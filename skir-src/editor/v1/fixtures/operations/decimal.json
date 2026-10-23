@@ -1,0 +1,93 @@
+{
+  "cases": [
+    {
+      "id": "decimal_scale",
+      "expression": {
+        "kind": "call",
+        "value": {
+          "operation": {"value": "decimal.scale"},
+          "type_arguments": [],
+          "arguments": [{"kind": "literal", "value": {"kind": "decimal", "value": "1.25"}}]
+        }
+      },
+      "check": {
+        "resultType": {
+          "value": {
+            "kind": "nominal",
+            "value": {"kind": "scalar", "value": {"kind": "integer", "value": {"width": "signed_thirty_two"}}}
+          },
+          "may_be_missing": true
+        },
+        "failures": [],
+        "inferredType": {
+          "value": {
+            "kind": "nominal",
+            "value": {"kind": "scalar", "value": {"kind": "integer", "value": {"width": "signed_thirty_two"}}}
+          },
+          "may_be_missing": false
+        }
+      },
+      "expected": {"available": {"integer": "2"}, "reads": []}
+    },
+    {
+      "id": "decimal_scale_ignores_trailing_zeros",
+      "expression": {
+        "kind": "call",
+        "value": {
+          "operation": {"value": "decimal.scale"},
+          "type_arguments": [],
+          "arguments": [{"kind": "literal", "value": {"kind": "decimal", "value": "1.250"}}]
+        }
+      },
+      "expected": {"available": {"integer": "2"}, "reads": []}
+    },
+    {
+      "id": "decimal_scale_whole",
+      "expression": {
+        "kind": "call",
+        "value": {
+          "operation": {"value": "decimal.scale"},
+          "type_arguments": [],
+          "arguments": [{"kind": "literal", "value": {"kind": "decimal", "value": "100"}}]
+        }
+      },
+      "expected": {"available": {"integer": "0"}, "reads": []}
+    },
+    {
+      "id": "decimal_scale_small",
+      "expression": {
+        "kind": "call",
+        "value": {
+          "operation": {"value": "decimal.scale"},
+          "type_arguments": [],
+          "arguments": [{"kind": "literal", "value": {"kind": "decimal", "value": "-0.001"}}]
+        }
+      },
+      "expected": {"available": {"integer": "3"}, "reads": []}
+    },
+    {
+      "id": "decimal_scale_of_computed_value",
+      "expression": {
+        "kind": "call",
+        "value": {
+          "operation": {"value": "decimal.scale"},
+          "type_arguments": [],
+          "arguments": [
+            {
+              "kind": "call",
+              "value": {
+                "operation": {"value": "number.multiply"},
+                "type_arguments": [],
+                "arguments": [
+                  {"kind": "literal", "value": {"kind": "decimal", "value": "0.5"}},
+                  {"kind": "literal", "value": {"kind": "decimal", "value": "0.2"}}
+                ]
+              }
+            }
+          ]
+        }
+      },
+      "expected": {"available": {"integer": "1"}, "reads": []}
+    }
+  ]
+}

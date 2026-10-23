@@ -1,0 +1,2043 @@
+{
+  "cases": [
+    {
+      "id": "number_add_integers",
+      "expression": {
+        "kind": "call",
+        "value": {
+          "operation": {"value": "number.add"},
+          "type_arguments": [],
+          "arguments": [
+            {"kind": "literal", "value": {"kind": "integer", "value": "7"}},
+            {"kind": "literal", "value": {"kind": "integer", "value": "5"}}
+          ]
+        }
+      },
+      "check": {
+        "resultType": {
+          "value": {
+            "kind": "nominal",
+            "value": {"kind": "scalar", "value": {"kind": "integer", "value": {"width": "signed_sixty_four"}}}
+          },
+          "may_be_missing": true
+        },
+        "failures": [],
+        "inferredType": {
+          "value": {
+            "kind": "nominal",
+            "value": {"kind": "scalar", "value": {"kind": "integer", "value": {"width": "signed_sixty_four"}}}
+          },
+          "may_be_missing": false
+        }
+      },
+      "expected": {"available": {"integer": "12"}, "reads": []}
+    },
+    {
+      "id": "number_add_exact_large_integers",
+      "expression": {
+        "kind": "call",
+        "value": {
+          "operation": {"value": "number.add"},
+          "type_arguments": [],
+          "arguments": [
+            {"kind": "literal", "value": {"kind": "integer", "value": "18446744073709551616"}},
+            {"kind": "literal", "value": {"kind": "integer", "value": "999999999999999999999999999999"}}
+          ]
+        }
+      },
+      "expected": {"available": {"integer": "1000000000018446744073709551615"}, "reads": []}
+    },
+    {
+      "id": "number_add_canonical_decimals",
+      "expression": {
+        "kind": "call",
+        "value": {
+          "operation": {"value": "number.add"},
+          "type_arguments": [],
+          "arguments": [
+            {"kind": "literal", "value": {"kind": "decimal", "value": "1.200"}},
+            {"kind": "literal", "value": {"kind": "decimal", "value": "2.30"}}
+          ]
+        }
+      },
+      "check": {
+        "resultType": {
+          "value": {"kind": "nominal", "value": {"kind": "scalar", "value": "decimal"}},
+          "may_be_missing": true
+        },
+        "failures": [],
+        "inferredType": {
+          "value": {"kind": "nominal", "value": {"kind": "scalar", "value": "decimal"}},
+          "may_be_missing": false
+        }
+      },
+      "expected": {"available": {"decimal": "3.5"}, "reads": []}
+    },
+    {
+      "id": "number_add_decimals_exact",
+      "expression": {
+        "kind": "call",
+        "value": {
+          "operation": {"value": "number.add"},
+          "type_arguments": [],
+          "arguments": [
+            {"kind": "literal", "value": {"kind": "decimal", "value": "0.1"}},
+            {"kind": "literal", "value": {"kind": "decimal", "value": "0.2"}}
+          ]
+        }
+      },
+      "expected": {"available": {"decimal": "0.3"}, "reads": []}
+    },
+    {
+      "id": "number_add_variadic",
+      "expression": {
+        "kind": "call",
+        "value": {
+          "operation": {"value": "number.add"},
+          "type_arguments": [],
+          "arguments": [
+            {"kind": "literal", "value": {"kind": "integer", "value": "1"}},
+            {"kind": "literal", "value": {"kind": "integer", "value": "2"}},
+            {"kind": "literal", "value": {"kind": "integer", "value": "3"}},
+            {"kind": "literal", "value": {"kind": "integer", "value": "4"}}
+          ]
+        }
+      },
+      "expected": {"available": {"integer": "10"}, "reads": []}
+    },
+    {
+      "id": "number_add_floats_ieee",
+      "expression": {
+        "kind": "call",
+        "value": {
+          "operation": {"value": "number.add"},
+          "type_arguments": [],
+          "arguments": [
+            {"kind": "literal", "value": {"kind": "float", "value": 0.1}},
+            {"kind": "literal", "value": {"kind": "float", "value": 0.2}}
+          ]
+        }
+      },
+      "check": {
+        "resultType": {
+          "value": {
+            "kind": "nominal",
+            "value": {"kind": "scalar", "value": {"kind": "float", "value": {"width": "sixty_four"}}}
+          },
+          "may_be_missing": true
+        },
+        "failures": [],
+        "inferredType": {
+          "value": {
+            "kind": "nominal",
+            "value": {"kind": "scalar", "value": {"kind": "float", "value": {"width": "sixty_four"}}}
+          },
+          "may_be_missing": false
+        }
+      },
+      "expected": {"available": {"float": 0.30000000000000004}, "reads": []}
+    },
+    {
+      "id": "number_add_float_overflow",
+      "expression": {
+        "kind": "call",
+        "value": {
+          "operation": {"value": "number.add"},
+          "type_arguments": [],
+          "arguments": [
+            {"kind": "literal", "value": {"kind": "float", "value": 1.7976931348623157e+308}},
+            {"kind": "literal", "value": {"kind": "float", "value": 1.7976931348623157e+308}}
+          ]
+        }
+      },
+      "expected": {"failed": "non_finite_number", "reads": []}
+    },
+    {
+      "id": "number_add_mixed_families",
+      "expression": {
+        "kind": "call",
+        "value": {
+          "operation": {"value": "number.add"},
+          "type_arguments": [],
+          "arguments": [
+            {"kind": "literal", "value": {"kind": "integer", "value": "1"}},
+            {"kind": "literal", "value": {"kind": "decimal", "value": "0.5"}}
+          ]
+        }
+      },
+      "check": {
+        "resultType": {
+          "value": {
+            "kind": "nominal",
+            "value": {"kind": "scalar", "value": {"kind": "integer", "value": {"width": "signed_sixty_four"}}}
+          },
+          "may_be_missing": true
+        },
+        "failures": ["numeric_family_mismatch"]
+      },
+      "expected": {"failed": "ill_typed_argument", "reads": []}
+    },
+    {
+      "id": "number_add_one_argument",
+      "expression": {
+        "kind": "call",
+        "value": {
+          "operation": {"value": "number.add"},
+          "type_arguments": [],
+          "arguments": [{"kind": "literal", "value": {"kind": "integer", "value": "1"}}]
+        }
+      },
+      "check": {
+        "resultType": {
+          "value": {
+            "kind": "nominal",
+            "value": {"kind": "scalar", "value": {"kind": "integer", "value": {"width": "signed_sixty_four"}}}
+          },
+          "may_be_missing": true
+        },
+        "failures": ["invalid_argument_count"]
+      },
+      "expected": {"failed": "invalid_argument_count", "reads": []}
+    },
+    {
+      "id": "number_subtract_integers",
+      "expression": {
+        "kind": "call",
+        "value": {
+          "operation": {"value": "number.subtract"},
+          "type_arguments": [],
+          "arguments": [
+            {"kind": "literal", "value": {"kind": "integer", "value": "5"}},
+            {"kind": "literal", "value": {"kind": "integer", "value": "8"}}
+          ]
+        }
+      },
+      "expected": {"available": {"integer": "-3"}, "reads": []}
+    },
+    {
+      "id": "number_subtract_decimals",
+      "expression": {
+        "kind": "call",
+        "value": {
+          "operation": {"value": "number.subtract"},
+          "type_arguments": [],
+          "arguments": [
+            {"kind": "literal", "value": {"kind": "decimal", "value": "0.3"}},
+            {"kind": "literal", "value": {"kind": "decimal", "value": "0.1"}}
+          ]
+        }
+      },
+      "expected": {"available": {"decimal": "0.2"}, "reads": []}
+    },
+    {
+      "id": "number_subtract_float_overflow",
+      "expression": {
+        "kind": "call",
+        "value": {
+          "operation": {"value": "number.subtract"},
+          "type_arguments": [],
+          "arguments": [
+            {"kind": "literal", "value": {"kind": "float", "value": -1.7976931348623157e+308}},
+            {"kind": "literal", "value": {"kind": "float", "value": 1.7976931348623157e+308}}
+          ]
+        }
+      },
+      "expected": {"failed": "non_finite_number", "reads": []}
+    },
+    {
+      "id": "number_multiply_variadic",
+      "expression": {
+        "kind": "call",
+        "value": {
+          "operation": {"value": "number.multiply"},
+          "type_arguments": [],
+          "arguments": [
+            {"kind": "literal", "value": {"kind": "integer", "value": "2"}},
+            {"kind": "literal", "value": {"kind": "integer", "value": "3"}},
+            {"kind": "literal", "value": {"kind": "integer", "value": "4"}}
+          ]
+        }
+      },
+      "expected": {"available": {"integer": "24"}, "reads": []}
+    },
+    {
+      "id": "number_multiply_beyond_64_bits",
+      "expression": {
+        "kind": "call",
+        "value": {
+          "operation": {"value": "number.multiply"},
+          "type_arguments": [],
+          "arguments": [
+            {"kind": "literal", "value": {"kind": "integer", "value": "4294967296"}},
+            {"kind": "literal", "value": {"kind": "integer", "value": "4294967296"}}
+          ]
+        }
+      },
+      "expected": {"available": {"integer": "18446744073709551616"}, "reads": []}
+    },
+    {
+      "id": "number_multiply_decimals",
+      "expression": {
+        "kind": "call",
+        "value": {
+          "operation": {"value": "number.multiply"},
+          "type_arguments": [],
+          "arguments": [
+            {"kind": "literal", "value": {"kind": "decimal", "value": "1.5"}},
+            {"kind": "literal", "value": {"kind": "decimal", "value": "1.5"}}
+          ]
+        }
+      },
+      "expected": {"available": {"decimal": "2.25"}, "reads": []}
+    },
+    {
+      "id": "number_multiply_float_overflow",
+      "expression": {
+        "kind": "call",
+        "value": {
+          "operation": {"value": "number.multiply"},
+          "type_arguments": [],
+          "arguments": [
+            {"kind": "literal", "value": {"kind": "float", "value": 1e+200}},
+            {"kind": "literal", "value": {"kind": "float", "value": 1e+200}}
+          ]
+        }
+      },
+      "expected": {"failed": "non_finite_number", "reads": []}
+    },
+    {
+      "id": "number_divide_integers_truncate",
+      "expression": {
+        "kind": "call",
+        "value": {
+          "operation": {"value": "number.divide"},
+          "type_arguments": [],
+          "arguments": [
+            {"kind": "literal", "value": {"kind": "integer", "value": "7"}},
+            {"kind": "literal", "value": {"kind": "integer", "value": "2"}}
+          ]
+        }
+      },
+      "expected": {"available": {"integer": "3"}, "reads": []}
+    },
+    {
+      "id": "number_divide_negative_integers_truncate",
+      "expression": {
+        "kind": "call",
+        "value": {
+          "operation": {"value": "number.divide"},
+          "type_arguments": [],
+          "arguments": [
+            {"kind": "literal", "value": {"kind": "integer", "value": "-7"}},
+            {"kind": "literal", "value": {"kind": "integer", "value": "2"}}
+          ]
+        }
+      },
+      "expected": {"available": {"integer": "-3"}, "reads": []}
+    },
+    {
+      "id": "number_divide_integer_by_zero",
+      "expression": {
+        "kind": "call",
+        "value": {
+          "operation": {"value": "number.divide"},
+          "type_arguments": [],
+          "arguments": [
+            {"kind": "literal", "value": {"kind": "integer", "value": "7"}},
+            {"kind": "literal", "value": {"kind": "integer", "value": "0"}}
+          ]
+        }
+      },
+      "expected": {"failed": "division_by_zero", "reads": []}
+    },
+    {
+      "id": "number_divide_decimal_precision",
+      "expression": {
+        "kind": "call",
+        "value": {
+          "operation": {"value": "number.divide"},
+          "type_arguments": [],
+          "arguments": [
+            {"kind": "literal", "value": {"kind": "decimal", "value": "10"}},
+            {"kind": "literal", "value": {"kind": "decimal", "value": "3"}}
+          ]
+        }
+      },
+      "expected": {"available": {"decimal": "3.333333333333333333333333333333333"}, "reads": []}
+    },
+    {
+      "id": "number_divide_negative_decimal_precision",
+      "expression": {
+        "kind": "call",
+        "value": {
+          "operation": {"value": "number.divide"},
+          "type_arguments": [],
+          "arguments": [
+            {"kind": "literal", "value": {"kind": "decimal", "value": "-10"}},
+            {"kind": "literal", "value": {"kind": "decimal", "value": "3"}}
+          ]
+        }
+      },
+      "expected": {"available": {"decimal": "-3.333333333333333333333333333333333"}, "reads": []}
+    },
+    {
+      "id": "number_divide_decimal_half_even",
+      "expression": {
+        "kind": "call",
+        "value": {
+          "operation": {"value": "number.divide"},
+          "type_arguments": [],
+          "arguments": [
+            {"kind": "literal", "value": {"kind": "decimal", "value": "1"}},
+            {"kind": "literal", "value": {"kind": "decimal", "value": "7"}}
+          ]
+        }
+      },
+      "expected": {"available": {"decimal": "0.1428571428571428571428571428571429"}, "reads": []}
+    },
+    {
+      "id": "number_divide_decimal_exact",
+      "expression": {
+        "kind": "call",
+        "value": {
+          "operation": {"value": "number.divide"},
+          "type_arguments": [],
+          "arguments": [
+            {"kind": "literal", "value": {"kind": "decimal", "value": "1"}},
+            {"kind": "literal", "value": {"kind": "decimal", "value": "8"}}
+          ]
+        }
+      },
+      "expected": {"available": {"decimal": "0.125"}, "reads": []}
+    },
+    {
+      "id": "number_divide_decimal_canonical_result",
+      "expression": {
+        "kind": "call",
+        "value": {
+          "operation": {"value": "number.divide"},
+          "type_arguments": [],
+          "arguments": [
+            {"kind": "literal", "value": {"kind": "decimal", "value": "6.0"}},
+            {"kind": "literal", "value": {"kind": "decimal", "value": "2"}}
+          ]
+        }
+      },
+      "expected": {"available": {"decimal": "3"}, "reads": []}
+    },
+    {
+      "id": "number_divide_decimal_by_zero",
+      "expression": {
+        "kind": "call",
+        "value": {
+          "operation": {"value": "number.divide"},
+          "type_arguments": [],
+          "arguments": [
+            {"kind": "literal", "value": {"kind": "decimal", "value": "1"}},
+            {"kind": "literal", "value": {"kind": "decimal", "value": "0"}}
+          ]
+        }
+      },
+      "expected": {"failed": "division_by_zero", "reads": []}
+    },
+    {
+      "id": "number_divide_floats",
+      "expression": {
+        "kind": "call",
+        "value": {
+          "operation": {"value": "number.divide"},
+          "type_arguments": [],
+          "arguments": [
+            {"kind": "literal", "value": {"kind": "float", "value": 1.0}},
+            {"kind": "literal", "value": {"kind": "float", "value": 3.0}}
+          ]
+        }
+      },
+      "expected": {"available": {"float": 0.3333333333333333}, "reads": []}
+    },
+    {
+      "id": "number_divide_float_by_zero",
+      "expression": {
+        "kind": "call",
+        "value": {
+          "operation": {"value": "number.divide"},
+          "type_arguments": [],
+          "arguments": [
+            {"kind": "literal", "value": {"kind": "float", "value": 1.0}},
+            {"kind": "literal", "value": {"kind": "float", "value": 0.0}}
+          ]
+        }
+      },
+      "expected": {"failed": "division_by_zero", "reads": []}
+    },
+    {
+      "id": "number_divide_float_overflow",
+      "expression": {
+        "kind": "call",
+        "value": {
+          "operation": {"value": "number.divide"},
+          "type_arguments": [],
+          "arguments": [
+            {"kind": "literal", "value": {"kind": "float", "value": 1e+308}},
+            {"kind": "literal", "value": {"kind": "float", "value": 0.1}}
+          ]
+        }
+      },
+      "expected": {"failed": "non_finite_number", "reads": []}
+    },
+    {
+      "id": "number_remainder_sign_of_dividend",
+      "expression": {
+        "kind": "call",
+        "value": {
+          "operation": {"value": "number.remainder"},
+          "type_arguments": [],
+          "arguments": [
+            {"kind": "literal", "value": {"kind": "integer", "value": "-7"}},
+            {"kind": "literal", "value": {"kind": "integer", "value": "2"}}
+          ]
+        }
+      },
+      "expected": {"available": {"integer": "-1"}, "reads": []}
+    },
+    {
+      "id": "number_remainder_negative_divisor",
+      "expression": {
+        "kind": "call",
+        "value": {
+          "operation": {"value": "number.remainder"},
+          "type_arguments": [],
+          "arguments": [
+            {"kind": "literal", "value": {"kind": "integer", "value": "7"}},
+            {"kind": "literal", "value": {"kind": "integer", "value": "-2"}}
+          ]
+        }
+      },
+      "expected": {"available": {"integer": "1"}, "reads": []}
+    },
+    {
+      "id": "number_remainder_by_zero",
+      "expression": {
+        "kind": "call",
+        "value": {
+          "operation": {"value": "number.remainder"},
+          "type_arguments": [],
+          "arguments": [
+            {"kind": "literal", "value": {"kind": "integer", "value": "7"}},
+            {"kind": "literal", "value": {"kind": "integer", "value": "0"}}
+          ]
+        }
+      },
+      "expected": {"failed": "division_by_zero", "reads": []}
+    },
+    {
+      "id": "number_remainder_decimals",
+      "expression": {
+        "kind": "call",
+        "value": {
+          "operation": {"value": "number.remainder"},
+          "type_arguments": [],
+          "arguments": [
+            {"kind": "literal", "value": {"kind": "decimal", "value": "5.5"}},
+            {"kind": "literal", "value": {"kind": "decimal", "value": "2"}}
+          ]
+        }
+      },
+      "expected": {"available": {"decimal": "1.5"}, "reads": []}
+    },
+    {
+      "id": "number_remainder_floats",
+      "expression": {
+        "kind": "call",
+        "value": {
+          "operation": {"value": "number.remainder"},
+          "type_arguments": [],
+          "arguments": [
+            {"kind": "literal", "value": {"kind": "float", "value": -5.5}},
+            {"kind": "literal", "value": {"kind": "float", "value": 2.0}}
+          ]
+        }
+      },
+      "expected": {"available": {"float": -1.5}, "reads": []}
+    },
+    {
+      "id": "number_remainder_float_by_zero",
+      "expression": {
+        "kind": "call",
+        "value": {
+          "operation": {"value": "number.remainder"},
+          "type_arguments": [],
+          "arguments": [
+            {"kind": "literal", "value": {"kind": "float", "value": 5.0}},
+            {"kind": "literal", "value": {"kind": "float", "value": 0.0}}
+          ]
+        }
+      },
+      "expected": {"failed": "division_by_zero", "reads": []}
+    },
+    {
+      "id": "number_round_large_decimal_ties_even",
+      "expression": {
+        "kind": "call",
+        "value": {
+          "operation": {"value": "number.round"},
+          "type_arguments": [],
+          "arguments": [
+            {"kind": "literal", "value": {"kind": "decimal", "value": "9007199254740993.25"}},
+            {"kind": "literal", "value": {"kind": "decimal", "value": "0.5"}},
+            {
+              "kind": "literal",
+              "value": {
+                "kind": "named",
+                "value": {
+                  "actual_type": {
+                    "definition": {
+                      "type_id": {"kind": "declared", "value": {"value": "467745c1c9534484864d2d63c72c7aae"}},
+                      "revision": 1
+                    },
+                    "arguments": []
+                  },
+                  "payload": {"kind": "enum_case", "value": "NearestTiesToEven"}
+                }
+              }
+            }
+          ]
+        }
+      },
+      "expected": {"available": {"decimal": "9007199254740993"}, "reads": []}
+    },
+    {
+      "id": "number_round_negative_ties_even",
+      "expression": {
+        "kind": "call",
+        "value": {
+          "operation": {"value": "number.round"},
+          "type_arguments": [],
+          "arguments": [
+            {"kind": "literal", "value": {"kind": "decimal", "value": "-1.25"}},
+            {"kind": "literal", "value": {"kind": "decimal", "value": "0.5"}},
+            {
+              "kind": "literal",
+              "value": {
+                "kind": "named",
+                "value": {
+                  "actual_type": {
+                    "definition": {
+                      "type_id": {"kind": "declared", "value": {"value": "467745c1c9534484864d2d63c72c7aae"}},
+                      "revision": 1
+                    },
+                    "arguments": []
+                  },
+                  "payload": {"kind": "enum_case", "value": "NearestTiesToEven"}
+                }
+              }
+            }
+          ]
+        }
+      },
+      "expected": {"available": {"decimal": "-1"}, "reads": []}
+    },
+    {
+      "id": "number_round_negative_floor",
+      "expression": {
+        "kind": "call",
+        "value": {
+          "operation": {"value": "number.round"},
+          "type_arguments": [],
+          "arguments": [
+            {"kind": "literal", "value": {"kind": "decimal", "value": "-1.1"}},
+            {"kind": "literal", "value": {"kind": "decimal", "value": "0.5"}},
+            {
+              "kind": "literal",
+              "value": {
+                "kind": "named",
+                "value": {
+                  "actual_type": {
+                    "definition": {
+                      "type_id": {"kind": "declared", "value": {"value": "467745c1c9534484864d2d63c72c7aae"}},
+                      "revision": 1
+                    },
+                    "arguments": []
+                  },
+                  "payload": {"kind": "enum_case", "value": "Floor"}
+                }
+              }
+            }
+          ]
+        }
+      },
+      "expected": {"available": {"decimal": "-1.5"}, "reads": []}
+    },
+    {
+      "id": "number_round_negative_ceiling",
+      "expression": {
+        "kind": "call",
+        "value": {
+          "operation": {"value": "number.round"},
+          "type_arguments": [],
+          "arguments": [
+            {"kind": "literal", "value": {"kind": "decimal", "value": "-1.1"}},
+            {"kind": "literal", "value": {"kind": "decimal", "value": "0.5"}},
+            {
+              "kind": "literal",
+              "value": {
+                "kind": "named",
+                "value": {
+                  "actual_type": {
+                    "definition": {
+                      "type_id": {"kind": "declared", "value": {"value": "467745c1c9534484864d2d63c72c7aae"}},
+                      "revision": 1
+                    },
+                    "arguments": []
+                  },
+                  "payload": {"kind": "enum_case", "value": "Ceiling"}
+                }
+              }
+            }
+          ]
+        }
+      },
+      "expected": {"available": {"decimal": "-1"}, "reads": []}
+    },
+    {
+      "id": "number_round_toward_zero",
+      "expression": {
+        "kind": "call",
+        "value": {
+          "operation": {"value": "number.round"},
+          "type_arguments": [],
+          "arguments": [
+            {"kind": "literal", "value": {"kind": "decimal", "value": "-1.9"}},
+            {"kind": "literal", "value": {"kind": "decimal", "value": "0.5"}},
+            {
+              "kind": "literal",
+              "value": {
+                "kind": "named",
+                "value": {
+                  "actual_type": {
+                    "definition": {
+                      "type_id": {"kind": "declared", "value": {"value": "467745c1c9534484864d2d63c72c7aae"}},
+                      "revision": 1
+                    },
+                    "arguments": []
+                  },
+                  "payload": {"kind": "enum_case", "value": "TowardZero"}
+                }
+              }
+            }
+          ]
+        }
+      },
+      "expected": {"available": {"decimal": "-1.5"}, "reads": []}
+    },
+    {
+      "id": "number_round_ties_away",
+      "expression": {
+        "kind": "call",
+        "value": {
+          "operation": {"value": "number.round"},
+          "type_arguments": [],
+          "arguments": [
+            {"kind": "literal", "value": {"kind": "decimal", "value": "-2.5"}},
+            {"kind": "literal", "value": {"kind": "decimal", "value": "1"}},
+            {
+              "kind": "literal",
+              "value": {
+                "kind": "named",
+                "value": {
+                  "actual_type": {
+                    "definition": {
+                      "type_id": {"kind": "declared", "value": {"value": "467745c1c9534484864d2d63c72c7aae"}},
+                      "revision": 1
+                    },
+                    "arguments": []
+                  },
+                  "payload": {"kind": "enum_case", "value": "NearestTiesAway"}
+                }
+              }
+            }
+          ]
+        }
+      },
+      "expected": {"available": {"decimal": "-3"}, "reads": []}
+    },
+    {
+      "id": "number_round_decimal_hundredths",
+      "expression": {
+        "kind": "call",
+        "value": {
+          "operation": {"value": "number.round"},
+          "type_arguments": [],
+          "arguments": [
+            {"kind": "literal", "value": {"kind": "decimal", "value": "2.345"}},
+            {"kind": "literal", "value": {"kind": "decimal", "value": "0.01"}},
+            {
+              "kind": "literal",
+              "value": {
+                "kind": "named",
+                "value": {
+                  "actual_type": {
+                    "definition": {
+                      "type_id": {"kind": "declared", "value": {"value": "467745c1c9534484864d2d63c72c7aae"}},
+                      "revision": 1
+                    },
+                    "arguments": []
+                  },
+                  "payload": {"kind": "enum_case", "value": "NearestTiesAway"}
+                }
+              }
+            }
+          ]
+        }
+      },
+      "expected": {"available": {"decimal": "2.35"}, "reads": []}
+    },
+    {
+      "id": "number_round_unsigned_integer_extreme",
+      "expression": {
+        "kind": "call",
+        "value": {
+          "operation": {"value": "number.round"},
+          "type_arguments": [],
+          "arguments": [
+            {"kind": "literal", "value": {"kind": "integer", "value": "18446744073709551615"}},
+            {"kind": "literal", "value": {"kind": "integer", "value": "2"}},
+            {
+              "kind": "literal",
+              "value": {
+                "kind": "named",
+                "value": {
+                  "actual_type": {
+                    "definition": {
+                      "type_id": {"kind": "declared", "value": {"value": "467745c1c9534484864d2d63c72c7aae"}},
+                      "revision": 1
+                    },
+                    "arguments": []
+                  },
+                  "payload": {"kind": "enum_case", "value": "NearestTiesToEven"}
+                }
+              }
+            }
+          ]
+        }
+      },
+      "expected": {"available": {"integer": "18446744073709551616"}, "reads": []}
+    },
+    {
+      "id": "number_round_integer_increment",
+      "expression": {
+        "kind": "call",
+        "value": {
+          "operation": {"value": "number.round"},
+          "type_arguments": [],
+          "arguments": [
+            {"kind": "literal", "value": {"kind": "integer", "value": "17"}},
+            {"kind": "literal", "value": {"kind": "integer", "value": "5"}},
+            {
+              "kind": "literal",
+              "value": {
+                "kind": "named",
+                "value": {
+                  "actual_type": {
+                    "definition": {
+                      "type_id": {"kind": "declared", "value": {"value": "467745c1c9534484864d2d63c72c7aae"}},
+                      "revision": 1
+                    },
+                    "arguments": []
+                  },
+                  "payload": {"kind": "enum_case", "value": "NearestTiesToEven"}
+                }
+              }
+            }
+          ]
+        }
+      },
+      "check": {
+        "resultType": {
+          "value": {
+            "kind": "nominal",
+            "value": {"kind": "scalar", "value": {"kind": "integer", "value": {"width": "signed_sixty_four"}}}
+          },
+          "may_be_missing": true
+        },
+        "failures": [],
+        "inferredType": {
+          "value": {
+            "kind": "nominal",
+            "value": {"kind": "scalar", "value": {"kind": "integer", "value": {"width": "signed_sixty_four"}}}
+          },
+          "may_be_missing": false
+        }
+      },
+      "expected": {"available": {"integer": "15"}, "reads": []}
+    },
+    {
+      "id": "number_round_integer_ceiling",
+      "expression": {
+        "kind": "call",
+        "value": {
+          "operation": {"value": "number.round"},
+          "type_arguments": [],
+          "arguments": [
+            {"kind": "literal", "value": {"kind": "integer", "value": "17"}},
+            {"kind": "literal", "value": {"kind": "integer", "value": "5"}},
+            {
+              "kind": "literal",
+              "value": {
+                "kind": "named",
+                "value": {
+                  "actual_type": {
+                    "definition": {
+                      "type_id": {"kind": "declared", "value": {"value": "467745c1c9534484864d2d63c72c7aae"}},
+                      "revision": 1
+                    },
+                    "arguments": []
+                  },
+                  "payload": {"kind": "enum_case", "value": "Ceiling"}
+                }
+              }
+            }
+          ]
+        }
+      },
+      "expected": {"available": {"integer": "20"}, "reads": []}
+    },
+    {
+      "id": "number_round_negative_integer_toward_zero",
+      "expression": {
+        "kind": "call",
+        "value": {
+          "operation": {"value": "number.round"},
+          "type_arguments": [],
+          "arguments": [
+            {"kind": "literal", "value": {"kind": "integer", "value": "-17"}},
+            {"kind": "literal", "value": {"kind": "integer", "value": "5"}},
+            {
+              "kind": "literal",
+              "value": {
+                "kind": "named",
+                "value": {
+                  "actual_type": {
+                    "definition": {
+                      "type_id": {"kind": "declared", "value": {"value": "467745c1c9534484864d2d63c72c7aae"}},
+                      "revision": 1
+                    },
+                    "arguments": []
+                  },
+                  "payload": {"kind": "enum_case", "value": "TowardZero"}
+                }
+              }
+            }
+          ]
+        }
+      },
+      "expected": {"available": {"integer": "-15"}, "reads": []}
+    },
+    {
+      "id": "number_round_float_tie_keeps_family",
+      "expression": {
+        "kind": "call",
+        "value": {
+          "operation": {"value": "number.round"},
+          "type_arguments": [],
+          "arguments": [
+            {"kind": "literal", "value": {"kind": "float", "value": 1.25}},
+            {"kind": "literal", "value": {"kind": "float", "value": 0.5}},
+            {
+              "kind": "literal",
+              "value": {
+                "kind": "named",
+                "value": {
+                  "actual_type": {
+                    "definition": {
+                      "type_id": {"kind": "declared", "value": {"value": "467745c1c9534484864d2d63c72c7aae"}},
+                      "revision": 1
+                    },
+                    "arguments": []
+                  },
+                  "payload": {"kind": "enum_case", "value": "NearestTiesToEven"}
+                }
+              }
+            }
+          ]
+        }
+      },
+      "expected": {"available": {"float": 1.0}, "reads": []}
+    },
+    {
+      "id": "number_round_float_uses_exact_binary_value",
+      "expression": {
+        "kind": "call",
+        "value": {
+          "operation": {"value": "number.round"},
+          "type_arguments": [],
+          "arguments": [
+            {"kind": "literal", "value": {"kind": "float", "value": 2.675}},
+            {"kind": "literal", "value": {"kind": "float", "value": 0.01}},
+            {
+              "kind": "literal",
+              "value": {
+                "kind": "named",
+                "value": {
+                  "actual_type": {
+                    "definition": {
+                      "type_id": {"kind": "declared", "value": {"value": "467745c1c9534484864d2d63c72c7aae"}},
+                      "revision": 1
+                    },
+                    "arguments": []
+                  },
+                  "payload": {"kind": "enum_case", "value": "NearestTiesAway"}
+                }
+              }
+            }
+          ]
+        }
+      },
+      "expected": {"available": {"float": 2.67}, "reads": []}
+    },
+    {
+      "id": "number_round_float_overflow",
+      "expression": {
+        "kind": "call",
+        "value": {
+          "operation": {"value": "number.round"},
+          "type_arguments": [],
+          "arguments": [
+            {"kind": "literal", "value": {"kind": "float", "value": 1.7976931348623157e+308}},
+            {"kind": "literal", "value": {"kind": "float", "value": 1e+308}},
+            {
+              "kind": "literal",
+              "value": {
+                "kind": "named",
+                "value": {
+                  "actual_type": {
+                    "definition": {
+                      "type_id": {"kind": "declared", "value": {"value": "467745c1c9534484864d2d63c72c7aae"}},
+                      "revision": 1
+                    },
+                    "arguments": []
+                  },
+                  "payload": {"kind": "enum_case", "value": "Ceiling"}
+                }
+              }
+            }
+          ]
+        }
+      },
+      "expected": {"failed": "non_finite_number", "reads": []}
+    },
+    {
+      "id": "number_round_zero_increment",
+      "expression": {
+        "kind": "call",
+        "value": {
+          "operation": {"value": "number.round"},
+          "type_arguments": [],
+          "arguments": [
+            {"kind": "literal", "value": {"kind": "integer", "value": "5"}},
+            {"kind": "literal", "value": {"kind": "integer", "value": "0"}},
+            {
+              "kind": "literal",
+              "value": {
+                "kind": "named",
+                "value": {
+                  "actual_type": {
+                    "definition": {
+                      "type_id": {"kind": "declared", "value": {"value": "467745c1c9534484864d2d63c72c7aae"}},
+                      "revision": 1
+                    },
+                    "arguments": []
+                  },
+                  "payload": {"kind": "enum_case", "value": "NearestTiesToEven"}
+                }
+              }
+            }
+          ]
+        }
+      },
+      "expected": {"failed": "invalid_rounding_increment", "reads": []}
+    },
+    {
+      "id": "number_round_negative_increment",
+      "expression": {
+        "kind": "call",
+        "value": {
+          "operation": {"value": "number.round"},
+          "type_arguments": [],
+          "arguments": [
+            {"kind": "literal", "value": {"kind": "decimal", "value": "1.5"}},
+            {"kind": "literal", "value": {"kind": "decimal", "value": "-0.5"}},
+            {
+              "kind": "literal",
+              "value": {
+                "kind": "named",
+                "value": {
+                  "actual_type": {
+                    "definition": {
+                      "type_id": {"kind": "declared", "value": {"value": "467745c1c9534484864d2d63c72c7aae"}},
+                      "revision": 1
+                    },
+                    "arguments": []
+                  },
+                  "payload": {"kind": "enum_case", "value": "Floor"}
+                }
+              }
+            }
+          ]
+        }
+      },
+      "expected": {"failed": "invalid_rounding_increment", "reads": []}
+    },
+    {
+      "id": "number_round_mixed_family",
+      "expression": {
+        "kind": "call",
+        "value": {
+          "operation": {"value": "number.round"},
+          "type_arguments": [],
+          "arguments": [
+            {"kind": "literal", "value": {"kind": "integer", "value": "5"}},
+            {"kind": "literal", "value": {"kind": "decimal", "value": "0.5"}},
+            {
+              "kind": "literal",
+              "value": {
+                "kind": "named",
+                "value": {
+                  "actual_type": {
+                    "definition": {
+                      "type_id": {"kind": "declared", "value": {"value": "467745c1c9534484864d2d63c72c7aae"}},
+                      "revision": 1
+                    },
+                    "arguments": []
+                  },
+                  "payload": {"kind": "enum_case", "value": "NearestTiesToEven"}
+                }
+              }
+            }
+          ]
+        }
+      },
+      "check": {
+        "resultType": {
+          "value": {
+            "kind": "nominal",
+            "value": {"kind": "scalar", "value": {"kind": "integer", "value": {"width": "signed_sixty_four"}}}
+          },
+          "may_be_missing": true
+        },
+        "failures": ["numeric_family_mismatch"]
+      },
+      "expected": {"failed": "ill_typed_argument", "reads": []}
+    },
+    {
+      "id": "number_round_mode_is_required_on_the_wire",
+      "expression": {
+        "kind": "call",
+        "value": {
+          "operation": {"value": "number.round"},
+          "type_arguments": [],
+          "arguments": [
+            {"kind": "literal", "value": {"kind": "integer", "value": "5"}},
+            {"kind": "literal", "value": {"kind": "integer", "value": "2"}}
+          ]
+        }
+      },
+      "check": {
+        "resultType": {
+          "value": {
+            "kind": "nominal",
+            "value": {"kind": "scalar", "value": {"kind": "integer", "value": {"width": "signed_sixty_four"}}}
+          },
+          "may_be_missing": true
+        },
+        "failures": ["invalid_argument_count"]
+      },
+      "expected": {"failed": "invalid_argument_count", "reads": []}
+    },
+    {
+      "id": "number_power_integer",
+      "expression": {
+        "kind": "call",
+        "value": {
+          "operation": {"value": "number.power"},
+          "type_arguments": [],
+          "arguments": [
+            {"kind": "literal", "value": {"kind": "integer", "value": "2"}},
+            {"kind": "literal", "value": {"kind": "integer", "value": "10"}}
+          ]
+        }
+      },
+      "check": {
+        "resultType": {
+          "value": {
+            "kind": "nominal",
+            "value": {"kind": "scalar", "value": {"kind": "integer", "value": {"width": "signed_sixty_four"}}}
+          },
+          "may_be_missing": true
+        },
+        "failures": [],
+        "inferredType": {
+          "value": {
+            "kind": "nominal",
+            "value": {"kind": "scalar", "value": {"kind": "integer", "value": {"width": "signed_sixty_four"}}}
+          },
+          "may_be_missing": false
+        }
+      },
+      "expected": {"available": {"integer": "1024"}, "reads": []}
+    },
+    {
+      "id": "number_power_integer_exact",
+      "expression": {
+        "kind": "call",
+        "value": {
+          "operation": {"value": "number.power"},
+          "type_arguments": [],
+          "arguments": [
+            {"kind": "literal", "value": {"kind": "integer", "value": "2"}},
+            {"kind": "literal", "value": {"kind": "integer", "value": "100"}}
+          ]
+        }
+      },
+      "expected": {"available": {"integer": "1267650600228229401496703205376"}, "reads": []}
+    },
+    {
+      "id": "number_power_zero_exponent",
+      "expression": {
+        "kind": "call",
+        "value": {
+          "operation": {"value": "number.power"},
+          "type_arguments": [],
+          "arguments": [
+            {"kind": "literal", "value": {"kind": "integer", "value": "0"}},
+            {"kind": "literal", "value": {"kind": "integer", "value": "0"}}
+          ]
+        }
+      },
+      "expected": {"available": {"integer": "1"}, "reads": []}
+    },
+    {
+      "id": "number_power_decimal_exact",
+      "expression": {
+        "kind": "call",
+        "value": {
+          "operation": {"value": "number.power"},
+          "type_arguments": [],
+          "arguments": [
+            {"kind": "literal", "value": {"kind": "decimal", "value": "0.1"}},
+            {"kind": "literal", "value": {"kind": "integer", "value": "3"}}
+          ]
+        }
+      },
+      "expected": {"available": {"decimal": "0.001"}, "reads": []}
+    },
+    {
+      "id": "number_power_float_square_and_multiply",
+      "expression": {
+        "kind": "call",
+        "value": {
+          "operation": {"value": "number.power"},
+          "type_arguments": [],
+          "arguments": [
+            {"kind": "literal", "value": {"kind": "float", "value": 1.1}},
+            {"kind": "literal", "value": {"kind": "integer", "value": "3"}}
+          ]
+        }
+      },
+      "expected": {"available": {"float": 1.3310000000000004}, "reads": []}
+    },
+    {
+      "id": "number_power_float_square",
+      "expression": {
+        "kind": "call",
+        "value": {
+          "operation": {"value": "number.power"},
+          "type_arguments": [],
+          "arguments": [
+            {"kind": "literal", "value": {"kind": "float", "value": 0.1}},
+            {"kind": "literal", "value": {"kind": "integer", "value": "2"}}
+          ]
+        }
+      },
+      "expected": {"available": {"float": 0.010000000000000002}, "reads": []}
+    },
+    {
+      "id": "number_power_float_overflow",
+      "expression": {
+        "kind": "call",
+        "value": {
+          "operation": {"value": "number.power"},
+          "type_arguments": [],
+          "arguments": [
+            {"kind": "literal", "value": {"kind": "float", "value": 10.0}},
+            {"kind": "literal", "value": {"kind": "integer", "value": "400"}}
+          ]
+        }
+      },
+      "expected": {"failed": "non_finite_number", "reads": []}
+    },
+    {
+      "id": "number_power_negative_exponent",
+      "expression": {
+        "kind": "call",
+        "value": {
+          "operation": {"value": "number.power"},
+          "type_arguments": [],
+          "arguments": [
+            {"kind": "literal", "value": {"kind": "integer", "value": "2"}},
+            {"kind": "literal", "value": {"kind": "integer", "value": "-1"}}
+          ]
+        }
+      },
+      "expected": {"failed": "negative_exponent", "reads": []}
+    },
+    {
+      "id": "number_power_exponent_outside_32_bits",
+      "expression": {
+        "kind": "call",
+        "value": {
+          "operation": {"value": "number.power"},
+          "type_arguments": [],
+          "arguments": [
+            {"kind": "literal", "value": {"kind": "integer", "value": "2"}},
+            {"kind": "literal", "value": {"kind": "integer", "value": "2147483648"}}
+          ]
+        }
+      },
+      "expected": {"failed": "integer_out_of_range", "reads": []}
+    },
+    {
+      "id": "number_sqrt_integer_floor",
+      "expression": {
+        "kind": "call",
+        "value": {
+          "operation": {"value": "number.sqrt"},
+          "type_arguments": [],
+          "arguments": [{"kind": "literal", "value": {"kind": "integer", "value": "17"}}]
+        }
+      },
+      "check": {
+        "resultType": {
+          "value": {
+            "kind": "nominal",
+            "value": {"kind": "scalar", "value": {"kind": "integer", "value": {"width": "signed_sixty_four"}}}
+          },
+          "may_be_missing": true
+        },
+        "failures": [],
+        "inferredType": {
+          "value": {
+            "kind": "nominal",
+            "value": {"kind": "scalar", "value": {"kind": "integer", "value": {"width": "signed_sixty_four"}}}
+          },
+          "may_be_missing": false
+        }
+      },
+      "expected": {"available": {"integer": "4"}, "reads": []}
+    },
+    {
+      "id": "number_sqrt_integer_large",
+      "expression": {
+        "kind": "call",
+        "value": {
+          "operation": {"value": "number.sqrt"},
+          "type_arguments": [],
+          "arguments": [
+            {
+              "kind": "literal",
+              "value": {"kind": "integer", "value": "10000000000000000000000000000000000000000"}
+            }
+          ]
+        }
+      },
+      "expected": {"available": {"integer": "100000000000000000000"}, "reads": []}
+    },
+    {
+      "id": "number_sqrt_integer_zero",
+      "expression": {
+        "kind": "call",
+        "value": {
+          "operation": {"value": "number.sqrt"},
+          "type_arguments": [],
+          "arguments": [{"kind": "literal", "value": {"kind": "integer", "value": "0"}}]
+        }
+      },
+      "expected": {"available": {"integer": "0"}, "reads": []}
+    },
+    {
+      "id": "number_sqrt_decimal_precision",
+      "expression": {
+        "kind": "call",
+        "value": {
+          "operation": {"value": "number.sqrt"},
+          "type_arguments": [],
+          "arguments": [{"kind": "literal", "value": {"kind": "decimal", "value": "2"}}]
+        }
+      },
+      "expected": {"available": {"decimal": "1.414213562373095048801688724209698"}, "reads": []}
+    },
+    {
+      "id": "number_sqrt_decimal_exact",
+      "expression": {
+        "kind": "call",
+        "value": {
+          "operation": {"value": "number.sqrt"},
+          "type_arguments": [],
+          "arguments": [{"kind": "literal", "value": {"kind": "decimal", "value": "0.25"}}]
+        }
+      },
+      "expected": {"available": {"decimal": "0.5"}, "reads": []}
+    },
+    {
+      "id": "number_sqrt_float",
+      "expression": {
+        "kind": "call",
+        "value": {
+          "operation": {"value": "number.sqrt"},
+          "type_arguments": [],
+          "arguments": [{"kind": "literal", "value": {"kind": "float", "value": 2.0}}]
+        }
+      },
+      "expected": {"available": {"float": 1.4142135623730951}, "reads": []}
+    },
+    {
+      "id": "number_sqrt_negative_integer",
+      "expression": {
+        "kind": "call",
+        "value": {
+          "operation": {"value": "number.sqrt"},
+          "type_arguments": [],
+          "arguments": [{"kind": "literal", "value": {"kind": "integer", "value": "-4"}}]
+        }
+      },
+      "expected": {"failed": "negative_square_root", "reads": []}
+    },
+    {
+      "id": "number_sqrt_negative_decimal",
+      "expression": {
+        "kind": "call",
+        "value": {
+          "operation": {"value": "number.sqrt"},
+          "type_arguments": [],
+          "arguments": [{"kind": "literal", "value": {"kind": "decimal", "value": "-0.01"}}]
+        }
+      },
+      "expected": {"failed": "negative_square_root", "reads": []}
+    },
+    {
+      "id": "number_convert_integer_to_int8",
+      "expression": {
+        "kind": "call",
+        "value": {
+          "operation": {"value": "number.convert"},
+          "type_arguments": [{"kind": "scalar", "value": {"kind": "integer", "value": {"width": "signed_eight"}}}],
+          "arguments": [{"kind": "literal", "value": {"kind": "integer", "value": "100"}}]
+        }
+      },
+      "check": {
+        "resultType": {
+          "value": {
+            "kind": "nominal",
+            "value": {"kind": "scalar", "value": {"kind": "integer", "value": {"width": "signed_eight"}}}
+          },
+          "may_be_missing": true
+        },
+        "failures": [],
+        "inferredType": {
+          "value": {
+            "kind": "nominal",
+            "value": {"kind": "scalar", "value": {"kind": "integer", "value": {"width": "signed_eight"}}}
+          },
+          "may_be_missing": false
+        }
+      },
+      "expected": {"available": {"integer": "100"}, "reads": []}
+    },
+    {
+      "id": "number_convert_integer_outside_int8",
+      "expression": {
+        "kind": "call",
+        "value": {
+          "operation": {"value": "number.convert"},
+          "type_arguments": [{"kind": "scalar", "value": {"kind": "integer", "value": {"width": "signed_eight"}}}],
+          "arguments": [{"kind": "literal", "value": {"kind": "integer", "value": "300"}}]
+        }
+      },
+      "check": {
+        "resultType": {
+          "value": {
+            "kind": "nominal",
+            "value": {"kind": "scalar", "value": {"kind": "integer", "value": {"width": "signed_eight"}}}
+          },
+          "may_be_missing": true
+        },
+        "failures": [],
+        "inferredType": {
+          "value": {
+            "kind": "nominal",
+            "value": {"kind": "scalar", "value": {"kind": "integer", "value": {"width": "signed_eight"}}}
+          },
+          "may_be_missing": false
+        }
+      },
+      "expected": {"failed": "inexact_conversion", "reads": []}
+    },
+    {
+      "id": "number_convert_negative_to_unsigned",
+      "expression": {
+        "kind": "call",
+        "value": {
+          "operation": {"value": "number.convert"},
+          "type_arguments": [{"kind": "scalar", "value": {"kind": "integer", "value": {"width": "unsigned_eight"}}}],
+          "arguments": [{"kind": "literal", "value": {"kind": "integer", "value": "-1"}}]
+        }
+      },
+      "expected": {"failed": "inexact_conversion", "reads": []}
+    },
+    {
+      "id": "number_convert_uint64_maximum",
+      "expression": {
+        "kind": "call",
+        "value": {
+          "operation": {"value": "number.convert"},
+          "type_arguments": [{"kind": "scalar", "value": {"kind": "integer", "value": {"width": "unsigned_sixty_four"}}}],
+          "arguments": [{"kind": "literal", "value": {"kind": "integer", "value": "18446744073709551615"}}]
+        }
+      },
+      "expected": {"available": {"integer": "18446744073709551615"}, "reads": []}
+    },
+    {
+      "id": "number_convert_whole_decimal_to_integer",
+      "expression": {
+        "kind": "call",
+        "value": {
+          "operation": {"value": "number.convert"},
+          "type_arguments": [{"kind": "scalar", "value": {"kind": "integer", "value": {"width": "signed_thirty_two"}}}],
+          "arguments": [{"kind": "literal", "value": {"kind": "decimal", "value": "3.0"}}]
+        }
+      },
+      "expected": {"available": {"integer": "3"}, "reads": []}
+    },
+    {
+      "id": "number_convert_fractional_decimal_to_integer",
+      "expression": {
+        "kind": "call",
+        "value": {
+          "operation": {"value": "number.convert"},
+          "type_arguments": [{"kind": "scalar", "value": {"kind": "integer", "value": {"width": "signed_thirty_two"}}}],
+          "arguments": [{"kind": "literal", "value": {"kind": "decimal", "value": "2.5"}}]
+        }
+      },
+      "expected": {"failed": "inexact_conversion", "reads": []}
+    },
+    {
+      "id": "number_convert_float_to_decimal_exact_binary",
+      "expression": {
+        "kind": "call",
+        "value": {
+          "operation": {"value": "number.convert"},
+          "type_arguments": [{"kind": "scalar", "value": "decimal"}],
+          "arguments": [{"kind": "literal", "value": {"kind": "float", "value": 0.1}}]
+        }
+      },
+      "expected": {"available": {"decimal": "0.1000000000000000055511151231257827021181583404541015625"}, "reads": []}
+    },
+    {
+      "id": "number_convert_integer_to_float64",
+      "expression": {
+        "kind": "call",
+        "value": {
+          "operation": {"value": "number.convert"},
+          "type_arguments": [{"kind": "scalar", "value": {"kind": "float", "value": {"width": "sixty_four"}}}],
+          "arguments": [{"kind": "literal", "value": {"kind": "integer", "value": "9007199254740992"}}]
+        }
+      },
+      "expected": {"available": {"float": 9007199254740992.0}, "reads": []}
+    },
+    {
+      "id": "number_convert_integer_not_a_double",
+      "expression": {
+        "kind": "call",
+        "value": {
+          "operation": {"value": "number.convert"},
+          "type_arguments": [{"kind": "scalar", "value": {"kind": "float", "value": {"width": "sixty_four"}}}],
+          "arguments": [{"kind": "literal", "value": {"kind": "integer", "value": "9007199254740993"}}]
+        }
+      },
+      "expected": {"failed": "inexact_conversion", "reads": []}
+    },
+    {
+      "id": "number_convert_decimal_not_a_double",
+      "expression": {
+        "kind": "call",
+        "value": {
+          "operation": {"value": "number.convert"},
+          "type_arguments": [{"kind": "scalar", "value": {"kind": "float", "value": {"width": "sixty_four"}}}],
+          "arguments": [{"kind": "literal", "value": {"kind": "decimal", "value": "0.1"}}]
+        }
+      },
+      "expected": {"failed": "inexact_conversion", "reads": []}
+    },
+    {
+      "id": "number_convert_float_to_float32",
+      "expression": {
+        "kind": "call",
+        "value": {
+          "operation": {"value": "number.convert"},
+          "type_arguments": [{"kind": "scalar", "value": {"kind": "float", "value": {"width": "thirty_two"}}}],
+          "arguments": [{"kind": "literal", "value": {"kind": "float", "value": 0.5}}]
+        }
+      },
+      "expected": {"available": {"float": 0.5}, "reads": []}
+    },
+    {
+      "id": "number_convert_float_not_a_float32",
+      "expression": {
+        "kind": "call",
+        "value": {
+          "operation": {"value": "number.convert"},
+          "type_arguments": [{"kind": "scalar", "value": {"kind": "float", "value": {"width": "thirty_two"}}}],
+          "arguments": [{"kind": "literal", "value": {"kind": "float", "value": 0.1}}]
+        }
+      },
+      "expected": {"failed": "inexact_conversion", "reads": []}
+    },
+    {
+      "id": "number_convert_float_to_integer",
+      "expression": {
+        "kind": "call",
+        "value": {
+          "operation": {"value": "number.convert"},
+          "type_arguments": [{"kind": "scalar", "value": {"kind": "integer", "value": {"width": "signed_sixteen"}}}],
+          "arguments": [{"kind": "literal", "value": {"kind": "float", "value": -3.0}}]
+        }
+      },
+      "expected": {"available": {"integer": "-3"}, "reads": []}
+    },
+    {
+      "id": "number_format_und_has_no_grouping",
+      "expression": {
+        "kind": "call",
+        "value": {
+          "operation": {"value": "number.format"},
+          "type_arguments": [],
+          "arguments": [
+            {"kind": "literal", "value": {"kind": "decimal", "value": "9007199254740993.255"}},
+            {"kind": "literal", "value": {"kind": "integer", "value": "2"}},
+            {"kind": "literal", "value": {"kind": "string_value", "value": "und"}}
+          ]
+        }
+      },
+      "expected": {"available": {"string": "9007199254740993.26"}, "reads": []}
+    },
+    {
+      "id": "number_format_pads_fraction",
+      "expression": {
+        "kind": "call",
+        "value": {
+          "operation": {"value": "number.format"},
+          "type_arguments": [],
+          "arguments": [
+            {"kind": "literal", "value": {"kind": "integer", "value": "5"}},
+            {"kind": "literal", "value": {"kind": "integer", "value": "2"}},
+            {"kind": "literal", "value": {"kind": "string_value", "value": "und"}}
+          ]
+        }
+      },
+      "expected": {"available": {"string": "5.00"}, "reads": []}
+    },
+    {
+      "id": "number_format_half_even_down",
+      "expression": {
+        "kind": "call",
+        "value": {
+          "operation": {"value": "number.format"},
+          "type_arguments": [],
+          "arguments": [
+            {"kind": "literal", "value": {"kind": "decimal", "value": "2.5"}},
+            {"kind": "literal", "value": {"kind": "integer", "value": "0"}},
+            {"kind": "literal", "value": {"kind": "string_value", "value": "und"}}
+          ]
+        }
+      },
+      "expected": {"available": {"string": "2"}, "reads": []}
+    },
+    {
+      "id": "number_format_half_even_up",
+      "expression": {
+        "kind": "call",
+        "value": {
+          "operation": {"value": "number.format"},
+          "type_arguments": [],
+          "arguments": [
+            {"kind": "literal", "value": {"kind": "decimal", "value": "3.5"}},
+            {"kind": "literal", "value": {"kind": "integer", "value": "0"}},
+            {"kind": "literal", "value": {"kind": "string_value", "value": "und"}}
+          ]
+        }
+      },
+      "expected": {"available": {"string": "4"}, "reads": []}
+    },
+    {
+      "id": "number_format_english_grouping",
+      "expression": {
+        "kind": "call",
+        "value": {
+          "operation": {"value": "number.format"},
+          "type_arguments": [],
+          "arguments": [
+            {"kind": "literal", "value": {"kind": "integer", "value": "18446744073709551615"}},
+            {"kind": "literal", "value": {"kind": "integer", "value": "0"}},
+            {"kind": "literal", "value": {"kind": "string_value", "value": "en-US"}}
+          ]
+        }
+      },
+      "expected": {"available": {"string": "18,446,744,073,709,551,615"}, "reads": []}
+    },
+    {
+      "id": "number_format_english_negative",
+      "expression": {
+        "kind": "call",
+        "value": {
+          "operation": {"value": "number.format"},
+          "type_arguments": [],
+          "arguments": [
+            {"kind": "literal", "value": {"kind": "decimal", "value": "-1234.5"}},
+            {"kind": "literal", "value": {"kind": "integer", "value": "1"}},
+            {"kind": "literal", "value": {"kind": "string_value", "value": "en-US"}}
+          ]
+        }
+      },
+      "expected": {"available": {"string": "-1,234.5"}, "reads": []}
+    },
+    {
+      "id": "number_format_german_symbols",
+      "expression": {
+        "kind": "call",
+        "value": {
+          "operation": {"value": "number.format"},
+          "type_arguments": [],
+          "arguments": [
+            {"kind": "literal", "value": {"kind": "decimal", "value": "9007199254740993.25"}},
+            {"kind": "literal", "value": {"kind": "integer", "value": "2"}},
+            {"kind": "literal", "value": {"kind": "string_value", "value": "de-DE"}}
+          ]
+        }
+      },
+      "expected": {"available": {"string": "9.007.199.254.740.993,25"}, "reads": []}
+    },
+    {
+      "id": "number_format_indian_grouping",
+      "expression": {
+        "kind": "call",
+        "value": {
+          "operation": {"value": "number.format"},
+          "type_arguments": [],
+          "arguments": [
+            {"kind": "literal", "value": {"kind": "decimal", "value": "1234567.89"}},
+            {"kind": "literal", "value": {"kind": "integer", "value": "2"}},
+            {"kind": "literal", "value": {"kind": "string_value", "value": "hi-IN"}}
+          ]
+        }
+      },
+      "expected": {"available": {"string": "12,34,567.89"}, "reads": []}
+    },
+    {
+      "id": "number_format_float_uses_shortest_decimal",
+      "expression": {
+        "kind": "call",
+        "value": {
+          "operation": {"value": "number.format"},
+          "type_arguments": [],
+          "arguments": [
+            {"kind": "literal", "value": {"kind": "float", "value": 150.095}},
+            {"kind": "literal", "value": {"kind": "integer", "value": "2"}},
+            {"kind": "literal", "value": {"kind": "string_value", "value": "und"}}
+          ]
+        }
+      },
+      "expected": {"available": {"string": "150.10"}, "reads": []}
+    },
+    {
+      "id": "number_format_invalid_locale",
+      "expression": {
+        "kind": "call",
+        "value": {
+          "operation": {"value": "number.format"},
+          "type_arguments": [],
+          "arguments": [
+            {"kind": "literal", "value": {"kind": "integer", "value": "1"}},
+            {"kind": "literal", "value": {"kind": "integer", "value": "0"}},
+            {"kind": "literal", "value": {"kind": "string_value", "value": "%%"}}
+          ]
+        }
+      },
+      "expected": {"failed": "invalid_locale", "reads": []}
+    },
+    {
+      "id": "number_plural_english_one",
+      "expression": {
+        "kind": "call",
+        "value": {
+          "operation": {"value": "number.plural_category"},
+          "type_arguments": [],
+          "arguments": [
+            {"kind": "literal", "value": {"kind": "integer", "value": "1"}},
+            {"kind": "literal", "value": {"kind": "string_value", "value": "en"}}
+          ]
+        }
+      },
+      "expected": {
+        "available": {
+          "named": {
+            "declared": "d15ae2d6248442e3a046d8cf29a7ddd5",
+            "revision": 1,
+            "arguments": [],
+            "payload": {"enum_case": "One"}
+          }
+        },
+        "reads": []
+      }
+    },
+    {
+      "id": "number_plural_english_zero_is_other",
+      "expression": {
+        "kind": "call",
+        "value": {
+          "operation": {"value": "number.plural_category"},
+          "type_arguments": [],
+          "arguments": [
+            {"kind": "literal", "value": {"kind": "integer", "value": "0"}},
+            {"kind": "literal", "value": {"kind": "string_value", "value": "en"}}
+          ]
+        }
+      },
+      "expected": {
+        "available": {
+          "named": {
+            "declared": "d15ae2d6248442e3a046d8cf29a7ddd5",
+            "revision": 1,
+            "arguments": [],
+            "payload": {"enum_case": "Other"}
+          }
+        },
+        "reads": []
+      }
+    },
+    {
+      "id": "number_plural_english_fraction",
+      "expression": {
+        "kind": "call",
+        "value": {
+          "operation": {"value": "number.plural_category"},
+          "type_arguments": [],
+          "arguments": [
+            {"kind": "literal", "value": {"kind": "decimal", "value": "1.5"}},
+            {"kind": "literal", "value": {"kind": "string_value", "value": "en"}}
+          ]
+        }
+      },
+      "expected": {
+        "available": {
+          "named": {
+            "declared": "d15ae2d6248442e3a046d8cf29a7ddd5",
+            "revision": 1,
+            "arguments": [],
+            "payload": {"enum_case": "Other"}
+          }
+        },
+        "reads": []
+      }
+    },
+    {
+      "id": "number_plural_arabic_zero",
+      "expression": {
+        "kind": "call",
+        "value": {
+          "operation": {"value": "number.plural_category"},
+          "type_arguments": [],
+          "arguments": [
+            {"kind": "literal", "value": {"kind": "integer", "value": "0"}},
+            {"kind": "literal", "value": {"kind": "string_value", "value": "ar"}}
+          ]
+        }
+      },
+      "expected": {
+        "available": {
+          "named": {
+            "declared": "d15ae2d6248442e3a046d8cf29a7ddd5",
+            "revision": 1,
+            "arguments": [],
+            "payload": {"enum_case": "Zero"}
+          }
+        },
+        "reads": []
+      }
+    },
+    {
+      "id": "number_plural_arabic_two",
+      "expression": {
+        "kind": "call",
+        "value": {
+          "operation": {"value": "number.plural_category"},
+          "type_arguments": [],
+          "arguments": [
+            {"kind": "literal", "value": {"kind": "integer", "value": "2"}},
+            {"kind": "literal", "value": {"kind": "string_value", "value": "ar"}}
+          ]
+        }
+      },
+      "expected": {
+        "available": {
+          "named": {
+            "declared": "d15ae2d6248442e3a046d8cf29a7ddd5",
+            "revision": 1,
+            "arguments": [],
+            "payload": {"enum_case": "Two"}
+          }
+        },
+        "reads": []
+      }
+    },
+    {
+      "id": "number_plural_arabic_few",
+      "expression": {
+        "kind": "call",
+        "value": {
+          "operation": {"value": "number.plural_category"},
+          "type_arguments": [],
+          "arguments": [
+            {"kind": "literal", "value": {"kind": "integer", "value": "3"}},
+            {"kind": "literal", "value": {"kind": "string_value", "value": "ar"}}
+          ]
+        }
+      },
+      "expected": {
+        "available": {
+          "named": {
+            "declared": "d15ae2d6248442e3a046d8cf29a7ddd5",
+            "revision": 1,
+            "arguments": [],
+            "payload": {"enum_case": "Few"}
+          }
+        },
+        "reads": []
+      }
+    },
+    {
+      "id": "number_plural_arabic_many",
+      "expression": {
+        "kind": "call",
+        "value": {
+          "operation": {"value": "number.plural_category"},
+          "type_arguments": [],
+          "arguments": [
+            {"kind": "literal", "value": {"kind": "integer", "value": "11"}},
+            {"kind": "literal", "value": {"kind": "string_value", "value": "ar"}}
+          ]
+        }
+      },
+      "expected": {
+        "available": {
+          "named": {
+            "declared": "d15ae2d6248442e3a046d8cf29a7ddd5",
+            "revision": 1,
+            "arguments": [],
+            "payload": {"enum_case": "Many"}
+          }
+        },
+        "reads": []
+      }
+    },
+    {
+      "id": "number_plural_arabic_hundred_is_other",
+      "expression": {
+        "kind": "call",
+        "value": {
+          "operation": {"value": "number.plural_category"},
+          "type_arguments": [],
+          "arguments": [
+            {"kind": "literal", "value": {"kind": "integer", "value": "100"}},
+            {"kind": "literal", "value": {"kind": "string_value", "value": "ar"}}
+          ]
+        }
+      },
+      "expected": {
+        "available": {
+          "named": {
+            "declared": "d15ae2d6248442e3a046d8cf29a7ddd5",
+            "revision": 1,
+            "arguments": [],
+            "payload": {"enum_case": "Other"}
+          }
+        },
+        "reads": []
+      }
+    },
+    {
+      "id": "number_plural_polish_few",
+      "expression": {
+        "kind": "call",
+        "value": {
+          "operation": {"value": "number.plural_category"},
+          "type_arguments": [],
+          "arguments": [
+            {"kind": "literal", "value": {"kind": "integer", "value": "22"}},
+            {"kind": "literal", "value": {"kind": "string_value", "value": "pl"}}
+          ]
+        }
+      },
+      "expected": {
+        "available": {
+          "named": {
+            "declared": "d15ae2d6248442e3a046d8cf29a7ddd5",
+            "revision": 1,
+            "arguments": [],
+            "payload": {"enum_case": "Few"}
+          }
+        },
+        "reads": []
+      }
+    },
+    {
+      "id": "number_plural_polish_many",
+      "expression": {
+        "kind": "call",
+        "value": {
+          "operation": {"value": "number.plural_category"},
+          "type_arguments": [],
+          "arguments": [
+            {"kind": "literal", "value": {"kind": "integer", "value": "5"}},
+            {"kind": "literal", "value": {"kind": "string_value", "value": "pl"}}
+          ]
+        }
+      },
+      "expected": {
+        "available": {
+          "named": {
+            "declared": "d15ae2d6248442e3a046d8cf29a7ddd5",
+            "revision": 1,
+            "arguments": [],
+            "payload": {"enum_case": "Many"}
+          }
+        },
+        "reads": []
+      }
+    },
+    {
+      "id": "number_plural_invalid_locale",
+      "expression": {
+        "kind": "call",
+        "value": {
+          "operation": {"value": "number.plural_category"},
+          "type_arguments": [],
+          "arguments": [
+            {"kind": "literal", "value": {"kind": "integer", "value": "1"}},
+            {"kind": "literal", "value": {"kind": "string_value", "value": "%%"}}
+          ]
+        }
+      },
+      "expected": {"failed": "invalid_locale", "reads": []}
+    }
+  ]
+}

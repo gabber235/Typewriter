@@ -1,0 +1,179 @@
+{
+  "cases": [
+    {
+      "id": "catalog_declaration_definition",
+      "expression": {
+        "kind": "field",
+        "value": {
+          "source": {
+            "kind": "call",
+            "value": {
+              "operation": {"value": "catalog.declaration"},
+              "type_arguments": [],
+              "arguments": [
+                {
+                  "kind": "call",
+                  "value": {
+                    "operation": {"value": "value.configuration"},
+                    "type_arguments": [],
+                    "arguments": [
+                      {
+                        "kind": "literal",
+                        "value": {
+                          "kind": "named",
+                          "value": {
+                            "actual_type": {
+                              "definition": {
+                                "type_id": {"kind": "qualified", "value": {"namespace": "fixture", "name": "Color"}},
+                                "revision": 1
+                              },
+                              "arguments": []
+                            },
+                            "payload": {"kind": "enum_case", "value": "Red"}
+                          }
+                        }
+                      }
+                    ]
+                  }
+                }
+              ]
+            }
+          },
+          "path": {
+            "segments": [
+              {"kind": "field", "value": {"name": "definition"}},
+              {"kind": "field", "value": {"name": "representation"}}
+            ]
+          }
+        }
+      },
+      "typeDefinitions": [
+        {
+          "id": {
+            "type_id": {"kind": "qualified", "value": {"namespace": "fixture", "name": "Color"}},
+            "revision": 1
+          },
+          "parameters": [],
+          "parents": [],
+          "representation": {"kind": "enumeration", "value": {"cases": [{"key": "Red"}, {"key": "Green"}, {"key": "Blue"}]}}
+        }
+      ],
+      "expected": {
+        "available": {
+          "named": {
+            "namespace": "skir",
+            "name": "editor/v1/type_catalog.skir:RepresentationTemplate.enumeration",
+            "revision": 1,
+            "arguments": [],
+            "payload": {
+              "record": {
+                "value": {
+                  "named": {
+                    "namespace": "skir",
+                    "name": "editor/v1/type_catalog.skir:EnumerationRepresentationTemplate",
+                    "revision": 1,
+                    "arguments": [],
+                    "payload": {
+                      "record": {
+                        "cases": {
+                          "list": [
+                            {
+                              "id": "canonical:0",
+                              "value": {
+                                "named": {
+                                  "namespace": "skir",
+                                  "name": "editor/v1/type_catalog.skir:EnumVariant",
+                                  "revision": 1,
+                                  "arguments": [],
+                                  "payload": {"record": {"key": {"string": "Red"}}}
+                                }
+                              }
+                            },
+                            {
+                              "id": "canonical:1",
+                              "value": {
+                                "named": {
+                                  "namespace": "skir",
+                                  "name": "editor/v1/type_catalog.skir:EnumVariant",
+                                  "revision": 1,
+                                  "arguments": [],
+                                  "payload": {"record": {"key": {"string": "Green"}}}
+                                }
+                              }
+                            },
+                            {
+                              "id": "canonical:2",
+                              "value": {
+                                "named": {
+                                  "namespace": "skir",
+                                  "name": "editor/v1/type_catalog.skir:EnumVariant",
+                                  "revision": 1,
+                                  "arguments": [],
+                                  "payload": {"record": {"key": {"string": "Blue"}}}
+                                }
+                              }
+                            }
+                          ]
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        },
+        "reads": []
+      }
+    },
+    {
+      "id": "catalog_declaration_absent",
+      "expression": {
+        "kind": "call",
+        "value": {
+          "operation": {"value": "catalog.declaration"},
+          "type_arguments": [],
+          "arguments": [
+            {
+              "kind": "call",
+              "value": {
+                "operation": {"value": "value.configuration"},
+                "type_arguments": [],
+                "arguments": [
+                  {
+                    "kind": "literal",
+                    "value": {
+                      "kind": "named",
+                      "value": {
+                        "actual_type": {
+                          "definition": {
+                            "type_id": {"kind": "qualified", "value": {"namespace": "fixture", "name": "Unknown"}},
+                            "revision": 1
+                          },
+                          "arguments": []
+                        },
+                        "payload": {"kind": "string_value", "value": "x"}
+                      }
+                    }
+                  }
+                ]
+              }
+            }
+          ]
+        }
+      },
+      "typeDefinitions": [
+        {
+          "id": {
+            "type_id": {"kind": "qualified", "value": {"namespace": "fixture", "name": "Color"}},
+            "revision": 1
+          },
+          "parameters": [],
+          "parents": [],
+          "representation": {"kind": "enumeration", "value": {"cases": [{"key": "Red"}, {"key": "Green"}, {"key": "Blue"}]}}
+        }
+      ],
+      "expected": {"unavailable": [], "reads": []}
+    }
+  ]
+}
