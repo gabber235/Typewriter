@@ -40,13 +40,13 @@ final class PanelMapKernel implements skir.MapKernel {
     final unfilledKeys = <skir.ValueLocation>[];
     var anyUnfilledKey = false;
     for (final row in source.value) {
-      if (_containsUnfilled(row.key)) {
+      if (containsUnfilled(row.key)) {
         anyUnfilledKey = true;
         unfilledKeys.addAll([?source.mapKey(row.id)]);
         continue;
       }
       if (canonicalAuthoredValue(row.key) != expected) continue;
-      return _containsUnfilled(row.value)
+      return containsUnfilled(row.value)
           ? skir.PortableMaybeMissing([?source.mapValue(row.id)])
           : skir.PortableMaybeValue(row.value);
     }
@@ -70,5 +70,3 @@ Never _notAnEntry() => throw skir.PortableOperationFailure(
   skir.PortableFailures.illTypedArgument,
   "Expected a map entry.",
 );
-
-bool _containsUnfilled(skir.DataValue value) => unfilledPaths(value).isNotEmpty;

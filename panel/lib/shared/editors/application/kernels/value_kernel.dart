@@ -32,15 +32,20 @@ final class PanelValueKernel implements skir.ValueKernel {
   bool equals(skir.DataValue first, skir.DataValue second) =>
       portableEquals(first, second);
 
+  /// Accepts readable or dense JSON. The decoded value must already be
+  /// portable and canonical, as literal admission defines it (canonical
+  /// integers, unique fields in name order, finite floats, canonical
+  /// decimals, nonblank item ids), else `invalid_json`; and it must be
+  /// admitted as [xType], else `incompatible_value`.
   @override
   skir.DataValue fromJson(
     String json,
     skir.TypeUse xType,
     skir.PortableTypes types,
   ) {
-    final skir.DataValue value;
+    final skir.DataValue decoded;
     try {
-      value = skir.DataValue.serializer.fromJson(jsonDecode(json));
+      decoded = skir.DataValue.serializer.fromJson(jsonDecode(json));
     } on Object catch (error) {
       if (error is! FormatException &&
           error is! ArgumentError &&
@@ -51,6 +56,16 @@ final class PanelValueKernel implements skir.ValueKernel {
       throw skir.PortableOperationFailure(
         skir.PortableFailures.invalidJson,
         "The text is not value JSON: $error",
+      );
+    }
+    final value = admitPortableValue(
+      decoded,
+      skir.PortableFailures.invalidJson,
+    );
+    if (!identical(value, decoded)) {
+      throw skir.PortableOperationFailure(
+        skir.PortableFailures.invalidJson,
+        "The value JSON is not canonical.",
       );
     }
     if (!types.admits(value, xType)) {

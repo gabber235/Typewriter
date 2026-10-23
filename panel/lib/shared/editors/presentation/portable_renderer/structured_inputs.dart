@@ -256,7 +256,6 @@ extension _PortableStructuredInputRendering
   ) => PortableNamedControlHost(
     control: control,
     bindings: childScope.bindings,
-    budget: childScope.budget,
     setBinding: childScope.apply,
     unavailableBuilder: (context, message) => _diagnostic(message),
     builder: (context, customPresentation, payload) {

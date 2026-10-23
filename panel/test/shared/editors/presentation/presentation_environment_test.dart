@@ -11,7 +11,7 @@ void main() {
               searchKey: null,
               placementField: null,
               definition: skir.TypeDefinition(
-                id: frameworkResourceIdUse.definition,
+                id: skir.resourceIdType.definition,
                 parameters: const [],
                 representation: skir.RepresentationTemplate.createScalar(
                   kind: skir.ScalarKind.text,
@@ -27,7 +27,7 @@ void main() {
         .toFrozen(),
   );
   final origin = skir.ExpressionBindingId(value: "context:test.origin");
-  final type = skir.TypeUse.wrapNamed(frameworkResourceIdUse);
+  final type = skir.TypeUse.wrapNamed(skir.resourceIdType);
   final imports = [
     skir.PresentationContextInput(
       source: skir.PresentationContextSource.caller,

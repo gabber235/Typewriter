@@ -712,7 +712,7 @@ CheckedEditorCatalog authoringFixtureCatalog({
         ),
         arguments: [
           skir.TypeTemplate.createNamed(
-            definition: frameworkResourceIdUse.definition,
+            definition: skir.resourceIdType.definition,
             arguments: const [],
           ),
         ],

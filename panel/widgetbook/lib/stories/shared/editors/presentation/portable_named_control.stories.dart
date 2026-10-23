@@ -141,10 +141,6 @@ class PortableNamedControlHostStory extends HookWidget {
                 content: null,
               ),
               bindings: bindings,
-              budget: skir.EvaluationBudget(
-                maxSteps: 100,
-                maxCollectionItems: 100,
-              ),
               setBinding: write,
               unavailableBuilder: (context, message) =>
                   Text(message, style: TextStyle(color: context.colors.danger)),

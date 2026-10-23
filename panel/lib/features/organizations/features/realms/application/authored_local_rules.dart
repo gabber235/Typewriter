@@ -206,6 +206,7 @@ final class _RuleProjectionBuilder {
       value: subjectValue,
       location: subject,
       budget: budget,
+      catalog: checkedCatalog,
     ).evaluate(rule.descriptor.predicate);
     final (outcome, findings) = switch (result) {
       PortableExpressionAvailable(:final value) =>

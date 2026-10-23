@@ -87,6 +87,33 @@ void main() {
     },
   );
 
+  test("a rule that needs type facts evaluates against the catalog", () {
+    // The subject is an int32, so a rule requiring text fails it; without
+    // the catalog's type facts the rule could not run at all.
+    final fixture = _nestedRuleFixture(
+      predicate: portableCall(
+        "value.instance_of",
+        [
+          skir.ExpressionNode.createInput(
+            binding: configuredValueBindingId,
+            path: editorRootPath,
+          ),
+        ],
+        typeArguments: [skir.TypeTemplate.wrapScalar(skir.ScalarKind.text)],
+      ),
+    );
+    final projection = AuthoredRuleProjection.evaluate(
+      draft: fixture.draft,
+      catalog: fixture.catalog,
+      resource: fixture.resource,
+      budget: skir.EvaluationBudget(maxSteps: 100, maxCollectionItems: 100),
+    );
+
+    final check = projection.checks.single;
+    expect(check.outcome, skir.CheckOutcome.finished);
+    expect(check.findings.single.code, "positive");
+  });
+
   test("a rule without explicit targets remains on its matched subject", () {
     final fixture = _nestedRuleFixture(targets: const []);
     final projection = AuthoredRuleProjection.evaluate(
@@ -142,7 +169,7 @@ void main() {
       expect(
         document.bindings[presentationSubjectIdentifierBindingId]!.schema,
         CompletePortablePresentationBinding(
-          skir.TypeUse.wrapNamed(frameworkResourceIdUse),
+          skir.TypeUse.wrapNamed(skir.resourceIdType),
         ),
       );
       expect(
@@ -271,6 +298,7 @@ void main() {
 _nestedRuleFixture({
   bool collection = false,
   List<skir.RelativeFieldPattern>? targets,
+  skir.ExpressionNode? predicate,
 }) {
   final generation = skir.CatalogGeneration(value: "catalog:nested_rules");
   final tag = _definition("Tag");
@@ -380,22 +408,24 @@ _nestedRuleFixture({
             skir.OwnedRule(
               id: ruleId,
               descriptor: skir.RuleDescriptor(
-                predicate: portableCall("value.equals", [
-                  portableCall("value.compare", [
-                    skir.ExpressionNode.createInput(
-                      binding: skir.ExpressionBindingId(
-                        value: "configured_value",
+                predicate:
+                    predicate ??
+                    portableCall("value.equals", [
+                      portableCall("value.compare", [
+                        skir.ExpressionNode.createInput(
+                          binding: skir.ExpressionBindingId(
+                            value: "configured_value",
+                          ),
+                          path: skir.ValuePath(segments: const []),
+                        ),
+                        skir.ExpressionNode.wrapLiteral(
+                          skir.DataValue.wrapInteger("0"),
+                        ),
+                      ]),
+                      skir.ExpressionNode.wrapLiteral(
+                        skir.DataValue.wrapInteger("1"),
                       ),
-                      path: skir.ValuePath(segments: const []),
-                    ),
-                    skir.ExpressionNode.wrapLiteral(
-                      skir.DataValue.wrapInteger("0"),
-                    ),
-                  ]),
-                  skir.ExpressionNode.wrapLiteral(
-                    skir.DataValue.wrapInteger("1"),
-                  ),
-                ]),
+                    ]),
               ),
               diagnostic: skir.DiagnosticTemplate(
                 code: "positive",

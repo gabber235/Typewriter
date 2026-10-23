@@ -266,7 +266,7 @@ function declarations(catalog: ResolvedOperations): Lines {
     ...indent(
       catalog.operations.map(
         (operation) =>
-          `${quoted(operation.id)} => const PortableOperationDeclaration(id: ${quoted(operation.id)}, profile: PortableProfile.${operation.profile}, parameters: [${operation.parameters
+          `${quoted(operation.id)} => const PortableOperationDeclaration(id: ${quoted(operation.id)}, parameters: [${operation.parameters
             .map((parameter) => PARAMETER_KINDS[parameter.kind])
             .join(", ")}], variadic: ${operation.parameters.at(-1)?.variadic ?? false}, typeArguments: ${operation.typeParameters.filter((parameter) => parameter.explicit).length}),`,
       ),
