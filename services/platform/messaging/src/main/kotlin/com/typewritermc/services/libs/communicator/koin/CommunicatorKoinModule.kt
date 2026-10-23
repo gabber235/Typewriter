@@ -17,8 +17,8 @@ import org.koin.dsl.module
  * Wires the typed communicator to core NATS using application-owned telemetry and provider bindings.
  *
  * The application must bind [OpenTelemetry], [ServiceTelemetry], [NatsConfigurationProvider], and
- * [NatsAuthenticationProvider]. [transportLimits] bounds framed replies, normally the generated
- * `TRANSPORT_LIMITS`. Connection and router lifecycle remain application-owned.
+ * [NatsAuthenticationProvider]. [transportLimits] are the payload framing defaults of every route that does not
+ * carry its own, normally the generated `TRANSPORT_LIMITS`. Connection and router lifecycle remain application-owned.
  */
 fun communicatorModule(
     transportLimits: TransportLimits,

@@ -132,25 +132,45 @@ describe("route emission", () => {
   });
 });
 
-describe("reply framing limits", () => {
+describe("payload framing limits", () => {
   test("every language receives the manifest limits", async () => {
     const { input, resolved } = await committedRoutes();
-    const { chunkBytes, maxChunks, replyTtlMs } = resolved.limits;
+    const { chunkBytes, windowFrames, requestMaxBytes, replyMaxBytes, replyTtlMs } = resolved.limits;
     const providers = symbolProviders(input);
     const kotlin = emitKotlin(resolved, providers.kotlin).find((file) => file.path === "TransportLimits.kt");
     expect(kotlin!.code).toContain("import com.typewritermc.services.libs.communicator.transfer.TransportLimits");
-    expect(kotlin!.code).toContain(
-      `val TRANSPORT_LIMITS = TransportLimits(chunkBytes = ${chunkBytes}, maxChunks = ${maxChunks})`,
-    );
+    expect(kotlin!.code).toContain(`        chunkBytes = ${chunkBytes},
+        windowFrames = ${windowFrames},
+        requestMaxBytes = ${requestMaxBytes},
+        replyMaxBytes = ${replyMaxBytes},`);
     expect(kotlin!.code).toContain(`val TRANSPORT_REPLY_TTL: Duration = ${replyTtlMs}.milliseconds`);
     const [dart] = emitDart(resolved, providers.dart);
-    expect(dart!.code).toContain(
-      `const transportLimits = TransportLimits(chunkBytes: ${chunkBytes}, maxChunks: ${maxChunks});`,
-    );
+    expect(dart!.code).toContain(`    chunkBytes: ${chunkBytes},
+    windowFrames: ${windowFrames},
+    requestMaxBytes: ${requestMaxBytes},
+    replyMaxBytes: ${replyMaxBytes},`);
     const [rust] = emitRust(resolved, providers.rust, input);
-    expect(rust!.code).toContain(`pub const RESPONSE_CHUNK_BYTES: usize = ${chunkBytes};`);
-    expect(rust!.code).toContain(`pub const MAX_RESPONSE_CHUNKS: usize = ${maxChunks};`);
+    expect(rust!.code).toContain(`pub const CHUNK_BYTES: usize = ${chunkBytes};`);
+    expect(rust!.code).toContain(`pub const WINDOW_FRAMES: usize = ${windowFrames};`);
+    expect(rust!.code).toContain(`pub const REPLY_MAX_BYTES: usize = ${replyMaxBytes};`);
     expect(rust!.code).toContain(`pub const REPLY_TTL_MS: i64 = ${replyTtlMs};`);
+  });
+
+  test("a route that raises a ceiling carries its own limits and the others the defaults", async () => {
+    const { input, resolved } = await committedRoutes();
+    const providers = symbolProviders(input);
+    const [realm] = emitKotlin(resolved, providers.kotlin);
+    const store = section(realm!.code, "val RealmRouteScope.sharedBlobStore get() =", "\n)\n");
+    expect(store).toContain("limits = TRANSPORT_LIMITS.copy(requestMaxBytes = 134217728),");
+    const fetch = section(realm!.code, "val RealmRouteScope.sharedBlobFetch get() =", "\n)\n");
+    expect(fetch).toContain("limits = TRANSPORT_LIMITS.copy(replyMaxBytes = 134217728),");
+    const metadata = section(realm!.code, "val RealmRouteScope.sharedBlobMetadata get() =", "\n)\n");
+    expect(metadata).not.toContain("limits =");
+    const [dart] = emitDart(resolved, providers.dart);
+    expect(dart!.code).toContain(
+      "limits: const TransportLimits(chunkBytes: 524288, windowFrames: 8, requestMaxBytes: 134217728, replyMaxBytes: 33554432),",
+    );
+    expect(dart!.code).toContain("limits: transportLimits,");
   });
 
   test("bulk reads are plain unary routes without an update channel", async () => {

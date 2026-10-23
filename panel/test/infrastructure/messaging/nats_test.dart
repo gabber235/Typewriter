@@ -51,6 +51,7 @@ final class _PendingSubscribeNatsClient
   Future<NatsMessage> request(
     String subject,
     Uint8List payload, {
+    required TransportLimits limits,
     Map<String, String> headers = const {},
     Duration timeout = const Duration(seconds: 10),
     Future<void>? cancelled,
@@ -144,6 +145,7 @@ final class _PendingReconnectNatsClient
   Future<NatsMessage> request(
     String subject,
     Uint8List payload, {
+    required TransportLimits limits,
     Map<String, String> headers = const {},
     Duration timeout = const Duration(seconds: 10),
     Future<void>? cancelled,
@@ -190,6 +192,7 @@ final class _FailingOrderedNatsClient
   Future<NatsMessage> request(
     String subject,
     Uint8List payload, {
+    required TransportLimits limits,
     Map<String, String> headers = const {},
     Duration timeout = const Duration(seconds: 10),
     Future<void>? cancelled,
@@ -265,6 +268,7 @@ final class _RecoveringPersistentNatsClient
   Future<NatsMessage> request(
     String subject,
     Uint8List payload, {
+    required TransportLimits limits,
     Map<String, String> headers = const {},
     Duration? timeout,
     Future<void>? cancelled,
@@ -471,6 +475,7 @@ void main() {
               responseSerializer:
                   skir.GetSentinelCredentialsResponse.serializer,
               outcome: (_) => ResponseOutcome.success,
+              limits: transportLimits,
             ),
           );
 
@@ -511,6 +516,7 @@ void main() {
               responseSerializer:
                   skir.GetSentinelCredentialsResponse.serializer,
               outcome: (_) => ResponseOutcome.success,
+              limits: transportLimits,
             ),
           );
 
@@ -533,6 +539,7 @@ void main() {
                 responseSerializer:
                     skir.GetSentinelCredentialsResponse.serializer,
                 outcome: (_) => ResponseOutcome.success,
+                limits: transportLimits,
               ),
             ),
         throwsA(isA<TimeoutException>()),
@@ -560,6 +567,7 @@ void main() {
                 responseSerializer:
                     skir.GetSentinelCredentialsResponse.serializer,
                 outcome: (_) => ResponseOutcome.success,
+                limits: transportLimits,
               ),
             ),
         throwsA(isA<NatsClientException>()),

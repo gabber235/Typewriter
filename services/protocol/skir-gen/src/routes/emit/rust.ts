@@ -17,6 +17,7 @@ import {
 } from "../manifest.js";
 import { methodResponses } from "../../outcomes.js";
 import type { ResolvedRoutes } from "../resolve.js";
+import { sideResponseLimit } from "../responses.js";
 import { scopeParameters } from "../subject.js";
 import { emitDispatchers } from "./rust_dispatch.js";
 import { emitResponses } from "./rust_responses.js";
@@ -190,16 +191,28 @@ function emitGrants({ roles, routes }: ResolvedRoutes): string[] {
   });
 }
 
-/** The manifest reply framing limits, which bound replies and the service response permission. */
-function emitLimits({ chunkBytes, maxChunks, replyTtlMs }: TransportLimits): string[] {
+/**
+ * The manifest payload framing limits, which bound component replies, and the response limits of
+ * the panel and service connections, which the backend grants.
+ */
+function emitLimits({ limits, roles, routes }: ResolvedRoutes): string[] {
+  const { chunkBytes, windowFrames, replyMaxBytes, replyTtlMs } = limits;
+  const option = (value: number | null) => (value === null ? "None" : `Some(${value})`);
   return [
-    "/// The most bytes of an encoded reply that one reply frame carries.",
-    `pub const RESPONSE_CHUNK_BYTES: usize = ${chunkBytes};`,
-    "/// The most frames one reply may have, and so the most messages a responder may send to one",
-    "/// requester inbox.",
-    `pub const MAX_RESPONSE_CHUNKS: usize = ${maxChunks};`,
+    "/// The most bytes of an encoded payload that one frame carries.",
+    `pub const CHUNK_BYTES: usize = ${chunkBytes};`,
+    "/// How many frames a sender may send before the receiver grants the next window.",
+    `pub const WINDOW_FRAMES: usize = ${windowFrames};`,
+    "/// The largest encoded reply a backend component sends; components serve no route that raises it.",
+    `pub const REPLY_MAX_BYTES: usize = ${replyMaxBytes};`,
     "/// How long in milliseconds a responder may send replies after it received a request.",
     `pub const REPLY_TTL_MS: i64 = ${replyTtlMs};`,
+    "/// How many messages a panel connection may send in answer to one received request: one credit",
+    "/// per window end of a framed reply. None when the panel never answers.",
+    `pub const PANEL_RESPONSE_LIMIT: Option<u32> = ${option(sideResponseLimit("panel", roles, routes))};`,
+    "/// How many messages a service connection may send in answer to one received request: the frames",
+    "/// of the largest reply any service role serves. None when no service role answers.",
+    `pub const SERVICE_RESPONSE_LIMIT: Option<u32> = ${option(sideResponseLimit("service", roles, routes))};`,
   ];
 }
 
@@ -227,7 +240,7 @@ function emitReplyInboxes(): string[] {
 }
 
 /**
- * Emits the backend transport module: the reply framing limits, the role grants of each scope, the
+ * Emits the backend transport module: the payload framing and response limits, the role grants of each scope, the
  * consumer naming rule, the reply inbox prefixes, one route type per route a component serves or publishes on, one
  * dispatcher per component that receives messages and the `SkirResponse` implementation of every
  * method response. Its `skir_types` child module implements `SkirType` for every Skir record. The
@@ -243,7 +256,7 @@ export function emitRust(
   const lines = [
     "//! Generated transport routes. Do not edit; regenerate with `bun run generate:protocol`.",
     "mod skir_types;",
-    ...emitLimits(resolved.limits),
+    ...emitLimits(resolved),
     ...emitGrants(resolved),
     ...emitConsumerName(),
     ...emitReplyInboxes(),

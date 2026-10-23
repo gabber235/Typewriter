@@ -143,12 +143,20 @@ const Operation = z.string().regex(/^[a-z][a-z0-9_]*(\.[a-z][a-z0-9_]*)*$/, {
   error: (issue) => `invalid operation name ${JSON.stringify(issue.input)}`,
 });
 
+/**
+ * A payload ceiling in bytes; a route raises the manifest default only when it moves larger values. Only unary
+ * requests may be framed: a scatter request is published to every listener and a watch request opens a stream.
+ */
+const MaxBytes = z.int().positive();
+
 const Flow = z.discriminatedUnion("kind", [
   z.strictObject({
     kind: z.literal("unary"),
     method: Reference,
     operation: Operation,
     request: Address,
+    request_max_bytes: MaxBytes.optional(),
+    reply_max_bytes: MaxBytes.optional(),
   }),
   z.strictObject({
     kind: z.literal("watch"),
@@ -156,12 +164,14 @@ const Flow = z.discriminatedUnion("kind", [
     operation: Operation,
     request: Address,
     updates: Updates,
+    reply_max_bytes: MaxBytes.optional(),
   }),
   z.strictObject({
     kind: z.literal("scatter"),
     method: Reference,
     operation: Operation,
     request: Address,
+    reply_max_bytes: MaxBytes.optional(),
   }),
   z.strictObject({
     kind: z.literal("event"),
@@ -225,13 +235,17 @@ export function routeParties(route: Route): readonly Party[] {
 }
 
 /**
- * How the transports split a large reply: frames carry at most `chunkBytes` of the encoded reply
- * and one reply has at most `maxChunks` frames. A service may answer a request for `replyTtlMs`
- * after receiving it, so a requester never needs to wait longer.
+ * How the transports split a large request or reply; see transport-routes.yaml. A payload above
+ * `chunkBytes` travels as frames of at most `chunkBytes` in credit windows of `windowFrames`.
+ * Requests are bounded by `requestMaxBytes` and replies by `replyMaxBytes`; the manifest declares
+ * the defaults and a request route may raise either for itself. A service may answer a request for
+ * `replyTtlMs` after receiving it, so a requester never needs to wait longer.
  */
 export interface TransportLimits {
   readonly chunkBytes: number;
-  readonly maxChunks: number;
+  readonly windowFrames: number;
+  readonly requestMaxBytes: number;
+  readonly replyMaxBytes: number;
   readonly replyTtlMs: number;
 }
 
@@ -246,7 +260,9 @@ export interface Manifest {
 
 const Limits = z.strictObject({
   chunk_bytes: z.int().positive(),
-  max_chunks: z.int().positive(),
+  window_frames: z.int().positive(),
+  request_max_bytes: MaxBytes,
+  reply_max_bytes: MaxBytes,
   reply_ttl_ms: z.int().positive(),
 });
 
@@ -261,8 +277,22 @@ const RawManifest = z
     const issue = (path: Array<string | number>, message: string) =>
       context.addIssue({ code: "custom", path, message });
     const used = new Set<string>();
+    const chunk = manifest.limits.chunk_bytes;
+    for (const field of ["request_max_bytes", "reply_max_bytes"] as const) {
+      if (manifest.limits[field] < chunk) {
+        issue(["limits", field], `${field} must hold at least one chunk of ${chunk} bytes`);
+      }
+    }
     manifest.routes.forEach((route, index) => {
       const at = ["routes", index];
+      if (route.flow.kind !== "event") {
+        for (const field of ["request_max_bytes", "reply_max_bytes"] as const) {
+          const value = field in route.flow ? (route.flow as Partial<Record<typeof field, number>>)[field] : undefined;
+          if (value !== undefined && value < chunk) {
+            issue([...at, "flow", field], `${field} must hold at least one chunk of ${chunk} bytes`);
+          }
+        }
+      }
       const event = route.flow.kind === "event";
       for (const field of PARTY_FIELDS) {
         const expected = event === (field === "publishers" || field === "subscribers");
@@ -361,7 +391,9 @@ export function parseManifest(source: string, file: string): Manifest {
   return {
     limits: {
       chunkBytes: limits.chunk_bytes,
-      maxChunks: limits.max_chunks,
+      windowFrames: limits.window_frames,
+      requestMaxBytes: limits.request_max_bytes,
+      replyMaxBytes: limits.reply_max_bytes,
       replyTtlMs: limits.reply_ttl_ms,
     },
     roles: new Map(Object.entries(roles).map(([name, role]) => [name, { name, ...role }])),

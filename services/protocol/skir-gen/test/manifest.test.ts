@@ -9,7 +9,7 @@ import { committedManifest, MANIFEST_PATH, manifestSource } from "./support.js";
 
 /** The committed manifest as plain YAML data, the independent view admission must preserve. */
 const RAW = parseYaml(readFileSync(MANIFEST_PATH, "utf8")) as {
-  limits: { chunk_bytes: number; max_chunks: number; reply_ttl_ms: number };
+  limits: { chunk_bytes: number; window_frames: number; request_max_bytes: number; reply_max_bytes: number; reply_ttl_ms: number };
   routes: Array<{ flow: { kind: string; method?: string; payload?: string; updates?: { payload: string } } }>;
 };
 
@@ -50,17 +50,22 @@ describe("manifest admission", () => {
     );
   });
 
-  test("declares the reply framing limits once", () => {
+  test("declares the payload framing limits once", () => {
     expect(committedManifest().limits).toEqual({
       chunkBytes: RAW.limits.chunk_bytes,
-      maxChunks: RAW.limits.max_chunks,
+      windowFrames: RAW.limits.window_frames,
+      requestMaxBytes: RAW.limits.request_max_bytes,
+      replyMaxBytes: RAW.limits.reply_max_bytes,
       replyTtlMs: RAW.limits.reply_ttl_ms,
     });
     const source = manifestSource(unary("sample_route", "{ role: authenticated_user }", "user.{user}.sample"), [
       "user-organization",
     ]);
-    expect(() => parseManifest(source.replace(/max_chunks: \d+/u, "max_chunks: 0"), "routes.yaml")).toThrow(
-      "limits.max_chunks",
+    expect(() => parseManifest(source.replace(/window_frames: \d+/u, "window_frames: 0"), "routes.yaml")).toThrow(
+      "limits.window_frames",
+    );
+    expect(() => parseManifest(source.replace(/reply_max_bytes: \d+/u, "reply_max_bytes: 1024"), "routes.yaml")).toThrow(
+      "reply_max_bytes must hold at least one chunk",
     );
     expect(() => parseManifest(source.replace(/chunk_bytes: \d+/u, "chunk_bytes: 1.5"), "routes.yaml")).toThrow(
       "limits.chunk_bytes",

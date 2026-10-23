@@ -75,10 +75,10 @@ const ROLES = `roles:
   realm_participant: { side: service, tenant: [organization, realm] }
 `;
 
-/** The committed reply framing limits, appended so inline route lines keep their positions. */
+/** The committed payload framing limits, appended so inline route lines keep their positions. */
 const LIMITS = (() => {
-  const { chunkBytes, maxChunks, replyTtlMs } = committedManifest().limits;
-  return `limits: { chunk_bytes: ${chunkBytes}, max_chunks: ${maxChunks}, reply_ttl_ms: ${replyTtlMs} }\n`;
+  const { chunkBytes, windowFrames, requestMaxBytes, replyMaxBytes, replyTtlMs } = committedManifest().limits;
+  return `limits: { chunk_bytes: ${chunkBytes}, window_frames: ${windowFrames}, request_max_bytes: ${requestMaxBytes}, reply_max_bytes: ${replyMaxBytes}, reply_ttl_ms: ${replyTtlMs} }\n`;
 })();
 
 /**

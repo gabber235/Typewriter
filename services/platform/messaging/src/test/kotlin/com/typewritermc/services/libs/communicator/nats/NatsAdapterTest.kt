@@ -515,4 +515,11 @@ private fun outbound() = OutboundMessage(MessageAddress.of("work"), byteArrayOf(
 
 private fun status(code: Int) = NatsClientMessage("reply", null, null, null, code, "status")
 
-private val TEST_LIMITS = TransportLimits(chunkBytes = 512 * 1024, maxChunks = 64)
+private val TEST_LIMITS =
+    TransportLimits(
+        chunkBytes = 512 * 1024,
+        windowFrames = 8,
+        requestMaxBytes = 512L * 1024,
+        replyMaxBytes =
+            32L * 1024 * 1024,
+    )

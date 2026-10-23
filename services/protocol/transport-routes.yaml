@@ -4,11 +4,13 @@
 # derives every subject family prefix and every role grant from the parties and the role
 # declarations below; backend/AGENTS.md describes the subject families.
 
-# Reply framing shared by every transport. A reply above chunk_bytes travels as frames of at most
-# chunk_bytes on the requester's reply inbox; a reply needing more than max_chunks frames fails as
-# too large. max_chunks also bounds how many messages a service may send to one reply inbox, and
-# reply_ttl_ms how long after a request it may send them, so no requester waits longer.
-limits: { chunk_bytes: 524288, max_chunks: 64, reply_ttl_ms: 300000 }
+# Payload framing shared by every transport. A payload above chunk_bytes travels as frames of at
+# most chunk_bytes in credit windows of window_frames: the receiver grants each next window.
+# Requests are single messages unless a route raises request_max_bytes; replies may be framed up to
+# reply_max_bytes. A payload above its ceiling fails as too large before any frame is sent.
+# reply_ttl_ms bounds a whole exchange. The generator derives each role's NATS response limit from
+# the largest framed reply it serves.
+limits: { chunk_bytes: 524288, window_frames: 8, request_max_bytes: 524288, reply_max_bytes: 33554432, reply_ttl_ms: 300000 }
 
 roles:
   authenticated_user: { side: panel, personal: user }
@@ -630,6 +632,7 @@ routes:
       method: "service/v1/artifact.skir:FetchArtifactBlob"
       operation: shared.blob.fetch
       request: shared.blob.fetch
+      reply_max_bytes: 134217728
 
   - name: shared_blob_store
     scope: realm
@@ -640,6 +643,7 @@ routes:
       method: "service/v1/artifact.skir:StoreArtifactBlob"
       operation: shared.blob.store
       request: shared.blob.store
+      request_max_bytes: 134217728
 
   - name: rollout_probe
     scope: realm

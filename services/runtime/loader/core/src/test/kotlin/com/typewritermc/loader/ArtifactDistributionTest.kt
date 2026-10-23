@@ -24,9 +24,11 @@ import com.typewritermc.loader.api.artifact.SharedArtifactId
 import com.typewritermc.loader.api.artifact.SharedArtifactProvenance
 import com.typewritermc.loader.artifact.ArtifactCoordinate
 import com.typewritermc.loader.artifact.ArtifactInboxReconciler
+import com.typewritermc.loader.artifact.CommunicatorBlobEndpoint
 import com.typewritermc.loader.artifact.DeploymentArtifact
 import com.typewritermc.loader.artifact.FileCandidateRepository
 import com.typewritermc.loader.artifact.FileDigestBlobStore
+import com.typewritermc.loader.artifact.StableRealmArtifactRoutes
 import com.typewritermc.loader.artifact.toApi
 import com.typewritermc.loader.artifact.toSkir
 import com.typewritermc.loader.deployment.DeploymentContent
@@ -52,6 +54,7 @@ import com.typewritermc.loader.shared.FileSharedArtifactRepository
 import com.typewritermc.loader.shared.SharedArtifactService
 import com.typewritermc.protocol.transport.RealmRouteScope
 import com.typewritermc.protocol.transport.ServiceRouteScope
+import com.typewritermc.protocol.transport.generated.TRANSPORT_LIMITS
 import com.typewritermc.protocol.transport.generated.authoringCompiledChanged
 import com.typewritermc.protocol.transport.generated.hostExecutionReport
 import com.typewritermc.protocol.transport.generated.hostExecutionWatch
@@ -61,21 +64,30 @@ import com.typewritermc.protocol.transport.generated.sharedBlobMetadata
 import com.typewritermc.protocol.transport.generated.sharedBlobStore
 import com.typewritermc.protocol.transport.generated.sharedCatalogFetch
 import com.typewritermc.protocol.transport.generated.sharedPublish
+import com.typewritermc.services.libs.communicator.client.Communicator
+import com.typewritermc.services.libs.communicator.router.RouterResult
+import com.typewritermc.services.libs.communicator.router.communicatorRoutes
+import com.typewritermc.services.libs.communicator.testing.MemoryNatsBroker
 import com.typewritermc.services.libs.filetransfer.blob.ArtifactDigest
 import com.typewritermc.services.libs.filetransfer.blob.BlobMetadata
 import com.typewritermc.services.libs.filetransfer.blob.BlobResult
 import com.typewritermc.services.libs.filetransfer.blob.StoreResult
 import com.typewritermc.services.libs.registrar.ServiceId
+import com.typewritermc.services.libs.telemetry.testing.TelemetryTestHarness
 import de.infix.testBalloon.framework.core.testSuite
 import io.kotest.assertions.throwables.shouldThrow
 import io.kotest.matchers.collections.shouldContainExactly
 import io.kotest.matchers.shouldBe
 import io.kotest.matchers.shouldNotBe
+import io.opentelemetry.api.trace.propagation.W3CTraceContextPropagator
+import io.opentelemetry.context.propagation.ContextPropagators
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.async
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.test.advanceTimeBy
 import kotlinx.coroutines.test.runCurrent
 import kotlinx.coroutines.test.runTest
+import kotlinx.coroutines.withContext
 import kotlinx.coroutines.withTimeout
 import skirout.kernel.v1.record_id.RecordId
 import skirout.kernel.v1.record_id.RecordIdKey
@@ -388,6 +400,45 @@ val ArtifactDistributionTest by testSuite {
             Files.write(store.pathFor(expected.digest), "content that rot!".encodeToByteArray())
 
             (store.fetch(expected.digest) is BlobResult.Invalid) shouldBe true
+        }
+    }
+
+    test("a remote host stores and fetches a 40 MiB blob through the Realm host") {
+        // Real time: the Realm host stores on the IO dispatcher, which virtual test time would outrun.
+        withContext(Dispatchers.Default) {
+            val broker = MemoryNatsBroker()
+            val harness = TelemetryTestHarness.create()
+            val propagators = ContextPropagators.create(W3CTraceContextPropagator.getInstance())
+            val root = Files.createTempDirectory("typewriter-remote-blobs")
+            val realmBlobs = FileDigestBlobStore(root)
+            val shared = SharedArtifactService("quests", realmBlobs, FileSharedArtifactRepository(root.resolve("shared.cbor")))
+            val address = RealmRouteScope(realmId = "quests", organizationId = "writers")
+            val realmHost = Communicator(broker.transport(TRANSPORT_LIMITS), harness.telemetry, propagators)
+            val router = realmHost.createRouter(communicatorRoutes { StableRealmArtifactRoutes(shared).register(this, address) }, this)
+            try {
+                router.start() shouldBe RouterResult.Success
+                val remote =
+                    CommunicatorBlobEndpoint(Communicator(broker.transport(TRANSPORT_LIMITS), harness.telemetry, propagators), address)
+                val blob = java.util.Random(7).let { random -> ByteArray(40 * 1024 * 1024).also(random::nextBytes) }
+                val expected = BlobMetadata(ArtifactDigest.sha256(blob), blob.size.toLong())
+
+                remote.store(expected, blob) shouldBe StoreResult.Stored(expected)
+                val fetched = remote.fetch(expected.digest).shouldSucceed()
+
+                ArtifactDigest.sha256(fetched) shouldBe expected.digest
+                realmBlobs.metadata(expected.digest) shouldBe BlobResult.Success(expected)
+                // Above one chunk in both directions: the upload and the download each travelled in 81 frames.
+                val frames =
+                    broker.published
+                        .filter {
+                            it.header("Typewriter-Chunk") != null
+                        }.groupingBy { it.subject.endsWith(".shared.blob.store") }
+                        .eachCount()
+                frames shouldBe mapOf(true to 81, false to 81)
+            } finally {
+                router.stop()
+                harness.close()
+            }
         }
     }
 

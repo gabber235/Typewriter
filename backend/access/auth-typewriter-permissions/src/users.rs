@@ -20,9 +20,13 @@ use wasmcloud_utils::skir_utils::RecordIdKeyIdentity;
 use wasmcloud_utils::transport::{
     ConnectionSession, GrantSet, OrganizationActorScope, SubjectToken, UserScope,
 };
-use wasmcloud_utils::transport_routes::{OrganizationActorRole, UserRole, panel_reply_inbox_prefix};
+use wasmcloud_utils::transport_routes::{
+    OrganizationActorRole, PANEL_RESPONSE_LIMIT, UserRole, panel_reply_inbox_prefix,
+};
 
-use crate::common::{AuthentikClaims, TrustedUserProfile, User, build_permissions};
+use crate::common::{
+    AuthentikClaims, TrustedUserProfile, User, build_permissions, response_permission,
+};
 
 /// Derive NATS policy and tags for one authenticated panel user.
 ///
@@ -123,7 +127,7 @@ pub async fn handle_panel_user(
     let permissions = build_permissions(
         grants.publish.into_iter().collect(),
         grants.subscribe.into_iter().collect(),
-        None,
+        PANEL_RESPONSE_LIMIT.map(response_permission),
     );
 
     main_attribute!(

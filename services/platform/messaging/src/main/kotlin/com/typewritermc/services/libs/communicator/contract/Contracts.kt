@@ -1,6 +1,7 @@
 package com.typewritermc.services.libs.communicator.contract
 
 import com.typewritermc.services.libs.communicator.address.AddressTemplate
+import com.typewritermc.services.libs.communicator.transfer.TransportLimits
 import com.typewritermc.services.libs.communicator.transport.Payload
 import com.typewritermc.services.libs.telemetry.ErrorSlug
 import kotlin.time.Duration
@@ -124,6 +125,7 @@ interface PayloadCodec<Value : Any> {
  *
  * A contract is metadata shared by caller and router; constructing it creates no subscription. Domain and internal
  * errors remain decoded responses; codec and transport failures are reported separately by the communicator.
+ * [limits] bound how large its request and reply may be; null uses the transport's limits.
  */
 class UnaryContract<Address : Any, Request : Any, Response : Any>(
     val name: OperationName,
@@ -133,6 +135,7 @@ class UnaryContract<Address : Any, Request : Any, Response : Any>(
     val responsePolicy: ResponsePolicy<Response>,
     val timeout: Duration = 10.seconds,
     val failureSlug: ErrorSlug,
+    val limits: TransportLimits? = null,
 ) {
     init {
         require(timeout.isPositive() && timeout.isFinite()) { "Unary timeout must be positive and finite" }
@@ -152,6 +155,7 @@ class ScatterContract<Address : Any, Request : Any, Response : Any>(
     val responseCodec: PayloadCodec<Response>,
     val responsePolicy: ResponsePolicy<Response>,
     val failureSlug: ErrorSlug,
+    val limits: TransportLimits? = null,
 )
 
 /**
@@ -185,6 +189,7 @@ class WatchContract<Address : Any, Request : Any, Initial : Any, Update : Any>(
     val timeout: Duration = 10.seconds,
     val failureSlug: ErrorSlug,
     val updateFilter: (Request, Update) -> Boolean = { _, _ -> true },
+    val limits: TransportLimits? = null,
 ) {
     init {
         require(timeout.isPositive() && timeout.isFinite()) { "Watch timeout must be positive and finite" }
@@ -201,6 +206,7 @@ fun <Address : Any, Request : Any, Initial : Any, Update : Any> WatchContract<Ad
         responsePolicy = initialPolicy,
         timeout = timeout,
         failureSlug = failureSlug,
+        limits = limits,
     )
 
 /** A watch item that identifies whether a value is the initial snapshot or a later update. */

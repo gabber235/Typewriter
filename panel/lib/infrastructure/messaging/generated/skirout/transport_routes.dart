@@ -55,6 +55,7 @@ extension UserOrganizationCreateRouteNats
       requestBytes: method.requestSerializer.toBytes(this),
       responseSerializer: method.responseSerializer,
       outcome: _createOrganizationOutcome,
+      limits: transportLimits,
     );
   }
 }
@@ -76,6 +77,7 @@ extension UserOrganizationsWatchRouteNats
       requestBytes: method.requestSerializer.toBytes(this),
       responseSerializer: method.responseSerializer,
       outcome: _watchUserOrganizationsOutcome,
+      limits: transportLimits,
     );
   }
 
@@ -156,6 +158,7 @@ extension UserJoinRequestsWatchRouteNats
       requestBytes: method.requestSerializer.toBytes(this),
       responseSerializer: method.responseSerializer,
       outcome: _watchUserJoinRequestsOutcome,
+      limits: transportLimits,
     );
   }
 
@@ -231,6 +234,7 @@ extension UserJoinRequestSubmitRouteNats
       requestBytes: method.requestSerializer.toBytes(this),
       responseSerializer: method.responseSerializer,
       outcome: _submitUserJoinRequestOutcome,
+      limits: transportLimits,
     );
   }
 }
@@ -247,6 +251,7 @@ extension UserJoinRequestCancelRouteNats
       requestBytes: method.requestSerializer.toBytes(this),
       responseSerializer: method.responseSerializer,
       outcome: _cancelUserJoinRequestOutcome,
+      limits: transportLimits,
     );
   }
 }
@@ -272,6 +277,7 @@ extension OrganizationMembersWatchRouteNats
       requestBytes: method.requestSerializer.toBytes(this),
       responseSerializer: method.responseSerializer,
       outcome: _watchOrganizationMembersOutcome,
+      limits: transportLimits,
     );
   }
 
@@ -358,6 +364,7 @@ extension OrganizationMembersUpdateRouteNats
       requestBytes: method.requestSerializer.toBytes(this),
       responseSerializer: method.responseSerializer,
       outcome: _updateOrganizationMemberRolesOutcome,
+      limits: transportLimits,
     );
   }
 }
@@ -378,6 +385,7 @@ extension OrganizationMemberRemoveRouteNats
       requestBytes: method.requestSerializer.toBytes(this),
       responseSerializer: method.responseSerializer,
       outcome: _removeOrganizationMemberOutcome,
+      limits: transportLimits,
     );
   }
 }
@@ -405,6 +413,7 @@ extension OrganizationJoinRequestsWatchRouteNats
       requestBytes: method.requestSerializer.toBytes(this),
       responseSerializer: method.responseSerializer,
       outcome: _watchOrganizationJoinRequestsOutcome,
+      limits: transportLimits,
     );
   }
 
@@ -494,6 +503,7 @@ extension OrganizationJoinRequestsApproveRouteNats
       requestBytes: method.requestSerializer.toBytes(this),
       responseSerializer: method.responseSerializer,
       outcome: _approveOrganizationJoinRequestsOutcome,
+      limits: transportLimits,
     );
   }
 }
@@ -516,6 +526,7 @@ extension OrganizationJoinRequestDeclineRouteNats
       requestBytes: method.requestSerializer.toBytes(this),
       responseSerializer: method.responseSerializer,
       outcome: _declineOrganizationJoinRequestOutcome,
+      limits: transportLimits,
     );
   }
 }
@@ -543,6 +554,7 @@ extension OrganizationJoinCodesWatchRouteNats
       requestBytes: method.requestSerializer.toBytes(this),
       responseSerializer: method.responseSerializer,
       outcome: _watchOrganizationJoinCodesOutcome,
+      limits: transportLimits,
     );
   }
 
@@ -631,6 +643,7 @@ extension OrganizationJoinCodeGenerateRouteNats
       requestBytes: method.requestSerializer.toBytes(this),
       responseSerializer: method.responseSerializer,
       outcome: _generateOrganizationJoinCodeOutcome,
+      limits: transportLimits,
     );
   }
 }
@@ -653,6 +666,7 @@ extension OrganizationJoinCodeRevokeRouteNats
       requestBytes: method.requestSerializer.toBytes(this),
       responseSerializer: method.responseSerializer,
       outcome: _revokeOrganizationJoinCodeOutcome,
+      limits: transportLimits,
     );
   }
 }
@@ -671,6 +685,7 @@ extension OrganizationRolesWatchRouteNats
       requestBytes: method.requestSerializer.toBytes(this),
       responseSerializer: method.responseSerializer,
       outcome: _watchOrganizationRolesOutcome,
+      limits: transportLimits,
     );
   }
 }
@@ -689,6 +704,7 @@ extension ServiceBindRouteNats
       requestBytes: method.requestSerializer.toBytes(this),
       responseSerializer: method.responseSerializer,
       outcome: _bindServiceOutcome,
+      limits: transportLimits,
     );
   }
 }
@@ -709,6 +725,7 @@ extension OrganizationServicesWatchRouteNats
       requestBytes: method.requestSerializer.toBytes(this),
       responseSerializer: method.responseSerializer,
       outcome: _watchOrganizationServicesOutcome,
+      limits: transportLimits,
     );
   }
 
@@ -789,6 +806,7 @@ extension OrganizationServiceUpdateRouteNats
       requestBytes: method.requestSerializer.toBytes(this),
       responseSerializer: method.responseSerializer,
       outcome: _updateOrganizationServiceOutcome,
+      limits: transportLimits,
     );
   }
 }
@@ -807,6 +825,7 @@ extension ServiceUnbindRouteNats
       requestBytes: method.requestSerializer.toBytes(this),
       responseSerializer: method.responseSerializer,
       outcome: _unbindServiceOutcome,
+      limits: transportLimits,
     );
   }
 }
@@ -826,6 +845,7 @@ extension ServiceTopologyConfigureRouteNats
       requestBytes: method.requestSerializer.toBytes(this),
       responseSerializer: method.responseSerializer,
       outcome: _configureServiceHostOutcome,
+      limits: transportLimits,
     );
   }
 }
@@ -844,6 +864,7 @@ extension OrganizationTopologyWatchRouteNats
       requestBytes: method.requestSerializer.toBytes(this),
       responseSerializer: method.responseSerializer,
       outcome: _watchOrganizationTopologyOutcome,
+      limits: transportLimits,
     );
   }
 
@@ -923,6 +944,7 @@ extension EditorCatalogFetchRouteNats
       requestBytes: method.requestSerializer.toBytes(this),
       responseSerializer: method.responseSerializer,
       outcome: _fetchEditorCatalogOutcome,
+      limits: transportLimits,
     );
   }
 }
@@ -946,6 +968,7 @@ extension EditorCatalogWatchRouteNats
       requestBytes: method.requestSerializer.toBytes(this),
       responseSerializer: method.responseSerializer,
       outcome: _watchEditorCatalogOutcome,
+      limits: transportLimits,
     );
   }
 
@@ -1021,6 +1044,7 @@ extension EditorValuePrepareRouteNats
       requestBytes: method.requestSerializer.toBytes(this),
       responseSerializer: method.responseSerializer,
       outcome: _prepareValueOutcome,
+      limits: transportLimits,
     );
   }
 }
@@ -1044,6 +1068,7 @@ extension EditorPresentationSearchRouteNats
       requestBytes: method.requestSerializer.toBytes(this),
       responseSerializer: method.responseSerializer,
       outcome: _watchRealmPresentationSearchOutcome,
+      limits: transportLimits,
     );
   }
 
@@ -1125,6 +1150,7 @@ extension EditorPresentationSearchCancelRouteNats
       requestBytes: method.requestSerializer.toBytes(this),
       responseSerializer: method.responseSerializer,
       outcome: _cancelRealmPresentationSearchOutcome,
+      limits: transportLimits,
     );
   }
 }
@@ -1148,6 +1174,7 @@ extension EditorCapabilityComputationInvokeRouteNats
       requestBytes: method.requestSerializer.toBytes(this),
       responseSerializer: method.responseSerializer,
       outcome: _invokeRealmComputationOutcome,
+      limits: transportLimits,
     );
   }
 }
@@ -1170,6 +1197,7 @@ extension EditorCapabilityCommandInvokeRouteNats
       requestBytes: method.requestSerializer.toBytes(this),
       responseSerializer: method.responseSerializer,
       outcome: _invokeRealmCommandOutcome,
+      limits: transportLimits,
     );
   }
 }
@@ -1196,6 +1224,7 @@ extension ResourceOperationsResolveRouteNats
       requestBytes: method.requestSerializer.toBytes(this),
       responseSerializer: method.responseSerializer,
       outcome: _resolveResourceOperationsOutcome,
+      limits: transportLimits,
     );
   }
 }
@@ -1222,6 +1251,7 @@ extension ResourceDropCandidatesResolveRouteNats
       requestBytes: method.requestSerializer.toBytes(this),
       responseSerializer: method.responseSerializer,
       outcome: _resolveDropCandidatesOutcome,
+      limits: transportLimits,
     );
   }
 }
@@ -1246,6 +1276,7 @@ extension AuthoringActionPrepareRouteNats
       requestBytes: method.requestSerializer.toBytes(this),
       responseSerializer: method.responseSerializer,
       outcome: _prepareAuthoringActionOutcome,
+      limits: transportLimits,
     );
   }
 }
@@ -1269,6 +1300,7 @@ extension AuthoringStateQueryRouteNats
       requestBytes: method.requestSerializer.toBytes(this),
       responseSerializer: method.responseSerializer,
       outcome: _queryAuthoringStateOutcome,
+      limits: transportLimits,
     );
   }
 }
@@ -1292,6 +1324,7 @@ extension AuthoringEditCommitRouteNats
       requestBytes: method.requestSerializer.toBytes(this),
       responseSerializer: method.responseSerializer,
       outcome: _commitPreparedEditOutcome,
+      limits: transportLimits,
     );
   }
 }
@@ -1315,6 +1348,7 @@ extension AuthoringTypePreviewRouteNats
       requestBytes: method.requestSerializer.toBytes(this),
       responseSerializer: method.responseSerializer,
       outcome: _previewTypeArgumentChangeOutcome,
+      limits: transportLimits,
     );
   }
 }
@@ -1338,6 +1372,7 @@ extension AuthoringTypeCommitRouteNats
       requestBytes: method.requestSerializer.toBytes(this),
       responseSerializer: method.responseSerializer,
       outcome: _prepareTypeArgumentChangeOutcome,
+      limits: transportLimits,
     );
   }
 }
@@ -1361,6 +1396,7 @@ extension AuthoringSearchRouteNats
       requestBytes: method.requestSerializer.toBytes(this),
       responseSerializer: method.responseSerializer,
       outcome: _searchAuthoringOutcome,
+      limits: transportLimits,
     );
   }
 }
@@ -1405,6 +1441,7 @@ extension AuthoringCompiledQueryRouteNats
       requestBytes: method.requestSerializer.toBytes(this),
       responseSerializer: method.responseSerializer,
       outcome: _queryPublishedContentOutcome,
+      limits: transportLimits,
     );
   }
 }
@@ -1450,6 +1487,7 @@ extension AuthoringCompiledStatusQueryRouteNats
       requestBytes: method.requestSerializer.toBytes(this),
       responseSerializer: method.responseSerializer,
       outcome: _queryCompiledResourceStatusOutcome,
+      limits: transportLimits,
     );
   }
 }
@@ -1473,6 +1511,7 @@ extension AuthoringPublishRouteNats
       requestBytes: method.requestSerializer.toBytes(this),
       responseSerializer: method.responseSerializer,
       outcome: _publishAuthoringOutcome,
+      limits: transportLimits,
     );
   }
 }
@@ -1496,6 +1535,7 @@ extension AuthoringPublicationQueryRouteNats
       requestBytes: method.requestSerializer.toBytes(this),
       responseSerializer: method.responseSerializer,
       outcome: _queryPublicationViewOutcome,
+      limits: transportLimits,
     );
   }
 }
@@ -1519,6 +1559,7 @@ extension AuthoringPublicationWatchRouteNats
       requestBytes: method.requestSerializer.toBytes(this),
       responseSerializer: method.responseSerializer,
       outcome: _watchPublicationOutcome,
+      limits: transportLimits,
     );
   }
 
@@ -1601,6 +1642,7 @@ extension SharedCatalogFetchRouteNats
       requestBytes: method.requestSerializer.toBytes(this),
       responseSerializer: method.responseSerializer,
       outcome: _fetchSharedArtifactCatalogOutcome,
+      limits: transportLimits,
     );
   }
 }
@@ -1624,6 +1666,7 @@ extension SharedPublishRouteNats
       requestBytes: method.requestSerializer.toBytes(this),
       responseSerializer: method.responseSerializer,
       outcome: _publishSharedArtifactOutcome,
+      limits: transportLimits,
     );
   }
 }
@@ -1647,6 +1690,7 @@ extension SharedBlobMetadataRouteNats
       requestBytes: method.requestSerializer.toBytes(this),
       responseSerializer: method.responseSerializer,
       outcome: _fetchArtifactBlobMetadataOutcome,
+      limits: transportLimits,
     );
   }
 }
@@ -1670,6 +1714,12 @@ extension SharedBlobFetchRouteNats
       requestBytes: method.requestSerializer.toBytes(this),
       responseSerializer: method.responseSerializer,
       outcome: _fetchArtifactBlobOutcome,
+      limits: const TransportLimits(
+        chunkBytes: 524288,
+        windowFrames: 8,
+        requestMaxBytes: 524288,
+        replyMaxBytes: 134217728,
+      ),
     );
   }
 }
@@ -1693,6 +1743,12 @@ extension SharedBlobStoreRouteNats
       requestBytes: method.requestSerializer.toBytes(this),
       responseSerializer: method.responseSerializer,
       outcome: _storeArtifactBlobOutcome,
+      limits: const TransportLimits(
+        chunkBytes: 524288,
+        windowFrames: 8,
+        requestMaxBytes: 134217728,
+        replyMaxBytes: 33554432,
+      ),
     );
   }
 }
@@ -2503,8 +2559,13 @@ ResponseOutcome _storeArtifactBlobOutcome(
   _ => ResponseOutcome.internalError,
 };
 
-/// Reply framing limits of the transport route manifest: frame size and frames per reply.
-const transportLimits = TransportLimits(chunkBytes: 524288, maxChunks: 64);
+/// Payload framing limits of the transport route manifest; routes that raise a ceiling carry their own.
+const transportLimits = TransportLimits(
+  chunkBytes: 524288,
+  windowFrames: 8,
+  requestMaxBytes: 524288,
+  replyMaxBytes: 33554432,
+);
 
 /// Names a connection's persistent projection consumer. The backend grants the same name.
 String persistentConsumerName({

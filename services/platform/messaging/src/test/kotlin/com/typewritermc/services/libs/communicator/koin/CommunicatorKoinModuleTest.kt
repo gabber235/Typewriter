@@ -118,4 +118,11 @@ private fun application(options: RouterOptions = RouterOptions()) =
         )
     }
 
-private val TEST_LIMITS = TransportLimits(chunkBytes = 512 * 1024, maxChunks = 64)
+private val TEST_LIMITS =
+    TransportLimits(
+        chunkBytes = 512 * 1024,
+        windowFrames = 8,
+        requestMaxBytes = 512L * 1024,
+        replyMaxBytes =
+            32L * 1024 * 1024,
+    )

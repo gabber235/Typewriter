@@ -1,3 +1,5 @@
+//! Response permissions enforced by a real NATS broker, as the auth callout hands them out.
+
 use std::{collections::BTreeSet, process::Stdio, time::Duration};
 
 use anyhow::{Context, Result, bail};
@@ -8,10 +10,13 @@ use tokio::{
     process::{Child, Command},
     sync::mpsc,
 };
-use wasmcloud_utils::transport::{GrantSet, RealmScope, SubjectToken};
-use wasmcloud_utils::transport_routes::{MAX_RESPONSE_CHUNKS, REPLY_TTL_MS, RealmRole};
+use wasmcloud_utils::skir::base::access::v1::permission::ResponsePermission;
+use wasmcloud_utils::transport::{CREDIT_HEADER, GrantSet, RealmScope, SubjectToken};
+use wasmcloud_utils::transport_routes::{
+    PANEL_RESPONSE_LIMIT, REPLY_TTL_MS, RealmRole, SERVICE_RESPONSE_LIMIT, WINDOW_FRAMES,
+};
 
-use crate::services::service_response_permission;
+use crate::common::response_permission;
 
 const REQUEST_SUBJECT: &str = "service.from.quests.organization.writers.realm.rollout.probe";
 const READINESS_SUBJECT: &str = "fixture.ready";
@@ -20,8 +25,10 @@ const FIRST_REPLY: &str = "_INBOX.requester.first";
 const ARBITRARY_REPLY: &str = "_INBOX.requester.arbitrary";
 const ARBITRARY_VALID_REPLY: &str = "_INBOX.requester.arbitrary_valid";
 const EXPIRED_REPLY: &str = "_INBOX.requester.expired";
-/// The reply message limit every service response permission carries.
-const MAX_REPLY_MESSAGES: i32 = MAX_RESPONSE_CHUNKS as i32;
+/// The panel inbox a framed reply arrives on.
+const PANEL_REPLY: &str = "_INBOX.panel.reply";
+/// The private inbox of a sender waiting for the credit answering a window end.
+const SENDER_CREDIT: &str = "_INBOX.sender.credit";
 
 struct Broker {
     _directory: tempfile::TempDir,
@@ -45,8 +52,45 @@ impl Drop for Broker {
     }
 }
 
+/// One broker user: its publish and subscribe allow lists and its optional response permission.
+struct FixtureUser<'a> {
+    name: &'a str,
+    publish: BTreeSet<String>,
+    subscribe: BTreeSet<String>,
+    response: Option<(i32, i64)>,
+}
+
+impl<'a> FixtureUser<'a> {
+    fn new(name: &'a str, publish: &[&str], subscribe: &[&str]) -> Self {
+        let subjects = |subjects: &[&str]| {
+            subjects
+                .iter()
+                .map(|subject| (*subject).to_owned())
+                .collect()
+        };
+        Self {
+            name,
+            publish: subjects(publish),
+            subscribe: subjects(subscribe),
+            response: None,
+        }
+    }
+
+    fn responding(mut self, response: &ResponsePermission) -> Result<Self> {
+        self.response = Some((
+            response.max_messages.context("response maximum missing")?,
+            response
+                .ttl
+                .as_ref()
+                .context("response expiration missing")?
+                .milliseconds,
+        ));
+        Ok(self)
+    }
+}
+
 #[tokio::test]
-async fn response_permissions_admit_every_frame_of_one_reply_per_responder() -> Result<()> {
+async fn a_service_sends_at_most_its_reply_limit_to_each_requester() -> Result<()> {
     let mut grants = GrantSet::default();
     RealmScope {
         organization: SubjectToken::try_from("writers")
@@ -57,36 +101,107 @@ async fn response_permissions_admit_every_frame_of_one_reply_per_responder() -> 
     .grant(RealmRole::RealmParticipant, &mut grants);
     assert!(grants.subscribe.contains(REQUEST_SUBJECT));
 
-    let mut response = service_response_permission();
-    assert_eq!(response.max_messages, Some(MAX_REPLY_MESSAGES));
+    let limit = SERVICE_RESPONSE_LIMIT.context("services must answer requests")?;
+    let mut response = response_permission(limit);
     assert_eq!(
         response.ttl.as_ref().map(|duration| duration.milliseconds),
         Some(REPLY_TTL_MS)
     );
+    // A short expiry lets the test observe a late reply being refused.
     response
         .ttl
         .as_mut()
         .context("response expiration missing")?
         .milliseconds = 1_000;
 
-    let config = server_config(
-        &grants.publish,
-        &grants.subscribe,
-        response.max_messages.context("response maximum missing")?,
-        response
-            .ttl
-            .as_ref()
-            .context("response expiration missing")?
-            .milliseconds,
-    );
-    let broker = start_broker(&config).await?;
-    let result = exercise_response_permissions(&broker.endpoint).await;
+    let responder = |name| {
+        FixtureUser {
+            name,
+            publish: grants.publish.clone(),
+            subscribe: grants.subscribe.clone(),
+            response: None,
+        }
+        .responding(&response)
+    };
+    let users = [
+        FixtureUser::new("requester", &[REQUEST_SUBJECT], &["_INBOX.requester.*"]),
+        responder("responder_one")?,
+        responder("responder_two")?,
+    ];
+    let broker = start_broker(&server_config(&users)).await?;
+    let result = exercise_service_responses(&broker.endpoint, limit).await;
     let cleanup = broker.close().await;
     result?;
     cleanup
 }
 
-async fn exercise_response_permissions(endpoint: &str) -> Result<()> {
+#[tokio::test]
+async fn a_panel_connection_answers_each_window_end_with_one_credit() -> Result<()> {
+    let limit = PANEL_RESPONSE_LIMIT.context("the panel must answer window ends")?;
+    let response = response_permission(limit);
+    assert_eq!(
+        response.ttl.as_ref().map(|duration| duration.milliseconds),
+        Some(REPLY_TTL_MS)
+    );
+
+    let users = [
+        FixtureUser::new("sender", &["_INBOX.panel.*"], &["_INBOX.sender.*"]),
+        FixtureUser::new("panel", &[], &["_INBOX.panel.*"]).responding(&response)?,
+    ];
+    let broker = start_broker(&server_config(&users)).await?;
+    let result = exercise_panel_credits(&broker.endpoint).await;
+    let cleanup = broker.close().await;
+    result?;
+    cleanup
+}
+
+async fn exercise_panel_credits(endpoint: &str) -> Result<()> {
+    let sender = connect(endpoint, "sender", None).await?;
+    let (panel_events, mut panel_violations) = mpsc::unbounded_channel();
+    let panel = connect(endpoint, "panel", Some(panel_events)).await?;
+    let mut frames = panel.subscribe(PANEL_REPLY).await?;
+    confirm_subscriptions(&panel).await?;
+    let mut credits = sender.subscribe(SENDER_CREDIT).await?;
+    sender.flush().await?;
+
+    // Two consecutive window ends: each one earns exactly one credit, and nothing more.
+    for window in 1..=2 {
+        sender
+            .publish_with_reply(PANEL_REPLY, SENDER_CREDIT, "window end".into())
+            .await?;
+        sender.flush().await?;
+        let window_end = receive(&mut frames).await?;
+        let reply = window_end
+            .reply
+            .context("a window end carries a reply subject")?;
+        assert_eq!(reply.as_str(), SENDER_CREDIT);
+
+        let grant = ((window + 1) * WINDOW_FRAMES).to_string();
+        let mut headers = async_nats::HeaderMap::new();
+        headers.insert(CREDIT_HEADER, grant.as_str());
+        panel
+            .publish_with_headers(reply.clone(), headers, "".into())
+            .await?;
+        panel.flush().await?;
+        let credit = receive(&mut credits).await?;
+        assert_eq!(
+            credit
+                .headers
+                .as_ref()
+                .and_then(|headers| headers.get(CREDIT_HEADER))
+                .map(|value| value.as_str()),
+            Some(grant.as_str())
+        );
+
+        panel.publish(reply, "second credit".into()).await?;
+        panel.flush().await?;
+        assert_publish_violation(&mut panel_violations).await?;
+        assert_no_message(&mut credits).await?;
+    }
+    Ok(())
+}
+
+async fn exercise_service_responses(endpoint: &str, limit: u32) -> Result<()> {
     let requester = connect(endpoint, "requester", None).await?;
     let (first_events, mut first_violations) = mpsc::unbounded_channel();
     let first = connect(endpoint, "responder_one", Some(first_events)).await?;
@@ -109,8 +224,8 @@ async fn exercise_response_permissions(endpoint: &str) -> Result<()> {
     assert_eq!(first_request.reply.as_deref(), Some(FIRST_REPLY));
     assert_eq!(second_request.reply.as_deref(), Some(FIRST_REPLY));
 
-    // Each responder may send every frame of one reply, and not one message more.
-    for frame in 0..MAX_REPLY_MESSAGES {
+    // Each responder may send its reply limit to one requester inbox, and not one message more.
+    for frame in 0..limit {
         first
             .publish(FIRST_REPLY, format!("first {frame}").into())
             .await?;
@@ -119,13 +234,13 @@ async fn exercise_response_permissions(endpoint: &str) -> Result<()> {
     first.flush().await?;
     second.flush().await?;
     let mut bodies = Vec::new();
-    for _ in 0..=MAX_REPLY_MESSAGES {
+    for _ in 0..=limit {
         bodies.push(String::from_utf8(
             receive(&mut replies).await?.payload.to_vec(),
         )?);
     }
     bodies.sort();
-    let mut expected: Vec<String> = (0..MAX_REPLY_MESSAGES)
+    let mut expected: Vec<String> = (0..limit)
         .map(|frame| format!("first {frame}"))
         .chain(["second".to_owned()])
         .collect();
@@ -189,28 +304,32 @@ async fn confirm_subscriptions(client: &Client) -> Result<()> {
     Ok(())
 }
 
-fn server_config(
-    publish: &BTreeSet<String>,
-    subscribe: &BTreeSet<String>,
-    max_messages: i32,
-    expires_milliseconds: i64,
-) -> String {
-    let mut publish = publish.clone();
-    let mut subscribe = subscribe.clone();
-    publish.insert(READINESS_SUBJECT.to_owned());
-    subscribe.insert(READINESS_SUBJECT.to_owned());
-    let publish = serde_json::to_string(&publish).unwrap();
-    let subscribe = serde_json::to_string(&subscribe).unwrap();
+/// Renders the broker users; every user may also use the readiness subject.
+fn server_config(users: &[FixtureUser<'_>]) -> String {
+    let users: Vec<String> = users
+        .iter()
+        .map(|user| {
+            let mut publish = user.publish.clone();
+            let mut subscribe = user.subscribe.clone();
+            publish.insert(READINESS_SUBJECT.to_owned());
+            subscribe.insert(READINESS_SUBJECT.to_owned());
+            let publish = serde_json::to_string(&publish).unwrap();
+            let subscribe = serde_json::to_string(&subscribe).unwrap();
+            let responses = user
+                .response
+                .map(|(max, expires)| {
+                    format!(", allow_responses: {{ max: {max}, expires: \"{expires}ms\" }}")
+                })
+                .unwrap_or_default();
+            format!(
+                r#"    {{ user: "{}", password: "{PASSWORD}", permissions: {{ publish: {{ allow: {publish} }}, subscribe: {{ allow: {subscribe} }}{responses} }} }}"#,
+                user.name
+            )
+        })
+        .collect();
     format!(
-        r#"
-authorization {{
-  users = [
-    {{ user: "requester", password: "{PASSWORD}", permissions: {{ publish: {{ allow: ["{REQUEST_SUBJECT}"] }}, subscribe: {{ allow: ["_INBOX.requester.*"] }} }} }}
-    {{ user: "responder_one", password: "{PASSWORD}", permissions: {{ publish: {{ allow: {publish} }}, subscribe: {{ allow: {subscribe} }}, allow_responses: {{ max: {max_messages}, expires: "{expires_milliseconds}ms" }} }} }}
-    {{ user: "responder_two", password: "{PASSWORD}", permissions: {{ publish: {{ allow: {publish} }}, subscribe: {{ allow: {subscribe} }}, allow_responses: {{ max: {max_messages}, expires: "{expires_milliseconds}ms" }} }} }}
-  ]
-}}
-"#
+        "authorization {{\n  users = [\n{}\n  ]\n}}\n",
+        users.join("\n")
     )
 }
 

@@ -63,6 +63,8 @@ export interface ResolvedRoute {
   readonly channels: readonly RouteChannel[];
   /** The derived broker permissions of every role party. */
   readonly grants: readonly Grant[];
+  /** The manifest limits with this route's own request and reply ceilings. */
+  readonly limits: TransportLimits;
 }
 
 /** The admitted manifest: transport limits, role and component declarations and every route. */
@@ -223,6 +225,35 @@ function resolveFlow(
 }
 
 /**
+ * The manifest limits with the ceilings a request route raises. Backend components cannot assemble a
+ * framed request: each invocation is stateless and its subscriptions are static ConfigMaps. Their
+ * replies are framed by one shared ceiling, so a route they serve keeps the manifest defaults.
+ */
+function routeLimits(route: Route, defaults: TransportLimits, at: RouteAt): TransportLimits {
+  if (route.flow.kind === "event") return defaults;
+  const limits = {
+    ...defaults,
+    requestMaxBytes: (route.flow.kind === "unary" ? route.flow.request_max_bytes : undefined) ?? defaults.requestMaxBytes,
+    replyMaxBytes: route.flow.reply_max_bytes ?? defaults.replyMaxBytes,
+  };
+  if ("server" in route && "component" in route.server) {
+    if (limits.requestMaxBytes > limits.chunkBytes) {
+      throw routeError(
+        within(at, "flow.request_max_bytes"),
+        "a backend component cannot receive framed requests; remove request_max_bytes",
+      );
+    }
+    if (route.flow.reply_max_bytes !== undefined) {
+      throw routeError(
+        within(at, "flow.reply_max_bytes"),
+        "a backend component frames every reply by the manifest reply_max_bytes; remove the route ceiling",
+      );
+    }
+  }
+  return limits;
+}
+
+/**
  * Derives each route's channel subjects and role grants and resolves the referenced Skir
  * declarations. Fails the whole generation on the first invalid route; every route's subjects are
  * admitted before any Skir lookup.
@@ -246,10 +277,10 @@ export function resolveRoutes(
     } catch (error) {
       throw routeError(at, (error as Error).message);
     }
-    return { route, at, channels, grants };
+    return { route, at, channels, grants, limits: routeLimits(route, manifest.limits, at) };
   });
   const routes = located.map(
-    ({ route, at, channels, grants }): ResolvedRoute => ({
+    ({ route, at, channels, grants, limits }): ResolvedRoute => ({
       name: route.name,
       scope: route.scope,
       parties: routeParties(route),
@@ -258,6 +289,7 @@ export function resolveRoutes(
       flow: resolveFlow(input, route, at),
       channels,
       grants,
+      limits,
     }),
   );
   return { limits: manifest.limits, roles, components: manifest.components, routes };

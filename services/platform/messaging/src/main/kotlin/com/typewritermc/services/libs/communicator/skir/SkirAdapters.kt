@@ -12,6 +12,7 @@ import com.typewritermc.services.libs.communicator.contract.ResponsePolicy
 import com.typewritermc.services.libs.communicator.contract.ScatterContract
 import com.typewritermc.services.libs.communicator.contract.UnaryContract
 import com.typewritermc.services.libs.communicator.contract.WatchContract
+import com.typewritermc.services.libs.communicator.transfer.TransportLimits
 import com.typewritermc.services.libs.communicator.transport.Payload
 import kotlin.time.Duration
 import kotlin.time.Duration.Companion.seconds
@@ -41,6 +42,7 @@ fun <Address : Any, Request : Any, Response : Any> skirUnaryContract(
     address: AddressTemplate<Address>,
     responsePolicy: ResponsePolicy<Response>,
     timeout: Duration = 10.seconds,
+    limits: TransportLimits? = null,
 ): UnaryContract<Address, Request, Response> =
     UnaryContract(
         name,
@@ -50,6 +52,7 @@ fun <Address : Any, Request : Any, Response : Any> skirUnaryContract(
         responsePolicy,
         timeout,
         name.failureSlug,
+        limits,
     )
 
 /**
@@ -61,6 +64,7 @@ fun <Address : Any, Request : Any, Response : Any> skirScatterContract(
     name: OperationName,
     address: AddressTemplate<Address>,
     responsePolicy: ResponsePolicy<Response>,
+    limits: TransportLimits? = null,
 ): ScatterContract<Address, Request, Response> =
     ScatterContract(
         name,
@@ -69,6 +73,7 @@ fun <Address : Any, Request : Any, Response : Any> skirScatterContract(
         method.responseSerializer.asPayloadCodec(),
         responsePolicy,
         name.failureSlug,
+        limits,
     )
 
 /**
@@ -84,6 +89,7 @@ fun <Address : Any, Request : Any, Initial : Any, Update : Any> skirWatchContrac
     initialPolicy: ResponsePolicy<Initial>,
     timeout: Duration = 10.seconds,
     updateFilter: (Request, Update) -> Boolean = { _, _ -> true },
+    limits: TransportLimits? = null,
 ): WatchContract<Address, Request, Initial, Update> =
     WatchContract(
         name,
@@ -96,6 +102,7 @@ fun <Address : Any, Request : Any, Initial : Any, Update : Any> skirWatchContrac
         timeout,
         name.failureSlug,
         updateFilter,
+        limits,
     )
 
 /** Creates an event contract encoding events with [serializer]. Failures are reported under [OperationName.failureSlug] of [name]. */

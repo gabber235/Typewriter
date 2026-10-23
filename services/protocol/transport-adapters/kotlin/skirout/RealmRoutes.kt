@@ -537,12 +537,14 @@ private val sharedBlobFetchRequestAddress = "service.to.{realm}.organization.{or
 val RealmRouteScope.sharedBlobFetch get() = skirUnaryContract(
     method = FetchArtifactBlob, name = OperationName.of("shared.blob.fetch"),
     address = sharedBlobFetchRequestAddress.subscribedAt(this), responsePolicy = fetchArtifactBlobResponsePolicy,
+    limits = TRANSPORT_LIMITS.copy(replyMaxBytes = 134217728),
 )
 
 private val sharedBlobStoreRequestAddress = "service.to.{realm}.organization.{organization}.realm.shared.blob.store".realmTemplate()
 val RealmRouteScope.sharedBlobStore get() = skirUnaryContract(
     method = StoreArtifactBlob, name = OperationName.of("shared.blob.store"),
     address = sharedBlobStoreRequestAddress.subscribedAt(this), responsePolicy = storeArtifactBlobResponsePolicy,
+    limits = TRANSPORT_LIMITS.copy(requestMaxBytes = 134217728),
 )
 
 private val rolloutProbeRequestAddress = "service.from.{realm}.organization.{organization}.realm.rollout.probe".realmTemplate()

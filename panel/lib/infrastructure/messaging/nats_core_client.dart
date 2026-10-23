@@ -187,31 +187,183 @@ final class NatsCoreClient implements NatsClient {
     }
   }
 
-  /// Collects the reply through the connection's shared request inbox.
+  /// Sends one request of a route bounded by [limits] and collects its reply
+  /// through the connection's shared request inbox.
   ///
-  /// Every message for this request passes through one [ReplyAssembler], so a
-  /// plain reply completes at once and framed replies complete when every
-  /// frame arrived and verified. Collection stops on every exit.
+  /// A request above the route's request ceiling fails with
+  /// [TransferTooLarge] before any frame is sent. A request larger than one
+  /// chunk travels in credit windows, and the answer to its final frame is the
+  /// reply. Every reply message passes through one [PayloadAssembler]: a plain
+  /// reply completes at once, each window end of a framed reply is answered on
+  /// its reply subject, and the reply completes when every frame arrived and
+  /// verified. Collection stops on every exit.
   @override
   Future<NatsMessage> request(
     String subject,
     Uint8List payload, {
+    required TransportLimits limits,
     Map<String, String> headers = const {},
     Duration timeout = const Duration(seconds: 10),
     Future<void>? cancelled,
   }) async {
+    if (payload.length > limits.requestMaxBytes) {
+      throw TransferTooLarge(
+        size: payload.length,
+        limit: limits.requestMaxBytes,
+      );
+    }
+    final connection = await _readyConnection();
+    if (payload.length <= limits.chunkBytes) {
+      return _collect(
+        connection,
+        subject,
+        payload,
+        headers: NatsHeaders(entries: headers.entries),
+        limits: limits,
+        timeout: timeout,
+        cancelled: cancelled,
+      );
+    }
+    return _sendFramed(
+      connection,
+      subject,
+      _FramedPayload(payload, limits.chunkBytes, headers),
+      limits: limits,
+      timeout: timeout,
+      cancelled: cancelled,
+    );
+  }
+
+  /// Sends [framed] in credit windows of the route's window size.
+  ///
+  /// Frames inside a window are published; the last frame of each window is
+  /// sent as a request whose answer carries the credit, the index below which
+  /// the next frames may go, and is awaited for [frameInactivity]. The final
+  /// frame is sent as a request whose answer is the route's reply, collected
+  /// like any other. A failure header on an answer fails the transfer, and a
+  /// credit on the answer to the final frame is a protocol error. On any
+  /// failure the receiver is told with an interrupted frame, so it frees the
+  /// assembly at once.
+  Future<NatsMessage> _sendFramed(
+    NatsConnection connection,
+    String subject,
+    _FramedPayload framed, {
+    required TransportLimits limits,
+    required Duration timeout,
+    required Future<void>? cancelled,
+  }) async {
+    final count = framed.count;
+    var granted = limits.windowFrames;
+    var index = 0;
+    try {
+      while (true) {
+        final windowEnd = min(granted, count);
+        for (; index < windowEnd - 1; index++) {
+          await _untilCancelled(
+            connection.publish(
+              subject,
+              framed.bytes(index),
+              headers: framed.headers(index),
+            ),
+            cancelled,
+          );
+        }
+        if (index == count - 1) {
+          return await _collect(
+            connection,
+            subject,
+            framed.bytes(index),
+            headers: framed.headers(index),
+            limits: limits,
+            timeout: timeout,
+            cancelled: cancelled,
+            finalFrame: true,
+          );
+        }
+        final answer = await _untilCancelled(
+          connection.request(
+            subject,
+            framed.bytes(index),
+            headers: framed.headers(index),
+            timeout: frameInactivity,
+          ),
+          cancelled,
+        );
+        final answerHeaders = answer.headers;
+        if (_statusFailure(answerHeaders) case final failure?) throw failure;
+        if (answerHeaders?.first(PayloadHeaders.failure) case final failure?) {
+          throw TransferFailure.named(failure, answerHeaders!);
+        }
+        final credit = int.tryParse(
+          answerHeaders?.first(PayloadHeaders.credit) ?? "",
+        );
+        index++;
+        if (credit == null || credit <= index) {
+          throw const TransferRejected("The receiver granted no credit");
+        }
+        granted = credit;
+      }
+    } on Object catch (error, stackTrace) {
+      try {
+        await connection.publish(
+          subject,
+          const [],
+          headers: NatsHeaders(
+            entries: [
+              MapEntry(PayloadHeaders.payload, framed.payloadId),
+              const MapEntry(
+                PayloadHeaders.failure,
+                PayloadHeaders.interrupted,
+              ),
+            ],
+          ),
+        );
+      } on Object {
+        // The failure that stopped the transfer remains the reported cause.
+      }
+      if (error is NatsClientException ||
+          error is TransferFailure ||
+          error is TransferCancelled) {
+        Error.throwWithStackTrace(error, stackTrace);
+      }
+      Error.throwWithStackTrace(_translate(error, stackTrace), stackTrace);
+    }
+  }
+
+  /// Sends one message as a request and collects its reply.
+  ///
+  /// The first reply message must arrive within [timeout] and every next frame
+  /// within [frameInactivity]. Window ends of a framed reply are answered with
+  /// their credit, so the responder never runs more than one window ahead and
+  /// the inbox buffers about one window. When [finalFrame], the message is the
+  /// last frame of a framed request, and a credit in its answer is a protocol
+  /// error rather than a reply.
+  Future<NatsMessage> _collect(
+    NatsConnection connection,
+    String subject,
+    Uint8List payload, {
+    required NatsHeaders headers,
+    required TransportLimits limits,
+    required Duration timeout,
+    required Future<void>? cancelled,
+    bool finalFrame = false,
+  }) async {
+    final maxFrames = limits.maxFrames(limits.replyMaxBytes);
+    final bufferedFrames = limits.windowFrames + _bufferedFrameMargin;
     final NatsRequestMany replies;
     try {
-      final connection = await _readyConnection();
       replies = await connection.requestMany(
         subject,
         payload,
-        headers: headers.isEmpty ? null : NatsHeaders(entries: headers.entries),
+        headers: headers.isEmpty ? null : headers,
         options: NatsRequestManyOptions(
-          timeout: timeout + replyAssemblyBudget,
-          maximumBufferedMessages: transportLimits.maxChunks + 1,
+          // Each frame restarts the inactivity bound below, so this lifetime
+          // only ends a reply whose every frame arrived just in time.
+          timeout: timeout + frameInactivity * (maxFrames + 1),
+          maximumBufferedMessages: bufferedFrames,
           maximumBufferedBytes:
-              transportLimits.maxEncodedSize + _framingAllowance,
+              min(limits.replyMaxBytes, limits.chunkBytes * bufferedFrames) +
+              _framingAllowance,
         ),
       );
     } on NatsClientException {
@@ -219,7 +371,7 @@ final class NatsCoreClient implements NatsClient {
     } on Object catch (error, stackTrace) {
       Error.throwWithStackTrace(_translate(error, stackTrace), stackTrace);
     }
-    final assembler = ReplyAssembler(transportLimits);
+    final assembler = PayloadAssembler(limits, maxBytes: limits.replyMaxBytes);
     final reply = Completer<NatsMessage>();
     void fail(Object error, [StackTrace? stackTrace]) {
       if (!reply.isCompleted) reply.completeError(error, stackTrace);
@@ -230,21 +382,34 @@ final class NatsCoreClient implements NatsClient {
       message: "NATS request timed out",
     );
     var deadline = Timer(timeout, () => fail(timedOut));
-    var first = true;
     final subscription = replies.messages.listen(
       (message) {
         if (reply.isCompleted) return;
-        if (first) {
-          first = false;
-          deadline.cancel();
-          deadline = Timer(replyAssemblyBudget, () => fail(timedOut));
-        }
-        if (_statusFailure(message.headers) case final failure?) {
+        deadline.cancel();
+        deadline = Timer(frameInactivity, () => fail(timedOut));
+        final messageHeaders = message.headers;
+        if (_statusFailure(messageHeaders) case final failure?) {
           fail(failure);
           return;
         }
+        if (finalFrame &&
+            messageHeaders?.first(PayloadHeaders.credit) != null) {
+          fail(
+            const TransferRejected(
+              "The receiver granted credit for the final frame",
+            ),
+          );
+          return;
+        }
+        final inbox = message.replySubject;
         try {
-          final bytes = assembler.accept(message.headers, message.payload);
+          final bytes = assembler.accept(
+            messageHeaders,
+            message.payload,
+            answer: inbox == null
+                ? null
+                : (answer) => _answerWindowEnd(connection, inbox, answer),
+          );
           if (bytes != null) {
             reply.complete(NatsMessage(bytes, subject: message.subject));
           }
@@ -264,6 +429,21 @@ final class NatsCoreClient implements NatsClient {
       await subscription.cancel();
       await replies.stop();
     }
+  }
+
+  /// Answers a window end of a framed reply on its reply subject. A lost
+  /// answer stalls the responder, which then gives the reply up; the request
+  /// fails on its inactivity bound.
+  void _answerWindowEnd(
+    NatsConnection connection,
+    String inbox,
+    NatsHeaders answer,
+  ) {
+    unawaited(
+      connection
+          .publish(inbox, const [], headers: answer)
+          .catchError((Object _) {}),
+    );
   }
 
   @override
@@ -481,8 +661,65 @@ final class NatsCoreClient implements NatsClient {
   }
 }
 
-/// Room for the headers of every frame on top of the largest encoded reply.
+/// Room for the headers of the buffered frames on top of their bytes.
 const _framingAllowance = 64 * 1024;
+
+/// Reply messages buffered beyond one credit window: a duplicate frame and an
+/// interrupted frame may arrive while a window is still being consumed.
+const _bufferedFrameMargin = 2;
+
+/// Waits for [operation] unless [cancelled] completes first, which fails with
+/// [TransferCancelled].
+Future<T> _untilCancelled<T>(Future<T> operation, Future<void>? cancelled) =>
+    cancelled == null
+    ? operation
+    : Future.any([
+        operation,
+        cancelled.then<T>((_) => throw const TransferCancelled()),
+      ]);
+
+/// One request payload split into frames of at most one chunk, which share a
+/// fresh payload id, the complete size and the digest.
+///
+/// The caller's headers travel on every frame, so each frame carries the same
+/// transport metadata as a plain request would.
+final class _FramedPayload {
+  _FramedPayload(Uint8List payload, this._chunkBytes, Map<String, String> base)
+    : _payload = Uint8List.fromList(payload),
+      payloadId = uuid.v4().replaceAll("-", ""),
+      count = (payload.length + _chunkBytes - 1) ~/ _chunkBytes,
+      _digest = sha256.convert(payload).toString(),
+      _base = base;
+
+  final Uint8List _payload;
+  final int _chunkBytes;
+  final String _digest;
+  final Map<String, String> _base;
+
+  /// Identifies this payload's frames at the receiver.
+  final String payloadId;
+
+  /// The number of frames.
+  final int count;
+
+  /// The bytes of frame [index], a view of the payload.
+  Uint8List bytes(int index) => Uint8List.sublistView(
+    _payload,
+    index * _chunkBytes,
+    min((index + 1) * _chunkBytes, _payload.length),
+  );
+
+  /// The caller's headers with the framing headers of frame [index].
+  NatsHeaders headers(int index) => NatsHeaders(
+    entries: {
+      ..._base,
+      PayloadHeaders.payload: payloadId,
+      PayloadHeaders.chunk: "$index/$count",
+      PayloadHeaders.size: "${_payload.length}",
+      PayloadHeaders.sha256: _digest,
+    }.entries,
+  );
+}
 
 String _diagnostic(Object error) => switch (error) {
   NatsException(:final message, :final cause) =>

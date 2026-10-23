@@ -737,6 +737,7 @@ private fun throwingWatchFixture(
             override suspend fun request(
                 message: OutboundMessage,
                 timeout: kotlin.time.Duration,
+                limits: com.typewritermc.services.libs.communicator.transfer.TransportLimits?,
             ) = TransportResult.Success(InboundMessage(message.address, "initial".encodeToByteArray()))
 
             override suspend fun subscribe(

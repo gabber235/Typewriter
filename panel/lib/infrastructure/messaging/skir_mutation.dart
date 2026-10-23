@@ -84,11 +84,13 @@ final class SkirMutationClient {
   /// returns the complete reply, however large. The response is decoded here,
   /// where the Skir serializer belongs, while transport failures remain
   /// transport failures for the caller to handle. Completing [cancelled] stops
-  /// the request with [TransferCancelled].
+  /// the request with [TransferCancelled]. [limits] are the route's payload
+  /// framing limits; routes that keep the manifest defaults omit them.
   Future<T> request<T>(
     FutureOr<String> subject,
     Uint8List bytes,
     skir.Serializer<T> serializer, {
+    TransportLimits limits = transportLimits,
     Future<void>? cancelled,
   }) async {
     final destination = await subject;
@@ -101,6 +103,7 @@ final class SkirMutationClient {
       operation: (headers) => client.request(
         destination,
         bytes,
+        limits: limits,
         headers: headers,
         timeout: const Duration(seconds: 10),
         cancelled: cancelled,
@@ -168,6 +171,7 @@ final class SkirMutationClient {
           operation: (headers) => client.request(
             destination,
             bytes,
+            limits: operation.limits,
             headers: headers,
             timeout: const Duration(seconds: 10),
           ),

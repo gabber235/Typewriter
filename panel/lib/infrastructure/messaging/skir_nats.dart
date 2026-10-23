@@ -23,11 +23,15 @@ final class SkirRouteOperation<TResponse> {
     required Uint8List requestBytes,
     required this.responseSerializer,
     required this.outcome,
+    required this.limits,
   }) : requestBytes = Uint8List.fromList(requestBytes).asUnmodifiableView();
 
   final String subject;
   final Uint8List requestBytes;
   final skir.Serializer<TResponse> responseSerializer;
+
+  /// The route's payload framing limits, which bound its request and reply.
+  final TransportLimits limits;
 
   /// Classifies a decoded response; generated per response type, because
   /// generic code cannot reach extension members of [TResponse].
@@ -188,6 +192,7 @@ extension RefNatsExtension on Ref {
       operation: (headers) => client.request(
         operation.subject,
         operation.requestBytes,
+        limits: operation.limits,
         headers: headers,
         timeout: _requestTimeout,
       ),
@@ -227,6 +232,8 @@ extension RefNatsExtension on Ref {
         operation: (headers) => read(natsProvider).request(
           subject,
           requestBytes,
+          // Projection routes keep the manifest's default limits.
+          limits: transportLimits,
           headers: headers,
           timeout: _requestTimeout,
         ),

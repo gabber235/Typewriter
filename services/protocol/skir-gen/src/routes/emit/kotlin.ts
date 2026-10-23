@@ -90,11 +90,25 @@ ${arms.join("\n")}
 }`;
 }
 
+/**
+ * The `limits` argument of a route that raises a manifest ceiling, or nothing: a contract without
+ * limits uses the transport's, which the services NATS transport is constructed with from
+ * TRANSPORT_LIMITS.
+ */
+function routeLimits(route: ResolvedRoute, defaults: TransportLimits): string {
+  const raised = [
+    ...(route.limits.requestMaxBytes === defaults.requestMaxBytes ? [] : [`requestMaxBytes = ${route.limits.requestMaxBytes}`]),
+    ...(route.limits.replyMaxBytes === defaults.replyMaxBytes ? [] : [`replyMaxBytes = ${route.limits.replyMaxBytes}`]),
+  ];
+  return raised.length === 0 ? "" : `\n    limits = TRANSPORT_LIMITS.copy(${raised.join(", ")}),`;
+}
+
 function routeFile(
   routes: readonly ResolvedRoute[],
   realm: boolean,
   path: string,
   symbols: CodeGenerator.SymbolProvider,
+  defaults: TransportLimits,
 ): CodeGenerator.OutputFile {
   const scope = realm ? "RealmRouteScope" : "ServiceRouteScope";
   const template = realm ? "realmTemplate()" : "serviceTemplate()";
@@ -128,7 +142,7 @@ function routeFile(
         blocks.push(`private val ${requestAddress} = ${kotlinString(serviceSubject(route, "request"))}.${template}
 val ${scope}.${name} get() = ${contract}(
     method = ${method.name}, name = OperationName.of(${operation}),
-    address = ${requestAddress}.subscribedAt(this), responsePolicy = ${policyOf(flow.method)},
+    address = ${requestAddress}.subscribedAt(this), responsePolicy = ${policyOf(flow.method)},${routeLimits(route, defaults)}
 )`);
         break;
       }
@@ -141,7 +155,7 @@ private val ${updateAddress} = ${kotlinString(serviceSubject(route, "updates"))}
 val ${scope}.${name} get() = ${contract}(
     method = ${method.name}, updateSerializer = ${update}.serializer,
     name = OperationName.of(${operation}), requestAddress = ${requestAddress}.subscribedAt(this),
-    updateAddress = ${updateAddress}, initialPolicy = ${policyOf(flow.method)},
+    updateAddress = ${updateAddress}, initialPolicy = ${policyOf(flow.method)},${routeLimits(route, defaults)}
 )`);
         break;
       }
@@ -159,13 +173,19 @@ val ${scope}.${name} get() = ${contract}(
 }
 
 /**
- * The manifest reply framing limits, which the services NATS transport is constructed with, and the
+ * The manifest payload framing limits, which the services NATS transport is constructed with, and the
  * reply time to live, which bounds how long a service waits for replies it requested.
  */
-function limitsFile({ chunkBytes, maxChunks, replyTtlMs }: TransportLimits): CodeGenerator.OutputFile {
+function limitsFile({ chunkBytes, windowFrames, requestMaxBytes, replyMaxBytes, replyTtlMs }: TransportLimits): CodeGenerator.OutputFile {
   const blocks = [
-    `/** Reply framing limits of the transport route manifest: frame size and frames per reply. */
-val TRANSPORT_LIMITS = TransportLimits(chunkBytes = ${chunkBytes}, maxChunks = ${maxChunks})`,
+    `/** Payload framing limits of the transport route manifest; routes that raise a ceiling carry their own. */
+val TRANSPORT_LIMITS =
+    TransportLimits(
+        chunkBytes = ${chunkBytes},
+        windowFrames = ${windowFrames},
+        requestMaxBytes = ${requestMaxBytes},
+        replyMaxBytes = ${replyMaxBytes},
+    )`,
     `/** How long a responder may send replies after it received a request, so no requester waits longer. */
 val TRANSPORT_REPLY_TTL: Duration = ${replyTtlMs}.milliseconds`,
   ];
@@ -193,7 +213,7 @@ fun serviceReplyInboxPrefix(${parameters}): String = "${prefix}"`;
 
 /**
  * Emits the Kotlin contracts of the routes a service role takes part in for the services runtime:
- * realm routes, the service routes of the registered service, the reply framing limits and reply
+ * realm routes, the service routes of the registered service, the payload framing limits and reply
  * time to live, and the service reply inbox prefix.
  */
 export function emitKotlin(
@@ -212,12 +232,14 @@ export function emitKotlin(
       true,
       "RealmRoutes.kt",
       symbols,
+      limits,
     ),
     routeFile(
       serviceRoutes.filter((route) => route.scope === "service"),
       false,
       "ServiceRegistrationRoutes.kt",
       symbols,
+      limits,
     ),
     limitsFile(limits),
     replyInboxFile(),

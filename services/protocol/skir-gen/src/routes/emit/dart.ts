@@ -309,6 +309,7 @@ function emitUnary(
             requestBytes: method.requestSerializer.toBytes(this),
             responseSerializer: method.responseSerializer,
             outcome: ${outcome},
+            limits: ${routeLimits(route, resolved.limits)},
         );
     }
 }`),
@@ -342,6 +343,7 @@ function emitWatch(
   symbols: CodeGenerator.SymbolProvider,
   imports: Imports,
   outcomes: Outcomes,
+  defaults: TransportLimits,
 ): Lines | undefined {
   const { flow } = route;
   if (flow.kind !== "watch" || !hasSide(route, roles, "panel")) {
@@ -382,6 +384,7 @@ function emitWatch(
             requestBytes: method.requestSerializer.toBytes(this),
             responseSerializer: method.responseSerializer,
             outcome: ${outcomes.use(flow.method)},
+            limits: ${routeLimits(route, defaults)},
         );
     }
 
@@ -495,10 +498,24 @@ static String? userIdFromSubject(
   ];
 }
 
-/** The manifest reply framing limits, which the panel NATS client assembles replies with. */
-function limits({ chunkBytes, maxChunks }: TransportLimits): Lines {
-  return lines(`/// Reply framing limits of the transport route manifest: frame size and frames per reply.
-const transportLimits = TransportLimits(chunkBytes: ${chunkBytes}, maxChunks: ${maxChunks});`);
+/** The manifest payload framing limits; a route that raises a ceiling carries its own. */
+function limits({ chunkBytes, windowFrames, requestMaxBytes, replyMaxBytes }: TransportLimits): Lines {
+  return lines(`/// Payload framing limits of the transport route manifest; routes that raise a ceiling carry their own.
+const transportLimits = TransportLimits(
+    chunkBytes: ${chunkBytes},
+    windowFrames: ${windowFrames},
+    requestMaxBytes: ${requestMaxBytes},
+    replyMaxBytes: ${replyMaxBytes},
+);`);
+}
+
+/** The limits a route operation carries: the manifest defaults or the route's raised ceilings. */
+function routeLimits(route: ResolvedRoute, defaults: TransportLimits): string {
+  const { chunkBytes, windowFrames, requestMaxBytes, replyMaxBytes } = route.limits;
+  if (requestMaxBytes === defaults.requestMaxBytes && replyMaxBytes === defaults.replyMaxBytes) {
+    return "transportLimits";
+  }
+  return `const TransportLimits(chunkBytes: ${chunkBytes}, windowFrames: ${windowFrames}, requestMaxBytes: ${requestMaxBytes}, replyMaxBytes: ${replyMaxBytes})`;
 }
 
 function dartName(route: ResolvedRoute): string {
@@ -507,7 +524,7 @@ function dartName(route: ResolvedRoute): string {
 
 /**
  * Emits the panel transport routes: one extension per panel request route, an event class per panel
- * event, one outcome function per request method, the reply framing limits, the consumer naming
+ * event, one outcome function per request method, the payload framing limits, the consumer naming
  * rule of persistent projections and the reply inbox prefix rule. The hand written messaging
  * runtime builds on them. The backend owns the panel's permissions; the panel never derives them.
  */
@@ -521,7 +538,7 @@ export function emitDart(
   const declarations = resolved.routes.flatMap((route) => {
     const declaration =
       emitUnary(route, resolved, symbols, imports, outcomes) ??
-      emitWatch(route, roles, symbols, imports, outcomes) ??
+      emitWatch(route, roles, symbols, imports, outcomes, resolved.limits) ??
       emitEvent(route, roles, symbols, imports);
     return declaration ? [declaration] : [];
   });

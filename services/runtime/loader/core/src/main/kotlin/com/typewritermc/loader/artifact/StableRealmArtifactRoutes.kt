@@ -63,14 +63,14 @@ class StableRealmArtifactRoutes(
                 is BlobResult.Invalid -> FetchArtifactBlobMetadataResponse.createInvalidError(reason = result.reason)
             }
         }
-        unaryAt(address.sharedBlobFetch, address) { call ->
+        unaryAt(address.sharedBlobFetch, address, parallelism = BLOB_ROUTE_PARALLELISM) { call ->
             when (val result = artifacts.fetch(call.request.digest.toApi())) {
                 is BlobResult.Success -> FetchArtifactBlobResponse.createSuccess(content = result.value.toByteString())
                 BlobResult.NotFound -> FetchArtifactBlobResponse.createNotFoundError()
                 is BlobResult.Invalid -> FetchArtifactBlobResponse.createInvalidError(reason = result.reason)
             }
         }
-        unaryAt(address.sharedBlobStore, address) { call ->
+        unaryAt(address.sharedBlobStore, address, parallelism = BLOB_ROUTE_PARALLELISM) { call ->
             when (val result = artifacts.store(call.request.expected.toApi(), call.request.content.toByteArray())) {
                 is StoreResult.Stored -> StoreArtifactBlobResponse.SuccessWrapper(result.metadata.toSkir())
                 is StoreResult.Invalid -> StoreArtifactBlobResponse.createInvalidError(reason = result.reason)
@@ -104,3 +104,9 @@ class StableRealmArtifactRoutes(
         }
     }
 }
+
+/**
+ * Workers of each blob route. A blob in flight sits in memory several times over (file bytes, wire encoding and
+ * frames), so two concurrent transfers bound a host at about 1 GiB for 128 MiB blobs; larger files stay local imports.
+ */
+private const val BLOB_ROUTE_PARALLELISM = 2
