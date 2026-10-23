@@ -65,7 +65,8 @@ internal object PortableValueKernel : ValueKernel {
         types: PortableTypes,
     ): Boolean = types.isInstance(value, xType)
 
-    override fun isNull(value: DataValue): Boolean = value == DataValue.NULL
+    /** Looks through named wrappers, so a named value whose payload is null is null. */
+    override fun isNull(value: DataValue): Boolean = value.unwrapNamed() == DataValue.NULL
 
     override fun let(
         value: DataValue,

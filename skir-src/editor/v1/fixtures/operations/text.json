@@ -1674,6 +1674,67 @@
         }
       },
       "expected": {"failed": "magnitude_limit", "reads": []}
+    },
+    {
+      "id": "text_parse_decimal_huge_exponent_fails_magnitude",
+      "expression": {
+        "kind": "call",
+        "value": {
+          "operation": {"value": "text.parse_decimal"},
+          "type_arguments": [],
+          "arguments": [{"kind": "literal", "value": {"kind": "string_value", "value": "1e2000000000"}}]
+        }
+      },
+      "expected": {"failed": "magnitude_limit", "reads": []}
+    },
+    {
+      "id": "text_parse_decimal_zero_with_huge_exponent",
+      "expression": {
+        "kind": "call",
+        "value": {
+          "operation": {"value": "text.parse_decimal"},
+          "type_arguments": [],
+          "arguments": [{"kind": "literal", "value": {"kind": "string_value", "value": "0.000e2000000000"}}]
+        }
+      },
+      "expected": {"available": {"decimal": "0"}, "reads": []}
+    },
+    {
+      "id": "text_parse_decimal_insignificant_zeros_do_not_count",
+      "expression": {
+        "kind": "call",
+        "value": {
+          "operation": {"value": "text.parse_decimal"},
+          "type_arguments": [],
+          "arguments": [
+            {
+              "kind": "literal",
+              "value": {
+                "kind": "string_value",
+                "value": "0000000000000000000000000000000001.5000000000000000000000000000000e-1"
+              }
+            }
+          ]
+        }
+      },
+      "expected": {"available": {"decimal": "0.15"}, "reads": []}
+    },
+    {
+      "id": "text_parse_duration_long_component_fails_range",
+      "expression": {
+        "kind": "call",
+        "value": {
+          "operation": {"value": "text.parse_duration"},
+          "type_arguments": [],
+          "arguments": [
+            {
+              "kind": "literal",
+              "value": {"kind": "string_value", "value": "PT9999999999999999999999999999999999999999S"}
+            }
+          ]
+        }
+      },
+      "expected": {"failed": "duration_range", "reads": []}
     }
   ]
 }

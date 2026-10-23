@@ -76,13 +76,28 @@ internal object PortableTextKernel : TextKernel {
             compose = form == UnicodeForm.Nfc || form == UnicodeForm.Nfkc,
         )
 
-    /** Exact; an exponent beyond the 32 bit range no host represents is not a number either. */
-    override fun parseDecimal(value: String): BigDecimal =
-        try {
-            BigDecimal(requireNumberSyntax(value)).requireMagnitude()
-        } catch (_: NumberFormatException) {
-            throw invalidNumber(value)
-        }
+    /**
+     * Exact; an exponent beyond the 32 bit range no host represents is not a number either. The digit count of the
+     * canonical result is known from the text, so an oversized result fails before any big number is built.
+     */
+    override fun parseDecimal(value: String): BigDecimal {
+        val match = NUMBER_SYNTAX.matchEntire(value) ?: throw invalidNumber(value)
+        val (whole, fraction, exponentText) = match.destructured
+        val exponent = if (exponentText.isEmpty()) 0 else exponentText.toIntOrNull() ?: throw invalidNumber(value)
+        val digits = (whole + fraction).trimStart('0')
+        val significand = digits.trimEnd('0')
+        if (significand.isEmpty()) return BigDecimal.ZERO
+        val scale = fraction.length.toLong() - exponent - (digits.length - significand.length)
+        val plainDigits =
+            when {
+                scale < 0 -> significand.length - scale
+                scale >= significand.length -> scale + 1
+                else -> significand.length.toLong()
+            }
+        if (plainDigits > MAX_RESULT_DIGITS) throw magnitudeLimit()
+        val unscaled = BigInteger(significand)
+        return BigDecimal(if (value.startsWith("-")) unscaled.negate() else unscaled, scale.toInt())
+    }
 
     /** Rounds to the nearest double; text whose value overflows the double range is not a finite number. */
     override fun parseFloat(value: String): Double {
@@ -117,10 +132,16 @@ internal object PortableTextKernel : TextKernel {
             )
         }
 
+        // A component of more significant digits is at least 10^16 milliseconds, beyond the duration range.
         fun component(
             digits: String,
             unit: Long,
-        ): BigInteger = if (digits.isEmpty()) BigInteger.ZERO else BigInteger(digits) * BigInteger.valueOf(unit)
+        ): BigInteger {
+            if (digits.trimStart('0').length > MAX_DURATION_DIGITS) {
+                throw OperationFailure(KernelFailure.DurationRange, "The duration $value is outside the portable range.")
+            }
+            return if (digits.isEmpty()) BigInteger.ZERO else BigInteger(digits) * BigInteger.valueOf(unit)
+        }
         val fraction = if (groups[7].isEmpty()) "" else groups[7].padEnd(3, '0')
         val milliseconds =
             component(groups[2], 86_400_000) + component(groups[4], 3_600_000) + component(groups[5], 60_000) +
@@ -190,8 +211,14 @@ internal object PortableTextKernel : TextKernel {
     override fun upper(value: String): String = PortableUnicode.upper(value)
 }
 
-/** The decimal and float syntax: an optional sign, digits with an optional fraction, and an optional exponent. */
-private val NUMBER_SYNTAX = Regex("[+-]?([0-9]+(\\.[0-9]*)?|\\.[0-9]+)([eE][+-]?[0-9]+)?")
+/**
+ * The decimal and float syntax: an optional sign, digits with an optional fraction, and an optional exponent. Groups:
+ * the whole digits, the fraction digits and the exponent.
+ */
+private val NUMBER_SYNTAX = Regex("[+-]?(?=[0-9]|\\.[0-9])([0-9]*)(?:\\.([0-9]*))?(?:[eE]([+-]?[0-9]+))?")
+
+/** The significant digits of 9007199254740991, the largest portable duration in milliseconds. */
+private const val MAX_DURATION_DIGITS = 16
 
 private val DURATION_SYNTAX = Regex("(-?)P(?:([0-9]+)D)?(T(?:([0-9]+)H)?(?:([0-9]+)M)?(?:([0-9]+)(?:\\.([0-9]{1,3}))?S)?)?")
 
