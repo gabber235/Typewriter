@@ -21,6 +21,7 @@ import com.typewritermc.library.TaxonomyDefinition
 import com.typewritermc.library.TaxonomyFields
 import com.typewritermc.library.TaxonomyTags
 import com.typewritermc.realm.authoring.InMemoryAuthoringViewStore
+import com.typewritermc.realm.authoring.valueAt
 import com.typewritermc.realm.catalog.RealmCatalogIncarnation
 import com.typewritermc.realm.catalog.RealmCatalogStore
 import com.typewritermc.realm.coreRealmCatalog

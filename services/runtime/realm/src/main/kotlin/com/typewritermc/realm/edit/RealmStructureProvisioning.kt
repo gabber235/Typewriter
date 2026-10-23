@@ -16,6 +16,7 @@ import com.typewritermc.authoring.of
 import com.typewritermc.authoring.record
 import com.typewritermc.realm.authoring.AuthoringView
 import com.typewritermc.realm.authoring.AuthoringViewStore
+import com.typewritermc.realm.authoring.valueAt
 import com.typewritermc.realm.catalog.AuthoringCatalogLease
 import com.typewritermc.types.NativeBinding
 import com.typewritermc.types.Ref

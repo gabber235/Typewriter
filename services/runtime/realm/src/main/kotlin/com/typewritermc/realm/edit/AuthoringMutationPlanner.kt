@@ -1,13 +1,11 @@
 package com.typewritermc.realm.edit
 
-import com.typewritermc.authoring.LocatedPortableValue
 import com.typewritermc.authoring.RealmRootDefinition
 import com.typewritermc.authoring.RealmSectionDefinition
 import com.typewritermc.authoring.ValueReplacement
 import com.typewritermc.authoring.definition
 import com.typewritermc.authoring.id
 import com.typewritermc.authoring.item
-import com.typewritermc.authoring.locate
 import com.typewritermc.authoring.of
 import com.typewritermc.authoring.payload
 import com.typewritermc.authoring.record
@@ -19,6 +17,7 @@ import com.typewritermc.realm.authoring.CounterpartBinding
 import com.typewritermc.realm.authoring.ProjectionResult
 import com.typewritermc.realm.authoring.ResourceValueMapper
 import com.typewritermc.realm.authoring.authoredTypeAt
+import com.typewritermc.realm.authoring.valueAt
 import com.typewritermc.services.libs.utils.sha256Hex
 import com.typewritermc.types.actualType
 import com.typewritermc.types.catalog.CheckedCatalog
@@ -1036,9 +1035,6 @@ private fun validateAcyclic(
         }
     }
 }
-
-internal fun AuthoringRecord.valueAt(path: ValuePath): DataValue? =
-    (DataValue.RecordWrapper(payload).locate(path) as? LocatedPortableValue.Value)?.value
 
 private fun AuthoringRecord.set(
     path: ValuePath,

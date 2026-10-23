@@ -37,9 +37,6 @@ import com.typewritermc.checking.UndecidedCandidate
 import com.typewritermc.configuration.kind
 import com.typewritermc.configuration.name
 import com.typewritermc.expression.operations.HostFailure
-import com.typewritermc.realm.checking.DefaultObservationRecorder
-import com.typewritermc.realm.checking.ObservationRecorder
-import com.typewritermc.realm.checking.expectedType
 import com.typewritermc.services.libs.utils.rethrowExceptional
 import com.typewritermc.types.actualType
 import com.typewritermc.types.canonicalValueKey

@@ -10,8 +10,8 @@ import com.typewritermc.authoring.definition
 import com.typewritermc.authoring.of
 import com.typewritermc.authoring.use
 import com.typewritermc.operations.requireAuthored
+import com.typewritermc.realm.authoring.valueAt
 import com.typewritermc.realm.catalog.AuthoringCatalogLease
-import com.typewritermc.realm.edit.valueAt
 import com.typewritermc.types.actualType
 import com.typewritermc.types.use
 import skirout.editor.v1.type_catalog.AuthoringRecord

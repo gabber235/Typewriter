@@ -11,7 +11,7 @@ import com.typewritermc.realm.authoring.RelationReads
 import com.typewritermc.realm.authoring.ResourceValueMapper
 import com.typewritermc.realm.authoring.authoredTypeAt
 import com.typewritermc.realm.authoring.unfilled
-import com.typewritermc.realm.edit.valueAt
+import com.typewritermc.realm.authoring.valueAt
 import com.typewritermc.types.catalog.Resolution
 import com.typewritermc.types.toResourceId
 import com.typewritermc.types.toSkir

@@ -14,6 +14,7 @@ import com.typewritermc.realm.authoring.AuthoringView
 import com.typewritermc.realm.authoring.CounterpartBinding
 import com.typewritermc.realm.authoring.ResourceValueMapper
 import com.typewritermc.realm.authoring.authoredTypeAt
+import com.typewritermc.realm.authoring.valueAt
 import com.typewritermc.services.libs.utils.sha256Hex
 import com.typewritermc.types.actualType
 import com.typewritermc.types.catalog.Resolution
