@@ -62,8 +62,8 @@ import skirout.editor.v1.type_catalog.TypeDefinitionId
 import skirout.editor.v1.type_catalog.TypeTemplate
 import java.math.BigDecimal
 import java.math.BigInteger
-import kotlin.time.Duration
 import kotlin.reflect.KClass
+import kotlin.time.Duration
 
 /**
  * Collects a provider's portable recipes and native checks under one declaration owner.

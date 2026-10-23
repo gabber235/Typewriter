@@ -93,7 +93,8 @@ operator fun <M : MissingPolicy> Expr<Duration, M>.times(factor: Expr<Long, M>):
 
 /** This duration [factor] times. */
 @JvmName("durationTimesRaw")
-operator fun <M : MissingPolicy> Expr<Duration, M>.times(factor: Long): Expr<Duration, M> = (toMilliseconds() * factor).millisecondsToDuration()
+operator fun <M : MissingPolicy> Expr<Duration, M>.times(factor: Long): Expr<Duration, M> =
+    (toMilliseconds() * factor).millisecondsToDuration()
 
 /** This duration divided by [divisor], truncated to whole milliseconds toward zero. */
 @JvmName("durationDiv")
@@ -102,7 +103,8 @@ operator fun <M : MissingPolicy> Expr<Duration, M>.div(divisor: Expr<Long, M>): 
 
 /** This duration divided by [divisor], truncated to whole milliseconds toward zero. */
 @JvmName("durationDivRaw")
-operator fun <M : MissingPolicy> Expr<Duration, M>.div(divisor: Long): Expr<Duration, M> = (toMilliseconds() / divisor).millisecondsToDuration()
+operator fun <M : MissingPolicy> Expr<Duration, M>.div(divisor: Long): Expr<Duration, M> =
+    (toMilliseconds() / divisor).millisecondsToDuration()
 
 /** The negation of this duration. */
 @JvmName("durationNegate")

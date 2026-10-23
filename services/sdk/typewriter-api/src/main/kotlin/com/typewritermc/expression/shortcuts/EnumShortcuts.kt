@@ -33,5 +33,4 @@ fun <E, M : MissingPolicy> Expr<E, M>.previous(type: TypeUse): Expr<E, MayBeMiss
 private fun <E, M : MissingPolicy> Expr<E, M>.shifted(
     type: TypeUse,
     step: Int,
-): Expr<E, MayBeMissing> =
-    let(enumEntries<E>(type)) { cases -> cases[(cases.indexOf(this) + step).mod(cases.size)] }
+): Expr<E, MayBeMissing> = let(enumEntries<E>(type)) { cases -> cases[(cases.indexOf(this) + step).mod(cases.size)] }

@@ -184,7 +184,8 @@ fun <T, M : MissingPolicy> Expr<out List<T>, M>.reduceOrNull(
 
 /** The sum of the numbers; zero when empty. */
 @JvmName("sumOfInt")
-fun <M : MissingPolicy> Expr<out Collection<Int>, M>.sum(): Expr<Int, MayBeMissing> = fold(numericLiteral(0)) { total, item -> total + item }
+fun <M : MissingPolicy> Expr<out Collection<Int>, M>.sum(): Expr<Int, MayBeMissing> =
+    fold(numericLiteral(0)) { total, item -> total + item }
 
 /** The sum of the numbers; zero when empty. */
 @JvmName("sumOfLong")

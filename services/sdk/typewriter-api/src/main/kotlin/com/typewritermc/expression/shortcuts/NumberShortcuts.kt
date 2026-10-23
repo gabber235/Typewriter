@@ -41,7 +41,8 @@ operator fun <M : MissingPolicy> Expr<Long, M>.unaryMinus(): Expr<Long, M> = num
 
 /** The negation of this number. */
 @JvmName("negateBigInteger")
-operator fun <M : MissingPolicy> Expr<BigInteger, M>.unaryMinus(): Expr<BigInteger, M> = numericLiteral(BigInteger.ZERO).lift<BigInteger, M>() - this
+operator fun <M : MissingPolicy> Expr<BigInteger, M>.unaryMinus(): Expr<BigInteger, M> =
+    numericLiteral(BigInteger.ZERO).lift<BigInteger, M>() - this
 
 /** The negation of this number. */
 @JvmName("negateFloat")
@@ -53,7 +54,8 @@ operator fun <M : MissingPolicy> Expr<Double, M>.unaryMinus(): Expr<Double, M> =
 
 /** The negation of this number. */
 @JvmName("negateBigDecimal")
-operator fun <M : MissingPolicy> Expr<BigDecimal, M>.unaryMinus(): Expr<BigDecimal, M> = numericLiteral(BigDecimal.ZERO).lift<BigDecimal, M>() - this
+operator fun <M : MissingPolicy> Expr<BigDecimal, M>.unaryMinus(): Expr<BigDecimal, M> =
+    numericLiteral(BigDecimal.ZERO).lift<BigDecimal, M>() - this
 
 /** The absolute value of this number. */
 @JvmName("absByte")
@@ -159,8 +161,7 @@ fun <M : MissingPolicy> Expr<Double, M>.truncate(): Expr<Double, M> = round(1.0,
 fun <M : MissingPolicy> Expr<BigDecimal, M>.truncate(): Expr<BigDecimal, M> = round(BigDecimal.ONE, RoundingMode.TowardZero)
 
 /** The remainder of floored division: it has the sign of [divisor], like Kotlin's mod. */
-fun <N : Number, M : MissingPolicy> Expr<N, M>.mod(divisor: Expr<N, M>): Expr<N, M> =
-    shared(divisor) { by -> (this % by + by) % by }
+fun <N : Number, M : MissingPolicy> Expr<N, M>.mod(divisor: Expr<N, M>): Expr<N, M> = shared(divisor) { by -> (this % by + by) % by }
 
 /** The remainder of floored division: it has the sign of [divisor], like Kotlin's mod. */
 @JvmName("modRaw")

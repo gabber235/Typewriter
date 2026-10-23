@@ -121,7 +121,8 @@ fun <M : MissingPolicy> Expr<String, M>.isSingleLine(): Expr<Boolean, M> = hasLi
 
 /** The lines of this text, split at every line break; the empty text is one empty line. Ids are positional. */
 fun <M : MissingPolicy> Expr<String, M>.lines(): Expr<List<String>, M> =
-    LINE_BREAKS.fold(replace("\r\n", "\n")) { text, lineBreak -> if (lineBreak == "\n") text else text.replace(lineBreak, "\n") }
+    LINE_BREAKS
+        .fold(replace("\r\n", "\n")) { text, lineBreak -> if (lineBreak == "\n") text else text.replace(lineBreak, "\n") }
         .split("\n")
 
 /** The number of lines of this text: none for the empty text, otherwise one more than its line breaks. */
@@ -340,8 +341,7 @@ fun <M : MissingPolicy> Expr<String, M>.capitalize(): Expr<String, M> =
     }
 
 /** Whether this text equals [other] after full Unicode case folding. */
-fun <M : MissingPolicy> Expr<String, M>.equalsIgnoreCase(other: Expr<String, M>): Expr<Boolean, M> =
-    foldCase() eq other.foldCase()
+fun <M : MissingPolicy> Expr<String, M>.equalsIgnoreCase(other: Expr<String, M>): Expr<Boolean, M> = foldCase() eq other.foldCase()
 
 /** Whether this text equals [other] after full Unicode case folding. */
 @JvmName("equalsIgnoreCaseRaw")

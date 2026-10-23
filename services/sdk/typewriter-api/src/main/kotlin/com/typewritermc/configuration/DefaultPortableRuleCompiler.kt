@@ -52,7 +52,14 @@ class DefaultPredicateReasoner : PredicateReasoner {
             .groupBy { it.subject.use }
             .values
             .filter { group -> contradicts(group.map { it.rule.descriptor.predicate }) }
-            .map { group -> DeclarationDiagnostic.of(group.first().rule.id.origin.owner, "contradictory_configuration_rules") }
+            .map { group ->
+                DeclarationDiagnostic.of(
+                    group
+                        .first()
+                        .rule.id.origin.owner,
+                    "contradictory_configuration_rules",
+                )
+            }
 
     /** Whether the bounds that [predicates] all require leave no value for some subject. */
     internal fun contradicts(predicates: List<ExpressionNode>): Boolean =
@@ -113,7 +120,9 @@ class DefaultPredicateReasoner : PredicateReasoner {
     ): List<Bound> {
         val test = node.call(PortableOperationCatalog.VALUE_EQUALS) ?: return emptyList()
         val (first, second) = test.arguments
-        val compared = first.call(PortableOperationCatalog.VALUE_COMPARE)?.let { it to second } ?: second.call(PortableOperationCatalog.VALUE_COMPARE)?.let { it to first }
+        val compared =
+            first.call(PortableOperationCatalog.VALUE_COMPARE)?.let { it to second }
+                ?: second.call(PortableOperationCatalog.VALUE_COMPARE)?.let { it to first }
         if (compared == null) {
             if (negated) return emptyList()
             val (subject, limit) = subjectAndLimit(first, second, scope) ?: return emptyList()
@@ -254,10 +263,37 @@ private fun ExpressionNode.literal(): DataValue? = (this as? ExpressionNode.Lite
 /** [path] projected from this bound value, extending the path of an input, local or field. */
 private fun ExpressionNode.project(path: ValuePath): ExpressionNode =
     when {
-        path.segments.isEmpty() -> this
-        this is ExpressionNode.InputWrapper -> ExpressionNode.InputWrapper(value.copy(path = ValuePath(segments = value.path.segments + path.segments)))
-        this is ExpressionNode.FieldWrapper -> ExpressionNode.FieldWrapper(value.copy(path = ValuePath(segments = value.path.segments + path.segments)))
-        else -> ExpressionNode.createField(source = this, path = path)
+        path.segments.isEmpty() -> {
+            this
+        }
+
+        this is ExpressionNode.InputWrapper -> {
+            ExpressionNode.InputWrapper(
+                value.copy(
+                    path =
+                        ValuePath(
+                            segments =
+                                value.path.segments + path.segments,
+                        ),
+                ),
+            )
+        }
+
+        this is ExpressionNode.FieldWrapper -> {
+            ExpressionNode.FieldWrapper(
+                value.copy(
+                    path =
+                        ValuePath(
+                            segments =
+                                value.path.segments + path.segments,
+                        ),
+                ),
+            )
+        }
+
+        else -> {
+            ExpressionNode.createField(source = this, path = path)
+        }
     }
 
 /** The position of this literal on its scale, or null when it is not a number, duration or timestamp. */
@@ -272,7 +308,10 @@ private fun DataValue.ordered(): Pair<Scale, BigDecimal>? =
         else -> null
     }
 
-private fun DataValue.integerOrNull(): Int? = (this as? DataValue.IntegerWrapper)?.let { runCatching { it.bigInteger.intValueExact() }.getOrNull() }
+private fun DataValue.integerOrNull(): Int? =
+    (this as? DataValue.IntegerWrapper)?.let {
+        runCatching { it.bigInteger.intValueExact() }.getOrNull()
+    }
 
 /** The tightest lower bound sorts last: the larger limit, and at equal limits the exclusive one. */
 private val LOWER_ORDER = compareBy<Bound> { it.limit }.thenBy { if (it.inclusive) 0 else 1 }
