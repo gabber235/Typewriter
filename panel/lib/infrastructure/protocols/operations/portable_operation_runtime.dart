@@ -19,9 +19,6 @@ export "package:typewriter_panel/infrastructure/protocols/operations/skirout/por
 export "package:typewriter_panel/infrastructure/protocols/skir/skir.dart"
     show ByteString;
 
-/// Where an operation runs. Realm implements only [rule]; the panel both.
-enum PortableProfile { rule, panel }
-
 /// How the call rule passes one argument; see operations.yaml.
 enum PortableParameterKind {
   /// Evaluated; unfilled entries make the call missing at their locations.
@@ -50,14 +47,12 @@ enum PortableParameterKind {
 final class PortableOperationDeclaration {
   const PortableOperationDeclaration({
     required this.id,
-    required this.profile,
     required this.parameters,
     required this.variadic,
     required this.typeArguments,
   });
 
   final String id;
-  final PortableProfile profile;
   final List<PortableParameterKind> parameters;
 
   /// Whether the last parameter repeats.
