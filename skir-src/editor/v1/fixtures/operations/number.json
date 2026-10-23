@@ -2148,6 +2148,178 @@
         }
       },
       "expected": {"failed": "magnitude_limit", "reads": []}
+    },
+    {
+      "id": "number_plural_exact_integer_operands",
+      "expression": {
+        "kind": "call",
+        "value": {
+          "operation": {"value": "number.plural_category"},
+          "type_arguments": [],
+          "arguments": [
+            {"kind": "literal", "value": {"kind": "integer", "value": "100000000000000000022"}},
+            {"kind": "literal", "value": {"kind": "string_value", "value": "pl"}}
+          ]
+        }
+      },
+      "expected": {
+        "available": {
+          "named": {
+            "declared": "d15ae2d6248442e3a046d8cf29a7ddd5",
+            "revision": 1,
+            "arguments": [],
+            "payload": {"enum_case": "Few"}
+          }
+        },
+        "reads": []
+      }
+    },
+    {
+      "id": "number_plural_fraction_uses_integer_digits",
+      "expression": {
+        "kind": "call",
+        "value": {
+          "operation": {"value": "number.plural_category"},
+          "type_arguments": [],
+          "arguments": [
+            {"kind": "literal", "value": {"kind": "decimal", "value": "1.5"}},
+            {"kind": "literal", "value": {"kind": "string_value", "value": "fr"}}
+          ]
+        }
+      },
+      "expected": {
+        "available": {
+          "named": {
+            "declared": "d15ae2d6248442e3a046d8cf29a7ddd5",
+            "revision": 1,
+            "arguments": [],
+            "payload": {"enum_case": "One"}
+          }
+        },
+        "reads": []
+      }
+    },
+    {
+      "id": "number_plural_half_has_integer_digit_zero",
+      "expression": {
+        "kind": "call",
+        "value": {
+          "operation": {"value": "number.plural_category"},
+          "type_arguments": [],
+          "arguments": [
+            {"kind": "literal", "value": {"kind": "decimal", "value": "0.5"}},
+            {"kind": "literal", "value": {"kind": "string_value", "value": "hi-IN"}}
+          ]
+        }
+      },
+      "expected": {
+        "available": {
+          "named": {
+            "declared": "d15ae2d6248442e3a046d8cf29a7ddd5",
+            "revision": 1,
+            "arguments": [],
+            "payload": {"enum_case": "One"}
+          }
+        },
+        "reads": []
+      }
+    },
+    {
+      "id": "number_plural_twenty_fraction_digits",
+      "expression": {
+        "kind": "call",
+        "value": {
+          "operation": {"value": "number.plural_category"},
+          "type_arguments": [],
+          "arguments": [
+            {"kind": "literal", "value": {"kind": "decimal", "value": "1.00000000000000000001"}},
+            {"kind": "literal", "value": {"kind": "string_value", "value": "en"}}
+          ]
+        }
+      },
+      "expected": {
+        "available": {
+          "named": {
+            "declared": "d15ae2d6248442e3a046d8cf29a7ddd5",
+            "revision": 1,
+            "arguments": [],
+            "payload": {"enum_case": "Other"}
+          }
+        },
+        "reads": []
+      }
+    },
+    {
+      "id": "number_plural_magnitude_limit",
+      "expression": {
+        "kind": "call",
+        "value": {
+          "operation": {"value": "number.plural_category"},
+          "type_arguments": [],
+          "arguments": [
+            {"kind": "literal", "value": {"kind": "integer", "value": "1000000000000000000000"}},
+            {"kind": "literal", "value": {"kind": "string_value", "value": "en"}}
+          ]
+        }
+      },
+      "expected": {"failed": "magnitude_limit", "reads": []}
+    },
+    {
+      "id": "number_plural_fraction_digit_limit",
+      "expression": {
+        "kind": "call",
+        "value": {
+          "operation": {"value": "number.plural_category"},
+          "type_arguments": [],
+          "arguments": [
+            {"kind": "literal", "value": {"kind": "decimal", "value": "0.000000000000000000001"}},
+            {"kind": "literal", "value": {"kind": "string_value", "value": "en"}}
+          ]
+        }
+      },
+      "expected": {"failed": "magnitude_limit", "reads": []}
+    },
+    {
+      "id": "number_format_fraction_digit_limit",
+      "expression": {
+        "kind": "call",
+        "value": {
+          "operation": {"value": "number.format"},
+          "type_arguments": [],
+          "arguments": [
+            {"kind": "literal", "value": {"kind": "integer", "value": "1"}},
+            {"kind": "literal", "value": {"kind": "integer", "value": "20001"}},
+            {"kind": "literal", "value": {"kind": "string_value", "value": "und"}}
+          ]
+        }
+      },
+      "expected": {"failed": "magnitude_limit", "reads": []}
+    },
+    {
+      "id": "number_format_result_digit_limit",
+      "expression": {
+        "kind": "call",
+        "value": {
+          "operation": {"value": "number.format"},
+          "type_arguments": [],
+          "arguments": [
+            {
+              "kind": "call",
+              "value": {
+                "operation": {"value": "number.power"},
+                "type_arguments": [],
+                "arguments": [
+                  {"kind": "literal", "value": {"kind": "integer", "value": "10"}},
+                  {"kind": "literal", "value": {"kind": "integer", "value": "19999"}}
+                ]
+              }
+            },
+            {"kind": "literal", "value": {"kind": "integer", "value": "1"}},
+            {"kind": "literal", "value": {"kind": "string_value", "value": "und"}}
+          ]
+        }
+      },
+      "expected": {"failed": "magnitude_limit", "reads": []}
     }
   ]
 }

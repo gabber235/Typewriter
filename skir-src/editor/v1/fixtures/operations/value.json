@@ -2228,6 +2228,153 @@
         }
       },
       "expected": {"unavailable": [], "reads": []}
+    },
+    {
+      "id": "value_from_json_duplicate_fields",
+      "expression": {
+        "kind": "call",
+        "value": {
+          "operation": {"value": "value.from_json"},
+          "type_arguments": [
+            {
+              "kind": "named",
+              "value": {
+                "definition": {
+                  "type_id": {"kind": "qualified", "value": {"namespace": "fixture", "name": "Dog"}},
+                  "revision": 1
+                },
+                "arguments": []
+              }
+            }
+          ],
+          "arguments": [
+            {
+              "kind": "literal",
+              "value": {
+                "kind": "string_value",
+                "value": "{\"kind\":\"named\",\"value\":{\"actual_type\":{\"definition\":{\"type_id\":{\"kind\":\"qualified\",\"value\":{\"namespace\":\"fixture\",\"name\":\"Dog\"}},\"revision\":1}},\"payload\":{\"kind\":\"record\",\"value\":{\"fields\":[{\"name\":\"name\",\"value\":{\"kind\":\"string_value\",\"value\":\"Rex\"}},{\"name\":\"name\",\"value\":{\"kind\":\"string_value\",\"value\":\"Max\"}}]}}}}"
+              }
+            }
+          ]
+        }
+      },
+      "typeDefinitions": [
+        {
+          "id": {
+            "type_id": {"kind": "qualified", "value": {"namespace": "fixture", "name": "Animal"}},
+            "revision": 1
+          },
+          "parameters": [],
+          "parents": [],
+          "representation": {
+            "kind": "record",
+            "value": {
+              "abstract": true,
+              "fields": [
+                {
+                  "owner": {
+                    "definition": {
+                      "type_id": {"kind": "qualified", "value": {"namespace": "fixture", "name": "Animal"}},
+                      "revision": 1
+                    },
+                    "name": "name"
+                  },
+                  "type": {"kind": "scalar", "value": "text"},
+                  "overrides": [],
+                  "has_constructor_default": false
+                }
+              ]
+            }
+          }
+        },
+        {
+          "id": {"type_id": {"kind": "qualified", "value": {"namespace": "fixture", "name": "Dog"}}, "revision": 1},
+          "parameters": [],
+          "parents": [
+            {
+              "definition": {
+                "type_id": {"kind": "qualified", "value": {"namespace": "fixture", "name": "Animal"}},
+                "revision": 1
+              },
+              "arguments": []
+            }
+          ],
+          "representation": {
+            "kind": "record",
+            "value": {
+              "abstract": false,
+              "fields": [
+                {
+                  "owner": {
+                    "definition": {
+                      "type_id": {"kind": "qualified", "value": {"namespace": "fixture", "name": "Dog"}},
+                      "revision": 1
+                    },
+                    "name": "name"
+                  },
+                  "type": {"kind": "scalar", "value": "text"},
+                  "overrides": [],
+                  "has_constructor_default": false
+                }
+              ]
+            }
+          }
+        }
+      ],
+      "expected": {"failed": "invalid_json", "reads": []}
+    },
+    {
+      "id": "value_from_json_noncanonical_integer",
+      "expression": {
+        "kind": "call",
+        "value": {
+          "operation": {"value": "value.from_json"},
+          "type_arguments": [{"kind": "scalar", "value": {"kind": "integer", "value": {"width": "signed_thirty_two"}}}],
+          "arguments": [
+            {
+              "kind": "literal",
+              "value": {"kind": "string_value", "value": "{\"kind\":\"integer\",\"value\":\"+5\"}"}
+            }
+          ]
+        }
+      },
+      "expected": {"failed": "invalid_json", "reads": []}
+    },
+    {
+      "id": "value_is_null_unwraps_named",
+      "expression": {
+        "kind": "call",
+        "value": {
+          "operation": {"value": "value.is_null"},
+          "type_arguments": [],
+          "arguments": [{"kind": "input", "value": {"binding": {"value": "subject"}, "path": {"segments": []}}}]
+        }
+      },
+      "inputs": {
+        "subject": {
+          "value": {
+            "named": {
+              "namespace": "fixture",
+              "name": "QuestCode",
+              "revision": 1,
+              "arguments": [],
+              "payload": {"null": true}
+            }
+          }
+        }
+      },
+      "typeDefinitions": [
+        {
+          "id": {
+            "type_id": {"kind": "qualified", "value": {"namespace": "fixture", "name": "QuestCode"}},
+            "revision": 1
+          },
+          "parameters": [],
+          "parents": [],
+          "representation": {"kind": "scalar", "value": {"kind": "text"}}
+        }
+      ],
+      "expected": {"available": {"boolean": true}, "reads": ["subject"]}
     }
   ]
 }

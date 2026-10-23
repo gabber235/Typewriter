@@ -31,7 +31,7 @@ Each operation file is `{ "cases": [ ... ] }`. Unknown keys fail on both hosts.
 | `resources` | no | `{ "<resource id>": { "configuration": <TypeSelection>, "fields": { "<name>": <compact value> } } }` |
 | `budget` | no | `{ "maxSteps": n, "maxCollectionItems": n }`, default 1000 and 1000 |
 | `check` | no | Kotlin checker: `{ "resultType", "failures", "inferredType" }` |
-| `expected` | yes | One of `available`, `unavailable`, `failed`, plus `reads` |
+| `expected` | yes | Exactly one of `available`, `unavailable`, `failed`, and always `reads` |
 
 ### `inputs`
 
@@ -46,7 +46,7 @@ Each operation file is `{ "cases": [ ... ] }`. Unknown keys fail on both hosts.
 | Field | Meaning |
 | --- | --- |
 | `resultType` | The slot type the expression is checked against |
-| `failures` | Check failure ids, in any order; `[]` when it checks |
+| `failures` | Check failure ids; compared as a multiset (order is not part of the contract); `[]` when it checks |
 | `inferredType` | Optional; the type the checker infers |
 
 ### `expected`
@@ -56,7 +56,10 @@ Each operation file is `{ "cases": [ ... ] }`. Unknown keys fail on both hosts.
 | `available` | The compact value |
 | `unavailable` | Compact locations, in collection order, distinct |
 | `failed` | A failure id from `failures` or `evaluator_failures` |
-| `reads` | Distinct compact locations, in first read order |
+| `reads` | Required. Distinct compact locations, in first read order; compared in order |
+
+Every runner compares the outcome and `reads` of every case it runs, and the Kotlin runner compares `check` as described
+above. A case without `reads` is invalid.
 
 ## Compact values
 
@@ -100,6 +103,8 @@ The resource id, then path segments.
 | Every failure an operation declares | As some case's `expected.failed` |
 | Every evaluator failure | As some case's `expected.failed`, except `outside_rule_profile` and `unknown_expression` |
 
+Host failures (`host_failures`: authored value reads in Realm and the SDK) never come from an evaluator and need no case.
+
 ## Rules these cases pin
 
 Besides the operation docs, the cases fix these evaluator rules.
@@ -117,6 +122,9 @@ Besides the operation docs, the cases fix these evaluator rules.
 | Enum defaults such as `mode = nearest_ties_to_even` are DSL only; the wire carries every argument | `number_round_mode_is_required_on_the_wire` |
 | Regex kernels charge at least one step per input position they examine | `regex_find_charges_steps` |
 | Locales are BCP 47 tags with hyphens (`en-US`, `und`) | `number_format_english_grouping` |
+| Every available call result charges collection items: one per item of a list or set, one per top level row of a map, one per started 64 UTF-16 code units of text and per started 64 bytes; an empty result charges nothing | `budget_text_result_charges_per_started_64_code_units` |
+| A short circuit of `and` or `or` is a plain boolean, even when the operand is a named boolean | `or_short_circuit_unwraps_named_boolean` |
+| A lambda local bound to a map entry is located at its row; its `key` and `value` are the row's `.#key` and `.#value` | `collection_filter_map_entry_value_is_located_at_row_value` |
 
 ## Pattern fixture
 

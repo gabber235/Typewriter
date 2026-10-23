@@ -265,6 +265,47 @@
         },
         "reads": []
       }
+    },
+    {
+      "id": "record_with_field_inserts_absent_field_in_order",
+      "expression": {
+        "kind": "call",
+        "value": {
+          "operation": {"value": "value.to_json"},
+          "type_arguments": [],
+          "arguments": [
+            {
+              "kind": "call",
+              "value": {
+                "operation": {"value": "record.with_field"},
+                "type_arguments": [],
+                "arguments": [
+                  {
+                    "kind": "literal",
+                    "value": {
+                      "kind": "record",
+                      "value": {
+                        "fields": [
+                          {"name": "a", "value": {"kind": "integer", "value": "1"}},
+                          {"name": "c", "value": {"kind": "integer", "value": "3"}}
+                        ]
+                      }
+                    }
+                  },
+                  {"kind": "literal", "value": {"kind": "string_value", "value": "b"}},
+                  {"kind": "literal", "value": {"kind": "integer", "value": "2"}}
+                ]
+              }
+            }
+          ]
+        }
+      },
+      "expected": {
+        "available": {
+          "string": "{\"kind\":\"record\",\"value\":{\"fields\":[{\"name\":\"a\",\"value\":{\"kind\":\"integer\",\"value\":\"1\"}},{\"name\":\"b\",\"value\":{\"kind\":\"integer\",\"value\":\"2\"}},{\"name\":\"c\",\"value\":{\"kind\":\"integer\",\"value\":\"3\"}}]}}"
+        },
+        "reads": []
+      }
     }
   ]
 }

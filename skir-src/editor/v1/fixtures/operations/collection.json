@@ -1824,6 +1824,99 @@
         "available": {"set": [{"id": "a", "value": {"integer": "1"}}, {"id": "b", "value": {"integer": "2"}}]},
         "reads": []
       }
+    },
+    {
+      "id": "collection_filter_map_entry_value_is_located_at_row_value",
+      "expression": {
+        "kind": "call",
+        "value": {
+          "operation": {"value": "collection.filter"},
+          "type_arguments": [],
+          "arguments": [
+            {
+              "kind": "input",
+              "value": {
+                "binding": {"value": "subject"},
+                "path": {"segments": [{"kind": "field", "value": {"name": "m"}}]}
+              }
+            },
+            {
+              "kind": "lambda",
+              "value": {
+                "arity": 1,
+                "body": {
+                  "kind": "call",
+                  "value": {
+                    "operation": {"value": "value.equals"},
+                    "type_arguments": [],
+                    "arguments": [
+                      {
+                        "kind": "local",
+                        "value": {
+                          "depth": 0,
+                          "slot": 0,
+                          "path": {"segments": [{"kind": "field", "value": {"name": "value"}}]}
+                        }
+                      },
+                      {"kind": "literal", "value": {"kind": "integer", "value": "1"}}
+                    ]
+                  }
+                }
+              }
+            }
+          ]
+        }
+      },
+      "inputs": {
+        "subject": {
+          "value": {
+            "record": {
+              "m": {
+                "map": [
+                  {"id": "r1", "key": {"string": "a"}, "value": {"integer": "1"}},
+                  {"id": "r2", "key": {"string": "b"}, "value": {"unfilled": true}}
+                ]
+              }
+            }
+          }
+        }
+      },
+      "expected": {"unavailable": ["subject.m[r2].#value"], "reads": ["subject.m"]}
+    },
+    {
+      "id": "collection_map_entry_key_is_located_at_row_key",
+      "expression": {
+        "kind": "call",
+        "value": {
+          "operation": {"value": "collection.map"},
+          "type_arguments": [],
+          "arguments": [
+            {
+              "kind": "input",
+              "value": {
+                "binding": {"value": "subject"},
+                "path": {"segments": [{"kind": "field", "value": {"name": "m"}}]}
+              }
+            },
+            {
+              "kind": "lambda",
+              "value": {
+                "arity": 1,
+                "body": {
+                  "kind": "local",
+                  "value": {"depth": 0, "slot": 0, "path": {"segments": [{"kind": "field", "value": {"name": "key"}}]}}
+                }
+              }
+            }
+          ]
+        }
+      },
+      "inputs": {
+        "subject": {
+          "value": {"record": {"m": {"map": [{"id": "r1", "key": {"unfilled": true}, "value": {"integer": "1"}}]}}}
+        }
+      },
+      "expected": {"unavailable": ["subject.m[r1].#key"], "reads": ["subject.m"]}
     }
   ]
 }

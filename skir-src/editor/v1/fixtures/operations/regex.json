@@ -856,6 +856,22 @@
         }
       },
       "expected": {"failed": "regex_limit", "reads": []}
+    },
+    {
+      "id": "regex_replace_invalid_template_fails_without_a_match",
+      "expression": {
+        "kind": "call",
+        "value": {
+          "operation": {"value": "regex.replace"},
+          "type_arguments": [],
+          "arguments": [
+            {"kind": "literal", "value": {"kind": "string_value", "value": "abc"}},
+            {"kind": "literal", "value": {"kind": "string_value", "value": "x"}},
+            {"kind": "literal", "value": {"kind": "string_value", "value": "$a"}}
+          ]
+        }
+      },
+      "expected": {"failed": "invalid_regex", "reads": []}
     }
   ]
 }

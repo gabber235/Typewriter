@@ -194,6 +194,7 @@ private fun JsonObject.fixtureCase(file: String): FixtureCase {
     val budget = this["budget"]?.jsonObject?.also { it.requireKeys(BUDGET_KEYS, "$file case $id budget") }
     val expected = getValue("expected").jsonObject
     expected.requireKeys(OUTCOME_KEYS + "reads", "$file case $id expected")
+    require("reads" in expected) { "$file case $id expects no reads; write an empty list." }
     require(expected.keys.count { it in OUTCOME_KEYS } == 1) { "$file case $id expects exactly one outcome." }
     return FixtureCase(
         file = file,
@@ -256,7 +257,7 @@ private fun FixtureCase.checkWith(check: JsonObject) {
                 ExpressionType.serializer.fromJsonCode(check.getValue("resultType").toString()),
                 onInferred = { inferred = it },
             ).map { it.value }
-    failures shouldBe check.getValue("failures").jsonArray.map { it.jsonPrimitive.content }
+    failures.sorted() shouldBe check.getValue("failures").jsonArray.map { it.jsonPrimitive.content }.sorted()
     check["inferredType"]?.let { inferred shouldBe ExpressionType.serializer.fromJsonCode(it.toString()) }
 }
 
@@ -300,7 +301,7 @@ private fun FixtureCase.evaluate() {
             (result as? Availability.Failed)?.diagnostic?.failure?.value shouldBe expectedFailure
         }
     }
-    reads.distinct().map { it.compact() } shouldBe expected.locations("reads").orEmpty()
+    reads.distinct().map { it.compact() } shouldBe expected.locations("reads")
 }
 
 private fun JsonObject.locations(key: String): List<String>? = this[key]?.jsonArray?.map { it.jsonPrimitive.content }

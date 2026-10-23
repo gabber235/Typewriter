@@ -1047,6 +1047,38 @@
       },
       "inputs": {"subject": {"value": {"record": {}}}},
       "expected": {"unavailable": ["subject.missing"], "reads": ["subject.missing"]}
+    },
+    {
+      "id": "list_at_partly_filled_record_item_is_missing_at_item",
+      "expression": {
+        "kind": "call",
+        "value": {
+          "operation": {"value": "list.at"},
+          "type_arguments": [],
+          "arguments": [
+            {
+              "kind": "input",
+              "value": {
+                "binding": {"value": "subject"},
+                "path": {"segments": [{"kind": "field", "value": {"name": "items"}}]}
+              }
+            },
+            {"kind": "literal", "value": {"kind": "integer", "value": "0"}}
+          ]
+        }
+      },
+      "inputs": {
+        "subject": {
+          "value": {
+            "record": {
+              "items": {
+                "list": [{"id": "a", "value": {"record": {"level": {"unfilled": true}, "name": {"string": "x"}}}}]
+              }
+            }
+          }
+        }
+      },
+      "expected": {"unavailable": ["subject.items[a]"], "reads": ["subject.items"]}
     }
   ]
 }
