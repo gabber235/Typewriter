@@ -1034,13 +1034,12 @@ final class AuthoringEdit implements PortableAuthoringEdit {
                   (binding) => binding.template.endpoint == oppositeEndpoint,
                 ) ??
             const <AppliedEndpointBinding>[]) {
-      for (final path in expandAuthoredPattern(
-        staged,
-        binding.template.relativePath,
-      )) {
-        if (path.isAtOrBelow(embedded.path)) {
-          locations.add(skir.ValueLocation(resource: target, path: path));
-        }
+      for (final location
+          in skir.DataValue.createRecord(fields: staged.fields).expandPattern(
+            skir.ValueLocation(resource: target, path: editorRootPath),
+            binding.template.relativePath,
+          )) {
+        if (location.path.isAtOrBelow(embedded.path)) locations.add(location);
       }
     }
     return locations.length == 1 ? locations.single : null;

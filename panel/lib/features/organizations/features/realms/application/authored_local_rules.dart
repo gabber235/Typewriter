@@ -4,16 +4,18 @@ import "package:typewriter_panel/typewriter_panel.dart";
 
 part "authored_local_rules.freezed.dart";
 
-/// Projects portable configuration rules onto one resource's working values.
+/// Evaluates portable configuration rules over one resource's working values
+/// exactly as Realm checks them (`RealmCheckRuntime`), so draft feedback and
+/// saved findings share one contract.
 ///
-/// Local feedback follows concrete collection occurrences and retains target
-/// locations even when values are unfinished. It is independent of Realm check
+/// Every location a recipe pattern reaches is one subject, missing and
+/// unfinished values included; each rule of the recipe yields one
+/// [AuthoredRuleCheck] there. The projection is independent of Realm check
 /// execution and cannot establish saved publication readiness.
 @freezed
 abstract class AuthoredRuleProjection with _$AuthoredRuleProjection {
   const factory AuthoredRuleProjection({
-    @Default({}) Map<skir.ValueLocation, List<skir.OwnedRule>> rules,
-    @Default([]) List<PortablePresentationDiagnostic> diagnostics,
+    @Default([]) List<AuthoredRuleCheck> checks,
   }) = _AuthoredRuleProjection;
 
   const AuthoredRuleProjection._();
@@ -37,14 +39,24 @@ abstract class AuthoredRuleProjection with _$AuthoredRuleProjection {
           const [],
           0,
         );
-    return AuthoredRuleProjection(
-      rules: {
-        for (final entry in builder.rules.entries)
-          entry.key: List<skir.OwnedRule>.unmodifiable(entry.value),
-      },
-      diagnostics: List.unmodifiable(builder.diagnostics),
-    );
+    return AuthoredRuleProjection(checks: List.unmodifiable(builder.checks));
   }
+}
+
+/// One rule evaluated at one subject: Realm's outcome and findings for it.
+///
+/// A true predicate finishes clean and a false one finishes with the rule's
+/// finding. Missing data needs input at its locations. A failure, or a result
+/// that is not a boolean, is a failed outcome. Diagnostic ids are
+/// deterministic per rule and subject.
+@freezed
+abstract class AuthoredRuleCheck with _$AuthoredRuleCheck {
+  const factory AuthoredRuleCheck({
+    required skir.RuleId rule,
+    required skir.ValueLocation subject,
+    required skir.CheckOutcome outcome,
+    @Default([]) List<skir.Diagnostic> findings,
+  }) = _AuthoredRuleCheck;
 }
 
 final class _RuleProjectionBuilder {
@@ -57,8 +69,7 @@ final class _RuleProjectionBuilder {
   final CheckedEditorCatalog checkedCatalog;
   final skir.ResourceId resource;
   final skir.EvaluationBudget budget;
-  final Map<skir.ValueLocation, List<skir.OwnedRule>> rules = {};
-  final List<PortablePresentationDiagnostic> diagnostics = [];
+  final List<AuthoredRuleCheck> checks = [];
 
   void visitContext(
     skir.TypeSelection selection,
@@ -72,37 +83,34 @@ final class _RuleProjectionBuilder {
       path: skir.ValuePath(segments: base),
     );
     for (final recipe in checkedCatalog.configuration(selection)) {
-      for (final match in value.expandPattern(
-        segments: recipe.relativePath.segments.toList(growable: false),
-        path: base,
-        depth: depth,
-      )) {
-        final concretePath = skir.ValuePath(
-          segments: match.path.skip(base.length),
+      for (final subject in value.expandPattern(owner, recipe.relativePath)) {
+        final relative = skir.ValuePath(
+          segments: subject.path.segments.skip(base.length),
         );
         final condition = recipe.representationCondition;
         if (condition != null &&
             checkedCatalog.representationKindAt(
                   selection,
-                  concretePath,
+                  relative,
                   value: value,
                 ) !=
                 condition) {
           continue;
         }
-        final location = skir.ValueLocation(
-          resource: resource,
-          path: skir.ValuePath(segments: match.path),
-        );
-        (rules[location] ??= []).addAll(recipe.rules);
+        final subjectValue = switch (value.readAt(relative)) {
+          PortablePathValue(:final value) => value,
+          PortablePathUnavailable() => skir.DataValue.unfilled,
+        };
         for (final rule in recipe.rules) {
-          _evaluate(
-            recipe,
-            rule,
-            match.value,
-            location,
-            ownerValue: value,
-            owner: owner,
+          checks.add(
+            _evaluate(
+              recipe,
+              rule,
+              subject,
+              subjectValue,
+              ownerValue: value,
+              owner: owner,
+            ),
           );
         }
       }
@@ -164,189 +172,114 @@ final class _RuleProjectionBuilder {
     }
   }
 
-  void _evaluate(
+  /// Realm's portable rule branch for one subject (`RealmCheckRuntime`).
+  /// An absent subject evaluates as unfilled, so it needs input.
+  AuthoredRuleCheck _evaluate(
     skir.ConfigurationRecipe recipe,
     skir.OwnedRule rule,
-    skir.DataValue subject,
-    skir.ValueLocation location, {
+    skir.ValueLocation subject,
+    skir.DataValue subjectValue, {
     required skir.DataValue ownerValue,
     required skir.ValueLocation owner,
   }) {
+    final id = skir.DiagnosticId(
+      value:
+          "local:${skir.RuleId.serializer.toJsonCode(rule.id)}:"
+          "${skir.ValueLocation.serializer.toJsonCode(subject)}",
+    );
+    skir.CheckOutcome failed(
+      skir.FailureId failure,
+      String message,
+      List<skir.ValueLocation> locations,
+    ) => skir.CheckOutcome.wrapFailed([
+      skir.Diagnostic(
+        id: id,
+        origin: rule.id.origin,
+        code: failure.value,
+        message: message,
+        severity: skir.DiagnosticSeverity.error,
+        primary: locations.firstOrNull ?? subject,
+        related: locations.skip(1).toList(),
+      ),
+    ]);
     final result = PortableExpressionEvaluator.configuredValue(
-      value: subject,
-      location: location,
+      value: subjectValue,
+      location: subject,
       budget: budget,
     ).evaluate(rule.descriptor.predicate);
-    switch (result) {
-      case PortableExpressionAvailable(:final value):
-        final payload = value.authoredPayload;
-        if (payload is skir.DataValue_booleanWrapper && payload.value) return;
-        diagnostics.add(
-          PortablePresentationDiagnostic(
-            code: rule.diagnostic.code,
-            origin: rule.id.origin,
-            message: payload is skir.DataValue_booleanWrapper
-                ? rule.diagnostic.message
-                : "${rule.diagnostic.message}: the rule result is not boolean",
-            severity: rule.diagnostic.severity,
-            targets: recipe.resolveDiagnosticTargets(
-              rule.diagnostic,
-              ownerValue: ownerValue,
-              owner: owner,
-              subject: location,
-            ),
+    final (outcome, findings) = switch (result) {
+      PortableExpressionAvailable(:final value) =>
+        switch (value.authoredPayload) {
+          skir.DataValue_booleanWrapper(value: true) => (
+            skir.CheckOutcome.finished,
+            const <skir.Diagnostic>[],
           ),
-        );
-      case PortableExpressionUnavailable():
-        return;
-      case PortableExpressionFailed(:final failure, :final message):
-        diagnostics.add(
-          PortablePresentationDiagnostic(
-            code: failure.value,
-            origin: rule.id.origin,
-            message: message,
-            severity: skir.DiagnosticSeverity.error,
-            targets: [PortableDiagnosticTarget.value(location)],
-          ),
-        );
-    }
-  }
-}
-
-@freezed
-abstract class _PatternMatch with _$PatternMatch {
-  const factory _PatternMatch({
-    required skir.DataValue value,
-    required List<skir.PathSegment> path,
-  }) = _PatternMatchValue;
-}
-
-extension _AuthoredValuePatternExpansion on skir.DataValue {
-  Iterable<_PatternMatch> expandPattern({
-    required List<skir.FieldPatternSegment> segments,
-    required List<skir.PathSegment> path,
-    int offset = 0,
-    int depth = 0,
-    bool preserveTargets = false,
-  }) sync* {
-    if (depth > 512) return;
-    if (offset == segments.length) {
-      yield _PatternMatch(value: this, path: path);
-      return;
-    }
-    final payload = authoredPayload;
-    final segment = segments[offset];
-    switch (segment) {
-      case skir.FieldPatternSegment_fieldWrapper(:final value):
-        final field = payload.authoredField(value.name);
-        final address = [
-          ...path,
-          skir.PathSegment.createField(name: value.name),
-        ];
-        if (field == null) {
-          if (!preserveTargets) return;
-          for (final remaining in segments.skip(offset + 1)) {
-            if (remaining is! skir.FieldPatternSegment_fieldWrapper) break;
-            address.add(
-              skir.PathSegment.createField(name: remaining.value.name),
-            );
-          }
-          yield _PatternMatch(value: skir.DataValue.unfilled, path: address);
-          return;
-        }
-        yield* field.expandPattern(
-          segments: segments,
-          path: address,
-          offset: offset + 1,
-          depth: depth + 1,
-          preserveTargets: preserveTargets,
-        );
-      case skir.FieldPatternSegment.items:
-        final items = payload.authoredItems;
-        if (items == null || items.isEmpty) {
-          if (preserveTargets) yield _PatternMatch(value: payload, path: path);
-          return;
-        }
-        for (final item in items) {
-          yield* item.value.expandPattern(
-            segments: segments,
-            path: [
-              ...path,
-              skir.PathSegment.createItem(id: item.id),
+          skir.DataValue_booleanWrapper() => (
+            skir.CheckOutcome.finished,
+            [
+              _finding(
+                recipe,
+                rule,
+                id,
+                subject,
+                ownerValue: ownerValue,
+                owner: owner,
+              ),
             ],
-            offset: offset + 1,
-            depth: depth + 1,
-            preserveTargets: preserveTargets,
-          );
-        }
-      case skir.FieldPatternSegment.keys:
-      case skir.FieldPatternSegment.values:
-        if (payload case skir.DataValue_mapValueWrapper(:final value)) {
-          if (value.rows.isEmpty && preserveTargets) {
-            yield _PatternMatch(value: payload, path: path);
-          }
-          for (final row in value.rows) {
-            final isKey = segment == skir.FieldPatternSegment.keys;
-            yield* (isKey ? row.key : row.value).expandPattern(
-              segments: segments,
-              path: [
-                ...path,
-                skir.PathSegment.createItem(id: row.id),
-                if (isKey)
-                  skir.PathSegment.mapKey
-                else
-                  skir.PathSegment.mapValue,
-              ],
-              offset: offset + 1,
-              depth: depth + 1,
-              preserveTargets: preserveTargets,
-            );
-          }
-        } else if (preserveTargets) {
-          yield _PatternMatch(value: payload, path: path);
-        }
-      case skir.FieldPatternSegment_unknown():
-        return;
-    }
+          ),
+          _ => (
+            failed(
+              skir.PortableFailures.expressionResultNotBoolean,
+              "The portable predicate did not produce a boolean value.",
+              [subject],
+            ),
+            const <skir.Diagnostic>[],
+          ),
+        },
+      PortableExpressionUnavailable(:final locations) => (
+        skir.CheckOutcome.wrapNeedsInput(locations),
+        const <skir.Diagnostic>[],
+      ),
+      PortableExpressionFailed(
+        :final failure,
+        :final message,
+        :final locations,
+      ) =>
+        (failed(failure, message, locations), const <skir.Diagnostic>[]),
+    };
+    return AuthoredRuleCheck(
+      rule: rule.id,
+      subject: subject,
+      outcome: outcome,
+      findings: findings,
+    );
   }
-}
 
-extension AuthoredDiagnosticTargetResolution on skir.ConfigurationRecipe {
-  /// Resolves owner relative targets for one matched rule occurrence.
-  /// A target equal to [relativePath] denotes only [subject], including when
-  /// that pattern contains collection wildcards. Other patterns expand from
-  /// [owner]. Empty targets fall back to the subject. The panel retains missing
-  /// field and empty collection addresses so unfinished drafts remain visible.
-  List<PortableDiagnosticTarget> resolveDiagnosticTargets(
-    skir.DiagnosticTemplate diagnostic, {
+  /// The rule's own finding. A target equal to the recipe pattern is the
+  /// subject; any other expands from [owner]. Targets are distinct, the first
+  /// is primary, and without targets the subject is primary.
+  skir.Diagnostic _finding(
+    skir.ConfigurationRecipe recipe,
+    skir.OwnedRule rule,
+    skir.DiagnosticId id,
+    skir.ValueLocation subject, {
     required skir.DataValue ownerValue,
     required skir.ValueLocation owner,
-    required skir.ValueLocation subject,
   }) {
-    final subjectTarget = PortableDiagnosticTarget.value(subject);
-    if (diagnostic.targets.isEmpty) return [subjectTarget];
-    final resolved = <PortableDiagnosticTarget>{};
-    for (final pattern in diagnostic.targets) {
-      if (pattern == relativePath) {
-        resolved.add(subjectTarget);
-        continue;
-      }
-      final matches = ownerValue.expandPattern(
-        segments: pattern.segments.toList(growable: false),
-        path: owner.path.segments.toList(growable: false),
-        preserveTargets: true,
-      );
-      for (final match in matches) {
-        resolved.add(
-          PortableDiagnosticTarget.value(
-            skir.ValueLocation(
-              resource: owner.resource,
-              path: skir.ValuePath(segments: match.path),
-            ),
-          ),
-        );
-      }
-    }
-    return resolved.isEmpty ? [subjectTarget] : List.unmodifiable(resolved);
+    final targets = {
+      for (final target in rule.diagnostic.targets)
+        ...(target == recipe.relativePath
+            ? [subject]
+            : ownerValue.expandPattern(owner, target)),
+    };
+    return skir.Diagnostic(
+      id: id,
+      origin: rule.id.origin,
+      code: rule.diagnostic.code,
+      message: rule.diagnostic.message,
+      severity: rule.diagnostic.severity,
+      primary: targets.firstOrNull ?? subject,
+      related: targets.skip(1).toList(),
+    );
   }
 }
