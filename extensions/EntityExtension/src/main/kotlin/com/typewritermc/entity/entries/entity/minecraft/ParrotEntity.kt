@@ -17,6 +17,7 @@ import com.typewritermc.entity.entries.data.minecraft.applyGenericEntityData
 import com.typewritermc.entity.entries.data.minecraft.living.applyLivingEntityData
 import com.typewritermc.entity.entries.data.minecraft.living.parrot.ParrotColorProperty
 import com.typewritermc.entity.entries.data.minecraft.living.parrot.applyParrotColorData
+import com.typewritermc.entity.entries.data.minecraft.living.tameable.applyTameableData
 import com.typewritermc.entity.entries.entity.WrapperFakeEntity
 import org.bukkit.entity.Player
 
@@ -33,7 +34,7 @@ class ParrotDefinition(
     override val name: String = "",
     override val displayName: Var<String> = ConstVar(""),
     override val sound: Var<Sound> = ConstVar(Sound.EMPTY),
-    @OnlyTags("generic_entity_data", "living_entity_data", "parrot_data")
+    @OnlyTags("generic_entity_data", "living_entity_data", "tameable_data", "parrot_data")
     override val data: List<Ref<EntityData<*>>> = emptyList(),
 ) : SimpleEntityDefinition {
     override fun create(player: Player): FakeEntity = ParrotEntity(player)
@@ -52,7 +53,7 @@ class ParrotInstance(
     override val name: String = "",
     override val definition: Ref<ParrotDefinition> = emptyRef(),
     override val spawnLocation: Position = Position.ORIGIN,
-    @OnlyTags("generic_entity_data", "living_entity_data", "parrot_data")
+    @OnlyTags("generic_entity_data", "living_entity_data", "tameable_data", "parrot_data")
     override val data: List<Ref<EntityData<*>>> = emptyList(),
     override val activity: Ref<out SharedEntityActivityEntry> = emptyRef(),
 ) : SimpleEntityInstance
@@ -64,6 +65,7 @@ private class ParrotEntity(player: Player) : WrapperFakeEntity(EntityTypes.PARRO
         }
         if (applyGenericEntityData(entity, property)) return
         if (applyLivingEntityData(entity, property)) return
+        if (applyTameableData(entity, property)) return
     }
 
 }
