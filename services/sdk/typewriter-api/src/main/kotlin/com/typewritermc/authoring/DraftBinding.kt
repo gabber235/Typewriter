@@ -2,6 +2,7 @@
 
 package com.typewritermc.authoring
 
+import com.typewritermc.expression.operations.HostFailure
 import com.typewritermc.types.catalog.CheckedType
 import com.typewritermc.types.nullable
 import com.typewritermc.types.use
@@ -167,7 +168,7 @@ private fun <V> collectionProjection(
                 if (present) {
                     Availability.Available(create(location, reads.readContext))
                 } else {
-                    projectionFailure("unexpected_null", "A nonnullable collection contains null.", location)
+                    projectionFailure(HostFailure.UnexpectedNull, "A nonnullable collection contains null.", location)
                 }
             }
     }
@@ -313,7 +314,7 @@ private fun requireContext(
         Availability.Available(Unit)
     } else {
         projectionFailure(
-            "read_context_mismatch",
+            HostFailure.ReadContextMismatch,
             "The draft view belongs to a different snapshot or catalog generation.",
             location,
         )
@@ -323,11 +324,10 @@ private fun requireContext(
 private fun <V> Availability<*>.cast(): Availability<V> = this as Availability<V>
 
 private fun <V> projectionFailure(
-    code: String,
+    failure: FailureId,
     message: String,
     location: ValueLocation,
-): Availability<V> =
-    Availability.Failed(EvaluationDiagnostic(failure = FailureId(value = code), message = message, locations = listOf(location)))
+): Availability<V> = Availability.Failed(EvaluationDiagnostic(failure = failure, message = message, locations = listOf(location)))
 
 class GenericField<Owner>(
     val owner: TypeDefinitionId,

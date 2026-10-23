@@ -36,6 +36,7 @@ import com.typewritermc.checking.TypedSelection
 import com.typewritermc.checking.UndecidedCandidate
 import com.typewritermc.configuration.kind
 import com.typewritermc.configuration.name
+import com.typewritermc.expression.operations.HostFailure
 import com.typewritermc.realm.authoring.AuthoredReadView
 import com.typewritermc.realm.authoring.RESOURCE_SELECTION_INPUT
 import com.typewritermc.services.libs.utils.rethrowExceptional
@@ -58,6 +59,7 @@ import com.typewritermc.types.use
 import skirout.editor.v1.authoring_facts.EditExpectation
 import skirout.editor.v1.authoring_facts.TraversalDirection
 import skirout.editor.v1.catalog.RepresentationKind
+import skirout.editor.v1.diagnostic.ValueProblem
 import skirout.editor.v1.expression.EvaluationDiagnostic
 import skirout.editor.v1.expression.ExpressionNode
 import skirout.editor.v1.expression.FailureId
@@ -132,7 +134,7 @@ class CapturedAuthoringReads(
         } catch (failure: Exception) {
             failure.rethrowExceptional()
             failed(
-                "native_read_failed",
+                HostFailure.NativeReadFailed,
                 failure.message ?: failure::class.simpleName.orEmpty(),
                 listOf(path.location),
             ).cast()
@@ -147,13 +149,13 @@ class CapturedAuthoringReads(
         observe(InputIdentity.Catalog(catalog))
         val located = valueAt(path.location)
         if (located is LocatedValue.Missing) return unavailable(located.at)
-        if (located is LocatedValue.Invalid) return failed(located.code, located.message, listOf(located.at))
+        if (located is LocatedValue.Invalid) return failed(located.failure, located.message, listOf(located.at))
         located as LocatedValue.Available
         observe(InputIdentity.Value(path.location))
         val named =
             located.value as? DataValue.NamedWrapper
                 ?: return failed(
-                    "expected_named_representation",
+                    HostFailure.ExpectedNamedRepresentation,
                     "A representation read requires a named authored value.",
                     listOf(path.location),
                 ).cast()
@@ -161,7 +163,7 @@ class CapturedAuthoringReads(
                 .isReadableAs(named.actualType.use, path.expected)
         ) {
             return failed(
-                "unreadable_value",
+                HostFailure.UnreadableValue,
                 "The authored value is not readable as the requested type.",
                 listOf(path.location),
             ).cast()
@@ -181,8 +183,8 @@ class CapturedAuthoringReads(
 
                 is CompletenessResult.Invalid -> {
                     return failed(
-                        result.problems.firstOrNull()?.code ?: "invalid_representation",
-                        "The authored representation does not match the requested type.",
+                        HostFailure.InvalidRepresentation,
+                        "The authored representation does not match the requested type${result.problems.codes()}.",
                         result.problems.map { path.location.append(it.location.path) }.ifEmpty { listOf(path.location) },
                     )
                 }
@@ -197,7 +199,7 @@ class CapturedAuthoringReads(
         } catch (failure: Exception) {
             failure.rethrowExceptional()
             failed(
-                "representation_read_failed",
+                HostFailure.RepresentationReadFailed,
                 failure.message ?: failure::class.simpleName.orEmpty(),
                 listOf(path.location),
             ).cast()
@@ -213,7 +215,7 @@ class CapturedAuthoringReads(
             }
 
             is LocatedValue.Invalid -> {
-                failed(located.code, located.message, listOf(located.at))
+                failed(located.failure, located.message, listOf(located.at))
             }
 
             is LocatedValue.Available -> {
@@ -253,7 +255,7 @@ class CapturedAuthoringReads(
                 }
             if (!readable) {
                 return failed(
-                    "unreadable_binding",
+                    HostFailure.UnreadableBinding,
                     "The authored value is not readable as the requested draft type.",
                     listOf(path.location),
                 )
@@ -269,7 +271,7 @@ class CapturedAuthoringReads(
             }
 
             is LocatedValue.Invalid -> {
-                failed(located.code, located.message, listOf(located.at))
+                failed(located.failure, located.message, listOf(located.at))
             }
 
             is LocatedValue.Available -> {
@@ -277,7 +279,7 @@ class CapturedAuthoringReads(
                 val named =
                     located.value as? DataValue.NamedWrapper
                         ?: return failed(
-                            "expected_named_binding",
+                            HostFailure.ExpectedNamedBinding,
                             "A draft binding requires a named authored value.",
                             listOf(path.location),
                         )
@@ -285,7 +287,7 @@ class CapturedAuthoringReads(
                         .isReadableAs(named.actualType.use, path.expected)
                 ) {
                     return failed(
-                        "unreadable_binding",
+                        HostFailure.UnreadableBinding,
                         "The authored value is not readable as the requested draft type.",
                         listOf(path.location),
                     )
@@ -313,7 +315,7 @@ class CapturedAuthoringReads(
             }
 
             is LocatedValue.Invalid -> {
-                failed(located.code, located.message, listOf(located.at))
+                failed(located.failure, located.message, listOf(located.at))
             }
 
             is LocatedValue.Available -> {
@@ -325,7 +327,7 @@ class CapturedAuthoringReads(
                         .isReadableAs(actual, path.expected)
                 ) {
                     return failed(
-                        "unreadable_value",
+                        HostFailure.UnreadableValue,
                         "The authored value is not readable as the requested type.",
                         listOf(path.location),
                     )
@@ -361,7 +363,7 @@ class CapturedAuthoringReads(
                     }
 
                     else -> {
-                        failed("expected_collection", "The authored value is not a collection.", listOf(path.location))
+                        failed(HostFailure.ExpectedCollection, "The authored value is not a collection.", listOf(path.location))
                         emptyList()
                     }
                 }
@@ -373,7 +375,7 @@ class CapturedAuthoringReads(
             }
 
             is LocatedValue.Invalid -> {
-                failed(value.code, value.message, listOf(value.at))
+                failed(value.failure, value.message, listOf(value.at))
                 emptyList()
             }
         }
@@ -445,7 +447,7 @@ class CapturedAuthoringReads(
         observe(InputIdentity.Catalog(catalog))
         val located = valueAt(path.location)
         if (located is LocatedValue.Missing) return unavailable(located.at)
-        if (located is LocatedValue.Invalid) return failed(located.code, located.message, listOf(located.at))
+        if (located is LocatedValue.Invalid) return failed(located.failure, located.message, listOf(located.at))
         located as LocatedValue.Available
         observe(InputIdentity.Value(path.location))
         if (located.value == DataValue.UNFILLED) return unavailable(path.location)
@@ -453,7 +455,7 @@ class CapturedAuthoringReads(
         if (!view.original.catalog.checked
                 .isReadableAs(actual, path.expected)
         ) {
-            return failed("unreadable_value", "The authored value is not readable as the requested type.", listOf(path.location))
+            return failed(HostFailure.UnreadableValue, "The authored value is not readable as the requested type.", listOf(path.location))
         }
         val checked = resolve(actual, path.location) ?: return Availability.Failed(failures.last())
         return when (val result = checked.complete(located.value)) {
@@ -468,8 +470,8 @@ class CapturedAuthoringReads(
             is CompletenessResult.Invalid -> {
                 val locations = result.problems.map { path.location.append(it.location.path) }
                 failed(
-                    result.problems.firstOrNull()?.code ?: "invalid_value",
-                    "The authored value does not match its checked schema.",
+                    HostFailure.InvalidValue,
+                    "The authored value does not match its checked schema${result.problems.codes()}.",
                     locations.ifEmpty { listOf(path.location) },
                 )
             }
@@ -485,7 +487,7 @@ class CapturedAuthoringReads(
             }
 
             is LocatedValue.Invalid -> {
-                failed(located.code, located.message, listOf(located.at))
+                failed(located.failure, located.message, listOf(located.at))
             }
 
             is LocatedValue.Available -> {
@@ -635,7 +637,7 @@ class CapturedAuthoringReads(
         val checked = (record.configuration as? TypeSelection.CompleteWrapper)?.let { resolve(it.use.use, location) }
         val binding = binding(location, record.configuration, checked)
         return binding?.let { Availability.Available(it) }
-            ?: failed("resource_binding_failed", "The resource could not be bound to its captured catalog.", listOf(location))
+            ?: failed(HostFailure.ResourceBindingFailed, "The resource could not be bound to its captured catalog.", listOf(location))
     }
 
     internal fun bindResource(
@@ -763,7 +765,7 @@ class CapturedAuthoringReads(
             }
 
             is LocatedPortableValue.Row -> {
-                LocatedValue.Invalid(location, "expected_value", "The path ends at a map row rather than a value.")
+                LocatedValue.Invalid(location, HostFailure.ExpectedValue, "The path ends at a map row rather than a value.")
             }
 
             is LocatedPortableValue.Missing -> {
@@ -771,15 +773,14 @@ class CapturedAuthoringReads(
             }
 
             is LocatedPortableValue.Invalid -> {
-                LocatedValue.Invalid(
-                    location.copy(path = result.traversed),
-                    result.code,
+                val (failure, message) =
                     when (result.code) {
-                        "expected_record" -> "A field was read from a nonrecord value."
-                        "expected_map_row" -> "A map branch was read outside a map row."
-                        else -> "The portable path is invalid."
-                    },
-                )
+                        "expected_record" -> HostFailure.ExpectedRecord to "A field was read from a nonrecord value."
+                        "expected_map_row" -> HostFailure.ExpectedMapRow to "A map branch was read outside a map row."
+                        "value_depth_limit" -> HostFailure.ValueDepthLimit to "The authored value nests too deeply."
+                        else -> error("Unknown portable path failure ${result.code}.")
+                    }
+                LocatedValue.Invalid(location.copy(path = result.traversed), failure, message)
             }
         }
     }
@@ -953,7 +954,7 @@ class CapturedAuthoringReads(
                     }
 
                     is Resolution.Invalid -> {
-                        failed("unresolved_partial_type", partial.diagnostics.joinToString { it.code }, listOf(location))
+                        failed(HostFailure.UnresolvedPartialType, partial.diagnostics.joinToString { it.code }, listOf(location))
                         null
                     }
                 }
@@ -979,7 +980,7 @@ class CapturedAuthoringReads(
 
             is Resolution.Invalid -> {
                 failed(
-                    "unresolved_type",
+                    HostFailure.UnresolvedType,
                     result.diagnostics.joinToString { it.code },
                     listOfNotNull(at),
                 )
@@ -1052,11 +1053,11 @@ class CapturedAuthoringReads(
         Availability.Unavailable(locations).also { missing += locations }
 
     private fun failed(
-        code: String,
+        failure: FailureId,
         message: String,
         locations: List<ValueLocation>,
     ): Availability.Failed {
-        val diagnostic = EvaluationDiagnostic(failure = FailureId(value = code), message = message, locations = locations)
+        val diagnostic = EvaluationDiagnostic(failure = failure, message = message, locations = locations)
         failures += diagnostic
         return Availability.Failed(diagnostic)
     }
@@ -1066,6 +1067,9 @@ class CapturedAuthoringReads(
     }
 }
 
+/** The admission problem codes, for a failure message: empty, or a colon and the distinct codes. */
+private fun List<ValueProblem>.codes(): String = if (isEmpty()) "" else ": " + map { it.code }.distinct().joinToString()
+
 internal object MissingSelectionPredicateEvaluator : SelectionPredicateEvaluator {
     override fun evaluate(
         predicate: ExpressionNode,
@@ -1074,7 +1078,7 @@ internal object MissingSelectionPredicateEvaluator : SelectionPredicateEvaluator
     ): Availability<Boolean> =
         Availability.Failed(
             EvaluationDiagnostic(
-                failure = FailureId(value = "selection_evaluator_unavailable"),
+                failure = HostFailure.SelectionEvaluatorUnavailable,
                 message = "No selection predicate evaluator is installed.",
                 locations = listOf(subject.location),
             ),
@@ -1092,7 +1096,7 @@ private sealed interface LocatedValue {
 
     data class Invalid(
         val at: ValueLocation,
-        val code: String,
+        val failure: FailureId,
         val message: String,
     ) : LocatedValue
 }

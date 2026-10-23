@@ -3,11 +3,14 @@ package com.typewritermc.checking
 import com.typewritermc.authoring.Availability
 import com.typewritermc.authoring.flatMap
 import com.typewritermc.authoring.map
+import com.typewritermc.expression.operations.HostFailure
+import skirout.editor.v1.expression.EvaluationDiagnostic
+import skirout.editor.v1.expression.FailureId
 import java.math.BigInteger
 
 fun <D> PartialSelection<D>.singleOrNone(): Availability<D?> =
     when {
-        knownMatches.size > 1 -> Availability.Failed(selectionFailure("selection.multiple", "More than one value matched"))
+        knownMatches.size > 1 -> Availability.Failed(selectionFailure(HostFailure.MultipleSelectionMatches, "More than one value matched."))
         else -> complete().map(List<D>::singleOrNull)
     }
 
@@ -65,13 +68,6 @@ private inline fun <T, R> Iterable<T>.foldAvailability(
 }
 
 private fun selectionFailure(
-    code: String,
+    failure: FailureId,
     message: String,
-) = skirout.editor.v1.expression
-    .EvaluationDiagnostic(
-        failure =
-            skirout.editor.v1.expression
-                .FailureId(value = code),
-        message = message,
-        locations = emptyList(),
-    )
+) = EvaluationDiagnostic(failure = failure, message = message, locations = emptyList())
