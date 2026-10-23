@@ -1,9 +1,6 @@
 use wasmcloud_utils::skir::base::editor::v1::{
     authoring, authoring_facts as facts, binding, catalog, checking,
-    expression::{
-        ExpressionLocal, ExpressionNode, FoldExpression, NumberArithmeticExpression,
-        NumberArithmeticOperation,
-    },
+    expression::{CallExpression, ExpressionLocal, ExpressionNode, LambdaExpression, OperationId},
     presentation::{
         AxisChild, AxisChildrenElement, AxisChildrenLayout, BoundControl, ChildrenElement,
         GraphDirection, GraphResourcesLayout, GridResourcesLayout, NamedControl,
@@ -341,12 +338,23 @@ fn resources_elements_preserve_their_field_binding_and_layout() {
 }
 
 #[test]
-fn collection_expressions_preserve_typed_fold_operands_and_lexical_slots() {
+fn operation_calls_preserve_typed_fold_operands_and_lexical_slots() {
     let local = |slot| {
         ExpressionNode::Local(Box::new(ExpressionLocal {
             depth: 0,
             slot,
             ..Default::default()
+        }))
+    };
+    let call = |operation: &str, arguments: Vec<ExpressionNode>| {
+        ExpressionNode::Call(Box::new(CallExpression {
+            operation: OperationId {
+                value: operation.to_owned(),
+                _unrecognized: None,
+            },
+            type_arguments: vec![],
+            arguments,
+            _unrecognized: None,
         }))
     };
     let input = ExpressionNode::Literal(Box::new(DataValue::ListValue(Box::new(ListPayload {
@@ -360,24 +368,24 @@ fn collection_expressions_preserve_typed_fold_operands_and_lexical_slots() {
         }],
         _unrecognized: None,
     }))));
-    let fold = ExpressionNode::Fold(Box::new(FoldExpression {
-        source: input.clone(),
-        initial: ExpressionNode::Literal(Box::new(DataValue::Integer("0".to_owned()))),
-        body: ExpressionNode::NumberArithmetic(Box::new(NumberArithmeticExpression {
-            operation: NumberArithmeticOperation::Add,
-            first: local(0),
-            second: local(1),
-            remaining: vec![],
-            _unrecognized: None,
-        })),
-        _unrecognized: None,
-    }));
-    let reverse = ExpressionNode::Reverse(Box::new(input));
+    let fold = call(
+        "collection.fold",
+        vec![
+            input.clone(),
+            ExpressionNode::Literal(Box::new(DataValue::Integer("0".to_owned()))),
+            ExpressionNode::Lambda(Box::new(LambdaExpression {
+                arity: 2,
+                body: call("number.add", vec![local(0), local(1)]),
+                _unrecognized: None,
+            })),
+        ],
+    );
+    let reverse = call("list.reverse", vec![input]);
     for value in [fold, reverse] {
         let bytes = ExpressionNode::serializer().to_bytes(&value);
         let decoded = ExpressionNode::serializer()
             .from_bytes(&bytes, UnrecognizedValues::Drop)
-            .expect("typed collection expression must decode");
+            .expect("operation call must decode");
         assert_eq!(decoded, value);
     }
 }
