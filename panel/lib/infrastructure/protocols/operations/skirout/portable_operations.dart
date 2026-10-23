@@ -477,6 +477,11 @@ abstract final class PortableFailures {
     value: "invalid_byte",
   );
 
+  /// An integer or decimal result would have more than 20000 digits.
+  static final magnitudeLimit = _lib_editor_v1_expression.FailureId(
+    value: "magnitude_limit",
+  );
+
   /// The duration is outside the representable range.
   static final durationRange = _lib_editor_v1_expression.FailureId(
     value: "duration_range",
@@ -623,6 +628,8 @@ abstract final class PortableFailures {
         "The value has no exact representation in the target type.",
     "negative_shift": "The shift distance is negative.",
     "invalid_byte": "A value is outside 0 to 255.",
+    "magnitude_limit":
+        "An integer or decimal result would have more than 20000 digits.",
     "duration_range": "The duration is outside the representable range.",
     "timestamp_range": "The timestamp is outside the representable range.",
     "invalid_calendar_date": "The fields do not name a valid date and time.",
@@ -658,7 +665,7 @@ abstract final class PortableFailures {
   static const declared = <String, List<String>>{
     "bytes.from_list": ["invalid_byte"],
     "duration.from_milliseconds": ["duration_range"],
-    "integer.shift_left": ["negative_shift"],
+    "integer.shift_left": ["negative_shift", "magnitude_limit"],
     "integer.shift_right": ["negative_shift"],
     "list.at": ["collection_key_absent"],
     "list.range": ["invalid_range_step"],
@@ -668,9 +675,13 @@ abstract final class PortableFailures {
     "number.convert": ["inexact_conversion"],
     "number.divide": ["division_by_zero", "non_finite_number"],
     "number.format": ["invalid_locale"],
-    "number.multiply": ["non_finite_number"],
+    "number.multiply": ["non_finite_number", "magnitude_limit"],
     "number.plural_category": ["invalid_locale"],
-    "number.power": ["negative_exponent", "non_finite_number"],
+    "number.power": [
+      "negative_exponent",
+      "non_finite_number",
+      "magnitude_limit",
+    ],
     "number.remainder": ["division_by_zero", "non_finite_number"],
     "number.round": ["invalid_rounding_increment", "non_finite_number"],
     "number.sqrt": ["negative_square_root"],
@@ -679,10 +690,14 @@ abstract final class PortableFailures {
     "regex.find_all": ["regex_limit", "invalid_regex"],
     "regex.replace": ["regex_limit", "invalid_regex"],
     "text.from_code_points": ["invalid_code_point"],
-    "text.parse_decimal": ["invalid_number_text"],
+    "text.parse_decimal": ["invalid_number_text", "magnitude_limit"],
     "text.parse_duration": ["invalid_duration_text", "duration_range"],
     "text.parse_float": ["invalid_number_text"],
-    "text.parse_integer": ["invalid_number_text", "invalid_radix"],
+    "text.parse_integer": [
+      "invalid_number_text",
+      "invalid_radix",
+      "magnitude_limit",
+    ],
     "text.parse_timestamp": ["invalid_timestamp_text", "timestamp_range"],
     "text.split": ["empty_separator"],
     "text.substring": ["substring_range"],

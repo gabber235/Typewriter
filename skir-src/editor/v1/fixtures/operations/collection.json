@@ -1478,7 +1478,7 @@
         "resultType": {
           "value": {
             "kind": "nominal",
-            "value": {"kind": "scalar", "value": {"kind": "integer", "value": {"width": "signed_sixty_four"}}}
+            "value": {"kind": "scalar", "value": {"kind": "integer", "value": {"width": "signed_thirty_two"}}}
           },
           "may_be_missing": true
         },
@@ -1486,7 +1486,7 @@
         "inferredType": {
           "value": {
             "kind": "nominal",
-            "value": {"kind": "scalar", "value": {"kind": "integer", "value": {"width": "signed_sixty_four"}}}
+            "value": {"kind": "scalar", "value": {"kind": "integer", "value": {"width": "signed_thirty_two"}}}
           },
           "may_be_missing": false
         }

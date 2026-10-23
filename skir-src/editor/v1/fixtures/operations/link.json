@@ -18,47 +18,6 @@
           ]
         }
       },
-      "check": {
-        "resultType": {
-          "value": {
-            "kind": "nominal",
-            "value": {
-              "kind": "named",
-              "value": {
-                "definition": {
-                  "type_id": {
-                    "kind": "qualified",
-                    "value": {"namespace": "kotlin", "name": "com.typewritermc.types.ResourceId"}
-                  },
-                  "revision": 1
-                },
-                "arguments": []
-              }
-            }
-          },
-          "may_be_missing": true
-        },
-        "failures": [],
-        "inferredType": {
-          "value": {
-            "kind": "nominal",
-            "value": {
-              "kind": "named",
-              "value": {
-                "definition": {
-                  "type_id": {
-                    "kind": "qualified",
-                    "value": {"namespace": "kotlin", "name": "com.typewritermc.types.ResourceId"}
-                  },
-                  "revision": 1
-                },
-                "arguments": []
-              }
-            }
-          },
-          "may_be_missing": false
-        }
-      },
       "expected": {
         "available": {
           "named": {

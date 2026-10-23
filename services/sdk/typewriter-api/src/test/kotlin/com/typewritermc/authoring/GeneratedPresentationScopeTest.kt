@@ -7,9 +7,9 @@ import com.typewritermc.expression.ExpressionFactory
 import com.typewritermc.expression.MayBeMissing
 import com.typewritermc.expression.MissingPolicy
 import com.typewritermc.expression.field
-import com.typewritermc.expression.gte
 import com.typewritermc.expression.literal
 import com.typewritermc.expression.orElse
+import com.typewritermc.expression.shortcuts.gte
 import com.typewritermc.presentation.DefaultPresentationRuntime
 import com.typewritermc.presentation.PresentationBuildBinding
 import com.typewritermc.presentation.presentationTemplate

@@ -141,8 +141,8 @@
           "operation": {"value": "regex.find"},
           "type_arguments": [],
           "arguments": [
-            {"kind": "literal", "value": {"kind": "string_value", "value": "ab"}},
-            {"kind": "literal", "value": {"kind": "string_value", "value": "a(x)?b"}}
+            {"kind": "literal", "value": {"kind": "string_value", "value": "b"}},
+            {"kind": "literal", "value": {"kind": "string_value", "value": "(x)|(b)"}}
           ]
         }
       },
@@ -154,10 +154,10 @@
             "arguments": [],
             "payload": {
               "record": {
-                "end": {"integer": "2"},
-                "groups": {"list": [{"id": "0", "value": {"null": true}}]},
+                "end": {"integer": "1"},
+                "groups": {"list": [{"id": "0", "value": {"null": true}}, {"id": "1", "value": {"string": "b"}}]},
                 "start": {"integer": "0"},
-                "text": {"string": "ab"}
+                "text": {"string": "b"}
               }
             }
           }
@@ -780,12 +780,12 @@
           "type_arguments": [],
           "arguments": [
             {"kind": "literal", "value": {"kind": "string_value", "value": "ab"}},
-            {"kind": "literal", "value": {"kind": "string_value", "value": "a(x)?b"}},
+            {"kind": "literal", "value": {"kind": "string_value", "value": "(x)|(b)"}},
             {"kind": "literal", "value": {"kind": "string_value", "value": "[$1]"}}
           ]
         }
       },
-      "expected": {"available": {"string": "[]"}, "reads": []}
+      "expected": {"available": {"string": "a[]"}, "reads": []}
     },
     {
       "id": "regex_replace_empty_matches_use_code_points",

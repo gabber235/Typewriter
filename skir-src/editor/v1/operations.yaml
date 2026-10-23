@@ -117,6 +117,7 @@ failures:
   inexact_conversion: The value has no exact representation in the target type.
   negative_shift: The shift distance is negative.
   invalid_byte: A value is outside 0 to 255.
+  magnitude_limit: An integer or decimal result would have more than 20000 digits.
   duration_range: The duration is outside the representable range.
   timestamp_range: The timestamp is outside the representable range.
   invalid_calendar_date: The fields do not name a valid date and time.
@@ -393,14 +394,14 @@ operations:
     doc: Parses an optionally signed integer of digits in radix. No whitespace or prefixes.
     profile: rule
     parameters: [value: text, radix: int32]
-    failures: [invalid_number_text, invalid_radix]
+    failures: [invalid_number_text, invalid_radix, magnitude_limit]
     result: integer
 
   text.parse_decimal:
     doc: Parses an optionally signed decimal number in plain or exponent notation.
     profile: rule
     parameters: [value: text]
-    failures: [invalid_number_text]
+    failures: [invalid_number_text, magnitude_limit]
     result: decimal
 
   text.parse_float:
@@ -480,7 +481,7 @@ operations:
     dsl: { operator: times }
     type_parameters: { N: numeric }
     parameters: [first: N, second: N, rest: N...]
-    failures: [non_finite_number]
+    failures: [non_finite_number, magnitude_limit]
     result: N
 
   number.divide:
@@ -518,7 +519,7 @@ operations:
     profile: rule
     type_parameters: { N: numeric }
     parameters: [value: N, exponent: int32]
-    failures: [negative_exponent, non_finite_number]
+    failures: [negative_exponent, non_finite_number, magnitude_limit]
     result: N
 
   number.sqrt:
@@ -604,7 +605,7 @@ operations:
     dsl: { name: shl, infix: true }
     type_parameters: { I: integer }
     parameters: [value: I, bits: int32]
-    failures: [negative_shift]
+    failures: [negative_shift, magnitude_limit]
     result: I
 
   integer.shift_right:

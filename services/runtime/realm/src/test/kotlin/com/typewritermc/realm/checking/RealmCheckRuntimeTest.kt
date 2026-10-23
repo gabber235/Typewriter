@@ -22,6 +22,10 @@ import com.typewritermc.discovery.OwnedProviderRegistry
 import com.typewritermc.discovery.ProviderLease
 import com.typewritermc.discovery.ProviderOrigin
 import com.typewritermc.discovery.contributionKey
+import com.typewritermc.expression.eq
+import com.typewritermc.expression.length
+import com.typewritermc.expression.literal
+import com.typewritermc.expression.not
 import com.typewritermc.imprint.ArtifactId
 import com.typewritermc.imprint.ContributionName
 import com.typewritermc.imprint.ContributionSourceId
@@ -390,13 +394,7 @@ val RealmCheckRuntimeTest by testSuite {
                     descriptor =
                         RuleDescriptor(
                             predicate =
-                                ExpressionNode.createRuleUnary(
-                                    operation = skirout.editor.v1.expression.RuleUnaryOperation.NON_EMPTY,
-                                    source =
-                                        com.typewritermc.expression
-                                            .input<Any?>(ExpressionBindingId(value = "configured_value"))
-                                            .toNode(),
-                                ),
+                                nameIsNotEmpty(),
                         ),
                     diagnostic =
                         DiagnosticTemplate(
@@ -636,13 +634,7 @@ val RealmCheckRuntimeTest by testSuite {
                     descriptor =
                         RuleDescriptor(
                             predicate =
-                                ExpressionNode.createRuleUnary(
-                                    operation = skirout.editor.v1.expression.RuleUnaryOperation.NON_EMPTY,
-                                    source =
-                                        com.typewritermc.expression
-                                            .input<Any?>(ExpressionBindingId(value = "configured_value"))
-                                            .toNode(),
-                                ),
+                                nameIsNotEmpty(),
                         ),
                     diagnostic =
                         DiagnosticTemplate(
@@ -1116,3 +1108,11 @@ private val DISCOVERY_LOCATION_FOR_TEST =
                 ),
         ),
     )
+
+/** The rule predicate "the configured text is not empty", built from portable primitives. */
+private fun nameIsNotEmpty(): ExpressionNode =
+    (
+        com.typewritermc.expression
+            .input<String>(ExpressionBindingId(value = "configured_value"))
+            .length eq literal(0)
+    ).not().toNode()

@@ -5,8 +5,8 @@ import com.typewritermc.expression.Handled
 import com.typewritermc.expression.MayBeMissing
 import com.typewritermc.expression.eq
 import com.typewritermc.expression.literal
-import com.typewritermc.expression.neq
 import com.typewritermc.expression.orElse
+import com.typewritermc.expression.shortcuts.neq
 import com.typewritermc.types.Color
 import com.typewritermc.types.text
 import skirout.editor.v1.presentation.CrossAxisAlignment

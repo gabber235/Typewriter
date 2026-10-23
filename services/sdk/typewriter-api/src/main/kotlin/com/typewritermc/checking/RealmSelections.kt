@@ -3,6 +3,7 @@ package com.typewritermc.checking
 import com.typewritermc.authoring.Availability
 import com.typewritermc.authoring.DraftBinding
 import com.typewritermc.authoring.GeneratedSdkApi
+import com.typewritermc.configuration.ruleProfileViolations
 import com.typewritermc.expression.Expr
 import com.typewritermc.expression.ExpressionFactory
 import com.typewritermc.expression.MissingPolicy
@@ -46,7 +47,10 @@ fun <D, S : Any> compileSelection(
 ): TypedSelection<D> {
     val configured =
         com.typewritermc.expression.input<Any?>(ExpressionBindingId(value = "configured_value"))
-    return TypedSelection(type, factory.create(configured).predicate().toNode())
+    val node = factory.create(configured).predicate().toNode()
+    val violations = node.ruleProfileViolations()
+    require(violations.isEmpty()) { "Selection predicates use the rule profile: ${violations.joinToString { it.value }}." }
+    return TypedSelection(type, node)
 }
 
 /**

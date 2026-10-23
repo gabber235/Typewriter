@@ -2038,6 +2038,116 @@
         }
       },
       "expected": {"failed": "invalid_locale", "reads": []}
+    },
+    {
+      "id": "number_power_beyond_magnitude_limit",
+      "expression": {
+        "kind": "call",
+        "value": {
+          "operation": {"value": "number.power"},
+          "type_arguments": [],
+          "arguments": [
+            {"kind": "literal", "value": {"kind": "integer", "value": "10"}},
+            {"kind": "literal", "value": {"kind": "integer", "value": "20000"}}
+          ]
+        }
+      },
+      "expected": {"failed": "magnitude_limit", "reads": []}
+    },
+    {
+      "id": "number_power_huge_exponent_fails_before_computing",
+      "expression": {
+        "kind": "call",
+        "value": {
+          "operation": {"value": "number.power"},
+          "type_arguments": [],
+          "arguments": [
+            {"kind": "literal", "value": {"kind": "integer", "value": "2"}},
+            {"kind": "literal", "value": {"kind": "integer", "value": "2147483647"}}
+          ]
+        }
+      },
+      "expected": {"failed": "magnitude_limit", "reads": []}
+    },
+    {
+      "id": "number_power_of_one_takes_any_exponent",
+      "expression": {
+        "kind": "call",
+        "value": {
+          "operation": {"value": "number.power"},
+          "type_arguments": [],
+          "arguments": [
+            {"kind": "literal", "value": {"kind": "integer", "value": "-1"}},
+            {"kind": "literal", "value": {"kind": "integer", "value": "2147483647"}}
+          ]
+        }
+      },
+      "expected": {"available": {"integer": "-1"}, "reads": []}
+    },
+    {
+      "id": "number_power_of_decimal_one_takes_any_exponent",
+      "expression": {
+        "kind": "call",
+        "value": {
+          "operation": {"value": "number.power"},
+          "type_arguments": [],
+          "arguments": [
+            {"kind": "literal", "value": {"kind": "decimal", "value": "1.00"}},
+            {"kind": "literal", "value": {"kind": "integer", "value": "2147483647"}}
+          ]
+        }
+      },
+      "expected": {"available": {"decimal": "1"}, "reads": []}
+    },
+    {
+      "id": "number_power_decimal_fraction_digits_limit",
+      "expression": {
+        "kind": "call",
+        "value": {
+          "operation": {"value": "number.power"},
+          "type_arguments": [],
+          "arguments": [
+            {"kind": "literal", "value": {"kind": "decimal", "value": "0.1"}},
+            {"kind": "literal", "value": {"kind": "integer", "value": "20001"}}
+          ]
+        }
+      },
+      "expected": {"failed": "magnitude_limit", "reads": []}
+    },
+    {
+      "id": "number_multiply_beyond_magnitude_limit",
+      "expression": {
+        "kind": "call",
+        "value": {
+          "operation": {"value": "number.multiply"},
+          "type_arguments": [],
+          "arguments": [
+            {
+              "kind": "call",
+              "value": {
+                "operation": {"value": "number.power"},
+                "type_arguments": [],
+                "arguments": [
+                  {"kind": "literal", "value": {"kind": "integer", "value": "10"}},
+                  {"kind": "literal", "value": {"kind": "integer", "value": "15000"}}
+                ]
+              }
+            },
+            {
+              "kind": "call",
+              "value": {
+                "operation": {"value": "number.power"},
+                "type_arguments": [],
+                "arguments": [
+                  {"kind": "literal", "value": {"kind": "integer", "value": "10"}},
+                  {"kind": "literal", "value": {"kind": "integer", "value": "6000"}}
+                ]
+              }
+            }
+          ]
+        }
+      },
+      "expected": {"failed": "magnitude_limit", "reads": []}
     }
   ]
 }

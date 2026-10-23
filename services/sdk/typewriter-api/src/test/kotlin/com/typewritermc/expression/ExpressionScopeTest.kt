@@ -30,11 +30,10 @@ val ExpressionScopeTest by testSuite {
         val frozen = expression.toNode()
         expression.toNode() shouldBe frozen
         callbacks shouldBe 2
-        val outer = frozen as ExpressionNode.MapWrapper
-        val inner = outer.value.body as ExpressionNode.MapWrapper
-        val addition = inner.value.body as ExpressionNode.NumberArithmeticWrapper
-        (addition.value.first as ExpressionNode.LocalWrapper).value.depth shouldBe 0
-        (addition.value.second as ExpressionNode.LocalWrapper).value.depth shouldBe 1
+        val inner = frozen.mapBody()
+        val addition = (inner.mapBody() as ExpressionNode.CallWrapper).value.arguments
+        (addition[0] as ExpressionNode.LocalWrapper).value.depth shouldBe 0
+        (addition[1] as ExpressionNode.LocalWrapper).value.depth shouldBe 1
     }
 
     test("reused captured builders resolve their frame at the insertion site") {
@@ -46,10 +45,9 @@ val ExpressionScopeTest by testSuite {
                     val outer = this
                     val nested = others.map { outer }
                     others.map { nested }
-                }.toNode() as ExpressionNode.MapWrapper
-        val middle = tree.value.body as ExpressionNode.MapWrapper
-        val nested = middle.value.body as ExpressionNode.MapWrapper
-        (nested.value.body as ExpressionNode.LocalWrapper).value.depth shouldBe 2
+                }.toNode()
+        val nested = tree.mapBody().mapBody()
+        (nested.mapBody() as ExpressionNode.LocalWrapper).value.depth shouldBe 2
     }
 
     test("a local cannot escape its authoring callback or bind through raw subtree insertion") {
@@ -70,4 +68,11 @@ val ExpressionScopeTest by testSuite {
         items += ListItem(id = ItemId(value = "second"), value = DataValue.StringValueWrapper("second"))
         literal.toNode() shouldBe before
     }
+}
+
+/** The lambda body of a collection.map call. */
+private fun ExpressionNode.mapBody(): ExpressionNode {
+    val call = (this as ExpressionNode.CallWrapper).value
+    call.operation.value shouldBe "collection.map"
+    return (call.arguments[1] as ExpressionNode.LambdaWrapper).value.body
 }

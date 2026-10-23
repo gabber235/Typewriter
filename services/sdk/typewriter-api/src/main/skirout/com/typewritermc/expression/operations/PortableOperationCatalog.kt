@@ -471,7 +471,7 @@ object PortableOperationCatalog {
                     OperationParameter("bits", Signature.Scalar(Signature.ScalarWord.INT32), ParameterKind.VALUE, variadic = false),
                 ),
             result = Signature.Variable("I"),
-            failures = listOf(KernelFailure.NegativeShift),
+            failures = listOf(KernelFailure.NegativeShift, KernelFailure.MagnitudeLimit),
             uses = setOf(),
             itemIds = null,
         )
@@ -874,7 +874,7 @@ object PortableOperationCatalog {
                     OperationParameter("rest", Signature.Variable("N"), ParameterKind.VALUE, variadic = true),
                 ),
             result = Signature.Variable("N"),
-            failures = listOf(KernelFailure.NonFiniteNumber),
+            failures = listOf(KernelFailure.NonFiniteNumber, KernelFailure.MagnitudeLimit),
             uses = setOf(),
             itemIds = null,
         )
@@ -913,7 +913,7 @@ object PortableOperationCatalog {
                     OperationParameter("exponent", Signature.Scalar(Signature.ScalarWord.INT32), ParameterKind.VALUE, variadic = false),
                 ),
             result = Signature.Variable("N"),
-            failures = listOf(KernelFailure.NegativeExponent, KernelFailure.NonFiniteNumber),
+            failures = listOf(KernelFailure.NegativeExponent, KernelFailure.NonFiniteNumber, KernelFailure.MagnitudeLimit),
             uses = setOf(),
             itemIds = null,
         )
@@ -1351,7 +1351,7 @@ object PortableOperationCatalog {
                     OperationParameter("value", Signature.Scalar(Signature.ScalarWord.TEXT), ParameterKind.VALUE, variadic = false),
                 ),
             result = Signature.Scalar(Signature.ScalarWord.DECIMAL),
-            failures = listOf(KernelFailure.InvalidNumberText),
+            failures = listOf(KernelFailure.InvalidNumberText, KernelFailure.MagnitudeLimit),
             uses = setOf(),
             itemIds = null,
         )
@@ -1403,7 +1403,7 @@ object PortableOperationCatalog {
                     OperationParameter("radix", Signature.Scalar(Signature.ScalarWord.INT32), ParameterKind.VALUE, variadic = false),
                 ),
             result = Signature.Scalar(Signature.ScalarWord.INTEGER),
-            failures = listOf(KernelFailure.InvalidNumberText, KernelFailure.InvalidRadix),
+            failures = listOf(KernelFailure.InvalidNumberText, KernelFailure.InvalidRadix, KernelFailure.MagnitudeLimit),
             uses = setOf(),
             itemIds = null,
         )

@@ -108,7 +108,7 @@ val DraftProjectionConformanceTest by testSuite {
             nested.y shouldBe Availability.Unavailable(listOf(placement.field("y")))
         }
         with(staged) {
-            (nested.x as Availability.Failed).diagnostic.code shouldBe "read_context_mismatch"
+            (nested.x as Availability.Failed).diagnostic.failure.value shouldBe "read_context_mismatch"
         }
     }
 
@@ -138,8 +138,8 @@ val DraftProjectionConformanceTest by testSuite {
         }
         val newer = FixtureDraftReads(reads.catalog, reads.values, mapOf(root to listOf(first)))
         with(newer) {
-            (draft.items() as Availability.Failed).diagnostic.code shouldBe "read_context_mismatch"
-            (draft.item(first) as Availability.Failed).diagnostic.code shouldBe "read_context_mismatch"
+            (draft.items() as Availability.Failed).diagnostic.failure.value shouldBe "read_context_mismatch"
+            (draft.item(first) as Availability.Failed).diagnostic.failure.value shouldBe "read_context_mismatch"
         }
     }
 
@@ -281,7 +281,16 @@ private class FixtureDraftReads(
 private fun <T> failed(
     code: String,
     location: ValueLocation,
-): Availability<T> = Availability.Failed(EvaluationDiagnostic(code = code, message = code, locations = listOf(location)))
+): Availability<T> =
+    Availability.Failed(
+        EvaluationDiagnostic(
+            failure =
+                skirout.editor.v1.expression
+                    .FailureId(value = code),
+            message = code,
+            locations = listOf(location),
+        ),
+    )
 
 private val INT_USE = integerScalar(IntegerWidth.SIGNED_THIRTY_TWO).use
 private val TEXT_USE = ScalarKind.TEXT.use

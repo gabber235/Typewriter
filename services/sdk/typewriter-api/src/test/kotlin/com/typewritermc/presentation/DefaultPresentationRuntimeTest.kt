@@ -653,10 +653,10 @@ val DefaultPresentationRuntimeTest by testSuite {
                 }
             }
         val conditional = result.layout.singleFixed().element as PresentationElement.ConditionalWrapper
-        val condition = conditional.value.condition as skirout.editor.v1.expression.ExpressionNode.ValueCompareWrapper
-        condition.value.operation shouldBe skirout.editor.v1.expression.ValueCompareOperation.EQUAL
-        val count = condition.value.left as skirout.editor.v1.expression.ExpressionNode.OrElseWrapper
-        (count.value.input as skirout.editor.v1.expression.ExpressionNode.InputWrapper).value.binding.value shouldBe
+        val condition = (conditional.value.condition as skirout.editor.v1.expression.ExpressionNode.CallWrapper).value
+        condition.operation.value shouldBe "value.equals"
+        val count = condition.arguments[0] as skirout.editor.v1.expression.ExpressionNode.OrElseWrapper
+        (count.value.value as skirout.editor.v1.expression.ExpressionNode.InputWrapper).value.binding.value shouldBe
             EditorContext.selectionCount.binding.value
         result.dependencies.contextInputs
             .single()
@@ -687,8 +687,9 @@ val DefaultPresentationRuntimeTest by testSuite {
         idText.paragraph.selectable shouldBe true
         idText.paragraph.softWrap shouldBe true
         val identifier = idText.value as skirout.editor.v1.expression.ExpressionNode.OrElseWrapper
-        val representation = identifier.value.input as skirout.editor.v1.expression.ExpressionNode.TextUnaryWrapper
-        val identityRead = representation.value.source as skirout.editor.v1.expression.ExpressionNode.InputWrapper
+        val representation = (identifier.value.value as skirout.editor.v1.expression.ExpressionNode.CallWrapper).value
+        representation.operation.value shouldBe "value.unwrap"
+        val identityRead = representation.arguments.single() as skirout.editor.v1.expression.ExpressionNode.InputWrapper
         identityRead.value.binding.value shouldBe "presentation.subject.identifier"
     }
 

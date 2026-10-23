@@ -332,6 +332,21 @@
         }
       },
       "expected": {"available": {"integer": "2148606515"}, "reads": []}
+    },
+    {
+      "id": "integer_shift_left_beyond_magnitude_limit",
+      "expression": {
+        "kind": "call",
+        "value": {
+          "operation": {"value": "integer.shift_left"},
+          "type_arguments": [],
+          "arguments": [
+            {"kind": "literal", "value": {"kind": "integer", "value": "1"}},
+            {"kind": "literal", "value": {"kind": "integer", "value": "70000"}}
+          ]
+        }
+      },
+      "expected": {"failed": "magnitude_limit", "reads": []}
     }
   ]
 }
