@@ -4,7 +4,7 @@ import com.typewritermc.authoring.validateStructure
 import com.typewritermc.realm.authoring.AuthoringLease
 import com.typewritermc.realm.authoring.AuthoringView
 import com.typewritermc.realm.authoring.ResourceValueMapper
-import com.typewritermc.realm.edit.AuthoringMutationPlanner
+import com.typewritermc.realm.edit.AuthoringSnapshotValidator
 import com.typewritermc.types.immutableMapCopy
 import skirout.editor.v1.diagnostic.StructuralResult
 import skirout.editor.v1.type_catalog.AuthoringRecord
@@ -34,8 +34,8 @@ internal fun AuthoringLease.operationObservation(
     val links = ResourceValueMapper.discover(resources)
     val projected = ResourceValueMapper.project(links, resources, root.catalog.relations, root.catalog.checked)
     val problems =
-        AuthoringMutationPlanner(root.catalog.checked, root.catalog.relations)
-            .validateSnapshot(root.resources, resources, upserts.keys + removals, projected)
+        AuthoringSnapshotValidator(root.catalog.checked, root.catalog.relations)
+            .validate(root.resources, resources, upserts.keys + removals, projected)
     require(problems.isEmpty()) { "An overlay violates resource structure or relation policy: $problems" }
     return AuthoringView(
         root.catalog,
