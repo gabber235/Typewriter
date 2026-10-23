@@ -11,11 +11,11 @@ import com.typewritermc.protocol.transport.RealmRouteScope
 import com.typewritermc.protocol.transport.generated.authoringActionPrepare
 import com.typewritermc.protocol.transport.generated.resourceDropCandidatesResolve
 import com.typewritermc.protocol.transport.generated.resourceOperationsResolve
-import com.typewritermc.realm.authoring.OperationCatalogChanged
-import com.typewritermc.realm.authoring.OperationPreparationResult
-import com.typewritermc.realm.authoring.OperationResolutionFailure
-import com.typewritermc.realm.authoring.ResourceOperationRuntime
-import com.typewritermc.realm.authoring.StaleOperationObservation
+import com.typewritermc.realm.operation.OperationCatalogChanged
+import com.typewritermc.realm.operation.OperationPreparationResult
+import com.typewritermc.realm.operation.OperationResolutionFailure
+import com.typewritermc.realm.operation.ResourceOperationRuntime
+import com.typewritermc.realm.operation.StaleOperationObservation
 import com.typewritermc.services.libs.communicator.router.CommunicatorRoutesBuilder
 import com.typewritermc.services.libs.utils.rethrowExceptional
 import com.typewritermc.types.requirePortable

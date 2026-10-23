@@ -3,12 +3,12 @@ package com.typewritermc.realm.search
 import com.surrealdb.Surreal
 import com.typewritermc.authoring.RealmRootDefinition
 import com.typewritermc.authoring.of
-import com.typewritermc.realm.authoring.AuthoringCatalogLease
 import com.typewritermc.realm.authoring.AuthoringView
-import com.typewritermc.realm.checking.TestCatalogLease
-import com.typewritermc.realm.repository.ResourceValueMapper
-import com.typewritermc.realm.repository.utils.surrealRecordId
-import com.typewritermc.realm.schema.openTestDatabase
+import com.typewritermc.realm.authoring.ResourceValueMapper
+import com.typewritermc.realm.authoring.TestCatalogLease
+import com.typewritermc.realm.catalog.AuthoringCatalogLease
+import com.typewritermc.realm.storage.openTestDatabase
+import com.typewritermc.realm.storage.surrealRecordId
 import com.typewritermc.types.RESOURCE_OWNERSHIP_FAMILY_ID
 import com.typewritermc.types.catalog.DefaultCheckedCatalog
 import com.typewritermc.types.endpointId
@@ -272,7 +272,7 @@ private fun Surreal.insertSearchRow(
         mapOf(
             "resource" to resource.surrealRecordId(),
             "content" to
-                com.typewritermc.realm.repository.utils
+                com.typewritermc.realm.storage
                     .encodeSkir(AuthoringRecord.serializer, record),
             "text" to text,
         ),
@@ -283,7 +283,7 @@ private fun definition(name: String): TypeDefinitionId = TypeDefinitionId.qualif
 
 private fun searchView(checked: com.typewritermc.types.catalog.CheckedCatalog): AuthoringView {
     val lease =
-        object : AuthoringCatalogLease by com.typewritermc.realm.checking
+        object : AuthoringCatalogLease by com.typewritermc.realm.authoring
             .TestCatalogLease() {
             override val checked = checked
         }

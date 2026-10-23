@@ -5,8 +5,8 @@ import com.typewritermc.protocol.transport.generated.authoringCompiledChanged
 import com.typewritermc.protocol.transport.generated.authoringPublicationQuery
 import com.typewritermc.protocol.transport.generated.authoringPublicationWatch
 import com.typewritermc.protocol.transport.generated.authoringPublish
-import com.typewritermc.realm.compiler.PublicationResult
-import com.typewritermc.realm.compiler.RealmPublicationCoordinator
+import com.typewritermc.realm.publication.PublicationResult
+import com.typewritermc.realm.publication.RealmPublicationCoordinator
 import com.typewritermc.services.libs.communicator.router.CommunicatorRoutesBuilder
 import skirout.editor.v1.compiled_content.CompiledContentChanged
 import skirout.editor.v1.publication.PublicationState

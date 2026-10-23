@@ -5,11 +5,7 @@ import com.typewritermc.authoring.of
 import com.typewritermc.authoring.use
 import com.typewritermc.checking.InputIdentity
 import com.typewritermc.operations.OperationOrigin
-import com.typewritermc.realm.checking.CapturedAuthoringReads
-import com.typewritermc.realm.repository.CounterpartBinding
-import com.typewritermc.realm.repository.DeclaredLinkEvidence
-import com.typewritermc.realm.repository.ResourceValueMapper
-import com.typewritermc.realm.repository.valueAt
+import com.typewritermc.realm.catalog.AuthoringCatalogLease
 import com.typewritermc.types.catalog.Resolution
 import com.typewritermc.types.endpoint
 import com.typewritermc.types.isAcyclic

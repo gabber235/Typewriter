@@ -2,9 +2,9 @@ package com.typewritermc.realm.routes
 
 import com.typewritermc.realm.authoring.AuthoringSeed
 import com.typewritermc.realm.authoring.InMemoryAuthoringViewStore
-import com.typewritermc.realm.checking.TEST_TYPE
-import com.typewritermc.realm.checking.TestCatalogLease
-import com.typewritermc.realm.checking.record
+import com.typewritermc.realm.authoring.TEST_TYPE
+import com.typewritermc.realm.authoring.TestCatalogLease
+import com.typewritermc.realm.authoring.record
 import com.typewritermc.realm.search.AuthoringSearchRepository
 import com.typewritermc.realm.search.IndexedAuthoringSearchCandidate
 import com.typewritermc.services.libs.communicator.router.communicatorRoutes

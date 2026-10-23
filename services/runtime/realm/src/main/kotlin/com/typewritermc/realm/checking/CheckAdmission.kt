@@ -2,7 +2,7 @@ package com.typewritermc.realm.checking
 
 import com.typewritermc.realm.authoring.AuthoringView
 import com.typewritermc.realm.authoring.AuthoringViewStore
-import com.typewritermc.realm.repository.conflicts
+import com.typewritermc.realm.authoring.conflicts
 import skirout.editor.v1.checking.CheckInstanceId
 import skirout.editor.v1.checking.CheckOutcome
 import skirout.editor.v1.checking.CheckResult

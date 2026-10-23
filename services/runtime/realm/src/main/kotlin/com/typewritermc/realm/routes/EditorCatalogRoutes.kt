@@ -5,7 +5,7 @@ import com.typewritermc.protocol.transport.RealmRouteScope
 import com.typewritermc.protocol.transport.generated.editorCatalogFetch
 import com.typewritermc.protocol.transport.generated.editorCatalogWatch
 import com.typewritermc.protocol.transport.generated.editorValuePrepare
-import com.typewritermc.realm.authoring.PreparationCatalogChanged
+import com.typewritermc.realm.operation.PreparationCatalogChanged
 import com.typewritermc.services.libs.communicator.router.CommunicatorRoutesBuilder
 import com.typewritermc.types.requireValid
 import skirout.editor.v1.catalog.PrepareValueResult

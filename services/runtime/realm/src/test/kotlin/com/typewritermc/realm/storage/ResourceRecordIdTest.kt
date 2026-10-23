@@ -1,0 +1,21 @@
+package com.typewritermc.realm.storage
+
+import com.surrealdb.RecordId
+import de.infix.testBalloon.framework.core.testSuite
+import io.kotest.assertions.throwables.shouldThrow
+import io.kotest.matchers.shouldBe
+import skirout.kernel.v1.resource_id.ResourceId
+
+val ResourceRecordIdTest by testSuite {
+    test("round trips opaque resource identities through the canonical table") {
+        val id = ResourceId(value = "same-value-for-any-kind")
+
+        id.surrealRecordId().toResourceId() shouldBe id
+    }
+
+    test("rejects records outside the canonical resource table") {
+        shouldThrow<IllegalArgumentException> {
+            RecordId("page", "same-value-for-any-kind").toResourceId()
+        }
+    }
+}

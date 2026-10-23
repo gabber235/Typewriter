@@ -1,26 +1,15 @@
 package com.typewritermc.realm.checking
 
-import com.typewritermc.authoring.Availability
-import com.typewritermc.authoring.DraftBinding
 import com.typewritermc.authoring.ReadContext
-import com.typewritermc.authoring.field
-import com.typewritermc.authoring.of
 import com.typewritermc.authoring.root
-import com.typewritermc.checking.CheckContext
-import com.typewritermc.checking.DiagnosticReporter
-import com.typewritermc.checking.DraftType
 import com.typewritermc.checking.InputIdentity
-import com.typewritermc.checking.RealmChecks
-import com.typewritermc.checking.reason
-import com.typewritermc.discovery.OwnedCheck
-import com.typewritermc.discovery.OwnedCheckRecipe
 import com.typewritermc.discovery.ProviderLease
 import com.typewritermc.realm.authoring.AuthoringLease
 import com.typewritermc.realm.authoring.AuthoringViewStore
 import com.typewritermc.realm.authoring.RESOURCE_SELECTION_INPUT
-import com.typewritermc.realm.repository.conflicts
-import com.typewritermc.services.libs.utils.closeAll
-import com.typewritermc.services.libs.utils.rethrowExceptional
+import com.typewritermc.realm.authoring.SelectionPredicateEvaluator
+import com.typewritermc.realm.authoring.ViewReadLimits
+import com.typewritermc.realm.authoring.conflicts
 import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
@@ -34,24 +23,14 @@ import kotlinx.coroutines.joinAll
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.runBlocking
 import skirout.editor.v1.authoring_facts.EditExpectation
-import skirout.editor.v1.catalog.ConfigurationRecipe
-import skirout.editor.v1.catalog.OwnedRule
 import skirout.editor.v1.checking.CheckInstanceId
 import skirout.editor.v1.checking.CheckOutcome
 import skirout.editor.v1.checking.CheckResult
 import skirout.editor.v1.checking.CheckTicket
 import skirout.editor.v1.checking.FindingSet
 import skirout.editor.v1.checking.FindingStatus
-import skirout.editor.v1.diagnostic.Diagnostic
-import skirout.editor.v1.diagnostic.DiagnosticSeverity
 import skirout.editor.v1.type_catalog.CatalogGeneration
 import skirout.editor.v1.type_catalog.CheckExecutionId
-import skirout.editor.v1.type_catalog.DiagnosticId
-import skirout.editor.v1.type_catalog.RuleId
-import skirout.editor.v1.type_catalog.RuleOrigin
-import skirout.editor.v1.type_catalog.ValueLocation
-import skirout.editor.v1.type_catalog.ValuePath
-import skirout.kernel.v1.resource_id.ResourceId
 import java.util.concurrent.atomic.AtomicLong
 
 interface CheckScheduler : AutoCloseable {
@@ -87,9 +66,9 @@ class RealmCheckRuntime(
     private val views: AuthoringViewStore,
     dispatcher: CoroutineDispatcher = Dispatchers.Default,
     private val dependencies: ReverseDependencyIndex = DefaultReverseDependencyIndex(),
-    private val checkInputs: RealmCheckInputs = RealmCheckInputs(),
-    private val selectionPredicates: SelectionPredicateEvaluator = RealmSelectionPredicateEvaluator(),
-    private val readLimits: ViewReadLimits = ViewReadLimits(),
+    checkInputs: RealmCheckInputs = RealmCheckInputs(),
+    selectionPredicates: SelectionPredicateEvaluator = RealmSelectionPredicateEvaluator(),
+    readLimits: ViewReadLimits = ViewReadLimits(),
 ) : CheckScheduler,
     CurrentCheckExecutions {
     private val lock = Any()
@@ -104,8 +83,7 @@ class RealmCheckRuntime(
     private val scope = CoroutineScope(SupervisorJob() + dispatcher)
     private val nextIncarnation = AtomicLong()
     private val nextExecution = AtomicLong()
-    private val nextDiagnostic = AtomicLong()
-    private val expressions = RealmExpressionRuntime()
+    private val evaluator = CheckEvaluator(views, checkInputs, selectionPredicates, readLimits, nextExecution)
     private var activeCatalog: ActiveCatalog? = null
     private val instances = linkedMapOf<CheckInstanceId, InstanceState>()
     private val retiredJobs = linkedSetOf<Job>()
@@ -115,7 +93,7 @@ class RealmCheckRuntime(
         val lease = views.capture()
         val replacement =
             try {
-                collectCatalog(lease)
+                collectCatalog(lease, "catalog:${nextIncarnation.getAndIncrement()}", evaluator)
             } catch (failure: Throwable) {
                 lease.close()
                 throw failure
@@ -209,7 +187,7 @@ class RealmCheckRuntime(
             require(captured.root.catalog.generation == target.catalog) {
                 "Captured check target uses a different catalog generation."
             }
-            catalog = collectCatalog(captured)
+            catalog = collectCatalog(captured, "catalog:${nextIncarnation.getAndIncrement()}", evaluator)
             snapshot = null
             val active = requireNotNull(catalog)
             val subjects = discoverSubjects(active, active.snapshot).subjects
@@ -217,7 +195,7 @@ class RealmCheckRuntime(
             val admission = DefaultCheckAdmission(views, this)
             val results =
                 subjects.map { subject ->
-                    val result = evaluate(active, subject, target)
+                    val result = evaluator.evaluate(active, subject, target)
                     when (admission.requireEvidenceForCapture(result, target)) {
                         AdmissionResult.Captured -> {
                             result
@@ -318,74 +296,7 @@ class RealmCheckRuntime(
     ): SubjectDiscovery {
         val lease = retained ?: views.capture()
         return try {
-            if (lease.root.catalog.generation != catalog.generation) return SubjectDiscovery(emptyList(), emptySet())
-            val subjects = mutableListOf<CheckSubject>()
-            val incompleteRules = linkedSetOf<RuleId>()
-            catalog.plans.forEach { plan ->
-                val reads = CapturedAuthoringReads(lease.originalView(), predicates = selectionPredicates, limits = readLimits)
-                subjects +=
-                    when (plan) {
-                        is CheckPlan.Simple -> {
-                            reads.discoverOccurrences(plan.owned.recipe.owner.owner).map { binding ->
-                                plan.subject(binding.location)
-                            }
-                        }
-
-                        is CheckPlan.Portable -> {
-                            reads.discoverOccurrences(plan.recipe.origin.owner).flatMap { binding ->
-                                if (!reads.matchesRepresentation(binding, plan.recipe.relativePath, plan.recipe.representationCondition)) {
-                                    emptyList()
-                                } else {
-                                    reads.expand(binding.location, plan.recipe.relativePath).map { location ->
-                                        plan.subject(location, binding.location)
-                                    }
-                                }
-                            }
-                        }
-
-                        is CheckPlan.Each<*> -> {
-                            reads.discoverResources(plan.type).map { binding -> plan.subject(binding.location) }
-                        }
-
-                        is CheckPlan.Realm -> {
-                            listOf(plan.subject(REALM_SUBJECT_KEY))
-                        }
-
-                        is CheckPlan.RegistrationFailure -> {
-                            listOf(plan.subject(REALM_SUBJECT_KEY))
-                        }
-
-                        is CheckPlan.DiscoveryFailure -> {
-                            emptyList()
-                        }
-                    }
-                val outcome = reads.health().outcome(plan.rule.origin)
-                if (outcome != CheckOutcome.FINISHED) {
-                    incompleteRules += plan.rule
-                    val findings =
-                        if (outcome is CheckOutcome.IncompleteWrapper) {
-                            listOf(
-                                diagnostic(
-                                    plan.rule.origin,
-                                    "check_discovery_incomplete",
-                                    outcome.reason,
-                                    at = null,
-                                ),
-                            )
-                        } else {
-                            emptyList()
-                        }
-                    subjects +=
-                        CheckPlan
-                            .DiscoveryFailure(
-                                rule = plan.rule,
-                                outcome = outcome,
-                                findings = findings,
-                                observed = reads.observations().flatMap { it.dependencies() },
-                            ).subject(DISCOVERY_SUBJECT_KEY)
-                }
-            }
-            SubjectDiscovery(subjects, incompleteRules)
+            catalog.discoverSubjects(lease, evaluator)
         } finally {
             if (retained == null) lease.close()
         }
@@ -409,7 +320,7 @@ class RealmCheckRuntime(
         state.ticket = ticket
         val job =
             scope.launch {
-                val result = evaluate(catalog, state.subject, CheckAdmissionTarget.CurrentFindings, ticket, lease)
+                val result = evaluator.evaluate(catalog, state.subject, CheckAdmissionTarget.CurrentFindings, ticket, lease)
                 complete(state.id, result)
             }
         job.invokeOnCompletion { lease.close() }
@@ -469,246 +380,8 @@ class RealmCheckRuntime(
         if (changed) mutableFindingChanges.tryEmit(Unit)
     }
 
-    private fun evaluate(
-        catalog: ActiveCatalog,
-        subject: CheckSubject,
-        target: CheckAdmissionTarget,
-        ticket: CheckTicket? = null,
-        suppliedLease: AuthoringLease? = null,
-    ): CheckResult {
-        val lease = suppliedLease ?: views.retain((target as CheckAdmissionTarget.CapturedAcceptance).view.readContext)
-        val actualTicket =
-            ticket ?: CheckTicket(
-                instance = subject.id,
-                incarnation = catalog.incarnation,
-                execution = CheckExecutionId(value = "capture:${nextExecution.getAndIncrement()}"),
-                catalog =
-                    lease.root.catalog.generation,
-            )
-        val reads = CapturedAuthoringReads(lease.originalView(), predicates = selectionPredicates, limits = readLimits)
-        val findings = mutableListOf<Diagnostic>()
-        var explicitOutcome: CheckOutcome? = null
-        return try {
-            try {
-                when (val plan = subject.plan) {
-                    is CheckPlan.Simple -> {
-                        val binding = reads.bindOccurrence(subject.location, plan.owned.recipe.owner.owner)
-                        if (binding == null) {
-                            explicitOutcome = CheckOutcome.IncompleteWrapper("check occurrence is no longer present")
-                        } else {
-                            val evaluation = with(reads) { checkInputs.evaluate(plan.owned.recipe, binding) }
-                            explicitOutcome = evaluation.outcome
-                            findings += evaluation.findings
-                        }
-                    }
-
-                    is CheckPlan.Portable -> {
-                        val binding = reads.bindOccurrence(subject.ownerLocation, plan.recipe.origin.owner)
-                        val stillPresent =
-                            binding != null &&
-                                reads.matchesRepresentation(binding, plan.recipe.relativePath, plan.recipe.representationCondition) &&
-                                subject.location in reads.expand(binding.location, plan.recipe.relativePath)
-                        if (!stillPresent) {
-                            explicitOutcome = CheckOutcome.IncompleteWrapper("portable rule occurrence is no longer present")
-                        } else {
-                            when (
-                                val evaluation =
-                                    expressions.evaluateBoolean(
-                                        plan.ownedRule.descriptor.predicate,
-                                        subject.location,
-                                        reads,
-                                    )
-                            ) {
-                                is Availability.Available -> {
-                                    if (!evaluation.value) findings += portableDiagnostic(plan, subject, reads)
-                                }
-
-                                is Availability.Unavailable -> {
-                                    explicitOutcome = CheckOutcome.NeedsInputWrapper(evaluation.locations)
-                                }
-
-                                is Availability.Failed -> {
-                                    explicitOutcome =
-                                        CheckOutcome.FailedWrapper(
-                                            listOf(
-                                                Diagnostic(
-                                                    id = DiagnosticId(value = "check:${nextDiagnostic.getAndIncrement()}"),
-                                                    origin = plan.ownedRule.id.origin,
-                                                    code = evaluation.diagnostic.failure.value,
-                                                    message = evaluation.diagnostic.message,
-                                                    severity = DiagnosticSeverity.ERROR,
-                                                    primary = evaluation.diagnostic.locations.firstOrNull() ?: subject.location,
-                                                    related = evaluation.diagnostic.locations.drop(1),
-                                                ),
-                                            ),
-                                        )
-                                }
-                            }
-                        }
-                    }
-
-                    is CheckPlan.Each<*> -> {
-                        val binding = reads.bindResource(subject.location, plan.type.match)
-                        if (binding == null) {
-                            explicitOutcome = CheckOutcome.IncompleteWrapper("check subject is no longer present")
-                        } else {
-                            val reporter =
-                                object : DiagnosticReporter {
-                                    override fun report(diagnostic: Diagnostic) {
-                                        findings += diagnostic
-                                    }
-                                }
-                            val context = CheckContext.create(reads, reporter, diagnosticFactory(plan.rule.origin))
-                            plan.invoke(context, binding)
-                        }
-                    }
-
-                    is CheckPlan.Realm -> {
-                        val reporter =
-                            object : DiagnosticReporter {
-                                override fun report(diagnostic: Diagnostic) {
-                                    findings += diagnostic
-                                }
-                            }
-                        val context = CheckContext.create(reads, reporter, diagnosticFactory(plan.rule.origin))
-                        plan.callback(context)
-                    }
-
-                    is CheckPlan.RegistrationFailure -> {
-                        explicitOutcome = CheckOutcome.FailedWrapper(listOf(plan.diagnostic))
-                    }
-
-                    is CheckPlan.DiscoveryFailure -> {
-                        plan.observed.forEach(reads::observeInput)
-                        explicitOutcome = plan.outcome
-                        findings += plan.findings
-                    }
-                }
-            } catch (failure: Exception) {
-                failure.rethrowExceptional()
-                explicitOutcome =
-                    CheckOutcome.FailedWrapper(
-                        listOf(
-                            diagnostic(
-                                subject.plan.rule.origin,
-                                "check_callback_failed",
-                                failure.message ?: failure::class.simpleName.orEmpty(),
-                                subject.findingLocation,
-                            ),
-                        ),
-                    )
-            }
-            val outcome = mergeOutcome(explicitOutcome, reads.health().outcome(subject.plan.rule.origin))
-            CheckResult(ticket = actualTicket, outcome = outcome, expectations = reads.observations(), findings = findings)
-        } finally {
-            if (suppliedLease == null) lease.close()
-        }
-    }
-
-    private fun collectCatalog(snapshot: AuthoringLease): ActiveCatalog {
-        val root = snapshot.root
-        val incarnation = "catalog:${nextIncarnation.getAndIncrement()}"
-        val leases = mutableListOf<ProviderLease>()
-        val plans = mutableListOf<CheckPlan>()
-        try {
-            root.catalog.checks.forEach { owned ->
-                leases += root.catalog.providers.retain(owned.origin)
-                plans += CheckPlan.Simple(RuleId(origin = owned.recipe.owner, localIndex = 0), owned)
-            }
-            root.catalog.configuration.forEach { recipe ->
-                recipe.rules.forEach { rule -> plans += CheckPlan.Portable(rule.id, recipe, rule) }
-            }
-            root.catalog.providers.checks().forEach { owned ->
-                leases += root.catalog.providers.retain(owned.origin)
-                val collector = RealmCheckCollector(owned)
-                try {
-                    owned.provider.run { collector.register() }
-                    plans += collector.plans
-                } catch (failure: Exception) {
-                    failure.rethrowExceptional()
-                    plans +=
-                        CheckPlan.RegistrationFailure(
-                            rule = RuleId(origin = owned.ruleOrigin, localIndex = 0),
-                            diagnostic =
-                                diagnostic(
-                                    owned.ruleOrigin,
-                                    "check_registration_failed",
-                                    failure.message ?: failure::class.simpleName.orEmpty(),
-                                    at = null,
-                                ),
-                        )
-                }
-            }
-            return ActiveCatalog(root.catalog.generation, incarnation, plans, leases, snapshot)
-        } catch (failure: Throwable) {
-            leases.asReversed().closeAll(failure)
-            throw failure
-        }
-    }
-
-    private fun diagnosticFactory(origin: RuleOrigin): (String, ValueLocation, List<ValueLocation>) -> Diagnostic =
-        { message, at, related -> diagnostic(origin, "realm.check", message, at, related) }
-
-    private fun diagnostic(
-        origin: RuleOrigin,
-        code: String,
-        message: String,
-        at: ValueLocation?,
-        related: List<ValueLocation> = emptyList(),
-    ): Diagnostic =
-        Diagnostic(
-            id = DiagnosticId(value = "check:${nextDiagnostic.getAndIncrement()}"),
-            origin = origin,
-            code = code,
-            message = message,
-            severity = DiagnosticSeverity.ERROR,
-            primary = at,
-            related = related,
-        )
-
-    private fun portableDiagnostic(
-        plan: CheckPlan.Portable,
-        subject: CheckSubject,
-        reads: CapturedAuthoringReads,
-    ): Diagnostic {
-        val targets =
-            plan.ownedRule.diagnostic.targets
-                .flatMap { target ->
-                    if (target == plan.recipe.relativePath) listOf(subject.location) else reads.expand(subject.ownerLocation, target)
-                }.distinct()
-        return Diagnostic(
-            id = DiagnosticId(value = "check:${nextDiagnostic.getAndIncrement()}"),
-            origin = plan.ownedRule.id.origin,
-            code = plan.ownedRule.diagnostic.code,
-            message = plan.ownedRule.diagnostic.message,
-            severity = plan.ownedRule.diagnostic.severity,
-            primary = targets.firstOrNull() ?: subject.location,
-            related = targets.drop(1),
-        )
-    }
-
     private fun ensureOpen() {
         check(!closed) { "Realm check runtime is closed." }
-    }
-
-    private inner class RealmCheckCollector(
-        private val owned: OwnedCheck,
-    ) : RealmChecks {
-        val plans = mutableListOf<CheckPlan>()
-        private var nextRegistration = 0
-
-        override fun <D> each(
-            type: DraftType<D>,
-            check: CheckContext.(D) -> Unit,
-        ) {
-            val rule = RuleId(origin = owned.ruleOrigin, localIndex = nextRegistration++)
-            plans += CheckPlan.Each(rule, type, check)
-        }
-
-        override fun realm(check: CheckContext.() -> Unit) {
-            val rule = RuleId(origin = owned.ruleOrigin, localIndex = nextRegistration++)
-            plans += CheckPlan.Realm(rule, check)
-        }
     }
 
     private data class InstanceState(
@@ -729,176 +402,3 @@ private data class RetainedCatalog(
     val catalog: ActiveCatalog,
     val lease: ProviderLease,
 )
-
-private class ActiveCatalog(
-    val generation: CatalogGeneration,
-    val incarnation: String,
-    val plans: List<CheckPlan>,
-    private val providerLeases: List<ProviderLease>,
-    val snapshot: AuthoringLease,
-) : AutoCloseable {
-    private val lock = Any()
-    private var references = 1
-    private var closeRequested = false
-
-    fun retain(): ProviderLease =
-        synchronized(lock) {
-            check(references > 0) { "Check catalog is closed." }
-            references += 1
-            ActiveCatalogLease(this)
-        }
-
-    override fun close() {
-        release(owner = true)
-    }
-
-    private fun release(owner: Boolean) {
-        val releaseResources =
-            synchronized(lock) {
-                if (owner) {
-                    if (closeRequested) return
-                    closeRequested = true
-                }
-                check(references > 0) { "Check catalog reference count is invalid." }
-                references -= 1
-                references == 0
-            }
-        if (releaseResources) (providerLeases.asReversed() + snapshot).closeAll()
-    }
-
-    private class ActiveCatalogLease(
-        private var catalog: ActiveCatalog?,
-    ) : ProviderLease {
-        override fun close() {
-            val current = synchronized(this) { catalog.also { catalog = null } } ?: return
-            current.release(owner = false)
-        }
-    }
-}
-
-private sealed interface CheckPlan {
-    val rule: RuleId
-
-    data class Simple(
-        override val rule: RuleId,
-        val owned: OwnedCheckRecipe,
-    ) : CheckPlan
-
-    data class Portable(
-        override val rule: RuleId,
-        val recipe: ConfigurationRecipe,
-        val ownedRule: OwnedRule,
-    ) : CheckPlan
-
-    data class Each<D>(
-        override val rule: RuleId,
-        val type: DraftType<D>,
-        val callback: CheckContext.(D) -> Unit,
-    ) : CheckPlan {
-        fun invoke(
-            context: CheckContext,
-            binding: DraftBinding,
-        ) {
-            callback(context, type.bind(binding))
-        }
-    }
-
-    data class Realm(
-        override val rule: RuleId,
-        val callback: CheckContext.() -> Unit,
-    ) : CheckPlan
-
-    data class RegistrationFailure(
-        override val rule: RuleId,
-        val diagnostic: Diagnostic,
-    ) : CheckPlan
-
-    data class DiscoveryFailure(
-        override val rule: RuleId,
-        val outcome: CheckOutcome,
-        val findings: List<Diagnostic>,
-        val observed: List<InputIdentity>,
-    ) : CheckPlan
-}
-
-private data class SubjectDiscovery(
-    val subjects: List<CheckSubject>,
-    val incompleteRules: Set<RuleId>,
-)
-
-/**
- * One scheduled rule occurrence. [location] keys the check instance on the wire, where realm-wide
- * subjects use the reserved [REALM_SUBJECT_KEY] and [DISCOVERY_SUBJECT_KEY] because the check
- * instance contract requires a location.
- */
-private data class CheckSubject(
-    val plan: CheckPlan,
-    val location: ValueLocation,
-    val ownerLocation: ValueLocation = location,
-) {
-    val id: CheckInstanceId = CheckInstanceId(rule = plan.rule, location = location)
-
-    /** Location findings for this subject anchor to; realm-wide subjects have none. */
-    val findingLocation: ValueLocation?
-        get() =
-            when (plan) {
-                is CheckPlan.Simple, is CheckPlan.Portable, is CheckPlan.Each<*> -> location
-                is CheckPlan.Realm, is CheckPlan.RegistrationFailure, is CheckPlan.DiscoveryFailure -> null
-            }
-}
-
-private fun CheckPlan.subject(location: ValueLocation): CheckSubject = CheckSubject(this, location)
-
-private fun CheckPlan.subject(
-    location: ValueLocation,
-    ownerLocation: ValueLocation,
-): CheckSubject = CheckSubject(this, location, ownerLocation)
-
-internal fun ViewReadHealth.outcome(origin: RuleOrigin): CheckOutcome =
-    when {
-        incomplete.isNotEmpty() -> {
-            CheckOutcome.IncompleteWrapper(incomplete.joinToString())
-        }
-
-        failures.isNotEmpty() -> {
-            CheckOutcome.FailedWrapper(
-                failures.mapIndexed { index, failure ->
-                    Diagnostic(
-                        id = DiagnosticId(value = "evaluation:$index:${failure.hashCode()}"),
-                        origin = origin,
-                        code = failure.failure.value,
-                        message = failure.message,
-                        severity = DiagnosticSeverity.ERROR,
-                        primary = failure.locations.firstOrNull(),
-                        related = failure.locations.drop(1),
-                    )
-                },
-            )
-        }
-
-        missing.isNotEmpty() -> {
-            CheckOutcome.NeedsInputWrapper(missing)
-        }
-
-        else -> {
-            CheckOutcome.FINISHED
-        }
-    }
-
-private fun mergeOutcome(
-    explicit: CheckOutcome?,
-    tracked: CheckOutcome,
-): CheckOutcome =
-    when {
-        explicit is CheckOutcome.IncompleteWrapper -> explicit
-        tracked is CheckOutcome.IncompleteWrapper -> tracked
-        explicit is CheckOutcome.FailedWrapper -> explicit
-        tracked is CheckOutcome.FailedWrapper -> tracked
-        explicit is CheckOutcome.NeedsInputWrapper -> explicit
-        tracked is CheckOutcome.NeedsInputWrapper -> tracked
-        explicit != null -> explicit
-        else -> tracked
-    }
-
-private val REALM_SUBJECT_KEY = ValueLocation.of(ResourceId(value = "typewriter.realm"))
-private val DISCOVERY_SUBJECT_KEY = ValueLocation.of(ResourceId(value = "typewriter.discovery"), ValuePath.root.field("subjects"))
