@@ -1,6 +1,6 @@
 import "package:flutter_test/flutter_test.dart";
 import "package:typewriter_panel/typewriter_panel.dart";
-import "package:widgetbook_workspace/stories/features/organizations/features/realms/features/search/presentation/authoring_search_result_items.stories.dart";
+import "package:widgetbook_workspace/stories/authoring/search/presentation/authoring_search_result_items.stories.dart";
 import "package:widgetbook_workspace/stories/shared/search/presentation/primary_search.stories.dart";
 
 import "support/network_images.dart";

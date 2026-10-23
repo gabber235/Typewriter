@@ -19,8 +19,8 @@ void main() {
 
   test("selectable route pages do not own inspectors", () {
     final paths = [
-      "lib/features/organizations/features/services/presentation/route.dart",
-      "lib/features/organizations/features/realms/presentation/resource_route.dart",
+      "lib/features/services/presentation/route.dart",
+      "lib/features/realms/presentation/resource_route.dart",
     ];
 
     for (final path in paths) {

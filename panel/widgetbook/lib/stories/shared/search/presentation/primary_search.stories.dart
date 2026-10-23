@@ -2,7 +2,7 @@ import "package:typewriter_panel/typewriter_panel.dart";
 import "package:typewriter_testkit/typewriter_testkit.dart";
 import "package:widgetbook/widgetbook.dart";
 import "package:widgetbook_annotation/widgetbook_annotation.dart" as widgetbook;
-import "package:widgetbook_workspace/stories/features/organizations/features/realms/features/search/presentation/authoring_search_story_fixtures.dart";
+import "package:widgetbook_workspace/stories/authoring/search/presentation/authoring_search_story_fixtures.dart";
 
 @widgetbook.UseCase(name: "App bar trigger", type: PrimarySearchButton)
 Widget primarySearchButtonUseCase(BuildContext context) =>
