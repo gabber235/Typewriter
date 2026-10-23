@@ -32,19 +32,9 @@ abstract class PortableNamedPayload with _$PortableNamedPayload {
     required skir.NamedTypeUse actualType,
     required skir.DataValue value,
     required skir.ValueLocation location,
-    required Map<skir.ExpressionBindingId, PortableExpressionBinding> bindings,
-    required skir.EvaluationBudget budget,
     required PortableBindingSetter setBinding,
   }) = _PortableNamedPayload;
   const PortableNamedPayload._();
-
-  PortableExpressionEvaluator evaluator() =>
-      PortableExpressionEvaluator.configuredValue(
-        value: value,
-        location: location,
-        budget: budget,
-        additional: bindings,
-      );
 
   FutureOr<PortablePresentationWriteResult> replace(
     skir.DataValue replacement, {
@@ -60,7 +50,6 @@ final class PortableNamedControlHost extends StatelessWidget {
   const PortableNamedControlHost({
     required this.control,
     required this.bindings,
-    required this.budget,
     required this.setBinding,
     required this.builder,
     required this.unavailableBuilder,
@@ -69,7 +58,6 @@ final class PortableNamedControlHost extends StatelessWidget {
 
   final skir.NamedControl control;
   final Map<skir.ExpressionBindingId, PortableExpressionBinding> bindings;
-  final skir.EvaluationBudget budget;
   final PortableBindingSetter setBinding;
   final PortableNamedPayloadBuilder builder;
   final PortableControlUnavailableBuilder unavailableBuilder;
@@ -115,8 +103,6 @@ final class PortableNamedControlHost extends StatelessWidget {
         actualType: value.value.actualType,
         value: value.value.payload,
         location: location,
-        bindings: bindings,
-        budget: budget,
         setBinding: setBinding,
       ),
     );
