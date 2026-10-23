@@ -189,8 +189,8 @@ sealed interface ExpressionLocal_OrMutable {
 }
 
 /**
- * Reads a lambda frame. Depth zero is the innermost frame; slots are defined by the enclosing operation.
- * Local values are captured for evaluation and may retain their authored location for read evidence.
+ * Reads a lambda frame. Depth zero is the innermost frame; slots are defined by the lambda's
+ * parameter. A local holds a value an earlier read or literal produced, so it is never a new read.
  *
  * Deeply immutable.
  */
@@ -340,35 +340,35 @@ class ExpressionLocal private constructor(
     }
 }
 
-sealed interface ExpressionField_OrMutable {
+sealed interface FieldExpression_OrMutable {
     val source: skirout.editor.v1.expression.ExpressionNode;
-    val name: kotlin.String;
+    val path: skirout.editor.v1.type_catalog.ValuePath_OrMutable;
 
-    fun toFrozen(): skirout.editor.v1.expression.ExpressionField;
+    fun toFrozen(): skirout.editor.v1.expression.FieldExpression;
 }
 
 /**
- * Projects one field while preserving lazy query reads and the originating authored location.
+ * Projects a path from a computed value. Map key and value segments project entries.
  *
  * Deeply immutable.
  */
 @kotlin.Suppress("UNUSED_PARAMETER")
-class ExpressionField private constructor(
+class FieldExpression private constructor(
     override val source: skirout.editor.v1.expression.ExpressionNode,
-    override val name: kotlin.String,
-    internal val _unrecognizedFields: _UnrecognizedFields<skirout.editor.v1.expression.ExpressionField>? =
+    override val path: skirout.editor.v1.type_catalog.ValuePath,
+    internal val _unrecognizedFields: _UnrecognizedFields<skirout.editor.v1.expression.FieldExpression>? =
         null,
-): skirout.editor.v1.expression.ExpressionField_OrMutable {
+): skirout.editor.v1.expression.FieldExpression_OrMutable {
     constructor(
         _mustNameArguments: _MustNameArguments =
             _MustNameArguments,
         source: skirout.editor.v1.expression.ExpressionNode,
-        name: kotlin.String,
-        _unrecognizedFields: _UnrecognizedFields<skirout.editor.v1.expression.ExpressionField>? =
+        path: skirout.editor.v1.type_catalog.ValuePath_OrMutable,
+        _unrecognizedFields: _UnrecognizedFields<skirout.editor.v1.expression.FieldExpression>? =
             null,
     ): this(
         source,
-        name,
+        path.toFrozen(),
         _unrecognizedFields,
     ) {}
 
@@ -378,7 +378,7 @@ class ExpressionField private constructor(
     /** Returns a mutable shallow copy of this instance */
     fun toMutable() = Mutable(
         source = this.source,
-        name = this.name,
+        path = this.path,
     );
 
     /** Returns a shallow copy of this instance with the specified fields replaced. */
@@ -387,11 +387,11 @@ class ExpressionField private constructor(
             _MustNameArguments,
         source: skirout.editor.v1.expression.ExpressionNode =
             this.source,
-        name: kotlin.String =
-            this.name,
-    ) = skirout.editor.v1.expression.ExpressionField(
+        path: skirout.editor.v1.type_catalog.ValuePath_OrMutable =
+            this.path,
+    ) = skirout.editor.v1.expression.FieldExpression(
         source,
-        name,
+        path.toFrozen(),
         this._unrecognizedFields,
     );
 
@@ -399,51 +399,67 @@ class ExpressionField private constructor(
     fun copy() = this;
 
     override fun equals(other: kotlin.Any?): kotlin.Boolean {
-        return this === other || (other is skirout.editor.v1.expression.ExpressionField && this.source == other.source && this.name == other.name);
+        return this === other || (other is skirout.editor.v1.expression.FieldExpression && this.source == other.source && this.path == other.path);
     }
 
     override fun hashCode(): kotlin.Int {
-        return kotlin.collections.listOf<kotlin.Any?>(this.source, this.name).hashCode();
+        return kotlin.collections.listOf<kotlin.Any?>(this.source, this.path).hashCode();
     }
 
     override fun toString(): kotlin.String {
         return build.skir.internal.toStringImpl(
             this,
-            _SerializerRegistry.ExpressionFieldSerializerImpl,
+            _SerializerRegistry.FieldExpressionSerializerImpl,
         )
     }
 
-    /** Mutable version of [ExpressionField]. */
+    /** Mutable version of [FieldExpression]. */
     class Mutable internal constructor(
         _mustNameArguments: _MustNameArguments =
             _MustNameArguments,
         override var source: skirout.editor.v1.expression.ExpressionNode =
             skirout.editor.v1.expression.ExpressionNode.UNKNOWN,
-        override var name: kotlin.String =
-            "",
-        internal var _unrecognizedFields: _UnrecognizedFields<skirout.editor.v1.expression.ExpressionField>? =
+        override var path: skirout.editor.v1.type_catalog.ValuePath_OrMutable =
+            skirout.editor.v1.type_catalog.ValuePath.partial(),
+        internal var _unrecognizedFields: _UnrecognizedFields<skirout.editor.v1.expression.FieldExpression>? =
             null,
-    ): skirout.editor.v1.expression.ExpressionField_OrMutable {
+    ): skirout.editor.v1.expression.FieldExpression_OrMutable {
         /** Returns a deeply immutable copy of this instance */
-        override fun toFrozen() = skirout.editor.v1.expression.ExpressionField(
+        override fun toFrozen() = skirout.editor.v1.expression.FieldExpression(
             source = this.source,
-            name = this.name,
+            path = this.path,
             _unrecognizedFields = this._unrecognizedFields,
         );
+
+        /**
+         * If the value of [path] is already mutable, returns it as-is.
+         * Otherwise, makes a mutable copy, assigns it back to [path] and returns it.
+         */
+        val mutablePath: skirout.editor.v1.type_catalog.ValuePath.Mutable get() {
+            var value = this.path;
+            return when (value) {
+                is skirout.editor.v1.type_catalog.ValuePath -> {
+                    value = value.toMutable();
+                    this.path = value;
+                    return value;
+                }
+                is skirout.editor.v1.type_catalog.ValuePath.Mutable -> value;
+            }
+        }
     }
 
     companion object {
         private val default =
-            skirout.editor.v1.expression.ExpressionField(
+            skirout.editor.v1.expression.FieldExpression(
                 skirout.editor.v1.expression.ExpressionNode.UNKNOWN,
-                "",
+                skirout.editor.v1.type_catalog.ValuePath.partial(),
             );
 
         /** Returns an instance with all fields set to their default values. */
         fun partial() = default;
 
         /**
-         * Creates a new instance of [ExpressionField].
+         * Creates a new instance of [FieldExpression].
          * Unlike the constructor, does not require all fields to be specified.
          * Missing fields will be set to their default values.
          */
@@ -452,241 +468,47 @@ class ExpressionField private constructor(
                 _MustNameArguments,
             source: skirout.editor.v1.expression.ExpressionNode =
                 skirout.editor.v1.expression.ExpressionNode.UNKNOWN,
-            name: kotlin.String =
-                "",
-        ) = skirout.editor.v1.expression.ExpressionField(
+            path: skirout.editor.v1.type_catalog.ValuePath_OrMutable =
+                skirout.editor.v1.type_catalog.ValuePath.partial(),
+        ) = skirout.editor.v1.expression.FieldExpression(
             source = source,
-            name = name,
+            path = path,
             _unrecognizedFields = null,
         );
 
-        /** Serializer for [ExpressionField] instances. */
-        val serializer get() = _SerializerRegistry.ExpressionFieldSerializer;
+        /** Serializer for [FieldExpression] instances. */
+        val serializer get() = _SerializerRegistry.FieldExpressionSerializer;
 
-        /** Describes the [ExpressionField] type. Provides runtime introspection capabilities. */
-        val typeDescriptor get() = _SerializerRegistry.ExpressionFieldSerializerImpl.typeDescriptor;
+        /** Describes the [FieldExpression] type. Provides runtime introspection capabilities. */
+        val typeDescriptor get() = _SerializerRegistry.FieldExpressionSerializerImpl.typeDescriptor;
     }
 }
 
-/** Deeply immutable. */
-sealed class EntryBranch private constructor() {
-    /** The kind of variant held by a `EntryBranch`. */
-    enum class Kind {
-        UNKNOWN,
-        KEY_CONST,
-        VALUE_CONST,
-    }
-
-    class Unknown @kotlin.Deprecated("For internal use", kotlin.ReplaceWith("skirout.editor.v1.expression.EntryBranch.UNKNOWN")) internal constructor(
-        internal val _kind: Kind,
-        internal override val _unrecognized: _UnrecognizedVariant<skirout.editor.v1.expression.EntryBranch>?,
-    ) : skirout.editor.v1.expression.EntryBranch() {
-        override val kind get() = _kind;
-
-        override fun equals(other: kotlin.Any?): kotlin.Boolean {
-            return other is skirout.editor.v1.expression.EntryBranch && other.kind == kind;
-        }
-
-        override fun hashCode(): kotlin.Int {
-            return kind.ordinal;
-        }
-    }
-
-    object KEY : skirout.editor.v1.expression.EntryBranch() {
-        override val kind get() = Kind.KEY_CONST;
-
-        override fun equals(other: kotlin.Any?): kotlin.Boolean {
-            return other is skirout.editor.v1.expression.EntryBranch && other.kind == Kind.KEY_CONST;
-        }
-
-        override fun hashCode(): kotlin.Int {
-            return Kind.KEY_CONST.ordinal;
-        }
-    }
-
-    object VALUE : skirout.editor.v1.expression.EntryBranch() {
-        override val kind get() = Kind.VALUE_CONST;
-
-        override fun equals(other: kotlin.Any?): kotlin.Boolean {
-            return other is skirout.editor.v1.expression.EntryBranch && other.kind == Kind.VALUE_CONST;
-        }
-
-        override fun hashCode(): kotlin.Int {
-            return Kind.VALUE_CONST.ordinal;
-        }
-    }
-
-    internal open val _unrecognized: _UnrecognizedVariant<skirout.editor.v1.expression.EntryBranch>? get() = null;
-
-    abstract val kind: Kind;
-
-    override fun toString(): kotlin.String {
-        return build.skir.internal.toStringImpl(
-            this,
-            _SerializerRegistry.EntryBranchSerializerImpl,
-        )
-    }
-
-    companion object {
-        /**
-         * Constant indicating an unknown [EntryBranch].
-         * Default value for fields of type [EntryBranch].
-         */
-        val UNKNOWN = @kotlin.Suppress("DEPRECATION") Unknown(Kind.UNKNOWN, null);
-
-        /** Serializer for [EntryBranch] instances. */
-        val serializer get() = _SerializerRegistry.EntryBranchSerializer;
-
-        /** Describes the [EntryBranch] type. Provides runtime introspection capabilities. */
-        val typeDescriptor get() = _SerializerRegistry.EntryBranchSerializerImpl.typeDescriptor;
-    }
-}
-
-sealed interface ExpressionEntryProjection_OrMutable {
-    val source: skirout.editor.v1.expression.ExpressionNode;
-    val branch: skirout.editor.v1.expression.EntryBranch;
-
-    fun toFrozen(): skirout.editor.v1.expression.ExpressionEntryProjection;
-}
-
-/** Deeply immutable. */
-@kotlin.Suppress("UNUSED_PARAMETER")
-class ExpressionEntryProjection private constructor(
-    override val source: skirout.editor.v1.expression.ExpressionNode,
-    override val branch: skirout.editor.v1.expression.EntryBranch,
-    internal val _unrecognizedFields: _UnrecognizedFields<skirout.editor.v1.expression.ExpressionEntryProjection>? =
-        null,
-): skirout.editor.v1.expression.ExpressionEntryProjection_OrMutable {
-    constructor(
-        _mustNameArguments: _MustNameArguments =
-            _MustNameArguments,
-        source: skirout.editor.v1.expression.ExpressionNode,
-        branch: skirout.editor.v1.expression.EntryBranch,
-        _unrecognizedFields: _UnrecognizedFields<skirout.editor.v1.expression.ExpressionEntryProjection>? =
-            null,
-    ): this(
-        source,
-        branch,
-        _unrecognizedFields,
-    ) {}
-
-    @kotlin.Deprecated("Already frozen", kotlin.ReplaceWith("this"))
-    override fun toFrozen() = this;
-
-    /** Returns a mutable shallow copy of this instance */
-    fun toMutable() = Mutable(
-        source = this.source,
-        branch = this.branch,
-    );
-
-    /** Returns a shallow copy of this instance with the specified fields replaced. */
-    fun copy(
-        _mustNameArguments: _MustNameArguments =
-            _MustNameArguments,
-        source: skirout.editor.v1.expression.ExpressionNode =
-            this.source,
-        branch: skirout.editor.v1.expression.EntryBranch =
-            this.branch,
-    ) = skirout.editor.v1.expression.ExpressionEntryProjection(
-        source,
-        branch,
-        this._unrecognizedFields,
-    );
-
-    @kotlin.Deprecated("No point in creating an exact copy of an immutable object", kotlin.ReplaceWith("this"))
-    fun copy() = this;
-
-    override fun equals(other: kotlin.Any?): kotlin.Boolean {
-        return this === other || (other is skirout.editor.v1.expression.ExpressionEntryProjection && this.source == other.source && this.branch == other.branch);
-    }
-
-    override fun hashCode(): kotlin.Int {
-        return kotlin.collections.listOf<kotlin.Any?>(this.source, this.branch).hashCode();
-    }
-
-    override fun toString(): kotlin.String {
-        return build.skir.internal.toStringImpl(
-            this,
-            _SerializerRegistry.ExpressionEntryProjectionSerializerImpl,
-        )
-    }
-
-    /** Mutable version of [ExpressionEntryProjection]. */
-    class Mutable internal constructor(
-        _mustNameArguments: _MustNameArguments =
-            _MustNameArguments,
-        override var source: skirout.editor.v1.expression.ExpressionNode =
-            skirout.editor.v1.expression.ExpressionNode.UNKNOWN,
-        override var branch: skirout.editor.v1.expression.EntryBranch =
-            skirout.editor.v1.expression.EntryBranch.UNKNOWN,
-        internal var _unrecognizedFields: _UnrecognizedFields<skirout.editor.v1.expression.ExpressionEntryProjection>? =
-            null,
-    ): skirout.editor.v1.expression.ExpressionEntryProjection_OrMutable {
-        /** Returns a deeply immutable copy of this instance */
-        override fun toFrozen() = skirout.editor.v1.expression.ExpressionEntryProjection(
-            source = this.source,
-            branch = this.branch,
-            _unrecognizedFields = this._unrecognizedFields,
-        );
-    }
-
-    companion object {
-        private val default =
-            skirout.editor.v1.expression.ExpressionEntryProjection(
-                skirout.editor.v1.expression.ExpressionNode.UNKNOWN,
-                skirout.editor.v1.expression.EntryBranch.UNKNOWN,
-            );
-
-        /** Returns an instance with all fields set to their default values. */
-        fun partial() = default;
-
-        /**
-         * Creates a new instance of [ExpressionEntryProjection].
-         * Unlike the constructor, does not require all fields to be specified.
-         * Missing fields will be set to their default values.
-         */
-        fun partial(
-            _mustNameArguments: _MustNameArguments =
-                _MustNameArguments,
-            source: skirout.editor.v1.expression.ExpressionNode =
-                skirout.editor.v1.expression.ExpressionNode.UNKNOWN,
-            branch: skirout.editor.v1.expression.EntryBranch =
-                skirout.editor.v1.expression.EntryBranch.UNKNOWN,
-        ) = skirout.editor.v1.expression.ExpressionEntryProjection(
-            source = source,
-            branch = branch,
-            _unrecognizedFields = null,
-        );
-
-        /** Serializer for [ExpressionEntryProjection] instances. */
-        val serializer get() = _SerializerRegistry.ExpressionEntryProjectionSerializer;
-
-        /** Describes the [ExpressionEntryProjection] type. Provides runtime introspection capabilities. */
-        val typeDescriptor get() = _SerializerRegistry.ExpressionEntryProjectionSerializerImpl.typeDescriptor;
-    }
-}
-
-sealed interface BinaryExpression_OrMutable {
+sealed interface LogicalExpression_OrMutable {
     val left: skirout.editor.v1.expression.ExpressionNode;
     val right: skirout.editor.v1.expression.ExpressionNode;
 
-    fun toFrozen(): skirout.editor.v1.expression.BinaryExpression;
+    fun toFrozen(): skirout.editor.v1.expression.LogicalExpression;
 }
 
-/** Deeply immutable. */
+/**
+ * Evaluates right only when left does not decide the result.
+ *
+ * Deeply immutable.
+ */
 @kotlin.Suppress("UNUSED_PARAMETER")
-class BinaryExpression private constructor(
+class LogicalExpression private constructor(
     override val left: skirout.editor.v1.expression.ExpressionNode,
     override val right: skirout.editor.v1.expression.ExpressionNode,
-    internal val _unrecognizedFields: _UnrecognizedFields<skirout.editor.v1.expression.BinaryExpression>? =
+    internal val _unrecognizedFields: _UnrecognizedFields<skirout.editor.v1.expression.LogicalExpression>? =
         null,
-): skirout.editor.v1.expression.BinaryExpression_OrMutable {
+): skirout.editor.v1.expression.LogicalExpression_OrMutable {
     constructor(
         _mustNameArguments: _MustNameArguments =
             _MustNameArguments,
         left: skirout.editor.v1.expression.ExpressionNode,
         right: skirout.editor.v1.expression.ExpressionNode,
-        _unrecognizedFields: _UnrecognizedFields<skirout.editor.v1.expression.BinaryExpression>? =
+        _unrecognizedFields: _UnrecognizedFields<skirout.editor.v1.expression.LogicalExpression>? =
             null,
     ): this(
         left,
@@ -711,7 +533,7 @@ class BinaryExpression private constructor(
             this.left,
         right: skirout.editor.v1.expression.ExpressionNode =
             this.right,
-    ) = skirout.editor.v1.expression.BinaryExpression(
+    ) = skirout.editor.v1.expression.LogicalExpression(
         left,
         right,
         this._unrecognizedFields,
@@ -721,7 +543,7 @@ class BinaryExpression private constructor(
     fun copy() = this;
 
     override fun equals(other: kotlin.Any?): kotlin.Boolean {
-        return this === other || (other is skirout.editor.v1.expression.BinaryExpression && this.left == other.left && this.right == other.right);
+        return this === other || (other is skirout.editor.v1.expression.LogicalExpression && this.left == other.left && this.right == other.right);
     }
 
     override fun hashCode(): kotlin.Int {
@@ -731,11 +553,11 @@ class BinaryExpression private constructor(
     override fun toString(): kotlin.String {
         return build.skir.internal.toStringImpl(
             this,
-            _SerializerRegistry.BinaryExpressionSerializerImpl,
+            _SerializerRegistry.LogicalExpressionSerializerImpl,
         )
     }
 
-    /** Mutable version of [BinaryExpression]. */
+    /** Mutable version of [LogicalExpression]. */
     class Mutable internal constructor(
         _mustNameArguments: _MustNameArguments =
             _MustNameArguments,
@@ -743,11 +565,11 @@ class BinaryExpression private constructor(
             skirout.editor.v1.expression.ExpressionNode.UNKNOWN,
         override var right: skirout.editor.v1.expression.ExpressionNode =
             skirout.editor.v1.expression.ExpressionNode.UNKNOWN,
-        internal var _unrecognizedFields: _UnrecognizedFields<skirout.editor.v1.expression.BinaryExpression>? =
+        internal var _unrecognizedFields: _UnrecognizedFields<skirout.editor.v1.expression.LogicalExpression>? =
             null,
-    ): skirout.editor.v1.expression.BinaryExpression_OrMutable {
+    ): skirout.editor.v1.expression.LogicalExpression_OrMutable {
         /** Returns a deeply immutable copy of this instance */
-        override fun toFrozen() = skirout.editor.v1.expression.BinaryExpression(
+        override fun toFrozen() = skirout.editor.v1.expression.LogicalExpression(
             left = this.left,
             right = this.right,
             _unrecognizedFields = this._unrecognizedFields,
@@ -756,7 +578,7 @@ class BinaryExpression private constructor(
 
     companion object {
         private val default =
-            skirout.editor.v1.expression.BinaryExpression(
+            skirout.editor.v1.expression.LogicalExpression(
                 skirout.editor.v1.expression.ExpressionNode.UNKNOWN,
                 skirout.editor.v1.expression.ExpressionNode.UNKNOWN,
             );
@@ -765,7 +587,7 @@ class BinaryExpression private constructor(
         fun partial() = default;
 
         /**
-         * Creates a new instance of [BinaryExpression].
+         * Creates a new instance of [LogicalExpression].
          * Unlike the constructor, does not require all fields to be specified.
          * Missing fields will be set to their default values.
          */
@@ -776,34 +598,38 @@ class BinaryExpression private constructor(
                 skirout.editor.v1.expression.ExpressionNode.UNKNOWN,
             right: skirout.editor.v1.expression.ExpressionNode =
                 skirout.editor.v1.expression.ExpressionNode.UNKNOWN,
-        ) = skirout.editor.v1.expression.BinaryExpression(
+        ) = skirout.editor.v1.expression.LogicalExpression(
             left = left,
             right = right,
             _unrecognizedFields = null,
         );
 
-        /** Serializer for [BinaryExpression] instances. */
-        val serializer get() = _SerializerRegistry.BinaryExpressionSerializer;
+        /** Serializer for [LogicalExpression] instances. */
+        val serializer get() = _SerializerRegistry.LogicalExpressionSerializer;
 
-        /** Describes the [BinaryExpression] type. Provides runtime introspection capabilities. */
-        val typeDescriptor get() = _SerializerRegistry.BinaryExpressionSerializerImpl.typeDescriptor;
+        /** Describes the [LogicalExpression] type. Provides runtime introspection capabilities. */
+        val typeDescriptor get() = _SerializerRegistry.LogicalExpressionSerializerImpl.typeDescriptor;
     }
 }
 
 sealed interface ConditionalExpression_OrMutable {
     val test: skirout.editor.v1.expression.ExpressionNode;
-    val yes: skirout.editor.v1.expression.ExpressionNode;
-    val no: skirout.editor.v1.expression.ExpressionNode;
+    val then: skirout.editor.v1.expression.ExpressionNode;
+    val otherwise: skirout.editor.v1.expression.ExpressionNode;
 
     fun toFrozen(): skirout.editor.v1.expression.ConditionalExpression;
 }
 
-/** Deeply immutable. */
+/**
+ * Evaluates only the branch the test selects.
+ *
+ * Deeply immutable.
+ */
 @kotlin.Suppress("UNUSED_PARAMETER")
 class ConditionalExpression private constructor(
     override val test: skirout.editor.v1.expression.ExpressionNode,
-    override val yes: skirout.editor.v1.expression.ExpressionNode,
-    override val no: skirout.editor.v1.expression.ExpressionNode,
+    override val then: skirout.editor.v1.expression.ExpressionNode,
+    override val otherwise: skirout.editor.v1.expression.ExpressionNode,
     internal val _unrecognizedFields: _UnrecognizedFields<skirout.editor.v1.expression.ConditionalExpression>? =
         null,
 ): skirout.editor.v1.expression.ConditionalExpression_OrMutable {
@@ -811,14 +637,14 @@ class ConditionalExpression private constructor(
         _mustNameArguments: _MustNameArguments =
             _MustNameArguments,
         test: skirout.editor.v1.expression.ExpressionNode,
-        yes: skirout.editor.v1.expression.ExpressionNode,
-        no: skirout.editor.v1.expression.ExpressionNode,
+        then: skirout.editor.v1.expression.ExpressionNode,
+        otherwise: skirout.editor.v1.expression.ExpressionNode,
         _unrecognizedFields: _UnrecognizedFields<skirout.editor.v1.expression.ConditionalExpression>? =
             null,
     ): this(
         test,
-        yes,
-        no,
+        then,
+        otherwise,
         _unrecognizedFields,
     ) {}
 
@@ -828,8 +654,8 @@ class ConditionalExpression private constructor(
     /** Returns a mutable shallow copy of this instance */
     fun toMutable() = Mutable(
         test = this.test,
-        yes = this.yes,
-        no = this.no,
+        then = this.then,
+        otherwise = this.otherwise,
     );
 
     /** Returns a shallow copy of this instance with the specified fields replaced. */
@@ -838,14 +664,14 @@ class ConditionalExpression private constructor(
             _MustNameArguments,
         test: skirout.editor.v1.expression.ExpressionNode =
             this.test,
-        yes: skirout.editor.v1.expression.ExpressionNode =
-            this.yes,
-        no: skirout.editor.v1.expression.ExpressionNode =
-            this.no,
+        then: skirout.editor.v1.expression.ExpressionNode =
+            this.then,
+        otherwise: skirout.editor.v1.expression.ExpressionNode =
+            this.otherwise,
     ) = skirout.editor.v1.expression.ConditionalExpression(
         test,
-        yes,
-        no,
+        then,
+        otherwise,
         this._unrecognizedFields,
     );
 
@@ -853,11 +679,11 @@ class ConditionalExpression private constructor(
     fun copy() = this;
 
     override fun equals(other: kotlin.Any?): kotlin.Boolean {
-        return this === other || (other is skirout.editor.v1.expression.ConditionalExpression && this.test == other.test && this.yes == other.yes && this.no == other.no);
+        return this === other || (other is skirout.editor.v1.expression.ConditionalExpression && this.test == other.test && this.then == other.then && this.otherwise == other.otherwise);
     }
 
     override fun hashCode(): kotlin.Int {
-        return kotlin.collections.listOf<kotlin.Any?>(this.test, this.yes, this.no).hashCode();
+        return kotlin.collections.listOf<kotlin.Any?>(this.test, this.then, this.otherwise).hashCode();
     }
 
     override fun toString(): kotlin.String {
@@ -873,9 +699,9 @@ class ConditionalExpression private constructor(
             _MustNameArguments,
         override var test: skirout.editor.v1.expression.ExpressionNode =
             skirout.editor.v1.expression.ExpressionNode.UNKNOWN,
-        override var yes: skirout.editor.v1.expression.ExpressionNode =
+        override var then: skirout.editor.v1.expression.ExpressionNode =
             skirout.editor.v1.expression.ExpressionNode.UNKNOWN,
-        override var no: skirout.editor.v1.expression.ExpressionNode =
+        override var otherwise: skirout.editor.v1.expression.ExpressionNode =
             skirout.editor.v1.expression.ExpressionNode.UNKNOWN,
         internal var _unrecognizedFields: _UnrecognizedFields<skirout.editor.v1.expression.ConditionalExpression>? =
             null,
@@ -883,8 +709,8 @@ class ConditionalExpression private constructor(
         /** Returns a deeply immutable copy of this instance */
         override fun toFrozen() = skirout.editor.v1.expression.ConditionalExpression(
             test = this.test,
-            yes = this.yes,
-            no = this.no,
+            then = this.then,
+            otherwise = this.otherwise,
             _unrecognizedFields = this._unrecognizedFields,
         );
     }
@@ -910,14 +736,14 @@ class ConditionalExpression private constructor(
                 _MustNameArguments,
             test: skirout.editor.v1.expression.ExpressionNode =
                 skirout.editor.v1.expression.ExpressionNode.UNKNOWN,
-            yes: skirout.editor.v1.expression.ExpressionNode =
+            then: skirout.editor.v1.expression.ExpressionNode =
                 skirout.editor.v1.expression.ExpressionNode.UNKNOWN,
-            no: skirout.editor.v1.expression.ExpressionNode =
+            otherwise: skirout.editor.v1.expression.ExpressionNode =
                 skirout.editor.v1.expression.ExpressionNode.UNKNOWN,
         ) = skirout.editor.v1.expression.ConditionalExpression(
             test = test,
-            yes = yes,
-            no = no,
+            then = then,
+            otherwise = otherwise,
             _unrecognizedFields = null,
         );
 
@@ -929,35 +755,35 @@ class ConditionalExpression private constructor(
     }
 }
 
-sealed interface OrElseExpression_OrMutable {
-    val input: skirout.editor.v1.expression.ExpressionNode;
+sealed interface FallbackExpression_OrMutable {
+    val value: skirout.editor.v1.expression.ExpressionNode;
     val fallback: skirout.editor.v1.expression.ExpressionNode;
 
-    fun toFrozen(): skirout.editor.v1.expression.OrElseExpression;
+    fun toFrozen(): skirout.editor.v1.expression.FallbackExpression;
 }
 
 /**
- * Evaluates fallback for unavailable, null, or unfilled input. Evaluation failures remain
+ * Evaluates fallback for missing, null, or unfilled value. Evaluation failures remain
  * failures instead of being hidden by the fallback.
  *
  * Deeply immutable.
  */
 @kotlin.Suppress("UNUSED_PARAMETER")
-class OrElseExpression private constructor(
-    override val input: skirout.editor.v1.expression.ExpressionNode,
+class FallbackExpression private constructor(
+    override val value: skirout.editor.v1.expression.ExpressionNode,
     override val fallback: skirout.editor.v1.expression.ExpressionNode,
-    internal val _unrecognizedFields: _UnrecognizedFields<skirout.editor.v1.expression.OrElseExpression>? =
+    internal val _unrecognizedFields: _UnrecognizedFields<skirout.editor.v1.expression.FallbackExpression>? =
         null,
-): skirout.editor.v1.expression.OrElseExpression_OrMutable {
+): skirout.editor.v1.expression.FallbackExpression_OrMutable {
     constructor(
         _mustNameArguments: _MustNameArguments =
             _MustNameArguments,
-        input: skirout.editor.v1.expression.ExpressionNode,
+        value: skirout.editor.v1.expression.ExpressionNode,
         fallback: skirout.editor.v1.expression.ExpressionNode,
-        _unrecognizedFields: _UnrecognizedFields<skirout.editor.v1.expression.OrElseExpression>? =
+        _unrecognizedFields: _UnrecognizedFields<skirout.editor.v1.expression.FallbackExpression>? =
             null,
     ): this(
-        input,
+        value,
         fallback,
         _unrecognizedFields,
     ) {}
@@ -967,7 +793,7 @@ class OrElseExpression private constructor(
 
     /** Returns a mutable shallow copy of this instance */
     fun toMutable() = Mutable(
-        input = this.input,
+        value = this.value,
         fallback = this.fallback,
     );
 
@@ -975,12 +801,12 @@ class OrElseExpression private constructor(
     fun copy(
         _mustNameArguments: _MustNameArguments =
             _MustNameArguments,
-        input: skirout.editor.v1.expression.ExpressionNode =
-            this.input,
+        value: skirout.editor.v1.expression.ExpressionNode =
+            this.value,
         fallback: skirout.editor.v1.expression.ExpressionNode =
             this.fallback,
-    ) = skirout.editor.v1.expression.OrElseExpression(
-        input,
+    ) = skirout.editor.v1.expression.FallbackExpression(
+        value,
         fallback,
         this._unrecognizedFields,
     );
@@ -989,34 +815,34 @@ class OrElseExpression private constructor(
     fun copy() = this;
 
     override fun equals(other: kotlin.Any?): kotlin.Boolean {
-        return this === other || (other is skirout.editor.v1.expression.OrElseExpression && this.input == other.input && this.fallback == other.fallback);
+        return this === other || (other is skirout.editor.v1.expression.FallbackExpression && this.value == other.value && this.fallback == other.fallback);
     }
 
     override fun hashCode(): kotlin.Int {
-        return kotlin.collections.listOf<kotlin.Any?>(this.input, this.fallback).hashCode();
+        return kotlin.collections.listOf<kotlin.Any?>(this.value, this.fallback).hashCode();
     }
 
     override fun toString(): kotlin.String {
         return build.skir.internal.toStringImpl(
             this,
-            _SerializerRegistry.OrElseExpressionSerializerImpl,
+            _SerializerRegistry.FallbackExpressionSerializerImpl,
         )
     }
 
-    /** Mutable version of [OrElseExpression]. */
+    /** Mutable version of [FallbackExpression]. */
     class Mutable internal constructor(
         _mustNameArguments: _MustNameArguments =
             _MustNameArguments,
-        override var input: skirout.editor.v1.expression.ExpressionNode =
+        override var value: skirout.editor.v1.expression.ExpressionNode =
             skirout.editor.v1.expression.ExpressionNode.UNKNOWN,
         override var fallback: skirout.editor.v1.expression.ExpressionNode =
             skirout.editor.v1.expression.ExpressionNode.UNKNOWN,
-        internal var _unrecognizedFields: _UnrecognizedFields<skirout.editor.v1.expression.OrElseExpression>? =
+        internal var _unrecognizedFields: _UnrecognizedFields<skirout.editor.v1.expression.FallbackExpression>? =
             null,
-    ): skirout.editor.v1.expression.OrElseExpression_OrMutable {
+    ): skirout.editor.v1.expression.FallbackExpression_OrMutable {
         /** Returns a deeply immutable copy of this instance */
-        override fun toFrozen() = skirout.editor.v1.expression.OrElseExpression(
-            input = this.input,
+        override fun toFrozen() = skirout.editor.v1.expression.FallbackExpression(
+            value = this.value,
             fallback = this.fallback,
             _unrecognizedFields = this._unrecognizedFields,
         );
@@ -1024,7 +850,7 @@ class OrElseExpression private constructor(
 
     companion object {
         private val default =
-            skirout.editor.v1.expression.OrElseExpression(
+            skirout.editor.v1.expression.FallbackExpression(
                 skirout.editor.v1.expression.ExpressionNode.UNKNOWN,
                 skirout.editor.v1.expression.ExpressionNode.UNKNOWN,
             );
@@ -1033,3063 +859,56 @@ class OrElseExpression private constructor(
         fun partial() = default;
 
         /**
-         * Creates a new instance of [OrElseExpression].
+         * Creates a new instance of [FallbackExpression].
          * Unlike the constructor, does not require all fields to be specified.
          * Missing fields will be set to their default values.
          */
         fun partial(
             _mustNameArguments: _MustNameArguments =
                 _MustNameArguments,
-            input: skirout.editor.v1.expression.ExpressionNode =
+            value: skirout.editor.v1.expression.ExpressionNode =
                 skirout.editor.v1.expression.ExpressionNode.UNKNOWN,
             fallback: skirout.editor.v1.expression.ExpressionNode =
                 skirout.editor.v1.expression.ExpressionNode.UNKNOWN,
-        ) = skirout.editor.v1.expression.OrElseExpression(
-            input = input,
+        ) = skirout.editor.v1.expression.FallbackExpression(
+            value = value,
             fallback = fallback,
             _unrecognizedFields = null,
         );
 
-        /** Serializer for [OrElseExpression] instances. */
-        val serializer get() = _SerializerRegistry.OrElseExpressionSerializer;
+        /** Serializer for [FallbackExpression] instances. */
+        val serializer get() = _SerializerRegistry.FallbackExpressionSerializer;
 
-        /** Describes the [OrElseExpression] type. Provides runtime introspection capabilities. */
-        val typeDescriptor get() = _SerializerRegistry.OrElseExpressionSerializerImpl.typeDescriptor;
+        /** Describes the [FallbackExpression] type. Provides runtime introspection capabilities. */
+        val typeDescriptor get() = _SerializerRegistry.FallbackExpressionSerializerImpl.typeDescriptor;
     }
 }
 
-/** Deeply immutable. */
-sealed class TextUnaryOperation private constructor() {
-    /** The kind of variant held by a `TextUnaryOperation`. */
-    enum class Kind {
-        UNKNOWN,
-        VALUE_CONST,
-        TRIM_CONST,
-        LOWER_CONST,
-        UPPER_CONST,
-        TITLE_CONST,
-    }
+sealed interface OperationId_OrMutable {
+    val value: kotlin.String;
 
-    class Unknown @kotlin.Deprecated("For internal use", kotlin.ReplaceWith("skirout.editor.v1.expression.TextUnaryOperation.UNKNOWN")) internal constructor(
-        internal val _kind: Kind,
-        internal override val _unrecognized: _UnrecognizedVariant<skirout.editor.v1.expression.TextUnaryOperation>?,
-    ) : skirout.editor.v1.expression.TextUnaryOperation() {
-        override val kind get() = _kind;
-
-        override fun equals(other: kotlin.Any?): kotlin.Boolean {
-            return other is skirout.editor.v1.expression.TextUnaryOperation && other.kind == kind;
-        }
-
-        override fun hashCode(): kotlin.Int {
-            return kind.ordinal;
-        }
-    }
-
-    object VALUE : skirout.editor.v1.expression.TextUnaryOperation() {
-        override val kind get() = Kind.VALUE_CONST;
-
-        override fun equals(other: kotlin.Any?): kotlin.Boolean {
-            return other is skirout.editor.v1.expression.TextUnaryOperation && other.kind == Kind.VALUE_CONST;
-        }
-
-        override fun hashCode(): kotlin.Int {
-            return Kind.VALUE_CONST.ordinal;
-        }
-    }
-
-    object TRIM : skirout.editor.v1.expression.TextUnaryOperation() {
-        override val kind get() = Kind.TRIM_CONST;
-
-        override fun equals(other: kotlin.Any?): kotlin.Boolean {
-            return other is skirout.editor.v1.expression.TextUnaryOperation && other.kind == Kind.TRIM_CONST;
-        }
-
-        override fun hashCode(): kotlin.Int {
-            return Kind.TRIM_CONST.ordinal;
-        }
-    }
-
-    object LOWER : skirout.editor.v1.expression.TextUnaryOperation() {
-        override val kind get() = Kind.LOWER_CONST;
-
-        override fun equals(other: kotlin.Any?): kotlin.Boolean {
-            return other is skirout.editor.v1.expression.TextUnaryOperation && other.kind == Kind.LOWER_CONST;
-        }
-
-        override fun hashCode(): kotlin.Int {
-            return Kind.LOWER_CONST.ordinal;
-        }
-    }
-
-    object UPPER : skirout.editor.v1.expression.TextUnaryOperation() {
-        override val kind get() = Kind.UPPER_CONST;
-
-        override fun equals(other: kotlin.Any?): kotlin.Boolean {
-            return other is skirout.editor.v1.expression.TextUnaryOperation && other.kind == Kind.UPPER_CONST;
-        }
-
-        override fun hashCode(): kotlin.Int {
-            return Kind.UPPER_CONST.ordinal;
-        }
-    }
-
-    object TITLE : skirout.editor.v1.expression.TextUnaryOperation() {
-        override val kind get() = Kind.TITLE_CONST;
-
-        override fun equals(other: kotlin.Any?): kotlin.Boolean {
-            return other is skirout.editor.v1.expression.TextUnaryOperation && other.kind == Kind.TITLE_CONST;
-        }
-
-        override fun hashCode(): kotlin.Int {
-            return Kind.TITLE_CONST.ordinal;
-        }
-    }
-
-    internal open val _unrecognized: _UnrecognizedVariant<skirout.editor.v1.expression.TextUnaryOperation>? get() = null;
-
-    abstract val kind: Kind;
-
-    override fun toString(): kotlin.String {
-        return build.skir.internal.toStringImpl(
-            this,
-            _SerializerRegistry.TextUnaryOperationSerializerImpl,
-        )
-    }
-
-    companion object {
-        /**
-         * Constant indicating an unknown [TextUnaryOperation].
-         * Default value for fields of type [TextUnaryOperation].
-         */
-        val UNKNOWN = @kotlin.Suppress("DEPRECATION") Unknown(Kind.UNKNOWN, null);
-
-        /** Serializer for [TextUnaryOperation] instances. */
-        val serializer get() = _SerializerRegistry.TextUnaryOperationSerializer;
-
-        /** Describes the [TextUnaryOperation] type. Provides runtime introspection capabilities. */
-        val typeDescriptor get() = _SerializerRegistry.TextUnaryOperationSerializerImpl.typeDescriptor;
-    }
-}
-
-sealed interface TextUnaryExpression_OrMutable {
-    val operation: skirout.editor.v1.expression.TextUnaryOperation;
-    val source: skirout.editor.v1.expression.ExpressionNode;
-
-    fun toFrozen(): skirout.editor.v1.expression.TextUnaryExpression;
-}
-
-/** Deeply immutable. */
-@kotlin.Suppress("UNUSED_PARAMETER")
-class TextUnaryExpression private constructor(
-    override val operation: skirout.editor.v1.expression.TextUnaryOperation,
-    override val source: skirout.editor.v1.expression.ExpressionNode,
-    internal val _unrecognizedFields: _UnrecognizedFields<skirout.editor.v1.expression.TextUnaryExpression>? =
-        null,
-): skirout.editor.v1.expression.TextUnaryExpression_OrMutable {
-    constructor(
-        _mustNameArguments: _MustNameArguments =
-            _MustNameArguments,
-        operation: skirout.editor.v1.expression.TextUnaryOperation,
-        source: skirout.editor.v1.expression.ExpressionNode,
-        _unrecognizedFields: _UnrecognizedFields<skirout.editor.v1.expression.TextUnaryExpression>? =
-            null,
-    ): this(
-        operation,
-        source,
-        _unrecognizedFields,
-    ) {}
-
-    @kotlin.Deprecated("Already frozen", kotlin.ReplaceWith("this"))
-    override fun toFrozen() = this;
-
-    /** Returns a mutable shallow copy of this instance */
-    fun toMutable() = Mutable(
-        operation = this.operation,
-        source = this.source,
-    );
-
-    /** Returns a shallow copy of this instance with the specified fields replaced. */
-    fun copy(
-        _mustNameArguments: _MustNameArguments =
-            _MustNameArguments,
-        operation: skirout.editor.v1.expression.TextUnaryOperation =
-            this.operation,
-        source: skirout.editor.v1.expression.ExpressionNode =
-            this.source,
-    ) = skirout.editor.v1.expression.TextUnaryExpression(
-        operation,
-        source,
-        this._unrecognizedFields,
-    );
-
-    @kotlin.Deprecated("No point in creating an exact copy of an immutable object", kotlin.ReplaceWith("this"))
-    fun copy() = this;
-
-    override fun equals(other: kotlin.Any?): kotlin.Boolean {
-        return this === other || (other is skirout.editor.v1.expression.TextUnaryExpression && this.operation == other.operation && this.source == other.source);
-    }
-
-    override fun hashCode(): kotlin.Int {
-        return kotlin.collections.listOf<kotlin.Any?>(this.operation, this.source).hashCode();
-    }
-
-    override fun toString(): kotlin.String {
-        return build.skir.internal.toStringImpl(
-            this,
-            _SerializerRegistry.TextUnaryExpressionSerializerImpl,
-        )
-    }
-
-    /** Mutable version of [TextUnaryExpression]. */
-    class Mutable internal constructor(
-        _mustNameArguments: _MustNameArguments =
-            _MustNameArguments,
-        override var operation: skirout.editor.v1.expression.TextUnaryOperation =
-            skirout.editor.v1.expression.TextUnaryOperation.UNKNOWN,
-        override var source: skirout.editor.v1.expression.ExpressionNode =
-            skirout.editor.v1.expression.ExpressionNode.UNKNOWN,
-        internal var _unrecognizedFields: _UnrecognizedFields<skirout.editor.v1.expression.TextUnaryExpression>? =
-            null,
-    ): skirout.editor.v1.expression.TextUnaryExpression_OrMutable {
-        /** Returns a deeply immutable copy of this instance */
-        override fun toFrozen() = skirout.editor.v1.expression.TextUnaryExpression(
-            operation = this.operation,
-            source = this.source,
-            _unrecognizedFields = this._unrecognizedFields,
-        );
-    }
-
-    companion object {
-        private val default =
-            skirout.editor.v1.expression.TextUnaryExpression(
-                skirout.editor.v1.expression.TextUnaryOperation.UNKNOWN,
-                skirout.editor.v1.expression.ExpressionNode.UNKNOWN,
-            );
-
-        /** Returns an instance with all fields set to their default values. */
-        fun partial() = default;
-
-        /**
-         * Creates a new instance of [TextUnaryExpression].
-         * Unlike the constructor, does not require all fields to be specified.
-         * Missing fields will be set to their default values.
-         */
-        fun partial(
-            _mustNameArguments: _MustNameArguments =
-                _MustNameArguments,
-            operation: skirout.editor.v1.expression.TextUnaryOperation =
-                skirout.editor.v1.expression.TextUnaryOperation.UNKNOWN,
-            source: skirout.editor.v1.expression.ExpressionNode =
-                skirout.editor.v1.expression.ExpressionNode.UNKNOWN,
-        ) = skirout.editor.v1.expression.TextUnaryExpression(
-            operation = operation,
-            source = source,
-            _unrecognizedFields = null,
-        );
-
-        /** Serializer for [TextUnaryExpression] instances. */
-        val serializer get() = _SerializerRegistry.TextUnaryExpressionSerializer;
-
-        /** Describes the [TextUnaryExpression] type. Provides runtime introspection capabilities. */
-        val typeDescriptor get() = _SerializerRegistry.TextUnaryExpressionSerializerImpl.typeDescriptor;
-    }
-}
-
-/** Deeply immutable. */
-sealed class TextCompareOperation private constructor() {
-    /** The kind of variant held by a `TextCompareOperation`. */
-    enum class Kind {
-        UNKNOWN,
-        CONTAINS_CONST,
-        STARTS_WITH_CONST,
-        ENDS_WITH_CONST,
-    }
-
-    class Unknown @kotlin.Deprecated("For internal use", kotlin.ReplaceWith("skirout.editor.v1.expression.TextCompareOperation.UNKNOWN")) internal constructor(
-        internal val _kind: Kind,
-        internal override val _unrecognized: _UnrecognizedVariant<skirout.editor.v1.expression.TextCompareOperation>?,
-    ) : skirout.editor.v1.expression.TextCompareOperation() {
-        override val kind get() = _kind;
-
-        override fun equals(other: kotlin.Any?): kotlin.Boolean {
-            return other is skirout.editor.v1.expression.TextCompareOperation && other.kind == kind;
-        }
-
-        override fun hashCode(): kotlin.Int {
-            return kind.ordinal;
-        }
-    }
-
-    object CONTAINS : skirout.editor.v1.expression.TextCompareOperation() {
-        override val kind get() = Kind.CONTAINS_CONST;
-
-        override fun equals(other: kotlin.Any?): kotlin.Boolean {
-            return other is skirout.editor.v1.expression.TextCompareOperation && other.kind == Kind.CONTAINS_CONST;
-        }
-
-        override fun hashCode(): kotlin.Int {
-            return Kind.CONTAINS_CONST.ordinal;
-        }
-    }
-
-    object STARTS_WITH : skirout.editor.v1.expression.TextCompareOperation() {
-        override val kind get() = Kind.STARTS_WITH_CONST;
-
-        override fun equals(other: kotlin.Any?): kotlin.Boolean {
-            return other is skirout.editor.v1.expression.TextCompareOperation && other.kind == Kind.STARTS_WITH_CONST;
-        }
-
-        override fun hashCode(): kotlin.Int {
-            return Kind.STARTS_WITH_CONST.ordinal;
-        }
-    }
-
-    object ENDS_WITH : skirout.editor.v1.expression.TextCompareOperation() {
-        override val kind get() = Kind.ENDS_WITH_CONST;
-
-        override fun equals(other: kotlin.Any?): kotlin.Boolean {
-            return other is skirout.editor.v1.expression.TextCompareOperation && other.kind == Kind.ENDS_WITH_CONST;
-        }
-
-        override fun hashCode(): kotlin.Int {
-            return Kind.ENDS_WITH_CONST.ordinal;
-        }
-    }
-
-    internal open val _unrecognized: _UnrecognizedVariant<skirout.editor.v1.expression.TextCompareOperation>? get() = null;
-
-    abstract val kind: Kind;
-
-    override fun toString(): kotlin.String {
-        return build.skir.internal.toStringImpl(
-            this,
-            _SerializerRegistry.TextCompareOperationSerializerImpl,
-        )
-    }
-
-    companion object {
-        /**
-         * Constant indicating an unknown [TextCompareOperation].
-         * Default value for fields of type [TextCompareOperation].
-         */
-        val UNKNOWN = @kotlin.Suppress("DEPRECATION") Unknown(Kind.UNKNOWN, null);
-
-        /** Serializer for [TextCompareOperation] instances. */
-        val serializer get() = _SerializerRegistry.TextCompareOperationSerializer;
-
-        /** Describes the [TextCompareOperation] type. Provides runtime introspection capabilities. */
-        val typeDescriptor get() = _SerializerRegistry.TextCompareOperationSerializerImpl.typeDescriptor;
-    }
-}
-
-sealed interface TextCompareExpression_OrMutable {
-    val operation: skirout.editor.v1.expression.TextCompareOperation;
-    val source: skirout.editor.v1.expression.ExpressionNode;
-    val other: skirout.editor.v1.expression.ExpressionNode;
-
-    fun toFrozen(): skirout.editor.v1.expression.TextCompareExpression;
-}
-
-/** Deeply immutable. */
-@kotlin.Suppress("UNUSED_PARAMETER")
-class TextCompareExpression private constructor(
-    override val operation: skirout.editor.v1.expression.TextCompareOperation,
-    override val source: skirout.editor.v1.expression.ExpressionNode,
-    override val other: skirout.editor.v1.expression.ExpressionNode,
-    internal val _unrecognizedFields: _UnrecognizedFields<skirout.editor.v1.expression.TextCompareExpression>? =
-        null,
-): skirout.editor.v1.expression.TextCompareExpression_OrMutable {
-    constructor(
-        _mustNameArguments: _MustNameArguments =
-            _MustNameArguments,
-        operation: skirout.editor.v1.expression.TextCompareOperation,
-        source: skirout.editor.v1.expression.ExpressionNode,
-        other: skirout.editor.v1.expression.ExpressionNode,
-        _unrecognizedFields: _UnrecognizedFields<skirout.editor.v1.expression.TextCompareExpression>? =
-            null,
-    ): this(
-        operation,
-        source,
-        other,
-        _unrecognizedFields,
-    ) {}
-
-    @kotlin.Deprecated("Already frozen", kotlin.ReplaceWith("this"))
-    override fun toFrozen() = this;
-
-    /** Returns a mutable shallow copy of this instance */
-    fun toMutable() = Mutable(
-        operation = this.operation,
-        source = this.source,
-        other = this.other,
-    );
-
-    /** Returns a shallow copy of this instance with the specified fields replaced. */
-    fun copy(
-        _mustNameArguments: _MustNameArguments =
-            _MustNameArguments,
-        operation: skirout.editor.v1.expression.TextCompareOperation =
-            this.operation,
-        source: skirout.editor.v1.expression.ExpressionNode =
-            this.source,
-        other: skirout.editor.v1.expression.ExpressionNode =
-            this.other,
-    ) = skirout.editor.v1.expression.TextCompareExpression(
-        operation,
-        source,
-        other,
-        this._unrecognizedFields,
-    );
-
-    @kotlin.Deprecated("No point in creating an exact copy of an immutable object", kotlin.ReplaceWith("this"))
-    fun copy() = this;
-
-    override fun equals(other: kotlin.Any?): kotlin.Boolean {
-        return this === other || (other is skirout.editor.v1.expression.TextCompareExpression && this.operation == other.operation && this.source == other.source && this.other == other.other);
-    }
-
-    override fun hashCode(): kotlin.Int {
-        return kotlin.collections.listOf<kotlin.Any?>(this.operation, this.source, this.other).hashCode();
-    }
-
-    override fun toString(): kotlin.String {
-        return build.skir.internal.toStringImpl(
-            this,
-            _SerializerRegistry.TextCompareExpressionSerializerImpl,
-        )
-    }
-
-    /** Mutable version of [TextCompareExpression]. */
-    class Mutable internal constructor(
-        _mustNameArguments: _MustNameArguments =
-            _MustNameArguments,
-        override var operation: skirout.editor.v1.expression.TextCompareOperation =
-            skirout.editor.v1.expression.TextCompareOperation.UNKNOWN,
-        override var source: skirout.editor.v1.expression.ExpressionNode =
-            skirout.editor.v1.expression.ExpressionNode.UNKNOWN,
-        override var other: skirout.editor.v1.expression.ExpressionNode =
-            skirout.editor.v1.expression.ExpressionNode.UNKNOWN,
-        internal var _unrecognizedFields: _UnrecognizedFields<skirout.editor.v1.expression.TextCompareExpression>? =
-            null,
-    ): skirout.editor.v1.expression.TextCompareExpression_OrMutable {
-        /** Returns a deeply immutable copy of this instance */
-        override fun toFrozen() = skirout.editor.v1.expression.TextCompareExpression(
-            operation = this.operation,
-            source = this.source,
-            other = this.other,
-            _unrecognizedFields = this._unrecognizedFields,
-        );
-    }
-
-    companion object {
-        private val default =
-            skirout.editor.v1.expression.TextCompareExpression(
-                skirout.editor.v1.expression.TextCompareOperation.UNKNOWN,
-                skirout.editor.v1.expression.ExpressionNode.UNKNOWN,
-                skirout.editor.v1.expression.ExpressionNode.UNKNOWN,
-            );
-
-        /** Returns an instance with all fields set to their default values. */
-        fun partial() = default;
-
-        /**
-         * Creates a new instance of [TextCompareExpression].
-         * Unlike the constructor, does not require all fields to be specified.
-         * Missing fields will be set to their default values.
-         */
-        fun partial(
-            _mustNameArguments: _MustNameArguments =
-                _MustNameArguments,
-            operation: skirout.editor.v1.expression.TextCompareOperation =
-                skirout.editor.v1.expression.TextCompareOperation.UNKNOWN,
-            source: skirout.editor.v1.expression.ExpressionNode =
-                skirout.editor.v1.expression.ExpressionNode.UNKNOWN,
-            other: skirout.editor.v1.expression.ExpressionNode =
-                skirout.editor.v1.expression.ExpressionNode.UNKNOWN,
-        ) = skirout.editor.v1.expression.TextCompareExpression(
-            operation = operation,
-            source = source,
-            other = other,
-            _unrecognizedFields = null,
-        );
-
-        /** Serializer for [TextCompareExpression] instances. */
-        val serializer get() = _SerializerRegistry.TextCompareExpressionSerializer;
-
-        /** Describes the [TextCompareExpression] type. Provides runtime introspection capabilities. */
-        val typeDescriptor get() = _SerializerRegistry.TextCompareExpressionSerializerImpl.typeDescriptor;
-    }
-}
-
-sealed interface TextReplaceExpression_OrMutable {
-    val source: skirout.editor.v1.expression.ExpressionNode;
-    val target: skirout.editor.v1.expression.ExpressionNode;
-    val replacement: skirout.editor.v1.expression.ExpressionNode;
-
-    fun toFrozen(): skirout.editor.v1.expression.TextReplaceExpression;
-}
-
-/** Deeply immutable. */
-@kotlin.Suppress("UNUSED_PARAMETER")
-class TextReplaceExpression private constructor(
-    override val source: skirout.editor.v1.expression.ExpressionNode,
-    override val target: skirout.editor.v1.expression.ExpressionNode,
-    override val replacement: skirout.editor.v1.expression.ExpressionNode,
-    internal val _unrecognizedFields: _UnrecognizedFields<skirout.editor.v1.expression.TextReplaceExpression>? =
-        null,
-): skirout.editor.v1.expression.TextReplaceExpression_OrMutable {
-    constructor(
-        _mustNameArguments: _MustNameArguments =
-            _MustNameArguments,
-        source: skirout.editor.v1.expression.ExpressionNode,
-        target: skirout.editor.v1.expression.ExpressionNode,
-        replacement: skirout.editor.v1.expression.ExpressionNode,
-        _unrecognizedFields: _UnrecognizedFields<skirout.editor.v1.expression.TextReplaceExpression>? =
-            null,
-    ): this(
-        source,
-        target,
-        replacement,
-        _unrecognizedFields,
-    ) {}
-
-    @kotlin.Deprecated("Already frozen", kotlin.ReplaceWith("this"))
-    override fun toFrozen() = this;
-
-    /** Returns a mutable shallow copy of this instance */
-    fun toMutable() = Mutable(
-        source = this.source,
-        target = this.target,
-        replacement = this.replacement,
-    );
-
-    /** Returns a shallow copy of this instance with the specified fields replaced. */
-    fun copy(
-        _mustNameArguments: _MustNameArguments =
-            _MustNameArguments,
-        source: skirout.editor.v1.expression.ExpressionNode =
-            this.source,
-        target: skirout.editor.v1.expression.ExpressionNode =
-            this.target,
-        replacement: skirout.editor.v1.expression.ExpressionNode =
-            this.replacement,
-    ) = skirout.editor.v1.expression.TextReplaceExpression(
-        source,
-        target,
-        replacement,
-        this._unrecognizedFields,
-    );
-
-    @kotlin.Deprecated("No point in creating an exact copy of an immutable object", kotlin.ReplaceWith("this"))
-    fun copy() = this;
-
-    override fun equals(other: kotlin.Any?): kotlin.Boolean {
-        return this === other || (other is skirout.editor.v1.expression.TextReplaceExpression && this.source == other.source && this.target == other.target && this.replacement == other.replacement);
-    }
-
-    override fun hashCode(): kotlin.Int {
-        return kotlin.collections.listOf<kotlin.Any?>(this.source, this.target, this.replacement).hashCode();
-    }
-
-    override fun toString(): kotlin.String {
-        return build.skir.internal.toStringImpl(
-            this,
-            _SerializerRegistry.TextReplaceExpressionSerializerImpl,
-        )
-    }
-
-    /** Mutable version of [TextReplaceExpression]. */
-    class Mutable internal constructor(
-        _mustNameArguments: _MustNameArguments =
-            _MustNameArguments,
-        override var source: skirout.editor.v1.expression.ExpressionNode =
-            skirout.editor.v1.expression.ExpressionNode.UNKNOWN,
-        override var target: skirout.editor.v1.expression.ExpressionNode =
-            skirout.editor.v1.expression.ExpressionNode.UNKNOWN,
-        override var replacement: skirout.editor.v1.expression.ExpressionNode =
-            skirout.editor.v1.expression.ExpressionNode.UNKNOWN,
-        internal var _unrecognizedFields: _UnrecognizedFields<skirout.editor.v1.expression.TextReplaceExpression>? =
-            null,
-    ): skirout.editor.v1.expression.TextReplaceExpression_OrMutable {
-        /** Returns a deeply immutable copy of this instance */
-        override fun toFrozen() = skirout.editor.v1.expression.TextReplaceExpression(
-            source = this.source,
-            target = this.target,
-            replacement = this.replacement,
-            _unrecognizedFields = this._unrecognizedFields,
-        );
-    }
-
-    companion object {
-        private val default =
-            skirout.editor.v1.expression.TextReplaceExpression(
-                skirout.editor.v1.expression.ExpressionNode.UNKNOWN,
-                skirout.editor.v1.expression.ExpressionNode.UNKNOWN,
-                skirout.editor.v1.expression.ExpressionNode.UNKNOWN,
-            );
-
-        /** Returns an instance with all fields set to their default values. */
-        fun partial() = default;
-
-        /**
-         * Creates a new instance of [TextReplaceExpression].
-         * Unlike the constructor, does not require all fields to be specified.
-         * Missing fields will be set to their default values.
-         */
-        fun partial(
-            _mustNameArguments: _MustNameArguments =
-                _MustNameArguments,
-            source: skirout.editor.v1.expression.ExpressionNode =
-                skirout.editor.v1.expression.ExpressionNode.UNKNOWN,
-            target: skirout.editor.v1.expression.ExpressionNode =
-                skirout.editor.v1.expression.ExpressionNode.UNKNOWN,
-            replacement: skirout.editor.v1.expression.ExpressionNode =
-                skirout.editor.v1.expression.ExpressionNode.UNKNOWN,
-        ) = skirout.editor.v1.expression.TextReplaceExpression(
-            source = source,
-            target = target,
-            replacement = replacement,
-            _unrecognizedFields = null,
-        );
-
-        /** Serializer for [TextReplaceExpression] instances. */
-        val serializer get() = _SerializerRegistry.TextReplaceExpressionSerializer;
-
-        /** Describes the [TextReplaceExpression] type. Provides runtime introspection capabilities. */
-        val typeDescriptor get() = _SerializerRegistry.TextReplaceExpressionSerializerImpl.typeDescriptor;
-    }
-}
-
-sealed interface TextSplitExpression_OrMutable {
-    val source: skirout.editor.v1.expression.ExpressionNode;
-    val separator: skirout.editor.v1.expression.ExpressionNode;
-
-    fun toFrozen(): skirout.editor.v1.expression.TextSplitExpression;
-}
-
-/** Deeply immutable. */
-@kotlin.Suppress("UNUSED_PARAMETER")
-class TextSplitExpression private constructor(
-    override val source: skirout.editor.v1.expression.ExpressionNode,
-    override val separator: skirout.editor.v1.expression.ExpressionNode,
-    internal val _unrecognizedFields: _UnrecognizedFields<skirout.editor.v1.expression.TextSplitExpression>? =
-        null,
-): skirout.editor.v1.expression.TextSplitExpression_OrMutable {
-    constructor(
-        _mustNameArguments: _MustNameArguments =
-            _MustNameArguments,
-        source: skirout.editor.v1.expression.ExpressionNode,
-        separator: skirout.editor.v1.expression.ExpressionNode,
-        _unrecognizedFields: _UnrecognizedFields<skirout.editor.v1.expression.TextSplitExpression>? =
-            null,
-    ): this(
-        source,
-        separator,
-        _unrecognizedFields,
-    ) {}
-
-    @kotlin.Deprecated("Already frozen", kotlin.ReplaceWith("this"))
-    override fun toFrozen() = this;
-
-    /** Returns a mutable shallow copy of this instance */
-    fun toMutable() = Mutable(
-        source = this.source,
-        separator = this.separator,
-    );
-
-    /** Returns a shallow copy of this instance with the specified fields replaced. */
-    fun copy(
-        _mustNameArguments: _MustNameArguments =
-            _MustNameArguments,
-        source: skirout.editor.v1.expression.ExpressionNode =
-            this.source,
-        separator: skirout.editor.v1.expression.ExpressionNode =
-            this.separator,
-    ) = skirout.editor.v1.expression.TextSplitExpression(
-        source,
-        separator,
-        this._unrecognizedFields,
-    );
-
-    @kotlin.Deprecated("No point in creating an exact copy of an immutable object", kotlin.ReplaceWith("this"))
-    fun copy() = this;
-
-    override fun equals(other: kotlin.Any?): kotlin.Boolean {
-        return this === other || (other is skirout.editor.v1.expression.TextSplitExpression && this.source == other.source && this.separator == other.separator);
-    }
-
-    override fun hashCode(): kotlin.Int {
-        return kotlin.collections.listOf<kotlin.Any?>(this.source, this.separator).hashCode();
-    }
-
-    override fun toString(): kotlin.String {
-        return build.skir.internal.toStringImpl(
-            this,
-            _SerializerRegistry.TextSplitExpressionSerializerImpl,
-        )
-    }
-
-    /** Mutable version of [TextSplitExpression]. */
-    class Mutable internal constructor(
-        _mustNameArguments: _MustNameArguments =
-            _MustNameArguments,
-        override var source: skirout.editor.v1.expression.ExpressionNode =
-            skirout.editor.v1.expression.ExpressionNode.UNKNOWN,
-        override var separator: skirout.editor.v1.expression.ExpressionNode =
-            skirout.editor.v1.expression.ExpressionNode.UNKNOWN,
-        internal var _unrecognizedFields: _UnrecognizedFields<skirout.editor.v1.expression.TextSplitExpression>? =
-            null,
-    ): skirout.editor.v1.expression.TextSplitExpression_OrMutable {
-        /** Returns a deeply immutable copy of this instance */
-        override fun toFrozen() = skirout.editor.v1.expression.TextSplitExpression(
-            source = this.source,
-            separator = this.separator,
-            _unrecognizedFields = this._unrecognizedFields,
-        );
-    }
-
-    companion object {
-        private val default =
-            skirout.editor.v1.expression.TextSplitExpression(
-                skirout.editor.v1.expression.ExpressionNode.UNKNOWN,
-                skirout.editor.v1.expression.ExpressionNode.UNKNOWN,
-            );
-
-        /** Returns an instance with all fields set to their default values. */
-        fun partial() = default;
-
-        /**
-         * Creates a new instance of [TextSplitExpression].
-         * Unlike the constructor, does not require all fields to be specified.
-         * Missing fields will be set to their default values.
-         */
-        fun partial(
-            _mustNameArguments: _MustNameArguments =
-                _MustNameArguments,
-            source: skirout.editor.v1.expression.ExpressionNode =
-                skirout.editor.v1.expression.ExpressionNode.UNKNOWN,
-            separator: skirout.editor.v1.expression.ExpressionNode =
-                skirout.editor.v1.expression.ExpressionNode.UNKNOWN,
-        ) = skirout.editor.v1.expression.TextSplitExpression(
-            source = source,
-            separator = separator,
-            _unrecognizedFields = null,
-        );
-
-        /** Serializer for [TextSplitExpression] instances. */
-        val serializer get() = _SerializerRegistry.TextSplitExpressionSerializer;
-
-        /** Describes the [TextSplitExpression] type. Provides runtime introspection capabilities. */
-        val typeDescriptor get() = _SerializerRegistry.TextSplitExpressionSerializerImpl.typeDescriptor;
-    }
-}
-
-sealed interface TextJoinExpression_OrMutable {
-    val source: skirout.editor.v1.expression.ExpressionNode;
-    val separator: skirout.editor.v1.expression.ExpressionNode;
-
-    fun toFrozen(): skirout.editor.v1.expression.TextJoinExpression;
-}
-
-/** Deeply immutable. */
-@kotlin.Suppress("UNUSED_PARAMETER")
-class TextJoinExpression private constructor(
-    override val source: skirout.editor.v1.expression.ExpressionNode,
-    override val separator: skirout.editor.v1.expression.ExpressionNode,
-    internal val _unrecognizedFields: _UnrecognizedFields<skirout.editor.v1.expression.TextJoinExpression>? =
-        null,
-): skirout.editor.v1.expression.TextJoinExpression_OrMutable {
-    constructor(
-        _mustNameArguments: _MustNameArguments =
-            _MustNameArguments,
-        source: skirout.editor.v1.expression.ExpressionNode,
-        separator: skirout.editor.v1.expression.ExpressionNode,
-        _unrecognizedFields: _UnrecognizedFields<skirout.editor.v1.expression.TextJoinExpression>? =
-            null,
-    ): this(
-        source,
-        separator,
-        _unrecognizedFields,
-    ) {}
-
-    @kotlin.Deprecated("Already frozen", kotlin.ReplaceWith("this"))
-    override fun toFrozen() = this;
-
-    /** Returns a mutable shallow copy of this instance */
-    fun toMutable() = Mutable(
-        source = this.source,
-        separator = this.separator,
-    );
-
-    /** Returns a shallow copy of this instance with the specified fields replaced. */
-    fun copy(
-        _mustNameArguments: _MustNameArguments =
-            _MustNameArguments,
-        source: skirout.editor.v1.expression.ExpressionNode =
-            this.source,
-        separator: skirout.editor.v1.expression.ExpressionNode =
-            this.separator,
-    ) = skirout.editor.v1.expression.TextJoinExpression(
-        source,
-        separator,
-        this._unrecognizedFields,
-    );
-
-    @kotlin.Deprecated("No point in creating an exact copy of an immutable object", kotlin.ReplaceWith("this"))
-    fun copy() = this;
-
-    override fun equals(other: kotlin.Any?): kotlin.Boolean {
-        return this === other || (other is skirout.editor.v1.expression.TextJoinExpression && this.source == other.source && this.separator == other.separator);
-    }
-
-    override fun hashCode(): kotlin.Int {
-        return kotlin.collections.listOf<kotlin.Any?>(this.source, this.separator).hashCode();
-    }
-
-    override fun toString(): kotlin.String {
-        return build.skir.internal.toStringImpl(
-            this,
-            _SerializerRegistry.TextJoinExpressionSerializerImpl,
-        )
-    }
-
-    /** Mutable version of [TextJoinExpression]. */
-    class Mutable internal constructor(
-        _mustNameArguments: _MustNameArguments =
-            _MustNameArguments,
-        override var source: skirout.editor.v1.expression.ExpressionNode =
-            skirout.editor.v1.expression.ExpressionNode.UNKNOWN,
-        override var separator: skirout.editor.v1.expression.ExpressionNode =
-            skirout.editor.v1.expression.ExpressionNode.UNKNOWN,
-        internal var _unrecognizedFields: _UnrecognizedFields<skirout.editor.v1.expression.TextJoinExpression>? =
-            null,
-    ): skirout.editor.v1.expression.TextJoinExpression_OrMutable {
-        /** Returns a deeply immutable copy of this instance */
-        override fun toFrozen() = skirout.editor.v1.expression.TextJoinExpression(
-            source = this.source,
-            separator = this.separator,
-            _unrecognizedFields = this._unrecognizedFields,
-        );
-    }
-
-    companion object {
-        private val default =
-            skirout.editor.v1.expression.TextJoinExpression(
-                skirout.editor.v1.expression.ExpressionNode.UNKNOWN,
-                skirout.editor.v1.expression.ExpressionNode.UNKNOWN,
-            );
-
-        /** Returns an instance with all fields set to their default values. */
-        fun partial() = default;
-
-        /**
-         * Creates a new instance of [TextJoinExpression].
-         * Unlike the constructor, does not require all fields to be specified.
-         * Missing fields will be set to their default values.
-         */
-        fun partial(
-            _mustNameArguments: _MustNameArguments =
-                _MustNameArguments,
-            source: skirout.editor.v1.expression.ExpressionNode =
-                skirout.editor.v1.expression.ExpressionNode.UNKNOWN,
-            separator: skirout.editor.v1.expression.ExpressionNode =
-                skirout.editor.v1.expression.ExpressionNode.UNKNOWN,
-        ) = skirout.editor.v1.expression.TextJoinExpression(
-            source = source,
-            separator = separator,
-            _unrecognizedFields = null,
-        );
-
-        /** Serializer for [TextJoinExpression] instances. */
-        val serializer get() = _SerializerRegistry.TextJoinExpressionSerializer;
-
-        /** Describes the [TextJoinExpression] type. Provides runtime introspection capabilities. */
-        val typeDescriptor get() = _SerializerRegistry.TextJoinExpressionSerializerImpl.typeDescriptor;
-    }
-}
-
-sealed interface TextSubstringExpression_OrMutable {
-    val source: skirout.editor.v1.expression.ExpressionNode;
-    val start: skirout.editor.v1.expression.ExpressionNode;
-    val end: skirout.editor.v1.expression.ExpressionNode?;
-
-    fun toFrozen(): skirout.editor.v1.expression.TextSubstringExpression;
-}
-
-/** Deeply immutable. */
-@kotlin.Suppress("UNUSED_PARAMETER")
-class TextSubstringExpression private constructor(
-    override val source: skirout.editor.v1.expression.ExpressionNode,
-    override val start: skirout.editor.v1.expression.ExpressionNode,
-    override val end: skirout.editor.v1.expression.ExpressionNode?,
-    internal val _unrecognizedFields: _UnrecognizedFields<skirout.editor.v1.expression.TextSubstringExpression>? =
-        null,
-): skirout.editor.v1.expression.TextSubstringExpression_OrMutable {
-    constructor(
-        _mustNameArguments: _MustNameArguments =
-            _MustNameArguments,
-        source: skirout.editor.v1.expression.ExpressionNode,
-        start: skirout.editor.v1.expression.ExpressionNode,
-        end: skirout.editor.v1.expression.ExpressionNode?,
-        _unrecognizedFields: _UnrecognizedFields<skirout.editor.v1.expression.TextSubstringExpression>? =
-            null,
-    ): this(
-        source,
-        start,
-        end,
-        _unrecognizedFields,
-    ) {}
-
-    @kotlin.Deprecated("Already frozen", kotlin.ReplaceWith("this"))
-    override fun toFrozen() = this;
-
-    /** Returns a mutable shallow copy of this instance */
-    fun toMutable() = Mutable(
-        source = this.source,
-        start = this.start,
-        end = this.end,
-    );
-
-    /** Returns a shallow copy of this instance with the specified fields replaced. */
-    fun copy(
-        _mustNameArguments: _MustNameArguments =
-            _MustNameArguments,
-        source: skirout.editor.v1.expression.ExpressionNode =
-            this.source,
-        start: skirout.editor.v1.expression.ExpressionNode =
-            this.start,
-        end: skirout.editor.v1.expression.ExpressionNode? =
-            this.end,
-    ) = skirout.editor.v1.expression.TextSubstringExpression(
-        source,
-        start,
-        end,
-        this._unrecognizedFields,
-    );
-
-    @kotlin.Deprecated("No point in creating an exact copy of an immutable object", kotlin.ReplaceWith("this"))
-    fun copy() = this;
-
-    override fun equals(other: kotlin.Any?): kotlin.Boolean {
-        return this === other || (other is skirout.editor.v1.expression.TextSubstringExpression && this.source == other.source && this.start == other.start && this.end == other.end);
-    }
-
-    override fun hashCode(): kotlin.Int {
-        return kotlin.collections.listOf<kotlin.Any?>(this.source, this.start, this.end).hashCode();
-    }
-
-    override fun toString(): kotlin.String {
-        return build.skir.internal.toStringImpl(
-            this,
-            _SerializerRegistry.TextSubstringExpressionSerializerImpl,
-        )
-    }
-
-    /** Mutable version of [TextSubstringExpression]. */
-    class Mutable internal constructor(
-        _mustNameArguments: _MustNameArguments =
-            _MustNameArguments,
-        override var source: skirout.editor.v1.expression.ExpressionNode =
-            skirout.editor.v1.expression.ExpressionNode.UNKNOWN,
-        override var start: skirout.editor.v1.expression.ExpressionNode =
-            skirout.editor.v1.expression.ExpressionNode.UNKNOWN,
-        override var end: skirout.editor.v1.expression.ExpressionNode? =
-            null,
-        internal var _unrecognizedFields: _UnrecognizedFields<skirout.editor.v1.expression.TextSubstringExpression>? =
-            null,
-    ): skirout.editor.v1.expression.TextSubstringExpression_OrMutable {
-        /** Returns a deeply immutable copy of this instance */
-        override fun toFrozen() = skirout.editor.v1.expression.TextSubstringExpression(
-            source = this.source,
-            start = this.start,
-            end = this.end,
-            _unrecognizedFields = this._unrecognizedFields,
-        );
-    }
-
-    companion object {
-        private val default =
-            skirout.editor.v1.expression.TextSubstringExpression(
-                skirout.editor.v1.expression.ExpressionNode.UNKNOWN,
-                skirout.editor.v1.expression.ExpressionNode.UNKNOWN,
-                null,
-            );
-
-        /** Returns an instance with all fields set to their default values. */
-        fun partial() = default;
-
-        /**
-         * Creates a new instance of [TextSubstringExpression].
-         * Unlike the constructor, does not require all fields to be specified.
-         * Missing fields will be set to their default values.
-         */
-        fun partial(
-            _mustNameArguments: _MustNameArguments =
-                _MustNameArguments,
-            source: skirout.editor.v1.expression.ExpressionNode =
-                skirout.editor.v1.expression.ExpressionNode.UNKNOWN,
-            start: skirout.editor.v1.expression.ExpressionNode =
-                skirout.editor.v1.expression.ExpressionNode.UNKNOWN,
-            end: skirout.editor.v1.expression.ExpressionNode? =
-                null,
-        ) = skirout.editor.v1.expression.TextSubstringExpression(
-            source = source,
-            start = start,
-            end = end,
-            _unrecognizedFields = null,
-        );
-
-        /** Serializer for [TextSubstringExpression] instances. */
-        val serializer get() = _SerializerRegistry.TextSubstringExpressionSerializer;
-
-        /** Describes the [TextSubstringExpression] type. Provides runtime introspection capabilities. */
-        val typeDescriptor get() = _SerializerRegistry.TextSubstringExpressionSerializerImpl.typeDescriptor;
-    }
-}
-
-sealed interface TextInterpolateExpression_OrMutable {
-    val parts: kotlin.collections.List<skirout.editor.v1.expression.ExpressionNode>;
-
-    fun toFrozen(): skirout.editor.v1.expression.TextInterpolateExpression;
-}
-
-/** Deeply immutable. */
-@kotlin.Suppress("UNUSED_PARAMETER")
-class TextInterpolateExpression private constructor(
-    override val parts: kotlin.collections.List<skirout.editor.v1.expression.ExpressionNode>,
-    internal val _unrecognizedFields: _UnrecognizedFields<skirout.editor.v1.expression.TextInterpolateExpression>? =
-        null,
-): skirout.editor.v1.expression.TextInterpolateExpression_OrMutable {
-    constructor(
-        _mustNameArguments: _MustNameArguments =
-            _MustNameArguments,
-        parts: kotlin.collections.Iterable<skirout.editor.v1.expression.ExpressionNode>,
-        _unrecognizedFields: _UnrecognizedFields<skirout.editor.v1.expression.TextInterpolateExpression>? =
-            null,
-    ): this(
-        build.skir.internal.toFrozenList(parts),
-        _unrecognizedFields,
-    ) {}
-
-    @kotlin.Deprecated("Already frozen", kotlin.ReplaceWith("this"))
-    override fun toFrozen() = this;
-
-    /** Returns a mutable shallow copy of this instance */
-    fun toMutable() = Mutable(
-        parts = this.parts,
-    );
-
-    /** Returns a shallow copy of this instance with the specified fields replaced. */
-    fun copy(
-        _mustNameArguments: _MustNameArguments =
-            _MustNameArguments,
-        parts: kotlin.collections.Iterable<skirout.editor.v1.expression.ExpressionNode> =
-            this.parts,
-    ) = skirout.editor.v1.expression.TextInterpolateExpression(
-        build.skir.internal.toFrozenList(parts),
-        this._unrecognizedFields,
-    );
-
-    @kotlin.Deprecated("No point in creating an exact copy of an immutable object", kotlin.ReplaceWith("this"))
-    fun copy() = this;
-
-    override fun equals(other: kotlin.Any?): kotlin.Boolean {
-        return this === other || (other is skirout.editor.v1.expression.TextInterpolateExpression && this.parts == other.parts);
-    }
-
-    override fun hashCode(): kotlin.Int {
-        return kotlin.collections.listOf<kotlin.Any?>(this.parts).hashCode();
-    }
-
-    override fun toString(): kotlin.String {
-        return build.skir.internal.toStringImpl(
-            this,
-            _SerializerRegistry.TextInterpolateExpressionSerializerImpl,
-        )
-    }
-
-    /** Mutable version of [TextInterpolateExpression]. */
-    class Mutable internal constructor(
-        _mustNameArguments: _MustNameArguments =
-            _MustNameArguments,
-        override var parts: kotlin.collections.List<skirout.editor.v1.expression.ExpressionNode> =
-            build.skir.internal.emptyFrozenList<skirout.editor.v1.expression.ExpressionNode>(),
-        internal var _unrecognizedFields: _UnrecognizedFields<skirout.editor.v1.expression.TextInterpolateExpression>? =
-            null,
-    ): skirout.editor.v1.expression.TextInterpolateExpression_OrMutable {
-        /** Returns a deeply immutable copy of this instance */
-        override fun toFrozen() = skirout.editor.v1.expression.TextInterpolateExpression(
-            parts = this.parts,
-            _unrecognizedFields = this._unrecognizedFields,
-        );
-    }
-
-    companion object {
-        private val default =
-            skirout.editor.v1.expression.TextInterpolateExpression(
-                build.skir.internal.emptyFrozenList<skirout.editor.v1.expression.ExpressionNode>(),
-            );
-
-        /** Returns an instance with all fields set to their default values. */
-        fun partial() = default;
-
-        /**
-         * Creates a new instance of [TextInterpolateExpression].
-         * Unlike the constructor, does not require all fields to be specified.
-         * Missing fields will be set to their default values.
-         */
-        fun partial(
-            _mustNameArguments: _MustNameArguments =
-                _MustNameArguments,
-            parts: kotlin.collections.Iterable<skirout.editor.v1.expression.ExpressionNode> =
-                build.skir.internal.emptyFrozenList<skirout.editor.v1.expression.ExpressionNode>(),
-        ) = skirout.editor.v1.expression.TextInterpolateExpression(
-            parts = parts,
-            _unrecognizedFields = null,
-        );
-
-        /** Serializer for [TextInterpolateExpression] instances. */
-        val serializer get() = _SerializerRegistry.TextInterpolateExpressionSerializer;
-
-        /** Describes the [TextInterpolateExpression] type. Provides runtime introspection capabilities. */
-        val typeDescriptor get() = _SerializerRegistry.TextInterpolateExpressionSerializerImpl.typeDescriptor;
-    }
-}
-
-/** Deeply immutable. */
-sealed class RegexMatchMode private constructor() {
-    /** The kind of variant held by a `RegexMatchMode`. */
-    enum class Kind {
-        UNKNOWN,
-        SEARCH_CONST,
-        FULL_MATCH_CONST,
-    }
-
-    class Unknown @kotlin.Deprecated("For internal use", kotlin.ReplaceWith("skirout.editor.v1.expression.RegexMatchMode.UNKNOWN")) internal constructor(
-        internal val _kind: Kind,
-        internal override val _unrecognized: _UnrecognizedVariant<skirout.editor.v1.expression.RegexMatchMode>?,
-    ) : skirout.editor.v1.expression.RegexMatchMode() {
-        override val kind get() = _kind;
-
-        override fun equals(other: kotlin.Any?): kotlin.Boolean {
-            return other is skirout.editor.v1.expression.RegexMatchMode && other.kind == kind;
-        }
-
-        override fun hashCode(): kotlin.Int {
-            return kind.ordinal;
-        }
-    }
-
-    object SEARCH : skirout.editor.v1.expression.RegexMatchMode() {
-        override val kind get() = Kind.SEARCH_CONST;
-
-        override fun equals(other: kotlin.Any?): kotlin.Boolean {
-            return other is skirout.editor.v1.expression.RegexMatchMode && other.kind == Kind.SEARCH_CONST;
-        }
-
-        override fun hashCode(): kotlin.Int {
-            return Kind.SEARCH_CONST.ordinal;
-        }
-    }
-
-    object FULL_MATCH : skirout.editor.v1.expression.RegexMatchMode() {
-        override val kind get() = Kind.FULL_MATCH_CONST;
-
-        override fun equals(other: kotlin.Any?): kotlin.Boolean {
-            return other is skirout.editor.v1.expression.RegexMatchMode && other.kind == Kind.FULL_MATCH_CONST;
-        }
-
-        override fun hashCode(): kotlin.Int {
-            return Kind.FULL_MATCH_CONST.ordinal;
-        }
-    }
-
-    internal open val _unrecognized: _UnrecognizedVariant<skirout.editor.v1.expression.RegexMatchMode>? get() = null;
-
-    abstract val kind: Kind;
-
-    override fun toString(): kotlin.String {
-        return build.skir.internal.toStringImpl(
-            this,
-            _SerializerRegistry.RegexMatchModeSerializerImpl,
-        )
-    }
-
-    companion object {
-        /**
-         * Constant indicating an unknown [RegexMatchMode].
-         * Default value for fields of type [RegexMatchMode].
-         */
-        val UNKNOWN = @kotlin.Suppress("DEPRECATION") Unknown(Kind.UNKNOWN, null);
-
-        /** Serializer for [RegexMatchMode] instances. */
-        val serializer get() = _SerializerRegistry.RegexMatchModeSerializer;
-
-        /** Describes the [RegexMatchMode] type. Provides runtime introspection capabilities. */
-        val typeDescriptor get() = _SerializerRegistry.RegexMatchModeSerializerImpl.typeDescriptor;
-    }
-}
-
-sealed interface RegexTestExpression_OrMutable {
-    val mode: skirout.editor.v1.expression.RegexMatchMode;
-    val source: skirout.editor.v1.expression.ExpressionNode;
-    val pattern: skirout.editor.v1.expression.ExpressionNode;
-
-    fun toFrozen(): skirout.editor.v1.expression.RegexTestExpression;
-}
-
-/** Deeply immutable. */
-@kotlin.Suppress("UNUSED_PARAMETER")
-class RegexTestExpression private constructor(
-    override val mode: skirout.editor.v1.expression.RegexMatchMode,
-    override val source: skirout.editor.v1.expression.ExpressionNode,
-    override val pattern: skirout.editor.v1.expression.ExpressionNode,
-    internal val _unrecognizedFields: _UnrecognizedFields<skirout.editor.v1.expression.RegexTestExpression>? =
-        null,
-): skirout.editor.v1.expression.RegexTestExpression_OrMutable {
-    constructor(
-        _mustNameArguments: _MustNameArguments =
-            _MustNameArguments,
-        mode: skirout.editor.v1.expression.RegexMatchMode,
-        source: skirout.editor.v1.expression.ExpressionNode,
-        pattern: skirout.editor.v1.expression.ExpressionNode,
-        _unrecognizedFields: _UnrecognizedFields<skirout.editor.v1.expression.RegexTestExpression>? =
-            null,
-    ): this(
-        mode,
-        source,
-        pattern,
-        _unrecognizedFields,
-    ) {}
-
-    @kotlin.Deprecated("Already frozen", kotlin.ReplaceWith("this"))
-    override fun toFrozen() = this;
-
-    /** Returns a mutable shallow copy of this instance */
-    fun toMutable() = Mutable(
-        mode = this.mode,
-        source = this.source,
-        pattern = this.pattern,
-    );
-
-    /** Returns a shallow copy of this instance with the specified fields replaced. */
-    fun copy(
-        _mustNameArguments: _MustNameArguments =
-            _MustNameArguments,
-        mode: skirout.editor.v1.expression.RegexMatchMode =
-            this.mode,
-        source: skirout.editor.v1.expression.ExpressionNode =
-            this.source,
-        pattern: skirout.editor.v1.expression.ExpressionNode =
-            this.pattern,
-    ) = skirout.editor.v1.expression.RegexTestExpression(
-        mode,
-        source,
-        pattern,
-        this._unrecognizedFields,
-    );
-
-    @kotlin.Deprecated("No point in creating an exact copy of an immutable object", kotlin.ReplaceWith("this"))
-    fun copy() = this;
-
-    override fun equals(other: kotlin.Any?): kotlin.Boolean {
-        return this === other || (other is skirout.editor.v1.expression.RegexTestExpression && this.mode == other.mode && this.source == other.source && this.pattern == other.pattern);
-    }
-
-    override fun hashCode(): kotlin.Int {
-        return kotlin.collections.listOf<kotlin.Any?>(this.mode, this.source, this.pattern).hashCode();
-    }
-
-    override fun toString(): kotlin.String {
-        return build.skir.internal.toStringImpl(
-            this,
-            _SerializerRegistry.RegexTestExpressionSerializerImpl,
-        )
-    }
-
-    /** Mutable version of [RegexTestExpression]. */
-    class Mutable internal constructor(
-        _mustNameArguments: _MustNameArguments =
-            _MustNameArguments,
-        override var mode: skirout.editor.v1.expression.RegexMatchMode =
-            skirout.editor.v1.expression.RegexMatchMode.UNKNOWN,
-        override var source: skirout.editor.v1.expression.ExpressionNode =
-            skirout.editor.v1.expression.ExpressionNode.UNKNOWN,
-        override var pattern: skirout.editor.v1.expression.ExpressionNode =
-            skirout.editor.v1.expression.ExpressionNode.UNKNOWN,
-        internal var _unrecognizedFields: _UnrecognizedFields<skirout.editor.v1.expression.RegexTestExpression>? =
-            null,
-    ): skirout.editor.v1.expression.RegexTestExpression_OrMutable {
-        /** Returns a deeply immutable copy of this instance */
-        override fun toFrozen() = skirout.editor.v1.expression.RegexTestExpression(
-            mode = this.mode,
-            source = this.source,
-            pattern = this.pattern,
-            _unrecognizedFields = this._unrecognizedFields,
-        );
-    }
-
-    companion object {
-        private val default =
-            skirout.editor.v1.expression.RegexTestExpression(
-                skirout.editor.v1.expression.RegexMatchMode.UNKNOWN,
-                skirout.editor.v1.expression.ExpressionNode.UNKNOWN,
-                skirout.editor.v1.expression.ExpressionNode.UNKNOWN,
-            );
-
-        /** Returns an instance with all fields set to their default values. */
-        fun partial() = default;
-
-        /**
-         * Creates a new instance of [RegexTestExpression].
-         * Unlike the constructor, does not require all fields to be specified.
-         * Missing fields will be set to their default values.
-         */
-        fun partial(
-            _mustNameArguments: _MustNameArguments =
-                _MustNameArguments,
-            mode: skirout.editor.v1.expression.RegexMatchMode =
-                skirout.editor.v1.expression.RegexMatchMode.UNKNOWN,
-            source: skirout.editor.v1.expression.ExpressionNode =
-                skirout.editor.v1.expression.ExpressionNode.UNKNOWN,
-            pattern: skirout.editor.v1.expression.ExpressionNode =
-                skirout.editor.v1.expression.ExpressionNode.UNKNOWN,
-        ) = skirout.editor.v1.expression.RegexTestExpression(
-            mode = mode,
-            source = source,
-            pattern = pattern,
-            _unrecognizedFields = null,
-        );
-
-        /** Serializer for [RegexTestExpression] instances. */
-        val serializer get() = _SerializerRegistry.RegexTestExpressionSerializer;
-
-        /** Describes the [RegexTestExpression] type. Provides runtime introspection capabilities. */
-        val typeDescriptor get() = _SerializerRegistry.RegexTestExpressionSerializerImpl.typeDescriptor;
-    }
-}
-
-sealed interface RegexCaptureExpression_OrMutable {
-    val source: skirout.editor.v1.expression.ExpressionNode;
-    val pattern: skirout.editor.v1.expression.ExpressionNode;
-    val group: skirout.editor.v1.expression.ExpressionNode;
-
-    fun toFrozen(): skirout.editor.v1.expression.RegexCaptureExpression;
-}
-
-/** Deeply immutable. */
-@kotlin.Suppress("UNUSED_PARAMETER")
-class RegexCaptureExpression private constructor(
-    override val source: skirout.editor.v1.expression.ExpressionNode,
-    override val pattern: skirout.editor.v1.expression.ExpressionNode,
-    override val group: skirout.editor.v1.expression.ExpressionNode,
-    internal val _unrecognizedFields: _UnrecognizedFields<skirout.editor.v1.expression.RegexCaptureExpression>? =
-        null,
-): skirout.editor.v1.expression.RegexCaptureExpression_OrMutable {
-    constructor(
-        _mustNameArguments: _MustNameArguments =
-            _MustNameArguments,
-        source: skirout.editor.v1.expression.ExpressionNode,
-        pattern: skirout.editor.v1.expression.ExpressionNode,
-        group: skirout.editor.v1.expression.ExpressionNode,
-        _unrecognizedFields: _UnrecognizedFields<skirout.editor.v1.expression.RegexCaptureExpression>? =
-            null,
-    ): this(
-        source,
-        pattern,
-        group,
-        _unrecognizedFields,
-    ) {}
-
-    @kotlin.Deprecated("Already frozen", kotlin.ReplaceWith("this"))
-    override fun toFrozen() = this;
-
-    /** Returns a mutable shallow copy of this instance */
-    fun toMutable() = Mutable(
-        source = this.source,
-        pattern = this.pattern,
-        group = this.group,
-    );
-
-    /** Returns a shallow copy of this instance with the specified fields replaced. */
-    fun copy(
-        _mustNameArguments: _MustNameArguments =
-            _MustNameArguments,
-        source: skirout.editor.v1.expression.ExpressionNode =
-            this.source,
-        pattern: skirout.editor.v1.expression.ExpressionNode =
-            this.pattern,
-        group: skirout.editor.v1.expression.ExpressionNode =
-            this.group,
-    ) = skirout.editor.v1.expression.RegexCaptureExpression(
-        source,
-        pattern,
-        group,
-        this._unrecognizedFields,
-    );
-
-    @kotlin.Deprecated("No point in creating an exact copy of an immutable object", kotlin.ReplaceWith("this"))
-    fun copy() = this;
-
-    override fun equals(other: kotlin.Any?): kotlin.Boolean {
-        return this === other || (other is skirout.editor.v1.expression.RegexCaptureExpression && this.source == other.source && this.pattern == other.pattern && this.group == other.group);
-    }
-
-    override fun hashCode(): kotlin.Int {
-        return kotlin.collections.listOf<kotlin.Any?>(this.source, this.pattern, this.group).hashCode();
-    }
-
-    override fun toString(): kotlin.String {
-        return build.skir.internal.toStringImpl(
-            this,
-            _SerializerRegistry.RegexCaptureExpressionSerializerImpl,
-        )
-    }
-
-    /** Mutable version of [RegexCaptureExpression]. */
-    class Mutable internal constructor(
-        _mustNameArguments: _MustNameArguments =
-            _MustNameArguments,
-        override var source: skirout.editor.v1.expression.ExpressionNode =
-            skirout.editor.v1.expression.ExpressionNode.UNKNOWN,
-        override var pattern: skirout.editor.v1.expression.ExpressionNode =
-            skirout.editor.v1.expression.ExpressionNode.UNKNOWN,
-        override var group: skirout.editor.v1.expression.ExpressionNode =
-            skirout.editor.v1.expression.ExpressionNode.UNKNOWN,
-        internal var _unrecognizedFields: _UnrecognizedFields<skirout.editor.v1.expression.RegexCaptureExpression>? =
-            null,
-    ): skirout.editor.v1.expression.RegexCaptureExpression_OrMutable {
-        /** Returns a deeply immutable copy of this instance */
-        override fun toFrozen() = skirout.editor.v1.expression.RegexCaptureExpression(
-            source = this.source,
-            pattern = this.pattern,
-            group = this.group,
-            _unrecognizedFields = this._unrecognizedFields,
-        );
-    }
-
-    companion object {
-        private val default =
-            skirout.editor.v1.expression.RegexCaptureExpression(
-                skirout.editor.v1.expression.ExpressionNode.UNKNOWN,
-                skirout.editor.v1.expression.ExpressionNode.UNKNOWN,
-                skirout.editor.v1.expression.ExpressionNode.UNKNOWN,
-            );
-
-        /** Returns an instance with all fields set to their default values. */
-        fun partial() = default;
-
-        /**
-         * Creates a new instance of [RegexCaptureExpression].
-         * Unlike the constructor, does not require all fields to be specified.
-         * Missing fields will be set to their default values.
-         */
-        fun partial(
-            _mustNameArguments: _MustNameArguments =
-                _MustNameArguments,
-            source: skirout.editor.v1.expression.ExpressionNode =
-                skirout.editor.v1.expression.ExpressionNode.UNKNOWN,
-            pattern: skirout.editor.v1.expression.ExpressionNode =
-                skirout.editor.v1.expression.ExpressionNode.UNKNOWN,
-            group: skirout.editor.v1.expression.ExpressionNode =
-                skirout.editor.v1.expression.ExpressionNode.UNKNOWN,
-        ) = skirout.editor.v1.expression.RegexCaptureExpression(
-            source = source,
-            pattern = pattern,
-            group = group,
-            _unrecognizedFields = null,
-        );
-
-        /** Serializer for [RegexCaptureExpression] instances. */
-        val serializer get() = _SerializerRegistry.RegexCaptureExpressionSerializer;
-
-        /** Describes the [RegexCaptureExpression] type. Provides runtime introspection capabilities. */
-        val typeDescriptor get() = _SerializerRegistry.RegexCaptureExpressionSerializerImpl.typeDescriptor;
-    }
-}
-
-sealed interface RegexReplaceExpression_OrMutable {
-    val source: skirout.editor.v1.expression.ExpressionNode;
-    val pattern: skirout.editor.v1.expression.ExpressionNode;
-    val replacement: skirout.editor.v1.expression.ExpressionNode;
-
-    fun toFrozen(): skirout.editor.v1.expression.RegexReplaceExpression;
-}
-
-/** Deeply immutable. */
-@kotlin.Suppress("UNUSED_PARAMETER")
-class RegexReplaceExpression private constructor(
-    override val source: skirout.editor.v1.expression.ExpressionNode,
-    override val pattern: skirout.editor.v1.expression.ExpressionNode,
-    override val replacement: skirout.editor.v1.expression.ExpressionNode,
-    internal val _unrecognizedFields: _UnrecognizedFields<skirout.editor.v1.expression.RegexReplaceExpression>? =
-        null,
-): skirout.editor.v1.expression.RegexReplaceExpression_OrMutable {
-    constructor(
-        _mustNameArguments: _MustNameArguments =
-            _MustNameArguments,
-        source: skirout.editor.v1.expression.ExpressionNode,
-        pattern: skirout.editor.v1.expression.ExpressionNode,
-        replacement: skirout.editor.v1.expression.ExpressionNode,
-        _unrecognizedFields: _UnrecognizedFields<skirout.editor.v1.expression.RegexReplaceExpression>? =
-            null,
-    ): this(
-        source,
-        pattern,
-        replacement,
-        _unrecognizedFields,
-    ) {}
-
-    @kotlin.Deprecated("Already frozen", kotlin.ReplaceWith("this"))
-    override fun toFrozen() = this;
-
-    /** Returns a mutable shallow copy of this instance */
-    fun toMutable() = Mutable(
-        source = this.source,
-        pattern = this.pattern,
-        replacement = this.replacement,
-    );
-
-    /** Returns a shallow copy of this instance with the specified fields replaced. */
-    fun copy(
-        _mustNameArguments: _MustNameArguments =
-            _MustNameArguments,
-        source: skirout.editor.v1.expression.ExpressionNode =
-            this.source,
-        pattern: skirout.editor.v1.expression.ExpressionNode =
-            this.pattern,
-        replacement: skirout.editor.v1.expression.ExpressionNode =
-            this.replacement,
-    ) = skirout.editor.v1.expression.RegexReplaceExpression(
-        source,
-        pattern,
-        replacement,
-        this._unrecognizedFields,
-    );
-
-    @kotlin.Deprecated("No point in creating an exact copy of an immutable object", kotlin.ReplaceWith("this"))
-    fun copy() = this;
-
-    override fun equals(other: kotlin.Any?): kotlin.Boolean {
-        return this === other || (other is skirout.editor.v1.expression.RegexReplaceExpression && this.source == other.source && this.pattern == other.pattern && this.replacement == other.replacement);
-    }
-
-    override fun hashCode(): kotlin.Int {
-        return kotlin.collections.listOf<kotlin.Any?>(this.source, this.pattern, this.replacement).hashCode();
-    }
-
-    override fun toString(): kotlin.String {
-        return build.skir.internal.toStringImpl(
-            this,
-            _SerializerRegistry.RegexReplaceExpressionSerializerImpl,
-        )
-    }
-
-    /** Mutable version of [RegexReplaceExpression]. */
-    class Mutable internal constructor(
-        _mustNameArguments: _MustNameArguments =
-            _MustNameArguments,
-        override var source: skirout.editor.v1.expression.ExpressionNode =
-            skirout.editor.v1.expression.ExpressionNode.UNKNOWN,
-        override var pattern: skirout.editor.v1.expression.ExpressionNode =
-            skirout.editor.v1.expression.ExpressionNode.UNKNOWN,
-        override var replacement: skirout.editor.v1.expression.ExpressionNode =
-            skirout.editor.v1.expression.ExpressionNode.UNKNOWN,
-        internal var _unrecognizedFields: _UnrecognizedFields<skirout.editor.v1.expression.RegexReplaceExpression>? =
-            null,
-    ): skirout.editor.v1.expression.RegexReplaceExpression_OrMutable {
-        /** Returns a deeply immutable copy of this instance */
-        override fun toFrozen() = skirout.editor.v1.expression.RegexReplaceExpression(
-            source = this.source,
-            pattern = this.pattern,
-            replacement = this.replacement,
-            _unrecognizedFields = this._unrecognizedFields,
-        );
-    }
-
-    companion object {
-        private val default =
-            skirout.editor.v1.expression.RegexReplaceExpression(
-                skirout.editor.v1.expression.ExpressionNode.UNKNOWN,
-                skirout.editor.v1.expression.ExpressionNode.UNKNOWN,
-                skirout.editor.v1.expression.ExpressionNode.UNKNOWN,
-            );
-
-        /** Returns an instance with all fields set to their default values. */
-        fun partial() = default;
-
-        /**
-         * Creates a new instance of [RegexReplaceExpression].
-         * Unlike the constructor, does not require all fields to be specified.
-         * Missing fields will be set to their default values.
-         */
-        fun partial(
-            _mustNameArguments: _MustNameArguments =
-                _MustNameArguments,
-            source: skirout.editor.v1.expression.ExpressionNode =
-                skirout.editor.v1.expression.ExpressionNode.UNKNOWN,
-            pattern: skirout.editor.v1.expression.ExpressionNode =
-                skirout.editor.v1.expression.ExpressionNode.UNKNOWN,
-            replacement: skirout.editor.v1.expression.ExpressionNode =
-                skirout.editor.v1.expression.ExpressionNode.UNKNOWN,
-        ) = skirout.editor.v1.expression.RegexReplaceExpression(
-            source = source,
-            pattern = pattern,
-            replacement = replacement,
-            _unrecognizedFields = null,
-        );
-
-        /** Serializer for [RegexReplaceExpression] instances. */
-        val serializer get() = _SerializerRegistry.RegexReplaceExpressionSerializer;
-
-        /** Describes the [RegexReplaceExpression] type. Provides runtime introspection capabilities. */
-        val typeDescriptor get() = _SerializerRegistry.RegexReplaceExpressionSerializerImpl.typeDescriptor;
-    }
-}
-
-/** Deeply immutable. */
-sealed class ValueCompareOperation private constructor() {
-    /** The kind of variant held by a `ValueCompareOperation`. */
-    enum class Kind {
-        UNKNOWN,
-        EQUAL_CONST,
-        NOT_EQUAL_CONST,
-    }
-
-    class Unknown @kotlin.Deprecated("For internal use", kotlin.ReplaceWith("skirout.editor.v1.expression.ValueCompareOperation.UNKNOWN")) internal constructor(
-        internal val _kind: Kind,
-        internal override val _unrecognized: _UnrecognizedVariant<skirout.editor.v1.expression.ValueCompareOperation>?,
-    ) : skirout.editor.v1.expression.ValueCompareOperation() {
-        override val kind get() = _kind;
-
-        override fun equals(other: kotlin.Any?): kotlin.Boolean {
-            return other is skirout.editor.v1.expression.ValueCompareOperation && other.kind == kind;
-        }
-
-        override fun hashCode(): kotlin.Int {
-            return kind.ordinal;
-        }
-    }
-
-    object EQUAL : skirout.editor.v1.expression.ValueCompareOperation() {
-        override val kind get() = Kind.EQUAL_CONST;
-
-        override fun equals(other: kotlin.Any?): kotlin.Boolean {
-            return other is skirout.editor.v1.expression.ValueCompareOperation && other.kind == Kind.EQUAL_CONST;
-        }
-
-        override fun hashCode(): kotlin.Int {
-            return Kind.EQUAL_CONST.ordinal;
-        }
-    }
-
-    object NOT_EQUAL : skirout.editor.v1.expression.ValueCompareOperation() {
-        override val kind get() = Kind.NOT_EQUAL_CONST;
-
-        override fun equals(other: kotlin.Any?): kotlin.Boolean {
-            return other is skirout.editor.v1.expression.ValueCompareOperation && other.kind == Kind.NOT_EQUAL_CONST;
-        }
-
-        override fun hashCode(): kotlin.Int {
-            return Kind.NOT_EQUAL_CONST.ordinal;
-        }
-    }
-
-    internal open val _unrecognized: _UnrecognizedVariant<skirout.editor.v1.expression.ValueCompareOperation>? get() = null;
-
-    abstract val kind: Kind;
-
-    override fun toString(): kotlin.String {
-        return build.skir.internal.toStringImpl(
-            this,
-            _SerializerRegistry.ValueCompareOperationSerializerImpl,
-        )
-    }
-
-    companion object {
-        /**
-         * Constant indicating an unknown [ValueCompareOperation].
-         * Default value for fields of type [ValueCompareOperation].
-         */
-        val UNKNOWN = @kotlin.Suppress("DEPRECATION") Unknown(Kind.UNKNOWN, null);
-
-        /** Serializer for [ValueCompareOperation] instances. */
-        val serializer get() = _SerializerRegistry.ValueCompareOperationSerializer;
-
-        /** Describes the [ValueCompareOperation] type. Provides runtime introspection capabilities. */
-        val typeDescriptor get() = _SerializerRegistry.ValueCompareOperationSerializerImpl.typeDescriptor;
-    }
-}
-
-sealed interface ValueCompareExpression_OrMutable {
-    val operation: skirout.editor.v1.expression.ValueCompareOperation;
-    val left: skirout.editor.v1.expression.ExpressionNode;
-    val right: skirout.editor.v1.expression.ExpressionNode;
-
-    fun toFrozen(): skirout.editor.v1.expression.ValueCompareExpression;
-}
-
-/** Deeply immutable. */
-@kotlin.Suppress("UNUSED_PARAMETER")
-class ValueCompareExpression private constructor(
-    override val operation: skirout.editor.v1.expression.ValueCompareOperation,
-    override val left: skirout.editor.v1.expression.ExpressionNode,
-    override val right: skirout.editor.v1.expression.ExpressionNode,
-    internal val _unrecognizedFields: _UnrecognizedFields<skirout.editor.v1.expression.ValueCompareExpression>? =
-        null,
-): skirout.editor.v1.expression.ValueCompareExpression_OrMutable {
-    constructor(
-        _mustNameArguments: _MustNameArguments =
-            _MustNameArguments,
-        operation: skirout.editor.v1.expression.ValueCompareOperation,
-        left: skirout.editor.v1.expression.ExpressionNode,
-        right: skirout.editor.v1.expression.ExpressionNode,
-        _unrecognizedFields: _UnrecognizedFields<skirout.editor.v1.expression.ValueCompareExpression>? =
-            null,
-    ): this(
-        operation,
-        left,
-        right,
-        _unrecognizedFields,
-    ) {}
-
-    @kotlin.Deprecated("Already frozen", kotlin.ReplaceWith("this"))
-    override fun toFrozen() = this;
-
-    /** Returns a mutable shallow copy of this instance */
-    fun toMutable() = Mutable(
-        operation = this.operation,
-        left = this.left,
-        right = this.right,
-    );
-
-    /** Returns a shallow copy of this instance with the specified fields replaced. */
-    fun copy(
-        _mustNameArguments: _MustNameArguments =
-            _MustNameArguments,
-        operation: skirout.editor.v1.expression.ValueCompareOperation =
-            this.operation,
-        left: skirout.editor.v1.expression.ExpressionNode =
-            this.left,
-        right: skirout.editor.v1.expression.ExpressionNode =
-            this.right,
-    ) = skirout.editor.v1.expression.ValueCompareExpression(
-        operation,
-        left,
-        right,
-        this._unrecognizedFields,
-    );
-
-    @kotlin.Deprecated("No point in creating an exact copy of an immutable object", kotlin.ReplaceWith("this"))
-    fun copy() = this;
-
-    override fun equals(other: kotlin.Any?): kotlin.Boolean {
-        return this === other || (other is skirout.editor.v1.expression.ValueCompareExpression && this.operation == other.operation && this.left == other.left && this.right == other.right);
-    }
-
-    override fun hashCode(): kotlin.Int {
-        return kotlin.collections.listOf<kotlin.Any?>(this.operation, this.left, this.right).hashCode();
-    }
-
-    override fun toString(): kotlin.String {
-        return build.skir.internal.toStringImpl(
-            this,
-            _SerializerRegistry.ValueCompareExpressionSerializerImpl,
-        )
-    }
-
-    /** Mutable version of [ValueCompareExpression]. */
-    class Mutable internal constructor(
-        _mustNameArguments: _MustNameArguments =
-            _MustNameArguments,
-        override var operation: skirout.editor.v1.expression.ValueCompareOperation =
-            skirout.editor.v1.expression.ValueCompareOperation.UNKNOWN,
-        override var left: skirout.editor.v1.expression.ExpressionNode =
-            skirout.editor.v1.expression.ExpressionNode.UNKNOWN,
-        override var right: skirout.editor.v1.expression.ExpressionNode =
-            skirout.editor.v1.expression.ExpressionNode.UNKNOWN,
-        internal var _unrecognizedFields: _UnrecognizedFields<skirout.editor.v1.expression.ValueCompareExpression>? =
-            null,
-    ): skirout.editor.v1.expression.ValueCompareExpression_OrMutable {
-        /** Returns a deeply immutable copy of this instance */
-        override fun toFrozen() = skirout.editor.v1.expression.ValueCompareExpression(
-            operation = this.operation,
-            left = this.left,
-            right = this.right,
-            _unrecognizedFields = this._unrecognizedFields,
-        );
-    }
-
-    companion object {
-        private val default =
-            skirout.editor.v1.expression.ValueCompareExpression(
-                skirout.editor.v1.expression.ValueCompareOperation.UNKNOWN,
-                skirout.editor.v1.expression.ExpressionNode.UNKNOWN,
-                skirout.editor.v1.expression.ExpressionNode.UNKNOWN,
-            );
-
-        /** Returns an instance with all fields set to their default values. */
-        fun partial() = default;
-
-        /**
-         * Creates a new instance of [ValueCompareExpression].
-         * Unlike the constructor, does not require all fields to be specified.
-         * Missing fields will be set to their default values.
-         */
-        fun partial(
-            _mustNameArguments: _MustNameArguments =
-                _MustNameArguments,
-            operation: skirout.editor.v1.expression.ValueCompareOperation =
-                skirout.editor.v1.expression.ValueCompareOperation.UNKNOWN,
-            left: skirout.editor.v1.expression.ExpressionNode =
-                skirout.editor.v1.expression.ExpressionNode.UNKNOWN,
-            right: skirout.editor.v1.expression.ExpressionNode =
-                skirout.editor.v1.expression.ExpressionNode.UNKNOWN,
-        ) = skirout.editor.v1.expression.ValueCompareExpression(
-            operation = operation,
-            left = left,
-            right = right,
-            _unrecognizedFields = null,
-        );
-
-        /** Serializer for [ValueCompareExpression] instances. */
-        val serializer get() = _SerializerRegistry.ValueCompareExpressionSerializer;
-
-        /** Describes the [ValueCompareExpression] type. Provides runtime introspection capabilities. */
-        val typeDescriptor get() = _SerializerRegistry.ValueCompareExpressionSerializerImpl.typeDescriptor;
-    }
-}
-
-/** Deeply immutable. */
-sealed class NumberArithmeticOperation private constructor() {
-    /** The kind of variant held by a `NumberArithmeticOperation`. */
-    enum class Kind {
-        UNKNOWN,
-        ADD_CONST,
-        SUBTRACT_CONST,
-        MULTIPLY_CONST,
-        DIVIDE_CONST,
-        REMAINDER_CONST,
-    }
-
-    class Unknown @kotlin.Deprecated("For internal use", kotlin.ReplaceWith("skirout.editor.v1.expression.NumberArithmeticOperation.UNKNOWN")) internal constructor(
-        internal val _kind: Kind,
-        internal override val _unrecognized: _UnrecognizedVariant<skirout.editor.v1.expression.NumberArithmeticOperation>?,
-    ) : skirout.editor.v1.expression.NumberArithmeticOperation() {
-        override val kind get() = _kind;
-
-        override fun equals(other: kotlin.Any?): kotlin.Boolean {
-            return other is skirout.editor.v1.expression.NumberArithmeticOperation && other.kind == kind;
-        }
-
-        override fun hashCode(): kotlin.Int {
-            return kind.ordinal;
-        }
-    }
-
-    object ADD : skirout.editor.v1.expression.NumberArithmeticOperation() {
-        override val kind get() = Kind.ADD_CONST;
-
-        override fun equals(other: kotlin.Any?): kotlin.Boolean {
-            return other is skirout.editor.v1.expression.NumberArithmeticOperation && other.kind == Kind.ADD_CONST;
-        }
-
-        override fun hashCode(): kotlin.Int {
-            return Kind.ADD_CONST.ordinal;
-        }
-    }
-
-    object SUBTRACT : skirout.editor.v1.expression.NumberArithmeticOperation() {
-        override val kind get() = Kind.SUBTRACT_CONST;
-
-        override fun equals(other: kotlin.Any?): kotlin.Boolean {
-            return other is skirout.editor.v1.expression.NumberArithmeticOperation && other.kind == Kind.SUBTRACT_CONST;
-        }
-
-        override fun hashCode(): kotlin.Int {
-            return Kind.SUBTRACT_CONST.ordinal;
-        }
-    }
-
-    object MULTIPLY : skirout.editor.v1.expression.NumberArithmeticOperation() {
-        override val kind get() = Kind.MULTIPLY_CONST;
-
-        override fun equals(other: kotlin.Any?): kotlin.Boolean {
-            return other is skirout.editor.v1.expression.NumberArithmeticOperation && other.kind == Kind.MULTIPLY_CONST;
-        }
-
-        override fun hashCode(): kotlin.Int {
-            return Kind.MULTIPLY_CONST.ordinal;
-        }
-    }
-
-    object DIVIDE : skirout.editor.v1.expression.NumberArithmeticOperation() {
-        override val kind get() = Kind.DIVIDE_CONST;
-
-        override fun equals(other: kotlin.Any?): kotlin.Boolean {
-            return other is skirout.editor.v1.expression.NumberArithmeticOperation && other.kind == Kind.DIVIDE_CONST;
-        }
-
-        override fun hashCode(): kotlin.Int {
-            return Kind.DIVIDE_CONST.ordinal;
-        }
-    }
-
-    object REMAINDER : skirout.editor.v1.expression.NumberArithmeticOperation() {
-        override val kind get() = Kind.REMAINDER_CONST;
-
-        override fun equals(other: kotlin.Any?): kotlin.Boolean {
-            return other is skirout.editor.v1.expression.NumberArithmeticOperation && other.kind == Kind.REMAINDER_CONST;
-        }
-
-        override fun hashCode(): kotlin.Int {
-            return Kind.REMAINDER_CONST.ordinal;
-        }
-    }
-
-    internal open val _unrecognized: _UnrecognizedVariant<skirout.editor.v1.expression.NumberArithmeticOperation>? get() = null;
-
-    abstract val kind: Kind;
-
-    override fun toString(): kotlin.String {
-        return build.skir.internal.toStringImpl(
-            this,
-            _SerializerRegistry.NumberArithmeticOperationSerializerImpl,
-        )
-    }
-
-    companion object {
-        /**
-         * Constant indicating an unknown [NumberArithmeticOperation].
-         * Default value for fields of type [NumberArithmeticOperation].
-         */
-        val UNKNOWN = @kotlin.Suppress("DEPRECATION") Unknown(Kind.UNKNOWN, null);
-
-        /** Serializer for [NumberArithmeticOperation] instances. */
-        val serializer get() = _SerializerRegistry.NumberArithmeticOperationSerializer;
-
-        /** Describes the [NumberArithmeticOperation] type. Provides runtime introspection capabilities. */
-        val typeDescriptor get() = _SerializerRegistry.NumberArithmeticOperationSerializerImpl.typeDescriptor;
-    }
-}
-
-sealed interface NumberArithmeticExpression_OrMutable {
-    val operation: skirout.editor.v1.expression.NumberArithmeticOperation;
-    val first: skirout.editor.v1.expression.ExpressionNode;
-    val second: skirout.editor.v1.expression.ExpressionNode;
-    val remaining: kotlin.collections.List<skirout.editor.v1.expression.ExpressionNode>;
-
-    fun toFrozen(): skirout.editor.v1.expression.NumberArithmeticExpression;
+    fun toFrozen(): skirout.editor.v1.expression.OperationId;
 }
 
 /**
- * Evaluates at least two operands in one arithmetic operation, preserving numeric promotion
- * across the complete argument sequence.
+ * Identity of a declared operation, for example "integer.gcd". Checking resolves it once;
+ * evaluators never choose between overloads at runtime.
  *
  * Deeply immutable.
  */
 @kotlin.Suppress("UNUSED_PARAMETER")
-class NumberArithmeticExpression private constructor(
-    override val operation: skirout.editor.v1.expression.NumberArithmeticOperation,
-    override val first: skirout.editor.v1.expression.ExpressionNode,
-    override val second: skirout.editor.v1.expression.ExpressionNode,
-    override val remaining: kotlin.collections.List<skirout.editor.v1.expression.ExpressionNode>,
-    internal val _unrecognizedFields: _UnrecognizedFields<skirout.editor.v1.expression.NumberArithmeticExpression>? =
+class OperationId private constructor(
+    override val value: kotlin.String,
+    internal val _unrecognizedFields: _UnrecognizedFields<skirout.editor.v1.expression.OperationId>? =
         null,
-): skirout.editor.v1.expression.NumberArithmeticExpression_OrMutable {
+): skirout.editor.v1.expression.OperationId_OrMutable {
     constructor(
         _mustNameArguments: _MustNameArguments =
             _MustNameArguments,
-        operation: skirout.editor.v1.expression.NumberArithmeticOperation,
-        first: skirout.editor.v1.expression.ExpressionNode,
-        second: skirout.editor.v1.expression.ExpressionNode,
-        remaining: kotlin.collections.Iterable<skirout.editor.v1.expression.ExpressionNode>,
-        _unrecognizedFields: _UnrecognizedFields<skirout.editor.v1.expression.NumberArithmeticExpression>? =
+        value: kotlin.String,
+        _unrecognizedFields: _UnrecognizedFields<skirout.editor.v1.expression.OperationId>? =
             null,
     ): this(
-        operation,
-        first,
-        second,
-        build.skir.internal.toFrozenList(remaining),
-        _unrecognizedFields,
-    ) {}
-
-    @kotlin.Deprecated("Already frozen", kotlin.ReplaceWith("this"))
-    override fun toFrozen() = this;
-
-    /** Returns a mutable shallow copy of this instance */
-    fun toMutable() = Mutable(
-        operation = this.operation,
-        first = this.first,
-        second = this.second,
-        remaining = this.remaining,
-    );
-
-    /** Returns a shallow copy of this instance with the specified fields replaced. */
-    fun copy(
-        _mustNameArguments: _MustNameArguments =
-            _MustNameArguments,
-        operation: skirout.editor.v1.expression.NumberArithmeticOperation =
-            this.operation,
-        first: skirout.editor.v1.expression.ExpressionNode =
-            this.first,
-        second: skirout.editor.v1.expression.ExpressionNode =
-            this.second,
-        remaining: kotlin.collections.Iterable<skirout.editor.v1.expression.ExpressionNode> =
-            this.remaining,
-    ) = skirout.editor.v1.expression.NumberArithmeticExpression(
-        operation,
-        first,
-        second,
-        build.skir.internal.toFrozenList(remaining),
-        this._unrecognizedFields,
-    );
-
-    @kotlin.Deprecated("No point in creating an exact copy of an immutable object", kotlin.ReplaceWith("this"))
-    fun copy() = this;
-
-    override fun equals(other: kotlin.Any?): kotlin.Boolean {
-        return this === other || (other is skirout.editor.v1.expression.NumberArithmeticExpression && this.operation == other.operation && this.first == other.first && this.second == other.second && this.remaining == other.remaining);
-    }
-
-    override fun hashCode(): kotlin.Int {
-        return kotlin.collections.listOf<kotlin.Any?>(this.operation, this.first, this.second, this.remaining).hashCode();
-    }
-
-    override fun toString(): kotlin.String {
-        return build.skir.internal.toStringImpl(
-            this,
-            _SerializerRegistry.NumberArithmeticExpressionSerializerImpl,
-        )
-    }
-
-    /** Mutable version of [NumberArithmeticExpression]. */
-    class Mutable internal constructor(
-        _mustNameArguments: _MustNameArguments =
-            _MustNameArguments,
-        override var operation: skirout.editor.v1.expression.NumberArithmeticOperation =
-            skirout.editor.v1.expression.NumberArithmeticOperation.UNKNOWN,
-        override var first: skirout.editor.v1.expression.ExpressionNode =
-            skirout.editor.v1.expression.ExpressionNode.UNKNOWN,
-        override var second: skirout.editor.v1.expression.ExpressionNode =
-            skirout.editor.v1.expression.ExpressionNode.UNKNOWN,
-        override var remaining: kotlin.collections.List<skirout.editor.v1.expression.ExpressionNode> =
-            build.skir.internal.emptyFrozenList<skirout.editor.v1.expression.ExpressionNode>(),
-        internal var _unrecognizedFields: _UnrecognizedFields<skirout.editor.v1.expression.NumberArithmeticExpression>? =
-            null,
-    ): skirout.editor.v1.expression.NumberArithmeticExpression_OrMutable {
-        /** Returns a deeply immutable copy of this instance */
-        override fun toFrozen() = skirout.editor.v1.expression.NumberArithmeticExpression(
-            operation = this.operation,
-            first = this.first,
-            second = this.second,
-            remaining = this.remaining,
-            _unrecognizedFields = this._unrecognizedFields,
-        );
-    }
-
-    companion object {
-        private val default =
-            skirout.editor.v1.expression.NumberArithmeticExpression(
-                skirout.editor.v1.expression.NumberArithmeticOperation.UNKNOWN,
-                skirout.editor.v1.expression.ExpressionNode.UNKNOWN,
-                skirout.editor.v1.expression.ExpressionNode.UNKNOWN,
-                build.skir.internal.emptyFrozenList<skirout.editor.v1.expression.ExpressionNode>(),
-            );
-
-        /** Returns an instance with all fields set to their default values. */
-        fun partial() = default;
-
-        /**
-         * Creates a new instance of [NumberArithmeticExpression].
-         * Unlike the constructor, does not require all fields to be specified.
-         * Missing fields will be set to their default values.
-         */
-        fun partial(
-            _mustNameArguments: _MustNameArguments =
-                _MustNameArguments,
-            operation: skirout.editor.v1.expression.NumberArithmeticOperation =
-                skirout.editor.v1.expression.NumberArithmeticOperation.UNKNOWN,
-            first: skirout.editor.v1.expression.ExpressionNode =
-                skirout.editor.v1.expression.ExpressionNode.UNKNOWN,
-            second: skirout.editor.v1.expression.ExpressionNode =
-                skirout.editor.v1.expression.ExpressionNode.UNKNOWN,
-            remaining: kotlin.collections.Iterable<skirout.editor.v1.expression.ExpressionNode> =
-                build.skir.internal.emptyFrozenList<skirout.editor.v1.expression.ExpressionNode>(),
-        ) = skirout.editor.v1.expression.NumberArithmeticExpression(
-            operation = operation,
-            first = first,
-            second = second,
-            remaining = remaining,
-            _unrecognizedFields = null,
-        );
-
-        /** Serializer for [NumberArithmeticExpression] instances. */
-        val serializer get() = _SerializerRegistry.NumberArithmeticExpressionSerializer;
-
-        /** Describes the [NumberArithmeticExpression] type. Provides runtime introspection capabilities. */
-        val typeDescriptor get() = _SerializerRegistry.NumberArithmeticExpressionSerializerImpl.typeDescriptor;
-    }
-}
-
-/** Deeply immutable. */
-sealed class NumberCompareOperation private constructor() {
-    /** The kind of variant held by a `NumberCompareOperation`. */
-    enum class Kind {
-        UNKNOWN,
-        GREATER_CONST,
-        GREATER_EQUAL_CONST,
-        LESS_CONST,
-        LESS_EQUAL_CONST,
-    }
-
-    class Unknown @kotlin.Deprecated("For internal use", kotlin.ReplaceWith("skirout.editor.v1.expression.NumberCompareOperation.UNKNOWN")) internal constructor(
-        internal val _kind: Kind,
-        internal override val _unrecognized: _UnrecognizedVariant<skirout.editor.v1.expression.NumberCompareOperation>?,
-    ) : skirout.editor.v1.expression.NumberCompareOperation() {
-        override val kind get() = _kind;
-
-        override fun equals(other: kotlin.Any?): kotlin.Boolean {
-            return other is skirout.editor.v1.expression.NumberCompareOperation && other.kind == kind;
-        }
-
-        override fun hashCode(): kotlin.Int {
-            return kind.ordinal;
-        }
-    }
-
-    object GREATER : skirout.editor.v1.expression.NumberCompareOperation() {
-        override val kind get() = Kind.GREATER_CONST;
-
-        override fun equals(other: kotlin.Any?): kotlin.Boolean {
-            return other is skirout.editor.v1.expression.NumberCompareOperation && other.kind == Kind.GREATER_CONST;
-        }
-
-        override fun hashCode(): kotlin.Int {
-            return Kind.GREATER_CONST.ordinal;
-        }
-    }
-
-    object GREATER_EQUAL : skirout.editor.v1.expression.NumberCompareOperation() {
-        override val kind get() = Kind.GREATER_EQUAL_CONST;
-
-        override fun equals(other: kotlin.Any?): kotlin.Boolean {
-            return other is skirout.editor.v1.expression.NumberCompareOperation && other.kind == Kind.GREATER_EQUAL_CONST;
-        }
-
-        override fun hashCode(): kotlin.Int {
-            return Kind.GREATER_EQUAL_CONST.ordinal;
-        }
-    }
-
-    object LESS : skirout.editor.v1.expression.NumberCompareOperation() {
-        override val kind get() = Kind.LESS_CONST;
-
-        override fun equals(other: kotlin.Any?): kotlin.Boolean {
-            return other is skirout.editor.v1.expression.NumberCompareOperation && other.kind == Kind.LESS_CONST;
-        }
-
-        override fun hashCode(): kotlin.Int {
-            return Kind.LESS_CONST.ordinal;
-        }
-    }
-
-    object LESS_EQUAL : skirout.editor.v1.expression.NumberCompareOperation() {
-        override val kind get() = Kind.LESS_EQUAL_CONST;
-
-        override fun equals(other: kotlin.Any?): kotlin.Boolean {
-            return other is skirout.editor.v1.expression.NumberCompareOperation && other.kind == Kind.LESS_EQUAL_CONST;
-        }
-
-        override fun hashCode(): kotlin.Int {
-            return Kind.LESS_EQUAL_CONST.ordinal;
-        }
-    }
-
-    internal open val _unrecognized: _UnrecognizedVariant<skirout.editor.v1.expression.NumberCompareOperation>? get() = null;
-
-    abstract val kind: Kind;
-
-    override fun toString(): kotlin.String {
-        return build.skir.internal.toStringImpl(
-            this,
-            _SerializerRegistry.NumberCompareOperationSerializerImpl,
-        )
-    }
-
-    companion object {
-        /**
-         * Constant indicating an unknown [NumberCompareOperation].
-         * Default value for fields of type [NumberCompareOperation].
-         */
-        val UNKNOWN = @kotlin.Suppress("DEPRECATION") Unknown(Kind.UNKNOWN, null);
-
-        /** Serializer for [NumberCompareOperation] instances. */
-        val serializer get() = _SerializerRegistry.NumberCompareOperationSerializer;
-
-        /** Describes the [NumberCompareOperation] type. Provides runtime introspection capabilities. */
-        val typeDescriptor get() = _SerializerRegistry.NumberCompareOperationSerializerImpl.typeDescriptor;
-    }
-}
-
-sealed interface NumberCompareExpression_OrMutable {
-    val operation: skirout.editor.v1.expression.NumberCompareOperation;
-    val left: skirout.editor.v1.expression.ExpressionNode;
-    val right: skirout.editor.v1.expression.ExpressionNode;
-
-    fun toFrozen(): skirout.editor.v1.expression.NumberCompareExpression;
-}
-
-/** Deeply immutable. */
-@kotlin.Suppress("UNUSED_PARAMETER")
-class NumberCompareExpression private constructor(
-    override val operation: skirout.editor.v1.expression.NumberCompareOperation,
-    override val left: skirout.editor.v1.expression.ExpressionNode,
-    override val right: skirout.editor.v1.expression.ExpressionNode,
-    internal val _unrecognizedFields: _UnrecognizedFields<skirout.editor.v1.expression.NumberCompareExpression>? =
-        null,
-): skirout.editor.v1.expression.NumberCompareExpression_OrMutable {
-    constructor(
-        _mustNameArguments: _MustNameArguments =
-            _MustNameArguments,
-        operation: skirout.editor.v1.expression.NumberCompareOperation,
-        left: skirout.editor.v1.expression.ExpressionNode,
-        right: skirout.editor.v1.expression.ExpressionNode,
-        _unrecognizedFields: _UnrecognizedFields<skirout.editor.v1.expression.NumberCompareExpression>? =
-            null,
-    ): this(
-        operation,
-        left,
-        right,
-        _unrecognizedFields,
-    ) {}
-
-    @kotlin.Deprecated("Already frozen", kotlin.ReplaceWith("this"))
-    override fun toFrozen() = this;
-
-    /** Returns a mutable shallow copy of this instance */
-    fun toMutable() = Mutable(
-        operation = this.operation,
-        left = this.left,
-        right = this.right,
-    );
-
-    /** Returns a shallow copy of this instance with the specified fields replaced. */
-    fun copy(
-        _mustNameArguments: _MustNameArguments =
-            _MustNameArguments,
-        operation: skirout.editor.v1.expression.NumberCompareOperation =
-            this.operation,
-        left: skirout.editor.v1.expression.ExpressionNode =
-            this.left,
-        right: skirout.editor.v1.expression.ExpressionNode =
-            this.right,
-    ) = skirout.editor.v1.expression.NumberCompareExpression(
-        operation,
-        left,
-        right,
-        this._unrecognizedFields,
-    );
-
-    @kotlin.Deprecated("No point in creating an exact copy of an immutable object", kotlin.ReplaceWith("this"))
-    fun copy() = this;
-
-    override fun equals(other: kotlin.Any?): kotlin.Boolean {
-        return this === other || (other is skirout.editor.v1.expression.NumberCompareExpression && this.operation == other.operation && this.left == other.left && this.right == other.right);
-    }
-
-    override fun hashCode(): kotlin.Int {
-        return kotlin.collections.listOf<kotlin.Any?>(this.operation, this.left, this.right).hashCode();
-    }
-
-    override fun toString(): kotlin.String {
-        return build.skir.internal.toStringImpl(
-            this,
-            _SerializerRegistry.NumberCompareExpressionSerializerImpl,
-        )
-    }
-
-    /** Mutable version of [NumberCompareExpression]. */
-    class Mutable internal constructor(
-        _mustNameArguments: _MustNameArguments =
-            _MustNameArguments,
-        override var operation: skirout.editor.v1.expression.NumberCompareOperation =
-            skirout.editor.v1.expression.NumberCompareOperation.UNKNOWN,
-        override var left: skirout.editor.v1.expression.ExpressionNode =
-            skirout.editor.v1.expression.ExpressionNode.UNKNOWN,
-        override var right: skirout.editor.v1.expression.ExpressionNode =
-            skirout.editor.v1.expression.ExpressionNode.UNKNOWN,
-        internal var _unrecognizedFields: _UnrecognizedFields<skirout.editor.v1.expression.NumberCompareExpression>? =
-            null,
-    ): skirout.editor.v1.expression.NumberCompareExpression_OrMutable {
-        /** Returns a deeply immutable copy of this instance */
-        override fun toFrozen() = skirout.editor.v1.expression.NumberCompareExpression(
-            operation = this.operation,
-            left = this.left,
-            right = this.right,
-            _unrecognizedFields = this._unrecognizedFields,
-        );
-    }
-
-    companion object {
-        private val default =
-            skirout.editor.v1.expression.NumberCompareExpression(
-                skirout.editor.v1.expression.NumberCompareOperation.UNKNOWN,
-                skirout.editor.v1.expression.ExpressionNode.UNKNOWN,
-                skirout.editor.v1.expression.ExpressionNode.UNKNOWN,
-            );
-
-        /** Returns an instance with all fields set to their default values. */
-        fun partial() = default;
-
-        /**
-         * Creates a new instance of [NumberCompareExpression].
-         * Unlike the constructor, does not require all fields to be specified.
-         * Missing fields will be set to their default values.
-         */
-        fun partial(
-            _mustNameArguments: _MustNameArguments =
-                _MustNameArguments,
-            operation: skirout.editor.v1.expression.NumberCompareOperation =
-                skirout.editor.v1.expression.NumberCompareOperation.UNKNOWN,
-            left: skirout.editor.v1.expression.ExpressionNode =
-                skirout.editor.v1.expression.ExpressionNode.UNKNOWN,
-            right: skirout.editor.v1.expression.ExpressionNode =
-                skirout.editor.v1.expression.ExpressionNode.UNKNOWN,
-        ) = skirout.editor.v1.expression.NumberCompareExpression(
-            operation = operation,
-            left = left,
-            right = right,
-            _unrecognizedFields = null,
-        );
-
-        /** Serializer for [NumberCompareExpression] instances. */
-        val serializer get() = _SerializerRegistry.NumberCompareExpressionSerializer;
-
-        /** Describes the [NumberCompareExpression] type. Provides runtime introspection capabilities. */
-        val typeDescriptor get() = _SerializerRegistry.NumberCompareExpressionSerializerImpl.typeDescriptor;
-    }
-}
-
-sealed interface NumberRoundExpression_OrMutable {
-    val source: skirout.editor.v1.expression.ExpressionNode;
-    val increment: skirout.editor.v1.expression.ExpressionNode;
-    val rounding: skirout.editor.v1.expression.ExpressionNode;
-
-    fun toFrozen(): skirout.editor.v1.expression.NumberRoundExpression;
-}
-
-/** Deeply immutable. */
-@kotlin.Suppress("UNUSED_PARAMETER")
-class NumberRoundExpression private constructor(
-    override val source: skirout.editor.v1.expression.ExpressionNode,
-    override val increment: skirout.editor.v1.expression.ExpressionNode,
-    override val rounding: skirout.editor.v1.expression.ExpressionNode,
-    internal val _unrecognizedFields: _UnrecognizedFields<skirout.editor.v1.expression.NumberRoundExpression>? =
-        null,
-): skirout.editor.v1.expression.NumberRoundExpression_OrMutable {
-    constructor(
-        _mustNameArguments: _MustNameArguments =
-            _MustNameArguments,
-        source: skirout.editor.v1.expression.ExpressionNode,
-        increment: skirout.editor.v1.expression.ExpressionNode,
-        rounding: skirout.editor.v1.expression.ExpressionNode,
-        _unrecognizedFields: _UnrecognizedFields<skirout.editor.v1.expression.NumberRoundExpression>? =
-            null,
-    ): this(
-        source,
-        increment,
-        rounding,
-        _unrecognizedFields,
-    ) {}
-
-    @kotlin.Deprecated("Already frozen", kotlin.ReplaceWith("this"))
-    override fun toFrozen() = this;
-
-    /** Returns a mutable shallow copy of this instance */
-    fun toMutable() = Mutable(
-        source = this.source,
-        increment = this.increment,
-        rounding = this.rounding,
-    );
-
-    /** Returns a shallow copy of this instance with the specified fields replaced. */
-    fun copy(
-        _mustNameArguments: _MustNameArguments =
-            _MustNameArguments,
-        source: skirout.editor.v1.expression.ExpressionNode =
-            this.source,
-        increment: skirout.editor.v1.expression.ExpressionNode =
-            this.increment,
-        rounding: skirout.editor.v1.expression.ExpressionNode =
-            this.rounding,
-    ) = skirout.editor.v1.expression.NumberRoundExpression(
-        source,
-        increment,
-        rounding,
-        this._unrecognizedFields,
-    );
-
-    @kotlin.Deprecated("No point in creating an exact copy of an immutable object", kotlin.ReplaceWith("this"))
-    fun copy() = this;
-
-    override fun equals(other: kotlin.Any?): kotlin.Boolean {
-        return this === other || (other is skirout.editor.v1.expression.NumberRoundExpression && this.source == other.source && this.increment == other.increment && this.rounding == other.rounding);
-    }
-
-    override fun hashCode(): kotlin.Int {
-        return kotlin.collections.listOf<kotlin.Any?>(this.source, this.increment, this.rounding).hashCode();
-    }
-
-    override fun toString(): kotlin.String {
-        return build.skir.internal.toStringImpl(
-            this,
-            _SerializerRegistry.NumberRoundExpressionSerializerImpl,
-        )
-    }
-
-    /** Mutable version of [NumberRoundExpression]. */
-    class Mutable internal constructor(
-        _mustNameArguments: _MustNameArguments =
-            _MustNameArguments,
-        override var source: skirout.editor.v1.expression.ExpressionNode =
-            skirout.editor.v1.expression.ExpressionNode.UNKNOWN,
-        override var increment: skirout.editor.v1.expression.ExpressionNode =
-            skirout.editor.v1.expression.ExpressionNode.UNKNOWN,
-        override var rounding: skirout.editor.v1.expression.ExpressionNode =
-            skirout.editor.v1.expression.ExpressionNode.UNKNOWN,
-        internal var _unrecognizedFields: _UnrecognizedFields<skirout.editor.v1.expression.NumberRoundExpression>? =
-            null,
-    ): skirout.editor.v1.expression.NumberRoundExpression_OrMutable {
-        /** Returns a deeply immutable copy of this instance */
-        override fun toFrozen() = skirout.editor.v1.expression.NumberRoundExpression(
-            source = this.source,
-            increment = this.increment,
-            rounding = this.rounding,
-            _unrecognizedFields = this._unrecognizedFields,
-        );
-    }
-
-    companion object {
-        private val default =
-            skirout.editor.v1.expression.NumberRoundExpression(
-                skirout.editor.v1.expression.ExpressionNode.UNKNOWN,
-                skirout.editor.v1.expression.ExpressionNode.UNKNOWN,
-                skirout.editor.v1.expression.ExpressionNode.UNKNOWN,
-            );
-
-        /** Returns an instance with all fields set to their default values. */
-        fun partial() = default;
-
-        /**
-         * Creates a new instance of [NumberRoundExpression].
-         * Unlike the constructor, does not require all fields to be specified.
-         * Missing fields will be set to their default values.
-         */
-        fun partial(
-            _mustNameArguments: _MustNameArguments =
-                _MustNameArguments,
-            source: skirout.editor.v1.expression.ExpressionNode =
-                skirout.editor.v1.expression.ExpressionNode.UNKNOWN,
-            increment: skirout.editor.v1.expression.ExpressionNode =
-                skirout.editor.v1.expression.ExpressionNode.UNKNOWN,
-            rounding: skirout.editor.v1.expression.ExpressionNode =
-                skirout.editor.v1.expression.ExpressionNode.UNKNOWN,
-        ) = skirout.editor.v1.expression.NumberRoundExpression(
-            source = source,
-            increment = increment,
-            rounding = rounding,
-            _unrecognizedFields = null,
-        );
-
-        /** Serializer for [NumberRoundExpression] instances. */
-        val serializer get() = _SerializerRegistry.NumberRoundExpressionSerializer;
-
-        /** Describes the [NumberRoundExpression] type. Provides runtime introspection capabilities. */
-        val typeDescriptor get() = _SerializerRegistry.NumberRoundExpressionSerializerImpl.typeDescriptor;
-    }
-}
-
-sealed interface NumberFormatExpression_OrMutable {
-    val source: skirout.editor.v1.expression.ExpressionNode;
-    val fractionDigits: skirout.editor.v1.expression.ExpressionNode;
-    val locale: skirout.editor.v1.expression.ExpressionNode;
-
-    fun toFrozen(): skirout.editor.v1.expression.NumberFormatExpression;
-}
-
-/** Deeply immutable. */
-@kotlin.Suppress("UNUSED_PARAMETER")
-class NumberFormatExpression private constructor(
-    override val source: skirout.editor.v1.expression.ExpressionNode,
-    override val fractionDigits: skirout.editor.v1.expression.ExpressionNode,
-    override val locale: skirout.editor.v1.expression.ExpressionNode,
-    internal val _unrecognizedFields: _UnrecognizedFields<skirout.editor.v1.expression.NumberFormatExpression>? =
-        null,
-): skirout.editor.v1.expression.NumberFormatExpression_OrMutable {
-    constructor(
-        _mustNameArguments: _MustNameArguments =
-            _MustNameArguments,
-        source: skirout.editor.v1.expression.ExpressionNode,
-        fractionDigits: skirout.editor.v1.expression.ExpressionNode,
-        locale: skirout.editor.v1.expression.ExpressionNode,
-        _unrecognizedFields: _UnrecognizedFields<skirout.editor.v1.expression.NumberFormatExpression>? =
-            null,
-    ): this(
-        source,
-        fractionDigits,
-        locale,
-        _unrecognizedFields,
-    ) {}
-
-    @kotlin.Deprecated("Already frozen", kotlin.ReplaceWith("this"))
-    override fun toFrozen() = this;
-
-    /** Returns a mutable shallow copy of this instance */
-    fun toMutable() = Mutable(
-        source = this.source,
-        fractionDigits = this.fractionDigits,
-        locale = this.locale,
-    );
-
-    /** Returns a shallow copy of this instance with the specified fields replaced. */
-    fun copy(
-        _mustNameArguments: _MustNameArguments =
-            _MustNameArguments,
-        source: skirout.editor.v1.expression.ExpressionNode =
-            this.source,
-        fractionDigits: skirout.editor.v1.expression.ExpressionNode =
-            this.fractionDigits,
-        locale: skirout.editor.v1.expression.ExpressionNode =
-            this.locale,
-    ) = skirout.editor.v1.expression.NumberFormatExpression(
-        source,
-        fractionDigits,
-        locale,
-        this._unrecognizedFields,
-    );
-
-    @kotlin.Deprecated("No point in creating an exact copy of an immutable object", kotlin.ReplaceWith("this"))
-    fun copy() = this;
-
-    override fun equals(other: kotlin.Any?): kotlin.Boolean {
-        return this === other || (other is skirout.editor.v1.expression.NumberFormatExpression && this.source == other.source && this.fractionDigits == other.fractionDigits && this.locale == other.locale);
-    }
-
-    override fun hashCode(): kotlin.Int {
-        return kotlin.collections.listOf<kotlin.Any?>(this.source, this.fractionDigits, this.locale).hashCode();
-    }
-
-    override fun toString(): kotlin.String {
-        return build.skir.internal.toStringImpl(
-            this,
-            _SerializerRegistry.NumberFormatExpressionSerializerImpl,
-        )
-    }
-
-    /** Mutable version of [NumberFormatExpression]. */
-    class Mutable internal constructor(
-        _mustNameArguments: _MustNameArguments =
-            _MustNameArguments,
-        override var source: skirout.editor.v1.expression.ExpressionNode =
-            skirout.editor.v1.expression.ExpressionNode.UNKNOWN,
-        override var fractionDigits: skirout.editor.v1.expression.ExpressionNode =
-            skirout.editor.v1.expression.ExpressionNode.UNKNOWN,
-        override var locale: skirout.editor.v1.expression.ExpressionNode =
-            skirout.editor.v1.expression.ExpressionNode.UNKNOWN,
-        internal var _unrecognizedFields: _UnrecognizedFields<skirout.editor.v1.expression.NumberFormatExpression>? =
-            null,
-    ): skirout.editor.v1.expression.NumberFormatExpression_OrMutable {
-        /** Returns a deeply immutable copy of this instance */
-        override fun toFrozen() = skirout.editor.v1.expression.NumberFormatExpression(
-            source = this.source,
-            fractionDigits = this.fractionDigits,
-            locale = this.locale,
-            _unrecognizedFields = this._unrecognizedFields,
-        );
-    }
-
-    companion object {
-        private val default =
-            skirout.editor.v1.expression.NumberFormatExpression(
-                skirout.editor.v1.expression.ExpressionNode.UNKNOWN,
-                skirout.editor.v1.expression.ExpressionNode.UNKNOWN,
-                skirout.editor.v1.expression.ExpressionNode.UNKNOWN,
-            );
-
-        /** Returns an instance with all fields set to their default values. */
-        fun partial() = default;
-
-        /**
-         * Creates a new instance of [NumberFormatExpression].
-         * Unlike the constructor, does not require all fields to be specified.
-         * Missing fields will be set to their default values.
-         */
-        fun partial(
-            _mustNameArguments: _MustNameArguments =
-                _MustNameArguments,
-            source: skirout.editor.v1.expression.ExpressionNode =
-                skirout.editor.v1.expression.ExpressionNode.UNKNOWN,
-            fractionDigits: skirout.editor.v1.expression.ExpressionNode =
-                skirout.editor.v1.expression.ExpressionNode.UNKNOWN,
-            locale: skirout.editor.v1.expression.ExpressionNode =
-                skirout.editor.v1.expression.ExpressionNode.UNKNOWN,
-        ) = skirout.editor.v1.expression.NumberFormatExpression(
-            source = source,
-            fractionDigits = fractionDigits,
-            locale = locale,
-            _unrecognizedFields = null,
-        );
-
-        /** Serializer for [NumberFormatExpression] instances. */
-        val serializer get() = _SerializerRegistry.NumberFormatExpressionSerializer;
-
-        /** Describes the [NumberFormatExpression] type. Provides runtime introspection capabilities. */
-        val typeDescriptor get() = _SerializerRegistry.NumberFormatExpressionSerializerImpl.typeDescriptor;
-    }
-}
-
-sealed interface DurationFormatExpression_OrMutable {
-    val source: skirout.editor.v1.expression.ExpressionNode;
-    val units: skirout.editor.v1.expression.ExpressionNode;
-    val fractionDigits: skirout.editor.v1.expression.ExpressionNode;
-
-    fun toFrozen(): skirout.editor.v1.expression.DurationFormatExpression;
-}
-
-/** Deeply immutable. */
-@kotlin.Suppress("UNUSED_PARAMETER")
-class DurationFormatExpression private constructor(
-    override val source: skirout.editor.v1.expression.ExpressionNode,
-    override val units: skirout.editor.v1.expression.ExpressionNode,
-    override val fractionDigits: skirout.editor.v1.expression.ExpressionNode,
-    internal val _unrecognizedFields: _UnrecognizedFields<skirout.editor.v1.expression.DurationFormatExpression>? =
-        null,
-): skirout.editor.v1.expression.DurationFormatExpression_OrMutable {
-    constructor(
-        _mustNameArguments: _MustNameArguments =
-            _MustNameArguments,
-        source: skirout.editor.v1.expression.ExpressionNode,
-        units: skirout.editor.v1.expression.ExpressionNode,
-        fractionDigits: skirout.editor.v1.expression.ExpressionNode,
-        _unrecognizedFields: _UnrecognizedFields<skirout.editor.v1.expression.DurationFormatExpression>? =
-            null,
-    ): this(
-        source,
-        units,
-        fractionDigits,
-        _unrecognizedFields,
-    ) {}
-
-    @kotlin.Deprecated("Already frozen", kotlin.ReplaceWith("this"))
-    override fun toFrozen() = this;
-
-    /** Returns a mutable shallow copy of this instance */
-    fun toMutable() = Mutable(
-        source = this.source,
-        units = this.units,
-        fractionDigits = this.fractionDigits,
-    );
-
-    /** Returns a shallow copy of this instance with the specified fields replaced. */
-    fun copy(
-        _mustNameArguments: _MustNameArguments =
-            _MustNameArguments,
-        source: skirout.editor.v1.expression.ExpressionNode =
-            this.source,
-        units: skirout.editor.v1.expression.ExpressionNode =
-            this.units,
-        fractionDigits: skirout.editor.v1.expression.ExpressionNode =
-            this.fractionDigits,
-    ) = skirout.editor.v1.expression.DurationFormatExpression(
-        source,
-        units,
-        fractionDigits,
-        this._unrecognizedFields,
-    );
-
-    @kotlin.Deprecated("No point in creating an exact copy of an immutable object", kotlin.ReplaceWith("this"))
-    fun copy() = this;
-
-    override fun equals(other: kotlin.Any?): kotlin.Boolean {
-        return this === other || (other is skirout.editor.v1.expression.DurationFormatExpression && this.source == other.source && this.units == other.units && this.fractionDigits == other.fractionDigits);
-    }
-
-    override fun hashCode(): kotlin.Int {
-        return kotlin.collections.listOf<kotlin.Any?>(this.source, this.units, this.fractionDigits).hashCode();
-    }
-
-    override fun toString(): kotlin.String {
-        return build.skir.internal.toStringImpl(
-            this,
-            _SerializerRegistry.DurationFormatExpressionSerializerImpl,
-        )
-    }
-
-    /** Mutable version of [DurationFormatExpression]. */
-    class Mutable internal constructor(
-        _mustNameArguments: _MustNameArguments =
-            _MustNameArguments,
-        override var source: skirout.editor.v1.expression.ExpressionNode =
-            skirout.editor.v1.expression.ExpressionNode.UNKNOWN,
-        override var units: skirout.editor.v1.expression.ExpressionNode =
-            skirout.editor.v1.expression.ExpressionNode.UNKNOWN,
-        override var fractionDigits: skirout.editor.v1.expression.ExpressionNode =
-            skirout.editor.v1.expression.ExpressionNode.UNKNOWN,
-        internal var _unrecognizedFields: _UnrecognizedFields<skirout.editor.v1.expression.DurationFormatExpression>? =
-            null,
-    ): skirout.editor.v1.expression.DurationFormatExpression_OrMutable {
-        /** Returns a deeply immutable copy of this instance */
-        override fun toFrozen() = skirout.editor.v1.expression.DurationFormatExpression(
-            source = this.source,
-            units = this.units,
-            fractionDigits = this.fractionDigits,
-            _unrecognizedFields = this._unrecognizedFields,
-        );
-    }
-
-    companion object {
-        private val default =
-            skirout.editor.v1.expression.DurationFormatExpression(
-                skirout.editor.v1.expression.ExpressionNode.UNKNOWN,
-                skirout.editor.v1.expression.ExpressionNode.UNKNOWN,
-                skirout.editor.v1.expression.ExpressionNode.UNKNOWN,
-            );
-
-        /** Returns an instance with all fields set to their default values. */
-        fun partial() = default;
-
-        /**
-         * Creates a new instance of [DurationFormatExpression].
-         * Unlike the constructor, does not require all fields to be specified.
-         * Missing fields will be set to their default values.
-         */
-        fun partial(
-            _mustNameArguments: _MustNameArguments =
-                _MustNameArguments,
-            source: skirout.editor.v1.expression.ExpressionNode =
-                skirout.editor.v1.expression.ExpressionNode.UNKNOWN,
-            units: skirout.editor.v1.expression.ExpressionNode =
-                skirout.editor.v1.expression.ExpressionNode.UNKNOWN,
-            fractionDigits: skirout.editor.v1.expression.ExpressionNode =
-                skirout.editor.v1.expression.ExpressionNode.UNKNOWN,
-        ) = skirout.editor.v1.expression.DurationFormatExpression(
-            source = source,
-            units = units,
-            fractionDigits = fractionDigits,
-            _unrecognizedFields = null,
-        );
-
-        /** Serializer for [DurationFormatExpression] instances. */
-        val serializer get() = _SerializerRegistry.DurationFormatExpressionSerializer;
-
-        /** Describes the [DurationFormatExpression] type. Provides runtime introspection capabilities. */
-        val typeDescriptor get() = _SerializerRegistry.DurationFormatExpressionSerializerImpl.typeDescriptor;
-    }
-}
-
-sealed interface TimestampFormatExpression_OrMutable {
-    val source: skirout.editor.v1.expression.ExpressionNode;
-    val pattern: skirout.editor.v1.expression.ExpressionNode;
-    val zone: skirout.editor.v1.expression.ExpressionNode;
-    val locale: skirout.editor.v1.expression.ExpressionNode;
-
-    fun toFrozen(): skirout.editor.v1.expression.TimestampFormatExpression;
-}
-
-/** Deeply immutable. */
-@kotlin.Suppress("UNUSED_PARAMETER")
-class TimestampFormatExpression private constructor(
-    override val source: skirout.editor.v1.expression.ExpressionNode,
-    override val pattern: skirout.editor.v1.expression.ExpressionNode,
-    override val zone: skirout.editor.v1.expression.ExpressionNode,
-    override val locale: skirout.editor.v1.expression.ExpressionNode,
-    internal val _unrecognizedFields: _UnrecognizedFields<skirout.editor.v1.expression.TimestampFormatExpression>? =
-        null,
-): skirout.editor.v1.expression.TimestampFormatExpression_OrMutable {
-    constructor(
-        _mustNameArguments: _MustNameArguments =
-            _MustNameArguments,
-        source: skirout.editor.v1.expression.ExpressionNode,
-        pattern: skirout.editor.v1.expression.ExpressionNode,
-        zone: skirout.editor.v1.expression.ExpressionNode,
-        locale: skirout.editor.v1.expression.ExpressionNode,
-        _unrecognizedFields: _UnrecognizedFields<skirout.editor.v1.expression.TimestampFormatExpression>? =
-            null,
-    ): this(
-        source,
-        pattern,
-        zone,
-        locale,
-        _unrecognizedFields,
-    ) {}
-
-    @kotlin.Deprecated("Already frozen", kotlin.ReplaceWith("this"))
-    override fun toFrozen() = this;
-
-    /** Returns a mutable shallow copy of this instance */
-    fun toMutable() = Mutable(
-        source = this.source,
-        pattern = this.pattern,
-        zone = this.zone,
-        locale = this.locale,
-    );
-
-    /** Returns a shallow copy of this instance with the specified fields replaced. */
-    fun copy(
-        _mustNameArguments: _MustNameArguments =
-            _MustNameArguments,
-        source: skirout.editor.v1.expression.ExpressionNode =
-            this.source,
-        pattern: skirout.editor.v1.expression.ExpressionNode =
-            this.pattern,
-        zone: skirout.editor.v1.expression.ExpressionNode =
-            this.zone,
-        locale: skirout.editor.v1.expression.ExpressionNode =
-            this.locale,
-    ) = skirout.editor.v1.expression.TimestampFormatExpression(
-        source,
-        pattern,
-        zone,
-        locale,
-        this._unrecognizedFields,
-    );
-
-    @kotlin.Deprecated("No point in creating an exact copy of an immutable object", kotlin.ReplaceWith("this"))
-    fun copy() = this;
-
-    override fun equals(other: kotlin.Any?): kotlin.Boolean {
-        return this === other || (other is skirout.editor.v1.expression.TimestampFormatExpression && this.source == other.source && this.pattern == other.pattern && this.zone == other.zone && this.locale == other.locale);
-    }
-
-    override fun hashCode(): kotlin.Int {
-        return kotlin.collections.listOf<kotlin.Any?>(this.source, this.pattern, this.zone, this.locale).hashCode();
-    }
-
-    override fun toString(): kotlin.String {
-        return build.skir.internal.toStringImpl(
-            this,
-            _SerializerRegistry.TimestampFormatExpressionSerializerImpl,
-        )
-    }
-
-    /** Mutable version of [TimestampFormatExpression]. */
-    class Mutable internal constructor(
-        _mustNameArguments: _MustNameArguments =
-            _MustNameArguments,
-        override var source: skirout.editor.v1.expression.ExpressionNode =
-            skirout.editor.v1.expression.ExpressionNode.UNKNOWN,
-        override var pattern: skirout.editor.v1.expression.ExpressionNode =
-            skirout.editor.v1.expression.ExpressionNode.UNKNOWN,
-        override var zone: skirout.editor.v1.expression.ExpressionNode =
-            skirout.editor.v1.expression.ExpressionNode.UNKNOWN,
-        override var locale: skirout.editor.v1.expression.ExpressionNode =
-            skirout.editor.v1.expression.ExpressionNode.UNKNOWN,
-        internal var _unrecognizedFields: _UnrecognizedFields<skirout.editor.v1.expression.TimestampFormatExpression>? =
-            null,
-    ): skirout.editor.v1.expression.TimestampFormatExpression_OrMutable {
-        /** Returns a deeply immutable copy of this instance */
-        override fun toFrozen() = skirout.editor.v1.expression.TimestampFormatExpression(
-            source = this.source,
-            pattern = this.pattern,
-            zone = this.zone,
-            locale = this.locale,
-            _unrecognizedFields = this._unrecognizedFields,
-        );
-    }
-
-    companion object {
-        private val default =
-            skirout.editor.v1.expression.TimestampFormatExpression(
-                skirout.editor.v1.expression.ExpressionNode.UNKNOWN,
-                skirout.editor.v1.expression.ExpressionNode.UNKNOWN,
-                skirout.editor.v1.expression.ExpressionNode.UNKNOWN,
-                skirout.editor.v1.expression.ExpressionNode.UNKNOWN,
-            );
-
-        /** Returns an instance with all fields set to their default values. */
-        fun partial() = default;
-
-        /**
-         * Creates a new instance of [TimestampFormatExpression].
-         * Unlike the constructor, does not require all fields to be specified.
-         * Missing fields will be set to their default values.
-         */
-        fun partial(
-            _mustNameArguments: _MustNameArguments =
-                _MustNameArguments,
-            source: skirout.editor.v1.expression.ExpressionNode =
-                skirout.editor.v1.expression.ExpressionNode.UNKNOWN,
-            pattern: skirout.editor.v1.expression.ExpressionNode =
-                skirout.editor.v1.expression.ExpressionNode.UNKNOWN,
-            zone: skirout.editor.v1.expression.ExpressionNode =
-                skirout.editor.v1.expression.ExpressionNode.UNKNOWN,
-            locale: skirout.editor.v1.expression.ExpressionNode =
-                skirout.editor.v1.expression.ExpressionNode.UNKNOWN,
-        ) = skirout.editor.v1.expression.TimestampFormatExpression(
-            source = source,
-            pattern = pattern,
-            zone = zone,
-            locale = locale,
-            _unrecognizedFields = null,
-        );
-
-        /** Serializer for [TimestampFormatExpression] instances. */
-        val serializer get() = _SerializerRegistry.TimestampFormatExpressionSerializer;
-
-        /** Describes the [TimestampFormatExpression] type. Provides runtime introspection capabilities. */
-        val typeDescriptor get() = _SerializerRegistry.TimestampFormatExpressionSerializerImpl.typeDescriptor;
-    }
-}
-
-sealed interface CollectionAccessExpression_OrMutable {
-    val source: skirout.editor.v1.expression.ExpressionNode;
-    val index: skirout.editor.v1.expression.ExpressionNode;
-
-    fun toFrozen(): skirout.editor.v1.expression.CollectionAccessExpression;
-}
-
-/** Deeply immutable. */
-@kotlin.Suppress("UNUSED_PARAMETER")
-class CollectionAccessExpression private constructor(
-    override val source: skirout.editor.v1.expression.ExpressionNode,
-    override val index: skirout.editor.v1.expression.ExpressionNode,
-    internal val _unrecognizedFields: _UnrecognizedFields<skirout.editor.v1.expression.CollectionAccessExpression>? =
-        null,
-): skirout.editor.v1.expression.CollectionAccessExpression_OrMutable {
-    constructor(
-        _mustNameArguments: _MustNameArguments =
-            _MustNameArguments,
-        source: skirout.editor.v1.expression.ExpressionNode,
-        index: skirout.editor.v1.expression.ExpressionNode,
-        _unrecognizedFields: _UnrecognizedFields<skirout.editor.v1.expression.CollectionAccessExpression>? =
-            null,
-    ): this(
-        source,
-        index,
-        _unrecognizedFields,
-    ) {}
-
-    @kotlin.Deprecated("Already frozen", kotlin.ReplaceWith("this"))
-    override fun toFrozen() = this;
-
-    /** Returns a mutable shallow copy of this instance */
-    fun toMutable() = Mutable(
-        source = this.source,
-        index = this.index,
-    );
-
-    /** Returns a shallow copy of this instance with the specified fields replaced. */
-    fun copy(
-        _mustNameArguments: _MustNameArguments =
-            _MustNameArguments,
-        source: skirout.editor.v1.expression.ExpressionNode =
-            this.source,
-        index: skirout.editor.v1.expression.ExpressionNode =
-            this.index,
-    ) = skirout.editor.v1.expression.CollectionAccessExpression(
-        source,
-        index,
-        this._unrecognizedFields,
-    );
-
-    @kotlin.Deprecated("No point in creating an exact copy of an immutable object", kotlin.ReplaceWith("this"))
-    fun copy() = this;
-
-    override fun equals(other: kotlin.Any?): kotlin.Boolean {
-        return this === other || (other is skirout.editor.v1.expression.CollectionAccessExpression && this.source == other.source && this.index == other.index);
-    }
-
-    override fun hashCode(): kotlin.Int {
-        return kotlin.collections.listOf<kotlin.Any?>(this.source, this.index).hashCode();
-    }
-
-    override fun toString(): kotlin.String {
-        return build.skir.internal.toStringImpl(
-            this,
-            _SerializerRegistry.CollectionAccessExpressionSerializerImpl,
-        )
-    }
-
-    /** Mutable version of [CollectionAccessExpression]. */
-    class Mutable internal constructor(
-        _mustNameArguments: _MustNameArguments =
-            _MustNameArguments,
-        override var source: skirout.editor.v1.expression.ExpressionNode =
-            skirout.editor.v1.expression.ExpressionNode.UNKNOWN,
-        override var index: skirout.editor.v1.expression.ExpressionNode =
-            skirout.editor.v1.expression.ExpressionNode.UNKNOWN,
-        internal var _unrecognizedFields: _UnrecognizedFields<skirout.editor.v1.expression.CollectionAccessExpression>? =
-            null,
-    ): skirout.editor.v1.expression.CollectionAccessExpression_OrMutable {
-        /** Returns a deeply immutable copy of this instance */
-        override fun toFrozen() = skirout.editor.v1.expression.CollectionAccessExpression(
-            source = this.source,
-            index = this.index,
-            _unrecognizedFields = this._unrecognizedFields,
-        );
-    }
-
-    companion object {
-        private val default =
-            skirout.editor.v1.expression.CollectionAccessExpression(
-                skirout.editor.v1.expression.ExpressionNode.UNKNOWN,
-                skirout.editor.v1.expression.ExpressionNode.UNKNOWN,
-            );
-
-        /** Returns an instance with all fields set to their default values. */
-        fun partial() = default;
-
-        /**
-         * Creates a new instance of [CollectionAccessExpression].
-         * Unlike the constructor, does not require all fields to be specified.
-         * Missing fields will be set to their default values.
-         */
-        fun partial(
-            _mustNameArguments: _MustNameArguments =
-                _MustNameArguments,
-            source: skirout.editor.v1.expression.ExpressionNode =
-                skirout.editor.v1.expression.ExpressionNode.UNKNOWN,
-            index: skirout.editor.v1.expression.ExpressionNode =
-                skirout.editor.v1.expression.ExpressionNode.UNKNOWN,
-        ) = skirout.editor.v1.expression.CollectionAccessExpression(
-            source = source,
-            index = index,
-            _unrecognizedFields = null,
-        );
-
-        /** Serializer for [CollectionAccessExpression] instances. */
-        val serializer get() = _SerializerRegistry.CollectionAccessExpressionSerializer;
-
-        /** Describes the [CollectionAccessExpression] type. Provides runtime introspection capabilities. */
-        val typeDescriptor get() = _SerializerRegistry.CollectionAccessExpressionSerializerImpl.typeDescriptor;
-    }
-}
-
-sealed interface CollectionContainsExpression_OrMutable {
-    val source: skirout.editor.v1.expression.ExpressionNode;
-    val value: skirout.editor.v1.expression.ExpressionNode;
-
-    fun toFrozen(): skirout.editor.v1.expression.CollectionContainsExpression;
-}
-
-/** Deeply immutable. */
-@kotlin.Suppress("UNUSED_PARAMETER")
-class CollectionContainsExpression private constructor(
-    override val source: skirout.editor.v1.expression.ExpressionNode,
-    override val value: skirout.editor.v1.expression.ExpressionNode,
-    internal val _unrecognizedFields: _UnrecognizedFields<skirout.editor.v1.expression.CollectionContainsExpression>? =
-        null,
-): skirout.editor.v1.expression.CollectionContainsExpression_OrMutable {
-    constructor(
-        _mustNameArguments: _MustNameArguments =
-            _MustNameArguments,
-        source: skirout.editor.v1.expression.ExpressionNode,
-        value: skirout.editor.v1.expression.ExpressionNode,
-        _unrecognizedFields: _UnrecognizedFields<skirout.editor.v1.expression.CollectionContainsExpression>? =
-            null,
-    ): this(
-        source,
         value,
         _unrecognizedFields,
     ) {}
@@ -4099,7 +918,6 @@ class CollectionContainsExpression private constructor(
 
     /** Returns a mutable shallow copy of this instance */
     fun toMutable() = Mutable(
-        source = this.source,
         value = this.value,
     );
 
@@ -4107,12 +925,9 @@ class CollectionContainsExpression private constructor(
     fun copy(
         _mustNameArguments: _MustNameArguments =
             _MustNameArguments,
-        source: skirout.editor.v1.expression.ExpressionNode =
-            this.source,
-        value: skirout.editor.v1.expression.ExpressionNode =
+        value: kotlin.String =
             this.value,
-    ) = skirout.editor.v1.expression.CollectionContainsExpression(
-        source,
+    ) = skirout.editor.v1.expression.OperationId(
         value,
         this._unrecognizedFields,
     );
@@ -4121,34 +936,31 @@ class CollectionContainsExpression private constructor(
     fun copy() = this;
 
     override fun equals(other: kotlin.Any?): kotlin.Boolean {
-        return this === other || (other is skirout.editor.v1.expression.CollectionContainsExpression && this.source == other.source && this.value == other.value);
+        return this === other || (other is skirout.editor.v1.expression.OperationId && this.value == other.value);
     }
 
     override fun hashCode(): kotlin.Int {
-        return kotlin.collections.listOf<kotlin.Any?>(this.source, this.value).hashCode();
+        return kotlin.collections.listOf<kotlin.Any?>(this.value).hashCode();
     }
 
     override fun toString(): kotlin.String {
         return build.skir.internal.toStringImpl(
             this,
-            _SerializerRegistry.CollectionContainsExpressionSerializerImpl,
+            _SerializerRegistry.OperationIdSerializerImpl,
         )
     }
 
-    /** Mutable version of [CollectionContainsExpression]. */
+    /** Mutable version of [OperationId]. */
     class Mutable internal constructor(
         _mustNameArguments: _MustNameArguments =
             _MustNameArguments,
-        override var source: skirout.editor.v1.expression.ExpressionNode =
-            skirout.editor.v1.expression.ExpressionNode.UNKNOWN,
-        override var value: skirout.editor.v1.expression.ExpressionNode =
-            skirout.editor.v1.expression.ExpressionNode.UNKNOWN,
-        internal var _unrecognizedFields: _UnrecognizedFields<skirout.editor.v1.expression.CollectionContainsExpression>? =
+        override var value: kotlin.String =
+            "",
+        internal var _unrecognizedFields: _UnrecognizedFields<skirout.editor.v1.expression.OperationId>? =
             null,
-    ): skirout.editor.v1.expression.CollectionContainsExpression_OrMutable {
+    ): skirout.editor.v1.expression.OperationId_OrMutable {
         /** Returns a deeply immutable copy of this instance */
-        override fun toFrozen() = skirout.editor.v1.expression.CollectionContainsExpression(
-            source = this.source,
+        override fun toFrozen() = skirout.editor.v1.expression.OperationId(
             value = this.value,
             _unrecognizedFields = this._unrecognizedFields,
         );
@@ -4156,341 +968,71 @@ class CollectionContainsExpression private constructor(
 
     companion object {
         private val default =
-            skirout.editor.v1.expression.CollectionContainsExpression(
-                skirout.editor.v1.expression.ExpressionNode.UNKNOWN,
-                skirout.editor.v1.expression.ExpressionNode.UNKNOWN,
+            skirout.editor.v1.expression.OperationId(
+                "",
             );
 
         /** Returns an instance with all fields set to their default values. */
         fun partial() = default;
 
         /**
-         * Creates a new instance of [CollectionContainsExpression].
+         * Creates a new instance of [OperationId].
          * Unlike the constructor, does not require all fields to be specified.
          * Missing fields will be set to their default values.
          */
         fun partial(
             _mustNameArguments: _MustNameArguments =
                 _MustNameArguments,
-            source: skirout.editor.v1.expression.ExpressionNode =
-                skirout.editor.v1.expression.ExpressionNode.UNKNOWN,
-            value: skirout.editor.v1.expression.ExpressionNode =
-                skirout.editor.v1.expression.ExpressionNode.UNKNOWN,
-        ) = skirout.editor.v1.expression.CollectionContainsExpression(
-            source = source,
+            value: kotlin.String =
+                "",
+        ) = skirout.editor.v1.expression.OperationId(
             value = value,
             _unrecognizedFields = null,
         );
 
-        /** Serializer for [CollectionContainsExpression] instances. */
-        val serializer get() = _SerializerRegistry.CollectionContainsExpressionSerializer;
+        /** Serializer for [OperationId] instances. */
+        val serializer get() = _SerializerRegistry.OperationIdSerializer;
 
-        /** Describes the [CollectionContainsExpression] type. Provides runtime introspection capabilities. */
-        val typeDescriptor get() = _SerializerRegistry.CollectionContainsExpressionSerializerImpl.typeDescriptor;
+        /** Describes the [OperationId] type. Provides runtime introspection capabilities. */
+        val typeDescriptor get() = _SerializerRegistry.OperationIdSerializerImpl.typeDescriptor;
     }
 }
 
-sealed interface ColorWithAlphaExpression_OrMutable {
-    val source: skirout.editor.v1.expression.ExpressionNode;
-    val alpha: skirout.editor.v1.expression.ExpressionNode;
+sealed interface CallExpression_OrMutable {
+    val operation: skirout.editor.v1.expression.OperationId_OrMutable;
+    val typeArguments: kotlin.collections.List<skirout.editor.v1.type_catalog.TypeTemplate>;
+    val arguments: kotlin.collections.List<skirout.editor.v1.expression.ExpressionNode>;
 
-    fun toFrozen(): skirout.editor.v1.expression.ColorWithAlphaExpression;
+    fun toFrozen(): skirout.editor.v1.expression.CallExpression;
 }
 
-/** Deeply immutable. */
+/**
+ * Calls one declared operation of skir-src/editor/v1/operations.yaml. Arguments follow its
+ * declared parameters; a lambda parameter takes a lambda node. Type arguments appear only where
+ * arguments cannot determine them, such as reading a resource by identity.
+ *
+ * Deeply immutable.
+ */
 @kotlin.Suppress("UNUSED_PARAMETER")
-class ColorWithAlphaExpression private constructor(
-    override val source: skirout.editor.v1.expression.ExpressionNode,
-    override val alpha: skirout.editor.v1.expression.ExpressionNode,
-    internal val _unrecognizedFields: _UnrecognizedFields<skirout.editor.v1.expression.ColorWithAlphaExpression>? =
+class CallExpression private constructor(
+    override val operation: skirout.editor.v1.expression.OperationId,
+    override val typeArguments: kotlin.collections.List<skirout.editor.v1.type_catalog.TypeTemplate>,
+    override val arguments: kotlin.collections.List<skirout.editor.v1.expression.ExpressionNode>,
+    internal val _unrecognizedFields: _UnrecognizedFields<skirout.editor.v1.expression.CallExpression>? =
         null,
-): skirout.editor.v1.expression.ColorWithAlphaExpression_OrMutable {
+): skirout.editor.v1.expression.CallExpression_OrMutable {
     constructor(
         _mustNameArguments: _MustNameArguments =
             _MustNameArguments,
-        source: skirout.editor.v1.expression.ExpressionNode,
-        alpha: skirout.editor.v1.expression.ExpressionNode,
-        _unrecognizedFields: _UnrecognizedFields<skirout.editor.v1.expression.ColorWithAlphaExpression>? =
+        operation: skirout.editor.v1.expression.OperationId_OrMutable,
+        typeArguments: kotlin.collections.Iterable<skirout.editor.v1.type_catalog.TypeTemplate>,
+        arguments: kotlin.collections.Iterable<skirout.editor.v1.expression.ExpressionNode>,
+        _unrecognizedFields: _UnrecognizedFields<skirout.editor.v1.expression.CallExpression>? =
             null,
     ): this(
-        source,
-        alpha,
-        _unrecognizedFields,
-    ) {}
-
-    @kotlin.Deprecated("Already frozen", kotlin.ReplaceWith("this"))
-    override fun toFrozen() = this;
-
-    /** Returns a mutable shallow copy of this instance */
-    fun toMutable() = Mutable(
-        source = this.source,
-        alpha = this.alpha,
-    );
-
-    /** Returns a shallow copy of this instance with the specified fields replaced. */
-    fun copy(
-        _mustNameArguments: _MustNameArguments =
-            _MustNameArguments,
-        source: skirout.editor.v1.expression.ExpressionNode =
-            this.source,
-        alpha: skirout.editor.v1.expression.ExpressionNode =
-            this.alpha,
-    ) = skirout.editor.v1.expression.ColorWithAlphaExpression(
-        source,
-        alpha,
-        this._unrecognizedFields,
-    );
-
-    @kotlin.Deprecated("No point in creating an exact copy of an immutable object", kotlin.ReplaceWith("this"))
-    fun copy() = this;
-
-    override fun equals(other: kotlin.Any?): kotlin.Boolean {
-        return this === other || (other is skirout.editor.v1.expression.ColorWithAlphaExpression && this.source == other.source && this.alpha == other.alpha);
-    }
-
-    override fun hashCode(): kotlin.Int {
-        return kotlin.collections.listOf<kotlin.Any?>(this.source, this.alpha).hashCode();
-    }
-
-    override fun toString(): kotlin.String {
-        return build.skir.internal.toStringImpl(
-            this,
-            _SerializerRegistry.ColorWithAlphaExpressionSerializerImpl,
-        )
-    }
-
-    /** Mutable version of [ColorWithAlphaExpression]. */
-    class Mutable internal constructor(
-        _mustNameArguments: _MustNameArguments =
-            _MustNameArguments,
-        override var source: skirout.editor.v1.expression.ExpressionNode =
-            skirout.editor.v1.expression.ExpressionNode.UNKNOWN,
-        override var alpha: skirout.editor.v1.expression.ExpressionNode =
-            skirout.editor.v1.expression.ExpressionNode.UNKNOWN,
-        internal var _unrecognizedFields: _UnrecognizedFields<skirout.editor.v1.expression.ColorWithAlphaExpression>? =
-            null,
-    ): skirout.editor.v1.expression.ColorWithAlphaExpression_OrMutable {
-        /** Returns a deeply immutable copy of this instance */
-        override fun toFrozen() = skirout.editor.v1.expression.ColorWithAlphaExpression(
-            source = this.source,
-            alpha = this.alpha,
-            _unrecognizedFields = this._unrecognizedFields,
-        );
-    }
-
-    companion object {
-        private val default =
-            skirout.editor.v1.expression.ColorWithAlphaExpression(
-                skirout.editor.v1.expression.ExpressionNode.UNKNOWN,
-                skirout.editor.v1.expression.ExpressionNode.UNKNOWN,
-            );
-
-        /** Returns an instance with all fields set to their default values. */
-        fun partial() = default;
-
-        /**
-         * Creates a new instance of [ColorWithAlphaExpression].
-         * Unlike the constructor, does not require all fields to be specified.
-         * Missing fields will be set to their default values.
-         */
-        fun partial(
-            _mustNameArguments: _MustNameArguments =
-                _MustNameArguments,
-            source: skirout.editor.v1.expression.ExpressionNode =
-                skirout.editor.v1.expression.ExpressionNode.UNKNOWN,
-            alpha: skirout.editor.v1.expression.ExpressionNode =
-                skirout.editor.v1.expression.ExpressionNode.UNKNOWN,
-        ) = skirout.editor.v1.expression.ColorWithAlphaExpression(
-            source = source,
-            alpha = alpha,
-            _unrecognizedFields = null,
-        );
-
-        /** Serializer for [ColorWithAlphaExpression] instances. */
-        val serializer get() = _SerializerRegistry.ColorWithAlphaExpressionSerializer;
-
-        /** Describes the [ColorWithAlphaExpression] type. Provides runtime introspection capabilities. */
-        val typeDescriptor get() = _SerializerRegistry.ColorWithAlphaExpressionSerializerImpl.typeDescriptor;
-    }
-}
-
-/** Deeply immutable. */
-sealed class RuleUnaryOperation private constructor() {
-    /** The kind of variant held by a `RuleUnaryOperation`. */
-    enum class Kind {
-        UNKNOWN,
-        NON_EMPTY_CONST,
-        NON_BLANK_CONST,
-        SINGLE_LINE_CONST,
-        POSITIVE_CONST,
-        NON_NEGATIVE_CONST,
-        UNIQUE_CONST,
-        NOT_NULL_CONST,
-        OPAQUE_CONST,
-    }
-
-    class Unknown @kotlin.Deprecated("For internal use", kotlin.ReplaceWith("skirout.editor.v1.expression.RuleUnaryOperation.UNKNOWN")) internal constructor(
-        internal val _kind: Kind,
-        internal override val _unrecognized: _UnrecognizedVariant<skirout.editor.v1.expression.RuleUnaryOperation>?,
-    ) : skirout.editor.v1.expression.RuleUnaryOperation() {
-        override val kind get() = _kind;
-
-        override fun equals(other: kotlin.Any?): kotlin.Boolean {
-            return other is skirout.editor.v1.expression.RuleUnaryOperation && other.kind == kind;
-        }
-
-        override fun hashCode(): kotlin.Int {
-            return kind.ordinal;
-        }
-    }
-
-    object NON_EMPTY : skirout.editor.v1.expression.RuleUnaryOperation() {
-        override val kind get() = Kind.NON_EMPTY_CONST;
-
-        override fun equals(other: kotlin.Any?): kotlin.Boolean {
-            return other is skirout.editor.v1.expression.RuleUnaryOperation && other.kind == Kind.NON_EMPTY_CONST;
-        }
-
-        override fun hashCode(): kotlin.Int {
-            return Kind.NON_EMPTY_CONST.ordinal;
-        }
-    }
-
-    object NON_BLANK : skirout.editor.v1.expression.RuleUnaryOperation() {
-        override val kind get() = Kind.NON_BLANK_CONST;
-
-        override fun equals(other: kotlin.Any?): kotlin.Boolean {
-            return other is skirout.editor.v1.expression.RuleUnaryOperation && other.kind == Kind.NON_BLANK_CONST;
-        }
-
-        override fun hashCode(): kotlin.Int {
-            return Kind.NON_BLANK_CONST.ordinal;
-        }
-    }
-
-    object SINGLE_LINE : skirout.editor.v1.expression.RuleUnaryOperation() {
-        override val kind get() = Kind.SINGLE_LINE_CONST;
-
-        override fun equals(other: kotlin.Any?): kotlin.Boolean {
-            return other is skirout.editor.v1.expression.RuleUnaryOperation && other.kind == Kind.SINGLE_LINE_CONST;
-        }
-
-        override fun hashCode(): kotlin.Int {
-            return Kind.SINGLE_LINE_CONST.ordinal;
-        }
-    }
-
-    object POSITIVE : skirout.editor.v1.expression.RuleUnaryOperation() {
-        override val kind get() = Kind.POSITIVE_CONST;
-
-        override fun equals(other: kotlin.Any?): kotlin.Boolean {
-            return other is skirout.editor.v1.expression.RuleUnaryOperation && other.kind == Kind.POSITIVE_CONST;
-        }
-
-        override fun hashCode(): kotlin.Int {
-            return Kind.POSITIVE_CONST.ordinal;
-        }
-    }
-
-    object NON_NEGATIVE : skirout.editor.v1.expression.RuleUnaryOperation() {
-        override val kind get() = Kind.NON_NEGATIVE_CONST;
-
-        override fun equals(other: kotlin.Any?): kotlin.Boolean {
-            return other is skirout.editor.v1.expression.RuleUnaryOperation && other.kind == Kind.NON_NEGATIVE_CONST;
-        }
-
-        override fun hashCode(): kotlin.Int {
-            return Kind.NON_NEGATIVE_CONST.ordinal;
-        }
-    }
-
-    object UNIQUE : skirout.editor.v1.expression.RuleUnaryOperation() {
-        override val kind get() = Kind.UNIQUE_CONST;
-
-        override fun equals(other: kotlin.Any?): kotlin.Boolean {
-            return other is skirout.editor.v1.expression.RuleUnaryOperation && other.kind == Kind.UNIQUE_CONST;
-        }
-
-        override fun hashCode(): kotlin.Int {
-            return Kind.UNIQUE_CONST.ordinal;
-        }
-    }
-
-    object NOT_NULL : skirout.editor.v1.expression.RuleUnaryOperation() {
-        override val kind get() = Kind.NOT_NULL_CONST;
-
-        override fun equals(other: kotlin.Any?): kotlin.Boolean {
-            return other is skirout.editor.v1.expression.RuleUnaryOperation && other.kind == Kind.NOT_NULL_CONST;
-        }
-
-        override fun hashCode(): kotlin.Int {
-            return Kind.NOT_NULL_CONST.ordinal;
-        }
-    }
-
-    object OPAQUE : skirout.editor.v1.expression.RuleUnaryOperation() {
-        override val kind get() = Kind.OPAQUE_CONST;
-
-        override fun equals(other: kotlin.Any?): kotlin.Boolean {
-            return other is skirout.editor.v1.expression.RuleUnaryOperation && other.kind == Kind.OPAQUE_CONST;
-        }
-
-        override fun hashCode(): kotlin.Int {
-            return Kind.OPAQUE_CONST.ordinal;
-        }
-    }
-
-    internal open val _unrecognized: _UnrecognizedVariant<skirout.editor.v1.expression.RuleUnaryOperation>? get() = null;
-
-    abstract val kind: Kind;
-
-    override fun toString(): kotlin.String {
-        return build.skir.internal.toStringImpl(
-            this,
-            _SerializerRegistry.RuleUnaryOperationSerializerImpl,
-        )
-    }
-
-    companion object {
-        /**
-         * Constant indicating an unknown [RuleUnaryOperation].
-         * Default value for fields of type [RuleUnaryOperation].
-         */
-        val UNKNOWN = @kotlin.Suppress("DEPRECATION") Unknown(Kind.UNKNOWN, null);
-
-        /** Serializer for [RuleUnaryOperation] instances. */
-        val serializer get() = _SerializerRegistry.RuleUnaryOperationSerializer;
-
-        /** Describes the [RuleUnaryOperation] type. Provides runtime introspection capabilities. */
-        val typeDescriptor get() = _SerializerRegistry.RuleUnaryOperationSerializerImpl.typeDescriptor;
-    }
-}
-
-sealed interface RuleUnaryExpression_OrMutable {
-    val operation: skirout.editor.v1.expression.RuleUnaryOperation;
-    val source: skirout.editor.v1.expression.ExpressionNode;
-
-    fun toFrozen(): skirout.editor.v1.expression.RuleUnaryExpression;
-}
-
-/** Deeply immutable. */
-@kotlin.Suppress("UNUSED_PARAMETER")
-class RuleUnaryExpression private constructor(
-    override val operation: skirout.editor.v1.expression.RuleUnaryOperation,
-    override val source: skirout.editor.v1.expression.ExpressionNode,
-    internal val _unrecognizedFields: _UnrecognizedFields<skirout.editor.v1.expression.RuleUnaryExpression>? =
-        null,
-): skirout.editor.v1.expression.RuleUnaryExpression_OrMutable {
-    constructor(
-        _mustNameArguments: _MustNameArguments =
-            _MustNameArguments,
-        operation: skirout.editor.v1.expression.RuleUnaryOperation,
-        source: skirout.editor.v1.expression.ExpressionNode,
-        _unrecognizedFields: _UnrecognizedFields<skirout.editor.v1.expression.RuleUnaryExpression>? =
-            null,
-    ): this(
-        operation,
-        source,
+        operation.toFrozen(),
+        build.skir.internal.toFrozenList(typeArguments),
+        build.skir.internal.toFrozenList(arguments),
         _unrecognizedFields,
     ) {}
 
@@ -4500,20 +1042,24 @@ class RuleUnaryExpression private constructor(
     /** Returns a mutable shallow copy of this instance */
     fun toMutable() = Mutable(
         operation = this.operation,
-        source = this.source,
+        typeArguments = this.typeArguments,
+        arguments = this.arguments,
     );
 
     /** Returns a shallow copy of this instance with the specified fields replaced. */
     fun copy(
         _mustNameArguments: _MustNameArguments =
             _MustNameArguments,
-        operation: skirout.editor.v1.expression.RuleUnaryOperation =
+        operation: skirout.editor.v1.expression.OperationId_OrMutable =
             this.operation,
-        source: skirout.editor.v1.expression.ExpressionNode =
-            this.source,
-    ) = skirout.editor.v1.expression.RuleUnaryExpression(
-        operation,
-        source,
+        typeArguments: kotlin.collections.Iterable<skirout.editor.v1.type_catalog.TypeTemplate> =
+            this.typeArguments,
+        arguments: kotlin.collections.Iterable<skirout.editor.v1.expression.ExpressionNode> =
+            this.arguments,
+    ) = skirout.editor.v1.expression.CallExpression(
+        operation.toFrozen(),
+        build.skir.internal.toFrozenList(typeArguments),
+        build.skir.internal.toFrozenList(arguments),
         this._unrecognizedFields,
     );
 
@@ -4521,179 +1067,79 @@ class RuleUnaryExpression private constructor(
     fun copy() = this;
 
     override fun equals(other: kotlin.Any?): kotlin.Boolean {
-        return this === other || (other is skirout.editor.v1.expression.RuleUnaryExpression && this.operation == other.operation && this.source == other.source);
+        return this === other || (other is skirout.editor.v1.expression.CallExpression && this.operation == other.operation && this.typeArguments == other.typeArguments && this.arguments == other.arguments);
     }
 
     override fun hashCode(): kotlin.Int {
-        return kotlin.collections.listOf<kotlin.Any?>(this.operation, this.source).hashCode();
+        return kotlin.collections.listOf<kotlin.Any?>(this.operation, this.typeArguments, this.arguments).hashCode();
     }
 
     override fun toString(): kotlin.String {
         return build.skir.internal.toStringImpl(
             this,
-            _SerializerRegistry.RuleUnaryExpressionSerializerImpl,
+            _SerializerRegistry.CallExpressionSerializerImpl,
         )
     }
 
-    /** Mutable version of [RuleUnaryExpression]. */
+    /** Mutable version of [CallExpression]. */
     class Mutable internal constructor(
         _mustNameArguments: _MustNameArguments =
             _MustNameArguments,
-        override var operation: skirout.editor.v1.expression.RuleUnaryOperation =
-            skirout.editor.v1.expression.RuleUnaryOperation.UNKNOWN,
-        override var source: skirout.editor.v1.expression.ExpressionNode =
-            skirout.editor.v1.expression.ExpressionNode.UNKNOWN,
-        internal var _unrecognizedFields: _UnrecognizedFields<skirout.editor.v1.expression.RuleUnaryExpression>? =
-            null,
-    ): skirout.editor.v1.expression.RuleUnaryExpression_OrMutable {
-        /** Returns a deeply immutable copy of this instance */
-        override fun toFrozen() = skirout.editor.v1.expression.RuleUnaryExpression(
-            operation = this.operation,
-            source = this.source,
-            _unrecognizedFields = this._unrecognizedFields,
-        );
-    }
-
-    companion object {
-        private val default =
-            skirout.editor.v1.expression.RuleUnaryExpression(
-                skirout.editor.v1.expression.RuleUnaryOperation.UNKNOWN,
-                skirout.editor.v1.expression.ExpressionNode.UNKNOWN,
-            );
-
-        /** Returns an instance with all fields set to their default values. */
-        fun partial() = default;
-
-        /**
-         * Creates a new instance of [RuleUnaryExpression].
-         * Unlike the constructor, does not require all fields to be specified.
-         * Missing fields will be set to their default values.
-         */
-        fun partial(
-            _mustNameArguments: _MustNameArguments =
-                _MustNameArguments,
-            operation: skirout.editor.v1.expression.RuleUnaryOperation =
-                skirout.editor.v1.expression.RuleUnaryOperation.UNKNOWN,
-            source: skirout.editor.v1.expression.ExpressionNode =
-                skirout.editor.v1.expression.ExpressionNode.UNKNOWN,
-        ) = skirout.editor.v1.expression.RuleUnaryExpression(
-            operation = operation,
-            source = source,
-            _unrecognizedFields = null,
-        );
-
-        /** Serializer for [RuleUnaryExpression] instances. */
-        val serializer get() = _SerializerRegistry.RuleUnaryExpressionSerializer;
-
-        /** Describes the [RuleUnaryExpression] type. Provides runtime introspection capabilities. */
-        val typeDescriptor get() = _SerializerRegistry.RuleUnaryExpressionSerializerImpl.typeDescriptor;
-    }
-}
-
-sealed interface RuleOneOfExpression_OrMutable {
-    val source: skirout.editor.v1.expression.ExpressionNode;
-    val firstCandidate: skirout.editor.v1.expression.ExpressionNode;
-    val remainingCandidates: kotlin.collections.List<skirout.editor.v1.expression.ExpressionNode>;
-
-    fun toFrozen(): skirout.editor.v1.expression.RuleOneOfExpression;
-}
-
-/** Deeply immutable. */
-@kotlin.Suppress("UNUSED_PARAMETER")
-class RuleOneOfExpression private constructor(
-    override val source: skirout.editor.v1.expression.ExpressionNode,
-    override val firstCandidate: skirout.editor.v1.expression.ExpressionNode,
-    override val remainingCandidates: kotlin.collections.List<skirout.editor.v1.expression.ExpressionNode>,
-    internal val _unrecognizedFields: _UnrecognizedFields<skirout.editor.v1.expression.RuleOneOfExpression>? =
-        null,
-): skirout.editor.v1.expression.RuleOneOfExpression_OrMutable {
-    constructor(
-        _mustNameArguments: _MustNameArguments =
-            _MustNameArguments,
-        source: skirout.editor.v1.expression.ExpressionNode,
-        firstCandidate: skirout.editor.v1.expression.ExpressionNode,
-        remainingCandidates: kotlin.collections.Iterable<skirout.editor.v1.expression.ExpressionNode>,
-        _unrecognizedFields: _UnrecognizedFields<skirout.editor.v1.expression.RuleOneOfExpression>? =
-            null,
-    ): this(
-        source,
-        firstCandidate,
-        build.skir.internal.toFrozenList(remainingCandidates),
-        _unrecognizedFields,
-    ) {}
-
-    @kotlin.Deprecated("Already frozen", kotlin.ReplaceWith("this"))
-    override fun toFrozen() = this;
-
-    /** Returns a mutable shallow copy of this instance */
-    fun toMutable() = Mutable(
-        source = this.source,
-        firstCandidate = this.firstCandidate,
-        remainingCandidates = this.remainingCandidates,
-    );
-
-    /** Returns a shallow copy of this instance with the specified fields replaced. */
-    fun copy(
-        _mustNameArguments: _MustNameArguments =
-            _MustNameArguments,
-        source: skirout.editor.v1.expression.ExpressionNode =
-            this.source,
-        firstCandidate: skirout.editor.v1.expression.ExpressionNode =
-            this.firstCandidate,
-        remainingCandidates: kotlin.collections.Iterable<skirout.editor.v1.expression.ExpressionNode> =
-            this.remainingCandidates,
-    ) = skirout.editor.v1.expression.RuleOneOfExpression(
-        source,
-        firstCandidate,
-        build.skir.internal.toFrozenList(remainingCandidates),
-        this._unrecognizedFields,
-    );
-
-    @kotlin.Deprecated("No point in creating an exact copy of an immutable object", kotlin.ReplaceWith("this"))
-    fun copy() = this;
-
-    override fun equals(other: kotlin.Any?): kotlin.Boolean {
-        return this === other || (other is skirout.editor.v1.expression.RuleOneOfExpression && this.source == other.source && this.firstCandidate == other.firstCandidate && this.remainingCandidates == other.remainingCandidates);
-    }
-
-    override fun hashCode(): kotlin.Int {
-        return kotlin.collections.listOf<kotlin.Any?>(this.source, this.firstCandidate, this.remainingCandidates).hashCode();
-    }
-
-    override fun toString(): kotlin.String {
-        return build.skir.internal.toStringImpl(
-            this,
-            _SerializerRegistry.RuleOneOfExpressionSerializerImpl,
-        )
-    }
-
-    /** Mutable version of [RuleOneOfExpression]. */
-    class Mutable internal constructor(
-        _mustNameArguments: _MustNameArguments =
-            _MustNameArguments,
-        override var source: skirout.editor.v1.expression.ExpressionNode =
-            skirout.editor.v1.expression.ExpressionNode.UNKNOWN,
-        override var firstCandidate: skirout.editor.v1.expression.ExpressionNode =
-            skirout.editor.v1.expression.ExpressionNode.UNKNOWN,
-        override var remainingCandidates: kotlin.collections.List<skirout.editor.v1.expression.ExpressionNode> =
+        override var operation: skirout.editor.v1.expression.OperationId_OrMutable =
+            skirout.editor.v1.expression.OperationId.partial(),
+        override var typeArguments: kotlin.collections.List<skirout.editor.v1.type_catalog.TypeTemplate> =
+            build.skir.internal.emptyFrozenList<skirout.editor.v1.type_catalog.TypeTemplate>(),
+        override var arguments: kotlin.collections.List<skirout.editor.v1.expression.ExpressionNode> =
             build.skir.internal.emptyFrozenList<skirout.editor.v1.expression.ExpressionNode>(),
-        internal var _unrecognizedFields: _UnrecognizedFields<skirout.editor.v1.expression.RuleOneOfExpression>? =
+        internal var _unrecognizedFields: _UnrecognizedFields<skirout.editor.v1.expression.CallExpression>? =
             null,
-    ): skirout.editor.v1.expression.RuleOneOfExpression_OrMutable {
+    ): skirout.editor.v1.expression.CallExpression_OrMutable {
         /** Returns a deeply immutable copy of this instance */
-        override fun toFrozen() = skirout.editor.v1.expression.RuleOneOfExpression(
-            source = this.source,
-            firstCandidate = this.firstCandidate,
-            remainingCandidates = this.remainingCandidates,
+        override fun toFrozen() = skirout.editor.v1.expression.CallExpression(
+            operation = this.operation,
+            typeArguments = this.typeArguments,
+            arguments = this.arguments,
             _unrecognizedFields = this._unrecognizedFields,
         );
+
+        /**
+         * If the value of [operation] is already mutable, returns it as-is.
+         * Otherwise, makes a mutable copy, assigns it back to [operation] and returns it.
+         */
+        val mutableOperation: skirout.editor.v1.expression.OperationId.Mutable get() {
+            var value = this.operation;
+            return when (value) {
+                is skirout.editor.v1.expression.OperationId -> {
+                    value = value.toMutable();
+                    this.operation = value;
+                    return value;
+                }
+                is skirout.editor.v1.expression.OperationId.Mutable -> value;
+            }
+        }
+
+        /**
+         * If the value of [typeArguments] is already mutable, returns it as-is.
+         * Otherwise, makes a mutable copy, assigns it back to [typeArguments] and returns it.
+         */
+        val mutableTypeArguments: kotlin.collections.MutableList<skirout.editor.v1.type_catalog.TypeTemplate> get() {
+            var value = this.typeArguments;
+            return when (value) {
+                is build.skir.internal.MutableList -> value;
+                else -> {
+                    value = build.skir.internal.MutableList(value);
+                    this.typeArguments = value;
+                    value;
+                }
+            }
+        }
     }
 
     companion object {
         private val default =
-            skirout.editor.v1.expression.RuleOneOfExpression(
-                skirout.editor.v1.expression.ExpressionNode.UNKNOWN,
-                skirout.editor.v1.expression.ExpressionNode.UNKNOWN,
+            skirout.editor.v1.expression.CallExpression(
+                skirout.editor.v1.expression.OperationId.partial(),
+                build.skir.internal.emptyFrozenList<skirout.editor.v1.type_catalog.TypeTemplate>(),
                 build.skir.internal.emptyFrozenList<skirout.editor.v1.expression.ExpressionNode>(),
             );
 
@@ -4701,1359 +1147,62 @@ class RuleOneOfExpression private constructor(
         fun partial() = default;
 
         /**
-         * Creates a new instance of [RuleOneOfExpression].
+         * Creates a new instance of [CallExpression].
          * Unlike the constructor, does not require all fields to be specified.
          * Missing fields will be set to their default values.
          */
         fun partial(
             _mustNameArguments: _MustNameArguments =
                 _MustNameArguments,
-            source: skirout.editor.v1.expression.ExpressionNode =
-                skirout.editor.v1.expression.ExpressionNode.UNKNOWN,
-            firstCandidate: skirout.editor.v1.expression.ExpressionNode =
-                skirout.editor.v1.expression.ExpressionNode.UNKNOWN,
-            remainingCandidates: kotlin.collections.Iterable<skirout.editor.v1.expression.ExpressionNode> =
+            operation: skirout.editor.v1.expression.OperationId_OrMutable =
+                skirout.editor.v1.expression.OperationId.partial(),
+            typeArguments: kotlin.collections.Iterable<skirout.editor.v1.type_catalog.TypeTemplate> =
+                build.skir.internal.emptyFrozenList<skirout.editor.v1.type_catalog.TypeTemplate>(),
+            arguments: kotlin.collections.Iterable<skirout.editor.v1.expression.ExpressionNode> =
                 build.skir.internal.emptyFrozenList<skirout.editor.v1.expression.ExpressionNode>(),
-        ) = skirout.editor.v1.expression.RuleOneOfExpression(
-            source = source,
-            firstCandidate = firstCandidate,
-            remainingCandidates = remainingCandidates,
+        ) = skirout.editor.v1.expression.CallExpression(
+            operation = operation,
+            typeArguments = typeArguments,
+            arguments = arguments,
             _unrecognizedFields = null,
         );
 
-        /** Serializer for [RuleOneOfExpression] instances. */
-        val serializer get() = _SerializerRegistry.RuleOneOfExpressionSerializer;
+        /** Serializer for [CallExpression] instances. */
+        val serializer get() = _SerializerRegistry.CallExpressionSerializer;
 
-        /** Describes the [RuleOneOfExpression] type. Provides runtime introspection capabilities. */
-        val typeDescriptor get() = _SerializerRegistry.RuleOneOfExpressionSerializerImpl.typeDescriptor;
+        /** Describes the [CallExpression] type. Provides runtime introspection capabilities. */
+        val typeDescriptor get() = _SerializerRegistry.CallExpressionSerializerImpl.typeDescriptor;
     }
 }
 
-/** Deeply immutable. */
-sealed class BoundDirection private constructor() {
-    /** The kind of variant held by a `BoundDirection`. */
-    enum class Kind {
-        UNKNOWN,
-        MINIMUM_CONST,
-        MAXIMUM_CONST,
-    }
-
-    class Unknown @kotlin.Deprecated("For internal use", kotlin.ReplaceWith("skirout.editor.v1.expression.BoundDirection.UNKNOWN")) internal constructor(
-        internal val _kind: Kind,
-        internal override val _unrecognized: _UnrecognizedVariant<skirout.editor.v1.expression.BoundDirection>?,
-    ) : skirout.editor.v1.expression.BoundDirection() {
-        override val kind get() = _kind;
-
-        override fun equals(other: kotlin.Any?): kotlin.Boolean {
-            return other is skirout.editor.v1.expression.BoundDirection && other.kind == kind;
-        }
-
-        override fun hashCode(): kotlin.Int {
-            return kind.ordinal;
-        }
-    }
-
-    object MINIMUM : skirout.editor.v1.expression.BoundDirection() {
-        override val kind get() = Kind.MINIMUM_CONST;
-
-        override fun equals(other: kotlin.Any?): kotlin.Boolean {
-            return other is skirout.editor.v1.expression.BoundDirection && other.kind == Kind.MINIMUM_CONST;
-        }
-
-        override fun hashCode(): kotlin.Int {
-            return Kind.MINIMUM_CONST.ordinal;
-        }
-    }
-
-    object MAXIMUM : skirout.editor.v1.expression.BoundDirection() {
-        override val kind get() = Kind.MAXIMUM_CONST;
-
-        override fun equals(other: kotlin.Any?): kotlin.Boolean {
-            return other is skirout.editor.v1.expression.BoundDirection && other.kind == Kind.MAXIMUM_CONST;
-        }
-
-        override fun hashCode(): kotlin.Int {
-            return Kind.MAXIMUM_CONST.ordinal;
-        }
-    }
-
-    internal open val _unrecognized: _UnrecognizedVariant<skirout.editor.v1.expression.BoundDirection>? get() = null;
-
-    abstract val kind: Kind;
-
-    override fun toString(): kotlin.String {
-        return build.skir.internal.toStringImpl(
-            this,
-            _SerializerRegistry.BoundDirectionSerializerImpl,
-        )
-    }
-
-    companion object {
-        /**
-         * Constant indicating an unknown [BoundDirection].
-         * Default value for fields of type [BoundDirection].
-         */
-        val UNKNOWN = @kotlin.Suppress("DEPRECATION") Unknown(Kind.UNKNOWN, null);
-
-        /** Serializer for [BoundDirection] instances. */
-        val serializer get() = _SerializerRegistry.BoundDirectionSerializer;
-
-        /** Describes the [BoundDirection] type. Provides runtime introspection capabilities. */
-        val typeDescriptor get() = _SerializerRegistry.BoundDirectionSerializerImpl.typeDescriptor;
-    }
-}
-
-/** Deeply immutable. */
-sealed class SizeBoundMetric private constructor() {
-    /** The kind of variant held by a `SizeBoundMetric`. */
-    enum class Kind {
-        UNKNOWN,
-        TEXT_LENGTH_CONST,
-        TEXT_LINES_CONST,
-        COLLECTION_ITEMS_CONST,
-    }
-
-    class Unknown @kotlin.Deprecated("For internal use", kotlin.ReplaceWith("skirout.editor.v1.expression.SizeBoundMetric.UNKNOWN")) internal constructor(
-        internal val _kind: Kind,
-        internal override val _unrecognized: _UnrecognizedVariant<skirout.editor.v1.expression.SizeBoundMetric>?,
-    ) : skirout.editor.v1.expression.SizeBoundMetric() {
-        override val kind get() = _kind;
-
-        override fun equals(other: kotlin.Any?): kotlin.Boolean {
-            return other is skirout.editor.v1.expression.SizeBoundMetric && other.kind == kind;
-        }
-
-        override fun hashCode(): kotlin.Int {
-            return kind.ordinal;
-        }
-    }
-
-    object TEXT_LENGTH : skirout.editor.v1.expression.SizeBoundMetric() {
-        override val kind get() = Kind.TEXT_LENGTH_CONST;
-
-        override fun equals(other: kotlin.Any?): kotlin.Boolean {
-            return other is skirout.editor.v1.expression.SizeBoundMetric && other.kind == Kind.TEXT_LENGTH_CONST;
-        }
-
-        override fun hashCode(): kotlin.Int {
-            return Kind.TEXT_LENGTH_CONST.ordinal;
-        }
-    }
-
-    object TEXT_LINES : skirout.editor.v1.expression.SizeBoundMetric() {
-        override val kind get() = Kind.TEXT_LINES_CONST;
-
-        override fun equals(other: kotlin.Any?): kotlin.Boolean {
-            return other is skirout.editor.v1.expression.SizeBoundMetric && other.kind == Kind.TEXT_LINES_CONST;
-        }
-
-        override fun hashCode(): kotlin.Int {
-            return Kind.TEXT_LINES_CONST.ordinal;
-        }
-    }
-
-    object COLLECTION_ITEMS : skirout.editor.v1.expression.SizeBoundMetric() {
-        override val kind get() = Kind.COLLECTION_ITEMS_CONST;
-
-        override fun equals(other: kotlin.Any?): kotlin.Boolean {
-            return other is skirout.editor.v1.expression.SizeBoundMetric && other.kind == Kind.COLLECTION_ITEMS_CONST;
-        }
-
-        override fun hashCode(): kotlin.Int {
-            return Kind.COLLECTION_ITEMS_CONST.ordinal;
-        }
-    }
-
-    internal open val _unrecognized: _UnrecognizedVariant<skirout.editor.v1.expression.SizeBoundMetric>? get() = null;
-
-    abstract val kind: Kind;
-
-    override fun toString(): kotlin.String {
-        return build.skir.internal.toStringImpl(
-            this,
-            _SerializerRegistry.SizeBoundMetricSerializerImpl,
-        )
-    }
-
-    companion object {
-        /**
-         * Constant indicating an unknown [SizeBoundMetric].
-         * Default value for fields of type [SizeBoundMetric].
-         */
-        val UNKNOWN = @kotlin.Suppress("DEPRECATION") Unknown(Kind.UNKNOWN, null);
-
-        /** Serializer for [SizeBoundMetric] instances. */
-        val serializer get() = _SerializerRegistry.SizeBoundMetricSerializer;
-
-        /** Describes the [SizeBoundMetric] type. Provides runtime introspection capabilities. */
-        val typeDescriptor get() = _SerializerRegistry.SizeBoundMetricSerializerImpl.typeDescriptor;
-    }
-}
-
-/** Deeply immutable. */
-sealed class SizeRangeMetric private constructor() {
-    /** The kind of variant held by a `SizeRangeMetric`. */
-    enum class Kind {
-        UNKNOWN,
-        TEXT_LENGTH_CONST,
-        COLLECTION_ITEMS_CONST,
-    }
-
-    class Unknown @kotlin.Deprecated("For internal use", kotlin.ReplaceWith("skirout.editor.v1.expression.SizeRangeMetric.UNKNOWN")) internal constructor(
-        internal val _kind: Kind,
-        internal override val _unrecognized: _UnrecognizedVariant<skirout.editor.v1.expression.SizeRangeMetric>?,
-    ) : skirout.editor.v1.expression.SizeRangeMetric() {
-        override val kind get() = _kind;
-
-        override fun equals(other: kotlin.Any?): kotlin.Boolean {
-            return other is skirout.editor.v1.expression.SizeRangeMetric && other.kind == kind;
-        }
-
-        override fun hashCode(): kotlin.Int {
-            return kind.ordinal;
-        }
-    }
-
-    object TEXT_LENGTH : skirout.editor.v1.expression.SizeRangeMetric() {
-        override val kind get() = Kind.TEXT_LENGTH_CONST;
-
-        override fun equals(other: kotlin.Any?): kotlin.Boolean {
-            return other is skirout.editor.v1.expression.SizeRangeMetric && other.kind == Kind.TEXT_LENGTH_CONST;
-        }
-
-        override fun hashCode(): kotlin.Int {
-            return Kind.TEXT_LENGTH_CONST.ordinal;
-        }
-    }
-
-    object COLLECTION_ITEMS : skirout.editor.v1.expression.SizeRangeMetric() {
-        override val kind get() = Kind.COLLECTION_ITEMS_CONST;
-
-        override fun equals(other: kotlin.Any?): kotlin.Boolean {
-            return other is skirout.editor.v1.expression.SizeRangeMetric && other.kind == Kind.COLLECTION_ITEMS_CONST;
-        }
-
-        override fun hashCode(): kotlin.Int {
-            return Kind.COLLECTION_ITEMS_CONST.ordinal;
-        }
-    }
-
-    internal open val _unrecognized: _UnrecognizedVariant<skirout.editor.v1.expression.SizeRangeMetric>? get() = null;
-
-    abstract val kind: Kind;
-
-    override fun toString(): kotlin.String {
-        return build.skir.internal.toStringImpl(
-            this,
-            _SerializerRegistry.SizeRangeMetricSerializerImpl,
-        )
-    }
-
-    companion object {
-        /**
-         * Constant indicating an unknown [SizeRangeMetric].
-         * Default value for fields of type [SizeRangeMetric].
-         */
-        val UNKNOWN = @kotlin.Suppress("DEPRECATION") Unknown(Kind.UNKNOWN, null);
-
-        /** Serializer for [SizeRangeMetric] instances. */
-        val serializer get() = _SerializerRegistry.SizeRangeMetricSerializer;
-
-        /** Describes the [SizeRangeMetric] type. Provides runtime introspection capabilities. */
-        val typeDescriptor get() = _SerializerRegistry.SizeRangeMetricSerializerImpl.typeDescriptor;
-    }
-}
-
-sealed interface RuleSizeBoundExpression_OrMutable {
-    val metric: skirout.editor.v1.expression.SizeBoundMetric;
-    val direction: skirout.editor.v1.expression.BoundDirection;
-    val source: skirout.editor.v1.expression.ExpressionNode;
-    val bound: skirout.editor.v1.expression.ExpressionNode;
-
-    fun toFrozen(): skirout.editor.v1.expression.RuleSizeBoundExpression;
-}
-
-/** Deeply immutable. */
-@kotlin.Suppress("UNUSED_PARAMETER")
-class RuleSizeBoundExpression private constructor(
-    override val metric: skirout.editor.v1.expression.SizeBoundMetric,
-    override val direction: skirout.editor.v1.expression.BoundDirection,
-    override val source: skirout.editor.v1.expression.ExpressionNode,
-    override val bound: skirout.editor.v1.expression.ExpressionNode,
-    internal val _unrecognizedFields: _UnrecognizedFields<skirout.editor.v1.expression.RuleSizeBoundExpression>? =
-        null,
-): skirout.editor.v1.expression.RuleSizeBoundExpression_OrMutable {
-    constructor(
-        _mustNameArguments: _MustNameArguments =
-            _MustNameArguments,
-        metric: skirout.editor.v1.expression.SizeBoundMetric,
-        direction: skirout.editor.v1.expression.BoundDirection,
-        source: skirout.editor.v1.expression.ExpressionNode,
-        bound: skirout.editor.v1.expression.ExpressionNode,
-        _unrecognizedFields: _UnrecognizedFields<skirout.editor.v1.expression.RuleSizeBoundExpression>? =
-            null,
-    ): this(
-        metric,
-        direction,
-        source,
-        bound,
-        _unrecognizedFields,
-    ) {}
-
-    @kotlin.Deprecated("Already frozen", kotlin.ReplaceWith("this"))
-    override fun toFrozen() = this;
-
-    /** Returns a mutable shallow copy of this instance */
-    fun toMutable() = Mutable(
-        metric = this.metric,
-        direction = this.direction,
-        source = this.source,
-        bound = this.bound,
-    );
-
-    /** Returns a shallow copy of this instance with the specified fields replaced. */
-    fun copy(
-        _mustNameArguments: _MustNameArguments =
-            _MustNameArguments,
-        metric: skirout.editor.v1.expression.SizeBoundMetric =
-            this.metric,
-        direction: skirout.editor.v1.expression.BoundDirection =
-            this.direction,
-        source: skirout.editor.v1.expression.ExpressionNode =
-            this.source,
-        bound: skirout.editor.v1.expression.ExpressionNode =
-            this.bound,
-    ) = skirout.editor.v1.expression.RuleSizeBoundExpression(
-        metric,
-        direction,
-        source,
-        bound,
-        this._unrecognizedFields,
-    );
-
-    @kotlin.Deprecated("No point in creating an exact copy of an immutable object", kotlin.ReplaceWith("this"))
-    fun copy() = this;
-
-    override fun equals(other: kotlin.Any?): kotlin.Boolean {
-        return this === other || (other is skirout.editor.v1.expression.RuleSizeBoundExpression && this.metric == other.metric && this.direction == other.direction && this.source == other.source && this.bound == other.bound);
-    }
-
-    override fun hashCode(): kotlin.Int {
-        return kotlin.collections.listOf<kotlin.Any?>(this.metric, this.direction, this.source, this.bound).hashCode();
-    }
-
-    override fun toString(): kotlin.String {
-        return build.skir.internal.toStringImpl(
-            this,
-            _SerializerRegistry.RuleSizeBoundExpressionSerializerImpl,
-        )
-    }
-
-    /** Mutable version of [RuleSizeBoundExpression]. */
-    class Mutable internal constructor(
-        _mustNameArguments: _MustNameArguments =
-            _MustNameArguments,
-        override var metric: skirout.editor.v1.expression.SizeBoundMetric =
-            skirout.editor.v1.expression.SizeBoundMetric.UNKNOWN,
-        override var direction: skirout.editor.v1.expression.BoundDirection =
-            skirout.editor.v1.expression.BoundDirection.UNKNOWN,
-        override var source: skirout.editor.v1.expression.ExpressionNode =
-            skirout.editor.v1.expression.ExpressionNode.UNKNOWN,
-        override var bound: skirout.editor.v1.expression.ExpressionNode =
-            skirout.editor.v1.expression.ExpressionNode.UNKNOWN,
-        internal var _unrecognizedFields: _UnrecognizedFields<skirout.editor.v1.expression.RuleSizeBoundExpression>? =
-            null,
-    ): skirout.editor.v1.expression.RuleSizeBoundExpression_OrMutable {
-        /** Returns a deeply immutable copy of this instance */
-        override fun toFrozen() = skirout.editor.v1.expression.RuleSizeBoundExpression(
-            metric = this.metric,
-            direction = this.direction,
-            source = this.source,
-            bound = this.bound,
-            _unrecognizedFields = this._unrecognizedFields,
-        );
-    }
-
-    companion object {
-        private val default =
-            skirout.editor.v1.expression.RuleSizeBoundExpression(
-                skirout.editor.v1.expression.SizeBoundMetric.UNKNOWN,
-                skirout.editor.v1.expression.BoundDirection.UNKNOWN,
-                skirout.editor.v1.expression.ExpressionNode.UNKNOWN,
-                skirout.editor.v1.expression.ExpressionNode.UNKNOWN,
-            );
-
-        /** Returns an instance with all fields set to their default values. */
-        fun partial() = default;
-
-        /**
-         * Creates a new instance of [RuleSizeBoundExpression].
-         * Unlike the constructor, does not require all fields to be specified.
-         * Missing fields will be set to their default values.
-         */
-        fun partial(
-            _mustNameArguments: _MustNameArguments =
-                _MustNameArguments,
-            metric: skirout.editor.v1.expression.SizeBoundMetric =
-                skirout.editor.v1.expression.SizeBoundMetric.UNKNOWN,
-            direction: skirout.editor.v1.expression.BoundDirection =
-                skirout.editor.v1.expression.BoundDirection.UNKNOWN,
-            source: skirout.editor.v1.expression.ExpressionNode =
-                skirout.editor.v1.expression.ExpressionNode.UNKNOWN,
-            bound: skirout.editor.v1.expression.ExpressionNode =
-                skirout.editor.v1.expression.ExpressionNode.UNKNOWN,
-        ) = skirout.editor.v1.expression.RuleSizeBoundExpression(
-            metric = metric,
-            direction = direction,
-            source = source,
-            bound = bound,
-            _unrecognizedFields = null,
-        );
-
-        /** Serializer for [RuleSizeBoundExpression] instances. */
-        val serializer get() = _SerializerRegistry.RuleSizeBoundExpressionSerializer;
-
-        /** Describes the [RuleSizeBoundExpression] type. Provides runtime introspection capabilities. */
-        val typeDescriptor get() = _SerializerRegistry.RuleSizeBoundExpressionSerializerImpl.typeDescriptor;
-    }
-}
-
-sealed interface RuleSizeRangeExpression_OrMutable {
-    val metric: skirout.editor.v1.expression.SizeRangeMetric;
-    val source: skirout.editor.v1.expression.ExpressionNode;
-    val minimum: skirout.editor.v1.expression.ExpressionNode;
-    val maximum: skirout.editor.v1.expression.ExpressionNode;
-
-    fun toFrozen(): skirout.editor.v1.expression.RuleSizeRangeExpression;
-}
-
-/** Deeply immutable. */
-@kotlin.Suppress("UNUSED_PARAMETER")
-class RuleSizeRangeExpression private constructor(
-    override val metric: skirout.editor.v1.expression.SizeRangeMetric,
-    override val source: skirout.editor.v1.expression.ExpressionNode,
-    override val minimum: skirout.editor.v1.expression.ExpressionNode,
-    override val maximum: skirout.editor.v1.expression.ExpressionNode,
-    internal val _unrecognizedFields: _UnrecognizedFields<skirout.editor.v1.expression.RuleSizeRangeExpression>? =
-        null,
-): skirout.editor.v1.expression.RuleSizeRangeExpression_OrMutable {
-    constructor(
-        _mustNameArguments: _MustNameArguments =
-            _MustNameArguments,
-        metric: skirout.editor.v1.expression.SizeRangeMetric,
-        source: skirout.editor.v1.expression.ExpressionNode,
-        minimum: skirout.editor.v1.expression.ExpressionNode,
-        maximum: skirout.editor.v1.expression.ExpressionNode,
-        _unrecognizedFields: _UnrecognizedFields<skirout.editor.v1.expression.RuleSizeRangeExpression>? =
-            null,
-    ): this(
-        metric,
-        source,
-        minimum,
-        maximum,
-        _unrecognizedFields,
-    ) {}
-
-    @kotlin.Deprecated("Already frozen", kotlin.ReplaceWith("this"))
-    override fun toFrozen() = this;
-
-    /** Returns a mutable shallow copy of this instance */
-    fun toMutable() = Mutable(
-        metric = this.metric,
-        source = this.source,
-        minimum = this.minimum,
-        maximum = this.maximum,
-    );
-
-    /** Returns a shallow copy of this instance with the specified fields replaced. */
-    fun copy(
-        _mustNameArguments: _MustNameArguments =
-            _MustNameArguments,
-        metric: skirout.editor.v1.expression.SizeRangeMetric =
-            this.metric,
-        source: skirout.editor.v1.expression.ExpressionNode =
-            this.source,
-        minimum: skirout.editor.v1.expression.ExpressionNode =
-            this.minimum,
-        maximum: skirout.editor.v1.expression.ExpressionNode =
-            this.maximum,
-    ) = skirout.editor.v1.expression.RuleSizeRangeExpression(
-        metric,
-        source,
-        minimum,
-        maximum,
-        this._unrecognizedFields,
-    );
-
-    @kotlin.Deprecated("No point in creating an exact copy of an immutable object", kotlin.ReplaceWith("this"))
-    fun copy() = this;
-
-    override fun equals(other: kotlin.Any?): kotlin.Boolean {
-        return this === other || (other is skirout.editor.v1.expression.RuleSizeRangeExpression && this.metric == other.metric && this.source == other.source && this.minimum == other.minimum && this.maximum == other.maximum);
-    }
-
-    override fun hashCode(): kotlin.Int {
-        return kotlin.collections.listOf<kotlin.Any?>(this.metric, this.source, this.minimum, this.maximum).hashCode();
-    }
-
-    override fun toString(): kotlin.String {
-        return build.skir.internal.toStringImpl(
-            this,
-            _SerializerRegistry.RuleSizeRangeExpressionSerializerImpl,
-        )
-    }
-
-    /** Mutable version of [RuleSizeRangeExpression]. */
-    class Mutable internal constructor(
-        _mustNameArguments: _MustNameArguments =
-            _MustNameArguments,
-        override var metric: skirout.editor.v1.expression.SizeRangeMetric =
-            skirout.editor.v1.expression.SizeRangeMetric.UNKNOWN,
-        override var source: skirout.editor.v1.expression.ExpressionNode =
-            skirout.editor.v1.expression.ExpressionNode.UNKNOWN,
-        override var minimum: skirout.editor.v1.expression.ExpressionNode =
-            skirout.editor.v1.expression.ExpressionNode.UNKNOWN,
-        override var maximum: skirout.editor.v1.expression.ExpressionNode =
-            skirout.editor.v1.expression.ExpressionNode.UNKNOWN,
-        internal var _unrecognizedFields: _UnrecognizedFields<skirout.editor.v1.expression.RuleSizeRangeExpression>? =
-            null,
-    ): skirout.editor.v1.expression.RuleSizeRangeExpression_OrMutable {
-        /** Returns a deeply immutable copy of this instance */
-        override fun toFrozen() = skirout.editor.v1.expression.RuleSizeRangeExpression(
-            metric = this.metric,
-            source = this.source,
-            minimum = this.minimum,
-            maximum = this.maximum,
-            _unrecognizedFields = this._unrecognizedFields,
-        );
-    }
-
-    companion object {
-        private val default =
-            skirout.editor.v1.expression.RuleSizeRangeExpression(
-                skirout.editor.v1.expression.SizeRangeMetric.UNKNOWN,
-                skirout.editor.v1.expression.ExpressionNode.UNKNOWN,
-                skirout.editor.v1.expression.ExpressionNode.UNKNOWN,
-                skirout.editor.v1.expression.ExpressionNode.UNKNOWN,
-            );
-
-        /** Returns an instance with all fields set to their default values. */
-        fun partial() = default;
-
-        /**
-         * Creates a new instance of [RuleSizeRangeExpression].
-         * Unlike the constructor, does not require all fields to be specified.
-         * Missing fields will be set to their default values.
-         */
-        fun partial(
-            _mustNameArguments: _MustNameArguments =
-                _MustNameArguments,
-            metric: skirout.editor.v1.expression.SizeRangeMetric =
-                skirout.editor.v1.expression.SizeRangeMetric.UNKNOWN,
-            source: skirout.editor.v1.expression.ExpressionNode =
-                skirout.editor.v1.expression.ExpressionNode.UNKNOWN,
-            minimum: skirout.editor.v1.expression.ExpressionNode =
-                skirout.editor.v1.expression.ExpressionNode.UNKNOWN,
-            maximum: skirout.editor.v1.expression.ExpressionNode =
-                skirout.editor.v1.expression.ExpressionNode.UNKNOWN,
-        ) = skirout.editor.v1.expression.RuleSizeRangeExpression(
-            metric = metric,
-            source = source,
-            minimum = minimum,
-            maximum = maximum,
-            _unrecognizedFields = null,
-        );
-
-        /** Serializer for [RuleSizeRangeExpression] instances. */
-        val serializer get() = _SerializerRegistry.RuleSizeRangeExpressionSerializer;
-
-        /** Describes the [RuleSizeRangeExpression] type. Provides runtime introspection capabilities. */
-        val typeDescriptor get() = _SerializerRegistry.RuleSizeRangeExpressionSerializerImpl.typeDescriptor;
-    }
-}
-
-sealed interface RuleNumericBoundExpression_OrMutable {
-    val direction: skirout.editor.v1.expression.BoundDirection;
-    val source: skirout.editor.v1.expression.ExpressionNode;
-    val bound: skirout.editor.v1.expression.ExpressionNode;
-    val inclusive: skirout.editor.v1.expression.ExpressionNode;
-
-    fun toFrozen(): skirout.editor.v1.expression.RuleNumericBoundExpression;
-}
-
-/** Deeply immutable. */
-@kotlin.Suppress("UNUSED_PARAMETER")
-class RuleNumericBoundExpression private constructor(
-    override val direction: skirout.editor.v1.expression.BoundDirection,
-    override val source: skirout.editor.v1.expression.ExpressionNode,
-    override val bound: skirout.editor.v1.expression.ExpressionNode,
-    override val inclusive: skirout.editor.v1.expression.ExpressionNode,
-    internal val _unrecognizedFields: _UnrecognizedFields<skirout.editor.v1.expression.RuleNumericBoundExpression>? =
-        null,
-): skirout.editor.v1.expression.RuleNumericBoundExpression_OrMutable {
-    constructor(
-        _mustNameArguments: _MustNameArguments =
-            _MustNameArguments,
-        direction: skirout.editor.v1.expression.BoundDirection,
-        source: skirout.editor.v1.expression.ExpressionNode,
-        bound: skirout.editor.v1.expression.ExpressionNode,
-        inclusive: skirout.editor.v1.expression.ExpressionNode,
-        _unrecognizedFields: _UnrecognizedFields<skirout.editor.v1.expression.RuleNumericBoundExpression>? =
-            null,
-    ): this(
-        direction,
-        source,
-        bound,
-        inclusive,
-        _unrecognizedFields,
-    ) {}
-
-    @kotlin.Deprecated("Already frozen", kotlin.ReplaceWith("this"))
-    override fun toFrozen() = this;
-
-    /** Returns a mutable shallow copy of this instance */
-    fun toMutable() = Mutable(
-        direction = this.direction,
-        source = this.source,
-        bound = this.bound,
-        inclusive = this.inclusive,
-    );
-
-    /** Returns a shallow copy of this instance with the specified fields replaced. */
-    fun copy(
-        _mustNameArguments: _MustNameArguments =
-            _MustNameArguments,
-        direction: skirout.editor.v1.expression.BoundDirection =
-            this.direction,
-        source: skirout.editor.v1.expression.ExpressionNode =
-            this.source,
-        bound: skirout.editor.v1.expression.ExpressionNode =
-            this.bound,
-        inclusive: skirout.editor.v1.expression.ExpressionNode =
-            this.inclusive,
-    ) = skirout.editor.v1.expression.RuleNumericBoundExpression(
-        direction,
-        source,
-        bound,
-        inclusive,
-        this._unrecognizedFields,
-    );
-
-    @kotlin.Deprecated("No point in creating an exact copy of an immutable object", kotlin.ReplaceWith("this"))
-    fun copy() = this;
-
-    override fun equals(other: kotlin.Any?): kotlin.Boolean {
-        return this === other || (other is skirout.editor.v1.expression.RuleNumericBoundExpression && this.direction == other.direction && this.source == other.source && this.bound == other.bound && this.inclusive == other.inclusive);
-    }
-
-    override fun hashCode(): kotlin.Int {
-        return kotlin.collections.listOf<kotlin.Any?>(this.direction, this.source, this.bound, this.inclusive).hashCode();
-    }
-
-    override fun toString(): kotlin.String {
-        return build.skir.internal.toStringImpl(
-            this,
-            _SerializerRegistry.RuleNumericBoundExpressionSerializerImpl,
-        )
-    }
-
-    /** Mutable version of [RuleNumericBoundExpression]. */
-    class Mutable internal constructor(
-        _mustNameArguments: _MustNameArguments =
-            _MustNameArguments,
-        override var direction: skirout.editor.v1.expression.BoundDirection =
-            skirout.editor.v1.expression.BoundDirection.UNKNOWN,
-        override var source: skirout.editor.v1.expression.ExpressionNode =
-            skirout.editor.v1.expression.ExpressionNode.UNKNOWN,
-        override var bound: skirout.editor.v1.expression.ExpressionNode =
-            skirout.editor.v1.expression.ExpressionNode.UNKNOWN,
-        override var inclusive: skirout.editor.v1.expression.ExpressionNode =
-            skirout.editor.v1.expression.ExpressionNode.UNKNOWN,
-        internal var _unrecognizedFields: _UnrecognizedFields<skirout.editor.v1.expression.RuleNumericBoundExpression>? =
-            null,
-    ): skirout.editor.v1.expression.RuleNumericBoundExpression_OrMutable {
-        /** Returns a deeply immutable copy of this instance */
-        override fun toFrozen() = skirout.editor.v1.expression.RuleNumericBoundExpression(
-            direction = this.direction,
-            source = this.source,
-            bound = this.bound,
-            inclusive = this.inclusive,
-            _unrecognizedFields = this._unrecognizedFields,
-        );
-    }
-
-    companion object {
-        private val default =
-            skirout.editor.v1.expression.RuleNumericBoundExpression(
-                skirout.editor.v1.expression.BoundDirection.UNKNOWN,
-                skirout.editor.v1.expression.ExpressionNode.UNKNOWN,
-                skirout.editor.v1.expression.ExpressionNode.UNKNOWN,
-                skirout.editor.v1.expression.ExpressionNode.UNKNOWN,
-            );
-
-        /** Returns an instance with all fields set to their default values. */
-        fun partial() = default;
-
-        /**
-         * Creates a new instance of [RuleNumericBoundExpression].
-         * Unlike the constructor, does not require all fields to be specified.
-         * Missing fields will be set to their default values.
-         */
-        fun partial(
-            _mustNameArguments: _MustNameArguments =
-                _MustNameArguments,
-            direction: skirout.editor.v1.expression.BoundDirection =
-                skirout.editor.v1.expression.BoundDirection.UNKNOWN,
-            source: skirout.editor.v1.expression.ExpressionNode =
-                skirout.editor.v1.expression.ExpressionNode.UNKNOWN,
-            bound: skirout.editor.v1.expression.ExpressionNode =
-                skirout.editor.v1.expression.ExpressionNode.UNKNOWN,
-            inclusive: skirout.editor.v1.expression.ExpressionNode =
-                skirout.editor.v1.expression.ExpressionNode.UNKNOWN,
-        ) = skirout.editor.v1.expression.RuleNumericBoundExpression(
-            direction = direction,
-            source = source,
-            bound = bound,
-            inclusive = inclusive,
-            _unrecognizedFields = null,
-        );
-
-        /** Serializer for [RuleNumericBoundExpression] instances. */
-        val serializer get() = _SerializerRegistry.RuleNumericBoundExpressionSerializer;
-
-        /** Describes the [RuleNumericBoundExpression] type. Provides runtime introspection capabilities. */
-        val typeDescriptor get() = _SerializerRegistry.RuleNumericBoundExpressionSerializerImpl.typeDescriptor;
-    }
-}
-
-sealed interface RuleNumericRangeExpression_OrMutable {
-    val source: skirout.editor.v1.expression.ExpressionNode;
-    val minimum: skirout.editor.v1.expression.ExpressionNode;
-    val maximum: skirout.editor.v1.expression.ExpressionNode;
-
-    fun toFrozen(): skirout.editor.v1.expression.RuleNumericRangeExpression;
-}
-
-/** Deeply immutable. */
-@kotlin.Suppress("UNUSED_PARAMETER")
-class RuleNumericRangeExpression private constructor(
-    override val source: skirout.editor.v1.expression.ExpressionNode,
-    override val minimum: skirout.editor.v1.expression.ExpressionNode,
-    override val maximum: skirout.editor.v1.expression.ExpressionNode,
-    internal val _unrecognizedFields: _UnrecognizedFields<skirout.editor.v1.expression.RuleNumericRangeExpression>? =
-        null,
-): skirout.editor.v1.expression.RuleNumericRangeExpression_OrMutable {
-    constructor(
-        _mustNameArguments: _MustNameArguments =
-            _MustNameArguments,
-        source: skirout.editor.v1.expression.ExpressionNode,
-        minimum: skirout.editor.v1.expression.ExpressionNode,
-        maximum: skirout.editor.v1.expression.ExpressionNode,
-        _unrecognizedFields: _UnrecognizedFields<skirout.editor.v1.expression.RuleNumericRangeExpression>? =
-            null,
-    ): this(
-        source,
-        minimum,
-        maximum,
-        _unrecognizedFields,
-    ) {}
-
-    @kotlin.Deprecated("Already frozen", kotlin.ReplaceWith("this"))
-    override fun toFrozen() = this;
-
-    /** Returns a mutable shallow copy of this instance */
-    fun toMutable() = Mutable(
-        source = this.source,
-        minimum = this.minimum,
-        maximum = this.maximum,
-    );
-
-    /** Returns a shallow copy of this instance with the specified fields replaced. */
-    fun copy(
-        _mustNameArguments: _MustNameArguments =
-            _MustNameArguments,
-        source: skirout.editor.v1.expression.ExpressionNode =
-            this.source,
-        minimum: skirout.editor.v1.expression.ExpressionNode =
-            this.minimum,
-        maximum: skirout.editor.v1.expression.ExpressionNode =
-            this.maximum,
-    ) = skirout.editor.v1.expression.RuleNumericRangeExpression(
-        source,
-        minimum,
-        maximum,
-        this._unrecognizedFields,
-    );
-
-    @kotlin.Deprecated("No point in creating an exact copy of an immutable object", kotlin.ReplaceWith("this"))
-    fun copy() = this;
-
-    override fun equals(other: kotlin.Any?): kotlin.Boolean {
-        return this === other || (other is skirout.editor.v1.expression.RuleNumericRangeExpression && this.source == other.source && this.minimum == other.minimum && this.maximum == other.maximum);
-    }
-
-    override fun hashCode(): kotlin.Int {
-        return kotlin.collections.listOf<kotlin.Any?>(this.source, this.minimum, this.maximum).hashCode();
-    }
-
-    override fun toString(): kotlin.String {
-        return build.skir.internal.toStringImpl(
-            this,
-            _SerializerRegistry.RuleNumericRangeExpressionSerializerImpl,
-        )
-    }
-
-    /** Mutable version of [RuleNumericRangeExpression]. */
-    class Mutable internal constructor(
-        _mustNameArguments: _MustNameArguments =
-            _MustNameArguments,
-        override var source: skirout.editor.v1.expression.ExpressionNode =
-            skirout.editor.v1.expression.ExpressionNode.UNKNOWN,
-        override var minimum: skirout.editor.v1.expression.ExpressionNode =
-            skirout.editor.v1.expression.ExpressionNode.UNKNOWN,
-        override var maximum: skirout.editor.v1.expression.ExpressionNode =
-            skirout.editor.v1.expression.ExpressionNode.UNKNOWN,
-        internal var _unrecognizedFields: _UnrecognizedFields<skirout.editor.v1.expression.RuleNumericRangeExpression>? =
-            null,
-    ): skirout.editor.v1.expression.RuleNumericRangeExpression_OrMutable {
-        /** Returns a deeply immutable copy of this instance */
-        override fun toFrozen() = skirout.editor.v1.expression.RuleNumericRangeExpression(
-            source = this.source,
-            minimum = this.minimum,
-            maximum = this.maximum,
-            _unrecognizedFields = this._unrecognizedFields,
-        );
-    }
-
-    companion object {
-        private val default =
-            skirout.editor.v1.expression.RuleNumericRangeExpression(
-                skirout.editor.v1.expression.ExpressionNode.UNKNOWN,
-                skirout.editor.v1.expression.ExpressionNode.UNKNOWN,
-                skirout.editor.v1.expression.ExpressionNode.UNKNOWN,
-            );
-
-        /** Returns an instance with all fields set to their default values. */
-        fun partial() = default;
-
-        /**
-         * Creates a new instance of [RuleNumericRangeExpression].
-         * Unlike the constructor, does not require all fields to be specified.
-         * Missing fields will be set to their default values.
-         */
-        fun partial(
-            _mustNameArguments: _MustNameArguments =
-                _MustNameArguments,
-            source: skirout.editor.v1.expression.ExpressionNode =
-                skirout.editor.v1.expression.ExpressionNode.UNKNOWN,
-            minimum: skirout.editor.v1.expression.ExpressionNode =
-                skirout.editor.v1.expression.ExpressionNode.UNKNOWN,
-            maximum: skirout.editor.v1.expression.ExpressionNode =
-                skirout.editor.v1.expression.ExpressionNode.UNKNOWN,
-        ) = skirout.editor.v1.expression.RuleNumericRangeExpression(
-            source = source,
-            minimum = minimum,
-            maximum = maximum,
-            _unrecognizedFields = null,
-        );
-
-        /** Serializer for [RuleNumericRangeExpression] instances. */
-        val serializer get() = _SerializerRegistry.RuleNumericRangeExpressionSerializer;
-
-        /** Describes the [RuleNumericRangeExpression] type. Provides runtime introspection capabilities. */
-        val typeDescriptor get() = _SerializerRegistry.RuleNumericRangeExpressionSerializerImpl.typeDescriptor;
-    }
-}
-
-sealed interface RuleMultipleOfExpression_OrMutable {
-    val source: skirout.editor.v1.expression.ExpressionNode;
-    val divisor: skirout.editor.v1.expression.ExpressionNode;
-
-    fun toFrozen(): skirout.editor.v1.expression.RuleMultipleOfExpression;
-}
-
-/** Deeply immutable. */
-@kotlin.Suppress("UNUSED_PARAMETER")
-class RuleMultipleOfExpression private constructor(
-    override val source: skirout.editor.v1.expression.ExpressionNode,
-    override val divisor: skirout.editor.v1.expression.ExpressionNode,
-    internal val _unrecognizedFields: _UnrecognizedFields<skirout.editor.v1.expression.RuleMultipleOfExpression>? =
-        null,
-): skirout.editor.v1.expression.RuleMultipleOfExpression_OrMutable {
-    constructor(
-        _mustNameArguments: _MustNameArguments =
-            _MustNameArguments,
-        source: skirout.editor.v1.expression.ExpressionNode,
-        divisor: skirout.editor.v1.expression.ExpressionNode,
-        _unrecognizedFields: _UnrecognizedFields<skirout.editor.v1.expression.RuleMultipleOfExpression>? =
-            null,
-    ): this(
-        source,
-        divisor,
-        _unrecognizedFields,
-    ) {}
-
-    @kotlin.Deprecated("Already frozen", kotlin.ReplaceWith("this"))
-    override fun toFrozen() = this;
-
-    /** Returns a mutable shallow copy of this instance */
-    fun toMutable() = Mutable(
-        source = this.source,
-        divisor = this.divisor,
-    );
-
-    /** Returns a shallow copy of this instance with the specified fields replaced. */
-    fun copy(
-        _mustNameArguments: _MustNameArguments =
-            _MustNameArguments,
-        source: skirout.editor.v1.expression.ExpressionNode =
-            this.source,
-        divisor: skirout.editor.v1.expression.ExpressionNode =
-            this.divisor,
-    ) = skirout.editor.v1.expression.RuleMultipleOfExpression(
-        source,
-        divisor,
-        this._unrecognizedFields,
-    );
-
-    @kotlin.Deprecated("No point in creating an exact copy of an immutable object", kotlin.ReplaceWith("this"))
-    fun copy() = this;
-
-    override fun equals(other: kotlin.Any?): kotlin.Boolean {
-        return this === other || (other is skirout.editor.v1.expression.RuleMultipleOfExpression && this.source == other.source && this.divisor == other.divisor);
-    }
-
-    override fun hashCode(): kotlin.Int {
-        return kotlin.collections.listOf<kotlin.Any?>(this.source, this.divisor).hashCode();
-    }
-
-    override fun toString(): kotlin.String {
-        return build.skir.internal.toStringImpl(
-            this,
-            _SerializerRegistry.RuleMultipleOfExpressionSerializerImpl,
-        )
-    }
-
-    /** Mutable version of [RuleMultipleOfExpression]. */
-    class Mutable internal constructor(
-        _mustNameArguments: _MustNameArguments =
-            _MustNameArguments,
-        override var source: skirout.editor.v1.expression.ExpressionNode =
-            skirout.editor.v1.expression.ExpressionNode.UNKNOWN,
-        override var divisor: skirout.editor.v1.expression.ExpressionNode =
-            skirout.editor.v1.expression.ExpressionNode.UNKNOWN,
-        internal var _unrecognizedFields: _UnrecognizedFields<skirout.editor.v1.expression.RuleMultipleOfExpression>? =
-            null,
-    ): skirout.editor.v1.expression.RuleMultipleOfExpression_OrMutable {
-        /** Returns a deeply immutable copy of this instance */
-        override fun toFrozen() = skirout.editor.v1.expression.RuleMultipleOfExpression(
-            source = this.source,
-            divisor = this.divisor,
-            _unrecognizedFields = this._unrecognizedFields,
-        );
-    }
-
-    companion object {
-        private val default =
-            skirout.editor.v1.expression.RuleMultipleOfExpression(
-                skirout.editor.v1.expression.ExpressionNode.UNKNOWN,
-                skirout.editor.v1.expression.ExpressionNode.UNKNOWN,
-            );
-
-        /** Returns an instance with all fields set to their default values. */
-        fun partial() = default;
-
-        /**
-         * Creates a new instance of [RuleMultipleOfExpression].
-         * Unlike the constructor, does not require all fields to be specified.
-         * Missing fields will be set to their default values.
-         */
-        fun partial(
-            _mustNameArguments: _MustNameArguments =
-                _MustNameArguments,
-            source: skirout.editor.v1.expression.ExpressionNode =
-                skirout.editor.v1.expression.ExpressionNode.UNKNOWN,
-            divisor: skirout.editor.v1.expression.ExpressionNode =
-                skirout.editor.v1.expression.ExpressionNode.UNKNOWN,
-        ) = skirout.editor.v1.expression.RuleMultipleOfExpression(
-            source = source,
-            divisor = divisor,
-            _unrecognizedFields = null,
-        );
-
-        /** Serializer for [RuleMultipleOfExpression] instances. */
-        val serializer get() = _SerializerRegistry.RuleMultipleOfExpressionSerializer;
-
-        /** Describes the [RuleMultipleOfExpression] type. Provides runtime introspection capabilities. */
-        val typeDescriptor get() = _SerializerRegistry.RuleMultipleOfExpressionSerializerImpl.typeDescriptor;
-    }
-}
-
-sealed interface RuleMaximumScaleExpression_OrMutable {
-    val source: skirout.editor.v1.expression.ExpressionNode;
-    val scale: skirout.editor.v1.expression.ExpressionNode;
-
-    fun toFrozen(): skirout.editor.v1.expression.RuleMaximumScaleExpression;
-}
-
-/** Deeply immutable. */
-@kotlin.Suppress("UNUSED_PARAMETER")
-class RuleMaximumScaleExpression private constructor(
-    override val source: skirout.editor.v1.expression.ExpressionNode,
-    override val scale: skirout.editor.v1.expression.ExpressionNode,
-    internal val _unrecognizedFields: _UnrecognizedFields<skirout.editor.v1.expression.RuleMaximumScaleExpression>? =
-        null,
-): skirout.editor.v1.expression.RuleMaximumScaleExpression_OrMutable {
-    constructor(
-        _mustNameArguments: _MustNameArguments =
-            _MustNameArguments,
-        source: skirout.editor.v1.expression.ExpressionNode,
-        scale: skirout.editor.v1.expression.ExpressionNode,
-        _unrecognizedFields: _UnrecognizedFields<skirout.editor.v1.expression.RuleMaximumScaleExpression>? =
-            null,
-    ): this(
-        source,
-        scale,
-        _unrecognizedFields,
-    ) {}
-
-    @kotlin.Deprecated("Already frozen", kotlin.ReplaceWith("this"))
-    override fun toFrozen() = this;
-
-    /** Returns a mutable shallow copy of this instance */
-    fun toMutable() = Mutable(
-        source = this.source,
-        scale = this.scale,
-    );
-
-    /** Returns a shallow copy of this instance with the specified fields replaced. */
-    fun copy(
-        _mustNameArguments: _MustNameArguments =
-            _MustNameArguments,
-        source: skirout.editor.v1.expression.ExpressionNode =
-            this.source,
-        scale: skirout.editor.v1.expression.ExpressionNode =
-            this.scale,
-    ) = skirout.editor.v1.expression.RuleMaximumScaleExpression(
-        source,
-        scale,
-        this._unrecognizedFields,
-    );
-
-    @kotlin.Deprecated("No point in creating an exact copy of an immutable object", kotlin.ReplaceWith("this"))
-    fun copy() = this;
-
-    override fun equals(other: kotlin.Any?): kotlin.Boolean {
-        return this === other || (other is skirout.editor.v1.expression.RuleMaximumScaleExpression && this.source == other.source && this.scale == other.scale);
-    }
-
-    override fun hashCode(): kotlin.Int {
-        return kotlin.collections.listOf<kotlin.Any?>(this.source, this.scale).hashCode();
-    }
-
-    override fun toString(): kotlin.String {
-        return build.skir.internal.toStringImpl(
-            this,
-            _SerializerRegistry.RuleMaximumScaleExpressionSerializerImpl,
-        )
-    }
-
-    /** Mutable version of [RuleMaximumScaleExpression]. */
-    class Mutable internal constructor(
-        _mustNameArguments: _MustNameArguments =
-            _MustNameArguments,
-        override var source: skirout.editor.v1.expression.ExpressionNode =
-            skirout.editor.v1.expression.ExpressionNode.UNKNOWN,
-        override var scale: skirout.editor.v1.expression.ExpressionNode =
-            skirout.editor.v1.expression.ExpressionNode.UNKNOWN,
-        internal var _unrecognizedFields: _UnrecognizedFields<skirout.editor.v1.expression.RuleMaximumScaleExpression>? =
-            null,
-    ): skirout.editor.v1.expression.RuleMaximumScaleExpression_OrMutable {
-        /** Returns a deeply immutable copy of this instance */
-        override fun toFrozen() = skirout.editor.v1.expression.RuleMaximumScaleExpression(
-            source = this.source,
-            scale = this.scale,
-            _unrecognizedFields = this._unrecognizedFields,
-        );
-    }
-
-    companion object {
-        private val default =
-            skirout.editor.v1.expression.RuleMaximumScaleExpression(
-                skirout.editor.v1.expression.ExpressionNode.UNKNOWN,
-                skirout.editor.v1.expression.ExpressionNode.UNKNOWN,
-            );
-
-        /** Returns an instance with all fields set to their default values. */
-        fun partial() = default;
-
-        /**
-         * Creates a new instance of [RuleMaximumScaleExpression].
-         * Unlike the constructor, does not require all fields to be specified.
-         * Missing fields will be set to their default values.
-         */
-        fun partial(
-            _mustNameArguments: _MustNameArguments =
-                _MustNameArguments,
-            source: skirout.editor.v1.expression.ExpressionNode =
-                skirout.editor.v1.expression.ExpressionNode.UNKNOWN,
-            scale: skirout.editor.v1.expression.ExpressionNode =
-                skirout.editor.v1.expression.ExpressionNode.UNKNOWN,
-        ) = skirout.editor.v1.expression.RuleMaximumScaleExpression(
-            source = source,
-            scale = scale,
-            _unrecognizedFields = null,
-        );
-
-        /** Serializer for [RuleMaximumScaleExpression] instances. */
-        val serializer get() = _SerializerRegistry.RuleMaximumScaleExpressionSerializer;
-
-        /** Describes the [RuleMaximumScaleExpression] type. Provides runtime introspection capabilities. */
-        val typeDescriptor get() = _SerializerRegistry.RuleMaximumScaleExpressionSerializerImpl.typeDescriptor;
-    }
-}
-
-/** Deeply immutable. */
-sealed class TimestampBoundDirection private constructor() {
-    /** The kind of variant held by a `TimestampBoundDirection`. */
-    enum class Kind {
-        UNKNOWN,
-        NOT_BEFORE_CONST,
-        NOT_AFTER_CONST,
-    }
-
-    class Unknown @kotlin.Deprecated("For internal use", kotlin.ReplaceWith("skirout.editor.v1.expression.TimestampBoundDirection.UNKNOWN")) internal constructor(
-        internal val _kind: Kind,
-        internal override val _unrecognized: _UnrecognizedVariant<skirout.editor.v1.expression.TimestampBoundDirection>?,
-    ) : skirout.editor.v1.expression.TimestampBoundDirection() {
-        override val kind get() = _kind;
-
-        override fun equals(other: kotlin.Any?): kotlin.Boolean {
-            return other is skirout.editor.v1.expression.TimestampBoundDirection && other.kind == kind;
-        }
-
-        override fun hashCode(): kotlin.Int {
-            return kind.ordinal;
-        }
-    }
-
-    object NOT_BEFORE : skirout.editor.v1.expression.TimestampBoundDirection() {
-        override val kind get() = Kind.NOT_BEFORE_CONST;
-
-        override fun equals(other: kotlin.Any?): kotlin.Boolean {
-            return other is skirout.editor.v1.expression.TimestampBoundDirection && other.kind == Kind.NOT_BEFORE_CONST;
-        }
-
-        override fun hashCode(): kotlin.Int {
-            return Kind.NOT_BEFORE_CONST.ordinal;
-        }
-    }
-
-    object NOT_AFTER : skirout.editor.v1.expression.TimestampBoundDirection() {
-        override val kind get() = Kind.NOT_AFTER_CONST;
-
-        override fun equals(other: kotlin.Any?): kotlin.Boolean {
-            return other is skirout.editor.v1.expression.TimestampBoundDirection && other.kind == Kind.NOT_AFTER_CONST;
-        }
-
-        override fun hashCode(): kotlin.Int {
-            return Kind.NOT_AFTER_CONST.ordinal;
-        }
-    }
-
-    internal open val _unrecognized: _UnrecognizedVariant<skirout.editor.v1.expression.TimestampBoundDirection>? get() = null;
-
-    abstract val kind: Kind;
-
-    override fun toString(): kotlin.String {
-        return build.skir.internal.toStringImpl(
-            this,
-            _SerializerRegistry.TimestampBoundDirectionSerializerImpl,
-        )
-    }
-
-    companion object {
-        /**
-         * Constant indicating an unknown [TimestampBoundDirection].
-         * Default value for fields of type [TimestampBoundDirection].
-         */
-        val UNKNOWN = @kotlin.Suppress("DEPRECATION") Unknown(Kind.UNKNOWN, null);
-
-        /** Serializer for [TimestampBoundDirection] instances. */
-        val serializer get() = _SerializerRegistry.TimestampBoundDirectionSerializer;
-
-        /** Describes the [TimestampBoundDirection] type. Provides runtime introspection capabilities. */
-        val typeDescriptor get() = _SerializerRegistry.TimestampBoundDirectionSerializerImpl.typeDescriptor;
-    }
-}
-
-sealed interface RuleTimestampBoundExpression_OrMutable {
-    val direction: skirout.editor.v1.expression.TimestampBoundDirection;
-    val source: skirout.editor.v1.expression.ExpressionNode;
-    val bound: skirout.editor.v1.expression.ExpressionNode;
-
-    fun toFrozen(): skirout.editor.v1.expression.RuleTimestampBoundExpression;
-}
-
-/** Deeply immutable. */
-@kotlin.Suppress("UNUSED_PARAMETER")
-class RuleTimestampBoundExpression private constructor(
-    override val direction: skirout.editor.v1.expression.TimestampBoundDirection,
-    override val source: skirout.editor.v1.expression.ExpressionNode,
-    override val bound: skirout.editor.v1.expression.ExpressionNode,
-    internal val _unrecognizedFields: _UnrecognizedFields<skirout.editor.v1.expression.RuleTimestampBoundExpression>? =
-        null,
-): skirout.editor.v1.expression.RuleTimestampBoundExpression_OrMutable {
-    constructor(
-        _mustNameArguments: _MustNameArguments =
-            _MustNameArguments,
-        direction: skirout.editor.v1.expression.TimestampBoundDirection,
-        source: skirout.editor.v1.expression.ExpressionNode,
-        bound: skirout.editor.v1.expression.ExpressionNode,
-        _unrecognizedFields: _UnrecognizedFields<skirout.editor.v1.expression.RuleTimestampBoundExpression>? =
-            null,
-    ): this(
-        direction,
-        source,
-        bound,
-        _unrecognizedFields,
-    ) {}
-
-    @kotlin.Deprecated("Already frozen", kotlin.ReplaceWith("this"))
-    override fun toFrozen() = this;
-
-    /** Returns a mutable shallow copy of this instance */
-    fun toMutable() = Mutable(
-        direction = this.direction,
-        source = this.source,
-        bound = this.bound,
-    );
-
-    /** Returns a shallow copy of this instance with the specified fields replaced. */
-    fun copy(
-        _mustNameArguments: _MustNameArguments =
-            _MustNameArguments,
-        direction: skirout.editor.v1.expression.TimestampBoundDirection =
-            this.direction,
-        source: skirout.editor.v1.expression.ExpressionNode =
-            this.source,
-        bound: skirout.editor.v1.expression.ExpressionNode =
-            this.bound,
-    ) = skirout.editor.v1.expression.RuleTimestampBoundExpression(
-        direction,
-        source,
-        bound,
-        this._unrecognizedFields,
-    );
-
-    @kotlin.Deprecated("No point in creating an exact copy of an immutable object", kotlin.ReplaceWith("this"))
-    fun copy() = this;
-
-    override fun equals(other: kotlin.Any?): kotlin.Boolean {
-        return this === other || (other is skirout.editor.v1.expression.RuleTimestampBoundExpression && this.direction == other.direction && this.source == other.source && this.bound == other.bound);
-    }
-
-    override fun hashCode(): kotlin.Int {
-        return kotlin.collections.listOf<kotlin.Any?>(this.direction, this.source, this.bound).hashCode();
-    }
-
-    override fun toString(): kotlin.String {
-        return build.skir.internal.toStringImpl(
-            this,
-            _SerializerRegistry.RuleTimestampBoundExpressionSerializerImpl,
-        )
-    }
-
-    /** Mutable version of [RuleTimestampBoundExpression]. */
-    class Mutable internal constructor(
-        _mustNameArguments: _MustNameArguments =
-            _MustNameArguments,
-        override var direction: skirout.editor.v1.expression.TimestampBoundDirection =
-            skirout.editor.v1.expression.TimestampBoundDirection.UNKNOWN,
-        override var source: skirout.editor.v1.expression.ExpressionNode =
-            skirout.editor.v1.expression.ExpressionNode.UNKNOWN,
-        override var bound: skirout.editor.v1.expression.ExpressionNode =
-            skirout.editor.v1.expression.ExpressionNode.UNKNOWN,
-        internal var _unrecognizedFields: _UnrecognizedFields<skirout.editor.v1.expression.RuleTimestampBoundExpression>? =
-            null,
-    ): skirout.editor.v1.expression.RuleTimestampBoundExpression_OrMutable {
-        /** Returns a deeply immutable copy of this instance */
-        override fun toFrozen() = skirout.editor.v1.expression.RuleTimestampBoundExpression(
-            direction = this.direction,
-            source = this.source,
-            bound = this.bound,
-            _unrecognizedFields = this._unrecognizedFields,
-        );
-    }
-
-    companion object {
-        private val default =
-            skirout.editor.v1.expression.RuleTimestampBoundExpression(
-                skirout.editor.v1.expression.TimestampBoundDirection.UNKNOWN,
-                skirout.editor.v1.expression.ExpressionNode.UNKNOWN,
-                skirout.editor.v1.expression.ExpressionNode.UNKNOWN,
-            );
-
-        /** Returns an instance with all fields set to their default values. */
-        fun partial() = default;
-
-        /**
-         * Creates a new instance of [RuleTimestampBoundExpression].
-         * Unlike the constructor, does not require all fields to be specified.
-         * Missing fields will be set to their default values.
-         */
-        fun partial(
-            _mustNameArguments: _MustNameArguments =
-                _MustNameArguments,
-            direction: skirout.editor.v1.expression.TimestampBoundDirection =
-                skirout.editor.v1.expression.TimestampBoundDirection.UNKNOWN,
-            source: skirout.editor.v1.expression.ExpressionNode =
-                skirout.editor.v1.expression.ExpressionNode.UNKNOWN,
-            bound: skirout.editor.v1.expression.ExpressionNode =
-                skirout.editor.v1.expression.ExpressionNode.UNKNOWN,
-        ) = skirout.editor.v1.expression.RuleTimestampBoundExpression(
-            direction = direction,
-            source = source,
-            bound = bound,
-            _unrecognizedFields = null,
-        );
-
-        /** Serializer for [RuleTimestampBoundExpression] instances. */
-        val serializer get() = _SerializerRegistry.RuleTimestampBoundExpressionSerializer;
-
-        /** Describes the [RuleTimestampBoundExpression] type. Provides runtime introspection capabilities. */
-        val typeDescriptor get() = _SerializerRegistry.RuleTimestampBoundExpressionSerializerImpl.typeDescriptor;
-    }
-}
-
-sealed interface UnaryCollectionExpression_OrMutable {
-    val source: skirout.editor.v1.expression.ExpressionNode;
+sealed interface LambdaExpression_OrMutable {
+    val arity: kotlin.Int;
     val body: skirout.editor.v1.expression.ExpressionNode;
 
-    fun toFrozen(): skirout.editor.v1.expression.UnaryCollectionExpression;
+    fun toFrozen(): skirout.editor.v1.expression.LambdaExpression;
 }
 
 /**
- * The body receives the current item at slot zero, except reduce, whose slots are accumulator then item.
+ * Body of a lambda argument. It opens one frame of `arity` locals.
  *
  * Deeply immutable.
  */
 @kotlin.Suppress("UNUSED_PARAMETER")
-class UnaryCollectionExpression private constructor(
-    override val source: skirout.editor.v1.expression.ExpressionNode,
+class LambdaExpression private constructor(
+    override val arity: kotlin.Int,
     override val body: skirout.editor.v1.expression.ExpressionNode,
-    internal val _unrecognizedFields: _UnrecognizedFields<skirout.editor.v1.expression.UnaryCollectionExpression>? =
+    internal val _unrecognizedFields: _UnrecognizedFields<skirout.editor.v1.expression.LambdaExpression>? =
         null,
-): skirout.editor.v1.expression.UnaryCollectionExpression_OrMutable {
+): skirout.editor.v1.expression.LambdaExpression_OrMutable {
     constructor(
         _mustNameArguments: _MustNameArguments =
             _MustNameArguments,
-        source: skirout.editor.v1.expression.ExpressionNode,
+        arity: kotlin.Int,
         body: skirout.editor.v1.expression.ExpressionNode,
-        _unrecognizedFields: _UnrecognizedFields<skirout.editor.v1.expression.UnaryCollectionExpression>? =
+        _unrecognizedFields: _UnrecognizedFields<skirout.editor.v1.expression.LambdaExpression>? =
             null,
     ): this(
-        source,
+        arity,
         body,
         _unrecognizedFields,
     ) {}
@@ -6063,7 +1212,7 @@ class UnaryCollectionExpression private constructor(
 
     /** Returns a mutable shallow copy of this instance */
     fun toMutable() = Mutable(
-        source = this.source,
+        arity = this.arity,
         body = this.body,
     );
 
@@ -6071,12 +1220,12 @@ class UnaryCollectionExpression private constructor(
     fun copy(
         _mustNameArguments: _MustNameArguments =
             _MustNameArguments,
-        source: skirout.editor.v1.expression.ExpressionNode =
-            this.source,
+        arity: kotlin.Int =
+            this.arity,
         body: skirout.editor.v1.expression.ExpressionNode =
             this.body,
-    ) = skirout.editor.v1.expression.UnaryCollectionExpression(
-        source,
+    ) = skirout.editor.v1.expression.LambdaExpression(
+        arity,
         body,
         this._unrecognizedFields,
     );
@@ -6085,34 +1234,34 @@ class UnaryCollectionExpression private constructor(
     fun copy() = this;
 
     override fun equals(other: kotlin.Any?): kotlin.Boolean {
-        return this === other || (other is skirout.editor.v1.expression.UnaryCollectionExpression && this.source == other.source && this.body == other.body);
+        return this === other || (other is skirout.editor.v1.expression.LambdaExpression && this.arity == other.arity && this.body == other.body);
     }
 
     override fun hashCode(): kotlin.Int {
-        return kotlin.collections.listOf<kotlin.Any?>(this.source, this.body).hashCode();
+        return kotlin.collections.listOf<kotlin.Any?>(this.arity, this.body).hashCode();
     }
 
     override fun toString(): kotlin.String {
         return build.skir.internal.toStringImpl(
             this,
-            _SerializerRegistry.UnaryCollectionExpressionSerializerImpl,
+            _SerializerRegistry.LambdaExpressionSerializerImpl,
         )
     }
 
-    /** Mutable version of [UnaryCollectionExpression]. */
+    /** Mutable version of [LambdaExpression]. */
     class Mutable internal constructor(
         _mustNameArguments: _MustNameArguments =
             _MustNameArguments,
-        override var source: skirout.editor.v1.expression.ExpressionNode =
-            skirout.editor.v1.expression.ExpressionNode.UNKNOWN,
+        override var arity: kotlin.Int =
+            0,
         override var body: skirout.editor.v1.expression.ExpressionNode =
             skirout.editor.v1.expression.ExpressionNode.UNKNOWN,
-        internal var _unrecognizedFields: _UnrecognizedFields<skirout.editor.v1.expression.UnaryCollectionExpression>? =
+        internal var _unrecognizedFields: _UnrecognizedFields<skirout.editor.v1.expression.LambdaExpression>? =
             null,
-    ): skirout.editor.v1.expression.UnaryCollectionExpression_OrMutable {
+    ): skirout.editor.v1.expression.LambdaExpression_OrMutable {
         /** Returns a deeply immutable copy of this instance */
-        override fun toFrozen() = skirout.editor.v1.expression.UnaryCollectionExpression(
-            source = this.source,
+        override fun toFrozen() = skirout.editor.v1.expression.LambdaExpression(
+            arity = this.arity,
             body = this.body,
             _unrecognizedFields = this._unrecognizedFields,
         );
@@ -6120,8 +1269,8 @@ class UnaryCollectionExpression private constructor(
 
     companion object {
         private val default =
-            skirout.editor.v1.expression.UnaryCollectionExpression(
-                skirout.editor.v1.expression.ExpressionNode.UNKNOWN,
+            skirout.editor.v1.expression.LambdaExpression(
+                0,
                 skirout.editor.v1.expression.ExpressionNode.UNKNOWN,
             );
 
@@ -6129,920 +1278,34 @@ class UnaryCollectionExpression private constructor(
         fun partial() = default;
 
         /**
-         * Creates a new instance of [UnaryCollectionExpression].
+         * Creates a new instance of [LambdaExpression].
          * Unlike the constructor, does not require all fields to be specified.
          * Missing fields will be set to their default values.
          */
         fun partial(
             _mustNameArguments: _MustNameArguments =
                 _MustNameArguments,
-            source: skirout.editor.v1.expression.ExpressionNode =
-                skirout.editor.v1.expression.ExpressionNode.UNKNOWN,
+            arity: kotlin.Int =
+                0,
             body: skirout.editor.v1.expression.ExpressionNode =
                 skirout.editor.v1.expression.ExpressionNode.UNKNOWN,
-        ) = skirout.editor.v1.expression.UnaryCollectionExpression(
-            source = source,
+        ) = skirout.editor.v1.expression.LambdaExpression(
+            arity = arity,
             body = body,
             _unrecognizedFields = null,
         );
 
-        /** Serializer for [UnaryCollectionExpression] instances. */
-        val serializer get() = _SerializerRegistry.UnaryCollectionExpressionSerializer;
-
-        /** Describes the [UnaryCollectionExpression] type. Provides runtime introspection capabilities. */
-        val typeDescriptor get() = _SerializerRegistry.UnaryCollectionExpressionSerializerImpl.typeDescriptor;
-    }
-}
-
-sealed interface FoldExpression_OrMutable {
-    val source: skirout.editor.v1.expression.ExpressionNode;
-    val initial: skirout.editor.v1.expression.ExpressionNode;
-    val body: skirout.editor.v1.expression.ExpressionNode;
-
-    fun toFrozen(): skirout.editor.v1.expression.FoldExpression;
-}
-
-/**
- * Evaluates source and initial outside the body frame. The body slots are accumulator then item.
- *
- * Deeply immutable.
- */
-@kotlin.Suppress("UNUSED_PARAMETER")
-class FoldExpression private constructor(
-    override val source: skirout.editor.v1.expression.ExpressionNode,
-    override val initial: skirout.editor.v1.expression.ExpressionNode,
-    override val body: skirout.editor.v1.expression.ExpressionNode,
-    internal val _unrecognizedFields: _UnrecognizedFields<skirout.editor.v1.expression.FoldExpression>? =
-        null,
-): skirout.editor.v1.expression.FoldExpression_OrMutable {
-    constructor(
-        _mustNameArguments: _MustNameArguments =
-            _MustNameArguments,
-        source: skirout.editor.v1.expression.ExpressionNode,
-        initial: skirout.editor.v1.expression.ExpressionNode,
-        body: skirout.editor.v1.expression.ExpressionNode,
-        _unrecognizedFields: _UnrecognizedFields<skirout.editor.v1.expression.FoldExpression>? =
-            null,
-    ): this(
-        source,
-        initial,
-        body,
-        _unrecognizedFields,
-    ) {}
-
-    @kotlin.Deprecated("Already frozen", kotlin.ReplaceWith("this"))
-    override fun toFrozen() = this;
-
-    /** Returns a mutable shallow copy of this instance */
-    fun toMutable() = Mutable(
-        source = this.source,
-        initial = this.initial,
-        body = this.body,
-    );
-
-    /** Returns a shallow copy of this instance with the specified fields replaced. */
-    fun copy(
-        _mustNameArguments: _MustNameArguments =
-            _MustNameArguments,
-        source: skirout.editor.v1.expression.ExpressionNode =
-            this.source,
-        initial: skirout.editor.v1.expression.ExpressionNode =
-            this.initial,
-        body: skirout.editor.v1.expression.ExpressionNode =
-            this.body,
-    ) = skirout.editor.v1.expression.FoldExpression(
-        source,
-        initial,
-        body,
-        this._unrecognizedFields,
-    );
-
-    @kotlin.Deprecated("No point in creating an exact copy of an immutable object", kotlin.ReplaceWith("this"))
-    fun copy() = this;
-
-    override fun equals(other: kotlin.Any?): kotlin.Boolean {
-        return this === other || (other is skirout.editor.v1.expression.FoldExpression && this.source == other.source && this.initial == other.initial && this.body == other.body);
-    }
-
-    override fun hashCode(): kotlin.Int {
-        return kotlin.collections.listOf<kotlin.Any?>(this.source, this.initial, this.body).hashCode();
-    }
-
-    override fun toString(): kotlin.String {
-        return build.skir.internal.toStringImpl(
-            this,
-            _SerializerRegistry.FoldExpressionSerializerImpl,
-        )
-    }
-
-    /** Mutable version of [FoldExpression]. */
-    class Mutable internal constructor(
-        _mustNameArguments: _MustNameArguments =
-            _MustNameArguments,
-        override var source: skirout.editor.v1.expression.ExpressionNode =
-            skirout.editor.v1.expression.ExpressionNode.UNKNOWN,
-        override var initial: skirout.editor.v1.expression.ExpressionNode =
-            skirout.editor.v1.expression.ExpressionNode.UNKNOWN,
-        override var body: skirout.editor.v1.expression.ExpressionNode =
-            skirout.editor.v1.expression.ExpressionNode.UNKNOWN,
-        internal var _unrecognizedFields: _UnrecognizedFields<skirout.editor.v1.expression.FoldExpression>? =
-            null,
-    ): skirout.editor.v1.expression.FoldExpression_OrMutable {
-        /** Returns a deeply immutable copy of this instance */
-        override fun toFrozen() = skirout.editor.v1.expression.FoldExpression(
-            source = this.source,
-            initial = this.initial,
-            body = this.body,
-            _unrecognizedFields = this._unrecognizedFields,
-        );
-    }
-
-    companion object {
-        private val default =
-            skirout.editor.v1.expression.FoldExpression(
-                skirout.editor.v1.expression.ExpressionNode.UNKNOWN,
-                skirout.editor.v1.expression.ExpressionNode.UNKNOWN,
-                skirout.editor.v1.expression.ExpressionNode.UNKNOWN,
-            );
-
-        /** Returns an instance with all fields set to their default values. */
-        fun partial() = default;
-
-        /**
-         * Creates a new instance of [FoldExpression].
-         * Unlike the constructor, does not require all fields to be specified.
-         * Missing fields will be set to their default values.
-         */
-        fun partial(
-            _mustNameArguments: _MustNameArguments =
-                _MustNameArguments,
-            source: skirout.editor.v1.expression.ExpressionNode =
-                skirout.editor.v1.expression.ExpressionNode.UNKNOWN,
-            initial: skirout.editor.v1.expression.ExpressionNode =
-                skirout.editor.v1.expression.ExpressionNode.UNKNOWN,
-            body: skirout.editor.v1.expression.ExpressionNode =
-                skirout.editor.v1.expression.ExpressionNode.UNKNOWN,
-        ) = skirout.editor.v1.expression.FoldExpression(
-            source = source,
-            initial = initial,
-            body = body,
-            _unrecognizedFields = null,
-        );
-
-        /** Serializer for [FoldExpression] instances. */
-        val serializer get() = _SerializerRegistry.FoldExpressionSerializer;
-
-        /** Describes the [FoldExpression] type. Provides runtime introspection capabilities. */
-        val typeDescriptor get() = _SerializerRegistry.FoldExpressionSerializerImpl.typeDescriptor;
-    }
-}
-
-sealed interface SortByExpression_OrMutable {
-    val source: skirout.editor.v1.expression.ExpressionNode;
-    val descending: skirout.editor.v1.expression.ExpressionNode?;
-    val key: skirout.editor.v1.expression.ExpressionNode;
-
-    fun toFrozen(): skirout.editor.v1.expression.SortByExpression;
-}
-
-/**
- * Evaluates each key with the item in slot zero. The descending expression belongs to the outer scope.
- *
- * Deeply immutable.
- */
-@kotlin.Suppress("UNUSED_PARAMETER")
-class SortByExpression private constructor(
-    override val source: skirout.editor.v1.expression.ExpressionNode,
-    override val descending: skirout.editor.v1.expression.ExpressionNode?,
-    override val key: skirout.editor.v1.expression.ExpressionNode,
-    internal val _unrecognizedFields: _UnrecognizedFields<skirout.editor.v1.expression.SortByExpression>? =
-        null,
-): skirout.editor.v1.expression.SortByExpression_OrMutable {
-    constructor(
-        _mustNameArguments: _MustNameArguments =
-            _MustNameArguments,
-        source: skirout.editor.v1.expression.ExpressionNode,
-        descending: skirout.editor.v1.expression.ExpressionNode?,
-        key: skirout.editor.v1.expression.ExpressionNode,
-        _unrecognizedFields: _UnrecognizedFields<skirout.editor.v1.expression.SortByExpression>? =
-            null,
-    ): this(
-        source,
-        descending,
-        key,
-        _unrecognizedFields,
-    ) {}
-
-    @kotlin.Deprecated("Already frozen", kotlin.ReplaceWith("this"))
-    override fun toFrozen() = this;
-
-    /** Returns a mutable shallow copy of this instance */
-    fun toMutable() = Mutable(
-        source = this.source,
-        descending = this.descending,
-        key = this.key,
-    );
-
-    /** Returns a shallow copy of this instance with the specified fields replaced. */
-    fun copy(
-        _mustNameArguments: _MustNameArguments =
-            _MustNameArguments,
-        source: skirout.editor.v1.expression.ExpressionNode =
-            this.source,
-        descending: skirout.editor.v1.expression.ExpressionNode? =
-            this.descending,
-        key: skirout.editor.v1.expression.ExpressionNode =
-            this.key,
-    ) = skirout.editor.v1.expression.SortByExpression(
-        source,
-        descending,
-        key,
-        this._unrecognizedFields,
-    );
-
-    @kotlin.Deprecated("No point in creating an exact copy of an immutable object", kotlin.ReplaceWith("this"))
-    fun copy() = this;
-
-    override fun equals(other: kotlin.Any?): kotlin.Boolean {
-        return this === other || (other is skirout.editor.v1.expression.SortByExpression && this.source == other.source && this.descending == other.descending && this.key == other.key);
-    }
-
-    override fun hashCode(): kotlin.Int {
-        return kotlin.collections.listOf<kotlin.Any?>(this.source, this.descending, this.key).hashCode();
-    }
-
-    override fun toString(): kotlin.String {
-        return build.skir.internal.toStringImpl(
-            this,
-            _SerializerRegistry.SortByExpressionSerializerImpl,
-        )
-    }
-
-    /** Mutable version of [SortByExpression]. */
-    class Mutable internal constructor(
-        _mustNameArguments: _MustNameArguments =
-            _MustNameArguments,
-        override var source: skirout.editor.v1.expression.ExpressionNode =
-            skirout.editor.v1.expression.ExpressionNode.UNKNOWN,
-        override var descending: skirout.editor.v1.expression.ExpressionNode? =
-            null,
-        override var key: skirout.editor.v1.expression.ExpressionNode =
-            skirout.editor.v1.expression.ExpressionNode.UNKNOWN,
-        internal var _unrecognizedFields: _UnrecognizedFields<skirout.editor.v1.expression.SortByExpression>? =
-            null,
-    ): skirout.editor.v1.expression.SortByExpression_OrMutable {
-        /** Returns a deeply immutable copy of this instance */
-        override fun toFrozen() = skirout.editor.v1.expression.SortByExpression(
-            source = this.source,
-            descending = this.descending,
-            key = this.key,
-            _unrecognizedFields = this._unrecognizedFields,
-        );
-    }
-
-    companion object {
-        private val default =
-            skirout.editor.v1.expression.SortByExpression(
-                skirout.editor.v1.expression.ExpressionNode.UNKNOWN,
-                null,
-                skirout.editor.v1.expression.ExpressionNode.UNKNOWN,
-            );
-
-        /** Returns an instance with all fields set to their default values. */
-        fun partial() = default;
-
-        /**
-         * Creates a new instance of [SortByExpression].
-         * Unlike the constructor, does not require all fields to be specified.
-         * Missing fields will be set to their default values.
-         */
-        fun partial(
-            _mustNameArguments: _MustNameArguments =
-                _MustNameArguments,
-            source: skirout.editor.v1.expression.ExpressionNode =
-                skirout.editor.v1.expression.ExpressionNode.UNKNOWN,
-            descending: skirout.editor.v1.expression.ExpressionNode? =
-                null,
-            key: skirout.editor.v1.expression.ExpressionNode =
-                skirout.editor.v1.expression.ExpressionNode.UNKNOWN,
-        ) = skirout.editor.v1.expression.SortByExpression(
-            source = source,
-            descending = descending,
-            key = key,
-            _unrecognizedFields = null,
-        );
-
-        /** Serializer for [SortByExpression] instances. */
-        val serializer get() = _SerializerRegistry.SortByExpressionSerializer;
-
-        /** Describes the [SortByExpression] type. Provides runtime introspection capabilities. */
-        val typeDescriptor get() = _SerializerRegistry.SortByExpressionSerializerImpl.typeDescriptor;
-    }
-}
-
-sealed interface SortWithExpression_OrMutable {
-    val source: skirout.editor.v1.expression.ExpressionNode;
-    val comparator: skirout.editor.v1.expression.ExpressionNode;
-
-    fun toFrozen(): skirout.editor.v1.expression.SortWithExpression;
-}
-
-/**
- * The comparator slots are the left item then the right item.
- *
- * Deeply immutable.
- */
-@kotlin.Suppress("UNUSED_PARAMETER")
-class SortWithExpression private constructor(
-    override val source: skirout.editor.v1.expression.ExpressionNode,
-    override val comparator: skirout.editor.v1.expression.ExpressionNode,
-    internal val _unrecognizedFields: _UnrecognizedFields<skirout.editor.v1.expression.SortWithExpression>? =
-        null,
-): skirout.editor.v1.expression.SortWithExpression_OrMutable {
-    constructor(
-        _mustNameArguments: _MustNameArguments =
-            _MustNameArguments,
-        source: skirout.editor.v1.expression.ExpressionNode,
-        comparator: skirout.editor.v1.expression.ExpressionNode,
-        _unrecognizedFields: _UnrecognizedFields<skirout.editor.v1.expression.SortWithExpression>? =
-            null,
-    ): this(
-        source,
-        comparator,
-        _unrecognizedFields,
-    ) {}
-
-    @kotlin.Deprecated("Already frozen", kotlin.ReplaceWith("this"))
-    override fun toFrozen() = this;
-
-    /** Returns a mutable shallow copy of this instance */
-    fun toMutable() = Mutable(
-        source = this.source,
-        comparator = this.comparator,
-    );
-
-    /** Returns a shallow copy of this instance with the specified fields replaced. */
-    fun copy(
-        _mustNameArguments: _MustNameArguments =
-            _MustNameArguments,
-        source: skirout.editor.v1.expression.ExpressionNode =
-            this.source,
-        comparator: skirout.editor.v1.expression.ExpressionNode =
-            this.comparator,
-    ) = skirout.editor.v1.expression.SortWithExpression(
-        source,
-        comparator,
-        this._unrecognizedFields,
-    );
-
-    @kotlin.Deprecated("No point in creating an exact copy of an immutable object", kotlin.ReplaceWith("this"))
-    fun copy() = this;
-
-    override fun equals(other: kotlin.Any?): kotlin.Boolean {
-        return this === other || (other is skirout.editor.v1.expression.SortWithExpression && this.source == other.source && this.comparator == other.comparator);
-    }
-
-    override fun hashCode(): kotlin.Int {
-        return kotlin.collections.listOf<kotlin.Any?>(this.source, this.comparator).hashCode();
-    }
-
-    override fun toString(): kotlin.String {
-        return build.skir.internal.toStringImpl(
-            this,
-            _SerializerRegistry.SortWithExpressionSerializerImpl,
-        )
-    }
-
-    /** Mutable version of [SortWithExpression]. */
-    class Mutable internal constructor(
-        _mustNameArguments: _MustNameArguments =
-            _MustNameArguments,
-        override var source: skirout.editor.v1.expression.ExpressionNode =
-            skirout.editor.v1.expression.ExpressionNode.UNKNOWN,
-        override var comparator: skirout.editor.v1.expression.ExpressionNode =
-            skirout.editor.v1.expression.ExpressionNode.UNKNOWN,
-        internal var _unrecognizedFields: _UnrecognizedFields<skirout.editor.v1.expression.SortWithExpression>? =
-            null,
-    ): skirout.editor.v1.expression.SortWithExpression_OrMutable {
-        /** Returns a deeply immutable copy of this instance */
-        override fun toFrozen() = skirout.editor.v1.expression.SortWithExpression(
-            source = this.source,
-            comparator = this.comparator,
-            _unrecognizedFields = this._unrecognizedFields,
-        );
-    }
-
-    companion object {
-        private val default =
-            skirout.editor.v1.expression.SortWithExpression(
-                skirout.editor.v1.expression.ExpressionNode.UNKNOWN,
-                skirout.editor.v1.expression.ExpressionNode.UNKNOWN,
-            );
-
-        /** Returns an instance with all fields set to their default values. */
-        fun partial() = default;
-
-        /**
-         * Creates a new instance of [SortWithExpression].
-         * Unlike the constructor, does not require all fields to be specified.
-         * Missing fields will be set to their default values.
-         */
-        fun partial(
-            _mustNameArguments: _MustNameArguments =
-                _MustNameArguments,
-            source: skirout.editor.v1.expression.ExpressionNode =
-                skirout.editor.v1.expression.ExpressionNode.UNKNOWN,
-            comparator: skirout.editor.v1.expression.ExpressionNode =
-                skirout.editor.v1.expression.ExpressionNode.UNKNOWN,
-        ) = skirout.editor.v1.expression.SortWithExpression(
-            source = source,
-            comparator = comparator,
-            _unrecognizedFields = null,
-        );
-
-        /** Serializer for [SortWithExpression] instances. */
-        val serializer get() = _SerializerRegistry.SortWithExpressionSerializer;
-
-        /** Describes the [SortWithExpression] type. Provides runtime introspection capabilities. */
-        val typeDescriptor get() = _SerializerRegistry.SortWithExpressionSerializerImpl.typeDescriptor;
-    }
-}
-
-sealed interface CollectionSliceExpression_OrMutable {
-    val source: skirout.editor.v1.expression.ExpressionNode;
-    val count: skirout.editor.v1.expression.ExpressionNode;
-
-    fun toFrozen(): skirout.editor.v1.expression.CollectionSliceExpression;
-}
-
-/** Deeply immutable. */
-@kotlin.Suppress("UNUSED_PARAMETER")
-class CollectionSliceExpression private constructor(
-    override val source: skirout.editor.v1.expression.ExpressionNode,
-    override val count: skirout.editor.v1.expression.ExpressionNode,
-    internal val _unrecognizedFields: _UnrecognizedFields<skirout.editor.v1.expression.CollectionSliceExpression>? =
-        null,
-): skirout.editor.v1.expression.CollectionSliceExpression_OrMutable {
-    constructor(
-        _mustNameArguments: _MustNameArguments =
-            _MustNameArguments,
-        source: skirout.editor.v1.expression.ExpressionNode,
-        count: skirout.editor.v1.expression.ExpressionNode,
-        _unrecognizedFields: _UnrecognizedFields<skirout.editor.v1.expression.CollectionSliceExpression>? =
-            null,
-    ): this(
-        source,
-        count,
-        _unrecognizedFields,
-    ) {}
-
-    @kotlin.Deprecated("Already frozen", kotlin.ReplaceWith("this"))
-    override fun toFrozen() = this;
-
-    /** Returns a mutable shallow copy of this instance */
-    fun toMutable() = Mutable(
-        source = this.source,
-        count = this.count,
-    );
-
-    /** Returns a shallow copy of this instance with the specified fields replaced. */
-    fun copy(
-        _mustNameArguments: _MustNameArguments =
-            _MustNameArguments,
-        source: skirout.editor.v1.expression.ExpressionNode =
-            this.source,
-        count: skirout.editor.v1.expression.ExpressionNode =
-            this.count,
-    ) = skirout.editor.v1.expression.CollectionSliceExpression(
-        source,
-        count,
-        this._unrecognizedFields,
-    );
-
-    @kotlin.Deprecated("No point in creating an exact copy of an immutable object", kotlin.ReplaceWith("this"))
-    fun copy() = this;
-
-    override fun equals(other: kotlin.Any?): kotlin.Boolean {
-        return this === other || (other is skirout.editor.v1.expression.CollectionSliceExpression && this.source == other.source && this.count == other.count);
-    }
-
-    override fun hashCode(): kotlin.Int {
-        return kotlin.collections.listOf<kotlin.Any?>(this.source, this.count).hashCode();
-    }
-
-    override fun toString(): kotlin.String {
-        return build.skir.internal.toStringImpl(
-            this,
-            _SerializerRegistry.CollectionSliceExpressionSerializerImpl,
-        )
-    }
-
-    /** Mutable version of [CollectionSliceExpression]. */
-    class Mutable internal constructor(
-        _mustNameArguments: _MustNameArguments =
-            _MustNameArguments,
-        override var source: skirout.editor.v1.expression.ExpressionNode =
-            skirout.editor.v1.expression.ExpressionNode.UNKNOWN,
-        override var count: skirout.editor.v1.expression.ExpressionNode =
-            skirout.editor.v1.expression.ExpressionNode.UNKNOWN,
-        internal var _unrecognizedFields: _UnrecognizedFields<skirout.editor.v1.expression.CollectionSliceExpression>? =
-            null,
-    ): skirout.editor.v1.expression.CollectionSliceExpression_OrMutable {
-        /** Returns a deeply immutable copy of this instance */
-        override fun toFrozen() = skirout.editor.v1.expression.CollectionSliceExpression(
-            source = this.source,
-            count = this.count,
-            _unrecognizedFields = this._unrecognizedFields,
-        );
-    }
-
-    companion object {
-        private val default =
-            skirout.editor.v1.expression.CollectionSliceExpression(
-                skirout.editor.v1.expression.ExpressionNode.UNKNOWN,
-                skirout.editor.v1.expression.ExpressionNode.UNKNOWN,
-            );
-
-        /** Returns an instance with all fields set to their default values. */
-        fun partial() = default;
-
-        /**
-         * Creates a new instance of [CollectionSliceExpression].
-         * Unlike the constructor, does not require all fields to be specified.
-         * Missing fields will be set to their default values.
-         */
-        fun partial(
-            _mustNameArguments: _MustNameArguments =
-                _MustNameArguments,
-            source: skirout.editor.v1.expression.ExpressionNode =
-                skirout.editor.v1.expression.ExpressionNode.UNKNOWN,
-            count: skirout.editor.v1.expression.ExpressionNode =
-                skirout.editor.v1.expression.ExpressionNode.UNKNOWN,
-        ) = skirout.editor.v1.expression.CollectionSliceExpression(
-            source = source,
-            count = count,
-            _unrecognizedFields = null,
-        );
-
-        /** Serializer for [CollectionSliceExpression] instances. */
-        val serializer get() = _SerializerRegistry.CollectionSliceExpressionSerializer;
-
-        /** Describes the [CollectionSliceExpression] type. Provides runtime introspection capabilities. */
-        val typeDescriptor get() = _SerializerRegistry.CollectionSliceExpressionSerializerImpl.typeDescriptor;
-    }
-}
-
-sealed interface ResourceIdentityQuerySource_OrMutable {
-    val identity: skirout.editor.v1.expression.ExpressionNode;
-    val target: skirout.editor.v1.type_catalog.TypeUse;
-
-    fun toFrozen(): skirout.editor.v1.expression.ResourceIdentityQuerySource;
-}
-
-/**
- * An identity expression needs an explicit catalog type witness to admit resource reads.
- *
- * Deeply immutable.
- */
-@kotlin.Suppress("UNUSED_PARAMETER")
-class ResourceIdentityQuerySource private constructor(
-    override val identity: skirout.editor.v1.expression.ExpressionNode,
-    override val target: skirout.editor.v1.type_catalog.TypeUse,
-    internal val _unrecognizedFields: _UnrecognizedFields<skirout.editor.v1.expression.ResourceIdentityQuerySource>? =
-        null,
-): skirout.editor.v1.expression.ResourceIdentityQuerySource_OrMutable {
-    constructor(
-        _mustNameArguments: _MustNameArguments =
-            _MustNameArguments,
-        identity: skirout.editor.v1.expression.ExpressionNode,
-        target: skirout.editor.v1.type_catalog.TypeUse,
-        _unrecognizedFields: _UnrecognizedFields<skirout.editor.v1.expression.ResourceIdentityQuerySource>? =
-            null,
-    ): this(
-        identity,
-        target,
-        _unrecognizedFields,
-    ) {}
-
-    @kotlin.Deprecated("Already frozen", kotlin.ReplaceWith("this"))
-    override fun toFrozen() = this;
-
-    /** Returns a mutable shallow copy of this instance */
-    fun toMutable() = Mutable(
-        identity = this.identity,
-        target = this.target,
-    );
-
-    /** Returns a shallow copy of this instance with the specified fields replaced. */
-    fun copy(
-        _mustNameArguments: _MustNameArguments =
-            _MustNameArguments,
-        identity: skirout.editor.v1.expression.ExpressionNode =
-            this.identity,
-        target: skirout.editor.v1.type_catalog.TypeUse =
-            this.target,
-    ) = skirout.editor.v1.expression.ResourceIdentityQuerySource(
-        identity,
-        target,
-        this._unrecognizedFields,
-    );
-
-    @kotlin.Deprecated("No point in creating an exact copy of an immutable object", kotlin.ReplaceWith("this"))
-    fun copy() = this;
-
-    override fun equals(other: kotlin.Any?): kotlin.Boolean {
-        return this === other || (other is skirout.editor.v1.expression.ResourceIdentityQuerySource && this.identity == other.identity && this.target == other.target);
-    }
-
-    override fun hashCode(): kotlin.Int {
-        return kotlin.collections.listOf<kotlin.Any?>(this.identity, this.target).hashCode();
-    }
-
-    override fun toString(): kotlin.String {
-        return build.skir.internal.toStringImpl(
-            this,
-            _SerializerRegistry.ResourceIdentityQuerySourceSerializerImpl,
-        )
-    }
-
-    /** Mutable version of [ResourceIdentityQuerySource]. */
-    class Mutable internal constructor(
-        _mustNameArguments: _MustNameArguments =
-            _MustNameArguments,
-        override var identity: skirout.editor.v1.expression.ExpressionNode =
-            skirout.editor.v1.expression.ExpressionNode.UNKNOWN,
-        override var target: skirout.editor.v1.type_catalog.TypeUse =
-            skirout.editor.v1.type_catalog.TypeUse.UNKNOWN,
-        internal var _unrecognizedFields: _UnrecognizedFields<skirout.editor.v1.expression.ResourceIdentityQuerySource>? =
-            null,
-    ): skirout.editor.v1.expression.ResourceIdentityQuerySource_OrMutable {
-        /** Returns a deeply immutable copy of this instance */
-        override fun toFrozen() = skirout.editor.v1.expression.ResourceIdentityQuerySource(
-            identity = this.identity,
-            target = this.target,
-            _unrecognizedFields = this._unrecognizedFields,
-        );
-    }
-
-    companion object {
-        private val default =
-            skirout.editor.v1.expression.ResourceIdentityQuerySource(
-                skirout.editor.v1.expression.ExpressionNode.UNKNOWN,
-                skirout.editor.v1.type_catalog.TypeUse.UNKNOWN,
-            );
-
-        /** Returns an instance with all fields set to their default values. */
-        fun partial() = default;
-
-        /**
-         * Creates a new instance of [ResourceIdentityQuerySource].
-         * Unlike the constructor, does not require all fields to be specified.
-         * Missing fields will be set to their default values.
-         */
-        fun partial(
-            _mustNameArguments: _MustNameArguments =
-                _MustNameArguments,
-            identity: skirout.editor.v1.expression.ExpressionNode =
-                skirout.editor.v1.expression.ExpressionNode.UNKNOWN,
-            target: skirout.editor.v1.type_catalog.TypeUse =
-                skirout.editor.v1.type_catalog.TypeUse.UNKNOWN,
-        ) = skirout.editor.v1.expression.ResourceIdentityQuerySource(
-            identity = identity,
-            target = target,
-            _unrecognizedFields = null,
-        );
-
-        /** Serializer for [ResourceIdentityQuerySource] instances. */
-        val serializer get() = _SerializerRegistry.ResourceIdentityQuerySourceSerializer;
-
-        /** Describes the [ResourceIdentityQuerySource] type. Provides runtime introspection capabilities. */
-        val typeDescriptor get() = _SerializerRegistry.ResourceIdentityQuerySourceSerializerImpl.typeDescriptor;
-    }
-}
-
-/** Deeply immutable. */
-sealed class ResourceQuerySource private constructor() {
-    /** The kind of variant held by a `ResourceQuerySource`. */
-    enum class Kind {
-        UNKNOWN,
-        REFERENCE_WRAPPER,
-        IDENTITY_WRAPPER,
-    }
-
-    class Unknown @kotlin.Deprecated("For internal use", kotlin.ReplaceWith("skirout.editor.v1.expression.ResourceQuerySource.UNKNOWN")) internal constructor(
-        internal val _kind: Kind,
-        internal override val _unrecognized: _UnrecognizedVariant<skirout.editor.v1.expression.ResourceQuerySource>?,
-    ) : skirout.editor.v1.expression.ResourceQuerySource() {
-        override val kind get() = _kind;
-
-        override fun equals(other: kotlin.Any?): kotlin.Boolean {
-            return other is skirout.editor.v1.expression.ResourceQuerySource && other.kind == kind;
-        }
-
-        override fun hashCode(): kotlin.Int {
-            return kind.ordinal;
-        }
-    }
-
-    class ReferenceWrapper(
-        val value: skirout.editor.v1.expression.ExpressionNode,
-    ) : skirout.editor.v1.expression.ResourceQuerySource() {
-        override val kind get() = Kind.REFERENCE_WRAPPER;
-
-        override fun equals(other: kotlin.Any?): kotlin.Boolean {
-            return other is skirout.editor.v1.expression.ResourceQuerySource.ReferenceWrapper && value == other.value;
-        }
-
-        override fun hashCode(): kotlin.Int {
-            return this.value.hashCode() + -925155509;
-        }
-    }
-
-    class IdentityWrapper private constructor (
-        val value: skirout.editor.v1.expression.ResourceIdentityQuerySource,
-    ) : skirout.editor.v1.expression.ResourceQuerySource() {
-        constructor(
-            value: skirout.editor.v1.expression.ResourceIdentityQuerySource_OrMutable,
-        ): this(value.toFrozen()) {}
-
-        override val kind get() = Kind.IDENTITY_WRAPPER;
-
-        override fun equals(other: kotlin.Any?): kotlin.Boolean {
-            return other is skirout.editor.v1.expression.ResourceQuerySource.IdentityWrapper && value == other.value;
-        }
-
-        override fun hashCode(): kotlin.Int {
-            return this.value.hashCode() + -135761730;
-        }
-    }
-
-    internal open val _unrecognized: _UnrecognizedVariant<skirout.editor.v1.expression.ResourceQuerySource>? get() = null;
-
-    abstract val kind: Kind;
-
-    override fun toString(): kotlin.String {
-        return build.skir.internal.toStringImpl(
-            this,
-            _SerializerRegistry.ResourceQuerySourceSerializerImpl,
-        )
-    }
-
-    companion object {
-        /**
-         * Constant indicating an unknown [ResourceQuerySource].
-         * Default value for fields of type [ResourceQuerySource].
-         */
-        val UNKNOWN = @kotlin.Suppress("DEPRECATION") Unknown(Kind.UNKNOWN, null);
-
-        /** Shortcut for `IdentityWrapper(skirout.editor.v1.expression.ResourceIdentityQuerySource(...))`. */
-        @kotlin.Suppress("UNUSED_PARAMETER")
-        fun createIdentity(
-            _mustNameArguments: _MustNameArguments =
-                _MustNameArguments,
-            identity: skirout.editor.v1.expression.ExpressionNode,
-            target: skirout.editor.v1.type_catalog.TypeUse,
-        ) = IdentityWrapper(
-            skirout.editor.v1.expression.ResourceIdentityQuerySource(
-                identity = identity,
-                target = target,
-            )
-        );
-
-        /** Serializer for [ResourceQuerySource] instances. */
-        val serializer get() = _SerializerRegistry.ResourceQuerySourceSerializer;
-
-        /** Describes the [ResourceQuerySource] type. Provides runtime introspection capabilities. */
-        val typeDescriptor get() = _SerializerRegistry.ResourceQuerySourceSerializerImpl.typeDescriptor;
-    }
-}
-
-/** Deeply immutable. */
-sealed class ExpressionQuery private constructor() {
-    /** The kind of variant held by a `ExpressionQuery`. */
-    enum class Kind {
-        UNKNOWN,
-        RESOURCE_IDENTITY_WRAPPER,
-        RESOURCE_VALUE_WRAPPER,
-        RESOURCE_CONFIGURATION_WRAPPER,
-        VALUE_CONFIGURATION_WRAPPER,
-        CATALOG_DECLARATION_WRAPPER,
-    }
-
-    class Unknown @kotlin.Deprecated("For internal use", kotlin.ReplaceWith("skirout.editor.v1.expression.ExpressionQuery.UNKNOWN")) internal constructor(
-        internal val _kind: Kind,
-        internal override val _unrecognized: _UnrecognizedVariant<skirout.editor.v1.expression.ExpressionQuery>?,
-    ) : skirout.editor.v1.expression.ExpressionQuery() {
-        override val kind get() = _kind;
-
-        override fun equals(other: kotlin.Any?): kotlin.Boolean {
-            return other is skirout.editor.v1.expression.ExpressionQuery && other.kind == kind;
-        }
-
-        override fun hashCode(): kotlin.Int {
-            return kind.ordinal;
-        }
-    }
-
-    class ResourceIdentityWrapper(
-        val value: skirout.editor.v1.expression.ResourceQuerySource,
-    ) : skirout.editor.v1.expression.ExpressionQuery() {
-        override val kind get() = Kind.RESOURCE_IDENTITY_WRAPPER;
-
-        override fun equals(other: kotlin.Any?): kotlin.Boolean {
-            return other is skirout.editor.v1.expression.ExpressionQuery.ResourceIdentityWrapper && value == other.value;
-        }
-
-        override fun hashCode(): kotlin.Int {
-            return this.value.hashCode() + -1734177329;
-        }
-    }
-
-    class ResourceValueWrapper(
-        val value: skirout.editor.v1.expression.ResourceQuerySource,
-    ) : skirout.editor.v1.expression.ExpressionQuery() {
-        override val kind get() = Kind.RESOURCE_VALUE_WRAPPER;
-
-        override fun equals(other: kotlin.Any?): kotlin.Boolean {
-            return other is skirout.editor.v1.expression.ExpressionQuery.ResourceValueWrapper && value == other.value;
-        }
-
-        override fun hashCode(): kotlin.Int {
-            return this.value.hashCode() + 304674304;
-        }
-    }
-
-    class ResourceConfigurationWrapper(
-        val value: skirout.editor.v1.expression.ResourceQuerySource,
-    ) : skirout.editor.v1.expression.ExpressionQuery() {
-        override val kind get() = Kind.RESOURCE_CONFIGURATION_WRAPPER;
-
-        override fun equals(other: kotlin.Any?): kotlin.Boolean {
-            return other is skirout.editor.v1.expression.ExpressionQuery.ResourceConfigurationWrapper && value == other.value;
-        }
-
-        override fun hashCode(): kotlin.Int {
-            return this.value.hashCode() + -800728443;
-        }
-    }
-
-    class ValueConfigurationWrapper(
-        val value: skirout.editor.v1.expression.ExpressionNode,
-    ) : skirout.editor.v1.expression.ExpressionQuery() {
-        override val kind get() = Kind.VALUE_CONFIGURATION_WRAPPER;
-
-        override fun equals(other: kotlin.Any?): kotlin.Boolean {
-            return other is skirout.editor.v1.expression.ExpressionQuery.ValueConfigurationWrapper && value == other.value;
-        }
-
-        override fun hashCode(): kotlin.Int {
-            return this.value.hashCode() + 523632296;
-        }
-    }
-
-    class CatalogDeclarationWrapper(
-        val value: skirout.editor.v1.expression.ExpressionNode,
-    ) : skirout.editor.v1.expression.ExpressionQuery() {
-        override val kind get() = Kind.CATALOG_DECLARATION_WRAPPER;
-
-        override fun equals(other: kotlin.Any?): kotlin.Boolean {
-            return other is skirout.editor.v1.expression.ExpressionQuery.CatalogDeclarationWrapper && value == other.value;
-        }
-
-        override fun hashCode(): kotlin.Int {
-            return this.value.hashCode() + 970905172;
-        }
-    }
-
-    internal open val _unrecognized: _UnrecognizedVariant<skirout.editor.v1.expression.ExpressionQuery>? get() = null;
-
-    abstract val kind: Kind;
-
-    override fun toString(): kotlin.String {
-        return build.skir.internal.toStringImpl(
-            this,
-            _SerializerRegistry.ExpressionQuerySerializerImpl,
-        )
-    }
-
-    companion object {
-        /**
-         * Constant indicating an unknown [ExpressionQuery].
-         * Default value for fields of type [ExpressionQuery].
-         */
-        val UNKNOWN = @kotlin.Suppress("DEPRECATION") Unknown(Kind.UNKNOWN, null);
-
-        /** Serializer for [ExpressionQuery] instances. */
-        val serializer get() = _SerializerRegistry.ExpressionQuerySerializer;
-
-        /** Describes the [ExpressionQuery] type. Provides runtime introspection capabilities. */
-        val typeDescriptor get() = _SerializerRegistry.ExpressionQuerySerializerImpl.typeDescriptor;
+        /** Serializer for [LambdaExpression] instances. */
+        val serializer get() = _SerializerRegistry.LambdaExpressionSerializer;
+
+        /** Describes the [LambdaExpression] type. Provides runtime introspection capabilities. */
+        val typeDescriptor get() = _SerializerRegistry.LambdaExpressionSerializerImpl.typeDescriptor;
     }
 }
 
 /**
- * Closed expression language shared by producers, checkers and evaluators.
- * Boolean and conditional branches evaluate only the needed branch. Collection bodies
- * introduce lexical frames without modifying authored state.
+ * Closed expression language. Hosts evaluate the structural forms themselves; every other
+ * operation is a call to the declared operation catalog.
  *
  * Deeply immutable.
  */
@@ -7054,68 +1317,12 @@ sealed class ExpressionNode private constructor() {
         INPUT_WRAPPER,
         LOCAL_WRAPPER,
         FIELD_WRAPPER,
-        ENTRY_PROJECTION_WRAPPER,
         AND_WRAPPER,
         OR_WRAPPER,
         CONDITIONAL_WRAPPER,
         OR_ELSE_WRAPPER,
-        TEXT_UNARY_WRAPPER,
-        TEXT_COMPARE_WRAPPER,
-        TEXT_LENGTH_WRAPPER,
-        TEXT_HAS_LINE_BREAK_WRAPPER,
-        TEXT_REPLACE_WRAPPER,
-        TEXT_SPLIT_WRAPPER,
-        TEXT_JOIN_WRAPPER,
-        TEXT_SUBSTRING_WRAPPER,
-        TEXT_INTERPOLATE_WRAPPER,
-        REGEX_TEST_WRAPPER,
-        REGEX_CAPTURE_WRAPPER,
-        REGEX_REPLACE_WRAPPER,
-        VALUE_COMPARE_WRAPPER,
-        IS_NULL_WRAPPER,
-        LINK_TARGET_WRAPPER,
-        BOOLEAN_NOT_WRAPPER,
-        NUMBER_ARITHMETIC_WRAPPER,
-        NUMBER_COMPARE_WRAPPER,
-        NUMBER_NEGATE_WRAPPER,
-        NUMBER_ROUND_WRAPPER,
-        NUMBER_FORMAT_WRAPPER,
-        DURATION_FORMAT_WRAPPER,
-        TIMESTAMP_FORMAT_WRAPPER,
-        COLLECTION_SIZE_WRAPPER,
-        COLLECTION_ACCESS_WRAPPER,
-        COLLECTION_CONTAINS_WRAPPER,
-        COLOR_WITH_ALPHA_WRAPPER,
-        RULE_UNARY_WRAPPER,
-        RULE_ONE_OF_WRAPPER,
-        RULE_SIZE_BOUND_WRAPPER,
-        RULE_SIZE_RANGE_WRAPPER,
-        RULE_NUMERIC_BOUND_WRAPPER,
-        RULE_NUMERIC_RANGE_WRAPPER,
-        RULE_MULTIPLE_OF_WRAPPER,
-        RULE_MAXIMUM_SCALE_WRAPPER,
-        RULE_TIMESTAMP_BOUND_WRAPPER,
-        ANY_WRAPPER,
-        ALL_WRAPPER,
-        NONE_WRAPPER,
-        MAP_WRAPPER,
-        FILTER_WRAPPER,
-        FIND_WRAPPER,
-        FIND_LAST_WRAPPER,
-        COUNT_WRAPPER,
-        DISTINCT_BY_WRAPPER,
-        GROUP_BY_WRAPPER,
-        FLAT_MAP_WRAPPER,
-        UNIQUE_BY_WRAPPER,
-        REDUCE_WRAPPER,
-        SORT_BY_WRAPPER,
-        SORT_WITH_WRAPPER,
-        FOLD_WRAPPER,
-        TAKE_WRAPPER,
-        SKIP_WRAPPER,
-        REVERSE_WRAPPER,
-        DISTINCT_WRAPPER,
-        QUERY_WRAPPER,
+        CALL_WRAPPER,
+        LAMBDA_WRAPPER,
     }
 
     class Unknown @kotlin.Deprecated("For internal use", kotlin.ReplaceWith("skirout.editor.v1.expression.ExpressionNode.UNKNOWN")) internal constructor(
@@ -7184,10 +1391,10 @@ sealed class ExpressionNode private constructor() {
     }
 
     class FieldWrapper private constructor (
-        val value: skirout.editor.v1.expression.ExpressionField,
+        val value: skirout.editor.v1.expression.FieldExpression,
     ) : skirout.editor.v1.expression.ExpressionNode() {
         constructor(
-            value: skirout.editor.v1.expression.ExpressionField_OrMutable,
+            value: skirout.editor.v1.expression.FieldExpression_OrMutable,
         ): this(value.toFrozen()) {}
 
         override val kind get() = Kind.FIELD_WRAPPER;
@@ -7201,29 +1408,11 @@ sealed class ExpressionNode private constructor() {
         }
     }
 
-    class EntryProjectionWrapper private constructor (
-        val value: skirout.editor.v1.expression.ExpressionEntryProjection,
-    ) : skirout.editor.v1.expression.ExpressionNode() {
-        constructor(
-            value: skirout.editor.v1.expression.ExpressionEntryProjection_OrMutable,
-        ): this(value.toFrozen()) {}
-
-        override val kind get() = Kind.ENTRY_PROJECTION_WRAPPER;
-
-        override fun equals(other: kotlin.Any?): kotlin.Boolean {
-            return other is skirout.editor.v1.expression.ExpressionNode.EntryProjectionWrapper && value == other.value;
-        }
-
-        override fun hashCode(): kotlin.Int {
-            return this.value.hashCode() + -1743340484;
-        }
-    }
-
     class AndWrapper private constructor (
-        val value: skirout.editor.v1.expression.BinaryExpression,
+        val value: skirout.editor.v1.expression.LogicalExpression,
     ) : skirout.editor.v1.expression.ExpressionNode() {
         constructor(
-            value: skirout.editor.v1.expression.BinaryExpression_OrMutable,
+            value: skirout.editor.v1.expression.LogicalExpression_OrMutable,
         ): this(value.toFrozen()) {}
 
         override val kind get() = Kind.AND_WRAPPER;
@@ -7238,10 +1427,10 @@ sealed class ExpressionNode private constructor() {
     }
 
     class OrWrapper private constructor (
-        val value: skirout.editor.v1.expression.BinaryExpression,
+        val value: skirout.editor.v1.expression.LogicalExpression,
     ) : skirout.editor.v1.expression.ExpressionNode() {
         constructor(
-            value: skirout.editor.v1.expression.BinaryExpression_OrMutable,
+            value: skirout.editor.v1.expression.LogicalExpression_OrMutable,
         ): this(value.toFrozen()) {}
 
         override val kind get() = Kind.OR_WRAPPER;
@@ -7274,10 +1463,10 @@ sealed class ExpressionNode private constructor() {
     }
 
     class OrElseWrapper private constructor (
-        val value: skirout.editor.v1.expression.OrElseExpression,
+        val value: skirout.editor.v1.expression.FallbackExpression,
     ) : skirout.editor.v1.expression.ExpressionNode() {
         constructor(
-            value: skirout.editor.v1.expression.OrElseExpression_OrMutable,
+            value: skirout.editor.v1.expression.FallbackExpression_OrMutable,
         ): this(value.toFrozen()) {}
 
         override val kind get() = Kind.OR_ELSE_WRAPPER;
@@ -7291,989 +1480,39 @@ sealed class ExpressionNode private constructor() {
         }
     }
 
-    class TextUnaryWrapper private constructor (
-        val value: skirout.editor.v1.expression.TextUnaryExpression,
+    class CallWrapper private constructor (
+        val value: skirout.editor.v1.expression.CallExpression,
     ) : skirout.editor.v1.expression.ExpressionNode() {
         constructor(
-            value: skirout.editor.v1.expression.TextUnaryExpression_OrMutable,
+            value: skirout.editor.v1.expression.CallExpression_OrMutable,
         ): this(value.toFrozen()) {}
 
-        override val kind get() = Kind.TEXT_UNARY_WRAPPER;
+        override val kind get() = Kind.CALL_WRAPPER;
 
         override fun equals(other: kotlin.Any?): kotlin.Boolean {
-            return other is skirout.editor.v1.expression.ExpressionNode.TextUnaryWrapper && value == other.value;
+            return other is skirout.editor.v1.expression.ExpressionNode.CallWrapper && value == other.value;
         }
 
         override fun hashCode(): kotlin.Int {
-            return this.value.hashCode() + -2098754659;
+            return this.value.hashCode() + 3045982;
         }
     }
 
-    class TextCompareWrapper private constructor (
-        val value: skirout.editor.v1.expression.TextCompareExpression,
+    class LambdaWrapper private constructor (
+        val value: skirout.editor.v1.expression.LambdaExpression,
     ) : skirout.editor.v1.expression.ExpressionNode() {
         constructor(
-            value: skirout.editor.v1.expression.TextCompareExpression_OrMutable,
+            value: skirout.editor.v1.expression.LambdaExpression_OrMutable,
         ): this(value.toFrozen()) {}
 
-        override val kind get() = Kind.TEXT_COMPARE_WRAPPER;
+        override val kind get() = Kind.LAMBDA_WRAPPER;
 
         override fun equals(other: kotlin.Any?): kotlin.Boolean {
-            return other is skirout.editor.v1.expression.ExpressionNode.TextCompareWrapper && value == other.value;
+            return other is skirout.editor.v1.expression.ExpressionNode.LambdaWrapper && value == other.value;
         }
 
         override fun hashCode(): kotlin.Int {
-            return this.value.hashCode() + -1319130157;
-        }
-    }
-
-    class TextLengthWrapper(
-        val value: skirout.editor.v1.expression.ExpressionNode,
-    ) : skirout.editor.v1.expression.ExpressionNode() {
-        override val kind get() = Kind.TEXT_LENGTH_WRAPPER;
-
-        override fun equals(other: kotlin.Any?): kotlin.Boolean {
-            return other is skirout.editor.v1.expression.ExpressionNode.TextLengthWrapper && value == other.value;
-        }
-
-        override fun hashCode(): kotlin.Int {
-            return this.value.hashCode() + -902482376;
-        }
-    }
-
-    class TextHasLineBreakWrapper(
-        val value: skirout.editor.v1.expression.ExpressionNode,
-    ) : skirout.editor.v1.expression.ExpressionNode() {
-        override val kind get() = Kind.TEXT_HAS_LINE_BREAK_WRAPPER;
-
-        override fun equals(other: kotlin.Any?): kotlin.Boolean {
-            return other is skirout.editor.v1.expression.ExpressionNode.TextHasLineBreakWrapper && value == other.value;
-        }
-
-        override fun hashCode(): kotlin.Int {
-            return this.value.hashCode() + -55759605;
-        }
-    }
-
-    class TextReplaceWrapper private constructor (
-        val value: skirout.editor.v1.expression.TextReplaceExpression,
-    ) : skirout.editor.v1.expression.ExpressionNode() {
-        constructor(
-            value: skirout.editor.v1.expression.TextReplaceExpression_OrMutable,
-        ): this(value.toFrozen()) {}
-
-        override val kind get() = Kind.TEXT_REPLACE_WRAPPER;
-
-        override fun equals(other: kotlin.Any?): kotlin.Boolean {
-            return other is skirout.editor.v1.expression.ExpressionNode.TextReplaceWrapper && value == other.value;
-        }
-
-        override fun hashCode(): kotlin.Int {
-            return this.value.hashCode() + -1175117406;
-        }
-    }
-
-    class TextSplitWrapper private constructor (
-        val value: skirout.editor.v1.expression.TextSplitExpression,
-    ) : skirout.editor.v1.expression.ExpressionNode() {
-        constructor(
-            value: skirout.editor.v1.expression.TextSplitExpression_OrMutable,
-        ): this(value.toFrozen()) {}
-
-        override val kind get() = Kind.TEXT_SPLIT_WRAPPER;
-
-        override fun equals(other: kotlin.Any?): kotlin.Boolean {
-            return other is skirout.editor.v1.expression.ExpressionNode.TextSplitWrapper && value == other.value;
-        }
-
-        override fun hashCode(): kotlin.Int {
-            return this.value.hashCode() + -2100531832;
-        }
-    }
-
-    class TextJoinWrapper private constructor (
-        val value: skirout.editor.v1.expression.TextJoinExpression,
-    ) : skirout.editor.v1.expression.ExpressionNode() {
-        constructor(
-            value: skirout.editor.v1.expression.TextJoinExpression_OrMutable,
-        ): this(value.toFrozen()) {}
-
-        override val kind get() = Kind.TEXT_JOIN_WRAPPER;
-
-        override fun equals(other: kotlin.Any?): kotlin.Boolean {
-            return other is skirout.editor.v1.expression.ExpressionNode.TextJoinWrapper && value == other.value;
-        }
-
-        override fun hashCode(): kotlin.Int {
-            return this.value.hashCode() + -1037859588;
-        }
-    }
-
-    class TextSubstringWrapper private constructor (
-        val value: skirout.editor.v1.expression.TextSubstringExpression,
-    ) : skirout.editor.v1.expression.ExpressionNode() {
-        constructor(
-            value: skirout.editor.v1.expression.TextSubstringExpression_OrMutable,
-        ): this(value.toFrozen()) {}
-
-        override val kind get() = Kind.TEXT_SUBSTRING_WRAPPER;
-
-        override fun equals(other: kotlin.Any?): kotlin.Boolean {
-            return other is skirout.editor.v1.expression.ExpressionNode.TextSubstringWrapper && value == other.value;
-        }
-
-        override fun hashCode(): kotlin.Int {
-            return this.value.hashCode() + 1274534335;
-        }
-    }
-
-    class TextInterpolateWrapper private constructor (
-        val value: skirout.editor.v1.expression.TextInterpolateExpression,
-    ) : skirout.editor.v1.expression.ExpressionNode() {
-        constructor(
-            value: skirout.editor.v1.expression.TextInterpolateExpression_OrMutable,
-        ): this(value.toFrozen()) {}
-
-        override val kind get() = Kind.TEXT_INTERPOLATE_WRAPPER;
-
-        override fun equals(other: kotlin.Any?): kotlin.Boolean {
-            return other is skirout.editor.v1.expression.ExpressionNode.TextInterpolateWrapper && value == other.value;
-        }
-
-        override fun hashCode(): kotlin.Int {
-            return this.value.hashCode() + 1319151;
-        }
-    }
-
-    class RegexTestWrapper private constructor (
-        val value: skirout.editor.v1.expression.RegexTestExpression,
-    ) : skirout.editor.v1.expression.ExpressionNode() {
-        constructor(
-            value: skirout.editor.v1.expression.RegexTestExpression_OrMutable,
-        ): this(value.toFrozen()) {}
-
-        override val kind get() = Kind.REGEX_TEST_WRAPPER;
-
-        override fun equals(other: kotlin.Any?): kotlin.Boolean {
-            return other is skirout.editor.v1.expression.ExpressionNode.RegexTestWrapper && value == other.value;
-        }
-
-        override fun hashCode(): kotlin.Int {
-            return this.value.hashCode() + -1000791670;
-        }
-    }
-
-    class RegexCaptureWrapper private constructor (
-        val value: skirout.editor.v1.expression.RegexCaptureExpression,
-    ) : skirout.editor.v1.expression.ExpressionNode() {
-        constructor(
-            value: skirout.editor.v1.expression.RegexCaptureExpression_OrMutable,
-        ): this(value.toFrozen()) {}
-
-        override val kind get() = Kind.REGEX_CAPTURE_WRAPPER;
-
-        override fun equals(other: kotlin.Any?): kotlin.Boolean {
-            return other is skirout.editor.v1.expression.ExpressionNode.RegexCaptureWrapper && value == other.value;
-        }
-
-        override fun hashCode(): kotlin.Int {
-            return this.value.hashCode() + -1241503922;
-        }
-    }
-
-    class RegexReplaceWrapper private constructor (
-        val value: skirout.editor.v1.expression.RegexReplaceExpression,
-    ) : skirout.editor.v1.expression.ExpressionNode() {
-        constructor(
-            value: skirout.editor.v1.expression.RegexReplaceExpression_OrMutable,
-        ): this(value.toFrozen()) {}
-
-        override val kind get() = Kind.REGEX_REPLACE_WRAPPER;
-
-        override fun equals(other: kotlin.Any?): kotlin.Boolean {
-            return other is skirout.editor.v1.expression.ExpressionNode.RegexReplaceWrapper && value == other.value;
-        }
-
-        override fun hashCode(): kotlin.Int {
-            return this.value.hashCode() + -699592004;
-        }
-    }
-
-    class ValueCompareWrapper private constructor (
-        val value: skirout.editor.v1.expression.ValueCompareExpression,
-    ) : skirout.editor.v1.expression.ExpressionNode() {
-        constructor(
-            value: skirout.editor.v1.expression.ValueCompareExpression_OrMutable,
-        ): this(value.toFrozen()) {}
-
-        override val kind get() = Kind.VALUE_COMPARE_WRAPPER;
-
-        override fun equals(other: kotlin.Any?): kotlin.Boolean {
-            return other is skirout.editor.v1.expression.ExpressionNode.ValueCompareWrapper && value == other.value;
-        }
-
-        override fun hashCode(): kotlin.Int {
-            return this.value.hashCode() + -1795722217;
-        }
-    }
-
-    class IsNullWrapper(
-        val value: skirout.editor.v1.expression.ExpressionNode,
-    ) : skirout.editor.v1.expression.ExpressionNode() {
-        override val kind get() = Kind.IS_NULL_WRAPPER;
-
-        override fun equals(other: kotlin.Any?): kotlin.Boolean {
-            return other is skirout.editor.v1.expression.ExpressionNode.IsNullWrapper && value == other.value;
-        }
-
-        override fun hashCode(): kotlin.Int {
-            return this.value.hashCode() + 2082085756;
-        }
-    }
-
-    class LinkTargetWrapper(
-        val value: skirout.editor.v1.expression.ExpressionNode,
-    ) : skirout.editor.v1.expression.ExpressionNode() {
-        override val kind get() = Kind.LINK_TARGET_WRAPPER;
-
-        override fun equals(other: kotlin.Any?): kotlin.Boolean {
-            return other is skirout.editor.v1.expression.ExpressionNode.LinkTargetWrapper && value == other.value;
-        }
-
-        override fun hashCode(): kotlin.Int {
-            return this.value.hashCode() + -1878085258;
-        }
-    }
-
-    class BooleanNotWrapper(
-        val value: skirout.editor.v1.expression.ExpressionNode,
-    ) : skirout.editor.v1.expression.ExpressionNode() {
-        override val kind get() = Kind.BOOLEAN_NOT_WRAPPER;
-
-        override fun equals(other: kotlin.Any?): kotlin.Boolean {
-            return other is skirout.editor.v1.expression.ExpressionNode.BooleanNotWrapper && value == other.value;
-        }
-
-        override fun hashCode(): kotlin.Int {
-            return this.value.hashCode() + -1834618308;
-        }
-    }
-
-    class NumberArithmeticWrapper private constructor (
-        val value: skirout.editor.v1.expression.NumberArithmeticExpression,
-    ) : skirout.editor.v1.expression.ExpressionNode() {
-        constructor(
-            value: skirout.editor.v1.expression.NumberArithmeticExpression_OrMutable,
-        ): this(value.toFrozen()) {}
-
-        override val kind get() = Kind.NUMBER_ARITHMETIC_WRAPPER;
-
-        override fun equals(other: kotlin.Any?): kotlin.Boolean {
-            return other is skirout.editor.v1.expression.ExpressionNode.NumberArithmeticWrapper && value == other.value;
-        }
-
-        override fun hashCode(): kotlin.Int {
-            return this.value.hashCode() + 592051040;
-        }
-    }
-
-    class NumberCompareWrapper private constructor (
-        val value: skirout.editor.v1.expression.NumberCompareExpression,
-    ) : skirout.editor.v1.expression.ExpressionNode() {
-        constructor(
-            value: skirout.editor.v1.expression.NumberCompareExpression_OrMutable,
-        ): this(value.toFrozen()) {}
-
-        override val kind get() = Kind.NUMBER_COMPARE_WRAPPER;
-
-        override fun equals(other: kotlin.Any?): kotlin.Boolean {
-            return other is skirout.editor.v1.expression.ExpressionNode.NumberCompareWrapper && value == other.value;
-        }
-
-        override fun hashCode(): kotlin.Int {
-            return this.value.hashCode() + -2113378833;
-        }
-    }
-
-    class NumberNegateWrapper(
-        val value: skirout.editor.v1.expression.ExpressionNode,
-    ) : skirout.editor.v1.expression.ExpressionNode() {
-        override val kind get() = Kind.NUMBER_NEGATE_WRAPPER;
-
-        override fun equals(other: kotlin.Any?): kotlin.Boolean {
-            return other is skirout.editor.v1.expression.ExpressionNode.NumberNegateWrapper && value == other.value;
-        }
-
-        override fun hashCode(): kotlin.Int {
-            return this.value.hashCode() + 237319352;
-        }
-    }
-
-    class NumberRoundWrapper private constructor (
-        val value: skirout.editor.v1.expression.NumberRoundExpression,
-    ) : skirout.editor.v1.expression.ExpressionNode() {
-        constructor(
-            value: skirout.editor.v1.expression.NumberRoundExpression_OrMutable,
-        ): this(value.toFrozen()) {}
-
-        override val kind get() = Kind.NUMBER_ROUND_WRAPPER;
-
-        override fun equals(other: kotlin.Any?): kotlin.Boolean {
-            return other is skirout.editor.v1.expression.ExpressionNode.NumberRoundWrapper && value == other.value;
-        }
-
-        override fun hashCode(): kotlin.Int {
-            return this.value.hashCode() + 1397134616;
-        }
-    }
-
-    class NumberFormatWrapper private constructor (
-        val value: skirout.editor.v1.expression.NumberFormatExpression,
-    ) : skirout.editor.v1.expression.ExpressionNode() {
-        constructor(
-            value: skirout.editor.v1.expression.NumberFormatExpression_OrMutable,
-        ): this(value.toFrozen()) {}
-
-        override val kind get() = Kind.NUMBER_FORMAT_WRAPPER;
-
-        override fun equals(other: kotlin.Any?): kotlin.Boolean {
-            return other is skirout.editor.v1.expression.ExpressionNode.NumberFormatWrapper && value == other.value;
-        }
-
-        override fun hashCode(): kotlin.Int {
-            return this.value.hashCode() + 17860013;
-        }
-    }
-
-    class DurationFormatWrapper private constructor (
-        val value: skirout.editor.v1.expression.DurationFormatExpression,
-    ) : skirout.editor.v1.expression.ExpressionNode() {
-        constructor(
-            value: skirout.editor.v1.expression.DurationFormatExpression_OrMutable,
-        ): this(value.toFrozen()) {}
-
-        override val kind get() = Kind.DURATION_FORMAT_WRAPPER;
-
-        override fun equals(other: kotlin.Any?): kotlin.Boolean {
-            return other is skirout.editor.v1.expression.ExpressionNode.DurationFormatWrapper && value == other.value;
-        }
-
-        override fun hashCode(): kotlin.Int {
-            return this.value.hashCode() + 1622735106;
-        }
-    }
-
-    class TimestampFormatWrapper private constructor (
-        val value: skirout.editor.v1.expression.TimestampFormatExpression,
-    ) : skirout.editor.v1.expression.ExpressionNode() {
-        constructor(
-            value: skirout.editor.v1.expression.TimestampFormatExpression_OrMutable,
-        ): this(value.toFrozen()) {}
-
-        override val kind get() = Kind.TIMESTAMP_FORMAT_WRAPPER;
-
-        override fun equals(other: kotlin.Any?): kotlin.Boolean {
-            return other is skirout.editor.v1.expression.ExpressionNode.TimestampFormatWrapper && value == other.value;
-        }
-
-        override fun hashCode(): kotlin.Int {
-            return this.value.hashCode() + -1141864640;
-        }
-    }
-
-    class CollectionSizeWrapper(
-        val value: skirout.editor.v1.expression.ExpressionNode,
-    ) : skirout.editor.v1.expression.ExpressionNode() {
-        override val kind get() = Kind.COLLECTION_SIZE_WRAPPER;
-
-        override fun equals(other: kotlin.Any?): kotlin.Boolean {
-            return other is skirout.editor.v1.expression.ExpressionNode.CollectionSizeWrapper && value == other.value;
-        }
-
-        override fun hashCode(): kotlin.Int {
-            return this.value.hashCode() + 1060461826;
-        }
-    }
-
-    class CollectionAccessWrapper private constructor (
-        val value: skirout.editor.v1.expression.CollectionAccessExpression,
-    ) : skirout.editor.v1.expression.ExpressionNode() {
-        constructor(
-            value: skirout.editor.v1.expression.CollectionAccessExpression_OrMutable,
-        ): this(value.toFrozen()) {}
-
-        override val kind get() = Kind.COLLECTION_ACCESS_WRAPPER;
-
-        override fun equals(other: kotlin.Any?): kotlin.Boolean {
-            return other is skirout.editor.v1.expression.ExpressionNode.CollectionAccessWrapper && value == other.value;
-        }
-
-        override fun hashCode(): kotlin.Int {
-            return this.value.hashCode() + 675018277;
-        }
-    }
-
-    class CollectionContainsWrapper private constructor (
-        val value: skirout.editor.v1.expression.CollectionContainsExpression,
-    ) : skirout.editor.v1.expression.ExpressionNode() {
-        constructor(
-            value: skirout.editor.v1.expression.CollectionContainsExpression_OrMutable,
-        ): this(value.toFrozen()) {}
-
-        override val kind get() = Kind.COLLECTION_CONTAINS_WRAPPER;
-
-        override fun equals(other: kotlin.Any?): kotlin.Boolean {
-            return other is skirout.editor.v1.expression.ExpressionNode.CollectionContainsWrapper && value == other.value;
-        }
-
-        override fun hashCode(): kotlin.Int {
-            return this.value.hashCode() + 1731496608;
-        }
-    }
-
-    class ColorWithAlphaWrapper private constructor (
-        val value: skirout.editor.v1.expression.ColorWithAlphaExpression,
-    ) : skirout.editor.v1.expression.ExpressionNode() {
-        constructor(
-            value: skirout.editor.v1.expression.ColorWithAlphaExpression_OrMutable,
-        ): this(value.toFrozen()) {}
-
-        override val kind get() = Kind.COLOR_WITH_ALPHA_WRAPPER;
-
-        override fun equals(other: kotlin.Any?): kotlin.Boolean {
-            return other is skirout.editor.v1.expression.ExpressionNode.ColorWithAlphaWrapper && value == other.value;
-        }
-
-        override fun hashCode(): kotlin.Int {
-            return this.value.hashCode() + 693261057;
-        }
-    }
-
-    class RuleUnaryWrapper private constructor (
-        val value: skirout.editor.v1.expression.RuleUnaryExpression,
-    ) : skirout.editor.v1.expression.ExpressionNode() {
-        constructor(
-            value: skirout.editor.v1.expression.RuleUnaryExpression_OrMutable,
-        ): this(value.toFrozen()) {}
-
-        override val kind get() = Kind.RULE_UNARY_WRAPPER;
-
-        override fun equals(other: kotlin.Any?): kotlin.Boolean {
-            return other is skirout.editor.v1.expression.ExpressionNode.RuleUnaryWrapper && value == other.value;
-        }
-
-        override fun hashCode(): kotlin.Int {
-            return this.value.hashCode() + -426768852;
-        }
-    }
-
-    class RuleOneOfWrapper private constructor (
-        val value: skirout.editor.v1.expression.RuleOneOfExpression,
-    ) : skirout.editor.v1.expression.ExpressionNode() {
-        constructor(
-            value: skirout.editor.v1.expression.RuleOneOfExpression_OrMutable,
-        ): this(value.toFrozen()) {}
-
-        override val kind get() = Kind.RULE_ONE_OF_WRAPPER;
-
-        override fun equals(other: kotlin.Any?): kotlin.Boolean {
-            return other is skirout.editor.v1.expression.ExpressionNode.RuleOneOfWrapper && value == other.value;
-        }
-
-        override fun hashCode(): kotlin.Int {
-            return this.value.hashCode() + -516606733;
-        }
-    }
-
-    class RuleSizeBoundWrapper private constructor (
-        val value: skirout.editor.v1.expression.RuleSizeBoundExpression,
-    ) : skirout.editor.v1.expression.ExpressionNode() {
-        constructor(
-            value: skirout.editor.v1.expression.RuleSizeBoundExpression_OrMutable,
-        ): this(value.toFrozen()) {}
-
-        override val kind get() = Kind.RULE_SIZE_BOUND_WRAPPER;
-
-        override fun equals(other: kotlin.Any?): kotlin.Boolean {
-            return other is skirout.editor.v1.expression.ExpressionNode.RuleSizeBoundWrapper && value == other.value;
-        }
-
-        override fun hashCode(): kotlin.Int {
-            return this.value.hashCode() + -1137213213;
-        }
-    }
-
-    class RuleSizeRangeWrapper private constructor (
-        val value: skirout.editor.v1.expression.RuleSizeRangeExpression,
-    ) : skirout.editor.v1.expression.ExpressionNode() {
-        constructor(
-            value: skirout.editor.v1.expression.RuleSizeRangeExpression_OrMutable,
-        ): this(value.toFrozen()) {}
-
-        override val kind get() = Kind.RULE_SIZE_RANGE_WRAPPER;
-
-        override fun equals(other: kotlin.Any?): kotlin.Boolean {
-            return other is skirout.editor.v1.expression.ExpressionNode.RuleSizeRangeWrapper && value == other.value;
-        }
-
-        override fun hashCode(): kotlin.Int {
-            return this.value.hashCode() + -1122860894;
-        }
-    }
-
-    class RuleNumericBoundWrapper private constructor (
-        val value: skirout.editor.v1.expression.RuleNumericBoundExpression,
-    ) : skirout.editor.v1.expression.ExpressionNode() {
-        constructor(
-            value: skirout.editor.v1.expression.RuleNumericBoundExpression_OrMutable,
-        ): this(value.toFrozen()) {}
-
-        override val kind get() = Kind.RULE_NUMERIC_BOUND_WRAPPER;
-
-        override fun equals(other: kotlin.Any?): kotlin.Boolean {
-            return other is skirout.editor.v1.expression.ExpressionNode.RuleNumericBoundWrapper && value == other.value;
-        }
-
-        override fun hashCode(): kotlin.Int {
-            return this.value.hashCode() + 1517025737;
-        }
-    }
-
-    class RuleNumericRangeWrapper private constructor (
-        val value: skirout.editor.v1.expression.RuleNumericRangeExpression,
-    ) : skirout.editor.v1.expression.ExpressionNode() {
-        constructor(
-            value: skirout.editor.v1.expression.RuleNumericRangeExpression_OrMutable,
-        ): this(value.toFrozen()) {}
-
-        override val kind get() = Kind.RULE_NUMERIC_RANGE_WRAPPER;
-
-        override fun equals(other: kotlin.Any?): kotlin.Boolean {
-            return other is skirout.editor.v1.expression.ExpressionNode.RuleNumericRangeWrapper && value == other.value;
-        }
-
-        override fun hashCode(): kotlin.Int {
-            return this.value.hashCode() + 1531378056;
-        }
-    }
-
-    class RuleMultipleOfWrapper private constructor (
-        val value: skirout.editor.v1.expression.RuleMultipleOfExpression,
-    ) : skirout.editor.v1.expression.ExpressionNode() {
-        constructor(
-            value: skirout.editor.v1.expression.RuleMultipleOfExpression_OrMutable,
-        ): this(value.toFrozen()) {}
-
-        override val kind get() = Kind.RULE_MULTIPLE_OF_WRAPPER;
-
-        override fun equals(other: kotlin.Any?): kotlin.Boolean {
-            return other is skirout.editor.v1.expression.ExpressionNode.RuleMultipleOfWrapper && value == other.value;
-        }
-
-        override fun hashCode(): kotlin.Int {
-            return this.value.hashCode() + -470700637;
-        }
-    }
-
-    class RuleMaximumScaleWrapper private constructor (
-        val value: skirout.editor.v1.expression.RuleMaximumScaleExpression,
-    ) : skirout.editor.v1.expression.ExpressionNode() {
-        constructor(
-            value: skirout.editor.v1.expression.RuleMaximumScaleExpression_OrMutable,
-        ): this(value.toFrozen()) {}
-
-        override val kind get() = Kind.RULE_MAXIMUM_SCALE_WRAPPER;
-
-        override fun equals(other: kotlin.Any?): kotlin.Boolean {
-            return other is skirout.editor.v1.expression.ExpressionNode.RuleMaximumScaleWrapper && value == other.value;
-        }
-
-        override fun hashCode(): kotlin.Int {
-            return this.value.hashCode() + 337742440;
-        }
-    }
-
-    class RuleTimestampBoundWrapper private constructor (
-        val value: skirout.editor.v1.expression.RuleTimestampBoundExpression,
-    ) : skirout.editor.v1.expression.ExpressionNode() {
-        constructor(
-            value: skirout.editor.v1.expression.RuleTimestampBoundExpression_OrMutable,
-        ): this(value.toFrozen()) {}
-
-        override val kind get() = Kind.RULE_TIMESTAMP_BOUND_WRAPPER;
-
-        override fun equals(other: kotlin.Any?): kotlin.Boolean {
-            return other is skirout.editor.v1.expression.ExpressionNode.RuleTimestampBoundWrapper && value == other.value;
-        }
-
-        override fun hashCode(): kotlin.Int {
-            return this.value.hashCode() + 1445368274;
-        }
-    }
-
-    class AnyWrapper private constructor (
-        val value: skirout.editor.v1.expression.UnaryCollectionExpression,
-    ) : skirout.editor.v1.expression.ExpressionNode() {
-        constructor(
-            value: skirout.editor.v1.expression.UnaryCollectionExpression_OrMutable,
-        ): this(value.toFrozen()) {}
-
-        override val kind get() = Kind.ANY_WRAPPER;
-
-        override fun equals(other: kotlin.Any?): kotlin.Boolean {
-            return other is skirout.editor.v1.expression.ExpressionNode.AnyWrapper && value == other.value;
-        }
-
-        override fun hashCode(): kotlin.Int {
-            return this.value.hashCode() + 96748;
-        }
-    }
-
-    class AllWrapper private constructor (
-        val value: skirout.editor.v1.expression.UnaryCollectionExpression,
-    ) : skirout.editor.v1.expression.ExpressionNode() {
-        constructor(
-            value: skirout.editor.v1.expression.UnaryCollectionExpression_OrMutable,
-        ): this(value.toFrozen()) {}
-
-        override val kind get() = Kind.ALL_WRAPPER;
-
-        override fun equals(other: kotlin.Any?): kotlin.Boolean {
-            return other is skirout.editor.v1.expression.ExpressionNode.AllWrapper && value == other.value;
-        }
-
-        override fun hashCode(): kotlin.Int {
-            return this.value.hashCode() + 96673;
-        }
-    }
-
-    class NoneWrapper private constructor (
-        val value: skirout.editor.v1.expression.UnaryCollectionExpression,
-    ) : skirout.editor.v1.expression.ExpressionNode() {
-        constructor(
-            value: skirout.editor.v1.expression.UnaryCollectionExpression_OrMutable,
-        ): this(value.toFrozen()) {}
-
-        override val kind get() = Kind.NONE_WRAPPER;
-
-        override fun equals(other: kotlin.Any?): kotlin.Boolean {
-            return other is skirout.editor.v1.expression.ExpressionNode.NoneWrapper && value == other.value;
-        }
-
-        override fun hashCode(): kotlin.Int {
-            return this.value.hashCode() + 3387192;
-        }
-    }
-
-    class MapWrapper private constructor (
-        val value: skirout.editor.v1.expression.UnaryCollectionExpression,
-    ) : skirout.editor.v1.expression.ExpressionNode() {
-        constructor(
-            value: skirout.editor.v1.expression.UnaryCollectionExpression_OrMutable,
-        ): this(value.toFrozen()) {}
-
-        override val kind get() = Kind.MAP_WRAPPER;
-
-        override fun equals(other: kotlin.Any?): kotlin.Boolean {
-            return other is skirout.editor.v1.expression.ExpressionNode.MapWrapper && value == other.value;
-        }
-
-        override fun hashCode(): kotlin.Int {
-            return this.value.hashCode() + 107868;
-        }
-    }
-
-    class FilterWrapper private constructor (
-        val value: skirout.editor.v1.expression.UnaryCollectionExpression,
-    ) : skirout.editor.v1.expression.ExpressionNode() {
-        constructor(
-            value: skirout.editor.v1.expression.UnaryCollectionExpression_OrMutable,
-        ): this(value.toFrozen()) {}
-
-        override val kind get() = Kind.FILTER_WRAPPER;
-
-        override fun equals(other: kotlin.Any?): kotlin.Boolean {
-            return other is skirout.editor.v1.expression.ExpressionNode.FilterWrapper && value == other.value;
-        }
-
-        override fun hashCode(): kotlin.Int {
-            return this.value.hashCode() + -1274492040;
-        }
-    }
-
-    class FindWrapper private constructor (
-        val value: skirout.editor.v1.expression.UnaryCollectionExpression,
-    ) : skirout.editor.v1.expression.ExpressionNode() {
-        constructor(
-            value: skirout.editor.v1.expression.UnaryCollectionExpression_OrMutable,
-        ): this(value.toFrozen()) {}
-
-        override val kind get() = Kind.FIND_WRAPPER;
-
-        override fun equals(other: kotlin.Any?): kotlin.Boolean {
-            return other is skirout.editor.v1.expression.ExpressionNode.FindWrapper && value == other.value;
-        }
-
-        override fun hashCode(): kotlin.Int {
-            return this.value.hashCode() + 3143097;
-        }
-    }
-
-    class FindLastWrapper private constructor (
-        val value: skirout.editor.v1.expression.UnaryCollectionExpression,
-    ) : skirout.editor.v1.expression.ExpressionNode() {
-        constructor(
-            value: skirout.editor.v1.expression.UnaryCollectionExpression_OrMutable,
-        ): this(value.toFrozen()) {}
-
-        override val kind get() = Kind.FIND_LAST_WRAPPER;
-
-        override fun equals(other: kotlin.Any?): kotlin.Boolean {
-            return other is skirout.editor.v1.expression.ExpressionNode.FindLastWrapper && value == other.value;
-        }
-
-        override fun hashCode(): kotlin.Int {
-            return this.value.hashCode() + 429850972;
-        }
-    }
-
-    class CountWrapper private constructor (
-        val value: skirout.editor.v1.expression.UnaryCollectionExpression,
-    ) : skirout.editor.v1.expression.ExpressionNode() {
-        constructor(
-            value: skirout.editor.v1.expression.UnaryCollectionExpression_OrMutable,
-        ): this(value.toFrozen()) {}
-
-        override val kind get() = Kind.COUNT_WRAPPER;
-
-        override fun equals(other: kotlin.Any?): kotlin.Boolean {
-            return other is skirout.editor.v1.expression.ExpressionNode.CountWrapper && value == other.value;
-        }
-
-        override fun hashCode(): kotlin.Int {
-            return this.value.hashCode() + 94851343;
-        }
-    }
-
-    class DistinctByWrapper private constructor (
-        val value: skirout.editor.v1.expression.UnaryCollectionExpression,
-    ) : skirout.editor.v1.expression.ExpressionNode() {
-        constructor(
-            value: skirout.editor.v1.expression.UnaryCollectionExpression_OrMutable,
-        ): this(value.toFrozen()) {}
-
-        override val kind get() = Kind.DISTINCT_BY_WRAPPER;
-
-        override fun equals(other: kotlin.Any?): kotlin.Boolean {
-            return other is skirout.editor.v1.expression.ExpressionNode.DistinctByWrapper && value == other.value;
-        }
-
-        override fun hashCode(): kotlin.Int {
-            return this.value.hashCode() + 2080903290;
-        }
-    }
-
-    class GroupByWrapper private constructor (
-        val value: skirout.editor.v1.expression.UnaryCollectionExpression,
-    ) : skirout.editor.v1.expression.ExpressionNode() {
-        constructor(
-            value: skirout.editor.v1.expression.UnaryCollectionExpression_OrMutable,
-        ): this(value.toFrozen()) {}
-
-        override val kind get() = Kind.GROUP_BY_WRAPPER;
-
-        override fun equals(other: kotlin.Any?): kotlin.Boolean {
-            return other is skirout.editor.v1.expression.ExpressionNode.GroupByWrapper && value == other.value;
-        }
-
-        override fun hashCode(): kotlin.Int {
-            return this.value.hashCode() + 506361367;
-        }
-    }
-
-    class FlatMapWrapper private constructor (
-        val value: skirout.editor.v1.expression.UnaryCollectionExpression,
-    ) : skirout.editor.v1.expression.ExpressionNode() {
-        constructor(
-            value: skirout.editor.v1.expression.UnaryCollectionExpression_OrMutable,
-        ): this(value.toFrozen()) {}
-
-        override val kind get() = Kind.FLAT_MAP_WRAPPER;
-
-        override fun equals(other: kotlin.Any?): kotlin.Boolean {
-            return other is skirout.editor.v1.expression.ExpressionNode.FlatMapWrapper && value == other.value;
-        }
-
-        override fun hashCode(): kotlin.Int {
-            return this.value.hashCode() + 1626238870;
-        }
-    }
-
-    class UniqueByWrapper private constructor (
-        val value: skirout.editor.v1.expression.UnaryCollectionExpression,
-    ) : skirout.editor.v1.expression.ExpressionNode() {
-        constructor(
-            value: skirout.editor.v1.expression.UnaryCollectionExpression_OrMutable,
-        ): this(value.toFrozen()) {}
-
-        override val kind get() = Kind.UNIQUE_BY_WRAPPER;
-
-        override fun equals(other: kotlin.Any?): kotlin.Boolean {
-            return other is skirout.editor.v1.expression.ExpressionNode.UniqueByWrapper && value == other.value;
-        }
-
-        override fun hashCode(): kotlin.Int {
-            return this.value.hashCode() + -538310779;
-        }
-    }
-
-    class ReduceWrapper private constructor (
-        val value: skirout.editor.v1.expression.UnaryCollectionExpression,
-    ) : skirout.editor.v1.expression.ExpressionNode() {
-        constructor(
-            value: skirout.editor.v1.expression.UnaryCollectionExpression_OrMutable,
-        ): this(value.toFrozen()) {}
-
-        override val kind get() = Kind.REDUCE_WRAPPER;
-
-        override fun equals(other: kotlin.Any?): kotlin.Boolean {
-            return other is skirout.editor.v1.expression.ExpressionNode.ReduceWrapper && value == other.value;
-        }
-
-        override fun hashCode(): kotlin.Int {
-            return this.value.hashCode() + -934873754;
-        }
-    }
-
-    class SortByWrapper private constructor (
-        val value: skirout.editor.v1.expression.SortByExpression,
-    ) : skirout.editor.v1.expression.ExpressionNode() {
-        constructor(
-            value: skirout.editor.v1.expression.SortByExpression_OrMutable,
-        ): this(value.toFrozen()) {}
-
-        override val kind get() = Kind.SORT_BY_WRAPPER;
-
-        override fun equals(other: kotlin.Any?): kotlin.Boolean {
-            return other is skirout.editor.v1.expression.ExpressionNode.SortByWrapper && value == other.value;
-        }
-
-        override fun hashCode(): kotlin.Int {
-            return this.value.hashCode() + -2024591720;
-        }
-    }
-
-    class SortWithWrapper private constructor (
-        val value: skirout.editor.v1.expression.SortWithExpression,
-    ) : skirout.editor.v1.expression.ExpressionNode() {
-        constructor(
-            value: skirout.editor.v1.expression.SortWithExpression_OrMutable,
-        ): this(value.toFrozen()) {}
-
-        override val kind get() = Kind.SORT_WITH_WRAPPER;
-
-        override fun equals(other: kotlin.Any?): kotlin.Boolean {
-            return other is skirout.editor.v1.expression.ExpressionNode.SortWithWrapper && value == other.value;
-        }
-
-        override fun hashCode(): kotlin.Int {
-            return this.value.hashCode() + -11843897;
-        }
-    }
-
-    class FoldWrapper private constructor (
-        val value: skirout.editor.v1.expression.FoldExpression,
-    ) : skirout.editor.v1.expression.ExpressionNode() {
-        constructor(
-            value: skirout.editor.v1.expression.FoldExpression_OrMutable,
-        ): this(value.toFrozen()) {}
-
-        override val kind get() = Kind.FOLD_WRAPPER;
-
-        override fun equals(other: kotlin.Any?): kotlin.Boolean {
-            return other is skirout.editor.v1.expression.ExpressionNode.FoldWrapper && value == other.value;
-        }
-
-        override fun hashCode(): kotlin.Int {
-            return this.value.hashCode() + 3148801;
-        }
-    }
-
-    class TakeWrapper private constructor (
-        val value: skirout.editor.v1.expression.CollectionSliceExpression,
-    ) : skirout.editor.v1.expression.ExpressionNode() {
-        constructor(
-            value: skirout.editor.v1.expression.CollectionSliceExpression_OrMutable,
-        ): this(value.toFrozen()) {}
-
-        override val kind get() = Kind.TAKE_WRAPPER;
-
-        override fun equals(other: kotlin.Any?): kotlin.Boolean {
-            return other is skirout.editor.v1.expression.ExpressionNode.TakeWrapper && value == other.value;
-        }
-
-        override fun hashCode(): kotlin.Int {
-            return this.value.hashCode() + 3552391;
-        }
-    }
-
-    class SkipWrapper private constructor (
-        val value: skirout.editor.v1.expression.CollectionSliceExpression,
-    ) : skirout.editor.v1.expression.ExpressionNode() {
-        constructor(
-            value: skirout.editor.v1.expression.CollectionSliceExpression_OrMutable,
-        ): this(value.toFrozen()) {}
-
-        override val kind get() = Kind.SKIP_WRAPPER;
-
-        override fun equals(other: kotlin.Any?): kotlin.Boolean {
-            return other is skirout.editor.v1.expression.ExpressionNode.SkipWrapper && value == other.value;
-        }
-
-        override fun hashCode(): kotlin.Int {
-            return this.value.hashCode() + 3532159;
-        }
-    }
-
-    class ReverseWrapper(
-        val value: skirout.editor.v1.expression.ExpressionNode,
-    ) : skirout.editor.v1.expression.ExpressionNode() {
-        override val kind get() = Kind.REVERSE_WRAPPER;
-
-        override fun equals(other: kotlin.Any?): kotlin.Boolean {
-            return other is skirout.editor.v1.expression.ExpressionNode.ReverseWrapper && value == other.value;
-        }
-
-        override fun hashCode(): kotlin.Int {
-            return this.value.hashCode() + 1099846370;
-        }
-    }
-
-    class DistinctWrapper(
-        val value: skirout.editor.v1.expression.ExpressionNode,
-    ) : skirout.editor.v1.expression.ExpressionNode() {
-        override val kind get() = Kind.DISTINCT_WRAPPER;
-
-        override fun equals(other: kotlin.Any?): kotlin.Boolean {
-            return other is skirout.editor.v1.expression.ExpressionNode.DistinctWrapper && value == other.value;
-        }
-
-        override fun hashCode(): kotlin.Int {
-            return this.value.hashCode() + 288698108;
-        }
-    }
-
-    class QueryWrapper(
-        val value: skirout.editor.v1.expression.ExpressionQuery,
-    ) : skirout.editor.v1.expression.ExpressionNode() {
-        override val kind get() = Kind.QUERY_WRAPPER;
-
-        override fun equals(other: kotlin.Any?): kotlin.Boolean {
-            return other is skirout.editor.v1.expression.ExpressionNode.QueryWrapper && value == other.value;
-        }
-
-        override fun hashCode(): kotlin.Int {
-            return this.value.hashCode() + 107944136;
+            return this.value.hashCode() + -1110092857;
         }
     }
 
@@ -8325,35 +1564,21 @@ sealed class ExpressionNode private constructor() {
             )
         );
 
-        /** Shortcut for `FieldWrapper(skirout.editor.v1.expression.ExpressionField(...))`. */
+        /** Shortcut for `FieldWrapper(skirout.editor.v1.expression.FieldExpression(...))`. */
         @kotlin.Suppress("UNUSED_PARAMETER")
         fun createField(
             _mustNameArguments: _MustNameArguments =
                 _MustNameArguments,
             source: skirout.editor.v1.expression.ExpressionNode,
-            name: kotlin.String,
+            path: skirout.editor.v1.type_catalog.ValuePath_OrMutable,
         ) = FieldWrapper(
-            skirout.editor.v1.expression.ExpressionField(
+            skirout.editor.v1.expression.FieldExpression(
                 source = source,
-                name = name,
+                path = path,
             )
         );
 
-        /** Shortcut for `EntryProjectionWrapper(skirout.editor.v1.expression.ExpressionEntryProjection(...))`. */
-        @kotlin.Suppress("UNUSED_PARAMETER")
-        fun createEntryProjection(
-            _mustNameArguments: _MustNameArguments =
-                _MustNameArguments,
-            source: skirout.editor.v1.expression.ExpressionNode,
-            branch: skirout.editor.v1.expression.EntryBranch,
-        ) = EntryProjectionWrapper(
-            skirout.editor.v1.expression.ExpressionEntryProjection(
-                source = source,
-                branch = branch,
-            )
-        );
-
-        /** Shortcut for `AndWrapper(skirout.editor.v1.expression.BinaryExpression(...))`. */
+        /** Shortcut for `AndWrapper(skirout.editor.v1.expression.LogicalExpression(...))`. */
         @kotlin.Suppress("UNUSED_PARAMETER")
         fun createAnd(
             _mustNameArguments: _MustNameArguments =
@@ -8361,13 +1586,13 @@ sealed class ExpressionNode private constructor() {
             left: skirout.editor.v1.expression.ExpressionNode,
             right: skirout.editor.v1.expression.ExpressionNode,
         ) = AndWrapper(
-            skirout.editor.v1.expression.BinaryExpression(
+            skirout.editor.v1.expression.LogicalExpression(
                 left = left,
                 right = right,
             )
         );
 
-        /** Shortcut for `OrWrapper(skirout.editor.v1.expression.BinaryExpression(...))`. */
+        /** Shortcut for `OrWrapper(skirout.editor.v1.expression.LogicalExpression(...))`. */
         @kotlin.Suppress("UNUSED_PARAMETER")
         fun createOr(
             _mustNameArguments: _MustNameArguments =
@@ -8375,7 +1600,7 @@ sealed class ExpressionNode private constructor() {
             left: skirout.editor.v1.expression.ExpressionNode,
             right: skirout.editor.v1.expression.ExpressionNode,
         ) = OrWrapper(
-            skirout.editor.v1.expression.BinaryExpression(
+            skirout.editor.v1.expression.LogicalExpression(
                 left = left,
                 right = right,
             )
@@ -8387,735 +1612,57 @@ sealed class ExpressionNode private constructor() {
             _mustNameArguments: _MustNameArguments =
                 _MustNameArguments,
             test: skirout.editor.v1.expression.ExpressionNode,
-            yes: skirout.editor.v1.expression.ExpressionNode,
-            no: skirout.editor.v1.expression.ExpressionNode,
+            then: skirout.editor.v1.expression.ExpressionNode,
+            otherwise: skirout.editor.v1.expression.ExpressionNode,
         ) = ConditionalWrapper(
             skirout.editor.v1.expression.ConditionalExpression(
                 test = test,
-                yes = yes,
-                no = no,
+                then = then,
+                otherwise = otherwise,
             )
         );
 
-        /** Shortcut for `OrElseWrapper(skirout.editor.v1.expression.OrElseExpression(...))`. */
+        /** Shortcut for `OrElseWrapper(skirout.editor.v1.expression.FallbackExpression(...))`. */
         @kotlin.Suppress("UNUSED_PARAMETER")
         fun createOrElse(
             _mustNameArguments: _MustNameArguments =
                 _MustNameArguments,
-            input: skirout.editor.v1.expression.ExpressionNode,
+            value: skirout.editor.v1.expression.ExpressionNode,
             fallback: skirout.editor.v1.expression.ExpressionNode,
         ) = OrElseWrapper(
-            skirout.editor.v1.expression.OrElseExpression(
-                input = input,
+            skirout.editor.v1.expression.FallbackExpression(
+                value = value,
                 fallback = fallback,
             )
         );
 
-        /** Shortcut for `TextUnaryWrapper(skirout.editor.v1.expression.TextUnaryExpression(...))`. */
+        /** Shortcut for `CallWrapper(skirout.editor.v1.expression.CallExpression(...))`. */
         @kotlin.Suppress("UNUSED_PARAMETER")
-        fun createTextUnary(
+        fun createCall(
             _mustNameArguments: _MustNameArguments =
                 _MustNameArguments,
-            operation: skirout.editor.v1.expression.TextUnaryOperation,
-            source: skirout.editor.v1.expression.ExpressionNode,
-        ) = TextUnaryWrapper(
-            skirout.editor.v1.expression.TextUnaryExpression(
+            operation: skirout.editor.v1.expression.OperationId_OrMutable,
+            typeArguments: kotlin.collections.Iterable<skirout.editor.v1.type_catalog.TypeTemplate>,
+            arguments: kotlin.collections.Iterable<skirout.editor.v1.expression.ExpressionNode>,
+        ) = CallWrapper(
+            skirout.editor.v1.expression.CallExpression(
                 operation = operation,
-                source = source,
+                typeArguments = typeArguments,
+                arguments = arguments,
             )
         );
 
-        /** Shortcut for `TextCompareWrapper(skirout.editor.v1.expression.TextCompareExpression(...))`. */
+        /** Shortcut for `LambdaWrapper(skirout.editor.v1.expression.LambdaExpression(...))`. */
         @kotlin.Suppress("UNUSED_PARAMETER")
-        fun createTextCompare(
+        fun createLambda(
             _mustNameArguments: _MustNameArguments =
                 _MustNameArguments,
-            operation: skirout.editor.v1.expression.TextCompareOperation,
-            source: skirout.editor.v1.expression.ExpressionNode,
-            other: skirout.editor.v1.expression.ExpressionNode,
-        ) = TextCompareWrapper(
-            skirout.editor.v1.expression.TextCompareExpression(
-                operation = operation,
-                source = source,
-                other = other,
-            )
-        );
-
-        /** Shortcut for `TextReplaceWrapper(skirout.editor.v1.expression.TextReplaceExpression(...))`. */
-        @kotlin.Suppress("UNUSED_PARAMETER")
-        fun createTextReplace(
-            _mustNameArguments: _MustNameArguments =
-                _MustNameArguments,
-            source: skirout.editor.v1.expression.ExpressionNode,
-            target: skirout.editor.v1.expression.ExpressionNode,
-            replacement: skirout.editor.v1.expression.ExpressionNode,
-        ) = TextReplaceWrapper(
-            skirout.editor.v1.expression.TextReplaceExpression(
-                source = source,
-                target = target,
-                replacement = replacement,
-            )
-        );
-
-        /** Shortcut for `TextSplitWrapper(skirout.editor.v1.expression.TextSplitExpression(...))`. */
-        @kotlin.Suppress("UNUSED_PARAMETER")
-        fun createTextSplit(
-            _mustNameArguments: _MustNameArguments =
-                _MustNameArguments,
-            source: skirout.editor.v1.expression.ExpressionNode,
-            separator: skirout.editor.v1.expression.ExpressionNode,
-        ) = TextSplitWrapper(
-            skirout.editor.v1.expression.TextSplitExpression(
-                source = source,
-                separator = separator,
-            )
-        );
-
-        /** Shortcut for `TextJoinWrapper(skirout.editor.v1.expression.TextJoinExpression(...))`. */
-        @kotlin.Suppress("UNUSED_PARAMETER")
-        fun createTextJoin(
-            _mustNameArguments: _MustNameArguments =
-                _MustNameArguments,
-            source: skirout.editor.v1.expression.ExpressionNode,
-            separator: skirout.editor.v1.expression.ExpressionNode,
-        ) = TextJoinWrapper(
-            skirout.editor.v1.expression.TextJoinExpression(
-                source = source,
-                separator = separator,
-            )
-        );
-
-        /** Shortcut for `TextSubstringWrapper(skirout.editor.v1.expression.TextSubstringExpression(...))`. */
-        @kotlin.Suppress("UNUSED_PARAMETER")
-        fun createTextSubstring(
-            _mustNameArguments: _MustNameArguments =
-                _MustNameArguments,
-            source: skirout.editor.v1.expression.ExpressionNode,
-            start: skirout.editor.v1.expression.ExpressionNode,
-            end: skirout.editor.v1.expression.ExpressionNode?,
-        ) = TextSubstringWrapper(
-            skirout.editor.v1.expression.TextSubstringExpression(
-                source = source,
-                start = start,
-                end = end,
-            )
-        );
-
-        /** Shortcut for `TextInterpolateWrapper(skirout.editor.v1.expression.TextInterpolateExpression(...))`. */
-        @kotlin.Suppress("UNUSED_PARAMETER")
-        fun createTextInterpolate(
-            _mustNameArguments: _MustNameArguments =
-                _MustNameArguments,
-            parts: kotlin.collections.Iterable<skirout.editor.v1.expression.ExpressionNode>,
-        ) = TextInterpolateWrapper(
-            skirout.editor.v1.expression.TextInterpolateExpression(
-                parts = parts,
-            )
-        );
-
-        /** Shortcut for `RegexTestWrapper(skirout.editor.v1.expression.RegexTestExpression(...))`. */
-        @kotlin.Suppress("UNUSED_PARAMETER")
-        fun createRegexTest(
-            _mustNameArguments: _MustNameArguments =
-                _MustNameArguments,
-            mode: skirout.editor.v1.expression.RegexMatchMode,
-            source: skirout.editor.v1.expression.ExpressionNode,
-            pattern: skirout.editor.v1.expression.ExpressionNode,
-        ) = RegexTestWrapper(
-            skirout.editor.v1.expression.RegexTestExpression(
-                mode = mode,
-                source = source,
-                pattern = pattern,
-            )
-        );
-
-        /** Shortcut for `RegexCaptureWrapper(skirout.editor.v1.expression.RegexCaptureExpression(...))`. */
-        @kotlin.Suppress("UNUSED_PARAMETER")
-        fun createRegexCapture(
-            _mustNameArguments: _MustNameArguments =
-                _MustNameArguments,
-            source: skirout.editor.v1.expression.ExpressionNode,
-            pattern: skirout.editor.v1.expression.ExpressionNode,
-            group: skirout.editor.v1.expression.ExpressionNode,
-        ) = RegexCaptureWrapper(
-            skirout.editor.v1.expression.RegexCaptureExpression(
-                source = source,
-                pattern = pattern,
-                group = group,
-            )
-        );
-
-        /** Shortcut for `RegexReplaceWrapper(skirout.editor.v1.expression.RegexReplaceExpression(...))`. */
-        @kotlin.Suppress("UNUSED_PARAMETER")
-        fun createRegexReplace(
-            _mustNameArguments: _MustNameArguments =
-                _MustNameArguments,
-            source: skirout.editor.v1.expression.ExpressionNode,
-            pattern: skirout.editor.v1.expression.ExpressionNode,
-            replacement: skirout.editor.v1.expression.ExpressionNode,
-        ) = RegexReplaceWrapper(
-            skirout.editor.v1.expression.RegexReplaceExpression(
-                source = source,
-                pattern = pattern,
-                replacement = replacement,
-            )
-        );
-
-        /** Shortcut for `ValueCompareWrapper(skirout.editor.v1.expression.ValueCompareExpression(...))`. */
-        @kotlin.Suppress("UNUSED_PARAMETER")
-        fun createValueCompare(
-            _mustNameArguments: _MustNameArguments =
-                _MustNameArguments,
-            operation: skirout.editor.v1.expression.ValueCompareOperation,
-            left: skirout.editor.v1.expression.ExpressionNode,
-            right: skirout.editor.v1.expression.ExpressionNode,
-        ) = ValueCompareWrapper(
-            skirout.editor.v1.expression.ValueCompareExpression(
-                operation = operation,
-                left = left,
-                right = right,
-            )
-        );
-
-        /** Shortcut for `NumberArithmeticWrapper(skirout.editor.v1.expression.NumberArithmeticExpression(...))`. */
-        @kotlin.Suppress("UNUSED_PARAMETER")
-        fun createNumberArithmetic(
-            _mustNameArguments: _MustNameArguments =
-                _MustNameArguments,
-            operation: skirout.editor.v1.expression.NumberArithmeticOperation,
-            first: skirout.editor.v1.expression.ExpressionNode,
-            second: skirout.editor.v1.expression.ExpressionNode,
-            remaining: kotlin.collections.Iterable<skirout.editor.v1.expression.ExpressionNode>,
-        ) = NumberArithmeticWrapper(
-            skirout.editor.v1.expression.NumberArithmeticExpression(
-                operation = operation,
-                first = first,
-                second = second,
-                remaining = remaining,
-            )
-        );
-
-        /** Shortcut for `NumberCompareWrapper(skirout.editor.v1.expression.NumberCompareExpression(...))`. */
-        @kotlin.Suppress("UNUSED_PARAMETER")
-        fun createNumberCompare(
-            _mustNameArguments: _MustNameArguments =
-                _MustNameArguments,
-            operation: skirout.editor.v1.expression.NumberCompareOperation,
-            left: skirout.editor.v1.expression.ExpressionNode,
-            right: skirout.editor.v1.expression.ExpressionNode,
-        ) = NumberCompareWrapper(
-            skirout.editor.v1.expression.NumberCompareExpression(
-                operation = operation,
-                left = left,
-                right = right,
-            )
-        );
-
-        /** Shortcut for `NumberRoundWrapper(skirout.editor.v1.expression.NumberRoundExpression(...))`. */
-        @kotlin.Suppress("UNUSED_PARAMETER")
-        fun createNumberRound(
-            _mustNameArguments: _MustNameArguments =
-                _MustNameArguments,
-            source: skirout.editor.v1.expression.ExpressionNode,
-            increment: skirout.editor.v1.expression.ExpressionNode,
-            rounding: skirout.editor.v1.expression.ExpressionNode,
-        ) = NumberRoundWrapper(
-            skirout.editor.v1.expression.NumberRoundExpression(
-                source = source,
-                increment = increment,
-                rounding = rounding,
-            )
-        );
-
-        /** Shortcut for `NumberFormatWrapper(skirout.editor.v1.expression.NumberFormatExpression(...))`. */
-        @kotlin.Suppress("UNUSED_PARAMETER")
-        fun createNumberFormat(
-            _mustNameArguments: _MustNameArguments =
-                _MustNameArguments,
-            source: skirout.editor.v1.expression.ExpressionNode,
-            fractionDigits: skirout.editor.v1.expression.ExpressionNode,
-            locale: skirout.editor.v1.expression.ExpressionNode,
-        ) = NumberFormatWrapper(
-            skirout.editor.v1.expression.NumberFormatExpression(
-                source = source,
-                fractionDigits = fractionDigits,
-                locale = locale,
-            )
-        );
-
-        /** Shortcut for `DurationFormatWrapper(skirout.editor.v1.expression.DurationFormatExpression(...))`. */
-        @kotlin.Suppress("UNUSED_PARAMETER")
-        fun createDurationFormat(
-            _mustNameArguments: _MustNameArguments =
-                _MustNameArguments,
-            source: skirout.editor.v1.expression.ExpressionNode,
-            units: skirout.editor.v1.expression.ExpressionNode,
-            fractionDigits: skirout.editor.v1.expression.ExpressionNode,
-        ) = DurationFormatWrapper(
-            skirout.editor.v1.expression.DurationFormatExpression(
-                source = source,
-                units = units,
-                fractionDigits = fractionDigits,
-            )
-        );
-
-        /** Shortcut for `TimestampFormatWrapper(skirout.editor.v1.expression.TimestampFormatExpression(...))`. */
-        @kotlin.Suppress("UNUSED_PARAMETER")
-        fun createTimestampFormat(
-            _mustNameArguments: _MustNameArguments =
-                _MustNameArguments,
-            source: skirout.editor.v1.expression.ExpressionNode,
-            pattern: skirout.editor.v1.expression.ExpressionNode,
-            zone: skirout.editor.v1.expression.ExpressionNode,
-            locale: skirout.editor.v1.expression.ExpressionNode,
-        ) = TimestampFormatWrapper(
-            skirout.editor.v1.expression.TimestampFormatExpression(
-                source = source,
-                pattern = pattern,
-                zone = zone,
-                locale = locale,
-            )
-        );
-
-        /** Shortcut for `CollectionAccessWrapper(skirout.editor.v1.expression.CollectionAccessExpression(...))`. */
-        @kotlin.Suppress("UNUSED_PARAMETER")
-        fun createCollectionAccess(
-            _mustNameArguments: _MustNameArguments =
-                _MustNameArguments,
-            source: skirout.editor.v1.expression.ExpressionNode,
-            index: skirout.editor.v1.expression.ExpressionNode,
-        ) = CollectionAccessWrapper(
-            skirout.editor.v1.expression.CollectionAccessExpression(
-                source = source,
-                index = index,
-            )
-        );
-
-        /** Shortcut for `CollectionContainsWrapper(skirout.editor.v1.expression.CollectionContainsExpression(...))`. */
-        @kotlin.Suppress("UNUSED_PARAMETER")
-        fun createCollectionContains(
-            _mustNameArguments: _MustNameArguments =
-                _MustNameArguments,
-            source: skirout.editor.v1.expression.ExpressionNode,
-            value: skirout.editor.v1.expression.ExpressionNode,
-        ) = CollectionContainsWrapper(
-            skirout.editor.v1.expression.CollectionContainsExpression(
-                source = source,
-                value = value,
-            )
-        );
-
-        /** Shortcut for `ColorWithAlphaWrapper(skirout.editor.v1.expression.ColorWithAlphaExpression(...))`. */
-        @kotlin.Suppress("UNUSED_PARAMETER")
-        fun createColorWithAlpha(
-            _mustNameArguments: _MustNameArguments =
-                _MustNameArguments,
-            source: skirout.editor.v1.expression.ExpressionNode,
-            alpha: skirout.editor.v1.expression.ExpressionNode,
-        ) = ColorWithAlphaWrapper(
-            skirout.editor.v1.expression.ColorWithAlphaExpression(
-                source = source,
-                alpha = alpha,
-            )
-        );
-
-        /** Shortcut for `RuleUnaryWrapper(skirout.editor.v1.expression.RuleUnaryExpression(...))`. */
-        @kotlin.Suppress("UNUSED_PARAMETER")
-        fun createRuleUnary(
-            _mustNameArguments: _MustNameArguments =
-                _MustNameArguments,
-            operation: skirout.editor.v1.expression.RuleUnaryOperation,
-            source: skirout.editor.v1.expression.ExpressionNode,
-        ) = RuleUnaryWrapper(
-            skirout.editor.v1.expression.RuleUnaryExpression(
-                operation = operation,
-                source = source,
-            )
-        );
-
-        /** Shortcut for `RuleOneOfWrapper(skirout.editor.v1.expression.RuleOneOfExpression(...))`. */
-        @kotlin.Suppress("UNUSED_PARAMETER")
-        fun createRuleOneOf(
-            _mustNameArguments: _MustNameArguments =
-                _MustNameArguments,
-            source: skirout.editor.v1.expression.ExpressionNode,
-            firstCandidate: skirout.editor.v1.expression.ExpressionNode,
-            remainingCandidates: kotlin.collections.Iterable<skirout.editor.v1.expression.ExpressionNode>,
-        ) = RuleOneOfWrapper(
-            skirout.editor.v1.expression.RuleOneOfExpression(
-                source = source,
-                firstCandidate = firstCandidate,
-                remainingCandidates = remainingCandidates,
-            )
-        );
-
-        /** Shortcut for `RuleSizeBoundWrapper(skirout.editor.v1.expression.RuleSizeBoundExpression(...))`. */
-        @kotlin.Suppress("UNUSED_PARAMETER")
-        fun createRuleSizeBound(
-            _mustNameArguments: _MustNameArguments =
-                _MustNameArguments,
-            metric: skirout.editor.v1.expression.SizeBoundMetric,
-            direction: skirout.editor.v1.expression.BoundDirection,
-            source: skirout.editor.v1.expression.ExpressionNode,
-            bound: skirout.editor.v1.expression.ExpressionNode,
-        ) = RuleSizeBoundWrapper(
-            skirout.editor.v1.expression.RuleSizeBoundExpression(
-                metric = metric,
-                direction = direction,
-                source = source,
-                bound = bound,
-            )
-        );
-
-        /** Shortcut for `RuleSizeRangeWrapper(skirout.editor.v1.expression.RuleSizeRangeExpression(...))`. */
-        @kotlin.Suppress("UNUSED_PARAMETER")
-        fun createRuleSizeRange(
-            _mustNameArguments: _MustNameArguments =
-                _MustNameArguments,
-            metric: skirout.editor.v1.expression.SizeRangeMetric,
-            source: skirout.editor.v1.expression.ExpressionNode,
-            minimum: skirout.editor.v1.expression.ExpressionNode,
-            maximum: skirout.editor.v1.expression.ExpressionNode,
-        ) = RuleSizeRangeWrapper(
-            skirout.editor.v1.expression.RuleSizeRangeExpression(
-                metric = metric,
-                source = source,
-                minimum = minimum,
-                maximum = maximum,
-            )
-        );
-
-        /** Shortcut for `RuleNumericBoundWrapper(skirout.editor.v1.expression.RuleNumericBoundExpression(...))`. */
-        @kotlin.Suppress("UNUSED_PARAMETER")
-        fun createRuleNumericBound(
-            _mustNameArguments: _MustNameArguments =
-                _MustNameArguments,
-            direction: skirout.editor.v1.expression.BoundDirection,
-            source: skirout.editor.v1.expression.ExpressionNode,
-            bound: skirout.editor.v1.expression.ExpressionNode,
-            inclusive: skirout.editor.v1.expression.ExpressionNode,
-        ) = RuleNumericBoundWrapper(
-            skirout.editor.v1.expression.RuleNumericBoundExpression(
-                direction = direction,
-                source = source,
-                bound = bound,
-                inclusive = inclusive,
-            )
-        );
-
-        /** Shortcut for `RuleNumericRangeWrapper(skirout.editor.v1.expression.RuleNumericRangeExpression(...))`. */
-        @kotlin.Suppress("UNUSED_PARAMETER")
-        fun createRuleNumericRange(
-            _mustNameArguments: _MustNameArguments =
-                _MustNameArguments,
-            source: skirout.editor.v1.expression.ExpressionNode,
-            minimum: skirout.editor.v1.expression.ExpressionNode,
-            maximum: skirout.editor.v1.expression.ExpressionNode,
-        ) = RuleNumericRangeWrapper(
-            skirout.editor.v1.expression.RuleNumericRangeExpression(
-                source = source,
-                minimum = minimum,
-                maximum = maximum,
-            )
-        );
-
-        /** Shortcut for `RuleMultipleOfWrapper(skirout.editor.v1.expression.RuleMultipleOfExpression(...))`. */
-        @kotlin.Suppress("UNUSED_PARAMETER")
-        fun createRuleMultipleOf(
-            _mustNameArguments: _MustNameArguments =
-                _MustNameArguments,
-            source: skirout.editor.v1.expression.ExpressionNode,
-            divisor: skirout.editor.v1.expression.ExpressionNode,
-        ) = RuleMultipleOfWrapper(
-            skirout.editor.v1.expression.RuleMultipleOfExpression(
-                source = source,
-                divisor = divisor,
-            )
-        );
-
-        /** Shortcut for `RuleMaximumScaleWrapper(skirout.editor.v1.expression.RuleMaximumScaleExpression(...))`. */
-        @kotlin.Suppress("UNUSED_PARAMETER")
-        fun createRuleMaximumScale(
-            _mustNameArguments: _MustNameArguments =
-                _MustNameArguments,
-            source: skirout.editor.v1.expression.ExpressionNode,
-            scale: skirout.editor.v1.expression.ExpressionNode,
-        ) = RuleMaximumScaleWrapper(
-            skirout.editor.v1.expression.RuleMaximumScaleExpression(
-                source = source,
-                scale = scale,
-            )
-        );
-
-        /** Shortcut for `RuleTimestampBoundWrapper(skirout.editor.v1.expression.RuleTimestampBoundExpression(...))`. */
-        @kotlin.Suppress("UNUSED_PARAMETER")
-        fun createRuleTimestampBound(
-            _mustNameArguments: _MustNameArguments =
-                _MustNameArguments,
-            direction: skirout.editor.v1.expression.TimestampBoundDirection,
-            source: skirout.editor.v1.expression.ExpressionNode,
-            bound: skirout.editor.v1.expression.ExpressionNode,
-        ) = RuleTimestampBoundWrapper(
-            skirout.editor.v1.expression.RuleTimestampBoundExpression(
-                direction = direction,
-                source = source,
-                bound = bound,
-            )
-        );
-
-        /** Shortcut for `AnyWrapper(skirout.editor.v1.expression.UnaryCollectionExpression(...))`. */
-        @kotlin.Suppress("UNUSED_PARAMETER")
-        fun createAny(
-            _mustNameArguments: _MustNameArguments =
-                _MustNameArguments,
-            source: skirout.editor.v1.expression.ExpressionNode,
+            arity: kotlin.Int,
             body: skirout.editor.v1.expression.ExpressionNode,
-        ) = AnyWrapper(
-            skirout.editor.v1.expression.UnaryCollectionExpression(
-                source = source,
+        ) = LambdaWrapper(
+            skirout.editor.v1.expression.LambdaExpression(
+                arity = arity,
                 body = body,
-            )
-        );
-
-        /** Shortcut for `AllWrapper(skirout.editor.v1.expression.UnaryCollectionExpression(...))`. */
-        @kotlin.Suppress("UNUSED_PARAMETER")
-        fun createAll(
-            _mustNameArguments: _MustNameArguments =
-                _MustNameArguments,
-            source: skirout.editor.v1.expression.ExpressionNode,
-            body: skirout.editor.v1.expression.ExpressionNode,
-        ) = AllWrapper(
-            skirout.editor.v1.expression.UnaryCollectionExpression(
-                source = source,
-                body = body,
-            )
-        );
-
-        /** Shortcut for `NoneWrapper(skirout.editor.v1.expression.UnaryCollectionExpression(...))`. */
-        @kotlin.Suppress("UNUSED_PARAMETER")
-        fun createNone(
-            _mustNameArguments: _MustNameArguments =
-                _MustNameArguments,
-            source: skirout.editor.v1.expression.ExpressionNode,
-            body: skirout.editor.v1.expression.ExpressionNode,
-        ) = NoneWrapper(
-            skirout.editor.v1.expression.UnaryCollectionExpression(
-                source = source,
-                body = body,
-            )
-        );
-
-        /** Shortcut for `MapWrapper(skirout.editor.v1.expression.UnaryCollectionExpression(...))`. */
-        @kotlin.Suppress("UNUSED_PARAMETER")
-        fun createMap(
-            _mustNameArguments: _MustNameArguments =
-                _MustNameArguments,
-            source: skirout.editor.v1.expression.ExpressionNode,
-            body: skirout.editor.v1.expression.ExpressionNode,
-        ) = MapWrapper(
-            skirout.editor.v1.expression.UnaryCollectionExpression(
-                source = source,
-                body = body,
-            )
-        );
-
-        /** Shortcut for `FilterWrapper(skirout.editor.v1.expression.UnaryCollectionExpression(...))`. */
-        @kotlin.Suppress("UNUSED_PARAMETER")
-        fun createFilter(
-            _mustNameArguments: _MustNameArguments =
-                _MustNameArguments,
-            source: skirout.editor.v1.expression.ExpressionNode,
-            body: skirout.editor.v1.expression.ExpressionNode,
-        ) = FilterWrapper(
-            skirout.editor.v1.expression.UnaryCollectionExpression(
-                source = source,
-                body = body,
-            )
-        );
-
-        /** Shortcut for `FindWrapper(skirout.editor.v1.expression.UnaryCollectionExpression(...))`. */
-        @kotlin.Suppress("UNUSED_PARAMETER")
-        fun createFind(
-            _mustNameArguments: _MustNameArguments =
-                _MustNameArguments,
-            source: skirout.editor.v1.expression.ExpressionNode,
-            body: skirout.editor.v1.expression.ExpressionNode,
-        ) = FindWrapper(
-            skirout.editor.v1.expression.UnaryCollectionExpression(
-                source = source,
-                body = body,
-            )
-        );
-
-        /** Shortcut for `FindLastWrapper(skirout.editor.v1.expression.UnaryCollectionExpression(...))`. */
-        @kotlin.Suppress("UNUSED_PARAMETER")
-        fun createFindLast(
-            _mustNameArguments: _MustNameArguments =
-                _MustNameArguments,
-            source: skirout.editor.v1.expression.ExpressionNode,
-            body: skirout.editor.v1.expression.ExpressionNode,
-        ) = FindLastWrapper(
-            skirout.editor.v1.expression.UnaryCollectionExpression(
-                source = source,
-                body = body,
-            )
-        );
-
-        /** Shortcut for `CountWrapper(skirout.editor.v1.expression.UnaryCollectionExpression(...))`. */
-        @kotlin.Suppress("UNUSED_PARAMETER")
-        fun createCount(
-            _mustNameArguments: _MustNameArguments =
-                _MustNameArguments,
-            source: skirout.editor.v1.expression.ExpressionNode,
-            body: skirout.editor.v1.expression.ExpressionNode,
-        ) = CountWrapper(
-            skirout.editor.v1.expression.UnaryCollectionExpression(
-                source = source,
-                body = body,
-            )
-        );
-
-        /** Shortcut for `DistinctByWrapper(skirout.editor.v1.expression.UnaryCollectionExpression(...))`. */
-        @kotlin.Suppress("UNUSED_PARAMETER")
-        fun createDistinctBy(
-            _mustNameArguments: _MustNameArguments =
-                _MustNameArguments,
-            source: skirout.editor.v1.expression.ExpressionNode,
-            body: skirout.editor.v1.expression.ExpressionNode,
-        ) = DistinctByWrapper(
-            skirout.editor.v1.expression.UnaryCollectionExpression(
-                source = source,
-                body = body,
-            )
-        );
-
-        /** Shortcut for `GroupByWrapper(skirout.editor.v1.expression.UnaryCollectionExpression(...))`. */
-        @kotlin.Suppress("UNUSED_PARAMETER")
-        fun createGroupBy(
-            _mustNameArguments: _MustNameArguments =
-                _MustNameArguments,
-            source: skirout.editor.v1.expression.ExpressionNode,
-            body: skirout.editor.v1.expression.ExpressionNode,
-        ) = GroupByWrapper(
-            skirout.editor.v1.expression.UnaryCollectionExpression(
-                source = source,
-                body = body,
-            )
-        );
-
-        /** Shortcut for `FlatMapWrapper(skirout.editor.v1.expression.UnaryCollectionExpression(...))`. */
-        @kotlin.Suppress("UNUSED_PARAMETER")
-        fun createFlatMap(
-            _mustNameArguments: _MustNameArguments =
-                _MustNameArguments,
-            source: skirout.editor.v1.expression.ExpressionNode,
-            body: skirout.editor.v1.expression.ExpressionNode,
-        ) = FlatMapWrapper(
-            skirout.editor.v1.expression.UnaryCollectionExpression(
-                source = source,
-                body = body,
-            )
-        );
-
-        /** Shortcut for `UniqueByWrapper(skirout.editor.v1.expression.UnaryCollectionExpression(...))`. */
-        @kotlin.Suppress("UNUSED_PARAMETER")
-        fun createUniqueBy(
-            _mustNameArguments: _MustNameArguments =
-                _MustNameArguments,
-            source: skirout.editor.v1.expression.ExpressionNode,
-            body: skirout.editor.v1.expression.ExpressionNode,
-        ) = UniqueByWrapper(
-            skirout.editor.v1.expression.UnaryCollectionExpression(
-                source = source,
-                body = body,
-            )
-        );
-
-        /** Shortcut for `ReduceWrapper(skirout.editor.v1.expression.UnaryCollectionExpression(...))`. */
-        @kotlin.Suppress("UNUSED_PARAMETER")
-        fun createReduce(
-            _mustNameArguments: _MustNameArguments =
-                _MustNameArguments,
-            source: skirout.editor.v1.expression.ExpressionNode,
-            body: skirout.editor.v1.expression.ExpressionNode,
-        ) = ReduceWrapper(
-            skirout.editor.v1.expression.UnaryCollectionExpression(
-                source = source,
-                body = body,
-            )
-        );
-
-        /** Shortcut for `SortByWrapper(skirout.editor.v1.expression.SortByExpression(...))`. */
-        @kotlin.Suppress("UNUSED_PARAMETER")
-        fun createSortBy(
-            _mustNameArguments: _MustNameArguments =
-                _MustNameArguments,
-            source: skirout.editor.v1.expression.ExpressionNode,
-            descending: skirout.editor.v1.expression.ExpressionNode?,
-            key: skirout.editor.v1.expression.ExpressionNode,
-        ) = SortByWrapper(
-            skirout.editor.v1.expression.SortByExpression(
-                source = source,
-                descending = descending,
-                key = key,
-            )
-        );
-
-        /** Shortcut for `SortWithWrapper(skirout.editor.v1.expression.SortWithExpression(...))`. */
-        @kotlin.Suppress("UNUSED_PARAMETER")
-        fun createSortWith(
-            _mustNameArguments: _MustNameArguments =
-                _MustNameArguments,
-            source: skirout.editor.v1.expression.ExpressionNode,
-            comparator: skirout.editor.v1.expression.ExpressionNode,
-        ) = SortWithWrapper(
-            skirout.editor.v1.expression.SortWithExpression(
-                source = source,
-                comparator = comparator,
-            )
-        );
-
-        /** Shortcut for `FoldWrapper(skirout.editor.v1.expression.FoldExpression(...))`. */
-        @kotlin.Suppress("UNUSED_PARAMETER")
-        fun createFold(
-            _mustNameArguments: _MustNameArguments =
-                _MustNameArguments,
-            source: skirout.editor.v1.expression.ExpressionNode,
-            initial: skirout.editor.v1.expression.ExpressionNode,
-            body: skirout.editor.v1.expression.ExpressionNode,
-        ) = FoldWrapper(
-            skirout.editor.v1.expression.FoldExpression(
-                source = source,
-                initial = initial,
-                body = body,
-            )
-        );
-
-        /** Shortcut for `TakeWrapper(skirout.editor.v1.expression.CollectionSliceExpression(...))`. */
-        @kotlin.Suppress("UNUSED_PARAMETER")
-        fun createTake(
-            _mustNameArguments: _MustNameArguments =
-                _MustNameArguments,
-            source: skirout.editor.v1.expression.ExpressionNode,
-            count: skirout.editor.v1.expression.ExpressionNode,
-        ) = TakeWrapper(
-            skirout.editor.v1.expression.CollectionSliceExpression(
-                source = source,
-                count = count,
-            )
-        );
-
-        /** Shortcut for `SkipWrapper(skirout.editor.v1.expression.CollectionSliceExpression(...))`. */
-        @kotlin.Suppress("UNUSED_PARAMETER")
-        fun createSkip(
-            _mustNameArguments: _MustNameArguments =
-                _MustNameArguments,
-            source: skirout.editor.v1.expression.ExpressionNode,
-            count: skirout.editor.v1.expression.ExpressionNode,
-        ) = SkipWrapper(
-            skirout.editor.v1.expression.CollectionSliceExpression(
-                source = source,
-                count = count,
             )
         );
 
@@ -9998,18 +2545,136 @@ class ExpressionBindings private constructor(
     }
 }
 
+sealed interface FailureId_OrMutable {
+    val value: kotlin.String;
+
+    fun toFrozen(): skirout.editor.v1.expression.FailureId;
+}
+
+/**
+ * Identity of a declared failure from the operation catalog, for example "regex_limit".
+ *
+ * Deeply immutable.
+ */
+@kotlin.Suppress("UNUSED_PARAMETER")
+class FailureId private constructor(
+    override val value: kotlin.String,
+    internal val _unrecognizedFields: _UnrecognizedFields<skirout.editor.v1.expression.FailureId>? =
+        null,
+): skirout.editor.v1.expression.FailureId_OrMutable {
+    constructor(
+        _mustNameArguments: _MustNameArguments =
+            _MustNameArguments,
+        value: kotlin.String,
+        _unrecognizedFields: _UnrecognizedFields<skirout.editor.v1.expression.FailureId>? =
+            null,
+    ): this(
+        value,
+        _unrecognizedFields,
+    ) {}
+
+    @kotlin.Deprecated("Already frozen", kotlin.ReplaceWith("this"))
+    override fun toFrozen() = this;
+
+    /** Returns a mutable shallow copy of this instance */
+    fun toMutable() = Mutable(
+        value = this.value,
+    );
+
+    /** Returns a shallow copy of this instance with the specified fields replaced. */
+    fun copy(
+        _mustNameArguments: _MustNameArguments =
+            _MustNameArguments,
+        value: kotlin.String =
+            this.value,
+    ) = skirout.editor.v1.expression.FailureId(
+        value,
+        this._unrecognizedFields,
+    );
+
+    @kotlin.Deprecated("No point in creating an exact copy of an immutable object", kotlin.ReplaceWith("this"))
+    fun copy() = this;
+
+    override fun equals(other: kotlin.Any?): kotlin.Boolean {
+        return this === other || (other is skirout.editor.v1.expression.FailureId && this.value == other.value);
+    }
+
+    override fun hashCode(): kotlin.Int {
+        return kotlin.collections.listOf<kotlin.Any?>(this.value).hashCode();
+    }
+
+    override fun toString(): kotlin.String {
+        return build.skir.internal.toStringImpl(
+            this,
+            _SerializerRegistry.FailureIdSerializerImpl,
+        )
+    }
+
+    /** Mutable version of [FailureId]. */
+    class Mutable internal constructor(
+        _mustNameArguments: _MustNameArguments =
+            _MustNameArguments,
+        override var value: kotlin.String =
+            "",
+        internal var _unrecognizedFields: _UnrecognizedFields<skirout.editor.v1.expression.FailureId>? =
+            null,
+    ): skirout.editor.v1.expression.FailureId_OrMutable {
+        /** Returns a deeply immutable copy of this instance */
+        override fun toFrozen() = skirout.editor.v1.expression.FailureId(
+            value = this.value,
+            _unrecognizedFields = this._unrecognizedFields,
+        );
+    }
+
+    companion object {
+        private val default =
+            skirout.editor.v1.expression.FailureId(
+                "",
+            );
+
+        /** Returns an instance with all fields set to their default values. */
+        fun partial() = default;
+
+        /**
+         * Creates a new instance of [FailureId].
+         * Unlike the constructor, does not require all fields to be specified.
+         * Missing fields will be set to their default values.
+         */
+        fun partial(
+            _mustNameArguments: _MustNameArguments =
+                _MustNameArguments,
+            value: kotlin.String =
+                "",
+        ) = skirout.editor.v1.expression.FailureId(
+            value = value,
+            _unrecognizedFields = null,
+        );
+
+        /** Serializer for [FailureId] instances. */
+        val serializer get() = _SerializerRegistry.FailureIdSerializer;
+
+        /** Describes the [FailureId] type. Provides runtime introspection capabilities. */
+        val typeDescriptor get() = _SerializerRegistry.FailureIdSerializerImpl.typeDescriptor;
+    }
+}
+
 sealed interface EvaluationDiagnostic_OrMutable {
-    val code: kotlin.String;
+    val failure: skirout.editor.v1.expression.FailureId_OrMutable;
     val message: kotlin.String;
     val locations: kotlin.collections.List<skirout.editor.v1.type_catalog.ValueLocation_OrMutable>;
 
     fun toFrozen(): skirout.editor.v1.expression.EvaluationDiagnostic;
 }
 
-/** Deeply immutable. */
+/**
+ * A failed evaluation: the declared failure, a message, and the observed inputs plus located
+ * frame values as context.
+ *
+ * Deeply immutable.
+ */
 @kotlin.Suppress("UNUSED_PARAMETER")
 class EvaluationDiagnostic private constructor(
-    override val code: kotlin.String,
+    override val failure: skirout.editor.v1.expression.FailureId,
     override val message: kotlin.String,
     override val locations: kotlin.collections.List<skirout.editor.v1.type_catalog.ValueLocation>,
     internal val _unrecognizedFields: _UnrecognizedFields<skirout.editor.v1.expression.EvaluationDiagnostic>? =
@@ -10018,13 +2683,13 @@ class EvaluationDiagnostic private constructor(
     constructor(
         _mustNameArguments: _MustNameArguments =
             _MustNameArguments,
-        code: kotlin.String,
+        failure: skirout.editor.v1.expression.FailureId_OrMutable,
         message: kotlin.String,
         locations: kotlin.collections.Iterable<skirout.editor.v1.type_catalog.ValueLocation_OrMutable>,
         _unrecognizedFields: _UnrecognizedFields<skirout.editor.v1.expression.EvaluationDiagnostic>? =
             null,
     ): this(
-        code,
+        failure.toFrozen(),
         message,
         build.skir.internal.toFrozenList(locations, { it.toFrozen() }),
         _unrecognizedFields,
@@ -10035,7 +2700,7 @@ class EvaluationDiagnostic private constructor(
 
     /** Returns a mutable shallow copy of this instance */
     fun toMutable() = Mutable(
-        code = this.code,
+        failure = this.failure,
         message = this.message,
         locations = this.locations,
     );
@@ -10044,14 +2709,14 @@ class EvaluationDiagnostic private constructor(
     fun copy(
         _mustNameArguments: _MustNameArguments =
             _MustNameArguments,
-        code: kotlin.String =
-            this.code,
+        failure: skirout.editor.v1.expression.FailureId_OrMutable =
+            this.failure,
         message: kotlin.String =
             this.message,
         locations: kotlin.collections.Iterable<skirout.editor.v1.type_catalog.ValueLocation_OrMutable> =
             this.locations,
     ) = skirout.editor.v1.expression.EvaluationDiagnostic(
-        code,
+        failure.toFrozen(),
         message,
         build.skir.internal.toFrozenList(locations, { it.toFrozen() }),
         this._unrecognizedFields,
@@ -10061,11 +2726,11 @@ class EvaluationDiagnostic private constructor(
     fun copy() = this;
 
     override fun equals(other: kotlin.Any?): kotlin.Boolean {
-        return this === other || (other is skirout.editor.v1.expression.EvaluationDiagnostic && this.code == other.code && this.message == other.message && this.locations == other.locations);
+        return this === other || (other is skirout.editor.v1.expression.EvaluationDiagnostic && this.failure == other.failure && this.message == other.message && this.locations == other.locations);
     }
 
     override fun hashCode(): kotlin.Int {
-        return kotlin.collections.listOf<kotlin.Any?>(this.code, this.message, this.locations).hashCode();
+        return kotlin.collections.listOf<kotlin.Any?>(this.failure, this.message, this.locations).hashCode();
     }
 
     override fun toString(): kotlin.String {
@@ -10079,8 +2744,8 @@ class EvaluationDiagnostic private constructor(
     class Mutable internal constructor(
         _mustNameArguments: _MustNameArguments =
             _MustNameArguments,
-        override var code: kotlin.String =
-            "",
+        override var failure: skirout.editor.v1.expression.FailureId_OrMutable =
+            skirout.editor.v1.expression.FailureId.partial(),
         override var message: kotlin.String =
             "",
         override var locations: kotlin.collections.List<skirout.editor.v1.type_catalog.ValueLocation_OrMutable> =
@@ -10090,11 +2755,27 @@ class EvaluationDiagnostic private constructor(
     ): skirout.editor.v1.expression.EvaluationDiagnostic_OrMutable {
         /** Returns a deeply immutable copy of this instance */
         override fun toFrozen() = skirout.editor.v1.expression.EvaluationDiagnostic(
-            code = this.code,
+            failure = this.failure,
             message = this.message,
             locations = this.locations,
             _unrecognizedFields = this._unrecognizedFields,
         );
+
+        /**
+         * If the value of [failure] is already mutable, returns it as-is.
+         * Otherwise, makes a mutable copy, assigns it back to [failure] and returns it.
+         */
+        val mutableFailure: skirout.editor.v1.expression.FailureId.Mutable get() {
+            var value = this.failure;
+            return when (value) {
+                is skirout.editor.v1.expression.FailureId -> {
+                    value = value.toMutable();
+                    this.failure = value;
+                    return value;
+                }
+                is skirout.editor.v1.expression.FailureId.Mutable -> value;
+            }
+        }
 
         /**
          * If the value of [locations] is already mutable, returns it as-is.
@@ -10116,7 +2797,7 @@ class EvaluationDiagnostic private constructor(
     companion object {
         private val default =
             skirout.editor.v1.expression.EvaluationDiagnostic(
-                "",
+                skirout.editor.v1.expression.FailureId.partial(),
                 "",
                 build.skir.internal.emptyFrozenList<skirout.editor.v1.type_catalog.ValueLocation>(),
             );
@@ -10132,14 +2813,14 @@ class EvaluationDiagnostic private constructor(
         fun partial(
             _mustNameArguments: _MustNameArguments =
                 _MustNameArguments,
-            code: kotlin.String =
-                "",
+            failure: skirout.editor.v1.expression.FailureId_OrMutable =
+                skirout.editor.v1.expression.FailureId.partial(),
             message: kotlin.String =
                 "",
             locations: kotlin.collections.Iterable<skirout.editor.v1.type_catalog.ValueLocation_OrMutable> =
                 build.skir.internal.emptyFrozenList<skirout.editor.v1.type_catalog.ValueLocation>(),
         ) = skirout.editor.v1.expression.EvaluationDiagnostic(
-            code = code,
+            failure = failure,
             message = message,
             locations = locations,
             _unrecognizedFields = null,
@@ -10154,82 +2835,21 @@ class EvaluationDiagnostic private constructor(
 }
 
 private object _SerializerRegistry {
-    val BinaryExpressionSerializerImpl = build.skir.internal.StructSerializer(
-        recordId = "editor/v1/expression.skir:BinaryExpression",
-        doc = "",
-        defaultInstance = skirout.editor.v1.expression.BinaryExpression.partial(),
-        newMutableFn = { it?.toMutable() ?: skirout.editor.v1.expression.BinaryExpression.Mutable() },
+    val CallExpressionSerializerImpl = build.skir.internal.StructSerializer(
+        recordId = "editor/v1/expression.skir:CallExpression",
+        doc = "Calls one declared operation of skir-src/editor/v1/operations.yaml. Arguments follow its\ndeclared parameters; a lambda parameter takes a lambda node. Type arguments appear only where\narguments cannot determine them, such as reading a resource by identity.",
+        defaultInstance = skirout.editor.v1.expression.CallExpression.partial(),
+        newMutableFn = { it?.toMutable() ?: skirout.editor.v1.expression.CallExpression.Mutable() },
         toFrozenFn = { it.toFrozen() },
         getUnrecognizedFields = { it._unrecognizedFields },
         setUnrecognizedFields = { m, u -> m._unrecognizedFields = u },
     );
 
-    val BinaryExpressionSerializer = build.skir.internal.makeSerializer(BinaryExpressionSerializerImpl);
-
-    val BoundDirectionSerializerImpl =
-        build.skir.internal.EnumSerializer.create<skirout.editor.v1.expression.BoundDirection, skirout.editor.v1.expression.BoundDirection.Unknown>(
-            recordId = "editor/v1/expression.skir:BoundDirection",
-            doc = "",
-            getKindOrdinal = { it.kind.ordinal },
-            kindCount = skirout.editor.v1.expression.BoundDirection.Kind.values().size,
-            unknownInstance = skirout.editor.v1.expression.BoundDirection.UNKNOWN,
-            wrapUnrecognized = { @kotlin.Suppress("DEPRECATION") skirout.editor.v1.expression.BoundDirection.Unknown(skirout.editor.v1.expression.BoundDirection.Kind.UNKNOWN, it) },
-            getUnrecognized = { it._unrecognized },
-        );
-
-    val BoundDirectionSerializer = build.skir.internal.makeSerializer(BoundDirectionSerializerImpl);
-
-    val CollectionAccessExpressionSerializerImpl = build.skir.internal.StructSerializer(
-        recordId = "editor/v1/expression.skir:CollectionAccessExpression",
-        doc = "",
-        defaultInstance = skirout.editor.v1.expression.CollectionAccessExpression.partial(),
-        newMutableFn = { it?.toMutable() ?: skirout.editor.v1.expression.CollectionAccessExpression.Mutable() },
-        toFrozenFn = { it.toFrozen() },
-        getUnrecognizedFields = { it._unrecognizedFields },
-        setUnrecognizedFields = { m, u -> m._unrecognizedFields = u },
-    );
-
-    val CollectionAccessExpressionSerializer = build.skir.internal.makeSerializer(CollectionAccessExpressionSerializerImpl);
-
-    val CollectionContainsExpressionSerializerImpl = build.skir.internal.StructSerializer(
-        recordId = "editor/v1/expression.skir:CollectionContainsExpression",
-        doc = "",
-        defaultInstance = skirout.editor.v1.expression.CollectionContainsExpression.partial(),
-        newMutableFn = { it?.toMutable() ?: skirout.editor.v1.expression.CollectionContainsExpression.Mutable() },
-        toFrozenFn = { it.toFrozen() },
-        getUnrecognizedFields = { it._unrecognizedFields },
-        setUnrecognizedFields = { m, u -> m._unrecognizedFields = u },
-    );
-
-    val CollectionContainsExpressionSerializer = build.skir.internal.makeSerializer(CollectionContainsExpressionSerializerImpl);
-
-    val CollectionSliceExpressionSerializerImpl = build.skir.internal.StructSerializer(
-        recordId = "editor/v1/expression.skir:CollectionSliceExpression",
-        doc = "",
-        defaultInstance = skirout.editor.v1.expression.CollectionSliceExpression.partial(),
-        newMutableFn = { it?.toMutable() ?: skirout.editor.v1.expression.CollectionSliceExpression.Mutable() },
-        toFrozenFn = { it.toFrozen() },
-        getUnrecognizedFields = { it._unrecognizedFields },
-        setUnrecognizedFields = { m, u -> m._unrecognizedFields = u },
-    );
-
-    val CollectionSliceExpressionSerializer = build.skir.internal.makeSerializer(CollectionSliceExpressionSerializerImpl);
-
-    val ColorWithAlphaExpressionSerializerImpl = build.skir.internal.StructSerializer(
-        recordId = "editor/v1/expression.skir:ColorWithAlphaExpression",
-        doc = "",
-        defaultInstance = skirout.editor.v1.expression.ColorWithAlphaExpression.partial(),
-        newMutableFn = { it?.toMutable() ?: skirout.editor.v1.expression.ColorWithAlphaExpression.Mutable() },
-        toFrozenFn = { it.toFrozen() },
-        getUnrecognizedFields = { it._unrecognizedFields },
-        setUnrecognizedFields = { m, u -> m._unrecognizedFields = u },
-    );
-
-    val ColorWithAlphaExpressionSerializer = build.skir.internal.makeSerializer(ColorWithAlphaExpressionSerializerImpl);
+    val CallExpressionSerializer = build.skir.internal.makeSerializer(CallExpressionSerializerImpl);
 
     val ConditionalExpressionSerializerImpl = build.skir.internal.StructSerializer(
         recordId = "editor/v1/expression.skir:ConditionalExpression",
-        doc = "",
+        doc = "Evaluates only the branch the test selects.",
         defaultInstance = skirout.editor.v1.expression.ConditionalExpression.partial(),
         newMutableFn = { it?.toMutable() ?: skirout.editor.v1.expression.ConditionalExpression.Mutable() },
         toFrozenFn = { it.toFrozen() },
@@ -10238,31 +2858,6 @@ private object _SerializerRegistry {
     );
 
     val ConditionalExpressionSerializer = build.skir.internal.makeSerializer(ConditionalExpressionSerializerImpl);
-
-    val DurationFormatExpressionSerializerImpl = build.skir.internal.StructSerializer(
-        recordId = "editor/v1/expression.skir:DurationFormatExpression",
-        doc = "",
-        defaultInstance = skirout.editor.v1.expression.DurationFormatExpression.partial(),
-        newMutableFn = { it?.toMutable() ?: skirout.editor.v1.expression.DurationFormatExpression.Mutable() },
-        toFrozenFn = { it.toFrozen() },
-        getUnrecognizedFields = { it._unrecognizedFields },
-        setUnrecognizedFields = { m, u -> m._unrecognizedFields = u },
-    );
-
-    val DurationFormatExpressionSerializer = build.skir.internal.makeSerializer(DurationFormatExpressionSerializerImpl);
-
-    val EntryBranchSerializerImpl =
-        build.skir.internal.EnumSerializer.create<skirout.editor.v1.expression.EntryBranch, skirout.editor.v1.expression.EntryBranch.Unknown>(
-            recordId = "editor/v1/expression.skir:EntryBranch",
-            doc = "",
-            getKindOrdinal = { it.kind.ordinal },
-            kindCount = skirout.editor.v1.expression.EntryBranch.Kind.values().size,
-            unknownInstance = skirout.editor.v1.expression.EntryBranch.UNKNOWN,
-            wrapUnrecognized = { @kotlin.Suppress("DEPRECATION") skirout.editor.v1.expression.EntryBranch.Unknown(skirout.editor.v1.expression.EntryBranch.Kind.UNKNOWN, it) },
-            getUnrecognized = { it._unrecognized },
-        );
-
-    val EntryBranchSerializer = build.skir.internal.makeSerializer(EntryBranchSerializerImpl);
 
     val EvaluationBudgetSerializerImpl = build.skir.internal.StructSerializer(
         recordId = "editor/v1/expression.skir:EvaluationBudget",
@@ -10278,7 +2873,7 @@ private object _SerializerRegistry {
 
     val EvaluationDiagnosticSerializerImpl = build.skir.internal.StructSerializer(
         recordId = "editor/v1/expression.skir:EvaluationDiagnostic",
-        doc = "",
+        doc = "A failed evaluation: the declared failure, a message, and the observed inputs plus located\nframe values as context.",
         defaultInstance = skirout.editor.v1.expression.EvaluationDiagnostic.partial(),
         newMutableFn = { it?.toMutable() ?: skirout.editor.v1.expression.EvaluationDiagnostic.Mutable() },
         toFrozenFn = { it.toFrozen() },
@@ -10312,30 +2907,6 @@ private object _SerializerRegistry {
 
     val ExpressionBindingsSerializer = build.skir.internal.makeSerializer(ExpressionBindingsSerializerImpl);
 
-    val ExpressionEntryProjectionSerializerImpl = build.skir.internal.StructSerializer(
-        recordId = "editor/v1/expression.skir:ExpressionEntryProjection",
-        doc = "",
-        defaultInstance = skirout.editor.v1.expression.ExpressionEntryProjection.partial(),
-        newMutableFn = { it?.toMutable() ?: skirout.editor.v1.expression.ExpressionEntryProjection.Mutable() },
-        toFrozenFn = { it.toFrozen() },
-        getUnrecognizedFields = { it._unrecognizedFields },
-        setUnrecognizedFields = { m, u -> m._unrecognizedFields = u },
-    );
-
-    val ExpressionEntryProjectionSerializer = build.skir.internal.makeSerializer(ExpressionEntryProjectionSerializerImpl);
-
-    val ExpressionFieldSerializerImpl = build.skir.internal.StructSerializer(
-        recordId = "editor/v1/expression.skir:ExpressionField",
-        doc = "Projects one field while preserving lazy query reads and the originating authored location.",
-        defaultInstance = skirout.editor.v1.expression.ExpressionField.partial(),
-        newMutableFn = { it?.toMutable() ?: skirout.editor.v1.expression.ExpressionField.Mutable() },
-        toFrozenFn = { it.toFrozen() },
-        getUnrecognizedFields = { it._unrecognizedFields },
-        setUnrecognizedFields = { m, u -> m._unrecognizedFields = u },
-    );
-
-    val ExpressionFieldSerializer = build.skir.internal.makeSerializer(ExpressionFieldSerializerImpl);
-
     val ExpressionInputSerializerImpl = build.skir.internal.StructSerializer(
         recordId = "editor/v1/expression.skir:ExpressionInput",
         doc = "Reads an externally supplied input at an authored value path.",
@@ -10350,7 +2921,7 @@ private object _SerializerRegistry {
 
     val ExpressionLocalSerializerImpl = build.skir.internal.StructSerializer(
         recordId = "editor/v1/expression.skir:ExpressionLocal",
-        doc = "Reads a lambda frame. Depth zero is the innermost frame; slots are defined by the enclosing operation.\nLocal values are captured for evaluation and may retain their authored location for read evidence.",
+        doc = "Reads a lambda frame. Depth zero is the innermost frame; slots are defined by the lambda's\nparameter. A local holds a value an earlier read or literal produced, so it is never a new read.",
         defaultInstance = skirout.editor.v1.expression.ExpressionLocal.partial(),
         newMutableFn = { it?.toMutable() ?: skirout.editor.v1.expression.ExpressionLocal.Mutable() },
         toFrozenFn = { it.toFrozen() },
@@ -10375,7 +2946,7 @@ private object _SerializerRegistry {
     val ExpressionNodeSerializerImpl =
         build.skir.internal.EnumSerializer.create<skirout.editor.v1.expression.ExpressionNode, skirout.editor.v1.expression.ExpressionNode.Unknown>(
             recordId = "editor/v1/expression.skir:ExpressionNode",
-            doc = "Closed expression language shared by producers, checkers and evaluators.\nBoolean and conditional branches evaluate only the needed branch. Collection bodies\nintroduce lexical frames without modifying authored state.",
+            doc = "Closed expression language. Hosts evaluate the structural forms themselves; every other\noperation is a call to the declared operation catalog.",
             getKindOrdinal = { it.kind.ordinal },
             kindCount = skirout.editor.v1.expression.ExpressionNode.Kind.values().size,
             unknownInstance = skirout.editor.v1.expression.ExpressionNode.UNKNOWN,
@@ -10384,19 +2955,6 @@ private object _SerializerRegistry {
         );
 
     val ExpressionNodeSerializer = build.skir.internal.makeSerializer(ExpressionNodeSerializerImpl);
-
-    val ExpressionQuerySerializerImpl =
-        build.skir.internal.EnumSerializer.create<skirout.editor.v1.expression.ExpressionQuery, skirout.editor.v1.expression.ExpressionQuery.Unknown>(
-            recordId = "editor/v1/expression.skir:ExpressionQuery",
-            doc = "",
-            getKindOrdinal = { it.kind.ordinal },
-            kindCount = skirout.editor.v1.expression.ExpressionQuery.Kind.values().size,
-            unknownInstance = skirout.editor.v1.expression.ExpressionQuery.UNKNOWN,
-            wrapUnrecognized = { @kotlin.Suppress("DEPRECATION") skirout.editor.v1.expression.ExpressionQuery.Unknown(skirout.editor.v1.expression.ExpressionQuery.Kind.UNKNOWN, it) },
-            getUnrecognized = { it._unrecognized },
-        );
-
-    val ExpressionQuerySerializer = build.skir.internal.makeSerializer(ExpressionQuerySerializerImpl);
 
     val ExpressionTypeSerializerImpl = build.skir.internal.StructSerializer(
         recordId = "editor/v1/expression.skir:ExpressionType",
@@ -10423,637 +2981,111 @@ private object _SerializerRegistry {
 
     val ExpressionValueTypeSerializer = build.skir.internal.makeSerializer(ExpressionValueTypeSerializerImpl);
 
-    val FoldExpressionSerializerImpl = build.skir.internal.StructSerializer(
-        recordId = "editor/v1/expression.skir:FoldExpression",
-        doc = "Evaluates source and initial outside the body frame. The body slots are accumulator then item.",
-        defaultInstance = skirout.editor.v1.expression.FoldExpression.partial(),
-        newMutableFn = { it?.toMutable() ?: skirout.editor.v1.expression.FoldExpression.Mutable() },
+    val FailureIdSerializerImpl = build.skir.internal.StructSerializer(
+        recordId = "editor/v1/expression.skir:FailureId",
+        doc = "Identity of a declared failure from the operation catalog, for example \"regex_limit\".",
+        defaultInstance = skirout.editor.v1.expression.FailureId.partial(),
+        newMutableFn = { it?.toMutable() ?: skirout.editor.v1.expression.FailureId.Mutable() },
         toFrozenFn = { it.toFrozen() },
         getUnrecognizedFields = { it._unrecognizedFields },
         setUnrecognizedFields = { m, u -> m._unrecognizedFields = u },
     );
 
-    val FoldExpressionSerializer = build.skir.internal.makeSerializer(FoldExpressionSerializerImpl);
+    val FailureIdSerializer = build.skir.internal.makeSerializer(FailureIdSerializerImpl);
 
-    val NumberArithmeticExpressionSerializerImpl = build.skir.internal.StructSerializer(
-        recordId = "editor/v1/expression.skir:NumberArithmeticExpression",
-        doc = "Evaluates at least two operands in one arithmetic operation, preserving numeric promotion\nacross the complete argument sequence.",
-        defaultInstance = skirout.editor.v1.expression.NumberArithmeticExpression.partial(),
-        newMutableFn = { it?.toMutable() ?: skirout.editor.v1.expression.NumberArithmeticExpression.Mutable() },
+    val FallbackExpressionSerializerImpl = build.skir.internal.StructSerializer(
+        recordId = "editor/v1/expression.skir:FallbackExpression",
+        doc = "Evaluates fallback for missing, null, or unfilled value. Evaluation failures remain\nfailures instead of being hidden by the fallback.",
+        defaultInstance = skirout.editor.v1.expression.FallbackExpression.partial(),
+        newMutableFn = { it?.toMutable() ?: skirout.editor.v1.expression.FallbackExpression.Mutable() },
         toFrozenFn = { it.toFrozen() },
         getUnrecognizedFields = { it._unrecognizedFields },
         setUnrecognizedFields = { m, u -> m._unrecognizedFields = u },
     );
 
-    val NumberArithmeticExpressionSerializer = build.skir.internal.makeSerializer(NumberArithmeticExpressionSerializerImpl);
+    val FallbackExpressionSerializer = build.skir.internal.makeSerializer(FallbackExpressionSerializerImpl);
 
-    val NumberArithmeticOperationSerializerImpl =
-        build.skir.internal.EnumSerializer.create<skirout.editor.v1.expression.NumberArithmeticOperation, skirout.editor.v1.expression.NumberArithmeticOperation.Unknown>(
-            recordId = "editor/v1/expression.skir:NumberArithmeticOperation",
-            doc = "",
-            getKindOrdinal = { it.kind.ordinal },
-            kindCount = skirout.editor.v1.expression.NumberArithmeticOperation.Kind.values().size,
-            unknownInstance = skirout.editor.v1.expression.NumberArithmeticOperation.UNKNOWN,
-            wrapUnrecognized = { @kotlin.Suppress("DEPRECATION") skirout.editor.v1.expression.NumberArithmeticOperation.Unknown(skirout.editor.v1.expression.NumberArithmeticOperation.Kind.UNKNOWN, it) },
-            getUnrecognized = { it._unrecognized },
-        );
-
-    val NumberArithmeticOperationSerializer = build.skir.internal.makeSerializer(NumberArithmeticOperationSerializerImpl);
-
-    val NumberCompareExpressionSerializerImpl = build.skir.internal.StructSerializer(
-        recordId = "editor/v1/expression.skir:NumberCompareExpression",
-        doc = "",
-        defaultInstance = skirout.editor.v1.expression.NumberCompareExpression.partial(),
-        newMutableFn = { it?.toMutable() ?: skirout.editor.v1.expression.NumberCompareExpression.Mutable() },
+    val FieldExpressionSerializerImpl = build.skir.internal.StructSerializer(
+        recordId = "editor/v1/expression.skir:FieldExpression",
+        doc = "Projects a path from a computed value. Map key and value segments project entries.",
+        defaultInstance = skirout.editor.v1.expression.FieldExpression.partial(),
+        newMutableFn = { it?.toMutable() ?: skirout.editor.v1.expression.FieldExpression.Mutable() },
         toFrozenFn = { it.toFrozen() },
         getUnrecognizedFields = { it._unrecognizedFields },
         setUnrecognizedFields = { m, u -> m._unrecognizedFields = u },
     );
 
-    val NumberCompareExpressionSerializer = build.skir.internal.makeSerializer(NumberCompareExpressionSerializerImpl);
+    val FieldExpressionSerializer = build.skir.internal.makeSerializer(FieldExpressionSerializerImpl);
 
-    val NumberCompareOperationSerializerImpl =
-        build.skir.internal.EnumSerializer.create<skirout.editor.v1.expression.NumberCompareOperation, skirout.editor.v1.expression.NumberCompareOperation.Unknown>(
-            recordId = "editor/v1/expression.skir:NumberCompareOperation",
-            doc = "",
-            getKindOrdinal = { it.kind.ordinal },
-            kindCount = skirout.editor.v1.expression.NumberCompareOperation.Kind.values().size,
-            unknownInstance = skirout.editor.v1.expression.NumberCompareOperation.UNKNOWN,
-            wrapUnrecognized = { @kotlin.Suppress("DEPRECATION") skirout.editor.v1.expression.NumberCompareOperation.Unknown(skirout.editor.v1.expression.NumberCompareOperation.Kind.UNKNOWN, it) },
-            getUnrecognized = { it._unrecognized },
-        );
-
-    val NumberCompareOperationSerializer = build.skir.internal.makeSerializer(NumberCompareOperationSerializerImpl);
-
-    val NumberFormatExpressionSerializerImpl = build.skir.internal.StructSerializer(
-        recordId = "editor/v1/expression.skir:NumberFormatExpression",
-        doc = "",
-        defaultInstance = skirout.editor.v1.expression.NumberFormatExpression.partial(),
-        newMutableFn = { it?.toMutable() ?: skirout.editor.v1.expression.NumberFormatExpression.Mutable() },
+    val LambdaExpressionSerializerImpl = build.skir.internal.StructSerializer(
+        recordId = "editor/v1/expression.skir:LambdaExpression",
+        doc = "Body of a lambda argument. It opens one frame of `arity` locals.",
+        defaultInstance = skirout.editor.v1.expression.LambdaExpression.partial(),
+        newMutableFn = { it?.toMutable() ?: skirout.editor.v1.expression.LambdaExpression.Mutable() },
         toFrozenFn = { it.toFrozen() },
         getUnrecognizedFields = { it._unrecognizedFields },
         setUnrecognizedFields = { m, u -> m._unrecognizedFields = u },
     );
 
-    val NumberFormatExpressionSerializer = build.skir.internal.makeSerializer(NumberFormatExpressionSerializerImpl);
+    val LambdaExpressionSerializer = build.skir.internal.makeSerializer(LambdaExpressionSerializerImpl);
 
-    val NumberRoundExpressionSerializerImpl = build.skir.internal.StructSerializer(
-        recordId = "editor/v1/expression.skir:NumberRoundExpression",
-        doc = "",
-        defaultInstance = skirout.editor.v1.expression.NumberRoundExpression.partial(),
-        newMutableFn = { it?.toMutable() ?: skirout.editor.v1.expression.NumberRoundExpression.Mutable() },
+    val LogicalExpressionSerializerImpl = build.skir.internal.StructSerializer(
+        recordId = "editor/v1/expression.skir:LogicalExpression",
+        doc = "Evaluates right only when left does not decide the result.",
+        defaultInstance = skirout.editor.v1.expression.LogicalExpression.partial(),
+        newMutableFn = { it?.toMutable() ?: skirout.editor.v1.expression.LogicalExpression.Mutable() },
         toFrozenFn = { it.toFrozen() },
         getUnrecognizedFields = { it._unrecognizedFields },
         setUnrecognizedFields = { m, u -> m._unrecognizedFields = u },
     );
 
-    val NumberRoundExpressionSerializer = build.skir.internal.makeSerializer(NumberRoundExpressionSerializerImpl);
+    val LogicalExpressionSerializer = build.skir.internal.makeSerializer(LogicalExpressionSerializerImpl);
 
-    val OrElseExpressionSerializerImpl = build.skir.internal.StructSerializer(
-        recordId = "editor/v1/expression.skir:OrElseExpression",
-        doc = "Evaluates fallback for unavailable, null, or unfilled input. Evaluation failures remain\nfailures instead of being hidden by the fallback.",
-        defaultInstance = skirout.editor.v1.expression.OrElseExpression.partial(),
-        newMutableFn = { it?.toMutable() ?: skirout.editor.v1.expression.OrElseExpression.Mutable() },
+    val OperationIdSerializerImpl = build.skir.internal.StructSerializer(
+        recordId = "editor/v1/expression.skir:OperationId",
+        doc = "Identity of a declared operation, for example \"integer.gcd\". Checking resolves it once;\nevaluators never choose between overloads at runtime.",
+        defaultInstance = skirout.editor.v1.expression.OperationId.partial(),
+        newMutableFn = { it?.toMutable() ?: skirout.editor.v1.expression.OperationId.Mutable() },
         toFrozenFn = { it.toFrozen() },
         getUnrecognizedFields = { it._unrecognizedFields },
         setUnrecognizedFields = { m, u -> m._unrecognizedFields = u },
     );
 
-    val OrElseExpressionSerializer = build.skir.internal.makeSerializer(OrElseExpressionSerializerImpl);
-
-    val RegexCaptureExpressionSerializerImpl = build.skir.internal.StructSerializer(
-        recordId = "editor/v1/expression.skir:RegexCaptureExpression",
-        doc = "",
-        defaultInstance = skirout.editor.v1.expression.RegexCaptureExpression.partial(),
-        newMutableFn = { it?.toMutable() ?: skirout.editor.v1.expression.RegexCaptureExpression.Mutable() },
-        toFrozenFn = { it.toFrozen() },
-        getUnrecognizedFields = { it._unrecognizedFields },
-        setUnrecognizedFields = { m, u -> m._unrecognizedFields = u },
-    );
-
-    val RegexCaptureExpressionSerializer = build.skir.internal.makeSerializer(RegexCaptureExpressionSerializerImpl);
-
-    val RegexMatchModeSerializerImpl =
-        build.skir.internal.EnumSerializer.create<skirout.editor.v1.expression.RegexMatchMode, skirout.editor.v1.expression.RegexMatchMode.Unknown>(
-            recordId = "editor/v1/expression.skir:RegexMatchMode",
-            doc = "",
-            getKindOrdinal = { it.kind.ordinal },
-            kindCount = skirout.editor.v1.expression.RegexMatchMode.Kind.values().size,
-            unknownInstance = skirout.editor.v1.expression.RegexMatchMode.UNKNOWN,
-            wrapUnrecognized = { @kotlin.Suppress("DEPRECATION") skirout.editor.v1.expression.RegexMatchMode.Unknown(skirout.editor.v1.expression.RegexMatchMode.Kind.UNKNOWN, it) },
-            getUnrecognized = { it._unrecognized },
-        );
-
-    val RegexMatchModeSerializer = build.skir.internal.makeSerializer(RegexMatchModeSerializerImpl);
-
-    val RegexReplaceExpressionSerializerImpl = build.skir.internal.StructSerializer(
-        recordId = "editor/v1/expression.skir:RegexReplaceExpression",
-        doc = "",
-        defaultInstance = skirout.editor.v1.expression.RegexReplaceExpression.partial(),
-        newMutableFn = { it?.toMutable() ?: skirout.editor.v1.expression.RegexReplaceExpression.Mutable() },
-        toFrozenFn = { it.toFrozen() },
-        getUnrecognizedFields = { it._unrecognizedFields },
-        setUnrecognizedFields = { m, u -> m._unrecognizedFields = u },
-    );
-
-    val RegexReplaceExpressionSerializer = build.skir.internal.makeSerializer(RegexReplaceExpressionSerializerImpl);
-
-    val RegexTestExpressionSerializerImpl = build.skir.internal.StructSerializer(
-        recordId = "editor/v1/expression.skir:RegexTestExpression",
-        doc = "",
-        defaultInstance = skirout.editor.v1.expression.RegexTestExpression.partial(),
-        newMutableFn = { it?.toMutable() ?: skirout.editor.v1.expression.RegexTestExpression.Mutable() },
-        toFrozenFn = { it.toFrozen() },
-        getUnrecognizedFields = { it._unrecognizedFields },
-        setUnrecognizedFields = { m, u -> m._unrecognizedFields = u },
-    );
-
-    val RegexTestExpressionSerializer = build.skir.internal.makeSerializer(RegexTestExpressionSerializerImpl);
-
-    val ResourceIdentityQuerySourceSerializerImpl = build.skir.internal.StructSerializer(
-        recordId = "editor/v1/expression.skir:ResourceIdentityQuerySource",
-        doc = "An identity expression needs an explicit catalog type witness to admit resource reads.",
-        defaultInstance = skirout.editor.v1.expression.ResourceIdentityQuerySource.partial(),
-        newMutableFn = { it?.toMutable() ?: skirout.editor.v1.expression.ResourceIdentityQuerySource.Mutable() },
-        toFrozenFn = { it.toFrozen() },
-        getUnrecognizedFields = { it._unrecognizedFields },
-        setUnrecognizedFields = { m, u -> m._unrecognizedFields = u },
-    );
-
-    val ResourceIdentityQuerySourceSerializer = build.skir.internal.makeSerializer(ResourceIdentityQuerySourceSerializerImpl);
-
-    val ResourceQuerySourceSerializerImpl =
-        build.skir.internal.EnumSerializer.create<skirout.editor.v1.expression.ResourceQuerySource, skirout.editor.v1.expression.ResourceQuerySource.Unknown>(
-            recordId = "editor/v1/expression.skir:ResourceQuerySource",
-            doc = "",
-            getKindOrdinal = { it.kind.ordinal },
-            kindCount = skirout.editor.v1.expression.ResourceQuerySource.Kind.values().size,
-            unknownInstance = skirout.editor.v1.expression.ResourceQuerySource.UNKNOWN,
-            wrapUnrecognized = { @kotlin.Suppress("DEPRECATION") skirout.editor.v1.expression.ResourceQuerySource.Unknown(skirout.editor.v1.expression.ResourceQuerySource.Kind.UNKNOWN, it) },
-            getUnrecognized = { it._unrecognized },
-        );
-
-    val ResourceQuerySourceSerializer = build.skir.internal.makeSerializer(ResourceQuerySourceSerializerImpl);
-
-    val RuleMaximumScaleExpressionSerializerImpl = build.skir.internal.StructSerializer(
-        recordId = "editor/v1/expression.skir:RuleMaximumScaleExpression",
-        doc = "",
-        defaultInstance = skirout.editor.v1.expression.RuleMaximumScaleExpression.partial(),
-        newMutableFn = { it?.toMutable() ?: skirout.editor.v1.expression.RuleMaximumScaleExpression.Mutable() },
-        toFrozenFn = { it.toFrozen() },
-        getUnrecognizedFields = { it._unrecognizedFields },
-        setUnrecognizedFields = { m, u -> m._unrecognizedFields = u },
-    );
-
-    val RuleMaximumScaleExpressionSerializer = build.skir.internal.makeSerializer(RuleMaximumScaleExpressionSerializerImpl);
-
-    val RuleMultipleOfExpressionSerializerImpl = build.skir.internal.StructSerializer(
-        recordId = "editor/v1/expression.skir:RuleMultipleOfExpression",
-        doc = "",
-        defaultInstance = skirout.editor.v1.expression.RuleMultipleOfExpression.partial(),
-        newMutableFn = { it?.toMutable() ?: skirout.editor.v1.expression.RuleMultipleOfExpression.Mutable() },
-        toFrozenFn = { it.toFrozen() },
-        getUnrecognizedFields = { it._unrecognizedFields },
-        setUnrecognizedFields = { m, u -> m._unrecognizedFields = u },
-    );
-
-    val RuleMultipleOfExpressionSerializer = build.skir.internal.makeSerializer(RuleMultipleOfExpressionSerializerImpl);
-
-    val RuleNumericBoundExpressionSerializerImpl = build.skir.internal.StructSerializer(
-        recordId = "editor/v1/expression.skir:RuleNumericBoundExpression",
-        doc = "",
-        defaultInstance = skirout.editor.v1.expression.RuleNumericBoundExpression.partial(),
-        newMutableFn = { it?.toMutable() ?: skirout.editor.v1.expression.RuleNumericBoundExpression.Mutable() },
-        toFrozenFn = { it.toFrozen() },
-        getUnrecognizedFields = { it._unrecognizedFields },
-        setUnrecognizedFields = { m, u -> m._unrecognizedFields = u },
-    );
-
-    val RuleNumericBoundExpressionSerializer = build.skir.internal.makeSerializer(RuleNumericBoundExpressionSerializerImpl);
-
-    val RuleNumericRangeExpressionSerializerImpl = build.skir.internal.StructSerializer(
-        recordId = "editor/v1/expression.skir:RuleNumericRangeExpression",
-        doc = "",
-        defaultInstance = skirout.editor.v1.expression.RuleNumericRangeExpression.partial(),
-        newMutableFn = { it?.toMutable() ?: skirout.editor.v1.expression.RuleNumericRangeExpression.Mutable() },
-        toFrozenFn = { it.toFrozen() },
-        getUnrecognizedFields = { it._unrecognizedFields },
-        setUnrecognizedFields = { m, u -> m._unrecognizedFields = u },
-    );
-
-    val RuleNumericRangeExpressionSerializer = build.skir.internal.makeSerializer(RuleNumericRangeExpressionSerializerImpl);
-
-    val RuleOneOfExpressionSerializerImpl = build.skir.internal.StructSerializer(
-        recordId = "editor/v1/expression.skir:RuleOneOfExpression",
-        doc = "",
-        defaultInstance = skirout.editor.v1.expression.RuleOneOfExpression.partial(),
-        newMutableFn = { it?.toMutable() ?: skirout.editor.v1.expression.RuleOneOfExpression.Mutable() },
-        toFrozenFn = { it.toFrozen() },
-        getUnrecognizedFields = { it._unrecognizedFields },
-        setUnrecognizedFields = { m, u -> m._unrecognizedFields = u },
-    );
-
-    val RuleOneOfExpressionSerializer = build.skir.internal.makeSerializer(RuleOneOfExpressionSerializerImpl);
-
-    val RuleSizeBoundExpressionSerializerImpl = build.skir.internal.StructSerializer(
-        recordId = "editor/v1/expression.skir:RuleSizeBoundExpression",
-        doc = "",
-        defaultInstance = skirout.editor.v1.expression.RuleSizeBoundExpression.partial(),
-        newMutableFn = { it?.toMutable() ?: skirout.editor.v1.expression.RuleSizeBoundExpression.Mutable() },
-        toFrozenFn = { it.toFrozen() },
-        getUnrecognizedFields = { it._unrecognizedFields },
-        setUnrecognizedFields = { m, u -> m._unrecognizedFields = u },
-    );
-
-    val RuleSizeBoundExpressionSerializer = build.skir.internal.makeSerializer(RuleSizeBoundExpressionSerializerImpl);
-
-    val RuleSizeRangeExpressionSerializerImpl = build.skir.internal.StructSerializer(
-        recordId = "editor/v1/expression.skir:RuleSizeRangeExpression",
-        doc = "",
-        defaultInstance = skirout.editor.v1.expression.RuleSizeRangeExpression.partial(),
-        newMutableFn = { it?.toMutable() ?: skirout.editor.v1.expression.RuleSizeRangeExpression.Mutable() },
-        toFrozenFn = { it.toFrozen() },
-        getUnrecognizedFields = { it._unrecognizedFields },
-        setUnrecognizedFields = { m, u -> m._unrecognizedFields = u },
-    );
-
-    val RuleSizeRangeExpressionSerializer = build.skir.internal.makeSerializer(RuleSizeRangeExpressionSerializerImpl);
-
-    val RuleTimestampBoundExpressionSerializerImpl = build.skir.internal.StructSerializer(
-        recordId = "editor/v1/expression.skir:RuleTimestampBoundExpression",
-        doc = "",
-        defaultInstance = skirout.editor.v1.expression.RuleTimestampBoundExpression.partial(),
-        newMutableFn = { it?.toMutable() ?: skirout.editor.v1.expression.RuleTimestampBoundExpression.Mutable() },
-        toFrozenFn = { it.toFrozen() },
-        getUnrecognizedFields = { it._unrecognizedFields },
-        setUnrecognizedFields = { m, u -> m._unrecognizedFields = u },
-    );
-
-    val RuleTimestampBoundExpressionSerializer = build.skir.internal.makeSerializer(RuleTimestampBoundExpressionSerializerImpl);
-
-    val RuleUnaryExpressionSerializerImpl = build.skir.internal.StructSerializer(
-        recordId = "editor/v1/expression.skir:RuleUnaryExpression",
-        doc = "",
-        defaultInstance = skirout.editor.v1.expression.RuleUnaryExpression.partial(),
-        newMutableFn = { it?.toMutable() ?: skirout.editor.v1.expression.RuleUnaryExpression.Mutable() },
-        toFrozenFn = { it.toFrozen() },
-        getUnrecognizedFields = { it._unrecognizedFields },
-        setUnrecognizedFields = { m, u -> m._unrecognizedFields = u },
-    );
-
-    val RuleUnaryExpressionSerializer = build.skir.internal.makeSerializer(RuleUnaryExpressionSerializerImpl);
-
-    val RuleUnaryOperationSerializerImpl =
-        build.skir.internal.EnumSerializer.create<skirout.editor.v1.expression.RuleUnaryOperation, skirout.editor.v1.expression.RuleUnaryOperation.Unknown>(
-            recordId = "editor/v1/expression.skir:RuleUnaryOperation",
-            doc = "",
-            getKindOrdinal = { it.kind.ordinal },
-            kindCount = skirout.editor.v1.expression.RuleUnaryOperation.Kind.values().size,
-            unknownInstance = skirout.editor.v1.expression.RuleUnaryOperation.UNKNOWN,
-            wrapUnrecognized = { @kotlin.Suppress("DEPRECATION") skirout.editor.v1.expression.RuleUnaryOperation.Unknown(skirout.editor.v1.expression.RuleUnaryOperation.Kind.UNKNOWN, it) },
-            getUnrecognized = { it._unrecognized },
-        );
-
-    val RuleUnaryOperationSerializer = build.skir.internal.makeSerializer(RuleUnaryOperationSerializerImpl);
-
-    val SizeBoundMetricSerializerImpl =
-        build.skir.internal.EnumSerializer.create<skirout.editor.v1.expression.SizeBoundMetric, skirout.editor.v1.expression.SizeBoundMetric.Unknown>(
-            recordId = "editor/v1/expression.skir:SizeBoundMetric",
-            doc = "",
-            getKindOrdinal = { it.kind.ordinal },
-            kindCount = skirout.editor.v1.expression.SizeBoundMetric.Kind.values().size,
-            unknownInstance = skirout.editor.v1.expression.SizeBoundMetric.UNKNOWN,
-            wrapUnrecognized = { @kotlin.Suppress("DEPRECATION") skirout.editor.v1.expression.SizeBoundMetric.Unknown(skirout.editor.v1.expression.SizeBoundMetric.Kind.UNKNOWN, it) },
-            getUnrecognized = { it._unrecognized },
-        );
-
-    val SizeBoundMetricSerializer = build.skir.internal.makeSerializer(SizeBoundMetricSerializerImpl);
-
-    val SizeRangeMetricSerializerImpl =
-        build.skir.internal.EnumSerializer.create<skirout.editor.v1.expression.SizeRangeMetric, skirout.editor.v1.expression.SizeRangeMetric.Unknown>(
-            recordId = "editor/v1/expression.skir:SizeRangeMetric",
-            doc = "",
-            getKindOrdinal = { it.kind.ordinal },
-            kindCount = skirout.editor.v1.expression.SizeRangeMetric.Kind.values().size,
-            unknownInstance = skirout.editor.v1.expression.SizeRangeMetric.UNKNOWN,
-            wrapUnrecognized = { @kotlin.Suppress("DEPRECATION") skirout.editor.v1.expression.SizeRangeMetric.Unknown(skirout.editor.v1.expression.SizeRangeMetric.Kind.UNKNOWN, it) },
-            getUnrecognized = { it._unrecognized },
-        );
-
-    val SizeRangeMetricSerializer = build.skir.internal.makeSerializer(SizeRangeMetricSerializerImpl);
-
-    val SortByExpressionSerializerImpl = build.skir.internal.StructSerializer(
-        recordId = "editor/v1/expression.skir:SortByExpression",
-        doc = "Evaluates each key with the item in slot zero. The descending expression belongs to the outer scope.",
-        defaultInstance = skirout.editor.v1.expression.SortByExpression.partial(),
-        newMutableFn = { it?.toMutable() ?: skirout.editor.v1.expression.SortByExpression.Mutable() },
-        toFrozenFn = { it.toFrozen() },
-        getUnrecognizedFields = { it._unrecognizedFields },
-        setUnrecognizedFields = { m, u -> m._unrecognizedFields = u },
-    );
-
-    val SortByExpressionSerializer = build.skir.internal.makeSerializer(SortByExpressionSerializerImpl);
-
-    val SortWithExpressionSerializerImpl = build.skir.internal.StructSerializer(
-        recordId = "editor/v1/expression.skir:SortWithExpression",
-        doc = "The comparator slots are the left item then the right item.",
-        defaultInstance = skirout.editor.v1.expression.SortWithExpression.partial(),
-        newMutableFn = { it?.toMutable() ?: skirout.editor.v1.expression.SortWithExpression.Mutable() },
-        toFrozenFn = { it.toFrozen() },
-        getUnrecognizedFields = { it._unrecognizedFields },
-        setUnrecognizedFields = { m, u -> m._unrecognizedFields = u },
-    );
-
-    val SortWithExpressionSerializer = build.skir.internal.makeSerializer(SortWithExpressionSerializerImpl);
-
-    val TextCompareExpressionSerializerImpl = build.skir.internal.StructSerializer(
-        recordId = "editor/v1/expression.skir:TextCompareExpression",
-        doc = "",
-        defaultInstance = skirout.editor.v1.expression.TextCompareExpression.partial(),
-        newMutableFn = { it?.toMutable() ?: skirout.editor.v1.expression.TextCompareExpression.Mutable() },
-        toFrozenFn = { it.toFrozen() },
-        getUnrecognizedFields = { it._unrecognizedFields },
-        setUnrecognizedFields = { m, u -> m._unrecognizedFields = u },
-    );
-
-    val TextCompareExpressionSerializer = build.skir.internal.makeSerializer(TextCompareExpressionSerializerImpl);
-
-    val TextCompareOperationSerializerImpl =
-        build.skir.internal.EnumSerializer.create<skirout.editor.v1.expression.TextCompareOperation, skirout.editor.v1.expression.TextCompareOperation.Unknown>(
-            recordId = "editor/v1/expression.skir:TextCompareOperation",
-            doc = "",
-            getKindOrdinal = { it.kind.ordinal },
-            kindCount = skirout.editor.v1.expression.TextCompareOperation.Kind.values().size,
-            unknownInstance = skirout.editor.v1.expression.TextCompareOperation.UNKNOWN,
-            wrapUnrecognized = { @kotlin.Suppress("DEPRECATION") skirout.editor.v1.expression.TextCompareOperation.Unknown(skirout.editor.v1.expression.TextCompareOperation.Kind.UNKNOWN, it) },
-            getUnrecognized = { it._unrecognized },
-        );
-
-    val TextCompareOperationSerializer = build.skir.internal.makeSerializer(TextCompareOperationSerializerImpl);
-
-    val TextInterpolateExpressionSerializerImpl = build.skir.internal.StructSerializer(
-        recordId = "editor/v1/expression.skir:TextInterpolateExpression",
-        doc = "",
-        defaultInstance = skirout.editor.v1.expression.TextInterpolateExpression.partial(),
-        newMutableFn = { it?.toMutable() ?: skirout.editor.v1.expression.TextInterpolateExpression.Mutable() },
-        toFrozenFn = { it.toFrozen() },
-        getUnrecognizedFields = { it._unrecognizedFields },
-        setUnrecognizedFields = { m, u -> m._unrecognizedFields = u },
-    );
-
-    val TextInterpolateExpressionSerializer = build.skir.internal.makeSerializer(TextInterpolateExpressionSerializerImpl);
-
-    val TextJoinExpressionSerializerImpl = build.skir.internal.StructSerializer(
-        recordId = "editor/v1/expression.skir:TextJoinExpression",
-        doc = "",
-        defaultInstance = skirout.editor.v1.expression.TextJoinExpression.partial(),
-        newMutableFn = { it?.toMutable() ?: skirout.editor.v1.expression.TextJoinExpression.Mutable() },
-        toFrozenFn = { it.toFrozen() },
-        getUnrecognizedFields = { it._unrecognizedFields },
-        setUnrecognizedFields = { m, u -> m._unrecognizedFields = u },
-    );
-
-    val TextJoinExpressionSerializer = build.skir.internal.makeSerializer(TextJoinExpressionSerializerImpl);
-
-    val TextReplaceExpressionSerializerImpl = build.skir.internal.StructSerializer(
-        recordId = "editor/v1/expression.skir:TextReplaceExpression",
-        doc = "",
-        defaultInstance = skirout.editor.v1.expression.TextReplaceExpression.partial(),
-        newMutableFn = { it?.toMutable() ?: skirout.editor.v1.expression.TextReplaceExpression.Mutable() },
-        toFrozenFn = { it.toFrozen() },
-        getUnrecognizedFields = { it._unrecognizedFields },
-        setUnrecognizedFields = { m, u -> m._unrecognizedFields = u },
-    );
-
-    val TextReplaceExpressionSerializer = build.skir.internal.makeSerializer(TextReplaceExpressionSerializerImpl);
-
-    val TextSplitExpressionSerializerImpl = build.skir.internal.StructSerializer(
-        recordId = "editor/v1/expression.skir:TextSplitExpression",
-        doc = "",
-        defaultInstance = skirout.editor.v1.expression.TextSplitExpression.partial(),
-        newMutableFn = { it?.toMutable() ?: skirout.editor.v1.expression.TextSplitExpression.Mutable() },
-        toFrozenFn = { it.toFrozen() },
-        getUnrecognizedFields = { it._unrecognizedFields },
-        setUnrecognizedFields = { m, u -> m._unrecognizedFields = u },
-    );
-
-    val TextSplitExpressionSerializer = build.skir.internal.makeSerializer(TextSplitExpressionSerializerImpl);
-
-    val TextSubstringExpressionSerializerImpl = build.skir.internal.StructSerializer(
-        recordId = "editor/v1/expression.skir:TextSubstringExpression",
-        doc = "",
-        defaultInstance = skirout.editor.v1.expression.TextSubstringExpression.partial(),
-        newMutableFn = { it?.toMutable() ?: skirout.editor.v1.expression.TextSubstringExpression.Mutable() },
-        toFrozenFn = { it.toFrozen() },
-        getUnrecognizedFields = { it._unrecognizedFields },
-        setUnrecognizedFields = { m, u -> m._unrecognizedFields = u },
-    );
-
-    val TextSubstringExpressionSerializer = build.skir.internal.makeSerializer(TextSubstringExpressionSerializerImpl);
-
-    val TextUnaryExpressionSerializerImpl = build.skir.internal.StructSerializer(
-        recordId = "editor/v1/expression.skir:TextUnaryExpression",
-        doc = "",
-        defaultInstance = skirout.editor.v1.expression.TextUnaryExpression.partial(),
-        newMutableFn = { it?.toMutable() ?: skirout.editor.v1.expression.TextUnaryExpression.Mutable() },
-        toFrozenFn = { it.toFrozen() },
-        getUnrecognizedFields = { it._unrecognizedFields },
-        setUnrecognizedFields = { m, u -> m._unrecognizedFields = u },
-    );
-
-    val TextUnaryExpressionSerializer = build.skir.internal.makeSerializer(TextUnaryExpressionSerializerImpl);
-
-    val TextUnaryOperationSerializerImpl =
-        build.skir.internal.EnumSerializer.create<skirout.editor.v1.expression.TextUnaryOperation, skirout.editor.v1.expression.TextUnaryOperation.Unknown>(
-            recordId = "editor/v1/expression.skir:TextUnaryOperation",
-            doc = "",
-            getKindOrdinal = { it.kind.ordinal },
-            kindCount = skirout.editor.v1.expression.TextUnaryOperation.Kind.values().size,
-            unknownInstance = skirout.editor.v1.expression.TextUnaryOperation.UNKNOWN,
-            wrapUnrecognized = { @kotlin.Suppress("DEPRECATION") skirout.editor.v1.expression.TextUnaryOperation.Unknown(skirout.editor.v1.expression.TextUnaryOperation.Kind.UNKNOWN, it) },
-            getUnrecognized = { it._unrecognized },
-        );
-
-    val TextUnaryOperationSerializer = build.skir.internal.makeSerializer(TextUnaryOperationSerializerImpl);
-
-    val TimestampBoundDirectionSerializerImpl =
-        build.skir.internal.EnumSerializer.create<skirout.editor.v1.expression.TimestampBoundDirection, skirout.editor.v1.expression.TimestampBoundDirection.Unknown>(
-            recordId = "editor/v1/expression.skir:TimestampBoundDirection",
-            doc = "",
-            getKindOrdinal = { it.kind.ordinal },
-            kindCount = skirout.editor.v1.expression.TimestampBoundDirection.Kind.values().size,
-            unknownInstance = skirout.editor.v1.expression.TimestampBoundDirection.UNKNOWN,
-            wrapUnrecognized = { @kotlin.Suppress("DEPRECATION") skirout.editor.v1.expression.TimestampBoundDirection.Unknown(skirout.editor.v1.expression.TimestampBoundDirection.Kind.UNKNOWN, it) },
-            getUnrecognized = { it._unrecognized },
-        );
-
-    val TimestampBoundDirectionSerializer = build.skir.internal.makeSerializer(TimestampBoundDirectionSerializerImpl);
-
-    val TimestampFormatExpressionSerializerImpl = build.skir.internal.StructSerializer(
-        recordId = "editor/v1/expression.skir:TimestampFormatExpression",
-        doc = "",
-        defaultInstance = skirout.editor.v1.expression.TimestampFormatExpression.partial(),
-        newMutableFn = { it?.toMutable() ?: skirout.editor.v1.expression.TimestampFormatExpression.Mutable() },
-        toFrozenFn = { it.toFrozen() },
-        getUnrecognizedFields = { it._unrecognizedFields },
-        setUnrecognizedFields = { m, u -> m._unrecognizedFields = u },
-    );
-
-    val TimestampFormatExpressionSerializer = build.skir.internal.makeSerializer(TimestampFormatExpressionSerializerImpl);
-
-    val UnaryCollectionExpressionSerializerImpl = build.skir.internal.StructSerializer(
-        recordId = "editor/v1/expression.skir:UnaryCollectionExpression",
-        doc = "The body receives the current item at slot zero, except reduce, whose slots are accumulator then item.",
-        defaultInstance = skirout.editor.v1.expression.UnaryCollectionExpression.partial(),
-        newMutableFn = { it?.toMutable() ?: skirout.editor.v1.expression.UnaryCollectionExpression.Mutable() },
-        toFrozenFn = { it.toFrozen() },
-        getUnrecognizedFields = { it._unrecognizedFields },
-        setUnrecognizedFields = { m, u -> m._unrecognizedFields = u },
-    );
-
-    val UnaryCollectionExpressionSerializer = build.skir.internal.makeSerializer(UnaryCollectionExpressionSerializerImpl);
-
-    val ValueCompareExpressionSerializerImpl = build.skir.internal.StructSerializer(
-        recordId = "editor/v1/expression.skir:ValueCompareExpression",
-        doc = "",
-        defaultInstance = skirout.editor.v1.expression.ValueCompareExpression.partial(),
-        newMutableFn = { it?.toMutable() ?: skirout.editor.v1.expression.ValueCompareExpression.Mutable() },
-        toFrozenFn = { it.toFrozen() },
-        getUnrecognizedFields = { it._unrecognizedFields },
-        setUnrecognizedFields = { m, u -> m._unrecognizedFields = u },
-    );
-
-    val ValueCompareExpressionSerializer = build.skir.internal.makeSerializer(ValueCompareExpressionSerializerImpl);
-
-    val ValueCompareOperationSerializerImpl =
-        build.skir.internal.EnumSerializer.create<skirout.editor.v1.expression.ValueCompareOperation, skirout.editor.v1.expression.ValueCompareOperation.Unknown>(
-            recordId = "editor/v1/expression.skir:ValueCompareOperation",
-            doc = "",
-            getKindOrdinal = { it.kind.ordinal },
-            kindCount = skirout.editor.v1.expression.ValueCompareOperation.Kind.values().size,
-            unknownInstance = skirout.editor.v1.expression.ValueCompareOperation.UNKNOWN,
-            wrapUnrecognized = { @kotlin.Suppress("DEPRECATION") skirout.editor.v1.expression.ValueCompareOperation.Unknown(skirout.editor.v1.expression.ValueCompareOperation.Kind.UNKNOWN, it) },
-            getUnrecognized = { it._unrecognized },
-        );
-
-    val ValueCompareOperationSerializer = build.skir.internal.makeSerializer(ValueCompareOperationSerializerImpl);
+    val OperationIdSerializer = build.skir.internal.makeSerializer(OperationIdSerializerImpl);
 
     init {
-        BinaryExpressionSerializerImpl.addField(
-            "left",
-            "left",
+        CallExpressionSerializerImpl.addField(
+            "operation",
+            "operation",
             0,
-            _SerializerRegistry.ExpressionNodeSerializer,
+            _SerializerRegistry.OperationIdSerializer,
             "",
-            { it.left },
-            { mut, v -> mut.left = v },
+            { it.operation },
+            { mut, v -> mut.operation = v },
         );
-        BinaryExpressionSerializerImpl.addField(
-            "right",
-            "right",
+        CallExpressionSerializerImpl.addField(
+            "type_arguments",
+            "typeArguments",
             1,
-            _SerializerRegistry.ExpressionNodeSerializer,
+            build.skir.Serializers.list(
+                skirout.editor.v1.type_catalog.TypeTemplate.serializer,
+            ),
             "",
-            { it.right },
-            { mut, v -> mut.right = v },
+            { it.typeArguments },
+            { mut, v -> mut.typeArguments = v },
         );
-        BinaryExpressionSerializerImpl.finalizeStruct();
-
-        BoundDirectionSerializerImpl.addConstantVariant(
-            1,
-            "minimum",
-            skirout.editor.v1.expression.BoundDirection.Kind.MINIMUM_CONST.ordinal,
-            "",
-            skirout.editor.v1.expression.BoundDirection.MINIMUM,
-        );
-        BoundDirectionSerializerImpl.addConstantVariant(
+        CallExpressionSerializerImpl.addField(
+            "arguments",
+            "arguments",
             2,
-            "maximum",
-            skirout.editor.v1.expression.BoundDirection.Kind.MAXIMUM_CONST.ordinal,
+            build.skir.Serializers.list(
+                _SerializerRegistry.ExpressionNodeSerializer,
+            ),
             "",
-            skirout.editor.v1.expression.BoundDirection.MAXIMUM,
+            { it.arguments },
+            { mut, v -> mut.arguments = v },
         );
-        BoundDirectionSerializerImpl.finalizeEnum();
-
-        CollectionAccessExpressionSerializerImpl.addField(
-            "source",
-            "source",
-            0,
-            _SerializerRegistry.ExpressionNodeSerializer,
-            "",
-            { it.source },
-            { mut, v -> mut.source = v },
-        );
-        CollectionAccessExpressionSerializerImpl.addField(
-            "index",
-            "index",
-            1,
-            _SerializerRegistry.ExpressionNodeSerializer,
-            "",
-            { it.index },
-            { mut, v -> mut.index = v },
-        );
-        CollectionAccessExpressionSerializerImpl.finalizeStruct();
-
-        CollectionContainsExpressionSerializerImpl.addField(
-            "source",
-            "source",
-            0,
-            _SerializerRegistry.ExpressionNodeSerializer,
-            "",
-            { it.source },
-            { mut, v -> mut.source = v },
-        );
-        CollectionContainsExpressionSerializerImpl.addField(
-            "value",
-            "value",
-            1,
-            _SerializerRegistry.ExpressionNodeSerializer,
-            "",
-            { it.value },
-            { mut, v -> mut.value = v },
-        );
-        CollectionContainsExpressionSerializerImpl.finalizeStruct();
-
-        CollectionSliceExpressionSerializerImpl.addField(
-            "source",
-            "source",
-            0,
-            _SerializerRegistry.ExpressionNodeSerializer,
-            "",
-            { it.source },
-            { mut, v -> mut.source = v },
-        );
-        CollectionSliceExpressionSerializerImpl.addField(
-            "count",
-            "count",
-            1,
-            _SerializerRegistry.ExpressionNodeSerializer,
-            "",
-            { it.count },
-            { mut, v -> mut.count = v },
-        );
-        CollectionSliceExpressionSerializerImpl.finalizeStruct();
-
-        ColorWithAlphaExpressionSerializerImpl.addField(
-            "source",
-            "source",
-            0,
-            _SerializerRegistry.ExpressionNodeSerializer,
-            "",
-            { it.source },
-            { mut, v -> mut.source = v },
-        );
-        ColorWithAlphaExpressionSerializerImpl.addField(
-            "alpha",
-            "alpha",
-            1,
-            _SerializerRegistry.ExpressionNodeSerializer,
-            "",
-            { it.alpha },
-            { mut, v -> mut.alpha = v },
-        );
-        ColorWithAlphaExpressionSerializerImpl.finalizeStruct();
+        CallExpressionSerializerImpl.finalizeStruct();
 
         ConditionalExpressionSerializerImpl.addField(
             "test",
@@ -11065,69 +3097,24 @@ private object _SerializerRegistry {
             { mut, v -> mut.test = v },
         );
         ConditionalExpressionSerializerImpl.addField(
-            "yes",
-            "yes",
+            "then",
+            "then",
             1,
             _SerializerRegistry.ExpressionNodeSerializer,
             "",
-            { it.yes },
-            { mut, v -> mut.yes = v },
+            { it.then },
+            { mut, v -> mut.then = v },
         );
         ConditionalExpressionSerializerImpl.addField(
-            "no",
-            "no",
+            "otherwise",
+            "otherwise",
             2,
             _SerializerRegistry.ExpressionNodeSerializer,
             "",
-            { it.no },
-            { mut, v -> mut.no = v },
+            { it.otherwise },
+            { mut, v -> mut.otherwise = v },
         );
         ConditionalExpressionSerializerImpl.finalizeStruct();
-
-        DurationFormatExpressionSerializerImpl.addField(
-            "source",
-            "source",
-            0,
-            _SerializerRegistry.ExpressionNodeSerializer,
-            "",
-            { it.source },
-            { mut, v -> mut.source = v },
-        );
-        DurationFormatExpressionSerializerImpl.addField(
-            "units",
-            "units",
-            1,
-            _SerializerRegistry.ExpressionNodeSerializer,
-            "",
-            { it.units },
-            { mut, v -> mut.units = v },
-        );
-        DurationFormatExpressionSerializerImpl.addField(
-            "fraction_digits",
-            "fractionDigits",
-            2,
-            _SerializerRegistry.ExpressionNodeSerializer,
-            "",
-            { it.fractionDigits },
-            { mut, v -> mut.fractionDigits = v },
-        );
-        DurationFormatExpressionSerializerImpl.finalizeStruct();
-
-        EntryBranchSerializerImpl.addConstantVariant(
-            1,
-            "key",
-            skirout.editor.v1.expression.EntryBranch.Kind.KEY_CONST.ordinal,
-            "",
-            skirout.editor.v1.expression.EntryBranch.KEY,
-        );
-        EntryBranchSerializerImpl.addConstantVariant(
-            2,
-            "value",
-            skirout.editor.v1.expression.EntryBranch.Kind.VALUE_CONST.ordinal,
-            "",
-            skirout.editor.v1.expression.EntryBranch.VALUE,
-        );
-        EntryBranchSerializerImpl.finalizeEnum();
 
         EvaluationBudgetSerializerImpl.addField(
             "max_steps",
@@ -11150,13 +3137,13 @@ private object _SerializerRegistry {
         EvaluationBudgetSerializerImpl.finalizeStruct();
 
         EvaluationDiagnosticSerializerImpl.addField(
-            "code",
-            "code",
+            "failure",
+            "failure",
             0,
-            build.skir.Serializers.string,
+            _SerializerRegistry.FailureIdSerializer,
             "",
-            { it.code },
-            { mut, v -> mut.code = v },
+            { it.failure },
+            { mut, v -> mut.failure = v },
         );
         EvaluationDiagnosticSerializerImpl.addField(
             "message",
@@ -11212,46 +3199,6 @@ private object _SerializerRegistry {
             { mut, v -> mut.values = v },
         );
         ExpressionBindingsSerializerImpl.finalizeStruct();
-
-        ExpressionEntryProjectionSerializerImpl.addField(
-            "source",
-            "source",
-            0,
-            _SerializerRegistry.ExpressionNodeSerializer,
-            "",
-            { it.source },
-            { mut, v -> mut.source = v },
-        );
-        ExpressionEntryProjectionSerializerImpl.addField(
-            "branch",
-            "branch",
-            1,
-            _SerializerRegistry.EntryBranchSerializer,
-            "",
-            { it.branch },
-            { mut, v -> mut.branch = v },
-        );
-        ExpressionEntryProjectionSerializerImpl.finalizeStruct();
-
-        ExpressionFieldSerializerImpl.addField(
-            "source",
-            "source",
-            0,
-            _SerializerRegistry.ExpressionNodeSerializer,
-            "",
-            { it.source },
-            { mut, v -> mut.source = v },
-        );
-        ExpressionFieldSerializerImpl.addField(
-            "name",
-            "name",
-            1,
-            build.skir.Serializers.string,
-            "",
-            { it.name },
-            { mut, v -> mut.name = v },
-        );
-        ExpressionFieldSerializerImpl.finalizeStruct();
 
         ExpressionInputSerializerImpl.addField(
             "binding",
@@ -11353,40 +3300,31 @@ private object _SerializerRegistry {
             4,
             "field",
             skirout.editor.v1.expression.ExpressionNode.Kind.FIELD_WRAPPER.ordinal,
-            _SerializerRegistry.ExpressionFieldSerializer,
+            _SerializerRegistry.FieldExpressionSerializer,
             "",
             { skirout.editor.v1.expression.ExpressionNode.FieldWrapper(it) },
             { it.value },
         );
         ExpressionNodeSerializerImpl.addWrapperVariant(
             5,
-            "entry_projection",
-            skirout.editor.v1.expression.ExpressionNode.Kind.ENTRY_PROJECTION_WRAPPER.ordinal,
-            _SerializerRegistry.ExpressionEntryProjectionSerializer,
-            "",
-            { skirout.editor.v1.expression.ExpressionNode.EntryProjectionWrapper(it) },
-            { it.value },
-        );
-        ExpressionNodeSerializerImpl.addWrapperVariant(
-            6,
             "and",
             skirout.editor.v1.expression.ExpressionNode.Kind.AND_WRAPPER.ordinal,
-            _SerializerRegistry.BinaryExpressionSerializer,
+            _SerializerRegistry.LogicalExpressionSerializer,
             "",
             { skirout.editor.v1.expression.ExpressionNode.AndWrapper(it) },
             { it.value },
         );
         ExpressionNodeSerializerImpl.addWrapperVariant(
-            7,
+            6,
             "or",
             skirout.editor.v1.expression.ExpressionNode.Kind.OR_WRAPPER.ordinal,
-            _SerializerRegistry.BinaryExpressionSerializer,
+            _SerializerRegistry.LogicalExpressionSerializer,
             "",
             { skirout.editor.v1.expression.ExpressionNode.OrWrapper(it) },
             { it.value },
         );
         ExpressionNodeSerializerImpl.addWrapperVariant(
-            8,
+            7,
             "conditional",
             skirout.editor.v1.expression.ExpressionNode.Kind.CONDITIONAL_WRAPPER.ordinal,
             _SerializerRegistry.ConditionalExpressionSerializer,
@@ -11395,575 +3333,33 @@ private object _SerializerRegistry {
             { it.value },
         );
         ExpressionNodeSerializerImpl.addWrapperVariant(
-            9,
+            8,
             "or_else",
             skirout.editor.v1.expression.ExpressionNode.Kind.OR_ELSE_WRAPPER.ordinal,
-            _SerializerRegistry.OrElseExpressionSerializer,
+            _SerializerRegistry.FallbackExpressionSerializer,
             "",
             { skirout.editor.v1.expression.ExpressionNode.OrElseWrapper(it) },
             { it.value },
         );
         ExpressionNodeSerializerImpl.addWrapperVariant(
+            9,
+            "call",
+            skirout.editor.v1.expression.ExpressionNode.Kind.CALL_WRAPPER.ordinal,
+            _SerializerRegistry.CallExpressionSerializer,
+            "",
+            { skirout.editor.v1.expression.ExpressionNode.CallWrapper(it) },
+            { it.value },
+        );
+        ExpressionNodeSerializerImpl.addWrapperVariant(
             10,
-            "text_unary",
-            skirout.editor.v1.expression.ExpressionNode.Kind.TEXT_UNARY_WRAPPER.ordinal,
-            _SerializerRegistry.TextUnaryExpressionSerializer,
+            "lambda",
+            skirout.editor.v1.expression.ExpressionNode.Kind.LAMBDA_WRAPPER.ordinal,
+            _SerializerRegistry.LambdaExpressionSerializer,
             "",
-            { skirout.editor.v1.expression.ExpressionNode.TextUnaryWrapper(it) },
-            { it.value },
-        );
-        ExpressionNodeSerializerImpl.addWrapperVariant(
-            11,
-            "text_compare",
-            skirout.editor.v1.expression.ExpressionNode.Kind.TEXT_COMPARE_WRAPPER.ordinal,
-            _SerializerRegistry.TextCompareExpressionSerializer,
-            "",
-            { skirout.editor.v1.expression.ExpressionNode.TextCompareWrapper(it) },
-            { it.value },
-        );
-        ExpressionNodeSerializerImpl.addWrapperVariant(
-            12,
-            "text_length",
-            skirout.editor.v1.expression.ExpressionNode.Kind.TEXT_LENGTH_WRAPPER.ordinal,
-            _SerializerRegistry.ExpressionNodeSerializer,
-            "",
-            { skirout.editor.v1.expression.ExpressionNode.TextLengthWrapper(it) },
-            { it.value },
-        );
-        ExpressionNodeSerializerImpl.addWrapperVariant(
-            13,
-            "text_has_line_break",
-            skirout.editor.v1.expression.ExpressionNode.Kind.TEXT_HAS_LINE_BREAK_WRAPPER.ordinal,
-            _SerializerRegistry.ExpressionNodeSerializer,
-            "",
-            { skirout.editor.v1.expression.ExpressionNode.TextHasLineBreakWrapper(it) },
-            { it.value },
-        );
-        ExpressionNodeSerializerImpl.addWrapperVariant(
-            14,
-            "text_replace",
-            skirout.editor.v1.expression.ExpressionNode.Kind.TEXT_REPLACE_WRAPPER.ordinal,
-            _SerializerRegistry.TextReplaceExpressionSerializer,
-            "",
-            { skirout.editor.v1.expression.ExpressionNode.TextReplaceWrapper(it) },
-            { it.value },
-        );
-        ExpressionNodeSerializerImpl.addWrapperVariant(
-            15,
-            "text_split",
-            skirout.editor.v1.expression.ExpressionNode.Kind.TEXT_SPLIT_WRAPPER.ordinal,
-            _SerializerRegistry.TextSplitExpressionSerializer,
-            "",
-            { skirout.editor.v1.expression.ExpressionNode.TextSplitWrapper(it) },
-            { it.value },
-        );
-        ExpressionNodeSerializerImpl.addWrapperVariant(
-            16,
-            "text_join",
-            skirout.editor.v1.expression.ExpressionNode.Kind.TEXT_JOIN_WRAPPER.ordinal,
-            _SerializerRegistry.TextJoinExpressionSerializer,
-            "",
-            { skirout.editor.v1.expression.ExpressionNode.TextJoinWrapper(it) },
-            { it.value },
-        );
-        ExpressionNodeSerializerImpl.addWrapperVariant(
-            17,
-            "text_substring",
-            skirout.editor.v1.expression.ExpressionNode.Kind.TEXT_SUBSTRING_WRAPPER.ordinal,
-            _SerializerRegistry.TextSubstringExpressionSerializer,
-            "",
-            { skirout.editor.v1.expression.ExpressionNode.TextSubstringWrapper(it) },
-            { it.value },
-        );
-        ExpressionNodeSerializerImpl.addWrapperVariant(
-            18,
-            "text_interpolate",
-            skirout.editor.v1.expression.ExpressionNode.Kind.TEXT_INTERPOLATE_WRAPPER.ordinal,
-            _SerializerRegistry.TextInterpolateExpressionSerializer,
-            "",
-            { skirout.editor.v1.expression.ExpressionNode.TextInterpolateWrapper(it) },
-            { it.value },
-        );
-        ExpressionNodeSerializerImpl.addWrapperVariant(
-            19,
-            "regex_test",
-            skirout.editor.v1.expression.ExpressionNode.Kind.REGEX_TEST_WRAPPER.ordinal,
-            _SerializerRegistry.RegexTestExpressionSerializer,
-            "",
-            { skirout.editor.v1.expression.ExpressionNode.RegexTestWrapper(it) },
-            { it.value },
-        );
-        ExpressionNodeSerializerImpl.addWrapperVariant(
-            20,
-            "regex_capture",
-            skirout.editor.v1.expression.ExpressionNode.Kind.REGEX_CAPTURE_WRAPPER.ordinal,
-            _SerializerRegistry.RegexCaptureExpressionSerializer,
-            "",
-            { skirout.editor.v1.expression.ExpressionNode.RegexCaptureWrapper(it) },
-            { it.value },
-        );
-        ExpressionNodeSerializerImpl.addWrapperVariant(
-            21,
-            "regex_replace",
-            skirout.editor.v1.expression.ExpressionNode.Kind.REGEX_REPLACE_WRAPPER.ordinal,
-            _SerializerRegistry.RegexReplaceExpressionSerializer,
-            "",
-            { skirout.editor.v1.expression.ExpressionNode.RegexReplaceWrapper(it) },
-            { it.value },
-        );
-        ExpressionNodeSerializerImpl.addWrapperVariant(
-            22,
-            "value_compare",
-            skirout.editor.v1.expression.ExpressionNode.Kind.VALUE_COMPARE_WRAPPER.ordinal,
-            _SerializerRegistry.ValueCompareExpressionSerializer,
-            "",
-            { skirout.editor.v1.expression.ExpressionNode.ValueCompareWrapper(it) },
-            { it.value },
-        );
-        ExpressionNodeSerializerImpl.addWrapperVariant(
-            23,
-            "is_null",
-            skirout.editor.v1.expression.ExpressionNode.Kind.IS_NULL_WRAPPER.ordinal,
-            _SerializerRegistry.ExpressionNodeSerializer,
-            "",
-            { skirout.editor.v1.expression.ExpressionNode.IsNullWrapper(it) },
-            { it.value },
-        );
-        ExpressionNodeSerializerImpl.addWrapperVariant(
-            24,
-            "link_target",
-            skirout.editor.v1.expression.ExpressionNode.Kind.LINK_TARGET_WRAPPER.ordinal,
-            _SerializerRegistry.ExpressionNodeSerializer,
-            "",
-            { skirout.editor.v1.expression.ExpressionNode.LinkTargetWrapper(it) },
-            { it.value },
-        );
-        ExpressionNodeSerializerImpl.addWrapperVariant(
-            25,
-            "boolean_not",
-            skirout.editor.v1.expression.ExpressionNode.Kind.BOOLEAN_NOT_WRAPPER.ordinal,
-            _SerializerRegistry.ExpressionNodeSerializer,
-            "",
-            { skirout.editor.v1.expression.ExpressionNode.BooleanNotWrapper(it) },
-            { it.value },
-        );
-        ExpressionNodeSerializerImpl.addWrapperVariant(
-            26,
-            "number_arithmetic",
-            skirout.editor.v1.expression.ExpressionNode.Kind.NUMBER_ARITHMETIC_WRAPPER.ordinal,
-            _SerializerRegistry.NumberArithmeticExpressionSerializer,
-            "",
-            { skirout.editor.v1.expression.ExpressionNode.NumberArithmeticWrapper(it) },
-            { it.value },
-        );
-        ExpressionNodeSerializerImpl.addWrapperVariant(
-            27,
-            "number_compare",
-            skirout.editor.v1.expression.ExpressionNode.Kind.NUMBER_COMPARE_WRAPPER.ordinal,
-            _SerializerRegistry.NumberCompareExpressionSerializer,
-            "",
-            { skirout.editor.v1.expression.ExpressionNode.NumberCompareWrapper(it) },
-            { it.value },
-        );
-        ExpressionNodeSerializerImpl.addWrapperVariant(
-            28,
-            "number_negate",
-            skirout.editor.v1.expression.ExpressionNode.Kind.NUMBER_NEGATE_WRAPPER.ordinal,
-            _SerializerRegistry.ExpressionNodeSerializer,
-            "",
-            { skirout.editor.v1.expression.ExpressionNode.NumberNegateWrapper(it) },
-            { it.value },
-        );
-        ExpressionNodeSerializerImpl.addWrapperVariant(
-            29,
-            "number_round",
-            skirout.editor.v1.expression.ExpressionNode.Kind.NUMBER_ROUND_WRAPPER.ordinal,
-            _SerializerRegistry.NumberRoundExpressionSerializer,
-            "",
-            { skirout.editor.v1.expression.ExpressionNode.NumberRoundWrapper(it) },
-            { it.value },
-        );
-        ExpressionNodeSerializerImpl.addWrapperVariant(
-            30,
-            "number_format",
-            skirout.editor.v1.expression.ExpressionNode.Kind.NUMBER_FORMAT_WRAPPER.ordinal,
-            _SerializerRegistry.NumberFormatExpressionSerializer,
-            "",
-            { skirout.editor.v1.expression.ExpressionNode.NumberFormatWrapper(it) },
-            { it.value },
-        );
-        ExpressionNodeSerializerImpl.addWrapperVariant(
-            31,
-            "duration_format",
-            skirout.editor.v1.expression.ExpressionNode.Kind.DURATION_FORMAT_WRAPPER.ordinal,
-            _SerializerRegistry.DurationFormatExpressionSerializer,
-            "",
-            { skirout.editor.v1.expression.ExpressionNode.DurationFormatWrapper(it) },
-            { it.value },
-        );
-        ExpressionNodeSerializerImpl.addWrapperVariant(
-            32,
-            "timestamp_format",
-            skirout.editor.v1.expression.ExpressionNode.Kind.TIMESTAMP_FORMAT_WRAPPER.ordinal,
-            _SerializerRegistry.TimestampFormatExpressionSerializer,
-            "",
-            { skirout.editor.v1.expression.ExpressionNode.TimestampFormatWrapper(it) },
-            { it.value },
-        );
-        ExpressionNodeSerializerImpl.addWrapperVariant(
-            33,
-            "collection_size",
-            skirout.editor.v1.expression.ExpressionNode.Kind.COLLECTION_SIZE_WRAPPER.ordinal,
-            _SerializerRegistry.ExpressionNodeSerializer,
-            "",
-            { skirout.editor.v1.expression.ExpressionNode.CollectionSizeWrapper(it) },
-            { it.value },
-        );
-        ExpressionNodeSerializerImpl.addWrapperVariant(
-            34,
-            "collection_access",
-            skirout.editor.v1.expression.ExpressionNode.Kind.COLLECTION_ACCESS_WRAPPER.ordinal,
-            _SerializerRegistry.CollectionAccessExpressionSerializer,
-            "",
-            { skirout.editor.v1.expression.ExpressionNode.CollectionAccessWrapper(it) },
-            { it.value },
-        );
-        ExpressionNodeSerializerImpl.addWrapperVariant(
-            35,
-            "collection_contains",
-            skirout.editor.v1.expression.ExpressionNode.Kind.COLLECTION_CONTAINS_WRAPPER.ordinal,
-            _SerializerRegistry.CollectionContainsExpressionSerializer,
-            "",
-            { skirout.editor.v1.expression.ExpressionNode.CollectionContainsWrapper(it) },
-            { it.value },
-        );
-        ExpressionNodeSerializerImpl.addWrapperVariant(
-            36,
-            "color_with_alpha",
-            skirout.editor.v1.expression.ExpressionNode.Kind.COLOR_WITH_ALPHA_WRAPPER.ordinal,
-            _SerializerRegistry.ColorWithAlphaExpressionSerializer,
-            "",
-            { skirout.editor.v1.expression.ExpressionNode.ColorWithAlphaWrapper(it) },
-            { it.value },
-        );
-        ExpressionNodeSerializerImpl.addWrapperVariant(
-            37,
-            "rule_unary",
-            skirout.editor.v1.expression.ExpressionNode.Kind.RULE_UNARY_WRAPPER.ordinal,
-            _SerializerRegistry.RuleUnaryExpressionSerializer,
-            "",
-            { skirout.editor.v1.expression.ExpressionNode.RuleUnaryWrapper(it) },
-            { it.value },
-        );
-        ExpressionNodeSerializerImpl.addWrapperVariant(
-            38,
-            "rule_one_of",
-            skirout.editor.v1.expression.ExpressionNode.Kind.RULE_ONE_OF_WRAPPER.ordinal,
-            _SerializerRegistry.RuleOneOfExpressionSerializer,
-            "",
-            { skirout.editor.v1.expression.ExpressionNode.RuleOneOfWrapper(it) },
-            { it.value },
-        );
-        ExpressionNodeSerializerImpl.addWrapperVariant(
-            39,
-            "rule_size_bound",
-            skirout.editor.v1.expression.ExpressionNode.Kind.RULE_SIZE_BOUND_WRAPPER.ordinal,
-            _SerializerRegistry.RuleSizeBoundExpressionSerializer,
-            "",
-            { skirout.editor.v1.expression.ExpressionNode.RuleSizeBoundWrapper(it) },
-            { it.value },
-        );
-        ExpressionNodeSerializerImpl.addWrapperVariant(
-            40,
-            "rule_size_range",
-            skirout.editor.v1.expression.ExpressionNode.Kind.RULE_SIZE_RANGE_WRAPPER.ordinal,
-            _SerializerRegistry.RuleSizeRangeExpressionSerializer,
-            "",
-            { skirout.editor.v1.expression.ExpressionNode.RuleSizeRangeWrapper(it) },
-            { it.value },
-        );
-        ExpressionNodeSerializerImpl.addWrapperVariant(
-            41,
-            "rule_numeric_bound",
-            skirout.editor.v1.expression.ExpressionNode.Kind.RULE_NUMERIC_BOUND_WRAPPER.ordinal,
-            _SerializerRegistry.RuleNumericBoundExpressionSerializer,
-            "",
-            { skirout.editor.v1.expression.ExpressionNode.RuleNumericBoundWrapper(it) },
-            { it.value },
-        );
-        ExpressionNodeSerializerImpl.addWrapperVariant(
-            42,
-            "rule_numeric_range",
-            skirout.editor.v1.expression.ExpressionNode.Kind.RULE_NUMERIC_RANGE_WRAPPER.ordinal,
-            _SerializerRegistry.RuleNumericRangeExpressionSerializer,
-            "",
-            { skirout.editor.v1.expression.ExpressionNode.RuleNumericRangeWrapper(it) },
-            { it.value },
-        );
-        ExpressionNodeSerializerImpl.addWrapperVariant(
-            43,
-            "rule_multiple_of",
-            skirout.editor.v1.expression.ExpressionNode.Kind.RULE_MULTIPLE_OF_WRAPPER.ordinal,
-            _SerializerRegistry.RuleMultipleOfExpressionSerializer,
-            "",
-            { skirout.editor.v1.expression.ExpressionNode.RuleMultipleOfWrapper(it) },
-            { it.value },
-        );
-        ExpressionNodeSerializerImpl.addWrapperVariant(
-            44,
-            "rule_maximum_scale",
-            skirout.editor.v1.expression.ExpressionNode.Kind.RULE_MAXIMUM_SCALE_WRAPPER.ordinal,
-            _SerializerRegistry.RuleMaximumScaleExpressionSerializer,
-            "",
-            { skirout.editor.v1.expression.ExpressionNode.RuleMaximumScaleWrapper(it) },
-            { it.value },
-        );
-        ExpressionNodeSerializerImpl.addWrapperVariant(
-            45,
-            "rule_timestamp_bound",
-            skirout.editor.v1.expression.ExpressionNode.Kind.RULE_TIMESTAMP_BOUND_WRAPPER.ordinal,
-            _SerializerRegistry.RuleTimestampBoundExpressionSerializer,
-            "",
-            { skirout.editor.v1.expression.ExpressionNode.RuleTimestampBoundWrapper(it) },
-            { it.value },
-        );
-        ExpressionNodeSerializerImpl.addWrapperVariant(
-            46,
-            "any",
-            skirout.editor.v1.expression.ExpressionNode.Kind.ANY_WRAPPER.ordinal,
-            _SerializerRegistry.UnaryCollectionExpressionSerializer,
-            "",
-            { skirout.editor.v1.expression.ExpressionNode.AnyWrapper(it) },
-            { it.value },
-        );
-        ExpressionNodeSerializerImpl.addWrapperVariant(
-            47,
-            "all",
-            skirout.editor.v1.expression.ExpressionNode.Kind.ALL_WRAPPER.ordinal,
-            _SerializerRegistry.UnaryCollectionExpressionSerializer,
-            "",
-            { skirout.editor.v1.expression.ExpressionNode.AllWrapper(it) },
-            { it.value },
-        );
-        ExpressionNodeSerializerImpl.addWrapperVariant(
-            48,
-            "none",
-            skirout.editor.v1.expression.ExpressionNode.Kind.NONE_WRAPPER.ordinal,
-            _SerializerRegistry.UnaryCollectionExpressionSerializer,
-            "",
-            { skirout.editor.v1.expression.ExpressionNode.NoneWrapper(it) },
-            { it.value },
-        );
-        ExpressionNodeSerializerImpl.addWrapperVariant(
-            49,
-            "map",
-            skirout.editor.v1.expression.ExpressionNode.Kind.MAP_WRAPPER.ordinal,
-            _SerializerRegistry.UnaryCollectionExpressionSerializer,
-            "",
-            { skirout.editor.v1.expression.ExpressionNode.MapWrapper(it) },
-            { it.value },
-        );
-        ExpressionNodeSerializerImpl.addWrapperVariant(
-            50,
-            "filter",
-            skirout.editor.v1.expression.ExpressionNode.Kind.FILTER_WRAPPER.ordinal,
-            _SerializerRegistry.UnaryCollectionExpressionSerializer,
-            "",
-            { skirout.editor.v1.expression.ExpressionNode.FilterWrapper(it) },
-            { it.value },
-        );
-        ExpressionNodeSerializerImpl.addWrapperVariant(
-            51,
-            "find",
-            skirout.editor.v1.expression.ExpressionNode.Kind.FIND_WRAPPER.ordinal,
-            _SerializerRegistry.UnaryCollectionExpressionSerializer,
-            "",
-            { skirout.editor.v1.expression.ExpressionNode.FindWrapper(it) },
-            { it.value },
-        );
-        ExpressionNodeSerializerImpl.addWrapperVariant(
-            52,
-            "find_last",
-            skirout.editor.v1.expression.ExpressionNode.Kind.FIND_LAST_WRAPPER.ordinal,
-            _SerializerRegistry.UnaryCollectionExpressionSerializer,
-            "",
-            { skirout.editor.v1.expression.ExpressionNode.FindLastWrapper(it) },
-            { it.value },
-        );
-        ExpressionNodeSerializerImpl.addWrapperVariant(
-            53,
-            "count",
-            skirout.editor.v1.expression.ExpressionNode.Kind.COUNT_WRAPPER.ordinal,
-            _SerializerRegistry.UnaryCollectionExpressionSerializer,
-            "",
-            { skirout.editor.v1.expression.ExpressionNode.CountWrapper(it) },
-            { it.value },
-        );
-        ExpressionNodeSerializerImpl.addWrapperVariant(
-            54,
-            "distinct_by",
-            skirout.editor.v1.expression.ExpressionNode.Kind.DISTINCT_BY_WRAPPER.ordinal,
-            _SerializerRegistry.UnaryCollectionExpressionSerializer,
-            "",
-            { skirout.editor.v1.expression.ExpressionNode.DistinctByWrapper(it) },
-            { it.value },
-        );
-        ExpressionNodeSerializerImpl.addWrapperVariant(
-            55,
-            "group_by",
-            skirout.editor.v1.expression.ExpressionNode.Kind.GROUP_BY_WRAPPER.ordinal,
-            _SerializerRegistry.UnaryCollectionExpressionSerializer,
-            "",
-            { skirout.editor.v1.expression.ExpressionNode.GroupByWrapper(it) },
-            { it.value },
-        );
-        ExpressionNodeSerializerImpl.addWrapperVariant(
-            56,
-            "flat_map",
-            skirout.editor.v1.expression.ExpressionNode.Kind.FLAT_MAP_WRAPPER.ordinal,
-            _SerializerRegistry.UnaryCollectionExpressionSerializer,
-            "",
-            { skirout.editor.v1.expression.ExpressionNode.FlatMapWrapper(it) },
-            { it.value },
-        );
-        ExpressionNodeSerializerImpl.addWrapperVariant(
-            57,
-            "unique_by",
-            skirout.editor.v1.expression.ExpressionNode.Kind.UNIQUE_BY_WRAPPER.ordinal,
-            _SerializerRegistry.UnaryCollectionExpressionSerializer,
-            "",
-            { skirout.editor.v1.expression.ExpressionNode.UniqueByWrapper(it) },
-            { it.value },
-        );
-        ExpressionNodeSerializerImpl.addWrapperVariant(
-            58,
-            "reduce",
-            skirout.editor.v1.expression.ExpressionNode.Kind.REDUCE_WRAPPER.ordinal,
-            _SerializerRegistry.UnaryCollectionExpressionSerializer,
-            "",
-            { skirout.editor.v1.expression.ExpressionNode.ReduceWrapper(it) },
-            { it.value },
-        );
-        ExpressionNodeSerializerImpl.addWrapperVariant(
-            59,
-            "sort_by",
-            skirout.editor.v1.expression.ExpressionNode.Kind.SORT_BY_WRAPPER.ordinal,
-            _SerializerRegistry.SortByExpressionSerializer,
-            "",
-            { skirout.editor.v1.expression.ExpressionNode.SortByWrapper(it) },
-            { it.value },
-        );
-        ExpressionNodeSerializerImpl.addWrapperVariant(
-            60,
-            "sort_with",
-            skirout.editor.v1.expression.ExpressionNode.Kind.SORT_WITH_WRAPPER.ordinal,
-            _SerializerRegistry.SortWithExpressionSerializer,
-            "",
-            { skirout.editor.v1.expression.ExpressionNode.SortWithWrapper(it) },
-            { it.value },
-        );
-        ExpressionNodeSerializerImpl.addWrapperVariant(
-            61,
-            "fold",
-            skirout.editor.v1.expression.ExpressionNode.Kind.FOLD_WRAPPER.ordinal,
-            _SerializerRegistry.FoldExpressionSerializer,
-            "",
-            { skirout.editor.v1.expression.ExpressionNode.FoldWrapper(it) },
-            { it.value },
-        );
-        ExpressionNodeSerializerImpl.addWrapperVariant(
-            62,
-            "take",
-            skirout.editor.v1.expression.ExpressionNode.Kind.TAKE_WRAPPER.ordinal,
-            _SerializerRegistry.CollectionSliceExpressionSerializer,
-            "",
-            { skirout.editor.v1.expression.ExpressionNode.TakeWrapper(it) },
-            { it.value },
-        );
-        ExpressionNodeSerializerImpl.addWrapperVariant(
-            63,
-            "skip",
-            skirout.editor.v1.expression.ExpressionNode.Kind.SKIP_WRAPPER.ordinal,
-            _SerializerRegistry.CollectionSliceExpressionSerializer,
-            "",
-            { skirout.editor.v1.expression.ExpressionNode.SkipWrapper(it) },
-            { it.value },
-        );
-        ExpressionNodeSerializerImpl.addWrapperVariant(
-            64,
-            "reverse",
-            skirout.editor.v1.expression.ExpressionNode.Kind.REVERSE_WRAPPER.ordinal,
-            _SerializerRegistry.ExpressionNodeSerializer,
-            "",
-            { skirout.editor.v1.expression.ExpressionNode.ReverseWrapper(it) },
-            { it.value },
-        );
-        ExpressionNodeSerializerImpl.addWrapperVariant(
-            65,
-            "distinct",
-            skirout.editor.v1.expression.ExpressionNode.Kind.DISTINCT_WRAPPER.ordinal,
-            _SerializerRegistry.ExpressionNodeSerializer,
-            "",
-            { skirout.editor.v1.expression.ExpressionNode.DistinctWrapper(it) },
-            { it.value },
-        );
-        ExpressionNodeSerializerImpl.addWrapperVariant(
-            66,
-            "query",
-            skirout.editor.v1.expression.ExpressionNode.Kind.QUERY_WRAPPER.ordinal,
-            _SerializerRegistry.ExpressionQuerySerializer,
-            "",
-            { skirout.editor.v1.expression.ExpressionNode.QueryWrapper(it) },
+            { skirout.editor.v1.expression.ExpressionNode.LambdaWrapper(it) },
             { it.value },
         );
         ExpressionNodeSerializerImpl.finalizeEnum();
-
-        ExpressionQuerySerializerImpl.addWrapperVariant(
-            1,
-            "resource_identity",
-            skirout.editor.v1.expression.ExpressionQuery.Kind.RESOURCE_IDENTITY_WRAPPER.ordinal,
-            _SerializerRegistry.ResourceQuerySourceSerializer,
-            "",
-            { skirout.editor.v1.expression.ExpressionQuery.ResourceIdentityWrapper(it) },
-            { it.value },
-        );
-        ExpressionQuerySerializerImpl.addWrapperVariant(
-            2,
-            "resource_value",
-            skirout.editor.v1.expression.ExpressionQuery.Kind.RESOURCE_VALUE_WRAPPER.ordinal,
-            _SerializerRegistry.ResourceQuerySourceSerializer,
-            "",
-            { skirout.editor.v1.expression.ExpressionQuery.ResourceValueWrapper(it) },
-            { it.value },
-        );
-        ExpressionQuerySerializerImpl.addWrapperVariant(
-            3,
-            "resource_configuration",
-            skirout.editor.v1.expression.ExpressionQuery.Kind.RESOURCE_CONFIGURATION_WRAPPER.ordinal,
-            _SerializerRegistry.ResourceQuerySourceSerializer,
-            "",
-            { skirout.editor.v1.expression.ExpressionQuery.ResourceConfigurationWrapper(it) },
-            { it.value },
-        );
-        ExpressionQuerySerializerImpl.addWrapperVariant(
-            4,
-            "value_configuration",
-            skirout.editor.v1.expression.ExpressionQuery.Kind.VALUE_CONFIGURATION_WRAPPER.ordinal,
-            _SerializerRegistry.ExpressionNodeSerializer,
-            "",
-            { skirout.editor.v1.expression.ExpressionQuery.ValueConfigurationWrapper(it) },
-            { it.value },
-        );
-        ExpressionQuerySerializerImpl.addWrapperVariant(
-            5,
-            "catalog_declaration",
-            skirout.editor.v1.expression.ExpressionQuery.Kind.CATALOG_DECLARATION_WRAPPER.ordinal,
-            _SerializerRegistry.ExpressionNodeSerializer,
-            "",
-            { skirout.editor.v1.expression.ExpressionQuery.CatalogDeclarationWrapper(it) },
-            { it.value },
-        );
-        ExpressionQuerySerializerImpl.finalizeEnum();
 
         ExpressionTypeSerializerImpl.addField(
             "value",
@@ -12039,239 +3435,27 @@ private object _SerializerRegistry {
         );
         ExpressionValueTypeSerializerImpl.finalizeEnum();
 
-        FoldExpressionSerializerImpl.addField(
-            "source",
-            "source",
+        FailureIdSerializerImpl.addField(
+            "value",
+            "value",
+            0,
+            build.skir.Serializers.string,
+            "",
+            { it.value },
+            { mut, v -> mut.value = v },
+        );
+        FailureIdSerializerImpl.finalizeStruct();
+
+        FallbackExpressionSerializerImpl.addField(
+            "value",
+            "value",
             0,
             _SerializerRegistry.ExpressionNodeSerializer,
             "",
-            { it.source },
-            { mut, v -> mut.source = v },
+            { it.value },
+            { mut, v -> mut.value = v },
         );
-        FoldExpressionSerializerImpl.addField(
-            "initial",
-            "initial",
-            1,
-            _SerializerRegistry.ExpressionNodeSerializer,
-            "",
-            { it.initial },
-            { mut, v -> mut.initial = v },
-        );
-        FoldExpressionSerializerImpl.addField(
-            "body",
-            "body",
-            2,
-            _SerializerRegistry.ExpressionNodeSerializer,
-            "",
-            { it.body },
-            { mut, v -> mut.body = v },
-        );
-        FoldExpressionSerializerImpl.finalizeStruct();
-
-        NumberArithmeticExpressionSerializerImpl.addField(
-            "operation",
-            "operation",
-            0,
-            _SerializerRegistry.NumberArithmeticOperationSerializer,
-            "",
-            { it.operation },
-            { mut, v -> mut.operation = v },
-        );
-        NumberArithmeticExpressionSerializerImpl.addField(
-            "first",
-            "first",
-            1,
-            _SerializerRegistry.ExpressionNodeSerializer,
-            "",
-            { it.first },
-            { mut, v -> mut.first = v },
-        );
-        NumberArithmeticExpressionSerializerImpl.addField(
-            "second",
-            "second",
-            2,
-            _SerializerRegistry.ExpressionNodeSerializer,
-            "",
-            { it.second },
-            { mut, v -> mut.second = v },
-        );
-        NumberArithmeticExpressionSerializerImpl.addField(
-            "remaining",
-            "remaining",
-            3,
-            build.skir.Serializers.list(
-                _SerializerRegistry.ExpressionNodeSerializer,
-            ),
-            "",
-            { it.remaining },
-            { mut, v -> mut.remaining = v },
-        );
-        NumberArithmeticExpressionSerializerImpl.finalizeStruct();
-
-        NumberArithmeticOperationSerializerImpl.addConstantVariant(
-            1,
-            "add",
-            skirout.editor.v1.expression.NumberArithmeticOperation.Kind.ADD_CONST.ordinal,
-            "",
-            skirout.editor.v1.expression.NumberArithmeticOperation.ADD,
-        );
-        NumberArithmeticOperationSerializerImpl.addConstantVariant(
-            2,
-            "subtract",
-            skirout.editor.v1.expression.NumberArithmeticOperation.Kind.SUBTRACT_CONST.ordinal,
-            "",
-            skirout.editor.v1.expression.NumberArithmeticOperation.SUBTRACT,
-        );
-        NumberArithmeticOperationSerializerImpl.addConstantVariant(
-            3,
-            "multiply",
-            skirout.editor.v1.expression.NumberArithmeticOperation.Kind.MULTIPLY_CONST.ordinal,
-            "",
-            skirout.editor.v1.expression.NumberArithmeticOperation.MULTIPLY,
-        );
-        NumberArithmeticOperationSerializerImpl.addConstantVariant(
-            4,
-            "divide",
-            skirout.editor.v1.expression.NumberArithmeticOperation.Kind.DIVIDE_CONST.ordinal,
-            "",
-            skirout.editor.v1.expression.NumberArithmeticOperation.DIVIDE,
-        );
-        NumberArithmeticOperationSerializerImpl.addConstantVariant(
-            5,
-            "remainder",
-            skirout.editor.v1.expression.NumberArithmeticOperation.Kind.REMAINDER_CONST.ordinal,
-            "",
-            skirout.editor.v1.expression.NumberArithmeticOperation.REMAINDER,
-        );
-        NumberArithmeticOperationSerializerImpl.finalizeEnum();
-
-        NumberCompareExpressionSerializerImpl.addField(
-            "operation",
-            "operation",
-            0,
-            _SerializerRegistry.NumberCompareOperationSerializer,
-            "",
-            { it.operation },
-            { mut, v -> mut.operation = v },
-        );
-        NumberCompareExpressionSerializerImpl.addField(
-            "left",
-            "left",
-            1,
-            _SerializerRegistry.ExpressionNodeSerializer,
-            "",
-            { it.left },
-            { mut, v -> mut.left = v },
-        );
-        NumberCompareExpressionSerializerImpl.addField(
-            "right",
-            "right",
-            2,
-            _SerializerRegistry.ExpressionNodeSerializer,
-            "",
-            { it.right },
-            { mut, v -> mut.right = v },
-        );
-        NumberCompareExpressionSerializerImpl.finalizeStruct();
-
-        NumberCompareOperationSerializerImpl.addConstantVariant(
-            1,
-            "greater",
-            skirout.editor.v1.expression.NumberCompareOperation.Kind.GREATER_CONST.ordinal,
-            "",
-            skirout.editor.v1.expression.NumberCompareOperation.GREATER,
-        );
-        NumberCompareOperationSerializerImpl.addConstantVariant(
-            2,
-            "greater_equal",
-            skirout.editor.v1.expression.NumberCompareOperation.Kind.GREATER_EQUAL_CONST.ordinal,
-            "",
-            skirout.editor.v1.expression.NumberCompareOperation.GREATER_EQUAL,
-        );
-        NumberCompareOperationSerializerImpl.addConstantVariant(
-            3,
-            "less",
-            skirout.editor.v1.expression.NumberCompareOperation.Kind.LESS_CONST.ordinal,
-            "",
-            skirout.editor.v1.expression.NumberCompareOperation.LESS,
-        );
-        NumberCompareOperationSerializerImpl.addConstantVariant(
-            4,
-            "less_equal",
-            skirout.editor.v1.expression.NumberCompareOperation.Kind.LESS_EQUAL_CONST.ordinal,
-            "",
-            skirout.editor.v1.expression.NumberCompareOperation.LESS_EQUAL,
-        );
-        NumberCompareOperationSerializerImpl.finalizeEnum();
-
-        NumberFormatExpressionSerializerImpl.addField(
-            "source",
-            "source",
-            0,
-            _SerializerRegistry.ExpressionNodeSerializer,
-            "",
-            { it.source },
-            { mut, v -> mut.source = v },
-        );
-        NumberFormatExpressionSerializerImpl.addField(
-            "fraction_digits",
-            "fractionDigits",
-            1,
-            _SerializerRegistry.ExpressionNodeSerializer,
-            "",
-            { it.fractionDigits },
-            { mut, v -> mut.fractionDigits = v },
-        );
-        NumberFormatExpressionSerializerImpl.addField(
-            "locale",
-            "locale",
-            2,
-            _SerializerRegistry.ExpressionNodeSerializer,
-            "",
-            { it.locale },
-            { mut, v -> mut.locale = v },
-        );
-        NumberFormatExpressionSerializerImpl.finalizeStruct();
-
-        NumberRoundExpressionSerializerImpl.addField(
-            "source",
-            "source",
-            0,
-            _SerializerRegistry.ExpressionNodeSerializer,
-            "",
-            { it.source },
-            { mut, v -> mut.source = v },
-        );
-        NumberRoundExpressionSerializerImpl.addField(
-            "increment",
-            "increment",
-            1,
-            _SerializerRegistry.ExpressionNodeSerializer,
-            "",
-            { it.increment },
-            { mut, v -> mut.increment = v },
-        );
-        NumberRoundExpressionSerializerImpl.addField(
-            "rounding",
-            "rounding",
-            2,
-            _SerializerRegistry.ExpressionNodeSerializer,
-            "",
-            { it.rounding },
-            { mut, v -> mut.rounding = v },
-        );
-        NumberRoundExpressionSerializerImpl.finalizeStruct();
-
-        OrElseExpressionSerializerImpl.addField(
-            "input",
-            "input",
-            0,
-            _SerializerRegistry.ExpressionNodeSerializer,
-            "",
-            { it.input },
-            { mut, v -> mut.input = v },
-        );
-        OrElseExpressionSerializerImpl.addField(
+        FallbackExpressionSerializerImpl.addField(
             "fallback",
             "fallback",
             1,
@@ -12280,9 +3464,9 @@ private object _SerializerRegistry {
             { it.fallback },
             { mut, v -> mut.fallback = v },
         );
-        OrElseExpressionSerializerImpl.finalizeStruct();
+        FallbackExpressionSerializerImpl.finalizeStruct();
 
-        RegexCaptureExpressionSerializerImpl.addField(
+        FieldExpressionSerializerImpl.addField(
             "source",
             "source",
             0,
@@ -12291,837 +3475,27 @@ private object _SerializerRegistry {
             { it.source },
             { mut, v -> mut.source = v },
         );
-        RegexCaptureExpressionSerializerImpl.addField(
-            "pattern",
-            "pattern",
+        FieldExpressionSerializerImpl.addField(
+            "path",
+            "path",
             1,
-            _SerializerRegistry.ExpressionNodeSerializer,
+            skirout.editor.v1.type_catalog.ValuePath.serializer,
             "",
-            { it.pattern },
-            { mut, v -> mut.pattern = v },
+            { it.path },
+            { mut, v -> mut.path = v },
         );
-        RegexCaptureExpressionSerializerImpl.addField(
-            "group",
-            "group",
-            2,
-            _SerializerRegistry.ExpressionNodeSerializer,
-            "",
-            { it.group },
-            { mut, v -> mut.group = v },
-        );
-        RegexCaptureExpressionSerializerImpl.finalizeStruct();
+        FieldExpressionSerializerImpl.finalizeStruct();
 
-        RegexMatchModeSerializerImpl.addConstantVariant(
-            1,
-            "search",
-            skirout.editor.v1.expression.RegexMatchMode.Kind.SEARCH_CONST.ordinal,
-            "",
-            skirout.editor.v1.expression.RegexMatchMode.SEARCH,
-        );
-        RegexMatchModeSerializerImpl.addConstantVariant(
-            2,
-            "full_match",
-            skirout.editor.v1.expression.RegexMatchMode.Kind.FULL_MATCH_CONST.ordinal,
-            "",
-            skirout.editor.v1.expression.RegexMatchMode.FULL_MATCH,
-        );
-        RegexMatchModeSerializerImpl.finalizeEnum();
-
-        RegexReplaceExpressionSerializerImpl.addField(
-            "source",
-            "source",
+        LambdaExpressionSerializerImpl.addField(
+            "arity",
+            "arity",
             0,
-            _SerializerRegistry.ExpressionNodeSerializer,
+            build.skir.Serializers.int32,
             "",
-            { it.source },
-            { mut, v -> mut.source = v },
+            { it.arity },
+            { mut, v -> mut.arity = v },
         );
-        RegexReplaceExpressionSerializerImpl.addField(
-            "pattern",
-            "pattern",
-            1,
-            _SerializerRegistry.ExpressionNodeSerializer,
-            "",
-            { it.pattern },
-            { mut, v -> mut.pattern = v },
-        );
-        RegexReplaceExpressionSerializerImpl.addField(
-            "replacement",
-            "replacement",
-            2,
-            _SerializerRegistry.ExpressionNodeSerializer,
-            "",
-            { it.replacement },
-            { mut, v -> mut.replacement = v },
-        );
-        RegexReplaceExpressionSerializerImpl.finalizeStruct();
-
-        RegexTestExpressionSerializerImpl.addField(
-            "mode",
-            "mode",
-            0,
-            _SerializerRegistry.RegexMatchModeSerializer,
-            "",
-            { it.mode },
-            { mut, v -> mut.mode = v },
-        );
-        RegexTestExpressionSerializerImpl.addField(
-            "source",
-            "source",
-            1,
-            _SerializerRegistry.ExpressionNodeSerializer,
-            "",
-            { it.source },
-            { mut, v -> mut.source = v },
-        );
-        RegexTestExpressionSerializerImpl.addField(
-            "pattern",
-            "pattern",
-            2,
-            _SerializerRegistry.ExpressionNodeSerializer,
-            "",
-            { it.pattern },
-            { mut, v -> mut.pattern = v },
-        );
-        RegexTestExpressionSerializerImpl.finalizeStruct();
-
-        ResourceIdentityQuerySourceSerializerImpl.addField(
-            "identity",
-            "identity",
-            0,
-            _SerializerRegistry.ExpressionNodeSerializer,
-            "",
-            { it.identity },
-            { mut, v -> mut.identity = v },
-        );
-        ResourceIdentityQuerySourceSerializerImpl.addField(
-            "target",
-            "target",
-            1,
-            skirout.editor.v1.type_catalog.TypeUse.serializer,
-            "",
-            { it.target },
-            { mut, v -> mut.target = v },
-        );
-        ResourceIdentityQuerySourceSerializerImpl.finalizeStruct();
-
-        ResourceQuerySourceSerializerImpl.addWrapperVariant(
-            1,
-            "reference",
-            skirout.editor.v1.expression.ResourceQuerySource.Kind.REFERENCE_WRAPPER.ordinal,
-            _SerializerRegistry.ExpressionNodeSerializer,
-            "",
-            { skirout.editor.v1.expression.ResourceQuerySource.ReferenceWrapper(it) },
-            { it.value },
-        );
-        ResourceQuerySourceSerializerImpl.addWrapperVariant(
-            2,
-            "identity",
-            skirout.editor.v1.expression.ResourceQuerySource.Kind.IDENTITY_WRAPPER.ordinal,
-            _SerializerRegistry.ResourceIdentityQuerySourceSerializer,
-            "",
-            { skirout.editor.v1.expression.ResourceQuerySource.IdentityWrapper(it) },
-            { it.value },
-        );
-        ResourceQuerySourceSerializerImpl.finalizeEnum();
-
-        RuleMaximumScaleExpressionSerializerImpl.addField(
-            "source",
-            "source",
-            0,
-            _SerializerRegistry.ExpressionNodeSerializer,
-            "",
-            { it.source },
-            { mut, v -> mut.source = v },
-        );
-        RuleMaximumScaleExpressionSerializerImpl.addField(
-            "scale",
-            "scale",
-            1,
-            _SerializerRegistry.ExpressionNodeSerializer,
-            "",
-            { it.scale },
-            { mut, v -> mut.scale = v },
-        );
-        RuleMaximumScaleExpressionSerializerImpl.finalizeStruct();
-
-        RuleMultipleOfExpressionSerializerImpl.addField(
-            "source",
-            "source",
-            0,
-            _SerializerRegistry.ExpressionNodeSerializer,
-            "",
-            { it.source },
-            { mut, v -> mut.source = v },
-        );
-        RuleMultipleOfExpressionSerializerImpl.addField(
-            "divisor",
-            "divisor",
-            1,
-            _SerializerRegistry.ExpressionNodeSerializer,
-            "",
-            { it.divisor },
-            { mut, v -> mut.divisor = v },
-        );
-        RuleMultipleOfExpressionSerializerImpl.finalizeStruct();
-
-        RuleNumericBoundExpressionSerializerImpl.addField(
-            "direction",
-            "direction",
-            0,
-            _SerializerRegistry.BoundDirectionSerializer,
-            "",
-            { it.direction },
-            { mut, v -> mut.direction = v },
-        );
-        RuleNumericBoundExpressionSerializerImpl.addField(
-            "source",
-            "source",
-            1,
-            _SerializerRegistry.ExpressionNodeSerializer,
-            "",
-            { it.source },
-            { mut, v -> mut.source = v },
-        );
-        RuleNumericBoundExpressionSerializerImpl.addField(
-            "bound",
-            "bound",
-            2,
-            _SerializerRegistry.ExpressionNodeSerializer,
-            "",
-            { it.bound },
-            { mut, v -> mut.bound = v },
-        );
-        RuleNumericBoundExpressionSerializerImpl.addField(
-            "inclusive",
-            "inclusive",
-            3,
-            _SerializerRegistry.ExpressionNodeSerializer,
-            "",
-            { it.inclusive },
-            { mut, v -> mut.inclusive = v },
-        );
-        RuleNumericBoundExpressionSerializerImpl.finalizeStruct();
-
-        RuleNumericRangeExpressionSerializerImpl.addField(
-            "source",
-            "source",
-            0,
-            _SerializerRegistry.ExpressionNodeSerializer,
-            "",
-            { it.source },
-            { mut, v -> mut.source = v },
-        );
-        RuleNumericRangeExpressionSerializerImpl.addField(
-            "minimum",
-            "minimum",
-            1,
-            _SerializerRegistry.ExpressionNodeSerializer,
-            "",
-            { it.minimum },
-            { mut, v -> mut.minimum = v },
-        );
-        RuleNumericRangeExpressionSerializerImpl.addField(
-            "maximum",
-            "maximum",
-            2,
-            _SerializerRegistry.ExpressionNodeSerializer,
-            "",
-            { it.maximum },
-            { mut, v -> mut.maximum = v },
-        );
-        RuleNumericRangeExpressionSerializerImpl.finalizeStruct();
-
-        RuleOneOfExpressionSerializerImpl.addField(
-            "source",
-            "source",
-            0,
-            _SerializerRegistry.ExpressionNodeSerializer,
-            "",
-            { it.source },
-            { mut, v -> mut.source = v },
-        );
-        RuleOneOfExpressionSerializerImpl.addField(
-            "first_candidate",
-            "firstCandidate",
-            1,
-            _SerializerRegistry.ExpressionNodeSerializer,
-            "",
-            { it.firstCandidate },
-            { mut, v -> mut.firstCandidate = v },
-        );
-        RuleOneOfExpressionSerializerImpl.addField(
-            "remaining_candidates",
-            "remainingCandidates",
-            2,
-            build.skir.Serializers.list(
-                _SerializerRegistry.ExpressionNodeSerializer,
-            ),
-            "",
-            { it.remainingCandidates },
-            { mut, v -> mut.remainingCandidates = v },
-        );
-        RuleOneOfExpressionSerializerImpl.finalizeStruct();
-
-        RuleSizeBoundExpressionSerializerImpl.addField(
-            "metric",
-            "metric",
-            0,
-            _SerializerRegistry.SizeBoundMetricSerializer,
-            "",
-            { it.metric },
-            { mut, v -> mut.metric = v },
-        );
-        RuleSizeBoundExpressionSerializerImpl.addField(
-            "direction",
-            "direction",
-            1,
-            _SerializerRegistry.BoundDirectionSerializer,
-            "",
-            { it.direction },
-            { mut, v -> mut.direction = v },
-        );
-        RuleSizeBoundExpressionSerializerImpl.addField(
-            "source",
-            "source",
-            2,
-            _SerializerRegistry.ExpressionNodeSerializer,
-            "",
-            { it.source },
-            { mut, v -> mut.source = v },
-        );
-        RuleSizeBoundExpressionSerializerImpl.addField(
-            "bound",
-            "bound",
-            3,
-            _SerializerRegistry.ExpressionNodeSerializer,
-            "",
-            { it.bound },
-            { mut, v -> mut.bound = v },
-        );
-        RuleSizeBoundExpressionSerializerImpl.finalizeStruct();
-
-        RuleSizeRangeExpressionSerializerImpl.addField(
-            "metric",
-            "metric",
-            0,
-            _SerializerRegistry.SizeRangeMetricSerializer,
-            "",
-            { it.metric },
-            { mut, v -> mut.metric = v },
-        );
-        RuleSizeRangeExpressionSerializerImpl.addField(
-            "source",
-            "source",
-            1,
-            _SerializerRegistry.ExpressionNodeSerializer,
-            "",
-            { it.source },
-            { mut, v -> mut.source = v },
-        );
-        RuleSizeRangeExpressionSerializerImpl.addField(
-            "minimum",
-            "minimum",
-            2,
-            _SerializerRegistry.ExpressionNodeSerializer,
-            "",
-            { it.minimum },
-            { mut, v -> mut.minimum = v },
-        );
-        RuleSizeRangeExpressionSerializerImpl.addField(
-            "maximum",
-            "maximum",
-            3,
-            _SerializerRegistry.ExpressionNodeSerializer,
-            "",
-            { it.maximum },
-            { mut, v -> mut.maximum = v },
-        );
-        RuleSizeRangeExpressionSerializerImpl.finalizeStruct();
-
-        RuleTimestampBoundExpressionSerializerImpl.addField(
-            "direction",
-            "direction",
-            0,
-            _SerializerRegistry.TimestampBoundDirectionSerializer,
-            "",
-            { it.direction },
-            { mut, v -> mut.direction = v },
-        );
-        RuleTimestampBoundExpressionSerializerImpl.addField(
-            "source",
-            "source",
-            1,
-            _SerializerRegistry.ExpressionNodeSerializer,
-            "",
-            { it.source },
-            { mut, v -> mut.source = v },
-        );
-        RuleTimestampBoundExpressionSerializerImpl.addField(
-            "bound",
-            "bound",
-            2,
-            _SerializerRegistry.ExpressionNodeSerializer,
-            "",
-            { it.bound },
-            { mut, v -> mut.bound = v },
-        );
-        RuleTimestampBoundExpressionSerializerImpl.finalizeStruct();
-
-        RuleUnaryExpressionSerializerImpl.addField(
-            "operation",
-            "operation",
-            0,
-            _SerializerRegistry.RuleUnaryOperationSerializer,
-            "",
-            { it.operation },
-            { mut, v -> mut.operation = v },
-        );
-        RuleUnaryExpressionSerializerImpl.addField(
-            "source",
-            "source",
-            1,
-            _SerializerRegistry.ExpressionNodeSerializer,
-            "",
-            { it.source },
-            { mut, v -> mut.source = v },
-        );
-        RuleUnaryExpressionSerializerImpl.finalizeStruct();
-
-        RuleUnaryOperationSerializerImpl.addConstantVariant(
-            1,
-            "non_empty",
-            skirout.editor.v1.expression.RuleUnaryOperation.Kind.NON_EMPTY_CONST.ordinal,
-            "",
-            skirout.editor.v1.expression.RuleUnaryOperation.NON_EMPTY,
-        );
-        RuleUnaryOperationSerializerImpl.addConstantVariant(
-            2,
-            "non_blank",
-            skirout.editor.v1.expression.RuleUnaryOperation.Kind.NON_BLANK_CONST.ordinal,
-            "",
-            skirout.editor.v1.expression.RuleUnaryOperation.NON_BLANK,
-        );
-        RuleUnaryOperationSerializerImpl.addConstantVariant(
-            3,
-            "single_line",
-            skirout.editor.v1.expression.RuleUnaryOperation.Kind.SINGLE_LINE_CONST.ordinal,
-            "",
-            skirout.editor.v1.expression.RuleUnaryOperation.SINGLE_LINE,
-        );
-        RuleUnaryOperationSerializerImpl.addConstantVariant(
-            4,
-            "positive",
-            skirout.editor.v1.expression.RuleUnaryOperation.Kind.POSITIVE_CONST.ordinal,
-            "",
-            skirout.editor.v1.expression.RuleUnaryOperation.POSITIVE,
-        );
-        RuleUnaryOperationSerializerImpl.addConstantVariant(
-            5,
-            "non_negative",
-            skirout.editor.v1.expression.RuleUnaryOperation.Kind.NON_NEGATIVE_CONST.ordinal,
-            "",
-            skirout.editor.v1.expression.RuleUnaryOperation.NON_NEGATIVE,
-        );
-        RuleUnaryOperationSerializerImpl.addConstantVariant(
-            6,
-            "unique",
-            skirout.editor.v1.expression.RuleUnaryOperation.Kind.UNIQUE_CONST.ordinal,
-            "",
-            skirout.editor.v1.expression.RuleUnaryOperation.UNIQUE,
-        );
-        RuleUnaryOperationSerializerImpl.addConstantVariant(
-            7,
-            "not_null",
-            skirout.editor.v1.expression.RuleUnaryOperation.Kind.NOT_NULL_CONST.ordinal,
-            "",
-            skirout.editor.v1.expression.RuleUnaryOperation.NOT_NULL,
-        );
-        RuleUnaryOperationSerializerImpl.addConstantVariant(
-            8,
-            "opaque",
-            skirout.editor.v1.expression.RuleUnaryOperation.Kind.OPAQUE_CONST.ordinal,
-            "",
-            skirout.editor.v1.expression.RuleUnaryOperation.OPAQUE,
-        );
-        RuleUnaryOperationSerializerImpl.finalizeEnum();
-
-        SizeBoundMetricSerializerImpl.addConstantVariant(
-            1,
-            "text_length",
-            skirout.editor.v1.expression.SizeBoundMetric.Kind.TEXT_LENGTH_CONST.ordinal,
-            "",
-            skirout.editor.v1.expression.SizeBoundMetric.TEXT_LENGTH,
-        );
-        SizeBoundMetricSerializerImpl.addConstantVariant(
-            2,
-            "text_lines",
-            skirout.editor.v1.expression.SizeBoundMetric.Kind.TEXT_LINES_CONST.ordinal,
-            "",
-            skirout.editor.v1.expression.SizeBoundMetric.TEXT_LINES,
-        );
-        SizeBoundMetricSerializerImpl.addConstantVariant(
-            3,
-            "collection_items",
-            skirout.editor.v1.expression.SizeBoundMetric.Kind.COLLECTION_ITEMS_CONST.ordinal,
-            "",
-            skirout.editor.v1.expression.SizeBoundMetric.COLLECTION_ITEMS,
-        );
-        SizeBoundMetricSerializerImpl.finalizeEnum();
-
-        SizeRangeMetricSerializerImpl.addConstantVariant(
-            1,
-            "text_length",
-            skirout.editor.v1.expression.SizeRangeMetric.Kind.TEXT_LENGTH_CONST.ordinal,
-            "",
-            skirout.editor.v1.expression.SizeRangeMetric.TEXT_LENGTH,
-        );
-        SizeRangeMetricSerializerImpl.addConstantVariant(
-            2,
-            "collection_items",
-            skirout.editor.v1.expression.SizeRangeMetric.Kind.COLLECTION_ITEMS_CONST.ordinal,
-            "",
-            skirout.editor.v1.expression.SizeRangeMetric.COLLECTION_ITEMS,
-        );
-        SizeRangeMetricSerializerImpl.finalizeEnum();
-
-        SortByExpressionSerializerImpl.addField(
-            "source",
-            "source",
-            0,
-            _SerializerRegistry.ExpressionNodeSerializer,
-            "",
-            { it.source },
-            { mut, v -> mut.source = v },
-        );
-        SortByExpressionSerializerImpl.addField(
-            "descending",
-            "descending",
-            1,
-            build.skir.Serializers.optional(
-                _SerializerRegistry.ExpressionNodeSerializer,
-            ),
-            "",
-            { it.descending },
-            { mut, v -> mut.descending = v },
-        );
-        SortByExpressionSerializerImpl.addField(
-            "key",
-            "key",
-            2,
-            _SerializerRegistry.ExpressionNodeSerializer,
-            "",
-            { it.key },
-            { mut, v -> mut.key = v },
-        );
-        SortByExpressionSerializerImpl.finalizeStruct();
-
-        SortWithExpressionSerializerImpl.addField(
-            "source",
-            "source",
-            0,
-            _SerializerRegistry.ExpressionNodeSerializer,
-            "",
-            { it.source },
-            { mut, v -> mut.source = v },
-        );
-        SortWithExpressionSerializerImpl.addField(
-            "comparator",
-            "comparator",
-            1,
-            _SerializerRegistry.ExpressionNodeSerializer,
-            "",
-            { it.comparator },
-            { mut, v -> mut.comparator = v },
-        );
-        SortWithExpressionSerializerImpl.finalizeStruct();
-
-        TextCompareExpressionSerializerImpl.addField(
-            "operation",
-            "operation",
-            0,
-            _SerializerRegistry.TextCompareOperationSerializer,
-            "",
-            { it.operation },
-            { mut, v -> mut.operation = v },
-        );
-        TextCompareExpressionSerializerImpl.addField(
-            "source",
-            "source",
-            1,
-            _SerializerRegistry.ExpressionNodeSerializer,
-            "",
-            { it.source },
-            { mut, v -> mut.source = v },
-        );
-        TextCompareExpressionSerializerImpl.addField(
-            "other",
-            "other",
-            2,
-            _SerializerRegistry.ExpressionNodeSerializer,
-            "",
-            { it.other },
-            { mut, v -> mut.other = v },
-        );
-        TextCompareExpressionSerializerImpl.finalizeStruct();
-
-        TextCompareOperationSerializerImpl.addConstantVariant(
-            1,
-            "contains",
-            skirout.editor.v1.expression.TextCompareOperation.Kind.CONTAINS_CONST.ordinal,
-            "",
-            skirout.editor.v1.expression.TextCompareOperation.CONTAINS,
-        );
-        TextCompareOperationSerializerImpl.addConstantVariant(
-            2,
-            "starts_with",
-            skirout.editor.v1.expression.TextCompareOperation.Kind.STARTS_WITH_CONST.ordinal,
-            "",
-            skirout.editor.v1.expression.TextCompareOperation.STARTS_WITH,
-        );
-        TextCompareOperationSerializerImpl.addConstantVariant(
-            3,
-            "ends_with",
-            skirout.editor.v1.expression.TextCompareOperation.Kind.ENDS_WITH_CONST.ordinal,
-            "",
-            skirout.editor.v1.expression.TextCompareOperation.ENDS_WITH,
-        );
-        TextCompareOperationSerializerImpl.finalizeEnum();
-
-        TextInterpolateExpressionSerializerImpl.addField(
-            "parts",
-            "parts",
-            0,
-            build.skir.Serializers.list(
-                _SerializerRegistry.ExpressionNodeSerializer,
-            ),
-            "",
-            { it.parts },
-            { mut, v -> mut.parts = v },
-        );
-        TextInterpolateExpressionSerializerImpl.finalizeStruct();
-
-        TextJoinExpressionSerializerImpl.addField(
-            "source",
-            "source",
-            0,
-            _SerializerRegistry.ExpressionNodeSerializer,
-            "",
-            { it.source },
-            { mut, v -> mut.source = v },
-        );
-        TextJoinExpressionSerializerImpl.addField(
-            "separator",
-            "separator",
-            1,
-            _SerializerRegistry.ExpressionNodeSerializer,
-            "",
-            { it.separator },
-            { mut, v -> mut.separator = v },
-        );
-        TextJoinExpressionSerializerImpl.finalizeStruct();
-
-        TextReplaceExpressionSerializerImpl.addField(
-            "source",
-            "source",
-            0,
-            _SerializerRegistry.ExpressionNodeSerializer,
-            "",
-            { it.source },
-            { mut, v -> mut.source = v },
-        );
-        TextReplaceExpressionSerializerImpl.addField(
-            "target",
-            "target",
-            1,
-            _SerializerRegistry.ExpressionNodeSerializer,
-            "",
-            { it.target },
-            { mut, v -> mut.target = v },
-        );
-        TextReplaceExpressionSerializerImpl.addField(
-            "replacement",
-            "replacement",
-            2,
-            _SerializerRegistry.ExpressionNodeSerializer,
-            "",
-            { it.replacement },
-            { mut, v -> mut.replacement = v },
-        );
-        TextReplaceExpressionSerializerImpl.finalizeStruct();
-
-        TextSplitExpressionSerializerImpl.addField(
-            "source",
-            "source",
-            0,
-            _SerializerRegistry.ExpressionNodeSerializer,
-            "",
-            { it.source },
-            { mut, v -> mut.source = v },
-        );
-        TextSplitExpressionSerializerImpl.addField(
-            "separator",
-            "separator",
-            1,
-            _SerializerRegistry.ExpressionNodeSerializer,
-            "",
-            { it.separator },
-            { mut, v -> mut.separator = v },
-        );
-        TextSplitExpressionSerializerImpl.finalizeStruct();
-
-        TextSubstringExpressionSerializerImpl.addField(
-            "source",
-            "source",
-            0,
-            _SerializerRegistry.ExpressionNodeSerializer,
-            "",
-            { it.source },
-            { mut, v -> mut.source = v },
-        );
-        TextSubstringExpressionSerializerImpl.addField(
-            "start",
-            "start",
-            1,
-            _SerializerRegistry.ExpressionNodeSerializer,
-            "",
-            { it.start },
-            { mut, v -> mut.start = v },
-        );
-        TextSubstringExpressionSerializerImpl.addField(
-            "end",
-            "end",
-            2,
-            build.skir.Serializers.optional(
-                _SerializerRegistry.ExpressionNodeSerializer,
-            ),
-            "",
-            { it.end },
-            { mut, v -> mut.end = v },
-        );
-        TextSubstringExpressionSerializerImpl.finalizeStruct();
-
-        TextUnaryExpressionSerializerImpl.addField(
-            "operation",
-            "operation",
-            0,
-            _SerializerRegistry.TextUnaryOperationSerializer,
-            "",
-            { it.operation },
-            { mut, v -> mut.operation = v },
-        );
-        TextUnaryExpressionSerializerImpl.addField(
-            "source",
-            "source",
-            1,
-            _SerializerRegistry.ExpressionNodeSerializer,
-            "",
-            { it.source },
-            { mut, v -> mut.source = v },
-        );
-        TextUnaryExpressionSerializerImpl.finalizeStruct();
-
-        TextUnaryOperationSerializerImpl.addConstantVariant(
-            1,
-            "value",
-            skirout.editor.v1.expression.TextUnaryOperation.Kind.VALUE_CONST.ordinal,
-            "",
-            skirout.editor.v1.expression.TextUnaryOperation.VALUE,
-        );
-        TextUnaryOperationSerializerImpl.addConstantVariant(
-            2,
-            "trim",
-            skirout.editor.v1.expression.TextUnaryOperation.Kind.TRIM_CONST.ordinal,
-            "",
-            skirout.editor.v1.expression.TextUnaryOperation.TRIM,
-        );
-        TextUnaryOperationSerializerImpl.addConstantVariant(
-            3,
-            "lower",
-            skirout.editor.v1.expression.TextUnaryOperation.Kind.LOWER_CONST.ordinal,
-            "",
-            skirout.editor.v1.expression.TextUnaryOperation.LOWER,
-        );
-        TextUnaryOperationSerializerImpl.addConstantVariant(
-            4,
-            "upper",
-            skirout.editor.v1.expression.TextUnaryOperation.Kind.UPPER_CONST.ordinal,
-            "",
-            skirout.editor.v1.expression.TextUnaryOperation.UPPER,
-        );
-        TextUnaryOperationSerializerImpl.addConstantVariant(
-            5,
-            "title",
-            skirout.editor.v1.expression.TextUnaryOperation.Kind.TITLE_CONST.ordinal,
-            "",
-            skirout.editor.v1.expression.TextUnaryOperation.TITLE,
-        );
-        TextUnaryOperationSerializerImpl.finalizeEnum();
-
-        TimestampBoundDirectionSerializerImpl.addConstantVariant(
-            1,
-            "not_before",
-            skirout.editor.v1.expression.TimestampBoundDirection.Kind.NOT_BEFORE_CONST.ordinal,
-            "",
-            skirout.editor.v1.expression.TimestampBoundDirection.NOT_BEFORE,
-        );
-        TimestampBoundDirectionSerializerImpl.addConstantVariant(
-            2,
-            "not_after",
-            skirout.editor.v1.expression.TimestampBoundDirection.Kind.NOT_AFTER_CONST.ordinal,
-            "",
-            skirout.editor.v1.expression.TimestampBoundDirection.NOT_AFTER,
-        );
-        TimestampBoundDirectionSerializerImpl.finalizeEnum();
-
-        TimestampFormatExpressionSerializerImpl.addField(
-            "source",
-            "source",
-            0,
-            _SerializerRegistry.ExpressionNodeSerializer,
-            "",
-            { it.source },
-            { mut, v -> mut.source = v },
-        );
-        TimestampFormatExpressionSerializerImpl.addField(
-            "pattern",
-            "pattern",
-            1,
-            _SerializerRegistry.ExpressionNodeSerializer,
-            "",
-            { it.pattern },
-            { mut, v -> mut.pattern = v },
-        );
-        TimestampFormatExpressionSerializerImpl.addField(
-            "zone",
-            "zone",
-            2,
-            _SerializerRegistry.ExpressionNodeSerializer,
-            "",
-            { it.zone },
-            { mut, v -> mut.zone = v },
-        );
-        TimestampFormatExpressionSerializerImpl.addField(
-            "locale",
-            "locale",
-            3,
-            _SerializerRegistry.ExpressionNodeSerializer,
-            "",
-            { it.locale },
-            { mut, v -> mut.locale = v },
-        );
-        TimestampFormatExpressionSerializerImpl.finalizeStruct();
-
-        UnaryCollectionExpressionSerializerImpl.addField(
-            "source",
-            "source",
-            0,
-            _SerializerRegistry.ExpressionNodeSerializer,
-            "",
-            { it.source },
-            { mut, v -> mut.source = v },
-        );
-        UnaryCollectionExpressionSerializerImpl.addField(
+        LambdaExpressionSerializerImpl.addField(
             "body",
             "body",
             1,
@@ -13130,51 +3504,37 @@ private object _SerializerRegistry {
             { it.body },
             { mut, v -> mut.body = v },
         );
-        UnaryCollectionExpressionSerializerImpl.finalizeStruct();
+        LambdaExpressionSerializerImpl.finalizeStruct();
 
-        ValueCompareExpressionSerializerImpl.addField(
-            "operation",
-            "operation",
+        LogicalExpressionSerializerImpl.addField(
+            "left",
+            "left",
             0,
-            _SerializerRegistry.ValueCompareOperationSerializer,
-            "",
-            { it.operation },
-            { mut, v -> mut.operation = v },
-        );
-        ValueCompareExpressionSerializerImpl.addField(
-            "left",
-            "left",
-            1,
             _SerializerRegistry.ExpressionNodeSerializer,
             "",
             { it.left },
             { mut, v -> mut.left = v },
         );
-        ValueCompareExpressionSerializerImpl.addField(
+        LogicalExpressionSerializerImpl.addField(
             "right",
             "right",
-            2,
+            1,
             _SerializerRegistry.ExpressionNodeSerializer,
             "",
             { it.right },
             { mut, v -> mut.right = v },
         );
-        ValueCompareExpressionSerializerImpl.finalizeStruct();
+        LogicalExpressionSerializerImpl.finalizeStruct();
 
-        ValueCompareOperationSerializerImpl.addConstantVariant(
-            1,
-            "equal",
-            skirout.editor.v1.expression.ValueCompareOperation.Kind.EQUAL_CONST.ordinal,
+        OperationIdSerializerImpl.addField(
+            "value",
+            "value",
+            0,
+            build.skir.Serializers.string,
             "",
-            skirout.editor.v1.expression.ValueCompareOperation.EQUAL,
+            { it.value },
+            { mut, v -> mut.value = v },
         );
-        ValueCompareOperationSerializerImpl.addConstantVariant(
-            2,
-            "not_equal",
-            skirout.editor.v1.expression.ValueCompareOperation.Kind.NOT_EQUAL_CONST.ordinal,
-            "",
-            skirout.editor.v1.expression.ValueCompareOperation.NOT_EQUAL,
-        );
-        ValueCompareOperationSerializerImpl.finalizeEnum();
+        OperationIdSerializerImpl.finalizeStruct();
     }
 }

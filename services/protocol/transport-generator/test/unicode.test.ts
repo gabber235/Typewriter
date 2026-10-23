@@ -1,5 +1,4 @@
 import { describe, expect, test } from "bun:test";
-import { readFileSync } from "node:fs";
 
 import {
   ALPHABET,
@@ -7,8 +6,10 @@ import {
   emitKotlinUnicodeTables,
   unicodeTables,
 } from "../src/operations/unicode.js";
-import { repository } from "./support.js";
-import { generatedUnicodeFiles, UNICODE_RELEASE, UNICODE_ROOT } from "./unicode_tables.js";
+import { committedOperations, OPERATIONS_CONFIG, repository } from "./support.js";
+
+const UNICODE_RELEASE = committedOperations().data.unicode;
+const UNICODE_ROOT = repository(OPERATIONS_CONFIG.unicodeData);
 
 const TABLES = unicodeTables(UNICODE_RELEASE, UNICODE_ROOT);
 
@@ -83,13 +84,6 @@ describe("emitted Unicode tables", () => {
         // A Kotlin class file constant holds at most 65535 bytes.
         expect(Buffer.byteLength(literal!, "utf8")).toBeLessThan(65535);
       }
-    }
-  });
-
-  test("match the committed generated files", () => {
-    for (const [path, content] of generatedUnicodeFiles()) {
-      // Rewrite with `bun services/protocol/transport-generator/test/unicode_tables.ts`.
-      expect(readFileSync(repository(path), "utf8")).toBe(content);
     }
   });
 });

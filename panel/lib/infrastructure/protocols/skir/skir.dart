@@ -11,7 +11,6 @@ import "skirout/editor/v1/authoring.dart"
 export "package:skir_client/skir_client.dart" hide EnumVariant, Service;
 
 export "converters.dart";
-export "operations/portable_unicode_tables.dart";
 export "skirout/access/v1/permission.dart";
 export "skirout/access/v1/sentinel.dart";
 export "skirout/editor/v1/action.dart";

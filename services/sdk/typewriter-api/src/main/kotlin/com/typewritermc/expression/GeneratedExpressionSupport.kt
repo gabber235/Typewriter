@@ -69,8 +69,10 @@ internal data class ExpressionEnvironment(
 /** A reusable authoring expression. Complete programs freeze their captured lexical scope through [toNode]. */
 class Expr<T, out M : MissingPolicy> internal constructor(
     private val emit: (ExpressionEnvironment) -> ExpressionNode,
-) {
+) : CallArgument() {
     internal fun lower(environment: ExpressionEnvironment): ExpressionNode = emit(environment.descend())
+
+    override fun lowerArgument(environment: ExpressionEnvironment): ExpressionNode = lower(environment)
 
     fun toNode(): ExpressionNode = lower(ExpressionEnvironment())
 }

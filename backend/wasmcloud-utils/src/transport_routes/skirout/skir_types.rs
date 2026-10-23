@@ -1316,29 +1316,12 @@ impl crate::SkirType for crate::skirout::base::editor::v1::expression::Expressio
         Self::serializer()
     }
 }
-impl crate::SkirType for crate::skirout::base::editor::v1::expression::ExpressionField {
+impl crate::SkirType for crate::skirout::base::editor::v1::expression::FieldExpression {
     fn serializer() -> crate::skir_client::Serializer<Self> {
         Self::serializer()
     }
 }
-impl crate::SkirType for crate::skirout::base::editor::v1::expression::EntryBranch {
-    fn serializer() -> crate::skir_client::Serializer<Self> {
-        Self::serializer()
-    }
-    fn is_unknown(&self) -> bool {
-        !matches!(
-            self,
-            crate::skirout::base::editor::v1::expression::EntryBranch::Key
-                | crate::skirout::base::editor::v1::expression::EntryBranch::Value
-        )
-    }
-}
-impl crate::SkirType for crate::skirout::base::editor::v1::expression::ExpressionEntryProjection {
-    fn serializer() -> crate::skir_client::Serializer<Self> {
-        Self::serializer()
-    }
-}
-impl crate::SkirType for crate::skirout::base::editor::v1::expression::BinaryExpression {
+impl crate::SkirType for crate::skirout::base::editor::v1::expression::LogicalExpression {
     fn serializer() -> crate::skir_client::Serializer<Self> {
         Self::serializer()
     }
@@ -1348,349 +1331,24 @@ impl crate::SkirType for crate::skirout::base::editor::v1::expression::Condition
         Self::serializer()
     }
 }
-impl crate::SkirType for crate::skirout::base::editor::v1::expression::OrElseExpression {
+impl crate::SkirType for crate::skirout::base::editor::v1::expression::FallbackExpression {
     fn serializer() -> crate::skir_client::Serializer<Self> {
         Self::serializer()
     }
 }
-impl crate::SkirType for crate::skirout::base::editor::v1::expression::TextUnaryOperation {
-    fn serializer() -> crate::skir_client::Serializer<Self> {
-        Self::serializer()
-    }
-    fn is_unknown(&self) -> bool {
-        !matches!(
-            self,
-            crate::skirout::base::editor::v1::expression::TextUnaryOperation::Value
-                | crate::skirout::base::editor::v1::expression::TextUnaryOperation::Trim
-                | crate::skirout::base::editor::v1::expression::TextUnaryOperation::Lower
-                | crate::skirout::base::editor::v1::expression::TextUnaryOperation::Upper
-                | crate::skirout::base::editor::v1::expression::TextUnaryOperation::Title
-        )
-    }
-}
-impl crate::SkirType for crate::skirout::base::editor::v1::expression::TextUnaryExpression {
+impl crate::SkirType for crate::skirout::base::editor::v1::expression::OperationId {
     fn serializer() -> crate::skir_client::Serializer<Self> {
         Self::serializer()
     }
 }
-impl crate::SkirType for crate::skirout::base::editor::v1::expression::TextCompareOperation {
-    fn serializer() -> crate::skir_client::Serializer<Self> {
-        Self::serializer()
-    }
-    fn is_unknown(&self) -> bool {
-        !matches!(
-            self,
-            crate::skirout::base::editor::v1::expression::TextCompareOperation::Contains
-                | crate::skirout::base::editor::v1::expression::TextCompareOperation::StartsWith
-                | crate::skirout::base::editor::v1::expression::TextCompareOperation::EndsWith
-        )
-    }
-}
-impl crate::SkirType for crate::skirout::base::editor::v1::expression::TextCompareExpression {
+impl crate::SkirType for crate::skirout::base::editor::v1::expression::CallExpression {
     fn serializer() -> crate::skir_client::Serializer<Self> {
         Self::serializer()
     }
 }
-impl crate::SkirType for crate::skirout::base::editor::v1::expression::TextReplaceExpression {
+impl crate::SkirType for crate::skirout::base::editor::v1::expression::LambdaExpression {
     fn serializer() -> crate::skir_client::Serializer<Self> {
         Self::serializer()
-    }
-}
-impl crate::SkirType for crate::skirout::base::editor::v1::expression::TextSplitExpression {
-    fn serializer() -> crate::skir_client::Serializer<Self> {
-        Self::serializer()
-    }
-}
-impl crate::SkirType for crate::skirout::base::editor::v1::expression::TextJoinExpression {
-    fn serializer() -> crate::skir_client::Serializer<Self> {
-        Self::serializer()
-    }
-}
-impl crate::SkirType for crate::skirout::base::editor::v1::expression::TextSubstringExpression {
-    fn serializer() -> crate::skir_client::Serializer<Self> {
-        Self::serializer()
-    }
-}
-impl crate::SkirType for crate::skirout::base::editor::v1::expression::TextInterpolateExpression {
-    fn serializer() -> crate::skir_client::Serializer<Self> {
-        Self::serializer()
-    }
-}
-impl crate::SkirType for crate::skirout::base::editor::v1::expression::RegexMatchMode {
-    fn serializer() -> crate::skir_client::Serializer<Self> {
-        Self::serializer()
-    }
-    fn is_unknown(&self) -> bool {
-        !matches!(
-            self,
-            crate::skirout::base::editor::v1::expression::RegexMatchMode::Search
-                | crate::skirout::base::editor::v1::expression::RegexMatchMode::FullMatch
-        )
-    }
-}
-impl crate::SkirType for crate::skirout::base::editor::v1::expression::RegexTestExpression {
-    fn serializer() -> crate::skir_client::Serializer<Self> {
-        Self::serializer()
-    }
-}
-impl crate::SkirType for crate::skirout::base::editor::v1::expression::RegexCaptureExpression {
-    fn serializer() -> crate::skir_client::Serializer<Self> {
-        Self::serializer()
-    }
-}
-impl crate::SkirType for crate::skirout::base::editor::v1::expression::RegexReplaceExpression {
-    fn serializer() -> crate::skir_client::Serializer<Self> {
-        Self::serializer()
-    }
-}
-impl crate::SkirType for crate::skirout::base::editor::v1::expression::ValueCompareOperation {
-    fn serializer() -> crate::skir_client::Serializer<Self> {
-        Self::serializer()
-    }
-    fn is_unknown(&self) -> bool {
-        !matches!(
-            self,
-            crate::skirout::base::editor::v1::expression::ValueCompareOperation::Equal
-                | crate::skirout::base::editor::v1::expression::ValueCompareOperation::NotEqual
-        )
-    }
-}
-impl crate::SkirType for crate::skirout::base::editor::v1::expression::ValueCompareExpression {
-    fn serializer() -> crate::skir_client::Serializer<Self> {
-        Self::serializer()
-    }
-}
-impl crate::SkirType for crate::skirout::base::editor::v1::expression::NumberArithmeticOperation {
-    fn serializer() -> crate::skir_client::Serializer<Self> {
-        Self::serializer()
-    }
-    fn is_unknown(&self) -> bool {
-        !matches!(self, crate::skirout::base::editor::v1::expression::NumberArithmeticOperation::Add | crate::skirout::base::editor::v1::expression::NumberArithmeticOperation::Subtract | crate::skirout::base::editor::v1::expression::NumberArithmeticOperation::Multiply | crate::skirout::base::editor::v1::expression::NumberArithmeticOperation::Divide | crate::skirout::base::editor::v1::expression::NumberArithmeticOperation::Remainder)
-    }
-}
-impl crate::SkirType for crate::skirout::base::editor::v1::expression::NumberArithmeticExpression {
-    fn serializer() -> crate::skir_client::Serializer<Self> {
-        Self::serializer()
-    }
-}
-impl crate::SkirType for crate::skirout::base::editor::v1::expression::NumberCompareOperation {
-    fn serializer() -> crate::skir_client::Serializer<Self> {
-        Self::serializer()
-    }
-    fn is_unknown(&self) -> bool {
-        !matches!(
-            self,
-            crate::skirout::base::editor::v1::expression::NumberCompareOperation::Greater
-                | crate::skirout::base::editor::v1::expression::NumberCompareOperation::GreaterEqual
-                | crate::skirout::base::editor::v1::expression::NumberCompareOperation::Less
-                | crate::skirout::base::editor::v1::expression::NumberCompareOperation::LessEqual
-        )
-    }
-}
-impl crate::SkirType for crate::skirout::base::editor::v1::expression::NumberCompareExpression {
-    fn serializer() -> crate::skir_client::Serializer<Self> {
-        Self::serializer()
-    }
-}
-impl crate::SkirType for crate::skirout::base::editor::v1::expression::NumberRoundExpression {
-    fn serializer() -> crate::skir_client::Serializer<Self> {
-        Self::serializer()
-    }
-}
-impl crate::SkirType for crate::skirout::base::editor::v1::expression::NumberFormatExpression {
-    fn serializer() -> crate::skir_client::Serializer<Self> {
-        Self::serializer()
-    }
-}
-impl crate::SkirType for crate::skirout::base::editor::v1::expression::DurationFormatExpression {
-    fn serializer() -> crate::skir_client::Serializer<Self> {
-        Self::serializer()
-    }
-}
-impl crate::SkirType for crate::skirout::base::editor::v1::expression::TimestampFormatExpression {
-    fn serializer() -> crate::skir_client::Serializer<Self> {
-        Self::serializer()
-    }
-}
-impl crate::SkirType for crate::skirout::base::editor::v1::expression::CollectionAccessExpression {
-    fn serializer() -> crate::skir_client::Serializer<Self> {
-        Self::serializer()
-    }
-}
-impl crate::SkirType
-    for crate::skirout::base::editor::v1::expression::CollectionContainsExpression
-{
-    fn serializer() -> crate::skir_client::Serializer<Self> {
-        Self::serializer()
-    }
-}
-impl crate::SkirType for crate::skirout::base::editor::v1::expression::ColorWithAlphaExpression {
-    fn serializer() -> crate::skir_client::Serializer<Self> {
-        Self::serializer()
-    }
-}
-impl crate::SkirType for crate::skirout::base::editor::v1::expression::RuleUnaryOperation {
-    fn serializer() -> crate::skir_client::Serializer<Self> {
-        Self::serializer()
-    }
-    fn is_unknown(&self) -> bool {
-        !matches!(
-            self,
-            crate::skirout::base::editor::v1::expression::RuleUnaryOperation::NonEmpty
-                | crate::skirout::base::editor::v1::expression::RuleUnaryOperation::NonBlank
-                | crate::skirout::base::editor::v1::expression::RuleUnaryOperation::SingleLine
-                | crate::skirout::base::editor::v1::expression::RuleUnaryOperation::Positive
-                | crate::skirout::base::editor::v1::expression::RuleUnaryOperation::NonNegative
-                | crate::skirout::base::editor::v1::expression::RuleUnaryOperation::Unique
-                | crate::skirout::base::editor::v1::expression::RuleUnaryOperation::NotNull
-                | crate::skirout::base::editor::v1::expression::RuleUnaryOperation::Opaque
-        )
-    }
-}
-impl crate::SkirType for crate::skirout::base::editor::v1::expression::RuleUnaryExpression {
-    fn serializer() -> crate::skir_client::Serializer<Self> {
-        Self::serializer()
-    }
-}
-impl crate::SkirType for crate::skirout::base::editor::v1::expression::RuleOneOfExpression {
-    fn serializer() -> crate::skir_client::Serializer<Self> {
-        Self::serializer()
-    }
-}
-impl crate::SkirType for crate::skirout::base::editor::v1::expression::BoundDirection {
-    fn serializer() -> crate::skir_client::Serializer<Self> {
-        Self::serializer()
-    }
-    fn is_unknown(&self) -> bool {
-        !matches!(
-            self,
-            crate::skirout::base::editor::v1::expression::BoundDirection::Minimum
-                | crate::skirout::base::editor::v1::expression::BoundDirection::Maximum
-        )
-    }
-}
-impl crate::SkirType for crate::skirout::base::editor::v1::expression::SizeBoundMetric {
-    fn serializer() -> crate::skir_client::Serializer<Self> {
-        Self::serializer()
-    }
-    fn is_unknown(&self) -> bool {
-        !matches!(
-            self,
-            crate::skirout::base::editor::v1::expression::SizeBoundMetric::TextLength
-                | crate::skirout::base::editor::v1::expression::SizeBoundMetric::TextLines
-                | crate::skirout::base::editor::v1::expression::SizeBoundMetric::CollectionItems
-        )
-    }
-}
-impl crate::SkirType for crate::skirout::base::editor::v1::expression::SizeRangeMetric {
-    fn serializer() -> crate::skir_client::Serializer<Self> {
-        Self::serializer()
-    }
-    fn is_unknown(&self) -> bool {
-        !matches!(
-            self,
-            crate::skirout::base::editor::v1::expression::SizeRangeMetric::TextLength
-                | crate::skirout::base::editor::v1::expression::SizeRangeMetric::CollectionItems
-        )
-    }
-}
-impl crate::SkirType for crate::skirout::base::editor::v1::expression::RuleSizeBoundExpression {
-    fn serializer() -> crate::skir_client::Serializer<Self> {
-        Self::serializer()
-    }
-}
-impl crate::SkirType for crate::skirout::base::editor::v1::expression::RuleSizeRangeExpression {
-    fn serializer() -> crate::skir_client::Serializer<Self> {
-        Self::serializer()
-    }
-}
-impl crate::SkirType for crate::skirout::base::editor::v1::expression::RuleNumericBoundExpression {
-    fn serializer() -> crate::skir_client::Serializer<Self> {
-        Self::serializer()
-    }
-}
-impl crate::SkirType for crate::skirout::base::editor::v1::expression::RuleNumericRangeExpression {
-    fn serializer() -> crate::skir_client::Serializer<Self> {
-        Self::serializer()
-    }
-}
-impl crate::SkirType for crate::skirout::base::editor::v1::expression::RuleMultipleOfExpression {
-    fn serializer() -> crate::skir_client::Serializer<Self> {
-        Self::serializer()
-    }
-}
-impl crate::SkirType for crate::skirout::base::editor::v1::expression::RuleMaximumScaleExpression {
-    fn serializer() -> crate::skir_client::Serializer<Self> {
-        Self::serializer()
-    }
-}
-impl crate::SkirType for crate::skirout::base::editor::v1::expression::TimestampBoundDirection {
-    fn serializer() -> crate::skir_client::Serializer<Self> {
-        Self::serializer()
-    }
-    fn is_unknown(&self) -> bool {
-        !matches!(
-            self,
-            crate::skirout::base::editor::v1::expression::TimestampBoundDirection::NotBefore
-                | crate::skirout::base::editor::v1::expression::TimestampBoundDirection::NotAfter
-        )
-    }
-}
-impl crate::SkirType
-    for crate::skirout::base::editor::v1::expression::RuleTimestampBoundExpression
-{
-    fn serializer() -> crate::skir_client::Serializer<Self> {
-        Self::serializer()
-    }
-}
-impl crate::SkirType for crate::skirout::base::editor::v1::expression::UnaryCollectionExpression {
-    fn serializer() -> crate::skir_client::Serializer<Self> {
-        Self::serializer()
-    }
-}
-impl crate::SkirType for crate::skirout::base::editor::v1::expression::FoldExpression {
-    fn serializer() -> crate::skir_client::Serializer<Self> {
-        Self::serializer()
-    }
-}
-impl crate::SkirType for crate::skirout::base::editor::v1::expression::SortByExpression {
-    fn serializer() -> crate::skir_client::Serializer<Self> {
-        Self::serializer()
-    }
-}
-impl crate::SkirType for crate::skirout::base::editor::v1::expression::SortWithExpression {
-    fn serializer() -> crate::skir_client::Serializer<Self> {
-        Self::serializer()
-    }
-}
-impl crate::SkirType for crate::skirout::base::editor::v1::expression::CollectionSliceExpression {
-    fn serializer() -> crate::skir_client::Serializer<Self> {
-        Self::serializer()
-    }
-}
-impl crate::SkirType for crate::skirout::base::editor::v1::expression::ResourceIdentityQuerySource {
-    fn serializer() -> crate::skir_client::Serializer<Self> {
-        Self::serializer()
-    }
-}
-impl crate::SkirType for crate::skirout::base::editor::v1::expression::ResourceQuerySource {
-    fn serializer() -> crate::skir_client::Serializer<Self> {
-        Self::serializer()
-    }
-    fn is_unknown(&self) -> bool {
-        !matches!(
-            self,
-            crate::skirout::base::editor::v1::expression::ResourceQuerySource::Reference(_)
-                | crate::skirout::base::editor::v1::expression::ResourceQuerySource::Identity(_)
-        )
-    }
-}
-impl crate::SkirType for crate::skirout::base::editor::v1::expression::ExpressionQuery {
-    fn serializer() -> crate::skir_client::Serializer<Self> {
-        Self::serializer()
-    }
-    fn is_unknown(&self) -> bool {
-        !matches!(self, crate::skirout::base::editor::v1::expression::ExpressionQuery::ResourceIdentity(_) | crate::skirout::base::editor::v1::expression::ExpressionQuery::ResourceValue(_) | crate::skirout::base::editor::v1::expression::ExpressionQuery::ResourceConfiguration(_) | crate::skirout::base::editor::v1::expression::ExpressionQuery::ValueConfiguration(_) | crate::skirout::base::editor::v1::expression::ExpressionQuery::CatalogDeclaration(_))
     }
 }
 impl crate::SkirType for crate::skirout::base::editor::v1::expression::ExpressionNode {
@@ -1704,72 +1362,12 @@ impl crate::SkirType for crate::skirout::base::editor::v1::expression::Expressio
                 | crate::skirout::base::editor::v1::expression::ExpressionNode::Input(_)
                 | crate::skirout::base::editor::v1::expression::ExpressionNode::Local(_)
                 | crate::skirout::base::editor::v1::expression::ExpressionNode::Field(_)
-                | crate::skirout::base::editor::v1::expression::ExpressionNode::EntryProjection(_)
                 | crate::skirout::base::editor::v1::expression::ExpressionNode::And(_)
                 | crate::skirout::base::editor::v1::expression::ExpressionNode::Or(_)
                 | crate::skirout::base::editor::v1::expression::ExpressionNode::Conditional(_)
                 | crate::skirout::base::editor::v1::expression::ExpressionNode::OrElse(_)
-                | crate::skirout::base::editor::v1::expression::ExpressionNode::TextUnary(_)
-                | crate::skirout::base::editor::v1::expression::ExpressionNode::TextCompare(_)
-                | crate::skirout::base::editor::v1::expression::ExpressionNode::TextLength(_)
-                | crate::skirout::base::editor::v1::expression::ExpressionNode::TextHasLineBreak(_)
-                | crate::skirout::base::editor::v1::expression::ExpressionNode::TextReplace(_)
-                | crate::skirout::base::editor::v1::expression::ExpressionNode::TextSplit(_)
-                | crate::skirout::base::editor::v1::expression::ExpressionNode::TextJoin(_)
-                | crate::skirout::base::editor::v1::expression::ExpressionNode::TextSubstring(_)
-                | crate::skirout::base::editor::v1::expression::ExpressionNode::TextInterpolate(_)
-                | crate::skirout::base::editor::v1::expression::ExpressionNode::RegexTest(_)
-                | crate::skirout::base::editor::v1::expression::ExpressionNode::RegexCapture(_)
-                | crate::skirout::base::editor::v1::expression::ExpressionNode::RegexReplace(_)
-                | crate::skirout::base::editor::v1::expression::ExpressionNode::ValueCompare(_)
-                | crate::skirout::base::editor::v1::expression::ExpressionNode::IsNull(_)
-                | crate::skirout::base::editor::v1::expression::ExpressionNode::LinkTarget(_)
-                | crate::skirout::base::editor::v1::expression::ExpressionNode::BooleanNot(_)
-                | crate::skirout::base::editor::v1::expression::ExpressionNode::NumberArithmetic(_)
-                | crate::skirout::base::editor::v1::expression::ExpressionNode::NumberCompare(_)
-                | crate::skirout::base::editor::v1::expression::ExpressionNode::NumberNegate(_)
-                | crate::skirout::base::editor::v1::expression::ExpressionNode::NumberRound(_)
-                | crate::skirout::base::editor::v1::expression::ExpressionNode::NumberFormat(_)
-                | crate::skirout::base::editor::v1::expression::ExpressionNode::DurationFormat(_)
-                | crate::skirout::base::editor::v1::expression::ExpressionNode::TimestampFormat(_)
-                | crate::skirout::base::editor::v1::expression::ExpressionNode::CollectionSize(_)
-                | crate::skirout::base::editor::v1::expression::ExpressionNode::CollectionAccess(_)
-                | crate::skirout::base::editor::v1::expression::ExpressionNode::CollectionContains(
-                    _
-                )
-                | crate::skirout::base::editor::v1::expression::ExpressionNode::ColorWithAlpha(_)
-                | crate::skirout::base::editor::v1::expression::ExpressionNode::RuleUnary(_)
-                | crate::skirout::base::editor::v1::expression::ExpressionNode::RuleOneOf(_)
-                | crate::skirout::base::editor::v1::expression::ExpressionNode::RuleSizeBound(_)
-                | crate::skirout::base::editor::v1::expression::ExpressionNode::RuleSizeRange(_)
-                | crate::skirout::base::editor::v1::expression::ExpressionNode::RuleNumericBound(_)
-                | crate::skirout::base::editor::v1::expression::ExpressionNode::RuleNumericRange(_)
-                | crate::skirout::base::editor::v1::expression::ExpressionNode::RuleMultipleOf(_)
-                | crate::skirout::base::editor::v1::expression::ExpressionNode::RuleMaximumScale(_)
-                | crate::skirout::base::editor::v1::expression::ExpressionNode::RuleTimestampBound(
-                    _
-                )
-                | crate::skirout::base::editor::v1::expression::ExpressionNode::Any(_)
-                | crate::skirout::base::editor::v1::expression::ExpressionNode::All(_)
-                | crate::skirout::base::editor::v1::expression::ExpressionNode::None(_)
-                | crate::skirout::base::editor::v1::expression::ExpressionNode::Map(_)
-                | crate::skirout::base::editor::v1::expression::ExpressionNode::Filter(_)
-                | crate::skirout::base::editor::v1::expression::ExpressionNode::Find(_)
-                | crate::skirout::base::editor::v1::expression::ExpressionNode::FindLast(_)
-                | crate::skirout::base::editor::v1::expression::ExpressionNode::Count(_)
-                | crate::skirout::base::editor::v1::expression::ExpressionNode::DistinctBy(_)
-                | crate::skirout::base::editor::v1::expression::ExpressionNode::GroupBy(_)
-                | crate::skirout::base::editor::v1::expression::ExpressionNode::FlatMap(_)
-                | crate::skirout::base::editor::v1::expression::ExpressionNode::UniqueBy(_)
-                | crate::skirout::base::editor::v1::expression::ExpressionNode::Reduce(_)
-                | crate::skirout::base::editor::v1::expression::ExpressionNode::SortBy(_)
-                | crate::skirout::base::editor::v1::expression::ExpressionNode::SortWith(_)
-                | crate::skirout::base::editor::v1::expression::ExpressionNode::Fold(_)
-                | crate::skirout::base::editor::v1::expression::ExpressionNode::Take(_)
-                | crate::skirout::base::editor::v1::expression::ExpressionNode::Skip(_)
-                | crate::skirout::base::editor::v1::expression::ExpressionNode::Reverse(_)
-                | crate::skirout::base::editor::v1::expression::ExpressionNode::Distinct(_)
-                | crate::skirout::base::editor::v1::expression::ExpressionNode::Query(_)
+                | crate::skirout::base::editor::v1::expression::ExpressionNode::Call(_)
+                | crate::skirout::base::editor::v1::expression::ExpressionNode::Lambda(_)
         )
     }
 }
@@ -1810,6 +1408,11 @@ impl crate::SkirType for crate::skirout::base::editor::v1::expression::Expressio
     }
 }
 impl crate::SkirType for crate::skirout::base::editor::v1::expression::ExpressionBindings {
+    fn serializer() -> crate::skir_client::Serializer<Self> {
+        Self::serializer()
+    }
+}
+impl crate::SkirType for crate::skirout::base::editor::v1::expression::FailureId {
     fn serializer() -> crate::skir_client::Serializer<Self> {
         Self::serializer()
     }

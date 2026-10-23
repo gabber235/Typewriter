@@ -1,10 +1,12 @@
 // Portable expressions carry their operation and lexical scope in the serialized tree.
 // External inputs retain their boundary identities. Lambda locals use frame addresses.
-// Both hosts share structural result types and distinguish missing input from evaluation failure.
+// Operations are calls to the catalog declared in operations.yaml; only structural forms with
+// their own evaluation order are nodes. Both hosts distinguish missing input from failure.
 
 import {
   DataValue,
   ExpressionBindingId,
+  TypeTemplate,
   TypeUse,
   ValueLocation,
   ValuePath,
@@ -16,414 +18,79 @@ struct ExpressionInput(810600001) {
   path: ValuePath = 1;
 }
 
-/// Reads a lambda frame. Depth zero is the innermost frame; slots are defined by the enclosing operation.
-/// Local values are captured for evaluation and may retain their authored location for read evidence.
+/// Reads a lambda frame. Depth zero is the innermost frame; slots are defined by the lambda's
+/// parameter. A local holds a value an earlier read or literal produced, so it is never a new read.
 struct ExpressionLocal(810600002) {
   depth: int32 = 0;
   slot: int32 = 1;
   path: ValuePath = 2;
 }
 
-/// Projects one field while preserving lazy query reads and the originating authored location.
-struct ExpressionField(810600003) {
+/// Projects a path from a computed value. Map key and value segments project entries.
+struct FieldExpression(810600003) {
   source: ExpressionNode = 0;
-  name: string = 1;
+  path: ValuePath = 1;
 }
 
-enum EntryBranch(810600004) {
-  key = 1;
-  value = 2;
-}
-
-struct ExpressionEntryProjection(810600005) {
-  source: ExpressionNode = 0;
-  branch: EntryBranch = 1;
-}
-
-struct BinaryExpression(810600006) {
+/// Evaluates right only when left does not decide the result.
+struct LogicalExpression(810600004) {
   left: ExpressionNode = 0;
   right: ExpressionNode = 1;
 }
 
-struct ConditionalExpression(810600007) {
+/// Evaluates only the branch the test selects.
+struct ConditionalExpression(810600005) {
   test: ExpressionNode = 0;
-  yes: ExpressionNode = 1;
-  no: ExpressionNode = 2;
+  then: ExpressionNode = 1;
+  otherwise: ExpressionNode = 2;
 }
 
-/// Evaluates fallback for unavailable, null, or unfilled input. Evaluation failures remain
+/// Evaluates fallback for missing, null, or unfilled value. Evaluation failures remain
 /// failures instead of being hidden by the fallback.
-struct OrElseExpression(810600008) {
-  input: ExpressionNode = 0;
+struct FallbackExpression(810600006) {
+  value: ExpressionNode = 0;
   fallback: ExpressionNode = 1;
 }
 
-enum TextUnaryOperation(810600009) {
-  value = 1;
-  trim = 2;
-  lower = 3;
-  upper = 4;
-  title = 5;
+/// Identity of a declared operation, for example "integer.gcd". Checking resolves it once;
+/// evaluators never choose between overloads at runtime.
+struct OperationId(810600007) {
+  value: string = 0;
 }
 
-struct TextUnaryExpression(810600010) {
-  operation: TextUnaryOperation = 0;
-  source: ExpressionNode = 1;
+/// Calls one declared operation of skir-src/editor/v1/operations.yaml. Arguments follow its
+/// declared parameters; a lambda parameter takes a lambda node. Type arguments appear only where
+/// arguments cannot determine them, such as reading a resource by identity.
+struct CallExpression(810600008) {
+  operation: OperationId = 0;
+  type_arguments: [TypeTemplate] = 1;
+  arguments: [ExpressionNode] = 2;
 }
 
-enum TextCompareOperation(810600011) {
-  contains = 1;
-  starts_with = 2;
-  ends_with = 3;
-}
-
-struct TextCompareExpression(810600012) {
-  operation: TextCompareOperation = 0;
-  source: ExpressionNode = 1;
-  other: ExpressionNode = 2;
-}
-
-struct TextReplaceExpression(810600013) {
-  source: ExpressionNode = 0;
-  target: ExpressionNode = 1;
-  replacement: ExpressionNode = 2;
-}
-
-struct TextSplitExpression(810600014) {
-  source: ExpressionNode = 0;
-  separator: ExpressionNode = 1;
-}
-
-struct TextJoinExpression(810600015) {
-  source: ExpressionNode = 0;
-  separator: ExpressionNode = 1;
-}
-
-struct TextSubstringExpression(810600016) {
-  source: ExpressionNode = 0;
-  start: ExpressionNode = 1;
-  end: ExpressionNode? = 2;
-}
-
-struct TextInterpolateExpression(810600017) {
-  parts: [ExpressionNode] = 0;
-}
-
-enum RegexMatchMode(810600018) {
-  search = 1;
-  full_match = 2;
-}
-
-struct RegexTestExpression(810600019) {
-  mode: RegexMatchMode = 0;
-  source: ExpressionNode = 1;
-  pattern: ExpressionNode = 2;
-}
-
-struct RegexCaptureExpression(810600020) {
-  source: ExpressionNode = 0;
-  pattern: ExpressionNode = 1;
-  group: ExpressionNode = 2;
-}
-
-struct RegexReplaceExpression(810600021) {
-  source: ExpressionNode = 0;
-  pattern: ExpressionNode = 1;
-  replacement: ExpressionNode = 2;
-}
-
-enum ValueCompareOperation(810600022) {
-  equal = 1;
-  not_equal = 2;
-}
-
-struct ValueCompareExpression(810600023) {
-  operation: ValueCompareOperation = 0;
-  left: ExpressionNode = 1;
-  right: ExpressionNode = 2;
-}
-
-enum NumberArithmeticOperation(810600024) {
-  add = 1;
-  subtract = 2;
-  multiply = 3;
-  divide = 4;
-  remainder = 5;
-}
-
-/// Evaluates at least two operands in one arithmetic operation, preserving numeric promotion
-/// across the complete argument sequence.
-struct NumberArithmeticExpression(810600025) {
-  operation: NumberArithmeticOperation = 0;
-  first: ExpressionNode = 1;
-  second: ExpressionNode = 2;
-  remaining: [ExpressionNode] = 3;
-}
-
-enum NumberCompareOperation(810600026) {
-  greater = 1;
-  greater_equal = 2;
-  less = 3;
-  less_equal = 4;
-}
-
-struct NumberCompareExpression(810600027) {
-  operation: NumberCompareOperation = 0;
-  left: ExpressionNode = 1;
-  right: ExpressionNode = 2;
-}
-
-struct NumberRoundExpression(810600028) {
-  source: ExpressionNode = 0;
-  increment: ExpressionNode = 1;
-  rounding: ExpressionNode = 2;
-}
-
-struct NumberFormatExpression(810600029) {
-  source: ExpressionNode = 0;
-  fraction_digits: ExpressionNode = 1;
-  locale: ExpressionNode = 2;
-}
-
-struct DurationFormatExpression(810600030) {
-  source: ExpressionNode = 0;
-  units: ExpressionNode = 1;
-  fraction_digits: ExpressionNode = 2;
-}
-
-struct TimestampFormatExpression(810600031) {
-  source: ExpressionNode = 0;
-  pattern: ExpressionNode = 1;
-  zone: ExpressionNode = 2;
-  locale: ExpressionNode = 3;
-}
-
-struct CollectionAccessExpression(810600032) {
-  source: ExpressionNode = 0;
-  index: ExpressionNode = 1;
-}
-
-struct CollectionContainsExpression(810600033) {
-  source: ExpressionNode = 0;
-  value: ExpressionNode = 1;
-}
-
-struct ColorWithAlphaExpression(810600034) {
-  source: ExpressionNode = 0;
-  alpha: ExpressionNode = 1;
-}
-
-enum RuleUnaryOperation(810600035) {
-  non_empty = 1;
-  non_blank = 2;
-  single_line = 3;
-  positive = 4;
-  non_negative = 5;
-  unique = 6;
-  not_null = 7;
-  opaque = 8;
-}
-
-struct RuleUnaryExpression(810600036) {
-  operation: RuleUnaryOperation = 0;
-  source: ExpressionNode = 1;
-}
-
-struct RuleOneOfExpression(810600037) {
-  source: ExpressionNode = 0;
-  first_candidate: ExpressionNode = 1;
-  remaining_candidates: [ExpressionNode] = 2;
-}
-
-enum BoundDirection(810600038) {
-  minimum = 1;
-  maximum = 2;
-}
-
-enum SizeBoundMetric(810600039) {
-  text_length = 1;
-  text_lines = 2;
-  collection_items = 3;
-}
-
-enum SizeRangeMetric(810600040) {
-  text_length = 1;
-  collection_items = 2;
-}
-
-struct RuleSizeBoundExpression(810600041) {
-  metric: SizeBoundMetric = 0;
-  direction: BoundDirection = 1;
-  source: ExpressionNode = 2;
-  bound: ExpressionNode = 3;
-}
-
-struct RuleSizeRangeExpression(810600042) {
-  metric: SizeRangeMetric = 0;
-  source: ExpressionNode = 1;
-  minimum: ExpressionNode = 2;
-  maximum: ExpressionNode = 3;
-}
-
-struct RuleNumericBoundExpression(810600043) {
-  direction: BoundDirection = 0;
-  source: ExpressionNode = 1;
-  bound: ExpressionNode = 2;
-  inclusive: ExpressionNode = 3;
-}
-
-struct RuleNumericRangeExpression(810600044) {
-  source: ExpressionNode = 0;
-  minimum: ExpressionNode = 1;
-  maximum: ExpressionNode = 2;
-}
-
-struct RuleMultipleOfExpression(810600045) {
-  source: ExpressionNode = 0;
-  divisor: ExpressionNode = 1;
-}
-
-struct RuleMaximumScaleExpression(810600046) {
-  source: ExpressionNode = 0;
-  scale: ExpressionNode = 1;
-}
-
-enum TimestampBoundDirection(810600047) {
-  not_before = 1;
-  not_after = 2;
-}
-
-struct RuleTimestampBoundExpression(810600048) {
-  direction: TimestampBoundDirection = 0;
-  source: ExpressionNode = 1;
-  bound: ExpressionNode = 2;
-}
-
-/// The body receives the current item at slot zero, except reduce, whose slots are accumulator then item.
-struct UnaryCollectionExpression(810600049) {
-  source: ExpressionNode = 0;
+/// Body of a lambda argument. It opens one frame of `arity` locals.
+struct LambdaExpression(810600009) {
+  arity: int32 = 0;
   body: ExpressionNode = 1;
 }
 
-/// Evaluates source and initial outside the body frame. The body slots are accumulator then item.
-struct FoldExpression(810600050) {
-  source: ExpressionNode = 0;
-  initial: ExpressionNode = 1;
-  body: ExpressionNode = 2;
-}
-
-/// Evaluates each key with the item in slot zero. The descending expression belongs to the outer scope.
-struct SortByExpression(810600051) {
-  source: ExpressionNode = 0;
-  descending: ExpressionNode? = 1;
-  key: ExpressionNode = 2;
-}
-
-/// The comparator slots are the left item then the right item.
-struct SortWithExpression(810600052) {
-  source: ExpressionNode = 0;
-  comparator: ExpressionNode = 1;
-}
-
-struct CollectionSliceExpression(810600053) {
-  source: ExpressionNode = 0;
-  count: ExpressionNode = 1;
-}
-
-/// An identity expression needs an explicit catalog type witness to admit resource reads.
-struct ResourceIdentityQuerySource(810600054) {
-  identity: ExpressionNode = 0;
-  target: TypeUse = 1;
-}
-
-enum ResourceQuerySource(810600055) {
-  reference: ExpressionNode = 1;
-  identity: ResourceIdentityQuerySource = 2;
-}
-
-enum ExpressionQuery(810600056) {
-  resource_identity: ResourceQuerySource = 1;
-  resource_value: ResourceQuerySource = 2;
-  resource_configuration: ResourceQuerySource = 3;
-  value_configuration: ExpressionNode = 4;
-  catalog_declaration: ExpressionNode = 5;
-}
-
-/// Closed expression language shared by producers, checkers and evaluators.
-/// Boolean and conditional branches evaluate only the needed branch. Collection bodies
-/// introduce lexical frames without modifying authored state.
-enum ExpressionNode(810600057) {
+/// Closed expression language. Hosts evaluate the structural forms themselves; every other
+/// operation is a call to the declared operation catalog.
+enum ExpressionNode(810600010) {
   literal: DataValue = 1;
   input: ExpressionInput = 2;
   local: ExpressionLocal = 3;
-  field: ExpressionField = 4;
-  entry_projection: ExpressionEntryProjection = 5;
-  and: BinaryExpression = 6;
-  or: BinaryExpression = 7;
-  conditional: ConditionalExpression = 8;
-  or_else: OrElseExpression = 9;
-  text_unary: TextUnaryExpression = 10;
-  text_compare: TextCompareExpression = 11;
-  text_length: ExpressionNode = 12;
-  text_has_line_break: ExpressionNode = 13;
-  text_replace: TextReplaceExpression = 14;
-  text_split: TextSplitExpression = 15;
-  text_join: TextJoinExpression = 16;
-  text_substring: TextSubstringExpression = 17;
-  text_interpolate: TextInterpolateExpression = 18;
-  regex_test: RegexTestExpression = 19;
-  regex_capture: RegexCaptureExpression = 20;
-  regex_replace: RegexReplaceExpression = 21;
-  value_compare: ValueCompareExpression = 22;
-  is_null: ExpressionNode = 23;
-  link_target: ExpressionNode = 24;
-  boolean_not: ExpressionNode = 25;
-  number_arithmetic: NumberArithmeticExpression = 26;
-  number_compare: NumberCompareExpression = 27;
-  number_negate: ExpressionNode = 28;
-  number_round: NumberRoundExpression = 29;
-  number_format: NumberFormatExpression = 30;
-  duration_format: DurationFormatExpression = 31;
-  timestamp_format: TimestampFormatExpression = 32;
-  collection_size: ExpressionNode = 33;
-  collection_access: CollectionAccessExpression = 34;
-  collection_contains: CollectionContainsExpression = 35;
-  color_with_alpha: ColorWithAlphaExpression = 36;
-  rule_unary: RuleUnaryExpression = 37;
-  rule_one_of: RuleOneOfExpression = 38;
-  rule_size_bound: RuleSizeBoundExpression = 39;
-  rule_size_range: RuleSizeRangeExpression = 40;
-  rule_numeric_bound: RuleNumericBoundExpression = 41;
-  rule_numeric_range: RuleNumericRangeExpression = 42;
-  rule_multiple_of: RuleMultipleOfExpression = 43;
-  rule_maximum_scale: RuleMaximumScaleExpression = 44;
-  rule_timestamp_bound: RuleTimestampBoundExpression = 45;
-  any: UnaryCollectionExpression = 46;
-  all: UnaryCollectionExpression = 47;
-  none: UnaryCollectionExpression = 48;
-  map: UnaryCollectionExpression = 49;
-  filter: UnaryCollectionExpression = 50;
-  find: UnaryCollectionExpression = 51;
-  find_last: UnaryCollectionExpression = 52;
-  count: UnaryCollectionExpression = 53;
-  distinct_by: UnaryCollectionExpression = 54;
-  group_by: UnaryCollectionExpression = 55;
-  flat_map: UnaryCollectionExpression = 56;
-  unique_by: UnaryCollectionExpression = 57;
-  reduce: UnaryCollectionExpression = 58;
-  sort_by: SortByExpression = 59;
-  sort_with: SortWithExpression = 60;
-  fold: FoldExpression = 61;
-  take: CollectionSliceExpression = 62;
-  skip: CollectionSliceExpression = 63;
-  reverse: ExpressionNode = 64;
-  distinct: ExpressionNode = 65;
-  query: ExpressionQuery = 66;
+  field: FieldExpression = 4;
+  and: LogicalExpression = 5;
+  or: LogicalExpression = 6;
+  conditional: ConditionalExpression = 7;
+  or_else: FallbackExpression = 8;
+  call: CallExpression = 9;
+  lambda: LambdaExpression = 10;
 }
 
 /// Structural expression results retain nominal catalog identities only where they are meaningful.
 /// Null is a value; unavailable input is represented separately by ExpressionType.may_be_missing.
-enum ExpressionValueType(810600058) {
+enum ExpressionValueType(810600011) {
   nominal: TypeUse = 1;
   list: ExpressionType = 2;
   map: ExpressionMappingType = 3;
@@ -432,34 +99,41 @@ enum ExpressionValueType(810600058) {
   null_value = 6;
 }
 
-struct ExpressionMappingType(810600059) {
+struct ExpressionMappingType(810600012) {
   key: ExpressionType = 0;
   value: ExpressionType = 1;
 }
 
-struct ExpressionType(810600060) {
+struct ExpressionType(810600013) {
   value: ExpressionValueType = 0;
   may_be_missing: bool = 1;
 }
 
 /// Limits one evaluation by executed steps and inspected collection items.
 /// Exhaustion is an evaluation failure, not a successful partial expression result.
-struct EvaluationBudget(810600061) {
+struct EvaluationBudget(810600014) {
   max_steps: int64 = 0;
   max_collection_items: int64 = 1;
 }
 
-struct ExpressionBinding(810600062) {
+struct ExpressionBinding(810600015) {
   id: ExpressionBindingId = 0;
   location: ValueLocation = 1;
 }
 
-struct ExpressionBindings(810600063) {
+struct ExpressionBindings(810600016) {
   values: [ExpressionBinding] = 0;
 }
 
-struct EvaluationDiagnostic(810600064) {
-  code: string = 0;
+/// Identity of a declared failure from the operation catalog, for example "regex_limit".
+struct FailureId(810600017) {
+  value: string = 0;
+}
+
+/// A failed evaluation: the declared failure, a message, and the observed inputs plus located
+/// frame values as context.
+struct EvaluationDiagnostic(810600018) {
+  failure: FailureId = 0;
   message: string = 1;
   locations: [ValueLocation] = 2;
 }
