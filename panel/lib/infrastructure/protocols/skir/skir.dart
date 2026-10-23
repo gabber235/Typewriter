@@ -2,7 +2,9 @@
 ///
 /// Import this library as `skir` so protocol names stay distinct from panel and
 /// Flutter names. It exposes generated declarations, serializers, and primitive
-/// converters used at protocol boundaries. The generated tree is not edited.
+/// converters used at protocol boundaries, plus the generated portable
+/// operation catalog with its hand written runtime. The generated tree is not
+/// edited.
 library;
 
 import "skirout/editor/v1/authoring.dart"
@@ -10,6 +12,7 @@ import "skirout/editor/v1/authoring.dart"
 
 export "package:skir_client/skir_client.dart" hide EnumVariant, Service;
 
+export "../operations/portable_operation_runtime.dart" hide ByteString;
 export "converters.dart";
 export "skirout/access/v1/permission.dart";
 export "skirout/access/v1/sentinel.dart";

@@ -521,7 +521,7 @@ function invokerCase(operation: ResolvedOperation, catalog: ResolvedOperations, 
   const body =
     operation.result.kind === "maybe"
       ? `${call}.map((it) => ${encode(operation.result.value, "it", catalog, operation)})`
-      : `PortableValue(${encode(operation.result, call, catalog, operation)})`;
+      : `PortableMaybeValue(${encode(operation.result, call, catalog, operation)})`;
   return [`${quoted(operation.id)} => ${body},`];
 }
 
