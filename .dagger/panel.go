@@ -125,6 +125,7 @@ func (m *Typewriter) PanelTest(
 ) *dagger.Container {
 	return m.panelContainer(source).
 		WithDirectory("/workspace/skir-src", source.Directory("/skir-src", defaultWorkspaceOpts)).
+		WithDirectory("/workspace/services/protocol/unicode", source.Directory("/services/protocol/unicode", defaultWorkspaceOpts)).
 		WithWorkdir("/workspace/panel").
 		WithExec([]string{"flutter", "test", "--no-pub", "--concurrency=2"})
 }
