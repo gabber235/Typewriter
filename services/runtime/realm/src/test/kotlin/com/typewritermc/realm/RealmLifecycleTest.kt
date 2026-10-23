@@ -47,11 +47,9 @@ import com.typewritermc.services.libs.communicator.transport.InboundMessage
 import com.typewritermc.services.libs.communicator.transport.TransportDelivery
 import com.typewritermc.services.libs.communicator.transport.TransportError
 import com.typewritermc.services.libs.filetransfer.blob.ArtifactDigest
-import com.typewritermc.services.libs.filetransfer.blob.BlobChunk
 import com.typewritermc.services.libs.filetransfer.blob.BlobMetadata
 import com.typewritermc.services.libs.filetransfer.blob.BlobResult
-import com.typewritermc.services.libs.filetransfer.blob.BlobWriteSession
-import com.typewritermc.services.libs.filetransfer.blob.TransferId
+import com.typewritermc.services.libs.filetransfer.blob.StoreResult
 import com.typewritermc.services.libs.telemetry.ErrorSlug
 import com.typewritermc.services.libs.telemetry.MainSpanScope
 import com.typewritermc.services.libs.telemetry.mainSpan
@@ -593,7 +591,6 @@ private class RealmLifecycleFixture(
 
 private class InMemorySharedArtifacts : SharedArtifactAccess {
     private val artifacts = mutableMapOf<ArtifactDigest, ByteArray>()
-    private val writes = mutableMapOf<TransferId, PendingBlobWrite>()
     var completedWrites = 0
         private set
 
@@ -602,44 +599,19 @@ private class InMemorySharedArtifacts : SharedArtifactAccess {
             ?.let { BlobResult.Success(BlobMetadata(digest, it.size.toLong())) }
             ?: BlobResult.NotFound
 
-    override suspend fun read(
-        digest: ArtifactDigest,
-        offset: Long,
-        maximumBytes: Int,
-    ): BlobResult<BlobChunk> {
-        val value = artifacts[digest] ?: return BlobResult.NotFound
-        val start = offset.toInt().coerceAtMost(value.size)
-        val end = (start + maximumBytes).coerceAtMost(value.size)
-        return BlobResult.Success(BlobChunk(offset, value.copyOfRange(start, end), end == value.size))
-    }
+    override suspend fun fetch(digest: ArtifactDigest): BlobResult<ByteArray> =
+        artifacts[digest]?.let { BlobResult.Success(it.copyOf()) } ?: BlobResult.NotFound
 
-    override suspend fun beginWrite(
-        transfer: TransferId,
+    override suspend fun store(
         expected: BlobMetadata,
-    ): BlobResult<BlobWriteSession> {
-        writes[transfer] = PendingBlobWrite(expected)
-        return BlobResult.Success(BlobWriteSession(transfer, expected, 0))
-    }
-
-    override suspend fun write(
-        transfer: TransferId,
-        offset: Long,
-        bytes: ByteArray,
-    ): BlobResult<Long> {
-        val pending = writes.getValue(transfer)
-        if (pending.bytes.size.toLong() != offset) return BlobResult.Conflict("Unexpected write offset.")
-        pending.bytes += bytes
-        return BlobResult.Success(pending.bytes.size.toLong())
-    }
-
-    override suspend fun complete(transfer: TransferId): BlobResult<BlobMetadata> {
-        val pending = writes.remove(transfer) ?: return BlobResult.NotFound
-        if (ArtifactDigest.sha256(pending.bytes) != pending.expected.digest) {
-            return BlobResult.Invalid("Digest mismatch.")
+        content: ByteArray,
+    ): StoreResult {
+        if (content.size.toLong() != expected.size || ArtifactDigest.sha256(content) != expected.digest) {
+            return StoreResult.Invalid("Content does not match its metadata.")
         }
-        artifacts[pending.expected.digest] = pending.bytes
+        artifacts[expected.digest] = content.copyOf()
         completedWrites++
-        return BlobResult.Success(pending.expected)
+        return StoreResult.Stored(expected)
     }
 
     override suspend fun publish(command: PublishSharedArtifact): PublishResult = error("Catalog writes are not used.")
@@ -651,11 +623,6 @@ private class InMemorySharedArtifacts : SharedArtifactAccess {
     ): PublishResult = error("Catalog deletes are not used.")
 
     override suspend fun catalog() = SharedArtifactCatalog(SharedCatalogRevision(0), emptyList())
-
-    private data class PendingBlobWrite(
-        val expected: BlobMetadata,
-        var bytes: ByteArray = byteArrayOf(),
-    )
 }
 
 private data class TestSession(

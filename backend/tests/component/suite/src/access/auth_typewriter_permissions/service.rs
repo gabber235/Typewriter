@@ -211,10 +211,8 @@ async fn attached_service_receives_only_its_realm_permissions(
         "shared.catalog.fetch",
         "shared.publish",
         "shared.blob.metadata",
-        "shared.blob.read",
-        "shared.blob.begin",
-        "shared.blob.write",
-        "shared.blob.complete",
+        "shared.blob.fetch",
+        "shared.blob.store",
     ] {
         assert!(publish.contains(&format!(
             "service.to.quests.organization.writers.realm.{suffix}"
@@ -301,11 +299,9 @@ async fn realm_service_executes_realm_routes_and_coordinates_hosts(
         "editor.authoring.publish",
         "editor.authoring.publication.watch",
         "editor.authoring.compiled.status.query",
-        "shared.blob.begin",
-        "shared.blob.complete",
+        "shared.blob.fetch",
         "shared.blob.metadata",
-        "shared.blob.read",
-        "shared.blob.write",
+        "shared.blob.store",
         "shared.catalog.fetch",
         "shared.publish",
     ] {
@@ -339,10 +335,8 @@ async fn realm_service_executes_realm_routes_and_coordinates_hosts(
         "shared.catalog.fetch",
         "shared.publish",
         "shared.blob.metadata",
-        "shared.blob.read",
-        "shared.blob.begin",
-        "shared.blob.write",
-        "shared.blob.complete",
+        "shared.blob.fetch",
+        "shared.blob.store",
     ] {
         assert!(publish.contains(&format!(
             "service.to.quests.organization.writers.realm.{suffix}"

@@ -11,8 +11,7 @@ import com.typewritermc.services.libs.filetransfer.blob.ArtifactDigest
 import com.typewritermc.services.libs.filetransfer.blob.BlobEndpoint
 import com.typewritermc.services.libs.filetransfer.blob.BlobMetadata
 import com.typewritermc.services.libs.filetransfer.blob.BlobResult
-import com.typewritermc.services.libs.filetransfer.blob.DEFAULT_CHUNK_SIZE
-import com.typewritermc.services.libs.filetransfer.blob.TransferId
+import com.typewritermc.services.libs.filetransfer.blob.requireStored
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
 import kotlinx.serialization.Serializable
@@ -43,15 +42,7 @@ class BlobProjectionRepository(
         val bytes = HostDeploymentProjectionCodec.encode(projection)
         val digest = ArtifactDigest.sha256(bytes)
         if (blobs.metadata(digest) !is BlobResult.Success) {
-            val transfer = TransferId.create()
-            blobs.beginWrite(transfer, BlobMetadata(digest, bytes.size.toLong())).requireSuccess()
-            var offset = 0
-            while (offset < bytes.size) {
-                val end = minOf(offset + DEFAULT_CHUNK_SIZE, bytes.size)
-                blobs.write(transfer, offset.toLong(), bytes.copyOfRange(offset, end)).requireSuccess()
-                offset = end
-            }
-            blobs.complete(transfer).requireSuccess()
+            blobs.store(BlobMetadata(digest, bytes.size.toLong()), bytes).requireStored()
         }
         return ProjectionReference(
             realmId = projection.realmId,
@@ -70,14 +61,7 @@ class BlobProjectionRepository(
         val blob = reference.blob.toApi()
         val metadata = blobs.metadata(blob).requireSuccess()
         require(metadata.size <= MAXIMUM_PROJECTION_SIZE) { "Deployment projection exceeds its maximum size." }
-        val bytes = ByteArray(metadata.size.toInt())
-        var offset = 0L
-        while (offset < metadata.size) {
-            val chunk = blobs.read(blob, offset, DEFAULT_CHUNK_SIZE).requireSuccess()
-            require(chunk.bytes.isNotEmpty()) { "Projection transfer ended before the declared blob size." }
-            chunk.bytes.copyInto(bytes, offset.toInt())
-            offset += chunk.bytes.size
-        }
+        val bytes = blobs.fetch(blob).requireSuccess()
         require(ArtifactDigest.sha256(bytes) == blob) { "Deployment projection digest does not match." }
         return HostDeploymentProjectionCodec.decode(bytes).also { projection ->
             require(projection.realmId == reference.realmId) { "Deployment projection belongs to another Realm." }
@@ -149,7 +133,6 @@ private fun <Value> BlobResult<Value>.requireSuccess(): Value =
         is BlobResult.Success -> value
         BlobResult.NotFound -> error("Blob was not found.")
         is BlobResult.Invalid -> error(reason)
-        is BlobResult.Conflict -> error(reason)
     }
 
 private fun readRolloutState(path: Path): StoredRolloutState =

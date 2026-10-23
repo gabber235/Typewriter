@@ -4,24 +4,26 @@ import com.typewritermc.loader.rollout.VerifiedArtifactSource
 import com.typewritermc.services.libs.filetransfer.blob.ArtifactDigest
 import com.typewritermc.services.libs.filetransfer.blob.BlobEndpoint
 import com.typewritermc.services.libs.filetransfer.blob.BlobResult
-import com.typewritermc.services.libs.filetransfer.blob.BlobTransfer
+import com.typewritermc.services.libs.filetransfer.blob.MAXIMUM_TRANSFERRED_BLOB_SIZE
+import com.typewritermc.services.libs.filetransfer.blob.requireStored
+import com.typewritermc.services.libs.filetransfer.blob.requireValue
 import java.nio.file.Path
 
 /**
  * Materializes artifact bytes in a local digest store before classpath use.
  *
- * A metadata hit returns the cached path without rehashing. Missing content is transferred sequentially and
- * verified on completion. Empty incomplete chunks fail; interrupted temporary transfers remain subject to store
- * lease cleanup.
+ * A metadata hit returns the cached path without rehashing. Missing content is fetched whole and stored locally,
+ * where the store verifies size and digest before the path becomes visible. A failed fetch leaves nothing behind.
  */
 class VerifiedArtifactCache(
     private val source: BlobEndpoint,
     private val cache: FileDigestBlobStore,
 ) : VerifiedArtifactSource {
-    /** Returns a cached path or completes a fresh transfer; each cache miss allocates a new transfer identity. */
     override suspend fun fetch(digest: ArtifactDigest): Path {
         if (cache.metadata(digest) is BlobResult.Success) return cache.pathFor(digest)
-        BlobTransfer().copyVerified(source, cache, digest)
+        val expected = source.metadata(digest).requireValue()
+        require(expected.digest == digest && expected.size <= MAXIMUM_TRANSFERRED_BLOB_SIZE) { "Artifact $digest cannot be transferred." }
+        cache.store(expected, source.fetch(digest).requireValue()).requireStored()
         return cache.pathFor(digest)
     }
 }

@@ -9,9 +9,8 @@ import com.typewritermc.services.libs.filetransfer.blob.ArtifactDigest
 import com.typewritermc.services.libs.filetransfer.blob.BlobEndpoint
 import com.typewritermc.services.libs.filetransfer.blob.BlobMetadata
 import com.typewritermc.services.libs.filetransfer.blob.BlobResult
-import com.typewritermc.services.libs.filetransfer.blob.BlobTransfer
-import com.typewritermc.services.libs.filetransfer.blob.ByteArrayBlobSource
 import com.typewritermc.services.libs.filetransfer.blob.DigestAlgorithm
+import com.typewritermc.services.libs.filetransfer.blob.requireStored
 import skirout.editor.v1.compiled_content.CompiledArtifactReference
 import skirout.editor.v1.compiled_content.CompiledBlobPointer
 import skirout.editor.v1.compiled_content.PublishedContent
@@ -30,10 +29,10 @@ class RegisteredCompiledArtifactStore(
         implementationToken: String,
         artifacts: Collection<CompiledArtifact>,
     ): PublishedContent {
-        val sources = artifacts.map { it to ByteArrayBlobSource(it.payload) }
+        val sources = artifacts.map { it to it.payload.blobMetadata() }
         retention.protect(publication.value, sources.mapTo(linkedSetOf()) { it.second.digest })
         val outputs =
-            sources.map { (artifact, source) ->
+            sources.map { (artifact, metadata) ->
                 PublishedOutput(
                     reference =
                         CompiledArtifactReference(
@@ -42,7 +41,7 @@ class RegisteredCompiledArtifactStore(
                             mediaType = artifact.mediaType,
                             semanticDigest = artifact.semanticDigest.value,
                         ),
-                    blob = BlobTransfer().copyVerified(source, blobs, source.digest).pointer(),
+                    blob = blobs.storeVerified(metadata, artifact.payload).pointer(),
                 )
             }
         return PublishedContent(
@@ -96,31 +95,49 @@ class RegisteredCompiledArtifactStore(
                     }
 
                     BlobResult.NotFound -> {
-                        val source = ByteArrayBlobSource(artifact.payload)
-                        check(
-                            source.digest == digest &&
-                                output.blob.size == artifact.payload.size.toLong(),
-                        ) {
+                        val rebuilt = artifact.payload.blobMetadata()
+                        check(rebuilt == BlobMetadata(digest, output.blob.size)) {
                             "Missing selected publication bytes cannot be rebuilt identically"
                         }
-                        source
+                        rebuilt to artifact.payload
                     }
 
                     is BlobResult.Invalid -> {
-                        error(metadata.reason)
-                    }
-
-                    is BlobResult.Conflict -> {
                         error(metadata.reason)
                     }
                 }
             }
         // Read metadata and validate all missing replacements before any writes.
         // Existing selected roots stay in place throughout repair.
-        for (source in missing) BlobTransfer().copyVerified(source, blobs, source.digest)
+        for ((metadata, payload) in missing) blobs.storeVerified(metadata, payload)
     }
 }
 
 private fun String.artifactDigest() = ArtifactDigest(DigestAlgorithm.SHA_256, this)
 
 private fun BlobMetadata.pointer() = CompiledBlobPointer(digest = digest.value, size = size)
+
+private fun ByteArray.blobMetadata() = BlobMetadata(ArtifactDigest.sha256(this), size.toLong())
+
+/**
+ * Stores [content] unless the endpoint already holds it, so unchanged outputs never travel again. Compiled payloads
+ * are produced locally, so a rejected store is a bug and fails with the store's reason.
+ */
+private suspend fun BlobEndpoint.storeVerified(
+    expected: BlobMetadata,
+    content: ByteArray,
+): BlobMetadata {
+    when (val present = metadata(expected.digest)) {
+        is BlobResult.Success -> {
+            check(present.value == expected) { "Stored blob metadata disagrees with its content" }
+            return present.value
+        }
+
+        BlobResult.NotFound -> {}
+
+        is BlobResult.Invalid -> {
+            error(present.reason)
+        }
+    }
+    return store(expected, content).requireStored()
+}

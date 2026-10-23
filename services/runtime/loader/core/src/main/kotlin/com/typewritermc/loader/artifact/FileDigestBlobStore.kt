@@ -4,59 +4,46 @@ import com.typewritermc.loader.api.artifact.PublicationBlobRetention
 import com.typewritermc.loader.api.artifact.PublicationBlobRoots
 import com.typewritermc.loader.artifactSpan
 import com.typewritermc.services.libs.filetransfer.blob.ArtifactDigest
-import com.typewritermc.services.libs.filetransfer.blob.BlobChunk
 import com.typewritermc.services.libs.filetransfer.blob.BlobEndpoint
 import com.typewritermc.services.libs.filetransfer.blob.BlobMetadata
 import com.typewritermc.services.libs.filetransfer.blob.BlobResult
-import com.typewritermc.services.libs.filetransfer.blob.BlobWriteSession
-import com.typewritermc.services.libs.filetransfer.blob.DEFAULT_CHUNK_SIZE
-import com.typewritermc.services.libs.filetransfer.blob.DigestAlgorithm
 import com.typewritermc.services.libs.filetransfer.blob.MAXIMUM_BLOB_SIZE
-import com.typewritermc.services.libs.filetransfer.blob.MAXIMUM_CHUNK_SIZE
-import com.typewritermc.services.libs.filetransfer.blob.TransferId
+import com.typewritermc.services.libs.filetransfer.blob.StoreResult
 import com.typewritermc.services.libs.telemetry.ServiceTelemetry
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
 import kotlinx.coroutines.withContext
-import java.nio.ByteBuffer
-import java.nio.channels.FileChannel
+import java.io.OutputStream
 import java.nio.file.AtomicMoveNotSupportedException
+import java.nio.file.FileAlreadyExistsException
 import java.nio.file.Files
 import java.nio.file.Path
 import java.nio.file.StandardCopyOption
-import java.nio.file.StandardOpenOption
-import java.security.DigestInputStream
+import java.security.DigestOutputStream
 import java.security.MessageDigest
 import java.time.Clock
 import java.time.Duration
-import java.time.Instant
-import java.util.Properties
 import java.util.concurrent.ConcurrentHashMap
 import kotlin.io.path.createDirectories
-import kotlin.io.path.exists
 import kotlin.io.path.fileSize
-import kotlin.io.path.inputStream
 import kotlin.io.path.isRegularFile
-import kotlin.io.path.name
-import kotlin.io.path.outputStream
 
 /**
- * Stores immutable digest addressed blobs and resumable transfer payloads on disk.
+ * Stores immutable digest addressed blobs on disk.
  *
- * Writes require the persisted offset and enforce size and chunk limits. Completion verifies SHA256 before
- * publishing bytes. Existing final files are trusted by metadata lookup rather than rehashed. Callers must
- * serialize writes to the same transfer and coordinate collection with producers; IO dispatching does not provide
- * mutual exclusion.
+ * A store writes a temporary file beside the blobs, verifies size and SHA256, and only then moves it into place,
+ * so a blob path never holds unverified content. Existing final files are trusted by metadata lookup rather than
+ * rehashed; [fetch] rehashes what it reads, so corruption on disk surfaces as invalid instead of being served.
+ * Callers coordinate collection with producers; IO dispatching does not provide mutual exclusion.
  */
 class FileDigestBlobStore(
     root: Path,
     private val clock: Clock = Clock.systemUTC(),
-    private val transferLease: Duration = Duration.ofHours(24),
     private val telemetry: ServiceTelemetry? = null,
 ) : BlobEndpoint {
     private val blobs = root.resolve("blobs").also(Path::createDirectories)
-    private val transfers = root.resolve("transfers").also(Path::createDirectories)
+    private val incoming = root.resolve("incoming").also(Path::createDirectories)
 
     private val publicationGate = Mutex()
     private val requiredRealms = ConcurrentHashMap.newKeySet<String>()
@@ -120,158 +107,80 @@ class FileDigestBlobStore(
             BlobResult.Success(BlobMetadata(digest, path.fileSize()))
         }
 
-    override suspend fun read(
-        digest: ArtifactDigest,
-        offset: Long,
-        maximumBytes: Int,
-    ): BlobResult<BlobChunk> =
+    override suspend fun fetch(digest: ArtifactDigest): BlobResult<ByteArray> =
         withContext(Dispatchers.IO) {
-            if (offset < 0) return@withContext BlobResult.Invalid("Blob offset must not be negative.")
-            if (maximumBytes !in 1..MAXIMUM_CHUNK_SIZE) {
-                return@withContext BlobResult.Invalid("Blob chunk size is outside the accepted range.")
-            }
             val path = blobPath(digest)
             if (!path.isRegularFile()) return@withContext BlobResult.NotFound
-            val size = path.fileSize()
-            if (offset > size) return@withContext BlobResult.Invalid("Blob offset exceeds its size.")
-            val requested = minOf(maximumBytes.toLong(), size - offset).toInt()
-            val bytes = ByteArray(requested)
-            FileChannel.open(path, StandardOpenOption.READ).use { channel ->
-                channel.position(offset)
-                var position = 0
-                while (position < bytes.size) {
-                    val read = channel.read(ByteBuffer.wrap(bytes, position, bytes.size - position))
-                    if (read < 0) break
-                    position += read
-                }
-            }
-            BlobResult.Success(BlobChunk(offset, bytes, offset + bytes.size == size))
+            val content = Files.readAllBytes(path)
+            if (ArtifactDigest.sha256(content) != digest) return@withContext BlobResult.Invalid("Stored blob digest does not match.")
+            BlobResult.Success(content)
         }
 
-    override suspend fun beginWrite(
-        transfer: TransferId,
+    override suspend fun store(
         expected: BlobMetadata,
-    ): BlobResult<BlobWriteSession> =
-        withContext(Dispatchers.IO) {
-            if (expected.size !in 0..MAXIMUM_BLOB_SIZE) {
-                return@withContext BlobResult.Invalid("Blob exceeds the maximum accepted size.")
-            }
-            val final = blobPath(expected.digest)
-            if (final.isRegularFile()) {
-                return@withContext BlobResult.Success(BlobWriteSession(transfer, expected, expected.size))
-            }
-            val directory = transferPath(transfer)
-            directory.createDirectories()
-            val metadata = directory.resolve("metadata.properties")
-            val payload = directory.resolve("payload")
-            if (metadata.exists()) {
-                val current = readTransfer(transfer) ?: return@withContext BlobResult.Invalid("Transfer metadata is invalid.")
-                if (current.expected != expected) {
-                    return@withContext BlobResult.Conflict("Transfer id already belongs to different content.")
-                }
-                touch(metadata)
-                return@withContext BlobResult.Success(current)
-            }
-            writeMetadata(metadata, expected)
-            FileChannel.open(payload, StandardOpenOption.CREATE_NEW, StandardOpenOption.WRITE).use { }
-            BlobResult.Success(BlobWriteSession(transfer, expected, 0))
-        }
+        content: ByteArray,
+    ): StoreResult = import(expected) { output -> output.write(content) }
 
-    override suspend fun write(
-        transfer: TransferId,
-        offset: Long,
-        bytes: ByteArray,
-    ): BlobResult<Long> =
-        withContext(Dispatchers.IO) {
-            if (bytes.size > MAXIMUM_CHUNK_SIZE) {
-                return@withContext BlobResult.Invalid("Blob chunk exceeds the maximum accepted size.")
-            }
-            val session = readTransfer(transfer) ?: return@withContext BlobResult.NotFound
-            if (offset != session.offset) {
-                return@withContext BlobResult.Conflict("Blob chunk offset differs from the persisted offset.")
-            }
-            if (offset + bytes.size > session.expected.size) {
-                return@withContext BlobResult.Invalid("Blob chunk exceeds the expected size.")
-            }
-            val payload = transferPath(transfer).resolve("payload")
-            FileChannel.open(payload, StandardOpenOption.WRITE).use { channel ->
-                channel.position(offset)
-                val buffer = ByteBuffer.wrap(bytes)
-                while (buffer.hasRemaining()) channel.write(buffer)
-                channel.force(true)
-            }
-            touch(transferPath(transfer).resolve("metadata.properties"))
-            BlobResult.Success(offset + bytes.size)
-        }
+    /** Imports a local file without loading it into memory; used for inbox artifacts above the transfer limit. */
+    suspend fun import(
+        path: Path,
+        expected: BlobMetadata,
+    ): StoreResult = import(expected) { output -> Files.newInputStream(path).use { it.copyTo(output) } }
 
-    override suspend fun complete(transfer: TransferId): BlobResult<BlobMetadata> =
-        telemetry.artifactSpan(
-            "artifact.blob.transfer",
-            "artifact-blob-transfer-failed",
-        ) { span ->
+    private suspend fun import(
+        expected: BlobMetadata,
+        write: (OutputStream) -> Unit,
+    ): StoreResult =
+        telemetry.artifactSpan("artifact.blob.store", "artifact-blob-store-failed") { span ->
+            span?.annotate {
+                attribute("blob.digest", expected.digest.value)
+                attribute("blob.bytes", expected.size)
+            }
             withContext(Dispatchers.IO) {
-                val session = readTransfer(transfer) ?: return@withContext BlobResult.NotFound
-                span?.annotate {
-                    attribute("blob.digest", session.expected.digest.value)
-                    attribute("blob.bytes", session.expected.size)
+                if (expected.size !in 0..MAXIMUM_BLOB_SIZE) {
+                    return@withContext StoreResult.Invalid("Blob exceeds the maximum accepted size.")
                 }
-                if (session.offset != session.expected.size) {
-                    return@withContext BlobResult.Conflict("Transfer is incomplete.")
-                }
-                val payload = transferPath(transfer).resolve("payload")
-                val actual = digest(payload)
-                if (actual != session.expected.digest) {
-                    return@withContext BlobResult.Invalid("Transfer digest differs from the expected digest.")
-                }
-                val target = blobPath(actual)
-                target.parent.createDirectories()
-                if (!target.exists()) moveAtomically(payload, target)
-                Files.deleteIfExists(payload)
-                Files.deleteIfExists(transferPath(transfer).resolve("metadata.properties"))
-                Files.deleteIfExists(transferPath(transfer))
-                BlobResult.Success(session.expected)
-            }
-        }
-
-    /**
-     * Removes temporary transfers whose metadata lease expired, including directories lacking metadata.
-     *
-     * Lease activity uses metadata modification time. Coordinate cleanup with writers resuming transfers.
-     */
-    suspend fun removeExpiredTransfers(): Int =
-        withContext(Dispatchers.IO) {
-            val expiredBefore = clock.instant().minus(transferLease)
-            var removed = 0
-            Files.list(transfers).use { entries ->
-                entries.filter(Files::isDirectory).forEach { directory ->
-                    val metadata = directory.resolve("metadata.properties")
-                    if (!metadata.exists() || Files.getLastModifiedTime(metadata).toInstant().isBefore(expiredBefore)) {
-                        Files.walk(directory).sorted(Comparator.reverseOrder()).forEach(Files::deleteIfExists)
-                        removed++
+                val target = blobPath(expected.digest)
+                if (target.isRegularFile()) return@withContext verifiedExisting(target, expected)
+                val temporary = Files.createTempFile(incoming, "blob", null)
+                try {
+                    val digest = MessageDigest.getInstance("SHA-256")
+                    DigestOutputStream(Files.newOutputStream(temporary), digest).use(write)
+                    val size = Files.size(temporary)
+                    if (size != expected.size) {
+                        return@withContext StoreResult.Invalid("Blob has $size bytes, expected ${expected.size}.")
                     }
+                    if (digest.digest().toHexString() != expected.digest.value) {
+                        return@withContext StoreResult.Invalid("Blob digest does not match.")
+                    }
+                    target.parent.createDirectories()
+                    moveAtomically(temporary, target)
+                    StoreResult.Stored(expected)
+                } catch (_: FileAlreadyExistsException) {
+                    verifiedExisting(target, expected)
+                } finally {
+                    Files.deleteIfExists(temporary)
                 }
             }
-            removed
         }
 
-    suspend fun activeTransferDigests(): Set<ArtifactDigest> =
-        withContext(Dispatchers.IO) {
-            Files.list(transfers).use { entries ->
-                entries
-                    .filter(Files::isDirectory)
-                    .toList()
-                    .mapNotNull { directory ->
-                        runCatching {
-                            readTransfer(TransferId(directory.fileName.toString()))?.expected?.digest
-                        }.getOrNull()
-                    }.toSet()
-            }
+    /** A concurrent or earlier store already placed this digest; its size must agree with the expectation. */
+    private fun verifiedExisting(
+        target: Path,
+        expected: BlobMetadata,
+    ): StoreResult {
+        val size = target.fileSize()
+        return if (size == expected.size) {
+            StoreResult.Stored(expected)
+        } else {
+            StoreResult.Invalid("Stored blob has $size bytes, expected ${expected.size}.")
         }
+    }
 
     /**
      * Deletes old final blobs outside the supplied protection set, using modification time and [gracePeriod].
      *
-     * This method does not discover deployment or transfer references. Supply all retention roots through
+     * This method does not discover deployment references. Supply all retention roots through
      * [DigestProtectionState] and coordinate concurrent publication.
      */
     suspend fun collectGarbage(
@@ -291,6 +200,12 @@ class FileDigestBlobStore(
         withContext(Dispatchers.IO) {
             val protectedValues = protected.mapTo(mutableSetOf()) { it.value }
             val expiredBefore = clock.instant().minus(gracePeriod)
+            // A store deletes its temporary file itself; only a process that died mid store leaves one behind.
+            Files.list(incoming).use { files ->
+                files
+                    .filter { file -> Files.getLastModifiedTime(file).toInstant().isBefore(expiredBefore) }
+                    .forEach(Files::deleteIfExists)
+            }
             var removed = 0
             Files.walk(blobs).use { paths ->
                 paths
@@ -314,55 +229,6 @@ class FileDigestBlobStore(
 
     private fun blobPath(digest: ArtifactDigest): Path = blobs.resolve(digest.value.take(2)).resolve(digest.value.drop(2))
 
-    private fun transferPath(transfer: TransferId): Path {
-        require(transfer.value.matches(Regex("[0-9a-fA-F]{8}(?:-[0-9a-fA-F]{4}){3}-[0-9a-fA-F]{12}"))) {
-            "Transfer id must be a UUID."
-        }
-        return transfers.resolve(transfer.value)
-    }
-
-    private fun readTransfer(transfer: TransferId): BlobWriteSession? {
-        val directory = transferPath(transfer)
-        val metadata = directory.resolve("metadata.properties")
-        val payload = directory.resolve("payload")
-        if (!metadata.isRegularFile() || !payload.isRegularFile()) return null
-        val properties = Properties().also { values -> metadata.inputStream().use(values::load) }
-        val digest =
-            runCatching {
-                ArtifactDigest(
-                    DigestAlgorithm.valueOf(properties.getProperty("algorithm")),
-                    properties.getProperty("digest"),
-                )
-            }.getOrNull() ?: return null
-        val size = properties.getProperty("size")?.toLongOrNull() ?: return null
-        return BlobWriteSession(transfer, BlobMetadata(digest, size), payload.fileSize())
-    }
-
-    private fun writeMetadata(
-        path: Path,
-        expected: BlobMetadata,
-    ) {
-        val properties =
-            Properties().apply {
-                setProperty("algorithm", expected.digest.algorithm.name)
-                setProperty("digest", expected.digest.value)
-                setProperty("size", expected.size.toString())
-            }
-        path.outputStream(StandardOpenOption.CREATE_NEW).use { properties.store(it, null) }
-    }
-
-    private fun digest(path: Path): ArtifactDigest {
-        val messageDigest = MessageDigest.getInstance("SHA-256")
-        DigestInputStream(path.inputStream(), messageDigest).use { input ->
-            val buffer = ByteArray(DEFAULT_CHUNK_SIZE)
-            var read = input.read(buffer)
-            while (read >= 0) {
-                read = input.read(buffer)
-            }
-        }
-        return ArtifactDigest(DigestAlgorithm.SHA_256, messageDigest.digest().toHexString())
-    }
-
     private fun moveAtomically(
         source: Path,
         target: Path,
@@ -372,13 +238,5 @@ class FileDigestBlobStore(
         } catch (_: AtomicMoveNotSupportedException) {
             Files.move(source, target)
         }
-    }
-
-    private fun touch(path: Path) {
-        Files.setLastModifiedTime(
-            path,
-            java.nio.file.attribute.FileTime
-                .from(Instant.now(clock)),
-        )
     }
 }

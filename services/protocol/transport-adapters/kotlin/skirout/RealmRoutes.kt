@@ -29,13 +29,11 @@ import skirout.editor.v1.resource_operations.ResolveDropCandidates
 import skirout.editor.v1.resource_operations.ResolveResourceOperations
 import skirout.editor.v1.search.CancelRealmPresentationSearch
 import skirout.editor.v1.search.WatchRealmPresentationSearch
-import skirout.service.v1.artifact.BeginArtifactBlobWrite
-import skirout.service.v1.artifact.CompleteArtifactBlobWrite
+import skirout.service.v1.artifact.FetchArtifactBlob
 import skirout.service.v1.artifact.FetchArtifactBlobMetadata
 import skirout.service.v1.artifact.FetchSharedArtifactCatalog
 import skirout.service.v1.artifact.PublishSharedArtifact
-import skirout.service.v1.artifact.ReadArtifactBlob
-import skirout.service.v1.artifact.WriteArtifactBlobChunk
+import skirout.service.v1.artifact.StoreArtifactBlob
 import skirout.service.v1.rollout.ApplyRolloutCommand
 import skirout.service.v1.rollout.ProbeRealmHosts
 import skirout.service.v1.rollout.QueryParticipantStatus
@@ -324,52 +322,25 @@ private val fetchArtifactBlobMetadataResponsePolicy = ResponsePolicy<skirout.ser
     }
 }
 
-private val readArtifactBlobResponsePolicy = ResponsePolicy<skirout.service.v1.artifact.ReadArtifactBlobResponse>(
-    skirout.service.v1.artifact.ReadArtifactBlobResponse.InternalErrorWrapper(skirout.kernel.v1.errors.InternalError.partial()),
+private val fetchArtifactBlobResponsePolicy = ResponsePolicy<skirout.service.v1.artifact.FetchArtifactBlobResponse>(
+    skirout.service.v1.artifact.FetchArtifactBlobResponse.InternalErrorWrapper(skirout.kernel.v1.errors.InternalError.partial()),
 ) { response ->
     when (response.kind) {
-        skirout.service.v1.artifact.ReadArtifactBlobResponse.Kind.SUCCESS_WRAPPER -> ResponseClassification.success("success")
-        skirout.service.v1.artifact.ReadArtifactBlobResponse.Kind.NOT_FOUND_ERROR_WRAPPER -> ResponseClassification.domainError("not-found-error")
-        skirout.service.v1.artifact.ReadArtifactBlobResponse.Kind.INVALID_ERROR_WRAPPER -> ResponseClassification.domainError("invalid-error")
-        skirout.service.v1.artifact.ReadArtifactBlobResponse.Kind.INTERNAL_ERROR_WRAPPER -> ResponseClassification.internalError("internal-error")
+        skirout.service.v1.artifact.FetchArtifactBlobResponse.Kind.SUCCESS_WRAPPER -> ResponseClassification.success("success")
+        skirout.service.v1.artifact.FetchArtifactBlobResponse.Kind.NOT_FOUND_ERROR_WRAPPER -> ResponseClassification.domainError("not-found-error")
+        skirout.service.v1.artifact.FetchArtifactBlobResponse.Kind.INVALID_ERROR_WRAPPER -> ResponseClassification.domainError("invalid-error")
+        skirout.service.v1.artifact.FetchArtifactBlobResponse.Kind.INTERNAL_ERROR_WRAPPER -> ResponseClassification.internalError("internal-error")
         else -> ResponseClassification.internalError("unknown")
     }
 }
 
-private val beginArtifactBlobWriteResponsePolicy = ResponsePolicy<skirout.service.v1.artifact.BeginArtifactBlobWriteResponse>(
-    skirout.service.v1.artifact.BeginArtifactBlobWriteResponse.InternalErrorWrapper(skirout.kernel.v1.errors.InternalError.partial()),
+private val storeArtifactBlobResponsePolicy = ResponsePolicy<skirout.service.v1.artifact.StoreArtifactBlobResponse>(
+    skirout.service.v1.artifact.StoreArtifactBlobResponse.InternalErrorWrapper(skirout.kernel.v1.errors.InternalError.partial()),
 ) { response ->
     when (response.kind) {
-        skirout.service.v1.artifact.BeginArtifactBlobWriteResponse.Kind.ACCEPTED_WRAPPER -> ResponseClassification.success("accepted")
-        skirout.service.v1.artifact.BeginArtifactBlobWriteResponse.Kind.INVALID_ERROR_WRAPPER -> ResponseClassification.domainError("invalid-error")
-        skirout.service.v1.artifact.BeginArtifactBlobWriteResponse.Kind.CONFLICT_ERROR_WRAPPER -> ResponseClassification.domainError("conflict-error")
-        skirout.service.v1.artifact.BeginArtifactBlobWriteResponse.Kind.INTERNAL_ERROR_WRAPPER -> ResponseClassification.internalError("internal-error")
-        else -> ResponseClassification.internalError("unknown")
-    }
-}
-
-private val writeArtifactBlobChunkResponsePolicy = ResponsePolicy<skirout.service.v1.artifact.WriteArtifactBlobChunkResponse>(
-    skirout.service.v1.artifact.WriteArtifactBlobChunkResponse.InternalErrorWrapper(skirout.kernel.v1.errors.InternalError.partial()),
-) { response ->
-    when (response.kind) {
-        skirout.service.v1.artifact.WriteArtifactBlobChunkResponse.Kind.ACCEPTED_WRAPPER -> ResponseClassification.success("accepted")
-        skirout.service.v1.artifact.WriteArtifactBlobChunkResponse.Kind.NOT_FOUND_ERROR_WRAPPER -> ResponseClassification.domainError("not-found-error")
-        skirout.service.v1.artifact.WriteArtifactBlobChunkResponse.Kind.INVALID_ERROR_WRAPPER -> ResponseClassification.domainError("invalid-error")
-        skirout.service.v1.artifact.WriteArtifactBlobChunkResponse.Kind.CONFLICT_ERROR_WRAPPER -> ResponseClassification.domainError("conflict-error")
-        skirout.service.v1.artifact.WriteArtifactBlobChunkResponse.Kind.INTERNAL_ERROR_WRAPPER -> ResponseClassification.internalError("internal-error")
-        else -> ResponseClassification.internalError("unknown")
-    }
-}
-
-private val completeArtifactBlobWriteResponsePolicy = ResponsePolicy<skirout.service.v1.artifact.CompleteArtifactBlobWriteResponse>(
-    skirout.service.v1.artifact.CompleteArtifactBlobWriteResponse.InternalErrorWrapper(skirout.kernel.v1.errors.InternalError.partial()),
-) { response ->
-    when (response.kind) {
-        skirout.service.v1.artifact.CompleteArtifactBlobWriteResponse.Kind.SUCCESS_WRAPPER -> ResponseClassification.success("success")
-        skirout.service.v1.artifact.CompleteArtifactBlobWriteResponse.Kind.NOT_FOUND_ERROR_WRAPPER -> ResponseClassification.domainError("not-found-error")
-        skirout.service.v1.artifact.CompleteArtifactBlobWriteResponse.Kind.INVALID_ERROR_WRAPPER -> ResponseClassification.domainError("invalid-error")
-        skirout.service.v1.artifact.CompleteArtifactBlobWriteResponse.Kind.CONFLICT_ERROR_WRAPPER -> ResponseClassification.domainError("conflict-error")
-        skirout.service.v1.artifact.CompleteArtifactBlobWriteResponse.Kind.INTERNAL_ERROR_WRAPPER -> ResponseClassification.internalError("internal-error")
+        skirout.service.v1.artifact.StoreArtifactBlobResponse.Kind.SUCCESS_WRAPPER -> ResponseClassification.success("success")
+        skirout.service.v1.artifact.StoreArtifactBlobResponse.Kind.INVALID_ERROR_WRAPPER -> ResponseClassification.domainError("invalid-error")
+        skirout.service.v1.artifact.StoreArtifactBlobResponse.Kind.INTERNAL_ERROR_WRAPPER -> ResponseClassification.internalError("internal-error")
         else -> ResponseClassification.internalError("unknown")
     }
 }
@@ -562,28 +533,16 @@ val RealmRouteScope.sharedBlobMetadata get() = skirUnaryContract(
     address = sharedBlobMetadataRequestAddress.subscribedAt(this), responsePolicy = fetchArtifactBlobMetadataResponsePolicy,
 )
 
-private val sharedBlobReadRequestAddress = "service.to.{realm}.organization.{organization}.realm.shared.blob.read".realmTemplate()
-val RealmRouteScope.sharedBlobRead get() = skirUnaryContract(
-    method = ReadArtifactBlob, name = OperationName.of("shared.blob.read"),
-    address = sharedBlobReadRequestAddress.subscribedAt(this), responsePolicy = readArtifactBlobResponsePolicy,
+private val sharedBlobFetchRequestAddress = "service.to.{realm}.organization.{organization}.realm.shared.blob.fetch".realmTemplate()
+val RealmRouteScope.sharedBlobFetch get() = skirUnaryContract(
+    method = FetchArtifactBlob, name = OperationName.of("shared.blob.fetch"),
+    address = sharedBlobFetchRequestAddress.subscribedAt(this), responsePolicy = fetchArtifactBlobResponsePolicy,
 )
 
-private val sharedBlobBeginRequestAddress = "service.to.{realm}.organization.{organization}.realm.shared.blob.begin".realmTemplate()
-val RealmRouteScope.sharedBlobBegin get() = skirUnaryContract(
-    method = BeginArtifactBlobWrite, name = OperationName.of("shared.blob.begin"),
-    address = sharedBlobBeginRequestAddress.subscribedAt(this), responsePolicy = beginArtifactBlobWriteResponsePolicy,
-)
-
-private val sharedBlobWriteRequestAddress = "service.to.{realm}.organization.{organization}.realm.shared.blob.write".realmTemplate()
-val RealmRouteScope.sharedBlobWrite get() = skirUnaryContract(
-    method = WriteArtifactBlobChunk, name = OperationName.of("shared.blob.write"),
-    address = sharedBlobWriteRequestAddress.subscribedAt(this), responsePolicy = writeArtifactBlobChunkResponsePolicy,
-)
-
-private val sharedBlobCompleteRequestAddress = "service.to.{realm}.organization.{organization}.realm.shared.blob.complete".realmTemplate()
-val RealmRouteScope.sharedBlobComplete get() = skirUnaryContract(
-    method = CompleteArtifactBlobWrite, name = OperationName.of("shared.blob.complete"),
-    address = sharedBlobCompleteRequestAddress.subscribedAt(this), responsePolicy = completeArtifactBlobWriteResponsePolicy,
+private val sharedBlobStoreRequestAddress = "service.to.{realm}.organization.{organization}.realm.shared.blob.store".realmTemplate()
+val RealmRouteScope.sharedBlobStore get() = skirUnaryContract(
+    method = StoreArtifactBlob, name = OperationName.of("shared.blob.store"),
+    address = sharedBlobStoreRequestAddress.subscribedAt(this), responsePolicy = storeArtifactBlobResponsePolicy,
 )
 
 private val rolloutProbeRequestAddress = "service.from.{realm}.organization.{organization}.realm.rollout.probe".realmTemplate()

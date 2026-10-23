@@ -140,47 +140,6 @@ impl BlobMetadata {
 }
 
 // ==============================================================================
-// struct BlobChunk
-// ==============================================================================
-
-#[derive(Clone, Debug, PartialEq, Default)]
-pub struct BlobChunk {
-    pub offset: i64,
-    pub bytes: Vec<u8>,
-    pub complete: bool,
-    /// Set this to None when you're creating a struct.
-    pub _unrecognized: Option<crate::skir_client::UnrecognizedFields<BlobChunk>>,
-}
-
-impl BlobChunk {
-    pub fn default_ref() -> &'static BlobChunk {
-        static D: std::sync::LazyLock<BlobChunk> = std::sync::LazyLock::new(BlobChunk::default);
-        &D
-    }
-}
-
-impl BlobChunk {
-    fn _adapter() -> &'static crate::skir_client::internal::StructAdapter<BlobChunk> {
-        static ADAPTER: std::sync::LazyLock<
-            crate::skir_client::internal::StructAdapter<BlobChunk>,
-        > = std::sync::LazyLock::new(|| {
-            crate::skir_client::internal::StructAdapter::new(
-                "service/v1/artifact.skir",
-                "BlobChunk",
-                "",
-                |x: &BlobChunk| &x._unrecognized,
-                |x: &mut BlobChunk, u| x._unrecognized = u,
-            )
-        });
-        &*ADAPTER
-    }
-    pub fn serializer() -> crate::skir_client::Serializer<BlobChunk> {
-        initialize_module_serializers();
-        crate::skir_client::internal::struct_serializer_from_static(BlobChunk::_adapter())
-    }
-}
-
-// ==============================================================================
 // struct SharedArtifactDescriptor
 // ==============================================================================
 
@@ -739,962 +698,368 @@ impl PublishSharedArtifactResponse {
 }
 
 // ==============================================================================
-// struct ReadArtifactBlobRequest
+// struct FetchArtifactBlobRequest
 // ==============================================================================
 
 #[derive(Clone, Debug, PartialEq, Default)]
-pub struct ReadArtifactBlobRequest {
+pub struct FetchArtifactBlobRequest {
     pub digest: ArtifactDigest,
-    pub offset: i64,
-    pub maximum_bytes: i32,
     /// Set this to None when you're creating a struct.
-    pub _unrecognized: Option<crate::skir_client::UnrecognizedFields<ReadArtifactBlobRequest>>,
+    pub _unrecognized: Option<crate::skir_client::UnrecognizedFields<FetchArtifactBlobRequest>>,
 }
 
-impl ReadArtifactBlobRequest {
-    pub fn default_ref() -> &'static ReadArtifactBlobRequest {
-        static D: std::sync::LazyLock<ReadArtifactBlobRequest> =
-            std::sync::LazyLock::new(ReadArtifactBlobRequest::default);
+impl FetchArtifactBlobRequest {
+    pub fn default_ref() -> &'static FetchArtifactBlobRequest {
+        static D: std::sync::LazyLock<FetchArtifactBlobRequest> =
+            std::sync::LazyLock::new(FetchArtifactBlobRequest::default);
         &D
     }
 }
 
-impl ReadArtifactBlobRequest {
-    fn _adapter() -> &'static crate::skir_client::internal::StructAdapter<ReadArtifactBlobRequest> {
-        static ADAPTER: std::sync::LazyLock<
-            crate::skir_client::internal::StructAdapter<ReadArtifactBlobRequest>,
-        > = std::sync::LazyLock::new(|| {
-            crate::skir_client::internal::StructAdapter::new(
-                "service/v1/artifact.skir",
-                "ReadArtifactBlobRequest",
-                "",
-                |x: &ReadArtifactBlobRequest| &x._unrecognized,
-                |x: &mut ReadArtifactBlobRequest, u| x._unrecognized = u,
-            )
-        });
-        &*ADAPTER
-    }
-    pub fn serializer() -> crate::skir_client::Serializer<ReadArtifactBlobRequest> {
-        initialize_module_serializers();
-        crate::skir_client::internal::struct_serializer_from_static(
-            ReadArtifactBlobRequest::_adapter(),
-        )
-    }
-}
-
-// ==============================================================================
-// struct ReadArtifactBlobResponse.NotFoundError
-// ==============================================================================
-
-#[derive(Clone, Debug, PartialEq, Default)]
-pub struct ReadArtifactBlobResponse_NotFoundError {
-    /// Set this to None when you're creating a struct.
-    pub _unrecognized:
-        Option<crate::skir_client::UnrecognizedFields<ReadArtifactBlobResponse_NotFoundError>>,
-}
-
-impl ReadArtifactBlobResponse_NotFoundError {
-    pub fn default_ref() -> &'static ReadArtifactBlobResponse_NotFoundError {
-        static D: std::sync::LazyLock<ReadArtifactBlobResponse_NotFoundError> =
-            std::sync::LazyLock::new(ReadArtifactBlobResponse_NotFoundError::default);
-        &D
-    }
-}
-
-impl ReadArtifactBlobResponse_NotFoundError {
-    fn _adapter()
-    -> &'static crate::skir_client::internal::StructAdapter<ReadArtifactBlobResponse_NotFoundError>
+impl FetchArtifactBlobRequest {
+    fn _adapter() -> &'static crate::skir_client::internal::StructAdapter<FetchArtifactBlobRequest>
     {
         static ADAPTER: std::sync::LazyLock<
-            crate::skir_client::internal::StructAdapter<ReadArtifactBlobResponse_NotFoundError>,
+            crate::skir_client::internal::StructAdapter<FetchArtifactBlobRequest>,
         > = std::sync::LazyLock::new(|| {
             crate::skir_client::internal::StructAdapter::new(
                 "service/v1/artifact.skir",
-                "ReadArtifactBlobResponse.NotFoundError",
+                "FetchArtifactBlobRequest",
                 "",
-                |x: &ReadArtifactBlobResponse_NotFoundError| &x._unrecognized,
-                |x: &mut ReadArtifactBlobResponse_NotFoundError, u| x._unrecognized = u,
+                |x: &FetchArtifactBlobRequest| &x._unrecognized,
+                |x: &mut FetchArtifactBlobRequest, u| x._unrecognized = u,
             )
         });
         &*ADAPTER
     }
-    pub fn serializer() -> crate::skir_client::Serializer<ReadArtifactBlobResponse_NotFoundError> {
+    pub fn serializer() -> crate::skir_client::Serializer<FetchArtifactBlobRequest> {
         initialize_module_serializers();
         crate::skir_client::internal::struct_serializer_from_static(
-            ReadArtifactBlobResponse_NotFoundError::_adapter(),
+            FetchArtifactBlobRequest::_adapter(),
         )
     }
 }
 
 // ==============================================================================
-// struct ReadArtifactBlobResponse.InvalidError
+// struct FetchArtifactBlobResponse.Success
 // ==============================================================================
 
 #[derive(Clone, Debug, PartialEq, Default)]
-pub struct ReadArtifactBlobResponse_InvalidError {
+pub struct FetchArtifactBlobResponse_Success {
+    pub content: Vec<u8>,
+    /// Set this to None when you're creating a struct.
+    pub _unrecognized:
+        Option<crate::skir_client::UnrecognizedFields<FetchArtifactBlobResponse_Success>>,
+}
+
+impl FetchArtifactBlobResponse_Success {
+    pub fn default_ref() -> &'static FetchArtifactBlobResponse_Success {
+        static D: std::sync::LazyLock<FetchArtifactBlobResponse_Success> =
+            std::sync::LazyLock::new(FetchArtifactBlobResponse_Success::default);
+        &D
+    }
+}
+
+impl FetchArtifactBlobResponse_Success {
+    fn _adapter()
+    -> &'static crate::skir_client::internal::StructAdapter<FetchArtifactBlobResponse_Success> {
+        static ADAPTER: std::sync::LazyLock<
+            crate::skir_client::internal::StructAdapter<FetchArtifactBlobResponse_Success>,
+        > = std::sync::LazyLock::new(|| {
+            crate::skir_client::internal::StructAdapter::new(
+                "service/v1/artifact.skir",
+                "FetchArtifactBlobResponse.Success",
+                "",
+                |x: &FetchArtifactBlobResponse_Success| &x._unrecognized,
+                |x: &mut FetchArtifactBlobResponse_Success, u| x._unrecognized = u,
+            )
+        });
+        &*ADAPTER
+    }
+    pub fn serializer() -> crate::skir_client::Serializer<FetchArtifactBlobResponse_Success> {
+        initialize_module_serializers();
+        crate::skir_client::internal::struct_serializer_from_static(
+            FetchArtifactBlobResponse_Success::_adapter(),
+        )
+    }
+}
+
+// ==============================================================================
+// struct FetchArtifactBlobResponse.NotFoundError
+// ==============================================================================
+
+#[derive(Clone, Debug, PartialEq, Default)]
+pub struct FetchArtifactBlobResponse_NotFoundError {
+    /// Set this to None when you're creating a struct.
+    pub _unrecognized:
+        Option<crate::skir_client::UnrecognizedFields<FetchArtifactBlobResponse_NotFoundError>>,
+}
+
+impl FetchArtifactBlobResponse_NotFoundError {
+    pub fn default_ref() -> &'static FetchArtifactBlobResponse_NotFoundError {
+        static D: std::sync::LazyLock<FetchArtifactBlobResponse_NotFoundError> =
+            std::sync::LazyLock::new(FetchArtifactBlobResponse_NotFoundError::default);
+        &D
+    }
+}
+
+impl FetchArtifactBlobResponse_NotFoundError {
+    fn _adapter()
+    -> &'static crate::skir_client::internal::StructAdapter<FetchArtifactBlobResponse_NotFoundError>
+    {
+        static ADAPTER: std::sync::LazyLock<
+            crate::skir_client::internal::StructAdapter<FetchArtifactBlobResponse_NotFoundError>,
+        > = std::sync::LazyLock::new(|| {
+            crate::skir_client::internal::StructAdapter::new(
+                "service/v1/artifact.skir",
+                "FetchArtifactBlobResponse.NotFoundError",
+                "",
+                |x: &FetchArtifactBlobResponse_NotFoundError| &x._unrecognized,
+                |x: &mut FetchArtifactBlobResponse_NotFoundError, u| x._unrecognized = u,
+            )
+        });
+        &*ADAPTER
+    }
+    pub fn serializer() -> crate::skir_client::Serializer<FetchArtifactBlobResponse_NotFoundError> {
+        initialize_module_serializers();
+        crate::skir_client::internal::struct_serializer_from_static(
+            FetchArtifactBlobResponse_NotFoundError::_adapter(),
+        )
+    }
+}
+
+// ==============================================================================
+// struct FetchArtifactBlobResponse.InvalidError
+// ==============================================================================
+
+#[derive(Clone, Debug, PartialEq, Default)]
+pub struct FetchArtifactBlobResponse_InvalidError {
     pub reason: String,
     /// Set this to None when you're creating a struct.
     pub _unrecognized:
-        Option<crate::skir_client::UnrecognizedFields<ReadArtifactBlobResponse_InvalidError>>,
+        Option<crate::skir_client::UnrecognizedFields<FetchArtifactBlobResponse_InvalidError>>,
 }
 
-impl ReadArtifactBlobResponse_InvalidError {
-    pub fn default_ref() -> &'static ReadArtifactBlobResponse_InvalidError {
-        static D: std::sync::LazyLock<ReadArtifactBlobResponse_InvalidError> =
-            std::sync::LazyLock::new(ReadArtifactBlobResponse_InvalidError::default);
+impl FetchArtifactBlobResponse_InvalidError {
+    pub fn default_ref() -> &'static FetchArtifactBlobResponse_InvalidError {
+        static D: std::sync::LazyLock<FetchArtifactBlobResponse_InvalidError> =
+            std::sync::LazyLock::new(FetchArtifactBlobResponse_InvalidError::default);
         &D
     }
 }
 
-impl ReadArtifactBlobResponse_InvalidError {
+impl FetchArtifactBlobResponse_InvalidError {
     fn _adapter()
-    -> &'static crate::skir_client::internal::StructAdapter<ReadArtifactBlobResponse_InvalidError>
+    -> &'static crate::skir_client::internal::StructAdapter<FetchArtifactBlobResponse_InvalidError>
     {
         static ADAPTER: std::sync::LazyLock<
-            crate::skir_client::internal::StructAdapter<ReadArtifactBlobResponse_InvalidError>,
+            crate::skir_client::internal::StructAdapter<FetchArtifactBlobResponse_InvalidError>,
         > = std::sync::LazyLock::new(|| {
             crate::skir_client::internal::StructAdapter::new(
                 "service/v1/artifact.skir",
-                "ReadArtifactBlobResponse.InvalidError",
+                "FetchArtifactBlobResponse.InvalidError",
                 "",
-                |x: &ReadArtifactBlobResponse_InvalidError| &x._unrecognized,
-                |x: &mut ReadArtifactBlobResponse_InvalidError, u| x._unrecognized = u,
+                |x: &FetchArtifactBlobResponse_InvalidError| &x._unrecognized,
+                |x: &mut FetchArtifactBlobResponse_InvalidError, u| x._unrecognized = u,
             )
         });
         &*ADAPTER
     }
-    pub fn serializer() -> crate::skir_client::Serializer<ReadArtifactBlobResponse_InvalidError> {
+    pub fn serializer() -> crate::skir_client::Serializer<FetchArtifactBlobResponse_InvalidError> {
         initialize_module_serializers();
         crate::skir_client::internal::struct_serializer_from_static(
-            ReadArtifactBlobResponse_InvalidError::_adapter(),
+            FetchArtifactBlobResponse_InvalidError::_adapter(),
         )
     }
 }
 
 // ==============================================================================
-// enum ReadArtifactBlobResponse
+// enum FetchArtifactBlobResponse
 // ==============================================================================
 
 #[derive(Debug, Clone, PartialEq)]
-pub enum ReadArtifactBlobResponse {
-    Unknown(Option<crate::skir_client::UnrecognizedVariant<ReadArtifactBlobResponse>>),
-    Success(Box<BlobChunk>),
-    NotFoundError(Box<ReadArtifactBlobResponse_NotFoundError>),
-    InvalidError(Box<ReadArtifactBlobResponse_InvalidError>),
+pub enum FetchArtifactBlobResponse {
+    Unknown(Option<crate::skir_client::UnrecognizedVariant<FetchArtifactBlobResponse>>),
+    Success(Box<FetchArtifactBlobResponse_Success>),
+    NotFoundError(Box<FetchArtifactBlobResponse_NotFoundError>),
+    InvalidError(Box<FetchArtifactBlobResponse_InvalidError>),
     InternalError(Box<crate::skirout::base::kernel::v1::errors::InternalError>),
 }
 
-impl Default for ReadArtifactBlobResponse {
+impl Default for FetchArtifactBlobResponse {
     fn default() -> Self {
-        ReadArtifactBlobResponse::Unknown(None)
+        FetchArtifactBlobResponse::Unknown(None)
     }
 }
 
-impl ReadArtifactBlobResponse {
-    fn _adapter() -> &'static crate::skir_client::internal::EnumAdapter<ReadArtifactBlobResponse> {
+impl FetchArtifactBlobResponse {
+    fn _adapter() -> &'static crate::skir_client::internal::EnumAdapter<FetchArtifactBlobResponse> {
         static ADAPTER: std::sync::LazyLock<
-            crate::skir_client::internal::EnumAdapter<ReadArtifactBlobResponse>,
+            crate::skir_client::internal::EnumAdapter<FetchArtifactBlobResponse>,
         > = std::sync::LazyLock::new(|| {
             crate::skir_client::internal::EnumAdapter::new(
-                |x: &ReadArtifactBlobResponse| match x {
-                    ReadArtifactBlobResponse::Unknown(_) => 0,
-                    ReadArtifactBlobResponse::Success(_) => 1,
-                    ReadArtifactBlobResponse::NotFoundError(_) => 2,
-                    ReadArtifactBlobResponse::InvalidError(_) => 3,
-                    ReadArtifactBlobResponse::InternalError(_) => 4,
+                |x: &FetchArtifactBlobResponse| match x {
+                    FetchArtifactBlobResponse::Unknown(_) => 0,
+                    FetchArtifactBlobResponse::Success(_) => 1,
+                    FetchArtifactBlobResponse::NotFoundError(_) => 2,
+                    FetchArtifactBlobResponse::InvalidError(_) => 3,
+                    FetchArtifactBlobResponse::InternalError(_) => 4,
                 },
-                |u| ReadArtifactBlobResponse::Unknown(Some(u)),
-                |x: &ReadArtifactBlobResponse| match x {
-                    ReadArtifactBlobResponse::Unknown(Some(u)) => Some(u.as_ref()),
+                |u| FetchArtifactBlobResponse::Unknown(Some(u)),
+                |x: &FetchArtifactBlobResponse| match x {
+                    FetchArtifactBlobResponse::Unknown(Some(u)) => Some(u.as_ref()),
                     _ => None,
                 },
                 "service/v1/artifact.skir",
-                "ReadArtifactBlobResponse",
+                "FetchArtifactBlobResponse",
                 "",
             )
         });
         &*ADAPTER
     }
-    pub fn serializer() -> crate::skir_client::Serializer<ReadArtifactBlobResponse> {
+    pub fn serializer() -> crate::skir_client::Serializer<FetchArtifactBlobResponse> {
         initialize_module_serializers();
         crate::skir_client::internal::enum_serializer_from_static(
-            ReadArtifactBlobResponse::_adapter(),
+            FetchArtifactBlobResponse::_adapter(),
         )
     }
 }
 
 // ==============================================================================
-// struct BeginArtifactBlobWriteRequest
+// struct StoreArtifactBlobRequest
 // ==============================================================================
 
 #[derive(Clone, Debug, PartialEq, Default)]
-pub struct BeginArtifactBlobWriteRequest {
-    pub transfer_id: String,
+pub struct StoreArtifactBlobRequest {
     pub expected: BlobMetadata,
+    pub content: Vec<u8>,
     /// Set this to None when you're creating a struct.
-    pub _unrecognized:
-        Option<crate::skir_client::UnrecognizedFields<BeginArtifactBlobWriteRequest>>,
+    pub _unrecognized: Option<crate::skir_client::UnrecognizedFields<StoreArtifactBlobRequest>>,
 }
 
-impl BeginArtifactBlobWriteRequest {
-    pub fn default_ref() -> &'static BeginArtifactBlobWriteRequest {
-        static D: std::sync::LazyLock<BeginArtifactBlobWriteRequest> =
-            std::sync::LazyLock::new(BeginArtifactBlobWriteRequest::default);
+impl StoreArtifactBlobRequest {
+    pub fn default_ref() -> &'static StoreArtifactBlobRequest {
+        static D: std::sync::LazyLock<StoreArtifactBlobRequest> =
+            std::sync::LazyLock::new(StoreArtifactBlobRequest::default);
         &D
     }
 }
 
-impl BeginArtifactBlobWriteRequest {
-    fn _adapter()
-    -> &'static crate::skir_client::internal::StructAdapter<BeginArtifactBlobWriteRequest> {
-        static ADAPTER: std::sync::LazyLock<
-            crate::skir_client::internal::StructAdapter<BeginArtifactBlobWriteRequest>,
-        > = std::sync::LazyLock::new(|| {
-            crate::skir_client::internal::StructAdapter::new(
-                "service/v1/artifact.skir",
-                "BeginArtifactBlobWriteRequest",
-                "",
-                |x: &BeginArtifactBlobWriteRequest| &x._unrecognized,
-                |x: &mut BeginArtifactBlobWriteRequest, u| x._unrecognized = u,
-            )
-        });
-        &*ADAPTER
-    }
-    pub fn serializer() -> crate::skir_client::Serializer<BeginArtifactBlobWriteRequest> {
-        initialize_module_serializers();
-        crate::skir_client::internal::struct_serializer_from_static(
-            BeginArtifactBlobWriteRequest::_adapter(),
-        )
-    }
-}
-
-// ==============================================================================
-// struct BeginArtifactBlobWriteResponse.Accepted
-// ==============================================================================
-
-#[derive(Clone, Debug, PartialEq, Default)]
-pub struct BeginArtifactBlobWriteResponse_Accepted {
-    pub offset: i64,
-    /// Set this to None when you're creating a struct.
-    pub _unrecognized:
-        Option<crate::skir_client::UnrecognizedFields<BeginArtifactBlobWriteResponse_Accepted>>,
-}
-
-impl BeginArtifactBlobWriteResponse_Accepted {
-    pub fn default_ref() -> &'static BeginArtifactBlobWriteResponse_Accepted {
-        static D: std::sync::LazyLock<BeginArtifactBlobWriteResponse_Accepted> =
-            std::sync::LazyLock::new(BeginArtifactBlobWriteResponse_Accepted::default);
-        &D
-    }
-}
-
-impl BeginArtifactBlobWriteResponse_Accepted {
-    fn _adapter()
-    -> &'static crate::skir_client::internal::StructAdapter<BeginArtifactBlobWriteResponse_Accepted>
+impl StoreArtifactBlobRequest {
+    fn _adapter() -> &'static crate::skir_client::internal::StructAdapter<StoreArtifactBlobRequest>
     {
         static ADAPTER: std::sync::LazyLock<
-            crate::skir_client::internal::StructAdapter<BeginArtifactBlobWriteResponse_Accepted>,
+            crate::skir_client::internal::StructAdapter<StoreArtifactBlobRequest>,
         > = std::sync::LazyLock::new(|| {
             crate::skir_client::internal::StructAdapter::new(
                 "service/v1/artifact.skir",
-                "BeginArtifactBlobWriteResponse.Accepted",
+                "StoreArtifactBlobRequest",
                 "",
-                |x: &BeginArtifactBlobWriteResponse_Accepted| &x._unrecognized,
-                |x: &mut BeginArtifactBlobWriteResponse_Accepted, u| x._unrecognized = u,
+                |x: &StoreArtifactBlobRequest| &x._unrecognized,
+                |x: &mut StoreArtifactBlobRequest, u| x._unrecognized = u,
             )
         });
         &*ADAPTER
     }
-    pub fn serializer() -> crate::skir_client::Serializer<BeginArtifactBlobWriteResponse_Accepted> {
+    pub fn serializer() -> crate::skir_client::Serializer<StoreArtifactBlobRequest> {
         initialize_module_serializers();
         crate::skir_client::internal::struct_serializer_from_static(
-            BeginArtifactBlobWriteResponse_Accepted::_adapter(),
+            StoreArtifactBlobRequest::_adapter(),
         )
     }
 }
 
 // ==============================================================================
-// struct BeginArtifactBlobWriteResponse.InvalidError
+// struct StoreArtifactBlobResponse.InvalidError
 // ==============================================================================
 
 #[derive(Clone, Debug, PartialEq, Default)]
-pub struct BeginArtifactBlobWriteResponse_InvalidError {
+pub struct StoreArtifactBlobResponse_InvalidError {
     pub reason: String,
     /// Set this to None when you're creating a struct.
     pub _unrecognized:
-        Option<crate::skir_client::UnrecognizedFields<BeginArtifactBlobWriteResponse_InvalidError>>,
+        Option<crate::skir_client::UnrecognizedFields<StoreArtifactBlobResponse_InvalidError>>,
 }
 
-impl BeginArtifactBlobWriteResponse_InvalidError {
-    pub fn default_ref() -> &'static BeginArtifactBlobWriteResponse_InvalidError {
-        static D: std::sync::LazyLock<BeginArtifactBlobWriteResponse_InvalidError> =
-            std::sync::LazyLock::new(BeginArtifactBlobWriteResponse_InvalidError::default);
+impl StoreArtifactBlobResponse_InvalidError {
+    pub fn default_ref() -> &'static StoreArtifactBlobResponse_InvalidError {
+        static D: std::sync::LazyLock<StoreArtifactBlobResponse_InvalidError> =
+            std::sync::LazyLock::new(StoreArtifactBlobResponse_InvalidError::default);
         &D
     }
 }
 
-impl BeginArtifactBlobWriteResponse_InvalidError {
-    fn _adapter() -> &'static crate::skir_client::internal::StructAdapter<
-        BeginArtifactBlobWriteResponse_InvalidError,
-    > {
-        static ADAPTER: std::sync::LazyLock<
-            crate::skir_client::internal::StructAdapter<
-                BeginArtifactBlobWriteResponse_InvalidError,
-            >,
-        > = std::sync::LazyLock::new(|| {
-            crate::skir_client::internal::StructAdapter::new(
-                "service/v1/artifact.skir",
-                "BeginArtifactBlobWriteResponse.InvalidError",
-                "",
-                |x: &BeginArtifactBlobWriteResponse_InvalidError| &x._unrecognized,
-                |x: &mut BeginArtifactBlobWriteResponse_InvalidError, u| x._unrecognized = u,
-            )
-        });
-        &*ADAPTER
-    }
-    pub fn serializer()
-    -> crate::skir_client::Serializer<BeginArtifactBlobWriteResponse_InvalidError> {
-        initialize_module_serializers();
-        crate::skir_client::internal::struct_serializer_from_static(
-            BeginArtifactBlobWriteResponse_InvalidError::_adapter(),
-        )
-    }
-}
-
-// ==============================================================================
-// struct BeginArtifactBlobWriteResponse.ConflictError
-// ==============================================================================
-
-#[derive(Clone, Debug, PartialEq, Default)]
-pub struct BeginArtifactBlobWriteResponse_ConflictError {
-    pub reason: String,
-    /// Set this to None when you're creating a struct.
-    pub _unrecognized: Option<
-        crate::skir_client::UnrecognizedFields<BeginArtifactBlobWriteResponse_ConflictError>,
-    >,
-}
-
-impl BeginArtifactBlobWriteResponse_ConflictError {
-    pub fn default_ref() -> &'static BeginArtifactBlobWriteResponse_ConflictError {
-        static D: std::sync::LazyLock<BeginArtifactBlobWriteResponse_ConflictError> =
-            std::sync::LazyLock::new(BeginArtifactBlobWriteResponse_ConflictError::default);
-        &D
-    }
-}
-
-impl BeginArtifactBlobWriteResponse_ConflictError {
-    fn _adapter() -> &'static crate::skir_client::internal::StructAdapter<
-        BeginArtifactBlobWriteResponse_ConflictError,
-    > {
-        static ADAPTER: std::sync::LazyLock<
-            crate::skir_client::internal::StructAdapter<
-                BeginArtifactBlobWriteResponse_ConflictError,
-            >,
-        > = std::sync::LazyLock::new(|| {
-            crate::skir_client::internal::StructAdapter::new(
-                "service/v1/artifact.skir",
-                "BeginArtifactBlobWriteResponse.ConflictError",
-                "",
-                |x: &BeginArtifactBlobWriteResponse_ConflictError| &x._unrecognized,
-                |x: &mut BeginArtifactBlobWriteResponse_ConflictError, u| x._unrecognized = u,
-            )
-        });
-        &*ADAPTER
-    }
-    pub fn serializer()
-    -> crate::skir_client::Serializer<BeginArtifactBlobWriteResponse_ConflictError> {
-        initialize_module_serializers();
-        crate::skir_client::internal::struct_serializer_from_static(
-            BeginArtifactBlobWriteResponse_ConflictError::_adapter(),
-        )
-    }
-}
-
-// ==============================================================================
-// enum BeginArtifactBlobWriteResponse
-// ==============================================================================
-
-#[derive(Debug, Clone, PartialEq)]
-pub enum BeginArtifactBlobWriteResponse {
-    Unknown(Option<crate::skir_client::UnrecognizedVariant<BeginArtifactBlobWriteResponse>>),
-    Accepted(Box<BeginArtifactBlobWriteResponse_Accepted>),
-    InvalidError(Box<BeginArtifactBlobWriteResponse_InvalidError>),
-    ConflictError(Box<BeginArtifactBlobWriteResponse_ConflictError>),
-    InternalError(Box<crate::skirout::base::kernel::v1::errors::InternalError>),
-}
-
-impl Default for BeginArtifactBlobWriteResponse {
-    fn default() -> Self {
-        BeginArtifactBlobWriteResponse::Unknown(None)
-    }
-}
-
-impl BeginArtifactBlobWriteResponse {
+impl StoreArtifactBlobResponse_InvalidError {
     fn _adapter()
-    -> &'static crate::skir_client::internal::EnumAdapter<BeginArtifactBlobWriteResponse> {
-        static ADAPTER: std::sync::LazyLock<
-            crate::skir_client::internal::EnumAdapter<BeginArtifactBlobWriteResponse>,
-        > = std::sync::LazyLock::new(|| {
-            crate::skir_client::internal::EnumAdapter::new(
-                |x: &BeginArtifactBlobWriteResponse| match x {
-                    BeginArtifactBlobWriteResponse::Unknown(_) => 0,
-                    BeginArtifactBlobWriteResponse::Accepted(_) => 1,
-                    BeginArtifactBlobWriteResponse::InvalidError(_) => 2,
-                    BeginArtifactBlobWriteResponse::ConflictError(_) => 3,
-                    BeginArtifactBlobWriteResponse::InternalError(_) => 4,
-                },
-                |u| BeginArtifactBlobWriteResponse::Unknown(Some(u)),
-                |x: &BeginArtifactBlobWriteResponse| match x {
-                    BeginArtifactBlobWriteResponse::Unknown(Some(u)) => Some(u.as_ref()),
-                    _ => None,
-                },
-                "service/v1/artifact.skir",
-                "BeginArtifactBlobWriteResponse",
-                "",
-            )
-        });
-        &*ADAPTER
-    }
-    pub fn serializer() -> crate::skir_client::Serializer<BeginArtifactBlobWriteResponse> {
-        initialize_module_serializers();
-        crate::skir_client::internal::enum_serializer_from_static(
-            BeginArtifactBlobWriteResponse::_adapter(),
-        )
-    }
-}
-
-// ==============================================================================
-// struct WriteArtifactBlobChunkRequest
-// ==============================================================================
-
-#[derive(Clone, Debug, PartialEq, Default)]
-pub struct WriteArtifactBlobChunkRequest {
-    pub transfer_id: String,
-    pub offset: i64,
-    pub bytes: Vec<u8>,
-    /// Set this to None when you're creating a struct.
-    pub _unrecognized:
-        Option<crate::skir_client::UnrecognizedFields<WriteArtifactBlobChunkRequest>>,
-}
-
-impl WriteArtifactBlobChunkRequest {
-    pub fn default_ref() -> &'static WriteArtifactBlobChunkRequest {
-        static D: std::sync::LazyLock<WriteArtifactBlobChunkRequest> =
-            std::sync::LazyLock::new(WriteArtifactBlobChunkRequest::default);
-        &D
-    }
-}
-
-impl WriteArtifactBlobChunkRequest {
-    fn _adapter()
-    -> &'static crate::skir_client::internal::StructAdapter<WriteArtifactBlobChunkRequest> {
-        static ADAPTER: std::sync::LazyLock<
-            crate::skir_client::internal::StructAdapter<WriteArtifactBlobChunkRequest>,
-        > = std::sync::LazyLock::new(|| {
-            crate::skir_client::internal::StructAdapter::new(
-                "service/v1/artifact.skir",
-                "WriteArtifactBlobChunkRequest",
-                "",
-                |x: &WriteArtifactBlobChunkRequest| &x._unrecognized,
-                |x: &mut WriteArtifactBlobChunkRequest, u| x._unrecognized = u,
-            )
-        });
-        &*ADAPTER
-    }
-    pub fn serializer() -> crate::skir_client::Serializer<WriteArtifactBlobChunkRequest> {
-        initialize_module_serializers();
-        crate::skir_client::internal::struct_serializer_from_static(
-            WriteArtifactBlobChunkRequest::_adapter(),
-        )
-    }
-}
-
-// ==============================================================================
-// struct WriteArtifactBlobChunkResponse.Accepted
-// ==============================================================================
-
-#[derive(Clone, Debug, PartialEq, Default)]
-pub struct WriteArtifactBlobChunkResponse_Accepted {
-    pub offset: i64,
-    /// Set this to None when you're creating a struct.
-    pub _unrecognized:
-        Option<crate::skir_client::UnrecognizedFields<WriteArtifactBlobChunkResponse_Accepted>>,
-}
-
-impl WriteArtifactBlobChunkResponse_Accepted {
-    pub fn default_ref() -> &'static WriteArtifactBlobChunkResponse_Accepted {
-        static D: std::sync::LazyLock<WriteArtifactBlobChunkResponse_Accepted> =
-            std::sync::LazyLock::new(WriteArtifactBlobChunkResponse_Accepted::default);
-        &D
-    }
-}
-
-impl WriteArtifactBlobChunkResponse_Accepted {
-    fn _adapter()
-    -> &'static crate::skir_client::internal::StructAdapter<WriteArtifactBlobChunkResponse_Accepted>
+    -> &'static crate::skir_client::internal::StructAdapter<StoreArtifactBlobResponse_InvalidError>
     {
         static ADAPTER: std::sync::LazyLock<
-            crate::skir_client::internal::StructAdapter<WriteArtifactBlobChunkResponse_Accepted>,
+            crate::skir_client::internal::StructAdapter<StoreArtifactBlobResponse_InvalidError>,
         > = std::sync::LazyLock::new(|| {
             crate::skir_client::internal::StructAdapter::new(
                 "service/v1/artifact.skir",
-                "WriteArtifactBlobChunkResponse.Accepted",
+                "StoreArtifactBlobResponse.InvalidError",
                 "",
-                |x: &WriteArtifactBlobChunkResponse_Accepted| &x._unrecognized,
-                |x: &mut WriteArtifactBlobChunkResponse_Accepted, u| x._unrecognized = u,
+                |x: &StoreArtifactBlobResponse_InvalidError| &x._unrecognized,
+                |x: &mut StoreArtifactBlobResponse_InvalidError, u| x._unrecognized = u,
             )
         });
         &*ADAPTER
     }
-    pub fn serializer() -> crate::skir_client::Serializer<WriteArtifactBlobChunkResponse_Accepted> {
+    pub fn serializer() -> crate::skir_client::Serializer<StoreArtifactBlobResponse_InvalidError> {
         initialize_module_serializers();
         crate::skir_client::internal::struct_serializer_from_static(
-            WriteArtifactBlobChunkResponse_Accepted::_adapter(),
+            StoreArtifactBlobResponse_InvalidError::_adapter(),
         )
     }
 }
 
 // ==============================================================================
-// struct WriteArtifactBlobChunkResponse.NotFoundError
-// ==============================================================================
-
-#[derive(Clone, Debug, PartialEq, Default)]
-pub struct WriteArtifactBlobChunkResponse_NotFoundError {
-    /// Set this to None when you're creating a struct.
-    pub _unrecognized: Option<
-        crate::skir_client::UnrecognizedFields<WriteArtifactBlobChunkResponse_NotFoundError>,
-    >,
-}
-
-impl WriteArtifactBlobChunkResponse_NotFoundError {
-    pub fn default_ref() -> &'static WriteArtifactBlobChunkResponse_NotFoundError {
-        static D: std::sync::LazyLock<WriteArtifactBlobChunkResponse_NotFoundError> =
-            std::sync::LazyLock::new(WriteArtifactBlobChunkResponse_NotFoundError::default);
-        &D
-    }
-}
-
-impl WriteArtifactBlobChunkResponse_NotFoundError {
-    fn _adapter() -> &'static crate::skir_client::internal::StructAdapter<
-        WriteArtifactBlobChunkResponse_NotFoundError,
-    > {
-        static ADAPTER: std::sync::LazyLock<
-            crate::skir_client::internal::StructAdapter<
-                WriteArtifactBlobChunkResponse_NotFoundError,
-            >,
-        > = std::sync::LazyLock::new(|| {
-            crate::skir_client::internal::StructAdapter::new(
-                "service/v1/artifact.skir",
-                "WriteArtifactBlobChunkResponse.NotFoundError",
-                "",
-                |x: &WriteArtifactBlobChunkResponse_NotFoundError| &x._unrecognized,
-                |x: &mut WriteArtifactBlobChunkResponse_NotFoundError, u| x._unrecognized = u,
-            )
-        });
-        &*ADAPTER
-    }
-    pub fn serializer()
-    -> crate::skir_client::Serializer<WriteArtifactBlobChunkResponse_NotFoundError> {
-        initialize_module_serializers();
-        crate::skir_client::internal::struct_serializer_from_static(
-            WriteArtifactBlobChunkResponse_NotFoundError::_adapter(),
-        )
-    }
-}
-
-// ==============================================================================
-// struct WriteArtifactBlobChunkResponse.InvalidError
-// ==============================================================================
-
-#[derive(Clone, Debug, PartialEq, Default)]
-pub struct WriteArtifactBlobChunkResponse_InvalidError {
-    pub reason: String,
-    /// Set this to None when you're creating a struct.
-    pub _unrecognized:
-        Option<crate::skir_client::UnrecognizedFields<WriteArtifactBlobChunkResponse_InvalidError>>,
-}
-
-impl WriteArtifactBlobChunkResponse_InvalidError {
-    pub fn default_ref() -> &'static WriteArtifactBlobChunkResponse_InvalidError {
-        static D: std::sync::LazyLock<WriteArtifactBlobChunkResponse_InvalidError> =
-            std::sync::LazyLock::new(WriteArtifactBlobChunkResponse_InvalidError::default);
-        &D
-    }
-}
-
-impl WriteArtifactBlobChunkResponse_InvalidError {
-    fn _adapter() -> &'static crate::skir_client::internal::StructAdapter<
-        WriteArtifactBlobChunkResponse_InvalidError,
-    > {
-        static ADAPTER: std::sync::LazyLock<
-            crate::skir_client::internal::StructAdapter<
-                WriteArtifactBlobChunkResponse_InvalidError,
-            >,
-        > = std::sync::LazyLock::new(|| {
-            crate::skir_client::internal::StructAdapter::new(
-                "service/v1/artifact.skir",
-                "WriteArtifactBlobChunkResponse.InvalidError",
-                "",
-                |x: &WriteArtifactBlobChunkResponse_InvalidError| &x._unrecognized,
-                |x: &mut WriteArtifactBlobChunkResponse_InvalidError, u| x._unrecognized = u,
-            )
-        });
-        &*ADAPTER
-    }
-    pub fn serializer()
-    -> crate::skir_client::Serializer<WriteArtifactBlobChunkResponse_InvalidError> {
-        initialize_module_serializers();
-        crate::skir_client::internal::struct_serializer_from_static(
-            WriteArtifactBlobChunkResponse_InvalidError::_adapter(),
-        )
-    }
-}
-
-// ==============================================================================
-// struct WriteArtifactBlobChunkResponse.ConflictError
-// ==============================================================================
-
-#[derive(Clone, Debug, PartialEq, Default)]
-pub struct WriteArtifactBlobChunkResponse_ConflictError {
-    pub reason: String,
-    /// Set this to None when you're creating a struct.
-    pub _unrecognized: Option<
-        crate::skir_client::UnrecognizedFields<WriteArtifactBlobChunkResponse_ConflictError>,
-    >,
-}
-
-impl WriteArtifactBlobChunkResponse_ConflictError {
-    pub fn default_ref() -> &'static WriteArtifactBlobChunkResponse_ConflictError {
-        static D: std::sync::LazyLock<WriteArtifactBlobChunkResponse_ConflictError> =
-            std::sync::LazyLock::new(WriteArtifactBlobChunkResponse_ConflictError::default);
-        &D
-    }
-}
-
-impl WriteArtifactBlobChunkResponse_ConflictError {
-    fn _adapter() -> &'static crate::skir_client::internal::StructAdapter<
-        WriteArtifactBlobChunkResponse_ConflictError,
-    > {
-        static ADAPTER: std::sync::LazyLock<
-            crate::skir_client::internal::StructAdapter<
-                WriteArtifactBlobChunkResponse_ConflictError,
-            >,
-        > = std::sync::LazyLock::new(|| {
-            crate::skir_client::internal::StructAdapter::new(
-                "service/v1/artifact.skir",
-                "WriteArtifactBlobChunkResponse.ConflictError",
-                "",
-                |x: &WriteArtifactBlobChunkResponse_ConflictError| &x._unrecognized,
-                |x: &mut WriteArtifactBlobChunkResponse_ConflictError, u| x._unrecognized = u,
-            )
-        });
-        &*ADAPTER
-    }
-    pub fn serializer()
-    -> crate::skir_client::Serializer<WriteArtifactBlobChunkResponse_ConflictError> {
-        initialize_module_serializers();
-        crate::skir_client::internal::struct_serializer_from_static(
-            WriteArtifactBlobChunkResponse_ConflictError::_adapter(),
-        )
-    }
-}
-
-// ==============================================================================
-// enum WriteArtifactBlobChunkResponse
+// enum StoreArtifactBlobResponse
 // ==============================================================================
 
 #[derive(Debug, Clone, PartialEq)]
-pub enum WriteArtifactBlobChunkResponse {
-    Unknown(Option<crate::skir_client::UnrecognizedVariant<WriteArtifactBlobChunkResponse>>),
-    Accepted(Box<WriteArtifactBlobChunkResponse_Accepted>),
-    NotFoundError(Box<WriteArtifactBlobChunkResponse_NotFoundError>),
-    InvalidError(Box<WriteArtifactBlobChunkResponse_InvalidError>),
-    ConflictError(Box<WriteArtifactBlobChunkResponse_ConflictError>),
-    InternalError(Box<crate::skirout::base::kernel::v1::errors::InternalError>),
-}
-
-impl Default for WriteArtifactBlobChunkResponse {
-    fn default() -> Self {
-        WriteArtifactBlobChunkResponse::Unknown(None)
-    }
-}
-
-impl WriteArtifactBlobChunkResponse {
-    fn _adapter()
-    -> &'static crate::skir_client::internal::EnumAdapter<WriteArtifactBlobChunkResponse> {
-        static ADAPTER: std::sync::LazyLock<
-            crate::skir_client::internal::EnumAdapter<WriteArtifactBlobChunkResponse>,
-        > = std::sync::LazyLock::new(|| {
-            crate::skir_client::internal::EnumAdapter::new(
-                |x: &WriteArtifactBlobChunkResponse| match x {
-                    WriteArtifactBlobChunkResponse::Unknown(_) => 0,
-                    WriteArtifactBlobChunkResponse::Accepted(_) => 1,
-                    WriteArtifactBlobChunkResponse::NotFoundError(_) => 2,
-                    WriteArtifactBlobChunkResponse::InvalidError(_) => 3,
-                    WriteArtifactBlobChunkResponse::ConflictError(_) => 4,
-                    WriteArtifactBlobChunkResponse::InternalError(_) => 5,
-                },
-                |u| WriteArtifactBlobChunkResponse::Unknown(Some(u)),
-                |x: &WriteArtifactBlobChunkResponse| match x {
-                    WriteArtifactBlobChunkResponse::Unknown(Some(u)) => Some(u.as_ref()),
-                    _ => None,
-                },
-                "service/v1/artifact.skir",
-                "WriteArtifactBlobChunkResponse",
-                "",
-            )
-        });
-        &*ADAPTER
-    }
-    pub fn serializer() -> crate::skir_client::Serializer<WriteArtifactBlobChunkResponse> {
-        initialize_module_serializers();
-        crate::skir_client::internal::enum_serializer_from_static(
-            WriteArtifactBlobChunkResponse::_adapter(),
-        )
-    }
-}
-
-// ==============================================================================
-// struct CompleteArtifactBlobWriteRequest
-// ==============================================================================
-
-#[derive(Clone, Debug, PartialEq, Default)]
-pub struct CompleteArtifactBlobWriteRequest {
-    pub transfer_id: String,
-    /// Set this to None when you're creating a struct.
-    pub _unrecognized:
-        Option<crate::skir_client::UnrecognizedFields<CompleteArtifactBlobWriteRequest>>,
-}
-
-impl CompleteArtifactBlobWriteRequest {
-    pub fn default_ref() -> &'static CompleteArtifactBlobWriteRequest {
-        static D: std::sync::LazyLock<CompleteArtifactBlobWriteRequest> =
-            std::sync::LazyLock::new(CompleteArtifactBlobWriteRequest::default);
-        &D
-    }
-}
-
-impl CompleteArtifactBlobWriteRequest {
-    fn _adapter()
-    -> &'static crate::skir_client::internal::StructAdapter<CompleteArtifactBlobWriteRequest> {
-        static ADAPTER: std::sync::LazyLock<
-            crate::skir_client::internal::StructAdapter<CompleteArtifactBlobWriteRequest>,
-        > = std::sync::LazyLock::new(|| {
-            crate::skir_client::internal::StructAdapter::new(
-                "service/v1/artifact.skir",
-                "CompleteArtifactBlobWriteRequest",
-                "",
-                |x: &CompleteArtifactBlobWriteRequest| &x._unrecognized,
-                |x: &mut CompleteArtifactBlobWriteRequest, u| x._unrecognized = u,
-            )
-        });
-        &*ADAPTER
-    }
-    pub fn serializer() -> crate::skir_client::Serializer<CompleteArtifactBlobWriteRequest> {
-        initialize_module_serializers();
-        crate::skir_client::internal::struct_serializer_from_static(
-            CompleteArtifactBlobWriteRequest::_adapter(),
-        )
-    }
-}
-
-// ==============================================================================
-// struct CompleteArtifactBlobWriteResponse.NotFoundError
-// ==============================================================================
-
-#[derive(Clone, Debug, PartialEq, Default)]
-pub struct CompleteArtifactBlobWriteResponse_NotFoundError {
-    /// Set this to None when you're creating a struct.
-    pub _unrecognized: Option<
-        crate::skir_client::UnrecognizedFields<CompleteArtifactBlobWriteResponse_NotFoundError>,
-    >,
-}
-
-impl CompleteArtifactBlobWriteResponse_NotFoundError {
-    pub fn default_ref() -> &'static CompleteArtifactBlobWriteResponse_NotFoundError {
-        static D: std::sync::LazyLock<CompleteArtifactBlobWriteResponse_NotFoundError> =
-            std::sync::LazyLock::new(CompleteArtifactBlobWriteResponse_NotFoundError::default);
-        &D
-    }
-}
-
-impl CompleteArtifactBlobWriteResponse_NotFoundError {
-    fn _adapter() -> &'static crate::skir_client::internal::StructAdapter<
-        CompleteArtifactBlobWriteResponse_NotFoundError,
-    > {
-        static ADAPTER: std::sync::LazyLock<
-            crate::skir_client::internal::StructAdapter<
-                CompleteArtifactBlobWriteResponse_NotFoundError,
-            >,
-        > = std::sync::LazyLock::new(|| {
-            crate::skir_client::internal::StructAdapter::new(
-                "service/v1/artifact.skir",
-                "CompleteArtifactBlobWriteResponse.NotFoundError",
-                "",
-                |x: &CompleteArtifactBlobWriteResponse_NotFoundError| &x._unrecognized,
-                |x: &mut CompleteArtifactBlobWriteResponse_NotFoundError, u| x._unrecognized = u,
-            )
-        });
-        &*ADAPTER
-    }
-    pub fn serializer()
-    -> crate::skir_client::Serializer<CompleteArtifactBlobWriteResponse_NotFoundError> {
-        initialize_module_serializers();
-        crate::skir_client::internal::struct_serializer_from_static(
-            CompleteArtifactBlobWriteResponse_NotFoundError::_adapter(),
-        )
-    }
-}
-
-// ==============================================================================
-// struct CompleteArtifactBlobWriteResponse.InvalidError
-// ==============================================================================
-
-#[derive(Clone, Debug, PartialEq, Default)]
-pub struct CompleteArtifactBlobWriteResponse_InvalidError {
-    pub reason: String,
-    /// Set this to None when you're creating a struct.
-    pub _unrecognized: Option<
-        crate::skir_client::UnrecognizedFields<CompleteArtifactBlobWriteResponse_InvalidError>,
-    >,
-}
-
-impl CompleteArtifactBlobWriteResponse_InvalidError {
-    pub fn default_ref() -> &'static CompleteArtifactBlobWriteResponse_InvalidError {
-        static D: std::sync::LazyLock<CompleteArtifactBlobWriteResponse_InvalidError> =
-            std::sync::LazyLock::new(CompleteArtifactBlobWriteResponse_InvalidError::default);
-        &D
-    }
-}
-
-impl CompleteArtifactBlobWriteResponse_InvalidError {
-    fn _adapter() -> &'static crate::skir_client::internal::StructAdapter<
-        CompleteArtifactBlobWriteResponse_InvalidError,
-    > {
-        static ADAPTER: std::sync::LazyLock<
-            crate::skir_client::internal::StructAdapter<
-                CompleteArtifactBlobWriteResponse_InvalidError,
-            >,
-        > = std::sync::LazyLock::new(|| {
-            crate::skir_client::internal::StructAdapter::new(
-                "service/v1/artifact.skir",
-                "CompleteArtifactBlobWriteResponse.InvalidError",
-                "",
-                |x: &CompleteArtifactBlobWriteResponse_InvalidError| &x._unrecognized,
-                |x: &mut CompleteArtifactBlobWriteResponse_InvalidError, u| x._unrecognized = u,
-            )
-        });
-        &*ADAPTER
-    }
-    pub fn serializer()
-    -> crate::skir_client::Serializer<CompleteArtifactBlobWriteResponse_InvalidError> {
-        initialize_module_serializers();
-        crate::skir_client::internal::struct_serializer_from_static(
-            CompleteArtifactBlobWriteResponse_InvalidError::_adapter(),
-        )
-    }
-}
-
-// ==============================================================================
-// struct CompleteArtifactBlobWriteResponse.ConflictError
-// ==============================================================================
-
-#[derive(Clone, Debug, PartialEq, Default)]
-pub struct CompleteArtifactBlobWriteResponse_ConflictError {
-    pub reason: String,
-    /// Set this to None when you're creating a struct.
-    pub _unrecognized: Option<
-        crate::skir_client::UnrecognizedFields<CompleteArtifactBlobWriteResponse_ConflictError>,
-    >,
-}
-
-impl CompleteArtifactBlobWriteResponse_ConflictError {
-    pub fn default_ref() -> &'static CompleteArtifactBlobWriteResponse_ConflictError {
-        static D: std::sync::LazyLock<CompleteArtifactBlobWriteResponse_ConflictError> =
-            std::sync::LazyLock::new(CompleteArtifactBlobWriteResponse_ConflictError::default);
-        &D
-    }
-}
-
-impl CompleteArtifactBlobWriteResponse_ConflictError {
-    fn _adapter() -> &'static crate::skir_client::internal::StructAdapter<
-        CompleteArtifactBlobWriteResponse_ConflictError,
-    > {
-        static ADAPTER: std::sync::LazyLock<
-            crate::skir_client::internal::StructAdapter<
-                CompleteArtifactBlobWriteResponse_ConflictError,
-            >,
-        > = std::sync::LazyLock::new(|| {
-            crate::skir_client::internal::StructAdapter::new(
-                "service/v1/artifact.skir",
-                "CompleteArtifactBlobWriteResponse.ConflictError",
-                "",
-                |x: &CompleteArtifactBlobWriteResponse_ConflictError| &x._unrecognized,
-                |x: &mut CompleteArtifactBlobWriteResponse_ConflictError, u| x._unrecognized = u,
-            )
-        });
-        &*ADAPTER
-    }
-    pub fn serializer()
-    -> crate::skir_client::Serializer<CompleteArtifactBlobWriteResponse_ConflictError> {
-        initialize_module_serializers();
-        crate::skir_client::internal::struct_serializer_from_static(
-            CompleteArtifactBlobWriteResponse_ConflictError::_adapter(),
-        )
-    }
-}
-
-// ==============================================================================
-// enum CompleteArtifactBlobWriteResponse
-// ==============================================================================
-
-#[derive(Debug, Clone, PartialEq)]
-pub enum CompleteArtifactBlobWriteResponse {
-    Unknown(Option<crate::skir_client::UnrecognizedVariant<CompleteArtifactBlobWriteResponse>>),
+pub enum StoreArtifactBlobResponse {
+    Unknown(Option<crate::skir_client::UnrecognizedVariant<StoreArtifactBlobResponse>>),
     Success(Box<BlobMetadata>),
-    NotFoundError(Box<CompleteArtifactBlobWriteResponse_NotFoundError>),
-    InvalidError(Box<CompleteArtifactBlobWriteResponse_InvalidError>),
-    ConflictError(Box<CompleteArtifactBlobWriteResponse_ConflictError>),
+    InvalidError(Box<StoreArtifactBlobResponse_InvalidError>),
     InternalError(Box<crate::skirout::base::kernel::v1::errors::InternalError>),
 }
 
-impl Default for CompleteArtifactBlobWriteResponse {
+impl Default for StoreArtifactBlobResponse {
     fn default() -> Self {
-        CompleteArtifactBlobWriteResponse::Unknown(None)
+        StoreArtifactBlobResponse::Unknown(None)
     }
 }
 
-impl CompleteArtifactBlobWriteResponse {
-    fn _adapter()
-    -> &'static crate::skir_client::internal::EnumAdapter<CompleteArtifactBlobWriteResponse> {
+impl StoreArtifactBlobResponse {
+    fn _adapter() -> &'static crate::skir_client::internal::EnumAdapter<StoreArtifactBlobResponse> {
         static ADAPTER: std::sync::LazyLock<
-            crate::skir_client::internal::EnumAdapter<CompleteArtifactBlobWriteResponse>,
+            crate::skir_client::internal::EnumAdapter<StoreArtifactBlobResponse>,
         > = std::sync::LazyLock::new(|| {
             crate::skir_client::internal::EnumAdapter::new(
-                |x: &CompleteArtifactBlobWriteResponse| match x {
-                    CompleteArtifactBlobWriteResponse::Unknown(_) => 0,
-                    CompleteArtifactBlobWriteResponse::Success(_) => 1,
-                    CompleteArtifactBlobWriteResponse::NotFoundError(_) => 2,
-                    CompleteArtifactBlobWriteResponse::InvalidError(_) => 3,
-                    CompleteArtifactBlobWriteResponse::ConflictError(_) => 4,
-                    CompleteArtifactBlobWriteResponse::InternalError(_) => 5,
+                |x: &StoreArtifactBlobResponse| match x {
+                    StoreArtifactBlobResponse::Unknown(_) => 0,
+                    StoreArtifactBlobResponse::Success(_) => 1,
+                    StoreArtifactBlobResponse::InvalidError(_) => 2,
+                    StoreArtifactBlobResponse::InternalError(_) => 3,
                 },
-                |u| CompleteArtifactBlobWriteResponse::Unknown(Some(u)),
-                |x: &CompleteArtifactBlobWriteResponse| match x {
-                    CompleteArtifactBlobWriteResponse::Unknown(Some(u)) => Some(u.as_ref()),
+                |u| StoreArtifactBlobResponse::Unknown(Some(u)),
+                |x: &StoreArtifactBlobResponse| match x {
+                    StoreArtifactBlobResponse::Unknown(Some(u)) => Some(u.as_ref()),
                     _ => None,
                 },
                 "service/v1/artifact.skir",
-                "CompleteArtifactBlobWriteResponse",
+                "StoreArtifactBlobResponse",
                 "",
             )
         });
         &*ADAPTER
     }
-    pub fn serializer() -> crate::skir_client::Serializer<CompleteArtifactBlobWriteResponse> {
+    pub fn serializer() -> crate::skir_client::Serializer<StoreArtifactBlobResponse> {
         initialize_module_serializers();
         crate::skir_client::internal::enum_serializer_from_static(
-            CompleteArtifactBlobWriteResponse::_adapter(),
+            StoreArtifactBlobResponse::_adapter(),
         )
     }
 }
@@ -1948,35 +1313,6 @@ fn initialize_module_serializers() {
                 "",
                 |x: &BlobMetadata| &x.size,
                 |x: &mut BlobMetadata, v| x.size = v,
-            );
-            (*a).finalize();
-        }
-        unsafe {
-            let a: *mut crate::skir_client::internal::StructAdapter<BlobChunk> =
-                BlobChunk::_adapter() as *const _ as *mut _;
-            (*a).add_field(
-                "offset",
-                0,
-                crate::skir_client::Serializer::int64(),
-                "",
-                |x: &BlobChunk| &x.offset,
-                |x: &mut BlobChunk, v| x.offset = v,
-            );
-            (*a).add_field(
-                "bytes",
-                1,
-                crate::skir_client::Serializer::bytes(),
-                "",
-                |x: &BlobChunk| &x.bytes,
-                |x: &mut BlobChunk, v| x.bytes = v,
-            );
-            (*a).add_field(
-                "complete",
-                2,
-                crate::skir_client::Serializer::bool(),
-                "",
-                |x: &BlobChunk| &x.complete,
-                |x: &mut BlobChunk, v| x.complete = v,
             );
             (*a).finalize();
         }
@@ -2422,8 +1758,8 @@ fn initialize_module_serializers() {
             (*a).finalize();
         }
         unsafe {
-            let a: *mut crate::skir_client::internal::StructAdapter<ReadArtifactBlobRequest> =
-                ReadArtifactBlobRequest::_adapter() as *const _ as *mut _;
+            let a: *mut crate::skir_client::internal::StructAdapter<FetchArtifactBlobRequest> =
+                FetchArtifactBlobRequest::_adapter() as *const _ as *mut _;
             (*a).add_field(
                 "digest",
                 0,
@@ -2431,319 +1767,59 @@ fn initialize_module_serializers() {
                     ArtifactDigest::_adapter(),
                 ),
                 "",
-                |x: &ReadArtifactBlobRequest| &x.digest,
-                |x: &mut ReadArtifactBlobRequest, v| x.digest = v,
-            );
-            (*a).add_field(
-                "offset",
-                1,
-                crate::skir_client::Serializer::int64(),
-                "",
-                |x: &ReadArtifactBlobRequest| &x.offset,
-                |x: &mut ReadArtifactBlobRequest, v| x.offset = v,
-            );
-            (*a).add_field(
-                "maximum_bytes",
-                2,
-                crate::skir_client::Serializer::int32(),
-                "",
-                |x: &ReadArtifactBlobRequest| &x.maximum_bytes,
-                |x: &mut ReadArtifactBlobRequest, v| x.maximum_bytes = v,
+                |x: &FetchArtifactBlobRequest| &x.digest,
+                |x: &mut FetchArtifactBlobRequest, v| x.digest = v,
             );
             (*a).finalize();
         }
         unsafe {
             let a: *mut crate::skir_client::internal::StructAdapter<
-                ReadArtifactBlobResponse_NotFoundError,
-            > = ReadArtifactBlobResponse_NotFoundError::_adapter() as *const _ as *mut _;
-            (*a).finalize();
-        }
-        unsafe {
-            let a: *mut crate::skir_client::internal::StructAdapter<
-                ReadArtifactBlobResponse_InvalidError,
-            > = ReadArtifactBlobResponse_InvalidError::_adapter() as *const _ as *mut _;
+                FetchArtifactBlobResponse_Success,
+            > = FetchArtifactBlobResponse_Success::_adapter() as *const _ as *mut _;
             (*a).add_field(
-                "reason",
+                "content",
                 0,
-                crate::skir_client::Serializer::string(),
-                "",
-                |x: &ReadArtifactBlobResponse_InvalidError| &x.reason,
-                |x: &mut ReadArtifactBlobResponse_InvalidError, v| x.reason = v,
-            );
-            (*a).finalize();
-        }
-        unsafe {
-            let a: *mut crate::skir_client::internal::EnumAdapter<ReadArtifactBlobResponse> =
-                ReadArtifactBlobResponse::_adapter() as *const _ as *mut _;
-            (*a).add_wrapper_variant(
-                "success",
-                1,
-                1,
-                crate::skir_client::internal::struct_serializer_from_static(BlobChunk::_adapter()),
-                "",
-                |v| ReadArtifactBlobResponse::Success(Box::new(v)),
-                |x| match x {
-                    ReadArtifactBlobResponse::Success(b) => b.as_ref(),
-                    _ => unreachable!(),
-                },
-            );
-            (*a).add_wrapper_variant(
-                "not_found_error",
-                2,
-                2,
-                crate::skir_client::internal::struct_serializer_from_static(
-                    ReadArtifactBlobResponse_NotFoundError::_adapter(),
-                ),
-                "",
-                |v| ReadArtifactBlobResponse::NotFoundError(Box::new(v)),
-                |x| match x {
-                    ReadArtifactBlobResponse::NotFoundError(b) => b.as_ref(),
-                    _ => unreachable!(),
-                },
-            );
-            (*a).add_wrapper_variant(
-                "invalid_error",
-                3,
-                3,
-                crate::skir_client::internal::struct_serializer_from_static(
-                    ReadArtifactBlobResponse_InvalidError::_adapter(),
-                ),
-                "",
-                |v| ReadArtifactBlobResponse::InvalidError(Box::new(v)),
-                |x| match x {
-                    ReadArtifactBlobResponse::InvalidError(b) => b.as_ref(),
-                    _ => unreachable!(),
-                },
-            );
-            (*a).add_wrapper_variant(
-                "internal_error",
-                4,
-                4,
-                crate::skirout::base::kernel::v1::errors::InternalError::serializer(),
-                "",
-                |v| ReadArtifactBlobResponse::InternalError(Box::new(v)),
-                |x| match x {
-                    ReadArtifactBlobResponse::InternalError(b) => b.as_ref(),
-                    _ => unreachable!(),
-                },
-            );
-            (*a).finalize();
-        }
-        unsafe {
-            let a: *mut crate::skir_client::internal::StructAdapter<BeginArtifactBlobWriteRequest> =
-                BeginArtifactBlobWriteRequest::_adapter() as *const _ as *mut _;
-            (*a).add_field(
-                "transfer_id",
-                0,
-                crate::skir_client::Serializer::string(),
-                "",
-                |x: &BeginArtifactBlobWriteRequest| &x.transfer_id,
-                |x: &mut BeginArtifactBlobWriteRequest, v| x.transfer_id = v,
-            );
-            (*a).add_field(
-                "expected",
-                1,
-                crate::skir_client::internal::struct_serializer_from_static(
-                    BlobMetadata::_adapter(),
-                ),
-                "",
-                |x: &BeginArtifactBlobWriteRequest| &x.expected,
-                |x: &mut BeginArtifactBlobWriteRequest, v| x.expected = v,
-            );
-            (*a).finalize();
-        }
-        unsafe {
-            let a: *mut crate::skir_client::internal::StructAdapter<
-                BeginArtifactBlobWriteResponse_Accepted,
-            > = BeginArtifactBlobWriteResponse_Accepted::_adapter() as *const _ as *mut _;
-            (*a).add_field(
-                "offset",
-                0,
-                crate::skir_client::Serializer::int64(),
-                "",
-                |x: &BeginArtifactBlobWriteResponse_Accepted| &x.offset,
-                |x: &mut BeginArtifactBlobWriteResponse_Accepted, v| x.offset = v,
-            );
-            (*a).finalize();
-        }
-        unsafe {
-            let a: *mut crate::skir_client::internal::StructAdapter<
-                BeginArtifactBlobWriteResponse_InvalidError,
-            > = BeginArtifactBlobWriteResponse_InvalidError::_adapter() as *const _ as *mut _;
-            (*a).add_field(
-                "reason",
-                0,
-                crate::skir_client::Serializer::string(),
-                "",
-                |x: &BeginArtifactBlobWriteResponse_InvalidError| &x.reason,
-                |x: &mut BeginArtifactBlobWriteResponse_InvalidError, v| x.reason = v,
-            );
-            (*a).finalize();
-        }
-        unsafe {
-            let a: *mut crate::skir_client::internal::StructAdapter<
-                BeginArtifactBlobWriteResponse_ConflictError,
-            > = BeginArtifactBlobWriteResponse_ConflictError::_adapter() as *const _ as *mut _;
-            (*a).add_field(
-                "reason",
-                0,
-                crate::skir_client::Serializer::string(),
-                "",
-                |x: &BeginArtifactBlobWriteResponse_ConflictError| &x.reason,
-                |x: &mut BeginArtifactBlobWriteResponse_ConflictError, v| x.reason = v,
-            );
-            (*a).finalize();
-        }
-        unsafe {
-            let a: *mut crate::skir_client::internal::EnumAdapter<BeginArtifactBlobWriteResponse> =
-                BeginArtifactBlobWriteResponse::_adapter() as *const _ as *mut _;
-            (*a).add_wrapper_variant(
-                "accepted",
-                1,
-                1,
-                crate::skir_client::internal::struct_serializer_from_static(
-                    BeginArtifactBlobWriteResponse_Accepted::_adapter(),
-                ),
-                "",
-                |v| BeginArtifactBlobWriteResponse::Accepted(Box::new(v)),
-                |x| match x {
-                    BeginArtifactBlobWriteResponse::Accepted(b) => b.as_ref(),
-                    _ => unreachable!(),
-                },
-            );
-            (*a).add_wrapper_variant(
-                "invalid_error",
-                2,
-                2,
-                crate::skir_client::internal::struct_serializer_from_static(
-                    BeginArtifactBlobWriteResponse_InvalidError::_adapter(),
-                ),
-                "",
-                |v| BeginArtifactBlobWriteResponse::InvalidError(Box::new(v)),
-                |x| match x {
-                    BeginArtifactBlobWriteResponse::InvalidError(b) => b.as_ref(),
-                    _ => unreachable!(),
-                },
-            );
-            (*a).add_wrapper_variant(
-                "conflict_error",
-                3,
-                3,
-                crate::skir_client::internal::struct_serializer_from_static(
-                    BeginArtifactBlobWriteResponse_ConflictError::_adapter(),
-                ),
-                "",
-                |v| BeginArtifactBlobWriteResponse::ConflictError(Box::new(v)),
-                |x| match x {
-                    BeginArtifactBlobWriteResponse::ConflictError(b) => b.as_ref(),
-                    _ => unreachable!(),
-                },
-            );
-            (*a).add_wrapper_variant(
-                "internal_error",
-                4,
-                4,
-                crate::skirout::base::kernel::v1::errors::InternalError::serializer(),
-                "",
-                |v| BeginArtifactBlobWriteResponse::InternalError(Box::new(v)),
-                |x| match x {
-                    BeginArtifactBlobWriteResponse::InternalError(b) => b.as_ref(),
-                    _ => unreachable!(),
-                },
-            );
-            (*a).finalize();
-        }
-        unsafe {
-            let a: *mut crate::skir_client::internal::StructAdapter<WriteArtifactBlobChunkRequest> =
-                WriteArtifactBlobChunkRequest::_adapter() as *const _ as *mut _;
-            (*a).add_field(
-                "transfer_id",
-                0,
-                crate::skir_client::Serializer::string(),
-                "",
-                |x: &WriteArtifactBlobChunkRequest| &x.transfer_id,
-                |x: &mut WriteArtifactBlobChunkRequest, v| x.transfer_id = v,
-            );
-            (*a).add_field(
-                "offset",
-                1,
-                crate::skir_client::Serializer::int64(),
-                "",
-                |x: &WriteArtifactBlobChunkRequest| &x.offset,
-                |x: &mut WriteArtifactBlobChunkRequest, v| x.offset = v,
-            );
-            (*a).add_field(
-                "bytes",
-                2,
                 crate::skir_client::Serializer::bytes(),
                 "",
-                |x: &WriteArtifactBlobChunkRequest| &x.bytes,
-                |x: &mut WriteArtifactBlobChunkRequest, v| x.bytes = v,
+                |x: &FetchArtifactBlobResponse_Success| &x.content,
+                |x: &mut FetchArtifactBlobResponse_Success, v| x.content = v,
             );
             (*a).finalize();
         }
         unsafe {
             let a: *mut crate::skir_client::internal::StructAdapter<
-                WriteArtifactBlobChunkResponse_Accepted,
-            > = WriteArtifactBlobChunkResponse_Accepted::_adapter() as *const _ as *mut _;
-            (*a).add_field(
-                "offset",
-                0,
-                crate::skir_client::Serializer::int64(),
-                "",
-                |x: &WriteArtifactBlobChunkResponse_Accepted| &x.offset,
-                |x: &mut WriteArtifactBlobChunkResponse_Accepted, v| x.offset = v,
-            );
+                FetchArtifactBlobResponse_NotFoundError,
+            > = FetchArtifactBlobResponse_NotFoundError::_adapter() as *const _ as *mut _;
             (*a).finalize();
         }
         unsafe {
             let a: *mut crate::skir_client::internal::StructAdapter<
-                WriteArtifactBlobChunkResponse_NotFoundError,
-            > = WriteArtifactBlobChunkResponse_NotFoundError::_adapter() as *const _ as *mut _;
-            (*a).finalize();
-        }
-        unsafe {
-            let a: *mut crate::skir_client::internal::StructAdapter<
-                WriteArtifactBlobChunkResponse_InvalidError,
-            > = WriteArtifactBlobChunkResponse_InvalidError::_adapter() as *const _ as *mut _;
+                FetchArtifactBlobResponse_InvalidError,
+            > = FetchArtifactBlobResponse_InvalidError::_adapter() as *const _ as *mut _;
             (*a).add_field(
                 "reason",
                 0,
                 crate::skir_client::Serializer::string(),
                 "",
-                |x: &WriteArtifactBlobChunkResponse_InvalidError| &x.reason,
-                |x: &mut WriteArtifactBlobChunkResponse_InvalidError, v| x.reason = v,
+                |x: &FetchArtifactBlobResponse_InvalidError| &x.reason,
+                |x: &mut FetchArtifactBlobResponse_InvalidError, v| x.reason = v,
             );
             (*a).finalize();
         }
         unsafe {
-            let a: *mut crate::skir_client::internal::StructAdapter<
-                WriteArtifactBlobChunkResponse_ConflictError,
-            > = WriteArtifactBlobChunkResponse_ConflictError::_adapter() as *const _ as *mut _;
-            (*a).add_field(
-                "reason",
-                0,
-                crate::skir_client::Serializer::string(),
-                "",
-                |x: &WriteArtifactBlobChunkResponse_ConflictError| &x.reason,
-                |x: &mut WriteArtifactBlobChunkResponse_ConflictError, v| x.reason = v,
-            );
-            (*a).finalize();
-        }
-        unsafe {
-            let a: *mut crate::skir_client::internal::EnumAdapter<WriteArtifactBlobChunkResponse> =
-                WriteArtifactBlobChunkResponse::_adapter() as *const _ as *mut _;
+            let a: *mut crate::skir_client::internal::EnumAdapter<FetchArtifactBlobResponse> =
+                FetchArtifactBlobResponse::_adapter() as *const _ as *mut _;
             (*a).add_wrapper_variant(
-                "accepted",
+                "success",
                 1,
                 1,
                 crate::skir_client::internal::struct_serializer_from_static(
-                    WriteArtifactBlobChunkResponse_Accepted::_adapter(),
+                    FetchArtifactBlobResponse_Success::_adapter(),
                 ),
                 "",
-                |v| WriteArtifactBlobChunkResponse::Accepted(Box::new(v)),
+                |v| FetchArtifactBlobResponse::Success(Box::new(v)),
                 |x| match x {
-                    WriteArtifactBlobChunkResponse::Accepted(b) => b.as_ref(),
+                    FetchArtifactBlobResponse::Success(b) => b.as_ref(),
                     _ => unreachable!(),
                 },
             );
@@ -2752,12 +1828,12 @@ fn initialize_module_serializers() {
                 2,
                 2,
                 crate::skir_client::internal::struct_serializer_from_static(
-                    WriteArtifactBlobChunkResponse_NotFoundError::_adapter(),
+                    FetchArtifactBlobResponse_NotFoundError::_adapter(),
                 ),
                 "",
-                |v| WriteArtifactBlobChunkResponse::NotFoundError(Box::new(v)),
+                |v| FetchArtifactBlobResponse::NotFoundError(Box::new(v)),
                 |x| match x {
-                    WriteArtifactBlobChunkResponse::NotFoundError(b) => b.as_ref(),
+                    FetchArtifactBlobResponse::NotFoundError(b) => b.as_ref(),
                     _ => unreachable!(),
                 },
             );
@@ -2766,95 +1842,69 @@ fn initialize_module_serializers() {
                 3,
                 3,
                 crate::skir_client::internal::struct_serializer_from_static(
-                    WriteArtifactBlobChunkResponse_InvalidError::_adapter(),
+                    FetchArtifactBlobResponse_InvalidError::_adapter(),
                 ),
                 "",
-                |v| WriteArtifactBlobChunkResponse::InvalidError(Box::new(v)),
+                |v| FetchArtifactBlobResponse::InvalidError(Box::new(v)),
                 |x| match x {
-                    WriteArtifactBlobChunkResponse::InvalidError(b) => b.as_ref(),
-                    _ => unreachable!(),
-                },
-            );
-            (*a).add_wrapper_variant(
-                "conflict_error",
-                4,
-                4,
-                crate::skir_client::internal::struct_serializer_from_static(
-                    WriteArtifactBlobChunkResponse_ConflictError::_adapter(),
-                ),
-                "",
-                |v| WriteArtifactBlobChunkResponse::ConflictError(Box::new(v)),
-                |x| match x {
-                    WriteArtifactBlobChunkResponse::ConflictError(b) => b.as_ref(),
+                    FetchArtifactBlobResponse::InvalidError(b) => b.as_ref(),
                     _ => unreachable!(),
                 },
             );
             (*a).add_wrapper_variant(
                 "internal_error",
-                5,
-                5,
+                4,
+                4,
                 crate::skirout::base::kernel::v1::errors::InternalError::serializer(),
                 "",
-                |v| WriteArtifactBlobChunkResponse::InternalError(Box::new(v)),
+                |v| FetchArtifactBlobResponse::InternalError(Box::new(v)),
                 |x| match x {
-                    WriteArtifactBlobChunkResponse::InternalError(b) => b.as_ref(),
+                    FetchArtifactBlobResponse::InternalError(b) => b.as_ref(),
                     _ => unreachable!(),
                 },
             );
             (*a).finalize();
         }
         unsafe {
-            let a: *mut crate::skir_client::internal::StructAdapter<
-                CompleteArtifactBlobWriteRequest,
-            > = CompleteArtifactBlobWriteRequest::_adapter() as *const _ as *mut _;
+            let a: *mut crate::skir_client::internal::StructAdapter<StoreArtifactBlobRequest> =
+                StoreArtifactBlobRequest::_adapter() as *const _ as *mut _;
             (*a).add_field(
-                "transfer_id",
+                "expected",
                 0,
-                crate::skir_client::Serializer::string(),
+                crate::skir_client::internal::struct_serializer_from_static(
+                    BlobMetadata::_adapter(),
+                ),
                 "",
-                |x: &CompleteArtifactBlobWriteRequest| &x.transfer_id,
-                |x: &mut CompleteArtifactBlobWriteRequest, v| x.transfer_id = v,
+                |x: &StoreArtifactBlobRequest| &x.expected,
+                |x: &mut StoreArtifactBlobRequest, v| x.expected = v,
+            );
+            (*a).add_field(
+                "content",
+                1,
+                crate::skir_client::Serializer::bytes(),
+                "",
+                |x: &StoreArtifactBlobRequest| &x.content,
+                |x: &mut StoreArtifactBlobRequest, v| x.content = v,
             );
             (*a).finalize();
         }
         unsafe {
             let a: *mut crate::skir_client::internal::StructAdapter<
-                CompleteArtifactBlobWriteResponse_NotFoundError,
-            > = CompleteArtifactBlobWriteResponse_NotFoundError::_adapter() as *const _ as *mut _;
-            (*a).finalize();
-        }
-        unsafe {
-            let a: *mut crate::skir_client::internal::StructAdapter<
-                CompleteArtifactBlobWriteResponse_InvalidError,
-            > = CompleteArtifactBlobWriteResponse_InvalidError::_adapter() as *const _ as *mut _;
-            (*a).add_field(
-                "reason",
-                0,
-                crate::skir_client::Serializer::string(),
-                "",
-                |x: &CompleteArtifactBlobWriteResponse_InvalidError| &x.reason,
-                |x: &mut CompleteArtifactBlobWriteResponse_InvalidError, v| x.reason = v,
-            );
-            (*a).finalize();
-        }
-        unsafe {
-            let a: *mut crate::skir_client::internal::StructAdapter<
-                CompleteArtifactBlobWriteResponse_ConflictError,
-            > = CompleteArtifactBlobWriteResponse_ConflictError::_adapter() as *const _ as *mut _;
+                StoreArtifactBlobResponse_InvalidError,
+            > = StoreArtifactBlobResponse_InvalidError::_adapter() as *const _ as *mut _;
             (*a).add_field(
                 "reason",
                 0,
                 crate::skir_client::Serializer::string(),
                 "",
-                |x: &CompleteArtifactBlobWriteResponse_ConflictError| &x.reason,
-                |x: &mut CompleteArtifactBlobWriteResponse_ConflictError, v| x.reason = v,
+                |x: &StoreArtifactBlobResponse_InvalidError| &x.reason,
+                |x: &mut StoreArtifactBlobResponse_InvalidError, v| x.reason = v,
             );
             (*a).finalize();
         }
         unsafe {
-            let a: *mut crate::skir_client::internal::EnumAdapter<
-                CompleteArtifactBlobWriteResponse,
-            > = CompleteArtifactBlobWriteResponse::_adapter() as *const _ as *mut _;
+            let a: *mut crate::skir_client::internal::EnumAdapter<StoreArtifactBlobResponse> =
+                StoreArtifactBlobResponse::_adapter() as *const _ as *mut _;
             (*a).add_wrapper_variant(
                 "success",
                 1,
@@ -2863,63 +1913,35 @@ fn initialize_module_serializers() {
                     BlobMetadata::_adapter(),
                 ),
                 "",
-                |v| CompleteArtifactBlobWriteResponse::Success(Box::new(v)),
+                |v| StoreArtifactBlobResponse::Success(Box::new(v)),
                 |x| match x {
-                    CompleteArtifactBlobWriteResponse::Success(b) => b.as_ref(),
-                    _ => unreachable!(),
-                },
-            );
-            (*a).add_wrapper_variant(
-                "not_found_error",
-                2,
-                2,
-                crate::skir_client::internal::struct_serializer_from_static(
-                    CompleteArtifactBlobWriteResponse_NotFoundError::_adapter(),
-                ),
-                "",
-                |v| CompleteArtifactBlobWriteResponse::NotFoundError(Box::new(v)),
-                |x| match x {
-                    CompleteArtifactBlobWriteResponse::NotFoundError(b) => b.as_ref(),
+                    StoreArtifactBlobResponse::Success(b) => b.as_ref(),
                     _ => unreachable!(),
                 },
             );
             (*a).add_wrapper_variant(
                 "invalid_error",
-                3,
-                3,
+                2,
+                2,
                 crate::skir_client::internal::struct_serializer_from_static(
-                    CompleteArtifactBlobWriteResponse_InvalidError::_adapter(),
+                    StoreArtifactBlobResponse_InvalidError::_adapter(),
                 ),
                 "",
-                |v| CompleteArtifactBlobWriteResponse::InvalidError(Box::new(v)),
+                |v| StoreArtifactBlobResponse::InvalidError(Box::new(v)),
                 |x| match x {
-                    CompleteArtifactBlobWriteResponse::InvalidError(b) => b.as_ref(),
-                    _ => unreachable!(),
-                },
-            );
-            (*a).add_wrapper_variant(
-                "conflict_error",
-                4,
-                4,
-                crate::skir_client::internal::struct_serializer_from_static(
-                    CompleteArtifactBlobWriteResponse_ConflictError::_adapter(),
-                ),
-                "",
-                |v| CompleteArtifactBlobWriteResponse::ConflictError(Box::new(v)),
-                |x| match x {
-                    CompleteArtifactBlobWriteResponse::ConflictError(b) => b.as_ref(),
+                    StoreArtifactBlobResponse::InvalidError(b) => b.as_ref(),
                     _ => unreachable!(),
                 },
             );
             (*a).add_wrapper_variant(
                 "internal_error",
-                5,
-                5,
+                3,
+                3,
                 crate::skirout::base::kernel::v1::errors::InternalError::serializer(),
                 "",
-                |v| CompleteArtifactBlobWriteResponse::InternalError(Box::new(v)),
+                |v| StoreArtifactBlobResponse::InternalError(Box::new(v)),
                 |x| match x {
-                    CompleteArtifactBlobWriteResponse::InternalError(b) => b.as_ref(),
+                    StoreArtifactBlobResponse::InternalError(b) => b.as_ref(),
                     _ => unreachable!(),
                 },
             );
@@ -3063,66 +2085,29 @@ pub fn publish_shared_artifact_method()
     &*METHOD
 }
 
-pub fn read_artifact_blob_method()
--> &'static crate::skir_client::Method<ReadArtifactBlobRequest, ReadArtifactBlobResponse> {
+pub fn fetch_artifact_blob_method()
+-> &'static crate::skir_client::Method<FetchArtifactBlobRequest, FetchArtifactBlobResponse> {
     static METHOD: std::sync::LazyLock<
-        crate::skir_client::Method<ReadArtifactBlobRequest, ReadArtifactBlobResponse>,
+        crate::skir_client::Method<FetchArtifactBlobRequest, FetchArtifactBlobResponse>,
     > = std::sync::LazyLock::new(|| crate::skir_client::Method {
-        name: "ReadArtifactBlob".to_string(),
+        name: "FetchArtifactBlob".to_string(),
         number: 930103_i64,
-        request_serializer: ReadArtifactBlobRequest::serializer(),
-        response_serializer: ReadArtifactBlobResponse::serializer(),
+        request_serializer: FetchArtifactBlobRequest::serializer(),
+        response_serializer: FetchArtifactBlobResponse::serializer(),
         doc: "".to_string(),
     });
     &*METHOD
 }
 
-pub fn begin_artifact_blob_write_method() -> &'static crate::skir_client::Method<
-    BeginArtifactBlobWriteRequest,
-    BeginArtifactBlobWriteResponse,
-> {
+pub fn store_artifact_blob_method()
+-> &'static crate::skir_client::Method<StoreArtifactBlobRequest, StoreArtifactBlobResponse> {
     static METHOD: std::sync::LazyLock<
-        crate::skir_client::Method<BeginArtifactBlobWriteRequest, BeginArtifactBlobWriteResponse>,
+        crate::skir_client::Method<StoreArtifactBlobRequest, StoreArtifactBlobResponse>,
     > = std::sync::LazyLock::new(|| crate::skir_client::Method {
-        name: "BeginArtifactBlobWrite".to_string(),
+        name: "StoreArtifactBlob".to_string(),
         number: 930104_i64,
-        request_serializer: BeginArtifactBlobWriteRequest::serializer(),
-        response_serializer: BeginArtifactBlobWriteResponse::serializer(),
-        doc: "".to_string(),
-    });
-    &*METHOD
-}
-
-pub fn write_artifact_blob_chunk_method() -> &'static crate::skir_client::Method<
-    WriteArtifactBlobChunkRequest,
-    WriteArtifactBlobChunkResponse,
-> {
-    static METHOD: std::sync::LazyLock<
-        crate::skir_client::Method<WriteArtifactBlobChunkRequest, WriteArtifactBlobChunkResponse>,
-    > = std::sync::LazyLock::new(|| crate::skir_client::Method {
-        name: "WriteArtifactBlobChunk".to_string(),
-        number: 930105_i64,
-        request_serializer: WriteArtifactBlobChunkRequest::serializer(),
-        response_serializer: WriteArtifactBlobChunkResponse::serializer(),
-        doc: "".to_string(),
-    });
-    &*METHOD
-}
-
-pub fn complete_artifact_blob_write_method() -> &'static crate::skir_client::Method<
-    CompleteArtifactBlobWriteRequest,
-    CompleteArtifactBlobWriteResponse,
-> {
-    static METHOD: std::sync::LazyLock<
-        crate::skir_client::Method<
-            CompleteArtifactBlobWriteRequest,
-            CompleteArtifactBlobWriteResponse,
-        >,
-    > = std::sync::LazyLock::new(|| crate::skir_client::Method {
-        name: "CompleteArtifactBlobWrite".to_string(),
-        number: 930106_i64,
-        request_serializer: CompleteArtifactBlobWriteRequest::serializer(),
-        response_serializer: CompleteArtifactBlobWriteResponse::serializer(),
+        request_serializer: StoreArtifactBlobRequest::serializer(),
+        response_serializer: StoreArtifactBlobResponse::serializer(),
         doc: "".to_string(),
     });
     &*METHOD
@@ -3139,7 +2124,7 @@ pub fn fetch_artifact_blob_metadata_method() -> &'static crate::skir_client::Met
         >,
     > = std::sync::LazyLock::new(|| crate::skir_client::Method {
         name: "FetchArtifactBlobMetadata".to_string(),
-        number: 930107_i64,
+        number: 930105_i64,
         request_serializer: FetchArtifactBlobMetadataRequest::serializer(),
         response_serializer: FetchArtifactBlobMetadataResponse::serializer(),
         doc: "".to_string(),

@@ -5,12 +5,10 @@ import com.typewritermc.engine.RESOURCE_GRAPH_MEDIA_TYPE
 import com.typewritermc.engine.RESOURCE_GRAPH_PROJECTION
 import com.typewritermc.engine.Root
 import com.typewritermc.services.libs.filetransfer.blob.ArtifactDigest
-import com.typewritermc.services.libs.filetransfer.blob.BlobChunk
 import com.typewritermc.services.libs.filetransfer.blob.BlobEndpoint
 import com.typewritermc.services.libs.filetransfer.blob.BlobMetadata
 import com.typewritermc.services.libs.filetransfer.blob.BlobResult
-import com.typewritermc.services.libs.filetransfer.blob.BlobWriteSession
-import com.typewritermc.services.libs.filetransfer.blob.TransferId
+import com.typewritermc.services.libs.filetransfer.blob.StoreResult
 import com.typewritermc.types.ResourceId
 import com.typewritermc.types.toSkir
 import de.infix.testBalloon.framework.core.testSuite
@@ -74,52 +72,12 @@ val BlobCompiledArtifactSourceTest by testSuite {
         }
     }
 
-    test("premature final chunks are rejected") {
+    test("truncated content is rejected") {
         runTest {
             val blobs = FakeBlobEndpoint()
             val shard = shard("d", "truncated")
             val activation = activation(1, listOf(shard), blobs)
             blobs.truncate(activation.outputs.single().blob)
-
-            shouldThrow<IllegalArgumentException> { BlobCompiledArtifactSource(blobs).load(activation) }
-        }
-    }
-
-    test("metadata size disagreement is rejected") {
-        runTest {
-            val blobs = FakeBlobEndpoint()
-            val activation = activation(1, listOf(shard("e", "size")), blobs)
-            blobs.misreportSize(activation.outputs.single().blob)
-
-            shouldThrow<IllegalArgumentException> { BlobCompiledArtifactSource(blobs).load(activation) }
-        }
-    }
-
-    test("empty chunk progress is rejected") {
-        runTest {
-            val blobs = FakeBlobEndpoint()
-            val activation = activation(1, listOf(shard("f", "empty")), blobs)
-            blobs.returnEmptyChunk(activation.outputs.single().blob)
-
-            shouldThrow<IllegalArgumentException> { BlobCompiledArtifactSource(blobs).load(activation) }
-        }
-    }
-
-    test("chunk offset disagreement is rejected") {
-        runTest {
-            val blobs = FakeBlobEndpoint()
-            val activation = activation(1, listOf(shard("a", "offset")), blobs)
-            blobs.shiftChunkOffset(activation.outputs.single().blob)
-
-            shouldThrow<IllegalArgumentException> { BlobCompiledArtifactSource(blobs).load(activation) }
-        }
-    }
-
-    test("missing final completion is rejected") {
-        runTest {
-            val blobs = FakeBlobEndpoint()
-            val activation = activation(1, listOf(shard("b", "completion")), blobs)
-            blobs.omitCompletion(activation.outputs.single().blob)
 
             shouldThrow<IllegalArgumentException> { BlobCompiledArtifactSource(blobs).load(activation) }
         }
@@ -175,10 +133,6 @@ private fun activation(
 
 private class FakeBlobEndpoint : BlobEndpoint {
     private val bytes = mutableMapOf<ArtifactDigest, ByteArray>()
-    private val declaredSizes = mutableMapOf<ArtifactDigest, Long>()
-    private val emptyChunks = mutableSetOf<ArtifactDigest>()
-    private val shiftedOffsets = mutableSetOf<ArtifactDigest>()
-    private val missingCompletions = mutableSetOf<ArtifactDigest>()
 
     fun remove(pointer: CompiledBlobPointer) {
         bytes.remove(pointer.artifactDigest())
@@ -194,59 +148,22 @@ private class FakeBlobEndpoint : BlobEndpoint {
         bytes[digest] = bytes.getValue(digest).copyOf(1)
     }
 
-    fun misreportSize(pointer: CompiledBlobPointer) {
-        val digest = pointer.artifactDigest()
-        declaredSizes[digest] = declaredSizes.getValue(digest) + 1
-    }
-
-    fun returnEmptyChunk(pointer: CompiledBlobPointer) {
-        emptyChunks += pointer.artifactDigest()
-    }
-
-    fun shiftChunkOffset(pointer: CompiledBlobPointer) {
-        shiftedOffsets += pointer.artifactDigest()
-    }
-
-    fun omitCompletion(pointer: CompiledBlobPointer) {
-        missingCompletions += pointer.artifactDigest()
-    }
-
     override suspend fun metadata(digest: ArtifactDigest): BlobResult<BlobMetadata> {
-        if (digest !in bytes) return BlobResult.NotFound
-        return BlobResult.Success(BlobMetadata(digest, declaredSizes.getValue(digest)))
-    }
-
-    override suspend fun read(
-        digest: ArtifactDigest,
-        offset: Long,
-        maximumBytes: Int,
-    ): BlobResult<BlobChunk> {
         val value = bytes[digest] ?: return BlobResult.NotFound
-        if (digest in emptyChunks) return BlobResult.Success(BlobChunk(offset, byteArrayOf(), complete = false))
-        val start = offset.toInt().coerceAtMost(value.size)
-        val end = (start + maximumBytes).coerceAtMost(value.size)
-        val reportedOffset = if (digest in shiftedOffsets) offset + 1 else offset
-        val complete = end == value.size && digest !in missingCompletions
-        return BlobResult.Success(BlobChunk(reportedOffset, value.copyOfRange(start, end), complete))
+        return BlobResult.Success(BlobMetadata(digest, value.size.toLong()))
     }
 
-    override suspend fun beginWrite(
-        transfer: TransferId,
+    override suspend fun fetch(digest: ArtifactDigest): BlobResult<ByteArray> =
+        bytes[digest]?.let { BlobResult.Success(it.copyOf()) } ?: BlobResult.NotFound
+
+    override suspend fun store(
         expected: BlobMetadata,
-    ): BlobResult<BlobWriteSession> = error("Writes are unsupported in this fixture.")
-
-    override suspend fun write(
-        transfer: TransferId,
-        offset: Long,
-        bytes: ByteArray,
-    ): BlobResult<Long> = error("Writes are unsupported in this fixture.")
-
-    override suspend fun complete(transfer: TransferId): BlobResult<BlobMetadata> = error("Writes are unsupported in this fixture.")
+        content: ByteArray,
+    ): StoreResult = error("Writes are unsupported in this fixture.")
 
     fun put(value: ByteArray): CompiledBlobPointer {
         val digest = ArtifactDigest.sha256(value)
         bytes[digest] = value
-        declaredSizes[digest] = value.size.toLong()
         return CompiledBlobPointer(digest = ContentDigest(digest.value).value, size = value.size.toLong())
     }
 }

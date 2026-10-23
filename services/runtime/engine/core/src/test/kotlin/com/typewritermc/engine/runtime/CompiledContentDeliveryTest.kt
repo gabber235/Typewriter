@@ -15,7 +15,6 @@ import com.typewritermc.services.libs.communicator.transport.TransportError
 import com.typewritermc.services.libs.communicator.transport.TransportResult
 import com.typewritermc.services.libs.filetransfer.blob.ArtifactDigest
 import com.typewritermc.services.libs.filetransfer.blob.BlobMetadata
-import com.typewritermc.services.libs.filetransfer.blob.TransferId
 import com.typewritermc.services.libs.telemetry.testing.TelemetryTestHarness
 import de.infix.testBalloon.framework.core.testSuite
 import io.kotest.assertions.withClue
@@ -121,23 +120,11 @@ private fun deliveryHost(
 
             override suspend fun metadata(digest: ArtifactDigest): Nothing = error("No content was returned")
 
-            override suspend fun read(
-                digest: ArtifactDigest,
-                offset: Long,
-                maximumBytes: Int,
-            ): Nothing = error("No content was returned")
+            override suspend fun fetch(digest: ArtifactDigest): Nothing = error("No content was returned")
 
-            override suspend fun beginWrite(
-                transfer: TransferId,
+            override suspend fun store(
                 expected: BlobMetadata,
+                content: ByteArray,
             ): Nothing = error("No content was returned")
-
-            override suspend fun write(
-                transfer: TransferId,
-                offset: Long,
-                bytes: ByteArray,
-            ): Nothing = error("No content was returned")
-
-            override suspend fun complete(transfer: TransferId): Nothing = error("No content was returned")
         }
 }

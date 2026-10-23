@@ -18,12 +18,10 @@ import com.typewritermc.services.libs.communicator.client.Communicator
 import com.typewritermc.services.libs.communicator.contract.UnaryContract
 import com.typewritermc.services.libs.communicator.result.CommunicationResult
 import com.typewritermc.services.libs.filetransfer.blob.ArtifactDigest
-import com.typewritermc.services.libs.filetransfer.blob.BlobChunk
 import com.typewritermc.services.libs.filetransfer.blob.BlobMetadata
 import com.typewritermc.services.libs.filetransfer.blob.BlobResult
-import com.typewritermc.services.libs.filetransfer.blob.BlobWriteSession
 import com.typewritermc.services.libs.filetransfer.blob.DigestAlgorithm
-import com.typewritermc.services.libs.filetransfer.blob.TransferId
+import com.typewritermc.services.libs.filetransfer.blob.StoreResult
 import com.typewritermc.services.libs.utils.rethrowExceptional
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.filterNotNull
@@ -34,7 +32,6 @@ import skirout.service.v1.artifact.FetchSharedArtifactCatalogResponse
 import skirout.service.v1.artifact.ProducerMetadataEntry
 import skirout.service.v1.artifact.PublishSharedArtifactRequest
 import skirout.service.v1.artifact.PublishSharedArtifactResponse
-import java.util.concurrent.ConcurrentHashMap
 import skirout.service.v1.artifact.ArtifactDigest as SkirArtifactDigest
 import skirout.service.v1.artifact.DigestAlgorithm as SkirDigestAlgorithm
 import skirout.service.v1.artifact.ProducerMetadata as SkirProducerMetadata
@@ -46,79 +43,21 @@ import skirout.service.v1.artifact.SharedArtifactProvenance as SkirSharedArtifac
  * Maintains shared artifact access across messaging session replacement.
  *
  * Requests wait for a nonnull session. Communication failure waits for a different session id before retrying,
- * without a local timeout. Remembered transfer metadata supports write recovery and lost completion responses.
- * Bound operations with caller cancellation or a suitable timeout.
+ * without a local timeout. Blob calls move whole content, so a retry repeats the call: fetch is a pure read and
+ * store is idempotent by digest. Bound operations with caller cancellation or a suitable timeout.
  */
 class ReconnectingSharedArtifactAccess(
     private val realmId: String,
     private val sessions: StateFlow<HostedMessagingSession?>,
 ) : SharedArtifactAccess {
-    private val transfers = ConcurrentHashMap<TransferId, BlobMetadata>()
-
     override suspend fun metadata(digest: ArtifactDigest): BlobResult<BlobMetadata> = withSessionRetry { endpoint(it).metadata(digest) }
 
-    override suspend fun read(
-        digest: ArtifactDigest,
-        offset: Long,
-        maximumBytes: Int,
-    ): BlobResult<BlobChunk> = withSessionRetry { endpoint(it).read(digest, offset, maximumBytes) }
+    override suspend fun fetch(digest: ArtifactDigest): BlobResult<ByteArray> = withSessionRetry { endpoint(it).fetch(digest) }
 
-    override suspend fun beginWrite(
-        transfer: TransferId,
+    override suspend fun store(
         expected: BlobMetadata,
-    ): BlobResult<BlobWriteSession> =
-        withSessionRetry { session ->
-            endpoint(session).beginWrite(transfer, expected).also { result ->
-                if (result is BlobResult.Success) transfers[transfer] = expected
-            }
-        }
-
-    override suspend fun write(
-        transfer: TransferId,
-        offset: Long,
-        bytes: ByteArray,
-    ): BlobResult<Long> =
-        withSessionRetry { session ->
-            val expected = transfers[transfer]
-            if (expected != null) {
-                when (val resumed = endpoint(session).beginWrite(transfer, expected)) {
-                    is BlobResult.Success -> {
-                        if (resumed.value.offset >= offset + bytes.size) {
-                            return@withSessionRetry BlobResult.Success(resumed.value.offset)
-                        }
-                        if (resumed.value.offset !=
-                            offset
-                        ) {
-                            return@withSessionRetry BlobResult.Conflict("Transfer offset changed unexpectedly.")
-                        }
-                    }
-
-                    else -> {
-                        return@withSessionRetry resumed.cast()
-                    }
-                }
-            }
-            endpoint(session).write(transfer, offset, bytes)
-        }
-
-    override suspend fun complete(transfer: TransferId): BlobResult<BlobMetadata> =
-        withSessionRetry { session ->
-            val result = endpoint(session).complete(transfer)
-            val expected = transfers[transfer]
-            when {
-                result is BlobResult.Success -> {
-                    result.also { transfers.remove(transfer) }
-                }
-
-                result == BlobResult.NotFound && expected != null && endpoint(session).metadata(expected.digest) is BlobResult.Success -> {
-                    BlobResult.Success(expected).also { transfers.remove(transfer) }
-                }
-
-                else -> {
-                    result
-                }
-            }
-        }
+        content: ByteArray,
+    ): StoreResult = withSessionRetry { endpoint(it).store(expected, content) }
 
     override suspend fun publish(command: PublishSharedArtifact): PublishResult = withSessionRetry { metadataClient(it).publish(command) }
 
@@ -154,9 +93,6 @@ class ReconnectingSharedArtifactAccess(
         }
     }
 }
-
-@Suppress("UNCHECKED_CAST")
-private fun <Value> BlobResult<*>.cast(): BlobResult<Value> = this as BlobResult<Value>
 
 /** Encodes shared artifact catalog and mutation operations for one Realm session. */
 private class CommunicatorSharedMetadataClient(

@@ -3,12 +3,10 @@ package com.typewritermc.realm.compiler
 import com.typewritermc.engine.CompiledArtifact
 import com.typewritermc.engine.ContentDigest
 import com.typewritermc.services.libs.filetransfer.blob.ArtifactDigest
-import com.typewritermc.services.libs.filetransfer.blob.BlobChunk
 import com.typewritermc.services.libs.filetransfer.blob.BlobEndpoint
 import com.typewritermc.services.libs.filetransfer.blob.BlobMetadata
 import com.typewritermc.services.libs.filetransfer.blob.BlobResult
-import com.typewritermc.services.libs.filetransfer.blob.BlobWriteSession
-import com.typewritermc.services.libs.filetransfer.blob.TransferId
+import com.typewritermc.services.libs.filetransfer.blob.StoreResult
 import de.infix.testBalloon.framework.core.testSuite
 import io.kotest.assertions.throwables.shouldThrow
 import io.kotest.matchers.shouldBe
@@ -38,6 +36,7 @@ val RegisteredCompiledArtifactStoreTest by testSuite {
                 listOf(firstArtifact),
             )
         first.outputs.single().blob shouldBe second.outputs.single().blob
+        blobs.stores shouldBe 1
         val replacement = 'b'.compiledArtifact("replacement")
         val third = store.store(PublicationId(value = "third"), CatalogGeneration(value = "catalog"), "implementation", listOf(replacement))
         third.outputs.map { it.reference.root } shouldBe listOf(replacement.root)
@@ -108,13 +107,11 @@ private fun Char.compiledArtifact(resource: String) =
     )
 
 internal class InMemoryBlobEndpoint : BlobEndpoint {
-    private data class PendingWrite(
-        val expected: BlobMetadata,
-        var bytes: ByteArray = byteArrayOf(),
-    )
-
     private val blobs = mutableMapOf<ArtifactDigest, ByteArray>()
-    private val writes = mutableMapOf<TransferId, PendingWrite>()
+
+    /** Every store that reached this endpoint, so tests can tell whether unchanged content travelled again. */
+    var stores = 0
+        private set
 
     fun remove(digest: ArtifactDigest) {
         blobs.remove(digest)
@@ -123,46 +120,18 @@ internal class InMemoryBlobEndpoint : BlobEndpoint {
     override suspend fun metadata(digest: ArtifactDigest): BlobResult<BlobMetadata> =
         blobs[digest]?.let { BlobResult.Success(BlobMetadata(digest, it.size.toLong())) } ?: BlobResult.NotFound
 
-    override suspend fun read(
-        digest: ArtifactDigest,
-        offset: Long,
-        maximumBytes: Int,
-    ): BlobResult<BlobChunk> {
-        val bytes = blobs[digest] ?: return BlobResult.NotFound
-        val start = offset.toInt()
-        val end = minOf(bytes.size, start + maximumBytes)
-        return BlobResult.Success(BlobChunk(offset, bytes.copyOfRange(start, end), end == bytes.size))
-    }
+    override suspend fun fetch(digest: ArtifactDigest): BlobResult<ByteArray> =
+        blobs[digest]?.let { BlobResult.Success(it.copyOf()) } ?: BlobResult.NotFound
 
-    override suspend fun beginWrite(
-        transfer: TransferId,
+    override suspend fun store(
         expected: BlobMetadata,
-    ): BlobResult<BlobWriteSession> {
-        val existing = blobs[expected.digest]
-        if (existing != null) return BlobResult.Success(BlobWriteSession(transfer, expected, existing.size.toLong()))
-        val pending = writes.getOrPut(transfer) { PendingWrite(expected) }
-        return BlobResult.Success(BlobWriteSession(transfer, expected, pending.bytes.size.toLong()))
-    }
-
-    override suspend fun write(
-        transfer: TransferId,
-        offset: Long,
-        bytes: ByteArray,
-    ): BlobResult<Long> {
-        val pending = writes[transfer] ?: return BlobResult.NotFound
-        if (offset != pending.bytes.size.toLong()) return BlobResult.Conflict("Unexpected write offset.")
-        pending.bytes += bytes
-        return BlobResult.Success(pending.bytes.size.toLong())
-    }
-
-    override suspend fun complete(transfer: TransferId): BlobResult<BlobMetadata> {
-        val pending = writes.remove(transfer) ?: return BlobResult.NotFound
-        if (pending.bytes.size.toLong() != pending.expected.size) return BlobResult.Invalid("Unexpected blob size.")
-        if (ArtifactDigest.sha256(pending.bytes) != pending.expected.digest) {
-            return BlobResult.Invalid("Unexpected blob digest.")
-        }
-        blobs[pending.expected.digest] = pending.bytes
-        return BlobResult.Success(pending.expected)
+        content: ByteArray,
+    ): StoreResult {
+        stores++
+        if (content.size.toLong() != expected.size) return StoreResult.Invalid("Unexpected blob size.")
+        if (ArtifactDigest.sha256(content) != expected.digest) return StoreResult.Invalid("Unexpected blob digest.")
+        blobs[expected.digest] = content.copyOf()
+        return StoreResult.Stored(expected)
     }
 }
 

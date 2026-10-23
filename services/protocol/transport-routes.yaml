@@ -621,45 +621,25 @@ routes:
       operation: shared.blob.metadata
       request: shared.blob.metadata
 
-  - name: shared_blob_read
+  - name: shared_blob_fetch
     scope: realm
     callers: [{ role: organization_member }, { role: realm_participant }]
     server: { role: realm_coordinator }
     flow:
       kind: unary
-      method: "service/v1/artifact.skir:ReadArtifactBlob"
-      operation: shared.blob.read
-      request: shared.blob.read
+      method: "service/v1/artifact.skir:FetchArtifactBlob"
+      operation: shared.blob.fetch
+      request: shared.blob.fetch
 
-  - name: shared_blob_begin
+  - name: shared_blob_store
     scope: realm
     callers: [{ role: organization_member }, { role: realm_participant }]
     server: { role: realm_coordinator }
     flow:
       kind: unary
-      method: "service/v1/artifact.skir:BeginArtifactBlobWrite"
-      operation: shared.blob.begin
-      request: shared.blob.begin
-
-  - name: shared_blob_write
-    scope: realm
-    callers: [{ role: organization_member }, { role: realm_participant }]
-    server: { role: realm_coordinator }
-    flow:
-      kind: unary
-      method: "service/v1/artifact.skir:WriteArtifactBlobChunk"
-      operation: shared.blob.write
-      request: shared.blob.write
-
-  - name: shared_blob_complete
-    scope: realm
-    callers: [{ role: organization_member }, { role: realm_participant }]
-    server: { role: realm_coordinator }
-    flow:
-      kind: unary
-      method: "service/v1/artifact.skir:CompleteArtifactBlobWrite"
-      operation: shared.blob.complete
-      request: shared.blob.complete
+      method: "service/v1/artifact.skir:StoreArtifactBlob"
+      operation: shared.blob.store
+      request: shared.blob.store
 
   - name: rollout_probe
     scope: realm

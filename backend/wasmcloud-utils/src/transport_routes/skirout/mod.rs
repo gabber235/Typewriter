@@ -186,16 +186,10 @@ impl crate::transport::RealmScope {
                     "service.to.{realm}.organization.{organization}.realm.shared.blob.metadata"
                 ));
                 grants.subscribe.insert(format!(
-                    "service.to.{realm}.organization.{organization}.realm.shared.blob.read"
+                    "service.to.{realm}.organization.{organization}.realm.shared.blob.fetch"
                 ));
                 grants.subscribe.insert(format!(
-                    "service.to.{realm}.organization.{organization}.realm.shared.blob.begin"
-                ));
-                grants.subscribe.insert(format!(
-                    "service.to.{realm}.organization.{organization}.realm.shared.blob.write"
-                ));
-                grants.subscribe.insert(format!(
-                    "service.to.{realm}.organization.{organization}.realm.shared.blob.complete"
+                    "service.to.{realm}.organization.{organization}.realm.shared.blob.store"
                 ));
                 grants.publish.insert(format!(
                     "service.from.{realm}.organization.{organization}.realm.rollout.probe"
@@ -232,16 +226,10 @@ impl crate::transport::RealmScope {
                     "service.to.{realm}.organization.{organization}.realm.shared.blob.metadata"
                 ));
                 grants.publish.insert(format!(
-                    "service.to.{realm}.organization.{organization}.realm.shared.blob.read"
+                    "service.to.{realm}.organization.{organization}.realm.shared.blob.fetch"
                 ));
                 grants.publish.insert(format!(
-                    "service.to.{realm}.organization.{organization}.realm.shared.blob.begin"
-                ));
-                grants.publish.insert(format!(
-                    "service.to.{realm}.organization.{organization}.realm.shared.blob.write"
-                ));
-                grants.publish.insert(format!(
-                    "service.to.{realm}.organization.{organization}.realm.shared.blob.complete"
+                    "service.to.{realm}.organization.{organization}.realm.shared.blob.store"
                 ));
                 grants.subscribe.insert(format!(
                     "service.from.{realm}.organization.{organization}.realm.rollout.probe"
@@ -583,16 +571,10 @@ impl crate::transport::OrganizationActorScope {
                     "service.to.*.organization.{organization}.realm.shared.blob.metadata"
                 ));
                 grants.publish.insert(format!(
-                    "service.to.*.organization.{organization}.realm.shared.blob.read"
+                    "service.to.*.organization.{organization}.realm.shared.blob.fetch"
                 ));
                 grants.publish.insert(format!(
-                    "service.to.*.organization.{organization}.realm.shared.blob.begin"
-                ));
-                grants.publish.insert(format!(
-                    "service.to.*.organization.{organization}.realm.shared.blob.write"
-                ));
-                grants.publish.insert(format!(
-                    "service.to.*.organization.{organization}.realm.shared.blob.complete"
+                    "service.to.*.organization.{organization}.realm.shared.blob.store"
                 ));
                 grants.publish.insert(format!(
                     "typewriter.presence.organization.{organization}.user.{user}"
@@ -3661,21 +3643,23 @@ impl crate::SkirResponse
         }
     }
 }
-impl crate::SkirResponse for crate::skirout::base::service::v1::artifact::ReadArtifactBlobResponse {
+impl crate::SkirResponse
+    for crate::skirout::base::service::v1::artifact::FetchArtifactBlobResponse
+{
     fn outcome(&self) -> crate::SkirResponseOutcome {
         match self {
-            crate::skirout::base::service::v1::artifact::ReadArtifactBlobResponse::Success(_) => crate::SkirResponseOutcome::Success,
-            crate::skirout::base::service::v1::artifact::ReadArtifactBlobResponse::NotFoundError(_) | crate::skirout::base::service::v1::artifact::ReadArtifactBlobResponse::InvalidError(_) => crate::SkirResponseOutcome::DomainError,
+            crate::skirout::base::service::v1::artifact::FetchArtifactBlobResponse::Success(_) => crate::SkirResponseOutcome::Success,
+            crate::skirout::base::service::v1::artifact::FetchArtifactBlobResponse::NotFoundError(_) | crate::skirout::base::service::v1::artifact::FetchArtifactBlobResponse::InvalidError(_) => crate::SkirResponseOutcome::DomainError,
             // internal_error and the generated unknown variant
             _ => crate::SkirResponseOutcome::InternalError,
         }
     }
     fn variant_slug(&self) -> &'static str {
         match self {
-            crate::skirout::base::service::v1::artifact::ReadArtifactBlobResponse::Success(_) => "success",
-            crate::skirout::base::service::v1::artifact::ReadArtifactBlobResponse::NotFoundError(_) => "not-found-error",
-            crate::skirout::base::service::v1::artifact::ReadArtifactBlobResponse::InvalidError(_) => "invalid-error",
-            crate::skirout::base::service::v1::artifact::ReadArtifactBlobResponse::InternalError(_) => "internal-error",
+            crate::skirout::base::service::v1::artifact::FetchArtifactBlobResponse::Success(_) => "success",
+            crate::skirout::base::service::v1::artifact::FetchArtifactBlobResponse::NotFoundError(_) => "not-found-error",
+            crate::skirout::base::service::v1::artifact::FetchArtifactBlobResponse::InvalidError(_) => "invalid-error",
+            crate::skirout::base::service::v1::artifact::FetchArtifactBlobResponse::InternalError(_) => "internal-error",
             _ => "unknown",
         }
     }
@@ -3683,35 +3667,34 @@ impl crate::SkirResponse for crate::skirout::base::service::v1::artifact::ReadAr
         self.variant_slug().to_owned()
     }
     fn internal_error() -> Self {
-        crate::skirout::base::service::v1::artifact::ReadArtifactBlobResponse::InternalError(
+        crate::skirout::base::service::v1::artifact::FetchArtifactBlobResponse::InternalError(
             ::std::default::Default::default(),
         )
     }
     fn domain_error_from_slug(slug: &str) -> Option<Self> {
         match slug {
-            "not-found-error" => Some(crate::skirout::base::service::v1::artifact::ReadArtifactBlobResponse::NotFoundError(::std::default::Default::default())),
-            "invalid-error" => Some(crate::skirout::base::service::v1::artifact::ReadArtifactBlobResponse::InvalidError(::std::default::Default::default())),
+            "not-found-error" => Some(crate::skirout::base::service::v1::artifact::FetchArtifactBlobResponse::NotFoundError(::std::default::Default::default())),
+            "invalid-error" => Some(crate::skirout::base::service::v1::artifact::FetchArtifactBlobResponse::InvalidError(::std::default::Default::default())),
             _ => None,
         }
     }
 }
 impl crate::SkirResponse
-    for crate::skirout::base::service::v1::artifact::BeginArtifactBlobWriteResponse
+    for crate::skirout::base::service::v1::artifact::StoreArtifactBlobResponse
 {
     fn outcome(&self) -> crate::SkirResponseOutcome {
         match self {
-            crate::skirout::base::service::v1::artifact::BeginArtifactBlobWriteResponse::Accepted(_) => crate::SkirResponseOutcome::Success,
-            crate::skirout::base::service::v1::artifact::BeginArtifactBlobWriteResponse::InvalidError(_) | crate::skirout::base::service::v1::artifact::BeginArtifactBlobWriteResponse::ConflictError(_) => crate::SkirResponseOutcome::DomainError,
+            crate::skirout::base::service::v1::artifact::StoreArtifactBlobResponse::Success(_) => crate::SkirResponseOutcome::Success,
+            crate::skirout::base::service::v1::artifact::StoreArtifactBlobResponse::InvalidError(_) => crate::SkirResponseOutcome::DomainError,
             // internal_error and the generated unknown variant
             _ => crate::SkirResponseOutcome::InternalError,
         }
     }
     fn variant_slug(&self) -> &'static str {
         match self {
-            crate::skirout::base::service::v1::artifact::BeginArtifactBlobWriteResponse::Accepted(_) => "accepted",
-            crate::skirout::base::service::v1::artifact::BeginArtifactBlobWriteResponse::InvalidError(_) => "invalid-error",
-            crate::skirout::base::service::v1::artifact::BeginArtifactBlobWriteResponse::ConflictError(_) => "conflict-error",
-            crate::skirout::base::service::v1::artifact::BeginArtifactBlobWriteResponse::InternalError(_) => "internal-error",
+            crate::skirout::base::service::v1::artifact::StoreArtifactBlobResponse::Success(_) => "success",
+            crate::skirout::base::service::v1::artifact::StoreArtifactBlobResponse::InvalidError(_) => "invalid-error",
+            crate::skirout::base::service::v1::artifact::StoreArtifactBlobResponse::InternalError(_) => "internal-error",
             _ => "unknown",
         }
     }
@@ -3719,88 +3702,13 @@ impl crate::SkirResponse
         self.variant_slug().to_owned()
     }
     fn internal_error() -> Self {
-        crate::skirout::base::service::v1::artifact::BeginArtifactBlobWriteResponse::InternalError(
+        crate::skirout::base::service::v1::artifact::StoreArtifactBlobResponse::InternalError(
             ::std::default::Default::default(),
         )
     }
     fn domain_error_from_slug(slug: &str) -> Option<Self> {
         match slug {
-            "invalid-error" => Some(crate::skirout::base::service::v1::artifact::BeginArtifactBlobWriteResponse::InvalidError(::std::default::Default::default())),
-            "conflict-error" => Some(crate::skirout::base::service::v1::artifact::BeginArtifactBlobWriteResponse::ConflictError(::std::default::Default::default())),
-            _ => None,
-        }
-    }
-}
-impl crate::SkirResponse
-    for crate::skirout::base::service::v1::artifact::WriteArtifactBlobChunkResponse
-{
-    fn outcome(&self) -> crate::SkirResponseOutcome {
-        match self {
-            crate::skirout::base::service::v1::artifact::WriteArtifactBlobChunkResponse::Accepted(_) => crate::SkirResponseOutcome::Success,
-            crate::skirout::base::service::v1::artifact::WriteArtifactBlobChunkResponse::NotFoundError(_) | crate::skirout::base::service::v1::artifact::WriteArtifactBlobChunkResponse::InvalidError(_) | crate::skirout::base::service::v1::artifact::WriteArtifactBlobChunkResponse::ConflictError(_) => crate::SkirResponseOutcome::DomainError,
-            // internal_error and the generated unknown variant
-            _ => crate::SkirResponseOutcome::InternalError,
-        }
-    }
-    fn variant_slug(&self) -> &'static str {
-        match self {
-            crate::skirout::base::service::v1::artifact::WriteArtifactBlobChunkResponse::Accepted(_) => "accepted",
-            crate::skirout::base::service::v1::artifact::WriteArtifactBlobChunkResponse::NotFoundError(_) => "not-found-error",
-            crate::skirout::base::service::v1::artifact::WriteArtifactBlobChunkResponse::InvalidError(_) => "invalid-error",
-            crate::skirout::base::service::v1::artifact::WriteArtifactBlobChunkResponse::ConflictError(_) => "conflict-error",
-            crate::skirout::base::service::v1::artifact::WriteArtifactBlobChunkResponse::InternalError(_) => "internal-error",
-            _ => "unknown",
-        }
-    }
-    fn variant_message(&self) -> String {
-        self.variant_slug().to_owned()
-    }
-    fn internal_error() -> Self {
-        crate::skirout::base::service::v1::artifact::WriteArtifactBlobChunkResponse::InternalError(
-            ::std::default::Default::default(),
-        )
-    }
-    fn domain_error_from_slug(slug: &str) -> Option<Self> {
-        match slug {
-            "not-found-error" => Some(crate::skirout::base::service::v1::artifact::WriteArtifactBlobChunkResponse::NotFoundError(::std::default::Default::default())),
-            "invalid-error" => Some(crate::skirout::base::service::v1::artifact::WriteArtifactBlobChunkResponse::InvalidError(::std::default::Default::default())),
-            "conflict-error" => Some(crate::skirout::base::service::v1::artifact::WriteArtifactBlobChunkResponse::ConflictError(::std::default::Default::default())),
-            _ => None,
-        }
-    }
-}
-impl crate::SkirResponse
-    for crate::skirout::base::service::v1::artifact::CompleteArtifactBlobWriteResponse
-{
-    fn outcome(&self) -> crate::SkirResponseOutcome {
-        match self {
-            crate::skirout::base::service::v1::artifact::CompleteArtifactBlobWriteResponse::Success(_) => crate::SkirResponseOutcome::Success,
-            crate::skirout::base::service::v1::artifact::CompleteArtifactBlobWriteResponse::NotFoundError(_) | crate::skirout::base::service::v1::artifact::CompleteArtifactBlobWriteResponse::InvalidError(_) | crate::skirout::base::service::v1::artifact::CompleteArtifactBlobWriteResponse::ConflictError(_) => crate::SkirResponseOutcome::DomainError,
-            // internal_error and the generated unknown variant
-            _ => crate::SkirResponseOutcome::InternalError,
-        }
-    }
-    fn variant_slug(&self) -> &'static str {
-        match self {
-            crate::skirout::base::service::v1::artifact::CompleteArtifactBlobWriteResponse::Success(_) => "success",
-            crate::skirout::base::service::v1::artifact::CompleteArtifactBlobWriteResponse::NotFoundError(_) => "not-found-error",
-            crate::skirout::base::service::v1::artifact::CompleteArtifactBlobWriteResponse::InvalidError(_) => "invalid-error",
-            crate::skirout::base::service::v1::artifact::CompleteArtifactBlobWriteResponse::ConflictError(_) => "conflict-error",
-            crate::skirout::base::service::v1::artifact::CompleteArtifactBlobWriteResponse::InternalError(_) => "internal-error",
-            _ => "unknown",
-        }
-    }
-    fn variant_message(&self) -> String {
-        self.variant_slug().to_owned()
-    }
-    fn internal_error() -> Self {
-        crate::skirout::base::service::v1::artifact::CompleteArtifactBlobWriteResponse::InternalError(::std::default::Default::default())
-    }
-    fn domain_error_from_slug(slug: &str) -> Option<Self> {
-        match slug {
-            "not-found-error" => Some(crate::skirout::base::service::v1::artifact::CompleteArtifactBlobWriteResponse::NotFoundError(::std::default::Default::default())),
-            "invalid-error" => Some(crate::skirout::base::service::v1::artifact::CompleteArtifactBlobWriteResponse::InvalidError(::std::default::Default::default())),
-            "conflict-error" => Some(crate::skirout::base::service::v1::artifact::CompleteArtifactBlobWriteResponse::ConflictError(::std::default::Default::default())),
+            "invalid-error" => Some(crate::skirout::base::service::v1::artifact::StoreArtifactBlobResponse::InvalidError(::std::default::Default::default())),
             _ => None,
         }
     }

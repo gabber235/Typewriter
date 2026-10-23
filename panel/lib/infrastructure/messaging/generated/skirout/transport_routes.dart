@@ -1651,9 +1651,9 @@ extension SharedBlobMetadataRouteNats
   }
 }
 
-extension SharedBlobReadRouteNats
-    on _lib_service_v1_artifact.ReadArtifactBlobRequest {
-  SkirRouteOperation<_lib_service_v1_artifact.ReadArtifactBlobResponse>
+extension SharedBlobFetchRouteNats
+    on _lib_service_v1_artifact.FetchArtifactBlobRequest {
+  SkirRouteOperation<_lib_service_v1_artifact.FetchArtifactBlobResponse>
   operation({
     required _skir.RecordId organizationId,
 
@@ -1663,20 +1663,20 @@ extension SharedBlobReadRouteNats
 
     final realm = realmId.id.transportIdentity;
 
-    final method = _lib_service_v1_artifact.readArtifactBlobMethod;
+    final method = _lib_service_v1_artifact.fetchArtifactBlobMethod;
     return SkirRouteOperation(
       subject:
-          "service.to.$realm.organization.$organization.realm.shared.blob.read",
+          "service.to.$realm.organization.$organization.realm.shared.blob.fetch",
       requestBytes: method.requestSerializer.toBytes(this),
       responseSerializer: method.responseSerializer,
-      outcome: _readArtifactBlobOutcome,
+      outcome: _fetchArtifactBlobOutcome,
     );
   }
 }
 
-extension SharedBlobBeginRouteNats
-    on _lib_service_v1_artifact.BeginArtifactBlobWriteRequest {
-  SkirRouteOperation<_lib_service_v1_artifact.BeginArtifactBlobWriteResponse>
+extension SharedBlobStoreRouteNats
+    on _lib_service_v1_artifact.StoreArtifactBlobRequest {
+  SkirRouteOperation<_lib_service_v1_artifact.StoreArtifactBlobResponse>
   operation({
     required _skir.RecordId organizationId,
 
@@ -1686,59 +1686,13 @@ extension SharedBlobBeginRouteNats
 
     final realm = realmId.id.transportIdentity;
 
-    final method = _lib_service_v1_artifact.beginArtifactBlobWriteMethod;
+    final method = _lib_service_v1_artifact.storeArtifactBlobMethod;
     return SkirRouteOperation(
       subject:
-          "service.to.$realm.organization.$organization.realm.shared.blob.begin",
+          "service.to.$realm.organization.$organization.realm.shared.blob.store",
       requestBytes: method.requestSerializer.toBytes(this),
       responseSerializer: method.responseSerializer,
-      outcome: _beginArtifactBlobWriteOutcome,
-    );
-  }
-}
-
-extension SharedBlobWriteRouteNats
-    on _lib_service_v1_artifact.WriteArtifactBlobChunkRequest {
-  SkirRouteOperation<_lib_service_v1_artifact.WriteArtifactBlobChunkResponse>
-  operation({
-    required _skir.RecordId organizationId,
-
-    required _skir.RecordId realmId,
-  }) {
-    final organization = organizationId.id.transportIdentity;
-
-    final realm = realmId.id.transportIdentity;
-
-    final method = _lib_service_v1_artifact.writeArtifactBlobChunkMethod;
-    return SkirRouteOperation(
-      subject:
-          "service.to.$realm.organization.$organization.realm.shared.blob.write",
-      requestBytes: method.requestSerializer.toBytes(this),
-      responseSerializer: method.responseSerializer,
-      outcome: _writeArtifactBlobChunkOutcome,
-    );
-  }
-}
-
-extension SharedBlobCompleteRouteNats
-    on _lib_service_v1_artifact.CompleteArtifactBlobWriteRequest {
-  SkirRouteOperation<_lib_service_v1_artifact.CompleteArtifactBlobWriteResponse>
-  operation({
-    required _skir.RecordId organizationId,
-
-    required _skir.RecordId realmId,
-  }) {
-    final organization = organizationId.id.transportIdentity;
-
-    final realm = realmId.id.transportIdentity;
-
-    final method = _lib_service_v1_artifact.completeArtifactBlobWriteMethod;
-    return SkirRouteOperation(
-      subject:
-          "service.to.$realm.organization.$organization.realm.shared.blob.complete",
-      requestBytes: method.requestSerializer.toBytes(this),
-      responseSerializer: method.responseSerializer,
-      outcome: _completeArtifactBlobWriteOutcome,
+      outcome: _storeArtifactBlobOutcome,
     );
   }
 }
@@ -2524,71 +2478,27 @@ ResponseOutcome _fetchArtifactBlobMetadataOutcome(
   _ => ResponseOutcome.internalError,
 };
 
-ResponseOutcome _readArtifactBlobOutcome(
-  _lib_service_v1_artifact.ReadArtifactBlobResponse response,
+ResponseOutcome _fetchArtifactBlobOutcome(
+  _lib_service_v1_artifact.FetchArtifactBlobResponse response,
 ) => switch (response.kind) {
-  _lib_service_v1_artifact.ReadArtifactBlobResponse_kind.successWrapper =>
+  _lib_service_v1_artifact.FetchArtifactBlobResponse_kind.successWrapper =>
     ResponseOutcome.success,
-  _lib_service_v1_artifact.ReadArtifactBlobResponse_kind.notFoundErrorWrapper ||
-  _lib_service_v1_artifact.ReadArtifactBlobResponse_kind.invalidErrorWrapper =>
+  _lib_service_v1_artifact
+      .FetchArtifactBlobResponse_kind
+      .notFoundErrorWrapper ||
+  _lib_service_v1_artifact.FetchArtifactBlobResponse_kind.invalidErrorWrapper =>
     ResponseOutcome.domainError,
   // internal_error and the generated unknown variant
   _ => ResponseOutcome.internalError,
 };
 
-ResponseOutcome _beginArtifactBlobWriteOutcome(
-  _lib_service_v1_artifact.BeginArtifactBlobWriteResponse response,
+ResponseOutcome _storeArtifactBlobOutcome(
+  _lib_service_v1_artifact.StoreArtifactBlobResponse response,
 ) => switch (response.kind) {
-  _lib_service_v1_artifact
-      .BeginArtifactBlobWriteResponse_kind
-      .acceptedWrapper =>
+  _lib_service_v1_artifact.StoreArtifactBlobResponse_kind.successWrapper =>
     ResponseOutcome.success,
-  _lib_service_v1_artifact
-      .BeginArtifactBlobWriteResponse_kind
-      .invalidErrorWrapper ||
-  _lib_service_v1_artifact
-      .BeginArtifactBlobWriteResponse_kind
-      .conflictErrorWrapper => ResponseOutcome.domainError,
-  // internal_error and the generated unknown variant
-  _ => ResponseOutcome.internalError,
-};
-
-ResponseOutcome _writeArtifactBlobChunkOutcome(
-  _lib_service_v1_artifact.WriteArtifactBlobChunkResponse response,
-) => switch (response.kind) {
-  _lib_service_v1_artifact
-      .WriteArtifactBlobChunkResponse_kind
-      .acceptedWrapper =>
-    ResponseOutcome.success,
-  _lib_service_v1_artifact
-      .WriteArtifactBlobChunkResponse_kind
-      .notFoundErrorWrapper ||
-  _lib_service_v1_artifact
-      .WriteArtifactBlobChunkResponse_kind
-      .invalidErrorWrapper ||
-  _lib_service_v1_artifact
-      .WriteArtifactBlobChunkResponse_kind
-      .conflictErrorWrapper => ResponseOutcome.domainError,
-  // internal_error and the generated unknown variant
-  _ => ResponseOutcome.internalError,
-};
-
-ResponseOutcome _completeArtifactBlobWriteOutcome(
-  _lib_service_v1_artifact.CompleteArtifactBlobWriteResponse response,
-) => switch (response.kind) {
-  _lib_service_v1_artifact
-      .CompleteArtifactBlobWriteResponse_kind
-      .successWrapper =>
-    ResponseOutcome.success,
-  _lib_service_v1_artifact
-      .CompleteArtifactBlobWriteResponse_kind
-      .notFoundErrorWrapper ||
-  _lib_service_v1_artifact
-      .CompleteArtifactBlobWriteResponse_kind
-      .invalidErrorWrapper ||
-  _lib_service_v1_artifact
-      .CompleteArtifactBlobWriteResponse_kind
-      .conflictErrorWrapper => ResponseOutcome.domainError,
+  _lib_service_v1_artifact.StoreArtifactBlobResponse_kind.invalidErrorWrapper =>
+    ResponseOutcome.domainError,
   // internal_error and the generated unknown variant
   _ => ResponseOutcome.internalError,
 };

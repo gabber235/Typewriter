@@ -345,145 +345,6 @@ class BlobMetadata private constructor(
     }
 }
 
-sealed interface BlobChunk_OrMutable {
-    val offset: kotlin.Long;
-    val bytes: okio.ByteString;
-    val complete: kotlin.Boolean;
-
-    fun toFrozen(): skirout.service.v1.artifact.BlobChunk;
-}
-
-/** Deeply immutable. */
-@kotlin.Suppress("UNUSED_PARAMETER")
-class BlobChunk private constructor(
-    override val offset: kotlin.Long,
-    override val bytes: okio.ByteString,
-    override val complete: kotlin.Boolean,
-    internal val _unrecognizedFields: _UnrecognizedFields<skirout.service.v1.artifact.BlobChunk>? =
-        null,
-): skirout.service.v1.artifact.BlobChunk_OrMutable {
-    constructor(
-        _mustNameArguments: _MustNameArguments =
-            _MustNameArguments,
-        offset: kotlin.Long,
-        bytes: okio.ByteString,
-        complete: kotlin.Boolean,
-        _unrecognizedFields: _UnrecognizedFields<skirout.service.v1.artifact.BlobChunk>? =
-            null,
-    ): this(
-        offset,
-        bytes,
-        complete,
-        _unrecognizedFields,
-    ) {}
-
-    @kotlin.Deprecated("Already frozen", kotlin.ReplaceWith("this"))
-    override fun toFrozen() = this;
-
-    /** Returns a mutable shallow copy of this instance */
-    fun toMutable() = Mutable(
-        offset = this.offset,
-        bytes = this.bytes,
-        complete = this.complete,
-    );
-
-    /** Returns a shallow copy of this instance with the specified fields replaced. */
-    fun copy(
-        _mustNameArguments: _MustNameArguments =
-            _MustNameArguments,
-        offset: kotlin.Long =
-            this.offset,
-        bytes: okio.ByteString =
-            this.bytes,
-        complete: kotlin.Boolean =
-            this.complete,
-    ) = skirout.service.v1.artifact.BlobChunk(
-        offset,
-        bytes,
-        complete,
-        this._unrecognizedFields,
-    );
-
-    @kotlin.Deprecated("No point in creating an exact copy of an immutable object", kotlin.ReplaceWith("this"))
-    fun copy() = this;
-
-    override fun equals(other: kotlin.Any?): kotlin.Boolean {
-        return this === other || (other is skirout.service.v1.artifact.BlobChunk && this.offset == other.offset && this.bytes == other.bytes && this.complete == other.complete);
-    }
-
-    override fun hashCode(): kotlin.Int {
-        return kotlin.collections.listOf<kotlin.Any?>(this.offset, this.bytes, this.complete).hashCode();
-    }
-
-    override fun toString(): kotlin.String {
-        return build.skir.internal.toStringImpl(
-            this,
-            _SerializerRegistry.BlobChunkSerializerImpl,
-        )
-    }
-
-    /** Mutable version of [BlobChunk]. */
-    class Mutable internal constructor(
-        _mustNameArguments: _MustNameArguments =
-            _MustNameArguments,
-        override var offset: kotlin.Long =
-            0L,
-        override var bytes: okio.ByteString =
-            okio.ByteString.EMPTY,
-        override var complete: kotlin.Boolean =
-            false,
-        internal var _unrecognizedFields: _UnrecognizedFields<skirout.service.v1.artifact.BlobChunk>? =
-            null,
-    ): skirout.service.v1.artifact.BlobChunk_OrMutable {
-        /** Returns a deeply immutable copy of this instance */
-        override fun toFrozen() = skirout.service.v1.artifact.BlobChunk(
-            offset = this.offset,
-            bytes = this.bytes,
-            complete = this.complete,
-            _unrecognizedFields = this._unrecognizedFields,
-        );
-    }
-
-    companion object {
-        private val default =
-            skirout.service.v1.artifact.BlobChunk(
-                0L,
-                okio.ByteString.EMPTY,
-                false,
-            );
-
-        /** Returns an instance with all fields set to their default values. */
-        fun partial() = default;
-
-        /**
-         * Creates a new instance of [BlobChunk].
-         * Unlike the constructor, does not require all fields to be specified.
-         * Missing fields will be set to their default values.
-         */
-        fun partial(
-            _mustNameArguments: _MustNameArguments =
-                _MustNameArguments,
-            offset: kotlin.Long =
-                0L,
-            bytes: okio.ByteString =
-                okio.ByteString.EMPTY,
-            complete: kotlin.Boolean =
-                false,
-        ) = skirout.service.v1.artifact.BlobChunk(
-            offset = offset,
-            bytes = bytes,
-            complete = complete,
-            _unrecognizedFields = null,
-        );
-
-        /** Serializer for [BlobChunk] instances. */
-        val serializer get() = _SerializerRegistry.BlobChunkSerializer;
-
-        /** Describes the [BlobChunk] type. Provides runtime introspection capabilities. */
-        val typeDescriptor get() = _SerializerRegistry.BlobChunkSerializerImpl.typeDescriptor;
-    }
-}
-
 sealed interface SharedArtifactDescriptor_OrMutable {
     val id: kotlin.String;
     val revision: kotlin.Long;
@@ -2223,35 +2084,27 @@ sealed class PublishSharedArtifactResponse private constructor() {
     }
 }
 
-sealed interface ReadArtifactBlobRequest_OrMutable {
+sealed interface FetchArtifactBlobRequest_OrMutable {
     val digest: skirout.service.v1.artifact.ArtifactDigest_OrMutable;
-    val offset: kotlin.Long;
-    val maximumBytes: kotlin.Int;
 
-    fun toFrozen(): skirout.service.v1.artifact.ReadArtifactBlobRequest;
+    fun toFrozen(): skirout.service.v1.artifact.FetchArtifactBlobRequest;
 }
 
 /** Deeply immutable. */
 @kotlin.Suppress("UNUSED_PARAMETER")
-class ReadArtifactBlobRequest private constructor(
+class FetchArtifactBlobRequest private constructor(
     override val digest: skirout.service.v1.artifact.ArtifactDigest,
-    override val offset: kotlin.Long,
-    override val maximumBytes: kotlin.Int,
-    internal val _unrecognizedFields: _UnrecognizedFields<skirout.service.v1.artifact.ReadArtifactBlobRequest>? =
+    internal val _unrecognizedFields: _UnrecognizedFields<skirout.service.v1.artifact.FetchArtifactBlobRequest>? =
         null,
-): skirout.service.v1.artifact.ReadArtifactBlobRequest_OrMutable {
+): skirout.service.v1.artifact.FetchArtifactBlobRequest_OrMutable {
     constructor(
         _mustNameArguments: _MustNameArguments =
             _MustNameArguments,
         digest: skirout.service.v1.artifact.ArtifactDigest_OrMutable,
-        offset: kotlin.Long,
-        maximumBytes: kotlin.Int,
-        _unrecognizedFields: _UnrecognizedFields<skirout.service.v1.artifact.ReadArtifactBlobRequest>? =
+        _unrecognizedFields: _UnrecognizedFields<skirout.service.v1.artifact.FetchArtifactBlobRequest>? =
             null,
     ): this(
         digest.toFrozen(),
-        offset,
-        maximumBytes,
         _unrecognizedFields,
     ) {}
 
@@ -2261,8 +2114,6 @@ class ReadArtifactBlobRequest private constructor(
     /** Returns a mutable shallow copy of this instance */
     fun toMutable() = Mutable(
         digest = this.digest,
-        offset = this.offset,
-        maximumBytes = this.maximumBytes,
     );
 
     /** Returns a shallow copy of this instance with the specified fields replaced. */
@@ -2271,14 +2122,8 @@ class ReadArtifactBlobRequest private constructor(
             _MustNameArguments,
         digest: skirout.service.v1.artifact.ArtifactDigest_OrMutable =
             this.digest,
-        offset: kotlin.Long =
-            this.offset,
-        maximumBytes: kotlin.Int =
-            this.maximumBytes,
-    ) = skirout.service.v1.artifact.ReadArtifactBlobRequest(
+    ) = skirout.service.v1.artifact.FetchArtifactBlobRequest(
         digest.toFrozen(),
-        offset,
-        maximumBytes,
         this._unrecognizedFields,
     );
 
@@ -2286,38 +2131,32 @@ class ReadArtifactBlobRequest private constructor(
     fun copy() = this;
 
     override fun equals(other: kotlin.Any?): kotlin.Boolean {
-        return this === other || (other is skirout.service.v1.artifact.ReadArtifactBlobRequest && this.digest == other.digest && this.offset == other.offset && this.maximumBytes == other.maximumBytes);
+        return this === other || (other is skirout.service.v1.artifact.FetchArtifactBlobRequest && this.digest == other.digest);
     }
 
     override fun hashCode(): kotlin.Int {
-        return kotlin.collections.listOf<kotlin.Any?>(this.digest, this.offset, this.maximumBytes).hashCode();
+        return kotlin.collections.listOf<kotlin.Any?>(this.digest).hashCode();
     }
 
     override fun toString(): kotlin.String {
         return build.skir.internal.toStringImpl(
             this,
-            _SerializerRegistry.ReadArtifactBlobRequestSerializerImpl,
+            _SerializerRegistry.FetchArtifactBlobRequestSerializerImpl,
         )
     }
 
-    /** Mutable version of [ReadArtifactBlobRequest]. */
+    /** Mutable version of [FetchArtifactBlobRequest]. */
     class Mutable internal constructor(
         _mustNameArguments: _MustNameArguments =
             _MustNameArguments,
         override var digest: skirout.service.v1.artifact.ArtifactDigest_OrMutable =
             skirout.service.v1.artifact.ArtifactDigest.partial(),
-        override var offset: kotlin.Long =
-            0L,
-        override var maximumBytes: kotlin.Int =
-            0,
-        internal var _unrecognizedFields: _UnrecognizedFields<skirout.service.v1.artifact.ReadArtifactBlobRequest>? =
+        internal var _unrecognizedFields: _UnrecognizedFields<skirout.service.v1.artifact.FetchArtifactBlobRequest>? =
             null,
-    ): skirout.service.v1.artifact.ReadArtifactBlobRequest_OrMutable {
+    ): skirout.service.v1.artifact.FetchArtifactBlobRequest_OrMutable {
         /** Returns a deeply immutable copy of this instance */
-        override fun toFrozen() = skirout.service.v1.artifact.ReadArtifactBlobRequest(
+        override fun toFrozen() = skirout.service.v1.artifact.FetchArtifactBlobRequest(
             digest = this.digest,
-            offset = this.offset,
-            maximumBytes = this.maximumBytes,
             _unrecognizedFields = this._unrecognizedFields,
         );
 
@@ -2340,17 +2179,15 @@ class ReadArtifactBlobRequest private constructor(
 
     companion object {
         private val default =
-            skirout.service.v1.artifact.ReadArtifactBlobRequest(
+            skirout.service.v1.artifact.FetchArtifactBlobRequest(
                 skirout.service.v1.artifact.ArtifactDigest.partial(),
-                0L,
-                0,
             );
 
         /** Returns an instance with all fields set to their default values. */
         fun partial() = default;
 
         /**
-         * Creates a new instance of [ReadArtifactBlobRequest].
+         * Creates a new instance of [FetchArtifactBlobRequest].
          * Unlike the constructor, does not require all fields to be specified.
          * Missing fields will be set to their default values.
          */
@@ -2359,28 +2196,22 @@ class ReadArtifactBlobRequest private constructor(
                 _MustNameArguments,
             digest: skirout.service.v1.artifact.ArtifactDigest_OrMutable =
                 skirout.service.v1.artifact.ArtifactDigest.partial(),
-            offset: kotlin.Long =
-                0L,
-            maximumBytes: kotlin.Int =
-                0,
-        ) = skirout.service.v1.artifact.ReadArtifactBlobRequest(
+        ) = skirout.service.v1.artifact.FetchArtifactBlobRequest(
             digest = digest,
-            offset = offset,
-            maximumBytes = maximumBytes,
             _unrecognizedFields = null,
         );
 
-        /** Serializer for [ReadArtifactBlobRequest] instances. */
-        val serializer get() = _SerializerRegistry.ReadArtifactBlobRequestSerializer;
+        /** Serializer for [FetchArtifactBlobRequest] instances. */
+        val serializer get() = _SerializerRegistry.FetchArtifactBlobRequestSerializer;
 
-        /** Describes the [ReadArtifactBlobRequest] type. Provides runtime introspection capabilities. */
-        val typeDescriptor get() = _SerializerRegistry.ReadArtifactBlobRequestSerializerImpl.typeDescriptor;
+        /** Describes the [FetchArtifactBlobRequest] type. Provides runtime introspection capabilities. */
+        val typeDescriptor get() = _SerializerRegistry.FetchArtifactBlobRequestSerializerImpl.typeDescriptor;
     }
 }
 
 /** Deeply immutable. */
-sealed class ReadArtifactBlobResponse private constructor() {
-    /** The kind of variant held by a `ReadArtifactBlobResponse`. */
+sealed class FetchArtifactBlobResponse private constructor() {
+    /** The kind of variant held by a `FetchArtifactBlobResponse`. */
     enum class Kind {
         UNKNOWN,
         SUCCESS_WRAPPER,
@@ -2389,14 +2220,14 @@ sealed class ReadArtifactBlobResponse private constructor() {
         INTERNAL_ERROR_WRAPPER,
     }
 
-    class Unknown @kotlin.Deprecated("For internal use", kotlin.ReplaceWith("skirout.service.v1.artifact.ReadArtifactBlobResponse.UNKNOWN")) internal constructor(
+    class Unknown @kotlin.Deprecated("For internal use", kotlin.ReplaceWith("skirout.service.v1.artifact.FetchArtifactBlobResponse.UNKNOWN")) internal constructor(
         internal val _kind: Kind,
-        internal override val _unrecognized: _UnrecognizedVariant<skirout.service.v1.artifact.ReadArtifactBlobResponse>?,
-    ) : skirout.service.v1.artifact.ReadArtifactBlobResponse() {
+        internal override val _unrecognized: _UnrecognizedVariant<skirout.service.v1.artifact.FetchArtifactBlobResponse>?,
+    ) : skirout.service.v1.artifact.FetchArtifactBlobResponse() {
         override val kind get() = _kind;
 
         override fun equals(other: kotlin.Any?): kotlin.Boolean {
-            return other is skirout.service.v1.artifact.ReadArtifactBlobResponse && other.kind == kind;
+            return other is skirout.service.v1.artifact.FetchArtifactBlobResponse && other.kind == kind;
         }
 
         override fun hashCode(): kotlin.Int {
@@ -2405,16 +2236,16 @@ sealed class ReadArtifactBlobResponse private constructor() {
     }
 
     class SuccessWrapper private constructor (
-        val value: skirout.service.v1.artifact.BlobChunk,
-    ) : skirout.service.v1.artifact.ReadArtifactBlobResponse() {
+        val value: skirout.service.v1.artifact.FetchArtifactBlobResponse.Success,
+    ) : skirout.service.v1.artifact.FetchArtifactBlobResponse() {
         constructor(
-            value: skirout.service.v1.artifact.BlobChunk_OrMutable,
+            value: skirout.service.v1.artifact.FetchArtifactBlobResponse.Success_OrMutable,
         ): this(value.toFrozen()) {}
 
         override val kind get() = Kind.SUCCESS_WRAPPER;
 
         override fun equals(other: kotlin.Any?): kotlin.Boolean {
-            return other is skirout.service.v1.artifact.ReadArtifactBlobResponse.SuccessWrapper && value == other.value;
+            return other is skirout.service.v1.artifact.FetchArtifactBlobResponse.SuccessWrapper && value == other.value;
         }
 
         override fun hashCode(): kotlin.Int {
@@ -2423,16 +2254,16 @@ sealed class ReadArtifactBlobResponse private constructor() {
     }
 
     class NotFoundErrorWrapper private constructor (
-        val value: skirout.service.v1.artifact.ReadArtifactBlobResponse.NotFoundError,
-    ) : skirout.service.v1.artifact.ReadArtifactBlobResponse() {
+        val value: skirout.service.v1.artifact.FetchArtifactBlobResponse.NotFoundError,
+    ) : skirout.service.v1.artifact.FetchArtifactBlobResponse() {
         constructor(
-            value: skirout.service.v1.artifact.ReadArtifactBlobResponse.NotFoundError_OrMutable,
+            value: skirout.service.v1.artifact.FetchArtifactBlobResponse.NotFoundError_OrMutable,
         ): this(value.toFrozen()) {}
 
         override val kind get() = Kind.NOT_FOUND_ERROR_WRAPPER;
 
         override fun equals(other: kotlin.Any?): kotlin.Boolean {
-            return other is skirout.service.v1.artifact.ReadArtifactBlobResponse.NotFoundErrorWrapper && value == other.value;
+            return other is skirout.service.v1.artifact.FetchArtifactBlobResponse.NotFoundErrorWrapper && value == other.value;
         }
 
         override fun hashCode(): kotlin.Int {
@@ -2441,16 +2272,16 @@ sealed class ReadArtifactBlobResponse private constructor() {
     }
 
     class InvalidErrorWrapper private constructor (
-        val value: skirout.service.v1.artifact.ReadArtifactBlobResponse.InvalidError,
-    ) : skirout.service.v1.artifact.ReadArtifactBlobResponse() {
+        val value: skirout.service.v1.artifact.FetchArtifactBlobResponse.InvalidError,
+    ) : skirout.service.v1.artifact.FetchArtifactBlobResponse() {
         constructor(
-            value: skirout.service.v1.artifact.ReadArtifactBlobResponse.InvalidError_OrMutable,
+            value: skirout.service.v1.artifact.FetchArtifactBlobResponse.InvalidError_OrMutable,
         ): this(value.toFrozen()) {}
 
         override val kind get() = Kind.INVALID_ERROR_WRAPPER;
 
         override fun equals(other: kotlin.Any?): kotlin.Boolean {
-            return other is skirout.service.v1.artifact.ReadArtifactBlobResponse.InvalidErrorWrapper && value == other.value;
+            return other is skirout.service.v1.artifact.FetchArtifactBlobResponse.InvalidErrorWrapper && value == other.value;
         }
 
         override fun hashCode(): kotlin.Int {
@@ -2460,7 +2291,7 @@ sealed class ReadArtifactBlobResponse private constructor() {
 
     class InternalErrorWrapper private constructor (
         val value: skirout.kernel.v1.errors.InternalError,
-    ) : skirout.service.v1.artifact.ReadArtifactBlobResponse() {
+    ) : skirout.service.v1.artifact.FetchArtifactBlobResponse() {
         constructor(
             value: skirout.kernel.v1.errors.InternalError_OrMutable,
         ): this(value.toFrozen()) {}
@@ -2468,7 +2299,7 @@ sealed class ReadArtifactBlobResponse private constructor() {
         override val kind get() = Kind.INTERNAL_ERROR_WRAPPER;
 
         override fun equals(other: kotlin.Any?): kotlin.Boolean {
-            return other is skirout.service.v1.artifact.ReadArtifactBlobResponse.InternalErrorWrapper && value == other.value;
+            return other is skirout.service.v1.artifact.FetchArtifactBlobResponse.InternalErrorWrapper && value == other.value;
         }
 
         override fun hashCode(): kotlin.Int {
@@ -2476,57 +2307,53 @@ sealed class ReadArtifactBlobResponse private constructor() {
         }
     }
 
-    internal open val _unrecognized: _UnrecognizedVariant<skirout.service.v1.artifact.ReadArtifactBlobResponse>? get() = null;
+    internal open val _unrecognized: _UnrecognizedVariant<skirout.service.v1.artifact.FetchArtifactBlobResponse>? get() = null;
 
     abstract val kind: Kind;
 
     override fun toString(): kotlin.String {
         return build.skir.internal.toStringImpl(
             this,
-            _SerializerRegistry.ReadArtifactBlobResponseSerializerImpl,
+            _SerializerRegistry.FetchArtifactBlobResponseSerializerImpl,
         )
     }
 
     companion object {
         /**
-         * Constant indicating an unknown [ReadArtifactBlobResponse].
-         * Default value for fields of type [ReadArtifactBlobResponse].
+         * Constant indicating an unknown [FetchArtifactBlobResponse].
+         * Default value for fields of type [FetchArtifactBlobResponse].
          */
         val UNKNOWN = @kotlin.Suppress("DEPRECATION") Unknown(Kind.UNKNOWN, null);
 
-        /** Shortcut for `SuccessWrapper(skirout.service.v1.artifact.BlobChunk(...))`. */
+        /** Shortcut for `SuccessWrapper(skirout.service.v1.artifact.FetchArtifactBlobResponse.Success(...))`. */
         @kotlin.Suppress("UNUSED_PARAMETER")
         fun createSuccess(
             _mustNameArguments: _MustNameArguments =
                 _MustNameArguments,
-            offset: kotlin.Long,
-            bytes: okio.ByteString,
-            complete: kotlin.Boolean,
+            content: okio.ByteString,
         ) = SuccessWrapper(
-            skirout.service.v1.artifact.BlobChunk(
-                offset = offset,
-                bytes = bytes,
-                complete = complete,
+            skirout.service.v1.artifact.FetchArtifactBlobResponse.Success(
+                content = content,
             )
         );
 
-        /** Shortcut for `NotFoundErrorWrapper(skirout.service.v1.artifact.ReadArtifactBlobResponse.NotFoundError(...))`. */
+        /** Shortcut for `NotFoundErrorWrapper(skirout.service.v1.artifact.FetchArtifactBlobResponse.NotFoundError(...))`. */
         @kotlin.Suppress("UNUSED_PARAMETER")
         fun createNotFoundError(
             _mustNameArguments: _MustNameArguments =
                 _MustNameArguments,
         ) = NotFoundErrorWrapper(
-            skirout.service.v1.artifact.ReadArtifactBlobResponse.NotFoundError()
+            skirout.service.v1.artifact.FetchArtifactBlobResponse.NotFoundError()
         );
 
-        /** Shortcut for `InvalidErrorWrapper(skirout.service.v1.artifact.ReadArtifactBlobResponse.InvalidError(...))`. */
+        /** Shortcut for `InvalidErrorWrapper(skirout.service.v1.artifact.FetchArtifactBlobResponse.InvalidError(...))`. */
         @kotlin.Suppress("UNUSED_PARAMETER")
         fun createInvalidError(
             _mustNameArguments: _MustNameArguments =
                 _MustNameArguments,
             reason: kotlin.String,
         ) = InvalidErrorWrapper(
-            skirout.service.v1.artifact.ReadArtifactBlobResponse.InvalidError(
+            skirout.service.v1.artifact.FetchArtifactBlobResponse.InvalidError(
                 reason = reason,
             )
         );
@@ -2540,27 +2367,136 @@ sealed class ReadArtifactBlobResponse private constructor() {
             skirout.kernel.v1.errors.InternalError()
         );
 
-        /** Serializer for [ReadArtifactBlobResponse] instances. */
-        val serializer get() = _SerializerRegistry.ReadArtifactBlobResponseSerializer;
+        /** Serializer for [FetchArtifactBlobResponse] instances. */
+        val serializer get() = _SerializerRegistry.FetchArtifactBlobResponseSerializer;
 
-        /** Describes the [ReadArtifactBlobResponse] type. Provides runtime introspection capabilities. */
-        val typeDescriptor get() = _SerializerRegistry.ReadArtifactBlobResponseSerializerImpl.typeDescriptor;
+        /** Describes the [FetchArtifactBlobResponse] type. Provides runtime introspection capabilities. */
+        val typeDescriptor get() = _SerializerRegistry.FetchArtifactBlobResponseSerializerImpl.typeDescriptor;
+    }
+
+    sealed interface Success_OrMutable {
+        val content: okio.ByteString;
+
+        fun toFrozen(): skirout.service.v1.artifact.FetchArtifactBlobResponse.Success;
+    }
+
+    /** Deeply immutable. */
+    @kotlin.Suppress("UNUSED_PARAMETER")
+    class Success private constructor(
+        override val content: okio.ByteString,
+        internal val _unrecognizedFields: _UnrecognizedFields<skirout.service.v1.artifact.FetchArtifactBlobResponse.Success>? =
+            null,
+    ): skirout.service.v1.artifact.FetchArtifactBlobResponse.Success_OrMutable {
+        constructor(
+            _mustNameArguments: _MustNameArguments =
+                _MustNameArguments,
+            content: okio.ByteString,
+            _unrecognizedFields: _UnrecognizedFields<skirout.service.v1.artifact.FetchArtifactBlobResponse.Success>? =
+                null,
+        ): this(
+            content,
+            _unrecognizedFields,
+        ) {}
+
+        @kotlin.Deprecated("Already frozen", kotlin.ReplaceWith("this"))
+        override fun toFrozen() = this;
+
+        /** Returns a mutable shallow copy of this instance */
+        fun toMutable() = Mutable(
+            content = this.content,
+        );
+
+        /** Returns a shallow copy of this instance with the specified fields replaced. */
+        fun copy(
+            _mustNameArguments: _MustNameArguments =
+                _MustNameArguments,
+            content: okio.ByteString =
+                this.content,
+        ) = skirout.service.v1.artifact.FetchArtifactBlobResponse.Success(
+            content,
+            this._unrecognizedFields,
+        );
+
+        @kotlin.Deprecated("No point in creating an exact copy of an immutable object", kotlin.ReplaceWith("this"))
+        fun copy() = this;
+
+        override fun equals(other: kotlin.Any?): kotlin.Boolean {
+            return this === other || (other is skirout.service.v1.artifact.FetchArtifactBlobResponse.Success && this.content == other.content);
+        }
+
+        override fun hashCode(): kotlin.Int {
+            return kotlin.collections.listOf<kotlin.Any?>(this.content).hashCode();
+        }
+
+        override fun toString(): kotlin.String {
+            return build.skir.internal.toStringImpl(
+                this,
+                _SerializerRegistry.FetchArtifactBlobResponse_SuccessSerializerImpl,
+            )
+        }
+
+        /** Mutable version of [Success]. */
+        class Mutable internal constructor(
+            _mustNameArguments: _MustNameArguments =
+                _MustNameArguments,
+            override var content: okio.ByteString =
+                okio.ByteString.EMPTY,
+            internal var _unrecognizedFields: _UnrecognizedFields<skirout.service.v1.artifact.FetchArtifactBlobResponse.Success>? =
+                null,
+        ): skirout.service.v1.artifact.FetchArtifactBlobResponse.Success_OrMutable {
+            /** Returns a deeply immutable copy of this instance */
+            override fun toFrozen() = skirout.service.v1.artifact.FetchArtifactBlobResponse.Success(
+                content = this.content,
+                _unrecognizedFields = this._unrecognizedFields,
+            );
+        }
+
+        companion object {
+            private val default =
+                skirout.service.v1.artifact.FetchArtifactBlobResponse.Success(
+                    okio.ByteString.EMPTY,
+                );
+
+            /** Returns an instance with all fields set to their default values. */
+            fun partial() = default;
+
+            /**
+             * Creates a new instance of [Success].
+             * Unlike the constructor, does not require all fields to be specified.
+             * Missing fields will be set to their default values.
+             */
+            fun partial(
+                _mustNameArguments: _MustNameArguments =
+                    _MustNameArguments,
+                content: okio.ByteString =
+                    okio.ByteString.EMPTY,
+            ) = skirout.service.v1.artifact.FetchArtifactBlobResponse.Success(
+                content = content,
+                _unrecognizedFields = null,
+            );
+
+            /** Serializer for [Success] instances. */
+            val serializer get() = _SerializerRegistry.FetchArtifactBlobResponse_SuccessSerializer;
+
+            /** Describes the [Success] type. Provides runtime introspection capabilities. */
+            val typeDescriptor get() = _SerializerRegistry.FetchArtifactBlobResponse_SuccessSerializerImpl.typeDescriptor;
+        }
     }
 
     sealed interface NotFoundError_OrMutable {
-        fun toFrozen(): skirout.service.v1.artifact.ReadArtifactBlobResponse.NotFoundError;
+        fun toFrozen(): skirout.service.v1.artifact.FetchArtifactBlobResponse.NotFoundError;
     }
 
     /** Deeply immutable. */
     @kotlin.Suppress("UNUSED_PARAMETER")
     class NotFoundError private constructor(
-        internal val _unrecognizedFields: _UnrecognizedFields<skirout.service.v1.artifact.ReadArtifactBlobResponse.NotFoundError>? =
+        internal val _unrecognizedFields: _UnrecognizedFields<skirout.service.v1.artifact.FetchArtifactBlobResponse.NotFoundError>? =
             null,
-    ): skirout.service.v1.artifact.ReadArtifactBlobResponse.NotFoundError_OrMutable {
+    ): skirout.service.v1.artifact.FetchArtifactBlobResponse.NotFoundError_OrMutable {
         constructor(
             _mustNameArguments: _MustNameArguments =
                 _MustNameArguments,
-            _unrecognizedFields: _UnrecognizedFields<skirout.service.v1.artifact.ReadArtifactBlobResponse.NotFoundError>? =
+            _unrecognizedFields: _UnrecognizedFields<skirout.service.v1.artifact.FetchArtifactBlobResponse.NotFoundError>? =
                 null,
         ): this(
             _unrecognizedFields,
@@ -2573,7 +2509,7 @@ sealed class ReadArtifactBlobResponse private constructor() {
         fun toMutable() = Mutable();
 
         override fun equals(other: kotlin.Any?): kotlin.Boolean {
-            return this === other || (other is skirout.service.v1.artifact.ReadArtifactBlobResponse.NotFoundError);
+            return this === other || (other is skirout.service.v1.artifact.FetchArtifactBlobResponse.NotFoundError);
         }
 
         override fun hashCode(): kotlin.Int {
@@ -2583,7 +2519,7 @@ sealed class ReadArtifactBlobResponse private constructor() {
         override fun toString(): kotlin.String {
             return build.skir.internal.toStringImpl(
                 this,
-                _SerializerRegistry.ReadArtifactBlobResponse_NotFoundErrorSerializerImpl,
+                _SerializerRegistry.FetchArtifactBlobResponse_NotFoundErrorSerializerImpl,
             )
         }
 
@@ -2591,18 +2527,18 @@ sealed class ReadArtifactBlobResponse private constructor() {
         class Mutable internal constructor(
             _mustNameArguments: _MustNameArguments =
                 _MustNameArguments,
-            internal var _unrecognizedFields: _UnrecognizedFields<skirout.service.v1.artifact.ReadArtifactBlobResponse.NotFoundError>? =
+            internal var _unrecognizedFields: _UnrecognizedFields<skirout.service.v1.artifact.FetchArtifactBlobResponse.NotFoundError>? =
                 null,
-        ): skirout.service.v1.artifact.ReadArtifactBlobResponse.NotFoundError_OrMutable {
+        ): skirout.service.v1.artifact.FetchArtifactBlobResponse.NotFoundError_OrMutable {
             /** Returns a deeply immutable copy of this instance */
-            override fun toFrozen() = skirout.service.v1.artifact.ReadArtifactBlobResponse.NotFoundError(
+            override fun toFrozen() = skirout.service.v1.artifact.FetchArtifactBlobResponse.NotFoundError(
                 _unrecognizedFields = this._unrecognizedFields,
             );
         }
 
         companion object {
             private val default =
-                skirout.service.v1.artifact.ReadArtifactBlobResponse.NotFoundError();
+                skirout.service.v1.artifact.FetchArtifactBlobResponse.NotFoundError();
 
             /** Returns an instance with all fields set to their default values. */
             fun partial() = default;
@@ -2615,36 +2551,36 @@ sealed class ReadArtifactBlobResponse private constructor() {
             fun partial(
                 _mustNameArguments: _MustNameArguments =
                     _MustNameArguments,
-            ) = skirout.service.v1.artifact.ReadArtifactBlobResponse.NotFoundError(
+            ) = skirout.service.v1.artifact.FetchArtifactBlobResponse.NotFoundError(
                 _unrecognizedFields = null,
             );
 
             /** Serializer for [NotFoundError] instances. */
-            val serializer get() = _SerializerRegistry.ReadArtifactBlobResponse_NotFoundErrorSerializer;
+            val serializer get() = _SerializerRegistry.FetchArtifactBlobResponse_NotFoundErrorSerializer;
 
             /** Describes the [NotFoundError] type. Provides runtime introspection capabilities. */
-            val typeDescriptor get() = _SerializerRegistry.ReadArtifactBlobResponse_NotFoundErrorSerializerImpl.typeDescriptor;
+            val typeDescriptor get() = _SerializerRegistry.FetchArtifactBlobResponse_NotFoundErrorSerializerImpl.typeDescriptor;
         }
     }
 
     sealed interface InvalidError_OrMutable {
         val reason: kotlin.String;
 
-        fun toFrozen(): skirout.service.v1.artifact.ReadArtifactBlobResponse.InvalidError;
+        fun toFrozen(): skirout.service.v1.artifact.FetchArtifactBlobResponse.InvalidError;
     }
 
     /** Deeply immutable. */
     @kotlin.Suppress("UNUSED_PARAMETER")
     class InvalidError private constructor(
         override val reason: kotlin.String,
-        internal val _unrecognizedFields: _UnrecognizedFields<skirout.service.v1.artifact.ReadArtifactBlobResponse.InvalidError>? =
+        internal val _unrecognizedFields: _UnrecognizedFields<skirout.service.v1.artifact.FetchArtifactBlobResponse.InvalidError>? =
             null,
-    ): skirout.service.v1.artifact.ReadArtifactBlobResponse.InvalidError_OrMutable {
+    ): skirout.service.v1.artifact.FetchArtifactBlobResponse.InvalidError_OrMutable {
         constructor(
             _mustNameArguments: _MustNameArguments =
                 _MustNameArguments,
             reason: kotlin.String,
-            _unrecognizedFields: _UnrecognizedFields<skirout.service.v1.artifact.ReadArtifactBlobResponse.InvalidError>? =
+            _unrecognizedFields: _UnrecognizedFields<skirout.service.v1.artifact.FetchArtifactBlobResponse.InvalidError>? =
                 null,
         ): this(
             reason,
@@ -2665,7 +2601,7 @@ sealed class ReadArtifactBlobResponse private constructor() {
                 _MustNameArguments,
             reason: kotlin.String =
                 this.reason,
-        ) = skirout.service.v1.artifact.ReadArtifactBlobResponse.InvalidError(
+        ) = skirout.service.v1.artifact.FetchArtifactBlobResponse.InvalidError(
             reason,
             this._unrecognizedFields,
         );
@@ -2674,7 +2610,7 @@ sealed class ReadArtifactBlobResponse private constructor() {
         fun copy() = this;
 
         override fun equals(other: kotlin.Any?): kotlin.Boolean {
-            return this === other || (other is skirout.service.v1.artifact.ReadArtifactBlobResponse.InvalidError && this.reason == other.reason);
+            return this === other || (other is skirout.service.v1.artifact.FetchArtifactBlobResponse.InvalidError && this.reason == other.reason);
         }
 
         override fun hashCode(): kotlin.Int {
@@ -2684,7 +2620,7 @@ sealed class ReadArtifactBlobResponse private constructor() {
         override fun toString(): kotlin.String {
             return build.skir.internal.toStringImpl(
                 this,
-                _SerializerRegistry.ReadArtifactBlobResponse_InvalidErrorSerializerImpl,
+                _SerializerRegistry.FetchArtifactBlobResponse_InvalidErrorSerializerImpl,
             )
         }
 
@@ -2694,11 +2630,11 @@ sealed class ReadArtifactBlobResponse private constructor() {
                 _MustNameArguments,
             override var reason: kotlin.String =
                 "",
-            internal var _unrecognizedFields: _UnrecognizedFields<skirout.service.v1.artifact.ReadArtifactBlobResponse.InvalidError>? =
+            internal var _unrecognizedFields: _UnrecognizedFields<skirout.service.v1.artifact.FetchArtifactBlobResponse.InvalidError>? =
                 null,
-        ): skirout.service.v1.artifact.ReadArtifactBlobResponse.InvalidError_OrMutable {
+        ): skirout.service.v1.artifact.FetchArtifactBlobResponse.InvalidError_OrMutable {
             /** Returns a deeply immutable copy of this instance */
-            override fun toFrozen() = skirout.service.v1.artifact.ReadArtifactBlobResponse.InvalidError(
+            override fun toFrozen() = skirout.service.v1.artifact.FetchArtifactBlobResponse.InvalidError(
                 reason = this.reason,
                 _unrecognizedFields = this._unrecognizedFields,
             );
@@ -2706,7 +2642,7 @@ sealed class ReadArtifactBlobResponse private constructor() {
 
         companion object {
             private val default =
-                skirout.service.v1.artifact.ReadArtifactBlobResponse.InvalidError(
+                skirout.service.v1.artifact.FetchArtifactBlobResponse.InvalidError(
                     "",
                 );
 
@@ -2723,45 +2659,45 @@ sealed class ReadArtifactBlobResponse private constructor() {
                     _MustNameArguments,
                 reason: kotlin.String =
                     "",
-            ) = skirout.service.v1.artifact.ReadArtifactBlobResponse.InvalidError(
+            ) = skirout.service.v1.artifact.FetchArtifactBlobResponse.InvalidError(
                 reason = reason,
                 _unrecognizedFields = null,
             );
 
             /** Serializer for [InvalidError] instances. */
-            val serializer get() = _SerializerRegistry.ReadArtifactBlobResponse_InvalidErrorSerializer;
+            val serializer get() = _SerializerRegistry.FetchArtifactBlobResponse_InvalidErrorSerializer;
 
             /** Describes the [InvalidError] type. Provides runtime introspection capabilities. */
-            val typeDescriptor get() = _SerializerRegistry.ReadArtifactBlobResponse_InvalidErrorSerializerImpl.typeDescriptor;
+            val typeDescriptor get() = _SerializerRegistry.FetchArtifactBlobResponse_InvalidErrorSerializerImpl.typeDescriptor;
         }
     }
 }
 
-sealed interface BeginArtifactBlobWriteRequest_OrMutable {
-    val transferId: kotlin.String;
+sealed interface StoreArtifactBlobRequest_OrMutable {
     val expected: skirout.service.v1.artifact.BlobMetadata_OrMutable;
+    val content: okio.ByteString;
 
-    fun toFrozen(): skirout.service.v1.artifact.BeginArtifactBlobWriteRequest;
+    fun toFrozen(): skirout.service.v1.artifact.StoreArtifactBlobRequest;
 }
 
 /** Deeply immutable. */
 @kotlin.Suppress("UNUSED_PARAMETER")
-class BeginArtifactBlobWriteRequest private constructor(
-    override val transferId: kotlin.String,
+class StoreArtifactBlobRequest private constructor(
     override val expected: skirout.service.v1.artifact.BlobMetadata,
-    internal val _unrecognizedFields: _UnrecognizedFields<skirout.service.v1.artifact.BeginArtifactBlobWriteRequest>? =
+    override val content: okio.ByteString,
+    internal val _unrecognizedFields: _UnrecognizedFields<skirout.service.v1.artifact.StoreArtifactBlobRequest>? =
         null,
-): skirout.service.v1.artifact.BeginArtifactBlobWriteRequest_OrMutable {
+): skirout.service.v1.artifact.StoreArtifactBlobRequest_OrMutable {
     constructor(
         _mustNameArguments: _MustNameArguments =
             _MustNameArguments,
-        transferId: kotlin.String,
         expected: skirout.service.v1.artifact.BlobMetadata_OrMutable,
-        _unrecognizedFields: _UnrecognizedFields<skirout.service.v1.artifact.BeginArtifactBlobWriteRequest>? =
+        content: okio.ByteString,
+        _unrecognizedFields: _UnrecognizedFields<skirout.service.v1.artifact.StoreArtifactBlobRequest>? =
             null,
     ): this(
-        transferId,
         expected.toFrozen(),
+        content,
         _unrecognizedFields,
     ) {}
 
@@ -2770,21 +2706,21 @@ class BeginArtifactBlobWriteRequest private constructor(
 
     /** Returns a mutable shallow copy of this instance */
     fun toMutable() = Mutable(
-        transferId = this.transferId,
         expected = this.expected,
+        content = this.content,
     );
 
     /** Returns a shallow copy of this instance with the specified fields replaced. */
     fun copy(
         _mustNameArguments: _MustNameArguments =
             _MustNameArguments,
-        transferId: kotlin.String =
-            this.transferId,
         expected: skirout.service.v1.artifact.BlobMetadata_OrMutable =
             this.expected,
-    ) = skirout.service.v1.artifact.BeginArtifactBlobWriteRequest(
-        transferId,
+        content: okio.ByteString =
+            this.content,
+    ) = skirout.service.v1.artifact.StoreArtifactBlobRequest(
         expected.toFrozen(),
+        content,
         this._unrecognizedFields,
     );
 
@@ -2792,35 +2728,35 @@ class BeginArtifactBlobWriteRequest private constructor(
     fun copy() = this;
 
     override fun equals(other: kotlin.Any?): kotlin.Boolean {
-        return this === other || (other is skirout.service.v1.artifact.BeginArtifactBlobWriteRequest && this.transferId == other.transferId && this.expected == other.expected);
+        return this === other || (other is skirout.service.v1.artifact.StoreArtifactBlobRequest && this.expected == other.expected && this.content == other.content);
     }
 
     override fun hashCode(): kotlin.Int {
-        return kotlin.collections.listOf<kotlin.Any?>(this.transferId, this.expected).hashCode();
+        return kotlin.collections.listOf<kotlin.Any?>(this.expected, this.content).hashCode();
     }
 
     override fun toString(): kotlin.String {
         return build.skir.internal.toStringImpl(
             this,
-            _SerializerRegistry.BeginArtifactBlobWriteRequestSerializerImpl,
+            _SerializerRegistry.StoreArtifactBlobRequestSerializerImpl,
         )
     }
 
-    /** Mutable version of [BeginArtifactBlobWriteRequest]. */
+    /** Mutable version of [StoreArtifactBlobRequest]. */
     class Mutable internal constructor(
         _mustNameArguments: _MustNameArguments =
             _MustNameArguments,
-        override var transferId: kotlin.String =
-            "",
         override var expected: skirout.service.v1.artifact.BlobMetadata_OrMutable =
             skirout.service.v1.artifact.BlobMetadata.partial(),
-        internal var _unrecognizedFields: _UnrecognizedFields<skirout.service.v1.artifact.BeginArtifactBlobWriteRequest>? =
+        override var content: okio.ByteString =
+            okio.ByteString.EMPTY,
+        internal var _unrecognizedFields: _UnrecognizedFields<skirout.service.v1.artifact.StoreArtifactBlobRequest>? =
             null,
-    ): skirout.service.v1.artifact.BeginArtifactBlobWriteRequest_OrMutable {
+    ): skirout.service.v1.artifact.StoreArtifactBlobRequest_OrMutable {
         /** Returns a deeply immutable copy of this instance */
-        override fun toFrozen() = skirout.service.v1.artifact.BeginArtifactBlobWriteRequest(
-            transferId = this.transferId,
+        override fun toFrozen() = skirout.service.v1.artifact.StoreArtifactBlobRequest(
             expected = this.expected,
+            content = this.content,
             _unrecognizedFields = this._unrecognizedFields,
         );
 
@@ -2843,1408 +2779,58 @@ class BeginArtifactBlobWriteRequest private constructor(
 
     companion object {
         private val default =
-            skirout.service.v1.artifact.BeginArtifactBlobWriteRequest(
-                "",
+            skirout.service.v1.artifact.StoreArtifactBlobRequest(
                 skirout.service.v1.artifact.BlobMetadata.partial(),
+                okio.ByteString.EMPTY,
             );
 
         /** Returns an instance with all fields set to their default values. */
         fun partial() = default;
 
         /**
-         * Creates a new instance of [BeginArtifactBlobWriteRequest].
+         * Creates a new instance of [StoreArtifactBlobRequest].
          * Unlike the constructor, does not require all fields to be specified.
          * Missing fields will be set to their default values.
          */
         fun partial(
             _mustNameArguments: _MustNameArguments =
                 _MustNameArguments,
-            transferId: kotlin.String =
-                "",
             expected: skirout.service.v1.artifact.BlobMetadata_OrMutable =
                 skirout.service.v1.artifact.BlobMetadata.partial(),
-        ) = skirout.service.v1.artifact.BeginArtifactBlobWriteRequest(
-            transferId = transferId,
+            content: okio.ByteString =
+                okio.ByteString.EMPTY,
+        ) = skirout.service.v1.artifact.StoreArtifactBlobRequest(
             expected = expected,
+            content = content,
             _unrecognizedFields = null,
         );
 
-        /** Serializer for [BeginArtifactBlobWriteRequest] instances. */
-        val serializer get() = _SerializerRegistry.BeginArtifactBlobWriteRequestSerializer;
+        /** Serializer for [StoreArtifactBlobRequest] instances. */
+        val serializer get() = _SerializerRegistry.StoreArtifactBlobRequestSerializer;
 
-        /** Describes the [BeginArtifactBlobWriteRequest] type. Provides runtime introspection capabilities. */
-        val typeDescriptor get() = _SerializerRegistry.BeginArtifactBlobWriteRequestSerializerImpl.typeDescriptor;
+        /** Describes the [StoreArtifactBlobRequest] type. Provides runtime introspection capabilities. */
+        val typeDescriptor get() = _SerializerRegistry.StoreArtifactBlobRequestSerializerImpl.typeDescriptor;
     }
 }
 
 /** Deeply immutable. */
-sealed class BeginArtifactBlobWriteResponse private constructor() {
-    /** The kind of variant held by a `BeginArtifactBlobWriteResponse`. */
-    enum class Kind {
-        UNKNOWN,
-        ACCEPTED_WRAPPER,
-        INVALID_ERROR_WRAPPER,
-        CONFLICT_ERROR_WRAPPER,
-        INTERNAL_ERROR_WRAPPER,
-    }
-
-    class Unknown @kotlin.Deprecated("For internal use", kotlin.ReplaceWith("skirout.service.v1.artifact.BeginArtifactBlobWriteResponse.UNKNOWN")) internal constructor(
-        internal val _kind: Kind,
-        internal override val _unrecognized: _UnrecognizedVariant<skirout.service.v1.artifact.BeginArtifactBlobWriteResponse>?,
-    ) : skirout.service.v1.artifact.BeginArtifactBlobWriteResponse() {
-        override val kind get() = _kind;
-
-        override fun equals(other: kotlin.Any?): kotlin.Boolean {
-            return other is skirout.service.v1.artifact.BeginArtifactBlobWriteResponse && other.kind == kind;
-        }
-
-        override fun hashCode(): kotlin.Int {
-            return kind.ordinal;
-        }
-    }
-
-    class AcceptedWrapper private constructor (
-        val value: skirout.service.v1.artifact.BeginArtifactBlobWriteResponse.Accepted,
-    ) : skirout.service.v1.artifact.BeginArtifactBlobWriteResponse() {
-        constructor(
-            value: skirout.service.v1.artifact.BeginArtifactBlobWriteResponse.Accepted_OrMutable,
-        ): this(value.toFrozen()) {}
-
-        override val kind get() = Kind.ACCEPTED_WRAPPER;
-
-        override fun equals(other: kotlin.Any?): kotlin.Boolean {
-            return other is skirout.service.v1.artifact.BeginArtifactBlobWriteResponse.AcceptedWrapper && value == other.value;
-        }
-
-        override fun hashCode(): kotlin.Int {
-            return this.value.hashCode() + -2146525273;
-        }
-    }
-
-    class InvalidErrorWrapper private constructor (
-        val value: skirout.service.v1.artifact.BeginArtifactBlobWriteResponse.InvalidError,
-    ) : skirout.service.v1.artifact.BeginArtifactBlobWriteResponse() {
-        constructor(
-            value: skirout.service.v1.artifact.BeginArtifactBlobWriteResponse.InvalidError_OrMutable,
-        ): this(value.toFrozen()) {}
-
-        override val kind get() = Kind.INVALID_ERROR_WRAPPER;
-
-        override fun equals(other: kotlin.Any?): kotlin.Boolean {
-            return other is skirout.service.v1.artifact.BeginArtifactBlobWriteResponse.InvalidErrorWrapper && value == other.value;
-        }
-
-        override fun hashCode(): kotlin.Int {
-            return this.value.hashCode() + -849636928;
-        }
-    }
-
-    class ConflictErrorWrapper private constructor (
-        val value: skirout.service.v1.artifact.BeginArtifactBlobWriteResponse.ConflictError,
-    ) : skirout.service.v1.artifact.BeginArtifactBlobWriteResponse() {
-        constructor(
-            value: skirout.service.v1.artifact.BeginArtifactBlobWriteResponse.ConflictError_OrMutable,
-        ): this(value.toFrozen()) {}
-
-        override val kind get() = Kind.CONFLICT_ERROR_WRAPPER;
-
-        override fun equals(other: kotlin.Any?): kotlin.Boolean {
-            return other is skirout.service.v1.artifact.BeginArtifactBlobWriteResponse.ConflictErrorWrapper && value == other.value;
-        }
-
-        override fun hashCode(): kotlin.Int {
-            return this.value.hashCode() + 274643803;
-        }
-    }
-
-    class InternalErrorWrapper private constructor (
-        val value: skirout.kernel.v1.errors.InternalError,
-    ) : skirout.service.v1.artifact.BeginArtifactBlobWriteResponse() {
-        constructor(
-            value: skirout.kernel.v1.errors.InternalError_OrMutable,
-        ): this(value.toFrozen()) {}
-
-        override val kind get() = Kind.INTERNAL_ERROR_WRAPPER;
-
-        override fun equals(other: kotlin.Any?): kotlin.Boolean {
-            return other is skirout.service.v1.artifact.BeginArtifactBlobWriteResponse.InternalErrorWrapper && value == other.value;
-        }
-
-        override fun hashCode(): kotlin.Int {
-            return this.value.hashCode() + 778975750;
-        }
-    }
-
-    internal open val _unrecognized: _UnrecognizedVariant<skirout.service.v1.artifact.BeginArtifactBlobWriteResponse>? get() = null;
-
-    abstract val kind: Kind;
-
-    override fun toString(): kotlin.String {
-        return build.skir.internal.toStringImpl(
-            this,
-            _SerializerRegistry.BeginArtifactBlobWriteResponseSerializerImpl,
-        )
-    }
-
-    companion object {
-        /**
-         * Constant indicating an unknown [BeginArtifactBlobWriteResponse].
-         * Default value for fields of type [BeginArtifactBlobWriteResponse].
-         */
-        val UNKNOWN = @kotlin.Suppress("DEPRECATION") Unknown(Kind.UNKNOWN, null);
-
-        /** Shortcut for `AcceptedWrapper(skirout.service.v1.artifact.BeginArtifactBlobWriteResponse.Accepted(...))`. */
-        @kotlin.Suppress("UNUSED_PARAMETER")
-        fun createAccepted(
-            _mustNameArguments: _MustNameArguments =
-                _MustNameArguments,
-            offset: kotlin.Long,
-        ) = AcceptedWrapper(
-            skirout.service.v1.artifact.BeginArtifactBlobWriteResponse.Accepted(
-                offset = offset,
-            )
-        );
-
-        /** Shortcut for `InvalidErrorWrapper(skirout.service.v1.artifact.BeginArtifactBlobWriteResponse.InvalidError(...))`. */
-        @kotlin.Suppress("UNUSED_PARAMETER")
-        fun createInvalidError(
-            _mustNameArguments: _MustNameArguments =
-                _MustNameArguments,
-            reason: kotlin.String,
-        ) = InvalidErrorWrapper(
-            skirout.service.v1.artifact.BeginArtifactBlobWriteResponse.InvalidError(
-                reason = reason,
-            )
-        );
-
-        /** Shortcut for `ConflictErrorWrapper(skirout.service.v1.artifact.BeginArtifactBlobWriteResponse.ConflictError(...))`. */
-        @kotlin.Suppress("UNUSED_PARAMETER")
-        fun createConflictError(
-            _mustNameArguments: _MustNameArguments =
-                _MustNameArguments,
-            reason: kotlin.String,
-        ) = ConflictErrorWrapper(
-            skirout.service.v1.artifact.BeginArtifactBlobWriteResponse.ConflictError(
-                reason = reason,
-            )
-        );
-
-        /** Shortcut for `InternalErrorWrapper(skirout.kernel.v1.errors.InternalError(...))`. */
-        @kotlin.Suppress("UNUSED_PARAMETER")
-        fun createInternalError(
-            _mustNameArguments: _MustNameArguments =
-                _MustNameArguments,
-        ) = InternalErrorWrapper(
-            skirout.kernel.v1.errors.InternalError()
-        );
-
-        /** Serializer for [BeginArtifactBlobWriteResponse] instances. */
-        val serializer get() = _SerializerRegistry.BeginArtifactBlobWriteResponseSerializer;
-
-        /** Describes the [BeginArtifactBlobWriteResponse] type. Provides runtime introspection capabilities. */
-        val typeDescriptor get() = _SerializerRegistry.BeginArtifactBlobWriteResponseSerializerImpl.typeDescriptor;
-    }
-
-    sealed interface Accepted_OrMutable {
-        val offset: kotlin.Long;
-
-        fun toFrozen(): skirout.service.v1.artifact.BeginArtifactBlobWriteResponse.Accepted;
-    }
-
-    /** Deeply immutable. */
-    @kotlin.Suppress("UNUSED_PARAMETER")
-    class Accepted private constructor(
-        override val offset: kotlin.Long,
-        internal val _unrecognizedFields: _UnrecognizedFields<skirout.service.v1.artifact.BeginArtifactBlobWriteResponse.Accepted>? =
-            null,
-    ): skirout.service.v1.artifact.BeginArtifactBlobWriteResponse.Accepted_OrMutable {
-        constructor(
-            _mustNameArguments: _MustNameArguments =
-                _MustNameArguments,
-            offset: kotlin.Long,
-            _unrecognizedFields: _UnrecognizedFields<skirout.service.v1.artifact.BeginArtifactBlobWriteResponse.Accepted>? =
-                null,
-        ): this(
-            offset,
-            _unrecognizedFields,
-        ) {}
-
-        @kotlin.Deprecated("Already frozen", kotlin.ReplaceWith("this"))
-        override fun toFrozen() = this;
-
-        /** Returns a mutable shallow copy of this instance */
-        fun toMutable() = Mutable(
-            offset = this.offset,
-        );
-
-        /** Returns a shallow copy of this instance with the specified fields replaced. */
-        fun copy(
-            _mustNameArguments: _MustNameArguments =
-                _MustNameArguments,
-            offset: kotlin.Long =
-                this.offset,
-        ) = skirout.service.v1.artifact.BeginArtifactBlobWriteResponse.Accepted(
-            offset,
-            this._unrecognizedFields,
-        );
-
-        @kotlin.Deprecated("No point in creating an exact copy of an immutable object", kotlin.ReplaceWith("this"))
-        fun copy() = this;
-
-        override fun equals(other: kotlin.Any?): kotlin.Boolean {
-            return this === other || (other is skirout.service.v1.artifact.BeginArtifactBlobWriteResponse.Accepted && this.offset == other.offset);
-        }
-
-        override fun hashCode(): kotlin.Int {
-            return kotlin.collections.listOf<kotlin.Any?>(this.offset).hashCode();
-        }
-
-        override fun toString(): kotlin.String {
-            return build.skir.internal.toStringImpl(
-                this,
-                _SerializerRegistry.BeginArtifactBlobWriteResponse_AcceptedSerializerImpl,
-            )
-        }
-
-        /** Mutable version of [Accepted]. */
-        class Mutable internal constructor(
-            _mustNameArguments: _MustNameArguments =
-                _MustNameArguments,
-            override var offset: kotlin.Long =
-                0L,
-            internal var _unrecognizedFields: _UnrecognizedFields<skirout.service.v1.artifact.BeginArtifactBlobWriteResponse.Accepted>? =
-                null,
-        ): skirout.service.v1.artifact.BeginArtifactBlobWriteResponse.Accepted_OrMutable {
-            /** Returns a deeply immutable copy of this instance */
-            override fun toFrozen() = skirout.service.v1.artifact.BeginArtifactBlobWriteResponse.Accepted(
-                offset = this.offset,
-                _unrecognizedFields = this._unrecognizedFields,
-            );
-        }
-
-        companion object {
-            private val default =
-                skirout.service.v1.artifact.BeginArtifactBlobWriteResponse.Accepted(
-                    0L,
-                );
-
-            /** Returns an instance with all fields set to their default values. */
-            fun partial() = default;
-
-            /**
-             * Creates a new instance of [Accepted].
-             * Unlike the constructor, does not require all fields to be specified.
-             * Missing fields will be set to their default values.
-             */
-            fun partial(
-                _mustNameArguments: _MustNameArguments =
-                    _MustNameArguments,
-                offset: kotlin.Long =
-                    0L,
-            ) = skirout.service.v1.artifact.BeginArtifactBlobWriteResponse.Accepted(
-                offset = offset,
-                _unrecognizedFields = null,
-            );
-
-            /** Serializer for [Accepted] instances. */
-            val serializer get() = _SerializerRegistry.BeginArtifactBlobWriteResponse_AcceptedSerializer;
-
-            /** Describes the [Accepted] type. Provides runtime introspection capabilities. */
-            val typeDescriptor get() = _SerializerRegistry.BeginArtifactBlobWriteResponse_AcceptedSerializerImpl.typeDescriptor;
-        }
-    }
-
-    sealed interface InvalidError_OrMutable {
-        val reason: kotlin.String;
-
-        fun toFrozen(): skirout.service.v1.artifact.BeginArtifactBlobWriteResponse.InvalidError;
-    }
-
-    /** Deeply immutable. */
-    @kotlin.Suppress("UNUSED_PARAMETER")
-    class InvalidError private constructor(
-        override val reason: kotlin.String,
-        internal val _unrecognizedFields: _UnrecognizedFields<skirout.service.v1.artifact.BeginArtifactBlobWriteResponse.InvalidError>? =
-            null,
-    ): skirout.service.v1.artifact.BeginArtifactBlobWriteResponse.InvalidError_OrMutable {
-        constructor(
-            _mustNameArguments: _MustNameArguments =
-                _MustNameArguments,
-            reason: kotlin.String,
-            _unrecognizedFields: _UnrecognizedFields<skirout.service.v1.artifact.BeginArtifactBlobWriteResponse.InvalidError>? =
-                null,
-        ): this(
-            reason,
-            _unrecognizedFields,
-        ) {}
-
-        @kotlin.Deprecated("Already frozen", kotlin.ReplaceWith("this"))
-        override fun toFrozen() = this;
-
-        /** Returns a mutable shallow copy of this instance */
-        fun toMutable() = Mutable(
-            reason = this.reason,
-        );
-
-        /** Returns a shallow copy of this instance with the specified fields replaced. */
-        fun copy(
-            _mustNameArguments: _MustNameArguments =
-                _MustNameArguments,
-            reason: kotlin.String =
-                this.reason,
-        ) = skirout.service.v1.artifact.BeginArtifactBlobWriteResponse.InvalidError(
-            reason,
-            this._unrecognizedFields,
-        );
-
-        @kotlin.Deprecated("No point in creating an exact copy of an immutable object", kotlin.ReplaceWith("this"))
-        fun copy() = this;
-
-        override fun equals(other: kotlin.Any?): kotlin.Boolean {
-            return this === other || (other is skirout.service.v1.artifact.BeginArtifactBlobWriteResponse.InvalidError && this.reason == other.reason);
-        }
-
-        override fun hashCode(): kotlin.Int {
-            return kotlin.collections.listOf<kotlin.Any?>(this.reason).hashCode();
-        }
-
-        override fun toString(): kotlin.String {
-            return build.skir.internal.toStringImpl(
-                this,
-                _SerializerRegistry.BeginArtifactBlobWriteResponse_InvalidErrorSerializerImpl,
-            )
-        }
-
-        /** Mutable version of [InvalidError]. */
-        class Mutable internal constructor(
-            _mustNameArguments: _MustNameArguments =
-                _MustNameArguments,
-            override var reason: kotlin.String =
-                "",
-            internal var _unrecognizedFields: _UnrecognizedFields<skirout.service.v1.artifact.BeginArtifactBlobWriteResponse.InvalidError>? =
-                null,
-        ): skirout.service.v1.artifact.BeginArtifactBlobWriteResponse.InvalidError_OrMutable {
-            /** Returns a deeply immutable copy of this instance */
-            override fun toFrozen() = skirout.service.v1.artifact.BeginArtifactBlobWriteResponse.InvalidError(
-                reason = this.reason,
-                _unrecognizedFields = this._unrecognizedFields,
-            );
-        }
-
-        companion object {
-            private val default =
-                skirout.service.v1.artifact.BeginArtifactBlobWriteResponse.InvalidError(
-                    "",
-                );
-
-            /** Returns an instance with all fields set to their default values. */
-            fun partial() = default;
-
-            /**
-             * Creates a new instance of [InvalidError].
-             * Unlike the constructor, does not require all fields to be specified.
-             * Missing fields will be set to their default values.
-             */
-            fun partial(
-                _mustNameArguments: _MustNameArguments =
-                    _MustNameArguments,
-                reason: kotlin.String =
-                    "",
-            ) = skirout.service.v1.artifact.BeginArtifactBlobWriteResponse.InvalidError(
-                reason = reason,
-                _unrecognizedFields = null,
-            );
-
-            /** Serializer for [InvalidError] instances. */
-            val serializer get() = _SerializerRegistry.BeginArtifactBlobWriteResponse_InvalidErrorSerializer;
-
-            /** Describes the [InvalidError] type. Provides runtime introspection capabilities. */
-            val typeDescriptor get() = _SerializerRegistry.BeginArtifactBlobWriteResponse_InvalidErrorSerializerImpl.typeDescriptor;
-        }
-    }
-
-    sealed interface ConflictError_OrMutable {
-        val reason: kotlin.String;
-
-        fun toFrozen(): skirout.service.v1.artifact.BeginArtifactBlobWriteResponse.ConflictError;
-    }
-
-    /** Deeply immutable. */
-    @kotlin.Suppress("UNUSED_PARAMETER")
-    class ConflictError private constructor(
-        override val reason: kotlin.String,
-        internal val _unrecognizedFields: _UnrecognizedFields<skirout.service.v1.artifact.BeginArtifactBlobWriteResponse.ConflictError>? =
-            null,
-    ): skirout.service.v1.artifact.BeginArtifactBlobWriteResponse.ConflictError_OrMutable {
-        constructor(
-            _mustNameArguments: _MustNameArguments =
-                _MustNameArguments,
-            reason: kotlin.String,
-            _unrecognizedFields: _UnrecognizedFields<skirout.service.v1.artifact.BeginArtifactBlobWriteResponse.ConflictError>? =
-                null,
-        ): this(
-            reason,
-            _unrecognizedFields,
-        ) {}
-
-        @kotlin.Deprecated("Already frozen", kotlin.ReplaceWith("this"))
-        override fun toFrozen() = this;
-
-        /** Returns a mutable shallow copy of this instance */
-        fun toMutable() = Mutable(
-            reason = this.reason,
-        );
-
-        /** Returns a shallow copy of this instance with the specified fields replaced. */
-        fun copy(
-            _mustNameArguments: _MustNameArguments =
-                _MustNameArguments,
-            reason: kotlin.String =
-                this.reason,
-        ) = skirout.service.v1.artifact.BeginArtifactBlobWriteResponse.ConflictError(
-            reason,
-            this._unrecognizedFields,
-        );
-
-        @kotlin.Deprecated("No point in creating an exact copy of an immutable object", kotlin.ReplaceWith("this"))
-        fun copy() = this;
-
-        override fun equals(other: kotlin.Any?): kotlin.Boolean {
-            return this === other || (other is skirout.service.v1.artifact.BeginArtifactBlobWriteResponse.ConflictError && this.reason == other.reason);
-        }
-
-        override fun hashCode(): kotlin.Int {
-            return kotlin.collections.listOf<kotlin.Any?>(this.reason).hashCode();
-        }
-
-        override fun toString(): kotlin.String {
-            return build.skir.internal.toStringImpl(
-                this,
-                _SerializerRegistry.BeginArtifactBlobWriteResponse_ConflictErrorSerializerImpl,
-            )
-        }
-
-        /** Mutable version of [ConflictError]. */
-        class Mutable internal constructor(
-            _mustNameArguments: _MustNameArguments =
-                _MustNameArguments,
-            override var reason: kotlin.String =
-                "",
-            internal var _unrecognizedFields: _UnrecognizedFields<skirout.service.v1.artifact.BeginArtifactBlobWriteResponse.ConflictError>? =
-                null,
-        ): skirout.service.v1.artifact.BeginArtifactBlobWriteResponse.ConflictError_OrMutable {
-            /** Returns a deeply immutable copy of this instance */
-            override fun toFrozen() = skirout.service.v1.artifact.BeginArtifactBlobWriteResponse.ConflictError(
-                reason = this.reason,
-                _unrecognizedFields = this._unrecognizedFields,
-            );
-        }
-
-        companion object {
-            private val default =
-                skirout.service.v1.artifact.BeginArtifactBlobWriteResponse.ConflictError(
-                    "",
-                );
-
-            /** Returns an instance with all fields set to their default values. */
-            fun partial() = default;
-
-            /**
-             * Creates a new instance of [ConflictError].
-             * Unlike the constructor, does not require all fields to be specified.
-             * Missing fields will be set to their default values.
-             */
-            fun partial(
-                _mustNameArguments: _MustNameArguments =
-                    _MustNameArguments,
-                reason: kotlin.String =
-                    "",
-            ) = skirout.service.v1.artifact.BeginArtifactBlobWriteResponse.ConflictError(
-                reason = reason,
-                _unrecognizedFields = null,
-            );
-
-            /** Serializer for [ConflictError] instances. */
-            val serializer get() = _SerializerRegistry.BeginArtifactBlobWriteResponse_ConflictErrorSerializer;
-
-            /** Describes the [ConflictError] type. Provides runtime introspection capabilities. */
-            val typeDescriptor get() = _SerializerRegistry.BeginArtifactBlobWriteResponse_ConflictErrorSerializerImpl.typeDescriptor;
-        }
-    }
-}
-
-sealed interface WriteArtifactBlobChunkRequest_OrMutable {
-    val transferId: kotlin.String;
-    val offset: kotlin.Long;
-    val bytes: okio.ByteString;
-
-    fun toFrozen(): skirout.service.v1.artifact.WriteArtifactBlobChunkRequest;
-}
-
-/** Deeply immutable. */
-@kotlin.Suppress("UNUSED_PARAMETER")
-class WriteArtifactBlobChunkRequest private constructor(
-    override val transferId: kotlin.String,
-    override val offset: kotlin.Long,
-    override val bytes: okio.ByteString,
-    internal val _unrecognizedFields: _UnrecognizedFields<skirout.service.v1.artifact.WriteArtifactBlobChunkRequest>? =
-        null,
-): skirout.service.v1.artifact.WriteArtifactBlobChunkRequest_OrMutable {
-    constructor(
-        _mustNameArguments: _MustNameArguments =
-            _MustNameArguments,
-        transferId: kotlin.String,
-        offset: kotlin.Long,
-        bytes: okio.ByteString,
-        _unrecognizedFields: _UnrecognizedFields<skirout.service.v1.artifact.WriteArtifactBlobChunkRequest>? =
-            null,
-    ): this(
-        transferId,
-        offset,
-        bytes,
-        _unrecognizedFields,
-    ) {}
-
-    @kotlin.Deprecated("Already frozen", kotlin.ReplaceWith("this"))
-    override fun toFrozen() = this;
-
-    /** Returns a mutable shallow copy of this instance */
-    fun toMutable() = Mutable(
-        transferId = this.transferId,
-        offset = this.offset,
-        bytes = this.bytes,
-    );
-
-    /** Returns a shallow copy of this instance with the specified fields replaced. */
-    fun copy(
-        _mustNameArguments: _MustNameArguments =
-            _MustNameArguments,
-        transferId: kotlin.String =
-            this.transferId,
-        offset: kotlin.Long =
-            this.offset,
-        bytes: okio.ByteString =
-            this.bytes,
-    ) = skirout.service.v1.artifact.WriteArtifactBlobChunkRequest(
-        transferId,
-        offset,
-        bytes,
-        this._unrecognizedFields,
-    );
-
-    @kotlin.Deprecated("No point in creating an exact copy of an immutable object", kotlin.ReplaceWith("this"))
-    fun copy() = this;
-
-    override fun equals(other: kotlin.Any?): kotlin.Boolean {
-        return this === other || (other is skirout.service.v1.artifact.WriteArtifactBlobChunkRequest && this.transferId == other.transferId && this.offset == other.offset && this.bytes == other.bytes);
-    }
-
-    override fun hashCode(): kotlin.Int {
-        return kotlin.collections.listOf<kotlin.Any?>(this.transferId, this.offset, this.bytes).hashCode();
-    }
-
-    override fun toString(): kotlin.String {
-        return build.skir.internal.toStringImpl(
-            this,
-            _SerializerRegistry.WriteArtifactBlobChunkRequestSerializerImpl,
-        )
-    }
-
-    /** Mutable version of [WriteArtifactBlobChunkRequest]. */
-    class Mutable internal constructor(
-        _mustNameArguments: _MustNameArguments =
-            _MustNameArguments,
-        override var transferId: kotlin.String =
-            "",
-        override var offset: kotlin.Long =
-            0L,
-        override var bytes: okio.ByteString =
-            okio.ByteString.EMPTY,
-        internal var _unrecognizedFields: _UnrecognizedFields<skirout.service.v1.artifact.WriteArtifactBlobChunkRequest>? =
-            null,
-    ): skirout.service.v1.artifact.WriteArtifactBlobChunkRequest_OrMutable {
-        /** Returns a deeply immutable copy of this instance */
-        override fun toFrozen() = skirout.service.v1.artifact.WriteArtifactBlobChunkRequest(
-            transferId = this.transferId,
-            offset = this.offset,
-            bytes = this.bytes,
-            _unrecognizedFields = this._unrecognizedFields,
-        );
-    }
-
-    companion object {
-        private val default =
-            skirout.service.v1.artifact.WriteArtifactBlobChunkRequest(
-                "",
-                0L,
-                okio.ByteString.EMPTY,
-            );
-
-        /** Returns an instance with all fields set to their default values. */
-        fun partial() = default;
-
-        /**
-         * Creates a new instance of [WriteArtifactBlobChunkRequest].
-         * Unlike the constructor, does not require all fields to be specified.
-         * Missing fields will be set to their default values.
-         */
-        fun partial(
-            _mustNameArguments: _MustNameArguments =
-                _MustNameArguments,
-            transferId: kotlin.String =
-                "",
-            offset: kotlin.Long =
-                0L,
-            bytes: okio.ByteString =
-                okio.ByteString.EMPTY,
-        ) = skirout.service.v1.artifact.WriteArtifactBlobChunkRequest(
-            transferId = transferId,
-            offset = offset,
-            bytes = bytes,
-            _unrecognizedFields = null,
-        );
-
-        /** Serializer for [WriteArtifactBlobChunkRequest] instances. */
-        val serializer get() = _SerializerRegistry.WriteArtifactBlobChunkRequestSerializer;
-
-        /** Describes the [WriteArtifactBlobChunkRequest] type. Provides runtime introspection capabilities. */
-        val typeDescriptor get() = _SerializerRegistry.WriteArtifactBlobChunkRequestSerializerImpl.typeDescriptor;
-    }
-}
-
-/** Deeply immutable. */
-sealed class WriteArtifactBlobChunkResponse private constructor() {
-    /** The kind of variant held by a `WriteArtifactBlobChunkResponse`. */
-    enum class Kind {
-        UNKNOWN,
-        ACCEPTED_WRAPPER,
-        NOT_FOUND_ERROR_WRAPPER,
-        INVALID_ERROR_WRAPPER,
-        CONFLICT_ERROR_WRAPPER,
-        INTERNAL_ERROR_WRAPPER,
-    }
-
-    class Unknown @kotlin.Deprecated("For internal use", kotlin.ReplaceWith("skirout.service.v1.artifact.WriteArtifactBlobChunkResponse.UNKNOWN")) internal constructor(
-        internal val _kind: Kind,
-        internal override val _unrecognized: _UnrecognizedVariant<skirout.service.v1.artifact.WriteArtifactBlobChunkResponse>?,
-    ) : skirout.service.v1.artifact.WriteArtifactBlobChunkResponse() {
-        override val kind get() = _kind;
-
-        override fun equals(other: kotlin.Any?): kotlin.Boolean {
-            return other is skirout.service.v1.artifact.WriteArtifactBlobChunkResponse && other.kind == kind;
-        }
-
-        override fun hashCode(): kotlin.Int {
-            return kind.ordinal;
-        }
-    }
-
-    class AcceptedWrapper private constructor (
-        val value: skirout.service.v1.artifact.WriteArtifactBlobChunkResponse.Accepted,
-    ) : skirout.service.v1.artifact.WriteArtifactBlobChunkResponse() {
-        constructor(
-            value: skirout.service.v1.artifact.WriteArtifactBlobChunkResponse.Accepted_OrMutable,
-        ): this(value.toFrozen()) {}
-
-        override val kind get() = Kind.ACCEPTED_WRAPPER;
-
-        override fun equals(other: kotlin.Any?): kotlin.Boolean {
-            return other is skirout.service.v1.artifact.WriteArtifactBlobChunkResponse.AcceptedWrapper && value == other.value;
-        }
-
-        override fun hashCode(): kotlin.Int {
-            return this.value.hashCode() + -2146525273;
-        }
-    }
-
-    class NotFoundErrorWrapper private constructor (
-        val value: skirout.service.v1.artifact.WriteArtifactBlobChunkResponse.NotFoundError,
-    ) : skirout.service.v1.artifact.WriteArtifactBlobChunkResponse() {
-        constructor(
-            value: skirout.service.v1.artifact.WriteArtifactBlobChunkResponse.NotFoundError_OrMutable,
-        ): this(value.toFrozen()) {}
-
-        override val kind get() = Kind.NOT_FOUND_ERROR_WRAPPER;
-
-        override fun equals(other: kotlin.Any?): kotlin.Boolean {
-            return other is skirout.service.v1.artifact.WriteArtifactBlobChunkResponse.NotFoundErrorWrapper && value == other.value;
-        }
-
-        override fun hashCode(): kotlin.Int {
-            return this.value.hashCode() + 1888290719;
-        }
-    }
-
-    class InvalidErrorWrapper private constructor (
-        val value: skirout.service.v1.artifact.WriteArtifactBlobChunkResponse.InvalidError,
-    ) : skirout.service.v1.artifact.WriteArtifactBlobChunkResponse() {
-        constructor(
-            value: skirout.service.v1.artifact.WriteArtifactBlobChunkResponse.InvalidError_OrMutable,
-        ): this(value.toFrozen()) {}
-
-        override val kind get() = Kind.INVALID_ERROR_WRAPPER;
-
-        override fun equals(other: kotlin.Any?): kotlin.Boolean {
-            return other is skirout.service.v1.artifact.WriteArtifactBlobChunkResponse.InvalidErrorWrapper && value == other.value;
-        }
-
-        override fun hashCode(): kotlin.Int {
-            return this.value.hashCode() + -849636928;
-        }
-    }
-
-    class ConflictErrorWrapper private constructor (
-        val value: skirout.service.v1.artifact.WriteArtifactBlobChunkResponse.ConflictError,
-    ) : skirout.service.v1.artifact.WriteArtifactBlobChunkResponse() {
-        constructor(
-            value: skirout.service.v1.artifact.WriteArtifactBlobChunkResponse.ConflictError_OrMutable,
-        ): this(value.toFrozen()) {}
-
-        override val kind get() = Kind.CONFLICT_ERROR_WRAPPER;
-
-        override fun equals(other: kotlin.Any?): kotlin.Boolean {
-            return other is skirout.service.v1.artifact.WriteArtifactBlobChunkResponse.ConflictErrorWrapper && value == other.value;
-        }
-
-        override fun hashCode(): kotlin.Int {
-            return this.value.hashCode() + 274643803;
-        }
-    }
-
-    class InternalErrorWrapper private constructor (
-        val value: skirout.kernel.v1.errors.InternalError,
-    ) : skirout.service.v1.artifact.WriteArtifactBlobChunkResponse() {
-        constructor(
-            value: skirout.kernel.v1.errors.InternalError_OrMutable,
-        ): this(value.toFrozen()) {}
-
-        override val kind get() = Kind.INTERNAL_ERROR_WRAPPER;
-
-        override fun equals(other: kotlin.Any?): kotlin.Boolean {
-            return other is skirout.service.v1.artifact.WriteArtifactBlobChunkResponse.InternalErrorWrapper && value == other.value;
-        }
-
-        override fun hashCode(): kotlin.Int {
-            return this.value.hashCode() + 778975750;
-        }
-    }
-
-    internal open val _unrecognized: _UnrecognizedVariant<skirout.service.v1.artifact.WriteArtifactBlobChunkResponse>? get() = null;
-
-    abstract val kind: Kind;
-
-    override fun toString(): kotlin.String {
-        return build.skir.internal.toStringImpl(
-            this,
-            _SerializerRegistry.WriteArtifactBlobChunkResponseSerializerImpl,
-        )
-    }
-
-    companion object {
-        /**
-         * Constant indicating an unknown [WriteArtifactBlobChunkResponse].
-         * Default value for fields of type [WriteArtifactBlobChunkResponse].
-         */
-        val UNKNOWN = @kotlin.Suppress("DEPRECATION") Unknown(Kind.UNKNOWN, null);
-
-        /** Shortcut for `AcceptedWrapper(skirout.service.v1.artifact.WriteArtifactBlobChunkResponse.Accepted(...))`. */
-        @kotlin.Suppress("UNUSED_PARAMETER")
-        fun createAccepted(
-            _mustNameArguments: _MustNameArguments =
-                _MustNameArguments,
-            offset: kotlin.Long,
-        ) = AcceptedWrapper(
-            skirout.service.v1.artifact.WriteArtifactBlobChunkResponse.Accepted(
-                offset = offset,
-            )
-        );
-
-        /** Shortcut for `NotFoundErrorWrapper(skirout.service.v1.artifact.WriteArtifactBlobChunkResponse.NotFoundError(...))`. */
-        @kotlin.Suppress("UNUSED_PARAMETER")
-        fun createNotFoundError(
-            _mustNameArguments: _MustNameArguments =
-                _MustNameArguments,
-        ) = NotFoundErrorWrapper(
-            skirout.service.v1.artifact.WriteArtifactBlobChunkResponse.NotFoundError()
-        );
-
-        /** Shortcut for `InvalidErrorWrapper(skirout.service.v1.artifact.WriteArtifactBlobChunkResponse.InvalidError(...))`. */
-        @kotlin.Suppress("UNUSED_PARAMETER")
-        fun createInvalidError(
-            _mustNameArguments: _MustNameArguments =
-                _MustNameArguments,
-            reason: kotlin.String,
-        ) = InvalidErrorWrapper(
-            skirout.service.v1.artifact.WriteArtifactBlobChunkResponse.InvalidError(
-                reason = reason,
-            )
-        );
-
-        /** Shortcut for `ConflictErrorWrapper(skirout.service.v1.artifact.WriteArtifactBlobChunkResponse.ConflictError(...))`. */
-        @kotlin.Suppress("UNUSED_PARAMETER")
-        fun createConflictError(
-            _mustNameArguments: _MustNameArguments =
-                _MustNameArguments,
-            reason: kotlin.String,
-        ) = ConflictErrorWrapper(
-            skirout.service.v1.artifact.WriteArtifactBlobChunkResponse.ConflictError(
-                reason = reason,
-            )
-        );
-
-        /** Shortcut for `InternalErrorWrapper(skirout.kernel.v1.errors.InternalError(...))`. */
-        @kotlin.Suppress("UNUSED_PARAMETER")
-        fun createInternalError(
-            _mustNameArguments: _MustNameArguments =
-                _MustNameArguments,
-        ) = InternalErrorWrapper(
-            skirout.kernel.v1.errors.InternalError()
-        );
-
-        /** Serializer for [WriteArtifactBlobChunkResponse] instances. */
-        val serializer get() = _SerializerRegistry.WriteArtifactBlobChunkResponseSerializer;
-
-        /** Describes the [WriteArtifactBlobChunkResponse] type. Provides runtime introspection capabilities. */
-        val typeDescriptor get() = _SerializerRegistry.WriteArtifactBlobChunkResponseSerializerImpl.typeDescriptor;
-    }
-
-    sealed interface Accepted_OrMutable {
-        val offset: kotlin.Long;
-
-        fun toFrozen(): skirout.service.v1.artifact.WriteArtifactBlobChunkResponse.Accepted;
-    }
-
-    /** Deeply immutable. */
-    @kotlin.Suppress("UNUSED_PARAMETER")
-    class Accepted private constructor(
-        override val offset: kotlin.Long,
-        internal val _unrecognizedFields: _UnrecognizedFields<skirout.service.v1.artifact.WriteArtifactBlobChunkResponse.Accepted>? =
-            null,
-    ): skirout.service.v1.artifact.WriteArtifactBlobChunkResponse.Accepted_OrMutable {
-        constructor(
-            _mustNameArguments: _MustNameArguments =
-                _MustNameArguments,
-            offset: kotlin.Long,
-            _unrecognizedFields: _UnrecognizedFields<skirout.service.v1.artifact.WriteArtifactBlobChunkResponse.Accepted>? =
-                null,
-        ): this(
-            offset,
-            _unrecognizedFields,
-        ) {}
-
-        @kotlin.Deprecated("Already frozen", kotlin.ReplaceWith("this"))
-        override fun toFrozen() = this;
-
-        /** Returns a mutable shallow copy of this instance */
-        fun toMutable() = Mutable(
-            offset = this.offset,
-        );
-
-        /** Returns a shallow copy of this instance with the specified fields replaced. */
-        fun copy(
-            _mustNameArguments: _MustNameArguments =
-                _MustNameArguments,
-            offset: kotlin.Long =
-                this.offset,
-        ) = skirout.service.v1.artifact.WriteArtifactBlobChunkResponse.Accepted(
-            offset,
-            this._unrecognizedFields,
-        );
-
-        @kotlin.Deprecated("No point in creating an exact copy of an immutable object", kotlin.ReplaceWith("this"))
-        fun copy() = this;
-
-        override fun equals(other: kotlin.Any?): kotlin.Boolean {
-            return this === other || (other is skirout.service.v1.artifact.WriteArtifactBlobChunkResponse.Accepted && this.offset == other.offset);
-        }
-
-        override fun hashCode(): kotlin.Int {
-            return kotlin.collections.listOf<kotlin.Any?>(this.offset).hashCode();
-        }
-
-        override fun toString(): kotlin.String {
-            return build.skir.internal.toStringImpl(
-                this,
-                _SerializerRegistry.WriteArtifactBlobChunkResponse_AcceptedSerializerImpl,
-            )
-        }
-
-        /** Mutable version of [Accepted]. */
-        class Mutable internal constructor(
-            _mustNameArguments: _MustNameArguments =
-                _MustNameArguments,
-            override var offset: kotlin.Long =
-                0L,
-            internal var _unrecognizedFields: _UnrecognizedFields<skirout.service.v1.artifact.WriteArtifactBlobChunkResponse.Accepted>? =
-                null,
-        ): skirout.service.v1.artifact.WriteArtifactBlobChunkResponse.Accepted_OrMutable {
-            /** Returns a deeply immutable copy of this instance */
-            override fun toFrozen() = skirout.service.v1.artifact.WriteArtifactBlobChunkResponse.Accepted(
-                offset = this.offset,
-                _unrecognizedFields = this._unrecognizedFields,
-            );
-        }
-
-        companion object {
-            private val default =
-                skirout.service.v1.artifact.WriteArtifactBlobChunkResponse.Accepted(
-                    0L,
-                );
-
-            /** Returns an instance with all fields set to their default values. */
-            fun partial() = default;
-
-            /**
-             * Creates a new instance of [Accepted].
-             * Unlike the constructor, does not require all fields to be specified.
-             * Missing fields will be set to their default values.
-             */
-            fun partial(
-                _mustNameArguments: _MustNameArguments =
-                    _MustNameArguments,
-                offset: kotlin.Long =
-                    0L,
-            ) = skirout.service.v1.artifact.WriteArtifactBlobChunkResponse.Accepted(
-                offset = offset,
-                _unrecognizedFields = null,
-            );
-
-            /** Serializer for [Accepted] instances. */
-            val serializer get() = _SerializerRegistry.WriteArtifactBlobChunkResponse_AcceptedSerializer;
-
-            /** Describes the [Accepted] type. Provides runtime introspection capabilities. */
-            val typeDescriptor get() = _SerializerRegistry.WriteArtifactBlobChunkResponse_AcceptedSerializerImpl.typeDescriptor;
-        }
-    }
-
-    sealed interface NotFoundError_OrMutable {
-        fun toFrozen(): skirout.service.v1.artifact.WriteArtifactBlobChunkResponse.NotFoundError;
-    }
-
-    /** Deeply immutable. */
-    @kotlin.Suppress("UNUSED_PARAMETER")
-    class NotFoundError private constructor(
-        internal val _unrecognizedFields: _UnrecognizedFields<skirout.service.v1.artifact.WriteArtifactBlobChunkResponse.NotFoundError>? =
-            null,
-    ): skirout.service.v1.artifact.WriteArtifactBlobChunkResponse.NotFoundError_OrMutable {
-        constructor(
-            _mustNameArguments: _MustNameArguments =
-                _MustNameArguments,
-            _unrecognizedFields: _UnrecognizedFields<skirout.service.v1.artifact.WriteArtifactBlobChunkResponse.NotFoundError>? =
-                null,
-        ): this(
-            _unrecognizedFields,
-        ) {}
-
-        @kotlin.Deprecated("Already frozen", kotlin.ReplaceWith("this"))
-        override fun toFrozen() = this;
-
-        /** Returns a mutable shallow copy of this instance */
-        fun toMutable() = Mutable();
-
-        override fun equals(other: kotlin.Any?): kotlin.Boolean {
-            return this === other || (other is skirout.service.v1.artifact.WriteArtifactBlobChunkResponse.NotFoundError);
-        }
-
-        override fun hashCode(): kotlin.Int {
-            return kotlin.collections.listOf<kotlin.Any?>().hashCode();
-        }
-
-        override fun toString(): kotlin.String {
-            return build.skir.internal.toStringImpl(
-                this,
-                _SerializerRegistry.WriteArtifactBlobChunkResponse_NotFoundErrorSerializerImpl,
-            )
-        }
-
-        /** Mutable version of [NotFoundError]. */
-        class Mutable internal constructor(
-            _mustNameArguments: _MustNameArguments =
-                _MustNameArguments,
-            internal var _unrecognizedFields: _UnrecognizedFields<skirout.service.v1.artifact.WriteArtifactBlobChunkResponse.NotFoundError>? =
-                null,
-        ): skirout.service.v1.artifact.WriteArtifactBlobChunkResponse.NotFoundError_OrMutable {
-            /** Returns a deeply immutable copy of this instance */
-            override fun toFrozen() = skirout.service.v1.artifact.WriteArtifactBlobChunkResponse.NotFoundError(
-                _unrecognizedFields = this._unrecognizedFields,
-            );
-        }
-
-        companion object {
-            private val default =
-                skirout.service.v1.artifact.WriteArtifactBlobChunkResponse.NotFoundError();
-
-            /** Returns an instance with all fields set to their default values. */
-            fun partial() = default;
-
-            /**
-             * Creates a new instance of [NotFoundError].
-             * Unlike the constructor, does not require all fields to be specified.
-             * Missing fields will be set to their default values.
-             */
-            fun partial(
-                _mustNameArguments: _MustNameArguments =
-                    _MustNameArguments,
-            ) = skirout.service.v1.artifact.WriteArtifactBlobChunkResponse.NotFoundError(
-                _unrecognizedFields = null,
-            );
-
-            /** Serializer for [NotFoundError] instances. */
-            val serializer get() = _SerializerRegistry.WriteArtifactBlobChunkResponse_NotFoundErrorSerializer;
-
-            /** Describes the [NotFoundError] type. Provides runtime introspection capabilities. */
-            val typeDescriptor get() = _SerializerRegistry.WriteArtifactBlobChunkResponse_NotFoundErrorSerializerImpl.typeDescriptor;
-        }
-    }
-
-    sealed interface InvalidError_OrMutable {
-        val reason: kotlin.String;
-
-        fun toFrozen(): skirout.service.v1.artifact.WriteArtifactBlobChunkResponse.InvalidError;
-    }
-
-    /** Deeply immutable. */
-    @kotlin.Suppress("UNUSED_PARAMETER")
-    class InvalidError private constructor(
-        override val reason: kotlin.String,
-        internal val _unrecognizedFields: _UnrecognizedFields<skirout.service.v1.artifact.WriteArtifactBlobChunkResponse.InvalidError>? =
-            null,
-    ): skirout.service.v1.artifact.WriteArtifactBlobChunkResponse.InvalidError_OrMutable {
-        constructor(
-            _mustNameArguments: _MustNameArguments =
-                _MustNameArguments,
-            reason: kotlin.String,
-            _unrecognizedFields: _UnrecognizedFields<skirout.service.v1.artifact.WriteArtifactBlobChunkResponse.InvalidError>? =
-                null,
-        ): this(
-            reason,
-            _unrecognizedFields,
-        ) {}
-
-        @kotlin.Deprecated("Already frozen", kotlin.ReplaceWith("this"))
-        override fun toFrozen() = this;
-
-        /** Returns a mutable shallow copy of this instance */
-        fun toMutable() = Mutable(
-            reason = this.reason,
-        );
-
-        /** Returns a shallow copy of this instance with the specified fields replaced. */
-        fun copy(
-            _mustNameArguments: _MustNameArguments =
-                _MustNameArguments,
-            reason: kotlin.String =
-                this.reason,
-        ) = skirout.service.v1.artifact.WriteArtifactBlobChunkResponse.InvalidError(
-            reason,
-            this._unrecognizedFields,
-        );
-
-        @kotlin.Deprecated("No point in creating an exact copy of an immutable object", kotlin.ReplaceWith("this"))
-        fun copy() = this;
-
-        override fun equals(other: kotlin.Any?): kotlin.Boolean {
-            return this === other || (other is skirout.service.v1.artifact.WriteArtifactBlobChunkResponse.InvalidError && this.reason == other.reason);
-        }
-
-        override fun hashCode(): kotlin.Int {
-            return kotlin.collections.listOf<kotlin.Any?>(this.reason).hashCode();
-        }
-
-        override fun toString(): kotlin.String {
-            return build.skir.internal.toStringImpl(
-                this,
-                _SerializerRegistry.WriteArtifactBlobChunkResponse_InvalidErrorSerializerImpl,
-            )
-        }
-
-        /** Mutable version of [InvalidError]. */
-        class Mutable internal constructor(
-            _mustNameArguments: _MustNameArguments =
-                _MustNameArguments,
-            override var reason: kotlin.String =
-                "",
-            internal var _unrecognizedFields: _UnrecognizedFields<skirout.service.v1.artifact.WriteArtifactBlobChunkResponse.InvalidError>? =
-                null,
-        ): skirout.service.v1.artifact.WriteArtifactBlobChunkResponse.InvalidError_OrMutable {
-            /** Returns a deeply immutable copy of this instance */
-            override fun toFrozen() = skirout.service.v1.artifact.WriteArtifactBlobChunkResponse.InvalidError(
-                reason = this.reason,
-                _unrecognizedFields = this._unrecognizedFields,
-            );
-        }
-
-        companion object {
-            private val default =
-                skirout.service.v1.artifact.WriteArtifactBlobChunkResponse.InvalidError(
-                    "",
-                );
-
-            /** Returns an instance with all fields set to their default values. */
-            fun partial() = default;
-
-            /**
-             * Creates a new instance of [InvalidError].
-             * Unlike the constructor, does not require all fields to be specified.
-             * Missing fields will be set to their default values.
-             */
-            fun partial(
-                _mustNameArguments: _MustNameArguments =
-                    _MustNameArguments,
-                reason: kotlin.String =
-                    "",
-            ) = skirout.service.v1.artifact.WriteArtifactBlobChunkResponse.InvalidError(
-                reason = reason,
-                _unrecognizedFields = null,
-            );
-
-            /** Serializer for [InvalidError] instances. */
-            val serializer get() = _SerializerRegistry.WriteArtifactBlobChunkResponse_InvalidErrorSerializer;
-
-            /** Describes the [InvalidError] type. Provides runtime introspection capabilities. */
-            val typeDescriptor get() = _SerializerRegistry.WriteArtifactBlobChunkResponse_InvalidErrorSerializerImpl.typeDescriptor;
-        }
-    }
-
-    sealed interface ConflictError_OrMutable {
-        val reason: kotlin.String;
-
-        fun toFrozen(): skirout.service.v1.artifact.WriteArtifactBlobChunkResponse.ConflictError;
-    }
-
-    /** Deeply immutable. */
-    @kotlin.Suppress("UNUSED_PARAMETER")
-    class ConflictError private constructor(
-        override val reason: kotlin.String,
-        internal val _unrecognizedFields: _UnrecognizedFields<skirout.service.v1.artifact.WriteArtifactBlobChunkResponse.ConflictError>? =
-            null,
-    ): skirout.service.v1.artifact.WriteArtifactBlobChunkResponse.ConflictError_OrMutable {
-        constructor(
-            _mustNameArguments: _MustNameArguments =
-                _MustNameArguments,
-            reason: kotlin.String,
-            _unrecognizedFields: _UnrecognizedFields<skirout.service.v1.artifact.WriteArtifactBlobChunkResponse.ConflictError>? =
-                null,
-        ): this(
-            reason,
-            _unrecognizedFields,
-        ) {}
-
-        @kotlin.Deprecated("Already frozen", kotlin.ReplaceWith("this"))
-        override fun toFrozen() = this;
-
-        /** Returns a mutable shallow copy of this instance */
-        fun toMutable() = Mutable(
-            reason = this.reason,
-        );
-
-        /** Returns a shallow copy of this instance with the specified fields replaced. */
-        fun copy(
-            _mustNameArguments: _MustNameArguments =
-                _MustNameArguments,
-            reason: kotlin.String =
-                this.reason,
-        ) = skirout.service.v1.artifact.WriteArtifactBlobChunkResponse.ConflictError(
-            reason,
-            this._unrecognizedFields,
-        );
-
-        @kotlin.Deprecated("No point in creating an exact copy of an immutable object", kotlin.ReplaceWith("this"))
-        fun copy() = this;
-
-        override fun equals(other: kotlin.Any?): kotlin.Boolean {
-            return this === other || (other is skirout.service.v1.artifact.WriteArtifactBlobChunkResponse.ConflictError && this.reason == other.reason);
-        }
-
-        override fun hashCode(): kotlin.Int {
-            return kotlin.collections.listOf<kotlin.Any?>(this.reason).hashCode();
-        }
-
-        override fun toString(): kotlin.String {
-            return build.skir.internal.toStringImpl(
-                this,
-                _SerializerRegistry.WriteArtifactBlobChunkResponse_ConflictErrorSerializerImpl,
-            )
-        }
-
-        /** Mutable version of [ConflictError]. */
-        class Mutable internal constructor(
-            _mustNameArguments: _MustNameArguments =
-                _MustNameArguments,
-            override var reason: kotlin.String =
-                "",
-            internal var _unrecognizedFields: _UnrecognizedFields<skirout.service.v1.artifact.WriteArtifactBlobChunkResponse.ConflictError>? =
-                null,
-        ): skirout.service.v1.artifact.WriteArtifactBlobChunkResponse.ConflictError_OrMutable {
-            /** Returns a deeply immutable copy of this instance */
-            override fun toFrozen() = skirout.service.v1.artifact.WriteArtifactBlobChunkResponse.ConflictError(
-                reason = this.reason,
-                _unrecognizedFields = this._unrecognizedFields,
-            );
-        }
-
-        companion object {
-            private val default =
-                skirout.service.v1.artifact.WriteArtifactBlobChunkResponse.ConflictError(
-                    "",
-                );
-
-            /** Returns an instance with all fields set to their default values. */
-            fun partial() = default;
-
-            /**
-             * Creates a new instance of [ConflictError].
-             * Unlike the constructor, does not require all fields to be specified.
-             * Missing fields will be set to their default values.
-             */
-            fun partial(
-                _mustNameArguments: _MustNameArguments =
-                    _MustNameArguments,
-                reason: kotlin.String =
-                    "",
-            ) = skirout.service.v1.artifact.WriteArtifactBlobChunkResponse.ConflictError(
-                reason = reason,
-                _unrecognizedFields = null,
-            );
-
-            /** Serializer for [ConflictError] instances. */
-            val serializer get() = _SerializerRegistry.WriteArtifactBlobChunkResponse_ConflictErrorSerializer;
-
-            /** Describes the [ConflictError] type. Provides runtime introspection capabilities. */
-            val typeDescriptor get() = _SerializerRegistry.WriteArtifactBlobChunkResponse_ConflictErrorSerializerImpl.typeDescriptor;
-        }
-    }
-}
-
-sealed interface CompleteArtifactBlobWriteRequest_OrMutable {
-    val transferId: kotlin.String;
-
-    fun toFrozen(): skirout.service.v1.artifact.CompleteArtifactBlobWriteRequest;
-}
-
-/** Deeply immutable. */
-@kotlin.Suppress("UNUSED_PARAMETER")
-class CompleteArtifactBlobWriteRequest private constructor(
-    override val transferId: kotlin.String,
-    internal val _unrecognizedFields: _UnrecognizedFields<skirout.service.v1.artifact.CompleteArtifactBlobWriteRequest>? =
-        null,
-): skirout.service.v1.artifact.CompleteArtifactBlobWriteRequest_OrMutable {
-    constructor(
-        _mustNameArguments: _MustNameArguments =
-            _MustNameArguments,
-        transferId: kotlin.String,
-        _unrecognizedFields: _UnrecognizedFields<skirout.service.v1.artifact.CompleteArtifactBlobWriteRequest>? =
-            null,
-    ): this(
-        transferId,
-        _unrecognizedFields,
-    ) {}
-
-    @kotlin.Deprecated("Already frozen", kotlin.ReplaceWith("this"))
-    override fun toFrozen() = this;
-
-    /** Returns a mutable shallow copy of this instance */
-    fun toMutable() = Mutable(
-        transferId = this.transferId,
-    );
-
-    /** Returns a shallow copy of this instance with the specified fields replaced. */
-    fun copy(
-        _mustNameArguments: _MustNameArguments =
-            _MustNameArguments,
-        transferId: kotlin.String =
-            this.transferId,
-    ) = skirout.service.v1.artifact.CompleteArtifactBlobWriteRequest(
-        transferId,
-        this._unrecognizedFields,
-    );
-
-    @kotlin.Deprecated("No point in creating an exact copy of an immutable object", kotlin.ReplaceWith("this"))
-    fun copy() = this;
-
-    override fun equals(other: kotlin.Any?): kotlin.Boolean {
-        return this === other || (other is skirout.service.v1.artifact.CompleteArtifactBlobWriteRequest && this.transferId == other.transferId);
-    }
-
-    override fun hashCode(): kotlin.Int {
-        return kotlin.collections.listOf<kotlin.Any?>(this.transferId).hashCode();
-    }
-
-    override fun toString(): kotlin.String {
-        return build.skir.internal.toStringImpl(
-            this,
-            _SerializerRegistry.CompleteArtifactBlobWriteRequestSerializerImpl,
-        )
-    }
-
-    /** Mutable version of [CompleteArtifactBlobWriteRequest]. */
-    class Mutable internal constructor(
-        _mustNameArguments: _MustNameArguments =
-            _MustNameArguments,
-        override var transferId: kotlin.String =
-            "",
-        internal var _unrecognizedFields: _UnrecognizedFields<skirout.service.v1.artifact.CompleteArtifactBlobWriteRequest>? =
-            null,
-    ): skirout.service.v1.artifact.CompleteArtifactBlobWriteRequest_OrMutable {
-        /** Returns a deeply immutable copy of this instance */
-        override fun toFrozen() = skirout.service.v1.artifact.CompleteArtifactBlobWriteRequest(
-            transferId = this.transferId,
-            _unrecognizedFields = this._unrecognizedFields,
-        );
-    }
-
-    companion object {
-        private val default =
-            skirout.service.v1.artifact.CompleteArtifactBlobWriteRequest(
-                "",
-            );
-
-        /** Returns an instance with all fields set to their default values. */
-        fun partial() = default;
-
-        /**
-         * Creates a new instance of [CompleteArtifactBlobWriteRequest].
-         * Unlike the constructor, does not require all fields to be specified.
-         * Missing fields will be set to their default values.
-         */
-        fun partial(
-            _mustNameArguments: _MustNameArguments =
-                _MustNameArguments,
-            transferId: kotlin.String =
-                "",
-        ) = skirout.service.v1.artifact.CompleteArtifactBlobWriteRequest(
-            transferId = transferId,
-            _unrecognizedFields = null,
-        );
-
-        /** Serializer for [CompleteArtifactBlobWriteRequest] instances. */
-        val serializer get() = _SerializerRegistry.CompleteArtifactBlobWriteRequestSerializer;
-
-        /** Describes the [CompleteArtifactBlobWriteRequest] type. Provides runtime introspection capabilities. */
-        val typeDescriptor get() = _SerializerRegistry.CompleteArtifactBlobWriteRequestSerializerImpl.typeDescriptor;
-    }
-}
-
-/** Deeply immutable. */
-sealed class CompleteArtifactBlobWriteResponse private constructor() {
-    /** The kind of variant held by a `CompleteArtifactBlobWriteResponse`. */
+sealed class StoreArtifactBlobResponse private constructor() {
+    /** The kind of variant held by a `StoreArtifactBlobResponse`. */
     enum class Kind {
         UNKNOWN,
         SUCCESS_WRAPPER,
-        NOT_FOUND_ERROR_WRAPPER,
         INVALID_ERROR_WRAPPER,
-        CONFLICT_ERROR_WRAPPER,
         INTERNAL_ERROR_WRAPPER,
     }
 
-    class Unknown @kotlin.Deprecated("For internal use", kotlin.ReplaceWith("skirout.service.v1.artifact.CompleteArtifactBlobWriteResponse.UNKNOWN")) internal constructor(
+    class Unknown @kotlin.Deprecated("For internal use", kotlin.ReplaceWith("skirout.service.v1.artifact.StoreArtifactBlobResponse.UNKNOWN")) internal constructor(
         internal val _kind: Kind,
-        internal override val _unrecognized: _UnrecognizedVariant<skirout.service.v1.artifact.CompleteArtifactBlobWriteResponse>?,
-    ) : skirout.service.v1.artifact.CompleteArtifactBlobWriteResponse() {
+        internal override val _unrecognized: _UnrecognizedVariant<skirout.service.v1.artifact.StoreArtifactBlobResponse>?,
+    ) : skirout.service.v1.artifact.StoreArtifactBlobResponse() {
         override val kind get() = _kind;
 
         override fun equals(other: kotlin.Any?): kotlin.Boolean {
-            return other is skirout.service.v1.artifact.CompleteArtifactBlobWriteResponse && other.kind == kind;
+            return other is skirout.service.v1.artifact.StoreArtifactBlobResponse && other.kind == kind;
         }
 
         override fun hashCode(): kotlin.Int {
@@ -4254,7 +2840,7 @@ sealed class CompleteArtifactBlobWriteResponse private constructor() {
 
     class SuccessWrapper private constructor (
         val value: skirout.service.v1.artifact.BlobMetadata,
-    ) : skirout.service.v1.artifact.CompleteArtifactBlobWriteResponse() {
+    ) : skirout.service.v1.artifact.StoreArtifactBlobResponse() {
         constructor(
             value: skirout.service.v1.artifact.BlobMetadata_OrMutable,
         ): this(value.toFrozen()) {}
@@ -4262,7 +2848,7 @@ sealed class CompleteArtifactBlobWriteResponse private constructor() {
         override val kind get() = Kind.SUCCESS_WRAPPER;
 
         override fun equals(other: kotlin.Any?): kotlin.Boolean {
-            return other is skirout.service.v1.artifact.CompleteArtifactBlobWriteResponse.SuccessWrapper && value == other.value;
+            return other is skirout.service.v1.artifact.StoreArtifactBlobResponse.SuccessWrapper && value == other.value;
         }
 
         override fun hashCode(): kotlin.Int {
@@ -4270,35 +2856,17 @@ sealed class CompleteArtifactBlobWriteResponse private constructor() {
         }
     }
 
-    class NotFoundErrorWrapper private constructor (
-        val value: skirout.service.v1.artifact.CompleteArtifactBlobWriteResponse.NotFoundError,
-    ) : skirout.service.v1.artifact.CompleteArtifactBlobWriteResponse() {
-        constructor(
-            value: skirout.service.v1.artifact.CompleteArtifactBlobWriteResponse.NotFoundError_OrMutable,
-        ): this(value.toFrozen()) {}
-
-        override val kind get() = Kind.NOT_FOUND_ERROR_WRAPPER;
-
-        override fun equals(other: kotlin.Any?): kotlin.Boolean {
-            return other is skirout.service.v1.artifact.CompleteArtifactBlobWriteResponse.NotFoundErrorWrapper && value == other.value;
-        }
-
-        override fun hashCode(): kotlin.Int {
-            return this.value.hashCode() + 1888290719;
-        }
-    }
-
     class InvalidErrorWrapper private constructor (
-        val value: skirout.service.v1.artifact.CompleteArtifactBlobWriteResponse.InvalidError,
-    ) : skirout.service.v1.artifact.CompleteArtifactBlobWriteResponse() {
+        val value: skirout.service.v1.artifact.StoreArtifactBlobResponse.InvalidError,
+    ) : skirout.service.v1.artifact.StoreArtifactBlobResponse() {
         constructor(
-            value: skirout.service.v1.artifact.CompleteArtifactBlobWriteResponse.InvalidError_OrMutable,
+            value: skirout.service.v1.artifact.StoreArtifactBlobResponse.InvalidError_OrMutable,
         ): this(value.toFrozen()) {}
 
         override val kind get() = Kind.INVALID_ERROR_WRAPPER;
 
         override fun equals(other: kotlin.Any?): kotlin.Boolean {
-            return other is skirout.service.v1.artifact.CompleteArtifactBlobWriteResponse.InvalidErrorWrapper && value == other.value;
+            return other is skirout.service.v1.artifact.StoreArtifactBlobResponse.InvalidErrorWrapper && value == other.value;
         }
 
         override fun hashCode(): kotlin.Int {
@@ -4306,27 +2874,9 @@ sealed class CompleteArtifactBlobWriteResponse private constructor() {
         }
     }
 
-    class ConflictErrorWrapper private constructor (
-        val value: skirout.service.v1.artifact.CompleteArtifactBlobWriteResponse.ConflictError,
-    ) : skirout.service.v1.artifact.CompleteArtifactBlobWriteResponse() {
-        constructor(
-            value: skirout.service.v1.artifact.CompleteArtifactBlobWriteResponse.ConflictError_OrMutable,
-        ): this(value.toFrozen()) {}
-
-        override val kind get() = Kind.CONFLICT_ERROR_WRAPPER;
-
-        override fun equals(other: kotlin.Any?): kotlin.Boolean {
-            return other is skirout.service.v1.artifact.CompleteArtifactBlobWriteResponse.ConflictErrorWrapper && value == other.value;
-        }
-
-        override fun hashCode(): kotlin.Int {
-            return this.value.hashCode() + 274643803;
-        }
-    }
-
     class InternalErrorWrapper private constructor (
         val value: skirout.kernel.v1.errors.InternalError,
-    ) : skirout.service.v1.artifact.CompleteArtifactBlobWriteResponse() {
+    ) : skirout.service.v1.artifact.StoreArtifactBlobResponse() {
         constructor(
             value: skirout.kernel.v1.errors.InternalError_OrMutable,
         ): this(value.toFrozen()) {}
@@ -4334,7 +2884,7 @@ sealed class CompleteArtifactBlobWriteResponse private constructor() {
         override val kind get() = Kind.INTERNAL_ERROR_WRAPPER;
 
         override fun equals(other: kotlin.Any?): kotlin.Boolean {
-            return other is skirout.service.v1.artifact.CompleteArtifactBlobWriteResponse.InternalErrorWrapper && value == other.value;
+            return other is skirout.service.v1.artifact.StoreArtifactBlobResponse.InternalErrorWrapper && value == other.value;
         }
 
         override fun hashCode(): kotlin.Int {
@@ -4342,21 +2892,21 @@ sealed class CompleteArtifactBlobWriteResponse private constructor() {
         }
     }
 
-    internal open val _unrecognized: _UnrecognizedVariant<skirout.service.v1.artifact.CompleteArtifactBlobWriteResponse>? get() = null;
+    internal open val _unrecognized: _UnrecognizedVariant<skirout.service.v1.artifact.StoreArtifactBlobResponse>? get() = null;
 
     abstract val kind: Kind;
 
     override fun toString(): kotlin.String {
         return build.skir.internal.toStringImpl(
             this,
-            _SerializerRegistry.CompleteArtifactBlobWriteResponseSerializerImpl,
+            _SerializerRegistry.StoreArtifactBlobResponseSerializerImpl,
         )
     }
 
     companion object {
         /**
-         * Constant indicating an unknown [CompleteArtifactBlobWriteResponse].
-         * Default value for fields of type [CompleteArtifactBlobWriteResponse].
+         * Constant indicating an unknown [StoreArtifactBlobResponse].
+         * Default value for fields of type [StoreArtifactBlobResponse].
          */
         val UNKNOWN = @kotlin.Suppress("DEPRECATION") Unknown(Kind.UNKNOWN, null);
 
@@ -4374,35 +2924,14 @@ sealed class CompleteArtifactBlobWriteResponse private constructor() {
             )
         );
 
-        /** Shortcut for `NotFoundErrorWrapper(skirout.service.v1.artifact.CompleteArtifactBlobWriteResponse.NotFoundError(...))`. */
-        @kotlin.Suppress("UNUSED_PARAMETER")
-        fun createNotFoundError(
-            _mustNameArguments: _MustNameArguments =
-                _MustNameArguments,
-        ) = NotFoundErrorWrapper(
-            skirout.service.v1.artifact.CompleteArtifactBlobWriteResponse.NotFoundError()
-        );
-
-        /** Shortcut for `InvalidErrorWrapper(skirout.service.v1.artifact.CompleteArtifactBlobWriteResponse.InvalidError(...))`. */
+        /** Shortcut for `InvalidErrorWrapper(skirout.service.v1.artifact.StoreArtifactBlobResponse.InvalidError(...))`. */
         @kotlin.Suppress("UNUSED_PARAMETER")
         fun createInvalidError(
             _mustNameArguments: _MustNameArguments =
                 _MustNameArguments,
             reason: kotlin.String,
         ) = InvalidErrorWrapper(
-            skirout.service.v1.artifact.CompleteArtifactBlobWriteResponse.InvalidError(
-                reason = reason,
-            )
-        );
-
-        /** Shortcut for `ConflictErrorWrapper(skirout.service.v1.artifact.CompleteArtifactBlobWriteResponse.ConflictError(...))`. */
-        @kotlin.Suppress("UNUSED_PARAMETER")
-        fun createConflictError(
-            _mustNameArguments: _MustNameArguments =
-                _MustNameArguments,
-            reason: kotlin.String,
-        ) = ConflictErrorWrapper(
-            skirout.service.v1.artifact.CompleteArtifactBlobWriteResponse.ConflictError(
+            skirout.service.v1.artifact.StoreArtifactBlobResponse.InvalidError(
                 reason = reason,
             )
         );
@@ -4416,111 +2945,31 @@ sealed class CompleteArtifactBlobWriteResponse private constructor() {
             skirout.kernel.v1.errors.InternalError()
         );
 
-        /** Serializer for [CompleteArtifactBlobWriteResponse] instances. */
-        val serializer get() = _SerializerRegistry.CompleteArtifactBlobWriteResponseSerializer;
+        /** Serializer for [StoreArtifactBlobResponse] instances. */
+        val serializer get() = _SerializerRegistry.StoreArtifactBlobResponseSerializer;
 
-        /** Describes the [CompleteArtifactBlobWriteResponse] type. Provides runtime introspection capabilities. */
-        val typeDescriptor get() = _SerializerRegistry.CompleteArtifactBlobWriteResponseSerializerImpl.typeDescriptor;
-    }
-
-    sealed interface NotFoundError_OrMutable {
-        fun toFrozen(): skirout.service.v1.artifact.CompleteArtifactBlobWriteResponse.NotFoundError;
-    }
-
-    /** Deeply immutable. */
-    @kotlin.Suppress("UNUSED_PARAMETER")
-    class NotFoundError private constructor(
-        internal val _unrecognizedFields: _UnrecognizedFields<skirout.service.v1.artifact.CompleteArtifactBlobWriteResponse.NotFoundError>? =
-            null,
-    ): skirout.service.v1.artifact.CompleteArtifactBlobWriteResponse.NotFoundError_OrMutable {
-        constructor(
-            _mustNameArguments: _MustNameArguments =
-                _MustNameArguments,
-            _unrecognizedFields: _UnrecognizedFields<skirout.service.v1.artifact.CompleteArtifactBlobWriteResponse.NotFoundError>? =
-                null,
-        ): this(
-            _unrecognizedFields,
-        ) {}
-
-        @kotlin.Deprecated("Already frozen", kotlin.ReplaceWith("this"))
-        override fun toFrozen() = this;
-
-        /** Returns a mutable shallow copy of this instance */
-        fun toMutable() = Mutable();
-
-        override fun equals(other: kotlin.Any?): kotlin.Boolean {
-            return this === other || (other is skirout.service.v1.artifact.CompleteArtifactBlobWriteResponse.NotFoundError);
-        }
-
-        override fun hashCode(): kotlin.Int {
-            return kotlin.collections.listOf<kotlin.Any?>().hashCode();
-        }
-
-        override fun toString(): kotlin.String {
-            return build.skir.internal.toStringImpl(
-                this,
-                _SerializerRegistry.CompleteArtifactBlobWriteResponse_NotFoundErrorSerializerImpl,
-            )
-        }
-
-        /** Mutable version of [NotFoundError]. */
-        class Mutable internal constructor(
-            _mustNameArguments: _MustNameArguments =
-                _MustNameArguments,
-            internal var _unrecognizedFields: _UnrecognizedFields<skirout.service.v1.artifact.CompleteArtifactBlobWriteResponse.NotFoundError>? =
-                null,
-        ): skirout.service.v1.artifact.CompleteArtifactBlobWriteResponse.NotFoundError_OrMutable {
-            /** Returns a deeply immutable copy of this instance */
-            override fun toFrozen() = skirout.service.v1.artifact.CompleteArtifactBlobWriteResponse.NotFoundError(
-                _unrecognizedFields = this._unrecognizedFields,
-            );
-        }
-
-        companion object {
-            private val default =
-                skirout.service.v1.artifact.CompleteArtifactBlobWriteResponse.NotFoundError();
-
-            /** Returns an instance with all fields set to their default values. */
-            fun partial() = default;
-
-            /**
-             * Creates a new instance of [NotFoundError].
-             * Unlike the constructor, does not require all fields to be specified.
-             * Missing fields will be set to their default values.
-             */
-            fun partial(
-                _mustNameArguments: _MustNameArguments =
-                    _MustNameArguments,
-            ) = skirout.service.v1.artifact.CompleteArtifactBlobWriteResponse.NotFoundError(
-                _unrecognizedFields = null,
-            );
-
-            /** Serializer for [NotFoundError] instances. */
-            val serializer get() = _SerializerRegistry.CompleteArtifactBlobWriteResponse_NotFoundErrorSerializer;
-
-            /** Describes the [NotFoundError] type. Provides runtime introspection capabilities. */
-            val typeDescriptor get() = _SerializerRegistry.CompleteArtifactBlobWriteResponse_NotFoundErrorSerializerImpl.typeDescriptor;
-        }
+        /** Describes the [StoreArtifactBlobResponse] type. Provides runtime introspection capabilities. */
+        val typeDescriptor get() = _SerializerRegistry.StoreArtifactBlobResponseSerializerImpl.typeDescriptor;
     }
 
     sealed interface InvalidError_OrMutable {
         val reason: kotlin.String;
 
-        fun toFrozen(): skirout.service.v1.artifact.CompleteArtifactBlobWriteResponse.InvalidError;
+        fun toFrozen(): skirout.service.v1.artifact.StoreArtifactBlobResponse.InvalidError;
     }
 
     /** Deeply immutable. */
     @kotlin.Suppress("UNUSED_PARAMETER")
     class InvalidError private constructor(
         override val reason: kotlin.String,
-        internal val _unrecognizedFields: _UnrecognizedFields<skirout.service.v1.artifact.CompleteArtifactBlobWriteResponse.InvalidError>? =
+        internal val _unrecognizedFields: _UnrecognizedFields<skirout.service.v1.artifact.StoreArtifactBlobResponse.InvalidError>? =
             null,
-    ): skirout.service.v1.artifact.CompleteArtifactBlobWriteResponse.InvalidError_OrMutable {
+    ): skirout.service.v1.artifact.StoreArtifactBlobResponse.InvalidError_OrMutable {
         constructor(
             _mustNameArguments: _MustNameArguments =
                 _MustNameArguments,
             reason: kotlin.String,
-            _unrecognizedFields: _UnrecognizedFields<skirout.service.v1.artifact.CompleteArtifactBlobWriteResponse.InvalidError>? =
+            _unrecognizedFields: _UnrecognizedFields<skirout.service.v1.artifact.StoreArtifactBlobResponse.InvalidError>? =
                 null,
         ): this(
             reason,
@@ -4541,7 +2990,7 @@ sealed class CompleteArtifactBlobWriteResponse private constructor() {
                 _MustNameArguments,
             reason: kotlin.String =
                 this.reason,
-        ) = skirout.service.v1.artifact.CompleteArtifactBlobWriteResponse.InvalidError(
+        ) = skirout.service.v1.artifact.StoreArtifactBlobResponse.InvalidError(
             reason,
             this._unrecognizedFields,
         );
@@ -4550,7 +2999,7 @@ sealed class CompleteArtifactBlobWriteResponse private constructor() {
         fun copy() = this;
 
         override fun equals(other: kotlin.Any?): kotlin.Boolean {
-            return this === other || (other is skirout.service.v1.artifact.CompleteArtifactBlobWriteResponse.InvalidError && this.reason == other.reason);
+            return this === other || (other is skirout.service.v1.artifact.StoreArtifactBlobResponse.InvalidError && this.reason == other.reason);
         }
 
         override fun hashCode(): kotlin.Int {
@@ -4560,7 +3009,7 @@ sealed class CompleteArtifactBlobWriteResponse private constructor() {
         override fun toString(): kotlin.String {
             return build.skir.internal.toStringImpl(
                 this,
-                _SerializerRegistry.CompleteArtifactBlobWriteResponse_InvalidErrorSerializerImpl,
+                _SerializerRegistry.StoreArtifactBlobResponse_InvalidErrorSerializerImpl,
             )
         }
 
@@ -4570,11 +3019,11 @@ sealed class CompleteArtifactBlobWriteResponse private constructor() {
                 _MustNameArguments,
             override var reason: kotlin.String =
                 "",
-            internal var _unrecognizedFields: _UnrecognizedFields<skirout.service.v1.artifact.CompleteArtifactBlobWriteResponse.InvalidError>? =
+            internal var _unrecognizedFields: _UnrecognizedFields<skirout.service.v1.artifact.StoreArtifactBlobResponse.InvalidError>? =
                 null,
-        ): skirout.service.v1.artifact.CompleteArtifactBlobWriteResponse.InvalidError_OrMutable {
+        ): skirout.service.v1.artifact.StoreArtifactBlobResponse.InvalidError_OrMutable {
             /** Returns a deeply immutable copy of this instance */
-            override fun toFrozen() = skirout.service.v1.artifact.CompleteArtifactBlobWriteResponse.InvalidError(
+            override fun toFrozen() = skirout.service.v1.artifact.StoreArtifactBlobResponse.InvalidError(
                 reason = this.reason,
                 _unrecognizedFields = this._unrecognizedFields,
             );
@@ -4582,7 +3031,7 @@ sealed class CompleteArtifactBlobWriteResponse private constructor() {
 
         companion object {
             private val default =
-                skirout.service.v1.artifact.CompleteArtifactBlobWriteResponse.InvalidError(
+                skirout.service.v1.artifact.StoreArtifactBlobResponse.InvalidError(
                     "",
                 );
 
@@ -4599,125 +3048,16 @@ sealed class CompleteArtifactBlobWriteResponse private constructor() {
                     _MustNameArguments,
                 reason: kotlin.String =
                     "",
-            ) = skirout.service.v1.artifact.CompleteArtifactBlobWriteResponse.InvalidError(
+            ) = skirout.service.v1.artifact.StoreArtifactBlobResponse.InvalidError(
                 reason = reason,
                 _unrecognizedFields = null,
             );
 
             /** Serializer for [InvalidError] instances. */
-            val serializer get() = _SerializerRegistry.CompleteArtifactBlobWriteResponse_InvalidErrorSerializer;
+            val serializer get() = _SerializerRegistry.StoreArtifactBlobResponse_InvalidErrorSerializer;
 
             /** Describes the [InvalidError] type. Provides runtime introspection capabilities. */
-            val typeDescriptor get() = _SerializerRegistry.CompleteArtifactBlobWriteResponse_InvalidErrorSerializerImpl.typeDescriptor;
-        }
-    }
-
-    sealed interface ConflictError_OrMutable {
-        val reason: kotlin.String;
-
-        fun toFrozen(): skirout.service.v1.artifact.CompleteArtifactBlobWriteResponse.ConflictError;
-    }
-
-    /** Deeply immutable. */
-    @kotlin.Suppress("UNUSED_PARAMETER")
-    class ConflictError private constructor(
-        override val reason: kotlin.String,
-        internal val _unrecognizedFields: _UnrecognizedFields<skirout.service.v1.artifact.CompleteArtifactBlobWriteResponse.ConflictError>? =
-            null,
-    ): skirout.service.v1.artifact.CompleteArtifactBlobWriteResponse.ConflictError_OrMutable {
-        constructor(
-            _mustNameArguments: _MustNameArguments =
-                _MustNameArguments,
-            reason: kotlin.String,
-            _unrecognizedFields: _UnrecognizedFields<skirout.service.v1.artifact.CompleteArtifactBlobWriteResponse.ConflictError>? =
-                null,
-        ): this(
-            reason,
-            _unrecognizedFields,
-        ) {}
-
-        @kotlin.Deprecated("Already frozen", kotlin.ReplaceWith("this"))
-        override fun toFrozen() = this;
-
-        /** Returns a mutable shallow copy of this instance */
-        fun toMutable() = Mutable(
-            reason = this.reason,
-        );
-
-        /** Returns a shallow copy of this instance with the specified fields replaced. */
-        fun copy(
-            _mustNameArguments: _MustNameArguments =
-                _MustNameArguments,
-            reason: kotlin.String =
-                this.reason,
-        ) = skirout.service.v1.artifact.CompleteArtifactBlobWriteResponse.ConflictError(
-            reason,
-            this._unrecognizedFields,
-        );
-
-        @kotlin.Deprecated("No point in creating an exact copy of an immutable object", kotlin.ReplaceWith("this"))
-        fun copy() = this;
-
-        override fun equals(other: kotlin.Any?): kotlin.Boolean {
-            return this === other || (other is skirout.service.v1.artifact.CompleteArtifactBlobWriteResponse.ConflictError && this.reason == other.reason);
-        }
-
-        override fun hashCode(): kotlin.Int {
-            return kotlin.collections.listOf<kotlin.Any?>(this.reason).hashCode();
-        }
-
-        override fun toString(): kotlin.String {
-            return build.skir.internal.toStringImpl(
-                this,
-                _SerializerRegistry.CompleteArtifactBlobWriteResponse_ConflictErrorSerializerImpl,
-            )
-        }
-
-        /** Mutable version of [ConflictError]. */
-        class Mutable internal constructor(
-            _mustNameArguments: _MustNameArguments =
-                _MustNameArguments,
-            override var reason: kotlin.String =
-                "",
-            internal var _unrecognizedFields: _UnrecognizedFields<skirout.service.v1.artifact.CompleteArtifactBlobWriteResponse.ConflictError>? =
-                null,
-        ): skirout.service.v1.artifact.CompleteArtifactBlobWriteResponse.ConflictError_OrMutable {
-            /** Returns a deeply immutable copy of this instance */
-            override fun toFrozen() = skirout.service.v1.artifact.CompleteArtifactBlobWriteResponse.ConflictError(
-                reason = this.reason,
-                _unrecognizedFields = this._unrecognizedFields,
-            );
-        }
-
-        companion object {
-            private val default =
-                skirout.service.v1.artifact.CompleteArtifactBlobWriteResponse.ConflictError(
-                    "",
-                );
-
-            /** Returns an instance with all fields set to their default values. */
-            fun partial() = default;
-
-            /**
-             * Creates a new instance of [ConflictError].
-             * Unlike the constructor, does not require all fields to be specified.
-             * Missing fields will be set to their default values.
-             */
-            fun partial(
-                _mustNameArguments: _MustNameArguments =
-                    _MustNameArguments,
-                reason: kotlin.String =
-                    "",
-            ) = skirout.service.v1.artifact.CompleteArtifactBlobWriteResponse.ConflictError(
-                reason = reason,
-                _unrecognizedFields = null,
-            );
-
-            /** Serializer for [ConflictError] instances. */
-            val serializer get() = _SerializerRegistry.CompleteArtifactBlobWriteResponse_ConflictErrorSerializer;
-
-            /** Describes the [ConflictError] type. Provides runtime introspection capabilities. */
-            val typeDescriptor get() = _SerializerRegistry.CompleteArtifactBlobWriteResponse_ConflictErrorSerializerImpl.typeDescriptor;
+            val typeDescriptor get() = _SerializerRegistry.StoreArtifactBlobResponse_InvalidErrorSerializerImpl.typeDescriptor;
         }
     }
 }
@@ -5230,54 +3570,28 @@ val PublishSharedArtifact: build.skir.service.Method<
     )
 }
 
-val ReadArtifactBlob: build.skir.service.Method<
-    skirout.service.v1.artifact.ReadArtifactBlobRequest,
-    skirout.service.v1.artifact.ReadArtifactBlobResponse,
+val FetchArtifactBlob: build.skir.service.Method<
+    skirout.service.v1.artifact.FetchArtifactBlobRequest,
+    skirout.service.v1.artifact.FetchArtifactBlobResponse,
 > by kotlin.lazy {
     build.skir.service.Method(
-        "ReadArtifactBlob",
+        "FetchArtifactBlob",
         930103,
-        skirout.service.v1.artifact.ReadArtifactBlobRequest.serializer,
-        skirout.service.v1.artifact.ReadArtifactBlobResponse.serializer,
+        skirout.service.v1.artifact.FetchArtifactBlobRequest.serializer,
+        skirout.service.v1.artifact.FetchArtifactBlobResponse.serializer,
         "",
     )
 }
 
-val BeginArtifactBlobWrite: build.skir.service.Method<
-    skirout.service.v1.artifact.BeginArtifactBlobWriteRequest,
-    skirout.service.v1.artifact.BeginArtifactBlobWriteResponse,
+val StoreArtifactBlob: build.skir.service.Method<
+    skirout.service.v1.artifact.StoreArtifactBlobRequest,
+    skirout.service.v1.artifact.StoreArtifactBlobResponse,
 > by kotlin.lazy {
     build.skir.service.Method(
-        "BeginArtifactBlobWrite",
+        "StoreArtifactBlob",
         930104,
-        skirout.service.v1.artifact.BeginArtifactBlobWriteRequest.serializer,
-        skirout.service.v1.artifact.BeginArtifactBlobWriteResponse.serializer,
-        "",
-    )
-}
-
-val WriteArtifactBlobChunk: build.skir.service.Method<
-    skirout.service.v1.artifact.WriteArtifactBlobChunkRequest,
-    skirout.service.v1.artifact.WriteArtifactBlobChunkResponse,
-> by kotlin.lazy {
-    build.skir.service.Method(
-        "WriteArtifactBlobChunk",
-        930105,
-        skirout.service.v1.artifact.WriteArtifactBlobChunkRequest.serializer,
-        skirout.service.v1.artifact.WriteArtifactBlobChunkResponse.serializer,
-        "",
-    )
-}
-
-val CompleteArtifactBlobWrite: build.skir.service.Method<
-    skirout.service.v1.artifact.CompleteArtifactBlobWriteRequest,
-    skirout.service.v1.artifact.CompleteArtifactBlobWriteResponse,
-> by kotlin.lazy {
-    build.skir.service.Method(
-        "CompleteArtifactBlobWrite",
-        930106,
-        skirout.service.v1.artifact.CompleteArtifactBlobWriteRequest.serializer,
-        skirout.service.v1.artifact.CompleteArtifactBlobWriteResponse.serializer,
+        skirout.service.v1.artifact.StoreArtifactBlobRequest.serializer,
+        skirout.service.v1.artifact.StoreArtifactBlobResponse.serializer,
         "",
     )
 }
@@ -5288,7 +3602,7 @@ val FetchArtifactBlobMetadata: build.skir.service.Method<
 > by kotlin.lazy {
     build.skir.service.Method(
         "FetchArtifactBlobMetadata",
-        930107,
+        930105,
         skirout.service.v1.artifact.FetchArtifactBlobMetadataRequest.serializer,
         skirout.service.v1.artifact.FetchArtifactBlobMetadataResponse.serializer,
         "",
@@ -5308,79 +3622,6 @@ private object _SerializerRegistry {
 
     val ArtifactDigestSerializer = build.skir.internal.makeSerializer(ArtifactDigestSerializerImpl);
 
-    val BeginArtifactBlobWriteRequestSerializerImpl = build.skir.internal.StructSerializer(
-        recordId = "service/v1/artifact.skir:BeginArtifactBlobWriteRequest",
-        doc = "",
-        defaultInstance = skirout.service.v1.artifact.BeginArtifactBlobWriteRequest.partial(),
-        newMutableFn = { it?.toMutable() ?: skirout.service.v1.artifact.BeginArtifactBlobWriteRequest.Mutable() },
-        toFrozenFn = { it.toFrozen() },
-        getUnrecognizedFields = { it._unrecognizedFields },
-        setUnrecognizedFields = { m, u -> m._unrecognizedFields = u },
-    );
-
-    val BeginArtifactBlobWriteRequestSerializer = build.skir.internal.makeSerializer(BeginArtifactBlobWriteRequestSerializerImpl);
-
-    val BeginArtifactBlobWriteResponseSerializerImpl =
-        build.skir.internal.EnumSerializer.create<skirout.service.v1.artifact.BeginArtifactBlobWriteResponse, skirout.service.v1.artifact.BeginArtifactBlobWriteResponse.Unknown>(
-            recordId = "service/v1/artifact.skir:BeginArtifactBlobWriteResponse",
-            doc = "",
-            getKindOrdinal = { it.kind.ordinal },
-            kindCount = skirout.service.v1.artifact.BeginArtifactBlobWriteResponse.Kind.values().size,
-            unknownInstance = skirout.service.v1.artifact.BeginArtifactBlobWriteResponse.UNKNOWN,
-            wrapUnrecognized = { @kotlin.Suppress("DEPRECATION") skirout.service.v1.artifact.BeginArtifactBlobWriteResponse.Unknown(skirout.service.v1.artifact.BeginArtifactBlobWriteResponse.Kind.UNKNOWN, it) },
-            getUnrecognized = { it._unrecognized },
-        );
-
-    val BeginArtifactBlobWriteResponseSerializer = build.skir.internal.makeSerializer(BeginArtifactBlobWriteResponseSerializerImpl);
-
-    val BeginArtifactBlobWriteResponse_AcceptedSerializerImpl = build.skir.internal.StructSerializer(
-        recordId = "service/v1/artifact.skir:BeginArtifactBlobWriteResponse.Accepted",
-        doc = "",
-        defaultInstance = skirout.service.v1.artifact.BeginArtifactBlobWriteResponse.Accepted.partial(),
-        newMutableFn = { it?.toMutable() ?: skirout.service.v1.artifact.BeginArtifactBlobWriteResponse.Accepted.Mutable() },
-        toFrozenFn = { it.toFrozen() },
-        getUnrecognizedFields = { it._unrecognizedFields },
-        setUnrecognizedFields = { m, u -> m._unrecognizedFields = u },
-    );
-
-    val BeginArtifactBlobWriteResponse_AcceptedSerializer = build.skir.internal.makeSerializer(BeginArtifactBlobWriteResponse_AcceptedSerializerImpl);
-
-    val BeginArtifactBlobWriteResponse_ConflictErrorSerializerImpl = build.skir.internal.StructSerializer(
-        recordId = "service/v1/artifact.skir:BeginArtifactBlobWriteResponse.ConflictError",
-        doc = "",
-        defaultInstance = skirout.service.v1.artifact.BeginArtifactBlobWriteResponse.ConflictError.partial(),
-        newMutableFn = { it?.toMutable() ?: skirout.service.v1.artifact.BeginArtifactBlobWriteResponse.ConflictError.Mutable() },
-        toFrozenFn = { it.toFrozen() },
-        getUnrecognizedFields = { it._unrecognizedFields },
-        setUnrecognizedFields = { m, u -> m._unrecognizedFields = u },
-    );
-
-    val BeginArtifactBlobWriteResponse_ConflictErrorSerializer = build.skir.internal.makeSerializer(BeginArtifactBlobWriteResponse_ConflictErrorSerializerImpl);
-
-    val BeginArtifactBlobWriteResponse_InvalidErrorSerializerImpl = build.skir.internal.StructSerializer(
-        recordId = "service/v1/artifact.skir:BeginArtifactBlobWriteResponse.InvalidError",
-        doc = "",
-        defaultInstance = skirout.service.v1.artifact.BeginArtifactBlobWriteResponse.InvalidError.partial(),
-        newMutableFn = { it?.toMutable() ?: skirout.service.v1.artifact.BeginArtifactBlobWriteResponse.InvalidError.Mutable() },
-        toFrozenFn = { it.toFrozen() },
-        getUnrecognizedFields = { it._unrecognizedFields },
-        setUnrecognizedFields = { m, u -> m._unrecognizedFields = u },
-    );
-
-    val BeginArtifactBlobWriteResponse_InvalidErrorSerializer = build.skir.internal.makeSerializer(BeginArtifactBlobWriteResponse_InvalidErrorSerializerImpl);
-
-    val BlobChunkSerializerImpl = build.skir.internal.StructSerializer(
-        recordId = "service/v1/artifact.skir:BlobChunk",
-        doc = "",
-        defaultInstance = skirout.service.v1.artifact.BlobChunk.partial(),
-        newMutableFn = { it?.toMutable() ?: skirout.service.v1.artifact.BlobChunk.Mutable() },
-        toFrozenFn = { it.toFrozen() },
-        getUnrecognizedFields = { it._unrecognizedFields },
-        setUnrecognizedFields = { m, u -> m._unrecognizedFields = u },
-    );
-
-    val BlobChunkSerializer = build.skir.internal.makeSerializer(BlobChunkSerializerImpl);
-
     val BlobMetadataSerializerImpl = build.skir.internal.StructSerializer(
         recordId = "service/v1/artifact.skir:BlobMetadata",
         doc = "",
@@ -5392,67 +3633,6 @@ private object _SerializerRegistry {
     );
 
     val BlobMetadataSerializer = build.skir.internal.makeSerializer(BlobMetadataSerializerImpl);
-
-    val CompleteArtifactBlobWriteRequestSerializerImpl = build.skir.internal.StructSerializer(
-        recordId = "service/v1/artifact.skir:CompleteArtifactBlobWriteRequest",
-        doc = "",
-        defaultInstance = skirout.service.v1.artifact.CompleteArtifactBlobWriteRequest.partial(),
-        newMutableFn = { it?.toMutable() ?: skirout.service.v1.artifact.CompleteArtifactBlobWriteRequest.Mutable() },
-        toFrozenFn = { it.toFrozen() },
-        getUnrecognizedFields = { it._unrecognizedFields },
-        setUnrecognizedFields = { m, u -> m._unrecognizedFields = u },
-    );
-
-    val CompleteArtifactBlobWriteRequestSerializer = build.skir.internal.makeSerializer(CompleteArtifactBlobWriteRequestSerializerImpl);
-
-    val CompleteArtifactBlobWriteResponseSerializerImpl =
-        build.skir.internal.EnumSerializer.create<skirout.service.v1.artifact.CompleteArtifactBlobWriteResponse, skirout.service.v1.artifact.CompleteArtifactBlobWriteResponse.Unknown>(
-            recordId = "service/v1/artifact.skir:CompleteArtifactBlobWriteResponse",
-            doc = "",
-            getKindOrdinal = { it.kind.ordinal },
-            kindCount = skirout.service.v1.artifact.CompleteArtifactBlobWriteResponse.Kind.values().size,
-            unknownInstance = skirout.service.v1.artifact.CompleteArtifactBlobWriteResponse.UNKNOWN,
-            wrapUnrecognized = { @kotlin.Suppress("DEPRECATION") skirout.service.v1.artifact.CompleteArtifactBlobWriteResponse.Unknown(skirout.service.v1.artifact.CompleteArtifactBlobWriteResponse.Kind.UNKNOWN, it) },
-            getUnrecognized = { it._unrecognized },
-        );
-
-    val CompleteArtifactBlobWriteResponseSerializer = build.skir.internal.makeSerializer(CompleteArtifactBlobWriteResponseSerializerImpl);
-
-    val CompleteArtifactBlobWriteResponse_ConflictErrorSerializerImpl = build.skir.internal.StructSerializer(
-        recordId = "service/v1/artifact.skir:CompleteArtifactBlobWriteResponse.ConflictError",
-        doc = "",
-        defaultInstance = skirout.service.v1.artifact.CompleteArtifactBlobWriteResponse.ConflictError.partial(),
-        newMutableFn = { it?.toMutable() ?: skirout.service.v1.artifact.CompleteArtifactBlobWriteResponse.ConflictError.Mutable() },
-        toFrozenFn = { it.toFrozen() },
-        getUnrecognizedFields = { it._unrecognizedFields },
-        setUnrecognizedFields = { m, u -> m._unrecognizedFields = u },
-    );
-
-    val CompleteArtifactBlobWriteResponse_ConflictErrorSerializer = build.skir.internal.makeSerializer(CompleteArtifactBlobWriteResponse_ConflictErrorSerializerImpl);
-
-    val CompleteArtifactBlobWriteResponse_InvalidErrorSerializerImpl = build.skir.internal.StructSerializer(
-        recordId = "service/v1/artifact.skir:CompleteArtifactBlobWriteResponse.InvalidError",
-        doc = "",
-        defaultInstance = skirout.service.v1.artifact.CompleteArtifactBlobWriteResponse.InvalidError.partial(),
-        newMutableFn = { it?.toMutable() ?: skirout.service.v1.artifact.CompleteArtifactBlobWriteResponse.InvalidError.Mutable() },
-        toFrozenFn = { it.toFrozen() },
-        getUnrecognizedFields = { it._unrecognizedFields },
-        setUnrecognizedFields = { m, u -> m._unrecognizedFields = u },
-    );
-
-    val CompleteArtifactBlobWriteResponse_InvalidErrorSerializer = build.skir.internal.makeSerializer(CompleteArtifactBlobWriteResponse_InvalidErrorSerializerImpl);
-
-    val CompleteArtifactBlobWriteResponse_NotFoundErrorSerializerImpl = build.skir.internal.StructSerializer(
-        recordId = "service/v1/artifact.skir:CompleteArtifactBlobWriteResponse.NotFoundError",
-        doc = "",
-        defaultInstance = skirout.service.v1.artifact.CompleteArtifactBlobWriteResponse.NotFoundError.partial(),
-        newMutableFn = { it?.toMutable() ?: skirout.service.v1.artifact.CompleteArtifactBlobWriteResponse.NotFoundError.Mutable() },
-        toFrozenFn = { it.toFrozen() },
-        getUnrecognizedFields = { it._unrecognizedFields },
-        setUnrecognizedFields = { m, u -> m._unrecognizedFields = u },
-    );
-
-    val CompleteArtifactBlobWriteResponse_NotFoundErrorSerializer = build.skir.internal.makeSerializer(CompleteArtifactBlobWriteResponse_NotFoundErrorSerializerImpl);
 
     val DigestAlgorithmSerializerImpl =
         build.skir.internal.EnumSerializer.create<skirout.service.v1.artifact.DigestAlgorithm, skirout.service.v1.artifact.DigestAlgorithm.Unknown>(
@@ -5515,6 +3695,67 @@ private object _SerializerRegistry {
     );
 
     val FetchArtifactBlobMetadataResponse_NotFoundErrorSerializer = build.skir.internal.makeSerializer(FetchArtifactBlobMetadataResponse_NotFoundErrorSerializerImpl);
+
+    val FetchArtifactBlobRequestSerializerImpl = build.skir.internal.StructSerializer(
+        recordId = "service/v1/artifact.skir:FetchArtifactBlobRequest",
+        doc = "",
+        defaultInstance = skirout.service.v1.artifact.FetchArtifactBlobRequest.partial(),
+        newMutableFn = { it?.toMutable() ?: skirout.service.v1.artifact.FetchArtifactBlobRequest.Mutable() },
+        toFrozenFn = { it.toFrozen() },
+        getUnrecognizedFields = { it._unrecognizedFields },
+        setUnrecognizedFields = { m, u -> m._unrecognizedFields = u },
+    );
+
+    val FetchArtifactBlobRequestSerializer = build.skir.internal.makeSerializer(FetchArtifactBlobRequestSerializerImpl);
+
+    val FetchArtifactBlobResponseSerializerImpl =
+        build.skir.internal.EnumSerializer.create<skirout.service.v1.artifact.FetchArtifactBlobResponse, skirout.service.v1.artifact.FetchArtifactBlobResponse.Unknown>(
+            recordId = "service/v1/artifact.skir:FetchArtifactBlobResponse",
+            doc = "",
+            getKindOrdinal = { it.kind.ordinal },
+            kindCount = skirout.service.v1.artifact.FetchArtifactBlobResponse.Kind.values().size,
+            unknownInstance = skirout.service.v1.artifact.FetchArtifactBlobResponse.UNKNOWN,
+            wrapUnrecognized = { @kotlin.Suppress("DEPRECATION") skirout.service.v1.artifact.FetchArtifactBlobResponse.Unknown(skirout.service.v1.artifact.FetchArtifactBlobResponse.Kind.UNKNOWN, it) },
+            getUnrecognized = { it._unrecognized },
+        );
+
+    val FetchArtifactBlobResponseSerializer = build.skir.internal.makeSerializer(FetchArtifactBlobResponseSerializerImpl);
+
+    val FetchArtifactBlobResponse_InvalidErrorSerializerImpl = build.skir.internal.StructSerializer(
+        recordId = "service/v1/artifact.skir:FetchArtifactBlobResponse.InvalidError",
+        doc = "",
+        defaultInstance = skirout.service.v1.artifact.FetchArtifactBlobResponse.InvalidError.partial(),
+        newMutableFn = { it?.toMutable() ?: skirout.service.v1.artifact.FetchArtifactBlobResponse.InvalidError.Mutable() },
+        toFrozenFn = { it.toFrozen() },
+        getUnrecognizedFields = { it._unrecognizedFields },
+        setUnrecognizedFields = { m, u -> m._unrecognizedFields = u },
+    );
+
+    val FetchArtifactBlobResponse_InvalidErrorSerializer = build.skir.internal.makeSerializer(FetchArtifactBlobResponse_InvalidErrorSerializerImpl);
+
+    val FetchArtifactBlobResponse_NotFoundErrorSerializerImpl = build.skir.internal.StructSerializer(
+        recordId = "service/v1/artifact.skir:FetchArtifactBlobResponse.NotFoundError",
+        doc = "",
+        defaultInstance = skirout.service.v1.artifact.FetchArtifactBlobResponse.NotFoundError.partial(),
+        newMutableFn = { it?.toMutable() ?: skirout.service.v1.artifact.FetchArtifactBlobResponse.NotFoundError.Mutable() },
+        toFrozenFn = { it.toFrozen() },
+        getUnrecognizedFields = { it._unrecognizedFields },
+        setUnrecognizedFields = { m, u -> m._unrecognizedFields = u },
+    );
+
+    val FetchArtifactBlobResponse_NotFoundErrorSerializer = build.skir.internal.makeSerializer(FetchArtifactBlobResponse_NotFoundErrorSerializerImpl);
+
+    val FetchArtifactBlobResponse_SuccessSerializerImpl = build.skir.internal.StructSerializer(
+        recordId = "service/v1/artifact.skir:FetchArtifactBlobResponse.Success",
+        doc = "",
+        defaultInstance = skirout.service.v1.artifact.FetchArtifactBlobResponse.Success.partial(),
+        newMutableFn = { it?.toMutable() ?: skirout.service.v1.artifact.FetchArtifactBlobResponse.Success.Mutable() },
+        toFrozenFn = { it.toFrozen() },
+        getUnrecognizedFields = { it._unrecognizedFields },
+        setUnrecognizedFields = { m, u -> m._unrecognizedFields = u },
+    );
+
+    val FetchArtifactBlobResponse_SuccessSerializer = build.skir.internal.makeSerializer(FetchArtifactBlobResponse_SuccessSerializerImpl);
 
     val FetchSharedArtifactCatalogRequestSerializerImpl = build.skir.internal.StructSerializer(
         recordId = "service/v1/artifact.skir:FetchSharedArtifactCatalogRequest",
@@ -5590,55 +3831,6 @@ private object _SerializerRegistry {
 
     val PublishSharedArtifactResponseSerializer = build.skir.internal.makeSerializer(PublishSharedArtifactResponseSerializerImpl);
 
-    val ReadArtifactBlobRequestSerializerImpl = build.skir.internal.StructSerializer(
-        recordId = "service/v1/artifact.skir:ReadArtifactBlobRequest",
-        doc = "",
-        defaultInstance = skirout.service.v1.artifact.ReadArtifactBlobRequest.partial(),
-        newMutableFn = { it?.toMutable() ?: skirout.service.v1.artifact.ReadArtifactBlobRequest.Mutable() },
-        toFrozenFn = { it.toFrozen() },
-        getUnrecognizedFields = { it._unrecognizedFields },
-        setUnrecognizedFields = { m, u -> m._unrecognizedFields = u },
-    );
-
-    val ReadArtifactBlobRequestSerializer = build.skir.internal.makeSerializer(ReadArtifactBlobRequestSerializerImpl);
-
-    val ReadArtifactBlobResponseSerializerImpl =
-        build.skir.internal.EnumSerializer.create<skirout.service.v1.artifact.ReadArtifactBlobResponse, skirout.service.v1.artifact.ReadArtifactBlobResponse.Unknown>(
-            recordId = "service/v1/artifact.skir:ReadArtifactBlobResponse",
-            doc = "",
-            getKindOrdinal = { it.kind.ordinal },
-            kindCount = skirout.service.v1.artifact.ReadArtifactBlobResponse.Kind.values().size,
-            unknownInstance = skirout.service.v1.artifact.ReadArtifactBlobResponse.UNKNOWN,
-            wrapUnrecognized = { @kotlin.Suppress("DEPRECATION") skirout.service.v1.artifact.ReadArtifactBlobResponse.Unknown(skirout.service.v1.artifact.ReadArtifactBlobResponse.Kind.UNKNOWN, it) },
-            getUnrecognized = { it._unrecognized },
-        );
-
-    val ReadArtifactBlobResponseSerializer = build.skir.internal.makeSerializer(ReadArtifactBlobResponseSerializerImpl);
-
-    val ReadArtifactBlobResponse_InvalidErrorSerializerImpl = build.skir.internal.StructSerializer(
-        recordId = "service/v1/artifact.skir:ReadArtifactBlobResponse.InvalidError",
-        doc = "",
-        defaultInstance = skirout.service.v1.artifact.ReadArtifactBlobResponse.InvalidError.partial(),
-        newMutableFn = { it?.toMutable() ?: skirout.service.v1.artifact.ReadArtifactBlobResponse.InvalidError.Mutable() },
-        toFrozenFn = { it.toFrozen() },
-        getUnrecognizedFields = { it._unrecognizedFields },
-        setUnrecognizedFields = { m, u -> m._unrecognizedFields = u },
-    );
-
-    val ReadArtifactBlobResponse_InvalidErrorSerializer = build.skir.internal.makeSerializer(ReadArtifactBlobResponse_InvalidErrorSerializerImpl);
-
-    val ReadArtifactBlobResponse_NotFoundErrorSerializerImpl = build.skir.internal.StructSerializer(
-        recordId = "service/v1/artifact.skir:ReadArtifactBlobResponse.NotFoundError",
-        doc = "",
-        defaultInstance = skirout.service.v1.artifact.ReadArtifactBlobResponse.NotFoundError.partial(),
-        newMutableFn = { it?.toMutable() ?: skirout.service.v1.artifact.ReadArtifactBlobResponse.NotFoundError.Mutable() },
-        toFrozenFn = { it.toFrozen() },
-        getUnrecognizedFields = { it._unrecognizedFields },
-        setUnrecognizedFields = { m, u -> m._unrecognizedFields = u },
-    );
-
-    val ReadArtifactBlobResponse_NotFoundErrorSerializer = build.skir.internal.makeSerializer(ReadArtifactBlobResponse_NotFoundErrorSerializerImpl);
-
     val SharedArtifactCatalogSerializerImpl = build.skir.internal.StructSerializer(
         recordId = "service/v1/artifact.skir:SharedArtifactCatalog",
         doc = "",
@@ -5712,78 +3904,42 @@ private object _SerializerRegistry {
 
     val SharedArtifactProvenance_ServiceSerializer = build.skir.internal.makeSerializer(SharedArtifactProvenance_ServiceSerializerImpl);
 
-    val WriteArtifactBlobChunkRequestSerializerImpl = build.skir.internal.StructSerializer(
-        recordId = "service/v1/artifact.skir:WriteArtifactBlobChunkRequest",
+    val StoreArtifactBlobRequestSerializerImpl = build.skir.internal.StructSerializer(
+        recordId = "service/v1/artifact.skir:StoreArtifactBlobRequest",
         doc = "",
-        defaultInstance = skirout.service.v1.artifact.WriteArtifactBlobChunkRequest.partial(),
-        newMutableFn = { it?.toMutable() ?: skirout.service.v1.artifact.WriteArtifactBlobChunkRequest.Mutable() },
+        defaultInstance = skirout.service.v1.artifact.StoreArtifactBlobRequest.partial(),
+        newMutableFn = { it?.toMutable() ?: skirout.service.v1.artifact.StoreArtifactBlobRequest.Mutable() },
         toFrozenFn = { it.toFrozen() },
         getUnrecognizedFields = { it._unrecognizedFields },
         setUnrecognizedFields = { m, u -> m._unrecognizedFields = u },
     );
 
-    val WriteArtifactBlobChunkRequestSerializer = build.skir.internal.makeSerializer(WriteArtifactBlobChunkRequestSerializerImpl);
+    val StoreArtifactBlobRequestSerializer = build.skir.internal.makeSerializer(StoreArtifactBlobRequestSerializerImpl);
 
-    val WriteArtifactBlobChunkResponseSerializerImpl =
-        build.skir.internal.EnumSerializer.create<skirout.service.v1.artifact.WriteArtifactBlobChunkResponse, skirout.service.v1.artifact.WriteArtifactBlobChunkResponse.Unknown>(
-            recordId = "service/v1/artifact.skir:WriteArtifactBlobChunkResponse",
+    val StoreArtifactBlobResponseSerializerImpl =
+        build.skir.internal.EnumSerializer.create<skirout.service.v1.artifact.StoreArtifactBlobResponse, skirout.service.v1.artifact.StoreArtifactBlobResponse.Unknown>(
+            recordId = "service/v1/artifact.skir:StoreArtifactBlobResponse",
             doc = "",
             getKindOrdinal = { it.kind.ordinal },
-            kindCount = skirout.service.v1.artifact.WriteArtifactBlobChunkResponse.Kind.values().size,
-            unknownInstance = skirout.service.v1.artifact.WriteArtifactBlobChunkResponse.UNKNOWN,
-            wrapUnrecognized = { @kotlin.Suppress("DEPRECATION") skirout.service.v1.artifact.WriteArtifactBlobChunkResponse.Unknown(skirout.service.v1.artifact.WriteArtifactBlobChunkResponse.Kind.UNKNOWN, it) },
+            kindCount = skirout.service.v1.artifact.StoreArtifactBlobResponse.Kind.values().size,
+            unknownInstance = skirout.service.v1.artifact.StoreArtifactBlobResponse.UNKNOWN,
+            wrapUnrecognized = { @kotlin.Suppress("DEPRECATION") skirout.service.v1.artifact.StoreArtifactBlobResponse.Unknown(skirout.service.v1.artifact.StoreArtifactBlobResponse.Kind.UNKNOWN, it) },
             getUnrecognized = { it._unrecognized },
         );
 
-    val WriteArtifactBlobChunkResponseSerializer = build.skir.internal.makeSerializer(WriteArtifactBlobChunkResponseSerializerImpl);
+    val StoreArtifactBlobResponseSerializer = build.skir.internal.makeSerializer(StoreArtifactBlobResponseSerializerImpl);
 
-    val WriteArtifactBlobChunkResponse_AcceptedSerializerImpl = build.skir.internal.StructSerializer(
-        recordId = "service/v1/artifact.skir:WriteArtifactBlobChunkResponse.Accepted",
+    val StoreArtifactBlobResponse_InvalidErrorSerializerImpl = build.skir.internal.StructSerializer(
+        recordId = "service/v1/artifact.skir:StoreArtifactBlobResponse.InvalidError",
         doc = "",
-        defaultInstance = skirout.service.v1.artifact.WriteArtifactBlobChunkResponse.Accepted.partial(),
-        newMutableFn = { it?.toMutable() ?: skirout.service.v1.artifact.WriteArtifactBlobChunkResponse.Accepted.Mutable() },
+        defaultInstance = skirout.service.v1.artifact.StoreArtifactBlobResponse.InvalidError.partial(),
+        newMutableFn = { it?.toMutable() ?: skirout.service.v1.artifact.StoreArtifactBlobResponse.InvalidError.Mutable() },
         toFrozenFn = { it.toFrozen() },
         getUnrecognizedFields = { it._unrecognizedFields },
         setUnrecognizedFields = { m, u -> m._unrecognizedFields = u },
     );
 
-    val WriteArtifactBlobChunkResponse_AcceptedSerializer = build.skir.internal.makeSerializer(WriteArtifactBlobChunkResponse_AcceptedSerializerImpl);
-
-    val WriteArtifactBlobChunkResponse_ConflictErrorSerializerImpl = build.skir.internal.StructSerializer(
-        recordId = "service/v1/artifact.skir:WriteArtifactBlobChunkResponse.ConflictError",
-        doc = "",
-        defaultInstance = skirout.service.v1.artifact.WriteArtifactBlobChunkResponse.ConflictError.partial(),
-        newMutableFn = { it?.toMutable() ?: skirout.service.v1.artifact.WriteArtifactBlobChunkResponse.ConflictError.Mutable() },
-        toFrozenFn = { it.toFrozen() },
-        getUnrecognizedFields = { it._unrecognizedFields },
-        setUnrecognizedFields = { m, u -> m._unrecognizedFields = u },
-    );
-
-    val WriteArtifactBlobChunkResponse_ConflictErrorSerializer = build.skir.internal.makeSerializer(WriteArtifactBlobChunkResponse_ConflictErrorSerializerImpl);
-
-    val WriteArtifactBlobChunkResponse_InvalidErrorSerializerImpl = build.skir.internal.StructSerializer(
-        recordId = "service/v1/artifact.skir:WriteArtifactBlobChunkResponse.InvalidError",
-        doc = "",
-        defaultInstance = skirout.service.v1.artifact.WriteArtifactBlobChunkResponse.InvalidError.partial(),
-        newMutableFn = { it?.toMutable() ?: skirout.service.v1.artifact.WriteArtifactBlobChunkResponse.InvalidError.Mutable() },
-        toFrozenFn = { it.toFrozen() },
-        getUnrecognizedFields = { it._unrecognizedFields },
-        setUnrecognizedFields = { m, u -> m._unrecognizedFields = u },
-    );
-
-    val WriteArtifactBlobChunkResponse_InvalidErrorSerializer = build.skir.internal.makeSerializer(WriteArtifactBlobChunkResponse_InvalidErrorSerializerImpl);
-
-    val WriteArtifactBlobChunkResponse_NotFoundErrorSerializerImpl = build.skir.internal.StructSerializer(
-        recordId = "service/v1/artifact.skir:WriteArtifactBlobChunkResponse.NotFoundError",
-        doc = "",
-        defaultInstance = skirout.service.v1.artifact.WriteArtifactBlobChunkResponse.NotFoundError.partial(),
-        newMutableFn = { it?.toMutable() ?: skirout.service.v1.artifact.WriteArtifactBlobChunkResponse.NotFoundError.Mutable() },
-        toFrozenFn = { it.toFrozen() },
-        getUnrecognizedFields = { it._unrecognizedFields },
-        setUnrecognizedFields = { m, u -> m._unrecognizedFields = u },
-    );
-
-    val WriteArtifactBlobChunkResponse_NotFoundErrorSerializer = build.skir.internal.makeSerializer(WriteArtifactBlobChunkResponse_NotFoundErrorSerializerImpl);
+    val StoreArtifactBlobResponse_InvalidErrorSerializer = build.skir.internal.makeSerializer(StoreArtifactBlobResponse_InvalidErrorSerializerImpl);
 
     init {
         ArtifactDigestSerializerImpl.addField(
@@ -5806,126 +3962,6 @@ private object _SerializerRegistry {
         );
         ArtifactDigestSerializerImpl.finalizeStruct();
 
-        BeginArtifactBlobWriteRequestSerializerImpl.addField(
-            "transfer_id",
-            "transferId",
-            0,
-            build.skir.Serializers.string,
-            "",
-            { it.transferId },
-            { mut, v -> mut.transferId = v },
-        );
-        BeginArtifactBlobWriteRequestSerializerImpl.addField(
-            "expected",
-            "expected",
-            1,
-            _SerializerRegistry.BlobMetadataSerializer,
-            "",
-            { it.expected },
-            { mut, v -> mut.expected = v },
-        );
-        BeginArtifactBlobWriteRequestSerializerImpl.finalizeStruct();
-
-        BeginArtifactBlobWriteResponseSerializerImpl.addWrapperVariant(
-            1,
-            "accepted",
-            skirout.service.v1.artifact.BeginArtifactBlobWriteResponse.Kind.ACCEPTED_WRAPPER.ordinal,
-            _SerializerRegistry.BeginArtifactBlobWriteResponse_AcceptedSerializer,
-            "",
-            { skirout.service.v1.artifact.BeginArtifactBlobWriteResponse.AcceptedWrapper(it) },
-            { it.value },
-        );
-        BeginArtifactBlobWriteResponseSerializerImpl.addWrapperVariant(
-            2,
-            "invalid_error",
-            skirout.service.v1.artifact.BeginArtifactBlobWriteResponse.Kind.INVALID_ERROR_WRAPPER.ordinal,
-            _SerializerRegistry.BeginArtifactBlobWriteResponse_InvalidErrorSerializer,
-            "",
-            { skirout.service.v1.artifact.BeginArtifactBlobWriteResponse.InvalidErrorWrapper(it) },
-            { it.value },
-        );
-        BeginArtifactBlobWriteResponseSerializerImpl.addWrapperVariant(
-            3,
-            "conflict_error",
-            skirout.service.v1.artifact.BeginArtifactBlobWriteResponse.Kind.CONFLICT_ERROR_WRAPPER.ordinal,
-            _SerializerRegistry.BeginArtifactBlobWriteResponse_ConflictErrorSerializer,
-            "",
-            { skirout.service.v1.artifact.BeginArtifactBlobWriteResponse.ConflictErrorWrapper(it) },
-            { it.value },
-        );
-        BeginArtifactBlobWriteResponseSerializerImpl.addWrapperVariant(
-            4,
-            "internal_error",
-            skirout.service.v1.artifact.BeginArtifactBlobWriteResponse.Kind.INTERNAL_ERROR_WRAPPER.ordinal,
-            skirout.kernel.v1.errors.InternalError.serializer,
-            "",
-            { skirout.service.v1.artifact.BeginArtifactBlobWriteResponse.InternalErrorWrapper(it) },
-            { it.value },
-        );
-        BeginArtifactBlobWriteResponseSerializerImpl.finalizeEnum();
-
-        BeginArtifactBlobWriteResponse_AcceptedSerializerImpl.addField(
-            "offset",
-            "offset",
-            0,
-            build.skir.Serializers.int64,
-            "",
-            { it.offset },
-            { mut, v -> mut.offset = v },
-        );
-        BeginArtifactBlobWriteResponse_AcceptedSerializerImpl.finalizeStruct();
-
-        BeginArtifactBlobWriteResponse_ConflictErrorSerializerImpl.addField(
-            "reason",
-            "reason",
-            0,
-            build.skir.Serializers.string,
-            "",
-            { it.reason },
-            { mut, v -> mut.reason = v },
-        );
-        BeginArtifactBlobWriteResponse_ConflictErrorSerializerImpl.finalizeStruct();
-
-        BeginArtifactBlobWriteResponse_InvalidErrorSerializerImpl.addField(
-            "reason",
-            "reason",
-            0,
-            build.skir.Serializers.string,
-            "",
-            { it.reason },
-            { mut, v -> mut.reason = v },
-        );
-        BeginArtifactBlobWriteResponse_InvalidErrorSerializerImpl.finalizeStruct();
-
-        BlobChunkSerializerImpl.addField(
-            "offset",
-            "offset",
-            0,
-            build.skir.Serializers.int64,
-            "",
-            { it.offset },
-            { mut, v -> mut.offset = v },
-        );
-        BlobChunkSerializerImpl.addField(
-            "bytes",
-            "bytes",
-            1,
-            build.skir.Serializers.bytes,
-            "",
-            { it.bytes },
-            { mut, v -> mut.bytes = v },
-        );
-        BlobChunkSerializerImpl.addField(
-            "complete",
-            "complete",
-            2,
-            build.skir.Serializers.bool,
-            "",
-            { it.complete },
-            { mut, v -> mut.complete = v },
-        );
-        BlobChunkSerializerImpl.finalizeStruct();
-
         BlobMetadataSerializerImpl.addField(
             "digest",
             "digest",
@@ -5945,88 +3981,6 @@ private object _SerializerRegistry {
             { mut, v -> mut.size = v },
         );
         BlobMetadataSerializerImpl.finalizeStruct();
-
-        CompleteArtifactBlobWriteRequestSerializerImpl.addField(
-            "transfer_id",
-            "transferId",
-            0,
-            build.skir.Serializers.string,
-            "",
-            { it.transferId },
-            { mut, v -> mut.transferId = v },
-        );
-        CompleteArtifactBlobWriteRequestSerializerImpl.finalizeStruct();
-
-        CompleteArtifactBlobWriteResponseSerializerImpl.addWrapperVariant(
-            1,
-            "success",
-            skirout.service.v1.artifact.CompleteArtifactBlobWriteResponse.Kind.SUCCESS_WRAPPER.ordinal,
-            _SerializerRegistry.BlobMetadataSerializer,
-            "",
-            { skirout.service.v1.artifact.CompleteArtifactBlobWriteResponse.SuccessWrapper(it) },
-            { it.value },
-        );
-        CompleteArtifactBlobWriteResponseSerializerImpl.addWrapperVariant(
-            2,
-            "not_found_error",
-            skirout.service.v1.artifact.CompleteArtifactBlobWriteResponse.Kind.NOT_FOUND_ERROR_WRAPPER.ordinal,
-            _SerializerRegistry.CompleteArtifactBlobWriteResponse_NotFoundErrorSerializer,
-            "",
-            { skirout.service.v1.artifact.CompleteArtifactBlobWriteResponse.NotFoundErrorWrapper(it) },
-            { it.value },
-        );
-        CompleteArtifactBlobWriteResponseSerializerImpl.addWrapperVariant(
-            3,
-            "invalid_error",
-            skirout.service.v1.artifact.CompleteArtifactBlobWriteResponse.Kind.INVALID_ERROR_WRAPPER.ordinal,
-            _SerializerRegistry.CompleteArtifactBlobWriteResponse_InvalidErrorSerializer,
-            "",
-            { skirout.service.v1.artifact.CompleteArtifactBlobWriteResponse.InvalidErrorWrapper(it) },
-            { it.value },
-        );
-        CompleteArtifactBlobWriteResponseSerializerImpl.addWrapperVariant(
-            4,
-            "conflict_error",
-            skirout.service.v1.artifact.CompleteArtifactBlobWriteResponse.Kind.CONFLICT_ERROR_WRAPPER.ordinal,
-            _SerializerRegistry.CompleteArtifactBlobWriteResponse_ConflictErrorSerializer,
-            "",
-            { skirout.service.v1.artifact.CompleteArtifactBlobWriteResponse.ConflictErrorWrapper(it) },
-            { it.value },
-        );
-        CompleteArtifactBlobWriteResponseSerializerImpl.addWrapperVariant(
-            5,
-            "internal_error",
-            skirout.service.v1.artifact.CompleteArtifactBlobWriteResponse.Kind.INTERNAL_ERROR_WRAPPER.ordinal,
-            skirout.kernel.v1.errors.InternalError.serializer,
-            "",
-            { skirout.service.v1.artifact.CompleteArtifactBlobWriteResponse.InternalErrorWrapper(it) },
-            { it.value },
-        );
-        CompleteArtifactBlobWriteResponseSerializerImpl.finalizeEnum();
-
-        CompleteArtifactBlobWriteResponse_ConflictErrorSerializerImpl.addField(
-            "reason",
-            "reason",
-            0,
-            build.skir.Serializers.string,
-            "",
-            { it.reason },
-            { mut, v -> mut.reason = v },
-        );
-        CompleteArtifactBlobWriteResponse_ConflictErrorSerializerImpl.finalizeStruct();
-
-        CompleteArtifactBlobWriteResponse_InvalidErrorSerializerImpl.addField(
-            "reason",
-            "reason",
-            0,
-            build.skir.Serializers.string,
-            "",
-            { it.reason },
-            { mut, v -> mut.reason = v },
-        );
-        CompleteArtifactBlobWriteResponse_InvalidErrorSerializerImpl.finalizeStruct();
-
-        CompleteArtifactBlobWriteResponse_NotFoundErrorSerializerImpl.finalizeStruct();
 
         DigestAlgorithmSerializerImpl.addConstantVariant(
             1,
@@ -6098,6 +4052,79 @@ private object _SerializerRegistry {
         FetchArtifactBlobMetadataResponse_InvalidErrorSerializerImpl.finalizeStruct();
 
         FetchArtifactBlobMetadataResponse_NotFoundErrorSerializerImpl.finalizeStruct();
+
+        FetchArtifactBlobRequestSerializerImpl.addField(
+            "digest",
+            "digest",
+            0,
+            _SerializerRegistry.ArtifactDigestSerializer,
+            "",
+            { it.digest },
+            { mut, v -> mut.digest = v },
+        );
+        FetchArtifactBlobRequestSerializerImpl.finalizeStruct();
+
+        FetchArtifactBlobResponseSerializerImpl.addWrapperVariant(
+            1,
+            "success",
+            skirout.service.v1.artifact.FetchArtifactBlobResponse.Kind.SUCCESS_WRAPPER.ordinal,
+            _SerializerRegistry.FetchArtifactBlobResponse_SuccessSerializer,
+            "",
+            { skirout.service.v1.artifact.FetchArtifactBlobResponse.SuccessWrapper(it) },
+            { it.value },
+        );
+        FetchArtifactBlobResponseSerializerImpl.addWrapperVariant(
+            2,
+            "not_found_error",
+            skirout.service.v1.artifact.FetchArtifactBlobResponse.Kind.NOT_FOUND_ERROR_WRAPPER.ordinal,
+            _SerializerRegistry.FetchArtifactBlobResponse_NotFoundErrorSerializer,
+            "",
+            { skirout.service.v1.artifact.FetchArtifactBlobResponse.NotFoundErrorWrapper(it) },
+            { it.value },
+        );
+        FetchArtifactBlobResponseSerializerImpl.addWrapperVariant(
+            3,
+            "invalid_error",
+            skirout.service.v1.artifact.FetchArtifactBlobResponse.Kind.INVALID_ERROR_WRAPPER.ordinal,
+            _SerializerRegistry.FetchArtifactBlobResponse_InvalidErrorSerializer,
+            "",
+            { skirout.service.v1.artifact.FetchArtifactBlobResponse.InvalidErrorWrapper(it) },
+            { it.value },
+        );
+        FetchArtifactBlobResponseSerializerImpl.addWrapperVariant(
+            4,
+            "internal_error",
+            skirout.service.v1.artifact.FetchArtifactBlobResponse.Kind.INTERNAL_ERROR_WRAPPER.ordinal,
+            skirout.kernel.v1.errors.InternalError.serializer,
+            "",
+            { skirout.service.v1.artifact.FetchArtifactBlobResponse.InternalErrorWrapper(it) },
+            { it.value },
+        );
+        FetchArtifactBlobResponseSerializerImpl.finalizeEnum();
+
+        FetchArtifactBlobResponse_InvalidErrorSerializerImpl.addField(
+            "reason",
+            "reason",
+            0,
+            build.skir.Serializers.string,
+            "",
+            { it.reason },
+            { mut, v -> mut.reason = v },
+        );
+        FetchArtifactBlobResponse_InvalidErrorSerializerImpl.finalizeStruct();
+
+        FetchArtifactBlobResponse_NotFoundErrorSerializerImpl.finalizeStruct();
+
+        FetchArtifactBlobResponse_SuccessSerializerImpl.addField(
+            "content",
+            "content",
+            0,
+            build.skir.Serializers.bytes,
+            "",
+            { it.content },
+            { mut, v -> mut.content = v },
+        );
+        FetchArtifactBlobResponse_SuccessSerializerImpl.finalizeStruct();
 
         FetchSharedArtifactCatalogRequestSerializerImpl.addField(
             "after_revision",
@@ -6296,86 +4323,6 @@ private object _SerializerRegistry {
         );
         PublishSharedArtifactResponseSerializerImpl.finalizeEnum();
 
-        ReadArtifactBlobRequestSerializerImpl.addField(
-            "digest",
-            "digest",
-            0,
-            _SerializerRegistry.ArtifactDigestSerializer,
-            "",
-            { it.digest },
-            { mut, v -> mut.digest = v },
-        );
-        ReadArtifactBlobRequestSerializerImpl.addField(
-            "offset",
-            "offset",
-            1,
-            build.skir.Serializers.int64,
-            "",
-            { it.offset },
-            { mut, v -> mut.offset = v },
-        );
-        ReadArtifactBlobRequestSerializerImpl.addField(
-            "maximum_bytes",
-            "maximumBytes",
-            2,
-            build.skir.Serializers.int32,
-            "",
-            { it.maximumBytes },
-            { mut, v -> mut.maximumBytes = v },
-        );
-        ReadArtifactBlobRequestSerializerImpl.finalizeStruct();
-
-        ReadArtifactBlobResponseSerializerImpl.addWrapperVariant(
-            1,
-            "success",
-            skirout.service.v1.artifact.ReadArtifactBlobResponse.Kind.SUCCESS_WRAPPER.ordinal,
-            _SerializerRegistry.BlobChunkSerializer,
-            "",
-            { skirout.service.v1.artifact.ReadArtifactBlobResponse.SuccessWrapper(it) },
-            { it.value },
-        );
-        ReadArtifactBlobResponseSerializerImpl.addWrapperVariant(
-            2,
-            "not_found_error",
-            skirout.service.v1.artifact.ReadArtifactBlobResponse.Kind.NOT_FOUND_ERROR_WRAPPER.ordinal,
-            _SerializerRegistry.ReadArtifactBlobResponse_NotFoundErrorSerializer,
-            "",
-            { skirout.service.v1.artifact.ReadArtifactBlobResponse.NotFoundErrorWrapper(it) },
-            { it.value },
-        );
-        ReadArtifactBlobResponseSerializerImpl.addWrapperVariant(
-            3,
-            "invalid_error",
-            skirout.service.v1.artifact.ReadArtifactBlobResponse.Kind.INVALID_ERROR_WRAPPER.ordinal,
-            _SerializerRegistry.ReadArtifactBlobResponse_InvalidErrorSerializer,
-            "",
-            { skirout.service.v1.artifact.ReadArtifactBlobResponse.InvalidErrorWrapper(it) },
-            { it.value },
-        );
-        ReadArtifactBlobResponseSerializerImpl.addWrapperVariant(
-            4,
-            "internal_error",
-            skirout.service.v1.artifact.ReadArtifactBlobResponse.Kind.INTERNAL_ERROR_WRAPPER.ordinal,
-            skirout.kernel.v1.errors.InternalError.serializer,
-            "",
-            { skirout.service.v1.artifact.ReadArtifactBlobResponse.InternalErrorWrapper(it) },
-            { it.value },
-        );
-        ReadArtifactBlobResponseSerializerImpl.finalizeEnum();
-
-        ReadArtifactBlobResponse_InvalidErrorSerializerImpl.addField(
-            "reason",
-            "reason",
-            0,
-            build.skir.Serializers.string,
-            "",
-            { it.reason },
-            { mut, v -> mut.reason = v },
-        );
-        ReadArtifactBlobResponse_InvalidErrorSerializerImpl.finalizeStruct();
-
-        ReadArtifactBlobResponse_NotFoundErrorSerializerImpl.finalizeStruct();
-
         SharedArtifactCatalogSerializerImpl.addField(
             "revision",
             "revision",
@@ -6558,94 +4505,56 @@ private object _SerializerRegistry {
         );
         SharedArtifactProvenance_ServiceSerializerImpl.finalizeStruct();
 
-        WriteArtifactBlobChunkRequestSerializerImpl.addField(
-            "transfer_id",
-            "transferId",
+        StoreArtifactBlobRequestSerializerImpl.addField(
+            "expected",
+            "expected",
             0,
-            build.skir.Serializers.string,
+            _SerializerRegistry.BlobMetadataSerializer,
             "",
-            { it.transferId },
-            { mut, v -> mut.transferId = v },
+            { it.expected },
+            { mut, v -> mut.expected = v },
         );
-        WriteArtifactBlobChunkRequestSerializerImpl.addField(
-            "offset",
-            "offset",
+        StoreArtifactBlobRequestSerializerImpl.addField(
+            "content",
+            "content",
             1,
-            build.skir.Serializers.int64,
-            "",
-            { it.offset },
-            { mut, v -> mut.offset = v },
-        );
-        WriteArtifactBlobChunkRequestSerializerImpl.addField(
-            "bytes",
-            "bytes",
-            2,
             build.skir.Serializers.bytes,
             "",
-            { it.bytes },
-            { mut, v -> mut.bytes = v },
+            { it.content },
+            { mut, v -> mut.content = v },
         );
-        WriteArtifactBlobChunkRequestSerializerImpl.finalizeStruct();
+        StoreArtifactBlobRequestSerializerImpl.finalizeStruct();
 
-        WriteArtifactBlobChunkResponseSerializerImpl.addWrapperVariant(
+        StoreArtifactBlobResponseSerializerImpl.addWrapperVariant(
             1,
-            "accepted",
-            skirout.service.v1.artifact.WriteArtifactBlobChunkResponse.Kind.ACCEPTED_WRAPPER.ordinal,
-            _SerializerRegistry.WriteArtifactBlobChunkResponse_AcceptedSerializer,
+            "success",
+            skirout.service.v1.artifact.StoreArtifactBlobResponse.Kind.SUCCESS_WRAPPER.ordinal,
+            _SerializerRegistry.BlobMetadataSerializer,
             "",
-            { skirout.service.v1.artifact.WriteArtifactBlobChunkResponse.AcceptedWrapper(it) },
+            { skirout.service.v1.artifact.StoreArtifactBlobResponse.SuccessWrapper(it) },
             { it.value },
         );
-        WriteArtifactBlobChunkResponseSerializerImpl.addWrapperVariant(
+        StoreArtifactBlobResponseSerializerImpl.addWrapperVariant(
             2,
-            "not_found_error",
-            skirout.service.v1.artifact.WriteArtifactBlobChunkResponse.Kind.NOT_FOUND_ERROR_WRAPPER.ordinal,
-            _SerializerRegistry.WriteArtifactBlobChunkResponse_NotFoundErrorSerializer,
-            "",
-            { skirout.service.v1.artifact.WriteArtifactBlobChunkResponse.NotFoundErrorWrapper(it) },
-            { it.value },
-        );
-        WriteArtifactBlobChunkResponseSerializerImpl.addWrapperVariant(
-            3,
             "invalid_error",
-            skirout.service.v1.artifact.WriteArtifactBlobChunkResponse.Kind.INVALID_ERROR_WRAPPER.ordinal,
-            _SerializerRegistry.WriteArtifactBlobChunkResponse_InvalidErrorSerializer,
+            skirout.service.v1.artifact.StoreArtifactBlobResponse.Kind.INVALID_ERROR_WRAPPER.ordinal,
+            _SerializerRegistry.StoreArtifactBlobResponse_InvalidErrorSerializer,
             "",
-            { skirout.service.v1.artifact.WriteArtifactBlobChunkResponse.InvalidErrorWrapper(it) },
+            { skirout.service.v1.artifact.StoreArtifactBlobResponse.InvalidErrorWrapper(it) },
             { it.value },
         );
-        WriteArtifactBlobChunkResponseSerializerImpl.addWrapperVariant(
-            4,
-            "conflict_error",
-            skirout.service.v1.artifact.WriteArtifactBlobChunkResponse.Kind.CONFLICT_ERROR_WRAPPER.ordinal,
-            _SerializerRegistry.WriteArtifactBlobChunkResponse_ConflictErrorSerializer,
-            "",
-            { skirout.service.v1.artifact.WriteArtifactBlobChunkResponse.ConflictErrorWrapper(it) },
-            { it.value },
-        );
-        WriteArtifactBlobChunkResponseSerializerImpl.addWrapperVariant(
-            5,
+        StoreArtifactBlobResponseSerializerImpl.addWrapperVariant(
+            3,
             "internal_error",
-            skirout.service.v1.artifact.WriteArtifactBlobChunkResponse.Kind.INTERNAL_ERROR_WRAPPER.ordinal,
+            skirout.service.v1.artifact.StoreArtifactBlobResponse.Kind.INTERNAL_ERROR_WRAPPER.ordinal,
             skirout.kernel.v1.errors.InternalError.serializer,
             "",
-            { skirout.service.v1.artifact.WriteArtifactBlobChunkResponse.InternalErrorWrapper(it) },
+            { skirout.service.v1.artifact.StoreArtifactBlobResponse.InternalErrorWrapper(it) },
             { it.value },
         );
-        WriteArtifactBlobChunkResponseSerializerImpl.finalizeEnum();
+        StoreArtifactBlobResponseSerializerImpl.finalizeEnum();
 
-        WriteArtifactBlobChunkResponse_AcceptedSerializerImpl.addField(
-            "offset",
-            "offset",
-            0,
-            build.skir.Serializers.int64,
-            "",
-            { it.offset },
-            { mut, v -> mut.offset = v },
-        );
-        WriteArtifactBlobChunkResponse_AcceptedSerializerImpl.finalizeStruct();
-
-        WriteArtifactBlobChunkResponse_ConflictErrorSerializerImpl.addField(
+        StoreArtifactBlobResponse_InvalidErrorSerializerImpl.addField(
             "reason",
             "reason",
             0,
@@ -6654,19 +4563,6 @@ private object _SerializerRegistry {
             { it.reason },
             { mut, v -> mut.reason = v },
         );
-        WriteArtifactBlobChunkResponse_ConflictErrorSerializerImpl.finalizeStruct();
-
-        WriteArtifactBlobChunkResponse_InvalidErrorSerializerImpl.addField(
-            "reason",
-            "reason",
-            0,
-            build.skir.Serializers.string,
-            "",
-            { it.reason },
-            { mut, v -> mut.reason = v },
-        );
-        WriteArtifactBlobChunkResponse_InvalidErrorSerializerImpl.finalizeStruct();
-
-        WriteArtifactBlobChunkResponse_NotFoundErrorSerializerImpl.finalizeStruct();
+        StoreArtifactBlobResponse_InvalidErrorSerializerImpl.finalizeStruct();
     }
 }

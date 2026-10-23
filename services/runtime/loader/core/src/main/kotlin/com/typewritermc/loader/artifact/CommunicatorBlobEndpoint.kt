@@ -1,36 +1,24 @@
 package com.typewritermc.loader.artifact
 
 import com.typewritermc.protocol.transport.RealmRouteScope
-import com.typewritermc.protocol.transport.generated.sharedBlobBegin
-import com.typewritermc.protocol.transport.generated.sharedBlobComplete
+import com.typewritermc.protocol.transport.generated.sharedBlobFetch
 import com.typewritermc.protocol.transport.generated.sharedBlobMetadata
-import com.typewritermc.protocol.transport.generated.sharedBlobRead
-import com.typewritermc.protocol.transport.generated.sharedBlobWrite
+import com.typewritermc.protocol.transport.generated.sharedBlobStore
 import com.typewritermc.services.libs.communicator.client.Communicator
 import com.typewritermc.services.libs.communicator.contract.UnaryContract
 import com.typewritermc.services.libs.communicator.result.CommunicationResult
 import com.typewritermc.services.libs.filetransfer.blob.ArtifactDigest
-import com.typewritermc.services.libs.filetransfer.blob.BlobChunk
 import com.typewritermc.services.libs.filetransfer.blob.BlobEndpoint
 import com.typewritermc.services.libs.filetransfer.blob.BlobMetadata
 import com.typewritermc.services.libs.filetransfer.blob.BlobResult
-import com.typewritermc.services.libs.filetransfer.blob.BlobWriteSession
-import com.typewritermc.services.libs.filetransfer.blob.DigestAlgorithm
-import com.typewritermc.services.libs.filetransfer.blob.TransferId
+import com.typewritermc.services.libs.filetransfer.blob.StoreResult
 import okio.ByteString.Companion.toByteString
-import skirout.service.v1.artifact.BeginArtifactBlobWriteRequest
-import skirout.service.v1.artifact.BeginArtifactBlobWriteResponse
-import skirout.service.v1.artifact.CompleteArtifactBlobWriteRequest
-import skirout.service.v1.artifact.CompleteArtifactBlobWriteResponse
 import skirout.service.v1.artifact.FetchArtifactBlobMetadataRequest
 import skirout.service.v1.artifact.FetchArtifactBlobMetadataResponse
-import skirout.service.v1.artifact.ReadArtifactBlobRequest
-import skirout.service.v1.artifact.ReadArtifactBlobResponse
-import skirout.service.v1.artifact.WriteArtifactBlobChunkRequest
-import skirout.service.v1.artifact.WriteArtifactBlobChunkResponse
-import skirout.service.v1.artifact.ArtifactDigest as SkirArtifactDigest
-import skirout.service.v1.artifact.BlobMetadata as SkirBlobMetadata
-import skirout.service.v1.artifact.DigestAlgorithm as SkirDigestAlgorithm
+import skirout.service.v1.artifact.FetchArtifactBlobRequest
+import skirout.service.v1.artifact.FetchArtifactBlobResponse
+import skirout.service.v1.artifact.StoreArtifactBlobRequest
+import skirout.service.v1.artifact.StoreArtifactBlobResponse
 
 /**
  * Identifies an unavailable Realm artifact request attempt.
@@ -67,112 +55,28 @@ class CommunicatorBlobEndpoint(
             else -> throw RealmArtifactCommunicationException("Realm artifact metadata is unavailable.")
         }
 
-    override suspend fun read(
-        digest: ArtifactDigest,
-        offset: Long,
-        maximumBytes: Int,
-    ): BlobResult<BlobChunk> =
-        when (
-            val response =
-                request(
-                    address.sharedBlobRead,
-                    ReadArtifactBlobRequest(
-                        digest = digest.toSkir(),
-                        offset = offset,
-                        maximumBytes = maximumBytes,
-                    ),
-                )
-        ) {
-            is ReadArtifactBlobResponse.SuccessWrapper -> {
-                BlobResult.Success(
-                    BlobChunk(
-                        response.value.offset,
-                        response.value.bytes.toByteArray(),
-                        response.value.complete,
-                    ),
-                )
-            }
-
-            is ReadArtifactBlobResponse.NotFoundErrorWrapper -> {
-                BlobResult.NotFound
-            }
-
-            is ReadArtifactBlobResponse.InvalidErrorWrapper -> {
-                BlobResult.Invalid(response.value.reason)
-            }
-
-            else -> {
-                throw RealmArtifactCommunicationException("Realm artifact read is unavailable.")
-            }
+    override suspend fun fetch(digest: ArtifactDigest): BlobResult<ByteArray> =
+        when (val response = request(address.sharedBlobFetch, FetchArtifactBlobRequest(digest = digest.toSkir()))) {
+            is FetchArtifactBlobResponse.SuccessWrapper -> BlobResult.Success(response.value.content.toByteArray())
+            is FetchArtifactBlobResponse.NotFoundErrorWrapper -> BlobResult.NotFound
+            is FetchArtifactBlobResponse.InvalidErrorWrapper -> BlobResult.Invalid(response.value.reason)
+            else -> throw RealmArtifactCommunicationException("Realm artifact fetch is unavailable.")
         }
 
-    override suspend fun beginWrite(
-        transfer: TransferId,
+    override suspend fun store(
         expected: BlobMetadata,
-    ): BlobResult<BlobWriteSession> =
+        content: ByteArray,
+    ): StoreResult =
         when (
             val response =
                 request(
-                    address.sharedBlobBegin,
-                    BeginArtifactBlobWriteRequest(
-                        transferId = transfer.value,
-                        expected = expected.toSkir(),
-                    ),
+                    address.sharedBlobStore,
+                    StoreArtifactBlobRequest(expected = expected.toSkir(), content = content.toByteString()),
                 )
         ) {
-            is BeginArtifactBlobWriteResponse.AcceptedWrapper -> {
-                BlobResult.Success(BlobWriteSession(transfer, expected, response.value.offset))
-            }
-
-            is BeginArtifactBlobWriteResponse.InvalidErrorWrapper -> {
-                BlobResult.Invalid(response.value.reason)
-            }
-
-            is BeginArtifactBlobWriteResponse.ConflictErrorWrapper -> {
-                BlobResult.Conflict(response.value.reason)
-            }
-
-            else -> {
-                throw RealmArtifactCommunicationException("Realm artifact write is unavailable.")
-            }
-        }
-
-    override suspend fun write(
-        transfer: TransferId,
-        offset: Long,
-        bytes: ByteArray,
-    ): BlobResult<Long> =
-        when (
-            val response =
-                request(
-                    address.sharedBlobWrite,
-                    WriteArtifactBlobChunkRequest(
-                        transferId = transfer.value,
-                        offset = offset,
-                        bytes = bytes.toByteString(),
-                    ),
-                )
-        ) {
-            is WriteArtifactBlobChunkResponse.AcceptedWrapper -> BlobResult.Success(response.value.offset)
-            is WriteArtifactBlobChunkResponse.NotFoundErrorWrapper -> BlobResult.NotFound
-            is WriteArtifactBlobChunkResponse.InvalidErrorWrapper -> BlobResult.Invalid(response.value.reason)
-            is WriteArtifactBlobChunkResponse.ConflictErrorWrapper -> BlobResult.Conflict(response.value.reason)
-            else -> throw RealmArtifactCommunicationException("Realm artifact write is unavailable.")
-        }
-
-    override suspend fun complete(transfer: TransferId): BlobResult<BlobMetadata> =
-        when (
-            val response =
-                request(
-                    address.sharedBlobComplete,
-                    CompleteArtifactBlobWriteRequest(transferId = transfer.value),
-                )
-        ) {
-            is CompleteArtifactBlobWriteResponse.SuccessWrapper -> BlobResult.Success(response.value.toApi())
-            is CompleteArtifactBlobWriteResponse.NotFoundErrorWrapper -> BlobResult.NotFound
-            is CompleteArtifactBlobWriteResponse.InvalidErrorWrapper -> BlobResult.Invalid(response.value.reason)
-            is CompleteArtifactBlobWriteResponse.ConflictErrorWrapper -> BlobResult.Conflict(response.value.reason)
-            else -> throw RealmArtifactCommunicationException("Realm artifact completion is unavailable.")
+            is StoreArtifactBlobResponse.SuccessWrapper -> StoreResult.Stored(response.value.toApi())
+            is StoreArtifactBlobResponse.InvalidErrorWrapper -> StoreResult.Invalid(response.value.reason)
+            else -> throw RealmArtifactCommunicationException("Realm artifact store is unavailable.")
         }
 
     private suspend fun <Request : Any, Response : Any> request(

@@ -56,17 +56,15 @@ import com.typewritermc.protocol.transport.generated.authoringCompiledChanged
 import com.typewritermc.protocol.transport.generated.hostExecutionReport
 import com.typewritermc.protocol.transport.generated.hostExecutionWatch
 import com.typewritermc.protocol.transport.generated.serviceHostRegister
-import com.typewritermc.protocol.transport.generated.sharedBlobBegin
-import com.typewritermc.protocol.transport.generated.sharedBlobComplete
+import com.typewritermc.protocol.transport.generated.sharedBlobFetch
 import com.typewritermc.protocol.transport.generated.sharedBlobMetadata
-import com.typewritermc.protocol.transport.generated.sharedBlobRead
-import com.typewritermc.protocol.transport.generated.sharedBlobWrite
+import com.typewritermc.protocol.transport.generated.sharedBlobStore
 import com.typewritermc.protocol.transport.generated.sharedCatalogFetch
 import com.typewritermc.protocol.transport.generated.sharedPublish
 import com.typewritermc.services.libs.filetransfer.blob.ArtifactDigest
 import com.typewritermc.services.libs.filetransfer.blob.BlobMetadata
 import com.typewritermc.services.libs.filetransfer.blob.BlobResult
-import com.typewritermc.services.libs.filetransfer.blob.TransferId
+import com.typewritermc.services.libs.filetransfer.blob.StoreResult
 import com.typewritermc.services.libs.registrar.ServiceId
 import de.infix.testBalloon.framework.core.testSuite
 import io.kotest.assertions.throwables.shouldThrow
@@ -153,10 +151,8 @@ val ArtifactDistributionTest by testSuite {
     test("blob contracts use valid telemetry slugs") {
         val scope = RealmRouteScope(organizationId = "writers", realmId = "quests")
         scope.sharedBlobMetadata.failureSlug.value shouldBe "shared-blob-metadata-failed"
-        scope.sharedBlobRead.failureSlug.value shouldBe "shared-blob-read-failed"
-        scope.sharedBlobBegin.failureSlug.value shouldBe "shared-blob-begin-failed"
-        scope.sharedBlobWrite.failureSlug.value shouldBe "shared-blob-write-failed"
-        scope.sharedBlobComplete.failureSlug.value shouldBe "shared-blob-complete-failed"
+        scope.sharedBlobFetch.failureSlug.value shouldBe "shared-blob-fetch-failed"
+        scope.sharedBlobStore.failureSlug.value shouldBe "shared-blob-store-failed"
     }
 
     test("generated Realm routes preserve the established authority family") {
@@ -351,21 +347,47 @@ val ArtifactDistributionTest by testSuite {
         panelImplementation.extensions.single().sourceParts shouldContainExactly listOf("common")
     }
 
-    test("blob completion verifies bytes and supports ranged reads") {
+    test("a stored blob becomes visible only when its size and digest match") {
         runTest {
-            val root = Files.createTempDirectory("typewriter-blobs")
-            val store = FileDigestBlobStore(root)
+            val store = FileDigestBlobStore(Files.createTempDirectory("typewriter-blobs"))
             val bytes = "verified artifact content".encodeToByteArray()
             val expected = BlobMetadata(ArtifactDigest.sha256(bytes), bytes.size.toLong())
-            val transfer = TransferId.create()
 
-            store.beginWrite(transfer, expected).shouldSucceed().offset shouldBe 0
-            store.write(transfer, 0, bytes.copyOfRange(0, 8)).shouldSucceed() shouldBe 8
-            store.write(transfer, 8, bytes.copyOfRange(8, bytes.size)).shouldSucceed() shouldBe bytes.size.toLong()
-            store.complete(transfer).shouldSucceed() shouldBe expected
-            val chunk = store.read(expected.digest, 3, 7).shouldSucceed()
-            chunk.bytes shouldBe bytes.copyOfRange(3, 10)
-            chunk.complete shouldBe false
+            (store.store(expected.copy(size = expected.size + 1), bytes) is StoreResult.Invalid) shouldBe true
+            (store.store(expected, "forged artifact content!!".encodeToByteArray()) is StoreResult.Invalid) shouldBe true
+            store.metadata(expected.digest) shouldBe BlobResult.NotFound
+
+            store.store(expected, bytes) shouldBe StoreResult.Stored(expected)
+            store.fetch(expected.digest).shouldSucceed() shouldBe bytes
+            store.metadata(expected.digest) shouldBe BlobResult.Success(expected)
+        }
+    }
+
+    test("storing content that is already present succeeds without change, so a lost reply can be retried") {
+        runTest {
+            val store = FileDigestBlobStore(Files.createTempDirectory("typewriter-blobs-retry"))
+            val bytes = "retried artifact content".encodeToByteArray()
+            val expected = BlobMetadata(ArtifactDigest.sha256(bytes), bytes.size.toLong())
+
+            store.store(expected, bytes) shouldBe StoreResult.Stored(expected)
+            val stored = Files.getLastModifiedTime(store.pathFor(expected.digest))
+            store.store(expected, bytes) shouldBe StoreResult.Stored(expected)
+
+            Files.getLastModifiedTime(store.pathFor(expected.digest)) shouldBe stored
+            store.fetch(expected.digest).shouldSucceed() shouldBe bytes
+        }
+    }
+
+    test("a blob corrupted on disk is reported invalid instead of served") {
+        runTest {
+            val store = FileDigestBlobStore(Files.createTempDirectory("typewriter-blobs-corrupt"))
+            val bytes = "content that rots".encodeToByteArray()
+            val expected = BlobMetadata(ArtifactDigest.sha256(bytes), bytes.size.toLong())
+            store.store(expected, bytes) shouldBe StoreResult.Stored(expected)
+
+            Files.write(store.pathFor(expected.digest), "content that rot!".encodeToByteArray())
+
+            (store.fetch(expected.digest) is BlobResult.Invalid) shouldBe true
         }
     }
 
@@ -663,10 +685,7 @@ val ArtifactDistributionTest by testSuite {
             val service = SharedArtifactService("realm", blobs, repository)
             val bytes = "road network".encodeToByteArray()
             val metadata = BlobMetadata(ArtifactDigest.sha256(bytes), bytes.size.toLong())
-            val transfer = TransferId.create()
-            blobs.beginWrite(transfer, metadata).shouldSucceed()
-            blobs.write(transfer, 0, bytes).shouldSucceed()
-            blobs.complete(transfer).shouldSucceed()
+            blobs.store(metadata, bytes) shouldBe StoreResult.Stored(metadata)
             val command =
                 PublishSharedArtifact(
                     SharedArtifactId("019d1f6c-1d2e-7249-9fa3-86964e89721d"),

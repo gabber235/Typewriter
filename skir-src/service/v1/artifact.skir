@@ -1,6 +1,6 @@
 import { InternalError } from "kernel/v1/errors.skir";
 
-// Artifact descriptors refer to immutable blob bytes. The catalog and transfer operations use the digest and size together to verify content.
+// Artifact descriptors refer to immutable blob bytes. The catalog and blob operations use the digest and size together to verify content.
 struct ArtifactDigest(83010001) {
   algorithm: DigestAlgorithm = 0;
   value: string = 1;
@@ -15,15 +15,9 @@ struct BlobMetadata(83010003) {
   size: int64 = 1;
 }
 
-struct BlobChunk(83010004) {
-  offset: int64 = 0;
-  bytes: bytes = 1;
-  complete: bool = 2;
-}
-
 // The durable catalog record for one logical artifact revision. Live records reference immutable blob content.
 // Deleted records are tombstones and omit digest and size so consumers cannot download deleted content.
-struct SharedArtifactDescriptor(83010005) {
+struct SharedArtifactDescriptor(83010004) {
   id: string = 0;
   revision: int64 = 1;
   label: string = 2;
@@ -36,7 +30,7 @@ struct SharedArtifactDescriptor(83010005) {
 }
 
 // Provenance identifies how a descriptor was produced. It is descriptive and does not transfer blob ownership.
-enum SharedArtifactProvenance(83010006) {
+enum SharedArtifactProvenance(83010005) {
   local_inbox: struct {
     relative_path: string = 0;
   } = 1;
@@ -50,17 +44,17 @@ enum SharedArtifactProvenance(83010006) {
 }
 
 // Catalog revision orders changes across artifacts. Descriptor revision orders changes to one artifact identity.
-struct SharedArtifactCatalog(83010007) {
+struct SharedArtifactCatalog(83010006) {
   revision: int64 = 0;
   artifacts: [SharedArtifactDescriptor] = 1;
 }
 
-struct ProducerMetadataEntry(83010008) {
+struct ProducerMetadataEntry(83010007) {
   key: string = 0;
   value: string = 1;
 }
 
-struct ProducerMetadata(83010009) {
+struct ProducerMetadata(83010008) {
   entries: [ProducerMetadataEntry] = 0;
 }
 
@@ -98,15 +92,15 @@ method PublishSharedArtifact(
   internal_error: InternalError = 4;
 } = 930102;
 
-// Reads a bounded byte range from immutable blob content. The response offset and complete flag provide the continuation contract.
-method ReadArtifactBlob(
+// Reads the complete immutable content of a blob. The content always hashes to the requested digest.
+method FetchArtifactBlob(
   struct {
     digest: ArtifactDigest = 0;
-    offset: int64 = 1;
-    maximum_bytes: int32 = 2;
   }
 ): enum {
-  success: BlobChunk = 1;
+  success: struct {
+    content: bytes = 0;
+  } = 1;
   not_found_error: struct {} = 2;
   invalid_error: struct {
     reason: string = 0;
@@ -114,63 +108,22 @@ method ReadArtifactBlob(
   internal_error: InternalError = 4;
 } = 930103;
 
-// Starts or resumes a transfer for the expected digest and size. The returned offset is the next accepted byte for the transfer.
-method BeginArtifactBlobWrite(
+// Stores complete blob content after verifying it against the expected digest and size. Content that is
+// already stored succeeds without change, so a retry after a lost reply is safe.
+method StoreArtifactBlob(
   struct {
-    transfer_id: string = 0;
-    expected: BlobMetadata = 1;
-  }
-): enum {
-  accepted: struct {
-    offset: int64 = 0;
-  } = 1;
-  invalid_error: struct {
-    reason: string = 0;
-  } = 2;
-  conflict_error: struct {
-    reason: string = 0;
-  } = 3;
-  internal_error: InternalError = 4;
-} = 930104;
-
-// Appends a chunk at the requested transfer offset. Accepted returns the next offset; invalid_error and conflict_error reject the write.
-method WriteArtifactBlobChunk(
-  struct {
-    transfer_id: string = 0;
-    offset: int64 = 1;
-    bytes: bytes = 2;
-  }
-): enum {
-  accepted: struct {
-    offset: int64 = 0;
-  } = 1;
-  not_found_error: struct {} = 2;
-  invalid_error: struct {
-    reason: string = 0;
-  } = 3;
-  conflict_error: struct {
-    reason: string = 0;
-  } = 4;
-  internal_error: InternalError = 5;
-} = 930105;
-
-// Finalizes a transfer and verifies the expected digest and size.
-method CompleteArtifactBlobWrite(
-  struct {
-    transfer_id: string = 0;
+    expected: BlobMetadata = 0;
+    content: bytes = 1;
   }
 ): enum {
   success: BlobMetadata = 1;
-  not_found_error: struct {} = 2;
   invalid_error: struct {
     reason: string = 0;
-  } = 3;
-  conflict_error: struct {
-    reason: string = 0;
-  } = 4;
-  internal_error: InternalError = 5;
-} = 930106;
+  } = 2;
+  internal_error: InternalError = 3;
+} = 930104;
 
+// Reports whether a blob is stored and its size, without moving its content.
 method FetchArtifactBlobMetadata(
   struct {
     digest: ArtifactDigest = 0;
@@ -182,4 +135,4 @@ method FetchArtifactBlobMetadata(
     reason: string = 0;
   } = 3;
   internal_error: InternalError = 4;
-} = 930107;
+} = 930105;
