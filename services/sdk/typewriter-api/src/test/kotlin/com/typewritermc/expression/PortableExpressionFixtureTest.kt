@@ -11,6 +11,7 @@ import com.typewritermc.authoring.name
 import com.typewritermc.authoring.root
 import com.typewritermc.checking.PartialSelection
 import com.typewritermc.checking.TypedSelection
+import com.typewritermc.configuration.ExpressionInference
 import com.typewritermc.configuration.PortableExpressionChecker
 import com.typewritermc.configuration.ruleProfileViolations
 import com.typewritermc.expression.operations.CatalogPortableTypes
@@ -218,22 +219,21 @@ private fun ExpressionNode.roundTrips() {
 private fun FixtureCase.checkWith(check: JsonObject) {
     val bindings =
         inputs.mapValues { (name, input) -> requireNotNull(input.type) { "Input ${name.value} of $id needs a type for check." } }
-    var inferred: ExpressionType? = null
+    val checker = PortableExpressionChecker(catalog::resolve)
     val failures =
-        PortableExpressionChecker(catalog::resolve)
-            .checkExpressionCodes(
-                expression,
-                bindings,
-                ExpressionType.serializer.fromJsonCode(check.getValue("resultType").toString()),
-                onInferred = { inferred = it },
-            ).map { it.value }
+        checker
+            .checkExpressionCodes(expression, bindings, ExpressionType.serializer.fromJsonCode(check.getValue("resultType").toString()))
+            .map { it.value }
     failures.sorted() shouldBe
         check
             .getValue("failures")
             .jsonArray
             .map { it.jsonPrimitive.content }
             .sorted()
-    check["inferredType"]?.let { inferred shouldBe ExpressionType.serializer.fromJsonCode(it.toString()) }
+    check["inferredType"]?.let {
+        checker.inferExpression(expression, bindings) shouldBe
+            ExpressionInference.Typed(ExpressionType.serializer.fromJsonCode(it.toString()))
+    }
 }
 
 private fun FixtureCase.evaluate() {

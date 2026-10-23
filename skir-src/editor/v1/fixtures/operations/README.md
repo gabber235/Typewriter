@@ -47,7 +47,7 @@ Each operation file is `{ "cases": [ ... ] }`. Unknown keys fail on both hosts.
 | --- | --- |
 | `resultType` | The slot type the expression is checked against |
 | `failures` | Check failure ids; compared as a multiset (order is not part of the contract); `[]` when it checks |
-| `inferredType` | Optional; the type the checker infers |
+| `inferredType` | Optional; the type the checker infers for the expression alone, without `resultType` as context |
 
 ### `expected`
 
