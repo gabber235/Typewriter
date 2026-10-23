@@ -87,7 +87,14 @@ class DefaultPredicateReasoner : PredicateReasoner {
             }
 
             is ExpressionNode.OrWrapper -> {
-                if (node.value.left.call(PortableOperationCatalog.VALUE_IS_NULL) != null) bounds(node.value.right, scope) else emptyList()
+                // `value == null or bounded` bounds the value when present, so only bounds computed from that value apply.
+                val skipped =
+                    node.value.left
+                        .call(PortableOperationCatalog.VALUE_IS_NULL)
+                        ?.arguments
+                        ?.singleOrNull()
+                        ?.let { substitute(it, scope) }
+                if (skipped == null) emptyList() else bounds(node.value.right, scope).filter { it.subject.node.computedFrom(skipped) }
             }
 
             is ExpressionNode.CallWrapper -> {
@@ -254,6 +261,15 @@ private data class Limit(
     val value: BigDecimal,
     val first: Boolean,
 )
+
+/** Whether this node is [value] or projects or computes from it, such as its field or its length. */
+private fun ExpressionNode.computedFrom(value: ExpressionNode): Boolean =
+    this == value ||
+        when (this) {
+            is ExpressionNode.FieldWrapper -> this.value.source.computedFrom(value)
+            is ExpressionNode.CallWrapper -> this.value.arguments.any { it.computedFrom(value) }
+            else -> false
+        }
 
 private fun ExpressionNode.call(operation: PortableOperation): CallExpression? =
     (this as? ExpressionNode.CallWrapper)?.value?.takeIf { it.operation == operation.id }

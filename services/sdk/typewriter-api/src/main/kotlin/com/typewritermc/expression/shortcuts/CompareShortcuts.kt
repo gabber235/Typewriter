@@ -14,7 +14,7 @@ import kotlin.time.Instant
 /*
  * Comparisons lower to value.compare tested with value.equals against -1 or 1, negated with boolean.not for the
  * inclusive forms. DefaultPredicateReasoner reads exactly these shapes to find contradictory bounds, and
- * CompareShortcutsTest pins them.
+ * ShortcutLoweringTest pins them.
  *
  *   a gt b   value.equals(value.compare(a, b), 1)
  *   a lt b   value.equals(value.compare(a, b), -1)
