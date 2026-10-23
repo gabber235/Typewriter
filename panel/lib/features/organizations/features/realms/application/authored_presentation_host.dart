@@ -437,19 +437,10 @@ final class AuthoredPresentationHost extends ChangeNotifier
           problem: "A presentation collection row could not be projected",
         );
       }
-      final projectedUse =
-          checked.applyTemplate(definition.rowType, record.configuration) ??
-          checked.concreteType(definition.rowType);
-      final rowSchema = projectedUse == null
-          ? null
-          : CompletePortablePresentationBinding(projectedUse);
       final bindings = {
         ...context.bindings,
-        definition.rowBindingId: PortableExpressionBinding(
-          value: row,
-          schema: rowSchema,
-        ),
-        projected.resourceBindingId: entry.key.toExpressionBinding(),
+        definition.rowBinding.id: PortableExpressionBinding(value: row),
+        projected.resourceBinding.id: entry.key.toExpressionBinding(),
       };
       final key = PortableExpressionEvaluator.located(
         bindings,
@@ -483,7 +474,6 @@ final class AuthoredPresentationHost extends ChangeNotifier
           configuration: record.configuration,
           label: checked.appearanceOf(record).label,
           row: row,
-          schema: rowSchema,
           key: key.value,
           canonicalKey: canonicalAuthoredValue(key.value),
           selectable: selected,
@@ -922,7 +912,7 @@ final class AuthoredPresentationHost extends ChangeNotifier
     row ??= skir.DataValue.createRecord(fields: const []);
     if (row == skir.DataValue.unfilled) return row;
     final applied = catalog.applyTemplate(
-      definition.rowType,
+      definition.rowBinding.type,
       record.configuration,
     );
     return applied == null

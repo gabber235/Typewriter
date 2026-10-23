@@ -93,8 +93,8 @@ final class _SearchInputStoryState extends State<_SearchInputStory> {
       semanticLabel: null,
     ),
     selectionMode: skir.SearchSelectionMode.single,
-    queryBindingId: skir.ExpressionBindingId(value: "query"),
-    summaryBindingId: skir.ExpressionBindingId(value: "summary"),
+    queryBinding: declareNamedBinding("query", textTemplate),
+    summaryBinding: declareNamedBinding("summary", textTemplate),
     maximumExtent: skir.ExpressionNode.wrapLiteral(
       skir.DataValue.wrapInteger("280"),
     ),
@@ -114,7 +114,7 @@ final class _SearchInputStoryState extends State<_SearchInputStory> {
         ),
       ),
       result: skir.SearchResultMapping(
-        bindingId: _row,
+        binding: declareBinding(_row, textTemplate),
         key: _rowRead,
         selectedValue: _rowRead,
         presentation: skir.PresentationNode(
@@ -194,7 +194,7 @@ final class _SearchInputStoryState extends State<_SearchInputStory> {
         (_control().toMutable()
               ..customValue = widget.customValue
                   ? skir.ExpressionNode.createInput(
-                      binding: _control().queryBindingId,
+                      binding: _control().queryBinding.id,
                       path: editorRootPath,
                     )
                   : null)

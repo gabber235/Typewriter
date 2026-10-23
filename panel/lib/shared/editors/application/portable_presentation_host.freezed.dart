@@ -1345,7 +1345,7 @@ as List<PortablePresentationDiagnostic>,
 /// @nodoc
 mixin _$PortableCollectionRowProjection {
 
- skir.ResourceId get resource; skir.TypeSelection get configuration; String get label; skir.DataValue get row; skir.DataValue get key; String get canonicalKey; bool get selectable; PortablePresentationBindingSchema? get schema;
+ skir.ResourceId get resource; skir.TypeSelection get configuration; String get label; skir.DataValue get row; skir.DataValue get key; String get canonicalKey; bool get selectable;
 /// Create a copy of PortableCollectionRowProjection
 /// with the given fields replaced by the non-null parameter values.
 @JsonKey(includeFromJson: false, includeToJson: false)
@@ -1357,20 +1357,20 @@ $PortableCollectionRowProjectionCopyWith<PortableCollectionRowProjection> get co
 @override
 bool operator ==(Object other) {
   final _this = this as PortableCollectionRowProjection;
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is PortableCollectionRowProjection&&(identical(other.resource, _this.resource) || other.resource == _this.resource)&&(identical(other.configuration, _this.configuration) || other.configuration == _this.configuration)&&(identical(other.label, _this.label) || other.label == _this.label)&&(identical(other.row, _this.row) || other.row == _this.row)&&(identical(other.key, _this.key) || other.key == _this.key)&&(identical(other.canonicalKey, _this.canonicalKey) || other.canonicalKey == _this.canonicalKey)&&(identical(other.selectable, _this.selectable) || other.selectable == _this.selectable)&&(identical(other.schema, _this.schema) || other.schema == _this.schema));
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is PortableCollectionRowProjection&&(identical(other.resource, _this.resource) || other.resource == _this.resource)&&(identical(other.configuration, _this.configuration) || other.configuration == _this.configuration)&&(identical(other.label, _this.label) || other.label == _this.label)&&(identical(other.row, _this.row) || other.row == _this.row)&&(identical(other.key, _this.key) || other.key == _this.key)&&(identical(other.canonicalKey, _this.canonicalKey) || other.canonicalKey == _this.canonicalKey)&&(identical(other.selectable, _this.selectable) || other.selectable == _this.selectable));
 }
 
 
 @override
 int get hashCode {
   final _this = this as PortableCollectionRowProjection;
-  return Object.hash(runtimeType,_this.resource,_this.configuration,_this.label,_this.row,_this.key,_this.canonicalKey,_this.selectable,_this.schema);
+  return Object.hash(runtimeType,_this.resource,_this.configuration,_this.label,_this.row,_this.key,_this.canonicalKey,_this.selectable);
 }
 
 @override
 String toString() {
   final _this = this as PortableCollectionRowProjection;
-  return 'PortableCollectionRowProjection(resource: ${_this.resource}, configuration: ${_this.configuration}, label: ${_this.label}, row: ${_this.row}, key: ${_this.key}, canonicalKey: ${_this.canonicalKey}, selectable: ${_this.selectable}, schema: ${_this.schema})';
+  return 'PortableCollectionRowProjection(resource: ${_this.resource}, configuration: ${_this.configuration}, label: ${_this.label}, row: ${_this.row}, key: ${_this.key}, canonicalKey: ${_this.canonicalKey}, selectable: ${_this.selectable})';
 }
 
 
@@ -1381,11 +1381,11 @@ abstract mixin class $PortableCollectionRowProjectionCopyWith<$Res>  {
   factory $PortableCollectionRowProjectionCopyWith(PortableCollectionRowProjection value, $Res Function(PortableCollectionRowProjection) _then) = _$PortableCollectionRowProjectionCopyWithImpl;
 @useResult
 $Res call({
- skir.ResourceId resource, skir.TypeSelection configuration, String label, skir.DataValue row, skir.DataValue key, String canonicalKey, bool selectable, PortablePresentationBindingSchema? schema
+ skir.ResourceId resource, skir.TypeSelection configuration, String label, skir.DataValue row, skir.DataValue key, String canonicalKey, bool selectable
 });
 
 
-$PortablePresentationBindingSchemaCopyWith<$Res>? get schema;
+
 
 }
 /// @nodoc
@@ -1398,7 +1398,7 @@ class _$PortableCollectionRowProjectionCopyWithImpl<$Res>
 
 /// Create a copy of PortableCollectionRowProjection
 /// with the given fields replaced by the non-null parameter values.
-@pragma('vm:prefer-inline') @override $Res call({Object? resource = null,Object? configuration = null,Object? label = null,Object? row = null,Object? key = null,Object? canonicalKey = null,Object? selectable = null,Object? schema = freezed,}) {
+@pragma('vm:prefer-inline') @override $Res call({Object? resource = null,Object? configuration = null,Object? label = null,Object? row = null,Object? key = null,Object? canonicalKey = null,Object? selectable = null,}) {
   return _then(PortableCollectionRowProjection(
 resource: null == resource ? _self.resource : resource // ignore: cast_nullable_to_non_nullable
 as skir.ResourceId,configuration: null == configuration ? _self.configuration : configuration // ignore: cast_nullable_to_non_nullable
@@ -1407,23 +1407,10 @@ as String,row: null == row ? _self.row : row // ignore: cast_nullable_to_non_nul
 as skir.DataValue,key: null == key ? _self.key : key // ignore: cast_nullable_to_non_nullable
 as skir.DataValue,canonicalKey: null == canonicalKey ? _self.canonicalKey : canonicalKey // ignore: cast_nullable_to_non_nullable
 as String,selectable: null == selectable ? _self.selectable : selectable // ignore: cast_nullable_to_non_nullable
-as bool,schema: freezed == schema ? _self.schema : schema // ignore: cast_nullable_to_non_nullable
-as PortablePresentationBindingSchema?,
+as bool,
   ));
 }
-/// Create a copy of PortableCollectionRowProjection
-/// with the given fields replaced by the non-null parameter values.
-@override
-@pragma('vm:prefer-inline')
-$PortablePresentationBindingSchemaCopyWith<$Res>? get schema {
-    if (_self.schema == null) {
-    return null;
-  }
 
-  return $PortablePresentationBindingSchemaCopyWith<$Res>(_self.schema!, (value) {
-    return _then(_self.copyWith(schema: value));
-  });
-}
 }
 
 
@@ -1505,10 +1492,10 @@ return $default(_that);case _:
 /// }
 /// ```
 
-@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function( skir.ResourceId resource,  skir.TypeSelection configuration,  String label,  skir.DataValue row,  skir.DataValue key,  String canonicalKey,  bool selectable,  PortablePresentationBindingSchema? schema)?  $default,{required TResult orElse(),}) {final _that = this;
+@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function( skir.ResourceId resource,  skir.TypeSelection configuration,  String label,  skir.DataValue row,  skir.DataValue key,  String canonicalKey,  bool selectable)?  $default,{required TResult orElse(),}) {final _that = this;
 switch (_that) {
 case _PortableCollectionRowProjection() when $default != null:
-return $default(_that.resource,_that.configuration,_that.label,_that.row,_that.key,_that.canonicalKey,_that.selectable,_that.schema);case _:
+return $default(_that.resource,_that.configuration,_that.label,_that.row,_that.key,_that.canonicalKey,_that.selectable);case _:
   return orElse();
 
 }
@@ -1526,10 +1513,10 @@ return $default(_that.resource,_that.configuration,_that.label,_that.row,_that.k
 /// }
 /// ```
 
-@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function( skir.ResourceId resource,  skir.TypeSelection configuration,  String label,  skir.DataValue row,  skir.DataValue key,  String canonicalKey,  bool selectable,  PortablePresentationBindingSchema? schema)  $default,) {final _that = this;
+@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function( skir.ResourceId resource,  skir.TypeSelection configuration,  String label,  skir.DataValue row,  skir.DataValue key,  String canonicalKey,  bool selectable)  $default,) {final _that = this;
 switch (_that) {
 case _PortableCollectionRowProjection():
-return $default(_that.resource,_that.configuration,_that.label,_that.row,_that.key,_that.canonicalKey,_that.selectable,_that.schema);case _:
+return $default(_that.resource,_that.configuration,_that.label,_that.row,_that.key,_that.canonicalKey,_that.selectable);case _:
   throw StateError('Unexpected subclass');
 
 }
@@ -1546,10 +1533,10 @@ return $default(_that.resource,_that.configuration,_that.label,_that.row,_that.k
 /// }
 /// ```
 
-@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function( skir.ResourceId resource,  skir.TypeSelection configuration,  String label,  skir.DataValue row,  skir.DataValue key,  String canonicalKey,  bool selectable,  PortablePresentationBindingSchema? schema)?  $default,) {final _that = this;
+@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function( skir.ResourceId resource,  skir.TypeSelection configuration,  String label,  skir.DataValue row,  skir.DataValue key,  String canonicalKey,  bool selectable)?  $default,) {final _that = this;
 switch (_that) {
 case _PortableCollectionRowProjection() when $default != null:
-return $default(_that.resource,_that.configuration,_that.label,_that.row,_that.key,_that.canonicalKey,_that.selectable,_that.schema);case _:
+return $default(_that.resource,_that.configuration,_that.label,_that.row,_that.key,_that.canonicalKey,_that.selectable);case _:
   return null;
 
 }
@@ -1561,7 +1548,7 @@ return $default(_that.resource,_that.configuration,_that.label,_that.row,_that.k
 
 
 class _PortableCollectionRowProjection implements PortableCollectionRowProjection {
-  const _PortableCollectionRowProjection({required this.resource, required this.configuration, required this.label, required this.row, required this.key, required this.canonicalKey, required this.selectable, this.schema});
+  const _PortableCollectionRowProjection({required this.resource, required this.configuration, required this.label, required this.row, required this.key, required this.canonicalKey, required this.selectable});
   
 
 @override final  skir.ResourceId resource;
@@ -1571,7 +1558,6 @@ class _PortableCollectionRowProjection implements PortableCollectionRowProjectio
 @override final  skir.DataValue key;
 @override final  String canonicalKey;
 @override final  bool selectable;
-@override final  PortablePresentationBindingSchema? schema;
 
 /// Create a copy of PortableCollectionRowProjection
 /// with the given fields replaced by the non-null parameter values.
@@ -1583,18 +1569,18 @@ _$PortableCollectionRowProjectionCopyWith<_PortableCollectionRowProjection> get 
 
 @override
 bool operator ==(Object other) {
-    return identical(this, other) || (other.runtimeType == runtimeType&&other is _PortableCollectionRowProjection&&(identical(other.resource, resource) || other.resource == resource)&&(identical(other.configuration, configuration) || other.configuration == configuration)&&(identical(other.label, label) || other.label == label)&&(identical(other.row, row) || other.row == row)&&(identical(other.key, key) || other.key == key)&&(identical(other.canonicalKey, canonicalKey) || other.canonicalKey == canonicalKey)&&(identical(other.selectable, selectable) || other.selectable == selectable)&&(identical(other.schema, schema) || other.schema == schema));
+    return identical(this, other) || (other.runtimeType == runtimeType&&other is _PortableCollectionRowProjection&&(identical(other.resource, resource) || other.resource == resource)&&(identical(other.configuration, configuration) || other.configuration == configuration)&&(identical(other.label, label) || other.label == label)&&(identical(other.row, row) || other.row == row)&&(identical(other.key, key) || other.key == key)&&(identical(other.canonicalKey, canonicalKey) || other.canonicalKey == canonicalKey)&&(identical(other.selectable, selectable) || other.selectable == selectable));
 }
 
 
 @override
 int get hashCode {
-    return Object.hash(runtimeType,resource,configuration,label,row,key,canonicalKey,selectable,schema);
+    return Object.hash(runtimeType,resource,configuration,label,row,key,canonicalKey,selectable);
 }
 
 @override
 String toString() {
-    return 'PortableCollectionRowProjection(resource: $resource, configuration: $configuration, label: $label, row: $row, key: $key, canonicalKey: $canonicalKey, selectable: $selectable, schema: $schema)';
+    return 'PortableCollectionRowProjection(resource: $resource, configuration: $configuration, label: $label, row: $row, key: $key, canonicalKey: $canonicalKey, selectable: $selectable)';
 }
 
 
@@ -1605,11 +1591,11 @@ abstract mixin class _$PortableCollectionRowProjectionCopyWith<$Res> implements 
   factory _$PortableCollectionRowProjectionCopyWith(_PortableCollectionRowProjection value, $Res Function(_PortableCollectionRowProjection) _then) = __$PortableCollectionRowProjectionCopyWithImpl;
 @override @useResult
 $Res call({
- skir.ResourceId resource, skir.TypeSelection configuration, String label, skir.DataValue row, skir.DataValue key, String canonicalKey, bool selectable, PortablePresentationBindingSchema? schema
+ skir.ResourceId resource, skir.TypeSelection configuration, String label, skir.DataValue row, skir.DataValue key, String canonicalKey, bool selectable
 });
 
 
-@override $PortablePresentationBindingSchemaCopyWith<$Res>? get schema;
+
 
 }
 /// @nodoc
@@ -1622,7 +1608,7 @@ class __$PortableCollectionRowProjectionCopyWithImpl<$Res>
 
 /// Create a copy of PortableCollectionRowProjection
 /// with the given fields replaced by the non-null parameter values.
-@override @pragma('vm:prefer-inline') $Res call({Object? resource = null,Object? configuration = null,Object? label = null,Object? row = null,Object? key = null,Object? canonicalKey = null,Object? selectable = null,Object? schema = freezed,}) {
+@override @pragma('vm:prefer-inline') $Res call({Object? resource = null,Object? configuration = null,Object? label = null,Object? row = null,Object? key = null,Object? canonicalKey = null,Object? selectable = null,}) {
   return _then(_PortableCollectionRowProjection(
 resource: null == resource ? _self.resource : resource // ignore: cast_nullable_to_non_nullable
 as skir.ResourceId,configuration: null == configuration ? _self.configuration : configuration // ignore: cast_nullable_to_non_nullable
@@ -1631,24 +1617,11 @@ as String,row: null == row ? _self.row : row // ignore: cast_nullable_to_non_nul
 as skir.DataValue,key: null == key ? _self.key : key // ignore: cast_nullable_to_non_nullable
 as skir.DataValue,canonicalKey: null == canonicalKey ? _self.canonicalKey : canonicalKey // ignore: cast_nullable_to_non_nullable
 as String,selectable: null == selectable ? _self.selectable : selectable // ignore: cast_nullable_to_non_nullable
-as bool,schema: freezed == schema ? _self.schema : schema // ignore: cast_nullable_to_non_nullable
-as PortablePresentationBindingSchema?,
+as bool,
   ));
 }
 
-/// Create a copy of PortableCollectionRowProjection
-/// with the given fields replaced by the non-null parameter values.
-@override
-@pragma('vm:prefer-inline')
-$PortablePresentationBindingSchemaCopyWith<$Res>? get schema {
-    if (_self.schema == null) {
-    return null;
-  }
 
-  return $PortablePresentationBindingSchemaCopyWith<$Res>(_self.schema!, (value) {
-    return _then(_self.copyWith(schema: value));
-  });
-}
 }
 
 /// @nodoc

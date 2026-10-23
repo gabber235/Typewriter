@@ -68,7 +68,7 @@ extension PortableResourceHeading on skir.ExpressionNode {
       skir.PresentationElement.createConditional(
         condition: portableCall("value.equals", [
           skir.ExpressionNode.createOrElse(
-            value: panelSelectionCountInput.bindingId.readExpression(),
+            value: panelSelectionCountInput.binding.id.readExpression(),
             fallback: skir.ExpressionNode.wrapLiteral(
               skir.DataValue.wrapInteger("1"),
             ),

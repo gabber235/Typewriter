@@ -130,7 +130,12 @@ BoundPresentationHost _scalarHost({
   );
   final mappings = skir.ValueMappings(
     completion: skir.ExpressionMapping(
-      inputBinding: candidate,
+      inputBinding: declareBinding(
+        candidate,
+        scalarTemplate(
+          skir.ScalarKind.createFloat(width: skir.FloatWidth.sixtyFour),
+        ),
+      ),
       body: portableCall("number.round", [
         read,
         numberLiteral(0.5),

@@ -156,7 +156,10 @@ final _serviceNameCandidate = skir.ExpressionBindingId(
 final _serviceNameMappings =
     (skir.ValueMappings.mutable()
           ..completion = skir.ExpressionMapping(
-            inputBinding: _serviceNameCandidate,
+            inputBinding: skir.BindingDeclaration(
+              id: _serviceNameCandidate,
+              type: skir.TypeTemplate.wrapScalar(skir.ScalarKind.text),
+            ),
             body: portableCall("regex.replace", [
               portableCall("regex.replace", [
                 portableCall("text.lower", [

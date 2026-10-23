@@ -72,6 +72,7 @@ final class PortableSearchInput extends HookWidget {
               ? host as PortableCollectionProjectionHost
               : null,
           material: searchScope.material,
+          subject: searchScope.materialSubject,
         );
         return const PortableSearchCompiler().bindControl(
           control: control,
@@ -314,15 +315,7 @@ final class PortableSearchInput extends HookWidget {
       return PortablePresentationNodeRenderer(
         node: summary,
         scope: scope
-            .withValues(
-              {control.summaryBindingId: current},
-              schemas: {
-                if (scope.expectedType(control.control.binding) case final use?)
-                  control.summaryBindingId: CompletePortablePresentationBinding(
-                    use,
-                  ),
-              },
-            )
+            .declare(control.summaryBinding, current)
             .withReadOnly(true),
       );
     }

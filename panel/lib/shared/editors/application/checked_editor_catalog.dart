@@ -643,6 +643,17 @@ final class CheckedEditorCatalog {
   skir.TypeUse? concreteType(skir.TypeTemplate template) =>
       _concreteTemplateType(template);
 
+  /// The type of a binding a presentation declares: [template] closed over
+  /// the type arguments of the material [subject], or taken as written when
+  /// there is no subject. Null when the catalog cannot apply it, such as for
+  /// a pending subject argument.
+  skir.TypeUse? declaredBindingType(
+    skir.TypeTemplate template,
+    skir.TypeSelection? subject,
+  ) => subject == null
+      ? concreteType(template)
+      : applyTemplate(template, subject);
+
   /// The published placement field of the selected type, or null when the
   /// type declares none. Layout reads and writes go through this path instead
   /// of assuming a field name.

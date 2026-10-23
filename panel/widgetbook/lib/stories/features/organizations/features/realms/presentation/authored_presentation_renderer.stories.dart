@@ -404,8 +404,8 @@ final _interactionGallery = skir.PresentationNode(
               allowAdd: true,
               allowRemove: true,
               allowReorder: true,
-              itemBindingId: skir.ExpressionBindingId(value: "list_item"),
-              indexBindingId: skir.ExpressionBindingId(value: "list_index"),
+              itemBinding: declareNamedBinding("list_item", textTemplate),
+              indexBinding: declareNamedBinding("list_index", int32Template),
               appearance: null,
               content: null,
             ),
@@ -436,8 +436,8 @@ final _interactionGallery = skir.PresentationNode(
               valuePresentation: null,
               allowAdd: true,
               allowRemove: true,
-              keyBindingId: skir.ExpressionBindingId(value: "map_key"),
-              valueBindingId: skir.ExpressionBindingId(value: "map_value"),
+              keyBinding: declareNamedBinding("map_key", textTemplate),
+              valueBinding: declareNamedBinding("map_value", textTemplate),
               appearance: null,
               content: null,
             ),
@@ -915,7 +915,7 @@ final class ResourceHeadingGallery extends HookWidget {
     final scope = PortablePresentationScope(
       operations: operations,
       bindings: {
-        panelSelectionCountInput.bindingId: PortableExpressionBinding(
+        panelSelectionCountInput.binding.id: PortableExpressionBinding(
           value: skir.DataValue.wrapInteger(multiple ? "2" : "1"),
         ),
       },

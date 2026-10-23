@@ -427,8 +427,16 @@ final class _SearchFixture {
             ..selectionMode = multiple
                 ? skir.SearchSelectionMode.multiple
                 : skir.SearchSelectionMode.single
-            ..queryBindingId = query
-            ..summaryBindingId = skir.ExpressionBindingId(value: "summary")
+            ..queryBinding = declareBinding(query, textTemplate)
+            ..summaryBinding = declareNamedBinding(
+              "summary",
+              multiple
+                  ? skir.TypeTemplate.createNamed(
+                      definition: _listDefinition,
+                      arguments: const [],
+                    )
+                  : textTemplate,
+            )
             ..maximumExtent = numberLiteral(220)
             ..placeholder = textLiteral("Search icons")
             ..provider = skir.SearchProvider.createStaticValues(
@@ -454,7 +462,11 @@ final class _SearchFixture {
                 ),
               ),
               result: skir.SearchResultMapping(
-                bindingId: row,
+                // The fixture publishes no link type for resource results.
+                binding: declareBinding(
+                  row,
+                  resources ? skir.TypeTemplate.unknown : textTemplate,
+                ),
                 key: rowRead,
                 selectedValue: rowRead,
                 label: rowRead,

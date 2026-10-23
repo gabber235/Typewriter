@@ -207,7 +207,12 @@ void main() {
       );
       final mappings = skir.ValueMappings(
         completion: skir.ExpressionMapping(
-          inputBinding: candidate,
+          inputBinding: declareBinding(
+            candidate,
+            scalarTemplate(
+              skir.ScalarKind.createFloat(width: skir.FloatWidth.sixtyFour),
+            ),
+          ),
           body: portableCall("number.round", [
             read,
             literalExpression(skir.DataValue.wrapFloat(0.5)),
@@ -217,7 +222,12 @@ void main() {
           ]),
         ),
         display: skir.ExpressionMapping(
-          inputBinding: candidate,
+          inputBinding: declareBinding(
+            candidate,
+            scalarTemplate(
+              skir.ScalarKind.createFloat(width: skir.FloatWidth.sixtyFour),
+            ),
+          ),
           body: portableCall("number.format", [
             read,
             literalExpression(skir.DataValue.wrapInteger("2")),
@@ -325,7 +335,7 @@ void main() {
               ..mappings = skir.ValueMappings(
                 display: null,
                 completion: skir.ExpressionMapping(
-                  inputBinding: candidate,
+                  inputBinding: declareBinding(candidate, use.portableTemplate),
                   body: portableCall("number.round", [
                     skir.ExpressionNode.createInput(
                       binding: candidate,
@@ -612,7 +622,14 @@ void main() {
                     bindingId: number,
                     path: editorRootPath,
                   ),
-                  scopeBindingId: configured,
+                  scopeBinding: declareBinding(
+                    configured,
+                    scalarTemplate(
+                      skir.ScalarKind.createFloat(
+                        width: skir.FloatWidth.sixtyFour,
+                      ),
+                    ),
+                  ),
                   child: presentationNode(
                     "number",
                     skir.PresentationElement.wrapNumericInput(

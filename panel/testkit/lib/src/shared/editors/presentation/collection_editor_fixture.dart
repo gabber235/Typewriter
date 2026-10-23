@@ -37,7 +37,7 @@ final class CollectionEditorScenario extends ChangeNotifier {
               resource: skir.AuthoringResource(
                 id: resource,
                 content: skir.AuthoringRecord(
-                  configuration: skir.TypeSelection.wrapComplete(_use("Owner")),
+                  configuration: skir.TypeSelection.wrapComplete(ownerType),
                   fields: [
                     skir.FieldValue(
                       name: "entries",
@@ -88,6 +88,9 @@ final class CollectionEditorScenario extends ChangeNotifier {
   static final third = skir.ItemId(value: "third");
   static final itemBinding = skir.ExpressionBindingId(value: "fixture.item");
   static final entriesPath = editorRootPath.field("entries");
+
+  /// The type of the owning resource, the configured value of the layout.
+  static final ownerType = _use("Owner");
   final CollectionEditorExample example;
   final bool confirmRemoval;
   final PortablePresentationCapabilities capabilities;
@@ -135,9 +138,13 @@ final class CollectionEditorScenario extends ChangeNotifier {
         skir.PresentationElement.wrapMapInput(
           (skir.MapControl.mutable()
                 ..control = control
-                ..keyBindingId = skir.ExpressionBindingId(value: "fixture.key")
-                ..valueBindingId = skir.ExpressionBindingId(
-                  value: "fixture.mapValue",
+                ..keyBinding = skir.BindingDeclaration(
+                  id: skir.ExpressionBindingId(value: "fixture.key"),
+                  type: _text,
+                )
+                ..valueBinding = skir.BindingDeclaration(
+                  id: skir.ExpressionBindingId(value: "fixture.mapValue"),
+                  type: _elementTemplate(example),
                 )
                 ..allowAdd = true
                 ..allowRemove = true)
@@ -146,7 +153,10 @@ final class CollectionEditorScenario extends ChangeNotifier {
       CollectionEditorExample.textSet => skir.PresentationElement.wrapSetInput(
         (skir.SetControl.mutable()
               ..control = control
-              ..itemBindingId = itemBinding
+              ..itemBinding = skir.BindingDeclaration(
+                id: itemBinding,
+                type: _elementTemplate(example),
+              )
               ..allowAdd = true
               ..allowRemove = true)
             .toFrozen(),
@@ -154,7 +164,10 @@ final class CollectionEditorScenario extends ChangeNotifier {
       _ => skir.PresentationElement.wrapListInput(
         (skir.ListControl.mutable()
               ..control = control
-              ..itemBindingId = itemBinding
+              ..itemBinding = skir.BindingDeclaration(
+                id: itemBinding,
+                type: _elementTemplate(example),
+              )
               ..itemPresentation = item
               ..allowAdd = true
               ..allowRemove = true
@@ -376,8 +389,21 @@ skir.DataValue _initialValue(
   };
 }
 
+final _text = skir.TypeTemplate.wrapScalar(skir.ScalarKind.text);
+
+/// The type of one entry of [example]'s collection: a list or set item, or a
+/// map value (map keys are text).
+skir.TypeTemplate _elementTemplate(CollectionEditorExample example) =>
+    switch (example) {
+      CollectionEditorExample.textList ||
+      CollectionEditorExample.textSet ||
+      CollectionEditorExample.scalarMap => _text,
+      CollectionEditorExample.nestedLists => _named("TextList"),
+      _ => _named("Step"),
+    };
+
 CheckedEditorCatalog _catalog(CollectionEditorExample example) {
-  final text = skir.TypeTemplate.wrapScalar(skir.ScalarKind.text);
+  final text = _text;
   final integer = skir.TypeTemplate.wrapScalar(
     skir.ScalarKind.createInteger(width: skir.IntegerWidth.signedThirtyTwo),
   );

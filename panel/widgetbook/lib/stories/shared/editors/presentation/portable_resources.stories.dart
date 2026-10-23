@@ -99,7 +99,10 @@ final class _ResourcesWorkspaceStoryState
               control: _fixture.control,
               layout: skir.ResourcesLayout.createTimeline(appearance: null),
               order: null,
-              itemBindingId: skir.ExpressionBindingId(value: "resources.item"),
+              itemBinding: declareNamedBinding(
+                "resources.item",
+                skir.TypeTemplate.unknown,
+              ),
             )
           : skir.PresentationElement.createResources(
               control: _fixture.control,
@@ -108,7 +111,10 @@ final class _ResourcesWorkspaceStoryState
                 appearance: null,
               ),
               order: null,
-              itemBindingId: skir.ExpressionBindingId(value: "resources.item"),
+              itemBinding: declareNamedBinding(
+                "resources.item",
+                skir.TypeTemplate.unknown,
+              ),
             ),
       header: null,
     );

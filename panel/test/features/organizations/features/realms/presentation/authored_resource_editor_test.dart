@@ -586,8 +586,7 @@ void main() {
               ..contextInputs = [
                 skir.PresentationContextInput(
                   source: skir.PresentationContextSource.caller,
-                  bindingId: caller,
-                  valueType: callerType,
+                  binding: declareBinding(caller, callerType.portableTemplate),
                 ),
               ];
             return (material.toMutable()
@@ -1171,8 +1170,9 @@ _emptyPageGraphFixture() {
                           appearance: null,
                         ),
                         order: null,
-                        itemBindingId: skir.ExpressionBindingId(
-                          value: "resources.item",
+                        itemBinding: declareNamedBinding(
+                          "resources.item",
+                          textTemplate,
                         ),
                       ),
                       header: null,

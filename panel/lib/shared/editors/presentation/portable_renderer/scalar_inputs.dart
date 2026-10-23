@@ -606,7 +606,7 @@ extension _PortableScalarInputRendering on PortablePresentationNodeRenderer {
       return _diagnostic("The choice binding is unavailable");
     }
     if (allowCustom &&
-        (options?.queryBindingId == null || options?.customValue == null)) {
+        (options?.queryBinding == null || options?.customValue == null)) {
       return _diagnostic(
         "Custom choice values require a query binding and value expression",
       );
@@ -829,15 +829,15 @@ extension _PortableScalarInputRendering on PortablePresentationNodeRenderer {
             onCustomValue: !allowCustom
                 ? null
                 : (query) {
-                    if (options?.queryBindingId == null ||
+                    if (options?.queryBinding == null ||
                         options?.customValue == null) {
                       return;
                     }
                     final result = scope
-                        .withValues({
-                          options!.queryBindingId!:
-                              skir.DataValue.wrapStringValue(query),
-                        })
+                        .declare(
+                          options!.queryBinding!,
+                          skir.DataValue.wrapStringValue(query),
+                        )
                         .evaluate(options.customValue!);
                     if (result is PortableExpressionAvailable) {
                       scope.write(control.binding, result.value);

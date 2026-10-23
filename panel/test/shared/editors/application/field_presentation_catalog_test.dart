@@ -294,7 +294,13 @@ void main() {
       "scope",
       skir.PresentationElement.createScopedBinding(
         binding: _control("nested").binding,
-        scopeBindingId: skir.ExpressionBindingId(value: "configured_value"),
+        scopeBinding: declareNamedBinding(
+          "configured_value",
+          skir.TypeTemplate.createNamed(
+            definition: _child,
+            arguments: const [],
+          ),
+        ),
         child: remainder,
       ),
     );
@@ -323,7 +329,13 @@ void main() {
         "nested.scope",
         skir.PresentationElement.createScopedBinding(
           binding: _control("nested").binding,
-          scopeBindingId: skir.ExpressionBindingId(value: "configured_value"),
+          scopeBinding: declareNamedBinding(
+            "configured_value",
+            skir.TypeTemplate.createNamed(
+              definition: _child,
+              arguments: const [],
+            ),
+          ),
           child: _part("nested.call", key, null),
         ),
       );
@@ -535,7 +547,7 @@ void main() {
                 "scope",
                 skir.PresentationElement.createScopedBinding(
                   binding: _control("name").binding,
-                  scopeBindingId: alias,
+                  scopeBinding: declareBinding(alias, textTemplate),
                   child: nested,
                 ),
               ))
@@ -619,7 +631,7 @@ void main() {
                       bindingId: skir.ExpressionBindingId(value: "unknown"),
                       path: skir.ValuePath.defaultInstance,
                     ),
-              scopeBindingId: alias,
+              scopeBinding: declareBinding(alias, textTemplate),
               child: local,
             ),
           ),

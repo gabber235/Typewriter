@@ -234,10 +234,12 @@ extension _PortableLayoutRendering on PortablePresentationNodeRenderer {
               ),
             );
       final itemScope = rowReference == null
-          ? childScope.withValues({
-              element.itemBindingId: row.value,
-            }, authoredOrigin: node.nodeId)
-          : childScope.withBinding(rowReference, element.itemBindingId);
+          ? childScope.declare(
+              element.itemBinding,
+              row.value,
+              authoredOrigin: node.nodeId,
+            )
+          : childScope.withBinding(rowReference, element.itemBinding);
       children.add(
         itemScope == null
             ? _diagnostic("The repeated collection item is unavailable")

@@ -97,8 +97,8 @@ void main() {
             ),
             header: null,
           ),
-          childrenBindingId: _childrenBinding,
-          childBindingId: _childBinding,
+          childrenBinding: declareBinding(_childrenBinding, _rowListTemplate),
+          childBinding: declareBinding(_childBinding, _rowTemplate),
           children: _sequence(childSlot),
         ),
         header: null,
@@ -107,7 +107,7 @@ void main() {
       await _pump(
         tester,
         node,
-        fixture.scope.withValues({
+        _supplied(fixture.scope, {
           _rootsBinding: skir.DataValue.createSetValue(
             items: [
               skir.ListItem(
@@ -149,7 +149,7 @@ void main() {
         String ownerPath = "first",
         String content = "initial",
       }) {
-        final base = fixture.scope.withValues({_rootsBinding: _keys(roots)});
+        final base = _supplied(fixture.scope, {_rootsBinding: _keys(roots)});
         return base.copyWith(
           bindings: {
             ...base.bindings,
@@ -218,7 +218,7 @@ void main() {
       await _pump(
         tester,
         _graphNode(),
-        fixture.scope.withValues({
+        _supplied(fixture.scope, {
           _rootsBinding: _keys(["tag:one", "tag:two", "tag:one"]),
         }),
       );
@@ -248,7 +248,7 @@ void main() {
       await _pump(
         tester,
         _graphNode(direction: skir.CollectionGraphDirection.reverse),
-        fixture.scope.withValues({
+        _supplied(fixture.scope, {
           _rootsBinding: _keys(["Shared"]),
         }),
       );
@@ -345,7 +345,7 @@ void main() {
     await _pump(
       tester,
       _graphNode(),
-      fixture.scope.withValues({
+      _supplied(fixture.scope, {
         _rootsBinding: skir.DataValue.wrapInteger("1"),
       }),
     );
@@ -426,7 +426,7 @@ void main() {
     await _pump(
       tester,
       node,
-      fixture.scope.withValues({_lookupBinding: skir.DataValue.unfilled}),
+      _supplied(fixture.scope, {_lookupBinding: skir.DataValue.unfilled}),
     );
 
     expect(find.text("Choose a tag"), findsOneWidget);
@@ -454,8 +454,8 @@ void main() {
           "unfinished.node",
           inputExpression(_rowBinding, field: "name"),
         ),
-        childrenBindingId: _childrenBinding,
-        childBindingId: _childBinding,
+        childrenBinding: declareBinding(_childrenBinding, _rowListTemplate),
+        childBinding: declareBinding(_childBinding, _rowTemplate),
         children: _sequence(_slotNode("unfinished.child", "graph.child")),
       ),
       header: null,
@@ -464,7 +464,7 @@ void main() {
     await _pump(
       tester,
       node,
-      fixture.scope.withValues({_rootsBinding: skir.DataValue.unfilled}),
+      _supplied(fixture.scope, {_rootsBinding: skir.DataValue.unfilled}),
     );
 
     expect(
@@ -531,11 +531,10 @@ _nestedMaterialFixture() {
   );
   final nestedDefinition = skir.PresentationCollectionDefinition(
     sourceId: "tags",
-    rowType: skir.TypeTemplate.createNamed(
-      definition: type,
-      arguments: const [],
+    rowBinding: declareBinding(
+      _rowBinding,
+      skir.TypeTemplate.createNamed(definition: type, arguments: const []),
     ),
-    rowBindingId: _rowBinding,
     key: inputExpression(_rowBinding, field: "name"),
     selectability: skir.ExpressionNode.wrapLiteral(
       skir.DataValue.wrapBoolean(true),
@@ -543,7 +542,7 @@ _nestedMaterialFixture() {
     relations: const [],
     projection: skir.PresentationCollectionProjection(
       root: skir.NamedTypeTemplate(definition: type, arguments: const []),
-      resourceBindingId: _resourceBinding,
+      resourceBinding: declareBinding(_resourceBinding, _resourceIdTemplate),
       fields: [
         skir.PresentationCollectionProjectionField(
           target: skir.ValuePath(
@@ -800,11 +799,10 @@ _fixture({
   final draft = AuthoringEdit.fromState(snapshot, catalog: checked);
   final definition = skir.PresentationCollectionDefinition(
     sourceId: "tags",
-    rowType: skir.TypeTemplate.createNamed(
-      definition: type,
-      arguments: const [],
+    rowBinding: declareBinding(
+      _rowBinding,
+      skir.TypeTemplate.createNamed(definition: type, arguments: const []),
     ),
-    rowBindingId: _rowBinding,
     key: projected
         ? inputExpression(_rowBinding, field: "name")
         : skir.ExpressionNode.createInput(
@@ -822,7 +820,7 @@ _fixture({
     ],
     projection: skir.PresentationCollectionProjection(
       root: skir.NamedTypeTemplate(definition: type, arguments: const []),
-      resourceBindingId: _resourceBinding,
+      resourceBinding: declareBinding(_resourceBinding, _resourceIdTemplate),
       fields: [
         for (final field in ["name", if (!projected) "next"])
           skir.PresentationCollectionProjectionField(
@@ -959,8 +957,8 @@ skir.PresentationNode _graphNode({
               )
             : null,
       ),
-      childrenBindingId: _childrenBinding,
-      childBindingId: _childBinding,
+      childrenBinding: declareBinding(_childrenBinding, _rowListTemplate),
+      childBinding: declareBinding(_childBinding, _rowTemplate),
       children: skir.SequencePresentation(
         item: childSlot,
         empty: null,
@@ -1082,6 +1080,16 @@ skir.TypeDefinitionId _definition(String name) => skir.TypeDefinitionId(
 );
 
 final _rowBinding = skir.ExpressionBindingId(value: "collection.row");
+final _rowTemplate = skir.TypeTemplate.createNamed(
+  definition: _definition("Tag"),
+  arguments: const [],
+);
+final _rowListTemplate = skir.TypeTemplate.createNamed(
+  definition: _definition("List"),
+  arguments: [_rowTemplate],
+);
+final _resourceIdTemplate = skir.TypeUse.wrapNamed(frameworkResourceIdUse)
+    .portableTemplate;
 final _resourceBinding = skir.ExpressionBindingId(value: "collection.resource");
 final _lookupBinding = skir.ExpressionBindingId(value: "lookup.key");
 final _nestedLookupBinding = skir.ExpressionBindingId(
@@ -1090,3 +1098,15 @@ final _nestedLookupBinding = skir.ExpressionBindingId(
 final _rootsBinding = skir.ExpressionBindingId(value: "graph.roots");
 final _childrenBinding = skir.ExpressionBindingId(value: "graph.children");
 final _childBinding = skir.ExpressionBindingId(value: "graph.child");
+
+/// Supplies values the graph roots and lookup keys read, as a caller would.
+PortablePresentationScope _supplied(
+  PortablePresentationScope scope,
+  Map<skir.ExpressionBindingId, skir.DataValue> values,
+) => scope.copyWith(
+  bindings: {
+    ...scope.bindings,
+    for (final MapEntry(:key, :value) in values.entries)
+      key: PortableExpressionBinding(value: value),
+  },
+);

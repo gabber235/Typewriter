@@ -107,7 +107,13 @@ void main() {
                             bindingId: inheritedConfiguredValue,
                             path: editorRootPath.field("name"),
                           ),
-                          scopeBindingId: inheritedConfiguredValue,
+                          scopeBinding: declareBinding(
+                            inheritedConfiguredValue,
+                            skir.TypeTemplate.createNamed(
+                              definition: definition,
+                              arguments: const [],
+                            ),
+                          ),
                           child: inheritedFieldRemaining,
                         ),
                       ),
@@ -325,11 +331,9 @@ void main() {
                   ..collections = [
                     (skir.PresentationCollectionDefinition.mutable()
                           ..sourceId = "shared.source"
-                          ..rowType = skir.TypeTemplate.wrapScalar(
-                            skir.ScalarKind.text,
-                          )
-                          ..rowBindingId = skir.ExpressionBindingId(
-                            value: "shared.row",
+                          ..rowBinding = declareNamedBinding(
+                            "shared.row",
+                            textTemplate,
                           )
                           ..key = skir.ExpressionNode.createInput(
                             binding: skir.ExpressionBindingId(

@@ -167,10 +167,10 @@ return custom(_that);case _:
 /// }
 /// ```
 
-@optionalTypeArgs TResult maybeWhen<TResult extends Object?>({TResult Function( skir.DataValue sourceValue,  skir.DataValue selectedValue,  skir.SearchResultMapping mapping,  String providerPath,  String distinctKey,  SearchQueryContext query,  PortablePresentationBindingSchema? sourceSchema,  Map<skir.ExpressionBindingId, PortableExpressionBinding> contextBindings)?  mapped,TResult Function( skir.DataValue selectedValue,  String providerPath,  SearchQueryContext query)?  custom,required TResult orElse(),}) {final _that = this;
+@optionalTypeArgs TResult maybeWhen<TResult extends Object?>({TResult Function( skir.DataValue sourceValue,  skir.DataValue selectedValue,  skir.SearchResultMapping mapping,  String providerPath,  String distinctKey,  SearchQueryContext query,  Map<skir.ExpressionBindingId, PortableExpressionBinding> contextBindings)?  mapped,TResult Function( skir.DataValue selectedValue,  String providerPath,  SearchQueryContext query)?  custom,required TResult orElse(),}) {final _that = this;
 switch (_that) {
 case PortableMappedSearchPayload() when mapped != null:
-return mapped(_that.sourceValue,_that.selectedValue,_that.mapping,_that.providerPath,_that.distinctKey,_that.query,_that.sourceSchema,_that.contextBindings);case PortableCustomSearchPayload() when custom != null:
+return mapped(_that.sourceValue,_that.selectedValue,_that.mapping,_that.providerPath,_that.distinctKey,_that.query,_that.contextBindings);case PortableCustomSearchPayload() when custom != null:
 return custom(_that.selectedValue,_that.providerPath,_that.query);case _:
   return orElse();
 
@@ -189,10 +189,10 @@ return custom(_that.selectedValue,_that.providerPath,_that.query);case _:
 /// }
 /// ```
 
-@optionalTypeArgs TResult when<TResult extends Object?>({required TResult Function( skir.DataValue sourceValue,  skir.DataValue selectedValue,  skir.SearchResultMapping mapping,  String providerPath,  String distinctKey,  SearchQueryContext query,  PortablePresentationBindingSchema? sourceSchema,  Map<skir.ExpressionBindingId, PortableExpressionBinding> contextBindings)  mapped,required TResult Function( skir.DataValue selectedValue,  String providerPath,  SearchQueryContext query)  custom,}) {final _that = this;
+@optionalTypeArgs TResult when<TResult extends Object?>({required TResult Function( skir.DataValue sourceValue,  skir.DataValue selectedValue,  skir.SearchResultMapping mapping,  String providerPath,  String distinctKey,  SearchQueryContext query,  Map<skir.ExpressionBindingId, PortableExpressionBinding> contextBindings)  mapped,required TResult Function( skir.DataValue selectedValue,  String providerPath,  SearchQueryContext query)  custom,}) {final _that = this;
 switch (_that) {
 case PortableMappedSearchPayload():
-return mapped(_that.sourceValue,_that.selectedValue,_that.mapping,_that.providerPath,_that.distinctKey,_that.query,_that.sourceSchema,_that.contextBindings);case PortableCustomSearchPayload():
+return mapped(_that.sourceValue,_that.selectedValue,_that.mapping,_that.providerPath,_that.distinctKey,_that.query,_that.contextBindings);case PortableCustomSearchPayload():
 return custom(_that.selectedValue,_that.providerPath,_that.query);}
 }
 /// A variant of `when` that fallback to returning `null`
@@ -207,10 +207,10 @@ return custom(_that.selectedValue,_that.providerPath,_that.query);}
 /// }
 /// ```
 
-@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>({TResult? Function( skir.DataValue sourceValue,  skir.DataValue selectedValue,  skir.SearchResultMapping mapping,  String providerPath,  String distinctKey,  SearchQueryContext query,  PortablePresentationBindingSchema? sourceSchema,  Map<skir.ExpressionBindingId, PortableExpressionBinding> contextBindings)?  mapped,TResult? Function( skir.DataValue selectedValue,  String providerPath,  SearchQueryContext query)?  custom,}) {final _that = this;
+@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>({TResult? Function( skir.DataValue sourceValue,  skir.DataValue selectedValue,  skir.SearchResultMapping mapping,  String providerPath,  String distinctKey,  SearchQueryContext query,  Map<skir.ExpressionBindingId, PortableExpressionBinding> contextBindings)?  mapped,TResult? Function( skir.DataValue selectedValue,  String providerPath,  SearchQueryContext query)?  custom,}) {final _that = this;
 switch (_that) {
 case PortableMappedSearchPayload() when mapped != null:
-return mapped(_that.sourceValue,_that.selectedValue,_that.mapping,_that.providerPath,_that.distinctKey,_that.query,_that.sourceSchema,_that.contextBindings);case PortableCustomSearchPayload() when custom != null:
+return mapped(_that.sourceValue,_that.selectedValue,_that.mapping,_that.providerPath,_that.distinctKey,_that.query,_that.contextBindings);case PortableCustomSearchPayload() when custom != null:
 return custom(_that.selectedValue,_that.providerPath,_that.query);case _:
   return null;
 
@@ -223,7 +223,7 @@ return custom(_that.selectedValue,_that.providerPath,_that.query);case _:
 
 
 class PortableMappedSearchPayload implements PortableSearchPayload {
-  const PortableMappedSearchPayload({required this.sourceValue, required this.selectedValue, required this.mapping, required this.providerPath, required this.distinctKey, required this.query, this.sourceSchema,  Map<skir.ExpressionBindingId, PortableExpressionBinding> contextBindings = const {}}): _contextBindings = contextBindings;
+  const PortableMappedSearchPayload({required this.sourceValue, required this.selectedValue, required this.mapping, required this.providerPath, required this.distinctKey, required this.query,  Map<skir.ExpressionBindingId, PortableExpressionBinding> contextBindings = const {}}): _contextBindings = contextBindings;
   
 
  final  skir.DataValue sourceValue;
@@ -232,7 +232,6 @@ class PortableMappedSearchPayload implements PortableSearchPayload {
 @override final  String providerPath;
  final  String distinctKey;
 @override final  SearchQueryContext query;
- final  PortablePresentationBindingSchema? sourceSchema;
  final  Map<skir.ExpressionBindingId, PortableExpressionBinding> _contextBindings;
 @JsonKey() Map<skir.ExpressionBindingId, PortableExpressionBinding> get contextBindings {
   if (_contextBindings is EqualUnmodifiableMapView) return _contextBindings;
@@ -251,18 +250,18 @@ $PortableMappedSearchPayloadCopyWith<PortableMappedSearchPayload> get copyWith =
 
 @override
 bool operator ==(Object other) {
-    return identical(this, other) || (other.runtimeType == runtimeType&&other is PortableMappedSearchPayload&&(identical(other.sourceValue, sourceValue) || other.sourceValue == sourceValue)&&(identical(other.selectedValue, selectedValue) || other.selectedValue == selectedValue)&&(identical(other.mapping, mapping) || other.mapping == mapping)&&(identical(other.providerPath, providerPath) || other.providerPath == providerPath)&&(identical(other.distinctKey, distinctKey) || other.distinctKey == distinctKey)&&(identical(other.query, query) || other.query == query)&&(identical(other.sourceSchema, sourceSchema) || other.sourceSchema == sourceSchema)&&const DeepCollectionEquality().equals(other.contextBindings, _contextBindings));
+    return identical(this, other) || (other.runtimeType == runtimeType&&other is PortableMappedSearchPayload&&(identical(other.sourceValue, sourceValue) || other.sourceValue == sourceValue)&&(identical(other.selectedValue, selectedValue) || other.selectedValue == selectedValue)&&(identical(other.mapping, mapping) || other.mapping == mapping)&&(identical(other.providerPath, providerPath) || other.providerPath == providerPath)&&(identical(other.distinctKey, distinctKey) || other.distinctKey == distinctKey)&&(identical(other.query, query) || other.query == query)&&const DeepCollectionEquality().equals(other.contextBindings, _contextBindings));
 }
 
 
 @override
 int get hashCode {
-    return Object.hash(runtimeType,sourceValue,selectedValue,mapping,providerPath,distinctKey,query,sourceSchema,const DeepCollectionEquality().hash(_contextBindings));
+    return Object.hash(runtimeType,sourceValue,selectedValue,mapping,providerPath,distinctKey,query,const DeepCollectionEquality().hash(_contextBindings));
 }
 
 @override
 String toString() {
-    return 'PortableSearchPayload.mapped(sourceValue: $sourceValue, selectedValue: $selectedValue, mapping: $mapping, providerPath: $providerPath, distinctKey: $distinctKey, query: $query, sourceSchema: $sourceSchema, contextBindings: $contextBindings)';
+    return 'PortableSearchPayload.mapped(sourceValue: $sourceValue, selectedValue: $selectedValue, mapping: $mapping, providerPath: $providerPath, distinctKey: $distinctKey, query: $query, contextBindings: $contextBindings)';
 }
 
 
@@ -273,11 +272,11 @@ abstract mixin class $PortableMappedSearchPayloadCopyWith<$Res> implements $Port
   factory $PortableMappedSearchPayloadCopyWith(PortableMappedSearchPayload value, $Res Function(PortableMappedSearchPayload) _then) = _$PortableMappedSearchPayloadCopyWithImpl;
 @override @useResult
 $Res call({
- skir.DataValue sourceValue, skir.DataValue selectedValue, skir.SearchResultMapping mapping, String providerPath, String distinctKey, SearchQueryContext query, PortablePresentationBindingSchema? sourceSchema, Map<skir.ExpressionBindingId, PortableExpressionBinding> contextBindings
+ skir.DataValue sourceValue, skir.DataValue selectedValue, skir.SearchResultMapping mapping, String providerPath, String distinctKey, SearchQueryContext query, Map<skir.ExpressionBindingId, PortableExpressionBinding> contextBindings
 });
 
 
-@override $SearchQueryContextCopyWith<$Res> get query;$PortablePresentationBindingSchemaCopyWith<$Res>? get sourceSchema;
+@override $SearchQueryContextCopyWith<$Res> get query;
 
 }
 /// @nodoc
@@ -290,7 +289,7 @@ class _$PortableMappedSearchPayloadCopyWithImpl<$Res>
 
 /// Create a copy of PortableSearchPayload
 /// with the given fields replaced by the non-null parameter values.
-@override @pragma('vm:prefer-inline') $Res call({Object? sourceValue = null,Object? selectedValue = null,Object? mapping = null,Object? providerPath = null,Object? distinctKey = null,Object? query = null,Object? sourceSchema = freezed,Object? contextBindings = null,}) {
+@override @pragma('vm:prefer-inline') $Res call({Object? sourceValue = null,Object? selectedValue = null,Object? mapping = null,Object? providerPath = null,Object? distinctKey = null,Object? query = null,Object? contextBindings = null,}) {
   return _then(PortableMappedSearchPayload(
 sourceValue: null == sourceValue ? _self.sourceValue : sourceValue // ignore: cast_nullable_to_non_nullable
 as skir.DataValue,selectedValue: null == selectedValue ? _self.selectedValue : selectedValue // ignore: cast_nullable_to_non_nullable
@@ -298,8 +297,7 @@ as skir.DataValue,mapping: null == mapping ? _self.mapping : mapping // ignore: 
 as skir.SearchResultMapping,providerPath: null == providerPath ? _self.providerPath : providerPath // ignore: cast_nullable_to_non_nullable
 as String,distinctKey: null == distinctKey ? _self.distinctKey : distinctKey // ignore: cast_nullable_to_non_nullable
 as String,query: null == query ? _self.query : query // ignore: cast_nullable_to_non_nullable
-as SearchQueryContext,sourceSchema: freezed == sourceSchema ? _self.sourceSchema : sourceSchema // ignore: cast_nullable_to_non_nullable
-as PortablePresentationBindingSchema?,contextBindings: null == contextBindings ? _self._contextBindings : contextBindings // ignore: cast_nullable_to_non_nullable
+as SearchQueryContext,contextBindings: null == contextBindings ? _self._contextBindings : contextBindings // ignore: cast_nullable_to_non_nullable
 as Map<skir.ExpressionBindingId, PortableExpressionBinding>,
   ));
 }
@@ -312,18 +310,6 @@ $SearchQueryContextCopyWith<$Res> get query {
   
   return $SearchQueryContextCopyWith<$Res>(_self.query, (value) {
     return _then(_self.copyWith(query: value));
-  });
-}/// Create a copy of PortableSearchPayload
-/// with the given fields replaced by the non-null parameter values.
-@override
-@pragma('vm:prefer-inline')
-$PortablePresentationBindingSchemaCopyWith<$Res>? get sourceSchema {
-    if (_self.sourceSchema == null) {
-    return null;
-  }
-
-  return $PortablePresentationBindingSchemaCopyWith<$Res>(_self.sourceSchema!, (value) {
-    return _then(_self.copyWith(sourceSchema: value));
   });
 }
 }

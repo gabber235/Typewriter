@@ -302,6 +302,10 @@ void main() {
       final source = skir.ExpressionBindingId(value: "source");
       final item = skir.ExpressionBindingId(value: "item");
       final alias = skir.ExpressionBindingId(value: "alias");
+      final reference = skir.TypeTemplate.createNamed(
+        definition: ref,
+        arguments: const [],
+      );
       final operations = PortableOperationResults();
       addTearDown(operations.dispose);
       final scope = PortablePresentationScope(
@@ -323,11 +327,11 @@ void main() {
             ],
           ),
         ),
-        item,
+        declareBinding(item, reference),
       )!;
       final aliasScope = itemScope.withBinding(
         skir.BindingRef(bindingId: item, path: editorRootPath),
-        alias,
+        declareBinding(alias, reference),
       )!;
       expect(aliasScope.bindings[alias]?.location, isNull);
       expect(

@@ -75,26 +75,10 @@ extension _PortableResourcesRendering on PortablePresentationNodeRenderer {
   ) {
     final order = element.order;
     if (order == null) return members;
-    final itemType = scope.catalog?.collectionItemType(
-      scope.host?.expectedType(
-        element.control.binding,
-        context: scope.invocation,
-      ),
-    );
     final keys = <skir.ResourceId, skir.DataValue?>{};
     for (final member in members) {
       final evaluated = scope
-          .copyWith(
-            bindings: {
-              ...scope.bindings,
-              element.itemBindingId: PortableExpressionBinding(
-                value: member.link,
-                schema: itemType == null
-                    ? null
-                    : CompletePortablePresentationBinding(itemType),
-              ),
-            },
-          )
+          .declare(element.itemBinding, member.link)
           .evaluate(order);
       switch (evaluated) {
         case PortableExpressionAvailable(:final value):
@@ -685,16 +669,9 @@ class _ResourceTreeGroupHeader extends StatelessWidget {
         ? Text(group.name, overflow: TextOverflow.ellipsis)
         : PortablePresentationNodeRenderer(
             node: node,
-            scope: scope.copyWith(
-              bindings: {
-                ...scope.bindings,
-                layout.groupBindingId: PortableExpressionBinding(
-                  value: _hierarchyGroupValue(scope.catalog, group),
-                  schema: CompletePortablePresentationBinding(
-                    skir.TypeUse.wrapNamed(hierarchyGroupUse),
-                  ),
-                ),
-              },
+            scope: scope.declare(
+              layout.groupBinding,
+              _hierarchyGroupValue(scope.catalog, group),
             ),
           );
     final row = Padding(

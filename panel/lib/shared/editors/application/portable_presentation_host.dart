@@ -348,7 +348,6 @@ abstract class PortableCollectionRowProjection
     required skir.DataValue key,
     required String canonicalKey,
     required bool selectable,
-    PortablePresentationBindingSchema? schema,
   }) = _PortableCollectionRowProjection;
 }
 

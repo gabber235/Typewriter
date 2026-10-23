@@ -32,7 +32,7 @@ extension _PortableDelegationRendering on PortablePresentationNodeRenderer {
     if (node == null) return const SizedBox.shrink();
     final nested = childScope.withBinding(
       element.binding,
-      element.scopeBindingId,
+      element.scopeBinding,
     );
     return nested == null
         ? _diagnostic("The polymorphic value is unavailable")
@@ -56,7 +56,7 @@ extension _PortableDelegationRendering on PortablePresentationNodeRenderer {
       if (target == null && value is skir.DataValue_namedWrapper) {
         target = skir.TypeSelection.wrapComplete(value.value.actualType);
       }
-      final rebound = nested.withBinding(argument.binding, argument.input);
+      final rebound = nested.withArgument(argument.binding, argument.input);
       if (rebound == null) {
         return const EditorSelection.failed(
           "A presentation argument is unavailable",
@@ -372,10 +372,24 @@ extension _PortableDelegationRendering on PortablePresentationNodeRenderer {
       return _scalarDefaultElement(value, control);
     }
     if (type case skir.TypeUse_namedWrapper(:final value)) {
-      final representation = childScope.catalog
+      final catalog = childScope.catalog;
+      final representation = catalog
           ?.published(value.definition)
           ?.definition
           .representation;
+      final selection = skir.TypeSelection.wrapComplete(value);
+      // Generated controls declare the applied element types of [value]; a
+      // type the catalog cannot apply stays unknown.
+      skir.BindingDeclaration declared(String id, skir.TypeTemplate? element) =>
+          skir.BindingDeclaration(
+            id: skir.ExpressionBindingId(value: id),
+            type: switch (element == null
+                ? null
+                : catalog?.applyTemplate(element, selection)) {
+              final use? => use.portableTemplate,
+              null => skir.TypeTemplate.unknown,
+            },
+          );
       return switch (representation) {
         skir.RepresentationTemplate_scalarWrapper(:final value) =>
           _scalarDefaultElement(value.kind, control),
@@ -391,7 +405,10 @@ extension _PortableDelegationRendering on PortablePresentationNodeRenderer {
                 element: skir.PresentationElement.wrapScopedBinding(
                   skir.ScopedBindingElement(
                     binding: reference,
-                    scopeBindingId: configuredValueBindingId,
+                    scopeBinding: skir.BindingDeclaration(
+                      id: configuredValueBindingId,
+                      type: skir.TypeUse.wrapNamed(value).portableTemplate,
+                    ),
                     child: skir.PresentationNode(
                       nodeId: "${node.nodeId}.remainingFields",
                       properties: skir.PresentationProperties.defaultInstance,
@@ -419,9 +436,7 @@ extension _PortableDelegationRendering on PortablePresentationNodeRenderer {
                     itemPresentation: null,
                     allowAdd: true,
                     allowRemove: true,
-                    itemBindingId: skir.ExpressionBindingId(
-                      value: "generated_item",
-                    ),
+                    itemBinding: declared("generated_item", value.item),
                   ),
                 )
               : skir.PresentationElement.wrapListInput(
@@ -433,15 +448,18 @@ extension _PortableDelegationRendering on PortablePresentationNodeRenderer {
                     allowAdd: true,
                     allowRemove: true,
                     allowReorder: true,
-                    itemBindingId: skir.ExpressionBindingId(
-                      value: "generated_item",
-                    ),
-                    indexBindingId: skir.ExpressionBindingId(
-                      value: "generated_index",
+                    itemBinding: declared("generated_item", value.item),
+                    indexBinding: skir.BindingDeclaration(
+                      id: skir.ExpressionBindingId(value: "generated_index"),
+                      type: skir.TypeTemplate.wrapScalar(
+                        skir.ScalarKind.createInteger(
+                          width: skir.IntegerWidth.signedThirtyTwo,
+                        ),
+                      ),
                     ),
                   ),
                 ),
-        skir.RepresentationTemplate_mappingWrapper() =>
+        skir.RepresentationTemplate_mappingWrapper(:final value) =>
           skir.PresentationElement.wrapMapInput(
             skir.MapControl(
               control: control,
@@ -451,10 +469,8 @@ extension _PortableDelegationRendering on PortablePresentationNodeRenderer {
               valuePresentation: null,
               allowAdd: true,
               allowRemove: true,
-              keyBindingId: skir.ExpressionBindingId(value: "generated_key"),
-              valueBindingId: skir.ExpressionBindingId(
-                value: "generated_value",
-              ),
+              keyBinding: declared("generated_key", value.key),
+              valueBinding: declared("generated_value", value.value),
             ),
           ),
         skir.RepresentationTemplate_enumerationWrapper() =>
