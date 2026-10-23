@@ -79,7 +79,7 @@ internal object PortableTextKernel : TextKernel {
     /** Exact; an exponent beyond the 32 bit range no host represents is not a number either. */
     override fun parseDecimal(value: String): BigDecimal =
         try {
-            BigDecimal(requireNumberSyntax(value))
+            BigDecimal(requireNumberSyntax(value)).requireMagnitude()
         } catch (_: NumberFormatException) {
             throw invalidNumber(value)
         }
@@ -99,7 +99,8 @@ internal object PortableTextKernel : TextKernel {
         val digits = value.removePrefix("+").let { if (it.startsWith("-")) it.substring(1) else it }
         val valid = digits.isNotEmpty() && digits.length + 1 >= value.length && digits.all { asciiDigit(it) in 0 until radix }
         if (!valid) throw invalidNumber(value)
-        return BigInteger(value.removePrefix("+"), radix)
+        if (digits.trimStart('0').length > MAX_RESULT_BITS) throw magnitudeLimit()
+        return BigInteger(value.removePrefix("+"), radix).requireMagnitude()
     }
 
     /** Days are 24 hours; seconds take at most three fraction digits. */

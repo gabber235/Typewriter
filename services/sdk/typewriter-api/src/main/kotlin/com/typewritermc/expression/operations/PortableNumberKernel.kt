@@ -34,7 +34,12 @@ internal object PortableNumberKernel : NumberKernel {
         rest: List<PortableNumber>,
     ): PortableNumber =
         (listOf(second) + rest).fold(first) { product, operand ->
-            product.combine(operand, BigInteger::multiply, BigDecimal::multiply, Double::times)
+            product.combine(
+                operand,
+                { left, right -> left.multiply(right).requireMagnitude() },
+                { left, right -> left.multiply(right).requireMagnitude() },
+                Double::times,
+            )
         }
 
     override fun divide(
@@ -78,11 +83,20 @@ internal object PortableNumberKernel : NumberKernel {
         if (exponent < 0) throw OperationFailure(KernelFailure.NegativeExponent, "The exponent $exponent is negative.")
         return when (value) {
             is PortableNumber.Integer -> {
-                PortableNumber.Integer(value.value.pow(exponent))
+                val base = value.value
+                if (base.abs() > BigInteger.ONE && (base.bitLength() - 1).toLong() * exponent > MAX_RESULT_BITS) throw magnitudeLimit()
+                PortableNumber.Integer(base.pow(exponent).requireMagnitude())
             }
 
             is PortableNumber.Decimal -> {
-                PortableNumber.Decimal(value.value.pow(exponent))
+                val base = value.value.stripTrailingZeros()
+                val unscaled = base.unscaledValue()
+                val growing = unscaled.abs() > BigInteger.ONE && (unscaled.bitLength() - 1).toLong() * exponent > MAX_RESULT_BITS
+                if (growing || Math.abs(base.scale().toLong()) * exponent > MAX_RESULT_DIGITS) throw magnitudeLimit()
+                // BigDecimal.pow stops at 999999999; -1, 0 and 1 stay small for any exponent.
+                val trivial = base.scale() == 0 && unscaled.abs() <= BigInteger.ONE
+                val power = if (trivial) BigDecimal(unscaled.pow(exponent)) else base.pow(exponent)
+                PortableNumber.Decimal(power.requireMagnitude())
             }
 
             is PortableNumber.Float -> {

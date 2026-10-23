@@ -64,6 +64,9 @@ object KernelFailure {
     /** A value is outside 0 to 255. */
     val InvalidByte: FailureId = FailureId(value = "invalid_byte")
 
+    /** An integer or decimal result would have more than 20000 digits. */
+    val MagnitudeLimit: FailureId = FailureId(value = "magnitude_limit")
+
     /** The duration is outside the representable range. */
     val DurationRange: FailureId = FailureId(value = "duration_range")
 
@@ -101,7 +104,7 @@ object KernelFailure {
     val IncompatibleValue: FailureId = FailureId(value = "incompatible_value")
 
     /** Every failure of this group, in declaration order. */
-    val all: List<FailureId> = listOf(SubstringRange, EmptySeparator, InvalidCodePoint, InvalidNumberText, InvalidRadix, InvalidDurationText, InvalidTimestampText, RegexLimit, InvalidRegex, NonFiniteNumber, DivisionByZero, InvalidRoundingIncrement, NegativeExponent, NegativeSquareRoot, InexactConversion, NegativeShift, InvalidByte, DurationRange, TimestampRange, InvalidCalendarDate, UnknownTimeZone, InvalidLocale, InvalidMonth, InvalidWeekday, CollectionKeyAbsent, SliceRange, InvalidRangeStep, InvalidJson, IncompatibleValue)
+    val all: List<FailureId> = listOf(SubstringRange, EmptySeparator, InvalidCodePoint, InvalidNumberText, InvalidRadix, InvalidDurationText, InvalidTimestampText, RegexLimit, InvalidRegex, NonFiniteNumber, DivisionByZero, InvalidRoundingIncrement, NegativeExponent, NegativeSquareRoot, InexactConversion, NegativeShift, InvalidByte, MagnitudeLimit, DurationRange, TimestampRange, InvalidCalendarDate, UnknownTimeZone, InvalidLocale, InvalidMonth, InvalidWeekday, CollectionKeyAbsent, SliceRange, InvalidRangeStep, InvalidJson, IncompatibleValue)
 
     private val messages: Map<String, String> =
         mapOf(
@@ -122,6 +125,7 @@ object KernelFailure {
             "inexact_conversion" to "The value has no exact representation in the target type.",
             "negative_shift" to "The shift distance is negative.",
             "invalid_byte" to "A value is outside 0 to 255.",
+            "magnitude_limit" to "An integer or decimal result would have more than 20000 digits.",
             "duration_range" to "The duration is outside the representable range.",
             "timestamp_range" to "The timestamp is outside the representable range.",
             "invalid_calendar_date" to "The fields do not name a valid date and time.",

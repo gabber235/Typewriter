@@ -32,7 +32,11 @@ internal object PortableIntegerKernel : IntegerKernel {
     override fun shiftLeft(
         value: BigInteger,
         bits: Int,
-    ): BigInteger = value.shiftLeft(requireShift(bits))
+    ): BigInteger {
+        val distance = requireShift(bits)
+        if (value.signum() != 0 && value.bitLength().toLong() + distance > MAX_RESULT_BITS) throw magnitudeLimit()
+        return value.shiftLeft(distance).requireMagnitude()
+    }
 
     /** Arithmetic: the result rounds toward negative infinity. */
     override fun shiftRight(
