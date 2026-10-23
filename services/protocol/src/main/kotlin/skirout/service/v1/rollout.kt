@@ -4537,7 +4537,7 @@ val ProbeRealmHosts: build.skir.service.Method<
 > by kotlin.lazy {
     build.skir.service.Method(
         "ProbeRealmHosts",
-        910008,
+        930601,
         skirout.service.v1.rollout.ProbeRealmHostsRequest.serializer,
         skirout.service.v1.rollout.ProbeRealmHostsResponse.serializer,
         "",
@@ -4550,7 +4550,7 @@ val ApplyRolloutCommand: build.skir.service.Method<
 > by kotlin.lazy {
     build.skir.service.Method(
         "ApplyRolloutCommand",
-        910009,
+        930602,
         skirout.service.v1.rollout.ApplyRolloutCommandRequest.serializer,
         skirout.service.v1.rollout.ApplyRolloutCommandResponse.serializer,
         "",
@@ -4563,7 +4563,7 @@ val QueryParticipantStatus: build.skir.service.Method<
 > by kotlin.lazy {
     build.skir.service.Method(
         "QueryParticipantStatus",
-        910010,
+        930603,
         skirout.service.v1.rollout.QueryParticipantStatusRequest.serializer,
         skirout.service.v1.rollout.QueryParticipantStatusResponse.serializer,
         "",

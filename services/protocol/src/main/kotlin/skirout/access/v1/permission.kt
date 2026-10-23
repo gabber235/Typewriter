@@ -1179,7 +1179,7 @@ val GetEntityPermission: build.skir.service.Method<
 > by kotlin.lazy {
     build.skir.service.Method(
         "GetEntityPermission",
-        209684,
+        910101,
         skirout.access.v1.permission.GetEntityPermissionRequest.serializer,
         skirout.access.v1.permission.GetEntityPermissionResponse.serializer,
         "",

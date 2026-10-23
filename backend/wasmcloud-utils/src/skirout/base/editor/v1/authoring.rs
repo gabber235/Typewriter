@@ -3071,7 +3071,7 @@ pub fn query_authoring_state_method()
         crate::skir_client::Method<QueryAuthoringStateRequest, QueryAuthoringStateResponse>,
     > = std::sync::LazyLock::new(|| crate::skir_client::Method {
         name: "QueryAuthoringState".to_string(),
-        number: 920010_i64,
+        number: 940201_i64,
         request_serializer: QueryAuthoringStateRequest::serializer(),
         response_serializer: QueryAuthoringStateResponse::serializer(),
         doc: "Returns the retained saved snapshot for one catalog generation.".to_string(),
@@ -3085,7 +3085,7 @@ pub fn search_authoring_method()
         crate::skir_client::Method<SearchAuthoringRequest, SearchAuthoringResponse>,
     > = std::sync::LazyLock::new(|| crate::skir_client::Method {
         name: "SearchAuthoring".to_string(),
-        number: 920011_i64,
+        number: 940202_i64,
         request_serializer: SearchAuthoringRequest::serializer(),
         response_serializer: SearchAuthoringResponse::serializer(),
         doc: "".to_string(),
@@ -3104,7 +3104,7 @@ pub fn commit_prepared_edit_method()
     > = std::sync::LazyLock::new(|| {
         crate::skir_client::Method {
             name: "CommitPreparedEdit".to_string(),
-            number: 920012_i64,
+            number: 940203_i64,
             request_serializer: PreparedEdit::serializer(),
             response_serializer: CommitPreparedEditResponse::serializer(),
             doc: "committed confirms installation of saved authoring state. It does not confirm check completion,\ncompilation, publication selection, or engine application. conflict_error requires refreshing\noriginal facts; rejected_error reports invalid intent or missing guards; catalog_changed_error\nrequires a new catalog.".to_string(),
@@ -3124,7 +3124,7 @@ pub fn preview_type_argument_change_method() -> &'static crate::skir_client::Met
         >,
     > = std::sync::LazyLock::new(|| crate::skir_client::Method {
         name: "PreviewTypeArgumentChange".to_string(),
-        number: 920013_i64,
+        number: 940204_i64,
         request_serializer: PreviewTypeArgumentChangeRequest::serializer(),
         response_serializer: PreviewTypeArgumentChangeResponse::serializer(),
         doc: "".to_string(),
@@ -3141,7 +3141,7 @@ pub fn prepare_type_argument_change_method()
     > = std::sync::LazyLock::new(|| {
         crate::skir_client::Method {
             name: "PrepareTypeArgumentChange".to_string(),
-            number: 920014_i64,
+            number: 940205_i64,
             request_serializer: TypeArgumentChangePreview::serializer(),
             response_serializer: PrepareTypeArgumentChangeResponse::serializer(),
             doc: "Revalidates a preview and returns proposed intent. CommitPreparedEdit performs the separate saved write.".to_string(),

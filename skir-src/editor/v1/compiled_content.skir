@@ -4,7 +4,6 @@
 // application are separate facts.
 
 import { CompilationRoot } from "editor/v1/compilation_root.skir";
-import { ResourceId } from "kernel/v1/resource_id.skir";
 import {
   CatalogGeneration,
   NamedTypeUse,
@@ -16,26 +15,27 @@ import {
   ValuePath,
 } from "editor/v1/type_catalog.skir";
 import { InternalError } from "kernel/v1/errors.skir";
+import { ResourceId } from "kernel/v1/resource_id.skir";
 
 /// Addresses serialized bytes by lowercase SHA 256 digest and exact byte count.
 /// This digest can differ from the semantic digest of the decoded artifact.
-struct CompiledBlobPointer(811500001) {
+struct CompiledBlobPointer(84100001) {
   digest: string = 0;
   size: int64 = 1;
 }
-struct CompiledArtifactReference(811500002) {
+struct CompiledArtifactReference(84100002) {
   root: CompilationRoot = 0;
   format_revision: int32 = 1;
   media_type: string = 2;
   semantic_digest: string = 3;
 }
-struct PublishedOutput(811500003) {
+struct PublishedOutput(84100003) {
   reference: CompiledArtifactReference = 0;
   blob: CompiledBlobPointer = 1;
 }
 /// Complete selected runtime descriptor, including the implementation requirements under which
 /// its outputs were compiled. Engines fetch the whole set before contributing a visible snapshot.
-struct PublishedContent(811500004) {
+struct PublishedContent(84100004) {
   publication: PublicationId = 0;
   format_revision: int32 = 1;
   catalog: CatalogGeneration = 2;
@@ -44,38 +44,38 @@ struct PublishedContent(811500004) {
 }
 /// Membership in the Realm selected publication. active does not confirm application by any engine,
 /// nor that the currently saved root still compiles to the selected artifact.
-enum CompiledResourceState(811500005) {
+enum CompiledResourceState(84100005) {
   not_compiled = 1;
   active: PublicationId = 2;
 }
-struct CompiledResourceStatus(811500006) {
+struct CompiledResourceStatus(84100006) {
   root: CompilationRoot = 0;
   state: CompiledResourceState = 1;
 }
 /// Hint to refetch current selection. The event carries no descriptor or ordered publication log.
-struct CompiledContentChanged(811500007) {
+struct CompiledContentChanged(84100007) {
   generation: CatalogGeneration = 0;
 }
-enum CompilationStatusSelection(811500008) {
+enum CompilationStatusSelection(84100008) {
   all_roots = 1;
   supplied_roots: [CompilationRoot] = 2;
 }
 
 /// Distinguishes one generated occurrence of an authored resource. The root occurrence has no segments.
-struct InstancePath(811500009) {
+struct InstancePath(84100009) {
   segments: [string] = 0;
 }
-struct CompilationContext(811500010) {
+struct CompilationContext(84100010) {
   instance_path: InstancePath = 0;
 }
 /// Identifies a resource in a compiled occurrence.
-struct CompiledResourceKey(811500011) {
+struct CompiledResourceKey(84100011) {
   source: ResourceId = 0;
   context: CompilationContext = 1;
 }
 /// The typed record of one compiled resource before graph hydration, with the native binding that
 /// produced it. Engines hydrate it only through the same binding provider and signature.
-struct CompiledResource(811500012) {
+struct CompiledResource(84100012) {
   key: CompiledResourceKey = 0;
   actual_type: NamedTypeUse = 1;
   binding_provider: NativeBindingId = 2;
@@ -83,27 +83,27 @@ struct CompiledResource(811500012) {
   value: NamedValue = 4;
 }
 /// The declared relation an edge projects, with the authored locations of both endpoints.
-struct CompiledRelationOrigin(811500013) {
+struct CompiledRelationOrigin(84100013) {
   relation: RelationId = 0;
   first_location: ValuePath? = 1;
   second_location: ValuePath? = 2;
 }
-enum CompiledEdgeOrigin(811500014) {
+enum CompiledEdgeOrigin(84100014) {
   relation: CompiledRelationOrigin = 1;
 }
 /// A link between compiled keys, including keys outside its shard.
-struct CompiledEdge(811500015) {
+struct CompiledEdge(84100015) {
   source: CompiledResourceKey = 0;
   target: CompiledResourceKey = 1;
   origin: CompiledEdgeOrigin = 2;
 }
-struct RuntimeRelationFact(811500016) {
+struct RuntimeRelationFact(84100016) {
   relation: RelationId = 0;
   owns_resources: bool = 1;
 }
 /// The canonical resource graph of one compilation unit: its resources, edges, and the type and
 /// relation declarations engines need to admit them against their runtime catalog.
-struct RuntimeCompilationFacts(811500017) {
+struct RuntimeCompilationFacts(84100017) {
   format_revision: int32 = 0;
   root: CompiledResourceKey = 1;
   resources: [CompiledResource] = 2;
@@ -113,7 +113,7 @@ struct RuntimeCompilationFacts(811500017) {
 }
 /// The payload of a resource graph blob: canonical facts and their semantic digest, the lowercase
 /// SHA 256 of their canonical encoding. Consumers recompute the digest before admitting the facts.
-struct ResourceGraphShard(811500018) {
+struct ResourceGraphShard(84100018) {
   digest: string = 0;
   facts: RuntimeCompilationFacts = 1;
 }
@@ -125,7 +125,7 @@ method QueryPublishedContent(
   content: PublishedContent = 1;
   absent: struct {} = 2;
   internal_error: InternalError = 3;
-} = 920008;
+} = 941001;
 
 method QueryCompiledResourceStatus(
   struct {
@@ -136,4 +136,4 @@ method QueryCompiledResourceStatus(
     statuses: [CompiledResourceStatus] = 0;
   } = 1;
   internal_error: InternalError = 2;
-} = 920009;
+} = 941002;

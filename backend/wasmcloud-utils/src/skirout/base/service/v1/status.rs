@@ -785,7 +785,7 @@ pub fn query_service_binding_method()
         crate::skir_client::Method<QueryServiceBindingRequest, QueryServiceBindingResponse>,
     > = std::sync::LazyLock::new(|| crate::skir_client::Method {
         name: "QueryServiceBinding".to_string(),
-        number: 955610_i64,
+        number: 930801_i64,
         request_serializer: QueryServiceBindingRequest::serializer(),
         response_serializer: QueryServiceBindingResponse::serializer(),
         doc: "".to_string(),
@@ -801,7 +801,7 @@ pub fn ensure_registration_lease_method() -> &'static crate::skir_client::Method
         crate::skir_client::Method<EnsureRegistrationLeaseRequest, EnsureRegistrationLeaseResponse>,
     > = std::sync::LazyLock::new(|| crate::skir_client::Method {
         name: "EnsureRegistrationLease".to_string(),
-        number: 955611_i64,
+        number: 930802_i64,
         request_serializer: EnsureRegistrationLeaseRequest::serializer(),
         response_serializer: EnsureRegistrationLeaseResponse::serializer(),
         doc: "".to_string(),

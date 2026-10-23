@@ -5266,7 +5266,7 @@ val PublishAuthoring: build.skir.service.Method<
 > by kotlin.lazy {
     build.skir.service.Method(
         "PublishAuthoring",
-        920018,
+        941501,
         skirout.editor.v1.publication.PublishAuthoringRequest.serializer,
         skirout.editor.v1.publication.PublishAuthoringResponse.serializer,
         "Releases only the issued candidate while its captured saved inputs and engine requirements still\nmatch. Reports release admission and selection: activated identifies the newly selected\npublication, not an acknowledgement from engine hosts; publishing means another release currently\nowns the publication gate; candidate_changed_error requires a fresh review.",
@@ -5280,7 +5280,7 @@ val WatchPublication: build.skir.service.Method<
 > by kotlin.lazy {
     build.skir.service.Method(
         "WatchPublication",
-        920019,
+        941502,
         skirout.editor.v1.publication.WatchPublicationRequest.serializer,
         skirout.editor.v1.publication.WatchPublicationResponse.serializer,
         "Returns the current review view identity; later identities arrive as update hints.",
@@ -5297,7 +5297,7 @@ val QueryPublicationView: build.skir.service.Method<
 > by kotlin.lazy {
     build.skir.service.Method(
         "QueryPublicationView",
-        920020,
+        941503,
         skirout.editor.v1.publication.QueryPublicationViewRequest.serializer,
         skirout.editor.v1.publication.QueryPublicationViewResponse.serializer,
         "Returns one immutable review view, or the current view identity when expected is no longer\ncurrent. Later invalidations require a separate query.",

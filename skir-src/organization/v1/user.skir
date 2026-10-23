@@ -25,7 +25,7 @@ method WatchUserOrganizations(
 
   snapshot: UserOrganizationsSnapshot;
   changed: UserOrganizationsChanged;
-} = 246975;
+} = 920701;
 
 // Reads all unexpired join requests made by the user. Request changes publish later user scoped changes.
 method WatchUserJoinRequests(
@@ -35,7 +35,7 @@ method WatchUserJoinRequests(
 
   snapshot: UserJoinRequestsSnapshot;
   changed: UserJoinRequestsChanged;
-} = 939197;
+} = 920702;
 
 // Submits one join code for the authenticated user.
 // A valid code either creates a pending request or immediately creates membership when its auto acceptance policy applies.
@@ -71,7 +71,7 @@ method SubmitUserJoinRequest(
 
   /// Record IDs from an unexpected table.
   invalid_record_id_error: InvalidRecordIdError;
-} = 4962;
+} = 920703;
 
 // Cancels one pending request made by the user and publishes its removal from the user request view.
 // The organization request view receives the corresponding removal as well.
@@ -93,4 +93,4 @@ method CancelUserJoinRequest(
 
   /// Record IDs from an unexpected table.
   invalid_record_id_error: InvalidRecordIdError;
-} = 387737;
+} = 920704;

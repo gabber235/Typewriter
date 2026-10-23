@@ -3040,7 +3040,7 @@ pub fn fetch_shared_artifact_catalog_method() -> &'static crate::skir_client::Me
         >,
     > = std::sync::LazyLock::new(|| crate::skir_client::Method {
         name: "FetchSharedArtifactCatalog".to_string(),
-        number: 910001_i64,
+        number: 930101_i64,
         request_serializer: FetchSharedArtifactCatalogRequest::serializer(),
         response_serializer: FetchSharedArtifactCatalogResponse::serializer(),
         doc: "".to_string(),
@@ -3055,7 +3055,7 @@ pub fn publish_shared_artifact_method()
         crate::skir_client::Method<PublishSharedArtifactRequest, PublishSharedArtifactResponse>,
     > = std::sync::LazyLock::new(|| crate::skir_client::Method {
         name: "PublishSharedArtifact".to_string(),
-        number: 910002_i64,
+        number: 930102_i64,
         request_serializer: PublishSharedArtifactRequest::serializer(),
         response_serializer: PublishSharedArtifactResponse::serializer(),
         doc: "".to_string(),
@@ -3069,7 +3069,7 @@ pub fn read_artifact_blob_method()
         crate::skir_client::Method<ReadArtifactBlobRequest, ReadArtifactBlobResponse>,
     > = std::sync::LazyLock::new(|| crate::skir_client::Method {
         name: "ReadArtifactBlob".to_string(),
-        number: 910003_i64,
+        number: 930103_i64,
         request_serializer: ReadArtifactBlobRequest::serializer(),
         response_serializer: ReadArtifactBlobResponse::serializer(),
         doc: "".to_string(),
@@ -3085,7 +3085,7 @@ pub fn begin_artifact_blob_write_method() -> &'static crate::skir_client::Method
         crate::skir_client::Method<BeginArtifactBlobWriteRequest, BeginArtifactBlobWriteResponse>,
     > = std::sync::LazyLock::new(|| crate::skir_client::Method {
         name: "BeginArtifactBlobWrite".to_string(),
-        number: 910004_i64,
+        number: 930104_i64,
         request_serializer: BeginArtifactBlobWriteRequest::serializer(),
         response_serializer: BeginArtifactBlobWriteResponse::serializer(),
         doc: "".to_string(),
@@ -3101,7 +3101,7 @@ pub fn write_artifact_blob_chunk_method() -> &'static crate::skir_client::Method
         crate::skir_client::Method<WriteArtifactBlobChunkRequest, WriteArtifactBlobChunkResponse>,
     > = std::sync::LazyLock::new(|| crate::skir_client::Method {
         name: "WriteArtifactBlobChunk".to_string(),
-        number: 910005_i64,
+        number: 930105_i64,
         request_serializer: WriteArtifactBlobChunkRequest::serializer(),
         response_serializer: WriteArtifactBlobChunkResponse::serializer(),
         doc: "".to_string(),
@@ -3120,7 +3120,7 @@ pub fn complete_artifact_blob_write_method() -> &'static crate::skir_client::Met
         >,
     > = std::sync::LazyLock::new(|| crate::skir_client::Method {
         name: "CompleteArtifactBlobWrite".to_string(),
-        number: 910006_i64,
+        number: 930106_i64,
         request_serializer: CompleteArtifactBlobWriteRequest::serializer(),
         response_serializer: CompleteArtifactBlobWriteResponse::serializer(),
         doc: "".to_string(),
@@ -3139,7 +3139,7 @@ pub fn fetch_artifact_blob_metadata_method() -> &'static crate::skir_client::Met
         >,
     > = std::sync::LazyLock::new(|| crate::skir_client::Method {
         name: "FetchArtifactBlobMetadata".to_string(),
-        number: 910007_i64,
+        number: 930107_i64,
         request_serializer: FetchArtifactBlobMetadataRequest::serializer(),
         response_serializer: FetchArtifactBlobMetadataResponse::serializer(),
         doc: "".to_string(),

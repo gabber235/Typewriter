@@ -1221,7 +1221,7 @@ pub fn watch_user_organizations_method() -> &'static crate::skir_client::Method<
         crate::skir_client::Method<WatchUserOrganizationsRequest, WatchUserOrganizationsResponse>,
     > = std::sync::LazyLock::new(|| crate::skir_client::Method {
         name: "WatchUserOrganizations".to_string(),
-        number: 246975_i64,
+        number: 920701_i64,
         request_serializer: WatchUserOrganizationsRequest::serializer(),
         response_serializer: WatchUserOrganizationsResponse::serializer(),
         doc: "".to_string(),
@@ -1236,7 +1236,7 @@ pub fn watch_user_join_requests_method()
         crate::skir_client::Method<WatchUserJoinRequestsRequest, WatchUserJoinRequestsResponse>,
     > = std::sync::LazyLock::new(|| crate::skir_client::Method {
         name: "WatchUserJoinRequests".to_string(),
-        number: 939197_i64,
+        number: 920702_i64,
         request_serializer: WatchUserJoinRequestsRequest::serializer(),
         response_serializer: WatchUserJoinRequestsResponse::serializer(),
         doc: "".to_string(),
@@ -1251,7 +1251,7 @@ pub fn submit_user_join_request_method()
         crate::skir_client::Method<SubmitUserJoinRequestRequest, SubmitUserJoinRequestResponse>,
     > = std::sync::LazyLock::new(|| crate::skir_client::Method {
         name: "SubmitUserJoinRequest".to_string(),
-        number: 4962_i64,
+        number: 920703_i64,
         request_serializer: SubmitUserJoinRequestRequest::serializer(),
         response_serializer: SubmitUserJoinRequestResponse::serializer(),
         doc: "".to_string(),
@@ -1266,7 +1266,7 @@ pub fn cancel_user_join_request_method()
         crate::skir_client::Method<CancelUserJoinRequestRequest, CancelUserJoinRequestResponse>,
     > = std::sync::LazyLock::new(|| crate::skir_client::Method {
         name: "CancelUserJoinRequest".to_string(),
-        number: 387737_i64,
+        number: 920704_i64,
         request_serializer: CancelUserJoinRequestRequest::serializer(),
         response_serializer: CancelUserJoinRequestResponse::serializer(),
         doc: "".to_string(),

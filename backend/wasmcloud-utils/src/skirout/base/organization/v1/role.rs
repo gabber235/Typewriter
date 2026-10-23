@@ -309,7 +309,7 @@ pub fn watch_organization_roles_method() -> &'static crate::skir_client::Method<
         crate::skir_client::Method<WatchOrganizationRolesRequest, WatchOrganizationRolesResponse>,
     > = std::sync::LazyLock::new(|| crate::skir_client::Method {
         name: "WatchOrganizationRoles".to_string(),
-        number: 49267_i64,
+        number: 920601_i64,
         request_serializer: WatchOrganizationRolesRequest::serializer(),
         response_serializer: WatchOrganizationRolesResponse::serializer(),
         doc: "".to_string(),

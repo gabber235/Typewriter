@@ -18,9 +18,9 @@ import "package:skir_client/skir_client.dart" as _skir;
 import "./authoring.dart" as _lib_editor_v1_authoring;
 import "./capability.dart" as _lib_editor_v1_capability;
 import "./operation.dart" as _lib_editor_v1_operation;
-import "../../kernel/v1/resource_id.dart" as _lib_kernel_v1_resource_id;
 import "./type_catalog.dart" as _lib_editor_v1_type_catalog;
 import "../../kernel/v1/errors.dart" as _lib_kernel_v1_errors;
+import "../../kernel/v1/resource_id.dart" as _lib_kernel_v1_resource_id;
 
 // -----------------------------------------------------------------------------
 // struct OperationOrigin
@@ -5396,7 +5396,7 @@ final _skir.Method<
 >
 resolveResourceOperationsMethod = _skir.Method(
   "ResolveResourceOperations",
-  920015,
+  941601,
   ResolveResourceOperationsRequest.serializer,
   ResolveResourceOperationsResult.serializer,
   "",
@@ -5405,7 +5405,7 @@ resolveResourceOperationsMethod = _skir.Method(
 final _skir.Method<PrepareAuthoringActionRequest, AuthoringActionResult>
 prepareAuthoringActionMethod = _skir.Method(
   "PrepareAuthoringAction",
-  920016,
+  941602,
   PrepareAuthoringActionRequest.serializer,
   AuthoringActionResult.serializer,
   "",
@@ -5414,7 +5414,7 @@ prepareAuthoringActionMethod = _skir.Method(
 final _skir.Method<ResolveDropCandidatesRequest, ResolveDropCandidatesResult>
 resolveDropCandidatesMethod = _skir.Method(
   "ResolveDropCandidates",
-  920017,
+  941603,
   ResolveDropCandidatesRequest.serializer,
   ResolveDropCandidatesResult.serializer,
   "",

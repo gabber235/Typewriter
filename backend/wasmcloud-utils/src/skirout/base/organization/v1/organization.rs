@@ -739,7 +739,7 @@ pub fn create_organization_method()
         crate::skir_client::Method<CreateOrganizationRequest, CreateOrganizationResponse>,
     > = std::sync::LazyLock::new(|| crate::skir_client::Method {
         name: "CreateOrganization".to_string(),
-        number: 336038_i64,
+        number: 920401_i64,
         request_serializer: CreateOrganizationRequest::serializer(),
         response_serializer: CreateOrganizationResponse::serializer(),
         doc: "".to_string(),
@@ -753,7 +753,7 @@ pub fn delete_organization_method()
         crate::skir_client::Method<DeleteOrganizationRequest, DeleteOrganizationResponse>,
     > = std::sync::LazyLock::new(|| crate::skir_client::Method {
         name: "DeleteOrganization".to_string(),
-        number: 627251_i64,
+        number: 920402_i64,
         request_serializer: DeleteOrganizationRequest::serializer(),
         response_serializer: DeleteOrganizationResponse::serializer(),
         doc: "".to_string(),

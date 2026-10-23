@@ -5,7 +5,7 @@ import { RecordId } from "kernel/v1/record_id.skir";
 // Access policy boundary for NATS identities. The auth callout validates the presented JWT, then
 // delegates entity specific publish and subscribe policy to the permission service. That service
 // owns the policy and returns the result for inclusion in signed NATS user claims.
-enum EntityPermissionQualifier {
+enum EntityPermissionQualifier(81010001) {
   user: struct {
     organization_id: RecordId?;
     connection_session: string;
@@ -13,26 +13,26 @@ enum EntityPermissionQualifier {
   service: struct {};
 }
 
-struct Permission {
+struct Permission(81010002) {
   allow: [string];
   deny: [string];
 }
 
-struct ResponsePermission {
+struct ResponsePermission(81010003) {
   max_messages: int32?;
   ttl: Duration?;
 }
 
 // Policy output owned by the permission service. The auth callout converts this result into NATS
 // permissions. Identity tags travel alongside this value in the resolution response.
-struct Permissions {
+struct Permissions(81010004) {
   publish: Permission;
   subscribe: Permission;
   response: ResponsePermission?;
 }
 
 // Permissions and identity tags granted to one authenticated entity.
-struct EntityPermissionGrant {
+struct EntityPermissionGrant(81010005) {
   permissions: Permissions;
   tags: [string];
 }
@@ -50,4 +50,4 @@ method GetEntityPermission(
 ): enum {
   granted: EntityPermissionGrant;
   internal_error: InternalError;
-} = 209684;
+} = 910101;

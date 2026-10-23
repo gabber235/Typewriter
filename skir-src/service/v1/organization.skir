@@ -7,14 +7,14 @@ import { Service } from "service/v1/service.skir";
 
 // Validation failures for organization owned service metadata. These are rejected without changing the service
 // revision or publishing a service update.
-enum ServiceUpdateValidationError {
+enum ServiceUpdateValidationError(83040001) {
   name_invalid;
 }
 
 // Events for one organization service projection. Binding and unbinding replace the complete list.
 // Metadata and liveness publish updates. Accepted command integration can remove an unbound identity.
 // Only organization bound services belong in this projection.
-enum OrganizationServicesChanged {
+enum OrganizationServicesChanged(83040002) {
   replace: [Service];
   update: Service;
   remove: RecordId;
@@ -27,7 +27,7 @@ method WatchOrganizationServices(
   internal_error: InternalError;
 
   list: [Service];
-} = 820326;
+} = 930401;
 
 // Performs an organization scoped compare and set update of service metadata.
 // The registration service owns revision and increments it only after accepting the name change. A stale expected
@@ -57,4 +57,4 @@ method UpdateOrganizationService(
   validation_error: ServiceUpdateValidationError;
   /// Record IDs from an unexpected table.
   invalid_record_id_error: InvalidRecordIdError;
-} = 872501;
+} = 930402;

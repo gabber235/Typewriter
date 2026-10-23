@@ -231,7 +231,7 @@ pub fn get_sentinel_credentials_method() -> &'static crate::skir_client::Method<
         crate::skir_client::Method<GetSentinelCredentialsRequest, GetSentinelCredentialsResponse>,
     > = std::sync::LazyLock::new(|| crate::skir_client::Method {
         name: "GetSentinelCredentials".to_string(),
-        number: 403062_i64,
+        number: 910201_i64,
         request_serializer: GetSentinelCredentialsRequest::serializer(),
         response_serializer: GetSentinelCredentialsResponse::serializer(),
         doc: "".to_string(),

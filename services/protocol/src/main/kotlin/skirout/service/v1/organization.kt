@@ -1016,7 +1016,7 @@ val WatchOrganizationServices: build.skir.service.Method<
 > by kotlin.lazy {
     build.skir.service.Method(
         "WatchOrganizationServices",
-        820326,
+        930401,
         skirout.service.v1.organization.WatchOrganizationServicesRequest.serializer,
         skirout.service.v1.organization.WatchOrganizationServicesResponse.serializer,
         "",
@@ -1029,7 +1029,7 @@ val UpdateOrganizationService: build.skir.service.Method<
 > by kotlin.lazy {
     build.skir.service.Method(
         "UpdateOrganizationService",
-        872501,
+        930402,
         skirout.service.v1.organization.UpdateOrganizationServiceRequest.serializer,
         skirout.service.v1.organization.UpdateOrganizationServiceResponse.serializer,
         "",

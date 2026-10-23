@@ -2418,7 +2418,7 @@ pub fn resolve_resource_operations_method() -> &'static crate::skir_client::Meth
         >,
     > = std::sync::LazyLock::new(|| crate::skir_client::Method {
         name: "ResolveResourceOperations".to_string(),
-        number: 920015_i64,
+        number: 941601_i64,
         request_serializer: ResolveResourceOperationsRequest::serializer(),
         response_serializer: ResolveResourceOperationsResult::serializer(),
         doc: "".to_string(),
@@ -2432,7 +2432,7 @@ pub fn prepare_authoring_action_method()
         crate::skir_client::Method<PrepareAuthoringActionRequest, AuthoringActionResult>,
     > = std::sync::LazyLock::new(|| crate::skir_client::Method {
         name: "PrepareAuthoringAction".to_string(),
-        number: 920016_i64,
+        number: 941602_i64,
         request_serializer: PrepareAuthoringActionRequest::serializer(),
         response_serializer: AuthoringActionResult::serializer(),
         doc: "".to_string(),
@@ -2446,7 +2446,7 @@ pub fn resolve_drop_candidates_method()
         crate::skir_client::Method<ResolveDropCandidatesRequest, ResolveDropCandidatesResult>,
     > = std::sync::LazyLock::new(|| crate::skir_client::Method {
         name: "ResolveDropCandidates".to_string(),
-        number: 920017_i64,
+        number: 941603_i64,
         request_serializer: ResolveDropCandidatesRequest::serializer(),
         response_serializer: ResolveDropCandidatesResult::serializer(),
         doc: "".to_string(),

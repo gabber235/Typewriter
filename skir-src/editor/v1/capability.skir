@@ -18,62 +18,62 @@ import {
 import { InternalError } from "kernel/v1/errors.skir";
 
 /// Caller correlation identity. It does not imply durable command storage or automatic deduplication.
-struct InvocationId(811200001) {
+struct InvocationId(84050001) {
   value: string = 0;
 }
 
-struct SearchCapabilityDefinition(811200002) {
+struct SearchCapabilityDefinition(84050002) {
   capability_id: CapabilityId = 0;
   request_type: TypeUse = 1;
   result_type: TypeUse = 2;
 }
 
-struct ComputationCapabilityDefinition(811200003) {
+struct ComputationCapabilityDefinition(84050003) {
   capability_id: CapabilityId = 0;
   request_type: TypeUse = 1;
   result_type: TypeUse = 2;
 }
 
-struct CommandCapabilityDefinition(811200004) {
+struct CommandCapabilityDefinition(84050004) {
   capability_id: CapabilityId = 0;
   request_type: TypeUse = 1;
 }
 
-enum CapabilityDefinition(811200005) {
+enum CapabilityDefinition(84050005) {
   search: SearchCapabilityDefinition = 1;
   computation: ComputationCapabilityDefinition = 2;
   command: CommandCapabilityDefinition = 3;
   authoring: AuthoringCapabilityDefinition = 4;
 }
 
-struct ResourceAddress(811200006) {
+struct ResourceAddress(84050006) {
   resource_type: TypeUse = 0;
   identity: DataValue = 1;
 }
 
-struct InvalidateResourceInstruction(811200007) {
+struct InvalidateResourceInstruction(84050007) {
   resource: ResourceAddress = 0;
 }
 
-struct OpenResourceInstruction(811200008) {
+struct OpenResourceInstruction(84050008) {
   resource: ResourceAddress = 0;
 }
 
-enum NotificationSeverity(811200009) {
+enum NotificationSeverity(84050009) {
   info = 1;
   success = 2;
   warning = 3;
   error = 4;
 }
 
-struct NotifyInstruction(811200010) {
+struct NotifyInstruction(84050010) {
   severity: NotificationSeverity = 0;
   message: string = 1;
 }
 
 /// Client effects returned by Realm commands. These instructions direct navigation, refresh,
 /// or notification; receiving them is separate from applying them in the current panel session.
-enum PanelInstruction(811200011) {
+enum PanelInstruction(84050011) {
   invalidate_resource: InvalidateResourceInstruction = 1;
   open_resource: OpenResourceInstruction = 2;
   notify: NotifyInstruction = 3;
@@ -81,7 +81,7 @@ enum PanelInstruction(811200011) {
 
 /// Selects a capability under a catalog generation with portable input. Computations require
 /// the declared result type; commands require expected_result_type to be absent.
-struct CapabilityInvocationRequest(811200012) {
+struct CapabilityInvocationRequest(84050012) {
   invocation_id: InvocationId = 0;
   generation: CatalogGeneration = 1;
   capability_id: CapabilityId = 2;
@@ -89,32 +89,32 @@ struct CapabilityInvocationRequest(811200012) {
   expected_result_type: TypeTemplate? = 4;
 }
 
-struct ComputationSuccess(811200013) {
+struct ComputationSuccess(84050013) {
   invocation_id: InvocationId = 0;
   value: DataValue = 1;
 }
 
-struct CommandSuccess(811200014) {
+struct CommandSuccess(84050014) {
   invocation_id: InvocationId = 0;
   instructions: [PanelInstruction] = 1;
 }
 
-struct CapabilityPermissionDenied(811200015) {
+struct CapabilityPermissionDenied(84050015) {
   invocation_id: InvocationId = 0;
   message: string = 1;
 }
 
-struct StaleCatalogGeneration(811200016) {
+struct StaleCatalogGeneration(84050016) {
   invocation_id: InvocationId = 0;
   actual_generation: CatalogGeneration = 1;
 }
 
-struct CapabilityFailure(811200017) {
+struct CapabilityFailure(84050017) {
   invocation_id: InvocationId = 0;
   diagnostics: [Diagnostic] = 1;
 }
 
-enum ComputationResult(811200018) {
+enum ComputationResult(84050018) {
   success: ComputationSuccess = 1;
   invalid_error: CapabilityFailure = 2;
   unavailable_error: CapabilityFailure = 3;
@@ -123,7 +123,7 @@ enum ComputationResult(811200018) {
   internal_error: InternalError = 6;
 }
 
-enum CommandResult(811200019) {
+enum CommandResult(84050019) {
   success: CommandSuccess = 1;
   invalid_error: CapabilityFailure = 2;
   unavailable_error: CapabilityFailure = 3;
@@ -132,7 +132,7 @@ enum CommandResult(811200019) {
   internal_error: InternalError = 6;
 }
 
-struct AuthoringCapabilityDefinition(811200020) {
+struct AuthoringCapabilityDefinition(84050020) {
   capability_id: CapabilityId = 0;
   targets: OperationTargets = 1;
   input: OperationInputDefinition? = 2;
@@ -140,8 +140,8 @@ struct AuthoringCapabilityDefinition(811200020) {
 
 method InvokeRealmComputation(
   CapabilityInvocationRequest
-): ComputationResult = 920004;
+): ComputationResult = 940501;
 
 method InvokeRealmCommand(
   CapabilityInvocationRequest
-): CommandResult = 920005;
+): CommandResult = 940502;

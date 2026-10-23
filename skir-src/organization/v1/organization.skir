@@ -8,25 +8,25 @@ import {
 import { RecordId } from "kernel/v1/record_id.skir";
 
 // Organization display data exposed in a user's organization list.
-struct Organization {
+struct Organization(82040001) {
   organization_id: RecordId;
   name: string;
   logo_url: string;
 }
 
 // Current organizations visible to one user and that user's organization list sequence.
-struct UserOrganizationsSnapshot {
+struct UserOrganizationsSnapshot(82040002) {
   sequence: int64;
   values: [Organization];
 }
 
-enum UserOrganizationsChange {
+enum UserOrganizationsChange(82040003) {
   add: Organization;
   remove: RecordId;
 }
 
 // Changes to a user's organization list. Remove carries the organization identity.
-struct UserOrganizationsChanged {
+struct UserOrganizationsChanged(82040004) {
   sequence: int64;
   changes: [UserOrganizationsChange];
 }
@@ -45,7 +45,7 @@ method CreateOrganization(
     organization: Organization;
     event: UserOrganizationsChanged;
   };
-} = 336038;
+} = 920401;
 
 // Deletes an organization by identity after validating the record identifier.
 method DeleteOrganization(
@@ -59,4 +59,4 @@ method DeleteOrganization(
 
   /// Record IDs from an unexpected table.
   invalid_record_id_error: InvalidRecordIdError;
-} = 627251;
+} = 920402;

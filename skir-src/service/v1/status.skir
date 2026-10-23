@@ -1,7 +1,7 @@
 import { InternalError } from "kernel/v1/errors.skir";
 
 // Durable organization association returned without changing registration state.
-enum ServiceBinding {
+enum ServiceBinding(83080001) {
   bound: struct {
     organization_id: string;
     organization_name: string?;
@@ -9,7 +9,7 @@ enum ServiceBinding {
   unbound;
 }
 
-struct RegistrationLease {
+struct RegistrationLease(83080002) {
   token: string;
   expires_at: timestamp;
 }
@@ -24,7 +24,7 @@ method QueryServiceBinding(
   /// Service not found.
   service_not_found_error: struct {};
   internal_error: InternalError;
-} = 955610;
+} = 930801;
 
 // Issues or reuses the temporary capability required to bind an unbound service.
 method EnsureRegistrationLease(
@@ -38,4 +38,4 @@ method EnsureRegistrationLease(
   /// Service not found.
   service_not_found_error: struct {};
   internal_error: InternalError;
-} = 955611;
+} = 930802;

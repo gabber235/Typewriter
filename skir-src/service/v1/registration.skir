@@ -22,12 +22,12 @@ method BindService(
   invalid_registration_token_error: struct {};
   /// Organization not found.
   organization_not_found_error: struct {};
-} = 304691;
+} = 930501;
 
 // Authoritative binding transition delivered to the service registrar after BindService commits.
 // It carries organization context only. Receipt means binding changed, not that the service has proved liveness;
 // the registrar must still establish authenticated messaging and send heartbeats.
-struct ServiceBoundNotification {
+struct ServiceBoundNotification(83050001) {
   organization_id: string;
   organization_name: string?;
 }
@@ -46,4 +46,4 @@ method UnbindService(
 
   /// Service not found in organization.
   service_not_found_error: struct {};
-} = 950343;
+} = 930502;

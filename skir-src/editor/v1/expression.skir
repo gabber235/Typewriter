@@ -13,33 +13,33 @@ import {
 } from "editor/v1/type_catalog.skir";
 
 /// Reads an externally supplied input at an authored value path.
-struct ExpressionInput(810600001) {
+struct ExpressionInput(84120001) {
   binding: ExpressionBindingId = 0;
   path: ValuePath = 1;
 }
 
 /// Reads a lambda frame. Depth zero is the innermost frame; slots are defined by the lambda's
 /// parameter. A local holds a value an earlier read or literal produced, so it is never a new read.
-struct ExpressionLocal(810600002) {
+struct ExpressionLocal(84120002) {
   depth: int32 = 0;
   slot: int32 = 1;
   path: ValuePath = 2;
 }
 
 /// Projects a path from a computed value. Map key and value segments project entries.
-struct FieldExpression(810600003) {
+struct FieldExpression(84120003) {
   source: ExpressionNode = 0;
   path: ValuePath = 1;
 }
 
 /// Evaluates right only when left does not decide the result.
-struct LogicalExpression(810600004) {
+struct LogicalExpression(84120004) {
   left: ExpressionNode = 0;
   right: ExpressionNode = 1;
 }
 
 /// Evaluates only the branch the test selects.
-struct ConditionalExpression(810600005) {
+struct ConditionalExpression(84120005) {
   test: ExpressionNode = 0;
   then: ExpressionNode = 1;
   otherwise: ExpressionNode = 2;
@@ -47,35 +47,35 @@ struct ConditionalExpression(810600005) {
 
 /// Evaluates fallback for missing, null, or unfilled value. Evaluation failures remain
 /// failures instead of being hidden by the fallback.
-struct FallbackExpression(810600006) {
+struct FallbackExpression(84120006) {
   value: ExpressionNode = 0;
   fallback: ExpressionNode = 1;
 }
 
 /// Identity of a declared operation, for example "integer.gcd". Checking resolves it once;
 /// evaluators never choose between overloads at runtime.
-struct OperationId(810600007) {
+struct OperationId(84120007) {
   value: string = 0;
 }
 
 /// Calls one declared operation of skir-src/editor/v1/operations.yaml. Arguments follow its
 /// declared parameters; a lambda parameter takes a lambda node. Type arguments appear only where
 /// arguments cannot determine them, such as reading a resource by identity.
-struct CallExpression(810600008) {
+struct CallExpression(84120008) {
   operation: OperationId = 0;
   type_arguments: [TypeTemplate] = 1;
   arguments: [ExpressionNode] = 2;
 }
 
 /// Body of a lambda argument. It opens one frame of `arity` locals.
-struct LambdaExpression(810600009) {
+struct LambdaExpression(84120009) {
   arity: int32 = 0;
   body: ExpressionNode = 1;
 }
 
 /// Closed expression language. Hosts evaluate the structural forms themselves; every other
 /// operation is a call to the declared operation catalog.
-enum ExpressionNode(810600010) {
+enum ExpressionNode(84120010) {
   literal: DataValue = 1;
   input: ExpressionInput = 2;
   local: ExpressionLocal = 3;
@@ -90,7 +90,7 @@ enum ExpressionNode(810600010) {
 
 /// Structural expression results retain nominal catalog identities only where they are meaningful.
 /// Null is a value; unavailable input is represented separately by ExpressionType.may_be_missing.
-enum ExpressionValueType(810600011) {
+enum ExpressionValueType(84120011) {
   nominal: TypeUse = 1;
   list: ExpressionType = 2;
   map: ExpressionMappingType = 3;
@@ -99,40 +99,40 @@ enum ExpressionValueType(810600011) {
   null_value = 6;
 }
 
-struct ExpressionMappingType(810600012) {
+struct ExpressionMappingType(84120012) {
   key: ExpressionType = 0;
   value: ExpressionType = 1;
 }
 
-struct ExpressionType(810600013) {
+struct ExpressionType(84120013) {
   value: ExpressionValueType = 0;
   may_be_missing: bool = 1;
 }
 
 /// Limits one evaluation by executed steps and inspected collection items.
 /// Exhaustion is an evaluation failure, not a successful partial expression result.
-struct EvaluationBudget(810600014) {
+struct EvaluationBudget(84120014) {
   max_steps: int64 = 0;
   max_collection_items: int64 = 1;
 }
 
-struct ExpressionBinding(810600015) {
+struct ExpressionBinding(84120015) {
   id: ExpressionBindingId = 0;
   location: ValueLocation = 1;
 }
 
-struct ExpressionBindings(810600016) {
+struct ExpressionBindings(84120016) {
   values: [ExpressionBinding] = 0;
 }
 
 /// Identity of a declared failure from the operation catalog, for example "regex_limit".
-struct FailureId(810600017) {
+struct FailureId(84120017) {
   value: string = 0;
 }
 
 /// A failed evaluation: the declared failure, a message, and the observed inputs plus located
 /// frame values as context.
-struct EvaluationDiagnostic(810600018) {
+struct EvaluationDiagnostic(84120018) {
   failure: FailureId = 0;
   message: string = 1;
   locations: [ValueLocation] = 2;

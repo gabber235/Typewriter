@@ -1450,7 +1450,7 @@ final class EnsureRegistrationLeaseResponse_internalErrorWrapper
 final _skir.Method<QueryServiceBindingRequest, QueryServiceBindingResponse>
 queryServiceBindingMethod = _skir.Method(
   "QueryServiceBinding",
-  955610,
+  930801,
   QueryServiceBindingRequest.serializer,
   QueryServiceBindingResponse.serializer,
   "",
@@ -1462,7 +1462,7 @@ final _skir.Method<
 >
 ensureRegistrationLeaseMethod = _skir.Method(
   "EnsureRegistrationLease",
-  955611,
+  930802,
   EnsureRegistrationLeaseRequest.serializer,
   EnsureRegistrationLeaseResponse.serializer,
   "",

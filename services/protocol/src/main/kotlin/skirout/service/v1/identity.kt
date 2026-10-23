@@ -1383,7 +1383,7 @@ val IssueServiceIdentity: build.skir.service.Method<
 > by kotlin.lazy {
     build.skir.service.Method(
         "IssueServiceIdentity",
-        672941,
+        930201,
         skirout.service.v1.identity.IssueServiceIdentityRequest.serializer,
         skirout.service.v1.identity.IssueServiceIdentityResponse.serializer,
         "",

@@ -1,5 +1,5 @@
 // Shared color value. The canonical representation is one ARGB 32 bit value.
 // Consumers convert the signed wire integer to an unsigned 32 bit color without changing its bits.
-struct Color {
+struct Color(80010001) {
   argb: int32 = 0;
 }

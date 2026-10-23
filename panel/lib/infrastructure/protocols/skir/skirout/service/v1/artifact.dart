@@ -5853,7 +5853,7 @@ final _skir.Method<
 >
 fetchSharedArtifactCatalogMethod = _skir.Method(
   "FetchSharedArtifactCatalog",
-  910001,
+  930101,
   FetchSharedArtifactCatalogRequest.serializer,
   FetchSharedArtifactCatalogResponse.serializer,
   "",
@@ -5862,7 +5862,7 @@ fetchSharedArtifactCatalogMethod = _skir.Method(
 final _skir.Method<PublishSharedArtifactRequest, PublishSharedArtifactResponse>
 publishSharedArtifactMethod = _skir.Method(
   "PublishSharedArtifact",
-  910002,
+  930102,
   PublishSharedArtifactRequest.serializer,
   PublishSharedArtifactResponse.serializer,
   "",
@@ -5871,7 +5871,7 @@ publishSharedArtifactMethod = _skir.Method(
 final _skir.Method<ReadArtifactBlobRequest, ReadArtifactBlobResponse>
 readArtifactBlobMethod = _skir.Method(
   "ReadArtifactBlob",
-  910003,
+  930103,
   ReadArtifactBlobRequest.serializer,
   ReadArtifactBlobResponse.serializer,
   "",
@@ -5883,7 +5883,7 @@ final _skir.Method<
 >
 beginArtifactBlobWriteMethod = _skir.Method(
   "BeginArtifactBlobWrite",
-  910004,
+  930104,
   BeginArtifactBlobWriteRequest.serializer,
   BeginArtifactBlobWriteResponse.serializer,
   "",
@@ -5895,7 +5895,7 @@ final _skir.Method<
 >
 writeArtifactBlobChunkMethod = _skir.Method(
   "WriteArtifactBlobChunk",
-  910005,
+  930105,
   WriteArtifactBlobChunkRequest.serializer,
   WriteArtifactBlobChunkResponse.serializer,
   "",
@@ -5907,7 +5907,7 @@ final _skir.Method<
 >
 completeArtifactBlobWriteMethod = _skir.Method(
   "CompleteArtifactBlobWrite",
-  910006,
+  930106,
   CompleteArtifactBlobWriteRequest.serializer,
   CompleteArtifactBlobWriteResponse.serializer,
   "",
@@ -5919,7 +5919,7 @@ final _skir.Method<
 >
 fetchArtifactBlobMetadataMethod = _skir.Method(
   "FetchArtifactBlobMetadata",
-  910007,
+  930107,
   FetchArtifactBlobMetadataRequest.serializer,
   FetchArtifactBlobMetadataResponse.serializer,
   "",

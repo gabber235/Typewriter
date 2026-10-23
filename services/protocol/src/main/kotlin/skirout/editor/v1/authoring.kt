@@ -6373,7 +6373,7 @@ val QueryAuthoringState: build.skir.service.Method<
 > by kotlin.lazy {
     build.skir.service.Method(
         "QueryAuthoringState",
-        920010,
+        940201,
         skirout.editor.v1.authoring.QueryAuthoringStateRequest.serializer,
         skirout.editor.v1.authoring.QueryAuthoringStateResponse.serializer,
         "Returns the retained saved snapshot for one catalog generation.",
@@ -6386,7 +6386,7 @@ val SearchAuthoring: build.skir.service.Method<
 > by kotlin.lazy {
     build.skir.service.Method(
         "SearchAuthoring",
-        920011,
+        940202,
         skirout.editor.v1.authoring.SearchAuthoringRequest.serializer,
         skirout.editor.v1.authoring.SearchAuthoringResponse.serializer,
         "",
@@ -6405,7 +6405,7 @@ val CommitPreparedEdit: build.skir.service.Method<
 > by kotlin.lazy {
     build.skir.service.Method(
         "CommitPreparedEdit",
-        920012,
+        940203,
         skirout.editor.v1.authoring.PreparedEdit.serializer,
         skirout.editor.v1.authoring.CommitPreparedEditResponse.serializer,
         "committed confirms installation of saved authoring state. It does not confirm check completion,\ncompilation, publication selection, or engine application. conflict_error requires refreshing\noriginal facts; rejected_error reports invalid intent or missing guards; catalog_changed_error\nrequires a new catalog.",
@@ -6418,7 +6418,7 @@ val PreviewTypeArgumentChange: build.skir.service.Method<
 > by kotlin.lazy {
     build.skir.service.Method(
         "PreviewTypeArgumentChange",
-        920013,
+        940204,
         skirout.editor.v1.authoring.PreviewTypeArgumentChangeRequest.serializer,
         skirout.editor.v1.authoring.PreviewTypeArgumentChangeResponse.serializer,
         "",
@@ -6432,7 +6432,7 @@ val PrepareTypeArgumentChange: build.skir.service.Method<
 > by kotlin.lazy {
     build.skir.service.Method(
         "PrepareTypeArgumentChange",
-        920014,
+        940205,
         skirout.editor.v1.authoring.TypeArgumentChangePreview.serializer,
         skirout.editor.v1.authoring.PrepareTypeArgumentChangeResponse.serializer,
         "Revalidates a preview and returns proposed intent. CommitPreparedEdit performs the separate saved write.",

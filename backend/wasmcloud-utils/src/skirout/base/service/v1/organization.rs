@@ -677,7 +677,7 @@ pub fn watch_organization_services_method() -> &'static crate::skir_client::Meth
         >,
     > = std::sync::LazyLock::new(|| crate::skir_client::Method {
         name: "WatchOrganizationServices".to_string(),
-        number: 820326_i64,
+        number: 930401_i64,
         request_serializer: WatchOrganizationServicesRequest::serializer(),
         response_serializer: WatchOrganizationServicesResponse::serializer(),
         doc: "".to_string(),
@@ -696,7 +696,7 @@ pub fn update_organization_service_method() -> &'static crate::skir_client::Meth
         >,
     > = std::sync::LazyLock::new(|| crate::skir_client::Method {
         name: "UpdateOrganizationService".to_string(),
-        number: 872501_i64,
+        number: 930402_i64,
         request_serializer: UpdateOrganizationServiceRequest::serializer(),
         response_serializer: UpdateOrganizationServiceResponse::serializer(),
         doc: "".to_string(),

@@ -16,28 +16,28 @@ import {
 } from "editor/v1/type_catalog.skir";
 import { InternalError } from "kernel/v1/errors.skir";
 
-struct RealmSearchSelector(811000001) {
+struct RealmSearchSelector(84170001) {
   selector_id: string = 0;
   key: string = 1;
   value: string? = 2;
 }
 
-enum RealmSearchSelectorOperator(811000002) {
+enum RealmSearchSelectorOperator(84170002) {
   and = 1;
   or = 2;
 }
 
-struct RealmSearchSelectorBinaryExpression(811000003) {
+struct RealmSearchSelectorBinaryExpression(84170003) {
   operator: RealmSearchSelectorOperator = 0;
   left: RealmSearchSelectorExpression = 1;
   right: RealmSearchSelectorExpression = 2;
 }
 
-struct RealmSearchSelectorNotExpression(811000004) {
+struct RealmSearchSelectorNotExpression(84170004) {
   expression: RealmSearchSelectorExpression = 0;
 }
 
-enum RealmSearchSelectorExpression(811000005) {
+enum RealmSearchSelectorExpression(84170005) {
   selector: RealmSearchSelector = 1;
   binary: RealmSearchSelectorBinaryExpression = 2;
   not: RealmSearchSelectorNotExpression = 3;
@@ -45,7 +45,7 @@ enum RealmSearchSelectorExpression(811000005) {
 
 /// Preserves normalized text, parsed terms, selector identities, and Boolean selector structure.
 /// Providers interpret the query instead of reconstructing selected filters from display text.
-struct RealmSearchQuery(811000006) {
+struct RealmSearchQuery(84170006) {
   normalized_query: string = 0;
   selectors: [RealmSearchSelector] = 1;
   selector_expression: RealmSearchSelectorExpression? = 2;
@@ -54,7 +54,7 @@ struct RealmSearchQuery(811000006) {
 
 /// Starts or replaces work for one subscription. Operation context gives input searches the
 /// same confirmed saved baseline and local overlay used by action preparation.
-struct RealmPresentationSearchRequest(811000007) {
+struct RealmPresentationSearchRequest(84170007) {
   subscription_id: string = 0;
   generation: CatalogGeneration = 1;
   capability_id: CapabilityId = 2;
@@ -64,7 +64,7 @@ struct RealmPresentationSearchRequest(811000007) {
   operation_context: OperationSearchContext? = 6;
 }
 
-enum RealmPresentationSearchStatus(811000008) {
+enum RealmPresentationSearchStatus(84170008) {
   loading = 1;
   ready = 2;
   search_failed_error = 3;
@@ -73,7 +73,7 @@ enum RealmPresentationSearchStatus(811000008) {
 /// Complete values accumulated for this subscription so far, not an incremental append batch.
 /// loading allows further snapshots; ready marks producer completion; search_failed_error carries
 /// diagnostics.
-struct RealmPresentationSearchSnapshot(811000009) {
+struct RealmPresentationSearchSnapshot(84170009) {
   subscription_id: string = 0;
   status: RealmPresentationSearchStatus = 1;
   values: [DataValue] = 2;
@@ -81,12 +81,12 @@ struct RealmPresentationSearchSnapshot(811000009) {
   diagnostics: [Diagnostic] = 4;
 }
 
-struct RealmPresentationSearchUnavailable(811000010) {
+struct RealmPresentationSearchUnavailable(84170010) {
   subscription_id: string = 0;
   diagnostics: [Diagnostic] = 1;
 }
 
-enum RealmPresentationSearchUpdate(811000011) {
+enum RealmPresentationSearchUpdate(84170011) {
   snapshot: RealmPresentationSearchSnapshot = 1;
   unavailable_error: RealmPresentationSearchUnavailable = 2;
   stale_observation_error: struct {
@@ -98,13 +98,13 @@ enum RealmPresentationSearchUpdate(811000011) {
 
 method WatchRealmPresentationSearch(
   RealmPresentationSearchRequest
-): RealmPresentationSearchUpdate = 920006;
+): RealmPresentationSearchUpdate = 941701;
 
-struct CancelRealmPresentationSearchRequest(811000012) {
+struct CancelRealmPresentationSearchRequest(84170012) {
   subscription_id: string = 0;
 }
 
-enum CancelRealmPresentationSearchResult(811000013) {
+enum CancelRealmPresentationSearchResult(84170013) {
   canceled = 1;
   not_found_error = 2;
   internal_error: InternalError = 3;
@@ -114,4 +114,4 @@ enum CancelRealmPresentationSearchResult(811000013) {
 /// retired.
 method CancelRealmPresentationSearch(
   CancelRealmPresentationSearchRequest
-): CancelRealmPresentationSearchResult = 920007;
+): CancelRealmPresentationSearchResult = 941702;

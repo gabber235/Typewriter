@@ -5873,7 +5873,7 @@ final class QueryPublicationViewResponse_internalErrorWrapper
 final _skir.Method<PublishAuthoringRequest, PublishAuthoringResponse>
 publishAuthoringMethod = _skir.Method(
   "PublishAuthoring",
-  920018,
+  941501,
   PublishAuthoringRequest.serializer,
   PublishAuthoringResponse.serializer,
   "Releases only the issued candidate while its captured saved inputs and engine requirements still\nmatch. Reports release admission and selection: activated identifies the newly selected\npublication, not an acknowledgement from engine hosts; publishing means another release currently\nowns the publication gate; candidate_changed_error requires a fresh review.",
@@ -5883,7 +5883,7 @@ publishAuthoringMethod = _skir.Method(
 final _skir.Method<WatchPublicationRequest, WatchPublicationResponse>
 watchPublicationMethod = _skir.Method(
   "WatchPublication",
-  920019,
+  941502,
   WatchPublicationRequest.serializer,
   WatchPublicationResponse.serializer,
   "Returns the current review view identity; later identities arrive as update hints.",
@@ -5894,7 +5894,7 @@ watchPublicationMethod = _skir.Method(
 final _skir.Method<QueryPublicationViewRequest, QueryPublicationViewResponse>
 queryPublicationViewMethod = _skir.Method(
   "QueryPublicationView",
-  920020,
+  941503,
   QueryPublicationViewRequest.serializer,
   QueryPublicationViewResponse.serializer,
   "Returns one immutable review view, or the current view identity when expected is no longer\ncurrent. Later invalidations require a separate query.",

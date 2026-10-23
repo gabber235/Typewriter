@@ -16,4 +16,4 @@ method GetSentinelCredentials(
     jwt: string;
     seed: string;
   };
-} = 403062;
+} = 910201;

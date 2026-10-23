@@ -2913,7 +2913,7 @@ val WatchOrganizationMembers: build.skir.service.Method<
 > by kotlin.lazy {
     build.skir.service.Method(
         "WatchOrganizationMembers",
-        638484,
+        920301,
         skirout.organization.v1.member.WatchOrganizationMembersRequest.serializer,
         skirout.organization.v1.member.WatchOrganizationMembersResponse.serializer,
         "",
@@ -2926,7 +2926,7 @@ val UpdateOrganizationMemberRoles: build.skir.service.Method<
 > by kotlin.lazy {
     build.skir.service.Method(
         "UpdateOrganizationMemberRoles",
-        813953,
+        920302,
         skirout.organization.v1.member.UpdateOrganizationMemberRolesRequest.serializer,
         skirout.organization.v1.member.UpdateOrganizationMemberRolesResponse.serializer,
         "",
@@ -2939,7 +2939,7 @@ val RemoveOrganizationMember: build.skir.service.Method<
 > by kotlin.lazy {
     build.skir.service.Method(
         "RemoveOrganizationMember",
-        291414,
+        920303,
         skirout.organization.v1.member.RemoveOrganizationMemberRequest.serializer,
         skirout.organization.v1.member.RemoveOrganizationMemberResponse.serializer,
         "",

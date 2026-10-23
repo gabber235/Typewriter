@@ -14,64 +14,64 @@ import {
   ValuePath,
 } from "editor/v1/type_catalog.skir";
 
-struct SetValueAction(810700001) {
+struct SetValueAction(84010001) {
   target: BindingRef = 0;
   value: ExpressionNode = 1;
 }
 
-struct InsertListItemAction(810700002) {
+struct InsertListItemAction(84010002) {
   target: BindingRef = 0;
   after: ItemId? = 1;
   value: ExpressionNode = 2;
 }
 
-struct AppendListItemAction(810700003) {
+struct AppendListItemAction(84010003) {
   target: BindingRef = 0;
   value: ExpressionNode = 1;
 }
 
-struct RemoveListItemAction(810700004) {
+struct RemoveListItemAction(84010004) {
   target: BindingRef = 0;
   item: ItemId = 1;
 }
 
-struct DuplicateListItemAction(810700005) {
+struct DuplicateListItemAction(84010005) {
   target: BindingRef = 0;
   item: ItemId = 1;
 }
 
-struct MoveListItemAction(810700006) {
+struct MoveListItemAction(84010006) {
   target: BindingRef = 0;
   item: ItemId = 1;
   after: ItemId? = 2;
 }
 
-struct InsertMapRowAction(810700007) {
+struct InsertMapRowAction(84010007) {
   target: BindingRef = 0;
   key: ExpressionNode = 1;
   value: ExpressionNode = 2;
 }
 
-struct UpdateMapRowAction(810700008) {
+struct UpdateMapRowAction(84010008) {
   target: BindingRef = 0;
   row: ItemId = 1;
   key: ExpressionNode = 2;
   value: ExpressionNode = 3;
 }
 
-struct RemoveMapRowAction(810700009) {
+struct RemoveMapRowAction(84010009) {
   target: BindingRef = 0;
   row: ItemId = 1;
 }
 
-struct ChooseFormAction(810700010) {
+struct ChooseFormAction(84010010) {
   target: BindingRef = 0;
   type: TypeUse = 1;
 }
 
 /// Mutations of bound editor values. Collection item identities identify occurrences and
 /// anchors; the owning edit scope decides staging and commit behavior.
-enum LocalEditorAction(810700011) {
+enum LocalEditorAction(84010011) {
   set_value: SetValueAction = 1;
   insert_list_item: InsertListItemAction = 2;
   append_list_item: AppendListItemAction = 3;
@@ -84,38 +84,38 @@ enum LocalEditorAction(810700011) {
   choose_form: ChooseFormAction = 10;
 }
 
-struct ReloadRealmAction(810700012) {}
+struct ReloadRealmAction(84010012) {}
 
-struct CommandCapabilityAction(810700013) {
+struct CommandCapabilityAction(84010013) {
   capability_id: CapabilityId = 0;
   payload: ExpressionNode = 1;
 }
 
-enum RealmEditorAction(810700014) {
+enum RealmEditorAction(84010014) {
   reload: ReloadRealmAction = 1;
   command: CommandCapabilityAction = 2;
 }
 
-enum ResourceNavigationMode(810700015) {
+enum ResourceNavigationMode(84010015) {
   open = 1;
   reveal = 2;
   edit = 3;
 }
 
-struct ResourceNavigationAction(810700016) {
+struct ResourceNavigationAction(84010016) {
   resource: ExpressionNode = 0;
   mode: ResourceNavigationMode = 1;
 }
 
 /// Invokes catalog authoring preparation for evaluated resource targets and optional initial input.
 /// Its output is a proposed edit, rather than an immediate saved resource mutation.
-struct AuthoringCapabilityAction(810700017) {
+struct AuthoringCapabilityAction(84010017) {
   capability: CapabilityId = 0;
   targets: ExpressionNode = 1;
   initial_input: ExpressionNode? = 2;
 }
 
-enum EditorAction(810700018) {
+enum EditorAction(84010018) {
   local: LocalEditorAction = 1;
   realm: RealmEditorAction = 2;
   navigate: ResourceNavigationAction = 3;
@@ -125,7 +125,7 @@ enum EditorAction(810700018) {
 
 /// A preset value for one field of the created resource, addressed relative to the created type.
 /// A value that evaluates to missing leaves the field at its creation default.
-struct CreateFieldValue(810700019) {
+struct CreateFieldValue(84010019) {
   path: ValuePath = 0;
   value: ExpressionNode = 1;
 }
@@ -134,7 +134,7 @@ struct CreateFieldValue(810700019) {
 /// link field of an ownership relation the new resource joins, such as the pages of the routed
 /// Book, so an owner type with two owning fields is never ambiguous. Without an owner, the host
 /// chooses one, for example the single instance of a realm section.
-struct CreateResourceAction(810700020) {
+struct CreateResourceAction(84010020) {
   type: TypeDefinitionId = 0;
   owner: BindingRef? = 1;
   fields: [CreateFieldValue] = 2;

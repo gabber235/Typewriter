@@ -1344,7 +1344,7 @@ final _skir.Method<
 >
 watchOrganizationServicesMethod = _skir.Method(
   "WatchOrganizationServices",
-  820326,
+  930401,
   WatchOrganizationServicesRequest.serializer,
   WatchOrganizationServicesResponse.serializer,
   "",
@@ -1356,7 +1356,7 @@ final _skir.Method<
 >
 updateOrganizationServiceMethod = _skir.Method(
   "UpdateOrganizationService",
-  872501,
+  930402,
   UpdateOrganizationServiceRequest.serializer,
   UpdateOrganizationServiceResponse.serializer,
   "",

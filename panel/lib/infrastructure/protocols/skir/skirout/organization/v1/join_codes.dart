@@ -3115,7 +3115,7 @@ final _skir.Method<
 >
 watchOrganizationJoinCodesMethod = _skir.Method(
   "WatchOrganizationJoinCodes",
-  690316,
+  920101,
   WatchOrganizationJoinCodesRequest.serializer,
   WatchOrganizationJoinCodesResponse.serializer,
   "",
@@ -3127,7 +3127,7 @@ final _skir.Method<
 >
 generateOrganizationJoinCodeMethod = _skir.Method(
   "GenerateOrganizationJoinCode",
-  804958,
+  920102,
   GenerateOrganizationJoinCodeRequest.serializer,
   GenerateOrganizationJoinCodeResponse.serializer,
   "",
@@ -3139,7 +3139,7 @@ final _skir.Method<
 >
 revokeOrganizationJoinCodeMethod = _skir.Method(
   "RevokeOrganizationJoinCode",
-  510187,
+  920103,
   RevokeOrganizationJoinCodeRequest.serializer,
   RevokeOrganizationJoinCodeResponse.serializer,
   "",

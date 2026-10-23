@@ -6,7 +6,7 @@ import { InternalError } from "kernel/v1/errors.skir";
 import { RecordId } from "kernel/v1/record_id.skir";
 
 // One organization role. Assignable controls ordinary administrator selection, while deletable controls role removal policy.
-struct OrganizationRole {
+struct OrganizationRole(82060001) {
   role_id: RecordId;
   name: string;
   color: Color;
@@ -28,4 +28,4 @@ method WatchOrganizationRoles(
   add: OrganizationRole;
   update: OrganizationRole;
   remove: RecordId;
-} = 49267;
+} = 920601;

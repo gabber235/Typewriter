@@ -1,10 +1,10 @@
 // Empty typed failure used when an operation cannot expose a recoverable domain cause.
 // It is the protocol marker for internal failure, not a message or diagnostic payload.
-struct InternalError {}
+struct InternalError(80030001) {}
 
 // Reports a record table mismatch at a typed boundary.
 // expected_table names the required table. given_tables names the distinct tables found in the input.
-struct InvalidRecordIdError {
+struct InvalidRecordIdError(80030002) {
   expected_table: string;
   given_tables: [string];
 }

@@ -15,8 +15,8 @@ import "dart:core" as _core;
 
 import "package:skir_client/skir_client.dart" as _skir;
 
-import "../../kernel/v1/resource_id.dart" as _lib_kernel_v1_resource_id;
 import "./type_catalog.dart" as _lib_editor_v1_type_catalog;
+import "../../kernel/v1/resource_id.dart" as _lib_kernel_v1_resource_id;
 
 // -----------------------------------------------------------------------------
 // struct LinkProjection

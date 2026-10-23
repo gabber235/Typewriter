@@ -11,6 +11,7 @@
     "./routes/dart": "./src/routes/dart.ts",
     "./operations/kotlin": "./src/operations/kotlin.ts",
     "./operations/dart": "./src/operations/dart.ts",
-    "./routes/subscriptions": "./src/routes/subscriptions.ts"
+    "./routes/subscriptions": "./src/routes/subscriptions.ts",
+    "./contracts": "./src/contracts/index.ts"
   }
 }

@@ -1166,7 +1166,7 @@ pub fn watch_realm_presentation_search_method() -> &'static crate::skir_client::
         crate::skir_client::Method<RealmPresentationSearchRequest, RealmPresentationSearchUpdate>,
     > = std::sync::LazyLock::new(|| crate::skir_client::Method {
         name: "WatchRealmPresentationSearch".to_string(),
-        number: 920006_i64,
+        number: 941701_i64,
         request_serializer: RealmPresentationSearchRequest::serializer(),
         response_serializer: RealmPresentationSearchUpdate::serializer(),
         doc: "".to_string(),
@@ -1188,7 +1188,7 @@ pub fn cancel_realm_presentation_search_method() -> &'static crate::skir_client:
     > = std::sync::LazyLock::new(|| {
         crate::skir_client::Method {
             name: "CancelRealmPresentationSearch".to_string(),
-            number: 920007_i64,
+            number: 941702_i64,
             request_serializer: CancelRealmPresentationSearchRequest::serializer(),
             response_serializer: CancelRealmPresentationSearchResult::serializer(),
             doc: "Requests cancellation of a source owned search job. not_found_error also covers work already\nretired.".to_string(),

@@ -3417,7 +3417,7 @@ val QueryPublishedContent: build.skir.service.Method<
 > by kotlin.lazy {
     build.skir.service.Method(
         "QueryPublishedContent",
-        920008,
+        941001,
         skirout.editor.v1.compiled_content.QueryPublishedContentRequest.serializer,
         skirout.editor.v1.compiled_content.QueryPublishedContentResponse.serializer,
         "Returns the descriptor of the selected publication, or absent before any publication is selected.",
@@ -3430,7 +3430,7 @@ val QueryCompiledResourceStatus: build.skir.service.Method<
 > by kotlin.lazy {
     build.skir.service.Method(
         "QueryCompiledResourceStatus",
-        920009,
+        941002,
         skirout.editor.v1.compiled_content.QueryCompiledResourceStatusRequest.serializer,
         skirout.editor.v1.compiled_content.QueryCompiledResourceStatusResponse.serializer,
         "",

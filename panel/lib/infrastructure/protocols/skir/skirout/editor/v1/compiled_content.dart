@@ -16,9 +16,9 @@ import "dart:core" as _core;
 import "package:skir_client/skir_client.dart" as _skir;
 
 import "./compilation_root.dart" as _lib_editor_v1_compilation_root;
-import "../../kernel/v1/resource_id.dart" as _lib_kernel_v1_resource_id;
 import "./type_catalog.dart" as _lib_editor_v1_type_catalog;
 import "../../kernel/v1/errors.dart" as _lib_kernel_v1_errors;
+import "../../kernel/v1/resource_id.dart" as _lib_kernel_v1_resource_id;
 
 // -----------------------------------------------------------------------------
 // struct CompiledBlobPointer
@@ -3701,7 +3701,7 @@ final class QueryCompiledResourceStatusResponse_internalErrorWrapper
 final _skir.Method<QueryPublishedContentRequest, QueryPublishedContentResponse>
 queryPublishedContentMethod = _skir.Method(
   "QueryPublishedContent",
-  920008,
+  941001,
   QueryPublishedContentRequest.serializer,
   QueryPublishedContentResponse.serializer,
   "Returns the descriptor of the selected publication, or absent before any publication is selected.",
@@ -3713,7 +3713,7 @@ final _skir.Method<
 >
 queryCompiledResourceStatusMethod = _skir.Method(
   "QueryCompiledResourceStatus",
-  920009,
+  941002,
   QueryCompiledResourceStatusRequest.serializer,
   QueryCompiledResourceStatusResponse.serializer,
   "",

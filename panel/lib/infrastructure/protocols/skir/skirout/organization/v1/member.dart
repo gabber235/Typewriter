@@ -3439,7 +3439,7 @@ final _skir.Method<
 >
 watchOrganizationMembersMethod = _skir.Method(
   "WatchOrganizationMembers",
-  638484,
+  920301,
   WatchOrganizationMembersRequest.serializer,
   WatchOrganizationMembersResponse.serializer,
   "",
@@ -3451,7 +3451,7 @@ final _skir.Method<
 >
 updateOrganizationMemberRolesMethod = _skir.Method(
   "UpdateOrganizationMemberRoles",
-  813953,
+  920302,
   UpdateOrganizationMemberRolesRequest.serializer,
   UpdateOrganizationMemberRolesResponse.serializer,
   "",
@@ -3463,7 +3463,7 @@ final _skir.Method<
 >
 removeOrganizationMemberMethod = _skir.Method(
   "RemoveOrganizationMember",
-  291414,
+  920303,
   RemoveOrganizationMemberRequest.serializer,
   RemoveOrganizationMemberResponse.serializer,
   "",

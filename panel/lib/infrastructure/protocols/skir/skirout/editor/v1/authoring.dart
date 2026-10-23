@@ -19,10 +19,10 @@ import "./authoring_facts.dart" as _lib_editor_v1_authoring_facts;
 import "./catalog.dart" as _lib_editor_v1_catalog;
 import "./checking.dart" as _lib_editor_v1_checking;
 import "./diagnostic.dart" as _lib_editor_v1_diagnostic;
-import "../../kernel/v1/resource_id.dart" as _lib_kernel_v1_resource_id;
 import "./type_catalog.dart" as _lib_editor_v1_type_catalog;
 import "./typed_value.dart" as _lib_editor_v1_typed_value;
 import "../../kernel/v1/errors.dart" as _lib_kernel_v1_errors;
+import "../../kernel/v1/resource_id.dart" as _lib_kernel_v1_resource_id;
 
 // -----------------------------------------------------------------------------
 // struct AuthoringResource
@@ -6852,7 +6852,7 @@ final class PrepareTypeArgumentChangeResponse_internalErrorWrapper
 final _skir.Method<QueryAuthoringStateRequest, QueryAuthoringStateResponse>
 queryAuthoringStateMethod = _skir.Method(
   "QueryAuthoringState",
-  920010,
+  940201,
   QueryAuthoringStateRequest.serializer,
   QueryAuthoringStateResponse.serializer,
   "Returns the retained saved snapshot for one catalog generation.",
@@ -6861,7 +6861,7 @@ queryAuthoringStateMethod = _skir.Method(
 final _skir.Method<SearchAuthoringRequest, SearchAuthoringResponse>
 searchAuthoringMethod = _skir.Method(
   "SearchAuthoring",
-  920011,
+  940202,
   SearchAuthoringRequest.serializer,
   SearchAuthoringResponse.serializer,
   "",
@@ -6874,7 +6874,7 @@ searchAuthoringMethod = _skir.Method(
 final _skir.Method<PreparedEdit, CommitPreparedEditResponse>
 commitPreparedEditMethod = _skir.Method(
   "CommitPreparedEdit",
-  920012,
+  940203,
   PreparedEdit.serializer,
   CommitPreparedEditResponse.serializer,
   "committed confirms installation of saved authoring state. It does not confirm check completion,\ncompilation, publication selection, or engine application. conflict_error requires refreshing\noriginal facts; rejected_error reports invalid intent or missing guards; catalog_changed_error\nrequires a new catalog.",
@@ -6886,7 +6886,7 @@ final _skir.Method<
 >
 previewTypeArgumentChangeMethod = _skir.Method(
   "PreviewTypeArgumentChange",
-  920013,
+  940204,
   PreviewTypeArgumentChangeRequest.serializer,
   PreviewTypeArgumentChangeResponse.serializer,
   "",
@@ -6896,7 +6896,7 @@ previewTypeArgumentChangeMethod = _skir.Method(
 final _skir.Method<TypeArgumentChangePreview, PrepareTypeArgumentChangeResponse>
 prepareTypeArgumentChangeMethod = _skir.Method(
   "PrepareTypeArgumentChange",
-  920014,
+  940205,
   TypeArgumentChangePreview.serializer,
   PrepareTypeArgumentChangeResponse.serializer,
   "Revalidates a preview and returns proposed intent. CommitPreparedEdit performs the separate saved write.",

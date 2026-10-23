@@ -690,7 +690,7 @@ pub fn bind_service_method()
         crate::skir_client::Method<BindServiceRequest, BindServiceResponse>,
     > = std::sync::LazyLock::new(|| crate::skir_client::Method {
         name: "BindService".to_string(),
-        number: 304691_i64,
+        number: 930501_i64,
         request_serializer: BindServiceRequest::serializer(),
         response_serializer: BindServiceResponse::serializer(),
         doc: "".to_string(),
@@ -704,7 +704,7 @@ pub fn unbind_service_method()
         crate::skir_client::Method<UnbindServiceRequest, UnbindServiceResponse>,
     > = std::sync::LazyLock::new(|| crate::skir_client::Method {
         name: "UnbindService".to_string(),
-        number: 950343_i64,
+        number: 930502_i64,
         request_serializer: UnbindServiceRequest::serializer(),
         response_serializer: UnbindServiceResponse::serializer(),
         doc: "".to_string(),

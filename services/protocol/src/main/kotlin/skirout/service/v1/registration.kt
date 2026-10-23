@@ -1129,7 +1129,7 @@ val BindService: build.skir.service.Method<
 > by kotlin.lazy {
     build.skir.service.Method(
         "BindService",
-        304691,
+        930501,
         skirout.service.v1.registration.BindServiceRequest.serializer,
         skirout.service.v1.registration.BindServiceResponse.serializer,
         "",
@@ -1142,7 +1142,7 @@ val UnbindService: build.skir.service.Method<
 > by kotlin.lazy {
     build.skir.service.Method(
         "UnbindService",
-        950343,
+        930502,
         skirout.service.v1.registration.UnbindServiceRequest.serializer,
         skirout.service.v1.registration.UnbindServiceResponse.serializer,
         "",

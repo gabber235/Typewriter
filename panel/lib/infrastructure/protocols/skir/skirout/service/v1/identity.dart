@@ -1681,7 +1681,7 @@ final class IssueServiceIdentityResponse_identityProviderUnavailableErrorWrapper
 final _skir.Method<IssueServiceIdentityRequest, IssueServiceIdentityResponse>
 issueServiceIdentityMethod = _skir.Method(
   "IssueServiceIdentity",
-  672941,
+  930201,
   IssueServiceIdentityRequest.serializer,
   IssueServiceIdentityResponse.serializer,
   "",

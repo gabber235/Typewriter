@@ -1,21 +1,21 @@
 import { InternalError } from "kernel/v1/errors.skir";
 
 // Artifact descriptors refer to immutable blob bytes. The catalog and transfer operations use the digest and size together to verify content.
-struct ArtifactDigest(812100001) {
+struct ArtifactDigest(83010001) {
   algorithm: DigestAlgorithm = 0;
   value: string = 1;
 }
 
-enum DigestAlgorithm(812100002) {
+enum DigestAlgorithm(83010002) {
   sha256 = 1;
 }
 
-struct BlobMetadata(812100003) {
+struct BlobMetadata(83010003) {
   digest: ArtifactDigest = 0;
   size: int64 = 1;
 }
 
-struct BlobChunk(812100004) {
+struct BlobChunk(83010004) {
   offset: int64 = 0;
   bytes: bytes = 1;
   complete: bool = 2;
@@ -23,7 +23,7 @@ struct BlobChunk(812100004) {
 
 // The durable catalog record for one logical artifact revision. Live records reference immutable blob content.
 // Deleted records are tombstones and omit digest and size so consumers cannot download deleted content.
-struct SharedArtifactDescriptor(812100005) {
+struct SharedArtifactDescriptor(83010005) {
   id: string = 0;
   revision: int64 = 1;
   label: string = 2;
@@ -36,7 +36,7 @@ struct SharedArtifactDescriptor(812100005) {
 }
 
 // Provenance identifies how a descriptor was produced. It is descriptive and does not transfer blob ownership.
-enum SharedArtifactProvenance(812100006) {
+enum SharedArtifactProvenance(83010006) {
   local_inbox: struct {
     relative_path: string = 0;
   } = 1;
@@ -50,17 +50,17 @@ enum SharedArtifactProvenance(812100006) {
 }
 
 // Catalog revision orders changes across artifacts. Descriptor revision orders changes to one artifact identity.
-struct SharedArtifactCatalog(812100007) {
+struct SharedArtifactCatalog(83010007) {
   revision: int64 = 0;
   artifacts: [SharedArtifactDescriptor] = 1;
 }
 
-struct ProducerMetadataEntry(812100008) {
+struct ProducerMetadataEntry(83010008) {
   key: string = 0;
   value: string = 1;
 }
 
-struct ProducerMetadata(812100009) {
+struct ProducerMetadata(83010009) {
   entries: [ProducerMetadataEntry] = 0;
 }
 
@@ -73,7 +73,7 @@ method FetchSharedArtifactCatalog(
 ): enum {
   success: SharedArtifactCatalog = 1;
   internal_error: InternalError = 2;
-} = 910001;
+} = 930101;
 
 // Publishes a descriptor for an already uploaded blob, or a tombstone when deleted is true.
 // Live publication requires digest and size. Deletion requires an expected revision.
@@ -96,7 +96,7 @@ method PublishSharedArtifact(
   unchanged: SharedArtifactDescriptor = 2;
   conflict_error: SharedArtifactDescriptor? = 3;
   internal_error: InternalError = 4;
-} = 910002;
+} = 930102;
 
 // Reads a bounded byte range from immutable blob content. The response offset and complete flag provide the continuation contract.
 method ReadArtifactBlob(
@@ -112,7 +112,7 @@ method ReadArtifactBlob(
     reason: string = 0;
   } = 3;
   internal_error: InternalError = 4;
-} = 910003;
+} = 930103;
 
 // Starts or resumes a transfer for the expected digest and size. The returned offset is the next accepted byte for the transfer.
 method BeginArtifactBlobWrite(
@@ -131,7 +131,7 @@ method BeginArtifactBlobWrite(
     reason: string = 0;
   } = 3;
   internal_error: InternalError = 4;
-} = 910004;
+} = 930104;
 
 // Appends a chunk at the requested transfer offset. Accepted returns the next offset; invalid_error and conflict_error reject the write.
 method WriteArtifactBlobChunk(
@@ -152,7 +152,7 @@ method WriteArtifactBlobChunk(
     reason: string = 0;
   } = 4;
   internal_error: InternalError = 5;
-} = 910005;
+} = 930105;
 
 // Finalizes a transfer and verifies the expected digest and size.
 method CompleteArtifactBlobWrite(
@@ -169,7 +169,7 @@ method CompleteArtifactBlobWrite(
     reason: string = 0;
   } = 4;
   internal_error: InternalError = 5;
-} = 910006;
+} = 930106;
 
 method FetchArtifactBlobMetadata(
   struct {
@@ -182,4 +182,4 @@ method FetchArtifactBlobMetadata(
     reason: string = 0;
   } = 3;
   internal_error: InternalError = 4;
-} = 910007;
+} = 930107;

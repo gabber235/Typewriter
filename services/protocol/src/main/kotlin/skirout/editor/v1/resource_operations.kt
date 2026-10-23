@@ -4835,7 +4835,7 @@ val ResolveResourceOperations: build.skir.service.Method<
 > by kotlin.lazy {
     build.skir.service.Method(
         "ResolveResourceOperations",
-        920015,
+        941601,
         skirout.editor.v1.resource_operations.ResolveResourceOperationsRequest.serializer,
         skirout.editor.v1.resource_operations.ResolveResourceOperationsResult.serializer,
         "",
@@ -4848,7 +4848,7 @@ val PrepareAuthoringAction: build.skir.service.Method<
 > by kotlin.lazy {
     build.skir.service.Method(
         "PrepareAuthoringAction",
-        920016,
+        941602,
         skirout.editor.v1.resource_operations.PrepareAuthoringActionRequest.serializer,
         skirout.editor.v1.resource_operations.AuthoringActionResult.serializer,
         "",
@@ -4861,7 +4861,7 @@ val ResolveDropCandidates: build.skir.service.Method<
 > by kotlin.lazy {
     build.skir.service.Method(
         "ResolveDropCandidates",
-        920017,
+        941603,
         skirout.editor.v1.resource_operations.ResolveDropCandidatesRequest.serializer,
         skirout.editor.v1.resource_operations.ResolveDropCandidatesResult.serializer,
         "",

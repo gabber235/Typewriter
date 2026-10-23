@@ -4404,7 +4404,7 @@ final _skir.Method<
 >
 watchOrganizationJoinRequestsMethod = _skir.Method(
   "WatchOrganizationJoinRequests",
-  399821,
+  920201,
   WatchOrganizationJoinRequestsRequest.serializer,
   WatchOrganizationJoinRequestsResponse.serializer,
   "",
@@ -4416,7 +4416,7 @@ final _skir.Method<
 >
 approveOrganizationJoinRequestsMethod = _skir.Method(
   "ApproveOrganizationJoinRequests",
-  167357,
+  920202,
   ApproveOrganizationJoinRequestsRequest.serializer,
   ApproveOrganizationJoinRequestsResponse.serializer,
   "",
@@ -4428,7 +4428,7 @@ final _skir.Method<
 >
 declineOrganizationJoinRequestMethod = _skir.Method(
   "DeclineOrganizationJoinRequest",
-  329306,
+  920203,
   DeclineOrganizationJoinRequestRequest.serializer,
   DeclineOrganizationJoinRequestResponse.serializer,
   "",

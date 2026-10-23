@@ -1,5 +1,6 @@
 import { spawnSync } from "node:child_process";
 
+import { normalizeContracts } from "typewriter-skir-gen/contracts";
 import { writeSubscriptionConfigMaps } from "typewriter-skir-gen/routes/subscriptions";
 
 const transportManifest = "services/protocol/transport-routes.yaml";
@@ -17,7 +18,11 @@ function run(command: string, args: string[], cwd?: string): void {
   if (result.status !== 0) process.exit(result.status ?? 1);
 }
 
-run("bun", ["services/protocol/check-skir-ids.ts", skirSources]);
+const problems = await normalizeContracts(skirSources);
+if (problems.length > 0) {
+  console.error(problems.map(({ path, message }) => `${path}: ${message}`).join("\n"));
+  process.exit(1);
+}
 run("bunx", ["--bun", "--no-install", "skir", "gen"]);
 // The NATS subscription ConfigMaps of component deployments come from the routes `skir gen` just admitted.
 await writeSubscriptionConfigMaps(transportManifest, skirSources);

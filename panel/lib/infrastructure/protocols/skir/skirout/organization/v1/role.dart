@@ -643,7 +643,7 @@ final _skir.Method<
 >
 watchOrganizationRolesMethod = _skir.Method(
   "WatchOrganizationRoles",
-  49267,
+  920601,
   WatchOrganizationRolesRequest.serializer,
   WatchOrganizationRolesResponse.serializer,
   "",
