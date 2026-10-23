@@ -6,6 +6,7 @@ import com.typewritermc.authoring.GeneratedSdkApi
 import com.typewritermc.authoring.name
 import com.typewritermc.expression.Expr
 import com.typewritermc.expression.ExpressionFactories
+import com.typewritermc.expression.operations.PortableOperationCatalog
 import com.typewritermc.types.ResourceIdDefinition
 import com.typewritermc.types.canonicalText
 import com.typewritermc.types.catalog.apply
@@ -112,6 +113,27 @@ internal class PresentationBuildState(
                 "Invalid $purpose: ${inference.failures.joinToString { it.value }}.",
             )
         }
+    }
+
+    /**
+     * Lowers a sort key, whose type must be ordered as value.compare requires (text, a number, boolean, timestamp or
+     * duration); any other key throws. [purpose] names the key in the failure.
+     */
+    fun lowerOrderKey(
+        expression: Expr<*, *>,
+        purpose: String,
+    ): ExpressionNode {
+        val (node, _) = lowerInferred(expression, purpose)
+        val comparison =
+            ExpressionNode.createCall(
+                operation = PortableOperationCatalog.VALUE_COMPARE.id,
+                typeArguments = emptyList(),
+                arguments = listOf(node, node),
+            )
+        require(type.typing.infer(comparison, visibleBindings()) is TemplateInference.Typed) {
+            "Invalid $purpose: the key is not of an ordered type."
+        }
+        return node
     }
 
     /**

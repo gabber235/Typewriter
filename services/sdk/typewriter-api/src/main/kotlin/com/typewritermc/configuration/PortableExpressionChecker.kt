@@ -1,10 +1,6 @@
 package com.typewritermc.configuration
 
-import com.typewritermc.authoring.arguments
-import com.typewritermc.authoring.definition
 import com.typewritermc.authoring.name
-import com.typewritermc.authoring.type
-import com.typewritermc.authoring.use
 import com.typewritermc.expression.CanonicalReadModels
 import com.typewritermc.expression.PortableExpressionLimits
 import com.typewritermc.expression.children
@@ -32,7 +28,6 @@ import com.typewritermc.types.catalog.resolve
 import com.typewritermc.types.floatScalar
 import com.typewritermc.types.integerScalar
 import com.typewritermc.types.isValid
-import com.typewritermc.types.namedUse
 import com.typewritermc.types.nullable
 import com.typewritermc.types.portableOrNull
 import com.typewritermc.types.unknownVariant
@@ -46,18 +41,15 @@ import skirout.editor.v1.expression.ExpressionNode
 import skirout.editor.v1.expression.ExpressionType
 import skirout.editor.v1.expression.ExpressionValueType
 import skirout.editor.v1.expression.FailureId
-import skirout.editor.v1.type_catalog.ArgumentSelection
 import skirout.editor.v1.type_catalog.CollectionKind
 import skirout.editor.v1.type_catalog.DataValue
 import skirout.editor.v1.type_catalog.ExpressionBindingId
 import skirout.editor.v1.type_catalog.FloatWidth
 import skirout.editor.v1.type_catalog.IntegerWidth
-import skirout.editor.v1.type_catalog.PartialSchema
 import skirout.editor.v1.type_catalog.PathSegment
 import skirout.editor.v1.type_catalog.ResolvedRepresentation
 import skirout.editor.v1.type_catalog.ScalarKind
 import skirout.editor.v1.type_catalog.TypeDefinitionId
-import skirout.editor.v1.type_catalog.TypeSelection
 import skirout.editor.v1.type_catalog.TypeTemplate
 import skirout.editor.v1.type_catalog.TypeUse
 import skirout.editor.v1.type_catalog.ValuePath
@@ -75,12 +67,6 @@ sealed interface ExpressionInference {
     ) : ExpressionInference
 }
 
-/** A checked expression retains the shared syntax and its declared result contract. */
-data class CheckedExpression(
-    val body: ExpressionNode,
-    val result: ExpressionType,
-)
-
 /**
  * Checks the closed shared expression language with lexical frames scoped to one invocation.
  *
@@ -90,26 +76,9 @@ data class CheckedExpression(
 class PortableExpressionChecker(
     resolveType: (TypeUse) -> Resolution<CheckedType>,
     private val owner: TypeDefinitionId? = null,
-    private val resolvePartial: ((TypeSelection) -> Resolution<PartialSchema>)? = null,
 ) {
     private val resolveType: (TypeUse) -> Resolution<CheckedType> = { use ->
         if (CanonicalReadModels.supports(use)) CanonicalReadModels.catalog.resolve(use) else resolveType(use)
-    }
-
-    /** Checks [body] against [expectedOutput]; failures become diagnostics of [affected]. */
-    fun checkExpression(
-        body: ExpressionNode,
-        bindings: Map<ExpressionBindingId, ExpressionType>,
-        expectedOutput: ExpressionType,
-        affected: TypeDefinitionId,
-        partialBindings: Map<ExpressionBindingId, TypeSelection> = emptyMap(),
-    ): Resolution<CheckedExpression> {
-        val failures = checkExpressionCodes(body, bindings, expectedOutput, partialBindings)
-        return if (failures.isEmpty()) {
-            Resolution.Ready(CheckedExpression(body, expectedOutput))
-        } else {
-            Resolution.Invalid(failures.map { DeclarationDiagnostic.of(affected, it.value) })
-        }
     }
 
     /** The first failure of checking [body] against [expectedOutput], or nothing when it is well typed. */
@@ -117,15 +86,13 @@ class PortableExpressionChecker(
         body: ExpressionNode,
         bindings: Map<ExpressionBindingId, ExpressionType>,
         expectedOutput: ExpressionType,
-        partialBindings: Map<ExpressionBindingId, TypeSelection> = emptyMap(),
-        onInferred: ((ExpressionType) -> Unit)? = null,
-    ): List<FailureId> = Invocation(bindings, partialBindings).check(body, expectedOutput, onInferred)
+    ): List<FailureId> = Invocation(bindings).check(body, expectedOutput)
 
     /** The result type of [body] over [bindings], for a result of any type such as a sort key or a repeated source. */
     fun inferExpression(
         body: ExpressionNode,
         bindings: Map<ExpressionBindingId, ExpressionType>,
-    ): ExpressionInference = Invocation(bindings, emptyMap()).inferOnly(body)
+    ): ExpressionInference = Invocation(bindings).inferOnly(body)
 
     /** Checks only the syntax of [body]: bindings, local addresses, paths, operations, arities and lambda placement. */
     fun checkExpressionStructure(
@@ -230,9 +197,7 @@ class PortableExpressionChecker(
 
     private inner class Invocation(
         bindings: Map<ExpressionBindingId, ExpressionType>,
-        partialBindings: Map<ExpressionBindingId, TypeSelection>,
     ) {
-        private val partialBindings = partialBindings.toMap()
         private val bindings = bindings.toMap()
 
         /** Numeric literal types by identity; they adopt the width of a non literal operand of their family. */
@@ -240,7 +205,7 @@ class PortableExpressionChecker(
 
         fun inferOnly(body: ExpressionNode): ExpressionInference =
             try {
-                validateStructure(body, bindings.keys + partialBindings.keys)
+                validateStructure(body, bindings.keys)
                 ExpressionInference.Typed(infer(body))
             } catch (failure: ExpressionCheckFailure) {
                 ExpressionInference.Failed(listOf(failure.failure))
@@ -249,13 +214,11 @@ class PortableExpressionChecker(
         fun check(
             body: ExpressionNode,
             expected: ExpressionType,
-            onInferred: ((ExpressionType) -> Unit)? = null,
         ): List<FailureId> =
             try {
-                validateStructure(body, bindings.keys + partialBindings.keys)
+                validateStructure(body, bindings.keys)
                 validateType(expected)
                 val result = contextualEmpty(body, expected) ?: infer(body)
-                onInferred?.invoke(result)
                 demand(compatible(result, expected), CheckFailure.IncompatibleExpressionResultType)
                 demand(!result.mayBeMissing || expected.mayBeMissing, CheckFailure.ExpressionResultMayBeMissing)
                 emptyList()
@@ -1252,33 +1215,9 @@ class PortableExpressionChecker(
             id: String,
             path: ValuePath,
         ): ExpressionType {
-            val key = ExpressionBindingId(value = id)
-            val selection = partialBindings[key]
-            if (selection == null) {
-                val input = bindings[key] ?: fail(CheckFailure.UnknownExpressionBinding)
-                validateType(input)
-                return project(input, path)
-            }
-            val missing = bindings[key]?.mayBeMissing ?: true
-            if (selection is TypeSelection.CompleteWrapper) {
-                ready(selection.use.use)
-                return project(nominalExpressionType(selection.use.use, missing), path)
-            }
-            selection as TypeSelection.PendingWrapper
-            val complete = selection.arguments.map { (it as? ArgumentSelection.ChosenWrapper)?.type }
-            if (complete.all { it != null }) {
-                val use = selection.definition.namedUse(complete.filterNotNull())
-                ready(use.use)
-                return project(nominalExpressionType(use.use, missing), path)
-            }
-            val field = path.segments.firstOrNull() as? PathSegment.FieldWrapper ?: fail(CheckFailure.InvalidExpressionPath)
-            val schema =
-                when (val resolved = resolvePartial?.invoke(selection)) {
-                    is Resolution.Ready -> resolved.value
-                    else -> fail(CheckFailure.InvalidExpressionPath)
-                }
-            val known = schema.knownFields.singleOrNull { it.key == field.name } ?: fail(CheckFailure.InvalidExpressionPath)
-            return project(nominalExpressionType(known.type, missing), ValuePath(segments = path.segments.drop(1)))
+            val input = bindings[ExpressionBindingId(value = id)] ?: fail(CheckFailure.UnknownExpressionBinding)
+            validateType(input)
+            return project(input, path)
         }
 
         private fun requireKind(

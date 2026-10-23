@@ -25,12 +25,6 @@ enum class TypeBound {
     ORDERED,
 }
 
-/** A host capability a kernel receives besides its arguments. */
-enum class OperationCapability { METER, TYPES, RESOURCES }
-
-/** How a list, set or map result names its items. */
-enum class ItemIdentities { SOURCE, POSITIONAL, NESTED, GROUPED, PREFIXED }
-
 /**
  * How the call rule passes one argument. [VALUE] arguments must be free of unfilled entries, or the call is missing at
  * their locations; [PARTIAL] and [LOCATED] arguments may contain them and [LOCATED] ones also carry their location;
@@ -167,8 +161,6 @@ data class PortableOperation(
     val parameters: List<OperationParameter>,
     val result: Signature,
     val failures: List<FailureId>,
-    val uses: Set<OperationCapability>,
-    val itemIds: ItemIdentities?,
 ) {
     /** The type parameters calls name as type arguments, in order. */
     val explicitTypeParameters: List<OperationTypeParameter> get() = typeParameters.filter { it.explicit }

@@ -7,8 +7,8 @@ import com.typewritermc.expression.label
 import com.typewritermc.expression.literal
 import com.typewritermc.expression.name
 import com.typewritermc.expression.orElse
-import com.typewritermc.expression.orIfBlank
 import com.typewritermc.expression.shortcuts.neq
+import com.typewritermc.expression.shortcuts.orIfBlank
 import com.typewritermc.expression.shortcuts.trim
 import com.typewritermc.library.fields
 import com.typewritermc.library.pageLocation

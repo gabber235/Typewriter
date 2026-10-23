@@ -50,7 +50,7 @@ val ExpressionTypeSafetyTest by testSuite {
             )
         val projected =
             with(FixtureReads) {
-                DefaultExpressionEvaluator(ExpressionValueReader { error("No authored read expected") }).evaluate(
+                DefaultExpressionEvaluator(ExpressionValueReader { error("No authored read expected") }, testPortableTypes()).evaluate(
                     ExpressionNode.createCall(
                         operation = PortableOperationCatalog.LINK_TARGET.id,
                         typeArguments = emptyList(),

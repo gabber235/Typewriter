@@ -3,6 +3,7 @@ package com.typewritermc.expression.shortcuts
 import com.typewritermc.expression.Expr
 import com.typewritermc.expression.MissingPolicy
 import com.typewritermc.expression.and
+import com.typewritermc.expression.compare
 import com.typewritermc.expression.contains
 import com.typewritermc.expression.eq
 import com.typewritermc.expression.listExpr
@@ -106,9 +107,12 @@ fun <N : Number, M : MissingPolicy> Expr<N, M>.inRange(
     maximum: N,
 ): Expr<Boolean, M> = inRange(numericLiteral(minimum).lift(), numericLiteral(maximum).lift())
 
-/** Whether this number is a whole multiple of [divisor]; fails with division_by_zero when [divisor] is zero. */
+/**
+ * Whether this number is a whole multiple of [divisor]; fails with division_by_zero when [divisor] is zero. The
+ * remainder compares to zero by value, so a negative zero remainder (-4.0 % 2.0) counts.
+ */
 fun <N : Number, M : MissingPolicy> Expr<N, M>.multipleOf(divisor: Expr<N, M>): Expr<Boolean, M> =
-    shared(divisor) { by -> this % by eq by - by }
+    shared(divisor) { by -> (this % by).compare(by - by) eq literal(0).lift() }
 
 /** Whether this number is a whole multiple of the nonzero [divisor]. */
 @JvmName("multipleOfRaw")
@@ -120,7 +124,7 @@ fun <N : Number, M : MissingPolicy> Expr<N, M>.multipleOf(divisor: N): Expr<Bool
             else -> divisor.toDouble() != 0.0
         }
     require(nonzero) { "A multiple needs a nonzero divisor." }
-    return this % divisor eq numericLiteral(zeroLike(divisor)).lift()
+    return (this % divisor).compare(numericLiteral(zeroLike(divisor)).lift()) eq literal(0).lift()
 }
 
 /** Zero in the Kotlin number type of [sample], so that the literal has the sample's numeric family. */

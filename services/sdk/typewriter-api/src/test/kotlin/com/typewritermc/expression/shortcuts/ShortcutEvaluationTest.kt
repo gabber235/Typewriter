@@ -2,6 +2,7 @@ package com.typewritermc.expression.shortcuts
 
 import com.typewritermc.authoring.Availability
 import com.typewritermc.expression.eq
+import com.typewritermc.expression.length
 import com.typewritermc.expression.literal
 import com.typewritermc.expression.operations.KernelFailure
 import com.typewritermc.expression.plus
@@ -15,6 +16,7 @@ import com.typewritermc.types.integer
 import com.typewritermc.types.named
 import com.typewritermc.types.timestamp
 import de.infix.testBalloon.framework.core.testSuite
+import io.kotest.assertions.throwables.shouldThrow
 import io.kotest.matchers.shouldBe
 import io.kotest.matchers.types.shouldBeInstanceOf
 import skirout.editor.v1.type_catalog.DataValue
@@ -136,6 +138,18 @@ val ShortcutEvaluationTest by testSuite {
         evaluate(subject<List<Long>>().firstOrNull(), list()) shouldBe Availability.Available(DataValue.NULL)
     }
 
+    test("extreme shortcuts pick the first smallest or largest key and fail or are null when empty") {
+        val values = list(text("bb"), text("a"), text("cc"), text("d"), ids = listOf("p", "q", "r", "s"))
+        evaluate(subject<List<String>>().minBy { length }, values) shouldBe available("a")
+        evaluate(subject<List<String>>().maxBy { length }, values) shouldBe available("bb")
+        evaluate(subject<List<String>>().minOf { length }, values) shouldBe available(1L)
+        evaluate(subject<List<String>>().maxOf { length }, values) shouldBe available(2L)
+        evaluate(subject<List<String>>().minByOrNull { length }, list()) shouldBe Availability.Available(DataValue.NULL)
+        evaluate(subject<List<String>>().maxByOrNull { length }, values) shouldBe available("bb")
+        val empty = evaluate(subject<List<String>>().minBy { length }, list())
+        (empty as Availability.Failed).diagnostic.failure shouldBe KernelFailure.CollectionKeyAbsent
+    }
+
     test("folding shortcuts reduce, sum and join") {
         evaluate(subject<List<Long>>().reduce { total, item -> total + item }, numbers(1, 2, 3)) shouldBe available(6L)
         evaluate(subject<List<Long>>().reduceOrNull { total, item -> total + item }, list()) shouldBe Availability.Available(DataValue.NULL)
@@ -145,7 +159,7 @@ val ShortcutEvaluationTest by testSuite {
         evaluate(subject<List<String>>().flatMap { split(",") }.joinToString("|"), texts("a,b", "c")) shouldBe available("a|b|c")
     }
 
-    test("duration formatting matches the clock text of the former duration format") {
+    test("duration formatting writes minutes, seconds and fraction digits as clock text") {
         val duration = subject<Duration>()
         evaluate(duration.formatDuration(), DataValue.duration(187_250.milliseconds)) shouldBe available("3:07.250")
         evaluate(duration.formatDuration(fractionalSecondDigits = 0), DataValue.duration(187_250.milliseconds)) shouldBe available("3:07")
@@ -200,6 +214,12 @@ val ShortcutEvaluationTest by testSuite {
         evaluate(subject<String>().escapeRegex(), text("a.b*c")) shouldBe available("a\\.b\\*c")
     }
 
+    test("raw regex shortcut patterns are validated alone when the expression is built") {
+        shouldThrow<IllegalArgumentException> { subject<String>().matches("a)|(b") }
+        shouldThrow<IllegalArgumentException> { subject<String>().matches("(?=a)") }
+        shouldThrow<IllegalArgumentException> { subject<String>().containsMatchIn("(") }
+    }
+
     test("rule shortcuts bound, divide and choose among allowed values") {
         evaluate(subject<Int>().positive(), number(0)) shouldBe available(false)
         evaluate(subject<Int>().nonNegative(), number(0)) shouldBe available(true)
@@ -207,6 +227,9 @@ val ShortcutEvaluationTest by testSuite {
         evaluate(subject<Int>().inRange(1, 3), number(4)) shouldBe available(false)
         evaluate(subject<Int>().multipleOf(5), number(15)) shouldBe available(true)
         evaluate(subject<BigDecimal>().multipleOf(BigDecimal("0.25")), DataValue.DecimalWrapper("1.5")) shouldBe available(true)
+        evaluate(subject<Double>().multipleOf(2.0), DataValue.FloatWrapper(-4.0)) shouldBe available(true)
+        evaluate(subject<Double>().multipleOf(literal(2.0).lift()), DataValue.FloatWrapper(-4.0)) shouldBe available(true)
+        evaluate(subject<Double>().multipleOf(2.0), DataValue.FloatWrapper(-3.0)) shouldBe available(false)
         evaluate(subject<BigDecimal>().maximumScale(2), DataValue.DecimalWrapper("1.250")) shouldBe available(true)
         evaluate(subject<String>().oneOf(literal("a"), literal("b")), text("c")) shouldBe available(false)
     }

@@ -8,17 +8,18 @@ import type {
   ResolvedOperations,
   ResolvedParameter,
 } from "../resolve.js";
-import type { Signature } from "../signature.js";
+import { concreteItem, signatureChildren, type Signature } from "../signature.js";
 import { emitKotlinUnicodeTables, type UnicodeTables } from "../unicode.js";
 import {
   boundOf,
-  concreteItem,
   constantName,
+  frameworkRecord,
   namedKind,
   operationGroups,
   renderDeclarations,
-  skirRecord,
   unwrapped,
+  valueVariable,
+  wrapWords,
 } from "./shared.js";
 
 const OPERATIONS_PACKAGE = "com.typewritermc.expression.operations";
@@ -57,16 +58,16 @@ export function emitKotlinOperations(
   symbols: CodeGenerator.SymbolProvider,
   input: Pick<CodeGenerator.Input<unknown>, "modules">,
 ): CodeGenerator.OutputFile[] {
-  const imported = (module: string, name: string) => importedKotlinSymbol(symbols.record(skirRecord(input, module, name)));
+  const imported = (reference: string) => importedKotlinSymbol(symbols.record(frameworkRecord(input, reference)));
   const records = {
-    dataValue: imported("editor/v1/type_catalog.skir", "DataValue"),
-    listItem: imported("editor/v1/type_catalog.skir", "ListItem"),
-    mapRow: imported("editor/v1/type_catalog.skir", "MapRow"),
-    linkValue: imported("editor/v1/type_catalog.skir", "LinkValue"),
-    resourceId: imported("editor/v1/type_catalog.skir", "ResourceId"),
-    typeUse: imported("editor/v1/type_catalog.skir", "TypeUse"),
-    operationId: imported("editor/v1/expression.skir", "OperationId"),
-    failureId: imported("editor/v1/expression.skir", "FailureId"),
+    dataValue: imported("editor/v1/type_catalog.skir:DataValue"),
+    listItem: imported("editor/v1/type_catalog.skir:ListItem"),
+    mapRow: imported("editor/v1/type_catalog.skir:MapRow"),
+    linkValue: imported("editor/v1/type_catalog.skir:LinkValue"),
+    resourceId: imported("editor/v1/type_catalog.skir:ResourceId"),
+    typeUse: imported("editor/v1/type_catalog.skir:TypeUse"),
+    operationId: imported("editor/v1/expression.skir:OperationId"),
+    failureId: imported("editor/v1/expression.skir:FailureId"),
   };
   const skir: Skir = {
     dataValue: records.dataValue.name,
@@ -115,20 +116,10 @@ function file(path: string, packageName: string, body: Body): CodeGenerator.Outp
   };
 }
 
+/** A KDoc comment of `text`; a `*` `/` pair inside it is spelled as an entity so it cannot close the comment early. */
 function kdoc(text: string): Lines {
-  const words = text.replace(/\s+/gu, " ").trim().split(" ");
-  const out: string[] = [];
-  let line = "";
-  for (const word of words) {
-    if (line.length > 0 && line.length + word.length + 1 > 110) {
-      out.push(line);
-      line = word;
-    } else {
-      line = line.length === 0 ? word : `${line} ${word}`;
-    }
-  }
-  out.push(line);
-  return out.length === 1 ? [`/** ${out[0]!.replaceAll("*/", "*&#47;")} */`] : ["/**", ...out.map((part) => ` * ${part}`), " */"];
+  const lines = wrapWords(text.replaceAll("*/", "*&#47;"), 110);
+  return lines.length === 1 ? [`/** ${lines[0]} */`] : ["/**", ...lines.map((line) => ` * ${line}`), " */"];
 }
 
 function escapeKeyword(name: string): string {
@@ -165,8 +156,6 @@ function catalogFile(catalog: ResolvedOperations, skir: Skir): Body {
           ]),
           `result = ${signature(operation.result, catalog, skir, imports)},`,
           `failures = listOf(${operation.failures.map((failure) => `KernelFailure.${upperCamel(failure)}`).join(", ")}),`,
-          `uses = setOf(${operation.uses.map((use) => `OperationCapability.${use.toUpperCase()}`).join(", ")}),`,
-          `itemIds = ${operation.itemIds === undefined ? "null" : `ItemIdentities.${operation.itemIds.toUpperCase()}`},`,
         ]),
         ")",
       ],
@@ -401,7 +390,7 @@ function kernelType(type: Signature, operation: ResolvedOperation, catalog: Reso
       return bound === "numeric" ? "PortableNumber" : bound === "integer" ? "java.math.BigInteger" : skir.dataValue;
     }
     case "nullable":
-      return type.value.kind === "variable" && boundOf(operation, type.value.name) !== "numeric" && boundOf(operation, type.value.name) !== "integer"
+      return type.value.kind === "variable" && valueVariable(operation, type.value.name)
         ? skir.dataValue
         : `${nested(type.value)}?`;
     case "list":
@@ -440,7 +429,7 @@ function decode(type: Signature, value: string, catalog: ResolvedOperations, ope
   const nested = (inner: Signature, expression: string) => decode(inner, expression, catalog, operation);
   switch (type.kind) {
     case "scalar":
-      return `${value}.as${upperCamel(type.scalar === "int32" ? "int32" : type.scalar)}()`;
+      return `${value}.as${upperCamel(type.scalar)}()`;
     case "named":
       return namedKind(catalog, type.name).kind === "read_model" ? value : `${value}.as${upperCamel(type.name)}()`;
     case "variable": {
@@ -448,7 +437,7 @@ function decode(type: Signature, value: string, catalog: ResolvedOperations, ope
       return bound === "numeric" ? `${value}.asNumber()` : bound === "integer" ? `${value}.asInteger()` : value;
     }
     case "nullable":
-      return type.value.kind === "variable" && kernelVariableIsValue(type.value.name, operation)
+      return type.value.kind === "variable" && valueVariable(operation, type.value.name)
         ? value
         : `${value}.asNullable { ${nested(type.value, "it")} }`;
     case "list":
@@ -473,17 +462,12 @@ function decode(type: Signature, value: string, catalog: ResolvedOperations, ope
   }
 }
 
-function kernelVariableIsValue(name: string, operation?: ResolvedOperation): boolean {
-  const bound = operation ? boundOf(operation, name) : "any";
-  return bound !== "numeric" && bound !== "integer";
-}
-
 /** Kotlin that encodes the kernel value `value` of `type` as a DataValue. */
 function encode(type: Signature, value: string, catalog: ResolvedOperations, operation?: ResolvedOperation): string {
   const nested = (inner: Signature, expression: string) => encode(inner, expression, catalog, operation);
   switch (type.kind) {
     case "scalar":
-      return `${lowerCamel(type.scalar)}Value(${value})`.replace("resource_idValue", "resourceIdValue");
+      return `${lowerCamel(type.scalar)}Value(${value})`;
     case "named":
       return namedKind(catalog, type.name).kind === "read_model" ? value : `${value}.toDataValue()`;
     case "variable": {
@@ -491,7 +475,7 @@ function encode(type: Signature, value: string, catalog: ResolvedOperations, ope
       return bound === "numeric" ? `numberValue(${value})` : bound === "integer" ? `integerValue(${value})` : value;
     }
     case "nullable":
-      return type.value.kind === "variable" && kernelVariableIsValue(type.value.name, operation)
+      return type.value.kind === "variable" && valueVariable(operation, type.value.name)
         ? value
         : `nullableValue(${value}) { ${nested(type.value, "it")} }`;
     case "list":
@@ -697,33 +681,13 @@ function dslFunctions(operation: ResolvedOperation, catalog: ResolvedOperations,
 
 function collectDslImports(type: Signature, catalog: ResolvedOperations, skir: Skir, imports: Set<string>): void {
   const visit = (value: Signature): void => {
-    switch (value.kind) {
-      case "named": {
-        const named = namedKind(catalog, value.name);
-        if (named.kind === "read_model") {
-          importedKotlinSymbol(skir.symbols.record(named.location)).imports.forEach((line) => imports.add(line));
-        }
-        return;
+    if (value.kind === "named") {
+      const named = namedKind(catalog, value.name);
+      if (named.kind === "read_model") {
+        importedKotlinSymbol(skir.symbols.record(named.location)).imports.forEach((line) => imports.add(line));
       }
-      case "scalar":
-      case "variable":
-        return;
-      case "map":
-      case "entry":
-        visit(value.key);
-        return visit(value.value);
-      case "each":
-      case "apply":
-        visit(value.input);
-        return visit(value.output);
-      case "step":
-        visit(value.accumulator);
-        return visit(value.item);
-      case "field_type":
-        return visit(value.record);
-      default:
-        return visit(value.value);
     }
+    signatureChildren(value).forEach(visit);
   };
   visit(type);
 }
@@ -782,7 +746,7 @@ function dslVariants(operation: ResolvedOperation): DslVariant[] {
   const linked = new Set<string>();
   const findLinks = (type: Signature): void => {
     if (type.kind === "link" && type.value.kind === "variable") linked.add(type.value.name);
-    if ("value" in type && typeof type.value === "object") findLinks(type.value);
+    signatureChildren(type).forEach(findLinks);
   };
   operation.parameters.forEach((parameter) => findLinks(parameter.type));
   findLinks(operation.result);
@@ -886,7 +850,7 @@ function dslFunction(
   const lambdas = operation.parameters.some((parameter) => ["each", "step", "comparator", "apply"].includes(parameter.kind));
   const resultPolicy = operation.result.kind === "maybe" || lambdas ? "MayBeMissing" : "M";
   const receiver = dsl.receiver ? operation.parameters[0]! : undefined;
-  const itemType = receiver ? itemOf(unwrapped(receiver.type), variant) : undefined;
+  const itemType = receiver ? itemOf(unwrapped(receiver.type)) : undefined;
 
   const declared: string[] = [];
   const callArguments: string[] = [];
@@ -963,11 +927,8 @@ function dslFunction(
 }
 
 /** The item type the each lambdas of a receiver of `type` see. */
-function itemOf(type: Signature, variant: DslVariant): Signature | undefined {
-  if (type.kind === "items" || type.kind === "list" || type.kind === "set") {
-    if (variant.receiver && type.value.kind === "entry") return type.value;
-    return type.value;
-  }
+function itemOf(type: Signature): Signature | undefined {
+  if (type.kind === "items" || type.kind === "list" || type.kind === "set") return type.value;
   if (type.kind === "map") return { kind: "entry", key: type.key, value: type.value };
   return undefined;
 }

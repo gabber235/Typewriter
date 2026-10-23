@@ -16,6 +16,7 @@ import java.math.MathContext
 import java.math.RoundingMode
 import java.time.ZoneOffset
 import java.time.format.DateTimeFormatter
+import kotlin.math.abs
 
 /** Realm's kernel of the operations over values of any type. */
 internal object PortableValueKernel : ValueKernel {
@@ -65,7 +66,8 @@ internal object PortableValueKernel : ValueKernel {
         types: PortableTypes,
     ): Boolean = types.isInstance(value, xType)
 
-    override fun isNull(value: DataValue): Boolean = value == DataValue.NULL
+    /** Looks through named wrappers, so a named value whose payload is null is null. */
+    override fun isNull(value: DataValue): Boolean = value.unwrapNamed() == DataValue.NULL
 
     override fun let(
         value: DataValue,
@@ -210,7 +212,8 @@ private fun canonicalJson(value: DataValue): String {
 
 /**
  * ECMAScript Number::toString: the shortest digits that round trip (the JDK's [Double.toString] digits), in plain
- * notation for magnitudes from 1e-7 up to 1e21 and exponent notation such as `1.5e+21` otherwise. Zero prints `0`.
+ * notation for magnitudes from 1e-6 (included) up to 1e21 (excluded) and exponent notation such as `1e-7` or `1.5e+21`
+ * otherwise. Zero prints `0`.
  */
 internal fun ecmaScriptNumber(value: Double): String {
     if (value == 0.0) return "0"
@@ -236,7 +239,7 @@ internal fun ecmaScriptNumber(value: Double): String {
             val power = exponent - 1
             val sign = if (power < 0) "-" else "+"
             val mantissa = if (count == 1) digits else digits.substring(0, 1) + "." + digits.substring(1)
-            "${mantissa}e$sign${kotlin.math.abs(power)}"
+            "${mantissa}e$sign${abs(power)}"
         }
     }
 }

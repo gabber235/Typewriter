@@ -9,8 +9,8 @@ import com.typewritermc.expression.label
 import com.typewritermc.expression.literal
 import com.typewritermc.expression.map
 import com.typewritermc.expression.orElse
-import com.typewritermc.expression.orIfBlank
 import com.typewritermc.expression.shortcuts.gt
+import com.typewritermc.expression.shortcuts.orIfBlank
 import com.typewritermc.expression.shortcuts.take
 import com.typewritermc.expression.shortcuts.trim
 import com.typewritermc.expression.size

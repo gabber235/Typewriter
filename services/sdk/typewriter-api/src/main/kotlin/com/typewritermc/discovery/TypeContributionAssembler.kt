@@ -27,6 +27,7 @@ import com.typewritermc.presentation.CheckedPresentationTemplate
 import com.typewritermc.presentation.NestedPresentationSlot
 import com.typewritermc.presentation.PresentationBuildBinding
 import com.typewritermc.presentation.PresentationNestedTemplate
+import com.typewritermc.presentation.PresentationTyping
 import com.typewritermc.presentation.inferInheritableNodes
 import com.typewritermc.presentation.selectMostSpecificDescriptors
 import com.typewritermc.presentation.validateInheritableNodes
@@ -224,9 +225,10 @@ fun CatalogContributions.assemble(context: CatalogAssemblyContext): CatalogAssem
     val configurationFailures = collectionResults.filterIsInstance<ConfigurationCollectionResult.Failed>()
     val ruleDiagnostics = configurationRuleDiagnostics(collectedCandidates, definitionIndex, structural)
     val opaqueParameters = OpaqueParameters(definitionIndex.values)
-    // Presentation expressions of generic materials check against opaque stand ins of their free parameters.
+    // Presentation expressions and resource displays of generic types check against opaque stand ins of free parameters.
     val presentationCatalog =
         DefaultCheckedCatalog(context.generation, definitions + opaqueParameters.definitions, quarantine = reservedDiagnostics)
+    val presentationTyping = PresentationTyping(presentationCatalog::resolve, opaqueParameters)
     val materialCollection =
         collectPresentationMaterials(
             presentations,
@@ -234,7 +236,7 @@ fun CatalogContributions.assemble(context: CatalogAssemblyContext): CatalogAssem
             nativeBindings,
             definitionIndex,
             structural,
-            com.typewritermc.presentation.PresentationTyping(presentationCatalog::resolve, opaqueParameters),
+            presentationTyping,
             resourceTypes,
             publishedRelations.ownershipEndpoints(),
         )
@@ -270,7 +272,8 @@ fun CatalogContributions.assemble(context: CatalogAssemblyContext): CatalogAssem
             )
         }
     val conflictingKeys = searchKeyConflicts.values.flatten().toSet()
-    val displayCollection = collectResourceDisplays(displays, definitionIndex, searchKeys.keys.sortedBy { it.canonicalText }, checked)
+    val displayCollection =
+        collectResourceDisplays(displays, definitionIndex, searchKeys.keys.sortedBy { it.canonicalText }, checked, presentationTyping)
     val placementDiagnostics = mutableListOf<DeclarationDiagnostic>()
     val placementFields = linkedMapOf<TypeDefinitionId, ValuePath>()
     val published =
@@ -474,7 +477,7 @@ private fun collectPresentationMaterials(
     nativeBindings: List<OwnedNativeBinding>,
     definitions: Map<TypeDefinitionId, TypeDefinition>,
     catalog: CheckedCatalog,
-    typing: com.typewritermc.presentation.PresentationTyping,
+    typing: PresentationTyping,
     resourceTypes: Set<TypeDefinitionId>,
     ownershipEndpoints: Set<EndpointId>,
 ): PresentationMaterialCollection {
@@ -1153,7 +1156,7 @@ private fun TypeTemplate.representation(
 private fun TypeTemplate.presentationTemplate(
     definitions: Map<TypeDefinitionId, TypeDefinition>,
     catalog: CheckedCatalog,
-    typing: com.typewritermc.presentation.PresentationTyping,
+    typing: PresentationTyping,
 ): CheckedPresentationTemplate =
     CheckedPresentationTemplate(
         type = this,

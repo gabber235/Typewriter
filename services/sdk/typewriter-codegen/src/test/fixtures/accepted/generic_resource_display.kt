@@ -5,7 +5,7 @@ package fixture
 import com.typewritermc.types.type
 import skirout.editor.v1.type_catalog.ResourceTarget
 import com.typewritermc.authoring.defaultLabel
-import com.typewritermc.expression.orIfBlank
+import com.typewritermc.expression.shortcuts.orIfBlank
 import com.typewritermc.types.Resource
 import com.typewritermc.types.TypewriterRecordContract
 import com.typewritermc.types.TypewriterType

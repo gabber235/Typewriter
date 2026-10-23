@@ -11,6 +11,7 @@ import com.typewritermc.checking.CheckEvaluation
 import com.typewritermc.checking.CheckInput
 import com.typewritermc.checking.CheckRecipe
 import com.typewritermc.configuration.name
+import com.typewritermc.expression.operations.HostFailure
 import com.typewritermc.services.libs.utils.rethrowExceptional
 import com.typewritermc.types.catalog.CheckedCatalog
 import com.typewritermc.types.catalog.CheckedType
@@ -23,7 +24,6 @@ import skirout.editor.v1.checking.CheckOutcome
 import skirout.editor.v1.diagnostic.Diagnostic
 import skirout.editor.v1.diagnostic.DiagnosticSeverity
 import skirout.editor.v1.expression.EvaluationDiagnostic
-import skirout.editor.v1.expression.FailureId
 import skirout.editor.v1.type_catalog.DataValue
 import skirout.editor.v1.type_catalog.DiagnosticId
 import skirout.editor.v1.type_catalog.FieldPatternSegment
@@ -92,7 +92,7 @@ class RealmCheckInputs(
                 return failed(
                     recipe,
                     EvaluationDiagnostic(
-                        failure = FailureId(value = "check_callback_failed"),
+                        failure = HostFailure.CheckCallbackFailed,
                         message = failure.message ?: failure::class.simpleName.orEmpty(),
                         locations = tuple.candidates.map(InputCandidate::location),
                     ),

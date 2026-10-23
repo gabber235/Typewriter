@@ -15,6 +15,7 @@ import com.typewritermc.checking.PartialSelection
 import com.typewritermc.checking.TypedSelection
 import com.typewritermc.elements.CueDefinition
 import com.typewritermc.expression.descendants
+import com.typewritermc.expression.field
 import com.typewritermc.expression.input
 import com.typewritermc.expression.literal
 import com.typewritermc.expression.orElse
@@ -39,9 +40,11 @@ import com.typewritermc.types.namedUse
 import com.typewritermc.types.of
 import com.typewritermc.types.qualified
 import com.typewritermc.types.record
+import com.typewritermc.types.template
 import com.typewritermc.types.type
 import com.typewritermc.types.use
 import de.infix.testBalloon.framework.core.testSuite
+import io.kotest.matchers.collections.shouldContain
 import io.kotest.matchers.collections.shouldNotContain
 import io.kotest.matchers.shouldBe
 import io.kotest.matchers.shouldNotBe
@@ -57,14 +60,20 @@ import skirout.editor.v1.type_catalog.CatalogGeneration
 import skirout.editor.v1.type_catalog.DataValue
 import skirout.editor.v1.type_catalog.EndpointId
 import skirout.editor.v1.type_catalog.ExpressionBindingId
+import skirout.editor.v1.type_catalog.FieldDeclaration
+import skirout.editor.v1.type_catalog.FieldOwner
 import skirout.editor.v1.type_catalog.ItemId
+import skirout.editor.v1.type_catalog.ParameterKey
 import skirout.editor.v1.type_catalog.RelationFamilyId
 import skirout.editor.v1.type_catalog.RelationId
 import skirout.editor.v1.type_catalog.RepresentationTemplate
 import skirout.editor.v1.type_catalog.ResourceTarget
+import skirout.editor.v1.type_catalog.ScalarKind
 import skirout.editor.v1.type_catalog.TypeDefinition
 import skirout.editor.v1.type_catalog.TypeDefinitionId
+import skirout.editor.v1.type_catalog.TypeParameter
 import skirout.editor.v1.type_catalog.TypeSelection
+import skirout.editor.v1.type_catalog.TypeTemplate
 import skirout.editor.v1.type_catalog.TypeUse
 
 val ResourceDisplayAssemblyTest by testSuite {
@@ -143,6 +152,27 @@ val ResourceDisplayAssemblyTest by testSuite {
                     .toNode()
         } shouldBe true
         assembly.label(book(title = "Kept")) shouldBe "Kept"
+    }
+
+    test("a display of a generic resource type checks against every application of its parameters") {
+        val generic = genericType(fixtureBox)
+        val target = ResourceTarget.type(fixtureBox.namedTemplate())
+        val reading = { field: String ->
+            displayProvider(target) {
+                DisplayFormulas(
+                    label = input<Any>(ExpressionBindingId(value = "configured_value")).field<String>(field).orElse(literal("Box")),
+                    accent = literal(Color(0xFF000000u)),
+                    icon = literal(Icon.Iconify("mdi:package")),
+                )
+            }
+        }
+
+        assemble(declarations = listOf(generic), displays = listOf(reading("title")))
+            .diagnosticCodes(fixtureBox) shouldNotContain "invalid_resource_display"
+        assemble(declarations = listOf(generic), displays = listOf(reading("contents")))
+            .diagnosticCodes(fixtureBox) shouldContain "invalid_resource_display"
+        assemble(declarations = listOf(generic), displays = listOf(reading("missing")))
+            .diagnosticCodes(fixtureBox) shouldContain "invalid_resource_display"
     }
 
     test("two displays for one target are rejected and the resource falls back to a less specific display") {
@@ -236,6 +266,36 @@ val ResourceDisplayAssemblyTest by testSuite {
 
 private val fixtureResource = TypeDefinitionId.qualified("fixture", "DisplayResource")
 private val fixturePage = TypeDefinitionId.qualified("fixture", "DisplayPage")
+private val fixtureBox = TypeDefinitionId.qualified("fixture", "DisplayBox")
+
+/** A page type `id<T>` with a text title and contents of the free parameter T. */
+private fun genericType(id: TypeDefinitionId): Pair<TypeDefinitionId, Pair<TypeDefinition, TypeDisplay?>> {
+    val parameter = ParameterKey(owner = id, index = 0)
+    val field = {
+        name: String,
+        type: TypeTemplate,
+        ->
+        FieldDeclaration.partial(owner = FieldOwner(definition = id, name = name), type = type)
+    }
+    return id to
+        Pair(
+            TypeDefinition.partial(
+                id = id,
+                parameters = listOf(TypeParameter.partial(key = parameter, name = "T")),
+                parents = listOf(PageDefinition.id.namedTemplate()),
+                representation =
+                    RepresentationTemplate.createRecord(
+                        fields =
+                            listOf(
+                                field("title", ScalarKind.TEXT.template),
+                                field("contents", TypeTemplate.ParameterWrapper(parameter)),
+                            ),
+                        abstract_ = false,
+                    ),
+            ),
+            null,
+        )
+}
 
 private fun fixtureType(
     id: TypeDefinitionId,

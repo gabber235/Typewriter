@@ -2,7 +2,7 @@ import type { CodeGenerator, RecordLocation } from "skir-internal";
 
 import { BLANK, type Lines } from "../../text.js";
 
-import type { ResolvedOperation, ResolvedOperations } from "../resolve.js";
+import { skirRecord, type ResolvedOperation, type ResolvedOperations } from "../resolve.js";
 import type { Signature } from "../signature.js";
 
 /** Groups operations by the part of their id before the dot, in id order. */
@@ -16,19 +16,9 @@ export function operationGroups(
   return [...groups].sort(([left], [right]) => (left < right ? -1 : left > right ? 1 : 0));
 }
 
-/** The Skir record `name` of `module`, which generated code references through a symbol provider. */
-export function skirRecord(
-  input: Pick<CodeGenerator.Input<unknown>, "modules">,
-  module: string,
-  name: string,
-): RecordLocation {
-  const location = input.modules
-    .find((candidate) => candidate.path === module)
-    ?.records.find((record) => record.recordAncestors.map((ancestor) => ancestor.name.text).join(".") === name);
-  if (!location) {
-    throw new Error(`the operations generator needs Skir record ${module}:${name}`);
-  }
-  return location;
+/** The framework Skir record `reference` (`module.skir:Name`) that generated code names through a symbol provider. */
+export function frameworkRecord(input: Pick<CodeGenerator.Input<unknown>, "modules">, reference: string): RecordLocation {
+  return skirRecord(input, reference, () => new Error(`the operations generator needs Skir record ${reference}`));
 }
 
 /** What one named signature word declares. */
@@ -50,17 +40,31 @@ export function boundOf(operation: ResolvedOperation, variable: string): string 
   return operation.typeParameters.find((parameter) => parameter.name === variable)?.bound ?? "any";
 }
 
-/** Whether a list item has a fixed kernel representation rather than an opaque value. */
-export function concreteItem(type: Signature): boolean {
-  switch (type.kind) {
-    case "scalar":
-    case "named":
-      return true;
-    case "nullable":
-      return concreteItem(type.value);
-    default:
-      return false;
+/**
+ * Wraps documentation text into lines of at most `width` characters, breaking only between words, so each emitter
+ * adds its own comment markers.
+ */
+export function wrapWords(text: string, width: number): string[] {
+  const lines: string[] = [];
+  let line = "";
+  for (const word of text.replace(/\s+/gu, " ").trim().split(" ")) {
+    if (line.length > 0 && line.length + 1 + word.length > width) {
+      lines.push(line);
+      line = word;
+    } else {
+      line = line.length === 0 ? word : `${line} ${word}`;
+    }
   }
+  return [...lines, line];
+}
+
+/**
+ * Whether kernels see type variable `name` of `operation` as an opaque DataValue: every bound except numeric and
+ * integer, which kernels receive as numbers. Without an operation, as for record fields, the bound is any.
+ */
+export function valueVariable(operation: ResolvedOperation | undefined, name: string): boolean {
+  const bound = operation ? boundOf(operation, name) : "any";
+  return bound !== "numeric" && bound !== "integer";
 }
 
 /** The top level type of a parameter or result below partial, located and maybe. */

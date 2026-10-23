@@ -1,16 +1,24 @@
 import type { CodeGenerator, RecordLocation } from "skir-internal";
 
+import { lowerCamel } from "../text.js";
 import type { YamlManifest } from "../yaml.js";
 import {
   slotEntry,
   type Bound,
   type Capability,
-  type ItemIds,
   type Operator,
   type RawOperation,
   type RawOperationsManifest,
 } from "./manifest.js";
-import { parseParameter, parseSignature, signatureText, type ParsedParameter, type Signature } from "./signature.js";
+import {
+  concreteItem,
+  parseParameter,
+  parseSignature,
+  signatureChildren,
+  signatureText,
+  type ParsedParameter,
+  type Signature,
+} from "./signature.js";
 
 /** A manifest enum: a catalog enumeration of the core library, generated for both hosts. */
 export interface ResolvedEnum {
@@ -81,7 +89,6 @@ export interface ResolvedOperation {
   readonly result: Signature;
   readonly failures: readonly string[];
   readonly uses: readonly Capability[];
-  readonly itemIds?: ItemIds;
 }
 
 export interface ResolvedOperations {
@@ -98,16 +105,19 @@ export interface ResolvedOperations {
   readonly operations: readonly ResolvedOperation[];
 }
 
-const LAMBDA_KINDS = new Set(["each", "step", "comparator", "apply"]);
-const PARAMETER_WRAPPERS = new Set(["partial", "located"]);
+/** Top level parameter words that change how the call rule passes the argument. */
+const PASSING_KINDS = new Set<string>(["partial", "located", "each", "step", "comparator", "apply"]);
+
+/** Words that describe how a call takes an argument, so no result, nor any part of one, uses them. */
+const PARAMETER_ONLY = new Set<string>([...PASSING_KINDS, "items", "field_of"]);
 
 /**
  * Resolves every signature word of the manifest. Rejects unknown words and names, misplaced
- * wrappers (maybe outside a result, lambdas or partial outside a parameter's top level, variadic
- * parameters before the last), undeclared type parameters, defaults on non enum
- * parameters, undeclared failures, resources outside the panel profile, item identities missing on
- * or given to the wrong results, and read models that name no Skir record. Every error names the
- * YAML path and line.
+ * wrappers (maybe outside a result, lambdas or partial outside a parameter's top level, parameter
+ * only words in a result, variadic parameters before the last), undeclared type parameters,
+ * defaults on non enum parameters, undeclared failures, resources outside the panel profile, item
+ * identities missing on or given to the wrong results, and read models that name no Skir record.
+ * Every error names the YAML path and line.
  */
 export function resolveOperations(
   manifest: YamlManifest<RawOperationsManifest>,
@@ -123,7 +133,11 @@ export function resolveOperations(
   const readModels = new Map(
     Object.entries(data.read_models).map(([name, reference]) => [
       name,
-      { name, reference, location: resolveRecord(input, reference, () => error(["read_models", name], `unknown Skir record ${reference}`)) },
+      {
+        name,
+        reference,
+        location: skirRecord(input, reference, () => error(["read_models", name], `unknown Skir record ${reference}`)),
+      },
     ]),
   );
   const recordNames = new Set(Object.keys(data.records));
@@ -201,7 +215,6 @@ type ErrorAt = (path: ReadonlyArray<string | number>, message: string) => Error;
 function resolveOperation(id: string, raw: RawOperation, names: Names, error: ErrorAt): ResolvedOperation {
   const [group = "", name = ""] = id.split(".");
   const variables = new Map(Object.entries(raw.type_parameters));
-  const used = new Set<string>();
   const inferable = new Set<string>();
 
   const parameters = raw.parameters.map((slot, index): ResolvedParameter => {
@@ -215,8 +228,8 @@ function resolveOperation(id: string, raw: RawOperation, names: Names, error: Er
     if (parsed.variadic && kind !== "value") {
       throw error(at, "a variadic parameter takes plain values");
     }
-    const inner = kind === "partial" || kind === "located" ? (parsed.type as { value: Signature }).value : parsed.type;
-    checkWords(inner, "parameter", variables, names, used, (message) => error(at, message));
+    const inner = parsed.type.kind === "partial" || parsed.type.kind === "located" ? parsed.type.value : parsed.type;
+    checkWords(inner, "parameter", variables, names, (message) => error(at, message));
     collectInferable(parsed.type, inferable);
     if (parsed.defaultCase !== undefined) {
       const enumeration = parsed.type.kind === "named" ? names.enums.get(parsed.type.name) : undefined;
@@ -242,7 +255,7 @@ function resolveOperation(id: string, raw: RawOperation, names: Names, error: Er
   const resultAt = ["result"];
   const result = parse(() => parseSignature(raw.result), resultAt, error);
   const resultInner = result.kind === "maybe" ? result.value : result;
-  checkWords(resultInner, "result", variables, names, used, (message) => error(resultAt, message));
+  checkWords(resultInner, "result", variables, names, (message) => error(resultAt, message));
 
   for (const failure of raw.failures) {
     if (!names.failures.has(failure)) {
@@ -260,7 +273,7 @@ function resolveOperation(id: string, raw: RawOperation, names: Names, error: Er
   if (!collection && raw.item_ids !== undefined) {
     throw error(["item_ids"], "only list, set and map results declare item_ids");
   }
-  if (collection && resultInner.kind !== "map" && concrete(resultInner.value) && raw.item_ids !== "positional") {
+  if (collection && resultInner.kind !== "map" && concreteItem(resultInner.value) && raw.item_ids !== "positional") {
     throw error(["item_ids"], "a list of concrete values has positional item_ids");
   }
 
@@ -281,7 +294,6 @@ function resolveOperation(id: string, raw: RawOperation, names: Names, error: Er
     result,
     failures: raw.failures,
     uses: raw.uses,
-    ...(raw.item_ids === undefined ? {} : { itemIds: raw.item_ids }),
   };
 }
 
@@ -311,7 +323,7 @@ function resolveDsl(
     throw error(["dsl"], "an infix function takes its receiver and one argument");
   }
   return {
-    name: dsl.name ?? dsl.operator ?? lowerCamelName(name),
+    name: dsl.name ?? dsl.operator ?? lowerCamel(name),
     ...(dsl.operator === undefined ? {} : { operator: dsl.operator }),
     infix: dsl.infix,
     property: dsl.property,
@@ -319,27 +331,26 @@ function resolveDsl(
   };
 }
 
-function lowerCamelName(value: string): string {
-  return value.replace(/_([a-z0-9])/gu, (_, letter: string) => letter.toUpperCase());
-}
-
 function parameterKind(type: Signature): ParameterKind {
-  if (LAMBDA_KINDS.has(type.kind)) return type.kind as ParameterKind;
-  if (PARAMETER_WRAPPERS.has(type.kind)) return type.kind as ParameterKind;
-  return "value";
+  return PASSING_KINDS.has(type.kind) ? (type.kind as ParameterKind) : "value";
 }
 
-/** Checks words below the top level of a parameter or result, recording the type variables it uses. */
+/**
+ * Checks the words of a parameter below partial and located, or of a result below maybe: every name is declared,
+ * lambdas only stand at a parameter's top level and a result uses no parameter only word.
+ */
 function checkWords(
   type: Signature,
   position: "parameter" | "result",
   variables: ReadonlyMap<string, Bound>,
   names: Names,
-  used: Set<string>,
   fail: (message: string) => Error,
   top = true,
 ): void {
-  const nested = (value: Signature) => checkWords(value, position, variables, names, used, fail, false);
+  const nested = (value: Signature) => checkWords(value, position, variables, names, fail, false);
+  if (position === "result" && PARAMETER_ONLY.has(type.kind)) {
+    throw fail(`${type.kind} describes how a call takes an argument, so no result uses it`);
+  }
   switch (type.kind) {
     case "scalar":
       return;
@@ -352,7 +363,6 @@ function checkWords(
       if (!variables.has(type.name)) {
         throw fail(`undeclared type parameter ${type.name}`);
       }
-      used.add(type.name);
       return;
     case "nullable":
       if (type.value.kind === "nullable") throw fail("a type is nullable once");
@@ -360,7 +370,6 @@ function checkWords(
     case "list":
     case "set":
     case "items":
-      return nested(type.value);
     case "link":
       return nested(type.value);
     case "map":
@@ -369,15 +378,15 @@ function checkWords(
       return nested(type.value);
     case "each":
     case "apply":
-      if (!top || position !== "parameter") throw fail(`${type.kind} is a parameter's top level word`);
+      if (!top) throw fail(`${type.kind} is a parameter's top level word`);
       nested(type.input);
       return nested(type.output);
     case "step":
-      if (!top || position !== "parameter") throw fail("step is a parameter's top level word");
+      if (!top) throw fail("step is a parameter's top level word");
       nested(type.accumulator);
       return nested(type.item);
     case "comparator":
-      if (!top || position !== "parameter") throw fail("comparator is a parameter's top level word");
+      if (!top) throw fail("comparator is a parameter's top level word");
       return nested(type.value);
     case "field_of":
     case "representation":
@@ -399,29 +408,9 @@ function checkWords(
  * and field_type do not.
  */
 function collectInferable(type: Signature, inferable: Set<string>): void {
-  switch (type.kind) {
-    case "variable":
-      inferable.add(type.name);
-      return;
-    case "scalar":
-    case "named":
-    case "representation":
-    case "field_type":
-      return;
-    case "map":
-    case "entry":
-      collectInferable(type.key, inferable);
-      return collectInferable(type.value, inferable);
-    case "each":
-    case "apply":
-      collectInferable(type.input, inferable);
-      return collectInferable(type.output, inferable);
-    case "step":
-      collectInferable(type.accumulator, inferable);
-      return collectInferable(type.item, inferable);
-    default:
-      return collectInferable(type.value, inferable);
-  }
+  if (type.kind === "variable") inferable.add(type.name);
+  if (type.kind === "representation" || type.kind === "field_type") return;
+  signatureChildren(type).forEach((child) => collectInferable(child, inferable));
 }
 
 function requireRecordField(
@@ -443,20 +432,8 @@ function requireRecordField(
   }
 }
 
-/** Whether a list item type has a fixed kernel representation rather than an opaque value. */
-export function concrete(type: Signature): boolean {
-  switch (type.kind) {
-    case "scalar":
-    case "named":
-      return true;
-    case "nullable":
-      return concrete(type.value);
-    default:
-      return false;
-  }
-}
-
-function resolveRecord(
+/** The Skir record a `module.skir:Outer.Inner` reference names; `fail` builds the error when none or several match. */
+export function skirRecord(
   input: Pick<CodeGenerator.Input<unknown>, "modules">,
   reference: string,
   fail: () => Error,

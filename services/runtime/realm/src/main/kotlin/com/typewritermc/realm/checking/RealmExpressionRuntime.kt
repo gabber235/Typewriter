@@ -6,12 +6,13 @@ import com.typewritermc.authoring.DraftBinding
 import com.typewritermc.expression.DefaultExpressionEvaluator
 import com.typewritermc.expression.ExpressionBindings
 import com.typewritermc.expression.ExpressionValueReader
+import com.typewritermc.expression.operations.CatalogPortableTypes
 import com.typewritermc.expression.operations.EvaluatorFailure
+import com.typewritermc.expression.operations.HostFailure
 import com.typewritermc.types.unwrapNamed
 import skirout.editor.v1.expression.EvaluationBudget
 import skirout.editor.v1.expression.EvaluationDiagnostic
 import skirout.editor.v1.expression.ExpressionNode
-import skirout.editor.v1.expression.FailureId
 import skirout.editor.v1.type_catalog.DataValue
 import skirout.editor.v1.type_catalog.ExpressionBindingId
 import skirout.editor.v1.type_catalog.ValueLocation
@@ -28,7 +29,7 @@ internal class RealmExpressionRuntime(
             reads as? CapturedAuthoringReads
                 ?: return Availability.Failed(
                     EvaluationDiagnostic(
-                        failure = FailureId(value = "untracked_expression_reads"),
+                        failure = HostFailure.UntrackedExpressionReads,
                         message = "Portable expressions require Realm snapshot reads.",
                         locations = listOf(location),
                     ),
@@ -36,6 +37,7 @@ internal class RealmExpressionRuntime(
         val evaluator =
             DefaultExpressionEvaluator(
                 ExpressionValueReader { requested -> snapshot.authoredValue(requested) },
+                CatalogPortableTypes(snapshot.view.original.catalog.checked),
             )
         val result =
             with(reads) {

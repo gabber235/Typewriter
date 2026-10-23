@@ -10,7 +10,7 @@ import skirout.editor.v1.expression.ExpressionNode
 import skirout.editor.v1.type_catalog.DataValue
 
 val ExpressionEvaluatorTest by testSuite {
-    val evaluator = DefaultExpressionEvaluator(ExpressionValueReader { error("No authored reads expected.") })
+    val evaluator = DefaultExpressionEvaluator(ExpressionValueReader { error("No authored reads expected.") }, testPortableTypes())
     val budget = EvaluationBudget(maxSteps = 100, maxCollectionItems = 100)
 
     test("Realm fails a profile panel call instead of evaluating it") {

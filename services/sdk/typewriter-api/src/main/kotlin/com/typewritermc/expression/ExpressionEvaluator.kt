@@ -16,6 +16,7 @@ import com.typewritermc.expression.operations.PortableOperationCatalog
 import com.typewritermc.expression.operations.PortableRuleKernels
 import com.typewritermc.expression.operations.PortableTypes
 import com.typewritermc.expression.operations.asItems
+import com.typewritermc.expression.operations.illTyped
 import com.typewritermc.expression.operations.invoker
 import com.typewritermc.types.catalog.Resolution
 import com.typewritermc.types.catalog.apply
@@ -32,8 +33,10 @@ import skirout.editor.v1.expression.FallbackExpression
 import skirout.editor.v1.expression.LambdaExpression
 import skirout.editor.v1.type_catalog.DataValue
 import skirout.editor.v1.type_catalog.ExpressionBindingId
+import skirout.editor.v1.type_catalog.ItemId
 import skirout.editor.v1.type_catalog.ListItem
 import skirout.editor.v1.type_catalog.PathSegment
+import skirout.editor.v1.type_catalog.TypeTemplate
 import skirout.editor.v1.type_catalog.TypeUse
 import skirout.editor.v1.type_catalog.ValueLocation
 import skirout.editor.v1.type_catalog.ValuePath
@@ -70,12 +73,12 @@ fun interface ExpressionValueReader {
  * failure id is declared in operations.yaml. Anything else a kernel throws is a bug and propagates. Only input
  * projections through located bindings are reads; lambda locals hold values an earlier read produced.
  *
- * [types] supplies the catalog type facts that typed operations (instance_of, cast, from_json, enum cases) need; a host
- * without them fails those operations.
+ * [types] supplies the catalog type facts that typed operations (instance_of, cast, from_json, enum cases) need; every
+ * host evaluates against the catalog its bindings were checked with.
  */
 class DefaultExpressionEvaluator(
     private val reader: ExpressionValueReader,
-    private val types: PortableTypes? = null,
+    private val types: PortableTypes,
 ) : ExpressionEvaluator {
     context(reads: AuthoredReads)
     override fun evaluate(
@@ -102,7 +105,7 @@ object PortableExpressionLimits {
 
 private class EvaluatorState(
     private val reader: ExpressionValueReader,
-    types: PortableTypes?,
+    types: PortableTypes,
     private val bindings: ExpressionBindings,
     private val budget: EvaluationBudget,
     initialValues: Map<ExpressionBindingId, DataValue>,
@@ -200,7 +203,7 @@ private class EvaluatorState(
                     root.value.path
                         .requireValidPath()
                         .append(projection.suffix)
-                present(local.value.at(path), local.location?.append(path))
+                present(local.value.at(path), local.locate(path))
             }
 
             else -> {
@@ -258,7 +261,8 @@ private class EvaluatorState(
     ): Availability<DataValue> {
         val first = evaluate(left)
         if (first !is Availability.Available) return first
-        if (first.value.predicate() != conjunction) return first
+        val decided = first.value.predicate()
+        if (decided != conjunction) return Availability.Available(DataValue.BooleanWrapper(decided))
         val second = evaluate(right)
         if (second !is Availability.Available) return second
         return Availability.Available(DataValue.BooleanWrapper(second.value.predicate()))
@@ -298,7 +302,8 @@ private class EvaluatorState(
      * Value arguments that still contain unfilled entries, and each lambdas whose body is missing for some item, do
      * not stop evaluation: their locations are collected, distinct and in collection order, and the call is missing
      * after every argument ran. Each lambdas run for every item of the first argument before the kernel; step,
-     * comparator and apply lambdas are driven by the kernel and abort the call when a body is missing or failed.
+     * comparator and apply lambdas are driven by the kernel and abort the call when a body is missing or failed. An
+     * available result charges its size to the collection item budget (see [resultSize]).
      */
     context(reads: AuthoredReads)
     private fun call(expression: CallExpression): Availability<DataValue> {
@@ -377,11 +382,14 @@ private class EvaluatorState(
             }
         }
         if (incomplete) return Availability.Unavailable(missing.toList())
-        return try {
-            invoker.invoke(arguments, typeArguments, context)
-        } catch (interrupted: LambdaInterrupted) {
-            interrupted.result
-        }
+        val result =
+            try {
+                invoker.invoke(arguments, typeArguments, context)
+            } catch (interrupted: LambdaInterrupted) {
+                interrupted.result
+            }
+        if (result is Availability.Available) items(result.value.resultSize())
+        return result
     }
 
     /** Runs [body] once per item of [source], in item order; missing items collect their locations. */
@@ -393,10 +401,11 @@ private class EvaluatorState(
         val results = mutableListOf<DataValue>()
         val missing = linkedSetOf<ValueLocation>()
         var blocked = false
+        val rows = source.value.isMap()
         for (item in source.value.asItems()) {
             items(1)
             val location = source.location?.item(item)
-            when (val result = evaluateWithLocals(body, listOf(LocalBinding(item.value, location)))) {
+            when (val result = evaluateWithLocals(body, listOf(LocalBinding(item.value, location, row = rows)))) {
                 is Availability.Available -> {
                     results += result.value
                 }
@@ -421,8 +430,12 @@ private class EvaluatorState(
         source: KernelArgument?,
     ): KernelArgument.Lambda {
         val sourceLocation = (source as? KernelArgument.Value)?.location
+        val rows = (source as? KernelArgument.Value)?.value?.isMap() == true
         return KernelArgument.Lambda { inputs ->
-            val locals = inputs.map { input -> LocalBinding(input.value, input.item?.let { id -> sourceLocation?.item(id) }) }
+            val locals =
+                inputs.map { input ->
+                    LocalBinding(input.value, input.item?.let { id -> sourceLocation?.item(id) }, row = rows && input.item != null)
+                }
             when (val result = evaluateWithLocals(body, locals)) {
                 is Availability.Available -> result.value
                 else -> throw LambdaInterrupted(result)
@@ -457,9 +470,11 @@ private class EvaluatorState(
                 frames
                     .getOrNull(frames.lastIndex - root.value.depth)
                     ?.getOrNull(root.value.slot)
-                    ?.location
-                    ?.append(root.value.path.requireValidPath())
-                    ?.append(projection.suffix)
+                    ?.locate(
+                        root.value.path
+                            .requireValidPath()
+                            .append(projection.suffix),
+                    )
             }
 
             else -> {
@@ -468,7 +483,7 @@ private class EvaluatorState(
         }
     }
 
-    private fun closedType(template: skirout.editor.v1.type_catalog.TypeTemplate): TypeUse =
+    private fun closedType(template: TypeTemplate): TypeUse =
         when (val resolved = template.apply(emptyMap())) {
             is Resolution.Ready -> resolved.value
             is Resolution.Invalid -> throw illTyped("A type argument is not a closed type.")
@@ -508,21 +523,58 @@ fun ExpressionNode.evaluateWith(
     budget: EvaluationBudget,
 ): Availability<DataValue> = evaluator.evaluate(this, bindings, budget)
 
+/**
+ * A lambda local. A local bound to a map entry ([row]) is located at the map row, and its `key` and `value` fields are
+ * that row's key and value, so missing data inside them is reported where it is authored.
+ */
 private data class LocalBinding(
     val value: DataValue,
     val location: ValueLocation?,
-)
+    val row: Boolean = false,
+) {
+    fun locate(path: ValuePath): ValueLocation? {
+        val location = location ?: return null
+        val first = path.segments.firstOrNull() as? PathSegment.FieldWrapper
+        if (!row || first == null) return location.append(path)
+        val member =
+            when (first.name) {
+                "key" -> PathSegment.MAP_KEY
+                "value" -> PathSegment.MAP_VALUE
+                else -> return location.append(path)
+            }
+        return location.append(ValuePath(segments = listOf(member) + path.segments.drop(1)))
+    }
+}
+
+private fun DataValue.isMap(): Boolean = unwrapNamed() is DataValue.MapValueWrapper
+
+/**
+ * The collection items a call result charges, so a composition cannot grow values past the budget without collections:
+ * one per item of a list or set and per row of a map (top level only, through named wrappers), and one per started 64
+ * UTF-16 code units of text or 64 bytes. Every other value charges nothing.
+ */
+private fun DataValue.resultSize(): Int =
+    when (val value = unwrapNamed()) {
+        is DataValue.ListValueWrapper -> value.value.items.size
+        is DataValue.SetValueWrapper -> value.value.items.size
+        is DataValue.MapValueWrapper -> value.value.rows.size
+        is DataValue.StringValueWrapper -> startedBlocks(value.value.length)
+        is DataValue.BytesWrapper -> startedBlocks(value.value.size)
+        else -> 0
+    }
+
+private fun startedBlocks(length: Int): Int = (length + RESULT_BLOCK - 1) / RESULT_BLOCK
+
+private const val RESULT_BLOCK = 64
 
 private fun ValueLocation.item(item: ListItem): ValueLocation = item(item.id)
 
-private fun ValueLocation.item(id: skirout.editor.v1.type_catalog.ItemId): ValueLocation = append(PathSegment.createItem(id = id))
+private fun ValueLocation.item(id: ItemId): ValueLocation = append(PathSegment.createItem(id = id))
 
 /** The truth value of a logical operand or conditional test. */
 private fun DataValue.predicate(): Boolean =
     (unwrapNamed() as? DataValue.BooleanWrapper)?.value
         ?: throw OperationFailure(EvaluatorFailure.ExpressionResultNotBoolean, "A logical operand or test is not a boolean.")
-
-private fun illTyped(message: String) = OperationFailure(EvaluatorFailure.IllTypedArgument, message)
 
 private fun literal(value: DataValue): DataValue =
     try {

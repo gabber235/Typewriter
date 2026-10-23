@@ -53,7 +53,10 @@ val ExpressionFactoriesTest by testSuite {
         depths.toSet() shouldBe setOf(0, 1)
         val result =
             with(FixtureReads) {
-                DefaultExpressionEvaluator(ExpressionValueReader { error("Literal program has no authored inputs") }).evaluate(
+                DefaultExpressionEvaluator(
+                    ExpressionValueReader { error("Literal program has no authored inputs") },
+                    testPortableTypes(),
+                ).evaluate(
                     first,
                     ExpressionBindings(emptyMap()),
                     EvaluationBudget(maxSteps = 100, maxCollectionItems = 100),
@@ -97,7 +100,10 @@ val ExpressionFactoriesTest by testSuite {
             }
         val result =
             with(FixtureReads) {
-                DefaultExpressionEvaluator(ExpressionValueReader { error("Literal program has no authored inputs") }).evaluate(
+                DefaultExpressionEvaluator(
+                    ExpressionValueReader { error("Literal program has no authored inputs") },
+                    testPortableTypes(),
+                ).evaluate(
                     expression.toNode(),
                     ExpressionBindings(emptyMap()),
                     EvaluationBudget(maxSteps = 100, maxCollectionItems = 100),

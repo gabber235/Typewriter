@@ -30,8 +30,6 @@ object PortableOperationCatalog {
                 ),
             result = Signature.Scalar(Signature.ScalarWord.BOOLEAN),
             failures = listOf(),
-            uses = setOf(),
-            itemIds = null,
         )
 
     /** The bytes of integers from 0 to 255. */
@@ -47,8 +45,6 @@ object PortableOperationCatalog {
                 ),
             result = Signature.Scalar(Signature.ScalarWord.BYTES),
             failures = listOf(KernelFailure.InvalidByte),
-            uses = setOf(),
-            itemIds = null,
         )
 
     /** The bytes as integers from 0 to 255. */
@@ -64,8 +60,6 @@ object PortableOperationCatalog {
                 ),
             result = Signature.ListOf(Signature.Scalar(Signature.ScalarWord.INT32)),
             failures = listOf(),
-            uses = setOf(),
-            itemIds = ItemIdentities.POSITIONAL,
         )
 
     /** The published declaration of the type a selection names; missing at no location when the catalog lacks it. */
@@ -81,8 +75,6 @@ object PortableOperationCatalog {
                 ),
             result = Signature.Maybe(Signature.ReadModel(PublishedType.serializer)),
             failures = listOf(),
-            uses = setOf(OperationCapability.RESOURCES),
-            itemIds = null,
         )
 
     /** Whether an item equals value. Stops at the first hit. */
@@ -99,8 +91,6 @@ object PortableOperationCatalog {
                 ),
             result = Signature.Scalar(Signature.ScalarWord.BOOLEAN),
             failures = listOf(),
-            uses = setOf(),
-            itemIds = null,
         )
 
     /** The items whose predicate is true, keeping their identities. */
@@ -117,8 +107,6 @@ object PortableOperationCatalog {
                 ),
             result = Signature.ListOf(Signature.Variable("T")),
             failures = listOf(),
-            uses = setOf(),
-            itemIds = ItemIdentities.SOURCE,
         )
 
     /** Folds the items from initial, left to right. */
@@ -136,8 +124,6 @@ object PortableOperationCatalog {
                 ),
             result = Signature.Variable("A"),
             failures = listOf(),
-            uses = setOf(),
-            itemIds = null,
         )
 
     /** The items grouped by key, in order of first occurrence. */
@@ -154,8 +140,6 @@ object PortableOperationCatalog {
                 ),
             result = Signature.MapOf(Signature.Variable("K"), Signature.ListOf(Signature.Variable("T"))),
             failures = listOf(),
-            uses = setOf(),
-            itemIds = ItemIdentities.GROUPED,
         )
 
     /** The body's result for every item, keeping the item identities. */
@@ -172,8 +156,6 @@ object PortableOperationCatalog {
                 ),
             result = Signature.ListOf(Signature.Variable("R")),
             failures = listOf(),
-            uses = setOf(),
-            itemIds = ItemIdentities.SOURCE,
         )
 
     /** The number of items, including unfilled ones. */
@@ -189,8 +171,6 @@ object PortableOperationCatalog {
                 ),
             result = Signature.Scalar(Signature.ScalarWord.INT32),
             failures = listOf(),
-            uses = setOf(),
-            itemIds = null,
         )
 
     /** The items ordered by key; equal keys keep their order. */
@@ -208,8 +188,6 @@ object PortableOperationCatalog {
                 ),
             result = Signature.ListOf(Signature.Variable("T")),
             failures = listOf(),
-            uses = setOf(),
-            itemIds = ItemIdentities.SOURCE,
         )
 
     /** The items ordered by comparator; equal items keep their order. */
@@ -226,8 +204,6 @@ object PortableOperationCatalog {
                 ),
             result = Signature.ListOf(Signature.Variable("T")),
             failures = listOf(),
-            uses = setOf(OperationCapability.METER),
-            itemIds = ItemIdentities.SOURCE,
         )
 
     /** The items as a list. */
@@ -243,8 +219,6 @@ object PortableOperationCatalog {
                 ),
             result = Signature.ListOf(Signature.Variable("T")),
             failures = listOf(),
-            uses = setOf(),
-            itemIds = ItemIdentities.SOURCE,
         )
 
     /** The distinct items as a set; the first occurrence of equal items is kept. */
@@ -260,8 +234,6 @@ object PortableOperationCatalog {
                 ),
             result = Signature.SetOf(Signature.Variable("T")),
             failures = listOf(),
-            uses = setOf(),
-            itemIds = ItemIdentities.SOURCE,
         )
 
     /** The number of fraction digits of the canonical decimal, without trailing zeros. */
@@ -277,8 +249,6 @@ object PortableOperationCatalog {
                 ),
             result = Signature.Scalar(Signature.ScalarWord.INT32),
             failures = listOf(),
-            uses = setOf(),
-            itemIds = null,
         )
 
     /** The duration of a number of milliseconds. */
@@ -294,8 +264,6 @@ object PortableOperationCatalog {
                 ),
             result = Signature.Scalar(Signature.ScalarWord.DURATION),
             failures = listOf(KernelFailure.DurationRange),
-            uses = setOf(),
-            itemIds = null,
         )
 
     /** The whole milliseconds of the duration, truncated toward zero. */
@@ -311,8 +279,6 @@ object PortableOperationCatalog {
                 ),
             result = Signature.Scalar(Signature.ScalarWord.INTEGER),
             failures = listOf(),
-            uses = setOf(),
-            itemIds = null,
         )
 
     /** A map entry of key and value. */
@@ -329,8 +295,6 @@ object PortableOperationCatalog {
                 ),
             result = Signature.EntryOf(Signature.Variable("K"), Signature.Variable("V")),
             failures = listOf(),
-            uses = setOf(),
-            itemIds = null,
         )
 
     /** Every case of the enumeration E in declaration order. */
@@ -345,8 +309,6 @@ object PortableOperationCatalog {
                 ),
             result = Signature.ListOf(Signature.Variable("E")),
             failures = listOf(),
-            uses = setOf(OperationCapability.TYPES),
-            itemIds = ItemIdentities.POSITIONAL,
         )
 
     /** The case of the enumeration E with the name, or null. */
@@ -362,8 +324,6 @@ object PortableOperationCatalog {
                 ),
             result = Signature.Nullable(Signature.Variable("E")),
             failures = listOf(),
-            uses = setOf(OperationCapability.TYPES),
-            itemIds = null,
         )
 
     /** Bitwise and, in two's complement. */
@@ -381,8 +341,6 @@ object PortableOperationCatalog {
                 ),
             result = Signature.Variable("I"),
             failures = listOf(),
-            uses = setOf(),
-            itemIds = null,
         )
 
     /** Bitwise complement, in two's complement (the negation minus one). */
@@ -398,8 +356,6 @@ object PortableOperationCatalog {
                 ),
             result = Signature.Variable("I"),
             failures = listOf(),
-            uses = setOf(),
-            itemIds = null,
         )
 
     /** Bitwise or, in two's complement. */
@@ -417,8 +373,6 @@ object PortableOperationCatalog {
                 ),
             result = Signature.Variable("I"),
             failures = listOf(),
-            uses = setOf(),
-            itemIds = null,
         )
 
     /** Bitwise exclusive or, in two's complement. */
@@ -436,8 +390,6 @@ object PortableOperationCatalog {
                 ),
             result = Signature.Variable("I"),
             failures = listOf(),
-            uses = setOf(),
-            itemIds = null,
         )
 
     /** Greatest common divisor of the absolute values; gcd(0, 0) is 0. */
@@ -454,8 +406,6 @@ object PortableOperationCatalog {
                 ),
             result = Signature.Variable("I"),
             failures = listOf(),
-            uses = setOf(),
-            itemIds = null,
         )
 
     /** Shifts left by bits, multiplying by two to the power of bits. */
@@ -472,8 +422,6 @@ object PortableOperationCatalog {
                 ),
             result = Signature.Variable("I"),
             failures = listOf(KernelFailure.NegativeShift, KernelFailure.MagnitudeLimit),
-            uses = setOf(),
-            itemIds = null,
         )
 
     /** Arithmetic shift right by bits, rounding toward negative infinity. */
@@ -490,8 +438,6 @@ object PortableOperationCatalog {
                 ),
             result = Signature.Variable("I"),
             failures = listOf(KernelFailure.NegativeShift),
-            uses = setOf(),
-            itemIds = null,
         )
 
     /** The identity of the resource the link names. */
@@ -507,8 +453,6 @@ object PortableOperationCatalog {
                 ),
             result = Signature.Scalar(Signature.ScalarWord.RESOURCE_ID),
             failures = listOf(),
-            uses = setOf(),
-            itemIds = null,
         )
 
     /** The item at index; missing while that item is unfilled. */
@@ -525,8 +469,6 @@ object PortableOperationCatalog {
                 ),
             result = Signature.Maybe(Signature.Variable("T")),
             failures = listOf(KernelFailure.CollectionKeyAbsent),
-            uses = setOf(),
-            itemIds = null,
         )
 
     /** The items of every list in order. */
@@ -544,8 +486,6 @@ object PortableOperationCatalog {
                 ),
             result = Signature.ListOf(Signature.Variable("T")),
             failures = listOf(),
-            uses = setOf(),
-            itemIds = ItemIdentities.PREFIXED,
         )
 
     /** The items of every inner list in order. */
@@ -561,8 +501,6 @@ object PortableOperationCatalog {
                 ),
             result = Signature.ListOf(Signature.Variable("T")),
             failures = listOf(),
-            uses = setOf(),
-            itemIds = ItemIdentities.NESTED,
         )
 
     /** The index of the first item equal to value, or -1. Stops at the first hit. */
@@ -579,8 +517,6 @@ object PortableOperationCatalog {
                 ),
             result = Signature.Scalar(Signature.ScalarWord.INT32),
             failures = listOf(),
-            uses = setOf(),
-            itemIds = null,
         )
 
     /** The index of the last item equal to value, or -1. Scans from the end. */
@@ -597,8 +533,6 @@ object PortableOperationCatalog {
                 ),
             result = Signature.Scalar(Signature.ScalarWord.INT32),
             failures = listOf(),
-            uses = setOf(),
-            itemIds = null,
         )
 
     /** A list of the values. */
@@ -614,8 +548,6 @@ object PortableOperationCatalog {
                 ),
             result = Signature.ListOf(Signature.Variable("T")),
             failures = listOf(),
-            uses = setOf(),
-            itemIds = ItemIdentities.POSITIONAL,
         )
 
     /** The integers from start, by step, up to but not including end. */
@@ -633,8 +565,6 @@ object PortableOperationCatalog {
                 ),
             result = Signature.ListOf(Signature.Scalar(Signature.ScalarWord.INT32)),
             failures = listOf(KernelFailure.InvalidRangeStep),
-            uses = setOf(OperationCapability.METER),
-            itemIds = ItemIdentities.POSITIONAL,
         )
 
     /** The items in reverse order. */
@@ -650,8 +580,6 @@ object PortableOperationCatalog {
                 ),
             result = Signature.ListOf(Signature.Variable("T")),
             failures = listOf(),
-            uses = setOf(),
-            itemIds = ItemIdentities.SOURCE,
         )
 
     /** Every accumulator of a left fold, starting with initial. */
@@ -669,8 +597,6 @@ object PortableOperationCatalog {
                 ),
             result = Signature.ListOf(Signature.Variable("A")),
             failures = listOf(),
-            uses = setOf(),
-            itemIds = ItemIdentities.POSITIONAL,
         )
 
     /** The items from start up to, not including, end. */
@@ -688,8 +614,6 @@ object PortableOperationCatalog {
                 ),
             result = Signature.ListOf(Signature.Variable("T")),
             failures = listOf(KernelFailure.SliceRange),
-            uses = setOf(),
-            itemIds = ItemIdentities.SOURCE,
         )
 
     /** Entries pairing items at equal positions; the shorter list decides the length. */
@@ -706,8 +630,6 @@ object PortableOperationCatalog {
                 ),
             result = Signature.ListOf(Signature.EntryOf(Signature.Variable("A"), Signature.Variable("B"))),
             failures = listOf(),
-            uses = setOf(),
-            itemIds = ItemIdentities.SOURCE,
         )
 
     /** Whether a row has the key. */
@@ -724,8 +646,6 @@ object PortableOperationCatalog {
                 ),
             result = Signature.Scalar(Signature.ScalarWord.BOOLEAN),
             failures = listOf(),
-            uses = setOf(),
-            itemIds = null,
         )
 
     /** The map of the entries; a later entry replaces an equal key and keeps the first position. */
@@ -741,8 +661,6 @@ object PortableOperationCatalog {
                 ),
             result = Signature.MapOf(Signature.Variable("K"), Signature.Variable("V")),
             failures = listOf(),
-            uses = setOf(),
-            itemIds = ItemIdentities.SOURCE,
         )
 
     /** The value of key; missing while that value is unfilled or a key is unfilled. */
@@ -759,8 +677,6 @@ object PortableOperationCatalog {
                 ),
             result = Signature.Maybe(Signature.Variable("V")),
             failures = listOf(KernelFailure.CollectionKeyAbsent),
-            uses = setOf(),
-            itemIds = null,
         )
 
     /** The map with every value replaced by the body's result for its entry. */
@@ -777,8 +693,6 @@ object PortableOperationCatalog {
                 ),
             result = Signature.MapOf(Signature.Variable("K"), Signature.Variable("R")),
             failures = listOf(),
-            uses = setOf(),
-            itemIds = ItemIdentities.SOURCE,
         )
 
     /** The sum. */
@@ -796,8 +710,6 @@ object PortableOperationCatalog {
                 ),
             result = Signature.Variable("N"),
             failures = listOf(KernelFailure.NonFiniteNumber),
-            uses = setOf(),
-            itemIds = null,
         )
 
     /** The value as the numeric type M when it is exactly representable there. */
@@ -813,8 +725,6 @@ object PortableOperationCatalog {
                 ),
             result = Signature.Variable("M"),
             failures = listOf(KernelFailure.InexactConversion),
-            uses = setOf(),
-            itemIds = null,
         )
 
     /**
@@ -834,8 +744,6 @@ object PortableOperationCatalog {
                 ),
             result = Signature.Variable("N"),
             failures = listOf(KernelFailure.DivisionByZero, KernelFailure.NonFiniteNumber),
-            uses = setOf(),
-            itemIds = null,
         )
 
     /**
@@ -857,8 +765,6 @@ object PortableOperationCatalog {
                 ),
             result = Signature.Scalar(Signature.ScalarWord.TEXT),
             failures = listOf(KernelFailure.InvalidLocale, KernelFailure.MagnitudeLimit),
-            uses = setOf(),
-            itemIds = null,
         )
 
     /** The product. */
@@ -876,8 +782,6 @@ object PortableOperationCatalog {
                 ),
             result = Signature.Variable("N"),
             failures = listOf(KernelFailure.NonFiniteNumber, KernelFailure.MagnitudeLimit),
-            uses = setOf(),
-            itemIds = null,
         )
 
     /**
@@ -898,8 +802,6 @@ object PortableOperationCatalog {
                 ),
             result = Signature.Named(PluralCategoryType),
             failures = listOf(KernelFailure.InvalidLocale, KernelFailure.MagnitudeLimit),
-            uses = setOf(),
-            itemIds = null,
         )
 
     /**
@@ -919,8 +821,6 @@ object PortableOperationCatalog {
                 ),
             result = Signature.Variable("N"),
             failures = listOf(KernelFailure.NegativeExponent, KernelFailure.NonFiniteNumber, KernelFailure.MagnitudeLimit),
-            uses = setOf(),
-            itemIds = null,
         )
 
     /** The remainder of truncating division; it has the sign of the dividend. */
@@ -937,8 +837,6 @@ object PortableOperationCatalog {
                 ),
             result = Signature.Variable("N"),
             failures = listOf(KernelFailure.DivisionByZero, KernelFailure.NonFiniteNumber),
-            uses = setOf(),
-            itemIds = null,
         )
 
     /** Rounds value to a multiple of increment. */
@@ -956,8 +854,6 @@ object PortableOperationCatalog {
                 ),
             result = Signature.Variable("N"),
             failures = listOf(KernelFailure.InvalidRoundingIncrement, KernelFailure.NonFiniteNumber),
-            uses = setOf(),
-            itemIds = null,
         )
 
     /**
@@ -976,8 +872,6 @@ object PortableOperationCatalog {
                 ),
             result = Signature.Variable("N"),
             failures = listOf(KernelFailure.NegativeSquareRoot),
-            uses = setOf(),
-            itemIds = null,
         )
 
     /** The difference. */
@@ -994,8 +888,6 @@ object PortableOperationCatalog {
                 ),
             result = Signature.Variable("N"),
             failures = listOf(KernelFailure.NonFiniteNumber),
-            uses = setOf(),
-            itemIds = null,
         )
 
     /** The record with one field replaced. */
@@ -1013,8 +905,6 @@ object PortableOperationCatalog {
                 ),
             result = Signature.Variable("X"),
             failures = listOf(),
-            uses = setOf(),
-            itemIds = null,
         )
 
     /** The first match of pattern in value, or null. Stops at the first match. */
@@ -1031,8 +921,6 @@ object PortableOperationCatalog {
                 ),
             result = Signature.Nullable(Signature.Named(RegexMatchType)),
             failures = listOf(KernelFailure.RegexLimit, KernelFailure.InvalidRegex),
-            uses = setOf(OperationCapability.METER),
-            itemIds = null,
         )
 
     /** Every non overlapping match of pattern in value, left to right. */
@@ -1049,8 +937,6 @@ object PortableOperationCatalog {
                 ),
             result = Signature.ListOf(Signature.Named(RegexMatchType)),
             failures = listOf(KernelFailure.RegexLimit, KernelFailure.InvalidRegex),
-            uses = setOf(OperationCapability.METER),
-            itemIds = ItemIdentities.POSITIONAL,
         )
 
     /**
@@ -1071,8 +957,6 @@ object PortableOperationCatalog {
                 ),
             result = Signature.Scalar(Signature.ScalarWord.TEXT),
             failures = listOf(KernelFailure.RegexLimit, KernelFailure.InvalidRegex),
-            uses = setOf(OperationCapability.METER),
-            itemIds = null,
         )
 
     /** The type selection of a resource by identity. Reads the resource; missing at its root when there is none. */
@@ -1088,8 +972,6 @@ object PortableOperationCatalog {
                 ),
             result = Signature.Maybe(Signature.ReadModel(TypeSelection.serializer)),
             failures = listOf(),
-            uses = setOf(OperationCapability.RESOURCES),
-            itemIds = null,
         )
 
     /** The identity of the resource the link names. Reads the resource; missing at its root when the link is stale. */
@@ -1105,8 +987,6 @@ object PortableOperationCatalog {
                 ),
             result = Signature.Maybe(Signature.Scalar(Signature.ScalarWord.RESOURCE_ID)),
             failures = listOf(),
-            uses = setOf(OperationCapability.RESOURCES),
-            itemIds = null,
         )
 
     /**
@@ -1125,8 +1005,6 @@ object PortableOperationCatalog {
                 ),
             result = Signature.Maybe(Signature.Variable("T")),
             failures = listOf(),
-            uses = setOf(OperationCapability.RESOURCES),
-            itemIds = null,
         )
 
     /**
@@ -1145,8 +1023,6 @@ object PortableOperationCatalog {
                 ),
             result = Signature.Maybe(Signature.Variable("T")),
             failures = listOf(),
-            uses = setOf(OperationCapability.RESOURCES),
-            itemIds = null,
         )
 
     /** The items of first that second does not contain. */
@@ -1163,8 +1039,6 @@ object PortableOperationCatalog {
                 ),
             result = Signature.SetOf(Signature.Variable("T")),
             failures = listOf(),
-            uses = setOf(),
-            itemIds = ItemIdentities.SOURCE,
         )
 
     /** The items of first that second contains. */
@@ -1181,8 +1055,6 @@ object PortableOperationCatalog {
                 ),
             result = Signature.SetOf(Signature.Variable("T")),
             failures = listOf(),
-            uses = setOf(),
-            itemIds = ItemIdentities.SOURCE,
         )
 
     /** The code points. */
@@ -1198,8 +1070,6 @@ object PortableOperationCatalog {
                 ),
             result = Signature.ListOf(Signature.Scalar(Signature.ScalarWord.INT32)),
             failures = listOf(),
-            uses = setOf(),
-            itemIds = ItemIdentities.POSITIONAL,
         )
 
     /** Full case folding of the pinned Unicode release, for caseless comparison. */
@@ -1215,8 +1085,6 @@ object PortableOperationCatalog {
                 ),
             result = Signature.Scalar(Signature.ScalarWord.TEXT),
             failures = listOf(),
-            uses = setOf(),
-            itemIds = null,
         )
 
     /** The text of these code points. */
@@ -1232,8 +1100,6 @@ object PortableOperationCatalog {
                 ),
             result = Signature.Scalar(Signature.ScalarWord.TEXT),
             failures = listOf(KernelFailure.InvalidCodePoint),
-            uses = setOf(),
-            itemIds = null,
         )
 
     /** The index of the first occurrence of needle at or after from, or -1. Stops at the first hit. */
@@ -1251,8 +1117,6 @@ object PortableOperationCatalog {
                 ),
             result = Signature.Scalar(Signature.ScalarWord.INT32),
             failures = listOf(),
-            uses = setOf(),
-            itemIds = null,
         )
 
     /** The parts joined with separator between them. */
@@ -1269,8 +1133,6 @@ object PortableOperationCatalog {
                 ),
             result = Signature.Scalar(Signature.ScalarWord.TEXT),
             failures = listOf(),
-            uses = setOf(),
-            itemIds = null,
         )
 
     /** The index of the last occurrence of needle starting at or before from, or -1. Scans from the end. */
@@ -1288,8 +1150,6 @@ object PortableOperationCatalog {
                 ),
             result = Signature.Scalar(Signature.ScalarWord.INT32),
             failures = listOf(),
-            uses = setOf(),
-            itemIds = null,
         )
 
     /** The number of code points. */
@@ -1305,8 +1165,6 @@ object PortableOperationCatalog {
                 ),
             result = Signature.Scalar(Signature.ScalarWord.INT32),
             failures = listOf(),
-            uses = setOf(),
-            itemIds = null,
         )
 
     /** Full lowercase mapping of the pinned Unicode release, root locale, with Final_Sigma. */
@@ -1322,8 +1180,6 @@ object PortableOperationCatalog {
                 ),
             result = Signature.Scalar(Signature.ScalarWord.TEXT),
             failures = listOf(),
-            uses = setOf(),
-            itemIds = null,
         )
 
     /** The Unicode normalization form of the text. */
@@ -1340,8 +1196,6 @@ object PortableOperationCatalog {
                 ),
             result = Signature.Scalar(Signature.ScalarWord.TEXT),
             failures = listOf(),
-            uses = setOf(),
-            itemIds = null,
         )
 
     /** Parses an optionally signed decimal number in plain or exponent notation. */
@@ -1357,8 +1211,6 @@ object PortableOperationCatalog {
                 ),
             result = Signature.Scalar(Signature.ScalarWord.DECIMAL),
             failures = listOf(KernelFailure.InvalidNumberText, KernelFailure.MagnitudeLimit),
-            uses = setOf(),
-            itemIds = null,
         )
 
     /** Parses an ISO 8601 duration of days, hours, minutes and seconds, such as PT1M30.5S. */
@@ -1374,8 +1226,6 @@ object PortableOperationCatalog {
                 ),
             result = Signature.Scalar(Signature.ScalarWord.DURATION),
             failures = listOf(KernelFailure.InvalidDurationText, KernelFailure.DurationRange),
-            uses = setOf(),
-            itemIds = null,
         )
 
     /** Parses an optionally signed finite floating point number in plain or exponent notation. */
@@ -1391,8 +1241,6 @@ object PortableOperationCatalog {
                 ),
             result = Signature.Scalar(Signature.ScalarWord.FLOAT),
             failures = listOf(KernelFailure.InvalidNumberText),
-            uses = setOf(),
-            itemIds = null,
         )
 
     /** Parses an optionally signed integer of digits in radix. No whitespace or prefixes. */
@@ -1409,8 +1257,6 @@ object PortableOperationCatalog {
                 ),
             result = Signature.Scalar(Signature.ScalarWord.INTEGER),
             failures = listOf(KernelFailure.InvalidNumberText, KernelFailure.InvalidRadix, KernelFailure.MagnitudeLimit),
-            uses = setOf(),
-            itemIds = null,
         )
 
     /** Parses an RFC 3339 timestamp. */
@@ -1426,8 +1272,6 @@ object PortableOperationCatalog {
                 ),
             result = Signature.Scalar(Signature.ScalarWord.TIMESTAMP),
             failures = listOf(KernelFailure.InvalidTimestampText, KernelFailure.TimestampRange),
-            uses = setOf(),
-            itemIds = null,
         )
 
     /** The parts between occurrences of separator, including empty ones. */
@@ -1444,8 +1288,6 @@ object PortableOperationCatalog {
                 ),
             result = Signature.ListOf(Signature.Scalar(Signature.ScalarWord.TEXT)),
             failures = listOf(KernelFailure.EmptySeparator),
-            uses = setOf(),
-            itemIds = ItemIdentities.POSITIONAL,
         )
 
     /** The code points from start up to, not including, end. */
@@ -1463,8 +1305,6 @@ object PortableOperationCatalog {
                 ),
             result = Signature.Scalar(Signature.ScalarWord.TEXT),
             failures = listOf(KernelFailure.SubstringRange),
-            uses = setOf(),
-            itemIds = null,
         )
 
     /**
@@ -1483,8 +1323,6 @@ object PortableOperationCatalog {
                 ),
             result = Signature.Scalar(Signature.ScalarWord.TEXT),
             failures = listOf(),
-            uses = setOf(),
-            itemIds = null,
         )
 
     /** Removes portable whitespace (Unicode White_Space and U+FEFF) from the end. */
@@ -1500,8 +1338,6 @@ object PortableOperationCatalog {
                 ),
             result = Signature.Scalar(Signature.ScalarWord.TEXT),
             failures = listOf(),
-            uses = setOf(),
-            itemIds = null,
         )
 
     /** Removes portable whitespace (Unicode White_Space and U+FEFF) from the start. */
@@ -1517,8 +1353,6 @@ object PortableOperationCatalog {
                 ),
             result = Signature.Scalar(Signature.ScalarWord.TEXT),
             failures = listOf(),
-            uses = setOf(),
-            itemIds = null,
         )
 
     /** Full uppercase mapping of the pinned Unicode release, root locale. */
@@ -1534,8 +1368,6 @@ object PortableOperationCatalog {
                 ),
             result = Signature.Scalar(Signature.ScalarWord.TEXT),
             failures = listOf(),
-            uses = setOf(),
-            itemIds = null,
         )
 
     /** The calendar fields of the timestamp at a fixed offset from UTC, proleptic Gregorian. */
@@ -1552,8 +1384,6 @@ object PortableOperationCatalog {
                 ),
             result = Signature.Named(DateTimeFieldsType),
             failures = listOf(KernelFailure.TimestampRange),
-            uses = setOf(),
-            itemIds = null,
         )
 
     /** The timestamp a number of milliseconds after 1970-01-01T00:00:00Z. */
@@ -1569,8 +1399,6 @@ object PortableOperationCatalog {
                 ),
             result = Signature.Scalar(Signature.ScalarWord.TIMESTAMP),
             failures = listOf(KernelFailure.TimestampRange),
-            uses = setOf(),
-            itemIds = null,
         )
 
     /** The timestamp of calendar fields at a fixed offset from UTC; weekday and day_of_year are ignored. */
@@ -1587,8 +1415,6 @@ object PortableOperationCatalog {
                 ),
             result = Signature.Scalar(Signature.ScalarWord.TIMESTAMP),
             failures = listOf(KernelFailure.InvalidCalendarDate, KernelFailure.TimestampRange),
-            uses = setOf(),
-            itemIds = null,
         )
 
     /** The CLDR name of month 1 to 12 in the locale. */
@@ -1606,8 +1432,6 @@ object PortableOperationCatalog {
                 ),
             result = Signature.Scalar(Signature.ScalarWord.TEXT),
             failures = listOf(KernelFailure.InvalidMonth, KernelFailure.InvalidLocale),
-            uses = setOf(),
-            itemIds = null,
         )
 
     /** The milliseconds since 1970-01-01T00:00:00Z. */
@@ -1623,8 +1447,6 @@ object PortableOperationCatalog {
                 ),
             result = Signature.Scalar(Signature.ScalarWord.INTEGER),
             failures = listOf(),
-            uses = setOf(),
-            itemIds = null,
         )
 
     /** The CLDR name of weekday 1 (Monday) to 7 in the locale. */
@@ -1642,8 +1464,6 @@ object PortableOperationCatalog {
                 ),
             result = Signature.Scalar(Signature.ScalarWord.TEXT),
             failures = listOf(KernelFailure.InvalidWeekday, KernelFailure.InvalidLocale),
-            uses = setOf(),
-            itemIds = null,
         )
 
     /** The offset from UTC of an IANA time zone at the timestamp. */
@@ -1660,8 +1480,6 @@ object PortableOperationCatalog {
                 ),
             result = Signature.Scalar(Signature.ScalarWord.DURATION),
             failures = listOf(KernelFailure.UnknownTimeZone),
-            uses = setOf(),
-            itemIds = null,
         )
 
     /** The value as X when its actual type is X or a descendant of X, otherwise null. */
@@ -1677,8 +1495,6 @@ object PortableOperationCatalog {
                 ),
             result = Signature.Nullable(Signature.Variable("X")),
             failures = listOf(),
-            uses = setOf(OperationCapability.TYPES),
-            itemIds = null,
         )
 
     /**
@@ -1698,8 +1514,6 @@ object PortableOperationCatalog {
                 ),
             result = Signature.Scalar(Signature.ScalarWord.INT32),
             failures = listOf(),
-            uses = setOf(),
-            itemIds = null,
         )
 
     /** The actual type of a named value, as a type selection; missing at no location for structural values. */
@@ -1715,8 +1529,6 @@ object PortableOperationCatalog {
                 ),
             result = Signature.Maybe(Signature.ReadModel(TypeSelection.serializer)),
             failures = listOf(),
-            uses = setOf(),
-            itemIds = null,
         )
 
     /** Whether two values are structurally equal. Collection item identities are ignored. */
@@ -1733,8 +1545,6 @@ object PortableOperationCatalog {
                 ),
             result = Signature.Scalar(Signature.ScalarWord.BOOLEAN),
             failures = listOf(),
-            uses = setOf(),
-            itemIds = null,
         )
 
     /** Parses canonical Skir readable JSON of a DataValue that the catalog admits as X. */
@@ -1750,8 +1560,6 @@ object PortableOperationCatalog {
                 ),
             result = Signature.Variable("X"),
             failures = listOf(KernelFailure.InvalidJson, KernelFailure.IncompatibleValue),
-            uses = setOf(OperationCapability.TYPES),
-            itemIds = null,
         )
 
     /** Whether the value's actual type is X or a descendant of X. */
@@ -1767,8 +1575,6 @@ object PortableOperationCatalog {
                 ),
             result = Signature.Scalar(Signature.ScalarWord.BOOLEAN),
             failures = listOf(),
-            uses = setOf(OperationCapability.TYPES),
-            itemIds = null,
         )
 
     /** Whether the value is the explicit null. Missing data is not null. */
@@ -1784,8 +1590,6 @@ object PortableOperationCatalog {
                 ),
             result = Signature.Scalar(Signature.ScalarWord.BOOLEAN),
             failures = listOf(),
-            uses = setOf(),
-            itemIds = null,
         )
 
     /** Evaluates value once and runs body with it bound as a lambda local. */
@@ -1802,8 +1606,6 @@ object PortableOperationCatalog {
                 ),
             result = Signature.Variable("R"),
             failures = listOf(),
-            uses = setOf(),
-            itemIds = null,
         )
 
     /**
@@ -1822,8 +1624,6 @@ object PortableOperationCatalog {
                 ),
             result = Signature.Scalar(Signature.ScalarWord.TEXT),
             failures = listOf(),
-            uses = setOf(),
-            itemIds = null,
         )
 
     /**
@@ -1843,8 +1643,6 @@ object PortableOperationCatalog {
                 ),
             result = Signature.Scalar(Signature.ScalarWord.TEXT),
             failures = listOf(),
-            uses = setOf(),
-            itemIds = null,
         )
 
     /** The representation of a value of the named type X. */
@@ -1860,8 +1658,6 @@ object PortableOperationCatalog {
                 ),
             result = Signature.Representation(Signature.Variable("X") as Signature.Variable),
             failures = listOf(),
-            uses = setOf(),
-            itemIds = null,
         )
 
     /** A value of the named type X over its representation. */
@@ -1877,8 +1673,6 @@ object PortableOperationCatalog {
                 ),
             result = Signature.Variable("X"),
             failures = listOf(),
-            uses = setOf(),
-            itemIds = null,
         )
 
     /** Every declared operation, in id order. */

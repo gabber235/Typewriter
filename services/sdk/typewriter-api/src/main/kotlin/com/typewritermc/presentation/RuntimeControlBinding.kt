@@ -248,7 +248,10 @@ internal class RuntimeControlBinding(
 
     private var resourceOrder: ExpressionNode? = null
 
-    /** Sorts the members by [key], evaluated with each member's link bound; the key may have any type. */
+    /**
+     * Sorts the members by [key], evaluated with each member's link bound. The key has an ordered type (text, a number,
+     * boolean, timestamp or duration), compared as value.compare compares; any other key throws.
+     */
     fun order(key: ResourceItemScope<*>.() -> Expr<*, Handled>) {
         check(resourceOrder == null) { "A resources layout may declare one order." }
         val scope =
@@ -264,7 +267,7 @@ internal class RuntimeControlBinding(
                     )
             }
         resourceOrder =
-            state.declare(RESOURCES_ITEM, memberLink(), mayBeMissing = false) { state.lowerInferred(scope.key(), "resources order").first }
+            state.declare(RESOURCES_ITEM, memberLink(), mayBeMissing = false) { state.lowerOrderKey(scope.key(), "resources order") }
     }
 
     fun graph(

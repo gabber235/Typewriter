@@ -18,7 +18,10 @@ import com.typewritermc.expression.FixtureReads
 import com.typewritermc.expression.eq
 import com.typewritermc.expression.field
 import com.typewritermc.expression.input
+import com.typewritermc.expression.isNull
 import com.typewritermc.expression.literal
+import com.typewritermc.expression.or
+import com.typewritermc.expression.testPortableTypes
 import com.typewritermc.types.StandardTypes
 import com.typewritermc.types.declared
 import com.typewritermc.types.duration
@@ -50,7 +53,7 @@ import kotlin.time.Instant
 val RuleShortcutReasoningTest by testSuite {
     val reasoner = DefaultPredicateReasoner()
 
-    test("rule helpers accept and reject configured values like their former rule nodes") {
+    test("rule helpers accept and reject configured values by their declared bounds") {
         rule { integerField(it).minimum(3) } holdsFor number(5) shouldBe true
         rule { integerField(it).minimum(5, inclusive = false) } holdsFor number(5) shouldBe false
         rule { integerField(it).between(1, 3) } holdsFor number(4) shouldBe false
@@ -93,6 +96,18 @@ val RuleShortcutReasoningTest by testSuite {
             rules { nullableIntegerField(it).whenPresent { minimum(10) } } + rules { integerField(it).maximum(5) },
         ) shouldBe
             true
+    }
+
+    test("a null skip only lifts bounds computed from the value it tests") {
+        val record = input<Any>(CONFIGURED_VALUE)
+        val first = record.field<Int?>("first")
+        val second = record.field<Int>("second")
+        reasoner.contradicts(
+            listOf((first.isNull() or (second gt 10)).toNode(), (second lt 5).toNode()),
+        ) shouldBe false
+        reasoner.contradicts(
+            listOf((record.field<Int?>("second").isNull() or (second gt 10)).toNode(), (second lt 5).toNode()),
+        ) shouldBe true
     }
 
     test("duration and timestamp bounds contradict on their own scale") {
@@ -146,7 +161,10 @@ private fun rule(configure: (ConfigurationCollectionScope) -> Unit): ExpressionN
 private infix fun ExpressionNode.holdsFor(value: DataValue): Boolean {
     val result =
         with(FixtureReads) {
-            DefaultExpressionEvaluator(ExpressionValueReader { error("Rule tests bind unlocated values only.") }).evaluateScoped(
+            DefaultExpressionEvaluator(
+                ExpressionValueReader { error("Rule tests bind unlocated values only.") },
+                testPortableTypes(),
+            ).evaluateScoped(
                 this@holdsFor,
                 ExpressionBindings(emptyMap()),
                 mapOf(CONFIGURED_VALUE to value),

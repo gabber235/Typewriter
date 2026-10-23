@@ -667,8 +667,10 @@ private fun WireExpressionNode.appearanceField(): String? {
 private fun WireExpressionNode.evaluate(): DataValue? =
     with(com.typewritermc.expression.FixtureReads) {
         com.typewritermc.expression
-            .DefaultExpressionEvaluator(com.typewritermc.expression.ExpressionValueReader { error("A closed expression reads nothing.") })
-            .evaluate(
+            .DefaultExpressionEvaluator(
+                com.typewritermc.expression.ExpressionValueReader { error("A closed expression reads nothing.") },
+                com.typewritermc.expression.testPortableTypes(),
+            ).evaluate(
                 this@evaluate,
                 com.typewritermc.expression.ExpressionBindings(emptyMap()),
                 skirout.editor.v1.expression

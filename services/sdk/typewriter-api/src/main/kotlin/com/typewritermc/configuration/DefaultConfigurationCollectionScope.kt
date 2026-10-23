@@ -13,7 +13,6 @@ import com.typewritermc.expression.MissingPolicy
 import com.typewritermc.expression.inputExpression
 import com.typewritermc.expression.isNull
 import com.typewritermc.expression.length
-import com.typewritermc.expression.operations.portableRegexValidationError
 import com.typewritermc.expression.or
 import com.typewritermc.expression.portableLiteral
 import com.typewritermc.expression.shortcuts.endsWith
@@ -134,10 +133,7 @@ internal class RuntimeConfigurationBinding(
         message: String = helperMessage(operation),
     ) {
         if (operation == ConfigurationRuleHelper.REGEX) {
-            val pattern =
-                arguments.singleOrNull() as? String
-                    ?: throw IllegalArgumentException("A regular expression rule requires one text pattern.")
-            pattern.portableRegexValidationError()?.let { reason -> throw IllegalArgumentException(reason) }
+            require(arguments.singleOrNull() is String) { "A regular expression rule requires one text pattern." }
         }
         PendingRule(operation.predicate(representation, arguments) { constant(it, expected, constants) }).error(message)
     }

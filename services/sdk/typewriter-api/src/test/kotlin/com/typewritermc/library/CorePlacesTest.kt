@@ -10,6 +10,7 @@ import com.typewritermc.discovery.assemble
 import com.typewritermc.expression.Handled
 import com.typewritermc.expression.descendants
 import com.typewritermc.expression.inputExpression
+import com.typewritermc.expression.listExpr
 import com.typewritermc.expression.literal
 import com.typewritermc.expression.name
 import com.typewritermc.expression.orElse
@@ -172,6 +173,14 @@ val CorePlacesTest by testSuite {
                 }
             }
         }.message shouldContain "Invalid resources order"
+        shouldThrow<IllegalArgumentException> {
+            build {
+                pages {
+                    order { listExpr(resource.fields.name.orElse(literal(""))) }
+                    list()
+                }
+            }
+        }.message shouldContain "not of an ordered type"
         shouldThrow<IllegalArgumentException> {
             build {
                 pages {

@@ -4,6 +4,7 @@ import com.typewritermc.configuration.ExpressionInference
 import com.typewritermc.configuration.PortableExpressionChecker
 import com.typewritermc.discovery.OpaqueParameters
 import com.typewritermc.expression.nominalExpressionType
+import com.typewritermc.expression.operations.CheckFailure
 import com.typewritermc.types.StandardTypes
 import com.typewritermc.types.catalog.CheckedType
 import com.typewritermc.types.catalog.Resolution
@@ -63,7 +64,7 @@ internal class PresentationTyping(
         when (val inference = checker.inferExpression(body, closed(bindings))) {
             is ExpressionInference.Typed -> {
                 template(inference.type)?.let(TemplateInference::Typed)
-                    ?: TemplateInference.Failed(listOf(com.typewritermc.expression.operations.CheckFailure.InvalidExpressionType))
+                    ?: TemplateInference.Failed(listOf(CheckFailure.InvalidExpressionType))
             }
 
             is ExpressionInference.Failed -> {

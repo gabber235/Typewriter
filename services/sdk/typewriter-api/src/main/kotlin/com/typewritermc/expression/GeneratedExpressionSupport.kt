@@ -231,36 +231,6 @@ fun <T : Any, M : MissingPolicy> Expr<T?, M>.orElse(value: Expr<T, Handled>): Ex
 fun <T : Any> Expr<T, MayBeMissing>.orElse(value: Expr<T, Handled>): Expr<T, Handled> =
     Expr { ExpressionNode.createOrElse(value = lower(it), fallback = value.lower(it)) }
 
-/** This text when it is present and has a code point besides portable whitespace, otherwise [fallback]. */
-fun Expr<String, MissingPolicy>.orIfBlank(fallback: Expr<String, Handled>): Expr<String, Handled> {
-    val source = this
-    return Expr { environment ->
-        val input = source.lower(environment)
-        val fallbackNode = fallback.lower(environment)
-        val blank =
-            ExpressionNode.createCall(
-                operation = PortableOperationCatalog.VALUE_EQUALS.id,
-                typeArguments = emptyList(),
-                arguments =
-                    listOf(
-                        ExpressionNode.createCall(
-                            operation = PortableOperationCatalog.TEXT_TRIM_START.id,
-                            typeArguments = emptyList(),
-                            arguments = listOf(input),
-                        ),
-                        ExpressionNode.LiteralWrapper(DataValue.StringValueWrapper("")),
-                    ),
-            )
-        ExpressionNode.createOrElse(
-            value = ExpressionNode.createConditional(test = blank, then = fallbackNode, otherwise = input),
-            fallback = fallbackNode,
-        )
-    }
-}
-
-/** This text when it is present and not blank, otherwise the literal [fallback]. */
-fun Expr<String, MissingPolicy>.orIfBlank(fallback: String): Expr<String, Handled> = orIfBlank(literal(fallback))
-
 fun <T> emptyListExpression(): Expr<List<T>, Handled> = portableLiteral(DataValue.listValue(emptyList()))
 
 private fun ExpressionNode.requireClosedExpression() {

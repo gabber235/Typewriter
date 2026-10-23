@@ -7,9 +7,9 @@ import com.typewritermc.expression.eq
 import com.typewritermc.expression.literal
 import com.typewritermc.expression.map
 import com.typewritermc.expression.orElse
-import com.typewritermc.expression.orIfBlank
 import com.typewritermc.expression.shortcuts.gt
 import com.typewritermc.expression.shortcuts.gte
+import com.typewritermc.expression.shortcuts.orIfBlank
 import com.typewritermc.expression.size
 import com.typewritermc.expression.target
 import com.typewritermc.presentation.AxisLayout

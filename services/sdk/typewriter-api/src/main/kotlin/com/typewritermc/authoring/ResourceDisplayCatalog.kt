@@ -6,6 +6,7 @@ import com.typewritermc.authoring.record
 import com.typewritermc.expression.DefaultExpressionEvaluator
 import com.typewritermc.expression.ExpressionBindings
 import com.typewritermc.expression.ExpressionValueReader
+import com.typewritermc.expression.operations.CatalogPortableTypes
 import com.typewritermc.types.catalog.CheckedCatalog
 import com.typewritermc.types.fields
 import com.typewritermc.types.named
@@ -80,7 +81,11 @@ class ResourceDisplayCatalog(
         val configuration = record.configuration as? TypeSelection.CompleteWrapper ?: return null
         val display = displayFor(configuration.use.definition, catalog) ?: return null
         val subject = DataValue.named(configuration.use, DataValue.RecordWrapper(record.payload))
-        val evaluator = DefaultExpressionEvaluator(ExpressionValueReader { error("Display formulas read their subject as a local value.") })
+        val evaluator =
+            DefaultExpressionEvaluator(
+                ExpressionValueReader { error("Display formulas read their subject as a local value.") },
+                CatalogPortableTypes(catalog),
+            )
         val result =
             evaluator.evaluateScoped(
                 display.label,
