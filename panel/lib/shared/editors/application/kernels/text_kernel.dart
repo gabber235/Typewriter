@@ -83,17 +83,15 @@ final class PanelTextKernel implements skir.TextKernel {
     final match = _numberText.firstMatch(value) ?? _invalidNumber(value);
     final fraction = match.group(3) ?? match.group(4) ?? "";
     final exponentText = match.group(5) ?? "0";
-    // An exponent or scale beyond the 32 bit range no host represents is not
-    // a number either.
+    // An exponent beyond the 32 bit range no host represents is not a number
+    // either.
     if (_withoutLeadingZeros(exponentText.replaceFirst(RegExp("^[+-]"), ""))
             .length >
         10) {
       _invalidNumber(value);
     }
     final exponent = int.parse(exponentText);
-    if (!_isInt32(exponent) || !_isInt32(fraction.length - exponent)) {
-      _invalidNumber(value);
-    }
+    if (!_isInt32(exponent)) _invalidNumber(value);
     final coefficient = _withoutLeadingZeros(
       "${match.group(2) ?? ""}$fraction",
     );
