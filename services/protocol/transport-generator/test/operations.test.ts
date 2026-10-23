@@ -26,6 +26,8 @@ evaluator_failures:
   ill_typed_argument: Wrong kind.
 check_failures:
   unknown_operation: Unknown.
+host_failures:
+  sample_read_failure: A sample read failure.
 ${extra}operations:
 ${operations}`;
 }
@@ -95,6 +97,14 @@ describe("operations manifest admission", () => {
     );
   });
 
+  test("rejects host failures that share an id with kernel or evaluator failures", async () => {
+    const input = await loadSkirInput();
+    const source = manifest(SAMPLE_FAILURE_USER).replace("sample_read_failure: A sample read failure.", "ill_typed_argument: Wrong kind.");
+    expect(() => resolveOperations(parseOperations(source, "operations.yaml"), input)).toThrow(
+      /host_failures\.ill_typed_argument: host failure ill_typed_argument is also a kernel or evaluator failure/,
+    );
+  });
+
   test("rejects read models that name no Skir record", async () => {
     const source = manifest(SAMPLE_FAILURE_USER).replace("type_catalog.skir:TypeSelection", "type_catalog.skir:Missing");
     await expect(loadSkirInput().then((input) => resolveOperations(parseOperations(source, "operations.yaml"), input))).rejects.toThrow(
@@ -141,7 +151,7 @@ describe("emitted operation catalog", async () => {
     for (const value of catalog.operations) {
       expect(declarations).toContain(`OperationId(value = "${value.id}")`);
     }
-    for (const failure of [...catalog.failures, ...catalog.evaluatorFailures, ...catalog.checkFailures]) {
+    for (const failure of [...catalog.failures, ...catalog.evaluatorFailures, ...catalog.checkFailures, ...catalog.hostFailures]) {
       expect(failures).toContain(`FailureId(value = "${failure.id}")`);
     }
   });

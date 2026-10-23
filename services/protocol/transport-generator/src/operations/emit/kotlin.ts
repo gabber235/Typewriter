@@ -267,18 +267,6 @@ function failuresFile(catalog: ResolvedOperations, skir: Skir): Body {
           "/** Every failure of this group, in declaration order. */",
           `val all: List<${skir.failureId}> = listOf(${failures.map((failure) => upperCamel(failure.id)).join(", ")})`,
         ],
-        [
-          "private val messages: Map<String, String> =",
-          ...indent([
-            "mapOf(",
-            ...indent(failures.map((failure) => `${quoted(failure.id)} to ${quoted(failure.message, "escaped")},`)),
-            ")",
-          ]),
-        ],
-        [
-          "/** The declared message of [failure], or null when it is not of this group. */",
-          `fun message(failure: ${skir.failureId}): String? = messages[failure.value]`,
-        ],
       ]),
     ),
     "}",
@@ -289,6 +277,7 @@ function failuresFile(catalog: ResolvedOperations, skir: Skir): Body {
       group("KernelFailure", "Failures operation kernels raise.", catalog.failures),
       group("EvaluatorFailure", "Failures of the structural forms and the call rule, on both hosts.", catalog.evaluatorFailures),
       group("CheckFailure", "Codes the expression checker reports.", catalog.checkFailures),
+      group("HostFailure", "Failures hosts raise while reading authored values; evaluators never raise them.", catalog.hostFailures),
     ]),
   };
 }

@@ -167,6 +167,31 @@ check_failures:
   outside_rule_profile: A rule calls a profile panel operation.
   expression_depth_limit: The expression is nested too deeply.
 
+host_failures:
+  untracked_expression_reads: Portable expressions require Realm snapshot reads.
+  selection_evaluator_unavailable: No selection predicate evaluator is installed.
+  check_callback_failed: A Kotlin check callback threw.
+  native_read_failed: Reading an authored value through its Kotlin type threw.
+  representation_read_failed: Reading an authored representation through its Kotlin type threw.
+  expected_named_representation: A representation read requires a named authored value.
+  invalid_representation: The authored representation does not match the requested type.
+  unreadable_value: The authored value is not readable as the requested type.
+  invalid_value: The authored value does not match its checked schema.
+  expected_named_binding: A draft binding requires a named authored value.
+  unreadable_binding: The authored value is not readable as the requested draft type.
+  expected_collection: The authored value is not a collection.
+  expected_value: The path ends at a map row rather than a value.
+  expected_record: A field was read from a value that is not a record.
+  expected_map_row: A map key or value was read outside a map row.
+  value_depth_limit: The authored value nests too deeply.
+  resource_binding_failed: The resource could not be bound to its captured catalog.
+  unresolved_type: A type does not resolve in the captured catalog.
+  unresolved_partial_type: A pending type selection does not resolve in the captured catalog.
+  inconsistent_graph_projection: The declared graph projection is inconsistent.
+  read_context_mismatch: The draft view belongs to a different snapshot or catalog generation.
+  unexpected_null: A nonnullable collection contains null.
+  multiple_selection_matches: More than one value matched a selection that takes one.
+
 operations:
   # VALUE
 
@@ -545,19 +570,23 @@ operations:
     doc: >-
       The value with exactly fraction_digits fraction digits (rounded half even; a float from its shortest
       round trip decimal) and the locale's CLDR digits, grouping and symbols. Locale und uses no grouping.
+      More than 20000 fraction digits, or a result of more than 20000 digits, fails magnitude_limit.
     profile: panel
     dsl: { name: formatNumber }
     type_parameters: { N: numeric }
     parameters: [value: N, fraction_digits: int32, locale: text]
-    failures: [invalid_locale]
+    failures: [invalid_locale, magnitude_limit]
     result: text
 
   number.plural_category:
-    doc: The CLDR plural category of the value in the locale.
+    doc: >-
+      The CLDR plural category of the value in the locale, from the plural operands of its exact decimal
+      value (a float through its shortest round trip decimal). A magnitude of 10^21 or more, or more than
+      20 fraction digits, is beyond the platform plural rules and fails magnitude_limit.
     profile: panel
     type_parameters: { N: numeric }
     parameters: [value: N, locale: text]
-    failures: [invalid_locale]
+    failures: [invalid_locale, magnitude_limit]
     result: plural_category
 
   integer.gcd:

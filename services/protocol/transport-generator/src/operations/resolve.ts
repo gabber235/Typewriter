@@ -92,6 +92,8 @@ export interface ResolvedOperations {
   readonly failures: readonly ResolvedFailure[];
   readonly evaluatorFailures: readonly ResolvedFailure[];
   readonly checkFailures: readonly ResolvedFailure[];
+  /** Failures hosts raise while reading authored values; evaluators never raise them. */
+  readonly hostFailures: readonly ResolvedFailure[];
   /** Sorted by id, so generated output is stable. */
   readonly operations: readonly ResolvedOperation[];
 }
@@ -167,6 +169,11 @@ export function resolveOperations(
       throw error(["failures", failure], `no operation declares failure ${failure}`);
     }
   }
+  for (const failure of Object.keys(data.host_failures)) {
+    if (failure in data.failures || failure in data.evaluator_failures) {
+      throw error(["host_failures", failure], `host failure ${failure} is also a kernel or evaluator failure`);
+    }
+  }
 
   const messages = (entries: Record<string, string>) =>
     Object.entries(entries).map(([id, message]) => ({ id, message }));
@@ -178,6 +185,7 @@ export function resolveOperations(
     failures: messages(data.failures),
     evaluatorFailures: messages(data.evaluator_failures),
     checkFailures: messages(data.check_failures),
+    hostFailures: messages(data.host_failures),
     operations,
   };
 }

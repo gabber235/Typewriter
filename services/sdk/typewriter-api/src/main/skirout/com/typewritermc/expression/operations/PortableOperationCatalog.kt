@@ -840,13 +840,14 @@ object PortableOperationCatalog {
 
     /**
      * The value with exactly fraction_digits fraction digits (rounded half even; a float from its shortest round
-     * trip decimal) and the locale's CLDR digits, grouping and symbols. Locale und uses no grouping.
+     * trip decimal) and the locale's CLDR digits, grouping and symbols. Locale und uses no grouping. More than 20000
+     * fraction digits, or a result of more than 20000 digits, fails magnitude_limit.
      */
     val NUMBER_FORMAT: PortableOperation =
         PortableOperation(
             id = OperationId(value = "number.format"),
             profile = OperationProfile.PANEL,
-            doc = "The value with exactly fraction_digits fraction digits (rounded half even; a float from its shortest round trip decimal) and the locale's CLDR digits, grouping and symbols. Locale und uses no grouping.",
+            doc = "The value with exactly fraction_digits fraction digits (rounded half even; a float from its shortest round trip decimal) and the locale's CLDR digits, grouping and symbols. Locale und uses no grouping. More than 20000 fraction digits, or a result of more than 20000 digits, fails magnitude_limit.",
             typeParameters = listOf(OperationTypeParameter("N", TypeBound.NUMERIC, explicit = false)),
             parameters =
                 listOf(
@@ -855,7 +856,7 @@ object PortableOperationCatalog {
                     OperationParameter("locale", Signature.Scalar(Signature.ScalarWord.TEXT), ParameterKind.VALUE, variadic = false),
                 ),
             result = Signature.Scalar(Signature.ScalarWord.TEXT),
-            failures = listOf(KernelFailure.InvalidLocale),
+            failures = listOf(KernelFailure.InvalidLocale, KernelFailure.MagnitudeLimit),
             uses = setOf(),
             itemIds = null,
         )
@@ -879,12 +880,16 @@ object PortableOperationCatalog {
             itemIds = null,
         )
 
-    /** The CLDR plural category of the value in the locale. */
+    /**
+     * The CLDR plural category of the value in the locale, from the plural operands of its exact decimal value (a
+     * float through its shortest round trip decimal). A magnitude of 10^21 or more, or more than 20 fraction digits,
+     * is beyond the platform plural rules and fails magnitude_limit.
+     */
     val NUMBER_PLURAL_CATEGORY: PortableOperation =
         PortableOperation(
             id = OperationId(value = "number.plural_category"),
             profile = OperationProfile.PANEL,
-            doc = "The CLDR plural category of the value in the locale.",
+            doc = "The CLDR plural category of the value in the locale, from the plural operands of its exact decimal value (a float through its shortest round trip decimal). A magnitude of 10^21 or more, or more than 20 fraction digits, is beyond the platform plural rules and fails magnitude_limit.",
             typeParameters = listOf(OperationTypeParameter("N", TypeBound.NUMERIC, explicit = false)),
             parameters =
                 listOf(
@@ -892,7 +897,7 @@ object PortableOperationCatalog {
                     OperationParameter("locale", Signature.Scalar(Signature.ScalarWord.TEXT), ParameterKind.VALUE, variadic = false),
                 ),
             result = Signature.Named(PluralCategoryType),
-            failures = listOf(KernelFailure.InvalidLocale),
+            failures = listOf(KernelFailure.InvalidLocale, KernelFailure.MagnitudeLimit),
             uses = setOf(),
             itemIds = null,
         )

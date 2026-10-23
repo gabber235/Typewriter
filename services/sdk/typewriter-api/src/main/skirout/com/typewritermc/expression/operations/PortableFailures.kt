@@ -105,43 +105,6 @@ object KernelFailure {
 
     /** Every failure of this group, in declaration order. */
     val all: List<FailureId> = listOf(SubstringRange, EmptySeparator, InvalidCodePoint, InvalidNumberText, InvalidRadix, InvalidDurationText, InvalidTimestampText, RegexLimit, InvalidRegex, NonFiniteNumber, DivisionByZero, InvalidRoundingIncrement, NegativeExponent, NegativeSquareRoot, InexactConversion, NegativeShift, InvalidByte, MagnitudeLimit, DurationRange, TimestampRange, InvalidCalendarDate, UnknownTimeZone, InvalidLocale, InvalidMonth, InvalidWeekday, CollectionKeyAbsent, SliceRange, InvalidRangeStep, InvalidJson, IncompatibleValue)
-
-    private val messages: Map<String, String> =
-        mapOf(
-            "substring_range" to "The start or end index is outside the text, or the end is before the start.",
-            "empty_separator" to "The separator is empty.",
-            "invalid_code_point" to "A value is not a Unicode scalar value.",
-            "invalid_number_text" to "The text is not a number in the expected syntax.",
-            "invalid_radix" to "The radix is outside 2 to 36.",
-            "invalid_duration_text" to "The text is not an ISO 8601 duration.",
-            "invalid_timestamp_text" to "The text is not an RFC 3339 timestamp.",
-            "regex_limit" to "The pattern or input exceeds its size limit.",
-            "invalid_regex" to "The pattern is outside the portable subset.",
-            "non_finite_number" to "Floating point arithmetic produced an infinite or undefined value.",
-            "division_by_zero" to "The divisor is zero.",
-            "invalid_rounding_increment" to "The rounding increment is not positive.",
-            "negative_exponent" to "The exponent is negative.",
-            "negative_square_root" to "The value is negative.",
-            "inexact_conversion" to "The value has no exact representation in the target type.",
-            "negative_shift" to "The shift distance is negative.",
-            "invalid_byte" to "A value is outside 0 to 255.",
-            "magnitude_limit" to "An integer or decimal result would have more than 20000 digits.",
-            "duration_range" to "The duration is outside the representable range.",
-            "timestamp_range" to "The timestamp is outside the representable range.",
-            "invalid_calendar_date" to "The fields do not name a valid date and time.",
-            "unknown_time_zone" to "The zone is not an IANA time zone.",
-            "invalid_locale" to "The locale is not a valid BCP 47 language tag.",
-            "invalid_month" to "The month is outside 1 to 12.",
-            "invalid_weekday" to "The weekday is outside 1 to 7.",
-            "collection_key_absent" to "The index or key is absent.",
-            "slice_range" to "The start or end index is outside the list, or the end is before the start.",
-            "invalid_range_step" to "The range step is zero.",
-            "invalid_json" to "The text is not canonical value JSON.",
-            "incompatible_value" to "The value does not have the requested type.",
-        )
-
-    /** The declared message of [failure], or null when it is not of this group. */
-    fun message(failure: FailureId): String? = messages[failure.value]
 }
 
 /** Failures of the structural forms and the call rule, on both hosts. */
@@ -187,26 +150,6 @@ object EvaluatorFailure {
 
     /** Every failure of this group, in declaration order. */
     val all: List<FailureId> = listOf(ExpressionStepLimit, ExpressionCollectionLimit, ExpressionDepthLimit, UnknownExpression, UnknownExpressionBinding, InvalidExpressionLocal, InvalidExpressionLiteral, UnknownOperation, InvalidArgumentCount, IllTypedArgument, IntegerOutOfRange, OutsideRuleProfile, ExpressionResultNotBoolean)
-
-    private val messages: Map<String, String> =
-        mapOf(
-            "expression_step_limit" to "The evaluation exceeded its step budget.",
-            "expression_collection_limit" to "The evaluation exceeded its collection item budget.",
-            "expression_depth_limit" to "The evaluation nested too deeply.",
-            "unknown_expression" to "The expression node is of a kind this host does not know.",
-            "unknown_expression_binding" to "The expression names a binding the host did not supply.",
-            "invalid_expression_local" to "A local refers outside its frames.",
-            "invalid_expression_literal" to "A literal is not a portable value.",
-            "unknown_operation" to "The call names an operation this host does not know.",
-            "invalid_argument_count" to "The call has the wrong number of arguments.",
-            "ill_typed_argument" to "An argument does not have its declared type.",
-            "integer_out_of_range" to "An integer argument is outside the 32 bit range its parameter accepts.",
-            "outside_rule_profile" to "Realm reached a profile panel operation.",
-            "expression_result_not_boolean" to "A predicate did not produce a boolean value.",
-        )
-
-    /** The declared message of [failure], or null when it is not of this group. */
-    fun message(failure: FailureId): String? = messages[failure.value]
 }
 
 /** Codes the expression checker reports. */
@@ -270,30 +213,79 @@ object CheckFailure {
 
     /** Every failure of this group, in declaration order. */
     val all: List<FailureId> = listOf(UnknownOperation, InvalidArgumentCount, InvalidOperandType, NumericFamilyMismatch, InvalidTypeArgument, LiteralRequired, IncompatibleExpressionTypes, IncompatibleExpressionResultType, ExpressionResultMayBeMissing, ExpressionTypeInferenceFailed, InvalidExpressionType, InvalidExpressionLiteral, UnknownExpression, UnknownExpressionBinding, InvalidExpressionLocal, InvalidExpressionPath, InvalidLambda, OutsideRuleProfile, ExpressionDepthLimit)
+}
 
-    private val messages: Map<String, String> =
-        mapOf(
-            "unknown_operation" to "The call names no declared operation.",
-            "invalid_argument_count" to "The call has the wrong number of arguments.",
-            "invalid_operand_type" to "An argument does not fit its parameter.",
-            "numeric_family_mismatch" to "Numeric operands mix integer, float and decimal.",
-            "invalid_type_argument" to "A type argument is missing, extra or not a valid type.",
-            "literal_required" to "The parameter only accepts a literal.",
-            "incompatible_expression_types" to "The branches of a conditional or fallback have no common type.",
-            "incompatible_expression_result_type" to "The result does not fit the slot.",
-            "expression_result_may_be_missing" to "The slot does not accept missing data.",
-            "expression_type_inference_failed" to "A literal has no type, such as an empty list without context.",
-            "invalid_expression_type" to "A declared type does not resolve in the catalog.",
-            "invalid_expression_literal" to "A literal is not a portable value.",
-            "unknown_expression" to "The expression node is of an unknown kind.",
-            "unknown_expression_binding" to "The expression names an unknown binding.",
-            "invalid_expression_local" to "A local refers outside its frames.",
-            "invalid_expression_path" to "A path does not exist on its type.",
-            "invalid_lambda" to "A lambda argument is missing, misplaced or has the wrong arity.",
-            "outside_rule_profile" to "A rule calls a profile panel operation.",
-            "expression_depth_limit" to "The expression is nested too deeply.",
-        )
+/** Failures hosts raise while reading authored values; evaluators never raise them. */
+object HostFailure {
+    /** Portable expressions require Realm snapshot reads. */
+    val UntrackedExpressionReads: FailureId = FailureId(value = "untracked_expression_reads")
 
-    /** The declared message of [failure], or null when it is not of this group. */
-    fun message(failure: FailureId): String? = messages[failure.value]
+    /** No selection predicate evaluator is installed. */
+    val SelectionEvaluatorUnavailable: FailureId = FailureId(value = "selection_evaluator_unavailable")
+
+    /** A Kotlin check callback threw. */
+    val CheckCallbackFailed: FailureId = FailureId(value = "check_callback_failed")
+
+    /** Reading an authored value through its Kotlin type threw. */
+    val NativeReadFailed: FailureId = FailureId(value = "native_read_failed")
+
+    /** Reading an authored representation through its Kotlin type threw. */
+    val RepresentationReadFailed: FailureId = FailureId(value = "representation_read_failed")
+
+    /** A representation read requires a named authored value. */
+    val ExpectedNamedRepresentation: FailureId = FailureId(value = "expected_named_representation")
+
+    /** The authored representation does not match the requested type. */
+    val InvalidRepresentation: FailureId = FailureId(value = "invalid_representation")
+
+    /** The authored value is not readable as the requested type. */
+    val UnreadableValue: FailureId = FailureId(value = "unreadable_value")
+
+    /** The authored value does not match its checked schema. */
+    val InvalidValue: FailureId = FailureId(value = "invalid_value")
+
+    /** A draft binding requires a named authored value. */
+    val ExpectedNamedBinding: FailureId = FailureId(value = "expected_named_binding")
+
+    /** The authored value is not readable as the requested draft type. */
+    val UnreadableBinding: FailureId = FailureId(value = "unreadable_binding")
+
+    /** The authored value is not a collection. */
+    val ExpectedCollection: FailureId = FailureId(value = "expected_collection")
+
+    /** The path ends at a map row rather than a value. */
+    val ExpectedValue: FailureId = FailureId(value = "expected_value")
+
+    /** A field was read from a value that is not a record. */
+    val ExpectedRecord: FailureId = FailureId(value = "expected_record")
+
+    /** A map key or value was read outside a map row. */
+    val ExpectedMapRow: FailureId = FailureId(value = "expected_map_row")
+
+    /** The authored value nests too deeply. */
+    val ValueDepthLimit: FailureId = FailureId(value = "value_depth_limit")
+
+    /** The resource could not be bound to its captured catalog. */
+    val ResourceBindingFailed: FailureId = FailureId(value = "resource_binding_failed")
+
+    /** A type does not resolve in the captured catalog. */
+    val UnresolvedType: FailureId = FailureId(value = "unresolved_type")
+
+    /** A pending type selection does not resolve in the captured catalog. */
+    val UnresolvedPartialType: FailureId = FailureId(value = "unresolved_partial_type")
+
+    /** The declared graph projection is inconsistent. */
+    val InconsistentGraphProjection: FailureId = FailureId(value = "inconsistent_graph_projection")
+
+    /** The draft view belongs to a different snapshot or catalog generation. */
+    val ReadContextMismatch: FailureId = FailureId(value = "read_context_mismatch")
+
+    /** A nonnullable collection contains null. */
+    val UnexpectedNull: FailureId = FailureId(value = "unexpected_null")
+
+    /** More than one value matched a selection that takes one. */
+    val MultipleSelectionMatches: FailureId = FailureId(value = "multiple_selection_matches")
+
+    /** Every failure of this group, in declaration order. */
+    val all: List<FailureId> = listOf(UntrackedExpressionReads, SelectionEvaluatorUnavailable, CheckCallbackFailed, NativeReadFailed, RepresentationReadFailed, ExpectedNamedRepresentation, InvalidRepresentation, UnreadableValue, InvalidValue, ExpectedNamedBinding, UnreadableBinding, ExpectedCollection, ExpectedValue, ExpectedRecord, ExpectedMapRow, ValueDepthLimit, ResourceBindingFailed, UnresolvedType, UnresolvedPartialType, InconsistentGraphProjection, ReadContextMismatch, UnexpectedNull, MultipleSelectionMatches)
 }

@@ -674,9 +674,9 @@ abstract final class PortableFailures {
     "number.add": ["non_finite_number"],
     "number.convert": ["inexact_conversion"],
     "number.divide": ["division_by_zero", "non_finite_number"],
-    "number.format": ["invalid_locale"],
+    "number.format": ["invalid_locale", "magnitude_limit"],
     "number.multiply": ["non_finite_number", "magnitude_limit"],
-    "number.plural_category": ["invalid_locale"],
+    "number.plural_category": ["invalid_locale", "magnitude_limit"],
     "number.power": [
       "negative_exponent",
       "non_finite_number",
@@ -1898,7 +1898,9 @@ abstract interface class NumberKernel {
 
   /// The value with exactly fraction_digits fraction digits (rounded half even; a
   /// float from its shortest round trip decimal) and the locale's CLDR digits,
-  /// grouping and symbols. Locale und uses no grouping. Panel profile.
+  /// grouping and symbols. Locale und uses no grouping. More than 20000 fraction
+  /// digits, or a result of more than 20000 digits, fails magnitude_limit. Panel
+  /// profile.
   String format(PortableNumber value, int fractionDigits, String locale);
 
   /// The product.
@@ -1908,7 +1910,10 @@ abstract interface class NumberKernel {
     List<PortableNumber> rest,
   );
 
-  /// The CLDR plural category of the value in the locale. Panel profile.
+  /// The CLDR plural category of the value in the locale, from the plural
+  /// operands of its exact decimal value (a float through its shortest round trip
+  /// decimal). A magnitude of 10^21 or more, or more than 20 fraction digits, is
+  /// beyond the platform plural rules and fails magnitude_limit. Panel profile.
   PluralCategory pluralCategory(PortableNumber value, String locale);
 
   /// Value raised to a nonnegative integer exponent, where any value to the power

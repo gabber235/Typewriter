@@ -1321,7 +1321,8 @@ operator fun <M : MissingPolicy> Expr<ULong, M>.div(
 
 /**
  * The value with exactly fraction_digits fraction digits (rounded half even; a float from its shortest round
- * trip decimal) and the locale's CLDR digits, grouping and symbols. Locale und uses no grouping.
+ * trip decimal) and the locale's CLDR digits, grouping and symbols. Locale und uses no grouping. More than 20000
+ * fraction digits, or a result of more than 20000 digits, fails magnitude_limit.
  */
 @JvmName("numberFormat")
 fun <N : Number, M : MissingPolicy> Expr<N, M>.formatNumber(
@@ -1332,7 +1333,8 @@ fun <N : Number, M : MissingPolicy> Expr<N, M>.formatNumber(
 
 /**
  * The value with exactly fraction_digits fraction digits (rounded half even; a float from its shortest round
- * trip decimal) and the locale's CLDR digits, grouping and symbols. Locale und uses no grouping.
+ * trip decimal) and the locale's CLDR digits, grouping and symbols. Locale und uses no grouping. More than 20000
+ * fraction digits, or a result of more than 20000 digits, fails magnitude_limit.
  */
 @JvmName("numberFormatRaw")
 fun <N : Number, M : MissingPolicy> Expr<N, M>.formatNumber(
@@ -1343,7 +1345,8 @@ fun <N : Number, M : MissingPolicy> Expr<N, M>.formatNumber(
 
 /**
  * The value with exactly fraction_digits fraction digits (rounded half even; a float from its shortest round
- * trip decimal) and the locale's CLDR digits, grouping and symbols. Locale und uses no grouping.
+ * trip decimal) and the locale's CLDR digits, grouping and symbols. Locale und uses no grouping. More than 20000
+ * fraction digits, or a result of more than 20000 digits, fails magnitude_limit.
  */
 @JvmName("numberFormatUByte")
 fun <M : MissingPolicy> Expr<UByte, M>.formatNumber(
@@ -1354,7 +1357,8 @@ fun <M : MissingPolicy> Expr<UByte, M>.formatNumber(
 
 /**
  * The value with exactly fraction_digits fraction digits (rounded half even; a float from its shortest round
- * trip decimal) and the locale's CLDR digits, grouping and symbols. Locale und uses no grouping.
+ * trip decimal) and the locale's CLDR digits, grouping and symbols. Locale und uses no grouping. More than 20000
+ * fraction digits, or a result of more than 20000 digits, fails magnitude_limit.
  */
 @JvmName("numberFormatUByteRaw")
 fun <M : MissingPolicy> Expr<UByte, M>.formatNumber(
@@ -1365,7 +1369,8 @@ fun <M : MissingPolicy> Expr<UByte, M>.formatNumber(
 
 /**
  * The value with exactly fraction_digits fraction digits (rounded half even; a float from its shortest round
- * trip decimal) and the locale's CLDR digits, grouping and symbols. Locale und uses no grouping.
+ * trip decimal) and the locale's CLDR digits, grouping and symbols. Locale und uses no grouping. More than 20000
+ * fraction digits, or a result of more than 20000 digits, fails magnitude_limit.
  */
 @JvmName("numberFormatUShort")
 fun <M : MissingPolicy> Expr<UShort, M>.formatNumber(
@@ -1376,7 +1381,8 @@ fun <M : MissingPolicy> Expr<UShort, M>.formatNumber(
 
 /**
  * The value with exactly fraction_digits fraction digits (rounded half even; a float from its shortest round
- * trip decimal) and the locale's CLDR digits, grouping and symbols. Locale und uses no grouping.
+ * trip decimal) and the locale's CLDR digits, grouping and symbols. Locale und uses no grouping. More than 20000
+ * fraction digits, or a result of more than 20000 digits, fails magnitude_limit.
  */
 @JvmName("numberFormatUShortRaw")
 fun <M : MissingPolicy> Expr<UShort, M>.formatNumber(
@@ -1387,7 +1393,8 @@ fun <M : MissingPolicy> Expr<UShort, M>.formatNumber(
 
 /**
  * The value with exactly fraction_digits fraction digits (rounded half even; a float from its shortest round
- * trip decimal) and the locale's CLDR digits, grouping and symbols. Locale und uses no grouping.
+ * trip decimal) and the locale's CLDR digits, grouping and symbols. Locale und uses no grouping. More than 20000
+ * fraction digits, or a result of more than 20000 digits, fails magnitude_limit.
  */
 @JvmName("numberFormatUInt")
 fun <M : MissingPolicy> Expr<UInt, M>.formatNumber(
@@ -1398,7 +1405,8 @@ fun <M : MissingPolicy> Expr<UInt, M>.formatNumber(
 
 /**
  * The value with exactly fraction_digits fraction digits (rounded half even; a float from its shortest round
- * trip decimal) and the locale's CLDR digits, grouping and symbols. Locale und uses no grouping.
+ * trip decimal) and the locale's CLDR digits, grouping and symbols. Locale und uses no grouping. More than 20000
+ * fraction digits, or a result of more than 20000 digits, fails magnitude_limit.
  */
 @JvmName("numberFormatUIntRaw")
 fun <M : MissingPolicy> Expr<UInt, M>.formatNumber(
@@ -1409,7 +1417,8 @@ fun <M : MissingPolicy> Expr<UInt, M>.formatNumber(
 
 /**
  * The value with exactly fraction_digits fraction digits (rounded half even; a float from its shortest round
- * trip decimal) and the locale's CLDR digits, grouping and symbols. Locale und uses no grouping.
+ * trip decimal) and the locale's CLDR digits, grouping and symbols. Locale und uses no grouping. More than 20000
+ * fraction digits, or a result of more than 20000 digits, fails magnitude_limit.
  */
 @JvmName("numberFormatULong")
 fun <M : MissingPolicy> Expr<ULong, M>.formatNumber(
@@ -1420,7 +1429,8 @@ fun <M : MissingPolicy> Expr<ULong, M>.formatNumber(
 
 /**
  * The value with exactly fraction_digits fraction digits (rounded half even; a float from its shortest round
- * trip decimal) and the locale's CLDR digits, grouping and symbols. Locale und uses no grouping.
+ * trip decimal) and the locale's CLDR digits, grouping and symbols. Locale und uses no grouping. More than 20000
+ * fraction digits, or a result of more than 20000 digits, fails magnitude_limit.
  */
 @JvmName("numberFormatULongRaw")
 fun <M : MissingPolicy> Expr<ULong, M>.formatNumber(
@@ -1499,70 +1509,110 @@ operator fun <M : MissingPolicy> Expr<ULong, M>.times(
 ): Expr<ULong, M> =
     call(PortableOperationCatalog.NUMBER_MULTIPLY, this, literal(second))
 
-/** The CLDR plural category of the value in the locale. */
+/**
+ * The CLDR plural category of the value in the locale, from the plural operands of its exact decimal value (a
+ * float through its shortest round trip decimal). A magnitude of 10^21 or more, or more than 20 fraction digits,
+ * is beyond the platform plural rules and fails magnitude_limit.
+ */
 @JvmName("numberPluralCategory")
 fun <N : Number, M : MissingPolicy> Expr<N, M>.pluralCategory(
     locale: Expr<String, M>,
 ): Expr<PluralCategory, M> =
     call(PortableOperationCatalog.NUMBER_PLURAL_CATEGORY, this, locale)
 
-/** The CLDR plural category of the value in the locale. */
+/**
+ * The CLDR plural category of the value in the locale, from the plural operands of its exact decimal value (a
+ * float through its shortest round trip decimal). A magnitude of 10^21 or more, or more than 20 fraction digits,
+ * is beyond the platform plural rules and fails magnitude_limit.
+ */
 @JvmName("numberPluralCategoryRaw")
 fun <N : Number, M : MissingPolicy> Expr<N, M>.pluralCategory(
     locale: String,
 ): Expr<PluralCategory, M> =
     call(PortableOperationCatalog.NUMBER_PLURAL_CATEGORY, this, literal(locale))
 
-/** The CLDR plural category of the value in the locale. */
+/**
+ * The CLDR plural category of the value in the locale, from the plural operands of its exact decimal value (a
+ * float through its shortest round trip decimal). A magnitude of 10^21 or more, or more than 20 fraction digits,
+ * is beyond the platform plural rules and fails magnitude_limit.
+ */
 @JvmName("numberPluralCategoryUByte")
 fun <M : MissingPolicy> Expr<UByte, M>.pluralCategory(
     locale: Expr<String, M>,
 ): Expr<PluralCategory, M> =
     call(PortableOperationCatalog.NUMBER_PLURAL_CATEGORY, this, locale)
 
-/** The CLDR plural category of the value in the locale. */
+/**
+ * The CLDR plural category of the value in the locale, from the plural operands of its exact decimal value (a
+ * float through its shortest round trip decimal). A magnitude of 10^21 or more, or more than 20 fraction digits,
+ * is beyond the platform plural rules and fails magnitude_limit.
+ */
 @JvmName("numberPluralCategoryUByteRaw")
 fun <M : MissingPolicy> Expr<UByte, M>.pluralCategory(
     locale: String,
 ): Expr<PluralCategory, M> =
     call(PortableOperationCatalog.NUMBER_PLURAL_CATEGORY, this, literal(locale))
 
-/** The CLDR plural category of the value in the locale. */
+/**
+ * The CLDR plural category of the value in the locale, from the plural operands of its exact decimal value (a
+ * float through its shortest round trip decimal). A magnitude of 10^21 or more, or more than 20 fraction digits,
+ * is beyond the platform plural rules and fails magnitude_limit.
+ */
 @JvmName("numberPluralCategoryUShort")
 fun <M : MissingPolicy> Expr<UShort, M>.pluralCategory(
     locale: Expr<String, M>,
 ): Expr<PluralCategory, M> =
     call(PortableOperationCatalog.NUMBER_PLURAL_CATEGORY, this, locale)
 
-/** The CLDR plural category of the value in the locale. */
+/**
+ * The CLDR plural category of the value in the locale, from the plural operands of its exact decimal value (a
+ * float through its shortest round trip decimal). A magnitude of 10^21 or more, or more than 20 fraction digits,
+ * is beyond the platform plural rules and fails magnitude_limit.
+ */
 @JvmName("numberPluralCategoryUShortRaw")
 fun <M : MissingPolicy> Expr<UShort, M>.pluralCategory(
     locale: String,
 ): Expr<PluralCategory, M> =
     call(PortableOperationCatalog.NUMBER_PLURAL_CATEGORY, this, literal(locale))
 
-/** The CLDR plural category of the value in the locale. */
+/**
+ * The CLDR plural category of the value in the locale, from the plural operands of its exact decimal value (a
+ * float through its shortest round trip decimal). A magnitude of 10^21 or more, or more than 20 fraction digits,
+ * is beyond the platform plural rules and fails magnitude_limit.
+ */
 @JvmName("numberPluralCategoryUInt")
 fun <M : MissingPolicy> Expr<UInt, M>.pluralCategory(
     locale: Expr<String, M>,
 ): Expr<PluralCategory, M> =
     call(PortableOperationCatalog.NUMBER_PLURAL_CATEGORY, this, locale)
 
-/** The CLDR plural category of the value in the locale. */
+/**
+ * The CLDR plural category of the value in the locale, from the plural operands of its exact decimal value (a
+ * float through its shortest round trip decimal). A magnitude of 10^21 or more, or more than 20 fraction digits,
+ * is beyond the platform plural rules and fails magnitude_limit.
+ */
 @JvmName("numberPluralCategoryUIntRaw")
 fun <M : MissingPolicy> Expr<UInt, M>.pluralCategory(
     locale: String,
 ): Expr<PluralCategory, M> =
     call(PortableOperationCatalog.NUMBER_PLURAL_CATEGORY, this, literal(locale))
 
-/** The CLDR plural category of the value in the locale. */
+/**
+ * The CLDR plural category of the value in the locale, from the plural operands of its exact decimal value (a
+ * float through its shortest round trip decimal). A magnitude of 10^21 or more, or more than 20 fraction digits,
+ * is beyond the platform plural rules and fails magnitude_limit.
+ */
 @JvmName("numberPluralCategoryULong")
 fun <M : MissingPolicy> Expr<ULong, M>.pluralCategory(
     locale: Expr<String, M>,
 ): Expr<PluralCategory, M> =
     call(PortableOperationCatalog.NUMBER_PLURAL_CATEGORY, this, locale)
 
-/** The CLDR plural category of the value in the locale. */
+/**
+ * The CLDR plural category of the value in the locale, from the plural operands of its exact decimal value (a
+ * float through its shortest round trip decimal). A magnitude of 10^21 or more, or more than 20 fraction digits,
+ * is beyond the platform plural rules and fails magnitude_limit.
+ */
 @JvmName("numberPluralCategoryULongRaw")
 fun <M : MissingPolicy> Expr<ULong, M>.pluralCategory(
     locale: String,

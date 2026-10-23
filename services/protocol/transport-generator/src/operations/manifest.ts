@@ -79,6 +79,7 @@ const RawOperationsManifest = z.strictObject({
   failures: Messages,
   evaluator_failures: Messages,
   check_failures: Messages,
+  host_failures: Messages,
   operations: z.record(OperationId, Operation),
 });
 
