@@ -1,27 +1,33 @@
 package com.typewritermc.expression
 
-import com.typewritermc.authoring.root
 import com.typewritermc.configuration.PortableExpressionChecker
+import com.typewritermc.expression.operations.CheckFailure
 import com.typewritermc.types.StandardTypes
 import com.typewritermc.types.catalog.DefaultCheckedCatalog
+import com.typewritermc.types.catalog.resolve
+import com.typewritermc.types.integer
 import com.typewritermc.types.integerScalar
-import com.typewritermc.types.nullable
 import com.typewritermc.types.qualified
 import com.typewritermc.types.template
 import com.typewritermc.types.use
 import de.infix.testBalloon.framework.core.testSuite
 import io.kotest.matchers.shouldBe
 import skirout.editor.v1.expression.ExpressionNode
-import skirout.editor.v1.expression.NumberArithmeticOperation
+import skirout.editor.v1.expression.ExpressionType
+import skirout.editor.v1.expression.ExpressionValueType
 import skirout.editor.v1.type_catalog.CatalogGeneration
+import skirout.editor.v1.type_catalog.DataValue
 import skirout.editor.v1.type_catalog.ExpressionBindingId
 import skirout.editor.v1.type_catalog.IntegerWidth
+import skirout.editor.v1.type_catalog.ItemId
 import skirout.editor.v1.type_catalog.PathSegment
 import skirout.editor.v1.type_catalog.RepresentationTemplate
 import skirout.editor.v1.type_catalog.ScalarKind
 import skirout.editor.v1.type_catalog.TypeDefinition
 import skirout.editor.v1.type_catalog.TypeDefinitionId
+import skirout.editor.v1.type_catalog.TypeUse
 import skirout.editor.v1.type_catalog.ValuePath
+import java.math.BigInteger
 
 val CanonicalExpressionTypeTest by testSuite {
     val catalog = DefaultCheckedCatalog(CatalogGeneration(value = "canonical expressions"), StandardTypes.definitions)
@@ -29,29 +35,33 @@ val CanonicalExpressionTypeTest by testSuite {
     val text = ScalarKind.TEXT.use
     val wide = integerScalar(IntegerWidth.SIGNED_SIXTY_FOUR).use
     val narrow = integerScalar(IntegerWidth.SIGNED_EIGHT).use
+    val count = integerScalar(IntegerWidth.SIGNED_THIRTY_TWO).use
     val rows = ExpressionBindingId(value = "rows")
+    val source = checkInput(rows)
 
-    test("grouped literal keys retain their numeric evidence inside structural map children") {
-        val expression = input<List<String>>(rows).groupBy { literal(1) }.toNode()
-        val expected = StandardTypes.map.use(listOf(narrow, StandardTypes.list.use(listOf(text))))
+    fun listType(item: TypeUse) = StandardTypes.list.use(listOf(item))
+
+    fun integerLiteral(value: Long) = checkLiteral(DataValue.integer(BigInteger.valueOf(value)))
+
+    test("grouped literal keys keep their numeric evidence inside structural map children") {
+        val expression = checkCall("collection.group_by", source, checkLambda(1, integerLiteral(1)))
         checker.checkExpressionCodes(
             expression,
-            mapOf(rows to nominalExpressionType(StandardTypes.list.use(listOf(text)))),
-            nominalExpressionType(expected),
+            mapOf(rows to nominalExpressionType(listType(text))),
+            nominalExpressionType(StandardTypes.map.use(listOf(narrow, listType(text)))),
         ) shouldBe emptyList()
     }
 
-    test("a bound numeric collection item cannot masquerade as a narrow literal") {
-        val expression = input<List<Long>>(rows).map { this }.toNode()
+    test("a bound numeric item cannot masquerade as a narrow literal") {
+        val expression = checkCall("collection.map", source, checkLambda(1, checkLocal(0)))
         checker.checkExpressionCodes(
             expression,
-            mapOf(rows to nominalExpressionType(StandardTypes.list.use(listOf(wide)))),
-            nominalExpressionType(StandardTypes.list.use(listOf(narrow))),
-        ) shouldBe
-            listOf("incompatible_expression_result_type")
+            mapOf(rows to nominalExpressionType(listType(wide))),
+            nominalExpressionType(listType(narrow)),
+        ) shouldBe listOf(CheckFailure.IncompatibleExpressionResultType)
     }
 
-    test("map access returns values while contains accepts keys for a declared mapping alias") {
+    test("a declared mapping alias reads values by key") {
         val aliasId = TypeDefinitionId.qualified("canonical", "TextToInteger")
         val alias =
             TypeDefinition.partial(
@@ -64,99 +74,80 @@ val CanonicalExpressionTypeTest by testSuite {
             )
         val aliases = DefaultCheckedCatalog(CatalogGeneration(value = "mapping alias"), StandardTypes.definitions + alias)
         val aliasChecker = PortableExpressionChecker(aliases::resolve)
-        val source = input<Any?>(rows).toNode()
         val bindings = mapOf(rows to nominalExpressionType(aliasId.use()))
-        val access = ExpressionNode.createCollectionAccess(source = source, index = literal("key").toNode())
-        aliasChecker.checkExpressionCodes(access, bindings, nominalExpressionType(wide, true)) shouldBe emptyList()
-        val contains = ExpressionNode.createCollectionContains(source = source, value = literal("key").toNode())
-        aliasChecker.checkExpressionCodes(contains, bindings, nominalExpressionType(ScalarKind.BOOLEAN.use)) shouldBe
+        val key = checkLiteral(DataValue.StringValueWrapper("key"))
+        aliasChecker.checkExpressionCodes(checkCall("map.get", source, key), bindings, nominalExpressionType(wide, true)) shouldBe
             emptyList()
+        aliasChecker.checkExpressionCodes(
+            checkCall("map.contains_key", source, key),
+            bindings,
+            nominalExpressionType(ScalarKind.BOOLEAN.use),
+        ) shouldBe emptyList()
+        aliasChecker.checkExpressionCodes(
+            checkCall("map.contains_key", source, integerLiteral(1)),
+            bindings,
+            nominalExpressionType(ScalarKind.BOOLEAN.use),
+        ) shouldBe listOf(CheckFailure.InvalidOperandType)
     }
 
-    test("a literal fold seed takes the declared accumulator width without narrowing bound inputs") {
-        val count = integerScalar(IntegerWidth.SIGNED_THIRTY_TWO).use
-        val expression = input<List<Int>>(rows).fold(literal(0)) { total, item -> total + item }.toNode()
+    test("a literal fold seed takes the accumulator width of the step without narrowing bound inputs") {
+        val step = checkLambda(2, checkCall("number.add", checkLocal(0), checkLocal(1)))
+        val expression = checkCall("collection.fold", source, integerLiteral(0), step)
         checker.checkExpressionCodes(
             expression,
-            mapOf(rows to nominalExpressionType(StandardTypes.list.use(listOf(count)))),
+            mapOf(rows to nominalExpressionType(listType(count))),
             nominalExpressionType(count),
         ) shouldBe emptyList()
     }
 
-    test("find and reduce represent empty results as nullable values rather than missing input") {
-        val source = input<List<String>>(rows).toNode()
-        val bindings = mapOf(rows to nominalExpressionType(StandardTypes.list.use(listOf(text))))
-        val find = ExpressionNode.createFind(source = source, body = literal(true).toNode())
-        val local = ExpressionNode.createLocal(depth = 0, slot = 0, path = ValuePath.root)
-        val reduce = ExpressionNode.createReduce(source = source, body = local)
-        listOf(find, reduce).forEach { node ->
-            checker.checkExpressionCodes(node, bindings, nominalExpressionType(text.nullable())) shouldBe emptyList()
-            checker.checkExpressionCodes(node, bindings, nominalExpressionType(text)) shouldBe listOf("incompatible_expression_result_type")
-        }
+    test("an item read by index may be missing") {
+        val bindings = mapOf(rows to nominalExpressionType(listType(text)))
+        val first = checkCall("list.at", source, integerLiteral(0))
+        checker.checkExpressionCodes(first, bindings, nominalExpressionType(text, true)) shouldBe emptyList()
+        checker.checkExpressionCodes(first, bindings, nominalExpressionType(text)) shouldBe
+            listOf(CheckFailure.ExpressionResultMayBeMissing)
     }
 
-    test("item paths through nullable derived lists remain possibly missing") {
-        val path =
-            ValuePath(
-                segments =
-                    listOf(
-                        PathSegment.createItem(
-                            id =
-                                skirout.editor.v1.type_catalog
-                                    .ItemId(value = "missing"),
-                        ),
-                    ),
-            )
-        val read =
-            ExpressionNode.createInput(
-                binding =
-                    skirout.editor.v1.type_catalog
-                        .ExpressionBindingId(value = rows.value),
-                path = path,
-            )
+    test("an each lambda sees the item type and a comparator returns an integer") {
+        val bindings = mapOf(rows to nominalExpressionType(listType(text)))
+        val isA = checkCall("value.equals", checkLocal(0), checkLiteral(DataValue.StringValueWrapper("a")))
+        val kept = checkCall("collection.filter", source, checkLambda(1, isA))
+        checker.checkExpressionCodes(kept, bindings, nominalExpressionType(listType(text))) shouldBe emptyList()
+        val lengths = checkCall("collection.map", source, checkLambda(1, checkCall("text.length", checkLocal(0))))
+        checker.checkExpressionCodes(lengths, bindings, nominalExpressionType(listType(count))) shouldBe emptyList()
+        val ordered = checkCall("collection.sort_with", source, checkLambda(2, checkCall("value.compare", checkLocal(0), checkLocal(1))))
+        checker.checkExpressionCodes(ordered, bindings, nominalExpressionType(listType(text))) shouldBe emptyList()
+        val unordered = checkCall("collection.sort_with", source, checkLambda(2, checkLocal(0)))
+        checker.checkExpressionCodes(unordered, bindings, nominalExpressionType(listType(text))) shouldBe
+            listOf(CheckFailure.InvalidOperandType)
+    }
+
+    test("an item path through a nullable derived list may be missing") {
+        val read = checkInput(rows, ValuePath(segments = listOf(PathSegment.createItem(id = ItemId(value = "missing")))))
         val optional =
-            skirout.editor.v1.expression.ExpressionType(
-                value =
-                    skirout.editor.v1.expression.ExpressionValueType
-                        .NullableWrapper(listExpressionType(nominalExpressionType(text))),
+            ExpressionType(
+                value = ExpressionValueType.NullableWrapper(listExpressionType(nominalExpressionType(text))),
                 mayBeMissing = false,
             )
         checker.checkExpressionCodes(read, mapOf(rows to optional), nominalExpressionType(text, true)) shouldBe emptyList()
-        checker.checkExpressionCodes(
-            read,
-            mapOf(rows to listExpressionType(nominalExpressionType(text))),
-            nominalExpressionType(text),
-        ) shouldBe
-            listOf("expression_result_may_be_missing")
+        val required = mapOf(rows to listExpressionType(nominalExpressionType(text)))
+        checker.checkExpressionCodes(read, required, nominalExpressionType(text)) shouldBe
+            listOf(CheckFailure.ExpressionResultMayBeMissing)
     }
 
-    test("unknown wire path segments produce a checking diagnostic") {
-        val read =
-            ExpressionNode.createInput(
-                binding =
-                    skirout.editor.v1.type_catalog
-                        .ExpressionBindingId(value = rows.value),
-                path = ValuePath(segments = listOf(PathSegment.UNKNOWN)),
-            )
-        checker.checkExpressionCodes(
-            read,
-            mapOf(rows to listExpressionType(nominalExpressionType(text))),
-            nominalExpressionType(text, true),
-        ) shouldBe
-            listOf("invalid_expression_path")
+    test("an unknown wire path segment is an invalid path") {
+        val read = checkInput(rows, ValuePath(segments = listOf(PathSegment.UNKNOWN)))
+        val bindings = mapOf(rows to listExpressionType(nominalExpressionType(text)))
+        checker.checkExpressionCodes(read, bindings, nominalExpressionType(text, true)) shouldBe
+            listOf(CheckFailure.InvalidExpressionPath)
     }
 
-    test("unknown operation enums reject during structural checking") {
-        val unknown =
-            ExpressionNode.createNumberArithmetic(
-                operation = NumberArithmeticOperation.UNKNOWN,
-                first = literal(1).toNode(),
-                second = literal(2).toNode(),
-                remaining = emptyList(),
-            )
-        checker.checkExpressionStructure(unknown, emptySet()) shouldBe listOf("unknown_expression_operation")
-        checker.checkExpressionStructure(ExpressionNode.UNKNOWN, emptySet()) shouldBe listOf("unknown_expression")
-        val outside = ExpressionNode.createLocal(depth = -1, slot = 0, path = ValuePath.root)
-        checker.checkExpressionStructure(outside, emptySet()) shouldBe listOf("invalid_expression_local")
+    test("structural checking rejects unknown nodes and locals outside their lambda") {
+        checker.checkExpressionStructure(ExpressionNode.UNKNOWN, emptySet()) shouldBe listOf(CheckFailure.UnknownExpression)
+        checker.checkExpressionStructure(checkLocal(0, depth = -1), emptySet()) shouldBe
+            listOf(CheckFailure.InvalidExpressionLocal)
+        checker.checkExpressionStructure(checkLocal(0), emptySet()) shouldBe listOf(CheckFailure.InvalidExpressionLocal)
+        checker.checkExpressionStructure(checkCall("collection.map", source, checkLambda(1, checkLocal(1))), setOf(rows)) shouldBe
+            listOf(CheckFailure.InvalidExpressionLocal)
     }
 }

@@ -60,6 +60,7 @@ import skirout.editor.v1.authoring_facts.TraversalDirection
 import skirout.editor.v1.catalog.RepresentationKind
 import skirout.editor.v1.expression.EvaluationDiagnostic
 import skirout.editor.v1.expression.ExpressionNode
+import skirout.editor.v1.expression.FailureId
 import skirout.editor.v1.type_catalog.ArgumentSelection
 import skirout.editor.v1.type_catalog.CatalogGeneration
 import skirout.editor.v1.type_catalog.DataValue
@@ -1054,7 +1055,7 @@ class CapturedAuthoringReads(
         message: String,
         locations: List<ValueLocation>,
     ): Availability.Failed {
-        val diagnostic = EvaluationDiagnostic(code = code, message = message, locations = locations)
+        val diagnostic = EvaluationDiagnostic(failure = FailureId(value = code), message = message, locations = locations)
         failures += diagnostic
         return Availability.Failed(diagnostic)
     }
@@ -1072,7 +1073,7 @@ internal object MissingSelectionPredicateEvaluator : SelectionPredicateEvaluator
     ): Availability<Boolean> =
         Availability.Failed(
             EvaluationDiagnostic(
-                code = "selection_evaluator_unavailable",
+                failure = FailureId(value = "selection_evaluator_unavailable"),
                 message = "No selection predicate evaluator is installed.",
                 locations = listOf(subject.location),
             ),

@@ -1,66 +1,73 @@
-package com.typewritermc.expression
+package com.typewritermc.expression.operations
 
 import java.util.ArrayDeque
 
 /**
  * Runs a bounded instruction program for normalized portable patterns using Unicode code point positions.
- * Matching and replacement charge work through the evaluator's step callback. Compilation limits program size;
- * callers must first apply [normalizePortableRegex] to enforce the shared feature and pattern limits.
+ * Matching and replacement charge one step per machine step through the caller's callback. Compilation limits program
+ * size; callers compile through [compiledPortableRegex], which first enforces the shared feature subset.
  */
 internal class PortableRegexMatcher private constructor(
     private val instructions: List<RegexInstruction>,
     private val start: Int,
     val groupCount: Int,
 ) {
-    fun containsMatchIn(
-        input: String,
+    /** The leftmost match starting at or after code point [fromIndex], preferring the earlier alternative. */
+    fun find(
+        codePoints: IntArray,
+        fromIndex: Int,
         consumeStep: () -> Unit,
-    ): Boolean = find(input, consumeStep) != null
+    ): PortableRegexMatch? = findFrom(codePoints, fromIndex, consumeStep)
 
-    fun matches(
-        input: String,
+    /**
+     * Every non overlapping match, left to right. After an empty match the search resumes one code point later, so
+     * the scan always ends.
+     */
+    fun findAll(
+        codePoints: IntArray,
         consumeStep: () -> Unit,
-    ): Boolean {
-        val codePoints = input.codePoints().toArray()
-        val captures = IntArray((groupCount + 1) * 2) { UNSET_CAPTURE }
-        var current = closure(listOf(MachineThread(start, captures)), 0, codePoints.size, consumeStep)
-        codePoints.forEachIndexed { index, codePoint ->
-            current = advance(current, codePoint, index + 1, codePoints.size, consumeStep)
+    ): List<PortableRegexMatch> {
+        val matches = mutableListOf<PortableRegexMatch>()
+        var searchFrom = 0
+        while (searchFrom <= codePoints.size) {
+            val match = findFrom(codePoints, searchFrom, consumeStep) ?: break
+            matches += match
+            searchFrom = if (match.start == match.end) match.end + 1 else match.end
         }
-        return current.firstOrNull { instructions[it.instruction] is RegexInstruction.Match } != null
+        return matches
     }
 
-    fun find(
-        input: String,
-        consumeStep: () -> Unit,
-    ): PortableRegexMatch? = find(input.codePoints().toArray(), 0, consumeStep)
-
+    /** Replaces every match of [findAll] with [replacement] expanded for that match. */
     fun replace(
         input: String,
-        replacement: String,
+        replacement: PortableRegexReplacement,
         consumeStep: () -> Unit,
     ): String {
         val codePoints = input.codePoints().toArray()
         val output = StringBuilder(input.length)
         var copiedUntil = 0
-        var searchFrom = 0
-        while (searchFrom <= codePoints.size) {
-            val match = find(codePoints, searchFrom, consumeStep) ?: break
+        findAll(codePoints, consumeStep).forEach { match ->
             output.appendCodePoints(codePoints, copiedUntil, match.start, consumeStep)
-            output.appendReplacement(replacement, codePoints, match.captures, groupCount, consumeStep)
-            copiedUntil = match.end
-            searchFrom =
-                if (match.start == match.end) {
-                    if (match.end == codePoints.size) codePoints.size + 1 else match.end + 1
-                } else {
-                    match.end
+            replacement.parts.forEach { part ->
+                when (part) {
+                    is ReplacementPart.Text -> {
+                        output.appendCodePoints(part.codePoints, 0, part.codePoints.size, consumeStep)
+                    }
+
+                    is ReplacementPart.Group -> {
+                        match.range(part.index)?.let { (from, to) ->
+                            output.appendCodePoints(codePoints, from, to, consumeStep)
+                        }
+                    }
                 }
+            }
+            copiedUntil = match.end
         }
         output.appendCodePoints(codePoints, copiedUntil, codePoints.size, consumeStep)
         return output.toString()
     }
 
-    private fun find(
+    private fun findFrom(
         codePoints: IntArray,
         fromIndex: Int,
         consumeStep: () -> Unit,
@@ -88,14 +95,6 @@ internal class PortableRegexMatcher private constructor(
         }
         return best
     }
-
-    private fun advance(
-        current: List<MachineThread>,
-        codePoint: Int,
-        position: Int,
-        length: Int,
-        consumeStep: () -> Unit,
-    ): List<MachineThread> = closure(consume(current, codePoint, consumeStep), position, length, consumeStep)
 
     private fun consume(
         current: List<MachineThread>,
@@ -201,8 +200,9 @@ internal class PortableRegexMatcher private constructor(
     }
 }
 
+/** One match as capture positions in code points; slot pairs per group, group 0 being the whole match. */
 internal class PortableRegexMatch internal constructor(
-    internal val captures: IntArray,
+    private val captures: IntArray,
 ) {
     val start: Int
         get() = captures[0]
@@ -210,17 +210,82 @@ internal class PortableRegexMatch internal constructor(
     val end: Int
         get() = captures[1]
 
-    fun group(
-        input: String,
-        index: Int,
-    ): String? {
-        val start = captures.getOrNull(index * 2) ?: return null
-        val end = captures.getOrNull(index * 2 + 1) ?: return null
-        if (start == UNSET_CAPTURE || end == UNSET_CAPTURE) return null
-        val startOffset = input.offsetByCodePoints(0, start)
-        val endOffset = input.offsetByCodePoints(0, end)
-        return input.substring(startOffset, endOffset)
+    /** The code point range group [index] matched, or null when the group did not take part. */
+    fun range(index: Int): Pair<Int, Int>? {
+        val from = captures[index * 2]
+        val to = captures[index * 2 + 1]
+        return if (from == UNSET_CAPTURE || to == UNSET_CAPTURE) null else from to to
     }
+}
+
+/**
+ * A parsed replacement template. `$n` inserts group n (empty when the group did not take part), taking the longest
+ * digit run that names an existing group, and `$$` inserts one dollar sign. Every other character, a backslash
+ * included, is literal. A `$` followed by neither a digit nor `$`, or naming a group the pattern lacks, is invalid.
+ */
+internal class PortableRegexReplacement private constructor(
+    internal val parts: List<ReplacementPart>,
+) {
+    companion object {
+        fun parse(
+            replacement: String,
+            groupCount: Int,
+        ): PortableRegexReplacement {
+            val parts = mutableListOf<ReplacementPart>()
+            val text = mutableListOf<Int>()
+
+            fun flush() {
+                if (text.isNotEmpty()) parts += ReplacementPart.Text(text.toIntArray())
+                text.clear()
+            }
+            var index = 0
+            while (index < replacement.length) {
+                val marker = replacement.codePointAt(index)
+                index += Character.charCount(marker)
+                if (marker != '$'.code) {
+                    text += marker
+                    continue
+                }
+                val next = replacement.getOrNull(index)
+                when {
+                    next == '$' -> {
+                        text += '$'.code
+                        index += 1
+                    }
+
+                    next != null && next in '0'..'9' -> {
+                        var group = next - '0'
+                        if (group > groupCount) throw PortableRegexCompileFailure("The replacement names a group the pattern lacks.")
+                        index += 1
+                        while (index < replacement.length && replacement[index] in '0'..'9') {
+                            val candidate = group * 10 + (replacement[index] - '0')
+                            if (candidate > groupCount) break
+                            group = candidate
+                            index += 1
+                        }
+                        flush()
+                        parts += ReplacementPart.Group(group)
+                    }
+
+                    else -> {
+                        throw PortableRegexCompileFailure("A replacement dollar sign must precede a group number or another dollar sign.")
+                    }
+                }
+            }
+            flush()
+            return PortableRegexReplacement(parts)
+        }
+    }
+}
+
+internal sealed interface ReplacementPart {
+    class Text(
+        val codePoints: IntArray,
+    ) : ReplacementPart
+
+    data class Group(
+        val index: Int,
+    ) : ReplacementPart
 }
 
 internal class PortableRegexCompileFailure(
@@ -659,54 +724,6 @@ private fun StringBuilder.appendCodePoints(
     for (index in start until end) {
         consumeStep()
         appendCodePoint(codePoints[index])
-    }
-}
-
-private fun StringBuilder.appendReplacement(
-    replacement: String,
-    codePoints: IntArray,
-    captures: IntArray,
-    groupCount: Int,
-    consumeStep: () -> Unit,
-) {
-    var index = 0
-    while (index < replacement.length) {
-        val marker = replacement.codePointAt(index)
-        index += Character.charCount(marker)
-        when (marker) {
-            '\\'.code -> {
-                if (index == replacement.length) throw PortableRegexCompileFailure("The regular expression replacement is invalid.")
-                val escaped = replacement.codePointAt(index)
-                consumeStep()
-                appendCodePoint(escaped)
-                index += Character.charCount(escaped)
-            }
-
-            '$'.code -> {
-                if (index == replacement.length || !replacement[index].isDigit()) {
-                    throw PortableRegexCompileFailure("The regular expression replacement is invalid.")
-                }
-                var group = replacement[index].digitToInt()
-                if (group > groupCount) throw PortableRegexCompileFailure("The regular expression replacement is invalid.")
-                index += 1
-                while (index < replacement.length && replacement[index].isDigit()) {
-                    val candidate = group * 10 + replacement[index].digitToInt()
-                    if (candidate > groupCount) break
-                    group = candidate
-                    index += 1
-                }
-                val captureStart = captures[group * 2]
-                val captureEnd = captures[group * 2 + 1]
-                if (captureStart != UNSET_CAPTURE && captureEnd != UNSET_CAPTURE) {
-                    appendCodePoints(codePoints, captureStart, captureEnd, consumeStep)
-                }
-            }
-
-            else -> {
-                consumeStep()
-                appendCodePoint(marker)
-            }
-        }
     }
 }
 

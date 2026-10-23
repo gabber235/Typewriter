@@ -8,6 +8,7 @@ import com.typewritermc.discovery.CatalogAssembly
 import com.typewritermc.discovery.CatalogAssemblyContext
 import com.typewritermc.discovery.assemble
 import com.typewritermc.expression.Handled
+import com.typewritermc.expression.descendants
 import com.typewritermc.expression.inputExpression
 import com.typewritermc.expression.literal
 import com.typewritermc.expression.name
@@ -123,7 +124,13 @@ val CorePlacesTest by testSuite {
         val reads = nodes.flatMap { it.appearanceReads() }.toSet()
         reads shouldBe setOf("label", "accent", "icon")
         val bars = nodes.firstNotNullOf { (it.element as? PresentationElement.RepeatedWrapper)?.value }
-        (bars.source as ExpressionNode.OrElseWrapper).value.input.shouldBeInstanceOf<ExpressionNode.TakeWrapper>()
+        val limited = (bars.source as ExpressionNode.OrElseWrapper).value.value
+        limited
+            .descendants()
+            .filterIsInstance<ExpressionNode.CallWrapper>()
+            .map { it.value.operation.value }
+            .toList() shouldContain
+            "list.slice"
     }
 
     test("the book outline groups pages by chapter and creates a page into the book from each group") {

@@ -23,6 +23,7 @@ import skirout.editor.v1.checking.CheckOutcome
 import skirout.editor.v1.diagnostic.Diagnostic
 import skirout.editor.v1.diagnostic.DiagnosticSeverity
 import skirout.editor.v1.expression.EvaluationDiagnostic
+import skirout.editor.v1.expression.FailureId
 import skirout.editor.v1.type_catalog.DataValue
 import skirout.editor.v1.type_catalog.DiagnosticId
 import skirout.editor.v1.type_catalog.FieldPatternSegment
@@ -91,7 +92,7 @@ class RealmCheckInputs(
                 return failed(
                     recipe,
                     EvaluationDiagnostic(
-                        code = "check_callback_failed",
+                        failure = FailureId(value = "check_callback_failed"),
                         message = failure.message ?: failure::class.simpleName.orEmpty(),
                         locations = tuple.candidates.map(InputCandidate::location),
                     ),
@@ -135,7 +136,7 @@ class RealmCheckInputs(
             Diagnostic(
                 id = ids(),
                 origin = recipe.owner,
-                code = failure.code,
+                code = failure.failure.value,
                 message = failure.message,
                 severity = DiagnosticSeverity.ERROR,
                 primary = failure.locations.firstOrNull(),

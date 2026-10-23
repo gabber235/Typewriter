@@ -68,4 +68,10 @@ private fun selectionFailure(
     code: String,
     message: String,
 ) = skirout.editor.v1.expression
-    .EvaluationDiagnostic(code = code, message = message, locations = emptyList())
+    .EvaluationDiagnostic(
+        failure =
+            skirout.editor.v1.expression
+                .FailureId(value = code),
+        message = message,
+        locations = emptyList(),
+    )

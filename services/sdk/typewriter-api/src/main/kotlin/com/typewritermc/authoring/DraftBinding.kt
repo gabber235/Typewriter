@@ -6,6 +6,7 @@ import com.typewritermc.types.catalog.CheckedType
 import com.typewritermc.types.nullable
 import com.typewritermc.types.use
 import skirout.editor.v1.expression.EvaluationDiagnostic
+import skirout.editor.v1.expression.FailureId
 import skirout.editor.v1.type_catalog.CatalogGeneration
 import skirout.editor.v1.type_catalog.ItemId
 import skirout.editor.v1.type_catalog.NamedTypeUse
@@ -325,7 +326,8 @@ private fun <V> projectionFailure(
     code: String,
     message: String,
     location: ValueLocation,
-): Availability<V> = Availability.Failed(EvaluationDiagnostic(code = code, message = message, locations = listOf(location)))
+): Availability<V> =
+    Availability.Failed(EvaluationDiagnostic(failure = FailureId(value = code), message = message, locations = listOf(location)))
 
 class GenericField<Owner>(
     val owner: TypeDefinitionId,
