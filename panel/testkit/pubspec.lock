@@ -1307,8 +1307,8 @@ packages:
     dependency: transitive
     description:
       path: "."
-      ref: "6d2e035dbcb060002a7a9f8f32d8e6598c76befd"
-      resolved-ref: "6d2e035dbcb060002a7a9f8f32d8e6598c76befd"
+      ref: "695dcef4a72e7bfe120ae60620d24ac4344f8bd3"
+      resolved-ref: "695dcef4a72e7bfe120ae60620d24ac4344f8bd3"
       url: "https://github.com/gabber235/skir-dart-client.git"
     source: git
     version: "1.0.12"

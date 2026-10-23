@@ -53,7 +53,7 @@ dependencies:
   skir_client:
     git:
       url: https://github.com/gabber235/skir-dart-client.git
-      ref: 6d2e035dbcb060002a7a9f8f32d8e6598c76befd
+      ref: 695dcef4a72e7bfe120ae60620d24ac4344f8bd3
   url_launcher: ^6.3.1
   uuid: ^4.5.1
   vector_math: ^2.2.0
