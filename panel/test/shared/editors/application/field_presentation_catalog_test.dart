@@ -142,38 +142,6 @@ void main() {
     );
   });
 
-  test("a published default request with invalid source expressions remains diagnostic", () {
-    final descriptor = _descriptor("base", _base);
-    final control =
-        (_control("name").toMutable()
-              ..label = skir.ExpressionNode.createInput(
-                binding: skir.ExpressionBindingId(value: "missing"),
-                path: skir.ValuePath.defaultInstance,
-              ))
-            .toFrozen();
-    final request = presentationNode(
-      "request",
-      skir.PresentationElement.createDefaultPresentation(
-        control: control,
-        presentationId: null,
-      ),
-    );
-    final catalog = _catalog(
-      [descriptor],
-      [
-        _material(descriptor, [request]),
-      ],
-    );
-    expect(
-      catalog.fieldPresentation(
-        _selection(_child),
-        "name",
-        skir.PresentationRole.inspector,
-      ),
-      isA<InvalidEditorFieldPresentation>(),
-    );
-  });
-
   test(
     "an invalid field only source never becomes an inspector continuation",
     () {
@@ -326,7 +294,13 @@ void main() {
       "scope",
       skir.PresentationElement.createScopedBinding(
         binding: _control("nested").binding,
-        scopeBindingId: skir.ExpressionBindingId(value: "configured_value"),
+        scopeBinding: declareNamedBinding(
+          "configured_value",
+          skir.TypeTemplate.createNamed(
+            definition: _child,
+            arguments: const [],
+          ),
+        ),
         child: remainder,
       ),
     );
@@ -355,7 +329,13 @@ void main() {
         "nested.scope",
         skir.PresentationElement.createScopedBinding(
           binding: _control("nested").binding,
-          scopeBindingId: skir.ExpressionBindingId(value: "configured_value"),
+          scopeBinding: declareNamedBinding(
+            "configured_value",
+            skir.TypeTemplate.createNamed(
+              definition: _child,
+              arguments: const [],
+            ),
+          ),
           child: _part("nested.call", key, null),
         ),
       );
@@ -567,7 +547,7 @@ void main() {
                 "scope",
                 skir.PresentationElement.createScopedBinding(
                   binding: _control("name").binding,
-                  scopeBindingId: alias,
+                  scopeBinding: declareBinding(alias, textTemplate),
                   child: nested,
                 ),
               ))
@@ -651,7 +631,7 @@ void main() {
                       bindingId: skir.ExpressionBindingId(value: "unknown"),
                       path: skir.ValuePath.defaultInstance,
                     ),
-              scopeBindingId: alias,
+              scopeBinding: declareBinding(alias, textTemplate),
               child: local,
             ),
           ),

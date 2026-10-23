@@ -45,7 +45,17 @@ void main() {
             appearance: null,
           ),
           order: null,
-          itemBindingId: skir.ExpressionBindingId(value: "resources.item"),
+          itemBinding: declareNamedBinding(
+            "resources.item",
+            document.catalog
+                .collectionItemType(
+                  document.catalog.valueTypeAt(
+                    document.resource(compiledEntryPageId)!.configuration,
+                    editorRootPath.field("elements"),
+                  ),
+                )!
+                .portableTemplate,
+          ),
         ),
       );
       Future<void> pump() {

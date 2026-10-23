@@ -45,12 +45,12 @@ final class ResourceActionDispatcher {
   final Future<void> Function()? reload;
 
   skir.DataValue _evaluate(skir.ExpressionNode expression) {
-    final evaluated = catalog.evaluateExpression(
-      expression,
-      bindings: context.bindings,
+    final evaluated = PortableExpressionEvaluator.located(
+      context.bindings,
       budget: skir.EvaluationBudget(maxSteps: 10000, maxCollectionItems: 10000),
+      catalog: catalog,
       queries: context.queries,
-    );
+    ).evaluate(expression);
     if (evaluated case PortableExpressionAvailable(:final value)) return value;
     throw StateError(switch (evaluated) {
       PortableExpressionFailed(:final message) => message,
@@ -59,15 +59,15 @@ final class ResourceActionDispatcher {
   }
 
   skir.DataValue? _evaluateOptional(skir.ExpressionNode expression) =>
-      switch (catalog.evaluateExpression(
-        expression,
-        bindings: context.bindings,
+      switch (PortableExpressionEvaluator.located(
+        context.bindings,
         budget: skir.EvaluationBudget(
           maxSteps: 10000,
           maxCollectionItems: 10000,
         ),
+        catalog: catalog,
         queries: context.queries,
-      )) {
+      ).evaluate(expression)) {
         PortableExpressionAvailable(:final value) => value,
         PortableExpressionUnavailable() => null,
         PortableExpressionFailed(:final message) => throw StateError(message),

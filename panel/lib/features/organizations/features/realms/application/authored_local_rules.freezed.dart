@@ -15,7 +15,7 @@ T _$identity<T>(T value) => value;
 /// @nodoc
 mixin _$AuthoredRuleProjection {
 
- Map<skir.ValueLocation, List<skir.OwnedRule>> get rules; List<PortablePresentationDiagnostic> get diagnostics;
+ List<AuthoredRuleCheck> get checks;
 /// Create a copy of AuthoredRuleProjection
 /// with the given fields replaced by the non-null parameter values.
 @JsonKey(includeFromJson: false, includeToJson: false)
@@ -27,20 +27,20 @@ $AuthoredRuleProjectionCopyWith<AuthoredRuleProjection> get copyWith => _$Author
 @override
 bool operator ==(Object other) {
   final _this = this as AuthoredRuleProjection;
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is AuthoredRuleProjection&&const DeepCollectionEquality().equals(other.rules, _this.rules)&&const DeepCollectionEquality().equals(other.diagnostics, _this.diagnostics));
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is AuthoredRuleProjection&&const DeepCollectionEquality().equals(other.checks, _this.checks));
 }
 
 
 @override
 int get hashCode {
   final _this = this as AuthoredRuleProjection;
-  return Object.hash(runtimeType,const DeepCollectionEquality().hash(_this.rules),const DeepCollectionEquality().hash(_this.diagnostics));
+  return Object.hash(runtimeType,const DeepCollectionEquality().hash(_this.checks));
 }
 
 @override
 String toString() {
   final _this = this as AuthoredRuleProjection;
-  return 'AuthoredRuleProjection(rules: ${_this.rules}, diagnostics: ${_this.diagnostics})';
+  return 'AuthoredRuleProjection(checks: ${_this.checks})';
 }
 
 
@@ -51,7 +51,7 @@ abstract mixin class $AuthoredRuleProjectionCopyWith<$Res>  {
   factory $AuthoredRuleProjectionCopyWith(AuthoredRuleProjection value, $Res Function(AuthoredRuleProjection) _then) = _$AuthoredRuleProjectionCopyWithImpl;
 @useResult
 $Res call({
- Map<skir.ValueLocation, List<skir.OwnedRule>> rules, List<PortablePresentationDiagnostic> diagnostics
+ List<AuthoredRuleCheck> checks
 });
 
 
@@ -68,11 +68,10 @@ class _$AuthoredRuleProjectionCopyWithImpl<$Res>
 
 /// Create a copy of AuthoredRuleProjection
 /// with the given fields replaced by the non-null parameter values.
-@pragma('vm:prefer-inline') @override $Res call({Object? rules = null,Object? diagnostics = null,}) {
+@pragma('vm:prefer-inline') @override $Res call({Object? checks = null,}) {
   return _then(AuthoredRuleProjection(
-rules: null == rules ? _self.rules : rules // ignore: cast_nullable_to_non_nullable
-as Map<skir.ValueLocation, List<skir.OwnedRule>>,diagnostics: null == diagnostics ? _self.diagnostics : diagnostics // ignore: cast_nullable_to_non_nullable
-as List<PortablePresentationDiagnostic>,
+checks: null == checks ? _self.checks : checks // ignore: cast_nullable_to_non_nullable
+as List<AuthoredRuleCheck>,
   ));
 }
 
@@ -157,10 +156,10 @@ return $default(_that);case _:
 /// }
 /// ```
 
-@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function( Map<skir.ValueLocation, List<skir.OwnedRule>> rules,  List<PortablePresentationDiagnostic> diagnostics)?  $default,{required TResult orElse(),}) {final _that = this;
+@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function( List<AuthoredRuleCheck> checks)?  $default,{required TResult orElse(),}) {final _that = this;
 switch (_that) {
 case _AuthoredRuleProjection() when $default != null:
-return $default(_that.rules,_that.diagnostics);case _:
+return $default(_that.checks);case _:
   return orElse();
 
 }
@@ -178,10 +177,10 @@ return $default(_that.rules,_that.diagnostics);case _:
 /// }
 /// ```
 
-@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function( Map<skir.ValueLocation, List<skir.OwnedRule>> rules,  List<PortablePresentationDiagnostic> diagnostics)  $default,) {final _that = this;
+@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function( List<AuthoredRuleCheck> checks)  $default,) {final _that = this;
 switch (_that) {
 case _AuthoredRuleProjection():
-return $default(_that.rules,_that.diagnostics);case _:
+return $default(_that.checks);case _:
   throw StateError('Unexpected subclass');
 
 }
@@ -198,10 +197,10 @@ return $default(_that.rules,_that.diagnostics);case _:
 /// }
 /// ```
 
-@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function( Map<skir.ValueLocation, List<skir.OwnedRule>> rules,  List<PortablePresentationDiagnostic> diagnostics)?  $default,) {final _that = this;
+@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function( List<AuthoredRuleCheck> checks)?  $default,) {final _that = this;
 switch (_that) {
 case _AuthoredRuleProjection() when $default != null:
-return $default(_that.rules,_that.diagnostics);case _:
+return $default(_that.checks);case _:
   return null;
 
 }
@@ -213,21 +212,14 @@ return $default(_that.rules,_that.diagnostics);case _:
 
 
 class _AuthoredRuleProjection extends AuthoredRuleProjection {
-  const _AuthoredRuleProjection({ Map<skir.ValueLocation, List<skir.OwnedRule>> rules = const {},  List<PortablePresentationDiagnostic> diagnostics = const []}): _rules = rules,_diagnostics = diagnostics,super._();
+  const _AuthoredRuleProjection({ List<AuthoredRuleCheck> checks = const []}): _checks = checks,super._();
   
 
- final  Map<skir.ValueLocation, List<skir.OwnedRule>> _rules;
-@override@JsonKey() Map<skir.ValueLocation, List<skir.OwnedRule>> get rules {
-  if (_rules is EqualUnmodifiableMapView) return _rules;
+ final  List<AuthoredRuleCheck> _checks;
+@override@JsonKey() List<AuthoredRuleCheck> get checks {
+  if (_checks is EqualUnmodifiableListView) return _checks;
   // ignore: implicit_dynamic_type
-  return EqualUnmodifiableMapView(_rules);
-}
-
- final  List<PortablePresentationDiagnostic> _diagnostics;
-@override@JsonKey() List<PortablePresentationDiagnostic> get diagnostics {
-  if (_diagnostics is EqualUnmodifiableListView) return _diagnostics;
-  // ignore: implicit_dynamic_type
-  return EqualUnmodifiableListView(_diagnostics);
+  return EqualUnmodifiableListView(_checks);
 }
 
 
@@ -241,18 +233,18 @@ _$AuthoredRuleProjectionCopyWith<_AuthoredRuleProjection> get copyWith => __$Aut
 
 @override
 bool operator ==(Object other) {
-    return identical(this, other) || (other.runtimeType == runtimeType&&other is _AuthoredRuleProjection&&const DeepCollectionEquality().equals(other.rules, _rules)&&const DeepCollectionEquality().equals(other.diagnostics, _diagnostics));
+    return identical(this, other) || (other.runtimeType == runtimeType&&other is _AuthoredRuleProjection&&const DeepCollectionEquality().equals(other.checks, _checks));
 }
 
 
 @override
 int get hashCode {
-    return Object.hash(runtimeType,const DeepCollectionEquality().hash(_rules),const DeepCollectionEquality().hash(_diagnostics));
+    return Object.hash(runtimeType,const DeepCollectionEquality().hash(_checks));
 }
 
 @override
 String toString() {
-    return 'AuthoredRuleProjection(rules: $rules, diagnostics: $diagnostics)';
+    return 'AuthoredRuleProjection(checks: $checks)';
 }
 
 
@@ -263,7 +255,7 @@ abstract mixin class _$AuthoredRuleProjectionCopyWith<$Res> implements $Authored
   factory _$AuthoredRuleProjectionCopyWith(_AuthoredRuleProjection value, $Res Function(_AuthoredRuleProjection) _then) = __$AuthoredRuleProjectionCopyWithImpl;
 @override @useResult
 $Res call({
- Map<skir.ValueLocation, List<skir.OwnedRule>> rules, List<PortablePresentationDiagnostic> diagnostics
+ List<AuthoredRuleCheck> checks
 });
 
 
@@ -280,11 +272,10 @@ class __$AuthoredRuleProjectionCopyWithImpl<$Res>
 
 /// Create a copy of AuthoredRuleProjection
 /// with the given fields replaced by the non-null parameter values.
-@override @pragma('vm:prefer-inline') $Res call({Object? rules = null,Object? diagnostics = null,}) {
+@override @pragma('vm:prefer-inline') $Res call({Object? checks = null,}) {
   return _then(_AuthoredRuleProjection(
-rules: null == rules ? _self._rules : rules // ignore: cast_nullable_to_non_nullable
-as Map<skir.ValueLocation, List<skir.OwnedRule>>,diagnostics: null == diagnostics ? _self._diagnostics : diagnostics // ignore: cast_nullable_to_non_nullable
-as List<PortablePresentationDiagnostic>,
+checks: null == checks ? _self._checks : checks // ignore: cast_nullable_to_non_nullable
+as List<AuthoredRuleCheck>,
   ));
 }
 
@@ -292,45 +283,45 @@ as List<PortablePresentationDiagnostic>,
 }
 
 /// @nodoc
-mixin _$PatternMatch {
+mixin _$AuthoredRuleCheck {
 
- skir.DataValue get value; List<skir.PathSegment> get path;
-/// Create a copy of _PatternMatch
+ skir.RuleId get rule; skir.ValueLocation get subject; skir.CheckOutcome get outcome; List<skir.Diagnostic> get findings;
+/// Create a copy of AuthoredRuleCheck
 /// with the given fields replaced by the non-null parameter values.
 @JsonKey(includeFromJson: false, includeToJson: false)
 @pragma('vm:prefer-inline')
-_$PatternMatchCopyWith<_PatternMatch> get copyWith => __$PatternMatchCopyWithImpl<_PatternMatch>(this as _PatternMatch, _$identity);
+$AuthoredRuleCheckCopyWith<AuthoredRuleCheck> get copyWith => _$AuthoredRuleCheckCopyWithImpl<AuthoredRuleCheck>(this as AuthoredRuleCheck, _$identity);
 
 
 
 @override
 bool operator ==(Object other) {
-  final _this = this as _PatternMatch;
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is _PatternMatch&&(identical(other.value, _this.value) || other.value == _this.value)&&const DeepCollectionEquality().equals(other.path, _this.path));
+  final _this = this as AuthoredRuleCheck;
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is AuthoredRuleCheck&&(identical(other.rule, _this.rule) || other.rule == _this.rule)&&(identical(other.subject, _this.subject) || other.subject == _this.subject)&&(identical(other.outcome, _this.outcome) || other.outcome == _this.outcome)&&const DeepCollectionEquality().equals(other.findings, _this.findings));
 }
 
 
 @override
 int get hashCode {
-  final _this = this as _PatternMatch;
-  return Object.hash(runtimeType,_this.value,const DeepCollectionEquality().hash(_this.path));
+  final _this = this as AuthoredRuleCheck;
+  return Object.hash(runtimeType,_this.rule,_this.subject,_this.outcome,const DeepCollectionEquality().hash(_this.findings));
 }
 
 @override
 String toString() {
-  final _this = this as _PatternMatch;
-  return '_PatternMatch(value: ${_this.value}, path: ${_this.path})';
+  final _this = this as AuthoredRuleCheck;
+  return 'AuthoredRuleCheck(rule: ${_this.rule}, subject: ${_this.subject}, outcome: ${_this.outcome}, findings: ${_this.findings})';
 }
 
 
 }
 
 /// @nodoc
-abstract mixin class _$PatternMatchCopyWith<$Res>  {
-  factory _$PatternMatchCopyWith(_PatternMatch value, $Res Function(_PatternMatch) _then) = __$PatternMatchCopyWithImpl;
+abstract mixin class $AuthoredRuleCheckCopyWith<$Res>  {
+  factory $AuthoredRuleCheckCopyWith(AuthoredRuleCheck value, $Res Function(AuthoredRuleCheck) _then) = _$AuthoredRuleCheckCopyWithImpl;
 @useResult
 $Res call({
- skir.DataValue value, List<skir.PathSegment> path
+ skir.RuleId rule, skir.ValueLocation subject, skir.CheckOutcome outcome, List<skir.Diagnostic> findings
 });
 
 
@@ -338,28 +329,30 @@ $Res call({
 
 }
 /// @nodoc
-class __$PatternMatchCopyWithImpl<$Res>
-    implements _$PatternMatchCopyWith<$Res> {
-  __$PatternMatchCopyWithImpl(this._self, this._then);
+class _$AuthoredRuleCheckCopyWithImpl<$Res>
+    implements $AuthoredRuleCheckCopyWith<$Res> {
+  _$AuthoredRuleCheckCopyWithImpl(this._self, this._then);
 
-  final _PatternMatch _self;
-  final $Res Function(_PatternMatch) _then;
+  final AuthoredRuleCheck _self;
+  final $Res Function(AuthoredRuleCheck) _then;
 
-/// Create a copy of _PatternMatch
+/// Create a copy of AuthoredRuleCheck
 /// with the given fields replaced by the non-null parameter values.
-@pragma('vm:prefer-inline') @override $Res call({Object? value = null,Object? path = null,}) {
-  return _then(_PatternMatch(
-value: null == value ? _self.value : value // ignore: cast_nullable_to_non_nullable
-as skir.DataValue,path: null == path ? _self.path : path // ignore: cast_nullable_to_non_nullable
-as List<skir.PathSegment>,
+@pragma('vm:prefer-inline') @override $Res call({Object? rule = null,Object? subject = null,Object? outcome = null,Object? findings = null,}) {
+  return _then(AuthoredRuleCheck(
+rule: null == rule ? _self.rule : rule // ignore: cast_nullable_to_non_nullable
+as skir.RuleId,subject: null == subject ? _self.subject : subject // ignore: cast_nullable_to_non_nullable
+as skir.ValueLocation,outcome: null == outcome ? _self.outcome : outcome // ignore: cast_nullable_to_non_nullable
+as skir.CheckOutcome,findings: null == findings ? _self.findings : findings // ignore: cast_nullable_to_non_nullable
+as List<skir.Diagnostic>,
   ));
 }
 
 }
 
 
-/// Adds pattern-matching-related methods to [_PatternMatch].
-extension _PatternMatchPatterns on _PatternMatch {
+/// Adds pattern-matching-related methods to [AuthoredRuleCheck].
+extension AuthoredRuleCheckPatterns on AuthoredRuleCheck {
 /// A variant of `map` that fallback to returning `orElse`.
 ///
 /// It is equivalent to doing:
@@ -372,10 +365,10 @@ extension _PatternMatchPatterns on _PatternMatch {
 /// }
 /// ```
 
-@optionalTypeArgs TResult maybeMap<TResult extends Object?>(TResult Function( _PatternMatchValue value)?  $default,{required TResult orElse(),}){
+@optionalTypeArgs TResult maybeMap<TResult extends Object?>(TResult Function( _AuthoredRuleCheck value)?  $default,{required TResult orElse(),}){
 final _that = this;
 switch (_that) {
-case _PatternMatchValue() when $default != null:
+case _AuthoredRuleCheck() when $default != null:
 return $default(_that);case _:
   return orElse();
 
@@ -394,10 +387,10 @@ return $default(_that);case _:
 /// }
 /// ```
 
-@optionalTypeArgs TResult map<TResult extends Object?>(TResult Function( _PatternMatchValue value)  $default,){
+@optionalTypeArgs TResult map<TResult extends Object?>(TResult Function( _AuthoredRuleCheck value)  $default,){
 final _that = this;
 switch (_that) {
-case _PatternMatchValue():
+case _AuthoredRuleCheck():
 return $default(_that);case _:
   throw StateError('Unexpected subclass');
 
@@ -415,10 +408,10 @@ return $default(_that);case _:
 /// }
 /// ```
 
-@optionalTypeArgs TResult? mapOrNull<TResult extends Object?>(TResult? Function( _PatternMatchValue value)?  $default,){
+@optionalTypeArgs TResult? mapOrNull<TResult extends Object?>(TResult? Function( _AuthoredRuleCheck value)?  $default,){
 final _that = this;
 switch (_that) {
-case _PatternMatchValue() when $default != null:
+case _AuthoredRuleCheck() when $default != null:
 return $default(_that);case _:
   return null;
 
@@ -436,10 +429,10 @@ return $default(_that);case _:
 /// }
 /// ```
 
-@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function( skir.DataValue value,  List<skir.PathSegment> path)?  $default,{required TResult orElse(),}) {final _that = this;
+@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function( skir.RuleId rule,  skir.ValueLocation subject,  skir.CheckOutcome outcome,  List<skir.Diagnostic> findings)?  $default,{required TResult orElse(),}) {final _that = this;
 switch (_that) {
-case _PatternMatchValue() when $default != null:
-return $default(_that.value,_that.path);case _:
+case _AuthoredRuleCheck() when $default != null:
+return $default(_that.rule,_that.subject,_that.outcome,_that.findings);case _:
   return orElse();
 
 }
@@ -457,10 +450,10 @@ return $default(_that.value,_that.path);case _:
 /// }
 /// ```
 
-@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function( skir.DataValue value,  List<skir.PathSegment> path)  $default,) {final _that = this;
+@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function( skir.RuleId rule,  skir.ValueLocation subject,  skir.CheckOutcome outcome,  List<skir.Diagnostic> findings)  $default,) {final _that = this;
 switch (_that) {
-case _PatternMatchValue():
-return $default(_that.value,_that.path);case _:
+case _AuthoredRuleCheck():
+return $default(_that.rule,_that.subject,_that.outcome,_that.findings);case _:
   throw StateError('Unexpected subclass');
 
 }
@@ -477,10 +470,10 @@ return $default(_that.value,_that.path);case _:
 /// }
 /// ```
 
-@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function( skir.DataValue value,  List<skir.PathSegment> path)?  $default,) {final _that = this;
+@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function( skir.RuleId rule,  skir.ValueLocation subject,  skir.CheckOutcome outcome,  List<skir.Diagnostic> findings)?  $default,) {final _that = this;
 switch (_that) {
-case _PatternMatchValue() when $default != null:
-return $default(_that.value,_that.path);case _:
+case _AuthoredRuleCheck() when $default != null:
+return $default(_that.rule,_that.subject,_that.outcome,_that.findings);case _:
   return null;
 
 }
@@ -491,52 +484,54 @@ return $default(_that.value,_that.path);case _:
 /// @nodoc
 
 
-class _PatternMatchValue implements _PatternMatch {
-  const _PatternMatchValue({required this.value, required  List<skir.PathSegment> path}): _path = path;
+class _AuthoredRuleCheck implements AuthoredRuleCheck {
+  const _AuthoredRuleCheck({required this.rule, required this.subject, required this.outcome,  List<skir.Diagnostic> findings = const []}): _findings = findings;
   
 
-@override final  skir.DataValue value;
- final  List<skir.PathSegment> _path;
-@override List<skir.PathSegment> get path {
-  if (_path is EqualUnmodifiableListView) return _path;
+@override final  skir.RuleId rule;
+@override final  skir.ValueLocation subject;
+@override final  skir.CheckOutcome outcome;
+ final  List<skir.Diagnostic> _findings;
+@override@JsonKey() List<skir.Diagnostic> get findings {
+  if (_findings is EqualUnmodifiableListView) return _findings;
   // ignore: implicit_dynamic_type
-  return EqualUnmodifiableListView(_path);
+  return EqualUnmodifiableListView(_findings);
 }
 
 
-/// Create a copy of _PatternMatch
+/// Create a copy of AuthoredRuleCheck
 /// with the given fields replaced by the non-null parameter values.
 @override @JsonKey(includeFromJson: false, includeToJson: false)
 @pragma('vm:prefer-inline')
-_$PatternMatchValueCopyWith<_PatternMatchValue> get copyWith => __$PatternMatchValueCopyWithImpl<_PatternMatchValue>(this, _$identity);
+_$AuthoredRuleCheckCopyWith<_AuthoredRuleCheck> get copyWith => __$AuthoredRuleCheckCopyWithImpl<_AuthoredRuleCheck>(this, _$identity);
 
 
 
 @override
 bool operator ==(Object other) {
-    return identical(this, other) || (other.runtimeType == runtimeType&&other is _PatternMatchValue&&(identical(other.value, value) || other.value == value)&&const DeepCollectionEquality().equals(other.path, _path));
+    return identical(this, other) || (other.runtimeType == runtimeType&&other is _AuthoredRuleCheck&&(identical(other.rule, rule) || other.rule == rule)&&(identical(other.subject, subject) || other.subject == subject)&&(identical(other.outcome, outcome) || other.outcome == outcome)&&const DeepCollectionEquality().equals(other.findings, _findings));
 }
 
 
 @override
 int get hashCode {
-    return Object.hash(runtimeType,value,const DeepCollectionEquality().hash(_path));
+    return Object.hash(runtimeType,rule,subject,outcome,const DeepCollectionEquality().hash(_findings));
 }
 
 @override
 String toString() {
-    return '_PatternMatch(value: $value, path: $path)';
+    return 'AuthoredRuleCheck(rule: $rule, subject: $subject, outcome: $outcome, findings: $findings)';
 }
 
 
 }
 
 /// @nodoc
-abstract mixin class _$PatternMatchValueCopyWith<$Res> implements _$PatternMatchCopyWith<$Res> {
-  factory _$PatternMatchValueCopyWith(_PatternMatchValue value, $Res Function(_PatternMatchValue) _then) = __$PatternMatchValueCopyWithImpl;
+abstract mixin class _$AuthoredRuleCheckCopyWith<$Res> implements $AuthoredRuleCheckCopyWith<$Res> {
+  factory _$AuthoredRuleCheckCopyWith(_AuthoredRuleCheck value, $Res Function(_AuthoredRuleCheck) _then) = __$AuthoredRuleCheckCopyWithImpl;
 @override @useResult
 $Res call({
- skir.DataValue value, List<skir.PathSegment> path
+ skir.RuleId rule, skir.ValueLocation subject, skir.CheckOutcome outcome, List<skir.Diagnostic> findings
 });
 
 
@@ -544,20 +539,22 @@ $Res call({
 
 }
 /// @nodoc
-class __$PatternMatchValueCopyWithImpl<$Res>
-    implements _$PatternMatchValueCopyWith<$Res> {
-  __$PatternMatchValueCopyWithImpl(this._self, this._then);
+class __$AuthoredRuleCheckCopyWithImpl<$Res>
+    implements _$AuthoredRuleCheckCopyWith<$Res> {
+  __$AuthoredRuleCheckCopyWithImpl(this._self, this._then);
 
-  final _PatternMatchValue _self;
-  final $Res Function(_PatternMatchValue) _then;
+  final _AuthoredRuleCheck _self;
+  final $Res Function(_AuthoredRuleCheck) _then;
 
-/// Create a copy of _PatternMatch
+/// Create a copy of AuthoredRuleCheck
 /// with the given fields replaced by the non-null parameter values.
-@override @pragma('vm:prefer-inline') $Res call({Object? value = null,Object? path = null,}) {
-  return _then(_PatternMatchValue(
-value: null == value ? _self.value : value // ignore: cast_nullable_to_non_nullable
-as skir.DataValue,path: null == path ? _self._path : path // ignore: cast_nullable_to_non_nullable
-as List<skir.PathSegment>,
+@override @pragma('vm:prefer-inline') $Res call({Object? rule = null,Object? subject = null,Object? outcome = null,Object? findings = null,}) {
+  return _then(_AuthoredRuleCheck(
+rule: null == rule ? _self.rule : rule // ignore: cast_nullable_to_non_nullable
+as skir.RuleId,subject: null == subject ? _self.subject : subject // ignore: cast_nullable_to_non_nullable
+as skir.ValueLocation,outcome: null == outcome ? _self.outcome : outcome // ignore: cast_nullable_to_non_nullable
+as skir.CheckOutcome,findings: null == findings ? _self._findings : findings // ignore: cast_nullable_to_non_nullable
+as List<skir.Diagnostic>,
   ));
 }
 

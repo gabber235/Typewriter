@@ -404,8 +404,8 @@ final _interactionGallery = skir.PresentationNode(
               allowAdd: true,
               allowRemove: true,
               allowReorder: true,
-              itemBindingId: skir.ExpressionBindingId(value: "list_item"),
-              indexBindingId: skir.ExpressionBindingId(value: "list_index"),
+              itemBinding: declareNamedBinding("list_item", textTemplate),
+              indexBinding: declareNamedBinding("list_index", int32Template),
               appearance: null,
               content: null,
             ),
@@ -436,8 +436,8 @@ final _interactionGallery = skir.PresentationNode(
               valuePresentation: null,
               allowAdd: true,
               allowRemove: true,
-              keyBindingId: skir.ExpressionBindingId(value: "map_key"),
-              valueBindingId: skir.ExpressionBindingId(value: "map_value"),
+              keyBinding: declareNamedBinding("map_key", textTemplate),
+              valueBinding: declareNamedBinding("map_value", textTemplate),
               appearance: null,
               content: null,
             ),
@@ -544,9 +544,10 @@ final _interactionGallery = skir.PresentationNode(
           name: "unavailable_label",
         ),
         icon: textLiteral("material-symbols:edit"),
+        // A field the quest does not have: the label is missing data.
         label: skir.ExpressionNode.createInput(
-          binding: skir.ExpressionBindingId(value: "missing_header_value"),
-          path: skir.ValuePath(segments: const []),
+          binding: _interactionRoot,
+          path: editorRootPath.field("missing_header_value"),
         ),
         tooltip: null,
         action: skir.EditorAction.wrapLocal(
@@ -914,7 +915,7 @@ final class ResourceHeadingGallery extends HookWidget {
     final scope = PortablePresentationScope(
       operations: operations,
       bindings: {
-        panelSelectionCountInput.bindingId: PortableExpressionBinding(
+        panelSelectionCountInput.binding.id: PortableExpressionBinding(
           value: skir.DataValue.wrapInteger(multiple ? "2" : "1"),
         ),
       },

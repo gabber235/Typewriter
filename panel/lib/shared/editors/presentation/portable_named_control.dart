@@ -8,7 +8,7 @@ typedef PortableBindingSetter =
     FutureOr<PortablePresentationWriteResult> Function(
       skir.BindingRef reference,
       skir.DataValue value, {
-      Iterable<PortableExpressionRead> reads,
+      Iterable<skir.ValueLocation> reads,
     });
 
 typedef PortableNamedPayloadBuilder = Widget Function(
@@ -48,7 +48,7 @@ abstract class PortableNamedPayload with _$PortableNamedPayload {
 
   FutureOr<PortablePresentationWriteResult> replace(
     skir.DataValue replacement, {
-    Iterable<PortableExpressionRead> reads = const [],
+    Iterable<skir.ValueLocation> reads = const [],
   }) => setBinding(
     reference,
     skir.DataValue.createNamed(actualType: actualType, payload: replacement),

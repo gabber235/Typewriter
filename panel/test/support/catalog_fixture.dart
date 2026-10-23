@@ -12,6 +12,7 @@ skir.EditorCatalog testCatalogSnapshot({
   skir.TypeDefinitionId? realmRoot,
   List<skir.PresentationDescriptor> presentations = const [],
   List<skir.PresentationMaterial> presentationMaterials = const [],
+  List<skir.ConfigurationRecipe> configuration = const [],
 }) => skir.EditorCatalog(
   resourceDisplays: const [],
   resourceOperations: const [],
@@ -21,7 +22,7 @@ skir.EditorCatalog testCatalogSnapshot({
   realmRoot: realmRoot ?? skir.TypeDefinitionId.defaultInstance,
   presentations: presentations,
   presentationMaterials: presentationMaterials,
-  configuration: const [],
+  configuration: configuration,
   diagnostics: const [],
   endpointBindings: const [],
   capabilities: const [],
@@ -37,6 +38,7 @@ CheckedEditorCatalog testCheckedCatalog({
   skir.TypeDefinitionId? realmRoot,
   List<skir.PresentationDescriptor> presentations = const [],
   List<skir.PresentationMaterial> presentationMaterials = const [],
+  List<skir.ConfigurationRecipe> configuration = const [],
 }) => CheckedEditorCatalog(
   testCatalogSnapshot(
     generation: generation,
@@ -45,5 +47,6 @@ CheckedEditorCatalog testCheckedCatalog({
     realmRoot: realmRoot,
     presentations: presentations,
     presentationMaterials: presentationMaterials,
+    configuration: configuration,
   ),
 );

@@ -118,8 +118,10 @@ void main() {
                 ..contextInputs = [
                   skir.PresentationContextInput(
                     source: skir.PresentationContextSource.caller,
-                    bindingId: contextId,
-                    valueType: textType,
+                    binding: declareBinding(
+                      contextId,
+                      textType.portableTemplate,
+                    ),
                   ),
                 ])
               .toFrozen(),
@@ -378,7 +380,10 @@ void main() {
             bindingId: inheritedConfiguredValue,
             path: editorRootPath,
           ),
-          scopeBindingId: inheritedConfiguredValue,
+          scopeBinding: declareBinding(
+            inheritedConfiguredValue,
+            skir.TypeUse.wrapNamed(inspectorMessageType).portableTemplate,
+          ),
           child: inspectorLayoutRemainder("child.remaining"),
         ),
       ),

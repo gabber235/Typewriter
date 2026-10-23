@@ -437,32 +437,23 @@ final class AuthoredPresentationHost extends ChangeNotifier
           problem: "A presentation collection row could not be projected",
         );
       }
-      final projectedUse =
-          checked.applyTemplate(definition.rowType, record.configuration) ??
-          checked.concreteType(definition.rowType);
-      final rowSchema = projectedUse == null
-          ? null
-          : CompletePortablePresentationBinding(projectedUse);
       final bindings = {
         ...context.bindings,
-        definition.rowBindingId: PortableExpressionBinding(
-          value: row,
-          schema: rowSchema,
-        ),
-        projected.resourceBindingId: entry.key.toExpressionBinding(),
+        definition.rowBinding.id: PortableExpressionBinding(value: row),
+        projected.resourceBinding.id: entry.key.toExpressionBinding(),
       };
-      final key = checked.evaluateExpression(
-        definition.key,
-        bindings: bindings,
+      final key = PortableExpressionEvaluator.located(
+        bindings,
         budget: budget,
+        catalog: checked,
         queries: queries,
-      );
-      final selectable = checked.evaluateExpression(
-        definition.selectability,
-        bindings: bindings,
+      ).evaluate(definition.key);
+      final selectable = PortableExpressionEvaluator.located(
+        bindings,
         budget: budget,
+        catalog: checked,
         queries: queries,
-      );
+      ).evaluate(definition.selectability);
       if (key is! PortableExpressionAvailable) {
         return PortableCollectionProjection(
           definition: definition,
@@ -483,7 +474,6 @@ final class AuthoredPresentationHost extends ChangeNotifier
           configuration: record.configuration,
           label: checked.appearanceOf(record).label,
           row: row,
-          schema: rowSchema,
           key: key.value,
           canonicalKey: canonicalAuthoredValue(key.value),
           selectable: selected,
@@ -922,7 +912,7 @@ final class AuthoredPresentationHost extends ChangeNotifier
     row ??= skir.DataValue.createRecord(fields: const []);
     if (row == skir.DataValue.unfilled) return row;
     final applied = catalog.applyTemplate(
-      definition.rowType,
+      definition.rowBinding.type,
       record.configuration,
     );
     return applied == null
@@ -1235,24 +1225,13 @@ final class AuthoredPresentationHost extends ChangeNotifier
           value.target,
           context,
           reads: [
-            PortableExpressionRead(
-              source: PortableExpressionReadSource.input(
-                value.target.bindingId,
-              ),
+            skir.ValueLocation(
+              resource: target.resource,
               path: skir.ValuePath(
                 segments: [
-                  ...value.target.path.segments,
+                  ...target.path.segments,
                   skir.PathSegment.createItem(id: source.id),
                 ],
-              ),
-              location: skir.ValueLocation(
-                resource: target.resource,
-                path: skir.ValuePath(
-                  segments: [
-                    ...target.path.segments,
-                    skir.PathSegment.createItem(id: source.id),
-                  ],
-                ),
               ),
             ),
           ],
@@ -1358,17 +1337,16 @@ final class AuthoredPresentationHost extends ChangeNotifier
   _AuthoredActionValue? _evaluate(
     skir.ExpressionNode expression,
     PortableInvocationContext context,
-  ) =>
-      switch ((context.queries?.catalog ?? authored.catalog).evaluateExpression(
-        expression,
-        bindings: context.bindings,
-        budget: budget,
-        queries: context.queries,
-      )) {
-        PortableExpressionAvailable(:final value, :final reads) =>
-          _AuthoredActionValue(value, reads),
-        PortableExpressionUnavailable() || PortableExpressionFailed() => null,
-      };
+  ) => switch (PortableExpressionEvaluator.located(
+    context.bindings,
+    budget: budget,
+    catalog: context.queries?.catalog ?? authored.catalog,
+    queries: context.queries,
+  ).evaluate(expression)) {
+    PortableExpressionAvailable(:final value, :final reads) =>
+      _AuthoredActionValue(value, reads),
+    PortableExpressionUnavailable() || PortableExpressionFailed() => null,
+  };
 
   PortablePresentationWriteResult _editList(
     skir.BindingRef reference,
@@ -1378,7 +1356,7 @@ final class AuthoredPresentationHost extends ChangeNotifier
       PortableAuthoringEdit operation,
     )
     apply,
-    Iterable<PortableExpressionRead> reads = const [],
+    Iterable<skir.ValueLocation> reads = const [],
   }) {
     final target = location(reference, context: context);
     if (target == null) {
@@ -1400,7 +1378,7 @@ final class AuthoredPresentationHost extends ChangeNotifier
     PortableInvocationContext context, {
     required List<skir.MapRow> Function(List<skir.MapRow> rows) update,
     skir.ItemId? requiredRow,
-    Iterable<PortableExpressionRead> reads = const [],
+    Iterable<skir.ValueLocation> reads = const [],
   }) {
     final target = location(reference, context: context);
     final current = read(reference, context: context)?.authoredPayload;
@@ -1526,5 +1504,5 @@ final class _AuthoredActionValue {
   const _AuthoredActionValue(this.value, this.reads);
 
   final skir.DataValue value;
-  final List<PortableExpressionRead> reads;
+  final List<skir.ValueLocation> reads;
 }

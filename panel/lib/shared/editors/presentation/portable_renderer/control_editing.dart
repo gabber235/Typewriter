@@ -17,21 +17,8 @@ skir.DataValue _payloadReplacement(
 PortableExpressionResult _evaluateMapping(
   PortablePresentationScope scope,
   skir.ExpressionMapping mapping,
-  skir.DataValue candidate, {
-  skir.TypeUse? candidateType,
-}) => scope
-    .copyWith(
-      bindings: {
-        ...scope.bindings,
-        mapping.inputBinding: PortableExpressionBinding(
-          value: candidate,
-          schema: candidateType == null
-              ? null
-              : CompletePortablePresentationBinding(candidateType),
-        ),
-      },
-    )
-    .evaluate(mapping.body);
+  skir.DataValue candidate,
+) => scope.declare(mapping.inputBinding, candidate).evaluate(mapping.body);
 
 String? _mappedDisplay(
   PortablePresentationScope scope,
@@ -45,12 +32,7 @@ String? _mappedDisplay(
       value == skir.DataValue.null_) {
     return null;
   }
-  final result = _evaluateMapping(
-    scope,
-    mapping,
-    value,
-    candidateType: scope.expectedPayloadType(reference),
-  );
+  final result = _evaluateMapping(scope, mapping, value);
   return result is PortableExpressionAvailable &&
           result.value is skir.DataValue_stringValueWrapper
       ? (result.value as skir.DataValue_stringValueWrapper).value
@@ -144,12 +126,7 @@ class _PortableEntryEditing extends HookWidget {
           currentPayload == skir.DataValue.null_) {
         return null;
       }
-      final result = _evaluateMapping(
-        scope,
-        mapping,
-        currentPayload,
-        candidateType: scope.expectedPayloadType(control.binding),
-      );
+      final result = _evaluateMapping(scope, mapping, currentPayload);
       final message =
           result is PortableExpressionAvailable &&
               result.value is skir.DataValue_stringValueWrapper
@@ -173,7 +150,7 @@ class _PortableEntryEditing extends HookWidget {
 
     Future<void> write(
       skir.DataValue payload, {
-      Iterable<PortableExpressionRead> reads = const [],
+      Iterable<skir.ValueLocation> reads = const [],
     }) async {
       if (!active.value || latestIdentity.value != identity) return;
       final current = latest.value;
@@ -244,12 +221,7 @@ class _PortableEntryEditing extends HookWidget {
             );
             return;
           }
-          final result = _evaluateMapping(
-            source,
-            mapping,
-            candidate,
-            candidateType: source.expectedPayloadType(control.binding),
-          );
+          final result = _evaluateMapping(source, mapping, candidate);
           if (result is! PortableExpressionAvailable) {
             await feedback(
               "The completion expression could not produce a value",

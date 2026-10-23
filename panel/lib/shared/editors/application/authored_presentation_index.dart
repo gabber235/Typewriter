@@ -259,8 +259,8 @@ extension AuthoredPresentationBindings on skir.PresentationNode {
         }
       case skir.PresentationElement_scopedBindingWrapper(:final value):
         final address = aliases.resolve(value.binding);
-        final nested = {...aliases}..remove(value.scopeBindingId);
-        if (address != null) nested[value.scopeBindingId] = address;
+        final nested = {...aliases}..remove(value.scopeBinding.id);
+        if (address != null) nested[value.scopeBinding.id] = address;
         yield* value.child.authoredBindingUses(
           nested,
           sources,
@@ -306,7 +306,10 @@ extension AuthoredPresentationBindings on skir.PresentationNode {
             );
         if (value.summary case final child?) {
           yield* child.authoredBindingUses(
-            {...aliases, value.summaryBindingId: local(value.summaryBindingId)},
+            {
+              ...aliases,
+              value.summaryBinding.id: local(value.summaryBinding.id),
+            },
             sources,
             onEditableBinding,
             true,
@@ -326,7 +329,7 @@ extension AuthoredPresentationBindings on skir.PresentationNode {
         }
         yield* _searchAuthoredBindingUses(
           value.provider,
-          {...aliases, value.queryBindingId: local(value.queryBindingId)},
+          {...aliases, value.queryBinding.id: local(value.queryBinding.id)},
           sources,
           onEditableBinding,
           nodeId,
@@ -348,8 +351,8 @@ extension AuthoredPresentationBindings on skir.PresentationNode {
         }
       case skir.PresentationElement_polymorphicMatchWrapper(:final value):
         final address = aliases.resolve(value.binding);
-        final nested = {...aliases}..remove(value.scopeBindingId);
-        if (address != null) nested[value.scopeBindingId] = address;
+        final nested = {...aliases}..remove(value.scopeBinding.id);
+        if (address != null) nested[value.scopeBinding.id] = address;
         for (final item in value.cases) {
           yield* item.child.authoredBindingUses(
             nested,
@@ -373,11 +376,11 @@ extension AuthoredPresentationBindings on skir.PresentationNode {
           final address =
               aliases.resolve(value.control.binding)?.items ??
               AuthoredBindingAddress(
-                root: AuthoredBindingRoot.local(value.itemBindingId),
+                root: AuthoredBindingRoot.local(value.itemBinding.id),
                 path: const [],
               );
           yield* child.authoredBindingUses(
-            {...aliases, value.itemBindingId: address},
+            {...aliases, value.itemBinding.id: address},
             sources,
             onEditableBinding,
             true,
@@ -389,11 +392,11 @@ extension AuthoredPresentationBindings on skir.PresentationNode {
           final address =
               aliases.resolve(value.control.binding)?.items ??
               AuthoredBindingAddress(
-                root: AuthoredBindingRoot.local(value.itemBindingId),
+                root: AuthoredBindingRoot.local(value.itemBinding.id),
                 path: const [],
               );
           yield* child.authoredBindingUses(
-            {...aliases, value.itemBindingId: address},
+            {...aliases, value.itemBinding.id: address},
             sources,
             onEditableBinding,
             true,
@@ -406,10 +409,10 @@ extension AuthoredPresentationBindings on skir.PresentationNode {
           yield* child.authoredBindingUses(
             {
               ...aliases,
-              value.keyBindingId:
+              value.keyBinding.id:
                   address?.append([skir.PathSegment.mapKey]) ??
                   AuthoredBindingAddress(
-                    root: AuthoredBindingRoot.local(value.keyBindingId),
+                    root: AuthoredBindingRoot.local(value.keyBinding.id),
                     path: const [],
                   ),
             },
@@ -423,10 +426,10 @@ extension AuthoredPresentationBindings on skir.PresentationNode {
           yield* child.authoredBindingUses(
             {
               ...aliases,
-              value.valueBindingId:
+              value.valueBinding.id:
                   address?.append([skir.PathSegment.mapValue]) ??
                   AuthoredBindingAddress(
-                    root: AuthoredBindingRoot.local(value.valueBindingId),
+                    root: AuthoredBindingRoot.local(value.valueBinding.id),
                     path: const [],
                   ),
             },
@@ -447,13 +450,13 @@ extension AuthoredPresentationBindings on skir.PresentationNode {
             source?.items ??
             AuthoredBindingAddress(
               root: AuthoredBindingRoot.local(
-                value.itemBindingId,
+                value.itemBinding.id,
                 origin: nodeId,
               ),
               path: const [],
             );
         yield* value.presentation.item.authoredBindingUses(
-          {...aliases, value.itemBindingId: address},
+          {...aliases, value.itemBinding.id: address},
           sources,
           onEditableBinding,
           true,
@@ -463,7 +466,7 @@ extension AuthoredPresentationBindings on skir.PresentationNode {
           yield* value.presentation.item.authoredBindingUses(
             {
               ...aliases,
-              value.itemBindingId: address.append([skir.PathSegment.mapValue]),
+              value.itemBinding.id: address.append([skir.PathSegment.mapValue]),
             },
             sources,
             onEditableBinding,
@@ -498,7 +501,7 @@ extension AuthoredPresentationBindings on skir.PresentationNode {
         yield* value.found.authoredBindingUses(
           {
             ...aliases,
-            if (definition != null) definition.rowBindingId: address,
+            if (definition != null) definition.rowBinding.id: address,
           },
           sources,
           onEditableBinding,
@@ -530,8 +533,8 @@ extension AuthoredPresentationBindings on skir.PresentationNode {
         final address = source.items;
         final nested = {
           ...aliases,
-          if (definition != null) definition.rowBindingId: address,
-          value.childrenBindingId: source,
+          if (definition != null) definition.rowBinding.id: address,
+          value.childrenBinding.id: source,
         };
         yield* value.node.authoredBindingUses(
           nested,
@@ -548,7 +551,7 @@ extension AuthoredPresentationBindings on skir.PresentationNode {
           onPart,
         );
         yield* value.children.item.authoredBindingUses(
-          {...nested, value.childBindingId: address},
+          {...nested, value.childBinding.id: address},
           sources,
           onEditableBinding,
           true,
@@ -619,7 +622,7 @@ Iterable<AuthoredBindingUse> _searchAuthoredBindingUses(
   ) sync* {
     final nested = {
       ...environment,
-      mapping.bindingId: foreign(mapping.bindingId),
+      mapping.binding.id: foreign(mapping.binding.id),
     };
     yield* mapping.presentation.authoredBindingUses(
       nested,
@@ -641,7 +644,7 @@ Iterable<AuthoredBindingUse> _searchAuthoredBindingUses(
       yield* result(value.result, {
         ...aliases,
         for (final context in value.contextBindings)
-          context.bindingId: foreign(context.bindingId),
+          context.binding.id: foreign(context.binding.id),
       });
     case skir.SearchProvider_gateWrapper(:final value):
       yield* _searchAuthoredBindingUses(

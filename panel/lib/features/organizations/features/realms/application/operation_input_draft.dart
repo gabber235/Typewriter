@@ -118,10 +118,7 @@ final class OperationInputDraft extends ChangeNotifier {
               skir.AxisChild.wrapFixed(switch (candidateSearches[field
                   .template
                   .key]) {
-                final capability? => _candidateSearch(
-                  field.template.key,
-                  capability,
-                ),
+                final capability? => _candidateSearch(field, capability),
                 null => _node(
                   "operation.input.${field.template.key}",
                   skir.PresentationElement.createDefaultPresentation(
@@ -139,9 +136,18 @@ final class OperationInputDraft extends ChangeNotifier {
   /// A search over the declared candidates of [field]: each result is an
   /// operation resource option whose id fills the field.
   skir.PresentationNode _candidateSearch(
-    String field,
+    AppliedEditorField applied,
     skir.CapabilityId capability,
   ) {
+    final field = applied.template.key;
+    final resultType = catalog.snapshot.capabilities
+        .whereType<skir.CapabilityDefinition_searchWrapper>()
+        .where((entry) => entry.value.capabilityId == capability)
+        .firstOrNull
+        ?.value
+        .resultType;
+    skir.TypeTemplate template(skir.TypeUse? use) =>
+        use?.portableTemplate ?? skir.TypeTemplate.unknown;
     final row = skir.ExpressionBindingId(value: "operation.input.$field.row");
     final id = skir.ExpressionNode.createInput(
       binding: row,
@@ -158,11 +164,13 @@ final class OperationInputDraft extends ChangeNotifier {
       skir.PresentationElement.createSearchInput(
         control: _control(editorRootPath.field(field)),
         selectionMode: skir.SearchSelectionMode.single,
-        queryBindingId: skir.ExpressionBindingId(
-          value: "operation.input.$field.query",
+        queryBinding: skir.BindingDeclaration(
+          id: skir.ExpressionBindingId(value: "operation.input.$field.query"),
+          type: skir.TypeTemplate.wrapScalar(skir.ScalarKind.text),
         ),
-        summaryBindingId: skir.ExpressionBindingId(
-          value: "operation.input.$field.summary",
+        summaryBinding: skir.BindingDeclaration(
+          id: skir.ExpressionBindingId(value: "operation.input.$field.summary"),
+          type: template(applied.type),
         ),
         maximumExtent: skir.ExpressionNode.wrapLiteral(
           skir.DataValue.wrapFloat(320),
@@ -171,7 +179,10 @@ final class OperationInputDraft extends ChangeNotifier {
           capabilityId: capability,
           payload: text(""),
           result: skir.SearchResultMapping(
-            bindingId: row,
+            binding: skir.BindingDeclaration(
+              id: row,
+              type: template(resultType),
+            ),
             key: id,
             selectedValue: id,
             label: label,

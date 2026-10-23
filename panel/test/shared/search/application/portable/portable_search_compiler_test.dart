@@ -23,7 +23,7 @@ void main() {
           resultPath: r"$.results[*]",
           resultType: skir.TypeTemplate.wrapScalar(skir.ScalarKind.text),
           result: skir.SearchResultMapping(
-            bindingId: _rowBinding,
+            binding: declareBinding(_rowBinding, textTemplate),
             key: row,
             selectedValue: row,
             label: row,
@@ -31,9 +31,8 @@ void main() {
           ),
           contextBindings: [
             skir.HttpJsonContextBinding(
-              bindingId: origin,
+              binding: declareBinding(origin, textTemplate),
               path: r"$.origin",
-              valueType: skir.TypeTemplate.wrapScalar(skir.ScalarKind.text),
             ),
           ],
           selectors: const [],
@@ -53,7 +52,6 @@ void main() {
       final text = CompletePortablePresentationBinding(
         skir.TypeUse.wrapScalar(skir.ScalarKind.text),
       );
-      expect(payload.sourceSchema, text);
       expect(payload.contextBindings[origin]?.schema, text);
       final operations = PortableOperationResults();
       final scope = binding.resultScope(
@@ -66,6 +64,7 @@ void main() {
         ),
       );
       expect(scope.bindings[origin]?.value.authoredString, "Marketplace");
+      expect(scope.bindings[_rowBinding]?.schema, text);
       expect(
         scope.bindings[_rowBinding]?.value.authoredString,
         "Remote choice",
@@ -85,7 +84,6 @@ void main() {
       final result = await _firstResult(binding.source);
       final payload = result.payload as PortableMappedSearchPayload;
       final text = skir.TypeUse.wrapScalar(skir.ScalarKind.text);
-      expect(payload.sourceSchema, CompletePortablePresentationBinding(text));
       expect(
         payload.contextBindings[_rowContextBinding],
         same(fixture.invocation.bindings[_rowContextBinding]),
@@ -105,7 +103,7 @@ void main() {
         CompletePortablePresentationBinding(text),
       );
       expect(
-        scope.bindings[fixture.control.queryBindingId]?.schema,
+        scope.bindings[fixture.control.queryBinding.id]?.schema,
         CompletePortablePresentationBinding(text),
       );
       expect(
@@ -472,7 +470,7 @@ _SearchFixture _fixture({
     path: skir.ValuePath(segments: const []),
   );
   final mapping = skir.SearchResultMapping(
-    bindingId: _rowBinding,
+    binding: declareBinding(_rowBinding, textTemplate),
     key: rowRead,
     selectedValue: selected == null
         ? skir.ExpressionNode.createInput(
@@ -533,8 +531,8 @@ _SearchFixture _fixture({
       selectionMode: multiple
           ? skir.SearchSelectionMode.multiple
           : skir.SearchSelectionMode.single,
-      queryBindingId: skir.ExpressionBindingId(value: "query"),
-      summaryBindingId: skir.ExpressionBindingId(value: "summary"),
+      queryBinding: declareNamedBinding("query", textTemplate),
+      summaryBinding: declareNamedBinding("summary", textTemplate),
       maximumExtent: skir.ExpressionNode.wrapLiteral(
         skir.DataValue.wrapInteger("320"),
       ),
@@ -580,7 +578,7 @@ skir.SearchProvider _staticProvider(
     result:
         mapping ??
         skir.SearchResultMapping(
-          bindingId: _rowBinding,
+          binding: declareBinding(_rowBinding, textTemplate),
           key: rowRead,
           selectedValue: rowRead,
           presentation: skir.PresentationNode.defaultInstance,

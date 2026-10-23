@@ -2240,17 +2240,17 @@ PortableMaybe<_lib_editor_v1_type_catalog.DataValue>? invokePortableOperation(
   List<_lib_editor_v1_type_catalog.TypeUse> typeArguments,
   KernelContext context,
 ) => switch (id) {
-  "boolean.not" => PortableValue(
+  "boolean.not" => PortableMaybeValue(
     booleanValue(kernel.boolean.not(arguments[0].value.asBoolean())),
   ),
-  "bytes.from_list" => PortableValue(
+  "bytes.from_list" => PortableMaybeValue(
     bytesValue(
       kernel.bytes.fromList([
         for (final it in arguments[0].value.asItems()) it.value.asInt32(),
       ]),
     ),
   ),
-  "bytes.to_list" => PortableValue(
+  "bytes.to_list" => PortableMaybeValue(
     positionalList([
       for (final it in kernel.bytes.toList(arguments[0].value.asBytes()))
         int32Value(it),
@@ -2260,7 +2260,7 @@ PortableMaybe<_lib_editor_v1_type_catalog.DataValue>? invokePortableOperation(
     kernel.catalog
         .declaration(arguments[0].value, context.resources)
         .map((it) => it),
-  "collection.contains" => PortableValue(
+  "collection.contains" => PortableMaybeValue(
     booleanValue(
       kernel.collection.contains(
         arguments[0].value.asItems(),
@@ -2268,7 +2268,7 @@ PortableMaybe<_lib_editor_v1_type_catalog.DataValue>? invokePortableOperation(
       ),
     ),
   ),
-  "collection.filter" => PortableValue(
+  "collection.filter" => PortableMaybeValue(
     itemsList(
       kernel.collection.filter(
         arguments[0].value.asItems(),
@@ -2276,14 +2276,14 @@ PortableMaybe<_lib_editor_v1_type_catalog.DataValue>? invokePortableOperation(
       ),
     ),
   ),
-  "collection.fold" => PortableValue(
+  "collection.fold" => PortableMaybeValue(
     kernel.collection.fold(
       arguments[0].value.asItems(),
       arguments[1].value,
       arguments[2].step,
     ),
   ),
-  "collection.group_by" => PortableValue(
+  "collection.group_by" => PortableMaybeValue(
     rowsMap(
       kernel.collection.groupBy(
         arguments[0].value.asItems(),
@@ -2291,7 +2291,7 @@ PortableMaybe<_lib_editor_v1_type_catalog.DataValue>? invokePortableOperation(
       ),
     ),
   ),
-  "collection.map" => PortableValue(
+  "collection.map" => PortableMaybeValue(
     itemsList(
       kernel.collection.map(
         arguments[0].value.asItems(),
@@ -2299,10 +2299,10 @@ PortableMaybe<_lib_editor_v1_type_catalog.DataValue>? invokePortableOperation(
       ),
     ),
   ),
-  "collection.size" => PortableValue(
+  "collection.size" => PortableMaybeValue(
     int32Value(kernel.collection.size(arguments[0].value.asItems())),
   ),
-  "collection.sort_by" => PortableValue(
+  "collection.sort_by" => PortableMaybeValue(
     itemsList(
       kernel.collection.sortBy(
         arguments[0].value.asItems(),
@@ -2311,7 +2311,7 @@ PortableMaybe<_lib_editor_v1_type_catalog.DataValue>? invokePortableOperation(
       ),
     ),
   ),
-  "collection.sort_with" => PortableValue(
+  "collection.sort_with" => PortableMaybeValue(
     itemsList(
       kernel.collection.sortWith(
         arguments[0].value.asItems(),
@@ -2320,39 +2320,39 @@ PortableMaybe<_lib_editor_v1_type_catalog.DataValue>? invokePortableOperation(
       ),
     ),
   ),
-  "collection.to_list" => PortableValue(
+  "collection.to_list" => PortableMaybeValue(
     itemsList(kernel.collection.toList(arguments[0].value.asItems())),
   ),
-  "collection.to_set" => PortableValue(
+  "collection.to_set" => PortableMaybeValue(
     itemsSet(kernel.collection.toSet(arguments[0].value.asItems())),
   ),
-  "decimal.scale" => PortableValue(
+  "decimal.scale" => PortableMaybeValue(
     int32Value(kernel.decimal.scale(arguments[0].value.asDecimal())),
   ),
-  "duration.from_milliseconds" => PortableValue(
+  "duration.from_milliseconds" => PortableMaybeValue(
     durationValue(
       kernel.duration.fromMilliseconds(arguments[0].value.asInteger()),
     ),
   ),
-  "duration.to_milliseconds" => PortableValue(
+  "duration.to_milliseconds" => PortableMaybeValue(
     integerValue(
       kernel.duration.toMilliseconds(arguments[0].value.asDuration()),
     ),
   ),
-  "entry.of" => PortableValue(
+  "entry.of" => PortableMaybeValue(
     kernel.entry.of(arguments[0].value, arguments[1].value),
   ),
-  "enum.cases" => PortableValue(
+  "enum.cases" => PortableMaybeValue(
     itemsList(kernel.enumeration.cases(typeArguments[0], context.types)),
   ),
-  "enum.from_name" => PortableValue(
+  "enum.from_name" => PortableMaybeValue(
     kernel.enumeration.fromName(
       arguments[0].value.asText(),
       typeArguments[0],
       context.types,
     ),
   ),
-  "integer.bit_and" => PortableValue(
+  "integer.bit_and" => PortableMaybeValue(
     integerValue(
       kernel.integer.bitAnd(
         arguments[0].value.asInteger(),
@@ -2361,10 +2361,10 @@ PortableMaybe<_lib_editor_v1_type_catalog.DataValue>? invokePortableOperation(
       ),
     ),
   ),
-  "integer.bit_not" => PortableValue(
+  "integer.bit_not" => PortableMaybeValue(
     integerValue(kernel.integer.bitNot(arguments[0].value.asInteger())),
   ),
-  "integer.bit_or" => PortableValue(
+  "integer.bit_or" => PortableMaybeValue(
     integerValue(
       kernel.integer.bitOr(
         arguments[0].value.asInteger(),
@@ -2373,7 +2373,7 @@ PortableMaybe<_lib_editor_v1_type_catalog.DataValue>? invokePortableOperation(
       ),
     ),
   ),
-  "integer.bit_xor" => PortableValue(
+  "integer.bit_xor" => PortableMaybeValue(
     integerValue(
       kernel.integer.bitXor(
         arguments[0].value.asInteger(),
@@ -2382,7 +2382,7 @@ PortableMaybe<_lib_editor_v1_type_catalog.DataValue>? invokePortableOperation(
       ),
     ),
   ),
-  "integer.gcd" => PortableValue(
+  "integer.gcd" => PortableMaybeValue(
     integerValue(
       kernel.integer.gcd(
         arguments[0].value.asInteger(),
@@ -2390,7 +2390,7 @@ PortableMaybe<_lib_editor_v1_type_catalog.DataValue>? invokePortableOperation(
       ),
     ),
   ),
-  "integer.shift_left" => PortableValue(
+  "integer.shift_left" => PortableMaybeValue(
     integerValue(
       kernel.integer.shiftLeft(
         arguments[0].value.asInteger(),
@@ -2398,7 +2398,7 @@ PortableMaybe<_lib_editor_v1_type_catalog.DataValue>? invokePortableOperation(
       ),
     ),
   ),
-  "integer.shift_right" => PortableValue(
+  "integer.shift_right" => PortableMaybeValue(
     integerValue(
       kernel.integer.shiftRight(
         arguments[0].value.asInteger(),
@@ -2406,7 +2406,7 @@ PortableMaybe<_lib_editor_v1_type_catalog.DataValue>? invokePortableOperation(
       ),
     ),
   ),
-  "link.target" => PortableValue(
+  "link.target" => PortableMaybeValue(
     resourceIdValue(kernel.link.target(arguments[0].value.asLink())),
   ),
   "list.at" =>
@@ -2416,7 +2416,7 @@ PortableMaybe<_lib_editor_v1_type_catalog.DataValue>? invokePortableOperation(
           arguments[1].value.asInt32(),
         )
         .map((it) => it),
-  "list.concat" => PortableValue(
+  "list.concat" => PortableMaybeValue(
     itemsList(
       kernel.list.concat(
         arguments[0].value.asItems(),
@@ -2425,23 +2425,23 @@ PortableMaybe<_lib_editor_v1_type_catalog.DataValue>? invokePortableOperation(
       ),
     ),
   ),
-  "list.flatten" => PortableValue(
+  "list.flatten" => PortableMaybeValue(
     itemsList(kernel.list.flatten(arguments[0].value.asItems())),
   ),
-  "list.index_of" => PortableValue(
+  "list.index_of" => PortableMaybeValue(
     int32Value(
       kernel.list.indexOf(arguments[0].value.asItems(), arguments[1].value),
     ),
   ),
-  "list.last_index_of" => PortableValue(
+  "list.last_index_of" => PortableMaybeValue(
     int32Value(
       kernel.list.lastIndexOf(arguments[0].value.asItems(), arguments[1].value),
     ),
   ),
-  "list.of" => PortableValue(
+  "list.of" => PortableMaybeValue(
     itemsList(kernel.list.of([for (final it in arguments.skip(0)) it.value])),
   ),
-  "list.range" => PortableValue(
+  "list.range" => PortableMaybeValue(
     positionalList([
       for (final it in kernel.list.range(
         arguments[0].value.asInt32(),
@@ -2452,10 +2452,10 @@ PortableMaybe<_lib_editor_v1_type_catalog.DataValue>? invokePortableOperation(
         int32Value(it),
     ]),
   ),
-  "list.reverse" => PortableValue(
+  "list.reverse" => PortableMaybeValue(
     itemsList(kernel.list.reverse(arguments[0].value.asItems())),
   ),
-  "list.scan" => PortableValue(
+  "list.scan" => PortableMaybeValue(
     itemsList(
       kernel.list.scan(
         arguments[0].value.asItems(),
@@ -2464,7 +2464,7 @@ PortableMaybe<_lib_editor_v1_type_catalog.DataValue>? invokePortableOperation(
       ),
     ),
   ),
-  "list.slice" => PortableValue(
+  "list.slice" => PortableMaybeValue(
     itemsList(
       kernel.list.slice(
         arguments[0].value.asItems(),
@@ -2473,7 +2473,7 @@ PortableMaybe<_lib_editor_v1_type_catalog.DataValue>? invokePortableOperation(
       ),
     ),
   ),
-  "list.zip" => PortableValue(
+  "list.zip" => PortableMaybeValue(
     itemsList(
       kernel.list.zip(
         arguments[0].value.asItems(),
@@ -2481,19 +2481,19 @@ PortableMaybe<_lib_editor_v1_type_catalog.DataValue>? invokePortableOperation(
       ),
     ),
   ),
-  "map.contains_key" => PortableValue(
+  "map.contains_key" => PortableMaybeValue(
     booleanValue(
       kernel.map.containsKey(arguments[0].value.asRows(), arguments[1].value),
     ),
   ),
-  "map.from_entries" => PortableValue(
+  "map.from_entries" => PortableMaybeValue(
     rowsMap(kernel.map.fromEntries(arguments[0].value.asItems())),
   ),
   "map.get" =>
     kernel.map
         .get(arguments[0].located((it) => it.asRows()), arguments[1].value)
         .map((it) => it),
-  "map.map_values" => PortableValue(
+  "map.map_values" => PortableMaybeValue(
     rowsMap(
       kernel.map.mapValues(
         arguments[0].value.asRows(),
@@ -2501,7 +2501,7 @@ PortableMaybe<_lib_editor_v1_type_catalog.DataValue>? invokePortableOperation(
       ),
     ),
   ),
-  "number.add" => PortableValue(
+  "number.add" => PortableMaybeValue(
     numberValue(
       kernel.number.add(
         arguments[0].value.asNumber(),
@@ -2510,12 +2510,12 @@ PortableMaybe<_lib_editor_v1_type_catalog.DataValue>? invokePortableOperation(
       ),
     ),
   ),
-  "number.convert" => PortableValue(
+  "number.convert" => PortableMaybeValue(
     numberValue(
       kernel.number.convert(arguments[0].value.asNumber(), typeArguments[0]),
     ),
   ),
-  "number.divide" => PortableValue(
+  "number.divide" => PortableMaybeValue(
     numberValue(
       kernel.number.divide(
         arguments[0].value.asNumber(),
@@ -2523,7 +2523,7 @@ PortableMaybe<_lib_editor_v1_type_catalog.DataValue>? invokePortableOperation(
       ),
     ),
   ),
-  "number.format" => PortableValue(
+  "number.format" => PortableMaybeValue(
     textValue(
       kernel.number.format(
         arguments[0].value.asNumber(),
@@ -2532,7 +2532,7 @@ PortableMaybe<_lib_editor_v1_type_catalog.DataValue>? invokePortableOperation(
       ),
     ),
   ),
-  "number.multiply" => PortableValue(
+  "number.multiply" => PortableMaybeValue(
     numberValue(
       kernel.number.multiply(
         arguments[0].value.asNumber(),
@@ -2541,7 +2541,7 @@ PortableMaybe<_lib_editor_v1_type_catalog.DataValue>? invokePortableOperation(
       ),
     ),
   ),
-  "number.plural_category" => PortableValue(
+  "number.plural_category" => PortableMaybeValue(
     kernel.number
         .pluralCategory(
           arguments[0].value.asNumber(),
@@ -2549,7 +2549,7 @@ PortableMaybe<_lib_editor_v1_type_catalog.DataValue>? invokePortableOperation(
         )
         .toDataValue(),
   ),
-  "number.power" => PortableValue(
+  "number.power" => PortableMaybeValue(
     numberValue(
       kernel.number.power(
         arguments[0].value.asNumber(),
@@ -2557,7 +2557,7 @@ PortableMaybe<_lib_editor_v1_type_catalog.DataValue>? invokePortableOperation(
       ),
     ),
   ),
-  "number.remainder" => PortableValue(
+  "number.remainder" => PortableMaybeValue(
     numberValue(
       kernel.number.remainder(
         arguments[0].value.asNumber(),
@@ -2565,7 +2565,7 @@ PortableMaybe<_lib_editor_v1_type_catalog.DataValue>? invokePortableOperation(
       ),
     ),
   ),
-  "number.round" => PortableValue(
+  "number.round" => PortableMaybeValue(
     numberValue(
       kernel.number.round(
         arguments[0].value.asNumber(),
@@ -2574,10 +2574,10 @@ PortableMaybe<_lib_editor_v1_type_catalog.DataValue>? invokePortableOperation(
       ),
     ),
   ),
-  "number.sqrt" => PortableValue(
+  "number.sqrt" => PortableMaybeValue(
     numberValue(kernel.number.sqrt(arguments[0].value.asNumber())),
   ),
-  "number.subtract" => PortableValue(
+  "number.subtract" => PortableMaybeValue(
     numberValue(
       kernel.number.subtract(
         arguments[0].value.asNumber(),
@@ -2585,14 +2585,14 @@ PortableMaybe<_lib_editor_v1_type_catalog.DataValue>? invokePortableOperation(
       ),
     ),
   ),
-  "record.with_field" => PortableValue(
+  "record.with_field" => PortableMaybeValue(
     kernel.record.withField(
       arguments[0].value,
       arguments[1].value.asText(),
       arguments[2].value,
     ),
   ),
-  "regex.find" => PortableValue(
+  "regex.find" => PortableMaybeValue(
     nullableValue(
       kernel.regex.find(
         arguments[0].value.asText(),
@@ -2602,7 +2602,7 @@ PortableMaybe<_lib_editor_v1_type_catalog.DataValue>? invokePortableOperation(
       (it) => it.toDataValue(),
     ),
   ),
-  "regex.find_all" => PortableValue(
+  "regex.find_all" => PortableMaybeValue(
     positionalList([
       for (final it in kernel.regex.findAll(
         arguments[0].value.asText(),
@@ -2612,7 +2612,7 @@ PortableMaybe<_lib_editor_v1_type_catalog.DataValue>? invokePortableOperation(
         it.toDataValue(),
     ]),
   ),
-  "regex.replace" => PortableValue(
+  "regex.replace" => PortableMaybeValue(
     textValue(
       kernel.regex.replace(
         arguments[0].value.asText(),
@@ -2642,7 +2642,7 @@ PortableMaybe<_lib_editor_v1_type_catalog.DataValue>? invokePortableOperation(
           context.resources,
         )
         .map((it) => it),
-  "set.difference" => PortableValue(
+  "set.difference" => PortableMaybeValue(
     itemsSet(
       kernel.set.difference(
         arguments[0].value.asItems(),
@@ -2650,7 +2650,7 @@ PortableMaybe<_lib_editor_v1_type_catalog.DataValue>? invokePortableOperation(
       ),
     ),
   ),
-  "set.intersect" => PortableValue(
+  "set.intersect" => PortableMaybeValue(
     itemsSet(
       kernel.set.intersect(
         arguments[0].value.asItems(),
@@ -2658,23 +2658,23 @@ PortableMaybe<_lib_editor_v1_type_catalog.DataValue>? invokePortableOperation(
       ),
     ),
   ),
-  "text.code_points" => PortableValue(
+  "text.code_points" => PortableMaybeValue(
     positionalList([
       for (final it in kernel.text.codePoints(arguments[0].value.asText()))
         int32Value(it),
     ]),
   ),
-  "text.fold_case" => PortableValue(
+  "text.fold_case" => PortableMaybeValue(
     textValue(kernel.text.foldCase(arguments[0].value.asText())),
   ),
-  "text.from_code_points" => PortableValue(
+  "text.from_code_points" => PortableMaybeValue(
     textValue(
       kernel.text.fromCodePoints([
         for (final it in arguments[0].value.asItems()) it.value.asInt32(),
       ]),
     ),
   ),
-  "text.index_of" => PortableValue(
+  "text.index_of" => PortableMaybeValue(
     int32Value(
       kernel.text.indexOf(
         arguments[0].value.asText(),
@@ -2683,14 +2683,14 @@ PortableMaybe<_lib_editor_v1_type_catalog.DataValue>? invokePortableOperation(
       ),
     ),
   ),
-  "text.join" => PortableValue(
+  "text.join" => PortableMaybeValue(
     textValue(
       kernel.text.join([
         for (final it in arguments[0].value.asItems()) it.value.asText(),
       ], arguments[1].value.asText()),
     ),
   ),
-  "text.last_index_of" => PortableValue(
+  "text.last_index_of" => PortableMaybeValue(
     int32Value(
       kernel.text.lastIndexOf(
         arguments[0].value.asText(),
@@ -2699,13 +2699,13 @@ PortableMaybe<_lib_editor_v1_type_catalog.DataValue>? invokePortableOperation(
       ),
     ),
   ),
-  "text.length" => PortableValue(
+  "text.length" => PortableMaybeValue(
     int32Value(kernel.text.length(arguments[0].value.asText())),
   ),
-  "text.lower" => PortableValue(
+  "text.lower" => PortableMaybeValue(
     textValue(kernel.text.lower(arguments[0].value.asText())),
   ),
-  "text.normalize" => PortableValue(
+  "text.normalize" => PortableMaybeValue(
     textValue(
       kernel.text.normalize(
         arguments[0].value.asText(),
@@ -2713,16 +2713,16 @@ PortableMaybe<_lib_editor_v1_type_catalog.DataValue>? invokePortableOperation(
       ),
     ),
   ),
-  "text.parse_decimal" => PortableValue(
+  "text.parse_decimal" => PortableMaybeValue(
     decimalValue(kernel.text.parseDecimal(arguments[0].value.asText())),
   ),
-  "text.parse_duration" => PortableValue(
+  "text.parse_duration" => PortableMaybeValue(
     durationValue(kernel.text.parseDuration(arguments[0].value.asText())),
   ),
-  "text.parse_float" => PortableValue(
+  "text.parse_float" => PortableMaybeValue(
     floatValue(kernel.text.parseFloat(arguments[0].value.asText())),
   ),
-  "text.parse_integer" => PortableValue(
+  "text.parse_integer" => PortableMaybeValue(
     integerValue(
       kernel.text.parseInteger(
         arguments[0].value.asText(),
@@ -2730,10 +2730,10 @@ PortableMaybe<_lib_editor_v1_type_catalog.DataValue>? invokePortableOperation(
       ),
     ),
   ),
-  "text.parse_timestamp" => PortableValue(
+  "text.parse_timestamp" => PortableMaybeValue(
     timestampValue(kernel.text.parseTimestamp(arguments[0].value.asText())),
   ),
-  "text.split" => PortableValue(
+  "text.split" => PortableMaybeValue(
     positionalList([
       for (final it in kernel.text.split(
         arguments[0].value.asText(),
@@ -2742,7 +2742,7 @@ PortableMaybe<_lib_editor_v1_type_catalog.DataValue>? invokePortableOperation(
         textValue(it),
     ]),
   ),
-  "text.substring" => PortableValue(
+  "text.substring" => PortableMaybeValue(
     textValue(
       kernel.text.substring(
         arguments[0].value.asText(),
@@ -2751,19 +2751,19 @@ PortableMaybe<_lib_editor_v1_type_catalog.DataValue>? invokePortableOperation(
       ),
     ),
   ),
-  "text.title" => PortableValue(
+  "text.title" => PortableMaybeValue(
     textValue(kernel.text.title(arguments[0].value.asText())),
   ),
-  "text.trim_end" => PortableValue(
+  "text.trim_end" => PortableMaybeValue(
     textValue(kernel.text.trimEnd(arguments[0].value.asText())),
   ),
-  "text.trim_start" => PortableValue(
+  "text.trim_start" => PortableMaybeValue(
     textValue(kernel.text.trimStart(arguments[0].value.asText())),
   ),
-  "text.upper" => PortableValue(
+  "text.upper" => PortableMaybeValue(
     textValue(kernel.text.upper(arguments[0].value.asText())),
   ),
-  "timestamp.fields" => PortableValue(
+  "timestamp.fields" => PortableMaybeValue(
     kernel.timestamp
         .fields(
           arguments[0].value.asTimestamp(),
@@ -2771,12 +2771,12 @@ PortableMaybe<_lib_editor_v1_type_catalog.DataValue>? invokePortableOperation(
         )
         .toDataValue(),
   ),
-  "timestamp.from_epoch_milliseconds" => PortableValue(
+  "timestamp.from_epoch_milliseconds" => PortableMaybeValue(
     timestampValue(
       kernel.timestamp.fromEpochMilliseconds(arguments[0].value.asInteger()),
     ),
   ),
-  "timestamp.from_fields" => PortableValue(
+  "timestamp.from_fields" => PortableMaybeValue(
     timestampValue(
       kernel.timestamp.fromFields(
         DateTimeFields.fromDataValue(arguments[0].value),
@@ -2784,7 +2784,7 @@ PortableMaybe<_lib_editor_v1_type_catalog.DataValue>? invokePortableOperation(
       ),
     ),
   ),
-  "timestamp.month_name" => PortableValue(
+  "timestamp.month_name" => PortableMaybeValue(
     textValue(
       kernel.timestamp.monthName(
         arguments[0].value.asInt32(),
@@ -2793,12 +2793,12 @@ PortableMaybe<_lib_editor_v1_type_catalog.DataValue>? invokePortableOperation(
       ),
     ),
   ),
-  "timestamp.to_epoch_milliseconds" => PortableValue(
+  "timestamp.to_epoch_milliseconds" => PortableMaybeValue(
     integerValue(
       kernel.timestamp.toEpochMilliseconds(arguments[0].value.asTimestamp()),
     ),
   ),
-  "timestamp.weekday_name" => PortableValue(
+  "timestamp.weekday_name" => PortableMaybeValue(
     textValue(
       kernel.timestamp.weekdayName(
         arguments[0].value.asInt32(),
@@ -2807,7 +2807,7 @@ PortableMaybe<_lib_editor_v1_type_catalog.DataValue>? invokePortableOperation(
       ),
     ),
   ),
-  "timestamp.zone_offset" => PortableValue(
+  "timestamp.zone_offset" => PortableMaybeValue(
     durationValue(
       kernel.timestamp.zoneOffset(
         arguments[0].value.asTimestamp(),
@@ -2815,25 +2815,25 @@ PortableMaybe<_lib_editor_v1_type_catalog.DataValue>? invokePortableOperation(
       ),
     ),
   ),
-  "value.cast" => PortableValue(
+  "value.cast" => PortableMaybeValue(
     kernel.value.cast(arguments[0].value, typeArguments[0], context.types),
   ),
-  "value.compare" => PortableValue(
+  "value.compare" => PortableMaybeValue(
     int32Value(kernel.value.compare(arguments[0].value, arguments[1].value)),
   ),
   "value.configuration" =>
     kernel.value.configuration(arguments[0].value).map((it) => it),
-  "value.equals" => PortableValue(
+  "value.equals" => PortableMaybeValue(
     booleanValue(kernel.value.equals(arguments[0].value, arguments[1].value)),
   ),
-  "value.from_json" => PortableValue(
+  "value.from_json" => PortableMaybeValue(
     kernel.value.fromJson(
       arguments[0].value.asText(),
       typeArguments[0],
       context.types,
     ),
   ),
-  "value.instance_of" => PortableValue(
+  "value.instance_of" => PortableMaybeValue(
     booleanValue(
       kernel.value.instanceOf(
         arguments[0].value,
@@ -2842,20 +2842,20 @@ PortableMaybe<_lib_editor_v1_type_catalog.DataValue>? invokePortableOperation(
       ),
     ),
   ),
-  "value.is_null" => PortableValue(
+  "value.is_null" => PortableMaybeValue(
     booleanValue(kernel.value.isNull(arguments[0].value)),
   ),
-  "value.let" => PortableValue(
+  "value.let" => PortableMaybeValue(
     kernel.value.let(arguments[0].value, arguments[1].apply),
   ),
-  "value.to_json" => PortableValue(
+  "value.to_json" => PortableMaybeValue(
     textValue(kernel.value.toJson(arguments[0].value)),
   ),
-  "value.to_text" => PortableValue(
+  "value.to_text" => PortableMaybeValue(
     textValue(kernel.value.toText(arguments[0].value)),
   ),
-  "value.unwrap" => PortableValue(kernel.value.unwrap(arguments[0].value)),
-  "value.wrap" => PortableValue(
+  "value.unwrap" => PortableMaybeValue(kernel.value.unwrap(arguments[0].value)),
+  "value.wrap" => PortableMaybeValue(
     kernel.value.wrap(arguments[0].value, typeArguments[0]),
   ),
   _ => null,

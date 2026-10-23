@@ -914,9 +914,11 @@ CheckedEditorCatalog authoringFixtureCatalog({
     if (kind == "page") present(kind, skir.PresentationRole.workspace, input);
     if (kind == "tag") present(kind, skir.PresentationRole.item, label);
   }
+  // [relation] names the link collection the field holds; members are its links.
   skir.PresentationNode resources(
     String id,
     String linkField,
+    String relation,
     skir.ResourcesLayout layout, {
     skir.ExpressionNode? order,
   }) => skir.PresentationNode(
@@ -933,13 +935,21 @@ CheckedEditorCatalog authoringFixtureCatalog({
       ),
       layout: layout,
       order: order,
-      itemBindingId: fixtureResourcesItemBinding,
+      itemBinding: skir.BindingDeclaration(
+        id: fixtureResourcesItemBinding,
+        type: _template("${relation}Link"),
+      ),
     ),
   );
   present(
     "realm",
     skir.PresentationRole.navigator,
-    resources("fixture.realm.sections", "sections", skir.ResourcesLayout.list),
+    resources(
+      "fixture.realm.sections",
+      "sections",
+      "realmSections",
+      skir.ResourcesLayout.list,
+    ),
   );
   present(
     "library",
@@ -947,6 +957,7 @@ CheckedEditorCatalog authoringFixtureCatalog({
     resources(
       "fixture.library.books",
       "books",
+      "libraryBooks",
       skir.ResourcesLayout.createGrid(
         itemExtent: _number(240),
         aspectRatio: _number(0.72),
@@ -960,6 +971,7 @@ CheckedEditorCatalog authoringFixtureCatalog({
     resources(
       "fixture.taxonomy.tags",
       "tags",
+      "taxonomyTags",
       skir.ResourcesLayout.createGraph(
         direction: skir.GraphDirection.topToBottom,
         appearance: null,
@@ -973,15 +985,22 @@ CheckedEditorCatalog authoringFixtureCatalog({
     resources(
       "fixture.book.pages",
       "pages",
-      order: skir.ExpressionNode.wrapLinkTarget(
+      "bookPages",
+      order: portableCall("link.target", [
         skir.ExpressionNode.createInput(
           binding: fixtureResourcesItemBinding,
           path: editorRootPath,
         ),
-      ),
+      ]),
       skir.ResourcesLayout.createTree(
         path: editorRootPath.field("chapter"),
-        groupBindingId: group,
+        groupBinding: skir.BindingDeclaration(
+          id: group,
+          type: skir.TypeTemplate.createNamed(
+            definition: hierarchyGroupUse.definition,
+            arguments: const [],
+          ),
+        ),
         connectors: null,
         initiallyExpanded: true,
         group: skir.PresentationNode(

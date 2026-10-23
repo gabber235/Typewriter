@@ -63,7 +63,11 @@ final class InheritedFieldPresentationScenario {
                       bindingId: inheritedConfiguredValue,
                       path: editorRootPath.field(field),
                     ),
-                    scopeBindingId: inheritedConfiguredValue,
+                    scopeBinding: skir.BindingDeclaration(
+                      id: inheritedConfiguredValue,
+                      type: skir.TypeUse.wrapNamed(inheritedActionType)
+                          .portableTemplate,
+                    ),
                     child: actionLayout,
                   ),
                 ),
@@ -249,14 +253,20 @@ skir.PresentationNode inheritedFieldTextInput(
                 ? skir.ValueMappings(
                     display: null,
                     completion: skir.ExpressionMapping(
-                      inputBinding: candidate,
-                      body: skir.ExpressionNode.createTextUnary(
-                        operation: skir.TextUnaryOperation.trim,
-                        source: skir.ExpressionNode.createInput(
-                          binding: candidate,
-                          path: editorRootPath,
+                      inputBinding: skir.BindingDeclaration(
+                        id: candidate,
+                        type: skir.TypeTemplate.wrapScalar(
+                          skir.ScalarKind.text,
                         ),
                       ),
+                      body: portableCall("text.trim_start", [
+                        portableCall("text.trim_end", [
+                          skir.ExpressionNode.createInput(
+                            binding: candidate,
+                            path: editorRootPath,
+                          ),
+                        ]),
+                      ]),
                     ),
                   )
                 : null)

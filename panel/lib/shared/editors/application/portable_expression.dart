@@ -4,29 +4,45 @@ import "package:typewriter_panel/typewriter_panel.dart";
 
 part "portable_expression.freezed.dart";
 part "portable_expression_queries.dart";
-part "portable_expression_model.dart";
-part "portable_expression_scalars.dart";
 part "canonical_read_models.dart";
 
-/// Evaluation outcome together with the lexical and resource paths observed.
-/// Unavailable input remains distinct from an invalid expression or exhausted
-/// budget so presentation can choose a fallback without hiding a failure.
+/// The outcome of one evaluation, with the authored locations it read.
+///
+/// Missing data stays distinct from a failure, so presentation can choose a
+/// fallback without hiding a broken expression.
 @freezed
 sealed class PortableExpressionResult with _$PortableExpressionResult {
   const factory PortableExpressionResult.available(
     skir.DataValue value,
-    List<PortableExpressionRead> reads,
+
+    /// Distinct authored locations whose stored values decided this result,
+    /// in first read order. Save conflict witnesses are built from exactly
+    /// these: input projections of located bindings and the resources panel
+    /// operations read. Lambda locals are never reads.
+    List<skir.ValueLocation> reads,
   ) = PortableExpressionAvailable;
+
   const factory PortableExpressionResult.unavailable(
-    List<PortableExpressionRead> reads,
+    /// Authored locations whose missing values block the result. Empty when
+    /// the missing data has no authored location.
+    List<skir.ValueLocation> locations,
+    List<skir.ValueLocation> reads,
   ) = PortableExpressionUnavailable;
+
   const factory PortableExpressionResult.failed(
-    String code,
-    String message,
-    List<PortableExpressionRead> reads,
-  ) = PortableExpressionFailed;
+    /// The declared failure, from operations.yaml.
+    skir.FailureId failure,
+    String message, {
+
+    /// The reads so far plus the located lambda locals in scope, as Kotlin
+    /// reports them.
+    required List<skir.ValueLocation> locations,
+    required List<skir.ValueLocation> reads,
+  }) = PortableExpressionFailed;
 }
 
+/// A value bound for evaluation. A [location] makes reads through the binding
+/// authored reads; [schema] is the binding's declared type, when known.
 final class PortableExpressionBinding {
   const PortableExpressionBinding({
     required this.value,
@@ -39,21 +55,25 @@ final class PortableExpressionBinding {
   final PortablePresentationBindingSchema? schema;
 }
 
-/// Evaluates portable expression trees against captured lexical bindings.
+/// Evaluates portable expression trees against bindings, with the generated
+/// call rule dispatching every operation to [panelKernel].
 ///
-/// Each [evaluate] call resets step, collection and read tracking. Boolean
-/// operations, conditionals and fallbacks short circuit, so only executed reads
-/// become witnesses. Missing bindings and unfilled paths produce unavailable
-/// results; invalid operations and budget exhaustion produce typed failures.
-/// Canonical resource queries require the checked contracts supplied by
-/// [CheckedEditorCatalog.evaluateExpression].
+/// The evaluator owns the structural forms (literals, input and local
+/// projections, field projection, short circuit, conditionals and fallbacks)
+/// and the uniform call rule; operations themselves are pure kernels. Each
+/// [evaluate] call resets its step, collection item and read tracking.
+/// Materials are checked by Realm when it builds them, so the panel trusts
+/// the trees it receives: an ill typed tree fails with `ill_typed_argument`
+/// instead of crashing.
 final class PortableExpressionEvaluator {
   PortableExpressionEvaluator(
     Map<skir.ExpressionBindingId, skir.DataValue> bindings, {
     required this.budget,
+    CheckedEditorCatalog? catalog,
     this.queries,
-    this.queryContracts = const {},
-  }) : _bindings = Map.unmodifiable({
+    this.subject,
+  }) : catalog = catalog ?? queries?.catalog,
+       _bindings = Map.unmodifiable({
          for (final entry in bindings.entries)
            entry.key: PortableExpressionBinding(value: entry.value),
        });
@@ -61,9 +81,11 @@ final class PortableExpressionEvaluator {
   PortableExpressionEvaluator.located(
     Map<skir.ExpressionBindingId, PortableExpressionBinding> bindings, {
     required this.budget,
+    CheckedEditorCatalog? catalog,
     this.queries,
-    this.queryContracts = const {},
-  }) : _bindings = Map.unmodifiable(bindings);
+    this.subject,
+  }) : catalog = catalog ?? queries?.catalog,
+       _bindings = Map.unmodifiable(bindings);
 
   factory PortableExpressionEvaluator.configuredValue({
     required skir.DataValue value,
@@ -71,19 +93,36 @@ final class PortableExpressionEvaluator {
     required skir.EvaluationBudget budget,
     Map<skir.ExpressionBindingId, PortableExpressionBinding> additional =
         const {},
-  }) => PortableExpressionEvaluator.located({
-    ...additional,
-    skir.ExpressionBindingId(value: "configured_value"):
-        PortableExpressionBinding(value: value, location: location),
-  }, budget: budget);
+    CheckedEditorCatalog? catalog,
+  }) => PortableExpressionEvaluator.located(
+    {
+      ...additional,
+      configuredValueBindingId: PortableExpressionBinding(
+        value: value,
+        location: location,
+      ),
+    },
+    budget: budget,
+    catalog: catalog,
+  );
 
   final skir.EvaluationBudget budget;
+
+  /// The catalog whose type facts typed operations use; without one, those
+  /// operations fail `outside_rule_profile`.
+  final CheckedEditorCatalog? catalog;
+
+  /// The authoring observation resource operations read.
   final PortableExpressionQueries? queries;
-  final Map<ExpressionOccurrence, CheckedQueryCall> queryContracts;
-  List<int> _occurrence = const [];
+
+  /// The selection of the material subject whose type parameters call type
+  /// arguments may name. Without it, type arguments must be closed.
+  final skir.TypeSelection? subject;
+
   final Map<skir.ExpressionBindingId, PortableExpressionBinding> _bindings;
   final _frames = <List<PortableExpressionBinding>>[];
-  final Set<PortableExpressionRead> _reads = {};
+  // Insertion ordered: a repeated read keeps its first position.
+  final _reads = <skir.ValueLocation>{};
   var _steps = 0;
   var _collectionItems = 0;
   var _depth = 0;
@@ -94,1217 +133,822 @@ final class PortableExpressionEvaluator {
     _steps = 0;
     _collectionItems = 0;
     _depth = 0;
-    _occurrence = const [];
-    try {
-      final result = _evaluate(node);
-      return switch (result) {
-        _Available(:final value) => PortableExpressionAvailable(
-          value,
-          List.unmodifiable(_reads),
+    final result = _evaluate(node);
+    final reads = List<skir.ValueLocation>.unmodifiable(_reads);
+    return switch (result) {
+      _Available(:final value) => PortableExpressionAvailable(value, reads),
+      _Unavailable(:final locations) => PortableExpressionUnavailable(
+        List.unmodifiable(locations),
+        reads,
+      ),
+      _Failed(:final failure, :final message, :final locations) =>
+        PortableExpressionFailed(
+          failure,
+          message,
+          locations: List.unmodifiable(locations),
+          reads: reads,
         ),
-        _Unavailable() => PortableExpressionUnavailable(
-          List.unmodifiable(_reads),
-        ),
-      };
-    } on ExpressionProblem catch (failure) {
-      return PortableExpressionFailed(
-        failure.code,
-        "Invalid expression",
-        List.unmodifiable(_reads),
-      );
-    } on _ExpressionFailure catch (failure) {
-      return PortableExpressionFailed(
-        failure.code,
-        failure.message,
-        List.unmodifiable(_reads),
-      );
-    } on RangeError {
-      return PortableExpressionFailed(
-        "invalid_operation_arguments",
-        "The expression operation received the wrong number of arguments",
-        List.unmodifiable(_reads),
-      );
-    }
+    };
   }
 
   _Evaluation _evaluate(skir.ExpressionNode node) {
     _depth++;
     try {
-      if (_depth > 512) {
-        throw const _ExpressionFailure(
-          "expression_depth_limit",
-          "The expression exceeded its depth limit",
-        );
+      if (_depth > _maximumDepth) {
+        _fail(skir.PortableFailures.expressionDepthLimit);
       }
-      _consumeStep();
-      final projection = node.readProjection(remainingDepth: 512 - _depth);
+      _consumeSteps(1);
+      final projection = _projection(node);
       if (projection != null) return _project(projection);
       return switch (node) {
-        skir.ExpressionNode_literalWrapper(:final value) => _Available(value),
-        skir.ExpressionNode_fieldWrapper(:final value) => _field(
-          value.source,
-          skir.PathSegment.createField(name: value.name),
+        skir.ExpressionNode_literalWrapper(:final value) => _Available(
+          _portableLiteral(value),
         ),
-        skir.ExpressionNode_entryProjectionWrapper(:final value) => _field(
-          value.source,
-          switch (value.branch) {
-            skir.EntryBranch.key => skir.PathSegment.mapKey,
-            skir.EntryBranch.value => skir.PathSegment.mapValue,
-            _ => throw const ExpressionProblem("invalid_entry_projection"),
-          },
-        ),
-        skir.ExpressionNode_andWrapper(:final value) => _boolean(
-          value.left,
-          value.right,
+        skir.ExpressionNode_fieldWrapper(:final value) => _field(value),
+        skir.ExpressionNode_andWrapper(:final value) => _logical(
+          value,
           conjunction: true,
         ),
-        skir.ExpressionNode_orWrapper(:final value) => _boolean(
-          value.left,
-          value.right,
+        skir.ExpressionNode_orWrapper(:final value) => _logical(
+          value,
           conjunction: false,
         ),
         skir.ExpressionNode_conditionalWrapper(:final value) => _conditional(
           value,
         ),
         skir.ExpressionNode_orElseWrapper(:final value) => _orElse(value),
-        skir.ExpressionNode_anyWrapper(:final value) ||
-        skir.ExpressionNode_allWrapper(:final value) ||
-        skir.ExpressionNode_noneWrapper(:final value) ||
-        skir.ExpressionNode_mapWrapper(:final value) ||
-        skir.ExpressionNode_filterWrapper(:final value) ||
-        skir.ExpressionNode_findWrapper(:final value) ||
-        skir.ExpressionNode_findLastWrapper(:final value) ||
-        skir.ExpressionNode_countWrapper(:final value) ||
-        skir.ExpressionNode_distinctByWrapper(:final value) ||
-        skir.ExpressionNode_groupByWrapper(:final value) ||
-        skir.ExpressionNode_flatMapWrapper(:final value) ||
-        skir.ExpressionNode_uniqueByWrapper(
-          :final value,
-        ) => _unaryCollection(node, value.source, value.body),
-        skir.ExpressionNode_sortByWrapper(:final value) => _unaryCollection(
-          node,
-          value.source,
-          value.key,
-          descending: value.descending,
-          bodyIndex: 2,
+        skir.ExpressionNode_callWrapper(:final value) => _call(value),
+        skir.ExpressionNode_lambdaWrapper() => _fail(
+          skir.PortableFailures.illTypedArgument,
+          "A lambda is only an argument of a lambda parameter.",
         ),
-        skir.ExpressionNode_foldWrapper(:final value) => _fold(
-          value.source,
-          value.initial,
-          value.body,
-        ),
-        skir.ExpressionNode_reduceWrapper(:final value) => _fold(
-          value.source,
-          null,
-          value.body,
-        ),
-        skir.ExpressionNode_sortWithWrapper(:final value) => _sortWith(value),
-        skir.ExpressionNode_takeWrapper(:final value) => _slice(
-          value,
-          take: true,
-        ),
-        skir.ExpressionNode_skipWrapper(:final value) => _slice(
-          value,
-          take: false,
-        ),
-        skir.ExpressionNode_reverseWrapper(:final value) => _reorder(
-          value,
-          distinct: false,
-        ),
-        skir.ExpressionNode_distinctWrapper(:final value) => _reorder(
-          value,
-          distinct: true,
-        ),
-        skir.ExpressionNode_unknown() => throw const ExpressionProblem(
-          "unknown_expression",
-        ),
-        _ => _scalar(node),
+        _ => _fail(skir.PortableFailures.unknownExpression),
       };
+    } on skir.PortableOperationFailure catch (failure) {
+      return _Failed(failure.failure, failure.message, _failureLocations());
     } finally {
       _depth--;
     }
   }
 
-  _Evaluation _child(skir.ExpressionNode node, int index) {
-    final previous = _occurrence;
-    _occurrence = [...previous, index];
-    try {
-      return _evaluate(node);
-    } finally {
-      _occurrence = previous;
+  /// The input or local a chain of field nodes projects, with the joined path
+  /// and the number of field nodes, so only the deepest path is read.
+  _Projection? _projection(skir.ExpressionNode node) {
+    var current = node;
+    final suffixes = <Iterable<skir.PathSegment>>[];
+    while (current is skir.ExpressionNode_fieldWrapper) {
+      suffixes.add(current.value.path.segments);
+      current = current.value.source;
+      if (_depth + suffixes.length > _maximumDepth) {
+        _fail(skir.PortableFailures.expressionDepthLimit);
+      }
     }
-  }
-
-  PortableExpressionBinding _local(skir.ExpressionLocal ref) {
-    if (ref.depth < 0 || ref.slot < 0 || ref.depth >= _frames.length) {
-      throw const ExpressionProblem("invalid_expression_local");
-    }
-    final frame = _frames[_frames.length - 1 - ref.depth];
-    if (ref.slot >= frame.length) {
-      throw const ExpressionProblem("invalid_expression_local");
-    }
-    return frame[ref.slot];
-  }
-
-  _Evaluation _project(ExpressionProjection projection) {
-    for (var i = 0; i < projection.descents; i++) {
-      _consumeStep();
-    }
-    switch (projection.root) {
-      case skir.ExpressionNode_inputWrapper(:final value):
-        final path = skir.ValuePath(
-          segments: [...value.path.segments, ...projection.suffix.segments],
-        );
-        return _readBinding(
-          _bindings[value.binding],
-          path,
-          PortableExpressionReadSource.input(value.binding),
-        );
-      case skir.ExpressionNode_localWrapper(:final value):
-        return _readBinding(
-          _local(value),
-          skir.ValuePath(
-            segments: [...value.path.segments, ...projection.suffix.segments],
-          ),
-          PortableExpressionReadSource.local(value.depth, value.slot),
-        );
-      case skir.ExpressionNode_queryWrapper(:final value):
-        return _query(
-          value,
-          projection.suffix,
-          ExpressionOccurrence(
-            path: [
-              ..._occurrence,
-              for (var i = 0; i < projection.descents; i++) 0,
-            ],
-          ),
-        );
-      default:
-        throw const ExpressionProblem("invalid_projection");
-    }
-  }
-
-  _Evaluation _readBinding(
-    PortableExpressionBinding? binding,
-    skir.ValuePath path,
-    PortableExpressionReadSource source,
-  ) {
-    final origin = binding?.location;
-    _reads.add(
-      PortableExpressionRead(
-        source: source,
-        path: path,
-        location: origin == null ? null : _appendLocation(origin, path),
+    final suffix = [for (final segments in suffixes.reversed) ...segments];
+    return switch (current) {
+      skir.ExpressionNode_inputWrapper(:final value) => _Projection(
+        input: value,
+        path: [...value.path.segments, ...suffix],
+        descents: suffixes.length,
       ),
+      skir.ExpressionNode_localWrapper(:final value) => _Projection(
+        local: value,
+        path: [...value.path.segments, ...suffix],
+        descents: suffixes.length,
+      ),
+      _ => null,
+    };
+  }
+
+  _Evaluation _project(_Projection projection) {
+    _consumeSteps(projection.descents);
+    final input = projection.input;
+    if (input != null) {
+      final binding =
+          _bindings[input.binding] ??
+          _fail(
+            skir.PortableFailures.unknownExpressionBinding,
+            "Unknown expression binding ${input.binding.value}.",
+          );
+      final location = _below(binding.location, projection.path);
+      if (location != null) _reads.add(location);
+      return _readValue(binding.value, projection.path, location);
+    }
+    // A local holds a value an input read or a literal produced; reading it
+    // is never a new dependency.
+    final binding = _local(projection.local!);
+    return _readValue(
+      binding.value,
+      projection.path,
+      _below(binding.location, projection.path),
     );
-    if (binding == null) return const _Unavailable();
-    return switch (binding.value.readExpressionAt(path)) {
-      PortablePathValue(:final value) when value != skir.DataValue.unfilled =>
-        _Available(value),
-      _ => const _Unavailable(),
-    };
   }
 
-  _Evaluation _field(skir.ExpressionNode source, skir.PathSegment segment) {
-    final evaluated = _child(source, 0);
-    if (evaluated is _Unavailable) return evaluated;
-    return switch ((evaluated as _Available).value.readExpressionAt(
-      skir.ValuePath(segments: [segment]),
-    )) {
-      PortablePathValue(:final value) when value != skir.DataValue.unfilled =>
-        _Available(value),
-      _ => const _Unavailable(),
-    };
+  _Evaluation _readValue(
+    skir.DataValue value,
+    List<skir.PathSegment> path,
+    skir.ValueLocation? location,
+  ) => switch (value.readExpressionAt(skir.ValuePath(segments: path))) {
+    PortablePathValue(:final value) when value != skir.DataValue.unfilled =>
+      _Available(value),
+    _ => _Unavailable([?location]),
+  };
+
+  PortableExpressionBinding _local(skir.ExpressionLocal reference) {
+    final frameIndex = _frames.length - 1 - reference.depth;
+    if (reference.depth < 0 ||
+        reference.slot < 0 ||
+        frameIndex < 0 ||
+        reference.slot >= _frames[frameIndex].length) {
+      _fail(skir.PortableFailures.invalidExpressionLocal);
+    }
+    return _frames[frameIndex][reference.slot];
   }
 
-  _Evaluation _boolean(
-    skir.ExpressionNode left,
-    skir.ExpressionNode right, {
+  /// Projects a path from a computed value. Its source has no authored
+  /// location, so missing data here has none either.
+  _Evaluation _field(skir.FieldExpression expression) {
+    final source = _evaluate(expression.source);
+    if (source is! _Available) return source;
+    final value = source.value;
+    if (value == skir.DataValue.unfilled ||
+        value.authoredPayload == skir.DataValue.null_) {
+      return const _Unavailable([]);
+    }
+    return _readValue(value, expression.path.segments.toList(), null);
+  }
+
+  _Evaluation _logical(
+    skir.LogicalExpression expression, {
     required bool conjunction,
   }) {
-    final first = _child(left, 0);
-    if (first is _Unavailable) return first;
-    final firstValue = _booleanValue((first as _Available).value);
-    if (conjunction ? !firstValue : firstValue) {
-      return _Available(skir.DataValue.wrapBoolean(firstValue));
-    }
-    final second = _child(right, 1);
-    if (second is _Unavailable) return second;
-    return _Available(
-      skir.DataValue.wrapBoolean(_booleanValue((second as _Available).value)),
+    final left = _evaluate(expression.left);
+    if (left is! _Available) return left;
+    final decided = _condition(left.value);
+    if (decided != conjunction) return _Available(skir.booleanValue(decided));
+    final right = _evaluate(expression.right);
+    if (right is! _Available) return right;
+    return _Available(skir.booleanValue(_condition(right.value)));
+  }
+
+  _Evaluation _conditional(skir.ConditionalExpression expression) {
+    final test = _evaluate(expression.test);
+    if (test is! _Available) return test;
+    return _evaluate(
+      _condition(test.value) ? expression.then : expression.otherwise,
     );
   }
 
-  _Evaluation _conditional(skir.ConditionalExpression value) {
-    final test = _child(value.test, 0);
-    if (test is _Unavailable) return test;
-    final yes = _booleanValue((test as _Available).value);
-    return _child(yes ? value.yes : value.no, yes ? 1 : 2);
+  bool _condition(skir.DataValue value) => switch (value.authoredPayload) {
+    skir.DataValue_booleanWrapper(:final value) => value,
+    _ => _fail(skir.PortableFailures.expressionResultNotBoolean),
+  };
+
+  _Evaluation _orElse(skir.FallbackExpression expression) {
+    final value = _evaluate(expression.value);
+    return switch (value) {
+      _Available(:final value)
+          when value != skir.DataValue.null_ &&
+              value != skir.DataValue.unfilled =>
+        _Available(value),
+      _Failed() => value,
+      _ => _evaluate(expression.fallback),
+    };
   }
 
-  _Evaluation _orElse(skir.OrElseExpression value) {
-    final input = _child(value.input, 0);
-    if (input is _Unavailable) return _child(value.fallback, 1);
-    final actual = (input as _Available).value;
-    return actual == skir.DataValue.null_ || actual == skir.DataValue.unfilled
-        ? _child(value.fallback, 1)
-        : input;
+  /// The uniform call rule: everything operation specific comes from the
+  /// generated declaration and dispatch.
+  _Evaluation _call(skir.CallExpression call) {
+    final id = call.operation.value;
+    final declaration =
+        skir.portableOperation(id) ??
+        _fail(skir.PortableFailures.unknownOperation, "Unknown operation $id.");
+    if (!declaration.accepts(call.arguments.length)) {
+      _fail(
+        skir.PortableFailures.invalidArgumentCount,
+        "$id takes ${declaration.parameters.length} arguments, not "
+        "${call.arguments.length}.",
+      );
+    }
+    if (call.typeArguments.length != declaration.typeArguments) {
+      _fail(
+        skir.PortableFailures.illTypedArgument,
+        "$id takes ${declaration.typeArguments} type arguments.",
+      );
+    }
+    final typeArguments = [
+      for (final template in call.typeArguments) _closeType(template),
+    ];
+    final arguments = <skir.KernelArgument>[];
+    final missing = <skir.ValueLocation>{};
+    var incomplete = false;
+    for (final (index, argument) in call.arguments.indexed) {
+      final kind = declaration.parameterAt(index)!;
+      switch (kind) {
+        case skir.PortableParameterKind.value ||
+            skir.PortableParameterKind.partial ||
+            skir.PortableParameterKind.located:
+          final result = _evaluate(argument);
+          if (result is! _Available) return result;
+          final location = _sourceLocation(argument);
+          if (kind == skir.PortableParameterKind.value) {
+            final unfilled = unfilledPaths(result.value);
+            if (unfilled.isNotEmpty) {
+              incomplete = true;
+              if (location != null) {
+                missing.addAll([
+                  for (final path in unfilled) _below(location, path)!,
+                ]);
+              }
+            }
+          }
+          arguments.add(skir.KernelValue(result.value, location));
+        case skir.PortableParameterKind.each:
+          final each = _each(arguments.first, _lambda(argument, arity: 1));
+          if (each is! _EachResults) return each as _Evaluation;
+          arguments.add(skir.KernelEach(each.results));
+        case skir.PortableParameterKind.step ||
+            skir.PortableParameterKind.comparator:
+          arguments.add(
+            _kernelLambda(arguments.first, _lambda(argument, arity: 2)),
+          );
+        case skir.PortableParameterKind.apply:
+          arguments.add(_kernelLambda(null, _lambda(argument, arity: 1)));
+      }
+    }
+    if (incomplete) return _Unavailable(missing.toList());
+    try {
+      final result = skir.invokePortableOperation(
+        panelKernel,
+        id,
+        arguments,
+        typeArguments,
+        skir.KernelContext(
+          meter: _EvaluationMeter(this),
+          typeFacts: switch (catalog) {
+            final catalog? => _CatalogTypes(catalog),
+            null => null,
+          },
+          resourceAccess: queries == null ? null : _EvaluationResources(this),
+        ),
+      )!;
+      return switch (result) {
+        skir.PortableMaybeValue(:final value) => _Available(value),
+        skir.PortableMaybeMissing(:final locations) => _Unavailable(locations),
+      };
+    } on _LambdaInterrupted catch (interrupted) {
+      return interrupted.result;
+    }
   }
+
+  /// Runs an each lambda for every item of [source], in item order, before
+  /// the kernel. A missing item body makes the call missing after every item
+  /// ran; a failed one returns at once.
+  Object _each(skir.KernelArgument source, skir.ExpressionNode body) {
+    final value = source as skir.KernelValue;
+    final results = <skir.DataValue>[];
+    final missing = <skir.ValueLocation>{};
+    var incomplete = false;
+    for (final item in value.value.asItems()) {
+      _consumeItems(1);
+      final location = _below(value.location, [
+        skir.PathSegment.createItem(id: item.id),
+      ]);
+      final result = _inFrame([
+        PortableExpressionBinding(value: item.value, location: location),
+      ], body);
+      switch (result) {
+        case _Available(:final value):
+          results.add(value);
+        case _Unavailable(:final locations):
+          incomplete = true;
+          missing.addAll(locations.isEmpty ? [?location] : locations);
+        case _Failed():
+          return result;
+      }
+    }
+    if (incomplete) return _Unavailable(missing.toList());
+    return _EachResults(results);
+  }
+
+  /// A lambda the kernel drives. A local with an item id is an item of
+  /// [source], so it keeps that item's location.
+  skir.KernelLambda _kernelLambda(
+    skir.KernelArgument? source,
+    skir.ExpressionNode body,
+  ) {
+    final origin = switch (source) {
+      skir.KernelValue(:final location) => location,
+      _ => null,
+    };
+    return skir.KernelLambda((locals) {
+      final result = _inFrame([
+        for (final local in locals)
+          PortableExpressionBinding(
+            value: local.value,
+            location: switch (local.item) {
+              final item? => _below(origin, [
+                skir.PathSegment.createItem(id: item),
+              ]),
+              null => null,
+            },
+          ),
+      ], body);
+      return switch (result) {
+        _Available(:final value) => value,
+        _ => throw _LambdaInterrupted(result),
+      };
+    });
+  }
+
+  skir.ExpressionNode _lambda(
+    skir.ExpressionNode argument, {
+    required int arity,
+  }) => switch (argument) {
+    skir.ExpressionNode_lambdaWrapper(:final value) when value.arity == arity =>
+      value.body,
+    _ => _fail(
+      skir.PortableFailures.illTypedArgument,
+      "Expected a lambda of $arity parameters.",
+    ),
+  };
 
   _Evaluation _inFrame(
-    List<PortableExpressionBinding> values,
+    List<PortableExpressionBinding> locals,
     skir.ExpressionNode body,
-    int index,
   ) {
-    _frames.add(List.unmodifiable(values));
+    _frames.add(List.unmodifiable(locals));
     try {
-      return _child(body, index);
+      return _evaluate(body);
     } finally {
       _frames.removeLast();
     }
   }
 
-  _Evaluation _slice(
-    skir.CollectionSliceExpression expression, {
-    required bool take,
-  }) {
-    final source = _child(expression.source, 0);
-    if (source is _Unavailable) return source;
-    final count = _child(expression.count, 1);
-    if (count is _Unavailable) return count;
-    final size = _nonnegativeCount((count as _Available).value);
-    final value = (source as _Available).value;
-    final entries = _collectionEntries(value);
-    _consumeCollectionItems(size < entries.length ? size : entries.length);
-    return _Available(
-      _reorderCollection(
-        value,
-        take ? entries.take(size).toList() : entries.skip(size).toList(),
-      ),
-    );
-  }
-
-  _Evaluation _reorder(skir.ExpressionNode source, {required bool distinct}) {
-    final input = _child(source, 0);
-    if (input is _Unavailable) return input;
-    final value = (input as _Available).value;
-    final entries = _collectionEntries(value);
-    _consumeCollectionItems(entries.length);
-    if (!distinct) {
-      return _Available(_reorderCollection(value, entries.reversed.toList()));
-    }
-    if (entries.any((entry) => _containsUnfilled(entry.value))) {
-      return const _Unavailable();
-    }
-    final seen = <String>{};
-    return _Available(
-      _reorderCollection(
-        value,
-        entries.where((entry) => seen.add(_canonical(entry.value))).toList(),
-      ),
-    );
-  }
-
-  _Evaluation _unaryCollection(
-    skir.ExpressionNode node,
-    skir.ExpressionNode source,
-    skir.ExpressionNode body, {
-    skir.ExpressionNode? descending,
-    int bodyIndex = 1,
-  }) {
-    final input = _child(source, 0);
-    if (input is _Unavailable) return input;
-    final value = (input as _Available).value;
-    final entries = _collectionEntries(value);
-    var reverse = false;
-    if (descending != null) {
-      final result = _child(descending, 1);
-      if (result is _Unavailable) return result;
-      reverse = _booleanValue((result as _Available).value);
-    }
-    final origin = _sourceLocation(source);
-    final results = <(_CollectionEntry, skir.DataValue)>[];
-    var missing = false;
-    for (final entry in entries) {
-      _consumeCollectionItems(1);
-      final result = _inFrame(
-        [
-          PortableExpressionBinding(
-            value: entry.value,
-            location: origin == null ? null : _entryLocation(origin, entry.id),
-          ),
-        ],
-        body,
-        bodyIndex,
-      );
-      if (result is _Unavailable) {
-        missing = true;
-        continue;
-      }
-      final computed = (result as _Available).value;
-      if (_containsUnfilled(computed)) {
-        missing = true;
-        continue;
-      }
-      results.add((entry, computed));
-      if (node is skir.ExpressionNode_anyWrapper && _booleanValue(computed)) {
-        return _Available(_bool(true));
-      }
-      if (node is skir.ExpressionNode_allWrapper && !_booleanValue(computed)) {
-        return _Available(_bool(false));
-      }
-      if (node is skir.ExpressionNode_noneWrapper && _booleanValue(computed)) {
-        return _Available(_bool(false));
-      }
-      if (node is skir.ExpressionNode_findWrapper && _booleanValue(computed)) {
-        return missing ? const _Unavailable() : _Available(entry.value);
-      }
-    }
-    if (node is skir.ExpressionNode_uniqueByWrapper) {
-      final seen = <String>{};
-      for (final result in results) {
-        if (!seen.add(_canonical(result.$2))) return _Available(_bool(false));
-      }
-    }
-    if (missing) return const _Unavailable();
-    return _Available(switch (node) {
-      skir.ExpressionNode_anyWrapper() => _bool(false),
-      skir.ExpressionNode_allWrapper() ||
-      skir.ExpressionNode_noneWrapper() ||
-      skir.ExpressionNode_uniqueByWrapper() => _bool(true),
-      skir.ExpressionNode_mapWrapper() => skir.DataValue.createListValue(
-        items: [
-          for (final result in results)
-            skir.ListItem(id: result.$1.id, value: result.$2),
-        ],
-      ),
-      skir.ExpressionNode_filterWrapper() => _reorderCollection(
-        value,
-        results
-            .where((result) => _booleanValue(result.$2))
-            .map((result) => result.$1)
-            .toList(),
-      ),
-      skir.ExpressionNode_findWrapper() => skir.DataValue.null_,
-      skir.ExpressionNode_findLastWrapper() =>
-        results
-                .where((result) => _booleanValue(result.$2))
-                .lastOrNull
-                ?.$1
-                .value ??
-            skir.DataValue.null_,
-      skir.ExpressionNode_countWrapper() => _integerValue(
-        results.where((result) => _booleanValue(result.$2)).length,
-      ),
-      skir.ExpressionNode_distinctByWrapper() => _reorderCollection(
-        value,
-        _distinctEntriesByResult(results),
-      ),
-      skir.ExpressionNode_sortByWrapper() => _reorderCollection(
-        value,
-        _sortEntriesByResult(results, descending: reverse),
-      ),
-      skir.ExpressionNode_groupByWrapper() => _groupByKey(results),
-      skir.ExpressionNode_flatMapWrapper() => _flatMap(results),
-      _ => throw const ExpressionProblem("unknown_expression"),
-    });
-  }
-
-  _Evaluation _fold(
-    skir.ExpressionNode source,
-    skir.ExpressionNode? initial,
-    skir.ExpressionNode body,
-  ) {
-    final input = _child(source, 0);
-    if (input is _Unavailable) return input;
-    final entries = _collectionEntries((input as _Available).value);
-    final origin = _sourceLocation(source);
-    skir.DataValue accumulator;
-    skir.ValueLocation? accumulatorLocation;
-    if (initial == null) {
-      if (entries.isEmpty) return _Available(skir.DataValue.null_);
-      accumulator = entries.first.value;
-      accumulatorLocation = origin == null
-          ? null
-          : _entryLocation(origin, entries.first.id);
-    } else {
-      final result = _child(initial, 1);
-      if (result is _Unavailable) return result;
-      accumulator = (result as _Available).value;
-      accumulatorLocation = _sourceLocation(initial);
-    }
-    if (_containsUnfilled(accumulator)) return const _Unavailable();
-    for (final entry in initial == null ? entries.skip(1) : entries) {
-      _consumeCollectionItems(1);
-      final result = _inFrame(
-        [
-          PortableExpressionBinding(
-            value: accumulator,
-            location: accumulatorLocation,
-          ),
-          PortableExpressionBinding(
-            value: entry.value,
-            location: origin == null ? null : _entryLocation(origin, entry.id),
-          ),
-        ],
-        body,
-        initial == null ? 1 : 2,
-      );
-      if (result is _Unavailable) return result;
-      accumulator = (result as _Available).value;
-      if (_containsUnfilled(accumulator)) return const _Unavailable();
-      accumulatorLocation = null;
-    }
-    return _Available(accumulator);
-  }
-
-  _Evaluation _sortWith(skir.SortWithExpression expression) {
-    final input = _child(expression.source, 0);
-    if (input is _Unavailable) return input;
-    final value = (input as _Available).value;
-    final origin = _sourceLocation(expression.source);
-    final sorted = <_CollectionEntry>[];
-    for (final entry in _collectionEntries(value)) {
-      var insertion = sorted.length;
-      while (insertion > 0) {
-        _consumeCollectionItems(2);
-        final left = sorted[insertion - 1];
-        final result = _inFrame(
-          [
-            for (final item in [left, entry])
-              PortableExpressionBinding(
-                value: item.value,
-                location: origin == null
-                    ? null
-                    : _entryLocation(origin, item.id),
-              ),
-          ],
-          expression.comparator,
-          1,
-        );
-        if (result is _Unavailable) return result;
-        final computed = (result as _Available).value;
-        if (_containsUnfilled(computed)) return const _Unavailable();
-        if (_number(computed).compareTo(_Decimal.zero) <= 0) break;
-        insertion--;
-      }
-      sorted.insert(insertion, entry);
-    }
-    return _Available(_reorderCollection(value, sorted));
-  }
-
-  skir.ValueLocation? _sourceLocation(skir.ExpressionNode node) {
-    final projection = node.readProjection();
+  /// The authored location of an argument that projects a located input or
+  /// local; computed arguments have none.
+  skir.ValueLocation? _sourceLocation(skir.ExpressionNode argument) {
+    final projection = _projection(argument);
     if (projection == null) return null;
-    return switch (projection.root) {
-      skir.ExpressionNode_inputWrapper(:final value) =>
-        switch (_bindings[value.binding]?.location) {
-          final origin? => _appendLocation(
-            origin,
-            skir.ValuePath(
-              segments: [...value.path.segments, ...projection.suffix.segments],
-            ),
-          ),
-          _ => null,
-        },
-      skir.ExpressionNode_localWrapper(:final value) => switch (_local(value)
-          .location) {
-        final origin? => _appendLocation(
-          origin,
-          skir.ValuePath(
-            segments: [...value.path.segments, ...projection.suffix.segments],
-          ),
-        ),
-        _ => null,
-      },
-      _ => null,
-    };
+    final input = projection.input;
+    final origin = input != null
+        ? _bindings[input.binding]?.location
+        : _local(projection.local!).location;
+    return _below(origin, projection.path);
   }
 
-  void _consumeCollectionItems(int count) {
+  skir.TypeUse _closeType(skir.TypeTemplate template) {
+    final subject = this.subject;
+    final catalog = this.catalog;
+    final closed =
+        _closedUse(template) ??
+        (subject != null && catalog != null
+            ? catalog.applyTemplate(template, subject)
+            : null);
+    return closed ??
+        _fail(
+          skir.PortableFailures.illTypedArgument,
+          "A type argument names a type parameter this evaluation cannot "
+          "close.",
+        );
+  }
+
+  List<skir.ValueLocation> _failureLocations() => {
+    ..._reads,
+    for (final frame in _frames)
+      for (final local in frame) ?local.location,
+  }.toList();
+
+  void _consumeSteps(int count) {
+    _steps += count;
+    if (_steps > budget.maxSteps) {
+      _fail(skir.PortableFailures.expressionStepLimit);
+    }
+  }
+
+  void _consumeItems(int count) {
     _collectionItems += count;
     if (_collectionItems > budget.maxCollectionItems) {
-      throw const _ExpressionFailure(
-        "expression_collection_limit",
-        "The expression exceeded its collection item limit",
-      );
+      _fail(skir.PortableFailures.expressionCollectionLimit);
     }
-  }
-
-  void _consumeStep() {
-    _steps++;
-    if (_steps > budget.maxSteps) {
-      throw const _ExpressionFailure(
-        "expression_step_limit",
-        "The expression exceeded its step limit",
-      );
-    }
-  }
-
-  skir.DataValue _arithmetic(
-    List<skir.DataValue> values,
-    _Arithmetic operation,
-  ) {
-    final unwrapped = values.map(_unwrap).toList(growable: false);
-    if (unwrapped.every((value) => value is skir.DataValue_integerWrapper)) {
-      final operands = unwrapped
-          .cast<skir.DataValue_integerWrapper>()
-          .map((value) => BigInt.parse(value.value))
-          .toList();
-      var result = operands.first;
-      if (operation == _Arithmetic.negate) result = -result;
-      for (final operand in operands.skip(1)) {
-        if ((operation == _Arithmetic.divide ||
-                operation == _Arithmetic.remainder) &&
-            operand == BigInt.zero) {
-          throw const _ExpressionFailure(
-            "division_by_zero",
-            "Division by zero is not defined",
-          );
-        }
-        result = switch (operation) {
-          _Arithmetic.add => result + operand,
-          _Arithmetic.subtract => result - operand,
-          _Arithmetic.multiply => result * operand,
-          _Arithmetic.divide => result ~/ operand,
-          _Arithmetic.remainder => result.remainder(operand),
-          _Arithmetic.negate => result,
-        };
-      }
-      return skir.DataValue.wrapInteger(result.toString());
-    }
-    if (unwrapped.every((value) => value is skir.DataValue_decimalWrapper)) {
-      final operands = unwrapped
-          .cast<skir.DataValue_decimalWrapper>()
-          .map((value) => _Decimal.parse(value.value))
-          .toList();
-      var result = operands.first;
-      if (operation == _Arithmetic.negate) result = -result;
-      for (final operand in operands.skip(1)) {
-        result = switch (operation) {
-          _Arithmetic.add => result + operand,
-          _Arithmetic.subtract => result - operand,
-          _Arithmetic.multiply => result * operand,
-          _Arithmetic.divide => result.divide(operand),
-          _Arithmetic.remainder => result.remainder(operand),
-          _Arithmetic.negate => result,
-        };
-      }
-      return skir.DataValue.wrapDecimal(result.canonical);
-    }
-    if (unwrapped.every((value) => value is skir.DataValue_floatWrapper)) {
-      final operands = unwrapped
-          .cast<skir.DataValue_floatWrapper>()
-          .map((value) => value.value)
-          .toList();
-      var result = operands.first;
-      if (operation == _Arithmetic.negate) result = -result;
-      for (final operand in operands.skip(1)) {
-        result = switch (operation) {
-          _Arithmetic.add => result + operand,
-          _Arithmetic.subtract => result - operand,
-          _Arithmetic.multiply => result * operand,
-          _Arithmetic.divide => result / operand,
-          _Arithmetic.remainder => result.remainder(operand),
-          _Arithmetic.negate => result,
-        };
-      }
-      if (!result.isFinite) {
-        throw const _ExpressionFailure(
-          "nonfinite_number",
-          "Floating point arithmetic produced a nonfinite value",
-        );
-      }
-      return skir.DataValue.wrapFloat(result);
-    }
-    throw const _ExpressionFailure(
-      "numeric_family_mismatch",
-      "Arithmetic operands must use one numeric representation",
-    );
-  }
-
-  skir.DataValue _substring(List<skir.DataValue> values) {
-    final runes = _text(values.first).runes.toList(growable: false);
-    final start = _integer(values[1]).toInt();
-    final end = values.length == 2 ? runes.length : _integer(values[2]).toInt();
-    if (start < 0 || end < start || end > runes.length) {
-      throw const _ExpressionFailure(
-        "substring_range",
-        "The substring range is invalid",
-      );
-    }
-    return skir.DataValue.wrapStringValue(
-      String.fromCharCodes(runes.sublist(start, end)),
-    );
-  }
-
-  skir.DataValue _capture(List<skir.DataValue> values) {
-    final input = _text(values.first);
-    final matcher = _regex(values);
-    final match = matcher.find(input, _consumeStep);
-    if (match == null) {
-      throw const _ExpressionFailure(
-        "regex_no_match",
-        "The regular expression did not match",
-      );
-    }
-    final group = _integer(values[2]).toInt();
-    if (group < 0 || group > matcher.groupCount) {
-      throw const _ExpressionFailure(
-        "regex_group_absent",
-        "The regular expression capture group is absent",
-      );
-    }
-    final captured = match.group(input, group);
-    if (captured == null) {
-      throw const _ExpressionFailure(
-        "regex_group_absent",
-        "The regular expression capture group is absent",
-      );
-    }
-    return skir.DataValue.wrapStringValue(captured);
-  }
-
-  skir.DataValue _replaceRegex(List<skir.DataValue> values) {
-    try {
-      return skir.DataValue.wrapStringValue(
-        _regex(values)
-            .replace(_text(values[0]), _text(values[2]), _consumeStep),
-      );
-    } on PortableRegexCompileFailure {
-      throw const _ExpressionFailure(
-        "invalid_regex_replacement",
-        "The regular expression replacement is invalid",
-      );
-    }
-  }
-
-  skir.DataValue _withAlpha(List<skir.DataValue> values) {
-    final color = _integer(values[0]);
-    final alpha = _integer(values[1]).toInt();
-    if (alpha < 0 || alpha > 255) {
-      throw const _ExpressionFailure(
-        "color_alpha_range",
-        "Color alpha must be between zero and 255",
-      );
-    }
-    final replaced =
-        (color & BigInt.from(0x00ffffff)) | (BigInt.from(alpha) << 24);
-    return skir.DataValue.wrapInteger(replaced.toString());
-  }
-
-  PortableRegexMatcher _regex(List<skir.DataValue> values) {
-    final input = _text(values.first);
-    final pattern = _text(values[1]);
-    if (input.length > 16384) {
-      throw const _ExpressionFailure(
-        "regex_limit",
-        "The regular expression input exceeds its limit",
-      );
-    }
-    final normalization = pattern.normalizePortableRegex();
-    final normalized = switch (normalization) {
-      PortableRegexReady(:final pattern) => pattern,
-      PortableRegexInvalid(:final reason) => throw _ExpressionFailure(
-        "invalid_regex",
-        reason,
-      ),
-      PortableRegexUnsupported(:final reason) => throw _ExpressionFailure(
-        "unsupported_regex_pattern",
-        reason,
-      ),
-    };
-    try {
-      return PortableRegexMatcher.compile(normalized);
-    } on PortableRegexCompileFailure {
-      throw const _ExpressionFailure(
-        "invalid_regex",
-        "The regular expression pattern is invalid",
-      );
-    }
-  }
-
-  _Evaluation _unique(skir.DataValue value) {
-    final keys = <String>{};
-    var unfinished = false;
-    for (final item in _collectionValues(value)) {
-      if (_containsUnfilled(item)) {
-        unfinished = true;
-        continue;
-      }
-      if (!keys.add(_canonical(item))) {
-        return _Available(skir.DataValue.wrapBoolean(false));
-      }
-    }
-    return unfinished
-        ? const _Unavailable()
-        : _Available(skir.DataValue.wrapBoolean(true));
   }
 }
 
-final class _CollectionEntry {
-  const _CollectionEntry(this.id, this.value);
+const _maximumDepth = 512;
 
-  final skir.ItemId id;
+Never _fail(skir.FailureId failure, [String? message]) =>
+    throw skir.PortableOperationFailure(failure, message);
+
+final class _Projection {
+  const _Projection({
+    required this.path,
+    required this.descents,
+    this.input,
+    this.local,
+  });
+
+  final skir.ExpressionInput? input;
+  final skir.ExpressionLocal? local;
+  final List<skir.PathSegment> path;
+
+  /// The field nodes above the root, each of which costs a step.
+  final int descents;
+}
+
+sealed class _Evaluation {
+  const _Evaluation();
+}
+
+final class _Available extends _Evaluation {
+  const _Available(this.value);
+
   final skir.DataValue value;
 }
 
-List<_CollectionEntry> _collectionEntries(skir.DataValue value) =>
-    switch (_unwrap(value)) {
-      skir.DataValue_listValueWrapper(:final value) ||
-      skir.DataValue_setValueWrapper(:final value) => [
-        for (final item in value.items) _CollectionEntry(item.id, item.value),
-      ],
-      skir.DataValue_mapValueWrapper(:final value) => [
-        for (final row in value.rows)
-          _CollectionEntry(
-            row.id,
-            skir.DataValue.createRecord(
-              fields: [
-                skir.FieldValue(name: "key", value: row.key),
-                skir.FieldValue(name: "value", value: row.value),
-              ],
-            ),
-          ),
-      ],
-      _ => throw const _ExpressionFailure(
-        "expected_collection",
-        "The expression value is not a collection",
-      ),
-    };
+final class _Unavailable extends _Evaluation {
+  const _Unavailable(this.locations);
 
-skir.DataValue _reorderCollection(
-  skir.DataValue value,
-  List<_CollectionEntry> entries,
-) => switch (value) {
-  skir.DataValue_namedWrapper(value: final named) => skir.DataValue.createNamed(
-    actualType: named.actualType,
-    payload: _reorderCollection(named.payload, entries),
+  final List<skir.ValueLocation> locations;
+}
+
+final class _Failed extends _Evaluation {
+  const _Failed(this.failure, this.message, this.locations);
+
+  final skir.FailureId failure;
+  final String message;
+  final List<skir.ValueLocation> locations;
+}
+
+final class _EachResults {
+  const _EachResults(this.results);
+
+  final List<skir.DataValue> results;
+}
+
+/// Aborts a kernel driven lambda whose body is missing or failed; the call
+/// rule returns [result] for the whole call.
+final class _LambdaInterrupted implements Exception {
+  const _LambdaInterrupted(this.result);
+
+  final _Evaluation result;
+}
+
+final class _EvaluationMeter implements skir.PortableMeter {
+  const _EvaluationMeter(this._evaluator);
+
+  final PortableExpressionEvaluator _evaluator;
+
+  @override
+  void items(int count) => _evaluator._consumeItems(count);
+
+  @override
+  void steps(int count) => _evaluator._consumeSteps(count);
+}
+
+/// The catalog's type facts for typed operations.
+final class _CatalogTypes implements skir.PortableTypes {
+  const _CatalogTypes(this._catalog);
+
+  final CheckedEditorCatalog _catalog;
+
+  @override
+  bool admits(skir.DataValue value, skir.TypeUse type) =>
+      _catalog.admitsPortableValue(type, value);
+
+  @override
+  List<String> enumCases(skir.TypeUse type) {
+    final representation = switch (type) {
+      skir.TypeUse_namedWrapper(:final value) =>
+        _catalog.published(value.definition)?.definition.representation,
+      _ => null,
+    };
+    return switch (representation) {
+      skir.RepresentationTemplate_enumerationWrapper(:final value) => [
+        for (final variant in value.cases) variant.key,
+      ],
+      _ => const [],
+    };
+  }
+
+  @override
+  bool isInstance(skir.DataValue value, skir.TypeUse type) => switch (value) {
+    skir.DataValue_namedWrapper(:final value) => _catalog.isReadableAs(
+      skir.TypeUse.wrapNamed(value.actualType),
+      type,
+    ),
+    _ when value == skir.DataValue.null_ =>
+      type is skir.TypeUse_nullableWrapper,
+    _ => _catalog.admitsPortableValue(type, value),
+  };
+}
+
+/// Authored resource access through the evaluation's observation. Every
+/// resource a kernel reads is recorded at its root.
+final class _EvaluationResources implements skir.PortableResources {
+  const _EvaluationResources(this._evaluator);
+
+  final PortableExpressionEvaluator _evaluator;
+
+  CheckedEditorCatalog? get _catalog => _evaluator.catalog;
+
+  @override
+  skir.AuthoringRecord? resource(skir.ResourceId id) {
+    _evaluator._reads.add(
+      skir.ValueLocation(resource: id, path: editorRootPath),
+    );
+    return _evaluator.queries?.authored?.resource(id);
+  }
+
+  @override
+  bool selects(skir.TypeSelection configuration, skir.TypeUse type) =>
+      switch (_catalog) {
+        final catalog? => _selectionMatches(catalog, configuration, type),
+        null => false,
+      };
+
+  @override
+  bool linkTargets(skir.LinkValue link, skir.TypeSelection configuration) {
+    final catalog = _catalog;
+    if (catalog == null) return false;
+    final relation = catalog.snapshot.relations
+        .where(
+          (candidate) =>
+              candidate.first.id == link.endpoint ||
+              candidate.second.id == link.endpoint,
+        )
+        .singleOrNull;
+    // Without a published relation there is no family to check the target
+    // against, so only the resource's existence guards the link.
+    if (relation == null) return true;
+    // The link sits on its own endpoint; it targets the opposite one.
+    final opposite = relation.first.id == link.endpoint
+        ? relation.second
+        : relation.first;
+    return catalog
+        .nominalDefinitions(configuration)
+        .contains(opposite.resource.definition);
+  }
+
+  @override
+  skir.PublishedType? declaration(skir.TypeDefinitionId definition) =>
+      _catalog?.published(definition);
+}
+
+/// Whether a resource configured as [selection] is a value of [expected]. A
+/// pending selection matches its nominal family when its chosen arguments are
+/// readable as the expected ones.
+bool _selectionMatches(
+  CheckedEditorCatalog catalog,
+  skir.TypeSelection selection,
+  skir.TypeUse expected,
+) {
+  if (selection is skir.TypeSelection_completeWrapper) {
+    return catalog.selectionMatches(selection, expected);
+  }
+  final named = catalog.namedUse(expected);
+  if (named == null ||
+      !catalog.nominalDefinitions(selection).contains(named.definition)) {
+    return false;
+  }
+  if (selection case skir.TypeSelection_pendingWrapper(:final value)
+      when value.definition == named.definition) {
+    if (value.arguments.length != named.arguments.length) return false;
+    for (final (index, argument) in value.arguments.indexed) {
+      if (argument case skir.ArgumentSelection_chosenWrapper(:final value)) {
+        if (!catalog.isReadableAs(value, named.arguments.elementAt(index))) {
+          return false;
+        }
+      }
+    }
+  }
+  return true;
+}
+
+/// The template as a closed type use, or null when it names a parameter.
+skir.TypeUse? _closedUse(skir.TypeTemplate template) => switch (template) {
+  skir.TypeTemplate_namedWrapper(:final value) => () {
+    final arguments = [
+      for (final argument in value.arguments) _closedUse(argument),
+    ];
+    return arguments.contains(null)
+        ? null
+        : skir.TypeUse.createNamed(
+            definition: value.definition,
+            arguments: arguments.nonNulls,
+          );
+  }(),
+  skir.TypeTemplate_nullableWrapper(:final value) => switch (_closedUse(
+    value.value,
+  )) {
+    final use? => skir.TypeUse.createNullable(value: use),
+    null => null,
+  },
+  skir.TypeTemplate_scalarWrapper(:final value) => skir.TypeUse.wrapScalar(
+    value,
   ),
-  skir.DataValue_listValueWrapper(value: final list) =>
-    skir.DataValue.createListValue(items: _orderedItems(list.items, entries)),
-  skir.DataValue_setValueWrapper(value: final set) =>
-    skir.DataValue.createSetValue(items: _orderedItems(set.items, entries)),
-  skir.DataValue_mapValueWrapper(value: final map) =>
-    skir.DataValue.createMapValue(rows: _orderedRows(map.rows, entries)),
-  _ => throw const _ExpressionFailure(
-    "expected_collection",
-    "The expression value is not a collection",
-  ),
+  _ => null,
 };
 
-List<skir.ListItem> _orderedItems(
-  Iterable<skir.ListItem> source,
-  List<_CollectionEntry> entries,
-) {
-  final byId = {for (final item in source) item.id: item};
-  return [
-    for (final entry in entries)
-      byId[entry.id] ??
-          (throw const _ExpressionFailure(
-            "collection_identity_absent",
-            "The collection item identity is absent",
-          )),
-  ];
+skir.ValueLocation? _below(
+  skir.ValueLocation? location,
+  Iterable<skir.PathSegment> path,
+) => location == null
+    ? null
+    : skir.ValueLocation(
+        resource: location.resource,
+        path: skir.ValuePath(segments: [...location.path.segments, ...path]),
+      );
+
+/// The paths below [value] that hold unfilled entries, through named
+/// payloads, record fields, collection items and map row keys and values.
+/// The value itself being unfilled yields the empty path.
+List<List<skir.PathSegment>> unfilledPaths(skir.DataValue value) {
+  final paths = <List<skir.PathSegment>>[];
+  void visit(skir.DataValue current, List<skir.PathSegment> path) {
+    if (path.length > _maximumDepth) {
+      _fail(skir.PortableFailures.expressionDepthLimit);
+    }
+    if (current == skir.DataValue.unfilled) {
+      paths.add(path);
+      return;
+    }
+    switch (current) {
+      case skir.DataValue_namedWrapper(:final value):
+        visit(value.payload, path);
+      case skir.DataValue_recordWrapper(:final value):
+        for (final field in value.fields) {
+          visit(field.value, [
+            ...path,
+            skir.PathSegment.createField(name: field.name),
+          ]);
+        }
+      case skir.DataValue_listValueWrapper(:final value) ||
+          skir.DataValue_setValueWrapper(:final value):
+        for (final item in value.items) {
+          visit(item.value, [
+            ...path,
+            skir.PathSegment.createItem(id: item.id),
+          ]);
+        }
+      case skir.DataValue_mapValueWrapper(:final value):
+        for (final row in value.rows) {
+          final rowPath = [...path, skir.PathSegment.createItem(id: row.id)];
+          visit(row.key, [...rowPath, skir.PathSegment.mapKey]);
+          visit(row.value, [...rowPath, skir.PathSegment.mapValue]);
+        }
+      default:
+        break;
+    }
+  }
+
+  visit(value, const []);
+  return paths;
 }
 
-List<skir.MapRow> _orderedRows(
-  Iterable<skir.MapRow> source,
-  List<_CollectionEntry> entries,
-) {
-  final byId = {for (final row in source) row.id: row};
-  return [
-    for (final entry in entries)
-      byId[entry.id] ??
-          (throw const _ExpressionFailure(
-            "collection_identity_absent",
-            "The collection row identity is absent",
-          )),
-  ];
+/// The canonical form of a literal, as Kotlin's `requirePortable` admits it:
+/// integers in canonical notation and record fields in name order. A literal
+/// that is already canonical is returned as is. A value that is not portable
+/// fails `invalid_expression_literal`.
+skir.DataValue _portableLiteral(skir.DataValue value, [int depth = 0]) {
+  Never invalid(String message) =>
+      _fail(skir.PortableFailures.invalidExpressionLiteral, message);
+  if (depth > _maximumDepth) invalid("The literal is nested too deeply.");
+  if (value == skir.DataValue.unfilled ||
+      value == skir.DataValue.null_ ||
+      value == skir.DataValue.unit) {
+    return value;
+  }
+  skir.ItemId item(skir.ItemId id) =>
+      id.value.trim().isEmpty ? invalid("Item ids must not be blank.") : id;
+  Iterable<skir.ListItem> items(Iterable<skir.ListItem> source) {
+    var changed = false;
+    final checked = [
+      for (final entry in source)
+        () {
+          final admitted = _portableLiteral(entry.value, depth + 1);
+          item(entry.id);
+          if (identical(admitted, entry.value)) return entry;
+          changed = true;
+          return skir.ListItem(id: item(entry.id), value: admitted);
+        }(),
+    ];
+    return changed ? checked : source;
+  }
+
+  return switch (value) {
+    skir.DataValue_booleanWrapper() ||
+    skir.DataValue_stringValueWrapper() ||
+    skir.DataValue_bytesWrapper() ||
+    skir.DataValue_timestampWrapper() ||
+    skir.DataValue_enumCaseWrapper() => value,
+    skir.DataValue_integerWrapper(value: final text) => switch (BigInt.tryParse(
+      text,
+    )) {
+      final parsed? when parsed.toString() == text => value,
+      final parsed? => skir.integerValue(parsed),
+      null => invalid("The integer payload is invalid."),
+    },
+    skir.DataValue_floatWrapper(value: final number) =>
+      number.isFinite ? value : invalid("Float payloads must be finite."),
+    skir.DataValue_decimalWrapper(value: final text) =>
+      _canonicalDecimalSyntax.hasMatch(text)
+          ? value
+          : invalid("The decimal payload is not canonical decimal syntax."),
+    skir.DataValue_durationWrapper(value: final duration) =>
+      BigInt.from(duration.value.milliseconds).abs() <= portableDurationLimit
+          ? value
+          : invalid("The duration exceeds the portable range."),
+    skir.DataValue_recordWrapper(value: final record) => () {
+      var changed = false;
+      final fields = [
+        for (final field in record.fields)
+          () {
+            final admitted = _portableLiteral(field.value, depth + 1);
+            if (identical(admitted, field.value)) return field;
+            changed = true;
+            return skir.FieldValue(name: field.name, value: admitted);
+          }(),
+      ];
+      final sorted = [...fields]
+        ..sort((left, right) => left.name.compareTo(right.name));
+      for (var index = 1; index < sorted.length; index++) {
+        if (sorted[index - 1].name == sorted[index].name) {
+          invalid("Record field ${sorted[index].name} is duplicated.");
+        }
+      }
+      final ordered = [
+        for (var index = 0; index < fields.length; index++)
+          identical(fields[index], sorted[index]),
+      ].every((same) => same);
+      return !changed && ordered
+          ? value
+          : skir.DataValue.createRecord(fields: sorted);
+    }(),
+    skir.DataValue_namedWrapper(value: final named) => () {
+      final payload = _portableLiteral(named.payload, depth + 1);
+      return identical(payload, named.payload)
+          ? value
+          : skir.DataValue.createNamed(
+              actualType: named.actualType,
+              payload: payload,
+            );
+    }(),
+    skir.DataValue_listValueWrapper(value: final list) => () {
+      final checked = items(list.items);
+      return identical(checked, list.items)
+          ? value
+          : skir.DataValue.createListValue(items: checked);
+    }(),
+    skir.DataValue_setValueWrapper(value: final set) => () {
+      final checked = items(set.items);
+      return identical(checked, set.items)
+          ? value
+          : skir.DataValue.createSetValue(items: checked);
+    }(),
+    skir.DataValue_mapValueWrapper(value: final map) => () {
+      var changed = false;
+      final rows = [
+        for (final row in map.rows)
+          () {
+            item(row.id);
+            final key = _portableLiteral(row.key, depth + 1);
+            final rowValue = _portableLiteral(row.value, depth + 1);
+            if (identical(key, row.key) && identical(rowValue, row.value)) {
+              return row;
+            }
+            changed = true;
+            return skir.MapRow(id: row.id, key: key, value: rowValue);
+          }(),
+      ];
+      return changed ? skir.DataValue.createMapValue(rows: rows) : value;
+    }(),
+    skir.DataValue_linkWrapper(value: final link) =>
+      link.endpoint.value.trim().isEmpty ||
+              link.target.resource.value.trim().isEmpty
+          ? invalid("Links need an endpoint and a target resource.")
+          : value,
+    _ => invalid("Unknown value variant."),
+  };
 }
 
-skir.ValueLocation _entryLocation(skir.ValueLocation base, skir.ItemId id) =>
-    _appendLocation(
-      base,
-      skir.ValuePath(segments: [skir.PathSegment.createItem(id: id)]),
-    );
+final _canonicalDecimalSyntax = RegExp(r"^-?(0|[1-9][0-9]*)(\.[0-9]+)?$");
 
-skir.ValueLocation _appendLocation(
-  skir.ValueLocation base,
-  skir.ValuePath suffix,
-) => skir.ValueLocation(
-  resource: base.resource,
-  path: skir.ValuePath(segments: [...base.path.segments, ...suffix.segments]),
+/// A call node of the declared operation [operation], for panel built trees.
+/// The panel has no shortcuts: it composes primitives directly.
+skir.ExpressionNode portableCall(
+  String operation,
+  List<skir.ExpressionNode> arguments, {
+  List<skir.TypeTemplate> typeArguments = const [],
+}) => skir.ExpressionNode.createCall(
+  operation: skir.OperationId(value: operation),
+  typeArguments: typeArguments,
+  arguments: arguments,
 );
 
-int _nonnegativeCount(skir.DataValue value) {
-  final count = _integer(value);
-  if (count.isNegative) {
-    throw const _ExpressionFailure(
-      "negative_collection_count",
-      "A collection count cannot be negative",
-    );
-  }
-  return count.toInt();
-}
-
-List<_CollectionEntry> _distinctEntriesByResult(
-  List<(_CollectionEntry, skir.DataValue)> results,
-) {
-  final seen = <String>{};
-  return [
-    for (final result in results)
-      if (seen.add(_canonical(result.$2))) result.$1,
-  ];
-}
-
-List<_CollectionEntry> _sortEntriesByResult(
-  List<(_CollectionEntry, skir.DataValue)> results, {
-  required bool descending,
-}) {
-  final sorted = [...results]
-    ..sort((left, right) {
-      final comparison = _comparePortable(left.$2, right.$2);
-      return descending ? -comparison : comparison;
-    });
-  return sorted.map((result) => result.$1).toList();
-}
-
-skir.DataValue _groupByKey(List<(_CollectionEntry, skir.DataValue)> results) {
-  final groups = <String, (skir.DataValue, List<_CollectionEntry>)>{};
-  for (final result in results) {
-    final key = _canonical(result.$2);
-    final group = groups[key];
-    if (group == null) {
-      groups[key] = (result.$2, [result.$1]);
-    } else {
-      group.$2.add(result.$1);
-    }
-  }
-  return skir.DataValue.createMapValue(
-    rows: [
-      for (final group in groups.values)
-        skir.MapRow(
-          id: group.$2.first.id,
-          key: group.$1,
-          value: skir.DataValue.createListValue(
-            items: [
-              for (final entry in group.$2)
-                skir.ListItem(id: entry.id, value: entry.value),
-            ],
-          ),
-        ),
-    ],
-  );
-}
-
-skir.DataValue _flatMap(
-  List<(_CollectionEntry, skir.DataValue)> results,
-) => skir.DataValue.createListValue(
-  items: [
-    for (final result in results)
-      for (final inner in _collectionEntries(result.$2))
-        skir.ListItem(
-          id: skir.ItemId(
-            value:
-                "${result.$1.id.value.length}:${result.$1.id.value}${inner.id.value.length}:${inner.id.value}",
-          ),
-          value: inner.value,
-        ),
-  ],
-);
-
-int _comparePortable(skir.DataValue left, skir.DataValue right) {
-  final first = _unwrap(left);
-  final second = _unwrap(right);
-  if (first is skir.DataValue_integerWrapper ||
-      first is skir.DataValue_floatWrapper ||
-      first is skir.DataValue_decimalWrapper) {
-    return _compareNumber(first, second);
-  }
-  return switch ((first, second)) {
-    (
-      skir.DataValue_stringValueWrapper(value: final left),
-      skir.DataValue_stringValueWrapper(value: final right),
-    ) =>
-      _compareCodePoints(left, right),
-    (
-      skir.DataValue_booleanWrapper(value: final left),
-      skir.DataValue_booleanWrapper(value: final right),
-    ) =>
-      left == right ? 0 : (left ? 1 : -1),
-    (
-      skir.DataValue_timestampWrapper(value: final left),
-      skir.DataValue_timestampWrapper(value: final right),
-    ) =>
-      left.compareTo(right),
-    (
-      skir.DataValue_durationWrapper(value: final left),
-      skir.DataValue_durationWrapper(value: final right),
-    ) =>
-      left.value.milliseconds.compareTo(right.value.milliseconds),
-    _ => throw const _ExpressionFailure(
-      "collection_value_not_ordered",
-      "The collection key does not have portable ordering semantics",
-    ),
-  };
-}
-
-int _compareCodePoints(String left, String right) {
-  final first = left.runes.iterator;
-  final second = right.runes.iterator;
-  while (first.moveNext() && second.moveNext()) {
-    final comparison = first.current.compareTo(second.current);
-    if (comparison != 0) return comparison;
-  }
-  return left.runes.length.compareTo(right.runes.length);
-}
-
-enum _Arithmetic { add, subtract, multiply, divide, remainder, negate }
-
-skir.DataValue _bool(bool value) => skir.DataValue.wrapBoolean(value);
-
-skir.DataValue _string(String value) => skir.DataValue.wrapStringValue(value);
-
-skir.DataValue _integerValue(int value) =>
-    skir.DataValue.wrapInteger(value.toString());
-
-int _compareNumbers(List<skir.DataValue> values) =>
-    _compareNumber(values[0], values[1]);
-
-int _compareNumber(skir.DataValue left, skir.DataValue right) =>
-    _number(left).compareTo(_number(right));
-
-_Decimal _number(skir.DataValue value) => switch (_unwrap(value)) {
-  skir.DataValue_integerWrapper(:final value) => _Decimal.parse(value),
-  skir.DataValue_decimalWrapper(:final value) => _Decimal.parse(value),
-  skir.DataValue_floatWrapper(:final value) => _Decimal.parse(value.toString()),
-  _ => throw const _ExpressionFailure(
-    "expected_number",
-    "The expression value is not numeric",
-  ),
-};
-
-skir.DataValue _split(
-  List<skir.DataValue> values,
-  void Function(int) consumeItems,
-) {
-  final source = _text(values[0]);
-  final separator = _text(values[1]);
-  consumeItems(_literalSplitItemCount(source, separator));
-  final parts = separator.isEmpty
-      ? [for (final codePoint in source.runes) String.fromCharCode(codePoint)]
-      : source.split(separator);
-  return skir.DataValue.createListValue(
-    items: [
-      for (var index = 0; index < parts.length; index++)
-        skir.ListItem(
-          id: skir.ItemId(value: "split.$index"),
-          value: _string(parts[index]),
-        ),
-    ],
-  );
-}
-
-String _boundedLiteralReplace(
-  String source,
-  String target,
-  String replacement,
-  void Function() consumeStep,
-) {
-  if (target.isEmpty) {
-    final sourceCodePoints = source.runes.length;
-    for (var index = 0; index <= sourceCodePoints; index++) {
-      _chargeCodePoints(replacement, consumeStep);
-    }
-    for (var index = 0; index < sourceCodePoints; index++) {
-      consumeStep();
-    }
-    final result = StringBuffer(replacement);
-    for (final codePoint in source.runes) {
-      result
-        ..writeCharCode(codePoint)
-        ..write(replacement);
-    }
-    return result.toString();
-  }
-  var copiedUntil = 0;
-  while (true) {
-    final match = source.indexOf(target, copiedUntil);
-    if (match < 0) {
-      _chargeCodePointRange(source, copiedUntil, source.length, consumeStep);
-      break;
-    }
-    _chargeCodePointRange(source, copiedUntil, match, consumeStep);
-    _chargeCodePoints(replacement, consumeStep);
-    copiedUntil = match + target.length;
-  }
-  return source.replaceAll(target, replacement);
-}
-
-String _boundedJoin(
-  Iterable<String> values,
-  String separator,
-  void Function() consumeStep,
-) {
-  var index = 0;
-  for (final value in values) {
-    if (index > 0) _chargeCodePoints(separator, consumeStep);
-    _chargeCodePoints(value, consumeStep);
-    index++;
-  }
-  return values.join(separator);
-}
-
-String _boundedInterpolate(
-  List<skir.DataValue> values,
-  void Function() consumeStep,
-) {
-  final rendered = values
-      .map(portableExpressionDisplayText)
-      .toList(growable: false);
-  for (final value in rendered) {
-    _chargeCodePoints(value, consumeStep);
-  }
-  return rendered.join();
-}
-
-int _literalSplitItemCount(String source, String separator) {
-  if (separator.isEmpty) return source.runes.length;
-  var count = 1;
-  var from = 0;
-  while (true) {
-    final match = source.indexOf(separator, from);
-    if (match < 0) return count;
-    count++;
-    from = match + separator.length;
-  }
-}
-
-void _chargeCodePoints(String value, void Function() consumeStep) {
-  for (final _ in value.runes) {
-    consumeStep();
-  }
-}
-
-void _chargeCodePointRange(
-  String value,
-  int start,
-  int end,
-  void Function() consumeStep,
-) {
-  var offset = start;
-  while (offset < end) {
-    final first = value.codeUnitAt(offset++);
-    if (first >= 0xD800 &&
-        first <= 0xDBFF &&
-        offset < end &&
-        value.codeUnitAt(offset) >= 0xDC00 &&
-        value.codeUnitAt(offset) <= 0xDFFF) {
-      offset++;
-    }
-    consumeStep();
-  }
-}
-
-List<skir.DataValue> _collectionValues(skir.DataValue value) =>
-    switch (_unwrap(value)) {
-      skir.DataValue_listValueWrapper(:final value) => [
-        for (final item in value.items) item.value,
-      ],
-      skir.DataValue_setValueWrapper(:final value) => [
-        for (final item in value.items) item.value,
-      ],
-      skir.DataValue_mapValueWrapper(:final value) => [
-        for (final row in value.rows) row.value,
-      ],
-      _ => throw const _ExpressionFailure(
-        "expected_collection",
-        "The expression value is not a collection",
-      ),
-    };
-
-skir.DataValue _collectionAccess(List<skir.DataValue> values) {
-  final collection = _unwrap(values[0]);
-  final key = _unwrap(values[1]);
-  final result = switch ((collection, key)) {
-    (
-      skir.DataValue_listValueWrapper(value: final list),
-      skir.DataValue_integerWrapper(value: final index),
-    ) =>
-      list.items.elementAtOrNull(int.parse(index))?.value,
-    (skir.DataValue_mapValueWrapper(value: final map), _) =>
-      map.rows
-          .where((row) => _canonical(row.key) == _canonical(key))
-          .firstOrNull
-          ?.value,
-    (
-      skir.DataValue_recordWrapper(value: final record),
-      skir.DataValue_stringValueWrapper(value: final field),
-    ) =>
-      record.fields.where((entry) => entry.name == field).firstOrNull?.value,
-    (
-      skir.DataValue_stringValueWrapper(value: final text),
-      skir.DataValue_integerWrapper(value: final index),
-    ) =>
-      text.runes.elementAtOrNull(int.parse(index)) == null
-          ? null
-          : _string(
-              String.fromCharCode(text.runes.elementAt(int.parse(index))),
-            ),
-    _ => null,
-  };
-  if (result == null) {
-    throw const _ExpressionFailure(
-      "collection_key_absent",
-      "The collection key or index is absent",
-    );
-  }
-  return result;
-}
-
-bool _collectionContains(List<skir.DataValue> values) {
-  final collection = _unwrap(values[0]);
-  final expected = _unwrap(values[1]);
-  final key = _canonical(expected);
-  return switch (collection) {
-    skir.DataValue_listValueWrapper(:final value) => value.items.any(
-      (item) => _canonical(item.value) == key,
-    ),
-    skir.DataValue_setValueWrapper(:final value) => value.items.any(
-      (item) => _canonical(item.value) == key,
-    ),
-    skir.DataValue_mapValueWrapper(:final value) => value.rows.any(
-      (row) => _canonical(row.key) == key,
-    ),
-    skir.DataValue_recordWrapper(:final value)
-        when expected is skir.DataValue_stringValueWrapper =>
-      value.fields.any((field) => field.name == expected.value),
-    _ => throw const _ExpressionFailure(
-      "expected_collection",
-      "The expression value is not a collection",
-    ),
-  };
-}
-
-int _size(skir.DataValue value) => switch (_unwrap(value)) {
-  skir.DataValue_stringValueWrapper(:final value) => value.runes.length,
-  skir.DataValue_bytesWrapper(:final value) => value.length,
-  skir.DataValue_listValueWrapper(:final value) => value.items.length,
-  skir.DataValue_setValueWrapper(:final value) => value.items.length,
-  skir.DataValue_mapValueWrapper(:final value) => value.rows.length,
-  skir.DataValue_recordWrapper(:final value) => value.fields.length,
-  _ => throw const _ExpressionFailure(
-    "expected_sized_value",
-    "The expression value has no size",
-  ),
-};
-
-/// Formats a value for presentation labels and expression interpolation.
+/// Formats a value for presentation labels.
 ///
 /// Named values use their payload, and empty values have no display text.
 String portableExpressionDisplayText(skir.DataValue value) {
-  final unwrapped = _unwrap(value);
+  final unwrapped = value.authoredPayload;
   if (unwrapped == skir.DataValue.unfilled ||
       unwrapped == skir.DataValue.null_ ||
       unwrapped == skir.DataValue.unit) {
@@ -1332,147 +976,15 @@ String portableExpressionDisplayText(skir.DataValue value) {
   };
 }
 
-bool _hasLineBreak(String value) => value.runes.any(
-  (rune) => rune == 10 || rune == 13 || rune == 0x2028 || rune == 0x2029,
-);
+/// The semantic key of portable equality and collection identity: named
+/// type identity stays significant, record fields and set and map entries are
+/// order independent, list order matters, and item identities are ignored.
+/// Equal keys mean equal values exactly when Kotlin's `canonicalValueKey`
+/// agrees.
+String canonicalAuthoredValue(skir.DataValue value) => _canonical(value, 0);
 
-String _titleCase(String value) => value
-    .split(RegExp(r"\s+"))
-    .map(
-      (word) => word.isEmpty
-          ? word
-          : "${word.substring(0, 1).toUpperCase()}${word.substring(1).toLowerCase()}",
-    )
-    .join(" ");
-
-String _portableTrim(String value) {
-  var start = 0;
-  var end = value.length;
-  while (start < end && _isPortableWhitespace(value.codeUnitAt(start))) {
-    start++;
-  }
-  while (end > start && _isPortableWhitespace(value.codeUnitAt(end - 1))) {
-    end--;
-  }
-  return value.substring(start, end);
-}
-
-bool _isPortableWhitespace(int value) =>
-    (value >= 0x0009 && value <= 0x000d) ||
-    value == 0x0020 ||
-    value == 0x0085 ||
-    value == 0x00a0 ||
-    value == 0x1680 ||
-    (value >= 0x2000 && value <= 0x200a) ||
-    value == 0x2028 ||
-    value == 0x2029 ||
-    value == 0x202f ||
-    value == 0x205f ||
-    value == 0x3000 ||
-    value == 0xfeff;
-
-bool _betweenInt(int value, int minimum, int maximum) =>
-    value >= minimum && value <= maximum;
-
-skir.DataValue _multipleOf(List<skir.DataValue> values) {
-  final divisor = _number(values[1]);
-  if (divisor.compareTo(_Decimal.zero) == 0) return _bool(false);
-  return _bool(_number(values[0]).remainder(divisor).isZero);
-}
-
-DateTime _timestamp(skir.DataValue value) => switch (_unwrap(value)) {
-  skir.DataValue_timestampWrapper(:final value) => value,
-  _ => throw const _ExpressionFailure(
-    "expected_timestamp",
-    "The expression value is not a timestamp",
-  ),
-};
-
-sealed class _Evaluation {
-  const _Evaluation();
-}
-
-final class _Available extends _Evaluation {
-  const _Available(this.value);
-
-  final skir.DataValue value;
-}
-
-final class _Unavailable extends _Evaluation {
-  const _Unavailable();
-}
-
-final class _ExpressionFailure implements Exception {
-  const _ExpressionFailure(this.code, this.message);
-
-  final String code;
-  final String message;
-}
-
-skir.DataValue _unwrap(skir.DataValue value) {
-  var current = value;
-  var depth = 0;
-  while (current is skir.DataValue_namedWrapper) {
-    depth++;
-    if (depth > _maximumAuthoredValueDepth) {
-      throw const _ExpressionFailure(
-        "value_depth_limit",
-        "The authored value exceeded its depth limit",
-      );
-    }
-    current = current.value.payload;
-  }
-  return current;
-}
-
-bool _booleanValue(skir.DataValue value) => switch (_unwrap(value)) {
-  skir.DataValue_booleanWrapper(:final value) => value,
-  _ => throw const _ExpressionFailure(
-    "expected_boolean",
-    "The expression value is not Boolean",
-  ),
-};
-
-BigInt _integer(skir.DataValue value) => switch (_unwrap(value)) {
-  skir.DataValue_integerWrapper(:final value) => BigInt.parse(value),
-  _ => throw const _ExpressionFailure(
-    "expected_integer",
-    "The expression value is not an integer",
-  ),
-};
-
-String _text(skir.DataValue value) => switch (_unwrap(value)) {
-  skir.DataValue_stringValueWrapper(:final value) => value,
-  _ => throw const _ExpressionFailure(
-    "expected_text",
-    "The expression value is not text",
-  ),
-};
-
-int _lineCount(String value) {
-  if (value.isEmpty) return 0;
-  var lines = 1;
-  for (var index = 0; index < value.length; index++) {
-    final unit = value.codeUnitAt(index);
-    if (unit == 13) {
-      lines++;
-      if (index + 1 < value.length && value.codeUnitAt(index + 1) == 10) {
-        index++;
-      }
-    } else if (unit == 10 || unit == 0x2028 || unit == 0x2029) {
-      lines++;
-    }
-  }
-  return lines;
-}
-
-String _canonical(skir.DataValue value, [int depth = 0]) {
-  if (depth > _maximumAuthoredValueDepth) {
-    throw const _ExpressionFailure(
-      "value_depth_limit",
-      "The authored value exceeded its depth limit",
-    );
-  }
+String _canonical(skir.DataValue value, int depth) {
+  if (depth > _maximumDepth) _fail(skir.PortableFailures.expressionDepthLimit);
   if (value == skir.DataValue.unfilled) return "unfilled";
   if (value == skir.DataValue.null_) return "null";
   if (value == skir.DataValue.unit) return "unit";
@@ -1482,12 +994,12 @@ String _canonical(skir.DataValue value, [int depth = 0]) {
       "integer:${BigInt.parse(value)}",
     skir.DataValue_floatWrapper(:final value) => "float:${_floatBits(value)}",
     skir.DataValue_decimalWrapper(:final value) =>
-      "decimal:${_Decimal.parse(value).canonical}",
+      "decimal:${skir.PortableDecimal.parse(value)}",
     skir.DataValue_stringValueWrapper(:final value) =>
       "text:${value.length}:$value",
     skir.DataValue_bytesWrapper(:final value) => "bytes:${value.toBase16()}",
     skir.DataValue_timestampWrapper(:final value) =>
-      "timestamp:${value.toUtc().microsecondsSinceEpoch}",
+      "timestamp:${value.millisecondsSinceEpoch}",
     skir.DataValue_durationWrapper(:final value) =>
       "duration:${value.value.milliseconds}",
     skir.DataValue_enumCaseWrapper(:final value) =>
@@ -1538,36 +1050,30 @@ String _canonical(skir.DataValue value, [int depth = 0]) {
   };
 }
 
-/// Builds the semantic key used by portable equality and collection identity.
-/// Named type identity remains significant; record field and set or map order
-/// are normalized, list order is preserved, and collection item IDs are ignored.
-String canonicalAuthoredValue(skir.DataValue value) => _canonical(value);
-
 String _framed(String kind, Iterable<String> parts) {
   final values = parts.toList(growable: false);
   return "$kind:${values.length}:${values.map((part) => "${part.length}:$part").join()}";
 }
 
 String _floatBits(double value) {
-  final data = ByteData(8)..setFloat64(0, value);
-  return data.getUint64(0).toRadixString(16).padLeft(16, "0");
+  final bytes = ByteData(8)..setFloat64(0, value);
+  return "${bytes.getUint32(0).toRadixString(16).padLeft(8, "0")}"
+      "${bytes.getUint32(4).toRadixString(16).padLeft(8, "0")}";
 }
 
-String _namedTypeKey(skir.NamedTypeUse value, [int depth = 0]) {
-  _guardAuthoredValueDepth(depth);
+String _namedTypeKey(skir.NamedTypeUse value, int depth) {
+  if (depth > _maximumDepth) _fail(skir.PortableFailures.expressionDepthLimit);
   return _framed("named_type", [
-    _definitionKey(value.definition),
+    _framed("definition", [
+      _typeIdKey(value.definition.typeId),
+      value.definition.revision.toString(),
+    ]),
     _framed(
       "arguments",
       value.arguments.map((argument) => _typeUseKey(argument, depth + 1)),
     ),
   ]);
 }
-
-String _definitionKey(skir.TypeDefinitionId value) => _framed("definition", [
-  _typeIdKey(value.typeId),
-  value.revision.toString(),
-]);
 
 String _typeIdKey(skir.TypeId value) => switch (value) {
   skir.TypeId_declaredWrapper(:final value) => _framed("declared", [
@@ -1580,8 +1086,8 @@ String _typeIdKey(skir.TypeId value) => switch (value) {
   _ => "unknown_type_id",
 };
 
-String _typeUseKey(skir.TypeUse value, [int depth = 0]) {
-  _guardAuthoredValueDepth(depth);
+String _typeUseKey(skir.TypeUse value, int depth) {
+  if (depth > _maximumDepth) _fail(skir.PortableFailures.expressionDepthLimit);
   return switch (value) {
     skir.TypeUse_namedWrapper(:final value) => _namedTypeKey(value, depth + 1),
     skir.TypeUse_nullableWrapper(:final value) => _framed("nullable", [
@@ -1592,15 +1098,6 @@ String _typeUseKey(skir.TypeUse value, [int depth = 0]) {
     ]),
     _ => "unknown_type_use",
   };
-}
-
-void _guardAuthoredValueDepth(int depth) {
-  if (depth > _maximumAuthoredValueDepth) {
-    throw const _ExpressionFailure(
-      "value_depth_limit",
-      "The authored value exceeded its depth limit",
-    );
-  }
 }
 
 String _scalarKindKey(skir.ScalarKind value) => switch (value) {
@@ -1628,478 +1125,4 @@ String _pathSegmentKey(skir.PathSegment value) {
     ]),
     _ => "unknown_path_segment",
   };
-}
-
-bool _containsUnfilled(skir.DataValue value, [int depth = 0]) {
-  if (depth > _maximumAuthoredValueDepth) {
-    throw const _ExpressionFailure(
-      "value_depth_limit",
-      "The authored value exceeded its depth limit",
-    );
-  }
-  if (value == skir.DataValue.unfilled) return true;
-  return switch (value) {
-    skir.DataValue_namedWrapper(:final value) => _containsUnfilled(
-      value.payload,
-      depth + 1,
-    ),
-    skir.DataValue_recordWrapper(:final value) => value.fields.any(
-      (field) => _containsUnfilled(field.value, depth + 1),
-    ),
-    skir.DataValue_listValueWrapper(:final value) ||
-    skir.DataValue_setValueWrapper(
-      :final value,
-    ) => value.items.any((item) => _containsUnfilled(item.value, depth + 1)),
-    skir.DataValue_mapValueWrapper(:final value) => value.rows.any(
-      (row) =>
-          _containsUnfilled(row.key, depth + 1) ||
-          _containsUnfilled(row.value, depth + 1),
-    ),
-    _ => false,
-  };
-}
-
-const _maximumAuthoredValueDepth = 512;
-
-final class _Decimal {
-  const _Decimal(this.unscaled, this.scale);
-
-  factory _Decimal.parse(String source) {
-    final match = RegExp(
-      r"^([+-]?)([0-9]+)(?:\.([0-9]*))?(?:[eE]([+-]?[0-9]+))?$",
-    ).firstMatch(source);
-    if (match == null) {
-      throw const _ExpressionFailure(
-        "expected_number",
-        "The expression value is not numeric",
-      );
-    }
-    final fraction = match.group(3) ?? "";
-    final exponent = int.tryParse(match.group(4) ?? "0");
-    if (exponent == null) {
-      throw const _ExpressionFailure(
-        "expected_number",
-        "The expression value is not numeric",
-      );
-    }
-    var magnitude = BigInt.parse("${match.group(2)}$fraction");
-    if (match.group(1) == "-") magnitude = -magnitude;
-    final scale = fraction.length - exponent;
-    return scale < 0
-        ? _Decimal(magnitude * _tenPow(-scale), 0)
-        : _Decimal(magnitude, scale);
-  }
-
-  static final zero = _Decimal(BigInt.zero, 0);
-
-  final BigInt unscaled;
-  final int scale;
-
-  bool get isZero => unscaled == BigInt.zero;
-
-  int get normalizedScale {
-    var magnitude = unscaled;
-    var current = scale;
-    while (current > 0 && magnitude.remainder(BigInt.from(10)) == BigInt.zero) {
-      magnitude ~/= BigInt.from(10);
-      current--;
-    }
-    return current;
-  }
-
-  _Decimal operator +(_Decimal other) {
-    final targetScale = scale > other.scale ? scale : other.scale;
-    final left = unscaled * _tenPow(targetScale - scale);
-    final right = other.unscaled * _tenPow(targetScale - other.scale);
-    return _Decimal(left + right, targetScale);
-  }
-
-  _Decimal operator -(_Decimal other) => this + (-other);
-
-  _Decimal operator -() => _Decimal(-unscaled, scale);
-
-  _Decimal operator *(_Decimal other) =>
-      _Decimal(unscaled * other.unscaled, scale + other.scale);
-
-  _Decimal divide(_Decimal other) {
-    if (other.isZero) {
-      throw const _ExpressionFailure(
-        "division_by_zero",
-        "Division by zero is not defined",
-      );
-    }
-    const precision = 34;
-    final magnitudeExponent = _ratioExponent(
-      unscaled.abs(),
-      other.unscaled.abs(),
-    );
-    final valueExponent = magnitudeExponent + other.scale - scale;
-    final targetScale = precision - 1 - valueExponent;
-    final factor = other.scale - scale + targetScale;
-    final numerator = factor >= 0 ? unscaled * _tenPow(factor) : unscaled;
-    final denominator = factor >= 0
-        ? other.unscaled
-        : other.unscaled * _tenPow(-factor);
-    var quotient = numerator ~/ denominator;
-    final remainder = numerator.remainder(denominator).abs();
-    final divisor = denominator.abs();
-    final doubled = remainder * BigInt.from(2);
-    if (doubled > divisor || (doubled == divisor && quotient.isOdd)) {
-      final negative = numerator.isNegative != denominator.isNegative;
-      quotient += negative ? -BigInt.one : BigInt.one;
-    }
-    return targetScale < 0
-        ? _Decimal(quotient * _tenPow(-targetScale), 0)
-        : _Decimal(quotient, targetScale);
-  }
-
-  _Decimal remainder(_Decimal other) {
-    if (other.isZero) {
-      throw const _ExpressionFailure(
-        "division_by_zero",
-        "Division by zero is not defined",
-      );
-    }
-    final targetScale = scale > other.scale ? scale : other.scale;
-    final left = unscaled * _tenPow(targetScale - scale);
-    final right = other.unscaled * _tenPow(targetScale - other.scale);
-    return _Decimal(left.remainder(right), targetScale);
-  }
-
-  int compareTo(_Decimal other) {
-    final targetScale = scale > other.scale ? scale : other.scale;
-    final left = unscaled * _tenPow(targetScale - scale);
-    final right = other.unscaled * _tenPow(targetScale - other.scale);
-    return left.compareTo(right);
-  }
-
-  String get canonical {
-    var magnitude = unscaled;
-    var actualScale = scale;
-    while (actualScale > 0 &&
-        magnitude.remainder(BigInt.from(10)) == BigInt.zero) {
-      magnitude ~/= BigInt.from(10);
-      actualScale--;
-    }
-    final negative = magnitude.isNegative;
-    final digits = magnitude.abs().toString().padLeft(actualScale + 1, "0");
-    final value = actualScale == 0
-        ? digits
-        : "${digits.substring(0, digits.length - actualScale)}.${digits.substring(digits.length - actualScale)}";
-    return negative ? "-$value" : value;
-  }
-}
-
-int _ratioExponent(BigInt numerator, BigInt denominator) {
-  final digitDifference =
-      numerator.toString().length - denominator.toString().length;
-  if (digitDifference >= 0) {
-    return numerator >= denominator * _tenPow(digitDifference)
-        ? digitDifference
-        : digitDifference - 1;
-  }
-  return numerator * _tenPow(-digitDifference) >= denominator
-      ? digitDifference
-      : digitDifference - 1;
-}
-
-BigInt _tenPow(int exponent) {
-  var value = BigInt.one;
-  for (var index = 0; index < exponent; index++) {
-    value *= BigInt.from(10);
-  }
-  return value;
-}
-
-skir.DataValue _linkTarget(skir.DataValue value) {
-  if (_unwrap(value) case skir.DataValue_linkWrapper(:final value)) {
-    return value.target.resource.toExpressionValue();
-  }
-  throw const _ExpressionFailure(
-    "expected_link",
-    "The expression value is not a relationship link",
-  );
-}
-
-BigInt _roundQuotient(BigInt numerator, BigInt denominator, String mode) {
-  final quotient = numerator ~/ denominator;
-  final remainder = numerator.remainder(denominator);
-  final direction = numerator.isNegative ? -BigInt.one : BigInt.one;
-  return switch (mode) {
-    "TowardZero" => quotient,
-    "Floor" => quotient - (remainder.isNegative ? BigInt.one : BigInt.zero),
-    "Ceiling" =>
-      quotient + (remainder > BigInt.zero ? BigInt.one : BigInt.zero),
-    "NearestTiesToEven" =>
-      remainder.abs() * BigInt.two > denominator ||
-              (remainder.abs() * BigInt.two == denominator && quotient.isOdd)
-          ? quotient + direction
-          : quotient,
-    _ => throw const _ExpressionFailure(
-      "invalid_rounding_mode",
-      "The rounding mode is unavailable",
-    ),
-  };
-}
-
-skir.DataValue _chargeFormattedValue(
-  skir.DataValue value,
-  void Function() consumeStep,
-) {
-  if (value case skir.DataValue_stringValueWrapper(:final value)) {
-    for (final _ in value.runes) {
-      consumeStep();
-    }
-  }
-  return value;
-}
-
-_Decimal _formatNumber(skir.DataValue value) {
-  if (_unwrap(value) case skir.DataValue_floatWrapper(:final value)) {
-    if (!value.isFinite) {
-      throw const _ExpressionFailure(
-        "non_finite_number",
-        "The numeric value must be finite",
-      );
-    }
-  }
-  final source = switch (_unwrap(value)) {
-    skir.DataValue_integerWrapper(:final value) => value,
-    skir.DataValue_decimalWrapper(:final value) => value,
-    skir.DataValue_floatWrapper(:final value) => value.toString(),
-    _ => throw const _ExpressionFailure(
-      "expected_number",
-      "The expression value is not numeric",
-    ),
-  };
-  final exponentText = RegExp(r"[eE]([+-]?[0-9]+)$")
-      .firstMatch(source)
-      ?.group(1);
-  final exponent = exponentText == null ? 0 : int.tryParse(exponentText);
-  if (source.length > 4096 ||
-      exponent == null ||
-      exponent.abs() + source.length > 4096) {
-    throw const _ExpressionFailure(
-      "format_size_limit",
-      "The formatted value exceeds its size limit",
-    );
-  }
-  return _number(value);
-}
-
-skir.DataValue _roundPortableNumber(List<skir.DataValue> values) {
-  final value = _unwrap(values[0]);
-  final increment = _unwrap(values[1]);
-  if (value.kind != increment.kind) {
-    throw const _ExpressionFailure(
-      "numeric_family_mismatch",
-      "Rounding operands must use one numeric representation",
-    );
-  }
-  final source = _formatNumber(value);
-  final step = _formatNumber(increment);
-  if (step.compareTo(_Decimal.zero) <= 0) {
-    throw const _ExpressionFailure(
-      "invalid_rounding_increment",
-      "The rounding increment must be positive",
-    );
-  }
-  final numerator = source.unscaled * _tenPow(step.scale);
-  final denominator = step.unscaled * _tenPow(source.scale);
-  final rounded =
-      _Decimal(_roundQuotient(numerator, denominator, _text(values[2])), 0) *
-      step;
-  return switch (value) {
-    skir.DataValue_integerWrapper() => skir.DataValue.wrapInteger(
-      rounded.canonical,
-    ),
-    skir.DataValue_decimalWrapper() => skir.DataValue.wrapDecimal(
-      rounded.canonical,
-    ),
-    skir.DataValue_floatWrapper() => _formatFiniteFloat(
-      double.parse(rounded.canonical),
-    ),
-    _ => throw const _ExpressionFailure(
-      "expected_number",
-      "The expression value is not numeric",
-    ),
-  };
-}
-
-int _formatPrecision(skir.DataValue value, int maximum) {
-  final precision = _integer(value);
-  if (precision < BigInt.zero || precision > BigInt.from(maximum)) {
-    throw const _ExpressionFailure(
-      "invalid_format_precision",
-      "Display precision is outside its supported range",
-    );
-  }
-  return precision.toInt();
-}
-
-/// Localized grouping uses the host locale data. Locale und remains deterministic.
-skir.DataValue _formatPortableNumber(List<skir.DataValue> values) {
-  final digits = _formatPrecision(values[1], 20);
-  final source = _formatNumber(values[0]);
-  if (source.unscaled.abs().toString().length + source.scale > 4096) {
-    throw const _ExpressionFailure(
-      "format_size_limit",
-      "The formatted value exceeds its size limit",
-    );
-  }
-  final coefficient = source.scale <= digits
-      ? source.unscaled * _tenPow(digits - source.scale)
-      : _roundQuotient(
-          source.unscaled,
-          _tenPow(source.scale - digits),
-          "NearestTiesToEven",
-        );
-  final magnitude = coefficient.abs().toString().padLeft(digits + 1, "0");
-  var whole = digits == 0
-      ? magnitude
-      : magnitude.substring(0, magnitude.length - digits);
-  final fraction = digits == 0
-      ? ""
-      : magnitude.substring(magnitude.length - digits);
-  final locale = _text(values[2]);
-  if (locale == "und") {
-    return _string(
-      "${coefficient.isNegative ? "-" : ""}$whole${digits == 0 ? "" : ".$fraction"}",
-    );
-  }
-  NumberFormat formatter;
-  try {
-    final canonical = Intl.canonicalizedLocale(locale);
-    final resolved = NumberFormat.localeExists(canonical)
-        ? canonical
-        : canonical.split("_").first;
-    if (!NumberFormat.localeExists(resolved)) {
-      throw const _ExpressionFailure(
-        "invalid_format_locale",
-        "The display locale is unavailable",
-      );
-    }
-    formatter = NumberFormat.decimalPattern(resolved);
-  } on ArgumentError {
-    throw const _ExpressionFailure(
-      "invalid_format_locale",
-      "The display locale is unavailable",
-    );
-  }
-  final symbols = formatter.symbols;
-  final pattern = symbols.DECIMAL_PATTERN.split(";").first.split(".").first;
-  final groups = pattern.split(",");
-  if (groups.length > 1) {
-    final primary = groups.last.replaceAll(RegExp("[^0#]"), "").length;
-    final secondary = groups.length > 2
-        ? groups[groups.length - 2].replaceAll(RegExp("[^0#]"), "").length
-        : primary;
-    final chunks = <String>[];
-    var end = whole.length;
-    var size = primary;
-    while (end > size) {
-      chunks.insert(0, whole.substring(end - size, end));
-      end -= size;
-      size = secondary;
-    }
-    chunks.insert(0, whole.substring(0, end));
-    whole = chunks.join(symbols.GROUP_SEP);
-  }
-  var result =
-      "${coefficient.isNegative ? symbols.MINUS_SIGN : ""}$whole${digits == 0 ? "" : "${symbols.DECIMAL_SEP}$fraction"}";
-  final zero = symbols.ZERO_DIGIT.runes.first;
-  if (zero != 48) {
-    result = String.fromCharCodes(
-      result.runes.map(
-        (rune) => rune >= 48 && rune <= 57 ? zero + rune - 48 : rune,
-      ),
-    );
-  }
-  return _string(result);
-}
-
-skir.DataValue _formatPortableDuration(List<skir.DataValue> values) {
-  final value = _unwrap(values[0]);
-  if (value is! skir.DataValue_durationWrapper) {
-    throw const _ExpressionFailure(
-      "expected_duration",
-      "The expression value is not a duration",
-    );
-  }
-  if (!value.value.value.isPortable) {
-    throw const _ExpressionFailure(
-      "duration_range",
-      "Duration millisecond count exceeds the finite portable range",
-    );
-  }
-  final units = _text(values[1]);
-  if (units != "MinutesAndSeconds" && units != "HoursMinutesAndSeconds") {
-    throw const _ExpressionFailure(
-      "invalid_duration_units",
-      "The duration display units are unavailable",
-    );
-  }
-  final digits = _formatPrecision(values[2], 3);
-  final milliseconds = BigInt.from(value.value.value.milliseconds);
-  final magnitude = milliseconds.abs();
-  final seconds = magnitude ~/ BigInt.from(1000);
-  final minutes = seconds ~/ BigInt.from(60);
-  final secondsPart = seconds
-      .remainder(BigInt.from(60))
-      .toString()
-      .padLeft(2, "0");
-  final whole = units == "MinutesAndSeconds"
-      ? "$minutes:$secondsPart"
-      : "${minutes ~/ BigInt.from(60)}:${minutes.remainder(BigInt.from(60)).toString().padLeft(2, "0")}:$secondsPart";
-  final fraction = digits == 0
-      ? ""
-      : ".${magnitude.remainder(BigInt.from(1000)).toString().padLeft(3, "0").substring(0, digits)}";
-  return _string("${milliseconds.isNegative ? "-" : ""}$whole$fraction");
-}
-
-skir.DataValue _formatPortableTimestamp(List<skir.DataValue> values) {
-  final value = _unwrap(values[0]);
-  if (value is! skir.DataValue_timestampWrapper) {
-    throw const _ExpressionFailure(
-      "expected_timestamp",
-      "The expression value is not a timestamp",
-    );
-  }
-  final pattern = _text(values[1]);
-  if (pattern.length > 128 ||
-      !RegExp(r"^(?:yyyy|MM|dd|HH|mm|ss|SSS|[^A-Za-z])+$").hasMatch(pattern)) {
-    throw const _ExpressionFailure(
-      "invalid_timestamp_pattern",
-      "The timestamp pattern is not portable",
-    );
-  }
-  final timestamp = switch (_text(values[2])) {
-    "UTC" || "utc" => value.value.toUtc(),
-    "local" => value.value.toLocal(),
-    _ => throw const _ExpressionFailure(
-      "invalid_timestamp_zone",
-      "The timestamp zone is unavailable",
-    ),
-  };
-  final locale = _text(values[3]);
-  final canonical = locale == "und"
-      ? "en_US"
-      : Intl.canonicalizedLocale(locale);
-  if (!DateFormat.localeExists(canonical)) {
-    throw const _ExpressionFailure(
-      "invalid_format_locale",
-      "The display locale is unavailable",
-    );
-  }
-  return _string(DateFormat(pattern, canonical).format(timestamp));
-}
-
-skir.DataValue _formatFiniteFloat(double value) {
-  if (!value.isFinite) {
-    throw const _ExpressionFailure(
-      "non_finite_number",
-      "The numeric result must be finite",
-    );
-  }
-  return skir.DataValue.wrapFloat(value);
 }

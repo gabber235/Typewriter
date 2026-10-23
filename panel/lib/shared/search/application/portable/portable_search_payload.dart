@@ -18,7 +18,6 @@ sealed class PortableSearchPayload with _$PortableSearchPayload {
     required String providerPath,
     required String distinctKey,
     required SearchQueryContext query,
-    PortablePresentationBindingSchema? sourceSchema,
     @Default({})
     Map<skir.ExpressionBindingId, PortableExpressionBinding> contextBindings,
   }) = PortableMappedSearchPayload;

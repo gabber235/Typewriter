@@ -151,7 +151,7 @@ void main() {
       header: null,
     );
     final mapping = skir.SearchResultMapping(
-      bindingId: row,
+      binding: skir.BindingDeclaration(id: row, type: _text),
       key: rowRead,
       selectedValue: rowRead,
       presentation: resultNode,
@@ -168,8 +168,8 @@ void main() {
         semanticLabel: null,
       ),
       selectionMode: skir.SearchSelectionMode.single,
-      queryBindingId: skir.ExpressionBindingId(value: "query"),
-      summaryBindingId: summaryBinding,
+      queryBinding: _query,
+      summaryBinding: skir.BindingDeclaration(id: summaryBinding, type: _text),
       maximumExtent: skir.ExpressionNode.wrapLiteral(
         skir.DataValue.wrapInteger("240"),
       ),
@@ -415,8 +415,8 @@ void main() {
         semanticLabel: null,
       ),
       selectionMode: skir.SearchSelectionMode.single,
-      queryBindingId: skir.ExpressionBindingId(value: "query"),
-      summaryBindingId: skir.ExpressionBindingId(value: "summary"),
+      queryBinding: _query,
+      summaryBinding: _summary,
       maximumExtent: skir.ExpressionNode.wrapLiteral(
         skir.DataValue.wrapInteger("240"),
       ),
@@ -431,7 +431,13 @@ void main() {
           arguments: const [],
         ),
         result: skir.SearchResultMapping(
-          bindingId: row,
+          binding: skir.BindingDeclaration(
+            id: row,
+            type: skir.TypeTemplate.createNamed(
+              definition: resultType,
+              arguments: const [],
+            ),
+          ),
           key: rowRead,
           selectedValue: rowRead,
           presentation: resultNode,
@@ -609,8 +615,8 @@ skir.SearchControl _pendingControl() {
       semanticLabel: null,
     ),
     selectionMode: skir.SearchSelectionMode.single,
-    queryBindingId: skir.ExpressionBindingId(value: "query"),
-    summaryBindingId: skir.ExpressionBindingId(value: "summary"),
+    queryBinding: _query,
+    summaryBinding: _summary,
     maximumExtent: skir.ExpressionNode.wrapLiteral(
       skir.DataValue.wrapInteger("240"),
     ),
@@ -626,7 +632,7 @@ skir.SearchControl _pendingControl() {
         ),
       ),
       result: skir.SearchResultMapping(
-        bindingId: row,
+        binding: skir.BindingDeclaration(id: row, type: _text),
         key: rowRead,
         selectedValue: rowRead,
         presentation: skir.PresentationNode(
@@ -764,3 +770,13 @@ final class _TestHost extends ChangeNotifier
     ),
   ]);
 }
+
+final _text = skir.TypeTemplate.wrapScalar(skir.ScalarKind.text);
+final _query = skir.BindingDeclaration(
+  id: skir.ExpressionBindingId(value: "query"),
+  type: _text,
+);
+final _summary = skir.BindingDeclaration(
+  id: skir.ExpressionBindingId(value: "summary"),
+  type: _text,
+);

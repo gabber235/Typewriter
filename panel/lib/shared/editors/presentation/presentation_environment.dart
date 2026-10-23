@@ -75,35 +75,36 @@ extension PortableContextImports
   }) {
     final result = {...this};
     for (final input in imports) {
+      final id = input.binding.id;
+      final type = catalog.concreteType(input.binding.type);
+      if (type == null) {
+        throw const FormatException("A context input has no closed type");
+      }
       if (input.source case skir.PresentationContextSource_hostWrapper(
         :final value,
       )) {
-        if (HostContext.valueType(value) != input.valueType) {
+        if (HostContext.valueType(value) != type) {
           throw const FormatException("Host input has an incompatible type");
         }
-        if (!result.containsKey(input.bindingId)) {
+        if (!result.containsKey(id)) {
           if (host.bindingFor(value) case final binding?) {
-            result[input.bindingId] = binding;
+            result[id] = binding;
           }
         }
       }
-      final supplied = result[input.bindingId];
+      final supplied = result[id];
       if (supplied == null) {
-        result[input.bindingId] = PortableExpressionBinding(
-          schema: CompletePortablePresentationBinding(input.valueType),
+        result[id] = PortableExpressionBinding(
+          schema: CompletePortablePresentationBinding(type),
           value: skir.DataValue.unfilled,
         );
         continue;
       }
       if (supplied.location != null ||
-          supplied.schema !=
-              CompletePortablePresentationBinding(input.valueType)) {
+          supplied.schema != CompletePortablePresentationBinding(type)) {
         throw const FormatException("Caller input has an incompatible binding");
       }
-      final inspection = catalog.inspectPortableValue(
-        input.valueType,
-        supplied.value,
-      );
+      final inspection = catalog.inspectPortableValue(type, supplied.value);
       if (inspection.structuralProblems.isNotEmpty) {
         throw const FormatException("Caller input has malformed data");
       }

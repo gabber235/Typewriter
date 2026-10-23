@@ -8,6 +8,9 @@
 /// wrong kind, which only an unchecked tree reaches.
 library;
 
+import "dart:math" as math;
+import "dart:typed_data";
+
 import "package:typewriter_panel/infrastructure/protocols/operations/skirout/portable_operations.dart";
 import "package:typewriter_panel/infrastructure/protocols/skir/skir.dart"
     as skir;
@@ -64,9 +67,8 @@ final class PortableOperationDeclaration {
   final int typeArguments;
 
   /// Whether a call with [count] arguments fits the declared parameters.
-  bool accepts(int count) => variadic
-      ? count >= parameters.length - 1
-      : count == parameters.length;
+  bool accepts(int count) =>
+      variadic ? count >= parameters.length - 1 : count == parameters.length;
 
   /// The kind of the parameter argument [index] binds.
   PortableParameterKind? parameterAt(int index) => index < parameters.length
@@ -90,6 +92,10 @@ final class PortableOperationFailure implements Exception {
 }
 
 /// A decimal number: [unscaled] times ten to the power of minus [scale].
+///
+/// Arithmetic is exact except [divide] and [sqrt], which round to a number of
+/// significant digits half even, as Java's `MathContext.DECIMAL128` does for
+/// 34. Results are normalized, so [toString] is the canonical text.
 final class PortableDecimal implements Comparable<PortableDecimal> {
   const PortableDecimal(this.unscaled, this.scale);
 
@@ -105,34 +111,169 @@ final class PortableDecimal implements Comparable<PortableDecimal> {
     final fraction = match.group(3) ?? "";
     var magnitude = BigInt.parse("${match.group(2)}$fraction");
     if (match.group(1) == "-") magnitude = -magnitude;
-    final scale = fraction.length - exponent;
-    return scale < 0
-        ? PortableDecimal(magnitude * BigInt.from(10).pow(-scale), 0)
-        : PortableDecimal(magnitude, scale).normalized();
+    return PortableDecimal._scaled(magnitude, fraction.length - exponent);
   }
+
+  /// The integer [value].
+  PortableDecimal.integer(BigInt value) : this(value, 0);
+
+  /// The exact decimal value of the finite double [value], so `0.1` becomes
+  /// `0.1000000000000000055511151231257827021181583404541015625`.
+  factory PortableDecimal.fromDouble(double value) {
+    if (!value.isFinite) {
+      throw ArgumentError.value(value, "value", "Must be finite");
+    }
+    final bytes = ByteData(8)..setFloat64(0, value);
+    final high = bytes.getUint32(0);
+    final low = bytes.getUint32(4);
+    final biased = (high >> 20) & 0x7ff;
+    var mantissa = (BigInt.from(high & 0xfffff) << 32) | BigInt.from(low);
+    var exponent = -1074;
+    if (biased != 0) {
+      mantissa |= BigInt.one << 52;
+      exponent = biased - 1075;
+    }
+    if ((high >> 31) != 0) mantissa = -mantissa;
+    return exponent >= 0
+        ? PortableDecimal(mantissa << exponent, 0)
+        : PortableDecimal(
+            mantissa * BigInt.from(5).pow(-exponent),
+            -exponent,
+          ).normalized();
+  }
+
+  /// [unscaled] times ten to the power of minus [scale], for any [scale].
+  factory PortableDecimal._scaled(BigInt unscaled, int scale) =>
+      unscaled == BigInt.zero
+      ? zero
+      : scale < 0
+      ? PortableDecimal(unscaled * _ten.pow(-scale), 0)
+      : PortableDecimal(unscaled, scale).normalized();
+
+  static final zero = PortableDecimal(BigInt.zero, 0);
 
   final BigInt unscaled;
   final int scale;
+
+  bool get isZero => unscaled == BigInt.zero;
+
+  bool get isNegative => unscaled.isNegative;
 
   /// This value without trailing fraction zeros.
   PortableDecimal normalized() {
     var value = unscaled;
     var digits = scale;
-    final ten = BigInt.from(10);
-    while (digits > 0 && value != BigInt.zero && value % ten == BigInt.zero) {
-      value ~/= ten;
+    while (digits > 0 && value != BigInt.zero && value % _ten == BigInt.zero) {
+      value ~/= _ten;
       digits--;
     }
     return PortableDecimal(value, value == BigInt.zero ? 0 : digits);
   }
 
   /// This value at [digits] fraction digits; [digits] must not be smaller.
-  BigInt unscaledAt(int digits) =>
-      unscaled * BigInt.from(10).pow(digits - scale);
+  BigInt unscaledAt(int digits) => unscaled * _ten.pow(digits - scale);
+
+  /// The nearest double, by a correctly rounded parse of the canonical text.
+  double toDouble() => double.parse(toString());
+
+  PortableDecimal operator +(PortableDecimal other) {
+    final digits = math.max(scale, other.scale);
+    return PortableDecimal(
+      unscaledAt(digits) + other.unscaledAt(digits),
+      digits,
+    ).normalized();
+  }
+
+  PortableDecimal operator -(PortableDecimal other) => this + (-other);
+
+  PortableDecimal operator -() => PortableDecimal(-unscaled, scale);
+
+  PortableDecimal operator *(PortableDecimal other) => PortableDecimal(
+    unscaled * other.unscaled,
+    scale + other.scale,
+  ).normalized();
+
+  /// The quotient rounded to [precision] significant digits, half even.
+  /// [divisor] must not be zero.
+  PortableDecimal divide(PortableDecimal divisor, {int precision = 34}) {
+    if (divisor.isZero) throw ArgumentError.value(divisor, "divisor");
+    if (isZero) return zero;
+    final numerator = unscaled.abs() * _ten.pow(divisor.scale);
+    final denominator = divisor.unscaled.abs() * _ten.pow(scale);
+    var fraction =
+        precision -
+        (numerator.toString().length - denominator.toString().length);
+    while (true) {
+      final scaledNumerator = fraction >= 0
+          ? numerator * _ten.pow(fraction)
+          : numerator;
+      final scaledDenominator = fraction >= 0
+          ? denominator
+          : denominator * _ten.pow(-fraction);
+      var quotient = scaledNumerator ~/ scaledDenominator;
+      if (quotient >= _ten.pow(precision)) {
+        fraction--;
+        continue;
+      }
+      final remainder = scaledNumerator - quotient * scaledDenominator;
+      final doubled = remainder * BigInt.two;
+      if (doubled > scaledDenominator ||
+          (doubled == scaledDenominator && quotient.isOdd)) {
+        quotient += BigInt.one;
+      }
+      final negative = unscaled.isNegative != divisor.unscaled.isNegative;
+      return PortableDecimal._scaled(negative ? -quotient : quotient, fraction);
+    }
+  }
+
+  /// The remainder of truncating division; it has the sign of this value.
+  /// [divisor] must not be zero.
+  PortableDecimal remainder(PortableDecimal divisor) {
+    final digits = math.max(scale, divisor.scale);
+    return PortableDecimal(
+      unscaledAt(digits).remainder(divisor.unscaledAt(digits)),
+      digits,
+    ).normalized();
+  }
+
+  /// This value raised to the nonnegative [exponent], exactly.
+  PortableDecimal power(int exponent) =>
+      PortableDecimal(unscaled.pow(exponent), scale * exponent).normalized();
+
+  /// The square root rounded to [precision] significant digits, half even.
+  /// This value must not be negative.
+  PortableDecimal sqrt({int precision = 34}) {
+    if (isNegative) throw ArgumentError.value(this, "value");
+    if (isZero) return zero;
+    final integerDigits = unscaled.toString().length - scale;
+    var fraction = precision + 2 - (integerDigits / 2).floor();
+    while (true) {
+      if (2 * fraction < scale) fraction = (scale + 1) ~/ 2;
+      final radicand = unscaled * _ten.pow(2 * fraction - scale);
+      final root = integerSquareRoot(radicand);
+      final dropped = root.toString().length - precision;
+      if (dropped <= 0) {
+        if (root * root == radicand) {
+          return PortableDecimal._scaled(root, fraction);
+        }
+        fraction += 1 - dropped;
+        continue;
+      }
+      final unit = _ten.pow(dropped);
+      var kept = root ~/ unit;
+      final rest = root - kept * unit;
+      final half = unit ~/ BigInt.two;
+      final exact = root * root == radicand;
+      if (rest > half || (rest == half && (!exact || kept.isOdd))) {
+        kept += BigInt.one;
+      }
+      return PortableDecimal._scaled(kept, fraction - dropped);
+    }
+  }
 
   @override
   int compareTo(PortableDecimal other) {
-    final digits = scale > other.scale ? scale : other.scale;
+    final digits = math.max(scale, other.scale);
     return unscaledAt(digits).compareTo(other.unscaledAt(digits));
   }
 
@@ -141,21 +282,56 @@ final class PortableDecimal implements Comparable<PortableDecimal> {
       other is PortableDecimal && compareTo(other) == 0;
 
   @override
-  int get hashCode => Object.hash(
-    normalized().unscaled,
-    normalized().scale,
-  );
+  int get hashCode => Object.hash(normalized().unscaled, normalized().scale);
 
-  /// Canonical plain notation without trailing fraction zeros.
+  /// Canonical plain notation without trailing fraction zeros; zero is `0`.
   @override
   String toString() {
     final value = normalized();
     final negative = value.unscaled.isNegative;
-    final digits = value.unscaled.abs().toString().padLeft(value.scale + 1, "0");
+    final digits = value.unscaled.abs().toString().padLeft(
+      value.scale + 1,
+      "0",
+    );
     final whole = digits.substring(0, digits.length - value.scale);
     final fraction = digits.substring(digits.length - value.scale);
     return "${negative ? "-" : ""}$whole${fraction.isEmpty ? "" : ".$fraction"}";
   }
+}
+
+final _ten = BigInt.from(10);
+
+/// The floor of the square root of the nonnegative [value].
+BigInt integerSquareRoot(BigInt value) {
+  if (value < BigInt.two) return value;
+  var current = BigInt.one << ((value.bitLength + 1) >> 1);
+  while (true) {
+    final next = (current + value ~/ current) >> 1;
+    if (next >= current) return current;
+    current = next;
+  }
+}
+
+/// Rounds the rational [numerator] / [denominator] to an integer by [mode].
+/// [denominator] must be positive.
+BigInt roundQuotient(BigInt numerator, BigInt denominator, RoundingMode mode) {
+  final quotient = numerator ~/ denominator;
+  final remainder = numerator - quotient * denominator;
+  if (remainder == BigInt.zero) return quotient;
+  final away = numerator.isNegative
+      ? quotient - BigInt.one
+      : quotient + BigInt.one;
+  final doubled = remainder.abs() * BigInt.two;
+  return switch (mode) {
+    RoundingMode.towardZero => quotient,
+    RoundingMode.floor => numerator.isNegative ? away : quotient,
+    RoundingMode.ceiling => numerator.isNegative ? quotient : away,
+    RoundingMode.nearestTiesAway => doubled >= denominator ? away : quotient,
+    RoundingMode.nearestTiesToEven =>
+      doubled > denominator || (doubled == denominator && quotient.isOdd)
+          ? away
+          : quotient,
+  };
 }
 
 /// A number of one family, as numeric kernels receive and return it.
@@ -185,18 +361,18 @@ sealed class PortableMaybe<T> {
 
   /// This result with [convert] applied to a value.
   PortableMaybe<R> map<R>(R Function(T value) convert) => switch (this) {
-    PortableValue(:final value) => PortableValue(convert(value)),
-    PortableMissing(:final locations) => PortableMissing(locations),
+    PortableMaybeValue(:final value) => PortableMaybeValue(convert(value)),
+    PortableMaybeMissing(:final locations) => PortableMaybeMissing(locations),
   };
 }
 
-final class PortableValue<T> extends PortableMaybe<T> {
-  const PortableValue(this.value);
+final class PortableMaybeValue<T> extends PortableMaybe<T> {
+  const PortableMaybeValue(this.value);
   final T value;
 }
 
-final class PortableMissing<T> extends PortableMaybe<T> {
-  const PortableMissing(this.locations);
+final class PortableMaybeMissing<T> extends PortableMaybe<T> {
+  const PortableMaybeMissing(this.locations);
 
   /// Authored locations whose missing values block the result.
   final List<skir.ValueLocation> locations;
@@ -210,8 +386,9 @@ final class Located<T> {
   final skir.ValueLocation? location;
 
   /// The location of collection item [id] below this value.
-  skir.ValueLocation? item(skir.ItemId id) =>
-      _below(location, [skir.PathSegment.wrapItem(skir.ItemPathSegment(id: id))]);
+  skir.ValueLocation? item(skir.ItemId id) => _below(location, [
+    skir.PathSegment.wrapItem(skir.ItemPathSegment(id: id)),
+  ]);
 
   /// The location of the key of map row [id] below this value.
   skir.ValueLocation? mapKey(skir.ItemId id) => _below(location, [
@@ -233,16 +410,22 @@ skir.ValueLocation? _below(
     ? null
     : skir.ValueLocation(
         resource: location.resource,
-        path: skir.ValuePath(segments: [...location.path.segments, ...segments]),
+        path: skir.ValuePath(
+          segments: [...location.path.segments, ...segments],
+        ),
       );
 
 /// A step lambda the kernel drives with the accumulator and one source item.
-typedef PortableStep =
-    skir.DataValue Function(skir.DataValue accumulator, skir.ListItem item);
+typedef PortableStep = skir.DataValue Function(
+  skir.DataValue accumulator,
+  skir.ListItem item,
+);
 
 /// A comparator lambda over two source items: negative, zero or positive.
-typedef PortableComparator =
-    int Function(skir.ListItem left, skir.ListItem right);
+typedef PortableComparator = int Function(
+  skir.ListItem left,
+  skir.ListItem right,
+);
 
 /// A lambda the kernel runs once with one value.
 typedef PortableApply = skir.DataValue Function(skir.DataValue value);
@@ -267,7 +450,24 @@ abstract interface class PortableTypes {
 
 /// Authored resource access for panel profile operations. Every resource the
 /// kernels read through it becomes a read of the evaluation.
-abstract interface class PortableResources {}
+abstract interface class PortableResources {
+  /// The authored record of resource [id], or null when the observation has
+  /// no such resource. Records a read of the resource either way.
+  skir.AuthoringRecord? resource(skir.ResourceId id);
+
+  /// Whether a resource configured as [configuration] is a value of [type].
+  /// A pending configuration matches when its chosen arguments allow [type].
+  bool selects(skir.TypeSelection configuration, skir.TypeUse type);
+
+  /// Whether a resource configured as [configuration] belongs to the family
+  /// the opposite endpoint of [link]'s relation names, so the link still
+  /// targets the kind of resource it was authored for.
+  bool linkTargets(skir.LinkValue link, skir.TypeSelection configuration);
+
+  /// The published declaration of [definition], or null when the catalog
+  /// lacks it.
+  skir.PublishedType? declaration(skir.TypeDefinitionId definition);
+}
 
 /// One argument as the call rule hands it to the generated dispatch.
 sealed class KernelArgument {
@@ -291,7 +491,9 @@ sealed class KernelArgument {
 
   /// The each lambda's results in item order, decoded by [decode].
   List<T> each<T>(T Function(skir.DataValue value) decode) => switch (this) {
-    KernelEach(:final results) => [for (final result in results) decode(result)],
+    KernelEach(:final results) => [
+      for (final result in results) decode(result),
+    ],
     _ => throw _illTyped("Expected an each lambda."),
   };
 
@@ -305,9 +507,10 @@ sealed class KernelArgument {
 
   PortableComparator get comparator {
     final lambda = _lambda;
-    return (left, right) => lambda
-        .invoke([KernelLocal(left.value, left.id), KernelLocal(right.value, right.id)])
-        .asInt32();
+    return (left, right) => lambda.invoke([
+      KernelLocal(left.value, left.id),
+      KernelLocal(right.value, right.id),
+    ]).asInt32();
   }
 
   PortableApply get apply {
@@ -350,7 +553,11 @@ final class KernelLocal {
 
 /// The capabilities a kernel may use besides its arguments.
 final class KernelContext {
-  const KernelContext({required this.meter, this.typeFacts, this.resourceAccess});
+  const KernelContext({
+    required this.meter,
+    this.typeFacts,
+    this.resourceAccess,
+  });
 
   final PortableMeter meter;
   final PortableTypes? typeFacts;
@@ -543,7 +750,8 @@ final resourceIdType = skir.NamedTypeUse(
   arguments: const [],
 );
 
-skir.DataValue linkValue(skir.LinkValue value) => skir.DataValue.wrapLink(value);
+skir.DataValue linkValue(skir.LinkValue value) =>
+    skir.DataValue.wrapLink(value);
 
 skir.DataValue numberValue(PortableNumber value) => switch (value) {
   PortableInteger(:final value) => integerValue(value),
@@ -581,7 +789,10 @@ skir.DataValue positionalList(List<skir.DataValue> values) =>
 /// Items named by position: 0, 1, 2, ...
 List<skir.ListItem> positionalItems(List<skir.DataValue> values) => [
   for (final (index, value) in values.indexed)
-    skir.ListItem(id: skir.ItemId(value: "$index"), value: value),
+    skir.ListItem(
+      id: skir.ItemId(value: "$index"),
+      value: value,
+    ),
 ];
 
 /// A map entry as items and lambdas see it: a record of key and value.

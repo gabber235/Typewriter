@@ -263,7 +263,7 @@ skir.PresentationNode _inspectorHostStatus(
 skir.PresentationElement _inspectorRelativeTime(
   skir.ExpressionBindingId binding,
 ) => skir.PresentationElement.createConditional(
-  condition: skir.ExpressionNode.wrapIsNull(_portableRead(binding)),
+  condition: portableCall("value.is_null", [_portableRead(binding)]),
   whenTrue: _portableText("${binding.value}.never", _portableLiteral("Never")),
   whenFalse: _inspectorNode(
     "${binding.value}.relative",
@@ -290,11 +290,12 @@ skir.PresentationNode _inspectorMessage(
 ) => _inspectorNode(
   "$id.visible",
   skir.PresentationElement.createConditional(
-    condition: skir.ExpressionNode.createValueCompare(
-      operation: skir.ValueCompareOperation.notEqual,
-      left: _portableRead(binding),
-      right: _portableLiteral("None"),
-    ),
+    condition: portableCall("boolean.not", [
+      portableCall("value.equals", [
+        _portableRead(binding),
+        _portableLiteral("None"),
+      ]),
+    ]),
     whenTrue: _inspectorFact(
       id,
       "Message",
@@ -337,7 +338,7 @@ skir.PresentationNode _inspectorWorkload(
           action: skir.EditorAction.wrapLocal(
             skir.LocalEditorAction.createSetValue(
               target: _portableReference(binding),
-              value: skir.ExpressionNode.wrapBooleanNot(_portableRead(binding)),
+              value: portableCall("boolean.not", [_portableRead(binding)]),
             ),
           ),
           tooltip: _portableLiteral(label),
