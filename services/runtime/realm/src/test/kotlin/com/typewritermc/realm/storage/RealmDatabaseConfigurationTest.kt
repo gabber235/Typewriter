@@ -1,6 +1,9 @@
 package com.typewritermc.realm.storage
 
 import com.typewritermc.realm.RealmSettings
+import com.typewritermc.realm.SURREALDB_EMBEDDED_VERSION
+import com.typewritermc.realm.SURREALDB_SERVER_VERSION
+import com.typewritermc.realm.databaseConfiguration
 import de.infix.testBalloon.framework.core.testSuite
 import io.kotest.assertions.throwables.shouldThrow
 import io.kotest.matchers.shouldBe
@@ -17,6 +20,7 @@ val RealmDatabaseConfigurationTest by testSuite {
         configuration.authentication shouldBe DatabaseAuthentication.None
         configuration.namespace shouldBe "typewriter"
         configuration.database shouldBe "realm"
+        configuration.expectedVersion shouldBe SURREALDB_EMBEDDED_VERSION
     }
 
     test("embedded engines always enable versioning") {
@@ -44,6 +48,7 @@ val RealmDatabaseConfigurationTest by testSuite {
 
         configuration.endpoint shouldBe DatabaseEndpoint.Remote(URI("wss://database.example.com"))
         configuration.authentication shouldBe DatabaseAuthentication.Database("realm", "secret")
+        configuration.expectedVersion shouldBe SURREALDB_SERVER_VERSION
     }
 
     test("remote configuration supports namespace credentials") {
@@ -83,6 +88,7 @@ val RealmDatabaseConfigurationTest by testSuite {
                 authentication = DatabaseAuthentication.Root("root", "secret"),
                 namespace = "typewriter",
                 database = "realm",
+                expectedVersion = SURREALDB_EMBEDDED_VERSION,
             )
         }
     }

@@ -75,6 +75,7 @@ val DatabaseProviderTest by testSuite {
                     authentication = DatabaseAuthentication.None,
                     namespace = "reopen",
                     database = "reopen",
+                    expectedVersion = SURREALDB_EMBEDDED_VERSION,
                 ),
             )
 

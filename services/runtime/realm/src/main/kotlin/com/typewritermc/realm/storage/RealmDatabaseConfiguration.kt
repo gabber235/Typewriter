@@ -1,6 +1,5 @@
 package com.typewritermc.realm.storage
 
-import com.typewritermc.realm.RealmSettings
 import java.net.URI
 import java.nio.file.Path
 
@@ -8,13 +7,15 @@ import java.nio.file.Path
  * Selects a Realm database endpoint, authentication scope, namespace, and database.
  *
  * Embedded storage requires no authentication. Nonblank names and endpoint syntax are checked here, while
- * supported engine and exact version checks occur on connection.
+ * supported engine and exact version checks occur on connection against [expectedVersion].
  */
 data class RealmDatabaseConfiguration(
     val endpoint: DatabaseEndpoint,
     val authentication: DatabaseAuthentication,
     val namespace: String,
     val database: String,
+    /** The SurrealDB version this Realm build was tested against; a server reporting another one is refused. */
+    val expectedVersion: String,
 ) {
     init {
         require(namespace.isNotBlank()) { "Database namespace must not be blank" }
@@ -125,63 +126,6 @@ sealed interface DatabaseAuthentication {
         override fun toString(): String = "Bearer(token=[redacted])"
     }
 }
-
-internal fun RealmSettings.databaseConfiguration(): RealmDatabaseConfiguration {
-    val endpoint = databaseEndpoint()
-    val authentication = databaseAuthentication()
-    return RealmDatabaseConfiguration(
-        endpoint = endpoint,
-        authentication = authentication,
-        namespace = get("REALM_DB_NAMESPACE", "typewriter")!!,
-        database = get("REALM_DB_DATABASE", "realm")!!,
-    )
-}
-
-private fun RealmSettings.databaseEndpoint(): DatabaseEndpoint =
-    when (get("REALM_DB_ENDPOINT_TYPE", "embedded")!!.lowercase()) {
-        "embedded" -> embeddedDatabaseEndpoint()
-        "remote" -> DatabaseEndpoint.Remote(URI(getRequired("REALM_DB_URL")))
-        else -> error("Unknown Realm database endpoint type")
-    }
-
-private fun RealmSettings.embeddedDatabaseEndpoint(): DatabaseEndpoint.Embedded {
-    val retention = get("REALM_DB_RETENTION")
-    return when (get("REALM_DB_ENGINE", "surrealkv")!!.lowercase()) {
-        "memory" -> DatabaseEndpoint.Embedded.Memory(retention)
-        "surrealkv" -> DatabaseEndpoint.Embedded.SurrealKv(Path.of(get("REALM_DB_PATH", "database/realm")!!), retention)
-        "rocksdb" -> DatabaseEndpoint.Embedded.RocksDb(Path.of(get("REALM_DB_PATH", "database/realm")!!), retention)
-        else -> error("Unknown embedded Realm database engine")
-    }
-}
-
-private fun RealmSettings.databaseAuthentication(): DatabaseAuthentication =
-    when (get("REALM_DB_AUTHENTICATION", "none")!!.lowercase()) {
-        "none" -> {
-            DatabaseAuthentication.None
-        }
-
-        "root" -> {
-            DatabaseAuthentication.Root(getRequired("REALM_DB_USERNAME"), getRequired("REALM_DB_PASSWORD"))
-        }
-
-        "namespace" -> {
-            DatabaseAuthentication.Namespace(getRequired("REALM_DB_USERNAME"), getRequired("REALM_DB_PASSWORD"))
-        }
-
-        "database" -> {
-            DatabaseAuthentication.Database(getRequired("REALM_DB_USERNAME"), getRequired("REALM_DB_PASSWORD"))
-        }
-
-        "bearer" -> {
-            DatabaseAuthentication.Bearer(getRequired("REALM_DB_TOKEN"))
-        }
-
-        else -> {
-            error("Unknown Realm database authentication type")
-        }
-    }
-
-private fun RealmSettings.getRequired(name: String): String = requireNotNull(get(name)) { "Realm setting $name must be configured" }
 
 private fun embeddedConnectionString(
     scheme: String,

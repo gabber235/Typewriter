@@ -6,8 +6,6 @@ import com.surrealdb.signin.BearerCredential
 import com.surrealdb.signin.DatabaseCredential
 import com.surrealdb.signin.NamespaceCredential
 import com.surrealdb.signin.RootCredential
-import com.typewritermc.realm.SURREALDB_EMBEDDED_VERSION
-import com.typewritermc.realm.SURREALDB_SERVER_VERSION
 import com.typewritermc.services.libs.telemetry.ErrorSlug
 import com.typewritermc.services.libs.telemetry.MainSpanScope
 import com.typewritermc.services.libs.telemetry.childSpanBlocking
@@ -62,7 +60,7 @@ class DatabaseProvider(
                         requireSupportedEmbeddedEngine(configuration.endpoint)
                         db.connect(configuration.endpoint.connectionString)
                         val serverVersion = db.version()
-                        requireSupportedDatabaseVersion(serverVersion, configuration.endpoint.expectedVersion)
+                        requireSupportedDatabaseVersion(serverVersion, configuration.expectedVersion)
                         child.annotate {
                             attribute("db.version", serverVersion)
                             attribute("db.connect.attempts", attempt + 1)
@@ -154,13 +152,6 @@ internal fun requireSupportedDatabaseVersion(
         )
     }
 }
-
-private val DatabaseEndpoint.expectedVersion: String
-    get() =
-        when (this) {
-            is DatabaseEndpoint.Remote -> SURREALDB_SERVER_VERSION
-            is DatabaseEndpoint.Embedded -> SURREALDB_EMBEDDED_VERSION
-        }
 
 private val DatabaseEndpoint.connectionType: String
     get() =
