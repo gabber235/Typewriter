@@ -8,10 +8,10 @@ import com.typewritermc.authoring.root
 import com.typewritermc.configuration.field
 import com.typewritermc.operations.OperationInvocation
 import com.typewritermc.operations.PreparationChoices
-import com.typewritermc.realm.authoring.AuthoringCatalogLease
 import com.typewritermc.realm.authoring.AuthoringSeed
 import com.typewritermc.realm.authoring.EmptyProviders
 import com.typewritermc.realm.authoring.InMemoryAuthoringViewStore
+import com.typewritermc.realm.catalog.AuthoringCatalogLease
 import com.typewritermc.realm.operation.RuntimeOperationPreparation
 import com.typewritermc.types.FactoryNativeBindingRegistry
 import com.typewritermc.types.NativeBindingRegistry

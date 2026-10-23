@@ -3,10 +3,10 @@ package com.typewritermc.realm.search
 import com.surrealdb.Surreal
 import com.typewritermc.authoring.RealmRootDefinition
 import com.typewritermc.authoring.of
-import com.typewritermc.realm.authoring.AuthoringCatalogLease
 import com.typewritermc.realm.authoring.AuthoringView
 import com.typewritermc.realm.authoring.ResourceValueMapper
 import com.typewritermc.realm.authoring.TestCatalogLease
+import com.typewritermc.realm.catalog.AuthoringCatalogLease
 import com.typewritermc.realm.storage.openTestDatabase
 import com.typewritermc.realm.storage.surrealRecordId
 import com.typewritermc.types.RESOURCE_OWNERSHIP_FAMILY_ID

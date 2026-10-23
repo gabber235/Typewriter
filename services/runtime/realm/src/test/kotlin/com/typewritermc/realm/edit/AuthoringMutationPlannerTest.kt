@@ -224,10 +224,10 @@ class AuthoringMutationPlannerTest {
                 )
             check(operations.failures.isEmpty()) { operations.failures.joinToString { it.cause.toString() } }
             val lease =
-                object : com.typewritermc.realm.authoring.AuthoringCatalogLease by baseline.catalog {
+                object : com.typewritermc.realm.catalog.AuthoringCatalogLease by baseline.catalog {
                     override val operations = operations
 
-                    override fun retain(): com.typewritermc.realm.authoring.AuthoringCatalogLease = this
+                    override fun retain(): com.typewritermc.realm.catalog.AuthoringCatalogLease = this
 
                     override fun close() = Unit
                 }

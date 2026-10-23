@@ -16,6 +16,7 @@ import com.typewritermc.checking.InspectionCompletion
 import com.typewritermc.configuration.field
 import com.typewritermc.discovery.OwnedCheckRecipe
 import com.typewritermc.discovery.OwnedProviderRegistry
+import com.typewritermc.realm.catalog.AuthoringCatalogLease
 import com.typewritermc.realm.checking.dependencies
 import com.typewritermc.realm.edit.valueAt
 import com.typewritermc.types.FactoryNativeBindingRegistry

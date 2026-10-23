@@ -5,10 +5,10 @@ import com.typewritermc.authoring.of
 import com.typewritermc.configuration.field
 import com.typewritermc.engine.ResourceGraphCompileResult
 import com.typewritermc.engine.relation
-import com.typewritermc.realm.authoring.AuthoringCatalogLease
 import com.typewritermc.realm.authoring.AuthoringSeed
 import com.typewritermc.realm.authoring.EmptyProviders
 import com.typewritermc.realm.authoring.InMemoryAuthoringViewStore
+import com.typewritermc.realm.catalog.AuthoringCatalogLease
 import com.typewritermc.types.FactoryNativeBindingRegistry
 import com.typewritermc.types.NativeBindingRegistry
 import com.typewritermc.types.catalog.CheckedCatalog

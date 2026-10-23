@@ -29,7 +29,7 @@ import com.typewritermc.library.Taxonomy
 import com.typewritermc.library.TaxonomyDefinition
 import com.typewritermc.presentation.DefaultPresentationRuntime
 import com.typewritermc.presentation.PresentationRuntime
-import com.typewritermc.realm.authoring.AuthoringCatalogLease
+import com.typewritermc.realm.catalog.AuthoringCatalogLease
 import com.typewritermc.realm.catalog.RealmCatalogIncarnation
 import com.typewritermc.types.NativeBinding
 import com.typewritermc.types.Ref

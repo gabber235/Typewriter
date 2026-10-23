@@ -5,6 +5,7 @@ import com.typewritermc.authoring.of
 import com.typewritermc.authoring.use
 import com.typewritermc.checking.InputIdentity
 import com.typewritermc.operations.OperationOrigin
+import com.typewritermc.realm.catalog.AuthoringCatalogLease
 import com.typewritermc.realm.edit.valueAt
 import com.typewritermc.types.catalog.Resolution
 import com.typewritermc.types.endpoint

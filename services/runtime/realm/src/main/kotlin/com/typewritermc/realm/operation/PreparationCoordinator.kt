@@ -1,7 +1,7 @@
 package com.typewritermc.realm.operation
 
 import com.typewritermc.authoring.InitializationRuntime
-import com.typewritermc.realm.authoring.AuthoringCatalogLease
+import com.typewritermc.realm.catalog.AuthoringCatalogLease
 import com.typewritermc.types.unknownVariant
 import skirout.editor.v1.catalog.PreparationOperation
 import skirout.editor.v1.catalog.PrepareValueResult

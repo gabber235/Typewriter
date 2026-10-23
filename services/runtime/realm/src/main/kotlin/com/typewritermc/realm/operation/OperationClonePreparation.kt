@@ -13,7 +13,7 @@ import com.typewritermc.checking.InputIdentity
 import com.typewritermc.operations.OperationPreparation
 import com.typewritermc.realm.authoring.RelationReads
 import com.typewritermc.realm.authoring.ResourceValueMapper
-import com.typewritermc.realm.authoring.ownershipRelationIds
+import com.typewritermc.realm.catalog.ownershipRelationIds
 import com.typewritermc.types.actualType
 import com.typewritermc.types.endpoint
 import com.typewritermc.types.field

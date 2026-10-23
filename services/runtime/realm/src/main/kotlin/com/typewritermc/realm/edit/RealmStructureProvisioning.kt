@@ -14,9 +14,9 @@ import com.typewritermc.authoring.boundCollectionPath
 import com.typewritermc.authoring.definition
 import com.typewritermc.authoring.of
 import com.typewritermc.authoring.record
-import com.typewritermc.realm.authoring.AuthoringCatalogLease
 import com.typewritermc.realm.authoring.AuthoringView
 import com.typewritermc.realm.authoring.AuthoringViewStore
+import com.typewritermc.realm.catalog.AuthoringCatalogLease
 import com.typewritermc.types.NativeBinding
 import com.typewritermc.types.Ref
 import com.typewritermc.types.actualType

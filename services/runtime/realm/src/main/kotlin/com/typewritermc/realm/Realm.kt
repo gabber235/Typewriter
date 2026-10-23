@@ -8,9 +8,9 @@ import com.typewritermc.discovery.RuntimeScope
 import com.typewritermc.loader.api.HostedMessagingSession
 import com.typewritermc.loader.api.HostedRuntimeHost
 import com.typewritermc.protocol.transport.RealmRouteScope
-import com.typewritermc.realm.authoring.AuthoringCatalogLease
 import com.typewritermc.realm.authoring.AuthoringViewStore
 import com.typewritermc.realm.authoring.InMemoryAuthoringViewStore
+import com.typewritermc.realm.catalog.AuthoringCatalogLease
 import com.typewritermc.realm.catalog.RealmCatalogStore
 import com.typewritermc.realm.checking.RealmCheckRuntime
 import com.typewritermc.realm.edit.AuthoringRepository

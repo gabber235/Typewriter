@@ -7,10 +7,10 @@ import com.typewritermc.authoring.with
 import com.typewritermc.checking.InputIdentity
 import com.typewritermc.discovery.OwnedCheckRecipe
 import com.typewritermc.discovery.OwnedProviderRegistry
-import com.typewritermc.realm.authoring.AuthoringCatalogLease
 import com.typewritermc.realm.authoring.AuthoringSeed
 import com.typewritermc.realm.authoring.EmptyProviders
 import com.typewritermc.realm.authoring.InMemoryAuthoringViewStore
+import com.typewritermc.realm.catalog.AuthoringCatalogLease
 import com.typewritermc.realm.checking.dependencies
 import com.typewritermc.realm.edit.AuthoringMutationPlanner
 import com.typewritermc.realm.edit.AuthoringRepository

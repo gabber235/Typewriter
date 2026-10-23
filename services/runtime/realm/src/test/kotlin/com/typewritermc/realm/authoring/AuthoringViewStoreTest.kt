@@ -19,6 +19,7 @@ import com.typewritermc.discovery.OwnedPresentation
 import com.typewritermc.discovery.OwnedProviderRegistry
 import com.typewritermc.discovery.ProviderLease
 import com.typewritermc.discovery.ProviderOrigin
+import com.typewritermc.realm.catalog.AuthoringCatalogLease
 import com.typewritermc.realm.operation.operationObservation
 import com.typewritermc.types.FactoryNativeBindingRegistry
 import com.typewritermc.types.NativeBindingFactory

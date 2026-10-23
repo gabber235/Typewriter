@@ -8,7 +8,7 @@ import com.typewritermc.engine.ResourceGraphCompileResult
 import com.typewritermc.engine.encodeShard
 import com.typewritermc.engine.semanticDigest
 import com.typewritermc.realm.authoring.AuthoringView
-import com.typewritermc.realm.authoring.ownershipRelationIds
+import com.typewritermc.realm.catalog.ownershipRelationIds
 import com.typewritermc.types.toSkir
 import skirout.editor.v1.compilation_root.CompilationRoot
 

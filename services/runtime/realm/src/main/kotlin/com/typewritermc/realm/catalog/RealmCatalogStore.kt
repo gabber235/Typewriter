@@ -9,7 +9,6 @@ import com.typewritermc.discovery.OwnedProviderRegistry
 import com.typewritermc.discovery.RetainedOwnedProviderRegistry
 import com.typewritermc.operations.OperationCatalog
 import com.typewritermc.presentation.CollectionProjectionSpec
-import com.typewritermc.realm.authoring.AuthoringCatalogLease
 import com.typewritermc.services.libs.utils.closeAll
 import com.typewritermc.types.NativeBindingRegistry
 import com.typewritermc.types.catalog.CheckedCatalog

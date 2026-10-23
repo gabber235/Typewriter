@@ -5,7 +5,7 @@ import com.typewritermc.authoring.definition
 import com.typewritermc.authoring.use
 import com.typewritermc.realm.authoring.AuthoringView
 import com.typewritermc.realm.authoring.ResourceValueMapper
-import com.typewritermc.realm.authoring.ownershipRelationIds
+import com.typewritermc.realm.catalog.ownershipRelationIds
 import com.typewritermc.realm.storage.decodeSkir
 import com.typewritermc.realm.storage.inPreviewTransaction
 import com.typewritermc.realm.storage.surrealRecordId
