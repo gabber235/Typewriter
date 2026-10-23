@@ -1,0 +1,60 @@
+{
+  "cases": [
+    {
+      "id": "entry_of",
+      "expression": {
+        "kind": "call",
+        "value": {
+          "operation": {"value": "entry.of"},
+          "type_arguments": [],
+          "arguments": [
+            {"kind": "literal", "value": {"kind": "string_value", "value": "k"}},
+            {"kind": "literal", "value": {"kind": "integer", "value": "1"}}
+          ]
+        }
+      },
+      "check": {
+        "resultType": {
+          "value": {
+            "kind": "entry",
+            "value": {
+              "key": {
+                "value": {"kind": "nominal", "value": {"kind": "scalar", "value": "text"}},
+                "may_be_missing": false
+              },
+              "value": {
+                "value": {
+                  "kind": "nominal",
+                  "value": {"kind": "scalar", "value": {"kind": "integer", "value": {"width": "signed_sixty_four"}}}
+                },
+                "may_be_missing": false
+              }
+            }
+          },
+          "may_be_missing": true
+        },
+        "failures": [],
+        "inferredType": {
+          "value": {
+            "kind": "entry",
+            "value": {
+              "key": {
+                "value": {"kind": "nominal", "value": {"kind": "scalar", "value": "text"}},
+                "may_be_missing": false
+              },
+              "value": {
+                "value": {
+                  "kind": "nominal",
+                  "value": {"kind": "scalar", "value": {"kind": "integer", "value": {"width": "signed_sixty_four"}}}
+                },
+                "may_be_missing": false
+              }
+            }
+          },
+          "may_be_missing": false
+        }
+      },
+      "expected": {"available": {"record": {"key": {"string": "k"}, "value": {"integer": "1"}}}, "reads": []}
+    }
+  ]
+}

@@ -1,0 +1,2450 @@
+{
+  "cases": [
+    {
+      "id": "value_equals_canonical_decimal",
+      "expression": {
+        "kind": "call",
+        "value": {
+          "operation": {"value": "value.equals"},
+          "type_arguments": [],
+          "arguments": [
+            {"kind": "literal", "value": {"kind": "decimal", "value": "1.2300"}},
+            {"kind": "literal", "value": {"kind": "decimal", "value": "1.23"}}
+          ]
+        }
+      },
+      "check": {
+        "resultType": {
+          "value": {"kind": "nominal", "value": {"kind": "scalar", "value": "boolean"}},
+          "may_be_missing": true
+        },
+        "failures": [],
+        "inferredType": {
+          "value": {"kind": "nominal", "value": {"kind": "scalar", "value": "boolean"}},
+          "may_be_missing": false
+        }
+      },
+      "expected": {"available": {"boolean": true}, "reads": []}
+    },
+    {
+      "id": "value_equals_named_scalar",
+      "expression": {
+        "kind": "call",
+        "value": {
+          "operation": {"value": "value.equals"},
+          "type_arguments": [],
+          "arguments": [
+            {
+              "kind": "literal",
+              "value": {
+                "kind": "named",
+                "value": {
+                  "actual_type": {
+                    "definition": {
+                      "type_id": {"kind": "qualified", "value": {"namespace": "fixture", "name": "QuestCode"}},
+                      "revision": 1
+                    },
+                    "arguments": []
+                  },
+                  "payload": {"kind": "string_value", "value": "Q42"}
+                }
+              }
+            },
+            {
+              "kind": "literal",
+              "value": {
+                "kind": "named",
+                "value": {
+                  "actual_type": {
+                    "definition": {
+                      "type_id": {"kind": "qualified", "value": {"namespace": "fixture", "name": "QuestCode"}},
+                      "revision": 1
+                    },
+                    "arguments": []
+                  },
+                  "payload": {"kind": "string_value", "value": "Q42"}
+                }
+              }
+            }
+          ]
+        }
+      },
+      "typeDefinitions": [
+        {
+          "id": {
+            "type_id": {"kind": "qualified", "value": {"namespace": "fixture", "name": "QuestCode"}},
+            "revision": 1
+          },
+          "parameters": [],
+          "parents": [],
+          "representation": {"kind": "scalar", "value": {"kind": "text"}}
+        }
+      ],
+      "expected": {"available": {"boolean": true}, "reads": []}
+    },
+    {
+      "id": "value_equals_named_type_matters",
+      "expression": {
+        "kind": "call",
+        "value": {
+          "operation": {"value": "value.equals"},
+          "type_arguments": [],
+          "arguments": [
+            {
+              "kind": "literal",
+              "value": {
+                "kind": "named",
+                "value": {
+                  "actual_type": {
+                    "definition": {
+                      "type_id": {"kind": "qualified", "value": {"namespace": "fixture", "name": "QuestCode"}},
+                      "revision": 1
+                    },
+                    "arguments": []
+                  },
+                  "payload": {"kind": "string_value", "value": "Q42"}
+                }
+              }
+            },
+            {"kind": "literal", "value": {"kind": "string_value", "value": "Q42"}}
+          ]
+        }
+      },
+      "typeDefinitions": [
+        {
+          "id": {
+            "type_id": {"kind": "qualified", "value": {"namespace": "fixture", "name": "QuestCode"}},
+            "revision": 1
+          },
+          "parameters": [],
+          "parents": [],
+          "representation": {"kind": "scalar", "value": {"kind": "text"}}
+        }
+      ],
+      "expected": {"available": {"boolean": false}, "reads": []}
+    },
+    {
+      "id": "value_equals_record_field_order",
+      "expression": {
+        "kind": "call",
+        "value": {
+          "operation": {"value": "value.equals"},
+          "type_arguments": [],
+          "arguments": [
+            {
+              "kind": "literal",
+              "value": {
+                "kind": "record",
+                "value": {
+                  "fields": [
+                    {"name": "first", "value": {"kind": "string_value", "value": "A"}},
+                    {"name": "second", "value": {"kind": "integer", "value": "2"}}
+                  ]
+                }
+              }
+            },
+            {
+              "kind": "literal",
+              "value": {
+                "kind": "record",
+                "value": {
+                  "fields": [
+                    {"name": "second", "value": {"kind": "integer", "value": "2"}},
+                    {"name": "first", "value": {"kind": "string_value", "value": "A"}}
+                  ]
+                }
+              }
+            }
+          ]
+        }
+      },
+      "check": {
+        "resultType": {
+          "value": {"kind": "nominal", "value": {"kind": "scalar", "value": "boolean"}},
+          "may_be_missing": true
+        },
+        "failures": ["expression_type_inference_failed"]
+      },
+      "expected": {"available": {"boolean": true}, "reads": []}
+    },
+    {
+      "id": "value_equals_list_ignores_item_ids",
+      "expression": {
+        "kind": "call",
+        "value": {
+          "operation": {"value": "value.equals"},
+          "type_arguments": [],
+          "arguments": [
+            {
+              "kind": "literal",
+              "value": {
+                "kind": "list_value",
+                "value": {
+                  "items": [
+                    {"id": {"value": "left.one"}, "value": {"kind": "string_value", "value": "A"}},
+                    {"id": {"value": "left.two"}, "value": {"kind": "string_value", "value": "B"}}
+                  ]
+                }
+              }
+            },
+            {
+              "kind": "literal",
+              "value": {
+                "kind": "list_value",
+                "value": {
+                  "items": [
+                    {"id": {"value": "right.one"}, "value": {"kind": "string_value", "value": "A"}},
+                    {"id": {"value": "right.two"}, "value": {"kind": "string_value", "value": "B"}}
+                  ]
+                }
+              }
+            }
+          ]
+        }
+      },
+      "check": {
+        "resultType": {
+          "value": {"kind": "nominal", "value": {"kind": "scalar", "value": "boolean"}},
+          "may_be_missing": true
+        },
+        "failures": [],
+        "inferredType": {
+          "value": {"kind": "nominal", "value": {"kind": "scalar", "value": "boolean"}},
+          "may_be_missing": false
+        }
+      },
+      "expected": {"available": {"boolean": true}, "reads": []}
+    },
+    {
+      "id": "value_equals_list_order_matters",
+      "expression": {
+        "kind": "call",
+        "value": {
+          "operation": {"value": "value.equals"},
+          "type_arguments": [],
+          "arguments": [
+            {
+              "kind": "literal",
+              "value": {
+                "kind": "list_value",
+                "value": {
+                  "items": [
+                    {"id": {"value": "a"}, "value": {"kind": "string_value", "value": "A"}},
+                    {"id": {"value": "b"}, "value": {"kind": "string_value", "value": "B"}}
+                  ]
+                }
+              }
+            },
+            {
+              "kind": "literal",
+              "value": {
+                "kind": "list_value",
+                "value": {
+                  "items": [
+                    {"id": {"value": "b"}, "value": {"kind": "string_value", "value": "B"}},
+                    {"id": {"value": "a"}, "value": {"kind": "string_value", "value": "A"}}
+                  ]
+                }
+              }
+            }
+          ]
+        }
+      },
+      "expected": {"available": {"boolean": false}, "reads": []}
+    },
+    {
+      "id": "value_equals_set_ignores_order_and_ids",
+      "expression": {
+        "kind": "call",
+        "value": {
+          "operation": {"value": "value.equals"},
+          "type_arguments": [],
+          "arguments": [
+            {
+              "kind": "literal",
+              "value": {
+                "kind": "set_value",
+                "value": {
+                  "items": [
+                    {"id": {"value": "left.one"}, "value": {"kind": "string_value", "value": "A"}},
+                    {"id": {"value": "left.two"}, "value": {"kind": "string_value", "value": "B"}}
+                  ]
+                }
+              }
+            },
+            {
+              "kind": "literal",
+              "value": {
+                "kind": "set_value",
+                "value": {
+                  "items": [
+                    {"id": {"value": "right.two"}, "value": {"kind": "string_value", "value": "B"}},
+                    {"id": {"value": "right.one"}, "value": {"kind": "string_value", "value": "A"}}
+                  ]
+                }
+              }
+            }
+          ]
+        }
+      },
+      "expected": {"available": {"boolean": true}, "reads": []}
+    },
+    {
+      "id": "value_equals_map_ignores_row_order_and_ids",
+      "expression": {
+        "kind": "call",
+        "value": {
+          "operation": {"value": "value.equals"},
+          "type_arguments": [],
+          "arguments": [
+            {
+              "kind": "literal",
+              "value": {
+                "kind": "map_value",
+                "value": {
+                  "rows": [
+                    {
+                      "id": {"value": "left.one"},
+                      "key": {"kind": "string_value", "value": "A"},
+                      "value": {"kind": "integer", "value": "1"}
+                    },
+                    {
+                      "id": {"value": "left.two"},
+                      "key": {"kind": "string_value", "value": "B"},
+                      "value": {"kind": "integer", "value": "2"}
+                    }
+                  ]
+                }
+              }
+            },
+            {
+              "kind": "literal",
+              "value": {
+                "kind": "map_value",
+                "value": {
+                  "rows": [
+                    {
+                      "id": {"value": "right.two"},
+                      "key": {"kind": "string_value", "value": "B"},
+                      "value": {"kind": "integer", "value": "2"}
+                    },
+                    {
+                      "id": {"value": "right.one"},
+                      "key": {"kind": "string_value", "value": "A"},
+                      "value": {"kind": "integer", "value": "1"}
+                    }
+                  ]
+                }
+              }
+            }
+          ]
+        }
+      },
+      "expected": {"available": {"boolean": true}, "reads": []}
+    },
+    {
+      "id": "value_equals_float_signed_zero_compares_bits",
+      "expression": {
+        "kind": "call",
+        "value": {
+          "operation": {"value": "value.equals"},
+          "type_arguments": [],
+          "arguments": [
+            {"kind": "literal", "value": {"kind": "float", "value": 0.0}},
+            {"kind": "literal", "value": {"kind": "float", "value": -0.0}}
+          ]
+        }
+      },
+      "expected": {"available": {"boolean": false}, "reads": []}
+    },
+    {
+      "id": "value_equals_text_and_integer",
+      "expression": {
+        "kind": "call",
+        "value": {
+          "operation": {"value": "value.equals"},
+          "type_arguments": [],
+          "arguments": [
+            {"kind": "literal", "value": {"kind": "integer", "value": "1"}},
+            {"kind": "literal", "value": {"kind": "string_value", "value": "1"}}
+          ]
+        }
+      },
+      "check": {
+        "resultType": {
+          "value": {"kind": "nominal", "value": {"kind": "scalar", "value": "boolean"}},
+          "may_be_missing": true
+        },
+        "failures": ["invalid_operand_type"]
+      },
+      "expected": {"available": {"boolean": false}, "reads": []}
+    },
+    {
+      "id": "value_compare_text_by_code_point",
+      "expression": {
+        "kind": "call",
+        "value": {
+          "operation": {"value": "value.compare"},
+          "type_arguments": [],
+          "arguments": [
+            {"kind": "literal", "value": {"kind": "string_value", "value": "～"}},
+            {"kind": "literal", "value": {"kind": "string_value", "value": "😀"}}
+          ]
+        }
+      },
+      "check": {
+        "resultType": {
+          "value": {
+            "kind": "nominal",
+            "value": {"kind": "scalar", "value": {"kind": "integer", "value": {"width": "signed_thirty_two"}}}
+          },
+          "may_be_missing": true
+        },
+        "failures": [],
+        "inferredType": {
+          "value": {
+            "kind": "nominal",
+            "value": {"kind": "scalar", "value": {"kind": "integer", "value": {"width": "signed_thirty_two"}}}
+          },
+          "may_be_missing": false
+        }
+      },
+      "expected": {"available": {"integer": "-1"}, "reads": []}
+    },
+    {
+      "id": "value_compare_text_prefix_orders_first",
+      "expression": {
+        "kind": "call",
+        "value": {
+          "operation": {"value": "value.compare"},
+          "type_arguments": [],
+          "arguments": [
+            {"kind": "literal", "value": {"kind": "string_value", "value": "ab"}},
+            {"kind": "literal", "value": {"kind": "string_value", "value": "a"}}
+          ]
+        }
+      },
+      "expected": {"available": {"integer": "1"}, "reads": []}
+    },
+    {
+      "id": "value_compare_integers_by_value",
+      "expression": {
+        "kind": "call",
+        "value": {
+          "operation": {"value": "value.compare"},
+          "type_arguments": [],
+          "arguments": [
+            {"kind": "literal", "value": {"kind": "integer", "value": "2"}},
+            {"kind": "literal", "value": {"kind": "integer", "value": "10"}}
+          ]
+        }
+      },
+      "expected": {"available": {"integer": "-1"}, "reads": []}
+    },
+    {
+      "id": "value_compare_decimals_by_value",
+      "expression": {
+        "kind": "call",
+        "value": {
+          "operation": {"value": "value.compare"},
+          "type_arguments": [],
+          "arguments": [
+            {"kind": "literal", "value": {"kind": "decimal", "value": "1.10"}},
+            {"kind": "literal", "value": {"kind": "decimal", "value": "1.1"}}
+          ]
+        }
+      },
+      "expected": {"available": {"integer": "0"}, "reads": []}
+    },
+    {
+      "id": "value_compare_false_before_true",
+      "expression": {
+        "kind": "call",
+        "value": {
+          "operation": {"value": "value.compare"},
+          "type_arguments": [],
+          "arguments": [
+            {"kind": "literal", "value": {"kind": "boolean", "value": false}},
+            {"kind": "literal", "value": {"kind": "boolean", "value": true}}
+          ]
+        }
+      },
+      "expected": {"available": {"integer": "-1"}, "reads": []}
+    },
+    {
+      "id": "value_compare_timestamps",
+      "expression": {
+        "kind": "call",
+        "value": {
+          "operation": {"value": "value.compare"},
+          "type_arguments": [],
+          "arguments": [
+            {
+              "kind": "literal",
+              "value": {
+                "kind": "timestamp",
+                "value": {"unix_millis": 1704153600000, "formatted": "2024-01-02T00:00:00.000Z"}
+              }
+            },
+            {
+              "kind": "literal",
+              "value": {
+                "kind": "timestamp",
+                "value": {"unix_millis": 1704067199999, "formatted": "2023-12-31T23:59:59.999Z"}
+              }
+            }
+          ]
+        }
+      },
+      "expected": {"available": {"integer": "1"}, "reads": []}
+    },
+    {
+      "id": "value_compare_durations",
+      "expression": {
+        "kind": "call",
+        "value": {
+          "operation": {"value": "value.compare"},
+          "type_arguments": [],
+          "arguments": [
+            {"kind": "literal", "value": {"kind": "duration", "value": {"value": {"milliseconds": 1000}}}},
+            {"kind": "literal", "value": {"kind": "duration", "value": {"value": {"milliseconds": 2000}}}}
+          ]
+        }
+      },
+      "expected": {"available": {"integer": "-1"}, "reads": []}
+    },
+    {
+      "id": "value_compare_unwraps_named",
+      "expression": {
+        "kind": "call",
+        "value": {
+          "operation": {"value": "value.compare"},
+          "type_arguments": [],
+          "arguments": [
+            {
+              "kind": "literal",
+              "value": {
+                "kind": "named",
+                "value": {
+                  "actual_type": {
+                    "definition": {
+                      "type_id": {"kind": "qualified", "value": {"namespace": "fixture", "name": "QuestCode"}},
+                      "revision": 1
+                    },
+                    "arguments": []
+                  },
+                  "payload": {"kind": "string_value", "value": "b"}
+                }
+              }
+            },
+            {
+              "kind": "literal",
+              "value": {
+                "kind": "named",
+                "value": {
+                  "actual_type": {
+                    "definition": {
+                      "type_id": {"kind": "qualified", "value": {"namespace": "fixture", "name": "QuestCode"}},
+                      "revision": 1
+                    },
+                    "arguments": []
+                  },
+                  "payload": {"kind": "string_value", "value": "a"}
+                }
+              }
+            }
+          ]
+        }
+      },
+      "typeDefinitions": [
+        {
+          "id": {
+            "type_id": {"kind": "qualified", "value": {"namespace": "fixture", "name": "QuestCode"}},
+            "revision": 1
+          },
+          "parameters": [],
+          "parents": [],
+          "representation": {"kind": "scalar", "value": {"kind": "text"}}
+        }
+      ],
+      "expected": {"available": {"integer": "1"}, "reads": []}
+    },
+    {
+      "id": "value_compare_mixed_kinds_ill_typed",
+      "expression": {
+        "kind": "call",
+        "value": {
+          "operation": {"value": "value.compare"},
+          "type_arguments": [],
+          "arguments": [
+            {"kind": "literal", "value": {"kind": "integer", "value": "1"}},
+            {"kind": "literal", "value": {"kind": "string_value", "value": "a"}}
+          ]
+        }
+      },
+      "check": {
+        "resultType": {
+          "value": {
+            "kind": "nominal",
+            "value": {"kind": "scalar", "value": {"kind": "integer", "value": {"width": "signed_thirty_two"}}}
+          },
+          "may_be_missing": true
+        },
+        "failures": ["invalid_operand_type"]
+      },
+      "expected": {"failed": "ill_typed_argument", "reads": []}
+    },
+    {
+      "id": "value_is_null_null",
+      "expression": {
+        "kind": "call",
+        "value": {
+          "operation": {"value": "value.is_null"},
+          "type_arguments": [],
+          "arguments": [{"kind": "literal", "value": "null"}]
+        }
+      },
+      "expected": {"available": {"boolean": true}, "reads": []}
+    },
+    {
+      "id": "value_is_null_zero",
+      "expression": {
+        "kind": "call",
+        "value": {
+          "operation": {"value": "value.is_null"},
+          "type_arguments": [],
+          "arguments": [{"kind": "literal", "value": {"kind": "integer", "value": "0"}}]
+        }
+      },
+      "expected": {"available": {"boolean": false}, "reads": []}
+    },
+    {
+      "id": "value_is_null_missing_is_not_null",
+      "expression": {
+        "kind": "call",
+        "value": {
+          "operation": {"value": "value.is_null"},
+          "type_arguments": [],
+          "arguments": [
+            {
+              "kind": "input",
+              "value": {
+                "binding": {"value": "subject"},
+                "path": {"segments": [{"kind": "field", "value": {"name": "nickname"}}]}
+              }
+            }
+          ]
+        }
+      },
+      "inputs": {"subject": {"value": {"record": {}}}},
+      "expected": {"unavailable": ["subject.nickname"], "reads": ["subject.nickname"]}
+    },
+    {
+      "id": "value_to_text_integer",
+      "expression": {
+        "kind": "call",
+        "value": {
+          "operation": {"value": "value.to_text"},
+          "type_arguments": [],
+          "arguments": [{"kind": "literal", "value": {"kind": "integer", "value": "-42"}}]
+        }
+      },
+      "check": {
+        "resultType": {"value": {"kind": "nominal", "value": {"kind": "scalar", "value": "text"}}, "may_be_missing": true},
+        "failures": [],
+        "inferredType": {"value": {"kind": "nominal", "value": {"kind": "scalar", "value": "text"}}, "may_be_missing": false}
+      },
+      "expected": {"available": {"string": "-42"}, "reads": []}
+    },
+    {
+      "id": "value_to_text_large_integer",
+      "expression": {
+        "kind": "call",
+        "value": {
+          "operation": {"value": "value.to_text"},
+          "type_arguments": [],
+          "arguments": [{"kind": "literal", "value": {"kind": "integer", "value": "123456789012345678901234567890"}}]
+        }
+      },
+      "expected": {"available": {"string": "123456789012345678901234567890"}, "reads": []}
+    },
+    {
+      "id": "value_to_text_decimal_canonical",
+      "expression": {
+        "kind": "call",
+        "value": {
+          "operation": {"value": "value.to_text"},
+          "type_arguments": [],
+          "arguments": [{"kind": "literal", "value": {"kind": "decimal", "value": "1.500"}}]
+        }
+      },
+      "expected": {"available": {"string": "1.5"}, "reads": []}
+    },
+    {
+      "id": "value_to_text_decimal_negative_zero",
+      "expression": {
+        "kind": "call",
+        "value": {
+          "operation": {"value": "value.to_text"},
+          "type_arguments": [],
+          "arguments": [{"kind": "literal", "value": {"kind": "decimal", "value": "-0.0"}}]
+        }
+      },
+      "expected": {"available": {"string": "0"}, "reads": []}
+    },
+    {
+      "id": "value_to_text_float_whole",
+      "expression": {
+        "kind": "call",
+        "value": {
+          "operation": {"value": "value.to_text"},
+          "type_arguments": [],
+          "arguments": [{"kind": "literal", "value": {"kind": "float", "value": 1.0}}]
+        }
+      },
+      "expected": {"available": {"string": "1"}, "reads": []}
+    },
+    {
+      "id": "value_to_text_float_negative_zero",
+      "expression": {
+        "kind": "call",
+        "value": {
+          "operation": {"value": "value.to_text"},
+          "type_arguments": [],
+          "arguments": [{"kind": "literal", "value": {"kind": "float", "value": -0.0}}]
+        }
+      },
+      "expected": {"available": {"string": "0"}, "reads": []}
+    },
+    {
+      "id": "value_to_text_float_fraction",
+      "expression": {
+        "kind": "call",
+        "value": {
+          "operation": {"value": "value.to_text"},
+          "type_arguments": [],
+          "arguments": [{"kind": "literal", "value": {"kind": "float", "value": 1.5}}]
+        }
+      },
+      "expected": {"available": {"string": "1.5"}, "reads": []}
+    },
+    {
+      "id": "value_to_text_float_shortest_digits",
+      "expression": {
+        "kind": "call",
+        "value": {
+          "operation": {"value": "value.to_text"},
+          "type_arguments": [],
+          "arguments": [{"kind": "literal", "value": {"kind": "float", "value": 0.30000000000000004}}]
+        }
+      },
+      "expected": {"available": {"string": "0.30000000000000004"}, "reads": []}
+    },
+    {
+      "id": "value_to_text_float_large_plain",
+      "expression": {
+        "kind": "call",
+        "value": {
+          "operation": {"value": "value.to_text"},
+          "type_arguments": [],
+          "arguments": [{"kind": "literal", "value": {"kind": "float", "value": 1.2345678901234568e+20}}]
+        }
+      },
+      "expected": {"available": {"string": "123456789012345680000"}, "reads": []}
+    },
+    {
+      "id": "value_to_text_float_exponent_large",
+      "expression": {
+        "kind": "call",
+        "value": {
+          "operation": {"value": "value.to_text"},
+          "type_arguments": [],
+          "arguments": [{"kind": "literal", "value": {"kind": "float", "value": 1e+21}}]
+        }
+      },
+      "expected": {"available": {"string": "1e+21"}, "reads": []}
+    },
+    {
+      "id": "value_to_text_float_small_plain",
+      "expression": {
+        "kind": "call",
+        "value": {
+          "operation": {"value": "value.to_text"},
+          "type_arguments": [],
+          "arguments": [{"kind": "literal", "value": {"kind": "float", "value": 1e-06}}]
+        }
+      },
+      "expected": {"available": {"string": "0.000001"}, "reads": []}
+    },
+    {
+      "id": "value_to_text_float_exponent_small",
+      "expression": {
+        "kind": "call",
+        "value": {
+          "operation": {"value": "value.to_text"},
+          "type_arguments": [],
+          "arguments": [{"kind": "literal", "value": {"kind": "float", "value": 1e-07}}]
+        }
+      },
+      "expected": {"available": {"string": "1e-7"}, "reads": []}
+    },
+    {
+      "id": "value_to_text_float_maximum",
+      "expression": {
+        "kind": "call",
+        "value": {
+          "operation": {"value": "value.to_text"},
+          "type_arguments": [],
+          "arguments": [{"kind": "literal", "value": {"kind": "float", "value": 1.7976931348623157e+308}}]
+        }
+      },
+      "expected": {"available": {"string": "1.7976931348623157e+308"}, "reads": []}
+    },
+    {
+      "id": "value_to_text_float_subnormal",
+      "expression": {
+        "kind": "call",
+        "value": {
+          "operation": {"value": "value.to_text"},
+          "type_arguments": [],
+          "arguments": [{"kind": "literal", "value": {"kind": "float", "value": 5e-324}}]
+        }
+      },
+      "expected": {"available": {"string": "5e-324"}, "reads": []}
+    },
+    {
+      "id": "value_to_text_boolean",
+      "expression": {
+        "kind": "call",
+        "value": {
+          "operation": {"value": "value.to_text"},
+          "type_arguments": [],
+          "arguments": [{"kind": "literal", "value": {"kind": "boolean", "value": true}}]
+        }
+      },
+      "expected": {"available": {"string": "true"}, "reads": []}
+    },
+    {
+      "id": "value_to_text_text_unchanged",
+      "expression": {
+        "kind": "call",
+        "value": {
+          "operation": {"value": "value.to_text"},
+          "type_arguments": [],
+          "arguments": [{"kind": "literal", "value": {"kind": "string_value", "value": " a b "}}]
+        }
+      },
+      "expected": {"available": {"string": " a b "}, "reads": []}
+    },
+    {
+      "id": "value_to_text_timestamp_milliseconds",
+      "expression": {
+        "kind": "call",
+        "value": {
+          "operation": {"value": "value.to_text"},
+          "type_arguments": [],
+          "arguments": [
+            {
+              "kind": "literal",
+              "value": {
+                "kind": "timestamp",
+                "value": {"unix_millis": 1704164645006, "formatted": "2024-01-02T03:04:05.006Z"}
+              }
+            }
+          ]
+        }
+      },
+      "expected": {"available": {"string": "2024-01-02T03:04:05.006Z"}, "reads": []}
+    },
+    {
+      "id": "value_to_text_timestamp_whole_second",
+      "expression": {
+        "kind": "call",
+        "value": {
+          "operation": {"value": "value.to_text"},
+          "type_arguments": [],
+          "arguments": [
+            {
+              "kind": "literal",
+              "value": {
+                "kind": "timestamp",
+                "value": {"unix_millis": 1704164645000, "formatted": "2024-01-02T03:04:05Z"}
+              }
+            }
+          ]
+        }
+      },
+      "expected": {"available": {"string": "2024-01-02T03:04:05.000Z"}, "reads": []}
+    },
+    {
+      "id": "value_to_text_duration_zero",
+      "expression": {
+        "kind": "call",
+        "value": {
+          "operation": {"value": "value.to_text"},
+          "type_arguments": [],
+          "arguments": [{"kind": "literal", "value": {"kind": "duration", "value": {}}}]
+        }
+      },
+      "expected": {"available": {"string": "PT0S"}, "reads": []}
+    },
+    {
+      "id": "value_to_text_duration_negative",
+      "expression": {
+        "kind": "call",
+        "value": {
+          "operation": {"value": "value.to_text"},
+          "type_arguments": [],
+          "arguments": [{"kind": "literal", "value": {"kind": "duration", "value": {"value": {"milliseconds": -1500}}}}]
+        }
+      },
+      "expected": {"available": {"string": "-PT1.5S"}, "reads": []}
+    },
+    {
+      "id": "value_to_text_duration_hour",
+      "expression": {
+        "kind": "call",
+        "value": {
+          "operation": {"value": "value.to_text"},
+          "type_arguments": [],
+          "arguments": [{"kind": "literal", "value": {"kind": "duration", "value": {"value": {"milliseconds": 3600000}}}}]
+        }
+      },
+      "expected": {"available": {"string": "PT1H"}, "reads": []}
+    },
+    {
+      "id": "value_to_text_duration_minutes_seconds",
+      "expression": {
+        "kind": "call",
+        "value": {
+          "operation": {"value": "value.to_text"},
+          "type_arguments": [],
+          "arguments": [{"kind": "literal", "value": {"kind": "duration", "value": {"value": {"milliseconds": 90500}}}}]
+        }
+      },
+      "expected": {"available": {"string": "PT1M30.5S"}, "reads": []}
+    },
+    {
+      "id": "value_to_text_duration_minute",
+      "expression": {
+        "kind": "call",
+        "value": {
+          "operation": {"value": "value.to_text"},
+          "type_arguments": [],
+          "arguments": [{"kind": "literal", "value": {"kind": "duration", "value": {"value": {"milliseconds": 60000}}}}]
+        }
+      },
+      "expected": {"available": {"string": "PT1M"}, "reads": []}
+    },
+    {
+      "id": "value_to_text_duration_beyond_a_day",
+      "expression": {
+        "kind": "call",
+        "value": {
+          "operation": {"value": "value.to_text"},
+          "type_arguments": [],
+          "arguments": [{"kind": "literal", "value": {"kind": "duration", "value": {"value": {"milliseconds": 90000000}}}}]
+        }
+      },
+      "expected": {"available": {"string": "PT25H"}, "reads": []}
+    },
+    {
+      "id": "value_to_text_duration_all_units",
+      "expression": {
+        "kind": "call",
+        "value": {
+          "operation": {"value": "value.to_text"},
+          "type_arguments": [],
+          "arguments": [{"kind": "literal", "value": {"kind": "duration", "value": {"value": {"milliseconds": 3661001}}}}]
+        }
+      },
+      "expected": {"available": {"string": "PT1H1M1.001S"}, "reads": []}
+    },
+    {
+      "id": "value_to_text_duration_tenth",
+      "expression": {
+        "kind": "call",
+        "value": {
+          "operation": {"value": "value.to_text"},
+          "type_arguments": [],
+          "arguments": [{"kind": "literal", "value": {"kind": "duration", "value": {"value": {"milliseconds": 100}}}}]
+        }
+      },
+      "expected": {"available": {"string": "PT0.1S"}, "reads": []}
+    },
+    {
+      "id": "value_to_text_enum_case_name",
+      "expression": {
+        "kind": "call",
+        "value": {
+          "operation": {"value": "value.to_text"},
+          "type_arguments": [],
+          "arguments": [
+            {
+              "kind": "literal",
+              "value": {
+                "kind": "named",
+                "value": {
+                  "actual_type": {
+                    "definition": {
+                      "type_id": {"kind": "declared", "value": {"value": "467745c1c9534484864d2d63c72c7aae"}},
+                      "revision": 1
+                    },
+                    "arguments": []
+                  },
+                  "payload": {"kind": "enum_case", "value": "Floor"}
+                }
+              }
+            }
+          ]
+        }
+      },
+      "expected": {"available": {"string": "Floor"}, "reads": []}
+    },
+    {
+      "id": "value_to_text_unit",
+      "expression": {
+        "kind": "call",
+        "value": {
+          "operation": {"value": "value.to_text"},
+          "type_arguments": [],
+          "arguments": [{"kind": "literal", "value": "unit"}]
+        }
+      },
+      "expected": {"available": {"string": "unit"}, "reads": []}
+    },
+    {
+      "id": "value_to_text_null",
+      "expression": {
+        "kind": "call",
+        "value": {
+          "operation": {"value": "value.to_text"},
+          "type_arguments": [],
+          "arguments": [{"kind": "literal", "value": "null"}]
+        }
+      },
+      "expected": {"available": {"string": "null"}, "reads": []}
+    },
+    {
+      "id": "value_to_text_unwraps_named",
+      "expression": {
+        "kind": "call",
+        "value": {
+          "operation": {"value": "value.to_text"},
+          "type_arguments": [],
+          "arguments": [
+            {
+              "kind": "literal",
+              "value": {
+                "kind": "named",
+                "value": {
+                  "actual_type": {
+                    "definition": {
+                      "type_id": {"kind": "qualified", "value": {"namespace": "fixture", "name": "QuestCode"}},
+                      "revision": 1
+                    },
+                    "arguments": []
+                  },
+                  "payload": {"kind": "string_value", "value": "Q42"}
+                }
+              }
+            }
+          ]
+        }
+      },
+      "typeDefinitions": [
+        {
+          "id": {
+            "type_id": {"kind": "qualified", "value": {"namespace": "fixture", "name": "QuestCode"}},
+            "revision": 1
+          },
+          "parameters": [],
+          "parents": [],
+          "representation": {"kind": "scalar", "value": {"kind": "text"}}
+        }
+      ],
+      "expected": {"available": {"string": "Q42"}, "reads": []}
+    },
+    {
+      "id": "value_to_text_record_as_json",
+      "expression": {
+        "kind": "call",
+        "value": {
+          "operation": {"value": "value.to_text"},
+          "type_arguments": [],
+          "arguments": [
+            {
+              "kind": "literal",
+              "value": {
+                "kind": "record",
+                "value": {"fields": [{"name": "a", "value": {"kind": "integer", "value": "1"}}]}
+              }
+            }
+          ]
+        }
+      },
+      "expected": {
+        "available": {
+          "string": "{\"kind\":\"record\",\"value\":{\"fields\":[{\"name\":\"a\",\"value\":{\"kind\":\"integer\",\"value\":\"1\"}}]}}"
+        },
+        "reads": []
+      }
+    },
+    {
+      "id": "value_to_json_integer",
+      "expression": {
+        "kind": "call",
+        "value": {
+          "operation": {"value": "value.to_json"},
+          "type_arguments": [],
+          "arguments": [{"kind": "literal", "value": {"kind": "integer", "value": "7"}}]
+        }
+      },
+      "check": {
+        "resultType": {"value": {"kind": "nominal", "value": {"kind": "scalar", "value": "text"}}, "may_be_missing": true},
+        "failures": [],
+        "inferredType": {"value": {"kind": "nominal", "value": {"kind": "scalar", "value": "text"}}, "may_be_missing": false}
+      },
+      "expected": {"available": {"string": "{\"kind\":\"integer\",\"value\":\"7\"}"}, "reads": []}
+    },
+    {
+      "id": "value_to_json_text",
+      "expression": {
+        "kind": "call",
+        "value": {
+          "operation": {"value": "value.to_json"},
+          "type_arguments": [],
+          "arguments": [{"kind": "literal", "value": {"kind": "string_value", "value": "x"}}]
+        }
+      },
+      "expected": {"available": {"string": "{\"kind\":\"string_value\",\"value\":\"x\"}"}, "reads": []}
+    },
+    {
+      "id": "value_to_json_null_is_a_json_string",
+      "expression": {
+        "kind": "call",
+        "value": {
+          "operation": {"value": "value.to_json"},
+          "type_arguments": [],
+          "arguments": [{"kind": "literal", "value": "null"}]
+        }
+      },
+      "expected": {"available": {"string": "\"null\""}, "reads": []}
+    },
+    {
+      "id": "value_to_json_boolean_false_is_kept",
+      "expression": {
+        "kind": "call",
+        "value": {
+          "operation": {"value": "value.to_json"},
+          "type_arguments": [],
+          "arguments": [{"kind": "literal", "value": {"kind": "boolean", "value": false}}]
+        }
+      },
+      "expected": {"available": {"string": "{\"kind\":\"boolean\",\"value\":false}"}, "reads": []}
+    },
+    {
+      "id": "value_to_json_record",
+      "expression": {
+        "kind": "call",
+        "value": {
+          "operation": {"value": "value.to_json"},
+          "type_arguments": [],
+          "arguments": [
+            {
+              "kind": "literal",
+              "value": {
+                "kind": "record",
+                "value": {
+                  "fields": [
+                    {"name": "a", "value": {"kind": "integer", "value": "1"}},
+                    {"name": "b", "value": {"kind": "string_value", "value": "x"}}
+                  ]
+                }
+              }
+            }
+          ]
+        }
+      },
+      "expected": {
+        "available": {
+          "string": "{\"kind\":\"record\",\"value\":{\"fields\":[{\"name\":\"a\",\"value\":{\"kind\":\"integer\",\"value\":\"1\"}},{\"name\":\"b\",\"value\":{\"kind\":\"string_value\",\"value\":\"x\"}}]}}"
+        },
+        "reads": []
+      }
+    },
+    {
+      "id": "value_to_json_empty_record_omits_default",
+      "expression": {
+        "kind": "call",
+        "value": {
+          "operation": {"value": "value.to_json"},
+          "type_arguments": [],
+          "arguments": [{"kind": "literal", "value": {"kind": "record", "value": {"fields": []}}}]
+        }
+      },
+      "expected": {"available": {"string": "{\"kind\":\"record\",\"value\":{}}"}, "reads": []}
+    },
+    {
+      "id": "value_to_json_list_keeps_item_ids",
+      "expression": {
+        "kind": "call",
+        "value": {
+          "operation": {"value": "value.to_json"},
+          "type_arguments": [],
+          "arguments": [
+            {
+              "kind": "literal",
+              "value": {
+                "kind": "list_value",
+                "value": {"items": [{"id": {"value": "a"}, "value": {"kind": "boolean", "value": true}}]}
+              }
+            }
+          ]
+        }
+      },
+      "expected": {
+        "available": {
+          "string": "{\"kind\":\"list_value\",\"value\":{\"items\":[{\"id\":{\"value\":\"a\"},\"value\":{\"kind\":\"boolean\",\"value\":true}}]}}"
+        },
+        "reads": []
+      }
+    },
+    {
+      "id": "value_from_json_integer",
+      "expression": {
+        "kind": "call",
+        "value": {
+          "operation": {"value": "value.from_json"},
+          "type_arguments": [{"kind": "scalar", "value": {"kind": "integer", "value": {"width": "signed_thirty_two"}}}],
+          "arguments": [
+            {
+              "kind": "literal",
+              "value": {"kind": "string_value", "value": "{\"kind\":\"integer\",\"value\":\"7\"}"}
+            }
+          ]
+        }
+      },
+      "check": {
+        "resultType": {
+          "value": {
+            "kind": "nominal",
+            "value": {"kind": "scalar", "value": {"kind": "integer", "value": {"width": "signed_thirty_two"}}}
+          },
+          "may_be_missing": true
+        },
+        "failures": [],
+        "inferredType": {
+          "value": {
+            "kind": "nominal",
+            "value": {"kind": "scalar", "value": {"kind": "integer", "value": {"width": "signed_thirty_two"}}}
+          },
+          "may_be_missing": false
+        }
+      },
+      "expected": {"available": {"integer": "7"}, "reads": []}
+    },
+    {
+      "id": "value_from_json_text",
+      "expression": {
+        "kind": "call",
+        "value": {
+          "operation": {"value": "value.from_json"},
+          "type_arguments": [{"kind": "scalar", "value": "text"}],
+          "arguments": [
+            {
+              "kind": "literal",
+              "value": {"kind": "string_value", "value": "{\"kind\":\"string_value\",\"value\":\"x\"}"}
+            }
+          ]
+        }
+      },
+      "expected": {"available": {"string": "x"}, "reads": []}
+    },
+    {
+      "id": "value_from_json_named",
+      "expression": {
+        "kind": "call",
+        "value": {
+          "operation": {"value": "value.from_json"},
+          "type_arguments": [
+            {
+              "kind": "named",
+              "value": {
+                "definition": {
+                  "type_id": {"kind": "qualified", "value": {"namespace": "fixture", "name": "QuestCode"}},
+                  "revision": 1
+                },
+                "arguments": []
+              }
+            }
+          ],
+          "arguments": [
+            {
+              "kind": "literal",
+              "value": {
+                "kind": "string_value",
+                "value": "{\"kind\":\"named\",\"value\":{\"actual_type\":{\"definition\":{\"type_id\":{\"kind\":\"qualified\",\"value\":{\"namespace\":\"fixture\",\"name\":\"QuestCode\"}},\"revision\":1}},\"payload\":{\"kind\":\"string_value\",\"value\":\"Q42\"}}}"
+              }
+            }
+          ]
+        }
+      },
+      "typeDefinitions": [
+        {
+          "id": {
+            "type_id": {"kind": "qualified", "value": {"namespace": "fixture", "name": "QuestCode"}},
+            "revision": 1
+          },
+          "parameters": [],
+          "parents": [],
+          "representation": {"kind": "scalar", "value": {"kind": "text"}}
+        }
+      ],
+      "expected": {
+        "available": {
+          "named": {
+            "namespace": "fixture",
+            "name": "QuestCode",
+            "revision": 1,
+            "arguments": [],
+            "payload": {"string": "Q42"}
+          }
+        },
+        "reads": []
+      }
+    },
+    {
+      "id": "value_from_json_malformed",
+      "expression": {
+        "kind": "call",
+        "value": {
+          "operation": {"value": "value.from_json"},
+          "type_arguments": [{"kind": "scalar", "value": {"kind": "integer", "value": {"width": "signed_thirty_two"}}}],
+          "arguments": [{"kind": "literal", "value": {"kind": "string_value", "value": "{\"kind\":"}}]
+        }
+      },
+      "expected": {"failed": "invalid_json", "reads": []}
+    },
+    {
+      "id": "value_from_json_not_json",
+      "expression": {
+        "kind": "call",
+        "value": {
+          "operation": {"value": "value.from_json"},
+          "type_arguments": [{"kind": "scalar", "value": {"kind": "integer", "value": {"width": "signed_thirty_two"}}}],
+          "arguments": [{"kind": "literal", "value": {"kind": "string_value", "value": "nope"}}]
+        }
+      },
+      "expected": {"failed": "invalid_json", "reads": []}
+    },
+    {
+      "id": "value_from_json_wrong_kind",
+      "expression": {
+        "kind": "call",
+        "value": {
+          "operation": {"value": "value.from_json"},
+          "type_arguments": [{"kind": "scalar", "value": "text"}],
+          "arguments": [
+            {
+              "kind": "literal",
+              "value": {"kind": "string_value", "value": "{\"kind\":\"integer\",\"value\":\"7\"}"}
+            }
+          ]
+        }
+      },
+      "expected": {"failed": "incompatible_value", "reads": []}
+    },
+    {
+      "id": "value_from_json_outside_width",
+      "expression": {
+        "kind": "call",
+        "value": {
+          "operation": {"value": "value.from_json"},
+          "type_arguments": [{"kind": "scalar", "value": {"kind": "integer", "value": {"width": "signed_eight"}}}],
+          "arguments": [
+            {
+              "kind": "literal",
+              "value": {"kind": "string_value", "value": "{\"kind\":\"integer\",\"value\":\"300\"}"}
+            }
+          ]
+        }
+      },
+      "expected": {"failed": "incompatible_value", "reads": []}
+    },
+    {
+      "id": "value_let_binds_once",
+      "expression": {
+        "kind": "call",
+        "value": {
+          "operation": {"value": "value.let"},
+          "type_arguments": [],
+          "arguments": [
+            {"kind": "literal", "value": {"kind": "integer", "value": "5"}},
+            {
+              "kind": "lambda",
+              "value": {
+                "arity": 1,
+                "body": {
+                  "kind": "call",
+                  "value": {
+                    "operation": {"value": "number.multiply"},
+                    "type_arguments": [],
+                    "arguments": [
+                      {"kind": "local", "value": {"depth": 0, "slot": 0, "path": {"segments": []}}},
+                      {"kind": "literal", "value": {"kind": "integer", "value": "2"}}
+                    ]
+                  }
+                }
+              }
+            }
+          ]
+        }
+      },
+      "check": {
+        "resultType": {
+          "value": {
+            "kind": "nominal",
+            "value": {"kind": "scalar", "value": {"kind": "integer", "value": {"width": "signed_sixty_four"}}}
+          },
+          "may_be_missing": true
+        },
+        "failures": [],
+        "inferredType": {
+          "value": {
+            "kind": "nominal",
+            "value": {"kind": "scalar", "value": {"kind": "integer", "value": {"width": "signed_sixty_four"}}}
+          },
+          "may_be_missing": false
+        }
+      },
+      "expected": {"available": {"integer": "10"}, "reads": []}
+    },
+    {
+      "id": "value_let_local_is_not_a_read",
+      "expression": {
+        "kind": "call",
+        "value": {
+          "operation": {"value": "value.let"},
+          "type_arguments": [],
+          "arguments": [
+            {
+              "kind": "input",
+              "value": {
+                "binding": {"value": "subject"},
+                "path": {"segments": [{"kind": "field", "value": {"name": "n"}}]}
+              }
+            },
+            {
+              "kind": "lambda",
+              "value": {
+                "arity": 1,
+                "body": {
+                  "kind": "call",
+                  "value": {
+                    "operation": {"value": "number.add"},
+                    "type_arguments": [],
+                    "arguments": [
+                      {"kind": "local", "value": {"depth": 0, "slot": 0, "path": {"segments": []}}},
+                      {"kind": "local", "value": {"depth": 0, "slot": 0, "path": {"segments": []}}}
+                    ]
+                  }
+                }
+              }
+            }
+          ]
+        }
+      },
+      "inputs": {"subject": {"value": {"record": {"n": {"integer": "4"}}}}},
+      "expected": {"available": {"integer": "8"}, "reads": ["subject.n"]}
+    },
+    {
+      "id": "value_let_missing_body",
+      "expression": {
+        "kind": "call",
+        "value": {
+          "operation": {"value": "value.let"},
+          "type_arguments": [],
+          "arguments": [
+            {"kind": "literal", "value": {"kind": "integer", "value": "1"}},
+            {
+              "kind": "lambda",
+              "value": {
+                "arity": 1,
+                "body": {
+                  "kind": "input",
+                  "value": {
+                    "binding": {"value": "subject"},
+                    "path": {"segments": [{"kind": "field", "value": {"name": "missing"}}]}
+                  }
+                }
+              }
+            }
+          ]
+        }
+      },
+      "inputs": {"subject": {"value": {"record": {}}}},
+      "expected": {"unavailable": ["subject.missing"], "reads": ["subject.missing"]}
+    },
+    {
+      "id": "value_instance_of_parent",
+      "expression": {
+        "kind": "call",
+        "value": {
+          "operation": {"value": "value.instance_of"},
+          "type_arguments": [
+            {
+              "kind": "named",
+              "value": {
+                "definition": {
+                  "type_id": {"kind": "qualified", "value": {"namespace": "fixture", "name": "Animal"}},
+                  "revision": 1
+                },
+                "arguments": []
+              }
+            }
+          ],
+          "arguments": [
+            {
+              "kind": "literal",
+              "value": {
+                "kind": "named",
+                "value": {
+                  "actual_type": {
+                    "definition": {
+                      "type_id": {"kind": "qualified", "value": {"namespace": "fixture", "name": "Dog"}},
+                      "revision": 1
+                    },
+                    "arguments": []
+                  },
+                  "payload": {
+                    "kind": "record",
+                    "value": {"fields": [{"name": "name", "value": {"kind": "string_value", "value": "Rex"}}]}
+                  }
+                }
+              }
+            }
+          ]
+        }
+      },
+      "typeDefinitions": [
+        {
+          "id": {
+            "type_id": {"kind": "qualified", "value": {"namespace": "fixture", "name": "Animal"}},
+            "revision": 1
+          },
+          "parameters": [],
+          "parents": [],
+          "representation": {
+            "kind": "record",
+            "value": {
+              "abstract": true,
+              "fields": [
+                {
+                  "owner": {
+                    "definition": {
+                      "type_id": {"kind": "qualified", "value": {"namespace": "fixture", "name": "Animal"}},
+                      "revision": 1
+                    },
+                    "name": "name"
+                  },
+                  "type": {"kind": "scalar", "value": "text"},
+                  "overrides": [],
+                  "has_constructor_default": false
+                }
+              ]
+            }
+          }
+        },
+        {
+          "id": {"type_id": {"kind": "qualified", "value": {"namespace": "fixture", "name": "Dog"}}, "revision": 1},
+          "parameters": [],
+          "parents": [
+            {
+              "definition": {
+                "type_id": {"kind": "qualified", "value": {"namespace": "fixture", "name": "Animal"}},
+                "revision": 1
+              },
+              "arguments": []
+            }
+          ],
+          "representation": {
+            "kind": "record",
+            "value": {
+              "abstract": false,
+              "fields": [
+                {
+                  "owner": {
+                    "definition": {
+                      "type_id": {"kind": "qualified", "value": {"namespace": "fixture", "name": "Dog"}},
+                      "revision": 1
+                    },
+                    "name": "name"
+                  },
+                  "type": {"kind": "scalar", "value": "text"},
+                  "overrides": [],
+                  "has_constructor_default": false
+                }
+              ]
+            }
+          }
+        },
+        {
+          "id": {"type_id": {"kind": "qualified", "value": {"namespace": "fixture", "name": "Cat"}}, "revision": 1},
+          "parameters": [],
+          "parents": [
+            {
+              "definition": {
+                "type_id": {"kind": "qualified", "value": {"namespace": "fixture", "name": "Animal"}},
+                "revision": 1
+              },
+              "arguments": []
+            }
+          ],
+          "representation": {
+            "kind": "record",
+            "value": {
+              "abstract": false,
+              "fields": [
+                {
+                  "owner": {
+                    "definition": {
+                      "type_id": {"kind": "qualified", "value": {"namespace": "fixture", "name": "Cat"}},
+                      "revision": 1
+                    },
+                    "name": "name"
+                  },
+                  "type": {"kind": "scalar", "value": "text"},
+                  "overrides": [],
+                  "has_constructor_default": false
+                }
+              ]
+            }
+          }
+        }
+      ],
+      "check": {
+        "resultType": {
+          "value": {"kind": "nominal", "value": {"kind": "scalar", "value": "boolean"}},
+          "may_be_missing": true
+        },
+        "failures": [],
+        "inferredType": {
+          "value": {"kind": "nominal", "value": {"kind": "scalar", "value": "boolean"}},
+          "may_be_missing": false
+        }
+      },
+      "expected": {"available": {"boolean": true}, "reads": []}
+    },
+    {
+      "id": "value_instance_of_own_type",
+      "expression": {
+        "kind": "call",
+        "value": {
+          "operation": {"value": "value.instance_of"},
+          "type_arguments": [
+            {
+              "kind": "named",
+              "value": {
+                "definition": {
+                  "type_id": {"kind": "qualified", "value": {"namespace": "fixture", "name": "Dog"}},
+                  "revision": 1
+                },
+                "arguments": []
+              }
+            }
+          ],
+          "arguments": [
+            {
+              "kind": "literal",
+              "value": {
+                "kind": "named",
+                "value": {
+                  "actual_type": {
+                    "definition": {
+                      "type_id": {"kind": "qualified", "value": {"namespace": "fixture", "name": "Dog"}},
+                      "revision": 1
+                    },
+                    "arguments": []
+                  },
+                  "payload": {
+                    "kind": "record",
+                    "value": {"fields": [{"name": "name", "value": {"kind": "string_value", "value": "Rex"}}]}
+                  }
+                }
+              }
+            }
+          ]
+        }
+      },
+      "typeDefinitions": [
+        {
+          "id": {
+            "type_id": {"kind": "qualified", "value": {"namespace": "fixture", "name": "Animal"}},
+            "revision": 1
+          },
+          "parameters": [],
+          "parents": [],
+          "representation": {
+            "kind": "record",
+            "value": {
+              "abstract": true,
+              "fields": [
+                {
+                  "owner": {
+                    "definition": {
+                      "type_id": {"kind": "qualified", "value": {"namespace": "fixture", "name": "Animal"}},
+                      "revision": 1
+                    },
+                    "name": "name"
+                  },
+                  "type": {"kind": "scalar", "value": "text"},
+                  "overrides": [],
+                  "has_constructor_default": false
+                }
+              ]
+            }
+          }
+        },
+        {
+          "id": {"type_id": {"kind": "qualified", "value": {"namespace": "fixture", "name": "Dog"}}, "revision": 1},
+          "parameters": [],
+          "parents": [
+            {
+              "definition": {
+                "type_id": {"kind": "qualified", "value": {"namespace": "fixture", "name": "Animal"}},
+                "revision": 1
+              },
+              "arguments": []
+            }
+          ],
+          "representation": {
+            "kind": "record",
+            "value": {
+              "abstract": false,
+              "fields": [
+                {
+                  "owner": {
+                    "definition": {
+                      "type_id": {"kind": "qualified", "value": {"namespace": "fixture", "name": "Dog"}},
+                      "revision": 1
+                    },
+                    "name": "name"
+                  },
+                  "type": {"kind": "scalar", "value": "text"},
+                  "overrides": [],
+                  "has_constructor_default": false
+                }
+              ]
+            }
+          }
+        },
+        {
+          "id": {"type_id": {"kind": "qualified", "value": {"namespace": "fixture", "name": "Cat"}}, "revision": 1},
+          "parameters": [],
+          "parents": [
+            {
+              "definition": {
+                "type_id": {"kind": "qualified", "value": {"namespace": "fixture", "name": "Animal"}},
+                "revision": 1
+              },
+              "arguments": []
+            }
+          ],
+          "representation": {
+            "kind": "record",
+            "value": {
+              "abstract": false,
+              "fields": [
+                {
+                  "owner": {
+                    "definition": {
+                      "type_id": {"kind": "qualified", "value": {"namespace": "fixture", "name": "Cat"}},
+                      "revision": 1
+                    },
+                    "name": "name"
+                  },
+                  "type": {"kind": "scalar", "value": "text"},
+                  "overrides": [],
+                  "has_constructor_default": false
+                }
+              ]
+            }
+          }
+        }
+      ],
+      "expected": {"available": {"boolean": true}, "reads": []}
+    },
+    {
+      "id": "value_instance_of_sibling",
+      "expression": {
+        "kind": "call",
+        "value": {
+          "operation": {"value": "value.instance_of"},
+          "type_arguments": [
+            {
+              "kind": "named",
+              "value": {
+                "definition": {
+                  "type_id": {"kind": "qualified", "value": {"namespace": "fixture", "name": "Cat"}},
+                  "revision": 1
+                },
+                "arguments": []
+              }
+            }
+          ],
+          "arguments": [
+            {
+              "kind": "literal",
+              "value": {
+                "kind": "named",
+                "value": {
+                  "actual_type": {
+                    "definition": {
+                      "type_id": {"kind": "qualified", "value": {"namespace": "fixture", "name": "Dog"}},
+                      "revision": 1
+                    },
+                    "arguments": []
+                  },
+                  "payload": {
+                    "kind": "record",
+                    "value": {"fields": [{"name": "name", "value": {"kind": "string_value", "value": "Rex"}}]}
+                  }
+                }
+              }
+            }
+          ]
+        }
+      },
+      "typeDefinitions": [
+        {
+          "id": {
+            "type_id": {"kind": "qualified", "value": {"namespace": "fixture", "name": "Animal"}},
+            "revision": 1
+          },
+          "parameters": [],
+          "parents": [],
+          "representation": {
+            "kind": "record",
+            "value": {
+              "abstract": true,
+              "fields": [
+                {
+                  "owner": {
+                    "definition": {
+                      "type_id": {"kind": "qualified", "value": {"namespace": "fixture", "name": "Animal"}},
+                      "revision": 1
+                    },
+                    "name": "name"
+                  },
+                  "type": {"kind": "scalar", "value": "text"},
+                  "overrides": [],
+                  "has_constructor_default": false
+                }
+              ]
+            }
+          }
+        },
+        {
+          "id": {"type_id": {"kind": "qualified", "value": {"namespace": "fixture", "name": "Dog"}}, "revision": 1},
+          "parameters": [],
+          "parents": [
+            {
+              "definition": {
+                "type_id": {"kind": "qualified", "value": {"namespace": "fixture", "name": "Animal"}},
+                "revision": 1
+              },
+              "arguments": []
+            }
+          ],
+          "representation": {
+            "kind": "record",
+            "value": {
+              "abstract": false,
+              "fields": [
+                {
+                  "owner": {
+                    "definition": {
+                      "type_id": {"kind": "qualified", "value": {"namespace": "fixture", "name": "Dog"}},
+                      "revision": 1
+                    },
+                    "name": "name"
+                  },
+                  "type": {"kind": "scalar", "value": "text"},
+                  "overrides": [],
+                  "has_constructor_default": false
+                }
+              ]
+            }
+          }
+        },
+        {
+          "id": {"type_id": {"kind": "qualified", "value": {"namespace": "fixture", "name": "Cat"}}, "revision": 1},
+          "parameters": [],
+          "parents": [
+            {
+              "definition": {
+                "type_id": {"kind": "qualified", "value": {"namespace": "fixture", "name": "Animal"}},
+                "revision": 1
+              },
+              "arguments": []
+            }
+          ],
+          "representation": {
+            "kind": "record",
+            "value": {
+              "abstract": false,
+              "fields": [
+                {
+                  "owner": {
+                    "definition": {
+                      "type_id": {"kind": "qualified", "value": {"namespace": "fixture", "name": "Cat"}},
+                      "revision": 1
+                    },
+                    "name": "name"
+                  },
+                  "type": {"kind": "scalar", "value": "text"},
+                  "overrides": [],
+                  "has_constructor_default": false
+                }
+              ]
+            }
+          }
+        }
+      ],
+      "expected": {"available": {"boolean": false}, "reads": []}
+    },
+    {
+      "id": "value_cast_to_parent_keeps_value",
+      "expression": {
+        "kind": "call",
+        "value": {
+          "operation": {"value": "value.cast"},
+          "type_arguments": [
+            {
+              "kind": "named",
+              "value": {
+                "definition": {
+                  "type_id": {"kind": "qualified", "value": {"namespace": "fixture", "name": "Animal"}},
+                  "revision": 1
+                },
+                "arguments": []
+              }
+            }
+          ],
+          "arguments": [
+            {
+              "kind": "literal",
+              "value": {
+                "kind": "named",
+                "value": {
+                  "actual_type": {
+                    "definition": {
+                      "type_id": {"kind": "qualified", "value": {"namespace": "fixture", "name": "Dog"}},
+                      "revision": 1
+                    },
+                    "arguments": []
+                  },
+                  "payload": {
+                    "kind": "record",
+                    "value": {"fields": [{"name": "name", "value": {"kind": "string_value", "value": "Rex"}}]}
+                  }
+                }
+              }
+            }
+          ]
+        }
+      },
+      "typeDefinitions": [
+        {
+          "id": {
+            "type_id": {"kind": "qualified", "value": {"namespace": "fixture", "name": "Animal"}},
+            "revision": 1
+          },
+          "parameters": [],
+          "parents": [],
+          "representation": {
+            "kind": "record",
+            "value": {
+              "abstract": true,
+              "fields": [
+                {
+                  "owner": {
+                    "definition": {
+                      "type_id": {"kind": "qualified", "value": {"namespace": "fixture", "name": "Animal"}},
+                      "revision": 1
+                    },
+                    "name": "name"
+                  },
+                  "type": {"kind": "scalar", "value": "text"},
+                  "overrides": [],
+                  "has_constructor_default": false
+                }
+              ]
+            }
+          }
+        },
+        {
+          "id": {"type_id": {"kind": "qualified", "value": {"namespace": "fixture", "name": "Dog"}}, "revision": 1},
+          "parameters": [],
+          "parents": [
+            {
+              "definition": {
+                "type_id": {"kind": "qualified", "value": {"namespace": "fixture", "name": "Animal"}},
+                "revision": 1
+              },
+              "arguments": []
+            }
+          ],
+          "representation": {
+            "kind": "record",
+            "value": {
+              "abstract": false,
+              "fields": [
+                {
+                  "owner": {
+                    "definition": {
+                      "type_id": {"kind": "qualified", "value": {"namespace": "fixture", "name": "Dog"}},
+                      "revision": 1
+                    },
+                    "name": "name"
+                  },
+                  "type": {"kind": "scalar", "value": "text"},
+                  "overrides": [],
+                  "has_constructor_default": false
+                }
+              ]
+            }
+          }
+        },
+        {
+          "id": {"type_id": {"kind": "qualified", "value": {"namespace": "fixture", "name": "Cat"}}, "revision": 1},
+          "parameters": [],
+          "parents": [
+            {
+              "definition": {
+                "type_id": {"kind": "qualified", "value": {"namespace": "fixture", "name": "Animal"}},
+                "revision": 1
+              },
+              "arguments": []
+            }
+          ],
+          "representation": {
+            "kind": "record",
+            "value": {
+              "abstract": false,
+              "fields": [
+                {
+                  "owner": {
+                    "definition": {
+                      "type_id": {"kind": "qualified", "value": {"namespace": "fixture", "name": "Cat"}},
+                      "revision": 1
+                    },
+                    "name": "name"
+                  },
+                  "type": {"kind": "scalar", "value": "text"},
+                  "overrides": [],
+                  "has_constructor_default": false
+                }
+              ]
+            }
+          }
+        }
+      ],
+      "expected": {
+        "available": {
+          "named": {
+            "namespace": "fixture",
+            "name": "Dog",
+            "revision": 1,
+            "arguments": [],
+            "payload": {"record": {"name": {"string": "Rex"}}}
+          }
+        },
+        "reads": []
+      }
+    },
+    {
+      "id": "value_cast_to_sibling_is_null",
+      "expression": {
+        "kind": "call",
+        "value": {
+          "operation": {"value": "value.cast"},
+          "type_arguments": [
+            {
+              "kind": "named",
+              "value": {
+                "definition": {
+                  "type_id": {"kind": "qualified", "value": {"namespace": "fixture", "name": "Cat"}},
+                  "revision": 1
+                },
+                "arguments": []
+              }
+            }
+          ],
+          "arguments": [
+            {
+              "kind": "literal",
+              "value": {
+                "kind": "named",
+                "value": {
+                  "actual_type": {
+                    "definition": {
+                      "type_id": {"kind": "qualified", "value": {"namespace": "fixture", "name": "Dog"}},
+                      "revision": 1
+                    },
+                    "arguments": []
+                  },
+                  "payload": {
+                    "kind": "record",
+                    "value": {"fields": [{"name": "name", "value": {"kind": "string_value", "value": "Rex"}}]}
+                  }
+                }
+              }
+            }
+          ]
+        }
+      },
+      "typeDefinitions": [
+        {
+          "id": {
+            "type_id": {"kind": "qualified", "value": {"namespace": "fixture", "name": "Animal"}},
+            "revision": 1
+          },
+          "parameters": [],
+          "parents": [],
+          "representation": {
+            "kind": "record",
+            "value": {
+              "abstract": true,
+              "fields": [
+                {
+                  "owner": {
+                    "definition": {
+                      "type_id": {"kind": "qualified", "value": {"namespace": "fixture", "name": "Animal"}},
+                      "revision": 1
+                    },
+                    "name": "name"
+                  },
+                  "type": {"kind": "scalar", "value": "text"},
+                  "overrides": [],
+                  "has_constructor_default": false
+                }
+              ]
+            }
+          }
+        },
+        {
+          "id": {"type_id": {"kind": "qualified", "value": {"namespace": "fixture", "name": "Dog"}}, "revision": 1},
+          "parameters": [],
+          "parents": [
+            {
+              "definition": {
+                "type_id": {"kind": "qualified", "value": {"namespace": "fixture", "name": "Animal"}},
+                "revision": 1
+              },
+              "arguments": []
+            }
+          ],
+          "representation": {
+            "kind": "record",
+            "value": {
+              "abstract": false,
+              "fields": [
+                {
+                  "owner": {
+                    "definition": {
+                      "type_id": {"kind": "qualified", "value": {"namespace": "fixture", "name": "Dog"}},
+                      "revision": 1
+                    },
+                    "name": "name"
+                  },
+                  "type": {"kind": "scalar", "value": "text"},
+                  "overrides": [],
+                  "has_constructor_default": false
+                }
+              ]
+            }
+          }
+        },
+        {
+          "id": {"type_id": {"kind": "qualified", "value": {"namespace": "fixture", "name": "Cat"}}, "revision": 1},
+          "parameters": [],
+          "parents": [
+            {
+              "definition": {
+                "type_id": {"kind": "qualified", "value": {"namespace": "fixture", "name": "Animal"}},
+                "revision": 1
+              },
+              "arguments": []
+            }
+          ],
+          "representation": {
+            "kind": "record",
+            "value": {
+              "abstract": false,
+              "fields": [
+                {
+                  "owner": {
+                    "definition": {
+                      "type_id": {"kind": "qualified", "value": {"namespace": "fixture", "name": "Cat"}},
+                      "revision": 1
+                    },
+                    "name": "name"
+                  },
+                  "type": {"kind": "scalar", "value": "text"},
+                  "overrides": [],
+                  "has_constructor_default": false
+                }
+              ]
+            }
+          }
+        }
+      ],
+      "expected": {"available": {"null": true}, "reads": []}
+    },
+    {
+      "id": "value_wrap_named_scalar",
+      "expression": {
+        "kind": "call",
+        "value": {
+          "operation": {"value": "value.wrap"},
+          "type_arguments": [
+            {
+              "kind": "named",
+              "value": {
+                "definition": {
+                  "type_id": {"kind": "qualified", "value": {"namespace": "fixture", "name": "QuestCode"}},
+                  "revision": 1
+                },
+                "arguments": []
+              }
+            }
+          ],
+          "arguments": [{"kind": "literal", "value": {"kind": "string_value", "value": "Q42"}}]
+        }
+      },
+      "typeDefinitions": [
+        {
+          "id": {
+            "type_id": {"kind": "qualified", "value": {"namespace": "fixture", "name": "QuestCode"}},
+            "revision": 1
+          },
+          "parameters": [],
+          "parents": [],
+          "representation": {"kind": "scalar", "value": {"kind": "text"}}
+        }
+      ],
+      "check": {
+        "resultType": {
+          "value": {
+            "kind": "nominal",
+            "value": {
+              "kind": "named",
+              "value": {
+                "definition": {
+                  "type_id": {"kind": "qualified", "value": {"namespace": "fixture", "name": "QuestCode"}},
+                  "revision": 1
+                },
+                "arguments": []
+              }
+            }
+          },
+          "may_be_missing": true
+        },
+        "failures": [],
+        "inferredType": {
+          "value": {
+            "kind": "nominal",
+            "value": {
+              "kind": "named",
+              "value": {
+                "definition": {
+                  "type_id": {"kind": "qualified", "value": {"namespace": "fixture", "name": "QuestCode"}},
+                  "revision": 1
+                },
+                "arguments": []
+              }
+            }
+          },
+          "may_be_missing": false
+        }
+      },
+      "expected": {
+        "available": {
+          "named": {
+            "namespace": "fixture",
+            "name": "QuestCode",
+            "revision": 1,
+            "arguments": [],
+            "payload": {"string": "Q42"}
+          }
+        },
+        "reads": []
+      }
+    },
+    {
+      "id": "value_unwrap_named_scalar",
+      "expression": {
+        "kind": "call",
+        "value": {
+          "operation": {"value": "value.unwrap"},
+          "type_arguments": [],
+          "arguments": [
+            {
+              "kind": "literal",
+              "value": {
+                "kind": "named",
+                "value": {
+                  "actual_type": {
+                    "definition": {
+                      "type_id": {"kind": "qualified", "value": {"namespace": "fixture", "name": "QuestCode"}},
+                      "revision": 1
+                    },
+                    "arguments": []
+                  },
+                  "payload": {"kind": "string_value", "value": "Q42"}
+                }
+              }
+            }
+          ]
+        }
+      },
+      "typeDefinitions": [
+        {
+          "id": {
+            "type_id": {"kind": "qualified", "value": {"namespace": "fixture", "name": "QuestCode"}},
+            "revision": 1
+          },
+          "parameters": [],
+          "parents": [],
+          "representation": {"kind": "scalar", "value": {"kind": "text"}}
+        }
+      ],
+      "check": {
+        "resultType": {"value": {"kind": "nominal", "value": {"kind": "scalar", "value": "text"}}, "may_be_missing": true},
+        "failures": [],
+        "inferredType": {"value": {"kind": "nominal", "value": {"kind": "scalar", "value": "text"}}, "may_be_missing": false}
+      },
+      "expected": {"available": {"string": "Q42"}, "reads": []}
+    },
+    {
+      "id": "value_configuration_of_named_value",
+      "expression": {
+        "kind": "call",
+        "value": {
+          "operation": {"value": "value.configuration"},
+          "type_arguments": [],
+          "arguments": [
+            {
+              "kind": "literal",
+              "value": {
+                "kind": "named",
+                "value": {
+                  "actual_type": {
+                    "definition": {
+                      "type_id": {"kind": "qualified", "value": {"namespace": "fixture", "name": "Color"}},
+                      "revision": 1
+                    },
+                    "arguments": []
+                  },
+                  "payload": {"kind": "enum_case", "value": "Red"}
+                }
+              }
+            }
+          ]
+        }
+      },
+      "typeDefinitions": [
+        {
+          "id": {
+            "type_id": {"kind": "qualified", "value": {"namespace": "fixture", "name": "Color"}},
+            "revision": 1
+          },
+          "parameters": [],
+          "parents": [],
+          "representation": {"kind": "enumeration", "value": {"cases": [{"key": "Red"}, {"key": "Green"}, {"key": "Blue"}]}}
+        }
+      ],
+      "expected": {
+        "available": {
+          "named": {
+            "namespace": "skir",
+            "name": "editor/v1/type_catalog.skir:TypeSelection.complete",
+            "revision": 1,
+            "arguments": [],
+            "payload": {
+              "record": {
+                "value": {
+                  "named": {
+                    "namespace": "skir",
+                    "name": "editor/v1/type_catalog.skir:NamedTypeUse",
+                    "revision": 1,
+                    "arguments": [],
+                    "payload": {
+                      "record": {
+                        "arguments": {"list": []},
+                        "definition": {
+                          "named": {
+                            "namespace": "skir",
+                            "name": "editor/v1/type_catalog.skir:TypeDefinitionId",
+                            "revision": 1,
+                            "arguments": [],
+                            "payload": {
+                              "record": {
+                                "revision": {"integer": "1"},
+                                "type_id": {
+                                  "named": {
+                                    "namespace": "skir",
+                                    "name": "editor/v1/type_catalog.skir:TypeId.qualified",
+                                    "revision": 1,
+                                    "arguments": [],
+                                    "payload": {
+                                      "record": {
+                                        "value": {
+                                          "named": {
+                                            "namespace": "skir",
+                                            "name": "editor/v1/type_catalog.skir:QualifiedTypeId",
+                                            "revision": 1,
+                                            "arguments": [],
+                                            "payload": {
+                                              "record": {
+                                                "name": {"string": "Color"},
+                                                "namespace": {"string": "fixture"}
+                                              }
+                                            }
+                                          }
+                                        }
+                                      }
+                                    }
+                                  }
+                                }
+                              }
+                            }
+                          }
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        },
+        "reads": []
+      }
+    },
+    {
+      "id": "value_configuration_of_structural_value_is_missing",
+      "expression": {
+        "kind": "call",
+        "value": {
+          "operation": {"value": "value.configuration"},
+          "type_arguments": [],
+          "arguments": [{"kind": "literal", "value": {"kind": "integer", "value": "5"}}]
+        }
+      },
+      "expected": {"unavailable": [], "reads": []}
+    }
+  ]
+}

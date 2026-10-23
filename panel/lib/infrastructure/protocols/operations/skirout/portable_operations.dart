@@ -1626,8 +1626,8 @@ abstract interface class BytesKernel {
 
 /// The operations of group catalog. A kernel that misses a method does not analyze.
 abstract interface class CatalogKernel {
-  /// The published declaration of the type a selection names; missing when the
-  /// catalog lacks it. Panel profile.
+  /// The published declaration of the type a selection names; missing at no
+  /// location when the catalog lacks it. Panel profile.
   PortableMaybe<_lib_editor_v1_type_catalog.DataValue> declaration(
     _lib_editor_v1_type_catalog.DataValue selection,
     PortableResources resources,
@@ -1881,9 +1881,9 @@ abstract interface class NumberKernel {
   /// significant digits, half even; floats follow IEEE 754.
   PortableNumber divide(PortableNumber dividend, PortableNumber divisor);
 
-  /// The value with exactly fraction_digits fraction digits (rounded half even)
-  /// and the locale's CLDR digits, grouping and symbols. Locale und uses no
-  /// grouping. Panel profile.
+  /// The value with exactly fraction_digits fraction digits (rounded half even; a
+  /// float from its shortest round trip decimal) and the locale's CLDR digits,
+  /// grouping and symbols. Locale und uses no grouping. Panel profile.
   String format(PortableNumber value, int fractionDigits, String locale);
 
   /// The product.
@@ -1896,8 +1896,8 @@ abstract interface class NumberKernel {
   /// The CLDR plural category of the value in the locale. Panel profile.
   PluralCategory pluralCategory(PortableNumber value, String locale);
 
-  /// Value raised to a nonnegative integer exponent; exact for integers and
-  /// decimals.
+  /// Value raised to a nonnegative integer exponent, where any value to the power
+  /// 0 is 1; exact for integers and decimals.
   PortableNumber power(PortableNumber value, int exponent);
 
   /// The remainder of truncating division; it has the sign of the dividend.
@@ -1936,8 +1936,9 @@ abstract interface class RegexKernel {
   /// Every non overlapping match of pattern in value, left to right.
   List<RegexMatch> findAll(String value, String pattern, PortableMeter meter);
 
-  /// Replaces every match of pattern; $n in replacement inserts group n and $$ a
-  /// dollar sign.
+  /// Replaces every match of pattern. In replacement, $n inserts group n (the
+  /// longest digit run naming an existing group; empty when it did not take part)
+  /// and $$ a dollar sign; any other $ fails invalid_regex.
   String replace(
     String value,
     String pattern,
@@ -1948,29 +1949,30 @@ abstract interface class RegexKernel {
 
 /// The operations of group resource. A kernel that misses a method does not analyze.
 abstract interface class ResourceKernel {
-  /// The type selection of a resource by identity; missing when there is no such
-  /// resource. Panel profile.
+  /// The type selection of a resource by identity. Reads the resource; missing at
+  /// its root when there is none. Panel profile.
   PortableMaybe<_lib_editor_v1_type_catalog.DataValue> configuration(
     _lib_editor_v1_type_catalog.ResourceId identity,
     PortableResources resources,
   );
 
-  /// The identity of the resource the link names; missing when the link is stale.
-  /// Panel profile.
+  /// The identity of the resource the link names. Reads the resource; missing at
+  /// its root when the link is stale. Panel profile.
   PortableMaybe<_lib_editor_v1_type_catalog.ResourceId> identity(
     _lib_editor_v1_type_catalog.LinkValue reference,
     PortableResources resources,
   );
 
-  /// The configured value of the resource the link names; missing when the link
-  /// is stale. Panel profile.
+  /// The resource's fields as a record of its configured type. Reads the
+  /// resource; missing at its root when the link is stale. Panel profile.
   PortableMaybe<_lib_editor_v1_type_catalog.DataValue> value(
     _lib_editor_v1_type_catalog.LinkValue reference,
     PortableResources resources,
   );
 
-  /// The configured value of a resource of type T by identity; missing when it is
-  /// not a T. Panel profile.
+  /// The fields of a resource of type T or a descendant, as a record of its
+  /// configured type. Reads the resource; missing at its root when there is no
+  /// such resource or it is not a T. Panel profile.
   PortableMaybe<_lib_editor_v1_type_catalog.DataValue> valueOf(
     _lib_editor_v1_type_catalog.ResourceId identity,
     _lib_editor_v1_type_catalog.TypeUse tType,
@@ -2108,8 +2110,8 @@ abstract interface class ValueKernel {
     _lib_editor_v1_type_catalog.DataValue second,
   );
 
-  /// The actual type of a named value, as a type selection; missing for
-  /// structural values. Panel profile.
+  /// The actual type of a named value, as a type selection; missing at no
+  /// location for structural values. Panel profile.
   PortableMaybe<_lib_editor_v1_type_catalog.DataValue> configuration(
     _lib_editor_v1_type_catalog.DataValue value,
   );
@@ -2145,7 +2147,8 @@ abstract interface class ValueKernel {
     PortableApply body,
   );
 
-  /// The value as canonical Skir readable JSON of its DataValue.
+  /// The value as canonical Skir readable JSON of its DataValue, without
+  /// whitespace and with default fields omitted.
   String toJson(_lib_editor_v1_type_catalog.DataValue value);
 
   /// Canonical text of a value. Integers and decimals in plain notation, floats

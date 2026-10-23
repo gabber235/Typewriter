@@ -1,0 +1,1052 @@
+{
+  "cases": [
+    {
+      "id": "list_of_positional_ids",
+      "expression": {
+        "kind": "call",
+        "value": {
+          "operation": {"value": "list.of"},
+          "type_arguments": [],
+          "arguments": [
+            {"kind": "literal", "value": {"kind": "string_value", "value": "a"}},
+            {"kind": "literal", "value": {"kind": "string_value", "value": "b"}}
+          ]
+        }
+      },
+      "check": {
+        "resultType": {
+          "value": {
+            "kind": "list",
+            "value": {
+              "value": {"kind": "nominal", "value": {"kind": "scalar", "value": "text"}},
+              "may_be_missing": false
+            }
+          },
+          "may_be_missing": true
+        },
+        "failures": [],
+        "inferredType": {
+          "value": {
+            "kind": "list",
+            "value": {
+              "value": {"kind": "nominal", "value": {"kind": "scalar", "value": "text"}},
+              "may_be_missing": false
+            }
+          },
+          "may_be_missing": false
+        }
+      },
+      "expected": {
+        "available": {"list": [{"id": "0", "value": {"string": "a"}}, {"id": "1", "value": {"string": "b"}}]},
+        "reads": []
+      }
+    },
+    {
+      "id": "list_of_nothing",
+      "expression": {"kind": "call", "value": {"operation": {"value": "list.of"}, "type_arguments": [], "arguments": []}},
+      "expected": {"available": {"list": []}, "reads": []}
+    },
+    {
+      "id": "list_index_of_first",
+      "expression": {
+        "kind": "call",
+        "value": {
+          "operation": {"value": "list.index_of"},
+          "type_arguments": [],
+          "arguments": [
+            {
+              "kind": "literal",
+              "value": {
+                "kind": "list_value",
+                "value": {
+                  "items": [
+                    {"id": {"value": "x"}, "value": {"kind": "string_value", "value": "a"}},
+                    {"id": {"value": "y"}, "value": {"kind": "string_value", "value": "b"}},
+                    {"id": {"value": "z"}, "value": {"kind": "string_value", "value": "a"}}
+                  ]
+                }
+              }
+            },
+            {"kind": "literal", "value": {"kind": "string_value", "value": "a"}}
+          ]
+        }
+      },
+      "check": {
+        "resultType": {
+          "value": {
+            "kind": "nominal",
+            "value": {"kind": "scalar", "value": {"kind": "integer", "value": {"width": "signed_thirty_two"}}}
+          },
+          "may_be_missing": true
+        },
+        "failures": [],
+        "inferredType": {
+          "value": {
+            "kind": "nominal",
+            "value": {"kind": "scalar", "value": {"kind": "integer", "value": {"width": "signed_thirty_two"}}}
+          },
+          "may_be_missing": false
+        }
+      },
+      "expected": {"available": {"integer": "0"}, "reads": []}
+    },
+    {
+      "id": "list_index_of_absent",
+      "expression": {
+        "kind": "call",
+        "value": {
+          "operation": {"value": "list.index_of"},
+          "type_arguments": [],
+          "arguments": [
+            {
+              "kind": "literal",
+              "value": {
+                "kind": "list_value",
+                "value": {"items": [{"id": {"value": "x"}, "value": {"kind": "string_value", "value": "a"}}]}
+              }
+            },
+            {"kind": "literal", "value": {"kind": "string_value", "value": "q"}}
+          ]
+        }
+      },
+      "expected": {"available": {"integer": "-1"}, "reads": []}
+    },
+    {
+      "id": "list_index_of_ignores_item_ids",
+      "expression": {
+        "kind": "call",
+        "value": {
+          "operation": {"value": "list.index_of"},
+          "type_arguments": [],
+          "arguments": [
+            {
+              "kind": "literal",
+              "value": {
+                "kind": "list_value",
+                "value": {
+                  "items": [
+                    {
+                      "id": {"value": "o"},
+                      "value": {
+                        "kind": "list_value",
+                        "value": {"items": [{"id": {"value": "p"}, "value": {"kind": "integer", "value": "1"}}]}
+                      }
+                    }
+                  ]
+                }
+              }
+            },
+            {
+              "kind": "call",
+              "value": {
+                "operation": {"value": "list.of"},
+                "type_arguments": [],
+                "arguments": [{"kind": "literal", "value": {"kind": "integer", "value": "1"}}]
+              }
+            }
+          ]
+        }
+      },
+      "expected": {"available": {"integer": "0"}, "reads": []}
+    },
+    {
+      "id": "list_last_index_of",
+      "expression": {
+        "kind": "call",
+        "value": {
+          "operation": {"value": "list.last_index_of"},
+          "type_arguments": [],
+          "arguments": [
+            {
+              "kind": "literal",
+              "value": {
+                "kind": "list_value",
+                "value": {
+                  "items": [
+                    {"id": {"value": "x"}, "value": {"kind": "string_value", "value": "a"}},
+                    {"id": {"value": "y"}, "value": {"kind": "string_value", "value": "b"}},
+                    {"id": {"value": "z"}, "value": {"kind": "string_value", "value": "a"}}
+                  ]
+                }
+              }
+            },
+            {"kind": "literal", "value": {"kind": "string_value", "value": "a"}}
+          ]
+        }
+      },
+      "expected": {"available": {"integer": "2"}, "reads": []}
+    },
+    {
+      "id": "list_last_index_of_absent",
+      "expression": {
+        "kind": "call",
+        "value": {
+          "operation": {"value": "list.last_index_of"},
+          "type_arguments": [],
+          "arguments": [
+            {
+              "kind": "literal",
+              "value": {
+                "kind": "list_value",
+                "value": {"items": [{"id": {"value": "x"}, "value": {"kind": "string_value", "value": "a"}}]}
+              }
+            },
+            {"kind": "literal", "value": {"kind": "string_value", "value": "q"}}
+          ]
+        }
+      },
+      "expected": {"available": {"integer": "-1"}, "reads": []}
+    },
+    {
+      "id": "list_at_index",
+      "expression": {
+        "kind": "call",
+        "value": {
+          "operation": {"value": "list.at"},
+          "type_arguments": [],
+          "arguments": [
+            {
+              "kind": "literal",
+              "value": {
+                "kind": "list_value",
+                "value": {
+                  "items": [
+                    {"id": {"value": "a"}, "value": {"kind": "integer", "value": "10"}},
+                    {"id": {"value": "b"}, "value": {"kind": "integer", "value": "20"}},
+                    {"id": {"value": "c"}, "value": {"kind": "integer", "value": "30"}}
+                  ]
+                }
+              }
+            },
+            {"kind": "literal", "value": {"kind": "integer", "value": "1"}}
+          ]
+        }
+      },
+      "expected": {"available": {"integer": "20"}, "reads": []}
+    },
+    {
+      "id": "list_at_past_end",
+      "expression": {
+        "kind": "call",
+        "value": {
+          "operation": {"value": "list.at"},
+          "type_arguments": [],
+          "arguments": [
+            {
+              "kind": "literal",
+              "value": {
+                "kind": "list_value",
+                "value": {"items": [{"id": {"value": "a"}, "value": {"kind": "integer", "value": "10"}}]}
+              }
+            },
+            {"kind": "literal", "value": {"kind": "integer", "value": "1"}}
+          ]
+        }
+      },
+      "expected": {"failed": "collection_key_absent", "reads": []}
+    },
+    {
+      "id": "list_at_negative",
+      "expression": {
+        "kind": "call",
+        "value": {
+          "operation": {"value": "list.at"},
+          "type_arguments": [],
+          "arguments": [
+            {
+              "kind": "literal",
+              "value": {
+                "kind": "list_value",
+                "value": {"items": [{"id": {"value": "a"}, "value": {"kind": "integer", "value": "10"}}]}
+              }
+            },
+            {"kind": "literal", "value": {"kind": "integer", "value": "-1"}}
+          ]
+        }
+      },
+      "expected": {"failed": "collection_key_absent", "reads": []}
+    },
+    {
+      "id": "list_at_unfilled_item_located",
+      "expression": {
+        "kind": "call",
+        "value": {
+          "operation": {"value": "list.at"},
+          "type_arguments": [],
+          "arguments": [
+            {
+              "kind": "input",
+              "value": {
+                "binding": {"value": "subject"},
+                "path": {"segments": [{"kind": "field", "value": {"name": "items"}}]}
+              }
+            },
+            {"kind": "literal", "value": {"kind": "integer", "value": "1"}}
+          ]
+        }
+      },
+      "inputs": {
+        "subject": {
+          "value": {
+            "record": {
+              "items": {"list": [{"id": "a", "value": {"integer": "1"}}, {"id": "b", "value": {"unfilled": true}}]}
+            }
+          }
+        }
+      },
+      "expected": {"unavailable": ["subject.items[b]"], "reads": ["subject.items"]}
+    },
+    {
+      "id": "list_at_complete_item_of_partial_list",
+      "expression": {
+        "kind": "call",
+        "value": {
+          "operation": {"value": "list.at"},
+          "type_arguments": [],
+          "arguments": [
+            {
+              "kind": "input",
+              "value": {
+                "binding": {"value": "subject"},
+                "path": {"segments": [{"kind": "field", "value": {"name": "items"}}]}
+              }
+            },
+            {"kind": "literal", "value": {"kind": "integer", "value": "0"}}
+          ]
+        }
+      },
+      "inputs": {
+        "subject": {
+          "value": {
+            "record": {
+              "items": {"list": [{"id": "a", "value": {"integer": "1"}}, {"id": "b", "value": {"unfilled": true}}]}
+            }
+          }
+        }
+      },
+      "expected": {"available": {"integer": "1"}, "reads": ["subject.items"]}
+    },
+    {
+      "id": "list_at_unfilled_item_unlocated",
+      "expression": {
+        "kind": "call",
+        "value": {
+          "operation": {"value": "list.at"},
+          "type_arguments": [],
+          "arguments": [
+            {
+              "kind": "input",
+              "value": {
+                "binding": {"value": "subject"},
+                "path": {"segments": [{"kind": "field", "value": {"name": "items"}}]}
+              }
+            },
+            {"kind": "literal", "value": {"kind": "integer", "value": "1"}}
+          ]
+        }
+      },
+      "inputs": {
+        "subject": {
+          "value": {
+            "record": {
+              "items": {"list": [{"id": "a", "value": {"integer": "1"}}, {"id": "b", "value": {"unfilled": true}}]}
+            }
+          },
+          "located": false
+        }
+      },
+      "expected": {"unavailable": [], "reads": []}
+    },
+    {
+      "id": "list_slice_keeps_source_ids",
+      "expression": {
+        "kind": "call",
+        "value": {
+          "operation": {"value": "list.slice"},
+          "type_arguments": [],
+          "arguments": [
+            {
+              "kind": "literal",
+              "value": {
+                "kind": "list_value",
+                "value": {
+                  "items": [
+                    {"id": {"value": "a"}, "value": {"kind": "string_value", "value": "a"}},
+                    {"id": {"value": "b"}, "value": {"kind": "string_value", "value": "b"}},
+                    {"id": {"value": "c"}, "value": {"kind": "string_value", "value": "c"}},
+                    {"id": {"value": "d"}, "value": {"kind": "string_value", "value": "d"}}
+                  ]
+                }
+              }
+            },
+            {"kind": "literal", "value": {"kind": "integer", "value": "1"}},
+            {"kind": "literal", "value": {"kind": "integer", "value": "3"}}
+          ]
+        }
+      },
+      "expected": {
+        "available": {"list": [{"id": "b", "value": {"string": "b"}}, {"id": "c", "value": {"string": "c"}}]},
+        "reads": []
+      }
+    },
+    {
+      "id": "list_slice_empty_at_end",
+      "expression": {
+        "kind": "call",
+        "value": {
+          "operation": {"value": "list.slice"},
+          "type_arguments": [],
+          "arguments": [
+            {
+              "kind": "literal",
+              "value": {
+                "kind": "list_value",
+                "value": {
+                  "items": [
+                    {"id": {"value": "a"}, "value": {"kind": "string_value", "value": "a"}},
+                    {"id": {"value": "b"}, "value": {"kind": "string_value", "value": "b"}},
+                    {"id": {"value": "c"}, "value": {"kind": "string_value", "value": "c"}},
+                    {"id": {"value": "d"}, "value": {"kind": "string_value", "value": "d"}}
+                  ]
+                }
+              }
+            },
+            {"kind": "literal", "value": {"kind": "integer", "value": "4"}},
+            {"kind": "literal", "value": {"kind": "integer", "value": "4"}}
+          ]
+        }
+      },
+      "expected": {"available": {"list": []}, "reads": []}
+    },
+    {
+      "id": "list_slice_end_before_start",
+      "expression": {
+        "kind": "call",
+        "value": {
+          "operation": {"value": "list.slice"},
+          "type_arguments": [],
+          "arguments": [
+            {
+              "kind": "literal",
+              "value": {
+                "kind": "list_value",
+                "value": {
+                  "items": [
+                    {"id": {"value": "a"}, "value": {"kind": "string_value", "value": "a"}},
+                    {"id": {"value": "b"}, "value": {"kind": "string_value", "value": "b"}},
+                    {"id": {"value": "c"}, "value": {"kind": "string_value", "value": "c"}},
+                    {"id": {"value": "d"}, "value": {"kind": "string_value", "value": "d"}}
+                  ]
+                }
+              }
+            },
+            {"kind": "literal", "value": {"kind": "integer", "value": "2"}},
+            {"kind": "literal", "value": {"kind": "integer", "value": "1"}}
+          ]
+        }
+      },
+      "expected": {"failed": "slice_range", "reads": []}
+    },
+    {
+      "id": "list_slice_end_beyond_size",
+      "expression": {
+        "kind": "call",
+        "value": {
+          "operation": {"value": "list.slice"},
+          "type_arguments": [],
+          "arguments": [
+            {
+              "kind": "literal",
+              "value": {
+                "kind": "list_value",
+                "value": {
+                  "items": [
+                    {"id": {"value": "a"}, "value": {"kind": "string_value", "value": "a"}},
+                    {"id": {"value": "b"}, "value": {"kind": "string_value", "value": "b"}},
+                    {"id": {"value": "c"}, "value": {"kind": "string_value", "value": "c"}},
+                    {"id": {"value": "d"}, "value": {"kind": "string_value", "value": "d"}}
+                  ]
+                }
+              }
+            },
+            {"kind": "literal", "value": {"kind": "integer", "value": "0"}},
+            {"kind": "literal", "value": {"kind": "integer", "value": "5"}}
+          ]
+        }
+      },
+      "expected": {"failed": "slice_range", "reads": []}
+    },
+    {
+      "id": "list_slice_negative_start",
+      "expression": {
+        "kind": "call",
+        "value": {
+          "operation": {"value": "list.slice"},
+          "type_arguments": [],
+          "arguments": [
+            {
+              "kind": "literal",
+              "value": {
+                "kind": "list_value",
+                "value": {
+                  "items": [
+                    {"id": {"value": "a"}, "value": {"kind": "string_value", "value": "a"}},
+                    {"id": {"value": "b"}, "value": {"kind": "string_value", "value": "b"}},
+                    {"id": {"value": "c"}, "value": {"kind": "string_value", "value": "c"}},
+                    {"id": {"value": "d"}, "value": {"kind": "string_value", "value": "d"}}
+                  ]
+                }
+              }
+            },
+            {"kind": "literal", "value": {"kind": "integer", "value": "-1"}},
+            {"kind": "literal", "value": {"kind": "integer", "value": "2"}}
+          ]
+        }
+      },
+      "expected": {"failed": "slice_range", "reads": []}
+    },
+    {
+      "id": "list_reverse_keeps_source_ids",
+      "expression": {
+        "kind": "call",
+        "value": {
+          "operation": {"value": "list.reverse"},
+          "type_arguments": [],
+          "arguments": [
+            {
+              "kind": "literal",
+              "value": {
+                "kind": "list_value",
+                "value": {
+                  "items": [
+                    {"id": {"value": "a"}, "value": {"kind": "integer", "value": "1"}},
+                    {"id": {"value": "b"}, "value": {"kind": "integer", "value": "2"}},
+                    {"id": {"value": "c"}, "value": {"kind": "integer", "value": "3"}}
+                  ]
+                }
+              }
+            }
+          ]
+        }
+      },
+      "expected": {
+        "available": {
+          "list": [
+            {"id": "c", "value": {"integer": "3"}},
+            {"id": "b", "value": {"integer": "2"}},
+            {"id": "a", "value": {"integer": "1"}}
+          ]
+        },
+        "reads": []
+      }
+    },
+    {
+      "id": "list_concat_prefixes_argument_position",
+      "expression": {
+        "kind": "call",
+        "value": {
+          "operation": {"value": "list.concat"},
+          "type_arguments": [],
+          "arguments": [
+            {
+              "kind": "literal",
+              "value": {
+                "kind": "list_value",
+                "value": {
+                  "items": [
+                    {"id": {"value": "x"}, "value": {"kind": "integer", "value": "1"}},
+                    {"id": {"value": "y"}, "value": {"kind": "integer", "value": "2"}}
+                  ]
+                }
+              }
+            },
+            {
+              "kind": "literal",
+              "value": {
+                "kind": "list_value",
+                "value": {"items": [{"id": {"value": "x"}, "value": {"kind": "integer", "value": "3"}}]}
+              }
+            }
+          ]
+        }
+      },
+      "expected": {
+        "available": {
+          "list": [
+            {"id": "1:01:x", "value": {"integer": "1"}},
+            {"id": "1:01:y", "value": {"integer": "2"}},
+            {"id": "1:11:x", "value": {"integer": "3"}}
+          ]
+        },
+        "reads": []
+      }
+    },
+    {
+      "id": "list_concat_variadic",
+      "expression": {
+        "kind": "call",
+        "value": {
+          "operation": {"value": "list.concat"},
+          "type_arguments": [],
+          "arguments": [
+            {
+              "kind": "literal",
+              "value": {
+                "kind": "list_value",
+                "value": {"items": [{"id": {"value": "a"}, "value": {"kind": "integer", "value": "1"}}]}
+              }
+            },
+            {
+              "kind": "call",
+              "value": {"operation": {"value": "list.of"}, "type_arguments": [], "arguments": []}
+            },
+            {
+              "kind": "literal",
+              "value": {
+                "kind": "list_value",
+                "value": {"items": [{"id": {"value": "a"}, "value": {"kind": "integer", "value": "2"}}]}
+              }
+            }
+          ]
+        }
+      },
+      "expected": {
+        "available": {"list": [{"id": "1:01:a", "value": {"integer": "1"}}, {"id": "1:21:a", "value": {"integer": "2"}}]},
+        "reads": []
+      }
+    },
+    {
+      "id": "list_flatten_nests_ids",
+      "expression": {
+        "kind": "call",
+        "value": {
+          "operation": {"value": "list.flatten"},
+          "type_arguments": [],
+          "arguments": [
+            {
+              "kind": "literal",
+              "value": {
+                "kind": "list_value",
+                "value": {
+                  "items": [
+                    {
+                      "id": {"value": "o1"},
+                      "value": {
+                        "kind": "list_value",
+                        "value": {
+                          "items": [
+                            {"id": {"value": "i1"}, "value": {"kind": "integer", "value": "1"}},
+                            {"id": {"value": "i2"}, "value": {"kind": "integer", "value": "2"}}
+                          ]
+                        }
+                      }
+                    },
+                    {
+                      "id": {"value": "o2"},
+                      "value": {
+                        "kind": "list_value",
+                        "value": {"items": [{"id": {"value": "i1"}, "value": {"kind": "integer", "value": "3"}}]}
+                      }
+                    }
+                  ]
+                }
+              }
+            }
+          ]
+        }
+      },
+      "expected": {
+        "available": {
+          "list": [
+            {"id": "2:o12:i1", "value": {"integer": "1"}},
+            {"id": "2:o12:i2", "value": {"integer": "2"}},
+            {"id": "2:o22:i1", "value": {"integer": "3"}}
+          ]
+        },
+        "reads": []
+      }
+    },
+    {
+      "id": "list_flatten_of_map_changes_item_type",
+      "expression": {
+        "kind": "call",
+        "value": {
+          "operation": {"value": "list.flatten"},
+          "type_arguments": [],
+          "arguments": [
+            {
+              "kind": "call",
+              "value": {
+                "operation": {"value": "collection.map"},
+                "type_arguments": [],
+                "arguments": [
+                  {
+                    "kind": "literal",
+                    "value": {
+                      "kind": "list_value",
+                      "value": {
+                        "items": [
+                          {"id": {"value": "a"}, "value": {"kind": "string_value", "value": "aa"}},
+                          {"id": {"value": "b"}, "value": {"kind": "string_value", "value": "b"}}
+                        ]
+                      }
+                    }
+                  },
+                  {
+                    "kind": "lambda",
+                    "value": {
+                      "arity": 1,
+                      "body": {
+                        "kind": "literal",
+                        "value": {
+                          "kind": "list_value",
+                          "value": {"items": [{"id": {"value": "x"}, "value": {"kind": "integer", "value": "1"}}]}
+                        }
+                      }
+                    }
+                  }
+                ]
+              }
+            }
+          ]
+        }
+      },
+      "expected": {
+        "available": {"list": [{"id": "1:a1:x", "value": {"integer": "1"}}, {"id": "1:b1:x", "value": {"integer": "1"}}]},
+        "reads": []
+      }
+    },
+    {
+      "id": "list_range_ascending",
+      "expression": {
+        "kind": "call",
+        "value": {
+          "operation": {"value": "list.range"},
+          "type_arguments": [],
+          "arguments": [
+            {"kind": "literal", "value": {"kind": "integer", "value": "0"}},
+            {"kind": "literal", "value": {"kind": "integer", "value": "5"}},
+            {"kind": "literal", "value": {"kind": "integer", "value": "2"}}
+          ]
+        }
+      },
+      "check": {
+        "resultType": {
+          "value": {
+            "kind": "list",
+            "value": {
+              "value": {
+                "kind": "nominal",
+                "value": {"kind": "scalar", "value": {"kind": "integer", "value": {"width": "signed_thirty_two"}}}
+              },
+              "may_be_missing": false
+            }
+          },
+          "may_be_missing": true
+        },
+        "failures": [],
+        "inferredType": {
+          "value": {
+            "kind": "list",
+            "value": {
+              "value": {
+                "kind": "nominal",
+                "value": {"kind": "scalar", "value": {"kind": "integer", "value": {"width": "signed_thirty_two"}}}
+              },
+              "may_be_missing": false
+            }
+          },
+          "may_be_missing": false
+        }
+      },
+      "expected": {
+        "available": {
+          "list": [
+            {"id": "0", "value": {"integer": "0"}},
+            {"id": "1", "value": {"integer": "2"}},
+            {"id": "2", "value": {"integer": "4"}}
+          ]
+        },
+        "reads": []
+      }
+    },
+    {
+      "id": "list_range_descending",
+      "expression": {
+        "kind": "call",
+        "value": {
+          "operation": {"value": "list.range"},
+          "type_arguments": [],
+          "arguments": [
+            {"kind": "literal", "value": {"kind": "integer", "value": "5"}},
+            {"kind": "literal", "value": {"kind": "integer", "value": "0"}},
+            {"kind": "literal", "value": {"kind": "integer", "value": "-2"}}
+          ]
+        }
+      },
+      "expected": {
+        "available": {
+          "list": [
+            {"id": "0", "value": {"integer": "5"}},
+            {"id": "1", "value": {"integer": "3"}},
+            {"id": "2", "value": {"integer": "1"}}
+          ]
+        },
+        "reads": []
+      }
+    },
+    {
+      "id": "list_range_empty",
+      "expression": {
+        "kind": "call",
+        "value": {
+          "operation": {"value": "list.range"},
+          "type_arguments": [],
+          "arguments": [
+            {"kind": "literal", "value": {"kind": "integer", "value": "0"}},
+            {"kind": "literal", "value": {"kind": "integer", "value": "0"}},
+            {"kind": "literal", "value": {"kind": "integer", "value": "1"}}
+          ]
+        }
+      },
+      "expected": {"available": {"list": []}, "reads": []}
+    },
+    {
+      "id": "list_range_wrong_direction_is_empty",
+      "expression": {
+        "kind": "call",
+        "value": {
+          "operation": {"value": "list.range"},
+          "type_arguments": [],
+          "arguments": [
+            {"kind": "literal", "value": {"kind": "integer", "value": "0"}},
+            {"kind": "literal", "value": {"kind": "integer", "value": "5"}},
+            {"kind": "literal", "value": {"kind": "integer", "value": "-1"}}
+          ]
+        }
+      },
+      "expected": {"available": {"list": []}, "reads": []}
+    },
+    {
+      "id": "list_range_zero_step",
+      "expression": {
+        "kind": "call",
+        "value": {
+          "operation": {"value": "list.range"},
+          "type_arguments": [],
+          "arguments": [
+            {"kind": "literal", "value": {"kind": "integer", "value": "0"}},
+            {"kind": "literal", "value": {"kind": "integer", "value": "5"}},
+            {"kind": "literal", "value": {"kind": "integer", "value": "0"}}
+          ]
+        }
+      },
+      "expected": {"failed": "invalid_range_step", "reads": []}
+    },
+    {
+      "id": "list_range_charges_items_before_producing",
+      "expression": {
+        "kind": "call",
+        "value": {
+          "operation": {"value": "list.range"},
+          "type_arguments": [],
+          "arguments": [
+            {"kind": "literal", "value": {"kind": "integer", "value": "0"}},
+            {"kind": "literal", "value": {"kind": "integer", "value": "2000"}},
+            {"kind": "literal", "value": {"kind": "integer", "value": "1"}}
+          ]
+        }
+      },
+      "expected": {"failed": "expression_collection_limit", "reads": []}
+    },
+    {
+      "id": "list_zip_shorter_decides",
+      "expression": {
+        "kind": "call",
+        "value": {
+          "operation": {"value": "list.zip"},
+          "type_arguments": [],
+          "arguments": [
+            {
+              "kind": "literal",
+              "value": {
+                "kind": "list_value",
+                "value": {
+                  "items": [
+                    {"id": {"value": "a"}, "value": {"kind": "integer", "value": "1"}},
+                    {"id": {"value": "b"}, "value": {"kind": "integer", "value": "2"}},
+                    {"id": {"value": "c"}, "value": {"kind": "integer", "value": "3"}}
+                  ]
+                }
+              }
+            },
+            {
+              "kind": "literal",
+              "value": {
+                "kind": "list_value",
+                "value": {
+                  "items": [
+                    {"id": {"value": "x"}, "value": {"kind": "string_value", "value": "x"}},
+                    {"id": {"value": "y"}, "value": {"kind": "string_value", "value": "y"}}
+                  ]
+                }
+              }
+            }
+          ]
+        }
+      },
+      "expected": {
+        "available": {
+          "list": [
+            {"id": "a", "value": {"record": {"key": {"integer": "1"}, "value": {"string": "x"}}}},
+            {"id": "b", "value": {"record": {"key": {"integer": "2"}, "value": {"string": "y"}}}}
+          ]
+        },
+        "reads": []
+      }
+    },
+    {
+      "id": "list_scan_every_accumulator",
+      "expression": {
+        "kind": "call",
+        "value": {
+          "operation": {"value": "list.scan"},
+          "type_arguments": [],
+          "arguments": [
+            {
+              "kind": "literal",
+              "value": {
+                "kind": "list_value",
+                "value": {
+                  "items": [
+                    {"id": {"value": "a"}, "value": {"kind": "integer", "value": "1"}},
+                    {"id": {"value": "b"}, "value": {"kind": "integer", "value": "2"}},
+                    {"id": {"value": "c"}, "value": {"kind": "integer", "value": "3"}}
+                  ]
+                }
+              }
+            },
+            {"kind": "literal", "value": {"kind": "integer", "value": "0"}},
+            {
+              "kind": "lambda",
+              "value": {
+                "arity": 2,
+                "body": {
+                  "kind": "call",
+                  "value": {
+                    "operation": {"value": "number.add"},
+                    "type_arguments": [],
+                    "arguments": [
+                      {"kind": "local", "value": {"depth": 0, "slot": 0, "path": {"segments": []}}},
+                      {"kind": "local", "value": {"depth": 0, "slot": 1, "path": {"segments": []}}}
+                    ]
+                  }
+                }
+              }
+            }
+          ]
+        }
+      },
+      "check": {
+        "resultType": {
+          "value": {
+            "kind": "list",
+            "value": {
+              "value": {
+                "kind": "nominal",
+                "value": {"kind": "scalar", "value": {"kind": "integer", "value": {"width": "signed_sixty_four"}}}
+              },
+              "may_be_missing": false
+            }
+          },
+          "may_be_missing": true
+        },
+        "failures": [],
+        "inferredType": {
+          "value": {
+            "kind": "list",
+            "value": {
+              "value": {
+                "kind": "nominal",
+                "value": {"kind": "scalar", "value": {"kind": "integer", "value": {"width": "signed_sixty_four"}}}
+              },
+              "may_be_missing": false
+            }
+          },
+          "may_be_missing": false
+        }
+      },
+      "expected": {
+        "available": {
+          "list": [
+            {"id": "0", "value": {"integer": "0"}},
+            {"id": "1", "value": {"integer": "1"}},
+            {"id": "2", "value": {"integer": "3"}},
+            {"id": "3", "value": {"integer": "6"}}
+          ]
+        },
+        "reads": []
+      }
+    },
+    {
+      "id": "list_scan_empty_has_initial",
+      "expression": {
+        "kind": "call",
+        "value": {
+          "operation": {"value": "list.scan"},
+          "type_arguments": [],
+          "arguments": [
+            {
+              "kind": "call",
+              "value": {"operation": {"value": "list.of"}, "type_arguments": [], "arguments": []}
+            },
+            {"kind": "literal", "value": {"kind": "integer", "value": "7"}},
+            {
+              "kind": "lambda",
+              "value": {
+                "arity": 2,
+                "body": {"kind": "local", "value": {"depth": 0, "slot": 0, "path": {"segments": []}}}
+              }
+            }
+          ]
+        }
+      },
+      "expected": {"available": {"list": [{"id": "0", "value": {"integer": "7"}}]}, "reads": []}
+    },
+    {
+      "id": "list_scan_missing_step_aborts",
+      "expression": {
+        "kind": "call",
+        "value": {
+          "operation": {"value": "list.scan"},
+          "type_arguments": [],
+          "arguments": [
+            {
+              "kind": "literal",
+              "value": {
+                "kind": "list_value",
+                "value": {"items": [{"id": {"value": "a"}, "value": {"kind": "integer", "value": "1"}}]}
+              }
+            },
+            {"kind": "literal", "value": {"kind": "integer", "value": "0"}},
+            {
+              "kind": "lambda",
+              "value": {
+                "arity": 2,
+                "body": {
+                  "kind": "input",
+                  "value": {
+                    "binding": {"value": "subject"},
+                    "path": {"segments": [{"kind": "field", "value": {"name": "missing"}}]}
+                  }
+                }
+              }
+            }
+          ]
+        }
+      },
+      "inputs": {"subject": {"value": {"record": {}}}},
+      "expected": {"unavailable": ["subject.missing"], "reads": ["subject.missing"]}
+    }
+  ]
+}
