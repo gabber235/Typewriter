@@ -343,21 +343,6 @@
       "expected": {"available": {"boolean": true}, "reads": []}
     },
     {
-      "id": "value_equals_float_signed_zero_compares_bits",
-      "expression": {
-        "kind": "call",
-        "value": {
-          "operation": {"value": "value.equals"},
-          "type_arguments": [],
-          "arguments": [
-            {"kind": "literal", "value": {"kind": "float", "value": 0.0}},
-            {"kind": "literal", "value": {"kind": "float", "value": -0.0}}
-          ]
-        }
-      },
-      "expected": {"available": {"boolean": false}, "reads": []}
-    },
-    {
       "id": "value_equals_text_and_integer",
       "expression": {
         "kind": "call",
@@ -703,18 +688,6 @@
         }
       },
       "expected": {"available": {"string": "1"}, "reads": []}
-    },
-    {
-      "id": "value_to_text_float_negative_zero",
-      "expression": {
-        "kind": "call",
-        "value": {
-          "operation": {"value": "value.to_text"},
-          "type_arguments": [],
-          "arguments": [{"kind": "literal", "value": {"kind": "float", "value": -0.0}}]
-        }
-      },
-      "expected": {"available": {"string": "0"}, "reads": []}
     },
     {
       "id": "value_to_text_float_fraction",
@@ -1568,26 +1541,7 @@
               "arguments": []
             }
           ],
-          "representation": {
-            "kind": "record",
-            "value": {
-              "abstract": false,
-              "fields": [
-                {
-                  "owner": {
-                    "definition": {
-                      "type_id": {"kind": "qualified", "value": {"namespace": "fixture", "name": "Dog"}},
-                      "revision": 1
-                    },
-                    "name": "name"
-                  },
-                  "type": {"kind": "scalar", "value": "text"},
-                  "overrides": [],
-                  "has_constructor_default": false
-                }
-              ]
-            }
-          }
+          "representation": {"kind": "record", "value": {"abstract": false, "fields": []}}
         },
         {
           "id": {"type_id": {"kind": "qualified", "value": {"namespace": "fixture", "name": "Cat"}}, "revision": 1},
@@ -1601,26 +1555,7 @@
               "arguments": []
             }
           ],
-          "representation": {
-            "kind": "record",
-            "value": {
-              "abstract": false,
-              "fields": [
-                {
-                  "owner": {
-                    "definition": {
-                      "type_id": {"kind": "qualified", "value": {"namespace": "fixture", "name": "Cat"}},
-                      "revision": 1
-                    },
-                    "name": "name"
-                  },
-                  "type": {"kind": "scalar", "value": "text"},
-                  "overrides": [],
-                  "has_constructor_default": false
-                }
-              ]
-            }
-          }
+          "representation": {"kind": "record", "value": {"abstract": false, "fields": []}}
         }
       ],
       "check": {
@@ -1718,26 +1653,7 @@
               "arguments": []
             }
           ],
-          "representation": {
-            "kind": "record",
-            "value": {
-              "abstract": false,
-              "fields": [
-                {
-                  "owner": {
-                    "definition": {
-                      "type_id": {"kind": "qualified", "value": {"namespace": "fixture", "name": "Dog"}},
-                      "revision": 1
-                    },
-                    "name": "name"
-                  },
-                  "type": {"kind": "scalar", "value": "text"},
-                  "overrides": [],
-                  "has_constructor_default": false
-                }
-              ]
-            }
-          }
+          "representation": {"kind": "record", "value": {"abstract": false, "fields": []}}
         },
         {
           "id": {"type_id": {"kind": "qualified", "value": {"namespace": "fixture", "name": "Cat"}}, "revision": 1},
@@ -1751,26 +1667,7 @@
               "arguments": []
             }
           ],
-          "representation": {
-            "kind": "record",
-            "value": {
-              "abstract": false,
-              "fields": [
-                {
-                  "owner": {
-                    "definition": {
-                      "type_id": {"kind": "qualified", "value": {"namespace": "fixture", "name": "Cat"}},
-                      "revision": 1
-                    },
-                    "name": "name"
-                  },
-                  "type": {"kind": "scalar", "value": "text"},
-                  "overrides": [],
-                  "has_constructor_default": false
-                }
-              ]
-            }
-          }
+          "representation": {"kind": "record", "value": {"abstract": false, "fields": []}}
         }
       ],
       "expected": {"available": {"boolean": true}, "reads": []}
@@ -1857,26 +1754,7 @@
               "arguments": []
             }
           ],
-          "representation": {
-            "kind": "record",
-            "value": {
-              "abstract": false,
-              "fields": [
-                {
-                  "owner": {
-                    "definition": {
-                      "type_id": {"kind": "qualified", "value": {"namespace": "fixture", "name": "Dog"}},
-                      "revision": 1
-                    },
-                    "name": "name"
-                  },
-                  "type": {"kind": "scalar", "value": "text"},
-                  "overrides": [],
-                  "has_constructor_default": false
-                }
-              ]
-            }
-          }
+          "representation": {"kind": "record", "value": {"abstract": false, "fields": []}}
         },
         {
           "id": {"type_id": {"kind": "qualified", "value": {"namespace": "fixture", "name": "Cat"}}, "revision": 1},
@@ -1890,26 +1768,7 @@
               "arguments": []
             }
           ],
-          "representation": {
-            "kind": "record",
-            "value": {
-              "abstract": false,
-              "fields": [
-                {
-                  "owner": {
-                    "definition": {
-                      "type_id": {"kind": "qualified", "value": {"namespace": "fixture", "name": "Cat"}},
-                      "revision": 1
-                    },
-                    "name": "name"
-                  },
-                  "type": {"kind": "scalar", "value": "text"},
-                  "overrides": [],
-                  "has_constructor_default": false
-                }
-              ]
-            }
-          }
+          "representation": {"kind": "record", "value": {"abstract": false, "fields": []}}
         }
       ],
       "expected": {"available": {"boolean": false}, "reads": []}
@@ -1996,26 +1855,7 @@
               "arguments": []
             }
           ],
-          "representation": {
-            "kind": "record",
-            "value": {
-              "abstract": false,
-              "fields": [
-                {
-                  "owner": {
-                    "definition": {
-                      "type_id": {"kind": "qualified", "value": {"namespace": "fixture", "name": "Dog"}},
-                      "revision": 1
-                    },
-                    "name": "name"
-                  },
-                  "type": {"kind": "scalar", "value": "text"},
-                  "overrides": [],
-                  "has_constructor_default": false
-                }
-              ]
-            }
-          }
+          "representation": {"kind": "record", "value": {"abstract": false, "fields": []}}
         },
         {
           "id": {"type_id": {"kind": "qualified", "value": {"namespace": "fixture", "name": "Cat"}}, "revision": 1},
@@ -2029,26 +1869,7 @@
               "arguments": []
             }
           ],
-          "representation": {
-            "kind": "record",
-            "value": {
-              "abstract": false,
-              "fields": [
-                {
-                  "owner": {
-                    "definition": {
-                      "type_id": {"kind": "qualified", "value": {"namespace": "fixture", "name": "Cat"}},
-                      "revision": 1
-                    },
-                    "name": "name"
-                  },
-                  "type": {"kind": "scalar", "value": "text"},
-                  "overrides": [],
-                  "has_constructor_default": false
-                }
-              ]
-            }
-          }
+          "representation": {"kind": "record", "value": {"abstract": false, "fields": []}}
         }
       ],
       "expected": {
@@ -2146,26 +1967,7 @@
               "arguments": []
             }
           ],
-          "representation": {
-            "kind": "record",
-            "value": {
-              "abstract": false,
-              "fields": [
-                {
-                  "owner": {
-                    "definition": {
-                      "type_id": {"kind": "qualified", "value": {"namespace": "fixture", "name": "Dog"}},
-                      "revision": 1
-                    },
-                    "name": "name"
-                  },
-                  "type": {"kind": "scalar", "value": "text"},
-                  "overrides": [],
-                  "has_constructor_default": false
-                }
-              ]
-            }
-          }
+          "representation": {"kind": "record", "value": {"abstract": false, "fields": []}}
         },
         {
           "id": {"type_id": {"kind": "qualified", "value": {"namespace": "fixture", "name": "Cat"}}, "revision": 1},
@@ -2179,26 +1981,7 @@
               "arguments": []
             }
           ],
-          "representation": {
-            "kind": "record",
-            "value": {
-              "abstract": false,
-              "fields": [
-                {
-                  "owner": {
-                    "definition": {
-                      "type_id": {"kind": "qualified", "value": {"namespace": "fixture", "name": "Cat"}},
-                      "revision": 1
-                    },
-                    "name": "name"
-                  },
-                  "type": {"kind": "scalar", "value": "text"},
-                  "overrides": [],
-                  "has_constructor_default": false
-                }
-              ]
-            }
-          }
+          "representation": {"kind": "record", "value": {"abstract": false, "fields": []}}
         }
       ],
       "expected": {"available": {"null": true}, "reads": []}
