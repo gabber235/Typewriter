@@ -676,13 +676,13 @@ _fixture({
   final listParameter = skir.ParameterKey(owner: list, index: 0);
   final listOfResources = skir.NamedTypeUse(
     definition: list,
-    arguments: [skir.TypeUse.wrapNamed(frameworkResourceIdUse)],
+    arguments: [skir.TypeUse.wrapNamed(skir.resourceIdType)],
   );
   final listOfResourcesTemplate = skir.TypeTemplate.createNamed(
     definition: list,
     arguments: [
       skir.TypeTemplate.createNamed(
-        definition: frameworkResourceIdUse.definition,
+        definition: skir.resourceIdType.definition,
         arguments: const [],
       ),
     ],
@@ -1088,7 +1088,7 @@ final _rowListTemplate = skir.TypeTemplate.createNamed(
   definition: _definition("List"),
   arguments: [_rowTemplate],
 );
-final _resourceIdTemplate = skir.TypeUse.wrapNamed(frameworkResourceIdUse)
+final _resourceIdTemplate = skir.TypeUse.wrapNamed(skir.resourceIdType)
     .portableTemplate;
 final _resourceBinding = skir.ExpressionBindingId(value: "collection.resource");
 final _lookupBinding = skir.ExpressionBindingId(value: "lookup.key");

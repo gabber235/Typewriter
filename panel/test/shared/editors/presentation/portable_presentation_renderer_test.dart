@@ -2035,7 +2035,7 @@ _linkCollectionFixture({
       ),
       resourceBinding: declareBinding(
         collectionResourceBinding,
-        skir.TypeUse.wrapNamed(frameworkResourceIdUse).portableTemplate,
+        skir.TypeUse.wrapNamed(skir.resourceIdType).portableTemplate,
       ),
       fields: const [],
     ),

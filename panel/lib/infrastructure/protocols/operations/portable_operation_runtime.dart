@@ -750,9 +750,6 @@ final resourceIdType = skir.NamedTypeUse(
   arguments: const [],
 );
 
-skir.DataValue linkValue(skir.LinkValue value) =>
-    skir.DataValue.wrapLink(value);
-
 skir.DataValue numberValue(PortableNumber value) => switch (value) {
   PortableInteger(:final value) => integerValue(value),
   PortableFloat(:final value) => floatValue(value),

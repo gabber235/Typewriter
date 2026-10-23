@@ -712,8 +712,6 @@ void main() {
       actualType: use,
       value: skir.DataValue.wrapStringValue("Old"),
       location: skir.ValueLocation(resource: _resource, path: _namePath),
-      bindings: const {},
-      budget: _budget,
       setBinding: (reference, value, {reads = const <skir.ValueLocation>[]}) {
         written = value;
         observed = reads.toList();
@@ -870,7 +868,7 @@ CheckedEditorCatalog _catalog({bool generic = false, bool display = true}) {
     parents: const [],
   );
   final resourceId = skir.TypeDefinition(
-    id: frameworkResourceIdUse.definition,
+    id: skir.resourceIdType.definition,
     parameters: const [],
     representation: skir.RepresentationTemplate.createScalar(
       kind: skir.ScalarKind.text,

@@ -35,17 +35,6 @@ abstract class PortableExpressionQueries with _$PortableExpressionQueries {
   }) = _PortableExpressionQueries;
 }
 
-final frameworkResourceIdUse = skir.NamedTypeUse(
-  definition: skir.TypeDefinitionId(
-    typeId: skir.TypeId.createQualified(
-      namespace: "kotlin",
-      name: "com.typewritermc.types.ResourceId",
-    ),
-    revision: 1,
-  ),
-  arguments: const [],
-);
-
 /// The group a tree layout binds while rendering each group header: its path,
 /// last path segment as name, and direct members.
 final hierarchyGroupUse = skir.NamedTypeUse(
@@ -59,14 +48,11 @@ final hierarchyGroupUse = skir.NamedTypeUse(
 );
 
 extension ResourceIdentityExpression on skir.ResourceId {
-  skir.DataValue toExpressionValue() => skir.DataValue.createNamed(
-    actualType: frameworkResourceIdUse,
-    payload: skir.DataValue.wrapStringValue(value),
-  );
+  skir.DataValue toExpressionValue() => skir.resourceIdValue(this);
   PortableExpressionBinding toExpressionBinding() => PortableExpressionBinding(
     value: toExpressionValue(),
     schema: CompletePortablePresentationBinding(
-      skir.TypeUse.wrapNamed(frameworkResourceIdUse),
+      skir.TypeUse.wrapNamed(skir.resourceIdType),
     ),
   );
 }

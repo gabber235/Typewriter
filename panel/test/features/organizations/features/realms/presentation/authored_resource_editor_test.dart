@@ -551,7 +551,7 @@ void main() {
       final caller = skir.ExpressionBindingId(
         value: "context:test.page.caller",
       );
-      final callerType = skir.TypeUse.wrapNamed(frameworkResourceIdUse);
+      final callerType = skir.TypeUse.wrapNamed(skir.resourceIdType);
       final fallback = skir.ExpressionNode.createOrElse(
         value: skir.ExpressionNode.createField(
           source: portableCall(
@@ -608,7 +608,7 @@ void main() {
             searchKey: null,
             placementField: null,
             definition: skir.TypeDefinition(
-              id: frameworkResourceIdUse.definition,
+              id: skir.resourceIdType.definition,
               parameters: const [],
               representation: skir.RepresentationTemplate.createScalar(
                 kind: skir.ScalarKind.text,

@@ -129,7 +129,7 @@ final class AuthoredPresentationHost extends ChangeNotifier
       bindings: {
         presentationSubjectIdentifierBindingId: PortablePresentationBinding(
           schema: CompletePortablePresentationBinding(
-            skir.TypeUse.wrapNamed(frameworkResourceIdUse),
+            skir.TypeUse.wrapNamed(skir.resourceIdType),
           ),
           value: resource.toExpressionValue(),
         ),
