@@ -1,5 +1,6 @@
 import "package:typewriter_panel/typewriter_panel.dart";
 
+export "package:typewriter_panel/shared/theme/appearance.dart";
 export "package:typewriter_panel/shared/theme/color_scheme.dart";
 export "package:typewriter_panel/shared/theme/component_themes.dart";
 export "package:typewriter_panel/shared/theme/typewriter_colors.dart";

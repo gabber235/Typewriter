@@ -137,7 +137,7 @@ extension _PortableStructuredInputRendering
                       ),
                       onPressed: enabled
                           ? () async {
-                              final chosen = await showAuthoredTypeSearch(
+                              final chosen = await showTypeSearch(
                                 context,
                                 searchHint: _operationText(
                                   childScope,

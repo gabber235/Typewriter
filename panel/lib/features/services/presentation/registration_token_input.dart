@@ -32,9 +32,9 @@ class RegistrationTokenInput extends HookConsumerWidget {
       error.value = null;
       final organization = ref.read(organizationIdProvider);
       if (organization == null) throw ApiException.noOrganization();
-      final repository = ref
-          .read(resourceRepositoriesProvider)
-          .services(organization);
+      final repository = ref.read(
+        serviceResourceRepositoryProvider(organization),
+      );
       final response = await ref
           .read(localWorkControllerProvider)
           .execute(repository.bind(token));

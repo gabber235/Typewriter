@@ -1,5 +1,6 @@
 import "package:typewriter_panel/typewriter_panel.dart";
 
+part "auth.freezed.dart";
 part "auth.g.dart";
 
 bool _usesCustomSchemeRedirect() {
@@ -31,48 +32,34 @@ bool _usesLoopbackRedirect() {
 /// This is the panel's normalized read model for account display and authenticated
 /// transport setup. The claims remain optional because providers may omit profile
 /// fields; [sub] is the stable identity used by user scoped backend subjects.
-class UserInfo {
-  const UserInfo({
-    required this.sub,
-    this.name,
-    this.username,
-    this.email,
-    this.avatarUrl,
-    this.emailVerified,
-    this.entitlements,
-    this.groups,
-    this.discord,
-  });
-
-  final String sub;
-  final String? name;
-  final String? username;
-  final String? email;
-  final String? avatarUrl;
-  final bool? emailVerified;
-  final List<String>? entitlements;
-  final List<String>? groups;
-  final DiscordInfo? discord;
+@freezed
+abstract class UserInfo with _$UserInfo {
+  const factory UserInfo({
+    required String sub,
+    String? name,
+    String? username,
+    String? email,
+    String? avatarUrl,
+    bool? emailVerified,
+    List<String>? entitlements,
+    List<String>? groups,
+    DiscordInfo? discord,
+  }) = _UserInfo;
 }
 
 /// Optional Discord profile claims attached to [UserInfo].
 ///
 /// Discord data is descriptive only. Authorization still comes from the identity
 /// provider session and backend responses.
-class DiscordInfo {
-  const DiscordInfo({
-    required this.id,
-    this.username,
-    this.avatarUrl,
-    this.email,
-    this.roles,
-  });
-
-  final String id;
-  final String? username;
-  final String? avatarUrl;
-  final String? email;
-  final List<String>? roles;
+@freezed
+abstract class DiscordInfo with _$DiscordInfo {
+  const factory DiscordInfo({
+    required String id,
+    String? username,
+    String? avatarUrl,
+    String? email,
+    List<String>? roles,
+  }) = _DiscordInfo;
 }
 
 /// The bearer token and its provider supplied expiry, when known.
@@ -80,11 +67,10 @@ class DiscordInfo {
 /// Transport adapters consume this value at the authentication boundary. The
 /// identity provider manager, owned by [Auth], refreshes credentials before they
 /// expire; a missing expiry means the provider supplied no lifetime.
-class AccessToken {
-  const AccessToken({required this.token, this.expiresAt});
-
-  final String token;
-  final DateTime? expiresAt;
+@freezed
+abstract class AccessToken with _$AccessToken {
+  const factory AccessToken({required String token, DateTime? expiresAt}) =
+      _AccessToken;
 }
 
 /// Owns the panel's identity provider session for the application lifetime.
@@ -303,3 +289,7 @@ Future<UserInfo> authUserInfo(Ref ref) async {
     discord: discordInfo,
   );
 }
+
+/// The generated avatar shown for a user without a provider avatar.
+const userIconUrl =
+    "https://api.dicebear.com/9.x/bottts-neutral/webp?backgroundColor=00897b,00acc1,039be5,1e88e5,3949ab,43a047,5e35b1,7cb342,8e24aa,b6e3f4,c0aede,c0ca33,d1d4f9,d81b60,e53935,f4511e,fb8c00,fdd835,ffb300,ffd5dc,ffdfbf&eyes=eva,frame1,frame2,robocop,roundFrame01,roundFrame02,sensor,shade01&mouth=bite,diagram,smile01,smile02&backgroundType=gradientLinear";

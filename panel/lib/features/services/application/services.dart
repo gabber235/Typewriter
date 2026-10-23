@@ -48,8 +48,7 @@ class CanonicalOrganizationServices extends _$CanonicalOrganizationServices {
       snapshot: (response) => response.readSnapshot(),
       reduce: (current, event) => event.applyWatched(current),
       confirmedEvents: ref
-          .watch(resourceRepositoriesProvider)
-          .services(organizationId)
+          .watch(serviceResourceRepositoryProvider(organizationId))
           .identities,
       reduceConfirmed: (current, event) => event.applyCanonical(current),
       reconcileSnapshot: (current, incoming) =>

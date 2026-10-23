@@ -10,7 +10,10 @@ void main() {
     () {
       final document = _document();
       final container = ProviderContainer.test(
-        overrides: authoringFixtureOverrides(document: document),
+        overrides: [
+          ...appOverrides(),
+          ...authoringFixtureOverrides(document: document),
+        ],
       );
       addTearDown(container.dispose);
       final workspace = container.read(

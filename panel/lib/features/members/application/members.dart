@@ -33,9 +33,9 @@ class OrganizationMembers extends _$OrganizationMembers {
       return;
     }
 
-    final repository = ref
-        .watch(resourceRepositoriesProvider)
-        .membership(organizationId);
+    final repository = ref.watch(
+      membershipResourceRepositoryProvider(organizationId),
+    );
     final request = skir.WatchOrganizationMembersRequest();
     yield* request.watch<List<skir.OrganizationMember>>(
       ref,

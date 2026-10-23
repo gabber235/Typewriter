@@ -5,6 +5,7 @@ void topologyLifecycleTests() {
     final nats = FakeNatsClient();
     final container = ProviderContainer.test(
       overrides: [
+        ...appOverrides(),
         userIdProvider.overrideWith((ref) async => null),
         natsProvider.overrideWith(() => FakeNats(nats)),
       ],
@@ -43,6 +44,7 @@ void topologyLifecycleTests() {
       );
     final container = ProviderContainer.test(
       overrides: [
+        ...appOverrides(),
         userIdProvider.overrideWith((ref) async => "user1"),
         natsProvider.overrideWith(() => FakeNats(nats)),
       ],

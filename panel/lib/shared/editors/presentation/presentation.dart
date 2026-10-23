@@ -12,3 +12,4 @@ export "presentation_environment.dart";
 export "presentation_value_environment.dart";
 export "reference_picker.dart";
 export "timeline/timeline.dart";
+export "type_search.dart";

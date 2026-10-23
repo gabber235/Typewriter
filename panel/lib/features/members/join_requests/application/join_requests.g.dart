@@ -56,7 +56,7 @@ final class OrganizationJoinRequestsProvider
 }
 
 String _$organizationJoinRequestsHash() =>
-    r'647008a815a2b837371c2487cc93681b864b4d95';
+    r'972f92a43dc4cb76d2af68f24e047dd66536e404';
 
 /// Owns the current organization moderation projection.
 ///

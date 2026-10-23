@@ -9,7 +9,7 @@ part of "authoring_session.dart";
 final class AuthoringResourceRepository {
   AuthoringResourceRepository(this.session, this.organization, this.realm);
 
-  final ResourceRepositories session;
+  final ResourceSession session;
   final skir.RecordId organization;
   final skir.RecordId realm;
   final _changes = StreamController<skir.AuthoringChanged>.broadcast(

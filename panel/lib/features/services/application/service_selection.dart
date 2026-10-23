@@ -21,9 +21,9 @@ class ServiceIdentifier extends SelectableIdentifier {
     if (organization == null) {
       return AsyncError(ApiException.noOrganization(), StackTrace.current);
     }
-    final repository = ref
-        .watch(resourceRepositoriesProvider)
-        .services(organization);
+    final repository = ref.watch(
+      serviceResourceRepositoryProvider(organization),
+    );
     final work = ref.watch(localWorkProvider.notifier);
     final canonicalState = ref.watch(canonicalServiceProvider(serviceId));
     if (canonicalState.mapUnready<Selectable>() case final value?) return value;

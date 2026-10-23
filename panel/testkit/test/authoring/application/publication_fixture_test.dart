@@ -113,9 +113,11 @@ void main() {
   );
 
   test("default repositories start empty and remain isolated by scope and container", () async {
-    final container = ProviderContainer(overrides: authoringFixtureOverrides());
+    final container = ProviderContainer(
+      overrides: [...appOverrides(), ...authoringFixtureOverrides()],
+    );
     final otherContainer = ProviderContainer(
-      overrides: authoringFixtureOverrides(),
+      overrides: [...appOverrides(), ...authoringFixtureOverrides()],
     );
     final sameRealm = AuthoringScope(
       organizationId: skir.recordId("organization:other"),
@@ -176,7 +178,7 @@ void main() {
     "provider disposal closes defaults and rejects further observations",
     () async {
       final container = ProviderContainer(
-        overrides: authoringFixtureOverrides(),
+        overrides: [...appOverrides(), ...authoringFixtureOverrides()],
       );
       final repository = container.read(
         realmPublicationRepositoryProvider(
@@ -198,10 +200,10 @@ void main() {
       final supplied = TestPublicationRepository(_scope, initial: initial);
       addTearDown(supplied.close);
       final container = ProviderContainer(
-        overrides: authoringFixtureOverrides(
-          scope: _scope,
-          publication: supplied,
-        ),
+        overrides: [
+          ...appOverrides(),
+          ...authoringFixtureOverrides(scope: _scope, publication: supplied),
+        ],
       );
       try {
         expect(
@@ -244,10 +246,10 @@ void main() {
     test("a supplied repository rejects scope $mismatch", () async {
       final supplied = TestPublicationRepository(_scope, initial: _empty());
       final container = ProviderContainer(
-        overrides: authoringFixtureOverrides(
-          scope: _scope,
-          publication: supplied,
-        ),
+        overrides: [
+          ...appOverrides(),
+          ...authoringFixtureOverrides(scope: _scope, publication: supplied),
+        ],
       );
       try {
         expect(

@@ -26,6 +26,7 @@ void main() {
       addTearDown(transport.dispose);
       final container = ProviderContainer.test(
         overrides: [
+          ...appOverrides(),
           organizationIdProvider.overrideWith((ref) => organization),
           realmIdProvider.overrideWithValue(realm),
           ...authoringFixtureOverrides(
@@ -104,10 +105,13 @@ void main() {
       realmId: skir.recordId("service:realm"),
     );
     final container = ProviderContainer.test(
-      overrides: authoringFixtureOverrides(
-        scope: scope,
-        observation: AsyncError(error, StackTrace.current),
-      ),
+      overrides: [
+        ...appOverrides(),
+        ...authoringFixtureOverrides(
+          scope: scope,
+          observation: AsyncError(error, StackTrace.current),
+        ),
+      ],
     );
     addTearDown(container.dispose);
     final route = container.listen(

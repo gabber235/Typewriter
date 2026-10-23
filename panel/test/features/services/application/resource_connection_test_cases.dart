@@ -7,7 +7,7 @@ void _testResourceConnections() {
       final harness = await _Harness.create();
       addTearDown(harness.dispose);
       final workspace = harness.container.read(localWorkControllerProvider);
-      final repositories = harness.container.read(resourceRepositoriesProvider);
+      final session = harness.container.read(resourceSessionProvider);
       final owners = InspectionBindings(workspace: workspace);
       addTearDown(owners.dispose);
 
@@ -53,10 +53,7 @@ void _testResourceConnections() {
         harness.container.read(localWorkControllerProvider),
         same(workspace),
       );
-      expect(
-        harness.container.read(resourceRepositoriesProvider),
-        same(repositories),
-      );
+      expect(harness.container.read(resourceSessionProvider), same(session));
       expect(
         source.value(editorRootPath.field("name")).valueOrNull,
         skir.DataValue.wrapStringValue("renamed"),

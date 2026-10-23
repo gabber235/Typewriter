@@ -5,6 +5,7 @@ class FakeApp extends StatelessWidget {
   const FakeApp({
     required this.child,
     this.overrides = const [],
+    this.replacedProviders = const {},
     this.shortcuts,
     this.actions,
     this.themeMode,
@@ -14,6 +15,10 @@ class FakeApp extends StatelessWidget {
 
   final Widget child;
   final List<Override> overrides;
+
+  /// Providers this story or test overrides itself, so appOverrides leaves
+  /// them out.
+  final Set<ProviderBase<Object?>> replacedProviders;
   final Map<ShortcutActivator, Intent>? shortcuts;
   final Map<Type, Action<Intent>>? actions;
   final ThemeMode? themeMode;
@@ -29,7 +34,10 @@ class FakeApp extends StatelessWidget {
           _ => ThemeMode.light,
         };
     return ProviderScope(
-      overrides: overrides,
+      overrides: [
+        ...appOverrides(replacing: replacedProviders),
+        ...overrides,
+      ],
       // Disable retry logic for both tests and widgetbooks to make them more deterministic.
       retry: (retryCount, error) => null,
       child: MaterialApp(

@@ -76,17 +76,6 @@ abstract class RealmInteractionState with _$RealmInteractionState {
   };
 }
 
-/// Resolves the route's realm parameter to the typed topology identifier.
-///
-/// A missing parameter deliberately remains `null`; it represents the
-/// organization level route, not a failed lookup.
-@riverpod
-skir.RecordId? realmId(Ref ref) {
-  final id = ref.watch(routeParamProvider("realmId"));
-  if (id == null) return null;
-  return skir.recordId("realm_instance:$id");
-}
-
 /// Finds the selected realm in the organization topology projection.
 ///
 /// Topology is the authority for realm identity, owner host, lifecycle status,

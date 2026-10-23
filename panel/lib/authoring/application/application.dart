@@ -22,6 +22,7 @@ export "authoring_placement.dart";
 export "authoring_relation_index.dart";
 export "authoring_resource_mutation.dart";
 export "authoring_selectable_resource.dart";
+export "authoring_selection_operations.dart";
 export "authoring_session.dart";
 export "authoring_subject_role.dart";
 export "nats_realm_editor_catalog_source.dart";

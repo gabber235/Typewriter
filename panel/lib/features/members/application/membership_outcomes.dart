@@ -157,7 +157,7 @@ extension MembershipSubmission on WidgetRef {
   MembershipResourceRepository get membershipCommands {
     final organization = read(organizationIdProvider);
     if (organization == null) throw ApiException.noOrganization();
-    return read(resourceRepositoriesProvider).membership(organization);
+    return read(membershipResourceRepositoryProvider(organization));
   }
 
   /// Submits through local work ownership, then interprets the typed reply.

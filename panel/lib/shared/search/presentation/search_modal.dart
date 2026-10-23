@@ -37,7 +37,7 @@ Future<T?> showSearchModal<T>(
     child: UncontrolledProviderScope(
       container: ProviderScope.containerOf(context),
       child: SelectionOperationsRoot(
-        operations: SelectionOperationsRoot.of(context),
+        source: SelectionOperationsRoot.of(context),
         child: GlobalModeShortcut(
           child: GlobalOperationShortcuts(
             child: SearchModal(

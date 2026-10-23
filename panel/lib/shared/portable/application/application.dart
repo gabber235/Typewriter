@@ -37,6 +37,7 @@ export "portable_duration_admission.dart";
 export "portable_editor_diagnostics.dart";
 export "portable_expression.dart";
 export "portable_presentation_diagnostic.dart";
+export "portable_presentation_document.dart";
 export "portable_scalar_admission.dart";
 export "portable_text_sizing.dart";
 export "portable_value_admission.dart";

@@ -409,12 +409,6 @@ class _RenderPaneGeometry extends RenderProxyBox {
   }
 }
 
-/// Requests focus movement to the nearest eligible pane in [direction].
-class NavigatePaneIntent extends Intent {
-  const NavigatePaneIntent(this.direction);
-  final AxisDirection direction;
-}
-
 /// Provides the coordinator and shortcuts used by descendant [Pane] widgets.
 ///
 /// Navigation is enabled only when at least two eligible panes are laid out.

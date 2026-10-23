@@ -1,5 +1,6 @@
 library;
 
+export "action_row.dart";
 export "adaptive_choice_control.dart";
 export "adaptive_leading_layout.dart";
 export "admonition.dart";
@@ -58,6 +59,7 @@ export "section.dart";
 export "section_title.dart";
 export "selection_initialization.dart";
 export "shimmer.dart";
+export "shortcut_display.dart";
 export "simple_scaffold.dart";
 export "stagger_entrance.dart";
 export "status_indicator.dart";

@@ -239,7 +239,7 @@ extension PublicationWorkRegistration on LocalWork {
           this,
         )..start(),
         destination: (ref) =>
-            RealmWorkDestination(ref.read(appRouterProvider), scope),
+            RealmWorkDestination(ref.read(navigationRouterProvider), scope),
       );
 }
 

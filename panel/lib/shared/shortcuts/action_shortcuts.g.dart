@@ -12,7 +12,7 @@ part of 'action_shortcuts.dart';
 ///
 /// Each action set owns its registration through a [GlobalKey]. Re registering
 /// replaces that set's previous entries, while [sweep] removes entries whose
-/// owner is no longer mounted. The registry supplies the visible [ActionRow];
+/// owner is no longer mounted. The registry supplies the visible `ActionRow`;
 /// keyboard handlers are installed separately by [RegisteredActionShortcuts].
 
 @ProviderFor(ActionShortcuts)
@@ -22,7 +22,7 @@ final actionShortcutsProvider = ActionShortcutsProvider._();
 ///
 /// Each action set owns its registration through a [GlobalKey]. Re registering
 /// replaces that set's previous entries, while [sweep] removes entries whose
-/// owner is no longer mounted. The registry supplies the visible [ActionRow];
+/// owner is no longer mounted. The registry supplies the visible `ActionRow`;
 /// keyboard handlers are installed separately by [RegisteredActionShortcuts].
 final class ActionShortcutsProvider
     extends $NotifierProvider<ActionShortcuts, Map<String, ActionShortcut>> {
@@ -30,7 +30,7 @@ final class ActionShortcutsProvider
   ///
   /// Each action set owns its registration through a [GlobalKey]. Re registering
   /// replaces that set's previous entries, while [sweep] removes entries whose
-  /// owner is no longer mounted. The registry supplies the visible [ActionRow];
+  /// owner is no longer mounted. The registry supplies the visible `ActionRow`;
   /// keyboard handlers are installed separately by [RegisteredActionShortcuts].
   ActionShortcutsProvider._()
     : super(
@@ -65,7 +65,7 @@ String _$actionShortcutsHash() => r'01b317df7ee865ef80884d00b87dd4db606a3101';
 ///
 /// Each action set owns its registration through a [GlobalKey]. Re registering
 /// replaces that set's previous entries, while [sweep] removes entries whose
-/// owner is no longer mounted. The registry supplies the visible [ActionRow];
+/// owner is no longer mounted. The registry supplies the visible `ActionRow`;
 /// keyboard handlers are installed separately by [RegisteredActionShortcuts].
 
 abstract class _$ActionShortcuts

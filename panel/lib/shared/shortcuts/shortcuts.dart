@@ -3,7 +3,6 @@ import "package:typewriter_panel/typewriter_panel.dart";
 export "action_shortcuts.dart";
 export "adaptive_single_activator.dart";
 export "shortcut.dart";
-export "shortcut_display.dart";
 
 /// The panel wide keyboard map used by `MaterialApp.router` and action sets.
 ///
@@ -138,6 +137,17 @@ class OpenSearchIntent extends Intent {
 /// Opens and focuses the selected realm inbox from Normal mode.
 class OpenRealmInboxIntent extends Intent {
   const OpenRealmInboxIntent();
+}
+
+/// Requests focus movement to the nearest eligible pane in [direction].
+class NavigatePaneIntent extends Intent {
+  const NavigatePaneIntent(this.direction);
+  final AxisDirection direction;
+}
+
+/// Opens the focused selectable's menu through its existing context action path.
+class SelectorContextMenuIntent extends Intent {
+  const SelectorContextMenuIntent();
 }
 
 /// Returns activators whose mapped intent has exactly [intent].

@@ -128,10 +128,8 @@ import 'package:widgetbook_workspace/stories/shared/selectables/presentation/sel
     as _widgetbook_workspace_stories_shared_selectables_presentation_selector_popup_stories;
 import 'package:widgetbook_workspace/stories/shared/shell/appbar.stories.dart'
     as _widgetbook_workspace_stories_shared_shell_appbar_stories;
-import 'package:widgetbook_workspace/stories/shared/shortcuts/action_shortcuts.stories.dart'
-    as _widgetbook_workspace_stories_shared_shortcuts_action_shortcuts_stories;
-import 'package:widgetbook_workspace/stories/shared/shortcuts/shortcut_display.stories.dart'
-    as _widgetbook_workspace_stories_shared_shortcuts_shortcut_display_stories;
+import 'package:widgetbook_workspace/stories/shared/ui/components/action_row.stories.dart'
+    as _widgetbook_workspace_stories_shared_ui_components_action_row_stories;
 import 'package:widgetbook_workspace/stories/shared/ui/components/adaptive_choice_control.stories.dart'
     as _widgetbook_workspace_stories_shared_ui_components_adaptive_choice_control_stories;
 import 'package:widgetbook_workspace/stories/shared/ui/components/adaptive_leading_layout.stories.dart'
@@ -186,6 +184,8 @@ import 'package:widgetbook_workspace/stories/shared/ui/components/selection_init
     as _widgetbook_workspace_stories_shared_ui_components_selection_initialization_stories;
 import 'package:widgetbook_workspace/stories/shared/ui/components/shimmer.stories.dart'
     as _widgetbook_workspace_stories_shared_ui_components_shimmer_stories;
+import 'package:widgetbook_workspace/stories/shared/ui/components/shortcut_display.stories.dart'
+    as _widgetbook_workspace_stories_shared_ui_components_shortcut_display_stories;
 import 'package:widgetbook_workspace/stories/shared/ui/components/surface.stories.dart'
     as _widgetbook_workspace_stories_shared_ui_components_surface_stories;
 import 'package:widgetbook_workspace/stories/shared/ui/components/text_scroller.stories.dart'
@@ -1500,44 +1500,22 @@ final directories = <_widgetbook.WidgetbookNode>[
         ],
       ),
       _widgetbook.WidgetbookFolder(
-        name: 'shortcuts',
-        children: [
-          _widgetbook.WidgetbookComponent(
-            name: 'ActionRow',
-            useCases: [
-              _widgetbook.WidgetbookUseCase(
-                name: 'Default',
-                builder:
-                    _widgetbook_workspace_stories_shared_shortcuts_action_shortcuts_stories
-                        .actionRowUseCase,
-              ),
-            ],
-          ),
-          _widgetbook.WidgetbookComponent(
-            name: 'ShortcutDisplay',
-            useCases: [
-              _widgetbook.WidgetbookUseCase(
-                name: 'Rotating',
-                builder:
-                    _widgetbook_workspace_stories_shared_shortcuts_shortcut_display_stories
-                        .rotatingShortcutsUseCase,
-              ),
-              _widgetbook.WidgetbookUseCase(
-                name: 'Single',
-                builder:
-                    _widgetbook_workspace_stories_shared_shortcuts_shortcut_display_stories
-                        .singleShortcutDisplayUseCase,
-              ),
-            ],
-          ),
-        ],
-      ),
-      _widgetbook.WidgetbookFolder(
         name: 'ui',
         children: [
           _widgetbook.WidgetbookFolder(
             name: 'components',
             children: [
+              _widgetbook.WidgetbookComponent(
+                name: 'ActionRow',
+                useCases: [
+                  _widgetbook.WidgetbookUseCase(
+                    name: 'Default',
+                    builder:
+                        _widgetbook_workspace_stories_shared_ui_components_action_row_stories
+                            .actionRowUseCase,
+                  ),
+                ],
+              ),
               _widgetbook.WidgetbookComponent(
                 name: 'AdaptiveChoiceControl<Object>',
                 useCases: [
@@ -1940,6 +1918,23 @@ final directories = <_widgetbook.WidgetbookNode>[
                     builder:
                         _widgetbook_workspace_stories_shared_ui_components_shimmer_stories
                             .shimmerSmallShapesListUseCase,
+                  ),
+                ],
+              ),
+              _widgetbook.WidgetbookComponent(
+                name: 'ShortcutDisplay',
+                useCases: [
+                  _widgetbook.WidgetbookUseCase(
+                    name: 'Rotating',
+                    builder:
+                        _widgetbook_workspace_stories_shared_ui_components_shortcut_display_stories
+                            .rotatingShortcutsUseCase,
+                  ),
+                  _widgetbook.WidgetbookUseCase(
+                    name: 'Single',
+                    builder:
+                        _widgetbook_workspace_stories_shared_ui_components_shortcut_display_stories
+                            .singleShortcutDisplayUseCase,
                   ),
                 ],
               ),

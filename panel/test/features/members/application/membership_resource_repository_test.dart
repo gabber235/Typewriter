@@ -29,12 +29,16 @@ void main() {
     () async {
       final nats = FakeNatsClient(actorId: testUserId);
       addTearDown(nats.dispose);
-      final session = ResourceRepositories(
+      final session = ResourceSession(
         SkirMutationClient(() => nats, () async => _Telemetry()),
         testUserId,
       );
-      addTearDown(session.dispose);
-      final repository = session.membership(testOrganizationId);
+      final repository = MembershipResourceRepository(
+        session,
+        testOrganizationId,
+      );
+      addTearDown(repository.dispose);
+      addTearDown(session.end);
       final events = <skir.OrganizationMembersChanged>[];
       final subscription = repository.members.listen(events.add);
       addTearDown(subscription.cancel);
@@ -81,19 +85,18 @@ void main() {
   test("membership owner rejects missing identity and use after disposal", () {
     final nats = FakeNatsClient();
     addTearDown(nats.dispose);
-    final unauthenticated = ResourceRepositories(
+    final unauthenticated = ResourceSession(
       SkirMutationClient(() => nats, () async => _Telemetry()),
       null,
     );
-    expect(
-      () => unauthenticated.membership(testOrganizationId).remove(testMemberId),
-      throwsA(isA<ApiException>()),
+    final repository = MembershipResourceRepository(
+      unauthenticated,
+      testOrganizationId,
     );
-    unauthenticated.dispose();
-    expect(
-      () => unauthenticated.membership(testOrganizationId),
-      throwsStateError,
-    );
+    addTearDown(repository.dispose);
+    expect(() => repository.remove(testMemberId), throwsA(isA<ApiException>()));
+    unauthenticated.end();
+    expect(() => repository.remove(testMemberId), throwsStateError);
   });
 
   test("disposed owner rejects integration of an in flight command", () async {
@@ -101,11 +104,14 @@ void main() {
     addTearDown(nats.dispose);
     final response = Completer<Uint8List>();
     nats.registerHandler(memberRemoveSubject, (_) => response.future);
-    final session = ResourceRepositories(
+    final session = ResourceSession(
       SkirMutationClient(() => nats, () async => _Telemetry()),
       testUserId,
     );
-    final repository = session.membership(testOrganizationId);
+    final repository = MembershipResourceRepository(
+      session,
+      testOrganizationId,
+    );
     final events = <skir.OrganizationMembersChanged>[];
     final subscription = repository.members.listen(events.add);
     addTearDown(subscription.cancel);
@@ -113,7 +119,8 @@ void main() {
     final sending = command.send();
     await pumpEventQueue();
 
-    session.dispose();
+    session.end();
+    repository.dispose();
     response.complete(
       skir.RemoveOrganizationMemberResponse.serializer.toBytes(
         skir.RemoveOrganizationMemberResponse.createSuccess(

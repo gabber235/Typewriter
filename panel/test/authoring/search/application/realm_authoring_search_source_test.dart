@@ -84,11 +84,14 @@ void main() {
         ),
       );
       final container = ProviderContainer.test(
-        overrides: authoringFixtureOverrides(
-          document: document,
-          transport: transport,
-          commands: commands,
-        ),
+        overrides: [
+          ...appOverrides(),
+          ...authoringFixtureOverrides(
+            document: document,
+            transport: transport,
+            commands: commands,
+          ),
+        ],
       );
       addTearDown(container.dispose);
       final scope = container.read(selectedAuthoringScopeProvider)!;
@@ -173,6 +176,7 @@ _fixture() {
   );
   final container = ProviderContainer.test(
     overrides: [
+      ...appOverrides(),
       organizationIdProvider.overrideWithValue(organization),
       realmIdProvider.overrideWithValue(realm),
       ...authoringFixtureOverrides(

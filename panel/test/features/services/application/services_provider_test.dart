@@ -264,9 +264,7 @@ void main() {
       ..setConnectionState(const NatsConnected());
     await _waitFor(() => harness.nats.requests.length == 2);
     final renamed = _service("one", name: "Confirmed rename", revision: 3);
-    harness.container
-        .read(resourceRepositoriesProvider)
-        .services(_organizationId)
+    harness.container.read(serviceResourceRepositoryProvider(_organizationId))
       ..acceptService(renamed)
       ..acceptService(_service("removed", revision: 9));
     await _waitFor(() => harness.value.value?.first.revision == 3);
@@ -303,8 +301,7 @@ void main() {
     await harness.start();
     final renamed = _service("one", name: "Confirmed first", revision: 2);
     harness.container
-        .read(resourceRepositoriesProvider)
-        .services(_organizationId)
+        .read(serviceResourceRepositoryProvider(_organizationId))
         .acceptService(renamed);
     await _waitFor(() => harness.value.value?.single.revision == 2);
     reply.complete(

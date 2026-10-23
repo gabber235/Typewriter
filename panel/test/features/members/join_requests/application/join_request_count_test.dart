@@ -35,6 +35,7 @@ void main() {
     test("returns 0 when provider is loading", () {
       final container = ProviderContainer.test(
         overrides: [
+          ...appOverrides(),
           organizationJoinRequestsProvider.overrideWith(
             LoadingJoinRequestsNotifier.new,
           ),
@@ -47,6 +48,7 @@ void main() {
     test("returns 0 when provider has error", () async {
       final container = ProviderContainer.test(
         overrides: [
+          ...appOverrides(),
           organizationJoinRequestsProvider.overrideWith(
             ErrorJoinRequestsNotifier.new,
           ),
@@ -80,6 +82,7 @@ void main() {
     test("returns 0 for empty list", () async {
       final container = ProviderContainer.test(
         overrides: [
+          ...appOverrides(),
           organizationJoinRequestsProvider.overrideWith(
             () => MockJoinRequestsNotifier([]),
           ),
@@ -98,6 +101,7 @@ void main() {
 
       final container = ProviderContainer.test(
         overrides: [
+          ...appOverrides(),
           organizationJoinRequestsProvider.overrideWith(
             () => MockJoinRequestsNotifier(expiredRequests),
           ),
@@ -117,6 +121,7 @@ void main() {
 
       final container = ProviderContainer.test(
         overrides: [
+          ...appOverrides(),
           organizationJoinRequestsProvider.overrideWith(
             () => MockJoinRequestsNotifier(activeRequests),
           ),
@@ -137,6 +142,7 @@ void main() {
 
       final container = ProviderContainer.test(
         overrides: [
+          ...appOverrides(),
           organizationJoinRequestsProvider.overrideWith(
             () => MockJoinRequestsNotifier(mixedRequests),
           ),

@@ -38,6 +38,7 @@ void main() {
     test("returns 0 when provider is loading", () {
       final container = ProviderContainer.test(
         overrides: [
+          ...appOverrides(),
           organizationJoinCodesProvider.overrideWith(
             LoadingJoinCodesNotifier.new,
           ),
@@ -50,6 +51,7 @@ void main() {
     test("returns 0 for empty list", () async {
       final container = ProviderContainer.test(
         overrides: [
+          ...appOverrides(),
           organizationJoinCodesProvider.overrideWith(
             () => MockJoinCodesNotifier([]),
           ),
@@ -68,6 +70,7 @@ void main() {
 
       final container = ProviderContainer.test(
         overrides: [
+          ...appOverrides(),
           organizationJoinCodesProvider.overrideWith(
             () => MockJoinCodesNotifier(expiredCodes),
           ),
@@ -83,6 +86,7 @@ void main() {
 
       final container = ProviderContainer.test(
         overrides: [
+          ...appOverrides(),
           organizationJoinCodesProvider.overrideWith(
             () => MockJoinCodesNotifier(codes),
           ),
@@ -102,6 +106,7 @@ void main() {
 
       final container = ProviderContainer.test(
         overrides: [
+          ...appOverrides(),
           organizationJoinCodesProvider.overrideWith(
             () => MockJoinCodesNotifier(mixedCodes),
           ),
@@ -122,6 +127,7 @@ void main() {
 
       final container = ProviderContainer.test(
         overrides: [
+          ...appOverrides(),
           organizationJoinCodesProvider.overrideWith(
             () => MockJoinCodesNotifier(activeCodes),
           ),

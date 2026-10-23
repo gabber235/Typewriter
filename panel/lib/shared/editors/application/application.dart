@@ -2,6 +2,7 @@ library;
 
 export "bound_presentation_host.dart";
 export "multi_edit_owner.dart";
+export "portable_link_plan.dart";
 export "portable_presentation_host.dart";
 export "search/portable_search_compiler.dart";
 export "search/portable_search_environment.dart";

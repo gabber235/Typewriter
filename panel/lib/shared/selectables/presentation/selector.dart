@@ -98,22 +98,13 @@ class Selector extends HookConsumerWidget {
     final selection = ref.watch(selectionProvider);
     final selected = ref.watch(selectedProvider);
 
-    final registeredOperations = SelectionOperationsRoot.of(context);
+    final source = SelectionOperationsRoot.of(context);
     final captured = contextTargets.value;
-    final resources = captured
-        ?.whereType<AuthoringResourceIdentifier>()
-        .toList();
     final operations =
-        resources != null &&
-            resources.isNotEmpty &&
-            resources.length == captured!.length &&
-            resources.every((item) => item.scope == resources.first.scope)
-        ? resourceSelectionOperationsFor(
-            ref,
-            resources.first.scope,
-            resources.map((item) => item.resourceId),
-          )
-        : selectionOperationsFor(ref, context, selected.value);
+        (captured == null
+            ? null
+            : source.operationsForTargets(ref, captured)) ??
+        source.operationsFor(ref, selected.value ?? const []);
 
     useFocusedChange(focusNode, ({required hasFocus}) {
       isFocused.value = hasFocus;
@@ -131,29 +122,26 @@ class Selector extends HookConsumerWidget {
       pendingContextPosition.value = globalPosition;
     }
 
-    useEffect(
-      () {
-        final position = pendingContextPosition.value;
-        if (position == null) return null;
-        var active = true;
-        WidgetsBinding.instance.addPostFrameCallback((_) {
-          if (!active || !context.mounted) return;
-          if (!ref.read(selectionProvider).contains(selectableId) ||
-              !focusNode.hasFocus) {
-            pendingContextPosition.value = null;
-            return;
-          }
-          if (selected.isLoading) return;
+    useEffect(() {
+      final position = pendingContextPosition.value;
+      if (position == null) return null;
+      var active = true;
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (!active || !context.mounted) return;
+        if (!ref.read(selectionProvider).contains(selectableId) ||
+            !focusNode.hasFocus) {
           pendingContextPosition.value = null;
-          if (selected.hasError || operations.isEmpty) return;
-          final anchor = anchorKey.currentContext?.findRenderObject();
-          if (anchor is! RenderBox || !anchor.attached) return;
-          controller.open(position: anchor.globalToLocal(position));
-        });
-        return () => active = false;
-      },
-      [pendingContextPosition.value, selection, selected, registeredOperations],
-    );
+          return;
+        }
+        if (selected.isLoading) return;
+        pendingContextPosition.value = null;
+        if (selected.hasError || operations.isEmpty) return;
+        final anchor = anchorKey.currentContext?.findRenderObject();
+        if (anchor is! RenderBox || !anchor.attached) return;
+        controller.open(position: anchor.globalToLocal(position));
+      });
+      return () => active = false;
+    }, [pendingContextPosition.value, selection, selected, source]);
 
     final focusAnimation = useAnimationController(
       duration: 200.ms,
@@ -313,9 +301,4 @@ class SelectedSelectorIntent extends Intent {
 
   /// Whether the activation originated from Flutter's activate intent.
   final bool throughActivateIntent;
-}
-
-/// Opens the focused selectable's menu through its existing context action path.
-class SelectorContextMenuIntent extends Intent {
-  const SelectorContextMenuIntent();
 }

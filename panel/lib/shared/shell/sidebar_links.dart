@@ -257,6 +257,3 @@ class DocumentationSidebarLink extends StatelessWidget {
     );
   }
 }
-
-const userIconUrl =
-    "https://api.dicebear.com/9.x/bottts-neutral/webp?backgroundColor=00897b,00acc1,039be5,1e88e5,3949ab,43a047,5e35b1,7cb342,8e24aa,b6e3f4,c0aede,c0ca33,d1d4f9,d81b60,e53935,f4511e,fb8c00,fdd835,ffb300,ffd5dc,ffdfbf&eyes=eva,frame1,frame2,robocop,roundFrame01,roundFrame02,sensor,shade01&mouth=bite,diagram,smile01,smile02&backgroundType=gradientLinear";

@@ -81,7 +81,7 @@ final class CanonicalOrganizationServicesProvider
 }
 
 String _$canonicalOrganizationServicesHash() =>
-    r'8c8b42d69ff5882417a21739d0818892e3b074a0';
+    r'b20c0c39b163ee121849d2995dcbf4b11240e3c9';
 
 /// Owns the organization scoped canonical service identity projection.
 ///
@@ -343,7 +343,7 @@ final class OrganizationTopologyControllerProvider
 }
 
 String _$organizationTopologyControllerHash() =>
-    r'b4fdc45ff0a804156b1bd5f57e11afe21780fe4d';
+    r'b801d3f8e154c03d901f43e1db6766607f915d3f';
 
 /// Owns the live organization topology projection.
 ///
@@ -601,6 +601,105 @@ final class HostConnectedFamily extends $Family
 
   @override
   String toString() => r'hostConnectedProvider';
+}
+
+/// The services command owner for one organization in the current resource
+/// session. Repeated reads share the repository and its mutation boundary.
+
+@ProviderFor(serviceResourceRepository)
+final serviceResourceRepositoryProvider = ServiceResourceRepositoryFamily._();
+
+/// The services command owner for one organization in the current resource
+/// session. Repeated reads share the repository and its mutation boundary.
+
+final class ServiceResourceRepositoryProvider
+    extends
+        $FunctionalProvider<
+          ServiceResourceRepository,
+          ServiceResourceRepository,
+          ServiceResourceRepository
+        >
+    with $Provider<ServiceResourceRepository> {
+  /// The services command owner for one organization in the current resource
+  /// session. Repeated reads share the repository and its mutation boundary.
+  ServiceResourceRepositoryProvider._({
+    required ServiceResourceRepositoryFamily super.from,
+    required skir.RecordId super.argument,
+  }) : super(
+         retry: null,
+         name: r'serviceResourceRepositoryProvider',
+         isAutoDispose: false,
+         dependencies: null,
+         $allTransitiveDependencies: null,
+       );
+
+  @override
+  String debugGetCreateSourceHash() => _$serviceResourceRepositoryHash();
+
+  @override
+  String toString() {
+    return r'serviceResourceRepositoryProvider'
+        ''
+        '($argument)';
+  }
+
+  @$internal
+  @override
+  $ProviderElement<ServiceResourceRepository> $createElement(
+    $ProviderPointer pointer,
+  ) => $ProviderElement(pointer);
+
+  @override
+  ServiceResourceRepository create(Ref ref) {
+    final argument = this.argument as skir.RecordId;
+    return serviceResourceRepository(ref, argument);
+  }
+
+  /// {@macro riverpod.override_with_value}
+  Override overrideWithValue(ServiceResourceRepository value) {
+    return $ProviderOverride(
+      origin: this,
+      providerOverride: $SyncValueProvider<ServiceResourceRepository>(value),
+    );
+  }
+
+  @override
+  bool operator ==(Object other) {
+    return other is ServiceResourceRepositoryProvider &&
+        other.argument == argument;
+  }
+
+  @override
+  int get hashCode {
+    return argument.hashCode;
+  }
+}
+
+String _$serviceResourceRepositoryHash() =>
+    r'413f50b3044e4571901d007e52a901925c88fea2';
+
+/// The services command owner for one organization in the current resource
+/// session. Repeated reads share the repository and its mutation boundary.
+
+final class ServiceResourceRepositoryFamily extends $Family
+    with $FunctionalFamilyOverride<ServiceResourceRepository, skir.RecordId> {
+  ServiceResourceRepositoryFamily._()
+    : super(
+        retry: null,
+        name: r'serviceResourceRepositoryProvider',
+        dependencies: null,
+        $allTransitiveDependencies: null,
+        isAutoDispose: false,
+      );
+
+  /// The services command owner for one organization in the current resource
+  /// session. Repeated reads share the repository and its mutation boundary.
+
+  ServiceResourceRepositoryProvider call(skir.RecordId organization) =>
+      ServiceResourceRepositoryProvider._(argument: organization, from: this);
+
+  @override
+  String toString() => r'serviceResourceRepositoryProvider';
 }
 
 /// Adapts the organization scoped service projection to the current route.

@@ -17,9 +17,9 @@ Set<(MembershipRemovalKind, skir.RecordId)> pendingMembershipRemovals(Ref ref) {
   }
   final organization = ref.watch(organizationIdProvider);
   if (organization == null) return const {};
-  final repository = ref
-      .watch(resourceRepositoriesProvider)
-      .membership(organization);
+  final repository = ref.watch(
+    membershipResourceRepositoryProvider(organization),
+  );
   return {
     for (final submission in work.submissions)
       if (submission.sending && repository.removalFor(submission.id) != null)

@@ -1499,6 +1499,7 @@ void main() {
     () async {
       final container = ProviderContainer.test(
         overrides: [
+          ...appOverrides(),
           localWorkScopeProvider.overrideWithValue(
             LocalWorkScope(
               userId: "fixture",

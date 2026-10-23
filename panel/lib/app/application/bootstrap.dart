@@ -11,6 +11,7 @@ Future<void> bootstrap() async {
 
   runApp(
     ProviderScope(
+      overrides: appOverrides(),
       retry: kDebugMode
           ? (retryCount, error) => null
           : ProviderContainer.defaultRetry,

@@ -18,8 +18,8 @@ final class ResourceOperationRunner {
     required this.invocation,
     required this.label,
     this.canMutate,
-  }) : _router = ref.read(appRouterProvider),
-       _navigation = ref.read(appRouterProvider).navigationRevision {
+  }) : _router = ref.read(navigationRouterProvider),
+       _navigation = ref.read(navigationRouterProvider).navigationRevision {
     _router.addListener(_cancelExpiredDialog);
     workspace.addListener(_cancelExpiredDialog);
     _commandsLease = ref.listenManual(
@@ -37,7 +37,7 @@ final class ResourceOperationRunner {
   final String label;
   final bool Function()? canMutate;
   late final ProviderSubscription<AuthoredResourceCommands> _commandsLease;
-  final AppRouter _router;
+  final NavigationRouter _router;
   final int _navigation;
   bool _closed = false;
   bool _navigating = false;

@@ -12,8 +12,8 @@ part "authoring_session_state.dart";
 /// Repository and catalog changes schedule coalesced refreshes. Lifecycle revisions
 /// prevent late responses from a replaced session from publishing into current state.
 /// Saved observations flow into the shared editing workspace, which separately owns
-/// local intent and replay. This session borrows transport repositories and releases
-/// them when the provider is disposed.
+/// local intent and replay. This session owns its transport repository, rebinds it
+/// when the connection is replaced, and disposes it with the provider.
 @riverpod
 class AuthoringSession extends _$AuthoringSession {
   late AuthoringResourceRepository _repository;
@@ -36,8 +36,11 @@ class AuthoringSession extends _$AuthoringSession {
     _latestInvalidatedGeneration = null;
     _organizationId = organizationId;
     _realmId = realmId;
-    final repositories = ref.watch(resourceRepositoriesProvider);
-    final repository = repositories.authoring(organizationId, realmId);
+    final repository = AuthoringResourceRepository(
+      ref.watch(resourceSessionProvider),
+      organizationId,
+      realmId,
+    );
     _repository = repository;
     final changes = repository.changes.listen(
       (change) => _acceptChange(change, lifecycleRevision),
@@ -72,24 +75,46 @@ class AuthoringSession extends _$AuthoringSession {
       ..onDispose(changes.cancel)
       ..onDispose(invalidations.cancel)
       ..onDispose(catalogInvalidations.close)
-      ..onDispose(() => repositories.releaseAuthoring(repository));
+      ..onDispose(repository.dispose)
+      ..listen(
+        natsProvider,
+        (previous, next) {
+          if (previous == null || identical(previous, next)) return;
+          unawaited(
+            repository.rebindTransport(next).catchError((
+              Object error,
+              StackTrace stackTrace,
+            ) {
+              FlutterError.reportError(
+                FlutterErrorDetails(
+                  exception: error,
+                  stack: stackTrace,
+                  library: "authoring transport",
+                  context: ErrorDescription(
+                    "rebinding retained authoring watches",
+                  ),
+                ),
+              );
+            }),
+          );
+        },
+        onError: (_, _) {
+          // A failed connection has no client to rebind to; its consumers
+          // observe the failure through natsProvider itself.
+        },
+      );
     unawaited(
-      _start(
-        repositories,
-        repository,
-        lifecycleRevision,
-        organizationId,
-        realmId,
-      ).catchError((Object error, StackTrace stackTrace) {
-        if (!_isActive(lifecycleRevision)) return;
-        state = state.copyWith(refreshing: false, failure: error);
-      }),
+      _start(repository, lifecycleRevision, organizationId, realmId).catchError(
+        (Object error, StackTrace stackTrace) {
+          if (!_isActive(lifecycleRevision)) return;
+          state = state.copyWith(refreshing: false, failure: error);
+        },
+      ),
     );
     return const AuthoringSessionState();
   }
 
   Future<void> _start(
-    ResourceRepositories repositories,
     AuthoringResourceRepository repository,
     int lifecycleRevision,
     skir.RecordId organizationId,

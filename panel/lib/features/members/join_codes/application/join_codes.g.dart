@@ -62,7 +62,7 @@ final class OrganizationJoinCodesProvider
 }
 
 String _$organizationJoinCodesHash() =>
-    r'41cf9a4c7e2bd6fadd3c27ce52052dac95fad11c';
+    r'9d00b574ad9e9c77dab1a51aacfe23a26965e06f';
 
 /// Owns the panel's live read model of invitation codes for the selected organization.
 ///

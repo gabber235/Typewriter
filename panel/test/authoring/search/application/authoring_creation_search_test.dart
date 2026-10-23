@@ -209,6 +209,7 @@ _fixture({bool reversedOwnership = false, bool manyEntries = false}) {
   );
   final container = ProviderContainer.test(
     overrides: [
+      ...appOverrides(),
       organizationIdProvider.overrideWithValue(organization),
       realmIdProvider.overrideWithValue(realm),
       ...authoringFixtureOverrides(

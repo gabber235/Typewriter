@@ -13,8 +13,8 @@ part of 'authoring_session.dart';
 /// Repository and catalog changes schedule coalesced refreshes. Lifecycle revisions
 /// prevent late responses from a replaced session from publishing into current state.
 /// Saved observations flow into the shared editing workspace, which separately owns
-/// local intent and replay. This session borrows transport repositories and releases
-/// them when the provider is disposed.
+/// local intent and replay. This session owns its transport repository, rebinds it
+/// when the connection is replaced, and disposes it with the provider.
 
 @ProviderFor(AuthoringSession)
 final authoringSessionProvider = AuthoringSessionFamily._();
@@ -24,8 +24,8 @@ final authoringSessionProvider = AuthoringSessionFamily._();
 /// Repository and catalog changes schedule coalesced refreshes. Lifecycle revisions
 /// prevent late responses from a replaced session from publishing into current state.
 /// Saved observations flow into the shared editing workspace, which separately owns
-/// local intent and replay. This session borrows transport repositories and releases
-/// them when the provider is disposed.
+/// local intent and replay. This session owns its transport repository, rebinds it
+/// when the connection is replaced, and disposes it with the provider.
 final class AuthoringSessionProvider
     extends $NotifierProvider<AuthoringSession, AuthoringSessionState> {
   /// Owns confirmed authoring observations and the catalog that interprets them for one Realm.
@@ -33,8 +33,8 @@ final class AuthoringSessionProvider
   /// Repository and catalog changes schedule coalesced refreshes. Lifecycle revisions
   /// prevent late responses from a replaced session from publishing into current state.
   /// Saved observations flow into the shared editing workspace, which separately owns
-  /// local intent and replay. This session borrows transport repositories and releases
-  /// them when the provider is disposed.
+  /// local intent and replay. This session owns its transport repository, rebinds it
+  /// when the connection is replaced, and disposes it with the provider.
   AuthoringSessionProvider._({
     required AuthoringSessionFamily super.from,
     required (skir.RecordId, skir.RecordId) super.argument,
@@ -79,15 +79,15 @@ final class AuthoringSessionProvider
   }
 }
 
-String _$authoringSessionHash() => r'5a6f85f9d965a35fffe07217806a0c7b22ec0f12';
+String _$authoringSessionHash() => r'476d16d0cd042ef2b9728bd7e24eb1ab04fa4455';
 
 /// Owns confirmed authoring observations and the catalog that interprets them for one Realm.
 ///
 /// Repository and catalog changes schedule coalesced refreshes. Lifecycle revisions
 /// prevent late responses from a replaced session from publishing into current state.
 /// Saved observations flow into the shared editing workspace, which separately owns
-/// local intent and replay. This session borrows transport repositories and releases
-/// them when the provider is disposed.
+/// local intent and replay. This session owns its transport repository, rebinds it
+/// when the connection is replaced, and disposes it with the provider.
 
 final class AuthoringSessionFamily extends $Family
     with
@@ -112,8 +112,8 @@ final class AuthoringSessionFamily extends $Family
   /// Repository and catalog changes schedule coalesced refreshes. Lifecycle revisions
   /// prevent late responses from a replaced session from publishing into current state.
   /// Saved observations flow into the shared editing workspace, which separately owns
-  /// local intent and replay. This session borrows transport repositories and releases
-  /// them when the provider is disposed.
+  /// local intent and replay. This session owns its transport repository, rebinds it
+  /// when the connection is replaced, and disposes it with the provider.
 
   AuthoringSessionProvider call(
     skir.RecordId organizationId,
@@ -132,8 +132,8 @@ final class AuthoringSessionFamily extends $Family
 /// Repository and catalog changes schedule coalesced refreshes. Lifecycle revisions
 /// prevent late responses from a replaced session from publishing into current state.
 /// Saved observations flow into the shared editing workspace, which separately owns
-/// local intent and replay. This session borrows transport repositories and releases
-/// them when the provider is disposed.
+/// local intent and replay. This session owns its transport repository, rebinds it
+/// when the connection is replaced, and disposes it with the provider.
 
 abstract class _$AuthoringSession extends $Notifier<AuthoringSessionState> {
   late final _$args = ref.$arg as (skir.RecordId, skir.RecordId);

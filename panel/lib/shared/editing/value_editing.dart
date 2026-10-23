@@ -6,7 +6,7 @@ import "package:typewriter_panel/typewriter_panel.dart";
 ///
 /// The view borrows its workspace, so disposal leaves the shared owner alive.
 /// A creator that hands ownership of the workspace to the view releases it
-/// through [onDispose]. [ValueEditingRegistration] supplies the borrowed form
+/// through [onDispose]. `ValueEditingRegistration` supplies the borrowed form
 /// for resource views retained by the local work session.
 final class ValueEditing
     implements EditOwner, EditingControlOwner, EditingStageOwner {

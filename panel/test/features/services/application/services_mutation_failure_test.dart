@@ -59,8 +59,7 @@ class _Harness {
   }
 
   void observe(skir.Service service) => container
-      .read(resourceRepositoriesProvider)
-      .services(_organizationId)
+      .read(serviceResourceRepositoryProvider(_organizationId))
       .acceptService(service);
 
   void dispose() {
@@ -72,7 +71,7 @@ class _Harness {
 
 extension _ServiceRepositoryCommands on ProviderContainer {
   ServiceResourceRepository get _services =>
-      read(resourceRepositoriesProvider).services(_organizationId);
+      read(serviceResourceRepositoryProvider(_organizationId));
 
   Future<TypedMutationResult> updateService(skir.Service service) {
     final snapshot = service.editorSnapshot;
@@ -158,8 +157,7 @@ void main() {
         .read(localWorkControllerProvider)
         .execute(
           harness.container
-              .read(resourceRepositoriesProvider)
-              .services(_organizationId)
+              .read(serviceResourceRepositoryProvider(_organizationId))
               .bind("registration token"),
         );
     for (var attempt = 0; attempt < 10; attempt++) {

@@ -83,9 +83,9 @@ class OrganizationJoinCodes extends _$OrganizationJoinCodes {
       return;
     }
 
-    final repository = ref
-        .watch(resourceRepositoriesProvider)
-        .membership(organizationId);
+    final repository = ref.watch(
+      membershipResourceRepositoryProvider(organizationId),
+    );
     final request = skir.WatchOrganizationJoinCodesRequest();
     yield* request.watch<List<skir.JoinCode>>(
       ref,

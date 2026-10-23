@@ -85,7 +85,7 @@ class _OrganizationMenuContent extends HookConsumerWidget {
                   organizations: filteredOrganizations,
                   onSelect: (org) {
                     ref
-                        .read(appRouterProvider)
+                        .read(navigationRouterProvider)
                         .navigate(
                           OrganizationRoute(
                             organizationId: org.organizationId.id,
@@ -180,7 +180,7 @@ class _OrganizationActions extends HookConsumerWidget {
           onTap: () {
             onDismiss();
             ref
-                .read(appRouterProvider)
+                .read(navigationRouterProvider)
                 .navigate(
                   OrganizationRoute(
                     organizationId: organization.organizationId.id,

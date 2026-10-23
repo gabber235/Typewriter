@@ -26,6 +26,7 @@ void topologyStateTests() {
             );
           final container = ProviderContainer.test(
             overrides: [
+              ...appOverrides(),
               userIdProvider.overrideWith((ref) async => "user1"),
               organizationIdProvider.overrideWith((ref) => _organizationId),
               natsProvider.overrideWith(() => FakeNats(nats)),
@@ -193,6 +194,7 @@ void topologyStateTests() {
       );
       final container = ProviderContainer.test(
         overrides: [
+          ...appOverrides(),
           userIdProvider.overrideWith((ref) async => "user1"),
           natsProvider.overrideWith(() => FakeNats(nats)),
         ],
@@ -254,6 +256,7 @@ void topologyStateTests() {
       });
       final container = ProviderContainer.test(
         overrides: [
+          ...appOverrides(),
           userIdProvider.overrideWith((ref) async => "user1"),
           organizationIdProvider.overrideWith((ref) => _organizationId),
           natsProvider.overrideWith(() => FakeNats(nats)),

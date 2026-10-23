@@ -132,15 +132,15 @@ List<SearchHostEffectExecutor<SearchHostEffect>> _buildHostEffectExecutors(
 ) => [
   SearchHostEffectExecutor<OpenOrganizationEffect>((effect) async {
     await ref
-        .read(appRouterProvider)
+        .read(navigationRouterProvider)
         .navigate(OrganizationRoute(organizationId: effect.organizationId.id));
   }),
   SearchHostEffectExecutor<CreateOrganizationEffect>((effect) async {
-    await ref.read(appRouterProvider).navigate(IndexRoute());
+    await ref.read(navigationRouterProvider).navigate(IndexRoute());
   }),
   SearchHostEffectExecutor<OpenRealmEffect>((effect) async {
     await ref
-        .read(appRouterProvider)
+        .read(navigationRouterProvider)
         .navigate(realmNavigationRoute(effect.organizationId, effect.realmId));
   }),
   SearchHostEffectExecutor<RevealCreatedAuthoringResourceEffect>(

@@ -26,7 +26,7 @@ class RealmInboxShortcut extends HookConsumerWidget {
     final popup = scope == null
         ? null
         : ref.watch(realmInboxPopupProvider(scope));
-    final router = ref.watch(appRouterProvider);
+    final router = ref.watch(navigationRouterProvider);
     useEffect(() {
       var path = router.currentPath;
       void changed() {

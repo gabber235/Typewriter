@@ -63,8 +63,7 @@ class _Harness {
       nats.registerHandler(subject, handler);
 
   void observe(skir.Service service) => container
-      .read(resourceRepositoriesProvider)
-      .services(_organizationId)
+      .read(serviceResourceRepositoryProvider(_organizationId))
       .acceptService(service);
 
   void dispose() {
@@ -79,7 +78,7 @@ Matcher _apiException(int code) =>
 
 extension _ServiceRepositoryCommands on ProviderContainer {
   ServiceResourceRepository get _services =>
-      read(resourceRepositoriesProvider).services(_organizationId);
+      read(serviceResourceRepositoryProvider(_organizationId));
 
   Future<void> bindService(String token) async {
     final response = await read(localWorkControllerProvider)

@@ -257,7 +257,7 @@ class RealmSurfaceNavigation {
     }
     final target = document.open(resource);
     await ref
-        .read(appRouterProvider)
+        .read(navigationRouterProvider)
         .navigate(surfaceRoute(scope, target), isCurrent: isCurrent);
     if (!current()) return false;
     final selected = switch (target) {
@@ -305,7 +305,7 @@ class RealmSurfaceNavigation {
       if (!isCurrent()) return;
     }
     await ref
-        .read(appRouterProvider)
+        .read(navigationRouterProvider)
         .navigate(
           surfaceRoute(scope, const SurfaceTarget.home()),
           isCurrent: isCurrent,
@@ -336,7 +336,7 @@ class RealmSurfaceNavigation {
       if (ref.read(routedResourceProvider(scope)) != resource &&
           !ref.read(showsSideInspectorProvider(scope))) {
         await ref
-            .read(appRouterProvider)
+            .read(navigationRouterProvider)
             .navigate(
               surfaceRoute(scope, SurfaceTarget.resource(routed: resource)),
               isCurrent: isCurrent,
@@ -383,13 +383,13 @@ PortableLocationRevealController realmLocationReveal(
 final class ResourceCreationNavigationIntent {
   ResourceCreationNavigationIntent(Ref ref)
     : _ref = ref,
-      _router = ref.read(appRouterProvider),
-      _navigation = ref.read(appRouterProvider).navigationRevision,
+      _router = ref.read(navigationRouterProvider),
+      _navigation = ref.read(navigationRouterProvider).navigationRevision,
       _selection = ref.read(selectionProvider),
       _scope = ref.read(selectedAuthoringScopeProvider);
 
   final Ref _ref;
-  final AppRouter _router;
+  final NavigationRouter _router;
   final int _navigation;
   final AuthoringScope? _scope;
   List<SelectableIdentifier> _selection;

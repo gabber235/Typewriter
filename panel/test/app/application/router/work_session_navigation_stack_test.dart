@@ -177,6 +177,7 @@ void main() {
     );
     final container = ProviderContainer(
       overrides: [
+        ...appOverrides(),
         ...authoringFixtureOverrides(scope: scope, books: [book]),
         appRouterProvider.overrideWithValue(fixture.router),
       ],
@@ -235,6 +236,7 @@ void main() {
       );
       final container = ProviderContainer(
         overrides: [
+          ...appOverrides(),
           ...authoringFixtureOverrides(scope: scope, books: [book]),
           appRouterProvider.overrideWithValue(fixture.router),
         ],
@@ -289,6 +291,7 @@ void main() {
       await tester.pumpWidget(
         ProviderScope(
           overrides: [
+            ...appOverrides(),
             accessTokenProvider.overrideWithValue(
               const AsyncData(AccessToken(token: "fixture-token")),
             ),

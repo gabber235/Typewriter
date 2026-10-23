@@ -163,6 +163,48 @@ void main() {
       await harness.dispose();
     }
   });
+  test("a replaced connection rebinds the authoring watch", () async {
+    final harness = _Harness();
+    final replacement = FakeNatsClient();
+    var queries = 0;
+    for (final client in [harness.nats, replacement]) {
+      client.registerHandler(_catalogSubject, (_) => _catalogResponse());
+    }
+    // Queries use the session transport; only the change watch follows the
+    // replaced connection.
+    harness.nats.registerHandler(_snapshotSubject, (_) {
+      queries++;
+      return _snapshotResponse(_snapshot("Initial", 1));
+    });
+    final provider = authoringSessionProvider(_organization, _realm);
+    final subscription = harness.container.listen(provider, (_, _) {});
+    try {
+      await waitForProvider(
+        harness.container,
+        provider,
+        (state) => _title(state) == "Initial",
+        description: "initial state",
+      );
+      final beforeReplacement = queries;
+      (harness.container.read(natsProvider.notifier) as FakeNats).connection =
+          replacement;
+      // Rebinding invalidates the session, which refreshes its snapshot.
+      await _waitUntil(() => queries > beforeReplacement);
+      await pumpEventQueue();
+      final beforeChange = queries;
+      replacement.emitMessageOnSubject(
+        _eventSubject,
+        skir.AuthoringChanged.serializer.toBytes(
+          skir.AuthoringChanged(generation: _generation),
+        ),
+      );
+      await _waitUntil(() => queries > beforeChange);
+    } finally {
+      subscription.close();
+      await harness.dispose();
+      await replacement.dispose();
+    }
+  });
   test("catalog invalidation refetches matching state and preserves the local draft", () async {
     final harness = _Harness();
     var generation = _generation;
@@ -275,14 +317,14 @@ Uint8List _catalogResponse({skir.CatalogGeneration? generation}) =>
 
 final class _Harness {
   _Harness() {
-    repositories = ResourceRepositories(
+    session = ResourceSession(
       SkirMutationClient(() => nats, () async => const NoopPanelTelemetry()),
       null,
     );
     container = ProviderContainer.test(
       overrides: [
         natsProvider.overrideWith(() => FakeNats(nats)),
-        resourceRepositoriesProvider.overrideWithValue(repositories),
+        resourceSessionProvider.overrideWithValue(session),
         organizationIdProvider.overrideWithValue(_organization),
         realmIdProvider.overrideWithValue(_realm),
         panelTelemetryProvider.overrideWithValue(
@@ -293,7 +335,7 @@ final class _Harness {
   }
 
   final FakeNatsClient nats = FakeNatsClient();
-  late final ResourceRepositories repositories;
+  late final ResourceSession session;
   late final ProviderContainer container;
 
   void emit() => nats.emitMessageOnSubject(
@@ -304,7 +346,7 @@ final class _Harness {
   );
   Future<void> dispose() async {
     container.dispose();
-    repositories.dispose();
+    session.end();
     await nats.dispose();
   }
 }

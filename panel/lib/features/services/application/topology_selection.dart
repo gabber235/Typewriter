@@ -44,9 +44,9 @@ class ServiceHostIdentifier extends SelectableIdentifier {
       (service) => service.serviceId == host.serviceId,
     );
     final service = projectedServiceState.requireValue;
-    final repository = ref
-        .watch(resourceRepositoriesProvider)
-        .services(organization);
+    final repository = ref.watch(
+      serviceResourceRepositoryProvider(organization),
+    );
     final work = ref.watch(localWorkProvider.notifier);
     final configurationSnapshot = HostEditorSnapshot(host, topology);
 
@@ -162,7 +162,7 @@ class RealmInstanceIdentifier extends SelectableIdentifier {
     );
     final connected = connections[host?.serviceId] ?? false;
     final organization = service?.organization;
-    final router = ref.watch(appRouterProvider);
+    final router = ref.watch(navigationRouterProvider);
 
     return AsyncData(
       _RealmInstanceSelectable(

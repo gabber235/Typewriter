@@ -90,30 +90,6 @@ skir.OperationInvocation captureResourceOperationInvocation({
   );
 }
 
-/// Projects Realm affordances while retaining generic service operations.
-List<SelectionOperation> selectionOperationsFor(
-  WidgetRef ref,
-  BuildContext context,
-  List<Selectable>? selection,
-) {
-  if (selection == null || selection.isEmpty) return [];
-  final identifiers = selection.map((item) => item.id).toList();
-  if (identifiers.any((id) => id is! AuthoringResourceIdentifier)) {
-    return availableSelectionOperations(
-      SelectionOperationsRoot.of(context),
-      selection,
-    );
-  }
-  final resources = identifiers.cast<AuthoringResourceIdentifier>();
-  final scope = resources.first.scope;
-  if (resources.any((id) => id.scope != scope)) return [];
-  return resourceSelectionOperationsFor(
-    ref,
-    scope,
-    resources.map((id) => id.resourceId),
-  );
-}
-
 /// The client navigation entries, then the catalog operations in the order
 /// the Realm resolved them: by group, then order.
 List<SelectionOperation> resourceSelectionOperationsFor(

@@ -83,7 +83,7 @@ extension RealmEditingRegistration on LocalWork {
       );
     },
     destination: (ref) =>
-        RealmWorkDestination(ref.read(appRouterProvider), scope),
+        RealmWorkDestination(ref.read(navigationRouterProvider), scope),
   );
 }
 
@@ -160,7 +160,7 @@ final class RealmWorkDestination extends WorkDestination {
   RealmWorkDestination(this.router, this.scope) {
     router.addListener(notifyListeners);
   }
-  final AppRouter router;
+  final NavigationRouter router;
   final AuthoringScope scope;
   @override
   bool get isCurrent {

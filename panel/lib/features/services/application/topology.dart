@@ -33,8 +33,7 @@ class OrganizationTopologyController extends _$OrganizationTopologyController {
           snapshot: (response) => response.readSnapshot(),
           reduce: (current, event) => event.applyTo(current),
           confirmedEvents: ref
-              .watch(resourceRepositoriesProvider)
-              .services(organizationId)
+              .watch(serviceResourceRepositoryProvider(organizationId))
               .configurations
               .map(skir.OrganizationTopologyChanged.wrapConfigurationChanged),
           reconcileSnapshot: (current, incoming) =>

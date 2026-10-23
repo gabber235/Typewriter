@@ -664,6 +664,7 @@ Future<RealmInboxState> _inbox({
   addTearDown(publication.close);
   final container = ProviderContainer.test(
     overrides: [
+      ...appOverrides(),
       ...authoringFixtureOverrides(
         scope: _scope,
         document: document,
@@ -730,6 +731,7 @@ _navigation({
   addTearDown(publication.close);
   final container = ProviderContainer.test(
     overrides: [
+      ...appOverrides(),
       ...authoringFixtureOverrides(
         scope: _scope,
         document: document,

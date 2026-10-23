@@ -45,9 +45,9 @@ class OrganizationJoinRequests extends _$OrganizationJoinRequests {
       return;
     }
 
-    final repository = ref
-        .watch(resourceRepositoriesProvider)
-        .membership(organizationId);
+    final repository = ref.watch(
+      membershipResourceRepositoryProvider(organizationId),
+    );
     final request = skir.WatchOrganizationJoinRequestsRequest();
     yield* request.watch<List<skir.OrganizationJoinRequest>>(
       ref,

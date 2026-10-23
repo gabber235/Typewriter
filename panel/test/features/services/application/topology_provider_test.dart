@@ -68,9 +68,9 @@ Future<skir.ConfigureServiceHostResponse> _configureHost(
   skir.ServiceHost host,
   skir.HostExecutionConfiguration execution,
 ) {
-  final repository = container
-      .read(resourceRepositoriesProvider)
-      .services(_organizationId);
+  final repository = container.read(
+    serviceResourceRepositoryProvider(_organizationId),
+  );
   return container
       .read(localWorkControllerProvider)
       .execute(repository.configure(host.hostId, host.revision, execution));
@@ -128,6 +128,7 @@ void main() {
       );
     final container = ProviderContainer.test(
       overrides: [
+        ...appOverrides(),
         userIdProvider.overrideWith((ref) async => "user1"),
         organizationIdProvider.overrideWith((ref) => _organizationId),
         natsProvider.overrideWith(() => FakeNats(nats)),
@@ -249,6 +250,7 @@ void main() {
       );
     final container = ProviderContainer.test(
       overrides: [
+        ...appOverrides(),
         userIdProvider.overrideWith((ref) async => "user1"),
         organizationIdProvider.overrideWith((ref) => _organizationId),
         natsProvider.overrideWith(() => FakeNats(nats)),
@@ -286,8 +288,7 @@ void main() {
       ),
     );
     container
-        .read(resourceRepositoriesProvider)
-        .services(_organizationId)
+        .read(serviceResourceRepositoryProvider(_organizationId))
         .acceptConfiguration(
           skir.HostConfigurationChange(
             host: configuredHost,
@@ -417,6 +418,7 @@ void main() {
         );
       final container = ProviderContainer.test(
         overrides: [
+          ...appOverrides(),
           userIdProvider.overrideWith((ref) async => "user1"),
           organizationIdProvider.overrideWith((ref) => _organizationId),
           natsProvider.overrideWith(() => FakeNats(nats)),
@@ -473,6 +475,7 @@ void main() {
       );
     final container = ProviderContainer.test(
       overrides: [
+        ...appOverrides(),
         userIdProvider.overrideWith((ref) async => "user1"),
         organizationIdProvider.overrideWith((ref) => _organizationId),
         natsProvider.overrideWith(() => FakeNats(nats)),
@@ -528,6 +531,7 @@ void main() {
         );
       final container = ProviderContainer.test(
         overrides: [
+          ...appOverrides(),
           userIdProvider.overrideWith((ref) async => "user1"),
           organizationIdProvider.overrideWithValue(_organizationId),
           natsProvider.overrideWith(() => FakeNats(nats)),

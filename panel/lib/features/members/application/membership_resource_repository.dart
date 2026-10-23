@@ -1,16 +1,31 @@
 part of "members.dart";
 
+/// The membership command owner for one organization in the current resource
+/// session. Repeated reads share the repository and its mutation boundary.
+@Riverpod(keepAlive: true)
+MembershipResourceRepository membershipResourceRepository(
+  Ref ref,
+  skir.RecordId organization,
+) {
+  final repository = MembershipResourceRepository(
+    ref.watch(resourceSessionProvider),
+    organization,
+  );
+  ref.onDispose(repository.dispose);
+  return repository;
+}
+
 /// Owns membership command preparation and confirmed projection facts.
 ///
 /// Each method freezes a request for the local work controller to submit later.
 /// Accepted replies publish their captured events through the same sequenced
 /// projections as broker delivery. These streams do not replay earlier events.
-/// Repository lifetime follows [ResourceRepositories], while [organization]
+/// Repository lifetime follows [ResourceSession], while [organization]
 /// fixes the scope for every prepared command.
 final class MembershipResourceRepository {
   MembershipResourceRepository(this.session, this.organization);
 
-  final ResourceRepositories session;
+  final ResourceSession session;
   final skir.RecordId organization;
   final _members = StreamController<skir.OrganizationMembersChanged>.broadcast(
     sync: true,

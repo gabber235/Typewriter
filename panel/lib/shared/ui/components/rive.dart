@@ -114,7 +114,7 @@ class _RiveErrorWidget extends StatelessWidget {
     final theme = Theme.of(context);
 
     return Container(
-      padding: const EdgeInsets.all(16),
+      padding: EdgeInsets.all(context.spacing.space4),
       decoration: BoxDecoration(
         color: theme.colorScheme.errorContainer.withValues(alpha: 0.1),
         borderRadius: context.shapes.mediumBorderRadius,
@@ -130,7 +130,7 @@ class _RiveErrorWidget extends StatelessWidget {
             size: 32,
             color: theme.colorScheme.error,
           ),
-          const SizedBox(height: 8),
+          SizedBox(height: context.spacing.space2),
           Text(
             "Failed to load animation",
             style: Theme.of(context).textTheme.bodyMedium!.copyWith(

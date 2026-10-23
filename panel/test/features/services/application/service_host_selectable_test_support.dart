@@ -107,6 +107,7 @@ class _Harness {
       );
     final container = ProviderContainer.test(
       overrides: [
+        ...appOverrides(),
         userIdProvider.overrideWith((ref) async => "user1"),
         organizationIdProvider.overrideWith(
           (ref) => organization?.call() ?? _organizationId,

@@ -1,5 +1,20 @@
 part of "services.dart";
 
+/// The services command owner for one organization in the current resource
+/// session. Repeated reads share the repository and its mutation boundary.
+@Riverpod(keepAlive: true)
+ServiceResourceRepository serviceResourceRepository(
+  Ref ref,
+  skir.RecordId organization,
+) {
+  final repository = ServiceResourceRepository(
+    ref.watch(resourceSessionProvider),
+    organization,
+  );
+  ref.onDispose(repository.dispose);
+  return repository;
+}
+
 /// Owns organization service and host configuration transport for the resource
 /// session.
 ///
@@ -10,11 +25,11 @@ part of "services.dart";
 /// runtime topology remain separate resources even when a host refers to the
 /// same service.
 ///
-/// The repository lives as long as its [ResourceRepositories] session. Closing
+/// The repository lives as long as its [ResourceSession]. Closing
 /// that session closes its streams and makes further operations invalid.
 final class ServiceResourceRepository {
   ServiceResourceRepository(this.session, this.organization);
-  final ResourceRepositories session;
+  final ResourceSession session;
   final skir.RecordId organization;
   final _configurations =
       StreamController<skir.HostConfigurationChange>.broadcast(sync: true);
