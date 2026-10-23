@@ -64,6 +64,17 @@ import skirout.editor.v1.type_catalog.ValuePath
 import java.util.Collections
 import java.util.IdentityHashMap
 
+/** The inferred result type of an expression, or the check failures that leave it untyped. */
+sealed interface ExpressionInference {
+    data class Typed(
+        val type: ExpressionType,
+    ) : ExpressionInference
+
+    data class Failed(
+        val failures: List<FailureId>,
+    ) : ExpressionInference
+}
+
 /** A checked expression retains the shared syntax and its declared result contract. */
 data class CheckedExpression(
     val body: ExpressionNode,
@@ -110,11 +121,11 @@ class PortableExpressionChecker(
         onInferred: ((ExpressionType) -> Unit)? = null,
     ): List<FailureId> = Invocation(bindings, partialBindings).check(body, expectedOutput, onInferred)
 
-    /** Checks [body] against [bindings] and infers its result, for a result of any type such as an order key. */
-    fun checkAnyResultCodes(
+    /** The result type of [body] over [bindings], for a result of any type such as a sort key or a repeated source. */
+    fun inferExpression(
         body: ExpressionNode,
         bindings: Map<ExpressionBindingId, ExpressionType>,
-    ): List<FailureId> = Invocation(bindings, emptyMap()).inferOnly(body)
+    ): ExpressionInference = Invocation(bindings, emptyMap()).inferOnly(body)
 
     /** Checks only the syntax of [body]: bindings, local addresses, paths, operations, arities and lambda placement. */
     fun checkExpressionStructure(
@@ -227,13 +238,12 @@ class PortableExpressionChecker(
         /** Numeric literal types by identity; they adopt the width of a non literal operand of their family. */
         private val literalTypes = Collections.newSetFromMap(IdentityHashMap<ExpressionType, Boolean>())
 
-        fun inferOnly(body: ExpressionNode): List<FailureId> =
+        fun inferOnly(body: ExpressionNode): ExpressionInference =
             try {
                 validateStructure(body, bindings.keys + partialBindings.keys)
-                infer(body)
-                emptyList()
+                ExpressionInference.Typed(infer(body))
             } catch (failure: ExpressionCheckFailure) {
-                listOf(failure.failure)
+                ExpressionInference.Failed(listOf(failure.failure))
             }
 
         fun check(
@@ -613,10 +623,13 @@ class PortableExpressionChecker(
                         }
 
                         is PathSegment.FieldWrapper -> {
-                            val checked = ready(current.nominalUseOrNull() ?: fail(CheckFailure.InvalidExpressionPath))
+                            val use = current.nominalUseOrNull() ?: fail(CheckFailure.InvalidExpressionPath)
+                            val checked = ready(use)
                             val field =
                                 checked.schema.fields.singleOrNull { it.key == segment.name } ?: fail(CheckFailure.InvalidExpressionPath)
-                            nominalExpressionType(field.type, true)
+                            // A read model is a complete Skir value, so its fields are present whenever it is;
+                            // an authored field may be unfilled.
+                            nominalExpressionType(field.type, !CanonicalReadModels.supports(use))
                         }
 
                         else -> {

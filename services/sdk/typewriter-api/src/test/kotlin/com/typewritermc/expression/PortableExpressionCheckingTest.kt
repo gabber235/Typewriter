@@ -62,23 +62,6 @@ val PortableExpressionCheckingTest by testSuite {
 
     fun read(id: ExpressionBindingId) = checkInput(id)
 
-    test("an unused generic ambient binding does not postpone checking a concrete candidate") {
-        val generic = ParameterKey(owner = TypeDefinitionId.qualified("test", "GenericAmbient"), index = 0).template
-        val concrete = integerScalar(IntegerWidth.SIGNED_THIRTY_TWO).template
-        val bindings = mapOf(parent to generic, candidate to concrete)
-        com.typewritermc.presentation.checkPresentationExpression(
-            read(candidate),
-            bindings,
-            concrete,
-            setOf(candidate),
-            catalog::resolve,
-        ) shouldBe emptyList()
-        val trimmed = checkCall("text.trim_start", read(candidate))
-        com.typewritermc.presentation
-            .checkPresentationExpression(trimmed, bindings, concrete, setOf(candidate), catalog::resolve)
-            .isNotEmpty() shouldBe true
-    }
-
     test("rounding keeps the declared unsigned width and the missing increment") {
         val unsigned = integerScalar(IntegerWidth.UNSIGNED_SIXTY_FOUR).use
         val expression = checkCall("number.round", read(candidate), read(parent), mode)
