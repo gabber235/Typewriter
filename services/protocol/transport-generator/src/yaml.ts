@@ -21,7 +21,6 @@ export function parseYamlManifest<T>(
   source: string,
   file: string,
   schema: z.ZodType<T>,
-  displayPath: (path: ReadonlyArray<PropertyKey>) => ReadonlyArray<string | number> = plainPath,
 ): YamlManifest<T> {
   const lineCounter = new LineCounter();
   const document = parseDocument(source, { lineCounter, uniqueKeys: true });
@@ -35,7 +34,7 @@ export function parseYamlManifest<T>(
   if (!result.success) {
     throw new ManifestError(
       result.error.issues
-        .map((issue) => error(displayPath(issue.path), issue.message).message)
+        .map((issue) => error(documentPath(issue.path), issue.message).message)
         .join("\n"),
     );
   }
@@ -49,7 +48,8 @@ export function yamlPath(path: ReadonlyArray<string | number>): string {
     .join("");
 }
 
-function plainPath(path: ReadonlyArray<PropertyKey>): ReadonlyArray<string | number> {
+/** The document keys of a Zod issue path, which Zod types as property keys; a symbol names no document node. */
+function documentPath(path: ReadonlyArray<PropertyKey>): ReadonlyArray<string | number> {
   return path.filter((key): key is string | number => typeof key !== "symbol");
 }
 

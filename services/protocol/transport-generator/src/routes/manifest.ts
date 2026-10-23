@@ -1,6 +1,6 @@
 import { z } from "zod";
 
-import { ManifestError, parseYamlManifest } from "../yaml.js";
+import { parseYamlManifest } from "../yaml.js";
 
 import { SubjectTemplate, scopeParameters, type Parameter } from "./subject.js";
 
@@ -349,8 +349,6 @@ function admitAddresses(
   }
 }
 
-export { ManifestError, yamlPath } from "../yaml.js";
-
 /**
  * Parses and admits the transport route manifest. Duplicate YAML keys and unknown fields fail, as
  * do parties that name undeclared roles or components, components that take part in no route,
@@ -359,9 +357,7 @@ export { ManifestError, yamlPath } from "../yaml.js";
  * `routes[3].flow.request` and the line.
  */
 export function parseManifest(source: string, file: string): Manifest {
-  const { limits, roles, components, routes } = parseYamlManifest(source, file, RawManifest, (path) =>
-    path.filter((key): key is string | number => key !== "symbol" && typeof key !== "symbol"),
-  ).data;
+  const { limits, roles, components, routes } = parseYamlManifest(source, file, RawManifest).data;
   return {
     limits: {
       chunkBytes: limits.chunk_bytes,
