@@ -6,7 +6,6 @@ import {
   slotEntry,
   type Bound,
   type Capability,
-  type ItemIds,
   type Operator,
   type RawOperation,
   type RawOperationsManifest,
@@ -90,7 +89,6 @@ export interface ResolvedOperation {
   readonly result: Signature;
   readonly failures: readonly string[];
   readonly uses: readonly Capability[];
-  readonly itemIds?: ItemIds;
 }
 
 export interface ResolvedOperations {
@@ -296,7 +294,6 @@ function resolveOperation(id: string, raw: RawOperation, names: Names, error: Er
     result,
     failures: raw.failures,
     uses: raw.uses,
-    ...(raw.item_ids === undefined ? {} : { itemIds: raw.item_ids }),
   };
 }
 

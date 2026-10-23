@@ -156,8 +156,6 @@ function catalogFile(catalog: ResolvedOperations, skir: Skir): Body {
           ]),
           `result = ${signature(operation.result, catalog, skir, imports)},`,
           `failures = listOf(${operation.failures.map((failure) => `KernelFailure.${upperCamel(failure)}`).join(", ")}),`,
-          `uses = setOf(${operation.uses.map((use) => `OperationCapability.${use.toUpperCase()}`).join(", ")}),`,
-          `itemIds = ${operation.itemIds === undefined ? "null" : `ItemIdentities.${operation.itemIds.toUpperCase()}`},`,
         ]),
         ")",
       ],

@@ -660,55 +660,6 @@ abstract final class PortableFailures {
     "expression_result_not_boolean":
         "A predicate did not produce a boolean value.",
   };
-
-  /// The failures each operation declares, by operation id.
-  static const declared = <String, List<String>>{
-    "bytes.from_list": ["invalid_byte"],
-    "duration.from_milliseconds": ["duration_range"],
-    "integer.shift_left": ["negative_shift", "magnitude_limit"],
-    "integer.shift_right": ["negative_shift"],
-    "list.at": ["collection_key_absent"],
-    "list.range": ["invalid_range_step"],
-    "list.slice": ["slice_range"],
-    "map.get": ["collection_key_absent"],
-    "number.add": ["non_finite_number"],
-    "number.convert": ["inexact_conversion"],
-    "number.divide": ["division_by_zero", "non_finite_number"],
-    "number.format": ["invalid_locale", "magnitude_limit"],
-    "number.multiply": ["non_finite_number", "magnitude_limit"],
-    "number.plural_category": ["invalid_locale", "magnitude_limit"],
-    "number.power": [
-      "negative_exponent",
-      "non_finite_number",
-      "magnitude_limit",
-    ],
-    "number.remainder": ["division_by_zero", "non_finite_number"],
-    "number.round": ["invalid_rounding_increment", "non_finite_number"],
-    "number.sqrt": ["negative_square_root"],
-    "number.subtract": ["non_finite_number"],
-    "regex.find": ["regex_limit", "invalid_regex"],
-    "regex.find_all": ["regex_limit", "invalid_regex"],
-    "regex.replace": ["regex_limit", "invalid_regex"],
-    "text.from_code_points": ["invalid_code_point"],
-    "text.parse_decimal": ["invalid_number_text", "magnitude_limit"],
-    "text.parse_duration": ["invalid_duration_text", "duration_range"],
-    "text.parse_float": ["invalid_number_text"],
-    "text.parse_integer": [
-      "invalid_number_text",
-      "invalid_radix",
-      "magnitude_limit",
-    ],
-    "text.parse_timestamp": ["invalid_timestamp_text", "timestamp_range"],
-    "text.split": ["empty_separator"],
-    "text.substring": ["substring_range"],
-    "timestamp.fields": ["timestamp_range"],
-    "timestamp.from_epoch_milliseconds": ["timestamp_range"],
-    "timestamp.from_fields": ["invalid_calendar_date", "timestamp_range"],
-    "timestamp.month_name": ["invalid_month", "invalid_locale"],
-    "timestamp.weekday_name": ["invalid_weekday", "invalid_locale"],
-    "timestamp.zone_offset": ["unknown_time_zone"],
-    "value.from_json": ["invalid_json", "incompatible_value"],
-  };
 }
 
 /// The declaration of operation [id], or null when this build does not know it.
@@ -1517,113 +1468,6 @@ PortableOperationDeclaration? portableOperation(String id) => switch (id) {
   _ => null,
 };
 
-/// Every declared operation id, in id order.
-const portableOperationIds = <String>[
-  "boolean.not",
-  "bytes.from_list",
-  "bytes.to_list",
-  "catalog.declaration",
-  "collection.contains",
-  "collection.filter",
-  "collection.fold",
-  "collection.group_by",
-  "collection.map",
-  "collection.size",
-  "collection.sort_by",
-  "collection.sort_with",
-  "collection.to_list",
-  "collection.to_set",
-  "decimal.scale",
-  "duration.from_milliseconds",
-  "duration.to_milliseconds",
-  "entry.of",
-  "enum.cases",
-  "enum.from_name",
-  "integer.bit_and",
-  "integer.bit_not",
-  "integer.bit_or",
-  "integer.bit_xor",
-  "integer.gcd",
-  "integer.shift_left",
-  "integer.shift_right",
-  "link.target",
-  "list.at",
-  "list.concat",
-  "list.flatten",
-  "list.index_of",
-  "list.last_index_of",
-  "list.of",
-  "list.range",
-  "list.reverse",
-  "list.scan",
-  "list.slice",
-  "list.zip",
-  "map.contains_key",
-  "map.from_entries",
-  "map.get",
-  "map.map_values",
-  "number.add",
-  "number.convert",
-  "number.divide",
-  "number.format",
-  "number.multiply",
-  "number.plural_category",
-  "number.power",
-  "number.remainder",
-  "number.round",
-  "number.sqrt",
-  "number.subtract",
-  "record.with_field",
-  "regex.find",
-  "regex.find_all",
-  "regex.replace",
-  "resource.configuration",
-  "resource.identity",
-  "resource.value",
-  "resource.value_of",
-  "set.difference",
-  "set.intersect",
-  "text.code_points",
-  "text.fold_case",
-  "text.from_code_points",
-  "text.index_of",
-  "text.join",
-  "text.last_index_of",
-  "text.length",
-  "text.lower",
-  "text.normalize",
-  "text.parse_decimal",
-  "text.parse_duration",
-  "text.parse_float",
-  "text.parse_integer",
-  "text.parse_timestamp",
-  "text.split",
-  "text.substring",
-  "text.title",
-  "text.trim_end",
-  "text.trim_start",
-  "text.upper",
-  "timestamp.fields",
-  "timestamp.from_epoch_milliseconds",
-  "timestamp.from_fields",
-  "timestamp.month_name",
-  "timestamp.to_epoch_milliseconds",
-  "timestamp.weekday_name",
-  "timestamp.zone_offset",
-  "value.cast",
-  "value.compare",
-  "value.configuration",
-  "value.equals",
-  "value.from_json",
-  "value.instance_of",
-  "value.is_null",
-  "value.let",
-  "value.to_json",
-  "value.to_text",
-  "value.unwrap",
-  "value.wrap",
-];
-
 /// The operations of group boolean. A kernel that misses a method does not analyze.
 abstract interface class BooleanKernel {
   /// The negation.
@@ -2261,10 +2105,10 @@ PortableMaybe<_lib_editor_v1_type_catalog.DataValue>? invokePortableOperation(
         int32Value(it),
     ]),
   ),
-  "catalog.declaration" =>
-    kernel.catalog
-        .declaration(arguments[0].value, context.resources)
-        .map((it) => it),
+  "catalog.declaration" => kernel.catalog.declaration(
+    arguments[0].value,
+    context.resources,
+  ),
   "collection.contains" => PortableMaybeValue(
     booleanValue(
       kernel.collection.contains(
@@ -2414,13 +2258,10 @@ PortableMaybe<_lib_editor_v1_type_catalog.DataValue>? invokePortableOperation(
   "link.target" => PortableMaybeValue(
     resourceIdValue(kernel.link.target(arguments[0].value.asLink())),
   ),
-  "list.at" =>
-    kernel.list
-        .at(
-          arguments[0].located((it) => it.asItems()),
-          arguments[1].value.asInt32(),
-        )
-        .map((it) => it),
+  "list.at" => kernel.list.at(
+    arguments[0].located((it) => it.asItems()),
+    arguments[1].value.asInt32(),
+  ),
   "list.concat" => PortableMaybeValue(
     itemsList(
       kernel.list.concat(
@@ -2494,10 +2335,10 @@ PortableMaybe<_lib_editor_v1_type_catalog.DataValue>? invokePortableOperation(
   "map.from_entries" => PortableMaybeValue(
     rowsMap(kernel.map.fromEntries(arguments[0].value.asItems())),
   ),
-  "map.get" =>
-    kernel.map
-        .get(arguments[0].located((it) => it.asRows()), arguments[1].value)
-        .map((it) => it),
+  "map.get" => kernel.map.get(
+    arguments[0].located((it) => it.asRows()),
+    arguments[1].value,
+  ),
   "map.map_values" => PortableMaybeValue(
     rowsMap(
       kernel.map.mapValues(
@@ -2627,26 +2468,23 @@ PortableMaybe<_lib_editor_v1_type_catalog.DataValue>? invokePortableOperation(
       ),
     ),
   ),
-  "resource.configuration" =>
-    kernel.resource
-        .configuration(arguments[0].value.asResourceId(), context.resources)
-        .map((it) => it),
+  "resource.configuration" => kernel.resource.configuration(
+    arguments[0].value.asResourceId(),
+    context.resources,
+  ),
   "resource.identity" =>
     kernel.resource
         .identity(arguments[0].value.asLink(), context.resources)
         .map((it) => resourceIdValue(it)),
-  "resource.value" =>
-    kernel.resource
-        .value(arguments[0].value.asLink(), context.resources)
-        .map((it) => it),
-  "resource.value_of" =>
-    kernel.resource
-        .valueOf(
-          arguments[0].value.asResourceId(),
-          typeArguments[0],
-          context.resources,
-        )
-        .map((it) => it),
+  "resource.value" => kernel.resource.value(
+    arguments[0].value.asLink(),
+    context.resources,
+  ),
+  "resource.value_of" => kernel.resource.valueOf(
+    arguments[0].value.asResourceId(),
+    typeArguments[0],
+    context.resources,
+  ),
   "set.difference" => PortableMaybeValue(
     itemsSet(
       kernel.set.difference(
@@ -2826,8 +2664,7 @@ PortableMaybe<_lib_editor_v1_type_catalog.DataValue>? invokePortableOperation(
   "value.compare" => PortableMaybeValue(
     int32Value(kernel.value.compare(arguments[0].value, arguments[1].value)),
   ),
-  "value.configuration" =>
-    kernel.value.configuration(arguments[0].value).map((it) => it),
+  "value.configuration" => kernel.value.configuration(arguments[0].value),
   "value.equals" => PortableMaybeValue(
     booleanValue(kernel.value.equals(arguments[0].value, arguments[1].value)),
   ),

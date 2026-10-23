@@ -243,16 +243,6 @@ function failures(catalog: ResolvedOperations, skir: Skir): Lines {
           ...indent(all.map((failure) => `${quoted(failure.id)}: ${quoted(failure.message, "escaped")},`)),
           "};",
         ],
-        [
-          "/// The failures each operation declares, by operation id.",
-          "static const declared = <String, List<String>>{",
-          ...indent(
-            catalog.operations
-              .filter((operation) => operation.failures.length > 0)
-              .map((operation) => `${quoted(operation.id)}: [${operation.failures.map((failure) => quoted(failure)).join(", ")}],`),
-          ),
-          "};",
-        ],
       ]),
     ),
     "}",
@@ -283,11 +273,6 @@ function declarations(catalog: ResolvedOperations): Lines {
     ),
     ...indent(["_ => null,"]),
     "};",
-    BLANK,
-    "/// Every declared operation id, in id order.",
-    "const portableOperationIds = <String>[",
-    ...indent(catalog.operations.map((operation) => `${quoted(operation.id)},`)),
-    "];",
   ];
 }
 
@@ -509,10 +494,12 @@ function invokerCase(operation: ResolvedOperation, catalog: ResolvedOperations):
   const typeArguments = operation.typeParameters.filter((parameter) => parameter.explicit).map((_, index) => `typeArguments[${index}]`);
   const capabilities = operation.uses.map((use) => `context.${use}`);
   const call = `kernel.${groupField(operation.group)}.${methodName(operation)}(${[...argumentsOf, ...typeArguments, ...capabilities].join(", ")})`;
-  const body =
-    operation.result.kind === "maybe"
-      ? `${call}.map((it) => ${encode(operation.result.value, "it", catalog, operation)})`
-      : `PortableMaybeValue(${encode(operation.result, call, catalog, operation)})`;
+  if (operation.result.kind !== "maybe") {
+    return [`${quoted(operation.id)} => PortableMaybeValue(${encode(operation.result, call, catalog, operation)}),`];
+  }
+  // A kernel whose available value already is a DataValue needs no mapping.
+  const encoded = encode(operation.result.value, "it", catalog, operation);
+  const body = encoded === "it" ? call : `${call}.map((it) => ${encoded})`;
   return [`${quoted(operation.id)} => ${body},`];
 }
 
