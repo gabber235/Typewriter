@@ -5,6 +5,7 @@ package com.typewritermc.presentation
 import com.typewritermc.authoring.GeneratedSdkApi
 import com.typewritermc.expression.Expr
 import com.typewritermc.expression.Handled
+import com.typewritermc.types.template
 import skirout.editor.v1.expression.ExpressionNode
 import skirout.editor.v1.presentation.BoundControl
 import skirout.editor.v1.presentation.PopupSide
@@ -14,6 +15,10 @@ import skirout.editor.v1.presentation.SearchSelectionMode
 import skirout.editor.v1.presentation.SearchSelectorMultiplicity
 import skirout.editor.v1.presentation.SearchSelectorValues
 import skirout.editor.v1.type_catalog.ExpressionBindingId
+
+private val TEXT_TEMPLATE =
+    skirout.editor.v1.type_catalog.TypeTemplate
+        .ScalarWrapper(skirout.editor.v1.type_catalog.ScalarKind.TEXT)
 
 internal class RuntimeSearchInputScope<Value, Row>(
     private val state: PresentationBuildState,
@@ -56,7 +61,17 @@ internal class RuntimeSearchInputScope<Value, Row>(
                         skirout.editor.v1.presentation.SearchSelectorDefinition(
                             selectorId = id,
                             key = key,
-                            valueBindingId = binding,
+                            valueBinding =
+                                skirout.editor.v1.presentation.BindingDeclaration(
+                                    id = binding,
+                                    type =
+                                        if (multiplicity == SearchSelectorMultiplicity.MULTIPLE) {
+                                            com.typewritermc.types.StandardTypes.list
+                                                .template(listOf(TEXT_TEMPLATE))
+                                        } else {
+                                            TEXT_TEMPLATE
+                                        },
+                                ),
                             values = values,
                             caseSensitive = caseSensitive,
                             multiplicity = multiplicity,
@@ -133,8 +148,14 @@ internal class RuntimeSearchInputScope<Value, Row>(
         return PresentationElement.createSearchInput(
             control = control,
             selectionMode = selectionMode,
-            queryBindingId = SEARCH_QUERY,
-            summaryBindingId = ExpressionBindingId(value = "search_summary"),
+            queryBinding =
+                skirout.editor.v1.presentation
+                    .BindingDeclaration(id = SEARCH_QUERY, type = TEXT_TEMPLATE),
+            summaryBinding =
+                skirout.editor.v1.presentation.BindingDeclaration(
+                    id = ExpressionBindingId(value = "search_summary"),
+                    type = UNTYPED_BINDING,
+                ),
             maximumExtent = frozen.popup.maximumExtent ?: expression(400.0),
             provider = source.wire(state, mapping, selectors),
             summary = summary,
@@ -181,7 +202,9 @@ private class RuntimeSearchResultScope<Value, Row>(
 
     fun build(): skirout.editor.v1.presentation.SearchResultMapping =
         skirout.editor.v1.presentation.SearchResultMapping(
-            bindingId = SEARCH_RESULT_ROW,
+            binding =
+                skirout.editor.v1.presentation
+                    .BindingDeclaration(id = SEARCH_RESULT_ROW, type = UNTYPED_BINDING),
             key = requireNotNull(key) { "Search result mapping must declare a key." },
             selectedValue = requireNotNull(selectedValue) { "Search result mapping must declare a selected value." },
             presentation = requireNotNull(presentation) { "Search result mapping must declare a presentation." },

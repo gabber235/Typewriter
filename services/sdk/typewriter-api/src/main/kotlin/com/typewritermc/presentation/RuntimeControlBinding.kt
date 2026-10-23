@@ -165,8 +165,15 @@ internal class RuntimeControlBinding(
                 allowAdd = add,
                 allowRemove = remove,
                 allowReorder = reorder,
-                itemBindingId = ExpressionBindingId(value = "list_item"),
-                indexBindingId = ExpressionBindingId(value = "list_index"),
+                itemBinding = slotBinding("list_item", NestedPresentationSlot.Items),
+                indexBinding =
+                    skirout.editor.v1.presentation.BindingDeclaration(
+                        id = ExpressionBindingId(value = "list_index"),
+                        type =
+                            com.typewritermc.types
+                                .integerScalar(skirout.editor.v1.type_catalog.IntegerWidth.SIGNED_THIRTY_TWO)
+                                .template,
+                    ),
                 appearance = appearance,
                 content = content,
             )
@@ -188,7 +195,7 @@ internal class RuntimeControlBinding(
                 itemPresentation = body,
                 allowAdd = add,
                 allowRemove = remove,
-                itemBindingId = ExpressionBindingId(value = "set_item"),
+                itemBinding = slotBinding("set_item", NestedPresentationSlot.Items),
                 appearance = appearance,
                 content = content,
             )
@@ -212,8 +219,8 @@ internal class RuntimeControlBinding(
                 valuePresentation = values,
                 allowAdd = add,
                 allowRemove = remove,
-                keyBindingId = ExpressionBindingId(value = "map_key"),
-                valueBindingId = ExpressionBindingId(value = "map_value"),
+                keyBinding = slotBinding("map_key", NestedPresentationSlot.Keys),
+                valueBinding = slotBinding("map_value", NestedPresentationSlot.Values),
                 appearance = appearance,
                 content = content,
             )
@@ -310,7 +317,13 @@ internal class RuntimeControlBinding(
             ResourcesLayout.createTree(
                 path = path.path,
                 group = scope.group,
-                groupBindingId = groupBinding,
+                groupBinding =
+                    skirout.editor.v1.presentation.BindingDeclaration(
+                        id = groupBinding,
+                        type =
+                            com.typewritermc.authoring.HierarchyGroupDefinition.id
+                                .template(),
+                    ),
                 connectors = null,
                 initiallyExpanded = scope.initiallyExpanded,
             ),
@@ -330,7 +343,11 @@ internal class RuntimeControlBinding(
                 control = it,
                 layout = layout,
                 order = resourceOrder,
-                itemBindingId = RESOURCES_ITEM,
+                itemBinding =
+                    skirout.editor.v1.presentation.BindingDeclaration(
+                        id = RESOURCES_ITEM,
+                        type = requireNotNull(checked.itemsOrNull()) { "A resources layout presents a collection of links." }.type,
+                    ),
             )
         }
     }
@@ -439,6 +456,13 @@ internal class RuntimeControlBinding(
             )
         }
     }
+
+    /** Declares the binding [id] of a collection editor, typed as the element at [slot]. */
+    private fun slotBinding(
+        id: String,
+        slot: NestedPresentationSlot,
+    ) = skirout.editor.v1.presentation
+        .BindingDeclaration(id = ExpressionBindingId(value = id), type = checked.nested(slot).type.type)
 
     private fun <Scope> nestedPresentation(
         block: ControlConfiguration<Scope>,

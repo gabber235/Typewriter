@@ -1979,6 +1979,11 @@ impl crate::SkirType for crate::skirout::base::editor::v1::presentation::Sequenc
         Self::serializer()
     }
 }
+impl crate::SkirType for crate::skirout::base::editor::v1::presentation::BindingDeclaration {
+    fn serializer() -> crate::skir_client::Serializer<Self> {
+        Self::serializer()
+    }
+}
 impl crate::SkirType for crate::skirout::base::editor::v1::presentation::RepeatedElement {
     fn serializer() -> crate::skir_client::Serializer<Self> {
         Self::serializer()

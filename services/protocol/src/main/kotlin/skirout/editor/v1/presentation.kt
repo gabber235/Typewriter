@@ -9163,9 +9163,154 @@ class SequencePresentation private constructor(
     }
 }
 
+sealed interface BindingDeclaration_OrMutable {
+    val id: skirout.editor.v1.type_catalog.ExpressionBindingId_OrMutable;
+    val type: skirout.editor.v1.type_catalog.TypeTemplate;
+
+    fun toFrozen(): skirout.editor.v1.presentation.BindingDeclaration;
+}
+
+/**
+ * A binding a presentation introduces, with the type its expressions see. Templates may
+ * use the type parameters of the material that declares them.
+ *
+ * Deeply immutable.
+ */
+@kotlin.Suppress("UNUSED_PARAMETER")
+class BindingDeclaration private constructor(
+    override val id: skirout.editor.v1.type_catalog.ExpressionBindingId,
+    override val type: skirout.editor.v1.type_catalog.TypeTemplate,
+    internal val _unrecognizedFields: _UnrecognizedFields<skirout.editor.v1.presentation.BindingDeclaration>? =
+        null,
+): skirout.editor.v1.presentation.BindingDeclaration_OrMutable {
+    constructor(
+        _mustNameArguments: _MustNameArguments =
+            _MustNameArguments,
+        id: skirout.editor.v1.type_catalog.ExpressionBindingId_OrMutable,
+        type: skirout.editor.v1.type_catalog.TypeTemplate,
+        _unrecognizedFields: _UnrecognizedFields<skirout.editor.v1.presentation.BindingDeclaration>? =
+            null,
+    ): this(
+        id.toFrozen(),
+        type,
+        _unrecognizedFields,
+    ) {}
+
+    @kotlin.Deprecated("Already frozen", kotlin.ReplaceWith("this"))
+    override fun toFrozen() = this;
+
+    /** Returns a mutable shallow copy of this instance */
+    fun toMutable() = Mutable(
+        id = this.id,
+        type = this.type,
+    );
+
+    /** Returns a shallow copy of this instance with the specified fields replaced. */
+    fun copy(
+        _mustNameArguments: _MustNameArguments =
+            _MustNameArguments,
+        id: skirout.editor.v1.type_catalog.ExpressionBindingId_OrMutable =
+            this.id,
+        type: skirout.editor.v1.type_catalog.TypeTemplate =
+            this.type,
+    ) = skirout.editor.v1.presentation.BindingDeclaration(
+        id.toFrozen(),
+        type,
+        this._unrecognizedFields,
+    );
+
+    @kotlin.Deprecated("No point in creating an exact copy of an immutable object", kotlin.ReplaceWith("this"))
+    fun copy() = this;
+
+    override fun equals(other: kotlin.Any?): kotlin.Boolean {
+        return this === other || (other is skirout.editor.v1.presentation.BindingDeclaration && this.id == other.id && this.type == other.type);
+    }
+
+    override fun hashCode(): kotlin.Int {
+        return kotlin.collections.listOf<kotlin.Any?>(this.id, this.type).hashCode();
+    }
+
+    override fun toString(): kotlin.String {
+        return build.skir.internal.toStringImpl(
+            this,
+            _SerializerRegistry.BindingDeclarationSerializerImpl,
+        )
+    }
+
+    /** Mutable version of [BindingDeclaration]. */
+    class Mutable internal constructor(
+        _mustNameArguments: _MustNameArguments =
+            _MustNameArguments,
+        override var id: skirout.editor.v1.type_catalog.ExpressionBindingId_OrMutable =
+            skirout.editor.v1.type_catalog.ExpressionBindingId.partial(),
+        override var type: skirout.editor.v1.type_catalog.TypeTemplate =
+            skirout.editor.v1.type_catalog.TypeTemplate.UNKNOWN,
+        internal var _unrecognizedFields: _UnrecognizedFields<skirout.editor.v1.presentation.BindingDeclaration>? =
+            null,
+    ): skirout.editor.v1.presentation.BindingDeclaration_OrMutable {
+        /** Returns a deeply immutable copy of this instance */
+        override fun toFrozen() = skirout.editor.v1.presentation.BindingDeclaration(
+            id = this.id,
+            type = this.type,
+            _unrecognizedFields = this._unrecognizedFields,
+        );
+
+        /**
+         * If the value of [id] is already mutable, returns it as-is.
+         * Otherwise, makes a mutable copy, assigns it back to [id] and returns it.
+         */
+        val mutableId: skirout.editor.v1.type_catalog.ExpressionBindingId.Mutable get() {
+            var value = this.id;
+            return when (value) {
+                is skirout.editor.v1.type_catalog.ExpressionBindingId -> {
+                    value = value.toMutable();
+                    this.id = value;
+                    return value;
+                }
+                is skirout.editor.v1.type_catalog.ExpressionBindingId.Mutable -> value;
+            }
+        }
+    }
+
+    companion object {
+        private val default =
+            skirout.editor.v1.presentation.BindingDeclaration(
+                skirout.editor.v1.type_catalog.ExpressionBindingId.partial(),
+                skirout.editor.v1.type_catalog.TypeTemplate.UNKNOWN,
+            );
+
+        /** Returns an instance with all fields set to their default values. */
+        fun partial() = default;
+
+        /**
+         * Creates a new instance of [BindingDeclaration].
+         * Unlike the constructor, does not require all fields to be specified.
+         * Missing fields will be set to their default values.
+         */
+        fun partial(
+            _mustNameArguments: _MustNameArguments =
+                _MustNameArguments,
+            id: skirout.editor.v1.type_catalog.ExpressionBindingId_OrMutable =
+                skirout.editor.v1.type_catalog.ExpressionBindingId.partial(),
+            type: skirout.editor.v1.type_catalog.TypeTemplate =
+                skirout.editor.v1.type_catalog.TypeTemplate.UNKNOWN,
+        ) = skirout.editor.v1.presentation.BindingDeclaration(
+            id = id,
+            type = type,
+            _unrecognizedFields = null,
+        );
+
+        /** Serializer for [BindingDeclaration] instances. */
+        val serializer get() = _SerializerRegistry.BindingDeclarationSerializer;
+
+        /** Describes the [BindingDeclaration] type. Provides runtime introspection capabilities. */
+        val typeDescriptor get() = _SerializerRegistry.BindingDeclarationSerializerImpl.typeDescriptor;
+    }
+}
+
 sealed interface RepeatedElement_OrMutable {
     val source: skirout.editor.v1.expression.ExpressionNode;
-    val itemBindingId: skirout.editor.v1.type_catalog.ExpressionBindingId_OrMutable;
+    val itemBinding: skirout.editor.v1.presentation.BindingDeclaration_OrMutable;
     val presentation: skirout.editor.v1.presentation.SequencePresentation_OrMutable;
 
     fun toFrozen(): skirout.editor.v1.presentation.RepeatedElement;
@@ -9175,7 +9320,7 @@ sealed interface RepeatedElement_OrMutable {
 @kotlin.Suppress("UNUSED_PARAMETER")
 class RepeatedElement private constructor(
     override val source: skirout.editor.v1.expression.ExpressionNode,
-    override val itemBindingId: skirout.editor.v1.type_catalog.ExpressionBindingId,
+    override val itemBinding: skirout.editor.v1.presentation.BindingDeclaration,
     override val presentation: skirout.editor.v1.presentation.SequencePresentation,
     internal val _unrecognizedFields: _UnrecognizedFields<skirout.editor.v1.presentation.RepeatedElement>? =
         null,
@@ -9184,13 +9329,13 @@ class RepeatedElement private constructor(
         _mustNameArguments: _MustNameArguments =
             _MustNameArguments,
         source: skirout.editor.v1.expression.ExpressionNode,
-        itemBindingId: skirout.editor.v1.type_catalog.ExpressionBindingId_OrMutable,
+        itemBinding: skirout.editor.v1.presentation.BindingDeclaration_OrMutable,
         presentation: skirout.editor.v1.presentation.SequencePresentation_OrMutable,
         _unrecognizedFields: _UnrecognizedFields<skirout.editor.v1.presentation.RepeatedElement>? =
             null,
     ): this(
         source,
-        itemBindingId.toFrozen(),
+        itemBinding.toFrozen(),
         presentation.toFrozen(),
         _unrecognizedFields,
     ) {}
@@ -9201,7 +9346,7 @@ class RepeatedElement private constructor(
     /** Returns a mutable shallow copy of this instance */
     fun toMutable() = Mutable(
         source = this.source,
-        itemBindingId = this.itemBindingId,
+        itemBinding = this.itemBinding,
         presentation = this.presentation,
     );
 
@@ -9211,13 +9356,13 @@ class RepeatedElement private constructor(
             _MustNameArguments,
         source: skirout.editor.v1.expression.ExpressionNode =
             this.source,
-        itemBindingId: skirout.editor.v1.type_catalog.ExpressionBindingId_OrMutable =
-            this.itemBindingId,
+        itemBinding: skirout.editor.v1.presentation.BindingDeclaration_OrMutable =
+            this.itemBinding,
         presentation: skirout.editor.v1.presentation.SequencePresentation_OrMutable =
             this.presentation,
     ) = skirout.editor.v1.presentation.RepeatedElement(
         source,
-        itemBindingId.toFrozen(),
+        itemBinding.toFrozen(),
         presentation.toFrozen(),
         this._unrecognizedFields,
     );
@@ -9226,11 +9371,11 @@ class RepeatedElement private constructor(
     fun copy() = this;
 
     override fun equals(other: kotlin.Any?): kotlin.Boolean {
-        return this === other || (other is skirout.editor.v1.presentation.RepeatedElement && this.source == other.source && this.itemBindingId == other.itemBindingId && this.presentation == other.presentation);
+        return this === other || (other is skirout.editor.v1.presentation.RepeatedElement && this.source == other.source && this.itemBinding == other.itemBinding && this.presentation == other.presentation);
     }
 
     override fun hashCode(): kotlin.Int {
-        return kotlin.collections.listOf<kotlin.Any?>(this.source, this.itemBindingId, this.presentation).hashCode();
+        return kotlin.collections.listOf<kotlin.Any?>(this.source, this.itemBinding, this.presentation).hashCode();
     }
 
     override fun toString(): kotlin.String {
@@ -9246,8 +9391,8 @@ class RepeatedElement private constructor(
             _MustNameArguments,
         override var source: skirout.editor.v1.expression.ExpressionNode =
             skirout.editor.v1.expression.ExpressionNode.UNKNOWN,
-        override var itemBindingId: skirout.editor.v1.type_catalog.ExpressionBindingId_OrMutable =
-            skirout.editor.v1.type_catalog.ExpressionBindingId.partial(),
+        override var itemBinding: skirout.editor.v1.presentation.BindingDeclaration_OrMutable =
+            skirout.editor.v1.presentation.BindingDeclaration.partial(),
         override var presentation: skirout.editor.v1.presentation.SequencePresentation =
             skirout.editor.v1.presentation.SequencePresentation.partial(),
         internal var _unrecognizedFields: _UnrecognizedFields<skirout.editor.v1.presentation.RepeatedElement>? =
@@ -9256,24 +9401,24 @@ class RepeatedElement private constructor(
         /** Returns a deeply immutable copy of this instance */
         override fun toFrozen() = skirout.editor.v1.presentation.RepeatedElement(
             source = this.source,
-            itemBindingId = this.itemBindingId,
+            itemBinding = this.itemBinding,
             presentation = this.presentation,
             _unrecognizedFields = this._unrecognizedFields,
         );
 
         /**
-         * If the value of [itemBindingId] is already mutable, returns it as-is.
-         * Otherwise, makes a mutable copy, assigns it back to [itemBindingId] and returns it.
+         * If the value of [itemBinding] is already mutable, returns it as-is.
+         * Otherwise, makes a mutable copy, assigns it back to [itemBinding] and returns it.
          */
-        val mutableItemBindingId: skirout.editor.v1.type_catalog.ExpressionBindingId.Mutable get() {
-            var value = this.itemBindingId;
+        val mutableItemBinding: skirout.editor.v1.presentation.BindingDeclaration.Mutable get() {
+            var value = this.itemBinding;
             return when (value) {
-                is skirout.editor.v1.type_catalog.ExpressionBindingId -> {
+                is skirout.editor.v1.presentation.BindingDeclaration -> {
                     value = value.toMutable();
-                    this.itemBindingId = value;
+                    this.itemBinding = value;
                     return value;
                 }
-                is skirout.editor.v1.type_catalog.ExpressionBindingId.Mutable -> value;
+                is skirout.editor.v1.presentation.BindingDeclaration.Mutable -> value;
             }
         }
     }
@@ -9282,7 +9427,7 @@ class RepeatedElement private constructor(
         private val default =
             skirout.editor.v1.presentation.RepeatedElement(
                 skirout.editor.v1.expression.ExpressionNode.UNKNOWN,
-                skirout.editor.v1.type_catalog.ExpressionBindingId.partial(),
+                skirout.editor.v1.presentation.BindingDeclaration.partial(),
                 skirout.editor.v1.presentation.SequencePresentation.partial(),
             );
 
@@ -9299,13 +9444,13 @@ class RepeatedElement private constructor(
                 _MustNameArguments,
             source: skirout.editor.v1.expression.ExpressionNode =
                 skirout.editor.v1.expression.ExpressionNode.UNKNOWN,
-            itemBindingId: skirout.editor.v1.type_catalog.ExpressionBindingId_OrMutable =
-                skirout.editor.v1.type_catalog.ExpressionBindingId.partial(),
+            itemBinding: skirout.editor.v1.presentation.BindingDeclaration_OrMutable =
+                skirout.editor.v1.presentation.BindingDeclaration.partial(),
             presentation: skirout.editor.v1.presentation.SequencePresentation_OrMutable =
                 skirout.editor.v1.presentation.SequencePresentation.partial(),
         ) = skirout.editor.v1.presentation.RepeatedElement(
             source = source,
-            itemBindingId = itemBindingId,
+            itemBinding = itemBinding,
             presentation = presentation,
             _unrecognizedFields = null,
         );
@@ -9320,7 +9465,7 @@ class RepeatedElement private constructor(
 
 sealed interface ScopedBindingElement_OrMutable {
     val binding: skirout.editor.v1.binding.BindingRef_OrMutable;
-    val scopeBindingId: skirout.editor.v1.type_catalog.ExpressionBindingId_OrMutable;
+    val scopeBinding: skirout.editor.v1.presentation.BindingDeclaration_OrMutable;
     val child: skirout.editor.v1.presentation.PresentationNode_OrMutable;
 
     fun toFrozen(): skirout.editor.v1.presentation.ScopedBindingElement;
@@ -9330,7 +9475,7 @@ sealed interface ScopedBindingElement_OrMutable {
 @kotlin.Suppress("UNUSED_PARAMETER")
 class ScopedBindingElement private constructor(
     override val binding: skirout.editor.v1.binding.BindingRef,
-    override val scopeBindingId: skirout.editor.v1.type_catalog.ExpressionBindingId,
+    override val scopeBinding: skirout.editor.v1.presentation.BindingDeclaration,
     override val child: skirout.editor.v1.presentation.PresentationNode,
     internal val _unrecognizedFields: _UnrecognizedFields<skirout.editor.v1.presentation.ScopedBindingElement>? =
         null,
@@ -9339,13 +9484,13 @@ class ScopedBindingElement private constructor(
         _mustNameArguments: _MustNameArguments =
             _MustNameArguments,
         binding: skirout.editor.v1.binding.BindingRef_OrMutable,
-        scopeBindingId: skirout.editor.v1.type_catalog.ExpressionBindingId_OrMutable,
+        scopeBinding: skirout.editor.v1.presentation.BindingDeclaration_OrMutable,
         child: skirout.editor.v1.presentation.PresentationNode_OrMutable,
         _unrecognizedFields: _UnrecognizedFields<skirout.editor.v1.presentation.ScopedBindingElement>? =
             null,
     ): this(
         binding.toFrozen(),
-        scopeBindingId.toFrozen(),
+        scopeBinding.toFrozen(),
         child.toFrozen(),
         _unrecognizedFields,
     ) {}
@@ -9356,7 +9501,7 @@ class ScopedBindingElement private constructor(
     /** Returns a mutable shallow copy of this instance */
     fun toMutable() = Mutable(
         binding = this.binding,
-        scopeBindingId = this.scopeBindingId,
+        scopeBinding = this.scopeBinding,
         child = this.child,
     );
 
@@ -9366,13 +9511,13 @@ class ScopedBindingElement private constructor(
             _MustNameArguments,
         binding: skirout.editor.v1.binding.BindingRef_OrMutable =
             this.binding,
-        scopeBindingId: skirout.editor.v1.type_catalog.ExpressionBindingId_OrMutable =
-            this.scopeBindingId,
+        scopeBinding: skirout.editor.v1.presentation.BindingDeclaration_OrMutable =
+            this.scopeBinding,
         child: skirout.editor.v1.presentation.PresentationNode_OrMutable =
             this.child,
     ) = skirout.editor.v1.presentation.ScopedBindingElement(
         binding.toFrozen(),
-        scopeBindingId.toFrozen(),
+        scopeBinding.toFrozen(),
         child.toFrozen(),
         this._unrecognizedFields,
     );
@@ -9381,11 +9526,11 @@ class ScopedBindingElement private constructor(
     fun copy() = this;
 
     override fun equals(other: kotlin.Any?): kotlin.Boolean {
-        return this === other || (other is skirout.editor.v1.presentation.ScopedBindingElement && this.binding == other.binding && this.scopeBindingId == other.scopeBindingId && this.child == other.child);
+        return this === other || (other is skirout.editor.v1.presentation.ScopedBindingElement && this.binding == other.binding && this.scopeBinding == other.scopeBinding && this.child == other.child);
     }
 
     override fun hashCode(): kotlin.Int {
-        return kotlin.collections.listOf<kotlin.Any?>(this.binding, this.scopeBindingId, this.child).hashCode();
+        return kotlin.collections.listOf<kotlin.Any?>(this.binding, this.scopeBinding, this.child).hashCode();
     }
 
     override fun toString(): kotlin.String {
@@ -9401,8 +9546,8 @@ class ScopedBindingElement private constructor(
             _MustNameArguments,
         override var binding: skirout.editor.v1.binding.BindingRef_OrMutable =
             skirout.editor.v1.binding.BindingRef.partial(),
-        override var scopeBindingId: skirout.editor.v1.type_catalog.ExpressionBindingId_OrMutable =
-            skirout.editor.v1.type_catalog.ExpressionBindingId.partial(),
+        override var scopeBinding: skirout.editor.v1.presentation.BindingDeclaration_OrMutable =
+            skirout.editor.v1.presentation.BindingDeclaration.partial(),
         override var child: skirout.editor.v1.presentation.PresentationNode =
             skirout.editor.v1.presentation.PresentationNode.partial(),
         internal var _unrecognizedFields: _UnrecognizedFields<skirout.editor.v1.presentation.ScopedBindingElement>? =
@@ -9411,7 +9556,7 @@ class ScopedBindingElement private constructor(
         /** Returns a deeply immutable copy of this instance */
         override fun toFrozen() = skirout.editor.v1.presentation.ScopedBindingElement(
             binding = this.binding,
-            scopeBindingId = this.scopeBindingId,
+            scopeBinding = this.scopeBinding,
             child = this.child,
             _unrecognizedFields = this._unrecognizedFields,
         );
@@ -9433,18 +9578,18 @@ class ScopedBindingElement private constructor(
         }
 
         /**
-         * If the value of [scopeBindingId] is already mutable, returns it as-is.
-         * Otherwise, makes a mutable copy, assigns it back to [scopeBindingId] and returns it.
+         * If the value of [scopeBinding] is already mutable, returns it as-is.
+         * Otherwise, makes a mutable copy, assigns it back to [scopeBinding] and returns it.
          */
-        val mutableScopeBindingId: skirout.editor.v1.type_catalog.ExpressionBindingId.Mutable get() {
-            var value = this.scopeBindingId;
+        val mutableScopeBinding: skirout.editor.v1.presentation.BindingDeclaration.Mutable get() {
+            var value = this.scopeBinding;
             return when (value) {
-                is skirout.editor.v1.type_catalog.ExpressionBindingId -> {
+                is skirout.editor.v1.presentation.BindingDeclaration -> {
                     value = value.toMutable();
-                    this.scopeBindingId = value;
+                    this.scopeBinding = value;
                     return value;
                 }
-                is skirout.editor.v1.type_catalog.ExpressionBindingId.Mutable -> value;
+                is skirout.editor.v1.presentation.BindingDeclaration.Mutable -> value;
             }
         }
     }
@@ -9453,7 +9598,7 @@ class ScopedBindingElement private constructor(
         private val default =
             skirout.editor.v1.presentation.ScopedBindingElement(
                 skirout.editor.v1.binding.BindingRef.partial(),
-                skirout.editor.v1.type_catalog.ExpressionBindingId.partial(),
+                skirout.editor.v1.presentation.BindingDeclaration.partial(),
                 skirout.editor.v1.presentation.PresentationNode.partial(),
             );
 
@@ -9470,13 +9615,13 @@ class ScopedBindingElement private constructor(
                 _MustNameArguments,
             binding: skirout.editor.v1.binding.BindingRef_OrMutable =
                 skirout.editor.v1.binding.BindingRef.partial(),
-            scopeBindingId: skirout.editor.v1.type_catalog.ExpressionBindingId_OrMutable =
-                skirout.editor.v1.type_catalog.ExpressionBindingId.partial(),
+            scopeBinding: skirout.editor.v1.presentation.BindingDeclaration_OrMutable =
+                skirout.editor.v1.presentation.BindingDeclaration.partial(),
             child: skirout.editor.v1.presentation.PresentationNode_OrMutable =
                 skirout.editor.v1.presentation.PresentationNode.partial(),
         ) = skirout.editor.v1.presentation.ScopedBindingElement(
             binding = binding,
-            scopeBindingId = scopeBindingId,
+            scopeBinding = scopeBinding,
             child = child,
             _unrecognizedFields = null,
         );
@@ -9756,8 +9901,8 @@ sealed interface CollectionGraphElement_OrMutable {
     val direction: skirout.editor.v1.presentation.CollectionGraphDirection;
     val maximumDepth: kotlin.Int?;
     val node: skirout.editor.v1.presentation.PresentationNode_OrMutable;
-    val childrenBindingId: skirout.editor.v1.type_catalog.ExpressionBindingId_OrMutable;
-    val childBindingId: skirout.editor.v1.type_catalog.ExpressionBindingId_OrMutable;
+    val childrenBinding: skirout.editor.v1.presentation.BindingDeclaration_OrMutable;
+    val childBinding: skirout.editor.v1.presentation.BindingDeclaration_OrMutable;
     val children: skirout.editor.v1.presentation.SequencePresentation_OrMutable;
 
     fun toFrozen(): skirout.editor.v1.presentation.CollectionGraphElement;
@@ -9773,8 +9918,8 @@ class CollectionGraphElement private constructor(
     override val direction: skirout.editor.v1.presentation.CollectionGraphDirection,
     override val maximumDepth: kotlin.Int?,
     override val node: skirout.editor.v1.presentation.PresentationNode,
-    override val childrenBindingId: skirout.editor.v1.type_catalog.ExpressionBindingId,
-    override val childBindingId: skirout.editor.v1.type_catalog.ExpressionBindingId,
+    override val childrenBinding: skirout.editor.v1.presentation.BindingDeclaration,
+    override val childBinding: skirout.editor.v1.presentation.BindingDeclaration,
     override val children: skirout.editor.v1.presentation.SequencePresentation,
     internal val _unrecognizedFields: _UnrecognizedFields<skirout.editor.v1.presentation.CollectionGraphElement>? =
         null,
@@ -9789,8 +9934,8 @@ class CollectionGraphElement private constructor(
         direction: skirout.editor.v1.presentation.CollectionGraphDirection,
         maximumDepth: kotlin.Int?,
         node: skirout.editor.v1.presentation.PresentationNode_OrMutable,
-        childrenBindingId: skirout.editor.v1.type_catalog.ExpressionBindingId_OrMutable,
-        childBindingId: skirout.editor.v1.type_catalog.ExpressionBindingId_OrMutable,
+        childrenBinding: skirout.editor.v1.presentation.BindingDeclaration_OrMutable,
+        childBinding: skirout.editor.v1.presentation.BindingDeclaration_OrMutable,
         children: skirout.editor.v1.presentation.SequencePresentation_OrMutable,
         _unrecognizedFields: _UnrecognizedFields<skirout.editor.v1.presentation.CollectionGraphElement>? =
             null,
@@ -9802,8 +9947,8 @@ class CollectionGraphElement private constructor(
         direction,
         maximumDepth,
         node.toFrozen(),
-        childrenBindingId.toFrozen(),
-        childBindingId.toFrozen(),
+        childrenBinding.toFrozen(),
+        childBinding.toFrozen(),
         children.toFrozen(),
         _unrecognizedFields,
     ) {}
@@ -9820,8 +9965,8 @@ class CollectionGraphElement private constructor(
         direction = this.direction,
         maximumDepth = this.maximumDepth,
         node = this.node,
-        childrenBindingId = this.childrenBindingId,
-        childBindingId = this.childBindingId,
+        childrenBinding = this.childrenBinding,
+        childBinding = this.childBinding,
         children = this.children,
     );
 
@@ -9843,10 +9988,10 @@ class CollectionGraphElement private constructor(
             this.maximumDepth,
         node: skirout.editor.v1.presentation.PresentationNode_OrMutable =
             this.node,
-        childrenBindingId: skirout.editor.v1.type_catalog.ExpressionBindingId_OrMutable =
-            this.childrenBindingId,
-        childBindingId: skirout.editor.v1.type_catalog.ExpressionBindingId_OrMutable =
-            this.childBindingId,
+        childrenBinding: skirout.editor.v1.presentation.BindingDeclaration_OrMutable =
+            this.childrenBinding,
+        childBinding: skirout.editor.v1.presentation.BindingDeclaration_OrMutable =
+            this.childBinding,
         children: skirout.editor.v1.presentation.SequencePresentation_OrMutable =
             this.children,
     ) = skirout.editor.v1.presentation.CollectionGraphElement(
@@ -9857,8 +10002,8 @@ class CollectionGraphElement private constructor(
         direction,
         maximumDepth,
         node.toFrozen(),
-        childrenBindingId.toFrozen(),
-        childBindingId.toFrozen(),
+        childrenBinding.toFrozen(),
+        childBinding.toFrozen(),
         children.toFrozen(),
         this._unrecognizedFields,
     );
@@ -9867,11 +10012,11 @@ class CollectionGraphElement private constructor(
     fun copy() = this;
 
     override fun equals(other: kotlin.Any?): kotlin.Boolean {
-        return this === other || (other is skirout.editor.v1.presentation.CollectionGraphElement && this.sourceId == other.sourceId && this.roots == other.roots && this.rootSequence == other.rootSequence && this.relationId == other.relationId && this.direction == other.direction && this.maximumDepth == other.maximumDepth && this.node == other.node && this.childrenBindingId == other.childrenBindingId && this.childBindingId == other.childBindingId && this.children == other.children);
+        return this === other || (other is skirout.editor.v1.presentation.CollectionGraphElement && this.sourceId == other.sourceId && this.roots == other.roots && this.rootSequence == other.rootSequence && this.relationId == other.relationId && this.direction == other.direction && this.maximumDepth == other.maximumDepth && this.node == other.node && this.childrenBinding == other.childrenBinding && this.childBinding == other.childBinding && this.children == other.children);
     }
 
     override fun hashCode(): kotlin.Int {
-        return kotlin.collections.listOf<kotlin.Any?>(this.sourceId, this.roots, this.rootSequence, this.relationId, this.direction, this.maximumDepth, this.node, this.childrenBindingId, this.childBindingId, this.children).hashCode();
+        return kotlin.collections.listOf<kotlin.Any?>(this.sourceId, this.roots, this.rootSequence, this.relationId, this.direction, this.maximumDepth, this.node, this.childrenBinding, this.childBinding, this.children).hashCode();
     }
 
     override fun toString(): kotlin.String {
@@ -9899,10 +10044,10 @@ class CollectionGraphElement private constructor(
             null,
         override var node: skirout.editor.v1.presentation.PresentationNode =
             skirout.editor.v1.presentation.PresentationNode.partial(),
-        override var childrenBindingId: skirout.editor.v1.type_catalog.ExpressionBindingId_OrMutable =
-            skirout.editor.v1.type_catalog.ExpressionBindingId.partial(),
-        override var childBindingId: skirout.editor.v1.type_catalog.ExpressionBindingId_OrMutable =
-            skirout.editor.v1.type_catalog.ExpressionBindingId.partial(),
+        override var childrenBinding: skirout.editor.v1.presentation.BindingDeclaration_OrMutable =
+            skirout.editor.v1.presentation.BindingDeclaration.partial(),
+        override var childBinding: skirout.editor.v1.presentation.BindingDeclaration_OrMutable =
+            skirout.editor.v1.presentation.BindingDeclaration.partial(),
         override var children: skirout.editor.v1.presentation.SequencePresentation =
             skirout.editor.v1.presentation.SequencePresentation.partial(),
         internal var _unrecognizedFields: _UnrecognizedFields<skirout.editor.v1.presentation.CollectionGraphElement>? =
@@ -9917,41 +10062,41 @@ class CollectionGraphElement private constructor(
             direction = this.direction,
             maximumDepth = this.maximumDepth,
             node = this.node,
-            childrenBindingId = this.childrenBindingId,
-            childBindingId = this.childBindingId,
+            childrenBinding = this.childrenBinding,
+            childBinding = this.childBinding,
             children = this.children,
             _unrecognizedFields = this._unrecognizedFields,
         );
 
         /**
-         * If the value of [childrenBindingId] is already mutable, returns it as-is.
-         * Otherwise, makes a mutable copy, assigns it back to [childrenBindingId] and returns it.
+         * If the value of [childrenBinding] is already mutable, returns it as-is.
+         * Otherwise, makes a mutable copy, assigns it back to [childrenBinding] and returns it.
          */
-        val mutableChildrenBindingId: skirout.editor.v1.type_catalog.ExpressionBindingId.Mutable get() {
-            var value = this.childrenBindingId;
+        val mutableChildrenBinding: skirout.editor.v1.presentation.BindingDeclaration.Mutable get() {
+            var value = this.childrenBinding;
             return when (value) {
-                is skirout.editor.v1.type_catalog.ExpressionBindingId -> {
+                is skirout.editor.v1.presentation.BindingDeclaration -> {
                     value = value.toMutable();
-                    this.childrenBindingId = value;
+                    this.childrenBinding = value;
                     return value;
                 }
-                is skirout.editor.v1.type_catalog.ExpressionBindingId.Mutable -> value;
+                is skirout.editor.v1.presentation.BindingDeclaration.Mutable -> value;
             }
         }
 
         /**
-         * If the value of [childBindingId] is already mutable, returns it as-is.
-         * Otherwise, makes a mutable copy, assigns it back to [childBindingId] and returns it.
+         * If the value of [childBinding] is already mutable, returns it as-is.
+         * Otherwise, makes a mutable copy, assigns it back to [childBinding] and returns it.
          */
-        val mutableChildBindingId: skirout.editor.v1.type_catalog.ExpressionBindingId.Mutable get() {
-            var value = this.childBindingId;
+        val mutableChildBinding: skirout.editor.v1.presentation.BindingDeclaration.Mutable get() {
+            var value = this.childBinding;
             return when (value) {
-                is skirout.editor.v1.type_catalog.ExpressionBindingId -> {
+                is skirout.editor.v1.presentation.BindingDeclaration -> {
                     value = value.toMutable();
-                    this.childBindingId = value;
+                    this.childBinding = value;
                     return value;
                 }
-                is skirout.editor.v1.type_catalog.ExpressionBindingId.Mutable -> value;
+                is skirout.editor.v1.presentation.BindingDeclaration.Mutable -> value;
             }
         }
     }
@@ -9966,8 +10111,8 @@ class CollectionGraphElement private constructor(
                 skirout.editor.v1.presentation.CollectionGraphDirection.UNKNOWN,
                 null,
                 skirout.editor.v1.presentation.PresentationNode.partial(),
-                skirout.editor.v1.type_catalog.ExpressionBindingId.partial(),
-                skirout.editor.v1.type_catalog.ExpressionBindingId.partial(),
+                skirout.editor.v1.presentation.BindingDeclaration.partial(),
+                skirout.editor.v1.presentation.BindingDeclaration.partial(),
                 skirout.editor.v1.presentation.SequencePresentation.partial(),
             );
 
@@ -9996,10 +10141,10 @@ class CollectionGraphElement private constructor(
                 null,
             node: skirout.editor.v1.presentation.PresentationNode_OrMutable =
                 skirout.editor.v1.presentation.PresentationNode.partial(),
-            childrenBindingId: skirout.editor.v1.type_catalog.ExpressionBindingId_OrMutable =
-                skirout.editor.v1.type_catalog.ExpressionBindingId.partial(),
-            childBindingId: skirout.editor.v1.type_catalog.ExpressionBindingId_OrMutable =
-                skirout.editor.v1.type_catalog.ExpressionBindingId.partial(),
+            childrenBinding: skirout.editor.v1.presentation.BindingDeclaration_OrMutable =
+                skirout.editor.v1.presentation.BindingDeclaration.partial(),
+            childBinding: skirout.editor.v1.presentation.BindingDeclaration_OrMutable =
+                skirout.editor.v1.presentation.BindingDeclaration.partial(),
             children: skirout.editor.v1.presentation.SequencePresentation_OrMutable =
                 skirout.editor.v1.presentation.SequencePresentation.partial(),
         ) = skirout.editor.v1.presentation.CollectionGraphElement(
@@ -10010,8 +10155,8 @@ class CollectionGraphElement private constructor(
             direction = direction,
             maximumDepth = maximumDepth,
             node = node,
-            childrenBindingId = childrenBindingId,
-            childBindingId = childBindingId,
+            childrenBinding = childrenBinding,
+            childBinding = childBinding,
             children = children,
             _unrecognizedFields = null,
         );
@@ -15004,8 +15149,8 @@ sealed interface ListControl_OrMutable {
     val allowAdd: kotlin.Boolean;
     val allowRemove: kotlin.Boolean;
     val allowReorder: kotlin.Boolean;
-    val itemBindingId: skirout.editor.v1.type_catalog.ExpressionBindingId_OrMutable;
-    val indexBindingId: skirout.editor.v1.type_catalog.ExpressionBindingId_OrMutable;
+    val itemBinding: skirout.editor.v1.presentation.BindingDeclaration_OrMutable;
+    val indexBinding: skirout.editor.v1.presentation.BindingDeclaration_OrMutable;
     val appearance: skirout.editor.v1.presentation.CollectionAppearance_OrMutable?;
     val content: skirout.editor.v1.presentation.CollectionContent_OrMutable?;
 
@@ -15020,8 +15165,8 @@ class ListControl private constructor(
     override val allowAdd: kotlin.Boolean,
     override val allowRemove: kotlin.Boolean,
     override val allowReorder: kotlin.Boolean,
-    override val itemBindingId: skirout.editor.v1.type_catalog.ExpressionBindingId,
-    override val indexBindingId: skirout.editor.v1.type_catalog.ExpressionBindingId,
+    override val itemBinding: skirout.editor.v1.presentation.BindingDeclaration,
+    override val indexBinding: skirout.editor.v1.presentation.BindingDeclaration,
     override val appearance: skirout.editor.v1.presentation.CollectionAppearance?,
     override val content: skirout.editor.v1.presentation.CollectionContent?,
     internal val _unrecognizedFields: _UnrecognizedFields<skirout.editor.v1.presentation.ListControl>? =
@@ -15035,8 +15180,8 @@ class ListControl private constructor(
         allowAdd: kotlin.Boolean,
         allowRemove: kotlin.Boolean,
         allowReorder: kotlin.Boolean,
-        itemBindingId: skirout.editor.v1.type_catalog.ExpressionBindingId_OrMutable,
-        indexBindingId: skirout.editor.v1.type_catalog.ExpressionBindingId_OrMutable,
+        itemBinding: skirout.editor.v1.presentation.BindingDeclaration_OrMutable,
+        indexBinding: skirout.editor.v1.presentation.BindingDeclaration_OrMutable,
         appearance: skirout.editor.v1.presentation.CollectionAppearance_OrMutable?,
         content: skirout.editor.v1.presentation.CollectionContent_OrMutable?,
         _unrecognizedFields: _UnrecognizedFields<skirout.editor.v1.presentation.ListControl>? =
@@ -15047,8 +15192,8 @@ class ListControl private constructor(
         allowAdd,
         allowRemove,
         allowReorder,
-        itemBindingId.toFrozen(),
-        indexBindingId.toFrozen(),
+        itemBinding.toFrozen(),
+        indexBinding.toFrozen(),
         if (appearance != null) appearance.toFrozen() else null,
         if (content != null) content.toFrozen() else null,
         _unrecognizedFields,
@@ -15064,8 +15209,8 @@ class ListControl private constructor(
         allowAdd = this.allowAdd,
         allowRemove = this.allowRemove,
         allowReorder = this.allowReorder,
-        itemBindingId = this.itemBindingId,
-        indexBindingId = this.indexBindingId,
+        itemBinding = this.itemBinding,
+        indexBinding = this.indexBinding,
         appearance = this.appearance,
         content = this.content,
     );
@@ -15084,10 +15229,10 @@ class ListControl private constructor(
             this.allowRemove,
         allowReorder: kotlin.Boolean =
             this.allowReorder,
-        itemBindingId: skirout.editor.v1.type_catalog.ExpressionBindingId_OrMutable =
-            this.itemBindingId,
-        indexBindingId: skirout.editor.v1.type_catalog.ExpressionBindingId_OrMutable =
-            this.indexBindingId,
+        itemBinding: skirout.editor.v1.presentation.BindingDeclaration_OrMutable =
+            this.itemBinding,
+        indexBinding: skirout.editor.v1.presentation.BindingDeclaration_OrMutable =
+            this.indexBinding,
         appearance: skirout.editor.v1.presentation.CollectionAppearance_OrMutable? =
             this.appearance,
         content: skirout.editor.v1.presentation.CollectionContent_OrMutable? =
@@ -15098,8 +15243,8 @@ class ListControl private constructor(
         allowAdd,
         allowRemove,
         allowReorder,
-        itemBindingId.toFrozen(),
-        indexBindingId.toFrozen(),
+        itemBinding.toFrozen(),
+        indexBinding.toFrozen(),
         if (appearance != null) appearance.toFrozen() else null,
         if (content != null) content.toFrozen() else null,
         this._unrecognizedFields,
@@ -15109,11 +15254,11 @@ class ListControl private constructor(
     fun copy() = this;
 
     override fun equals(other: kotlin.Any?): kotlin.Boolean {
-        return this === other || (other is skirout.editor.v1.presentation.ListControl && this.control == other.control && this.itemPresentation == other.itemPresentation && this.allowAdd == other.allowAdd && this.allowRemove == other.allowRemove && this.allowReorder == other.allowReorder && this.itemBindingId == other.itemBindingId && this.indexBindingId == other.indexBindingId && this.appearance == other.appearance && this.content == other.content);
+        return this === other || (other is skirout.editor.v1.presentation.ListControl && this.control == other.control && this.itemPresentation == other.itemPresentation && this.allowAdd == other.allowAdd && this.allowRemove == other.allowRemove && this.allowReorder == other.allowReorder && this.itemBinding == other.itemBinding && this.indexBinding == other.indexBinding && this.appearance == other.appearance && this.content == other.content);
     }
 
     override fun hashCode(): kotlin.Int {
-        return kotlin.collections.listOf<kotlin.Any?>(this.control, this.itemPresentation, this.allowAdd, this.allowRemove, this.allowReorder, this.itemBindingId, this.indexBindingId, this.appearance, this.content).hashCode();
+        return kotlin.collections.listOf<kotlin.Any?>(this.control, this.itemPresentation, this.allowAdd, this.allowRemove, this.allowReorder, this.itemBinding, this.indexBinding, this.appearance, this.content).hashCode();
     }
 
     override fun toString(): kotlin.String {
@@ -15137,10 +15282,10 @@ class ListControl private constructor(
             false,
         override var allowReorder: kotlin.Boolean =
             false,
-        override var itemBindingId: skirout.editor.v1.type_catalog.ExpressionBindingId_OrMutable =
-            skirout.editor.v1.type_catalog.ExpressionBindingId.partial(),
-        override var indexBindingId: skirout.editor.v1.type_catalog.ExpressionBindingId_OrMutable =
-            skirout.editor.v1.type_catalog.ExpressionBindingId.partial(),
+        override var itemBinding: skirout.editor.v1.presentation.BindingDeclaration_OrMutable =
+            skirout.editor.v1.presentation.BindingDeclaration.partial(),
+        override var indexBinding: skirout.editor.v1.presentation.BindingDeclaration_OrMutable =
+            skirout.editor.v1.presentation.BindingDeclaration.partial(),
         override var appearance: skirout.editor.v1.presentation.CollectionAppearance_OrMutable? =
             null,
         override var content: skirout.editor.v1.presentation.CollectionContent? =
@@ -15155,42 +15300,42 @@ class ListControl private constructor(
             allowAdd = this.allowAdd,
             allowRemove = this.allowRemove,
             allowReorder = this.allowReorder,
-            itemBindingId = this.itemBindingId,
-            indexBindingId = this.indexBindingId,
+            itemBinding = this.itemBinding,
+            indexBinding = this.indexBinding,
             appearance = this.appearance,
             content = this.content,
             _unrecognizedFields = this._unrecognizedFields,
         );
 
         /**
-         * If the value of [itemBindingId] is already mutable, returns it as-is.
-         * Otherwise, makes a mutable copy, assigns it back to [itemBindingId] and returns it.
+         * If the value of [itemBinding] is already mutable, returns it as-is.
+         * Otherwise, makes a mutable copy, assigns it back to [itemBinding] and returns it.
          */
-        val mutableItemBindingId: skirout.editor.v1.type_catalog.ExpressionBindingId.Mutable get() {
-            var value = this.itemBindingId;
+        val mutableItemBinding: skirout.editor.v1.presentation.BindingDeclaration.Mutable get() {
+            var value = this.itemBinding;
             return when (value) {
-                is skirout.editor.v1.type_catalog.ExpressionBindingId -> {
+                is skirout.editor.v1.presentation.BindingDeclaration -> {
                     value = value.toMutable();
-                    this.itemBindingId = value;
+                    this.itemBinding = value;
                     return value;
                 }
-                is skirout.editor.v1.type_catalog.ExpressionBindingId.Mutable -> value;
+                is skirout.editor.v1.presentation.BindingDeclaration.Mutable -> value;
             }
         }
 
         /**
-         * If the value of [indexBindingId] is already mutable, returns it as-is.
-         * Otherwise, makes a mutable copy, assigns it back to [indexBindingId] and returns it.
+         * If the value of [indexBinding] is already mutable, returns it as-is.
+         * Otherwise, makes a mutable copy, assigns it back to [indexBinding] and returns it.
          */
-        val mutableIndexBindingId: skirout.editor.v1.type_catalog.ExpressionBindingId.Mutable get() {
-            var value = this.indexBindingId;
+        val mutableIndexBinding: skirout.editor.v1.presentation.BindingDeclaration.Mutable get() {
+            var value = this.indexBinding;
             return when (value) {
-                is skirout.editor.v1.type_catalog.ExpressionBindingId -> {
+                is skirout.editor.v1.presentation.BindingDeclaration -> {
                     value = value.toMutable();
-                    this.indexBindingId = value;
+                    this.indexBinding = value;
                     return value;
                 }
-                is skirout.editor.v1.type_catalog.ExpressionBindingId.Mutable -> value;
+                is skirout.editor.v1.presentation.BindingDeclaration.Mutable -> value;
             }
         }
     }
@@ -15203,8 +15348,8 @@ class ListControl private constructor(
                 false,
                 false,
                 false,
-                skirout.editor.v1.type_catalog.ExpressionBindingId.partial(),
-                skirout.editor.v1.type_catalog.ExpressionBindingId.partial(),
+                skirout.editor.v1.presentation.BindingDeclaration.partial(),
+                skirout.editor.v1.presentation.BindingDeclaration.partial(),
                 null,
                 null,
             );
@@ -15230,10 +15375,10 @@ class ListControl private constructor(
                 false,
             allowReorder: kotlin.Boolean =
                 false,
-            itemBindingId: skirout.editor.v1.type_catalog.ExpressionBindingId_OrMutable =
-                skirout.editor.v1.type_catalog.ExpressionBindingId.partial(),
-            indexBindingId: skirout.editor.v1.type_catalog.ExpressionBindingId_OrMutable =
-                skirout.editor.v1.type_catalog.ExpressionBindingId.partial(),
+            itemBinding: skirout.editor.v1.presentation.BindingDeclaration_OrMutable =
+                skirout.editor.v1.presentation.BindingDeclaration.partial(),
+            indexBinding: skirout.editor.v1.presentation.BindingDeclaration_OrMutable =
+                skirout.editor.v1.presentation.BindingDeclaration.partial(),
             appearance: skirout.editor.v1.presentation.CollectionAppearance_OrMutable? =
                 null,
             content: skirout.editor.v1.presentation.CollectionContent_OrMutable? =
@@ -15244,8 +15389,8 @@ class ListControl private constructor(
             allowAdd = allowAdd,
             allowRemove = allowRemove,
             allowReorder = allowReorder,
-            itemBindingId = itemBindingId,
-            indexBindingId = indexBindingId,
+            itemBinding = itemBinding,
+            indexBinding = indexBinding,
             appearance = appearance,
             content = content,
             _unrecognizedFields = null,
@@ -15265,8 +15410,8 @@ sealed interface MapControl_OrMutable {
     val valuePresentation: skirout.editor.v1.presentation.PresentationNode_OrMutable?;
     val allowAdd: kotlin.Boolean;
     val allowRemove: kotlin.Boolean;
-    val keyBindingId: skirout.editor.v1.type_catalog.ExpressionBindingId_OrMutable;
-    val valueBindingId: skirout.editor.v1.type_catalog.ExpressionBindingId_OrMutable;
+    val keyBinding: skirout.editor.v1.presentation.BindingDeclaration_OrMutable;
+    val valueBinding: skirout.editor.v1.presentation.BindingDeclaration_OrMutable;
     val appearance: skirout.editor.v1.presentation.CollectionAppearance_OrMutable?;
     val content: skirout.editor.v1.presentation.CollectionContent_OrMutable?;
 
@@ -15281,8 +15426,8 @@ class MapControl private constructor(
     override val valuePresentation: skirout.editor.v1.presentation.PresentationNode?,
     override val allowAdd: kotlin.Boolean,
     override val allowRemove: kotlin.Boolean,
-    override val keyBindingId: skirout.editor.v1.type_catalog.ExpressionBindingId,
-    override val valueBindingId: skirout.editor.v1.type_catalog.ExpressionBindingId,
+    override val keyBinding: skirout.editor.v1.presentation.BindingDeclaration,
+    override val valueBinding: skirout.editor.v1.presentation.BindingDeclaration,
     override val appearance: skirout.editor.v1.presentation.CollectionAppearance?,
     override val content: skirout.editor.v1.presentation.CollectionContent?,
     internal val _unrecognizedFields: _UnrecognizedFields<skirout.editor.v1.presentation.MapControl>? =
@@ -15296,8 +15441,8 @@ class MapControl private constructor(
         valuePresentation: skirout.editor.v1.presentation.PresentationNode_OrMutable?,
         allowAdd: kotlin.Boolean,
         allowRemove: kotlin.Boolean,
-        keyBindingId: skirout.editor.v1.type_catalog.ExpressionBindingId_OrMutable,
-        valueBindingId: skirout.editor.v1.type_catalog.ExpressionBindingId_OrMutable,
+        keyBinding: skirout.editor.v1.presentation.BindingDeclaration_OrMutable,
+        valueBinding: skirout.editor.v1.presentation.BindingDeclaration_OrMutable,
         appearance: skirout.editor.v1.presentation.CollectionAppearance_OrMutable?,
         content: skirout.editor.v1.presentation.CollectionContent_OrMutable?,
         _unrecognizedFields: _UnrecognizedFields<skirout.editor.v1.presentation.MapControl>? =
@@ -15308,8 +15453,8 @@ class MapControl private constructor(
         if (valuePresentation != null) valuePresentation.toFrozen() else null,
         allowAdd,
         allowRemove,
-        keyBindingId.toFrozen(),
-        valueBindingId.toFrozen(),
+        keyBinding.toFrozen(),
+        valueBinding.toFrozen(),
         if (appearance != null) appearance.toFrozen() else null,
         if (content != null) content.toFrozen() else null,
         _unrecognizedFields,
@@ -15325,8 +15470,8 @@ class MapControl private constructor(
         valuePresentation = this.valuePresentation,
         allowAdd = this.allowAdd,
         allowRemove = this.allowRemove,
-        keyBindingId = this.keyBindingId,
-        valueBindingId = this.valueBindingId,
+        keyBinding = this.keyBinding,
+        valueBinding = this.valueBinding,
         appearance = this.appearance,
         content = this.content,
     );
@@ -15345,10 +15490,10 @@ class MapControl private constructor(
             this.allowAdd,
         allowRemove: kotlin.Boolean =
             this.allowRemove,
-        keyBindingId: skirout.editor.v1.type_catalog.ExpressionBindingId_OrMutable =
-            this.keyBindingId,
-        valueBindingId: skirout.editor.v1.type_catalog.ExpressionBindingId_OrMutable =
-            this.valueBindingId,
+        keyBinding: skirout.editor.v1.presentation.BindingDeclaration_OrMutable =
+            this.keyBinding,
+        valueBinding: skirout.editor.v1.presentation.BindingDeclaration_OrMutable =
+            this.valueBinding,
         appearance: skirout.editor.v1.presentation.CollectionAppearance_OrMutable? =
             this.appearance,
         content: skirout.editor.v1.presentation.CollectionContent_OrMutable? =
@@ -15359,8 +15504,8 @@ class MapControl private constructor(
         if (valuePresentation != null) valuePresentation.toFrozen() else null,
         allowAdd,
         allowRemove,
-        keyBindingId.toFrozen(),
-        valueBindingId.toFrozen(),
+        keyBinding.toFrozen(),
+        valueBinding.toFrozen(),
         if (appearance != null) appearance.toFrozen() else null,
         if (content != null) content.toFrozen() else null,
         this._unrecognizedFields,
@@ -15370,11 +15515,11 @@ class MapControl private constructor(
     fun copy() = this;
 
     override fun equals(other: kotlin.Any?): kotlin.Boolean {
-        return this === other || (other is skirout.editor.v1.presentation.MapControl && this.control == other.control && this.keyPresentation == other.keyPresentation && this.valuePresentation == other.valuePresentation && this.allowAdd == other.allowAdd && this.allowRemove == other.allowRemove && this.keyBindingId == other.keyBindingId && this.valueBindingId == other.valueBindingId && this.appearance == other.appearance && this.content == other.content);
+        return this === other || (other is skirout.editor.v1.presentation.MapControl && this.control == other.control && this.keyPresentation == other.keyPresentation && this.valuePresentation == other.valuePresentation && this.allowAdd == other.allowAdd && this.allowRemove == other.allowRemove && this.keyBinding == other.keyBinding && this.valueBinding == other.valueBinding && this.appearance == other.appearance && this.content == other.content);
     }
 
     override fun hashCode(): kotlin.Int {
-        return kotlin.collections.listOf<kotlin.Any?>(this.control, this.keyPresentation, this.valuePresentation, this.allowAdd, this.allowRemove, this.keyBindingId, this.valueBindingId, this.appearance, this.content).hashCode();
+        return kotlin.collections.listOf<kotlin.Any?>(this.control, this.keyPresentation, this.valuePresentation, this.allowAdd, this.allowRemove, this.keyBinding, this.valueBinding, this.appearance, this.content).hashCode();
     }
 
     override fun toString(): kotlin.String {
@@ -15398,10 +15543,10 @@ class MapControl private constructor(
             false,
         override var allowRemove: kotlin.Boolean =
             false,
-        override var keyBindingId: skirout.editor.v1.type_catalog.ExpressionBindingId_OrMutable =
-            skirout.editor.v1.type_catalog.ExpressionBindingId.partial(),
-        override var valueBindingId: skirout.editor.v1.type_catalog.ExpressionBindingId_OrMutable =
-            skirout.editor.v1.type_catalog.ExpressionBindingId.partial(),
+        override var keyBinding: skirout.editor.v1.presentation.BindingDeclaration_OrMutable =
+            skirout.editor.v1.presentation.BindingDeclaration.partial(),
+        override var valueBinding: skirout.editor.v1.presentation.BindingDeclaration_OrMutable =
+            skirout.editor.v1.presentation.BindingDeclaration.partial(),
         override var appearance: skirout.editor.v1.presentation.CollectionAppearance_OrMutable? =
             null,
         override var content: skirout.editor.v1.presentation.CollectionContent? =
@@ -15416,42 +15561,42 @@ class MapControl private constructor(
             valuePresentation = this.valuePresentation,
             allowAdd = this.allowAdd,
             allowRemove = this.allowRemove,
-            keyBindingId = this.keyBindingId,
-            valueBindingId = this.valueBindingId,
+            keyBinding = this.keyBinding,
+            valueBinding = this.valueBinding,
             appearance = this.appearance,
             content = this.content,
             _unrecognizedFields = this._unrecognizedFields,
         );
 
         /**
-         * If the value of [keyBindingId] is already mutable, returns it as-is.
-         * Otherwise, makes a mutable copy, assigns it back to [keyBindingId] and returns it.
+         * If the value of [keyBinding] is already mutable, returns it as-is.
+         * Otherwise, makes a mutable copy, assigns it back to [keyBinding] and returns it.
          */
-        val mutableKeyBindingId: skirout.editor.v1.type_catalog.ExpressionBindingId.Mutable get() {
-            var value = this.keyBindingId;
+        val mutableKeyBinding: skirout.editor.v1.presentation.BindingDeclaration.Mutable get() {
+            var value = this.keyBinding;
             return when (value) {
-                is skirout.editor.v1.type_catalog.ExpressionBindingId -> {
+                is skirout.editor.v1.presentation.BindingDeclaration -> {
                     value = value.toMutable();
-                    this.keyBindingId = value;
+                    this.keyBinding = value;
                     return value;
                 }
-                is skirout.editor.v1.type_catalog.ExpressionBindingId.Mutable -> value;
+                is skirout.editor.v1.presentation.BindingDeclaration.Mutable -> value;
             }
         }
 
         /**
-         * If the value of [valueBindingId] is already mutable, returns it as-is.
-         * Otherwise, makes a mutable copy, assigns it back to [valueBindingId] and returns it.
+         * If the value of [valueBinding] is already mutable, returns it as-is.
+         * Otherwise, makes a mutable copy, assigns it back to [valueBinding] and returns it.
          */
-        val mutableValueBindingId: skirout.editor.v1.type_catalog.ExpressionBindingId.Mutable get() {
-            var value = this.valueBindingId;
+        val mutableValueBinding: skirout.editor.v1.presentation.BindingDeclaration.Mutable get() {
+            var value = this.valueBinding;
             return when (value) {
-                is skirout.editor.v1.type_catalog.ExpressionBindingId -> {
+                is skirout.editor.v1.presentation.BindingDeclaration -> {
                     value = value.toMutable();
-                    this.valueBindingId = value;
+                    this.valueBinding = value;
                     return value;
                 }
-                is skirout.editor.v1.type_catalog.ExpressionBindingId.Mutable -> value;
+                is skirout.editor.v1.presentation.BindingDeclaration.Mutable -> value;
             }
         }
     }
@@ -15464,8 +15609,8 @@ class MapControl private constructor(
                 null,
                 false,
                 false,
-                skirout.editor.v1.type_catalog.ExpressionBindingId.partial(),
-                skirout.editor.v1.type_catalog.ExpressionBindingId.partial(),
+                skirout.editor.v1.presentation.BindingDeclaration.partial(),
+                skirout.editor.v1.presentation.BindingDeclaration.partial(),
                 null,
                 null,
             );
@@ -15491,10 +15636,10 @@ class MapControl private constructor(
                 false,
             allowRemove: kotlin.Boolean =
                 false,
-            keyBindingId: skirout.editor.v1.type_catalog.ExpressionBindingId_OrMutable =
-                skirout.editor.v1.type_catalog.ExpressionBindingId.partial(),
-            valueBindingId: skirout.editor.v1.type_catalog.ExpressionBindingId_OrMutable =
-                skirout.editor.v1.type_catalog.ExpressionBindingId.partial(),
+            keyBinding: skirout.editor.v1.presentation.BindingDeclaration_OrMutable =
+                skirout.editor.v1.presentation.BindingDeclaration.partial(),
+            valueBinding: skirout.editor.v1.presentation.BindingDeclaration_OrMutable =
+                skirout.editor.v1.presentation.BindingDeclaration.partial(),
             appearance: skirout.editor.v1.presentation.CollectionAppearance_OrMutable? =
                 null,
             content: skirout.editor.v1.presentation.CollectionContent_OrMutable? =
@@ -15505,8 +15650,8 @@ class MapControl private constructor(
             valuePresentation = valuePresentation,
             allowAdd = allowAdd,
             allowRemove = allowRemove,
-            keyBindingId = keyBindingId,
-            valueBindingId = valueBindingId,
+            keyBinding = keyBinding,
+            valueBinding = valueBinding,
             appearance = appearance,
             content = content,
             _unrecognizedFields = null,
@@ -16292,7 +16437,7 @@ class PolymorphicMatchCase private constructor(
 
 sealed interface PolymorphicMatchElement_OrMutable {
     val binding: skirout.editor.v1.binding.BindingRef_OrMutable;
-    val scopeBindingId: skirout.editor.v1.type_catalog.ExpressionBindingId_OrMutable;
+    val scopeBinding: skirout.editor.v1.presentation.BindingDeclaration_OrMutable;
     val cases: kotlin.collections.List<skirout.editor.v1.presentation.PolymorphicMatchCase_OrMutable>;
     val fallback: skirout.editor.v1.presentation.PresentationNode_OrMutable?;
 
@@ -16303,7 +16448,7 @@ sealed interface PolymorphicMatchElement_OrMutable {
 @kotlin.Suppress("UNUSED_PARAMETER")
 class PolymorphicMatchElement private constructor(
     override val binding: skirout.editor.v1.binding.BindingRef,
-    override val scopeBindingId: skirout.editor.v1.type_catalog.ExpressionBindingId,
+    override val scopeBinding: skirout.editor.v1.presentation.BindingDeclaration,
     override val cases: kotlin.collections.List<skirout.editor.v1.presentation.PolymorphicMatchCase>,
     override val fallback: skirout.editor.v1.presentation.PresentationNode?,
     internal val _unrecognizedFields: _UnrecognizedFields<skirout.editor.v1.presentation.PolymorphicMatchElement>? =
@@ -16313,14 +16458,14 @@ class PolymorphicMatchElement private constructor(
         _mustNameArguments: _MustNameArguments =
             _MustNameArguments,
         binding: skirout.editor.v1.binding.BindingRef_OrMutable,
-        scopeBindingId: skirout.editor.v1.type_catalog.ExpressionBindingId_OrMutable,
+        scopeBinding: skirout.editor.v1.presentation.BindingDeclaration_OrMutable,
         cases: kotlin.collections.Iterable<skirout.editor.v1.presentation.PolymorphicMatchCase_OrMutable>,
         fallback: skirout.editor.v1.presentation.PresentationNode_OrMutable?,
         _unrecognizedFields: _UnrecognizedFields<skirout.editor.v1.presentation.PolymorphicMatchElement>? =
             null,
     ): this(
         binding.toFrozen(),
-        scopeBindingId.toFrozen(),
+        scopeBinding.toFrozen(),
         build.skir.internal.toFrozenList(cases, { it.toFrozen() }),
         if (fallback != null) fallback.toFrozen() else null,
         _unrecognizedFields,
@@ -16332,7 +16477,7 @@ class PolymorphicMatchElement private constructor(
     /** Returns a mutable shallow copy of this instance */
     fun toMutable() = Mutable(
         binding = this.binding,
-        scopeBindingId = this.scopeBindingId,
+        scopeBinding = this.scopeBinding,
         cases = this.cases,
         fallback = this.fallback,
     );
@@ -16343,15 +16488,15 @@ class PolymorphicMatchElement private constructor(
             _MustNameArguments,
         binding: skirout.editor.v1.binding.BindingRef_OrMutable =
             this.binding,
-        scopeBindingId: skirout.editor.v1.type_catalog.ExpressionBindingId_OrMutable =
-            this.scopeBindingId,
+        scopeBinding: skirout.editor.v1.presentation.BindingDeclaration_OrMutable =
+            this.scopeBinding,
         cases: kotlin.collections.Iterable<skirout.editor.v1.presentation.PolymorphicMatchCase_OrMutable> =
             this.cases,
         fallback: skirout.editor.v1.presentation.PresentationNode_OrMutable? =
             this.fallback,
     ) = skirout.editor.v1.presentation.PolymorphicMatchElement(
         binding.toFrozen(),
-        scopeBindingId.toFrozen(),
+        scopeBinding.toFrozen(),
         build.skir.internal.toFrozenList(cases, { it.toFrozen() }),
         if (fallback != null) fallback.toFrozen() else null,
         this._unrecognizedFields,
@@ -16361,11 +16506,11 @@ class PolymorphicMatchElement private constructor(
     fun copy() = this;
 
     override fun equals(other: kotlin.Any?): kotlin.Boolean {
-        return this === other || (other is skirout.editor.v1.presentation.PolymorphicMatchElement && this.binding == other.binding && this.scopeBindingId == other.scopeBindingId && this.cases == other.cases && this.fallback == other.fallback);
+        return this === other || (other is skirout.editor.v1.presentation.PolymorphicMatchElement && this.binding == other.binding && this.scopeBinding == other.scopeBinding && this.cases == other.cases && this.fallback == other.fallback);
     }
 
     override fun hashCode(): kotlin.Int {
-        return kotlin.collections.listOf<kotlin.Any?>(this.binding, this.scopeBindingId, this.cases, this.fallback).hashCode();
+        return kotlin.collections.listOf<kotlin.Any?>(this.binding, this.scopeBinding, this.cases, this.fallback).hashCode();
     }
 
     override fun toString(): kotlin.String {
@@ -16381,8 +16526,8 @@ class PolymorphicMatchElement private constructor(
             _MustNameArguments,
         override var binding: skirout.editor.v1.binding.BindingRef_OrMutable =
             skirout.editor.v1.binding.BindingRef.partial(),
-        override var scopeBindingId: skirout.editor.v1.type_catalog.ExpressionBindingId_OrMutable =
-            skirout.editor.v1.type_catalog.ExpressionBindingId.partial(),
+        override var scopeBinding: skirout.editor.v1.presentation.BindingDeclaration_OrMutable =
+            skirout.editor.v1.presentation.BindingDeclaration.partial(),
         override var cases: kotlin.collections.List<skirout.editor.v1.presentation.PolymorphicMatchCase> =
             build.skir.internal.emptyFrozenList<skirout.editor.v1.presentation.PolymorphicMatchCase>(),
         override var fallback: skirout.editor.v1.presentation.PresentationNode? =
@@ -16393,7 +16538,7 @@ class PolymorphicMatchElement private constructor(
         /** Returns a deeply immutable copy of this instance */
         override fun toFrozen() = skirout.editor.v1.presentation.PolymorphicMatchElement(
             binding = this.binding,
-            scopeBindingId = this.scopeBindingId,
+            scopeBinding = this.scopeBinding,
             cases = this.cases,
             fallback = this.fallback,
             _unrecognizedFields = this._unrecognizedFields,
@@ -16416,18 +16561,18 @@ class PolymorphicMatchElement private constructor(
         }
 
         /**
-         * If the value of [scopeBindingId] is already mutable, returns it as-is.
-         * Otherwise, makes a mutable copy, assigns it back to [scopeBindingId] and returns it.
+         * If the value of [scopeBinding] is already mutable, returns it as-is.
+         * Otherwise, makes a mutable copy, assigns it back to [scopeBinding] and returns it.
          */
-        val mutableScopeBindingId: skirout.editor.v1.type_catalog.ExpressionBindingId.Mutable get() {
-            var value = this.scopeBindingId;
+        val mutableScopeBinding: skirout.editor.v1.presentation.BindingDeclaration.Mutable get() {
+            var value = this.scopeBinding;
             return when (value) {
-                is skirout.editor.v1.type_catalog.ExpressionBindingId -> {
+                is skirout.editor.v1.presentation.BindingDeclaration -> {
                     value = value.toMutable();
-                    this.scopeBindingId = value;
+                    this.scopeBinding = value;
                     return value;
                 }
-                is skirout.editor.v1.type_catalog.ExpressionBindingId.Mutable -> value;
+                is skirout.editor.v1.presentation.BindingDeclaration.Mutable -> value;
             }
         }
     }
@@ -16436,7 +16581,7 @@ class PolymorphicMatchElement private constructor(
         private val default =
             skirout.editor.v1.presentation.PolymorphicMatchElement(
                 skirout.editor.v1.binding.BindingRef.partial(),
-                skirout.editor.v1.type_catalog.ExpressionBindingId.partial(),
+                skirout.editor.v1.presentation.BindingDeclaration.partial(),
                 build.skir.internal.emptyFrozenList<skirout.editor.v1.presentation.PolymorphicMatchCase>(),
                 null,
             );
@@ -16454,15 +16599,15 @@ class PolymorphicMatchElement private constructor(
                 _MustNameArguments,
             binding: skirout.editor.v1.binding.BindingRef_OrMutable =
                 skirout.editor.v1.binding.BindingRef.partial(),
-            scopeBindingId: skirout.editor.v1.type_catalog.ExpressionBindingId_OrMutable =
-                skirout.editor.v1.type_catalog.ExpressionBindingId.partial(),
+            scopeBinding: skirout.editor.v1.presentation.BindingDeclaration_OrMutable =
+                skirout.editor.v1.presentation.BindingDeclaration.partial(),
             cases: kotlin.collections.Iterable<skirout.editor.v1.presentation.PolymorphicMatchCase_OrMutable> =
                 build.skir.internal.emptyFrozenList<skirout.editor.v1.presentation.PolymorphicMatchCase>(),
             fallback: skirout.editor.v1.presentation.PresentationNode_OrMutable? =
                 null,
         ) = skirout.editor.v1.presentation.PolymorphicMatchElement(
             binding = binding,
-            scopeBindingId = scopeBindingId,
+            scopeBinding = scopeBinding,
             cases = cases,
             fallback = fallback,
             _unrecognizedFields = null,
@@ -16844,7 +16989,7 @@ sealed class SearchSelectorValues private constructor() {
 sealed interface SearchSelectorDefinition_OrMutable {
     val selectorId: kotlin.String;
     val key: kotlin.String;
-    val valueBindingId: skirout.editor.v1.type_catalog.ExpressionBindingId_OrMutable;
+    val valueBinding: skirout.editor.v1.presentation.BindingDeclaration_OrMutable;
     val values: skirout.editor.v1.presentation.SearchSelectorValues;
     val caseSensitive: kotlin.Boolean;
     val multiplicity: skirout.editor.v1.presentation.SearchSelectorMultiplicity;
@@ -16858,7 +17003,7 @@ sealed interface SearchSelectorDefinition_OrMutable {
 class SearchSelectorDefinition private constructor(
     override val selectorId: kotlin.String,
     override val key: kotlin.String,
-    override val valueBindingId: skirout.editor.v1.type_catalog.ExpressionBindingId,
+    override val valueBinding: skirout.editor.v1.presentation.BindingDeclaration,
     override val values: skirout.editor.v1.presentation.SearchSelectorValues,
     override val caseSensitive: kotlin.Boolean,
     override val multiplicity: skirout.editor.v1.presentation.SearchSelectorMultiplicity,
@@ -16871,7 +17016,7 @@ class SearchSelectorDefinition private constructor(
             _MustNameArguments,
         selectorId: kotlin.String,
         key: kotlin.String,
-        valueBindingId: skirout.editor.v1.type_catalog.ExpressionBindingId_OrMutable,
+        valueBinding: skirout.editor.v1.presentation.BindingDeclaration_OrMutable,
         values: skirout.editor.v1.presentation.SearchSelectorValues,
         caseSensitive: kotlin.Boolean,
         multiplicity: skirout.editor.v1.presentation.SearchSelectorMultiplicity,
@@ -16881,7 +17026,7 @@ class SearchSelectorDefinition private constructor(
     ): this(
         selectorId,
         key,
-        valueBindingId.toFrozen(),
+        valueBinding.toFrozen(),
         values,
         caseSensitive,
         multiplicity,
@@ -16896,7 +17041,7 @@ class SearchSelectorDefinition private constructor(
     fun toMutable() = Mutable(
         selectorId = this.selectorId,
         key = this.key,
-        valueBindingId = this.valueBindingId,
+        valueBinding = this.valueBinding,
         values = this.values,
         caseSensitive = this.caseSensitive,
         multiplicity = this.multiplicity,
@@ -16911,8 +17056,8 @@ class SearchSelectorDefinition private constructor(
             this.selectorId,
         key: kotlin.String =
             this.key,
-        valueBindingId: skirout.editor.v1.type_catalog.ExpressionBindingId_OrMutable =
-            this.valueBindingId,
+        valueBinding: skirout.editor.v1.presentation.BindingDeclaration_OrMutable =
+            this.valueBinding,
         values: skirout.editor.v1.presentation.SearchSelectorValues =
             this.values,
         caseSensitive: kotlin.Boolean =
@@ -16924,7 +17069,7 @@ class SearchSelectorDefinition private constructor(
     ) = skirout.editor.v1.presentation.SearchSelectorDefinition(
         selectorId,
         key,
-        valueBindingId.toFrozen(),
+        valueBinding.toFrozen(),
         values,
         caseSensitive,
         multiplicity,
@@ -16936,11 +17081,11 @@ class SearchSelectorDefinition private constructor(
     fun copy() = this;
 
     override fun equals(other: kotlin.Any?): kotlin.Boolean {
-        return this === other || (other is skirout.editor.v1.presentation.SearchSelectorDefinition && this.selectorId == other.selectorId && this.key == other.key && this.valueBindingId == other.valueBindingId && this.values == other.values && this.caseSensitive == other.caseSensitive && this.multiplicity == other.multiplicity && this.color == other.color);
+        return this === other || (other is skirout.editor.v1.presentation.SearchSelectorDefinition && this.selectorId == other.selectorId && this.key == other.key && this.valueBinding == other.valueBinding && this.values == other.values && this.caseSensitive == other.caseSensitive && this.multiplicity == other.multiplicity && this.color == other.color);
     }
 
     override fun hashCode(): kotlin.Int {
-        return kotlin.collections.listOf<kotlin.Any?>(this.selectorId, this.key, this.valueBindingId, this.values, this.caseSensitive, this.multiplicity, this.color).hashCode();
+        return kotlin.collections.listOf<kotlin.Any?>(this.selectorId, this.key, this.valueBinding, this.values, this.caseSensitive, this.multiplicity, this.color).hashCode();
     }
 
     override fun toString(): kotlin.String {
@@ -16958,8 +17103,8 @@ class SearchSelectorDefinition private constructor(
             "",
         override var key: kotlin.String =
             "",
-        override var valueBindingId: skirout.editor.v1.type_catalog.ExpressionBindingId_OrMutable =
-            skirout.editor.v1.type_catalog.ExpressionBindingId.partial(),
+        override var valueBinding: skirout.editor.v1.presentation.BindingDeclaration_OrMutable =
+            skirout.editor.v1.presentation.BindingDeclaration.partial(),
         override var values: skirout.editor.v1.presentation.SearchSelectorValues =
             skirout.editor.v1.presentation.SearchSelectorValues.UNKNOWN,
         override var caseSensitive: kotlin.Boolean =
@@ -16975,7 +17120,7 @@ class SearchSelectorDefinition private constructor(
         override fun toFrozen() = skirout.editor.v1.presentation.SearchSelectorDefinition(
             selectorId = this.selectorId,
             key = this.key,
-            valueBindingId = this.valueBindingId,
+            valueBinding = this.valueBinding,
             values = this.values,
             caseSensitive = this.caseSensitive,
             multiplicity = this.multiplicity,
@@ -16984,18 +17129,18 @@ class SearchSelectorDefinition private constructor(
         );
 
         /**
-         * If the value of [valueBindingId] is already mutable, returns it as-is.
-         * Otherwise, makes a mutable copy, assigns it back to [valueBindingId] and returns it.
+         * If the value of [valueBinding] is already mutable, returns it as-is.
+         * Otherwise, makes a mutable copy, assigns it back to [valueBinding] and returns it.
          */
-        val mutableValueBindingId: skirout.editor.v1.type_catalog.ExpressionBindingId.Mutable get() {
-            var value = this.valueBindingId;
+        val mutableValueBinding: skirout.editor.v1.presentation.BindingDeclaration.Mutable get() {
+            var value = this.valueBinding;
             return when (value) {
-                is skirout.editor.v1.type_catalog.ExpressionBindingId -> {
+                is skirout.editor.v1.presentation.BindingDeclaration -> {
                     value = value.toMutable();
-                    this.valueBindingId = value;
+                    this.valueBinding = value;
                     return value;
                 }
-                is skirout.editor.v1.type_catalog.ExpressionBindingId.Mutable -> value;
+                is skirout.editor.v1.presentation.BindingDeclaration.Mutable -> value;
             }
         }
     }
@@ -17005,7 +17150,7 @@ class SearchSelectorDefinition private constructor(
             skirout.editor.v1.presentation.SearchSelectorDefinition(
                 "",
                 "",
-                skirout.editor.v1.type_catalog.ExpressionBindingId.partial(),
+                skirout.editor.v1.presentation.BindingDeclaration.partial(),
                 skirout.editor.v1.presentation.SearchSelectorValues.UNKNOWN,
                 false,
                 skirout.editor.v1.presentation.SearchSelectorMultiplicity.UNKNOWN,
@@ -17027,8 +17172,8 @@ class SearchSelectorDefinition private constructor(
                 "",
             key: kotlin.String =
                 "",
-            valueBindingId: skirout.editor.v1.type_catalog.ExpressionBindingId_OrMutable =
-                skirout.editor.v1.type_catalog.ExpressionBindingId.partial(),
+            valueBinding: skirout.editor.v1.presentation.BindingDeclaration_OrMutable =
+                skirout.editor.v1.presentation.BindingDeclaration.partial(),
             values: skirout.editor.v1.presentation.SearchSelectorValues =
                 skirout.editor.v1.presentation.SearchSelectorValues.UNKNOWN,
             caseSensitive: kotlin.Boolean =
@@ -17040,7 +17185,7 @@ class SearchSelectorDefinition private constructor(
         ) = skirout.editor.v1.presentation.SearchSelectorDefinition(
             selectorId = selectorId,
             key = key,
-            valueBindingId = valueBindingId,
+            valueBinding = valueBinding,
             values = values,
             caseSensitive = caseSensitive,
             multiplicity = multiplicity,
@@ -17057,7 +17202,7 @@ class SearchSelectorDefinition private constructor(
 }
 
 sealed interface SearchResultMapping_OrMutable {
-    val bindingId: skirout.editor.v1.type_catalog.ExpressionBindingId_OrMutable;
+    val binding: skirout.editor.v1.presentation.BindingDeclaration_OrMutable;
     val key: skirout.editor.v1.expression.ExpressionNode;
     val selectedValue: skirout.editor.v1.expression.ExpressionNode;
     val presentation: skirout.editor.v1.presentation.PresentationNode_OrMutable;
@@ -17069,7 +17214,7 @@ sealed interface SearchResultMapping_OrMutable {
 /** Deeply immutable. */
 @kotlin.Suppress("UNUSED_PARAMETER")
 class SearchResultMapping private constructor(
-    override val bindingId: skirout.editor.v1.type_catalog.ExpressionBindingId,
+    override val binding: skirout.editor.v1.presentation.BindingDeclaration,
     override val key: skirout.editor.v1.expression.ExpressionNode,
     override val selectedValue: skirout.editor.v1.expression.ExpressionNode,
     override val presentation: skirout.editor.v1.presentation.PresentationNode,
@@ -17080,7 +17225,7 @@ class SearchResultMapping private constructor(
     constructor(
         _mustNameArguments: _MustNameArguments =
             _MustNameArguments,
-        bindingId: skirout.editor.v1.type_catalog.ExpressionBindingId_OrMutable,
+        binding: skirout.editor.v1.presentation.BindingDeclaration_OrMutable,
         key: skirout.editor.v1.expression.ExpressionNode,
         selectedValue: skirout.editor.v1.expression.ExpressionNode,
         presentation: skirout.editor.v1.presentation.PresentationNode_OrMutable,
@@ -17088,7 +17233,7 @@ class SearchResultMapping private constructor(
         _unrecognizedFields: _UnrecognizedFields<skirout.editor.v1.presentation.SearchResultMapping>? =
             null,
     ): this(
-        bindingId.toFrozen(),
+        binding.toFrozen(),
         key,
         selectedValue,
         presentation.toFrozen(),
@@ -17101,7 +17246,7 @@ class SearchResultMapping private constructor(
 
     /** Returns a mutable shallow copy of this instance */
     fun toMutable() = Mutable(
-        bindingId = this.bindingId,
+        binding = this.binding,
         key = this.key,
         selectedValue = this.selectedValue,
         presentation = this.presentation,
@@ -17112,8 +17257,8 @@ class SearchResultMapping private constructor(
     fun copy(
         _mustNameArguments: _MustNameArguments =
             _MustNameArguments,
-        bindingId: skirout.editor.v1.type_catalog.ExpressionBindingId_OrMutable =
-            this.bindingId,
+        binding: skirout.editor.v1.presentation.BindingDeclaration_OrMutable =
+            this.binding,
         key: skirout.editor.v1.expression.ExpressionNode =
             this.key,
         selectedValue: skirout.editor.v1.expression.ExpressionNode =
@@ -17123,7 +17268,7 @@ class SearchResultMapping private constructor(
         label: skirout.editor.v1.expression.ExpressionNode? =
             this.label,
     ) = skirout.editor.v1.presentation.SearchResultMapping(
-        bindingId.toFrozen(),
+        binding.toFrozen(),
         key,
         selectedValue,
         presentation.toFrozen(),
@@ -17135,11 +17280,11 @@ class SearchResultMapping private constructor(
     fun copy() = this;
 
     override fun equals(other: kotlin.Any?): kotlin.Boolean {
-        return this === other || (other is skirout.editor.v1.presentation.SearchResultMapping && this.bindingId == other.bindingId && this.key == other.key && this.selectedValue == other.selectedValue && this.presentation == other.presentation && this.label == other.label);
+        return this === other || (other is skirout.editor.v1.presentation.SearchResultMapping && this.binding == other.binding && this.key == other.key && this.selectedValue == other.selectedValue && this.presentation == other.presentation && this.label == other.label);
     }
 
     override fun hashCode(): kotlin.Int {
-        return kotlin.collections.listOf<kotlin.Any?>(this.bindingId, this.key, this.selectedValue, this.presentation, this.label).hashCode();
+        return kotlin.collections.listOf<kotlin.Any?>(this.binding, this.key, this.selectedValue, this.presentation, this.label).hashCode();
     }
 
     override fun toString(): kotlin.String {
@@ -17153,8 +17298,8 @@ class SearchResultMapping private constructor(
     class Mutable internal constructor(
         _mustNameArguments: _MustNameArguments =
             _MustNameArguments,
-        override var bindingId: skirout.editor.v1.type_catalog.ExpressionBindingId_OrMutable =
-            skirout.editor.v1.type_catalog.ExpressionBindingId.partial(),
+        override var binding: skirout.editor.v1.presentation.BindingDeclaration_OrMutable =
+            skirout.editor.v1.presentation.BindingDeclaration.partial(),
         override var key: skirout.editor.v1.expression.ExpressionNode =
             skirout.editor.v1.expression.ExpressionNode.UNKNOWN,
         override var selectedValue: skirout.editor.v1.expression.ExpressionNode =
@@ -17168,7 +17313,7 @@ class SearchResultMapping private constructor(
     ): skirout.editor.v1.presentation.SearchResultMapping_OrMutable {
         /** Returns a deeply immutable copy of this instance */
         override fun toFrozen() = skirout.editor.v1.presentation.SearchResultMapping(
-            bindingId = this.bindingId,
+            binding = this.binding,
             key = this.key,
             selectedValue = this.selectedValue,
             presentation = this.presentation,
@@ -17177,18 +17322,18 @@ class SearchResultMapping private constructor(
         );
 
         /**
-         * If the value of [bindingId] is already mutable, returns it as-is.
-         * Otherwise, makes a mutable copy, assigns it back to [bindingId] and returns it.
+         * If the value of [binding] is already mutable, returns it as-is.
+         * Otherwise, makes a mutable copy, assigns it back to [binding] and returns it.
          */
-        val mutableBindingId: skirout.editor.v1.type_catalog.ExpressionBindingId.Mutable get() {
-            var value = this.bindingId;
+        val mutableBinding: skirout.editor.v1.presentation.BindingDeclaration.Mutable get() {
+            var value = this.binding;
             return when (value) {
-                is skirout.editor.v1.type_catalog.ExpressionBindingId -> {
+                is skirout.editor.v1.presentation.BindingDeclaration -> {
                     value = value.toMutable();
-                    this.bindingId = value;
+                    this.binding = value;
                     return value;
                 }
-                is skirout.editor.v1.type_catalog.ExpressionBindingId.Mutable -> value;
+                is skirout.editor.v1.presentation.BindingDeclaration.Mutable -> value;
             }
         }
     }
@@ -17196,7 +17341,7 @@ class SearchResultMapping private constructor(
     companion object {
         private val default =
             skirout.editor.v1.presentation.SearchResultMapping(
-                skirout.editor.v1.type_catalog.ExpressionBindingId.partial(),
+                skirout.editor.v1.presentation.BindingDeclaration.partial(),
                 skirout.editor.v1.expression.ExpressionNode.UNKNOWN,
                 skirout.editor.v1.expression.ExpressionNode.UNKNOWN,
                 skirout.editor.v1.presentation.PresentationNode.partial(),
@@ -17214,8 +17359,8 @@ class SearchResultMapping private constructor(
         fun partial(
             _mustNameArguments: _MustNameArguments =
                 _MustNameArguments,
-            bindingId: skirout.editor.v1.type_catalog.ExpressionBindingId_OrMutable =
-                skirout.editor.v1.type_catalog.ExpressionBindingId.partial(),
+            binding: skirout.editor.v1.presentation.BindingDeclaration_OrMutable =
+                skirout.editor.v1.presentation.BindingDeclaration.partial(),
             key: skirout.editor.v1.expression.ExpressionNode =
                 skirout.editor.v1.expression.ExpressionNode.UNKNOWN,
             selectedValue: skirout.editor.v1.expression.ExpressionNode =
@@ -17225,7 +17370,7 @@ class SearchResultMapping private constructor(
             label: skirout.editor.v1.expression.ExpressionNode? =
                 null,
         ) = skirout.editor.v1.presentation.SearchResultMapping(
-            bindingId = bindingId,
+            binding = binding,
             key = key,
             selectedValue = selectedValue,
             presentation = presentation,
@@ -17381,9 +17526,8 @@ class HttpQueryParameter private constructor(
 }
 
 sealed interface HttpJsonContextBinding_OrMutable {
-    val bindingId: skirout.editor.v1.type_catalog.ExpressionBindingId_OrMutable;
+    val binding: skirout.editor.v1.presentation.BindingDeclaration_OrMutable;
     val path: kotlin.String;
-    val valueType: skirout.editor.v1.type_catalog.TypeTemplate;
 
     fun toFrozen(): skirout.editor.v1.presentation.HttpJsonContextBinding;
 }
@@ -17391,24 +17535,21 @@ sealed interface HttpJsonContextBinding_OrMutable {
 /** Deeply immutable. */
 @kotlin.Suppress("UNUSED_PARAMETER")
 class HttpJsonContextBinding private constructor(
-    override val bindingId: skirout.editor.v1.type_catalog.ExpressionBindingId,
+    override val binding: skirout.editor.v1.presentation.BindingDeclaration,
     override val path: kotlin.String,
-    override val valueType: skirout.editor.v1.type_catalog.TypeTemplate,
     internal val _unrecognizedFields: _UnrecognizedFields<skirout.editor.v1.presentation.HttpJsonContextBinding>? =
         null,
 ): skirout.editor.v1.presentation.HttpJsonContextBinding_OrMutable {
     constructor(
         _mustNameArguments: _MustNameArguments =
             _MustNameArguments,
-        bindingId: skirout.editor.v1.type_catalog.ExpressionBindingId_OrMutable,
+        binding: skirout.editor.v1.presentation.BindingDeclaration_OrMutable,
         path: kotlin.String,
-        valueType: skirout.editor.v1.type_catalog.TypeTemplate,
         _unrecognizedFields: _UnrecognizedFields<skirout.editor.v1.presentation.HttpJsonContextBinding>? =
             null,
     ): this(
-        bindingId.toFrozen(),
+        binding.toFrozen(),
         path,
-        valueType,
         _unrecognizedFields,
     ) {}
 
@@ -17417,25 +17558,21 @@ class HttpJsonContextBinding private constructor(
 
     /** Returns a mutable shallow copy of this instance */
     fun toMutable() = Mutable(
-        bindingId = this.bindingId,
+        binding = this.binding,
         path = this.path,
-        valueType = this.valueType,
     );
 
     /** Returns a shallow copy of this instance with the specified fields replaced. */
     fun copy(
         _mustNameArguments: _MustNameArguments =
             _MustNameArguments,
-        bindingId: skirout.editor.v1.type_catalog.ExpressionBindingId_OrMutable =
-            this.bindingId,
+        binding: skirout.editor.v1.presentation.BindingDeclaration_OrMutable =
+            this.binding,
         path: kotlin.String =
             this.path,
-        valueType: skirout.editor.v1.type_catalog.TypeTemplate =
-            this.valueType,
     ) = skirout.editor.v1.presentation.HttpJsonContextBinding(
-        bindingId.toFrozen(),
+        binding.toFrozen(),
         path,
-        valueType,
         this._unrecognizedFields,
     );
 
@@ -17443,11 +17580,11 @@ class HttpJsonContextBinding private constructor(
     fun copy() = this;
 
     override fun equals(other: kotlin.Any?): kotlin.Boolean {
-        return this === other || (other is skirout.editor.v1.presentation.HttpJsonContextBinding && this.bindingId == other.bindingId && this.path == other.path && this.valueType == other.valueType);
+        return this === other || (other is skirout.editor.v1.presentation.HttpJsonContextBinding && this.binding == other.binding && this.path == other.path);
     }
 
     override fun hashCode(): kotlin.Int {
-        return kotlin.collections.listOf<kotlin.Any?>(this.bindingId, this.path, this.valueType).hashCode();
+        return kotlin.collections.listOf<kotlin.Any?>(this.binding, this.path).hashCode();
     }
 
     override fun toString(): kotlin.String {
@@ -17461,36 +17598,33 @@ class HttpJsonContextBinding private constructor(
     class Mutable internal constructor(
         _mustNameArguments: _MustNameArguments =
             _MustNameArguments,
-        override var bindingId: skirout.editor.v1.type_catalog.ExpressionBindingId_OrMutable =
-            skirout.editor.v1.type_catalog.ExpressionBindingId.partial(),
+        override var binding: skirout.editor.v1.presentation.BindingDeclaration_OrMutable =
+            skirout.editor.v1.presentation.BindingDeclaration.partial(),
         override var path: kotlin.String =
             "",
-        override var valueType: skirout.editor.v1.type_catalog.TypeTemplate =
-            skirout.editor.v1.type_catalog.TypeTemplate.UNKNOWN,
         internal var _unrecognizedFields: _UnrecognizedFields<skirout.editor.v1.presentation.HttpJsonContextBinding>? =
             null,
     ): skirout.editor.v1.presentation.HttpJsonContextBinding_OrMutable {
         /** Returns a deeply immutable copy of this instance */
         override fun toFrozen() = skirout.editor.v1.presentation.HttpJsonContextBinding(
-            bindingId = this.bindingId,
+            binding = this.binding,
             path = this.path,
-            valueType = this.valueType,
             _unrecognizedFields = this._unrecognizedFields,
         );
 
         /**
-         * If the value of [bindingId] is already mutable, returns it as-is.
-         * Otherwise, makes a mutable copy, assigns it back to [bindingId] and returns it.
+         * If the value of [binding] is already mutable, returns it as-is.
+         * Otherwise, makes a mutable copy, assigns it back to [binding] and returns it.
          */
-        val mutableBindingId: skirout.editor.v1.type_catalog.ExpressionBindingId.Mutable get() {
-            var value = this.bindingId;
+        val mutableBinding: skirout.editor.v1.presentation.BindingDeclaration.Mutable get() {
+            var value = this.binding;
             return when (value) {
-                is skirout.editor.v1.type_catalog.ExpressionBindingId -> {
+                is skirout.editor.v1.presentation.BindingDeclaration -> {
                     value = value.toMutable();
-                    this.bindingId = value;
+                    this.binding = value;
                     return value;
                 }
-                is skirout.editor.v1.type_catalog.ExpressionBindingId.Mutable -> value;
+                is skirout.editor.v1.presentation.BindingDeclaration.Mutable -> value;
             }
         }
     }
@@ -17498,9 +17632,8 @@ class HttpJsonContextBinding private constructor(
     companion object {
         private val default =
             skirout.editor.v1.presentation.HttpJsonContextBinding(
-                skirout.editor.v1.type_catalog.ExpressionBindingId.partial(),
+                skirout.editor.v1.presentation.BindingDeclaration.partial(),
                 "",
-                skirout.editor.v1.type_catalog.TypeTemplate.UNKNOWN,
             );
 
         /** Returns an instance with all fields set to their default values. */
@@ -17514,16 +17647,13 @@ class HttpJsonContextBinding private constructor(
         fun partial(
             _mustNameArguments: _MustNameArguments =
                 _MustNameArguments,
-            bindingId: skirout.editor.v1.type_catalog.ExpressionBindingId_OrMutable =
-                skirout.editor.v1.type_catalog.ExpressionBindingId.partial(),
+            binding: skirout.editor.v1.presentation.BindingDeclaration_OrMutable =
+                skirout.editor.v1.presentation.BindingDeclaration.partial(),
             path: kotlin.String =
                 "",
-            valueType: skirout.editor.v1.type_catalog.TypeTemplate =
-                skirout.editor.v1.type_catalog.TypeTemplate.UNKNOWN,
         ) = skirout.editor.v1.presentation.HttpJsonContextBinding(
-            bindingId = bindingId,
+            binding = binding,
             path = path,
-            valueType = valueType,
             _unrecognizedFields = null,
         );
 
@@ -20117,8 +20247,8 @@ sealed class SearchProvider private constructor() {
 sealed interface SearchControl_OrMutable {
     val control: skirout.editor.v1.presentation.BoundControl_OrMutable;
     val selectionMode: skirout.editor.v1.presentation.SearchSelectionMode;
-    val queryBindingId: skirout.editor.v1.type_catalog.ExpressionBindingId_OrMutable;
-    val summaryBindingId: skirout.editor.v1.type_catalog.ExpressionBindingId_OrMutable;
+    val queryBinding: skirout.editor.v1.presentation.BindingDeclaration_OrMutable;
+    val summaryBinding: skirout.editor.v1.presentation.BindingDeclaration_OrMutable;
     val maximumExtent: skirout.editor.v1.expression.ExpressionNode;
     val provider: skirout.editor.v1.presentation.SearchProvider;
     val summary: skirout.editor.v1.presentation.PresentationNode_OrMutable?;
@@ -20142,8 +20272,8 @@ sealed interface SearchControl_OrMutable {
 class SearchControl private constructor(
     override val control: skirout.editor.v1.presentation.BoundControl,
     override val selectionMode: skirout.editor.v1.presentation.SearchSelectionMode,
-    override val queryBindingId: skirout.editor.v1.type_catalog.ExpressionBindingId,
-    override val summaryBindingId: skirout.editor.v1.type_catalog.ExpressionBindingId,
+    override val queryBinding: skirout.editor.v1.presentation.BindingDeclaration,
+    override val summaryBinding: skirout.editor.v1.presentation.BindingDeclaration,
     override val maximumExtent: skirout.editor.v1.expression.ExpressionNode,
     override val provider: skirout.editor.v1.presentation.SearchProvider,
     override val summary: skirout.editor.v1.presentation.PresentationNode?,
@@ -20166,8 +20296,8 @@ class SearchControl private constructor(
             _MustNameArguments,
         control: skirout.editor.v1.presentation.BoundControl_OrMutable,
         selectionMode: skirout.editor.v1.presentation.SearchSelectionMode,
-        queryBindingId: skirout.editor.v1.type_catalog.ExpressionBindingId_OrMutable,
-        summaryBindingId: skirout.editor.v1.type_catalog.ExpressionBindingId_OrMutable,
+        queryBinding: skirout.editor.v1.presentation.BindingDeclaration_OrMutable,
+        summaryBinding: skirout.editor.v1.presentation.BindingDeclaration_OrMutable,
         maximumExtent: skirout.editor.v1.expression.ExpressionNode,
         provider: skirout.editor.v1.presentation.SearchProvider,
         summary: skirout.editor.v1.presentation.PresentationNode_OrMutable?,
@@ -20187,8 +20317,8 @@ class SearchControl private constructor(
     ): this(
         control.toFrozen(),
         selectionMode,
-        queryBindingId.toFrozen(),
-        summaryBindingId.toFrozen(),
+        queryBinding.toFrozen(),
+        summaryBinding.toFrozen(),
         maximumExtent,
         provider,
         if (summary != null) summary.toFrozen() else null,
@@ -20213,8 +20343,8 @@ class SearchControl private constructor(
     fun toMutable() = Mutable(
         control = this.control,
         selectionMode = this.selectionMode,
-        queryBindingId = this.queryBindingId,
-        summaryBindingId = this.summaryBindingId,
+        queryBinding = this.queryBinding,
+        summaryBinding = this.summaryBinding,
         maximumExtent = this.maximumExtent,
         provider = this.provider,
         summary = this.summary,
@@ -20239,10 +20369,10 @@ class SearchControl private constructor(
             this.control,
         selectionMode: skirout.editor.v1.presentation.SearchSelectionMode =
             this.selectionMode,
-        queryBindingId: skirout.editor.v1.type_catalog.ExpressionBindingId_OrMutable =
-            this.queryBindingId,
-        summaryBindingId: skirout.editor.v1.type_catalog.ExpressionBindingId_OrMutable =
-            this.summaryBindingId,
+        queryBinding: skirout.editor.v1.presentation.BindingDeclaration_OrMutable =
+            this.queryBinding,
+        summaryBinding: skirout.editor.v1.presentation.BindingDeclaration_OrMutable =
+            this.summaryBinding,
         maximumExtent: skirout.editor.v1.expression.ExpressionNode =
             this.maximumExtent,
         provider: skirout.editor.v1.presentation.SearchProvider =
@@ -20274,8 +20404,8 @@ class SearchControl private constructor(
     ) = skirout.editor.v1.presentation.SearchControl(
         control.toFrozen(),
         selectionMode,
-        queryBindingId.toFrozen(),
-        summaryBindingId.toFrozen(),
+        queryBinding.toFrozen(),
+        summaryBinding.toFrozen(),
         maximumExtent,
         provider,
         if (summary != null) summary.toFrozen() else null,
@@ -20297,11 +20427,11 @@ class SearchControl private constructor(
     fun copy() = this;
 
     override fun equals(other: kotlin.Any?): kotlin.Boolean {
-        return this === other || (other is skirout.editor.v1.presentation.SearchControl && this.control == other.control && this.selectionMode == other.selectionMode && this.queryBindingId == other.queryBindingId && this.summaryBindingId == other.summaryBindingId && this.maximumExtent == other.maximumExtent && this.provider == other.provider && this.summary == other.summary && this.placeholder == other.placeholder && this.customValue == other.customValue && this.initialQuery == other.initialQuery && this.appearance == other.appearance && this.content == other.content && this.popup == other.popup && this.popupSide == other.popupSide && this.emptyText == other.emptyText && this.loadingText == other.loadingText && this.empty == other.empty && this.loading == other.loading);
+        return this === other || (other is skirout.editor.v1.presentation.SearchControl && this.control == other.control && this.selectionMode == other.selectionMode && this.queryBinding == other.queryBinding && this.summaryBinding == other.summaryBinding && this.maximumExtent == other.maximumExtent && this.provider == other.provider && this.summary == other.summary && this.placeholder == other.placeholder && this.customValue == other.customValue && this.initialQuery == other.initialQuery && this.appearance == other.appearance && this.content == other.content && this.popup == other.popup && this.popupSide == other.popupSide && this.emptyText == other.emptyText && this.loadingText == other.loadingText && this.empty == other.empty && this.loading == other.loading);
     }
 
     override fun hashCode(): kotlin.Int {
-        return kotlin.collections.listOf<kotlin.Any?>(this.control, this.selectionMode, this.queryBindingId, this.summaryBindingId, this.maximumExtent, this.provider, this.summary, this.placeholder, this.customValue, this.initialQuery, this.appearance, this.content, this.popup, this.popupSide, this.emptyText, this.loadingText, this.empty, this.loading).hashCode();
+        return kotlin.collections.listOf<kotlin.Any?>(this.control, this.selectionMode, this.queryBinding, this.summaryBinding, this.maximumExtent, this.provider, this.summary, this.placeholder, this.customValue, this.initialQuery, this.appearance, this.content, this.popup, this.popupSide, this.emptyText, this.loadingText, this.empty, this.loading).hashCode();
     }
 
     override fun toString(): kotlin.String {
@@ -20319,10 +20449,10 @@ class SearchControl private constructor(
             skirout.editor.v1.presentation.BoundControl.partial(),
         override var selectionMode: skirout.editor.v1.presentation.SearchSelectionMode =
             skirout.editor.v1.presentation.SearchSelectionMode.UNKNOWN,
-        override var queryBindingId: skirout.editor.v1.type_catalog.ExpressionBindingId_OrMutable =
-            skirout.editor.v1.type_catalog.ExpressionBindingId.partial(),
-        override var summaryBindingId: skirout.editor.v1.type_catalog.ExpressionBindingId_OrMutable =
-            skirout.editor.v1.type_catalog.ExpressionBindingId.partial(),
+        override var queryBinding: skirout.editor.v1.presentation.BindingDeclaration_OrMutable =
+            skirout.editor.v1.presentation.BindingDeclaration.partial(),
+        override var summaryBinding: skirout.editor.v1.presentation.BindingDeclaration_OrMutable =
+            skirout.editor.v1.presentation.BindingDeclaration.partial(),
         override var maximumExtent: skirout.editor.v1.expression.ExpressionNode =
             skirout.editor.v1.expression.ExpressionNode.UNKNOWN,
         override var provider: skirout.editor.v1.presentation.SearchProvider =
@@ -20358,8 +20488,8 @@ class SearchControl private constructor(
         override fun toFrozen() = skirout.editor.v1.presentation.SearchControl(
             control = this.control,
             selectionMode = this.selectionMode,
-            queryBindingId = this.queryBindingId,
-            summaryBindingId = this.summaryBindingId,
+            queryBinding = this.queryBinding,
+            summaryBinding = this.summaryBinding,
             maximumExtent = this.maximumExtent,
             provider = this.provider,
             summary = this.summary,
@@ -20378,34 +20508,34 @@ class SearchControl private constructor(
         );
 
         /**
-         * If the value of [queryBindingId] is already mutable, returns it as-is.
-         * Otherwise, makes a mutable copy, assigns it back to [queryBindingId] and returns it.
+         * If the value of [queryBinding] is already mutable, returns it as-is.
+         * Otherwise, makes a mutable copy, assigns it back to [queryBinding] and returns it.
          */
-        val mutableQueryBindingId: skirout.editor.v1.type_catalog.ExpressionBindingId.Mutable get() {
-            var value = this.queryBindingId;
+        val mutableQueryBinding: skirout.editor.v1.presentation.BindingDeclaration.Mutable get() {
+            var value = this.queryBinding;
             return when (value) {
-                is skirout.editor.v1.type_catalog.ExpressionBindingId -> {
+                is skirout.editor.v1.presentation.BindingDeclaration -> {
                     value = value.toMutable();
-                    this.queryBindingId = value;
+                    this.queryBinding = value;
                     return value;
                 }
-                is skirout.editor.v1.type_catalog.ExpressionBindingId.Mutable -> value;
+                is skirout.editor.v1.presentation.BindingDeclaration.Mutable -> value;
             }
         }
 
         /**
-         * If the value of [summaryBindingId] is already mutable, returns it as-is.
-         * Otherwise, makes a mutable copy, assigns it back to [summaryBindingId] and returns it.
+         * If the value of [summaryBinding] is already mutable, returns it as-is.
+         * Otherwise, makes a mutable copy, assigns it back to [summaryBinding] and returns it.
          */
-        val mutableSummaryBindingId: skirout.editor.v1.type_catalog.ExpressionBindingId.Mutable get() {
-            var value = this.summaryBindingId;
+        val mutableSummaryBinding: skirout.editor.v1.presentation.BindingDeclaration.Mutable get() {
+            var value = this.summaryBinding;
             return when (value) {
-                is skirout.editor.v1.type_catalog.ExpressionBindingId -> {
+                is skirout.editor.v1.presentation.BindingDeclaration -> {
                     value = value.toMutable();
-                    this.summaryBindingId = value;
+                    this.summaryBinding = value;
                     return value;
                 }
-                is skirout.editor.v1.type_catalog.ExpressionBindingId.Mutable -> value;
+                is skirout.editor.v1.presentation.BindingDeclaration.Mutable -> value;
             }
         }
     }
@@ -20415,8 +20545,8 @@ class SearchControl private constructor(
             skirout.editor.v1.presentation.SearchControl(
                 skirout.editor.v1.presentation.BoundControl.partial(),
                 skirout.editor.v1.presentation.SearchSelectionMode.UNKNOWN,
-                skirout.editor.v1.type_catalog.ExpressionBindingId.partial(),
-                skirout.editor.v1.type_catalog.ExpressionBindingId.partial(),
+                skirout.editor.v1.presentation.BindingDeclaration.partial(),
+                skirout.editor.v1.presentation.BindingDeclaration.partial(),
                 skirout.editor.v1.expression.ExpressionNode.UNKNOWN,
                 skirout.editor.v1.presentation.SearchProvider.UNKNOWN,
                 null,
@@ -20448,10 +20578,10 @@ class SearchControl private constructor(
                 skirout.editor.v1.presentation.BoundControl.partial(),
             selectionMode: skirout.editor.v1.presentation.SearchSelectionMode =
                 skirout.editor.v1.presentation.SearchSelectionMode.UNKNOWN,
-            queryBindingId: skirout.editor.v1.type_catalog.ExpressionBindingId_OrMutable =
-                skirout.editor.v1.type_catalog.ExpressionBindingId.partial(),
-            summaryBindingId: skirout.editor.v1.type_catalog.ExpressionBindingId_OrMutable =
-                skirout.editor.v1.type_catalog.ExpressionBindingId.partial(),
+            queryBinding: skirout.editor.v1.presentation.BindingDeclaration_OrMutable =
+                skirout.editor.v1.presentation.BindingDeclaration.partial(),
+            summaryBinding: skirout.editor.v1.presentation.BindingDeclaration_OrMutable =
+                skirout.editor.v1.presentation.BindingDeclaration.partial(),
             maximumExtent: skirout.editor.v1.expression.ExpressionNode =
                 skirout.editor.v1.expression.ExpressionNode.UNKNOWN,
             provider: skirout.editor.v1.presentation.SearchProvider =
@@ -20483,8 +20613,8 @@ class SearchControl private constructor(
         ) = skirout.editor.v1.presentation.SearchControl(
             control = control,
             selectionMode = selectionMode,
-            queryBindingId = queryBindingId,
-            summaryBindingId = summaryBindingId,
+            queryBinding = queryBinding,
+            summaryBinding = summaryBinding,
             maximumExtent = maximumExtent,
             provider = provider,
             summary = summary,
@@ -23136,12 +23266,12 @@ sealed class PresentationElement private constructor() {
             _mustNameArguments: _MustNameArguments =
                 _MustNameArguments,
             source: skirout.editor.v1.expression.ExpressionNode,
-            itemBindingId: skirout.editor.v1.type_catalog.ExpressionBindingId_OrMutable,
+            itemBinding: skirout.editor.v1.presentation.BindingDeclaration_OrMutable,
             presentation: skirout.editor.v1.presentation.SequencePresentation_OrMutable,
         ) = RepeatedWrapper(
             skirout.editor.v1.presentation.RepeatedElement(
                 source = source,
-                itemBindingId = itemBindingId,
+                itemBinding = itemBinding,
                 presentation = presentation,
             )
         );
@@ -23152,12 +23282,12 @@ sealed class PresentationElement private constructor() {
             _mustNameArguments: _MustNameArguments =
                 _MustNameArguments,
             binding: skirout.editor.v1.binding.BindingRef_OrMutable,
-            scopeBindingId: skirout.editor.v1.type_catalog.ExpressionBindingId_OrMutable,
+            scopeBinding: skirout.editor.v1.presentation.BindingDeclaration_OrMutable,
             child: skirout.editor.v1.presentation.PresentationNode_OrMutable,
         ) = ScopedBindingWrapper(
             skirout.editor.v1.presentation.ScopedBindingElement(
                 binding = binding,
-                scopeBindingId = scopeBindingId,
+                scopeBinding = scopeBinding,
                 child = child,
             )
         );
@@ -23478,8 +23608,8 @@ sealed class PresentationElement private constructor() {
             allowAdd: kotlin.Boolean,
             allowRemove: kotlin.Boolean,
             allowReorder: kotlin.Boolean,
-            itemBindingId: skirout.editor.v1.type_catalog.ExpressionBindingId_OrMutable,
-            indexBindingId: skirout.editor.v1.type_catalog.ExpressionBindingId_OrMutable,
+            itemBinding: skirout.editor.v1.presentation.BindingDeclaration_OrMutable,
+            indexBinding: skirout.editor.v1.presentation.BindingDeclaration_OrMutable,
             appearance: skirout.editor.v1.presentation.CollectionAppearance_OrMutable?,
             content: skirout.editor.v1.presentation.CollectionContent_OrMutable?,
         ) = ListInputWrapper(
@@ -23489,8 +23619,8 @@ sealed class PresentationElement private constructor() {
                 allowAdd = allowAdd,
                 allowRemove = allowRemove,
                 allowReorder = allowReorder,
-                itemBindingId = itemBindingId,
-                indexBindingId = indexBindingId,
+                itemBinding = itemBinding,
+                indexBinding = indexBinding,
                 appearance = appearance,
                 content = content,
             )
@@ -23506,8 +23636,8 @@ sealed class PresentationElement private constructor() {
             valuePresentation: skirout.editor.v1.presentation.PresentationNode_OrMutable?,
             allowAdd: kotlin.Boolean,
             allowRemove: kotlin.Boolean,
-            keyBindingId: skirout.editor.v1.type_catalog.ExpressionBindingId_OrMutable,
-            valueBindingId: skirout.editor.v1.type_catalog.ExpressionBindingId_OrMutable,
+            keyBinding: skirout.editor.v1.presentation.BindingDeclaration_OrMutable,
+            valueBinding: skirout.editor.v1.presentation.BindingDeclaration_OrMutable,
             appearance: skirout.editor.v1.presentation.CollectionAppearance_OrMutable?,
             content: skirout.editor.v1.presentation.CollectionContent_OrMutable?,
         ) = MapInputWrapper(
@@ -23517,8 +23647,8 @@ sealed class PresentationElement private constructor() {
                 valuePresentation = valuePresentation,
                 allowAdd = allowAdd,
                 allowRemove = allowRemove,
-                keyBindingId = keyBindingId,
-                valueBindingId = valueBindingId,
+                keyBinding = keyBinding,
+                valueBinding = valueBinding,
                 appearance = appearance,
                 content = content,
             )
@@ -23607,8 +23737,8 @@ sealed class PresentationElement private constructor() {
                 _MustNameArguments,
             control: skirout.editor.v1.presentation.BoundControl_OrMutable,
             selectionMode: skirout.editor.v1.presentation.SearchSelectionMode,
-            queryBindingId: skirout.editor.v1.type_catalog.ExpressionBindingId_OrMutable,
-            summaryBindingId: skirout.editor.v1.type_catalog.ExpressionBindingId_OrMutable,
+            queryBinding: skirout.editor.v1.presentation.BindingDeclaration_OrMutable,
+            summaryBinding: skirout.editor.v1.presentation.BindingDeclaration_OrMutable,
             maximumExtent: skirout.editor.v1.expression.ExpressionNode,
             provider: skirout.editor.v1.presentation.SearchProvider,
             summary: skirout.editor.v1.presentation.PresentationNode_OrMutable?,
@@ -23627,8 +23757,8 @@ sealed class PresentationElement private constructor() {
             skirout.editor.v1.presentation.SearchControl(
                 control = control,
                 selectionMode = selectionMode,
-                queryBindingId = queryBindingId,
-                summaryBindingId = summaryBindingId,
+                queryBinding = queryBinding,
+                summaryBinding = summaryBinding,
                 maximumExtent = maximumExtent,
                 provider = provider,
                 summary = summary,
@@ -23678,8 +23808,8 @@ sealed class PresentationElement private constructor() {
             direction: skirout.editor.v1.presentation.CollectionGraphDirection,
             maximumDepth: kotlin.Int?,
             node: skirout.editor.v1.presentation.PresentationNode_OrMutable,
-            childrenBindingId: skirout.editor.v1.type_catalog.ExpressionBindingId_OrMutable,
-            childBindingId: skirout.editor.v1.type_catalog.ExpressionBindingId_OrMutable,
+            childrenBinding: skirout.editor.v1.presentation.BindingDeclaration_OrMutable,
+            childBinding: skirout.editor.v1.presentation.BindingDeclaration_OrMutable,
             children: skirout.editor.v1.presentation.SequencePresentation_OrMutable,
         ) = CollectionGraphWrapper(
             skirout.editor.v1.presentation.CollectionGraphElement(
@@ -23690,8 +23820,8 @@ sealed class PresentationElement private constructor() {
                 direction = direction,
                 maximumDepth = maximumDepth,
                 node = node,
-                childrenBindingId = childrenBindingId,
-                childBindingId = childBindingId,
+                childrenBinding = childrenBinding,
+                childBinding = childBinding,
                 children = children,
             )
         );
@@ -23754,13 +23884,13 @@ sealed class PresentationElement private constructor() {
             _mustNameArguments: _MustNameArguments =
                 _MustNameArguments,
             binding: skirout.editor.v1.binding.BindingRef_OrMutable,
-            scopeBindingId: skirout.editor.v1.type_catalog.ExpressionBindingId_OrMutable,
+            scopeBinding: skirout.editor.v1.presentation.BindingDeclaration_OrMutable,
             cases: kotlin.collections.Iterable<skirout.editor.v1.presentation.PolymorphicMatchCase_OrMutable>,
             fallback: skirout.editor.v1.presentation.PresentationNode_OrMutable?,
         ) = PolymorphicMatchWrapper(
             skirout.editor.v1.presentation.PolymorphicMatchElement(
                 binding = binding,
-                scopeBindingId = scopeBindingId,
+                scopeBinding = scopeBinding,
                 cases = cases,
                 fallback = fallback,
             )
@@ -23893,7 +24023,7 @@ sealed class PresentationElement private constructor() {
             itemPresentation: skirout.editor.v1.presentation.PresentationNode_OrMutable?,
             allowAdd: kotlin.Boolean,
             allowRemove: kotlin.Boolean,
-            itemBindingId: skirout.editor.v1.type_catalog.ExpressionBindingId_OrMutable,
+            itemBinding: skirout.editor.v1.presentation.BindingDeclaration_OrMutable,
             appearance: skirout.editor.v1.presentation.CollectionAppearance_OrMutable?,
             content: skirout.editor.v1.presentation.CollectionContent_OrMutable?,
         ) = SetInputWrapper(
@@ -23902,7 +24032,7 @@ sealed class PresentationElement private constructor() {
                 itemPresentation = itemPresentation,
                 allowAdd = allowAdd,
                 allowRemove = allowRemove,
-                itemBindingId = itemBindingId,
+                itemBinding = itemBinding,
                 appearance = appearance,
                 content = content,
             )
@@ -23916,13 +24046,13 @@ sealed class PresentationElement private constructor() {
             control: skirout.editor.v1.presentation.BoundControl_OrMutable,
             layout: skirout.editor.v1.presentation.ResourcesLayout,
             order: skirout.editor.v1.expression.ExpressionNode?,
-            itemBindingId: skirout.editor.v1.type_catalog.ExpressionBindingId_OrMutable,
+            itemBinding: skirout.editor.v1.presentation.BindingDeclaration_OrMutable,
         ) = ResourcesWrapper(
             skirout.editor.v1.presentation.ResourcesElement(
                 control = control,
                 layout = layout,
                 order = order,
-                itemBindingId = itemBindingId,
+                itemBinding = itemBinding,
             )
         );
 
@@ -24674,8 +24804,7 @@ class PresentationCollectionRelationDefinition private constructor(
 
 sealed interface PresentationCollectionDefinition_OrMutable {
     val sourceId: kotlin.String;
-    val rowType: skirout.editor.v1.type_catalog.TypeTemplate;
-    val rowBindingId: skirout.editor.v1.type_catalog.ExpressionBindingId_OrMutable;
+    val rowBinding: skirout.editor.v1.presentation.BindingDeclaration_OrMutable;
     val key: skirout.editor.v1.expression.ExpressionNode;
     val selectability: skirout.editor.v1.expression.ExpressionNode;
     val relations: kotlin.collections.List<skirout.editor.v1.presentation.PresentationCollectionRelationDefinition_OrMutable>;
@@ -24686,15 +24815,15 @@ sealed interface PresentationCollectionDefinition_OrMutable {
 
 /**
  * Authoritative typed schema for a collection referenced by presentation nodes.
- * The row binding scopes key, selectability, and relation expressions to one row.
+ * The row binding scopes key, selectability, and relation expressions to one row; its type
+ * is the row type.
  *
  * Deeply immutable.
  */
 @kotlin.Suppress("UNUSED_PARAMETER")
 class PresentationCollectionDefinition private constructor(
     override val sourceId: kotlin.String,
-    override val rowType: skirout.editor.v1.type_catalog.TypeTemplate,
-    override val rowBindingId: skirout.editor.v1.type_catalog.ExpressionBindingId,
+    override val rowBinding: skirout.editor.v1.presentation.BindingDeclaration,
     override val key: skirout.editor.v1.expression.ExpressionNode,
     override val selectability: skirout.editor.v1.expression.ExpressionNode,
     override val relations: build.skir.KeyedList<skirout.editor.v1.presentation.PresentationCollectionRelationDefinition, kotlin.String>,
@@ -24706,8 +24835,7 @@ class PresentationCollectionDefinition private constructor(
         _mustNameArguments: _MustNameArguments =
             _MustNameArguments,
         sourceId: kotlin.String,
-        rowType: skirout.editor.v1.type_catalog.TypeTemplate,
-        rowBindingId: skirout.editor.v1.type_catalog.ExpressionBindingId_OrMutable,
+        rowBinding: skirout.editor.v1.presentation.BindingDeclaration_OrMutable,
         key: skirout.editor.v1.expression.ExpressionNode,
         selectability: skirout.editor.v1.expression.ExpressionNode,
         relations: kotlin.collections.Iterable<skirout.editor.v1.presentation.PresentationCollectionRelationDefinition_OrMutable>,
@@ -24716,8 +24844,7 @@ class PresentationCollectionDefinition private constructor(
             null,
     ): this(
         sourceId,
-        rowType,
-        rowBindingId.toFrozen(),
+        rowBinding.toFrozen(),
         key,
         selectability,
         build.skir.internal.toKeyedList(relations, "relationId", { it.relationId }, { it.toFrozen() }),
@@ -24731,8 +24858,7 @@ class PresentationCollectionDefinition private constructor(
     /** Returns a mutable shallow copy of this instance */
     fun toMutable() = Mutable(
         sourceId = this.sourceId,
-        rowType = this.rowType,
-        rowBindingId = this.rowBindingId,
+        rowBinding = this.rowBinding,
         key = this.key,
         selectability = this.selectability,
         relations = this.relations,
@@ -24745,10 +24871,8 @@ class PresentationCollectionDefinition private constructor(
             _MustNameArguments,
         sourceId: kotlin.String =
             this.sourceId,
-        rowType: skirout.editor.v1.type_catalog.TypeTemplate =
-            this.rowType,
-        rowBindingId: skirout.editor.v1.type_catalog.ExpressionBindingId_OrMutable =
-            this.rowBindingId,
+        rowBinding: skirout.editor.v1.presentation.BindingDeclaration_OrMutable =
+            this.rowBinding,
         key: skirout.editor.v1.expression.ExpressionNode =
             this.key,
         selectability: skirout.editor.v1.expression.ExpressionNode =
@@ -24759,8 +24883,7 @@ class PresentationCollectionDefinition private constructor(
             this.projection,
     ) = skirout.editor.v1.presentation.PresentationCollectionDefinition(
         sourceId,
-        rowType,
-        rowBindingId.toFrozen(),
+        rowBinding.toFrozen(),
         key,
         selectability,
         build.skir.internal.toKeyedList(relations, "relationId", { it.relationId }, { it.toFrozen() }),
@@ -24772,11 +24895,11 @@ class PresentationCollectionDefinition private constructor(
     fun copy() = this;
 
     override fun equals(other: kotlin.Any?): kotlin.Boolean {
-        return this === other || (other is skirout.editor.v1.presentation.PresentationCollectionDefinition && this.sourceId == other.sourceId && this.rowType == other.rowType && this.rowBindingId == other.rowBindingId && this.key == other.key && this.selectability == other.selectability && this.relations == other.relations && this.projection == other.projection);
+        return this === other || (other is skirout.editor.v1.presentation.PresentationCollectionDefinition && this.sourceId == other.sourceId && this.rowBinding == other.rowBinding && this.key == other.key && this.selectability == other.selectability && this.relations == other.relations && this.projection == other.projection);
     }
 
     override fun hashCode(): kotlin.Int {
-        return kotlin.collections.listOf<kotlin.Any?>(this.sourceId, this.rowType, this.rowBindingId, this.key, this.selectability, this.relations, this.projection).hashCode();
+        return kotlin.collections.listOf<kotlin.Any?>(this.sourceId, this.rowBinding, this.key, this.selectability, this.relations, this.projection).hashCode();
     }
 
     override fun toString(): kotlin.String {
@@ -24792,10 +24915,8 @@ class PresentationCollectionDefinition private constructor(
             _MustNameArguments,
         override var sourceId: kotlin.String =
             "",
-        override var rowType: skirout.editor.v1.type_catalog.TypeTemplate =
-            skirout.editor.v1.type_catalog.TypeTemplate.UNKNOWN,
-        override var rowBindingId: skirout.editor.v1.type_catalog.ExpressionBindingId_OrMutable =
-            skirout.editor.v1.type_catalog.ExpressionBindingId.partial(),
+        override var rowBinding: skirout.editor.v1.presentation.BindingDeclaration_OrMutable =
+            skirout.editor.v1.presentation.BindingDeclaration.partial(),
         override var key: skirout.editor.v1.expression.ExpressionNode =
             skirout.editor.v1.expression.ExpressionNode.UNKNOWN,
         override var selectability: skirout.editor.v1.expression.ExpressionNode =
@@ -24810,8 +24931,7 @@ class PresentationCollectionDefinition private constructor(
         /** Returns a deeply immutable copy of this instance */
         override fun toFrozen() = skirout.editor.v1.presentation.PresentationCollectionDefinition(
             sourceId = this.sourceId,
-            rowType = this.rowType,
-            rowBindingId = this.rowBindingId,
+            rowBinding = this.rowBinding,
             key = this.key,
             selectability = this.selectability,
             relations = this.relations,
@@ -24820,18 +24940,18 @@ class PresentationCollectionDefinition private constructor(
         );
 
         /**
-         * If the value of [rowBindingId] is already mutable, returns it as-is.
-         * Otherwise, makes a mutable copy, assigns it back to [rowBindingId] and returns it.
+         * If the value of [rowBinding] is already mutable, returns it as-is.
+         * Otherwise, makes a mutable copy, assigns it back to [rowBinding] and returns it.
          */
-        val mutableRowBindingId: skirout.editor.v1.type_catalog.ExpressionBindingId.Mutable get() {
-            var value = this.rowBindingId;
+        val mutableRowBinding: skirout.editor.v1.presentation.BindingDeclaration.Mutable get() {
+            var value = this.rowBinding;
             return when (value) {
-                is skirout.editor.v1.type_catalog.ExpressionBindingId -> {
+                is skirout.editor.v1.presentation.BindingDeclaration -> {
                     value = value.toMutable();
-                    this.rowBindingId = value;
+                    this.rowBinding = value;
                     return value;
                 }
-                is skirout.editor.v1.type_catalog.ExpressionBindingId.Mutable -> value;
+                is skirout.editor.v1.presentation.BindingDeclaration.Mutable -> value;
             }
         }
 
@@ -24856,8 +24976,7 @@ class PresentationCollectionDefinition private constructor(
         private val default =
             skirout.editor.v1.presentation.PresentationCollectionDefinition(
                 "",
-                skirout.editor.v1.type_catalog.TypeTemplate.UNKNOWN,
-                skirout.editor.v1.type_catalog.ExpressionBindingId.partial(),
+                skirout.editor.v1.presentation.BindingDeclaration.partial(),
                 skirout.editor.v1.expression.ExpressionNode.UNKNOWN,
                 skirout.editor.v1.expression.ExpressionNode.UNKNOWN,
                 build.skir.internal.emptyKeyedList<skirout.editor.v1.presentation.PresentationCollectionRelationDefinition, kotlin.String>(),
@@ -24877,10 +24996,8 @@ class PresentationCollectionDefinition private constructor(
                 _MustNameArguments,
             sourceId: kotlin.String =
                 "",
-            rowType: skirout.editor.v1.type_catalog.TypeTemplate =
-                skirout.editor.v1.type_catalog.TypeTemplate.UNKNOWN,
-            rowBindingId: skirout.editor.v1.type_catalog.ExpressionBindingId_OrMutable =
-                skirout.editor.v1.type_catalog.ExpressionBindingId.partial(),
+            rowBinding: skirout.editor.v1.presentation.BindingDeclaration_OrMutable =
+                skirout.editor.v1.presentation.BindingDeclaration.partial(),
             key: skirout.editor.v1.expression.ExpressionNode =
                 skirout.editor.v1.expression.ExpressionNode.UNKNOWN,
             selectability: skirout.editor.v1.expression.ExpressionNode =
@@ -24891,8 +25008,7 @@ class PresentationCollectionDefinition private constructor(
                 null,
         ) = skirout.editor.v1.presentation.PresentationCollectionDefinition(
             sourceId = sourceId,
-            rowType = rowType,
-            rowBindingId = rowBindingId,
+            rowBinding = rowBinding,
             key = key,
             selectability = selectability,
             relations = relations,
@@ -25144,7 +25260,7 @@ class PresentationCollectionProjectionField private constructor(
 
 sealed interface PresentationCollectionProjection_OrMutable {
     val root: skirout.editor.v1.type_catalog.NamedTypeTemplate_OrMutable;
-    val resourceBindingId: skirout.editor.v1.type_catalog.ExpressionBindingId_OrMutable;
+    val resourceBinding: skirout.editor.v1.presentation.BindingDeclaration_OrMutable;
     val fields: kotlin.collections.List<skirout.editor.v1.presentation.PresentationCollectionProjectionField_OrMutable>;
 
     fun toFrozen(): skirout.editor.v1.presentation.PresentationCollectionProjection;
@@ -25154,7 +25270,7 @@ sealed interface PresentationCollectionProjection_OrMutable {
 @kotlin.Suppress("UNUSED_PARAMETER")
 class PresentationCollectionProjection private constructor(
     override val root: skirout.editor.v1.type_catalog.NamedTypeTemplate,
-    override val resourceBindingId: skirout.editor.v1.type_catalog.ExpressionBindingId,
+    override val resourceBinding: skirout.editor.v1.presentation.BindingDeclaration,
     override val fields: kotlin.collections.List<skirout.editor.v1.presentation.PresentationCollectionProjectionField>,
     internal val _unrecognizedFields: _UnrecognizedFields<skirout.editor.v1.presentation.PresentationCollectionProjection>? =
         null,
@@ -25163,13 +25279,13 @@ class PresentationCollectionProjection private constructor(
         _mustNameArguments: _MustNameArguments =
             _MustNameArguments,
         root: skirout.editor.v1.type_catalog.NamedTypeTemplate_OrMutable,
-        resourceBindingId: skirout.editor.v1.type_catalog.ExpressionBindingId_OrMutable,
+        resourceBinding: skirout.editor.v1.presentation.BindingDeclaration_OrMutable,
         fields: kotlin.collections.Iterable<skirout.editor.v1.presentation.PresentationCollectionProjectionField_OrMutable>,
         _unrecognizedFields: _UnrecognizedFields<skirout.editor.v1.presentation.PresentationCollectionProjection>? =
             null,
     ): this(
         root.toFrozen(),
-        resourceBindingId.toFrozen(),
+        resourceBinding.toFrozen(),
         build.skir.internal.toFrozenList(fields, { it.toFrozen() }),
         _unrecognizedFields,
     ) {}
@@ -25180,7 +25296,7 @@ class PresentationCollectionProjection private constructor(
     /** Returns a mutable shallow copy of this instance */
     fun toMutable() = Mutable(
         root = this.root,
-        resourceBindingId = this.resourceBindingId,
+        resourceBinding = this.resourceBinding,
         fields = this.fields,
     );
 
@@ -25190,13 +25306,13 @@ class PresentationCollectionProjection private constructor(
             _MustNameArguments,
         root: skirout.editor.v1.type_catalog.NamedTypeTemplate_OrMutable =
             this.root,
-        resourceBindingId: skirout.editor.v1.type_catalog.ExpressionBindingId_OrMutable =
-            this.resourceBindingId,
+        resourceBinding: skirout.editor.v1.presentation.BindingDeclaration_OrMutable =
+            this.resourceBinding,
         fields: kotlin.collections.Iterable<skirout.editor.v1.presentation.PresentationCollectionProjectionField_OrMutable> =
             this.fields,
     ) = skirout.editor.v1.presentation.PresentationCollectionProjection(
         root.toFrozen(),
-        resourceBindingId.toFrozen(),
+        resourceBinding.toFrozen(),
         build.skir.internal.toFrozenList(fields, { it.toFrozen() }),
         this._unrecognizedFields,
     );
@@ -25205,11 +25321,11 @@ class PresentationCollectionProjection private constructor(
     fun copy() = this;
 
     override fun equals(other: kotlin.Any?): kotlin.Boolean {
-        return this === other || (other is skirout.editor.v1.presentation.PresentationCollectionProjection && this.root == other.root && this.resourceBindingId == other.resourceBindingId && this.fields == other.fields);
+        return this === other || (other is skirout.editor.v1.presentation.PresentationCollectionProjection && this.root == other.root && this.resourceBinding == other.resourceBinding && this.fields == other.fields);
     }
 
     override fun hashCode(): kotlin.Int {
-        return kotlin.collections.listOf<kotlin.Any?>(this.root, this.resourceBindingId, this.fields).hashCode();
+        return kotlin.collections.listOf<kotlin.Any?>(this.root, this.resourceBinding, this.fields).hashCode();
     }
 
     override fun toString(): kotlin.String {
@@ -25225,8 +25341,8 @@ class PresentationCollectionProjection private constructor(
             _MustNameArguments,
         override var root: skirout.editor.v1.type_catalog.NamedTypeTemplate_OrMutable =
             skirout.editor.v1.type_catalog.NamedTypeTemplate.partial(),
-        override var resourceBindingId: skirout.editor.v1.type_catalog.ExpressionBindingId_OrMutable =
-            skirout.editor.v1.type_catalog.ExpressionBindingId.partial(),
+        override var resourceBinding: skirout.editor.v1.presentation.BindingDeclaration_OrMutable =
+            skirout.editor.v1.presentation.BindingDeclaration.partial(),
         override var fields: kotlin.collections.List<skirout.editor.v1.presentation.PresentationCollectionProjectionField_OrMutable> =
             build.skir.internal.emptyFrozenList<skirout.editor.v1.presentation.PresentationCollectionProjectionField>(),
         internal var _unrecognizedFields: _UnrecognizedFields<skirout.editor.v1.presentation.PresentationCollectionProjection>? =
@@ -25235,7 +25351,7 @@ class PresentationCollectionProjection private constructor(
         /** Returns a deeply immutable copy of this instance */
         override fun toFrozen() = skirout.editor.v1.presentation.PresentationCollectionProjection(
             root = this.root,
-            resourceBindingId = this.resourceBindingId,
+            resourceBinding = this.resourceBinding,
             fields = this.fields,
             _unrecognizedFields = this._unrecognizedFields,
         );
@@ -25257,18 +25373,18 @@ class PresentationCollectionProjection private constructor(
         }
 
         /**
-         * If the value of [resourceBindingId] is already mutable, returns it as-is.
-         * Otherwise, makes a mutable copy, assigns it back to [resourceBindingId] and returns it.
+         * If the value of [resourceBinding] is already mutable, returns it as-is.
+         * Otherwise, makes a mutable copy, assigns it back to [resourceBinding] and returns it.
          */
-        val mutableResourceBindingId: skirout.editor.v1.type_catalog.ExpressionBindingId.Mutable get() {
-            var value = this.resourceBindingId;
+        val mutableResourceBinding: skirout.editor.v1.presentation.BindingDeclaration.Mutable get() {
+            var value = this.resourceBinding;
             return when (value) {
-                is skirout.editor.v1.type_catalog.ExpressionBindingId -> {
+                is skirout.editor.v1.presentation.BindingDeclaration -> {
                     value = value.toMutable();
-                    this.resourceBindingId = value;
+                    this.resourceBinding = value;
                     return value;
                 }
-                is skirout.editor.v1.type_catalog.ExpressionBindingId.Mutable -> value;
+                is skirout.editor.v1.presentation.BindingDeclaration.Mutable -> value;
             }
         }
 
@@ -25293,7 +25409,7 @@ class PresentationCollectionProjection private constructor(
         private val default =
             skirout.editor.v1.presentation.PresentationCollectionProjection(
                 skirout.editor.v1.type_catalog.NamedTypeTemplate.partial(),
-                skirout.editor.v1.type_catalog.ExpressionBindingId.partial(),
+                skirout.editor.v1.presentation.BindingDeclaration.partial(),
                 build.skir.internal.emptyFrozenList<skirout.editor.v1.presentation.PresentationCollectionProjectionField>(),
             );
 
@@ -25310,13 +25426,13 @@ class PresentationCollectionProjection private constructor(
                 _MustNameArguments,
             root: skirout.editor.v1.type_catalog.NamedTypeTemplate_OrMutable =
                 skirout.editor.v1.type_catalog.NamedTypeTemplate.partial(),
-            resourceBindingId: skirout.editor.v1.type_catalog.ExpressionBindingId_OrMutable =
-                skirout.editor.v1.type_catalog.ExpressionBindingId.partial(),
+            resourceBinding: skirout.editor.v1.presentation.BindingDeclaration_OrMutable =
+                skirout.editor.v1.presentation.BindingDeclaration.partial(),
             fields: kotlin.collections.Iterable<skirout.editor.v1.presentation.PresentationCollectionProjectionField_OrMutable> =
                 build.skir.internal.emptyFrozenList<skirout.editor.v1.presentation.PresentationCollectionProjectionField>(),
         ) = skirout.editor.v1.presentation.PresentationCollectionProjection(
             root = root,
-            resourceBindingId = resourceBindingId,
+            resourceBinding = resourceBinding,
             fields = fields,
             _unrecognizedFields = null,
         );
@@ -25404,9 +25520,8 @@ sealed class PresentationInputAccess private constructor() {
 }
 
 sealed interface PresentationInput_OrMutable {
-    val bindingId: skirout.editor.v1.type_catalog.ExpressionBindingId_OrMutable;
+    val binding: skirout.editor.v1.presentation.BindingDeclaration_OrMutable;
     val name: kotlin.String;
-    val valueType: skirout.editor.v1.type_catalog.TypeTemplate;
     val access: skirout.editor.v1.presentation.PresentationInputAccess;
 
     fun toFrozen(): skirout.editor.v1.presentation.PresentationInput;
@@ -25415,9 +25530,8 @@ sealed interface PresentationInput_OrMutable {
 /** Deeply immutable. */
 @kotlin.Suppress("UNUSED_PARAMETER")
 class PresentationInput private constructor(
-    override val bindingId: skirout.editor.v1.type_catalog.ExpressionBindingId,
+    override val binding: skirout.editor.v1.presentation.BindingDeclaration,
     override val name: kotlin.String,
-    override val valueType: skirout.editor.v1.type_catalog.TypeTemplate,
     override val access: skirout.editor.v1.presentation.PresentationInputAccess,
     internal val _unrecognizedFields: _UnrecognizedFields<skirout.editor.v1.presentation.PresentationInput>? =
         null,
@@ -25425,16 +25539,14 @@ class PresentationInput private constructor(
     constructor(
         _mustNameArguments: _MustNameArguments =
             _MustNameArguments,
-        bindingId: skirout.editor.v1.type_catalog.ExpressionBindingId_OrMutable,
+        binding: skirout.editor.v1.presentation.BindingDeclaration_OrMutable,
         name: kotlin.String,
-        valueType: skirout.editor.v1.type_catalog.TypeTemplate,
         access: skirout.editor.v1.presentation.PresentationInputAccess,
         _unrecognizedFields: _UnrecognizedFields<skirout.editor.v1.presentation.PresentationInput>? =
             null,
     ): this(
-        bindingId.toFrozen(),
+        binding.toFrozen(),
         name,
-        valueType,
         access,
         _unrecognizedFields,
     ) {}
@@ -25444,9 +25556,8 @@ class PresentationInput private constructor(
 
     /** Returns a mutable shallow copy of this instance */
     fun toMutable() = Mutable(
-        bindingId = this.bindingId,
+        binding = this.binding,
         name = this.name,
-        valueType = this.valueType,
         access = this.access,
     );
 
@@ -25454,18 +25565,15 @@ class PresentationInput private constructor(
     fun copy(
         _mustNameArguments: _MustNameArguments =
             _MustNameArguments,
-        bindingId: skirout.editor.v1.type_catalog.ExpressionBindingId_OrMutable =
-            this.bindingId,
+        binding: skirout.editor.v1.presentation.BindingDeclaration_OrMutable =
+            this.binding,
         name: kotlin.String =
             this.name,
-        valueType: skirout.editor.v1.type_catalog.TypeTemplate =
-            this.valueType,
         access: skirout.editor.v1.presentation.PresentationInputAccess =
             this.access,
     ) = skirout.editor.v1.presentation.PresentationInput(
-        bindingId.toFrozen(),
+        binding.toFrozen(),
         name,
-        valueType,
         access,
         this._unrecognizedFields,
     );
@@ -25474,11 +25582,11 @@ class PresentationInput private constructor(
     fun copy() = this;
 
     override fun equals(other: kotlin.Any?): kotlin.Boolean {
-        return this === other || (other is skirout.editor.v1.presentation.PresentationInput && this.bindingId == other.bindingId && this.name == other.name && this.valueType == other.valueType && this.access == other.access);
+        return this === other || (other is skirout.editor.v1.presentation.PresentationInput && this.binding == other.binding && this.name == other.name && this.access == other.access);
     }
 
     override fun hashCode(): kotlin.Int {
-        return kotlin.collections.listOf<kotlin.Any?>(this.bindingId, this.name, this.valueType, this.access).hashCode();
+        return kotlin.collections.listOf<kotlin.Any?>(this.binding, this.name, this.access).hashCode();
     }
 
     override fun toString(): kotlin.String {
@@ -25492,12 +25600,10 @@ class PresentationInput private constructor(
     class Mutable internal constructor(
         _mustNameArguments: _MustNameArguments =
             _MustNameArguments,
-        override var bindingId: skirout.editor.v1.type_catalog.ExpressionBindingId_OrMutable =
-            skirout.editor.v1.type_catalog.ExpressionBindingId.partial(),
+        override var binding: skirout.editor.v1.presentation.BindingDeclaration_OrMutable =
+            skirout.editor.v1.presentation.BindingDeclaration.partial(),
         override var name: kotlin.String =
             "",
-        override var valueType: skirout.editor.v1.type_catalog.TypeTemplate =
-            skirout.editor.v1.type_catalog.TypeTemplate.UNKNOWN,
         override var access: skirout.editor.v1.presentation.PresentationInputAccess =
             skirout.editor.v1.presentation.PresentationInputAccess.UNKNOWN,
         internal var _unrecognizedFields: _UnrecognizedFields<skirout.editor.v1.presentation.PresentationInput>? =
@@ -25505,26 +25611,25 @@ class PresentationInput private constructor(
     ): skirout.editor.v1.presentation.PresentationInput_OrMutable {
         /** Returns a deeply immutable copy of this instance */
         override fun toFrozen() = skirout.editor.v1.presentation.PresentationInput(
-            bindingId = this.bindingId,
+            binding = this.binding,
             name = this.name,
-            valueType = this.valueType,
             access = this.access,
             _unrecognizedFields = this._unrecognizedFields,
         );
 
         /**
-         * If the value of [bindingId] is already mutable, returns it as-is.
-         * Otherwise, makes a mutable copy, assigns it back to [bindingId] and returns it.
+         * If the value of [binding] is already mutable, returns it as-is.
+         * Otherwise, makes a mutable copy, assigns it back to [binding] and returns it.
          */
-        val mutableBindingId: skirout.editor.v1.type_catalog.ExpressionBindingId.Mutable get() {
-            var value = this.bindingId;
+        val mutableBinding: skirout.editor.v1.presentation.BindingDeclaration.Mutable get() {
+            var value = this.binding;
             return when (value) {
-                is skirout.editor.v1.type_catalog.ExpressionBindingId -> {
+                is skirout.editor.v1.presentation.BindingDeclaration -> {
                     value = value.toMutable();
-                    this.bindingId = value;
+                    this.binding = value;
                     return value;
                 }
-                is skirout.editor.v1.type_catalog.ExpressionBindingId.Mutable -> value;
+                is skirout.editor.v1.presentation.BindingDeclaration.Mutable -> value;
             }
         }
     }
@@ -25532,9 +25637,8 @@ class PresentationInput private constructor(
     companion object {
         private val default =
             skirout.editor.v1.presentation.PresentationInput(
-                skirout.editor.v1.type_catalog.ExpressionBindingId.partial(),
+                skirout.editor.v1.presentation.BindingDeclaration.partial(),
                 "",
-                skirout.editor.v1.type_catalog.TypeTemplate.UNKNOWN,
                 skirout.editor.v1.presentation.PresentationInputAccess.UNKNOWN,
             );
 
@@ -25549,18 +25653,15 @@ class PresentationInput private constructor(
         fun partial(
             _mustNameArguments: _MustNameArguments =
                 _MustNameArguments,
-            bindingId: skirout.editor.v1.type_catalog.ExpressionBindingId_OrMutable =
-                skirout.editor.v1.type_catalog.ExpressionBindingId.partial(),
+            binding: skirout.editor.v1.presentation.BindingDeclaration_OrMutable =
+                skirout.editor.v1.presentation.BindingDeclaration.partial(),
             name: kotlin.String =
                 "",
-            valueType: skirout.editor.v1.type_catalog.TypeTemplate =
-                skirout.editor.v1.type_catalog.TypeTemplate.UNKNOWN,
             access: skirout.editor.v1.presentation.PresentationInputAccess =
                 skirout.editor.v1.presentation.PresentationInputAccess.UNKNOWN,
         ) = skirout.editor.v1.presentation.PresentationInput(
-            bindingId = bindingId,
+            binding = binding,
             name = name,
-            valueType = valueType,
             access = access,
             _unrecognizedFields = null,
         );
@@ -26632,7 +26733,7 @@ sealed interface SetControl_OrMutable {
     val itemPresentation: skirout.editor.v1.presentation.PresentationNode_OrMutable?;
     val allowAdd: kotlin.Boolean;
     val allowRemove: kotlin.Boolean;
-    val itemBindingId: skirout.editor.v1.type_catalog.ExpressionBindingId_OrMutable;
+    val itemBinding: skirout.editor.v1.presentation.BindingDeclaration_OrMutable;
     val appearance: skirout.editor.v1.presentation.CollectionAppearance_OrMutable?;
     val content: skirout.editor.v1.presentation.CollectionContent_OrMutable?;
 
@@ -26646,7 +26747,7 @@ class SetControl private constructor(
     override val itemPresentation: skirout.editor.v1.presentation.PresentationNode?,
     override val allowAdd: kotlin.Boolean,
     override val allowRemove: kotlin.Boolean,
-    override val itemBindingId: skirout.editor.v1.type_catalog.ExpressionBindingId,
+    override val itemBinding: skirout.editor.v1.presentation.BindingDeclaration,
     override val appearance: skirout.editor.v1.presentation.CollectionAppearance?,
     override val content: skirout.editor.v1.presentation.CollectionContent?,
     internal val _unrecognizedFields: _UnrecognizedFields<skirout.editor.v1.presentation.SetControl>? =
@@ -26659,7 +26760,7 @@ class SetControl private constructor(
         itemPresentation: skirout.editor.v1.presentation.PresentationNode_OrMutable?,
         allowAdd: kotlin.Boolean,
         allowRemove: kotlin.Boolean,
-        itemBindingId: skirout.editor.v1.type_catalog.ExpressionBindingId_OrMutable,
+        itemBinding: skirout.editor.v1.presentation.BindingDeclaration_OrMutable,
         appearance: skirout.editor.v1.presentation.CollectionAppearance_OrMutable?,
         content: skirout.editor.v1.presentation.CollectionContent_OrMutable?,
         _unrecognizedFields: _UnrecognizedFields<skirout.editor.v1.presentation.SetControl>? =
@@ -26669,7 +26770,7 @@ class SetControl private constructor(
         if (itemPresentation != null) itemPresentation.toFrozen() else null,
         allowAdd,
         allowRemove,
-        itemBindingId.toFrozen(),
+        itemBinding.toFrozen(),
         if (appearance != null) appearance.toFrozen() else null,
         if (content != null) content.toFrozen() else null,
         _unrecognizedFields,
@@ -26684,7 +26785,7 @@ class SetControl private constructor(
         itemPresentation = this.itemPresentation,
         allowAdd = this.allowAdd,
         allowRemove = this.allowRemove,
-        itemBindingId = this.itemBindingId,
+        itemBinding = this.itemBinding,
         appearance = this.appearance,
         content = this.content,
     );
@@ -26701,8 +26802,8 @@ class SetControl private constructor(
             this.allowAdd,
         allowRemove: kotlin.Boolean =
             this.allowRemove,
-        itemBindingId: skirout.editor.v1.type_catalog.ExpressionBindingId_OrMutable =
-            this.itemBindingId,
+        itemBinding: skirout.editor.v1.presentation.BindingDeclaration_OrMutable =
+            this.itemBinding,
         appearance: skirout.editor.v1.presentation.CollectionAppearance_OrMutable? =
             this.appearance,
         content: skirout.editor.v1.presentation.CollectionContent_OrMutable? =
@@ -26712,7 +26813,7 @@ class SetControl private constructor(
         if (itemPresentation != null) itemPresentation.toFrozen() else null,
         allowAdd,
         allowRemove,
-        itemBindingId.toFrozen(),
+        itemBinding.toFrozen(),
         if (appearance != null) appearance.toFrozen() else null,
         if (content != null) content.toFrozen() else null,
         this._unrecognizedFields,
@@ -26722,11 +26823,11 @@ class SetControl private constructor(
     fun copy() = this;
 
     override fun equals(other: kotlin.Any?): kotlin.Boolean {
-        return this === other || (other is skirout.editor.v1.presentation.SetControl && this.control == other.control && this.itemPresentation == other.itemPresentation && this.allowAdd == other.allowAdd && this.allowRemove == other.allowRemove && this.itemBindingId == other.itemBindingId && this.appearance == other.appearance && this.content == other.content);
+        return this === other || (other is skirout.editor.v1.presentation.SetControl && this.control == other.control && this.itemPresentation == other.itemPresentation && this.allowAdd == other.allowAdd && this.allowRemove == other.allowRemove && this.itemBinding == other.itemBinding && this.appearance == other.appearance && this.content == other.content);
     }
 
     override fun hashCode(): kotlin.Int {
-        return kotlin.collections.listOf<kotlin.Any?>(this.control, this.itemPresentation, this.allowAdd, this.allowRemove, this.itemBindingId, this.appearance, this.content).hashCode();
+        return kotlin.collections.listOf<kotlin.Any?>(this.control, this.itemPresentation, this.allowAdd, this.allowRemove, this.itemBinding, this.appearance, this.content).hashCode();
     }
 
     override fun toString(): kotlin.String {
@@ -26748,8 +26849,8 @@ class SetControl private constructor(
             false,
         override var allowRemove: kotlin.Boolean =
             false,
-        override var itemBindingId: skirout.editor.v1.type_catalog.ExpressionBindingId_OrMutable =
-            skirout.editor.v1.type_catalog.ExpressionBindingId.partial(),
+        override var itemBinding: skirout.editor.v1.presentation.BindingDeclaration_OrMutable =
+            skirout.editor.v1.presentation.BindingDeclaration.partial(),
         override var appearance: skirout.editor.v1.presentation.CollectionAppearance_OrMutable? =
             null,
         override var content: skirout.editor.v1.presentation.CollectionContent? =
@@ -26763,25 +26864,25 @@ class SetControl private constructor(
             itemPresentation = this.itemPresentation,
             allowAdd = this.allowAdd,
             allowRemove = this.allowRemove,
-            itemBindingId = this.itemBindingId,
+            itemBinding = this.itemBinding,
             appearance = this.appearance,
             content = this.content,
             _unrecognizedFields = this._unrecognizedFields,
         );
 
         /**
-         * If the value of [itemBindingId] is already mutable, returns it as-is.
-         * Otherwise, makes a mutable copy, assigns it back to [itemBindingId] and returns it.
+         * If the value of [itemBinding] is already mutable, returns it as-is.
+         * Otherwise, makes a mutable copy, assigns it back to [itemBinding] and returns it.
          */
-        val mutableItemBindingId: skirout.editor.v1.type_catalog.ExpressionBindingId.Mutable get() {
-            var value = this.itemBindingId;
+        val mutableItemBinding: skirout.editor.v1.presentation.BindingDeclaration.Mutable get() {
+            var value = this.itemBinding;
             return when (value) {
-                is skirout.editor.v1.type_catalog.ExpressionBindingId -> {
+                is skirout.editor.v1.presentation.BindingDeclaration -> {
                     value = value.toMutable();
-                    this.itemBindingId = value;
+                    this.itemBinding = value;
                     return value;
                 }
-                is skirout.editor.v1.type_catalog.ExpressionBindingId.Mutable -> value;
+                is skirout.editor.v1.presentation.BindingDeclaration.Mutable -> value;
             }
         }
     }
@@ -26793,7 +26894,7 @@ class SetControl private constructor(
                 null,
                 false,
                 false,
-                skirout.editor.v1.type_catalog.ExpressionBindingId.partial(),
+                skirout.editor.v1.presentation.BindingDeclaration.partial(),
                 null,
                 null,
             );
@@ -26817,8 +26918,8 @@ class SetControl private constructor(
                 false,
             allowRemove: kotlin.Boolean =
                 false,
-            itemBindingId: skirout.editor.v1.type_catalog.ExpressionBindingId_OrMutable =
-                skirout.editor.v1.type_catalog.ExpressionBindingId.partial(),
+            itemBinding: skirout.editor.v1.presentation.BindingDeclaration_OrMutable =
+                skirout.editor.v1.presentation.BindingDeclaration.partial(),
             appearance: skirout.editor.v1.presentation.CollectionAppearance_OrMutable? =
                 null,
             content: skirout.editor.v1.presentation.CollectionContent_OrMutable? =
@@ -26828,7 +26929,7 @@ class SetControl private constructor(
             itemPresentation = itemPresentation,
             allowAdd = allowAdd,
             allowRemove = allowRemove,
-            itemBindingId = itemBindingId,
+            itemBinding = itemBinding,
             appearance = appearance,
             content = content,
             _unrecognizedFields = null,
@@ -26950,7 +27051,7 @@ sealed interface ResourcesElement_OrMutable {
     val control: skirout.editor.v1.presentation.BoundControl_OrMutable;
     val layout: skirout.editor.v1.presentation.ResourcesLayout;
     val order: skirout.editor.v1.expression.ExpressionNode?;
-    val itemBindingId: skirout.editor.v1.type_catalog.ExpressionBindingId_OrMutable;
+    val itemBinding: skirout.editor.v1.presentation.BindingDeclaration_OrMutable;
 
     fun toFrozen(): skirout.editor.v1.presentation.ResourcesElement;
 }
@@ -26958,7 +27059,7 @@ sealed interface ResourcesElement_OrMutable {
 /**
  * Lays out the resources of a bound link field, such as the elements of a page or the books
  * of the library. Every member renders through its item presentation. Adding and removing
- * members edits the link. `order` is evaluated with `item_binding_id` bound to each member's
+ * members edits the link. `order` is evaluated with `item_binding` bound to each member's
  * link and sorts the members by its result; without it members keep link order.
  *
  * Deeply immutable.
@@ -26968,7 +27069,7 @@ class ResourcesElement private constructor(
     override val control: skirout.editor.v1.presentation.BoundControl,
     override val layout: skirout.editor.v1.presentation.ResourcesLayout,
     override val order: skirout.editor.v1.expression.ExpressionNode?,
-    override val itemBindingId: skirout.editor.v1.type_catalog.ExpressionBindingId,
+    override val itemBinding: skirout.editor.v1.presentation.BindingDeclaration,
     internal val _unrecognizedFields: _UnrecognizedFields<skirout.editor.v1.presentation.ResourcesElement>? =
         null,
 ): skirout.editor.v1.presentation.ResourcesElement_OrMutable {
@@ -26978,14 +27079,14 @@ class ResourcesElement private constructor(
         control: skirout.editor.v1.presentation.BoundControl_OrMutable,
         layout: skirout.editor.v1.presentation.ResourcesLayout,
         order: skirout.editor.v1.expression.ExpressionNode?,
-        itemBindingId: skirout.editor.v1.type_catalog.ExpressionBindingId_OrMutable,
+        itemBinding: skirout.editor.v1.presentation.BindingDeclaration_OrMutable,
         _unrecognizedFields: _UnrecognizedFields<skirout.editor.v1.presentation.ResourcesElement>? =
             null,
     ): this(
         control.toFrozen(),
         layout,
         order,
-        itemBindingId.toFrozen(),
+        itemBinding.toFrozen(),
         _unrecognizedFields,
     ) {}
 
@@ -26997,7 +27098,7 @@ class ResourcesElement private constructor(
         control = this.control,
         layout = this.layout,
         order = this.order,
-        itemBindingId = this.itemBindingId,
+        itemBinding = this.itemBinding,
     );
 
     /** Returns a shallow copy of this instance with the specified fields replaced. */
@@ -27010,13 +27111,13 @@ class ResourcesElement private constructor(
             this.layout,
         order: skirout.editor.v1.expression.ExpressionNode? =
             this.order,
-        itemBindingId: skirout.editor.v1.type_catalog.ExpressionBindingId_OrMutable =
-            this.itemBindingId,
+        itemBinding: skirout.editor.v1.presentation.BindingDeclaration_OrMutable =
+            this.itemBinding,
     ) = skirout.editor.v1.presentation.ResourcesElement(
         control.toFrozen(),
         layout,
         order,
-        itemBindingId.toFrozen(),
+        itemBinding.toFrozen(),
         this._unrecognizedFields,
     );
 
@@ -27024,11 +27125,11 @@ class ResourcesElement private constructor(
     fun copy() = this;
 
     override fun equals(other: kotlin.Any?): kotlin.Boolean {
-        return this === other || (other is skirout.editor.v1.presentation.ResourcesElement && this.control == other.control && this.layout == other.layout && this.order == other.order && this.itemBindingId == other.itemBindingId);
+        return this === other || (other is skirout.editor.v1.presentation.ResourcesElement && this.control == other.control && this.layout == other.layout && this.order == other.order && this.itemBinding == other.itemBinding);
     }
 
     override fun hashCode(): kotlin.Int {
-        return kotlin.collections.listOf<kotlin.Any?>(this.control, this.layout, this.order, this.itemBindingId).hashCode();
+        return kotlin.collections.listOf<kotlin.Any?>(this.control, this.layout, this.order, this.itemBinding).hashCode();
     }
 
     override fun toString(): kotlin.String {
@@ -27048,8 +27149,8 @@ class ResourcesElement private constructor(
             skirout.editor.v1.presentation.ResourcesLayout.UNKNOWN,
         override var order: skirout.editor.v1.expression.ExpressionNode? =
             null,
-        override var itemBindingId: skirout.editor.v1.type_catalog.ExpressionBindingId_OrMutable =
-            skirout.editor.v1.type_catalog.ExpressionBindingId.partial(),
+        override var itemBinding: skirout.editor.v1.presentation.BindingDeclaration_OrMutable =
+            skirout.editor.v1.presentation.BindingDeclaration.partial(),
         internal var _unrecognizedFields: _UnrecognizedFields<skirout.editor.v1.presentation.ResourcesElement>? =
             null,
     ): skirout.editor.v1.presentation.ResourcesElement_OrMutable {
@@ -27058,23 +27159,23 @@ class ResourcesElement private constructor(
             control = this.control,
             layout = this.layout,
             order = this.order,
-            itemBindingId = this.itemBindingId,
+            itemBinding = this.itemBinding,
             _unrecognizedFields = this._unrecognizedFields,
         );
 
         /**
-         * If the value of [itemBindingId] is already mutable, returns it as-is.
-         * Otherwise, makes a mutable copy, assigns it back to [itemBindingId] and returns it.
+         * If the value of [itemBinding] is already mutable, returns it as-is.
+         * Otherwise, makes a mutable copy, assigns it back to [itemBinding] and returns it.
          */
-        val mutableItemBindingId: skirout.editor.v1.type_catalog.ExpressionBindingId.Mutable get() {
-            var value = this.itemBindingId;
+        val mutableItemBinding: skirout.editor.v1.presentation.BindingDeclaration.Mutable get() {
+            var value = this.itemBinding;
             return when (value) {
-                is skirout.editor.v1.type_catalog.ExpressionBindingId -> {
+                is skirout.editor.v1.presentation.BindingDeclaration -> {
                     value = value.toMutable();
-                    this.itemBindingId = value;
+                    this.itemBinding = value;
                     return value;
                 }
-                is skirout.editor.v1.type_catalog.ExpressionBindingId.Mutable -> value;
+                is skirout.editor.v1.presentation.BindingDeclaration.Mutable -> value;
             }
         }
     }
@@ -27085,7 +27186,7 @@ class ResourcesElement private constructor(
                 skirout.editor.v1.presentation.BoundControl.partial(),
                 skirout.editor.v1.presentation.ResourcesLayout.UNKNOWN,
                 null,
-                skirout.editor.v1.type_catalog.ExpressionBindingId.partial(),
+                skirout.editor.v1.presentation.BindingDeclaration.partial(),
             );
 
         /** Returns an instance with all fields set to their default values. */
@@ -27105,13 +27206,13 @@ class ResourcesElement private constructor(
                 skirout.editor.v1.presentation.ResourcesLayout.UNKNOWN,
             order: skirout.editor.v1.expression.ExpressionNode? =
                 null,
-            itemBindingId: skirout.editor.v1.type_catalog.ExpressionBindingId_OrMutable =
-                skirout.editor.v1.type_catalog.ExpressionBindingId.partial(),
+            itemBinding: skirout.editor.v1.presentation.BindingDeclaration_OrMutable =
+                skirout.editor.v1.presentation.BindingDeclaration.partial(),
         ) = skirout.editor.v1.presentation.ResourcesElement(
             control = control,
             layout = layout,
             order = order,
-            itemBindingId = itemBindingId,
+            itemBinding = itemBinding,
             _unrecognizedFields = null,
         );
 
@@ -27305,14 +27406,14 @@ sealed class ResourcesLayout private constructor() {
                 _MustNameArguments,
             path: skirout.editor.v1.type_catalog.ValuePath_OrMutable,
             group: skirout.editor.v1.presentation.PresentationNode_OrMutable?,
-            groupBindingId: skirout.editor.v1.type_catalog.ExpressionBindingId_OrMutable,
+            groupBinding: skirout.editor.v1.presentation.BindingDeclaration_OrMutable,
             connectors: skirout.editor.v1.presentation.HierarchySequenceLayout_OrMutable?,
             initiallyExpanded: kotlin.Boolean,
         ) = TreeWrapper(
             skirout.editor.v1.presentation.TreeResourcesLayout(
                 path = path,
                 group = group,
-                groupBindingId = groupBindingId,
+                groupBinding = groupBinding,
                 connectors = connectors,
                 initiallyExpanded = initiallyExpanded,
             )
@@ -30621,7 +30722,7 @@ class NumericInteractionOptions private constructor(
 }
 
 sealed interface ExpressionMapping_OrMutable {
-    val inputBinding: skirout.editor.v1.type_catalog.ExpressionBindingId_OrMutable;
+    val inputBinding: skirout.editor.v1.presentation.BindingDeclaration_OrMutable;
     val body: skirout.editor.v1.expression.ExpressionNode;
 
     fun toFrozen(): skirout.editor.v1.presentation.ExpressionMapping;
@@ -30630,7 +30731,7 @@ sealed interface ExpressionMapping_OrMutable {
 /** Deeply immutable. */
 @kotlin.Suppress("UNUSED_PARAMETER")
 class ExpressionMapping private constructor(
-    override val inputBinding: skirout.editor.v1.type_catalog.ExpressionBindingId,
+    override val inputBinding: skirout.editor.v1.presentation.BindingDeclaration,
     override val body: skirout.editor.v1.expression.ExpressionNode,
     internal val _unrecognizedFields: _UnrecognizedFields<skirout.editor.v1.presentation.ExpressionMapping>? =
         null,
@@ -30638,7 +30739,7 @@ class ExpressionMapping private constructor(
     constructor(
         _mustNameArguments: _MustNameArguments =
             _MustNameArguments,
-        inputBinding: skirout.editor.v1.type_catalog.ExpressionBindingId_OrMutable,
+        inputBinding: skirout.editor.v1.presentation.BindingDeclaration_OrMutable,
         body: skirout.editor.v1.expression.ExpressionNode,
         _unrecognizedFields: _UnrecognizedFields<skirout.editor.v1.presentation.ExpressionMapping>? =
             null,
@@ -30661,7 +30762,7 @@ class ExpressionMapping private constructor(
     fun copy(
         _mustNameArguments: _MustNameArguments =
             _MustNameArguments,
-        inputBinding: skirout.editor.v1.type_catalog.ExpressionBindingId_OrMutable =
+        inputBinding: skirout.editor.v1.presentation.BindingDeclaration_OrMutable =
             this.inputBinding,
         body: skirout.editor.v1.expression.ExpressionNode =
             this.body,
@@ -30693,8 +30794,8 @@ class ExpressionMapping private constructor(
     class Mutable internal constructor(
         _mustNameArguments: _MustNameArguments =
             _MustNameArguments,
-        override var inputBinding: skirout.editor.v1.type_catalog.ExpressionBindingId_OrMutable =
-            skirout.editor.v1.type_catalog.ExpressionBindingId.partial(),
+        override var inputBinding: skirout.editor.v1.presentation.BindingDeclaration_OrMutable =
+            skirout.editor.v1.presentation.BindingDeclaration.partial(),
         override var body: skirout.editor.v1.expression.ExpressionNode =
             skirout.editor.v1.expression.ExpressionNode.UNKNOWN,
         internal var _unrecognizedFields: _UnrecognizedFields<skirout.editor.v1.presentation.ExpressionMapping>? =
@@ -30711,15 +30812,15 @@ class ExpressionMapping private constructor(
          * If the value of [inputBinding] is already mutable, returns it as-is.
          * Otherwise, makes a mutable copy, assigns it back to [inputBinding] and returns it.
          */
-        val mutableInputBinding: skirout.editor.v1.type_catalog.ExpressionBindingId.Mutable get() {
+        val mutableInputBinding: skirout.editor.v1.presentation.BindingDeclaration.Mutable get() {
             var value = this.inputBinding;
             return when (value) {
-                is skirout.editor.v1.type_catalog.ExpressionBindingId -> {
+                is skirout.editor.v1.presentation.BindingDeclaration -> {
                     value = value.toMutable();
                     this.inputBinding = value;
                     return value;
                 }
-                is skirout.editor.v1.type_catalog.ExpressionBindingId.Mutable -> value;
+                is skirout.editor.v1.presentation.BindingDeclaration.Mutable -> value;
             }
         }
     }
@@ -30727,7 +30828,7 @@ class ExpressionMapping private constructor(
     companion object {
         private val default =
             skirout.editor.v1.presentation.ExpressionMapping(
-                skirout.editor.v1.type_catalog.ExpressionBindingId.partial(),
+                skirout.editor.v1.presentation.BindingDeclaration.partial(),
                 skirout.editor.v1.expression.ExpressionNode.UNKNOWN,
             );
 
@@ -30742,8 +30843,8 @@ class ExpressionMapping private constructor(
         fun partial(
             _mustNameArguments: _MustNameArguments =
                 _MustNameArguments,
-            inputBinding: skirout.editor.v1.type_catalog.ExpressionBindingId_OrMutable =
-                skirout.editor.v1.type_catalog.ExpressionBindingId.partial(),
+            inputBinding: skirout.editor.v1.presentation.BindingDeclaration_OrMutable =
+                skirout.editor.v1.presentation.BindingDeclaration.partial(),
             body: skirout.editor.v1.expression.ExpressionNode =
                 skirout.editor.v1.expression.ExpressionNode.UNKNOWN,
         ) = skirout.editor.v1.presentation.ExpressionMapping(
@@ -32500,7 +32601,7 @@ sealed interface SelectInteractionOptions_OrMutable {
     val filtering: kotlin.Boolean?;
     val maximumMenuHeight: skirout.editor.v1.expression.ExpressionNode?;
     val selectedTextStyle: skirout.editor.v1.presentation.InputTextStyle_OrMutable?;
-    val queryBindingId: skirout.editor.v1.type_catalog.ExpressionBindingId_OrMutable?;
+    val queryBinding: skirout.editor.v1.presentation.BindingDeclaration_OrMutable?;
     val customValue: skirout.editor.v1.expression.ExpressionNode?;
     val optionOverrides: kotlin.collections.List<skirout.editor.v1.presentation.ChoiceOptionAppearance_OrMutable>;
 
@@ -32514,7 +32615,7 @@ class SelectInteractionOptions private constructor(
     override val filtering: kotlin.Boolean?,
     override val maximumMenuHeight: skirout.editor.v1.expression.ExpressionNode?,
     override val selectedTextStyle: skirout.editor.v1.presentation.InputTextStyle?,
-    override val queryBindingId: skirout.editor.v1.type_catalog.ExpressionBindingId?,
+    override val queryBinding: skirout.editor.v1.presentation.BindingDeclaration?,
     override val customValue: skirout.editor.v1.expression.ExpressionNode?,
     override val optionOverrides: build.skir.KeyedList<skirout.editor.v1.presentation.ChoiceOptionAppearance, kotlin.String>,
     internal val _unrecognizedFields: _UnrecognizedFields<skirout.editor.v1.presentation.SelectInteractionOptions>? =
@@ -32527,7 +32628,7 @@ class SelectInteractionOptions private constructor(
         filtering: kotlin.Boolean?,
         maximumMenuHeight: skirout.editor.v1.expression.ExpressionNode?,
         selectedTextStyle: skirout.editor.v1.presentation.InputTextStyle_OrMutable?,
-        queryBindingId: skirout.editor.v1.type_catalog.ExpressionBindingId_OrMutable?,
+        queryBinding: skirout.editor.v1.presentation.BindingDeclaration_OrMutable?,
         customValue: skirout.editor.v1.expression.ExpressionNode?,
         optionOverrides: kotlin.collections.Iterable<skirout.editor.v1.presentation.ChoiceOptionAppearance_OrMutable>,
         _unrecognizedFields: _UnrecognizedFields<skirout.editor.v1.presentation.SelectInteractionOptions>? =
@@ -32537,7 +32638,7 @@ class SelectInteractionOptions private constructor(
         filtering,
         maximumMenuHeight,
         if (selectedTextStyle != null) selectedTextStyle.toFrozen() else null,
-        if (queryBindingId != null) queryBindingId.toFrozen() else null,
+        if (queryBinding != null) queryBinding.toFrozen() else null,
         customValue,
         build.skir.internal.toKeyedList(optionOverrides, "optionId", { it.optionId }, { it.toFrozen() }),
         _unrecognizedFields,
@@ -32552,7 +32653,7 @@ class SelectInteractionOptions private constructor(
         filtering = this.filtering,
         maximumMenuHeight = this.maximumMenuHeight,
         selectedTextStyle = this.selectedTextStyle,
-        queryBindingId = this.queryBindingId,
+        queryBinding = this.queryBinding,
         customValue = this.customValue,
         optionOverrides = this.optionOverrides,
     );
@@ -32569,8 +32670,8 @@ class SelectInteractionOptions private constructor(
             this.maximumMenuHeight,
         selectedTextStyle: skirout.editor.v1.presentation.InputTextStyle_OrMutable? =
             this.selectedTextStyle,
-        queryBindingId: skirout.editor.v1.type_catalog.ExpressionBindingId_OrMutable? =
-            this.queryBindingId,
+        queryBinding: skirout.editor.v1.presentation.BindingDeclaration_OrMutable? =
+            this.queryBinding,
         customValue: skirout.editor.v1.expression.ExpressionNode? =
             this.customValue,
         optionOverrides: kotlin.collections.Iterable<skirout.editor.v1.presentation.ChoiceOptionAppearance_OrMutable> =
@@ -32580,7 +32681,7 @@ class SelectInteractionOptions private constructor(
         filtering,
         maximumMenuHeight,
         if (selectedTextStyle != null) selectedTextStyle.toFrozen() else null,
-        if (queryBindingId != null) queryBindingId.toFrozen() else null,
+        if (queryBinding != null) queryBinding.toFrozen() else null,
         customValue,
         build.skir.internal.toKeyedList(optionOverrides, "optionId", { it.optionId }, { it.toFrozen() }),
         this._unrecognizedFields,
@@ -32590,11 +32691,11 @@ class SelectInteractionOptions private constructor(
     fun copy() = this;
 
     override fun equals(other: kotlin.Any?): kotlin.Boolean {
-        return this === other || (other is skirout.editor.v1.presentation.SelectInteractionOptions && this.presentation == other.presentation && this.filtering == other.filtering && this.maximumMenuHeight == other.maximumMenuHeight && this.selectedTextStyle == other.selectedTextStyle && this.queryBindingId == other.queryBindingId && this.customValue == other.customValue && this.optionOverrides == other.optionOverrides);
+        return this === other || (other is skirout.editor.v1.presentation.SelectInteractionOptions && this.presentation == other.presentation && this.filtering == other.filtering && this.maximumMenuHeight == other.maximumMenuHeight && this.selectedTextStyle == other.selectedTextStyle && this.queryBinding == other.queryBinding && this.customValue == other.customValue && this.optionOverrides == other.optionOverrides);
     }
 
     override fun hashCode(): kotlin.Int {
-        return kotlin.collections.listOf<kotlin.Any?>(this.presentation, this.filtering, this.maximumMenuHeight, this.selectedTextStyle, this.queryBindingId, this.customValue, this.optionOverrides).hashCode();
+        return kotlin.collections.listOf<kotlin.Any?>(this.presentation, this.filtering, this.maximumMenuHeight, this.selectedTextStyle, this.queryBinding, this.customValue, this.optionOverrides).hashCode();
     }
 
     override fun toString(): kotlin.String {
@@ -32616,7 +32717,7 @@ class SelectInteractionOptions private constructor(
             null,
         override var selectedTextStyle: skirout.editor.v1.presentation.InputTextStyle_OrMutable? =
             null,
-        override var queryBindingId: skirout.editor.v1.type_catalog.ExpressionBindingId_OrMutable? =
+        override var queryBinding: skirout.editor.v1.presentation.BindingDeclaration_OrMutable? =
             null,
         override var customValue: skirout.editor.v1.expression.ExpressionNode? =
             null,
@@ -32631,7 +32732,7 @@ class SelectInteractionOptions private constructor(
             filtering = this.filtering,
             maximumMenuHeight = this.maximumMenuHeight,
             selectedTextStyle = this.selectedTextStyle,
-            queryBindingId = this.queryBindingId,
+            queryBinding = this.queryBinding,
             customValue = this.customValue,
             optionOverrides = this.optionOverrides,
             _unrecognizedFields = this._unrecognizedFields,
@@ -32669,7 +32770,7 @@ class SelectInteractionOptions private constructor(
                 null,
             selectedTextStyle: skirout.editor.v1.presentation.InputTextStyle_OrMutable? =
                 null,
-            queryBindingId: skirout.editor.v1.type_catalog.ExpressionBindingId_OrMutable? =
+            queryBinding: skirout.editor.v1.presentation.BindingDeclaration_OrMutable? =
                 null,
             customValue: skirout.editor.v1.expression.ExpressionNode? =
                 null,
@@ -32680,7 +32781,7 @@ class SelectInteractionOptions private constructor(
             filtering = filtering,
             maximumMenuHeight = maximumMenuHeight,
             selectedTextStyle = selectedTextStyle,
-            queryBindingId = queryBindingId,
+            queryBinding = queryBinding,
             customValue = customValue,
             optionOverrides = optionOverrides,
             _unrecognizedFields = null,
@@ -37516,39 +37617,35 @@ sealed class PresentationContextSource private constructor() {
 }
 
 sealed interface PresentationContextInput_OrMutable {
-    val bindingId: skirout.editor.v1.type_catalog.ExpressionBindingId_OrMutable;
+    val binding: skirout.editor.v1.presentation.BindingDeclaration_OrMutable;
     val source: skirout.editor.v1.presentation.PresentationContextSource;
-    val valueType: skirout.editor.v1.type_catalog.TypeUse;
 
     fun toFrozen(): skirout.editor.v1.presentation.PresentationContextInput;
 }
 
 /**
- * A value a presentation reads from its surroundings. Expressions read it through `binding_id`;
+ * A value a presentation reads from its surroundings. Expressions read it through `binding`;
  * `source` says who supplies it, so a host fills its declared inputs without sharing binding names.
  *
  * Deeply immutable.
  */
 @kotlin.Suppress("UNUSED_PARAMETER")
 class PresentationContextInput private constructor(
-    override val bindingId: skirout.editor.v1.type_catalog.ExpressionBindingId,
+    override val binding: skirout.editor.v1.presentation.BindingDeclaration,
     override val source: skirout.editor.v1.presentation.PresentationContextSource,
-    override val valueType: skirout.editor.v1.type_catalog.TypeUse,
     internal val _unrecognizedFields: _UnrecognizedFields<skirout.editor.v1.presentation.PresentationContextInput>? =
         null,
 ): skirout.editor.v1.presentation.PresentationContextInput_OrMutable {
     constructor(
         _mustNameArguments: _MustNameArguments =
             _MustNameArguments,
-        bindingId: skirout.editor.v1.type_catalog.ExpressionBindingId_OrMutable,
+        binding: skirout.editor.v1.presentation.BindingDeclaration_OrMutable,
         source: skirout.editor.v1.presentation.PresentationContextSource,
-        valueType: skirout.editor.v1.type_catalog.TypeUse,
         _unrecognizedFields: _UnrecognizedFields<skirout.editor.v1.presentation.PresentationContextInput>? =
             null,
     ): this(
-        bindingId.toFrozen(),
+        binding.toFrozen(),
         source,
-        valueType,
         _unrecognizedFields,
     ) {}
 
@@ -37557,25 +37654,21 @@ class PresentationContextInput private constructor(
 
     /** Returns a mutable shallow copy of this instance */
     fun toMutable() = Mutable(
-        bindingId = this.bindingId,
+        binding = this.binding,
         source = this.source,
-        valueType = this.valueType,
     );
 
     /** Returns a shallow copy of this instance with the specified fields replaced. */
     fun copy(
         _mustNameArguments: _MustNameArguments =
             _MustNameArguments,
-        bindingId: skirout.editor.v1.type_catalog.ExpressionBindingId_OrMutable =
-            this.bindingId,
+        binding: skirout.editor.v1.presentation.BindingDeclaration_OrMutable =
+            this.binding,
         source: skirout.editor.v1.presentation.PresentationContextSource =
             this.source,
-        valueType: skirout.editor.v1.type_catalog.TypeUse =
-            this.valueType,
     ) = skirout.editor.v1.presentation.PresentationContextInput(
-        bindingId.toFrozen(),
+        binding.toFrozen(),
         source,
-        valueType,
         this._unrecognizedFields,
     );
 
@@ -37583,11 +37676,11 @@ class PresentationContextInput private constructor(
     fun copy() = this;
 
     override fun equals(other: kotlin.Any?): kotlin.Boolean {
-        return this === other || (other is skirout.editor.v1.presentation.PresentationContextInput && this.bindingId == other.bindingId && this.source == other.source && this.valueType == other.valueType);
+        return this === other || (other is skirout.editor.v1.presentation.PresentationContextInput && this.binding == other.binding && this.source == other.source);
     }
 
     override fun hashCode(): kotlin.Int {
-        return kotlin.collections.listOf<kotlin.Any?>(this.bindingId, this.source, this.valueType).hashCode();
+        return kotlin.collections.listOf<kotlin.Any?>(this.binding, this.source).hashCode();
     }
 
     override fun toString(): kotlin.String {
@@ -37601,36 +37694,33 @@ class PresentationContextInput private constructor(
     class Mutable internal constructor(
         _mustNameArguments: _MustNameArguments =
             _MustNameArguments,
-        override var bindingId: skirout.editor.v1.type_catalog.ExpressionBindingId_OrMutable =
-            skirout.editor.v1.type_catalog.ExpressionBindingId.partial(),
+        override var binding: skirout.editor.v1.presentation.BindingDeclaration_OrMutable =
+            skirout.editor.v1.presentation.BindingDeclaration.partial(),
         override var source: skirout.editor.v1.presentation.PresentationContextSource =
             skirout.editor.v1.presentation.PresentationContextSource.UNKNOWN,
-        override var valueType: skirout.editor.v1.type_catalog.TypeUse =
-            skirout.editor.v1.type_catalog.TypeUse.UNKNOWN,
         internal var _unrecognizedFields: _UnrecognizedFields<skirout.editor.v1.presentation.PresentationContextInput>? =
             null,
     ): skirout.editor.v1.presentation.PresentationContextInput_OrMutable {
         /** Returns a deeply immutable copy of this instance */
         override fun toFrozen() = skirout.editor.v1.presentation.PresentationContextInput(
-            bindingId = this.bindingId,
+            binding = this.binding,
             source = this.source,
-            valueType = this.valueType,
             _unrecognizedFields = this._unrecognizedFields,
         );
 
         /**
-         * If the value of [bindingId] is already mutable, returns it as-is.
-         * Otherwise, makes a mutable copy, assigns it back to [bindingId] and returns it.
+         * If the value of [binding] is already mutable, returns it as-is.
+         * Otherwise, makes a mutable copy, assigns it back to [binding] and returns it.
          */
-        val mutableBindingId: skirout.editor.v1.type_catalog.ExpressionBindingId.Mutable get() {
-            var value = this.bindingId;
+        val mutableBinding: skirout.editor.v1.presentation.BindingDeclaration.Mutable get() {
+            var value = this.binding;
             return when (value) {
-                is skirout.editor.v1.type_catalog.ExpressionBindingId -> {
+                is skirout.editor.v1.presentation.BindingDeclaration -> {
                     value = value.toMutable();
-                    this.bindingId = value;
+                    this.binding = value;
                     return value;
                 }
-                is skirout.editor.v1.type_catalog.ExpressionBindingId.Mutable -> value;
+                is skirout.editor.v1.presentation.BindingDeclaration.Mutable -> value;
             }
         }
     }
@@ -37638,9 +37728,8 @@ class PresentationContextInput private constructor(
     companion object {
         private val default =
             skirout.editor.v1.presentation.PresentationContextInput(
-                skirout.editor.v1.type_catalog.ExpressionBindingId.partial(),
+                skirout.editor.v1.presentation.BindingDeclaration.partial(),
                 skirout.editor.v1.presentation.PresentationContextSource.UNKNOWN,
-                skirout.editor.v1.type_catalog.TypeUse.UNKNOWN,
             );
 
         /** Returns an instance with all fields set to their default values. */
@@ -37654,16 +37743,13 @@ class PresentationContextInput private constructor(
         fun partial(
             _mustNameArguments: _MustNameArguments =
                 _MustNameArguments,
-            bindingId: skirout.editor.v1.type_catalog.ExpressionBindingId_OrMutable =
-                skirout.editor.v1.type_catalog.ExpressionBindingId.partial(),
+            binding: skirout.editor.v1.presentation.BindingDeclaration_OrMutable =
+                skirout.editor.v1.presentation.BindingDeclaration.partial(),
             source: skirout.editor.v1.presentation.PresentationContextSource =
                 skirout.editor.v1.presentation.PresentationContextSource.UNKNOWN,
-            valueType: skirout.editor.v1.type_catalog.TypeUse =
-                skirout.editor.v1.type_catalog.TypeUse.UNKNOWN,
         ) = skirout.editor.v1.presentation.PresentationContextInput(
-            bindingId = bindingId,
+            binding = binding,
             source = source,
-            valueType = valueType,
             _unrecognizedFields = null,
         );
 
@@ -38350,7 +38436,7 @@ class GridResourcesLayout private constructor(
 sealed interface TreeResourcesLayout_OrMutable {
     val path: skirout.editor.v1.type_catalog.ValuePath_OrMutable;
     val group: skirout.editor.v1.presentation.PresentationNode_OrMutable?;
-    val groupBindingId: skirout.editor.v1.type_catalog.ExpressionBindingId_OrMutable;
+    val groupBinding: skirout.editor.v1.presentation.BindingDeclaration_OrMutable;
     val connectors: skirout.editor.v1.presentation.HierarchySequenceLayout_OrMutable?;
     val initiallyExpanded: kotlin.Boolean;
 
@@ -38359,7 +38445,7 @@ sealed interface TreeResourcesLayout_OrMutable {
 
 /**
  * Groups members by the hierarchy path at `path`, relative to each member. `group` renders
- * each group header with `group_binding_id` bound to a HierarchyGroup value. Dropping a member
+ * each group header with `group_binding` bound to a HierarchyGroup value. Dropping a member
  * onto a group rewrites its path field.
  *
  * Deeply immutable.
@@ -38368,7 +38454,7 @@ sealed interface TreeResourcesLayout_OrMutable {
 class TreeResourcesLayout private constructor(
     override val path: skirout.editor.v1.type_catalog.ValuePath,
     override val group: skirout.editor.v1.presentation.PresentationNode?,
-    override val groupBindingId: skirout.editor.v1.type_catalog.ExpressionBindingId,
+    override val groupBinding: skirout.editor.v1.presentation.BindingDeclaration,
     override val connectors: skirout.editor.v1.presentation.HierarchySequenceLayout?,
     override val initiallyExpanded: kotlin.Boolean,
     internal val _unrecognizedFields: _UnrecognizedFields<skirout.editor.v1.presentation.TreeResourcesLayout>? =
@@ -38379,7 +38465,7 @@ class TreeResourcesLayout private constructor(
             _MustNameArguments,
         path: skirout.editor.v1.type_catalog.ValuePath_OrMutable,
         group: skirout.editor.v1.presentation.PresentationNode_OrMutable?,
-        groupBindingId: skirout.editor.v1.type_catalog.ExpressionBindingId_OrMutable,
+        groupBinding: skirout.editor.v1.presentation.BindingDeclaration_OrMutable,
         connectors: skirout.editor.v1.presentation.HierarchySequenceLayout_OrMutable?,
         initiallyExpanded: kotlin.Boolean,
         _unrecognizedFields: _UnrecognizedFields<skirout.editor.v1.presentation.TreeResourcesLayout>? =
@@ -38387,7 +38473,7 @@ class TreeResourcesLayout private constructor(
     ): this(
         path.toFrozen(),
         if (group != null) group.toFrozen() else null,
-        groupBindingId.toFrozen(),
+        groupBinding.toFrozen(),
         if (connectors != null) connectors.toFrozen() else null,
         initiallyExpanded,
         _unrecognizedFields,
@@ -38400,7 +38486,7 @@ class TreeResourcesLayout private constructor(
     fun toMutable() = Mutable(
         path = this.path,
         group = this.group,
-        groupBindingId = this.groupBindingId,
+        groupBinding = this.groupBinding,
         connectors = this.connectors,
         initiallyExpanded = this.initiallyExpanded,
     );
@@ -38413,8 +38499,8 @@ class TreeResourcesLayout private constructor(
             this.path,
         group: skirout.editor.v1.presentation.PresentationNode_OrMutable? =
             this.group,
-        groupBindingId: skirout.editor.v1.type_catalog.ExpressionBindingId_OrMutable =
-            this.groupBindingId,
+        groupBinding: skirout.editor.v1.presentation.BindingDeclaration_OrMutable =
+            this.groupBinding,
         connectors: skirout.editor.v1.presentation.HierarchySequenceLayout_OrMutable? =
             this.connectors,
         initiallyExpanded: kotlin.Boolean =
@@ -38422,7 +38508,7 @@ class TreeResourcesLayout private constructor(
     ) = skirout.editor.v1.presentation.TreeResourcesLayout(
         path.toFrozen(),
         if (group != null) group.toFrozen() else null,
-        groupBindingId.toFrozen(),
+        groupBinding.toFrozen(),
         if (connectors != null) connectors.toFrozen() else null,
         initiallyExpanded,
         this._unrecognizedFields,
@@ -38432,11 +38518,11 @@ class TreeResourcesLayout private constructor(
     fun copy() = this;
 
     override fun equals(other: kotlin.Any?): kotlin.Boolean {
-        return this === other || (other is skirout.editor.v1.presentation.TreeResourcesLayout && this.path == other.path && this.group == other.group && this.groupBindingId == other.groupBindingId && this.connectors == other.connectors && this.initiallyExpanded == other.initiallyExpanded);
+        return this === other || (other is skirout.editor.v1.presentation.TreeResourcesLayout && this.path == other.path && this.group == other.group && this.groupBinding == other.groupBinding && this.connectors == other.connectors && this.initiallyExpanded == other.initiallyExpanded);
     }
 
     override fun hashCode(): kotlin.Int {
-        return kotlin.collections.listOf<kotlin.Any?>(this.path, this.group, this.groupBindingId, this.connectors, this.initiallyExpanded).hashCode();
+        return kotlin.collections.listOf<kotlin.Any?>(this.path, this.group, this.groupBinding, this.connectors, this.initiallyExpanded).hashCode();
     }
 
     override fun toString(): kotlin.String {
@@ -38454,8 +38540,8 @@ class TreeResourcesLayout private constructor(
             skirout.editor.v1.type_catalog.ValuePath.partial(),
         override var group: skirout.editor.v1.presentation.PresentationNode? =
             null,
-        override var groupBindingId: skirout.editor.v1.type_catalog.ExpressionBindingId_OrMutable =
-            skirout.editor.v1.type_catalog.ExpressionBindingId.partial(),
+        override var groupBinding: skirout.editor.v1.presentation.BindingDeclaration_OrMutable =
+            skirout.editor.v1.presentation.BindingDeclaration.partial(),
         override var connectors: skirout.editor.v1.presentation.HierarchySequenceLayout_OrMutable? =
             null,
         override var initiallyExpanded: kotlin.Boolean =
@@ -38467,7 +38553,7 @@ class TreeResourcesLayout private constructor(
         override fun toFrozen() = skirout.editor.v1.presentation.TreeResourcesLayout(
             path = this.path,
             group = this.group,
-            groupBindingId = this.groupBindingId,
+            groupBinding = this.groupBinding,
             connectors = this.connectors,
             initiallyExpanded = this.initiallyExpanded,
             _unrecognizedFields = this._unrecognizedFields,
@@ -38490,18 +38576,18 @@ class TreeResourcesLayout private constructor(
         }
 
         /**
-         * If the value of [groupBindingId] is already mutable, returns it as-is.
-         * Otherwise, makes a mutable copy, assigns it back to [groupBindingId] and returns it.
+         * If the value of [groupBinding] is already mutable, returns it as-is.
+         * Otherwise, makes a mutable copy, assigns it back to [groupBinding] and returns it.
          */
-        val mutableGroupBindingId: skirout.editor.v1.type_catalog.ExpressionBindingId.Mutable get() {
-            var value = this.groupBindingId;
+        val mutableGroupBinding: skirout.editor.v1.presentation.BindingDeclaration.Mutable get() {
+            var value = this.groupBinding;
             return when (value) {
-                is skirout.editor.v1.type_catalog.ExpressionBindingId -> {
+                is skirout.editor.v1.presentation.BindingDeclaration -> {
                     value = value.toMutable();
-                    this.groupBindingId = value;
+                    this.groupBinding = value;
                     return value;
                 }
-                is skirout.editor.v1.type_catalog.ExpressionBindingId.Mutable -> value;
+                is skirout.editor.v1.presentation.BindingDeclaration.Mutable -> value;
             }
         }
     }
@@ -38511,7 +38597,7 @@ class TreeResourcesLayout private constructor(
             skirout.editor.v1.presentation.TreeResourcesLayout(
                 skirout.editor.v1.type_catalog.ValuePath.partial(),
                 null,
-                skirout.editor.v1.type_catalog.ExpressionBindingId.partial(),
+                skirout.editor.v1.presentation.BindingDeclaration.partial(),
                 null,
                 false,
             );
@@ -38531,8 +38617,8 @@ class TreeResourcesLayout private constructor(
                 skirout.editor.v1.type_catalog.ValuePath.partial(),
             group: skirout.editor.v1.presentation.PresentationNode_OrMutable? =
                 null,
-            groupBindingId: skirout.editor.v1.type_catalog.ExpressionBindingId_OrMutable =
-                skirout.editor.v1.type_catalog.ExpressionBindingId.partial(),
+            groupBinding: skirout.editor.v1.presentation.BindingDeclaration_OrMutable =
+                skirout.editor.v1.presentation.BindingDeclaration.partial(),
             connectors: skirout.editor.v1.presentation.HierarchySequenceLayout_OrMutable? =
                 null,
             initiallyExpanded: kotlin.Boolean =
@@ -38540,7 +38626,7 @@ class TreeResourcesLayout private constructor(
         ) = skirout.editor.v1.presentation.TreeResourcesLayout(
             path = path,
             group = group,
-            groupBindingId = groupBindingId,
+            groupBinding = groupBinding,
             connectors = connectors,
             initiallyExpanded = initiallyExpanded,
             _unrecognizedFields = null,
@@ -40887,6 +40973,18 @@ private object _SerializerRegistry {
 
     val BadgeContentSerializer = build.skir.internal.makeSerializer(BadgeContentSerializerImpl);
 
+    val BindingDeclarationSerializerImpl = build.skir.internal.StructSerializer(
+        recordId = "editor/v1/presentation.skir:BindingDeclaration",
+        doc = "A binding a presentation introduces, with the type its expressions see. Templates may\nuse the type parameters of the material that declares them.",
+        defaultInstance = skirout.editor.v1.presentation.BindingDeclaration.partial(),
+        newMutableFn = { it?.toMutable() ?: skirout.editor.v1.presentation.BindingDeclaration.Mutable() },
+        toFrozenFn = { it.toFrozen() },
+        getUnrecognizedFields = { it._unrecognizedFields },
+        setUnrecognizedFields = { m, u -> m._unrecognizedFields = u },
+    );
+
+    val BindingDeclarationSerializer = build.skir.internal.makeSerializer(BindingDeclarationSerializerImpl);
+
     val BorderOverrideSerializerImpl =
         build.skir.internal.EnumSerializer.create<skirout.editor.v1.presentation.BorderOverride, skirout.editor.v1.presentation.BorderOverride.Unknown>(
             recordId = "editor/v1/presentation.skir:BorderOverride",
@@ -42450,7 +42548,7 @@ private object _SerializerRegistry {
 
     val PresentationCollectionDefinitionSerializerImpl = build.skir.internal.StructSerializer(
         recordId = "editor/v1/presentation.skir:PresentationCollectionDefinition",
-        doc = "Authoritative typed schema for a collection referenced by presentation nodes.\nThe row binding scopes key, selectability, and relation expressions to one row.",
+        doc = "Authoritative typed schema for a collection referenced by presentation nodes.\nThe row binding scopes key, selectability, and relation expressions to one row; its type\nis the row type.",
         defaultInstance = skirout.editor.v1.presentation.PresentationCollectionDefinition.partial(),
         newMutableFn = { it?.toMutable() ?: skirout.editor.v1.presentation.PresentationCollectionDefinition.Mutable() },
         toFrozenFn = { it.toFrozen() },
@@ -42537,7 +42635,7 @@ private object _SerializerRegistry {
 
     val PresentationContextInputSerializerImpl = build.skir.internal.StructSerializer(
         recordId = "editor/v1/presentation.skir:PresentationContextInput",
-        doc = "A value a presentation reads from its surroundings. Expressions read it through [binding_id];\n[source] says who supplies it, so a host fills its declared inputs without sharing binding names.",
+        doc = "A value a presentation reads from its surroundings. Expressions read it through [binding];\n[source] says who supplies it, so a host fills its declared inputs without sharing binding names.",
         defaultInstance = skirout.editor.v1.presentation.PresentationContextInput.partial(),
         newMutableFn = { it?.toMutable() ?: skirout.editor.v1.presentation.PresentationContextInput.Mutable() },
         toFrozenFn = { it.toFrozen() },
@@ -43091,7 +43189,7 @@ private object _SerializerRegistry {
 
     val ResourcesElementSerializerImpl = build.skir.internal.StructSerializer(
         recordId = "editor/v1/presentation.skir:ResourcesElement",
-        doc = "Lays out the resources of a bound link field, such as the elements of a page or the books\nof the library. Every member renders through its item presentation. Adding and removing\nmembers edits the link. [order] is evaluated with [item_binding_id] bound to each member's\nlink and sorts the members by its result; without it members keep link order.",
+        doc = "Lays out the resources of a bound link field, such as the elements of a page or the books\nof the library. Every member renders through its item presentation. Adding and removing\nmembers edits the link. [order] is evaluated with [item_binding] bound to each member's\nlink and sorts the members by its result; without it members keep link order.",
         defaultInstance = skirout.editor.v1.presentation.ResourcesElement.partial(),
         newMutableFn = { it?.toMutable() ?: skirout.editor.v1.presentation.ResourcesElement.Mutable() },
         toFrozenFn = { it.toFrozen() },
@@ -43828,7 +43926,7 @@ private object _SerializerRegistry {
 
     val TreeResourcesLayoutSerializerImpl = build.skir.internal.StructSerializer(
         recordId = "editor/v1/presentation.skir:TreeResourcesLayout",
-        doc = "Groups members by the hierarchy path at [path], relative to each member. [group] renders\neach group header with [group_binding_id] bound to a HierarchyGroup value. Dropping a member\nonto a group rewrites its path field.",
+        doc = "Groups members by the hierarchy path at [path], relative to each member. [group] renders\neach group header with [group_binding] bound to a HierarchyGroup value. Dropping a member\nonto a group rewrites its path field.",
         defaultInstance = skirout.editor.v1.presentation.TreeResourcesLayout.partial(),
         newMutableFn = { it?.toMutable() ?: skirout.editor.v1.presentation.TreeResourcesLayout.Mutable() },
         toFrozenFn = { it.toFrozen() },
@@ -44283,6 +44381,26 @@ private object _SerializerRegistry {
             { mut, v -> mut.options = v },
         );
         BadgeContentSerializerImpl.finalizeStruct();
+
+        BindingDeclarationSerializerImpl.addField(
+            "id",
+            "id",
+            0,
+            skirout.editor.v1.type_catalog.ExpressionBindingId.serializer,
+            "",
+            { it.id },
+            { mut, v -> mut.id = v },
+        );
+        BindingDeclarationSerializerImpl.addField(
+            "type",
+            "type",
+            1,
+            skirout.editor.v1.type_catalog.TypeTemplate.serializer,
+            "",
+            { it.type },
+            { mut, v -> mut.type = v },
+        );
+        BindingDeclarationSerializerImpl.finalizeStruct();
 
         BorderOverrideSerializerImpl.addConstantVariant(
             1,
@@ -45137,22 +45255,22 @@ private object _SerializerRegistry {
             { mut, v -> mut.node = v },
         );
         CollectionGraphElementSerializerImpl.addField(
-            "children_binding_id",
-            "childrenBindingId",
+            "children_binding",
+            "childrenBinding",
             7,
-            skirout.editor.v1.type_catalog.ExpressionBindingId.serializer,
+            _SerializerRegistry.BindingDeclarationSerializer,
             "",
-            { it.childrenBindingId },
-            { mut, v -> mut.childrenBindingId = v },
+            { it.childrenBinding },
+            { mut, v -> mut.childrenBinding = v },
         );
         CollectionGraphElementSerializerImpl.addField(
-            "child_binding_id",
-            "childBindingId",
+            "child_binding",
+            "childBinding",
             8,
-            skirout.editor.v1.type_catalog.ExpressionBindingId.serializer,
+            _SerializerRegistry.BindingDeclarationSerializer,
             "",
-            { it.childBindingId },
-            { mut, v -> mut.childBindingId = v },
+            { it.childBinding },
+            { mut, v -> mut.childBinding = v },
         );
         CollectionGraphElementSerializerImpl.addField(
             "children",
@@ -46480,7 +46598,7 @@ private object _SerializerRegistry {
             "input_binding",
             "inputBinding",
             0,
-            skirout.editor.v1.type_catalog.ExpressionBindingId.serializer,
+            _SerializerRegistry.BindingDeclarationSerializer,
             "",
             { it.inputBinding },
             { mut, v -> mut.inputBinding = v },
@@ -47234,13 +47352,13 @@ private object _SerializerRegistry {
         HostContextInputSerializerImpl.finalizeEnum();
 
         HttpJsonContextBindingSerializerImpl.addField(
-            "binding_id",
-            "bindingId",
+            "binding",
+            "binding",
             0,
-            skirout.editor.v1.type_catalog.ExpressionBindingId.serializer,
+            _SerializerRegistry.BindingDeclarationSerializer,
             "",
-            { it.bindingId },
-            { mut, v -> mut.bindingId = v },
+            { it.binding },
+            { mut, v -> mut.binding = v },
         );
         HttpJsonContextBindingSerializerImpl.addField(
             "path",
@@ -47250,15 +47368,6 @@ private object _SerializerRegistry {
             "",
             { it.path },
             { mut, v -> mut.path = v },
-        );
-        HttpJsonContextBindingSerializerImpl.addField(
-            "value_type",
-            "valueType",
-            2,
-            skirout.editor.v1.type_catalog.TypeTemplate.serializer,
-            "",
-            { it.valueType },
-            { mut, v -> mut.valueType = v },
         );
         HttpJsonContextBindingSerializerImpl.finalizeStruct();
 
@@ -48053,22 +48162,22 @@ private object _SerializerRegistry {
             { mut, v -> mut.allowReorder = v },
         );
         ListControlSerializerImpl.addField(
-            "item_binding_id",
-            "itemBindingId",
+            "item_binding",
+            "itemBinding",
             5,
-            skirout.editor.v1.type_catalog.ExpressionBindingId.serializer,
+            _SerializerRegistry.BindingDeclarationSerializer,
             "",
-            { it.itemBindingId },
-            { mut, v -> mut.itemBindingId = v },
+            { it.itemBinding },
+            { mut, v -> mut.itemBinding = v },
         );
         ListControlSerializerImpl.addField(
-            "index_binding_id",
-            "indexBindingId",
+            "index_binding",
+            "indexBinding",
             6,
-            skirout.editor.v1.type_catalog.ExpressionBindingId.serializer,
+            _SerializerRegistry.BindingDeclarationSerializer,
             "",
-            { it.indexBindingId },
-            { mut, v -> mut.indexBindingId = v },
+            { it.indexBinding },
+            { mut, v -> mut.indexBinding = v },
         );
         ListControlSerializerImpl.addField(
             "appearance",
@@ -48188,22 +48297,22 @@ private object _SerializerRegistry {
             { mut, v -> mut.allowRemove = v },
         );
         MapControlSerializerImpl.addField(
-            "key_binding_id",
-            "keyBindingId",
+            "key_binding",
+            "keyBinding",
             5,
-            skirout.editor.v1.type_catalog.ExpressionBindingId.serializer,
+            _SerializerRegistry.BindingDeclarationSerializer,
             "",
-            { it.keyBindingId },
-            { mut, v -> mut.keyBindingId = v },
+            { it.keyBinding },
+            { mut, v -> mut.keyBinding = v },
         );
         MapControlSerializerImpl.addField(
-            "value_binding_id",
-            "valueBindingId",
+            "value_binding",
+            "valueBinding",
             6,
-            skirout.editor.v1.type_catalog.ExpressionBindingId.serializer,
+            _SerializerRegistry.BindingDeclarationSerializer,
             "",
-            { it.valueBindingId },
-            { mut, v -> mut.valueBindingId = v },
+            { it.valueBinding },
+            { mut, v -> mut.valueBinding = v },
         );
         MapControlSerializerImpl.addField(
             "appearance",
@@ -48844,13 +48953,13 @@ private object _SerializerRegistry {
             { mut, v -> mut.binding = v },
         );
         PolymorphicMatchElementSerializerImpl.addField(
-            "scope_binding_id",
-            "scopeBindingId",
+            "scope_binding",
+            "scopeBinding",
             1,
-            skirout.editor.v1.type_catalog.ExpressionBindingId.serializer,
+            _SerializerRegistry.BindingDeclarationSerializer,
             "",
-            { it.scopeBindingId },
-            { mut, v -> mut.scopeBindingId = v },
+            { it.scopeBinding },
+            { mut, v -> mut.scopeBinding = v },
         );
         PolymorphicMatchElementSerializerImpl.addField(
             "cases",
@@ -49421,27 +49530,18 @@ private object _SerializerRegistry {
             { mut, v -> mut.sourceId = v },
         );
         PresentationCollectionDefinitionSerializerImpl.addField(
-            "row_type",
-            "rowType",
+            "row_binding",
+            "rowBinding",
             1,
-            skirout.editor.v1.type_catalog.TypeTemplate.serializer,
+            _SerializerRegistry.BindingDeclarationSerializer,
             "",
-            { it.rowType },
-            { mut, v -> mut.rowType = v },
+            { it.rowBinding },
+            { mut, v -> mut.rowBinding = v },
         );
         PresentationCollectionDefinitionSerializerImpl.addField(
-            "row_binding_id",
-            "rowBindingId",
+            "key",
+            "key",
             2,
-            skirout.editor.v1.type_catalog.ExpressionBindingId.serializer,
-            "",
-            { it.rowBindingId },
-            { mut, v -> mut.rowBindingId = v },
-        );
-        PresentationCollectionDefinitionSerializerImpl.addField(
-            "key",
-            "key",
-            3,
             skirout.editor.v1.expression.ExpressionNode.serializer,
             "",
             { it.key },
@@ -49450,7 +49550,7 @@ private object _SerializerRegistry {
         PresentationCollectionDefinitionSerializerImpl.addField(
             "selectability",
             "selectability",
-            4,
+            3,
             skirout.editor.v1.expression.ExpressionNode.serializer,
             "",
             { it.selectability },
@@ -49459,7 +49559,7 @@ private object _SerializerRegistry {
         PresentationCollectionDefinitionSerializerImpl.addField(
             "relations",
             "relations",
-            5,
+            4,
             build.skir.internal.keyedListSerializer(
                 _SerializerRegistry.PresentationCollectionRelationDefinitionSerializer,
                 "relation_id",
@@ -49472,7 +49572,7 @@ private object _SerializerRegistry {
         PresentationCollectionDefinitionSerializerImpl.addField(
             "projection",
             "projection",
-            6,
+            5,
             build.skir.Serializers.optional(
                 _SerializerRegistry.PresentationCollectionProjectionSerializer,
             ),
@@ -49492,13 +49592,13 @@ private object _SerializerRegistry {
             { mut, v -> mut.root = v },
         );
         PresentationCollectionProjectionSerializerImpl.addField(
-            "resource_binding_id",
-            "resourceBindingId",
+            "resource_binding",
+            "resourceBinding",
             1,
-            skirout.editor.v1.type_catalog.ExpressionBindingId.serializer,
+            _SerializerRegistry.BindingDeclarationSerializer,
             "",
-            { it.resourceBindingId },
-            { mut, v -> mut.resourceBindingId = v },
+            { it.resourceBinding },
+            { mut, v -> mut.resourceBinding = v },
         );
         PresentationCollectionProjectionSerializerImpl.addField(
             "fields",
@@ -49677,13 +49777,13 @@ private object _SerializerRegistry {
         PresentationConnectionSerializerImpl.finalizeEnum();
 
         PresentationContextInputSerializerImpl.addField(
-            "binding_id",
-            "bindingId",
+            "binding",
+            "binding",
             0,
-            skirout.editor.v1.type_catalog.ExpressionBindingId.serializer,
+            _SerializerRegistry.BindingDeclarationSerializer,
             "",
-            { it.bindingId },
-            { mut, v -> mut.bindingId = v },
+            { it.binding },
+            { mut, v -> mut.binding = v },
         );
         PresentationContextInputSerializerImpl.addField(
             "source",
@@ -49693,15 +49793,6 @@ private object _SerializerRegistry {
             "",
             { it.source },
             { mut, v -> mut.source = v },
-        );
-        PresentationContextInputSerializerImpl.addField(
-            "value_type",
-            "valueType",
-            2,
-            skirout.editor.v1.type_catalog.TypeUse.serializer,
-            "",
-            { it.valueType },
-            { mut, v -> mut.valueType = v },
         );
         PresentationContextInputSerializerImpl.finalizeStruct();
 
@@ -50579,13 +50670,13 @@ private object _SerializerRegistry {
         PresentationHeaderTitleSerializerImpl.finalizeEnum();
 
         PresentationInputSerializerImpl.addField(
-            "binding_id",
-            "bindingId",
+            "binding",
+            "binding",
             0,
-            skirout.editor.v1.type_catalog.ExpressionBindingId.serializer,
+            _SerializerRegistry.BindingDeclarationSerializer,
             "",
-            { it.bindingId },
-            { mut, v -> mut.bindingId = v },
+            { it.binding },
+            { mut, v -> mut.binding = v },
         );
         PresentationInputSerializerImpl.addField(
             "name",
@@ -50597,18 +50688,9 @@ private object _SerializerRegistry {
             { mut, v -> mut.name = v },
         );
         PresentationInputSerializerImpl.addField(
-            "value_type",
-            "valueType",
+            "access",
+            "access",
             2,
-            skirout.editor.v1.type_catalog.TypeTemplate.serializer,
-            "",
-            { it.valueType },
-            { mut, v -> mut.valueType = v },
-        );
-        PresentationInputSerializerImpl.addField(
-            "access",
-            "access",
-            3,
             _SerializerRegistry.PresentationInputAccessSerializer,
             "",
             { it.access },
@@ -51530,13 +51612,13 @@ private object _SerializerRegistry {
             { mut, v -> mut.source = v },
         );
         RepeatedElementSerializerImpl.addField(
-            "item_binding_id",
-            "itemBindingId",
+            "item_binding",
+            "itemBinding",
             1,
-            skirout.editor.v1.type_catalog.ExpressionBindingId.serializer,
+            _SerializerRegistry.BindingDeclarationSerializer,
             "",
-            { it.itemBindingId },
-            { mut, v -> mut.itemBindingId = v },
+            { it.itemBinding },
+            { mut, v -> mut.itemBinding = v },
         );
         RepeatedElementSerializerImpl.addField(
             "presentation",
@@ -51614,13 +51696,13 @@ private object _SerializerRegistry {
             { mut, v -> mut.order = v },
         );
         ResourcesElementSerializerImpl.addField(
-            "item_binding_id",
-            "itemBindingId",
+            "item_binding",
+            "itemBinding",
             3,
-            skirout.editor.v1.type_catalog.ExpressionBindingId.serializer,
+            _SerializerRegistry.BindingDeclarationSerializer,
             "",
-            { it.itemBindingId },
-            { mut, v -> mut.itemBindingId = v },
+            { it.itemBinding },
+            { mut, v -> mut.itemBinding = v },
         );
         ResourcesElementSerializerImpl.finalizeStruct();
 
@@ -51857,13 +51939,13 @@ private object _SerializerRegistry {
             { mut, v -> mut.binding = v },
         );
         ScopedBindingElementSerializerImpl.addField(
-            "scope_binding_id",
-            "scopeBindingId",
+            "scope_binding",
+            "scopeBinding",
             1,
-            skirout.editor.v1.type_catalog.ExpressionBindingId.serializer,
+            _SerializerRegistry.BindingDeclarationSerializer,
             "",
-            { it.scopeBindingId },
-            { mut, v -> mut.scopeBindingId = v },
+            { it.scopeBinding },
+            { mut, v -> mut.scopeBinding = v },
         );
         ScopedBindingElementSerializerImpl.addField(
             "child",
@@ -51895,22 +51977,22 @@ private object _SerializerRegistry {
             { mut, v -> mut.selectionMode = v },
         );
         SearchControlSerializerImpl.addField(
-            "query_binding_id",
-            "queryBindingId",
+            "query_binding",
+            "queryBinding",
             2,
-            skirout.editor.v1.type_catalog.ExpressionBindingId.serializer,
+            _SerializerRegistry.BindingDeclarationSerializer,
             "",
-            { it.queryBindingId },
-            { mut, v -> mut.queryBindingId = v },
+            { it.queryBinding },
+            { mut, v -> mut.queryBinding = v },
         );
         SearchControlSerializerImpl.addField(
-            "summary_binding_id",
-            "summaryBindingId",
+            "summary_binding",
+            "summaryBinding",
             3,
-            skirout.editor.v1.type_catalog.ExpressionBindingId.serializer,
+            _SerializerRegistry.BindingDeclarationSerializer,
             "",
-            { it.summaryBindingId },
-            { mut, v -> mut.summaryBindingId = v },
+            { it.summaryBinding },
+            { mut, v -> mut.summaryBinding = v },
         );
         SearchControlSerializerImpl.addField(
             "maximum_extent",
@@ -52204,13 +52286,13 @@ private object _SerializerRegistry {
         SearchRankingFieldSerializerImpl.finalizeStruct();
 
         SearchResultMappingSerializerImpl.addField(
-            "binding_id",
-            "bindingId",
+            "binding",
+            "binding",
             0,
-            skirout.editor.v1.type_catalog.ExpressionBindingId.serializer,
+            _SerializerRegistry.BindingDeclarationSerializer,
             "",
-            { it.bindingId },
-            { mut, v -> mut.bindingId = v },
+            { it.binding },
+            { mut, v -> mut.binding = v },
         );
         SearchResultMappingSerializerImpl.addField(
             "key",
@@ -52287,13 +52369,13 @@ private object _SerializerRegistry {
             { mut, v -> mut.key = v },
         );
         SearchSelectorDefinitionSerializerImpl.addField(
-            "value_binding_id",
-            "valueBindingId",
+            "value_binding",
+            "valueBinding",
             2,
-            skirout.editor.v1.type_catalog.ExpressionBindingId.serializer,
+            _SerializerRegistry.BindingDeclarationSerializer,
             "",
-            { it.valueBindingId },
-            { mut, v -> mut.valueBindingId = v },
+            { it.valueBinding },
+            { mut, v -> mut.valueBinding = v },
         );
         SearchSelectorDefinitionSerializerImpl.addField(
             "values",
@@ -52555,15 +52637,15 @@ private object _SerializerRegistry {
             { mut, v -> mut.selectedTextStyle = v },
         );
         SelectInteractionOptionsSerializerImpl.addField(
-            "query_binding_id",
-            "queryBindingId",
+            "query_binding",
+            "queryBinding",
             4,
             build.skir.Serializers.optional(
-                skirout.editor.v1.type_catalog.ExpressionBindingId.serializer,
+                _SerializerRegistry.BindingDeclarationSerializer,
             ),
             "",
-            { it.queryBindingId },
-            { mut, v -> mut.queryBindingId = v },
+            { it.queryBinding },
+            { mut, v -> mut.queryBinding = v },
         );
         SelectInteractionOptionsSerializerImpl.addField(
             "custom_value",
@@ -52754,13 +52836,13 @@ private object _SerializerRegistry {
             { mut, v -> mut.allowRemove = v },
         );
         SetControlSerializerImpl.addField(
-            "item_binding_id",
-            "itemBindingId",
+            "item_binding",
+            "itemBinding",
             4,
-            skirout.editor.v1.type_catalog.ExpressionBindingId.serializer,
+            _SerializerRegistry.BindingDeclarationSerializer,
             "",
-            { it.itemBindingId },
-            { mut, v -> mut.itemBindingId = v },
+            { it.itemBinding },
+            { mut, v -> mut.itemBinding = v },
         );
         SetControlSerializerImpl.addField(
             "appearance",
@@ -54393,13 +54475,13 @@ private object _SerializerRegistry {
             { mut, v -> mut.group = v },
         );
         TreeResourcesLayoutSerializerImpl.addField(
-            "group_binding_id",
-            "groupBindingId",
+            "group_binding",
+            "groupBinding",
             2,
-            skirout.editor.v1.type_catalog.ExpressionBindingId.serializer,
+            _SerializerRegistry.BindingDeclarationSerializer,
             "",
-            { it.groupBindingId },
-            { mut, v -> mut.groupBindingId = v },
+            { it.groupBinding },
+            { mut, v -> mut.groupBinding = v },
         );
         TreeResourcesLayoutSerializerImpl.addField(
             "connectors",

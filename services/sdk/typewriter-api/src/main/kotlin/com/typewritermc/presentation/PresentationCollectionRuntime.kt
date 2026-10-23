@@ -6,6 +6,7 @@ import com.typewritermc.expression.MayBeMissing
 import com.typewritermc.types.fields
 import com.typewritermc.types.items
 import com.typewritermc.types.requirePortable
+import com.typewritermc.types.template
 import skirout.editor.v1.expression.ExpressionNode
 import skirout.editor.v1.presentation.CollectionGraphDirection
 import skirout.editor.v1.presentation.CrossAxisAlignment
@@ -48,7 +49,9 @@ internal fun <V, ItemScope> RuntimePresentationData.renderRepeated(
         state.node(
             PresentationElement.createRepeated(
                 source = expression(source),
-                itemBindingId = binding,
+                itemBinding =
+                    skirout.editor.v1.presentation
+                        .BindingDeclaration(id = binding, type = UNTYPED_BINDING),
                 presentation =
                     skirout.editor.v1.presentation.SequencePresentation(
                         item = state.column(itemNodes),
@@ -231,8 +234,16 @@ internal fun <Row, Key> RuntimePresentationData.renderCollectionGraph(
                 direction = graphDirection,
                 maximumDepth = graphMaximumDepth,
                 node = requireNotNull(node) { "Collection graph node content is required." },
-                childrenBindingId = childrenBinding,
-                childBindingId = childBinding,
+                childrenBinding =
+                    skirout.editor.v1.presentation.BindingDeclaration(
+                        id = childrenBinding,
+                        type =
+                            com.typewritermc.types.StandardTypes.list
+                                .template(listOf(source.rowType)),
+                    ),
+                childBinding =
+                    skirout.editor.v1.presentation
+                        .BindingDeclaration(id = childBinding, type = source.rowType),
                 children = childSequence ?: sequence(childItem),
             ),
         )
@@ -339,8 +350,9 @@ private class RuntimeSequenceLayoutScope : SequenceLayoutScope {
 internal fun CollectionSource<*, *>.wire(state: PresentationBuildState): PresentationCollectionDefinition =
     PresentationCollectionDefinition(
         sourceId = id,
-        rowType = rowType,
-        rowBindingId = rowBinding,
+        rowBinding =
+            skirout.editor.v1.presentation
+                .BindingDeclaration(id = rowBinding, type = rowType),
         key = expression(key),
         selectability = expression(selectability),
         relations =
@@ -354,7 +366,13 @@ internal fun CollectionSource<*, *>.wire(state: PresentationBuildState): Present
             (rows as? CollectionRows.Projected)?.let { projected ->
                 PresentationCollectionProjection(
                     root = projected.projection.root,
-                    resourceBindingId = projected.resourceBinding,
+                    resourceBinding =
+                        skirout.editor.v1.presentation.BindingDeclaration(
+                            id = projected.resourceBinding,
+                            type =
+                                com.typewritermc.types.ResourceIdDefinition.id
+                                    .template(),
+                        ),
                     fields =
                         projected.projection.fields.map { field ->
                             PresentationCollectionProjectionField(

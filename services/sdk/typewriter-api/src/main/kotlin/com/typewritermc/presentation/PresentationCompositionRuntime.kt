@@ -94,7 +94,11 @@ internal class RuntimePresentationData(
                 state.node(
                     PresentationElement.createScopedBinding(
                         binding = input.binding,
-                        scopeBindingId = requireNotNull(scopeBinding),
+                        scopeBinding =
+                            skirout.editor.v1.presentation.BindingDeclaration(
+                                id = requireNotNull(scopeBinding),
+                                type = UNTYPED_BINDING,
+                            ),
                         child = child,
                     ),
                 )
@@ -144,7 +148,9 @@ internal class RuntimePresentationData(
             state.node(
                 PresentationElement.createPolymorphicMatch(
                     binding = binding.binding,
-                    scopeBindingId = scopeBinding,
+                    scopeBinding =
+                        skirout.editor.v1.presentation
+                            .BindingDeclaration(id = scopeBinding, type = UNTYPED_BINDING),
                     cases = wireCases,
                     fallback = fallback,
                 ),

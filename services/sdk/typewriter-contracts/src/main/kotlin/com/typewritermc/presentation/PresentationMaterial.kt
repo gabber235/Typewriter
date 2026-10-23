@@ -149,12 +149,12 @@ private fun PresentationNode.writesWithinOwner(
         ): Boolean = child == null || visit(child, nested)
         return when (val element = node.element) {
             is PresentationElement.ScopedBindingWrapper -> {
-                child(element.value.child, bindings + (element.value.scopeBindingId.value to element.value.binding.writeScope(bindings)))
+                child(element.value.child, bindings + (element.value.scopeBinding.id.value to element.value.binding.writeScope(bindings)))
             }
 
             is PresentationElement.PolymorphicMatchWrapper -> {
                 val value = element.value
-                val nested = bindings + (value.scopeBindingId.value to value.binding.writeScope(bindings))
+                val nested = bindings + (value.scopeBinding.id.value to value.binding.writeScope(bindings))
                 value.cases.all { child(it.child, nested) } && child(value.fallback)
             }
 
@@ -174,8 +174,8 @@ private fun PresentationNode.writesWithinOwner(
                     value.itemPresentation,
                     bindings +
                         mapOf(
-                            value.itemBindingId.value to value.control.binding.writeScope(bindings),
-                            value.indexBindingId.value to FieldWriteScope.Foreign,
+                            value.itemBinding.id.value to value.control.binding.writeScope(bindings),
+                            value.indexBinding.id.value to FieldWriteScope.Foreign,
                         ),
                 )
             }
@@ -184,7 +184,7 @@ private fun PresentationNode.writesWithinOwner(
                 child(
                     element.value.itemPresentation,
                     bindings + (
-                        element.value.itemBindingId.value to
+                        element.value.itemBinding.id.value to
                             element.value.control.binding
                                 .writeScope(bindings)
                     ),
@@ -194,8 +194,8 @@ private fun PresentationNode.writesWithinOwner(
             is PresentationElement.MapInputWrapper -> {
                 val value = element.value
                 val scope = value.control.binding.writeScope(bindings)
-                child(value.keyPresentation, bindings + (value.keyBindingId.value to scope)) &&
-                    child(value.valuePresentation, bindings + (value.valueBindingId.value to scope))
+                child(value.keyPresentation, bindings + (value.keyBinding.id.value to scope)) &&
+                    child(value.valuePresentation, bindings + (value.valueBinding.id.value to scope))
             }
 
             is PresentationElement.RepeatedWrapper -> {
@@ -203,13 +203,13 @@ private fun PresentationNode.writesWithinOwner(
                 val source = (value.source as? skirout.editor.v1.expression.ExpressionNode.InputWrapper)?.value
                 val scope =
                     source?.let { BindingRef(bindingId = it.binding, path = it.path).writeScope(bindings) } ?: FieldWriteScope.Foreign
-                child(value.presentation.item, bindings + (value.itemBindingId.value to scope)) &&
+                child(value.presentation.item, bindings + (value.itemBinding.id.value to scope)) &&
                     child(value.presentation.empty) && child(value.presentation.separator)
             }
 
             is PresentationElement.CollectionLookupWrapper -> {
                 val value = element.value
-                val row = sources[value.sourceId]?.rowBindingId?.value
+                val row = sources[value.sourceId]?.rowBinding?.id?.value
                 val nested =
                     if (row ==
                         null
@@ -223,15 +223,15 @@ private fun PresentationNode.writesWithinOwner(
 
             is PresentationElement.CollectionGraphWrapper -> {
                 val value = element.value
-                val row = sources[value.sourceId]?.rowBindingId?.value
+                val row = sources[value.sourceId]?.rowBinding?.id?.value
                 val nested =
                     bindings +
                         buildMap {
                             if (row != null) put(row, FieldWriteScope.Foreign)
-                            put(value.childrenBindingId.value, FieldWriteScope.Foreign)
+                            put(value.childrenBinding.id.value, FieldWriteScope.Foreign)
                         }
                 child(value.node, nested) && child(value.rootSequence.item, nested) &&
-                    child(value.children.item, nested + (value.childBindingId.value to FieldWriteScope.Foreign)) &&
+                    child(value.children.item, nested + (value.childBinding.id.value to FieldWriteScope.Foreign)) &&
                     listOf(
                         value.rootSequence.empty,
                         value.rootSequence.separator,
@@ -247,11 +247,11 @@ private fun PresentationNode.writesWithinOwner(
                     result: skirout.editor.v1.presentation.SearchResultMapping,
                     nested: Map<String, FieldWriteScope>,
                 ): Boolean {
-                    val scoped = nested + (result.bindingId.value to FieldWriteScope.Foreign)
+                    val scoped = nested + (result.binding.id.value to FieldWriteScope.Foreign)
                     return child(result.presentation, scoped)
                 }
 
-                val queryBindings = bindings + (value.queryBindingId.value to FieldWriteScope.Foreign)
+                val queryBindings = bindings + (value.queryBinding.id.value to FieldWriteScope.Foreign)
 
                 fun provider(source: SearchProvider): Boolean =
                     when (source) {
@@ -272,7 +272,7 @@ private fun PresentationNode.writesWithinOwner(
                                 source.value.result,
                                 queryBindings +
                                     source.value.contextBindings.associate {
-                                        it.bindingId.value to FieldWriteScope.Foreign
+                                        it.binding.id.value to FieldWriteScope.Foreign
                                     },
                             )
                         }
@@ -318,7 +318,7 @@ private fun PresentationNode.writesWithinOwner(
                         }
                     }
                 child(value.empty) && child(value.loading) &&
-                    child(value.summary, bindings + (value.summaryBindingId.value to FieldWriteScope.Foreign)) && provider(value.provider)
+                    child(value.summary, bindings + (value.summaryBinding.id.value to FieldWriteScope.Foreign)) && provider(value.provider)
             }
 
             is PresentationElement.ResourcesWrapper -> {
@@ -328,7 +328,8 @@ private fun PresentationNode.writesWithinOwner(
                     bindings + (
                         layout
                             ?.value
-                            ?.groupBindingId
+                            ?.groupBinding
+                            ?.id
                             ?.value
                             .orEmpty() to FieldWriteScope.Foreign
                     ),
