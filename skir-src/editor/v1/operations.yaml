@@ -207,7 +207,9 @@ operations:
     result: text
 
   value.to_json:
-    doc: The value as canonical Skir readable JSON of its DataValue.
+    doc: >-
+      The value as canonical Skir readable JSON of its DataValue, without whitespace and with default
+      fields omitted.
     profile: rule
     dsl: { name: toJson }
     type_parameters: { T: any }
@@ -269,7 +271,7 @@ operations:
     result: representation<X>
 
   value.configuration:
-    doc: The actual type of a named value, as a type selection; missing for structural values.
+    doc: The actual type of a named value, as a type selection; missing at no location for structural values.
     profile: panel
     dsl: { name: configuration }
     type_parameters: { T: any }
@@ -442,7 +444,9 @@ operations:
     item_ids: positional
 
   regex.replace:
-    doc: Replaces every match of pattern; $n in replacement inserts group n and $$ a dollar sign.
+    doc: >-
+      Replaces every match of pattern. In replacement, $n inserts group n (the longest digit run naming an
+      existing group; empty when it did not take part) and $$ a dollar sign; any other $ fails invalid_regex.
     profile: rule
     dsl: { name: replaceRegex }
     parameters: [value: text, pattern: text, replacement: text]
@@ -508,7 +512,9 @@ operations:
     result: N
 
   number.power:
-    doc: Value raised to a nonnegative integer exponent; exact for integers and decimals.
+    doc: >-
+      Value raised to a nonnegative integer exponent, where any value to the power 0 is 1; exact for
+      integers and decimals.
     profile: rule
     type_parameters: { N: numeric }
     parameters: [value: N, exponent: int32]
@@ -536,8 +542,8 @@ operations:
 
   number.format:
     doc: >-
-      The value with exactly fraction_digits fraction digits (rounded half even) and the
-      locale's CLDR digits, grouping and symbols. Locale und uses no grouping.
+      The value with exactly fraction_digits fraction digits (rounded half even; a float from its shortest
+      round trip decimal) and the locale's CLDR digits, grouping and symbols. Locale und uses no grouping.
     profile: panel
     dsl: { name: formatNumber }
     type_parameters: { N: numeric }
@@ -1003,7 +1009,9 @@ operations:
     result: resource_id
 
   resource.value:
-    doc: The configured value of the resource the link names; missing when the link is stale.
+    doc: >-
+      The resource's fields as a record of its configured type. Reads the resource; missing at its root
+      when the link is stale.
     profile: panel
     type_parameters: { T: any }
     parameters: [reference: link<T>]
@@ -1011,7 +1019,9 @@ operations:
     result: maybe<T>
 
   resource.value_of:
-    doc: The configured value of a resource of type T by identity; missing when it is not a T.
+    doc: >-
+      The fields of a resource of type T or a descendant, as a record of its configured type. Reads the
+      resource; missing at its root when there is no such resource or it is not a T.
     profile: panel
     dsl: hand
     type_parameters: { T: any }
@@ -1020,7 +1030,9 @@ operations:
     result: maybe<T>
 
   resource.identity:
-    doc: The identity of the resource the link names; missing when the link is stale.
+    doc: >-
+      The identity of the resource the link names. Reads the resource; missing at its root when the link
+      is stale.
     profile: panel
     type_parameters: { T: any }
     parameters: [reference: link<T>]
@@ -1028,14 +1040,18 @@ operations:
     result: maybe<resource_id>
 
   resource.configuration:
-    doc: The type selection of a resource by identity; missing when there is no such resource.
+    doc: >-
+      The type selection of a resource by identity. Reads the resource; missing at its root when there
+      is none.
     profile: panel
     parameters: [identity: resource_id]
     uses: [resources]
     result: maybe<type_selection>
 
   catalog.declaration:
-    doc: The published declaration of the type a selection names; missing when the catalog lacks it.
+    doc: >-
+      The published declaration of the type a selection names; missing at no location when the catalog
+      lacks it.
     profile: panel
     parameters: [selection: type_selection]
     uses: [resources]
