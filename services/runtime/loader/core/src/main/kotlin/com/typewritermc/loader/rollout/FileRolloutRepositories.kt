@@ -12,6 +12,7 @@ import com.typewritermc.services.libs.filetransfer.blob.BlobEndpoint
 import com.typewritermc.services.libs.filetransfer.blob.BlobMetadata
 import com.typewritermc.services.libs.filetransfer.blob.BlobResult
 import com.typewritermc.services.libs.filetransfer.blob.requireStored
+import com.typewritermc.services.libs.filetransfer.blob.requireValue
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
 import kotlinx.serialization.Serializable
@@ -59,9 +60,9 @@ class BlobProjectionRepository(
     /** Downloads, bounds, authenticates, and validates projection bytes against the supplied reference. */
     override suspend fun fetch(reference: ProjectionReference): HostDeploymentProjection {
         val blob = reference.blob.toApi()
-        val metadata = blobs.metadata(blob).requireSuccess()
+        val metadata = blobs.metadata(blob).requireValue()
         require(metadata.size <= MAXIMUM_PROJECTION_SIZE) { "Deployment projection exceeds its maximum size." }
-        val bytes = blobs.fetch(blob).requireSuccess()
+        val bytes = blobs.fetch(blob).requireValue()
         require(ArtifactDigest.sha256(bytes) == blob) { "Deployment projection digest does not match." }
         return HostDeploymentProjectionCodec.decode(bytes).also { projection ->
             require(projection.realmId == reference.realmId) { "Deployment projection belongs to another Realm." }
@@ -127,13 +128,6 @@ private data class StoredRolloutState(
 private val rolloutCbor = Cbor { encodeDefaults = true }
 
 private const val MAXIMUM_PROJECTION_SIZE = 4L * 1024L * 1024L
-
-private fun <Value> BlobResult<Value>.requireSuccess(): Value =
-    when (this) {
-        is BlobResult.Success -> value
-        BlobResult.NotFound -> error("Blob was not found.")
-        is BlobResult.Invalid -> error(reason)
-    }
 
 private fun readRolloutState(path: Path): StoredRolloutState =
     if (path.exists()) rolloutCbor.decodeFromByteArray(StoredRolloutState.serializer(), path.readBytes()) else StoredRolloutState()
