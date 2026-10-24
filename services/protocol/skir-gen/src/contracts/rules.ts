@@ -3,10 +3,16 @@ import type { Module } from "skir-internal";
 import type { ContractProblem } from "./index.js";
 import { contextOf } from "./numbering.js";
 
-/** A context imports only its own files and kernel (skir-src/AGENTS.md, Contract boundary). */
+/**
+ * A context imports only its own files and kernel, and kernel imports nothing (skir-src/AGENTS.md,
+ * Contract boundary).
+ */
 export function importProblems(module: Module): ContractProblem[] {
   const context = contextOf(module.path);
   return Object.keys(module.pathToImportedNames).flatMap((imported) => {
+    if (context === "kernel") {
+      return [{ path: module.path, message: `kernel may not import ${imported}; kernel imports nothing` }];
+    }
     const target = contextOf(imported);
     if (target === context || target === "kernel") return [];
     return [{

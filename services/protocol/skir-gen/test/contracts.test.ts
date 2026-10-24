@@ -121,6 +121,17 @@ describe("normalizeContracts rejects what no rewrite can fix", () => {
     expect(await normalizeContracts(directory)).toEqual([]);
   });
 
+  test("rejects any import from kernel, even of another kernel file", async () => {
+    const directory = skirTree({
+      "kernel/v1/record_id.skir": "struct RecordId(80010001) { table: string = 0; }",
+      "kernel/v1/resource_id.skir": "import { RecordId } from \"kernel/v1/record_id.skir\";\nstruct ResourceId(80020001) { id: RecordId = 0; }",
+    });
+    expect(await normalizeContracts(directory)).toEqual([{
+      path: "kernel/v1/resource_id.skir",
+      message: "kernel may not import kernel/v1/record_id.skir; kernel imports nothing",
+    }]);
+  });
+
   test("rejects enum variants that do not run 1, 2, 3", async () => {
     const directory = skirTree({
       "service/v1/status.skir": "enum Health(83010001) {\n  ready = 1;\n  degraded = 3;\n}",
