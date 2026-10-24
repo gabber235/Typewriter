@@ -50,7 +50,7 @@ $Res call({
 });
 
 
-
+$UserInfoCopyWith<$Res> get user;
 
 }
 /// @nodoc
@@ -73,7 +73,16 @@ as skir.GetSentinelCredentialsResponse_Success,organization: freezed == organiza
 as skir.RecordId?,
   ));
 }
-
+/// Create a copy of NatsConnectionSettings
+/// with the given fields replaced by the non-null parameter values.
+@override
+@pragma('vm:prefer-inline')
+$UserInfoCopyWith<$Res> get user {
+  
+  return $UserInfoCopyWith<$Res>(_self.user, (value) {
+    return _then(_self.copyWith(user: value));
+  });
+}
 }
 
 
@@ -252,7 +261,7 @@ $Res call({
 });
 
 
-
+@override $UserInfoCopyWith<$Res> get user;
 
 }
 /// @nodoc
@@ -276,7 +285,16 @@ as skir.RecordId?,
   ));
 }
 
-
+/// Create a copy of NatsConnectionSettings
+/// with the given fields replaced by the non-null parameter values.
+@override
+@pragma('vm:prefer-inline')
+$UserInfoCopyWith<$Res> get user {
+  
+  return $UserInfoCopyWith<$Res>(_self.user, (value) {
+    return _then(_self.copyWith(user: value));
+  });
+}
 }
 
 // dart format on

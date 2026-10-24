@@ -5,8 +5,6 @@ import "package:faker/faker.dart";
 
 import "package:typewriter_testkit/src/shared/testing/testing.dart";
 
-export "features/features.dart";
-
 skir.Organization generateRandomOrganization() {
   return skir.Organization(
     organizationId: skir.recordId("organization:${faker.guid.guid()}"),

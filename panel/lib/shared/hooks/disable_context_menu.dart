@@ -3,7 +3,7 @@ import "package:typewriter_panel/typewriter_panel.dart";
 /// Disables the browser context menu while the owning widget is mounted.
 ///
 /// This affects the web page, not only the widget subtree, so it belongs on a
-/// stable shell owner such as [AppRequiredWidgets]. On non web platforms the
+/// stable shell owner such as `AppRequiredWidgets`. On non web platforms the
 /// hook has no effect. If the menu was enabled when the hook mounted and is
 /// disabled at disposal, this hook enables it again. It does not coordinate
 /// ownership with other hooks that disable the same global menu.

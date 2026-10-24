@@ -1,0 +1,48 @@
+/// Authoring state and boundary adapters for one realm's authored content.
+///
+/// This library connects an [AuthoringScope] to its authoritative catalog,
+/// authoring projections, editor resources, capability invocation, and
+/// presentation search. Riverpod providers construct the graph only when an
+/// organization and an online realm exist. NATS adapters translate between
+/// those application contracts and the realm service wire protocols.
+///
+/// [AuthoringSession] pairs confirmed observations with their checked catalog.
+/// [RealmEditing] adapts commands into the [EditingWorkspace] retained by the
+/// application local work driver. That workspace owns working values, grouped
+/// operations, and save lifecycle across Realm views. The Realm service remains
+/// authoritative for durable content.
+
+library;
+
+export "authored_capability_transport.dart";
+export "authored_local_rules.dart";
+export "authored_presentation_host.dart";
+export "authored_resource_commands.dart";
+export "authoring_placement.dart";
+export "authoring_relation_index.dart";
+export "authoring_resource_mutation.dart";
+export "authoring_selectable_resource.dart";
+export "authoring_selection_operations.dart";
+export "authoring_session.dart";
+export "authoring_subject_role.dart";
+export "nats_realm_editor_catalog_source.dart";
+export "nats_realm_presentation_search_transport.dart";
+export "nats_realm_publication_source.dart";
+export "nats_resource_operation_transport.dart";
+export "operation_input_draft.dart";
+export "portable_link_choices.dart";
+export "realm_edit_model.dart";
+export "realm_edit_persistence.dart";
+export "realm_editing.dart";
+export "realm_editing_binding.dart";
+export "realm_editing_registration.dart";
+export "realm_publication.dart";
+export "realm_publication_view.dart";
+export "realm_surface_navigation.dart";
+export "resource_appearance_provider.dart";
+export "resource_creation.dart";
+export "resource_drop.dart";
+export "resource_issues.dart";
+export "resource_operation_runner.dart";
+export "resource_operations.dart";
+export "surface_navigator.dart";

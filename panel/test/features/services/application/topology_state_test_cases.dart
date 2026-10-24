@@ -1,0 +1,288 @@
+part of "topology_provider_test.dart";
+
+void topologyStateTests() {
+  for (final conflict in [false, true]) {
+    for (final eventFirst in [false, true]) {
+      test(
+        "${conflict ? "conflict" : "success"} and watch converge with eventFirst=$eventFirst",
+        () async {
+          final response = Completer<skir.ConfigureServiceHostResponse>();
+          final nats = FakeNatsClient()
+            ..registerHandler(
+              _watchSubject,
+              (_) => skir.WatchOrganizationTopologyResponse.serializer.toBytes(
+                skir.WatchOrganizationTopologyResponse.createList(
+                  hosts: [_host()],
+                  realms: [_realm()],
+                  engines: [],
+                ),
+              ),
+            )
+            ..registerHandler(
+              _configureSubject,
+              (_) async => skir.ConfigureServiceHostResponse.serializer.toBytes(
+                await response.future,
+              ),
+            );
+          final container = ProviderContainer.test(
+            overrides: [
+              ...appOverrides(),
+              userIdProvider.overrideWith((ref) async => "user1"),
+              organizationIdProvider.overrideWith((ref) => _organizationId),
+              natsProvider.overrideWith(() => FakeNats(nats)),
+            ],
+          );
+          addTearDown(nats.dispose);
+          addTearDown(container.dispose);
+
+          final provider = organizationTopologyControllerProvider(
+            _organizationId,
+          );
+          container.listen(provider, (_, _) {});
+          await container.read(provider.future);
+
+          final change = skir.HostConfigurationChange(
+            host: _host(revision: 2),
+            realm: null,
+            engine: null,
+            removedResources: [_realm().realmId],
+          );
+          void emit(skir.OrganizationTopologyChanged event) {
+            nats.emitMessageOnSubject(
+              _listenSubject,
+              skir.OrganizationTopologyChanged.serializer.toBytes(event),
+            );
+          }
+
+          final command = _configureHost(
+            container,
+            _host(),
+            skir.HostExecutionConfiguration(realm: null, primaryEngine: null),
+          );
+          final commandCompleted = expectLater(
+            command,
+            completion(isA<skir.ConfigureServiceHostResponse>()),
+          );
+
+          await _waitFor(
+            () => nats.requests.any(
+              (request) => request.subject == _configureSubject,
+            ),
+          );
+          if (eventFirst) {
+            emit(
+              skir.OrganizationTopologyChanged.wrapConfigurationChanged(change),
+            );
+            await _waitFor(
+              () =>
+                  container.read(provider).requireValue.hosts.first.revision ==
+                  2,
+            );
+          }
+          response.complete(
+            conflict
+                ? skir.ConfigureServiceHostResponse.createConflictError(
+                    actual: change,
+                  )
+                : skir.ConfigureServiceHostResponse.wrapSuccess(change),
+          );
+          await commandCompleted;
+          await container.pump();
+
+          expect(
+            container.read(provider).requireValue.hosts.single.revision,
+            2,
+          );
+          expect(container.read(provider).requireValue.realms, isEmpty);
+
+          emit(
+            skir.OrganizationTopologyChanged.wrapObservationsReported(
+              skir.HostExecutionObservation(
+                host: _host(
+                  state: skir.HostRuntimeState(
+                    status: skir.HostRuntimeStatus.active,
+                    message: "fresh",
+                    updatedAt: DateTime.utc(2026),
+                  ),
+                ),
+                realm: null,
+                engine: null,
+              ),
+            ),
+          );
+          emit(
+            skir.OrganizationTopologyChanged.wrapHostAdvertised(
+              _host(id: "host2"),
+            ),
+          );
+          emit(
+            skir.OrganizationTopologyChanged.wrapHostAdvertised(
+              _host(id: "host3"),
+            ),
+          );
+          await _waitFor(
+            () => container.read(provider).requireValue.hosts.length == 3,
+          );
+          final observed = container.read(provider).requireValue;
+
+          expect(observed.hosts.first.revision, 2);
+          expect(observed.hosts.first.state.message, "fresh");
+          expect(observed.realms, isEmpty);
+          emit(
+            skir.OrganizationTopologyChanged.wrapConfigurationChanged(change),
+          );
+          emit(
+            skir.OrganizationTopologyChanged.wrapReplace(
+              skir.OrganizationTopologySnapshot(
+                hosts: [
+                  _host(
+                    revision: 2,
+                    state: skir.HostRuntimeState(
+                      status: skir.HostRuntimeStatus.active,
+                      message: "fresh",
+                      updatedAt: DateTime.utc(2026),
+                    ),
+                  ),
+                  _host(id: "host2"),
+                ],
+                realms: [],
+                engines: [],
+              ),
+            ),
+          );
+          await _waitFor(
+            () => container.read(provider).requireValue.hosts.length == 2,
+          );
+
+          expect(
+            container.read(provider).requireValue.hosts.first.state.message,
+            "fresh",
+          );
+          expect(container.read(provider).requireValue.hosts.first.revision, 2);
+        },
+      );
+    }
+  }
+
+  test(
+    "organization owners isolate commands and dispose subscriptions",
+    () async {
+      final otherId = skir.recordId("organization:org2");
+      final nats = FakeNatsClient();
+      for (final id in [_organizationId, otherId]) {
+        nats.registerHandler(
+          "cloud.to.user.user1.organization.${id.id}.topology.watch",
+          (_) => skir.WatchOrganizationTopologyResponse.serializer.toBytes(
+            skir.WatchOrganizationTopologyResponse.createList(
+              hosts: [_host()],
+              realms: [],
+              engines: [],
+            ),
+          ),
+        );
+      }
+      nats.registerHandler(
+        _configureSubject,
+        (_) => skir.ConfigureServiceHostResponse.serializer.toBytes(
+          skir.ConfigureServiceHostResponse.createSuccess(
+            host: _host(revision: 2),
+            realm: null,
+            engine: null,
+            removedResources: [],
+          ),
+        ),
+      );
+      final container = ProviderContainer.test(
+        overrides: [
+          ...appOverrides(),
+          userIdProvider.overrideWith((ref) async => "user1"),
+          natsProvider.overrideWith(() => FakeNats(nats)),
+        ],
+      );
+      addTearDown(nats.dispose);
+
+      addTearDown(container.dispose);
+      final first = organizationTopologyControllerProvider(_organizationId);
+      final second = organizationTopologyControllerProvider(otherId);
+      final subscription = container.listen(first, (_, _) {});
+      container.listen(second, (_, _) {});
+      await Future.wait([
+        container.read(first.future),
+        container.read(second.future),
+      ]);
+
+      await _configureHost(
+        container,
+        _host(),
+        skir.HostExecutionConfiguration(realm: null, primaryEngine: null),
+      );
+      await container.pump();
+      expect(container.read(first).requireValue.hosts.single.revision, 2);
+      expect(container.read(second).requireValue.hosts.single.revision, 1);
+      subscription.close();
+      container.invalidate(first);
+      await container.pump();
+
+      expect(nats.subscriptionSubjects, [
+        "cloud.from.organization.org2.topology.watch",
+      ]);
+    },
+  );
+  test(
+    "host configuration sends the generated transactional request",
+    () async {
+      final nats = FakeNatsClient()
+        ..registerHandler(
+          _watchSubject,
+          (_) => skir.WatchOrganizationTopologyResponse.serializer.toBytes(
+            skir.WatchOrganizationTopologyResponse.createList(
+              hosts: [_host()],
+              realms: [],
+              engines: [],
+            ),
+          ),
+        );
+      skir.ConfigureServiceHostRequest? decoded;
+      nats.registerHandler(_configureSubject, (data) {
+        decoded = skir.ConfigureServiceHostRequest.serializer.fromBytes(data);
+        return skir.ConfigureServiceHostResponse.serializer.toBytes(
+          skir.ConfigureServiceHostResponse.createSuccess(
+            host: _host(revision: 2),
+            realm: null,
+            engine: null,
+            removedResources: [],
+          ),
+        );
+      });
+      final container = ProviderContainer.test(
+        overrides: [
+          ...appOverrides(),
+          userIdProvider.overrideWith((ref) async => "user1"),
+          organizationIdProvider.overrideWith((ref) => _organizationId),
+          natsProvider.overrideWith(() => FakeNats(nats)),
+        ],
+      );
+      addTearDown(container.dispose);
+      addTearDown(nats.dispose);
+
+      container.listen(organizationTopologyProvider, (_, _) {});
+      await container.read(organizationTopologyProvider.future);
+      final execution = skir.HostExecutionConfiguration(
+        realm: null,
+        primaryEngine: null,
+      );
+
+      await _configureHost(container, _host(), execution);
+
+      expect(
+        nats.requests
+            .singleWhere((request) => request.subject == _configureSubject)
+            .subject,
+        _configureSubject,
+      );
+      expect(decoded!.hostId, _host().hostId);
+      expect(decoded!.expectedRevision, 1);
+      expect(decoded!.execution, execution);
+    },
+  );
+}

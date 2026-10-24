@@ -130,18 +130,6 @@ List<skir.Organization> _reduceOrganizations(
   });
 }
 
-/// Resolves the organization route parameter into the typed record identity.
-///
-/// A missing route parameter yields null. No provider fabricates an organization
-/// identity, so nested organization consumers can distinguish an absent route
-/// from a missing membership projection.
-@riverpod
-skir.RecordId? organizationId(Ref ref) {
-  final id = ref.watch(routeParamProvider("organizationId"));
-  if (id == null) return null;
-  return skir.recordId("organization:$id");
-}
-
 /// Selects the routed organization from the user's canonical organization list.
 ///
 /// This is a read projection, not a second organization cache. It stays null

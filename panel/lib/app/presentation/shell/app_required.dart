@@ -17,7 +17,9 @@ class AppRequiredWidgets extends HookWidget {
     useDisableContextMenu();
     return RealmNavigationBoundary(
       child: SelectionOperationsRoot(
-        operations: const [...coreSelectionOperations],
+        source: const AuthoringSelectionOperations(
+          RegisteredSelectionOperations(coreSelectionOperations),
+        ),
         child: GlobalCursorController(
           child: GlobalPaneNavigator(
             child: GlobalActionsManager(

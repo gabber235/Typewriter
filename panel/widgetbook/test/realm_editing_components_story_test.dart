@@ -1,9 +1,9 @@
 import "package:flutter_test/flutter_test.dart";
 import "package:typewriter_panel/typewriter_panel.dart";
 import "package:typewriter_testkit/typewriter_testkit.dart";
-import "package:widgetbook_workspace/stories/features/organizations/features/realms/presentation/authored_type_argument_editor.stories.dart";
-import "package:widgetbook_workspace/stories/features/organizations/features/realms/presentation/realm_editing_review.stories.dart";
-import "package:widgetbook_workspace/stories/features/organizations/features/realms/presentation/resource_drop_target.stories.dart";
+import "package:widgetbook_workspace/stories/authoring/presentation/authored_type_argument_editor.stories.dart";
+import "package:widgetbook_workspace/stories/authoring/presentation/realm_editing_review.stories.dart";
+import "package:widgetbook_workspace/stories/authoring/presentation/resource_drop_target.stories.dart";
 
 void main() {
   Future<void> choose(WidgetTester tester, String label) async {

@@ -2,8 +2,8 @@ import "package:flutter_test/flutter_test.dart";
 import "package:typewriter_panel/typewriter_panel.dart";
 import "package:widgetbook_workspace/stories/shared/editors/presentation/components/color_picker/color_picker_field.stories.dart";
 import "package:widgetbook_workspace/stories/shared/editors/presentation/components/date_time_picker/date_time_picker_field.stories.dart";
-import "package:widgetbook_workspace/stories/shared/editors/presentation/components/input_field_container.stories.dart";
-import "package:widgetbook_workspace/stories/shared/editors/presentation/components/validated_text_field.stories.dart";
+import "package:widgetbook_workspace/stories/shared/ui/input/input_field_container.stories.dart";
+import "package:widgetbook_workspace/stories/shared/ui/input/validated_text_field.stories.dart";
 
 void main() {
   testWidgets("input container enters and leaves editing by keyboard", (

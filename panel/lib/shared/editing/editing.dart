@@ -9,4 +9,3 @@ export "selection_editing.dart";
 export "value_edit_model.dart";
 export "value_edit_persistence.dart";
 export "value_editing.dart";
-export "value_editing_registration.dart";

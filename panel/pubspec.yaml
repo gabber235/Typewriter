@@ -65,6 +65,7 @@ dependencies:
   crypto: 3.0.7
 
 dev_dependencies:
+  analyzer: ^13.3.0
   flutter_test:
     sdk: flutter
   auto_route_generator:

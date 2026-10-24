@@ -1,5 +1,4 @@
-/// Public authentication feature surface, combining session state and sign in UI.
+/// Public authentication feature surface: the sign in route.
 library;
 
-export "application/application.dart";
 export "presentation/presentation.dart";

@@ -1,7 +1,7 @@
 import "package:flutter_test/flutter_test.dart";
 import "package:typewriter_panel/typewriter_panel.dart";
 import "package:typewriter_testkit/typewriter_testkit.dart";
-import "package:widgetbook_workspace/stories/features/organizations/features/realms/presentation/resource_drop_target.stories.dart";
+import "package:widgetbook_workspace/stories/authoring/presentation/resource_drop_target.stories.dart";
 
 void main() {
   testWidgets(
