@@ -10,4 +10,7 @@ List<Override> appOverrides() => [
   interactionSuspendedProvider.overrideWith(
     (ref) => ref.watch(realmInteractionProvider).suspended,
   ),
+  dialogShortcutsProvider.overrideWith(
+    (ref) => ref.watch(selectionClearingShortcutsProvider),
+  ),
 ];

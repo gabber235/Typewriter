@@ -1,5 +1,7 @@
 import "package:typewriter_panel/typewriter_panel.dart";
 
+part "global_operation_shortcuts.g.dart";
+
 /// Gates selection operations and selection clearing by the current
 /// interaction context.
 ///
@@ -15,15 +17,31 @@ class GlobalOperationShortcuts extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final enabled =
-        !ref.watch(interactionSuspendedProvider) &&
-        ref.watch(currentInteractionModeProvider) is NormalMode;
     return ManagedActionSet(
-      shortcuts: [if (enabled) _unselectSelection],
-      child: SelectionOperationShortcuts(enabled: enabled, child: child),
+      shortcuts: ref.watch(selectionClearingShortcutsProvider),
+      child: SelectionOperationShortcuts(
+        enabled: ref.watch(selectionShortcutsEnabledProvider),
+        child: child,
+      ),
     );
   }
 }
+
+/// Whether selection shortcuts apply: only in [NormalMode] while interaction
+/// is not suspended.
+@riverpod
+bool selectionShortcutsEnabled(Ref ref) =>
+    !ref.watch(interactionSuspendedProvider) &&
+    ref.watch(currentInteractionModeProvider) is NormalMode;
+
+/// The shortcut that clears the selection while selection shortcuts apply.
+///
+/// [GlobalOperationShortcuts] offers it, and the app offers it in dialogs
+/// through [dialogShortcutsProvider].
+@riverpod
+List<ActionShortcut> selectionClearingShortcuts(Ref ref) => [
+  if (ref.watch(selectionShortcutsEnabledProvider)) _unselectSelection,
+];
 
 /// Clears the selection, or narrows a multi selection to the focused item.
 final _unselectSelection = ActionShortcut.intent(

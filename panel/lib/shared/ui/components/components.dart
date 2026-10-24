@@ -18,6 +18,7 @@ export "context_menu.dart";
 export "countdown_badge.dart";
 export "cursor_controller.dart";
 export "depth_box.dart";
+export "dialog_shortcuts.dart";
 export "dimension_resize.dart";
 export "directional_content_switcher.dart";
 export "drag_handle.dart";
