@@ -45,7 +45,6 @@ class HttpHeaders private constructor(
     private fun normalized() = entries.map { it.first.lowercase() to it.second }
 
     companion object {
-        /** Empty validated headers. */
         val Empty = HttpHeaders(emptyList())
 
         /** Builds validated headers from pairs while preserving their order and duplicates. */
@@ -76,7 +75,6 @@ class HttpHeaders private constructor(
     }
 }
 
-/** HTTP methods supported by the bounded service transport. */
 enum class HttpMethod(
     val permitsBody: Boolean,
 ) {

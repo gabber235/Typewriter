@@ -6,6 +6,7 @@
 library;
 
 export "animated_list.dart";
+export "deferred_value.dart";
 export "delayed_execution.dart";
 export "disable_context_menu.dart";
 export "focused_change.dart";
@@ -18,3 +19,5 @@ export "refresh_at.dart";
 export "rive.dart";
 export "text_size.dart";
 export "timer.dart";
+export "value_update_policy.dart";
+export "widget_state_observation.dart";

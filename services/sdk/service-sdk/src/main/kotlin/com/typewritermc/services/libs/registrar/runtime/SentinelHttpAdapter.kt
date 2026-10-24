@@ -1,5 +1,6 @@
 package com.typewritermc.services.libs.registrar.runtime
 
+import com.typewritermc.protocol.skir.fromBoundedBytes
 import com.typewritermc.services.libs.http.core.HttpMethod
 import com.typewritermc.services.libs.http.core.HttpOperation
 import com.typewritermc.services.libs.http.core.HttpRequest
@@ -9,7 +10,7 @@ import com.typewritermc.services.libs.registrar.RedactedSecret
 import com.typewritermc.services.libs.registrar.RegistrarFailure
 import com.typewritermc.services.libs.registrar.SentinelFailureReason
 import com.typewritermc.services.libs.telemetry.ErrorSlug
-import com.typewritermc.services.libs.utils.rethrowExceptionalThrowable
+import com.typewritermc.services.libs.utils.rethrowExceptional
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
 import skirout.access.v1.sentinel.GetSentinelCredentialsResponse
@@ -74,9 +75,9 @@ class TypewriterSentinelProvider(
         if (!result.response.headers.hasSkirMediaType()) return protocol()
         val response =
             try {
-                GetSentinelCredentialsResponse.serializer.fromBytes(result.response.body)
+                GetSentinelCredentialsResponse.serializer.fromBoundedBytes(result.response.body)
             } catch (failure: Throwable) {
-                rethrowExceptionalThrowable(failure)
+                failure.rethrowExceptional()
                 return protocol()
             }
         return when (response.kind) {
@@ -91,7 +92,7 @@ class TypewriterSentinelProvider(
                         ),
                     )
                 } catch (failure: Throwable) {
-                    rethrowExceptionalThrowable(failure)
+                    failure.rethrowExceptional()
                     protocol()
                 }
             }

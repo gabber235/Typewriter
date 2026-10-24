@@ -1,5 +1,11 @@
-import "package:dart_casing/dart_casing.dart";
 import "package:typewriter_panel/typewriter_panel.dart";
+
+extension NullableDisplayLabel on String? {
+  String displayLabel(String fallback) {
+    final value = this;
+    return value == null || value.trim().isEmpty ? fallback : value;
+  }
+}
 
 /// String transformations used for authored names and display labels.
 extension StringX on String {
@@ -20,11 +26,9 @@ extension StringX on String {
 
   int? get asInt => int.tryParse(this);
 
-  /// If the string is empty, returns null
-  /// Otherwise returns the string
   String? get nullIfEmpty => isEmpty ? null : this;
 
-  /// Joins a path with another path.
+  /// Appends a dot separated path, omitting the separator when this is empty.
   String join(String other) {
     if (isEmpty) return other;
     return "$this.$other";

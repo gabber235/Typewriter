@@ -1,5 +1,4 @@
-import "package:flutter/material.dart";
-import "package:flutter_animate/flutter_animate.dart";
+import "package:typewriter_panel/typewriter_panel.dart";
 
 /// Reusable animation effects for interactive panel controls.
 extension AnimationExtension on Animate {
@@ -23,7 +22,7 @@ extension AnimationExtension on Animate {
 
 /// Adds curve composition to Flutter tweens.
 extension TweenExtension<T> on Tween<T> {
-  /// Applies [curve] after this tween without changing its endpoints.
+  /// Transforms animation progress through [curve] before evaluating this tween.
   Animatable<T> curved(Curve curve) {
     return chain(CurveTween(curve: curve));
   }

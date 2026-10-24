@@ -11,51 +11,47 @@ class RelativeTimeDescription {
   final DateTime nextRefreshAt;
 }
 
-/// Formats [value] relative to [now] and returns the next useful refresh time.
-///
-/// Past and future values use compact and natural forms. Values below one
-/// minute are shown as `Just now`.
-RelativeTimeDescription describeRelativeTime({
-  required DateTime value,
-  required DateTime now,
-}) {
-  final future = value.isAfter(now);
-  final elapsed = future ? value.difference(now) : now.difference(value);
-  if (elapsed.inSeconds < 60) {
+extension RelativeTimestampOperations on DateTime {
+  /// Describes this timestamp relative to [now] and schedules its next change.
+  RelativeTimeDescription describeRelativeTo({required DateTime now}) {
+    final future = isAfter(now);
+    final elapsed = future ? difference(now) : now.difference(this);
+    if (elapsed.inSeconds < 60) {
+      return RelativeTimeDescription(
+        compact: "Just now",
+        natural: "Just now",
+        nextRefreshAt: add(const Duration(minutes: 1)),
+      );
+    }
+
+    final unit = _relativeUnit(elapsed);
+    final amount = elapsed.inSeconds ~/ unit.duration.inSeconds;
+    final compactValue = future
+        ? "in ${unit.compact(amount)}"
+        : "${unit.compact(amount)} ago";
+    final naturalValue = future
+        ? "in ${unit.natural(amount)}"
+        : "${unit.natural(amount)} ago";
+    final boundary = future
+        ? subtract(unit.duration * amount)
+        : add(unit.duration * (amount + 1));
+
+    final nextThreshold = unit.nextThreshold;
+    final threshold = future || nextThreshold == null
+        ? null
+        : add(nextThreshold);
+    final nextBoundary = threshold != null && threshold.isBefore(boundary)
+        ? threshold
+        : boundary;
+
     return RelativeTimeDescription(
-      compact: "Just now",
-      natural: "Just now",
-      nextRefreshAt: value.add(const Duration(minutes: 1)),
+      compact: compactValue,
+      natural: naturalValue,
+      nextRefreshAt: nextBoundary.isAfter(now)
+          ? nextBoundary
+          : now.add(const Duration(seconds: 1)),
     );
   }
-
-  final unit = _relativeUnit(elapsed);
-  final amount = elapsed.inSeconds ~/ unit.duration.inSeconds;
-  final compactValue = future
-      ? "in ${unit.compact(amount)}"
-      : "${unit.compact(amount)} ago";
-  final naturalValue = future
-      ? "in ${unit.natural(amount)}"
-      : "${unit.natural(amount)} ago";
-  final boundary = future
-      ? value.subtract(unit.duration * amount)
-      : value.add(unit.duration * (amount + 1));
-
-  final nextThreshold = unit.nextThreshold;
-  final threshold = future || nextThreshold == null
-      ? null
-      : value.add(nextThreshold);
-  final nextBoundary = threshold != null && threshold.isBefore(boundary)
-      ? threshold
-      : boundary;
-
-  return RelativeTimeDescription(
-    compact: compactValue,
-    natural: naturalValue,
-    nextRefreshAt: nextBoundary.isAfter(now)
-        ? nextBoundary
-        : now.add(const Duration(seconds: 1)),
-  );
 }
 
 _RelativeUnit _relativeUnit(Duration value) {

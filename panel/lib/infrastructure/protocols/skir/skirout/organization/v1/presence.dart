@@ -12,6 +12,7 @@
 //   dart pub add skir_client
 
 import "dart:core" as _core;
+
 import "package:skir_client/skir_client.dart" as _skir;
 
 import "../../kernel/v1/record_id.dart" as _lib_kernel_v1_record_id;
@@ -37,7 +38,8 @@ final class OrganizationPresence implements OrganizationPresence_orMutable {
 
   /// Returns a new mutable instance.
   /// Fields are initialized to their default values.
-  static OrganizationPresence_mutable mutable() => OrganizationPresence_mutable._();
+  static OrganizationPresence_mutable mutable() =>
+      OrganizationPresence_mutable._();
 
   /// Returns this instance (no-op).
   @_core.Deprecated("This instance is already frozen.")
@@ -51,7 +53,10 @@ final class OrganizationPresence implements OrganizationPresence_orMutable {
   _core.bool operator ==(other) {
     if (_core.identical(this, other)) return true;
     if (other is! OrganizationPresence) return false;
-    return _skir.internal__listEquality.equals(_equality_proxy, other._equality_proxy);
+    return _skir.internal__listEquality.equals(
+      _equality_proxy,
+      other._equality_proxy,
+    );
   }
 
   @_core.override
@@ -63,7 +68,11 @@ final class OrganizationPresence implements OrganizationPresence_orMutable {
   _core.String toString() => _skir.internal__stringify(this, serializer);
 
   /// Serializer for `OrganizationPresence` instances.
-  static _skir.StructSerializer<OrganizationPresence, OrganizationPresence_mutable> get serializer {
+  static _skir.StructSerializer<
+    OrganizationPresence,
+    OrganizationPresence_mutable
+  >
+  get serializer {
     if (_serializerBuilder.mustInitialize()) {
       _serializerBuilder.finalize();
     }
@@ -82,7 +91,8 @@ final class OrganizationPresence implements OrganizationPresence_orMutable {
 }
 
 /// Mutable version of [OrganizationPresence].
-final class OrganizationPresence_mutable implements OrganizationPresence_orMutable {
+final class OrganizationPresence_mutable
+    implements OrganizationPresence_orMutable {
   _skir.internal__UnrecognizedFields? _u;
 
   OrganizationPresence_mutable._();
@@ -127,7 +137,10 @@ final class MembersPresence implements MembersPresence_orMutable {
   _core.bool operator ==(other) {
     if (_core.identical(this, other)) return true;
     if (other is! MembersPresence) return false;
-    return _skir.internal__listEquality.equals(_equality_proxy, other._equality_proxy);
+    return _skir.internal__listEquality.equals(
+      _equality_proxy,
+      other._equality_proxy,
+    );
   }
 
   @_core.override
@@ -139,7 +152,8 @@ final class MembersPresence implements MembersPresence_orMutable {
   _core.String toString() => _skir.internal__stringify(this, serializer);
 
   /// Serializer for `MembersPresence` instances.
-  static _skir.StructSerializer<MembersPresence, MembersPresence_mutable> get serializer {
+  static _skir.StructSerializer<MembersPresence, MembersPresence_mutable>
+  get serializer {
     if (_serializerBuilder.mustInitialize()) {
       _serializerBuilder.finalize();
     }
@@ -203,7 +217,10 @@ final class ServicesPresence implements ServicesPresence_orMutable {
   _core.bool operator ==(other) {
     if (_core.identical(this, other)) return true;
     if (other is! ServicesPresence) return false;
-    return _skir.internal__listEquality.equals(_equality_proxy, other._equality_proxy);
+    return _skir.internal__listEquality.equals(
+      _equality_proxy,
+      other._equality_proxy,
+    );
   }
 
   @_core.override
@@ -215,7 +232,8 @@ final class ServicesPresence implements ServicesPresence_orMutable {
   _core.String toString() => _skir.internal__stringify(this, serializer);
 
   /// Serializer for `ServicesPresence` instances.
-  static _skir.StructSerializer<ServicesPresence, ServicesPresence_mutable> get serializer {
+  static _skir.StructSerializer<ServicesPresence, ServicesPresence_mutable>
+  get serializer {
     if (_serializerBuilder.mustInitialize()) {
       _serializerBuilder.finalize();
     }
@@ -262,13 +280,9 @@ final class ServicePresence implements ServicePresence_orMutable {
 
   factory ServicePresence({
     required _lib_kernel_v1_record_id.RecordId_orMutable serviceId,
-  }) => ServicePresence._(
-    serviceId.toFrozen(),
-  );
+  }) => ServicePresence._(serviceId.toFrozen());
 
-  ServicePresence._(
-    this.serviceId,
-  );
+  ServicePresence._(this.serviceId);
 
   /// Default instance with all fields set to their default values.
   static final defaultInstance = ServicePresence._(
@@ -287,29 +301,30 @@ final class ServicePresence implements ServicePresence_orMutable {
   ServicePresence toFrozen() => this;
 
   /// Returns a mutable shallow copy of this instance.
-  ServicePresence_mutable toMutable() => ServicePresence_mutable._(
-    this.serviceId,
-  );
+  ServicePresence_mutable toMutable() =>
+      ServicePresence_mutable._(this.serviceId);
 
   @_core.override
   _core.bool operator ==(other) {
     if (_core.identical(this, other)) return true;
     if (other is! ServicePresence) return false;
-    return _skir.internal__listEquality.equals(_equality_proxy, other._equality_proxy);
+    return _skir.internal__listEquality.equals(
+      _equality_proxy,
+      other._equality_proxy,
+    );
   }
 
   @_core.override
   _core.int get hashCode => _skir.internal__listEquality.hash(_equality_proxy);
 
-  _core.List get _equality_proxy => [
-    this.serviceId,
-  ];
+  _core.List get _equality_proxy => [this.serviceId];
 
   @_core.override
   _core.String toString() => _skir.internal__stringify(this, serializer);
 
   /// Serializer for `ServicePresence` instances.
-  static _skir.StructSerializer<ServicePresence, ServicePresence_mutable> get serializer {
+  static _skir.StructSerializer<ServicePresence, ServicePresence_mutable>
+  get serializer {
     if (_serializerBuilder.mustInitialize()) {
       _serializerBuilder.addField(
         "service_id",
@@ -341,9 +356,7 @@ final class ServicePresence_mutable implements ServicePresence_orMutable {
   _lib_kernel_v1_record_id.RecordId_orMutable serviceId;
   _skir.internal__UnrecognizedFields? _u;
 
-  ServicePresence_mutable._(
-    this.serviceId,
-  );
+  ServicePresence_mutable._(this.serviceId);
 
   /// If the value of [serviceId] is already mutable, returns it as-is.
   /// Otherwise, makes a mutable copy, assigns it back to [serviceId] and returns it.
@@ -352,15 +365,15 @@ final class ServicePresence_mutable implements ServicePresence_orMutable {
     if (value is _lib_kernel_v1_record_id.RecordId_mutable) {
       return value;
     } else {
-      return this.serviceId = (value as _lib_kernel_v1_record_id.RecordId).toMutable();
+      return this.serviceId = (value as _lib_kernel_v1_record_id.RecordId)
+          .toMutable();
     }
   }
 
   /// Returns a deeply immutable copy of this instance.
   @_core.override
-  ServicePresence toFrozen() => ServicePresence(
-    serviceId: this.serviceId,
-  ).._u = this._u;
+  ServicePresence toFrozen() =>
+      ServicePresence(serviceId: this.serviceId).._u = this._u;
 }
 
 // -----------------------------------------------------------------------------
@@ -398,7 +411,10 @@ final class RealmsPresence implements RealmsPresence_orMutable {
   _core.bool operator ==(other) {
     if (_core.identical(this, other)) return true;
     if (other is! RealmsPresence) return false;
-    return _skir.internal__listEquality.equals(_equality_proxy, other._equality_proxy);
+    return _skir.internal__listEquality.equals(
+      _equality_proxy,
+      other._equality_proxy,
+    );
   }
 
   @_core.override
@@ -410,7 +426,8 @@ final class RealmsPresence implements RealmsPresence_orMutable {
   _core.String toString() => _skir.internal__stringify(this, serializer);
 
   /// Serializer for `RealmsPresence` instances.
-  static _skir.StructSerializer<RealmsPresence, RealmsPresence_mutable> get serializer {
+  static _skir.StructSerializer<RealmsPresence, RealmsPresence_mutable>
+  get serializer {
     if (_serializerBuilder.mustInitialize()) {
       _serializerBuilder.finalize();
     }
@@ -457,13 +474,9 @@ final class RealmPresence implements RealmPresence_orMutable {
 
   factory RealmPresence({
     required _lib_kernel_v1_record_id.RecordId_orMutable realmId,
-  }) => RealmPresence._(
-    realmId.toFrozen(),
-  );
+  }) => RealmPresence._(realmId.toFrozen());
 
-  RealmPresence._(
-    this.realmId,
-  );
+  RealmPresence._(this.realmId);
 
   /// Default instance with all fields set to their default values.
   static final defaultInstance = RealmPresence._(
@@ -482,29 +495,29 @@ final class RealmPresence implements RealmPresence_orMutable {
   RealmPresence toFrozen() => this;
 
   /// Returns a mutable shallow copy of this instance.
-  RealmPresence_mutable toMutable() => RealmPresence_mutable._(
-    this.realmId,
-  );
+  RealmPresence_mutable toMutable() => RealmPresence_mutable._(this.realmId);
 
   @_core.override
   _core.bool operator ==(other) {
     if (_core.identical(this, other)) return true;
     if (other is! RealmPresence) return false;
-    return _skir.internal__listEquality.equals(_equality_proxy, other._equality_proxy);
+    return _skir.internal__listEquality.equals(
+      _equality_proxy,
+      other._equality_proxy,
+    );
   }
 
   @_core.override
   _core.int get hashCode => _skir.internal__listEquality.hash(_equality_proxy);
 
-  _core.List get _equality_proxy => [
-    this.realmId,
-  ];
+  _core.List get _equality_proxy => [this.realmId];
 
   @_core.override
   _core.String toString() => _skir.internal__stringify(this, serializer);
 
   /// Serializer for `RealmPresence` instances.
-  static _skir.StructSerializer<RealmPresence, RealmPresence_mutable> get serializer {
+  static _skir.StructSerializer<RealmPresence, RealmPresence_mutable>
+  get serializer {
     if (_serializerBuilder.mustInitialize()) {
       _serializerBuilder.addField(
         "realm_id",
@@ -536,9 +549,7 @@ final class RealmPresence_mutable implements RealmPresence_orMutable {
   _lib_kernel_v1_record_id.RecordId_orMutable realmId;
   _skir.internal__UnrecognizedFields? _u;
 
-  RealmPresence_mutable._(
-    this.realmId,
-  );
+  RealmPresence_mutable._(this.realmId);
 
   /// If the value of [realmId] is already mutable, returns it as-is.
   /// Otherwise, makes a mutable copy, assigns it back to [realmId] and returns it.
@@ -547,15 +558,15 @@ final class RealmPresence_mutable implements RealmPresence_orMutable {
     if (value is _lib_kernel_v1_record_id.RecordId_mutable) {
       return value;
     } else {
-      return this.realmId = (value as _lib_kernel_v1_record_id.RecordId).toMutable();
+      return this.realmId = (value as _lib_kernel_v1_record_id.RecordId)
+          .toMutable();
     }
   }
 
   /// Returns a deeply immutable copy of this instance.
   @_core.override
-  RealmPresence toFrozen() => RealmPresence(
-    realmId: this.realmId,
-  ).._u = this._u;
+  RealmPresence toFrozen() =>
+      RealmPresence(realmId: this.realmId).._u = this._u;
 }
 
 // -----------------------------------------------------------------------------
@@ -576,13 +587,9 @@ final class RealmLibraryPresence implements RealmLibraryPresence_orMutable {
 
   factory RealmLibraryPresence({
     required _lib_kernel_v1_record_id.RecordId_orMutable realmId,
-  }) => RealmLibraryPresence._(
-    realmId.toFrozen(),
-  );
+  }) => RealmLibraryPresence._(realmId.toFrozen());
 
-  RealmLibraryPresence._(
-    this.realmId,
-  );
+  RealmLibraryPresence._(this.realmId);
 
   /// Default instance with all fields set to their default values.
   static final defaultInstance = RealmLibraryPresence._(
@@ -591,9 +598,10 @@ final class RealmLibraryPresence implements RealmLibraryPresence_orMutable {
 
   /// Returns a new mutable instance.
   /// Fields are initialized to their default values.
-  static RealmLibraryPresence_mutable mutable() => RealmLibraryPresence_mutable._(
-    _lib_kernel_v1_record_id.RecordId.defaultInstance,
-  );
+  static RealmLibraryPresence_mutable mutable() =>
+      RealmLibraryPresence_mutable._(
+        _lib_kernel_v1_record_id.RecordId.defaultInstance,
+      );
 
   /// Returns this instance (no-op).
   @_core.Deprecated("This instance is already frozen.")
@@ -601,29 +609,33 @@ final class RealmLibraryPresence implements RealmLibraryPresence_orMutable {
   RealmLibraryPresence toFrozen() => this;
 
   /// Returns a mutable shallow copy of this instance.
-  RealmLibraryPresence_mutable toMutable() => RealmLibraryPresence_mutable._(
-    this.realmId,
-  );
+  RealmLibraryPresence_mutable toMutable() =>
+      RealmLibraryPresence_mutable._(this.realmId);
 
   @_core.override
   _core.bool operator ==(other) {
     if (_core.identical(this, other)) return true;
     if (other is! RealmLibraryPresence) return false;
-    return _skir.internal__listEquality.equals(_equality_proxy, other._equality_proxy);
+    return _skir.internal__listEquality.equals(
+      _equality_proxy,
+      other._equality_proxy,
+    );
   }
 
   @_core.override
   _core.int get hashCode => _skir.internal__listEquality.hash(_equality_proxy);
 
-  _core.List get _equality_proxy => [
-    this.realmId,
-  ];
+  _core.List get _equality_proxy => [this.realmId];
 
   @_core.override
   _core.String toString() => _skir.internal__stringify(this, serializer);
 
   /// Serializer for `RealmLibraryPresence` instances.
-  static _skir.StructSerializer<RealmLibraryPresence, RealmLibraryPresence_mutable> get serializer {
+  static _skir.StructSerializer<
+    RealmLibraryPresence,
+    RealmLibraryPresence_mutable
+  >
+  get serializer {
     if (_serializerBuilder.mustInitialize()) {
       _serializerBuilder.addField(
         "realm_id",
@@ -651,13 +663,12 @@ final class RealmLibraryPresence implements RealmLibraryPresence_orMutable {
 }
 
 /// Mutable version of [RealmLibraryPresence].
-final class RealmLibraryPresence_mutable implements RealmLibraryPresence_orMutable {
+final class RealmLibraryPresence_mutable
+    implements RealmLibraryPresence_orMutable {
   _lib_kernel_v1_record_id.RecordId_orMutable realmId;
   _skir.internal__UnrecognizedFields? _u;
 
-  RealmLibraryPresence_mutable._(
-    this.realmId,
-  );
+  RealmLibraryPresence_mutable._(this.realmId);
 
   /// If the value of [realmId] is already mutable, returns it as-is.
   /// Otherwise, makes a mutable copy, assigns it back to [realmId] and returns it.
@@ -666,15 +677,15 @@ final class RealmLibraryPresence_mutable implements RealmLibraryPresence_orMutab
     if (value is _lib_kernel_v1_record_id.RecordId_mutable) {
       return value;
     } else {
-      return this.realmId = (value as _lib_kernel_v1_record_id.RecordId).toMutable();
+      return this.realmId = (value as _lib_kernel_v1_record_id.RecordId)
+          .toMutable();
     }
   }
 
   /// Returns a deeply immutable copy of this instance.
   @_core.override
-  RealmLibraryPresence toFrozen() => RealmLibraryPresence(
-    realmId: this.realmId,
-  ).._u = this._u;
+  RealmLibraryPresence toFrozen() =>
+      RealmLibraryPresence(realmId: this.realmId).._u = this._u;
 }
 
 // -----------------------------------------------------------------------------
@@ -695,13 +706,9 @@ final class RealmTagsPresence implements RealmTagsPresence_orMutable {
 
   factory RealmTagsPresence({
     required _lib_kernel_v1_record_id.RecordId_orMutable realmId,
-  }) => RealmTagsPresence._(
-    realmId.toFrozen(),
-  );
+  }) => RealmTagsPresence._(realmId.toFrozen());
 
-  RealmTagsPresence._(
-    this.realmId,
-  );
+  RealmTagsPresence._(this.realmId);
 
   /// Default instance with all fields set to their default values.
   static final defaultInstance = RealmTagsPresence._(
@@ -720,29 +727,30 @@ final class RealmTagsPresence implements RealmTagsPresence_orMutable {
   RealmTagsPresence toFrozen() => this;
 
   /// Returns a mutable shallow copy of this instance.
-  RealmTagsPresence_mutable toMutable() => RealmTagsPresence_mutable._(
-    this.realmId,
-  );
+  RealmTagsPresence_mutable toMutable() =>
+      RealmTagsPresence_mutable._(this.realmId);
 
   @_core.override
   _core.bool operator ==(other) {
     if (_core.identical(this, other)) return true;
     if (other is! RealmTagsPresence) return false;
-    return _skir.internal__listEquality.equals(_equality_proxy, other._equality_proxy);
+    return _skir.internal__listEquality.equals(
+      _equality_proxy,
+      other._equality_proxy,
+    );
   }
 
   @_core.override
   _core.int get hashCode => _skir.internal__listEquality.hash(_equality_proxy);
 
-  _core.List get _equality_proxy => [
-    this.realmId,
-  ];
+  _core.List get _equality_proxy => [this.realmId];
 
   @_core.override
   _core.String toString() => _skir.internal__stringify(this, serializer);
 
   /// Serializer for `RealmTagsPresence` instances.
-  static _skir.StructSerializer<RealmTagsPresence, RealmTagsPresence_mutable> get serializer {
+  static _skir.StructSerializer<RealmTagsPresence, RealmTagsPresence_mutable>
+  get serializer {
     if (_serializerBuilder.mustInitialize()) {
       _serializerBuilder.addField(
         "realm_id",
@@ -774,9 +782,7 @@ final class RealmTagsPresence_mutable implements RealmTagsPresence_orMutable {
   _lib_kernel_v1_record_id.RecordId_orMutable realmId;
   _skir.internal__UnrecognizedFields? _u;
 
-  RealmTagsPresence_mutable._(
-    this.realmId,
-  );
+  RealmTagsPresence_mutable._(this.realmId);
 
   /// If the value of [realmId] is already mutable, returns it as-is.
   /// Otherwise, makes a mutable copy, assigns it back to [realmId] and returns it.
@@ -785,15 +791,15 @@ final class RealmTagsPresence_mutable implements RealmTagsPresence_orMutable {
     if (value is _lib_kernel_v1_record_id.RecordId_mutable) {
       return value;
     } else {
-      return this.realmId = (value as _lib_kernel_v1_record_id.RecordId).toMutable();
+      return this.realmId = (value as _lib_kernel_v1_record_id.RecordId)
+          .toMutable();
     }
   }
 
   /// Returns a deeply immutable copy of this instance.
   @_core.override
-  RealmTagsPresence toFrozen() => RealmTagsPresence(
-    realmId: this.realmId,
-  ).._u = this._u;
+  RealmTagsPresence toFrozen() =>
+      RealmTagsPresence(realmId: this.realmId).._u = this._u;
 }
 
 // -----------------------------------------------------------------------------
@@ -818,15 +824,9 @@ final class BookPresence implements BookPresence_orMutable {
   factory BookPresence({
     required _lib_kernel_v1_record_id.RecordId_orMutable realmId,
     required _lib_kernel_v1_record_id.RecordId_orMutable bookId,
-  }) => BookPresence._(
-    realmId.toFrozen(),
-    bookId.toFrozen(),
-  );
+  }) => BookPresence._(realmId.toFrozen(), bookId.toFrozen());
 
-  BookPresence._(
-    this.realmId,
-    this.bookId,
-  );
+  BookPresence._(this.realmId, this.bookId);
 
   /// Default instance with all fields set to their default values.
   static final defaultInstance = BookPresence._(
@@ -847,31 +847,30 @@ final class BookPresence implements BookPresence_orMutable {
   BookPresence toFrozen() => this;
 
   /// Returns a mutable shallow copy of this instance.
-  BookPresence_mutable toMutable() => BookPresence_mutable._(
-    this.realmId,
-    this.bookId,
-  );
+  BookPresence_mutable toMutable() =>
+      BookPresence_mutable._(this.realmId, this.bookId);
 
   @_core.override
   _core.bool operator ==(other) {
     if (_core.identical(this, other)) return true;
     if (other is! BookPresence) return false;
-    return _skir.internal__listEquality.equals(_equality_proxy, other._equality_proxy);
+    return _skir.internal__listEquality.equals(
+      _equality_proxy,
+      other._equality_proxy,
+    );
   }
 
   @_core.override
   _core.int get hashCode => _skir.internal__listEquality.hash(_equality_proxy);
 
-  _core.List get _equality_proxy => [
-    this.realmId,
-    this.bookId,
-  ];
+  _core.List get _equality_proxy => [this.realmId, this.bookId];
 
   @_core.override
   _core.String toString() => _skir.internal__stringify(this, serializer);
 
   /// Serializer for `BookPresence` instances.
-  static _skir.StructSerializer<BookPresence, BookPresence_mutable> get serializer {
+  static _skir.StructSerializer<BookPresence, BookPresence_mutable>
+  get serializer {
     if (_serializerBuilder.mustInitialize()) {
       _serializerBuilder.addField(
         "realm_id",
@@ -913,10 +912,7 @@ final class BookPresence_mutable implements BookPresence_orMutable {
   _lib_kernel_v1_record_id.RecordId_orMutable bookId;
   _skir.internal__UnrecognizedFields? _u;
 
-  BookPresence_mutable._(
-    this.realmId,
-    this.bookId,
-  );
+  BookPresence_mutable._(this.realmId, this.bookId);
 
   /// If the value of [realmId] is already mutable, returns it as-is.
   /// Otherwise, makes a mutable copy, assigns it back to [realmId] and returns it.
@@ -925,7 +921,8 @@ final class BookPresence_mutable implements BookPresence_orMutable {
     if (value is _lib_kernel_v1_record_id.RecordId_mutable) {
       return value;
     } else {
-      return this.realmId = (value as _lib_kernel_v1_record_id.RecordId).toMutable();
+      return this.realmId = (value as _lib_kernel_v1_record_id.RecordId)
+          .toMutable();
     }
   }
 
@@ -936,16 +933,15 @@ final class BookPresence_mutable implements BookPresence_orMutable {
     if (value is _lib_kernel_v1_record_id.RecordId_mutable) {
       return value;
     } else {
-      return this.bookId = (value as _lib_kernel_v1_record_id.RecordId).toMutable();
+      return this.bookId = (value as _lib_kernel_v1_record_id.RecordId)
+          .toMutable();
     }
   }
 
   /// Returns a deeply immutable copy of this instance.
   @_core.override
-  BookPresence toFrozen() => BookPresence(
-    realmId: this.realmId,
-    bookId: this.bookId,
-  ).._u = this._u;
+  BookPresence toFrozen() =>
+      BookPresence(realmId: this.realmId, bookId: this.bookId).._u = this._u;
 }
 
 // -----------------------------------------------------------------------------
@@ -987,13 +983,7 @@ sealed class PageActivity {
         "",
         overview,
       );
-      _serializerBuilder.addConstantVariant(
-        2,
-        "graph",
-        "graph",
-        "",
-        graph,
-      );
+      _serializerBuilder.addConstantVariant(2, "graph", "graph", "", graph);
       _serializerBuilder.addConstantVariant(
         3,
         "timeline",
@@ -1013,15 +1003,16 @@ sealed class PageActivity {
     return _serializerBuilder.serializer;
   }
 
-  static final _serializerBuilder = _skir.internal__EnumSerializerBuilder.create(
-    recordId: "organization/v1/presence.skir:PageActivity",
-    doc: "",
-    unknownInstance: PageActivity_unknown._instance,
-    enumInstance: PageActivity.unknown,
-    getOrdinal: (it) => it.kind._ordinal,
-    wrapUnrecognized: PageActivity_unknown._unrecognized,
-    getUnrecognized: (it) => it._u,
-  );
+  static final _serializerBuilder = _skir.internal__EnumSerializerBuilder
+      .create(
+        recordId: "organization/v1/presence.skir:PageActivity",
+        doc: "",
+        unknownInstance: PageActivity_unknown._instance,
+        enumInstance: PageActivity.unknown,
+        getOrdinal: (it) => it.kind._ordinal,
+        wrapUnrecognized: PageActivity_unknown._unrecognized,
+        getUnrecognized: (it) => it._u,
+      );
 }
 
 /// The kind of variant held by a `PageActivity`.
@@ -1052,7 +1043,8 @@ final class PageActivity_unknown implements PageActivity {
   @_core.override
   _core.int get hashCode => 8118964;
   @_core.override
-  _core.String toString() => _skir.internal__stringify(this, PageActivity.serializer);
+  _core.String toString() =>
+      _skir.internal__stringify(this, PageActivity.serializer);
 }
 
 enum _PageActivity_consts implements PageActivity {
@@ -1067,7 +1059,8 @@ enum _PageActivity_consts implements PageActivity {
   const _PageActivity_consts(this.kind);
 
   @_core.override
-  _core.String toString() => _skir.internal__stringify(this, PageActivity.serializer);
+  _core.String toString() =>
+      _skir.internal__stringify(this, PageActivity.serializer);
 }
 
 // -----------------------------------------------------------------------------
@@ -1107,12 +1100,7 @@ final class PagePresence implements PagePresence_orMutable {
     activity,
   );
 
-  PagePresence._(
-    this.realmId,
-    this.bookId,
-    this.pageId,
-    this.activity,
-  );
+  PagePresence._(this.realmId, this.bookId, this.pageId, this.activity);
 
   /// Default instance with all fields set to their default values.
   static final defaultInstance = PagePresence._(
@@ -1148,7 +1136,10 @@ final class PagePresence implements PagePresence_orMutable {
   _core.bool operator ==(other) {
     if (_core.identical(this, other)) return true;
     if (other is! PagePresence) return false;
-    return _skir.internal__listEquality.equals(_equality_proxy, other._equality_proxy);
+    return _skir.internal__listEquality.equals(
+      _equality_proxy,
+      other._equality_proxy,
+    );
   }
 
   @_core.override
@@ -1165,7 +1156,8 @@ final class PagePresence implements PagePresence_orMutable {
   _core.String toString() => _skir.internal__stringify(this, serializer);
 
   /// Serializer for `PagePresence` instances.
-  static _skir.StructSerializer<PagePresence, PagePresence_mutable> get serializer {
+  static _skir.StructSerializer<PagePresence, PagePresence_mutable>
+  get serializer {
     if (_serializerBuilder.mustInitialize()) {
       _serializerBuilder.addField(
         "realm_id",
@@ -1227,12 +1219,7 @@ final class PagePresence_mutable implements PagePresence_orMutable {
   PageActivity activity;
   _skir.internal__UnrecognizedFields? _u;
 
-  PagePresence_mutable._(
-    this.realmId,
-    this.bookId,
-    this.pageId,
-    this.activity,
-  );
+  PagePresence_mutable._(this.realmId, this.bookId, this.pageId, this.activity);
 
   /// If the value of [realmId] is already mutable, returns it as-is.
   /// Otherwise, makes a mutable copy, assigns it back to [realmId] and returns it.
@@ -1241,7 +1228,8 @@ final class PagePresence_mutable implements PagePresence_orMutable {
     if (value is _lib_kernel_v1_record_id.RecordId_mutable) {
       return value;
     } else {
-      return this.realmId = (value as _lib_kernel_v1_record_id.RecordId).toMutable();
+      return this.realmId = (value as _lib_kernel_v1_record_id.RecordId)
+          .toMutable();
     }
   }
 
@@ -1252,7 +1240,8 @@ final class PagePresence_mutable implements PagePresence_orMutable {
     if (value is _lib_kernel_v1_record_id.RecordId_mutable) {
       return value;
     } else {
-      return this.bookId = (value as _lib_kernel_v1_record_id.RecordId).toMutable();
+      return this.bookId = (value as _lib_kernel_v1_record_id.RecordId)
+          .toMutable();
     }
   }
 
@@ -1263,7 +1252,8 @@ final class PagePresence_mutable implements PagePresence_orMutable {
     if (value is _lib_kernel_v1_record_id.RecordId_mutable) {
       return value;
     } else {
-      return this.pageId = (value as _lib_kernel_v1_record_id.RecordId).toMutable();
+      return this.pageId = (value as _lib_kernel_v1_record_id.RecordId)
+          .toMutable();
     }
   }
 
@@ -1305,121 +1295,88 @@ sealed class PresenceLocation {
   static const PresenceLocation unknown = PresenceLocation_unknown._instance;
 
   /// Create a 'organization' variant wrapping around the given value.
-  factory PresenceLocation.wrapOrganization(
-    OrganizationPresence value
-  ) => PresenceLocation_organizationWrapper._(value);
+  factory PresenceLocation.wrapOrganization(OrganizationPresence value) =>
+      PresenceLocation_organizationWrapper._(value);
 
   /// Same as `wrapOrganization(OrganizationPresence(...))`.
-  factory PresenceLocation.createOrganization() => PresenceLocation.wrapOrganization(
-    OrganizationPresence()
-  );
+  factory PresenceLocation.createOrganization() =>
+      PresenceLocation.wrapOrganization(OrganizationPresence());
 
   /// Create a 'members' variant wrapping around the given value.
-  factory PresenceLocation.wrapMembers(
-    MembersPresence value
-  ) => PresenceLocation_membersWrapper._(value);
+  factory PresenceLocation.wrapMembers(MembersPresence value) =>
+      PresenceLocation_membersWrapper._(value);
 
   /// Same as `wrapMembers(MembersPresence(...))`.
-  factory PresenceLocation.createMembers() => PresenceLocation.wrapMembers(
-    MembersPresence()
-  );
+  factory PresenceLocation.createMembers() =>
+      PresenceLocation.wrapMembers(MembersPresence());
 
   /// Create a 'services' variant wrapping around the given value.
-  factory PresenceLocation.wrapServices(
-    ServicesPresence value
-  ) => PresenceLocation_servicesWrapper._(value);
+  factory PresenceLocation.wrapServices(ServicesPresence value) =>
+      PresenceLocation_servicesWrapper._(value);
 
   /// Same as `wrapServices(ServicesPresence(...))`.
-  factory PresenceLocation.createServices() => PresenceLocation.wrapServices(
-    ServicesPresence()
-  );
+  factory PresenceLocation.createServices() =>
+      PresenceLocation.wrapServices(ServicesPresence());
 
   /// Create a 'service' variant wrapping around the given value.
-  factory PresenceLocation.wrapService(
-    ServicePresence value
-  ) => PresenceLocation_serviceWrapper._(value);
+  factory PresenceLocation.wrapService(ServicePresence value) =>
+      PresenceLocation_serviceWrapper._(value);
 
   /// Same as `wrapService(ServicePresence(...))`.
   factory PresenceLocation.createService({
     required _lib_kernel_v1_record_id.RecordId_orMutable serviceId,
-  }) => PresenceLocation.wrapService(
-    ServicePresence(
-      serviceId: serviceId,
-    )
-  );
+  }) => PresenceLocation.wrapService(ServicePresence(serviceId: serviceId));
 
   /// Create a 'realms' variant wrapping around the given value.
-  factory PresenceLocation.wrapRealms(
-    RealmsPresence value
-  ) => PresenceLocation_realmsWrapper._(value);
+  factory PresenceLocation.wrapRealms(RealmsPresence value) =>
+      PresenceLocation_realmsWrapper._(value);
 
   /// Same as `wrapRealms(RealmsPresence(...))`.
-  factory PresenceLocation.createRealms() => PresenceLocation.wrapRealms(
-    RealmsPresence()
-  );
+  factory PresenceLocation.createRealms() =>
+      PresenceLocation.wrapRealms(RealmsPresence());
 
   /// Create a 'realm' variant wrapping around the given value.
-  factory PresenceLocation.wrapRealm(
-    RealmPresence value
-  ) => PresenceLocation_realmWrapper._(value);
+  factory PresenceLocation.wrapRealm(RealmPresence value) =>
+      PresenceLocation_realmWrapper._(value);
 
   /// Same as `wrapRealm(RealmPresence(...))`.
   factory PresenceLocation.createRealm({
     required _lib_kernel_v1_record_id.RecordId_orMutable realmId,
-  }) => PresenceLocation.wrapRealm(
-    RealmPresence(
-      realmId: realmId,
-    )
-  );
+  }) => PresenceLocation.wrapRealm(RealmPresence(realmId: realmId));
 
   /// Create a 'realm_library' variant wrapping around the given value.
-  factory PresenceLocation.wrapRealmLibrary(
-    RealmLibraryPresence value
-  ) => PresenceLocation_realmLibraryWrapper._(value);
+  factory PresenceLocation.wrapRealmLibrary(RealmLibraryPresence value) =>
+      PresenceLocation_realmLibraryWrapper._(value);
 
   /// Same as `wrapRealmLibrary(RealmLibraryPresence(...))`.
   factory PresenceLocation.createRealmLibrary({
     required _lib_kernel_v1_record_id.RecordId_orMutable realmId,
-  }) => PresenceLocation.wrapRealmLibrary(
-    RealmLibraryPresence(
-      realmId: realmId,
-    )
-  );
+  }) =>
+      PresenceLocation.wrapRealmLibrary(RealmLibraryPresence(realmId: realmId));
 
   /// Create a 'realm_tags' variant wrapping around the given value.
-  factory PresenceLocation.wrapRealmTags(
-    RealmTagsPresence value
-  ) => PresenceLocation_realmTagsWrapper._(value);
+  factory PresenceLocation.wrapRealmTags(RealmTagsPresence value) =>
+      PresenceLocation_realmTagsWrapper._(value);
 
   /// Same as `wrapRealmTags(RealmTagsPresence(...))`.
   factory PresenceLocation.createRealmTags({
     required _lib_kernel_v1_record_id.RecordId_orMutable realmId,
-  }) => PresenceLocation.wrapRealmTags(
-    RealmTagsPresence(
-      realmId: realmId,
-    )
-  );
+  }) => PresenceLocation.wrapRealmTags(RealmTagsPresence(realmId: realmId));
 
   /// Create a 'book' variant wrapping around the given value.
-  factory PresenceLocation.wrapBook(
-    BookPresence value
-  ) => PresenceLocation_bookWrapper._(value);
+  factory PresenceLocation.wrapBook(BookPresence value) =>
+      PresenceLocation_bookWrapper._(value);
 
   /// Same as `wrapBook(BookPresence(...))`.
   factory PresenceLocation.createBook({
     required _lib_kernel_v1_record_id.RecordId_orMutable realmId,
     required _lib_kernel_v1_record_id.RecordId_orMutable bookId,
-  }) => PresenceLocation.wrapBook(
-    BookPresence(
-      realmId: realmId,
-      bookId: bookId,
-    )
-  );
+  }) =>
+      PresenceLocation.wrapBook(BookPresence(realmId: realmId, bookId: bookId));
 
   /// Create a 'page' variant wrapping around the given value.
-  factory PresenceLocation.wrapPage(
-    PagePresence value
-  ) => PresenceLocation_pageWrapper._(value);
+  factory PresenceLocation.wrapPage(PagePresence value) =>
+      PresenceLocation_pageWrapper._(value);
 
   /// Same as `wrapPage(PagePresence(...))`.
   factory PresenceLocation.createPage({
@@ -1433,7 +1390,7 @@ sealed class PresenceLocation {
       bookId: bookId,
       pageId: pageId,
       activity: activity,
-    )
+    ),
   );
 
   /// Returns the kind of variant held by this PresenceLocation.
@@ -1547,15 +1504,16 @@ sealed class PresenceLocation {
     return _serializerBuilder.serializer;
   }
 
-  static final _serializerBuilder = _skir.internal__EnumSerializerBuilder.create(
-    recordId: "organization/v1/presence.skir:PresenceLocation",
-    doc: "",
-    unknownInstance: PresenceLocation_unknown._instance,
-    enumInstance: PresenceLocation.unknown,
-    getOrdinal: (it) => it.kind._ordinal,
-    wrapUnrecognized: PresenceLocation_unknown._unrecognized,
-    getUnrecognized: (it) => it._u,
-  );
+  static final _serializerBuilder = _skir.internal__EnumSerializerBuilder
+      .create(
+        recordId: "organization/v1/presence.skir:PresenceLocation",
+        doc: "",
+        unknownInstance: PresenceLocation_unknown._instance,
+        enumInstance: PresenceLocation.unknown,
+        getOrdinal: (it) => it.kind._ordinal,
+        wrapUnrecognized: PresenceLocation_unknown._unrecognized,
+        getUnrecognized: (it) => it._u,
+      );
 }
 
 /// The kind of variant held by a `PresenceLocation`.
@@ -1592,7 +1550,8 @@ final class PresenceLocation_unknown implements PresenceLocation {
   @_core.override
   _core.int get hashCode => 8118964;
   @_core.override
-  _core.String toString() => _skir.internal__stringify(this, PresenceLocation.serializer);
+  _core.String toString() =>
+      _skir.internal__stringify(this, PresenceLocation.serializer);
 }
 
 sealed class _PresenceLocation_wrapper implements PresenceLocation {
@@ -1608,10 +1567,12 @@ sealed class _PresenceLocation_wrapper implements PresenceLocation {
   _core.int get hashCode => (kind._ordinal * 31) ^ value.hashCode;
 
   @_core.override
-  _core.String toString() => _skir.internal__stringify(this, PresenceLocation.serializer);
+  _core.String toString() =>
+      _skir.internal__stringify(this, PresenceLocation.serializer);
 }
 
-final class PresenceLocation_organizationWrapper extends _PresenceLocation_wrapper {
+final class PresenceLocation_organizationWrapper
+    extends _PresenceLocation_wrapper {
   final OrganizationPresence value;
 
   PresenceLocation_organizationWrapper._(this.value);
@@ -1665,7 +1626,8 @@ final class PresenceLocation_realmWrapper extends _PresenceLocation_wrapper {
   PresenceLocation_kind get kind => PresenceLocation_kind.realmWrapper;
 }
 
-final class PresenceLocation_realmLibraryWrapper extends _PresenceLocation_wrapper {
+final class PresenceLocation_realmLibraryWrapper
+    extends _PresenceLocation_wrapper {
   final RealmLibraryPresence value;
 
   PresenceLocation_realmLibraryWrapper._(this.value);
@@ -1674,7 +1636,8 @@ final class PresenceLocation_realmLibraryWrapper extends _PresenceLocation_wrapp
   PresenceLocation_kind get kind => PresenceLocation_kind.realmLibraryWrapper;
 }
 
-final class PresenceLocation_realmTagsWrapper extends _PresenceLocation_wrapper {
+final class PresenceLocation_realmTagsWrapper
+    extends _PresenceLocation_wrapper {
   final RealmTagsPresence value;
 
   PresenceLocation_realmTagsWrapper._(this.value);
@@ -1727,17 +1690,9 @@ final class PanelPresence implements PanelPresence_orMutable {
     required _core.String sessionId,
     required _core.int sequence,
     required PresenceLocation location,
-  }) => PanelPresence._(
-    sessionId,
-    sequence,
-    location,
-  );
+  }) => PanelPresence._(sessionId, sequence, location);
 
-  PanelPresence._(
-    this.sessionId,
-    this.sequence,
-    this.location,
-  );
+  PanelPresence._(this.sessionId, this.sequence, this.location);
 
   /// Default instance with all fields set to their default values.
   static final defaultInstance = PanelPresence._(
@@ -1748,11 +1703,8 @@ final class PanelPresence implements PanelPresence_orMutable {
 
   /// Returns a new mutable instance.
   /// Fields are initialized to their default values.
-  static PanelPresence_mutable mutable() => PanelPresence_mutable._(
-    "",
-    0,
-    PresenceLocation.unknown,
-  );
+  static PanelPresence_mutable mutable() =>
+      PanelPresence_mutable._("", 0, PresenceLocation.unknown);
 
   /// Returns this instance (no-op).
   @_core.Deprecated("This instance is already frozen.")
@@ -1760,17 +1712,17 @@ final class PanelPresence implements PanelPresence_orMutable {
   PanelPresence toFrozen() => this;
 
   /// Returns a mutable shallow copy of this instance.
-  PanelPresence_mutable toMutable() => PanelPresence_mutable._(
-    this.sessionId,
-    this.sequence,
-    this.location,
-  );
+  PanelPresence_mutable toMutable() =>
+      PanelPresence_mutable._(this.sessionId, this.sequence, this.location);
 
   @_core.override
   _core.bool operator ==(other) {
     if (_core.identical(this, other)) return true;
     if (other is! PanelPresence) return false;
-    return _skir.internal__listEquality.equals(_equality_proxy, other._equality_proxy);
+    return _skir.internal__listEquality.equals(
+      _equality_proxy,
+      other._equality_proxy,
+    );
   }
 
   @_core.override
@@ -1786,7 +1738,8 @@ final class PanelPresence implements PanelPresence_orMutable {
   _core.String toString() => _skir.internal__stringify(this, serializer);
 
   /// Serializer for `PanelPresence` instances.
-  static _skir.StructSerializer<PanelPresence, PanelPresence_mutable> get serializer {
+  static _skir.StructSerializer<PanelPresence, PanelPresence_mutable>
+  get serializer {
     if (_serializerBuilder.mustInitialize()) {
       _serializerBuilder.addField(
         "session_id",
@@ -1838,11 +1791,7 @@ final class PanelPresence_mutable implements PanelPresence_orMutable {
   PresenceLocation location;
   _skir.internal__UnrecognizedFields? _u;
 
-  PanelPresence_mutable._(
-    this.sessionId,
-    this.sequence,
-    this.location,
-  );
+  PanelPresence_mutable._(this.sessionId, this.sequence, this.location);
 
   /// Returns a deeply immutable copy of this instance.
   @_core.override
@@ -1869,26 +1818,17 @@ final class PresenceLeft implements PresenceLeft_orMutable {
   final _core.String sessionId;
   _skir.internal__UnrecognizedFields? _u;
 
-  factory PresenceLeft({
-    required _core.String sessionId,
-  }) => PresenceLeft._(
-    sessionId,
-  );
+  factory PresenceLeft({required _core.String sessionId}) =>
+      PresenceLeft._(sessionId);
 
-  PresenceLeft._(
-    this.sessionId,
-  );
+  PresenceLeft._(this.sessionId);
 
   /// Default instance with all fields set to their default values.
-  static final defaultInstance = PresenceLeft._(
-    "",
-  );
+  static final defaultInstance = PresenceLeft._("");
 
   /// Returns a new mutable instance.
   /// Fields are initialized to their default values.
-  static PresenceLeft_mutable mutable() => PresenceLeft_mutable._(
-    "",
-  );
+  static PresenceLeft_mutable mutable() => PresenceLeft_mutable._("");
 
   /// Returns this instance (no-op).
   @_core.Deprecated("This instance is already frozen.")
@@ -1896,29 +1836,29 @@ final class PresenceLeft implements PresenceLeft_orMutable {
   PresenceLeft toFrozen() => this;
 
   /// Returns a mutable shallow copy of this instance.
-  PresenceLeft_mutable toMutable() => PresenceLeft_mutable._(
-    this.sessionId,
-  );
+  PresenceLeft_mutable toMutable() => PresenceLeft_mutable._(this.sessionId);
 
   @_core.override
   _core.bool operator ==(other) {
     if (_core.identical(this, other)) return true;
     if (other is! PresenceLeft) return false;
-    return _skir.internal__listEquality.equals(_equality_proxy, other._equality_proxy);
+    return _skir.internal__listEquality.equals(
+      _equality_proxy,
+      other._equality_proxy,
+    );
   }
 
   @_core.override
   _core.int get hashCode => _skir.internal__listEquality.hash(_equality_proxy);
 
-  _core.List get _equality_proxy => [
-    this.sessionId,
-  ];
+  _core.List get _equality_proxy => [this.sessionId];
 
   @_core.override
   _core.String toString() => _skir.internal__stringify(this, serializer);
 
   /// Serializer for `PresenceLeft` instances.
-  static _skir.StructSerializer<PresenceLeft, PresenceLeft_mutable> get serializer {
+  static _skir.StructSerializer<PresenceLeft, PresenceLeft_mutable>
+  get serializer {
     if (_serializerBuilder.mustInitialize()) {
       _serializerBuilder.addField(
         "session_id",
@@ -1950,15 +1890,12 @@ final class PresenceLeft_mutable implements PresenceLeft_orMutable {
   _core.String sessionId;
   _skir.internal__UnrecognizedFields? _u;
 
-  PresenceLeft_mutable._(
-    this.sessionId,
-  );
+  PresenceLeft_mutable._(this.sessionId);
 
   /// Returns a deeply immutable copy of this instance.
   @_core.override
-  PresenceLeft toFrozen() => PresenceLeft(
-    sessionId: this.sessionId,
-  ).._u = this._u;
+  PresenceLeft toFrozen() =>
+      PresenceLeft(sessionId: this.sessionId).._u = this._u;
 }
 
 // -----------------------------------------------------------------------------
@@ -1981,9 +1918,8 @@ sealed class PresenceEvent {
   static const PresenceEvent unknown = PresenceEvent_unknown._instance;
 
   /// Create a 'active' variant wrapping around the given value.
-  factory PresenceEvent.wrapActive(
-    PanelPresence value
-  ) => PresenceEvent_activeWrapper._(value);
+  factory PresenceEvent.wrapActive(PanelPresence value) =>
+      PresenceEvent_activeWrapper._(value);
 
   /// Same as `wrapActive(PanelPresence(...))`.
   factory PresenceEvent.createActive({
@@ -1991,26 +1927,16 @@ sealed class PresenceEvent {
     required _core.int sequence,
     required PresenceLocation location,
   }) => PresenceEvent.wrapActive(
-    PanelPresence(
-      sessionId: sessionId,
-      sequence: sequence,
-      location: location,
-    )
+    PanelPresence(sessionId: sessionId, sequence: sequence, location: location),
   );
 
   /// Create a 'left' variant wrapping around the given value.
-  factory PresenceEvent.wrapLeft(
-    PresenceLeft value
-  ) => PresenceEvent_leftWrapper._(value);
+  factory PresenceEvent.wrapLeft(PresenceLeft value) =>
+      PresenceEvent_leftWrapper._(value);
 
   /// Same as `wrapLeft(PresenceLeft(...))`.
-  factory PresenceEvent.createLeft({
-    required _core.String sessionId,
-  }) => PresenceEvent.wrapLeft(
-    PresenceLeft(
-      sessionId: sessionId,
-    )
-  );
+  factory PresenceEvent.createLeft({required _core.String sessionId}) =>
+      PresenceEvent.wrapLeft(PresenceLeft(sessionId: sessionId));
 
   /// Returns the kind of variant held by this PresenceEvent.
   PresenceEvent_kind get kind;
@@ -2043,15 +1969,16 @@ sealed class PresenceEvent {
     return _serializerBuilder.serializer;
   }
 
-  static final _serializerBuilder = _skir.internal__EnumSerializerBuilder.create(
-    recordId: "organization/v1/presence.skir:PresenceEvent",
-    doc: "",
-    unknownInstance: PresenceEvent_unknown._instance,
-    enumInstance: PresenceEvent.unknown,
-    getOrdinal: (it) => it.kind._ordinal,
-    wrapUnrecognized: PresenceEvent_unknown._unrecognized,
-    getUnrecognized: (it) => it._u,
-  );
+  static final _serializerBuilder = _skir.internal__EnumSerializerBuilder
+      .create(
+        recordId: "organization/v1/presence.skir:PresenceEvent",
+        doc: "",
+        unknownInstance: PresenceEvent_unknown._instance,
+        enumInstance: PresenceEvent.unknown,
+        getOrdinal: (it) => it.kind._ordinal,
+        wrapUnrecognized: PresenceEvent_unknown._unrecognized,
+        getUnrecognized: (it) => it._u,
+      );
 }
 
 /// The kind of variant held by a `PresenceEvent`.
@@ -2080,7 +2007,8 @@ final class PresenceEvent_unknown implements PresenceEvent {
   @_core.override
   _core.int get hashCode => 8118964;
   @_core.override
-  _core.String toString() => _skir.internal__stringify(this, PresenceEvent.serializer);
+  _core.String toString() =>
+      _skir.internal__stringify(this, PresenceEvent.serializer);
 }
 
 sealed class _PresenceEvent_wrapper implements PresenceEvent {
@@ -2096,7 +2024,8 @@ sealed class _PresenceEvent_wrapper implements PresenceEvent {
   _core.int get hashCode => (kind._ordinal * 31) ^ value.hashCode;
 
   @_core.override
-  _core.String toString() => _skir.internal__stringify(this, PresenceEvent.serializer);
+  _core.String toString() =>
+      _skir.internal__stringify(this, PresenceEvent.serializer);
 }
 
 final class PresenceEvent_activeWrapper extends _PresenceEvent_wrapper {

@@ -30,8 +30,8 @@ object SourcePartEligibilityResolver {
     /**
      * Produces one eligibility entry for every source part in deterministic artifact order.
      *
-     * The returned entries are consumed by discovery assembly to suppress executable bindings while preserving
-     * structural definitions. Manifests are expected to have valid include references.
+     * Engine projections use these entries to select executable source parts. Realm loads selected extensions'
+     * common authoring providers independently of engine placement. Manifests must have valid include references.
      */
     fun resolve(
         selection: DeploymentSelection,

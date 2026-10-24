@@ -19,6 +19,9 @@ const val EXTENSION_API_CONFIGURATION = "imprintExtensionApi"
 /** Dependency bucket supplying the host API to hosted artifacts at compile time. */
 const val HOST_API_CONFIGURATION = "imprintHostApi"
 
+/** Dependency bucket supplying generated metadata from the shared platform API. */
+const val PLATFORM_API_CONFIGURATION = "imprintPlatformApi"
+
 /** Dependency bucket supplying KSP processors to each generated source part. */
 const val PROCESSORS_CONFIGURATION = "imprintProcessors"
 
@@ -51,6 +54,7 @@ private fun Project.createDependencyBuckets() {
         ENGINE_CORE_CONFIGURATION,
         EXTENSION_API_CONFIGURATION,
         HOST_API_CONFIGURATION,
+        PLATFORM_API_CONFIGURATION,
         PROCESSORS_CONFIGURATION,
     ).forEach { name ->
         configurations.maybeCreate(name).apply {

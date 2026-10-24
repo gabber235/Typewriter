@@ -26,7 +26,10 @@ loaderProjects.map(::project).forEach { it.version = "1000.0.0" }
 
 subprojects.forEach { serviceProject ->
     serviceProject.pluginManager.withPlugin("com.typewritermc.imprint") {
-        serviceProject.dependencies.add("imprintProcessors", project(":typewriter-codegen"))
+        serviceProject.dependencies.add(
+            "imprintProcessors",
+            serviceProject.dependencyFactory.createProjectDependency(":typewriter-codegen"),
+        )
     }
 }
 

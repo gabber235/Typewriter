@@ -1,10 +1,4 @@
-import "package:flutter/foundation.dart";
-import "package:flutter/material.dart";
-import "package:flutter_animate/flutter_animate.dart";
-import "package:typewriter_panel/app/presentation/theme/typewriter_colors.dart";
-import "package:typewriter_panel/app/presentation/theme/typewriter_shapes.dart";
-import "package:typewriter_panel/app/presentation/theme/typewriter_spacing.dart";
-import "package:typewriter_panel/app/presentation/theme/typewriter_state_tokens.dart";
+import "package:typewriter_panel/typewriter_panel.dart";
 
 /// Applies panel wide Material component defaults to [base].
 ///

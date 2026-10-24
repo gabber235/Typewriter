@@ -14,6 +14,7 @@ import com.typewritermc.services.libs.communicator.transport.TransportDelivery
 import com.typewritermc.services.libs.communicator.transport.TransportError
 import com.typewritermc.services.libs.communicator.transport.TransportResult
 import com.typewritermc.services.libs.communicator.transport.TransportSubscription
+import com.typewritermc.services.libs.utils.rethrowExceptional
 import kotlinx.coroutines.NonCancellable
 import kotlinx.coroutines.TimeoutCancellationException
 import kotlinx.coroutines.currentCoroutineContext
@@ -75,7 +76,7 @@ class NatsMessageTransport(
             currentCoroutineContext().ensureActive()
             TransportResult.Failure(TransportError.Timeout(failure))
         } catch (failure: Throwable) {
-            rethrowExceptional(failure)
+            failure.rethrowExceptional()
             TransportResult.Failure(TransportError.Failure(failure))
         }
     }
@@ -95,7 +96,7 @@ class NatsMessageTransport(
             try {
                 client.subscribe(pattern.value, options.consumerGroup?.value)
             } catch (failure: Throwable) {
-                rethrowExceptional(failure)
+                failure.rethrowExceptional()
                 return TransportResult.Failure(TransportError.Failure(failure))
             }
         return try {
@@ -108,7 +109,7 @@ class NatsMessageTransport(
             } catch (cleanup: Throwable) {
                 throw combineFailures(failure, cleanup)
             }
-            rethrowExceptional(failure)
+            failure.rethrowExceptional()
             TransportResult.Failure(TransportError.Failure(failure))
         }
     }
@@ -137,7 +138,7 @@ private class NatsTransportSubscription(
                     message.statusError()?.let(TransportDelivery::Failure)
                         ?: TransportDelivery.Message(message.toInboundMessage())
                 }.catch { failure ->
-                    rethrowExceptional(failure)
+                    failure.rethrowExceptional()
                     emit(TransportDelivery.Failure(TransportError.Failure(failure)))
                 }.transformWhile { delivery ->
                     emit(delivery)
@@ -192,7 +193,7 @@ private suspend fun <Value> transportCall(block: suspend () -> Value): Transport
     try {
         TransportResult.Success(block())
     } catch (failure: Throwable) {
-        rethrowExceptional(failure)
+        failure.rethrowExceptional()
         TransportResult.Failure(TransportError.Failure(failure))
     }
 

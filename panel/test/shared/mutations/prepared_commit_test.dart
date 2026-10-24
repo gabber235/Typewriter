@@ -1,12 +1,9 @@
-import "dart:async";
-
-import "package:flutter/foundation.dart";
 import "package:flutter_test/flutter_test.dart";
 import "package:typewriter_panel/typewriter_panel.dart";
 
 void main() {
   test("queued capture waits for confirmed state integration", () async {
-    final work = LocalWorkSession();
+    final work = ScopedWorkSession();
     addTearDown(work.dispose);
     final integrated = Completer<void>();
     var revision = 0;
@@ -24,21 +21,22 @@ void main() {
     );
     var prepared = false;
 
-    final queued = work.enqueue(
-      PendingCommit(
-        resources: {"resource"},
-        prepare: () {
-          prepared = true;
-          final capturedRevision = revision;
-          return PreparedCommit<int>(
-            id: "second",
-            label: "Second",
-            resources: {"resource"},
-            send: () async => SubmissionResult.confirmed(capturedRevision),
-          );
-        },
-      ),
-    );
+    Future<MutationSubmission<int>> captureQueued() async {
+      final reservation = await work.reserve({"resource"});
+      prepared = true;
+      final capturedRevision = revision;
+      return work.start(
+        PreparedCommit<int>(
+          id: "second",
+          label: "Second",
+          resources: {"resource"},
+          send: () async => SubmissionResult.confirmed(capturedRevision),
+        ),
+        reservation: reservation,
+      );
+    }
+
+    final queued = captureQueued();
     await Future<void>.delayed(Duration.zero);
     expect(prepared, isFalse);
     integrated.complete();
@@ -51,7 +49,7 @@ void main() {
   test(
     "integration failure preserves acceptance and retries only integration",
     () async {
-      final work = LocalWorkSession();
+      final work = ScopedWorkSession();
       addTearDown(work.dispose);
       final previousHandler = FlutterError.onError;
       FlutterError.onError = (_) {};
@@ -94,7 +92,7 @@ void main() {
   test(
     "uncertain work retains its reservation while disjoint work proceeds",
     () async {
-      final work = LocalWorkSession();
+      final work = ScopedWorkSession();
       addTearDown(work.dispose);
       var attempts = 0;
       final uncertain = work.start(

@@ -1,7 +1,32 @@
-import "package:flutter/material.dart";
-import "package:flutter_animate/flutter_animate.dart";
-import "package:flutter_hooks/flutter_hooks.dart";
 import "package:typewriter_panel/typewriter_panel.dart";
+
+class SearchSurfaceStyle {
+  const SearchSurfaceStyle({
+    this.constraints,
+    this.shape,
+    this.fill,
+    this.padding,
+  });
+  final BoxConstraints? constraints;
+  final ShapeBorder? shape;
+  final Color? fill;
+  final EdgeInsetsGeometry? padding;
+}
+
+class SearchSurfaceAppearance extends InheritedWidget {
+  const SearchSurfaceAppearance({
+    required this.style,
+    required super.child,
+    super.key,
+  });
+  final SearchSurfaceStyle style;
+  static SearchSurfaceStyle? maybeOf(BuildContext context) => context
+      .dependOnInheritedWidgetOfExactType<SearchSurfaceAppearance>()
+      ?.style;
+  @override
+  bool updateShouldNotify(SearchSurfaceAppearance oldWidget) =>
+      style != oldWidget.style;
+}
 
 const _maxSearchFrameWidth = 880.0;
 const _maxSearchFrameHeightFraction = 0.8;
@@ -242,9 +267,11 @@ class _SheetPreviewLayout extends HookWidget {
                   ),
                   child: Material(
                     color: Theme.of(context).colorScheme.surfaceContainer,
-                    shape: RoundedRectangleBorder(
-                      borderRadius: context.shapes.mediumBorderRadius,
-                    ),
+                    shape:
+                        SearchSurfaceAppearance.maybeOf(context)?.shape ??
+                        RoundedRectangleBorder(
+                          borderRadius: context.shapes.mediumBorderRadius,
+                        ),
                     child: Padding(
                       padding: EdgeInsets.all(context.spacing.space2),
                       child: Column(
@@ -296,7 +323,9 @@ class _PrimarySearchFrame extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return ConstrainedBox(
-      constraints: const BoxConstraints(maxWidth: _maxSearchFrameWidth),
+      constraints:
+          SearchSurfaceAppearance.maybeOf(context)?.constraints ??
+          const BoxConstraints(maxWidth: _maxSearchFrameWidth),
       child: _FloatingCard(
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -507,23 +536,28 @@ class _FloatingCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final colors = Theme.of(context).colorScheme;
+    final style = SearchSurfaceAppearance.maybeOf(context);
 
     return Surface(
-      color: colors.surfaceContainer,
+      color: style?.fill ?? colors.surfaceContainer,
+      foreground: context.colors.contentPrimary,
+      secondaryForeground: context.colors.contentSecondary,
       child: Material(
-        color: colors.surfaceContainer,
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(20),
-          side: BorderSide(
-            color: colors.outlineVariant.withValues(alpha: 0.72),
-            width: context.isDarkMode ? 1.2 : 0.4,
-          ),
-        ),
+        color: style?.fill ?? colors.surfaceContainer,
+        shape:
+            style?.shape ??
+            RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(20),
+              side: BorderSide(
+                color: colors.outlineVariant.withValues(alpha: 0.72),
+                width: context.isDarkMode ? 1.2 : 0.4,
+              ),
+            ),
         elevation: 3,
         shadowColor: colors.shadow,
         clipBehavior: .antiAlias,
         child: Padding(
-          padding: EdgeInsets.all(context.spacing.space4),
+          padding: style?.padding ?? EdgeInsets.all(context.spacing.space4),
           child: child,
         ),
       ),

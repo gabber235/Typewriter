@@ -8,23 +8,21 @@ void _testResourceConnections() {
       addTearDown(harness.dispose);
       final workspace = harness.container.read(localWorkControllerProvider);
       final repositories = harness.container.read(resourceRepositoriesProvider);
-      final owners = EditorOwnerRegistry(workspace: workspace);
+      final owners = InspectionBindings(workspace: workspace);
       addTearDown(owners.dispose);
 
-      final model = harness.selectable.buildPresentation(owners);
-      final source =
-          (model.inputs[const BindingId(2)]! as PresentationEditInput).owner
-              as EditorSource;
+      _buildInspection(harness, owners);
+      final source = _identitySource(owners);
       expect(
         source.update(
-          DataPath.root.field("name"),
-          const StringValue("renamed"),
+          editorRootPath.field("name"),
+          skir.DataValue.wrapStringValue("renamed"),
         ),
         isA<AppliedEditorMutation>(),
       );
       expect(
-        source.value(DataPath.root.field("name")).valueOrNull,
-        const StringValue("renamed"),
+        source.value(editorRootPath.field("name")).valueOrNull,
+        skir.DataValue.wrapStringValue("renamed"),
       );
 
       final replacement = FakeNatsClient();
@@ -46,9 +44,8 @@ void _testResourceConnections() {
             ),
           ),
         );
-      (harness.container.read(
-        natsProvider.notifier,
-      ) as _ReplaceableNats).connection = replacement;
+      (harness.container.read(natsProvider.notifier) as FakeNats).connection =
+          replacement;
       await harness.container.pump();
 
       expect(
@@ -60,8 +57,8 @@ void _testResourceConnections() {
         same(repositories),
       );
       expect(
-        source.value(DataPath.root.field("name")).valueOrNull,
-        const StringValue("renamed"),
+        source.value(editorRootPath.field("name")).valueOrNull,
+        skir.DataValue.wrapStringValue("renamed"),
       );
       expect(await source.flush(), isA<MutationSuccess>());
       expect(harness.nats.requests, isEmpty);

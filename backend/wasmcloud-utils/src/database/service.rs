@@ -147,10 +147,7 @@ impl From<ServiceStateRecord> for ServiceState {
         }
     }
 }
-/// Converts a complete database service into the public service value.
-///
-/// This boundary preserves database failures as conversion errors. It does not publish the value
-/// or assert that any later publication succeeded.
+/// Rejects stored custom roles that lack a name while converting the service projection.
 impl TryFrom<ServiceRecord> for Service {
     type Error = otel_wasi::Error;
     fn try_from(value: ServiceRecord) -> Result<Self, Self::Error> {

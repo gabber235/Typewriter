@@ -1,31 +1,36 @@
 import "package:typewriter_panel/typewriter_panel.dart";
 
+part "tree_diff.freezed.dart";
+
 /// Row changes required to transform one visible tree list into another.
 ///
 /// Removals are ordered from the end toward the start because consumers apply
 /// them directly to an indexed animated list. Insertions use their target
 /// indices in the next list.
-class SearchTreeDiff {
-  const SearchTreeDiff({required this.removals, required this.insertions});
-
-  final List<SearchTreeRemoval> removals;
-  final List<SearchTreeInsertion> insertions;
+@freezed
+abstract class SearchTreeDiff with _$SearchTreeDiff {
+  const factory SearchTreeDiff({
+    required List<SearchTreeRemoval> removals,
+    required List<SearchTreeInsertion> insertions,
+  }) = _SearchTreeDiff;
 }
 
 /// One row removed from the previous visible list.
-class SearchTreeRemoval {
-  const SearchTreeRemoval({required this.index, required this.row});
-
-  final int index;
-  final SearchTreeRow row;
+@freezed
+abstract class SearchTreeRemoval with _$SearchTreeRemoval {
+  const factory SearchTreeRemoval({
+    required int index,
+    required SearchTreeRow row,
+  }) = _SearchTreeRemoval;
 }
 
 /// One row inserted into the next visible list.
-class SearchTreeInsertion {
-  const SearchTreeInsertion({required this.index, required this.row});
-
-  final int index;
-  final SearchTreeRow row;
+@freezed
+abstract class SearchTreeInsertion with _$SearchTreeInsertion {
+  const factory SearchTreeInsertion({
+    required int index,
+    required SearchTreeRow row,
+  }) = _SearchTreeInsertion;
 }
 
 /// Computes keyed additions and removals while retaining the longest stable

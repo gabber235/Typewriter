@@ -12,8 +12,8 @@ part of 'action_shortcuts.dart';
 ///
 /// Each action set owns its registration through a [GlobalKey]. Re registering
 /// replaces that set's previous entries, while [sweep] removes entries whose
-/// owner is no longer mounted. The registry is the shared source for keyboard
-/// actions and the visible [ActionRow].
+/// owner is no longer mounted. The registry supplies the visible [ActionRow];
+/// keyboard handlers are installed separately by [RegisteredActionShortcuts].
 
 @ProviderFor(ActionShortcuts)
 final actionShortcutsProvider = ActionShortcutsProvider._();
@@ -22,16 +22,16 @@ final actionShortcutsProvider = ActionShortcutsProvider._();
 ///
 /// Each action set owns its registration through a [GlobalKey]. Re registering
 /// replaces that set's previous entries, while [sweep] removes entries whose
-/// owner is no longer mounted. The registry is the shared source for keyboard
-/// actions and the visible [ActionRow].
+/// owner is no longer mounted. The registry supplies the visible [ActionRow];
+/// keyboard handlers are installed separately by [RegisteredActionShortcuts].
 final class ActionShortcutsProvider
     extends $NotifierProvider<ActionShortcuts, Map<String, ActionShortcut>> {
   /// Riverpod registry of mounted action sets and their winning actions.
   ///
   /// Each action set owns its registration through a [GlobalKey]. Re registering
   /// replaces that set's previous entries, while [sweep] removes entries whose
-  /// owner is no longer mounted. The registry is the shared source for keyboard
-  /// actions and the visible [ActionRow].
+  /// owner is no longer mounted. The registry supplies the visible [ActionRow];
+  /// keyboard handlers are installed separately by [RegisteredActionShortcuts].
   ActionShortcutsProvider._()
     : super(
         from: null,
@@ -59,14 +59,14 @@ final class ActionShortcutsProvider
   }
 }
 
-String _$actionShortcutsHash() => r'bba5f306a5a974f4139fc669b110e6005ea7f0fc';
+String _$actionShortcutsHash() => r'01b317df7ee865ef80884d00b87dd4db606a3101';
 
 /// Riverpod registry of mounted action sets and their winning actions.
 ///
 /// Each action set owns its registration through a [GlobalKey]. Re registering
 /// replaces that set's previous entries, while [sweep] removes entries whose
-/// owner is no longer mounted. The registry is the shared source for keyboard
-/// actions and the visible [ActionRow].
+/// owner is no longer mounted. The registry supplies the visible [ActionRow];
+/// keyboard handlers are installed separately by [RegisteredActionShortcuts].
 
 abstract class _$ActionShortcuts
     extends $Notifier<Map<String, ActionShortcut>> {

@@ -6,7 +6,7 @@ plugins {
 dependencies {
     imprintEngineCore(project(":engine-core"))
     imprintHostApi(project(":loader-api"))
-    testImplementation(libs.kotlin.coroutines.test)
+    imprintPlatformApi(project(":typewriter-api"))
 }
 
 typewriter {

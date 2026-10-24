@@ -1,4 +1,3 @@
-import "package:flutter/material.dart";
 import "package:typewriter_panel/typewriter_panel.dart";
 import "package:typewriter_testkit/typewriter_testkit.dart";
 import "package:widgetbook/widgetbook.dart";
@@ -12,8 +11,12 @@ Widget tagGraphUseCase(BuildContext context) {
     initialOption: DisplayState.fewItems,
   );
 
-  return FakeApp(
-    overrides: [...tagsProviderOverrides(state: tagsState)],
+  return AuthoringFixtureApp(
+    scenario: tagsState,
+    state: tagsState,
+    createDocument: () => fixtureAuthoringDocument(
+      tags: tagsState.generateReadyBatch(generateTagBatch) ?? const [],
+    ),
     child: const InspectorScaffold(child: TagGraph()),
   );
 }

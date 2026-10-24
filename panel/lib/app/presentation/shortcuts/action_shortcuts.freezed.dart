@@ -13,7 +13,7 @@ part of 'action_shortcuts.dart';
 // dart format off
 T _$identity<T>(T value) => value;
 /// @nodoc
-mixin _$ActionShortcut implements DiagnosticableTreeMixin {
+mixin _$ActionShortcut {
 
  String get id; String get label; String get description; int get priority; Widget? get icon; ActionInvoke? get onInvoke; bool get show; bool get registerShortcut; GlobalKey<State<StatefulWidget>>? get owner;
 /// Create a copy of ActionShortcut
@@ -23,13 +23,6 @@ mixin _$ActionShortcut implements DiagnosticableTreeMixin {
 $ActionShortcutCopyWith<ActionShortcut> get copyWith => _$ActionShortcutCopyWithImpl<ActionShortcut>(this as ActionShortcut, _$identity);
 
 
-@override
-void debugFillProperties(DiagnosticPropertiesBuilder properties) {
-  final _this = this as ActionShortcut;
-  properties
-    ..add(DiagnosticsProperty('type', 'ActionShortcut'))
-    ..add(DiagnosticsProperty('id', _this.id))..add(DiagnosticsProperty('label', _this.label))..add(DiagnosticsProperty('description', _this.description))..add(DiagnosticsProperty('priority', _this.priority))..add(DiagnosticsProperty('icon', _this.icon))..add(DiagnosticsProperty('onInvoke', _this.onInvoke))..add(DiagnosticsProperty('show', _this.show))..add(DiagnosticsProperty('registerShortcut', _this.registerShortcut))..add(DiagnosticsProperty('owner', _this.owner));
-}
 
 @override
 bool operator ==(Object other) {
@@ -45,7 +38,7 @@ int get hashCode {
 }
 
 @override
-String toString({ DiagnosticLevel minLevel = DiagnosticLevel.info }) {
+String toString() {
   final _this = this as ActionShortcut;
   return 'ActionShortcut(id: ${_this.id}, label: ${_this.label}, description: ${_this.description}, priority: ${_this.priority}, icon: ${_this.icon}, onInvoke: ${_this.onInvoke}, show: ${_this.show}, registerShortcut: ${_this.registerShortcut}, owner: ${_this.owner})';
 }
@@ -232,7 +225,7 @@ return intent(_that.id,_that.label,_that.description,_that.intent,_that.priority
 /// @nodoc
 
 
-class ActivatorActionShortcut extends ActionShortcut with DiagnosticableTreeMixin {
+class ActivatorActionShortcut extends ActionShortcut {
   const ActivatorActionShortcut({required this.id, required this.label, required this.description, required  List<ShortcutActivator> activators, required this.priority, this.icon, this.onInvoke, this.show = true, this.registerShortcut = true, this.owner}): assert(id != "", 'ID must not be empty.'),_activators = activators,super._();
   
 
@@ -260,12 +253,6 @@ class ActivatorActionShortcut extends ActionShortcut with DiagnosticableTreeMixi
 $ActivatorActionShortcutCopyWith<ActivatorActionShortcut> get copyWith => _$ActivatorActionShortcutCopyWithImpl<ActivatorActionShortcut>(this, _$identity);
 
 
-@override
-void debugFillProperties(DiagnosticPropertiesBuilder properties) {
-    properties
-    ..add(DiagnosticsProperty('type', 'ActionShortcut'))
-    ..add(DiagnosticsProperty('id', id))..add(DiagnosticsProperty('label', label))..add(DiagnosticsProperty('description', description))..add(DiagnosticsProperty('activators', activators))..add(DiagnosticsProperty('priority', priority))..add(DiagnosticsProperty('icon', icon))..add(DiagnosticsProperty('onInvoke', onInvoke))..add(DiagnosticsProperty('show', show))..add(DiagnosticsProperty('registerShortcut', registerShortcut))..add(DiagnosticsProperty('owner', owner));
-}
 
 @override
 bool operator ==(Object other) {
@@ -279,7 +266,7 @@ int get hashCode {
 }
 
 @override
-String toString({ DiagnosticLevel minLevel = DiagnosticLevel.info }) {
+String toString() {
     return 'ActionShortcut(id: $id, label: $label, description: $description, activators: $activators, priority: $priority, icon: $icon, onInvoke: $onInvoke, show: $show, registerShortcut: $registerShortcut, owner: $owner)';
 }
 
@@ -330,7 +317,7 @@ as GlobalKey<State<StatefulWidget>>?,
 /// @nodoc
 
 
-class IntentActionShortcut extends ActionShortcut with DiagnosticableTreeMixin {
+class IntentActionShortcut extends ActionShortcut {
   const IntentActionShortcut({required this.id, required this.label, required this.description, required this.intent, required this.priority, this.icon, this.onInvoke, this.show = true, this.registerShortcut = true, this.owner}): assert(id != "", 'ID must not be empty.'),super._();
   
 
@@ -352,12 +339,6 @@ class IntentActionShortcut extends ActionShortcut with DiagnosticableTreeMixin {
 $IntentActionShortcutCopyWith<IntentActionShortcut> get copyWith => _$IntentActionShortcutCopyWithImpl<IntentActionShortcut>(this, _$identity);
 
 
-@override
-void debugFillProperties(DiagnosticPropertiesBuilder properties) {
-    properties
-    ..add(DiagnosticsProperty('type', 'ActionShortcut.intent'))
-    ..add(DiagnosticsProperty('id', id))..add(DiagnosticsProperty('label', label))..add(DiagnosticsProperty('description', description))..add(DiagnosticsProperty('intent', intent))..add(DiagnosticsProperty('priority', priority))..add(DiagnosticsProperty('icon', icon))..add(DiagnosticsProperty('onInvoke', onInvoke))..add(DiagnosticsProperty('show', show))..add(DiagnosticsProperty('registerShortcut', registerShortcut))..add(DiagnosticsProperty('owner', owner));
-}
 
 @override
 bool operator ==(Object other) {
@@ -371,7 +352,7 @@ int get hashCode {
 }
 
 @override
-String toString({ DiagnosticLevel minLevel = DiagnosticLevel.info }) {
+String toString() {
     return 'ActionShortcut.intent(id: $id, label: $label, description: $description, intent: $intent, priority: $priority, icon: $icon, onInvoke: $onInvoke, show: $show, registerShortcut: $registerShortcut, owner: $owner)';
 }
 

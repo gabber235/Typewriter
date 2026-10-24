@@ -27,7 +27,7 @@ sealed interface InternalError_OrMutable {
 /** Deeply immutable. */
 @kotlin.Suppress("UNUSED_PARAMETER")
 class InternalError private constructor(
-    private val _unrecognizedFields: _UnrecognizedFields<skirout.kernel.v1.errors.InternalError>? =
+    internal val _unrecognizedFields: _UnrecognizedFields<skirout.kernel.v1.errors.InternalError>? =
         null,
 ): skirout.kernel.v1.errors.InternalError_OrMutable {
     constructor(
@@ -56,7 +56,7 @@ class InternalError private constructor(
     override fun toString(): kotlin.String {
         return build.skir.internal.toStringImpl(
             this,
-            skirout.kernel.v1.errors.InternalError.serializerImpl,
+            _SerializerRegistry.InternalErrorSerializerImpl,
         )
     }
 
@@ -92,25 +92,11 @@ class InternalError private constructor(
             _unrecognizedFields = null,
         );
 
-        private val serializerImpl = build.skir.internal.StructSerializer(
-            recordId = "kernel/v1/errors.skir:InternalError",
-            doc = "",
-            defaultInstance = default,
-            newMutableFn = { it?.toMutable() ?: Mutable() },
-            toFrozenFn = { it.toFrozen() },
-            getUnrecognizedFields = { it._unrecognizedFields },
-            setUnrecognizedFields = { m, u -> m._unrecognizedFields = u },
-        );
-
         /** Serializer for [InternalError] instances. */
-        val serializer = build.skir.internal.makeSerializer(serializerImpl);
+        val serializer get() = _SerializerRegistry.InternalErrorSerializer;
 
         /** Describes the [InternalError] type. Provides runtime introspection capabilities. */
-        val typeDescriptor get() = serializerImpl.typeDescriptor;
-
-        init {
-            serializerImpl.finalizeStruct();
-        }
+        val typeDescriptor get() = _SerializerRegistry.InternalErrorSerializerImpl.typeDescriptor;
     }
 }
 
@@ -126,7 +112,7 @@ sealed interface InvalidRecordIdError_OrMutable {
 class InvalidRecordIdError private constructor(
     override val expectedTable: kotlin.String,
     override val givenTables: kotlin.collections.List<kotlin.String>,
-    private val _unrecognizedFields: _UnrecognizedFields<skirout.kernel.v1.errors.InvalidRecordIdError>? =
+    internal val _unrecognizedFields: _UnrecognizedFields<skirout.kernel.v1.errors.InvalidRecordIdError>? =
         null,
 ): skirout.kernel.v1.errors.InvalidRecordIdError_OrMutable {
     constructor(
@@ -179,7 +165,7 @@ class InvalidRecordIdError private constructor(
     override fun toString(): kotlin.String {
         return build.skir.internal.toStringImpl(
             this,
-            skirout.kernel.v1.errors.InvalidRecordIdError.serializerImpl,
+            _SerializerRegistry.InvalidRecordIdErrorSerializerImpl,
         )
     }
 
@@ -246,44 +232,62 @@ class InvalidRecordIdError private constructor(
             _unrecognizedFields = null,
         );
 
-        private val serializerImpl = build.skir.internal.StructSerializer(
-            recordId = "kernel/v1/errors.skir:InvalidRecordIdError",
-            doc = "",
-            defaultInstance = default,
-            newMutableFn = { it?.toMutable() ?: Mutable() },
-            toFrozenFn = { it.toFrozen() },
-            getUnrecognizedFields = { it._unrecognizedFields },
-            setUnrecognizedFields = { m, u -> m._unrecognizedFields = u },
-        );
-
         /** Serializer for [InvalidRecordIdError] instances. */
-        val serializer = build.skir.internal.makeSerializer(serializerImpl);
+        val serializer get() = _SerializerRegistry.InvalidRecordIdErrorSerializer;
 
         /** Describes the [InvalidRecordIdError] type. Provides runtime introspection capabilities. */
-        val typeDescriptor get() = serializerImpl.typeDescriptor;
+        val typeDescriptor get() = _SerializerRegistry.InvalidRecordIdErrorSerializerImpl.typeDescriptor;
+    }
+}
 
-        init {
-            serializerImpl.addField(
-                "expected_table",
-                "expectedTable",
-                0,
+private object _SerializerRegistry {
+    val InternalErrorSerializerImpl = build.skir.internal.StructSerializer(
+        recordId = "kernel/v1/errors.skir:InternalError",
+        doc = "",
+        defaultInstance = skirout.kernel.v1.errors.InternalError.partial(),
+        newMutableFn = { it?.toMutable() ?: skirout.kernel.v1.errors.InternalError.Mutable() },
+        toFrozenFn = { it.toFrozen() },
+        getUnrecognizedFields = { it._unrecognizedFields },
+        setUnrecognizedFields = { m, u -> m._unrecognizedFields = u },
+    );
+
+    val InternalErrorSerializer = build.skir.internal.makeSerializer(InternalErrorSerializerImpl);
+
+    val InvalidRecordIdErrorSerializerImpl = build.skir.internal.StructSerializer(
+        recordId = "kernel/v1/errors.skir:InvalidRecordIdError",
+        doc = "",
+        defaultInstance = skirout.kernel.v1.errors.InvalidRecordIdError.partial(),
+        newMutableFn = { it?.toMutable() ?: skirout.kernel.v1.errors.InvalidRecordIdError.Mutable() },
+        toFrozenFn = { it.toFrozen() },
+        getUnrecognizedFields = { it._unrecognizedFields },
+        setUnrecognizedFields = { m, u -> m._unrecognizedFields = u },
+    );
+
+    val InvalidRecordIdErrorSerializer = build.skir.internal.makeSerializer(InvalidRecordIdErrorSerializerImpl);
+
+    init {
+        InternalErrorSerializerImpl.finalizeStruct();
+
+        InvalidRecordIdErrorSerializerImpl.addField(
+            "expected_table",
+            "expectedTable",
+            0,
+            build.skir.Serializers.string,
+            "",
+            { it.expectedTable },
+            { mut, v -> mut.expectedTable = v },
+        );
+        InvalidRecordIdErrorSerializerImpl.addField(
+            "given_tables",
+            "givenTables",
+            1,
+            build.skir.Serializers.list(
                 build.skir.Serializers.string,
-                "",
-                { it.expectedTable },
-                { mut, v -> mut.expectedTable = v },
-            );
-            serializerImpl.addField(
-                "given_tables",
-                "givenTables",
-                1,
-                build.skir.Serializers.list(
-                    build.skir.Serializers.string,
-                ),
-                "",
-                { it.givenTables },
-                { mut, v -> mut.givenTables = v },
-            );
-            serializerImpl.finalizeStruct();
-        }
+            ),
+            "",
+            { it.givenTables },
+            { mut, v -> mut.givenTables = v },
+        );
+        InvalidRecordIdErrorSerializerImpl.finalizeStruct();
     }
 }

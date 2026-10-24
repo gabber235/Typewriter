@@ -1,7 +1,4 @@
-import "package:flutter/foundation.dart";
-import "package:freezed_annotation/freezed_annotation.dart";
-import "package:typewriter_panel/app/application/router/access/route_access_module.dart";
-import "package:typewriter_panel/app/application/router/access/route_access_state_controller.dart";
+import "package:typewriter_panel/typewriter_panel.dart";
 
 part "organization_route_access.freezed.dart";
 

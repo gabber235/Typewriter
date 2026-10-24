@@ -1,7 +1,3 @@
-import "dart:async";
-
-import "package:collection/collection.dart";
-import "package:flutter/foundation.dart";
 import "package:flutter_test/flutter_test.dart";
 import "package:typewriter_panel/typewriter_panel.dart";
 

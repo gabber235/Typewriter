@@ -11,8 +11,9 @@ part of 'auth.dart';
 /// Owns the panel's identity provider session for the application lifetime.
 ///
 /// Construction selects the redirect flow required by the current platform,
-/// initializes the OIDC manager, and restores any persisted session. Sign in and
-/// sign out invalidate this provider so all consumers observe the new session
+/// initializes the OIDC manager, and restores any persisted session. Web sign in
+/// navigates in the current tab and restores the session on return. Native sign
+/// in and sign out invalidate this provider so consumers observe the new session
 /// through Riverpod rather than retaining their own authentication state.
 
 @ProviderFor(Auth)
@@ -21,16 +22,18 @@ final authProvider = AuthProvider._();
 /// Owns the panel's identity provider session for the application lifetime.
 ///
 /// Construction selects the redirect flow required by the current platform,
-/// initializes the OIDC manager, and restores any persisted session. Sign in and
-/// sign out invalidate this provider so all consumers observe the new session
+/// initializes the OIDC manager, and restores any persisted session. Web sign in
+/// navigates in the current tab and restores the session on return. Native sign
+/// in and sign out invalidate this provider so consumers observe the new session
 /// through Riverpod rather than retaining their own authentication state.
 final class AuthProvider
     extends $AsyncNotifierProvider<Auth, OidcUserManager?> {
   /// Owns the panel's identity provider session for the application lifetime.
   ///
   /// Construction selects the redirect flow required by the current platform,
-  /// initializes the OIDC manager, and restores any persisted session. Sign in and
-  /// sign out invalidate this provider so all consumers observe the new session
+  /// initializes the OIDC manager, and restores any persisted session. Web sign in
+  /// navigates in the current tab and restores the session on return. Native sign
+  /// in and sign out invalidate this provider so consumers observe the new session
   /// through Riverpod rather than retaining their own authentication state.
   AuthProvider._()
     : super(
@@ -51,13 +54,14 @@ final class AuthProvider
   Auth create() => Auth();
 }
 
-String _$authHash() => r'f5fcbb5a594b66fa9d89b04dd12a6855f610eaa0';
+String _$authHash() => r'4daab917096ee770bce8a39a831fb78f2224c25e';
 
 /// Owns the panel's identity provider session for the application lifetime.
 ///
 /// Construction selects the redirect flow required by the current platform,
-/// initializes the OIDC manager, and restores any persisted session. Sign in and
-/// sign out invalidate this provider so all consumers observe the new session
+/// initializes the OIDC manager, and restores any persisted session. Web sign in
+/// navigates in the current tab and restores the session on return. Native sign
+/// in and sign out invalidate this provider so consumers observe the new session
 /// through Riverpod rather than retaining their own authentication state.
 
 abstract class _$Auth extends $AsyncNotifier<OidcUserManager?> {

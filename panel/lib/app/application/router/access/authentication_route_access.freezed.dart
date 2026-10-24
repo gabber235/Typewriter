@@ -13,17 +13,11 @@ part of 'authentication_route_access.dart';
 // dart format off
 T _$identity<T>(T value) => value;
 /// @nodoc
-mixin _$RouteAuthenticationDecision implements DiagnosticableTreeMixin {
+mixin _$RouteAuthenticationDecision {
 
 
 
 
-@override
-void debugFillProperties(DiagnosticPropertiesBuilder properties) {
-    properties
-    ..add(DiagnosticsProperty('type', 'RouteAuthenticationDecision'))
-    ;
-}
 
 @override
 bool operator ==(Object other) {
@@ -35,7 +29,7 @@ bool operator ==(Object other) {
 int get hashCode => runtimeType.hashCode;
 
 @override
-String toString({ DiagnosticLevel minLevel = DiagnosticLevel.info }) {
+String toString() {
     return 'RouteAuthenticationDecision()';
 }
 
@@ -193,7 +187,7 @@ return unavailable();case _:
 /// @nodoc
 
 
-class RouteAuthenticationLoading with DiagnosticableTreeMixin implements RouteAuthenticationDecision {
+class RouteAuthenticationLoading implements RouteAuthenticationDecision {
   const RouteAuthenticationLoading();
   
 
@@ -201,12 +195,6 @@ class RouteAuthenticationLoading with DiagnosticableTreeMixin implements RouteAu
 
 
 
-@override
-void debugFillProperties(DiagnosticPropertiesBuilder properties) {
-    properties
-    ..add(DiagnosticsProperty('type', 'RouteAuthenticationDecision.loading'))
-    ;
-}
 
 @override
 bool operator ==(Object other) {
@@ -218,7 +206,7 @@ bool operator ==(Object other) {
 int get hashCode => runtimeType.hashCode;
 
 @override
-String toString({ DiagnosticLevel minLevel = DiagnosticLevel.info }) {
+String toString() {
     return 'RouteAuthenticationDecision.loading()';
 }
 
@@ -231,7 +219,7 @@ String toString({ DiagnosticLevel minLevel = DiagnosticLevel.info }) {
 /// @nodoc
 
 
-class RouteAuthenticationAuthenticated with DiagnosticableTreeMixin implements RouteAuthenticationDecision {
+class RouteAuthenticationAuthenticated implements RouteAuthenticationDecision {
   const RouteAuthenticationAuthenticated();
   
 
@@ -239,12 +227,6 @@ class RouteAuthenticationAuthenticated with DiagnosticableTreeMixin implements R
 
 
 
-@override
-void debugFillProperties(DiagnosticPropertiesBuilder properties) {
-    properties
-    ..add(DiagnosticsProperty('type', 'RouteAuthenticationDecision.authenticated'))
-    ;
-}
 
 @override
 bool operator ==(Object other) {
@@ -256,7 +238,7 @@ bool operator ==(Object other) {
 int get hashCode => runtimeType.hashCode;
 
 @override
-String toString({ DiagnosticLevel minLevel = DiagnosticLevel.info }) {
+String toString() {
     return 'RouteAuthenticationDecision.authenticated()';
 }
 
@@ -269,7 +251,7 @@ String toString({ DiagnosticLevel minLevel = DiagnosticLevel.info }) {
 /// @nodoc
 
 
-class RouteAuthenticationUnauthenticated with DiagnosticableTreeMixin implements RouteAuthenticationDecision {
+class RouteAuthenticationUnauthenticated implements RouteAuthenticationDecision {
   const RouteAuthenticationUnauthenticated();
   
 
@@ -277,12 +259,6 @@ class RouteAuthenticationUnauthenticated with DiagnosticableTreeMixin implements
 
 
 
-@override
-void debugFillProperties(DiagnosticPropertiesBuilder properties) {
-    properties
-    ..add(DiagnosticsProperty('type', 'RouteAuthenticationDecision.unauthenticated'))
-    ;
-}
 
 @override
 bool operator ==(Object other) {
@@ -294,7 +270,7 @@ bool operator ==(Object other) {
 int get hashCode => runtimeType.hashCode;
 
 @override
-String toString({ DiagnosticLevel minLevel = DiagnosticLevel.info }) {
+String toString() {
     return 'RouteAuthenticationDecision.unauthenticated()';
 }
 
@@ -307,7 +283,7 @@ String toString({ DiagnosticLevel minLevel = DiagnosticLevel.info }) {
 /// @nodoc
 
 
-class RouteAuthenticationUnavailable with DiagnosticableTreeMixin implements RouteAuthenticationDecision {
+class RouteAuthenticationUnavailable implements RouteAuthenticationDecision {
   const RouteAuthenticationUnavailable();
   
 
@@ -315,12 +291,6 @@ class RouteAuthenticationUnavailable with DiagnosticableTreeMixin implements Rou
 
 
 
-@override
-void debugFillProperties(DiagnosticPropertiesBuilder properties) {
-    properties
-    ..add(DiagnosticsProperty('type', 'RouteAuthenticationDecision.unavailable'))
-    ;
-}
 
 @override
 bool operator ==(Object other) {
@@ -332,7 +302,7 @@ bool operator ==(Object other) {
 int get hashCode => runtimeType.hashCode;
 
 @override
-String toString({ DiagnosticLevel minLevel = DiagnosticLevel.info }) {
+String toString() {
     return 'RouteAuthenticationDecision.unavailable()';
 }
 

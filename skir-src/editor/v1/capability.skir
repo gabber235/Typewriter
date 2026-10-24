@@ -1,46 +1,53 @@
-import { TypeDiagnostic } from "editor/v1/diagnostic.skir";
+// Capabilities publish typed Realm operations in the editor catalog. Computations return
+// portable values, commands return panel instructions, search streams correlated snapshots,
+// and authoring capabilities prepare proposed edits. Invocation results distinguish stale
+// catalog data, invalid input, unavailable execution, and permission rejection.
+
+import { Diagnostic } from "editor/v1/diagnostic.skir";
+import {
+  OperationInputDefinition,
+  OperationTargets,
+} from "editor/v1/operation.skir";
 import {
   CapabilityId,
   CatalogGeneration,
-  ResolvedTypeRef,
-  TypeExpression,
-  TypedValue,
+  DataValue,
+  TypeTemplate,
+  TypeUse,
 } from "editor/v1/type_catalog.skir";
 
-// Capabilities expose typed Realm operations to editor consumers. Definitions
-// describe dispatch shape in the catalog; invocation results make correlation,
-// generation checks, authorization, decoding, and failure explicit.
-
+/// Caller correlation identity. It does not imply durable command storage or automatic deduplication.
 struct InvocationId(811200001) {
   value: string = 0;
 }
 
 struct SearchCapabilityDefinition(811200002) {
   capability_id: CapabilityId = 0;
-  request_type: ResolvedTypeRef = 1;
-  result_type: ResolvedTypeRef = 2;
+  request_type: TypeUse = 1;
+  result_type: TypeUse = 2;
 }
 
 struct ComputationCapabilityDefinition(811200003) {
   capability_id: CapabilityId = 0;
-  request_type: ResolvedTypeRef = 1;
-  result_type: ResolvedTypeRef = 2;
+  request_type: TypeUse = 1;
+  result_type: TypeUse = 2;
 }
 
 struct CommandCapabilityDefinition(811200004) {
   capability_id: CapabilityId = 0;
-  request_type: ResolvedTypeRef = 1;
+  request_type: TypeUse = 1;
 }
 
 enum CapabilityDefinition(811200005) {
   search: SearchCapabilityDefinition = 1;
   computation: ComputationCapabilityDefinition = 2;
   command: CommandCapabilityDefinition = 3;
+  authoring: AuthoringCapabilityDefinition = 4;
 }
 
 struct ResourceAddress(811200006) {
-  resource_type: ResolvedTypeRef = 0;
-  identity: TypedValue = 1;
+  resource_type: TypeUse = 0;
+  identity: DataValue = 1;
 }
 
 struct InvalidateResourceInstruction(811200007) {
@@ -63,23 +70,27 @@ struct NotifyInstruction(811200010) {
   message: string = 1;
 }
 
+/// Client effects returned by Realm commands. These instructions direct navigation, refresh,
+/// or notification; receiving them is separate from applying them in the current panel session.
 enum PanelInstruction(811200011) {
   invalidate_resource: InvalidateResourceInstruction = 1;
   open_resource: OpenResourceInstruction = 2;
   notify: NotifyInstruction = 3;
 }
 
+/// Selects a capability under a catalog generation with portable input. Computations require
+/// the declared result type; commands require expected_result_type to be absent.
 struct CapabilityInvocationRequest(811200012) {
   invocation_id: InvocationId = 0;
   generation: CatalogGeneration = 1;
   capability_id: CapabilityId = 2;
-  payload: TypedValue = 3;
-  expected_result_type: TypeExpression? = 4;
+  payload: DataValue = 3;
+  expected_result_type: TypeTemplate? = 4;
 }
 
 struct ComputationSuccess(811200013) {
   invocation_id: InvocationId = 0;
-  value: TypedValue = 1;
+  value: DataValue = 1;
 }
 
 struct CommandSuccess(811200014) {
@@ -99,7 +110,7 @@ struct StaleCatalogGeneration(811200016) {
 
 struct CapabilityFailure(811200017) {
   invocation_id: InvocationId = 0;
-  diagnostics: [TypeDiagnostic] = 1;
+  diagnostics: [Diagnostic] = 1;
 }
 
 enum ComputationResult(811200018) {
@@ -118,10 +129,16 @@ enum CommandResult(811200019) {
   stale_generation: StaleCatalogGeneration = 5;
 }
 
+struct AuthoringCapabilityDefinition(811200020) {
+  capability_id: CapabilityId = 0;
+  targets: OperationTargets = 1;
+  input: OperationInputDefinition? = 2;
+}
+
 method InvokeRealmComputation(
   CapabilityInvocationRequest
-): ComputationResult = 919101;
+): ComputationResult = 920004;
 
 method InvokeRealmCommand(
   CapabilityInvocationRequest
-): CommandResult = 919102;
+): CommandResult = 920005;

@@ -1,14 +1,12 @@
-import "package:flutter/material.dart";
-import "package:flutter_hooks/flutter_hooks.dart";
-import "package:hooks_riverpod/hooks_riverpod.dart";
 import "package:typewriter_panel/typewriter_panel.dart";
 
 /// Binds a service registration token to the selected organization.
 ///
 /// Validation happens before the request so malformed tokens never reach the
-/// service API. A successful request clears the input after the application
-/// provider accepts the bind. Provider failures are passed to [LoadingButton],
-/// which owns the in progress and error presentation for the request.
+/// service API. The local work controller executes the repository request,
+/// including its accepted snapshot refresh, before the input is cleared.
+/// Request failures are passed to [LoadingButton], which owns the in progress
+/// and error presentation.
 class RegistrationTokenInput extends HookConsumerWidget {
   const RegistrationTokenInput({super.key});
 
@@ -32,7 +30,15 @@ class RegistrationTokenInput extends HookConsumerWidget {
         return;
       }
       error.value = null;
-      await ref.read(canonicalServicesProvider.notifier).bindService(token);
+      final organization = ref.read(organizationIdProvider);
+      if (organization == null) throw ApiException.noOrganization();
+      final repository = ref
+          .read(resourceRepositoriesProvider)
+          .services(organization);
+      final response = await ref
+          .read(localWorkControllerProvider)
+          .execute(repository.bind(token));
+      response.requireAcceptedBinding();
       controller.clear();
     }
 

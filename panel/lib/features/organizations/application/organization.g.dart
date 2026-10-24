@@ -54,7 +54,7 @@ final class OrganizationsProvider
   Organizations create() => Organizations();
 }
 
-String _$organizationsHash() => r'cee411b116915b0b6e4da21ef292d6a4b640f7ec';
+String _$organizationsHash() => r'bc553d234848d952d06eb26265a45adafa49a4ec';
 
 /// Owns the current user's organization list projection.
 ///
@@ -143,7 +143,7 @@ final class OrganizationIdProvider
   }
 }
 
-String _$organizationIdHash() => r'9902444ecead9e5ebb83f436a847d913ff97d987';
+String _$organizationIdHash() => r'7eb63d4df0d5163bd3cd75644fc63f619087e550';
 
 /// Selects the routed organization from the user's canonical organization list.
 ///

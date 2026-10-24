@@ -1,5 +1,3 @@
-import "package:flutter/material.dart";
-import "package:freezed_annotation/freezed_annotation.dart";
 import "package:typewriter_panel/typewriter_panel.dart";
 
 part "graph_edge.freezed.dart";

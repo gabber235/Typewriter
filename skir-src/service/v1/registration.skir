@@ -3,16 +3,13 @@ import { ServiceRole } from "service/v1/service.skir";
 
 // Completes the operator mediated transition from an issued, unbound service to an organization bound service.
 // The registration token is a temporary bearer capability. The registration service validates its expiry and
-// atomically consumes it while writing the organization binding. This operation is user scoped, idempotent by
-// operation_id, and does not issue or replace service identity credentials.
+// atomically consumes it while writing the organization binding. This operation is user scoped
+// and does not issue or replace service identity credentials.
 method BindService(
   struct {
-    operation_id: string;
     registration_token: string;
   }
 ): enum {
-  invalid_operation_id_error: struct {};
-  operation_identity_reused_error: struct {};
   internal_error: InternalError;
 
   success: struct {
@@ -38,12 +35,9 @@ struct ServiceBoundNotification {
 // identity remains intact, so a later binding uses a newly observed lease rather than reviving the old one.
 method UnbindService(
   struct {
-    operation_id: string;
     service_id: string;
   }
 ): enum {
-  invalid_operation_id_error: struct {};
-  operation_identity_reused_error: struct {};
   internal_error: InternalError;
 
   success: struct {};

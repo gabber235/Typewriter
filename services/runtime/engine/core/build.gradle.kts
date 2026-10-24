@@ -10,6 +10,7 @@ dependencies {
     api(project(":typewriter-api"))
     api(libs.kotlin.coroutines.core)
     implementation(project(":messaging"))
+    implementation(project(":protocol-transport"))
     implementation(libs.kotlin.serialize.json)
     testImplementation(project(":loader-api"))
     testImplementation(libs.kotlin.coroutines.test)

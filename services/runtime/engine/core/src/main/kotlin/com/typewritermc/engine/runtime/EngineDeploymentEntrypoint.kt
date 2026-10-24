@@ -1,97 +1,109 @@
 package com.typewritermc.engine.runtime
 
+import com.typewritermc.checking.CatalogGeneration
+import com.typewritermc.discovery.CatalogAssemblyContext
 import com.typewritermc.discovery.DeploymentFacts
 import com.typewritermc.discovery.DiscoveryDomains
-import com.typewritermc.discovery.Eligibility
-import com.typewritermc.discovery.RuntimeRegistrar
-import com.typewritermc.discovery.SourcePartCatalogEntry
-import com.typewritermc.discovery.TypeContributionAssembler
-import com.typewritermc.discovery.runtime.DiscoveryArtifactPackage
-import com.typewritermc.discovery.runtime.DiscoveryModuleLoader
-import com.typewritermc.discovery.runtime.ManifestDiscoveryReader
-import com.typewritermc.elements.ElementCatalogAssembler
-import com.typewritermc.elements.ElementContributionReader
-import com.typewritermc.imprint.EngineManifest
-import com.typewritermc.imprint.ExtensionManifest
+import com.typewritermc.discovery.GeneratedProviderArtifact
+import com.typewritermc.discovery.GeneratedProviderKind
+import com.typewritermc.discovery.GeneratedProviderLoader
+import com.typewritermc.discovery.assemble
+import com.typewritermc.imprint.COMMON_SOURCE_PART
 import com.typewritermc.imprint.ImprintRuntimeEntrypoint
-import com.typewritermc.loader.api.HostedArtifact
 import com.typewritermc.loader.api.HostedDeploymentContext
 import com.typewritermc.loader.api.HostedRuntimeEntrypoint
+import com.typewritermc.loader.api.RuntimePlacement
 import com.typewritermc.loader.api.SourcePartDisposition
 import com.typewritermc.loader.api.StagedHostedRuntime
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.cancel
 
-/**
- * Stages an engine from loader supplied manifests and loads execution discovery into an isolated deployment.
- *
- * The package must contain one engine plus extensions. Staging constructs the content gateway and delivery adapter
- * but registration starts on activation. Failure during runtime construction cancels its parent scope and closes
- * discovery resources.
- */
 @ImprintRuntimeEntrypoint
 class EngineDeploymentEntrypoint : HostedRuntimeEntrypoint {
     override suspend fun stage(context: HostedDeploymentContext): StagedHostedRuntime {
-        val artifactFiles =
-            listOf(context.artifacts.runtimeArtifact) +
-                context.artifacts.extensions.map { HostedArtifact(it.path, it.manifest) }
-        val artifactPaths = artifactFiles.map { it.path }
-        val manifests = artifactFiles.map { it.manifest }
-        val engine = manifests.filterIsInstance<EngineManifest>().single()
-        val extensions = manifests.filterIsInstance<ExtensionManifest>()
-        require(manifests.size == 1 + extensions.size) {
-            "An engine deployment may contain one engine and extension artifacts."
+        val implementation = requireNotNull(context.engineImplementation) { "Engine runtime implementation is missing." }
+        require(implementation.placement == context.identity.placement) {
+            "Engine runtime implementation placement does not match the hosted runtime."
         }
-        val contributions = ManifestDiscoveryReader.read(manifests)
-        val sourceParts =
-            context.artifacts.extensions.flatMap { extension ->
-                extension.sourceParts.map { sourcePart ->
-                    SourcePartCatalogEntry(
-                        extension.id,
-                        sourcePart.name,
-                        when (val disposition = sourcePart.disposition) {
-                            is SourcePartDisposition.Eligible -> Eligibility.Eligible
-                            is SourcePartDisposition.Ineligible -> Eligibility.Ineligible(disposition.reasons)
-                        },
-                    )
+        val artifacts =
+            listOf(
+                GeneratedProviderArtifact(
+                    artifact = context.artifacts.runtimeArtifact.manifest.id,
+                    path = context.artifacts.runtimeArtifact.path,
+                ),
+            ) +
+                context.artifacts.extensions.mapNotNull { extension ->
+                    val acceptedParts =
+                        extension.sourceParts.mapNotNullTo(linkedSetOf()) { sourcePart ->
+                            val eligible = sourcePart.disposition as? SourcePartDisposition.Eligible
+                            sourcePart.name.takeIf { eligible != null && context.identity.placement in eligible.placements }
+                        }
+                    acceptedParts.takeIf(Set<String>::isNotEmpty)?.let {
+                        GeneratedProviderArtifact(
+                            artifact = extension.id,
+                            path = extension.path,
+                            acceptedSourceParts = it + COMMON_SOURCE_PART,
+                        )
+                    }
                 }
-            }
-        val discovery = TypeContributionAssembler.assemble(contributions.types, sourceParts)
-        val facts = DeploymentFacts(context.facts)
-        val elementCatalog =
-            ElementCatalogAssembler.assemble(
-                ElementContributionReader.read(manifests),
-                sourceParts,
-                facts,
-            )
-        val artifactPackage =
-            DiscoveryArtifactPackage(
-                artifacts = artifactPaths.map { it.toUri().toURL() },
-                selectedEngine = engine.id,
-                selectedExtensions = extensions.mapTo(mutableSetOf()) { it.id },
-                facts = facts,
-            )
         val deployment =
-            DiscoveryModuleLoader().load(
-                artifactPackage,
-                DiscoveryDomains.Execution,
-                discovery,
-                requireNotNull(javaClass.classLoader),
+            GeneratedProviderLoader().load(
+                artifacts = artifacts,
+                facts = DeploymentFacts(context.facts),
+                domain = DiscoveryDomains.Execution,
+                acceptedKinds = EXECUTION_PROVIDER_KINDS,
+                parentClassLoader = requireNotNull(javaClass.classLoader),
             )
-        val parentScope = CoroutineScope(Dispatchers.Default)
+        val deploymentScope = CoroutineScope(Dispatchers.Default)
         return try {
-            ReloadableEngineRuntime(
-                deployment = deployment,
-                registrars = deployment.application.koin.getAll<RuntimeRegistrar>(),
-                parentScope = parentScope,
-                contentGateway = AssemblingEngineContentGateway(EngineContentAssembler(elementCatalog, deployment.prototypes)),
-                contentDelivery = MessagingEngineContentDelivery(context.host, context.identity.realmId, parentScope),
-            )
+            val assembly =
+                deployment.providers.contributions.assemble(
+                    CatalogAssemblyContext(CatalogGeneration(executionCatalogIdentity(artifacts))),
+                )
+            val runtime =
+                ReloadableEngineRuntime(
+                    deployment = deployment,
+                    registrars = deployment.providers.registrars.map { it.registrar },
+                    parentScope = deploymentScope,
+                    implementationToken = implementation.fingerprint(),
+                    enforceImplementationCompatibility =
+                        context.identity.placement == RuntimePlacement.PRIMARY_ENGINE,
+                    contentGateway = PageContentGateway(assembly.checked, assembly.bindings, assembly.snapshot.relations),
+                    contentDelivery = MessagingEngineContentDelivery(context.host, context.identity.realmId, deploymentScope),
+                )
+            ScopedEngineRuntime(runtime, deploymentScope)
         } catch (failure: Throwable) {
-            parentScope.cancel()
+            deploymentScope.cancel()
             runCatching { deployment.close() }.exceptionOrNull()?.let(failure::addSuppressed)
             throw failure
         }
     }
 }
+
+/** Owns the coroutine scope of one staged engine deployment and cancels it after final closure. */
+private class ScopedEngineRuntime(
+    private val runtime: ReloadableEngineRuntime,
+    private val scope: CoroutineScope,
+) : StagedHostedRuntime by runtime {
+    override suspend fun close() {
+        try {
+            runtime.close()
+        } finally {
+            scope.cancel()
+        }
+    }
+}
+
+private fun executionCatalogIdentity(artifacts: List<GeneratedProviderArtifact>): String =
+    artifacts.joinToString(separator = ",") { it.artifact.value }
+
+private val EXECUTION_PROVIDER_KINDS =
+    setOf(
+        GeneratedProviderKind.Type,
+        GeneratedProviderKind.NativeBinding,
+        GeneratedProviderKind.Resource,
+        GeneratedProviderKind.Relation,
+        GeneratedProviderKind.EndpointBindings,
+        GeneratedProviderKind.Registrar,
+    )

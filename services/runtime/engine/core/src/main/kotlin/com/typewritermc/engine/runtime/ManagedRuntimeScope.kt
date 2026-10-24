@@ -1,7 +1,7 @@
 package com.typewritermc.engine.runtime
 
 import com.typewritermc.discovery.DeploymentFacts
-import com.typewritermc.types.TypePrototypeRegistry
+import com.typewritermc.discovery.RuntimeCleanupOwner
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.SupervisorJob
@@ -12,22 +12,21 @@ import kotlinx.coroutines.cancelAndJoin
  *
  * Closure cancels and joins child jobs, then runs cleanup in reverse registration order. Once the closed flag is
  * set, repeated calls return and new ownership registrations fail. Lifecycle and registration access must be
- * serialized; the cleanup list is not synchronized. Cleanup exceptions are collected with later causes suppressed.
+ * serialized. Registered cleanup ownership is synchronized and collects later failures as suppressed causes.
  */
 class ManagedRuntimeScope(
     parent: CoroutineScope,
-    override val prototypes: TypePrototypeRegistry,
     override val facts: DeploymentFacts,
 ) : com.typewritermc.discovery.RuntimeScope {
     private val job = SupervisorJob(parent.coroutineContext[Job])
     override val coroutineScope = CoroutineScope(parent.coroutineContext + job)
-    private val cleanups = mutableListOf<suspend () -> Unit>()
+    private val ownership = RuntimeCleanupOwner()
     private var closed = false
 
     /** Registers cleanup owned by this activation, executed after child jobs and in reverse registration order. */
     override fun own(cleanup: suspend () -> Unit) {
         check(!closed) { "Runtime scope is already closed." }
-        cleanups += cleanup
+        ownership.own(cleanup)
     }
 
     /** Registers [resource] for closure with the activation and returns the same resource for immediate use. */
@@ -46,15 +45,6 @@ class ManagedRuntimeScope(
         if (closed) return
         closed = true
         job.cancelAndJoin()
-        val failures = mutableListOf<Throwable>()
-        cleanups.reversed().forEach { cleanup ->
-            runCatching { cleanup() }.exceptionOrNull()?.let(failures::add)
-        }
-        cleanups.clear()
-        if (failures.isNotEmpty()) {
-            val failure = failures.first()
-            failures.drop(1).forEach(failure::addSuppressed)
-            throw failure
-        }
+        ownership.close()
     }
 }

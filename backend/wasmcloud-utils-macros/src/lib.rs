@@ -1,15 +1,13 @@
 //! Compile time helpers used by the handwritten Typewriter backend components.
 //!
-//! The macros keep three boundaries consistent: SurrealDB query literals are validated before
-//! compilation, broker subjects are routed to typed handlers, and generated SKIR response enums
-//! are constructed with the payload shape required by the wire contract. The runtime behavior
-//! lives in `wasmcloud_utils`; this crate only parses declarations and emits calls into it.
+//! The macros check query structure, map database outcomes into domain responses, and construct
+//! generated Skir payloads. Runtime execution lives in `wasmcloud_utils`; generated transport
+//! routes separately own broker subject dispatch.
 
 use proc_macro::TokenStream;
 use syn::parse_macro_input;
 
 mod database_query;
-mod dispatch_actions;
 mod paths;
 mod skir_domain_result;
 mod skir_response;
@@ -27,26 +25,11 @@ pub fn skir_response(input: TokenStream) -> TokenStream {
     skir_response::expand(input).into()
 }
 
-/// Route a broker message subject to a typed asynchronous or synchronous handler.
-///
-/// A single subject template dispatches by its `<action>` capture. Named templates let several
-/// subject families share one declaration. Handlers receive the broker message and parsed
-/// parameters, and must return `Result<Response, otel_wasi::Error>` so replies and failures keep
-/// the messaging boundary's standard behavior.
-#[proc_macro]
-pub fn dispatch_actions(input: TokenStream) -> TokenStream {
-    let input = parse_macro_input!(input as dispatch_actions::DispatchInput);
-
-    match dispatch_actions::expand(input) {
-        Ok(tokens) => tokens.into(),
-        Err(error) => error.to_compile_error().into(),
-    }
-}
-
 /// Create a read query from a compile time string literal.
 ///
-/// The literal must contain at least one statement and no mutation statement. The generated
-/// value retains the final result position for typed decoding at the runtime database boundary.
+/// The literal must contain at least one statement and no recognized mutation keyword outside
+/// quoted values or comments. This is a lexical check, not a proof that called database functions
+/// are pure. The generated value retains the final result position for typed decoding.
 #[proc_macro]
 pub fn read_query(input: TokenStream) -> TokenStream {
     let input = parse_macro_input!(input as database_query::ReadQueryInput);

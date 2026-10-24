@@ -1,141 +1,33 @@
-import "package:flutter/material.dart";
-import "package:hooks_riverpod/hooks_riverpod.dart";
 import "package:typewriter_panel/typewriter_panel.dart";
-import "package:typewriter_testkit/typewriter_testkit.dart";
-
-EditOwner? selectionOwner(ProviderContainer container) {
-  final model = container.read(inspectionSessionProvider).model;
-  if (model == null || model.inputs.isEmpty) return null;
-  return (model.inputs.values.single as PresentationEditInput).owner;
-}
 
 class MockSelectableIdentifier extends SelectableIdentifier {
-  MockSelectableIdentifier(this.id, [RecordValue? value])
-    : value = value ?? RecordValue(const {});
-
-  @override
-  final String id;
-  final RecordValue value;
-
-  @override
-  AsyncValue<Selectable<MockSelectableIdentifier>> create(Ref ref) {
-    return AsyncData(MockSelectable(this, value));
-  }
-
-  @override
-  bool operator ==(Object other) =>
-      identical(this, other) ||
-      (other is MockSelectableIdentifier && other.id == id);
-
-  @override
-  int get hashCode => id.hashCode;
-
-  @override
-  String toString() => "MockSelectableIdentifier($id)";
-}
-
-class LoadingSelectableIdentifier extends SelectableIdentifier {
-  LoadingSelectableIdentifier(this.id);
+  const MockSelectableIdentifier(this.id);
 
   @override
   final String id;
 
   @override
-  AsyncValue<Selectable<LoadingSelectableIdentifier>> create(Ref ref) {
-    return const AsyncLoading();
-  }
+  AsyncValue<Selectable<MockSelectableIdentifier>> create(Ref ref) =>
+      AsyncData(MockSelectable(this));
 
   @override
   bool operator ==(Object other) =>
       identical(this, other) ||
-      (other is LoadingSelectableIdentifier && other.id == id);
+      other is MockSelectableIdentifier && other.id == id;
 
   @override
   int get hashCode => id.hashCode;
 }
 
-class MockSelectable extends EditableSelectable<MockSelectableIdentifier> {
-  MockSelectable(this.id, this.data);
+final class MockSelectable extends Selectable<MockSelectableIdentifier> {
+  const MockSelectable(this.id);
 
   @override
   final MockSelectableIdentifier id;
-  final RecordValue data;
-
-  EditorCommit? latestCommit;
 
   @override
-  String get name => "Mock ${id.id}";
-
-  late final TypeDefinition rootDefinition = TypeDefinition(
-    id: ResolvedTypeRef(
-      id: QualifiedTypeId(namespace: "selection_test", name: id.id),
-      revision: 1,
-    ),
-    kind: NominalTypeKind.concrete,
-    representation: RecordType(
-      fields: data.fields.map(
-        (name, value) =>
-            MapEntry(name, TypeField(name: name, type: value.typeExpression)),
-      ),
-    ),
-  );
+  String get name => id.id;
 
   @override
-  late final EditorDocument document = EditorDocument(
-    rootType: NamedType(rootDefinition.id),
-    typeCatalog: TypeCatalog([rootDefinition]),
-    confirmedValue: data,
-    revision: 1,
-  );
-
-  @override
-  List<SelectionCapability> get capabilities => [];
-
-  @override
-  Widget? buildInspectorHeader(EditOwner owner) => null;
-
-  @override
-  EditorSnapshot get snapshot =>
-      FakeEditorSnapshot(document, validation: validate);
-
-  @override
-  late final EditableResource resource = FakeEditableResource(
-    key: EditorResourceKey(scope: null, identity: id.resourceId),
-    current: snapshot,
-    commit: commit,
-    load: () async => snapshot,
-  );
-
-  Future<TypedMutationResult> commit(EditorCommit commit) async {
-    latestCommit = commit;
-    final value = commit.rootValue;
-    if (value is! RecordValue) {
-      return TypedMutationResult.invalid([
-        const TypeDiagnostic(
-          code: TypeDiagnosticCode.invalidValue,
-          message: "The selectable root must remain a record",
-        ),
-      ]);
-    }
-    return TypedMutationResult.success(
-      revision: commit.expectedRevision + 1,
-      value: value,
-    );
-  }
-
-  @override
-  bool operator ==(Object other) =>
-      identical(this, other) || (other is MockSelectable && other.id == id);
-
-  @override
-  int get hashCode => id.hashCode;
-}
-
-extension TestDataValueTypeExpression on DataValue {
-  TypeExpression get typeExpression => switch (this) {
-    StringValue() => const StringType(),
-    IntegerValue() => const IntegerType(width: IntegerWidth.signed64),
-    BooleanValue() => const BooleanType(),
-    _ => const AnyType(),
-  };
+  List<SelectionCapability> get capabilities => const [];
 }

@@ -1,17 +1,13 @@
-import "package:flutter/material.dart";
-import "package:flutter_hooks/flutter_hooks.dart";
-import "package:hooks_riverpod/hooks_riverpod.dart";
 import "package:typewriter_panel/typewriter_panel.dart";
-import "package:vector_math/vector_math_64.dart" hide Colors;
 
 /// Receives an element identifier and its preview dimensions during resizing.
 typedef GraphResizeCallback = void Function(GraphIdentifier, int, int);
 
 /// Interactive graph surface backed by an immutable [GraphData] snapshot.
 ///
-/// Selection is read from the shared selection provider. The primary focused
-/// element is added to the active keyboard target when it is not already in the
-/// selection, so focus and multi selection remain distinct. Pointer and
+/// Selection is read from the shared selection provider. A focused item outside
+/// that selection becomes the sole keyboard target; focus inside the selection
+/// preserves the selected batch. Pointer and
 /// keyboard edits are previews until the corresponding callback receives
 /// absolute grid values. Callers own persistence and rebuild the graph with the
 /// resulting snapshot.
@@ -181,6 +177,44 @@ class Graph extends HookConsumerWidget {
 
             final viewerKey = useGlobalKey();
 
+            bool containsGlobalPosition(Offset position) {
+              final box = viewerKey.currentContext?.findRenderObject();
+              if (box is! RenderBox || !box.attached || !box.hasSize) {
+                return false;
+              }
+              return (Offset.zero & box.size).contains(
+                box.globalToLocal(position),
+              );
+            }
+
+            useEffect(() {
+              var mounted = true;
+              var pending = false;
+              void scheduleCheck() {
+                if (!mounted ||
+                    pending ||
+                    interactionController.value == null) {
+                  return;
+                }
+                pending = true;
+                WidgetsBinding.instance.addPostFrameCallback((_) {
+                  pending = false;
+                  if (!mounted) return;
+                  interactionController.refreshDragContainment(
+                    containsGlobalPosition,
+                  );
+                  scheduleCheck();
+                });
+              }
+
+              interactionController.addListener(scheduleCheck);
+              scheduleCheck();
+              return () {
+                mounted = false;
+                interactionController.removeListener(scheduleCheck);
+              };
+            }, [interactionController, viewerKey]);
+
             final dragStart = useState<Offset?>(null);
 
             final ignoreCentering = useState<List<FocusNode>>([]);
@@ -267,14 +301,45 @@ class Graph extends HookConsumerWidget {
                         retainedIds: {?focusedId},
                       )
                       .toList(growable: false);
+                  bool updateGraphMove(
+                    DragTargetDetails<GraphDragPayload<GraphDragData>> details,
+                  ) {
+                    final offered = details.data;
+                    if (!interactionController.ownsDrag(offered)) return false;
+                    final placed = layout.placementsById[offered.value.graphId];
+                    final box = graphKey.currentContext?.findRenderObject();
+                    if (placed == null ||
+                        box is! RenderBox ||
+                        !box.attached ||
+                        !box.hasSize) {
+                      dragStart.value = null;
+                      interactionController.cancelMove();
+                      return false;
+                    }
+                    if (interactionController.movingIds.isEmpty) {
+                      dragStart.value = placed.position;
+                      interactionController.beginMove(
+                        data: data,
+                        origin: placed.id,
+                        selectedIds: ref
+                            .read(selectionProvider)
+                            .map((id) => GraphIdentifier(id.id))
+                            .toSet(),
+                      );
+                    }
+                    interactionController.updateMove(
+                      box.globalToLocal(details.offset) - dragStart.value!,
+                    );
+                    return true;
+                  }
+
                   return GraphDragTargetSurface(
                     viewport: viewportRect,
                     enabled: onElementsMoved != null,
-                    activeDragId: interactionController.activeDragId,
+                    dragState: interactionController.dragState,
                     graph: GraphDrag(
-                      draggingInsideGraph:
-                          interactionController.draggingInsideGraph,
-                      activeDragId: interactionController.activeDragId,
+                      controller: interactionController,
+                      containsGlobalPosition: containsGlobalPosition,
                       child: Actions(
                         actions: {
                           SelectedSelectorIntent:
@@ -403,48 +468,27 @@ class Graph extends HookConsumerWidget {
                         ),
                       ),
                     ),
-                    dragTarget: DragTarget<GraphDragData>(
-                      onWillAcceptWithDetails: (details) {
-                        final placed =
-                            layout.placementsById[details.data.graphId];
-                        if (placed == null) return false;
-                        final renderBox =
-                            graphKey.currentContext?.findRenderObject()
-                                as RenderBox?;
-                        assert(renderBox != null, "Graph render box not found");
-
-                        dragStart.value = placed.position;
-                        interactionController
-                          ..beginMove(
-                            data: data,
-                            origin: placed.id,
-                            selectedIds: ref
-                                .read(selectionProvider)
-                                .map((id) => GraphIdentifier(id.id))
-                                .toSet(),
-                          )
-                          ..updateMove(
-                            renderBox!.globalToLocal(details.offset) -
-                                dragStart.value!,
-                          );
-                        return true;
-                      },
-                      onMove: (details) {
-                        final start = dragStart.value;
-                        if (start == null) return;
-                        final renderBox =
-                            graphKey.currentContext?.findRenderObject()
-                                as RenderBox?;
-                        assert(renderBox != null, "Graph render box not found");
-                        interactionController.updateMove(
-                          renderBox!.globalToLocal(details.offset) - start,
-                        );
-                      },
-                      onLeave: (_) {
+                    dragTarget: DragTarget<GraphDragPayload<GraphDragData>>(
+                      // Flutter asks this before onDragStarted. Ready admission has no effects.
+                      onWillAcceptWithDetails: (details) =>
+                          details.data.canHover &&
+                          layout.placementsById.containsKey(
+                            details.data.value.graphId,
+                          ),
+                      onMove: updateGraphMove,
+                      onLeave: (offered) {
+                        if (offered == null ||
+                            !interactionController.ownsDrag(offered)) {
+                          return;
+                        }
                         dragStart.value = null;
                         interactionController.cancelMove();
                       },
-                      onAcceptWithDetails: (_) {
+                      onAcceptWithDetails: (details) {
+                        if (!updateGraphMove(details) ||
+                            !details.data.claim()) {
+                          return;
+                        }
                         dragStart.value = null;
                         final changes = interactionController.finishMove(data);
                         if (changes.isNotEmpty) onElementsMoved!(changes);

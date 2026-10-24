@@ -1,7 +1,3 @@
-import "dart:math";
-
-import "package:flutter/material.dart";
-import "package:flutter_hooks/flutter_hooks.dart";
 import "package:typewriter_panel/typewriter_panel.dart";
 
 /// Owns transient graph manipulation state for one mounted [Graph].
@@ -10,13 +6,19 @@ import "package:typewriter_panel/typewriter_panel.dart";
 /// them into commit payloads on completion. It does not own canonical graph
 /// data or selection. Its keyboard position map is a session baseline, reset
 /// when keyboard move mode ends or the controller is disposed.
-class GraphInteractionController extends ChangeNotifier {
+class GraphInteractionController extends ChangeNotifier
+    implements ValueListenable<GraphDragSession?> {
   Set<GraphIdentifier> _movingIds = const {};
   Offset _moveOffset = Offset.zero;
   GraphResizePreview? _resize;
   final Map<GraphIdentifier, (int, int)> _keyboardPositions = {};
-  final ValueNotifier<bool> draggingInsideGraph = ValueNotifier(false);
-  final ValueNotifier<GraphIdentifier?> activeDragId = ValueNotifier(null);
+  GraphDragSession? _drag;
+  bool _closed = false;
+  bool _disposed = false;
+
+  @override
+  GraphDragSession? get value => _drag;
+  ValueListenable<GraphDragSession?> get dragState => this;
 
   Set<GraphIdentifier> get movingIds => _movingIds;
   Offset get moveOffset => _moveOffset;
@@ -37,12 +39,13 @@ class GraphInteractionController extends ChangeNotifier {
   /// Starts moving [origin], selected elements, and elements contained by them.
   ///
   /// The origin must exist in [data]. The method clears the previous pointer
-  /// offset and marks the graph as the active drag source.
+  /// offset and starts the movement preview.
   void beginMove({
     required GraphData data,
     required GraphIdentifier origin,
     required Set<GraphIdentifier> selectedIds,
   }) {
+    if (_closed) return;
     final originElement = data.keyedElements[origin];
     if (originElement == null) return;
 
@@ -56,13 +59,12 @@ class GraphInteractionController extends ChangeNotifier {
         if (selectedElements.any(element.inside)) element.id,
     };
     _moveOffset = Offset.zero;
-    draggingInsideGraph.value = true;
     notifyListeners();
   }
 
   /// Updates the pointer displacement in scene pixels.
   void updateMove(Offset offset) {
-    if (_movingIds.isEmpty || _moveOffset == offset) return;
+    if (_closed || _movingIds.isEmpty || _moveOffset == offset) return;
     _moveOffset = offset;
     notifyListeners();
   }
@@ -92,14 +94,9 @@ class GraphInteractionController extends ChangeNotifier {
 
   /// Discards the move preview without changing [GraphData].
   void cancelMove() {
-    if (_movingIds.isEmpty &&
-        _moveOffset == Offset.zero &&
-        !draggingInsideGraph.value) {
-      return;
-    }
+    if (_movingIds.isEmpty && _moveOffset == Offset.zero) return;
     _movingIds = const {};
     _moveOffset = Offset.zero;
-    draggingInsideGraph.value = false;
     notifyListeners();
   }
 
@@ -108,8 +105,10 @@ class GraphInteractionController extends ChangeNotifier {
     updateResize(id, width, height);
   }
 
-  /// Replaces the active resize preview with positive dimensions.
+  /// Replaces the active resize preview. Callers must supply positive grid
+  /// dimensions; the assertion diagnoses violations during development.
   void updateResize(GraphIdentifier id, int width, int height) {
+    if (_closed) return;
     assert(width > 0 && height > 0, "Dimensions must be positive");
     final next = GraphResizePreview(id: id, width: width, height: height);
     if (_resize?.id == next.id &&
@@ -152,6 +151,7 @@ class GraphInteractionController extends ChangeNotifier {
     required int dx,
     required int dy,
   }) {
+    if (_closed) return const [];
     _keyboardPositions.removeWhere((id, _) => !ids.contains(id));
     return ids
         .map((id) {
@@ -180,6 +180,7 @@ class GraphInteractionController extends ChangeNotifier {
     required int dw,
     required int dh,
   }) {
+    if (_closed) return const [];
     return ids
         .map((id) => data.keyedElements[id])
         .nonNulls
@@ -193,10 +194,87 @@ class GraphInteractionController extends ChangeNotifier {
         .toList(growable: false);
   }
 
+  /// Installs an active payload, retiring any replaced gesture authority.
+  bool beginDrag(
+    GraphDragPayload<GraphDragData> payload,
+    Offset position, {
+    required bool inside,
+  }) {
+    if (_closed || !payload.isDragging) return false;
+    final previous = _drag;
+    if (previous != null && !identical(previous.payload, payload)) {
+      previous.payload.retire();
+    }
+    _movingIds = const {};
+    _moveOffset = Offset.zero;
+    _drag = GraphDragSession(
+      payload: payload,
+      globalPosition: position,
+      inside: inside,
+    );
+    notifyListeners();
+    return true;
+  }
+
+  /// Checks exact gesture identity before any movement or target callback.
+  bool ownsDrag(GraphDragPayload<GraphDragData> payload) =>
+      !_closed && identical(_drag?.payload, payload) && payload.isDragging;
+
+  void updateDrag(
+    GraphDragPayload<GraphDragData> payload,
+    Offset position, {
+    required bool inside,
+  }) {
+    if (!ownsDrag(payload)) return;
+    final current = _drag!;
+    final next = current.copyWith(globalPosition: position, inside: inside);
+    if (next == current) return;
+    _drag = next;
+    notifyListeners();
+  }
+
+  /// Rechecks the last physical pointer position after viewport layout.
+  void refreshDragContainment(bool Function(Offset) contains) {
+    final current = _drag;
+    if (current == null) return;
+    updateDrag(
+      current.payload,
+      current.globalPosition,
+      inside: contains(current.globalPosition),
+    );
+  }
+
+  void endDrag(GraphDragPayload<GraphDragData> payload) {
+    if (_closed || !identical(_drag?.payload, payload)) return;
+    _drag = null;
+    _movingIds = const {};
+    _moveOffset = Offset.zero;
+    notifyListeners();
+  }
+
+  /// Blocks writes synchronously during graph removal.
+  void close() {
+    if (_closed) return;
+    _closed = true;
+    _movingIds = const {};
+    _moveOffset = Offset.zero;
+    _resize = null;
+    _keyboardPositions.clear();
+    _drag?.payload.retire();
+    _drag = null;
+  }
+
+  @override
+  void addListener(VoidCallback listener) {
+    if (!_closed) super.addListener(listener);
+  }
+
   @override
   void dispose() {
-    draggingInsideGraph.dispose();
-    activeDragId.dispose();
+    if (_disposed) return;
+    close();
+    notifyListeners();
+    _disposed = true;
     super.dispose();
   }
 }
@@ -205,6 +283,12 @@ class GraphInteractionController extends ChangeNotifier {
 GraphInteractionController useGraphInteractionController() {
   final controller = useMemoized(GraphInteractionController.new);
   useListenable(controller);
-  useEffect(() => controller.dispose, [controller]);
+  useEffect(() {
+    return () {
+      controller.close();
+      WidgetsBinding.instance.addPostFrameCallback((_) => controller.dispose());
+      WidgetsBinding.instance.ensureVisualUpdate();
+    };
+  }, [controller]);
   return controller;
 }

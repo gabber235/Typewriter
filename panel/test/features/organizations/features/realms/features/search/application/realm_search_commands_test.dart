@@ -1,6 +1,4 @@
-import "package:flutter/foundation.dart";
 import "package:flutter_test/flutter_test.dart";
-import "package:hooks_riverpod/hooks_riverpod.dart";
 import "package:typewriter_panel/infrastructure/protocols/skir/skir.dart"
     as skir;
 import "package:typewriter_panel/typewriter_panel.dart";
@@ -12,8 +10,11 @@ void main() {
     );
     addTearDown(availability.dispose);
     final realm = TopologyRealm(
-      realmId: recordId("realm:test"),
-      ownerHost: TopologyOwnerHost(id: recordId("service:test"), name: "test"),
+      realmId: skir.recordId("realm:test"),
+      ownerHost: TopologyOwnerHost(
+        id: skir.recordId("service:test"),
+        name: "test",
+      ),
       revision: 1,
       targetEngine: const TopologyEngineTarget(
         engineId: "typewritermc:paper",
@@ -37,7 +38,7 @@ void main() {
       query: SearchQueryContext.empty,
     );
     final command = openRealmCommand(
-      organizationId: recordId("organization:test"),
+      organizationId: skir.recordId("organization:test"),
       availability: availability,
     );
 

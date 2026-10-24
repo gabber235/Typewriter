@@ -1,11 +1,13 @@
 import "package:flutter_test/flutter_test.dart";
+import "package:typewriter_panel/infrastructure/protocols/skir/skir.dart"
+    as skir;
 import "package:typewriter_panel/typewriter_panel.dart";
 
 void main() {
   group("OrganizationJoinCode", () {
     test("isExpired returns true when expiresAt is in the past", () {
       final code = OrganizationJoinCode(
-        code: recordId("organization_join_code:ABC123"),
+        code: skir.recordId("organization_join_code:ABC123"),
         createdAt: DateTime.now().subtract(const Duration(days: 2)),
         expiresAt: DateTime.now().subtract(const Duration(days: 1)),
       );
@@ -17,7 +19,7 @@ void main() {
 
     test("isExpired returns false when expiresAt is in the future", () {
       final code = OrganizationJoinCode(
-        code: recordId("organization_join_code:ABC123"),
+        code: skir.recordId("organization_join_code:ABC123"),
         createdAt: DateTime.now(),
         expiresAt: DateTime.now().add(const Duration(days: 7)),
       );
@@ -29,7 +31,7 @@ void main() {
 
     test("neverExpires returns true when expiresAt is null", () {
       final code = OrganizationJoinCode(
-        code: recordId("organization_join_code:ABC123"),
+        code: skir.recordId("organization_join_code:ABC123"),
         createdAt: DateTime.now(),
         expiresAt: null,
       );
@@ -44,14 +46,14 @@ void main() {
     test("creates auto-accept config with role ids", () {
       final autoAccept = JoinCodeAutoAccept(
         roleIds: [
-          recordId("organization_role:r1"),
-          recordId("organization_role:r2"),
+          skir.recordId("organization_role:r1"),
+          skir.recordId("organization_role:r2"),
         ],
       );
 
       expect(autoAccept.roleIds, [
-        recordId("organization_role:r1"),
-        recordId("organization_role:r2"),
+        skir.recordId("organization_role:r1"),
+        skir.recordId("organization_role:r2"),
       ]);
     });
   });
@@ -69,12 +71,14 @@ void main() {
       final options = JoinCodeOptions(
         singleUse: false,
         expiration: JoinCodeExpiration.never(),
-        autoAcceptRoleIds: [recordId("organization_role:r1")],
+        autoAcceptRoleIds: [skir.recordId("organization_role:r1")],
       );
 
       expect(options.singleUse, false);
       expect(options.expiration, isA<JoinCodeExpirationNever>());
-      expect(options.autoAcceptRoleIds, [recordId("organization_role:r1")]);
+      expect(options.autoAcceptRoleIds, [
+        skir.recordId("organization_role:r1"),
+      ]);
     });
   });
 }

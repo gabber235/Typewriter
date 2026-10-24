@@ -1,212 +1,158 @@
 import "package:flutter_test/flutter_test.dart";
-import "package:riverpod/riverpod.dart";
 import "package:typewriter_panel/infrastructure/protocols/skir/skir.dart"
     as skir;
 import "package:typewriter_panel/typewriter_panel.dart";
 import "package:typewriter_testkit/typewriter_testkit.dart";
 
-import "../../../../../support/provider_test_utils.dart";
-
-const _snapshotSubject =
-    "service.to.realm1.organization.org1.realm.library.authoring.snapshot.get";
-const _eventSubject =
-    "service.from.realm1.organization.org1.realm.library.authoring.changed";
-const _compiledSubject =
-    "service.from.realm1.organization.org1.realm.compiled.content.watch";
+import "../../../../../support/publication.dart";
 
 void main() {
-  test("direct page changes update an acquired document", () async {
-    final nats = FakeNatsClient();
-    var snapshotSequence = 1;
-    var snapshotRequests = 0;
-    var pageName = "Initial";
-    final snapshotScopes = <List<skir.AuthoringSnapshotScope_kind>>[];
-    skir.PageCompileStatus compileStatus = skir.PageCompileStatus.notCompiled;
-
-    nats.registerHandler(_snapshotSubject, (payload) {
-      final request = skir.GetAuthoringSnapshotRequest.serializer.fromBytes(
-        payload,
-      );
-      snapshotScopes.add(request.scopes.map((scope) => scope.kind).toList());
-      snapshotRequests++;
-      if (snapshotRequests == 4) {
-        pageName = "During refresh";
-        nats.emitMessageOnSubject(
-          _eventSubject,
-          skir.AuthoringChanged.serializer.toBytes(
-            skir.AuthoringChanged(
-              sequence: 3,
-              batchId: "during-compile-refresh",
-              changes: [
-                skir.AuthoringResourceChange.wrapUpsertPage(
-                  _wirePage("During refresh"),
-                ),
-              ],
-              indirectlyAffectedResources: const [],
+  final scope = AuthoringScope(
+    organizationId: skir.recordId("organization:org1"),
+    realmId: skir.recordId("service:realm1"),
+  );
+  test("a new view hint immediately revokes the old command and only a coherent ready review authorizes publishing", () async {
+    final work = ScopedWorkSession();
+    final source =
+        TestPublicationRepository(
+            scope,
+            initial: publicationObservation(readyPublicationStatus()),
+          )
+          ..send = () async => SubmissionConfirmed(
+            skir.PublishAuthoringResponse.wrapResult(
+              skir.PublicationResult.noChanges,
             ),
-          ),
-        );
-      }
-      return skir.GetAuthoringSnapshotResponse.serializer.toBytes(
-        skir.GetAuthoringSnapshotResponse.createSuccess(
-          sequence: snapshotSequence,
-          slices: [
-            for (final scope in request.scopes)
-              switch (scope) {
-                skir.AuthoringSnapshotScope.library_ =>
-                  skir.AuthoringSnapshotSlice.createLibrary(
-                    books: [_wireBook()],
-                    tags: const [],
-                  ),
-                skir.AuthoringSnapshotScope_bookWrapper() =>
-                  skir.AuthoringSnapshotSlice.createBook(
-                    bookId: _book,
-                    book: _wireBook(),
-                    pages: [_wirePage(pageName)],
-                  ),
-                skir.AuthoringSnapshotScope_pageWrapper() =>
-                  skir.AuthoringSnapshotSlice.createPage(
-                    pageId: _page,
-                    document: skir.PageDocument(
-                      page: _wirePage(pageName),
-                      elements: const [],
-                      references: const [],
-                      crossPageTargets: const [],
-                      crossPageSources: const [],
-                      diagnostics: const [],
-                      compileStatus: compileStatus,
-                    ),
-                  ),
-                skir.AuthoringSnapshotScope_unknown() => throw StateError(
-                  "Unknown authoring scope",
-                ),
-              },
-          ],
-        ),
-      );
+          );
+    final driver = PublicationWorkDriver(scope, source, work)..start();
+    addTearDown(() async {
+      driver.dispose();
+      work.dispose();
+      await source.close();
     });
-
-    final container = ProviderContainer.test(
-      overrides: [
-        natsProvider.overrideWithValue(nats),
-        organizationIdProvider.overrideWithValue(_org),
-        realmIdProvider.overrideWithValue(_realm),
-        panelTelemetryProvider.overrideWithValue(
-          const AsyncData(NoopPanelTelemetry()),
-        ),
-      ],
+    await waitForPublication(() => driver.view is ReadyRealmPublication);
+    final stale = (driver.view as ReadyRealmPublication).command;
+    source.observe(
+      PublicationObservation.fetching(skir.PublicationViewId(value: "new")),
     );
-
-    final provider = authoringSessionProvider(_org, _realm);
-    final subscription = container.listen(provider, (_, _) {});
-    final libraryLease = container.read(provider.notifier).acquireLibrary();
-    await libraryLease.ready;
-    final bookLease = container.read(provider.notifier).acquireBook(_book);
-    await bookLease.ready;
-
-    final pageLease = container.read(provider.notifier).acquirePage(_page);
-    await pageLease.ready;
-
-    nats.emitMessageOnSubject(
-      _eventSubject,
-      skir.AuthoringChanged.serializer.toBytes(
-        skir.AuthoringChanged(
-          sequence: 2,
-          batchId: "page-update",
-          changes: [
-            skir.AuthoringResourceChange.wrapUpsertPage(_wirePage("Updated")),
-          ],
-          indirectlyAffectedResources: const [],
-        ),
-      ),
+    await waitForPublication(() => driver.view is CheckingRealmPublication);
+    expect(driver.view, isA<CheckingRealmPublication>());
+    expect(
+      await stale.invoke(),
+      isA<skir.PublicationResult_candidateChangedWrapper>(),
     );
-    await waitForProvider(
-      container,
-      provider,
-      (state) => state.sequence == 2,
-      description: "direct page change sequence 2",
+    expect(source.candidates, isEmpty);
+    final blocked = blockedPublicationStatus();
+    source.emit(blocked);
+    await waitForPublication(
+      () =>
+          driver.view is BlockedRealmPublication &&
+          driver.view.review == blocked,
     );
-
-    expect(container.read(provider).pages[_page]?.name, "Updated");
-    expect(container.read(provider).documents[_page]?.page.name, "Updated");
-
-    snapshotSequence = 4;
-    compileStatus = skir.PageCompileStatus.createBlocked(
-      lastActiveManifestId: null,
-      diagnosticCount: 1,
+    expect(driver.view, isA<BlockedRealmPublication>());
+    final ready = readyPublicationStatus(candidate: "new");
+    source.emit(ready, id: "new");
+    await waitForPublication(
+      () => driver.view is ReadyRealmPublication && driver.view.review == ready,
     );
-    nats.emitMessageOnSubject(
-      _compiledSubject,
-      skir.WatchCompiledContentResponse.serializer.toBytes(
-        skir.WatchCompiledContentResponse.createBlocked(),
-      ),
-    );
-
-    await waitForProvider(
-      container,
-      provider,
-      (state) =>
-          state.documents[_page]?.compileStatus
-              is skir.PageCompileStatus_blockedWrapper,
-      description: "blocked page compile status",
-    );
-
-    await waitForProvider(
-      container,
-      provider,
-      (state) => state.sequence == 4,
-      description: "full recovery sequence 4",
-    );
-
-    expect(container.read(provider).pages[_page]?.name, "During refresh");
-    expect(snapshotRequests, 4);
-    expect(snapshotScopes.last, [
-      skir.AuthoringSnapshotScope_kind.libraryConst,
-      skir.AuthoringSnapshotScope_kind.bookWrapper,
-      skir.AuthoringSnapshotScope_kind.pageWrapper,
-    ]);
-
-    final pageOnlyRequestBytes = skir.GetAuthoringSnapshotRequest.serializer
-        .toBytes(
-          skir.GetAuthoringSnapshotRequest(
-            scopes: [skir.AuthoringSnapshotScope.createPage(pageId: _page)],
-          ),
-        )
-        .length;
-    final compilationRequestBytes = nats.requests
-        .where((request) => request.subject == _snapshotSubject)
-        .last
-        .payload
-        .length;
-    expect(compilationRequestBytes, greaterThan(pageOnlyRequestBytes));
-
-    pageLease.release();
-    bookLease.release();
-    libraryLease.release();
-    subscription.close();
-    container.dispose();
-    await nats.dispose();
+    final fresh = (driver.view as ReadyRealmPublication).command;
+    await fresh.invoke();
+    expect(source.candidates.single.value, "new");
+    await waitForPublication(() => driver.view is ReadyRealmPublication);
   });
+  test("repeated invocation and old terminal observations cannot authorize a second request while sending", () async {
+    final work = ScopedWorkSession();
+    final source = TestPublicationRepository(
+      scope,
+      initial: publicationObservation(readyPublicationStatus()),
+    );
+    final response =
+        Completer<SubmissionResult<skir.PublishAuthoringResponse>>();
+    source.send = () => response.future;
+    final driver = PublicationWorkDriver(scope, source, work)..start();
+    addTearDown(() async {
+      driver.dispose();
+      work.dispose();
+      await source.close();
+    });
+    await waitForPublication(() => driver.view is ReadyRealmPublication);
+    final command = (driver.view as ReadyRealmPublication).command;
+    final first = command.invoke();
+    await waitForPublication(() => source.candidates.isNotEmpty);
+    final oldStatus = readyPublicationStatus(candidate: "older");
+    source.emit(oldStatus, id: "old");
+    await waitForPublication(
+      () =>
+          driver.view is RequestActiveRealmPublication &&
+          driver.view.review == oldStatus,
+    );
+    expect(driver.view, isA<RequestActiveRealmPublication>());
+    expect(
+      await command.invoke(),
+      isA<skir.PublicationResult_candidateChangedWrapper>(),
+    );
+    expect(source.candidates, hasLength(1));
+    response.complete(
+      SubmissionConfirmed(
+        skir.PublishAuthoringResponse.wrapResult(
+          skir.PublicationResult.noChanges,
+        ),
+      ),
+    );
+    await first;
+    await waitForPublication(() => driver.view is ReadyRealmPublication);
+  });
+  test("unknown delivery remains readonly after coherent observations and never offers replay", () async {
+    final work = ScopedWorkSession();
+    final source =
+        TestPublicationRepository(
+            scope,
+            initial: publicationObservation(readyPublicationStatus()),
+          )
+          ..send = () async => SubmissionUncertain(
+            message: "Reply missing",
+            cause: TimeoutException("timeout"),
+            stackTrace: StackTrace.current,
+          );
+    final driver = PublicationWorkDriver(scope, source, work)..start();
+    addTearDown(() async {
+      driver.dispose();
+      work.dispose();
+      await source.close();
+    });
+    await waitForPublication(() => driver.view is ReadyRealmPublication);
+    final command = (driver.view as ReadyRealmPublication).command;
+    await expectLater(
+      command.invoke(),
+      throwsA(isA<SubmissionException<skir.PublishAuthoringResponse>>()),
+    );
+    final laterStatus = readyPublicationStatus(candidate: "later");
+    source.emit(laterStatus);
+    await waitForPublication(
+      () =>
+          driver.view is UncertainRealmPublication &&
+          driver.view.review == laterStatus,
+    );
+    expect(driver.view, isA<UncertainRealmPublication>());
+    expect(work.submissions.single.canReplay, isFalse);
+    expect(
+      await command.invoke(),
+      isA<skir.PublicationResult_candidateChangedWrapper>(),
+    );
+    expect(source.candidates, hasLength(1));
+  });
+  test(
+    "default and unknown nested variants never carry a publish capability",
+    () {
+      expect(validPublicationStatus(skir.PublicationStatus.unknown), isFalse);
+      expect(
+        validPublicationStatus(
+          skir.PublicationStatus.wrapReady(
+            skir.PublicationStatus_Ready.defaultInstance,
+          ),
+        ),
+        isFalse,
+      );
+      expect(validPublicationStatus(readyPublicationStatus()), isTrue);
+    },
+  );
 }
-
-final _org = recordId("organization:org1");
-final _realm = recordId("service:realm1");
-final _book = recordId("book:book1");
-final _page = recordId("page:page1");
-
-skir.Page _wirePage(String name) => skir.Page(
-  id: _page,
-  book: _book,
-  name: name,
-  kind: skir.PageKindRef(id: skir.PageKindId(value: "test"), revision: 1),
-  chapter: "",
-  priority: 0,
-);
-
-skir.Book _wireBook() => skir.Book(
-  id: _book,
-  title: "Book",
-  icon: "mdi:book",
-  color: skir.Color(argb: 0xFF000000.toSigned(32)),
-  tags: const [],
-);

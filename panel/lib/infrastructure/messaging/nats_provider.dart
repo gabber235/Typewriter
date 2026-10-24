@@ -1,9 +1,3 @@
-import "dart:async";
-import "dart:convert";
-
-import "package:flutter/foundation.dart";
-import "package:http/http.dart" as http;
-import "package:riverpod_annotation/riverpod_annotation.dart";
 import "package:typewriter_panel/infrastructure/protocols/skir/skir.dart"
     as skir;
 import "package:typewriter_panel/typewriter_panel.dart";
@@ -18,14 +12,20 @@ typedef NatsClientFactory = NatsClient Function(
   NatsClientConfiguration configuration,
 );
 
+typedef NatsConnectionSessionFactory = String Function();
+
 /// Provides the concrete NATS owner factory used after authentication.
 @Riverpod(keepAlive: true)
 NatsClientFactory natsClientFactory(Ref ref) => NatsCoreClient.connect;
 
+@Riverpod(keepAlive: true)
+NatsConnectionSessionFactory natsConnectionSessionFactory(Ref ref) =>
+    () => uuid.v4().replaceAll("-", "").toLowerCase();
+
 /// Owns the HTTP client used by panel infrastructure requests.
 @Riverpod(keepAlive: true)
-http.Client panelHttpClient(Ref ref) {
-  final client = http.Client();
+Client panelHttpClient(Ref ref) {
+  final client = Client();
   ref.onDispose(client.close);
   return client;
 }
@@ -66,50 +66,47 @@ Future<skir.GetSentinelCredentialsResponse_Success> sentinelCredentials(
   };
 }
 
-/// Owns the authenticated NATS client for the current user and organization.
+/// Publishes the active client owned by the authenticated connection scope.
 ///
-/// Credential providers and the organization qualifier are read when this
-/// owner is built. Invalidating it closes the old client before a fresh
-/// connection is created, which makes retry an ownership operation rather than
-/// a second connection layered over the first.
+/// Credential and organization changes dispose the entire previous connection.
+/// Permission refresh and retry retain the current client until a replacement
+/// has been admitted by the server.
 @Riverpod(keepAlive: true)
 class Nats extends _$Nats {
+  late NatsConnectionOwner _connection;
+
+  NatsClient get client => state;
+
   @override
   NatsClient build() {
     final token = ref.watch(accessTokenProvider).value?.token;
     if (token == null) {
       throw StateError("User must be authenticated before connecting to NATS");
     }
-    final user = ref.watch(authUserInfoProvider).requireValue;
-    final sentinel = ref.watch(sentinelCredentialsProvider).requireValue;
-    final qualifier = skir.EntityPermissionQualifier.createUser(
-      organizationId: ref.watch(organizationIdProvider),
-    );
-    final configuration = NatsClientConfiguration(
-      url: AppConfig.nats.url,
-      seed: sentinel.seed,
-      jwt: sentinel.jwt,
-      username: user.username ?? user.name ?? user.sub,
-      password: token,
-      connectNkey: base64.encode(
-        skir.EntityPermissionQualifier.serializer.toBytes(qualifier),
+    final connection = NatsConnectionOwner(
+      settings: NatsConnectionSettings(
+        url: AppConfig.nats.url,
+        token: token,
+        user: ref.watch(authUserInfoProvider).requireValue,
+        sentinel: ref.watch(sentinelCredentialsProvider).requireValue,
+        organization: ref.watch(organizationIdProvider),
       ),
-      requestInboxPrefix: "_INBOX.${user.sub}",
+      clientFactory: ref.watch(natsClientFactoryProvider),
+      sessionFactory: ref.watch(natsConnectionSessionFactoryProvider),
+      onReplacement: (client) => state = client,
     );
-
-    debugPrint("nats: connecting to ${configuration.url}");
-    final client = ref.watch(natsClientFactoryProvider)(configuration);
-    ref.onDispose(() => unawaited(client.close()));
-    return client;
+    _connection = connection;
+    ref.onDispose(() => unawaited(connection.close()));
+    return connection.client;
   }
 
-  /// Replaces a failed client after its transport resources have been closed.
-  Future<void> retry() async {
-    final client = state;
-    await client.close();
-    if (!ref.mounted) return;
-    ref.invalidateSelf();
-  }
+  Future<void> ensureRealmsAdmitted(Set<skir.RecordId> required) =>
+      _connection.ensureRealmsAdmitted(required);
+
+  Future<void> refreshAuthorization(Set<skir.RecordId> observedRealms) =>
+      _connection.refreshAuthorization(observedRealms);
+
+  Future<void> retry() => _connection.retry();
 }
 
 /// Projects transport lifecycle into Riverpod for connection status UI.

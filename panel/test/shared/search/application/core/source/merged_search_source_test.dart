@@ -193,10 +193,13 @@ void main() {
       final globalFirst = FakeSearchSource();
       final globalSecond = FakeSearchSource();
       final locallyLimited = [
-        localFirst.limited(1),
-        localSecond.limited(1),
+        localFirst.limited((_) => 1),
+        localSecond.limited((_) => 1),
       ].merged();
-      final globallyLimited = [globalFirst, globalSecond].merged().limited(1);
+      final globallyLimited = [
+        globalFirst,
+        globalSecond,
+      ].merged().limited((_) => 1);
 
       addTearDown(locallyLimited.dispose);
       addTearDown(globallyLimited.dispose);
@@ -227,8 +230,8 @@ void main() {
       final first = FakeSearchSource();
       final second = FakeSearchSource();
       final source = [
-        first.inSection(id: "first", title: "First"),
-        second.inSection(id: "second", title: "Second"),
+        first.inSection(id: "first", title: (_) => "First"),
+        second.inSection(id: "second", title: (_) => "Second"),
       ].merged().distinct();
       addTearDown(source.dispose);
       final snapshots = <SearchSourceSnapshot>[];

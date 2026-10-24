@@ -1,0 +1,56 @@
+package com.typewritermc.realm.authoring
+
+import com.typewritermc.authoring.AuthoringRecord
+import com.typewritermc.authoring.StructuralResult
+import com.typewritermc.authoring.definitionFor
+import com.typewritermc.authoring.immutableAuthoringCopy
+import com.typewritermc.authoring.validateStructure
+import com.typewritermc.realm.repository.AuthoringMutationPlanner
+import com.typewritermc.realm.repository.ResourceValueMapper
+import com.typewritermc.types.ResourceId
+import com.typewritermc.types.immutableMapCopy
+
+/** Signals that a caller must refresh saved state before inspecting its proposed overlay. */
+internal class StaleOperationObservation(
+    val actual: String,
+) : IllegalStateException("The saved authoring observation changed")
+
+/** Materializes one caller owned working baseline while the saved view's catalog remains leased. */
+internal fun AuthoringLease.operationObservation(
+    confirmedObservation: String,
+    upserts: Map<ResourceId, AuthoringRecord>,
+    removals: Set<ResourceId>,
+): AuthoringView {
+    if (confirmedObservation != root.observationId) throw StaleOperationObservation(root.observationId)
+    require(upserts.size + removals.size <= 100_000) { "The operation overlay is too large" }
+    require(upserts.keys.intersect(removals).isEmpty()) { "An overlay cannot replace and remove the same resource" }
+    require((upserts.keys + removals).all { it.value.isNotBlank() }) { "An overlay resource identity is empty" }
+    require(removals.all { it in root.resources }) { "An overlay removes an unknown resource" }
+    upserts.forEach { (_, record) ->
+        val structural = record.validateStructure(root.catalog.checked)
+        require(structural is StructuralResult.Valid) { "An overlay resource has invalid authored structure: $structural" }
+    }
+    val resources = (root.resources + upserts - removals).immutableAuthoringCopy()
+    val links = ResourceValueMapper.discover(resources)
+    val projected = ResourceValueMapper.project(links, resources, root.catalog.relations, root.catalog.checked)
+    val problems =
+        AuthoringMutationPlanner(root.catalog.checked, root.catalog.relations, root.catalog.endpointBindings)
+            .validateSnapshot(resources, upserts.keys + removals, projected)
+    require(problems.isEmpty()) { "An overlay violates resource structure or relation policy: $problems" }
+    return AuthoringView(
+        root.catalog,
+        resources,
+        resources
+            .mapValues { (id, record) ->
+                if (id !in upserts) {
+                    root.resourceDefinitions.getValue(id)
+                } else {
+                    root.catalog.resources
+                        .definitionFor(record.configuration, root.catalog.checked)
+                        .id
+                }
+            }.immutableMapCopy(),
+        links.associateBy { it.id }.immutableMapCopy(),
+        root.observationId,
+    )
+}

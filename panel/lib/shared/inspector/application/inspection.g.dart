@@ -89,24 +89,27 @@ String _$inspectedSelectionHash() =>
 
 /// Whether the inspector should occupy space for the current selection.
 ///
-/// Loading and error states intentionally remain visible. The session replaces
-/// the graph with an unavailable state while selected resources refresh.
+/// When no retained selection value is available, loading and errors keep the
+/// pane visible. The session retains its installed graph until a new selection
+/// can be built; temporary provider states do not replace it.
 
 @ProviderFor(hasInspectableSelection)
 final hasInspectableSelectionProvider = HasInspectableSelectionProvider._();
 
 /// Whether the inspector should occupy space for the current selection.
 ///
-/// Loading and error states intentionally remain visible. The session replaces
-/// the graph with an unavailable state while selected resources refresh.
+/// When no retained selection value is available, loading and errors keep the
+/// pane visible. The session retains its installed graph until a new selection
+/// can be built; temporary provider states do not replace it.
 
 final class HasInspectableSelectionProvider
     extends $FunctionalProvider<bool, bool, bool>
     with $Provider<bool> {
   /// Whether the inspector should occupy space for the current selection.
   ///
-  /// Loading and error states intentionally remain visible. The session replaces
-  /// the graph with an unavailable state while selected resources refresh.
+  /// When no retained selection value is available, loading and errors keep the
+  /// pane visible. The session retains its installed graph until a new selection
+  /// can be built; temporary provider states do not replace it.
   HasInspectableSelectionProvider._()
     : super(
         from: null,

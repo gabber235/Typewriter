@@ -36,7 +36,6 @@ class TypewriterService private constructor(
     private val registrar: ServiceRegistrar,
     private val application: KoinApplication,
 ) {
-    /** Latest registrar state for lifecycle presentation and service integration. */
     val states: StateFlow<RegistrarSnapshot> = registrar.states
 
     /** Starts registration and waits until the service has a confirmed organization binding. */

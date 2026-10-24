@@ -17,20 +17,16 @@ void main() {
     ];
 
     for (final (elapsed, compact, natural) in cases) {
-      final result = describeRelativeTime(
-        value: now.subtract(elapsed),
-        now: now,
-      );
+      final result = now.subtract(elapsed).describeRelativeTo(now: now);
       expect(result.compact, compact);
       expect(result.natural, natural);
     }
   });
 
   test("describes future values symmetrically", () {
-    final result = describeRelativeTime(
-      value: now.add(const Duration(hours: 2)),
-      now: now,
-    );
+    final result = now
+        .add(const Duration(hours: 2))
+        .describeRelativeTo(now: now);
 
     expect(result.compact, "in 2h");
     expect(result.natural, "in 2 hours");
@@ -38,21 +34,21 @@ void main() {
 
   test("refreshes past values on the next visible unit boundary", () {
     final value = now.subtract(const Duration(minutes: 5, seconds: 20));
-    final result = describeRelativeTime(value: value, now: now);
+    final result = value.describeRelativeTo(now: now);
 
     expect(result.nextRefreshAt, now.add(const Duration(seconds: 40)));
   });
 
   test("refreshes future values when their visible amount decreases", () {
     final value = now.add(const Duration(minutes: 5, seconds: 20));
-    final result = describeRelativeTime(value: value, now: now);
+    final result = value.describeRelativeTo(now: now);
 
     expect(result.nextRefreshAt, now.add(const Duration(seconds: 20)));
   });
 
   test("refreshes at a product threshold before a larger unit boundary", () {
     final value = now.subtract(const Duration(days: 29));
-    final result = describeRelativeTime(value: value, now: now);
+    final result = value.describeRelativeTo(now: now);
 
     expect(result.compact, "4w ago");
     expect(result.nextRefreshAt, now.add(const Duration(days: 1)));

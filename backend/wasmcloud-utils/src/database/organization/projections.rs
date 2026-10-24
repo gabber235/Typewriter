@@ -35,7 +35,6 @@ pub struct OrganizationMemberProjection {
     pub joined_at: Datetime,
 }
 
-/// Converts the projection into the organization facing join request view.
 impl From<JoinRequestProjection> for OrganizationJoinRequest {
     fn from(value: JoinRequestProjection) -> Self {
         Self {
@@ -51,7 +50,6 @@ impl From<JoinRequestProjection> for OrganizationJoinRequest {
     }
 }
 
-/// Converts the same projection into the user facing join request view.
 impl From<JoinRequestProjection> for UserJoinRequest {
     fn from(value: JoinRequestProjection) -> Self {
         Self {
@@ -66,7 +64,6 @@ impl From<JoinRequestProjection> for UserJoinRequest {
     }
 }
 
-/// Converts the joined member projection into the public member view.
 impl From<OrganizationMemberProjection> for OrganizationMember {
     fn from(value: OrganizationMemberProjection) -> Self {
         Self {

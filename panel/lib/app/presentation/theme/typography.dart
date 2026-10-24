@@ -1,4 +1,4 @@
-import "package:flutter/material.dart";
+import "package:typewriter_panel/typewriter_panel.dart";
 
 TextStyle _style(String family, double size, double height, double weight) =>
     TextStyle(

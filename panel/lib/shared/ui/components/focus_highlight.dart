@@ -1,6 +1,3 @@
-import "package:flutter/material.dart";
-import "package:flutter_animate/flutter_animate.dart";
-import "package:flutter_hooks/flutter_hooks.dart";
 import "package:typewriter_panel/typewriter_panel.dart";
 
 /// Describes whether a focusable owner or one of its descendants is focused.
@@ -27,7 +24,7 @@ enum FocusHighlighting {
   /// Only highlight when it has primary focus, otherwise don't highlight at all.
   onlyPrimary(_primaryFocus),
 
-  /// Only highlight when a child has focus.
+  /// Highlights this node or its descendants using the same focus style.
   onlyChild(_childFocus),
 
   /// Highlights when this node or one of its descendants has focus.

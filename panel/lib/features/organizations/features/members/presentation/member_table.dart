@@ -1,7 +1,3 @@
-import "package:flutter/material.dart";
-import "package:flutter_hooks/flutter_hooks.dart";
-import "package:hooks_riverpod/hooks_riverpod.dart";
-import "package:iconify_flutter_plus/icons/material_symbols.dart";
 import "package:typewriter_panel/infrastructure/protocols/skir/skir.dart"
     as skir;
 import "package:typewriter_panel/typewriter_panel.dart";
@@ -9,9 +5,9 @@ import "package:typewriter_panel/typewriter_panel.dart";
 /// Desktop member projection with bulk selection and inline role editing.
 ///
 /// The table does not own membership data. It renders the provider snapshot,
-/// keeps selection and focus transient, and delegates mutations to the
-/// provider. Row identity is the user's record id, allowing animated updates
-/// to follow members across live add, update, and remove events.
+/// keeps selection and focus transient, and submits repository commands through
+/// shared local work. Row identity is the user's record id, allowing animated
+/// updates to follow members across live add, update, and remove events.
 class MembersTable extends HookConsumerWidget {
   const MembersTable({
     required this.members,
@@ -289,8 +285,12 @@ class MembersTable extends HookConsumerWidget {
                   selectedRoles: member.roles,
                   onRolesChanged: (newRoles) {
                     ref
-                        .read(organizationMembersProvider.notifier)
-                        .updateMemberRoles([member.userId], newRoles)
+                        .executeMembership(
+                          ref.membershipCommands.updateRoles([
+                            member.userId,
+                          ], newRoles),
+                          (response) => response.requireAccepted(),
+                        )
                         .catchApiExceptionsAndDisplay(context);
                   },
                   placeholder: "Select roles",

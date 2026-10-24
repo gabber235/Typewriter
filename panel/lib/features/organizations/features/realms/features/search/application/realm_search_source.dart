@@ -1,7 +1,3 @@
-import "package:flutter/foundation.dart";
-import "package:hooks_riverpod/hooks_riverpod.dart";
-import "package:rxdart/rxdart.dart";
-import "package:searchlight/searchlight.dart" hide SearchResult;
 import "package:typewriter_panel/infrastructure/protocols/skir/skir.dart"
     as skir;
 import "package:typewriter_panel/typewriter_panel.dart";
@@ -12,6 +8,9 @@ const realmSearchResultType = SearchResultType(
   label: "Realm",
 );
 
+/// Indexes the supplied topology projection without probing runtime readiness.
+/// Commands separately gate opening a Realm on availability; retained results
+/// may remain visible while the projection reloads or reports an error.
 final class RealmsSearchSource(
   final ValueListenable<AsyncValue<List<TopologyRealm>>> realms,
 ) implements SearchSource {
@@ -122,9 +121,11 @@ final class RealmsSearchSource(
   }
 
   @override
-  Future<SearchPreviewRequestResult> preview(SearchPreviewRequest request) {
-    throw UnimplementedError();
-  }
+  Future<SearchPreviewRequestResult> preview(
+    SearchPreviewRequest request,
+  ) async => const SearchPreviewRequestResult.error(
+    message: "Realm results do not provide a separate preview",
+  );
 
   @override
   void dispose() {

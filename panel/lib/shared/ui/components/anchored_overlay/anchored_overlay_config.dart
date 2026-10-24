@@ -2,7 +2,8 @@
 enum AnchoredOverlaySide { top, bottom, left, right }
 
 /// Selects the rectangle that constrains overlay placement.
-/// Uses the nearest [AnchoredOverlayScope], or the full overlay when absent.
+/// `nearestScope` uses the nearest `AnchoredOverlayScope`, with the full
+/// overlay as a fallback. `overlay` always uses the full overlay.
 enum BoundaryMode { nearestScope, overlay }
 
 /// Controls whether the overlay shares the anchor's width or height.

@@ -1,4 +1,3 @@
-import "package:flutter/material.dart";
 import "package:typewriter_panel/typewriter_panel.dart";
 import "package:typewriter_testkit/typewriter_testkit.dart";
 import "package:widgetbook/widgetbook.dart";
@@ -46,7 +45,7 @@ class AnchoredPopupStory extends StatelessWidget {
                   decoration: InputDecoration(labelText: "Filter activity"),
                 ),
                 const Text(
-                  "Hover Close, or press Escape to return to the trigger.",
+                  "Hover to preview. Click to interact. Escape dismisses either.",
                 ),
               ],
             ),

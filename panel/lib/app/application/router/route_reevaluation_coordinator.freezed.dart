@@ -13,17 +13,11 @@ part of 'route_reevaluation_coordinator.dart';
 // dart format off
 T _$identity<T>(T value) => value;
 /// @nodoc
-mixin _$RouteReevaluationState implements DiagnosticableTreeMixin {
+mixin _$RouteReevaluationState {
 
 
 
 
-@override
-void debugFillProperties(DiagnosticPropertiesBuilder properties) {
-    properties
-    ..add(DiagnosticsProperty('type', 'RouteReevaluationState'))
-    ;
-}
 
 @override
 bool operator ==(Object other) {
@@ -35,7 +29,7 @@ bool operator ==(Object other) {
 int get hashCode => runtimeType.hashCode;
 
 @override
-String toString({ DiagnosticLevel minLevel = DiagnosticLevel.info }) {
+String toString() {
     return 'RouteReevaluationState()';
 }
 
@@ -187,7 +181,7 @@ return disposed();case _:
 /// @nodoc
 
 
-class RouteReevaluationIdle with DiagnosticableTreeMixin implements RouteReevaluationState {
+class RouteReevaluationIdle implements RouteReevaluationState {
   const RouteReevaluationIdle();
   
 
@@ -195,12 +189,6 @@ class RouteReevaluationIdle with DiagnosticableTreeMixin implements RouteReevalu
 
 
 
-@override
-void debugFillProperties(DiagnosticPropertiesBuilder properties) {
-    properties
-    ..add(DiagnosticsProperty('type', 'RouteReevaluationState.idle'))
-    ;
-}
 
 @override
 bool operator ==(Object other) {
@@ -212,7 +200,7 @@ bool operator ==(Object other) {
 int get hashCode => runtimeType.hashCode;
 
 @override
-String toString({ DiagnosticLevel minLevel = DiagnosticLevel.info }) {
+String toString() {
     return 'RouteReevaluationState.idle()';
 }
 
@@ -225,7 +213,7 @@ String toString({ DiagnosticLevel minLevel = DiagnosticLevel.info }) {
 /// @nodoc
 
 
-class RouteReevaluationRunning with DiagnosticableTreeMixin implements RouteReevaluationState {
+class RouteReevaluationRunning implements RouteReevaluationState {
   const RouteReevaluationRunning({this.followUpRequested = false});
   
 
@@ -238,12 +226,6 @@ class RouteReevaluationRunning with DiagnosticableTreeMixin implements RouteReev
 $RouteReevaluationRunningCopyWith<RouteReevaluationRunning> get copyWith => _$RouteReevaluationRunningCopyWithImpl<RouteReevaluationRunning>(this, _$identity);
 
 
-@override
-void debugFillProperties(DiagnosticPropertiesBuilder properties) {
-    properties
-    ..add(DiagnosticsProperty('type', 'RouteReevaluationState.running'))
-    ..add(DiagnosticsProperty('followUpRequested', followUpRequested));
-}
 
 @override
 bool operator ==(Object other) {
@@ -257,7 +239,7 @@ int get hashCode {
 }
 
 @override
-String toString({ DiagnosticLevel minLevel = DiagnosticLevel.info }) {
+String toString() {
     return 'RouteReevaluationState.running(followUpRequested: $followUpRequested)';
 }
 
@@ -299,7 +281,7 @@ as bool,
 /// @nodoc
 
 
-class RouteReevaluationDisposed with DiagnosticableTreeMixin implements RouteReevaluationState {
+class RouteReevaluationDisposed implements RouteReevaluationState {
   const RouteReevaluationDisposed();
   
 
@@ -307,12 +289,6 @@ class RouteReevaluationDisposed with DiagnosticableTreeMixin implements RouteRee
 
 
 
-@override
-void debugFillProperties(DiagnosticPropertiesBuilder properties) {
-    properties
-    ..add(DiagnosticsProperty('type', 'RouteReevaluationState.disposed'))
-    ;
-}
 
 @override
 bool operator ==(Object other) {
@@ -324,7 +300,7 @@ bool operator ==(Object other) {
 int get hashCode => runtimeType.hashCode;
 
 @override
-String toString({ DiagnosticLevel minLevel = DiagnosticLevel.info }) {
+String toString() {
     return 'RouteReevaluationState.disposed()';
 }
 

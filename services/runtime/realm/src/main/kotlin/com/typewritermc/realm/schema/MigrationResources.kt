@@ -1,6 +1,6 @@
 package com.typewritermc.realm.schema
 
-import java.security.MessageDigest
+import com.typewritermc.services.libs.utils.sha256Hex
 
 private const val MIGRATION_SCHEMA_PATH = "schema/migration.surql"
 private const val REALM_SCHEMA_INDEX_PATH = "schema/realm/_index.txt"
@@ -77,7 +77,7 @@ internal class MigrationResources(
         return DatabasePatch(
             id = filename.removeSuffix(".surql"),
             script = script,
-            checksum = script.sha256(),
+            checksum = script.sha256Hex(),
         )
     }
 
@@ -108,9 +108,3 @@ private fun loadClasspathResource(path: String): String? =
         .getResourceAsStream(path)
         ?.bufferedReader()
         ?.use { it.readText() }
-
-private fun String.sha256(): String =
-    MessageDigest
-        .getInstance("SHA-256")
-        .digest(toByteArray(Charsets.UTF_8))
-        .joinToString("") { byte -> "%02x".format(byte.toInt() and 0xff) }

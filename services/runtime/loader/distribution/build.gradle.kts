@@ -2,7 +2,7 @@ import java.util.zip.ZipFile
 
 plugins {
     id("com.typewritermc.basic-conventions")
-    id("com.gradleup.shadow") version "9.4.1"
+    id("com.gradleup.shadow") version "9.6.1"
 }
 
 version = "1000.0.0"

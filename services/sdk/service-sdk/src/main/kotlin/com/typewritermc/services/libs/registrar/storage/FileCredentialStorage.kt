@@ -9,7 +9,7 @@ import com.typewritermc.services.libs.registrar.RedactedSecret
 import com.typewritermc.services.libs.registrar.ServiceId
 import com.typewritermc.services.libs.registrar.ServiceIdentity
 import com.typewritermc.services.libs.registrar.ServiceRole
-import com.typewritermc.services.libs.utils.rethrowExceptionalThrowable
+import com.typewritermc.services.libs.utils.rethrowExceptional
 import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
@@ -62,7 +62,7 @@ class FileCredentialStorage(
                 }
                 CredentialLoadResult.Loaded(record.toCredentials())
             } catch (failure: Throwable) {
-                rethrowExceptionalThrowable(failure)
+                failure.rethrowExceptional()
                 when (failure) {
                     is SerializationException, is IllegalArgumentException -> corrupt()
                     else -> unavailable()
@@ -102,7 +102,7 @@ class FileCredentialStorage(
                 setOwnerOnlyPermissions(path)
                 CredentialStoreResult.Success
             } catch (failure: Throwable) {
-                rethrowExceptionalThrowable(failure)
+                failure.rethrowExceptional()
                 CredentialStoreResult.Failure(CredentialStorageError.Unavailable(STORAGE_WRITE_SLUG))
             } finally {
                 temporary?.let(::deleteTemporary)
@@ -116,7 +116,7 @@ class FileCredentialStorage(
                 setOf(PosixFilePermission.OWNER_READ, PosixFilePermission.OWNER_WRITE),
             )
         } catch (failure: Throwable) {
-            rethrowExceptionalThrowable(failure)
+            failure.rethrowExceptional()
         }
     }
 
@@ -124,7 +124,7 @@ class FileCredentialStorage(
         try {
             Files.deleteIfExists(temporary)
         } catch (failure: Throwable) {
-            rethrowExceptionalThrowable(failure)
+            failure.rethrowExceptional()
         }
     }
 }

@@ -9,8 +9,7 @@ class _OrganizationsSelector extends HookWidget {
 
   final List<OrganizationData> organizations;
 
-  Widget spacer(BuildContext context) =>
-      SliverToBoxAdapter(child: SizedBox(height: context.spacing.space4));
+  Widget spacer(BuildContext context) => SliverGap(context.spacing.space4);
 
   @override
   Widget build(BuildContext context) {
@@ -19,13 +18,6 @@ class _OrganizationsSelector extends HookWidget {
     final filteredOrganizations = organizations.where((organization) {
       return organization.name.toLowerCase().contains(normalizedQuery);
     }).toList();
-
-    final animation = useSliverAnimatedList(
-      items: filteredOrganizations,
-      identity: (item) => item.organizationId,
-      removedItemBuilder: (context, item, animation) =>
-          _child(context, item, animation, ignorePointer: true),
-    );
 
     return SliverMainAxisGroup(
       slivers: [
@@ -61,31 +53,13 @@ class _OrganizationsSelector extends HookWidget {
             ),
           )
         else
-          SliverAnimatedList(
-            key: animation.key,
-            initialItemCount: animation.items.length,
-            itemBuilder: (context, index, animation) =>
-                _child(context, filteredOrganizations[index], animation),
+          AnimatedSliverList<OrganizationData>(
+            items: filteredOrganizations,
+            identity: (item) => item.organizationId,
+            itemBuilder: (context, item) =>
+                _OrganizationListTile(organization: item),
           ),
       ],
-    );
-  }
-
-  Widget _child(
-    BuildContext context,
-    OrganizationData item,
-    Animation<double> animation, {
-    bool ignorePointer = false,
-  }) {
-    return IgnorePointer(
-      key: ValueKey(item.organizationId),
-      ignoring: ignorePointer,
-      child: ElasticTransition(
-        animation: animation,
-        child: StaggerEntrance(
-          child: _OrganizationListTile(organization: item),
-        ),
-      ),
     );
   }
 }

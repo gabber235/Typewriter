@@ -1,8 +1,5 @@
-import "dart:async";
-
 import "package:flutter_test/flutter_test.dart";
-import "package:riverpod/misc.dart" show ProviderListenable;
-import "package:riverpod/riverpod.dart";
+import "package:typewriter_panel/typewriter_panel.dart";
 
 Future<T> waitForProvider<T>(
   ProviderContainer container,

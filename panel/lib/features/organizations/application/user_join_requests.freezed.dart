@@ -13,7 +13,7 @@ part of 'user_join_requests.dart';
 // dart format off
 T _$identity<T>(T value) => value;
 /// @nodoc
-mixin _$UserJoinRequest implements DiagnosticableTreeMixin {
+mixin _$UserJoinRequest {
 
  skir.RecordId get requestId; skir.RecordId get organizationId; String get organizationName; String get organizationLogoUrl; DateTime get requestedAt; DateTime get expiresAt;
 /// Create a copy of UserJoinRequest
@@ -23,13 +23,6 @@ mixin _$UserJoinRequest implements DiagnosticableTreeMixin {
 $UserJoinRequestCopyWith<UserJoinRequest> get copyWith => _$UserJoinRequestCopyWithImpl<UserJoinRequest>(this as UserJoinRequest, _$identity);
 
 
-@override
-void debugFillProperties(DiagnosticPropertiesBuilder properties) {
-  final _this = this as UserJoinRequest;
-  properties
-    ..add(DiagnosticsProperty('type', 'UserJoinRequest'))
-    ..add(DiagnosticsProperty('requestId', _this.requestId))..add(DiagnosticsProperty('organizationId', _this.organizationId))..add(DiagnosticsProperty('organizationName', _this.organizationName))..add(DiagnosticsProperty('organizationLogoUrl', _this.organizationLogoUrl))..add(DiagnosticsProperty('requestedAt', _this.requestedAt))..add(DiagnosticsProperty('expiresAt', _this.expiresAt));
-}
 
 @override
 bool operator ==(Object other) {
@@ -45,7 +38,7 @@ int get hashCode {
 }
 
 @override
-String toString({ DiagnosticLevel minLevel = DiagnosticLevel.info }) {
+String toString() {
   final _this = this as UserJoinRequest;
   return 'UserJoinRequest(requestId: ${_this.requestId}, organizationId: ${_this.organizationId}, organizationName: ${_this.organizationName}, organizationLogoUrl: ${_this.organizationLogoUrl}, requestedAt: ${_this.requestedAt}, expiresAt: ${_this.expiresAt})';
 }
@@ -223,7 +216,7 @@ return $default(_that.requestId,_that.organizationId,_that.organizationName,_tha
 /// @nodoc
 
 
-class _UserJoinRequest extends UserJoinRequest with DiagnosticableTreeMixin {
+class _UserJoinRequest extends UserJoinRequest {
   const _UserJoinRequest({required this.requestId, required this.organizationId, required this.organizationName, required this.organizationLogoUrl, required this.requestedAt, required this.expiresAt}): super._();
   
 
@@ -241,12 +234,6 @@ class _UserJoinRequest extends UserJoinRequest with DiagnosticableTreeMixin {
 _$UserJoinRequestCopyWith<_UserJoinRequest> get copyWith => __$UserJoinRequestCopyWithImpl<_UserJoinRequest>(this, _$identity);
 
 
-@override
-void debugFillProperties(DiagnosticPropertiesBuilder properties) {
-    properties
-    ..add(DiagnosticsProperty('type', 'UserJoinRequest'))
-    ..add(DiagnosticsProperty('requestId', requestId))..add(DiagnosticsProperty('organizationId', organizationId))..add(DiagnosticsProperty('organizationName', organizationName))..add(DiagnosticsProperty('organizationLogoUrl', organizationLogoUrl))..add(DiagnosticsProperty('requestedAt', requestedAt))..add(DiagnosticsProperty('expiresAt', expiresAt));
-}
 
 @override
 bool operator ==(Object other) {
@@ -260,7 +247,7 @@ int get hashCode {
 }
 
 @override
-String toString({ DiagnosticLevel minLevel = DiagnosticLevel.info }) {
+String toString() {
     return 'UserJoinRequest(requestId: $requestId, organizationId: $organizationId, organizationName: $organizationName, organizationLogoUrl: $organizationLogoUrl, requestedAt: $requestedAt, expiresAt: $expiresAt)';
 }
 

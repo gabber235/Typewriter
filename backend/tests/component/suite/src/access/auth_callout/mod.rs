@@ -11,16 +11,16 @@ use jose::{
     policy::{Checkable, StandardPolicy},
 };
 use nats_jwt_rs::{
-    Claims,
+    Claims, ClaimsHeader,
     authorization::{AuthRequest, AuthResponse},
-    user::User,
 };
 use nkeys::KeyPair;
 use typewriter_component_test::prelude::SkirMessagingExpectationExt;
 use wasmcloud_utils::skir::base::access::v1::permission::{
     EntityPermissionQualifier, EntityPermissionQualifier_User, GetEntityPermissionResponse,
-    Permission, Permissions,
+    Permission, Permissions, ResponsePermission,
 };
+use wasmcloud_utils::skir::base::kernel::v1::duration::Duration as SkirDuration;
 
 const PRIVATE_JWK: &str = r#"{
     "use": "sig",
@@ -143,6 +143,7 @@ fn auth_request(password: Option<String>) -> anyhow::Result<Vec<u8>> {
     let user = KeyPair::new_user();
     let qualifier = EntityPermissionQualifier::User(Box::new(EntityPermissionQualifier_User {
         organization_id: None,
+        connection_session: "0123456789abcdef0123456789abcdef".into(),
         _unrecognized: None,
     }));
     let mut payload = AuthRequest::default();
@@ -198,6 +199,33 @@ fn authorization_payload(response: &[u8]) -> anyhow::Result<serde_json::Value> {
     Ok(serde_json::from_slice(&decoded)?)
 }
 
+fn signed_claims(token: &str) -> anyhow::Result<serde_json::Value> {
+    let mut parts = token.split('.');
+    let header = parts
+        .next()
+        .ok_or_else(|| anyhow::anyhow!("signed claims have no header"))?;
+    let payload = parts
+        .next()
+        .ok_or_else(|| anyhow::anyhow!("signed claims have no payload"))?;
+    let signature = parts
+        .next()
+        .ok_or_else(|| anyhow::anyhow!("signed claims have no signature"))?;
+    if parts.next().is_some() {
+        anyhow::bail!("signed claims have extra segments");
+    }
+
+    header.parse::<ClaimsHeader>()?;
+    let decoded = base64::engine::general_purpose::URL_SAFE_NO_PAD.decode(payload)?;
+    let claims: serde_json::Value = serde_json::from_slice(&decoded)?;
+    let issuer = claims["iss"]
+        .as_str()
+        .ok_or_else(|| anyhow::anyhow!("signed claims issuer missing"))?;
+    let signature = base64::engine::general_purpose::URL_SAFE_NO_PAD.decode(signature)?;
+    let signed = format!("{header}.{payload}");
+    KeyPair::from_public_key(issuer)?.verify(signed.as_bytes(), &signature)?;
+    Ok(claims)
+}
+
 fn expect_jwks(context: &TestContext<AuthCallout>) -> anyhow::Result<()> {
     let current_key: serde_json::Value = serde_json::from_str(PUBLIC_JWK)?;
     let mut previous_key = current_key.clone();
@@ -224,7 +252,14 @@ fn expect_permissions(context: &TestContext<AuthCallout>) -> anyhow::Result<()> 
                 deny: Vec::new(),
                 _unrecognized: None,
             },
-            response: None,
+            response: Some(ResponsePermission {
+                max_messages: Some(1),
+                ttl: Some(SkirDuration {
+                    milliseconds: 300_000,
+                    _unrecognized: None,
+                }),
+                _unrecognized: None,
+            }),
             _unrecognized: None,
         },
         tags: vec!["user:panel_user".into()],
@@ -280,15 +315,17 @@ async fn valid_user_token_receives_signed_permissions(
     let user_jwt = payload["nats"]["jwt"]
         .as_str()
         .ok_or_else(|| anyhow::anyhow!("authorization response jwt missing"))?;
-    let user_claims = Claims::<User>::decode(user_jwt)?;
-    assert_eq!(user_claims.name.as_deref(), Some("Panel User"));
+    let user_claims = signed_claims(user_jwt)?;
+    assert_eq!(user_claims["name"], "Panel User");
     assert_eq!(
-        user_claims.payload().permissions.permissions.publish.allow,
-        ["cloud.to.user.panel_user.organization.watch"]
+        user_claims["nats"]["pub"]["allow"],
+        serde_json::json!(["cloud.to.user.panel_user.organization.watch"])
     );
+    assert_eq!(user_claims["nats"]["resp"]["max"], 1);
+    assert_eq!(user_claims["nats"]["resp"]["ttl"], 300_000_000_000_u64);
     assert_eq!(
-        user_claims.payload().generic_fields.tags,
-        Some(vec!["user:panel_user".into()])
+        user_claims["nats"]["tags"],
+        serde_json::json!(["user:panel_user"])
     );
     Ok(())
 }
@@ -345,9 +382,9 @@ async fn user_token_without_name_receives_unknown_display_name(
     let user_jwt = payload["nats"]["jwt"]
         .as_str()
         .ok_or_else(|| anyhow::anyhow!("authorization response jwt missing"))?;
-    let user_claims = Claims::<User>::decode(user_jwt)?;
+    let user_claims = signed_claims(user_jwt)?;
 
-    assert_eq!(user_claims.name.as_deref(), Some("Unknown"));
+    assert_eq!(user_claims["name"], "Unknown");
     Ok(())
 }
 

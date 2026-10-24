@@ -7,10 +7,10 @@ part of "books.dart";
 /// failure states from either dependency are returned unchanged to the UI.
 @riverpod
 AsyncValue<List<Book>> filteredBooks(Ref ref, String query) {
-  final books = ref.watch(projectedBooksProvider);
+  final books = ref.watch(workingBooksProvider);
   if (books.mapUnready<List<Book>>() case final value?) return value;
   if (query.isEmpty) return AsyncData(books.requireValue);
-  final tags = ref.watch(projectedTagsProvider);
+  final tags = ref.watch(workingTagsProvider);
   if (tags.mapUnready<List<Book>>() case final value?) return value;
   final lowercaseQuery = query.toLowerCase();
   return AsyncData(
@@ -29,71 +29,8 @@ AsyncValue<List<Book>> filteredBooks(Ref ref, String query) {
 
 /// Resolves the current route parameter into the typed book record identity.
 @riverpod
-skir.RecordId? bookId(Ref ref) {
+skir.ResourceId? bookId(Ref ref) {
   final id = ref.watch(routeParamProvider("bookId"));
   if (id == null) return null;
-  return recordId("book:$id");
-}
-
-/// Finds one confirmed book in the authoritative realm session.
-@riverpod
-Future<Book?> canonicalBook(Ref ref, skir.RecordId bookId) async {
-  final books = await ref.watch(canonicalBooksProvider.future);
-  return books.firstWhereOrNull((book) => book.bookId == bookId);
-}
-
-/// Overlays local editor values on the confirmed book collection.
-///
-/// The authoring session remains canonical. Local values belong to the
-/// resource key for the current organization and realm. An invalid projection
-/// is ignored, leaving the confirmed value visible to this view.
-@riverpod
-AsyncValue<List<Book>> projectedBooks(Ref ref) {
-  final canonical = ref.watch(canonicalBooksProvider);
-  if (canonical.mapUnready<List<Book>>() case final value?) return value;
-  final organizationId = ref.watch(organizationIdProvider);
-  final realmId = ref.watch(realmIdProvider);
-  if (organizationId == null || realmId == null) {
-    return AsyncData(canonical.requireValue);
-  }
-  final local = ref.watch(
-    localWorkProvider.select((state) => state.editorValues),
-  );
-  return AsyncData([
-    for (final book in canonical.requireValue)
-      book.projected(
-        local[EditorResourceKey(
-          scope: EditorResourceScope(
-            organizationId: organizationId,
-            realmId: realmId,
-          ),
-          identity: book.bookId,
-        )],
-      ),
-  ]);
-}
-
-/// Returns one book with its local editor projection, if present.
-///
-/// This is the read model for consumers that need edits before confirmation.
-/// It retains the canonical loading or missing value state until the local
-/// overlay can be applied.
-@riverpod
-AsyncValue<Book?> projectedBook(Ref ref, skir.RecordId bookId) {
-  final canonical = ref.watch(canonicalBookProvider(bookId));
-  if (canonical.mapUnready<Book?>() case final value?) return value;
-  final organizationId = ref.watch(organizationIdProvider);
-  final realmId = ref.watch(realmIdProvider);
-  if (organizationId == null || realmId == null) return canonical;
-  final key = EditorResourceKey(
-    scope: EditorResourceScope(
-      organizationId: organizationId,
-      realmId: realmId,
-    ),
-    identity: bookId,
-  );
-  final local = ref.watch(
-    localWorkProvider.select((state) => state.editorValues[key]),
-  );
-  return AsyncData(canonical.requireValue?.projected(local));
+  return skir.ResourceId(value: id);
 }

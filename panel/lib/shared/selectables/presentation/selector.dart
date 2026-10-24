@@ -1,7 +1,3 @@
-import "package:flutter/material.dart";
-import "package:flutter_animate/flutter_animate.dart";
-import "package:flutter_hooks/flutter_hooks.dart";
-import "package:hooks_riverpod/hooks_riverpod.dart";
 import "package:typewriter_panel/typewriter_panel.dart";
 
 /// Associates a widget subtree with its selectable identifier.
@@ -9,28 +5,46 @@ import "package:typewriter_panel/typewriter_panel.dart";
 /// The scope is a focus lookup boundary, not selection state. It lets graph
 /// navigation and other consumers map Flutter's primary focus back to an item
 /// without making focus imply that the item is selected.
-class SelectableScope extends InheritedWidget {
-  const SelectableScope({required this.id, required super.child, super.key});
+class SelectableScope extends HookWidget {
+  const SelectableScope({required this.id, required this.child, super.key});
 
   final SelectableIdentifier id;
-
-  static SelectableIdentifier? maybeOf(BuildContext? context) {
-    if (context == null) return null;
-    final scope = context.getInheritedWidgetOfExactType<SelectableScope>();
-    return scope?.id;
-  }
+  final Widget child;
 
   /// Returns the identifier under Flutter's primary focus, if any.
   ///
-  /// This reads the focused node's build context. It returns null when focus
-  /// is outside a [SelectableScope].
+  /// Identity belongs to the focus tree, so this remains safe during widget
+  /// removal and layout. It returns null outside a [SelectableScope].
   static SelectableIdentifier? primaryFocusedId() {
-    final node = FocusManager.instance.primaryFocus;
-    return maybeOf(node?.context);
+    for (
+      var node = FocusManager.instance.primaryFocus;
+      node != null;
+      node = node.parent
+    ) {
+      if (node is _SelectableFocusNode) return node.id;
+    }
+    return null;
   }
 
   @override
-  bool updateShouldNotify(SelectableScope oldWidget) => id != oldWidget.id;
+  Widget build(BuildContext context) {
+    final node = useMemoized(() => _SelectableFocusNode(id))..id = id;
+    useEffect(() => node.dispose, [node]);
+    return Focus(
+      focusNode: node,
+      canRequestFocus: false,
+      skipTraversal: true,
+      includeSemantics: false,
+      child: child,
+    );
+  }
+}
+
+final class _SelectableFocusNode extends FocusNode {
+  _SelectableFocusNode(this.id)
+    : super(canRequestFocus: false, skipTraversal: true);
+
+  SelectableIdentifier id;
 }
 
 /// Combines selection gestures, focus handling, context actions, and item UI.
@@ -46,6 +60,7 @@ class Selector extends HookConsumerWidget {
     required this.focusNode,
     this.onFocusChange,
     this.onDoubleTap,
+    this.shortcuts = const {},
     super.key,
   });
 
@@ -67,23 +82,78 @@ class Selector extends HookConsumerWidget {
   /// Optional callback for a double tap without changing selection semantics.
   final VoidCallback? onDoubleTap;
 
+  /// Item specific intents that take precedence over closed menu traversal.
+  /// Descendant controls and an open menu retain their closer shortcut scopes.
+  final Map<ShortcutActivator, Intent> shortcuts;
+
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final isSelected = ref.watch(isSelectedProvider(selectableId));
     final isFocused = useState(false);
     final isHovered = useState(false);
     final controller = useMenuController();
+    final anchorKey = useGlobalKey();
+    final pendingContextPosition = useState<Offset?>(null);
+    final contextTargets = useState<List<SelectableIdentifier>?>(null);
+    final selection = ref.watch(selectionProvider);
+    final selected = ref.watch(selectedProvider);
 
-    final operations = availableSelectionOperations(
-      SelectionOperationsRoot.of(context),
-      ref.watch(selectedProvider).value,
-    );
+    final registeredOperations = SelectionOperationsRoot.of(context);
+    final captured = contextTargets.value;
+    final resources = captured
+        ?.whereType<AuthoringResourceIdentifier>()
+        .toList();
+    final operations =
+        resources != null &&
+            resources.isNotEmpty &&
+            resources.length == captured!.length &&
+            resources.every((item) => item.scope == resources.first.scope)
+        ? resourceSelectionOperationsFor(
+            ref,
+            resources.first.scope,
+            resources.map((item) => item.resourceId),
+          )
+        : selectionOperationsFor(ref, context, selected.value);
 
     useFocusedChange(focusNode, ({required hasFocus}) {
       isFocused.value = hasFocus;
+      if (!hasFocus) pendingContextPosition.value = null;
       onFocusChange?.call(hasFocus);
       return null;
     }, [focusNode, onFocusChange]);
+
+    void activateContext(Offset globalPosition) {
+      if (!ref.read(selectionProvider).contains(selectableId)) {
+        ref.read(selectionProvider.notifier).selectAll([selectableId]);
+      }
+      contextTargets.value = List.of(ref.read(selectionProvider));
+      focusNode.requestFocus();
+      pendingContextPosition.value = globalPosition;
+    }
+
+    useEffect(
+      () {
+        final position = pendingContextPosition.value;
+        if (position == null) return null;
+        var active = true;
+        WidgetsBinding.instance.addPostFrameCallback((_) {
+          if (!active || !context.mounted) return;
+          if (!ref.read(selectionProvider).contains(selectableId) ||
+              !focusNode.hasFocus) {
+            pendingContextPosition.value = null;
+            return;
+          }
+          if (selected.isLoading) return;
+          pendingContextPosition.value = null;
+          if (selected.hasError || operations.isEmpty) return;
+          final anchor = anchorKey.currentContext?.findRenderObject();
+          if (anchor is! RenderBox || !anchor.attached) return;
+          controller.open(position: anchor.globalToLocal(position));
+        });
+        return () => active = false;
+      },
+      [pendingContextPosition.value, selection, selected, registeredOperations],
+    );
 
     final focusAnimation = useAnimationController(
       duration: 200.ms,
@@ -100,7 +170,9 @@ class Selector extends HookConsumerWidget {
     return KeyedSubtree(
       key: Key(selectableId.id),
       child: ContextMenuRegion(
+        key: anchorKey,
         childFocusNode: focusNode,
+        onClose: () => contextTargets.value = null,
         items: [
           if (operations.isNotEmpty)
             MenuItem.section(
@@ -113,11 +185,14 @@ class Selector extends HookConsumerWidget {
         enableGestures: false,
         controller: controller,
         child: GestureDetector(
-          onSecondaryTapUp: ContextMenuRegion.onSecondaryTapUp(controller),
-          onLongPressStart: ContextMenuRegion.onLongPressStart(controller),
+          onSecondaryTapUp: (details) =>
+              activateContext(details.globalPosition),
+          onLongPressStart: (details) =>
+              activateContext(details.globalPosition),
           onDoubleTap: onDoubleTap,
           onTapUp: ContextMenuRegion.onTapUp(
             controller,
+            onContextTap: (details) => activateContext(details.globalPosition),
             orElse: (_) {
               Actions.maybeInvoke(
                 context,
@@ -136,9 +211,31 @@ class Selector extends HookConsumerWidget {
             id: selectableId,
             child: FocusableActionDetector(
               focusNode: focusNode,
+              shortcuts: {
+                ...shortcuts,
+                const SingleActivator(LogicalKeyboardKey.contextMenu):
+                    const SelectorContextMenuIntent(),
+                const SingleActivator(LogicalKeyboardKey.f10, shift: true):
+                    const SelectorContextMenuIntent(),
+              },
               onShowHoverHighlight: (hover) => isHovered.value = hover,
               mouseCursor: SystemMouseCursors.click,
               actions: {
+                SelectorContextMenuIntent:
+                    CallbackAction<SelectorContextMenuIntent>(
+                      onInvoke: (_) {
+                        final anchor = anchorKey.currentContext
+                            ?.findRenderObject();
+                        if (anchor is RenderBox && anchor.attached) {
+                          activateContext(
+                            anchor.localToGlobal(
+                              anchor.size.center(Offset.zero),
+                            ),
+                          );
+                        }
+                        return null;
+                      },
+                    ),
                 ActivateIntent: CallbackAction(
                   onInvoke: (_) {
                     Actions.maybeInvoke(
@@ -224,4 +321,9 @@ class SelectedSelectorIntent extends Intent {
 
   /// Whether the activation originated from Flutter's activate intent.
   final bool throughActivateIntent;
+}
+
+/// Opens the focused selectable's menu through its existing context action path.
+class SelectorContextMenuIntent extends Intent {
+  const SelectorContextMenuIntent();
 }

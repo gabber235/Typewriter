@@ -1,7 +1,4 @@
-import "dart:async";
-
-import "package:flutter/widgets.dart";
-import "package:flutter_hooks/flutter_hooks.dart";
+import "package:typewriter_panel/typewriter_panel.dart";
 
 /// Rebuilds the widget when [refreshAt] is reached.
 ///

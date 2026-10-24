@@ -1,0 +1,126 @@
+diff --git a/dist/index.d.ts b/dist/index.d.ts
+index a6099543a009f9823eb682a101f59f39ed33a3e7..a5462c2230f800c2a9c38bcf1f99ca0e819bec0b 100644
+--- a/dist/index.d.ts
++++ b/dist/index.d.ts
+@@ -8,5 +8,35 @@ declare class RustCodeGenerator implements CodeGenerator<Config> {
+     generateCode(input: CodeGenerator.Input<Config>): CodeGenerator.Output;
+ }
+ export declare const GENERATOR: RustCodeGenerator;
++export interface RustBindingReference {
++    readonly language: "rust";
++    readonly absolutePath: string;
++}
++export interface MethodNames {
++    readonly module: string;
++    readonly name: string;
++    readonly method: RustBindingReference;
++    readonly requestType: string;
++    readonly responseType: string;
++}
++export interface RecordNames {
++    readonly key: string;
++    readonly type: string;
++    readonly fields: ReadonlyArray<{
++        readonly sourceName: string;
++        readonly targetName: string;
++    }>;
++}
++export interface LanguageBindings {
++    readonly language: "rust";
++    readonly methods: ReadonlyArray<MethodNames>;
++    readonly records: ReadonlyArray<RecordNames>;
++}
++export interface BindingInput {
++    readonly modules: readonly object[];
++    readonly recordMap: ReadonlyMap<string, object>;
++    readonly config: unknown;
++}
++export declare function exportBindings(publicInput: BindingInput): LanguageBindings;
+ export {};
+ //# sourceMappingURL=index.d.ts.map
+\ No newline at end of file
+diff --git a/dist/index.js b/dist/index.js
+index c9037742cf39836d832327b5e8e6beff760310bb..a4b79bdad40996fe24f12877ce1bd709fff705b2 100644
+--- a/dist/index.js
++++ b/dist/index.js
+@@ -1,7 +1,7 @@
+ import { convertCase, } from "skir-internal";
+ import { z } from "zod";
+ import { KeyedArrayContext } from "./keyed_array_context.js";
+-import { getTypeName, isUpperCasedKeyword, Namer, toStructFieldName as toRustFieldName, } from "./naming.js";
++import { getTypeName, getMethodName, isUpperCasedKeyword, Namer, toRustPathPrefix, toStructFieldName as toRustFieldName, } from "./naming.js";
+ import { collectRustModuleSpecs } from "./rust_module_spec.js";
+ import { skirDefaultIsRustDefault, TypeSpeller } from "./type_speller.js";
+ const Config = z.strictObject({});
+@@ -610,4 +610,32 @@ function docToCommentText(doc) {
+         .join("");
+ }
+ export const GENERATOR = new RustCodeGenerator();
++export function exportBindings(publicInput) {
++    const input = publicInput;
++    const absoluteNamer = new Namer(null);
++    const typeSpeller = new TypeSpeller(input.recordMap, absoluteNamer);
++    return {
++        language: "rust",
++        methods: input.modules.flatMap((module) => module.methods.map((method) => ({
++            module: module.path,
++            name: method.name.text,
++            method: {
++                language: "rust",
++                absolutePath: `${toRustPathPrefix(module.path)}::${getMethodName(method)}`,
++            },
++            requestType: typeSpeller.getRustType(method.requestType),
++            responseType: typeSpeller.getRustType(method.responseType),
++        }))),
++        records: [...input.recordMap.values()].map((location) => ({
++            key: location.record.key,
++            type: `${toRustPathPrefix(location.modulePath)}::${getTypeName(location)}`,
++            fields: location.record.recordType === "struct"
++                ? location.record.fields.map((field) => ({
++                    sourceName: field.name.text,
++                    targetName: toRustFieldName(field.name.text),
++                }))
++                : [],
++        })),
++    };
++}
+ //# sourceMappingURL=index.js.map
+\ No newline at end of file
+diff --git a/dist/naming.d.ts b/dist/naming.d.ts
+index e1859ca41b2f16f027dbeeb4dc1a86406643829e..b86956ba8cc3d4e560e38eb3b1d4f6ecabf41594 100644
+--- a/dist/naming.d.ts
++++ b/dist/naming.d.ts
+@@ -1,4 +1,4 @@
+-import { Module, type RecordLocation } from "skir-internal";
++import { Module, type Method, type RecordLocation } from "skir-internal";
+ export declare class Namer {
+     readonly skirModule: Module | null;
+     constructor(skirModule: Module | null);
+@@ -18,6 +18,7 @@ export declare class Namer {
+ export declare function toRustPathPrefix(modulePath: string): string;
+ /** Returns the name of the Rust type for the given record. */
+ export declare function getTypeName(record: RecordLocation): string;
++export declare function getMethodName(method: Method | string): string;
+ export declare function toStructFieldName(input: string): string;
+ export declare function maybeEscapeUpperCasedName(input: string): string;
+ export declare function isUpperCasedKeyword(input: string): boolean;
+diff --git a/dist/naming.js b/dist/naming.js
+index 36c596d1c8b8c95eaf482b9e93048586d749abf6..6d6621663cbaff13b4050c630e0639a754b8ec0c 100644
+--- a/dist/naming.js
++++ b/dist/naming.js
+@@ -1,3 +1,4 @@
++import { convertCase, } from "skir-internal";
+ export class Namer {
+     skirModule;
+     constructor(skirModule) {
+@@ -33,6 +34,10 @@ export function getTypeName(record) {
+         .map((r) => maybeEscapeUpperCasedName(r.name.text))
+         .join("_");
+ }
++export function getMethodName(method) {
++    const skirName = typeof method === "string" ? method : method.name.text;
++    return convertCase(skirName, "lower_underscore").concat("_method");
++}
+ export function toStructFieldName(input) {
+     return RESERVED_KEYWORDS.has(input) || GENERARATED_STRUCT_METHODS.has(input)
+         ? `${input}_`

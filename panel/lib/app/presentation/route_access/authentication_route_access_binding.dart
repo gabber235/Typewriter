@@ -1,6 +1,4 @@
-import "package:hooks_riverpod/hooks_riverpod.dart";
-import "package:typewriter_panel/app/application/router/access/access.dart";
-import "package:typewriter_panel/features/auth/application/application.dart";
+import "package:typewriter_panel/typewriter_panel.dart";
 
 /// Mirrors authentication provider state into the router access module.
 ///

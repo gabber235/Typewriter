@@ -1,5 +1,9 @@
 part of "multiselect_dropdown.dart";
 
+/// Owns a controller until its hook is disposed or its keys change.
+///
+/// Initial text and both callbacks are captured when the controller is created.
+/// Later builds do not replace them unless the hook keys change.
 const useMultiSelectTextEditingController =
     _MultiSelectTextEditingControllerHookCreator();
 

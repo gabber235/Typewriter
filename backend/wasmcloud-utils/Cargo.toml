@@ -20,5 +20,4 @@ wasmcloud-utils-macros.workspace = true
 opentelemetry.workspace = true
 otel-wasi.workspace = true
 tracing.workspace = true
-tracing-opentelemetry.workspace = true
 wit-bindgen.workspace = true

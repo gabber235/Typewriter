@@ -1,6 +1,5 @@
-import "dart:io";
-
 import "package:flutter_test/flutter_test.dart";
+import "package:typewriter_panel/typewriter_panel.dart";
 
 void main() {
   test("reusable organization and book shells own the inspector", () {

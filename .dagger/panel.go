@@ -4,9 +4,9 @@ import (
 	"dagger/typewriter/internal/dagger"
 )
 
-const panelFlutterVersion = "3.47.2"
+const panelFlutterVersion = "3.49.0-0.2.pre"
 
-const panelGeneratorCacheVersion = "flutter-3.47.2-lock-v2"
+const panelGeneratorCacheVersion = "flutter-" + panelFlutterVersion + "-lock-v3"
 
 var defaultWorkspaceOpts = dagger.WorkspaceDirectoryOpts{
 	Exclude:   []string{".git", "target", "node_modules", "build", "dist"},
@@ -72,13 +72,6 @@ func (m *Typewriter) buildRunner(
 		WithWorkdir(dir).
 		WithExec([]string{"flutter", "pub", "get", "--enforce-lockfile"}).
 		WithExec([]string{"dart", "run", "build_runner", "build"}).
-		WithWorkdir("/workspace/panel").
-		WithExec([]string{
-			"sh",
-			"-c",
-			"(git diff --name-only --diff-filter=ACM -z -- ':(glob)**/*.g.dart' ':(glob)**/*.freezed.dart'; git ls-files --others --exclude-standard -z -- ':(glob)**/*.g.dart' ':(glob)**/*.freezed.dart') | xargs -0 -r sed -i 's/[[:space:]]*$//'",
-		}).
-		WithWorkdir(dir).
 		WithExec([]string{"dart", "format", "--output=none", "."}).
 		WithoutMount("/root/.pub-cache").
 		WithoutMount("/workspace/panel/.dart_tool").
@@ -133,21 +126,21 @@ func (m *Typewriter) PanelTest(
 	return m.panelContainer(source).
 		WithDirectory("/workspace/skir-src", source.Directory("/skir-src", defaultWorkspaceOpts)).
 		WithWorkdir("/workspace/panel").
-		WithExec([]string{"flutter", "test", "--no-pub"})
+		WithExec([]string{"flutter", "test", "--no-pub", "--concurrency=2"})
 }
 
 // +check
 func (m *Typewriter) PanelTestKitTest(source *dagger.Workspace) *dagger.Container {
 	return m.panelContainer(source).
 		WithWorkdir("/workspace/panel/testkit").
-		WithExec([]string{"flutter", "test", "--no-pub"})
+		WithExec([]string{"flutter", "test", "--no-pub", "--concurrency=2"})
 }
 
 // +check
 func (m *Typewriter) PanelWidgetbookTest(source *dagger.Workspace) *dagger.Container {
 	return m.panelContainer(source).
 		WithWorkdir("/workspace/panel/widgetbook").
-		WithExec([]string{"flutter", "test", "--no-pub"})
+		WithExec([]string{"flutter", "test", "--no-pub", "--concurrency=2"})
 }
 
 // +check
@@ -160,8 +153,8 @@ authorization {
   users: [{
     nkey: "UD466L6EBCM3YY5HEGHJANNTN4LSKTSUXTH7RILHCKEQMQHTBNLHJJXT"
     permissions: {
-      publish: {allow: ["allowed.>", "_INBOX.integration.>"]}
-      subscribe: {allow: ["allowed.>", "_INBOX.integration.>"]}
+      publish: {allow: ["allowed.echo", "allowed.missing", "_INBOX.integration.*"]}
+      subscribe: {allow: ["allowed.echo", "_INBOX.integration.*"]}
     }
   }]
 }
@@ -174,15 +167,30 @@ authorization {
 			Args:          []string{"-c", "/etc/nats/nats.conf"},
 			UseEntrypoint: true,
 		})
+	native := dag.Container().
+		From("nats:2.15.0-alpine").
+		WithFile("/etc/nats/nats.conf", source.Directory("/panel", defaultWorkspaceOpts).
+			File("test/infrastructure/messaging/fixtures/nats_native.conf")).
+		WithExposedPort(4222).
+		AsService(dagger.ContainerAsServiceOpts{
+			Args:          []string{"-c", "/etc/nats/nats.conf"},
+			UseEntrypoint: true,
+		})
 
 	return m.panelContainer(source).
 		WithServiceBinding("nats", nats).
+		WithServiceBinding("nats-native", native).
 		WithEnvVariable("NATS_ADAPTER_URL", "nats://nats:4222").
+		WithEnvVariable("NATS_NATIVE_URL", "nats://nats-native:4222").
+		WithEnvVariable("NATS_NATIVE_ADMIN_USER", "fixture_admin").
+		WithEnvVariable("NATS_NATIVE_ADMIN_PASSWORD", "fixture_admin").
 		WithWorkdir("/workspace/panel").
 		WithExec([]string{
 			"flutter",
 			"test",
 			"--no-pub",
+			"--concurrency=2",
 			"test/infrastructure/messaging/nats_core_client_integration_test.dart",
+			"test/infrastructure/messaging/nats_native_authorization_integration_test.dart",
 		})
 }

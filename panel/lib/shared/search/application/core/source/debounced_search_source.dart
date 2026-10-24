@@ -1,5 +1,3 @@
-import "dart:async";
-
 import "package:typewriter_panel/typewriter_panel.dart";
 
 /// Delays search and preview requests until input has been quiet for [duration].

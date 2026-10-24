@@ -16,7 +16,6 @@ pub use surrealdb_component_sdk::{
     TransactionOutcome,
 };
 
-pub mod mutation;
 pub mod organization;
 pub mod service;
 pub mod topology;

@@ -5,6 +5,12 @@ plugins {
     `java-library`
 }
 
+kotlin {
+    sourceSets.named("main") {
+        kotlin.srcDir("src/main/skirout")
+    }
+}
+
 buildConfig {
     packageName("com.typewritermc.loader")
     useKotlinOutput {
@@ -16,6 +22,7 @@ buildConfig {
 
 dependencies {
     api(project(":loader-api"))
+    implementation(project(":protocol-transport"))
     implementation("com.typewritermc:imprint-archive")
     api("com.typewritermc:imprint-model")
     implementation(project(":typewriter-api"))

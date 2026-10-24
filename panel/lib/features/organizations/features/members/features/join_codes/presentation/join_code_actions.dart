@@ -1,8 +1,7 @@
-import "package:flutter/material.dart";
 import "package:typewriter_panel/typewriter_panel.dart";
 
 /// Actions shown while one or more visible codes are selected.
-/// Confirmation and provider mutation remain in the route callback so this
+/// Confirmation and submission remain in the route callback so this
 /// control can stay independent of the live projection.
 class BulkJoinCodeActions extends StatelessWidget {
   const BulkJoinCodeActions({

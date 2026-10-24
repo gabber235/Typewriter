@@ -1,5 +1,6 @@
 package com.typewritermc.realm.schema
 
+import com.surrealdb.InternalException
 import com.surrealdb.Surreal
 import com.surrealdb.signin.BearerCredential
 import com.surrealdb.signin.DatabaseCredential
@@ -54,26 +55,50 @@ class DatabaseProvider(
                     attribute("db.namespace", configuration.namespace)
                     attribute("db.database", configuration.database)
                 }
-                val db = Surreal()
+                var latest: Throwable? = null
+                repeat(MAXIMUM_CONNECT_ATTEMPTS) { attempt ->
+                    val db = Surreal()
+                    try {
+                        requireSupportedEmbeddedEngine(configuration.endpoint)
+                        db.connect(configuration.endpoint.connectionString)
+                        val serverVersion = db.version()
+                        requireSupportedDatabaseVersion(serverVersion, configuration.endpoint.expectedVersion)
+                        child.annotate {
+                            attribute("db.version", serverVersion)
+                            attribute("db.connect.attempts", attempt + 1)
+                        }
+                        db.authenticate(configuration)
 
-                try {
-                    requireSupportedEmbeddedEngine(configuration.endpoint)
-                    db.connect(configuration.endpoint.connectionString)
-                    val serverVersion = db.version()
-                    requireSupportedDatabaseVersion(serverVersion, configuration.endpoint.expectedVersion)
-                    child.annotate { attribute("db.version", serverVersion) }
-                    db.authenticate(configuration)
-
-                    db.useNs(configuration.namespace).useDb(configuration.database)
-                    SchemaMigrator(db).migrate()
-                    db
-                } catch (failure: Throwable) {
-                    runCatching(db::close).exceptionOrNull()?.let(failure::addSuppressed)
-                    throw failure
+                        db.useNs(configuration.namespace).useDb(configuration.database)
+                        SchemaMigrator(db).migrate()
+                        return@withErrorSlug db
+                    } catch (failure: Throwable) {
+                        runCatching(db::close).exceptionOrNull()?.let(failure::addSuppressed)
+                        // SurrealKV can release its exclusive lock shortly after the native handle close returns.
+                        if (
+                            !failure.isSurrealKvLockReleasePending(configuration.endpoint) ||
+                            attempt + 1 == MAXIMUM_CONNECT_ATTEMPTS
+                        ) {
+                            throw failure
+                        }
+                        latest = failure
+                        Thread.sleep(LOCK_RELEASE_RETRY_MILLIS)
+                    }
                 }
+                throw requireNotNull(latest)
             }
         }
 }
+
+private fun Throwable.isSurrealKvLockReleasePending(endpoint: DatabaseEndpoint): Boolean =
+    endpoint is DatabaseEndpoint.Embedded.SurrealKv &&
+        generateSequence(this) { it.cause }.any { failure ->
+            failure is InternalException &&
+                failure.message.orEmpty().contains("LOCK is already locked by another process")
+        }
+
+private const val MAXIMUM_CONNECT_ATTEMPTS = 100
+private const val LOCK_RELEASE_RETRY_MILLIS = 20L
 
 private fun Surreal.authenticate(configuration: RealmDatabaseConfiguration) {
     val authentication = configuration.authentication

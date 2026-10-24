@@ -1,7 +1,3 @@
-import "package:flutter/material.dart";
-import "package:flutter/services.dart";
-import "package:iconify_flutter_plus/icons/ion.dart";
-import "package:iconify_flutter_plus/icons/lucide.dart";
 import "package:typewriter_panel/typewriter_panel.dart";
 
 /// Builds graph specific mode, zoom, and reset shortcuts.

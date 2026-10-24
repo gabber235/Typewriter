@@ -34,7 +34,6 @@ enum OrganizationJoinCodesChange {
 // Changes to the active code projection. Consumers apply changes only when sequence advances and refresh on a gap.
 struct OrganizationJoinCodesChanged {
   sequence: int64;
-  operation_id: string;
   changes: [OrganizationJoinCodesChange];
 }
 
@@ -49,10 +48,8 @@ method WatchOrganizationJoinCodes(
 } = 690316;
 
 // Creates an invitation code and emits its add change after the transaction commits.
-// Replaying the same operation identity is supported; reusing it with different input is rejected.
 method GenerateOrganizationJoinCode(
   struct {
-    operation_id: string;
     single_use: bool;
     expiration: enum {
       never;
@@ -63,8 +60,6 @@ method GenerateOrganizationJoinCode(
     };
   }
 ): enum {
-  invalid_operation_id_error: struct {};
-  operation_identity_reused_error: struct {};
   internal_error: InternalError;
 
   success: struct {
@@ -89,12 +84,9 @@ method GenerateOrganizationJoinCode(
 // An expired or already removed code is reported as not found.
 method RevokeOrganizationJoinCode(
   struct {
-    operation_id: string;
     code_id: RecordId;
   }
 ): enum {
-  invalid_operation_id_error: struct {};
-  operation_identity_reused_error: struct {};
   internal_error: InternalError;
 
   success: struct {

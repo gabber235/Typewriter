@@ -7,6 +7,26 @@ import "../support/search_core_test_harness.dart";
 
 void main() {
   group("GatedSearchSource", () {
+    test("defers initialization until the first permitted query", () {
+      final inner = FakeSearchSource();
+      final source = inner.gated(
+        (context) => context.normalizedQuery.length >= 2,
+      );
+      addTearDown(source.dispose);
+
+      source.initialize(SearchQueryContext.empty);
+      source.search(queryContext("a"));
+      expect(inner.initializeCount, 0);
+      expect(inner.searches, isEmpty);
+
+      source.search(queryContext("ab"));
+      expect(inner.initializeCount, 1);
+      source.search(SearchQueryContext.empty);
+      source.search(queryContext("cd"));
+      expect(inner.initializeCount, 1);
+      expect(inner.searches, [queryContext("cd")]);
+    });
+
     test("initializes the inner source once", () {
       final inner = FakeSearchSource();
       final source = inner.gated((context) => true);

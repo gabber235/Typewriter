@@ -1,10 +1,4 @@
-import "dart:async";
-import "dart:io";
-
-import "package:flutter/material.dart";
-import "package:flutter/rendering.dart";
 import "package:flutter_test/flutter_test.dart";
-import "package:riverpod_annotation/riverpod_annotation.dart";
 import "package:test_screenshot/test_screenshot.dart";
 import "package:typewriter_panel/typewriter_panel.dart";
 import "package:typewriter_testkit/typewriter_testkit.dart";
@@ -110,4 +104,11 @@ String _sanitizeFileName(String input) {
       .replaceAll(RegExp(r"\s+"), "_");
   if (sanitized.isEmpty) return "screenshot";
   return sanitized;
+}
+
+/// Supplies one explicit operation lifetime to a manual presentation fixture.
+PortableOperationResults testPortableOperations() {
+  final operations = PortableOperationResults();
+  addTearDown(operations.dispose);
+  return operations;
 }

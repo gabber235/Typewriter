@@ -1,5 +1,6 @@
 package com.typewritermc.types.ksp
 
+import com.google.devtools.ksp.isAbstract
 import com.google.devtools.ksp.symbol.KSClassDeclaration
 import com.google.devtools.ksp.symbol.KSDeclaration
 import com.google.devtools.ksp.symbol.KSPropertyDeclaration
@@ -26,6 +27,27 @@ private val KSDeclaration.serialName: String?
 private val KSPropertyDeclaration.isSerializedProperty: Boolean
     get() =
         extensionReceiver == null &&
-            hasBackingField &&
+            (hasBackingField || isConstructorProperty) &&
             !isDelegated() &&
             annotation<Transient>() == null
+
+internal val KSPropertyDeclaration.isStoredTypeProperty: Boolean
+    get() {
+        return extensionReceiver == null &&
+            (
+                hasBackingField ||
+                    isConstructorProperty ||
+                    isAbstract()
+            ) &&
+            !isDelegated() &&
+            annotation<Transient>() == null
+    }
+
+private val KSPropertyDeclaration.isConstructorProperty: Boolean
+    get() {
+        val owner = parentDeclaration as? KSClassDeclaration ?: return false
+        val name = simpleName.asString()
+        return owner.primaryConstructor?.parameters?.any { parameter ->
+            parameter.name?.asString() == name && (parameter.isVal || parameter.isVar)
+        } == true
+    }

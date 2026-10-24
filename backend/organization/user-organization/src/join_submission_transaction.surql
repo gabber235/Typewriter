@@ -1,8 +1,7 @@
+-- A code either admits the user immediately or creates a moderation request. Admission, single
+-- use consumption, and all affected projection sequences commit together. Returned facts let the
+-- handler publish the user and organization views without rereading later database state.
 BEGIN TRANSACTION;
-        RETURN {
-            LET $previous = fn::mutation::recall($receipt, $request_bytes);
-            IF $previous != NONE { RETURN $previous.value };
-            LET $result = {
 RETURN {
     LET $codes = SELECT organization.*, single_use, auto_accept_roles
         FROM $code
@@ -102,11 +101,4 @@ RETURN {
         FETCH roles)
     }
 };
-            };
-            IF $result.kind IN ['request_made', 'auto_accepted'] {
-                LET $stored = fn::mutation::commit($receipt, $request_bytes, { value: $result });
-                RETURN $stored.value;
-            };
-            RETURN $result;
-        };
-        COMMIT TRANSACTION;
+COMMIT TRANSACTION;

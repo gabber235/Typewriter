@@ -1,12 +1,10 @@
-import "package:flutter/material.dart";
-import "package:flutter/services.dart";
 import "package:typewriter_panel/typewriter_panel.dart";
 
 /// Switches between hexadecimal, RGB, and HSL editors for one color.
 ///
-/// The caller owns the selected format and color. Channel edits preserve the
-/// channels not being edited, and the alpha channel is exposed only when
-/// [includeAlpha] is true.
+/// The caller owns the selected format and color. Channel edits rebuild a
+/// candidate from current channels, with alpha rounded through whole percent
+/// precision. Alpha input is exposed only when [includeAlpha] is true.
 class ColorFields extends StatelessWidget {
   const ColorFields({
     required this.color,
@@ -15,9 +13,11 @@ class ColorFields extends StatelessWidget {
     required this.enabled,
     required this.onFormatChanged,
     required this.onChanged,
+    this.showFormatSelector = true,
     super.key,
   });
 
+  final bool showFormatSelector;
   final Color color;
   final ColorFieldFormat format;
   final bool includeAlpha;
@@ -30,18 +30,19 @@ class ColorFields extends StatelessWidget {
     crossAxisAlignment: CrossAxisAlignment.stretch,
     spacing: context.spacing.space2,
     children: [
-      AdaptiveChoiceControl<ColorFieldFormat>(
-        selected: format,
-        enabled: enabled,
-        choices: const {
-          ColorFieldFormat.hex: "Hex",
-          ColorFieldFormat.rgb: "RGB",
-          ColorFieldFormat.hsl: "HSL",
-        },
-        onSelected: (value) {
-          if (value != null) onFormatChanged(value);
-        },
-      ),
+      if (showFormatSelector)
+        AdaptiveChoiceControl<ColorFieldFormat>(
+          selected: format,
+          enabled: enabled,
+          choices: const {
+            ColorFieldFormat.hex: "Hex",
+            ColorFieldFormat.rgb: "RGB",
+            ColorFieldFormat.hsl: "HSL",
+          },
+          onSelected: (value) {
+            if (value != null) onFormatChanged(value);
+          },
+        ),
       switch (format) {
         ColorFieldFormat.hex => _HexField(
           color: color,

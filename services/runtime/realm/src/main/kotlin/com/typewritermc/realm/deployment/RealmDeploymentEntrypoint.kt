@@ -50,7 +50,7 @@ class RealmDeploymentEntrypoint(
     override suspend fun stage(context: HostedDeploymentContext): StagedHostedRuntime = RealmDeploymentRuntime(factory.stage(context))
 }
 
-private class RealmDeploymentRuntime(
+internal class RealmDeploymentRuntime(
     private val realm: ManagedRealmRuntime,
 ) : StagedHostedRuntime {
     private val mutableHealth = MutableStateFlow<RuntimeHealth>(RuntimeHealth.Staged)

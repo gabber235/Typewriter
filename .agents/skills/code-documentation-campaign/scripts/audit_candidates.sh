@@ -11,6 +11,8 @@ fd -t f \
   --exclude build \
   --exclude .dart_tool \
   --exclude skirout \
+  --exclude generated \
+  --exclude '*.generated.dart' \
   --exclude '*.g.dart' \
   --exclude '*.freezed.dart' \
   | rg -v '(^|/)(test|tests|testkit|widgetbook|docs/adapters)/' \

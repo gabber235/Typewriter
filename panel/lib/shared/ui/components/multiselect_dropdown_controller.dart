@@ -140,7 +140,6 @@ _MultiselectDropdownController<T> _useMultiselectDropdownController<
     },
   );
   final defaultInputFieldController = useInputFieldController(
-    inputFocusNode: dropdown.focusNode,
     inputDebugLabel: "MultiselectDropdown",
     surroundingDebugLabel: "Surrounding focus node",
   );

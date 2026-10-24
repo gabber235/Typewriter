@@ -1,9 +1,7 @@
-import "dart:async";
-
-import "package:flutter/material.dart";
 import "package:flutter_test/flutter_test.dart";
-import "package:hooks_riverpod/hooks_riverpod.dart";
 import "package:typewriter_panel/typewriter_panel.dart";
+
+import "../../../support/test_utils.dart";
 
 void main() {
   Future<void> navigate(
@@ -22,14 +20,10 @@ void main() {
   Widget harness({
     required GlobalKey actionContext,
     required List<Widget> children,
-  }) => ProviderScope(
-    child: MaterialApp(
-      home: GlobalPaneNavigator(
-        child: Builder(
-          key: actionContext,
-          builder: (context) => Scaffold(body: Stack(children: children)),
-        ),
-      ),
+  }) => testApp(
+    child: Builder(
+      key: actionContext,
+      builder: (context) => Stack(children: children),
     ),
   );
 

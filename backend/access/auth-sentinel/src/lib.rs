@@ -8,9 +8,10 @@
 //! permissions from `auth-typewriter-permissions`.
 //!
 //! The HTTP boundary is intentionally narrow and unauthenticated. Its trust boundary is the
-//! deployment secret, which is read at request time and never logged or included in telemetry.
-//! Missing configuration, malformed credential blocks, unknown paths, and wrong methods fail
-//! explicitly. The endpoint must not become a general credential or policy service.
+//! deployment secret, which is read at request time.
+//! Missing configuration or credential markers, unknown paths, and wrong methods fail
+//! explicitly. Enclosed JWT and seed contents are not validated here. The endpoint must not
+//! become a general credential or policy service.
 
 mod bindings {
     use crate::Component;
@@ -83,9 +84,8 @@ impl Handler for Component {
 /// Build the bootstrap response from the deployment credential bundle.
 ///
 /// This is the only point where the sentinel secret crosses into the Skir response. Both required
-/// credential blocks must be present. Extraction failure is reported as an internal error, never
-/// as a partial success, because the registrar cannot establish a valid bootstrap connection from
-/// incomplete credentials.
+/// credential marker pairs must be present. Extraction failure is reported as an internal error,
+/// never as a partial success. The returned contents still require validation by their consumers.
 fn sentinel_response_bytes() -> Result<Vec<u8>, otel_wasi::Error<ErrorCode>> {
     let creds = std::env::var("NATS_SENTINEL_CREDS").map_err(|_| {
         ErrorCode::InternalError(Some("NATS_SENTINEL_CREDS not set".to_string()))
@@ -122,8 +122,8 @@ fn sentinel_response_bytes() -> Result<Vec<u8>, otel_wasi::Error<ErrorCode>> {
     Ok(GetSentinelCredentialsResponse::serializer().to_bytes(&response))
 }
 
-#[instrument]
-/// Extract one complete credential block without exposing its value to telemetry.
+#[instrument(skip(creds))]
+/// Extracts text between credential markers without validating the enclosed JWT or seed.
 fn extract_from_creds(creds: &str, begin_marker: &str, end_marker: &str) -> Option<String> {
     let start = creds.find(begin_marker)? + begin_marker.len();
     let end = creds[start..].find(end_marker)? + start;
@@ -218,5 +218,85 @@ mod tests {
     #[test]
     fn missing_marker_returns_none() {
         assert_eq!(extract_from_creds("", "begin", "end"), None);
+    }
+
+    #[test]
+    fn extraction_tracing_omits_the_credential_bundle() {
+        let jwt = "synthetic.jwt.credential";
+        let seed = "SYNTHETIC_PRIVATE_SEED";
+        let creds = format!(
+            "-----BEGIN NATS USER JWT-----\n{jwt}\n------END NATS USER JWT------\n\
+             -----BEGIN USER NKEY SEED-----\n{seed}\n------END USER NKEY SEED------"
+        );
+        let recorder = CapturedTracing::default();
+        tracing::subscriber::with_default(recorder.clone(), || {
+            assert_eq!(
+                extract_from_creds(
+                    &creds,
+                    "-----BEGIN NATS USER JWT-----",
+                    "------END NATS USER JWT------",
+                )
+                .as_deref(),
+                Some(jwt)
+            );
+            assert_eq!(
+                extract_from_creds(
+                    &creds,
+                    "-----BEGIN USER NKEY SEED-----",
+                    "------END USER NKEY SEED------",
+                )
+                .as_deref(),
+                Some(seed)
+            );
+        });
+        let fields = recorder.fields.lock().unwrap();
+        assert!(fields.iter().any(|(name, _)| name == "begin_marker"));
+        assert!(!fields.iter().any(|(name, _)| name == "creds"));
+        for (_, value) in fields.iter() {
+            assert!(!value.contains(jwt));
+            assert!(!value.contains(seed));
+        }
+    }
+
+    #[derive(Clone, Default)]
+    struct CapturedTracing {
+        fields: std::sync::Arc<std::sync::Mutex<Vec<(String, String)>>>,
+        next_id: std::sync::Arc<std::sync::atomic::AtomicU64>,
+    }
+
+    struct FieldVisitor<'a>(&'a mut Vec<(String, String)>);
+
+    impl tracing::field::Visit for FieldVisitor<'_> {
+        fn record_debug(&mut self, field: &tracing::field::Field, value: &dyn std::fmt::Debug) {
+            self.0.push((field.name().to_owned(), format!("{value:?}")));
+        }
+    }
+
+    impl tracing::Subscriber for CapturedTracing {
+        fn enabled(&self, _: &tracing::Metadata<'_>) -> bool {
+            true
+        }
+
+        fn new_span(&self, attrs: &tracing::span::Attributes<'_>) -> tracing::span::Id {
+            attrs.record(&mut FieldVisitor(&mut self.fields.lock().unwrap()));
+            let id = self
+                .next_id
+                .fetch_add(1, std::sync::atomic::Ordering::Relaxed)
+                + 1;
+            tracing::span::Id::from_u64(id)
+        }
+
+        fn record(&self, _: &tracing::span::Id, values: &tracing::span::Record<'_>) {
+            values.record(&mut FieldVisitor(&mut self.fields.lock().unwrap()));
+        }
+
+        fn record_follows_from(&self, _: &tracing::span::Id, _: &tracing::span::Id) {}
+
+        fn event(&self, event: &tracing::Event<'_>) {
+            event.record(&mut FieldVisitor(&mut self.fields.lock().unwrap()));
+        }
+
+        fn enter(&self, _: &tracing::span::Id) {}
+        fn exit(&self, _: &tracing::span::Id) {}
     }
 }

@@ -1,12 +1,11 @@
-import "package:flutter/material.dart";
 import "package:flutter_test/flutter_test.dart";
 import "package:typewriter_panel/typewriter_panel.dart";
 
+import "../../../support/test_utils.dart";
+
 void main() {
   Widget scrollView(List<Widget> slivers) {
-    return MaterialApp(
-      home: Scaffold(body: CustomScrollView(slivers: slivers)),
-    );
+    return testApp(child: CustomScrollView(slivers: slivers));
   }
 
   testWidgets("centers a short group as one block without scrolling", (
@@ -113,25 +112,23 @@ void main() {
   ) async {
     var taps = 0;
     await tester.pumpWidget(
-      MaterialApp(
-        home: Scaffold(
-          body: CustomScrollView(
-            reverse: true,
-            slivers: [
-              CenteredSliverMainAxisGroup(
-                slivers: [
-                  SliverToBoxAdapter(
-                    child: GestureDetector(
-                      key: const Key("reversed"),
-                      behavior: HitTestBehavior.opaque,
-                      onTap: () => taps++,
-                      child: const SizedBox(height: 100),
-                    ),
+      testApp(
+        child: CustomScrollView(
+          reverse: true,
+          slivers: [
+            CenteredSliverMainAxisGroup(
+              slivers: [
+                SliverToBoxAdapter(
+                  child: GestureDetector(
+                    key: const Key("reversed"),
+                    behavior: HitTestBehavior.opaque,
+                    onTap: () => taps++,
+                    child: const SizedBox(height: 100),
                   ),
-                ],
-              ),
-            ],
-          ),
+                ),
+              ],
+            ),
+          ],
         ),
       ),
     );

@@ -1,6 +1,3 @@
-import "package:flutter/foundation.dart";
-import "package:flutter/material.dart";
-import "package:flutter/rendering.dart";
 import "package:typewriter_panel/typewriter_panel.dart";
 
 /// Render slots for the graph and its scene positioned drop target.
@@ -17,7 +14,7 @@ class GraphDragTargetSurface
   const GraphDragTargetSurface({
     required this.viewport,
     required this.enabled,
-    required this.activeDragId,
+    required this.dragState,
     required this.graph,
     required this.dragTarget,
     super.key,
@@ -25,7 +22,7 @@ class GraphDragTargetSurface
 
   final Rect viewport;
   final bool enabled;
-  final ValueListenable<GraphIdentifier?> activeDragId;
+  final ValueListenable<GraphDragSession?> dragState;
   final Widget graph;
   final Widget dragTarget;
 
@@ -45,7 +42,7 @@ class GraphDragTargetSurface
     return RenderGraphDragTargetSurface(
       viewport: viewport,
       enabled: enabled,
-      activeDragId: activeDragId,
+      dragState: dragState,
     );
   }
 
@@ -57,7 +54,7 @@ class GraphDragTargetSurface
     renderObject
       ..viewport = viewport
       ..enabled = enabled
-      ..activeDragId = activeDragId;
+      ..dragState = dragState;
   }
 }
 
@@ -93,7 +90,7 @@ class RenderGraphDragTargetSurface extends RenderBox
   RenderGraphDragTargetSurface({
     required this._viewport,
     required this._enabled,
-    required this._activeDragId,
+    required this._dragState,
   });
 
   Rect _viewport;
@@ -112,11 +109,11 @@ class RenderGraphDragTargetSurface extends RenderBox
     markNeedsLayout();
   }
 
-  ValueListenable<GraphIdentifier?> _activeDragId;
-  ValueListenable<GraphIdentifier?> get activeDragId => _activeDragId;
-  set activeDragId(ValueListenable<GraphIdentifier?> value) {
-    if (_activeDragId == value) return;
-    _activeDragId = value;
+  ValueListenable<GraphDragSession?> _dragState;
+  ValueListenable<GraphDragSession?> get dragState => _dragState;
+  set dragState(ValueListenable<GraphDragSession?> value) {
+    if (_dragState == value) return;
+    _dragState = value;
   }
 
   @override
@@ -173,7 +170,7 @@ class RenderGraphDragTargetSurface extends RenderBox
         .whereType<RenderMetaData>()
         .map((target) => target.metaData)
         .whereType<_GraphDragTargetRegionMarker>()
-        .any((marker) => marker.targetId != activeDragId.value);
+        .any((marker) => marker.targetId != dragState.value?.source);
 
     if (enabled && dragTarget != null && !blocksGraphDrag) {
       anyHit = _hitChild(result, position, dragTarget) || anyHit;

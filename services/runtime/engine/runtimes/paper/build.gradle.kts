@@ -1,10 +1,12 @@
+import com.typewritermc.buildlogic.realmDatabaseCredentials
+import xyz.jpenilla.runpaper.task.RunServer
 import java.nio.file.Files
 import java.nio.file.StandardCopyOption
 
 plugins {
     id("com.typewritermc.basic-conventions")
     id("com.typewritermc.imprint")
-    id("xyz.jpenilla.run-paper") version "3.0.1"
+    id("xyz.jpenilla.run-paper") version "3.1.0"
 }
 
 val loaderPlugin =
@@ -43,16 +45,17 @@ val stagePaperArtifacts =
 dependencies {
     imprintEngineCore(project(":engine-core"))
     imprintHostApi(project(":loader-api"))
+    imprintPlatformApi(project(":typewriter-api"))
     loaderPlugin(project(":loader-distribution"))
-    testImplementation(libs.kotlin.coroutines.test)
 }
 
 runPaper {
     disablePluginJarDetection()
 }
 
-tasks.runServer {
-    minecraftVersion("26.2")
+private fun RunServer.configurePaperRuntime(configurationFile: String) {
+    minecraftVersion("26.3")
+    build(200)
     javaLauncher.set(
         javaToolchains.launcherFor {
             languageVersion.set(JavaLanguageVersion.of(25))
@@ -64,9 +67,26 @@ tasks.runServer {
     environment(
         "TYPEWRITER_CONFIG_FILE",
         rootProject.layout.projectDirectory
-            .file("runtime/config/local.properties")
+            .file("runtime/config/$configurationFile")
             .asFile.absolutePath,
     )
+}
+
+tasks.runServer {
+    configurePaperRuntime("local.properties")
+}
+
+private val realmDatabaseCredentials = providers.realmDatabaseCredentials()
+
+tasks.register<RunServer>("runServerKubernetes") {
+    group = "run paper"
+    description = "Run a Paper server using the local Kubernetes Realm database."
+    configurePaperRuntime("local-kubernetes.properties")
+    doFirst {
+        val credentials = realmDatabaseCredentials.get()
+        environment("REALM_DB_USERNAME", credentials.username)
+        environment("REALM_DB_PASSWORD", credentials.password)
+    }
 }
 
 typewriter {

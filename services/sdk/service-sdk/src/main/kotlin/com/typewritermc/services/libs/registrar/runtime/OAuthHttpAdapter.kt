@@ -11,7 +11,7 @@ import com.typewritermc.services.libs.registrar.IdentityCredentials
 import com.typewritermc.services.libs.registrar.RedactedSecret
 import com.typewritermc.services.libs.registrar.RegistrarFailure
 import com.typewritermc.services.libs.telemetry.ErrorSlug
-import com.typewritermc.services.libs.utils.rethrowExceptionalThrowable
+import com.typewritermc.services.libs.utils.rethrowExceptional
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
 import kotlinx.serialization.SerialName
@@ -95,7 +95,7 @@ class AuthentikTokenExchanger(
             try {
                 oauthJson.decodeFromString<TokenResponse>(result.response.body.toString(StandardCharsets.UTF_8))
             } catch (failure: Throwable) {
-                rethrowExceptionalThrowable(failure)
+                failure.rethrowExceptional()
                 return protocol()
             }
         if (

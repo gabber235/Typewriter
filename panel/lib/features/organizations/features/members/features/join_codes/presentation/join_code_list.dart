@@ -1,6 +1,3 @@
-import "package:flutter/material.dart";
-import "package:hooks_riverpod/hooks_riverpod.dart";
-import "package:iconify_flutter_plus/icons/material_symbols.dart";
 import "package:typewriter_panel/infrastructure/protocols/skir/skir.dart"
     as skir;
 import "package:typewriter_panel/typewriter_panel.dart";
@@ -9,7 +6,7 @@ import "package:typewriter_panel/typewriter_panel.dart";
 ///
 /// Selection is shared with the route so bulk actions behave identically on
 /// mobile and desktop. Animated removal is visual only. Revocation and expiry
-/// are still decided by the application provider.
+/// visibility comes from the shared activity and local expiry projections.
 class JoinCodesCardList extends HookConsumerWidget {
   const JoinCodesCardList({
     required this.codes,

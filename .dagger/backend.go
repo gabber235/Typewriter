@@ -15,12 +15,14 @@ const (
 	backendTarget        = backendCacheRoot + "/target"
 	componentTestXtask   = backendTarget + "/debug/component-test-xtask"
 	cleanupBackendTarget = `cargo clean --manifest-path /workspace/backend/Cargo.toml --target-dir "$CARGO_TARGET_DIR" >/dev/null`
+	finishBackendCommand = `cleanup_status=0; ` + cleanupBackendTarget + ` || cleanup_status=$?; ` +
+		`if [ "$status" -ne 0 ]; then exit "$status"; fi; exit "$cleanup_status"`
 )
 
 func withBackendTargetCleanup(command ...string) []string {
 	return append([]string{
 		"sh", "-c",
-		`status=0; "$@" || status=$?; ` + cleanupBackendTarget + ` || exit $?; exit "$status"`,
+		`status=0; "$@" || status=$?; ` + finishBackendCommand,
 		"backend-command",
 	}, command...)
 }
@@ -29,7 +31,7 @@ func backendTestCommand(args ...string) []string {
 	command := append([]string{componentTestXtask}, args...)
 	return append([]string{
 		"sh", "-c",
-		`status=0; cargo build --manifest-path backend/tests/component/Cargo.toml -p component-test-xtask && "$@" || status=$?; ` + cleanupBackendTarget + ` || exit $?; exit "$status"`,
+		`status=0; cargo build --locked --manifest-path backend/tests/component/Cargo.toml -p component-test-xtask && "$@" || status=$?; ` + finishBackendCommand,
 		"backend-test",
 	}, command...)
 }
@@ -54,6 +56,7 @@ func (m *Typewriter) backendContainer(source *dagger.Workspace, cacheScope strin
 		).
 		WithMountedCache(backendCacheRoot, lockedCache(cachePrefix+"-target-v3")).
 		WithEnvVariable("CARGO_TARGET_DIR", backendTarget).
+		WithEnvVariable("CARGO_BUILD_JOBS", "2").
 		WithEnvVariable("CARGO_INCREMENTAL", "0").
 		WithEnvVariable("CARGO_PROFILE_DEV_DEBUG", "0").
 		WithEnvVariable("CARGO_PROFILE_TEST_DEBUG", "0")
@@ -61,14 +64,19 @@ func (m *Typewriter) backendContainer(source *dagger.Workspace, cacheScope strin
 
 func (m *Typewriter) backendTestContainer(source *dagger.Workspace) *dagger.Container {
 	return m.backendContainer(source, "component-test").
-		WithFile("/usr/local/bin/nats-server", dag.Container().From("nats:2.15.0-alpine").File("/usr/local/bin/nats-server"))
+		WithFile("/usr/local/bin/nats-server", backendNatsServer())
+}
+
+func backendNatsServer() *dagger.File {
+	return dag.Container().From("nats:2.15.0-alpine").File("/usr/local/bin/nats-server")
 }
 
 // +check
 func (m *Typewriter) BackendUnitTest(source *dagger.Workspace) *dagger.Container {
 	return m.backendContainer(source, "unit-test").
+		WithFile("/usr/local/bin/nats-server", backendNatsServer()).
 		WithExec(withBackendTargetCleanup(
-			"cargo", "test", "--manifest-path", "backend/Cargo.toml",
+			"cargo", "test", "--locked", "--manifest-path", "backend/Cargo.toml",
 			"--workspace", "--no-fail-fast", "--jobs", "2",
 		))
 }
@@ -77,15 +85,20 @@ func (m *Typewriter) BackendUnitTest(source *dagger.Workspace) *dagger.Container
 func (m *Typewriter) BackendSupportTest(source *dagger.Workspace) *dagger.Container {
 	return m.backendContainer(source, "support-test").
 		WithExec(withBackendTargetCleanup(
-			"cargo", "test", "--manifest-path", "backend/tests/component/Cargo.toml",
+			"cargo", "test", "--locked", "--manifest-path", "backend/tests/component/Cargo.toml",
 			"--workspace", "--exclude", "typewriter-component-tests", "--no-fail-fast", "--jobs", "2",
 		))
 }
 
 // BackendTest runs the full embedded component test suite.
-func (m *Typewriter) BackendTest(source *dagger.Workspace) *dagger.Container {
+func (m *Typewriter) BackendTest(
+	source *dagger.Workspace,
+	// +optional
+	// +default="2"
+	jobs int,
+) *dagger.Container {
 	return m.backendTestContainer(source).
-		WithExec(backendTestCommand("component-test", "--all", "--jobs", "2"))
+		WithExec(backendTestCommand("component-test", "--all", "--jobs", strconv.Itoa(jobs)))
 }
 
 // BackendTestFixture runs every case for one fixture.

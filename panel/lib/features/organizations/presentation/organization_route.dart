@@ -1,7 +1,3 @@
-import "package:auto_route/auto_route.dart";
-import "package:flutter/material.dart";
-import "package:hooks_riverpod/hooks_riverpod.dart";
-import "package:iconify_flutter_plus/icons/material_symbols.dart";
 import "package:typewriter_panel/infrastructure/protocols/skir/skir.dart"
     as skir;
 import "package:typewriter_panel/typewriter_panel.dart";
@@ -31,7 +27,9 @@ class OrganizationPage extends HookConsumerWidget {
 /// It owns navigation chrome and the suspension barrier around realm content. A
 /// connection retry invalidates topology state, leaving resource repositories and
 /// editor sessions owned by their respective application providers.
-class OrganizationScaffold extends HookConsumerWidget {
+/// Transport and service recovery own automatic refreshes. Returning input
+/// focus does not invalidate runtime readiness.
+class OrganizationScaffold extends ConsumerWidget {
   const OrganizationScaffold({required this.child, super.key});
 
   final Widget child;
@@ -42,65 +40,88 @@ class OrganizationScaffold extends HookConsumerWidget {
     final realmId = ref.watch(realmIdProvider);
     final interaction = ref.watch(realmInteractionProvider);
     final selectedRealm = ref.watch(selectedRealmProvider).value;
+    ref.watch(realmTopologyRecoveryProvider);
 
-    void retryConnection() =>
-        ref.invalidate(organizationTopologyStreamProvider);
+    void retryConnection() {
+      if (organizationId == null) return;
+      ref
+          .read(organizationTopologyControllerProvider(organizationId).notifier)
+          .refresh();
+    }
 
-    return PrimarySearchShortcut(
-      child: SimpleScaffold(
-        appBar: CustomAppBar(
-          leading: [
-            if (organizationId != null) ...[
-              const OrganizationSelector(),
-              if (realmId != null) ...[
-                Icones(
-                  MaterialSymbols.chevron_right,
-                  size: 16,
-                  color: Theme.of(context).colorScheme.onSurfaceVariant,
-                ),
-                const RealmSelector(),
+    return RealmInboxShortcut(
+      child: PrimarySearchShortcut(
+        child: SimpleScaffold(
+          appBar: CustomAppBar(
+            navigation: AppBarBreadcrumbs(
+              children: [
+                if (organizationId != null) ...[
+                  const OrganizationSelector(),
+                  if (realmId != null) ...[const RealmSelector()],
+                ],
               ],
-            ],
-          ],
-          trailing: RealmSuspensionInline(
-            suspended: interaction.suspended,
-            child: const ModeDisplayWidget(),
-          ),
-          sidebar: OrganizationSidebarContent(suspended: interaction.suspended),
-        ),
-        child: Row(
-          children: [
-            if (!context.isMobile)
-              Sidebar(
-                child: OrganizationSidebarContent(
-                  suspended: interaction.suspended,
-                ),
-              ),
-            Expanded(
-              child: RealmSuspensionBarrier(
-                interaction: interaction,
-                realm: selectedRealm,
-                onRetry: retryConnection,
-                child: Column(
-                  children: [
-                    Expanded(
-                      child: InspectorScaffold(
-                        realmRuntime: ref.watch(
-                          activeRealmEditorRuntimeProvider,
-                        ),
-                        margin: EdgeInsets.only(
-                          top: context.spacing.space2,
-                          right: context.spacing.space2,
-                        ),
-                        child: child,
-                      ),
-                    ),
-                    ActionRow(),
-                  ],
-                ),
-              ),
             ),
-          ],
+            primary: AppBarItem.adaptive(
+              key: const ValueKey("search"),
+              collapseOrder: 0,
+              child: const PrimarySearchButton(),
+            ),
+            actions: [
+              AppBarItem.adaptive(
+                key: const ValueKey("activity"),
+                collapseOrder: 1,
+                child: const WorkspaceActivityButton(),
+              ),
+              AppBarItem.expandedOnly(
+                key: const ValueKey("mode"),
+                collapseOrder: 2,
+                child: RealmSuspensionInline(
+                  suspended: interaction.suspended,
+                  child: const ModeDisplayWidget(),
+                ),
+              ),
+              AppBarItem.compactOnly(
+                key: const ValueKey("sidebar"),
+                collapseOrder: 2,
+                child: SidebarMenuButton(
+                  sidebar: OrganizationSidebarContent(
+                    suspended: interaction.suspended,
+                  ),
+                ),
+              ),
+            ],
+          ),
+          child: Row(
+            children: [
+              if (!context.isMobile)
+                Sidebar(
+                  child: OrganizationSidebarContent(
+                    suspended: interaction.suspended,
+                  ),
+                ),
+              Expanded(
+                child: RealmSuspensionBarrier(
+                  interaction: interaction,
+                  realm: selectedRealm,
+                  onRetry: retryConnection,
+                  child: Column(
+                    children: [
+                      Expanded(
+                        child: InspectorScaffold(
+                          margin: EdgeInsets.only(
+                            top: context.spacing.space2,
+                            right: context.spacing.space2,
+                          ),
+                          child: child,
+                        ),
+                      ),
+                      ActionRow(),
+                    ],
+                  ),
+                ),
+              ),
+            ],
+          ),
         ),
       ),
     );

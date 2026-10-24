@@ -1,6 +1,7 @@
-import "package:flutter/material.dart";
 import "package:flutter_test/flutter_test.dart";
 import "package:typewriter_panel/typewriter_panel.dart";
+
+import "../../../support/test_utils.dart";
 
 void main() {
   group("StaggerScope", () {
@@ -551,10 +552,10 @@ class _TestApp extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return MaterialApp(
-      home: MediaQuery(
+    return testApp(
+      child: MediaQuery(
         data: MediaQueryData(disableAnimations: disableAnimations),
-        child: Scaffold(body: child),
+        child: child,
       ),
     );
   }

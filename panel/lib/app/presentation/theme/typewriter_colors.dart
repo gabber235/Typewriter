@@ -1,4 +1,4 @@
-import "package:flutter/material.dart";
+import "package:typewriter_panel/typewriter_panel.dart";
 
 /// Semantic colors for panel surfaces, content, feedback, and interaction.
 ///

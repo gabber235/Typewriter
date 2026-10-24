@@ -1,287 +1,466 @@
-// Expressions form the editor's recursive computation tree. Typed values and
-// binding references provide leaves; the remaining nodes compose them into
-// conditionals, collection pipelines, conversions, and presentation values.
-// The panel evaluates this tree locally for rendering, validation, actions, and
-// search, while the schema keeps the tree portable across protocol boundaries.
-//
-// Every nested expression is typed. Collection lambdas and reducers introduce
-// temporary bindings through BindingId slots, and BindingRef resolves values
-// from the caller's binding environment and data path.
+// Portable expressions carry their operation and lexical scope in the serialized tree.
+// External inputs retain their boundary identities. Lambda locals use frame addresses.
+// Both hosts share structural result types and distinguish missing input from evaluation failure.
 
 import {
-  BindingId,
-  BindingRef,
-} from "editor/v1/binding.skir";
-import {
-  ConversionId,
-  TypeExpression,
-  TypedValue,
+  DataValue,
+  ExpressionBindingId,
+  TypeUse,
+  ValueLocation,
+  ValuePath,
 } from "editor/v1/type_catalog.skir";
 
-enum ComparisonOperator(810600001) {
+/// Reads an externally supplied input at an authored value path.
+struct ExpressionInput(810600001) {
+  binding: ExpressionBindingId = 0;
+  path: ValuePath = 1;
+}
+
+/// Reads a lambda frame. Depth zero is the innermost frame; slots are defined by the enclosing operation.
+/// Local values are captured for evaluation and may retain their authored location for read evidence.
+struct ExpressionLocal(810600002) {
+  depth: int32 = 0;
+  slot: int32 = 1;
+  path: ValuePath = 2;
+}
+
+/// Projects one field while preserving lazy query reads and the originating authored location.
+struct ExpressionField(810600003) {
+  source: ExpressionNode = 0;
+  name: string = 1;
+}
+
+enum EntryBranch(810600004) {
+  key = 1;
+  value = 2;
+}
+
+struct ExpressionEntryProjection(810600005) {
+  source: ExpressionNode = 0;
+  branch: EntryBranch = 1;
+}
+
+struct BinaryExpression(810600006) {
+  left: ExpressionNode = 0;
+  right: ExpressionNode = 1;
+}
+
+struct ConditionalExpression(810600007) {
+  test: ExpressionNode = 0;
+  yes: ExpressionNode = 1;
+  no: ExpressionNode = 2;
+}
+
+/// Evaluates fallback for unavailable, null, or unfilled input. Evaluation failures remain
+/// failures instead of being hidden by the fallback.
+struct OrElseExpression(810600008) {
+  input: ExpressionNode = 0;
+  fallback: ExpressionNode = 1;
+}
+
+enum TextUnaryOperation(810600009) {
+  value = 1;
+  trim = 2;
+  lower = 3;
+  upper = 4;
+  title = 5;
+}
+
+struct TextUnaryExpression(810600010) {
+  operation: TextUnaryOperation = 0;
+  source: ExpressionNode = 1;
+}
+
+enum TextCompareOperation(810600011) {
+  contains = 1;
+  starts_with = 2;
+  ends_with = 3;
+}
+
+struct TextCompareExpression(810600012) {
+  operation: TextCompareOperation = 0;
+  source: ExpressionNode = 1;
+  other: ExpressionNode = 2;
+}
+
+struct TextReplaceExpression(810600013) {
+  source: ExpressionNode = 0;
+  target: ExpressionNode = 1;
+  replacement: ExpressionNode = 2;
+}
+
+struct TextSplitExpression(810600014) {
+  source: ExpressionNode = 0;
+  separator: ExpressionNode = 1;
+}
+
+struct TextJoinExpression(810600015) {
+  source: ExpressionNode = 0;
+  separator: ExpressionNode = 1;
+}
+
+struct TextSubstringExpression(810600016) {
+  source: ExpressionNode = 0;
+  start: ExpressionNode = 1;
+  end: ExpressionNode? = 2;
+}
+
+struct TextInterpolateExpression(810600017) {
+  parts: [ExpressionNode] = 0;
+}
+
+enum RegexMatchMode(810600018) {
+  search = 1;
+  full_match = 2;
+}
+
+struct RegexTestExpression(810600019) {
+  mode: RegexMatchMode = 0;
+  source: ExpressionNode = 1;
+  pattern: ExpressionNode = 2;
+}
+
+struct RegexCaptureExpression(810600020) {
+  source: ExpressionNode = 0;
+  pattern: ExpressionNode = 1;
+  group: ExpressionNode = 2;
+}
+
+struct RegexReplaceExpression(810600021) {
+  source: ExpressionNode = 0;
+  pattern: ExpressionNode = 1;
+  replacement: ExpressionNode = 2;
+}
+
+enum ValueCompareOperation(810600022) {
   equal = 1;
   not_equal = 2;
-  less_than = 3;
-  less_than_or_equal = 4;
-  greater_than = 5;
-  greater_than_or_equal = 6;
 }
 
-enum BooleanOperator(810600002) {
-  and = 1;
-  or = 2;
-  not = 3;
+struct ValueCompareExpression(810600023) {
+  operation: ValueCompareOperation = 0;
+  left: ExpressionNode = 1;
+  right: ExpressionNode = 2;
 }
 
-enum ArithmeticOperator(810600003) {
+enum NumberArithmeticOperation(810600024) {
   add = 1;
   subtract = 2;
   multiply = 3;
   divide = 4;
   remainder = 5;
-  negate = 6;
 }
 
-struct FieldAccessExpression(810600004) {
-  target: TypedExpression = 0;
-  field_name: string = 1;
+/// Evaluates at least two operands in one arithmetic operation, preserving numeric promotion
+/// across the complete argument sequence.
+struct NumberArithmeticExpression(810600025) {
+  operation: NumberArithmeticOperation = 0;
+  first: ExpressionNode = 1;
+  second: ExpressionNode = 2;
+  remaining: [ExpressionNode] = 3;
 }
 
-enum InterpolationPart(810600005) {
-  text: string = 1;
-  expression: TypedExpression = 2;
+enum NumberCompareOperation(810600026) {
+  greater = 1;
+  greater_equal = 2;
+  less = 3;
+  less_equal = 4;
 }
 
-struct InterpolationExpression(810600006) {
-  parts: [InterpolationPart] = 0;
+struct NumberCompareExpression(810600027) {
+  operation: NumberCompareOperation = 0;
+  left: ExpressionNode = 1;
+  right: ExpressionNode = 2;
 }
 
-struct ComparisonExpression(810600007) {
-  operator: ComparisonOperator = 0;
-  left: TypedExpression = 1;
-  right: TypedExpression = 2;
+struct NumberRoundExpression(810600028) {
+  source: ExpressionNode = 0;
+  increment: ExpressionNode = 1;
+  rounding: ExpressionNode = 2;
 }
 
-struct BooleanExpression(810600008) {
-  operator: BooleanOperator = 0;
-  operands: [TypedExpression] = 1;
+struct NumberFormatExpression(810600029) {
+  source: ExpressionNode = 0;
+  fraction_digits: ExpressionNode = 1;
+  locale: ExpressionNode = 2;
 }
 
-struct ArithmeticExpression(810600009) {
-  operator: ArithmeticOperator = 0;
-  operands: [TypedExpression] = 1;
+struct DurationFormatExpression(810600030) {
+  source: ExpressionNode = 0;
+  units: ExpressionNode = 1;
+  fraction_digits: ExpressionNode = 2;
 }
 
-struct ConditionalExpression(810600010) {
-  condition: TypedExpression = 0;
-  when_true: TypedExpression = 1;
-  when_false: TypedExpression = 2;
+struct TimestampFormatExpression(810600031) {
+  source: ExpressionNode = 0;
+  pattern: ExpressionNode = 1;
+  zone: ExpressionNode = 2;
+  locale: ExpressionNode = 3;
 }
 
-// Collection expressions introduce scoped item bindings for nested expressions.
-struct CollectionMapExpression(810600011) {
-  source: TypedExpression = 0;
-  transform: TypedExpression = 1;
-  item_binding_id: BindingId = 2;
+struct CollectionAccessExpression(810600032) {
+  source: ExpressionNode = 0;
+  index: ExpressionNode = 1;
 }
 
-struct CollectionFilterExpression(810600012) {
-  source: TypedExpression = 0;
-  predicate: TypedExpression = 1;
-  item_binding_id: BindingId = 2;
+struct CollectionContainsExpression(810600033) {
+  source: ExpressionNode = 0;
+  value: ExpressionNode = 1;
 }
 
-enum CollectionQuantifier(810600013) {
-  any = 1;
-  all = 2;
-  none = 3;
+struct ColorWithAlphaExpression(810600034) {
+  source: ExpressionNode = 0;
+  alpha: ExpressionNode = 1;
 }
 
-struct CollectionQuantifierExpression(810600014) {
-  source: TypedExpression = 0;
-  quantifier: CollectionQuantifier = 1;
-  predicate: TypedExpression = 2;
-  item_binding_id: BindingId = 3;
+enum RuleUnaryOperation(810600035) {
+  non_empty = 1;
+  non_blank = 2;
+  single_line = 3;
+  positive = 4;
+  non_negative = 5;
+  unique = 6;
+  not_null = 7;
+  opaque = 8;
 }
 
-enum CollectionSelection(810600015) {
-  first = 1;
-  last = 2;
+struct RuleUnaryExpression(810600036) {
+  operation: RuleUnaryOperation = 0;
+  source: ExpressionNode = 1;
 }
 
-struct CollectionFindExpression(810600016) {
-  source: TypedExpression = 0;
-  selection: CollectionSelection = 1;
-  predicate: TypedExpression = 2;
-  item_binding_id: BindingId = 3;
+struct RuleOneOfExpression(810600037) {
+  source: ExpressionNode = 0;
+  first_candidate: ExpressionNode = 1;
+  remaining_candidates: [ExpressionNode] = 2;
 }
 
-struct CollectionCountExpression(810600017) {
-  source: TypedExpression = 0;
-  predicate: TypedExpression = 1;
-  item_binding_id: BindingId = 2;
+enum BoundDirection(810600038) {
+  minimum = 1;
+  maximum = 2;
 }
 
-struct CollectionDistinctExpression(810600018) {
-  source: TypedExpression = 0;
-  key: TypedExpression? = 1;
-  item_binding_id: BindingId? = 2;
+enum SizeBoundMetric(810600039) {
+  text_length = 1;
+  text_lines = 2;
+  collection_items = 3;
 }
 
-enum CollectionSortDirection(810600019) {
-  ascending = 1;
-  descending = 2;
+enum SizeRangeMetric(810600040) {
+  text_length = 1;
+  collection_items = 2;
 }
 
-struct CollectionComparator(810600020) {
-  left_binding_id: BindingId = 0;
-  right_binding_id: BindingId = 1;
-  comparison: TypedExpression = 2;
+struct RuleSizeBoundExpression(810600041) {
+  metric: SizeBoundMetric = 0;
+  direction: BoundDirection = 1;
+  source: ExpressionNode = 2;
+  bound: ExpressionNode = 3;
 }
 
-struct CollectionSortExpression(810600021) {
-  source: TypedExpression = 0;
-  key: TypedExpression = 1;
-  item_binding_id: BindingId = 2;
-  direction: CollectionSortDirection = 3;
-  comparator: CollectionComparator? = 4;
+struct RuleSizeRangeExpression(810600042) {
+  metric: SizeRangeMetric = 0;
+  source: ExpressionNode = 1;
+  minimum: ExpressionNode = 2;
+  maximum: ExpressionNode = 3;
 }
 
-struct CollectionGroupExpression(810600022) {
-  source: TypedExpression = 0;
-  key: TypedExpression = 1;
-  item_binding_id: BindingId = 2;
-  value: TypedExpression? = 3;
+struct RuleNumericBoundExpression(810600043) {
+  direction: BoundDirection = 0;
+  source: ExpressionNode = 1;
+  bound: ExpressionNode = 2;
+  inclusive: ExpressionNode = 3;
 }
 
-struct CollectionReduceExpression(810600023) {
-  source: TypedExpression = 0;
-  accumulator_binding_id: BindingId = 1;
-  item_binding_id: BindingId = 2;
-  reduction: TypedExpression = 3;
+struct RuleNumericRangeExpression(810600044) {
+  source: ExpressionNode = 0;
+  minimum: ExpressionNode = 1;
+  maximum: ExpressionNode = 2;
 }
 
-struct CollectionFoldExpression(810600024) {
-  source: TypedExpression = 0;
-  initial: TypedExpression = 1;
-  accumulator_binding_id: BindingId = 2;
-  item_binding_id: BindingId = 3;
-  reduction: TypedExpression = 4;
+struct RuleMultipleOfExpression(810600045) {
+  source: ExpressionNode = 0;
+  divisor: ExpressionNode = 1;
 }
 
-enum CollectionTransformOperation(810600025) {
-  flat_map = 1;
-  take = 2;
-  skip = 3;
-  reverse = 4;
+struct RuleMaximumScaleExpression(810600046) {
+  source: ExpressionNode = 0;
+  scale: ExpressionNode = 1;
 }
 
-struct CollectionTransformExpression(810600026) {
-  source: TypedExpression = 0;
-  operation: CollectionTransformOperation = 1;
-  transform: TypedExpression? = 2;
-  item_binding_id: BindingId? = 3;
-  count: TypedExpression? = 4;
+enum TimestampBoundDirection(810600047) {
+  not_before = 1;
+  not_after = 2;
 }
 
-struct IsTypeExpression(810600027) {
-  source: TypedExpression = 0;
-  type: TypeExpression = 1;
+struct RuleTimestampBoundExpression(810600048) {
+  direction: TimestampBoundDirection = 0;
+  source: ExpressionNode = 1;
+  bound: ExpressionNode = 2;
 }
 
-struct ConversionExpression(810600028) {
-  conversion_id: ConversionId = 0;
-  input: TypedExpression = 1;
+/// The body receives the current item at slot zero, except reduce, whose slots are accumulator then item.
+struct UnaryCollectionExpression(810600049) {
+  source: ExpressionNode = 0;
+  body: ExpressionNode = 1;
 }
 
-enum StringOperation(810600029) {
-  trim = 1;
-  lower_case = 2;
-  upper_case = 3;
-  title_case = 4;
-  replace = 5;
-  split = 6;
-  join = 7;
-  substring = 8;
-  contains = 9;
-  starts_with = 10;
-  ends_with = 11;
+/// Evaluates source and initial outside the body frame. The body slots are accumulator then item.
+struct FoldExpression(810600050) {
+  source: ExpressionNode = 0;
+  initial: ExpressionNode = 1;
+  body: ExpressionNode = 2;
 }
 
-struct StringOperationExpression(810600030) {
-  operation: StringOperation = 0;
-  operands: [TypedExpression] = 1;
+/// Evaluates each key with the item in slot zero. The descending expression belongs to the outer scope.
+struct SortByExpression(810600051) {
+  source: ExpressionNode = 0;
+  descending: ExpressionNode? = 1;
+  key: ExpressionNode = 2;
 }
 
-enum CollectionOperation(810600031) {
-  access = 1;
-  length = 2;
-  contains = 3;
+/// The comparator slots are the left item then the right item.
+struct SortWithExpression(810600052) {
+  source: ExpressionNode = 0;
+  comparator: ExpressionNode = 1;
 }
 
-struct CollectionOperationExpression(810600032) {
-  operation: CollectionOperation = 0;
-  operands: [TypedExpression] = 1;
+struct CollectionSliceExpression(810600053) {
+  source: ExpressionNode = 0;
+  count: ExpressionNode = 1;
 }
 
-enum RegexOperation(810600033) {
-  matches = 1;
-  capture = 2;
-  replace = 3;
+/// An identity expression needs an explicit catalog type witness to admit resource reads.
+struct ResourceIdentityQuerySource(810600054) {
+  identity: ExpressionNode = 0;
+  target: TypeUse = 1;
 }
 
-struct RegexExpression(810600034) {
-  operation: RegexOperation = 0;
-  source: TypedExpression = 1;
-  pattern: string = 2;
-  group: int32? = 3;
-  replacement: string? = 4;
+enum ResourceQuerySource(810600055) {
+  reference: ExpressionNode = 1;
+  identity: ResourceIdentityQuerySource = 2;
 }
 
-struct CoalesceExpression(810600035) {
-  operands: [TypedExpression] = 0;
+enum ExpressionQuery(810600056) {
+  resource_identity: ResourceQuerySource = 1;
+  resource_value: ResourceQuerySource = 2;
+  resource_configuration: ResourceQuerySource = 3;
+  value_configuration: ExpressionNode = 4;
+  catalog_declaration: ExpressionNode = 5;
 }
 
-enum ColorOperation(810600036) {
-  with_alpha = 1;
-}
-
-struct ColorOperationExpression(810600037) {
-  operation: ColorOperation = 0;
-  color: TypedExpression = 1;
-  alpha: TypedExpression = 2;
-}
-
-enum Expression(810600038) {
-  literal: TypedValue = 1;
-  binding: BindingRef = 2;
-  field_access: FieldAccessExpression = 3;
-  interpolation: InterpolationExpression = 4;
-  comparison: ComparisonExpression = 5;
-  boolean_operation: BooleanExpression = 6;
-  arithmetic: ArithmeticExpression = 7;
+/// Closed expression language shared by producers, checkers and evaluators.
+/// Boolean and conditional branches evaluate only the needed branch. Collection bodies
+/// introduce lexical frames without modifying authored state.
+enum ExpressionNode(810600057) {
+  literal: DataValue = 1;
+  input: ExpressionInput = 2;
+  local: ExpressionLocal = 3;
+  field: ExpressionField = 4;
+  entry_projection: ExpressionEntryProjection = 5;
+  and: BinaryExpression = 6;
+  or: BinaryExpression = 7;
   conditional: ConditionalExpression = 8;
-  collection_map: CollectionMapExpression = 9;
-  collection_filter: CollectionFilterExpression = 10;
-  collection_quantifier: CollectionQuantifierExpression = 11;
-  collection_find: CollectionFindExpression = 12;
-  collection_count: CollectionCountExpression = 13;
-  collection_distinct: CollectionDistinctExpression = 14;
-  collection_sort: CollectionSortExpression = 15;
-  collection_group: CollectionGroupExpression = 16;
-  collection_reduce: CollectionReduceExpression = 17;
-  collection_fold: CollectionFoldExpression = 18;
-  collection_transform: CollectionTransformExpression = 19;
-  is_type: IsTypeExpression = 20;
-  conversion: ConversionExpression = 21;
-  string_operation: StringOperationExpression = 22;
-  collection_operation: CollectionOperationExpression = 23;
-  regex: RegexExpression = 24;
-  coalesce: CoalesceExpression = 25;
-  color_operation: ColorOperationExpression = 26;
+  or_else: OrElseExpression = 9;
+  text_unary: TextUnaryExpression = 10;
+  text_compare: TextCompareExpression = 11;
+  text_length: ExpressionNode = 12;
+  text_has_line_break: ExpressionNode = 13;
+  text_replace: TextReplaceExpression = 14;
+  text_split: TextSplitExpression = 15;
+  text_join: TextJoinExpression = 16;
+  text_substring: TextSubstringExpression = 17;
+  text_interpolate: TextInterpolateExpression = 18;
+  regex_test: RegexTestExpression = 19;
+  regex_capture: RegexCaptureExpression = 20;
+  regex_replace: RegexReplaceExpression = 21;
+  value_compare: ValueCompareExpression = 22;
+  is_null: ExpressionNode = 23;
+  link_target: ExpressionNode = 24;
+  boolean_not: ExpressionNode = 25;
+  number_arithmetic: NumberArithmeticExpression = 26;
+  number_compare: NumberCompareExpression = 27;
+  number_negate: ExpressionNode = 28;
+  number_round: NumberRoundExpression = 29;
+  number_format: NumberFormatExpression = 30;
+  duration_format: DurationFormatExpression = 31;
+  timestamp_format: TimestampFormatExpression = 32;
+  collection_size: ExpressionNode = 33;
+  collection_access: CollectionAccessExpression = 34;
+  collection_contains: CollectionContainsExpression = 35;
+  color_parse: ExpressionNode = 36;
+  color_with_alpha: ColorWithAlphaExpression = 37;
+  rule_unary: RuleUnaryExpression = 38;
+  rule_one_of: RuleOneOfExpression = 39;
+  rule_size_bound: RuleSizeBoundExpression = 40;
+  rule_size_range: RuleSizeRangeExpression = 41;
+  rule_numeric_bound: RuleNumericBoundExpression = 42;
+  rule_numeric_range: RuleNumericRangeExpression = 43;
+  rule_multiple_of: RuleMultipleOfExpression = 44;
+  rule_maximum_scale: RuleMaximumScaleExpression = 45;
+  rule_timestamp_bound: RuleTimestampBoundExpression = 46;
+  any: UnaryCollectionExpression = 47;
+  all: UnaryCollectionExpression = 48;
+  none: UnaryCollectionExpression = 49;
+  map: UnaryCollectionExpression = 50;
+  filter: UnaryCollectionExpression = 51;
+  find: UnaryCollectionExpression = 52;
+  find_last: UnaryCollectionExpression = 53;
+  count: UnaryCollectionExpression = 54;
+  distinct_by: UnaryCollectionExpression = 55;
+  group_by: UnaryCollectionExpression = 56;
+  flat_map: UnaryCollectionExpression = 57;
+  unique_by: UnaryCollectionExpression = 58;
+  reduce: UnaryCollectionExpression = 59;
+  sort_by: SortByExpression = 60;
+  sort_with: SortWithExpression = 61;
+  fold: FoldExpression = 62;
+  take: CollectionSliceExpression = 63;
+  skip: CollectionSliceExpression = 64;
+  reverse: ExpressionNode = 65;
+  distinct: ExpressionNode = 66;
+  query: ExpressionQuery = 67;
 }
 
-struct TypedExpression(810600039) {
-  result_type: TypeExpression = 0;
-  expression: Expression? = 1;
+/// Structural expression results retain nominal catalog identities only where they are meaningful.
+/// Null is a value; unavailable input is represented separately by ExpressionType.may_be_missing.
+enum ExpressionValueType(810600058) {
+  nominal: TypeUse = 1;
+  list: ExpressionType = 2;
+  map: ExpressionMappingType = 3;
+  entry: ExpressionMappingType = 4;
+  nullable: ExpressionType = 5;
+  null_value = 6;
+}
+
+struct ExpressionMappingType(810600059) {
+  key: ExpressionType = 0;
+  value: ExpressionType = 1;
+}
+
+struct ExpressionType(810600060) {
+  value: ExpressionValueType = 0;
+  may_be_missing: bool = 1;
+}
+
+/// Limits one evaluation by executed steps and inspected collection items.
+/// Exhaustion is an evaluation failure, not a successful partial expression result.
+struct EvaluationBudget(810600061) {
+  max_steps: int64 = 0;
+  max_collection_items: int64 = 1;
+}
+
+struct ExpressionBinding(810600062) {
+  id: ExpressionBindingId = 0;
+  location: ValueLocation = 1;
+}
+
+struct ExpressionBindings(810600063) {
+  values: [ExpressionBinding] = 0;
+}
+
+struct EvaluationDiagnostic(810600064) {
+  code: string = 0;
+  message: string = 1;
+  locations: [ValueLocation] = 2;
 }

@@ -1,5 +1,4 @@
-import "package:flutter/material.dart";
-import "package:flutter_animate/flutter_animate.dart";
+import "package:typewriter_panel/typewriter_panel.dart";
 
 /// Switches keyed content with the panel's standard elastic size and scale
 /// transition.
@@ -10,15 +9,15 @@ import "package:flutter_animate/flutter_animate.dart";
 class ElasticSwitcher extends StatelessWidget {
   const ElasticSwitcher({required this.child, super.key});
 
-  /// The widget to display. Provide a new child (with a differing identity or
-  /// key) to trigger the transition to it.
+  /// The widget to display. Change its runtime type or key to start a transition.
   final Widget? child;
 
   @override
   Widget build(BuildContext context) {
     final disableAnimation = MediaQuery.disableAnimationsOf(context);
-    final sizeDuraiton = disableAnimation ? Duration.zero : 1000.ms;
-    final scaleDuration = disableAnimation ? Duration.zero : 800.ms;
+    if (disableAnimation) return child ?? const SizedBox.shrink();
+    final sizeDuraiton = 1000.ms;
+    final scaleDuration = 800.ms;
 
     return AnimatedSize(
       duration: sizeDuraiton,

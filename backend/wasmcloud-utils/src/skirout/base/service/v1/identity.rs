@@ -26,28 +26,33 @@ pub struct IssueServiceIdentityRequest {
 
 impl IssueServiceIdentityRequest {
     pub fn default_ref() -> &'static IssueServiceIdentityRequest {
-        static D: std::sync::LazyLock<IssueServiceIdentityRequest> = std::sync::LazyLock::new(IssueServiceIdentityRequest::default);
+        static D: std::sync::LazyLock<IssueServiceIdentityRequest> =
+            std::sync::LazyLock::new(IssueServiceIdentityRequest::default);
         &D
     }
 }
 
 impl IssueServiceIdentityRequest {
-    fn _adapter() -> &'static crate::skir_client::internal::StructAdapter<IssueServiceIdentityRequest> {
-        static ADAPTER: std::sync::LazyLock<crate::skir_client::internal::StructAdapter<IssueServiceIdentityRequest>> =
-            std::sync::LazyLock::new(|| {
-                crate::skir_client::internal::StructAdapter::new(
-                    "service/v1/identity.skir",
-                    "IssueServiceIdentityRequest",
-                    "",
-                    |x: &IssueServiceIdentityRequest| &x._unrecognized,
-                    |x: &mut IssueServiceIdentityRequest, u| x._unrecognized = u,
-                )
-            });
+    fn _adapter()
+    -> &'static crate::skir_client::internal::StructAdapter<IssueServiceIdentityRequest> {
+        static ADAPTER: std::sync::LazyLock<
+            crate::skir_client::internal::StructAdapter<IssueServiceIdentityRequest>,
+        > = std::sync::LazyLock::new(|| {
+            crate::skir_client::internal::StructAdapter::new(
+                "service/v1/identity.skir",
+                "IssueServiceIdentityRequest",
+                "",
+                |x: &IssueServiceIdentityRequest| &x._unrecognized,
+                |x: &mut IssueServiceIdentityRequest, u| x._unrecognized = u,
+            )
+        });
         &*ADAPTER
     }
     pub fn serializer() -> crate::skir_client::Serializer<IssueServiceIdentityRequest> {
         initialize_module_serializers();
-        crate::skir_client::internal::struct_serializer_from_static(IssueServiceIdentityRequest::_adapter())
+        crate::skir_client::internal::struct_serializer_from_static(
+            IssueServiceIdentityRequest::_adapter(),
+        )
     }
 }
 
@@ -62,33 +67,40 @@ pub struct IssueServiceIdentityResponse_Success {
     pub username: String,
     pub token: String,
     /// Set this to None when you're creating a struct.
-    pub _unrecognized: Option<crate::skir_client::UnrecognizedFields<IssueServiceIdentityResponse_Success>>,
+    pub _unrecognized:
+        Option<crate::skir_client::UnrecognizedFields<IssueServiceIdentityResponse_Success>>,
 }
 
 impl IssueServiceIdentityResponse_Success {
     pub fn default_ref() -> &'static IssueServiceIdentityResponse_Success {
-        static D: std::sync::LazyLock<IssueServiceIdentityResponse_Success> = std::sync::LazyLock::new(IssueServiceIdentityResponse_Success::default);
+        static D: std::sync::LazyLock<IssueServiceIdentityResponse_Success> =
+            std::sync::LazyLock::new(IssueServiceIdentityResponse_Success::default);
         &D
     }
 }
 
 impl IssueServiceIdentityResponse_Success {
-    fn _adapter() -> &'static crate::skir_client::internal::StructAdapter<IssueServiceIdentityResponse_Success> {
-        static ADAPTER: std::sync::LazyLock<crate::skir_client::internal::StructAdapter<IssueServiceIdentityResponse_Success>> =
-            std::sync::LazyLock::new(|| {
-                crate::skir_client::internal::StructAdapter::new(
-                    "service/v1/identity.skir",
-                    "IssueServiceIdentityResponse.Success",
-                    "",
-                    |x: &IssueServiceIdentityResponse_Success| &x._unrecognized,
-                    |x: &mut IssueServiceIdentityResponse_Success, u| x._unrecognized = u,
-                )
-            });
+    fn _adapter()
+    -> &'static crate::skir_client::internal::StructAdapter<IssueServiceIdentityResponse_Success>
+    {
+        static ADAPTER: std::sync::LazyLock<
+            crate::skir_client::internal::StructAdapter<IssueServiceIdentityResponse_Success>,
+        > = std::sync::LazyLock::new(|| {
+            crate::skir_client::internal::StructAdapter::new(
+                "service/v1/identity.skir",
+                "IssueServiceIdentityResponse.Success",
+                "",
+                |x: &IssueServiceIdentityResponse_Success| &x._unrecognized,
+                |x: &mut IssueServiceIdentityResponse_Success, u| x._unrecognized = u,
+            )
+        });
         &*ADAPTER
     }
     pub fn serializer() -> crate::skir_client::Serializer<IssueServiceIdentityResponse_Success> {
         initialize_module_serializers();
-        crate::skir_client::internal::struct_serializer_from_static(IssueServiceIdentityResponse_Success::_adapter())
+        crate::skir_client::internal::struct_serializer_from_static(
+            IssueServiceIdentityResponse_Success::_adapter(),
+        )
     }
 }
 
@@ -99,33 +111,44 @@ impl IssueServiceIdentityResponse_Success {
 #[derive(Clone, Debug, PartialEq, Default)]
 pub struct IssueServiceIdentityResponse_MalformedRequestError {
     /// Set this to None when you're creating a struct.
-    pub _unrecognized: Option<crate::skir_client::UnrecognizedFields<IssueServiceIdentityResponse_MalformedRequestError>>,
+    pub _unrecognized: Option<
+        crate::skir_client::UnrecognizedFields<IssueServiceIdentityResponse_MalformedRequestError>,
+    >,
 }
 
 impl IssueServiceIdentityResponse_MalformedRequestError {
     pub fn default_ref() -> &'static IssueServiceIdentityResponse_MalformedRequestError {
-        static D: std::sync::LazyLock<IssueServiceIdentityResponse_MalformedRequestError> = std::sync::LazyLock::new(IssueServiceIdentityResponse_MalformedRequestError::default);
+        static D: std::sync::LazyLock<IssueServiceIdentityResponse_MalformedRequestError> =
+            std::sync::LazyLock::new(IssueServiceIdentityResponse_MalformedRequestError::default);
         &D
     }
 }
 
 impl IssueServiceIdentityResponse_MalformedRequestError {
-    fn _adapter() -> &'static crate::skir_client::internal::StructAdapter<IssueServiceIdentityResponse_MalformedRequestError> {
-        static ADAPTER: std::sync::LazyLock<crate::skir_client::internal::StructAdapter<IssueServiceIdentityResponse_MalformedRequestError>> =
-            std::sync::LazyLock::new(|| {
-                crate::skir_client::internal::StructAdapter::new(
-                    "service/v1/identity.skir",
-                    "IssueServiceIdentityResponse.MalformedRequestError",
-                    "",
-                    |x: &IssueServiceIdentityResponse_MalformedRequestError| &x._unrecognized,
-                    |x: &mut IssueServiceIdentityResponse_MalformedRequestError, u| x._unrecognized = u,
-                )
-            });
+    fn _adapter() -> &'static crate::skir_client::internal::StructAdapter<
+        IssueServiceIdentityResponse_MalformedRequestError,
+    > {
+        static ADAPTER: std::sync::LazyLock<
+            crate::skir_client::internal::StructAdapter<
+                IssueServiceIdentityResponse_MalformedRequestError,
+            >,
+        > = std::sync::LazyLock::new(|| {
+            crate::skir_client::internal::StructAdapter::new(
+                "service/v1/identity.skir",
+                "IssueServiceIdentityResponse.MalformedRequestError",
+                "",
+                |x: &IssueServiceIdentityResponse_MalformedRequestError| &x._unrecognized,
+                |x: &mut IssueServiceIdentityResponse_MalformedRequestError, u| x._unrecognized = u,
+            )
+        });
         &*ADAPTER
     }
-    pub fn serializer() -> crate::skir_client::Serializer<IssueServiceIdentityResponse_MalformedRequestError> {
+    pub fn serializer()
+    -> crate::skir_client::Serializer<IssueServiceIdentityResponse_MalformedRequestError> {
         initialize_module_serializers();
-        crate::skir_client::internal::struct_serializer_from_static(IssueServiceIdentityResponse_MalformedRequestError::_adapter())
+        crate::skir_client::internal::struct_serializer_from_static(
+            IssueServiceIdentityResponse_MalformedRequestError::_adapter(),
+        )
     }
 }
 
@@ -136,33 +159,44 @@ impl IssueServiceIdentityResponse_MalformedRequestError {
 #[derive(Clone, Debug, PartialEq, Default)]
 pub struct IssueServiceIdentityResponse_UnknownRoleError {
     /// Set this to None when you're creating a struct.
-    pub _unrecognized: Option<crate::skir_client::UnrecognizedFields<IssueServiceIdentityResponse_UnknownRoleError>>,
+    pub _unrecognized: Option<
+        crate::skir_client::UnrecognizedFields<IssueServiceIdentityResponse_UnknownRoleError>,
+    >,
 }
 
 impl IssueServiceIdentityResponse_UnknownRoleError {
     pub fn default_ref() -> &'static IssueServiceIdentityResponse_UnknownRoleError {
-        static D: std::sync::LazyLock<IssueServiceIdentityResponse_UnknownRoleError> = std::sync::LazyLock::new(IssueServiceIdentityResponse_UnknownRoleError::default);
+        static D: std::sync::LazyLock<IssueServiceIdentityResponse_UnknownRoleError> =
+            std::sync::LazyLock::new(IssueServiceIdentityResponse_UnknownRoleError::default);
         &D
     }
 }
 
 impl IssueServiceIdentityResponse_UnknownRoleError {
-    fn _adapter() -> &'static crate::skir_client::internal::StructAdapter<IssueServiceIdentityResponse_UnknownRoleError> {
-        static ADAPTER: std::sync::LazyLock<crate::skir_client::internal::StructAdapter<IssueServiceIdentityResponse_UnknownRoleError>> =
-            std::sync::LazyLock::new(|| {
-                crate::skir_client::internal::StructAdapter::new(
-                    "service/v1/identity.skir",
-                    "IssueServiceIdentityResponse.UnknownRoleError",
-                    "",
-                    |x: &IssueServiceIdentityResponse_UnknownRoleError| &x._unrecognized,
-                    |x: &mut IssueServiceIdentityResponse_UnknownRoleError, u| x._unrecognized = u,
-                )
-            });
+    fn _adapter() -> &'static crate::skir_client::internal::StructAdapter<
+        IssueServiceIdentityResponse_UnknownRoleError,
+    > {
+        static ADAPTER: std::sync::LazyLock<
+            crate::skir_client::internal::StructAdapter<
+                IssueServiceIdentityResponse_UnknownRoleError,
+            >,
+        > = std::sync::LazyLock::new(|| {
+            crate::skir_client::internal::StructAdapter::new(
+                "service/v1/identity.skir",
+                "IssueServiceIdentityResponse.UnknownRoleError",
+                "",
+                |x: &IssueServiceIdentityResponse_UnknownRoleError| &x._unrecognized,
+                |x: &mut IssueServiceIdentityResponse_UnknownRoleError, u| x._unrecognized = u,
+            )
+        });
         &*ADAPTER
     }
-    pub fn serializer() -> crate::skir_client::Serializer<IssueServiceIdentityResponse_UnknownRoleError> {
+    pub fn serializer()
+    -> crate::skir_client::Serializer<IssueServiceIdentityResponse_UnknownRoleError> {
         initialize_module_serializers();
-        crate::skir_client::internal::struct_serializer_from_static(IssueServiceIdentityResponse_UnknownRoleError::_adapter())
+        crate::skir_client::internal::struct_serializer_from_static(
+            IssueServiceIdentityResponse_UnknownRoleError::_adapter(),
+        )
     }
 }
 
@@ -173,33 +207,50 @@ impl IssueServiceIdentityResponse_UnknownRoleError {
 #[derive(Clone, Debug, PartialEq, Default)]
 pub struct IssueServiceIdentityResponse_RoleUnknownPropertyError {
     /// Set this to None when you're creating a struct.
-    pub _unrecognized: Option<crate::skir_client::UnrecognizedFields<IssueServiceIdentityResponse_RoleUnknownPropertyError>>,
+    pub _unrecognized: Option<
+        crate::skir_client::UnrecognizedFields<
+            IssueServiceIdentityResponse_RoleUnknownPropertyError,
+        >,
+    >,
 }
 
 impl IssueServiceIdentityResponse_RoleUnknownPropertyError {
     pub fn default_ref() -> &'static IssueServiceIdentityResponse_RoleUnknownPropertyError {
-        static D: std::sync::LazyLock<IssueServiceIdentityResponse_RoleUnknownPropertyError> = std::sync::LazyLock::new(IssueServiceIdentityResponse_RoleUnknownPropertyError::default);
+        static D: std::sync::LazyLock<IssueServiceIdentityResponse_RoleUnknownPropertyError> =
+            std::sync::LazyLock::new(
+                IssueServiceIdentityResponse_RoleUnknownPropertyError::default,
+            );
         &D
     }
 }
 
 impl IssueServiceIdentityResponse_RoleUnknownPropertyError {
-    fn _adapter() -> &'static crate::skir_client::internal::StructAdapter<IssueServiceIdentityResponse_RoleUnknownPropertyError> {
-        static ADAPTER: std::sync::LazyLock<crate::skir_client::internal::StructAdapter<IssueServiceIdentityResponse_RoleUnknownPropertyError>> =
-            std::sync::LazyLock::new(|| {
-                crate::skir_client::internal::StructAdapter::new(
-                    "service/v1/identity.skir",
-                    "IssueServiceIdentityResponse.RoleUnknownPropertyError",
-                    "",
-                    |x: &IssueServiceIdentityResponse_RoleUnknownPropertyError| &x._unrecognized,
-                    |x: &mut IssueServiceIdentityResponse_RoleUnknownPropertyError, u| x._unrecognized = u,
-                )
-            });
+    fn _adapter() -> &'static crate::skir_client::internal::StructAdapter<
+        IssueServiceIdentityResponse_RoleUnknownPropertyError,
+    > {
+        static ADAPTER: std::sync::LazyLock<
+            crate::skir_client::internal::StructAdapter<
+                IssueServiceIdentityResponse_RoleUnknownPropertyError,
+            >,
+        > = std::sync::LazyLock::new(|| {
+            crate::skir_client::internal::StructAdapter::new(
+                "service/v1/identity.skir",
+                "IssueServiceIdentityResponse.RoleUnknownPropertyError",
+                "",
+                |x: &IssueServiceIdentityResponse_RoleUnknownPropertyError| &x._unrecognized,
+                |x: &mut IssueServiceIdentityResponse_RoleUnknownPropertyError, u| {
+                    x._unrecognized = u
+                },
+            )
+        });
         &*ADAPTER
     }
-    pub fn serializer() -> crate::skir_client::Serializer<IssueServiceIdentityResponse_RoleUnknownPropertyError> {
+    pub fn serializer()
+    -> crate::skir_client::Serializer<IssueServiceIdentityResponse_RoleUnknownPropertyError> {
         initialize_module_serializers();
-        crate::skir_client::internal::struct_serializer_from_static(IssueServiceIdentityResponse_RoleUnknownPropertyError::_adapter())
+        crate::skir_client::internal::struct_serializer_from_static(
+            IssueServiceIdentityResponse_RoleUnknownPropertyError::_adapter(),
+        )
     }
 }
 
@@ -210,33 +261,44 @@ impl IssueServiceIdentityResponse_RoleUnknownPropertyError {
 #[derive(Clone, Debug, PartialEq, Default)]
 pub struct IssueServiceIdentityResponse_RoleTypeInvalidError {
     /// Set this to None when you're creating a struct.
-    pub _unrecognized: Option<crate::skir_client::UnrecognizedFields<IssueServiceIdentityResponse_RoleTypeInvalidError>>,
+    pub _unrecognized: Option<
+        crate::skir_client::UnrecognizedFields<IssueServiceIdentityResponse_RoleTypeInvalidError>,
+    >,
 }
 
 impl IssueServiceIdentityResponse_RoleTypeInvalidError {
     pub fn default_ref() -> &'static IssueServiceIdentityResponse_RoleTypeInvalidError {
-        static D: std::sync::LazyLock<IssueServiceIdentityResponse_RoleTypeInvalidError> = std::sync::LazyLock::new(IssueServiceIdentityResponse_RoleTypeInvalidError::default);
+        static D: std::sync::LazyLock<IssueServiceIdentityResponse_RoleTypeInvalidError> =
+            std::sync::LazyLock::new(IssueServiceIdentityResponse_RoleTypeInvalidError::default);
         &D
     }
 }
 
 impl IssueServiceIdentityResponse_RoleTypeInvalidError {
-    fn _adapter() -> &'static crate::skir_client::internal::StructAdapter<IssueServiceIdentityResponse_RoleTypeInvalidError> {
-        static ADAPTER: std::sync::LazyLock<crate::skir_client::internal::StructAdapter<IssueServiceIdentityResponse_RoleTypeInvalidError>> =
-            std::sync::LazyLock::new(|| {
-                crate::skir_client::internal::StructAdapter::new(
-                    "service/v1/identity.skir",
-                    "IssueServiceIdentityResponse.RoleTypeInvalidError",
-                    "",
-                    |x: &IssueServiceIdentityResponse_RoleTypeInvalidError| &x._unrecognized,
-                    |x: &mut IssueServiceIdentityResponse_RoleTypeInvalidError, u| x._unrecognized = u,
-                )
-            });
+    fn _adapter() -> &'static crate::skir_client::internal::StructAdapter<
+        IssueServiceIdentityResponse_RoleTypeInvalidError,
+    > {
+        static ADAPTER: std::sync::LazyLock<
+            crate::skir_client::internal::StructAdapter<
+                IssueServiceIdentityResponse_RoleTypeInvalidError,
+            >,
+        > = std::sync::LazyLock::new(|| {
+            crate::skir_client::internal::StructAdapter::new(
+                "service/v1/identity.skir",
+                "IssueServiceIdentityResponse.RoleTypeInvalidError",
+                "",
+                |x: &IssueServiceIdentityResponse_RoleTypeInvalidError| &x._unrecognized,
+                |x: &mut IssueServiceIdentityResponse_RoleTypeInvalidError, u| x._unrecognized = u,
+            )
+        });
         &*ADAPTER
     }
-    pub fn serializer() -> crate::skir_client::Serializer<IssueServiceIdentityResponse_RoleTypeInvalidError> {
+    pub fn serializer()
+    -> crate::skir_client::Serializer<IssueServiceIdentityResponse_RoleTypeInvalidError> {
         initialize_module_serializers();
-        crate::skir_client::internal::struct_serializer_from_static(IssueServiceIdentityResponse_RoleTypeInvalidError::_adapter())
+        crate::skir_client::internal::struct_serializer_from_static(
+            IssueServiceIdentityResponse_RoleTypeInvalidError::_adapter(),
+        )
     }
 }
 
@@ -247,33 +309,48 @@ impl IssueServiceIdentityResponse_RoleTypeInvalidError {
 #[derive(Clone, Debug, PartialEq, Default)]
 pub struct IssueServiceIdentityResponse_RoleVersionInvalidError {
     /// Set this to None when you're creating a struct.
-    pub _unrecognized: Option<crate::skir_client::UnrecognizedFields<IssueServiceIdentityResponse_RoleVersionInvalidError>>,
+    pub _unrecognized: Option<
+        crate::skir_client::UnrecognizedFields<
+            IssueServiceIdentityResponse_RoleVersionInvalidError,
+        >,
+    >,
 }
 
 impl IssueServiceIdentityResponse_RoleVersionInvalidError {
     pub fn default_ref() -> &'static IssueServiceIdentityResponse_RoleVersionInvalidError {
-        static D: std::sync::LazyLock<IssueServiceIdentityResponse_RoleVersionInvalidError> = std::sync::LazyLock::new(IssueServiceIdentityResponse_RoleVersionInvalidError::default);
+        static D: std::sync::LazyLock<IssueServiceIdentityResponse_RoleVersionInvalidError> =
+            std::sync::LazyLock::new(IssueServiceIdentityResponse_RoleVersionInvalidError::default);
         &D
     }
 }
 
 impl IssueServiceIdentityResponse_RoleVersionInvalidError {
-    fn _adapter() -> &'static crate::skir_client::internal::StructAdapter<IssueServiceIdentityResponse_RoleVersionInvalidError> {
-        static ADAPTER: std::sync::LazyLock<crate::skir_client::internal::StructAdapter<IssueServiceIdentityResponse_RoleVersionInvalidError>> =
-            std::sync::LazyLock::new(|| {
-                crate::skir_client::internal::StructAdapter::new(
-                    "service/v1/identity.skir",
-                    "IssueServiceIdentityResponse.RoleVersionInvalidError",
-                    "",
-                    |x: &IssueServiceIdentityResponse_RoleVersionInvalidError| &x._unrecognized,
-                    |x: &mut IssueServiceIdentityResponse_RoleVersionInvalidError, u| x._unrecognized = u,
-                )
-            });
+    fn _adapter() -> &'static crate::skir_client::internal::StructAdapter<
+        IssueServiceIdentityResponse_RoleVersionInvalidError,
+    > {
+        static ADAPTER: std::sync::LazyLock<
+            crate::skir_client::internal::StructAdapter<
+                IssueServiceIdentityResponse_RoleVersionInvalidError,
+            >,
+        > = std::sync::LazyLock::new(|| {
+            crate::skir_client::internal::StructAdapter::new(
+                "service/v1/identity.skir",
+                "IssueServiceIdentityResponse.RoleVersionInvalidError",
+                "",
+                |x: &IssueServiceIdentityResponse_RoleVersionInvalidError| &x._unrecognized,
+                |x: &mut IssueServiceIdentityResponse_RoleVersionInvalidError, u| {
+                    x._unrecognized = u
+                },
+            )
+        });
         &*ADAPTER
     }
-    pub fn serializer() -> crate::skir_client::Serializer<IssueServiceIdentityResponse_RoleVersionInvalidError> {
+    pub fn serializer()
+    -> crate::skir_client::Serializer<IssueServiceIdentityResponse_RoleVersionInvalidError> {
         initialize_module_serializers();
-        crate::skir_client::internal::struct_serializer_from_static(IssueServiceIdentityResponse_RoleVersionInvalidError::_adapter())
+        crate::skir_client::internal::struct_serializer_from_static(
+            IssueServiceIdentityResponse_RoleVersionInvalidError::_adapter(),
+        )
     }
 }
 
@@ -284,33 +361,51 @@ impl IssueServiceIdentityResponse_RoleVersionInvalidError {
 #[derive(Clone, Debug, PartialEq, Default)]
 pub struct IssueServiceIdentityResponse_CustomRoleNameRequiredError {
     /// Set this to None when you're creating a struct.
-    pub _unrecognized: Option<crate::skir_client::UnrecognizedFields<IssueServiceIdentityResponse_CustomRoleNameRequiredError>>,
+    pub _unrecognized: Option<
+        crate::skir_client::UnrecognizedFields<
+            IssueServiceIdentityResponse_CustomRoleNameRequiredError,
+        >,
+    >,
 }
 
 impl IssueServiceIdentityResponse_CustomRoleNameRequiredError {
     pub fn default_ref() -> &'static IssueServiceIdentityResponse_CustomRoleNameRequiredError {
-        static D: std::sync::LazyLock<IssueServiceIdentityResponse_CustomRoleNameRequiredError> = std::sync::LazyLock::new(IssueServiceIdentityResponse_CustomRoleNameRequiredError::default);
+        static D: std::sync::LazyLock<IssueServiceIdentityResponse_CustomRoleNameRequiredError> =
+            std::sync::LazyLock::new(
+                IssueServiceIdentityResponse_CustomRoleNameRequiredError::default,
+            );
         &D
     }
 }
 
 impl IssueServiceIdentityResponse_CustomRoleNameRequiredError {
-    fn _adapter() -> &'static crate::skir_client::internal::StructAdapter<IssueServiceIdentityResponse_CustomRoleNameRequiredError> {
-        static ADAPTER: std::sync::LazyLock<crate::skir_client::internal::StructAdapter<IssueServiceIdentityResponse_CustomRoleNameRequiredError>> =
-            std::sync::LazyLock::new(|| {
-                crate::skir_client::internal::StructAdapter::new(
-                    "service/v1/identity.skir",
-                    "IssueServiceIdentityResponse.CustomRoleNameRequiredError",
-                    "",
-                    |x: &IssueServiceIdentityResponse_CustomRoleNameRequiredError| &x._unrecognized,
-                    |x: &mut IssueServiceIdentityResponse_CustomRoleNameRequiredError, u| x._unrecognized = u,
-                )
-            });
+    fn _adapter() -> &'static crate::skir_client::internal::StructAdapter<
+        IssueServiceIdentityResponse_CustomRoleNameRequiredError,
+    > {
+        static ADAPTER: std::sync::LazyLock<
+            crate::skir_client::internal::StructAdapter<
+                IssueServiceIdentityResponse_CustomRoleNameRequiredError,
+            >,
+        > = std::sync::LazyLock::new(|| {
+            crate::skir_client::internal::StructAdapter::new(
+                "service/v1/identity.skir",
+                "IssueServiceIdentityResponse.CustomRoleNameRequiredError",
+                "",
+                |x: &IssueServiceIdentityResponse_CustomRoleNameRequiredError| &x._unrecognized,
+                |x: &mut IssueServiceIdentityResponse_CustomRoleNameRequiredError, u| {
+                    x._unrecognized = u
+                },
+            )
+        });
         &*ADAPTER
     }
-    pub fn serializer() -> crate::skir_client::Serializer<IssueServiceIdentityResponse_CustomRoleNameRequiredError> {
+    pub fn serializer()
+    -> crate::skir_client::Serializer<IssueServiceIdentityResponse_CustomRoleNameRequiredError>
+    {
         initialize_module_serializers();
-        crate::skir_client::internal::struct_serializer_from_static(IssueServiceIdentityResponse_CustomRoleNameRequiredError::_adapter())
+        crate::skir_client::internal::struct_serializer_from_static(
+            IssueServiceIdentityResponse_CustomRoleNameRequiredError::_adapter(),
+        )
     }
 }
 
@@ -321,33 +416,50 @@ impl IssueServiceIdentityResponse_CustomRoleNameRequiredError {
 #[derive(Clone, Debug, PartialEq, Default)]
 pub struct IssueServiceIdentityResponse_CustomRoleNameInvalidError {
     /// Set this to None when you're creating a struct.
-    pub _unrecognized: Option<crate::skir_client::UnrecognizedFields<IssueServiceIdentityResponse_CustomRoleNameInvalidError>>,
+    pub _unrecognized: Option<
+        crate::skir_client::UnrecognizedFields<
+            IssueServiceIdentityResponse_CustomRoleNameInvalidError,
+        >,
+    >,
 }
 
 impl IssueServiceIdentityResponse_CustomRoleNameInvalidError {
     pub fn default_ref() -> &'static IssueServiceIdentityResponse_CustomRoleNameInvalidError {
-        static D: std::sync::LazyLock<IssueServiceIdentityResponse_CustomRoleNameInvalidError> = std::sync::LazyLock::new(IssueServiceIdentityResponse_CustomRoleNameInvalidError::default);
+        static D: std::sync::LazyLock<IssueServiceIdentityResponse_CustomRoleNameInvalidError> =
+            std::sync::LazyLock::new(
+                IssueServiceIdentityResponse_CustomRoleNameInvalidError::default,
+            );
         &D
     }
 }
 
 impl IssueServiceIdentityResponse_CustomRoleNameInvalidError {
-    fn _adapter() -> &'static crate::skir_client::internal::StructAdapter<IssueServiceIdentityResponse_CustomRoleNameInvalidError> {
-        static ADAPTER: std::sync::LazyLock<crate::skir_client::internal::StructAdapter<IssueServiceIdentityResponse_CustomRoleNameInvalidError>> =
-            std::sync::LazyLock::new(|| {
-                crate::skir_client::internal::StructAdapter::new(
-                    "service/v1/identity.skir",
-                    "IssueServiceIdentityResponse.CustomRoleNameInvalidError",
-                    "",
-                    |x: &IssueServiceIdentityResponse_CustomRoleNameInvalidError| &x._unrecognized,
-                    |x: &mut IssueServiceIdentityResponse_CustomRoleNameInvalidError, u| x._unrecognized = u,
-                )
-            });
+    fn _adapter() -> &'static crate::skir_client::internal::StructAdapter<
+        IssueServiceIdentityResponse_CustomRoleNameInvalidError,
+    > {
+        static ADAPTER: std::sync::LazyLock<
+            crate::skir_client::internal::StructAdapter<
+                IssueServiceIdentityResponse_CustomRoleNameInvalidError,
+            >,
+        > = std::sync::LazyLock::new(|| {
+            crate::skir_client::internal::StructAdapter::new(
+                "service/v1/identity.skir",
+                "IssueServiceIdentityResponse.CustomRoleNameInvalidError",
+                "",
+                |x: &IssueServiceIdentityResponse_CustomRoleNameInvalidError| &x._unrecognized,
+                |x: &mut IssueServiceIdentityResponse_CustomRoleNameInvalidError, u| {
+                    x._unrecognized = u
+                },
+            )
+        });
         &*ADAPTER
     }
-    pub fn serializer() -> crate::skir_client::Serializer<IssueServiceIdentityResponse_CustomRoleNameInvalidError> {
+    pub fn serializer()
+    -> crate::skir_client::Serializer<IssueServiceIdentityResponse_CustomRoleNameInvalidError> {
         initialize_module_serializers();
-        crate::skir_client::internal::struct_serializer_from_static(IssueServiceIdentityResponse_CustomRoleNameInvalidError::_adapter())
+        crate::skir_client::internal::struct_serializer_from_static(
+            IssueServiceIdentityResponse_CustomRoleNameInvalidError::_adapter(),
+        )
     }
 }
 
@@ -358,33 +470,51 @@ impl IssueServiceIdentityResponse_CustomRoleNameInvalidError {
 #[derive(Clone, Debug, PartialEq, Default)]
 pub struct IssueServiceIdentityResponse_BuiltinRoleNameForbiddenError {
     /// Set this to None when you're creating a struct.
-    pub _unrecognized: Option<crate::skir_client::UnrecognizedFields<IssueServiceIdentityResponse_BuiltinRoleNameForbiddenError>>,
+    pub _unrecognized: Option<
+        crate::skir_client::UnrecognizedFields<
+            IssueServiceIdentityResponse_BuiltinRoleNameForbiddenError,
+        >,
+    >,
 }
 
 impl IssueServiceIdentityResponse_BuiltinRoleNameForbiddenError {
     pub fn default_ref() -> &'static IssueServiceIdentityResponse_BuiltinRoleNameForbiddenError {
-        static D: std::sync::LazyLock<IssueServiceIdentityResponse_BuiltinRoleNameForbiddenError> = std::sync::LazyLock::new(IssueServiceIdentityResponse_BuiltinRoleNameForbiddenError::default);
+        static D: std::sync::LazyLock<IssueServiceIdentityResponse_BuiltinRoleNameForbiddenError> =
+            std::sync::LazyLock::new(
+                IssueServiceIdentityResponse_BuiltinRoleNameForbiddenError::default,
+            );
         &D
     }
 }
 
 impl IssueServiceIdentityResponse_BuiltinRoleNameForbiddenError {
-    fn _adapter() -> &'static crate::skir_client::internal::StructAdapter<IssueServiceIdentityResponse_BuiltinRoleNameForbiddenError> {
-        static ADAPTER: std::sync::LazyLock<crate::skir_client::internal::StructAdapter<IssueServiceIdentityResponse_BuiltinRoleNameForbiddenError>> =
-            std::sync::LazyLock::new(|| {
-                crate::skir_client::internal::StructAdapter::new(
-                    "service/v1/identity.skir",
-                    "IssueServiceIdentityResponse.BuiltinRoleNameForbiddenError",
-                    "",
-                    |x: &IssueServiceIdentityResponse_BuiltinRoleNameForbiddenError| &x._unrecognized,
-                    |x: &mut IssueServiceIdentityResponse_BuiltinRoleNameForbiddenError, u| x._unrecognized = u,
-                )
-            });
+    fn _adapter() -> &'static crate::skir_client::internal::StructAdapter<
+        IssueServiceIdentityResponse_BuiltinRoleNameForbiddenError,
+    > {
+        static ADAPTER: std::sync::LazyLock<
+            crate::skir_client::internal::StructAdapter<
+                IssueServiceIdentityResponse_BuiltinRoleNameForbiddenError,
+            >,
+        > = std::sync::LazyLock::new(|| {
+            crate::skir_client::internal::StructAdapter::new(
+                "service/v1/identity.skir",
+                "IssueServiceIdentityResponse.BuiltinRoleNameForbiddenError",
+                "",
+                |x: &IssueServiceIdentityResponse_BuiltinRoleNameForbiddenError| &x._unrecognized,
+                |x: &mut IssueServiceIdentityResponse_BuiltinRoleNameForbiddenError, u| {
+                    x._unrecognized = u
+                },
+            )
+        });
         &*ADAPTER
     }
-    pub fn serializer() -> crate::skir_client::Serializer<IssueServiceIdentityResponse_BuiltinRoleNameForbiddenError> {
+    pub fn serializer()
+    -> crate::skir_client::Serializer<IssueServiceIdentityResponse_BuiltinRoleNameForbiddenError>
+    {
         initialize_module_serializers();
-        crate::skir_client::internal::struct_serializer_from_static(IssueServiceIdentityResponse_BuiltinRoleNameForbiddenError::_adapter())
+        crate::skir_client::internal::struct_serializer_from_static(
+            IssueServiceIdentityResponse_BuiltinRoleNameForbiddenError::_adapter(),
+        )
     }
 }
 
@@ -395,33 +525,54 @@ impl IssueServiceIdentityResponse_BuiltinRoleNameForbiddenError {
 #[derive(Clone, Debug, PartialEq, Default)]
 pub struct IssueServiceIdentityResponse_IdentityProviderUnavailableError {
     /// Set this to None when you're creating a struct.
-    pub _unrecognized: Option<crate::skir_client::UnrecognizedFields<IssueServiceIdentityResponse_IdentityProviderUnavailableError>>,
+    pub _unrecognized: Option<
+        crate::skir_client::UnrecognizedFields<
+            IssueServiceIdentityResponse_IdentityProviderUnavailableError,
+        >,
+    >,
 }
 
 impl IssueServiceIdentityResponse_IdentityProviderUnavailableError {
     pub fn default_ref() -> &'static IssueServiceIdentityResponse_IdentityProviderUnavailableError {
-        static D: std::sync::LazyLock<IssueServiceIdentityResponse_IdentityProviderUnavailableError> = std::sync::LazyLock::new(IssueServiceIdentityResponse_IdentityProviderUnavailableError::default);
+        static D: std::sync::LazyLock<
+            IssueServiceIdentityResponse_IdentityProviderUnavailableError,
+        > = std::sync::LazyLock::new(
+            IssueServiceIdentityResponse_IdentityProviderUnavailableError::default,
+        );
         &D
     }
 }
 
 impl IssueServiceIdentityResponse_IdentityProviderUnavailableError {
-    fn _adapter() -> &'static crate::skir_client::internal::StructAdapter<IssueServiceIdentityResponse_IdentityProviderUnavailableError> {
-        static ADAPTER: std::sync::LazyLock<crate::skir_client::internal::StructAdapter<IssueServiceIdentityResponse_IdentityProviderUnavailableError>> =
-            std::sync::LazyLock::new(|| {
-                crate::skir_client::internal::StructAdapter::new(
-                    "service/v1/identity.skir",
-                    "IssueServiceIdentityResponse.IdentityProviderUnavailableError",
-                    "",
-                    |x: &IssueServiceIdentityResponse_IdentityProviderUnavailableError| &x._unrecognized,
-                    |x: &mut IssueServiceIdentityResponse_IdentityProviderUnavailableError, u| x._unrecognized = u,
-                )
-            });
+    fn _adapter() -> &'static crate::skir_client::internal::StructAdapter<
+        IssueServiceIdentityResponse_IdentityProviderUnavailableError,
+    > {
+        static ADAPTER: std::sync::LazyLock<
+            crate::skir_client::internal::StructAdapter<
+                IssueServiceIdentityResponse_IdentityProviderUnavailableError,
+            >,
+        > = std::sync::LazyLock::new(|| {
+            crate::skir_client::internal::StructAdapter::new(
+                "service/v1/identity.skir",
+                "IssueServiceIdentityResponse.IdentityProviderUnavailableError",
+                "",
+                |x: &IssueServiceIdentityResponse_IdentityProviderUnavailableError| {
+                    &x._unrecognized
+                },
+                |x: &mut IssueServiceIdentityResponse_IdentityProviderUnavailableError, u| {
+                    x._unrecognized = u
+                },
+            )
+        });
         &*ADAPTER
     }
-    pub fn serializer() -> crate::skir_client::Serializer<IssueServiceIdentityResponse_IdentityProviderUnavailableError> {
+    pub fn serializer()
+    -> crate::skir_client::Serializer<IssueServiceIdentityResponse_IdentityProviderUnavailableError>
+    {
         initialize_module_serializers();
-        crate::skir_client::internal::struct_serializer_from_static(IssueServiceIdentityResponse_IdentityProviderUnavailableError::_adapter())
+        crate::skir_client::internal::struct_serializer_from_static(
+            IssueServiceIdentityResponse_IdentityProviderUnavailableError::_adapter(),
+        )
     }
 }
 
@@ -442,7 +593,9 @@ pub enum IssueServiceIdentityResponse {
     CustomRoleNameRequiredError(Box<IssueServiceIdentityResponse_CustomRoleNameRequiredError>),
     CustomRoleNameInvalidError(Box<IssueServiceIdentityResponse_CustomRoleNameInvalidError>),
     BuiltinRoleNameForbiddenError(Box<IssueServiceIdentityResponse_BuiltinRoleNameForbiddenError>),
-    IdentityProviderUnavailableError(Box<IssueServiceIdentityResponse_IdentityProviderUnavailableError>),
+    IdentityProviderUnavailableError(
+        Box<IssueServiceIdentityResponse_IdentityProviderUnavailableError>,
+    ),
 }
 
 impl Default for IssueServiceIdentityResponse {
@@ -452,36 +605,43 @@ impl Default for IssueServiceIdentityResponse {
 }
 
 impl IssueServiceIdentityResponse {
-    fn _adapter() -> &'static crate::skir_client::internal::EnumAdapter<IssueServiceIdentityResponse> {
-        static ADAPTER: std::sync::LazyLock<crate::skir_client::internal::EnumAdapter<IssueServiceIdentityResponse>> =
-            std::sync::LazyLock::new(|| {
-                crate::skir_client::internal::EnumAdapter::new(
-                    |x: &IssueServiceIdentityResponse| match x {
-                        IssueServiceIdentityResponse::Unknown(_) => 0,
-                        IssueServiceIdentityResponse::InternalError(_) => 1,
-                        IssueServiceIdentityResponse::Success(_) => 2,
-                        IssueServiceIdentityResponse::MalformedRequestError(_) => 3,
-                        IssueServiceIdentityResponse::UnknownRoleError(_) => 4,
-                        IssueServiceIdentityResponse::RoleUnknownPropertyError(_) => 5,
-                        IssueServiceIdentityResponse::RoleTypeInvalidError(_) => 6,
-                        IssueServiceIdentityResponse::RoleVersionInvalidError(_) => 7,
-                        IssueServiceIdentityResponse::CustomRoleNameRequiredError(_) => 8,
-                        IssueServiceIdentityResponse::CustomRoleNameInvalidError(_) => 9,
-                        IssueServiceIdentityResponse::BuiltinRoleNameForbiddenError(_) => 10,
-                        IssueServiceIdentityResponse::IdentityProviderUnavailableError(_) => 11,
-                    },
-                    |u| IssueServiceIdentityResponse::Unknown(Some(u)),
-                    |x: &IssueServiceIdentityResponse| match x { IssueServiceIdentityResponse::Unknown(Some(u)) => Some(u.as_ref()), _ => None },
-                    "service/v1/identity.skir",
-                    "IssueServiceIdentityResponse",
-                    "",
-                )
-            });
+    fn _adapter() -> &'static crate::skir_client::internal::EnumAdapter<IssueServiceIdentityResponse>
+    {
+        static ADAPTER: std::sync::LazyLock<
+            crate::skir_client::internal::EnumAdapter<IssueServiceIdentityResponse>,
+        > = std::sync::LazyLock::new(|| {
+            crate::skir_client::internal::EnumAdapter::new(
+                |x: &IssueServiceIdentityResponse| match x {
+                    IssueServiceIdentityResponse::Unknown(_) => 0,
+                    IssueServiceIdentityResponse::InternalError(_) => 1,
+                    IssueServiceIdentityResponse::Success(_) => 2,
+                    IssueServiceIdentityResponse::MalformedRequestError(_) => 3,
+                    IssueServiceIdentityResponse::UnknownRoleError(_) => 4,
+                    IssueServiceIdentityResponse::RoleUnknownPropertyError(_) => 5,
+                    IssueServiceIdentityResponse::RoleTypeInvalidError(_) => 6,
+                    IssueServiceIdentityResponse::RoleVersionInvalidError(_) => 7,
+                    IssueServiceIdentityResponse::CustomRoleNameRequiredError(_) => 8,
+                    IssueServiceIdentityResponse::CustomRoleNameInvalidError(_) => 9,
+                    IssueServiceIdentityResponse::BuiltinRoleNameForbiddenError(_) => 10,
+                    IssueServiceIdentityResponse::IdentityProviderUnavailableError(_) => 11,
+                },
+                |u| IssueServiceIdentityResponse::Unknown(Some(u)),
+                |x: &IssueServiceIdentityResponse| match x {
+                    IssueServiceIdentityResponse::Unknown(Some(u)) => Some(u.as_ref()),
+                    _ => None,
+                },
+                "service/v1/identity.skir",
+                "IssueServiceIdentityResponse",
+                "",
+            )
+        });
         &*ADAPTER
     }
     pub fn serializer() -> crate::skir_client::Serializer<IssueServiceIdentityResponse> {
         initialize_module_serializers();
-        crate::skir_client::internal::enum_serializer_from_static(IssueServiceIdentityResponse::_adapter())
+        crate::skir_client::internal::enum_serializer_from_static(
+            IssueServiceIdentityResponse::_adapter(),
+        )
     }
 }
 
@@ -490,73 +650,277 @@ impl IssueServiceIdentityResponse {
 // ==============================================================================
 
 fn initialize_module_serializers() {
-    static INIT: std::sync::LazyLock<()> =
-        std::sync::LazyLock::new(|| {
-            unsafe {
-                let a: *mut crate::skir_client::internal::StructAdapter<IssueServiceIdentityRequest> = IssueServiceIdentityRequest::_adapter() as *const _ as *mut _;
-                (*a).add_field("role", 0, crate::skirout::base::service::v1::service::ServiceRole::serializer(), "", |x: &IssueServiceIdentityRequest| &x.role, |x: &mut IssueServiceIdentityRequest, v| x.role = v);
-                (*a).finalize();
-            }
-            unsafe {
-                let a: *mut crate::skir_client::internal::StructAdapter<IssueServiceIdentityResponse_Success> = IssueServiceIdentityResponse_Success::_adapter() as *const _ as *mut _;
-                (*a).add_field("service_id", 0, crate::skir_client::Serializer::string(), "", |x: &IssueServiceIdentityResponse_Success| &x.service_id, |x: &mut IssueServiceIdentityResponse_Success, v| x.service_id = v);
-                (*a).add_field("display_name", 1, crate::skir_client::Serializer::string(), "", |x: &IssueServiceIdentityResponse_Success| &x.display_name, |x: &mut IssueServiceIdentityResponse_Success, v| x.display_name = v);
-                (*a).add_field("username", 2, crate::skir_client::Serializer::string(), "", |x: &IssueServiceIdentityResponse_Success| &x.username, |x: &mut IssueServiceIdentityResponse_Success, v| x.username = v);
-                (*a).add_field("token", 3, crate::skir_client::Serializer::string(), "", |x: &IssueServiceIdentityResponse_Success| &x.token, |x: &mut IssueServiceIdentityResponse_Success, v| x.token = v);
-                (*a).finalize();
-            }
-            unsafe {
-                let a: *mut crate::skir_client::internal::StructAdapter<IssueServiceIdentityResponse_MalformedRequestError> = IssueServiceIdentityResponse_MalformedRequestError::_adapter() as *const _ as *mut _;
-                (*a).finalize();
-            }
-            unsafe {
-                let a: *mut crate::skir_client::internal::StructAdapter<IssueServiceIdentityResponse_UnknownRoleError> = IssueServiceIdentityResponse_UnknownRoleError::_adapter() as *const _ as *mut _;
-                (*a).finalize();
-            }
-            unsafe {
-                let a: *mut crate::skir_client::internal::StructAdapter<IssueServiceIdentityResponse_RoleUnknownPropertyError> = IssueServiceIdentityResponse_RoleUnknownPropertyError::_adapter() as *const _ as *mut _;
-                (*a).finalize();
-            }
-            unsafe {
-                let a: *mut crate::skir_client::internal::StructAdapter<IssueServiceIdentityResponse_RoleTypeInvalidError> = IssueServiceIdentityResponse_RoleTypeInvalidError::_adapter() as *const _ as *mut _;
-                (*a).finalize();
-            }
-            unsafe {
-                let a: *mut crate::skir_client::internal::StructAdapter<IssueServiceIdentityResponse_RoleVersionInvalidError> = IssueServiceIdentityResponse_RoleVersionInvalidError::_adapter() as *const _ as *mut _;
-                (*a).finalize();
-            }
-            unsafe {
-                let a: *mut crate::skir_client::internal::StructAdapter<IssueServiceIdentityResponse_CustomRoleNameRequiredError> = IssueServiceIdentityResponse_CustomRoleNameRequiredError::_adapter() as *const _ as *mut _;
-                (*a).finalize();
-            }
-            unsafe {
-                let a: *mut crate::skir_client::internal::StructAdapter<IssueServiceIdentityResponse_CustomRoleNameInvalidError> = IssueServiceIdentityResponse_CustomRoleNameInvalidError::_adapter() as *const _ as *mut _;
-                (*a).finalize();
-            }
-            unsafe {
-                let a: *mut crate::skir_client::internal::StructAdapter<IssueServiceIdentityResponse_BuiltinRoleNameForbiddenError> = IssueServiceIdentityResponse_BuiltinRoleNameForbiddenError::_adapter() as *const _ as *mut _;
-                (*a).finalize();
-            }
-            unsafe {
-                let a: *mut crate::skir_client::internal::StructAdapter<IssueServiceIdentityResponse_IdentityProviderUnavailableError> = IssueServiceIdentityResponse_IdentityProviderUnavailableError::_adapter() as *const _ as *mut _;
-                (*a).finalize();
-            }
-            unsafe {
-                let a: *mut crate::skir_client::internal::EnumAdapter<IssueServiceIdentityResponse> = IssueServiceIdentityResponse::_adapter() as *const _ as *mut _;
-                (*a).add_wrapper_variant("internal_error", 1, 1, crate::skirout::base::kernel::v1::errors::InternalError::serializer(), "", |v| IssueServiceIdentityResponse::InternalError(Box::new(v)), |x| match x { IssueServiceIdentityResponse::InternalError(b) => b.as_ref(), _ => unreachable!() });
-                (*a).add_wrapper_variant("success", 2, 2, crate::skir_client::internal::struct_serializer_from_static(IssueServiceIdentityResponse_Success::_adapter()), "", |v| IssueServiceIdentityResponse::Success(Box::new(v)), |x| match x { IssueServiceIdentityResponse::Success(b) => b.as_ref(), _ => unreachable!() });
-                (*a).add_wrapper_variant("malformed_request_error", 3, 3, crate::skir_client::internal::struct_serializer_from_static(IssueServiceIdentityResponse_MalformedRequestError::_adapter()), "", |v| IssueServiceIdentityResponse::MalformedRequestError(Box::new(v)), |x| match x { IssueServiceIdentityResponse::MalformedRequestError(b) => b.as_ref(), _ => unreachable!() });
-                (*a).add_wrapper_variant("unknown_role_error", 4, 4, crate::skir_client::internal::struct_serializer_from_static(IssueServiceIdentityResponse_UnknownRoleError::_adapter()), "", |v| IssueServiceIdentityResponse::UnknownRoleError(Box::new(v)), |x| match x { IssueServiceIdentityResponse::UnknownRoleError(b) => b.as_ref(), _ => unreachable!() });
-                (*a).add_wrapper_variant("role_unknown_property_error", 5, 5, crate::skir_client::internal::struct_serializer_from_static(IssueServiceIdentityResponse_RoleUnknownPropertyError::_adapter()), "", |v| IssueServiceIdentityResponse::RoleUnknownPropertyError(Box::new(v)), |x| match x { IssueServiceIdentityResponse::RoleUnknownPropertyError(b) => b.as_ref(), _ => unreachable!() });
-                (*a).add_wrapper_variant("role_type_invalid_error", 6, 6, crate::skir_client::internal::struct_serializer_from_static(IssueServiceIdentityResponse_RoleTypeInvalidError::_adapter()), "", |v| IssueServiceIdentityResponse::RoleTypeInvalidError(Box::new(v)), |x| match x { IssueServiceIdentityResponse::RoleTypeInvalidError(b) => b.as_ref(), _ => unreachable!() });
-                (*a).add_wrapper_variant("role_version_invalid_error", 7, 7, crate::skir_client::internal::struct_serializer_from_static(IssueServiceIdentityResponse_RoleVersionInvalidError::_adapter()), "", |v| IssueServiceIdentityResponse::RoleVersionInvalidError(Box::new(v)), |x| match x { IssueServiceIdentityResponse::RoleVersionInvalidError(b) => b.as_ref(), _ => unreachable!() });
-                (*a).add_wrapper_variant("custom_role_name_required_error", 8, 8, crate::skir_client::internal::struct_serializer_from_static(IssueServiceIdentityResponse_CustomRoleNameRequiredError::_adapter()), "", |v| IssueServiceIdentityResponse::CustomRoleNameRequiredError(Box::new(v)), |x| match x { IssueServiceIdentityResponse::CustomRoleNameRequiredError(b) => b.as_ref(), _ => unreachable!() });
-                (*a).add_wrapper_variant("custom_role_name_invalid_error", 9, 9, crate::skir_client::internal::struct_serializer_from_static(IssueServiceIdentityResponse_CustomRoleNameInvalidError::_adapter()), "", |v| IssueServiceIdentityResponse::CustomRoleNameInvalidError(Box::new(v)), |x| match x { IssueServiceIdentityResponse::CustomRoleNameInvalidError(b) => b.as_ref(), _ => unreachable!() });
-                (*a).add_wrapper_variant("builtin_role_name_forbidden_error", 10, 10, crate::skir_client::internal::struct_serializer_from_static(IssueServiceIdentityResponse_BuiltinRoleNameForbiddenError::_adapter()), "", |v| IssueServiceIdentityResponse::BuiltinRoleNameForbiddenError(Box::new(v)), |x| match x { IssueServiceIdentityResponse::BuiltinRoleNameForbiddenError(b) => b.as_ref(), _ => unreachable!() });
-                (*a).add_wrapper_variant("identity_provider_unavailable_error", 11, 11, crate::skir_client::internal::struct_serializer_from_static(IssueServiceIdentityResponse_IdentityProviderUnavailableError::_adapter()), "", |v| IssueServiceIdentityResponse::IdentityProviderUnavailableError(Box::new(v)), |x| match x { IssueServiceIdentityResponse::IdentityProviderUnavailableError(b) => b.as_ref(), _ => unreachable!() });
-                (*a).finalize();
-            }
-        });
+    static INIT: std::sync::LazyLock<()> = std::sync::LazyLock::new(|| {
+        unsafe {
+            let a: *mut crate::skir_client::internal::StructAdapter<IssueServiceIdentityRequest> =
+                IssueServiceIdentityRequest::_adapter() as *const _ as *mut _;
+            (*a).add_field(
+                "role",
+                0,
+                crate::skirout::base::service::v1::service::ServiceRole::serializer(),
+                "",
+                |x: &IssueServiceIdentityRequest| &x.role,
+                |x: &mut IssueServiceIdentityRequest, v| x.role = v,
+            );
+            (*a).finalize();
+        }
+        unsafe {
+            let a: *mut crate::skir_client::internal::StructAdapter<
+                IssueServiceIdentityResponse_Success,
+            > = IssueServiceIdentityResponse_Success::_adapter() as *const _ as *mut _;
+            (*a).add_field(
+                "service_id",
+                0,
+                crate::skir_client::Serializer::string(),
+                "",
+                |x: &IssueServiceIdentityResponse_Success| &x.service_id,
+                |x: &mut IssueServiceIdentityResponse_Success, v| x.service_id = v,
+            );
+            (*a).add_field(
+                "display_name",
+                1,
+                crate::skir_client::Serializer::string(),
+                "",
+                |x: &IssueServiceIdentityResponse_Success| &x.display_name,
+                |x: &mut IssueServiceIdentityResponse_Success, v| x.display_name = v,
+            );
+            (*a).add_field(
+                "username",
+                2,
+                crate::skir_client::Serializer::string(),
+                "",
+                |x: &IssueServiceIdentityResponse_Success| &x.username,
+                |x: &mut IssueServiceIdentityResponse_Success, v| x.username = v,
+            );
+            (*a).add_field(
+                "token",
+                3,
+                crate::skir_client::Serializer::string(),
+                "",
+                |x: &IssueServiceIdentityResponse_Success| &x.token,
+                |x: &mut IssueServiceIdentityResponse_Success, v| x.token = v,
+            );
+            (*a).finalize();
+        }
+        unsafe {
+            let a: *mut crate::skir_client::internal::StructAdapter<
+                IssueServiceIdentityResponse_MalformedRequestError,
+            > = IssueServiceIdentityResponse_MalformedRequestError::_adapter() as *const _
+                as *mut _;
+            (*a).finalize();
+        }
+        unsafe {
+            let a: *mut crate::skir_client::internal::StructAdapter<
+                IssueServiceIdentityResponse_UnknownRoleError,
+            > = IssueServiceIdentityResponse_UnknownRoleError::_adapter() as *const _ as *mut _;
+            (*a).finalize();
+        }
+        unsafe {
+            let a: *mut crate::skir_client::internal::StructAdapter<
+                IssueServiceIdentityResponse_RoleUnknownPropertyError,
+            > = IssueServiceIdentityResponse_RoleUnknownPropertyError::_adapter() as *const _
+                as *mut _;
+            (*a).finalize();
+        }
+        unsafe {
+            let a: *mut crate::skir_client::internal::StructAdapter<
+                IssueServiceIdentityResponse_RoleTypeInvalidError,
+            > = IssueServiceIdentityResponse_RoleTypeInvalidError::_adapter() as *const _ as *mut _;
+            (*a).finalize();
+        }
+        unsafe {
+            let a: *mut crate::skir_client::internal::StructAdapter<
+                IssueServiceIdentityResponse_RoleVersionInvalidError,
+            > = IssueServiceIdentityResponse_RoleVersionInvalidError::_adapter() as *const _
+                as *mut _;
+            (*a).finalize();
+        }
+        unsafe {
+            let a: *mut crate::skir_client::internal::StructAdapter<
+                IssueServiceIdentityResponse_CustomRoleNameRequiredError,
+            > = IssueServiceIdentityResponse_CustomRoleNameRequiredError::_adapter() as *const _
+                as *mut _;
+            (*a).finalize();
+        }
+        unsafe {
+            let a: *mut crate::skir_client::internal::StructAdapter<
+                IssueServiceIdentityResponse_CustomRoleNameInvalidError,
+            > = IssueServiceIdentityResponse_CustomRoleNameInvalidError::_adapter() as *const _
+                as *mut _;
+            (*a).finalize();
+        }
+        unsafe {
+            let a: *mut crate::skir_client::internal::StructAdapter<
+                IssueServiceIdentityResponse_BuiltinRoleNameForbiddenError,
+            > = IssueServiceIdentityResponse_BuiltinRoleNameForbiddenError::_adapter() as *const _
+                as *mut _;
+            (*a).finalize();
+        }
+        unsafe {
+            let a: *mut crate::skir_client::internal::StructAdapter<
+                IssueServiceIdentityResponse_IdentityProviderUnavailableError,
+            > = IssueServiceIdentityResponse_IdentityProviderUnavailableError::_adapter()
+                as *const _ as *mut _;
+            (*a).finalize();
+        }
+        unsafe {
+            let a: *mut crate::skir_client::internal::EnumAdapter<IssueServiceIdentityResponse> =
+                IssueServiceIdentityResponse::_adapter() as *const _ as *mut _;
+            (*a).add_wrapper_variant(
+                "internal_error",
+                1,
+                1,
+                crate::skirout::base::kernel::v1::errors::InternalError::serializer(),
+                "",
+                |v| IssueServiceIdentityResponse::InternalError(Box::new(v)),
+                |x| match x {
+                    IssueServiceIdentityResponse::InternalError(b) => b.as_ref(),
+                    _ => unreachable!(),
+                },
+            );
+            (*a).add_wrapper_variant(
+                "success",
+                2,
+                2,
+                crate::skir_client::internal::struct_serializer_from_static(
+                    IssueServiceIdentityResponse_Success::_adapter(),
+                ),
+                "",
+                |v| IssueServiceIdentityResponse::Success(Box::new(v)),
+                |x| match x {
+                    IssueServiceIdentityResponse::Success(b) => b.as_ref(),
+                    _ => unreachable!(),
+                },
+            );
+            (*a).add_wrapper_variant(
+                "malformed_request_error",
+                3,
+                3,
+                crate::skir_client::internal::struct_serializer_from_static(
+                    IssueServiceIdentityResponse_MalformedRequestError::_adapter(),
+                ),
+                "",
+                |v| IssueServiceIdentityResponse::MalformedRequestError(Box::new(v)),
+                |x| match x {
+                    IssueServiceIdentityResponse::MalformedRequestError(b) => b.as_ref(),
+                    _ => unreachable!(),
+                },
+            );
+            (*a).add_wrapper_variant(
+                "unknown_role_error",
+                4,
+                4,
+                crate::skir_client::internal::struct_serializer_from_static(
+                    IssueServiceIdentityResponse_UnknownRoleError::_adapter(),
+                ),
+                "",
+                |v| IssueServiceIdentityResponse::UnknownRoleError(Box::new(v)),
+                |x| match x {
+                    IssueServiceIdentityResponse::UnknownRoleError(b) => b.as_ref(),
+                    _ => unreachable!(),
+                },
+            );
+            (*a).add_wrapper_variant(
+                "role_unknown_property_error",
+                5,
+                5,
+                crate::skir_client::internal::struct_serializer_from_static(
+                    IssueServiceIdentityResponse_RoleUnknownPropertyError::_adapter(),
+                ),
+                "",
+                |v| IssueServiceIdentityResponse::RoleUnknownPropertyError(Box::new(v)),
+                |x| match x {
+                    IssueServiceIdentityResponse::RoleUnknownPropertyError(b) => b.as_ref(),
+                    _ => unreachable!(),
+                },
+            );
+            (*a).add_wrapper_variant(
+                "role_type_invalid_error",
+                6,
+                6,
+                crate::skir_client::internal::struct_serializer_from_static(
+                    IssueServiceIdentityResponse_RoleTypeInvalidError::_adapter(),
+                ),
+                "",
+                |v| IssueServiceIdentityResponse::RoleTypeInvalidError(Box::new(v)),
+                |x| match x {
+                    IssueServiceIdentityResponse::RoleTypeInvalidError(b) => b.as_ref(),
+                    _ => unreachable!(),
+                },
+            );
+            (*a).add_wrapper_variant(
+                "role_version_invalid_error",
+                7,
+                7,
+                crate::skir_client::internal::struct_serializer_from_static(
+                    IssueServiceIdentityResponse_RoleVersionInvalidError::_adapter(),
+                ),
+                "",
+                |v| IssueServiceIdentityResponse::RoleVersionInvalidError(Box::new(v)),
+                |x| match x {
+                    IssueServiceIdentityResponse::RoleVersionInvalidError(b) => b.as_ref(),
+                    _ => unreachable!(),
+                },
+            );
+            (*a).add_wrapper_variant(
+                "custom_role_name_required_error",
+                8,
+                8,
+                crate::skir_client::internal::struct_serializer_from_static(
+                    IssueServiceIdentityResponse_CustomRoleNameRequiredError::_adapter(),
+                ),
+                "",
+                |v| IssueServiceIdentityResponse::CustomRoleNameRequiredError(Box::new(v)),
+                |x| match x {
+                    IssueServiceIdentityResponse::CustomRoleNameRequiredError(b) => b.as_ref(),
+                    _ => unreachable!(),
+                },
+            );
+            (*a).add_wrapper_variant(
+                "custom_role_name_invalid_error",
+                9,
+                9,
+                crate::skir_client::internal::struct_serializer_from_static(
+                    IssueServiceIdentityResponse_CustomRoleNameInvalidError::_adapter(),
+                ),
+                "",
+                |v| IssueServiceIdentityResponse::CustomRoleNameInvalidError(Box::new(v)),
+                |x| match x {
+                    IssueServiceIdentityResponse::CustomRoleNameInvalidError(b) => b.as_ref(),
+                    _ => unreachable!(),
+                },
+            );
+            (*a).add_wrapper_variant(
+                "builtin_role_name_forbidden_error",
+                10,
+                10,
+                crate::skir_client::internal::struct_serializer_from_static(
+                    IssueServiceIdentityResponse_BuiltinRoleNameForbiddenError::_adapter(),
+                ),
+                "",
+                |v| IssueServiceIdentityResponse::BuiltinRoleNameForbiddenError(Box::new(v)),
+                |x| match x {
+                    IssueServiceIdentityResponse::BuiltinRoleNameForbiddenError(b) => b.as_ref(),
+                    _ => unreachable!(),
+                },
+            );
+            (*a).add_wrapper_variant(
+                "identity_provider_unavailable_error",
+                11,
+                11,
+                crate::skir_client::internal::struct_serializer_from_static(
+                    IssueServiceIdentityResponse_IdentityProviderUnavailableError::_adapter(),
+                ),
+                "",
+                |v| IssueServiceIdentityResponse::IdentityProviderUnavailableError(Box::new(v)),
+                |x| match x {
+                    IssueServiceIdentityResponse::IdentityProviderUnavailableError(b) => b.as_ref(),
+                    _ => unreachable!(),
+                },
+            );
+            (*a).finalize();
+        }
+    });
     let _ = *INIT;
 }
 
@@ -564,15 +928,16 @@ fn initialize_module_serializers() {
 // Methods
 // ==============================================================================
 
-pub fn issue_service_identity_method() -> &'static crate::skir_client::Method<IssueServiceIdentityRequest, IssueServiceIdentityResponse> {
-    static METHOD: std::sync::LazyLock<crate::skir_client::Method<IssueServiceIdentityRequest, IssueServiceIdentityResponse>> = std::sync::LazyLock::new(|| {
-        crate::skir_client::Method {
-            name: "IssueServiceIdentity".to_string(),
-            number: 672941_i64,
-            request_serializer: IssueServiceIdentityRequest::serializer(),
-            response_serializer: IssueServiceIdentityResponse::serializer(),
-            doc: "".to_string(),
-        }
+pub fn issue_service_identity_method()
+-> &'static crate::skir_client::Method<IssueServiceIdentityRequest, IssueServiceIdentityResponse> {
+    static METHOD: std::sync::LazyLock<
+        crate::skir_client::Method<IssueServiceIdentityRequest, IssueServiceIdentityResponse>,
+    > = std::sync::LazyLock::new(|| crate::skir_client::Method {
+        name: "IssueServiceIdentity".to_string(),
+        number: 672941_i64,
+        request_serializer: IssueServiceIdentityRequest::serializer(),
+        response_serializer: IssueServiceIdentityResponse::serializer(),
+        doc: "".to_string(),
     });
     &*METHOD
 }

@@ -30,7 +30,7 @@ sealed interface Color_OrMutable {
 @kotlin.Suppress("UNUSED_PARAMETER")
 class Color private constructor(
     override val argb: kotlin.Int,
-    private val _unrecognizedFields: _UnrecognizedFields<skirout.kernel.v1.color.Color>? =
+    internal val _unrecognizedFields: _UnrecognizedFields<skirout.kernel.v1.color.Color>? =
         null,
 ): skirout.kernel.v1.color.Color_OrMutable {
     constructor(
@@ -77,7 +77,7 @@ class Color private constructor(
     override fun toString(): kotlin.String {
         return build.skir.internal.toStringImpl(
             this,
-            skirout.kernel.v1.color.Color.serializerImpl,
+            _SerializerRegistry.ColorSerializerImpl,
         )
     }
 
@@ -121,33 +121,37 @@ class Color private constructor(
             _unrecognizedFields = null,
         );
 
-        private val serializerImpl = build.skir.internal.StructSerializer(
-            recordId = "kernel/v1/color.skir:Color",
-            doc = "",
-            defaultInstance = default,
-            newMutableFn = { it?.toMutable() ?: Mutable() },
-            toFrozenFn = { it.toFrozen() },
-            getUnrecognizedFields = { it._unrecognizedFields },
-            setUnrecognizedFields = { m, u -> m._unrecognizedFields = u },
-        );
-
         /** Serializer for [Color] instances. */
-        val serializer = build.skir.internal.makeSerializer(serializerImpl);
+        val serializer get() = _SerializerRegistry.ColorSerializer;
 
         /** Describes the [Color] type. Provides runtime introspection capabilities. */
-        val typeDescriptor get() = serializerImpl.typeDescriptor;
+        val typeDescriptor get() = _SerializerRegistry.ColorSerializerImpl.typeDescriptor;
+    }
+}
 
-        init {
-            serializerImpl.addField(
-                "argb",
-                "argb",
-                0,
-                build.skir.Serializers.int32,
-                "",
-                { it.argb },
-                { mut, v -> mut.argb = v },
-            );
-            serializerImpl.finalizeStruct();
-        }
+private object _SerializerRegistry {
+    val ColorSerializerImpl = build.skir.internal.StructSerializer(
+        recordId = "kernel/v1/color.skir:Color",
+        doc = "",
+        defaultInstance = skirout.kernel.v1.color.Color.partial(),
+        newMutableFn = { it?.toMutable() ?: skirout.kernel.v1.color.Color.Mutable() },
+        toFrozenFn = { it.toFrozen() },
+        getUnrecognizedFields = { it._unrecognizedFields },
+        setUnrecognizedFields = { m, u -> m._unrecognizedFields = u },
+    );
+
+    val ColorSerializer = build.skir.internal.makeSerializer(ColorSerializerImpl);
+
+    init {
+        ColorSerializerImpl.addField(
+            "argb",
+            "argb",
+            0,
+            build.skir.Serializers.int32,
+            "",
+            { it.argb },
+            { mut, v -> mut.argb = v },
+        );
+        ColorSerializerImpl.finalizeStruct();
     }
 }

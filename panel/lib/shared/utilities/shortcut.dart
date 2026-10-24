@@ -1,6 +1,4 @@
-import "package:flutter/foundation.dart";
-import "package:flutter/material.dart";
-import "package:flutter/services.dart";
+import "package:typewriter_panel/typewriter_panel.dart";
 
 /// A set of [LogicalKeyboardKey]s that can be used as the keys in a map,
 /// preserving the insertion order for display purposes.

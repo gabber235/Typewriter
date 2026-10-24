@@ -1,9 +1,4 @@
-import "dart:async";
-
-import "package:flutter/foundation.dart";
-import "package:nats_core/nats_core.dart" as core;
-import "package:nats_jetstream/nats_jetstream.dart" as jetstream;
-import "package:typewriter_panel/infrastructure/messaging/nats_client.dart";
+import "package:typewriter_panel/typewriter_panel.dart";
 
 /// Owns the concrete NATS connection for the panel transport boundary.
 ///
@@ -17,11 +12,11 @@ final class NatsCoreClient implements NatsClient {
   factory NatsCoreClient.connect(NatsClientConfiguration configuration) {
     try {
       return NatsCoreClient._(
-        core.NatsConnection.connect(
-          core.NatsOptions(
-            servers: [core.NatsServer.parse(configuration.url)],
+        NatsConnection.connect(
+          NatsOptions(
+            servers: [NatsServer.parse(configuration.url)],
             name: "typewriter-panel",
-            authentication: core.NatsAuthentication.nkey(
+            authentication: NatsAuthentication.nkey(
               configuration.seed,
               jwt: configuration.jwt,
               username: configuration.username,
@@ -31,13 +26,18 @@ final class NatsCoreClient implements NatsClient {
             requestInboxPrefix: configuration.requestInboxPrefix,
           ),
         ),
+        configuration,
       );
     } on Object catch (error, stackTrace) {
       Error.throwWithStackTrace(_translate(error, stackTrace), stackTrace);
     }
   }
 
-  NatsCoreClient._(this._connection) {
+  NatsCoreClient._(
+    this._connection,
+    this._configuration, {
+    this._persistentOpener,
+  }) {
     unawaited(_initialize());
   }
 
@@ -45,17 +45,45 @@ final class NatsCoreClient implements NatsClient {
   /// tested without a live server.
   @visibleForTesting
   factory NatsCoreClient.fromConnectionFuture(
-    Future<core.NatsConnection> connection,
-  ) => NatsCoreClient._(connection);
+    Future<NatsConnection> connection, {
+    required NatsClientConfiguration configuration,
+    Future<NatsSubscription> Function(
+      String stream,
+      String consumerName,
+      String filterSubject,
+    )?
+    persistentOpener,
+  }) => NatsCoreClient._(
+    connection,
+    configuration,
+    persistentOpener: persistentOpener,
+  );
 
-  final Future<core.NatsConnection> _connection;
+  final Future<NatsConnection> _connection;
+  final NatsClientConfiguration _configuration;
+  final Future<NatsSubscription> Function(
+    String stream,
+    String consumerName,
+    String filterSubject,
+  )?
+  _persistentOpener;
   final StreamController<NatsConnectionState> _connectionStateController =
       StreamController<NatsConnectionState>.broadcast();
 
   NatsConnectionState _connectionState = const NatsConnecting();
-  StreamSubscription<core.NatsConnectionEvent>? _events;
+  StreamSubscription<NatsConnectionEvent>? _events;
   bool _closed = false;
   Future<void>? _closeOperation;
+  final Map<String, Future<NatsSubscription>> _projectionSubscriptions = {};
+
+  @override
+  String get actorId => _configuration.actorId;
+
+  @override
+  String? get organizationId => _configuration.organizationId;
+
+  @override
+  String get connectionSession => _configuration.connectionSession;
 
   @override
   NatsConnectionState get connectionState => _connectionState;
@@ -85,22 +113,22 @@ final class NatsCoreClient implements NatsClient {
       _setConnectionState(NatsFailed(_translate(error, stackTrace)));
       debugPrint("nats: connection error ${_diagnostic(error)}");
       if (kDebugMode) {
-        if (error case core.NatsException(:final causeStackTrace?)) {
+        if (error case NatsException(:final causeStackTrace?)) {
           debugPrint("nats: connection error cause\n$causeStackTrace");
         }
       }
     }
   }
 
-  void _onEvent(core.NatsConnectionEvent event) {
+  void _onEvent(NatsConnectionEvent event) {
     if (_closed) return;
 
     switch (event) {
-      case core.NatsConnected():
+      case CoreNatsConnected():
         _setConnectionState(const NatsConnected());
-      case core.NatsConnecting() || core.NatsReconnecting():
+      case CoreNatsConnecting() || CoreNatsReconnecting():
         break;
-      case core.NatsDisconnected(:final error, :final willReconnect):
+      case NatsDisconnected(:final error, :final willReconnect):
         final failure = _translate(
           error,
           error.causeStackTrace ?? StackTrace.current,
@@ -108,9 +136,9 @@ final class NatsCoreClient implements NatsClient {
         _setConnectionState(
           willReconnect ? NatsReconnecting(failure) : NatsFailed(failure),
         );
-      case core.NatsDraining():
+      case NatsDraining():
         break;
-      case core.NatsClosed(:final error):
+      case CoreNatsClosed(:final error):
         _setConnectionState(
           error == null
               ? const NatsClosed()
@@ -121,7 +149,7 @@ final class NatsCoreClient implements NatsClient {
                   ),
                 ),
         );
-      case core.NatsServerError() || core.NatsLameDuckMode():
+      case NatsServerError() || NatsLameDuckMode():
         break;
     }
   }
@@ -138,7 +166,7 @@ final class NatsCoreClient implements NatsClient {
     }
   }
 
-  Future<core.NatsConnection> _readyConnection() async {
+  Future<NatsConnection> _readyConnection() async {
     if (_closed) {
       throw const NatsClientException(
         kind: NatsFailureKind.closed,
@@ -146,7 +174,14 @@ final class NatsCoreClient implements NatsClient {
       );
     }
     try {
-      return await _connection;
+      final connection = await _connection;
+      if (_closed) {
+        throw const NatsClientException(
+          kind: NatsFailureKind.closed,
+          message: "NATS client is closed",
+        );
+      }
+      return connection;
     } on Object catch (error, stackTrace) {
       Error.throwWithStackTrace(_translate(error, stackTrace), stackTrace);
     }
@@ -164,9 +199,7 @@ final class NatsCoreClient implements NatsClient {
       final response = await connection.request(
         subject,
         payload,
-        headers: headers.isEmpty
-            ? null
-            : core.NatsHeaders(entries: headers.entries),
+        headers: headers.isEmpty ? null : NatsHeaders(entries: headers.entries),
         timeout: timeout,
       );
       return NatsMessage(response.payload, subject: response.subject);
@@ -188,9 +221,7 @@ final class NatsCoreClient implements NatsClient {
       await connection.publish(
         subject,
         payload,
-        headers: headers.isEmpty
-            ? null
-            : core.NatsHeaders(entries: headers.entries),
+        headers: headers.isEmpty ? null : NatsHeaders(entries: headers.entries),
       );
     } on NatsClientException {
       rethrow;
@@ -203,7 +234,18 @@ final class NatsCoreClient implements NatsClient {
   Future<NatsSubscription> subscribe(String subject) async {
     try {
       final connection = await _readyConnection();
-      return _NatsCoreSubscription(await connection.subscribe(subject));
+      final subscription = await connection.subscribe(subject);
+      try {
+        await connection.flush();
+      } on Object catch (error, stackTrace) {
+        try {
+          await subscription.unsubscribe();
+        } on Object {
+          // The admission failure remains the cause owned by this operation.
+        }
+        Error.throwWithStackTrace(error, stackTrace);
+      }
+      return _NatsCoreSubscription(subscription);
     } on NatsClientException {
       rethrow;
     } on Object catch (error, stackTrace) {
@@ -212,24 +254,119 @@ final class NatsCoreClient implements NatsClient {
   }
 
   @override
-  Future<NatsSubscription> subscribeOrdered(
+  Future<NatsSubscription> subscribePersistent(
     String stream,
+    String consumerName,
     String filterSubject,
   ) async {
-    try {
-      final connection = await _readyConnection();
-      final consumer = jetstream.JetStreamContext(connection).consumers.ordered(
-        stream,
-        options: jetstream.JetStreamOrderedConsumerOptions(
-          filters: jetstream.JetStreamConsumerFilters.single(filterSubject),
-        ),
+    if (_closed) {
+      throw const NatsClientException(
+        kind: NatsFailureKind.closed,
+        message: "NATS client is closed",
       );
-      return _NatsJetStreamSubscription(consumer.consume());
+    }
+    if (_projectionSubscriptions.containsKey(consumerName)) {
+      throw StateError("This projection already has a subscription owner");
+    }
+    final acquisition =
+        _persistentOpener?.call(stream, consumerName, filterSubject) ??
+        _openPersistent(stream, consumerName, filterSubject);
+    _projectionSubscriptions[consumerName] = acquisition;
+    try {
+      return await acquisition;
     } on NatsClientException {
+      final _ = _projectionSubscriptions.remove(consumerName);
       rethrow;
     } on Object catch (error, stackTrace) {
+      final _ = _projectionSubscriptions.remove(consumerName);
       Error.throwWithStackTrace(_translate(error, stackTrace), stackTrace);
     }
+  }
+
+  Future<_NatsNativeProjectionSubscription> _openPersistent(
+    String stream,
+    String consumerName,
+    String filterSubject,
+  ) async {
+    final connection = await _readyConnection();
+    final manager = JetStreamContext(connection).consumers;
+    await _deleteNamedConsumer(manager, stream, consumerName);
+    final config = JetStreamPullConsumerConfig(
+      name: consumerName,
+      durable: false,
+      filters: JetStreamConsumerFilters.single(filterSubject),
+      ackPolicy: JetStreamConsumerAckPolicy.none,
+      start: const JetStreamConsumerStart.all(),
+      inactiveThreshold: JetStreamNanoseconds.fromDuration(
+        const Duration(minutes: 2),
+      ),
+    );
+    late final JetStreamConsumerInfo info;
+    try {
+      info = await manager.createPull(stream, config);
+    } on NatsTimeoutException {
+      info = await manager.info(stream, consumerName);
+    } on NatsConnectionException {
+      info = await manager.info(stream, consumerName);
+    }
+    _requireNamedConsumer(info, config);
+    final consumer = await manager.pull(stream, consumerName);
+    return _NatsNativeProjectionSubscription(
+      consumer.consume(),
+      cleanup: () async {
+        if (connection.isConnected) {
+          await _deleteNamedConsumer(manager, stream, consumerName);
+        }
+      },
+      release: () => _projectionSubscriptions.remove(consumerName),
+    );
+  }
+
+  void _requireNamedConsumer(
+    JetStreamConsumerInfo info,
+    JetStreamPullConsumerConfig expected,
+  ) {
+    final actual = info.config;
+    if (info.name != expected.name ||
+        actual.kind != JetStreamConsumerKind.pull ||
+        actual.durableName != null ||
+        actual.ackPolicy != JetStreamConsumerAckPolicy.none ||
+        !const ListEquality<String>().equals(
+          actual.filterSubjects,
+          expected.filters.subjects,
+        )) {
+      throw StateError("Named projection consumer definition differs");
+    }
+  }
+
+  Future<void> _deleteNamedConsumer(
+    JetStreamConsumerManager manager,
+    String stream,
+    String consumer,
+  ) async {
+    try {
+      await manager.delete(stream, consumer);
+    } on JetStreamApiException catch (error) {
+      if (error.code != 404) rethrow;
+    } on NatsTimeoutException {
+      await _reconcileDeletion(manager, stream, consumer);
+    } on NatsConnectionException {
+      await _reconcileDeletion(manager, stream, consumer);
+    }
+  }
+
+  Future<void> _reconcileDeletion(
+    JetStreamConsumerManager manager,
+    String stream,
+    String consumer,
+  ) async {
+    try {
+      await manager.info(stream, consumer);
+    } on JetStreamApiException catch (error) {
+      if (error.code == 404) return;
+      rethrow;
+    }
+    await manager.delete(stream, consumer);
   }
 
   /// Closes the transport exactly once and completes after owned resources are
@@ -244,20 +381,52 @@ final class NatsCoreClient implements NatsClient {
 
     _setConnectionState(const NatsClosed());
 
+    final acquisitions = _projectionSubscriptions.values.toList(
+      growable: false,
+    );
+    Object? failure;
+    StackTrace? failureStackTrace;
     try {
-      final connection = await _connection;
-      await connection.close();
-    } on Object {
-      // Initial connection failure already owns its transport cleanup.
+      try {
+        await Future.wait(
+          acquisitions.map(
+            (acquisition) => acquisition.then(
+              (subscription) => subscription.unsubscribe(),
+              onError: (Object _, StackTrace _) {},
+            ),
+          ),
+        );
+      } on Object catch (error, stackTrace) {
+        failure = error;
+        failureStackTrace = stackTrace;
+      }
+
+      NatsConnection? connection;
+      try {
+        connection = await _connection;
+      } on Object {
+        // A connection that never opened has no transport left to close.
+      }
+      if (connection != null) {
+        try {
+          await connection.close();
+        } on Object catch (error, stackTrace) {
+          failure ??= error;
+          failureStackTrace ??= stackTrace;
+        }
+      }
     } finally {
       await _events?.cancel();
       await _connectionStateController.close();
+    }
+    if (failure != null) {
+      Error.throwWithStackTrace(failure, failureStackTrace!);
     }
   }
 }
 
 String _diagnostic(Object error) => switch (error) {
-  core.NatsException(:final message, :final cause) =>
+  NatsException(:final message, :final cause) =>
     "${error.runtimeType}: $message${cause == null ? "" : " (${cause.runtimeType})"}",
   _ => error.runtimeType.toString(),
 };
@@ -265,7 +434,7 @@ String _diagnostic(Object error) => switch (error) {
 final class _NatsCoreSubscription implements NatsSubscription {
   const _NatsCoreSubscription(this._subscription);
 
-  final core.NatsSubscription _subscription;
+  final CoreNatsSubscription _subscription;
 
   @override
   Stream<NatsMessage> get messages => _subscription.messages.transform(
@@ -296,13 +465,20 @@ final class _NatsCoreSubscription implements NatsSubscription {
   }
 }
 
-final class _NatsJetStreamSubscription implements NatsSubscription {
-  const _NatsJetStreamSubscription(this._subscription);
+final class _NatsNativeProjectionSubscription implements NatsSubscription {
+  _NatsNativeProjectionSubscription(
+    this.operation, {
+    required this.cleanup,
+    required this.release,
+  });
 
-  final jetstream.JetStreamOrderedConsumerStream _subscription;
+  final JetStreamConsumerStream operation;
+  final Future<void> Function() cleanup;
+  final VoidCallback release;
+  Future<void>? _unsubscribing;
 
   @override
-  Stream<NatsMessage> get messages => _subscription.messages.transform(
+  Stream<NatsMessage> get messages => operation.messages.transform(
     StreamTransformer.fromHandlers(
       handleData: (delivery, sink) => sink.add(
         NatsMessage(
@@ -318,46 +494,72 @@ final class _NatsJetStreamSubscription implements NatsSubscription {
   @override
   Future<void> get done async {
     try {
-      await _subscription.done;
+      await operation.done;
     } on Object catch (error, stackTrace) {
       Error.throwWithStackTrace(_translate(error, stackTrace), stackTrace);
     }
   }
 
   @override
-  Future<void> unsubscribe() async {
+  Future<void> unsubscribe() => _unsubscribing ??= () async {
     try {
-      await _subscription.stop();
-    } on Object catch (error, stackTrace) {
-      Error.throwWithStackTrace(_translate(error, stackTrace), stackTrace);
+      try {
+        try {
+          await operation.stop();
+        } on Object {
+          // The native stream and done retain the terminal delivery failure.
+        }
+        try {
+          await operation.done;
+        } on Object {
+          // Delivery failure remains observable through messages and done.
+        }
+        await cleanup();
+      } on Object catch (error, stackTrace) {
+        Error.throwWithStackTrace(_translate(error, stackTrace), stackTrace);
+      }
+    } finally {
+      release();
     }
-  }
+  }();
 }
 
 NatsClientException _translate(Object error, StackTrace stackTrace) {
   if (error is NatsClientException) return error;
   final kind = switch (error) {
-    core.NatsAuthenticationException() => NatsFailureKind.authentication,
-    core.NatsPermissionException() => NatsFailureKind.permission,
-    core.NatsTimeoutException() ||
-    core.NatsDrainTimeoutException() => NatsFailureKind.timeout,
-    core.NatsNoRespondersException() => NatsFailureKind.noResponders,
-    core.NatsClosedException() ||
-    core.NatsDrainingException() => NatsFailureKind.closed,
-    core.NatsProtocolException() ||
-    core.NatsSubjectException() ||
-    core.NatsHeaderException() ||
-    core.NatsMaxPayloadException() ||
-    core.NatsMissingReplySubjectException() ||
-    core.NatsSlowConsumerException() => NatsFailureKind.protocol,
-    core.NatsConnectionException() ||
-    core.NatsDnsException() ||
-    core.NatsConnectCandidatesException() ||
-    core.NatsReconnectBufferException() ||
-    core.NatsMaximumSubscriptionsException() ||
-    core.NatsConnectionLimitException() ||
-    core.NatsStaleConnectionException() ||
-    core.NatsUnsupportedRuntimeException() => NatsFailureKind.unavailable,
+    JetStreamConsumerHeartbeatException() => NatsFailureKind.timeout,
+    JetStreamApiException(:final code) when code == 404 =>
+      NatsFailureKind.unavailable,
+    JetStreamConsumerStatusException(:final code) when code == 404 =>
+      NatsFailureKind.unavailable,
+    JetStreamConsumerStatusException(code: 409, :final description)
+        when _lostConsumerStatus(description) =>
+      NatsFailureKind.unavailable,
+    JetStreamApiException(:final code) when code == 403 =>
+      NatsFailureKind.permission,
+    JetStreamApiException() ||
+    JetStreamProtocolException() ||
+    JetStreamConsumerStatusException() => NatsFailureKind.protocol,
+    NatsAuthenticationException() => NatsFailureKind.authentication,
+    NatsPermissionException() => NatsFailureKind.permission,
+    NatsTimeoutException() ||
+    NatsDrainTimeoutException() => NatsFailureKind.timeout,
+    NatsNoRespondersException() => NatsFailureKind.noResponders,
+    NatsClosedException() || NatsDrainingException() => NatsFailureKind.closed,
+    NatsProtocolException() ||
+    NatsSubjectException() ||
+    NatsHeaderException() ||
+    NatsMaxPayloadException() ||
+    NatsMissingReplySubjectException() ||
+    NatsSlowConsumerException() => NatsFailureKind.protocol,
+    NatsConnectionException() ||
+    NatsDnsException() ||
+    NatsConnectCandidatesException() ||
+    NatsReconnectBufferException() ||
+    NatsMaximumSubscriptionsException() ||
+    NatsConnectionLimitException() ||
+    NatsStaleConnectionException() ||
+    NatsUnsupportedRuntimeException() => NatsFailureKind.unavailable,
     ArgumentError() || FormatException() => NatsFailureKind.protocol,
     _ => NatsFailureKind.unknown,
   };
@@ -369,10 +571,16 @@ NatsClientException _translate(Object error, StackTrace stackTrace) {
   );
 }
 
+bool _lostConsumerStatus(String description) {
+  final normalized = description.toLowerCase();
+  return normalized.contains("consumer deleted") ||
+      normalized.contains("leadership change");
+}
+
 String _translatedMessage(Object error, NatsFailureKind kind) =>
     switch (error) {
-      core.NatsUnknownServerException() => "NATS server rejected the operation",
-      core.NatsException(:final message) => message,
+      NatsUnknownServerException() => "NATS server rejected the operation",
+      NatsException(:final message) => message,
       ArgumentError() ||
       FormatException() => "Invalid NATS client configuration",
       _ => kind.safeDescription,

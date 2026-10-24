@@ -1,12 +1,13 @@
-import "package:flutter/material.dart";
 import "package:flutter_test/flutter_test.dart";
+import "package:typewriter_panel/infrastructure/protocols/skir/skir.dart"
+    as skir;
 import "package:typewriter_panel/typewriter_panel.dart";
 
 void main() {
   group("OrganizationRole", () {
     test("creates role with all properties", () {
       final role = OrganizationRole(
-        roleId: recordId("organization_role:role-1"),
+        roleId: skir.recordId("organization_role:role-1"),
         name: "Admin",
         color: Colors.blue,
         defaultRole: true,
@@ -14,7 +15,7 @@ void main() {
         deletable: false,
       );
 
-      expect(role.roleId, recordId("organization_role:role-1"));
+      expect(role.roleId, skir.recordId("organization_role:role-1"));
       expect(role.name, "Admin");
       expect(role.color, Colors.blue);
       expect(role.defaultRole, true);
@@ -24,7 +25,7 @@ void main() {
 
     test("uses defaults for optional properties", () {
       final role = OrganizationRole(
-        roleId: recordId("organization_role:role-1"),
+        roleId: skir.recordId("organization_role:role-1"),
         name: "Member",
         color: Colors.grey,
       );
@@ -39,13 +40,13 @@ void main() {
     test("creates member with all properties", () {
       final now = DateTime.now();
       final member = OrganizationMember(
-        userId: recordId("user:member-1"),
+        userId: skir.recordId("user:member-1"),
         name: "John Doe",
         email: "john@example.com",
         avatarUrl: "https://example.com/avatar.png",
         roles: [
           OrganizationRole(
-            roleId: recordId("organization_role:r1"),
+            roleId: skir.recordId("organization_role:r1"),
             name: "Admin",
             color: Colors.red,
           ),
@@ -53,7 +54,7 @@ void main() {
         joinedAt: now,
       );
 
-      expect(member.userId, recordId("user:member-1"));
+      expect(member.userId, skir.recordId("user:member-1"));
       expect(member.name, "John Doe");
       expect(member.email, "john@example.com");
       expect(member.avatarUrl, "https://example.com/avatar.png");

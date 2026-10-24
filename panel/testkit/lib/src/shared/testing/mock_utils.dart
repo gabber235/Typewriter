@@ -1,5 +1,5 @@
 import "package:faker/faker.dart";
-import "package:pub_semver/pub_semver.dart";
+import "package:typewriter_panel/typewriter_panel.dart";
 
 enum DisplayState {
   loading,

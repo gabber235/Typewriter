@@ -1,13 +1,4 @@
-import "dart:async";
-
-import "package:flutter/material.dart";
-import "package:flutter_animate/flutter_animate.dart";
-import "package:flutter_hooks/flutter_hooks.dart";
-import "package:typewriter_panel/shared/hooks/forward_animation.dart";
-import "package:typewriter_panel/shared/hooks/loading_button_controller.dart";
-import "package:typewriter_panel/shared/ui/components/elastic_switcher.dart";
-import "package:typewriter_panel/shared/ui/components/loading_button/loading_button_controller.dart";
-import "package:typewriter_panel/shared/utilities/snackbar.dart";
+import "package:typewriter_panel/typewriter_panel.dart";
 
 export "loading_button_controller.dart";
 export "loading_icon_button.dart";
@@ -28,10 +19,6 @@ enum LoadingVariant { filled, text, outlined }
 /// its state. The named constructors select filled, text, or outlined Material
 /// treatments, with icon variants that add a leading icon without changing the
 /// action contract.
-///
-/// A controller is useful when a surrounding shortcut or action row must invoke
-/// the same operation as the button. The button remains the visual and
-/// interaction owner.
 class LoadingButton extends HookWidget {
   const LoadingButton({
     required this.child,

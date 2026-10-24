@@ -1,9 +1,21 @@
-import "package:collection/collection.dart";
-import "package:flutter/material.dart";
-import "package:freezed_annotation/freezed_annotation.dart";
 import "package:typewriter_panel/typewriter_panel.dart";
 
 part "graph_layout.freezed.dart";
+
+/// Projects one exact drag payload into physical viewport coordinates.
+/// A null controller value represents an idle graph.
+@freezed
+abstract class GraphDragSession with _$GraphDragSession {
+  const factory GraphDragSession({
+    required GraphDragPayload<GraphDragData> payload,
+    required Offset globalPosition,
+    required bool inside,
+  }) = _GraphDragSession;
+
+  const GraphDragSession._();
+
+  GraphIdentifier get source => payload.value.graphId;
+}
 
 /// Transient geometry shown while a move or resize is still in progress.
 ///

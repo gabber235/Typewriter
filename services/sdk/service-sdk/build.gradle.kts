@@ -6,6 +6,7 @@ plugins {
 
 dependencies {
     api(project(":messaging"))
+    implementation(project(":protocol-transport"))
     api(project(":telemetry"))
     api(project(":internal-utils"))
     api(platform(libs.koin.bom))
@@ -16,6 +17,5 @@ dependencies {
     implementation(libs.kotlin.serialize.cbor)
     implementation(libs.kotlin.serialize.json)
     implementation(libs.mordant)
-    testImplementation(libs.koin.test)
     testImplementation(libs.kotlin.coroutines.test)
 }

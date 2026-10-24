@@ -1,3 +1,5 @@
+-- Creating an organization also creates its initial roles and founder membership through the
+-- setup event below. Projection sequences are advanced by the commands that publish their changes.
 DEFINE TABLE OVERWRITE organization SCHEMAFULL
     PERMISSIONS NONE;
 

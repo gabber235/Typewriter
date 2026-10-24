@@ -1,8 +1,6 @@
+import "package:typewriter_panel/typewriter_panel.dart";
+
 // ignore_for_file: sort_constructors_first
-
-import "dart:math";
-
-import "package:petitparser/petitparser.dart";
 
 /// Half open source range used by parsing and editor replacement.
 ///

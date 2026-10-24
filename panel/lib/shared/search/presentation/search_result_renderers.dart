@@ -1,6 +1,3 @@
-import "package:flutter/material.dart";
-import "package:flutter/services.dart";
-import "package:freezed_annotation/freezed_annotation.dart";
 import "package:typewriter_panel/typewriter_panel.dart";
 
 part "search_result_renderers.freezed.dart";
@@ -18,7 +15,7 @@ abstract class SearchResultRowContext with _$SearchResultRowContext {
     required bool selected,
     required bool focused,
     required bool loading,
-    required VoidCallback onTap,
+    required VoidCallback? onTap,
     ShortcutActivator? shortcutActivator,
   }) = _SearchResultRowContext;
 }

@@ -41,6 +41,8 @@ interface LoaderServiceConnection {
  * authority remains with the host.
  */
 interface LoaderService : LoaderServiceConnection {
+    val artifactBlobs: com.typewritermc.loader.artifact.FileDigestBlobStore
+
     suspend fun start(): RegistrarResult<ReadySession>
 
     suspend fun stop(): RegistrarStopResult
@@ -52,6 +54,7 @@ interface LoaderService : LoaderServiceConnection {
  * stays with the enclosing loader application.
  */
 class RegistrarLoaderService(
+    override val artifactBlobs: com.typewritermc.loader.artifact.FileDigestBlobStore,
     private val service: TypewriterService,
     override val openTelemetry: OpenTelemetry,
     override val telemetry: ServiceTelemetry,

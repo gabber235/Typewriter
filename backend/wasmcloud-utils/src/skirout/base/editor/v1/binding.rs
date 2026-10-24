@@ -14,51 +14,15 @@
 //   cargo add skir-client
 
 // ==============================================================================
-// struct BindingId
-// ==============================================================================
-
-#[derive(Clone, Debug, PartialEq, Default)]
-pub struct BindingId {
-    pub value: i64,
-    /// Set this to None when you're creating a struct.
-    pub _unrecognized: Option<crate::skir_client::UnrecognizedFields<BindingId>>,
-}
-
-impl BindingId {
-    pub fn default_ref() -> &'static BindingId {
-        static D: std::sync::LazyLock<BindingId> = std::sync::LazyLock::new(BindingId::default);
-        &D
-    }
-}
-
-impl BindingId {
-    fn _adapter() -> &'static crate::skir_client::internal::StructAdapter<BindingId> {
-        static ADAPTER: std::sync::LazyLock<crate::skir_client::internal::StructAdapter<BindingId>> =
-            std::sync::LazyLock::new(|| {
-                crate::skir_client::internal::StructAdapter::new(
-                    "editor/v1/binding.skir",
-                    "BindingId",
-                    "",
-                    |x: &BindingId| &x._unrecognized,
-                    |x: &mut BindingId, u| x._unrecognized = u,
-                )
-            });
-        &*ADAPTER
-    }
-    pub fn serializer() -> crate::skir_client::Serializer<BindingId> {
-        initialize_module_serializers();
-        crate::skir_client::internal::struct_serializer_from_static(BindingId::_adapter())
-    }
-}
-
-// ==============================================================================
 // struct BindingRef
 // ==============================================================================
 
+/// Locates a value within an expression binding scope. The binding identifies the root and
+/// path identifies a descendant; this carries no resource ownership or edit permission by itself.
 #[derive(Clone, Debug, PartialEq, Default)]
 pub struct BindingRef {
-    pub path: crate::skirout::base::editor::v1::path::DataPath,
-    pub binding_id: BindingId,
+    pub path: crate::skirout::base::editor::v1::type_catalog::ValuePath,
+    pub binding_id: crate::skirout::base::editor::v1::type_catalog::ExpressionBindingId,
     /// Set this to None when you're creating a struct.
     pub _unrecognized: Option<crate::skir_client::UnrecognizedFields<BindingRef>>,
 }
@@ -72,16 +36,17 @@ impl BindingRef {
 
 impl BindingRef {
     fn _adapter() -> &'static crate::skir_client::internal::StructAdapter<BindingRef> {
-        static ADAPTER: std::sync::LazyLock<crate::skir_client::internal::StructAdapter<BindingRef>> =
-            std::sync::LazyLock::new(|| {
-                crate::skir_client::internal::StructAdapter::new(
-                    "editor/v1/binding.skir",
-                    "BindingRef",
-                    "",
-                    |x: &BindingRef| &x._unrecognized,
-                    |x: &mut BindingRef, u| x._unrecognized = u,
-                )
-            });
+        static ADAPTER: std::sync::LazyLock<
+            crate::skir_client::internal::StructAdapter<BindingRef>,
+        > = std::sync::LazyLock::new(|| {
+            crate::skir_client::internal::StructAdapter::new(
+                "editor/v1/binding.skir",
+                "BindingRef",
+                "Locates a value within an expression binding scope. The binding identifies the root and\npath identifies a descendant; this carries no resource ownership or edit permission by itself.",
+                |x: &BindingRef| &x._unrecognized,
+                |x: &mut BindingRef, u| x._unrecognized = u,
+            )
+        });
         &*ADAPTER
     }
     pub fn serializer() -> crate::skir_client::Serializer<BindingRef> {
@@ -91,122 +56,30 @@ impl BindingRef {
 }
 
 // ==============================================================================
-// struct ResolvedBinding
-// ==============================================================================
-
-#[derive(Clone, Debug, PartialEq, Default)]
-pub struct ResolvedBinding {
-    pub reference: BindingRef,
-    pub value_type: crate::skirout::base::editor::v1::type_catalog::TypeExpression,
-    pub value: crate::skirout::base::editor::v1::type_catalog::TypedValue,
-    pub writable: bool,
-    pub revision: i64,
-    /// Set this to None when you're creating a struct.
-    pub _unrecognized: Option<crate::skir_client::UnrecognizedFields<ResolvedBinding>>,
-}
-
-impl ResolvedBinding {
-    pub fn default_ref() -> &'static ResolvedBinding {
-        static D: std::sync::LazyLock<ResolvedBinding> = std::sync::LazyLock::new(ResolvedBinding::default);
-        &D
-    }
-}
-
-impl ResolvedBinding {
-    fn _adapter() -> &'static crate::skir_client::internal::StructAdapter<ResolvedBinding> {
-        static ADAPTER: std::sync::LazyLock<crate::skir_client::internal::StructAdapter<ResolvedBinding>> =
-            std::sync::LazyLock::new(|| {
-                crate::skir_client::internal::StructAdapter::new(
-                    "editor/v1/binding.skir",
-                    "ResolvedBinding",
-                    "",
-                    |x: &ResolvedBinding| &x._unrecognized,
-                    |x: &mut ResolvedBinding, u| x._unrecognized = u,
-                )
-            });
-        &*ADAPTER
-    }
-    pub fn serializer() -> crate::skir_client::Serializer<ResolvedBinding> {
-        initialize_module_serializers();
-        crate::skir_client::internal::struct_serializer_from_static(ResolvedBinding::_adapter())
-    }
-}
-
-// ==============================================================================
-// enum BindingResolution
-// ==============================================================================
-
-#[derive(Debug, Clone, PartialEq)]
-pub enum BindingResolution {
-    Unknown(Option<crate::skir_client::UnrecognizedVariant<BindingResolution>>),
-    Resolved(Box<ResolvedBinding>),
-    Diagnostics(Vec<crate::skirout::base::editor::v1::diagnostic::TypeDiagnostic>),
-}
-
-impl Default for BindingResolution {
-    fn default() -> Self {
-        BindingResolution::Unknown(None)
-    }
-}
-
-impl BindingResolution {
-    fn _adapter() -> &'static crate::skir_client::internal::EnumAdapter<BindingResolution> {
-        static ADAPTER: std::sync::LazyLock<crate::skir_client::internal::EnumAdapter<BindingResolution>> =
-            std::sync::LazyLock::new(|| {
-                crate::skir_client::internal::EnumAdapter::new(
-                    |x: &BindingResolution| match x {
-                        BindingResolution::Unknown(_) => 0,
-                        BindingResolution::Resolved(_) => 1,
-                        BindingResolution::Diagnostics(_) => 2,
-                    },
-                    |u| BindingResolution::Unknown(Some(u)),
-                    |x: &BindingResolution| match x { BindingResolution::Unknown(Some(u)) => Some(u.as_ref()), _ => None },
-                    "editor/v1/binding.skir",
-                    "BindingResolution",
-                    "",
-                )
-            });
-        &*ADAPTER
-    }
-    pub fn serializer() -> crate::skir_client::Serializer<BindingResolution> {
-        initialize_module_serializers();
-        crate::skir_client::internal::enum_serializer_from_static(BindingResolution::_adapter())
-    }
-}
-
-// ==============================================================================
 // initialize_module_serializers()
 // ==============================================================================
 
 fn initialize_module_serializers() {
-    static INIT: std::sync::LazyLock<()> =
-        std::sync::LazyLock::new(|| {
-            unsafe {
-                let a: *mut crate::skir_client::internal::StructAdapter<BindingId> = BindingId::_adapter() as *const _ as *mut _;
-                (*a).add_field("value", 0, crate::skir_client::Serializer::int64(), "", |x: &BindingId| &x.value, |x: &mut BindingId, v| x.value = v);
-                (*a).finalize();
-            }
-            unsafe {
-                let a: *mut crate::skir_client::internal::StructAdapter<BindingRef> = BindingRef::_adapter() as *const _ as *mut _;
-                (*a).add_field("path", 0, crate::skirout::base::editor::v1::path::DataPath::serializer(), "", |x: &BindingRef| &x.path, |x: &mut BindingRef, v| x.path = v);
-                (*a).add_field("binding_id", 1, crate::skir_client::internal::struct_serializer_from_static(BindingId::_adapter()), "", |x: &BindingRef| &x.binding_id, |x: &mut BindingRef, v| x.binding_id = v);
-                (*a).finalize();
-            }
-            unsafe {
-                let a: *mut crate::skir_client::internal::StructAdapter<ResolvedBinding> = ResolvedBinding::_adapter() as *const _ as *mut _;
-                (*a).add_field("reference", 0, crate::skir_client::internal::struct_serializer_from_static(BindingRef::_adapter()), "", |x: &ResolvedBinding| &x.reference, |x: &mut ResolvedBinding, v| x.reference = v);
-                (*a).add_field("value_type", 1, crate::skirout::base::editor::v1::type_catalog::TypeExpression::serializer(), "", |x: &ResolvedBinding| &x.value_type, |x: &mut ResolvedBinding, v| x.value_type = v);
-                (*a).add_field("value", 2, crate::skirout::base::editor::v1::type_catalog::TypedValue::serializer(), "", |x: &ResolvedBinding| &x.value, |x: &mut ResolvedBinding, v| x.value = v);
-                (*a).add_field("writable", 3, crate::skir_client::Serializer::bool(), "", |x: &ResolvedBinding| &x.writable, |x: &mut ResolvedBinding, v| x.writable = v);
-                (*a).add_field("revision", 4, crate::skir_client::Serializer::int64(), "", |x: &ResolvedBinding| &x.revision, |x: &mut ResolvedBinding, v| x.revision = v);
-                (*a).finalize();
-            }
-            unsafe {
-                let a: *mut crate::skir_client::internal::EnumAdapter<BindingResolution> = BindingResolution::_adapter() as *const _ as *mut _;
-                (*a).add_wrapper_variant("resolved", 1, 1, crate::skir_client::internal::struct_serializer_from_static(ResolvedBinding::_adapter()), "", |v| BindingResolution::Resolved(Box::new(v)), |x| match x { BindingResolution::Resolved(b) => b.as_ref(), _ => unreachable!() });
-                (*a).add_wrapper_variant("diagnostics", 2, 2, crate::skir_client::Serializer::array(crate::skirout::base::editor::v1::diagnostic::TypeDiagnostic::serializer()), "", |v| BindingResolution::Diagnostics(v), |x| match x { BindingResolution::Diagnostics(v) => v, _ => unreachable!() });
-                (*a).finalize();
-            }
-        });
+    static INIT: std::sync::LazyLock<()> = std::sync::LazyLock::new(|| unsafe {
+        let a: *mut crate::skir_client::internal::StructAdapter<BindingRef> =
+            BindingRef::_adapter() as *const _ as *mut _;
+        (*a).add_field(
+            "path",
+            0,
+            crate::skirout::base::editor::v1::type_catalog::ValuePath::serializer(),
+            "",
+            |x: &BindingRef| &x.path,
+            |x: &mut BindingRef, v| x.path = v,
+        );
+        (*a).add_field(
+            "binding_id",
+            1,
+            crate::skirout::base::editor::v1::type_catalog::ExpressionBindingId::serializer(),
+            "",
+            |x: &BindingRef| &x.binding_id,
+            |x: &mut BindingRef, v| x.binding_id = v,
+        );
+        (*a).finalize();
+    });
     let _ = *INIT;
 }

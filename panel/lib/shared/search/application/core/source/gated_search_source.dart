@@ -23,12 +23,25 @@ final class GatedSearchSource extends DelegatingSearchSource {
   final SearchSourceClosedGuidance? closedGuidance;
 
   bool _acceptSnapshots = true;
+  bool _initializationPending = false;
+
+  @override
+  void initialize(SearchQueryContext context) {
+    // Initialization can start remote work, so it obeys the same gate as edits.
+    _initializationPending = true;
+    search(context);
+  }
 
   @override
   void search(SearchQueryContext context) {
     if (isOpen(context)) {
       _acceptSnapshots = true;
-      source.search(context);
+      if (_initializationPending) {
+        _initializationPending = false;
+        source.initialize(context);
+      } else {
+        source.search(context);
+      }
       return;
     }
 

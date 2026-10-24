@@ -13,6 +13,276 @@ part of 'graph_layout.dart';
 // dart format off
 T _$identity<T>(T value) => value;
 /// @nodoc
+mixin _$GraphDragSession {
+
+ GraphDragPayload<GraphDragData> get payload; Offset get globalPosition; bool get inside;
+/// Create a copy of GraphDragSession
+/// with the given fields replaced by the non-null parameter values.
+@JsonKey(includeFromJson: false, includeToJson: false)
+@pragma('vm:prefer-inline')
+$GraphDragSessionCopyWith<GraphDragSession> get copyWith => _$GraphDragSessionCopyWithImpl<GraphDragSession>(this as GraphDragSession, _$identity);
+
+
+
+@override
+bool operator ==(Object other) {
+  final _this = this as GraphDragSession;
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is GraphDragSession&&(identical(other.payload, _this.payload) || other.payload == _this.payload)&&(identical(other.globalPosition, _this.globalPosition) || other.globalPosition == _this.globalPosition)&&(identical(other.inside, _this.inside) || other.inside == _this.inside));
+}
+
+
+@override
+int get hashCode {
+  final _this = this as GraphDragSession;
+  return Object.hash(runtimeType,_this.payload,_this.globalPosition,_this.inside);
+}
+
+@override
+String toString() {
+  final _this = this as GraphDragSession;
+  return 'GraphDragSession(payload: ${_this.payload}, globalPosition: ${_this.globalPosition}, inside: ${_this.inside})';
+}
+
+
+}
+
+/// @nodoc
+abstract mixin class $GraphDragSessionCopyWith<$Res>  {
+  factory $GraphDragSessionCopyWith(GraphDragSession value, $Res Function(GraphDragSession) _then) = _$GraphDragSessionCopyWithImpl;
+@useResult
+$Res call({
+ GraphDragPayload<GraphDragData> payload, Offset globalPosition, bool inside
+});
+
+
+
+
+}
+/// @nodoc
+class _$GraphDragSessionCopyWithImpl<$Res>
+    implements $GraphDragSessionCopyWith<$Res> {
+  _$GraphDragSessionCopyWithImpl(this._self, this._then);
+
+  final GraphDragSession _self;
+  final $Res Function(GraphDragSession) _then;
+
+/// Create a copy of GraphDragSession
+/// with the given fields replaced by the non-null parameter values.
+@pragma('vm:prefer-inline') @override $Res call({Object? payload = null,Object? globalPosition = null,Object? inside = null,}) {
+  return _then(GraphDragSession(
+payload: null == payload ? _self.payload : payload // ignore: cast_nullable_to_non_nullable
+as GraphDragPayload<GraphDragData>,globalPosition: null == globalPosition ? _self.globalPosition : globalPosition // ignore: cast_nullable_to_non_nullable
+as Offset,inside: null == inside ? _self.inside : inside // ignore: cast_nullable_to_non_nullable
+as bool,
+  ));
+}
+
+}
+
+
+/// Adds pattern-matching-related methods to [GraphDragSession].
+extension GraphDragSessionPatterns on GraphDragSession {
+/// A variant of `map` that fallback to returning `orElse`.
+///
+/// It is equivalent to doing:
+/// ```dart
+/// switch (sealedClass) {
+///   case final Subclass value:
+///     return ...;
+///   case _:
+///     return orElse();
+/// }
+/// ```
+
+@optionalTypeArgs TResult maybeMap<TResult extends Object?>(TResult Function( _GraphDragSession value)?  $default,{required TResult orElse(),}){
+final _that = this;
+switch (_that) {
+case _GraphDragSession() when $default != null:
+return $default(_that);case _:
+  return orElse();
+
+}
+}
+/// A `switch`-like method, using callbacks.
+///
+/// Callbacks receives the raw object, upcasted.
+/// It is equivalent to doing:
+/// ```dart
+/// switch (sealedClass) {
+///   case final Subclass value:
+///     return ...;
+///   case final Subclass2 value:
+///     return ...;
+/// }
+/// ```
+
+@optionalTypeArgs TResult map<TResult extends Object?>(TResult Function( _GraphDragSession value)  $default,){
+final _that = this;
+switch (_that) {
+case _GraphDragSession():
+return $default(_that);case _:
+  throw StateError('Unexpected subclass');
+
+}
+}
+/// A variant of `map` that fallback to returning `null`.
+///
+/// It is equivalent to doing:
+/// ```dart
+/// switch (sealedClass) {
+///   case final Subclass value:
+///     return ...;
+///   case _:
+///     return null;
+/// }
+/// ```
+
+@optionalTypeArgs TResult? mapOrNull<TResult extends Object?>(TResult? Function( _GraphDragSession value)?  $default,){
+final _that = this;
+switch (_that) {
+case _GraphDragSession() when $default != null:
+return $default(_that);case _:
+  return null;
+
+}
+}
+/// A variant of `when` that fallback to an `orElse` callback.
+///
+/// It is equivalent to doing:
+/// ```dart
+/// switch (sealedClass) {
+///   case Subclass(:final field):
+///     return ...;
+///   case _:
+///     return orElse();
+/// }
+/// ```
+
+@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function( GraphDragPayload<GraphDragData> payload,  Offset globalPosition,  bool inside)?  $default,{required TResult orElse(),}) {final _that = this;
+switch (_that) {
+case _GraphDragSession() when $default != null:
+return $default(_that.payload,_that.globalPosition,_that.inside);case _:
+  return orElse();
+
+}
+}
+/// A `switch`-like method, using callbacks.
+///
+/// As opposed to `map`, this offers destructuring.
+/// It is equivalent to doing:
+/// ```dart
+/// switch (sealedClass) {
+///   case Subclass(:final field):
+///     return ...;
+///   case Subclass2(:final field2):
+///     return ...;
+/// }
+/// ```
+
+@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function( GraphDragPayload<GraphDragData> payload,  Offset globalPosition,  bool inside)  $default,) {final _that = this;
+switch (_that) {
+case _GraphDragSession():
+return $default(_that.payload,_that.globalPosition,_that.inside);case _:
+  throw StateError('Unexpected subclass');
+
+}
+}
+/// A variant of `when` that fallback to returning `null`
+///
+/// It is equivalent to doing:
+/// ```dart
+/// switch (sealedClass) {
+///   case Subclass(:final field):
+///     return ...;
+///   case _:
+///     return null;
+/// }
+/// ```
+
+@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function( GraphDragPayload<GraphDragData> payload,  Offset globalPosition,  bool inside)?  $default,) {final _that = this;
+switch (_that) {
+case _GraphDragSession() when $default != null:
+return $default(_that.payload,_that.globalPosition,_that.inside);case _:
+  return null;
+
+}
+}
+
+}
+
+/// @nodoc
+
+
+class _GraphDragSession extends GraphDragSession {
+  const _GraphDragSession({required this.payload, required this.globalPosition, required this.inside}): super._();
+  
+
+@override final  GraphDragPayload<GraphDragData> payload;
+@override final  Offset globalPosition;
+@override final  bool inside;
+
+/// Create a copy of GraphDragSession
+/// with the given fields replaced by the non-null parameter values.
+@override @JsonKey(includeFromJson: false, includeToJson: false)
+@pragma('vm:prefer-inline')
+_$GraphDragSessionCopyWith<_GraphDragSession> get copyWith => __$GraphDragSessionCopyWithImpl<_GraphDragSession>(this, _$identity);
+
+
+
+@override
+bool operator ==(Object other) {
+    return identical(this, other) || (other.runtimeType == runtimeType&&other is _GraphDragSession&&(identical(other.payload, payload) || other.payload == payload)&&(identical(other.globalPosition, globalPosition) || other.globalPosition == globalPosition)&&(identical(other.inside, inside) || other.inside == inside));
+}
+
+
+@override
+int get hashCode {
+    return Object.hash(runtimeType,payload,globalPosition,inside);
+}
+
+@override
+String toString() {
+    return 'GraphDragSession(payload: $payload, globalPosition: $globalPosition, inside: $inside)';
+}
+
+
+}
+
+/// @nodoc
+abstract mixin class _$GraphDragSessionCopyWith<$Res> implements $GraphDragSessionCopyWith<$Res> {
+  factory _$GraphDragSessionCopyWith(_GraphDragSession value, $Res Function(_GraphDragSession) _then) = __$GraphDragSessionCopyWithImpl;
+@override @useResult
+$Res call({
+ GraphDragPayload<GraphDragData> payload, Offset globalPosition, bool inside
+});
+
+
+
+
+}
+/// @nodoc
+class __$GraphDragSessionCopyWithImpl<$Res>
+    implements _$GraphDragSessionCopyWith<$Res> {
+  __$GraphDragSessionCopyWithImpl(this._self, this._then);
+
+  final _GraphDragSession _self;
+  final $Res Function(_GraphDragSession) _then;
+
+/// Create a copy of GraphDragSession
+/// with the given fields replaced by the non-null parameter values.
+@override @pragma('vm:prefer-inline') $Res call({Object? payload = null,Object? globalPosition = null,Object? inside = null,}) {
+  return _then(_GraphDragSession(
+payload: null == payload ? _self.payload : payload // ignore: cast_nullable_to_non_nullable
+as GraphDragPayload<GraphDragData>,globalPosition: null == globalPosition ? _self.globalPosition : globalPosition // ignore: cast_nullable_to_non_nullable
+as Offset,inside: null == inside ? _self.inside : inside // ignore: cast_nullable_to_non_nullable
+as bool,
+  ));
+}
+
+
+}
+
+/// @nodoc
 mixin _$GraphInteractionPreview {
 
  Set<GraphIdentifier> get movingIds; (int, int,) get moveDelta; GraphResizePreview? get resize;

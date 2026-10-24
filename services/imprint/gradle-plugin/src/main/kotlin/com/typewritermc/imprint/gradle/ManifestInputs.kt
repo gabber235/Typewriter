@@ -1,13 +1,33 @@
 package com.typewritermc.imprint.gradle
 
 import com.typewritermc.imprint.ArtifactKind
+import org.gradle.api.file.ConfigurableFileCollection
 import org.gradle.api.file.RegularFileProperty
 import org.gradle.api.provider.ListProperty
 import org.gradle.api.provider.Property
 import org.gradle.api.tasks.Input
 import org.gradle.api.tasks.InputFile
+import org.gradle.api.tasks.InputFiles
 import org.gradle.api.tasks.PathSensitive
 import org.gradle.api.tasks.PathSensitivity
+
+enum class RuntimeEntrypointInputPolicy {
+    NONE,
+    HOSTED_RUNTIME_METADATA,
+}
+
+/** Tracks an optional archive whose generated metadata contributes to the canonical manifest. */
+abstract class ManifestArchiveInput {
+    @get:Input
+    abstract val namespace: Property<String>
+
+    @get:Input
+    abstract val entrypointPolicy: Property<RuntimeEntrypointInputPolicy>
+
+    @get:InputFiles
+    @get:PathSensitive(PathSensitivity.RELATIVE)
+    abstract val artifacts: ConfigurableFileCollection
+}
 
 /** Preserves source part declarations as named inputs for manifest generation and incremental builds. */
 abstract class ManifestSourcePartInput {

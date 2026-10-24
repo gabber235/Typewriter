@@ -9,7 +9,7 @@ import com.typewritermc.services.libs.communicator.router.CommunicatorRoutesBuil
  */
 internal class RealmCapabilityInvocationRoutes(
     private val source: RealmCapabilityInvocationSource,
-    private val contracts: LibraryContracts,
+    private val contracts: EditorContracts,
 ) {
     /** Registers computation and command calls while leaving validation and dispatch ownership with [source]. */
     fun register(builder: CommunicatorRoutesBuilder) =

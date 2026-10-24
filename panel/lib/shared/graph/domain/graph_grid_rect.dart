@@ -1,4 +1,4 @@
-import "package:flutter/widgets.dart";
+import "package:typewriter_panel/typewriter_panel.dart";
 
 /// Integer rectangle used by graph placement policies.
 ///
@@ -93,10 +93,11 @@ extension GraphGridRectCollection on Iterable<GraphGridRect> {
   }
 }
 
-/// Returns the area weighted center in grid coordinates.
+/// Returns the graph centering point in grid coordinates.
 ///
-/// [cellSize] converts cell area to the pixel area used by the existing graph
-/// centering policy. Empty input has no center and returns null.
+/// Each rectangle contributes a base mass of one plus its pixel area scaled by
+/// 0.001. [cellSize] therefore changes the relative influence of large nodes.
+/// Empty input has no center and returns null.
 Offset? graphCenterOfMass(
   Iterable<GraphGridRect> rects, {
   required double cellSize,

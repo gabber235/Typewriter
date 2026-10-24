@@ -3,6 +3,7 @@ package com.typewritermc.loader
 import com.typewritermc.services.libs.telemetry.ErrorSlug
 import com.typewritermc.services.libs.telemetry.MainSpanScope
 import com.typewritermc.services.libs.telemetry.ServiceTelemetry
+import com.typewritermc.services.libs.telemetry.SpanPresentation
 import com.typewritermc.services.libs.telemetry.mainSpan
 import io.opentelemetry.api.common.Attributes
 
@@ -15,6 +16,7 @@ internal suspend fun <Value> ServiceTelemetry?.artifactSpan(
     name: String,
     failureSlug: String,
     attributes: Attributes = Attributes.empty(),
+    presentation: SpanPresentation? = null,
     block: suspend (MainSpanScope?) -> Value,
 ): Value =
     if (this == null) {
@@ -24,5 +26,6 @@ internal suspend fun <Value> ServiceTelemetry?.artifactSpan(
             name,
             ErrorSlug.of(failureSlug),
             attributes = attributes,
+            presentation = presentation,
         ) { main -> block(main) }
     }

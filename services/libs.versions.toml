@@ -1,42 +1,39 @@
 [versions]
-kotlin = "2.4.10"
-ksp = "2.3.10"
+kotlin = "2.4.21"
+ksp = "2.3.12"
 ktlint = "1.8.0"
 ktlint-gradle = "14.2.0"
-detekt = "2.0.0-alpha.5"
+detekt = "2.0.0-alpha.6"
 foojay = "1.0.0"
 koin-bom = "4.2.2"
-kotlin-logging = "8.0.4"
-logback = "1.6.0"
-mordant = "3.0.2"
-opentelemetry = "1.64.0"
-opentelemetry-semconv = "1.43.0"
-paper = "1.21.11-R0.1-SNAPSHOT"
+logback = "1.6.5"
+mordant = "3.1.0"
+opentelemetry = "1.67.0"
+opentelemetry-semconv = "1.44.0"
+paper = "1.21.4-R0.1-SNAPSHOT"
 semver = "3.1.0"
-kotlinpoet = "2.2.0"
+kotlinpoet = "2.4.0"
 
-skir = "1.0.16"
-okio = "3.6.0"
+skir = "1.0.17"
+okio = "3.18.2"
 
 nats = "0.9.1"
 cryptography = "0.6.0"
-surrealdb-server = "3.2.3"
+surrealdb-server = "3.3.0"
 surrealdb-embedded = "3.1.5"
 surrealdb-java-sdk = "2.1.2"
 
 kotlin-serialize = "1.11.0"
 kotlin-coroutines = "1.11.0"
-jline = "4.3.1"
+jline = "4.4.8"
 clikt = "5.1.0"
-gradle-buildconfig = "6.0.10"
+gradle-buildconfig = "6.1.2"
 
-test-balloon = "1.0.1-K2.4.0"
-test-balloon-addons = "0.16.0"
-kotest = "6.2.3"
+test-balloon = "1.1.0"
+kotest = "6.2.6"
 mockk = "1.14.11"
 
 [libraries]
-kotlin-stdlib = { module = "org.jetbrains.kotlin:kotlin-stdlib", version.ref = "kotlin" }
 kotlin-reflect = { module = "org.jetbrains.kotlin:kotlin-reflect", version.ref = "kotlin" }
 foojay-resolver = { module = "org.gradle.toolchains:foojay-resolver", version.ref = "foojay" }
 kotlin-gradle-plugin = { module = "org.jetbrains.kotlin:kotlin-gradle-plugin", version.ref = "kotlin" }
@@ -53,23 +50,18 @@ jline = { module = "org.jline:jline", version.ref = "jline" }
 clikt = { module = "com.github.ajalt.clikt:clikt", version.ref = "clikt" }
 mordant = { module = "com.github.ajalt.mordant:mordant", version.ref = "mordant" }
 
-kotlin-logging-jvm = { module = "io.github.oshai:kotlin-logging-jvm", version.ref = "kotlin-logging" }
 logback = { module = "ch.qos.logback:logback-classic", version.ref = "logback" }
 
 koin-bom = { module = "io.insert-koin:koin-bom", version.ref = "koin-bom" }
 koin-core = { module = "io.insert-koin:koin-core" }
-koin-test = { module = "io.insert-koin:koin-test", version.ref = "koin-bom" }
 
 test-balloon = { module = "de.infix.testBalloon:testBalloon-framework-core", version.ref = "test-balloon" }
 test-balloon-gradle-plugin = { module = "de.infix.testBalloon:de.infix.testBalloon.gradle.plugin", version.ref = "test-balloon" }
 test-balloon-kotest-assertions = {module = "de.infix.testBalloon:testBalloon-integration-kotest-assertions", version.ref = "test-balloon"}
-test-balloon-data-test = { module = "at.asitplus.testballoon:datatest", version.ref = "test-balloon-addons"}
-test-balloon-property-test = { module = "at.asitplus.testballoon:property", version.ref = "test-balloon-addons"}
 kotest-assertions = { module = "io.kotest:kotest-assertions-core", version.ref = "kotest" }
-kotest-property = { module = "io.kotest:kotest-property", version.ref = "kotest" }
 mockk = { module = "io.mockk:mockk", version.ref = "mockk" }
 
-skir-client = { module = "build.skir:skir-client", version.ref = "skir"}
+skir-client = { module = "build.skir:skir-client", version.ref = "skir" }
 okio = { module = "com.squareup.okio:okio-jvm", version.ref = "okio" }
 
 nats-core = { module = "io.github.n-hass:natskt-core", version.ref = "nats" }
@@ -94,14 +86,10 @@ paper-api = { module = "io.papermc.paper:paper-api", version.ref = "paper" }
 
 [plugins]
 kotlin-jvm = { id = "org.jetbrains.kotlin.jvm", version.ref = "kotlin" }
-foojay-resolver = { id = "org.gradle.toolchains.foojay-resolver-convention", version.ref = "foojay" }
-
 kotlin-serialize = { id = "org.jetbrains.kotlin.plugin.serialization", version.ref = "kotlin" }
+ksp = { id = "com.google.devtools.ksp", version.ref = "ksp" }
 
 gradle-buildconfig = { id = "com.github.gmazzo.buildconfig", version.ref = "gradle-buildconfig" }
-
-test-balloon-plugin = { id = "de.infix.testBalloon", version.ref = "test-balloon"}
-
 
 [bundles]
 basic-test = ["test-balloon", "test-balloon-kotest-assertions", "kotest-assertions"]

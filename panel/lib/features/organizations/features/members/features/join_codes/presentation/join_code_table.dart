@@ -1,8 +1,3 @@
-import "package:flutter/material.dart";
-import "package:flutter/services.dart";
-import "package:flutter_hooks/flutter_hooks.dart";
-import "package:hooks_riverpod/hooks_riverpod.dart";
-import "package:iconify_flutter_plus/icons/material_symbols.dart";
 import "package:typewriter_panel/infrastructure/protocols/skir/skir.dart"
     as skir;
 import "package:typewriter_panel/typewriter_panel.dart";
@@ -11,7 +6,8 @@ import "package:typewriter_panel/typewriter_panel.dart";
 ///
 /// Rows expose pointer and keyboard operations through
 /// [JoinCodeTableRowShortcuts]. This widget owns focus and selection visuals,
-/// while the route and application provider own the actions and data.
+/// while the route owns selection and providers supply observed data. Row
+/// controls submit prepared repository commands through shared local work.
 class JoinCodesTable extends HookConsumerWidget {
   const JoinCodesTable({
     required this.codes,
@@ -279,9 +275,6 @@ class JoinCodesTable extends HookConsumerWidget {
                   selectedCodes.value = selectedCodes.value
                       .where((selected) => selected != code.code)
                       .toSet();
-                  ref
-                      .read(organizationJoinCodesProvider.notifier)
-                      .cleanupExpiredCodes();
                 },
               ),
             ),

@@ -15,7 +15,7 @@ T _$identity<T>(T value) => value;
 /// @nodoc
 mixin _$Book {
 
- skir.RecordId get bookId; String get title; String get icon; Color get color; List<skir.RecordId> get tagIds;
+ skir.ResourceId get bookId; String get title; String get icon; Color get color; List<skir.ResourceId> get tagIds;
 /// Create a copy of Book
 /// with the given fields replaced by the non-null parameter values.
 @JsonKey(includeFromJson: false, includeToJson: false)
@@ -51,7 +51,7 @@ abstract mixin class $BookCopyWith<$Res>  {
   factory $BookCopyWith(Book value, $Res Function(Book) _then) = _$BookCopyWithImpl;
 @useResult
 $Res call({
- skir.RecordId bookId, String title, String icon, Color color, List<skir.RecordId> tagIds
+ skir.ResourceId bookId, String title, String icon, Color color, List<skir.ResourceId> tagIds
 });
 
 
@@ -71,11 +71,11 @@ class _$BookCopyWithImpl<$Res>
 @pragma('vm:prefer-inline') @override $Res call({Object? bookId = null,Object? title = null,Object? icon = null,Object? color = null,Object? tagIds = null,}) {
   return _then(Book(
 bookId: null == bookId ? _self.bookId : bookId // ignore: cast_nullable_to_non_nullable
-as skir.RecordId,title: null == title ? _self.title : title // ignore: cast_nullable_to_non_nullable
+as skir.ResourceId,title: null == title ? _self.title : title // ignore: cast_nullable_to_non_nullable
 as String,icon: null == icon ? _self.icon : icon // ignore: cast_nullable_to_non_nullable
 as String,color: null == color ? _self.color : color // ignore: cast_nullable_to_non_nullable
 as Color,tagIds: null == tagIds ? _self.tagIds : tagIds // ignore: cast_nullable_to_non_nullable
-as List<skir.RecordId>,
+as List<skir.ResourceId>,
   ));
 }
 
@@ -160,7 +160,7 @@ return $default(_that);case _:
 /// }
 /// ```
 
-@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function( skir.RecordId bookId,  String title,  String icon,  Color color,  List<skir.RecordId> tagIds)?  $default,{required TResult orElse(),}) {final _that = this;
+@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function( skir.ResourceId bookId,  String title,  String icon,  Color color,  List<skir.ResourceId> tagIds)?  $default,{required TResult orElse(),}) {final _that = this;
 switch (_that) {
 case _Book() when $default != null:
 return $default(_that.bookId,_that.title,_that.icon,_that.color,_that.tagIds);case _:
@@ -181,7 +181,7 @@ return $default(_that.bookId,_that.title,_that.icon,_that.color,_that.tagIds);ca
 /// }
 /// ```
 
-@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function( skir.RecordId bookId,  String title,  String icon,  Color color,  List<skir.RecordId> tagIds)  $default,) {final _that = this;
+@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function( skir.ResourceId bookId,  String title,  String icon,  Color color,  List<skir.ResourceId> tagIds)  $default,) {final _that = this;
 switch (_that) {
 case _Book():
 return $default(_that.bookId,_that.title,_that.icon,_that.color,_that.tagIds);case _:
@@ -201,7 +201,7 @@ return $default(_that.bookId,_that.title,_that.icon,_that.color,_that.tagIds);ca
 /// }
 /// ```
 
-@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function( skir.RecordId bookId,  String title,  String icon,  Color color,  List<skir.RecordId> tagIds)?  $default,) {final _that = this;
+@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function( skir.ResourceId bookId,  String title,  String icon,  Color color,  List<skir.ResourceId> tagIds)?  $default,) {final _that = this;
 switch (_that) {
 case _Book() when $default != null:
 return $default(_that.bookId,_that.title,_that.icon,_that.color,_that.tagIds);case _:
@@ -216,15 +216,15 @@ return $default(_that.bookId,_that.title,_that.icon,_that.color,_that.tagIds);ca
 
 
 class _Book extends Book {
-  const _Book({required this.bookId, required this.title, required this.icon, required this.color, required  List<skir.RecordId> tagIds}): assert(title != "", 'Title must not be empty.'),assert(icon != "", 'Icon must not be empty.'),_tagIds = tagIds,super._();
+  const _Book({required this.bookId, required this.title, required this.icon, required this.color, required  List<skir.ResourceId> tagIds}): assert(title != "", 'Title must not be empty.'),assert(icon != "", 'Icon must not be empty.'),_tagIds = tagIds,super._();
   
 
-@override final  skir.RecordId bookId;
+@override final  skir.ResourceId bookId;
 @override final  String title;
 @override final  String icon;
 @override final  Color color;
- final  List<skir.RecordId> _tagIds;
-@override List<skir.RecordId> get tagIds {
+ final  List<skir.ResourceId> _tagIds;
+@override List<skir.ResourceId> get tagIds {
   if (_tagIds is EqualUnmodifiableListView) return _tagIds;
   // ignore: implicit_dynamic_type
   return EqualUnmodifiableListView(_tagIds);
@@ -263,7 +263,7 @@ abstract mixin class _$BookCopyWith<$Res> implements $BookCopyWith<$Res> {
   factory _$BookCopyWith(_Book value, $Res Function(_Book) _then) = __$BookCopyWithImpl;
 @override @useResult
 $Res call({
- skir.RecordId bookId, String title, String icon, Color color, List<skir.RecordId> tagIds
+ skir.ResourceId bookId, String title, String icon, Color color, List<skir.ResourceId> tagIds
 });
 
 
@@ -283,11 +283,11 @@ class __$BookCopyWithImpl<$Res>
 @override @pragma('vm:prefer-inline') $Res call({Object? bookId = null,Object? title = null,Object? icon = null,Object? color = null,Object? tagIds = null,}) {
   return _then(_Book(
 bookId: null == bookId ? _self.bookId : bookId // ignore: cast_nullable_to_non_nullable
-as skir.RecordId,title: null == title ? _self.title : title // ignore: cast_nullable_to_non_nullable
+as skir.ResourceId,title: null == title ? _self.title : title // ignore: cast_nullable_to_non_nullable
 as String,icon: null == icon ? _self.icon : icon // ignore: cast_nullable_to_non_nullable
 as String,color: null == color ? _self.color : color // ignore: cast_nullable_to_non_nullable
 as Color,tagIds: null == tagIds ? _self._tagIds : tagIds // ignore: cast_nullable_to_non_nullable
-as List<skir.RecordId>,
+as List<skir.ResourceId>,
   ));
 }
 

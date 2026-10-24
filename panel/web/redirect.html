@@ -55,6 +55,11 @@
     </main>
 
     <script type="text/javascript">
+        // Completes the configured OIDC redirect outside the Flutter app. Popup
+        // flows deliver the callback URI over the versioned channel and await an
+        // acknowledgement. Same page flows store it under the original state
+        // before returning to the saved app URI. Timeout only makes this tab safe
+        // to close; it does not establish that authentication succeeded.
         (function () {
             'use strict';
             const WIRE_VERSION = 2;

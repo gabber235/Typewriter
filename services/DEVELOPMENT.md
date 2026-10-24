@@ -2,6 +2,10 @@
 
 `services/` is one Gradle multiproject build. `build-logic` and `imprint` are the only included builds because Gradle needs both while configuring normal projects.
 
+Services compile and run on Java 21. Paper API compilation targets Minecraft 1.21.4, the minimum supported server version.
+The development server uses Paper 26.3 build 200 with its own Java 25 launcher. Its newer runtime does not raise the
+minimum Java or Paper API version for the plugin.
+
 ## Project ownership
 
 - `protocol` owns generated Kotlin Skir contracts.
@@ -54,11 +58,13 @@ Never add another nested Gradle root for a normal service project. `services/set
 
 ## Discovery development
 
-Imprint assembles one canonical manifest for each artifact. KSP processors contribute static metadata and generated module providers. Realm discovery loads only Realm bindings. Execution discovery loads only execution bindings. Each deployment owns an isolated Koin application and classloader.
+Imprint assembles one canonical manifest for each artifact. KSP processors contribute static metadata and generated module providers. Realm discovery loads only Realm bindings. Execution discovery loads only execution bindings. Each deployment retains its own classloader and admitted discovery packages.
 
-Element runtime facets always contribute execution bindings. Realm discovery never loads them.
+`DeploymentRuntimeOwners` resolves generated providers, capability owners, and registrars from one deployment scoped set of explicitly supplied runtime services. Realm and engines use the same construction policy. Owner instances are shared within that deployment and are never borrowed from a global registry. `RuntimeScope` owns activated effects, while `RuntimeCleanupOwner` disposes registered resources in reverse order and preserves cleanup failures.
 
-The conformance extension proves declared type identities, generated prototypes, element descriptors, source part eligibility, generated registrars, generated facets, and engine targeting.
+Generated registrars contribute runtime setup only to their declared domains. Compiled artifact producers own source specific compilation, while the engine content gateway admits compiled artifacts into the engine resource graph. Element declarations provide authored data and editor semantics. They do not own execution setup or compiled content assembly.
+
+The conformance extension proves declared type identities, generated prototypes, element descriptors, source part eligibility, generated registrars, and engine targeting.
 
 ## Runtime status
 

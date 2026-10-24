@@ -1,0 +1,236 @@
+diff --git a/dist/index.d.ts b/dist/index.d.ts
+index d5a012943a1580c085aff4cbb11dc6c9fc379871..db87bd735d5ee849d087faf556eb7effd2172f08 100644
+--- a/dist/index.d.ts
++++ b/dist/index.d.ts
+@@ -8,5 +8,44 @@ declare class DartCodeGenerator implements CodeGenerator<Config> {
+     generateCode(input: CodeGenerator.Input<Config>): CodeGenerator.Output;
+ }
+ export declare const GENERATOR: DartCodeGenerator;
++export interface DartBindingReference {
++    readonly language: "dart";
++    readonly importUri: string;
++    readonly symbol: string;
++    readonly alias: string;
++}
++export interface MethodNames {
++    readonly module: string;
++    readonly name: string;
++    readonly method: DartBindingReference;
++    readonly requestType: string;
++    readonly responseType: string;
++    readonly imports: ReadonlyArray<{
++        readonly importUri: string;
++        readonly alias: string;
++    }>;
++}
++export interface RecordNames {
++    readonly key: string;
++    readonly type: string;
++    readonly binding: DartBindingReference;
++    readonly fields: ReadonlyArray<{
++        readonly sourceName: string;
++        readonly targetName: string;
++    }>;
++}
++export interface LanguageBindings {
++    readonly language: "dart";
++    readonly methods: ReadonlyArray<MethodNames>;
++    readonly records: ReadonlyArray<RecordNames>;
++}
++export interface BindingInput {
++    readonly modules: readonly object[];
++    readonly recordMap: ReadonlyMap<string, object>;
++    readonly config: {
++        readonly importUriPrefix?: string;
++    };
++}
++export declare function exportBindings(publicInput: BindingInput): LanguageBindings;
+ export {};
+ //# sourceMappingURL=index.d.ts.map
+\ No newline at end of file
+diff --git a/dist/index.js b/dist/index.js
+index 20f17446547a808fdfca8d0eb7e5a2d84851fcda..a8b1c0f8b1748109a9f504556c7ef0f789ae52ee 100644
+--- a/dist/index.js
++++ b/dist/index.js
+@@ -1,7 +1,7 @@
+ import * as paths from "path";
+ import { convertCase, } from "skir-internal";
+ import { z } from "zod";
+-import { enumVariantToDartName, getModuleAlias, structFieldToDartName, toLowerCamel, toTopLevelConstantName, toUpperCamel, } from "./naming.js";
++import { enumVariantToDartName, getModuleAlias, getMethodName, getUnqualifiedClassName, structFieldToDartName, toLowerCamel, toTopLevelConstantName, toUpperCamel, } from "./naming.js";
+ import { TypeSpeller } from "./type_speller.js";
+ const Config = z.strictObject({});
+ class DartCodeGenerator {
+@@ -702,4 +702,65 @@ function docToCommentText(doc) {
+         .join("");
+ }
+ export const GENERATOR = new DartCodeGenerator();
++export function exportBindings(publicInput) {
++    const input = publicInput;
++    const importUriPrefix = input.config.importUriPrefix ?? "";
++    const importUri = (modulePath) => importUriPrefix + modulePath.replace(/\.skir$/, ".dart");
++    return {
++        language: "dart",
++        methods: input.modules.flatMap((module) => module.methods.map((method) => {
++            const typeSpeller = new TypeSpeller(input.recordMap, module, true);
++            const requestType = typeSpeller.getDartType(method.requestType, "frozen");
++            const responseType = typeSpeller.getDartType(method.responseType, "frozen");
++            const imports = [...typeSpeller.referencedModulePaths]
++                .sort()
++                .map((modulePath) => ({
++                importUri: importUri(modulePath),
++                alias: getModuleAlias(modulePath),
++            }));
++            if (requestType.includes("_core.") || responseType.includes("_core.")) {
++                imports.unshift({ importUri: "dart:core", alias: "_core" });
++            }
++            if (requestType.includes("_skir.") || responseType.includes("_skir.")) {
++                imports.unshift({
++                    importUri: "package:skir_client/skir_client.dart",
++                    alias: "_skir",
++                });
++            }
++            return {
++                module: module.path,
++                name: method.name.text,
++                method: {
++                    language: "dart",
++                    importUri: importUri(module.path),
++                    symbol: getMethodName(method),
++                    alias: getModuleAlias(module.path),
++                },
++                requestType,
++                responseType,
++                imports,
++            };
++        })),
++        records: [...input.recordMap.values()].map((location) => {
++            const symbol = getUnqualifiedClassName(location);
++            const alias = getModuleAlias(location.modulePath);
++            return {
++                key: location.record.key,
++                type: `${alias}.${symbol}`,
++                binding: {
++                    language: "dart",
++                    importUri: importUri(location.modulePath),
++                    symbol,
++                    alias,
++                },
++                fields: location.record.recordType === "struct"
++                    ? location.record.fields.map((field) => ({
++                        sourceName: field.name.text,
++                        targetName: structFieldToDartName(field),
++                    }))
++                    : [],
++            };
++        }),
++    };
++}
+ //# sourceMappingURL=index.js.map
+\ No newline at end of file
+diff --git a/dist/naming.d.ts b/dist/naming.d.ts
+index b890e6f74450d860879ce79097815673c0177061..f25d7b3ff681b19e10ed41ce8d517498a69ca943 100644
+--- a/dist/naming.d.ts
++++ b/dist/naming.d.ts
+@@ -1,12 +1,15 @@
+-import { Constant, Field, Module, RecordLocation } from "skir-internal";
++import { Constant, Field, Module, Method, RecordLocation } from "skir-internal";
+ export declare function structFieldToDartName(field: Field | string): string;
+ export declare function enumVariantToDartName(variant: Field): string;
+ export declare function toLowerCamel(field: Field): string;
+ export declare function toUpperCamel(field: Field): string;
+ export declare function toTopLevelConstantName(constant: Constant): string;
++export declare function getMethodName(method: Method | string): string;
+ /** Returns the name of the frozen Dart class for the given record. */
+ export declare function getClassName(record: RecordLocation, origin: {
+     origin: Module;
++    qualifyOrigin?: boolean;
+ }): string;
++export declare function getUnqualifiedClassName(record: RecordLocation): string;
+ export declare function getModuleAlias(modulePath: string): string;
+ //# sourceMappingURL=naming.d.ts.map
+\ No newline at end of file
+diff --git a/dist/naming.js b/dist/naming.js
+index 17b09ed2e9f4ab0236a17e4ab24e535e0d55791b..511e1fd75fb7327ef5ed421a2bf0a8ca4e021160 100644
+--- a/dist/naming.js
++++ b/dist/naming.js
+@@ -35,16 +35,14 @@ export function toTopLevelConstantName(constant) {
+         ? convertCaseResult + "_"
+         : convertCaseResult;
+ }
++export function getMethodName(method) {
++    const skirName = typeof method === "string" ? method : method.name.text;
++    return convertCase(skirName, "lowerCamel") + "Method";
++}
+ /** Returns the name of the frozen Dart class for the given record. */
+ export function getClassName(record, origin) {
+-    const { recordAncestors } = record;
+-    const parts = [];
+-    for (let i = 0; i < recordAncestors.length; ++i) {
+-        const record = recordAncestors[i];
+-        parts.push(record.name.text);
+-    }
+-    const name = parts.join("_");
+-    if (origin.origin.path === record.modulePath) {
++    const name = getUnqualifiedClassName(record);
++    if (origin.origin.path === record.modulePath && !origin.qualifyOrigin) {
+         return name;
+     }
+     else {
+@@ -52,6 +50,9 @@ export function getClassName(record, origin) {
+         return `${alias}.${name}`;
+     }
+ }
++export function getUnqualifiedClassName(record) {
++    return record.recordAncestors.map((ancestor) => ancestor.name.text).join("_");
++}
+ export function getModuleAlias(modulePath) {
+     return ("_lib_" +
+         modulePath
+diff --git a/dist/type_speller.d.ts b/dist/type_speller.d.ts
+index cf06a6ddff232624b8abcecc09b807ea096440d8..60cb443a80c579a89ffce56ae023e26f2d567268 100644
+--- a/dist/type_speller.d.ts
++++ b/dist/type_speller.d.ts
+@@ -19,7 +19,8 @@ export type TypeFlavor = "initializer" | "frozen" | "maybe-mutable" | "mutable"
+ export declare class TypeSpeller {
+     readonly recordMap: ReadonlyMap<RecordKey, RecordLocation>;
+     private readonly origin;
+-    constructor(recordMap: ReadonlyMap<RecordKey, RecordLocation>, origin: Module);
++    private readonly qualifyOrigin;
++    constructor(recordMap: ReadonlyMap<RecordKey, RecordLocation>, origin: Module, qualifyOrigin?: boolean);
+     readonly referencedModulePaths: Set<string>;
+     getDartType(type: ResolvedType, flavor: "initializer" | "frozen" | "mutable", allRecordsFrozen?: undefined): string;
+     getDartType(type: ResolvedType, flavor: TypeFlavor, allRecordsFrozen: boolean | undefined): string;
+diff --git a/dist/type_speller.js b/dist/type_speller.js
+index ca89fd3a4d2467af36fd6de116bb6f2ae756aa8b..d60ffcdbe86651b1b41f0758f972275f079bcf10 100644
+--- a/dist/type_speller.js
++++ b/dist/type_speller.js
+@@ -18,9 +18,11 @@ import { getClassName, structFieldToDartName } from "./naming.js";
+ export class TypeSpeller {
+     recordMap;
+     origin;
+-    constructor(recordMap, origin) {
++    qualifyOrigin;
++    constructor(recordMap, origin, qualifyOrigin = false) {
+         this.recordMap = recordMap;
+         this.origin = origin;
++        this.qualifyOrigin = qualifyOrigin;
+     }
+     referencedModulePaths = new Set();
+     getDartType(type, flavor, 
+@@ -125,10 +127,13 @@ export class TypeSpeller {
+         const record = typeof recordOrKey === "string"
+             ? this.recordMap.get(recordOrKey)
+             : recordOrKey;
+-        if (record.modulePath !== this.origin.path) {
++        if (record.modulePath !== this.origin.path || this.qualifyOrigin) {
+             this.referencedModulePaths.add(record.modulePath);
+         }
+-        return getClassName(record, { origin: this.origin });
++        return getClassName(record, {
++            origin: this.origin,
++            qualifyOrigin: this.qualifyOrigin,
++        });
+     }
+     getSerializerExpression(type) {
+         switch (type.kind) {

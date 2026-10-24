@@ -26,7 +26,7 @@ final class ColorLibraryStorageProvider
         argument: null,
         retry: null,
         name: r'colorLibraryStorageProvider',
-        isAutoDispose: true,
+        isAutoDispose: false,
         dependencies: null,
         $allTransitiveDependencies: null,
       );
@@ -55,7 +55,7 @@ final class ColorLibraryStorageProvider
 }
 
 String _$colorLibraryStorageHash() =>
-    r'0408e37522c083a862c009f22f413fedd7abe992';
+    r'a53e440481433993fe4ec420d5722818e338ea69';
 
 /// Keeps color picker preferences alive across editor widget lifecycles.
 

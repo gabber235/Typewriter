@@ -15,11 +15,11 @@ dependencies {
     implementation(project(":internal-utils"))
     implementation(project(":telemetry"))
     implementation(project(":messaging"))
-    implementation(project(":file-transfer"))
+    implementation(project(":protocol-transport"))
     implementation(project(":file-transfer"))
     imprintHostApi(project(":loader-api"))
+    imprintPlatformApi(project(":typewriter-api"))
     implementation(project(":engine-api"))
-    implementation(project(":typewriter-api"))
     implementation(libs.surrealdb.java.sdk)
     implementation(libs.kotlin.serialize.json)
 
@@ -27,7 +27,6 @@ dependencies {
     testImplementation(project(":file-transfer"))
     testImplementation(project(":telemetry"))
     testImplementation(project(":loader-api"))
-    testImplementation(libs.mockk)
     testImplementation(libs.kotlin.coroutines.test)
 }
 

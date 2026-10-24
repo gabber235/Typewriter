@@ -11,27 +11,19 @@ dependencies:
     sdk: flutter
   typewriter_panel:
     path: ../
-  hooks_riverpod: 3.4.3
-  riverpod_annotation: 4.0.7
-  flutter_animate:
   faker:
-  pub_semver:
-  collection:
-  iconify_flutter_plus: ^1.0.4
-  riverpod: 3.4.3
 dev_dependencies:
   flutter_test:
     sdk: flutter
   build_runner:
   flutter_lints:
   riverpod_generator:
-  riverpod_lint:
 
 dependency_overrides:
   nats_core:
     git:
       url: https://github.com/gabber235/nats.dart.git
-      ref: 5c695ca2f0e46440dbd9e2afe618a20980673036
+      ref: 50231b430d1f5f37226ac36da30dd22c1c1859d9
       path: packages/nats_core
 
 flutter:

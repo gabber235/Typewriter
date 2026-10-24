@@ -313,6 +313,7 @@ private fun MessagingOperation.wireValue(): String =
         MessagingOperation.CONNECT -> "connect"
         MessagingOperation.BINDING_WATCH -> "binding_watch"
         MessagingOperation.BINDING_QUERY -> "binding_query"
+        MessagingOperation.REGISTRATION_LEASE -> "registration_lease"
         MessagingOperation.REAUTHORIZE -> "reauthorize"
         MessagingOperation.HEARTBEAT -> "heartbeat"
         MessagingOperation.SHUTDOWN -> "shutdown"

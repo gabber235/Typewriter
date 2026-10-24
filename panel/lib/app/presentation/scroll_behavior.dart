@@ -1,5 +1,4 @@
-import "package:flutter/gestures.dart";
-import "package:flutter/material.dart";
+import "package:typewriter_panel/typewriter_panel.dart";
 
 /// Enables direct scrolling with the pointer devices supported by the panel.
 ///

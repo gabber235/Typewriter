@@ -1,7 +1,6 @@
-import "package:flutter/material.dart";
-import "package:flutter_hooks/flutter_hooks.dart";
-import "package:hooks_riverpod/hooks_riverpod.dart";
 import "package:typewriter_panel/typewriter_panel.dart";
+
+part "eager_initialization.freezed.dart";
 
 /// Resolves global startup dependencies before exposing the application shell.
 ///
@@ -16,55 +15,79 @@ class EagerInitialization extends ConsumerWidget {
 
   /// Converts an asynchronous dependency into either its value or a boundary
   /// widget. A null value is valid and therefore remains distinct from an
-  /// error or loading state.
-  (T?, Widget?) require<T>(AsyncValue<T> value) {
+  /// error or loading state. Retry recomputes the owner of the failed dependency.
+  _StartupDependency<T> _require<T>(AsyncValue<T> value, VoidCallback retry) {
     if (value.hasError) {
-      return (null, _Error(value.error!));
+      return _StartupDependency.blocked(_Error(value.error!, retry));
     }
     if (value.isLoading) {
-      return (null, const _Loading());
+      return const _StartupDependency.blocked(_Loading());
     }
-    return (value.value, null);
+    return _StartupDependency.ready(value.value);
   }
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final (_, otelWidget) = require(ref.watch(panelTelemetryProvider));
-    if (otelWidget != null) {
-      return otelWidget;
+    if (_require(
+          ref.watch(panelTelemetryProvider),
+          () => ref.invalidate(panelTelemetryProvider),
+        )
+        case _BlockedDependency(:final boundary)) {
+      return boundary;
     }
 
     // Fetch sentinel credentials before authentication checks
-    final (_, sentinelWidget) = require(ref.watch(sentinelCredentialsProvider));
-    if (sentinelWidget != null) {
-      return sentinelWidget;
+    if (_require(
+          ref.watch(sentinelCredentialsProvider),
+          () => ref.invalidate(sentinelCredentialsProvider),
+        )
+        case _BlockedDependency(:final boundary)) {
+      return boundary;
     }
 
-    final (isAuthenticated, authenticatedWidget) = require(
+    switch (_require(
       ref.watch(isAuthenticatedProvider),
-    );
-    if (authenticatedWidget != null) {
-      return authenticatedWidget;
-    }
-    if (isAuthenticated != true) {
-      return child;
-    }
-
-    final (token, accessWidget) = require(ref.watch(accessTokenProvider));
-    if (accessWidget != null) {
-      return accessWidget;
-    }
-    if (token == null) {
-      return child;
+      () => ref.invalidate(authProvider),
+    )) {
+      case _BlockedDependency(:final boundary):
+        return boundary;
+      case _ReadyDependency(:final value) when value != true:
+        return child;
+      case _ReadyDependency():
+        break;
     }
 
-    final (_, authUserInfoWidget) = require(ref.watch(authUserInfoProvider));
-    if (authUserInfoWidget != null) {
-      return authUserInfoWidget;
+    switch (_require(
+      ref.watch(accessTokenProvider),
+      () => ref.invalidate(authProvider),
+    )) {
+      case _BlockedDependency(:final boundary):
+        return boundary;
+      case _ReadyDependency(:final value) when value == null:
+        return child;
+      case _ReadyDependency():
+        break;
+    }
+
+    if (_require(
+          ref.watch(authUserInfoProvider),
+          () => ref.invalidate(authProvider),
+        )
+        case _BlockedDependency(:final boundary)) {
+      return boundary;
     }
 
     return child;
   }
+}
+
+/// A startup dependency that is either resolved or represented by the boundary
+/// widget shown while it loads or after it fails.
+@freezed
+sealed class _StartupDependency<T> with _$StartupDependency<T> {
+  const factory _StartupDependency.ready(T? value) = _ReadyDependency<T>;
+  const factory _StartupDependency.blocked(Widget boundary) =
+      _BlockedDependency<T>;
 }
 
 class _Loading extends HookWidget {
@@ -82,19 +105,23 @@ class _Loading extends HookWidget {
   }
 }
 
-class _Error extends HookConsumerWidget {
-  const _Error(this.error);
+class _Error extends StatelessWidget {
+  const _Error(this.error, this.retry);
   final Object error;
+  final VoidCallback retry;
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
+  Widget build(BuildContext context) {
     return MaterialApp(
       title: "Typewriter",
       theme: buildTheme(Brightness.light),
       darkTheme: buildTheme(Brightness.dark),
       builder: (context, child) => Responsive(child: child!),
       home: Scaffold(
-        body: ErrorScreen(message: "$error", child: SignOutButton()),
+        body: ErrorScreen(
+          message: "$error",
+          child: ElevatedButton(onPressed: retry, child: const Text("Retry")),
+        ),
       ),
     );
   }

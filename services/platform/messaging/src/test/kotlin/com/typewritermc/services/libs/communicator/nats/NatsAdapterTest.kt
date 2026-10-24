@@ -19,13 +19,18 @@ import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.CompletableDeferred
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.async
+import kotlinx.coroutines.awaitCancellation
+import kotlinx.coroutines.cancelAndJoin
 import kotlinx.coroutines.coroutineScope
+import kotlinx.coroutines.currentCoroutineContext
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.flow.toList
+import kotlinx.coroutines.isActive
+import kotlinx.coroutines.launch
 import kotlinx.coroutines.test.advanceTimeBy
 import kotlinx.coroutines.yield
 import kotlin.time.Duration
@@ -152,6 +157,70 @@ val NatsAdapterTest by testSuite {
 
         val cancelled = connection(FakeClient(connectResult = Result.failure(CancellationException("stop"))))
         shouldThrow<CancellationException> { cancelled.connect() }
+    }
+
+    test("canceling vendor authentication preserves the connection timeout and permits another attempt") {
+        val timeout = IllegalStateException("timed out connecting to server")
+        val failedClient = FakeClient(connectResult = Result.failure(timeout))
+        val replacementClient = FakeClient()
+        val clients = ArrayDeque(listOf(failedClient, replacementClient))
+        val connection =
+            NatsConnection(
+                { NatsConnectionConfiguration("nats://localhost") },
+                { awaitCancellation() },
+                { _, authentication ->
+                    clients.removeFirst().also { client ->
+                        if (client === failedClient) {
+                            client.onConnect = {
+                                coroutineScope {
+                                    val entered = CompletableDeferred<Unit>()
+                                    val callback =
+                                        launch {
+                                            entered.complete(Unit)
+                                            authentication(true) { "signed" }
+                                        }
+                                    entered.await()
+                                    callback.cancelAndJoin()
+                                }
+                            }
+                        }
+                    }
+                },
+            )
+
+        val failure = connection.connect().shouldBeInstanceOf<NatsLifecycleResult.Failure>()
+        failure.error.shouldBeInstanceOf<NatsLifecycleError.Connection>().cause shouldBe timeout
+        currentCoroutineContext().isActive shouldBe true
+        connection.state.value shouldBe NatsConnectionState.Disconnected
+        failedClient.events.shouldContainExactly("connect", "disconnect")
+        connection.connect() shouldBe NatsLifecycleResult.Success
+        connection.shutdown() shouldBe NatsLifecycleResult.Success
+    }
+
+    test("caller cancellation propagates and releases the partially connected client") {
+        coroutineScope {
+            val entered = CompletableDeferred<Unit>()
+            val client = FakeClient()
+            val connection =
+                NatsConnection(
+                    { NatsConnectionConfiguration("nats://localhost") },
+                    { NatsAuthentication() },
+                    FakeFactory(client) {
+                        entered.complete(Unit)
+                        awaitCancellation()
+                    },
+                )
+            val pending = async { connection.connect() }
+            entered.await()
+
+            pending.cancel()
+
+            shouldThrow<CancellationException> { pending.await() }
+            pending.join()
+            currentCoroutineContext().isActive shouldBe true
+            connection.state.value shouldBe NatsConnectionState.Disconnected
+            client.events.shouldContainExactly("connect", "disconnect")
+        }
     }
 
     test("reconnect reloads providers and shutdown drains before disconnect") {

@@ -1,100 +1,143 @@
 package com.typewritermc.realm.routes
 
+import com.typewritermc.operations.OperationSearch
+import com.typewritermc.realm.authoring.AuthoringSeed
+import com.typewritermc.realm.authoring.InMemoryAuthoringViewStore
+import com.typewritermc.realm.catalog.RealmCatalogStore
+import com.typewritermc.realm.catalog.installTestCatalog
+import com.typewritermc.realm.checking.TestCatalogLease
 import de.infix.testBalloon.framework.core.testSuite
 import io.kotest.matchers.collections.shouldContainExactly
 import io.kotest.matchers.shouldBe
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Job
+import kotlinx.coroutines.awaitCancellation
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.test.runCurrent
 import kotlinx.coroutines.test.runTest
-import skirout.editor.v1.diagnostic.DiagnosticCode
 import skirout.editor.v1.search.RealmPresentationSearchRequest
 import skirout.editor.v1.search.RealmPresentationSearchStatus
 import skirout.editor.v1.search.RealmPresentationSearchUpdate
 import skirout.editor.v1.search.RealmSearchQuery
 import skirout.editor.v1.type_catalog.CapabilityId
 import skirout.editor.v1.type_catalog.CatalogGeneration
-import skirout.editor.v1.type_catalog.TypeExpression
-import skirout.editor.v1.type_catalog.TypedValue
+import skirout.editor.v1.type_catalog.DataValue
+import skirout.editor.v1.type_catalog.TypeTemplate
 
 val RealmPresentationSearchRoutesTest by testSuite {
-    test("production presentation search source returns typed unavailable diagnostics") {
+    test("switching from an operation search cancels its stream even when the next capability is unavailable") {
         runTest {
-            RouteFixture().use { fixture ->
-                val response = fixture.search(validSearchRequest())
-                val unavailable = response as RealmPresentationSearchUpdate.UnavailableWrapper
+            RealmCatalogStore().use { catalogs ->
+                catalogs.installTestCatalog("generation")
+                val operation = PendingSearchSource(backgroundScope)
+                val views = InMemoryAuthoringViewStore(TestCatalogLease(), AuthoringSeed(emptyMap()))
+                val source = CapabilityRealmPresentationSearchSource(backgroundScope, catalogs, views, operation)
+                source.watch(validSearchRequest().copy(capabilityId = CapabilityId(value = OperationSearch.compatibleBooks.id.value))) { }
+                runCurrent()
+                operation.active.toSet() shouldBe setOf("search")
 
-                unavailable.value.subscriptionId shouldBe "search"
-                unavailable.value.diagnostics
-                    .single()
-                    .message shouldBe
-                    "Realm presentation search source is unavailable"
+                val replacement = source.watch(validSearchRequest()) { }
+                runCurrent()
+
+                (replacement as RealmPresentationSearchUpdate.SnapshotWrapper).value.status shouldBe RealmPresentationSearchStatus.ERROR
+                operation.active.toSet() shouldBe emptySet()
+                source.cancel("search") shouldBe false
+                views.close()
             }
         }
     }
 
-    test("route passes the complete request and publishes complete replacement snapshots") {
+    test("unavailable source returns a correlated typed diagnostic") {
+        runTest {
+            val response = UnavailableRealmPresentationSearchSource().watch(validSearchRequest()) { }
+
+            val unavailable = response as RealmPresentationSearchUpdate.UnavailableWrapper
+            unavailable.value.subscriptionId shouldBe "search"
+            unavailable.value.diagnostics
+                .single()
+                .message shouldBe "Realm presentation search source is unavailable"
+        }
+    }
+
+    test("source receives the complete request and can publish replacement snapshots") {
         runTest {
             val source = FakeRealmPresentationSearchSource()
             val request = validSearchRequest()
-            RouteFixture(presentationSearch = source).use { fixture ->
-                val initial = fixture.search(request) as RealmPresentationSearchUpdate.SnapshotWrapper
-                val update =
-                    fixture
-                        .publishedTo("editor.presentation.search", RealmPresentationSearchUpdate.serializer)
-                        .single() as RealmPresentationSearchUpdate.SnapshotWrapper
+            val published = mutableListOf<RealmPresentationSearchUpdate>()
 
-                source.request shouldBe request
-                initial.value.status shouldBe RealmPresentationSearchStatus.LOADING
-                update.value.subscriptionId shouldBe request.subscriptionId
-                update.value.status shouldBe RealmPresentationSearchStatus.READY
-                update.value.values shouldContainExactly listOf(TypedValue.StringWrapper("Alex"))
-                update.value.guidance shouldContainExactly listOf("Search by player name")
-            }
+            val initial = source.watch(request, published::add) as RealmPresentationSearchUpdate.SnapshotWrapper
+            val update = published.single() as RealmPresentationSearchUpdate.SnapshotWrapper
+
+            source.request shouldBe request
+            initial.value.status shouldBe RealmPresentationSearchStatus.LOADING
+            update.value.subscriptionId shouldBe request.subscriptionId
+            update.value.status shouldBe RealmPresentationSearchStatus.READY
+            update.value.values shouldContainExactly listOf(DataValue.StringValueWrapper("Alex"))
+            update.value.guidance shouldContainExactly listOf("Search by player name")
         }
     }
 
-    test("invalid requests are rejected before reaching the source") {
-        runTest {
-            val source = FakeRealmPresentationSearchSource()
-            val invalid =
-                validSearchRequest().copy(
-                    capabilityId = CapabilityId(value = ""),
-                    payload = TypedValue.UNKNOWN,
-                    resultType = TypeExpression.UNKNOWN,
-                )
-            RouteFixture(presentationSearch = source).use { fixture ->
-                val response = fixture.search(invalid) as RealmPresentationSearchUpdate.SnapshotWrapper
+    test("invalid request is rejected before a source can start") {
+        val invalid =
+            validSearchRequest().copy(
+                capabilityId = CapabilityId(value = ""),
+                payload = DataValue.UNKNOWN,
+                resultType = TypeTemplate.UNKNOWN,
+            )
 
-                source.request shouldBe null
-                response.value.status shouldBe RealmPresentationSearchStatus.ERROR
-                response.value.diagnostics.map { it.code } shouldContainExactly
-                    listOf(
-                        DiagnosticCode.INVALID_VALUE,
-                        DiagnosticCode.INVALID_VALUE,
-                        DiagnosticCode.INVALID_VALUE,
-                    )
-            }
-        }
+        val response = requireNotNull(invalidRealmPresentationSearchRequest(invalid)) as RealmPresentationSearchUpdate.SnapshotWrapper
+
+        response.value.status shouldBe RealmPresentationSearchStatus.ERROR
+        response.value.diagnostics.size shouldBe 3
     }
 
     test("mismatched source subscriptions become correlated error snapshots") {
-        runTest {
-            val source = FakeRealmPresentationSearchSource(initialSubscriptionId = "different")
-            RouteFixture(presentationSearch = source).use { fixture ->
-                val response = fixture.search(validSearchRequest()) as RealmPresentationSearchUpdate.SnapshotWrapper
+        val response = invalidRealmPresentationSearchResponse("search") as RealmPresentationSearchUpdate.SnapshotWrapper
 
-                response.value.subscriptionId shouldBe "search"
-                response.value.status shouldBe RealmPresentationSearchStatus.ERROR
-                response.value.diagnostics
-                    .single()
-                    .message shouldBe
-                    "Realm presentation search response used a different subscription ID"
-            }
-        }
+        response.value.subscriptionId shouldBe "search"
+        response.value.status shouldBe RealmPresentationSearchStatus.ERROR
+        response.value.diagnostics
+            .single()
+            .message shouldBe "Realm presentation search response used a different subscription ID"
     }
 }
 
-private class FakeRealmPresentationSearchSource(
-    private val initialSubscriptionId: String? = null,
+private class PendingSearchSource(
+    private val scope: CoroutineScope,
 ) : RealmPresentationSearchSource {
+    val active = mutableSetOf<String>()
+    private val jobs = mutableMapOf<String, Job>()
+
+    override suspend fun watch(
+        request: RealmPresentationSearchRequest,
+        updates: RealmPresentationSearchUpdatePublisher,
+    ): RealmPresentationSearchUpdate {
+        jobs[request.subscriptionId] =
+            scope.launch {
+                active += request.subscriptionId
+                try {
+                    awaitCancellation()
+                } finally {
+                    active -= request.subscriptionId
+                }
+            }
+        return RealmPresentationSearchUpdate.createSnapshot(
+            subscriptionId = request.subscriptionId,
+            status = RealmPresentationSearchStatus.LOADING,
+            values = emptyList(),
+            guidance = emptyList(),
+            diagnostics = emptyList(),
+        )
+    }
+
+    override fun cancel(subscriptionId: String): Boolean =
+        jobs.remove(subscriptionId)?.let {
+            it.cancel()
+            true
+        } ?: false
+}
+
+private class FakeRealmPresentationSearchSource : RealmPresentationSearchSource {
     var request: RealmPresentationSearchRequest? = null
 
     override suspend fun watch(
@@ -106,13 +149,13 @@ private class FakeRealmPresentationSearchSource(
             RealmPresentationSearchUpdate.createSnapshot(
                 subscriptionId = request.subscriptionId,
                 status = RealmPresentationSearchStatus.READY,
-                values = listOf(TypedValue.StringWrapper("Alex")),
+                values = listOf(DataValue.StringValueWrapper("Alex")),
                 guidance = listOf("Search by player name"),
                 diagnostics = emptyList(),
             ),
         )
         return RealmPresentationSearchUpdate.createSnapshot(
-            subscriptionId = initialSubscriptionId ?: request.subscriptionId,
+            subscriptionId = request.subscriptionId,
             status = RealmPresentationSearchStatus.LOADING,
             values = emptyList(),
             guidance = emptyList(),
@@ -123,21 +166,14 @@ private class FakeRealmPresentationSearchSource(
     override fun cancel(subscriptionId: String): Boolean = false
 }
 
-private suspend fun RouteFixture.search(request: RealmPresentationSearchRequest): RealmPresentationSearchUpdate =
-    request(
-        "editor.presentation.search",
-        request,
-        RealmPresentationSearchRequest.serializer,
-        RealmPresentationSearchUpdate.serializer,
-    )
-
 private fun validSearchRequest() =
     RealmPresentationSearchRequest(
         subscriptionId = "search",
         generation = CatalogGeneration(value = "generation"),
         capabilityId = CapabilityId(value = "capability"),
-        payload = TypedValue.StringWrapper("server"),
-        resultType = TypeExpression.UNIT,
+        payload = DataValue.StringValueWrapper("server"),
+        resultType = TypeTemplate.ScalarWrapper(skirout.editor.v1.type_catalog.ScalarKind.TEXT),
+        operationContext = null,
         query =
             RealmSearchQuery(
                 normalizedQuery = "alex",

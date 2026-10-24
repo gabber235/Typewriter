@@ -13,17 +13,11 @@ part of 'organization_route_access.dart';
 // dart format off
 T _$identity<T>(T value) => value;
 /// @nodoc
-mixin _$OrganizationRouteAccessState implements DiagnosticableTreeMixin {
+mixin _$OrganizationRouteAccessState {
 
 
 
 
-@override
-void debugFillProperties(DiagnosticPropertiesBuilder properties) {
-    properties
-    ..add(DiagnosticsProperty('type', 'OrganizationRouteAccessState'))
-    ;
-}
 
 @override
 bool operator ==(Object other) {
@@ -35,7 +29,7 @@ bool operator ==(Object other) {
 int get hashCode => runtimeType.hashCode;
 
 @override
-String toString({ DiagnosticLevel minLevel = DiagnosticLevel.info }) {
+String toString() {
     return 'OrganizationRouteAccessState()';
 }
 
@@ -187,7 +181,7 @@ return available(_that.principalId,_that.organizationIds);case _:
 /// @nodoc
 
 
-class OrganizationRouteAccessLoading with DiagnosticableTreeMixin implements OrganizationRouteAccessState {
+class OrganizationRouteAccessLoading implements OrganizationRouteAccessState {
   const OrganizationRouteAccessLoading();
   
 
@@ -195,12 +189,6 @@ class OrganizationRouteAccessLoading with DiagnosticableTreeMixin implements Org
 
 
 
-@override
-void debugFillProperties(DiagnosticPropertiesBuilder properties) {
-    properties
-    ..add(DiagnosticsProperty('type', 'OrganizationRouteAccessState.loading'))
-    ;
-}
 
 @override
 bool operator ==(Object other) {
@@ -212,7 +200,7 @@ bool operator ==(Object other) {
 int get hashCode => runtimeType.hashCode;
 
 @override
-String toString({ DiagnosticLevel minLevel = DiagnosticLevel.info }) {
+String toString() {
     return 'OrganizationRouteAccessState.loading()';
 }
 
@@ -225,7 +213,7 @@ String toString({ DiagnosticLevel minLevel = DiagnosticLevel.info }) {
 /// @nodoc
 
 
-class OrganizationRouteAccessUnavailable with DiagnosticableTreeMixin implements OrganizationRouteAccessState {
+class OrganizationRouteAccessUnavailable implements OrganizationRouteAccessState {
   const OrganizationRouteAccessUnavailable();
   
 
@@ -233,12 +221,6 @@ class OrganizationRouteAccessUnavailable with DiagnosticableTreeMixin implements
 
 
 
-@override
-void debugFillProperties(DiagnosticPropertiesBuilder properties) {
-    properties
-    ..add(DiagnosticsProperty('type', 'OrganizationRouteAccessState.unavailable'))
-    ;
-}
 
 @override
 bool operator ==(Object other) {
@@ -250,7 +232,7 @@ bool operator ==(Object other) {
 int get hashCode => runtimeType.hashCode;
 
 @override
-String toString({ DiagnosticLevel minLevel = DiagnosticLevel.info }) {
+String toString() {
     return 'OrganizationRouteAccessState.unavailable()';
 }
 
@@ -263,7 +245,7 @@ String toString({ DiagnosticLevel minLevel = DiagnosticLevel.info }) {
 /// @nodoc
 
 
-class OrganizationRouteAccessAvailable with DiagnosticableTreeMixin implements OrganizationRouteAccessState {
+class OrganizationRouteAccessAvailable implements OrganizationRouteAccessState {
   const OrganizationRouteAccessAvailable({required this.principalId, required  Set<String> organizationIds}): _organizationIds = organizationIds;
   
 
@@ -283,12 +265,6 @@ class OrganizationRouteAccessAvailable with DiagnosticableTreeMixin implements O
 $OrganizationRouteAccessAvailableCopyWith<OrganizationRouteAccessAvailable> get copyWith => _$OrganizationRouteAccessAvailableCopyWithImpl<OrganizationRouteAccessAvailable>(this, _$identity);
 
 
-@override
-void debugFillProperties(DiagnosticPropertiesBuilder properties) {
-    properties
-    ..add(DiagnosticsProperty('type', 'OrganizationRouteAccessState.available'))
-    ..add(DiagnosticsProperty('principalId', principalId))..add(DiagnosticsProperty('organizationIds', organizationIds));
-}
 
 @override
 bool operator ==(Object other) {
@@ -302,7 +278,7 @@ int get hashCode {
 }
 
 @override
-String toString({ DiagnosticLevel minLevel = DiagnosticLevel.info }) {
+String toString() {
     return 'OrganizationRouteAccessState.available(principalId: $principalId, organizationIds: $organizationIds)';
 }
 

@@ -1,6 +1,5 @@
-import "dart:io";
-
 import "package:flutter_test/flutter_test.dart";
+import "package:typewriter_panel/typewriter_panel.dart";
 
 void main() {
   final sourceFile = File("../skir-src/editor/v1/presentation.skir");

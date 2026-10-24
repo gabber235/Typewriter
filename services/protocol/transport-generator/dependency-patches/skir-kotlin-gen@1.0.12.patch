@@ -1,0 +1,115 @@
+diff --git a/dist/index.d.ts b/dist/index.d.ts
+index 103eadeefb8923cc4128f82d2d1cef35da255f3f..da13c39ea2a8c74f2fb3e851867b7832df643c41 100644
+--- a/dist/index.d.ts
++++ b/dist/index.d.ts
+@@ -12,5 +12,38 @@ declare class KotlinCodeGenerator implements CodeGenerator<Config> {
+     generateCode(input: CodeGenerator.Input<Config>): CodeGenerator.Output;
+ }
+ export declare const GENERATOR: KotlinCodeGenerator;
++export interface KotlinBindingReference {
++    readonly language: "kotlin";
++    readonly packageName: string;
++    readonly symbol: string;
++}
++export interface MethodNames {
++    readonly module: string;
++    readonly name: string;
++    readonly method: KotlinBindingReference;
++    readonly requestType: string;
++    readonly responseType: string;
++}
++export interface RecordNames {
++    readonly key: string;
++    readonly type: string;
++    readonly fields: ReadonlyArray<{
++        readonly sourceName: string;
++        readonly targetName: string;
++    }>;
++}
++export interface LanguageBindings {
++    readonly language: "kotlin";
++    readonly methods: ReadonlyArray<MethodNames>;
++    readonly records: ReadonlyArray<RecordNames>;
++}
++export interface BindingInput {
++    readonly modules: readonly object[];
++    readonly recordMap: ReadonlyMap<string, object>;
++    readonly config: {
++        readonly packagePrefix?: string;
++    };
++}
++export declare function exportBindings(publicInput: BindingInput): LanguageBindings;
+ export {};
+ //# sourceMappingURL=index.d.ts.map
+\ No newline at end of file
+diff --git a/dist/index.js b/dist/index.js
+index d5d2d9ea8cbd9bfba681900bfb72e8b81741eaad..0424f3cb3065702c705b79df3fd3d87898c60294 100644
+--- a/dist/index.js
++++ b/dist/index.js
+@@ -702,4 +702,33 @@ function docToCommentText(doc) {
+         .join("");
+ }
+ export const GENERATOR = new KotlinCodeGenerator();
++export function exportBindings(publicInput) {
++    const input = publicInput;
++    const namer = new Namer(input.config.packagePrefix ?? "");
++    const typeSpeller = new TypeSpeller(input.recordMap, namer);
++    return {
++        language: "kotlin",
++        methods: input.modules.flatMap((module) => module.methods.map((method) => ({
++            module: module.path,
++            name: method.name.text,
++            method: {
++                language: "kotlin",
++                packageName: namer.modulePackage(module.path),
++                symbol: method.name.text,
++            },
++            requestType: typeSpeller.getKotlinType(method.requestType, "frozen"),
++            responseType: typeSpeller.getKotlinType(method.responseType, "frozen"),
++        }))),
++        records: [...input.recordMap.values()].map((location) => ({
++            key: location.record.key,
++            type: namer.getClassName(location).qualifiedName,
++            fields: location.record.recordType === "struct"
++                ? location.record.fields.map((field) => ({
++                    sourceName: field.name.text,
++                    targetName: namer.structFieldToKotlinName(field),
++                }))
++                : [],
++        })),
++    };
++}
+ //# sourceMappingURL=index.js.map
+\ No newline at end of file
+diff --git a/dist/naming.d.ts b/dist/naming.d.ts
+index fb2b96cce69a629dba86270f38c562eb322a5e06..007bcfbcc21c9819ddc897979e5e4968e1e9f4de 100644
+--- a/dist/naming.d.ts
++++ b/dist/naming.d.ts
+@@ -6,6 +6,7 @@ export declare class Namer {
+     structFieldToKotlinName(field: Field | string): string;
+     /** Returns the name of the frozen Kotlin class for the given record. */
+     getClassName(record: RecordLocation): ClassName;
++    modulePackage(modulePath: string): string;
+ }
+ export declare function toEnumConstantName(field: Field): string;
+ export interface ClassName {
+diff --git a/dist/naming.js b/dist/naming.js
+index 22353ea204fae8c1a3fe352b59a78b10405fc3df..35bf537d347334a38fcaa242e9dd11ce29eafabd 100644
+--- a/dist/naming.js
++++ b/dist/naming.js
+@@ -47,6 +47,15 @@ export class Namer {
+         const qualifiedName = `${this.packagePrefix}skirout.${importPath}.${parts.join(".")}`;
+         return { name, qualifiedName };
+     }
++    modulePackage(modulePath) {
++        return (this.packagePrefix +
++            "skirout." +
++            modulePath
++                .replace(/\.skir$/, "")
++                .replace(/^@/, "external/")
++                .replace(/-/g, "_")
++                .replace(/\//g, "."));
++    }
+ }
+ const KOTLIN_HARD_KEYWORDS = new Set([
+     "abstract",

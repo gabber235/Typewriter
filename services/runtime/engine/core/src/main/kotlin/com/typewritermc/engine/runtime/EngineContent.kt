@@ -1,210 +1,79 @@
 package com.typewritermc.engine.runtime
 
-import com.typewritermc.elements.Element
-import com.typewritermc.elements.ElementCatalog
-import com.typewritermc.engine.ActivatedCompiledContent
-import com.typewritermc.engine.CompiledBlobPointer
-import com.typewritermc.engine.CompiledContentActivation
-import com.typewritermc.engine.CompiledContentBundle
-import com.typewritermc.engine.CompiledElementKey
-import com.typewritermc.engine.CompiledManifest
-import com.typewritermc.engine.CompiledPageShard
-import com.typewritermc.engine.ContentDigest
-import com.typewritermc.loader.api.artifact.ArtifactDigest
-import com.typewritermc.loader.api.artifact.BlobEndpoint
-import com.typewritermc.loader.api.artifact.BlobResult
-import com.typewritermc.loader.api.artifact.DEFAULT_CHUNK_SIZE
-import com.typewritermc.loader.api.artifact.DigestAlgorithm
-import com.typewritermc.types.ConcreteTypePrototype
-import com.typewritermc.types.TypeDecodingContext
-import com.typewritermc.types.TypePrototypeRegistry
-import kotlinx.coroutines.flow.MutableStateFlow
-import kotlinx.coroutines.flow.StateFlow
-import kotlinx.serialization.json.Json
-import java.io.ByteArrayOutputStream
+import com.typewritermc.engine.LoadedCompiledArtifact
+import com.typewritermc.engine.LoadedPublishedContent
+import com.typewritermc.engine.PAGE_COMPILATION_FORMAT_REVISION
+import com.typewritermc.engine.PAGE_COMPILATION_MEDIA_TYPE
+import com.typewritermc.engine.PAGE_COMPILATION_PROJECTION
+import com.typewritermc.engine.PUBLISHED_CONTENT_FORMAT_REVISION
+import com.typewritermc.engine.RuntimeCompilationFacts
+import com.typewritermc.engine.decodeCompiledPageShard
+import com.typewritermc.types.NativeBindingRegistry
+import com.typewritermc.types.RelationContract
+import com.typewritermc.types.catalog.CheckedCatalog
 
 /**
- * Accepts a loaded activation at the engine content boundary.
+ * Accepts loaded compiled content at the engine content boundary.
  *
- * Successful return means the implementation applied its own content contract. Ordering and stale revision
- * rejection belong to the runtime invoking this gateway.
+ * Successful return means the implementation applied its own content contract. The delivery owner serializes current state fetches and application.
  */
 fun interface EngineContentGateway {
-    suspend fun apply(content: ActivatedCompiledContent)
+    suspend fun apply(content: LoadedPublishedContent)
 }
 
 /**
- * Loads the manifest and shards described by an activation.
+ * Admits complete Page publications and holds the compiled resource graph of the last accepted one.
  *
- * Implementations are responsible for verifying external bytes before returning a usable bundle; failures
- * propagate to delivery.
+ * Every artifact must be a Page shard whose payload matches its manifest and passes admission against the
+ * execution catalog. [graph] changes only after the whole publication is admitted, so any decoding or admission
+ * failure retains the previous graph. The delivery owner serializes [apply].
  */
-fun interface CompiledContentSource {
-    suspend fun load(activation: CompiledContentActivation): ActivatedCompiledContent
-}
-
-/**
- * Loads compiled JSON blobs with exact size, contiguous chunk, and SHA256 verification.
- *
- * Manifest and shard identities must match their descriptors. Shards are cached by semantic digest for reuse
- * across activations. Calls must be serialized because the cache is mutable; each blob is buffered in memory and
- * must fit an Int sized array.
- */
-class BlobCompiledContentSource(
-    private val blobs: BlobEndpoint,
-) : CompiledContentSource {
-    private val shards = mutableMapOf<ContentDigest, CompiledPageShard>()
-
-    override suspend fun load(activation: CompiledContentActivation): ActivatedCompiledContent {
-        val manifest =
-            json.decodeFromString(
-                CompiledManifest.serializer(),
-                read(activation.manifest).decodeToString(),
-            )
-        require(manifest.digest == activation.manifestDigest) { "Compiled manifest identity does not match activation." }
-        val pointers = activation.shards.associateBy { it.shard }
-        val loaded =
-            manifest.pages.map { page ->
-                shards[page.shard]
-                    ?: run {
-                        val pointer = requireNotNull(pointers[page.shard]) { "Activation is missing shard ${page.shard.value}." }
-                        json
-                            .decodeFromString(
-                                CompiledPageShard.serializer(),
-                                read(pointer.blob).decodeToString(),
-                            ).also { shard ->
-                                require(shard.digest == page.shard) { "Compiled shard identity does not match its manifest." }
-                                require(shard.page == page.page) { "Compiled shard page does not match its manifest." }
-                                shards[page.shard] = shard
-                            }
-                    }
-            }
-        return ActivatedCompiledContent(activation.activationRevision, CompiledContentBundle(manifest, loaded))
-    }
-
-    private suspend fun read(pointer: CompiledBlobPointer): ByteArray {
-        require(pointer.size <= Int.MAX_VALUE) { "Compiled blob is too large to buffer." }
-        val expected = ArtifactDigest(DigestAlgorithm.SHA_256, pointer.digest.value)
-        val metadata = blobs.metadata(expected).success("read compiled blob metadata")
-        require(metadata.size == pointer.size) { "Compiled blob size does not match its descriptor." }
-        val output = ByteArrayOutputStream(pointer.size.toInt())
-        var offset = 0L
-        var complete = pointer.size == 0L
-        while (offset < pointer.size) {
-            val chunk = blobs.read(expected, offset, DEFAULT_CHUNK_SIZE).success("read compiled blob")
-            require(chunk.offset == offset) { "Compiled blob returned a noncontiguous chunk." }
-            require(chunk.bytes.isNotEmpty()) { "Compiled blob ended before its declared size." }
-            require(chunk.bytes.size.toLong() <= pointer.size - offset) { "Compiled blob exceeded its declared size." }
-            output.write(chunk.bytes)
-            offset += chunk.bytes.size
-            require(!chunk.complete || offset == pointer.size) { "Compiled blob ended before its declared size." }
-            complete = chunk.complete
-        }
-        require(complete) { "Compiled blob did not mark its final chunk complete." }
-        val bytes = output.toByteArray()
-        require(ArtifactDigest.sha256(bytes) == expected) { "Compiled blob digest verification failed." }
-        return bytes
-    }
-}
-
-/**
- * Publishes decoded elements indexed by compiled occurrence together with their manifest.
- *
- * This is decoded content, not a set of attached runtime facets or proof that entries are being executed.
- */
-data class EngineContentSnapshot(
-    val manifest: CompiledManifest,
-    val elements: Map<CompiledElementKey, Element>,
-)
-
-/**
- * Decodes compiled elements using the engine catalog and deployment prototypes.
- *
- * Only manifest format revision one is supported. Duplicate compiled keys, missing concrete prototypes, and
- * decoded values that are not elements fail assembly. Decoding follows the catalog descriptor; no schema migration
- * is performed here.
- */
-class EngineContentAssembler(
-    private val catalog: ElementCatalog,
-    private val prototypes: TypePrototypeRegistry,
-) {
-    /** Decodes every shard in [content] into an atomically usable element snapshot. */
-    fun assemble(content: CompiledContentBundle): EngineContentSnapshot {
-        require(content.manifest.formatRevision == 1) {
-            "Unsupported compiled content format ${content.manifest.formatRevision}."
-        }
-        val context =
-            object : TypeDecodingContext {
-                override val prototypes: TypePrototypeRegistry = this@EngineContentAssembler.prototypes
-            }
-        val compiledElements =
-            content.shards
-                .flatMap { it.elements }
-        require(compiledElements.map { it.key }.distinct().size == compiledElements.size) {
-            "Compiled content contains duplicate element keys."
-        }
-        val elements =
-            compiledElements
-                .associate { element ->
-                    val descriptor =
-                        catalog.entries.singleOrNull { it.descriptor.id == element.elementType }?.descriptor
-                            ?: error("Element type ${element.elementType.value} is unavailable in the engine catalog.")
-                    val prototype =
-                        prototypes.require(descriptor.type) as? ConcreteTypePrototype<*>
-                            ?: error("Element type ${descriptor.type} is not concrete.")
-                    val decoded = with(context) { prototype.decode(element.value) }
-                    require(decoded is Element) { "Decoded value for ${descriptor.type} is not an Element." }
-                    element.key to decoded
-                }
-        return EngineContentSnapshot(content.manifest, elements)
-    }
-}
-
-/**
- * Replaces the observable decoded snapshot only after complete assembly succeeds.
- *
- * A failed assembly leaves the previous snapshot in place. This gateway does not attach facets, dispatch entries,
- * or provide player execution.
- */
-class AssemblingEngineContentGateway(
-    private val assembler: EngineContentAssembler,
+class PageContentGateway(
+    private val catalog: CheckedCatalog,
+    private val bindings: NativeBindingRegistry,
+    private val relations: Collection<RelationContract>,
 ) : EngineContentGateway {
-    private val mutableSnapshot = MutableStateFlow<EngineContentSnapshot?>(null)
-    val snapshot: StateFlow<EngineContentSnapshot?> = mutableSnapshot
+    @Volatile
+    var graph: CompiledResourceGraph? = null
+        private set
 
-    override suspend fun apply(content: ActivatedCompiledContent) {
-        mutableSnapshot.value = assembler.assemble(content.content)
+    override suspend fun apply(content: LoadedPublishedContent) {
+        require(content.descriptor.formatRevision == PUBLISHED_CONTENT_FORMAT_REVISION) {
+            "Unsupported compiled content format ${content.descriptor.formatRevision}."
+        }
+        val facts = content.artifacts.map { it.admittedPageFacts() }
+        graph = CompiledResourceGraph.assemble(facts, relations, catalog, bindings)
+    }
+
+    private fun LoadedCompiledArtifact.admittedPageFacts(): RuntimeCompilationFacts {
+        require(reference.root.projection == PAGE_COMPILATION_PROJECTION && reference.mediaType == PAGE_COMPILATION_MEDIA_TYPE) {
+            "Engine content does not support ${reference.root.projection.value} and ${reference.mediaType}."
+        }
+        val shard = payload.decodeCompiledPageShard()
+        require(shard.digest == reference.semanticDigest) {
+            "Compiled Page artifact identity does not match its manifest."
+        }
+        val facts = shard.facts
+        require(facts.root.source == reference.root.resource) {
+            "Compiled Page artifact root does not match its payload."
+        }
+        require(facts.formatRevision == reference.formatRevision && facts.formatRevision == PAGE_COMPILATION_FORMAT_REVISION) {
+            "Compiled Page artifact format does not match its manifest."
+        }
+        facts.requireAccepted(catalog, relations)
+        return facts
     }
 }
 
-/**
- * Distinguishes newly applied content, a stale activation, and runtimes without a content gateway.
- *
- * Ignored reports the current activation and manifest, not the rejected incoming revision.
- */
+/** Reports whether the complete publication was installed or was already current. */
 sealed interface ContentApplicationResult {
-    /** The gateway accepted the incoming activation and it became the current content. */
     data class Applied(
-        val activationRevision: Long,
-        val manifest: ContentDigest,
+        val publication: com.typewritermc.authoring.PublicationId,
     ) : ContentApplicationResult
 
-    /** The activation was stale or repeated; the current content remains authoritative. */
-    data class Ignored(
-        val activationRevision: Long,
-        val currentManifest: ContentDigest,
+    data class Unchanged(
+        val publication: com.typewritermc.authoring.PublicationId,
     ) : ContentApplicationResult
 
-    /** No content gateway is configured, so the activation could not be applied. */
     data object Unsupported : ContentApplicationResult
 }
-
-private fun <T> BlobResult<T>.success(operation: String): T =
-    when (this) {
-        is BlobResult.Success -> value
-        BlobResult.NotFound -> error("$operation failed because the blob was not found.")
-        is BlobResult.Conflict -> error("$operation failed: $reason")
-        is BlobResult.Invalid -> error("$operation failed: $reason")
-    }
-
-private val json = Json { ignoreUnknownKeys = true }

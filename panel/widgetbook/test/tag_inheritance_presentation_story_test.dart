@@ -1,5 +1,6 @@
-import "package:flutter/widgets.dart";
 import "package:flutter_test/flutter_test.dart";
+import "package:typewriter_panel/typewriter_panel.dart";
+import "package:widgetbook/widgetbook.dart";
 import "package:widgetbook_workspace/stories/features/organizations/features/realms/features/tags/presentation/tag_inheritance_presentation.stories.dart";
 
 void main() {
@@ -15,11 +16,19 @@ void main() {
 
   for (final MapEntry(key: name, value: story) in stories.entries) {
     testWidgets("$name inheritance story renders", (tester) async {
-      await tester.pumpWidget(Builder(builder: story));
-      await tester.pump();
+      final state = WidgetbookState(root: WidgetbookRoot(children: const []));
+      addTearDown(state.dispose);
+      await tester.pumpWidget(
+        WidgetbookScope(
+          state: state,
+          child: Builder(builder: story),
+        ),
+      );
+      await tester.pumpAndSettle();
 
       expect(tester.takeException(), isNull);
-      expect(find.text("Inheritance"), findsOneWidget);
+      expect(find.byType(AuthoredResourceInspection), findsOneWidget);
+      expect(find.byKey(const ValueKey("effective-tags")), findsOneWidget);
     });
   }
 }

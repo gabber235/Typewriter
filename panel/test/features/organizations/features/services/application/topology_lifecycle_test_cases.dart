@@ -6,7 +6,7 @@ void topologyLifecycleTests() {
     final container = ProviderContainer.test(
       overrides: [
         userIdProvider.overrideWith((ref) async => null),
-        natsProvider.overrideWithValue(nats),
+        natsProvider.overrideWith(() => FakeNats(nats)),
       ],
     );
     addTearDown(nats.dispose);
@@ -41,7 +41,7 @@ void topologyLifecycleTests() {
     final container = ProviderContainer.test(
       overrides: [
         userIdProvider.overrideWith((ref) async => "user1"),
-        natsProvider.overrideWithValue(nats),
+        natsProvider.overrideWith(() => FakeNats(nats)),
       ],
     );
     addTearDown(nats.dispose);
@@ -50,15 +50,11 @@ void topologyLifecycleTests() {
 
     container.listen(provider, (_, _) {});
     await container.read(provider.future);
-    final command = container
-        .read(provider.notifier)
-        .configureHost(
-          host: TopologyHost.fromSkir(_host()),
-          execution: skir.HostExecutionConfiguration(
-            realm: null,
-            primaryEngine: null,
-          ),
-        );
+    final command = _configureHost(
+      container,
+      TopologyHost.fromSkir(_host()),
+      skir.HostExecutionConfiguration(realm: null, primaryEngine: null),
+    );
     await _waitFor(
       () =>
           nats.requests.any((request) => request.subject == _configureSubject),
@@ -75,7 +71,15 @@ void topologyLifecycleTests() {
         removedResources: [],
       ),
     );
-    expect((await command).host.revision, 2);
-    expect(container.read(provider).requireValue.hosts.single.revision, 1);
+    final result = await command;
+    await container.pump();
+    expect(
+      (result as skir.ConfigureServiceHostResponse_successWrapper)
+          .value
+          .host
+          .revision,
+      2,
+    );
+    expect(container.read(provider).requireValue.hosts.single.revision, 2);
   });
 }

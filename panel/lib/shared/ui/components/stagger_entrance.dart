@@ -1,8 +1,4 @@
-import "dart:math" as math;
-
-import "package:flutter/rendering.dart";
-import "package:flutter/widgets.dart";
-import "package:flutter_hooks/flutter_hooks.dart";
+import "package:typewriter_panel/typewriter_panel.dart";
 
 const _defaultDuration = Duration(milliseconds: 300);
 const _defaultInterval = Duration(milliseconds: 60);
@@ -19,6 +15,8 @@ const _defaultSlideOffset = 0.05;
 ///
 /// A nested scope is treated as one contiguous group in its parent's schedule.
 /// Omitted settings inherit from the nearest parent scope.
+/// Settings are captured when the coordinator is created. Remount the scope
+/// to start another run; rebuilding with new settings does not reschedule it.
 class StaggerScope extends HookWidget {
   const StaggerScope({
     required this.child,
@@ -436,6 +434,11 @@ class _StaggerScopeMarker extends InheritedWidget {
   }
 }
 
+/// Seals one registration tree after layout and assigns it one root timeline.
+///
+/// Sealing makes later registrations immediately visible. Nested coordinators
+/// contribute ordered groups, while the root caps launch delays and owns the
+/// clock. Disabling animations reveals the run and cannot restart that run.
 class _StaggerCoordinator {
   _StaggerCoordinator({
     required this.parent,
@@ -527,7 +530,7 @@ class _StaggerCoordinator {
 
     final finalDesiredStart = assignments.fold<double>(
       0,
-      (latest, assignment) => math.max(latest, assignment.desiredStartUs),
+      (latest, assignment) => max(latest, assignment.desiredStartUs),
     );
     final capUs = settings.maxLaunchDuration.inMicroseconds.toDouble();
     final scale = finalDesiredStart <= 0 || finalDesiredStart <= capUs
@@ -539,7 +542,7 @@ class _StaggerCoordinator {
       final startUs = assignment.desiredStartUs * scale;
       final durationUs = assignment.node.settings.duration.inMicroseconds
           .toDouble();
-      timelineUs = math.max(timelineUs, startUs + durationUs);
+      timelineUs = max(timelineUs, startUs + durationUs);
     }
 
     if (timelineUs <= 0) {
@@ -549,9 +552,7 @@ class _StaggerCoordinator {
       return;
     }
 
-    final timelineDuration = Duration(
-      microseconds: math.max(1, timelineUs.round()),
-    );
+    final timelineDuration = Duration(microseconds: max(1, timelineUs.round()));
     localController.duration = timelineDuration;
 
     for (final assignment in assignments) {

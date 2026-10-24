@@ -1,7 +1,3 @@
-import "dart:async";
-
-import "package:flutter/material.dart";
-import "package:hooks_riverpod/hooks_riverpod.dart";
 import "package:typewriter_panel/typewriter_panel.dart";
 
 const coreSelectionOperations = <SelectionOperation>[
@@ -14,8 +10,9 @@ const coreSelectionOperations = <SelectionOperation>[
 ///
 /// Instances are registered by [SelectionOperationsRoot]. Availability is
 /// evaluated against the resolved selection, while execution reads the latest
-/// provider state so menu, shortcut, and inspector invocations share one
-/// operation implementation.
+/// provider state at invocation so menus, shortcuts and inspector controls share
+/// one operation implementation. An operation may retain that captured batch
+/// while awaiting confirmation.
 abstract class SelectionOperation {
   const SelectionOperation();
 
@@ -24,6 +21,9 @@ abstract class SelectionOperation {
 
   /// Human readable description displayed in tooltips and shortcut displays.
   String get description;
+
+  /// Whether this operation is offered among the inspector controls.
+  bool get showInInspector => true;
 
   /// Returns whether this operation is valid for [selection].
   ///
@@ -35,9 +35,8 @@ abstract class SelectionOperation {
   ///
   /// Implementations may mutate model state, emit provider changes, or trigger
   /// UI effects. The caller may await the returned [Future]. Availability is
-  /// checked before invocation, but implementations read current provider
-  /// state because selection can change while an asynchronous menu or dialog
-  /// is open.
+  /// checked before invocation. A confirmation flow can retain the selection
+  /// captured when the operation begins.
   FutureOr<void> executeOn(WidgetRef ref);
 
   /// Builds the context menu item that invokes this operation.
@@ -94,12 +93,7 @@ abstract class IntentShortcutOperation extends ShortcutableOperation {
   );
 }
 
-/// Base type for capability objects exposed by [Selectable.capabilities].
-///
-/// Concrete operations inspect capability subtypes to decide whether a batch
-/// action is available and to collect the per item callbacks or data needed to
-/// execute it. Extend this type to advertise a capability. The base type has
-/// no API because each operation defines its own contract.
+/// Resolves capability requirements and callbacks across a selectable batch.
 extension SelectionCapabilitySelectionX on Iterable<Selectable> {
   /// Whether every item exposes a capability of type [T].
   ///

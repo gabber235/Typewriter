@@ -1,5 +1,3 @@
-import "dart:async";
-
 import "package:typewriter_panel/typewriter_panel.dart";
 
 /// Persistence boundary for the most recently committed search results.

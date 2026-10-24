@@ -1,20 +1,11 @@
 // ignore_for_file: invalid_use_of_internal_member
 
-import "dart:async";
-
-import "package:flutter/widgets.dart";
 import "package:flutter_test/flutter_test.dart";
-import "package:hooks_riverpod/hooks_riverpod.dart";
-import "package:hooks_riverpod/legacy.dart";
-import "package:typewriter_panel/app/application/router/access/authentication_route_access.dart";
-import "package:typewriter_panel/app/application/router/access/organization_route_access.dart";
-import "package:typewriter_panel/app/application/router/access/route_access_coordinator.dart";
-import "package:typewriter_panel/app/presentation/route_access/authentication_route_access_binding.dart";
-import "package:typewriter_panel/app/presentation/route_access/organization_route_access_binding.dart";
-import "package:typewriter_panel/app/presentation/route_access/route_access_binding.dart";
-import "package:typewriter_panel/features/auth/application/auth.dart";
-import "package:typewriter_panel/features/organizations/application/application.dart";
-import "package:typewriter_panel/infrastructure/protocols/skir/converters.dart";
+import "package:typewriter_panel/infrastructure/protocols/skir/skir.dart"
+    as skir;
+import "package:typewriter_panel/typewriter_panel.dart";
+
+import "../../../support/test_utils.dart";
 
 final _authenticationDependency = StateProvider<Future<bool>>(
   (ref) => Future.value(false),
@@ -37,26 +28,26 @@ RouteAccessCoordinator _coordinator() => RouteAccessCoordinator(
 );
 
 OrganizationData _organization(String id) => OrganizationData(
-  organizationId: recordId("organization:$id"),
+  organizationId: skir.recordId("organization:$id"),
   name: id,
   logoUrl: "",
 );
 
-Widget _app({required RouteAccessCoordinator access, required Widget child}) {
-  return ProviderScope(
-    overrides: [
-      isAuthenticatedProvider.overrideWith(
-        (ref) => ref.watch(_authenticationDependency),
-      ),
-      userIdProvider.overrideWith((ref) => ref.watch(_principalDependency)),
-      organizationsProvider.overrideWith(_ControlledOrganizations.new),
-    ],
-    child: Directionality(
-      textDirection: TextDirection.ltr,
+const _bound = Key("bound");
+
+final _overrides = [
+  isAuthenticatedProvider.overrideWith(
+    (ref) => ref.watch(_authenticationDependency),
+  ),
+  userIdProvider.overrideWith((ref) => ref.watch(_principalDependency)),
+  organizationsProvider.overrideWith(_ControlledOrganizations.new),
+];
+
+Widget _app({required RouteAccessCoordinator access, required Widget child}) =>
+    testApp(
+      overrides: _overrides,
       child: RouteAccessBinding(access: access, builder: (_) => child),
-    ),
-  );
-}
+    );
 
 void main() {
   testWidgets("fireImmediately seeds modules before builder", (tester) async {
@@ -125,9 +116,14 @@ void main() {
       sync: true,
     );
     final access = _coordinator();
-    await tester.pumpWidget(_app(access: access, child: const SizedBox()));
+    await tester.pumpWidget(
+      _app(
+        access: access,
+        child: const SizedBox(key: _bound),
+      ),
+    );
     final container = ProviderScope.containerOf(
-      tester.element(find.byType(SizedBox)),
+      tester.element(find.byKey(_bound)),
     );
 
     container.read(_principalDependency.notifier).state = Future.value(
@@ -187,9 +183,14 @@ void main() {
     final organizations = StreamController<List<OrganizationData>>(sync: true);
     final principal = Completer<String?>();
     final access = _coordinator();
-    await tester.pumpWidget(_app(access: access, child: const SizedBox()));
+    await tester.pumpWidget(
+      _app(
+        access: access,
+        child: const SizedBox(key: _bound),
+      ),
+    );
     final container = ProviderScope.containerOf(
-      tester.element(find.byType(SizedBox)),
+      tester.element(find.byKey(_bound)),
     );
 
     container.read(_organizationsDependency.notifier).state =
@@ -215,15 +216,10 @@ void main() {
     final access = _coordinator();
     final mounted = StateProvider((ref) => true);
     await tester.pumpWidget(
-      ProviderScope(
-        overrides: [
-          isAuthenticatedProvider.overrideWith(
-            (ref) => ref.watch(_authenticationDependency),
-          ),
-          userIdProvider.overrideWith((ref) => ref.watch(_principalDependency)),
-          organizationsProvider.overrideWith(_ControlledOrganizations.new),
-        ],
+      testApp(
+        overrides: _overrides,
         child: Consumer(
+          key: _bound,
           builder: (context, ref, _) => ref.watch(mounted)
               ? RouteAccessBinding(
                   access: access,
@@ -234,7 +230,7 @@ void main() {
       ),
     );
     final container = ProviderScope.containerOf(
-      tester.element(find.byType(SizedBox)),
+      tester.element(find.byKey(_bound)),
     );
     final decisionAtUnmount = access.authentication.decision;
     container.read(mounted.notifier).state = false;
@@ -254,12 +250,22 @@ void main() {
   ) async {
     final oldAccess = _coordinator();
     final newAccess = _coordinator();
-    await tester.pumpWidget(_app(access: oldAccess, child: const SizedBox()));
+    await tester.pumpWidget(
+      _app(
+        access: oldAccess,
+        child: const SizedBox(key: _bound),
+      ),
+    );
     final container = ProviderScope.containerOf(
-      tester.element(find.byType(SizedBox)),
+      tester.element(find.byKey(_bound)),
     );
     final oldDecision = oldAccess.authentication.decision;
-    await tester.pumpWidget(_app(access: newAccess, child: const SizedBox()));
+    await tester.pumpWidget(
+      _app(
+        access: newAccess,
+        child: const SizedBox(key: _bound),
+      ),
+    );
 
     container.read(_authenticationDependency.notifier).state = Future.value(
       true,
@@ -281,9 +287,14 @@ void main() {
     var notifications = 0;
     access.addListener(() => notifications++);
 
-    await tester.pumpWidget(_app(access: access, child: const SizedBox()));
+    await tester.pumpWidget(
+      _app(
+        access: access,
+        child: const SizedBox(key: _bound),
+      ),
+    );
     final container = ProviderScope.containerOf(
-      tester.element(find.byType(SizedBox)),
+      tester.element(find.byKey(_bound)),
     );
     container.read(_authenticationDependency.notifier).state = Future.value(
       true,

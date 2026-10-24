@@ -1,6 +1,7 @@
-import "package:flutter/material.dart";
 import "package:flutter_test/flutter_test.dart";
 import "package:typewriter_panel/typewriter_panel.dart";
+
+import "../../support/test_utils.dart";
 
 void main() {
   testWidgets("RiveAsset renders placeholder during Flutter tests", (
@@ -8,13 +9,12 @@ void main() {
   ) async {
     const placeholderKey = Key("rive-placeholder");
 
-    await tester.pumpWidget(
-      const MaterialApp(
-        home: RiveAsset(
-          asset: "assets/cute_robot.riv",
-          stateMachineName: "Motion",
-          placeholder: SizedBox(key: placeholderKey),
-        ),
+    await tester.pumpTestApp(
+      settle: false,
+      child: const RiveAsset(
+        asset: "assets/cute_robot.riv",
+        stateMachineName: "Motion",
+        placeholder: SizedBox(key: placeholderKey),
       ),
     );
 

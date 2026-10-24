@@ -3,8 +3,8 @@ package com.typewritermc.loader.deployment
 import com.typewritermc.imprint.ArtifactId
 import com.typewritermc.imprint.ArtifactRequirement
 import com.typewritermc.imprint.VersionConstraint
-import com.typewritermc.loader.api.artifact.ArtifactDigest
 import com.typewritermc.loader.artifact.DeploymentArtifact
+import com.typewritermc.services.libs.filetransfer.blob.ArtifactDigest
 import kotlinx.serialization.ExperimentalSerializationApi
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.cbor.Cbor

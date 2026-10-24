@@ -1,0 +1,78 @@
+package com.typewritermc.configuration
+
+import com.typewritermc.authoring.ValueLocation
+import com.typewritermc.checking.CheckRecipe
+import com.typewritermc.checking.Diagnostic
+import com.typewritermc.expression.EvaluationDiagnostic
+import com.typewritermc.expression.ExpressionFactory
+import com.typewritermc.types.TypeTemplate
+
+data class CollectedConfiguration(
+    val recipes: List<ConfigurationRecipe>,
+    val checks: List<CheckRecipe>,
+)
+
+data class NestedConfigurationScope(
+    val representation: RepresentationKind,
+    val expected: TypeTemplate,
+    val scope: kotlin.reflect.KClass<*>,
+    val expressions: ExpressionFactory<*> = GenericValueExpressionsFactory,
+    val create: (ConfigurationCollectionScope) -> Any,
+)
+
+interface ConfigurationCollectionScope {
+    fun <S : Any> field(
+        path: RelativeFieldPattern,
+        representation: RepresentationKind,
+        expected: TypeTemplate,
+        scope: kotlin.reflect.KClass<S>,
+    ): S = field(path, representation, expected, scope, emptyMap(), configurationExpressions(scope))
+
+    fun <S : Any> field(
+        path: RelativeFieldPattern,
+        representation: RepresentationKind,
+        expected: TypeTemplate,
+        scope: kotlin.reflect.KClass<S>,
+        nested: Map<FieldPatternSegment, NestedConfigurationScope>,
+    ): S = field(path, representation, expected, scope, nested, configurationExpressions(scope))
+
+    fun <S : Any> field(
+        path: RelativeFieldPattern,
+        representation: RepresentationKind,
+        expected: TypeTemplate,
+        scope: kotlin.reflect.KClass<S>,
+        nested: Map<FieldPatternSegment, NestedConfigurationScope>,
+        expressions: ExpressionFactory<*>,
+    ): S
+
+    fun nested(path: RelativeFieldPattern): ConfigurationCollectionScope
+
+    fun collected(): CollectedConfiguration
+}
+
+interface ConfigurationProvider {
+    fun collect(scope: ConfigurationCollectionScope): CollectedConfiguration
+}
+
+fun interface PortableConstantEncoder {
+    fun encode(
+        expected: TypeTemplate,
+        value: Any?,
+    ): com.typewritermc.types.DataValue
+}
+
+sealed interface RuleEvaluation {
+    data object Passed : RuleEvaluation
+
+    data class Violated(
+        val findings: List<Diagnostic>,
+    ) : RuleEvaluation
+
+    data class Unavailable(
+        val locations: List<ValueLocation>,
+    ) : RuleEvaluation
+
+    data class Failed(
+        val diagnostic: EvaluationDiagnostic,
+    ) : RuleEvaluation
+}

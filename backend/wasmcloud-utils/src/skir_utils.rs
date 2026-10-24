@@ -1,8 +1,12 @@
 //! Conversion and formatting boundaries between generated SKIR values and SurrealDB.
 //!
-//! The conversions preserve the supported record ID shapes in both directions. Values
-//! that the target representation cannot express are mapped to its closest explicit
-//! unknown or null form, according to the existing conversion contract.
+//! Supported record shapes retain their typed keys. Unknown Skir keys become empty string keys,
+//! unknown nested values become null, and unsupported database values become unknown Skir variants.
+//! These conversions do not validate incoming identities. The native database UUID conversion
+//! requires valid UUID text and panics otherwise.
+//!
+//! Display formatting serves diagnostics and telemetry. Database queries bind typed record IDs;
+//! callers needing a subject token extract a string identity and validate its transport grammar.
 
 use opentelemetry::Value;
 
@@ -13,6 +17,38 @@ use crate::skirout::base::kernel::v1::record_id::{
 };
 use std::collections::{BTreeSet, HashMap};
 use std::fmt;
+
+/// Extracts the raw string identity stored by a record key.
+///
+/// This receiver does not render SurrealQL syntax or validate a target grammar. Callers remain
+/// responsible for applying the grammar of the transport or wire boundary that receives it.
+pub trait RecordIdKeyIdentity {
+    fn raw_identity(&self) -> Result<&str, crate::otel_wasi::Error>;
+}
+
+impl RecordIdKeyIdentity for surrealdb_component_sdk::RecordIdKey {
+    fn raw_identity(&self) -> Result<&str, crate::otel_wasi::Error> {
+        let Self::String(value) = self else {
+            return Err(crate::otel_wasi::Error::new(
+                "record-id-key-identity-required",
+                "string record identity required",
+            ));
+        };
+        Ok(value)
+    }
+}
+
+impl RecordIdKeyIdentity for RecordIdKey {
+    fn raw_identity(&self) -> Result<&str, crate::otel_wasi::Error> {
+        let Self::String(value) = self else {
+            return Err(crate::otel_wasi::Error::new(
+                "record-id-key-identity-required",
+                "string record identity required",
+            ));
+        };
+        Ok(value)
+    }
+}
 
 // =============================================================================
 // Display helpers
@@ -31,7 +67,6 @@ fn is_simple_id(s: &str) -> bool {
     s.parse::<i64>().is_err()
 }
 
-/// Format a string as a record ID key: bare if simple, backtick-quoted otherwise.
 fn fmt_string_key(s: &str, f: &mut fmt::Formatter<'_>) -> fmt::Result {
     if is_simple_id(s) {
         write!(f, "{s}")
@@ -40,7 +75,6 @@ fn fmt_string_key(s: &str, f: &mut fmt::Formatter<'_>) -> fmt::Result {
     }
 }
 
-/// Format a string as a record ID value: single-quoted with internal single quotes escaped.
 fn fmt_string_value(s: &str, f: &mut fmt::Formatter<'_>) -> fmt::Result {
     write!(f, "'")?;
     for c in s.chars() {
@@ -523,6 +557,26 @@ mod tests {
             key: RecordIdKey::String("id".to_owned()),
             _unrecognized: None,
         }
+    }
+
+    #[test]
+    fn string_record_keys_preserve_raw_business_identity() {
+        for identity in ["quest-world", "123", "550e8400-e29b-41d4-a716-446655440000"] {
+            let skir = RecordIdKey::String(identity.to_owned());
+            let database = surrealdb_component_sdk::RecordIdKey::String(identity.to_owned());
+            assert_eq!(skir.raw_identity().unwrap(), identity);
+            assert_eq!(database.raw_identity().unwrap(), identity);
+        }
+    }
+
+    #[test]
+    fn structured_record_keys_are_not_business_identities() {
+        assert!(RecordIdKey::Number(123).raw_identity().is_err());
+        assert!(
+            surrealdb_component_sdk::RecordIdKey::Number(123)
+                .raw_identity()
+                .is_err()
+        );
     }
 
     #[test]

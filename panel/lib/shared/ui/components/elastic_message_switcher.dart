@@ -1,4 +1,3 @@
-import "package:flutter/material.dart";
 import "package:typewriter_panel/typewriter_panel.dart";
 
 /// Switches keyed messages with an elastic slide, fade, and size transition.
@@ -23,6 +22,8 @@ class ElasticMessageSwitcher extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final reduced = MediaQuery.disableAnimationsOf(context);
+    if (reduced) return child ?? const SizedBox.shrink();
     return AnimatedSize(
       duration: sizeDuration,
       alignment: Alignment.topCenter,
@@ -33,7 +34,16 @@ class ElasticMessageSwitcher extends StatelessWidget {
         switchInCurve: Curves.linear,
         switchOutCurve: Curves.linear,
         transitionBuilder: (child, animation) {
-          return ElasticMessageTransition(animation: animation, child: child);
+          return AnimatedBuilder(
+            animation: animation,
+            builder: (context, child) => ExcludeInteraction(
+              excluding:
+                  animation.status == AnimationStatus.reverse ||
+                  animation.status == AnimationStatus.dismissed,
+              child: child!,
+            ),
+            child: ElasticMessageTransition(animation: animation, child: child),
+          );
         },
         child: child,
       ),

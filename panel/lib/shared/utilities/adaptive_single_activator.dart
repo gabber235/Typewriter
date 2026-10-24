@@ -1,15 +1,12 @@
-import "package:flutter/foundation.dart";
-import "package:flutter/material.dart";
-import "package:flutter/services.dart";
+import "package:typewriter_panel/typewriter_panel.dart";
 
 /// Whether the current platform is an Apple platform (macOS or iOS).
 bool get isApple =>
     defaultTargetPlatform == TargetPlatform.iOS ||
     defaultTargetPlatform == TargetPlatform.macOS;
 
-/// If the user is on an Apple platform, this will return true if the [meta]
-/// key is pressed. Otherwise, it will return true if the [control] key is
-/// pressed.
+/// Whether either Command key is pressed on Apple platforms, or either Control
+/// key is pressed on other platforms.
 bool get hasOverrideDown =>
     HardwareKeyboard.instance.isLogicalKeyPressed(
           LogicalKeyboardKey.controlLeft,

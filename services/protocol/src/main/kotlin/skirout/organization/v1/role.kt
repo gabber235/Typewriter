@@ -40,7 +40,7 @@ class OrganizationRole private constructor(
     override val defaultRole: kotlin.Boolean,
     override val assignable: kotlin.Boolean,
     override val deletable: kotlin.Boolean,
-    private val _unrecognizedFields: _UnrecognizedFields<skirout.organization.v1.role.OrganizationRole>? =
+    internal val _unrecognizedFields: _UnrecognizedFields<skirout.organization.v1.role.OrganizationRole>? =
         null,
 ): skirout.organization.v1.role.OrganizationRole_OrMutable {
     constructor(
@@ -117,7 +117,7 @@ class OrganizationRole private constructor(
     override fun toString(): kotlin.String {
         return build.skir.internal.toStringImpl(
             this,
-            skirout.organization.v1.role.OrganizationRole.serializerImpl,
+            _SerializerRegistry.OrganizationRoleSerializerImpl,
         )
     }
 
@@ -228,79 +228,11 @@ class OrganizationRole private constructor(
             _unrecognizedFields = null,
         );
 
-        private val serializerImpl = build.skir.internal.StructSerializer(
-            recordId = "organization/v1/role.skir:OrganizationRole",
-            doc = "",
-            defaultInstance = default,
-            newMutableFn = { it?.toMutable() ?: Mutable() },
-            toFrozenFn = { it.toFrozen() },
-            getUnrecognizedFields = { it._unrecognizedFields },
-            setUnrecognizedFields = { m, u -> m._unrecognizedFields = u },
-        );
-
         /** Serializer for [OrganizationRole] instances. */
-        val serializer = build.skir.internal.makeSerializer(serializerImpl);
+        val serializer get() = _SerializerRegistry.OrganizationRoleSerializer;
 
         /** Describes the [OrganizationRole] type. Provides runtime introspection capabilities. */
-        val typeDescriptor get() = serializerImpl.typeDescriptor;
-
-        init {
-            serializerImpl.addField(
-                "role_id",
-                "roleId",
-                0,
-                skirout.kernel.v1.record_id.RecordId.serializer,
-                "",
-                { it.roleId },
-                { mut, v -> mut.roleId = v },
-            );
-            serializerImpl.addField(
-                "name",
-                "name",
-                1,
-                build.skir.Serializers.string,
-                "",
-                { it.name },
-                { mut, v -> mut.name = v },
-            );
-            serializerImpl.addField(
-                "color",
-                "color",
-                2,
-                skirout.kernel.v1.color.Color.serializer,
-                "",
-                { it.color },
-                { mut, v -> mut.color = v },
-            );
-            serializerImpl.addField(
-                "default_role",
-                "defaultRole",
-                3,
-                build.skir.Serializers.bool,
-                "",
-                { it.defaultRole },
-                { mut, v -> mut.defaultRole = v },
-            );
-            serializerImpl.addField(
-                "assignable",
-                "assignable",
-                4,
-                build.skir.Serializers.bool,
-                "",
-                { it.assignable },
-                { mut, v -> mut.assignable = v },
-            );
-            serializerImpl.addField(
-                "deletable",
-                "deletable",
-                5,
-                build.skir.Serializers.bool,
-                "",
-                { it.deletable },
-                { mut, v -> mut.deletable = v },
-            );
-            serializerImpl.finalizeStruct();
-        }
+        val typeDescriptor get() = _SerializerRegistry.OrganizationRoleSerializerImpl.typeDescriptor;
     }
 }
 
@@ -311,7 +243,7 @@ sealed interface WatchOrganizationRolesRequest_OrMutable {
 /** Deeply immutable. */
 @kotlin.Suppress("UNUSED_PARAMETER")
 class WatchOrganizationRolesRequest private constructor(
-    private val _unrecognizedFields: _UnrecognizedFields<skirout.organization.v1.role.WatchOrganizationRolesRequest>? =
+    internal val _unrecognizedFields: _UnrecognizedFields<skirout.organization.v1.role.WatchOrganizationRolesRequest>? =
         null,
 ): skirout.organization.v1.role.WatchOrganizationRolesRequest_OrMutable {
     constructor(
@@ -340,7 +272,7 @@ class WatchOrganizationRolesRequest private constructor(
     override fun toString(): kotlin.String {
         return build.skir.internal.toStringImpl(
             this,
-            skirout.organization.v1.role.WatchOrganizationRolesRequest.serializerImpl,
+            _SerializerRegistry.WatchOrganizationRolesRequestSerializerImpl,
         )
     }
 
@@ -376,25 +308,11 @@ class WatchOrganizationRolesRequest private constructor(
             _unrecognizedFields = null,
         );
 
-        private val serializerImpl = build.skir.internal.StructSerializer(
-            recordId = "organization/v1/role.skir:WatchOrganizationRolesRequest",
-            doc = "",
-            defaultInstance = default,
-            newMutableFn = { it?.toMutable() ?: Mutable() },
-            toFrozenFn = { it.toFrozen() },
-            getUnrecognizedFields = { it._unrecognizedFields },
-            setUnrecognizedFields = { m, u -> m._unrecognizedFields = u },
-        );
-
         /** Serializer for [WatchOrganizationRolesRequest] instances. */
-        val serializer = build.skir.internal.makeSerializer(serializerImpl);
+        val serializer get() = _SerializerRegistry.WatchOrganizationRolesRequestSerializer;
 
         /** Describes the [WatchOrganizationRolesRequest] type. Provides runtime introspection capabilities. */
-        val typeDescriptor get() = serializerImpl.typeDescriptor;
-
-        init {
-            serializerImpl.finalizeStruct();
-        }
+        val typeDescriptor get() = _SerializerRegistry.WatchOrganizationRolesRequestSerializerImpl.typeDescriptor;
     }
 }
 
@@ -522,7 +440,7 @@ sealed class WatchOrganizationRolesResponse private constructor() {
     override fun toString(): kotlin.String {
         return build.skir.internal.toStringImpl(
             this,
-            skirout.organization.v1.role.WatchOrganizationRolesResponse._serializerImpl,
+            _SerializerRegistry.WatchOrganizationRolesResponseSerializerImpl,
         )
     }
 
@@ -600,82 +518,11 @@ sealed class WatchOrganizationRolesResponse private constructor() {
             )
         );
 
-        private val _serializerImpl =
-            build.skir.internal.EnumSerializer.create<skirout.organization.v1.role.WatchOrganizationRolesResponse, Unknown>(
-                recordId = "organization/v1/role.skir:WatchOrganizationRolesResponse",
-                doc = "",
-                getKindOrdinal = { it.kind.ordinal },
-                kindCount = Kind.values().size,
-                unknownInstance = UNKNOWN,
-                wrapUnrecognized = { @kotlin.Suppress("DEPRECATION") Unknown(Kind.UNKNOWN, it) },
-                getUnrecognized = { it._unrecognized },
-            );
-
         /** Serializer for [WatchOrganizationRolesResponse] instances. */
-        val serializer = build.skir.internal.makeSerializer(_serializerImpl);
+        val serializer get() = _SerializerRegistry.WatchOrganizationRolesResponseSerializer;
 
         /** Describes the [WatchOrganizationRolesResponse] type. Provides runtime introspection capabilities. */
-        val typeDescriptor get() = _serializerImpl.typeDescriptor;
-
-        init {
-            _maybeFinalizeSerializer();
-        }
-
-        private var _finalizationCounter = 0;
-
-        private fun _maybeFinalizeSerializer() {
-            _finalizationCounter += 1;
-            if (_finalizationCounter == 1) {
-                _serializerImpl.addWrapperVariant(
-                    1,
-                    "internal_error",
-                    Kind.INTERNAL_ERROR_WRAPPER.ordinal,
-                    skirout.kernel.v1.errors.InternalError.serializer,
-                    "",
-                    { InternalErrorWrapper(it) },
-                    { it.value },
-                );
-                _serializerImpl.addWrapperVariant(
-                    2,
-                    "list",
-                    Kind.LIST_WRAPPER.ordinal,
-                    build.skir.Serializers.list(
-                        skirout.organization.v1.role.OrganizationRole.serializer,
-                    ),
-                    "",
-                    { ListWrapper(it) },
-                    { it.value },
-                );
-                _serializerImpl.addWrapperVariant(
-                    3,
-                    "add",
-                    Kind.ADD_WRAPPER.ordinal,
-                    skirout.organization.v1.role.OrganizationRole.serializer,
-                    "",
-                    { AddWrapper(it) },
-                    { it.value },
-                );
-                _serializerImpl.addWrapperVariant(
-                    4,
-                    "update",
-                    Kind.UPDATE_WRAPPER.ordinal,
-                    skirout.organization.v1.role.OrganizationRole.serializer,
-                    "",
-                    { UpdateWrapper(it) },
-                    { it.value },
-                );
-                _serializerImpl.addWrapperVariant(
-                    5,
-                    "remove",
-                    Kind.REMOVE_WRAPPER.ordinal,
-                    skirout.kernel.v1.record_id.RecordId.serializer,
-                    "",
-                    { RemoveWrapper(it) },
-                    { it.value },
-                );
-                _serializerImpl.finalizeEnum();
-            }
-        }
+        val typeDescriptor get() = _SerializerRegistry.WatchOrganizationRolesResponseSerializerImpl.typeDescriptor;
     }
 }
 
@@ -690,4 +537,152 @@ val WatchOrganizationRoles: build.skir.service.Method<
         skirout.organization.v1.role.WatchOrganizationRolesResponse.serializer,
         "",
     )
+}
+
+private object _SerializerRegistry {
+    val OrganizationRoleSerializerImpl = build.skir.internal.StructSerializer(
+        recordId = "organization/v1/role.skir:OrganizationRole",
+        doc = "",
+        defaultInstance = skirout.organization.v1.role.OrganizationRole.partial(),
+        newMutableFn = { it?.toMutable() ?: skirout.organization.v1.role.OrganizationRole.Mutable() },
+        toFrozenFn = { it.toFrozen() },
+        getUnrecognizedFields = { it._unrecognizedFields },
+        setUnrecognizedFields = { m, u -> m._unrecognizedFields = u },
+    );
+
+    val OrganizationRoleSerializer = build.skir.internal.makeSerializer(OrganizationRoleSerializerImpl);
+
+    val WatchOrganizationRolesRequestSerializerImpl = build.skir.internal.StructSerializer(
+        recordId = "organization/v1/role.skir:WatchOrganizationRolesRequest",
+        doc = "",
+        defaultInstance = skirout.organization.v1.role.WatchOrganizationRolesRequest.partial(),
+        newMutableFn = { it?.toMutable() ?: skirout.organization.v1.role.WatchOrganizationRolesRequest.Mutable() },
+        toFrozenFn = { it.toFrozen() },
+        getUnrecognizedFields = { it._unrecognizedFields },
+        setUnrecognizedFields = { m, u -> m._unrecognizedFields = u },
+    );
+
+    val WatchOrganizationRolesRequestSerializer = build.skir.internal.makeSerializer(WatchOrganizationRolesRequestSerializerImpl);
+
+    val WatchOrganizationRolesResponseSerializerImpl =
+        build.skir.internal.EnumSerializer.create<skirout.organization.v1.role.WatchOrganizationRolesResponse, skirout.organization.v1.role.WatchOrganizationRolesResponse.Unknown>(
+            recordId = "organization/v1/role.skir:WatchOrganizationRolesResponse",
+            doc = "",
+            getKindOrdinal = { it.kind.ordinal },
+            kindCount = skirout.organization.v1.role.WatchOrganizationRolesResponse.Kind.values().size,
+            unknownInstance = skirout.organization.v1.role.WatchOrganizationRolesResponse.UNKNOWN,
+            wrapUnrecognized = { @kotlin.Suppress("DEPRECATION") skirout.organization.v1.role.WatchOrganizationRolesResponse.Unknown(skirout.organization.v1.role.WatchOrganizationRolesResponse.Kind.UNKNOWN, it) },
+            getUnrecognized = { it._unrecognized },
+        );
+
+    val WatchOrganizationRolesResponseSerializer = build.skir.internal.makeSerializer(WatchOrganizationRolesResponseSerializerImpl);
+
+    init {
+        OrganizationRoleSerializerImpl.addField(
+            "role_id",
+            "roleId",
+            0,
+            skirout.kernel.v1.record_id.RecordId.serializer,
+            "",
+            { it.roleId },
+            { mut, v -> mut.roleId = v },
+        );
+        OrganizationRoleSerializerImpl.addField(
+            "name",
+            "name",
+            1,
+            build.skir.Serializers.string,
+            "",
+            { it.name },
+            { mut, v -> mut.name = v },
+        );
+        OrganizationRoleSerializerImpl.addField(
+            "color",
+            "color",
+            2,
+            skirout.kernel.v1.color.Color.serializer,
+            "",
+            { it.color },
+            { mut, v -> mut.color = v },
+        );
+        OrganizationRoleSerializerImpl.addField(
+            "default_role",
+            "defaultRole",
+            3,
+            build.skir.Serializers.bool,
+            "",
+            { it.defaultRole },
+            { mut, v -> mut.defaultRole = v },
+        );
+        OrganizationRoleSerializerImpl.addField(
+            "assignable",
+            "assignable",
+            4,
+            build.skir.Serializers.bool,
+            "",
+            { it.assignable },
+            { mut, v -> mut.assignable = v },
+        );
+        OrganizationRoleSerializerImpl.addField(
+            "deletable",
+            "deletable",
+            5,
+            build.skir.Serializers.bool,
+            "",
+            { it.deletable },
+            { mut, v -> mut.deletable = v },
+        );
+        OrganizationRoleSerializerImpl.finalizeStruct();
+
+        WatchOrganizationRolesRequestSerializerImpl.finalizeStruct();
+
+        WatchOrganizationRolesResponseSerializerImpl.addWrapperVariant(
+            1,
+            "internal_error",
+            skirout.organization.v1.role.WatchOrganizationRolesResponse.Kind.INTERNAL_ERROR_WRAPPER.ordinal,
+            skirout.kernel.v1.errors.InternalError.serializer,
+            "",
+            { skirout.organization.v1.role.WatchOrganizationRolesResponse.InternalErrorWrapper(it) },
+            { it.value },
+        );
+        WatchOrganizationRolesResponseSerializerImpl.addWrapperVariant(
+            2,
+            "list",
+            skirout.organization.v1.role.WatchOrganizationRolesResponse.Kind.LIST_WRAPPER.ordinal,
+            build.skir.Serializers.list(
+                _SerializerRegistry.OrganizationRoleSerializer,
+            ),
+            "",
+            { skirout.organization.v1.role.WatchOrganizationRolesResponse.ListWrapper(it) },
+            { it.value },
+        );
+        WatchOrganizationRolesResponseSerializerImpl.addWrapperVariant(
+            3,
+            "add",
+            skirout.organization.v1.role.WatchOrganizationRolesResponse.Kind.ADD_WRAPPER.ordinal,
+            _SerializerRegistry.OrganizationRoleSerializer,
+            "",
+            { skirout.organization.v1.role.WatchOrganizationRolesResponse.AddWrapper(it) },
+            { it.value },
+        );
+        WatchOrganizationRolesResponseSerializerImpl.addWrapperVariant(
+            4,
+            "update",
+            skirout.organization.v1.role.WatchOrganizationRolesResponse.Kind.UPDATE_WRAPPER.ordinal,
+            _SerializerRegistry.OrganizationRoleSerializer,
+            "",
+            { skirout.organization.v1.role.WatchOrganizationRolesResponse.UpdateWrapper(it) },
+            { it.value },
+        );
+        WatchOrganizationRolesResponseSerializerImpl.addWrapperVariant(
+            5,
+            "remove",
+            skirout.organization.v1.role.WatchOrganizationRolesResponse.Kind.REMOVE_WRAPPER.ordinal,
+            skirout.kernel.v1.record_id.RecordId.serializer,
+            "",
+            { skirout.organization.v1.role.WatchOrganizationRolesResponse.RemoveWrapper(it) },
+            { it.value },
+        );
+        WatchOrganizationRolesResponseSerializerImpl.finalizeEnum();
+    }
 }

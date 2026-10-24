@@ -1,10 +1,7 @@
-import "dart:async";
-
-import "package:flutter/material.dart";
 import "package:flutter_test/flutter_test.dart";
-import "package:typewriter_panel/shared/ui/components/loading_button/loading_button.dart";
+import "package:typewriter_panel/typewriter_panel.dart";
 
-import "loading_button_test_support.dart";
+import "../../../../support/test_utils.dart";
 
 void main() {
   for (final variant in LoadingVariant.values) {
@@ -15,7 +12,7 @@ void main() {
         final completer = Completer<void>();
         var invoked = 0;
 
-        await tester.pumpLoadingButtonApp(
+        await tester.pumpTestApp(
           child: Center(
             child: LoadingButton(
               variant: variant,
@@ -50,7 +47,7 @@ void main() {
       });
 
       testWidgets("shows snackbar and tooltip on failure", (tester) async {
-        await tester.pumpLoadingButtonApp(
+        await tester.pumpTestApp(
           child: Center(
             child: LoadingButton(
               variant: variant,
@@ -74,7 +71,7 @@ void main() {
         (tester) async {
           final completer = Completer<void>();
           var invoked = 0;
-          await tester.pumpLoadingButtonApp(
+          await tester.pumpTestApp(
             child: Center(
               child: LoadingButton.icon(
                 variant: variant,
@@ -116,7 +113,7 @@ void main() {
       testWidgets("with icon shows snackbar and tooltip on failure", (
         tester,
       ) async {
-        await tester.pumpLoadingButtonApp(
+        await tester.pumpTestApp(
           child: Center(
             child: LoadingButton(
               variant: variant,
@@ -143,7 +140,7 @@ void main() {
       var invoked = 0;
       final controller = LoadingButtonController();
 
-      await tester.pumpLoadingButtonApp(
+      await tester.pumpTestApp(
         child: Center(
           child: LoadingButton(
             controller: controller,
@@ -182,7 +179,7 @@ void main() {
     testWidgets("returns false when button is disabled", (tester) async {
       final controller = LoadingButtonController();
 
-      await tester.pumpLoadingButtonApp(
+      await tester.pumpTestApp(
         child: Center(
           child: LoadingButton(
             controller: controller,
@@ -202,7 +199,7 @@ void main() {
       var invoked = 0;
       final controller = LoadingButtonController();
 
-      await tester.pumpLoadingButtonApp(
+      await tester.pumpTestApp(
         child: Center(
           child: LoadingButton(
             controller: controller,
@@ -233,7 +230,7 @@ void main() {
       var invoked = false;
       final controller = LoadingButtonController();
 
-      await tester.pumpLoadingButtonApp(
+      await tester.pumpTestApp(
         child: Center(
           child: LoadingButton.icon(
             controller: controller,
@@ -258,7 +255,7 @@ void main() {
     ) async {
       final controller = LoadingButtonController();
 
-      await tester.pumpLoadingButtonApp(
+      await tester.pumpTestApp(
         child: Center(
           child: LoadingButton(
             controller: controller,
@@ -281,7 +278,7 @@ void main() {
       final completer = Completer<void>();
       final controller = LoadingButtonController();
 
-      await tester.pumpLoadingButtonApp(
+      await tester.pumpTestApp(
         child: Center(
           child: LoadingButton(
             controller: controller,

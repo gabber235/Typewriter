@@ -21,7 +21,6 @@ class ServiceHttpClient(
     private val telemetry: ServiceTelemetry,
     private val propagators: ContextPropagators,
 ) {
-    /** Executes the request once, returning transport classification while preserving HTTP status responses. */
     suspend fun execute(request: HttpRequest): HttpResult {
         val body = request.body
         val bodySize = body.size.toLong()

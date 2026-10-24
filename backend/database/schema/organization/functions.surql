@@ -1,3 +1,6 @@
+-- Shared membership policy for schema guards and organization command handlers.
+-- Mutation functions run inside the caller's transaction and return projection values with
+-- their new sequences. Rust handlers publish those facts separately after the transaction commits.
 DEFINE FUNCTION OVERWRITE fn::organization::roles::valid_for(
     $roles: array<record<organization_role>>,
     $organization: record<organization>
@@ -58,19 +61,14 @@ DEFINE FUNCTION OVERWRITE fn::account::organization::teams(
     RETURN [];
 };
 
+-- Replaces assignable roles for the whole selection while retaining each member's protected roles.
+-- Default roles are used only when the combined selection would otherwise be empty. All targets
+-- and the remaining founder role holders are checked before any membership is changed.
 DEFINE FUNCTION OVERWRITE fn::organization::members::update_roles(
     $org: record<organization>,
     $users: array<record<user>>,
-    $roles: array<record<organization_role>>,
-    $receipt: record<mutation_receipt>,
-    $request_bytes: array<int>
+    $roles: array<record<organization_role>>
 ) {
-    LET $previous = fn::mutation::recall($receipt, $request_bytes);
-
-    IF $previous != NONE {
-        RETURN $previous
-    };
-
     IF array::is_empty($users) OR array::len(array::distinct($users)) != array::len($users) {
         RETURN {
             outcome: 'invalid-selection-error'
@@ -179,22 +177,14 @@ DEFINE FUNCTION OVERWRITE fn::organization::members::update_roles(
         sequence: $sequence
     };
 
-    RETURN fn::mutation::commit($receipt, $request_bytes, $result);
+    RETURN $result;
 } PERMISSIONS NONE;
 
 DEFINE FUNCTION OVERWRITE fn::organization::members::approve_requests(
     $org: record<organization>,
     $requests: array<record<request_to_join>>,
-    $roles: array<record<organization_role>>,
-    $receipt: record<mutation_receipt>,
-    $request_bytes: array<int>
+    $roles: array<record<organization_role>>
 ) {
-    LET $previous = fn::mutation::recall($receipt, $request_bytes);
-
-    IF $previous != NONE {
-        RETURN $previous
-    };
-
     IF array::is_empty($requests) OR array::len(array::distinct($requests)) != array::len($requests) {
         RETURN {
             outcome: 'invalid-selection-error'
@@ -303,5 +293,5 @@ DEFINE FUNCTION OVERWRITE fn::organization::members::approve_requests(
         members_sequence: $members_sequence
     };
 
-    RETURN fn::mutation::commit($receipt, $request_bytes, $result);
+    RETURN $result;
 } PERMISSIONS NONE;

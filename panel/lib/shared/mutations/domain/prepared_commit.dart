@@ -1,4 +1,3 @@
-import "package:freezed_annotation/freezed_annotation.dart";
 import "package:typewriter_panel/typewriter_panel.dart";
 
 part "prepared_commit.freezed.dart";
@@ -7,8 +6,9 @@ part "prepared_commit.freezed.dart";
 ///
 /// Capture request data and destination immutably. All attempts reuse that
 /// input. [resources] defines the reservation boundary. [integrate] updates
-/// local owners after a confirmed or rejected response and must never resend
-/// the mutation. [dispose] releases dependencies retained for deferred work.
+/// local owners after a known delivery result and must never resend the
+/// mutation. Known results include local failure before submission; uncertain
+/// results are withheld from integration by [MutationSubmission]. [dispose] releases dependencies retained for deferred work.
 @freezed
 abstract class PreparedCommit<T> with _$PreparedCommit<T> {
   const factory PreparedCommit({

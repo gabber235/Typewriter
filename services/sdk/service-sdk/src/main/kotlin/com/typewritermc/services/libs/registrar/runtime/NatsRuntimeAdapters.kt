@@ -65,7 +65,7 @@ internal suspend fun authenticateService(
         sentinel,
     )
 
-/** Signs the Sentinel seed and packages the bearer token for NATS authentication. */
+/** Signs the server nonce with the Sentinel seed and packages the bearer token for NATS authentication. */
 internal suspend fun createServiceAuthentication(
     hasNonce: Boolean,
     signer: suspend (String) -> String?,

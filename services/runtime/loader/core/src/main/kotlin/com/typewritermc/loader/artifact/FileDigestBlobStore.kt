@@ -1,19 +1,23 @@
 package com.typewritermc.loader.artifact
 
-import com.typewritermc.loader.api.artifact.ArtifactDigest
-import com.typewritermc.loader.api.artifact.BlobChunk
-import com.typewritermc.loader.api.artifact.BlobEndpoint
-import com.typewritermc.loader.api.artifact.BlobMetadata
-import com.typewritermc.loader.api.artifact.BlobResult
-import com.typewritermc.loader.api.artifact.BlobWriteSession
-import com.typewritermc.loader.api.artifact.DEFAULT_CHUNK_SIZE
-import com.typewritermc.loader.api.artifact.DigestAlgorithm
-import com.typewritermc.loader.api.artifact.MAXIMUM_BLOB_SIZE
-import com.typewritermc.loader.api.artifact.MAXIMUM_CHUNK_SIZE
-import com.typewritermc.loader.api.artifact.TransferId
+import com.typewritermc.loader.api.artifact.PublicationBlobRetention
+import com.typewritermc.loader.api.artifact.PublicationBlobRoots
 import com.typewritermc.loader.artifactSpan
+import com.typewritermc.services.libs.filetransfer.blob.ArtifactDigest
+import com.typewritermc.services.libs.filetransfer.blob.BlobChunk
+import com.typewritermc.services.libs.filetransfer.blob.BlobEndpoint
+import com.typewritermc.services.libs.filetransfer.blob.BlobMetadata
+import com.typewritermc.services.libs.filetransfer.blob.BlobResult
+import com.typewritermc.services.libs.filetransfer.blob.BlobWriteSession
+import com.typewritermc.services.libs.filetransfer.blob.DEFAULT_CHUNK_SIZE
+import com.typewritermc.services.libs.filetransfer.blob.DigestAlgorithm
+import com.typewritermc.services.libs.filetransfer.blob.MAXIMUM_BLOB_SIZE
+import com.typewritermc.services.libs.filetransfer.blob.MAXIMUM_CHUNK_SIZE
+import com.typewritermc.services.libs.filetransfer.blob.TransferId
 import com.typewritermc.services.libs.telemetry.ServiceTelemetry
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.sync.Mutex
+import kotlinx.coroutines.sync.withLock
 import kotlinx.coroutines.withContext
 import java.nio.ByteBuffer
 import java.nio.channels.FileChannel
@@ -28,6 +32,7 @@ import java.time.Clock
 import java.time.Duration
 import java.time.Instant
 import java.util.Properties
+import java.util.concurrent.ConcurrentHashMap
 import kotlin.io.path.createDirectories
 import kotlin.io.path.exists
 import kotlin.io.path.fileSize
@@ -52,6 +57,61 @@ class FileDigestBlobStore(
 ) : BlobEndpoint {
     private val blobs = root.resolve("blobs").also(Path::createDirectories)
     private val transfers = root.resolve("transfers").also(Path::createDirectories)
+
+    private val publicationGate = Mutex()
+    private val requiredRealms = ConcurrentHashMap.newKeySet<String>()
+    private val pins = FilePublicationPins(root.resolve("publication-pins.cbor"))
+
+    fun publicationRetention(realmId: String): PublicationBlobRetention {
+        requiredRealms.add(realmId)
+        return object : PublicationBlobRetention {
+            override suspend fun protect(
+                publication: String,
+                digests: Set<ArtifactDigest>,
+            ) {
+                publicationGate.withLock {
+                    val all = pins.read()
+                    val realm = checkNotNull(all[realmId]) { "Publication roots are not reconciled" }
+                    val prior = realm.publications[publication]
+                    check(prior == null || prior == digests) { "Publication bytes changed" }
+                    pins.write(
+                        all + (
+                            realmId to
+                                realm.copy(
+                                    publications = realm.publications + (publication to digests),
+                                )
+                        ),
+                    )
+                }
+            }
+
+            override suspend fun selected(publication: String) {
+                publicationGate.withLock {
+                    val all = pins.read()
+                    val realm = checkNotNull(all[realmId])
+                    check(publication in realm.publications)
+                    val retired = realm.selected?.takeIf { it != publication }
+                    pins.write(
+                        all + (
+                            realmId to
+                                RealmPublicationPins(
+                                    selected = publication,
+                                    publications = realm.publications.filterKeys { it != retired },
+                                )
+                        ),
+                    )
+                }
+            }
+
+            override suspend fun reconcile(selected: PublicationBlobRoots?) {
+                publicationGate.withLock {
+                    val all = pins.read()
+                    val retained = selected?.let { mapOf(it.publication to it.digests) }.orEmpty()
+                    pins.write(all + (realmId to RealmPublicationPins(selected?.publication, retained)))
+                }
+            }
+        }
+    }
 
     override suspend fun metadata(digest: ArtifactDigest): BlobResult<BlobMetadata> =
         withContext(Dispatchers.IO) {
@@ -218,6 +278,16 @@ class FileDigestBlobStore(
         protected: Set<ArtifactDigest>,
         gracePeriod: Duration = Duration.ofDays(7),
     ): Int =
+        publicationGate.withLock {
+            val retained = pins.read()
+            if (!retained.keys.containsAll(requiredRealms)) return@withLock 0
+            collectUnprotected(protected + retained.values.flatMap { it.digests }.toSet(), gracePeriod)
+        }
+
+    private suspend fun collectUnprotected(
+        protected: Set<ArtifactDigest>,
+        gracePeriod: Duration = Duration.ofDays(7),
+    ): Int =
         withContext(Dispatchers.IO) {
             val protectedValues = protected.mapTo(mutableSetOf()) { it.value }
             val expiredBefore = clock.instant().minus(gracePeriod)
@@ -290,7 +360,7 @@ class FileDigestBlobStore(
                 read = input.read(buffer)
             }
         }
-        return ArtifactDigest(DigestAlgorithm.SHA_256, messageDigest.digest().joinToString("") { "%02x".format(it) })
+        return ArtifactDigest(DigestAlgorithm.SHA_256, messageDigest.digest().toHexString())
     }
 
     private fun moveAtomically(

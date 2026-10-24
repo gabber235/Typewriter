@@ -1,13 +1,9 @@
-import "package:flutter/material.dart";
-import "package:flutter_animate/flutter_animate.dart";
-import "package:flutter_hooks/flutter_hooks.dart";
-import "package:iconify_flutter_plus/icons/material_symbols.dart";
 import "package:typewriter_panel/typewriter_panel.dart";
 
 /// Shows the time remaining until [endDate] and updates once per second.
 ///
-/// A null end date represents a resource that does not expire. Once the timer
-/// reaches zero, [onExpired] is called and the timer stops. The callback is a
+/// A null end date represents a resource that does not expire. On the first
+/// timer tick after expiry, [onExpired] is called and the timer stops. It is a
 /// notification only; ownership of expiry state remains with the caller.
 class CountdownBadge extends HookWidget {
   const CountdownBadge({
@@ -50,33 +46,31 @@ class CountdownBadge extends HookWidget {
 
     return Surface(
       color: backgroundColor,
-      child: Container(
-        padding: EdgeInsets.symmetric(
-          horizontal: 10,
-          vertical: context.spacing.space1,
-        ),
-        decoration: BoxDecoration(
-          color: backgroundColor,
-          borderRadius: BorderRadius.circular(16),
-        ),
-        child: Row(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Icones(
-              MaterialSymbols.timer_rounded,
-              size: 14,
-              color: foregroundColor,
-            ),
-            SizedBox(width: context.spacing.space1),
-            Text(
-              _formatDuration(remaining.value),
-              style: Theme.of(context).textTheme.labelSmall?.copyWith(
-                color: foregroundColor,
-                fontWeight: FontWeight.w500,
-                fontFeatures: const [FontFeature.tabularFigures()],
+      foreground: foregroundColor,
+      child: Builder(
+        builder: (context) => Container(
+          padding: EdgeInsets.symmetric(
+            horizontal: 10,
+            vertical: context.spacing.space1,
+          ),
+          decoration: BoxDecoration(
+            color: backgroundColor,
+            borderRadius: BorderRadius.circular(16),
+          ),
+          child: Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Icones(MaterialSymbols.timer_rounded, size: 14),
+              SizedBox(width: context.spacing.space1),
+              Text(
+                _formatDuration(remaining.value),
+                style: Theme.of(context).textTheme.labelSmall?.copyWith(
+                  fontWeight: FontWeight.w500,
+                  fontFeatures: const [FontFeature.tabularFigures()],
+                ),
               ),
-            ),
-          ],
+            ],
+          ),
         ),
       ),
     );
@@ -112,32 +106,32 @@ class _NeverExpiresBadge extends StatelessWidget {
   Widget build(BuildContext context) {
     final colorScheme = Theme.of(context).colorScheme;
 
-    return Container(
-      padding: EdgeInsets.symmetric(
-        horizontal: 10,
-        vertical: context.spacing.space1,
-      ),
-      decoration: BoxDecoration(
-        color: colorScheme.primaryContainer,
-        borderRadius: BorderRadius.circular(16),
-      ),
-      child: Row(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          Icon(
-            Icons.all_inclusive_rounded,
-            size: 14,
-            color: colorScheme.onPrimaryContainer,
+    return Surface(
+      color: colorScheme.primaryContainer,
+      foreground: colorScheme.onPrimaryContainer,
+      child: Builder(
+        builder: (context) => Container(
+          padding: EdgeInsets.symmetric(
+            horizontal: 10,
+            vertical: context.spacing.space1,
           ),
-          SizedBox(width: context.spacing.space1),
-          Text(
-            "Never",
-            style: Theme.of(context).textTheme.labelSmall?.copyWith(
-              color: colorScheme.onPrimaryContainer,
-              fontWeight: FontWeight.w500,
-            ),
+          decoration: BoxDecoration(
+            color: colorScheme.primaryContainer,
+            borderRadius: BorderRadius.circular(16),
           ),
-        ],
+          child: Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Icon(Icons.all_inclusive_rounded, size: 14),
+              SizedBox(width: context.spacing.space1),
+              Text(
+                "Never",
+                style: Theme.of(context).textTheme.labelSmall
+                    ?.copyWith(fontWeight: FontWeight.w500),
+              ),
+            ],
+          ),
+        ),
       ),
     );
   }

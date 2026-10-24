@@ -1,10 +1,4 @@
-import "package:flutter/material.dart";
-import "package:typewriter_panel/app/presentation/theme/color_scheme.dart";
-import "package:typewriter_panel/app/presentation/theme/component_themes.dart";
-import "package:typewriter_panel/app/presentation/theme/typewriter_shapes.dart";
-import "package:typewriter_panel/app/presentation/theme/typewriter_spacing.dart";
-import "package:typewriter_panel/app/presentation/theme/typewriter_state_tokens.dart";
-import "package:typewriter_panel/app/presentation/theme/typography.dart";
+import "package:typewriter_panel/typewriter_panel.dart";
 
 export "package:typewriter_panel/app/presentation/theme/color_scheme.dart";
 export "package:typewriter_panel/app/presentation/theme/component_themes.dart";

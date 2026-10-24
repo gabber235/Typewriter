@@ -1,0 +1,210 @@
+import "package:typewriter_panel/infrastructure/protocols/skir/skir.dart"
+    as skir;
+import "package:typewriter_panel/typewriter_panel.dart";
+
+/// Owns a view binding into retained Realm work, plus its review and apply
+/// controls. Rebinding or disposal detaches the view without discarding edits.
+/// Type argument changes require existing related work to be resolved first,
+/// then use Realm preview and preparation before staging through this binding.
+final class AuthoredResourceInspection extends StatefulWidget {
+  const AuthoredResourceInspection({
+    required this.resource,
+    required this.workspace,
+    required this.commands,
+    this.role = skir.PresentationRole.inspector,
+    this.commitPolicy = EditorCommitPolicy.autosaveChanges,
+    this.openResource,
+    super.key,
+  });
+
+  final skir.ResourceId resource;
+  final RealmEditing workspace;
+  final AuthoredResourceCommands commands;
+  final skir.PresentationRole role;
+  final EditorCommitPolicy commitPolicy;
+  final ValueChanged<skir.ResourceId>? openResource;
+
+  @override
+  State<AuthoredResourceInspection> createState() =>
+      _AuthoredResourceInspectionState();
+}
+
+final class _AuthoredResourceInspectionState
+    extends State<AuthoredResourceInspection> {
+  late RealmEditingBinding _binding;
+
+  @override
+  void initState() {
+    super.initState();
+    _binding = widget.workspace.attach(
+      widget.resource,
+      policy: widget.commitPolicy,
+    )..addListener(_updated);
+  }
+
+  void _updated() {
+    if (mounted) setState(() {});
+  }
+
+  @override
+  void didUpdateWidget(covariant AuthoredResourceInspection oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (widget.workspace != oldWidget.workspace ||
+        widget.resource != oldWidget.resource ||
+        widget.commitPolicy != oldWidget.commitPolicy) {
+      _binding
+        ..removeListener(_updated)
+        ..detach();
+      _binding = widget.workspace.attach(
+        widget.resource,
+        policy: widget.commitPolicy,
+      )..addListener(_updated);
+    }
+  }
+
+  @override
+  void dispose() {
+    _binding
+      ..removeListener(_updated)
+      ..detach();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final relatedWork = widget.workspace.hasWorkFor(widget.resource);
+    final configuration = _binding.document
+        .resource(widget.resource)
+        ?.configuration;
+    final needsReview =
+        _binding.phase is EditGroupConflict<AuthoringDocument> ||
+        _binding.phase is EditGroupResourceMissing<AuthoringDocument> ||
+        _binding.phase is EditGroupRepeatedContention<AuthoringDocument>;
+    final editor = _editor(
+      widget.role,
+      enabled:
+          widget.workspace.state.available &&
+          _binding.document.entry(widget.resource) != null,
+      readOnly: !_binding.control.canEdit,
+    );
+
+    final content = Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      spacing: context.spacing.space2,
+      children: [
+        if (needsReview)
+          AuthoringConflictNotice(
+            workspace: widget.workspace,
+            group: _binding.editingGroup,
+          ),
+        if (configuration != null)
+          AuthoredTypeArgumentEditor(
+            selection: configuration,
+            catalog: _binding.document.catalog,
+            preview: (requested) => widget.commands.previewTypeArguments(
+              resource: widget.resource,
+              requested: requested,
+            ),
+            commit: (preview) async {
+              final prepared = await widget.commands.prepareTypeArguments(
+                preview,
+              );
+              return switch (prepared) {
+                skir.PreparedEditResult_preparedWrapper(:final value) =>
+                  _binding.stagePrepared(
+                    label: "Change type arguments",
+                    edit: value.edit,
+                  ),
+                skir.PreparedEditResult_needsInputWrapper() =>
+                  const EditStageResult.rejected(
+                    "The type change needs more input",
+                    null,
+                  ),
+                skir.PreparedEditResult_rejectedWrapper() =>
+                  const EditStageResult.rejected(
+                    "The Realm rejected the type change",
+                    null,
+                  ),
+                _ => const EditStageResult.rejected(
+                  "The type change result is unavailable",
+                  null,
+                ),
+              };
+            },
+            enabled: !relatedWork && !_binding.saving,
+            disabledMessage: relatedWork
+                ? "Save or discard local edits before changing type arguments"
+                : null,
+            onStatus: (message) {
+              _binding.reportStatus(message);
+            },
+          ),
+        if (widget.role == skir.PresentationRole.workspaceEditor)
+          Expanded(child: editor)
+        else
+          editor,
+        if (_binding.status case final message?) Text(message),
+        ApplyControls(control: _binding.control),
+        for (final group in _binding.relatedGroups.where(
+          (group) => group.showControls,
+        ))
+          EditingGroupPanel(
+            workspace: widget.workspace.workspace,
+            id: group.id,
+            review: () =>
+                RealmEditingReview(workspace: widget.workspace, id: group.id),
+          ),
+      ],
+    );
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      spacing: context.spacing.space3,
+      children: [
+        if (widget.role == skir.PresentationRole.workspaceEditor)
+          Expanded(child: content)
+        else
+          content,
+      ],
+    );
+  }
+
+  AuthoredResourceEditor _editor(
+    skir.PresentationRole role, {
+    required bool enabled,
+    required bool readOnly,
+  }) => AuthoredResourceEditor(
+    key: ValueKey(role),
+    resource: widget.resource,
+    document: _binding.document,
+    edit: _binding,
+    role: role,
+    budget: skir.EvaluationBudget(maxSteps: 10000, maxCollectionItems: 10000),
+    invokeCommand: _invokeCommand,
+    watchSearch: widget.commands.watchSearch,
+    reload: widget.commands.reload,
+    onStatus: (message) {
+      _binding.reportStatus(message);
+    },
+    openResource: widget.openResource,
+    prepareValue: widget.commands.prepareValue,
+    enabled: enabled,
+    readOnly: readOnly,
+  );
+
+  Future<void> _invokeCommand(
+    skir.CapabilityId capabilityId,
+    skir.DataValue payload,
+  ) async {
+    final result = await widget.commands.invokeCommand(
+      capabilityId: capabilityId,
+      payload: payload,
+    );
+    await handleRealmCommandResult(
+      result,
+      isCurrent: () => mounted,
+      reload: widget.commands.reload,
+      openResource: (resource) => widget.openResource?.call(resource),
+      reportStatus: _binding.reportStatus,
+    );
+  }
+}
