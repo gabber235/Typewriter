@@ -23,7 +23,7 @@ import skirout.editor.v1.type_catalog.RuleId
 internal fun collectCatalog(
     snapshot: AuthoringLease,
     incarnation: String,
-    evaluator: CheckEvaluator,
+    diagnostics: CheckDiagnosticIds,
 ): ActiveCatalog {
     val root = snapshot.root
     val leases = mutableListOf<ProviderLease>()
@@ -48,7 +48,7 @@ internal fun collectCatalog(
                     CheckPlan.RegistrationFailure(
                         rule = RuleId(origin = owned.ruleOrigin, localIndex = 0),
                         diagnostic =
-                            evaluator.diagnostic(
+                            diagnostics.error(
                                 owned.ruleOrigin,
                                 "check_registration_failed",
                                 failure.message ?: failure::class.simpleName.orEmpty(),

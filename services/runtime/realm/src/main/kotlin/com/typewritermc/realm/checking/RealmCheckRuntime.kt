@@ -6,6 +6,7 @@ import com.typewritermc.checking.InputIdentity
 import com.typewritermc.discovery.ProviderLease
 import com.typewritermc.realm.authoring.AuthoringLease
 import com.typewritermc.realm.authoring.AuthoringViewStore
+import com.typewritermc.realm.authoring.CapturedAuthoringReads
 import com.typewritermc.realm.authoring.RESOURCE_SELECTION_INPUT
 import com.typewritermc.realm.authoring.SelectionPredicateEvaluator
 import com.typewritermc.realm.authoring.ViewReadLimits
@@ -83,7 +84,11 @@ class RealmCheckRuntime(
     private val scope = CoroutineScope(SupervisorJob() + dispatcher)
     private val nextIncarnation = AtomicLong()
     private val nextExecution = AtomicLong()
-    private val evaluator = CheckEvaluator(views, checkInputs, selectionPredicates, readLimits, nextExecution)
+    private val diagnostics = CheckDiagnosticIds()
+    private val captureReads: (AuthoringLease) -> CapturedAuthoringReads = { lease ->
+        CapturedAuthoringReads(lease.originalView(), predicates = selectionPredicates, limits = readLimits)
+    }
+    private val evaluator = CheckEvaluator(views, checkInputs, captureReads, nextExecution, diagnostics)
     private var activeCatalog: ActiveCatalog? = null
     private val instances = linkedMapOf<CheckInstanceId, InstanceState>()
     private val retiredJobs = linkedSetOf<Job>()
@@ -93,7 +98,7 @@ class RealmCheckRuntime(
         val lease = views.capture()
         val replacement =
             try {
-                collectCatalog(lease, "catalog:${nextIncarnation.getAndIncrement()}", evaluator)
+                collectCatalog(lease, "catalog:${nextIncarnation.getAndIncrement()}", diagnostics)
             } catch (failure: Throwable) {
                 lease.close()
                 throw failure
@@ -187,7 +192,7 @@ class RealmCheckRuntime(
             require(captured.root.catalog.generation == target.catalog) {
                 "Captured check target uses a different catalog generation."
             }
-            catalog = collectCatalog(captured, "catalog:${nextIncarnation.getAndIncrement()}", evaluator)
+            catalog = collectCatalog(captured, "catalog:${nextIncarnation.getAndIncrement()}", diagnostics)
             snapshot = null
             val active = requireNotNull(catalog)
             val subjects = discoverSubjects(active, active.snapshot).subjects
@@ -296,7 +301,7 @@ class RealmCheckRuntime(
     ): SubjectDiscovery {
         val lease = retained ?: views.capture()
         return try {
-            catalog.discoverSubjects(lease, evaluator)
+            catalog.discoverSubjects(lease, captureReads, diagnostics)
         } finally {
             if (retained == null) lease.close()
         }

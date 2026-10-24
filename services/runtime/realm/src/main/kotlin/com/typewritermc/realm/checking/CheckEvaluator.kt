@@ -7,9 +7,7 @@ import com.typewritermc.checking.DiagnosticReporter
 import com.typewritermc.realm.authoring.AuthoringLease
 import com.typewritermc.realm.authoring.AuthoringViewStore
 import com.typewritermc.realm.authoring.CapturedAuthoringReads
-import com.typewritermc.realm.authoring.SelectionPredicateEvaluator
 import com.typewritermc.realm.authoring.ViewReadHealth
-import com.typewritermc.realm.authoring.ViewReadLimits
 import com.typewritermc.services.libs.utils.rethrowExceptional
 import skirout.editor.v1.checking.CheckOutcome
 import skirout.editor.v1.checking.CheckResult
@@ -25,21 +23,16 @@ import java.util.concurrent.atomic.AtomicLong
 /**
  * Evaluates one check subject against a retained authored snapshot and records the reads it depends on.
  *
- * Execution and diagnostic identities come from counters shared with the owning [RealmCheckRuntime].
+ * The owning [RealmCheckRuntime] supplies the reads factory and the execution and diagnostic id sequences.
  */
 internal class CheckEvaluator(
     private val views: AuthoringViewStore,
     private val checkInputs: RealmCheckInputs,
-    private val selectionPredicates: SelectionPredicateEvaluator,
-    private val readLimits: ViewReadLimits,
+    private val captureReads: (AuthoringLease) -> CapturedAuthoringReads,
     private val nextExecution: AtomicLong,
+    private val diagnostics: CheckDiagnosticIds,
 ) {
-    private val nextDiagnostic = AtomicLong()
     private val expressions = RealmExpressionRuntime()
-
-    /** Captures reads over [lease] with this runtime's selection predicates and read limits. */
-    fun reads(lease: AuthoringLease): CapturedAuthoringReads =
-        CapturedAuthoringReads(lease.originalView(), predicates = selectionPredicates, limits = readLimits)
 
     fun evaluate(
         catalog: ActiveCatalog,
@@ -57,7 +50,7 @@ internal class CheckEvaluator(
                 catalog =
                     lease.root.catalog.generation,
             )
-        val reads = reads(lease)
+        val reads = captureReads(lease)
         val findings = mutableListOf<Diagnostic>()
         var explicitOutcome: CheckOutcome? = null
         return try {
@@ -104,7 +97,7 @@ internal class CheckEvaluator(
                                         CheckOutcome.FailedWrapper(
                                             listOf(
                                                 Diagnostic(
-                                                    id = DiagnosticId(value = "check:${nextDiagnostic.getAndIncrement()}"),
+                                                    id = diagnostics.next(),
                                                     origin = plan.ownedRule.id.origin,
                                                     code = evaluation.diagnostic.failure.value,
                                                     message = evaluation.diagnostic.message,
@@ -161,7 +154,7 @@ internal class CheckEvaluator(
                 explicitOutcome =
                     CheckOutcome.FailedWrapper(
                         listOf(
-                            diagnostic(
+                            diagnostics.error(
                                 subject.plan.rule.origin,
                                 "check_callback_failed",
                                 failure.message ?: failure::class.simpleName.orEmpty(),
@@ -178,24 +171,7 @@ internal class CheckEvaluator(
     }
 
     private fun diagnosticFactory(origin: RuleOrigin): (String, ValueLocation, List<ValueLocation>) -> Diagnostic =
-        { message, at, related -> diagnostic(origin, "realm.check", message, at, related) }
-
-    fun diagnostic(
-        origin: RuleOrigin,
-        code: String,
-        message: String,
-        at: ValueLocation?,
-        related: List<ValueLocation> = emptyList(),
-    ): Diagnostic =
-        Diagnostic(
-            id = DiagnosticId(value = "check:${nextDiagnostic.getAndIncrement()}"),
-            origin = origin,
-            code = code,
-            message = message,
-            severity = DiagnosticSeverity.ERROR,
-            primary = at,
-            related = related,
-        )
+        { message, at, related -> diagnostics.error(origin, "realm.check", message, at, related) }
 
     private fun portableDiagnostic(
         plan: CheckPlan.Portable,
@@ -208,7 +184,7 @@ internal class CheckEvaluator(
                     if (target == plan.recipe.relativePath) listOf(subject.location) else reads.expand(subject.ownerLocation, target)
                 }.distinct()
         return Diagnostic(
-            id = DiagnosticId(value = "check:${nextDiagnostic.getAndIncrement()}"),
+            id = diagnostics.next(),
             origin = plan.ownedRule.id.origin,
             code = plan.ownedRule.diagnostic.code,
             message = plan.ownedRule.diagnostic.message,

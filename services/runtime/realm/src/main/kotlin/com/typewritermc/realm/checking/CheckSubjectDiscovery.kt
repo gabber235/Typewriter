@@ -5,6 +5,7 @@ import com.typewritermc.authoring.of
 import com.typewritermc.authoring.root
 import com.typewritermc.checking.reason
 import com.typewritermc.realm.authoring.AuthoringLease
+import com.typewritermc.realm.authoring.CapturedAuthoringReads
 import skirout.editor.v1.checking.CheckInstanceId
 import skirout.editor.v1.checking.CheckOutcome
 import skirout.editor.v1.type_catalog.RuleId
@@ -15,13 +16,14 @@ import skirout.kernel.v1.resource_id.ResourceId
 /** Discovers the current subjects of every plan in this catalog over [lease]. */
 internal fun ActiveCatalog.discoverSubjects(
     lease: AuthoringLease,
-    evaluator: CheckEvaluator,
+    captureReads: (AuthoringLease) -> CapturedAuthoringReads,
+    diagnostics: CheckDiagnosticIds,
 ): SubjectDiscovery {
     if (lease.root.catalog.generation != generation) return SubjectDiscovery(emptyList(), emptySet())
     val subjects = mutableListOf<CheckSubject>()
     val incompleteRules = linkedSetOf<RuleId>()
     plans.forEach { plan ->
-        val reads = evaluator.reads(lease)
+        val reads = captureReads(lease)
         subjects +=
             when (plan) {
                 is CheckPlan.Simple -> {
@@ -64,7 +66,7 @@ internal fun ActiveCatalog.discoverSubjects(
             val findings =
                 if (outcome is CheckOutcome.IncompleteWrapper) {
                     listOf(
-                        evaluator.diagnostic(
+                        diagnostics.error(
                             plan.rule.origin,
                             "check_discovery_incomplete",
                             outcome.reason,
