@@ -11,8 +11,9 @@ part of 'interaction_suspension.dart';
 /// Whether mode shortcuts and selection operations are blocked app wide, for
 /// example while the realm connection is being checked.
 ///
-/// The app overrides it through appOverrides; the default keeps tests and
-/// Widgetbook stories unblocked.
+/// The app overrides it through appOverrides, which bootstrap, testApp and
+/// FakeApp install. The unblocked default applies only to containers built
+/// without appOverrides.
 
 @ProviderFor(interactionSuspended)
 final interactionSuspendedProvider = InteractionSuspendedProvider._();
@@ -20,8 +21,9 @@ final interactionSuspendedProvider = InteractionSuspendedProvider._();
 /// Whether mode shortcuts and selection operations are blocked app wide, for
 /// example while the realm connection is being checked.
 ///
-/// The app overrides it through appOverrides; the default keeps tests and
-/// Widgetbook stories unblocked.
+/// The app overrides it through appOverrides, which bootstrap, testApp and
+/// FakeApp install. The unblocked default applies only to containers built
+/// without appOverrides.
 
 final class InteractionSuspendedProvider
     extends $FunctionalProvider<bool, bool, bool>
@@ -29,8 +31,9 @@ final class InteractionSuspendedProvider
   /// Whether mode shortcuts and selection operations are blocked app wide, for
   /// example while the realm connection is being checked.
   ///
-  /// The app overrides it through appOverrides; the default keeps tests and
-  /// Widgetbook stories unblocked.
+  /// The app overrides it through appOverrides, which bootstrap, testApp and
+  /// FakeApp install. The unblocked default applies only to containers built
+  /// without appOverrides.
   InteractionSuspendedProvider._()
     : super(
         from: null,

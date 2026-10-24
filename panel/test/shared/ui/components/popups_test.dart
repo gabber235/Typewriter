@@ -2,6 +2,7 @@ import "package:flutter_test/flutter_test.dart";
 import "package:typewriter_panel/typewriter_panel.dart";
 
 import "../../../support/test_utils.dart";
+import "../../selectables/application/selection_test_support.dart";
 
 Future<void> _invokePrimaryAction(WidgetTester tester) async {
   final modifier = isApple
@@ -126,5 +127,40 @@ void main() {
 
     expect(cancellations, 1);
     expect(find.byType(ConfirmationDialogue), findsNothing);
+  });
+
+  testWidgets("Escape in a Normal mode dialog clears the selection first", (
+    tester,
+  ) async {
+    const selected = MockSelectableIdentifier("selected");
+    await tester.pumpTestApp(
+      child: Builder(
+        builder: (context) => TextButton(
+          onPressed: () => showAdvancedDialog<void>(
+            context: context,
+            builder: (_) => Dialog(
+              child: TextButton(
+                autofocus: true,
+                onPressed: () {},
+                child: const Text("Inside"),
+              ),
+            ),
+          ),
+          child: const Text("Open"),
+        ),
+      ),
+    );
+    final container = ProviderScope.containerOf(
+      tester.element(find.text("Open")),
+    );
+    container.read(selectionProvider.notifier).selectAll([selected]);
+
+    await tester.tap(find.text("Open"));
+    await tester.pumpAndSettle();
+    await tester.sendKeyEvent(LogicalKeyboardKey.escape);
+    await tester.pumpAndSettle();
+
+    expect(container.read(selectionProvider), isEmpty);
+    expect(find.text("Inside"), findsOneWidget);
   });
 }

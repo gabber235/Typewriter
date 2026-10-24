@@ -249,7 +249,12 @@ Future<T?> showAdvancedDialog<T>({
       builder: (context, ref, child) {
         return Shortcuts(
           shortcuts: typewriterShortcuts,
-          child: GlobalModeShortcut(child: Responsive(child: builder(context))),
+          child: GlobalModeShortcut(
+            child: ManagedActionSet(
+              shortcuts: ref.watch(dialogShortcutsProvider),
+              child: Responsive(child: builder(context)),
+            ),
+          ),
         );
       },
     ),

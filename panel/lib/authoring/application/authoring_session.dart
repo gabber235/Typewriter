@@ -98,10 +98,13 @@ class AuthoringSession extends _$AuthoringSession {
             }),
           );
         },
-        onError: (_, _) {
-          // A failed connection has no client to rebind to; its consumers
-          // observe the failure through natsProvider itself.
-        },
+        // A failed connection has no client to rebind to; its consumers
+        // observe the failure through natsProvider itself. It is not reported
+        // here: the connection fails routinely while an app lifecycle change
+        // rebuilds it before authentication settles ("User must be
+        // authenticated before connecting to NATS"), and reporting each of
+        // those would surface as an app error with nothing to act on.
+        onError: (_, _) {},
       );
     unawaited(
       _start(repository, lifecycleRevision, organizationId, realmId).catchError(

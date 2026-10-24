@@ -213,25 +213,6 @@ List<ResourceCrumbChoice> resourceCrumbChoices(
       ),
     );
 
-/// The route that shows [target] in [scope].
-OrganizationRoute surfaceRoute(AuthoringScope scope, SurfaceTarget target) =>
-    OrganizationRoute(
-      organizationId: scope.organizationId.id,
-      children: [
-        RealmRoute(
-          realmId: scope.realmId.id,
-          children: [
-            switch (target) {
-              HomeTarget() => const RealmHomeRoute(),
-              ResourceTarget(:final routed) => ResourceRoute(
-                resourceId: routed.value,
-              ),
-            },
-          ],
-        ),
-      ],
-    );
-
 /// Moves the panel to the surface of a resource through [SurfaceNavigator].
 ///
 /// Every operation navigates first and selects afterwards, so selection
@@ -241,6 +222,9 @@ class RealmSurfaceNavigation {
   const RealmSurfaceNavigation(this.ref);
 
   final Ref ref;
+
+  PageRouteInfo<Object?> _surface(AuthoringScope scope, SurfaceTarget target) =>
+      ref.read(realmRoutesProvider).surface(scope, target);
 
   /// Opens the nearest surface of [resource] and selects the resource inside
   /// it, or the routed resource itself. Returns false when the resource is
@@ -258,7 +242,7 @@ class RealmSurfaceNavigation {
     final target = document.open(resource);
     await ref
         .read(navigationRouterProvider)
-        .navigate(surfaceRoute(scope, target), isCurrent: isCurrent);
+        .navigate(_surface(scope, target), isCurrent: isCurrent);
     if (!current()) return false;
     final selected = switch (target) {
       HomeTarget(:final selected) => selected,
@@ -307,7 +291,7 @@ class RealmSurfaceNavigation {
     await ref
         .read(navigationRouterProvider)
         .navigate(
-          surfaceRoute(scope, const SurfaceTarget.home()),
+          _surface(scope, const SurfaceTarget.home()),
           isCurrent: isCurrent,
         );
   }
@@ -338,7 +322,7 @@ class RealmSurfaceNavigation {
         await ref
             .read(navigationRouterProvider)
             .navigate(
-              surfaceRoute(scope, SurfaceTarget.resource(routed: resource)),
+              _surface(scope, SurfaceTarget.resource(routed: resource)),
               isCurrent: isCurrent,
             );
         if (!isCurrent()) return;
