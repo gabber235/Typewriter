@@ -44,13 +44,17 @@ method UpdateOrganizationService(
 
   success: Service;
 
+  /// Service changed elsewhere.
   conflict_error: struct {
     expected_revision: int64;
     actual: Service;
   };
 
+  /// Service not found in organization.
   service_not_found_error: struct {};
 
+  /// Service update is invalid.
   validation_error: ServiceUpdateValidationError;
+  /// Record IDs from an unexpected table.
   invalid_record_id_error: InvalidRecordIdError;
 } = 872501;

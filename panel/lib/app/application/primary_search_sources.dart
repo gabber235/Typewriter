@@ -22,7 +22,7 @@ PrimarySearchRequest buildPrimarySearchRequest(Ref ref) {
     rowRenderers: {
       organizationSearchResultType.rowRendererId: (context) =>
           OrganizationSearchResultItem.organization(
-            organization: context.result.payload as OrganizationData,
+            organization: context.result.payload as skir.Organization,
             focused: context.focused,
             selected: context.selected,
             loading: context.loading,
@@ -39,7 +39,7 @@ PrimarySearchRequest buildPrimarySearchRequest(Ref ref) {
           ),
       realmSearchResultType.rowRendererId: (context) =>
           RealmSearchResultItem.realm(
-            realm: context.result.payload as TopologyRealm,
+            realm: context.result.payload as skir.RealmInstance,
             focused: context.focused,
             selected: context.selected,
             loading: context.loading,

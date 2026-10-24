@@ -1,21 +1,19 @@
 package com.typewritermc.presentation
 
-import com.typewritermc.authoring.ItemId
 import com.typewritermc.authoring.TypedPath
 import com.typewritermc.dsl.TypewriterDsl
 import com.typewritermc.expression.Expr
-import com.typewritermc.expression.ExpressionBindingId
 import com.typewritermc.expression.Handled
-import com.typewritermc.types.TypeDefinitionId
-import com.typewritermc.types.TypeTemplate
-import com.typewritermc.types.skir.SkirAuthoringValueCodec
-import com.typewritermc.types.skir.SkirTypeCodec
-import com.typewritermc.types.skir.getOrThrow
 import skirout.editor.v1.action.CreateFieldValue
 import skirout.editor.v1.action.EditorAction
 import skirout.editor.v1.binding.BindingRef
 import skirout.editor.v1.expression.ExpressionNode
 import skirout.editor.v1.presentation.PresentationNode
+import skirout.editor.v1.type_catalog.ExpressionBindingId
+import skirout.editor.v1.type_catalog.ItemId
+import skirout.editor.v1.type_catalog.NamedTypeUse
+import skirout.editor.v1.type_catalog.TypeDefinitionId
+import skirout.editor.v1.type_catalog.TypeTemplate
 
 /** Owns completion for one configured scope before its parent captures child nodes. */
 internal class ControlScopeSession<S>(
@@ -53,7 +51,7 @@ data class PresentationParameter<Value>(
 fun <Value> presentationParameter(name: String): PresentationParameter<Value> {
     require(name.isNotBlank()) { "Presentation parameter names must not be blank." }
     require(!name.startsWith("context:")) { "Presentation parameters cannot shadow caller inputs." }
-    return PresentationParameter(ExpressionBindingId(name))
+    return PresentationParameter(ExpressionBindingId(value = name))
 }
 
 interface PresentationActionFactory {
@@ -104,7 +102,7 @@ interface PresentationActionFactory {
 
     fun chooseForm(
         binding: BindingRef,
-        type: com.typewritermc.types.TypeUse.Named,
+        type: NamedTypeUse,
     ): EditorAction
 }
 
@@ -149,7 +147,7 @@ class CreateResourceScope internal constructor() {
 
     /** Presets the field at this path of the created resource to [value]. */
     operator fun <V> TypedPath<*, V>.invoke(value: Expr<V, Handled>) {
-        val wirePath = SkirAuthoringValueCodec.encode(path).getOrThrow()
+        val wirePath = path
         require(fields.none { it.path == wirePath }) { "A create action presets each field once." }
         fields += CreateFieldValue(path = wirePath, value = value.toNode())
     }
@@ -168,12 +166,12 @@ fun createResource(
 ): EditorAction {
     val scope = CreateResourceScope().apply(presets)
     return EditorAction.createCreate(
-        type = SkirTypeCodec.encode(type).getOrThrow(),
+        type = type,
         owner =
             owner?.let {
                 BindingRef(
-                    path = SkirAuthoringValueCodec.encode(it.path).getOrThrow(),
-                    bindingId = CONFIGURED_VALUE.wire(),
+                    path = it.path,
+                    bindingId = CONFIGURED_VALUE,
                 )
             },
         fields = scope.fields.toList(),

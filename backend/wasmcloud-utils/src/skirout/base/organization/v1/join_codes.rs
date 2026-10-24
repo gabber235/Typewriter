@@ -722,9 +722,13 @@ pub enum GenerateOrganizationJoinCodeResponse {
     Unknown(Option<crate::skir_client::UnrecognizedVariant<GenerateOrganizationJoinCodeResponse>>),
     InternalError(Box<crate::skirout::base::kernel::v1::errors::InternalError>),
     Success(Box<GenerateOrganizationJoinCodeResponse_Success>),
+    /// Roles not found.
     RolesNotFoundError(Box<GenerateOrganizationJoinCodeResponse_RolesNotFoundError>),
+    /// Roles not assignable.
     RolesNotAssignableError(Box<GenerateOrganizationJoinCodeResponse_RolesNotAssignableError>),
+    /// Invalid expiration duration.
     InvalidExpirationError(Box<GenerateOrganizationJoinCodeResponse_InvalidExpirationError>),
+    /// Record IDs from an unexpected table.
     InvalidRecordIdError(Box<crate::skirout::base::kernel::v1::errors::InvalidRecordIdError>),
 }
 
@@ -923,7 +927,9 @@ pub enum RevokeOrganizationJoinCodeResponse {
     Unknown(Option<crate::skir_client::UnrecognizedVariant<RevokeOrganizationJoinCodeResponse>>),
     InternalError(Box<crate::skirout::base::kernel::v1::errors::InternalError>),
     Success(Box<RevokeOrganizationJoinCodeResponse_Success>),
+    /// Join code not found.
     CodeNotFoundError(Box<RevokeOrganizationJoinCodeResponse_CodeNotFoundError>),
+    /// Record IDs from an unexpected table.
     InvalidRecordIdError(Box<crate::skirout::base::kernel::v1::errors::InvalidRecordIdError>),
 }
 
@@ -1357,7 +1363,7 @@ fn initialize_module_serializers() {
                 crate::skir_client::internal::struct_serializer_from_static(
                     GenerateOrganizationJoinCodeResponse_RolesNotFoundError::_adapter(),
                 ),
-                "",
+                "Roles not found.",
                 |v| GenerateOrganizationJoinCodeResponse::RolesNotFoundError(Box::new(v)),
                 |x| match x {
                     GenerateOrganizationJoinCodeResponse::RolesNotFoundError(b) => b.as_ref(),
@@ -1371,7 +1377,7 @@ fn initialize_module_serializers() {
                 crate::skir_client::internal::struct_serializer_from_static(
                     GenerateOrganizationJoinCodeResponse_RolesNotAssignableError::_adapter(),
                 ),
-                "",
+                "Roles not assignable.",
                 |v| GenerateOrganizationJoinCodeResponse::RolesNotAssignableError(Box::new(v)),
                 |x| match x {
                     GenerateOrganizationJoinCodeResponse::RolesNotAssignableError(b) => b.as_ref(),
@@ -1385,7 +1391,7 @@ fn initialize_module_serializers() {
                 crate::skir_client::internal::struct_serializer_from_static(
                     GenerateOrganizationJoinCodeResponse_InvalidExpirationError::_adapter(),
                 ),
-                "",
+                "Invalid expiration duration.",
                 |v| GenerateOrganizationJoinCodeResponse::InvalidExpirationError(Box::new(v)),
                 |x| match x {
                     GenerateOrganizationJoinCodeResponse::InvalidExpirationError(b) => b.as_ref(),
@@ -1397,7 +1403,7 @@ fn initialize_module_serializers() {
                 6,
                 6,
                 crate::skirout::base::kernel::v1::errors::InvalidRecordIdError::serializer(),
-                "",
+                "Record IDs from an unexpected table.",
                 |v| GenerateOrganizationJoinCodeResponse::InvalidRecordIdError(Box::new(v)),
                 |x| match x {
                     GenerateOrganizationJoinCodeResponse::InvalidRecordIdError(b) => b.as_ref(),
@@ -1488,7 +1494,7 @@ fn initialize_module_serializers() {
                 crate::skir_client::internal::struct_serializer_from_static(
                     RevokeOrganizationJoinCodeResponse_CodeNotFoundError::_adapter(),
                 ),
-                "",
+                "Join code not found.",
                 |v| RevokeOrganizationJoinCodeResponse::CodeNotFoundError(Box::new(v)),
                 |x| match x {
                     RevokeOrganizationJoinCodeResponse::CodeNotFoundError(b) => b.as_ref(),
@@ -1500,7 +1506,7 @@ fn initialize_module_serializers() {
                 4,
                 4,
                 crate::skirout::base::kernel::v1::errors::InvalidRecordIdError::serializer(),
-                "",
+                "Record IDs from an unexpected table.",
                 |v| RevokeOrganizationJoinCodeResponse::InvalidRecordIdError(Box::new(v)),
                 |x| match x {
                     RevokeOrganizationJoinCodeResponse::InvalidRecordIdError(b) => b.as_ref(),

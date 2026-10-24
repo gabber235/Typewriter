@@ -7,32 +7,16 @@
 use serde::{Deserialize, Serialize};
 use surrealdb_component_sdk::{Datetime, RecordId};
 
+use super::{SkirDb, SkirType};
 use crate::skir::base::service::v1::topology::{
     ChildRuntimeState, ChildRuntimeStatus, EngineInstance, EngineTarget, HostRuntimeState,
     HostRuntimeStatus, OwnerHost, RealmInfo, RealmInstance, ReconciledRevision, ServiceHost,
     SupportedEngine,
 };
 
-/// Stored desired and applied topology revisions.
-///
-/// Desired state is what configuration requests require. Applied state is what host execution
-/// has reported as completed; callers must not treat the two values as interchangeable.
-#[derive(Debug, Serialize, Deserialize, Clone, PartialEq, Eq)]
-pub struct ReconciledRevisionRecord {
-    pub desired: i64,
-    pub applied: i64,
-}
-
-impl From<ReconciledRevisionRecord> for ReconciledRevision {
-    fn from(value: ReconciledRevisionRecord) -> Self {
-        Self {
-            desired: value.desired,
-            applied: value.applied,
-            _unrecognized: None,
-        }
-    }
-}
-
+/// Stored engine target. It stays a storage shape instead of [`SkirDb`] because the schema
+/// validates every stored field: [`SkirDb`] omits an empty version constraint, which would
+/// replace the schema's typed validation error with a type mismatch.
 #[derive(Debug, Serialize, Deserialize, Clone, PartialEq, Eq)]
 pub struct EngineTargetRecord {
     pub engine_id: String,
@@ -58,6 +42,8 @@ impl From<EngineTargetRecord> for EngineTarget {
     }
 }
 
+/// Stored supported engine. Like [`EngineTargetRecord`] it keeps every field, so an empty engine id
+/// reaches the schema's typed validation error.
 #[derive(Debug, Serialize, Deserialize, Clone, PartialEq, Eq)]
 pub struct SupportedEngineRecord {
     pub engine_id: String,
@@ -72,31 +58,11 @@ impl From<SupportedEngineRecord> for SupportedEngine {
     }
 }
 
-#[derive(Debug, Serialize, Deserialize, Clone, Copy, PartialEq, Eq)]
-#[serde(rename_all = "UPPERCASE")]
-pub enum HostRuntimeStatusRecord {
-    Offline,
-    Reconciling,
-    Active,
-    Failed,
-    Drifted,
-}
-
-impl From<HostRuntimeStatusRecord> for HostRuntimeStatus {
-    fn from(value: HostRuntimeStatusRecord) -> Self {
-        match value {
-            HostRuntimeStatusRecord::Offline => HostRuntimeStatus::Offline,
-            HostRuntimeStatusRecord::Reconciling => HostRuntimeStatus::Reconciling,
-            HostRuntimeStatusRecord::Active => HostRuntimeStatus::Active,
-            HostRuntimeStatusRecord::Failed => HostRuntimeStatus::Failed,
-            HostRuntimeStatusRecord::Drifted => HostRuntimeStatus::Drifted,
-        }
-    }
-}
-
+/// Stored host observation. The status is the generated Skir enum; `updated_at` stays a storage
+/// field because the schema declares it as a `datetime`.
 #[derive(Debug, Serialize, Deserialize, Clone)]
 pub struct HostRuntimeStateRecord {
-    pub status: HostRuntimeStatusRecord,
+    pub status: SkirDb<HostRuntimeStatus>,
     pub message: Option<String>,
     pub updated_at: Datetime,
 }
@@ -104,7 +70,7 @@ pub struct HostRuntimeStateRecord {
 impl From<HostRuntimeStateRecord> for HostRuntimeState {
     fn from(value: HostRuntimeStateRecord) -> Self {
         Self {
-            status: value.status.into(),
+            status: value.status.0,
             message: value.message,
             updated_at: value.updated_at.into(),
             _unrecognized: None,
@@ -112,35 +78,11 @@ impl From<HostRuntimeStateRecord> for HostRuntimeState {
     }
 }
 
-#[derive(Debug, Serialize, Deserialize, Clone, Copy, PartialEq, Eq)]
-#[serde(rename_all = "UPPERCASE")]
-pub enum ChildRuntimeStatusRecord {
-    Absent,
-    Staging,
-    Active,
-    Quiescing,
-    Failed,
-    RolledBack,
-    Drifted,
-}
-
-impl From<ChildRuntimeStatusRecord> for ChildRuntimeStatus {
-    fn from(value: ChildRuntimeStatusRecord) -> Self {
-        match value {
-            ChildRuntimeStatusRecord::Absent => ChildRuntimeStatus::Absent,
-            ChildRuntimeStatusRecord::Staging => ChildRuntimeStatus::Staging,
-            ChildRuntimeStatusRecord::Active => ChildRuntimeStatus::Active,
-            ChildRuntimeStatusRecord::Quiescing => ChildRuntimeStatus::Quiescing,
-            ChildRuntimeStatusRecord::Failed => ChildRuntimeStatus::Failed,
-            ChildRuntimeStatusRecord::RolledBack => ChildRuntimeStatus::RolledBack,
-            ChildRuntimeStatusRecord::Drifted => ChildRuntimeStatus::Drifted,
-        }
-    }
-}
-
+/// Stored Realm or engine observation. The status is the generated Skir enum; `updated_at` stays
+/// a storage field because the schema declares it as a `datetime`.
 #[derive(Debug, Serialize, Deserialize, Clone)]
 pub struct ChildRuntimeStateRecord {
-    pub status: ChildRuntimeStatusRecord,
+    pub status: SkirDb<ChildRuntimeStatus>,
     pub active_artifact_version: Option<String>,
     pub message: Option<String>,
     pub updated_at: Datetime,
@@ -149,7 +91,7 @@ pub struct ChildRuntimeStateRecord {
 impl From<ChildRuntimeStateRecord> for ChildRuntimeState {
     fn from(value: ChildRuntimeStateRecord) -> Self {
         Self {
-            status: value.status.into(),
+            status: value.status.0,
             active_artifact_version: value.active_artifact_version,
             message: value.message,
             updated_at: value.updated_at.into(),
@@ -158,22 +100,16 @@ impl From<ChildRuntimeStateRecord> for ChildRuntimeState {
     }
 }
 
+/// Converts a reported observation into its stored shape, rejecting the unknown status.
 impl TryFrom<&ChildRuntimeState> for ChildRuntimeStateRecord {
     type Error = ();
 
     fn try_from(value: &ChildRuntimeState) -> Result<Self, Self::Error> {
-        let status = match value.status {
-            ChildRuntimeStatus::Absent => ChildRuntimeStatusRecord::Absent,
-            ChildRuntimeStatus::Staging => ChildRuntimeStatusRecord::Staging,
-            ChildRuntimeStatus::Active => ChildRuntimeStatusRecord::Active,
-            ChildRuntimeStatus::Quiescing => ChildRuntimeStatusRecord::Quiescing,
-            ChildRuntimeStatus::Failed => ChildRuntimeStatusRecord::Failed,
-            ChildRuntimeStatus::RolledBack => ChildRuntimeStatusRecord::RolledBack,
-            ChildRuntimeStatus::Drifted => ChildRuntimeStatusRecord::Drifted,
-            ChildRuntimeStatus::Unknown(_) => return Err(()),
-        };
+        if value.status.is_unknown() {
+            return Err(());
+        }
         Ok(Self {
-            status,
+            status: SkirDb(value.status.clone()),
             active_artifact_version: value.active_artifact_version.clone(),
             message: value.message.clone(),
             updated_at: value.updated_at.into(),
@@ -190,7 +126,9 @@ pub struct ServiceHostRecord {
     pub entrypoint: String,
     pub can_host_realm: bool,
     pub supported_engines: Vec<SupportedEngineRecord>,
-    pub topology_revision: ReconciledRevisionRecord,
+    /// Desired and applied topology revisions. Desired state is what configuration requests
+    /// require; applied state is what host execution reported as completed.
+    pub topology_revision: SkirDb<ReconciledRevision>,
     pub state: HostRuntimeStateRecord,
 }
 
@@ -207,21 +145,11 @@ impl From<ServiceHostRecord> for ServiceHost {
                 .into_iter()
                 .map(Into::into)
                 .collect(),
-            topology_revision: value.topology_revision.into(),
+            topology_revision: value.topology_revision.0,
             state: value.state.into(),
             _unrecognized: None,
         }
     }
-}
-
-/// Stored realm instance before related host data is joined into a view.
-#[derive(Debug, Serialize, Deserialize, Clone)]
-pub struct RealmInstanceRecord {
-    pub id: RecordId,
-    pub owner_host_id: RecordId,
-    pub revision: i64,
-    pub target_engine: EngineTargetRecord,
-    pub state: ChildRuntimeStateRecord,
 }
 
 #[derive(Debug, Serialize, Deserialize, Clone)]
@@ -261,17 +189,6 @@ impl From<RealmInstanceViewRecord> for RealmInstance {
             _unrecognized: None,
         }
     }
-}
-
-/// Stored engine instance before related host and realm data is joined into a view.
-#[derive(Debug, Serialize, Deserialize, Clone)]
-pub struct EngineInstanceRecord {
-    pub id: RecordId,
-    pub owner_host_id: RecordId,
-    pub realm_id: RecordId,
-    pub revision: i64,
-    pub target: EngineTargetRecord,
-    pub state: ChildRuntimeStateRecord,
 }
 
 /// Minimal realm and owner information embedded in an engine view.

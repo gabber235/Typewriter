@@ -3,15 +3,15 @@ package com.typewritermc.discovery
 import com.typewritermc.checking.CheckRecipe
 import com.typewritermc.checking.RealmCheckProvider
 import com.typewritermc.configuration.ConfigurationProvider
-import com.typewritermc.configuration.RuleOrigin
 import com.typewritermc.imprint.ArtifactId
-import com.typewritermc.presentation.PresentationDescriptor
 import com.typewritermc.presentation.PresentationProvider
-import com.typewritermc.types.DeclarationOwner
-import com.typewritermc.types.EndpointBindingTemplate
 import com.typewritermc.types.NativeBindingFactory
-import com.typewritermc.types.RelationContract
-import com.typewritermc.types.TypeDefinitionId
+import skirout.editor.v1.catalog.EndpointBindingTemplate
+import skirout.editor.v1.catalog.PresentationDescriptor
+import skirout.editor.v1.catalog.RelationContract
+import skirout.editor.v1.type_catalog.DeclarationOwner
+import skirout.editor.v1.type_catalog.RuleOrigin
+import skirout.editor.v1.type_catalog.TypeDefinitionId
 
 data class ProviderOrigin(
     val owner: DeclarationOwner,

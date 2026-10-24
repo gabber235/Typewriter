@@ -1801,7 +1801,7 @@ as String?,
 /// @nodoc
 mixin _$PortableResourceProjection {
 
- skir.ResourceId get resource; skir.TypeSelection get configuration; ResourceAppearance get appearance; skir.DataValue get value; List<PortablePresentationDiagnostic> get diagnostics; PortableDiagnosticFallback get diagnosticFallback;
+ skir.ResourceId get resource; skir.TypeSelection get configuration; skir.ResourceAppearance get appearance; skir.DataValue get value; List<PortablePresentationDiagnostic> get diagnostics; PortableDiagnosticFallback get diagnosticFallback;
 /// Create a copy of PortableResourceProjection
 /// with the given fields replaced by the non-null parameter values.
 @JsonKey(includeFromJson: false, includeToJson: false)
@@ -1837,11 +1837,11 @@ abstract mixin class $PortableResourceProjectionCopyWith<$Res>  {
   factory $PortableResourceProjectionCopyWith(PortableResourceProjection value, $Res Function(PortableResourceProjection) _then) = _$PortableResourceProjectionCopyWithImpl;
 @useResult
 $Res call({
- skir.ResourceId resource, skir.TypeSelection configuration, ResourceAppearance appearance, skir.DataValue value, List<PortablePresentationDiagnostic> diagnostics, PortableDiagnosticFallback diagnosticFallback
+ skir.ResourceId resource, skir.TypeSelection configuration, skir.ResourceAppearance appearance, skir.DataValue value, List<PortablePresentationDiagnostic> diagnostics, PortableDiagnosticFallback diagnosticFallback
 });
 
 
-$ResourceAppearanceCopyWith<$Res> get appearance;
+
 
 }
 /// @nodoc
@@ -1859,22 +1859,13 @@ class _$PortableResourceProjectionCopyWithImpl<$Res>
 resource: null == resource ? _self.resource : resource // ignore: cast_nullable_to_non_nullable
 as skir.ResourceId,configuration: null == configuration ? _self.configuration : configuration // ignore: cast_nullable_to_non_nullable
 as skir.TypeSelection,appearance: null == appearance ? _self.appearance : appearance // ignore: cast_nullable_to_non_nullable
-as ResourceAppearance,value: null == value ? _self.value : value // ignore: cast_nullable_to_non_nullable
+as skir.ResourceAppearance,value: null == value ? _self.value : value // ignore: cast_nullable_to_non_nullable
 as skir.DataValue,diagnostics: null == diagnostics ? _self.diagnostics : diagnostics // ignore: cast_nullable_to_non_nullable
 as List<PortablePresentationDiagnostic>,diagnosticFallback: null == diagnosticFallback ? _self.diagnosticFallback : diagnosticFallback // ignore: cast_nullable_to_non_nullable
 as PortableDiagnosticFallback,
   ));
 }
-/// Create a copy of PortableResourceProjection
-/// with the given fields replaced by the non-null parameter values.
-@override
-@pragma('vm:prefer-inline')
-$ResourceAppearanceCopyWith<$Res> get appearance {
-  
-  return $ResourceAppearanceCopyWith<$Res>(_self.appearance, (value) {
-    return _then(_self.copyWith(appearance: value));
-  });
-}
+
 }
 
 
@@ -1956,7 +1947,7 @@ return $default(_that);case _:
 /// }
 /// ```
 
-@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function( skir.ResourceId resource,  skir.TypeSelection configuration,  ResourceAppearance appearance,  skir.DataValue value,  List<PortablePresentationDiagnostic> diagnostics,  PortableDiagnosticFallback diagnosticFallback)?  $default,{required TResult orElse(),}) {final _that = this;
+@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function( skir.ResourceId resource,  skir.TypeSelection configuration,  skir.ResourceAppearance appearance,  skir.DataValue value,  List<PortablePresentationDiagnostic> diagnostics,  PortableDiagnosticFallback diagnosticFallback)?  $default,{required TResult orElse(),}) {final _that = this;
 switch (_that) {
 case _PortableResourceProjection() when $default != null:
 return $default(_that.resource,_that.configuration,_that.appearance,_that.value,_that.diagnostics,_that.diagnosticFallback);case _:
@@ -1977,7 +1968,7 @@ return $default(_that.resource,_that.configuration,_that.appearance,_that.value,
 /// }
 /// ```
 
-@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function( skir.ResourceId resource,  skir.TypeSelection configuration,  ResourceAppearance appearance,  skir.DataValue value,  List<PortablePresentationDiagnostic> diagnostics,  PortableDiagnosticFallback diagnosticFallback)  $default,) {final _that = this;
+@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function( skir.ResourceId resource,  skir.TypeSelection configuration,  skir.ResourceAppearance appearance,  skir.DataValue value,  List<PortablePresentationDiagnostic> diagnostics,  PortableDiagnosticFallback diagnosticFallback)  $default,) {final _that = this;
 switch (_that) {
 case _PortableResourceProjection():
 return $default(_that.resource,_that.configuration,_that.appearance,_that.value,_that.diagnostics,_that.diagnosticFallback);case _:
@@ -1997,7 +1988,7 @@ return $default(_that.resource,_that.configuration,_that.appearance,_that.value,
 /// }
 /// ```
 
-@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function( skir.ResourceId resource,  skir.TypeSelection configuration,  ResourceAppearance appearance,  skir.DataValue value,  List<PortablePresentationDiagnostic> diagnostics,  PortableDiagnosticFallback diagnosticFallback)?  $default,) {final _that = this;
+@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function( skir.ResourceId resource,  skir.TypeSelection configuration,  skir.ResourceAppearance appearance,  skir.DataValue value,  List<PortablePresentationDiagnostic> diagnostics,  PortableDiagnosticFallback diagnosticFallback)?  $default,) {final _that = this;
 switch (_that) {
 case _PortableResourceProjection() when $default != null:
 return $default(_that.resource,_that.configuration,_that.appearance,_that.value,_that.diagnostics,_that.diagnosticFallback);case _:
@@ -2017,7 +2008,7 @@ class _PortableResourceProjection implements PortableResourceProjection {
 
 @override final  skir.ResourceId resource;
 @override final  skir.TypeSelection configuration;
-@override final  ResourceAppearance appearance;
+@override final  skir.ResourceAppearance appearance;
 @override final  skir.DataValue value;
  final  List<PortablePresentationDiagnostic> _diagnostics;
 @override@JsonKey() List<PortablePresentationDiagnostic> get diagnostics {
@@ -2060,11 +2051,11 @@ abstract mixin class _$PortableResourceProjectionCopyWith<$Res> implements $Port
   factory _$PortableResourceProjectionCopyWith(_PortableResourceProjection value, $Res Function(_PortableResourceProjection) _then) = __$PortableResourceProjectionCopyWithImpl;
 @override @useResult
 $Res call({
- skir.ResourceId resource, skir.TypeSelection configuration, ResourceAppearance appearance, skir.DataValue value, List<PortablePresentationDiagnostic> diagnostics, PortableDiagnosticFallback diagnosticFallback
+ skir.ResourceId resource, skir.TypeSelection configuration, skir.ResourceAppearance appearance, skir.DataValue value, List<PortablePresentationDiagnostic> diagnostics, PortableDiagnosticFallback diagnosticFallback
 });
 
 
-@override $ResourceAppearanceCopyWith<$Res> get appearance;
+
 
 }
 /// @nodoc
@@ -2082,23 +2073,14 @@ class __$PortableResourceProjectionCopyWithImpl<$Res>
 resource: null == resource ? _self.resource : resource // ignore: cast_nullable_to_non_nullable
 as skir.ResourceId,configuration: null == configuration ? _self.configuration : configuration // ignore: cast_nullable_to_non_nullable
 as skir.TypeSelection,appearance: null == appearance ? _self.appearance : appearance // ignore: cast_nullable_to_non_nullable
-as ResourceAppearance,value: null == value ? _self.value : value // ignore: cast_nullable_to_non_nullable
+as skir.ResourceAppearance,value: null == value ? _self.value : value // ignore: cast_nullable_to_non_nullable
 as skir.DataValue,diagnostics: null == diagnostics ? _self._diagnostics : diagnostics // ignore: cast_nullable_to_non_nullable
 as List<PortablePresentationDiagnostic>,diagnosticFallback: null == diagnosticFallback ? _self.diagnosticFallback : diagnosticFallback // ignore: cast_nullable_to_non_nullable
 as PortableDiagnosticFallback,
   ));
 }
 
-/// Create a copy of PortableResourceProjection
-/// with the given fields replaced by the non-null parameter values.
-@override
-@pragma('vm:prefer-inline')
-$ResourceAppearanceCopyWith<$Res> get appearance {
-  
-  return $ResourceAppearanceCopyWith<$Res>(_self.appearance, (value) {
-    return _then(_self.copyWith(appearance: value));
-  });
-}
+
 }
 
 /// @nodoc

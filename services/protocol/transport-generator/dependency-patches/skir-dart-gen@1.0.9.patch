@@ -1,167 +1,152 @@
 diff --git a/dist/index.d.ts b/dist/index.d.ts
-index d5a012943a1580c085aff4cbb11dc6c9fc379871..db87bd735d5ee849d087faf556eb7effd2172f08 100644
+index d5a012943a1580c085aff4cbb11dc6c9fc379871..a4aee8531d14051d7ada712de00e73c17e49adf6 100644
 --- a/dist/index.d.ts
 +++ b/dist/index.d.ts
-@@ -8,5 +8,44 @@ declare class DartCodeGenerator implements CodeGenerator<Config> {
+@@ -1,11 +1,16 @@
+ import { type CodeGenerator } from "skir-internal";
+ import { z } from "zod";
+-declare const Config: z.ZodObject<{}, z.core.$strict>;
++declare const Config: z.ZodObject<{
++    importUriPrefix: z.ZodOptional<z.ZodString>;
++}, z.core.$strict>;
+ type Config = z.infer<typeof Config>;
+ declare class DartCodeGenerator implements CodeGenerator<Config> {
+     readonly id = "skir-dart-gen";
+-    readonly configType: z.ZodObject<{}, z.core.$strict>;
++    readonly configType: z.ZodObject<{
++        importUriPrefix: z.ZodOptional<z.ZodString>;
++    }, z.core.$strict>;
      generateCode(input: CodeGenerator.Input<Config>): CodeGenerator.Output;
++    symbols(input: CodeGenerator.Input<Config>): CodeGenerator.SymbolProvider;
  }
  export declare const GENERATOR: DartCodeGenerator;
-+export interface DartBindingReference {
-+    readonly language: "dart";
-+    readonly importUri: string;
-+    readonly symbol: string;
-+    readonly alias: string;
-+}
-+export interface MethodNames {
-+    readonly module: string;
-+    readonly name: string;
-+    readonly method: DartBindingReference;
-+    readonly requestType: string;
-+    readonly responseType: string;
-+    readonly imports: ReadonlyArray<{
-+        readonly importUri: string;
-+        readonly alias: string;
-+    }>;
-+}
-+export interface RecordNames {
-+    readonly key: string;
-+    readonly type: string;
-+    readonly binding: DartBindingReference;
-+    readonly fields: ReadonlyArray<{
-+        readonly sourceName: string;
-+        readonly targetName: string;
-+    }>;
-+}
-+export interface LanguageBindings {
-+    readonly language: "dart";
-+    readonly methods: ReadonlyArray<MethodNames>;
-+    readonly records: ReadonlyArray<RecordNames>;
-+}
-+export interface BindingInput {
-+    readonly modules: readonly object[];
-+    readonly recordMap: ReadonlyMap<string, object>;
-+    readonly config: {
-+        readonly importUriPrefix?: string;
-+    };
-+}
-+export declare function exportBindings(publicInput: BindingInput): LanguageBindings;
  export {};
- //# sourceMappingURL=index.d.ts.map
-\ No newline at end of file
 diff --git a/dist/index.js b/dist/index.js
-index 20f17446547a808fdfca8d0eb7e5a2d84851fcda..a8b1c0f8b1748109a9f504556c7ef0f789ae52ee 100644
+index 20f17446547a808fdfca8d0eb7e5a2d84851fcda..adedccc8865cf1e4643e1074f1ed4b2768c691cf 100644
 --- a/dist/index.js
 +++ b/dist/index.js
-@@ -1,7 +1,7 @@
+@@ -1,9 +1,12 @@
  import * as paths from "path";
  import { convertCase, } from "skir-internal";
  import { z } from "zod";
 -import { enumVariantToDartName, getModuleAlias, structFieldToDartName, toLowerCamel, toTopLevelConstantName, toUpperCamel, } from "./naming.js";
-+import { enumVariantToDartName, getModuleAlias, getMethodName, getUnqualifiedClassName, structFieldToDartName, toLowerCamel, toTopLevelConstantName, toUpperCamel, } from "./naming.js";
++import { enumVariantToDartName, getKindConstantName, getKindName, getMethodName, getModuleAlias, getModuleImportUri, getUnqualifiedClassName, structFieldToDartName, toLowerCamel, toTopLevelConstantName, toUpperCamel, } from "./naming.js";
  import { TypeSpeller } from "./type_speller.js";
- const Config = z.strictObject({});
+-const Config = z.strictObject({});
++const Config = z.strictObject({
++    /** Package URI prefix of the generated files; symbols() needs it for companion imports. */
++    importUriPrefix: z.string().optional(),
++});
  class DartCodeGenerator {
-@@ -702,4 +702,65 @@ function docToCommentText(doc) {
-         .join("");
+     id = "skir-dart-gen";
+     configType = Config;
+@@ -12,12 +15,32 @@ class DartCodeGenerator {
+         const outputFiles = [];
+         for (const module of input.modules) {
+             outputFiles.push({
+-                path: module.path.replace(/\.skir$/, ".dart"),
++                path: getModuleImportUri("", module.path),
+                 code: new DartSourceFileGenerator(module, recordMap, config).generate(),
+             });
+         }
+         return { files: outputFiles };
+     }
++    symbols(input) {
++        const { importUriPrefix } = input.config;
++        if (importUriPrefix === undefined) {
++            throw new Error("skir-dart-gen symbols require importUriPrefix");
++        }
++        const inModule = (modulePath, name) => {
++            const alias = getModuleAlias(modulePath);
++            return {
++                reference: `${alias}.${name}`,
++                imports: [
++                    `import "${getModuleImportUri(importUriPrefix, modulePath)}" as ${alias};`,
++                ],
++            };
++        };
++        return {
++            record: (location) => inModule(location.modulePath, getUnqualifiedClassName(location)),
++            method: (module, method) => inModule(module.path, getMethodName(method)),
++            variant: (location, variant) => inModule(location.modulePath, getKindName(location, variant)),
++        };
++    }
  }
- export const GENERATOR = new DartCodeGenerator();
-+export function exportBindings(publicInput) {
-+    const input = publicInput;
-+    const importUriPrefix = input.config.importUriPrefix ?? "";
-+    const importUri = (modulePath) => importUriPrefix + modulePath.replace(/\.skir$/, ".dart");
-+    return {
-+        language: "dart",
-+        methods: input.modules.flatMap((module) => module.methods.map((method) => {
-+            const typeSpeller = new TypeSpeller(input.recordMap, module, true);
-+            const requestType = typeSpeller.getDartType(method.requestType, "frozen");
-+            const responseType = typeSpeller.getDartType(method.responseType, "frozen");
-+            const imports = [...typeSpeller.referencedModulePaths]
-+                .sort()
-+                .map((modulePath) => ({
-+                importUri: importUri(modulePath),
-+                alias: getModuleAlias(modulePath),
-+            }));
-+            if (requestType.includes("_core.") || responseType.includes("_core.")) {
-+                imports.unshift({ importUri: "dart:core", alias: "_core" });
-+            }
-+            if (requestType.includes("_skir.") || responseType.includes("_skir.")) {
-+                imports.unshift({
-+                    importUri: "package:skir_client/skir_client.dart",
-+                    alias: "_skir",
-+                });
-+            }
-+            return {
-+                module: module.path,
-+                name: method.name.text,
-+                method: {
-+                    language: "dart",
-+                    importUri: importUri(module.path),
-+                    symbol: getMethodName(method),
-+                    alias: getModuleAlias(module.path),
-+                },
-+                requestType,
-+                responseType,
-+                imports,
-+            };
-+        })),
-+        records: [...input.recordMap.values()].map((location) => {
-+            const symbol = getUnqualifiedClassName(location);
-+            const alias = getModuleAlias(location.modulePath);
-+            return {
-+                key: location.record.key,
-+                type: `${alias}.${symbol}`,
-+                binding: {
-+                    language: "dart",
-+                    importUri: importUri(location.modulePath),
-+                    symbol,
-+                    alias,
-+                },
-+                fields: location.record.recordType === "struct"
-+                    ? location.record.fields.map((field) => ({
-+                        sourceName: field.name.text,
-+                        targetName: structFieldToDartName(field),
-+                    }))
-+                    : [],
-+            };
-+        }),
-+    };
-+}
- //# sourceMappingURL=index.js.map
-\ No newline at end of file
+ // Generates the code for one Dart file.
+ class DartSourceFileGenerator {
+@@ -311,7 +334,7 @@ class DartSourceFileGenerator {
+         for (const wrapperVariant of wrapperVariants) {
+             const type = wrapperVariant.type;
+             const serializerExpr = typeSpeller.getSerializerExpression(type);
+-            this.push("_serializerBuilder.addWrapperVariant(\n", `${wrapperVariant.number},\n`, `"${wrapperVariant.name.text}",\n`, `"wrap${toUpperCamel(wrapperVariant)}",\n`, `${serializerExpr},\n`, `${toDartStringLiteral(wrapperVariant.doc.text)},\n`, `${className}_${toLowerCamel(wrapperVariant)}Wrapper._,\n`, "(it) => it.value,\n", `ordinal: ${className}_kind.${toLowerCamel(wrapperVariant)}Wrapper._ordinal,\n`, ");\n");
++            this.push("_serializerBuilder.addWrapperVariant(\n", `${wrapperVariant.number},\n`, `"${wrapperVariant.name.text}",\n`, `"wrap${toUpperCamel(wrapperVariant)}",\n`, `${serializerExpr},\n`, `${toDartStringLiteral(wrapperVariant.doc.text)},\n`, `${className}_${toLowerCamel(wrapperVariant)}Wrapper._,\n`, "(it) => it.value,\n", `ordinal: ${className}_kind.${getKindConstantName(wrapperVariant)}._ordinal,\n`, ");\n");
+         }
+         for (const removedNumber of record.record.removedNumbers) {
+             this.push(`_serializerBuilder.addRemovedNumber(${removedNumber});\n`);
+@@ -323,11 +346,11 @@ class DartSourceFileGenerator {
+         let ordinalCounter = 1;
+         for (const variant of constantVariants) {
+             const ordinal = ordinalCounter++;
+-            this.push(`${toLowerCamel(variant)}Const(${ordinal}),\n`);
++            this.push(`${getKindConstantName(variant)}(${ordinal}),\n`);
+         }
+         for (const variant of wrapperVariants) {
+             const ordinal = ordinalCounter++;
+-            this.push(`${toLowerCamel(variant)}Wrapper(${ordinal}),\n`);
++            this.push(`${getKindConstantName(variant)}(${ordinal}),\n`);
+         }
+         this.replaceEnd(",\n", ";\n\n");
+         this.push("final _core.int _ordinal;\n\n", `const ${className}_kind(this._ordinal);\n\n`, "}\n\n");
+@@ -348,14 +371,14 @@ class DartSourceFileGenerator {
+             this.push(`sealed class _${className}_wrapper implements ${className} {\n`, "_core.dynamic get value;\n\n", "@_core.override\n", "_core.bool operator ==(other) {\n", `if (other is! _${className}_wrapper) return false;\n`, "return kind == other.kind && value == other.value;\n", "}\n\n", "@_core.override\n", "_core.int get hashCode => (kind._ordinal * 31) ^ value.hashCode;\n\n", "@_core.override\n", "_core.String toString() => _skir.internal__stringify(this, ", `${className}.serializer);\n`, "}\n\n");
+             for (const variant of wrapperVariants) {
+                 const dartType = typeSpeller.getDartType(variant.type, "frozen");
+-                this.push(`final class ${className}_${toLowerCamel(variant)}Wrapper `, `extends _${className}_wrapper {\n`, `final ${dartType} value;\n\n`, `${className}_${toLowerCamel(variant)}Wrapper._(this.value);\n\n`, "@_core.override\n", `${className}_kind get kind => ${className}_kind.${toLowerCamel(variant)}Wrapper;\n`, "}\n\n");
++                this.push(`final class ${className}_${toLowerCamel(variant)}Wrapper `, `extends _${className}_wrapper {\n`, `final ${dartType} value;\n\n`, `${className}_${toLowerCamel(variant)}Wrapper._(this.value);\n\n`, "@_core.override\n", `${className}_kind get kind => ${className}_kind.${getKindConstantName(variant)};\n`, "}\n\n");
+             }
+         }
+     }
+     writeMethod(method) {
+         const { typeSpeller } = this;
+         const methodName = method.name.text;
+-        const skirName = convertCase(methodName, "lowerCamel") + "Method";
++        const skirName = getMethodName(method);
+         const requestType = typeSpeller.getDartType(method.requestType, "frozen");
+         const requestSerializerExpr = typeSpeller.getSerializerExpression(method.requestType);
+         const responseType = typeSpeller.getDartType(method.responseType, "frozen");
 diff --git a/dist/naming.d.ts b/dist/naming.d.ts
-index b890e6f74450d860879ce79097815673c0177061..f25d7b3ff681b19e10ed41ce8d517498a69ca943 100644
+index b890e6f74450d860879ce79097815673c0177061..afb01404f08155b9935db20578c14ff0da60f3d0 100644
 --- a/dist/naming.d.ts
 +++ b/dist/naming.d.ts
-@@ -1,12 +1,15 @@
+@@ -1,4 +1,4 @@
 -import { Constant, Field, Module, RecordLocation } from "skir-internal";
-+import { Constant, Field, Module, Method, RecordLocation } from "skir-internal";
++import { Constant, Field, Method, Module, RecordLocation } from "skir-internal";
  export declare function structFieldToDartName(field: Field | string): string;
  export declare function enumVariantToDartName(variant: Field): string;
  export declare function toLowerCamel(field: Field): string;
- export declare function toUpperCamel(field: Field): string;
- export declare function toTopLevelConstantName(constant: Constant): string;
-+export declare function getMethodName(method: Method | string): string;
- /** Returns the name of the frozen Dart class for the given record. */
+@@ -8,5 +8,15 @@ export declare function toTopLevelConstantName(constant: Constant): string;
  export declare function getClassName(record: RecordLocation, origin: {
      origin: Module;
-+    qualifyOrigin?: boolean;
  }): string;
++/** Returns the name of the frozen Dart class within its own module. */
 +export declare function getUnqualifiedClassName(record: RecordLocation): string;
++/** Returns the name of the generated method descriptor. */
++export declare function getMethodName(method: Method): string;
++/** Returns the constant of the generated kind enum for the given variant. */
++export declare function getKindConstantName(variant: Field): string;
++/** Returns the kind enum constant of the given variant within its own module. */
++export declare function getKindName(record: RecordLocation, variant: Field): string;
++/** Returns the import URI of the Dart file generated for the given module. */
++export declare function getModuleImportUri(importUriPrefix: string, modulePath: string): string;
  export declare function getModuleAlias(modulePath: string): string;
  //# sourceMappingURL=naming.d.ts.map
 \ No newline at end of file
 diff --git a/dist/naming.js b/dist/naming.js
-index 17b09ed2e9f4ab0236a17e4ab24e535e0d55791b..511e1fd75fb7327ef5ed421a2bf0a8ca4e021160 100644
+index 17b09ed2e9f4ab0236a17e4ab24e535e0d55791b..15bcf0fc1f459f2251de9f39629dff12411ccc7e 100644
 --- a/dist/naming.js
 +++ b/dist/naming.js
-@@ -35,16 +35,14 @@ export function toTopLevelConstantName(constant) {
-         ? convertCaseResult + "_"
-         : convertCaseResult;
+@@ -37,13 +37,7 @@ export function toTopLevelConstantName(constant) {
  }
-+export function getMethodName(method) {
-+    const skirName = typeof method === "string" ? method : method.name.text;
-+    return convertCase(skirName, "lowerCamel") + "Method";
-+}
  /** Returns the name of the frozen Dart class for the given record. */
  export function getClassName(record, origin) {
 -    const { recordAncestors } = record;
@@ -171,66 +156,204 @@ index 17b09ed2e9f4ab0236a17e4ab24e535e0d55791b..511e1fd75fb7327ef5ed421a2bf0a8ca
 -        parts.push(record.name.text);
 -    }
 -    const name = parts.join("_");
--    if (origin.origin.path === record.modulePath) {
 +    const name = getUnqualifiedClassName(record);
-+    if (origin.origin.path === record.modulePath && !origin.qualifyOrigin) {
+     if (origin.origin.path === record.modulePath) {
          return name;
      }
-     else {
-@@ -52,6 +50,9 @@ export function getClassName(record, origin) {
+@@ -52,6 +46,26 @@ export function getClassName(record, origin) {
          return `${alias}.${name}`;
      }
  }
++/** Returns the name of the frozen Dart class within its own module. */
 +export function getUnqualifiedClassName(record) {
-+    return record.recordAncestors.map((ancestor) => ancestor.name.text).join("_");
++    return record.recordAncestors.map((r) => r.name.text).join("_");
++}
++/** Returns the name of the generated method descriptor. */
++export function getMethodName(method) {
++    return convertCase(method.name.text, "lowerCamel") + "Method";
++}
++/** Returns the constant of the generated kind enum for the given variant. */
++export function getKindConstantName(variant) {
++    return toLowerCamel(variant) + (variant.type ? "Wrapper" : "Const");
++}
++/** Returns the kind enum constant of the given variant within its own module. */
++export function getKindName(record, variant) {
++    return `${getUnqualifiedClassName(record)}_kind.${getKindConstantName(variant)}`;
++}
++/** Returns the import URI of the Dart file generated for the given module. */
++export function getModuleImportUri(importUriPrefix, modulePath) {
++    return importUriPrefix + modulePath.replace(/\.skir$/, ".dart");
 +}
  export function getModuleAlias(modulePath) {
      return ("_lib_" +
          modulePath
-diff --git a/dist/type_speller.d.ts b/dist/type_speller.d.ts
-index cf06a6ddff232624b8abcecc09b807ea096440d8..60cb443a80c579a89ffce56ae023e26f2d567268 100644
---- a/dist/type_speller.d.ts
-+++ b/dist/type_speller.d.ts
-@@ -19,7 +19,8 @@ export type TypeFlavor = "initializer" | "frozen" | "maybe-mutable" | "mutable"
- export declare class TypeSpeller {
-     readonly recordMap: ReadonlyMap<RecordKey, RecordLocation>;
-     private readonly origin;
--    constructor(recordMap: ReadonlyMap<RecordKey, RecordLocation>, origin: Module);
-+    private readonly qualifyOrigin;
-+    constructor(recordMap: ReadonlyMap<RecordKey, RecordLocation>, origin: Module, qualifyOrigin?: boolean);
-     readonly referencedModulePaths: Set<string>;
-     getDartType(type: ResolvedType, flavor: "initializer" | "frozen" | "mutable", allRecordsFrozen?: undefined): string;
-     getDartType(type: ResolvedType, flavor: TypeFlavor, allRecordsFrozen: boolean | undefined): string;
-diff --git a/dist/type_speller.js b/dist/type_speller.js
-index ca89fd3a4d2467af36fd6de116bb6f2ae756aa8b..d60ffcdbe86651b1b41f0758f972275f079bcf10 100644
---- a/dist/type_speller.js
-+++ b/dist/type_speller.js
-@@ -18,9 +18,11 @@ import { getClassName, structFieldToDartName } from "./naming.js";
- export class TypeSpeller {
-     recordMap;
-     origin;
--    constructor(recordMap, origin) {
-+    qualifyOrigin;
-+    constructor(recordMap, origin, qualifyOrigin = false) {
-         this.recordMap = recordMap;
-         this.origin = origin;
-+        this.qualifyOrigin = qualifyOrigin;
+diff --git a/src/index.ts b/src/index.ts
+index ab6cf195b342c67a51b5d7a00bc7a3a4f5732dba..4fd6ef08b15264a8a8488ba300d75c8073fffbbf 100644
+--- a/src/index.ts
++++ b/src/index.ts
+@@ -14,7 +14,12 @@ import {
+ import { z } from "zod";
+ import {
+   enumVariantToDartName,
++  getKindConstantName,
++  getKindName,
++  getMethodName,
+   getModuleAlias,
++  getModuleImportUri,
++  getUnqualifiedClassName,
+   structFieldToDartName,
+   toLowerCamel,
+   toTopLevelConstantName,
+@@ -22,7 +27,10 @@ import {
+ } from "./naming.js";
+ import { TypeSpeller } from "./type_speller.js";
+ 
+-const Config = z.strictObject({});
++const Config = z.strictObject({
++  /** Package URI prefix of the generated files; symbols() needs it for companion imports. */
++  importUriPrefix: z.string().optional(),
++});
+ 
+ type Config = z.infer<typeof Config>;
+ 
+@@ -35,12 +43,35 @@ class DartCodeGenerator implements CodeGenerator<Config> {
+     const outputFiles: CodeGenerator.OutputFile[] = [];
+     for (const module of input.modules) {
+       outputFiles.push({
+-        path: module.path.replace(/\.skir$/, ".dart"),
++        path: getModuleImportUri("", module.path),
+         code: new DartSourceFileGenerator(module, recordMap, config).generate(),
+       });
      }
-     referencedModulePaths = new Set();
-     getDartType(type, flavor, 
-@@ -125,10 +127,13 @@ export class TypeSpeller {
-         const record = typeof recordOrKey === "string"
-             ? this.recordMap.get(recordOrKey)
-             : recordOrKey;
--        if (record.modulePath !== this.origin.path) {
-+        if (record.modulePath !== this.origin.path || this.qualifyOrigin) {
-             this.referencedModulePaths.add(record.modulePath);
-         }
--        return getClassName(record, { origin: this.origin });
-+        return getClassName(record, {
-+            origin: this.origin,
-+            qualifyOrigin: this.qualifyOrigin,
-+        });
+     return { files: outputFiles };
+   }
++
++  symbols(input: CodeGenerator.Input<Config>): CodeGenerator.SymbolProvider {
++    const { importUriPrefix } = input.config;
++    if (importUriPrefix === undefined) {
++      throw new Error("skir-dart-gen symbols require importUriPrefix");
++    }
++    const inModule = (modulePath: string, name: string): CodeGenerator.Symbol => {
++      const alias = getModuleAlias(modulePath);
++      return {
++        reference: `${alias}.${name}`,
++        imports: [
++          `import "${getModuleImportUri(importUriPrefix, modulePath)}" as ${alias};`,
++        ],
++      };
++    };
++    return {
++      record: (location) =>
++        inModule(location.modulePath, getUnqualifiedClassName(location)),
++      method: (module, method) => inModule(module.path, getMethodName(method)),
++      variant: (location, variant) =>
++        inModule(location.modulePath, getKindName(location, variant)),
++    };
++  }
+ }
+ 
+ // Generates the code for one Dart file.
+@@ -489,7 +520,7 @@ class DartSourceFileGenerator {
+         `${toDartStringLiteral(wrapperVariant.doc.text)},\n`,
+         `${className}_${toLowerCamel(wrapperVariant)}Wrapper._,\n`,
+         "(it) => it.value,\n",
+-        `ordinal: ${className}_kind.${toLowerCamel(wrapperVariant)}Wrapper._ordinal,\n`,
++        `ordinal: ${className}_kind.${getKindConstantName(wrapperVariant)}._ordinal,\n`,
+         ");\n",
+       );
      }
-     getSerializerExpression(type) {
-         switch (type.kind) {
+@@ -521,11 +552,11 @@ class DartSourceFileGenerator {
+     let ordinalCounter = 1;
+     for (const variant of constantVariants) {
+       const ordinal = ordinalCounter++;
+-      this.push(`${toLowerCamel(variant)}Const(${ordinal}),\n`);
++      this.push(`${getKindConstantName(variant)}(${ordinal}),\n`);
+     }
+     for (const variant of wrapperVariants) {
+       const ordinal = ordinalCounter++;
+-      this.push(`${toLowerCamel(variant)}Wrapper(${ordinal}),\n`);
++      this.push(`${getKindConstantName(variant)}(${ordinal}),\n`);
+     }
+     this.replaceEnd(",\n", ";\n\n");
+     this.push(
+@@ -594,7 +625,7 @@ class DartSourceFileGenerator {
+           `final ${dartType} value;\n\n`,
+           `${className}_${toLowerCamel(variant)}Wrapper._(this.value);\n\n`,
+           "@_core.override\n",
+-          `${className}_kind get kind => ${className}_kind.${toLowerCamel(variant)}Wrapper;\n`,
++          `${className}_kind get kind => ${className}_kind.${getKindConstantName(variant)};\n`,
+           "}\n\n",
+         );
+       }
+@@ -604,7 +635,7 @@ class DartSourceFileGenerator {
+   private writeMethod(method: Method): void {
+     const { typeSpeller } = this;
+     const methodName = method.name.text;
+-    const skirName = convertCase(methodName, "lowerCamel") + "Method";
++    const skirName = getMethodName(method);
+     const requestType = typeSpeller.getDartType(method.requestType!, "frozen");
+     const requestSerializerExpr = typeSpeller.getSerializerExpression(
+       method.requestType!,
+diff --git a/src/naming.ts b/src/naming.ts
+index d79f3287ea2d6ab8431325d3d83a9eaf749e1b4e..70cbad5f05d0df5440aa0e266bad4f4c2c7a6459 100644
+--- a/src/naming.ts
++++ b/src/naming.ts
+@@ -1,6 +1,7 @@
+ import {
+   Constant,
+   Field,
++  Method,
+   Module,
+   RecordLocation,
+   convertCase,
+@@ -54,14 +55,7 @@ export function getClassName(
+     origin: Module;
+   },
+ ): string {
+-  const { recordAncestors } = record;
+-  const parts: string[] = [];
+-  for (let i = 0; i < recordAncestors.length; ++i) {
+-    const record = recordAncestors[i]!;
+-    parts.push(record.name.text);
+-  }
+-
+-  const name = parts.join("_");
++  const name = getUnqualifiedClassName(record);
+ 
+   if (origin.origin.path === record.modulePath) {
+     return name;
+@@ -71,6 +65,34 @@ export function getClassName(
+   }
+ }
+ 
++/** Returns the name of the frozen Dart class within its own module. */
++export function getUnqualifiedClassName(record: RecordLocation): string {
++  return record.recordAncestors.map((r) => r.name.text).join("_");
++}
++
++/** Returns the name of the generated method descriptor. */
++export function getMethodName(method: Method): string {
++  return convertCase(method.name.text, "lowerCamel") + "Method";
++}
++
++/** Returns the constant of the generated kind enum for the given variant. */
++export function getKindConstantName(variant: Field): string {
++  return toLowerCamel(variant) + (variant.type ? "Wrapper" : "Const");
++}
++
++/** Returns the kind enum constant of the given variant within its own module. */
++export function getKindName(record: RecordLocation, variant: Field): string {
++  return `${getUnqualifiedClassName(record)}_kind.${getKindConstantName(variant)}`;
++}
++
++/** Returns the import URI of the Dart file generated for the given module. */
++export function getModuleImportUri(
++  importUriPrefix: string,
++  modulePath: string,
++): string {
++  return importUriPrefix + modulePath.replace(/\.skir$/, ".dart");
++}
++
+ export function getModuleAlias(modulePath: string): string {
+   return (
+     "_lib_" +

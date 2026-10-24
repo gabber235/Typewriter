@@ -8,7 +8,14 @@ import com.typewritermc.loader.api.artifact.SharedArtifactDescriptor
 import com.typewritermc.loader.api.artifact.SharedArtifactId
 import com.typewritermc.loader.api.artifact.SharedArtifactProvenance
 import com.typewritermc.loader.api.artifact.SharedArtifactRevision
-import com.typewritermc.protocol.transport.generated.RealmRouteScope
+import com.typewritermc.protocol.transport.RealmRouteScope
+import com.typewritermc.protocol.transport.generated.sharedBlobBegin
+import com.typewritermc.protocol.transport.generated.sharedBlobComplete
+import com.typewritermc.protocol.transport.generated.sharedBlobMetadata
+import com.typewritermc.protocol.transport.generated.sharedBlobRead
+import com.typewritermc.protocol.transport.generated.sharedBlobWrite
+import com.typewritermc.protocol.transport.generated.sharedCatalogFetch
+import com.typewritermc.protocol.transport.generated.sharedPublish
 import com.typewritermc.services.libs.communicator.router.CommunicatorRoutesBuilder
 import com.typewritermc.services.libs.filetransfer.blob.ArtifactDigest
 import com.typewritermc.services.libs.filetransfer.blob.BlobMetadata
@@ -45,23 +52,23 @@ class StableRealmArtifactRoutes(
         builder: CommunicatorRoutesBuilder,
         address: RealmRouteScope,
     ) = with(builder) {
-        unaryAt(sharedContracts.catalog(address), address) {
+        unaryAt(address.sharedCatalogFetch, address) {
             val catalog = artifacts.catalog()
             FetchSharedArtifactCatalogResponse.createSuccess(
                 revision = catalog.revision.value,
                 artifacts = catalog.artifacts.map(SharedArtifactDescriptor::toSkir),
             )
         }
-        unaryAt(sharedContracts.publish(address), address) { call -> publish(call.request) }
-        unaryAt(blobContracts.metadata(address), address) { call ->
+        unaryAt(address.sharedPublish, address) { call -> publish(call.request) }
+        unaryAt(address.sharedBlobMetadata, address) { call ->
             when (val result = artifacts.metadata(call.request.digest.toApi())) {
                 is BlobResult.Success -> FetchArtifactBlobMetadataResponse.SuccessWrapper(result.value.toSkir())
-                BlobResult.NotFound -> FetchArtifactBlobMetadataResponse.createNotFound()
-                is BlobResult.Invalid -> FetchArtifactBlobMetadataResponse.createInvalid(reason = result.reason)
-                is BlobResult.Conflict -> FetchArtifactBlobMetadataResponse.createInvalid(reason = result.reason)
+                BlobResult.NotFound -> FetchArtifactBlobMetadataResponse.createNotFoundError()
+                is BlobResult.Invalid -> FetchArtifactBlobMetadataResponse.createInvalidError(reason = result.reason)
+                is BlobResult.Conflict -> FetchArtifactBlobMetadataResponse.createInvalidError(reason = result.reason)
             }
         }
-        unaryAt(blobContracts.read(address), address) { call ->
+        unaryAt(address.sharedBlobRead, address) { call ->
             when (val result = artifacts.read(call.request.digest.toApi(), call.request.offset, call.request.maximumBytes)) {
                 is BlobResult.Success -> {
                     ReadArtifactBlobResponse.createSuccess(
@@ -72,27 +79,27 @@ class StableRealmArtifactRoutes(
                 }
 
                 BlobResult.NotFound -> {
-                    ReadArtifactBlobResponse.createNotFound()
+                    ReadArtifactBlobResponse.createNotFoundError()
                 }
 
                 is BlobResult.Invalid -> {
-                    ReadArtifactBlobResponse.createInvalid(reason = result.reason)
+                    ReadArtifactBlobResponse.createInvalidError(reason = result.reason)
                 }
 
                 is BlobResult.Conflict -> {
-                    ReadArtifactBlobResponse.createInvalid(reason = result.reason)
+                    ReadArtifactBlobResponse.createInvalidError(reason = result.reason)
                 }
             }
         }
-        unaryAt(blobContracts.begin(address), address) { call ->
+        unaryAt(address.sharedBlobBegin, address) { call ->
             when (val result = artifacts.beginWrite(TransferId(call.request.transferId), call.request.expected.toApi())) {
                 is BlobResult.Success -> BeginArtifactBlobWriteResponse.createAccepted(offset = result.value.offset)
-                BlobResult.NotFound -> BeginArtifactBlobWriteResponse.createInvalid(reason = "Transfer was not found.")
-                is BlobResult.Invalid -> BeginArtifactBlobWriteResponse.createInvalid(reason = result.reason)
-                is BlobResult.Conflict -> BeginArtifactBlobWriteResponse.createConflict(reason = result.reason)
+                BlobResult.NotFound -> BeginArtifactBlobWriteResponse.createInvalidError(reason = "Transfer was not found.")
+                is BlobResult.Invalid -> BeginArtifactBlobWriteResponse.createInvalidError(reason = result.reason)
+                is BlobResult.Conflict -> BeginArtifactBlobWriteResponse.createConflictError(reason = result.reason)
             }
         }
-        unaryAt(blobContracts.write(address), address) { call ->
+        unaryAt(address.sharedBlobWrite, address) { call ->
             when (
                 val result =
                     artifacts.write(
@@ -102,17 +109,17 @@ class StableRealmArtifactRoutes(
                     )
             ) {
                 is BlobResult.Success -> WriteArtifactBlobChunkResponse.createAccepted(offset = result.value)
-                BlobResult.NotFound -> WriteArtifactBlobChunkResponse.createNotFound()
-                is BlobResult.Invalid -> WriteArtifactBlobChunkResponse.createInvalid(reason = result.reason)
-                is BlobResult.Conflict -> WriteArtifactBlobChunkResponse.createConflict(reason = result.reason)
+                BlobResult.NotFound -> WriteArtifactBlobChunkResponse.createNotFoundError()
+                is BlobResult.Invalid -> WriteArtifactBlobChunkResponse.createInvalidError(reason = result.reason)
+                is BlobResult.Conflict -> WriteArtifactBlobChunkResponse.createConflictError(reason = result.reason)
             }
         }
-        unaryAt(blobContracts.complete(address), address) { call ->
+        unaryAt(address.sharedBlobComplete, address) { call ->
             when (val result = artifacts.complete(TransferId(call.request.transferId))) {
                 is BlobResult.Success -> CompleteArtifactBlobWriteResponse.SuccessWrapper(result.value.toSkir())
-                BlobResult.NotFound -> CompleteArtifactBlobWriteResponse.createNotFound()
-                is BlobResult.Invalid -> CompleteArtifactBlobWriteResponse.createInvalid(reason = result.reason)
-                is BlobResult.Conflict -> CompleteArtifactBlobWriteResponse.createConflict(reason = result.reason)
+                BlobResult.NotFound -> CompleteArtifactBlobWriteResponse.createNotFoundError()
+                is BlobResult.Invalid -> CompleteArtifactBlobWriteResponse.createInvalidError(reason = result.reason)
+                is BlobResult.Conflict -> CompleteArtifactBlobWriteResponse.createConflictError(reason = result.reason)
             }
         }
     }
@@ -139,59 +146,7 @@ class StableRealmArtifactRoutes(
         return when (result) {
             is PublishResult.Published -> PublishSharedArtifactResponse.PublishedWrapper(result.descriptor.toSkir())
             is PublishResult.Unchanged -> PublishSharedArtifactResponse.UnchangedWrapper(result.descriptor.toSkir())
-            is PublishResult.Conflict -> PublishSharedArtifactResponse.ConflictWrapper(result.current?.toSkir())
+            is PublishResult.Conflict -> PublishSharedArtifactResponse.ConflictErrorWrapper(result.current?.toSkir())
         }
     }
 }
-
-private fun ArtifactDigest.toSkir() = SkirArtifactDigest(algorithm = SkirDigestAlgorithm.SHA256, value = value)
-
-private fun SkirArtifactDigest.toApi(): ArtifactDigest {
-    require(algorithm == SkirDigestAlgorithm.SHA256) { "Unsupported artifact digest algorithm." }
-    return ArtifactDigest(DigestAlgorithm.SHA_256, value)
-}
-
-private fun BlobMetadata.toSkir() = SkirBlobMetadata(digest = digest.toSkir(), size = size)
-
-private fun SkirBlobMetadata.toApi() = BlobMetadata(digest.toApi(), size)
-
-private fun ProducerMetadata.toSkir() =
-    SkirProducerMetadata(entries = values.entries.sortedBy { it.key }.map { ProducerMetadataEntry(key = it.key, value = it.value) })
-
-private fun SkirProducerMetadata.toApi() = ProducerMetadata(entries.associate { it.key to it.value })
-
-private fun SharedArtifactDescriptor.toSkir() =
-    SkirSharedArtifactDescriptor(
-        id = id.value,
-        revision = revision.value,
-        label = label,
-        mediaType = mediaType,
-        digest = digest?.toSkir(),
-        size = size,
-        metadata = metadata?.toSkir(),
-        provenance = provenance.toSkir(),
-        deleted = deleted,
-    )
-
-private fun SharedArtifactProvenance.toSkir(): SkirSharedArtifactProvenance =
-    when (this) {
-        is SharedArtifactProvenance.LocalInbox -> {
-            SkirSharedArtifactProvenance.createLocalInbox(relativePath = relativePath)
-        }
-
-        is SharedArtifactProvenance.PanelUpload -> {
-            SkirSharedArtifactProvenance.createPanel(userId = userId)
-        }
-
-        is SharedArtifactProvenance.HostedRuntime -> {
-            SkirSharedArtifactProvenance.createService(serviceId = serviceId, runtimeId = runtimeId)
-        }
-    }
-
-private fun SkirSharedArtifactProvenance.toApi(): SharedArtifactProvenance =
-    when (this) {
-        is SkirSharedArtifactProvenance.LocalInboxWrapper -> SharedArtifactProvenance.LocalInbox(value.relativePath)
-        is SkirSharedArtifactProvenance.PanelWrapper -> SharedArtifactProvenance.PanelUpload(value.userId)
-        is SkirSharedArtifactProvenance.ServiceWrapper -> SharedArtifactProvenance.HostedRuntime(value.serviceId, value.runtimeId)
-        else -> error("Unknown shared artifact provenance.")
-    }

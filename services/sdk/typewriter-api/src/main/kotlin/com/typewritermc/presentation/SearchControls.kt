@@ -1,12 +1,15 @@
 package com.typewritermc.presentation
 
-import com.typewritermc.authoring.ValuePath
-import com.typewritermc.capability.CapabilityId
 import com.typewritermc.expression.Expr
-import com.typewritermc.expression.ExpressionBindingId
 import com.typewritermc.expression.Handled
-import com.typewritermc.types.TypeTemplate
 import skirout.editor.v1.expression.ExpressionNode
+import skirout.editor.v1.presentation.PopupSide
+import skirout.editor.v1.presentation.SearchSelectionMode
+import skirout.editor.v1.presentation.SearchSelectorMultiplicity
+import skirout.editor.v1.presentation.SearchSelectorValues
+import skirout.editor.v1.type_catalog.CapabilityId
+import skirout.editor.v1.type_catalog.ExpressionBindingId
+import skirout.editor.v1.type_catalog.TypeTemplate
 import kotlin.time.Duration
 
 interface SearchInputScope<Value, Row> :
@@ -148,25 +151,13 @@ fun <Row> SearchProviderSpec<Row>.section(
     label: Expr<String, Handled>,
 ): SearchProviderSpec<Row> = decorate(SearchDecoration.Section(id, label.toNode()))
 
-enum class SearchSelectionMode { Single, Multiple }
-
-enum class SearchSelectorMultiplicity { Single, Multiple }
-
-sealed interface SearchSelectorValues {
-    data object FreeText : SearchSelectorValues
-
-    data class Enumeration(
-        val values: List<String>,
-    ) : SearchSelectorValues
-}
-
 interface SearchSelectorsScope {
     fun selector(
         id: String,
         key: String,
-        values: SearchSelectorValues = SearchSelectorValues.FreeText,
+        values: SearchSelectorValues = SearchSelectorValues.FREE_TEXT,
         caseSensitive: Boolean = false,
-        multiplicity: SearchSelectorMultiplicity = SearchSelectorMultiplicity.Single,
+        multiplicity: SearchSelectorMultiplicity = SearchSelectorMultiplicity.SINGLE,
         color: Long? = null,
     ): Expr<Any?, Handled>
 }
@@ -369,7 +360,7 @@ private class DefaultHttpJsonSearchScope<Row> : HttpJsonSearchScope<Row> {
         type: TypeTemplate,
     ): Expr<Any?, Handled> {
         require(id.isNotBlank()) { "HTTP search context id must not be blank." }
-        val binding = ExpressionBindingId("search_context.$id")
+        val binding = ExpressionBindingId(value = "search_context.$id")
         contexts += HttpContext(binding, path, type)
         return com.typewritermc.expression.inputExpression(binding)
     }
@@ -394,5 +385,5 @@ internal fun <Row> SearchProviderSpec<Row>.runtime(): DefaultSearchProviderSpec<
     this as? DefaultSearchProviderSpec<Row>
         ?: throw IllegalArgumentException("Search providers must be created by SearchSources.")
 
-internal val SEARCH_QUERY = ExpressionBindingId("search_query")
-internal val SEARCH_RESULT_ROW = ExpressionBindingId("search_result")
+internal val SEARCH_QUERY = ExpressionBindingId(value = "search_query")
+internal val SEARCH_RESULT_ROW = ExpressionBindingId(value = "search_result")

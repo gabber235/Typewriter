@@ -1,10 +1,8 @@
 package com.typewritermc.presentation
 
-import com.typewritermc.authoring.ValuePath
 import com.typewritermc.expression.Expr
 import com.typewritermc.expression.Handled
-import com.typewritermc.types.skir.SkirTypeCodec
-import com.typewritermc.types.skir.getOrThrow
+import com.typewritermc.types.use
 import skirout.editor.v1.binding.BindingRef
 import skirout.editor.v1.presentation.PresentationElement
 import skirout.editor.v1.presentation.PresentationNode
@@ -73,7 +71,7 @@ internal class RuntimePresentationData(
             } else {
                 BindingRef(
                     path = WireValuePath(segments = emptyList()),
-                    bindingId = requireNotNull(scopeBinding).wire(),
+                    bindingId = requireNotNull(scopeBinding),
                 )
             }
         val session = input.rebind?.invoke(localBinding, children) ?: input.session
@@ -88,7 +86,7 @@ internal class RuntimePresentationData(
                 state.node(
                     PresentationElement.createTypedField(
                         binding = input.binding,
-                        expectedType = SkirTypeCodec.encode(expected).getOrThrow(),
+                        expectedType = expected,
                         presentation = child,
                     ),
                 )
@@ -96,7 +94,7 @@ internal class RuntimePresentationData(
                 state.node(
                     PresentationElement.createScopedBinding(
                         binding = input.binding,
-                        scopeBindingId = requireNotNull(scopeBinding).wire(),
+                        scopeBindingId = requireNotNull(scopeBinding),
                         child = child,
                     ),
                 )
@@ -116,8 +114,8 @@ internal class RuntimePresentationData(
                     type: AppliedPresentation<Subtype>,
                     body: MatchCaseScope<Subtype>.() -> Unit,
                 ) {
-                    state.type(type.type)
-                    require(wireCases.none { candidate -> candidate.concreteType == SkirTypeCodec.encode(type.type).getOrThrow() }) {
+                    state.type(type.type.use)
+                    require(wireCases.none { candidate -> candidate.concreteType == type.type }) {
                         "A polymorphic match may declare one case per concrete type."
                     }
                     val nodes = mutableListOf<PresentationNode>()
@@ -130,7 +128,7 @@ internal class RuntimePresentationData(
                     state.withTarget(nodes) { caseScope.body() }
                     wireCases +=
                         skirout.editor.v1.presentation.PolymorphicMatchCase(
-                            concreteType = SkirTypeCodec.encode(type.type).getOrThrow(),
+                            concreteType = type.type.use,
                             child = state.column(nodes),
                         )
                 }
@@ -146,7 +144,7 @@ internal class RuntimePresentationData(
             state.node(
                 PresentationElement.createPolymorphicMatch(
                     binding = binding.binding,
-                    scopeBindingId = scopeBinding.wire(),
+                    scopeBindingId = scopeBinding,
                     cases = wireCases,
                     fallback = fallback,
                 ),
@@ -174,7 +172,7 @@ internal class RuntimePresentationData(
                     }
                     wireArguments +=
                         skirout.editor.v1.presentation.PresentationArgument(
-                            input = parameter.binding.wire(),
+                            input = parameter.binding,
                             binding = value.binding,
                         )
                 }
@@ -183,9 +181,7 @@ internal class RuntimePresentationData(
         target +=
             state.node(
                 PresentationElement.createInvocation(
-                    presentationId =
-                        skirout.editor.v1.type_catalog
-                            .PresentationId(namespace = id.namespace, name = id.name),
+                    presentationId = id,
                     arguments = wireArguments,
                 ),
             )
@@ -233,10 +229,7 @@ internal class RuntimePresentedField<V, S : Any>(
         configure: S.() -> Unit,
     ) {
         val presentationId =
-            using?.let { state.presentationId(it, checked) }?.let { id ->
-                skirout.editor.v1.type_catalog
-                    .PresentationId(namespace = id.namespace, name = id.name)
-            }
+            using?.let { state.presentationId(it, checked) }
         require(using == null || presentationId != null) {
             "The selected presentation reference was not registered by its generated provider."
         }

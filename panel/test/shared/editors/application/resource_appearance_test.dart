@@ -47,7 +47,7 @@ void main() {
 
     // The element display overrides only the label; accent and icon are the
     // defaults, which read the entry type's own display.
-    expect(appearance.accent.toARGB32(), 0xFFE74C3C);
+    expect(appearance.accentColor.toARGB32(), 0xFFE74C3C);
     expect(appearance.icon, skir.Icon.wrapIconify("fa6-solid:message"));
   });
 

@@ -4,11 +4,9 @@ package com.typewritermc.library
 
 import com.typewritermc.authoring.HierarchyGroupDefinition
 import com.typewritermc.authoring.RealmRootDefinition
-import com.typewritermc.checking.CatalogGeneration
 import com.typewritermc.discovery.CatalogAssembly
 import com.typewritermc.discovery.CatalogAssemblyContext
 import com.typewritermc.discovery.assemble
-import com.typewritermc.expression.ExpressionBindingId
 import com.typewritermc.expression.Handled
 import com.typewritermc.expression.inputExpression
 import com.typewritermc.expression.literal
@@ -16,19 +14,13 @@ import com.typewritermc.expression.name
 import com.typewritermc.expression.orElse
 import com.typewritermc.presentation.DefaultPresentationRuntime
 import com.typewritermc.presentation.PresentationBuildBinding
-import com.typewritermc.presentation.PresentationMaterial
-import com.typewritermc.presentation.PresentationTarget
 import com.typewritermc.presentation.createResource
 import com.typewritermc.presentation.presentationTemplate
 import com.typewritermc.presentation.resource
-import com.typewritermc.types.PresentationRole
 import com.typewritermc.types.RESOURCE_OWNERSHIP_FAMILY_ID
-import com.typewritermc.types.TypeDefinitionId
-import com.typewritermc.types.TypeUse
-import com.typewritermc.types.catalog.DeclarationStatus
 import com.typewritermc.types.catalog.Resolution
-import com.typewritermc.types.skir.SkirTypeCodec
-import com.typewritermc.types.skir.getOrThrow
+import com.typewritermc.types.fields
+import com.typewritermc.types.use
 import de.infix.testBalloon.framework.core.testSuite
 import io.kotest.assertions.throwables.shouldThrow
 import io.kotest.matchers.collections.shouldContain
@@ -36,6 +28,9 @@ import io.kotest.matchers.shouldBe
 import io.kotest.matchers.string.shouldContain
 import io.kotest.matchers.types.shouldBeInstanceOf
 import skirout.editor.v1.action.EditorAction
+import skirout.editor.v1.catalog.DeclarationStatus
+import skirout.editor.v1.catalog.PresentationMaterial
+import skirout.editor.v1.catalog.PresentationRole
 import skirout.editor.v1.expression.ExpressionNode
 import skirout.editor.v1.presentation.ChildrenElement
 import skirout.editor.v1.presentation.GraphDirection
@@ -47,18 +42,23 @@ import skirout.editor.v1.presentation.PresentationNumber
 import skirout.editor.v1.presentation.ResourcesElement
 import skirout.editor.v1.presentation.ResourcesLayout
 import skirout.editor.v1.presentation.StackChild
+import skirout.editor.v1.type_catalog.CatalogGeneration
 import skirout.editor.v1.type_catalog.DataValue
+import skirout.editor.v1.type_catalog.ExpressionBindingId
 import skirout.editor.v1.type_catalog.PathSegment
+import skirout.editor.v1.type_catalog.TypeDefinitionId
+import skirout.editor.v1.catalog.PresentationTarget as WirePresentationTarget
 import skirout.editor.v1.presentation.PresentationColor as WireColor
 
 val CorePlacesTest by testSuite {
-    val assembly = frameworkContributions().assemble(CatalogAssemblyContext(CatalogGeneration("core places")))
+    val assembly = frameworkContributions().assemble(CatalogAssemblyContext(CatalogGeneration(value = "core places")))
 
     test("the core catalog publishes its realm root and keeps every core resource type owned") {
-        assembly.snapshot.realmRoot shouldBe RealmRootDefinition.id
-        assembly.snapshot.diagnostics.filter { it.code in setOf("unowned_resource_type", "generic_realm_section") } shouldBe emptyList()
+        assembly.editorCatalog.realmRoot shouldBe RealmRootDefinition.id
+        assembly.editorCatalog.diagnostics.filter { it.code in setOf("unowned_resource_type", "generic_realm_section") } shouldBe
+            emptyList()
         listOf(RealmRootDefinition.id, LibraryDefinition.id, TaxonomyDefinition.id, BookDefinition.id, TagDefinition.id).forEach {
-            assembly.checked.definition(it) shouldBe DeclarationStatus.Ready
+            assembly.checked.definition(it) shouldBe DeclarationStatus.READY
         }
     }
 
@@ -133,7 +133,7 @@ val CorePlacesTest by testSuite {
         (resources.order != null) shouldBe true
         val tree = resources.layout.shouldBeInstanceOf<ResourcesLayout.TreeWrapper>().value
         tree.path.segments shouldBe listOf(PathSegment.createField(name = "chapter"))
-        material.dependencies.types shouldContain SkirTypeCodec.encode(TypeUse.Named(HierarchyGroupDefinition.id)).getOrThrow()
+        material.dependencies.types shouldContain HierarchyGroupDefinition.id.use()
 
         val create =
             requireNotNull(tree.group)
@@ -141,7 +141,7 @@ val CorePlacesTest by testSuite {
                 .single()
                 .shouldBeInstanceOf<EditorAction.CreateWrapper>()
                 .value
-        create.type shouldBe SkirTypeCodec.encode(PageDefinition.id).getOrThrow()
+        create.type shouldBe PageDefinition.id
         requireNotNull(create.owner).path.segments shouldBe listOf(PathSegment.createField(name = "pages"))
         create.fields
             .single()
@@ -160,7 +160,7 @@ val CorePlacesTest by testSuite {
         shouldThrow<IllegalArgumentException> {
             build {
                 pages {
-                    order { inputExpression<String, Handled>(ExpressionBindingId("unbound")) }
+                    order { inputExpression<String, Handled>(ExpressionBindingId(value = "unbound")) }
                     list()
                 }
             }
@@ -169,7 +169,7 @@ val CorePlacesTest by testSuite {
             build {
                 pages {
                     order { resource.fields.name.orElse(literal("")) }
-                    graph(com.typewritermc.discovery.GraphDirection.TOP_TO_BOTTOM)
+                    graph(GraphDirection.TOP_TO_BOTTOM)
                 }
             }
         }.message shouldContain "cannot declare an order"
@@ -198,9 +198,9 @@ val CorePlacesTest by testSuite {
 
 /** Builds a Book workspace whose only content is a button running the action [action] creates. */
 private fun CatalogAssembly.bookBuild(): (() -> EditorAction) -> Unit {
-    val checked = (checked.resolve(BookDefinition.use) as Resolution.Ready).value
+    val checked = (checked.resolve(BookDefinition.use.use) as Resolution.Ready).value
     val ownership =
-        snapshot.relations
+        relations
             .filter { relation -> relation.families.any { it.value == RESOURCE_OWNERSHIP_FAMILY_ID } }
             .mapTo(hashSetOf()) { it.first.id }
     val binding = PresentationBuildBinding(checked.presentationTemplate(), PresentationRole.WORKSPACE, ownershipEndpoints = ownership)
@@ -209,7 +209,7 @@ private fun CatalogAssembly.bookBuild(): (() -> EditorAction) -> Unit {
 
 /** Builds a Book workspace whose content [content] declares through the generated Book presentation scope. */
 private fun CatalogAssembly.bookPresentation(): (BookPresentationScope.() -> Unit) -> Unit {
-    val checked = (checked.resolve(BookDefinition.use) as Resolution.Ready).value
+    val checked = (checked.resolve(BookDefinition.use.use) as Resolution.Ready).value
     val binding = PresentationBuildBinding(checked.presentationTemplate(), PresentationRole.WORKSPACE)
     return { content -> DefaultPresentationRuntime().build(binding) { scope -> BookPresentationScopeImpl(scope).content() } }
 }
@@ -217,10 +217,12 @@ private fun CatalogAssembly.bookPresentation(): (BookPresentationScope.() -> Uni
 private fun CatalogAssembly.material(
     type: TypeDefinitionId,
     role: PresentationRole,
-): PresentationMaterial =
-    snapshot.presentationMaterials.single {
-        it.role == role && (it.target as? PresentationTarget.Named)?.type?.definition == type
+): PresentationMaterial {
+    val wireType = type
+    return editorCatalog.presentationMaterials.single {
+        it.role == role && (it.target as? WirePresentationTarget.NamedWrapper)?.value?.definition == wireType
     }
+}
 
 private fun CatalogAssembly.resources(
     type: TypeDefinitionId,

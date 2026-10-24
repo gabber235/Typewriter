@@ -153,8 +153,8 @@ authorization {
   users: [{
     nkey: "UD466L6EBCM3YY5HEGHJANNTN4LSKTSUXTH7RILHCKEQMQHTBNLHJJXT"
     permissions: {
-      publish: {allow: ["allowed.echo", "allowed.missing", "_INBOX.integration.*"]}
-      subscribe: {allow: ["allowed.echo", "_INBOX.integration.*"]}
+      publish: {allow: ["allowed.echo", "allowed.chunked", "allowed.missing", "_INBOX.integration.*"]}
+      subscribe: {allow: ["allowed.echo", "allowed.chunked", "_INBOX.integration.*"]}
     }
   }]
 }
@@ -190,6 +190,7 @@ authorization {
 			"test",
 			"--no-pub",
 			"--concurrency=2",
+			"test/infrastructure/messaging/chunked_reply_test.dart",
 			"test/infrastructure/messaging/nats_core_client_integration_test.dart",
 			"test/infrastructure/messaging/nats_native_authorization_integration_test.dart",
 		})

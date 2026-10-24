@@ -10,7 +10,7 @@ Duration? _noRouteRetry(int retryCount, Object error) => null;
 /// Ready observations propagate synchronously so a heartbeat does not create
 /// a loading interval. An actual source refresh retains its pending state.
 @Riverpod(retry: _noRouteRetry)
-FutureOr<List<Service>> canonicalServices(Ref ref) {
+FutureOr<List<skir.Service>> canonicalServices(Ref ref) {
   final organization = ref.watch(organizationIdProvider);
   if (organization == null) return const [];
   final source = canonicalOrganizationServicesProvider(organization);
@@ -25,9 +25,11 @@ FutureOr<List<Service>> canonicalServices(Ref ref) {
 /// that render editable names should use this projection, while mutation
 /// preparation must retain the canonical snapshot.
 @riverpod
-AsyncValue<List<Service>> projectedServices(Ref ref) {
+AsyncValue<List<skir.Service>> projectedServices(Ref ref) {
   final canonical = ref.watch(canonicalServicesProvider);
-  if (canonical.mapUnready<List<Service>>() case final value?) return value;
+  if (canonical.mapUnready<List<skir.Service>>() case final value?) {
+    return value;
+  }
 
   final organization = ref.watch(organizationIdProvider);
   if (organization == null) return AsyncData(canonical.requireValue);
@@ -48,9 +50,9 @@ AsyncValue<List<Service>> projectedServices(Ref ref) {
 
 /// Resolves one service with its unsaved local identity draft applied.
 @riverpod
-AsyncValue<Service?> projectedService(Ref ref, skir.RecordId serviceId) {
+AsyncValue<skir.Service?> projectedService(Ref ref, skir.RecordId serviceId) {
   final canonical = ref.watch(canonicalServiceProvider(serviceId));
-  if (canonical.mapUnready<Service?>() case final value?) return value;
+  if (canonical.mapUnready<skir.Service?>() case final value?) return value;
 
   final organization = ref.watch(organizationIdProvider);
   if (organization == null) return canonical;
@@ -73,9 +75,11 @@ AsyncValue<Service?> projectedService(Ref ref, skir.RecordId serviceId) {
 /// Projection updates are synchronous; only an unresolved source can introduce
 /// a loading state for consumers such as the realm interaction gate.
 @Riverpod(retry: _noRouteRetry)
-FutureOr<OrganizationTopology> organizationTopology(Ref ref) {
+FutureOr<skir.OrganizationTopologySnapshot> organizationTopology(Ref ref) {
   final organization = ref.watch(organizationIdProvider);
-  if (organization == null) return OrganizationTopology.empty;
+  if (organization == null) {
+    return skir.OrganizationTopologySnapshot.defaultInstance;
+  }
   final source = organizationTopologyControllerProvider(organization);
   final topology = ref.watch(source);
   if (!topology.isLoading && !topology.hasError) return topology.requireValue;

@@ -1,3 +1,5 @@
+import "package:typewriter_panel/infrastructure/protocols/skir/skir.dart"
+    as skir;
 import "package:typewriter_panel/typewriter_panel.dart";
 
 /// Lets the user switch the organization workspace to another realm.
@@ -14,7 +16,7 @@ class RealmSelector extends HookConsumerWidget {
     final realmsAsync = ref.watch(realmsProvider);
     final selectedRealmAsync = ref.watch(selectedRealmProvider);
 
-    return SelectorPopupWithSelection<TopologyRealm>(
+    return SelectorPopupWithSelection<skir.RealmInstance>(
       itemsAsync: realmsAsync,
       selectedAsync: selectedRealmAsync,
       name: "realms",
@@ -52,9 +54,9 @@ class _RealmMenuContent extends HookConsumerWidget {
     required this.onDismiss,
   });
 
-  final List<TopologyRealm> realms;
-  final TopologyRealm? selectedRealm;
-  final void Function(TopologyRealm) onDismiss;
+  final List<skir.RealmInstance> realms;
+  final skir.RealmInstance? selectedRealm;
+  final void Function(skir.RealmInstance) onDismiss;
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -105,15 +107,15 @@ class _RealmMenuItem extends HookConsumerWidget {
     required this.onDismiss,
   });
 
-  final TopologyRealm realm;
+  final skir.RealmInstance realm;
   final bool isSelected;
-  final void Function(TopologyRealm) onDismiss;
+  final void Function(skir.RealmInstance) onDismiss;
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final onColor = realmServiceRoleColor.on(context);
     final isOnline =
-        realm.state.status == TopologyRuntimeStatus.active &&
+        realm.state.status == skir.ChildRuntimeStatus.active &&
         ref.watch(hostConnectedProvider(realm.ownerHost.id));
 
     return Padding(

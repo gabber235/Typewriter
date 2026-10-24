@@ -7,8 +7,10 @@ import com.typewritermc.realm.TestRealmStructure
 import com.typewritermc.realm.catalog.RealmCatalogStore
 import com.typewritermc.realm.catalog.installTestCatalog
 import com.typewritermc.types.catalog.Resolution
-import com.typewritermc.types.skir.getOrThrow
+import com.typewritermc.types.requirePortable
+import com.typewritermc.types.template
 import com.typewritermc.types.toTemplate
+import com.typewritermc.types.use
 import de.infix.testBalloon.framework.core.testSuite
 import io.kotest.matchers.collections.shouldContainExactly
 import io.kotest.matchers.shouldBe
@@ -22,6 +24,9 @@ import skirout.editor.v1.search.RealmPresentationSearchRequest
 import skirout.editor.v1.search.RealmPresentationSearchStatus
 import skirout.editor.v1.search.RealmPresentationSearchUpdate
 import skirout.editor.v1.search.RealmSearchQuery
+import skirout.editor.v1.search.RealmSearchSelector
+import skirout.editor.v1.search.RealmSearchSelectorExpression
+import skirout.editor.v1.search.RealmSearchSelectorOperator
 import skirout.editor.v1.type_catalog.CapabilityId
 import skirout.editor.v1.type_catalog.CatalogGeneration
 import skirout.editor.v1.type_catalog.DataValue
@@ -36,14 +41,15 @@ val RealmPresentationSearchRoutesTest by testSuite {
                     val operation = PendingSearchSource(backgroundScope)
                     val source = CapabilityRealmPresentationSearchSource(backgroundScope, catalogs, fixture.views, operation)
                     val candidates = fixture.candidateSearch(MoveToOwner, "destination")
-                    source.watch(validSearchRequest().copy(capabilityId = CapabilityId(value = candidates.value))) { }
+                    source.watch(validSearchRequest().copy(capabilityId = candidates)) { }
                     runCurrent()
                     operation.active.toSet() shouldBe setOf("search")
 
                     val replacement = source.watch(validSearchRequest()) { }
                     runCurrent()
 
-                    (replacement as RealmPresentationSearchUpdate.SnapshotWrapper).value.status shouldBe RealmPresentationSearchStatus.ERROR
+                    (replacement as RealmPresentationSearchUpdate.SnapshotWrapper).value.status shouldBe
+                        RealmPresentationSearchStatus.SEARCH_FAILED_ERROR
                     operation.active.toSet() shouldBe emptySet()
                     source.cancel("search") shouldBe false
                 }
@@ -82,7 +88,7 @@ val RealmPresentationSearchRoutesTest by testSuite {
                             capabilityId = CapabilityId(value = "unknown"),
                         ),
                     ) { }
-                (response is RealmPresentationSearchUpdate.UnavailableWrapper) shouldBe true
+                (response is RealmPresentationSearchUpdate.UnavailableErrorWrapper) shouldBe true
             }
         }
     }
@@ -91,7 +97,7 @@ val RealmPresentationSearchRoutesTest by testSuite {
         runTest {
             val response = UnavailableRealmPresentationSearchSource().watch(validSearchRequest()) { }
 
-            val unavailable = response as RealmPresentationSearchUpdate.UnavailableWrapper
+            val unavailable = response as RealmPresentationSearchUpdate.UnavailableErrorWrapper
             unavailable.value.subscriptionId shouldBe "search"
             unavailable.value.diagnostics
                 .single()
@@ -127,15 +133,41 @@ val RealmPresentationSearchRoutesTest by testSuite {
 
         val response = requireNotNull(invalidRealmPresentationSearchRequest(invalid)) as RealmPresentationSearchUpdate.SnapshotWrapper
 
-        response.value.status shouldBe RealmPresentationSearchStatus.ERROR
+        response.value.status shouldBe RealmPresentationSearchStatus.SEARCH_FAILED_ERROR
         response.value.diagnostics.size shouldBe 3
+    }
+
+    test("an unknown selector operator is rejected before a source can start") {
+        val selector =
+            RealmSearchSelectorExpression.createSelector(selectorId = "type", key = "type", value = "npc")
+        val invalid =
+            validSearchRequest().copy(
+                query =
+                    RealmSearchQuery.partial(
+                        normalizedQuery = "alex",
+                        selectors = listOf(RealmSearchSelector(selectorId = "type", key = "type", value = "npc")),
+                        selectorExpression =
+                            RealmSearchSelectorExpression.createBinary(
+                                operator_ = RealmSearchSelectorOperator.UNKNOWN,
+                                left = selector,
+                                right = selector,
+                            ),
+                    ),
+            )
+
+        val response = requireNotNull(invalidRealmPresentationSearchRequest(invalid)) as RealmPresentationSearchUpdate.SnapshotWrapper
+
+        response.value.status shouldBe RealmPresentationSearchStatus.SEARCH_FAILED_ERROR
+        response.value.diagnostics
+            .single()
+            .message shouldBe "Realm search selector expression contains an unknown operator"
     }
 
     test("mismatched source subscriptions become correlated error snapshots") {
         val response = invalidRealmPresentationSearchResponse("search") as RealmPresentationSearchUpdate.SnapshotWrapper
 
         response.value.subscriptionId shouldBe "search"
-        response.value.status shouldBe RealmPresentationSearchStatus.ERROR
+        response.value.status shouldBe RealmPresentationSearchStatus.SEARCH_FAILED_ERROR
         response.value.diagnostics
             .single()
             .message shouldBe "Realm presentation search response used a different subscription ID"
@@ -233,11 +265,9 @@ private fun CoreOperationsFixture.candidateRequest(
     generation = CatalogGeneration(value = catalogGeneration()),
     capabilityId = CapabilityId(value = candidateSearch(operation, field).value),
     resultType =
-        com.typewritermc.types.skir.SkirTypeCodec
-            .encode(
-                com.typewritermc.operations.OperationResourceOptionDefinition.use
-                    .toTemplate(),
-            ).getOrThrow(),
+        com.typewritermc.operations.OperationResourceOptionDefinition.use
+            .toTemplate()
+            .template,
     operationContext = searchContext(*subjects),
     query = RealmSearchQuery(normalizedQuery = query, terms = listOf(query), selectors = emptyList(), selectorExpression = null),
 )
@@ -246,12 +276,10 @@ private fun CoreOperationsFixture.candidateRequest(
 private fun CoreOperationsFixture.option(value: DataValue): OperationResourceOption =
     views.read { root ->
         val checked =
-            (root.catalog.checked.resolve(com.typewritermc.operations.OperationResourceOptionDefinition.use) as Resolution.Ready).value
+            (root.catalog.checked.resolve(com.typewritermc.operations.OperationResourceOptionDefinition.use.use) as Resolution.Ready).value
         val complete =
             checked.complete(
-                com.typewritermc.types.skir.SkirDataValueCodec
-                    .decode(value)
-                    .getOrThrow(),
+                value.requirePortable(),
             ) as com.typewritermc.authoring.CompletenessResult.Complete
         root.catalog.nativeBindings
             .bind(checked)

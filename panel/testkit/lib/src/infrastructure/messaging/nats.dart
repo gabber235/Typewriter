@@ -1,11 +1,9 @@
-import "package:typewriter_panel/infrastructure/protocols/skir/skir.dart"
-    as skir;
 import "package:typewriter_panel/typewriter_panel.dart";
 
 /// Keeps the notifier contract when feature tests supply a transport directly.
 ///
-/// These fixtures bypass server admission. Permission ownership tests use the
-/// production notifier with a replaced client factory instead.
+/// Connection ownership tests use the production notifier with a replaced
+/// client factory instead.
 class FakeNats extends Nats {
   FakeNats(this._initialClient);
 
@@ -17,12 +15,6 @@ class FakeNats extends Nats {
   NatsClient get connection => client;
 
   set connection(NatsClient client) => state = client;
-
-  @override
-  Future<void> ensureRealmsAdmitted(Set<skir.RecordId> required) async {}
-
-  @override
-  Future<void> refreshAuthorization(Set<skir.RecordId> observedRealms) async {}
 
   @override
   Future<void> retry() async {}
@@ -103,12 +95,15 @@ final class FakeNatsClient implements NatsClient {
     _handlers[subject] = handler;
   }
 
+  /// Answers with the handler registered for [subject]; completing
+  /// [cancelled] first fails the request with [TransferCancelled].
   @override
   Future<NatsMessage> request(
     String subject,
     Uint8List payload, {
     Map<String, String> headers = const {},
     Duration timeout = const Duration(seconds: 10),
+    Future<void>? cancelled,
   }) async {
     requests.add(
       FakeNatsRequest(
@@ -128,10 +123,15 @@ final class FakeNatsClient implements NatsClient {
     if (handler == null) {
       throw TimeoutException("No handler for subject: $subject", timeout);
     }
-    return NatsMessage(
-      await handler(Uint8List.fromList(payload)),
-      subject: subject,
-    );
+    final reply = Future.sync(() => handler(Uint8List.fromList(payload)));
+    final bytes = await switch (cancelled) {
+      null => reply,
+      final cancellation => Future.any([
+        reply,
+        cancellation.then<Uint8List>((_) => throw const TransferCancelled()),
+      ]),
+    };
+    return NatsMessage(bytes, subject: subject);
   }
 
   @override

@@ -95,10 +95,6 @@ class AuthoringSession extends _$AuthoringSession {
     skir.RecordId organizationId,
     skir.RecordId realmId,
   ) async {
-    await repositories.ensureAuthoringRealmsAdmitted(
-      repositories.authoringRealms(organizationId),
-    );
-    if (!_isActive(lifecycleRevision)) return;
     await repository.start();
     if (!_isActive(lifecycleRevision)) return;
     await _refresh(repository, lifecycleRevision, organizationId, realmId);
@@ -198,14 +194,14 @@ class AuthoringSession extends _$AuthoringSession {
         catalog: CheckedEditorCatalog(catalog),
       );
     } on Object catch (error) {
-      if (error is BoundedTransferCancelled && repository._isDisposed) return;
+      if (error is TransferCancelled && repository._isDisposed) return;
       if (!_isActive(lifecycleRevision)) return;
       state = state.copyWith(refreshing: false, failure: error);
       rethrow;
     }
   }
 
-  Future<skir.EditorCatalogWireSnapshot> _fetchCatalog(
+  Future<skir.EditorCatalog> _fetchCatalog(
     skir.RecordId organizationId,
     skir.RecordId realmId,
   ) async {
@@ -250,7 +246,7 @@ class AuthoringSession extends _$AuthoringSession {
     skir.PreparedEdit edit,
   ) => _repository.prepareCommit(edit);
 
-  Future<skir.TypePreviewResult> previewTypeArguments({
+  Future<skir.PreviewTypeArgumentChangeResponse> previewTypeArguments({
     required skir.ResourceId resource,
     required skir.TypeSelection requested,
   }) {
@@ -284,11 +280,11 @@ class AuthoringSession extends _$AuthoringSession {
     skir.PrepareAuthoringActionRequest request,
   ) => _resourceOperations.prepare(request);
 
-  Future<skir.PreparedEditResult> prepareTypeArguments(
+  Future<skir.PrepareTypeArgumentChangeResponse> prepareTypeArguments(
     skir.TypeArgumentChangePreview preview,
   ) => _repository.prepareTypeArgumentChange(preview);
 
-  Future<skir.PreparationStep> prepareStep(
+  Future<skir.PrepareValueResult> prepareStep(
     skir.PreparationOperation operation,
   ) =>
       NatsRealmEditorCatalogSource(ref)

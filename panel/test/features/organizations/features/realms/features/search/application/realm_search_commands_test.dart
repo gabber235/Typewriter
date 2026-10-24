@@ -9,19 +9,19 @@ void main() {
       const AsyncLoading(),
     );
     addTearDown(availability.dispose);
-    final realm = TopologyRealm(
+    final realm = skir.RealmInstance(
       realmId: skir.recordId("realm:test"),
-      ownerHost: TopologyOwnerHost(
+      ownerHost: skir.OwnerHost(
         id: skir.recordId("service:test"),
         name: "test",
       ),
       revision: 1,
-      targetEngine: const TopologyEngineTarget(
+      targetEngine: skir.EngineTarget(
         engineId: "typewritermc:paper",
         versionConstraint: "*",
       ),
-      state: TopologyRuntimeState(
-        status: TopologyRuntimeStatus.active,
+      state: skir.ChildRuntimeState(
+        status: skir.ChildRuntimeStatus.active,
         activeArtifactVersion: null,
         message: null,
         updatedAt: DateTime(2026),

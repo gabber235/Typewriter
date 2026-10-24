@@ -1,43 +1,49 @@
 package com.typewritermc.realm.authoring
 
-import com.typewritermc.authoring.AuthoringRecord
-import com.typewritermc.authoring.LinkOccurrence
-import com.typewritermc.authoring.LinkOccurrenceId
 import com.typewritermc.authoring.ReadContext
 import com.typewritermc.authoring.RealmRootDefinition
 import com.typewritermc.authoring.RelationSelection
 import com.typewritermc.authoring.ResourceDisplayCatalog
-import com.typewritermc.authoring.SelectionId
-import com.typewritermc.authoring.TypeSelection
-import com.typewritermc.authoring.ValueLocation
-import com.typewritermc.authoring.ValuePath
-import com.typewritermc.authoring.definition
 import com.typewritermc.authoring.field
-import com.typewritermc.authoring.immutableAuthoringCopy
 import com.typewritermc.authoring.item
 import com.typewritermc.authoring.mapKey
 import com.typewritermc.authoring.mapValue
-import com.typewritermc.checking.CatalogGeneration
+import com.typewritermc.authoring.of
+import com.typewritermc.authoring.payload
+import com.typewritermc.authoring.root
 import com.typewritermc.checking.InputIdentity
-import com.typewritermc.configuration.ConfigurationRecipe
 import com.typewritermc.discovery.OwnedCheckRecipe
 import com.typewritermc.discovery.OwnedProviderRegistry
 import com.typewritermc.operations.OperationCatalog
 import com.typewritermc.realm.repository.CapturedAuthoringValues
 import com.typewritermc.realm.repository.ResourceValueMapper
-import com.typewritermc.types.DataValue
-import com.typewritermc.types.EndpointBindingTemplate
 import com.typewritermc.types.NativeBindingRegistry
-import com.typewritermc.types.RelationContract
-import com.typewritermc.types.RelationId
-import com.typewritermc.types.ResourceId
-import com.typewritermc.types.TypeDefinitionId
 import com.typewritermc.types.catalog.CheckedCatalog
+import com.typewritermc.types.field
+import com.typewritermc.types.fields
 import com.typewritermc.types.immutableMapCopy
+import com.typewritermc.types.items
 import com.typewritermc.types.ownsResources
+import com.typewritermc.types.payload
+import com.typewritermc.types.record
+import com.typewritermc.types.rows
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import skirout.editor.v1.authoring.LinkOccurrence
+import skirout.editor.v1.authoring.LinkOccurrenceId
+import skirout.editor.v1.catalog.ConfigurationRecipe
+import skirout.editor.v1.catalog.EndpointBindingTemplate
+import skirout.editor.v1.catalog.RelationContract
+import skirout.editor.v1.type_catalog.AuthoringRecord
+import skirout.editor.v1.type_catalog.CatalogGeneration
+import skirout.editor.v1.type_catalog.DataValue
+import skirout.editor.v1.type_catalog.RelationId
+import skirout.editor.v1.type_catalog.ResourceId
+import skirout.editor.v1.type_catalog.SelectionId
+import skirout.editor.v1.type_catalog.TypeDefinitionId
+import skirout.editor.v1.type_catalog.ValueLocation
+import skirout.editor.v1.type_catalog.ValuePath
 import java.util.IdentityHashMap
 import java.util.UUID
 import java.util.concurrent.ConcurrentHashMap
@@ -375,8 +381,8 @@ internal fun requiredAuthoringInputs(resources: Map<ResourceId, AuthoringRecord>
         add(RESOURCE_SELECTION_INPUT)
         resources.forEach { (id, record) ->
             add(InputIdentity.Existence(id))
-            add(InputIdentity.Form(ValueLocation(id, ValuePath())))
-            collectValueInputs(DataValue.Record(record.fields), ValueLocation(id, ValuePath()), this)
+            add(InputIdentity.Form(ValueLocation.of(id)))
+            collectValueInputs(DataValue.RecordWrapper(record.payload), ValueLocation.of(id), this)
         }
     }
 
@@ -387,28 +393,28 @@ private fun collectValueInputs(
 ) {
     inputs += InputIdentity.Value(at)
     when (value) {
-        is DataValue.Named -> {
+        is DataValue.NamedWrapper -> {
             inputs += InputIdentity.Form(at)
             collectValueInputs(value.payload, at, inputs)
         }
 
-        is DataValue.Record -> {
-            value.fields.forEach { (name, field) -> collectValueInputs(field, at.field(name), inputs) }
+        is DataValue.RecordWrapper -> {
+            value.fields.forEach { field -> collectValueInputs(field.value, at.field(field.name), inputs) }
         }
 
-        is DataValue.ListValue -> {
+        is DataValue.ListValueWrapper -> {
             inputs += InputIdentity.Membership(at)
             inputs += InputIdentity.Order(at)
             value.items.forEach { collectValueInputs(it.value, at.item(it.id), inputs) }
         }
 
-        is DataValue.SetValue -> {
+        is DataValue.SetValueWrapper -> {
             inputs += InputIdentity.Membership(at)
             inputs += InputIdentity.Order(at)
             value.items.forEach { collectValueInputs(it.value, at.item(it.id), inputs) }
         }
 
-        is DataValue.MapValue -> {
+        is DataValue.MapValueWrapper -> {
             inputs += InputIdentity.Membership(at)
             inputs += InputIdentity.Order(at)
             value.rows.forEach { row ->
@@ -428,7 +434,6 @@ private fun discoverLinks(resources: Map<ResourceId, AuthoringRecord>): Map<Link
         .discover(resources)
         .associateBy(LinkOccurrence::id)
 
-private fun immutableResources(resources: Map<ResourceId, AuthoringRecord>): Map<ResourceId, AuthoringRecord> =
-    resources.immutableAuthoringCopy()
+private fun immutableResources(resources: Map<ResourceId, AuthoringRecord>): Map<ResourceId, AuthoringRecord> = resources.immutableMapCopy()
 
-internal val RESOURCE_SELECTION_INPUT: InputIdentity = InputIdentity.Selection(SelectionId("realm.resources"))
+internal val RESOURCE_SELECTION_INPUT: InputIdentity = InputIdentity.Selection(SelectionId(value = "realm.resources"))

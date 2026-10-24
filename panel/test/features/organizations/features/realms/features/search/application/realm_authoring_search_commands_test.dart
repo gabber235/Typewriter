@@ -61,7 +61,7 @@ AuthoringSearchResultPayload _payload({
   required skir.TypeSelection configuration,
 }) {
   final catalog = CheckedEditorCatalog(
-    skir.EditorCatalogWireSnapshot(
+    skir.EditorCatalog(
       resourceDisplays: const [],
       resourceOperations: const [],
       generation: skir.CatalogGeneration(value: "catalog:test"),

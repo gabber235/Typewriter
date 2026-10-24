@@ -69,8 +69,7 @@ Future<skir.GetSentinelCredentialsResponse_Success> sentinelCredentials(
 /// Publishes the active client owned by the authenticated connection scope.
 ///
 /// Credential and organization changes dispose the entire previous connection.
-/// Permission refresh and retry retain the current client until a replacement
-/// has been admitted by the server.
+/// [retry] publishes a fresh session of the same scope.
 @Riverpod(keepAlive: true)
 class Nats extends _$Nats {
   late NatsConnectionOwner _connection;
@@ -99,12 +98,6 @@ class Nats extends _$Nats {
     ref.onDispose(() => unawaited(connection.close()));
     return connection.client;
   }
-
-  Future<void> ensureRealmsAdmitted(Set<skir.RecordId> required) =>
-      _connection.ensureRealmsAdmitted(required);
-
-  Future<void> refreshAuthorization(Set<skir.RecordId> observedRealms) =>
-      _connection.refreshAuthorization(observedRealms);
 
   Future<void> retry() => _connection.retry();
 }

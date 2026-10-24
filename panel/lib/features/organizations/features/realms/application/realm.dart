@@ -95,23 +95,21 @@ skir.RecordId? realmId(Ref ref) {
 /// Ready topology observations are projected without an asynchronous boundary,
 /// while initial resolution and explicit topology refreshes remain pending.
 @riverpod
-FutureOr<TopologyRealm?> selectedRealm(Ref ref) {
+FutureOr<skir.RealmInstance?> selectedRealm(Ref ref) {
   final id = ref.watch(realmIdProvider);
   if (id == null) return null;
   final topology = ref
       .watch(organizationTopologyProvider)
       .unwrapPrevious()
       .requireValue;
-  return topology.realmInstances.firstWhereOrNull(
-    (realm) => realm.realmId == id,
-  );
+  return topology.realms.firstWhereOrNull((realm) => realm.realmId == id);
 }
 
 /// Exposes all realms in the current organization topology for selection UI.
 @riverpod
-Future<List<TopologyRealm>> realms(Ref ref) async {
+Future<List<skir.RealmInstance>> realms(Ref ref) async {
   final topology = await ref.watch(organizationTopologyProvider.future);
-  return topology.realmInstances;
+  return topology.realms.toList();
 }
 
 @riverpod
@@ -151,7 +149,7 @@ FutureOr<RealmConnectionState> realmConnection(Ref ref) {
     return RealmConnectionState.unavailable;
   }
 
-  if (realm.state.status != TopologyRuntimeStatus.active ||
+  if (realm.state.status != skir.ChildRuntimeStatus.active ||
       !ref.watch(hostConnectedProvider(realm.ownerHost.id))) {
     return RealmConnectionState.offline;
   }

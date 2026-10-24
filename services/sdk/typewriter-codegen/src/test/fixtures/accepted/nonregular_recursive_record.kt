@@ -1,18 +1,19 @@
 package fixture
 
+import skirout.editor.v1.type_catalog.CatalogGeneration
 import com.typewritermc.authoring.CompletenessResult
 import com.typewritermc.authoring.complete
-import com.typewritermc.checking.CatalogGeneration
 import com.typewritermc.types.FactoryNativeBindingRegistry
 import com.typewritermc.types.NativeBinding
 import com.typewritermc.types.Resource
-import com.typewritermc.types.ScalarKind
+import skirout.editor.v1.type_catalog.ScalarKind
 import com.typewritermc.types.StandardTypes
-import com.typewritermc.types.TypeUse
 import com.typewritermc.types.TypewriterType
 import com.typewritermc.types.catalog.DefaultCheckedCatalog
 import com.typewritermc.types.catalog.Resolution
 import com.typewritermc.types.catalog.resolve
+import skirout.editor.v1.type_catalog.NamedTypeUse
+import com.typewritermc.types.use
 
 @TypewriterType(id = "a0000000000000000000000000000050")
 data class RecursiveSource(
@@ -27,13 +28,13 @@ data class Nest<T>(
 
 fun main() {
     val catalog = DefaultCheckedCatalog(
-        CatalogGeneration("recursive fixture"),
+        CatalogGeneration(value = "recursive fixture"),
         StandardTypes.definitions + NestDefinition.definition + RecursiveSourceDefinition.definition,
     )
     val bindings = FactoryNativeBindingRegistry(catalog, listOf(NestNativeBindingFactory, RecursiveSourceNativeBindingFactory))
-    val text = TypeUse.Scalar(ScalarKind.Text)
-    fun roundTrip(type: TypeUse.Named, original: Any) {
-        val checked = (catalog.resolve(type) as Resolution.Ready).value
+    val text = ScalarKind.TEXT.use
+    fun roundTrip(type: NamedTypeUse, original: Any) {
+        val checked = (catalog.resolve(type.use) as Resolution.Ready).value
         @Suppress("UNCHECKED_CAST")
         val binding = bindings.bind(checked) as NativeBinding<Any>
         val signature = binding.signature
@@ -44,6 +45,6 @@ fun main() {
     }
     roundTrip(NestDefinition.applied(listOf(text)), Nest<String>())
     roundTrip(NestDefinition.applied(listOf(text)), Nest(value = "root", next = Nest<List<String>>(value = listOf("child"))))
-    roundTrip(NestDefinition.applied(listOf(TypeUse.Named(StandardTypes.list, listOf(text)))), Nest<List<String>>(value = emptyList()))
+    roundTrip(NestDefinition.applied(listOf(StandardTypes.list.use(listOf(text)))), Nest<List<String>>(value = emptyList()))
     roundTrip(RecursiveSourceDefinition.use, RecursiveSource())
 }

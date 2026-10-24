@@ -8,27 +8,28 @@ import com.typewritermc.authoring.GeneratedSdkApi
 import com.typewritermc.authoring.ResourceDisplaySubject
 import com.typewritermc.configuration.PortableExpressionChecker
 import com.typewritermc.expression.CheckedExpressionProgram
-import com.typewritermc.expression.ExpressionBindingId
 import com.typewritermc.expression.children
 import com.typewritermc.expression.nominalExpressionType
 import com.typewritermc.types.ColorDefinition
 import com.typewritermc.types.IconDefinition
-import com.typewritermc.types.ResourceTarget
-import com.typewritermc.types.ScalarKind
-import com.typewritermc.types.TypeDefinition
-import com.typewritermc.types.TypeDefinitionId
-import com.typewritermc.types.TypeId
-import com.typewritermc.types.TypeTemplate
-import com.typewritermc.types.TypeUse
 import com.typewritermc.types.catalog.CheckedCatalog
-import com.typewritermc.types.catalog.DeclarationDiagnostic
-import com.typewritermc.types.catalog.DeclarationOrigin
 import com.typewritermc.types.catalog.Resolution
 import com.typewritermc.types.catalog.isReady
-import com.typewritermc.types.immutableCopy
+import com.typewritermc.types.catalog.of
+import com.typewritermc.types.qualified
+import com.typewritermc.types.template
+import com.typewritermc.types.unknownVariant
+import com.typewritermc.types.use
 import kotlinx.coroutines.CancellationException
+import skirout.editor.v1.diagnostic.DeclarationDiagnostic
+import skirout.editor.v1.diagnostic.DeclarationOrigin
 import skirout.editor.v1.expression.ExpressionNode
 import skirout.editor.v1.expression.ExpressionQuery
+import skirout.editor.v1.type_catalog.ResourceTarget
+import skirout.editor.v1.type_catalog.ScalarKind
+import skirout.editor.v1.type_catalog.TypeDefinition
+import skirout.editor.v1.type_catalog.TypeDefinitionId
+import skirout.editor.v1.type_catalog.TypeUse
 
 /** The displays a catalog publishes and the diagnostics of the ones it rejected. */
 internal class ResourceDisplayCollection(
@@ -61,8 +62,8 @@ internal fun collectResourceDisplays(
         displays.mapNotNull { owned ->
             val target = owned.provider.target
             val affected = target.affected
-            if (target is ResourceTarget.Type && !checked.isReady(target.template.definition)) return@mapNotNull null
-            val origins = listOf(DeclarationOrigin(owned.origin.owner))
+            if (target is ResourceTarget.TypeWrapper && !checked.isReady(target.template.definition)) return@mapNotNull null
+            val origins = listOf(DeclarationOrigin(owner = owned.origin.owner))
             val formulas =
                 try {
                     owned.provider.formulas().let { Triple(it.label.toNode(), it.accent.toNode(), it.icon.toNode()) }
@@ -70,30 +71,31 @@ internal fun collectResourceDisplays(
                     throw cancellation
                 } catch (cause: Exception) {
                     callbackFailures += CatalogCallbackFailure(owned.origin, CatalogCallback.Display(target), cause)
-                    diagnostics += DeclarationDiagnostic(affected, "resource_display_build_failed", origins)
+                    diagnostics += DeclarationDiagnostic.of(affected, "resource_display_build_failed", origins)
                     return@mapNotNull null
                 }
             val (label, accent, icon) = formulas
             if (listOf(label, accent, icon).any { it.readsContext() }) {
-                diagnostics += DeclarationDiagnostic(affected, "display_reads_context", origins)
+                diagnostics += DeclarationDiagnostic.of(affected, "display_reads_context", origins)
                 return@mapNotNull null
             }
             val subjects =
                 when (target) {
-                    is ResourceTarget.Type -> listOf(target.template.definition)
-                    ResourceTarget.AnyResource -> resourceTypes
+                    is ResourceTarget.TypeWrapper -> listOf(target.template.definition)
+                    ResourceTarget.ANY_RESOURCE -> resourceTypes
+                    else -> unknownVariant(target)
                 }.mapNotNull { definitions[it] }
                     .filter { checked.isReady(it.id) }
             val checker = PortableExpressionChecker(checked::resolve)
             val programs =
-                listOf(label to TEXT, accent to ColorDefinition.use, icon to IconDefinition.use).map { (node, expected) ->
+                listOf(label to TEXT, accent to ColorDefinition.use.use, icon to IconDefinition.use.use).map { (node, expected) ->
                     checker.checkAgainst(node, expected, subjects, affected)
                 }
             if (programs.any { it == null }) {
-                diagnostics += DeclarationDiagnostic(affected, "invalid_resource_display", origins)
+                diagnostics += DeclarationDiagnostic.of(affected, "invalid_resource_display", origins)
                 return@mapNotNull null
             }
-            owned to CheckedResourceDisplay(target.immutableCopy(), programs[0]!!, programs[1]!!, programs[2]!!)
+            owned to CheckedResourceDisplay(target, programs[0]!!, programs[1]!!, programs[2]!!)
         }
     val published =
         compiled.groupBy { (_, display) -> display.target }.flatMap { (target, declared) ->
@@ -102,10 +104,10 @@ internal fun collectResourceDisplays(
             val rejected = declared.filterNot { it === kept }
             if (rejected.isNotEmpty()) {
                 diagnostics +=
-                    DeclarationDiagnostic(
+                    DeclarationDiagnostic.of(
                         target.affected,
                         "duplicate_resource_display",
-                        rejected.map { (owned, _) -> DeclarationOrigin(owned.origin.owner) },
+                        rejected.map { (owned, _) -> DeclarationOrigin(owner = owned.origin.owner) },
                     )
             }
             listOfNotNull(kept?.second)
@@ -129,7 +131,7 @@ private fun PortableExpressionChecker.checkAgainst(
     var program: CheckedExpressionProgram? = null
     for (subject in subjects) {
         if (subject.parameters.isNotEmpty()) continue
-        val binding = mapOf(ResourceDisplaySubject.binding to nominalExpressionType(TypeUse.Named(subject.id), mayBeMissing = true))
+        val binding = mapOf(ResourceDisplaySubject.binding to nominalExpressionType(subject.id.use(), mayBeMissing = true))
         when (val result = checkProgram(node, binding, output, affected)) {
             is Resolution.Ready -> program = program ?: result.value
             is Resolution.Invalid -> return null
@@ -157,19 +159,14 @@ private val ExpressionQuery.readsResource: Boolean
 internal val ResourceTarget.affected: TypeDefinitionId
     get() =
         when (this) {
-            is ResourceTarget.Type -> template.definition
-            ResourceTarget.AnyResource -> ANY_RESOURCE
+            is ResourceTarget.TypeWrapper -> template.definition
+            ResourceTarget.ANY_RESOURCE -> ANY_RESOURCE
+            else -> unknownVariant(this)
         }
 
-private val ANY_RESOURCE = TypeDefinitionId(TypeId.Qualified("kotlin", "com.typewritermc.types.Resource"), 1)
+private val ANY_RESOURCE = TypeDefinitionId.qualified("kotlin", "com.typewritermc.types.Resource")
 
-private val TEXT = TypeUse.Scalar(ScalarKind.Text)
-
-internal fun ResourceTarget.immutableCopy(): ResourceTarget =
-    when (this) {
-        is ResourceTarget.Type -> ResourceTarget.Type(template.immutableCopy() as TypeTemplate.Named)
-        ResourceTarget.AnyResource -> this
-    }
+private val TEXT = ScalarKind.TEXT.use
 
 /**
  * Whether this is the framework's [com.typewritermc.authoring.DefaultDisplay]. Providers load in their artifact's own

@@ -1,3 +1,5 @@
+import "package:typewriter_panel/infrastructure/protocols/skir/skir.dart"
+    as skir;
 import "package:typewriter_panel/typewriter_panel.dart";
 
 /// Inline role editor for compact member surfaces.
@@ -17,13 +19,13 @@ class RoleMultiselectChips extends StatelessWidget {
   });
 
   /// The current role catalog, including protected roles that cannot be edited.
-  final List<OrganizationRole> availableRoles;
+  final List<skir.OrganizationRole> availableRoles;
 
   /// Roles currently projected onto the member or draft selection.
-  final List<OrganizationRole> selectedRoles;
+  final List<skir.OrganizationRole> selectedRoles;
 
   /// Receives the requested selection. The caller owns submission and errors.
-  final ValueChanged<List<OrganizationRole>> onRolesChanged;
+  final ValueChanged<List<skir.OrganizationRole>> onRolesChanged;
 
   /// Horizontal spacing between chips.
   final double spacing;
@@ -60,7 +62,7 @@ class _RoleFilterChip extends StatelessWidget {
     required this.onSelected,
   });
 
-  final OrganizationRole role;
+  final skir.OrganizationRole role;
   final bool isSelected;
   final ValueChanged<bool> onSelected;
 
@@ -70,7 +72,7 @@ class _RoleFilterChip extends StatelessWidget {
       label: Text(role.name),
       labelStyle: Theme.of(context).textTheme.labelMedium!.copyWith(
         color: isSelected
-            ? role.color
+            ? role.displayColor
             : Theme.of(context).colorScheme.onSurface,
       ),
       selected: isSelected,
@@ -80,16 +82,19 @@ class _RoleFilterChip extends StatelessWidget {
                 ? "Remove ${role.name}"
                 : "Assign ${role.name}"
           : "${role.name} is not assignable",
-      selectedColor: role.color.withValues(alpha: 0.2),
+      selectedColor: role.displayColor.withValues(alpha: 0.2),
       showCheckmark: false,
       avatar: Container(
         width: 12,
         height: 12,
-        decoration: BoxDecoration(color: role.color, shape: BoxShape.circle),
+        decoration: BoxDecoration(
+          color: role.displayColor,
+          shape: BoxShape.circle,
+        ),
       ),
       side: BorderSide(
         color: isSelected
-            ? role.color.withValues(alpha: 0.5)
+            ? role.displayColor.withValues(alpha: 0.5)
             : Colors.transparent,
       ),
     );

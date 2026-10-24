@@ -1,33 +1,52 @@
 package com.typewritermc.operations
 
 import com.typewritermc.authoring.CompletenessResult
-import com.typewritermc.authoring.PathSegment
-import com.typewritermc.authoring.ValuePath
 import com.typewritermc.authoring.complete
-import com.typewritermc.capability.CapabilityId
-import com.typewritermc.capability.RealmCapabilityDescriptor
+import com.typewritermc.authoring.name
 import com.typewritermc.discovery.OwnedPresentation
 import com.typewritermc.discovery.ProviderOrigin
 import com.typewritermc.discovery.affected
-import com.typewritermc.presentation.PresentationTarget
 import com.typewritermc.presentation.matches
-import com.typewritermc.types.DataValue
 import com.typewritermc.types.NativeBinding
 import com.typewritermc.types.NativeBindingRegistry
-import com.typewritermc.types.PresentationId
 import com.typewritermc.types.ResourceIdDefinition
-import com.typewritermc.types.ResourceTarget
-import com.typewritermc.types.ScalarKind
-import com.typewritermc.types.TypeTemplate
-import com.typewritermc.types.TypeUse
 import com.typewritermc.types.catalog.CheckedCatalog
 import com.typewritermc.types.catalog.CheckedType
-import com.typewritermc.types.catalog.DeclarationDiagnostic
-import com.typewritermc.types.catalog.DeclarationOrigin
 import com.typewritermc.types.catalog.Resolution
-import com.typewritermc.types.catalog.ResolvedRepresentation
+import com.typewritermc.types.catalog.of
 import com.typewritermc.types.catalog.resolve
+import com.typewritermc.types.fields
+import com.typewritermc.types.namedUse
+import com.typewritermc.types.nullable
+import com.typewritermc.types.requireValid
+import com.typewritermc.types.template
+import com.typewritermc.types.unknownVariant
+import com.typewritermc.types.use
 import kotlinx.coroutines.CancellationException
+import skirout.editor.v1.capability.AuthoringCapabilityDefinition
+import skirout.editor.v1.capability.CapabilityDefinition
+import skirout.editor.v1.capability.SearchCapabilityDefinition
+import skirout.editor.v1.catalog.PresentationTarget
+import skirout.editor.v1.diagnostic.DeclarationDiagnostic
+import skirout.editor.v1.diagnostic.DeclarationOrigin
+import skirout.editor.v1.operation.OperationAvailability
+import skirout.editor.v1.operation.OperationDrop
+import skirout.editor.v1.operation.OperationInputDefinition
+import skirout.editor.v1.operation.OperationTargets
+import skirout.editor.v1.operation.ResourceOperationDefinition
+import skirout.editor.v1.type_catalog.CapabilityId
+import skirout.editor.v1.type_catalog.DataValue
+import skirout.editor.v1.type_catalog.NamedTypeTemplate
+import skirout.editor.v1.type_catalog.NamedTypeUse
+import skirout.editor.v1.type_catalog.PathSegment
+import skirout.editor.v1.type_catalog.PresentationId
+import skirout.editor.v1.type_catalog.ResolvedRepresentation
+import skirout.editor.v1.type_catalog.ResourceTarget
+import skirout.editor.v1.type_catalog.ScalarKind
+import skirout.editor.v1.type_catalog.TypeDefinitionId
+import skirout.editor.v1.type_catalog.TypeTemplate
+import skirout.editor.v1.type_catalog.TypeUse
+import skirout.editor.v1.type_catalog.ValuePath
 
 class BoundOperationInput internal constructor(
     val schema: CheckedType?,
@@ -50,28 +69,31 @@ class CandidateSearch internal constructor(
     val operation: BoundResourceOperation,
     val field: OperationInputField,
 ) {
-    val descriptor: RealmCapabilityDescriptor.Search =
-        RealmCapabilityDescriptor.Search(
-            operation.definition.id.candidateSearch(field.path),
-            TypeUse.Scalar(ScalarKind.Text),
-            OperationResourceOptionDefinition.use,
+    val descriptor: SearchCapabilityDefinition =
+        SearchCapabilityDefinition(
+            capabilityId = operation.definition.id.candidateSearch(field.path),
+            requestType = ScalarKind.TEXT.use,
+            resultType = OperationResourceOptionDefinition.use.use,
         )
 }
 
-/** A published operation together with its executable callbacks and bound input. */
+/**
+ * A published operation together with its executable callbacks and bound input. [target] is the resource target the
+ * published [definition] carries in its wire form.
+ */
 class BoundResourceOperation internal constructor(
     val origin: ProviderOrigin,
+    val target: ResourceTarget,
     val definition: ResourceOperationDefinition,
     val input: BoundOperationInput,
     private val collected: CollectedOperation,
     resourceFields: Set<ValuePath>,
 ) {
-    val capability: RealmCapabilityDescriptor.Authoring =
-        RealmCapabilityDescriptor.Authoring(
-            definition.capability,
-            input.schema?.use,
-            definition.targets,
-            input.presentation,
+    val capability: AuthoringCapabilityDefinition =
+        AuthoringCapabilityDefinition(
+            capabilityId = definition.id.capability,
+            targets = definition.targets,
+            input = input.schema?.use?.let { type -> OperationInputDefinition(type = type, presentation = input.presentation) },
         )
 
     /** The field drops fill, when the operation declares one. */
@@ -106,15 +128,19 @@ data class OperationCatalog(
     val definitions: List<ResourceOperationDefinition> get() = operations.map { it.definition }
 
     /** The authoring capability of every operation and the candidate search of every searchable field. */
-    val capabilities: List<RealmCapabilityDescriptor>
-        get() = operations.flatMap { operation -> listOf(operation.capability) + operation.candidateSearches.map { it.descriptor } }
+    val capabilities: List<CapabilityDefinition>
+        get() =
+            operations.flatMap { operation ->
+                listOf(CapabilityDefinition.AuthoringWrapper(operation.capability)) +
+                    operation.candidateSearches.map { CapabilityDefinition.SearchWrapper(it.descriptor) }
+            }
 
     fun requireAuthoring(id: CapabilityId): BoundResourceOperation =
-        requireNotNull(operations.singleOrNull { it.capability.id == id }) { "Authoring operation is unavailable: ${id.value}" }
+        requireNotNull(operations.singleOrNull { it.capability.capabilityId == id }) { "Authoring operation is unavailable: ${id.value}" }
 
     /** The operation field whose candidates back the search capability [id], or null for any other capability. */
     fun candidateSearch(id: CapabilityId): CandidateSearch? =
-        operations.firstNotNullOfOrNull { operation -> operation.candidateSearches.singleOrNull { it.descriptor.id == id } }
+        operations.firstNotNullOfOrNull { operation -> operation.candidateSearches.singleOrNull { it.descriptor.capabilityId == id } }
 }
 
 /**
@@ -139,14 +165,18 @@ fun bindOperations(
             val collected = requireNotNull(declaration.collected)
             require(operations.none { it.definition.id == declaration.id }) { "Duplicate operation ${declaration.id}." }
             when (val target = declaration.target) {
-                is ResourceTarget.Type -> {
-                    require(catalog.resolve(target.template.asClosedUse()) is Resolution.Ready) {
+                is ResourceTarget.TypeWrapper -> {
+                    require(catalog.resolve(target.template.asClosedUse().use) is Resolution.Ready) {
                         "Operation target is unavailable: ${target.template}."
                     }
                 }
 
-                ResourceTarget.AnyResource -> {
+                ResourceTarget.ANY_RESOURCE -> {
                     Unit
+                }
+
+                else -> {
+                    unknownVariant(target)
                 }
             }
             val input = declaration.input.bind(collected, catalog, bindings, presentations)
@@ -159,28 +189,37 @@ fun bindOperations(
                         require(
                             catalog.isOwnedBy(schema, field.owner),
                         ) { "The operation input field ${field.path} belongs to another type." }
-                        val resource = type.withoutNullable() == ResourceIdDefinition.use
+                        val resource = type.withoutNullable() == ResourceIdDefinition.use.use
                         require(field.drop == null || resource) { "Only resource identity fields can be filled on drop." }
                         resource
                     }.mapTo(hashSetOf()) { it.path }
             val definition =
                 ResourceOperationDefinition(
-                    declaration.id,
-                    collected.presentation,
-                    OperationTargets(declaration.target, collected.cardinality),
-                    collected.fields.singleOrNull { it.drop != null }?.let { field ->
-                        OperationDrop(field.path, requireNotNull(field.drop))
-                    },
+                    id = declaration.id,
+                    presentation = collected.presentation,
+                    targets =
+                        OperationTargets(
+                            subject = declaration.target,
+                            cardinality = collected.cardinality,
+                        ),
+                    capability = declaration.id.capability,
+                    drop =
+                        collected.fields.singleOrNull { it.drop != null }?.let { field ->
+                            OperationDrop(
+                                input = field.path,
+                                hint = requireNotNull(field.drop),
+                            ).requireValid()
+                        },
                 )
-            operations += BoundResourceOperation(declaration.origin, definition, input, collected, resourceFields)
+            operations += BoundResourceOperation(declaration.origin, declaration.target, definition, input, collected, resourceFields)
         } catch (cancelled: CancellationException) {
             throw cancelled
         } catch (failure: Exception) {
             diagnostics +=
-                DeclarationDiagnostic(
+                DeclarationDiagnostic.of(
                     declaration.target.affected,
                     "invalid_resource_operation",
-                    listOf(DeclarationOrigin(declaration.origin.owner)),
+                    listOf(DeclarationOrigin(owner = declaration.origin.owner)),
                 )
             failures += OperationBindingFailure(declaration.origin, failure)
         }
@@ -201,13 +240,13 @@ private fun OperationInput.bind(
         }
 
         is OperationInput.Typed -> {
-            val checked = (catalog.resolve(use) as? Resolution.Ready)?.value ?: error("Operation input type is unavailable: $use.")
+            val checked = (catalog.resolve(use.use) as? Resolution.Ready)?.value ?: error("Operation input type is unavailable: $use.")
             val presentation =
                 collected.form?.let { reference ->
                     val matches =
                         presentations.filter {
                             it.reference === reference &&
-                                (it.descriptor.target as? PresentationTarget.Named)?.matches(checked) == true
+                                (it.descriptor.target as? PresentationTarget.NamedWrapper)?.matches(checked) == true
                         }
                     require(matches.size == 1) { "Operation input form must resolve uniquely for $use." }
                     matches.single().descriptor.id
@@ -221,9 +260,11 @@ private fun CheckedType.typeAt(path: ValuePath): TypeUse? {
     var current: CheckedType = this
     var type: TypeUse? = null
     path.segments.forEachIndexed { index, segment ->
-        val name = (segment as? PathSegment.Field)?.name ?: return null
-        val record = current.schema.representation as? ResolvedRepresentation.Record ?: return null
-        type = record.fields.singleOrNull { it.key == name }?.type ?: return null
+        val name = (segment as? PathSegment.FieldWrapper)?.name ?: return null
+        val record = current.schema.representation as? ResolvedRepresentation.RecordWrapper ?: return null
+        type = record.value.fields
+            .singleOrNull { it.key == name }
+            ?.type ?: return null
         if (index < path.segments.lastIndex) {
             current = (current.resolve(requireNotNull(type).withoutNullable()) as? Resolution.Ready)?.value ?: return null
         }
@@ -231,21 +272,22 @@ private fun CheckedType.typeAt(path: ValuePath): TypeUse? {
     return type
 }
 
-private fun TypeUse.withoutNullable(): TypeUse = if (this is TypeUse.Nullable) value.withoutNullable() else this
+private fun TypeUse.withoutNullable(): TypeUse = if (this is TypeUse.NullableWrapper) value.value.withoutNullable() else this
 
-private fun TypeUse.definitionOrNull() = (this as? TypeUse.Named)?.definition
+private fun TypeUse.definitionOrNull() = (this as? TypeUse.NamedWrapper)?.value?.definition
 
 private fun CheckedCatalog.isOwnedBy(
     input: CheckedType,
-    owner: com.typewritermc.types.TypeDefinitionId,
+    owner: TypeDefinitionId,
 ): Boolean = input.use.definitionOrNull()?.let { isNominalSubtype(it, owner) } == true
 
-fun TypeTemplate.Named.asClosedUse(): TypeUse.Named = TypeUse.Named(definition, arguments.map { it.asClosedUse() })
+fun NamedTypeTemplate.asClosedUse(): NamedTypeUse = definition.namedUse(arguments.map { it.asClosedUse() })
 
 private fun TypeTemplate.asClosedUse(): TypeUse =
     when (this) {
-        is TypeTemplate.Named -> asClosedUse()
-        is TypeTemplate.Nullable -> TypeUse.Nullable(value.asClosedUse())
-        is TypeTemplate.Scalar -> TypeUse.Scalar(kind)
-        is TypeTemplate.Parameter -> error("Resource operations require closed type applications.")
+        is TypeTemplate.NamedWrapper -> value.asClosedUse().use
+        is TypeTemplate.NullableWrapper -> value.value.asClosedUse().nullable()
+        is TypeTemplate.ScalarWrapper -> value.use
+        is TypeTemplate.ParameterWrapper -> error("Resource operations require closed type applications.")
+        else -> unknownVariant(this)
     }

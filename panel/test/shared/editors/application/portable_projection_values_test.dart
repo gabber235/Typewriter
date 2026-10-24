@@ -61,9 +61,9 @@ void main() {
         resourceProjection: PortableResourceProjection(
           resource: resource,
           configuration: skir.TypeSelection.unknown,
-          appearance: ResourceAppearance(
+          appearance: skir.ResourceAppearance(
             label: "Entry",
-            accent: const Color(0xff607d8b),
+            accent: const Color(0xff607d8b).toSkirColor(),
             icon: skir.Icon.wrapIconify("material-symbols:category"),
           ),
           value: skir.DataValue.unfilled,

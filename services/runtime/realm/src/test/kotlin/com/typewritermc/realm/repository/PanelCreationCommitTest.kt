@@ -1,47 +1,46 @@
 package com.typewritermc.realm.repository
 
 import com.surrealdb.Surreal
-import com.typewritermc.authoring.CommitResult
-import com.typewritermc.authoring.EditIntent
-import com.typewritermc.authoring.skir.SkirAuthoringOperationCodec
-import com.typewritermc.checking.CatalogGeneration
-import com.typewritermc.configuration.FieldPatternSegment
-import com.typewritermc.configuration.RelativeFieldPattern
+import com.typewritermc.authoring.requireValid
+import com.typewritermc.configuration.field
+import com.typewritermc.configuration.name
 import com.typewritermc.realm.authoring.InMemoryAuthoringViewStore
 import com.typewritermc.realm.checking.TestCatalogLease
 import com.typewritermc.realm.schema.MigrationResources
 import com.typewritermc.realm.schema.openTestDatabase
-import com.typewritermc.types.EndpointBindingTemplate
-import com.typewritermc.types.EndpointCardinality
-import com.typewritermc.types.EndpointDefinition
-import com.typewritermc.types.EndpointId
-import com.typewritermc.types.EndpointSlot
-import com.typewritermc.types.RelationContract
-import com.typewritermc.types.RelationDeletePolicy
-import com.typewritermc.types.RelationFamilyId
-import com.typewritermc.types.RelationId
-import com.typewritermc.types.ResourceId
-import com.typewritermc.types.TypeDefinitionId
-import com.typewritermc.types.TypeTemplate
-import com.typewritermc.types.TypeUse
-import com.typewritermc.types.skir.SkirTypeCodec
-import com.typewritermc.types.skir.getOrThrow
+import com.typewritermc.types.of
+import com.typewritermc.types.requireValid
 import de.infix.testBalloon.framework.core.testSuite
 import io.kotest.matchers.shouldBe
 import io.kotest.matchers.types.shouldBeInstanceOf
-import skirout.editor.v1.catalog.EditorCatalogWireSnapshot
+import skirout.editor.v1.authoring.CommitPreparedEditResponse
+import skirout.editor.v1.authoring.EditIntent
+import skirout.editor.v1.catalog.EditorCatalog
+import skirout.editor.v1.catalog.EndpointBindingTemplate
+import skirout.editor.v1.catalog.EndpointCardinality
+import skirout.editor.v1.catalog.EndpointDefinition
+import skirout.editor.v1.catalog.EndpointSlot
+import skirout.editor.v1.catalog.RelationContract
+import skirout.editor.v1.catalog.RelationDeletePolicy
+import skirout.editor.v1.type_catalog.CatalogGeneration
+import skirout.editor.v1.type_catalog.EndpointId
+import skirout.editor.v1.type_catalog.FieldPatternSegment
+import skirout.editor.v1.type_catalog.NamedTypeUse
+import skirout.editor.v1.type_catalog.RelationFamilyId
+import skirout.editor.v1.type_catalog.RelationId
+import skirout.editor.v1.type_catalog.RelativeFieldPattern
+import skirout.editor.v1.type_catalog.ResourceId
+import skirout.editor.v1.type_catalog.TypeDefinitionId
+import skirout.editor.v1.type_catalog.TypeTemplate
+import skirout.editor.v1.type_catalog.TypeUse
 import skirout.editor.v1.authoring.PreparedEdit as WireEdit
 import skirout.editor.v1.catalog.EndpointDefinition as WireEndpoint
-import skirout.editor.v1.type_catalog.NamedTypeUse as WireNamedTypeUse
-import skirout.editor.v1.type_catalog.TypeDefinitionId as WireDefinitionId
-import skirout.editor.v1.type_catalog.TypeTemplate as WireTemplate
-import skirout.editor.v1.type_catalog.TypeUse as WireTypeUse
 
 val PanelCreationCommitTest by testSuite {
     test("the panel page and Book creation commits into the Library through Realm and survives reload") {
-        val snapshot = EditorCatalogWireSnapshot.serializer.fromBytes(panelCreationFixture("catalog.skir"))
-        val seed = SkirAuthoringOperationCodec.decode(WireEdit.serializer.fromBytes(panelCreationFixture("seed.skir"))).getOrThrow()
-        val edit = SkirAuthoringOperationCodec.decode(WireEdit.serializer.fromBytes(panelCreationFixture("edit.skir"))).getOrThrow()
+        val snapshot = EditorCatalog.serializer.fromBytes(panelCreationFixture("catalog.skir"))
+        val seed = WireEdit.serializer.fromBytes(panelCreationFixture("seed.skir")).requireValid()
+        val edit = WireEdit.serializer.fromBytes(panelCreationFixture("edit.skir")).requireValid()
         val catalog = panelCreationCatalog(snapshot)
         Surreal().use { database ->
             database.openTestDatabase("panel_creation")
@@ -49,22 +48,22 @@ val PanelCreationCommitTest by testSuite {
             val storage = SurrealAuthoringStorage(database)
             val views = InMemoryAuthoringViewStore(catalog, storage.readCoherent())
             val owner = RealmAuthoringOwner(storage, views)
-            owner.commit(seed) shouldBe CommitResult.Committed
+            owner.commit(seed) shouldBe CommitPreparedEditResponse.COMMITTED
             storage.readCoherent().resources.size shouldBe 1
             val broken =
                 edit.copy(
                     intents =
                         edit.intents.map { intent ->
-                            if (intent is EditIntent.ConnectRelation) {
-                                intent.copy(intent = intent.intent.copy(target = ResourceId("absent")))
+                            if (intent is EditIntent.ConnectRelationWrapper) {
+                                EditIntent.ConnectRelationWrapper(intent.value.copy(target = ResourceId(value = "absent")))
                             } else {
                                 intent
                             }
                         },
                 )
-            owner.commit(broken).shouldBeInstanceOf<CommitResult.Rejected>()
+            owner.commit(broken).shouldBeInstanceOf<CommitPreparedEditResponse.RejectedErrorWrapper>()
             storage.readCoherent().resources.size shouldBe 1
-            owner.commit(edit) shouldBe CommitResult.Committed
+            owner.commit(edit) shouldBe CommitPreparedEditResponse.COMMITTED
             val saved = storage.readCoherent()
             saved.resources.size shouldBe 3
             val links =
@@ -97,82 +96,79 @@ private fun panelCreationFixture(name: String): ByteArray =
     }.use { it.readBytes() }
 
 /** The captured panel catalog: a Library owning Books that own pages, each linking back to its owner. */
-private fun panelCreationCatalog(snapshot: EditorCatalogWireSnapshot): TestCatalogLease =
+private fun panelCreationCatalog(snapshot: EditorCatalog): TestCatalogLease =
     TestCatalogLease(
-        generation = CatalogGeneration(snapshot.generation.value),
-        definitions = snapshot.types.map { SkirTypeCodec.decode(it.definition).getOrThrow() },
+        generation = snapshot.generation,
+        definitions = snapshot.types.map { it.definition.requireValid() },
         relations =
             snapshot.relations.map { relation ->
-                RelationContract(
-                    RelationId(relation.id.value),
+                RelationContract.of(
+                    relation.id,
                     endpoint(relation.first),
                     endpoint(relation.second),
-                    relation.families.mapTo(linkedSetOf()) { RelationFamilyId(it.value) },
+                    relation.families.toSet(),
                 )
             },
         endpointBindings =
             snapshot.endpointBindings.map { binding ->
                 EndpointBindingTemplate(
-                    EndpointId(binding.endpoint.value),
-                    SkirTypeCodec.decode(WireTemplate.NamedWrapper(binding.containingResource)).getOrThrow() as TypeTemplate.Named,
-                    definitionId(binding.valueOwner),
-                    RelativeFieldPattern(
-                        binding.relativePath.segments.map { segment ->
-                            when (segment) {
-                                is skirout.editor.v1.type_catalog.FieldPatternSegment.FieldWrapper -> {
-                                    FieldPatternSegment.Field(segment.value.name)
-                                }
+                    endpoint = binding.endpoint.requireValid(),
+                    containingResource = binding.containingResource.requireValid(),
+                    valueOwner = binding.valueOwner.requireValid(),
+                    relativePath =
+                        RelativeFieldPattern(
+                            segments =
+                                binding.relativePath.segments.map { segment ->
+                                    when (segment) {
+                                        is skirout.editor.v1.type_catalog.FieldPatternSegment.FieldWrapper -> {
+                                            FieldPatternSegment.field(segment.value.name)
+                                        }
 
-                                skirout.editor.v1.type_catalog.FieldPatternSegment.ITEMS -> {
-                                    FieldPatternSegment.Items
-                                }
+                                        skirout.editor.v1.type_catalog.FieldPatternSegment.ITEMS -> {
+                                            FieldPatternSegment.ITEMS
+                                        }
 
-                                skirout.editor.v1.type_catalog.FieldPatternSegment.KEYS -> {
-                                    FieldPatternSegment.Keys
-                                }
+                                        skirout.editor.v1.type_catalog.FieldPatternSegment.KEYS -> {
+                                            FieldPatternSegment.KEYS
+                                        }
 
-                                skirout.editor.v1.type_catalog.FieldPatternSegment.VALUES -> {
-                                    FieldPatternSegment.Values
-                                }
+                                        skirout.editor.v1.type_catalog.FieldPatternSegment.VALUES -> {
+                                            FieldPatternSegment.VALUES
+                                        }
 
-                                else -> {
-                                    error("Unknown captured field pattern")
-                                }
-                            }
-                        },
-                    ),
-                    SkirTypeCodec.decode(binding.target).getOrThrow(),
-                    binding.containsCollection,
+                                        else -> {
+                                            error("Unknown captured field pattern")
+                                        }
+                                    }
+                                },
+                        ),
+                    target = binding.target.requireValid(),
+                    containsCollection = binding.containsCollection,
                 )
             },
     )
 
-private fun definitionId(id: WireDefinitionId): TypeDefinitionId =
-    (
-        SkirTypeCodec
-            .decode(
-                WireTypeUse.NamedWrapper(WireNamedTypeUse(definition = id, arguments = emptyList())),
-            ).getOrThrow() as TypeUse.Named
-    ).definition
-
 private fun endpoint(endpoint: WireEndpoint): EndpointDefinition =
     EndpointDefinition(
-        EndpointId(endpoint.id.value),
-        when (endpoint.slot) {
-            skirout.editor.v1.catalog.EndpointSlot.FIRST -> EndpointSlot.First
-            skirout.editor.v1.catalog.EndpointSlot.SECOND -> EndpointSlot.Second
-            else -> error("Unknown captured endpoint slot")
-        },
-        SkirTypeCodec.decode(WireTemplate.NamedWrapper(endpoint.resource)).getOrThrow() as TypeTemplate.Named,
-        when (endpoint.cardinality) {
-            skirout.editor.v1.catalog.EndpointCardinality.ONE -> EndpointCardinality.One
-            skirout.editor.v1.catalog.EndpointCardinality.MANY -> EndpointCardinality.Many
-            else -> error("Unknown captured endpoint cardinality")
-        },
-        when (endpoint.onDelete) {
-            skirout.editor.v1.catalog.RelationDeletePolicy.RESTRICT -> RelationDeletePolicy.RESTRICT
-            skirout.editor.v1.catalog.RelationDeletePolicy.CASCADE -> RelationDeletePolicy.CASCADE
-            skirout.editor.v1.catalog.RelationDeletePolicy.CLEAR -> RelationDeletePolicy.CLEAR
-            else -> error("Unknown captured deletion policy")
-        },
+        id = endpoint.id.requireValid(),
+        slot =
+            when (endpoint.slot) {
+                skirout.editor.v1.catalog.EndpointSlot.FIRST -> EndpointSlot.FIRST
+                skirout.editor.v1.catalog.EndpointSlot.SECOND -> EndpointSlot.SECOND
+                else -> error("Unknown captured endpoint slot")
+            },
+        resource = endpoint.resource.requireValid(),
+        cardinality =
+            when (endpoint.cardinality) {
+                skirout.editor.v1.catalog.EndpointCardinality.ONE -> EndpointCardinality.ONE
+                skirout.editor.v1.catalog.EndpointCardinality.MANY -> EndpointCardinality.MANY
+                else -> error("Unknown captured endpoint cardinality")
+            },
+        onDelete =
+            when (endpoint.onDelete) {
+                skirout.editor.v1.catalog.RelationDeletePolicy.RESTRICT -> RelationDeletePolicy.RESTRICT
+                skirout.editor.v1.catalog.RelationDeletePolicy.CASCADE -> RelationDeletePolicy.CASCADE
+                skirout.editor.v1.catalog.RelationDeletePolicy.CLEAR -> RelationDeletePolicy.CLEAR
+                else -> error("Unknown captured deletion policy")
+            },
     )

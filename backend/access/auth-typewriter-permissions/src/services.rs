@@ -21,9 +21,10 @@ use wasmcloud_utils::{
         },
     },
     skir_utils::RecordIdKeyIdentity,
+    transport::{GrantSet, RealmScope, ServiceScope, SubjectToken, request_route},
     transport_routes::{
-        GrantScope, GrantSet, RealmRole, RealmScope, ServiceBindingQueryRoute,
-        ServiceMessagingScopeRoute, ServiceRole, ServiceScope, SubjectToken, request_route,
+        MAX_RESPONSE_CHUNKS, REPLY_TTL_MS, RealmRole, ServiceBindingQueryRoute,
+        ServiceMessagingScopeRoute, ServiceRole, service_reply_inbox_prefix,
     },
 };
 
@@ -73,7 +74,10 @@ pub async fn handle_service(
     service_scope.grant(ServiceRole::RegisteredService, &mut grants);
     let mut tags = vec![format!("service:{service_id}")];
 
-    grants.subscribe.insert(format!("_INBOX.{service_id}.*"));
+    grants.subscribe.insert(format!(
+        "{}.*",
+        service_reply_inbox_prefix(&service_scope.service)
+    ));
     main_attribute!("auth.permissions.category.registration" = true);
 
     handle_service_binding(binding, &service_id, &mut grants, &mut tags).await?;
@@ -92,11 +96,13 @@ pub async fn handle_service(
     Ok((permissions, tags))
 }
 
+/// Lets a service answer each request it receives within [`REPLY_TTL_MS`]. A framed reply sends up
+/// to [`MAX_RESPONSE_CHUNKS`] frames to the requester's inbox, so that is the reply message limit.
 pub(crate) fn service_response_permission() -> ResponsePermission {
     ResponsePermission {
-        max_messages: Some(1),
+        max_messages: Some(MAX_RESPONSE_CHUNKS as i32),
         ttl: Some(Duration {
-            milliseconds: 300_000,
+            milliseconds: REPLY_TTL_MS,
             _unrecognized: None,
         }),
         _unrecognized: None,
@@ -182,8 +188,8 @@ async fn handle_bound_binding(
         .map(|record| record.key.raw_identity())
         .transpose()?
     {
-        grant_realm(&org_id, realm, RealmRole::Coordinator, grants)?;
-        grant_realm(&org_id, realm, RealmRole::Participant, grants)?;
+        grant_realm(&org_id, realm, RealmRole::RealmCoordinator, grants)?;
+        grant_realm(&org_id, realm, RealmRole::RealmParticipant, grants)?;
     }
 
     if let Some(realm) = scope
@@ -192,7 +198,7 @@ async fn handle_bound_binding(
         .map(|record| record.key.raw_identity())
         .transpose()?
     {
-        grant_realm(&org_id, realm, RealmRole::Participant, grants)?;
+        grant_realm(&org_id, realm, RealmRole::RealmParticipant, grants)?;
     }
 
     Ok(())
@@ -230,7 +236,7 @@ async fn query_service_messaging_scope(
     };
     match request_route::<ServiceMessagingScopeRoute>(service_scope, &request_value).await? {
         GetServiceMessagingScopeResponse::Found(scope) => Ok(*scope),
-        GetServiceMessagingScopeResponse::NotFound(_) => Err(wasi_error!(
+        GetServiceMessagingScopeResponse::NotFoundError(_) => Err(wasi_error!(
             "permissions-service-messaging-scope-not-found",
             "Service has no host messaging scope",
         )),

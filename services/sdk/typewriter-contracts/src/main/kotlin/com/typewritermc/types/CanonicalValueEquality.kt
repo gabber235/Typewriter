@@ -1,9 +1,10 @@
 package com.typewritermc.types
 
-import com.typewritermc.authoring.CanonicalValueHash
 import com.typewritermc.authoring.CompleteValue
-import kotlinx.serialization.encodeToString
-import kotlinx.serialization.json.Json
+import skirout.editor.v1.type_catalog.CanonicalValueHash
+import skirout.editor.v1.type_catalog.DataValue
+import skirout.editor.v1.type_catalog.TypeUse
+import skirout.editor.v1.type_catalog.ValuePath
 import java.security.MessageDigest
 
 interface CanonicalValueEquality {
@@ -28,7 +29,7 @@ object DefaultCanonicalValueEquality : CanonicalValueEquality {
     override fun hash(value: CompleteValue): CanonicalValueHash {
         val input = listOf(value.schema.use.semanticForm(), value.value.canonicalValueKey()).framed("value").encodeToByteArray()
         val digest = MessageDigest.getInstance("SHA256").digest(input)
-        return CanonicalValueHash(digest.toHexString())
+        return CanonicalValueHash(value = digest.toHexString())
     }
 }
 
@@ -40,86 +41,90 @@ object DefaultCanonicalValueEquality : CanonicalValueEquality {
  */
 fun DataValue.canonicalValueKey(): String =
     when (this) {
-        DataValue.Unfilled -> {
+        DataValue.UNFILLED -> {
             "unfilled"
         }
 
-        DataValue.Null -> {
+        DataValue.NULL -> {
             "null"
         }
 
-        DataValue.Unit -> {
+        DataValue.UNIT -> {
             "unit"
         }
 
-        is DataValue.Boolean -> {
+        is DataValue.BooleanWrapper -> {
             "boolean:$value"
         }
 
-        is DataValue.Integer -> {
-            "integer:$value"
+        is DataValue.IntegerWrapper -> {
+            "integer:$bigInteger"
         }
 
-        is DataValue.Float -> {
+        is DataValue.FloatWrapper -> {
             "float:${value.toBits()}"
         }
 
-        is DataValue.Decimal -> {
+        is DataValue.DecimalWrapper -> {
             "decimal:${value.toBigDecimal().stripTrailingZeros().toPlainString()}"
         }
 
-        is DataValue.StringValue -> {
+        is DataValue.StringValueWrapper -> {
             "text:${value.length}:$value"
         }
 
-        is DataValue.Bytes -> {
-            "bytes:${value.joinToString(",")}"
+        is DataValue.BytesWrapper -> {
+            "bytes:${value.toByteArray().joinToString(",")}"
         }
 
-        is DataValue.Timestamp -> {
-            "timestamp:$value"
+        is DataValue.TimestampWrapper -> {
+            "timestamp:$instant"
         }
 
-        is DataValue.Duration -> {
-            "duration:$value"
+        is DataValue.DurationWrapper -> {
+            "duration:$duration"
         }
 
-        is DataValue.EnumCase -> {
-            "enum:${key.length}:$key"
+        is DataValue.EnumCaseWrapper -> {
+            "enum:${value.length}:$value"
         }
 
-        is DataValue.Record -> {
-            fields.entries
-                .sortedBy(Map.Entry<String, DataValue>::key)
-                .map { (key, value) ->
-                    listOf(key, value.canonicalValueKey()).framed("field")
-                }.framed("record")
+        is DataValue.RecordWrapper -> {
+            fields
+                .sortedBy { it.name }
+                .map { field -> listOf(field.name, field.value.canonicalValueKey()).framed("field") }
+                .framed("record")
         }
 
-        is DataValue.Named -> {
-            listOf(actualType.semanticForm(), payload.canonicalValueKey()).framed("named")
+        is DataValue.NamedWrapper -> {
+            listOf(actualType.use.semanticForm(), payload.canonicalValueKey()).framed("named")
         }
 
-        is DataValue.ListValue -> {
+        is DataValue.ListValueWrapper -> {
             items.map { it.value.canonicalValueKey() }.framed("list")
         }
 
-        is DataValue.SetValue -> {
+        is DataValue.SetValueWrapper -> {
             items.map { it.value.canonicalValueKey() }.sorted().framed("set")
         }
 
-        is DataValue.MapValue -> {
+        is DataValue.MapValueWrapper -> {
             rows
                 .map { listOf(it.key.canonicalValueKey(), it.value.canonicalValueKey()).framed("row") }
                 .sorted()
                 .framed("map")
         }
 
-        is DataValue.Link -> {
-            listOf(endpoint.value, target.resource.value, Json.encodeToString(target.opposite)).framed("link")
+        is DataValue.LinkWrapper -> {
+            val opposite = value.target.opposite?.let(ValuePath.serializer::toJsonCode) ?: "null"
+            listOf(value.endpoint.value, value.target.resource.value, opposite).framed("link")
+        }
+
+        else -> {
+            unknownVariant(this)
         }
     }
 
-private fun TypeUse.semanticForm(): String = Json.encodeToString(this)
+private fun TypeUse.semanticForm(): String = canonicalText
 
 private fun List<String>.framed(kind: String): String = "$kind:$size:" + joinToString("") { "${it.length}:$it" }

@@ -10,16 +10,18 @@ part of 'resource_repositories.dart';
 // ignore_for_file: type=lint, type=warning
 /// Provides one resource repository owner for the active local work scope.
 ///
-/// The owner retains its repositories across authenticated transport replacement
-/// and rebinds their active watches. Scope disposal cascades to every cached child.
+/// The owner retains its repositories when a retry replaces the authenticated
+/// transport and rebinds their active watches. Scope disposal cascades to every
+/// cached child.
 
 @ProviderFor(resourceRepositories)
 final resourceRepositoriesProvider = ResourceRepositoriesProvider._();
 
 /// Provides one resource repository owner for the active local work scope.
 ///
-/// The owner retains its repositories across authenticated transport replacement
-/// and rebinds their active watches. Scope disposal cascades to every cached child.
+/// The owner retains its repositories when a retry replaces the authenticated
+/// transport and rebinds their active watches. Scope disposal cascades to every
+/// cached child.
 
 final class ResourceRepositoriesProvider
     extends
@@ -31,8 +33,9 @@ final class ResourceRepositoriesProvider
     with $Provider<ResourceRepositories> {
   /// Provides one resource repository owner for the active local work scope.
   ///
-  /// The owner retains its repositories across authenticated transport replacement
-  /// and rebinds their active watches. Scope disposal cascades to every cached child.
+  /// The owner retains its repositories when a retry replaces the authenticated
+  /// transport and rebinds their active watches. Scope disposal cascades to every
+  /// cached child.
   ResourceRepositoriesProvider._()
     : super(
         from: null,
@@ -68,4 +71,4 @@ final class ResourceRepositoriesProvider
 }
 
 String _$resourceRepositoriesHash() =>
-    r'0aa03b8f9081c46e4749269339042eb07895da72';
+    r'cba715a08cd78a1bd95b19a2273fb1272a558501';

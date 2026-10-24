@@ -1,6 +1,5 @@
 package com.typewritermc.types
 
-import com.typewritermc.authoring.ItemId
 import com.typewritermc.expression.Expr
 import com.typewritermc.expression.Handled
 import com.typewritermc.expression.gte
@@ -8,8 +7,6 @@ import com.typewritermc.expression.length
 import com.typewritermc.expression.literal
 import com.typewritermc.expression.orElse
 import com.typewritermc.presentation.TextLines
-import com.typewritermc.presentation.TextOverflow
-import com.typewritermc.presentation.TextParagraph
 import com.typewritermc.presentation.cache
 import com.typewritermc.presentation.debounce
 import com.typewritermc.presentation.distinct
@@ -17,7 +14,13 @@ import com.typewritermc.presentation.gate
 import com.typewritermc.presentation.history
 import com.typewritermc.presentation.limit
 import com.typewritermc.presentation.section
-import skirout.editor.v1.expression.ExpressionNode
+import com.typewritermc.presentation.textParagraph
+import skirout.editor.v1.catalog.PresentationRole
+import skirout.editor.v1.presentation.PresentationTextOverflow
+import skirout.editor.v1.type_catalog.DataValue
+import skirout.editor.v1.type_catalog.ItemId
+import skirout.editor.v1.type_catalog.ListItem
+import skirout.editor.v1.type_catalog.ScalarKind
 import kotlin.time.Duration.Companion.milliseconds
 import kotlin.time.Duration.Companion.seconds
 
@@ -42,7 +45,7 @@ object CoreIconSdkProvider : IconIconifyPresentation, IconSvgPresentation {
                         row(spacing = 10.0) {
                             icon(row)
                             flexible {
-                                text(row, paragraph = TextParagraph(maximumLines = 1, overflow = TextOverflow.Ellipsis))
+                                text(row, paragraph = textParagraph(maxLines = 1, overflow = PresentationTextOverflow.ELLIPSIS))
                             }
                         }
                     }
@@ -51,7 +54,7 @@ object CoreIconSdkProvider : IconIconifyPresentation, IconSvgPresentation {
                     row(spacing = 10.0) {
                         icon(current.orElse(literal("material-symbols:book")))
                         flexible {
-                            text(current, paragraph = TextParagraph(maximumLines = 1, overflow = TextOverflow.Ellipsis))
+                            text(current, paragraph = textParagraph(maxLines = 1, overflow = PresentationTextOverflow.ELLIPSIS))
                         }
                     }
                 }
@@ -61,7 +64,7 @@ object CoreIconSdkProvider : IconIconifyPresentation, IconSvgPresentation {
                             uri(literal("https://api.iconify.design/search"))
                             parameter("query", query)
                             parameter("limit", literal("64"))
-                            result("$.icons[*]", TypeTemplate.Scalar(ScalarKind.Text))
+                            result("$.icons[*]", ScalarKind.TEXT.template)
                             timeout(5.seconds)
                         }.gate(query.length gte 2, literal("Enter at least two characters"))
                         .debounce(150.milliseconds)
@@ -90,8 +93,13 @@ object CoreIconSdkProvider : IconIconifyPresentation, IconSvgPresentation {
 
 private val suggestedIcons: Expr<List<String>, Handled> =
     com.typewritermc.expression.portableLiteral(
-        DataValue.ListValue(
+        DataValue.listValue(
             listOf("mdi:home", "mdi:account", "mdi:star", "mdi:map-marker", "game-icons:broad-dagger")
-                .mapIndexed { index, icon -> ListItem(ItemId("icon.suggestion.$index"), DataValue.StringValue(icon)) },
+                .mapIndexed {
+                    index,
+                    icon,
+                    ->
+                    ListItem(id = ItemId(value = "icon.suggestion.$index"), value = DataValue.StringValueWrapper(icon))
+                },
         ),
     )

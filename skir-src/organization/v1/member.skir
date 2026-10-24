@@ -55,21 +55,28 @@ method UpdateOrganizationMemberRoles(
     members: [OrganizationMember];
     event: OrganizationMembersChanged;
   };
+  /// Users not found.
   user_not_found_error: struct {
     user_ids: [RecordId];
   };
+  /// Roles not found.
   roles_not_found_error: struct {
     role_ids: [RecordId];
   };
+  /// Roles not assignable.
   roles_not_assignable_error: struct {
     user_ids: [RecordId];
     role_ids: [RecordId];
   };
+  /// At least one role is required.
   roles_required_error: struct {
     user_ids: [RecordId];
   };
+  /// Founder role is required.
   founder_role_required_error: struct {};
+  /// Selection must contain distinct targets.
   invalid_selection_error: struct {};
+  /// Record IDs from an unexpected table.
   invalid_record_id_error: InvalidRecordIdError;
 } = 813953;
 
@@ -87,12 +94,15 @@ method RemoveOrganizationMember(
     event: OrganizationMembersChanged;
   };
 
+  /// User is not a member.
   user_not_member_error: struct {
     user_id: RecordId;
   };
+  /// Founder cannot be removed.
   founder_cannot_be_removed_error: struct {
     user_id: RecordId;
   };
 
+  /// Record IDs from an unexpected table.
   invalid_record_id_error: InvalidRecordIdError;
 } = 291414;

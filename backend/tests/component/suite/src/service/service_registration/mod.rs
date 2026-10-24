@@ -25,14 +25,9 @@ pub struct ServiceRegistration;
 impl FixtureSpec for ServiceRegistration {
     fn configure(builder: FixtureBuilder<Self>) -> FixtureBuilder<Self> {
         builder
-            .messaging_subscription("typewriter.from.service.*.binding.query")
-            .messaging_subscription("typewriter.from.service.*.registration.ensure")
-            .messaging_subscription("typewriter.from.service.*.messaging.scope")
-            .messaging_subscription("typewriter.from.service.*.heartbeat")
-            .messaging_subscription("typewriter.from.service.*.shutdown")
-            .messaging_subscription("typewriter.from.user.*.organization.*.services.*")
-            .messaging_subscription("typewriter.from.user.*.organization.*.topology.*")
-            .messaging_subscription("typewriter.from.service.*.execution.*")
+            .messaging_subscriptions(
+                wasmcloud_utils::transport_routes::service_registration::SUBSCRIPTIONS,
+            )
             .otel()
             .typewriter_database(SchemaPreset::Registration)
     }

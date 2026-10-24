@@ -203,7 +203,9 @@ pub enum BindServiceResponse {
     Unknown(Option<crate::skir_client::UnrecognizedVariant<BindServiceResponse>>),
     InternalError(Box<crate::skirout::base::kernel::v1::errors::InternalError>),
     Success(Box<BindServiceResponse_Success>),
+    /// Invalid or expired registration token.
     InvalidRegistrationTokenError(Box<BindServiceResponse_InvalidRegistrationTokenError>),
+    /// Organization not found.
     OrganizationNotFoundError(Box<BindServiceResponse_OrganizationNotFoundError>),
 }
 
@@ -425,6 +427,7 @@ pub enum UnbindServiceResponse {
     Unknown(Option<crate::skir_client::UnrecognizedVariant<UnbindServiceResponse>>),
     InternalError(Box<crate::skirout::base::kernel::v1::errors::InternalError>),
     Success(Box<UnbindServiceResponse_Success>),
+    /// Service not found in organization.
     ServiceNotFoundError(Box<UnbindServiceResponse_ServiceNotFoundError>),
 }
 
@@ -560,7 +563,7 @@ fn initialize_module_serializers() {
                 crate::skir_client::internal::struct_serializer_from_static(
                     BindServiceResponse_InvalidRegistrationTokenError::_adapter(),
                 ),
-                "",
+                "Invalid or expired registration token.",
                 |v| BindServiceResponse::InvalidRegistrationTokenError(Box::new(v)),
                 |x| match x {
                     BindServiceResponse::InvalidRegistrationTokenError(b) => b.as_ref(),
@@ -574,7 +577,7 @@ fn initialize_module_serializers() {
                 crate::skir_client::internal::struct_serializer_from_static(
                     BindServiceResponse_OrganizationNotFoundError::_adapter(),
                 ),
-                "",
+                "Organization not found.",
                 |v| BindServiceResponse::OrganizationNotFoundError(Box::new(v)),
                 |x| match x {
                     BindServiceResponse::OrganizationNotFoundError(b) => b.as_ref(),
@@ -664,7 +667,7 @@ fn initialize_module_serializers() {
                 crate::skir_client::internal::struct_serializer_from_static(
                     UnbindServiceResponse_ServiceNotFoundError::_adapter(),
                 ),
-                "",
+                "Service not found in organization.",
                 |v| UnbindServiceResponse::ServiceNotFoundError(Box::new(v)),
                 |x| match x {
                     UnbindServiceResponse::ServiceNotFoundError(b) => b.as_ref(),

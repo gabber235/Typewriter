@@ -72,7 +72,8 @@ class Communicator(
      *
      * Replies accumulate until the supplied policy completes or its timeout expires. Collection cancellation
      * releases the channel. The transport does not provide exactly one reply per logical host; callers choose
-     * validation and completion rules.
+     * validation and completion rules. A responder whose reply could not be delivered complete is emitted as a
+     * failure and collection continues with the other responders; any other transport failure ends collection.
      */
     fun <Address : Any, Request : Any, Response : Any> scatter(
         contract: ScatterContract<Address, Request, Response>,
@@ -170,7 +171,7 @@ class Communicator(
                                                     delivery.error.toCommunicationError(contract.failureSlug),
                                                 ),
                                             )
-                                            return@withTimeoutOrNull true
+                                            if (!delivery.isResponderFailure) return@withTimeoutOrNull true
                                         }
 
                                         TransportDelivery.Completed -> {
@@ -326,41 +327,11 @@ class Communicator(
             SpanKind.PRODUCER,
             contract.updateAddress.template,
         ) { annotate ->
-            val classification = contract.updateClassifier.classify(update)
             publishResponse(
                 destination,
                 update,
                 contract.updateCodec,
-                classification,
-                contract.failureSlug,
-                headers,
-                annotate,
-            )
-        }.responseResult()
-    }
-
-    /** Publishes an update to the concrete subject resolved for one watch request. */
-    suspend fun <Address : Any, Request : Any, Initial : Any, Update : Any> publishUpdate(
-        contract: WatchContract<Address, Request, Initial, Update>,
-        address: Address,
-        request: Request,
-        update: Update,
-        headers: MessageHeaders = MessageHeaders.Empty,
-    ): CommunicationResult<Unit> {
-        val destination = contract.updateDestination(address, request)
-        return operation(
-            contract.name.value,
-            "publish",
-            contract.failureSlug,
-            SpanKind.PRODUCER,
-            contract.updateAddress.template,
-        ) { annotate ->
-            val classification = contract.updateClassifier.classify(update)
-            publishResponse(
-                destination,
-                update,
-                contract.updateCodec,
-                classification,
+                UPDATE_CLASSIFICATION,
                 contract.failureSlug,
                 headers,
                 annotate,
@@ -379,7 +350,7 @@ class Communicator(
         headers: MessageHeaders = MessageHeaders.Empty,
     ): CommunicationResult<Unit> =
         operation(name, "publish", failureSlug, SpanKind.PRODUCER, template) { annotate ->
-            publishResponse(destination, response, codec, classification, failureSlug, headers, annotate)
+            publishResponse(destination, response, codec, classification, failureSlug, headers, annotate, transport::reply)
         }.responseResult()
 
     private suspend fun <Response : Any> publishResponse(
@@ -390,6 +361,7 @@ class Communicator(
         failureSlug: ErrorSlug,
         headers: MessageHeaders,
         annotate: (TypedAttributes.() -> Unit) -> Unit,
+        send: suspend (OutboundMessage) -> TransportResult<Unit> = transport::publish,
     ): OperationOutcome<Unit> {
         annotate {
             attribute("messaging.destination.name", destination.value)
@@ -397,7 +369,7 @@ class Communicator(
             attribute("operation.outcome", classification.outcome.name.lowercase())
         }
         val payload = classify({ codec.encode(response) }) { CommunicationError.Encode(failureSlug, it) }
-        classifyTransport(failureSlug, transport.publish(outbound(destination, payload, headers)))
+        classifyTransport(failureSlug, send(outbound(destination, payload, headers)))
         return classification.operationOutcome(Unit)
     }
 
@@ -415,7 +387,7 @@ class Communicator(
         headers: MessageHeaders = MessageHeaders.Empty,
     ): Flow<CommunicationResult<WatchMessage<Initial, Update>>> =
         flow {
-            val updateAddress = contract.updateDestination(address, request)
+            val updateAddress = contract.updateAddress.render(address)
             val subscriptionResult =
                 operation(
                     contract.name.value,
@@ -568,12 +540,11 @@ class Communicator(
                         classify(block = { contract.updateCodec.decode(message.payload) }, error = {
                             CommunicationError.Decode(contract.failureSlug, it)
                         })
-                    val classification = contract.updateClassifier.classify(update)
                     main.annotate {
-                        domainOutcome(classification.variant.value)
-                        operationOutcome(classification.outcome.name.lowercase())
+                        domainOutcome(UPDATE_CLASSIFICATION.variant.value)
+                        operationOutcome(UPDATE_CLASSIFICATION.outcome.name.lowercase())
                     }
-                    classification.operationOutcome(update)
+                    UPDATE_CLASSIFICATION.operationOutcome(update)
                 }
             CommunicationResult.Success(WatchMessage.Update(outcome.value()))
         } catch (failure: Throwable) {
@@ -759,3 +730,6 @@ private fun Throwable.causes(): Sequence<Throwable> =
             current = current.cause
         }
     }
+
+/** Watch updates carry no outcome of their own, so every delivered update records as a success. */
+private val UPDATE_CLASSIFICATION = ResponseClassification.success("update")

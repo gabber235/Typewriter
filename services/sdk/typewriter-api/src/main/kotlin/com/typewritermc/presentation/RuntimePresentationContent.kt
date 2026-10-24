@@ -3,12 +3,15 @@ package com.typewritermc.presentation
 import com.typewritermc.expression.Expr
 import com.typewritermc.expression.Handled
 import com.typewritermc.expression.literal
-import com.typewritermc.types.DataValue
 import com.typewritermc.types.Icon
-import com.typewritermc.types.skir.SkirDataValueCodec
-import com.typewritermc.types.skir.getOrThrow
+import com.typewritermc.types.integer
+import com.typewritermc.types.requirePortable
+import skirout.editor.v1.presentation.DateTimeZone
 import skirout.editor.v1.presentation.PresentationElement
 import skirout.editor.v1.presentation.PresentationNode
+import skirout.editor.v1.presentation.RelativeTimeStyle
+import skirout.editor.v1.presentation.TextParagraph
+import skirout.editor.v1.type_catalog.DataValue
 import kotlin.time.Instant
 
 internal class RuntimePresentationContent(
@@ -100,7 +103,7 @@ internal class RuntimePresentationContent(
                     letterSpacing = null,
                     decoration = null,
                     semanticLabel = null,
-                    paragraph = paragraph.wire(),
+                    paragraph = paragraph,
                 ),
             )
     }
@@ -170,11 +173,7 @@ internal class RuntimePresentationContent(
                     value = expression(value),
                     options = state.displayAppearance(configure),
                     format = expression(format),
-                    timeZone =
-                        when (zone) {
-                            DateTimeZone.Local -> skirout.editor.v1.presentation.DateTimeZone.LOCAL
-                            DateTimeZone.Utc -> skirout.editor.v1.presentation.DateTimeZone.UTC
-                        },
+                    timeZone = zone,
                 ),
             )
     }
@@ -182,7 +181,7 @@ internal class RuntimePresentationContent(
     override fun richText(configure: RichTextScope.() -> Unit) {
         val runs = mutableListOf<skirout.editor.v1.presentation.TextRun>()
         var overallStyle: TextStyleOverride? = null
-        var overallParagraph = TextParagraph()
+        var overallParagraph = textParagraph()
         var overallSizing: TextSizing? = null
         val scope =
             object : RichTextScope {
@@ -215,7 +214,7 @@ internal class RuntimePresentationContent(
                 PresentationElement.createRichText(
                     runs = runs,
                     style = overallStyle?.wire(),
-                    paragraph = overallParagraph.wire(),
+                    paragraph = overallParagraph,
                     sizing = overallSizing?.wire(),
                 ),
             )
@@ -230,9 +229,7 @@ internal class RuntimePresentationContent(
             cases.map { candidate ->
                 skirout.editor.v1.presentation.StatusCase(
                     match =
-                        com.typewritermc.types.skir.SkirDataValueCodec
-                            .encode(portableLiteral(candidate.value))
-                            .getOrThrow(),
+                        portableLiteral(candidate.value).requirePortable(),
                     appearance = candidate.appearance.wire(state),
                 )
             }
@@ -257,16 +254,8 @@ internal class RuntimePresentationContent(
                 PresentationElement.createRelativeTime(
                     value = expression(value),
                     options = state.displayAppearance(configure),
-                    style =
-                        when (style) {
-                            RelativeTimeStyle.Compact -> skirout.editor.v1.presentation.RelativeTimeStyle.COMPACT
-                            RelativeTimeStyle.Full -> skirout.editor.v1.presentation.RelativeTimeStyle.NATURAL
-                        },
-                    timeZone =
-                        when (zone) {
-                            DateTimeZone.Local -> skirout.editor.v1.presentation.DateTimeZone.LOCAL
-                            DateTimeZone.Utc -> skirout.editor.v1.presentation.DateTimeZone.UTC
-                        },
+                    style = style,
+                    timeZone = zone,
                 ),
             )
     }
@@ -274,20 +263,20 @@ internal class RuntimePresentationContent(
 
 private fun portableLiteral(value: Any?): DataValue =
     when (value) {
-        null -> DataValue.Null
+        null -> DataValue.NULL
         is DataValue -> value
-        is String -> DataValue.StringValue(value)
-        is Boolean -> DataValue.Boolean(value)
-        is Byte -> DataValue.Integer(value.toLong().toBigInteger())
-        is Short -> DataValue.Integer(value.toLong().toBigInteger())
-        is Int -> DataValue.Integer(value.toBigInteger())
-        is Long -> DataValue.Integer(value.toBigInteger())
-        is UByte -> DataValue.Integer(value.toLong().toBigInteger())
-        is UShort -> DataValue.Integer(value.toLong().toBigInteger())
-        is UInt -> DataValue.Integer(value.toLong().toBigInteger())
-        is ULong -> DataValue.Integer(value.toString().toBigInteger())
-        is Float -> DataValue.Float(value.toDouble())
-        is Double -> DataValue.Float(value)
+        is String -> DataValue.StringValueWrapper(value)
+        is Boolean -> DataValue.BooleanWrapper(value)
+        is Byte -> DataValue.integer(value.toLong().toBigInteger())
+        is Short -> DataValue.integer(value.toLong().toBigInteger())
+        is Int -> DataValue.integer(value.toBigInteger())
+        is Long -> DataValue.integer(value.toBigInteger())
+        is UByte -> DataValue.integer(value.toLong().toBigInteger())
+        is UShort -> DataValue.integer(value.toLong().toBigInteger())
+        is UInt -> DataValue.integer(value.toLong().toBigInteger())
+        is ULong -> DataValue.integer(value.toString().toBigInteger())
+        is Float -> DataValue.FloatWrapper(value.toDouble())
+        is Double -> DataValue.FloatWrapper(value)
         else -> throw IllegalArgumentException("A status case value must have a portable literal representation.")
     }
 
@@ -297,23 +286,6 @@ private fun TextStyleOverride.wire(): skirout.editor.v1.presentation.TextStyleOv
         fontWeight = weight?.let(::expression),
         fontItalic = null,
         decoration = null,
-    )
-
-private fun TextParagraph.wire(): skirout.editor.v1.presentation.TextParagraph =
-    skirout.editor.v1.presentation.TextParagraph(
-        maxLines = maximumLines,
-        overflow =
-            when (overflow) {
-                TextOverflow.Clip -> skirout.editor.v1.presentation.PresentationTextOverflow.CLIP
-                TextOverflow.Ellipsis -> skirout.editor.v1.presentation.PresentationTextOverflow.ELLIPSIS
-            },
-        softWrap = softWrap,
-        selectable = selectable,
-        tone =
-            when (tone) {
-                TextTone.Primary -> skirout.editor.v1.presentation.PresentationTextTone.PRIMARY
-                TextTone.Secondary -> skirout.editor.v1.presentation.PresentationTextTone.SECONDARY
-            },
     )
 
 internal fun TextSizing.wire(): skirout.editor.v1.presentation.TextSizing =

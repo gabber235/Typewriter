@@ -273,7 +273,7 @@ void main() {
       final lifecycle = _MutableLifecycle();
       var subscriptions = 0;
       var cancellations = 0;
-      final services = StreamController<List<Service>>(
+      final services = StreamController<List<skir.Service>>(
         onListen: () => subscriptions++,
         onCancel: () => cancellations++,
       );
@@ -666,10 +666,10 @@ class _MutableLifecycle extends NatsLifecycle {
 
 class _PendingServices extends CanonicalOrganizationServices {
   _PendingServices(this.stream);
-  final Stream<List<Service>> stream;
+  final Stream<List<skir.Service>> stream;
 
   @override
-  Stream<List<Service>> build(skir.RecordId organizationId) => stream;
+  Stream<List<skir.Service>> build(skir.RecordId organizationId) => stream;
 }
 
 class _NavigationObserver extends NavigatorObserver {

@@ -7,8 +7,8 @@ import "package:typewriter_testkit/src/shared/testing/testing.dart";
 
 export "features/features.dart";
 
-OrganizationData generateRandomOrganization() {
-  return OrganizationData(
+skir.Organization generateRandomOrganization() {
+  return skir.Organization(
     organizationId: skir.recordId("organization:${faker.guid.guid()}"),
     name: faker.lorem
         .words(faker.randomGenerator.integer(4, min: 2))
@@ -24,7 +24,7 @@ class OrganizationsMock extends Organizations {
   final DisplayState displayState;
 
   @override
-  Stream<List<OrganizationData>> build() async* {
+  Stream<List<skir.Organization>> build() async* {
     yield await displayState.generate(generateRandomOrganization);
   }
 
@@ -42,7 +42,7 @@ class OrganizationProviderMock extends Organization {
   OrganizationProviderMock();
 
   @override
-  Future<OrganizationData?> build() async {
+  Future<skir.Organization?> build() async {
     final organizations = await ref.watch(organizationsProvider.future);
     return organizations.firstOrNull;
   }
@@ -71,11 +71,11 @@ List<Override> organizationProviderOverrides() => [
 // User Join Request Mocks (for the user's own pending requests)
 // ============================================================================
 
-UserJoinRequest generateRandomUserJoinRequest() {
+skir.UserJoinRequest generateRandomUserJoinRequest() {
   final expiresAt = DateTime.now().add(
     Duration(minutes: faker.randomGenerator.integer(60, min: 1)),
   );
-  return UserJoinRequest(
+  return skir.UserJoinRequest(
     requestId: skir.recordId("request_to_join:${faker.guid.guid()}"),
     organizationId: skir.recordId("organization:${faker.guid.guid()}"),
     organizationName: faker.lorem
@@ -94,7 +94,7 @@ class UserJoinRequestsMock extends UserJoinRequests {
   final DisplayState displayState;
 
   @override
-  Stream<List<UserJoinRequest>> build() async* {
+  Stream<List<skir.UserJoinRequest>> build() async* {
     yield await displayState.generate(generateRandomUserJoinRequest);
   }
 

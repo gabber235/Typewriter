@@ -17,7 +17,7 @@ class JoinCodesTab extends HookConsumerWidget {
     final rolesAsync = ref.watch(organizationRolesProvider);
     final selectedCodes = useState<Set<skir.RecordId>>({});
     final joinCodeOptions = useState(const JoinCodeOptions());
-    final liveCodes = useRef<List<OrganizationJoinCode>>([]);
+    final liveCodes = useRef<List<skir.JoinCode>>([]);
 
     final isRevokingSelection = useRef(false);
 

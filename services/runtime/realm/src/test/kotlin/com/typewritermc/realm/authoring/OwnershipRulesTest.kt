@@ -1,58 +1,71 @@
 package com.typewritermc.realm.authoring
 
-import com.typewritermc.authoring.AuthoringRecord
-import com.typewritermc.authoring.EditIntent
-import com.typewritermc.authoring.ItemId
-import com.typewritermc.authoring.PathSegment
-import com.typewritermc.authoring.PreparedEdit
 import com.typewritermc.authoring.RealmRootDefinition
-import com.typewritermc.authoring.TypeSelection
-import com.typewritermc.authoring.ValueLocation
-import com.typewritermc.authoring.ValuePath
-import com.typewritermc.checking.CatalogGeneration
-import com.typewritermc.configuration.FieldPatternSegment
-import com.typewritermc.configuration.RelativeFieldPattern
+import com.typewritermc.authoring.field
+import com.typewritermc.authoring.fieldMap
+import com.typewritermc.authoring.of
+import com.typewritermc.authoring.root
+import com.typewritermc.configuration.field
 import com.typewritermc.operations.OperationInvocation
 import com.typewritermc.operations.PreparationChoices
 import com.typewritermc.realm.checking.EmptyProviders
 import com.typewritermc.realm.repository.AuthoringMutationPlanner
 import com.typewritermc.realm.repository.MutationPlanningResult
-import com.typewritermc.types.CollectionKind
-import com.typewritermc.types.DataValue
-import com.typewritermc.types.EndpointBindingTemplate
-import com.typewritermc.types.EndpointCardinality
-import com.typewritermc.types.EndpointDefinition
-import com.typewritermc.types.EndpointId
-import com.typewritermc.types.EndpointSlot
 import com.typewritermc.types.FactoryNativeBindingRegistry
-import com.typewritermc.types.FieldDeclaration
-import com.typewritermc.types.FieldOwner
-import com.typewritermc.types.LinkTarget
-import com.typewritermc.types.ListItem
 import com.typewritermc.types.NativeBindingRegistry
 import com.typewritermc.types.RESOURCE_OWNERSHIP_FAMILY_ID
-import com.typewritermc.types.RelationContract
-import com.typewritermc.types.RelationDeletePolicy
-import com.typewritermc.types.RelationFamilyId
-import com.typewritermc.types.RelationId
-import com.typewritermc.types.RepresentationTemplate
-import com.typewritermc.types.ResourceId
-import com.typewritermc.types.ScalarKind
-import com.typewritermc.types.TypeDefinition
-import com.typewritermc.types.TypeDefinitionId
-import com.typewritermc.types.TypeId
-import com.typewritermc.types.TypeTemplate
-import com.typewritermc.types.TypeUse
 import com.typewritermc.types.catalog.CheckedCatalog
 import com.typewritermc.types.catalog.DefaultCheckedCatalog
+import com.typewritermc.types.items
+import com.typewritermc.types.listValue
+import com.typewritermc.types.named
+import com.typewritermc.types.namedTemplate
+import com.typewritermc.types.namedUse
+import com.typewritermc.types.of
+import com.typewritermc.types.payload
+import com.typewritermc.types.qualified
+import com.typewritermc.types.template
+import com.typewritermc.types.toResourceId
+import com.typewritermc.types.toResourceIds
+import com.typewritermc.types.use
 import de.infix.testBalloon.framework.core.testSuite
 import io.kotest.matchers.shouldBe
 import kotlinx.coroutines.test.runTest
+import skirout.editor.v1.authoring.EditIntent
+import skirout.editor.v1.authoring.PreparedEdit
+import skirout.editor.v1.catalog.EndpointBindingTemplate
+import skirout.editor.v1.catalog.EndpointCardinality
+import skirout.editor.v1.catalog.EndpointDefinition
+import skirout.editor.v1.catalog.EndpointSlot
+import skirout.editor.v1.catalog.RelationContract
+import skirout.editor.v1.catalog.RelationDeletePolicy
+import skirout.editor.v1.type_catalog.AuthoringRecord
+import skirout.editor.v1.type_catalog.CatalogGeneration
+import skirout.editor.v1.type_catalog.CollectionKind
+import skirout.editor.v1.type_catalog.DataValue
+import skirout.editor.v1.type_catalog.EndpointId
+import skirout.editor.v1.type_catalog.FieldDeclaration
+import skirout.editor.v1.type_catalog.FieldOwner
+import skirout.editor.v1.type_catalog.FieldPatternSegment
+import skirout.editor.v1.type_catalog.ItemId
+import skirout.editor.v1.type_catalog.LinkTarget
+import skirout.editor.v1.type_catalog.ListItem
+import skirout.editor.v1.type_catalog.RelationFamilyId
+import skirout.editor.v1.type_catalog.RelationId
+import skirout.editor.v1.type_catalog.RelativeFieldPattern
+import skirout.editor.v1.type_catalog.RepresentationTemplate
+import skirout.editor.v1.type_catalog.ResourceId
+import skirout.editor.v1.type_catalog.ScalarKind
+import skirout.editor.v1.type_catalog.TypeDefinition
+import skirout.editor.v1.type_catalog.TypeDefinitionId
+import skirout.editor.v1.type_catalog.TypeSelection
+import skirout.editor.v1.type_catalog.ValueLocation
+import skirout.editor.v1.type_catalog.ValuePath
 
-private val first = ResourceId("first")
-private val second = ResourceId("second")
-private val keyframe = ResourceId("keyframe")
-private val other = ResourceId("other")
+private val first = ResourceId(value = "first")
+private val second = ResourceId(value = "second")
+private val keyframe = ResourceId(value = "keyframe")
+private val other = ResourceId(value = "other")
 
 /**
  * Ownership over a catalog whose members are held only by their owner's collection, like keyframes in a segment. They
@@ -61,17 +74,17 @@ private val other = ResourceId("other")
 val OwnershipRulesTest by testSuite {
     test("a member without a back reference lists every owner whose collection accepts it") {
         withPreparation { preparation, _ ->
-            preparation.ownerCandidatesOf(keyframe).toList() shouldBe listOf(first, second)
+            preparation.ownerCandidatesOf(keyframe.toResourceId()).toList() shouldBe listOf(first, second).toResourceIds()
         }
     }
 
     test("moving members without a back reference releases them from the old owner and reads current owners") {
         runTest {
             withPreparation { preparation, edit ->
-                preparation.move(listOf(keyframe), second, null)
-                preparation.ownerOf(keyframe) shouldBe second
-                preparation.move(listOf(other), second, null)
-                preparation.ownerOf(other) shouldBe second
+                preparation.move(listOf(keyframe.toResourceId()), second.toResourceId(), null)
+                preparation.ownerOf(keyframe.toResourceId()) shouldBe second.toResourceId()
+                preparation.move(listOf(other.toResourceId()), second.toResourceId(), null)
+                preparation.ownerOf(other.toResourceId()) shouldBe second.toResourceId()
 
                 val resources = edit.planned()
                 resources.getValue(first).children() shouldBe emptyList()
@@ -81,15 +94,23 @@ val OwnershipRulesTest by testSuite {
     }
 
     test("the realm root needs no owner even when its type could be owned") {
-        val root = ResourceId("root")
-        val resources = seed() + (root to AuthoringRecord(TypeSelection.Complete(ROOT_USE), mapOf("frame" to DataValue.StringValue("0"))))
+        val root = ResourceId(value = "root")
+        val resources =
+            seed() +
+                (root to AuthoringRecord.of(TypeSelection.CompleteWrapper(ROOT_USE), mapOf("frame" to DataValue.StringValueWrapper("0"))))
         val catalog = OwnerSideCatalogLease()
         val planner = AuthoringMutationPlanner(catalog.checked, listOf(OWNERSHIP_CONTRACT), listOf(OWNER_BINDING))
         val edit =
             PreparedEdit(
-                catalog.generation,
-                emptyList(),
-                listOf(EditIntent.SetValue(ValueLocation(root, ValuePath(listOf(PathSegment.Field("frame")))), DataValue.StringValue("1"))),
+                catalog = catalog.generation,
+                expectations = emptyList(),
+                intents =
+                    listOf(
+                        EditIntent.createSetValue(
+                            at = ValueLocation.of(root, ValuePath.root.field("frame")),
+                            value = DataValue.StringValueWrapper("1"),
+                        ),
+                    ),
             )
 
         (planner.plan(resources, edit) is MutationPlanningResult.Accepted) shouldBe true
@@ -101,7 +122,7 @@ private inline fun withPreparation(body: (RuntimeOperationPreparation, WorkingVi
     try {
         store.capture().use { lease ->
             val edit = WorkingViewEditContext(lease.root, "owner-side")
-            val invocation = OperationInvocation("owner-side", listOf(keyframe, other))
+            val invocation = OperationInvocation("owner-side", listOf(keyframe, other).toResourceIds())
             body(RuntimeOperationPreparation(invocation, PreparationChoices(), edit), edit)
         }
     } finally {
@@ -118,8 +139,11 @@ private fun WorkingViewEditContext.planned(): Map<ResourceId, AuthoringRecord> {
 }
 
 private fun AuthoringRecord.children(): List<ResourceId> {
-    val items = ((fields.getValue("children") as DataValue.Named).payload as DataValue.ListValue).items
-    return items.map { ((it.value as DataValue.Named).payload as DataValue.Link).target.resource }
+    val items = ((fieldMap.getValue("children") as DataValue.NamedWrapper).payload as DataValue.ListValueWrapper).items
+    return items.map {
+        ((it.value as DataValue.NamedWrapper).payload as DataValue.LinkWrapper)
+            .value.target.resource
+    }
 }
 
 private fun seed() =
@@ -131,17 +155,24 @@ private fun seed() =
     )
 
 private fun ownerRecord(members: List<ResourceId>) =
-    AuthoringRecord(
-        TypeSelection.Complete(OWNER_USE),
+    AuthoringRecord.of(
+        TypeSelection.CompleteWrapper(OWNER_USE),
         mapOf(
             "children" to
-                DataValue.Named(
+                DataValue.named(
                     CHILDREN_USE,
-                    DataValue.ListValue(
+                    DataValue.listValue(
                         members.mapIndexed { index, member ->
                             ListItem(
-                                ItemId("child_$index"),
-                                DataValue.Named(CHILD_LINK_USE, DataValue.Link(OWNER_ENDPOINT, LinkTarget(member, null))),
+                                id = ItemId(value = "child_$index"),
+                                value =
+                                    DataValue.named(
+                                        CHILD_LINK_USE,
+                                        DataValue.createLink(
+                                            endpoint = OWNER_ENDPOINT,
+                                            target = LinkTarget(resource = member, opposite = null),
+                                        ),
+                                    ),
                             )
                         },
                     ),
@@ -149,17 +180,21 @@ private fun ownerRecord(members: List<ResourceId>) =
         ),
     )
 
-private fun memberRecord() = AuthoringRecord(TypeSelection.Complete(MEMBER_USE), mapOf("frame" to DataValue.StringValue("0")))
+private fun memberRecord() =
+    AuthoringRecord.of(
+        TypeSelection.CompleteWrapper(MEMBER_USE),
+        mapOf("frame" to DataValue.StringValueWrapper("0")),
+    )
 
 private class OwnerSideCatalogLease : AuthoringCatalogLease {
-    override val generation = CatalogGeneration("owner_side")
+    override val generation = CatalogGeneration(value = "owner_side")
     override val checked: CheckedCatalog = DefaultCheckedCatalog(generation, DEFINITIONS)
     override val nativeBindings: NativeBindingRegistry = FactoryNativeBindingRegistry(checked, emptyList())
     override val providers = EmptyProviders
     override val checks = emptyList<com.typewritermc.discovery.OwnedCheckRecipe>()
     override val relations = listOf(OWNERSHIP_CONTRACT)
     override val endpointBindings = listOf(OWNER_BINDING)
-    override val configuration: List<com.typewritermc.configuration.ConfigurationRecipe> = emptyList()
+    override val configuration: List<skirout.editor.v1.catalog.ConfigurationRecipe> = emptyList()
     override val operations = com.typewritermc.operations.OperationCatalog()
     override val placementFields = emptyMap<TypeDefinitionId, ValuePath>()
 
@@ -168,76 +203,95 @@ private class OwnerSideCatalogLease : AuthoringCatalogLease {
     override fun close() = Unit
 }
 
-private val OWNER = TypeDefinitionId(TypeId.Qualified("owner_side", "segment"), 1)
-private val MEMBER = TypeDefinitionId(TypeId.Qualified("owner_side", "keyframe"), 1)
-private val CHILD_LINK = TypeDefinitionId(TypeId.Qualified("owner_side", "keyframe_link"), 1)
-private val CHILDREN = TypeDefinitionId(TypeId.Qualified("owner_side", "keyframes"), 1)
-private val OWNER_USE = TypeUse.Named(OWNER)
-private val MEMBER_USE = TypeUse.Named(MEMBER)
-private val ROOT_USE = TypeUse.Named(RealmRootDefinition.id)
-private val CHILD_LINK_USE = TypeUse.Named(CHILD_LINK)
-private val CHILDREN_USE = TypeUse.Named(CHILDREN)
-private val OWNERSHIP = RelationId("segment_keyframes")
-private val OWNER_ENDPOINT = EndpointId("segment_keyframes:first")
-private val MEMBER_ENDPOINT = EndpointId("segment_keyframes:second")
+private val OWNER = TypeDefinitionId.qualified("owner_side", "segment")
+private val MEMBER = TypeDefinitionId.qualified("owner_side", "keyframe")
+private val CHILD_LINK = TypeDefinitionId.qualified("owner_side", "keyframe_link")
+private val CHILDREN = TypeDefinitionId.qualified("owner_side", "keyframes")
+private val OWNER_USE = OWNER.namedUse()
+private val MEMBER_USE = MEMBER.namedUse()
+private val ROOT_USE = RealmRootDefinition.id.namedUse()
+private val CHILD_LINK_USE = CHILD_LINK.namedUse()
+private val CHILDREN_USE = CHILDREN.namedUse()
+private val OWNERSHIP = RelationId(value = "segment_keyframes")
+private val OWNER_ENDPOINT = EndpointId(value = "segment_keyframes:first")
+private val MEMBER_ENDPOINT = EndpointId(value = "segment_keyframes:second")
 private val OWNERSHIP_CONTRACT =
-    RelationContract(
+    RelationContract.of(
         OWNERSHIP,
         EndpointDefinition(
-            OWNER_ENDPOINT,
-            EndpointSlot.First,
-            TypeTemplate.Named(OWNER),
-            EndpointCardinality.One,
-            RelationDeletePolicy.CASCADE,
+            id = OWNER_ENDPOINT,
+            slot = EndpointSlot.FIRST,
+            resource = OWNER.namedTemplate(),
+            cardinality = EndpointCardinality.ONE,
+            onDelete = RelationDeletePolicy.CASCADE,
         ),
         EndpointDefinition(
-            MEMBER_ENDPOINT,
-            EndpointSlot.Second,
-            TypeTemplate.Named(MEMBER),
-            EndpointCardinality.Many,
-            RelationDeletePolicy.CLEAR,
+            id = MEMBER_ENDPOINT,
+            slot = EndpointSlot.SECOND,
+            resource = MEMBER.namedTemplate(),
+            cardinality = EndpointCardinality.MANY,
+            onDelete = RelationDeletePolicy.CLEAR,
         ),
-        setOf(RelationFamilyId(RESOURCE_OWNERSHIP_FAMILY_ID)),
+        setOf(RelationFamilyId(value = RESOURCE_OWNERSHIP_FAMILY_ID)),
     )
 private val OWNER_BINDING =
     EndpointBindingTemplate(
         endpoint = OWNER_ENDPOINT,
-        containingResource = TypeTemplate.Named(OWNER),
+        containingResource = OWNER.namedTemplate(),
         valueOwner = OWNER,
-        relativePath = RelativeFieldPattern(listOf(FieldPatternSegment.Field("children"), FieldPatternSegment.Items)),
-        target = TypeTemplate.Named(MEMBER),
+        relativePath = RelativeFieldPattern(segments = listOf(FieldPatternSegment.field("children"), FieldPatternSegment.ITEMS)),
+        target = MEMBER.template(),
         containsCollection = true,
     )
 private val DEFINITIONS =
     listOf(
-        TypeDefinition(
-            OWNER,
+        TypeDefinition.partial(
+            id = OWNER,
             representation =
-                RepresentationTemplate.Record(
-                    listOf(FieldDeclaration(FieldOwner(OWNER, "children"), TypeTemplate.Named(CHILDREN))),
-                ),
-        ),
-        TypeDefinition(
-            MEMBER,
-            representation =
-                RepresentationTemplate.Record(
-                    listOf(FieldDeclaration(FieldOwner(MEMBER, "frame"), TypeTemplate.Scalar(ScalarKind.Text))),
-                ),
-        ),
-        TypeDefinition(
-            RealmRootDefinition.id,
-            representation =
-                RepresentationTemplate.Record(
-                    listOf(
-                        FieldDeclaration(
-                            FieldOwner(RealmRootDefinition.id, "frame"),
-                            TypeTemplate.Scalar(ScalarKind.Text),
-                            overrides = listOf(FieldOwner(MEMBER, "frame")),
+                RepresentationTemplate.createRecord(
+                    fields =
+                        listOf(
+                            FieldDeclaration.partial(owner = FieldOwner(definition = OWNER, name = "children"), type = CHILDREN.template()),
                         ),
-                    ),
+                    abstract_ = false,
                 ),
-            parents = listOf(TypeTemplate.Named(MEMBER)),
         ),
-        TypeDefinition(CHILD_LINK, representation = RepresentationTemplate.Link(OWNER_ENDPOINT, TypeTemplate.Named(MEMBER))),
-        TypeDefinition(CHILDREN, representation = RepresentationTemplate.Sequence(TypeTemplate.Named(CHILD_LINK), CollectionKind.List)),
+        TypeDefinition.partial(
+            id = MEMBER,
+            representation =
+                RepresentationTemplate.createRecord(
+                    fields =
+                        listOf(
+                            FieldDeclaration.partial(
+                                owner = FieldOwner(definition = MEMBER, name = "frame"),
+                                type = ScalarKind.TEXT.template,
+                            ),
+                        ),
+                    abstract_ = false,
+                ),
+        ),
+        TypeDefinition.partial(
+            id = RealmRootDefinition.id,
+            representation =
+                RepresentationTemplate.createRecord(
+                    fields =
+                        listOf(
+                            FieldDeclaration.partial(
+                                owner = FieldOwner(definition = RealmRootDefinition.id, name = "frame"),
+                                type = ScalarKind.TEXT.template,
+                                overrides = listOf(FieldOwner(definition = MEMBER, name = "frame")),
+                            ),
+                        ),
+                    abstract_ = false,
+                ),
+            parents = listOf(MEMBER.namedTemplate()),
+        ),
+        TypeDefinition.partial(
+            id = CHILD_LINK,
+            representation = RepresentationTemplate.createLink(endpoint = OWNER_ENDPOINT, target = MEMBER.template()),
+        ),
+        TypeDefinition.partial(
+            id = CHILDREN,
+            representation = RepresentationTemplate.createSequence(item = CHILD_LINK.template(), kind = CollectionKind.LIST),
+        ),
     )

@@ -153,11 +153,13 @@ final selectedRealmProvider = SelectedRealmProvider._();
 final class SelectedRealmProvider
     extends
         $FunctionalProvider<
-          AsyncValue<TopologyRealm?>,
-          TopologyRealm?,
-          FutureOr<TopologyRealm?>
+          AsyncValue<skir.RealmInstance?>,
+          skir.RealmInstance?,
+          FutureOr<skir.RealmInstance?>
         >
-    with $FutureModifier<TopologyRealm?>, $FutureProvider<TopologyRealm?> {
+    with
+        $FutureModifier<skir.RealmInstance?>,
+        $FutureProvider<skir.RealmInstance?> {
   /// Finds the selected realm in the organization topology projection.
   ///
   /// Topology is the authority for realm identity, owner host, lifecycle status,
@@ -181,17 +183,17 @@ final class SelectedRealmProvider
 
   @$internal
   @override
-  $FutureProviderElement<TopologyRealm?> $createElement(
+  $FutureProviderElement<skir.RealmInstance?> $createElement(
     $ProviderPointer pointer,
   ) => $FutureProviderElement(pointer);
 
   @override
-  FutureOr<TopologyRealm?> create(Ref ref) {
+  FutureOr<skir.RealmInstance?> create(Ref ref) {
     return selectedRealm(ref);
   }
 }
 
-String _$selectedRealmHash() => r'7c6e6a7ab9eb575dc76e3e20133c5ee1159c63e4';
+String _$selectedRealmHash() => r'47d5331beb42b2132e28cd7501be85cd7db60d0f';
 
 /// Exposes all realms in the current organization topology for selection UI.
 
@@ -203,13 +205,13 @@ final realmsProvider = RealmsProvider._();
 final class RealmsProvider
     extends
         $FunctionalProvider<
-          AsyncValue<List<TopologyRealm>>,
-          List<TopologyRealm>,
-          FutureOr<List<TopologyRealm>>
+          AsyncValue<List<skir.RealmInstance>>,
+          List<skir.RealmInstance>,
+          FutureOr<List<skir.RealmInstance>>
         >
     with
-        $FutureModifier<List<TopologyRealm>>,
-        $FutureProvider<List<TopologyRealm>> {
+        $FutureModifier<List<skir.RealmInstance>>,
+        $FutureProvider<List<skir.RealmInstance>> {
   /// Exposes all realms in the current organization topology for selection UI.
   RealmsProvider._()
     : super(
@@ -227,17 +229,17 @@ final class RealmsProvider
 
   @$internal
   @override
-  $FutureProviderElement<List<TopologyRealm>> $createElement(
+  $FutureProviderElement<List<skir.RealmInstance>> $createElement(
     $ProviderPointer pointer,
   ) => $FutureProviderElement(pointer);
 
   @override
-  FutureOr<List<TopologyRealm>> create(Ref ref) {
+  FutureOr<List<skir.RealmInstance>> create(Ref ref) {
     return realms(ref);
   }
 }
 
-String _$realmsHash() => r'8c75ecbbc7533ed1d2315cc04909bdb119dbeb80';
+String _$realmsHash() => r'76efc4d64e5b22b8d70d472918bfe3b71d0c67fc';
 
 @ProviderFor(realmsAvailability)
 final realmsAvailabilityProvider = RealmsAvailabilityProvider._();
@@ -340,7 +342,7 @@ final class RealmConnectionProvider
   }
 }
 
-String _$realmConnectionHash() => r'48c4f00081a8a74185daf6e7c506ef951d2f7ffb';
+String _$realmConnectionHash() => r'644d37a03b10e813ca546812566cccef1dc69fd3';
 
 /// Provides a synchronous interaction policy for widgets during async checks.
 ///

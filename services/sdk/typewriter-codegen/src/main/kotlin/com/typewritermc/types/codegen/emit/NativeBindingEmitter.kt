@@ -17,7 +17,6 @@ import com.squareup.kotlinpoet.TypeName
 import com.squareup.kotlinpoet.TypeSpec
 import com.squareup.kotlinpoet.asClassName
 import com.squareup.kotlinpoet.joinToCode
-import com.typewritermc.authoring.NativeBindingId
 import com.typewritermc.codegen.DefinitionReferences
 import com.typewritermc.codegen.TypeParameterBindings
 import com.typewritermc.codegen.annotation
@@ -28,11 +27,6 @@ import com.typewritermc.codegen.listCode
 import com.typewritermc.codegen.serialName
 import com.typewritermc.codegen.setCode
 import com.typewritermc.codegen.valueClassScalarKind
-import com.typewritermc.types.FieldOwner
-import com.typewritermc.types.ScalarKind
-import com.typewritermc.types.TypeDefinitionId
-import com.typewritermc.types.TypeTemplate
-import com.typewritermc.types.TypeUse
 import com.typewritermc.types.TypewriterString
 import com.typewritermc.types.catalog.CheckedType
 import com.typewritermc.types.codegen.SdkDeclaration
@@ -41,6 +35,13 @@ import com.typewritermc.types.codegen.erasedTypeName
 import com.typewritermc.types.codegen.parameterizedOrSelf
 import com.typewritermc.types.ksp.OwnedFieldDeclaration
 import com.typewritermc.types.parameterKeys
+import com.typewritermc.types.template
+import skirout.editor.v1.type_catalog.FieldOwner
+import skirout.editor.v1.type_catalog.NativeBindingId
+import skirout.editor.v1.type_catalog.ScalarKind
+import skirout.editor.v1.type_catalog.TypeDefinitionId
+import skirout.editor.v1.type_catalog.TypeTemplate
+import skirout.editor.v1.type_catalog.TypeUse
 import kotlin.reflect.KClass
 import com.typewritermc.codegen.TypewriterApi as Api
 
@@ -66,7 +67,7 @@ internal object NativeBindingEmitter : SdkEmitter {
             ).addProperty(
                 PropertySpec
                     .builder("provider", NativeBindingId::class, KModifier.OVERRIDE)
-                    .initializer("%T(%S)", NativeBindingId::class, signature)
+                    .initializer("%T(value = %S)", NativeBindingId::class, signature)
                     .build(),
             ).addProperty(
                 PropertySpec
@@ -130,7 +131,7 @@ internal object NativeBindingEmitter : SdkEmitter {
                         ?.firstOrNull()
                         ?.name
                         ?.asString() ?: ownedFields.first().name
-                scalarBinding(common, ScalarKind.Text, property, STRING)
+                scalarBinding(common, ScalarKind.TEXT, property, STRING)
             }
 
             declaration.classKind == ClassKind.ENUM_CLASS -> {
@@ -195,7 +196,7 @@ internal object NativeBindingEmitter : SdkEmitter {
             "%T(\n⇥%Lrepresentation = arguments.resolver.bind(%T(%L)),\nunwrap = { value·->♢value.%N },\nconstruct = { value·->♢%T(value as %T) },\n⇤)",
             Api.GeneratedScalarNativeBinding.parameterizedBy(nativeApplied),
             common,
-            TypeUse.Scalar::class,
+            TypeUse.ScalarWrapper::class,
             kind.kotlinCode(),
             property,
             names.source,
@@ -247,7 +248,7 @@ internal object NativeBindingEmitter : SdkEmitter {
                     "%T%L",
                     Api.GeneratedConstructorField.parameterizedBy(nativeApplied),
                     com.typewritermc.codegen.namedArguments(
-                        "owner" to CodeBlock.of("%T(%L,♢%S)", FieldOwner::class, field.owner.kotlinCode(), field.name),
+                        "owner" to CodeBlock.of("%T(definition·=·%L,♢name·=·%S)", FieldOwner::class, field.owner.kotlinCode(), field.name),
                         "sourceName" to CodeBlock.of("%S", field.sourceName),
                         "hasDefault" to CodeBlock.of("%L", field.hasConstructorDefault),
                         "type" to CodeBlock.of("{ arguments·->♢%L }", field.template.nativeAppliedCode(definition.id)),

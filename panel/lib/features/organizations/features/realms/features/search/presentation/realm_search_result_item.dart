@@ -1,3 +1,5 @@
+import "package:typewriter_panel/infrastructure/protocols/skir/skir.dart"
+    as skir;
 import "package:typewriter_panel/typewriter_panel.dart";
 
 /// Renders a topology realm with its host identity and runtime status.
@@ -13,7 +15,7 @@ class RealmSearchResultItem extends HookConsumerWidget {
   });
 
   factory RealmSearchResultItem.realm({
-    required TopologyRealm realm,
+    required skir.RealmInstance realm,
     bool selected = false,
     bool focused = false,
     bool loading = false,
@@ -32,7 +34,7 @@ class RealmSearchResultItem extends HookConsumerWidget {
     );
   }
 
-  final TopologyRealm realm;
+  final skir.RealmInstance realm;
   final bool selected;
   final bool focused;
   final bool loading;

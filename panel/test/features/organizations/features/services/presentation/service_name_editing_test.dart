@@ -229,12 +229,15 @@ void main() {
 
 final class _Fixture {
   _Fixture() {
-    final service = Service(
+    final service = skir.Service(
       serviceId: skir.recordId("service:test"),
       revision: 1,
       name: "gabber235",
-      role: HostServiceRole(version: "1.0.0"),
+      role: skir.ServiceRole.createHost(version: "1.0.0"),
       createdAt: DateTime.utc(2026),
+      organization: null,
+      registration: null,
+      state: null,
     );
     final snapshot = service.editorSnapshot;
     owner = fakeValueEditing(

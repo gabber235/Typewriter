@@ -36,19 +36,17 @@ final class ScriptedAuthoringTransport extends ChangeNotifier {
   void confirm(int request, AuthoringDocument confirmed) {
     publish(AsyncData(confirmed));
     requests[request].response.complete(
-      skir.CommitPreparedEditResponse.wrapResult(skir.CommitResult.committed),
+      skir.CommitPreparedEditResponse.committed,
     );
   }
 
-  void reject(int request, skir.CommitResult response) {
-    if (response == skir.CommitResult.committed) {
+  void reject(int request, skir.CommitPreparedEditResponse response) {
+    if (response == skir.CommitPreparedEditResponse.committed) {
       throw ArgumentError(
         "A committed reply requires an explicit confirmed document",
       );
     }
-    requests[request].response.complete(
-      skir.CommitPreparedEditResponse.wrapResult(response),
-    );
+    requests[request].response.complete(response);
   }
 
   void loseReply(int request, Object error) =>
@@ -174,7 +172,8 @@ List<Override> authoringFixtureOverrides({
 
 AuthoredResourceCommands fixtureAuthoringCommands(
   ScriptedAuthoringTransport transport, {
-  Future<skir.PreparationStep> Function(skir.PreparationOperation)? prepareStep,
+  Future<skir.PrepareValueResult> Function(skir.PreparationOperation)?
+  prepareStep,
   Future<skir.ResolveResourceOperationsResult> Function(
     skir.ResolveResourceOperationsRequest,
   )?
@@ -276,7 +275,7 @@ skir.PreparedValue _fixturePrepareValue(
 }
 
 /// Portable fixture initialization. Native constructor captures belong to Realm tests.
-skir.PreparationStep fixturePreparationStep(
+skir.PrepareValueResult fixturePreparationStep(
   AuthoringDocument document,
   skir.PreparationOperation operation,
 ) {
@@ -362,11 +361,11 @@ skir.PreparationStep fixturePreparationStep(
   );
   final content = skir.PreparedContent.wrapRecord(record);
   if (required.isEmpty) {
-    return skir.PreparationStep.wrapReady(
+    return skir.PrepareValueResult.wrapReady(
       skir.PreparedValue(content: content, findings: const []),
     );
   }
-  return skir.PreparationStep.wrapNeedsInput(
+  return skir.PrepareValueResult.wrapNeedsInput(
     skir.PreparationDraft(
       catalog: document.generation,
       target: target,
@@ -1037,7 +1036,7 @@ CheckedEditorCatalog authoringFixtureCatalog({
     ),
   );
   return CheckedEditorCatalog(
-    skir.EditorCatalogWireSnapshot(
+    skir.EditorCatalog(
       resourceDisplays: _fixtureDisplays,
       resourceOperations: const [],
       generation:
@@ -1196,10 +1195,9 @@ RealmEditPersistence fixtureRealmPersistence({
           cause: response,
           stackTrace: StackTrace.current,
         ),
-        skir.CommitPreparedEditResponse_resultWrapper(
-          value: skir.CommitResult.committed,
-        ) =>
-          SubmissionResult.confirmed(response),
+        skir.CommitPreparedEditResponse.committed => SubmissionResult.confirmed(
+          response,
+        ),
         _ => SubmissionResult.rejected(
           message: response.rejectionMessage,
           response: response,

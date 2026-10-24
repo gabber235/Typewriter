@@ -1,10 +1,12 @@
 //! Messaging helpers shared by wasmCloud components.
 //!
 //! This module owns the transport boundary for broker messages, including trace context
-//! propagation, request and reply error slugs, and typed SKIR replies. Generated transport
-//! routes own subject parsing and construction.
+//! propagation, reply framing, request and reply error slugs, and typed SKIR replies.
+//! Generated transport routes own subject parsing and construction.
 
 use otel_wasi::ResultWithSlug;
+
+use crate::transport;
 
 pub use crate::bindings::exports::wasmcloud::nats::*;
 pub use crate::bindings::wasmcloud::nats::*;
@@ -27,28 +29,62 @@ fn current_trace_headers() -> Option<Vec<types::HeaderEntry>> {
 
 /// Reply on the subject carried by a broker message.
 ///
-/// The input must contain `reply_to`. The reply has no nested reply target and uses
-/// `message-reply-failed` for broker failures, or `message-no-reply-to` when the input
-/// cannot be answered.
+/// The input must contain `reply_to`. A reply above the generated chunk size travels as frames
+/// (see [`crate::transport::plan_reply`]); a frame that cannot be published is followed by an
+/// interrupted frame so the requester fails at once. A reply above the transport limit sends one
+/// too large frame and fails with `transport-transfer-too-large`. Broker failures use
+/// `message-reply-failed`, and an input without `reply_to` fails with `message-no-reply-to`.
 pub async fn reply(
     reply_to: types::NatsMessage,
     data: impl Into<Vec<u8>>,
 ) -> Result<(), otel_wasi::Error> {
-    if let Some(reply_to) = reply_to.reply_to {
-        core::publish(types::NatsMessage {
-            subject: reply_to,
-            reply_to: None,
-            body: data.into(),
-            headers: current_trace_headers(),
-        })
-        .await
-        .map_err(|e| otel_wasi::Error::new("message-reply-failed", e.to_string()))
-    } else {
-        Err(otel_wasi::Error::new(
+    let Some(subject) = reply_to.reply_to else {
+        return Err(otel_wasi::Error::new(
             "message-no-reply-to",
             "No reply_to field in message",
-        ))
+        ));
+    };
+    match transport::plan_reply(data.into()) {
+        transport::ReplyPlan::Single(body) => publish_reply(&subject, body, Vec::new()).await,
+        transport::ReplyPlan::TooLarge { size, frame } => {
+            publish_reply(&subject, frame.body, frame.headers).await?;
+            Err(otel_wasi::Error::new(
+                "transport-transfer-too-large",
+                format!("the reply of {size} bytes exceeds the transport limit"),
+            ))
+        }
+        transport::ReplyPlan::Framed { reply_id, frames } => {
+            for frame in frames {
+                if let Err(error) = publish_reply(&subject, frame.body, frame.headers).await {
+                    let interrupted = transport::interrupted_frame(&reply_id);
+                    // The requester learns at once; the original publish failure stays the result.
+                    let _ = publish_reply(&subject, interrupted.body, interrupted.headers).await;
+                    return Err(error);
+                }
+            }
+            Ok(())
+        }
     }
+}
+
+async fn publish_reply(
+    subject: &str,
+    body: Vec<u8>,
+    framing: Vec<(&'static str, String)>,
+) -> Result<(), otel_wasi::Error> {
+    let mut headers = current_trace_headers().unwrap_or_default();
+    headers.extend(framing.into_iter().map(|(name, value)| types::HeaderEntry {
+        name: name.to_owned(),
+        value,
+    }));
+    core::publish(types::NatsMessage {
+        subject: subject.to_owned(),
+        reply_to: None,
+        body,
+        headers: (!headers.is_empty()).then_some(headers),
+    })
+    .await
+    .map_err(|e| otel_wasi::Error::new("message-reply-failed", e.to_string()))
 }
 
 /// Publish a message with an explicit reply subject.
@@ -88,12 +124,15 @@ pub async fn publish(subject: String, data: impl Into<Vec<u8>>) -> Result<(), ot
 /// Send a request and wait up to five seconds for its broker reply.
 ///
 /// The returned message is untyped because the caller owns response decoding. Broker
-/// failures and timeout are returned as `message-request-failed`.
+/// failures and timeout are returned as `message-request-failed`. Components receive only
+/// the first reply message, so a framed reply fails as `transport-transfer-too-large`
+/// instead of returning a partial body, and a failure frame fails with the slug of its
+/// failure (see [`crate::transport::unusable_reply_slug`]).
 pub async fn request(
     subject: String,
     data: impl Into<Vec<u8>>,
 ) -> Result<types::NatsMessage, otel_wasi::Error> {
-    core::request(
+    let reply = core::request(
         types::NatsMessage {
             subject,
             body: data.into(),
@@ -103,7 +142,19 @@ pub async fn request(
         5000,
     )
     .await
-    .error_with_slug("message-request-failed")
+    .error_with_slug("message-request-failed")?;
+    let headers = reply
+        .headers
+        .iter()
+        .flatten()
+        .map(|entry| (entry.name.as_str(), entry.value.as_str()));
+    if let Some(slug) = transport::unusable_reply_slug(headers) {
+        return Err(otel_wasi::Error::new(
+            slug,
+            "the reply is framed or failed, and components receive only its first message",
+        ));
+    }
+    Ok(reply)
 }
 
 /// Publish durably through JetStream and return its typed acknowledgement.

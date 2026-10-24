@@ -1,0 +1,13 @@
+{
+  "name": "typewriter-transport",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "check": "tsc -p tsconfig.json"
+  },
+  "exports": {
+    "./rust": "./src/rust.ts",
+    "./kotlin": "./src/kotlin.ts",
+    "./dart": "./src/dart.ts"
+  }
+}

@@ -8,13 +8,17 @@ const _publishSubject = "cloud.to.user.user1.organization.org1.services.watch";
 const _listenSubject = "cloud.from.organization.org1.services.watch";
 final _organizationId = skir.recordId("organization:org1");
 
-Service _service(String id, {String? name, int revision = 1}) => Service(
-  serviceId: skir.recordId("service:$id"),
-  revision: revision,
-  name: name ?? "Service $id",
-  role: HostServiceRole(version: "1"),
-  createdAt: DateTime.utc(2025),
-);
+skir.Service _service(String id, {String? name, int revision = 1}) =>
+    skir.Service(
+      serviceId: skir.recordId("service:$id"),
+      revision: revision,
+      name: name ?? "Service $id",
+      role: skir.ServiceRole.createHost(version: "1"),
+      createdAt: DateTime.utc(2025),
+      organization: null,
+      registration: null,
+      state: null,
+    );
 
 Future<void> _waitFor(bool Function() condition) async {
   await Future.doWhile(() async {
@@ -48,8 +52,8 @@ class _Harness {
 
   final FakeNatsClient nats = FakeNatsClient();
   late final ProviderContainer container;
-  late final ProviderSubscription<AsyncValue<List<Service>>> subscription;
-  AsyncValue<List<Service>> value = const AsyncLoading();
+  late final ProviderSubscription<AsyncValue<List<skir.Service>>> subscription;
+  AsyncValue<List<skir.Service>> value = const AsyncLoading();
 
   Future<void> start() => _waitFor(
     () =>
@@ -57,7 +61,9 @@ class _Harness {
         nats.subscriptionSubjects.contains(_listenSubject),
   );
 
-  Future<List<Service>> emit(skir.OrganizationServicesChanged event) async {
+  Future<List<skir.Service>> emit(
+    skir.OrganizationServicesChanged event,
+  ) async {
     final previous = value;
     nats.emitMessageOnSubject(
       _listenSubject,
@@ -67,7 +73,7 @@ class _Harness {
     return await container.read(canonicalServicesProvider.future);
   }
 
-  Future<List<Service>> emitWithoutChange(
+  Future<List<skir.Service>> emitWithoutChange(
     skir.OrganizationServicesChanged event,
   ) async {
     nats.emitMessageOnSubject(
@@ -132,17 +138,15 @@ void main() {
     test("reduces replacement, update, and remove", () async {
       expect(
         await harness.emit(
-          skir.OrganizationServicesChanged.wrapReplace([
-            _service("one").toSkir(),
-          ]),
+          skir.OrganizationServicesChanged.wrapReplace([_service("one")]),
         ),
         [_service("one")],
       );
       expect(
         await harness.emit(
           skir.OrganizationServicesChanged.wrapReplace([
-            _service("one").toSkir(),
-            _service("two").toSkir(),
+            _service("one"),
+            _service("two"),
           ]),
         ),
         [_service("one"), _service("two")],
@@ -150,7 +154,7 @@ void main() {
       final updated = _service("one", name: "Updated", revision: 2);
       expect(
         await harness.emit(
-          skir.OrganizationServicesChanged.wrapUpdate(updated.toSkir()),
+          skir.OrganizationServicesChanged.wrapUpdate(updated),
         ),
         [updated, _service("two")],
       );
@@ -169,15 +173,16 @@ void main() {
       final previousErrorHandler = FlutterError.onError;
       FlutterError.onError = errors.add;
       addTearDown(() => FlutterError.onError = previousErrorHandler);
-      final current = _service("one", name: "Current", revision: 3).copyWith(
-        registration: ServiceRegistration(
-          token: "sensitive-token",
-          expiresAt: DateTime.utc(2027),
-        ),
-      );
+      final current =
+          (_service("one", name: "Current", revision: 3).toMutable()
+                ..registration = skir.ServiceRegistration(
+                  token: "sensitive-token",
+                  expiresAt: DateTime.utc(2027),
+                ))
+              .toFrozen();
       expect(
         await harness.emit(
-          skir.OrganizationServicesChanged.wrapReplace([current.toSkir()]),
+          skir.OrganizationServicesChanged.wrapReplace([current]),
         ),
         [current],
       );
@@ -185,7 +190,7 @@ void main() {
       expect(
         await harness.emitWithoutChange(
           skir.OrganizationServicesChanged.wrapUpdate(
-            _service("one", name: "Older", revision: 2).toSkir(),
+            _service("one", name: "Older", revision: 2),
           ),
         ),
         [current],
@@ -193,7 +198,7 @@ void main() {
       expect(
         await harness.emitWithoutChange(
           skir.OrganizationServicesChanged.wrapUpdate(
-            _service("one", name: "Divergent", revision: 3).toSkir(),
+            _service("one", name: "Divergent", revision: 3),
           ),
         ),
         [current],
@@ -208,25 +213,27 @@ void main() {
     });
 
     test("accepts equal revision heartbeat state updates", () async {
-      final current = _service("one").copyWith(
-        state: ServiceState(
-          status: ServiceStateStatus.offline,
-          lastSeen: DateTime.utc(2025, 1, 1),
-        ),
-      );
-      final heartbeat = current.copyWith(
-        state: ServiceState(
-          status: ServiceStateStatus.online,
-          lastSeen: DateTime.utc(2025, 1, 1, 0, 1),
-        ),
-      );
+      final current =
+          (_service("one").toMutable()
+                ..state = skir.ServiceState(
+                  status: skir.ServiceStatus.offline,
+                  lastSeen: DateTime.utc(2025, 1, 1),
+                ))
+              .toFrozen();
+      final heartbeat =
+          (current.toMutable()
+                ..state = skir.ServiceState(
+                  status: skir.ServiceStatus.online,
+                  lastSeen: DateTime.utc(2025, 1, 1, 0, 1),
+                ))
+              .toFrozen();
       await harness.emit(
-        skir.OrganizationServicesChanged.wrapReplace([current.toSkir()]),
+        skir.OrganizationServicesChanged.wrapReplace([current]),
       );
 
       expect(
         await harness.emit(
-          skir.OrganizationServicesChanged.wrapUpdate(heartbeat.toSkir()),
+          skir.OrganizationServicesChanged.wrapUpdate(heartbeat),
         ),
         [heartbeat],
       );
@@ -243,8 +250,8 @@ void main() {
   test("delayed reconnect snapshot preserves confirmed facts and replacement membership", () async {
     final harness = _Harness(
       initialReply: skir.WatchOrganizationServicesResponse.wrapList([
-        _service("one").toSkir(),
-        _service("removed").toSkir(),
+        _service("one"),
+        _service("removed"),
       ]),
     );
     addTearDown(harness.dispose);
@@ -265,9 +272,7 @@ void main() {
     await _waitFor(() => harness.value.value?.first.revision == 3);
     reply.complete(
       skir.WatchOrganizationServicesResponse.serializer.toBytes(
-        skir.WatchOrganizationServicesResponse.wrapList([
-          _service("one").toSkir(),
-        ]),
+        skir.WatchOrganizationServicesResponse.wrapList([_service("one")]),
       ),
     );
     await _waitFor(() => harness.value.value?.length == 1);
@@ -275,7 +280,7 @@ void main() {
     expect(
       await harness.emit(
         skir.OrganizationServicesChanged.wrapUpdate(
-          _service("one", name: "Later event", revision: 4).toSkir(),
+          _service("one", name: "Later event", revision: 4),
         ),
       ),
       [_service("one", name: "Later event", revision: 4)],
@@ -283,7 +288,7 @@ void main() {
     expect(
       await harness.emit(
         skir.OrganizationServicesChanged.wrapReplace([
-          _service("removed", revision: 1).toSkir(),
+          _service("removed", revision: 1),
         ]),
       ),
       [_service("removed", revision: 1)],
@@ -304,9 +309,7 @@ void main() {
     await _waitFor(() => harness.value.value?.single.revision == 2);
     reply.complete(
       skir.WatchOrganizationServicesResponse.serializer.toBytes(
-        skir.WatchOrganizationServicesResponse.wrapList([
-          _service("one").toSkir(),
-        ]),
+        skir.WatchOrganizationServicesResponse.wrapList([_service("one")]),
       ),
     );
     await pumpEventQueue();

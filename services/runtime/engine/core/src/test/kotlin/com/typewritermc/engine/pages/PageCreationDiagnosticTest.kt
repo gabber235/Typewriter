@@ -3,29 +3,40 @@ package com.typewritermc.engine.pages
 import com.typewritermc.authoring.CompletenessResult
 import com.typewritermc.authoring.DefaultInitializationRuntime
 import com.typewritermc.authoring.HierarchyPathDefinition
-import com.typewritermc.authoring.InitializationRequest
-import com.typewritermc.authoring.PathSegment
-import com.typewritermc.authoring.PreparationTarget
-import com.typewritermc.authoring.PreparedContent
-import com.typewritermc.authoring.TypeSelection
 import com.typewritermc.authoring.complete
-import com.typewritermc.checking.CatalogGeneration
+import com.typewritermc.authoring.fieldMap
+import com.typewritermc.authoring.record
 import com.typewritermc.discovery.GeneratedProviderIndex
 import com.typewritermc.discovery.GeneratedProviderKind
 import com.typewritermc.discovery.GeneratedTypeProvider
-import com.typewritermc.types.DataValue
 import com.typewritermc.types.FactoryNativeBindingRegistry
-import com.typewritermc.types.LinkTarget
 import com.typewritermc.types.NativeBindingFactory
 import com.typewritermc.types.ResourceId
 import com.typewritermc.types.StandardTypes
-import com.typewritermc.types.TypeDefinition
-import com.typewritermc.types.TypeUse
 import com.typewritermc.types.catalog.DefaultCheckedCatalog
 import com.typewritermc.types.catalog.Resolution
-import com.typewritermc.types.catalog.ResolvedRepresentation
+import com.typewritermc.types.endpoint
+import com.typewritermc.types.fieldMap
+import com.typewritermc.types.fields
+import com.typewritermc.types.integer
+import com.typewritermc.types.named
+import com.typewritermc.types.payload
+import com.typewritermc.types.record
+import com.typewritermc.types.toSkir
+import com.typewritermc.types.use
 import de.infix.testBalloon.framework.core.testSuite
 import io.kotest.matchers.shouldBe
+import skirout.editor.v1.catalog.PreparationTarget
+import skirout.editor.v1.catalog.PreparedContent
+import skirout.editor.v1.catalog.ValuePreparationRequest
+import skirout.editor.v1.type_catalog.CatalogGeneration
+import skirout.editor.v1.type_catalog.DataValue
+import skirout.editor.v1.type_catalog.LinkTarget
+import skirout.editor.v1.type_catalog.PathSegment
+import skirout.editor.v1.type_catalog.ResolvedRepresentation
+import skirout.editor.v1.type_catalog.TypeDefinition
+import skirout.editor.v1.type_catalog.TypeSelection
+import skirout.editor.v1.type_catalog.TypeUse
 import java.math.BigInteger
 import java.util.Collections
 
@@ -51,66 +62,69 @@ val PageCreationDiagnosticTest by testSuite {
                 .filter { it.kind == GeneratedProviderKind.NativeBinding }
                 .map { instance(it.providerClass) as NativeBindingFactory }
                 .distinctBy(NativeBindingFactory::provider)
-        val generation = CatalogGeneration("page creation diagnosis")
+        val generation = CatalogGeneration(value = "page creation diagnosis")
         val catalog = DefaultCheckedCatalog(generation, StandardTypes.definitions + definitions)
         val bindings = FactoryNativeBindingRegistry(catalog, factories)
         val prepared =
             DefaultInitializationRuntime(catalog, bindings).prepareNow(
-                InitializationRequest(
+                ValuePreparationRequest(
                     catalog = generation,
-                    target = PreparationTarget.Record(TypeSelection.Complete(SequencePageDefinition.use)),
-                    supplied =
-                        DataValue.Record(
+                    target = PreparationTarget.RecordWrapper(TypeSelection.CompleteWrapper(SequencePageDefinition.use)),
+                    suppliedValue =
+                        DataValue.record(
                             mapOf(
-                                "chapter" to DataValue.Named(HierarchyPathDefinition.use, DataValue.StringValue("")),
-                                "priority" to DataValue.Integer(BigInteger.ZERO),
+                                "chapter" to DataValue.named(HierarchyPathDefinition.use, DataValue.StringValueWrapper("")),
+                                "priority" to DataValue.integer(BigInteger.ZERO),
                             ),
                         ),
                 ),
             )
-        val fields = (prepared.content as PreparedContent.Record).record.fields
-        fields.filterValues { it == DataValue.Unfilled }.keys shouldBe setOf("book", "name", "elements")
+        val fields = (prepared.content as PreparedContent.RecordWrapper).record.fieldMap
+        fields.filterValues { it == DataValue.UNFILLED }.keys shouldBe setOf("book", "name", "elements")
         prepared.findings.map { it.code } shouldBe listOf("unfinished_constructor_input")
-        val page = (catalog.resolve(SequencePageDefinition.use) as Resolution.Ready).value
+        val page = (catalog.resolve(SequencePageDefinition.use.use) as Resolution.Ready).value
         val bookType =
             page.schema.fields
                 .single { it.key == "book" }
                 .type
         val bookSchema = (catalog.resolve(bookType) as Resolution.Ready).value
-        val endpoint = (bookSchema.schema.representation as ResolvedRepresentation.Link).endpoint
+        val endpoint = (bookSchema.schema.representation as ResolvedRepresentation.LinkWrapper).value.endpoint
         val connected =
-            DataValue.Named(
+            DataValue.named(
                 SequencePageDefinition.use,
-                DataValue.Record(
+                DataValue.record(
                     fields +
                         (
                             "book" to
-                                DataValue.Named(
-                                    bookType as TypeUse.Named,
-                                    DataValue.Link(endpoint, LinkTarget(ResourceId("book"), null)),
+                                DataValue.named(
+                                    (bookType as TypeUse.NamedWrapper).value,
+                                    DataValue.createLink(
+                                        endpoint = endpoint,
+                                        target = LinkTarget(resource = ResourceId("book").toSkir(), opposite = null),
+                                    ),
                                 )
                         ),
                 ),
             )
         val unfinished = page.complete(connected) as CompletenessResult.Unfinished
         unfinished.locations.map { location -> location.path.segments } shouldBe
-            listOf(listOf(PathSegment.Field("name")), listOf(PathSegment.Field("elements")))
-        val connectedFields = (connected.payload as DataValue.Record).fields
+            listOf(listOf(PathSegment.createField(name = "name")), listOf(PathSegment.createField(name = "elements")))
+        val connectedFields = (connected.payload as DataValue.RecordWrapper).value.fieldMap
         val preparedWithBook =
             DefaultInitializationRuntime(catalog, bindings).prepareNow(
-                InitializationRequest(
+                ValuePreparationRequest(
                     catalog = generation,
-                    target = PreparationTarget.Record(TypeSelection.Complete(SequencePageDefinition.use)),
-                    supplied = DataValue.Record(connectedFields.filterKeys { it in setOf("book", "chapter", "priority") }),
+                    target = PreparationTarget.RecordWrapper(TypeSelection.CompleteWrapper(SequencePageDefinition.use)),
+                    suppliedValue = DataValue.record(connectedFields.filterKeys { it in setOf("book", "chapter", "priority") }),
                 ),
             )
-        val withBookFields = (preparedWithBook.content as PreparedContent.Record).record.fields
-        withBookFields.filterValues { it == DataValue.Unfilled }.keys shouldBe emptySet()
+        val withBookFields = (preparedWithBook.content as PreparedContent.RecordWrapper).record.fieldMap
+        withBookFields.filterValues { it == DataValue.UNFILLED }.keys shouldBe emptySet()
         preparedWithBook.findings shouldBe emptyList()
-        withBookFields.getValue("name") shouldBe DataValue.StringValue("")
+        withBookFields.getValue("name") shouldBe DataValue.StringValueWrapper("")
         (
             page.complete(
-                DataValue.Named(SequencePageDefinition.use, DataValue.Record(withBookFields)),
+                DataValue.named(SequencePageDefinition.use, DataValue.record(withBookFields)),
             ) is CompletenessResult.Complete
         ) shouldBe
             true

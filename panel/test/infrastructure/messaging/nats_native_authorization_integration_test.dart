@@ -5,13 +5,9 @@ import "package:typewriter_panel/typewriter_panel.dart";
 
 const _currentSeed =
     "SUAKYRHVIOREXV7EUZTBHUHL7NUMHPMAS7QMDU3GTIUWEI5LDNOXD43IZY";
-const _rejectedSeed =
-    "SUAGJBS6P4WSOIX62RM2QTDD6DXY7NG2HQQ5NXS2YBG5YL5CZJ4VVM7IFY";
-const _acceptedSeed =
-    "SUAL3B2PIGI63SRQWPLVEFEL6HJSIFSTU3WEJIXVT6BFNXBDUOBRXGWCXQ";
+const _retrySeed = "SUAL3B2PIGI63SRQWPLVEFEL6HJSIFSTU3WEJIXVT6BFNXBDUOBRXGWCXQ";
 const _currentSession = "0123456789abcdef0123456789abcdef";
-const _rejectedSession = "11111111111111111111111111111111";
-const _acceptedSession = "22222222222222222222222222222222";
+const _retrySession = "22222222222222222222222222222222";
 const _stream = "TYPEWRITER_MEMBERSHIP";
 const _filter = "cloud.from.user.fixture-user.organizations.changed";
 const _snapshotSubject = "cloud.to.user.fixture-user.organization.watch";
@@ -72,6 +68,38 @@ Future<void> _expectConsumerAbsent(JetStreamConsumerManager consumers) async {
   }
 }
 
+/// Waits up to ten seconds for readiness, failing on terminal failure or
+/// closure.
+Future<void> _waitConnected(NatsClient client) async {
+  final connected = Completer<void>();
+  void accept(NatsConnectionState value) {
+    if (connected.isCompleted) return;
+    switch (value) {
+      case NatsConnected():
+        connected.complete();
+      case NatsFailed(:final failure):
+        connected.completeError(failure);
+      case NatsClosed():
+        connected.completeError(
+          const NatsClientException(
+            kind: NatsFailureKind.closed,
+            message: "Fixture connection closed",
+          ),
+        );
+      case NatsConnecting() || NatsReconnecting():
+        break;
+    }
+  }
+
+  final listener = client.connectionStateChanges.listen(accept);
+  accept(client.connectionState);
+  try {
+    await connected.future.timeout(const Duration(seconds: 10));
+  } finally {
+    await listener.cancel();
+  }
+}
+
 Future<NatsCoreClient> _connectClient(String serverUrl) async {
   final client = NatsCoreClient.connect(
     NatsClientConfiguration(
@@ -83,7 +111,7 @@ Future<NatsCoreClient> _connectClient(String serverUrl) async {
       connectionSession: _currentSession,
     ),
   );
-  await client.waitConnected();
+  await _waitConnected(client);
   return client;
 }
 
@@ -122,16 +150,6 @@ void main() {
 
       final client = await _connectClient(serverUrl);
       addTearDown(client.close);
-      final permissions = await client.queryPermissions();
-      expect(permissions.publish, contains(r"$SYS.REQ.USER.INFO"));
-      expect(
-        permissions.subscribe,
-        contains("_INBOX.fixture-user.$_currentSession.*"),
-      );
-      expect(
-        permissions.publish.followedBy(permissions.subscribe),
-        everyElement(isNot(contains(">"))),
-      );
 
       await consumers.createPull(
         _stream,
@@ -274,7 +292,7 @@ void main() {
         persistentOpener: (stream, consumer, filter) async =>
             _FailingCleanupSubscription(),
       );
-      await cleanupFailureClient.waitConnected();
+      await _waitConnected(cleanupFailureClient);
       await cleanupFailureClient.subscribePersistent(
         _stream,
         "TW_cleanup_failure",
@@ -288,7 +306,7 @@ void main() {
   );
 
   test(
-    "native permission admission preserves and then replaces the session",
+    "native retry replaces the session and rebinds retained repositories",
     () async {
       final admin = await NatsConnection.connect(
         NatsOptions(
@@ -302,8 +320,7 @@ void main() {
       addTearDown(admin.close);
       final credentials = <(String, String)>[
         (_currentSeed, _currentSession),
-        (_rejectedSeed, _rejectedSession),
-        (_acceptedSeed, _acceptedSession),
+        (_retrySeed, _retrySession),
       ];
       final clients = <NatsCoreClient>[];
       final container = ProviderContainer(
@@ -358,12 +375,11 @@ void main() {
       });
 
       final current = container.read(natsProvider);
-      final existingRealm = skir.recordId("realm_instance:fixture-realm");
-      final addedRealm = skir.recordId("realm_instance:fixture-added-realm");
+      final realm = skir.recordId("realm_instance:fixture-realm");
       final organization = skir.recordId("organization:fixture-organization");
       final repositories = container.read(resourceRepositoriesProvider);
       expect(repositories.transport.client, same(current));
-      final repository = repositories.authoring(organization, existingRealm);
+      final repository = repositories.authoring(organization, realm);
       final changes = <skir.AuthoringChanged>[];
       var invalidations = 0;
       final changesSubscription = repository.changes.listen(changes.add);
@@ -374,21 +390,25 @@ void main() {
       addTearDown(invalidationSubscription.cancel);
       final eventSubject = AuthoringChangedRouteEvent.subject(
         organizationId: organization,
-        realmId: existingRealm,
+        realmId: realm,
       );
+      Future<void> publishChange(String generation) async {
+        await admin.publish(
+          eventSubject,
+          skir.AuthoringChanged.serializer.toBytes(
+            skir.AuthoringChanged(
+              generation: skir.CatalogGeneration(value: generation),
+            ),
+          ),
+        );
+        await admin.flush();
+      }
+
       await repository.start();
       final invalidationsBeforeInitialDelivery = invalidations;
-      await admin.publish(
-        eventSubject,
-        skir.AuthoringChanged.serializer.toBytes(
-          skir.AuthoringChanged(
-            generation: skir.CatalogGeneration(value: "catalog:initial"),
-          ),
-        ),
-      );
-      await admin.flush();
+      await publishChange("catalog:initial");
       await _waitUntil(
-        "delivery before permission admission",
+        "delivery on the first session",
         () =>
             changes.length == 1 ||
             invalidations > invalidationsBeforeInitialDelivery,
@@ -398,86 +418,30 @@ void main() {
         invalidationsBeforeInitialDelivery,
         reason: "The retained repository rejected the initial event payload",
       );
-      await container.read(natsProvider.notifier).ensureRealmsAdmitted({
-        existingRealm,
-      });
       expect(current.connectionSession, _currentSession);
 
-      await expectLater(
-        container.read(natsProvider.notifier).ensureRealmsAdmitted({
-          existingRealm,
-          addedRealm,
-        }),
-        throwsA(
-          isA<NatsClientException>().having(
-            (error) => error.kind,
-            "kind",
-            NatsFailureKind.permission,
-          ),
-        ),
-      );
-      expect(container.read(natsProvider), same(current));
-      expect(current.connectionState, isA<NatsConnected>());
-      expect((await current.queryPermissions()).publish, isNotEmpty);
-      final invalidationsBeforeCurrentDelivery = invalidations;
-      await admin.publish(
-        eventSubject,
-        skir.AuthoringChanged.serializer.toBytes(
-          skir.AuthoringChanged(
-            generation: skir.CatalogGeneration(value: "catalog:current"),
-          ),
-        ),
-      );
-      await admin.flush();
-      await _waitUntil(
-        "delivery on the retained current repository",
-        () =>
-            changes.length == 2 ||
-            invalidations > invalidationsBeforeCurrentDelivery,
-      );
-      expect(
-        invalidations,
-        invalidationsBeforeCurrentDelivery,
-        reason: "The retained repository rejected the current event payload",
-      );
-
-      final invalidationsBeforeReplacement = invalidations;
-      await container.read(natsProvider.notifier).ensureRealmsAdmitted({
-        existingRealm,
-        addedRealm,
-      });
-      final accepted = container.read(natsProvider);
-      expect(accepted, same(clients.last));
-      expect(accepted.connectionSession, _acceptedSession);
+      final invalidationsBeforeRetry = invalidations;
+      await container.read(natsProvider.notifier).retry();
+      final retried = container.read(natsProvider);
+      expect(retried, same(clients.last));
+      expect(retried.connectionSession, _retrySession);
       await _waitUntil(
         "closure of the replaced connection",
         () => current.connectionState is NatsClosed,
       );
       await _waitUntil(
         "invalidation after retained repository rebind",
-        () => invalidations > invalidationsBeforeReplacement,
+        () => invalidations > invalidationsBeforeRetry,
       );
-      expect(
-        repositories.authoring(organization, existingRealm),
-        same(repository),
-      );
-      await admin.publish(
-        eventSubject,
-        skir.AuthoringChanged.serializer.toBytes(
-          skir.AuthoringChanged(
-            generation: skir.CatalogGeneration(value: "catalog:accepted"),
-          ),
-        ),
-      );
-      await admin.flush();
+      expect(repositories.authoring(organization, realm), same(repository));
+      await publishChange("catalog:retried");
       await _waitUntil(
         "delivery on the rebound retained repository",
-        () => changes.length == 3,
+        () => changes.length == 2,
       );
       expect(changes.map((change) => change.generation.value), [
         "catalog:initial",
-        "catalog:current",
-        "catalog:accepted",
+        "catalog:retried",
       ]);
     },
     skip: skipReason,
@@ -485,7 +449,7 @@ void main() {
   );
 
   test(
-    "native resource routes admit only the finite realm grants",
+    "native resource routes reach every realm of the organization only",
     () async {
       final admin = await NatsConnection.connect(
         NatsOptions(
@@ -498,17 +462,20 @@ void main() {
       );
       addTearDown(admin.close);
       const suffixes = ["operations.resolve", "actions.prepare"];
-      const realms = [
-        "fixture-realm",
-        "fixture-added-realm",
-        "fixture-ungranted-realm",
+      // A realm created after connect is reachable without a new connection.
+      const reachable = [
+        "service.to.fixture-realm.organization.fixture-organization.realm",
+        "service.to.fixture-added-realm.organization.fixture-organization.realm",
       ];
-      for (final realm in realms) {
+      const denied = [
+        "service.to.fixture-realm.organization.other-organization.realm",
+        "service.to.fixture-realm.organization.fixture-organization.other",
+      ];
+      for (final prefix in [...reachable, ...denied]) {
         for (final suffix in suffixes) {
-          final subject =
-              "service.to.$realm.organization.fixture-organization."
-              "realm.editor.resources.$suffix";
-          final responder = await admin.subscribe(subject);
+          final responder = await admin.subscribe(
+            "$prefix.editor.resources.$suffix",
+          );
           addTearDown(responder.unsubscribe);
           final listener = responder.messages.listen((message) {
             unawaited(admin.reply(message, message.payload));
@@ -517,53 +484,38 @@ void main() {
         }
       }
       await admin.flush();
-      final cases = [
-        ("current", _currentSeed, _currentSession, {"fixture-realm"}),
-        ("rejected", _rejectedSeed, _rejectedSession, {"fixture-realm"}),
-        (
-          "accepted",
-          _acceptedSeed,
-          _acceptedSession,
-          {"fixture-realm", "fixture-added-realm"},
+      final connection = await NatsConnection.connect(
+        NatsOptions(
+          servers: [NatsServer.parse(serverUrl)],
+          authentication: NatsAuthentication.nkey(_currentSeed),
+          requestInboxPrefix: "_INBOX.fixture-user.$_currentSession",
         ),
-      ];
-      for (final fixture in cases) {
-        final connection = await NatsConnection.connect(
-          NatsOptions(
-            servers: [NatsServer.parse(serverUrl)],
-            authentication: NatsAuthentication.nkey(fixture.$2),
-            requestInboxPrefix: "_INBOX.fixture-user.${fixture.$3}",
-          ),
-        );
-        addTearDown(connection.close);
-        for (final realm in realms) {
-          for (final suffix in suffixes) {
-            final subject =
-                "service.to.$realm.organization.fixture-organization."
-                "realm.editor.resources.$suffix";
-            if (fixture.$4.contains(realm)) {
-              final response = await connection.request(subject, const [42]);
-              expect(response.payload, [42], reason: "${fixture.$1} $subject");
-            } else {
-              final denied = connection.events
-                  .firstWhere((event) {
-                    if (event is! NatsServerError) return false;
-                    final error = event.error;
-                    return error is NatsPermissionException &&
-                        error.operation == NatsPermissionOperation.publish &&
-                        error.subject == subject;
-                  })
-                  .timeout(const Duration(seconds: 10));
-              await connection.publish(subject, const [42]);
-              await connection.flush();
-              final event = await denied;
-              expect(
-                event,
-                isA<NatsServerError>(),
-                reason: "${fixture.$1} must not publish $subject",
-              );
-            }
-          }
+      );
+      addTearDown(connection.close);
+      for (final suffix in suffixes) {
+        for (final prefix in reachable) {
+          final subject = "$prefix.editor.resources.$suffix";
+          final response = await connection.request(subject, const [42]);
+          expect(response.payload, [42], reason: subject);
+        }
+        for (final prefix in denied) {
+          final subject = "$prefix.editor.resources.$suffix";
+          final rejection = connection.events
+              .firstWhere((event) {
+                if (event is! NatsServerError) return false;
+                final error = event.error;
+                return error is NatsPermissionException &&
+                    error.operation == NatsPermissionOperation.publish &&
+                    error.subject == subject;
+              })
+              .timeout(const Duration(seconds: 10));
+          await connection.publish(subject, const [42]);
+          await connection.flush();
+          expect(
+            await rejection,
+            isA<NatsServerError>(),
+            reason: "must not publish $subject",
+          );
         }
       }
     },

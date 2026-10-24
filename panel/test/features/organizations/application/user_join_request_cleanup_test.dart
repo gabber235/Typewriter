@@ -5,10 +5,10 @@ import "package:typewriter_panel/typewriter_panel.dart";
 
 void main() {
   group("cleanupExpiredRequests", () {
-    UserJoinRequest createRequest({
+    skir.UserJoinRequest createRequest({
       required String id,
       required DateTime expiresAt,
-    }) => UserJoinRequest(
+    }) => skir.UserJoinRequest(
       requestId: skir.recordId("request_to_join:$id"),
       organizationId: skir.recordId("organization:$id"),
       organizationName: "Organization $id",
@@ -102,10 +102,10 @@ void main() {
   });
 }
 
-Future<List<UserJoinRequest>> readUserJoinRequests(
+Future<List<skir.UserJoinRequest>> readUserJoinRequests(
   ProviderContainer container,
 ) async {
-  final result = Completer<List<UserJoinRequest>>();
+  final result = Completer<List<skir.UserJoinRequest>>();
   final subscription = container.listen(userJoinRequestsProvider, (
     previous,
     next,
@@ -129,10 +129,10 @@ Future<List<UserJoinRequest>> readUserJoinRequests(
 class MockUserJoinRequestsNotifier extends UserJoinRequests {
   MockUserJoinRequestsNotifier(this.requests);
 
-  final List<UserJoinRequest> requests;
+  final List<skir.UserJoinRequest> requests;
 
   @override
-  Stream<List<UserJoinRequest>> build() async* {
+  Stream<List<skir.UserJoinRequest>> build() async* {
     yield requests;
   }
 }

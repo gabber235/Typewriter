@@ -1,15 +1,11 @@
 package com.typewritermc.realm.compiler
 
-import com.typewritermc.engine.CompilationRoot
 import com.typewritermc.realm.authoring.AuthoringView
-
-internal sealed interface CompilationStatusSelection {
-    data object All : CompilationStatusSelection
-
-    data class Supplied(
-        val roots: Set<CompilationRoot>,
-    ) : CompilationStatusSelection
-}
+import com.typewritermc.types.unknownVariant
+import skirout.editor.v1.compilation_root.CompilationRoot
+import skirout.editor.v1.compiled_content.CompilationStatusSelection
+import skirout.editor.v1.compiled_content.CompiledResourceState
+import skirout.editor.v1.type_catalog.PublicationId
 
 internal class CompiledRootStatuses(
     private val compilation: CompiledArtifactProducerRegistry,
@@ -18,21 +14,22 @@ internal class CompiledRootStatuses(
     suspend fun query(
         view: AuthoringView,
         selection: CompilationStatusSelection,
-    ): Map<CompilationRoot, RegisteredCompiledState> {
+    ): Map<CompilationRoot, CompiledResourceState> {
         val selected = results.selected()
         val available = selected?.outputs?.mapTo(linkedSetOf()) { output -> output.reference.root }.orEmpty()
         val roots =
             when (selection) {
-                CompilationStatusSelection.All -> compilation.roots(view) + available
-                is CompilationStatusSelection.Supplied -> selection.roots
+                CompilationStatusSelection.ALL_ROOTS -> compilation.roots(view) + available
+                is CompilationStatusSelection.SuppliedRootsWrapper -> selection.value
+                else -> unknownVariant(selection)
             }
         return roots
             .sortedWith(compareBy({ root -> root.projection.value }, { root -> root.resource.value }))
             .associateWithTo(linkedMapOf()) { root ->
                 if (root in available) {
-                    RegisteredCompiledState.Active(requireNotNull(selected).publication)
+                    CompiledResourceState.ActiveWrapper(PublicationId(value = requireNotNull(selected).publication.value))
                 } else {
-                    RegisteredCompiledState.NotCompiled
+                    CompiledResourceState.NOT_COMPILED
                 }
             }
     }

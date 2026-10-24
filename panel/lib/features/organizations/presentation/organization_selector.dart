@@ -1,3 +1,5 @@
+import "package:typewriter_panel/infrastructure/protocols/skir/skir.dart"
+    as skir;
 import "package:typewriter_panel/typewriter_panel.dart";
 
 /// Workspace switcher backed by the user's organization projection.
@@ -13,7 +15,7 @@ class OrganizationSelector extends HookConsumerWidget {
     final organizationsAsync = ref.watch(organizationsProvider);
     final selectedOrgAsync = ref.watch(organizationProvider);
 
-    return SelectorPopupWithSelection<OrganizationData>(
+    return SelectorPopupWithSelection<skir.Organization>(
       itemsAsync: organizationsAsync,
       selectedAsync: selectedOrgAsync,
       name: "organizations",
@@ -52,9 +54,9 @@ class _OrganizationMenuContent extends HookConsumerWidget {
     required this.onDismiss,
   });
 
-  final List<OrganizationData> organizations;
-  final OrganizationData? selectedOrganization;
-  final void Function(OrganizationData) onDismiss;
+  final List<skir.Organization> organizations;
+  final skir.Organization? selectedOrganization;
+  final void Function(skir.Organization) onDismiss;
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -116,8 +118,8 @@ class _OrganizationsList extends StatelessWidget {
     required this.onSelect,
   });
 
-  final List<OrganizationData> organizations;
-  final void Function(OrganizationData) onSelect;
+  final List<skir.Organization> organizations;
+  final void Function(skir.Organization) onSelect;
 
   @override
   Widget build(BuildContext context) {
@@ -164,7 +166,7 @@ class _OrganizationActions extends HookConsumerWidget {
     required this.onDismiss,
   });
 
-  final OrganizationData organization;
+  final skir.Organization organization;
   final VoidCallback onDismiss;
 
   @override

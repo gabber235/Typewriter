@@ -41,10 +41,8 @@ use wasmcloud_utils::{
         Permissions,
     },
     skir_client::UnrecognizedValues::Drop,
-    transport_routes::{
-        InternalComponentScope, PanelPermissionResolveRoute, ServicesPermissionResolveRoute,
-        request_route,
-    },
+    transport::{InternalComponentScope, request_route},
+    transport_routes::{PanelPermissionResolveRoute, ServicesPermissionResolveRoute},
     wasmcloud::messaging::{core_handler::Guest, reply, types},
 };
 
@@ -337,7 +335,16 @@ async fn create_user_claims(
         }
     }
 
-    let response = request_permissions(jwt, issuer.id.as_str(), qualifier).await?;
+    // A resolver failure is an authorization failure, never an empty grant.
+    let response = match request_permissions(jwt, issuer.id.as_str(), qualifier).await? {
+        GetEntityPermissionResponse::Granted(grant) => *grant,
+        GetEntityPermissionResponse::InternalError(_) | GetEntityPermissionResponse::Unknown(_) => {
+            return Err(wasi_error!(
+                "auth-permissions-unavailable",
+                "Permission resolution failed"
+            ));
+        }
+    };
     main_attribute!(
         "auth.permissions.tags.count" = response.tags.len() as i64,
         "auth.permissions.publish.allow.count" = response.permissions.publish.allow.len() as i64,

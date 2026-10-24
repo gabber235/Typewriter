@@ -25,8 +25,7 @@ use wasmcloud_utils::{
     },
     skir_utils::RecordIdKeyIdentity,
     skir_variant,
-    transport_routes::ServiceScope,
-    wasmcloud::messaging::types::NatsMessage,
+    transport::ServiceScope,
 };
 
 #[derive(Debug, Deserialize)]
@@ -56,7 +55,6 @@ enum ReportExecutionOutcome {
 /// same desired state. The query returns joined resource views, which preserves owner and Realm
 /// context for the runtime without exposing database records directly.
 pub async fn handle_watch(
-    _msg: NatsMessage,
     scope: ServiceScope,
     _request: WatchHostExecutionRequest,
 ) -> Result<WatchHostExecutionResponse, otel_wasi::Error> {
@@ -92,7 +90,7 @@ pub async fn handle_watch(
         ));
     };
     Ok(skir_variant!(WatchHostExecutionResponse::Desired {
-        topology_revision: host.topology_revision.desired,
+        topology_revision: host.topology_revision.0.desired,
         realm: desired.realm.map(Into::into),
         engine: desired.engine.map(Into::into),
     }))
@@ -102,11 +100,10 @@ pub async fn handle_watch(
 /// Applies runtime observations for the requested topology revision.
 ///
 /// Reports for a different revision are rejected without changing child or host state. For the
-/// current revision, only supplied child observations are written. The host becomes `ACTIVE`
+/// current revision, only supplied child observations are written. The host becomes `active`
 /// only when this report includes an active observation for every assigned child. Failed, rolled back, or drifted child
 /// states determine the corresponding host status; otherwise it remains reconciling.
 pub async fn handle_report(
-    _msg: NatsMessage,
     scope: ServiceScope,
     request: ReportHostExecutionRequest,
 ) -> Result<ReportHostExecutionResponse, otel_wasi::Error> {
@@ -178,33 +175,33 @@ pub async fn handle_report(
             };
             LET $complete = (
                 $realm = NONE
-                OR ($realm_state != NONE AND $realm_state != NULL AND $realm_state.status = 'ACTIVE')
+                OR ($realm_state != NONE AND $realm_state != NULL AND $realm_state.status = 'active')
             ) AND (
                 $engine = NONE
-                OR ($engine_state != NONE AND $engine_state != NULL AND $engine_state.status = 'ACTIVE')
+                OR ($engine_state != NONE AND $engine_state != NULL AND $engine_state.status = 'active')
             );
             LET $failed = (
-                $realm_state != NONE AND $realm_state != NULL AND $realm_state.status = 'FAILED'
+                $realm_state != NONE AND $realm_state != NULL AND $realm_state.status = 'failed'
             ) OR (
-                $engine_state != NONE AND $engine_state != NULL AND $engine_state.status = 'FAILED'
+                $engine_state != NONE AND $engine_state != NULL AND $engine_state.status = 'failed'
             );
             LET $drifted = (
                 $realm_state != NONE
                 AND $realm_state != NULL
-                AND $realm_state.status IN ['ROLLED_BACK', 'DRIFTED']
+                AND $realm_state.status IN ['rolled_back', 'drifted']
             ) OR (
                 $engine_state != NONE
                 AND $engine_state != NULL
-                AND $engine_state.status IN ['ROLLED_BACK', 'DRIFTED']
+                AND $engine_state.status IN ['rolled_back', 'drifted']
             );
             LET $host_status = IF $complete {
-                'ACTIVE'
+                'active'
             } ELSE IF $failed {
-                'FAILED'
+                'failed'
             } ELSE IF $drifted {
-                'DRIFTED'
+                'drifted'
             } ELSE {
-                'RECONCILING'
+                'reconciling'
             };
             LET $updated_host = UPDATE ONLY $host_id SET
                 topology_revision.applied = IF $complete {
@@ -304,7 +301,7 @@ async fn publish_report(
     };
     let organization_id = organization_id.key.raw_identity()?;
     wasmcloud_utils::transport_routes::OrganizationTopologyWatchRoute::delivery(
-        &wasmcloud_utils::transport_routes::OrganizationScope::try_from(organization_id)?,
+        &wasmcloud_utils::transport::OrganizationScope::try_from(organization_id)?,
     )
     .publish(OrganizationTopologyChanged::ObservationsReported(Box::new(
         observation,

@@ -248,7 +248,7 @@ _MapFixture _fixture() {
     );
   }
 
-  final snapshot = skir.EditorCatalogWireSnapshot.defaultInstance.toMutable()
+  final snapshot = skir.EditorCatalog.defaultInstance.toMutable()
     ..generation = skir.CatalogGeneration(value: "map:creation")
     ..types = [
       record("Owner", "entries", named("Entries")),

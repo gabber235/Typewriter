@@ -17,7 +17,7 @@ class MembersTab extends HookConsumerWidget {
     final theme = Theme.of(context);
     final membersAsync = ref.watch(organizationMembersProvider);
     final selectedIds = useState<Set<skir.RecordId>>({});
-    final liveMembers = useRef<List<OrganizationMember>>([]);
+    final liveMembers = useRef<List<skir.OrganizationMember>>([]);
     final isRemovingSelection = useRef(false);
 
     useEffect(() {

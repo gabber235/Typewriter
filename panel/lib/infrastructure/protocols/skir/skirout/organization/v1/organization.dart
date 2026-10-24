@@ -1293,6 +1293,8 @@ sealed class DeleteOrganizationResponse {
       );
 
   /// Create a 'invalid_record_id_error' variant wrapping around the given value.
+  ///
+  /// Record IDs from an unexpected table.
   factory DeleteOrganizationResponse.wrapInvalidRecordIdError(
     _lib_kernel_v1_errors.InvalidRecordIdError value,
   ) => DeleteOrganizationResponse_invalidRecordIdErrorWrapper._(value);
@@ -1339,7 +1341,7 @@ sealed class DeleteOrganizationResponse {
         "invalid_record_id_error",
         "wrapInvalidRecordIdError",
         _lib_kernel_v1_errors.InvalidRecordIdError.serializer,
-        "",
+        "Record IDs from an unexpected table.",
         DeleteOrganizationResponse_invalidRecordIdErrorWrapper._,
         (it) => it.value,
         ordinal: DeleteOrganizationResponse_kind

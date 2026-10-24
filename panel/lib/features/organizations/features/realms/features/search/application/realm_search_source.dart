@@ -12,7 +12,7 @@ const realmSearchResultType = SearchResultType(
 /// Commands separately gate opening a Realm on availability; retained results
 /// may remain visible while the projection reloads or reports an error.
 final class RealmsSearchSource(
-  final ValueListenable<AsyncValue<List<TopologyRealm>>> realms,
+  final ValueListenable<AsyncValue<List<skir.RealmInstance>>> realms,
 ) implements SearchSource {
   final _snapshotsController = BehaviorSubject<SearchSourceSnapshot>.seeded(
     SearchSourceSnapshot.loading(),
@@ -28,9 +28,9 @@ final class RealmsSearchSource(
     schema: Schema({"name": TypedField(.string)}),
   );
 
-  Map<String, TopologyRealm> get realmMap {
+  Map<String, skir.RealmInstance> get realmMap {
     return {
-      for (final realm in realms.value.value ?? <TopologyRealm>[])
+      for (final realm in realms.value.value ?? <skir.RealmInstance>[])
         realm.realmId.toSurrealQl(): realm,
     };
   }

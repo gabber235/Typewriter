@@ -17,13 +17,9 @@ import com.typewritermc.expression.target
 import com.typewritermc.expression.trim
 import com.typewritermc.presentation.AppliedPresentation
 import com.typewritermc.presentation.ContainerStyle
-import com.typewritermc.presentation.CrossAxisAlignment
 import com.typewritermc.presentation.IconOptions
 import com.typewritermc.presentation.Layout
-import com.typewritermc.presentation.MainAxisAlignment
-import com.typewritermc.presentation.PresentationAlignment
 import com.typewritermc.presentation.PresentationColor
-import com.typewritermc.presentation.PresentationInput
 import com.typewritermc.presentation.PresentationInsets
 import com.typewritermc.presentation.PresentationRadius
 import com.typewritermc.presentation.TextSizing
@@ -43,11 +39,13 @@ import com.typewritermc.types.Color
 import com.typewritermc.types.CoreIconSdkProvider
 import com.typewritermc.types.Icon
 import com.typewritermc.types.IconIconifyDefinition
-import com.typewritermc.types.IconIconifyExpressionsFactory
 import com.typewritermc.types.IconSvgDefinition
-import com.typewritermc.types.IconSvgExpressionsFactory
-import com.typewritermc.types.PresentationRole
 import com.typewritermc.types.Ref
+import com.typewritermc.types.use
+import skirout.editor.v1.catalog.PresentationRole
+import skirout.editor.v1.presentation.CrossAxisAlignment
+import skirout.editor.v1.presentation.MainAxisAlignment
+import skirout.editor.v1.presentation.PresentationAlignment
 
 object BookConfigurationProvider : BookConfiguration {
     override fun BookConfigurationScope.configure() {
@@ -169,12 +167,12 @@ object BookItemPresentation : BookPresentation {
         val accent = appearance.accent.asPresentationColor()
         val tags = bookTags()
         // The grid gives every item its whole cell; the volume keeps its size in the middle of it.
-        align(PresentationAlignment.Center) {
+        align(PresentationAlignment.CENTER) {
             focusRing(accent) {
                 hoverLift {
                     stackedCard(accent = accent, width = 175.0, height = 230.0) {
-                        column(main = MainAxisAlignment.SpaceBetween, cross = CrossAxisAlignment.Stretch) {
-                            fixed { align(PresentationAlignment.CenterStart) { icon(appearance.icon, IconOptions(size = 28.0)) } }
+                        column(main = MainAxisAlignment.SPACE_BETWEEN, cross = CrossAxisAlignment.STRETCH) {
+                            fixed { align(PresentationAlignment.CENTER_START) { icon(appearance.icon, IconOptions(size = 28.0)) } }
                             flexible {
                                 text(
                                     appearance.label,
@@ -217,7 +215,7 @@ private fun Layout.bookTagBars(
         ) {
             padding(PresentationInsets(4.0, 4.0, 4.0, 4.0)) {
                 repeated<Ref<BookTags.Book, Tag>, Ref<BookTags.Book, Tag>>(tags.take(literal(limit)).orElse(emptyListExpression())) {
-                    column(spacing = 5.0, cross = CrossAxisAlignment.Stretch)
+                    column(spacing = 5.0, cross = CrossAxisAlignment.STRETCH)
                     val color =
                         item.resource.fields.color
                             .orElse(literal(UNTAGGED))

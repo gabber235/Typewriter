@@ -1,14 +1,16 @@
 package com.typewritermc.realm.compiler
 
 import com.typewritermc.engine.CompilationResult
-import com.typewritermc.engine.CompilationRoot
 import com.typewritermc.engine.CompiledArtifact
 import com.typewritermc.engine.RESOURCE_GRAPH_MEDIA_TYPE
 import com.typewritermc.engine.RESOURCE_GRAPH_PROJECTION
 import com.typewritermc.engine.ResourceGraphCompileResult
 import com.typewritermc.engine.encodeShard
+import com.typewritermc.engine.semanticDigest
 import com.typewritermc.realm.authoring.AuthoringView
 import com.typewritermc.realm.authoring.ownershipRelationIds
+import com.typewritermc.types.toSkir
+import skirout.editor.v1.compilation_root.CompilationRoot
 
 /** Compiles every complete compilation unit with its ownership closure into the resource graph format. */
 internal object ResourceGraphArtifactProducer : CompiledArtifactProducer {
@@ -19,7 +21,7 @@ internal object ResourceGraphArtifactProducer : CompiledArtifactProducer {
         view.resources.entries
             .asSequence()
             .filter { (_, record) -> record.isCompilationUnit(view.catalog.checked) }
-            .map { (resource, _) -> CompilationRoot(projection, resource) }
+            .map { (resource, _) -> CompilationRoot(projection = projection, resource = resource) }
             .sortedBy { root -> root.resource.value }
             .toCollection(linkedSetOf())
 
@@ -40,7 +42,7 @@ internal object ResourceGraphArtifactProducer : CompiledArtifactProducer {
                             formatRevision = result.shard.facts.formatRevision,
                             mediaType = mediaType,
                             inputFingerprint = result.inputFingerprint,
-                            semanticDigest = result.shard.digest,
+                            semanticDigest = result.shard.semanticDigest,
                             payload = result.shard.facts.encodeShard(),
                         ),
                     )

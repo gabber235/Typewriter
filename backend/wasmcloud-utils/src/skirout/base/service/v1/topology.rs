@@ -1089,10 +1089,15 @@ impl ConfigureServiceHostResponse_RealmNotFoundError {
 pub enum ConfigureServiceHostResponse {
     Unknown(Option<crate::skir_client::UnrecognizedVariant<ConfigureServiceHostResponse>>),
     Success(Box<HostConfigurationChange>),
+    /// Host changed elsewhere.
     ConflictError(Box<ConfigureServiceHostResponse_ConflictError>),
+    /// Host configuration is invalid.
     InvalidConfigurationError(Box<ConfigureServiceHostResponse_InvalidConfigurationError>),
+    /// Engine target is incompatible.
     IncompatibleEngineError(Box<ConfigureServiceHostResponse_IncompatibleEngineError>),
+    /// Realm not found.
     RealmNotFoundError(Box<ConfigureServiceHostResponse_RealmNotFoundError>),
+    /// Record IDs from an unexpected table.
     InvalidRecordIdError(Box<crate::skirout::base::kernel::v1::errors::InvalidRecordIdError>),
     InternalError(Box<crate::skirout::base::kernel::v1::errors::InternalError>),
 }
@@ -1745,6 +1750,7 @@ impl ReportHostExecutionResponse_StaleRevisionError {
 pub enum ReportHostExecutionResponse {
     Unknown(Option<crate::skir_client::UnrecognizedVariant<ReportHostExecutionResponse>>),
     Success(Box<ReportHostExecutionResponse_Success>),
+    /// Host topology revision is stale.
     StaleRevisionError(Box<ReportHostExecutionResponse_StaleRevisionError>),
     InternalError(Box<crate::skirout::base::kernel::v1::errors::InternalError>),
 }
@@ -1877,46 +1883,49 @@ impl GetServiceMessagingScopeRequest {
 }
 
 // ==============================================================================
-// struct GetServiceMessagingScopeResponse.NotFound
+// struct GetServiceMessagingScopeResponse.NotFoundError
 // ==============================================================================
 
 #[derive(Clone, Debug, PartialEq, Default)]
-pub struct GetServiceMessagingScopeResponse_NotFound {
+pub struct GetServiceMessagingScopeResponse_NotFoundError {
     /// Set this to None when you're creating a struct.
-    pub _unrecognized:
-        Option<crate::skir_client::UnrecognizedFields<GetServiceMessagingScopeResponse_NotFound>>,
+    pub _unrecognized: Option<
+        crate::skir_client::UnrecognizedFields<GetServiceMessagingScopeResponse_NotFoundError>,
+    >,
 }
 
-impl GetServiceMessagingScopeResponse_NotFound {
-    pub fn default_ref() -> &'static GetServiceMessagingScopeResponse_NotFound {
-        static D: std::sync::LazyLock<GetServiceMessagingScopeResponse_NotFound> =
-            std::sync::LazyLock::new(GetServiceMessagingScopeResponse_NotFound::default);
+impl GetServiceMessagingScopeResponse_NotFoundError {
+    pub fn default_ref() -> &'static GetServiceMessagingScopeResponse_NotFoundError {
+        static D: std::sync::LazyLock<GetServiceMessagingScopeResponse_NotFoundError> =
+            std::sync::LazyLock::new(GetServiceMessagingScopeResponse_NotFoundError::default);
         &D
     }
 }
 
-impl GetServiceMessagingScopeResponse_NotFound {
+impl GetServiceMessagingScopeResponse_NotFoundError {
     fn _adapter() -> &'static crate::skir_client::internal::StructAdapter<
-        GetServiceMessagingScopeResponse_NotFound,
+        GetServiceMessagingScopeResponse_NotFoundError,
     > {
         static ADAPTER: std::sync::LazyLock<
-            crate::skir_client::internal::StructAdapter<GetServiceMessagingScopeResponse_NotFound>,
+            crate::skir_client::internal::StructAdapter<
+                GetServiceMessagingScopeResponse_NotFoundError,
+            >,
         > = std::sync::LazyLock::new(|| {
             crate::skir_client::internal::StructAdapter::new(
                 "service/v1/topology.skir",
-                "GetServiceMessagingScopeResponse.NotFound",
+                "GetServiceMessagingScopeResponse.NotFoundError",
                 "",
-                |x: &GetServiceMessagingScopeResponse_NotFound| &x._unrecognized,
-                |x: &mut GetServiceMessagingScopeResponse_NotFound, u| x._unrecognized = u,
+                |x: &GetServiceMessagingScopeResponse_NotFoundError| &x._unrecognized,
+                |x: &mut GetServiceMessagingScopeResponse_NotFoundError, u| x._unrecognized = u,
             )
         });
         &*ADAPTER
     }
-    pub fn serializer() -> crate::skir_client::Serializer<GetServiceMessagingScopeResponse_NotFound>
-    {
+    pub fn serializer()
+    -> crate::skir_client::Serializer<GetServiceMessagingScopeResponse_NotFoundError> {
         initialize_module_serializers();
         crate::skir_client::internal::struct_serializer_from_static(
-            GetServiceMessagingScopeResponse_NotFound::_adapter(),
+            GetServiceMessagingScopeResponse_NotFoundError::_adapter(),
         )
     }
 }
@@ -1929,7 +1938,8 @@ impl GetServiceMessagingScopeResponse_NotFound {
 pub enum GetServiceMessagingScopeResponse {
     Unknown(Option<crate::skir_client::UnrecognizedVariant<GetServiceMessagingScopeResponse>>),
     Found(Box<ServiceMessagingScope>),
-    NotFound(Box<GetServiceMessagingScopeResponse_NotFound>),
+    /// Service messaging scope not found.
+    NotFoundError(Box<GetServiceMessagingScopeResponse_NotFoundError>),
     InternalError(Box<crate::skirout::base::kernel::v1::errors::InternalError>),
 }
 
@@ -1949,7 +1959,7 @@ impl GetServiceMessagingScopeResponse {
                 |x: &GetServiceMessagingScopeResponse| match x {
                     GetServiceMessagingScopeResponse::Unknown(_) => 0,
                     GetServiceMessagingScopeResponse::Found(_) => 1,
-                    GetServiceMessagingScopeResponse::NotFound(_) => 2,
+                    GetServiceMessagingScopeResponse::NotFoundError(_) => 2,
                     GetServiceMessagingScopeResponse::InternalError(_) => 3,
                 },
                 |u| GetServiceMessagingScopeResponse::Unknown(Some(u)),
@@ -2704,7 +2714,7 @@ fn initialize_module_serializers() {
                 crate::skir_client::internal::struct_serializer_from_static(
                     ConfigureServiceHostResponse_ConflictError::_adapter(),
                 ),
-                "",
+                "Host changed elsewhere.",
                 |v| ConfigureServiceHostResponse::ConflictError(Box::new(v)),
                 |x| match x {
                     ConfigureServiceHostResponse::ConflictError(b) => b.as_ref(),
@@ -2718,7 +2728,7 @@ fn initialize_module_serializers() {
                 crate::skir_client::internal::struct_serializer_from_static(
                     ConfigureServiceHostResponse_InvalidConfigurationError::_adapter(),
                 ),
-                "",
+                "Host configuration is invalid.",
                 |v| ConfigureServiceHostResponse::InvalidConfigurationError(Box::new(v)),
                 |x| match x {
                     ConfigureServiceHostResponse::InvalidConfigurationError(b) => b.as_ref(),
@@ -2732,7 +2742,7 @@ fn initialize_module_serializers() {
                 crate::skir_client::internal::struct_serializer_from_static(
                     ConfigureServiceHostResponse_IncompatibleEngineError::_adapter(),
                 ),
-                "",
+                "Engine target is incompatible.",
                 |v| ConfigureServiceHostResponse::IncompatibleEngineError(Box::new(v)),
                 |x| match x {
                     ConfigureServiceHostResponse::IncompatibleEngineError(b) => b.as_ref(),
@@ -2746,7 +2756,7 @@ fn initialize_module_serializers() {
                 crate::skir_client::internal::struct_serializer_from_static(
                     ConfigureServiceHostResponse_RealmNotFoundError::_adapter(),
                 ),
-                "",
+                "Realm not found.",
                 |v| ConfigureServiceHostResponse::RealmNotFoundError(Box::new(v)),
                 |x| match x {
                     ConfigureServiceHostResponse::RealmNotFoundError(b) => b.as_ref(),
@@ -2758,7 +2768,7 @@ fn initialize_module_serializers() {
                 6,
                 6,
                 crate::skirout::base::kernel::v1::errors::InvalidRecordIdError::serializer(),
-                "",
+                "Record IDs from an unexpected table.",
                 |v| ConfigureServiceHostResponse::InvalidRecordIdError(Box::new(v)),
                 |x| match x {
                     ConfigureServiceHostResponse::InvalidRecordIdError(b) => b.as_ref(),
@@ -3129,7 +3139,7 @@ fn initialize_module_serializers() {
                 crate::skir_client::internal::struct_serializer_from_static(
                     ReportHostExecutionResponse_StaleRevisionError::_adapter(),
                 ),
-                "",
+                "Host topology revision is stale.",
                 |v| ReportHostExecutionResponse::StaleRevisionError(Box::new(v)),
                 |x| match x {
                     ReportHostExecutionResponse::StaleRevisionError(b) => b.as_ref(),
@@ -3199,8 +3209,8 @@ fn initialize_module_serializers() {
         }
         unsafe {
             let a: *mut crate::skir_client::internal::StructAdapter<
-                GetServiceMessagingScopeResponse_NotFound,
-            > = GetServiceMessagingScopeResponse_NotFound::_adapter() as *const _ as *mut _;
+                GetServiceMessagingScopeResponse_NotFoundError,
+            > = GetServiceMessagingScopeResponse_NotFoundError::_adapter() as *const _ as *mut _;
             (*a).finalize();
         }
         unsafe {
@@ -3222,16 +3232,16 @@ fn initialize_module_serializers() {
                 },
             );
             (*a).add_wrapper_variant(
-                "not_found",
+                "not_found_error",
                 2,
                 2,
                 crate::skir_client::internal::struct_serializer_from_static(
-                    GetServiceMessagingScopeResponse_NotFound::_adapter(),
+                    GetServiceMessagingScopeResponse_NotFoundError::_adapter(),
                 ),
-                "",
-                |v| GetServiceMessagingScopeResponse::NotFound(Box::new(v)),
+                "Service messaging scope not found.",
+                |v| GetServiceMessagingScopeResponse::NotFoundError(Box::new(v)),
                 |x| match x {
-                    GetServiceMessagingScopeResponse::NotFound(b) => b.as_ref(),
+                    GetServiceMessagingScopeResponse::NotFoundError(b) => b.as_ref(),
                     _ => unreachable!(),
                 },
             );

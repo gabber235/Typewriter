@@ -113,7 +113,7 @@ class _AuthoredResourceNavigatorState
             selected: widget.routedResource == widget.resource,
             leading: ResourceIcon(
               icon: appearance.icon,
-              color: appearance.accent,
+              color: appearance.accentColor,
               size: 20,
             ),
             title: Text(

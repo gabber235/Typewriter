@@ -2,21 +2,16 @@
 
 package com.typewritermc.realm.routes
 
-import com.typewritermc.authoring.AuthoringRecord
 import com.typewritermc.authoring.GeneratedSdkApi
 import com.typewritermc.authoring.GraphLayoutDefinition
 import com.typewritermc.authoring.GraphPlacement
 import com.typewritermc.authoring.HierarchyPath
-import com.typewritermc.authoring.ItemId
-import com.typewritermc.authoring.PathSegment
 import com.typewritermc.authoring.Placement
-import com.typewritermc.authoring.PreparedEdit
 import com.typewritermc.authoring.TimelineEntryPlacement
-import com.typewritermc.authoring.TypeSelection
-import com.typewritermc.authoring.ValuePath
-import com.typewritermc.authoring.skir.SkirAuthoringOperationCodec
-import com.typewritermc.capability.CapabilityId
-import com.typewritermc.checking.CatalogGeneration
+import com.typewritermc.authoring.field
+import com.typewritermc.authoring.of
+import com.typewritermc.authoring.requireValid
+import com.typewritermc.authoring.root
 import com.typewritermc.discovery.CatalogAssemblyContext
 import com.typewritermc.discovery.DeploymentFacts
 import com.typewritermc.discovery.DiscoveryDomains
@@ -34,10 +29,11 @@ import com.typewritermc.library.PageDefinition
 import com.typewritermc.library.PageElements
 import com.typewritermc.library.TagDefinition
 import com.typewritermc.operations.OperationDeclaration
-import com.typewritermc.operations.ResourceOperationId
+import com.typewritermc.operations.candidateSearch
+import com.typewritermc.operations.capability
 import com.typewritermc.presentation.DefaultPresentationRuntime
 import com.typewritermc.presentation.PresentationRuntime
-import com.typewritermc.protocol.transport.generated.RealmRouteScope
+import com.typewritermc.protocol.transport.RealmRouteScope
 import com.typewritermc.realm.authoring.AuthoringSeed
 import com.typewritermc.realm.authoring.InMemoryAuthoringViewStore
 import com.typewritermc.realm.authoring.ResourceOperationRuntime
@@ -48,23 +44,25 @@ import com.typewritermc.realm.repository.MutationPlanningResult
 import com.typewritermc.realm.testBook
 import com.typewritermc.realm.testTag
 import com.typewritermc.realm.withRealmStructure
-import com.typewritermc.types.DataValue
-import com.typewritermc.types.FieldOwner
 import com.typewritermc.types.NativeBinding
 import com.typewritermc.types.Ref
-import com.typewritermc.types.RepresentationTemplate
-import com.typewritermc.types.ResourceId
-import com.typewritermc.types.TypeDefinition
-import com.typewritermc.types.TypeDefinitionId
-import com.typewritermc.types.TypeId
-import com.typewritermc.types.TypeTemplate
-import com.typewritermc.types.TypeUse
+import com.typewritermc.types.actualType
 import com.typewritermc.types.catalog.Resolution
 import com.typewritermc.types.catalog.apply
 import com.typewritermc.types.encodeGeneratedDefault
-import com.typewritermc.types.skir.getOrThrow
+import com.typewritermc.types.fieldMap
+import com.typewritermc.types.fields
+import com.typewritermc.types.namedTemplate
+import com.typewritermc.types.namedUse
+import com.typewritermc.types.payload
+import com.typewritermc.types.qualified
+import com.typewritermc.types.requirePortable
+import com.typewritermc.types.toResourceId
+import com.typewritermc.types.use
 import skirout.editor.v1.authoring.AuthoringObservationId
+import skirout.editor.v1.authoring.PreparedEdit
 import skirout.editor.v1.capability.InvocationId
+import skirout.editor.v1.operation.ResourceOperationId
 import skirout.editor.v1.resource_operations.AuthoringActionResult
 import skirout.editor.v1.resource_operations.OperationInvocation
 import skirout.editor.v1.resource_operations.OperationOrigin
@@ -74,6 +72,19 @@ import skirout.editor.v1.resource_operations.OperationWorkingOverlay
 import skirout.editor.v1.resource_operations.PrepareAuthoringActionRequest
 import skirout.editor.v1.resource_operations.ResolveDropCandidatesRequest
 import skirout.editor.v1.resource_operations.ResolveResourceOperationsRequest
+import skirout.editor.v1.type_catalog.AuthoringRecord
+import skirout.editor.v1.type_catalog.CapabilityId
+import skirout.editor.v1.type_catalog.CatalogGeneration
+import skirout.editor.v1.type_catalog.DataValue
+import skirout.editor.v1.type_catalog.FieldOwner
+import skirout.editor.v1.type_catalog.ItemId
+import skirout.editor.v1.type_catalog.PathSegment
+import skirout.editor.v1.type_catalog.RepresentationTemplate
+import skirout.editor.v1.type_catalog.ResourceId
+import skirout.editor.v1.type_catalog.TypeDefinition
+import skirout.editor.v1.type_catalog.TypeDefinitionId
+import skirout.editor.v1.type_catalog.TypeSelection
+import skirout.editor.v1.type_catalog.ValuePath
 import java.nio.file.Path
 
 /**
@@ -117,16 +128,27 @@ internal class CoreOperationsFixture(
             declaration: TypeDefinition,
             vararg extraParents: TypeDefinitionId,
         ): OwnedTypeDeclaration {
-            val fields = (declaration.representation as RepresentationTemplate.Record).fields
+            val fields = (declaration.representation as RepresentationTemplate.RecordWrapper).value.fields
             return OwnedTypeDeclaration(
                 origin,
-                TypeDefinition(
-                    type,
+                TypeDefinition.partial(
+                    id = type,
                     representation =
-                        RepresentationTemplate.Record(
-                            fields.map { field -> field.copy(owner = FieldOwner(type, field.owner.name), overrides = listOf(field.owner)) },
+                        RepresentationTemplate.createRecord(
+                            fields =
+                                fields.map { field ->
+                                    field.copy(
+                                        owner = FieldOwner(definition = type, name = field.owner.name),
+                                        overrides = listOf(field.owner),
+                                    )
+                                },
+                            abstract_ = false,
                         ),
-                    parents = (listOf(contract) + extraParents).map { TypeTemplate.Named(it) },
+                    parents =
+                        (
+                            listOf(contract) +
+                                extraParents
+                        ).map { it.namedTemplate() },
                 ),
             )
         }
@@ -136,7 +158,7 @@ internal class CoreOperationsFixture(
             contract: TypeDefinitionId,
         ) = contributions.endpointBindings
             .filter { it.valueOwner == contract }
-            .map { it.copy(containingResource = TypeTemplate.Named(type), valueOwner = type) }
+            .map { it.copy(containingResource = type.namedTemplate(), valueOwner = type) }
         val pages = withPages || withElements
         val fixtureTypes =
             buildList {
@@ -159,7 +181,7 @@ internal class CoreOperationsFixture(
                 .copy(
                     declarations = contributions.declarations + fixtureTypes,
                     endpointBindings = contributions.endpointBindings + fixtureBindings,
-                ).assemble(CatalogAssemblyContext(CatalogGeneration("core-operations")))
+                ).assemble(CatalogAssemblyContext(CatalogGeneration(value = "core-operations")))
         check(assembly.operations.failures.isEmpty()) { assembly.operations.failures.joinToString { it.cause.stackTraceToString() } }
         catalogs.replace(RealmCatalogIncarnation(assembly, deployment))
         val lease = catalogs.captureCurrent()
@@ -168,19 +190,22 @@ internal class CoreOperationsFixture(
             value: T,
             type: TypeDefinitionId,
         ): AuthoringRecord {
-            val checked = (lease.checked.resolve(TypeUse.Named(type)) as Resolution.Ready).value
+            val checked = (lease.checked.resolve(type.use()) as Resolution.Ready).value
 
             @Suppress("UNCHECKED_CAST")
             val binding = lease.nativeBindings.bind(checked) as NativeBinding<T>
-            val encoded = binding.encode(value) as DataValue.Named
-            return AuthoringRecord(TypeSelection.Complete(encoded.actualType), (encoded.payload as DataValue.Record).fields)
+            val encoded = binding.encode(value) as DataValue.NamedWrapper
+            return AuthoringRecord.of(
+                TypeSelection.CompleteWrapper(encoded.actualType),
+                (encoded.payload as DataValue.RecordWrapper).value.fieldMap,
+            )
         }
 
         fun encodeFields(
             declaration: TypeDefinition,
             values: Map<String, Any?>,
         ): Map<String, DataValue> =
-            (declaration.representation as RepresentationTemplate.Record).fields.associate { field ->
+            (declaration.representation as RepresentationTemplate.RecordWrapper).value.fields.associate { field ->
                 val use = (field.type.apply(emptyMap()) as Resolution.Ready).value
                 val checked = (lease.checked.resolve(use) as Resolution.Ready).value
                 field.owner.name to lease.nativeBindings.bind(checked).encodeGeneratedDefault(values.getValue(field.owner.name))
@@ -198,8 +223,14 @@ internal class CoreOperationsFixture(
                 mapOf(
                     "book" to
                         Ref<BookPages.Page, Book>(
-                            ResourceId(book),
-                            ValuePath(listOf(PathSegment.Field("pages"), PathSegment.Item(ItemId("native:$index")))),
+                            ResourceId(value = book).toResourceId(),
+                            ValuePath(
+                                segments =
+                                    listOf(
+                                        PathSegment.createField(name = "pages"),
+                                        PathSegment.createItem(id = ItemId(value = "native:$index")),
+                                    ),
+                            ),
                         ),
                     "name" to "Page $index",
                     "chapter" to HierarchyPath.parse(chapter),
@@ -207,12 +238,12 @@ internal class CoreOperationsFixture(
                     "elements" to
                         elements.map {
                             Ref<PageElements.Page, com.typewritermc.elements.Element>(
-                                ResourceId(it),
-                                ValuePath(listOf(PathSegment.Field("page"))),
+                                ResourceId(value = it).toResourceId(),
+                                ValuePath.root.field("page"),
                             )
                         },
                 )
-            return AuthoringRecord(TypeSelection.Complete(TypeUse.Named(type)), encodeFields(PageDefinition.declaration, values))
+            return AuthoringRecord.of(TypeSelection.CompleteWrapper(type.namedUse()), encodeFields(PageDefinition.declaration, values))
         }
 
         fun entry(
@@ -224,13 +255,22 @@ internal class CoreOperationsFixture(
                 mapOf(
                     "page" to
                         Ref<PageElements.Element, com.typewritermc.library.Page>(
-                            ResourceId(page),
-                            ValuePath(listOf(PathSegment.Field("elements"), PathSegment.Item(ItemId("native:$index")))),
+                            ResourceId(value = page).toResourceId(),
+                            ValuePath(
+                                segments =
+                                    listOf(
+                                        PathSegment.createField(name = "elements"),
+                                        PathSegment.createItem(id = ItemId(value = "native:$index")),
+                                    ),
+                            ),
                         ),
                     "name" to "Entry",
                     "placement" to placement,
                 )
-            return AuthoringRecord(TypeSelection.Complete(TypeUse.Named(ENTRY_TYPE)), encodeFields(ElementDefinition.declaration, values))
+            return AuthoringRecord.of(
+                TypeSelection.CompleteWrapper(ENTRY_TYPE.namedUse()),
+                encodeFields(ElementDefinition.declaration, values),
+            )
         }
 
         fun bookOf(
@@ -241,43 +281,47 @@ internal class CoreOperationsFixture(
                 title = title,
                 pages =
                     pages.map {
-                        Ref(ResourceId(it), ValuePath(listOf(PathSegment.Field("book"))))
+                        Ref(ResourceId(value = it).toResourceId(), ValuePath.root.field("book"))
                     },
             ),
             BookDefinition.id,
         )
         val resources =
             mutableMapOf(
-                ResourceId("book") to bookOf("Tutorial"),
-                ResourceId("tag") to
+                ResourceId(value = "book") to bookOf("Tutorial"),
+                ResourceId(value = "tag") to
                     record(
-                        testTag(name = "Quest", parents = setOf(Ref(ResourceId("parent"))), placement = GraphPlacement()),
+                        testTag(
+                            name = "Quest",
+                            parents = setOf(Ref(ResourceId(value = "parent").toResourceId())),
+                            placement = GraphPlacement(),
+                        ),
                         TagDefinition.id,
                     ),
-                ResourceId("parent") to record(testTag(name = "Adventure", placement = GraphPlacement(5, 0)), TagDefinition.id),
-                ResourceId("loose") to record(testTag(name = "Loose", placement = GraphPlacement(9, 0)), TagDefinition.id),
+                ResourceId(value = "parent") to record(testTag(name = "Adventure", placement = GraphPlacement(5, 0)), TagDefinition.id),
+                ResourceId(value = "loose") to record(testTag(name = "Loose", placement = GraphPlacement(9, 0)), TagDefinition.id),
             )
         if (withPages) {
-            resources[ResourceId("book")] = bookOf("Source", "first", "second", "other")
-            resources[ResourceId("destination")] = bookOf("Destination", "resident", "peer")
-            resources[ResourceId("first")] = page("book", "intro", 100, 0)
-            resources[ResourceId("second")] = page("book", "intro", 1, 1)
-            resources[ResourceId("other")] = page("book", "outro", 77, 2)
-            resources[ResourceId("resident")] = page("destination", "intro", 9, 0)
-            resources[ResourceId("peer")] = page("destination", "outro", 3, 1)
+            resources[ResourceId(value = "book")] = bookOf("Source", "first", "second", "other")
+            resources[ResourceId(value = "destination")] = bookOf("Destination", "resident", "peer")
+            resources[ResourceId(value = "first")] = page("book", "intro", 100, 0)
+            resources[ResourceId(value = "second")] = page("book", "intro", 1, 1)
+            resources[ResourceId(value = "other")] = page("book", "outro", 77, 2)
+            resources[ResourceId(value = "resident")] = page("destination", "intro", 9, 0)
+            resources[ResourceId(value = "peer")] = page("destination", "outro", 3, 1)
         }
         if (withElements) {
-            resources[ResourceId("library")] = bookOf("Library", "graph", "canvas", "timeline")
-            resources[ResourceId("graph")] = page("library", "intro", 0, 0, GRAPH_PAGE_TYPE, listOf("graph-entry"))
-            resources[ResourceId("canvas")] = page("library", "intro", 1, 1, GRAPH_PAGE_TYPE, listOf("resident-entry"))
-            resources[ResourceId("timeline")] = page("library", "intro", 2, 2, elements = listOf("timeline-entry"))
-            resources[ResourceId("graph-entry")] = entry("graph", 0, GraphPlacement(0, 0, 2, 2))
-            resources[ResourceId("resident-entry")] = entry("canvas", 0, GraphPlacement(0, 0, 2, 2))
-            resources[ResourceId("timeline-entry")] = entry("timeline", 0, TimelineEntryPlacement(0))
+            resources[ResourceId(value = "library")] = bookOf("Library", "graph", "canvas", "timeline")
+            resources[ResourceId(value = "graph")] = page("library", "intro", 0, 0, GRAPH_PAGE_TYPE, listOf("graph-entry"))
+            resources[ResourceId(value = "canvas")] = page("library", "intro", 1, 1, GRAPH_PAGE_TYPE, listOf("resident-entry"))
+            resources[ResourceId(value = "timeline")] = page("library", "intro", 2, 2, elements = listOf("timeline-entry"))
+            resources[ResourceId(value = "graph-entry")] = entry("graph", 0, GraphPlacement(0, 0, 2, 2))
+            resources[ResourceId(value = "resident-entry")] = entry("canvas", 0, GraphPlacement(0, 0, 2, 2))
+            resources[ResourceId(value = "timeline-entry")] = entry("timeline", 0, TimelineEntryPlacement(0))
         }
         views = InMemoryAuthoringViewStore(lease, AuthoringSeed(resources.withRealmStructure(lease)))
         runtime = ResourceOperationRuntime(views)
-        routes = ResourceOperationRoutes(runtime, EditorContracts(RealmRouteScope("organization", "realm")))
+        routes = ResourceOperationRoutes(runtime, RealmRouteScope("organization", "realm"))
     }
 
     /** The published identity of the operation object [declaration]. */
@@ -292,20 +336,19 @@ internal class CoreOperationsFixture(
     fun candidateSearch(
         declaration: Any,
         field: String,
-    ): CapabilityId = operation(declaration).candidateSearch(ValuePath(listOf(PathSegment.Field(field))))
+    ): CapabilityId = operation(declaration).candidateSearch(ValuePath.root.field(field))
 
     fun input(
         value: Any,
         type: TypeDefinitionId,
     ): skirout.editor.v1.type_catalog.DataValue =
         views.read { root ->
-            val checked = (root.catalog.checked.resolve(TypeUse.Named(type)) as Resolution.Ready).value
-            com.typewritermc.types.skir.SkirDataValueCodec
-                .encode(
-                    root.catalog.nativeBindings
-                        .bind(checked)
-                        .encodeGeneratedDefault(value),
-                ).getOrThrow()
+            val checked = (root.catalog.checked.resolve(type.use()) as Resolution.Ready).value
+            (
+                root.catalog.nativeBindings
+                    .bind(checked)
+                    .encodeGeneratedDefault(value)
+            ).requirePortable()
         }
 
     fun resolve(vararg ids: String) = routes.resolve(resolveRequest(*ids))
@@ -365,12 +408,15 @@ internal class CoreOperationsFixture(
         type: TypeDefinitionId,
     ): AuthoringRecord =
         views.read { root ->
-            val checked = (root.catalog.checked.resolve(TypeUse.Named(type)) as Resolution.Ready).value
+            val checked = (root.catalog.checked.resolve(type.use()) as Resolution.Ready).value
 
             @Suppress("UNCHECKED_CAST")
             val binding = root.catalog.nativeBindings.bind(checked) as NativeBinding<T>
-            val encoded = binding.encode(value) as DataValue.Named
-            AuthoringRecord(TypeSelection.Complete(encoded.actualType), (encoded.payload as DataValue.Record).fields)
+            val encoded = binding.encode(value) as DataValue.NamedWrapper
+            AuthoringRecord.of(
+                TypeSelection.CompleteWrapper(encoded.actualType),
+                (encoded.payload as DataValue.RecordWrapper).value.fieldMap,
+            )
         }
 
     /** Plans [edit] against the saved resources and returns the resulting resources, or the planner rejection. */
@@ -385,7 +431,7 @@ internal class CoreOperationsFixture(
         val response = routes.prepare(request)
         val preview = response as? AuthoringActionResult.PreviewWrapper ?: error(response.toString())
         val before = views.read { it.resources }
-        val accepted = plan(SkirAuthoringOperationCodec.decode(preview.value.edit).getOrThrow()) as MutationPlanningResult.Accepted
+        val accepted = plan(preview.value.edit.requireValid()) as MutationPlanningResult.Accepted
         return before + accepted.plan.resources - accepted.plan.removedResources
     }
 
@@ -395,6 +441,6 @@ internal class CoreOperationsFixture(
     }
 }
 
-private val PAGE_TYPE = TypeDefinitionId(TypeId.Qualified("fixture", "Page"), 1)
-private val GRAPH_PAGE_TYPE = TypeDefinitionId(TypeId.Qualified("fixture", "GraphPage"), 1)
-private val ENTRY_TYPE = TypeDefinitionId(TypeId.Qualified("fixture", "Entry"), 1)
+private val PAGE_TYPE = TypeDefinitionId.qualified("fixture", "Page")
+private val GRAPH_PAGE_TYPE = TypeDefinitionId.qualified("fixture", "GraphPage")
+private val ENTRY_TYPE = TypeDefinitionId.qualified("fixture", "Entry")

@@ -16,11 +16,13 @@ void main() {
     var removedFromSelection = 0;
 
     var removedSelection = 0;
-    final member = OrganizationMember(
+    final member = skir.OrganizationMember(
       userId: skir.recordId("user:member"),
       roles: const [],
       joinedAt: DateTime.utc(2024),
       name: "Member",
+      email: null,
+      avatarUrl: null,
     );
 
     await tester.pumpWidget(

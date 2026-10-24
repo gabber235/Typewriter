@@ -833,7 +833,7 @@ _fixture({
     arguments: const [],
   );
   final textTemplate = skir.TypeTemplate.wrapScalar(skir.ScalarKind.text);
-  final snapshot = skir.EditorCatalogWireSnapshot(
+  final snapshot = skir.EditorCatalog(
     resourceDisplays: const [],
     resourceOperations: const [],
     generation: generation,

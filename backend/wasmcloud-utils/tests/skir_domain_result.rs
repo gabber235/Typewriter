@@ -64,9 +64,10 @@ fn invalid_record_id_has_standard_payload_and_metadata() {
     assert_eq!(error.given_tables, ["service"]);
     assert_eq!(response.outcome(), SkirResponseOutcome::DomainError);
     assert_eq!(response.variant_slug(), "invalid-record-id-error");
+    // The tables travel in the payload; the message is the variant doc and carries no payload.
     assert_eq!(
         response.variant_message(),
-        "Expected record IDs from table 'user', but received tables: 'service'."
+        "Record IDs from an unexpected table."
     );
 }
 

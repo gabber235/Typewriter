@@ -4,18 +4,21 @@ import com.typewritermc.authoring.CompletenessResult
 import com.typewritermc.authoring.complete
 import com.typewritermc.elements.Cue
 import com.typewritermc.elements.Element
-import com.typewritermc.engine.CompiledEdge
-import com.typewritermc.engine.CompiledResource
-import com.typewritermc.engine.CompiledResourceKey
-import com.typewritermc.engine.RuntimeCompilationFacts
+import com.typewritermc.engine.dataValue
 import com.typewritermc.engine.relation
 import com.typewritermc.library.Page
 import com.typewritermc.types.NativeBindingRegistry
-import com.typewritermc.types.RelationContract
-import com.typewritermc.types.RelationId
+import com.typewritermc.types.actualType
 import com.typewritermc.types.catalog.CheckedCatalog
 import com.typewritermc.types.catalog.Resolution
 import com.typewritermc.types.ownsResources
+import com.typewritermc.types.use
+import skirout.editor.v1.catalog.RelationContract
+import skirout.editor.v1.compiled_content.CompiledEdge
+import skirout.editor.v1.compiled_content.CompiledResource
+import skirout.editor.v1.compiled_content.CompiledResourceKey
+import skirout.editor.v1.compiled_content.RuntimeCompilationFacts
+import skirout.editor.v1.type_catalog.RelationId
 
 /** Hydrated resource roles and the compiled links between them. */
 class CompiledResourceGraph private constructor(
@@ -84,7 +87,7 @@ class CompiledResourceGraph private constructor(
                         "Compiled resource $key has inconsistent actual type evidence."
                     }
                     val checked =
-                        when (val resolution = catalog.resolve(record.actualType)) {
+                        when (val resolution = catalog.resolve(record.actualType.use)) {
                             is Resolution.Ready -> {
                                 resolution.value
                             }
@@ -96,7 +99,7 @@ class CompiledResourceGraph private constructor(
                             }
                         }
                     val complete =
-                        when (val result = checked.complete(record.value)) {
+                        when (val result = checked.complete(record.dataValue)) {
                             is CompletenessResult.Complete -> result.value
                             is CompletenessResult.Unfinished -> error("Compiled resource $key is unfinished at ${result.locations}.")
                             is CompletenessResult.Invalid -> error("Compiled resource $key is invalid: ${result.problems}.")

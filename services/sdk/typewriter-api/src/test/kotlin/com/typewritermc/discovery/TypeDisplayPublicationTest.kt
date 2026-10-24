@@ -1,7 +1,6 @@
 package com.typewritermc.discovery
 
 import com.typewritermc.authoring.PlacementDefinition
-import com.typewritermc.checking.CatalogGeneration
 import com.typewritermc.imprint.ArtifactId
 import com.typewritermc.imprint.ContributionName
 import com.typewritermc.imprint.ContributionSourceId
@@ -11,15 +10,13 @@ import com.typewritermc.library.PageDefinition
 import com.typewritermc.library.TagDefinition
 import com.typewritermc.types.Color
 import com.typewritermc.types.ColorDefinition
-import com.typewritermc.types.DeclarationOwner
 import com.typewritermc.types.Icon
 import com.typewritermc.types.TypeDisplay
-import com.typewritermc.types.catalog.toWire
-import com.typewritermc.types.skir.SkirTypeCodec
-import com.typewritermc.types.skir.getOrThrow
 import com.typewritermc.types.toWire
 import de.infix.testBalloon.framework.core.testSuite
 import io.kotest.matchers.shouldBe
+import skirout.editor.v1.type_catalog.CatalogGeneration
+import skirout.editor.v1.type_catalog.DeclarationOwner
 import java.lang.reflect.Modifier
 import java.util.Collections
 
@@ -39,19 +36,14 @@ val TypeDisplayPublicationTest by testSuite {
         val assembly =
             CatalogContributions(
                 declarations = providers.map { provider -> OwnedTypeDeclaration(origin, provider.definition, provider.display) },
-            ).assemble(CatalogAssemblyContext(CatalogGeneration("type display publication")))
+            ).assemble(CatalogAssemblyContext(CatalogGeneration(value = "type display publication")))
 
         BookDefinition.display shouldBe expected
-        assembly.snapshot.types
-            .single { published -> published.definition.id == BookDefinition.id }
-            .display shouldBe expected
-
         val wireDisplay =
-            assembly.snapshot
-                .toWire()
-                .types
-                .single { published -> published.definition == SkirTypeCodec.encode(BookDefinition.declaration).getOrThrow() }
+            assembly.editorCatalog.types
+                .single { published -> published.definition == BookDefinition.declaration }
                 .display
+        wireDisplay shouldBe expected.toWire()
         wireDisplay.description shouldBe expected.description
         wireDisplay.icon shouldBe expected.icon.toWire()
         wireDisplay.color.argb shouldBe expected.color.argb.toInt()
@@ -77,8 +69,8 @@ val TypeDisplayPublicationTest by testSuite {
                     providers.map { provider ->
                         OwnedTypeDeclaration(origin, provider.definition, provider.display, searchKey = provider.searchKey)
                     },
-            ).assemble(CatalogAssemblyContext(CatalogGeneration("search keys")))
-                .snapshot.types
+            ).assemble(CatalogAssemblyContext(CatalogGeneration(value = "search keys")))
+                .editorCatalog.types
                 .associate { it.definition.id to it.searchKey }
 
         published[BookDefinition.id] shouldBe "book"
@@ -119,7 +111,7 @@ internal fun providerOrigin(): ProviderOrigin =
         owner =
             DeclarationOwner(
                 source =
-                    ContributionKey(
+                    contributionKey(
                         source = ContributionSourceId("test"),
                         sourcePart = "main",
                         producer = ProducerId("test"),

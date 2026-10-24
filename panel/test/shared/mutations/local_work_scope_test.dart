@@ -171,6 +171,4 @@ void main() {
   );
 }
 
-final _emptyCatalog = CheckedEditorCatalog(
-  skir.EditorCatalogWireSnapshot.defaultInstance,
-);
+final _emptyCatalog = CheckedEditorCatalog(skir.EditorCatalog.defaultInstance);

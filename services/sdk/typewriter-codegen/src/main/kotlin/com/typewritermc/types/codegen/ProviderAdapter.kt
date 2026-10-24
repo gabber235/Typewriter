@@ -6,6 +6,7 @@ import com.squareup.kotlinpoet.CodeBlock
 import com.squareup.kotlinpoet.FileSpec
 import com.squareup.kotlinpoet.FunSpec
 import com.squareup.kotlinpoet.KModifier
+import com.squareup.kotlinpoet.MemberName
 import com.squareup.kotlinpoet.ParameterizedTypeName.Companion.parameterizedBy
 import com.squareup.kotlinpoet.PropertySpec
 import com.squareup.kotlinpoet.TypeName
@@ -20,16 +21,17 @@ import com.typewritermc.codegen.listCode
 import com.typewritermc.codegen.namedArguments
 import com.typewritermc.codegen.sentenceCase
 import com.typewritermc.discovery.GeneratedContract
-import com.typewritermc.presentation.PresentationDescriptor
-import com.typewritermc.presentation.PresentationTarget
-import com.typewritermc.types.ParameterKey
-import com.typewritermc.types.PresentationId
 import com.typewritermc.types.Resource
-import com.typewritermc.types.ResourceTarget
-import com.typewritermc.types.TypeDefinitionId
-import com.typewritermc.types.TypeTemplate
-import com.typewritermc.types.TypeUse
 import com.typewritermc.types.toTemplate
+import skirout.editor.v1.catalog.PresentationDescriptor
+import skirout.editor.v1.catalog.PresentationTarget
+import skirout.editor.v1.type_catalog.NamedTypeTemplate
+import skirout.editor.v1.type_catalog.NamedTypeUse
+import skirout.editor.v1.type_catalog.ParameterKey
+import skirout.editor.v1.type_catalog.PresentationId
+import skirout.editor.v1.type_catalog.ResourceTarget
+import skirout.editor.v1.type_catalog.TypeDefinitionId
+import skirout.editor.v1.type_catalog.TypeTemplate
 import com.typewritermc.codegen.TypewriterApi as Api
 
 /**
@@ -93,8 +95,8 @@ internal class ProviderAdapter(
                         .addCode(
                             """
                             |return with(%T) {
-                            |    %T(
-                            |        id = %T(origin.artifact.value,♢%S),
+                            |    %T.%M(
+                            |        id = %T(namespace = origin.artifact.value,♢name = %S),
                             |        owner = origin.owner,
                             |        target = %T(%L),
                             |        roles = roles,
@@ -105,9 +107,10 @@ internal class ProviderAdapter(
                             """.trimMargin(),
                             ownerClass,
                             PresentationDescriptor::class.asClassName(),
+                            PRESENTATION_DESCRIPTOR_OF,
                             PresentationId::class,
                             presentationName,
-                            PresentationTarget.Named::class,
+                            PresentationTarget.NamedWrapper::class,
                             symbolicTarget(),
                         ).build(),
                 ).addFunction(
@@ -148,11 +151,11 @@ internal class ProviderAdapter(
      */
     context(_: DefinitionReferences)
     fun operation(
-        application: TypeUse.Named?,
+        application: NamedTypeUse?,
         arguments: List<TypeName>,
         projections: List<CodeBlock>,
         input: TypeName,
-        inputUse: TypeUse.Named?,
+        inputUse: NamedTypeUse?,
     ): FileSpec {
         val draft: TypeName
         val target: CodeBlock
@@ -160,12 +163,12 @@ internal class ProviderAdapter(
         val spec: TypeName
         if (application == null) {
             draft = Api.ResourceDraft
-            target = CodeBlock.of("%T", ResourceTarget.AnyResource::class)
+            target = CodeBlock.of("%T.ANY_RESOURCE", ResourceTarget::class)
             subjects = CodeBlock.of("%T", Api.AnyResourceSubjects)
             spec = Api.ResourceOperationSpecImpl.parameterizedBy(input)
         } else {
             draft = if (targetParameters == 0) targetNames.draft else targetNames.exactDraft.parameterizedBy(arguments)
-            target = CodeBlock.of("%T(%L)", ResourceTarget.Type::class, application.toTemplate().kotlinCode())
+            target = CodeBlock.of("%T.%M(%L)", ResourceTarget::class, RESOURCE_TARGET_TYPE, application.toTemplate().kotlinCode())
             val projection =
                 if (targetParameters == 0) {
                     CodeBlock.of("%T", targetNames.draftProjection)
@@ -227,9 +230,9 @@ internal class ProviderAdapter(
         val anyResource = targetNames.source == Resource::class.asClassName()
         val target =
             if (anyResource) {
-                CodeBlock.of("%T", ResourceTarget.AnyResource::class)
+                CodeBlock.of("%T.ANY_RESOURCE", ResourceTarget::class)
             } else {
-                CodeBlock.of("%T(%L)", ResourceTarget.Type::class, symbolicTarget())
+                CodeBlock.of("%T.%M(%L)", ResourceTarget::class, RESOURCE_TARGET_TYPE, symbolicTarget())
             }
         val scope =
             if (anyResource) {
@@ -273,16 +276,20 @@ internal class ProviderAdapter(
             .initializer("%T.id", targetNames.definition)
             .build()
 
-    /** `TypeTemplate.Named(TargetDefinition.id, [Parameter(ParameterKey(TargetDefinition.id, i))...])`. */
+    /** `NamedTypeTemplate(TargetDefinition.id, [ParameterWrapper(ParameterKey(TargetDefinition.id, i))...])`. */
     private fun symbolicTarget(): CodeBlock {
         val id = CodeBlock.of("%T.id", targetNames.definition)
         val parameters =
             (0 until targetParameters).map { index ->
-                CodeBlock.of("%T(%T(%L,♢%L))", TypeTemplate.Parameter::class, ParameterKey::class, id, index)
+                CodeBlock.of("%T(%T(owner·=·%L,♢index·=·%L))", TypeTemplate.ParameterWrapper::class, ParameterKey::class, id, index)
             }
-        return CodeBlock.of("%T(%L,♢%L)", TypeTemplate.Named::class, id, parameters.listCode())
+        return CodeBlock.of("%T(definition·=·%L,♢arguments·=·%L)", NamedTypeTemplate::class, id, parameters.listCode())
     }
 
     private fun file(type: TypeSpec.Builder): FileSpec =
         GeneratedFile.builder(name.packageName, name.simpleName).addType(type.build()).build()
 }
+
+private val PRESENTATION_DESCRIPTOR_OF = MemberName("com.typewritermc.presentation", "of", isExtension = true)
+
+private val RESOURCE_TARGET_TYPE = MemberName("com.typewritermc.types", "type", isExtension = true)

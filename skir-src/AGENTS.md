@@ -21,7 +21,8 @@ Each bounded context owns its own version folders, such as `editor/v1` or `servi
 - Keep read models and write models separate. Display-oriented shapes are often not safe mutation shapes.
 - Define full models only when consumers genuinely need them. Prefer summaries, references, commands, and focused result payloads for narrower workflows.
 - Separate query, command, and event surfaces. Queries read state, commands change state, and events describe completed state changes.
-- Model failures as typed outcomes, not string errors. Use result variants such as success, validation_failed, not_found, permission_denied, and conflict.
+- Model failures as typed outcomes, not string errors. Name every failure variant with an `_error` suffix (validation_error, not_found_error, permission_denied_error, conflict_error); any other variant is a success. Every request response is an enum with `internal_error: InternalError`. The transport generator derives outcome classification from these names.
+- Describe complete results. Never model transport framing such as chunks, transfer identities or size limits; the transport splits large responses.
 - Do not model database internals. Contracts should survive database rewrites and must not be shaped around record layouts, indexes, storage-specific IDs, or query details.
 
 ## Pre-release evolution

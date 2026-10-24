@@ -4,31 +4,32 @@ import com.typewritermc.authoring.AuthoredReads
 import com.typewritermc.authoring.Availability
 import com.typewritermc.authoring.BoundCollectionPath
 import com.typewritermc.authoring.BoundPath
-import com.typewritermc.authoring.ItemId
-import com.typewritermc.authoring.PathSegment
-import com.typewritermc.authoring.ValueLocation
-import com.typewritermc.authoring.ValuePath
-import com.typewritermc.checking.CatalogGeneration
+import com.typewritermc.authoring.name
+import com.typewritermc.authoring.of
+import com.typewritermc.authoring.root
 import com.typewritermc.checking.PartialSelection
 import com.typewritermc.checking.TypedSelection
 import com.typewritermc.configuration.PortableExpressionChecker
-import com.typewritermc.types.DataValue
-import com.typewritermc.types.ListItem
-import com.typewritermc.types.MapRow
 import com.typewritermc.types.ResourceId
-import com.typewritermc.types.TypeDefinitionId
-import com.typewritermc.types.TypeId
-import com.typewritermc.types.TypeUse
 import com.typewritermc.types.catalog.DefaultCheckedCatalog
 import com.typewritermc.types.catalog.resolve
-import com.typewritermc.types.skir.SkirAuthoringValueCodec
-import com.typewritermc.types.skir.SkirTypeCodec
-import com.typewritermc.types.skir.getOrThrow
+import com.typewritermc.types.duration
+import com.typewritermc.types.field
+import com.typewritermc.types.fields
+import com.typewritermc.types.integer
+import com.typewritermc.types.listValue
+import com.typewritermc.types.mapValue
+import com.typewritermc.types.named
+import com.typewritermc.types.namedUse
+import com.typewritermc.types.qualified
+import com.typewritermc.types.record
+import com.typewritermc.types.requireValid
+import com.typewritermc.types.setValue
+import com.typewritermc.types.timestamp
 import com.typewritermc.types.unwrapNamed
 import de.infix.testBalloon.framework.core.testSuite
 import io.kotest.matchers.shouldBe
 import kotlinx.serialization.json.Json
-import kotlinx.serialization.json.JsonArray
 import kotlinx.serialization.json.JsonElement
 import kotlinx.serialization.json.JsonNull
 import kotlinx.serialization.json.JsonObject
@@ -36,7 +37,19 @@ import kotlinx.serialization.json.boolean
 import kotlinx.serialization.json.jsonArray
 import kotlinx.serialization.json.jsonObject
 import kotlinx.serialization.json.jsonPrimitive
+import skirout.editor.v1.expression.EvaluationBudget
 import skirout.editor.v1.expression.ExpressionNode
+import skirout.editor.v1.type_catalog.CatalogGeneration
+import skirout.editor.v1.type_catalog.DataValue
+import skirout.editor.v1.type_catalog.ExpressionBindingId
+import skirout.editor.v1.type_catalog.ItemId
+import skirout.editor.v1.type_catalog.ListItem
+import skirout.editor.v1.type_catalog.MapRow
+import skirout.editor.v1.type_catalog.PathSegment
+import skirout.editor.v1.type_catalog.TypeDefinitionId
+import skirout.editor.v1.type_catalog.TypeSelection
+import skirout.editor.v1.type_catalog.TypeUse
+import skirout.editor.v1.type_catalog.ValueLocation
 import java.nio.file.Files
 import java.nio.file.Path
 import kotlin.time.Duration.Companion.milliseconds
@@ -49,10 +62,10 @@ val PortableExpressionFixtureTest by testSuite {
             DefaultExpressionEvaluator(
                 ExpressionValueReader {
                     reads++
-                    Availability.Available(DataValue.StringValue("stored"))
+                    Availability.Available(DataValue.StringValueWrapper("stored"))
                 },
             )
-        val candidate = ExpressionBindingId("candidate")
+        val candidate = ExpressionBindingId(value = "candidate")
         val expression =
             ExpressionNode.createTextUnary(
                 operation = skirout.editor.v1.expression.TextUnaryOperation.TRIM,
@@ -62,20 +75,20 @@ val PortableExpressionFixtureTest by testSuite {
             evaluator.evaluateScoped(
                 expression,
                 ExpressionBindings(emptyMap()),
-                mapOf(candidate to DataValue.StringValue("  local  ")),
-                EvaluationBudget(20, 20),
+                mapOf(candidate to DataValue.StringValueWrapper("  local  ")),
+                EvaluationBudget(maxSteps = 20, maxCollectionItems = 20),
             )
-        } shouldBe Availability.Available(DataValue.StringValue("local"))
+        } shouldBe Availability.Available(DataValue.StringValueWrapper("local"))
         reads shouldBe 0
     }
     test("handled candidates retain runtime operation failures") {
         val evaluator = DefaultExpressionEvaluator(ExpressionValueReader { error("Local candidates must not read authored storage") })
-        val candidate = ExpressionBindingId("candidate")
+        val candidate = ExpressionBindingId(value = "candidate")
         val expression =
             ExpressionNode.createNumberArithmetic(
                 operation = skirout.editor.v1.expression.NumberArithmeticOperation.DIVIDE,
                 first = testInput(candidate),
-                second = testLiteral(DataValue.Integer(java.math.BigInteger.ZERO)),
+                second = testLiteral(DataValue.integer(java.math.BigInteger.ZERO)),
                 remaining = emptyList(),
             )
         val result =
@@ -83,8 +96,8 @@ val PortableExpressionFixtureTest by testSuite {
                 evaluator.evaluateScoped(
                     expression,
                     ExpressionBindings(emptyMap()),
-                    mapOf(candidate to DataValue.Integer(java.math.BigInteger.ONE)),
-                    EvaluationBudget(20, 20),
+                    mapOf(candidate to DataValue.integer(java.math.BigInteger.ONE)),
+                    EvaluationBudget(maxSteps = 20, maxCollectionItems = 20),
                 )
             }
         (result is Availability.Failed) shouldBe true
@@ -112,8 +125,8 @@ val PortableExpressionFixtureTest by testSuite {
                                 } else {
                                     location.path.segments.fold(configured.value()) { current, segment ->
                                         val field =
-                                            segment as? PathSegment.Field ?: error("Fixture root projections require field segments")
-                                        (current.unwrapNamed() as DataValue.Record).fields.getValue(field.name)
+                                            segment as? PathSegment.FieldWrapper ?: error("Fixture root projections require field segments")
+                                        requireNotNull((current.unwrapNamed() as DataValue.RecordWrapper).field(field.name))
                                     }
                                 }
                             Availability.Available(value)
@@ -129,7 +142,7 @@ val PortableExpressionFixtureTest by testSuite {
                             )
                         ) + case["partialBindings"]?.jsonObject.orEmpty().keys
                     ).associate { name ->
-                        ExpressionBindingId(name) to ValueLocation(ResourceId(name), ValuePath())
+                        ExpressionBindingId(value = name) to ValueLocation.of(ResourceId(name))
                     },
                 )
             val expression = case["expression"]!!.expression()
@@ -137,11 +150,10 @@ val PortableExpressionFixtureTest by testSuite {
                 val encodedType = case.getValue("resultType")
                 val definitions =
                     case["typeDefinitions"]?.jsonArray.orEmpty().map { encoded ->
-                        SkirTypeCodec
-                            .decode(
-                                skirout.editor.v1.type_catalog.TypeDefinition.serializer
-                                    .fromJsonCode(encoded.toString()),
-                            ).getOrThrow()
+                        (
+                            skirout.editor.v1.type_catalog.TypeDefinition.serializer
+                                .fromJsonCode(encoded.toString())
+                        ).requireValid()
                     }
                 val catalog = DefaultCheckedCatalog(FixtureReads.catalog, definitions)
                 val schemas =
@@ -149,7 +161,7 @@ val PortableExpressionFixtureTest by testSuite {
                         ?.jsonObject
                         .orEmpty()
                         .map { (name, encoded) ->
-                            ExpressionBindingId(name) to
+                            ExpressionBindingId(value = name) to
                                 skirout.editor.v1.expression.ExpressionType.serializer
                                     .fromJsonCode(encoded.toString())
                         }.toMap()
@@ -161,12 +173,10 @@ val PortableExpressionFixtureTest by testSuite {
                         ?.jsonObject
                         .orEmpty()
                         .map { (name, encoded) ->
-                            ExpressionBindingId(name) to
-                                SkirAuthoringValueCodec
-                                    .decode(
-                                        skirout.editor.v1.type_catalog.TypeSelection.serializer
-                                            .fromJsonCode(encoded.toString()),
-                                    ).getOrThrow()
+                            ExpressionBindingId(value = name) to
+                                TypeSelection.serializer
+                                    .fromJsonCode(encoded.toString())
+                                    .requireValid()
                         }.toMap()
                 var inferred: skirout.editor.v1.expression.ExpressionType? = null
                 PortableExpressionChecker(catalog::resolve, resolvePartial = catalog::resolvePartial)
@@ -184,7 +194,8 @@ val PortableExpressionFixtureTest by testSuite {
             }
             val roundTrip = ExpressionNode.serializer.fromBytes(ExpressionNode.serializer.toBytes(expression))
             ExpressionNode.serializer.toJsonCode(roundTrip) shouldBe ExpressionNode.serializer.toJsonCode(expression)
-            val result = with(FixtureReads) { evaluator.evaluate(expression, bindings, EvaluationBudget(100, 100)) }
+            val result =
+                with(FixtureReads) { evaluator.evaluate(expression, bindings, EvaluationBudget(maxSteps = 100, maxCollectionItems = 100)) }
             val expected = case["expectedByHost"]?.jsonObject?.get("kotlin")?.jsonObject ?: case["expected"]!!.jsonObject
             observed shouldBe expected["evaluatedReads"]!!.jsonArray.map { it.jsonPrimitive.content }
             when {
@@ -219,27 +230,27 @@ private fun fixturePath(): Path =
 private fun JsonObject.value(): DataValue =
     when {
         "null" in this -> {
-            DataValue.Null
+            DataValue.NULL
         }
 
         "unfilled" in this -> {
-            DataValue.Unfilled
+            DataValue.UNFILLED
         }
 
         "boolean" in this -> {
-            DataValue.Boolean(getValue("boolean").jsonPrimitive.boolean)
+            DataValue.BooleanWrapper(getValue("boolean").jsonPrimitive.boolean)
         }
 
         "integer" in this -> {
-            DataValue.Integer(getValue("integer").jsonPrimitive.content.toBigInteger())
+            DataValue.integer(getValue("integer").jsonPrimitive.content.toBigInteger())
         }
 
         "decimal" in this -> {
-            DataValue.Decimal(getValue("decimal").jsonPrimitive.content)
+            DataValue.DecimalWrapper(getValue("decimal").jsonPrimitive.content)
         }
 
         "duration" in this -> {
-            DataValue.Duration(
+            DataValue.duration(
                 getValue("duration")
                     .jsonPrimitive.content
                     .toLong()
@@ -248,79 +259,76 @@ private fun JsonObject.value(): DataValue =
         }
 
         "timestamp" in this -> {
-            DataValue.Timestamp(Instant.parse(getValue("timestamp").jsonPrimitive.content))
+            DataValue.timestamp(Instant.parse(getValue("timestamp").jsonPrimitive.content))
         }
 
         "float" in this -> {
-            DataValue.Float(getValue("float").jsonPrimitive.content.toDouble())
+            DataValue.FloatWrapper(getValue("float").jsonPrimitive.content.toDouble())
         }
 
         "string" in this -> {
-            DataValue.StringValue(getValue("string").jsonPrimitive.content)
+            DataValue.StringValueWrapper(getValue("string").jsonPrimitive.content)
         }
 
         "named" in this -> {
             val named = getValue("named").jsonObject
-            DataValue.Named(
-                TypeUse.Named(
-                    TypeDefinitionId(
-                        TypeId.Qualified(
-                            named.getValue("namespace").jsonPrimitive.content,
-                            named.getValue("name").jsonPrimitive.content,
-                        ),
+            DataValue.named(
+                TypeDefinitionId
+                    .qualified(
+                        named.getValue("namespace").jsonPrimitive.content,
+                        named.getValue("name").jsonPrimitive.content,
                         named
                             .getValue("revision")
                             .jsonPrimitive.content
                             .toInt(),
-                    ),
-                    named["arguments"]?.jsonArray.orEmpty().map { encoded ->
-                        SkirTypeCodec
-                            .decode(
+                    ).namedUse(
+                        named["arguments"]?.jsonArray.orEmpty().map { encoded ->
+                            (
                                 skirout.editor.v1.type_catalog.TypeUse.serializer
-                                    .fromJsonCode(encoded.toString()),
-                            ).getOrThrow()
-                    },
-                ),
+                                    .fromJsonCode(encoded.toString())
+                            ).requireValid()
+                        },
+                    ),
                 named.getValue("payload").jsonObject.value(),
             )
         }
 
         "record" in this -> {
-            DataValue.Record(getValue("record").jsonObject.mapValues { (_, value) -> value.jsonObject.value() })
+            DataValue.record(getValue("record").jsonObject.mapValues { (_, value) -> value.jsonObject.value() })
         }
 
         "list" in this -> {
-            DataValue.ListValue(
+            DataValue.listValue(
                 getValue("list").jsonArray.map { item ->
                     val encoded = item.jsonObject
                     ListItem(
-                        ItemId(encoded.getValue("id").jsonPrimitive.content),
-                        encoded.getValue("value").jsonObject.value(),
+                        id = ItemId(value = encoded.getValue("id").jsonPrimitive.content),
+                        value = encoded.getValue("value").jsonObject.value(),
                     )
                 },
             )
         }
 
         "set" in this -> {
-            DataValue.SetValue(
+            DataValue.setValue(
                 getValue("set").jsonArray.map { item ->
                     val encoded = item.jsonObject
                     ListItem(
-                        ItemId(encoded.getValue("id").jsonPrimitive.content),
-                        encoded.getValue("value").jsonObject.value(),
+                        id = ItemId(value = encoded.getValue("id").jsonPrimitive.content),
+                        value = encoded.getValue("value").jsonObject.value(),
                     )
                 },
             )
         }
 
         "map" in this -> {
-            DataValue.MapValue(
+            DataValue.mapValue(
                 getValue("map").jsonArray.map { row ->
                     val encoded = row.jsonObject
                     MapRow(
-                        ItemId(encoded.getValue("id").jsonPrimitive.content),
-                        encoded.getValue("key").jsonObject.value(),
-                        encoded.getValue("value").jsonObject.value(),
+                        id = ItemId(value = encoded.getValue("id").jsonPrimitive.content),
+                        key = encoded.getValue("key").jsonObject.value(),
+                        value = encoded.getValue("value").jsonObject.value(),
                     )
                 },
             )
@@ -334,19 +342,19 @@ private fun JsonObject.value(): DataValue =
 private fun JsonElement.expression(): ExpressionNode = ExpressionNode.serializer.fromJsonCode(toString())
 
 private fun ValueLocation.fixtureKey(): String {
-    val fields = path.segments.map { (it as PathSegment.Field).name }
+    val fields = path.segments.map { (it as PathSegment.FieldWrapper).name }
     return if (fields.isEmpty()) resource.value else "${resource.value}:${fields.joinToString(".")}"
 }
 
 internal object FixtureReads : AuthoredReads {
-    override val catalog = CatalogGeneration("expression fixture")
+    override val catalog = CatalogGeneration(value = "expression fixture")
     override val readContext = com.typewritermc.authoring.ReadContext(catalog)
 
     override fun <T> read(path: BoundPath<T>): Availability<T> = error("Fixture expressions use ExpressionValueReader.")
 
     override fun <T> readRepresentation(
         path: BoundPath<*>,
-        representation: com.typewritermc.types.TypeUse,
+        representation: TypeUse,
     ): Availability<T> = error("Fixture expressions use ExpressionValueReader.")
 
     override fun presence(path: BoundPath<*>): Availability<Boolean> = error("Fixture expressions use ExpressionValueReader.")

@@ -8,14 +8,14 @@ import "../../../../../support/publication.dart";
 
 void main() {
   for (final result in [
-    skir.PublicationResult.wrapBlocked(
+    skir.PublishAuthoringResponse.wrapBlockedError(
       skir.PublicationBlockers(
         first: skir.PublicationBlocker(details: publicationProblem()),
         additional: const [],
       ),
     ),
-    skir.PublicationResult.wrapInterrupted(_publication),
-    skir.PublicationResult.unknown,
+    skir.PublishAuthoringResponse.wrapInterruptedError(_publication),
+    skir.PublishAuthoringResponse.unknown,
   ]) {
     test(
       "publication transport journals ${result.kind.name} without inventing replay",
@@ -23,9 +23,7 @@ void main() {
         final nats = FakeNatsClient()
           ..registerHandler(
             _publishSubject,
-            (_) => skir.PublishAuthoringResponse.serializer.toBytes(
-              skir.PublishAuthoringResponse.wrapResult(result),
-            ),
+            (_) => skir.PublishAuthoringResponse.serializer.toBytes(result),
           );
         final container = ProviderContainer.test(
           overrides: [
@@ -52,7 +50,7 @@ void main() {
             ),
           ),
         });
-        if (result == skir.PublicationResult.unknown) {
+        if (result == skir.PublishAuthoringResponse.unknown) {
           await expectLater(
             work.execute(commit),
             throwsA(isA<SubmissionException<skir.PublishAuthoringResponse>>()),
@@ -64,10 +62,8 @@ void main() {
         } else {
           final response = await work.execute(commit);
           expect(
-            skir.PublicationResult.serializer.toBytes(
-              (response as skir.PublishAuthoringResponse_resultWrapper).value,
-            ),
-            skir.PublicationResult.serializer.toBytes(result),
+            skir.PublishAuthoringResponse.serializer.toBytes(response),
+            skir.PublishAuthoringResponse.serializer.toBytes(result),
           );
           expect(
             work.submissions.single.result,
@@ -153,8 +149,10 @@ void main() {
     nats
       ..registerHandler(
         _watchSubject,
-        (_) => skir.PublicationViewChanged.serializer.toBytes(
-          skir.PublicationViewChanged(current: view.id),
+        (_) => skir.WatchPublicationResponse.serializer.toBytes(
+          skir.WatchPublicationResponse.wrapViewChanged(
+            skir.PublicationViewChanged(current: view.id),
+          ),
         ),
       )
       ..registerHandler(_querySubject, (bytes) {
@@ -163,26 +161,13 @@ void main() {
         );
         if (request.expected != view.id) {
           return skir.QueryPublicationViewResponse.serializer.toBytes(
-            skir.QueryPublicationViewResponse.wrapChanged(
+            skir.QueryPublicationViewResponse.wrapViewChangedError(
               skir.PublicationViewChanged(current: view.id),
             ),
           );
         }
-        final encoded = skir.PublicationView.serializer.toBytes(view);
         return skir.QueryPublicationViewResponse.serializer.toBytes(
-          skir.QueryPublicationViewResponse.wrapChunk(
-            skir.PublicationViewChunk(
-              view: view.id,
-              transfer: skir.BoundedTransferChunk(
-                transferId: request.transferId,
-                index: 0,
-                chunkCount: 1,
-                encodedSize: encoded.length,
-                sha256: sha256.convert(encoded).toString(),
-                payload: skir.ByteString.copy(encoded),
-              ),
-            ),
-          ),
+          skir.QueryPublicationViewResponse.wrapView(view),
         );
       });
     final container = ProviderContainer.test(

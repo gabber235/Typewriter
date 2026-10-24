@@ -6,11 +6,13 @@ import com.typewritermc.engine.PUBLISHED_CONTENT_FORMAT_REVISION
 import com.typewritermc.engine.RESOURCE_GRAPH_FORMAT_REVISION
 import com.typewritermc.engine.RESOURCE_GRAPH_MEDIA_TYPE
 import com.typewritermc.engine.RESOURCE_GRAPH_PROJECTION
-import com.typewritermc.engine.RuntimeCompilationFacts
 import com.typewritermc.engine.decodeResourceGraphShard
 import com.typewritermc.types.NativeBindingRegistry
-import com.typewritermc.types.RelationContract
 import com.typewritermc.types.catalog.CheckedCatalog
+import com.typewritermc.types.toSkir
+import skirout.editor.v1.catalog.RelationContract
+import skirout.editor.v1.compiled_content.RuntimeCompilationFacts
+import skirout.editor.v1.type_catalog.PublicationId
 
 /**
  * Accepts loaded compiled content at the engine content boundary.
@@ -68,11 +70,11 @@ class ResourceGraphContentGateway(
 /** Reports whether the complete publication was installed or was already current. */
 sealed interface ContentApplicationResult {
     data class Applied(
-        val publication: com.typewritermc.authoring.PublicationId,
+        val publication: PublicationId,
     ) : ContentApplicationResult
 
     data class Unchanged(
-        val publication: com.typewritermc.authoring.PublicationId,
+        val publication: PublicationId,
     ) : ContentApplicationResult
 
     data object Unsupported : ContentApplicationResult

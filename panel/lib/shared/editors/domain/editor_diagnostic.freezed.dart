@@ -15,7 +15,7 @@ T _$identity<T>(T value) => value;
 /// @nodoc
 mixin _$EditorDiagnostic {
 
- EditorDiagnosticCode get code; String get message; skir.ValuePath? get path; EditorDiagnosticSeverity get severity; Map<String, String> get details;
+ EditorDiagnosticCode get code; String get message; skir.ValuePath? get path; skir.DiagnosticSeverity get severity; Map<String, String> get details;
 /// Create a copy of EditorDiagnostic
 /// with the given fields replaced by the non-null parameter values.
 @JsonKey(includeFromJson: false, includeToJson: false)
@@ -51,7 +51,7 @@ abstract mixin class $EditorDiagnosticCopyWith<$Res>  {
   factory $EditorDiagnosticCopyWith(EditorDiagnostic value, $Res Function(EditorDiagnostic) _then) = _$EditorDiagnosticCopyWithImpl;
 @useResult
 $Res call({
- EditorDiagnosticCode code, String message, skir.ValuePath? path, EditorDiagnosticSeverity severity, Map<String, String> details
+ EditorDiagnosticCode code, String message, skir.ValuePath? path, skir.DiagnosticSeverity severity, Map<String, String> details
 });
 
 
@@ -74,7 +74,7 @@ code: null == code ? _self.code : code // ignore: cast_nullable_to_non_nullable
 as EditorDiagnosticCode,message: null == message ? _self.message : message // ignore: cast_nullable_to_non_nullable
 as String,path: freezed == path ? _self.path : path // ignore: cast_nullable_to_non_nullable
 as skir.ValuePath?,severity: null == severity ? _self.severity : severity // ignore: cast_nullable_to_non_nullable
-as EditorDiagnosticSeverity,details: null == details ? _self.details : details // ignore: cast_nullable_to_non_nullable
+as skir.DiagnosticSeverity,details: null == details ? _self.details : details // ignore: cast_nullable_to_non_nullable
 as Map<String, String>,
   ));
 }
@@ -160,7 +160,7 @@ return $default(_that);case _:
 /// }
 /// ```
 
-@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function( EditorDiagnosticCode code,  String message,  skir.ValuePath? path,  EditorDiagnosticSeverity severity,  Map<String, String> details)?  $default,{required TResult orElse(),}) {final _that = this;
+@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function( EditorDiagnosticCode code,  String message,  skir.ValuePath? path,  skir.DiagnosticSeverity severity,  Map<String, String> details)?  $default,{required TResult orElse(),}) {final _that = this;
 switch (_that) {
 case _EditorDiagnostic() when $default != null:
 return $default(_that.code,_that.message,_that.path,_that.severity,_that.details);case _:
@@ -181,7 +181,7 @@ return $default(_that.code,_that.message,_that.path,_that.severity,_that.details
 /// }
 /// ```
 
-@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function( EditorDiagnosticCode code,  String message,  skir.ValuePath? path,  EditorDiagnosticSeverity severity,  Map<String, String> details)  $default,) {final _that = this;
+@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function( EditorDiagnosticCode code,  String message,  skir.ValuePath? path,  skir.DiagnosticSeverity severity,  Map<String, String> details)  $default,) {final _that = this;
 switch (_that) {
 case _EditorDiagnostic():
 return $default(_that.code,_that.message,_that.path,_that.severity,_that.details);case _:
@@ -201,7 +201,7 @@ return $default(_that.code,_that.message,_that.path,_that.severity,_that.details
 /// }
 /// ```
 
-@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function( EditorDiagnosticCode code,  String message,  skir.ValuePath? path,  EditorDiagnosticSeverity severity,  Map<String, String> details)?  $default,) {final _that = this;
+@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function( EditorDiagnosticCode code,  String message,  skir.ValuePath? path,  skir.DiagnosticSeverity severity,  Map<String, String> details)?  $default,) {final _that = this;
 switch (_that) {
 case _EditorDiagnostic() when $default != null:
 return $default(_that.code,_that.message,_that.path,_that.severity,_that.details);case _:
@@ -216,13 +216,13 @@ return $default(_that.code,_that.message,_that.path,_that.severity,_that.details
 
 
 class _EditorDiagnostic extends EditorDiagnostic {
-  const _EditorDiagnostic({required this.code, required this.message, this.path, this.severity = EditorDiagnosticSeverity.error,  Map<String, String> details = const {}}): _details = details,super._();
+  const _EditorDiagnostic({required this.code, required this.message, this.path, this.severity = skir.DiagnosticSeverity.error,  Map<String, String> details = const {}}): _details = details,super._();
   
 
 @override final  EditorDiagnosticCode code;
 @override final  String message;
 @override final  skir.ValuePath? path;
-@override@JsonKey() final  EditorDiagnosticSeverity severity;
+@override@JsonKey() final  skir.DiagnosticSeverity severity;
  final  Map<String, String> _details;
 @override@JsonKey() Map<String, String> get details {
   if (_details is EqualUnmodifiableMapView) return _details;
@@ -263,7 +263,7 @@ abstract mixin class _$EditorDiagnosticCopyWith<$Res> implements $EditorDiagnost
   factory _$EditorDiagnosticCopyWith(_EditorDiagnostic value, $Res Function(_EditorDiagnostic) _then) = __$EditorDiagnosticCopyWithImpl;
 @override @useResult
 $Res call({
- EditorDiagnosticCode code, String message, skir.ValuePath? path, EditorDiagnosticSeverity severity, Map<String, String> details
+ EditorDiagnosticCode code, String message, skir.ValuePath? path, skir.DiagnosticSeverity severity, Map<String, String> details
 });
 
 
@@ -286,7 +286,7 @@ code: null == code ? _self.code : code // ignore: cast_nullable_to_non_nullable
 as EditorDiagnosticCode,message: null == message ? _self.message : message // ignore: cast_nullable_to_non_nullable
 as String,path: freezed == path ? _self.path : path // ignore: cast_nullable_to_non_nullable
 as skir.ValuePath?,severity: null == severity ? _self.severity : severity // ignore: cast_nullable_to_non_nullable
-as EditorDiagnosticSeverity,details: null == details ? _self._details : details // ignore: cast_nullable_to_non_nullable
+as skir.DiagnosticSeverity,details: null == details ? _self._details : details // ignore: cast_nullable_to_non_nullable
 as Map<String, String>,
   ));
 }

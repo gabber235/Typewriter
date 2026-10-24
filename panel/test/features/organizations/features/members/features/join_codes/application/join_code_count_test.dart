@@ -17,10 +17,7 @@ void main() {
   group("join code count", () {
     var codeCounter = 0;
 
-    OrganizationJoinCode createCode({
-      bool? expired,
-      bool neverExpires = false,
-    }) {
+    skir.JoinCode createCode({bool? expired, bool neverExpires = false}) {
       codeCounter++;
       final now = DateTime.now();
       DateTime? expiresAt;
@@ -29,10 +26,12 @@ void main() {
             ? now.subtract(const Duration(days: 1))
             : now.add(const Duration(days: 7));
       }
-      return OrganizationJoinCode(
+      return skir.JoinCode(
         code: skir.recordId("organization_join_code:CODE-$codeCounter"),
         createdAt: now.subtract(const Duration(days: 1)),
         expiresAt: expiresAt,
+        singleUse: true,
+        autoAccept: skir.JoinCode_AutoAccept(roleIds: const []),
       );
     }
 

@@ -1,6 +1,7 @@
 package com.typewritermc.services.libs.registrar
 
 import com.typewritermc.services.libs.communicator.client.Communicator
+import com.typewritermc.services.libs.communicator.contract.OperationName
 import com.typewritermc.services.libs.telemetry.ErrorSlug
 import com.typewritermc.services.libs.telemetry.MainSpanScope
 import com.typewritermc.services.libs.telemetry.ServiceTelemetry
@@ -717,8 +718,8 @@ class ServiceRegistrar(
         generation: Long,
     ): Long? =
         telemetry.mainSpan(
-            "registrar.heartbeat",
-            ErrorSlug.of("registrar-heartbeat-failed"),
+            HEARTBEAT_OPERATION.value,
+            HEARTBEAT_OPERATION.failureSlug,
             parent = Context.root(),
             attributes = readyAttributes(session, generation),
         ) { main ->
@@ -1116,6 +1117,9 @@ private fun RuntimeCreateResult.asRuntimeResult(): RuntimeResult<RegistrarRuntim
     }
 
 private enum class HeartbeatResult { HEALTHY, RECONNECTED, TERMINAL }
+
+/** The heartbeat route's operation, whose failure slug the heartbeat span shares with the route. */
+private val HEARTBEAT_OPERATION = OperationName.of("registrar.heartbeat")
 
 private val RuntimeSetupProgress.stage: RegistrarStage
     get() =

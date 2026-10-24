@@ -1,46 +1,40 @@
 package com.typewritermc.realm.routes
 
-import com.typewritermc.authoring.AuthoringRecord
+import com.typewritermc.protocol.transport.RealmRouteScope
+import com.typewritermc.protocol.transport.generated.authoringSearch
 import com.typewritermc.realm.authoring.AuthoringViewStore
 import com.typewritermc.realm.search.AuthoringSearchRepository
 import com.typewritermc.realm.search.IndexedAuthoringSearchCandidate
 import com.typewritermc.services.libs.communicator.router.CommunicatorRoutesBuilder
-import com.typewritermc.types.DataValue
-import com.typewritermc.types.ResourceId
-import com.typewritermc.types.ScalarKind
-import com.typewritermc.types.TypeDefinitionId
-import com.typewritermc.types.TypeUse
-import com.typewritermc.types.skir.SkirAuthoringValueCodec
-import com.typewritermc.types.skir.SkirDataValueCodec
-import com.typewritermc.types.skir.SkirTypeCodec
-import com.typewritermc.types.skir.getOrThrow
+import com.typewritermc.types.requireValid
+import com.typewritermc.types.use
 import skirout.editor.v1.authoring.AuthoringDiagnostic
 import skirout.editor.v1.authoring.AuthoringSearchHit
 import skirout.editor.v1.authoring.PresentationSubject
 import skirout.editor.v1.authoring.SearchAuthoringRequest
 import skirout.editor.v1.authoring.SearchAuthoringResponse
-import skirout.editor.v1.type_catalog.CatalogGeneration as SkirCatalogGeneration
-import skirout.editor.v1.type_catalog.NamedTypeUse as SkirNamedTypeUse
-import skirout.editor.v1.type_catalog.ResourceId as SkirResourceId
-import skirout.editor.v1.type_catalog.TypeDefinitionId as SkirTypeDefinitionId
-import skirout.editor.v1.type_catalog.TypeUse as SkirTypeUse
-import skirout.editor.v1.typed_value.PortableValue as SkirPortableValue
+import skirout.editor.v1.type_catalog.AuthoringRecord
+import skirout.editor.v1.type_catalog.CatalogGeneration
+import skirout.editor.v1.type_catalog.DataValue
+import skirout.editor.v1.type_catalog.ResourceId
+import skirout.editor.v1.type_catalog.ScalarKind
+import skirout.editor.v1.typed_value.PortableValue
 
 internal class AuthoringSearchRoutes(
     private val repository: AuthoringSearchRepository,
     private val views: AuthoringViewStore,
-    private val contracts: EditorContracts,
+    private val address: RealmRouteScope,
 ) {
     fun register(builder: CommunicatorRoutesBuilder) =
         with(builder) {
-            unary(contracts.searchAuthoring) { call -> search(call.request) }
+            unary(address.authoringSearch) { call -> search(call.request) }
         }
 
     internal fun search(request: SearchAuthoringRequest): SearchAuthoringResponse =
         views.read { root ->
             if (root.catalog.generation.value != request.generation.value) {
-                return@read SearchAuthoringResponse.createCatalogChanged(
-                    actualGeneration = SkirCatalogGeneration(value = root.catalog.generation.value),
+                return@read SearchAuthoringResponse.createCatalogChangedError(
+                    actualGeneration = root.catalog.generation,
                 )
             }
             try {
@@ -48,13 +42,13 @@ internal class AuthoringSearchRoutes(
                     repository.search(
                         root,
                         request.query,
-                        request.contexts.mapTo(linkedSetOf()) { ResourceId(it.value) },
-                        request.roots.mapTo(linkedSetOf()) { it.toDomain() },
-                        request.target?.toDomain(),
+                        request.contexts.mapTo(linkedSetOf()) { it.requireValid() },
+                        request.roots.mapTo(linkedSetOf()) { it.requireValid() },
+                        request.target?.requireValid(),
                         MAX_SEARCH_CANDIDATES,
                     )
                 SearchAuthoringResponse.createSuccess(
-                    generation = SkirCatalogGeneration(value = root.catalog.generation.value),
+                    generation = root.catalog.generation,
                     hits =
                         candidates
                             .mapNotNull { candidate ->
@@ -73,35 +67,24 @@ private fun invalidSearch(
     code: String,
     message: String,
 ): SearchAuthoringResponse =
-    SearchAuthoringResponse.createInvalid(
+    SearchAuthoringResponse.createInvalidError(
         diagnostics = listOf(AuthoringDiagnostic(code = code, message = message, resource = null, path = null)),
     )
 
-private fun IndexedAuthoringSearchCandidate.toWire(record: AuthoringRecord): AuthoringSearchHit {
-    val wireResource = SkirResourceId(value = resource.value)
-    return AuthoringSearchHit(
-        resource = wireResource,
+private fun IndexedAuthoringSearchCandidate.toWire(record: AuthoringRecord): AuthoringSearchHit =
+    AuthoringSearchHit(
+        resource = resource,
         subject =
             PresentationSubject(
-                resource = wireResource,
-                content = SkirAuthoringValueCodec.encode(record).getOrThrow(),
+                resource = resource,
+                content = record,
             ),
         context =
-            SkirPortableValue(
-                actualType = SkirTypeCodec.encode(TypeUse.Scalar(ScalarKind.Text)).getOrThrow(),
-                payload = SkirDataValueCodec.encode(DataValue.StringValue(text)).getOrThrow(),
+            PortableValue(
+                actualType = ScalarKind.TEXT.use,
+                payload = DataValue.StringValueWrapper(text),
             ),
     )
-}
-
-private fun SkirTypeDefinitionId.toDomain(): TypeDefinitionId =
-    (
-        SkirTypeCodec
-            .decode(SkirTypeUse.NamedWrapper(SkirNamedTypeUse(definition = this, arguments = emptyList())))
-            .getOrThrow() as TypeUse.Named
-    ).definition
-
-private fun SkirNamedTypeUse.toDomain(): TypeUse.Named = SkirTypeCodec.decode(SkirTypeUse.NamedWrapper(this)).getOrThrow() as TypeUse.Named
 
 private const val MAX_SEARCH_CANDIDATES = 256
 private const val MAX_SEARCH_RESULTS = 100

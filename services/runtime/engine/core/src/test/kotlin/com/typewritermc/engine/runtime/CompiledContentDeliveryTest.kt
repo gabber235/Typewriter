@@ -12,6 +12,7 @@ import com.typewritermc.loader.api.artifact.SharedArtifactRevision
 import com.typewritermc.services.libs.communicator.client.Communicator
 import com.typewritermc.services.libs.communicator.testing.FakeMessageTransport
 import com.typewritermc.services.libs.communicator.transport.TransportError
+import com.typewritermc.services.libs.communicator.transport.TransportResult
 import com.typewritermc.services.libs.filetransfer.blob.ArtifactDigest
 import com.typewritermc.services.libs.filetransfer.blob.BlobMetadata
 import com.typewritermc.services.libs.filetransfer.blob.TransferId
@@ -33,8 +34,12 @@ val CompiledContentDeliveryTest by testSuite {
         runTest {
             TelemetryTestHarness.create().use { telemetry ->
                 val transport = FakeMessageTransport()
-                transport.respondWith { _, _ -> awaitCancellation() }
-                transport.respondWith { _, _ -> awaitCancellation() }
+                repeat(2) {
+                    transport.respondWith { _, timeout ->
+                        delay(timeout)
+                        TransportResult.Failure(TransportError.Timeout())
+                    }
+                }
                 val communicator = Communicator(transport, telemetry.telemetry, ContextPropagators.noop())
                 val session = HostedMessagingSession(1, "organization", communicator)
                 val host = deliveryHost(session, telemetry)
@@ -44,7 +49,7 @@ val CompiledContentDeliveryTest by testSuite {
                 withClue("health=${delivery.health.value}; actions=${transport.actions}") {
                     transport.actions.filterIsInstance<FakeMessageTransport.Action.Request>().size shouldBe 1
                 }
-                advanceTimeBy(31_001)
+                advanceTimeBy(11_001)
                 runCurrent()
                 transport.actions.filterIsInstance<FakeMessageTransport.Action.Request>().size shouldBe 2
                 host.messaging.value shouldBe session
@@ -85,7 +90,7 @@ val CompiledContentDeliveryTest by testSuite {
                 runCurrent()
                 stopped.await()
                 val requests = transport.actions.filterIsInstance<FakeMessageTransport.Action.Request>().size
-                advanceTimeBy(31_001)
+                advanceTimeBy(11_001)
                 runCurrent()
                 transport.actions.filterIsInstance<FakeMessageTransport.Action.Request>().size shouldBe requests
                 delivery.health.value shouldBe EngineContentDeliveryHealth.Idle

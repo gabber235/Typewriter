@@ -318,9 +318,7 @@ BoundPresentationHost _scalarHost({
     ),
   );
   return BoundPresentationHost(
-    catalog: CheckedEditorCatalog(
-      skir.EditorCatalogWireSnapshot.defaultInstance,
-    ),
+    catalog: CheckedEditorCatalog(skir.EditorCatalog.defaultInstance),
     root: () => root,
     bindings: [
       for (final entry in values.entries)

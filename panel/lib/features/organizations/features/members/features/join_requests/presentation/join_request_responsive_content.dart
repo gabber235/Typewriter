@@ -1,3 +1,5 @@
+import "package:typewriter_panel/infrastructure/protocols/skir/skir.dart"
+    as skir;
 import "package:typewriter_panel/typewriter_panel.dart";
 
 /// Mobile and tablet body for one join request card.
@@ -15,7 +17,7 @@ class JoinRequestResponsiveContent extends StatelessWidget {
     required this.onToggle,
     super.key,
   });
-  final OrganizationJoinRequest request;
+  final skir.OrganizationJoinRequest request;
   final bool isSelected;
   final bool isExpanded;
   final VoidCallback onExpired;

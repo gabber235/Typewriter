@@ -2,6 +2,7 @@ package com.typewritermc.discovery
 
 import com.typewritermc.imprint.ArtifactId
 import kotlinx.serialization.Serializable
+import skirout.editor.v1.type_catalog.ContributionKey
 
 @Serializable
 data class DeploymentFacts(
@@ -30,7 +31,6 @@ data class SourcePartCatalogEntry(
     val eligibility: Eligibility,
 )
 
-@Serializable
 data class DiscoveryDiagnostic(
     val code: String,
     val message: String,

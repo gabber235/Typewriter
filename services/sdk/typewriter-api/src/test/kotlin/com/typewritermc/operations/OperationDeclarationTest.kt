@@ -2,96 +2,99 @@
 
 package com.typewritermc.operations
 
-import com.typewritermc.authoring.AuthoringRecord
-import com.typewritermc.authoring.CounterpartChoice
 import com.typewritermc.authoring.GeneratedSdkApi
-import com.typewritermc.authoring.LinkOccurrence
-import com.typewritermc.authoring.LinkOccurrenceId
-import com.typewritermc.authoring.PreparedContent
-import com.typewritermc.authoring.PreparedValue
 import com.typewritermc.authoring.ResourceDraft
-import com.typewritermc.authoring.TypeSelection
-import com.typewritermc.authoring.ValueLocation
-import com.typewritermc.authoring.ValuePath
 import com.typewritermc.authoring.field
+import com.typewritermc.authoring.of
+import com.typewritermc.authoring.root
 import com.typewritermc.authoring.typedPath
-import com.typewritermc.checking.CatalogGeneration
 import com.typewritermc.discovery.CatalogAssemblyContext
-import com.typewritermc.discovery.ContributionKey
 import com.typewritermc.discovery.ProviderOrigin
 import com.typewritermc.discovery.assemble
+import com.typewritermc.discovery.contributionKey
 import com.typewritermc.imprint.ArtifactId
 import com.typewritermc.imprint.ContributionName
 import com.typewritermc.imprint.ContributionSourceId
 import com.typewritermc.imprint.ProducerId
 import com.typewritermc.library.frameworkContributions
-import com.typewritermc.presentation.ButtonVariant
-import com.typewritermc.types.DataValue
-import com.typewritermc.types.DeclarationOwner
-import com.typewritermc.types.EndpointId
 import com.typewritermc.types.FactoryNativeBindingRegistry
-import com.typewritermc.types.LinkTarget
 import com.typewritermc.types.ResourceId
 import com.typewritermc.types.ResourceIdDefinition
-import com.typewritermc.types.ResourceTarget
-import com.typewritermc.types.TypeDefinitionId
-import com.typewritermc.types.TypeId
-import com.typewritermc.types.TypeUse
 import com.typewritermc.types.catalog.DefaultCheckedCatalog
-import com.typewritermc.types.skir.SkirOperationCodec
-import com.typewritermc.types.skir.getOrThrow
+import com.typewritermc.types.field
+import com.typewritermc.types.namedUse
+import com.typewritermc.types.qualified
+import com.typewritermc.types.toSkir
+import com.typewritermc.types.use
 import de.infix.testBalloon.framework.core.testSuite
 import io.kotest.matchers.collections.shouldContainAll
 import io.kotest.matchers.shouldBe
 import io.kotest.matchers.string.shouldContain
+import skirout.editor.v1.authoring.CounterpartChoice
+import skirout.editor.v1.authoring.LinkOccurrence
+import skirout.editor.v1.authoring.LinkOccurrenceId
+import skirout.editor.v1.catalog.PreparedContent
+import skirout.editor.v1.catalog.PreparedValue
+import skirout.editor.v1.operation.OperationAvailability
+import skirout.editor.v1.operation.OperationCardinality
+import skirout.editor.v1.operation.OperationDrop
+import skirout.editor.v1.operation.OperationGroup
+import skirout.editor.v1.operation.OperationInspector
+import skirout.editor.v1.operation.OperationShortcut
+import skirout.editor.v1.operation.ResourceOperationDefinition
+import skirout.editor.v1.presentation.ButtonVariant
+import skirout.editor.v1.presentation.HeaderActionTone
+import skirout.editor.v1.resource_operations.PreparationChoice
+import skirout.editor.v1.resource_operations.PreparationChoiceAnswer
+import skirout.editor.v1.resource_operations.PreparationChoiceId
+import skirout.editor.v1.resource_operations.PreparationCounterpartOption
+import skirout.editor.v1.type_catalog.AuthoringRecord
+import skirout.editor.v1.type_catalog.CapabilityId
+import skirout.editor.v1.type_catalog.CatalogGeneration
+import skirout.editor.v1.type_catalog.DataValue
+import skirout.editor.v1.type_catalog.DeclarationOwner
+import skirout.editor.v1.type_catalog.EndpointId
+import skirout.editor.v1.type_catalog.LinkTarget
+import skirout.editor.v1.type_catalog.ResourceTarget
+import skirout.editor.v1.type_catalog.TypeDefinitionId
+import skirout.editor.v1.type_catalog.TypeSelection
+import skirout.editor.v1.type_catalog.ValueLocation
+import skirout.editor.v1.type_catalog.ValuePath
 
 val OperationDeclarationTest by testSuite {
-    test("declared appearance survives operation encoding with the tone following the group") {
-        ButtonVariant.entries.forEach { variant ->
+    test("declared appearance publishes with the tone following the group") {
+        listOf(ButtonVariant.FILLED, ButtonVariant.OUTLINED, ButtonVariant.TEXT).forEach { variant ->
             val declaration =
                 collect<Unit> {
                     appearance {
                         icon("mdi:delete-outline")
-                        group(OperationGroup.Destructive, order = 3)
-                        inspector(OperationInspector.Button(variant))
+                        group(OperationGroup.DESTRUCTIVE, order = 3)
+                        inspector(OperationInspector.ButtonWrapper(variant))
                     }
-                    gestures { shortcut(OperationShortcut.Delete) }
+                    gestures { shortcut(OperationShortcut.DELETE) }
                     confirm("Remove these?") { action("Remove") }
                     prepare { }
                 }
-            val bound = bind(declaration)
-            val encoded =
-                SkirOperationCodec
-                    .encode(ResolvedResourceOperations(listOf(ResolvedResourceOperation(bound.single(), OperationAvailability.Enabled))))
-                    .getOrThrow()
-            val definition = encoded.operations.single().definition
+            val definition = bind(declaration).single()
             val appearance = definition.presentation
             appearance.label shouldBe "Example operation"
             appearance.icon shouldBe "mdi:delete-outline"
             appearance.order shouldBe 3
-            appearance.tone shouldBe skirout.editor.v1.presentation.HeaderActionTone.DESTRUCTIVE
-            appearance.shortcut shouldBe skirout.editor.v1.operation.OperationShortcut.DELETE
+            appearance.tone shouldBe HeaderActionTone.DESTRUCTIVE
+            appearance.shortcut shouldBe OperationShortcut.DELETE
             appearance.confirmation?.title shouldBe "Example operation"
             appearance.confirmation?.confirmationLabel shouldBe "Remove"
-            (appearance.inspector as skirout.editor.v1.operation.OperationInspector.ButtonWrapper).value shouldBe
-                when (variant) {
-                    ButtonVariant.Filled -> skirout.editor.v1.presentation.ButtonVariant.FILLED
-                    ButtonVariant.Outlined -> skirout.editor.v1.presentation.ButtonVariant.OUTLINED
-                    ButtonVariant.Text -> skirout.editor.v1.presentation.ButtonVariant.TEXT
-                }
-            definition.capability.value shouldBe
-                bound
-                    .single()
-                    .id.capability.value
-            definition.targets.cardinality shouldBe skirout.editor.v1.operation.OperationCardinality.SELECTION
+            (appearance.inspector as OperationInspector.ButtonWrapper).value shouldBe variant
+            definition.capability.value shouldBe definition.id.capability.value
+            definition.targets.cardinality shouldBe OperationCardinality.SELECTION
             definition.drop shouldBe null
         }
     }
 
     test("the core catalog publishes every core operation for any resource with labels from object names") {
-        val assembly = frameworkContributions().assemble(CatalogAssemblyContext(CatalogGeneration("core operations")))
+        val assembly = frameworkContributions().assemble(CatalogAssemblyContext(CatalogGeneration(value = "core operations")))
         assembly.operations.diagnostics shouldBe emptyList()
-        val definitions = assembly.snapshot.resourceOperations.associateBy { it.id.declaration.substringAfterLast('.') }
+        val definitions = assembly.editorCatalog.resourceOperations.associateBy { it.id.declaration.substringAfterLast('.') }
         definitions.mapValues { it.value.presentation.label } shouldBe
             mapOf(
                 "Delete" to "Delete",
@@ -101,16 +104,19 @@ val OperationDeclarationTest by testSuite {
                 "Unlink" to "Unlink",
                 "LinkWithDuplicate" to "Link with duplicate",
             )
-        definitions.values.all { it.targets.subject == ResourceTarget.AnyResource } shouldBe true
-        definitions.getValue("LinkWithDuplicate").targets.cardinality shouldBe OperationCardinality.Single
-        definitions.getValue("Delete").presentation.shortcut shouldBe OperationShortcut.Delete
-        definitions.getValue("MoveToOwner").drop shouldBe OperationDrop(ValuePath().field("destination"), "Move here")
-        definitions.getValue("LinkWith").drop shouldBe OperationDrop(ValuePath().field("target"), "Link")
-        definitions.getValue("Unlink").drop shouldBe OperationDrop(ValuePath().field("target"), "Unlink")
-        val searches = assembly.snapshot.capabilities.map { it.id }
+        definitions.values.all { it.targets.subject == skirout.editor.v1.type_catalog.ResourceTarget.ANY_RESOURCE } shouldBe true
+        definitions.getValue("LinkWithDuplicate").targets.cardinality shouldBe OperationCardinality.SINGLE
+        definitions.getValue("Delete").presentation.shortcut shouldBe OperationShortcut.DELETE
+        definitions.getValue("MoveToOwner").drop shouldBe drop(ValuePath.root.field("destination"), "Move here")
+        definitions.getValue("LinkWith").drop shouldBe drop(ValuePath.root.field("target"), "Link")
+        definitions.getValue("Unlink").drop shouldBe drop(ValuePath.root.field("target"), "Unlink")
+        val searches =
+            assembly.editorCatalog.capabilities.mapNotNull { capability ->
+                (capability as? skirout.editor.v1.capability.CapabilityDefinition.SearchWrapper)?.value?.capabilityId
+            }
         searches shouldContainAll
             listOf("MoveToOwner" to "destination", "LinkWith" to "target", "Unlink" to "target").map { (operation, field) ->
-                definitions.getValue(operation).id.candidateSearch(ValuePath().field(field))
+                definitions.getValue(operation).id.candidateSearch(ValuePath.root.field(field))
             }
     }
 
@@ -123,7 +129,11 @@ val OperationDeclarationTest by testSuite {
         uncandidated.failure?.message!! shouldContain "must declare candidates"
 
         val second =
-            typedPath<MoveToOwnerInput, ResourceId>(MoveToOwnerInputDefinition.id, ValuePath().field("second"), ResourceIdDefinition.use)
+            typedPath<MoveToOwnerInput, ResourceId>(
+                MoveToOwnerInputDefinition.id,
+                ValuePath.root.field("second"),
+                ResourceIdDefinition.use.use,
+            )
         val twice =
             collect<MoveToOwnerInput> {
                 input {
@@ -147,7 +157,7 @@ val OperationDeclarationTest by testSuite {
                 appearance { label(" ") }
                 prepare { }
             }
-        val catalog = DefaultCheckedCatalog(CatalogGeneration("test"), emptyList())
+        val catalog = DefaultCheckedCatalog(CatalogGeneration(value = "test"), emptyList())
         val bound = bindOperations(listOf(declaration), catalog, FactoryNativeBindingRegistry(catalog, emptyList()), emptyList())
         bound.definitions shouldBe emptyList()
         bound.diagnostics
@@ -161,15 +171,15 @@ val OperationDeclarationTest by testSuite {
     }
 
     test("input fields must belong to the operation input type") {
-        val assembly = frameworkContributions().assemble(CatalogAssemblyContext(CatalogGeneration("foreign field")))
+        val assembly = frameworkContributions().assemble(CatalogAssemblyContext(CatalogGeneration(value = "foreign field")))
         val declaration =
             collect<MoveToOwnerInput>(OperationInput.Typed(MoveToOwnerInputDefinition.use)) {
                 input {
                     val foreign =
                         typedPath<MoveToOwnerInput, ResourceId>(
                             LinkWithInputDefinition.id,
-                            ValuePath().field("destination"),
-                            ResourceIdDefinition.use,
+                            ValuePath.root.field("destination"),
+                            ResourceIdDefinition.use.use,
                         )
                     foreign { candidates { emptySequence() } }
                 }
@@ -188,7 +198,7 @@ val OperationDeclarationTest by testSuite {
             collect<Unit> {
                 availableWhen {
                     invoked = true
-                    OperationAvailability.Enabled
+                    OperationAvailability.ENABLED
                 }
                 prepare { invoked = true }
             }
@@ -199,33 +209,45 @@ val OperationDeclarationTest by testSuite {
     }
 
     test("new counterpart choices retain initialized values and validate their configured type") {
-        val location = ValueLocation(ResourceId("owner"), ValuePath())
+        val location = ValueLocation.of(ResourceId("owner"))
 
         fun choice(name: String) =
-            CounterpartChoice.New(
-                location,
-                PreparedValue(
-                    PreparedContent.Record(
-                        AuthoringRecord(
-                            TypeSelection.Complete(TypeUse.Named(target)),
-                            mapOf("name" to DataValue.StringValue(name)),
-                        ),
+            CounterpartChoice.createNew(
+                containing = location,
+                prepared =
+                    PreparedValue(
+                        content =
+                            PreparedContent.RecordWrapper(
+                                AuthoringRecord.of(
+                                    TypeSelection.CompleteWrapper(target.namedUse()),
+                                    mapOf("name" to DataValue.StringValueWrapper(name)),
+                                ),
+                            ),
+                        findings = emptyList(),
                     ),
-                    emptyList(),
-                ),
             )
         val source =
-            LinkOccurrence(LinkOccurrenceId(EndpointId("source"), location), ResourceId("owner"), LinkTarget(ResourceId("target"), null))
+            LinkOccurrence(
+                id = LinkOccurrenceId(endpoint = EndpointId(value = "source"), location = location),
+                source = ResourceId("owner").toSkir(),
+                target = LinkTarget(resource = ResourceId("target").toSkir(), opposite = null),
+            )
         val proposed = choice("retained default")
-        val choices = PreparationChoices(mapOf("inverse" to PreparationChoiceAnswer.Counterpart(proposed)))
+        val inverse = PreparationChoiceId(value = "inverse")
+        val choices = PreparationChoices(listOf(PreparationChoiceAnswer.createCounterpart(choiceId = inverse, counterpart = proposed)))
         choices.require(
-            PreparationChoice.Counterpart("inverse", "Choose inverse", source, listOf(choice("newly sampled default"))),
+            PreparationChoice.Counterpart(
+                choiceId = inverse,
+                label = "Choose inverse",
+                source = source,
+                candidates = listOf(PreparationCounterpartOption(label = "Create", counterpart = choice("newly sampled default"))),
+            ),
         ) shouldBe
             proposed
     }
 }
 
-private val target = TypeDefinitionId(TypeId.Qualified("fixture", "Resource"), 1)
+private val target = TypeDefinitionId.qualified("fixture", "Resource")
 
 /** Collects one operation on any resource as a generated provider would, with the label derived from `ExampleOperation`. */
 private fun <I> collect(
@@ -235,24 +257,29 @@ private fun <I> collect(
     collectOperation<ResourceDraft, I>(
         origin = origin(),
         declaration = "fixture.ExampleOperation",
-        target = ResourceTarget.AnyResource,
+        target = ResourceTarget.ANY_RESOURCE,
         subjects = AnyResourceSubjects,
         input = input,
         defaultLabel = "Example operation",
     ) { spec -> ResourceOperationSpecImpl(spec).declare() }
 
 private fun bind(declaration: OperationDeclaration): List<ResourceOperationDefinition> {
-    val catalog = DefaultCheckedCatalog(CatalogGeneration("test"), emptyList())
+    val catalog = DefaultCheckedCatalog(CatalogGeneration(value = "test"), emptyList())
     val bound = bindOperations(listOf(declaration), catalog, FactoryNativeBindingRegistry(catalog, emptyList()), emptyList())
     bound.failures shouldBe emptyList()
     return bound.definitions
 }
 
+private fun drop(
+    input: ValuePath,
+    hint: String,
+) = OperationDrop(input = input, hint = hint)
+
 private fun origin(): ProviderOrigin =
     ProviderOrigin(
         DeclarationOwner(
-            ContributionKey(ContributionSourceId("fixture"), "main", ProducerId("ksp"), ContributionName("ops")),
-            "fixture.ExampleOperation",
+            source = contributionKey(ContributionSourceId("fixture"), "main", ProducerId("ksp"), ContributionName("ops")),
+            localIdentity = "fixture.ExampleOperation",
         ),
         ArtifactId("fixture"),
         "main",

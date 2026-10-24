@@ -248,7 +248,7 @@ void main() {
       final displayed = _definition("SequencePage");
       final fallback = _definition("ScenePage");
       final checked = CheckedEditorCatalog(
-        skir.EditorCatalogWireSnapshot(
+        skir.EditorCatalog(
           resourceDisplays: const [],
           resourceOperations: const [],
           generation: skir.CatalogGeneration(value: "catalog:display"),
@@ -383,7 +383,7 @@ void main() {
     final coin = _definition("CoinReward");
     final parameter = skir.ParameterKey(owner: wrapper, index: 0);
     final checked = CheckedEditorCatalog(
-      skir.EditorCatalogWireSnapshot(
+      skir.EditorCatalog(
         resourceDisplays: const [],
         resourceOperations: const [],
         generation: skir.CatalogGeneration(value: "catalog:covariance"),
@@ -479,7 +479,7 @@ void main() {
       ),
     ];
     final checked = CheckedEditorCatalog(
-      skir.EditorCatalogWireSnapshot(
+      skir.EditorCatalog(
         resourceDisplays: const [],
         resourceOperations: const [],
         generation: skir.CatalogGeneration(value: "catalog:specificity"),
@@ -644,7 +644,7 @@ void main() {
     );
     final original = fixture.catalog.snapshot;
     final checked = CheckedEditorCatalog(
-      skir.EditorCatalogWireSnapshot(
+      skir.EditorCatalog(
         resourceDisplays: const [],
         resourceOperations: const [],
         generation: original.generation,
@@ -800,7 +800,7 @@ _patternCatalog({required bool repeated}) {
       priority: repeated ? 100 : 1,
     ),
   ];
-  final snapshot = skir.EditorCatalogWireSnapshot(
+  final snapshot = skir.EditorCatalog(
     resourceDisplays: const [],
     resourceOperations: const [],
     generation: skir.CatalogGeneration(value: "catalog:patterns"),
@@ -902,7 +902,7 @@ _dependentCatalog() {
   );
   return (
     catalog: CheckedEditorCatalog(
-      skir.EditorCatalogWireSnapshot(
+      skir.EditorCatalog(
         resourceDisplays: const [],
         resourceOperations: const [],
         generation: skir.CatalogGeneration(value: "catalog:dependent"),
@@ -1000,7 +1000,7 @@ _catalog() {
   );
   final baseType = _published(base, [baseParameter]);
   final markerType = _published(marker, const []);
-  final snapshot = skir.EditorCatalogWireSnapshot(
+  final snapshot = skir.EditorCatalog(
     resourceDisplays: const [],
     resourceOperations: const [],
     generation: skir.CatalogGeneration(value: "catalog:1"),

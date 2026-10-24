@@ -1,53 +1,30 @@
 package com.typewritermc.authoring
 
-import com.typewritermc.types.DataValue
-import com.typewritermc.types.RelationId
-import com.typewritermc.types.ResourceId
-import kotlinx.serialization.Serializable
+import skirout.editor.v1.authoring_facts.EditExpectation
+import skirout.editor.v1.authoring_facts.LinkProjection
+import skirout.editor.v1.authoring_facts.TraversalDirection
+import skirout.editor.v1.type_catalog.RelationId
+import skirout.editor.v1.type_catalog.ResourceId
 
-/** Facts from the original read view that must still hold when an edit is accepted. */
-@Serializable
-sealed interface EditExpectation {
-    /** A missing value is distinct from the authored [DataValue.Null] variant. */
-    @Serializable
-    data class Value(
-        val at: ValueLocation,
-        val expected: DataValue?,
-    ) : EditExpectation
+/*
+ * Edit expectations are the generated Skir EditExpectation: facts from the original read view that must still hold
+ * when an edit is accepted. The resource id and link expectations describe sets; these factories give them their
+ * canonical form, without duplicates and in a fixed order, so equal facts compare and encode equally.
+ */
 
-    @Serializable
-    data class Resource(
-        val id: ResourceId,
-        val expected: AuthoringRecord?,
-    ) : EditExpectation
+/** Expects exactly the resources [expected], in id order. */
+fun EditExpectation.Companion.resourceIds(expected: Collection<ResourceId>): EditExpectation.ResourceIdsWrapper =
+    EditExpectation.ResourceIdsWrapper(expected.canonicalResourceIds())
 
-    @Serializable
-    data class ResourceExists(
-        val id: ResourceId,
-        val expected: Boolean,
-    ) : EditExpectation
+/** Expects exactly the [expected] links of [contract] at [resource], in the order of their dense Skir JSON. */
+fun EditExpectation.Companion.links(
+    resource: ResourceId,
+    contract: RelationId,
+    direction: TraversalDirection,
+    expected: Collection<LinkProjection>,
+): EditExpectation.LinksWrapper =
+    EditExpectation.createLinks(resource = resource, contract = contract, direction = direction, expected = expected.canonicalLinks())
 
-    @Serializable
-    data class Configuration(
-        val at: ValueLocation,
-        val expected: TypeSelection?,
-    ) : EditExpectation
+internal fun Collection<ResourceId>.canonicalResourceIds(): List<ResourceId> = distinct().sortedBy { it.value }
 
-    @Serializable
-    data class ResourceIds(
-        val expected: Set<ResourceId>,
-    ) : EditExpectation
-
-    @Serializable
-    data class Links(
-        val resource: ResourceId,
-        val contract: RelationId,
-        val direction: TraversalDirection,
-        val expected: Set<LinkProjection>,
-    ) : EditExpectation
-}
-
-data class ExpectationConflict(
-    val expected: EditExpectation,
-    val actual: EditExpectation,
-)
+internal fun Collection<LinkProjection>.canonicalLinks(): List<LinkProjection> = distinct().sortedBy(LinkProjection.serializer::toJsonCode)

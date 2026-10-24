@@ -8,13 +8,14 @@ import com.squareup.kotlinpoet.PropertySpec
 import com.squareup.kotlinpoet.TypeSpec
 import com.squareup.kotlinpoet.asClassName
 import com.typewritermc.authoring.TypedPath
-import com.typewritermc.authoring.ValuePath
 import com.typewritermc.codegen.completeUseCode
 import com.typewritermc.codegen.kotlinCode
 import com.typewritermc.types.codegen.SdkDeclaration
 import com.typewritermc.types.codegen.SdkEmitter
 import com.typewritermc.types.codegen.SdkField
 import com.typewritermc.types.codegen.containsParameter
+import com.typewritermc.types.template
+import skirout.editor.v1.type_catalog.ValuePath
 import com.typewritermc.codegen.TypewriterApi as Api
 
 /** `XFields`: one typed path per authoring field, for hand written selections, projections and checks. */
@@ -45,8 +46,9 @@ internal object FieldsEmitter : SdkEmitter {
         }
 }
 
-/** `ValuePath().field("name")`: the path of one field, built with the same API as hand written code. */
-internal fun SdkField.valuePath(): CodeBlock = CodeBlock.of("%T().%M(%S)", ValuePath::class, VALUE_PATH_FIELD, name)
+/** `ValuePath.root.field("name")`: the path of one field, built with the same API as hand written code. */
+internal fun SdkField.valuePath(): CodeBlock = CodeBlock.of("%T.%M.%M(%S)", ValuePath::class, VALUE_PATH_ROOT, VALUE_PATH_FIELD, name)
 
-private val TYPED_PATH = MemberName(ValuePath::class.asClassName().packageName, "typedPath")
-private val VALUE_PATH_FIELD = MemberName(ValuePath::class.asClassName().packageName, "field", isExtension = true)
+private val TYPED_PATH = MemberName(TypedPath::class.asClassName().packageName, "typedPath")
+private val VALUE_PATH_ROOT = MemberName(TypedPath::class.asClassName().packageName, "root", isExtension = true)
+private val VALUE_PATH_FIELD = MemberName(TypedPath::class.asClassName().packageName, "field", isExtension = true)

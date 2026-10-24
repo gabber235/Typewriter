@@ -57,5 +57,6 @@ method DeleteOrganization(
 
   success: struct {};
 
+  /// Record IDs from an unexpected table.
   invalid_record_id_error: InvalidRecordIdError;
 } = 627251;

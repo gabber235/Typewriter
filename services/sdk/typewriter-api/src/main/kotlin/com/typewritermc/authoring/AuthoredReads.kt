@@ -1,9 +1,12 @@
 package com.typewritermc.authoring
 
-import com.typewritermc.checking.CatalogGeneration
 import com.typewritermc.checking.PartialSelection
 import com.typewritermc.checking.TypedSelection
-import com.typewritermc.expression.EvaluationDiagnostic
+import skirout.editor.v1.expression.EvaluationDiagnostic
+import skirout.editor.v1.type_catalog.CatalogGeneration
+import skirout.editor.v1.type_catalog.ItemId
+import skirout.editor.v1.type_catalog.TypeUse
+import skirout.editor.v1.type_catalog.ValueLocation
 
 sealed interface Availability<out T> {
     data class Available<T>(
@@ -34,7 +37,7 @@ interface AuthoredReads {
 
     fun <T> readRepresentation(
         path: BoundPath<*>,
-        representation: com.typewritermc.types.TypeUse,
+        representation: TypeUse,
     ): Availability<T>
 
     fun presence(path: BoundPath<*>): Availability<Boolean>

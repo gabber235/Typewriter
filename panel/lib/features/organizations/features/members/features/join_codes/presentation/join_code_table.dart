@@ -16,7 +16,7 @@ class JoinCodesTable extends HookConsumerWidget {
     super.key,
   });
 
-  final List<OrganizationJoinCode> codes;
+  final List<skir.JoinCode> codes;
   final ValueNotifier<Set<skir.RecordId>> selectedCodes;
   final Future<void> Function() onRevokeSelection;
 
@@ -148,7 +148,7 @@ class JoinCodesTable extends HookConsumerWidget {
   TableRow _buildCodeRow(
     BuildContext context,
     WidgetRef ref,
-    OrganizationJoinCode code,
+    skir.JoinCode code,
     bool isSelected,
     ValueNotifier<skir.RecordId?> focusedCodeId,
     ThemeData theme,

@@ -301,11 +301,7 @@ void main() {
     final initial = _empty();
     final repository = TestPublicationRepository(_scope, initial: initial);
     final candidate = skir.PublicationCandidateId(value: "reviewed");
-    final reply = SubmissionConfirmed(
-      skir.PublishAuthoringResponse.wrapResult(
-        skir.PublicationResult.noChanges,
-      ),
-    );
+    final reply = SubmissionConfirmed(skir.PublishAuthoringResponse.noChanges);
     final root = skir.CompilationRoot(
       projection: skir.CompilationProjectionId(
         value: "typewriter.resource-graph",

@@ -1,22 +1,14 @@
 package com.typewritermc.realm.authoring
 
-import com.typewritermc.authoring.ArgumentLocation
-import com.typewritermc.authoring.AuthoringRecord
-import com.typewritermc.authoring.EditIntent
-import com.typewritermc.authoring.LinkOccurrence
-import com.typewritermc.authoring.LinkOccurrenceId
-import com.typewritermc.authoring.PathSegment
-import com.typewritermc.authoring.PreparedEdit
-import com.typewritermc.authoring.PreparedEditResult
-import com.typewritermc.authoring.TypeSelection
-import com.typewritermc.authoring.ValueLocation
-import com.typewritermc.authoring.ValuePath
-import com.typewritermc.authoring.ValueProblem
 import com.typewritermc.authoring.definition
 import com.typewritermc.authoring.field
 import com.typewritermc.authoring.item
 import com.typewritermc.authoring.mapKey
 import com.typewritermc.authoring.mapValue
+import com.typewritermc.authoring.of
+import com.typewritermc.authoring.requireValid
+import com.typewritermc.authoring.root
+import com.typewritermc.authoring.use
 import com.typewritermc.checking.InputIdentity
 import com.typewritermc.realm.checking.CapturedAuthoringReads
 import com.typewritermc.realm.repository.AuthoringMutationPlanner
@@ -25,61 +17,64 @@ import com.typewritermc.realm.repository.ResourceValueMapper
 import com.typewritermc.realm.repository.conflicts
 import com.typewritermc.realm.repository.requiredExpectations
 import com.typewritermc.realm.repository.sameFact
-import com.typewritermc.types.DataValue
-import com.typewritermc.types.EndpointSlot
-import com.typewritermc.types.RelationContract
-import com.typewritermc.types.ResourceId
-import com.typewritermc.types.TypeTemplate
-import com.typewritermc.types.TypeUse
+import com.typewritermc.types.actualType
 import com.typewritermc.types.catalog.CheckedCatalog
-import com.typewritermc.types.catalog.DeclarationDiagnostic
 import com.typewritermc.types.catalog.Resolution
-import com.typewritermc.types.catalog.ResolvedRepresentation
+import com.typewritermc.types.catalog.of
+import com.typewritermc.types.endpoint
+import com.typewritermc.types.field
+import com.typewritermc.types.fields
+import com.typewritermc.types.items
+import com.typewritermc.types.nullable
+import com.typewritermc.types.payload
+import com.typewritermc.types.requireValid
+import com.typewritermc.types.rows
+import com.typewritermc.types.template
+import com.typewritermc.types.toResourceId
+import com.typewritermc.types.toSkir
+import com.typewritermc.types.unknownVariant
+import com.typewritermc.types.use
+import skirout.editor.v1.authoring.EditIntent
+import skirout.editor.v1.authoring.LinkOccurrence
+import skirout.editor.v1.authoring.LinkOccurrenceId
+import skirout.editor.v1.authoring.LinkRepairIntent
+import skirout.editor.v1.authoring.PrepareTypeArgumentChangeResponse
+import skirout.editor.v1.authoring.PreparedEdit
+import skirout.editor.v1.authoring.PreviewTypeArgumentChangeResponse
+import skirout.editor.v1.authoring.TypeArgumentChangePreview
+import skirout.editor.v1.catalog.EndpointSlot
+import skirout.editor.v1.catalog.RelationContract
+import skirout.editor.v1.diagnostic.DeclarationDiagnostic
+import skirout.editor.v1.diagnostic.ValueProblem
+import skirout.editor.v1.type_catalog.AuthoringRecord
+import skirout.editor.v1.type_catalog.DataValue
+import skirout.editor.v1.type_catalog.NamedTypeTemplate
+import skirout.editor.v1.type_catalog.PathSegment
+import skirout.editor.v1.type_catalog.ResolvedRepresentation
+import skirout.editor.v1.type_catalog.ResourceId
+import skirout.editor.v1.type_catalog.TypeSelection
+import skirout.editor.v1.type_catalog.TypeTemplate
+import skirout.editor.v1.type_catalog.TypeUse
+import skirout.editor.v1.type_catalog.ValueLocation
+import skirout.editor.v1.type_catalog.ValuePath
 
-internal data class TypeArgumentChangePreview(
-    val resource: ResourceId,
-    val next: TypeSelection,
-    val edit: PreparedEdit,
-    val linkRepairs: List<LinkRepairIntent>,
-    val clearedLocations: List<ValueLocation>,
-)
-
-internal sealed interface LinkRepairIntent {
-    data class Clear(
-        val occurrence: LinkOccurrenceId,
-    ) : LinkRepairIntent
-
-    data class Remove(
-        val occurrence: LinkOccurrenceId,
-    ) : LinkRepairIntent
-}
-
-internal sealed interface TypePreviewResult {
-    data class Ready(
-        val preview: TypeArgumentChangePreview,
-    ) : TypePreviewResult
-
-    data class InvalidArguments(
-        val diagnostics: List<DeclarationDiagnostic>,
-    ) : TypePreviewResult
-
-    data class Incomplete(
-        val arguments: List<ArgumentLocation>,
-    ) : TypePreviewResult
-
-    data class Rejected(
-        val problems: List<ValueProblem>,
-    ) : TypePreviewResult
-}
+/** Checks a preview received from an editor; preparation decodes and checks its edit. */
+internal fun TypeArgumentChangePreview.requireValid(): TypeArgumentChangePreview =
+    apply {
+        resource.requireValid()
+        next.requireValid()
+        linkRepairs.forEach { it.occurrence.requireValid() }
+        clearedLocations.forEach { it.requireValid() }
+    }
 
 internal interface TypeArgumentOperations {
     fun preview(
         resource: ResourceId,
         requested: TypeSelection,
         snapshot: AuthoringLease,
-    ): TypePreviewResult
+    ): PreviewTypeArgumentChangeResponse
 
-    suspend fun prepare(preview: TypeArgumentChangePreview): PreparedEditResult
+    suspend fun prepare(preview: TypeArgumentChangePreview): PrepareTypeArgumentChangeResponse
 }
 
 /**
@@ -97,37 +92,37 @@ internal class DefaultTypeArgumentOperations(
         resource: ResourceId,
         requested: TypeSelection,
         snapshot: AuthoringLease,
-    ): TypePreviewResult {
+    ): PreviewTypeArgumentChangeResponse {
         val root = snapshot.root
         val requestedDefinition = requested.definition
         val record =
             root.resources[resource]
-                ?: return TypePreviewResult.InvalidArguments(
-                    listOf(DeclarationDiagnostic(requestedDefinition, "resource_missing")),
+                ?: return PreviewTypeArgumentChangeResponse.InvalidArgumentsErrorWrapper(
+                    listOf(DeclarationDiagnostic.of(requestedDefinition, "resource_missing")),
                 )
         val previous = record.configuration
         if (previous.definition != requestedDefinition) {
-            return TypePreviewResult.InvalidArguments(
-                listOf(DeclarationDiagnostic(requestedDefinition, "type_argument_definition_changed")),
+            return PreviewTypeArgumentChangeResponse.InvalidArgumentsErrorWrapper(
+                listOf(DeclarationDiagnostic.of(requestedDefinition, "type_argument_definition_changed")),
             )
         }
         val next = root.catalog.checked.resolvePartial(requested)
-        if (next is Resolution.Invalid) return TypePreviewResult.InvalidArguments(next.diagnostics)
+        if (next is Resolution.Invalid) return PreviewTypeArgumentChangeResponse.InvalidArgumentsErrorWrapper(next.diagnostics)
         val old = root.catalog.checked.resolvePartial(previous)
-        if (old is Resolution.Invalid) return TypePreviewResult.InvalidArguments(old.diagnostics)
+        if (old is Resolution.Invalid) return PreviewTypeArgumentChangeResponse.InvalidArgumentsErrorWrapper(old.diagnostics)
         old as Resolution.Ready
         next as Resolution.Ready
 
         val cleared = mutableListOf<ValueLocation>()
-        val nestedRetags = mutableListOf<EditIntent.Retag>()
+        val nestedRetags = mutableListOf<EditIntent.RetagWrapper>()
         val inspected = linkedSetOf<InputIdentity>()
-        val rootLocation = ValueLocation(resource, ValuePath())
+        val rootLocation = ValueLocation.of(resource)
         val oldFields = old.value.knownFields.associateBy { it.key }
         val newFields = next.value.knownFields.associateBy { it.key }
         newFields.forEach { (name, newField) ->
             val location = rootLocation.field(name)
             val oldField = oldFields[name]
-            val value = record.fields[name]
+            val value = record.field(name)
             if (oldField == null || value == null) {
                 cleared += location
                 inspected += InputIdentity.Value(location)
@@ -147,7 +142,7 @@ internal class DefaultTypeArgumentOperations(
         next.value.dependentFields.forEach { field ->
             val location = rootLocation.field(field.owner.name)
             inspected += InputIdentity.Value(location)
-            if (record.fields[field.owner.name] != DataValue.Unfilled) cleared += location
+            if (record.field(field.owner.name) != DataValue.UNFILLED) cleared += location
         }
         val relationRepairs =
             incompatibleLinks(
@@ -159,43 +154,29 @@ internal class DefaultTypeArgumentOperations(
                 root.catalog.checked,
                 inspected,
             )
-        val relationRepairLocations = relationRepairs.mapTo(mutableSetOf(), LinkRepairIntent::location)
+        val relationRepairLocations = relationRepairs.mapTo(mutableSetOf()) { it.occurrence.location }
         val evidence =
             buildSet<InputIdentity> {
                 add(InputIdentity.Existence(resource))
                 add(InputIdentity.Form(rootLocation))
                 add(InputIdentity.Incoming(resource, null))
                 addAll(inspected)
-                relationRepairs.forEach { repair ->
-                    val occurrence =
-                        when (repair) {
-                            is LinkRepairIntent.Clear -> repair.occurrence
-                            is LinkRepairIntent.Remove -> repair.occurrence
-                        }
-                    add(InputIdentity.Value(occurrence.location))
-                }
+                relationRepairs.forEach { repair -> add(InputIdentity.Value(repair.occurrence.location)) }
                 add(InputIdentity.Catalog(root.catalog.generation))
             }.toMutableSet()
         val repairs =
             buildList {
-                add(EditIntent.ConfigureResource(resource, requested))
+                add(EditIntent.createConfigureResource(resource = resource, configuration = requested))
                 addAll(nestedRetags)
                 cleared
                     .distinct()
                     .filterNot(relationRepairLocations::contains)
-                    .forEach { add(EditIntent.SetValue(it, DataValue.Unfilled)) }
+                    .forEach { add(EditIntent.createSetValue(at = it, value = DataValue.UNFILLED)) }
             }
         val plannedIntents =
             buildList {
                 addAll(repairs)
-                relationRepairs.forEach { repair ->
-                    val occurrence =
-                        when (repair) {
-                            is LinkRepairIntent.Clear -> repair.occurrence
-                            is LinkRepairIntent.Remove -> repair.occurrence
-                        }
-                    add(EditIntent.DisconnectRelation(occurrence))
-                }
+                relationRepairs.forEach { repair -> add(EditIntent.DisconnectRelationWrapper(repair.occurrence)) }
             }
         val planned =
             AuthoringMutationPlanner(
@@ -205,16 +186,16 @@ internal class DefaultTypeArgumentOperations(
             ).plan(
                 root.resources,
                 PreparedEdit(
-                    root.catalog.generation,
-                    emptyList(),
-                    plannedIntents,
+                    catalog = root.catalog.generation,
+                    expectations = emptyList(),
+                    intents = plannedIntents,
                 ),
             )
-        if (planned is MutationPlanningResult.Rejected) return TypePreviewResult.Rejected(planned.problems)
+        if (planned is MutationPlanningResult.Rejected) return PreviewTypeArgumentChangeResponse.RejectedErrorWrapper(planned.problems)
         planned as MutationPlanningResult.Accepted
         val reads = CapturedAuthoringReads(snapshot.originalView())
         evidence.forEach(reads::observeInput)
-        val witness = PreparedEdit(root.catalog.generation, emptyList(), plannedIntents)
+        val witness = PreparedEdit(catalog = root.catalog.generation, expectations = emptyList(), intents = plannedIntents)
         val required =
             root.values.requiredExpectations(
                 witness,
@@ -225,11 +206,11 @@ internal class DefaultTypeArgumentOperations(
                 planned.plan,
             )
         val observed = (reads.observations() + required).distinct()
-        return TypePreviewResult.Ready(
+        return PreviewTypeArgumentChangeResponse.ReadyWrapper(
             TypeArgumentChangePreview(
                 resource = resource,
                 next = requested,
-                edit = PreparedEdit(root.catalog.generation, observed, plannedIntents),
+                edit = PreparedEdit(catalog = root.catalog.generation, expectations = observed, intents = plannedIntents),
                 linkRepairs = relationRepairs,
                 clearedLocations =
                     (cleared + relationRepairLocations).distinct(),
@@ -237,44 +218,57 @@ internal class DefaultTypeArgumentOperations(
         )
     }
 
-    override suspend fun prepare(preview: TypeArgumentChangePreview): PreparedEditResult {
-        val rootLocation = ValueLocation(preview.resource, ValuePath())
-        if (!preview.hasCoherentMetadata()) {
-            return PreparedEditResult.Rejected(listOf(ValueProblem(rootLocation, "type_argument_preview_mismatch")))
+    override suspend fun prepare(preview: TypeArgumentChangePreview): PrepareTypeArgumentChangeResponse {
+        val resource = preview.resource
+        val edit = preview.edit.requireValid()
+        val rootLocation = ValueLocation.of(resource)
+        if (!preview.hasCoherentMetadata(resource, edit)) {
+            return PrepareTypeArgumentChangeResponse.RejectedErrorWrapper(
+                listOf(ValueProblem(location = rootLocation, code = "type_argument_preview_mismatch")),
+            )
         }
         return views.capture().use { snapshot ->
-            if (snapshot.root.catalog.generation != preview.edit.catalog) {
-                return PreparedEditResult.Rejected(listOf(ValueProblem(rootLocation, "catalog_changed")))
+            if (snapshot.root.catalog.generation != edit.catalog) {
+                return PrepareTypeArgumentChangeResponse.RejectedErrorWrapper(
+                    listOf(ValueProblem(location = rootLocation, code = "catalog_changed")),
+                )
             }
-            val conflicts = snapshot.root.values.conflicts(preview.edit.expectations)
+            val conflicts = snapshot.root.values.conflicts(edit.expectations)
             if (conflicts.isNotEmpty()) {
-                return PreparedEditResult.Rejected(listOf(ValueProblem(rootLocation, "expectation_conflict")))
+                return PrepareTypeArgumentChangeResponse.RejectedErrorWrapper(
+                    listOf(ValueProblem(location = rootLocation, code = "expectation_conflict")),
+                )
             }
             val verified =
-                when (val regenerated = preview(preview.resource, preview.next, snapshot)) {
-                    is TypePreviewResult.Ready -> {
-                        regenerated.preview
+                when (val regenerated = preview(resource, preview.next, snapshot)) {
+                    is PreviewTypeArgumentChangeResponse.ReadyWrapper -> {
+                        regenerated.value
                     }
 
-                    is TypePreviewResult.Rejected -> {
-                        return PreparedEditResult.Rejected(regenerated.problems)
+                    is PreviewTypeArgumentChangeResponse.RejectedErrorWrapper -> {
+                        return PrepareTypeArgumentChangeResponse.RejectedErrorWrapper(regenerated.value)
                     }
 
                     else -> {
-                        return PreparedEditResult.Rejected(
-                            listOf(ValueProblem(rootLocation, "type_argument_preview_no_longer_valid")),
+                        return PrepareTypeArgumentChangeResponse.RejectedErrorWrapper(
+                            listOf(ValueProblem(location = rootLocation, code = "type_argument_preview_no_longer_valid")),
                         )
                     }
                 }
             if (!verified.sameRepairs(preview)) {
-                return PreparedEditResult.Rejected(listOf(ValueProblem(rootLocation, "type_argument_preview_mismatch")))
+                return PrepareTypeArgumentChangeResponse.RejectedErrorWrapper(
+                    listOf(ValueProblem(location = rootLocation, code = "type_argument_preview_mismatch")),
+                )
             }
-            if (preview.edit.expectations.any { expected -> verified.edit.expectations.none { it.sameFact(expected) } } ||
-                verified.edit.expectations.any { expected -> preview.edit.expectations.none { it.sameFact(expected) } }
+            val verifiedEdit = verified.edit
+            if (edit.expectations.any { expected -> verifiedEdit.expectations.none { it.sameFact(expected) } } ||
+                verifiedEdit.expectations.any { expected -> edit.expectations.none { it.sameFact(expected) } }
             ) {
-                return PreparedEditResult.Rejected(listOf(ValueProblem(rootLocation, "type_argument_preview_mismatch")))
+                return PrepareTypeArgumentChangeResponse.RejectedErrorWrapper(
+                    listOf(ValueProblem(location = rootLocation, code = "type_argument_preview_mismatch")),
+                )
             }
-            PreparedEditResult.Prepared(verified.edit)
+            PrepareTypeArgumentChangeResponse.createPrepared(edit = verifiedEdit)
         }
     }
 
@@ -285,16 +279,19 @@ internal class DefaultTypeArgumentOperations(
             linkRepairs == other.linkRepairs &&
             clearedLocations == other.clearedLocations
 
-    private fun TypeArgumentChangePreview.hasCoherentMetadata(): Boolean {
-        val configuration = edit.intents.filterIsInstance<EditIntent.ConfigureResource>()
-        if (configuration != listOf(EditIntent.ConfigureResource(resource, next))) return false
+    private fun TypeArgumentChangePreview.hasCoherentMetadata(
+        resource: ResourceId,
+        edit: PreparedEdit,
+    ): Boolean {
+        val configuration = edit.intents.filterIsInstance<EditIntent.ConfigureResourceWrapper>()
+        if (configuration != listOf(EditIntent.createConfigureResource(resource = resource, configuration = next))) return false
         val cleared =
             (
                 edit.intents
-                    .filterIsInstance<EditIntent.SetValue>()
-                    .filter { it.value == DataValue.Unfilled }
-                    .map { it.at } +
-                    linkRepairs.map(LinkRepairIntent::location)
+                    .filterIsInstance<EditIntent.SetValueWrapper>()
+                    .filter { it.value.value == DataValue.UNFILLED }
+                    .map { it.value.at } +
+                    linkRepairs.map { it.occurrence.location }
             ).distinct()
         return clearedLocations == cleared
     }
@@ -307,29 +304,29 @@ private fun collectRepairs(
     at: ValueLocation,
     catalog: CheckedCatalog,
     repairs: MutableList<ValueLocation>,
-    retags: MutableList<EditIntent.Retag>,
+    retags: MutableList<EditIntent.RetagWrapper>,
     inspected: MutableSet<InputIdentity>,
 ) {
     inspected += InputIdentity.Value(at)
-    if (value == DataValue.Unfilled) return
-    if (value == DataValue.Null) {
-        if (next !is TypeUse.Nullable) repairs += at
+    if (value == DataValue.UNFILLED) return
+    if (value == DataValue.NULL) {
+        if (next !is TypeUse.NullableWrapper) repairs += at
         return
     }
 
-    val expected = if (next is TypeUse.Nullable) next.value else next
-    val declaredActual = if (old is TypeUse.Nullable) old.value else old
-    val actual = (value as? DataValue.Named)?.actualType ?: declaredActual
+    val expected = if (next is TypeUse.NullableWrapper) next.value.value else next
+    val declaredActual = if (old is TypeUse.NullableWrapper) old.value.value else old
+    val actual = (value as? DataValue.NamedWrapper)?.actualType?.use ?: declaredActual
     if (catalog.isReadableAs(actual, next)) return
 
-    val namedValue = value as? DataValue.Named
-    val actualNamed = actual as? TypeUse.Named
-    val expectedNamed = expected as? TypeUse.Named
+    val namedValue = value as? DataValue.NamedWrapper
+    val actualNamed = actual as? TypeUse.NamedWrapper
+    val expectedNamed = expected as? TypeUse.NamedWrapper
     val canRetag =
         namedValue != null &&
             actualNamed != null &&
             expectedNamed != null &&
-            actualNamed.definition == expectedNamed.definition
+            actualNamed.value.definition == expectedNamed.value.definition
     if (!canRetag) {
         repairs += at
         return
@@ -346,14 +343,14 @@ private fun collectRepairs(
         repairs += at
         return
     }
-    retags += EditIntent.Retag(at, expectedType)
+    retags += EditIntent.createRetag(at = at, type = expectedType.value)
     val payload = requireNotNull(namedValue).payload
     when {
-        payload is DataValue.Record && oldRepresentation is ResolvedRepresentation.Record &&
-            newRepresentation is ResolvedRepresentation.Record -> {
-            val oldFields = oldRepresentation.fields.associateBy { it.key }
-            newRepresentation.fields.forEach { field ->
-                val child = payload.fields[field.key]
+        payload is DataValue.RecordWrapper && oldRepresentation is ResolvedRepresentation.RecordWrapper &&
+            newRepresentation is ResolvedRepresentation.RecordWrapper -> {
+            val oldFields = oldRepresentation.value.fields.associateBy { it.key }
+            newRepresentation.value.fields.forEach { field ->
+                val child = payload.field(field.key)
                 val previous = oldFields[field.key]
                 val childLocation = at.field(field.key)
                 if (child == null || previous == null) {
@@ -365,15 +362,15 @@ private fun collectRepairs(
             }
         }
 
-        payload is DataValue.ListValue && oldRepresentation is ResolvedRepresentation.Sequence &&
-            newRepresentation is ResolvedRepresentation.Sequence -> {
+        payload is DataValue.ListValueWrapper && oldRepresentation is ResolvedRepresentation.SequenceWrapper &&
+            newRepresentation is ResolvedRepresentation.SequenceWrapper -> {
             inspected += InputIdentity.Membership(at)
             inspected += InputIdentity.Order(at)
             payload.items.forEach { item ->
                 collectRepairs(
                     item.value,
-                    oldRepresentation.item,
-                    newRepresentation.item,
+                    oldRepresentation.value.item,
+                    newRepresentation.value.item,
                     at.item(item.id),
                     catalog,
                     repairs,
@@ -383,14 +380,14 @@ private fun collectRepairs(
             }
         }
 
-        payload is DataValue.SetValue && oldRepresentation is ResolvedRepresentation.Sequence &&
-            newRepresentation is ResolvedRepresentation.Sequence -> {
+        payload is DataValue.SetValueWrapper && oldRepresentation is ResolvedRepresentation.SequenceWrapper &&
+            newRepresentation is ResolvedRepresentation.SequenceWrapper -> {
             inspected += InputIdentity.Membership(at)
             payload.items.forEach { item ->
                 collectRepairs(
                     item.value,
-                    oldRepresentation.item,
-                    newRepresentation.item,
+                    oldRepresentation.value.item,
+                    newRepresentation.value.item,
                     at.item(item.id),
                     catalog,
                     repairs,
@@ -400,15 +397,15 @@ private fun collectRepairs(
             }
         }
 
-        payload is DataValue.MapValue && oldRepresentation is ResolvedRepresentation.Mapping &&
-            newRepresentation is ResolvedRepresentation.Mapping -> {
+        payload is DataValue.MapValueWrapper && oldRepresentation is ResolvedRepresentation.MappingWrapper &&
+            newRepresentation is ResolvedRepresentation.MappingWrapper -> {
             inspected += InputIdentity.Membership(at)
             inspected += InputIdentity.Order(at)
             payload.rows.forEach { row ->
                 collectRepairs(
                     row.key,
-                    oldRepresentation.key,
-                    newRepresentation.key,
+                    oldRepresentation.value.key,
+                    newRepresentation.value.key,
                     at.item(row.id).mapKey(),
                     catalog,
                     repairs,
@@ -417,8 +414,8 @@ private fun collectRepairs(
                 )
                 collectRepairs(
                     row.value,
-                    oldRepresentation.value,
-                    newRepresentation.value,
+                    oldRepresentation.value.value,
+                    newRepresentation.value.value,
                     at.item(row.id).mapValue(),
                     catalog,
                     repairs,
@@ -447,15 +444,19 @@ private fun incompatibleLinks(
         contracts.flatMap { contract -> listOf(contract.first.id to contract, contract.second.id to contract) }.toMap()
     return occurrences
         .mapNotNull { occurrence ->
-            if (occurrence.source != resource && occurrence.target.resource != resource) return@mapNotNull null
+            if (occurrence.source != resource &&
+                occurrence.target.resource != resource
+            ) {
+                return@mapNotNull null
+            }
             val sourceRecord = resources[occurrence.source]
             val targetRecord = resources[occurrence.target.resource]
-            inspected += InputIdentity.Form(ValueLocation(occurrence.source, ValuePath()))
+            inspected += InputIdentity.Form(ValueLocation(resource = occurrence.source, path = ValuePath.root))
             inspected += InputIdentity.Value(occurrence.id.location)
-            inspected += InputIdentity.Form(ValueLocation(occurrence.target.resource, ValuePath()))
-            val contract = endpointContracts[occurrence.id.endpoint] ?: return@mapNotNull LinkRepairIntent.Clear(occurrence.id)
+            inspected += InputIdentity.Form(ValueLocation(resource = occurrence.target.resource, path = ValuePath.root))
+            val contract = endpointContracts[occurrence.id.endpoint] ?: return@mapNotNull LinkRepairIntent.ClearWrapper(occurrence.id)
             val sourceEndpoint = if (contract.first.id == occurrence.id.endpoint) contract.first else contract.second
-            val targetEndpoint = if (sourceEndpoint.slot == EndpointSlot.First) contract.second else contract.first
+            val targetEndpoint = if (sourceEndpoint.slot == EndpointSlot.FIRST) contract.second else contract.first
             inspected += InputIdentity.Incoming(resource, contract.id)
             val proposedSource = sourceRecord?.proposedIf(occurrence.source == resource, requested)
             val proposedTarget = targetRecord?.proposedIf(occurrence.target.resource == resource, requested)
@@ -469,11 +470,11 @@ private fun incompatibleLinks(
             if (sourceValid && targetValid && bindingValid) {
                 null
             } else if (occurrence.id.location.path.segments
-                    .lastOrNull() is PathSegment.Item
+                    .lastOrNull() is PathSegment.ItemWrapper
             ) {
-                LinkRepairIntent.Remove(occurrence.id)
+                LinkRepairIntent.RemoveWrapper(occurrence.id)
             } else {
-                LinkRepairIntent.Clear(occurrence.id)
+                LinkRepairIntent.ClearWrapper(occurrence.id)
             }
         }.distinct()
 }
@@ -488,31 +489,35 @@ private fun AuthoringRecord.matches(
     catalog: CheckedCatalog,
 ): Boolean =
     when (val selected = configuration) {
-        is TypeSelection.Complete -> catalog.isReadableAs(selected.use, expected)
-        is TypeSelection.Pending -> catalog.knownApplications(selected).any { catalog.isReadableAs(it, expected) }
+        is TypeSelection.CompleteWrapper -> catalog.isReadableAs(selected.use.use, expected)
+        is TypeSelection.PendingWrapper -> catalog.knownApplications(selected).any { catalog.isReadableAs(it.use, expected) }
+        else -> unknownVariant(selected)
     }
 
 private fun AuthoringRecord.matches(
-    expected: TypeTemplate.Named,
+    expected: NamedTypeTemplate,
     catalog: CheckedCatalog,
 ): Boolean {
-    val concrete = expected.concreteUseOrNull()
+    val concrete = expected.template.concreteUseOrNull()
     if (concrete != null) return matches(concrete, catalog)
     return catalog.isNominalSubtype(configuration.definition, expected.definition)
 }
 
-private val LinkRepairIntent.location: ValueLocation
+/** The occurrence a repair clears or removes. */
+private val LinkRepairIntent.occurrence: LinkOccurrenceId
     get() =
         when (this) {
-            is LinkRepairIntent.Clear -> occurrence.location
-            is LinkRepairIntent.Remove -> occurrence.location
+            is LinkRepairIntent.ClearWrapper -> value
+            is LinkRepairIntent.RemoveWrapper -> value
+            else -> unknownVariant(this)
         }
 
 private fun TypeTemplate.concreteUseOrNull(): TypeUse? {
     return when (this) {
-        is TypeTemplate.Parameter -> null
-        is TypeTemplate.Named -> TypeUse.Named(definition, arguments.map { it.concreteUseOrNull() ?: return null })
-        is TypeTemplate.Nullable -> value.concreteUseOrNull()?.let(TypeUse::Nullable)
-        is TypeTemplate.Scalar -> TypeUse.Scalar(kind)
+        is TypeTemplate.ParameterWrapper -> null
+        is TypeTemplate.NamedWrapper -> value.definition.use(value.arguments.map { it.concreteUseOrNull() ?: return null })
+        is TypeTemplate.NullableWrapper -> value.value.concreteUseOrNull()?.nullable()
+        is TypeTemplate.ScalarWrapper -> value.use
+        else -> unknownVariant(this)
     }
 }

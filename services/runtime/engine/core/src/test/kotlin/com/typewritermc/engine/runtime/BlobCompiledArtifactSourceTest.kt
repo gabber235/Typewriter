@@ -1,19 +1,9 @@
 package com.typewritermc.engine.runtime
 
-import com.typewritermc.authoring.PublicationId
-import com.typewritermc.checking.CatalogGeneration
-import com.typewritermc.engine.CompilationContext
-import com.typewritermc.engine.CompilationRoot
-import com.typewritermc.engine.CompiledArtifactReference
-import com.typewritermc.engine.CompiledBlobPointer
-import com.typewritermc.engine.CompiledResourceKey
 import com.typewritermc.engine.ContentDigest
-import com.typewritermc.engine.PublishedContent
-import com.typewritermc.engine.PublishedOutput
 import com.typewritermc.engine.RESOURCE_GRAPH_MEDIA_TYPE
 import com.typewritermc.engine.RESOURCE_GRAPH_PROJECTION
-import com.typewritermc.engine.ResourceGraphShard
-import com.typewritermc.engine.RuntimeCompilationFacts
+import com.typewritermc.engine.Root
 import com.typewritermc.services.libs.filetransfer.blob.ArtifactDigest
 import com.typewritermc.services.libs.filetransfer.blob.BlobChunk
 import com.typewritermc.services.libs.filetransfer.blob.BlobEndpoint
@@ -22,12 +12,22 @@ import com.typewritermc.services.libs.filetransfer.blob.BlobResult
 import com.typewritermc.services.libs.filetransfer.blob.BlobWriteSession
 import com.typewritermc.services.libs.filetransfer.blob.TransferId
 import com.typewritermc.types.ResourceId
+import com.typewritermc.types.toSkir
 import de.infix.testBalloon.framework.core.testSuite
 import io.kotest.assertions.throwables.shouldThrow
 import io.kotest.matchers.shouldBe
 import kotlinx.coroutines.test.runTest
-import kotlinx.serialization.encodeToString
-import kotlinx.serialization.json.Json
+import skirout.editor.v1.compilation_root.CompilationRoot
+import skirout.editor.v1.compiled_content.CompilationContext
+import skirout.editor.v1.compiled_content.CompiledArtifactReference
+import skirout.editor.v1.compiled_content.CompiledBlobPointer
+import skirout.editor.v1.compiled_content.CompiledResourceKey
+import skirout.editor.v1.compiled_content.PublishedContent
+import skirout.editor.v1.compiled_content.PublishedOutput
+import skirout.editor.v1.compiled_content.ResourceGraphShard
+import skirout.editor.v1.compiled_content.RuntimeCompilationFacts
+import skirout.editor.v1.type_catalog.CatalogGeneration
+import skirout.editor.v1.type_catalog.PublicationId
 
 val BlobCompiledArtifactSourceTest by testSuite {
     test("loads a complete publication and its opaque artifacts") {
@@ -38,13 +38,12 @@ val BlobCompiledArtifactSourceTest by testSuite {
 
             val loaded = BlobCompiledArtifactSource(blobs).load(activation)
 
-            loaded.descriptor.publication shouldBe PublicationId("publication:1")
+            loaded.descriptor.publication shouldBe PublicationId(value = "publication:1")
             loaded.descriptor.outputs
                 .map { it.reference }
                 .single()
-                .root.resource shouldBe ResourceId("page")
-            Json.decodeFromString(
-                ResourceGraphShard.serializer(),
+                .root.resource shouldBe ResourceId("page").toSkir()
+            ResourceGraphShard.serializer.fromJsonCode(
                 loaded.artifacts
                     .single()
                     .payload
@@ -131,11 +130,11 @@ private fun shard(
     digestCharacter: String,
     pageKey: String,
 ) = ResourceGraphShard(
-    digest = ContentDigest(digestCharacter.repeat(64)),
+    digest = ContentDigest(digestCharacter.repeat(64)).value,
     facts =
         RuntimeCompilationFacts(
             formatRevision = com.typewritermc.engine.RESOURCE_GRAPH_FORMAT_REVISION,
-            root = CompiledResourceKey(ResourceId(pageKey), CompilationContext.Root),
+            root = CompiledResourceKey(source = ResourceId(pageKey).toSkir(), context = CompilationContext.Root),
             resources = emptyList(),
             edges = emptyList(),
             types = emptyList(),
@@ -151,21 +150,26 @@ private fun activation(
     val outputs =
         shards.map { shard ->
             PublishedOutput(
-                CompiledArtifactReference(
-                    CompilationRoot(RESOURCE_GRAPH_PROJECTION, shard.facts.root.source),
-                    shard.facts.formatRevision,
-                    RESOURCE_GRAPH_MEDIA_TYPE,
-                    shard.digest,
-                ),
-                blobs.put(Json.encodeToString(shard).encodeToByteArray()),
+                reference =
+                    CompiledArtifactReference(
+                        root =
+                            CompilationRoot(
+                                projection = RESOURCE_GRAPH_PROJECTION,
+                                resource = shard.facts.root.source,
+                            ),
+                        formatRevision = shard.facts.formatRevision,
+                        mediaType = RESOURCE_GRAPH_MEDIA_TYPE,
+                        semanticDigest = shard.digest,
+                    ),
+                blob = blobs.put(ResourceGraphShard.serializer.toJsonCode(shard).encodeToByteArray()),
             )
         }
     return PublishedContent(
-        PublicationId("publication:$revision"),
-        com.typewritermc.engine.PUBLISHED_CONTENT_FORMAT_REVISION,
-        CatalogGeneration("catalog:1"),
-        "implementation",
-        outputs,
+        publication = PublicationId(value = "publication:$revision"),
+        formatRevision = com.typewritermc.engine.PUBLISHED_CONTENT_FORMAT_REVISION,
+        catalog = CatalogGeneration(value = "catalog:1"),
+        implementationToken = "implementation",
+        outputs = outputs,
     )
 }
 
@@ -243,12 +247,12 @@ private class FakeBlobEndpoint : BlobEndpoint {
         val digest = ArtifactDigest.sha256(value)
         bytes[digest] = value
         declaredSizes[digest] = value.size.toLong()
-        return CompiledBlobPointer(ContentDigest(digest.value), value.size.toLong())
+        return CompiledBlobPointer(digest = ContentDigest(digest.value).value, size = value.size.toLong())
     }
 }
 
 private fun CompiledBlobPointer.artifactDigest() =
     ArtifactDigest(
         com.typewritermc.services.libs.filetransfer.blob.DigestAlgorithm.SHA_256,
-        digest.value,
+        digest,
     )

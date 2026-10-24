@@ -296,7 +296,7 @@ void main() {
       );
       final generation = skir.CatalogGeneration(value: "catalog:named");
       final checked = CheckedEditorCatalog(
-        skir.EditorCatalogWireSnapshot(
+        skir.EditorCatalog(
           resourceDisplays: const [],
           resourceOperations: const [],
           generation: generation,
@@ -986,8 +986,7 @@ final class _ControlHost extends ChangeNotifier
 
   @override
   PortablePresentationDocument get document => PortablePresentationDocument(
-    catalog: skir.EditorCatalogWireSnapshot.defaultInstance
-        .asTrustedLocalCatalog(),
+    catalog: skir.EditorCatalog.defaultInstance.asTrustedLocalCatalog(),
     root: skir.PresentationNode.defaultInstance,
     bindings: const {},
     budget: _budget,

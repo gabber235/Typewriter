@@ -19,10 +19,10 @@ class _RealmInstanceSelectable
   final VoidCallback? onOpen;
   @override
   final RealmInstanceIdentifier id;
-  final TopologyRealm realm;
+  final skir.RealmInstance realm;
   final bool connected;
-  final TopologyHost? host;
-  final Service? service;
+  final skir.ServiceHost? host;
+  final skir.Service? service;
 
   @override
   String get name => realm.ownerHost.name.formatted;
@@ -66,9 +66,9 @@ class _EngineInstanceSelectable
 
   @override
   final EngineInstanceIdentifier id;
-  final TopologyEngine engine;
-  final TopologyHost? host;
-  final Service? service;
+  final skir.EngineInstance engine;
+  final skir.ServiceHost? host;
+  final skir.Service? service;
 
   @override
   String get name => "${engine.target.engineId} engine";

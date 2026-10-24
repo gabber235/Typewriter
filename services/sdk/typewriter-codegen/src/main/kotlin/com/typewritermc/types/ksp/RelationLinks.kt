@@ -1,19 +1,19 @@
 package com.typewritermc.types.ksp
 
-import com.typewritermc.types.EndpointId
-import com.typewritermc.types.ParameterKey
-import com.typewritermc.types.RepresentationTemplate
-import com.typewritermc.types.TypeDefinition
-import com.typewritermc.types.TypeDefinitionId
-import com.typewritermc.types.TypeId
-import com.typewritermc.types.TypeParameter
-import com.typewritermc.types.TypeTemplate
+import com.typewritermc.types.qualified
+import com.typewritermc.types.template
+import skirout.editor.v1.type_catalog.EndpointId
+import skirout.editor.v1.type_catalog.ParameterKey
+import skirout.editor.v1.type_catalog.RepresentationTemplate
+import skirout.editor.v1.type_catalog.TypeDefinition
+import skirout.editor.v1.type_catalog.TypeDefinitionId
+import skirout.editor.v1.type_catalog.TypeParameter
 
 /** Namespace of the link types a `Ref<Endpoint, Target>` field resolves to. */
 const val RELATION_LINK_NAMESPACE: String = "relation"
 
 /** The link type of the generated endpoint interface named [endpointName]. */
-fun relationLinkId(endpointName: String): TypeDefinitionId = TypeDefinitionId(TypeId.Qualified(RELATION_LINK_NAMESPACE, endpointName), 1)
+fun relationLinkId(endpointName: String): TypeDefinitionId = TypeDefinitionId.qualified(RELATION_LINK_NAMESPACE, endpointName)
 
 /** The link definition of [endpoint], generic over its target resource. */
 fun relationLinkDefinition(
@@ -21,10 +21,11 @@ fun relationLinkDefinition(
     endpoint: EndpointId,
 ): TypeDefinition {
     val id = relationLinkId(endpointName)
-    val target = ParameterKey(id, 0)
+    val target = ParameterKey(owner = id, index = 0)
     return TypeDefinition(
-        id,
-        parameters = listOf(TypeParameter(target, "Target")),
-        representation = RepresentationTemplate.Link(endpoint, TypeTemplate.Parameter(target)),
+        id = id,
+        parameters = listOf(TypeParameter(key = target, name = "Target", bounds = emptyList())),
+        representation = RepresentationTemplate.createLink(endpoint = endpoint, target = target.template),
+        parents = emptyList(),
     )
 }

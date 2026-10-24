@@ -1,21 +1,10 @@
 package com.typewritermc.realm.routes
 
-import com.typewritermc.authoring.CheckExecutionId
-import com.typewritermc.authoring.EditExpectation
-import com.typewritermc.authoring.ValueLocation
-import com.typewritermc.authoring.ValuePath
-import com.typewritermc.checking.CatalogGeneration
-import com.typewritermc.checking.CheckOutcome
-import com.typewritermc.checking.FindingStatus
-import com.typewritermc.configuration.RuleId
-import com.typewritermc.configuration.RuleOrigin
-import com.typewritermc.protocol.transport.generated.RealmRouteScope
+import com.typewritermc.authoring.of
+import com.typewritermc.protocol.transport.RealmRouteScope
 import com.typewritermc.realm.authoring.AuthoringSeed
 import com.typewritermc.realm.authoring.AuthoringViewDelta
 import com.typewritermc.realm.authoring.InMemoryAuthoringViewStore
-import com.typewritermc.realm.checking.CheckInstanceId
-import com.typewritermc.realm.checking.CheckTicket
-import com.typewritermc.realm.checking.FindingSet
 import com.typewritermc.realm.checking.TestCatalogLease
 import com.typewritermc.realm.checking.record
 import com.typewritermc.realm.compiler.PublicationFixture
@@ -26,9 +15,7 @@ import com.typewritermc.services.libs.communicator.transport.OutboundMessage
 import com.typewritermc.services.libs.communicator.transport.TransportError
 import com.typewritermc.services.libs.communicator.transport.TransportResult
 import com.typewritermc.services.libs.telemetry.testing.TelemetryTestHarness
-import com.typewritermc.types.ResourceId
-import com.typewritermc.types.TypeDefinitionId
-import com.typewritermc.types.TypeId
+import com.typewritermc.types.qualified
 import de.infix.testBalloon.framework.core.testSuite
 import io.kotest.matchers.shouldBe
 import io.opentelemetry.context.propagation.ContextPropagators
@@ -41,6 +28,19 @@ import kotlinx.coroutines.test.runTest
 import kotlinx.coroutines.withTimeout
 import kotlinx.coroutines.yield
 import skirout.editor.v1.authoring.AuthoringChanged
+import skirout.editor.v1.authoring_facts.EditExpectation
+import skirout.editor.v1.checking.CheckInstanceId
+import skirout.editor.v1.checking.CheckOutcome
+import skirout.editor.v1.checking.CheckTicket
+import skirout.editor.v1.checking.FindingSet
+import skirout.editor.v1.checking.FindingStatus
+import skirout.editor.v1.type_catalog.CatalogGeneration
+import skirout.editor.v1.type_catalog.CheckExecutionId
+import skirout.editor.v1.type_catalog.ResourceId
+import skirout.editor.v1.type_catalog.RuleId
+import skirout.editor.v1.type_catalog.RuleOrigin
+import skirout.editor.v1.type_catalog.TypeDefinitionId
+import skirout.editor.v1.type_catalog.ValueLocation
 import kotlin.time.Duration.Companion.seconds
 
 val EditorUpdatePublisherTest by testSuite {
@@ -50,7 +50,7 @@ val EditorUpdatePublisherTest by testSuite {
             HintConnection().use { connection ->
                 val events = connection.editorUpdates(publication, backgroundScope)
                 try {
-                    events.configure(connection.contracts, connection.address, connection.communicator)
+                    events.configure(connection.address, connection.communicator)
                     connection.transport.awaitCount(1)
                     events.committed()
                     connection.transport.awaitCount(2)
@@ -69,7 +69,7 @@ val EditorUpdatePublisherTest by testSuite {
                 val events = connection.editorUpdates(publication, backgroundScope)
                 try {
                     connection.transport.failNextPublish(TransportError.Unavailable())
-                    events.configure(connection.contracts, connection.address, connection.communicator)
+                    events.configure(connection.address, connection.communicator)
                     connection.transport.awaitCount(1)
                     runCurrent()
                     connection.transport.hints().size shouldBe 1
@@ -91,12 +91,11 @@ val EditorUpdatePublisherTest by testSuite {
                 val events = replacement.editorUpdates(publication, backgroundScope)
                 try {
                     events.configure(
-                        replacement.contracts,
                         replacement.address,
                         Communicator(blocked, telemetry.telemetry, ContextPropagators.noop()),
                     )
                     withTimeout(2.seconds) { blocked.started.await() }
-                    events.configure(replacement.contracts, replacement.address, replacement.communicator)
+                    events.configure(replacement.address, replacement.communicator)
                     withTimeout(2.seconds) { blocked.cancelled.await() }
                     replacement.transport.awaitCount(1)
                 } finally {
@@ -110,34 +109,39 @@ val EditorUpdatePublisherTest by testSuite {
     }
     test("finding evidence is current when expected values return") {
         runTest {
-            val resource = ResourceId("resource")
+            val resource = ResourceId(value = "resource")
             val original = record(name = "Quest")
             val views = InMemoryAuthoringViewStore(TestCatalogLease(), AuthoringSeed(mapOf(resource to original)))
             val ticket =
                 CheckTicket(
-                    CheckInstanceId(
-                        RuleId(RuleOrigin(TypeDefinitionId(TypeId.Qualified("test", "rule"), 1), 0), 0),
-                        ValueLocation(resource, ValuePath()),
-                    ),
-                    "catalog:1",
-                    CheckExecutionId("execution"),
-                    CatalogGeneration("catalog"),
+                    instance =
+                        CheckInstanceId(
+                            rule =
+                                RuleId(
+                                    origin = RuleOrigin(owner = TypeDefinitionId.qualified("test", "rule"), ordinal = 0),
+                                    localIndex = 0,
+                                ),
+                            location = ValueLocation.of(resource),
+                        ),
+                    incarnation = "catalog:1",
+                    execution = CheckExecutionId(value = "execution"),
+                    catalog = CatalogGeneration(value = "catalog"),
                 )
             val finding =
                 FindingSet(
-                    ticket,
-                    listOf(EditExpectation.Resource(resource, original)),
-                    CheckOutcome.Finished,
-                    emptyList(),
-                    FindingStatus.Current,
+                    ticket = ticket,
+                    expectations = listOf<EditExpectation>(EditExpectation.createResource(id = resource, expected = original)),
+                    outcome = CheckOutcome.FINISHED,
+                    findings = emptyList(),
+                    status = FindingStatus.CURRENT,
                 )
             try {
                 views.install(views.prepare(AuthoringViewDelta(upsertedResources = mapOf(resource to record(name = "Story")))))
                 views.read { captureFindings(it, listOf(finding)).findings.single().status } shouldBe
-                    skirout.editor.v1.checking.FindingStatus.OUTDATED
+                    FindingStatus.OUTDATED
                 views.install(views.prepare(AuthoringViewDelta(upsertedResources = mapOf(resource to original))))
                 views.read { captureFindings(it, listOf(finding)).findings.single().status } shouldBe
-                    skirout.editor.v1.checking.FindingStatus.CURRENT
+                    FindingStatus.CURRENT
             } finally {
                 views.close()
             }
@@ -147,7 +151,6 @@ val EditorUpdatePublisherTest by testSuite {
 
 private class HintConnection : AutoCloseable {
     val address = RealmRouteScope(organizationId = "organization", realmId = "realm")
-    val contracts = EditorContracts(address)
     val transport = FakeMessageTransport()
     private val telemetry = TelemetryTestHarness.create()
     val communicator = Communicator(transport, telemetry.telemetry, ContextPropagators.noop())

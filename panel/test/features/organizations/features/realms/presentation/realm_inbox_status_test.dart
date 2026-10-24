@@ -138,7 +138,7 @@ void main() {
         ready,
         RealmPublishCommand(
           ready.candidate,
-          () async => skir.PublicationResult.noChanges,
+          () async => skir.PublishAuthoringResponse.noChanges,
         ),
       ): const RealmInboxStatus.ready(),
       RealmPublicationView.blocked(

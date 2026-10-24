@@ -290,8 +290,7 @@ final class _NamedTestHost extends ChangeNotifier
 
   @override
   PortablePresentationDocument get document => PortablePresentationDocument(
-    catalog: skir.EditorCatalogWireSnapshot.defaultInstance
-        .asTrustedLocalCatalog(),
+    catalog: skir.EditorCatalog.defaultInstance.asTrustedLocalCatalog(),
     root: skir.PresentationNode.defaultInstance,
     bindings: const {},
     budget: skir.EvaluationBudget(maxSteps: 100, maxCollectionItems: 100),

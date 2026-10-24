@@ -50,16 +50,16 @@ final class AuthoredResourceCommands {
     this.prepareAuthoringAction = _preparationUnavailable,
   });
 
-  final Future<skir.TypePreviewResult> Function({
+  final Future<skir.PreviewTypeArgumentChangeResponse> Function({
     required skir.ResourceId resource,
     required skir.TypeSelection requested,
   })
   previewTypeArguments;
-  final Future<skir.PreparedEditResult> Function(
+  final Future<skir.PrepareTypeArgumentChangeResponse> Function(
     skir.TypeArgumentChangePreview preview,
   )
   prepareTypeArguments;
-  final Future<skir.PreparationStep> Function(
+  final Future<skir.PrepareValueResult> Function(
     skir.PreparationOperation operation,
   )
   prepareStep;

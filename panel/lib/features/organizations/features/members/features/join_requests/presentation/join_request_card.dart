@@ -1,3 +1,5 @@
+import "package:typewriter_panel/infrastructure/protocols/skir/skir.dart"
+    as skir;
 import "package:typewriter_panel/typewriter_panel.dart";
 
 /// Presents one moderation request and its transient interaction state.
@@ -18,7 +20,7 @@ class JoinRequestCard extends HookConsumerWidget {
     super.key,
   });
 
-  final OrganizationJoinRequest request;
+  final skir.OrganizationJoinRequest request;
   final bool isSelected;
   final ValueChanged<bool> onSelectionChanged;
   final VoidCallback onSelectAll;
@@ -30,7 +32,7 @@ class JoinRequestCard extends HookConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final theme = Theme.of(context);
     final rolesAsync = ref.watch(organizationRolesProvider);
-    final selectedRoles = useState<List<OrganizationRole>>([]);
+    final selectedRoles = useState<List<skir.OrganizationRole>>([]);
     final isDesktop = context.isDesktop;
 
     final expansibleController = useExpansibleController();

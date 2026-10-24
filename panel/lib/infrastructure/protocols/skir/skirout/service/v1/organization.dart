@@ -1062,6 +1062,8 @@ sealed class UpdateOrganizationServiceResponse {
   );
 
   /// Create a 'conflict_error' variant wrapping around the given value.
+  ///
+  /// Service changed elsewhere.
   factory UpdateOrganizationServiceResponse.wrapConflictError(
     UpdateOrganizationServiceResponse_ConflictError value,
   ) => UpdateOrganizationServiceResponse_conflictErrorWrapper._(value);
@@ -1078,6 +1080,8 @@ sealed class UpdateOrganizationServiceResponse {
   );
 
   /// Create a 'service_not_found_error' variant wrapping around the given value.
+  ///
+  /// Service not found in organization.
   factory UpdateOrganizationServiceResponse.wrapServiceNotFoundError(
     UpdateOrganizationServiceResponse_ServiceNotFoundError value,
   ) => UpdateOrganizationServiceResponse_serviceNotFoundErrorWrapper._(value);
@@ -1089,11 +1093,15 @@ sealed class UpdateOrganizationServiceResponse {
       );
 
   /// Create a 'validation_error' variant wrapping around the given value.
+  ///
+  /// Service update is invalid.
   factory UpdateOrganizationServiceResponse.wrapValidationError(
     ServiceUpdateValidationError value,
   ) => UpdateOrganizationServiceResponse_validationErrorWrapper._(value);
 
   /// Create a 'invalid_record_id_error' variant wrapping around the given value.
+  ///
+  /// Record IDs from an unexpected table.
   factory UpdateOrganizationServiceResponse.wrapInvalidRecordIdError(
     _lib_kernel_v1_errors.InvalidRecordIdError value,
   ) => UpdateOrganizationServiceResponse_invalidRecordIdErrorWrapper._(value);
@@ -1143,7 +1151,7 @@ sealed class UpdateOrganizationServiceResponse {
         "conflict_error",
         "wrapConflictError",
         UpdateOrganizationServiceResponse_ConflictError.serializer,
-        "",
+        "Service changed elsewhere.",
         UpdateOrganizationServiceResponse_conflictErrorWrapper._,
         (it) => it.value,
         ordinal: UpdateOrganizationServiceResponse_kind
@@ -1155,7 +1163,7 @@ sealed class UpdateOrganizationServiceResponse {
         "service_not_found_error",
         "wrapServiceNotFoundError",
         UpdateOrganizationServiceResponse_ServiceNotFoundError.serializer,
-        "",
+        "Service not found in organization.",
         UpdateOrganizationServiceResponse_serviceNotFoundErrorWrapper._,
         (it) => it.value,
         ordinal: UpdateOrganizationServiceResponse_kind
@@ -1167,7 +1175,7 @@ sealed class UpdateOrganizationServiceResponse {
         "validation_error",
         "wrapValidationError",
         ServiceUpdateValidationError.serializer,
-        "",
+        "Service update is invalid.",
         UpdateOrganizationServiceResponse_validationErrorWrapper._,
         (it) => it.value,
         ordinal: UpdateOrganizationServiceResponse_kind
@@ -1179,7 +1187,7 @@ sealed class UpdateOrganizationServiceResponse {
         "invalid_record_id_error",
         "wrapInvalidRecordIdError",
         _lib_kernel_v1_errors.InvalidRecordIdError.serializer,
-        "",
+        "Record IDs from an unexpected table.",
         UpdateOrganizationServiceResponse_invalidRecordIdErrorWrapper._,
         (it) => it.value,
         ordinal: UpdateOrganizationServiceResponse_kind

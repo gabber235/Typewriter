@@ -19,13 +19,22 @@ method IssueServiceIdentity(
     token: string;
   };
 
+  /// Malformed request.
   malformed_request_error: struct {};
+  /// Unknown role.
   unknown_role_error: struct {};
+  /// Unknown role property.
   role_unknown_property_error: struct {};
+  /// Invalid role type.
   role_type_invalid_error: struct {};
+  /// Invalid role version.
   role_version_invalid_error: struct {};
+  /// Custom role name required.
   custom_role_name_required_error: struct {};
+  /// Invalid custom role name.
   custom_role_name_invalid_error: struct {};
+  /// Built in role name forbidden.
   builtin_role_name_forbidden_error: struct {};
+  /// Identity provider unavailable.
   identity_provider_unavailable_error: struct {};
 } = 672941;

@@ -15,8 +15,7 @@ wit_bindgen::generate!({
 mod watch;
 
 use wasmcloud_utils::{
-    dispatch_route,
-    transport_routes::{OrganizationRolesWatchRoute, unmatched_route},
+    transport_routes::organization_roles::{Handlers, dispatch},
     wasmcloud::messaging::{core_handler::Guest, types},
 };
 
@@ -26,11 +25,12 @@ wasmcloud_utils::export!(Component);
 impl Guest for Component {
     #[otel_wasi::wasi_instrument(service = "organization-roles", export)]
     async fn handle_message(msg: types::NatsMessage) -> Result<(), otel_wasi::Error> {
-        handle_message_async(msg).await
+        dispatch(
+            msg,
+            Handlers {
+                organization_roles_watch: watch::handle_watch,
+            },
+        )
+        .await
     }
-}
-
-async fn handle_message_async(msg: types::NatsMessage) -> Result<(), otel_wasi::Error> {
-    dispatch_route!(msg, OrganizationRolesWatchRoute, watch::handle_watch);
-    Err(unmatched_route(&msg, "dispatch-action-unknown"))
 }

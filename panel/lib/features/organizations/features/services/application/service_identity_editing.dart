@@ -4,14 +4,14 @@ part of "services.dart";
 ///
 /// Only the editable name enters the document. Revision remains attached to
 /// the snapshot so the eventual rename cannot silently overwrite newer data.
-extension ServiceEditorSnapshotBuilder on Service {
+extension ServiceEditorSnapshotBuilder on skir.Service {
   EditorSnapshot get editorSnapshot => ServiceEditorSnapshot(this);
 }
 
 final class ServiceEditorSnapshot extends EditorSnapshot {
   const ServiceEditorSnapshot(this.service);
 
-  final Service service;
+  final skir.Service service;
 
   @override
   EditorDocument get document => EditorDocument(
@@ -102,7 +102,7 @@ final class ServiceEditPersistence extends ValueEditPersistence {
             ) =>
               MutationSuccess(
                 revision: value.revision,
-                value: Service.fromSkir(value).identityValue,
+                value: value.requireKnown().identityValue,
               ),
             skir.UpdateOrganizationServiceResponse_conflictErrorWrapper(
               :final value,
@@ -110,7 +110,7 @@ final class ServiceEditPersistence extends ValueEditPersistence {
               MutationConflict(
                 expectedRevision: commit.expectedRevision,
                 actualRevision: value.actual.revision,
-                actualValue: Service.fromSkir(value.actual).identityValue,
+                actualValue: value.actual.requireKnown().identityValue,
               ),
             skir.UpdateOrganizationServiceResponse_serviceNotFoundErrorWrapper() =>
               unavailableMutation(

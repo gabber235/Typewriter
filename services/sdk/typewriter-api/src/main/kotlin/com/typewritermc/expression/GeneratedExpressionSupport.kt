@@ -1,10 +1,8 @@
 package com.typewritermc.expression
 
 import com.typewritermc.authoring.GeneratedSdkApi
-import com.typewritermc.authoring.PathSegment
-import com.typewritermc.authoring.ValuePath
+import com.typewritermc.authoring.root
 import com.typewritermc.types.Color
-import com.typewritermc.types.DataValue
 import com.typewritermc.types.Icon
 import com.typewritermc.types.IconIconifyDefinition
 import com.typewritermc.types.IconSvgDefinition
@@ -13,15 +11,24 @@ import com.typewritermc.types.RelationshipEndpoint
 import com.typewritermc.types.Resource
 import com.typewritermc.types.ResourceId
 import com.typewritermc.types.ResourceIdDefinition
-import com.typewritermc.types.immutableCopy
-import com.typewritermc.types.skir.SkirAuthoringValueCodec
-import com.typewritermc.types.skir.SkirDataValueCodec
-import com.typewritermc.types.skir.getOrThrow
+import com.typewritermc.types.duration
+import com.typewritermc.types.field
+import com.typewritermc.types.integer
+import com.typewritermc.types.listValue
+import com.typewritermc.types.named
+import com.typewritermc.types.record
+import com.typewritermc.types.requirePortable
+import com.typewritermc.types.timestamp
+import com.typewritermc.types.use
 import skirout.editor.v1.expression.ExpressionNode
 import skirout.editor.v1.expression.NumberCompareOperation
 import skirout.editor.v1.expression.RuleUnaryOperation
 import skirout.editor.v1.expression.TextUnaryOperation
 import skirout.editor.v1.expression.ValueCompareOperation
+import skirout.editor.v1.type_catalog.DataValue
+import skirout.editor.v1.type_catalog.ExpressionBindingId
+import skirout.editor.v1.type_catalog.PathSegment
+import skirout.editor.v1.type_catalog.ValuePath
 import java.math.BigDecimal
 import java.math.BigInteger
 import kotlin.time.Duration
@@ -84,20 +91,19 @@ internal fun <T> local(
 
 internal fun <T, M : MissingPolicy> inputExpression(
     binding: ExpressionBindingId,
-    path: ValuePath = ValuePath(),
+    path: ValuePath = ValuePath.root,
 ): Expr<T, M> {
     val source =
         skirout.editor.v1.type_catalog
             .ExpressionBindingId(value = binding.value)
-    val frozenPath = SkirAuthoringValueCodec.encode(path).getOrThrow()
+    val frozenPath = path
     return Expr { ExpressionNode.createInput(binding = source, path = frozenPath) }
 }
 
 fun <V> Expr<*, out MissingPolicy>.field(name: String): Expr<V, MayBeMissing> {
     val source = this
     val segment =
-        skirout.editor.v1.type_catalog.PathSegment
-            .createField(name = name)
+        PathSegment.createField(name = name)
     return Expr { environment ->
         when (val expression = source.lower(environment)) {
             is ExpressionNode.InputWrapper -> {
@@ -296,49 +302,49 @@ fun <T> portableExpression(node: ExpressionNode): Expr<T, MayBeMissing> {
 }
 
 internal fun <T> portableLiteral(value: DataValue): Expr<T, Handled> {
-    val frozen = SkirDataValueCodec.encode(value.immutableCopy()).getOrThrow()
+    val frozen = value.requirePortable()
     return Expr { ExpressionNode.LiteralWrapper(frozen) }
 }
 
-fun literal(value: String): Expr<String, Handled> = portableLiteral(DataValue.StringValue(value))
+fun literal(value: String): Expr<String, Handled> = portableLiteral(DataValue.StringValueWrapper(value))
 
 fun literal(value: ResourceId): Expr<ResourceId, Handled> =
-    portableLiteral(DataValue.Named(ResourceIdDefinition.use, DataValue.StringValue(value.value)))
+    portableLiteral(DataValue.named(ResourceIdDefinition.use, DataValue.StringValueWrapper(value.value)))
 
-fun literal(value: Boolean): Expr<Boolean, Handled> = portableLiteral(DataValue.Boolean(value))
+fun literal(value: Boolean): Expr<Boolean, Handled> = portableLiteral(DataValue.BooleanWrapper(value))
 
-fun literal(value: Int): Expr<Int, Handled> = portableLiteral(DataValue.Integer(value.toBigInteger()))
+fun literal(value: Int): Expr<Int, Handled> = portableLiteral(DataValue.integer(value.toBigInteger()))
 
-fun literal(value: Long): Expr<Long, Handled> = portableLiteral(DataValue.Integer(value.toBigInteger()))
+fun literal(value: Long): Expr<Long, Handled> = portableLiteral(DataValue.integer(value.toBigInteger()))
 
-fun literal(value: Float): Expr<Float, Handled> = portableLiteral(DataValue.Float(value.toDouble()))
+fun literal(value: Float): Expr<Float, Handled> = portableLiteral(DataValue.FloatWrapper(value.toDouble()))
 
-fun literal(value: Double): Expr<Double, Handled> = portableLiteral(DataValue.Float(value))
+fun literal(value: Double): Expr<Double, Handled> = portableLiteral(DataValue.FloatWrapper(value))
 
-fun literal(value: BigInteger): Expr<BigInteger, Handled> = portableLiteral(DataValue.Integer(value))
+fun literal(value: BigInteger): Expr<BigInteger, Handled> = portableLiteral(DataValue.integer(value))
 
-fun literal(value: BigDecimal): Expr<BigDecimal, Handled> = portableLiteral(DataValue.Decimal(value.toPlainString()))
+fun literal(value: BigDecimal): Expr<BigDecimal, Handled> = portableLiteral(DataValue.DecimalWrapper(value.toPlainString()))
 
-fun literal(value: Instant): Expr<Instant, Handled> = portableLiteral(DataValue.Timestamp(value))
+fun literal(value: Instant): Expr<Instant, Handled> = portableLiteral(DataValue.timestamp(value))
 
-fun literal(value: Duration): Expr<Duration, Handled> = portableLiteral(DataValue.Duration(value))
+fun literal(value: Duration): Expr<Duration, Handled> = portableLiteral(DataValue.duration(value))
 
-fun literal(value: Color): Expr<Color, Handled> = portableLiteral(DataValue.Integer(value.argb.toString().toBigInteger()))
+fun literal(value: Color): Expr<Color, Handled> = portableLiteral(DataValue.integer(value.argb.toString().toBigInteger()))
 
 fun literal(value: Icon): Expr<Icon, Handled> =
     portableLiteral(
         when (value) {
             is Icon.Iconify -> {
-                DataValue.Named(
+                DataValue.named(
                     IconIconifyDefinition.use,
-                    DataValue.Record(
-                        mapOf("value" to DataValue.StringValue(value.value)),
+                    DataValue.record(
+                        mapOf("value" to DataValue.StringValueWrapper(value.value)),
                     ),
                 )
             }
 
             is Icon.Svg -> {
-                DataValue.Named(IconSvgDefinition.use, DataValue.Record(mapOf("source" to DataValue.StringValue(value.source))))
+                DataValue.named(IconSvgDefinition.use, DataValue.record(mapOf("source" to DataValue.StringValueWrapper(value.source))))
             }
         },
     )
@@ -579,14 +585,14 @@ fun Expr<String, MissingPolicy>.orIfBlank(fallback: String): Expr<String, Handle
 val <E : RelationshipEndpoint<*, *>, T : Resource, M : MissingPolicy> Expr<Ref<E, T>, M>.target: Expr<ResourceId, M>
     get() = Expr { ExpressionNode.LinkTargetWrapper(lower(it)) }
 
-fun <T> emptyListExpression(): Expr<List<T>, Handled> = portableLiteral(DataValue.ListValue(emptyList()))
+fun <T> emptyListExpression(): Expr<List<T>, Handled> = portableLiteral(DataValue.listValue(emptyList()))
 
 private fun numberLiteral(value: Number): DataValue =
     when (value) {
-        is Byte, is Short, is Int, is Long -> DataValue.Integer(value.toLong().toBigInteger())
-        is Float, is Double -> DataValue.Float(value.toDouble())
-        is BigInteger -> DataValue.Integer(value)
-        is BigDecimal -> DataValue.Decimal(value.toPlainString())
+        is Byte, is Short, is Int, is Long -> DataValue.integer(value.toLong().toBigInteger())
+        is Float, is Double -> DataValue.FloatWrapper(value.toDouble())
+        is BigInteger -> DataValue.integer(value)
+        is BigDecimal -> DataValue.DecimalWrapper(value.toPlainString())
         else -> throw IllegalArgumentException("Unsupported portable numeric constant ${value::class.qualifiedName}.")
     }
 
@@ -615,5 +621,5 @@ private fun ExpressionNode.requireClosedExpression() {
 
 fun <T> input(
     binding: ExpressionBindingId,
-    path: ValuePath = ValuePath(),
+    path: ValuePath = ValuePath.root,
 ): Expr<T, MayBeMissing> = inputExpression(binding, path)

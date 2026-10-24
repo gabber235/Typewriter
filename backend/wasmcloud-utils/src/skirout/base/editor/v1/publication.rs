@@ -157,106 +157,6 @@ impl PublicationAttempt {
 }
 
 // ==============================================================================
-// struct PublicationResult.Activated
-// ==============================================================================
-
-#[derive(Clone, Debug, PartialEq, Default)]
-pub struct PublicationResult_Activated {
-    pub publication: crate::skirout::base::editor::v1::type_catalog::PublicationId,
-    /// Set this to None when you're creating a struct.
-    pub _unrecognized: Option<crate::skir_client::UnrecognizedFields<PublicationResult_Activated>>,
-}
-
-impl PublicationResult_Activated {
-    pub fn default_ref() -> &'static PublicationResult_Activated {
-        static D: std::sync::LazyLock<PublicationResult_Activated> =
-            std::sync::LazyLock::new(PublicationResult_Activated::default);
-        &D
-    }
-}
-
-impl PublicationResult_Activated {
-    fn _adapter()
-    -> &'static crate::skir_client::internal::StructAdapter<PublicationResult_Activated> {
-        static ADAPTER: std::sync::LazyLock<
-            crate::skir_client::internal::StructAdapter<PublicationResult_Activated>,
-        > = std::sync::LazyLock::new(|| {
-            crate::skir_client::internal::StructAdapter::new(
-                "editor/v1/publication.skir",
-                "PublicationResult.Activated",
-                "",
-                |x: &PublicationResult_Activated| &x._unrecognized,
-                |x: &mut PublicationResult_Activated, u| x._unrecognized = u,
-            )
-        });
-        &*ADAPTER
-    }
-    pub fn serializer() -> crate::skir_client::Serializer<PublicationResult_Activated> {
-        initialize_module_serializers();
-        crate::skir_client::internal::struct_serializer_from_static(
-            PublicationResult_Activated::_adapter(),
-        )
-    }
-}
-
-// ==============================================================================
-// enum PublicationResult
-// ==============================================================================
-
-/// Reports release admission and selection. activated identifies the newly selected publication,
-/// not an acknowledgement from engine hosts. candidate_changed requires a fresh review; publishing
-/// means another release currently owns the publication gate.
-#[derive(Debug, Clone, PartialEq)]
-pub enum PublicationResult {
-    Unknown(Option<crate::skir_client::UnrecognizedVariant<PublicationResult>>),
-    Publishing,
-    Activated(Box<PublicationResult_Activated>),
-    Blocked(Box<PublicationBlockers>),
-    Interrupted(Box<crate::skirout::base::editor::v1::type_catalog::PublicationId>),
-    NoChanges,
-    CandidateChanged(Box<PublicationViewChanged>),
-}
-
-impl Default for PublicationResult {
-    fn default() -> Self {
-        PublicationResult::Unknown(None)
-    }
-}
-
-impl PublicationResult {
-    fn _adapter() -> &'static crate::skir_client::internal::EnumAdapter<PublicationResult> {
-        static ADAPTER: std::sync::LazyLock<
-            crate::skir_client::internal::EnumAdapter<PublicationResult>,
-        > = std::sync::LazyLock::new(|| {
-            crate::skir_client::internal::EnumAdapter::new(
-                |x: &PublicationResult| match x {
-                    PublicationResult::Unknown(_) => 0,
-                    PublicationResult::Publishing => 1,
-                    PublicationResult::Activated(_) => 2,
-                    PublicationResult::Blocked(_) => 3,
-                    PublicationResult::Interrupted(_) => 4,
-                    PublicationResult::NoChanges => 5,
-                    PublicationResult::CandidateChanged(_) => 6,
-                },
-                |u| PublicationResult::Unknown(Some(u)),
-                |x: &PublicationResult| match x {
-                    PublicationResult::Unknown(Some(u)) => Some(u.as_ref()),
-                    _ => None,
-                },
-                "editor/v1/publication.skir",
-                "PublicationResult",
-                "Reports release admission and selection. activated identifies the newly selected publication,\nnot an acknowledgement from engine hosts. candidate_changed requires a fresh review; publishing\nmeans another release currently owns the publication gate.",
-            )
-        });
-        &*ADAPTER
-    }
-    pub fn serializer() -> crate::skir_client::Serializer<PublicationResult> {
-        initialize_module_serializers();
-        crate::skir_client::internal::enum_serializer_from_static(PublicationResult::_adapter())
-    }
-}
-
-// ==============================================================================
 // struct PublicationReport
 // ==============================================================================
 
@@ -1305,7 +1205,7 @@ impl PublicationView {
 // struct PublicationViewChanged
 // ==============================================================================
 
-/// Invalidation hint naming the current review view. Query that exact identity to transfer its content.
+/// Invalidation hint naming the current review view. Query that exact identity to read its content.
 #[derive(Clone, Debug, PartialEq, Default)]
 pub struct PublicationViewChanged {
     pub current: PublicationViewId,
@@ -1329,7 +1229,7 @@ impl PublicationViewChanged {
             crate::skir_client::internal::StructAdapter::new(
                 "editor/v1/publication.skir",
                 "PublicationViewChanged",
-                "Invalidation hint naming the current review view. Query that exact identity to transfer its content.",
+                "Invalidation hint naming the current review view. Query that exact identity to read its content.",
                 |x: &PublicationViewChanged| &x._unrecognized,
                 |x: &mut PublicationViewChanged, u| x._unrecognized = u,
             )
@@ -1340,93 +1240,6 @@ impl PublicationViewChanged {
         initialize_module_serializers();
         crate::skir_client::internal::struct_serializer_from_static(
             PublicationViewChanged::_adapter(),
-        )
-    }
-}
-
-// ==============================================================================
-// struct PublicationViewChunk
-// ==============================================================================
-
-#[derive(Clone, Debug, PartialEq, Default)]
-pub struct PublicationViewChunk {
-    pub view: PublicationViewId,
-    pub transfer: crate::skirout::base::kernel::v1::bounded_transfer::BoundedTransferChunk,
-    /// Set this to None when you're creating a struct.
-    pub _unrecognized: Option<crate::skir_client::UnrecognizedFields<PublicationViewChunk>>,
-}
-
-impl PublicationViewChunk {
-    pub fn default_ref() -> &'static PublicationViewChunk {
-        static D: std::sync::LazyLock<PublicationViewChunk> =
-            std::sync::LazyLock::new(PublicationViewChunk::default);
-        &D
-    }
-}
-
-impl PublicationViewChunk {
-    fn _adapter() -> &'static crate::skir_client::internal::StructAdapter<PublicationViewChunk> {
-        static ADAPTER: std::sync::LazyLock<
-            crate::skir_client::internal::StructAdapter<PublicationViewChunk>,
-        > = std::sync::LazyLock::new(|| {
-            crate::skir_client::internal::StructAdapter::new(
-                "editor/v1/publication.skir",
-                "PublicationViewChunk",
-                "",
-                |x: &PublicationViewChunk| &x._unrecognized,
-                |x: &mut PublicationViewChunk, u| x._unrecognized = u,
-            )
-        });
-        &*ADAPTER
-    }
-    pub fn serializer() -> crate::skir_client::Serializer<PublicationViewChunk> {
-        initialize_module_serializers();
-        crate::skir_client::internal::struct_serializer_from_static(PublicationViewChunk::_adapter())
-    }
-}
-
-// ==============================================================================
-// struct PublicationTransferUnavailable
-// ==============================================================================
-
-#[derive(Clone, Debug, PartialEq, Default)]
-pub struct PublicationTransferUnavailable {
-    pub view: PublicationViewId,
-    pub encoded_size: i64,
-    pub max_encoded_size: i64,
-    /// Set this to None when you're creating a struct.
-    pub _unrecognized:
-        Option<crate::skir_client::UnrecognizedFields<PublicationTransferUnavailable>>,
-}
-
-impl PublicationTransferUnavailable {
-    pub fn default_ref() -> &'static PublicationTransferUnavailable {
-        static D: std::sync::LazyLock<PublicationTransferUnavailable> =
-            std::sync::LazyLock::new(PublicationTransferUnavailable::default);
-        &D
-    }
-}
-
-impl PublicationTransferUnavailable {
-    fn _adapter()
-    -> &'static crate::skir_client::internal::StructAdapter<PublicationTransferUnavailable> {
-        static ADAPTER: std::sync::LazyLock<
-            crate::skir_client::internal::StructAdapter<PublicationTransferUnavailable>,
-        > = std::sync::LazyLock::new(|| {
-            crate::skir_client::internal::StructAdapter::new(
-                "editor/v1/publication.skir",
-                "PublicationTransferUnavailable",
-                "",
-                |x: &PublicationTransferUnavailable| &x._unrecognized,
-                |x: &mut PublicationTransferUnavailable, u| x._unrecognized = u,
-            )
-        });
-        &*ADAPTER
-    }
-    pub fn serializer() -> crate::skir_client::Serializer<PublicationTransferUnavailable> {
-        initialize_module_serializers();
-        crate::skir_client::internal::struct_serializer_from_static(
-            PublicationTransferUnavailable::_adapter(),
         )
     }
 }
@@ -1474,13 +1287,63 @@ impl PublishAuthoringRequest {
 }
 
 // ==============================================================================
+// struct PublishAuthoringResponse.Activated
+// ==============================================================================
+
+#[derive(Clone, Debug, PartialEq, Default)]
+pub struct PublishAuthoringResponse_Activated {
+    pub publication: crate::skirout::base::editor::v1::type_catalog::PublicationId,
+    /// Set this to None when you're creating a struct.
+    pub _unrecognized:
+        Option<crate::skir_client::UnrecognizedFields<PublishAuthoringResponse_Activated>>,
+}
+
+impl PublishAuthoringResponse_Activated {
+    pub fn default_ref() -> &'static PublishAuthoringResponse_Activated {
+        static D: std::sync::LazyLock<PublishAuthoringResponse_Activated> =
+            std::sync::LazyLock::new(PublishAuthoringResponse_Activated::default);
+        &D
+    }
+}
+
+impl PublishAuthoringResponse_Activated {
+    fn _adapter()
+    -> &'static crate::skir_client::internal::StructAdapter<PublishAuthoringResponse_Activated>
+    {
+        static ADAPTER: std::sync::LazyLock<
+            crate::skir_client::internal::StructAdapter<PublishAuthoringResponse_Activated>,
+        > = std::sync::LazyLock::new(|| {
+            crate::skir_client::internal::StructAdapter::new(
+                "editor/v1/publication.skir",
+                "PublishAuthoringResponse.Activated",
+                "",
+                |x: &PublishAuthoringResponse_Activated| &x._unrecognized,
+                |x: &mut PublishAuthoringResponse_Activated, u| x._unrecognized = u,
+            )
+        });
+        &*ADAPTER
+    }
+    pub fn serializer() -> crate::skir_client::Serializer<PublishAuthoringResponse_Activated> {
+        initialize_module_serializers();
+        crate::skir_client::internal::struct_serializer_from_static(
+            PublishAuthoringResponse_Activated::_adapter(),
+        )
+    }
+}
+
+// ==============================================================================
 // enum PublishAuthoringResponse
 // ==============================================================================
 
 #[derive(Debug, Clone, PartialEq)]
 pub enum PublishAuthoringResponse {
     Unknown(Option<crate::skir_client::UnrecognizedVariant<PublishAuthoringResponse>>),
-    Result(Box<PublicationResult>),
+    Publishing,
+    Activated(Box<PublishAuthoringResponse_Activated>),
+    BlockedError(Box<PublicationBlockers>),
+    InterruptedError(Box<crate::skirout::base::editor::v1::type_catalog::PublicationId>),
+    NoChanges,
+    CandidateChangedError(Box<PublicationViewChanged>),
     InternalError(Box<crate::skirout::base::kernel::v1::errors::InternalError>),
 }
 
@@ -1498,8 +1361,13 @@ impl PublishAuthoringResponse {
             crate::skir_client::internal::EnumAdapter::new(
                 |x: &PublishAuthoringResponse| match x {
                     PublishAuthoringResponse::Unknown(_) => 0,
-                    PublishAuthoringResponse::Result(_) => 1,
-                    PublishAuthoringResponse::InternalError(_) => 2,
+                    PublishAuthoringResponse::Publishing => 1,
+                    PublishAuthoringResponse::Activated(_) => 2,
+                    PublishAuthoringResponse::BlockedError(_) => 3,
+                    PublishAuthoringResponse::InterruptedError(_) => 4,
+                    PublishAuthoringResponse::NoChanges => 5,
+                    PublishAuthoringResponse::CandidateChangedError(_) => 6,
+                    PublishAuthoringResponse::InternalError(_) => 7,
                 },
                 |u| PublishAuthoringResponse::Unknown(Some(u)),
                 |x: &PublishAuthoringResponse| match x {
@@ -1563,13 +1431,60 @@ impl WatchPublicationRequest {
 }
 
 // ==============================================================================
+// enum WatchPublicationResponse
+// ==============================================================================
+
+#[derive(Debug, Clone, PartialEq)]
+pub enum WatchPublicationResponse {
+    Unknown(Option<crate::skir_client::UnrecognizedVariant<WatchPublicationResponse>>),
+    ViewChanged(Box<PublicationViewChanged>),
+    InternalError(Box<crate::skirout::base::kernel::v1::errors::InternalError>),
+}
+
+impl Default for WatchPublicationResponse {
+    fn default() -> Self {
+        WatchPublicationResponse::Unknown(None)
+    }
+}
+
+impl WatchPublicationResponse {
+    fn _adapter() -> &'static crate::skir_client::internal::EnumAdapter<WatchPublicationResponse> {
+        static ADAPTER: std::sync::LazyLock<
+            crate::skir_client::internal::EnumAdapter<WatchPublicationResponse>,
+        > = std::sync::LazyLock::new(|| {
+            crate::skir_client::internal::EnumAdapter::new(
+                |x: &WatchPublicationResponse| match x {
+                    WatchPublicationResponse::Unknown(_) => 0,
+                    WatchPublicationResponse::ViewChanged(_) => 1,
+                    WatchPublicationResponse::InternalError(_) => 2,
+                },
+                |u| WatchPublicationResponse::Unknown(Some(u)),
+                |x: &WatchPublicationResponse| match x {
+                    WatchPublicationResponse::Unknown(Some(u)) => Some(u.as_ref()),
+                    _ => None,
+                },
+                "editor/v1/publication.skir",
+                "WatchPublicationResponse",
+                "",
+            )
+        });
+        &*ADAPTER
+    }
+    pub fn serializer() -> crate::skir_client::Serializer<WatchPublicationResponse> {
+        initialize_module_serializers();
+        crate::skir_client::internal::enum_serializer_from_static(
+            WatchPublicationResponse::_adapter(),
+        )
+    }
+}
+
+// ==============================================================================
 // struct QueryPublicationViewRequest
 // ==============================================================================
 
 #[derive(Clone, Debug, PartialEq, Default)]
 pub struct QueryPublicationViewRequest {
     pub expected: PublicationViewId,
-    pub transfer_id: String,
     /// Set this to None when you're creating a struct.
     pub _unrecognized: Option<crate::skir_client::UnrecognizedFields<QueryPublicationViewRequest>>,
 }
@@ -1613,9 +1528,8 @@ impl QueryPublicationViewRequest {
 #[derive(Debug, Clone, PartialEq)]
 pub enum QueryPublicationViewResponse {
     Unknown(Option<crate::skir_client::UnrecognizedVariant<QueryPublicationViewResponse>>),
-    Chunk(Box<PublicationViewChunk>),
-    Changed(Box<PublicationViewChanged>),
-    Unavailable(Box<PublicationTransferUnavailable>),
+    View(Box<PublicationView>),
+    ViewChangedError(Box<PublicationViewChanged>),
     InternalError(Box<crate::skirout::base::kernel::v1::errors::InternalError>),
 }
 
@@ -1634,10 +1548,9 @@ impl QueryPublicationViewResponse {
             crate::skir_client::internal::EnumAdapter::new(
                 |x: &QueryPublicationViewResponse| match x {
                     QueryPublicationViewResponse::Unknown(_) => 0,
-                    QueryPublicationViewResponse::Chunk(_) => 1,
-                    QueryPublicationViewResponse::Changed(_) => 2,
-                    QueryPublicationViewResponse::Unavailable(_) => 3,
-                    QueryPublicationViewResponse::InternalError(_) => 4,
+                    QueryPublicationViewResponse::View(_) => 1,
+                    QueryPublicationViewResponse::ViewChangedError(_) => 2,
+                    QueryPublicationViewResponse::InternalError(_) => 3,
                 },
                 |u| QueryPublicationViewResponse::Unknown(Some(u)),
                 |x: &QueryPublicationViewResponse| match x {
@@ -1740,80 +1653,6 @@ fn initialize_module_serializers() {
                 "",
                 |x: &PublicationAttempt| &x.state,
                 |x: &mut PublicationAttempt, v| x.state = v,
-            );
-            (*a).finalize();
-        }
-        unsafe {
-            let a: *mut crate::skir_client::internal::StructAdapter<PublicationResult_Activated> =
-                PublicationResult_Activated::_adapter() as *const _ as *mut _;
-            (*a).add_field(
-                "publication",
-                0,
-                crate::skirout::base::editor::v1::type_catalog::PublicationId::serializer(),
-                "",
-                |x: &PublicationResult_Activated| &x.publication,
-                |x: &mut PublicationResult_Activated, v| x.publication = v,
-            );
-            (*a).finalize();
-        }
-        unsafe {
-            let a: *mut crate::skir_client::internal::EnumAdapter<PublicationResult> =
-                PublicationResult::_adapter() as *const _ as *mut _;
-            (*a).add_constant_variant("publishing", 1, 1, "", PublicationResult::Publishing);
-            (*a).add_wrapper_variant(
-                "activated",
-                2,
-                2,
-                crate::skir_client::internal::struct_serializer_from_static(
-                    PublicationResult_Activated::_adapter(),
-                ),
-                "",
-                |v| PublicationResult::Activated(Box::new(v)),
-                |x| match x {
-                    PublicationResult::Activated(b) => b.as_ref(),
-                    _ => unreachable!(),
-                },
-            );
-            (*a).add_wrapper_variant(
-                "blocked",
-                3,
-                3,
-                crate::skir_client::internal::struct_serializer_from_static(
-                    PublicationBlockers::_adapter(),
-                ),
-                "",
-                |v| PublicationResult::Blocked(Box::new(v)),
-                |x| match x {
-                    PublicationResult::Blocked(b) => b.as_ref(),
-                    _ => unreachable!(),
-                },
-            );
-            (*a).add_wrapper_variant(
-                "interrupted",
-                4,
-                4,
-                crate::skirout::base::editor::v1::type_catalog::PublicationId::serializer(),
-                "",
-                |v| PublicationResult::Interrupted(Box::new(v)),
-                |x| match x {
-                    PublicationResult::Interrupted(b) => b.as_ref(),
-                    _ => unreachable!(),
-                },
-            );
-            (*a).add_constant_variant("no_changes", 5, 5, "", PublicationResult::NoChanges);
-            (*a).add_wrapper_variant(
-                "candidate_changed",
-                6,
-                6,
-                crate::skir_client::internal::struct_serializer_from_static(
-                    PublicationViewChanged::_adapter(),
-                ),
-                "",
-                |v| PublicationResult::CandidateChanged(Box::new(v)),
-                |x| match x {
-                    PublicationResult::CandidateChanged(b) => b.as_ref(),
-                    _ => unreachable!(),
-                },
             );
             (*a).finalize();
         }
@@ -2649,54 +2488,6 @@ fn initialize_module_serializers() {
             (*a).finalize();
         }
         unsafe {
-            let a: *mut crate::skir_client::internal::StructAdapter<PublicationViewChunk> =
-                PublicationViewChunk::_adapter() as *const _ as *mut _;
-            (*a).add_field(
-                "view",
-                0,
-                crate::skir_client::internal::struct_serializer_from_static(
-                    PublicationViewId::_adapter(),
-                ),
-                "",
-                |x: &PublicationViewChunk| &x.view,
-                |x: &mut PublicationViewChunk, v| x.view = v,
-            );
-            (*a).add_field("transfer", 1, crate::skirout::base::kernel::v1::bounded_transfer::BoundedTransferChunk::serializer(), "", |x: &PublicationViewChunk| &x.transfer, |x: &mut PublicationViewChunk, v| x.transfer = v);
-            (*a).finalize();
-        }
-        unsafe {
-            let a: *mut crate::skir_client::internal::StructAdapter<
-                PublicationTransferUnavailable,
-            > = PublicationTransferUnavailable::_adapter() as *const _ as *mut _;
-            (*a).add_field(
-                "view",
-                0,
-                crate::skir_client::internal::struct_serializer_from_static(
-                    PublicationViewId::_adapter(),
-                ),
-                "",
-                |x: &PublicationTransferUnavailable| &x.view,
-                |x: &mut PublicationTransferUnavailable, v| x.view = v,
-            );
-            (*a).add_field(
-                "encoded_size",
-                1,
-                crate::skir_client::Serializer::int64(),
-                "",
-                |x: &PublicationTransferUnavailable| &x.encoded_size,
-                |x: &mut PublicationTransferUnavailable, v| x.encoded_size = v,
-            );
-            (*a).add_field(
-                "max_encoded_size",
-                2,
-                crate::skir_client::Serializer::int64(),
-                "",
-                |x: &PublicationTransferUnavailable| &x.max_encoded_size,
-                |x: &mut PublicationTransferUnavailable, v| x.max_encoded_size = v,
-            );
-            (*a).finalize();
-        }
-        unsafe {
             let a: *mut crate::skir_client::internal::StructAdapter<PublishAuthoringRequest> =
                 PublishAuthoringRequest::_adapter() as *const _ as *mut _;
             (*a).add_field(
@@ -2712,26 +2503,82 @@ fn initialize_module_serializers() {
             (*a).finalize();
         }
         unsafe {
+            let a: *mut crate::skir_client::internal::StructAdapter<
+                PublishAuthoringResponse_Activated,
+            > = PublishAuthoringResponse_Activated::_adapter() as *const _ as *mut _;
+            (*a).add_field(
+                "publication",
+                0,
+                crate::skirout::base::editor::v1::type_catalog::PublicationId::serializer(),
+                "",
+                |x: &PublishAuthoringResponse_Activated| &x.publication,
+                |x: &mut PublishAuthoringResponse_Activated, v| x.publication = v,
+            );
+            (*a).finalize();
+        }
+        unsafe {
             let a: *mut crate::skir_client::internal::EnumAdapter<PublishAuthoringResponse> =
                 PublishAuthoringResponse::_adapter() as *const _ as *mut _;
+            (*a).add_constant_variant("publishing", 1, 1, "", PublishAuthoringResponse::Publishing);
             (*a).add_wrapper_variant(
-                "result",
-                1,
-                1,
-                crate::skir_client::internal::enum_serializer_from_static(
-                    PublicationResult::_adapter(),
+                "activated",
+                2,
+                2,
+                crate::skir_client::internal::struct_serializer_from_static(
+                    PublishAuthoringResponse_Activated::_adapter(),
                 ),
                 "",
-                |v| PublishAuthoringResponse::Result(Box::new(v)),
+                |v| PublishAuthoringResponse::Activated(Box::new(v)),
                 |x| match x {
-                    PublishAuthoringResponse::Result(b) => b.as_ref(),
+                    PublishAuthoringResponse::Activated(b) => b.as_ref(),
+                    _ => unreachable!(),
+                },
+            );
+            (*a).add_wrapper_variant(
+                "blocked_error",
+                3,
+                3,
+                crate::skir_client::internal::struct_serializer_from_static(
+                    PublicationBlockers::_adapter(),
+                ),
+                "",
+                |v| PublishAuthoringResponse::BlockedError(Box::new(v)),
+                |x| match x {
+                    PublishAuthoringResponse::BlockedError(b) => b.as_ref(),
+                    _ => unreachable!(),
+                },
+            );
+            (*a).add_wrapper_variant(
+                "interrupted_error",
+                4,
+                4,
+                crate::skirout::base::editor::v1::type_catalog::PublicationId::serializer(),
+                "",
+                |v| PublishAuthoringResponse::InterruptedError(Box::new(v)),
+                |x| match x {
+                    PublishAuthoringResponse::InterruptedError(b) => b.as_ref(),
+                    _ => unreachable!(),
+                },
+            );
+            (*a).add_constant_variant("no_changes", 5, 5, "", PublishAuthoringResponse::NoChanges);
+            (*a).add_wrapper_variant(
+                "candidate_changed_error",
+                6,
+                6,
+                crate::skir_client::internal::struct_serializer_from_static(
+                    PublicationViewChanged::_adapter(),
+                ),
+                "",
+                |v| PublishAuthoringResponse::CandidateChangedError(Box::new(v)),
+                |x| match x {
+                    PublishAuthoringResponse::CandidateChangedError(b) => b.as_ref(),
                     _ => unreachable!(),
                 },
             );
             (*a).add_wrapper_variant(
                 "internal_error",
-                2,
-                2,
+                7,
+                7,
                 crate::skirout::base::kernel::v1::errors::InternalError::serializer(),
                 "",
                 |v| PublishAuthoringResponse::InternalError(Box::new(v)),
@@ -2748,6 +2595,37 @@ fn initialize_module_serializers() {
             (*a).finalize();
         }
         unsafe {
+            let a: *mut crate::skir_client::internal::EnumAdapter<WatchPublicationResponse> =
+                WatchPublicationResponse::_adapter() as *const _ as *mut _;
+            (*a).add_wrapper_variant(
+                "view_changed",
+                1,
+                1,
+                crate::skir_client::internal::struct_serializer_from_static(
+                    PublicationViewChanged::_adapter(),
+                ),
+                "",
+                |v| WatchPublicationResponse::ViewChanged(Box::new(v)),
+                |x| match x {
+                    WatchPublicationResponse::ViewChanged(b) => b.as_ref(),
+                    _ => unreachable!(),
+                },
+            );
+            (*a).add_wrapper_variant(
+                "internal_error",
+                2,
+                2,
+                crate::skirout::base::kernel::v1::errors::InternalError::serializer(),
+                "",
+                |v| WatchPublicationResponse::InternalError(Box::new(v)),
+                |x| match x {
+                    WatchPublicationResponse::InternalError(b) => b.as_ref(),
+                    _ => unreachable!(),
+                },
+            );
+            (*a).finalize();
+        }
+        unsafe {
             let a: *mut crate::skir_client::internal::StructAdapter<QueryPublicationViewRequest> =
                 QueryPublicationViewRequest::_adapter() as *const _ as *mut _;
             (*a).add_field(
@@ -2760,65 +2638,43 @@ fn initialize_module_serializers() {
                 |x: &QueryPublicationViewRequest| &x.expected,
                 |x: &mut QueryPublicationViewRequest, v| x.expected = v,
             );
-            (*a).add_field(
-                "transfer_id",
-                1,
-                crate::skir_client::Serializer::string(),
-                "",
-                |x: &QueryPublicationViewRequest| &x.transfer_id,
-                |x: &mut QueryPublicationViewRequest, v| x.transfer_id = v,
-            );
             (*a).finalize();
         }
         unsafe {
             let a: *mut crate::skir_client::internal::EnumAdapter<QueryPublicationViewResponse> =
                 QueryPublicationViewResponse::_adapter() as *const _ as *mut _;
             (*a).add_wrapper_variant(
-                "chunk",
+                "view",
                 1,
                 1,
                 crate::skir_client::internal::struct_serializer_from_static(
-                    PublicationViewChunk::_adapter(),
+                    PublicationView::_adapter(),
                 ),
                 "",
-                |v| QueryPublicationViewResponse::Chunk(Box::new(v)),
+                |v| QueryPublicationViewResponse::View(Box::new(v)),
                 |x| match x {
-                    QueryPublicationViewResponse::Chunk(b) => b.as_ref(),
+                    QueryPublicationViewResponse::View(b) => b.as_ref(),
                     _ => unreachable!(),
                 },
             );
             (*a).add_wrapper_variant(
-                "changed",
+                "view_changed_error",
                 2,
                 2,
                 crate::skir_client::internal::struct_serializer_from_static(
                     PublicationViewChanged::_adapter(),
                 ),
                 "",
-                |v| QueryPublicationViewResponse::Changed(Box::new(v)),
+                |v| QueryPublicationViewResponse::ViewChangedError(Box::new(v)),
                 |x| match x {
-                    QueryPublicationViewResponse::Changed(b) => b.as_ref(),
-                    _ => unreachable!(),
-                },
-            );
-            (*a).add_wrapper_variant(
-                "unavailable",
-                3,
-                3,
-                crate::skir_client::internal::struct_serializer_from_static(
-                    PublicationTransferUnavailable::_adapter(),
-                ),
-                "",
-                |v| QueryPublicationViewResponse::Unavailable(Box::new(v)),
-                |x| match x {
-                    QueryPublicationViewResponse::Unavailable(b) => b.as_ref(),
+                    QueryPublicationViewResponse::ViewChangedError(b) => b.as_ref(),
                     _ => unreachable!(),
                 },
             );
             (*a).add_wrapper_variant(
                 "internal_error",
-                4,
-                4,
+                3,
+                3,
                 crate::skirout::base::kernel::v1::errors::InternalError::serializer(),
                 "",
                 |v| QueryPublicationViewResponse::InternalError(Box::new(v)),
@@ -2837,7 +2693,10 @@ fn initialize_module_serializers() {
 // Methods
 // ==============================================================================
 
-/// Releases only the issued candidate while its captured saved inputs and engine requirements still match.
+/// Releases only the issued candidate while its captured saved inputs and engine requirements still
+/// match. Reports release admission and selection: activated identifies the newly selected
+/// publication, not an acknowledgement from engine hosts; publishing means another release currently
+/// owns the publication gate; candidate_changed_error requires a fresh review.
 pub fn publish_authoring_method()
 -> &'static crate::skir_client::Method<PublishAuthoringRequest, PublishAuthoringResponse> {
     static METHOD: std::sync::LazyLock<
@@ -2848,28 +2707,30 @@ pub fn publish_authoring_method()
             number: 920018_i64,
             request_serializer: PublishAuthoringRequest::serializer(),
             response_serializer: PublishAuthoringResponse::serializer(),
-            doc: "Releases only the issued candidate while its captured saved inputs and engine requirements still match.".to_string(),
+            doc: "Releases only the issued candidate while its captured saved inputs and engine requirements still\nmatch. Reports release admission and selection: activated identifies the newly selected\npublication, not an acknowledgement from engine hosts; publishing means another release currently\nowns the publication gate; candidate_changed_error requires a fresh review.".to_string(),
         }
     });
     &*METHOD
 }
 
+/// Returns the current review view identity; later identities arrive as update hints.
 pub fn watch_publication_method()
--> &'static crate::skir_client::Method<WatchPublicationRequest, PublicationViewChanged> {
+-> &'static crate::skir_client::Method<WatchPublicationRequest, WatchPublicationResponse> {
     static METHOD: std::sync::LazyLock<
-        crate::skir_client::Method<WatchPublicationRequest, PublicationViewChanged>,
+        crate::skir_client::Method<WatchPublicationRequest, WatchPublicationResponse>,
     > = std::sync::LazyLock::new(|| crate::skir_client::Method {
         name: "WatchPublication".to_string(),
         number: 920019_i64,
         request_serializer: WatchPublicationRequest::serializer(),
-        response_serializer: PublicationViewChanged::serializer(),
-        doc: "".to_string(),
+        response_serializer: WatchPublicationResponse::serializer(),
+        doc: "Returns the current review view identity; later identities arrive as update hints."
+            .to_string(),
     });
     &*METHOD
 }
 
-/// Transfers one immutable review view or reports that expected is no longer current.
-/// All chunks share the view and transfer identities; later invalidations require a separate query.
+/// Returns one immutable review view, or the current view identity when expected is no longer
+/// current. Later invalidations require a separate query.
 pub fn query_publication_view_method()
 -> &'static crate::skir_client::Method<QueryPublicationViewRequest, QueryPublicationViewResponse> {
     static METHOD: std::sync::LazyLock<
@@ -2880,7 +2741,7 @@ pub fn query_publication_view_method()
             number: 920020_i64,
             request_serializer: QueryPublicationViewRequest::serializer(),
             response_serializer: QueryPublicationViewResponse::serializer(),
-            doc: "Transfers one immutable review view or reports that expected is no longer current.\nAll chunks share the view and transfer identities; later invalidations require a separate query.".to_string(),
+            doc: "Returns one immutable review view, or the current view identity when expected is no longer\ncurrent. Later invalidations require a separate query.".to_string(),
         }
     });
     &*METHOD

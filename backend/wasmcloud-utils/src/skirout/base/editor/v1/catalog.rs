@@ -938,14 +938,15 @@ impl RoleFallback {
 }
 
 // ==============================================================================
-// struct EditorCatalogWireSnapshot
+// struct EditorCatalog
 // ==============================================================================
 
-/// One coherent generation of authoring types, relations, presentations, capabilities, and operations.
-/// Generation changes invalidate client assumptions across the whole snapshot; they are separate
-/// from saved resource observations and selected compiled publications.
+/// The complete editor catalog of one installed generation: one coherent set of authoring types,
+/// relations, presentations, capabilities, and operations. Generation changes invalidate client
+/// assumptions across the whole catalog; they are separate from saved resource observations and
+/// selected compiled publications.
 #[derive(Clone, Debug, PartialEq, Default)]
-pub struct EditorCatalogWireSnapshot {
+pub struct EditorCatalog {
     pub generation: crate::skirout::base::editor::v1::type_catalog::CatalogGeneration,
     pub types: Vec<PublishedType>,
     pub relations: Vec<RelationContract>,
@@ -963,168 +964,35 @@ pub struct EditorCatalogWireSnapshot {
     /// The realm root type. The realm keeps exactly one instance, which owns every section.
     pub realm_root: crate::skirout::base::editor::v1::type_catalog::TypeDefinitionId,
     /// Set this to None when you're creating a struct.
-    pub _unrecognized: Option<crate::skir_client::UnrecognizedFields<EditorCatalogWireSnapshot>>,
+    pub _unrecognized: Option<crate::skir_client::UnrecognizedFields<EditorCatalog>>,
 }
 
-impl EditorCatalogWireSnapshot {
-    pub fn default_ref() -> &'static EditorCatalogWireSnapshot {
-        static D: std::sync::LazyLock<EditorCatalogWireSnapshot> =
-            std::sync::LazyLock::new(EditorCatalogWireSnapshot::default);
+impl EditorCatalog {
+    pub fn default_ref() -> &'static EditorCatalog {
+        static D: std::sync::LazyLock<EditorCatalog> =
+            std::sync::LazyLock::new(EditorCatalog::default);
         &D
     }
 }
 
-impl EditorCatalogWireSnapshot {
-    fn _adapter() -> &'static crate::skir_client::internal::StructAdapter<EditorCatalogWireSnapshot>
-    {
+impl EditorCatalog {
+    fn _adapter() -> &'static crate::skir_client::internal::StructAdapter<EditorCatalog> {
         static ADAPTER: std::sync::LazyLock<
-            crate::skir_client::internal::StructAdapter<EditorCatalogWireSnapshot>,
+            crate::skir_client::internal::StructAdapter<EditorCatalog>,
         > = std::sync::LazyLock::new(|| {
             crate::skir_client::internal::StructAdapter::new(
                 "editor/v1/catalog.skir",
-                "EditorCatalogWireSnapshot",
-                "One coherent generation of authoring types, relations, presentations, capabilities, and operations.\nGeneration changes invalidate client assumptions across the whole snapshot; they are separate\nfrom saved resource observations and selected compiled publications.",
-                |x: &EditorCatalogWireSnapshot| &x._unrecognized,
-                |x: &mut EditorCatalogWireSnapshot, u| x._unrecognized = u,
+                "EditorCatalog",
+                "The complete editor catalog of one installed generation: one coherent set of authoring types,\nrelations, presentations, capabilities, and operations. Generation changes invalidate client\nassumptions across the whole catalog; they are separate from saved resource observations and\nselected compiled publications.",
+                |x: &EditorCatalog| &x._unrecognized,
+                |x: &mut EditorCatalog, u| x._unrecognized = u,
             )
         });
         &*ADAPTER
     }
-    pub fn serializer() -> crate::skir_client::Serializer<EditorCatalogWireSnapshot> {
+    pub fn serializer() -> crate::skir_client::Serializer<EditorCatalog> {
         initialize_module_serializers();
-        crate::skir_client::internal::struct_serializer_from_static(
-            EditorCatalogWireSnapshot::_adapter(),
-        )
-    }
-}
-
-// ==============================================================================
-// struct CatalogTransferChunk
-// ==============================================================================
-
-#[derive(Clone, Debug, PartialEq, Default)]
-pub struct CatalogTransferChunk {
-    pub generation: crate::skirout::base::editor::v1::type_catalog::CatalogGeneration,
-    pub transfer: crate::skirout::base::kernel::v1::bounded_transfer::BoundedTransferChunk,
-    /// Set this to None when you're creating a struct.
-    pub _unrecognized: Option<crate::skir_client::UnrecognizedFields<CatalogTransferChunk>>,
-}
-
-impl CatalogTransferChunk {
-    pub fn default_ref() -> &'static CatalogTransferChunk {
-        static D: std::sync::LazyLock<CatalogTransferChunk> =
-            std::sync::LazyLock::new(CatalogTransferChunk::default);
-        &D
-    }
-}
-
-impl CatalogTransferChunk {
-    fn _adapter() -> &'static crate::skir_client::internal::StructAdapter<CatalogTransferChunk> {
-        static ADAPTER: std::sync::LazyLock<
-            crate::skir_client::internal::StructAdapter<CatalogTransferChunk>,
-        > = std::sync::LazyLock::new(|| {
-            crate::skir_client::internal::StructAdapter::new(
-                "editor/v1/catalog.skir",
-                "CatalogTransferChunk",
-                "",
-                |x: &CatalogTransferChunk| &x._unrecognized,
-                |x: &mut CatalogTransferChunk, u| x._unrecognized = u,
-            )
-        });
-        &*ADAPTER
-    }
-    pub fn serializer() -> crate::skir_client::Serializer<CatalogTransferChunk> {
-        initialize_module_serializers();
-        crate::skir_client::internal::struct_serializer_from_static(CatalogTransferChunk::_adapter())
-    }
-}
-
-// ==============================================================================
-// enum CatalogUnavailableReason
-// ==============================================================================
-
-#[derive(Debug, Clone, PartialEq)]
-pub enum CatalogUnavailableReason {
-    Unknown(Option<crate::skir_client::UnrecognizedVariant<CatalogUnavailableReason>>),
-    EncodedSizeLimit,
-}
-
-impl Default for CatalogUnavailableReason {
-    fn default() -> Self {
-        CatalogUnavailableReason::Unknown(None)
-    }
-}
-
-impl CatalogUnavailableReason {
-    fn _adapter() -> &'static crate::skir_client::internal::EnumAdapter<CatalogUnavailableReason> {
-        static ADAPTER: std::sync::LazyLock<
-            crate::skir_client::internal::EnumAdapter<CatalogUnavailableReason>,
-        > = std::sync::LazyLock::new(|| {
-            crate::skir_client::internal::EnumAdapter::new(
-                |x: &CatalogUnavailableReason| match x {
-                    CatalogUnavailableReason::Unknown(_) => 0,
-                    CatalogUnavailableReason::EncodedSizeLimit => 1,
-                },
-                |u| CatalogUnavailableReason::Unknown(Some(u)),
-                |x: &CatalogUnavailableReason| match x {
-                    CatalogUnavailableReason::Unknown(Some(u)) => Some(u.as_ref()),
-                    _ => None,
-                },
-                "editor/v1/catalog.skir",
-                "CatalogUnavailableReason",
-                "",
-            )
-        });
-        &*ADAPTER
-    }
-    pub fn serializer() -> crate::skir_client::Serializer<CatalogUnavailableReason> {
-        initialize_module_serializers();
-        crate::skir_client::internal::enum_serializer_from_static(
-            CatalogUnavailableReason::_adapter(),
-        )
-    }
-}
-
-// ==============================================================================
-// struct CatalogUnavailable
-// ==============================================================================
-
-#[derive(Clone, Debug, PartialEq, Default)]
-pub struct CatalogUnavailable {
-    pub generation: crate::skirout::base::editor::v1::type_catalog::CatalogGeneration,
-    pub reason: CatalogUnavailableReason,
-    pub encoded_size: i64,
-    pub max_encoded_size: i64,
-    /// Set this to None when you're creating a struct.
-    pub _unrecognized: Option<crate::skir_client::UnrecognizedFields<CatalogUnavailable>>,
-}
-
-impl CatalogUnavailable {
-    pub fn default_ref() -> &'static CatalogUnavailable {
-        static D: std::sync::LazyLock<CatalogUnavailable> =
-            std::sync::LazyLock::new(CatalogUnavailable::default);
-        &D
-    }
-}
-
-impl CatalogUnavailable {
-    fn _adapter() -> &'static crate::skir_client::internal::StructAdapter<CatalogUnavailable> {
-        static ADAPTER: std::sync::LazyLock<
-            crate::skir_client::internal::StructAdapter<CatalogUnavailable>,
-        > = std::sync::LazyLock::new(|| {
-            crate::skir_client::internal::StructAdapter::new(
-                "editor/v1/catalog.skir",
-                "CatalogUnavailable",
-                "",
-                |x: &CatalogUnavailable| &x._unrecognized,
-                |x: &mut CatalogUnavailable, u| x._unrecognized = u,
-            )
-        });
-        &*ADAPTER
-    }
-    pub fn serializer() -> crate::skir_client::Serializer<CatalogUnavailable> {
-        initialize_module_serializers();
-        crate::skir_client::internal::struct_serializer_from_static(CatalogUnavailable::_adapter())
+        crate::skir_client::internal::struct_serializer_from_static(EditorCatalog::_adapter())
     }
 }
 
@@ -1136,7 +1004,6 @@ impl CatalogUnavailable {
 pub struct CatalogFetchRequest {
     pub expected_generation:
         Option<crate::skirout::base::editor::v1::type_catalog::CatalogGeneration>,
-    pub transfer_id: String,
     /// Set this to None when you're creating a struct.
     pub _unrecognized: Option<crate::skir_client::UnrecognizedFields<CatalogFetchRequest>>,
 }
@@ -1174,12 +1041,12 @@ impl CatalogFetchRequest {
 // enum CatalogFetchResult
 // ==============================================================================
 
+/// The installed catalog, or its actual generation when it differs from the expected one.
 #[derive(Debug, Clone, PartialEq)]
 pub enum CatalogFetchResult {
     Unknown(Option<crate::skir_client::UnrecognizedVariant<CatalogFetchResult>>),
-    Chunk(Box<CatalogTransferChunk>),
-    GenerationChanged(Box<crate::skirout::base::editor::v1::type_catalog::CatalogGeneration>),
-    Unavailable(Box<CatalogUnavailable>),
+    Catalog(Box<EditorCatalog>),
+    GenerationChangedError(Box<crate::skirout::base::editor::v1::type_catalog::CatalogGeneration>),
     InternalError(Box<crate::skirout::base::kernel::v1::errors::InternalError>),
 }
 
@@ -1197,10 +1064,9 @@ impl CatalogFetchResult {
             crate::skir_client::internal::EnumAdapter::new(
                 |x: &CatalogFetchResult| match x {
                     CatalogFetchResult::Unknown(_) => 0,
-                    CatalogFetchResult::Chunk(_) => 1,
-                    CatalogFetchResult::GenerationChanged(_) => 2,
-                    CatalogFetchResult::Unavailable(_) => 3,
-                    CatalogFetchResult::InternalError(_) => 4,
+                    CatalogFetchResult::Catalog(_) => 1,
+                    CatalogFetchResult::GenerationChangedError(_) => 2,
+                    CatalogFetchResult::InternalError(_) => 3,
                 },
                 |u| CatalogFetchResult::Unknown(Some(u)),
                 |x: &CatalogFetchResult| match x {
@@ -1209,7 +1075,7 @@ impl CatalogFetchResult {
                 },
                 "editor/v1/catalog.skir",
                 "CatalogFetchResult",
-                "",
+                "The installed catalog, or its actual generation when it differs from the expected one.",
             )
         });
         &*ADAPTER
@@ -1661,64 +1527,18 @@ impl PreparationOperation {
 }
 
 // ==============================================================================
-// enum PreparationStep
+// enum PrepareValueResult
 // ==============================================================================
 
 /// Separates prepared editable content from a continuation needing caller input or unavailable
 /// preparation. ready describes completion of initialization, not saved authoring or publication.
 #[derive(Debug, Clone, PartialEq)]
-pub enum PreparationStep {
-    Unknown(Option<crate::skir_client::UnrecognizedVariant<PreparationStep>>),
-    Ready(Box<PreparedValue>),
-    NeedsInput(Box<PreparationDraft>),
-    Unavailable(Box<PreparationDraft>),
-}
-
-impl Default for PreparationStep {
-    fn default() -> Self {
-        PreparationStep::Unknown(None)
-    }
-}
-
-impl PreparationStep {
-    fn _adapter() -> &'static crate::skir_client::internal::EnumAdapter<PreparationStep> {
-        static ADAPTER: std::sync::LazyLock<
-            crate::skir_client::internal::EnumAdapter<PreparationStep>,
-        > = std::sync::LazyLock::new(|| {
-            crate::skir_client::internal::EnumAdapter::new(
-                |x: &PreparationStep| match x {
-                    PreparationStep::Unknown(_) => 0,
-                    PreparationStep::Ready(_) => 1,
-                    PreparationStep::NeedsInput(_) => 2,
-                    PreparationStep::Unavailable(_) => 3,
-                },
-                |u| PreparationStep::Unknown(Some(u)),
-                |x: &PreparationStep| match x {
-                    PreparationStep::Unknown(Some(u)) => Some(u.as_ref()),
-                    _ => None,
-                },
-                "editor/v1/catalog.skir",
-                "PreparationStep",
-                "Separates prepared editable content from a continuation needing caller input or unavailable\npreparation. ready describes completion of initialization, not saved authoring or publication.",
-            )
-        });
-        &*ADAPTER
-    }
-    pub fn serializer() -> crate::skir_client::Serializer<PreparationStep> {
-        initialize_module_serializers();
-        crate::skir_client::internal::enum_serializer_from_static(PreparationStep::_adapter())
-    }
-}
-
-// ==============================================================================
-// enum PrepareValueResult
-// ==============================================================================
-
-#[derive(Debug, Clone, PartialEq)]
 pub enum PrepareValueResult {
     Unknown(Option<crate::skir_client::UnrecognizedVariant<PrepareValueResult>>),
-    Prepared(Box<PreparationStep>),
-    CatalogChanged(Box<crate::skirout::base::editor::v1::type_catalog::CatalogGeneration>),
+    Ready(Box<PreparedValue>),
+    NeedsInput(Box<PreparationDraft>),
+    UnavailableError(Box<PreparationDraft>),
+    CatalogChangedError(Box<crate::skirout::base::editor::v1::type_catalog::CatalogGeneration>),
     InternalError(Box<crate::skirout::base::kernel::v1::errors::InternalError>),
 }
 
@@ -1736,9 +1556,11 @@ impl PrepareValueResult {
             crate::skir_client::internal::EnumAdapter::new(
                 |x: &PrepareValueResult| match x {
                     PrepareValueResult::Unknown(_) => 0,
-                    PrepareValueResult::Prepared(_) => 1,
-                    PrepareValueResult::CatalogChanged(_) => 2,
-                    PrepareValueResult::InternalError(_) => 3,
+                    PrepareValueResult::Ready(_) => 1,
+                    PrepareValueResult::NeedsInput(_) => 2,
+                    PrepareValueResult::UnavailableError(_) => 3,
+                    PrepareValueResult::CatalogChangedError(_) => 4,
+                    PrepareValueResult::InternalError(_) => 5,
                 },
                 |u| PrepareValueResult::Unknown(Some(u)),
                 |x: &PrepareValueResult| match x {
@@ -1747,7 +1569,7 @@ impl PrepareValueResult {
                 },
                 "editor/v1/catalog.skir",
                 "PrepareValueResult",
-                "",
+                "Separates prepared editable content from a continuation needing caller input or unavailable\npreparation. ready describes completion of initialization, not saved authoring or publication.",
             )
         });
         &*ADAPTER
@@ -1847,6 +1669,51 @@ impl TypeRecommendation {
 }
 
 // ==============================================================================
+// struct ResourceAppearance
+// ==============================================================================
+
+/// What the most specific `ResourceDisplayFormulas` of one resource evaluate to: its label, accent
+/// and icon. Editors evaluate it and bind it to resource presentations as a read model; it is never
+/// stored.
+#[derive(Clone, Debug, PartialEq, Default)]
+pub struct ResourceAppearance {
+    pub label: String,
+    pub accent: crate::skirout::base::kernel::v1::color::Color,
+    pub icon: crate::skirout::base::kernel::v1::icon::Icon,
+    /// Set this to None when you're creating a struct.
+    pub _unrecognized: Option<crate::skir_client::UnrecognizedFields<ResourceAppearance>>,
+}
+
+impl ResourceAppearance {
+    pub fn default_ref() -> &'static ResourceAppearance {
+        static D: std::sync::LazyLock<ResourceAppearance> =
+            std::sync::LazyLock::new(ResourceAppearance::default);
+        &D
+    }
+}
+
+impl ResourceAppearance {
+    fn _adapter() -> &'static crate::skir_client::internal::StructAdapter<ResourceAppearance> {
+        static ADAPTER: std::sync::LazyLock<
+            crate::skir_client::internal::StructAdapter<ResourceAppearance>,
+        > = std::sync::LazyLock::new(|| {
+            crate::skir_client::internal::StructAdapter::new(
+                "editor/v1/catalog.skir",
+                "ResourceAppearance",
+                "What the most specific `ResourceDisplayFormulas` of one resource evaluate to: its label, accent\nand icon. Editors evaluate it and bind it to resource presentations as a read model; it is never\nstored.",
+                |x: &ResourceAppearance| &x._unrecognized,
+                |x: &mut ResourceAppearance, u| x._unrecognized = u,
+            )
+        });
+        &*ADAPTER
+    }
+    pub fn serializer() -> crate::skir_client::Serializer<ResourceAppearance> {
+        initialize_module_serializers();
+        crate::skir_client::internal::struct_serializer_from_static(ResourceAppearance::_adapter())
+    }
+}
+
+// ==============================================================================
 // struct WatchEditorCatalogRequest
 // ==============================================================================
 
@@ -1884,6 +1751,55 @@ impl WatchEditorCatalogRequest {
         initialize_module_serializers();
         crate::skir_client::internal::struct_serializer_from_static(
             WatchEditorCatalogRequest::_adapter(),
+        )
+    }
+}
+
+// ==============================================================================
+// enum WatchEditorCatalogResponse
+// ==============================================================================
+
+#[derive(Debug, Clone, PartialEq)]
+pub enum WatchEditorCatalogResponse {
+    Unknown(Option<crate::skir_client::UnrecognizedVariant<WatchEditorCatalogResponse>>),
+    Invalidated(Box<CatalogInvalidated>),
+    InternalError(Box<crate::skirout::base::kernel::v1::errors::InternalError>),
+}
+
+impl Default for WatchEditorCatalogResponse {
+    fn default() -> Self {
+        WatchEditorCatalogResponse::Unknown(None)
+    }
+}
+
+impl WatchEditorCatalogResponse {
+    fn _adapter() -> &'static crate::skir_client::internal::EnumAdapter<WatchEditorCatalogResponse>
+    {
+        static ADAPTER: std::sync::LazyLock<
+            crate::skir_client::internal::EnumAdapter<WatchEditorCatalogResponse>,
+        > = std::sync::LazyLock::new(|| {
+            crate::skir_client::internal::EnumAdapter::new(
+                |x: &WatchEditorCatalogResponse| match x {
+                    WatchEditorCatalogResponse::Unknown(_) => 0,
+                    WatchEditorCatalogResponse::Invalidated(_) => 1,
+                    WatchEditorCatalogResponse::InternalError(_) => 2,
+                },
+                |u| WatchEditorCatalogResponse::Unknown(Some(u)),
+                |x: &WatchEditorCatalogResponse| match x {
+                    WatchEditorCatalogResponse::Unknown(Some(u)) => Some(u.as_ref()),
+                    _ => None,
+                },
+                "editor/v1/catalog.skir",
+                "WatchEditorCatalogResponse",
+                "",
+            )
+        });
+        &*ADAPTER
+    }
+    pub fn serializer() -> crate::skir_client::Serializer<WatchEditorCatalogResponse> {
+        initialize_module_serializers();
+        crate::skir_client::internal::enum_serializer_from_static(
+            WatchEditorCatalogResponse::_adapter(),
         )
     }
 }
@@ -2499,15 +2415,15 @@ fn initialize_module_serializers() {
             (*a).finalize();
         }
         unsafe {
-            let a: *mut crate::skir_client::internal::StructAdapter<EditorCatalogWireSnapshot> =
-                EditorCatalogWireSnapshot::_adapter() as *const _ as *mut _;
+            let a: *mut crate::skir_client::internal::StructAdapter<EditorCatalog> =
+                EditorCatalog::_adapter() as *const _ as *mut _;
             (*a).add_field(
                 "generation",
                 0,
                 crate::skirout::base::editor::v1::type_catalog::CatalogGeneration::serializer(),
                 "",
-                |x: &EditorCatalogWireSnapshot| &x.generation,
-                |x: &mut EditorCatalogWireSnapshot, v| x.generation = v,
+                |x: &EditorCatalog| &x.generation,
+                |x: &mut EditorCatalog, v| x.generation = v,
             );
             (*a).add_field(
                 "types",
@@ -2518,8 +2434,8 @@ fn initialize_module_serializers() {
                     ),
                 ),
                 "",
-                |x: &EditorCatalogWireSnapshot| &x.types,
-                |x: &mut EditorCatalogWireSnapshot, v| x.types = v,
+                |x: &EditorCatalog| &x.types,
+                |x: &mut EditorCatalog, v| x.types = v,
             );
             (*a).add_field(
                 "relations",
@@ -2530,8 +2446,8 @@ fn initialize_module_serializers() {
                     ),
                 ),
                 "",
-                |x: &EditorCatalogWireSnapshot| &x.relations,
-                |x: &mut EditorCatalogWireSnapshot, v| x.relations = v,
+                |x: &EditorCatalog| &x.relations,
+                |x: &mut EditorCatalog, v| x.relations = v,
             );
             (*a).add_field(
                 "resource_displays",
@@ -2542,8 +2458,8 @@ fn initialize_module_serializers() {
                     ),
                 ),
                 "",
-                |x: &EditorCatalogWireSnapshot| &x.resource_displays,
-                |x: &mut EditorCatalogWireSnapshot, v| x.resource_displays = v,
+                |x: &EditorCatalog| &x.resource_displays,
+                |x: &mut EditorCatalog, v| x.resource_displays = v,
             );
             (*a).add_field(
                 "presentations",
@@ -2554,8 +2470,8 @@ fn initialize_module_serializers() {
                     ),
                 ),
                 "",
-                |x: &EditorCatalogWireSnapshot| &x.presentations,
-                |x: &mut EditorCatalogWireSnapshot, v| x.presentations = v,
+                |x: &EditorCatalog| &x.presentations,
+                |x: &mut EditorCatalog, v| x.presentations = v,
             );
             (*a).add_field(
                 "presentation_materials",
@@ -2566,8 +2482,8 @@ fn initialize_module_serializers() {
                     ),
                 ),
                 "",
-                |x: &EditorCatalogWireSnapshot| &x.presentation_materials,
-                |x: &mut EditorCatalogWireSnapshot, v| x.presentation_materials = v,
+                |x: &EditorCatalog| &x.presentation_materials,
+                |x: &mut EditorCatalog, v| x.presentation_materials = v,
             );
             (*a).add_field(
                 "configuration",
@@ -2578,8 +2494,8 @@ fn initialize_module_serializers() {
                     ),
                 ),
                 "",
-                |x: &EditorCatalogWireSnapshot| &x.configuration,
-                |x: &mut EditorCatalogWireSnapshot, v| x.configuration = v,
+                |x: &EditorCatalog| &x.configuration,
+                |x: &mut EditorCatalog, v| x.configuration = v,
             );
             (*a).add_field(
                 "diagnostics",
@@ -2589,8 +2505,8 @@ fn initialize_module_serializers() {
                     ),
                 ),
                 "",
-                |x: &EditorCatalogWireSnapshot| &x.diagnostics,
-                |x: &mut EditorCatalogWireSnapshot, v| x.diagnostics = v,
+                |x: &EditorCatalog| &x.diagnostics,
+                |x: &mut EditorCatalog, v| x.diagnostics = v,
             );
             (*a).add_field(
                 "endpoint_bindings",
@@ -2601,8 +2517,8 @@ fn initialize_module_serializers() {
                     ),
                 ),
                 "",
-                |x: &EditorCatalogWireSnapshot| &x.endpoint_bindings,
-                |x: &mut EditorCatalogWireSnapshot, v| x.endpoint_bindings = v,
+                |x: &EditorCatalog| &x.endpoint_bindings,
+                |x: &mut EditorCatalog, v| x.endpoint_bindings = v,
             );
             (*a).add_field(
                 "capabilities",
@@ -2612,8 +2528,8 @@ fn initialize_module_serializers() {
                     ),
                 ),
                 "",
-                |x: &EditorCatalogWireSnapshot| &x.capabilities,
-                |x: &mut EditorCatalogWireSnapshot, v| x.capabilities = v,
+                |x: &EditorCatalog| &x.capabilities,
+                |x: &mut EditorCatalog, v| x.capabilities = v,
             );
             (*a).add_field(
                 "recommendations",
@@ -2624,8 +2540,8 @@ fn initialize_module_serializers() {
                     ),
                 ),
                 "",
-                |x: &EditorCatalogWireSnapshot| &x.recommendations,
-                |x: &mut EditorCatalogWireSnapshot, v| x.recommendations = v,
+                |x: &EditorCatalog| &x.recommendations,
+                |x: &mut EditorCatalog, v| x.recommendations = v,
             );
             (*a).add_field(
                 "role_fallbacks",
@@ -2636,76 +2552,11 @@ fn initialize_module_serializers() {
                     ),
                 ),
                 "",
-                |x: &EditorCatalogWireSnapshot| &x.role_fallbacks,
-                |x: &mut EditorCatalogWireSnapshot, v| x.role_fallbacks = v,
+                |x: &EditorCatalog| &x.role_fallbacks,
+                |x: &mut EditorCatalog, v| x.role_fallbacks = v,
             );
-            (*a).add_field("resource_operations", 12, crate::skir_client::Serializer::array(crate::skirout::base::editor::v1::operation::ResourceOperationDefinition::serializer()), "", |x: &EditorCatalogWireSnapshot| &x.resource_operations, |x: &mut EditorCatalogWireSnapshot, v| x.resource_operations = v);
-            (*a).add_field("realm_root", 13, crate::skirout::base::editor::v1::type_catalog::TypeDefinitionId::serializer(), "The realm root type. The realm keeps exactly one instance, which owns every section.", |x: &EditorCatalogWireSnapshot| &x.realm_root, |x: &mut EditorCatalogWireSnapshot, v| x.realm_root = v);
-            (*a).finalize();
-        }
-        unsafe {
-            let a: *mut crate::skir_client::internal::StructAdapter<CatalogTransferChunk> =
-                CatalogTransferChunk::_adapter() as *const _ as *mut _;
-            (*a).add_field(
-                "generation",
-                0,
-                crate::skirout::base::editor::v1::type_catalog::CatalogGeneration::serializer(),
-                "",
-                |x: &CatalogTransferChunk| &x.generation,
-                |x: &mut CatalogTransferChunk, v| x.generation = v,
-            );
-            (*a).add_field("transfer", 1, crate::skirout::base::kernel::v1::bounded_transfer::BoundedTransferChunk::serializer(), "", |x: &CatalogTransferChunk| &x.transfer, |x: &mut CatalogTransferChunk, v| x.transfer = v);
-            (*a).finalize();
-        }
-        unsafe {
-            let a: *mut crate::skir_client::internal::EnumAdapter<CatalogUnavailableReason> =
-                CatalogUnavailableReason::_adapter() as *const _ as *mut _;
-            (*a).add_constant_variant(
-                "encoded_size_limit",
-                1,
-                1,
-                "",
-                CatalogUnavailableReason::EncodedSizeLimit,
-            );
-            (*a).finalize();
-        }
-        unsafe {
-            let a: *mut crate::skir_client::internal::StructAdapter<CatalogUnavailable> =
-                CatalogUnavailable::_adapter() as *const _ as *mut _;
-            (*a).add_field(
-                "generation",
-                0,
-                crate::skirout::base::editor::v1::type_catalog::CatalogGeneration::serializer(),
-                "",
-                |x: &CatalogUnavailable| &x.generation,
-                |x: &mut CatalogUnavailable, v| x.generation = v,
-            );
-            (*a).add_field(
-                "reason",
-                1,
-                crate::skir_client::internal::enum_serializer_from_static(
-                    CatalogUnavailableReason::_adapter(),
-                ),
-                "",
-                |x: &CatalogUnavailable| &x.reason,
-                |x: &mut CatalogUnavailable, v| x.reason = v,
-            );
-            (*a).add_field(
-                "encoded_size",
-                2,
-                crate::skir_client::Serializer::int64(),
-                "",
-                |x: &CatalogUnavailable| &x.encoded_size,
-                |x: &mut CatalogUnavailable, v| x.encoded_size = v,
-            );
-            (*a).add_field(
-                "max_encoded_size",
-                3,
-                crate::skir_client::Serializer::int64(),
-                "",
-                |x: &CatalogUnavailable| &x.max_encoded_size,
-                |x: &mut CatalogUnavailable, v| x.max_encoded_size = v,
-            );
+            (*a).add_field("resource_operations", 12, crate::skir_client::Serializer::array(crate::skirout::base::editor::v1::operation::ResourceOperationDefinition::serializer()), "", |x: &EditorCatalog| &x.resource_operations, |x: &mut EditorCatalog, v| x.resource_operations = v);
+            (*a).add_field("realm_root", 13, crate::skirout::base::editor::v1::type_catalog::TypeDefinitionId::serializer(), "The realm root type. The realm keeps exactly one instance, which owns every section.", |x: &EditorCatalog| &x.realm_root, |x: &mut EditorCatalog, v| x.realm_root = v);
             (*a).finalize();
         }
         unsafe {
@@ -2721,63 +2572,41 @@ fn initialize_module_serializers() {
                 |x: &CatalogFetchRequest| &x.expected_generation,
                 |x: &mut CatalogFetchRequest, v| x.expected_generation = v,
             );
-            (*a).add_field(
-                "transfer_id",
-                1,
-                crate::skir_client::Serializer::string(),
-                "",
-                |x: &CatalogFetchRequest| &x.transfer_id,
-                |x: &mut CatalogFetchRequest, v| x.transfer_id = v,
-            );
             (*a).finalize();
         }
         unsafe {
             let a: *mut crate::skir_client::internal::EnumAdapter<CatalogFetchResult> =
                 CatalogFetchResult::_adapter() as *const _ as *mut _;
             (*a).add_wrapper_variant(
-                "chunk",
+                "catalog",
                 1,
                 1,
                 crate::skir_client::internal::struct_serializer_from_static(
-                    CatalogTransferChunk::_adapter(),
+                    EditorCatalog::_adapter(),
                 ),
                 "",
-                |v| CatalogFetchResult::Chunk(Box::new(v)),
+                |v| CatalogFetchResult::Catalog(Box::new(v)),
                 |x| match x {
-                    CatalogFetchResult::Chunk(b) => b.as_ref(),
+                    CatalogFetchResult::Catalog(b) => b.as_ref(),
                     _ => unreachable!(),
                 },
             );
             (*a).add_wrapper_variant(
-                "generation_changed",
+                "generation_changed_error",
                 2,
                 2,
                 crate::skirout::base::editor::v1::type_catalog::CatalogGeneration::serializer(),
                 "",
-                |v| CatalogFetchResult::GenerationChanged(Box::new(v)),
+                |v| CatalogFetchResult::GenerationChangedError(Box::new(v)),
                 |x| match x {
-                    CatalogFetchResult::GenerationChanged(b) => b.as_ref(),
-                    _ => unreachable!(),
-                },
-            );
-            (*a).add_wrapper_variant(
-                "unavailable",
-                3,
-                3,
-                crate::skir_client::internal::struct_serializer_from_static(
-                    CatalogUnavailable::_adapter(),
-                ),
-                "",
-                |v| CatalogFetchResult::Unavailable(Box::new(v)),
-                |x| match x {
-                    CatalogFetchResult::Unavailable(b) => b.as_ref(),
+                    CatalogFetchResult::GenerationChangedError(b) => b.as_ref(),
                     _ => unreachable!(),
                 },
             );
             (*a).add_wrapper_variant(
                 "internal_error",
-                4,
-                4,
+                3,
+                3,
                 crate::skirout::base::kernel::v1::errors::InternalError::serializer(),
                 "",
                 |v| CatalogFetchResult::InternalError(Box::new(v)),
@@ -3067,8 +2896,8 @@ fn initialize_module_serializers() {
             (*a).finalize();
         }
         unsafe {
-            let a: *mut crate::skir_client::internal::EnumAdapter<PreparationStep> =
-                PreparationStep::_adapter() as *const _ as *mut _;
+            let a: *mut crate::skir_client::internal::EnumAdapter<PrepareValueResult> =
+                PrepareValueResult::_adapter() as *const _ as *mut _;
             (*a).add_wrapper_variant(
                 "ready",
                 1,
@@ -3077,9 +2906,9 @@ fn initialize_module_serializers() {
                     PreparedValue::_adapter(),
                 ),
                 "",
-                |v| PreparationStep::Ready(Box::new(v)),
+                |v| PrepareValueResult::Ready(Box::new(v)),
                 |x| match x {
-                    PreparationStep::Ready(b) => b.as_ref(),
+                    PrepareValueResult::Ready(b) => b.as_ref(),
                     _ => unreachable!(),
                 },
             );
@@ -3091,61 +2920,42 @@ fn initialize_module_serializers() {
                     PreparationDraft::_adapter(),
                 ),
                 "",
-                |v| PreparationStep::NeedsInput(Box::new(v)),
+                |v| PrepareValueResult::NeedsInput(Box::new(v)),
                 |x| match x {
-                    PreparationStep::NeedsInput(b) => b.as_ref(),
+                    PrepareValueResult::NeedsInput(b) => b.as_ref(),
                     _ => unreachable!(),
                 },
             );
             (*a).add_wrapper_variant(
-                "unavailable",
+                "unavailable_error",
                 3,
                 3,
                 crate::skir_client::internal::struct_serializer_from_static(
                     PreparationDraft::_adapter(),
                 ),
                 "",
-                |v| PreparationStep::Unavailable(Box::new(v)),
+                |v| PrepareValueResult::UnavailableError(Box::new(v)),
                 |x| match x {
-                    PreparationStep::Unavailable(b) => b.as_ref(),
-                    _ => unreachable!(),
-                },
-            );
-            (*a).finalize();
-        }
-        unsafe {
-            let a: *mut crate::skir_client::internal::EnumAdapter<PrepareValueResult> =
-                PrepareValueResult::_adapter() as *const _ as *mut _;
-            (*a).add_wrapper_variant(
-                "prepared",
-                1,
-                1,
-                crate::skir_client::internal::enum_serializer_from_static(
-                    PreparationStep::_adapter(),
-                ),
-                "",
-                |v| PrepareValueResult::Prepared(Box::new(v)),
-                |x| match x {
-                    PrepareValueResult::Prepared(b) => b.as_ref(),
+                    PrepareValueResult::UnavailableError(b) => b.as_ref(),
                     _ => unreachable!(),
                 },
             );
             (*a).add_wrapper_variant(
-                "catalog_changed",
-                2,
-                2,
+                "catalog_changed_error",
+                4,
+                4,
                 crate::skirout::base::editor::v1::type_catalog::CatalogGeneration::serializer(),
                 "",
-                |v| PrepareValueResult::CatalogChanged(Box::new(v)),
+                |v| PrepareValueResult::CatalogChangedError(Box::new(v)),
                 |x| match x {
-                    PrepareValueResult::CatalogChanged(b) => b.as_ref(),
+                    PrepareValueResult::CatalogChangedError(b) => b.as_ref(),
                     _ => unreachable!(),
                 },
             );
             (*a).add_wrapper_variant(
                 "internal_error",
-                3,
-                3,
+                5,
+                5,
                 crate::skirout::base::kernel::v1::errors::InternalError::serializer(),
                 "",
                 |v| PrepareValueResult::InternalError(Box::new(v)),
@@ -3231,8 +3041,68 @@ fn initialize_module_serializers() {
             (*a).finalize();
         }
         unsafe {
+            let a: *mut crate::skir_client::internal::StructAdapter<ResourceAppearance> =
+                ResourceAppearance::_adapter() as *const _ as *mut _;
+            (*a).add_field(
+                "label",
+                0,
+                crate::skir_client::Serializer::string(),
+                "",
+                |x: &ResourceAppearance| &x.label,
+                |x: &mut ResourceAppearance, v| x.label = v,
+            );
+            (*a).add_field(
+                "accent",
+                1,
+                crate::skirout::base::kernel::v1::color::Color::serializer(),
+                "",
+                |x: &ResourceAppearance| &x.accent,
+                |x: &mut ResourceAppearance, v| x.accent = v,
+            );
+            (*a).add_field(
+                "icon",
+                2,
+                crate::skirout::base::kernel::v1::icon::Icon::serializer(),
+                "",
+                |x: &ResourceAppearance| &x.icon,
+                |x: &mut ResourceAppearance, v| x.icon = v,
+            );
+            (*a).finalize();
+        }
+        unsafe {
             let a: *mut crate::skir_client::internal::StructAdapter<WatchEditorCatalogRequest> =
                 WatchEditorCatalogRequest::_adapter() as *const _ as *mut _;
+            (*a).finalize();
+        }
+        unsafe {
+            let a: *mut crate::skir_client::internal::EnumAdapter<WatchEditorCatalogResponse> =
+                WatchEditorCatalogResponse::_adapter() as *const _ as *mut _;
+            (*a).add_wrapper_variant(
+                "invalidated",
+                1,
+                1,
+                crate::skir_client::internal::struct_serializer_from_static(
+                    CatalogInvalidated::_adapter(),
+                ),
+                "",
+                |v| WatchEditorCatalogResponse::Invalidated(Box::new(v)),
+                |x| match x {
+                    WatchEditorCatalogResponse::Invalidated(b) => b.as_ref(),
+                    _ => unreachable!(),
+                },
+            );
+            (*a).add_wrapper_variant(
+                "internal_error",
+                2,
+                2,
+                crate::skirout::base::kernel::v1::errors::InternalError::serializer(),
+                "",
+                |v| WatchEditorCatalogResponse::InternalError(Box::new(v)),
+                |x| match x {
+                    WatchEditorCatalogResponse::InternalError(b) => b.as_ref(),
+                    _ => unreachable!(),
+                },
+            );
             (*a).finalize();
         }
     });
@@ -3258,14 +3128,14 @@ pub fn fetch_editor_catalog_method()
 }
 
 pub fn watch_editor_catalog_method()
--> &'static crate::skir_client::Method<WatchEditorCatalogRequest, CatalogInvalidated> {
+-> &'static crate::skir_client::Method<WatchEditorCatalogRequest, WatchEditorCatalogResponse> {
     static METHOD: std::sync::LazyLock<
-        crate::skir_client::Method<WatchEditorCatalogRequest, CatalogInvalidated>,
+        crate::skir_client::Method<WatchEditorCatalogRequest, WatchEditorCatalogResponse>,
     > = std::sync::LazyLock::new(|| crate::skir_client::Method {
         name: "WatchEditorCatalog".to_string(),
         number: 920002_i64,
         request_serializer: WatchEditorCatalogRequest::serializer(),
-        response_serializer: CatalogInvalidated::serializer(),
+        response_serializer: WatchEditorCatalogResponse::serializer(),
         doc: "".to_string(),
     });
     &*METHOD

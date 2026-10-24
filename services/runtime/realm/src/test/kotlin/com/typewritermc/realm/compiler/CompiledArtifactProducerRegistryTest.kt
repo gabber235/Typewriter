@@ -1,17 +1,17 @@
 package com.typewritermc.realm.compiler
 
-import com.typewritermc.engine.CompilationProjectionId
 import com.typewritermc.engine.CompilationResult
-import com.typewritermc.engine.CompilationRoot
 import com.typewritermc.engine.CompiledArtifact
 import com.typewritermc.engine.ContentDigest
 import com.typewritermc.realm.authoring.AuthoringSeed
 import com.typewritermc.realm.authoring.InMemoryAuthoringViewStore
 import com.typewritermc.realm.checking.TestCatalogLease
-import com.typewritermc.types.ResourceId
 import de.infix.testBalloon.framework.core.testSuite
 import io.kotest.assertions.throwables.shouldThrow
 import io.kotest.matchers.shouldBe
+import skirout.editor.v1.compilation_root.CompilationProjectionId
+import skirout.editor.v1.compilation_root.CompilationRoot
+import skirout.editor.v1.type_catalog.ResourceId
 
 val CompiledArtifactProducerRegistryTest by testSuite {
     test("one blocked producer retains a partial ready batch and every producer receives the retained inputs") {
@@ -29,7 +29,10 @@ val CompiledArtifactProducerRegistryTest by testSuite {
                     received += incoming
                     listOf(
                         CompilationResult.Blocked(
-                            CompilationRoot(CompilationProjectionId("fixture.blocked"), ResourceId("root")),
+                            CompilationRoot(
+                                projection = CompilationProjectionId(value = "fixture.blocked"),
+                                resource = ResourceId(value = "root"),
+                            ),
                             ContentDigest("a".repeat(64)),
                             listOf(compilationDiagnostic("blocked", "Blocked")),
                         ),
@@ -107,11 +110,11 @@ private fun producer(
     compile: (CompilationInputs) -> List<CompilationResult>,
 ): CompiledArtifactProducer =
     object : CompiledArtifactProducer {
-        override val projection = CompilationProjectionId(projection)
+        override val projection = CompilationProjectionId(value = projection)
         override val mediaType = mediaType
 
         override fun roots(view: com.typewritermc.realm.authoring.AuthoringView): Set<CompilationRoot> =
-            setOf(CompilationRoot(this.projection, ResourceId("root")))
+            setOf(CompilationRoot(projection = this.projection, resource = ResourceId(value = "root")))
 
         context(inputs: CompilationInputs)
         override fun compile(roots: Set<CompilationRoot>): List<CompilationResult> = compile.invoke(inputs)
@@ -121,7 +124,7 @@ private fun artifact(
     projection: String,
     mediaType: String,
 ) = CompiledArtifact(
-    root = CompilationRoot(CompilationProjectionId(projection), ResourceId("root")),
+    root = CompilationRoot(projection = CompilationProjectionId(value = projection), resource = ResourceId(value = "root")),
     formatRevision = 2,
     mediaType = mediaType,
     inputFingerprint = ContentDigest("1".repeat(64)),

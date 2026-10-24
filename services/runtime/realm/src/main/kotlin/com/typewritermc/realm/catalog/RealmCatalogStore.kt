@@ -1,10 +1,7 @@
 package com.typewritermc.realm.catalog
 
 import com.typewritermc.authoring.ResourceDisplayCatalog
-import com.typewritermc.authoring.ValuePath
 import com.typewritermc.capability.RealmCapabilityProvider
-import com.typewritermc.checking.CatalogGeneration
-import com.typewritermc.configuration.ConfigurationRecipe
 import com.typewritermc.discovery.CatalogAssembly
 import com.typewritermc.discovery.GeneratedProviderDeployment
 import com.typewritermc.discovery.OwnedCheckRecipe
@@ -14,15 +11,18 @@ import com.typewritermc.operations.OperationCatalog
 import com.typewritermc.presentation.CollectionProjectionSpec
 import com.typewritermc.realm.authoring.AuthoringCatalogLease
 import com.typewritermc.services.libs.utils.closeAll
-import com.typewritermc.types.EndpointBindingTemplate
 import com.typewritermc.types.NativeBindingRegistry
-import com.typewritermc.types.RelationContract
-import com.typewritermc.types.TypeDefinitionId
 import com.typewritermc.types.catalog.CheckedCatalog
-import com.typewritermc.types.catalog.EditorCatalogSnapshot
 import kotlinx.coroutines.channels.BufferOverflow
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.SharedFlow
+import skirout.editor.v1.catalog.ConfigurationRecipe
+import skirout.editor.v1.catalog.EditorCatalog
+import skirout.editor.v1.catalog.EndpointBindingTemplate
+import skirout.editor.v1.catalog.RelationContract
+import skirout.editor.v1.type_catalog.CatalogGeneration
+import skirout.editor.v1.type_catalog.TypeDefinitionId
+import skirout.editor.v1.type_catalog.ValuePath
 import java.util.concurrent.atomic.AtomicBoolean
 
 data class RealmCatalogIncarnation(
@@ -30,14 +30,14 @@ data class RealmCatalogIncarnation(
     val deployment: GeneratedProviderDeployment,
 ) {
     init {
-        require(assembly.snapshot.generation == assembly.checked.generation) {
-            "The editor snapshot and checked catalog must use one generation."
+        require(assembly.editorCatalog.generation.value == assembly.checked.generation.value) {
+            "The editor catalog and checked catalog must use one generation."
         }
     }
 }
 
 interface RealmCatalogLease : AuthoringCatalogLease {
-    val editorSnapshot: EditorCatalogSnapshot
+    val editorCatalog: EditorCatalog
     val capabilities: List<RealmCapabilityProvider>
     val collectionProjections: List<CollectionProjectionSpec>
 }
@@ -47,7 +47,7 @@ interface RealmCatalogLease : AuthoringCatalogLease {
  *
  * [replace] installs only the initial incarnation; changing a running deployment creates a new store. Captured
  * leases keep the deployment alive after store closure, and the final released lease closes retired discovery.
- * Editor snapshots and executable services therefore share the same catalog generation and lifetime.
+ * Editor catalogs and executable services therefore share the same catalog generation and lifetime.
  */
 class RealmCatalogStore : AutoCloseable {
     private val lock = Any()
@@ -82,7 +82,7 @@ class RealmCatalogStore : AutoCloseable {
                 }
                 Retention(incarnation, current = true).also { current = it }
             }
-        check(mutableChanges.tryEmit(installed.incarnation.assembly.snapshot.generation)) {
+        check(mutableChanges.tryEmit(installed.incarnation.assembly.checked.generation)) {
             "Realm catalog change could not be published."
         }
     }
@@ -123,19 +123,19 @@ class RealmCatalogStore : AutoCloseable {
         private val incarnation get() = retention.incarnation
         private val assembly get() = incarnation.assembly
 
-        override val generation: CatalogGeneration get() = assembly.snapshot.generation
+        override val generation: CatalogGeneration get() = assembly.checked.generation
         override val checked: CheckedCatalog get() = assembly.checked
         override val nativeBindings: NativeBindingRegistry get() = assembly.bindings
         override val providers: OwnedProviderRegistry get() = retention.providers
         override val checks: List<OwnedCheckRecipe> get() = assembly.checks
-        override val relations: List<RelationContract> get() = assembly.snapshot.relations
-        override val endpointBindings: List<EndpointBindingTemplate> get() = assembly.snapshot.endpointBindings
-        override val configuration: List<ConfigurationRecipe> get() = assembly.snapshot.configuration
-        override val realmRoot: TypeDefinitionId get() = assembly.snapshot.realmRoot
+        override val relations: List<RelationContract> get() = assembly.relations
+        override val endpointBindings: List<EndpointBindingTemplate> get() = assembly.endpointBindings
+        override val configuration: List<ConfigurationRecipe> get() = assembly.configuration
+        override val realmRoot: TypeDefinitionId get() = assembly.editorCatalog.realmRoot
         override val operations: OperationCatalog get() = assembly.operations
-        override val placementFields: Map<TypeDefinitionId, ValuePath> get() = retention.placementFields
+        override val placementFields: Map<TypeDefinitionId, ValuePath> get() = assembly.placementFields
         override val displays: ResourceDisplayCatalog get() = assembly.displays
-        override val editorSnapshot: EditorCatalogSnapshot get() = assembly.snapshot
+        override val editorCatalog: EditorCatalog get() = assembly.editorCatalog
         override val capabilities: List<RealmCapabilityProvider>
             get() =
                 incarnation.deployment.providers.capabilities
@@ -161,10 +161,6 @@ class RealmCatalogStore : AutoCloseable {
         var current: Boolean,
     ) : AutoCloseable {
         val providers = RetainedOwnedProviderRegistry(incarnation.assembly.providers, incarnation.deployment)
-        val placementFields =
-            incarnation.assembly.snapshot.types
-                .mapNotNull { type -> type.placementField?.let { type.definition.id to it } }
-                .toMap()
         var leases = 0
 
         override fun close() {

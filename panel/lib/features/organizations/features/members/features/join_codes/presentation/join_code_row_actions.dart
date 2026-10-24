@@ -1,3 +1,5 @@
+import "package:typewriter_panel/infrastructure/protocols/skir/skir.dart"
+    as skir;
 import "package:typewriter_panel/typewriter_panel.dart";
 
 /// Desktop row control for revoking one invitation code.
@@ -7,7 +9,7 @@ import "package:typewriter_panel/typewriter_panel.dart";
 class JoinCodeRowActions extends HookConsumerWidget {
   const JoinCodeRowActions({required this.code, super.key});
 
-  final OrganizationJoinCode code;
+  final skir.JoinCode code;
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {

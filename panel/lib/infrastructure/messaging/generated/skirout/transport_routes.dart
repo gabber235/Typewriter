@@ -1,5 +1,5 @@
 // GENERATED CODE. DO NOT MODIFY BY HAND
-// ignore_for_file: cascade_invocations, constant_identifier_names, curly_braces_in_flow_control_structures, no_leading_underscores_for_library_prefixes, prefer_adjacent_string_concatenation, prefer_interpolation_to_compose_strings, unnecessary_this, use_raw_strings
+// ignore_for_file: cascade_invocations, constant_identifier_names, curly_braces_in_flow_control_structures, no_leading_underscores_for_library_prefixes, unnecessary_this, use_raw_strings
 
 import "package:typewriter_panel/infrastructure/protocols/skir/skir.dart"
     as _skir;
@@ -47,24 +47,14 @@ extension UserOrganizationCreateRouteNats
     _lib_organization_v1_organization.CreateOrganizationResponse
   >
   operation({required String userId}) {
-    final user = userId._transportIdentity;
+    final user = userId.transportIdentity;
 
     final method = _lib_organization_v1_organization.createOrganizationMethod;
     return SkirRouteOperation(
-      subject:
-          "cloud" +
-          "." +
-          "to" +
-          "." +
-          "user" +
-          "." +
-          user +
-          "." +
-          "organization" +
-          "." +
-          "create",
+      subject: "cloud.to.user.$user.organization.create",
       requestBytes: method.requestSerializer.toBytes(this),
       responseSerializer: method.responseSerializer,
+      outcome: _createOrganizationOutcome,
     );
   }
 }
@@ -78,24 +68,14 @@ extension UserOrganizationsWatchRouteNats
     on _lib_organization_v1_user.WatchUserOrganizationsRequest {
   SkirRouteOperation<_lib_organization_v1_user.WatchUserOrganizationsResponse>
   operation({required String userId}) {
-    final user = userId._transportIdentity;
+    final user = userId.transportIdentity;
 
     final method = _lib_organization_v1_user.watchUserOrganizationsMethod;
     return SkirRouteOperation(
-      subject:
-          "cloud" +
-          "." +
-          "to" +
-          "." +
-          "user" +
-          "." +
-          user +
-          "." +
-          "organization" +
-          "." +
-          "watch",
+      subject: "cloud.to.user.$user.organization.watch",
       requestBytes: method.requestSerializer.toBytes(this),
       responseSerializer: method.responseSerializer,
+      outcome: _watchUserOrganizationsOutcome,
     );
   }
 
@@ -128,7 +108,7 @@ extension UserOrganizationsWatchRouteNats
     TData Function(TData, TData)? reconcileSnapshot,
     TData? initialValue,
   }) {
-    final user = userId._transportIdentity;
+    final user = userId.transportIdentity;
 
     final operation = this.operation(userId: userId);
     return ref.watchProjection<
@@ -137,18 +117,7 @@ extension UserOrganizationsWatchRouteNats
       _lib_organization_v1_organization.UserOrganizationsChanged
     >(
       subject: operation.subject,
-      eventSubject:
-          "cloud" +
-          "." +
-          "from" +
-          "." +
-          "user" +
-          "." +
-          user +
-          "." +
-          "organizations" +
-          "." +
-          "changed",
+      eventSubject: "cloud.from.user.$user.organizations.changed",
       requestBytes: operation.requestBytes,
       responseSerializer: operation.responseSerializer,
       eventSerializer:
@@ -179,26 +148,14 @@ extension UserJoinRequestsWatchRouteNats
     on _lib_organization_v1_user.WatchUserJoinRequestsRequest {
   SkirRouteOperation<_lib_organization_v1_user.WatchUserJoinRequestsResponse>
   operation({required String userId}) {
-    final user = userId._transportIdentity;
+    final user = userId.transportIdentity;
 
     final method = _lib_organization_v1_user.watchUserJoinRequestsMethod;
     return SkirRouteOperation(
-      subject:
-          "cloud" +
-          "." +
-          "to" +
-          "." +
-          "user" +
-          "." +
-          user +
-          "." +
-          "organization" +
-          "." +
-          "join_requests" +
-          "." +
-          "watch",
+      subject: "cloud.to.user.$user.organization.join_requests.watch",
       requestBytes: method.requestSerializer.toBytes(this),
       responseSerializer: method.responseSerializer,
+      outcome: _watchUserJoinRequestsOutcome,
     );
   }
 
@@ -231,7 +188,7 @@ extension UserJoinRequestsWatchRouteNats
     TData Function(TData, TData)? reconcileSnapshot,
     TData? initialValue,
   }) {
-    final user = userId._transportIdentity;
+    final user = userId.transportIdentity;
 
     final operation = this.operation(userId: userId);
     return ref.watchProjection<
@@ -240,18 +197,7 @@ extension UserJoinRequestsWatchRouteNats
       _lib_organization_v1_join_request.UserJoinRequestsChanged
     >(
       subject: operation.subject,
-      eventSubject:
-          "cloud" +
-          "." +
-          "from" +
-          "." +
-          "user" +
-          "." +
-          user +
-          "." +
-          "join_requests" +
-          "." +
-          "changed",
+      eventSubject: "cloud.from.user.$user.join_requests.changed",
       requestBytes: operation.requestBytes,
       responseSerializer: operation.responseSerializer,
       eventSerializer:
@@ -277,26 +223,14 @@ extension UserJoinRequestSubmitRouteNats
     on _lib_organization_v1_user.SubmitUserJoinRequestRequest {
   SkirRouteOperation<_lib_organization_v1_user.SubmitUserJoinRequestResponse>
   operation({required String userId}) {
-    final user = userId._transportIdentity;
+    final user = userId.transportIdentity;
 
     final method = _lib_organization_v1_user.submitUserJoinRequestMethod;
     return SkirRouteOperation(
-      subject:
-          "cloud" +
-          "." +
-          "to" +
-          "." +
-          "user" +
-          "." +
-          user +
-          "." +
-          "organization" +
-          "." +
-          "join_requests" +
-          "." +
-          "request",
+      subject: "cloud.to.user.$user.organization.join_requests.request",
       requestBytes: method.requestSerializer.toBytes(this),
       responseSerializer: method.responseSerializer,
+      outcome: _submitUserJoinRequestOutcome,
     );
   }
 }
@@ -305,26 +239,14 @@ extension UserJoinRequestCancelRouteNats
     on _lib_organization_v1_user.CancelUserJoinRequestRequest {
   SkirRouteOperation<_lib_organization_v1_user.CancelUserJoinRequestResponse>
   operation({required String userId}) {
-    final user = userId._transportIdentity;
+    final user = userId.transportIdentity;
 
     final method = _lib_organization_v1_user.cancelUserJoinRequestMethod;
     return SkirRouteOperation(
-      subject:
-          "cloud" +
-          "." +
-          "to" +
-          "." +
-          "user" +
-          "." +
-          user +
-          "." +
-          "organization" +
-          "." +
-          "join_requests" +
-          "." +
-          "cancel",
+      subject: "cloud.to.user.$user.organization.join_requests.cancel",
       requestBytes: method.requestSerializer.toBytes(this),
       responseSerializer: method.responseSerializer,
+      outcome: _cancelUserJoinRequestOutcome,
     );
   }
 }
@@ -340,30 +262,16 @@ extension OrganizationMembersWatchRouteNats
     _lib_organization_v1_member.WatchOrganizationMembersResponse
   >
   operation({required String userId, required _skir.RecordId organizationId}) {
-    final user = userId._transportIdentity;
+    final user = userId.transportIdentity;
 
-    final organization = organizationId.id._transportIdentity;
+    final organization = organizationId.id.transportIdentity;
 
     final method = _lib_organization_v1_member.watchOrganizationMembersMethod;
     return SkirRouteOperation(
-      subject:
-          "cloud" +
-          "." +
-          "to" +
-          "." +
-          "user" +
-          "." +
-          user +
-          "." +
-          "organization" +
-          "." +
-          organization +
-          "." +
-          "members" +
-          "." +
-          "watch",
+      subject: "cloud.to.user.$user.organization.$organization.members.watch",
       requestBytes: method.requestSerializer.toBytes(this),
       responseSerializer: method.responseSerializer,
+      outcome: _watchOrganizationMembersOutcome,
     );
   }
 
@@ -398,7 +306,7 @@ extension OrganizationMembersWatchRouteNats
     TData Function(TData, TData)? reconcileSnapshot,
     TData? initialValue,
   }) {
-    final organization = organizationId.id._transportIdentity;
+    final organization = organizationId.id.transportIdentity;
 
     final operation = this.operation(
       userId: userId,
@@ -411,18 +319,7 @@ extension OrganizationMembersWatchRouteNats
       _lib_organization_v1_member.OrganizationMembersChanged
     >(
       subject: operation.subject,
-      eventSubject:
-          "cloud" +
-          "." +
-          "from" +
-          "." +
-          "organization" +
-          "." +
-          organization +
-          "." +
-          "members" +
-          "." +
-          "changed",
+      eventSubject: "cloud.from.organization.$organization.members.changed",
       requestBytes: operation.requestBytes,
       responseSerializer: operation.responseSerializer,
       eventSerializer:
@@ -450,31 +347,17 @@ extension OrganizationMembersUpdateRouteNats
     _lib_organization_v1_member.UpdateOrganizationMemberRolesResponse
   >
   operation({required String userId, required _skir.RecordId organizationId}) {
-    final user = userId._transportIdentity;
+    final user = userId.transportIdentity;
 
-    final organization = organizationId.id._transportIdentity;
+    final organization = organizationId.id.transportIdentity;
 
     final method =
         _lib_organization_v1_member.updateOrganizationMemberRolesMethod;
     return SkirRouteOperation(
-      subject:
-          "cloud" +
-          "." +
-          "to" +
-          "." +
-          "user" +
-          "." +
-          user +
-          "." +
-          "organization" +
-          "." +
-          organization +
-          "." +
-          "members" +
-          "." +
-          "update",
+      subject: "cloud.to.user.$user.organization.$organization.members.update",
       requestBytes: method.requestSerializer.toBytes(this),
       responseSerializer: method.responseSerializer,
+      outcome: _updateOrganizationMemberRolesOutcome,
     );
   }
 }
@@ -485,30 +368,16 @@ extension OrganizationMemberRemoveRouteNats
     _lib_organization_v1_member.RemoveOrganizationMemberResponse
   >
   operation({required String userId, required _skir.RecordId organizationId}) {
-    final user = userId._transportIdentity;
+    final user = userId.transportIdentity;
 
-    final organization = organizationId.id._transportIdentity;
+    final organization = organizationId.id.transportIdentity;
 
     final method = _lib_organization_v1_member.removeOrganizationMemberMethod;
     return SkirRouteOperation(
-      subject:
-          "cloud" +
-          "." +
-          "to" +
-          "." +
-          "user" +
-          "." +
-          user +
-          "." +
-          "organization" +
-          "." +
-          organization +
-          "." +
-          "members" +
-          "." +
-          "remove",
+      subject: "cloud.to.user.$user.organization.$organization.members.remove",
       requestBytes: method.requestSerializer.toBytes(this),
       responseSerializer: method.responseSerializer,
+      outcome: _removeOrganizationMemberOutcome,
     );
   }
 }
@@ -524,33 +393,18 @@ extension OrganizationJoinRequestsWatchRouteNats
     _lib_organization_v1_join_request.WatchOrganizationJoinRequestsResponse
   >
   operation({required String userId, required _skir.RecordId organizationId}) {
-    final user = userId._transportIdentity;
+    final user = userId.transportIdentity;
 
-    final organization = organizationId.id._transportIdentity;
+    final organization = organizationId.id.transportIdentity;
 
     final method =
         _lib_organization_v1_join_request.watchOrganizationJoinRequestsMethod;
     return SkirRouteOperation(
       subject:
-          "cloud" +
-          "." +
-          "to" +
-          "." +
-          "user" +
-          "." +
-          user +
-          "." +
-          "organization" +
-          "." +
-          organization +
-          "." +
-          "members" +
-          "." +
-          "join_requests" +
-          "." +
-          "watch",
+          "cloud.to.user.$user.organization.$organization.members.join_requests.watch",
       requestBytes: method.requestSerializer.toBytes(this),
       responseSerializer: method.responseSerializer,
+      outcome: _watchOrganizationJoinRequestsOutcome,
     );
   }
 
@@ -585,7 +439,7 @@ extension OrganizationJoinRequestsWatchRouteNats
     TData Function(TData, TData)? reconcileSnapshot,
     TData? initialValue,
   }) {
-    final organization = organizationId.id._transportIdentity;
+    final organization = organizationId.id.transportIdentity;
 
     final operation = this.operation(
       userId: userId,
@@ -599,17 +453,7 @@ extension OrganizationJoinRequestsWatchRouteNats
     >(
       subject: operation.subject,
       eventSubject:
-          "cloud" +
-          "." +
-          "from" +
-          "." +
-          "organization" +
-          "." +
-          organization +
-          "." +
-          "join_requests" +
-          "." +
-          "changed",
+          "cloud.from.organization.$organization.join_requests.changed",
       requestBytes: operation.requestBytes,
       responseSerializer: operation.responseSerializer,
       eventSerializer: _lib_organization_v1_join_request
@@ -638,33 +482,18 @@ extension OrganizationJoinRequestsApproveRouteNats
     _lib_organization_v1_join_request.ApproveOrganizationJoinRequestsResponse
   >
   operation({required String userId, required _skir.RecordId organizationId}) {
-    final user = userId._transportIdentity;
+    final user = userId.transportIdentity;
 
-    final organization = organizationId.id._transportIdentity;
+    final organization = organizationId.id.transportIdentity;
 
     final method =
         _lib_organization_v1_join_request.approveOrganizationJoinRequestsMethod;
     return SkirRouteOperation(
       subject:
-          "cloud" +
-          "." +
-          "to" +
-          "." +
-          "user" +
-          "." +
-          user +
-          "." +
-          "organization" +
-          "." +
-          organization +
-          "." +
-          "members" +
-          "." +
-          "join_requests" +
-          "." +
-          "approve",
+          "cloud.to.user.$user.organization.$organization.members.join_requests.approve",
       requestBytes: method.requestSerializer.toBytes(this),
       responseSerializer: method.responseSerializer,
+      outcome: _approveOrganizationJoinRequestsOutcome,
     );
   }
 }
@@ -675,33 +504,18 @@ extension OrganizationJoinRequestDeclineRouteNats
     _lib_organization_v1_join_request.DeclineOrganizationJoinRequestResponse
   >
   operation({required String userId, required _skir.RecordId organizationId}) {
-    final user = userId._transportIdentity;
+    final user = userId.transportIdentity;
 
-    final organization = organizationId.id._transportIdentity;
+    final organization = organizationId.id.transportIdentity;
 
     final method =
         _lib_organization_v1_join_request.declineOrganizationJoinRequestMethod;
     return SkirRouteOperation(
       subject:
-          "cloud" +
-          "." +
-          "to" +
-          "." +
-          "user" +
-          "." +
-          user +
-          "." +
-          "organization" +
-          "." +
-          organization +
-          "." +
-          "members" +
-          "." +
-          "join_requests" +
-          "." +
-          "decline",
+          "cloud.to.user.$user.organization.$organization.members.join_requests.decline",
       requestBytes: method.requestSerializer.toBytes(this),
       responseSerializer: method.responseSerializer,
+      outcome: _declineOrganizationJoinRequestOutcome,
     );
   }
 }
@@ -717,33 +531,18 @@ extension OrganizationJoinCodesWatchRouteNats
     _lib_organization_v1_join_codes.WatchOrganizationJoinCodesResponse
   >
   operation({required String userId, required _skir.RecordId organizationId}) {
-    final user = userId._transportIdentity;
+    final user = userId.transportIdentity;
 
-    final organization = organizationId.id._transportIdentity;
+    final organization = organizationId.id.transportIdentity;
 
     final method =
         _lib_organization_v1_join_codes.watchOrganizationJoinCodesMethod;
     return SkirRouteOperation(
       subject:
-          "cloud" +
-          "." +
-          "to" +
-          "." +
-          "user" +
-          "." +
-          user +
-          "." +
-          "organization" +
-          "." +
-          organization +
-          "." +
-          "members" +
-          "." +
-          "join_codes" +
-          "." +
-          "watch",
+          "cloud.to.user.$user.organization.$organization.members.join_codes.watch",
       requestBytes: method.requestSerializer.toBytes(this),
       responseSerializer: method.responseSerializer,
+      outcome: _watchOrganizationJoinCodesOutcome,
     );
   }
 
@@ -778,7 +577,7 @@ extension OrganizationJoinCodesWatchRouteNats
     TData Function(TData, TData)? reconcileSnapshot,
     TData? initialValue,
   }) {
-    final organization = organizationId.id._transportIdentity;
+    final organization = organizationId.id.transportIdentity;
 
     final operation = this.operation(
       userId: userId,
@@ -791,18 +590,7 @@ extension OrganizationJoinCodesWatchRouteNats
       _lib_organization_v1_join_codes.OrganizationJoinCodesChanged
     >(
       subject: operation.subject,
-      eventSubject:
-          "cloud" +
-          "." +
-          "from" +
-          "." +
-          "organization" +
-          "." +
-          organization +
-          "." +
-          "join_codes" +
-          "." +
-          "changed",
+      eventSubject: "cloud.from.organization.$organization.join_codes.changed",
       requestBytes: operation.requestBytes,
       responseSerializer: operation.responseSerializer,
       eventSerializer: _lib_organization_v1_join_codes
@@ -831,33 +619,18 @@ extension OrganizationJoinCodeGenerateRouteNats
     _lib_organization_v1_join_codes.GenerateOrganizationJoinCodeResponse
   >
   operation({required String userId, required _skir.RecordId organizationId}) {
-    final user = userId._transportIdentity;
+    final user = userId.transportIdentity;
 
-    final organization = organizationId.id._transportIdentity;
+    final organization = organizationId.id.transportIdentity;
 
     final method =
         _lib_organization_v1_join_codes.generateOrganizationJoinCodeMethod;
     return SkirRouteOperation(
       subject:
-          "cloud" +
-          "." +
-          "to" +
-          "." +
-          "user" +
-          "." +
-          user +
-          "." +
-          "organization" +
-          "." +
-          organization +
-          "." +
-          "members" +
-          "." +
-          "join_codes" +
-          "." +
-          "generate",
+          "cloud.to.user.$user.organization.$organization.members.join_codes.generate",
       requestBytes: method.requestSerializer.toBytes(this),
       responseSerializer: method.responseSerializer,
+      outcome: _generateOrganizationJoinCodeOutcome,
     );
   }
 }
@@ -868,33 +641,18 @@ extension OrganizationJoinCodeRevokeRouteNats
     _lib_organization_v1_join_codes.RevokeOrganizationJoinCodeResponse
   >
   operation({required String userId, required _skir.RecordId organizationId}) {
-    final user = userId._transportIdentity;
+    final user = userId.transportIdentity;
 
-    final organization = organizationId.id._transportIdentity;
+    final organization = organizationId.id.transportIdentity;
 
     final method =
         _lib_organization_v1_join_codes.revokeOrganizationJoinCodeMethod;
     return SkirRouteOperation(
       subject:
-          "cloud" +
-          "." +
-          "to" +
-          "." +
-          "user" +
-          "." +
-          user +
-          "." +
-          "organization" +
-          "." +
-          organization +
-          "." +
-          "members" +
-          "." +
-          "join_codes" +
-          "." +
-          "revoke",
+          "cloud.to.user.$user.organization.$organization.members.join_codes.revoke",
       requestBytes: method.requestSerializer.toBytes(this),
       responseSerializer: method.responseSerializer,
+      outcome: _revokeOrganizationJoinCodeOutcome,
     );
   }
 }
@@ -903,30 +661,16 @@ extension OrganizationRolesWatchRouteNats
     on _lib_organization_v1_role.WatchOrganizationRolesRequest {
   SkirRouteOperation<_lib_organization_v1_role.WatchOrganizationRolesResponse>
   operation({required String userId, required _skir.RecordId organizationId}) {
-    final user = userId._transportIdentity;
+    final user = userId.transportIdentity;
 
-    final organization = organizationId.id._transportIdentity;
+    final organization = organizationId.id.transportIdentity;
 
     final method = _lib_organization_v1_role.watchOrganizationRolesMethod;
     return SkirRouteOperation(
-      subject:
-          "cloud" +
-          "." +
-          "to" +
-          "." +
-          "user" +
-          "." +
-          user +
-          "." +
-          "organization" +
-          "." +
-          organization +
-          "." +
-          "roles" +
-          "." +
-          "watch",
+      subject: "cloud.to.user.$user.organization.$organization.roles.watch",
       requestBytes: method.requestSerializer.toBytes(this),
       responseSerializer: method.responseSerializer,
+      outcome: _watchOrganizationRolesOutcome,
     );
   }
 }
@@ -935,30 +679,16 @@ extension ServiceBindRouteNats
     on _lib_service_v1_registration.BindServiceRequest {
   SkirRouteOperation<_lib_service_v1_registration.BindServiceResponse>
   operation({required String userId, required _skir.RecordId organizationId}) {
-    final user = userId._transportIdentity;
+    final user = userId.transportIdentity;
 
-    final organization = organizationId.id._transportIdentity;
+    final organization = organizationId.id.transportIdentity;
 
     final method = _lib_service_v1_registration.bindServiceMethod;
     return SkirRouteOperation(
-      subject:
-          "cloud" +
-          "." +
-          "to" +
-          "." +
-          "user" +
-          "." +
-          user +
-          "." +
-          "organization" +
-          "." +
-          organization +
-          "." +
-          "services" +
-          "." +
-          "bind",
+      subject: "cloud.to.user.$user.organization.$organization.services.bind",
       requestBytes: method.requestSerializer.toBytes(this),
       responseSerializer: method.responseSerializer,
+      outcome: _bindServiceOutcome,
     );
   }
 }
@@ -969,30 +699,16 @@ extension OrganizationServicesWatchRouteNats
     _lib_service_v1_organization.WatchOrganizationServicesResponse
   >
   operation({required String userId, required _skir.RecordId organizationId}) {
-    final user = userId._transportIdentity;
+    final user = userId.transportIdentity;
 
-    final organization = organizationId.id._transportIdentity;
+    final organization = organizationId.id.transportIdentity;
 
     final method = _lib_service_v1_organization.watchOrganizationServicesMethod;
     return SkirRouteOperation(
-      subject:
-          "cloud" +
-          "." +
-          "to" +
-          "." +
-          "user" +
-          "." +
-          user +
-          "." +
-          "organization" +
-          "." +
-          organization +
-          "." +
-          "services" +
-          "." +
-          "watch",
+      subject: "cloud.to.user.$user.organization.$organization.services.watch",
       requestBytes: method.requestSerializer.toBytes(this),
       responseSerializer: method.responseSerializer,
+      outcome: _watchOrganizationServicesOutcome,
     );
   }
 
@@ -1027,7 +743,7 @@ extension OrganizationServicesWatchRouteNats
     TData Function(TData, TData)? reconcileSnapshot,
     TData? initialValue,
   }) {
-    final organization = organizationId.id._transportIdentity;
+    final organization = organizationId.id.transportIdentity;
 
     final operation = this.operation(
       userId: userId,
@@ -1040,18 +756,7 @@ extension OrganizationServicesWatchRouteNats
       _lib_service_v1_organization.OrganizationServicesChanged
     >(
       subject: operation.subject,
-      eventSubject:
-          "cloud" +
-          "." +
-          "from" +
-          "." +
-          "organization" +
-          "." +
-          organization +
-          "." +
-          "services" +
-          "." +
-          "watch",
+      eventSubject: "cloud.from.organization.$organization.services.watch",
       requestBytes: operation.requestBytes,
       responseSerializer: operation.responseSerializer,
       eventSerializer:
@@ -1074,30 +779,16 @@ extension OrganizationServiceUpdateRouteNats
     _lib_service_v1_organization.UpdateOrganizationServiceResponse
   >
   operation({required String userId, required _skir.RecordId organizationId}) {
-    final user = userId._transportIdentity;
+    final user = userId.transportIdentity;
 
-    final organization = organizationId.id._transportIdentity;
+    final organization = organizationId.id.transportIdentity;
 
     final method = _lib_service_v1_organization.updateOrganizationServiceMethod;
     return SkirRouteOperation(
-      subject:
-          "cloud" +
-          "." +
-          "to" +
-          "." +
-          "user" +
-          "." +
-          user +
-          "." +
-          "organization" +
-          "." +
-          organization +
-          "." +
-          "services" +
-          "." +
-          "update",
+      subject: "cloud.to.user.$user.organization.$organization.services.update",
       requestBytes: method.requestSerializer.toBytes(this),
       responseSerializer: method.responseSerializer,
+      outcome: _updateOrganizationServiceOutcome,
     );
   }
 }
@@ -1106,30 +797,16 @@ extension ServiceUnbindRouteNats
     on _lib_service_v1_registration.UnbindServiceRequest {
   SkirRouteOperation<_lib_service_v1_registration.UnbindServiceResponse>
   operation({required String userId, required _skir.RecordId organizationId}) {
-    final user = userId._transportIdentity;
+    final user = userId.transportIdentity;
 
-    final organization = organizationId.id._transportIdentity;
+    final organization = organizationId.id.transportIdentity;
 
     final method = _lib_service_v1_registration.unbindServiceMethod;
     return SkirRouteOperation(
-      subject:
-          "cloud" +
-          "." +
-          "to" +
-          "." +
-          "user" +
-          "." +
-          user +
-          "." +
-          "organization" +
-          "." +
-          organization +
-          "." +
-          "services" +
-          "." +
-          "unbind",
+      subject: "cloud.to.user.$user.organization.$organization.services.unbind",
       requestBytes: method.requestSerializer.toBytes(this),
       responseSerializer: method.responseSerializer,
+      outcome: _unbindServiceOutcome,
     );
   }
 }
@@ -1138,30 +815,17 @@ extension ServiceTopologyConfigureRouteNats
     on _lib_service_v1_topology.ConfigureServiceHostRequest {
   SkirRouteOperation<_lib_service_v1_topology.ConfigureServiceHostResponse>
   operation({required String userId, required _skir.RecordId organizationId}) {
-    final user = userId._transportIdentity;
+    final user = userId.transportIdentity;
 
-    final organization = organizationId.id._transportIdentity;
+    final organization = organizationId.id.transportIdentity;
 
     final method = _lib_service_v1_topology.configureServiceHostMethod;
     return SkirRouteOperation(
       subject:
-          "cloud" +
-          "." +
-          "to" +
-          "." +
-          "user" +
-          "." +
-          user +
-          "." +
-          "organization" +
-          "." +
-          organization +
-          "." +
-          "topology" +
-          "." +
-          "configure",
+          "cloud.to.user.$user.organization.$organization.topology.configure",
       requestBytes: method.requestSerializer.toBytes(this),
       responseSerializer: method.responseSerializer,
+      outcome: _configureServiceHostOutcome,
     );
   }
 }
@@ -1170,30 +834,16 @@ extension OrganizationTopologyWatchRouteNats
     on _lib_service_v1_topology.WatchOrganizationTopologyRequest {
   SkirRouteOperation<_lib_service_v1_topology.WatchOrganizationTopologyResponse>
   operation({required String userId, required _skir.RecordId organizationId}) {
-    final user = userId._transportIdentity;
+    final user = userId.transportIdentity;
 
-    final organization = organizationId.id._transportIdentity;
+    final organization = organizationId.id.transportIdentity;
 
     final method = _lib_service_v1_topology.watchOrganizationTopologyMethod;
     return SkirRouteOperation(
-      subject:
-          "cloud" +
-          "." +
-          "to" +
-          "." +
-          "user" +
-          "." +
-          user +
-          "." +
-          "organization" +
-          "." +
-          organization +
-          "." +
-          "topology" +
-          "." +
-          "watch",
+      subject: "cloud.to.user.$user.organization.$organization.topology.watch",
       requestBytes: method.requestSerializer.toBytes(this),
       responseSerializer: method.responseSerializer,
+      outcome: _watchOrganizationTopologyOutcome,
     );
   }
 
@@ -1225,7 +875,7 @@ extension OrganizationTopologyWatchRouteNats
     TData Function(TData, TData)? reconcileSnapshot,
     TData? initialValue,
   }) {
-    final organization = organizationId.id._transportIdentity;
+    final organization = organizationId.id.transportIdentity;
 
     final operation = this.operation(
       userId: userId,
@@ -1238,18 +888,7 @@ extension OrganizationTopologyWatchRouteNats
       _lib_service_v1_topology.OrganizationTopologyChanged
     >(
       subject: operation.subject,
-      eventSubject:
-          "cloud" +
-          "." +
-          "from" +
-          "." +
-          "organization" +
-          "." +
-          organization +
-          "." +
-          "topology" +
-          "." +
-          "watch",
+      eventSubject: "cloud.from.organization.$organization.topology.watch",
       requestBytes: operation.requestBytes,
       responseSerializer: operation.responseSerializer,
       eventSerializer:
@@ -1268,93 +907,45 @@ extension OrganizationTopologyWatchRouteNats
 
 extension EditorCatalogFetchRouteNats
     on _lib_editor_v1_catalog.CatalogFetchRequest {
-  Stream<_lib_editor_v1_catalog.CatalogFetchResult> watch(
-    SkirMutationClient transport, {
+  SkirRouteOperation<_lib_editor_v1_catalog.CatalogFetchResult> operation({
     required _skir.RecordId organizationId,
 
     required _skir.RecordId realmId,
   }) {
-    final organization = organizationId.id._transportIdentity;
+    final organization = organizationId.id.transportIdentity;
 
-    final realm = realmId.id._transportIdentity;
+    final realm = realmId.id.transportIdentity;
 
     final method = _lib_editor_v1_catalog.fetchEditorCatalogMethod;
-    return transport.watchRequest(
-      "service" +
-          "." +
-          "to" +
-          "." +
-          realm +
-          "." +
-          "organization" +
-          "." +
-          organization +
-          "." +
-          "realm" +
-          "." +
-          "editor" +
-          "." +
-          "catalog" +
-          "." +
-          "fetch",
-      "service" +
-          "." +
-          "from" +
-          "." +
-          realm +
-          "." +
-          "organization" +
-          "." +
-          organization +
-          "." +
-          "realm" +
-          "." +
-          "editor" +
-          "." +
-          "catalog" +
-          "." +
-          "fetch" +
-          "." +
-          this.transferId._transportTransfer,
-      method.requestSerializer.toBytes(this),
-      method.responseSerializer,
+    return SkirRouteOperation(
+      subject:
+          "service.to.$realm.organization.$organization.realm.editor.catalog.fetch",
+      requestBytes: method.requestSerializer.toBytes(this),
+      responseSerializer: method.responseSerializer,
+      outcome: _fetchEditorCatalogOutcome,
     );
   }
 }
 
 extension EditorCatalogWatchRouteNats
     on _lib_editor_v1_catalog.WatchEditorCatalogRequest {
-  SkirRouteOperation<_lib_editor_v1_catalog.CatalogInvalidated> operation({
+  SkirRouteOperation<_lib_editor_v1_catalog.WatchEditorCatalogResponse>
+  operation({
     required _skir.RecordId organizationId,
 
     required _skir.RecordId realmId,
   }) {
-    final organization = organizationId.id._transportIdentity;
+    final organization = organizationId.id.transportIdentity;
 
-    final realm = realmId.id._transportIdentity;
+    final realm = realmId.id.transportIdentity;
 
     final method = _lib_editor_v1_catalog.watchEditorCatalogMethod;
     return SkirRouteOperation(
       subject:
-          "service" +
-          "." +
-          "to" +
-          "." +
-          realm +
-          "." +
-          "organization" +
-          "." +
-          organization +
-          "." +
-          "realm" +
-          "." +
-          "editor" +
-          "." +
-          "catalog" +
-          "." +
-          "invalidate",
+          "service.to.$realm.organization.$organization.realm.editor.catalog.invalidate",
       requestBytes: method.requestSerializer.toBytes(this),
       responseSerializer: method.responseSerializer,
+      outcome: _watchEditorCatalogOutcome,
     );
   }
 
@@ -1364,12 +955,13 @@ extension EditorCatalogWatchRouteNats
 
     required _skir.RecordId realmId,
 
-    required TData Function(_lib_editor_v1_catalog.CatalogInvalidated) snapshot,
+    required TData Function(_lib_editor_v1_catalog.WatchEditorCatalogResponse)
+    snapshot,
     required TData Function(TData, _lib_editor_v1_catalog.CatalogInvalidated)
     reduce,
     required ProjectionReconciliation<
       TData,
-      _lib_editor_v1_catalog.CatalogInvalidated,
+      _lib_editor_v1_catalog.WatchEditorCatalogResponse,
       _lib_editor_v1_catalog.CatalogInvalidated
     >
     reconciliation,
@@ -1379,9 +971,9 @@ extension EditorCatalogWatchRouteNats
     TData Function(TData, TData)? reconcileSnapshot,
     TData? initialValue,
   }) {
-    final organization = organizationId.id._transportIdentity;
+    final organization = organizationId.id.transportIdentity;
 
-    final realm = realmId.id._transportIdentity;
+    final realm = realmId.id.transportIdentity;
 
     final operation = this.operation(
       organizationId: organizationId,
@@ -1390,28 +982,12 @@ extension EditorCatalogWatchRouteNats
     );
     return ref.watchProjection<
       TData,
-      _lib_editor_v1_catalog.CatalogInvalidated,
+      _lib_editor_v1_catalog.WatchEditorCatalogResponse,
       _lib_editor_v1_catalog.CatalogInvalidated
     >(
       subject: operation.subject,
       eventSubject:
-          "service" +
-          "." +
-          "from" +
-          "." +
-          realm +
-          "." +
-          "organization" +
-          "." +
-          organization +
-          "." +
-          "realm" +
-          "." +
-          "editor" +
-          "." +
-          "catalog" +
-          "." +
-          "invalidate",
+          "service.from.$realm.organization.$organization.realm.editor.catalog.invalidate",
       requestBytes: operation.requestBytes,
       responseSerializer: operation.responseSerializer,
       eventSerializer: _lib_editor_v1_catalog.CatalogInvalidated.serializer,
@@ -1434,32 +1010,17 @@ extension EditorValuePrepareRouteNats
 
     required _skir.RecordId realmId,
   }) {
-    final organization = organizationId.id._transportIdentity;
+    final organization = organizationId.id.transportIdentity;
 
-    final realm = realmId.id._transportIdentity;
+    final realm = realmId.id.transportIdentity;
 
     final method = _lib_editor_v1_catalog.prepareValueMethod;
     return SkirRouteOperation(
       subject:
-          "service" +
-          "." +
-          "to" +
-          "." +
-          realm +
-          "." +
-          "organization" +
-          "." +
-          organization +
-          "." +
-          "realm" +
-          "." +
-          "editor" +
-          "." +
-          "creation" +
-          "." +
-          "prepare",
+          "service.to.$realm.organization.$organization.realm.editor.creation.prepare",
       requestBytes: method.requestSerializer.toBytes(this),
       responseSerializer: method.responseSerializer,
+      outcome: _prepareValueOutcome,
     );
   }
 }
@@ -1472,32 +1033,17 @@ extension EditorPresentationSearchRouteNats
 
     required _skir.RecordId realmId,
   }) {
-    final organization = organizationId.id._transportIdentity;
+    final organization = organizationId.id.transportIdentity;
 
-    final realm = realmId.id._transportIdentity;
+    final realm = realmId.id.transportIdentity;
 
     final method = _lib_editor_v1_search.watchRealmPresentationSearchMethod;
     return SkirRouteOperation(
       subject:
-          "service" +
-          "." +
-          "to" +
-          "." +
-          realm +
-          "." +
-          "organization" +
-          "." +
-          organization +
-          "." +
-          "realm" +
-          "." +
-          "editor" +
-          "." +
-          "presentation" +
-          "." +
-          "search",
+          "service.to.$realm.organization.$organization.realm.editor.presentation.search",
       requestBytes: method.requestSerializer.toBytes(this),
       responseSerializer: method.responseSerializer,
+      outcome: _watchRealmPresentationSearchOutcome,
     );
   }
 
@@ -1527,9 +1073,9 @@ extension EditorPresentationSearchRouteNats
     TData Function(TData, TData)? reconcileSnapshot,
     TData? initialValue,
   }) {
-    final organization = organizationId.id._transportIdentity;
+    final organization = organizationId.id.transportIdentity;
 
-    final realm = realmId.id._transportIdentity;
+    final realm = realmId.id.transportIdentity;
 
     final operation = this.operation(
       organizationId: organizationId,
@@ -1543,23 +1089,7 @@ extension EditorPresentationSearchRouteNats
     >(
       subject: operation.subject,
       eventSubject:
-          "service" +
-          "." +
-          "from" +
-          "." +
-          realm +
-          "." +
-          "organization" +
-          "." +
-          organization +
-          "." +
-          "realm" +
-          "." +
-          "editor" +
-          "." +
-          "presentation" +
-          "." +
-          "search",
+          "service.from.$realm.organization.$organization.realm.editor.presentation.search",
       requestBytes: operation.requestBytes,
       responseSerializer: operation.responseSerializer,
       eventSerializer:
@@ -1584,34 +1114,17 @@ extension EditorPresentationSearchCancelRouteNats
 
     required _skir.RecordId realmId,
   }) {
-    final organization = organizationId.id._transportIdentity;
+    final organization = organizationId.id.transportIdentity;
 
-    final realm = realmId.id._transportIdentity;
+    final realm = realmId.id.transportIdentity;
 
     final method = _lib_editor_v1_search.cancelRealmPresentationSearchMethod;
     return SkirRouteOperation(
       subject:
-          "service" +
-          "." +
-          "to" +
-          "." +
-          realm +
-          "." +
-          "organization" +
-          "." +
-          organization +
-          "." +
-          "realm" +
-          "." +
-          "editor" +
-          "." +
-          "presentation" +
-          "." +
-          "search" +
-          "." +
-          "cancel",
+          "service.to.$realm.organization.$organization.realm.editor.presentation.search.cancel",
       requestBytes: method.requestSerializer.toBytes(this),
       responseSerializer: method.responseSerializer,
+      outcome: _cancelRealmPresentationSearchOutcome,
     );
   }
 }
@@ -1624,34 +1137,17 @@ extension EditorCapabilityComputationInvokeRouteNats
 
     required _skir.RecordId realmId,
   }) {
-    final organization = organizationId.id._transportIdentity;
+    final organization = organizationId.id.transportIdentity;
 
-    final realm = realmId.id._transportIdentity;
+    final realm = realmId.id.transportIdentity;
 
     final method = _lib_editor_v1_capability.invokeRealmComputationMethod;
     return SkirRouteOperation(
       subject:
-          "service" +
-          "." +
-          "to" +
-          "." +
-          realm +
-          "." +
-          "organization" +
-          "." +
-          organization +
-          "." +
-          "realm" +
-          "." +
-          "editor" +
-          "." +
-          "capability" +
-          "." +
-          "computation" +
-          "." +
-          "invoke",
+          "service.to.$realm.organization.$organization.realm.editor.capability.computation.invoke",
       requestBytes: method.requestSerializer.toBytes(this),
       responseSerializer: method.responseSerializer,
+      outcome: _invokeRealmComputationOutcome,
     );
   }
 }
@@ -1663,34 +1159,17 @@ extension EditorCapabilityCommandInvokeRouteNats
 
     required _skir.RecordId realmId,
   }) {
-    final organization = organizationId.id._transportIdentity;
+    final organization = organizationId.id.transportIdentity;
 
-    final realm = realmId.id._transportIdentity;
+    final realm = realmId.id.transportIdentity;
 
     final method = _lib_editor_v1_capability.invokeRealmCommandMethod;
     return SkirRouteOperation(
       subject:
-          "service" +
-          "." +
-          "to" +
-          "." +
-          realm +
-          "." +
-          "organization" +
-          "." +
-          organization +
-          "." +
-          "realm" +
-          "." +
-          "editor" +
-          "." +
-          "capability" +
-          "." +
-          "command" +
-          "." +
-          "invoke",
+          "service.to.$realm.organization.$organization.realm.editor.capability.command.invoke",
       requestBytes: method.requestSerializer.toBytes(this),
       responseSerializer: method.responseSerializer,
+      outcome: _invokeRealmCommandOutcome,
     );
   }
 }
@@ -1705,35 +1184,18 @@ extension ResourceOperationsResolveRouteNats
 
     required _skir.RecordId realmId,
   }) {
-    final organization = organizationId.id._transportIdentity;
+    final organization = organizationId.id.transportIdentity;
 
-    final realm = realmId.id._transportIdentity;
+    final realm = realmId.id.transportIdentity;
 
     final method =
         _lib_editor_v1_resource_operations.resolveResourceOperationsMethod;
     return SkirRouteOperation(
       subject:
-          "service" +
-          "." +
-          "to" +
-          "." +
-          realm +
-          "." +
-          "organization" +
-          "." +
-          organization +
-          "." +
-          "realm" +
-          "." +
-          "editor" +
-          "." +
-          "resources" +
-          "." +
-          "operations" +
-          "." +
-          "resolve",
+          "service.to.$realm.organization.$organization.realm.editor.resources.operations.resolve",
       requestBytes: method.requestSerializer.toBytes(this),
       responseSerializer: method.responseSerializer,
+      outcome: _resolveResourceOperationsOutcome,
     );
   }
 }
@@ -1748,35 +1210,18 @@ extension ResourceDropCandidatesResolveRouteNats
 
     required _skir.RecordId realmId,
   }) {
-    final organization = organizationId.id._transportIdentity;
+    final organization = organizationId.id.transportIdentity;
 
-    final realm = realmId.id._transportIdentity;
+    final realm = realmId.id.transportIdentity;
 
     final method =
         _lib_editor_v1_resource_operations.resolveDropCandidatesMethod;
     return SkirRouteOperation(
       subject:
-          "service" +
-          "." +
-          "to" +
-          "." +
-          realm +
-          "." +
-          "organization" +
-          "." +
-          organization +
-          "." +
-          "realm" +
-          "." +
-          "editor" +
-          "." +
-          "resources" +
-          "." +
-          "drops" +
-          "." +
-          "resolve",
+          "service.to.$realm.organization.$organization.realm.editor.resources.drops.resolve",
       requestBytes: method.requestSerializer.toBytes(this),
       responseSerializer: method.responseSerializer,
+      outcome: _resolveDropCandidatesOutcome,
     );
   }
 }
@@ -1789,95 +1234,41 @@ extension AuthoringActionPrepareRouteNats
 
     required _skir.RecordId realmId,
   }) {
-    final organization = organizationId.id._transportIdentity;
+    final organization = organizationId.id.transportIdentity;
 
-    final realm = realmId.id._transportIdentity;
+    final realm = realmId.id.transportIdentity;
 
     final method =
         _lib_editor_v1_resource_operations.prepareAuthoringActionMethod;
     return SkirRouteOperation(
       subject:
-          "service" +
-          "." +
-          "to" +
-          "." +
-          realm +
-          "." +
-          "organization" +
-          "." +
-          organization +
-          "." +
-          "realm" +
-          "." +
-          "editor" +
-          "." +
-          "resources" +
-          "." +
-          "actions" +
-          "." +
-          "prepare",
+          "service.to.$realm.organization.$organization.realm.editor.resources.actions.prepare",
       requestBytes: method.requestSerializer.toBytes(this),
       responseSerializer: method.responseSerializer,
+      outcome: _prepareAuthoringActionOutcome,
     );
   }
 }
 
 extension AuthoringStateQueryRouteNats
     on _lib_editor_v1_authoring.QueryAuthoringStateRequest {
-  Stream<_lib_editor_v1_authoring.QueryAuthoringStateResponse> watch(
-    SkirMutationClient transport, {
+  SkirRouteOperation<_lib_editor_v1_authoring.QueryAuthoringStateResponse>
+  operation({
     required _skir.RecordId organizationId,
 
     required _skir.RecordId realmId,
   }) {
-    final organization = organizationId.id._transportIdentity;
+    final organization = organizationId.id.transportIdentity;
 
-    final realm = realmId.id._transportIdentity;
+    final realm = realmId.id.transportIdentity;
 
     final method = _lib_editor_v1_authoring.queryAuthoringStateMethod;
-    return transport.watchRequest(
-      "service" +
-          "." +
-          "to" +
-          "." +
-          realm +
-          "." +
-          "organization" +
-          "." +
-          organization +
-          "." +
-          "realm" +
-          "." +
-          "editor" +
-          "." +
-          "authoring" +
-          "." +
-          "state" +
-          "." +
-          "query",
-      "service" +
-          "." +
-          "from" +
-          "." +
-          realm +
-          "." +
-          "organization" +
-          "." +
-          organization +
-          "." +
-          "realm" +
-          "." +
-          "editor" +
-          "." +
-          "authoring" +
-          "." +
-          "state" +
-          "." +
-          "query" +
-          "." +
-          this.transferId._transportTransfer,
-      method.requestSerializer.toBytes(this),
-      method.responseSerializer,
+    return SkirRouteOperation(
+      subject:
+          "service.to.$realm.organization.$organization.realm.editor.authoring.state.query",
+      requestBytes: method.requestSerializer.toBytes(this),
+      responseSerializer: method.responseSerializer,
+      outcome: _queryAuthoringStateOutcome,
     );
   }
 }
@@ -1890,34 +1281,17 @@ extension AuthoringEditCommitRouteNats
 
     required _skir.RecordId realmId,
   }) {
-    final organization = organizationId.id._transportIdentity;
+    final organization = organizationId.id.transportIdentity;
 
-    final realm = realmId.id._transportIdentity;
+    final realm = realmId.id.transportIdentity;
 
     final method = _lib_editor_v1_authoring.commitPreparedEditMethod;
     return SkirRouteOperation(
       subject:
-          "service" +
-          "." +
-          "to" +
-          "." +
-          realm +
-          "." +
-          "organization" +
-          "." +
-          organization +
-          "." +
-          "realm" +
-          "." +
-          "editor" +
-          "." +
-          "authoring" +
-          "." +
-          "edit" +
-          "." +
-          "commit",
+          "service.to.$realm.organization.$organization.realm.editor.authoring.edit.commit",
       requestBytes: method.requestSerializer.toBytes(this),
       responseSerializer: method.responseSerializer,
+      outcome: _commitPreparedEditOutcome,
     );
   }
 }
@@ -1930,34 +1304,17 @@ extension AuthoringTypePreviewRouteNats
 
     required _skir.RecordId realmId,
   }) {
-    final organization = organizationId.id._transportIdentity;
+    final organization = organizationId.id.transportIdentity;
 
-    final realm = realmId.id._transportIdentity;
+    final realm = realmId.id.transportIdentity;
 
     final method = _lib_editor_v1_authoring.previewTypeArgumentChangeMethod;
     return SkirRouteOperation(
       subject:
-          "service" +
-          "." +
-          "to" +
-          "." +
-          realm +
-          "." +
-          "organization" +
-          "." +
-          organization +
-          "." +
-          "realm" +
-          "." +
-          "editor" +
-          "." +
-          "authoring" +
-          "." +
-          "type" +
-          "." +
-          "preview",
+          "service.to.$realm.organization.$organization.realm.editor.authoring.type.preview",
       requestBytes: method.requestSerializer.toBytes(this),
       responseSerializer: method.responseSerializer,
+      outcome: _previewTypeArgumentChangeOutcome,
     );
   }
 }
@@ -1970,34 +1327,17 @@ extension AuthoringTypeCommitRouteNats
 
     required _skir.RecordId realmId,
   }) {
-    final organization = organizationId.id._transportIdentity;
+    final organization = organizationId.id.transportIdentity;
 
-    final realm = realmId.id._transportIdentity;
+    final realm = realmId.id.transportIdentity;
 
     final method = _lib_editor_v1_authoring.prepareTypeArgumentChangeMethod;
     return SkirRouteOperation(
       subject:
-          "service" +
-          "." +
-          "to" +
-          "." +
-          realm +
-          "." +
-          "organization" +
-          "." +
-          organization +
-          "." +
-          "realm" +
-          "." +
-          "editor" +
-          "." +
-          "authoring" +
-          "." +
-          "type" +
-          "." +
-          "commit",
+          "service.to.$realm.organization.$organization.realm.editor.authoring.type.commit",
       requestBytes: method.requestSerializer.toBytes(this),
       responseSerializer: method.responseSerializer,
+      outcome: _prepareTypeArgumentChangeOutcome,
     );
   }
 }
@@ -2010,32 +1350,17 @@ extension AuthoringSearchRouteNats
 
     required _skir.RecordId realmId,
   }) {
-    final organization = organizationId.id._transportIdentity;
+    final organization = organizationId.id.transportIdentity;
 
-    final realm = realmId.id._transportIdentity;
+    final realm = realmId.id.transportIdentity;
 
     final method = _lib_editor_v1_authoring.searchAuthoringMethod;
     return SkirRouteOperation(
       subject:
-          "service" +
-          "." +
-          "to" +
-          "." +
-          realm +
-          "." +
-          "organization" +
-          "." +
-          organization +
-          "." +
-          "realm" +
-          "." +
-          "editor" +
-          "." +
-          "authoring" +
-          "." +
-          "search",
+          "service.to.$realm.organization.$organization.realm.editor.authoring.search",
       requestBytes: method.requestSerializer.toBytes(this),
       responseSerializer: method.responseSerializer,
+      outcome: _searchAuthoringOutcome,
     );
   }
 }
@@ -2051,86 +1376,35 @@ final class AuthoringChangedRouteEvent {
 
     required _skir.RecordId realmId,
   }) {
-    final organization = organizationId.id._transportIdentity;
+    final organization = organizationId.id.transportIdentity;
 
-    final realm = realmId.id._transportIdentity;
+    final realm = realmId.id.transportIdentity;
 
-    return "service" +
-        "." +
-        "from" +
-        "." +
-        realm +
-        "." +
-        "organization" +
-        "." +
-        organization +
-        "." +
-        "realm" +
-        "." +
-        "editor" +
-        "." +
-        "authoring" +
-        "." +
-        "changed";
+    return "service.from.$realm.organization.$organization.realm.editor.authoring.changed";
   }
 }
 
 extension AuthoringCompiledQueryRouteNats
     on _lib_editor_v1_compiled_content.QueryPublishedContentRequest {
-  Stream<_lib_editor_v1_compiled_content.QueryPublishedContentResponse> watch(
-    SkirMutationClient transport, {
+  SkirRouteOperation<
+    _lib_editor_v1_compiled_content.QueryPublishedContentResponse
+  >
+  operation({
     required _skir.RecordId organizationId,
 
     required _skir.RecordId realmId,
   }) {
-    final organization = organizationId.id._transportIdentity;
+    final organization = organizationId.id.transportIdentity;
 
-    final realm = realmId.id._transportIdentity;
+    final realm = realmId.id.transportIdentity;
 
     final method = _lib_editor_v1_compiled_content.queryPublishedContentMethod;
-    return transport.watchRequest(
-      "service" +
-          "." +
-          "to" +
-          "." +
-          realm +
-          "." +
-          "organization" +
-          "." +
-          organization +
-          "." +
-          "realm" +
-          "." +
-          "editor" +
-          "." +
-          "authoring" +
-          "." +
-          "compiled" +
-          "." +
-          "query",
-      "service" +
-          "." +
-          "from" +
-          "." +
-          realm +
-          "." +
-          "organization" +
-          "." +
-          organization +
-          "." +
-          "realm" +
-          "." +
-          "editor" +
-          "." +
-          "authoring" +
-          "." +
-          "compiled" +
-          "." +
-          "query" +
-          "." +
-          this.transferId._transportTransfer,
-      method.requestSerializer.toBytes(this),
-      method.responseSerializer,
+    return SkirRouteOperation(
+      subject:
+          "service.to.$realm.organization.$organization.realm.editor.authoring.compiled.query",
+      requestBytes: method.requestSerializer.toBytes(this),
+      responseSerializer: method.responseSerializer,
+      outcome: _queryPublishedContentOutcome,
     );
   }
 }
@@ -2146,29 +1420,11 @@ final class AuthoringCompiledChangedRouteEvent {
 
     required _skir.RecordId realmId,
   }) {
-    final organization = organizationId.id._transportIdentity;
+    final organization = organizationId.id.transportIdentity;
 
-    final realm = realmId.id._transportIdentity;
+    final realm = realmId.id.transportIdentity;
 
-    return "service" +
-        "." +
-        "from" +
-        "." +
-        realm +
-        "." +
-        "organization" +
-        "." +
-        organization +
-        "." +
-        "realm" +
-        "." +
-        "editor" +
-        "." +
-        "authoring" +
-        "." +
-        "compiled" +
-        "." +
-        "changed";
+    return "service.from.$realm.organization.$organization.realm.editor.authoring.compiled.changed";
   }
 }
 
@@ -2182,37 +1438,18 @@ extension AuthoringCompiledStatusQueryRouteNats
 
     required _skir.RecordId realmId,
   }) {
-    final organization = organizationId.id._transportIdentity;
+    final organization = organizationId.id.transportIdentity;
 
-    final realm = realmId.id._transportIdentity;
+    final realm = realmId.id.transportIdentity;
 
     final method =
         _lib_editor_v1_compiled_content.queryCompiledResourceStatusMethod;
     return SkirRouteOperation(
       subject:
-          "service" +
-          "." +
-          "to" +
-          "." +
-          realm +
-          "." +
-          "organization" +
-          "." +
-          organization +
-          "." +
-          "realm" +
-          "." +
-          "editor" +
-          "." +
-          "authoring" +
-          "." +
-          "compiled" +
-          "." +
-          "status" +
-          "." +
-          "query",
+          "service.to.$realm.organization.$organization.realm.editor.authoring.compiled.status.query",
       requestBytes: method.requestSerializer.toBytes(this),
       responseSerializer: method.responseSerializer,
+      outcome: _queryCompiledResourceStatusOutcome,
     );
   }
 }
@@ -2225,132 +1462,63 @@ extension AuthoringPublishRouteNats
 
     required _skir.RecordId realmId,
   }) {
-    final organization = organizationId.id._transportIdentity;
+    final organization = organizationId.id.transportIdentity;
 
-    final realm = realmId.id._transportIdentity;
+    final realm = realmId.id.transportIdentity;
 
     final method = _lib_editor_v1_publication.publishAuthoringMethod;
     return SkirRouteOperation(
       subject:
-          "service" +
-          "." +
-          "to" +
-          "." +
-          realm +
-          "." +
-          "organization" +
-          "." +
-          organization +
-          "." +
-          "realm" +
-          "." +
-          "editor" +
-          "." +
-          "authoring" +
-          "." +
-          "publish",
+          "service.to.$realm.organization.$organization.realm.editor.authoring.publish",
       requestBytes: method.requestSerializer.toBytes(this),
       responseSerializer: method.responseSerializer,
+      outcome: _publishAuthoringOutcome,
     );
   }
 }
 
 extension AuthoringPublicationQueryRouteNats
     on _lib_editor_v1_publication.QueryPublicationViewRequest {
-  Stream<_lib_editor_v1_publication.QueryPublicationViewResponse> watch(
-    SkirMutationClient transport, {
+  SkirRouteOperation<_lib_editor_v1_publication.QueryPublicationViewResponse>
+  operation({
     required _skir.RecordId organizationId,
 
     required _skir.RecordId realmId,
   }) {
-    final organization = organizationId.id._transportIdentity;
+    final organization = organizationId.id.transportIdentity;
 
-    final realm = realmId.id._transportIdentity;
+    final realm = realmId.id.transportIdentity;
 
     final method = _lib_editor_v1_publication.queryPublicationViewMethod;
-    return transport.watchRequest(
-      "service" +
-          "." +
-          "to" +
-          "." +
-          realm +
-          "." +
-          "organization" +
-          "." +
-          organization +
-          "." +
-          "realm" +
-          "." +
-          "editor" +
-          "." +
-          "authoring" +
-          "." +
-          "publication" +
-          "." +
-          "query",
-      "service" +
-          "." +
-          "from" +
-          "." +
-          realm +
-          "." +
-          "organization" +
-          "." +
-          organization +
-          "." +
-          "realm" +
-          "." +
-          "editor" +
-          "." +
-          "authoring" +
-          "." +
-          "publication" +
-          "." +
-          "query" +
-          "." +
-          this.transferId._transportTransfer,
-      method.requestSerializer.toBytes(this),
-      method.responseSerializer,
+    return SkirRouteOperation(
+      subject:
+          "service.to.$realm.organization.$organization.realm.editor.authoring.publication.query",
+      requestBytes: method.requestSerializer.toBytes(this),
+      responseSerializer: method.responseSerializer,
+      outcome: _queryPublicationViewOutcome,
     );
   }
 }
 
 extension AuthoringPublicationWatchRouteNats
     on _lib_editor_v1_publication.WatchPublicationRequest {
-  SkirRouteOperation<_lib_editor_v1_publication.PublicationViewChanged>
+  SkirRouteOperation<_lib_editor_v1_publication.WatchPublicationResponse>
   operation({
     required _skir.RecordId organizationId,
 
     required _skir.RecordId realmId,
   }) {
-    final organization = organizationId.id._transportIdentity;
+    final organization = organizationId.id.transportIdentity;
 
-    final realm = realmId.id._transportIdentity;
+    final realm = realmId.id.transportIdentity;
 
     final method = _lib_editor_v1_publication.watchPublicationMethod;
     return SkirRouteOperation(
       subject:
-          "service" +
-          "." +
-          "to" +
-          "." +
-          realm +
-          "." +
-          "organization" +
-          "." +
-          organization +
-          "." +
-          "realm" +
-          "." +
-          "editor" +
-          "." +
-          "authoring" +
-          "." +
-          "publication" +
-          "." +
-          "watch",
+          "service.to.$realm.organization.$organization.realm.editor.authoring.publication.watch",
       requestBytes: method.requestSerializer.toBytes(this),
       responseSerializer: method.responseSerializer,
+      outcome: _watchPublicationOutcome,
     );
   }
 
@@ -2360,7 +1528,7 @@ extension AuthoringPublicationWatchRouteNats
 
     required _skir.RecordId realmId,
 
-    required TData Function(_lib_editor_v1_publication.PublicationViewChanged)
+    required TData Function(_lib_editor_v1_publication.WatchPublicationResponse)
     snapshot,
     required TData Function(
       TData,
@@ -2369,7 +1537,7 @@ extension AuthoringPublicationWatchRouteNats
     reduce,
     required ProjectionReconciliation<
       TData,
-      _lib_editor_v1_publication.PublicationViewChanged,
+      _lib_editor_v1_publication.WatchPublicationResponse,
       _lib_editor_v1_publication.PublicationViewChanged
     >
     reconciliation,
@@ -2379,9 +1547,9 @@ extension AuthoringPublicationWatchRouteNats
     TData Function(TData, TData)? reconcileSnapshot,
     TData? initialValue,
   }) {
-    final organization = organizationId.id._transportIdentity;
+    final organization = organizationId.id.transportIdentity;
 
-    final realm = realmId.id._transportIdentity;
+    final realm = realmId.id.transportIdentity;
 
     final operation = this.operation(
       organizationId: organizationId,
@@ -2390,30 +1558,12 @@ extension AuthoringPublicationWatchRouteNats
     );
     return ref.watchProjection<
       TData,
-      _lib_editor_v1_publication.PublicationViewChanged,
+      _lib_editor_v1_publication.WatchPublicationResponse,
       _lib_editor_v1_publication.PublicationViewChanged
     >(
       subject: operation.subject,
       eventSubject:
-          "service" +
-          "." +
-          "from" +
-          "." +
-          realm +
-          "." +
-          "organization" +
-          "." +
-          organization +
-          "." +
-          "realm" +
-          "." +
-          "editor" +
-          "." +
-          "authoring" +
-          "." +
-          "publication" +
-          "." +
-          "watch",
+          "service.from.$realm.organization.$organization.realm.editor.authoring.publication.watch",
       requestBytes: operation.requestBytes,
       responseSerializer: operation.responseSerializer,
       eventSerializer:
@@ -2440,32 +1590,17 @@ extension SharedCatalogFetchRouteNats
 
     required _skir.RecordId realmId,
   }) {
-    final organization = organizationId.id._transportIdentity;
+    final organization = organizationId.id.transportIdentity;
 
-    final realm = realmId.id._transportIdentity;
+    final realm = realmId.id.transportIdentity;
 
     final method = _lib_service_v1_artifact.fetchSharedArtifactCatalogMethod;
     return SkirRouteOperation(
       subject:
-          "service" +
-          "." +
-          "to" +
-          "." +
-          realm +
-          "." +
-          "organization" +
-          "." +
-          organization +
-          "." +
-          "realm" +
-          "." +
-          "shared" +
-          "." +
-          "catalog" +
-          "." +
-          "fetch",
+          "service.to.$realm.organization.$organization.realm.shared.catalog.fetch",
       requestBytes: method.requestSerializer.toBytes(this),
       responseSerializer: method.responseSerializer,
+      outcome: _fetchSharedArtifactCatalogOutcome,
     );
   }
 }
@@ -2478,30 +1613,17 @@ extension SharedPublishRouteNats
 
     required _skir.RecordId realmId,
   }) {
-    final organization = organizationId.id._transportIdentity;
+    final organization = organizationId.id.transportIdentity;
 
-    final realm = realmId.id._transportIdentity;
+    final realm = realmId.id.transportIdentity;
 
     final method = _lib_service_v1_artifact.publishSharedArtifactMethod;
     return SkirRouteOperation(
       subject:
-          "service" +
-          "." +
-          "to" +
-          "." +
-          realm +
-          "." +
-          "organization" +
-          "." +
-          organization +
-          "." +
-          "realm" +
-          "." +
-          "shared" +
-          "." +
-          "publish",
+          "service.to.$realm.organization.$organization.realm.shared.publish",
       requestBytes: method.requestSerializer.toBytes(this),
       responseSerializer: method.responseSerializer,
+      outcome: _publishSharedArtifactOutcome,
     );
   }
 }
@@ -2514,32 +1636,17 @@ extension SharedBlobMetadataRouteNats
 
     required _skir.RecordId realmId,
   }) {
-    final organization = organizationId.id._transportIdentity;
+    final organization = organizationId.id.transportIdentity;
 
-    final realm = realmId.id._transportIdentity;
+    final realm = realmId.id.transportIdentity;
 
     final method = _lib_service_v1_artifact.fetchArtifactBlobMetadataMethod;
     return SkirRouteOperation(
       subject:
-          "service" +
-          "." +
-          "to" +
-          "." +
-          realm +
-          "." +
-          "organization" +
-          "." +
-          organization +
-          "." +
-          "realm" +
-          "." +
-          "shared" +
-          "." +
-          "blob" +
-          "." +
-          "metadata",
+          "service.to.$realm.organization.$organization.realm.shared.blob.metadata",
       requestBytes: method.requestSerializer.toBytes(this),
       responseSerializer: method.responseSerializer,
+      outcome: _fetchArtifactBlobMetadataOutcome,
     );
   }
 }
@@ -2552,32 +1659,17 @@ extension SharedBlobReadRouteNats
 
     required _skir.RecordId realmId,
   }) {
-    final organization = organizationId.id._transportIdentity;
+    final organization = organizationId.id.transportIdentity;
 
-    final realm = realmId.id._transportIdentity;
+    final realm = realmId.id.transportIdentity;
 
     final method = _lib_service_v1_artifact.readArtifactBlobMethod;
     return SkirRouteOperation(
       subject:
-          "service" +
-          "." +
-          "to" +
-          "." +
-          realm +
-          "." +
-          "organization" +
-          "." +
-          organization +
-          "." +
-          "realm" +
-          "." +
-          "shared" +
-          "." +
-          "blob" +
-          "." +
-          "read",
+          "service.to.$realm.organization.$organization.realm.shared.blob.read",
       requestBytes: method.requestSerializer.toBytes(this),
       responseSerializer: method.responseSerializer,
+      outcome: _readArtifactBlobOutcome,
     );
   }
 }
@@ -2590,32 +1682,17 @@ extension SharedBlobBeginRouteNats
 
     required _skir.RecordId realmId,
   }) {
-    final organization = organizationId.id._transportIdentity;
+    final organization = organizationId.id.transportIdentity;
 
-    final realm = realmId.id._transportIdentity;
+    final realm = realmId.id.transportIdentity;
 
     final method = _lib_service_v1_artifact.beginArtifactBlobWriteMethod;
     return SkirRouteOperation(
       subject:
-          "service" +
-          "." +
-          "to" +
-          "." +
-          realm +
-          "." +
-          "organization" +
-          "." +
-          organization +
-          "." +
-          "realm" +
-          "." +
-          "shared" +
-          "." +
-          "blob" +
-          "." +
-          "begin",
+          "service.to.$realm.organization.$organization.realm.shared.blob.begin",
       requestBytes: method.requestSerializer.toBytes(this),
       responseSerializer: method.responseSerializer,
+      outcome: _beginArtifactBlobWriteOutcome,
     );
   }
 }
@@ -2628,32 +1705,17 @@ extension SharedBlobWriteRouteNats
 
     required _skir.RecordId realmId,
   }) {
-    final organization = organizationId.id._transportIdentity;
+    final organization = organizationId.id.transportIdentity;
 
-    final realm = realmId.id._transportIdentity;
+    final realm = realmId.id.transportIdentity;
 
     final method = _lib_service_v1_artifact.writeArtifactBlobChunkMethod;
     return SkirRouteOperation(
       subject:
-          "service" +
-          "." +
-          "to" +
-          "." +
-          realm +
-          "." +
-          "organization" +
-          "." +
-          organization +
-          "." +
-          "realm" +
-          "." +
-          "shared" +
-          "." +
-          "blob" +
-          "." +
-          "write",
+          "service.to.$realm.organization.$organization.realm.shared.blob.write",
       requestBytes: method.requestSerializer.toBytes(this),
       responseSerializer: method.responseSerializer,
+      outcome: _writeArtifactBlobChunkOutcome,
     );
   }
 }
@@ -2666,32 +1728,17 @@ extension SharedBlobCompleteRouteNats
 
     required _skir.RecordId realmId,
   }) {
-    final organization = organizationId.id._transportIdentity;
+    final organization = organizationId.id.transportIdentity;
 
-    final realm = realmId.id._transportIdentity;
+    final realm = realmId.id.transportIdentity;
 
     final method = _lib_service_v1_artifact.completeArtifactBlobWriteMethod;
     return SkirRouteOperation(
       subject:
-          "service" +
-          "." +
-          "to" +
-          "." +
-          realm +
-          "." +
-          "organization" +
-          "." +
-          organization +
-          "." +
-          "realm" +
-          "." +
-          "shared" +
-          "." +
-          "blob" +
-          "." +
-          "complete",
+          "service.to.$realm.organization.$organization.realm.shared.blob.complete",
       requestBytes: method.requestSerializer.toBytes(this),
       responseSerializer: method.responseSerializer,
+      outcome: _completeArtifactBlobWriteOutcome,
     );
   }
 }
@@ -2707,43 +1754,23 @@ final class OrganizationPresenceRouteEvent {
 
     required _skir.RecordId organizationId,
   }) {
-    final user = userId._transportIdentity;
+    final user = userId.transportIdentity;
 
-    final organization = organizationId.id._transportIdentity;
+    final organization = organizationId.id.transportIdentity;
 
-    return "typewriter" +
-        "." +
-        "presence" +
-        "." +
-        "organization" +
-        "." +
-        organization +
-        "." +
-        "user" +
-        "." +
-        user;
+    return "typewriter.presence.organization.$organization.user.$user";
   }
 
   static String subscriptionPattern({required _skir.RecordId organizationId}) {
-    final organization = organizationId.id._transportIdentity;
-    return "typewriter" +
-        "." +
-        "presence" +
-        "." +
-        "organization" +
-        "." +
-        organization +
-        "." +
-        "user" +
-        "." +
-        "*";
+    final organization = organizationId.id.transportIdentity;
+    return "typewriter.presence.organization.$organization.user.*";
   }
 
   static String? userIdFromSubject(
     String subject, {
     required _skir.RecordId organizationId,
   }) {
-    final organization = organizationId.id._transportIdentity;
+    final organization = organizationId.id.transportIdentity;
     final parts = subject.split(".");
     if (parts.length != 6 ||
         parts[0] != "typewriter" ||
@@ -2753,1509 +1780,824 @@ final class OrganizationPresenceRouteEvent {
         parts[4] != "user")
       return null;
     final userId = parts[5];
-    return userId._isTransportIdentity ? userId : null;
+    return userId.isTransportIdentity ? userId : null;
   }
 }
 
-final class TransportPermissionGrant {
-  TransportPermissionGrant({
-    required Set<String> publish,
-    required Set<String> subscribe,
-  }) : publish = Set.unmodifiable(publish),
-       subscribe = Set.unmodifiable(subscribe);
-  final Set<String> publish;
-  final Set<String> subscribe;
-}
-
-TransportPermissionGrant panelTransportPermissions({
-  required String actorId,
-  required _skir.RecordId? organizationId,
-  required String connectionSession,
-  required Iterable<_skir.RecordId> realmIds,
-}) {
-  final user = actorId._transportIdentity;
-  final session = connectionSession._transportSession;
-  final publish = <String>{"\$SYS.REQ.USER.INFO"};
-  final subscribe = <String>{"_INBOX.$user.$session.*"};
-  publish.add(
-    "cloud" +
-        "." +
-        "to" +
-        "." +
-        "user" +
-        "." +
-        user +
-        "." +
-        "organization" +
-        "." +
-        "create",
-  );
-
-  publish.add(
-    "cloud" +
-        "." +
-        "to" +
-        "." +
-        "user" +
-        "." +
-        user +
-        "." +
-        "organization" +
-        "." +
-        "watch",
-  );
-
-  subscribe.add(
-    "cloud" +
-        "." +
-        "from" +
-        "." +
-        "user" +
-        "." +
-        user +
-        "." +
-        "organizations" +
-        "." +
-        "changed",
-  );
-
-  _grantPersistentProjection(
-    publish,
-    stream: "TYPEWRITER_MEMBERSHIP",
-    consumer: _persistentConsumerName(
-      actor: user,
-      organization: null,
-      session: session,
-      projection: "user_organizations_changed",
-    ),
-    filter:
-        "cloud" +
-        "." +
-        "from" +
-        "." +
-        "user" +
-        "." +
-        user +
-        "." +
-        "organizations" +
-        "." +
-        "changed",
-  );
-
-  publish.add(
-    "cloud" +
-        "." +
-        "to" +
-        "." +
-        "user" +
-        "." +
-        user +
-        "." +
-        "organization" +
-        "." +
-        "join_requests" +
-        "." +
-        "watch",
-  );
-
-  subscribe.add(
-    "cloud" +
-        "." +
-        "from" +
-        "." +
-        "user" +
-        "." +
-        user +
-        "." +
-        "join_requests" +
-        "." +
-        "changed",
-  );
-
-  _grantPersistentProjection(
-    publish,
-    stream: "TYPEWRITER_MEMBERSHIP",
-    consumer: _persistentConsumerName(
-      actor: user,
-      organization: null,
-      session: session,
-      projection: "user_join_requests_changed",
-    ),
-    filter:
-        "cloud" +
-        "." +
-        "from" +
-        "." +
-        "user" +
-        "." +
-        user +
-        "." +
-        "join_requests" +
-        "." +
-        "changed",
-  );
-
-  publish.add(
-    "cloud" +
-        "." +
-        "to" +
-        "." +
-        "user" +
-        "." +
-        user +
-        "." +
-        "organization" +
-        "." +
-        "join_requests" +
-        "." +
-        "request",
-  );
-
-  publish.add(
-    "cloud" +
-        "." +
-        "to" +
-        "." +
-        "user" +
-        "." +
-        user +
-        "." +
-        "organization" +
-        "." +
-        "join_requests" +
-        "." +
-        "cancel",
-  );
-
-  final organization = organizationId?.id._transportIdentity;
-  final realms = realmIds.map((value) => value.id._transportIdentity).toSet();
-  if (organizationId != null || realms.isNotEmpty) {
-    if (organization == null)
-      throw StateError("Realm permissions require an admitted organization");
-    publish.add(
-      "cloud" +
-          "." +
-          "to" +
-          "." +
-          "user" +
-          "." +
-          user +
-          "." +
-          "organization" +
-          "." +
-          organization +
-          "." +
-          "members" +
-          "." +
-          "watch",
-    );
-
-    subscribe.add(
-      "cloud" +
-          "." +
-          "from" +
-          "." +
-          "organization" +
-          "." +
-          organization +
-          "." +
-          "members" +
-          "." +
-          "changed",
-    );
-
-    _grantPersistentProjection(
-      publish,
-      stream: "TYPEWRITER_MEMBERSHIP",
-      consumer: _persistentConsumerName(
-        actor: user,
-        organization: organization,
-        session: session,
-        projection: "organization_members_changed",
-      ),
-      filter:
-          "cloud" +
-          "." +
-          "from" +
-          "." +
-          "organization" +
-          "." +
-          organization +
-          "." +
-          "members" +
-          "." +
-          "changed",
-    );
-
-    publish.add(
-      "cloud" +
-          "." +
-          "to" +
-          "." +
-          "user" +
-          "." +
-          user +
-          "." +
-          "organization" +
-          "." +
-          organization +
-          "." +
-          "members" +
-          "." +
-          "update",
-    );
-
-    publish.add(
-      "cloud" +
-          "." +
-          "to" +
-          "." +
-          "user" +
-          "." +
-          user +
-          "." +
-          "organization" +
-          "." +
-          organization +
-          "." +
-          "members" +
-          "." +
-          "remove",
-    );
-
-    publish.add(
-      "cloud" +
-          "." +
-          "to" +
-          "." +
-          "user" +
-          "." +
-          user +
-          "." +
-          "organization" +
-          "." +
-          organization +
-          "." +
-          "members" +
-          "." +
-          "join_requests" +
-          "." +
-          "watch",
-    );
-
-    subscribe.add(
-      "cloud" +
-          "." +
-          "from" +
-          "." +
-          "organization" +
-          "." +
-          organization +
-          "." +
-          "join_requests" +
-          "." +
-          "changed",
-    );
-
-    _grantPersistentProjection(
-      publish,
-      stream: "TYPEWRITER_MEMBERSHIP",
-      consumer: _persistentConsumerName(
-        actor: user,
-        organization: organization,
-        session: session,
-        projection: "organization_join_requests_changed",
-      ),
-      filter:
-          "cloud" +
-          "." +
-          "from" +
-          "." +
-          "organization" +
-          "." +
-          organization +
-          "." +
-          "join_requests" +
-          "." +
-          "changed",
-    );
-
-    publish.add(
-      "cloud" +
-          "." +
-          "to" +
-          "." +
-          "user" +
-          "." +
-          user +
-          "." +
-          "organization" +
-          "." +
-          organization +
-          "." +
-          "members" +
-          "." +
-          "join_requests" +
-          "." +
-          "approve",
-    );
-
-    publish.add(
-      "cloud" +
-          "." +
-          "to" +
-          "." +
-          "user" +
-          "." +
-          user +
-          "." +
-          "organization" +
-          "." +
-          organization +
-          "." +
-          "members" +
-          "." +
-          "join_requests" +
-          "." +
-          "decline",
-    );
-
-    publish.add(
-      "cloud" +
-          "." +
-          "to" +
-          "." +
-          "user" +
-          "." +
-          user +
-          "." +
-          "organization" +
-          "." +
-          organization +
-          "." +
-          "members" +
-          "." +
-          "join_codes" +
-          "." +
-          "watch",
-    );
-
-    subscribe.add(
-      "cloud" +
-          "." +
-          "from" +
-          "." +
-          "organization" +
-          "." +
-          organization +
-          "." +
-          "join_codes" +
-          "." +
-          "changed",
-    );
-
-    _grantPersistentProjection(
-      publish,
-      stream: "TYPEWRITER_MEMBERSHIP",
-      consumer: _persistentConsumerName(
-        actor: user,
-        organization: organization,
-        session: session,
-        projection: "organization_join_codes_changed",
-      ),
-      filter:
-          "cloud" +
-          "." +
-          "from" +
-          "." +
-          "organization" +
-          "." +
-          organization +
-          "." +
-          "join_codes" +
-          "." +
-          "changed",
-    );
-
-    publish.add(
-      "cloud" +
-          "." +
-          "to" +
-          "." +
-          "user" +
-          "." +
-          user +
-          "." +
-          "organization" +
-          "." +
-          organization +
-          "." +
-          "members" +
-          "." +
-          "join_codes" +
-          "." +
-          "generate",
-    );
-
-    publish.add(
-      "cloud" +
-          "." +
-          "to" +
-          "." +
-          "user" +
-          "." +
-          user +
-          "." +
-          "organization" +
-          "." +
-          organization +
-          "." +
-          "members" +
-          "." +
-          "join_codes" +
-          "." +
-          "revoke",
-    );
-
-    publish.add(
-      "cloud" +
-          "." +
-          "to" +
-          "." +
-          "user" +
-          "." +
-          user +
-          "." +
-          "organization" +
-          "." +
-          organization +
-          "." +
-          "roles" +
-          "." +
-          "watch",
-    );
-
-    publish.add(
-      "cloud" +
-          "." +
-          "to" +
-          "." +
-          "user" +
-          "." +
-          user +
-          "." +
-          "organization" +
-          "." +
-          organization +
-          "." +
-          "services" +
-          "." +
-          "bind",
-    );
-
-    publish.add(
-      "cloud" +
-          "." +
-          "to" +
-          "." +
-          "user" +
-          "." +
-          user +
-          "." +
-          "organization" +
-          "." +
-          organization +
-          "." +
-          "services" +
-          "." +
-          "watch",
-    );
-
-    subscribe.add(
-      "cloud" +
-          "." +
-          "from" +
-          "." +
-          "organization" +
-          "." +
-          organization +
-          "." +
-          "services" +
-          "." +
-          "watch",
-    );
-
-    publish.add(
-      "cloud" +
-          "." +
-          "to" +
-          "." +
-          "user" +
-          "." +
-          user +
-          "." +
-          "organization" +
-          "." +
-          organization +
-          "." +
-          "services" +
-          "." +
-          "update",
-    );
-
-    publish.add(
-      "cloud" +
-          "." +
-          "to" +
-          "." +
-          "user" +
-          "." +
-          user +
-          "." +
-          "organization" +
-          "." +
-          organization +
-          "." +
-          "services" +
-          "." +
-          "unbind",
-    );
-
-    publish.add(
-      "cloud" +
-          "." +
-          "to" +
-          "." +
-          "user" +
-          "." +
-          user +
-          "." +
-          "organization" +
-          "." +
-          organization +
-          "." +
-          "topology" +
-          "." +
-          "configure",
-    );
-
-    publish.add(
-      "cloud" +
-          "." +
-          "to" +
-          "." +
-          "user" +
-          "." +
-          user +
-          "." +
-          "organization" +
-          "." +
-          organization +
-          "." +
-          "topology" +
-          "." +
-          "watch",
-    );
-
-    subscribe.add(
-      "cloud" +
-          "." +
-          "from" +
-          "." +
-          "organization" +
-          "." +
-          organization +
-          "." +
-          "topology" +
-          "." +
-          "watch",
-    );
-
-    publish.add(
-      "typewriter" +
-          "." +
-          "presence" +
-          "." +
-          "organization" +
-          "." +
-          organization +
-          "." +
-          "user" +
-          "." +
-          user,
-    );
-
-    subscribe.add(
-      "typewriter" +
-          "." +
-          "presence" +
-          "." +
-          "organization" +
-          "." +
-          organization +
-          "." +
-          "user" +
-          "." +
-          "*",
-    );
-
-    for (final realm in realms) {
-      publish.add(
-        "service" +
-            "." +
-            "to" +
-            "." +
-            realm +
-            "." +
-            "organization" +
-            "." +
-            organization +
-            "." +
-            "realm" +
-            "." +
-            "editor" +
-            "." +
-            "catalog" +
-            "." +
-            "fetch",
-      );
-
-      subscribe.add(
-        "service" +
-            "." +
-            "from" +
-            "." +
-            realm +
-            "." +
-            "organization" +
-            "." +
-            organization +
-            "." +
-            "realm" +
-            "." +
-            "editor" +
-            "." +
-            "catalog" +
-            "." +
-            "fetch" +
-            "." +
-            "*",
-      );
-
-      publish.add(
-        "service" +
-            "." +
-            "to" +
-            "." +
-            realm +
-            "." +
-            "organization" +
-            "." +
-            organization +
-            "." +
-            "realm" +
-            "." +
-            "editor" +
-            "." +
-            "catalog" +
-            "." +
-            "invalidate",
-      );
-
-      subscribe.add(
-        "service" +
-            "." +
-            "from" +
-            "." +
-            realm +
-            "." +
-            "organization" +
-            "." +
-            organization +
-            "." +
-            "realm" +
-            "." +
-            "editor" +
-            "." +
-            "catalog" +
-            "." +
-            "invalidate",
-      );
-
-      publish.add(
-        "service" +
-            "." +
-            "to" +
-            "." +
-            realm +
-            "." +
-            "organization" +
-            "." +
-            organization +
-            "." +
-            "realm" +
-            "." +
-            "editor" +
-            "." +
-            "creation" +
-            "." +
-            "prepare",
-      );
-
-      publish.add(
-        "service" +
-            "." +
-            "to" +
-            "." +
-            realm +
-            "." +
-            "organization" +
-            "." +
-            organization +
-            "." +
-            "realm" +
-            "." +
-            "editor" +
-            "." +
-            "presentation" +
-            "." +
-            "search",
-      );
-
-      subscribe.add(
-        "service" +
-            "." +
-            "from" +
-            "." +
-            realm +
-            "." +
-            "organization" +
-            "." +
-            organization +
-            "." +
-            "realm" +
-            "." +
-            "editor" +
-            "." +
-            "presentation" +
-            "." +
-            "search",
-      );
-
-      publish.add(
-        "service" +
-            "." +
-            "to" +
-            "." +
-            realm +
-            "." +
-            "organization" +
-            "." +
-            organization +
-            "." +
-            "realm" +
-            "." +
-            "editor" +
-            "." +
-            "presentation" +
-            "." +
-            "search" +
-            "." +
-            "cancel",
-      );
-
-      publish.add(
-        "service" +
-            "." +
-            "to" +
-            "." +
-            realm +
-            "." +
-            "organization" +
-            "." +
-            organization +
-            "." +
-            "realm" +
-            "." +
-            "editor" +
-            "." +
-            "capability" +
-            "." +
-            "computation" +
-            "." +
-            "invoke",
-      );
-
-      publish.add(
-        "service" +
-            "." +
-            "to" +
-            "." +
-            realm +
-            "." +
-            "organization" +
-            "." +
-            organization +
-            "." +
-            "realm" +
-            "." +
-            "editor" +
-            "." +
-            "capability" +
-            "." +
-            "command" +
-            "." +
-            "invoke",
-      );
-
-      publish.add(
-        "service" +
-            "." +
-            "to" +
-            "." +
-            realm +
-            "." +
-            "organization" +
-            "." +
-            organization +
-            "." +
-            "realm" +
-            "." +
-            "editor" +
-            "." +
-            "resources" +
-            "." +
-            "operations" +
-            "." +
-            "resolve",
-      );
-
-      publish.add(
-        "service" +
-            "." +
-            "to" +
-            "." +
-            realm +
-            "." +
-            "organization" +
-            "." +
-            organization +
-            "." +
-            "realm" +
-            "." +
-            "editor" +
-            "." +
-            "resources" +
-            "." +
-            "drops" +
-            "." +
-            "resolve",
-      );
-
-      publish.add(
-        "service" +
-            "." +
-            "to" +
-            "." +
-            realm +
-            "." +
-            "organization" +
-            "." +
-            organization +
-            "." +
-            "realm" +
-            "." +
-            "editor" +
-            "." +
-            "resources" +
-            "." +
-            "actions" +
-            "." +
-            "prepare",
-      );
-
-      publish.add(
-        "service" +
-            "." +
-            "to" +
-            "." +
-            realm +
-            "." +
-            "organization" +
-            "." +
-            organization +
-            "." +
-            "realm" +
-            "." +
-            "editor" +
-            "." +
-            "authoring" +
-            "." +
-            "state" +
-            "." +
-            "query",
-      );
-
-      subscribe.add(
-        "service" +
-            "." +
-            "from" +
-            "." +
-            realm +
-            "." +
-            "organization" +
-            "." +
-            organization +
-            "." +
-            "realm" +
-            "." +
-            "editor" +
-            "." +
-            "authoring" +
-            "." +
-            "state" +
-            "." +
-            "query" +
-            "." +
-            "*",
-      );
-
-      publish.add(
-        "service" +
-            "." +
-            "to" +
-            "." +
-            realm +
-            "." +
-            "organization" +
-            "." +
-            organization +
-            "." +
-            "realm" +
-            "." +
-            "editor" +
-            "." +
-            "authoring" +
-            "." +
-            "edit" +
-            "." +
-            "commit",
-      );
-
-      publish.add(
-        "service" +
-            "." +
-            "to" +
-            "." +
-            realm +
-            "." +
-            "organization" +
-            "." +
-            organization +
-            "." +
-            "realm" +
-            "." +
-            "editor" +
-            "." +
-            "authoring" +
-            "." +
-            "type" +
-            "." +
-            "preview",
-      );
-
-      publish.add(
-        "service" +
-            "." +
-            "to" +
-            "." +
-            realm +
-            "." +
-            "organization" +
-            "." +
-            organization +
-            "." +
-            "realm" +
-            "." +
-            "editor" +
-            "." +
-            "authoring" +
-            "." +
-            "type" +
-            "." +
-            "commit",
-      );
-
-      publish.add(
-        "service" +
-            "." +
-            "to" +
-            "." +
-            realm +
-            "." +
-            "organization" +
-            "." +
-            organization +
-            "." +
-            "realm" +
-            "." +
-            "editor" +
-            "." +
-            "authoring" +
-            "." +
-            "search",
-      );
-
-      subscribe.add(
-        "service" +
-            "." +
-            "from" +
-            "." +
-            realm +
-            "." +
-            "organization" +
-            "." +
-            organization +
-            "." +
-            "realm" +
-            "." +
-            "editor" +
-            "." +
-            "authoring" +
-            "." +
-            "changed",
-      );
-
-      publish.add(
-        "service" +
-            "." +
-            "to" +
-            "." +
-            realm +
-            "." +
-            "organization" +
-            "." +
-            organization +
-            "." +
-            "realm" +
-            "." +
-            "editor" +
-            "." +
-            "authoring" +
-            "." +
-            "compiled" +
-            "." +
-            "query",
-      );
-
-      subscribe.add(
-        "service" +
-            "." +
-            "from" +
-            "." +
-            realm +
-            "." +
-            "organization" +
-            "." +
-            organization +
-            "." +
-            "realm" +
-            "." +
-            "editor" +
-            "." +
-            "authoring" +
-            "." +
-            "compiled" +
-            "." +
-            "query" +
-            "." +
-            "*",
-      );
-
-      subscribe.add(
-        "service" +
-            "." +
-            "from" +
-            "." +
-            realm +
-            "." +
-            "organization" +
-            "." +
-            organization +
-            "." +
-            "realm" +
-            "." +
-            "editor" +
-            "." +
-            "authoring" +
-            "." +
-            "compiled" +
-            "." +
-            "changed",
-      );
-
-      publish.add(
-        "service" +
-            "." +
-            "to" +
-            "." +
-            realm +
-            "." +
-            "organization" +
-            "." +
-            organization +
-            "." +
-            "realm" +
-            "." +
-            "editor" +
-            "." +
-            "authoring" +
-            "." +
-            "compiled" +
-            "." +
-            "status" +
-            "." +
-            "query",
-      );
-
-      publish.add(
-        "service" +
-            "." +
-            "to" +
-            "." +
-            realm +
-            "." +
-            "organization" +
-            "." +
-            organization +
-            "." +
-            "realm" +
-            "." +
-            "editor" +
-            "." +
-            "authoring" +
-            "." +
-            "publish",
-      );
-
-      publish.add(
-        "service" +
-            "." +
-            "to" +
-            "." +
-            realm +
-            "." +
-            "organization" +
-            "." +
-            organization +
-            "." +
-            "realm" +
-            "." +
-            "editor" +
-            "." +
-            "authoring" +
-            "." +
-            "publication" +
-            "." +
-            "query",
-      );
-
-      subscribe.add(
-        "service" +
-            "." +
-            "from" +
-            "." +
-            realm +
-            "." +
-            "organization" +
-            "." +
-            organization +
-            "." +
-            "realm" +
-            "." +
-            "editor" +
-            "." +
-            "authoring" +
-            "." +
-            "publication" +
-            "." +
-            "query" +
-            "." +
-            "*",
-      );
-
-      publish.add(
-        "service" +
-            "." +
-            "to" +
-            "." +
-            realm +
-            "." +
-            "organization" +
-            "." +
-            organization +
-            "." +
-            "realm" +
-            "." +
-            "editor" +
-            "." +
-            "authoring" +
-            "." +
-            "publication" +
-            "." +
-            "watch",
-      );
-
-      subscribe.add(
-        "service" +
-            "." +
-            "from" +
-            "." +
-            realm +
-            "." +
-            "organization" +
-            "." +
-            organization +
-            "." +
-            "realm" +
-            "." +
-            "editor" +
-            "." +
-            "authoring" +
-            "." +
-            "publication" +
-            "." +
-            "watch",
-      );
-
-      publish.add(
-        "service" +
-            "." +
-            "to" +
-            "." +
-            realm +
-            "." +
-            "organization" +
-            "." +
-            organization +
-            "." +
-            "realm" +
-            "." +
-            "shared" +
-            "." +
-            "catalog" +
-            "." +
-            "fetch",
-      );
-
-      publish.add(
-        "service" +
-            "." +
-            "to" +
-            "." +
-            realm +
-            "." +
-            "organization" +
-            "." +
-            organization +
-            "." +
-            "realm" +
-            "." +
-            "shared" +
-            "." +
-            "publish",
-      );
-
-      publish.add(
-        "service" +
-            "." +
-            "to" +
-            "." +
-            realm +
-            "." +
-            "organization" +
-            "." +
-            organization +
-            "." +
-            "realm" +
-            "." +
-            "shared" +
-            "." +
-            "blob" +
-            "." +
-            "metadata",
-      );
-
-      publish.add(
-        "service" +
-            "." +
-            "to" +
-            "." +
-            realm +
-            "." +
-            "organization" +
-            "." +
-            organization +
-            "." +
-            "realm" +
-            "." +
-            "shared" +
-            "." +
-            "blob" +
-            "." +
-            "read",
-      );
-
-      publish.add(
-        "service" +
-            "." +
-            "to" +
-            "." +
-            realm +
-            "." +
-            "organization" +
-            "." +
-            organization +
-            "." +
-            "realm" +
-            "." +
-            "shared" +
-            "." +
-            "blob" +
-            "." +
-            "begin",
-      );
-
-      publish.add(
-        "service" +
-            "." +
-            "to" +
-            "." +
-            realm +
-            "." +
-            "organization" +
-            "." +
-            organization +
-            "." +
-            "realm" +
-            "." +
-            "shared" +
-            "." +
-            "blob" +
-            "." +
-            "write",
-      );
-
-      publish.add(
-        "service" +
-            "." +
-            "to" +
-            "." +
-            realm +
-            "." +
-            "organization" +
-            "." +
-            organization +
-            "." +
-            "realm" +
-            "." +
-            "shared" +
-            "." +
-            "blob" +
-            "." +
-            "complete",
-      );
-    }
-  }
-  return TransportPermissionGrant(publish: publish, subscribe: subscribe);
-}
-
-extension GeneratedRealmAdmission on ServerPermissionSnapshot {
-  Set<_skir.RecordId> admittedRealms(NatsClient client) {
-    final organization = client.organizationId?._transportIdentity;
-    if (organization == null) return const {};
-    const prefix = "service.to.";
-    final suffix =
-        ".organization." + organization + ".realm.editor.catalog.fetch";
-    return publish
-        .where(
-          (subject) => subject.startsWith(prefix) && subject.endsWith(suffix),
-        )
-        .map(
-          (subject) =>
-              subject.substring(prefix.length, subject.length - suffix.length),
-        )
-        .where((realm) => realm._isTransportIdentity)
-        .map(
-          (realm) => _skir.RecordId(
-            table: "realm_instance",
-            key: _skir.RecordIdKey.wrapString(realm),
-          ),
-        )
-        .where((realm) => realm.admittedBy(this, client))
-        .toSet();
-  }
-}
-
-extension GeneratedRealmPermission on _skir.RecordId {
-  bool admittedBy(ServerPermissionSnapshot snapshot, NatsClient client) {
-    final required = panelTransportPermissions(
-      actorId: client.actorId,
-      organizationId: client.organizationId == null
-          ? null
-          : _skir.RecordId(
-              table: "organization",
-              key: _skir.RecordIdKey.wrapString(client.organizationId!),
-            ),
-      connectionSession: client.connectionSession,
-      realmIds: [this],
-    );
-    return snapshot.publish.containsAll(required.publish) &&
-        snapshot.subscribe.containsAll(required.subscribe);
-  }
-}
-
-void _grantPersistentProjection(
-  Set<String> publish, {
-  required String stream,
-  required String consumer,
-  required String filter,
-}) {
-  publish.addAll({
-    "\$JS.API.STREAM.INFO.$stream",
-    "\$JS.API.CONSUMER.CREATE.$stream.$consumer.$filter",
-    "\$JS.API.CONSUMER.INFO.$stream.$consumer",
-    "\$JS.API.CONSUMER.MSG.NEXT.$stream.$consumer",
-    "\$JS.API.CONSUMER.DELETE.$stream.$consumer",
-  });
-}
-
-final class PersistentProjectionRoute {
-  const PersistentProjectionRoute({
-    required this.id,
-    required this.organizationScoped,
-  });
-  final String id;
-  final bool organizationScoped;
-  String consumerName(NatsClient client) {
-    final organization = client.organizationId;
-    if (organizationScoped && organization == null) {
-      throw StateError(
-        "Persistent organization projection requires an admitted organization",
-      );
-    }
-    return _persistentConsumerName(
-      actor: client.actorId._transportIdentity,
-      organization: organizationScoped
-          ? organization?._transportIdentity
-          : null,
-      session: client.connectionSession._transportSession,
-      projection: id,
-    );
-  }
-}
-
-String _persistentConsumerName({
+ResponseOutcome _createOrganizationOutcome(
+  _lib_organization_v1_organization.CreateOrganizationResponse response,
+) => switch (response.kind) {
+  _lib_organization_v1_organization
+      .CreateOrganizationResponse_kind
+      .successWrapper =>
+    ResponseOutcome.success,
+  // internal_error and the generated unknown variant
+  _ => ResponseOutcome.internalError,
+};
+
+ResponseOutcome _watchUserOrganizationsOutcome(
+  _lib_organization_v1_user.WatchUserOrganizationsResponse response,
+) => switch (response.kind) {
+  _lib_organization_v1_user
+      .WatchUserOrganizationsResponse_kind
+      .snapshotWrapper ||
+  _lib_organization_v1_user
+      .WatchUserOrganizationsResponse_kind
+      .changedWrapper => ResponseOutcome.success,
+  // internal_error and the generated unknown variant
+  _ => ResponseOutcome.internalError,
+};
+
+ResponseOutcome _watchUserJoinRequestsOutcome(
+  _lib_organization_v1_user.WatchUserJoinRequestsResponse response,
+) => switch (response.kind) {
+  _lib_organization_v1_user
+      .WatchUserJoinRequestsResponse_kind
+      .snapshotWrapper ||
+  _lib_organization_v1_user.WatchUserJoinRequestsResponse_kind.changedWrapper =>
+    ResponseOutcome.success,
+  // internal_error and the generated unknown variant
+  _ => ResponseOutcome.internalError,
+};
+
+ResponseOutcome _submitUserJoinRequestOutcome(
+  _lib_organization_v1_user.SubmitUserJoinRequestResponse response,
+) => switch (response.kind) {
+  _lib_organization_v1_user
+      .SubmitUserJoinRequestResponse_kind
+      .requestMadeWrapper ||
+  _lib_organization_v1_user
+      .SubmitUserJoinRequestResponse_kind
+      .autoAcceptedWrapper => ResponseOutcome.success,
+  _lib_organization_v1_user
+      .SubmitUserJoinRequestResponse_kind
+      .codeNotFoundErrorWrapper ||
+  _lib_organization_v1_user
+      .SubmitUserJoinRequestResponse_kind
+      .alreadyMemberErrorWrapper ||
+  _lib_organization_v1_user
+      .SubmitUserJoinRequestResponse_kind
+      .noAssignableRolesErrorWrapper ||
+  _lib_organization_v1_user
+      .SubmitUserJoinRequestResponse_kind
+      .maxPendingRequestsErrorWrapper ||
+  _lib_organization_v1_user
+      .SubmitUserJoinRequestResponse_kind
+      .pendingRequestExistsErrorWrapper ||
+  _lib_organization_v1_user
+      .SubmitUserJoinRequestResponse_kind
+      .invalidRecordIdErrorWrapper => ResponseOutcome.domainError,
+  // internal_error and the generated unknown variant
+  _ => ResponseOutcome.internalError,
+};
+
+ResponseOutcome _cancelUserJoinRequestOutcome(
+  _lib_organization_v1_user.CancelUserJoinRequestResponse response,
+) => switch (response.kind) {
+  _lib_organization_v1_user.CancelUserJoinRequestResponse_kind.successWrapper =>
+    ResponseOutcome.success,
+  _lib_organization_v1_user
+      .CancelUserJoinRequestResponse_kind
+      .requestNotFoundErrorWrapper ||
+  _lib_organization_v1_user
+      .CancelUserJoinRequestResponse_kind
+      .invalidRecordIdErrorWrapper => ResponseOutcome.domainError,
+  // internal_error and the generated unknown variant
+  _ => ResponseOutcome.internalError,
+};
+
+ResponseOutcome _watchOrganizationMembersOutcome(
+  _lib_organization_v1_member.WatchOrganizationMembersResponse response,
+) => switch (response.kind) {
+  _lib_organization_v1_member
+      .WatchOrganizationMembersResponse_kind
+      .snapshotWrapper =>
+    ResponseOutcome.success,
+  // internal_error and the generated unknown variant
+  _ => ResponseOutcome.internalError,
+};
+
+ResponseOutcome _updateOrganizationMemberRolesOutcome(
+  _lib_organization_v1_member.UpdateOrganizationMemberRolesResponse response,
+) => switch (response.kind) {
+  _lib_organization_v1_member
+      .UpdateOrganizationMemberRolesResponse_kind
+      .successWrapper =>
+    ResponseOutcome.success,
+  _lib_organization_v1_member
+      .UpdateOrganizationMemberRolesResponse_kind
+      .userNotFoundErrorWrapper ||
+  _lib_organization_v1_member
+      .UpdateOrganizationMemberRolesResponse_kind
+      .rolesNotFoundErrorWrapper ||
+  _lib_organization_v1_member
+      .UpdateOrganizationMemberRolesResponse_kind
+      .rolesNotAssignableErrorWrapper ||
+  _lib_organization_v1_member
+      .UpdateOrganizationMemberRolesResponse_kind
+      .rolesRequiredErrorWrapper ||
+  _lib_organization_v1_member
+      .UpdateOrganizationMemberRolesResponse_kind
+      .founderRoleRequiredErrorWrapper ||
+  _lib_organization_v1_member
+      .UpdateOrganizationMemberRolesResponse_kind
+      .invalidSelectionErrorWrapper ||
+  _lib_organization_v1_member
+      .UpdateOrganizationMemberRolesResponse_kind
+      .invalidRecordIdErrorWrapper => ResponseOutcome.domainError,
+  // internal_error and the generated unknown variant
+  _ => ResponseOutcome.internalError,
+};
+
+ResponseOutcome _removeOrganizationMemberOutcome(
+  _lib_organization_v1_member.RemoveOrganizationMemberResponse response,
+) => switch (response.kind) {
+  _lib_organization_v1_member
+      .RemoveOrganizationMemberResponse_kind
+      .successWrapper =>
+    ResponseOutcome.success,
+  _lib_organization_v1_member
+      .RemoveOrganizationMemberResponse_kind
+      .userNotMemberErrorWrapper ||
+  _lib_organization_v1_member
+      .RemoveOrganizationMemberResponse_kind
+      .founderCannotBeRemovedErrorWrapper ||
+  _lib_organization_v1_member
+      .RemoveOrganizationMemberResponse_kind
+      .invalidRecordIdErrorWrapper => ResponseOutcome.domainError,
+  // internal_error and the generated unknown variant
+  _ => ResponseOutcome.internalError,
+};
+
+ResponseOutcome _watchOrganizationJoinRequestsOutcome(
+  _lib_organization_v1_join_request.WatchOrganizationJoinRequestsResponse
+  response,
+) => switch (response.kind) {
+  _lib_organization_v1_join_request
+      .WatchOrganizationJoinRequestsResponse_kind
+      .snapshotWrapper ||
+  _lib_organization_v1_join_request
+      .WatchOrganizationJoinRequestsResponse_kind
+      .changedWrapper => ResponseOutcome.success,
+  // internal_error and the generated unknown variant
+  _ => ResponseOutcome.internalError,
+};
+
+ResponseOutcome _approveOrganizationJoinRequestsOutcome(
+  _lib_organization_v1_join_request.ApproveOrganizationJoinRequestsResponse
+  response,
+) => switch (response.kind) {
+  _lib_organization_v1_join_request
+      .ApproveOrganizationJoinRequestsResponse_kind
+      .successWrapper =>
+    ResponseOutcome.success,
+  _lib_organization_v1_join_request
+      .ApproveOrganizationJoinRequestsResponse_kind
+      .requestNotFoundErrorWrapper ||
+  _lib_organization_v1_join_request
+      .ApproveOrganizationJoinRequestsResponse_kind
+      .rolesNotFoundErrorWrapper ||
+  _lib_organization_v1_join_request
+      .ApproveOrganizationJoinRequestsResponse_kind
+      .rolesNotAssignableErrorWrapper ||
+  _lib_organization_v1_join_request
+      .ApproveOrganizationJoinRequestsResponse_kind
+      .rolesRequiredErrorWrapper ||
+  _lib_organization_v1_join_request
+      .ApproveOrganizationJoinRequestsResponse_kind
+      .userAlreadyMemberErrorWrapper ||
+  _lib_organization_v1_join_request
+      .ApproveOrganizationJoinRequestsResponse_kind
+      .invalidSelectionErrorWrapper ||
+  _lib_organization_v1_join_request
+      .ApproveOrganizationJoinRequestsResponse_kind
+      .invalidRecordIdErrorWrapper => ResponseOutcome.domainError,
+  // internal_error and the generated unknown variant
+  _ => ResponseOutcome.internalError,
+};
+
+ResponseOutcome _declineOrganizationJoinRequestOutcome(
+  _lib_organization_v1_join_request.DeclineOrganizationJoinRequestResponse
+  response,
+) => switch (response.kind) {
+  _lib_organization_v1_join_request
+      .DeclineOrganizationJoinRequestResponse_kind
+      .successWrapper =>
+    ResponseOutcome.success,
+  _lib_organization_v1_join_request
+      .DeclineOrganizationJoinRequestResponse_kind
+      .requestNotFoundErrorWrapper ||
+  _lib_organization_v1_join_request
+      .DeclineOrganizationJoinRequestResponse_kind
+      .invalidRecordIdErrorWrapper => ResponseOutcome.domainError,
+  // internal_error and the generated unknown variant
+  _ => ResponseOutcome.internalError,
+};
+
+ResponseOutcome _watchOrganizationJoinCodesOutcome(
+  _lib_organization_v1_join_codes.WatchOrganizationJoinCodesResponse response,
+) => switch (response.kind) {
+  _lib_organization_v1_join_codes
+      .WatchOrganizationJoinCodesResponse_kind
+      .snapshotWrapper ||
+  _lib_organization_v1_join_codes
+      .WatchOrganizationJoinCodesResponse_kind
+      .changedWrapper => ResponseOutcome.success,
+  // internal_error and the generated unknown variant
+  _ => ResponseOutcome.internalError,
+};
+
+ResponseOutcome _generateOrganizationJoinCodeOutcome(
+  _lib_organization_v1_join_codes.GenerateOrganizationJoinCodeResponse response,
+) => switch (response.kind) {
+  _lib_organization_v1_join_codes
+      .GenerateOrganizationJoinCodeResponse_kind
+      .successWrapper =>
+    ResponseOutcome.success,
+  _lib_organization_v1_join_codes
+      .GenerateOrganizationJoinCodeResponse_kind
+      .rolesNotFoundErrorWrapper ||
+  _lib_organization_v1_join_codes
+      .GenerateOrganizationJoinCodeResponse_kind
+      .rolesNotAssignableErrorWrapper ||
+  _lib_organization_v1_join_codes
+      .GenerateOrganizationJoinCodeResponse_kind
+      .invalidExpirationErrorWrapper ||
+  _lib_organization_v1_join_codes
+      .GenerateOrganizationJoinCodeResponse_kind
+      .invalidRecordIdErrorWrapper => ResponseOutcome.domainError,
+  // internal_error and the generated unknown variant
+  _ => ResponseOutcome.internalError,
+};
+
+ResponseOutcome _revokeOrganizationJoinCodeOutcome(
+  _lib_organization_v1_join_codes.RevokeOrganizationJoinCodeResponse response,
+) => switch (response.kind) {
+  _lib_organization_v1_join_codes
+      .RevokeOrganizationJoinCodeResponse_kind
+      .successWrapper =>
+    ResponseOutcome.success,
+  _lib_organization_v1_join_codes
+      .RevokeOrganizationJoinCodeResponse_kind
+      .codeNotFoundErrorWrapper ||
+  _lib_organization_v1_join_codes
+      .RevokeOrganizationJoinCodeResponse_kind
+      .invalidRecordIdErrorWrapper => ResponseOutcome.domainError,
+  // internal_error and the generated unknown variant
+  _ => ResponseOutcome.internalError,
+};
+
+ResponseOutcome _watchOrganizationRolesOutcome(
+  _lib_organization_v1_role.WatchOrganizationRolesResponse response,
+) => switch (response.kind) {
+  _lib_organization_v1_role.WatchOrganizationRolesResponse_kind.listWrapper ||
+  _lib_organization_v1_role.WatchOrganizationRolesResponse_kind.addWrapper ||
+  _lib_organization_v1_role.WatchOrganizationRolesResponse_kind.updateWrapper ||
+  _lib_organization_v1_role.WatchOrganizationRolesResponse_kind.removeWrapper =>
+    ResponseOutcome.success,
+  // internal_error and the generated unknown variant
+  _ => ResponseOutcome.internalError,
+};
+
+ResponseOutcome _bindServiceOutcome(
+  _lib_service_v1_registration.BindServiceResponse response,
+) => switch (response.kind) {
+  _lib_service_v1_registration.BindServiceResponse_kind.successWrapper =>
+    ResponseOutcome.success,
+  _lib_service_v1_registration
+      .BindServiceResponse_kind
+      .invalidRegistrationTokenErrorWrapper ||
+  _lib_service_v1_registration
+      .BindServiceResponse_kind
+      .organizationNotFoundErrorWrapper => ResponseOutcome.domainError,
+  // internal_error and the generated unknown variant
+  _ => ResponseOutcome.internalError,
+};
+
+ResponseOutcome _watchOrganizationServicesOutcome(
+  _lib_service_v1_organization.WatchOrganizationServicesResponse response,
+) => switch (response.kind) {
+  _lib_service_v1_organization
+      .WatchOrganizationServicesResponse_kind
+      .listWrapper =>
+    ResponseOutcome.success,
+  // internal_error and the generated unknown variant
+  _ => ResponseOutcome.internalError,
+};
+
+ResponseOutcome _updateOrganizationServiceOutcome(
+  _lib_service_v1_organization.UpdateOrganizationServiceResponse response,
+) => switch (response.kind) {
+  _lib_service_v1_organization
+      .UpdateOrganizationServiceResponse_kind
+      .successWrapper =>
+    ResponseOutcome.success,
+  _lib_service_v1_organization
+      .UpdateOrganizationServiceResponse_kind
+      .conflictErrorWrapper ||
+  _lib_service_v1_organization
+      .UpdateOrganizationServiceResponse_kind
+      .serviceNotFoundErrorWrapper ||
+  _lib_service_v1_organization
+      .UpdateOrganizationServiceResponse_kind
+      .validationErrorWrapper ||
+  _lib_service_v1_organization
+      .UpdateOrganizationServiceResponse_kind
+      .invalidRecordIdErrorWrapper => ResponseOutcome.domainError,
+  // internal_error and the generated unknown variant
+  _ => ResponseOutcome.internalError,
+};
+
+ResponseOutcome _unbindServiceOutcome(
+  _lib_service_v1_registration.UnbindServiceResponse response,
+) => switch (response.kind) {
+  _lib_service_v1_registration.UnbindServiceResponse_kind.successWrapper =>
+    ResponseOutcome.success,
+  _lib_service_v1_registration
+      .UnbindServiceResponse_kind
+      .serviceNotFoundErrorWrapper =>
+    ResponseOutcome.domainError,
+  // internal_error and the generated unknown variant
+  _ => ResponseOutcome.internalError,
+};
+
+ResponseOutcome _configureServiceHostOutcome(
+  _lib_service_v1_topology.ConfigureServiceHostResponse response,
+) => switch (response.kind) {
+  _lib_service_v1_topology.ConfigureServiceHostResponse_kind.successWrapper =>
+    ResponseOutcome.success,
+  _lib_service_v1_topology
+      .ConfigureServiceHostResponse_kind
+      .conflictErrorWrapper ||
+  _lib_service_v1_topology
+      .ConfigureServiceHostResponse_kind
+      .invalidConfigurationErrorWrapper ||
+  _lib_service_v1_topology
+      .ConfigureServiceHostResponse_kind
+      .incompatibleEngineErrorWrapper ||
+  _lib_service_v1_topology
+      .ConfigureServiceHostResponse_kind
+      .realmNotFoundErrorWrapper ||
+  _lib_service_v1_topology
+      .ConfigureServiceHostResponse_kind
+      .invalidRecordIdErrorWrapper => ResponseOutcome.domainError,
+  // internal_error and the generated unknown variant
+  _ => ResponseOutcome.internalError,
+};
+
+ResponseOutcome _watchOrganizationTopologyOutcome(
+  _lib_service_v1_topology.WatchOrganizationTopologyResponse response,
+) => switch (response.kind) {
+  _lib_service_v1_topology.WatchOrganizationTopologyResponse_kind.listWrapper =>
+    ResponseOutcome.success,
+  // internal_error and the generated unknown variant
+  _ => ResponseOutcome.internalError,
+};
+
+ResponseOutcome _fetchEditorCatalogOutcome(
+  _lib_editor_v1_catalog.CatalogFetchResult response,
+) => switch (response.kind) {
+  _lib_editor_v1_catalog.CatalogFetchResult_kind.catalogWrapper =>
+    ResponseOutcome.success,
+  _lib_editor_v1_catalog
+      .CatalogFetchResult_kind
+      .generationChangedErrorWrapper =>
+    ResponseOutcome.domainError,
+  // internal_error and the generated unknown variant
+  _ => ResponseOutcome.internalError,
+};
+
+ResponseOutcome _watchEditorCatalogOutcome(
+  _lib_editor_v1_catalog.WatchEditorCatalogResponse response,
+) => switch (response.kind) {
+  _lib_editor_v1_catalog.WatchEditorCatalogResponse_kind.invalidatedWrapper =>
+    ResponseOutcome.success,
+  // internal_error and the generated unknown variant
+  _ => ResponseOutcome.internalError,
+};
+
+ResponseOutcome _prepareValueOutcome(
+  _lib_editor_v1_catalog.PrepareValueResult response,
+) => switch (response.kind) {
+  _lib_editor_v1_catalog.PrepareValueResult_kind.readyWrapper ||
+  _lib_editor_v1_catalog.PrepareValueResult_kind.needsInputWrapper =>
+    ResponseOutcome.success,
+  _lib_editor_v1_catalog.PrepareValueResult_kind.unavailableErrorWrapper ||
+  _lib_editor_v1_catalog.PrepareValueResult_kind.catalogChangedErrorWrapper =>
+    ResponseOutcome.domainError,
+  // internal_error and the generated unknown variant
+  _ => ResponseOutcome.internalError,
+};
+
+ResponseOutcome _watchRealmPresentationSearchOutcome(
+  _lib_editor_v1_search.RealmPresentationSearchUpdate response,
+) => switch (response.kind) {
+  _lib_editor_v1_search.RealmPresentationSearchUpdate_kind.snapshotWrapper =>
+    ResponseOutcome.success,
+  _lib_editor_v1_search
+      .RealmPresentationSearchUpdate_kind
+      .unavailableErrorWrapper ||
+  _lib_editor_v1_search
+      .RealmPresentationSearchUpdate_kind
+      .staleObservationErrorWrapper => ResponseOutcome.domainError,
+  // internal_error and the generated unknown variant
+  _ => ResponseOutcome.internalError,
+};
+
+ResponseOutcome _cancelRealmPresentationSearchOutcome(
+  _lib_editor_v1_search.CancelRealmPresentationSearchResult response,
+) => switch (response.kind) {
+  _lib_editor_v1_search
+      .CancelRealmPresentationSearchResult_kind
+      .canceledConst =>
+    ResponseOutcome.success,
+  _lib_editor_v1_search
+      .CancelRealmPresentationSearchResult_kind
+      .notFoundErrorConst =>
+    ResponseOutcome.domainError,
+  // internal_error and the generated unknown variant
+  _ => ResponseOutcome.internalError,
+};
+
+ResponseOutcome _invokeRealmComputationOutcome(
+  _lib_editor_v1_capability.ComputationResult response,
+) => switch (response.kind) {
+  _lib_editor_v1_capability.ComputationResult_kind.successWrapper =>
+    ResponseOutcome.success,
+  _lib_editor_v1_capability.ComputationResult_kind.invalidErrorWrapper ||
+  _lib_editor_v1_capability.ComputationResult_kind.unavailableErrorWrapper ||
+  _lib_editor_v1_capability
+      .ComputationResult_kind
+      .permissionDeniedErrorWrapper ||
+  _lib_editor_v1_capability
+      .ComputationResult_kind
+      .staleGenerationErrorWrapper => ResponseOutcome.domainError,
+  // internal_error and the generated unknown variant
+  _ => ResponseOutcome.internalError,
+};
+
+ResponseOutcome _invokeRealmCommandOutcome(
+  _lib_editor_v1_capability.CommandResult response,
+) => switch (response.kind) {
+  _lib_editor_v1_capability.CommandResult_kind.successWrapper =>
+    ResponseOutcome.success,
+  _lib_editor_v1_capability.CommandResult_kind.invalidErrorWrapper ||
+  _lib_editor_v1_capability.CommandResult_kind.unavailableErrorWrapper ||
+  _lib_editor_v1_capability.CommandResult_kind.permissionDeniedErrorWrapper ||
+  _lib_editor_v1_capability.CommandResult_kind.staleGenerationErrorWrapper =>
+    ResponseOutcome.domainError,
+  // internal_error and the generated unknown variant
+  _ => ResponseOutcome.internalError,
+};
+
+ResponseOutcome _resolveResourceOperationsOutcome(
+  _lib_editor_v1_resource_operations.ResolveResourceOperationsResult response,
+) => switch (response.kind) {
+  _lib_editor_v1_resource_operations
+      .ResolveResourceOperationsResult_kind
+      .resolvedWrapper =>
+    ResponseOutcome.success,
+  _lib_editor_v1_resource_operations
+      .ResolveResourceOperationsResult_kind
+      .staleObservationErrorWrapper ||
+  _lib_editor_v1_resource_operations
+      .ResolveResourceOperationsResult_kind
+      .invalidErrorWrapper ||
+  _lib_editor_v1_resource_operations
+      .ResolveResourceOperationsResult_kind
+      .catalogChangedErrorWrapper ||
+  _lib_editor_v1_resource_operations
+      .ResolveResourceOperationsResult_kind
+      .permissionDeniedErrorWrapper ||
+  _lib_editor_v1_resource_operations
+      .ResolveResourceOperationsResult_kind
+      .failedErrorWrapper => ResponseOutcome.domainError,
+  // internal_error and the generated unknown variant
+  _ => ResponseOutcome.internalError,
+};
+
+ResponseOutcome _resolveDropCandidatesOutcome(
+  _lib_editor_v1_resource_operations.ResolveDropCandidatesResult response,
+) => switch (response.kind) {
+  _lib_editor_v1_resource_operations
+      .ResolveDropCandidatesResult_kind
+      .resolvedWrapper =>
+    ResponseOutcome.success,
+  _lib_editor_v1_resource_operations
+      .ResolveDropCandidatesResult_kind
+      .staleObservationErrorWrapper ||
+  _lib_editor_v1_resource_operations
+      .ResolveDropCandidatesResult_kind
+      .invalidErrorWrapper ||
+  _lib_editor_v1_resource_operations
+      .ResolveDropCandidatesResult_kind
+      .catalogChangedErrorWrapper ||
+  _lib_editor_v1_resource_operations
+      .ResolveDropCandidatesResult_kind
+      .permissionDeniedErrorWrapper ||
+  _lib_editor_v1_resource_operations
+      .ResolveDropCandidatesResult_kind
+      .failedErrorWrapper => ResponseOutcome.domainError,
+  // internal_error and the generated unknown variant
+  _ => ResponseOutcome.internalError,
+};
+
+ResponseOutcome _prepareAuthoringActionOutcome(
+  _lib_editor_v1_resource_operations.AuthoringActionResult response,
+) => switch (response.kind) {
+  _lib_editor_v1_resource_operations
+      .AuthoringActionResult_kind
+      .needsInputWrapper ||
+  _lib_editor_v1_resource_operations
+      .AuthoringActionResult_kind
+      .previewWrapper => ResponseOutcome.success,
+  _lib_editor_v1_resource_operations
+      .AuthoringActionResult_kind
+      .staleObservationErrorWrapper ||
+  _lib_editor_v1_resource_operations
+      .AuthoringActionResult_kind
+      .invalidErrorWrapper ||
+  _lib_editor_v1_resource_operations
+      .AuthoringActionResult_kind
+      .unavailableErrorWrapper ||
+  _lib_editor_v1_resource_operations
+      .AuthoringActionResult_kind
+      .catalogChangedErrorWrapper ||
+  _lib_editor_v1_resource_operations
+      .AuthoringActionResult_kind
+      .permissionDeniedErrorWrapper ||
+  _lib_editor_v1_resource_operations
+      .AuthoringActionResult_kind
+      .failedErrorWrapper => ResponseOutcome.domainError,
+  // internal_error and the generated unknown variant
+  _ => ResponseOutcome.internalError,
+};
+
+ResponseOutcome _queryAuthoringStateOutcome(
+  _lib_editor_v1_authoring.QueryAuthoringStateResponse response,
+) => switch (response.kind) {
+  _lib_editor_v1_authoring.QueryAuthoringStateResponse_kind.stateWrapper =>
+    ResponseOutcome.success,
+  _lib_editor_v1_authoring
+      .QueryAuthoringStateResponse_kind
+      .catalogChangedErrorWrapper =>
+    ResponseOutcome.domainError,
+  // internal_error and the generated unknown variant
+  _ => ResponseOutcome.internalError,
+};
+
+ResponseOutcome _commitPreparedEditOutcome(
+  _lib_editor_v1_authoring.CommitPreparedEditResponse response,
+) => switch (response.kind) {
+  _lib_editor_v1_authoring.CommitPreparedEditResponse_kind.committedConst =>
+    ResponseOutcome.success,
+  _lib_editor_v1_authoring
+      .CommitPreparedEditResponse_kind
+      .conflictErrorWrapper ||
+  _lib_editor_v1_authoring
+      .CommitPreparedEditResponse_kind
+      .rejectedErrorWrapper ||
+  _lib_editor_v1_authoring
+      .CommitPreparedEditResponse_kind
+      .catalogChangedErrorWrapper => ResponseOutcome.domainError,
+  // internal_error and the generated unknown variant
+  _ => ResponseOutcome.internalError,
+};
+
+ResponseOutcome _previewTypeArgumentChangeOutcome(
+  _lib_editor_v1_authoring.PreviewTypeArgumentChangeResponse response,
+) => switch (response.kind) {
+  _lib_editor_v1_authoring
+      .PreviewTypeArgumentChangeResponse_kind
+      .readyWrapper ||
+  _lib_editor_v1_authoring
+      .PreviewTypeArgumentChangeResponse_kind
+      .incompleteWrapper => ResponseOutcome.success,
+  _lib_editor_v1_authoring
+      .PreviewTypeArgumentChangeResponse_kind
+      .invalidArgumentsErrorWrapper ||
+  _lib_editor_v1_authoring
+      .PreviewTypeArgumentChangeResponse_kind
+      .rejectedErrorWrapper => ResponseOutcome.domainError,
+  // internal_error and the generated unknown variant
+  _ => ResponseOutcome.internalError,
+};
+
+ResponseOutcome _prepareTypeArgumentChangeOutcome(
+  _lib_editor_v1_authoring.PrepareTypeArgumentChangeResponse response,
+) => switch (response.kind) {
+  _lib_editor_v1_authoring
+      .PrepareTypeArgumentChangeResponse_kind
+      .preparedWrapper ||
+  _lib_editor_v1_authoring
+      .PrepareTypeArgumentChangeResponse_kind
+      .needsInputWrapper => ResponseOutcome.success,
+  _lib_editor_v1_authoring
+      .PrepareTypeArgumentChangeResponse_kind
+      .rejectedErrorWrapper =>
+    ResponseOutcome.domainError,
+  // internal_error and the generated unknown variant
+  _ => ResponseOutcome.internalError,
+};
+
+ResponseOutcome _searchAuthoringOutcome(
+  _lib_editor_v1_authoring.SearchAuthoringResponse response,
+) => switch (response.kind) {
+  _lib_editor_v1_authoring.SearchAuthoringResponse_kind.successWrapper =>
+    ResponseOutcome.success,
+  _lib_editor_v1_authoring.SearchAuthoringResponse_kind.invalidErrorWrapper ||
+  _lib_editor_v1_authoring
+      .SearchAuthoringResponse_kind
+      .catalogChangedErrorWrapper => ResponseOutcome.domainError,
+  // internal_error and the generated unknown variant
+  _ => ResponseOutcome.internalError,
+};
+
+ResponseOutcome _queryPublishedContentOutcome(
+  _lib_editor_v1_compiled_content.QueryPublishedContentResponse response,
+) => switch (response.kind) {
+  _lib_editor_v1_compiled_content
+      .QueryPublishedContentResponse_kind
+      .contentWrapper ||
+  _lib_editor_v1_compiled_content
+      .QueryPublishedContentResponse_kind
+      .absentWrapper => ResponseOutcome.success,
+  // internal_error and the generated unknown variant
+  _ => ResponseOutcome.internalError,
+};
+
+ResponseOutcome _queryCompiledResourceStatusOutcome(
+  _lib_editor_v1_compiled_content.QueryCompiledResourceStatusResponse response,
+) => switch (response.kind) {
+  _lib_editor_v1_compiled_content
+      .QueryCompiledResourceStatusResponse_kind
+      .successWrapper =>
+    ResponseOutcome.success,
+  // internal_error and the generated unknown variant
+  _ => ResponseOutcome.internalError,
+};
+
+ResponseOutcome _publishAuthoringOutcome(
+  _lib_editor_v1_publication.PublishAuthoringResponse response,
+) => switch (response.kind) {
+  _lib_editor_v1_publication.PublishAuthoringResponse_kind.publishingConst ||
+  _lib_editor_v1_publication.PublishAuthoringResponse_kind.activatedWrapper ||
+  _lib_editor_v1_publication.PublishAuthoringResponse_kind.noChangesConst =>
+    ResponseOutcome.success,
+  _lib_editor_v1_publication
+      .PublishAuthoringResponse_kind
+      .blockedErrorWrapper ||
+  _lib_editor_v1_publication
+      .PublishAuthoringResponse_kind
+      .interruptedErrorWrapper ||
+  _lib_editor_v1_publication
+      .PublishAuthoringResponse_kind
+      .candidateChangedErrorWrapper => ResponseOutcome.domainError,
+  // internal_error and the generated unknown variant
+  _ => ResponseOutcome.internalError,
+};
+
+ResponseOutcome _queryPublicationViewOutcome(
+  _lib_editor_v1_publication.QueryPublicationViewResponse response,
+) => switch (response.kind) {
+  _lib_editor_v1_publication.QueryPublicationViewResponse_kind.viewWrapper =>
+    ResponseOutcome.success,
+  _lib_editor_v1_publication
+      .QueryPublicationViewResponse_kind
+      .viewChangedErrorWrapper =>
+    ResponseOutcome.domainError,
+  // internal_error and the generated unknown variant
+  _ => ResponseOutcome.internalError,
+};
+
+ResponseOutcome _watchPublicationOutcome(
+  _lib_editor_v1_publication.WatchPublicationResponse response,
+) => switch (response.kind) {
+  _lib_editor_v1_publication.WatchPublicationResponse_kind.viewChangedWrapper =>
+    ResponseOutcome.success,
+  // internal_error and the generated unknown variant
+  _ => ResponseOutcome.internalError,
+};
+
+ResponseOutcome _fetchSharedArtifactCatalogOutcome(
+  _lib_service_v1_artifact.FetchSharedArtifactCatalogResponse response,
+) => switch (response.kind) {
+  _lib_service_v1_artifact
+      .FetchSharedArtifactCatalogResponse_kind
+      .successWrapper =>
+    ResponseOutcome.success,
+  // internal_error and the generated unknown variant
+  _ => ResponseOutcome.internalError,
+};
+
+ResponseOutcome _publishSharedArtifactOutcome(
+  _lib_service_v1_artifact.PublishSharedArtifactResponse response,
+) => switch (response.kind) {
+  _lib_service_v1_artifact
+      .PublishSharedArtifactResponse_kind
+      .publishedWrapper ||
+  _lib_service_v1_artifact
+      .PublishSharedArtifactResponse_kind
+      .unchangedWrapper => ResponseOutcome.success,
+  _lib_service_v1_artifact
+      .PublishSharedArtifactResponse_kind
+      .conflictErrorWrapper =>
+    ResponseOutcome.domainError,
+  // internal_error and the generated unknown variant
+  _ => ResponseOutcome.internalError,
+};
+
+ResponseOutcome _fetchArtifactBlobMetadataOutcome(
+  _lib_service_v1_artifact.FetchArtifactBlobMetadataResponse response,
+) => switch (response.kind) {
+  _lib_service_v1_artifact
+      .FetchArtifactBlobMetadataResponse_kind
+      .successWrapper =>
+    ResponseOutcome.success,
+  _lib_service_v1_artifact
+      .FetchArtifactBlobMetadataResponse_kind
+      .notFoundErrorWrapper ||
+  _lib_service_v1_artifact
+      .FetchArtifactBlobMetadataResponse_kind
+      .invalidErrorWrapper => ResponseOutcome.domainError,
+  // internal_error and the generated unknown variant
+  _ => ResponseOutcome.internalError,
+};
+
+ResponseOutcome _readArtifactBlobOutcome(
+  _lib_service_v1_artifact.ReadArtifactBlobResponse response,
+) => switch (response.kind) {
+  _lib_service_v1_artifact.ReadArtifactBlobResponse_kind.successWrapper =>
+    ResponseOutcome.success,
+  _lib_service_v1_artifact.ReadArtifactBlobResponse_kind.notFoundErrorWrapper ||
+  _lib_service_v1_artifact.ReadArtifactBlobResponse_kind.invalidErrorWrapper =>
+    ResponseOutcome.domainError,
+  // internal_error and the generated unknown variant
+  _ => ResponseOutcome.internalError,
+};
+
+ResponseOutcome _beginArtifactBlobWriteOutcome(
+  _lib_service_v1_artifact.BeginArtifactBlobWriteResponse response,
+) => switch (response.kind) {
+  _lib_service_v1_artifact
+      .BeginArtifactBlobWriteResponse_kind
+      .acceptedWrapper =>
+    ResponseOutcome.success,
+  _lib_service_v1_artifact
+      .BeginArtifactBlobWriteResponse_kind
+      .invalidErrorWrapper ||
+  _lib_service_v1_artifact
+      .BeginArtifactBlobWriteResponse_kind
+      .conflictErrorWrapper => ResponseOutcome.domainError,
+  // internal_error and the generated unknown variant
+  _ => ResponseOutcome.internalError,
+};
+
+ResponseOutcome _writeArtifactBlobChunkOutcome(
+  _lib_service_v1_artifact.WriteArtifactBlobChunkResponse response,
+) => switch (response.kind) {
+  _lib_service_v1_artifact
+      .WriteArtifactBlobChunkResponse_kind
+      .acceptedWrapper =>
+    ResponseOutcome.success,
+  _lib_service_v1_artifact
+      .WriteArtifactBlobChunkResponse_kind
+      .notFoundErrorWrapper ||
+  _lib_service_v1_artifact
+      .WriteArtifactBlobChunkResponse_kind
+      .invalidErrorWrapper ||
+  _lib_service_v1_artifact
+      .WriteArtifactBlobChunkResponse_kind
+      .conflictErrorWrapper => ResponseOutcome.domainError,
+  // internal_error and the generated unknown variant
+  _ => ResponseOutcome.internalError,
+};
+
+ResponseOutcome _completeArtifactBlobWriteOutcome(
+  _lib_service_v1_artifact.CompleteArtifactBlobWriteResponse response,
+) => switch (response.kind) {
+  _lib_service_v1_artifact
+      .CompleteArtifactBlobWriteResponse_kind
+      .successWrapper =>
+    ResponseOutcome.success,
+  _lib_service_v1_artifact
+      .CompleteArtifactBlobWriteResponse_kind
+      .notFoundErrorWrapper ||
+  _lib_service_v1_artifact
+      .CompleteArtifactBlobWriteResponse_kind
+      .invalidErrorWrapper ||
+  _lib_service_v1_artifact
+      .CompleteArtifactBlobWriteResponse_kind
+      .conflictErrorWrapper => ResponseOutcome.domainError,
+  // internal_error and the generated unknown variant
+  _ => ResponseOutcome.internalError,
+};
+
+/// Reply framing limits of the transport route manifest: frame size and frames per reply.
+const transportLimits = TransportLimits(chunkBytes: 524288, maxChunks: 64);
+
+/// Names a connection's persistent projection consumer. The backend grants the same name.
+String persistentConsumerName({
   required String actor,
   required String? organization,
   required String session,
@@ -4266,30 +2608,7 @@ String _persistentConsumerName({
   return "TW_$encoded";
 }
 
-extension _TransportSegment on String {
-  static final _identity = RegExp("^[^\\s.*>{}]+\$");
-  static final _transfer = RegExp("^[A-Za-z0-9_\\-]{1,64}\$");
-  static final _session = RegExp("^[a-f0-9]{32}\$");
-  bool get _isTransportIdentity => _identity.hasMatch(this);
-  String get _transportIdentity {
-    if (!_isTransportIdentity)
-      throw ArgumentError.value(this, "identity", "Invalid identity segment");
-    return this;
-  }
-
-  String get _transportTransfer {
-    if (!_transfer.hasMatch(this))
-      throw ArgumentError.value(this, "transferId", "Invalid transfer segment");
-    return this;
-  }
-
-  String get _transportSession {
-    if (!_session.hasMatch(this))
-      throw ArgumentError.value(
-        this,
-        "connectionSession",
-        "Invalid connection session",
-      );
-    return this;
-  }
-}
+/// The reply inbox prefix of a panel connection, `_INBOX.{user}.{session}`. Its reply inboxes are single
+/// tokens below it, and the backend grants the connection exactly those.
+String panelReplyInboxPrefix({required String user, required String session}) =>
+    "_INBOX.${user.transportIdentity}.${session.transportSession}";

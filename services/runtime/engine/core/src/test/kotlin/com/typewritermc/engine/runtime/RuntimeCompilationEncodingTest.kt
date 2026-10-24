@@ -1,37 +1,45 @@
 package com.typewritermc.engine.runtime
 
-import com.typewritermc.authoring.NativeBindingId
-import com.typewritermc.checking.CatalogGeneration
-import com.typewritermc.engine.CompilationContext
-import com.typewritermc.engine.CompiledResource
-import com.typewritermc.engine.CompiledResourceKey
-import com.typewritermc.engine.RuntimeCompilationFacts
+import com.typewritermc.engine.Root
 import com.typewritermc.engine.canonicalized
-import com.typewritermc.types.DataValue
-import com.typewritermc.types.RepresentationTemplate
+import com.typewritermc.engine.decodeResourceGraphShard
+import com.typewritermc.engine.encodeShard
+import com.typewritermc.engine.semanticDigest
 import com.typewritermc.types.ResourceId
-import com.typewritermc.types.ScalarKind
-import com.typewritermc.types.TypeDefinition
-import com.typewritermc.types.TypeDefinitionId
-import com.typewritermc.types.TypeId
-import com.typewritermc.types.TypeUse
 import com.typewritermc.types.catalog.DefaultCheckedCatalog
+import com.typewritermc.types.named
+import com.typewritermc.types.namedUse
+import com.typewritermc.types.qualified
+import com.typewritermc.types.toSkir
 import de.infix.testBalloon.framework.core.testSuite
 import io.kotest.assertions.throwables.shouldThrow
+import io.kotest.matchers.shouldBe
+import skirout.editor.v1.compiled_content.CompilationContext
+import skirout.editor.v1.compiled_content.CompiledResource
+import skirout.editor.v1.compiled_content.CompiledResourceKey
+import skirout.editor.v1.compiled_content.RuntimeCompilationFacts
+import skirout.editor.v1.type_catalog.CatalogGeneration
+import skirout.editor.v1.type_catalog.DataValue
+import skirout.editor.v1.type_catalog.NamedValue
+import skirout.editor.v1.type_catalog.NativeBindingId
+import skirout.editor.v1.type_catalog.RepresentationTemplate
+import skirout.editor.v1.type_catalog.ScalarKind
+import skirout.editor.v1.type_catalog.TypeDefinition
+import skirout.editor.v1.type_catalog.TypeDefinitionId
 
 val RuntimeCompilationEncodingTest by testSuite {
     test("conflicting declarations with one identity are rejected before canonical encoding") {
-        val id = TypeDefinitionId(TypeId.Qualified("test", "runtime"), 1)
+        val id = TypeDefinitionId.qualified("test", "runtime")
         val facts =
             RuntimeCompilationFacts(
                 formatRevision = com.typewritermc.engine.RESOURCE_GRAPH_FORMAT_REVISION,
-                root = CompiledResourceKey(ResourceId("page"), CompilationContext.Root),
+                root = CompiledResourceKey(source = ResourceId("page").toSkir(), context = CompilationContext.Root),
                 resources = emptyList(),
                 edges = emptyList(),
                 types =
                     listOf(
-                        TypeDefinition(id, representation = RepresentationTemplate.Scalar(ScalarKind.Text)),
-                        TypeDefinition(id, representation = RepresentationTemplate.Scalar(ScalarKind.Boolean)),
+                        TypeDefinition.partial(id = id, representation = RepresentationTemplate.createScalar(kind = ScalarKind.TEXT)),
+                        TypeDefinition.partial(id = id, representation = RepresentationTemplate.createScalar(kind = ScalarKind.BOOLEAN)),
                     ),
                 relations = emptyList(),
             )
@@ -40,11 +48,13 @@ val RuntimeCompilationEncodingTest by testSuite {
     }
 
     test("admission closes declarations from the resource level actual type") {
-        val resourceId = TypeDefinitionId(TypeId.Qualified("test", "resource"), 1)
-        val payloadId = TypeDefinitionId(TypeId.Qualified("test", "payload"), 1)
-        val resourceDefinition = TypeDefinition(resourceId, representation = RepresentationTemplate.Scalar(ScalarKind.Text))
-        val payloadDefinition = TypeDefinition(payloadId, representation = RepresentationTemplate.Scalar(ScalarKind.Text))
-        val key = CompiledResourceKey(ResourceId("page"), CompilationContext.Root)
+        val resourceId = TypeDefinitionId.qualified("test", "resource")
+        val payloadId = TypeDefinitionId.qualified("test", "payload")
+        val resourceDefinition =
+            TypeDefinition.partial(id = resourceId, representation = RepresentationTemplate.createScalar(kind = ScalarKind.TEXT))
+        val payloadDefinition =
+            TypeDefinition.partial(id = payloadId, representation = RepresentationTemplate.createScalar(kind = ScalarKind.TEXT))
+        val key = CompiledResourceKey(source = ResourceId("page").toSkir(), context = CompilationContext.Root)
         val facts =
             RuntimeCompilationFacts(
                 formatRevision = com.typewritermc.engine.RESOURCE_GRAPH_FORMAT_REVISION,
@@ -53,18 +63,63 @@ val RuntimeCompilationEncodingTest by testSuite {
                     listOf(
                         CompiledResource(
                             key = key,
-                            actualType = TypeUse.Named(resourceId),
-                            bindingProvider = NativeBindingId("test"),
+                            actualType = resourceId.namedUse(),
+                            bindingProvider = NativeBindingId(value = "test"),
                             bindingSignature = "test:v1",
-                            value = DataValue.Named(TypeUse.Named(payloadId), DataValue.StringValue("value")),
+                            value =
+                                (
+                                    DataValue.named(
+                                        payloadId.namedUse(),
+                                        DataValue.StringValueWrapper("value"),
+                                    ) as DataValue.NamedWrapper
+                                ).value,
                         ),
                     ),
                 edges = emptyList(),
                 types = listOf(resourceDefinition, payloadDefinition),
                 relations = emptyList(),
             )
-        val catalog = DefaultCheckedCatalog(CatalogGeneration("runtime encoding test"), listOf(resourceDefinition, payloadDefinition))
+        val catalog =
+            DefaultCheckedCatalog(CatalogGeneration(value = "runtime encoding test"), listOf(resourceDefinition, payloadDefinition))
 
         facts.requireAccepted(catalog, emptyList())
+    }
+
+    test("a shard decodes to its canonical facts and rejects invalid ones") {
+        val definition =
+            TypeDefinition.partial(
+                id = TypeDefinitionId.qualified("test", "resource"),
+                representation = RepresentationTemplate.createScalar(kind = ScalarKind.TEXT),
+            )
+        val key = CompiledResourceKey(source = ResourceId("page").toSkir(), context = CompilationContext.Root)
+        val facts =
+            RuntimeCompilationFacts(
+                formatRevision = com.typewritermc.engine.RESOURCE_GRAPH_FORMAT_REVISION,
+                root = key,
+                resources =
+                    listOf(
+                        CompiledResource(
+                            key = key,
+                            actualType = definition.id.namedUse(),
+                            bindingProvider = NativeBindingId(value = "test"),
+                            bindingSignature = "test:v1",
+                            value = NamedValue(actualType = definition.id.namedUse(), payload = DataValue.StringValueWrapper("value")),
+                        ),
+                    ),
+                edges = emptyList(),
+                types = listOf(definition),
+                relations = emptyList(),
+            )
+        val shard = facts.encodeShard()
+
+        shard.decodeResourceGraphShard().facts shouldBe facts.canonicalized()
+        shard.decodeResourceGraphShard().semanticDigest shouldBe facts.semanticDigest()
+        shouldThrow<IllegalArgumentException> {
+            shard
+                .decodeToString()
+                .replace("\"page\"", "\"\"")
+                .encodeToByteArray()
+                .decodeResourceGraphShard()
+        }.message shouldBe "Resource ids must not be blank."
     }
 }

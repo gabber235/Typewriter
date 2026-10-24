@@ -1,11 +1,15 @@
 package com.typewritermc.configuration
 
-import com.typewritermc.authoring.ValueLocation
 import com.typewritermc.checking.CheckRecipe
-import com.typewritermc.checking.Diagnostic
-import com.typewritermc.expression.EvaluationDiagnostic
 import com.typewritermc.expression.ExpressionFactory
-import com.typewritermc.types.TypeTemplate
+import skirout.editor.v1.catalog.ConfigurationRecipe
+import skirout.editor.v1.catalog.RepresentationKind
+import skirout.editor.v1.diagnostic.Diagnostic
+import skirout.editor.v1.expression.EvaluationDiagnostic
+import skirout.editor.v1.type_catalog.FieldPatternSegment
+import skirout.editor.v1.type_catalog.RelativeFieldPattern
+import skirout.editor.v1.type_catalog.TypeTemplate
+import skirout.editor.v1.type_catalog.ValueLocation
 
 data class CollectedConfiguration(
     val recipes: List<ConfigurationRecipe>,
@@ -58,7 +62,7 @@ fun interface PortableConstantEncoder {
     fun encode(
         expected: TypeTemplate,
         value: Any?,
-    ): com.typewritermc.types.DataValue
+    ): skirout.editor.v1.type_catalog.DataValue
 }
 
 sealed interface RuleEvaluation {

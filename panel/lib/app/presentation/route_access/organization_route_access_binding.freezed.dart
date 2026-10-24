@@ -15,7 +15,7 @@ T _$identity<T>(T value) => value;
 /// @nodoc
 mixin _$OrganizationAccessSnapshot {
 
- AsyncValue<String?> get principal; AsyncValue<List<OrganizationData>> get membership;
+ AsyncValue<String?> get principal; AsyncValue<List<skir.Organization>> get membership;
 /// Create a copy of _OrganizationAccessSnapshot
 /// with the given fields replaced by the non-null parameter values.
 @JsonKey(includeFromJson: false, includeToJson: false)
@@ -51,7 +51,7 @@ abstract mixin class _$OrganizationAccessSnapshotCopyWith<$Res>  {
   factory _$OrganizationAccessSnapshotCopyWith(_OrganizationAccessSnapshot value, $Res Function(_OrganizationAccessSnapshot) _then) = __$OrganizationAccessSnapshotCopyWithImpl;
 @useResult
 $Res call({
- AsyncValue<String?> principal, AsyncValue<List<OrganizationData>> membership
+ AsyncValue<String?> principal, AsyncValue<List<skir.Organization>> membership
 });
 
 
@@ -72,7 +72,7 @@ class __$OrganizationAccessSnapshotCopyWithImpl<$Res>
   return _then(_OrganizationAccessSnapshot(
 principal: null == principal ? _self.principal : principal // ignore: cast_nullable_to_non_nullable
 as AsyncValue<String?>,membership: null == membership ? _self.membership : membership // ignore: cast_nullable_to_non_nullable
-as AsyncValue<List<OrganizationData>>,
+as AsyncValue<List<skir.Organization>>,
   ));
 }
 
@@ -157,7 +157,7 @@ return $default(_that);case _:
 /// }
 /// ```
 
-@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function( AsyncValue<String?> principal,  AsyncValue<List<OrganizationData>> membership)?  $default,{required TResult orElse(),}) {final _that = this;
+@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function( AsyncValue<String?> principal,  AsyncValue<List<skir.Organization>> membership)?  $default,{required TResult orElse(),}) {final _that = this;
 switch (_that) {
 case __OrganizationAccessSnapshot() when $default != null:
 return $default(_that.principal,_that.membership);case _:
@@ -178,7 +178,7 @@ return $default(_that.principal,_that.membership);case _:
 /// }
 /// ```
 
-@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function( AsyncValue<String?> principal,  AsyncValue<List<OrganizationData>> membership)  $default,) {final _that = this;
+@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function( AsyncValue<String?> principal,  AsyncValue<List<skir.Organization>> membership)  $default,) {final _that = this;
 switch (_that) {
 case __OrganizationAccessSnapshot():
 return $default(_that.principal,_that.membership);case _:
@@ -198,7 +198,7 @@ return $default(_that.principal,_that.membership);case _:
 /// }
 /// ```
 
-@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function( AsyncValue<String?> principal,  AsyncValue<List<OrganizationData>> membership)?  $default,) {final _that = this;
+@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function( AsyncValue<String?> principal,  AsyncValue<List<skir.Organization>> membership)?  $default,) {final _that = this;
 switch (_that) {
 case __OrganizationAccessSnapshot() when $default != null:
 return $default(_that.principal,_that.membership);case _:
@@ -217,7 +217,7 @@ class __OrganizationAccessSnapshot implements _OrganizationAccessSnapshot {
   
 
 @override final  AsyncValue<String?> principal;
-@override final  AsyncValue<List<OrganizationData>> membership;
+@override final  AsyncValue<List<skir.Organization>> membership;
 
 /// Create a copy of _OrganizationAccessSnapshot
 /// with the given fields replaced by the non-null parameter values.
@@ -251,7 +251,7 @@ abstract mixin class _$_OrganizationAccessSnapshotCopyWith<$Res> implements _$Or
   factory _$_OrganizationAccessSnapshotCopyWith(__OrganizationAccessSnapshot value, $Res Function(__OrganizationAccessSnapshot) _then) = __$_OrganizationAccessSnapshotCopyWithImpl;
 @override @useResult
 $Res call({
- AsyncValue<String?> principal, AsyncValue<List<OrganizationData>> membership
+ AsyncValue<String?> principal, AsyncValue<List<skir.Organization>> membership
 });
 
 
@@ -272,7 +272,7 @@ class __$_OrganizationAccessSnapshotCopyWithImpl<$Res>
   return _then(__OrganizationAccessSnapshot(
 principal: null == principal ? _self.principal : principal // ignore: cast_nullable_to_non_nullable
 as AsyncValue<String?>,membership: null == membership ? _self.membership : membership // ignore: cast_nullable_to_non_nullable
-as AsyncValue<List<OrganizationData>>,
+as AsyncValue<List<skir.Organization>>,
   ));
 }
 

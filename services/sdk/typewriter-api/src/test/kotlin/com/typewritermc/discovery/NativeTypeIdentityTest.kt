@@ -3,7 +3,6 @@
 package com.typewritermc.discovery
 
 import com.typewritermc.authoring.GeneratedSdkApi
-import com.typewritermc.checking.CatalogGeneration
 import com.typewritermc.expression.literal
 import com.typewritermc.expression.orElse
 import com.typewritermc.imprint.ArtifactId
@@ -12,36 +11,38 @@ import com.typewritermc.imprint.ContributionSourceId
 import com.typewritermc.imprint.ProducerId
 import com.typewritermc.presentation.DefaultPresentationRuntime
 import com.typewritermc.presentation.PresentationBuildBinding
-import com.typewritermc.presentation.PresentationDescriptor
 import com.typewritermc.presentation.PresentationProvider
-import com.typewritermc.presentation.PresentationTarget
+import com.typewritermc.presentation.of
 import com.typewritermc.presentation.resource
-import com.typewritermc.types.DeclarationOwner
-import com.typewritermc.types.PresentationId
-import com.typewritermc.types.PresentationRole
-import com.typewritermc.types.RepresentationTemplate
 import com.typewritermc.types.Resource
 import com.typewritermc.types.ResourceId
 import com.typewritermc.types.ResourceIdDefinition
-import com.typewritermc.types.TypeDefinition
-import com.typewritermc.types.TypeDefinitionId
-import com.typewritermc.types.TypeId
-import com.typewritermc.types.TypeTemplate
+import com.typewritermc.types.namedTemplate
+import com.typewritermc.types.qualified
 import com.typewritermc.types.text
 import de.infix.testBalloon.framework.core.testSuite
 import io.kotest.matchers.shouldBe
+import skirout.editor.v1.catalog.PresentationDescriptor
+import skirout.editor.v1.catalog.PresentationRole
+import skirout.editor.v1.catalog.PresentationTarget
+import skirout.editor.v1.type_catalog.CatalogGeneration
+import skirout.editor.v1.type_catalog.DeclarationOwner
+import skirout.editor.v1.type_catalog.PresentationId
+import skirout.editor.v1.type_catalog.RepresentationTemplate
+import skirout.editor.v1.type_catalog.TypeDefinition
+import skirout.editor.v1.type_catalog.TypeDefinitionId
 
 val NativeTypeIdentityTest by testSuite {
     test("abstract resource identity builds queries without a native codec") {
         val assembly = nativeIdentityAssembly(ambiguous = false)
-        assembly.snapshot.presentationMaterials.size shouldBe 1
-        assembly.snapshot.diagnostics.any { it.code == "presentation_material_build_failed" } shouldBe false
+        assembly.editorCatalog.presentationMaterials.size shouldBe 1
+        assembly.editorCatalog.diagnostics.any { it.code == "presentation_material_build_failed" } shouldBe false
     }
 
     test("conflicting declarations cannot choose an arbitrary native class identity") {
         val assembly = nativeIdentityAssembly(ambiguous = true)
-        assembly.snapshot.presentationMaterials shouldBe emptyList()
-        assembly.snapshot.diagnostics.any { it.code == "presentation_material_build_failed" } shouldBe true
+        assembly.editorCatalog.presentationMaterials shouldBe emptyList()
+        assembly.editorCatalog.diagnostics.any { it.code == "presentation_material_build_failed" } shouldBe true
     }
 }
 
@@ -52,19 +53,26 @@ private fun nativeIdentityAssembly(ambiguous: Boolean): CatalogAssembly {
         ProviderOrigin(
             owner =
                 DeclarationOwner(
-                    ContributionKey(ContributionSourceId("test"), "main", ProducerId("query"), ContributionName("native_identity")),
-                    "native identity",
+                    source =
+                        contributionKey(
+                            ContributionSourceId("test"),
+                            "main",
+                            ProducerId("query"),
+                            ContributionName("native_identity"),
+                        ),
+                    localIdentity = "native identity",
                 ),
             artifact = ArtifactId("test:native_identity"),
             sourcePart = "main",
         )
-    val id = TypeDefinitionId(TypeId.Qualified("query.test", "Abstract"), 1)
-    val definition = TypeDefinition(id, representation = RepresentationTemplate.Record(emptyList(), abstract = true))
+    val id = TypeDefinitionId.qualified("query.test", "Abstract")
+    val definition =
+        TypeDefinition.partial(id = id, representation = RepresentationTemplate.createRecord(fields = emptyList(), abstract_ = true))
     val descriptor =
-        PresentationDescriptor(
-            PresentationId("test", "native_identity"),
+        PresentationDescriptor.of(
+            PresentationId(namespace = "test", name = "native_identity"),
             origin.owner,
-            PresentationTarget.Named(TypeTemplate.Named(id)),
+            PresentationTarget.NamedWrapper(id.namedTemplate()),
             setOf(PresentationRole.INSPECTOR),
             0,
         )
@@ -88,7 +96,7 @@ private fun nativeIdentityAssembly(ambiguous: Boolean): CatalogAssembly {
                     listOf(
                         OwnedTypeDeclaration(
                             origin,
-                            definition.copy(id = TypeDefinitionId(TypeId.Qualified("query.test", "Conflicting"), 1)),
+                            definition.copy(id = TypeDefinitionId.qualified("query.test", "Conflicting")),
                             nativeClass = AbstractQueryResource::class,
                         ),
                     )
@@ -96,5 +104,5 @@ private fun nativeIdentityAssembly(ambiguous: Boolean): CatalogAssembly {
                     emptyList()
                 },
         presentations = listOf(OwnedPresentation(origin, descriptor, provider)),
-    ).assemble(CatalogAssemblyContext(CatalogGeneration("native identity")))
+    ).assemble(CatalogAssemblyContext(CatalogGeneration(value = "native identity")))
 }

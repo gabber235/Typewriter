@@ -62,8 +62,7 @@ final class _AuthoredScalarGalleryState extends State<AuthoredScalarGallery> {
   };
 
   late final _host = BoundPresentationHost(
-    catalog: skir.EditorCatalogWireSnapshot.defaultInstance
-        .asTrustedLocalCatalog(),
+    catalog: skir.EditorCatalog.defaultInstance.asTrustedLocalCatalog(),
     root: () => _gallery,
     bindings: [
       _binding(_title, skir.TypeUse.wrapScalar(skir.ScalarKind.text)),
@@ -747,7 +746,7 @@ CheckedEditorCatalog _interactionCatalog() {
     ancestorTemplates: const [],
   );
   return CheckedEditorCatalog(
-    skir.EditorCatalogWireSnapshot(
+    skir.EditorCatalog(
       resourceDisplays: const [],
       generation: skir.CatalogGeneration(value: "catalog:interaction_story"),
       types: [

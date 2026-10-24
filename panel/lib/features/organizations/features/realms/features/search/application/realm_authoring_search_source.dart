@@ -121,7 +121,7 @@ final class RealmAuthoringSearchSource implements SearchSource {
           .search(
             skir.SearchAuthoringRequest(
               generation: document.generation,
-              query: encodeRealmSearchQuery(query).normalizedQuery,
+              query: query.normalizedQuery,
               roots: typeFilter.toList(growable: false),
               contexts: contexts.isNotEmpty ? contexts : [?contextResource],
               target: target,
@@ -196,11 +196,11 @@ final class RealmAuthoringSearchSource implements SearchSource {
             ],
           ),
         );
-      case skir.SearchAuthoringResponse_invalidWrapper(:final value):
+      case skir.SearchAuthoringResponse_invalidErrorWrapper(:final value):
         _publishError(
           value.diagnostics.map((diagnostic) => diagnostic.message).toList(),
         );
-      case skir.SearchAuthoringResponse_catalogChangedWrapper():
+      case skir.SearchAuthoringResponse_catalogChangedErrorWrapper():
         _publishError(const ["The Realm editor catalog changed"]);
       case skir.SearchAuthoringResponse_internalErrorWrapper():
         _publishError(const ["Realm could not complete the search"]);

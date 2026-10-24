@@ -38,12 +38,7 @@ extension PortableEditorDiagnosticMapping on EditorDiagnostic {
     return PortablePresentationDiagnostic(
       code: code.name,
       message: message,
-      severity: switch (severity) {
-        EditorDiagnosticSeverity.information =>
-          skir.DiagnosticSeverity.information,
-        EditorDiagnosticSeverity.warning => skir.DiagnosticSeverity.warning,
-        EditorDiagnosticSeverity.error => skir.DiagnosticSeverity.error,
-      },
+      severity: severity,
       details: details,
       targets: belongsToBinding
           ? [

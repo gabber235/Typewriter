@@ -3019,6 +3019,7 @@ sealed class ConfigureServiceHostResponse private constructor() {
         }
     }
 
+    /** Host changed elsewhere. */
     class ConflictErrorWrapper private constructor (
         val value: skirout.service.v1.topology.ConfigureServiceHostResponse.ConflictError,
     ) : skirout.service.v1.topology.ConfigureServiceHostResponse() {
@@ -3037,6 +3038,7 @@ sealed class ConfigureServiceHostResponse private constructor() {
         }
     }
 
+    /** Host configuration is invalid. */
     class InvalidConfigurationErrorWrapper private constructor (
         val value: skirout.service.v1.topology.ConfigureServiceHostResponse.InvalidConfigurationError,
     ) : skirout.service.v1.topology.ConfigureServiceHostResponse() {
@@ -3055,6 +3057,7 @@ sealed class ConfigureServiceHostResponse private constructor() {
         }
     }
 
+    /** Engine target is incompatible. */
     class IncompatibleEngineErrorWrapper private constructor (
         val value: skirout.service.v1.topology.ConfigureServiceHostResponse.IncompatibleEngineError,
     ) : skirout.service.v1.topology.ConfigureServiceHostResponse() {
@@ -3073,6 +3076,7 @@ sealed class ConfigureServiceHostResponse private constructor() {
         }
     }
 
+    /** Realm not found. */
     class RealmNotFoundErrorWrapper private constructor (
         val value: skirout.service.v1.topology.ConfigureServiceHostResponse.RealmNotFoundError,
     ) : skirout.service.v1.topology.ConfigureServiceHostResponse() {
@@ -3091,6 +3095,7 @@ sealed class ConfigureServiceHostResponse private constructor() {
         }
     }
 
+    /** Record IDs from an unexpected table. */
     class InvalidRecordIdErrorWrapper private constructor (
         val value: skirout.kernel.v1.errors.InvalidRecordIdError,
     ) : skirout.service.v1.topology.ConfigureServiceHostResponse() {
@@ -5283,6 +5288,7 @@ sealed class ReportHostExecutionResponse private constructor() {
         }
     }
 
+    /** Host topology revision is stale. */
     class StaleRevisionErrorWrapper private constructor (
         val value: skirout.service.v1.topology.ReportHostExecutionResponse.StaleRevisionError,
     ) : skirout.service.v1.topology.ReportHostExecutionResponse() {
@@ -5802,7 +5808,7 @@ sealed class GetServiceMessagingScopeResponse private constructor() {
     enum class Kind {
         UNKNOWN,
         FOUND_WRAPPER,
-        NOT_FOUND_WRAPPER,
+        NOT_FOUND_ERROR_WRAPPER,
         INTERNAL_ERROR_WRAPPER,
     }
 
@@ -5839,21 +5845,22 @@ sealed class GetServiceMessagingScopeResponse private constructor() {
         }
     }
 
-    class NotFoundWrapper private constructor (
-        val value: skirout.service.v1.topology.GetServiceMessagingScopeResponse.NotFound,
+    /** Service messaging scope not found. */
+    class NotFoundErrorWrapper private constructor (
+        val value: skirout.service.v1.topology.GetServiceMessagingScopeResponse.NotFoundError,
     ) : skirout.service.v1.topology.GetServiceMessagingScopeResponse() {
         constructor(
-            value: skirout.service.v1.topology.GetServiceMessagingScopeResponse.NotFound_OrMutable,
+            value: skirout.service.v1.topology.GetServiceMessagingScopeResponse.NotFoundError_OrMutable,
         ): this(value.toFrozen()) {}
 
-        override val kind get() = Kind.NOT_FOUND_WRAPPER;
+        override val kind get() = Kind.NOT_FOUND_ERROR_WRAPPER;
 
         override fun equals(other: kotlin.Any?): kotlin.Boolean {
-            return other is skirout.service.v1.topology.GetServiceMessagingScopeResponse.NotFoundWrapper && value == other.value;
+            return other is skirout.service.v1.topology.GetServiceMessagingScopeResponse.NotFoundErrorWrapper && value == other.value;
         }
 
         override fun hashCode(): kotlin.Int {
-            return this.value.hashCode() + 1615526678;
+            return this.value.hashCode() + 1888290719;
         }
     }
 
@@ -5909,13 +5916,13 @@ sealed class GetServiceMessagingScopeResponse private constructor() {
             )
         );
 
-        /** Shortcut for `NotFoundWrapper(skirout.service.v1.topology.GetServiceMessagingScopeResponse.NotFound(...))`. */
+        /** Shortcut for `NotFoundErrorWrapper(skirout.service.v1.topology.GetServiceMessagingScopeResponse.NotFoundError(...))`. */
         @kotlin.Suppress("UNUSED_PARAMETER")
-        fun createNotFound(
+        fun createNotFoundError(
             _mustNameArguments: _MustNameArguments =
                 _MustNameArguments,
-        ) = NotFoundWrapper(
-            skirout.service.v1.topology.GetServiceMessagingScopeResponse.NotFound()
+        ) = NotFoundErrorWrapper(
+            skirout.service.v1.topology.GetServiceMessagingScopeResponse.NotFoundError()
         );
 
         /** Shortcut for `InternalErrorWrapper(skirout.kernel.v1.errors.InternalError(...))`. */
@@ -5934,20 +5941,20 @@ sealed class GetServiceMessagingScopeResponse private constructor() {
         val typeDescriptor get() = _SerializerRegistry.GetServiceMessagingScopeResponseSerializerImpl.typeDescriptor;
     }
 
-    sealed interface NotFound_OrMutable {
-        fun toFrozen(): skirout.service.v1.topology.GetServiceMessagingScopeResponse.NotFound;
+    sealed interface NotFoundError_OrMutable {
+        fun toFrozen(): skirout.service.v1.topology.GetServiceMessagingScopeResponse.NotFoundError;
     }
 
     /** Deeply immutable. */
     @kotlin.Suppress("UNUSED_PARAMETER")
-    class NotFound private constructor(
-        internal val _unrecognizedFields: _UnrecognizedFields<skirout.service.v1.topology.GetServiceMessagingScopeResponse.NotFound>? =
+    class NotFoundError private constructor(
+        internal val _unrecognizedFields: _UnrecognizedFields<skirout.service.v1.topology.GetServiceMessagingScopeResponse.NotFoundError>? =
             null,
-    ): skirout.service.v1.topology.GetServiceMessagingScopeResponse.NotFound_OrMutable {
+    ): skirout.service.v1.topology.GetServiceMessagingScopeResponse.NotFoundError_OrMutable {
         constructor(
             _mustNameArguments: _MustNameArguments =
                 _MustNameArguments,
-            _unrecognizedFields: _UnrecognizedFields<skirout.service.v1.topology.GetServiceMessagingScopeResponse.NotFound>? =
+            _unrecognizedFields: _UnrecognizedFields<skirout.service.v1.topology.GetServiceMessagingScopeResponse.NotFoundError>? =
                 null,
         ): this(
             _unrecognizedFields,
@@ -5960,7 +5967,7 @@ sealed class GetServiceMessagingScopeResponse private constructor() {
         fun toMutable() = Mutable();
 
         override fun equals(other: kotlin.Any?): kotlin.Boolean {
-            return this === other || (other is skirout.service.v1.topology.GetServiceMessagingScopeResponse.NotFound);
+            return this === other || (other is skirout.service.v1.topology.GetServiceMessagingScopeResponse.NotFoundError);
         }
 
         override fun hashCode(): kotlin.Int {
@@ -5970,47 +5977,47 @@ sealed class GetServiceMessagingScopeResponse private constructor() {
         override fun toString(): kotlin.String {
             return build.skir.internal.toStringImpl(
                 this,
-                _SerializerRegistry.GetServiceMessagingScopeResponse_NotFoundSerializerImpl,
+                _SerializerRegistry.GetServiceMessagingScopeResponse_NotFoundErrorSerializerImpl,
             )
         }
 
-        /** Mutable version of [NotFound]. */
+        /** Mutable version of [NotFoundError]. */
         class Mutable internal constructor(
             _mustNameArguments: _MustNameArguments =
                 _MustNameArguments,
-            internal var _unrecognizedFields: _UnrecognizedFields<skirout.service.v1.topology.GetServiceMessagingScopeResponse.NotFound>? =
+            internal var _unrecognizedFields: _UnrecognizedFields<skirout.service.v1.topology.GetServiceMessagingScopeResponse.NotFoundError>? =
                 null,
-        ): skirout.service.v1.topology.GetServiceMessagingScopeResponse.NotFound_OrMutable {
+        ): skirout.service.v1.topology.GetServiceMessagingScopeResponse.NotFoundError_OrMutable {
             /** Returns a deeply immutable copy of this instance */
-            override fun toFrozen() = skirout.service.v1.topology.GetServiceMessagingScopeResponse.NotFound(
+            override fun toFrozen() = skirout.service.v1.topology.GetServiceMessagingScopeResponse.NotFoundError(
                 _unrecognizedFields = this._unrecognizedFields,
             );
         }
 
         companion object {
             private val default =
-                skirout.service.v1.topology.GetServiceMessagingScopeResponse.NotFound();
+                skirout.service.v1.topology.GetServiceMessagingScopeResponse.NotFoundError();
 
             /** Returns an instance with all fields set to their default values. */
             fun partial() = default;
 
             /**
-             * Creates a new instance of [NotFound].
+             * Creates a new instance of [NotFoundError].
              * Unlike the constructor, does not require all fields to be specified.
              * Missing fields will be set to their default values.
              */
             fun partial(
                 _mustNameArguments: _MustNameArguments =
                     _MustNameArguments,
-            ) = skirout.service.v1.topology.GetServiceMessagingScopeResponse.NotFound(
+            ) = skirout.service.v1.topology.GetServiceMessagingScopeResponse.NotFoundError(
                 _unrecognizedFields = null,
             );
 
-            /** Serializer for [NotFound] instances. */
-            val serializer get() = _SerializerRegistry.GetServiceMessagingScopeResponse_NotFoundSerializer;
+            /** Serializer for [NotFoundError] instances. */
+            val serializer get() = _SerializerRegistry.GetServiceMessagingScopeResponse_NotFoundErrorSerializer;
 
-            /** Describes the [NotFound] type. Provides runtime introspection capabilities. */
-            val typeDescriptor get() = _SerializerRegistry.GetServiceMessagingScopeResponse_NotFoundSerializerImpl.typeDescriptor;
+            /** Describes the [NotFoundError] type. Provides runtime introspection capabilities. */
+            val typeDescriptor get() = _SerializerRegistry.GetServiceMessagingScopeResponse_NotFoundErrorSerializerImpl.typeDescriptor;
         }
     }
 }
@@ -6554,17 +6561,17 @@ private object _SerializerRegistry {
 
     val GetServiceMessagingScopeResponseSerializer = build.skir.internal.makeSerializer(GetServiceMessagingScopeResponseSerializerImpl);
 
-    val GetServiceMessagingScopeResponse_NotFoundSerializerImpl = build.skir.internal.StructSerializer(
-        recordId = "service/v1/topology.skir:GetServiceMessagingScopeResponse.NotFound",
+    val GetServiceMessagingScopeResponse_NotFoundErrorSerializerImpl = build.skir.internal.StructSerializer(
+        recordId = "service/v1/topology.skir:GetServiceMessagingScopeResponse.NotFoundError",
         doc = "",
-        defaultInstance = skirout.service.v1.topology.GetServiceMessagingScopeResponse.NotFound.partial(),
-        newMutableFn = { it?.toMutable() ?: skirout.service.v1.topology.GetServiceMessagingScopeResponse.NotFound.Mutable() },
+        defaultInstance = skirout.service.v1.topology.GetServiceMessagingScopeResponse.NotFoundError.partial(),
+        newMutableFn = { it?.toMutable() ?: skirout.service.v1.topology.GetServiceMessagingScopeResponse.NotFoundError.Mutable() },
         toFrozenFn = { it.toFrozen() },
         getUnrecognizedFields = { it._unrecognizedFields },
         setUnrecognizedFields = { m, u -> m._unrecognizedFields = u },
     );
 
-    val GetServiceMessagingScopeResponse_NotFoundSerializer = build.skir.internal.makeSerializer(GetServiceMessagingScopeResponse_NotFoundSerializerImpl);
+    val GetServiceMessagingScopeResponse_NotFoundErrorSerializer = build.skir.internal.makeSerializer(GetServiceMessagingScopeResponse_NotFoundErrorSerializerImpl);
 
     val HostConfigurationChangeSerializerImpl = build.skir.internal.StructSerializer(
         recordId = "service/v1/topology.skir:HostConfigurationChange",
@@ -7045,7 +7052,7 @@ private object _SerializerRegistry {
             "conflict_error",
             skirout.service.v1.topology.ConfigureServiceHostResponse.Kind.CONFLICT_ERROR_WRAPPER.ordinal,
             _SerializerRegistry.ConfigureServiceHostResponse_ConflictErrorSerializer,
-            "",
+            "Host changed elsewhere.",
             { skirout.service.v1.topology.ConfigureServiceHostResponse.ConflictErrorWrapper(it) },
             { it.value },
         );
@@ -7054,7 +7061,7 @@ private object _SerializerRegistry {
             "invalid_configuration_error",
             skirout.service.v1.topology.ConfigureServiceHostResponse.Kind.INVALID_CONFIGURATION_ERROR_WRAPPER.ordinal,
             _SerializerRegistry.ConfigureServiceHostResponse_InvalidConfigurationErrorSerializer,
-            "",
+            "Host configuration is invalid.",
             { skirout.service.v1.topology.ConfigureServiceHostResponse.InvalidConfigurationErrorWrapper(it) },
             { it.value },
         );
@@ -7063,7 +7070,7 @@ private object _SerializerRegistry {
             "incompatible_engine_error",
             skirout.service.v1.topology.ConfigureServiceHostResponse.Kind.INCOMPATIBLE_ENGINE_ERROR_WRAPPER.ordinal,
             _SerializerRegistry.ConfigureServiceHostResponse_IncompatibleEngineErrorSerializer,
-            "",
+            "Engine target is incompatible.",
             { skirout.service.v1.topology.ConfigureServiceHostResponse.IncompatibleEngineErrorWrapper(it) },
             { it.value },
         );
@@ -7072,7 +7079,7 @@ private object _SerializerRegistry {
             "realm_not_found_error",
             skirout.service.v1.topology.ConfigureServiceHostResponse.Kind.REALM_NOT_FOUND_ERROR_WRAPPER.ordinal,
             _SerializerRegistry.ConfigureServiceHostResponse_RealmNotFoundErrorSerializer,
-            "",
+            "Realm not found.",
             { skirout.service.v1.topology.ConfigureServiceHostResponse.RealmNotFoundErrorWrapper(it) },
             { it.value },
         );
@@ -7081,7 +7088,7 @@ private object _SerializerRegistry {
             "invalid_record_id_error",
             skirout.service.v1.topology.ConfigureServiceHostResponse.Kind.INVALID_RECORD_ID_ERROR_WRAPPER.ordinal,
             skirout.kernel.v1.errors.InvalidRecordIdError.serializer,
-            "",
+            "Record IDs from an unexpected table.",
             { skirout.service.v1.topology.ConfigureServiceHostResponse.InvalidRecordIdErrorWrapper(it) },
             { it.value },
         );
@@ -7287,11 +7294,11 @@ private object _SerializerRegistry {
         );
         GetServiceMessagingScopeResponseSerializerImpl.addWrapperVariant(
             2,
-            "not_found",
-            skirout.service.v1.topology.GetServiceMessagingScopeResponse.Kind.NOT_FOUND_WRAPPER.ordinal,
-            _SerializerRegistry.GetServiceMessagingScopeResponse_NotFoundSerializer,
-            "",
-            { skirout.service.v1.topology.GetServiceMessagingScopeResponse.NotFoundWrapper(it) },
+            "not_found_error",
+            skirout.service.v1.topology.GetServiceMessagingScopeResponse.Kind.NOT_FOUND_ERROR_WRAPPER.ordinal,
+            _SerializerRegistry.GetServiceMessagingScopeResponse_NotFoundErrorSerializer,
+            "Service messaging scope not found.",
+            { skirout.service.v1.topology.GetServiceMessagingScopeResponse.NotFoundErrorWrapper(it) },
             { it.value },
         );
         GetServiceMessagingScopeResponseSerializerImpl.addWrapperVariant(
@@ -7305,7 +7312,7 @@ private object _SerializerRegistry {
         );
         GetServiceMessagingScopeResponseSerializerImpl.finalizeEnum();
 
-        GetServiceMessagingScopeResponse_NotFoundSerializerImpl.finalizeStruct();
+        GetServiceMessagingScopeResponse_NotFoundErrorSerializerImpl.finalizeStruct();
 
         HostConfigurationChangeSerializerImpl.addField(
             "host",
@@ -7805,7 +7812,7 @@ private object _SerializerRegistry {
             "stale_revision_error",
             skirout.service.v1.topology.ReportHostExecutionResponse.Kind.STALE_REVISION_ERROR_WRAPPER.ordinal,
             _SerializerRegistry.ReportHostExecutionResponse_StaleRevisionErrorSerializer,
-            "",
+            "Host topology revision is stale.",
             { skirout.service.v1.topology.ReportHostExecutionResponse.StaleRevisionErrorWrapper(it) },
             { it.value },
         );

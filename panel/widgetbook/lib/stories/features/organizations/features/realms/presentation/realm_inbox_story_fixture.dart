@@ -147,7 +147,7 @@ class RealmInboxStoryFixture extends ChangeNotifier {
           () async {
             published++;
             select(RealmInboxScenario.current);
-            return skir.PublicationResult.createActivated(
+            return skir.PublishAuthoringResponse.createActivated(
               publication: skir.PublicationId(value: "published"),
             );
           },

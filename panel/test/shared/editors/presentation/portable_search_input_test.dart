@@ -475,7 +475,7 @@ final class _SearchFixture {
     final host = BoundPresentationHost(
       readOnly: readOnly,
       catalog: CheckedEditorCatalog(
-        (skir.EditorCatalogWireSnapshot.mutable()
+        (skir.EditorCatalog.mutable()
               ..types = [
                 (skir.PublishedType.mutable()
                       ..status = skir.DeclarationStatus.ready
@@ -682,9 +682,9 @@ final class _ResourceSearchHost extends _CollectionSearchHost
   }) => PortableResourceProjection(
     resource: resource,
     configuration: skir.TypeSelection.unknown,
-    appearance: ResourceAppearance(
+    appearance: skir.ResourceAppearance(
       label: "Resource ${resource.value.split(":").last}",
-      accent: const Color(0xff607d8b),
+      accent: const Color(0xff607d8b).toSkirColor(),
       icon: skir.Icon.wrapIconify("material-symbols:category"),
     ),
     value: skir.DataValue.unfilled,

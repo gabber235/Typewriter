@@ -4,7 +4,6 @@ import com.typewritermc.types.DeletionPolicy
 import com.typewritermc.types.Many
 import com.typewritermc.types.One
 import com.typewritermc.types.Owning
-import com.typewritermc.types.PresentationRole
 import com.typewritermc.types.Ref
 import com.typewritermc.types.ReferenceContract
 import com.typewritermc.types.RelationDeletePolicy
@@ -12,6 +11,7 @@ import com.typewritermc.types.Resource
 import com.typewritermc.types.TypewriterDisplay
 import com.typewritermc.types.TypewriterRecordContract
 import com.typewritermc.types.TypewriterType
+import skirout.editor.v1.catalog.PresentationRole
 
 /**
  * The realm root: the only resource without an owner.

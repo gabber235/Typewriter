@@ -1,9 +1,11 @@
 package com.typewritermc.realm.routes
 
+import com.typewritermc.types.payload
 import skirout.editor.v1.search.RealmPresentationSearchRequest
 import skirout.editor.v1.search.RealmPresentationSearchStatus
 import skirout.editor.v1.search.RealmPresentationSearchUpdate
 import skirout.editor.v1.search.RealmSearchSelectorExpression
+import skirout.editor.v1.search.RealmSearchSelectorOperator
 import skirout.editor.v1.type_catalog.DataValue
 import skirout.editor.v1.type_catalog.TypeTemplate
 
@@ -13,7 +15,7 @@ import skirout.editor.v1.type_catalog.TypeTemplate
  * This is transport boundary validation only. Generation, capability identity, and result type compatibility remain
  * owned by the search source because they require the current discovery snapshot.
  *
- * It checks required fields and known selector expression structure with a bounded node count. A null result means
+ * It checks required fields and known selector expression variants and operators with a bounded node count. A null result means
  * these checks passed, not that catalog generation or capability types match.
  */
 internal fun invalidRealmPresentationSearchRequest(request: RealmPresentationSearchRequest): RealmPresentationSearchUpdate? {
@@ -36,7 +38,7 @@ internal fun invalidRealmPresentationSearchRequest(request: RealmPresentationSea
 
     return RealmPresentationSearchUpdate.createSnapshot(
         subscriptionId = request.subscriptionId,
-        status = RealmPresentationSearchStatus.ERROR,
+        status = RealmPresentationSearchStatus.SEARCH_FAILED_ERROR,
         values = emptyList(),
         guidance = emptyList(),
         diagnostics = messages.map(::realmDiagnostic),
@@ -51,7 +53,7 @@ internal fun invalidRealmPresentationSearchRequest(request: RealmPresentationSea
 internal fun invalidRealmPresentationSearchResponse(subscriptionId: String): RealmPresentationSearchUpdate =
     RealmPresentationSearchUpdate.createSnapshot(
         subscriptionId = subscriptionId,
-        status = RealmPresentationSearchStatus.ERROR,
+        status = RealmPresentationSearchStatus.SEARCH_FAILED_ERROR,
         values = emptyList(),
         guidance = emptyList(),
         diagnostics =
@@ -76,6 +78,9 @@ private fun RealmSearchSelectorExpression.validationMessage(): String? {
             }
 
             is RealmSearchSelectorExpression.BinaryWrapper -> {
+                if (expression.value.operator_ !in KNOWN_SELECTOR_OPERATORS) {
+                    return "Realm search selector expression contains an unknown operator"
+                }
                 pending.add(expression.value.left)
                 pending.add(expression.value.right)
             }
@@ -93,3 +98,5 @@ private fun RealmSearchSelectorExpression.validationMessage(): String? {
 }
 
 private const val MAXIMUM_SELECTOR_EXPRESSION_NODES = 256
+
+private val KNOWN_SELECTOR_OPERATORS = setOf(RealmSearchSelectorOperator.AND, RealmSearchSelectorOperator.OR)

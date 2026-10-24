@@ -1,8 +1,23 @@
 package com.typewritermc.authoring
 
-import com.typewritermc.types.DataValue
-import com.typewritermc.types.ListItem
-import com.typewritermc.types.MapRow
+import com.typewritermc.types.actualType
+import com.typewritermc.types.field
+import com.typewritermc.types.fields
+import com.typewritermc.types.items
+import com.typewritermc.types.listValue
+import com.typewritermc.types.mapValue
+import com.typewritermc.types.named
+import com.typewritermc.types.payload
+import com.typewritermc.types.rows
+import com.typewritermc.types.setValue
+import com.typewritermc.types.unknownVariant
+import com.typewritermc.types.with
+import skirout.editor.v1.type_catalog.DataValue
+import skirout.editor.v1.type_catalog.ItemId
+import skirout.editor.v1.type_catalog.ListItem
+import skirout.editor.v1.type_catalog.MapRow
+import skirout.editor.v1.type_catalog.PathSegment
+import skirout.editor.v1.type_catalog.ValuePath
 
 sealed interface LocatedPortableValue {
     data class Value(
@@ -67,11 +82,11 @@ fun DataValue.locate(
     path: ValuePath,
     onStep: (StructuralStep) -> Unit = {},
 ): LocatedPortableValue {
-    var at = ValuePath()
+    var at = ValuePath.root
     var node: LocatedPortableValue = LocatedPortableValue.Value(this)
     for (segment in path.segments) {
         onStep(StructuralStep.Form(at))
-        if (segment is PathSegment.Item) onStep(StructuralStep.Membership(at))
+        if (segment is PathSegment.ItemWrapper) onStep(StructuralStep.Membership(at))
         node = node.unwrap(at)
         if (node is LocatedPortableValue.Invalid) return node
         node = node.readChild(segment, at)
@@ -85,41 +100,41 @@ fun DataValue.locate(
 fun DataValue.descendants(): Sequence<LocatedValueNode> =
     sequence {
         val pending = ArrayDeque<ValueVisit>()
-        pending.addLast(ValueVisit(ValuePath(), this@descendants, 0))
+        pending.addLast(ValueVisit(ValuePath.root, this@descendants, 0))
         while (pending.isNotEmpty()) {
             val visit = pending.removeLast()
             require(visit.depth <= MAXIMUM_VALUE_DEPTH) { "Portable value depth limit exceeded." }
             yield(LocatedValueNode(visit.path, visit.value))
             val children =
                 when (val value = visit.value) {
-                    is DataValue.Named -> {
+                    is DataValue.NamedWrapper -> {
                         listOf(LocatedValueNode(visit.path, value.payload))
                     }
 
-                    is DataValue.Record -> {
-                        value.fields.map { (name, child) ->
-                            LocatedValueNode(visit.path.append(PathSegment.Field(name)), child)
+                    is DataValue.RecordWrapper -> {
+                        value.fields.map { field ->
+                            LocatedValueNode(visit.path.append(PathSegment.createField(name = field.name)), field.value)
                         }
                     }
 
-                    is DataValue.ListValue -> {
+                    is DataValue.ListValueWrapper -> {
                         value.items.map { item ->
-                            LocatedValueNode(visit.path.append(PathSegment.Item(item.id)), item.value)
+                            LocatedValueNode(visit.path.append(PathSegment.createItem(id = item.id)), item.value)
                         }
                     }
 
-                    is DataValue.SetValue -> {
+                    is DataValue.SetValueWrapper -> {
                         value.items.map { item ->
-                            LocatedValueNode(visit.path.append(PathSegment.Item(item.id)), item.value)
+                            LocatedValueNode(visit.path.append(PathSegment.createItem(id = item.id)), item.value)
                         }
                     }
 
-                    is DataValue.MapValue -> {
+                    is DataValue.MapValueWrapper -> {
                         value.rows.flatMap { row ->
-                            val item = visit.path.append(PathSegment.Item(row.id))
+                            val item = visit.path.append(PathSegment.createItem(id = row.id))
                             listOf(
-                                LocatedValueNode(item.append(PathSegment.MapKey), row.key),
-                                LocatedValueNode(item.append(PathSegment.MapValue), row.value),
+                                LocatedValueNode(item.append(PathSegment.MAP_KEY), row.key),
+                                LocatedValueNode(item.append(PathSegment.MAP_VALUE), row.value),
                             )
                         }
                     }
@@ -155,7 +170,7 @@ fun DataValue.writeField(
 private fun LocatedPortableValue.unwrap(at: ValuePath): LocatedPortableValue {
     var node = this
     var depth = 0
-    while (node is LocatedPortableValue.Value && node.value is DataValue.Named) {
+    while (node is LocatedPortableValue.Value && node.value is DataValue.NamedWrapper) {
         if (++depth > MAXIMUM_VALUE_DEPTH) return LocatedPortableValue.Invalid(at, "value_depth_limit")
         node = LocatedPortableValue.Value(node.value.payload)
     }
@@ -169,16 +184,17 @@ private fun LocatedPortableValue.readChild(
     val next = at.append(segment)
     val value = (this as? LocatedPortableValue.Value)?.value
     return when (segment) {
-        is PathSegment.Field -> {
+        is PathSegment.FieldWrapper -> {
             when (value) {
-                DataValue.Unfilled,
-                DataValue.Null,
+                DataValue.UNFILLED,
+                DataValue.NULL,
                 -> {
                     LocatedPortableValue.Missing(next)
                 }
 
-                is DataValue.Record -> {
-                    value.fields[segment.name]
+                is DataValue.RecordWrapper -> {
+                    value
+                        .field(segment.name)
                         ?.let(LocatedPortableValue::Value)
                         ?: LocatedPortableValue.Missing(next)
                 }
@@ -189,23 +205,23 @@ private fun LocatedPortableValue.readChild(
             }
         }
 
-        is PathSegment.Item -> {
+        is PathSegment.ItemWrapper -> {
             when (value) {
-                is DataValue.ListValue -> {
+                is DataValue.ListValueWrapper -> {
                     value.items
                         .singleOrNull { it.id == segment.id }
                         ?.let { LocatedPortableValue.Value(it.value) }
                         ?: LocatedPortableValue.Missing(next)
                 }
 
-                is DataValue.SetValue -> {
+                is DataValue.SetValueWrapper -> {
                     value.items
                         .singleOrNull { it.id == segment.id }
                         ?.let { LocatedPortableValue.Value(it.value) }
                         ?: LocatedPortableValue.Missing(next)
                 }
 
-                is DataValue.MapValue -> {
+                is DataValue.MapValueWrapper -> {
                     value.rows
                         .singleOrNull { it.id == segment.id }
                         ?.let(LocatedPortableValue::Row)
@@ -218,7 +234,7 @@ private fun LocatedPortableValue.readChild(
             }
         }
 
-        PathSegment.MapKey -> {
+        PathSegment.MAP_KEY -> {
             if (this is LocatedPortableValue.Row) {
                 LocatedPortableValue.Value(row.key)
             } else {
@@ -226,12 +242,16 @@ private fun LocatedPortableValue.readChild(
             }
         }
 
-        PathSegment.MapValue -> {
+        PathSegment.MAP_VALUE -> {
             if (this is LocatedPortableValue.Row) {
                 LocatedPortableValue.Value(row.value)
             } else {
                 LocatedPortableValue.Invalid(at, "expected_map_row")
             }
+        }
+
+        else -> {
+            unknownVariant(segment)
         }
     }
 }
@@ -243,42 +263,42 @@ private fun DataValue.rewrite(
 ): DataValue? {
     if (depth > MAXIMUM_VALUE_DEPTH) return null
     if (path.isEmpty()) return leaf(this)
-    if (this is DataValue.Named) return copy(payload = payload.rewrite(path, depth + 1, leaf) ?: return null)
+    if (this is DataValue.NamedWrapper) return DataValue.named(actualType, payload.rewrite(path, depth + 1, leaf) ?: return null)
     val tail = path.drop(1)
     return when (val segment = path.first()) {
-        is PathSegment.Field -> {
-            val record = this as? DataValue.Record ?: return null
-            val previous = record.fields[segment.name]
+        is PathSegment.FieldWrapper -> {
+            val record = this as? DataValue.RecordWrapper ?: return null
+            val previous = record.field(segment.name)
             val changed =
                 if (tail.isEmpty()) {
                     leaf(previous)
                 } else {
                     previous?.rewrite(tail, depth + 1, leaf)
                 }
-            record.copy(fields = record.fields + (segment.name to (changed ?: return null)))
+            DataValue.RecordWrapper(record.value.with(segment.name, changed ?: return null))
         }
 
-        is PathSegment.Item -> {
+        is PathSegment.ItemWrapper -> {
             when (this) {
-                is DataValue.ListValue -> {
-                    copy(items = items.rewriteItem(segment.id, tail, depth + 1, leaf) ?: return null)
+                is DataValue.ListValueWrapper -> {
+                    DataValue.listValue(items.rewriteItem(segment.id, tail, depth + 1, leaf) ?: return null)
                 }
 
-                is DataValue.SetValue -> {
-                    copy(items = items.rewriteItem(segment.id, tail, depth + 1, leaf) ?: return null)
+                is DataValue.SetValueWrapper -> {
+                    DataValue.setValue(items.rewriteItem(segment.id, tail, depth + 1, leaf) ?: return null)
                 }
 
-                is DataValue.MapValue -> {
+                is DataValue.MapValueWrapper -> {
                     val index = rows.indexOfFirst { it.id == segment.id }
                     if (index < 0) return null
                     val row = rows[index]
                     val changed =
                         when (tail.firstOrNull()) {
-                            PathSegment.MapKey -> row.copy(key = row.key.rewrite(tail.drop(1), depth + 1, leaf) ?: return null)
-                            PathSegment.MapValue -> row.copy(value = row.value.rewrite(tail.drop(1), depth + 1, leaf) ?: return null)
+                            PathSegment.MAP_KEY -> row.copy(key = row.key.rewrite(tail.drop(1), depth + 1, leaf) ?: return null)
+                            PathSegment.MAP_VALUE -> row.copy(value = row.value.rewrite(tail.drop(1), depth + 1, leaf) ?: return null)
                             else -> return null
                         }
-                    copy(rows = rows.toMutableList().also { it[index] = changed })
+                    DataValue.mapValue(rows.toMutableList().also { it[index] = changed })
                 }
 
                 else -> {
@@ -287,10 +307,14 @@ private fun DataValue.rewrite(
             }
         }
 
-        PathSegment.MapKey,
-        PathSegment.MapValue,
+        PathSegment.MAP_KEY,
+        PathSegment.MAP_VALUE,
         -> {
             null
+        }
+
+        else -> {
+            unknownVariant(segment)
         }
     }
 }

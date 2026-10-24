@@ -774,10 +774,11 @@ impl CapabilityFailure {
 pub enum ComputationResult {
     Unknown(Option<crate::skir_client::UnrecognizedVariant<ComputationResult>>),
     Success(Box<ComputationSuccess>),
-    Invalid(Box<CapabilityFailure>),
-    Unavailable(Box<CapabilityFailure>),
-    PermissionDenied(Box<CapabilityPermissionDenied>),
-    StaleGeneration(Box<StaleCatalogGeneration>),
+    InvalidError(Box<CapabilityFailure>),
+    UnavailableError(Box<CapabilityFailure>),
+    PermissionDeniedError(Box<CapabilityPermissionDenied>),
+    StaleGenerationError(Box<StaleCatalogGeneration>),
+    InternalError(Box<crate::skirout::base::kernel::v1::errors::InternalError>),
 }
 
 impl Default for ComputationResult {
@@ -795,10 +796,11 @@ impl ComputationResult {
                 |x: &ComputationResult| match x {
                     ComputationResult::Unknown(_) => 0,
                     ComputationResult::Success(_) => 1,
-                    ComputationResult::Invalid(_) => 2,
-                    ComputationResult::Unavailable(_) => 3,
-                    ComputationResult::PermissionDenied(_) => 4,
-                    ComputationResult::StaleGeneration(_) => 5,
+                    ComputationResult::InvalidError(_) => 2,
+                    ComputationResult::UnavailableError(_) => 3,
+                    ComputationResult::PermissionDeniedError(_) => 4,
+                    ComputationResult::StaleGenerationError(_) => 5,
+                    ComputationResult::InternalError(_) => 6,
                 },
                 |u| ComputationResult::Unknown(Some(u)),
                 |x: &ComputationResult| match x {
@@ -826,10 +828,11 @@ impl ComputationResult {
 pub enum CommandResult {
     Unknown(Option<crate::skir_client::UnrecognizedVariant<CommandResult>>),
     Success(Box<CommandSuccess>),
-    Invalid(Box<CapabilityFailure>),
-    Unavailable(Box<CapabilityFailure>),
-    PermissionDenied(Box<CapabilityPermissionDenied>),
-    StaleGeneration(Box<StaleCatalogGeneration>),
+    InvalidError(Box<CapabilityFailure>),
+    UnavailableError(Box<CapabilityFailure>),
+    PermissionDeniedError(Box<CapabilityPermissionDenied>),
+    StaleGenerationError(Box<StaleCatalogGeneration>),
+    InternalError(Box<crate::skirout::base::kernel::v1::errors::InternalError>),
 }
 
 impl Default for CommandResult {
@@ -847,10 +850,11 @@ impl CommandResult {
                 |x: &CommandResult| match x {
                     CommandResult::Unknown(_) => 0,
                     CommandResult::Success(_) => 1,
-                    CommandResult::Invalid(_) => 2,
-                    CommandResult::Unavailable(_) => 3,
-                    CommandResult::PermissionDenied(_) => 4,
-                    CommandResult::StaleGeneration(_) => 5,
+                    CommandResult::InvalidError(_) => 2,
+                    CommandResult::UnavailableError(_) => 3,
+                    CommandResult::PermissionDeniedError(_) => 4,
+                    CommandResult::StaleGenerationError(_) => 5,
+                    CommandResult::InternalError(_) => 6,
                 },
                 |u| CommandResult::Unknown(Some(u)),
                 |x: &CommandResult| match x {
@@ -1394,58 +1398,70 @@ fn initialize_module_serializers() {
                 },
             );
             (*a).add_wrapper_variant(
-                "invalid",
+                "invalid_error",
                 2,
                 2,
                 crate::skir_client::internal::struct_serializer_from_static(
                     CapabilityFailure::_adapter(),
                 ),
                 "",
-                |v| ComputationResult::Invalid(Box::new(v)),
+                |v| ComputationResult::InvalidError(Box::new(v)),
                 |x| match x {
-                    ComputationResult::Invalid(b) => b.as_ref(),
+                    ComputationResult::InvalidError(b) => b.as_ref(),
                     _ => unreachable!(),
                 },
             );
             (*a).add_wrapper_variant(
-                "unavailable",
+                "unavailable_error",
                 3,
                 3,
                 crate::skir_client::internal::struct_serializer_from_static(
                     CapabilityFailure::_adapter(),
                 ),
                 "",
-                |v| ComputationResult::Unavailable(Box::new(v)),
+                |v| ComputationResult::UnavailableError(Box::new(v)),
                 |x| match x {
-                    ComputationResult::Unavailable(b) => b.as_ref(),
+                    ComputationResult::UnavailableError(b) => b.as_ref(),
                     _ => unreachable!(),
                 },
             );
             (*a).add_wrapper_variant(
-                "permission_denied",
+                "permission_denied_error",
                 4,
                 4,
                 crate::skir_client::internal::struct_serializer_from_static(
                     CapabilityPermissionDenied::_adapter(),
                 ),
                 "",
-                |v| ComputationResult::PermissionDenied(Box::new(v)),
+                |v| ComputationResult::PermissionDeniedError(Box::new(v)),
                 |x| match x {
-                    ComputationResult::PermissionDenied(b) => b.as_ref(),
+                    ComputationResult::PermissionDeniedError(b) => b.as_ref(),
                     _ => unreachable!(),
                 },
             );
             (*a).add_wrapper_variant(
-                "stale_generation",
+                "stale_generation_error",
                 5,
                 5,
                 crate::skir_client::internal::struct_serializer_from_static(
                     StaleCatalogGeneration::_adapter(),
                 ),
                 "",
-                |v| ComputationResult::StaleGeneration(Box::new(v)),
+                |v| ComputationResult::StaleGenerationError(Box::new(v)),
                 |x| match x {
-                    ComputationResult::StaleGeneration(b) => b.as_ref(),
+                    ComputationResult::StaleGenerationError(b) => b.as_ref(),
+                    _ => unreachable!(),
+                },
+            );
+            (*a).add_wrapper_variant(
+                "internal_error",
+                6,
+                6,
+                crate::skirout::base::kernel::v1::errors::InternalError::serializer(),
+                "",
+                |v| ComputationResult::InternalError(Box::new(v)),
+                |x| match x {
+                    ComputationResult::InternalError(b) => b.as_ref(),
                     _ => unreachable!(),
                 },
             );
@@ -1469,58 +1485,70 @@ fn initialize_module_serializers() {
                 },
             );
             (*a).add_wrapper_variant(
-                "invalid",
+                "invalid_error",
                 2,
                 2,
                 crate::skir_client::internal::struct_serializer_from_static(
                     CapabilityFailure::_adapter(),
                 ),
                 "",
-                |v| CommandResult::Invalid(Box::new(v)),
+                |v| CommandResult::InvalidError(Box::new(v)),
                 |x| match x {
-                    CommandResult::Invalid(b) => b.as_ref(),
+                    CommandResult::InvalidError(b) => b.as_ref(),
                     _ => unreachable!(),
                 },
             );
             (*a).add_wrapper_variant(
-                "unavailable",
+                "unavailable_error",
                 3,
                 3,
                 crate::skir_client::internal::struct_serializer_from_static(
                     CapabilityFailure::_adapter(),
                 ),
                 "",
-                |v| CommandResult::Unavailable(Box::new(v)),
+                |v| CommandResult::UnavailableError(Box::new(v)),
                 |x| match x {
-                    CommandResult::Unavailable(b) => b.as_ref(),
+                    CommandResult::UnavailableError(b) => b.as_ref(),
                     _ => unreachable!(),
                 },
             );
             (*a).add_wrapper_variant(
-                "permission_denied",
+                "permission_denied_error",
                 4,
                 4,
                 crate::skir_client::internal::struct_serializer_from_static(
                     CapabilityPermissionDenied::_adapter(),
                 ),
                 "",
-                |v| CommandResult::PermissionDenied(Box::new(v)),
+                |v| CommandResult::PermissionDeniedError(Box::new(v)),
                 |x| match x {
-                    CommandResult::PermissionDenied(b) => b.as_ref(),
+                    CommandResult::PermissionDeniedError(b) => b.as_ref(),
                     _ => unreachable!(),
                 },
             );
             (*a).add_wrapper_variant(
-                "stale_generation",
+                "stale_generation_error",
                 5,
                 5,
                 crate::skir_client::internal::struct_serializer_from_static(
                     StaleCatalogGeneration::_adapter(),
                 ),
                 "",
-                |v| CommandResult::StaleGeneration(Box::new(v)),
+                |v| CommandResult::StaleGenerationError(Box::new(v)),
                 |x| match x {
-                    CommandResult::StaleGeneration(b) => b.as_ref(),
+                    CommandResult::StaleGenerationError(b) => b.as_ref(),
+                    _ => unreachable!(),
+                },
+            );
+            (*a).add_wrapper_variant(
+                "internal_error",
+                6,
+                6,
+                crate::skirout::base::kernel::v1::errors::InternalError::serializer(),
+                "",
+                |v| CommandResult::InternalError(Box::new(v)),
+                |x| match x {
+                    CommandResult::InternalError(b) => b.as_ref(),
                     _ => unreachable!(),
                 },
             );

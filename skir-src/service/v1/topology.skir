@@ -142,21 +142,26 @@ method ConfigureServiceHost(
 ): enum {
   success: HostConfigurationChange;
 
+  /// Host changed elsewhere.
   conflict_error: struct {
     actual: HostConfigurationChange;
   };
 
+  /// Host configuration is invalid.
   invalid_configuration_error: struct {
     message: string;
   };
 
+  /// Engine target is incompatible.
   incompatible_engine_error: struct {
     target: EngineTarget;
   };
 
+  /// Realm not found.
   realm_not_found_error: struct {
     realm_id: RecordId;
   };
+  /// Record IDs from an unexpected table.
   invalid_record_id_error: InvalidRecordIdError;
   internal_error: InternalError;
 } = 934201;
@@ -224,6 +229,7 @@ method ReportHostExecution(
   }
 ): enum {
   success: struct {};
+  /// Host topology revision is stale.
   stale_revision_error: struct {};
   internal_error: InternalError;
 } = 934204;
@@ -242,7 +248,8 @@ method GetServiceMessagingScope(
   }
 ): enum {
   found: ServiceMessagingScope;
-  not_found: struct {};
+  /// Service messaging scope not found.
+  not_found_error: struct {};
   internal_error: InternalError;
 } = 934205;
 

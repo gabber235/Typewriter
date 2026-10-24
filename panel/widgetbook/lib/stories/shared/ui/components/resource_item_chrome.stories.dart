@@ -29,9 +29,9 @@ Widget resourceItemChromeUseCase(BuildContext context) {
           value: interaction,
           child: ResourceItemChrome(
             density: density,
-            appearance: ResourceAppearance(
+            appearance: skir.ResourceAppearance(
               label: "The Lost Village",
-              accent: const Color(0xff3f51b5),
+              accent: const Color(0xff3f51b5).toSkirColor(),
               icon: skir.Icon.wrapIconify("material-symbols:book"),
             ),
           ),

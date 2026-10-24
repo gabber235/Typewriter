@@ -16,7 +16,7 @@ lines = [
     '/// Regenerate with TYPEWRITER_CONTROL_FIXTURE_DIR and this fixture tool.',
 ]
 for name, wire_type, file_name in [
-    ("compiledSdkControlCatalog", "EditorCatalogWireSnapshot", "catalog.bin"),
+    ("compiledSdkControlCatalog", "EditorCatalog", "catalog.bin"),
     ("compiledSdkTagRecord", "AuthoringRecord", "tag.bin"),
     ("compiledSdkTagValue", "DataValue", "tag-value.bin"),
     ("compiledSdkBookRecord", "AuthoringRecord", "book.bin"),
@@ -31,7 +31,7 @@ for name, wire_type, file_name in [
     ("compiledSdkNullableLayout", "PresentationNode", "nullable-layout.bin"),
     ("compiledSdkNullableValue", "DataValue", "nullable-value.bin"),
     ("compiledSdkNestedRemainderLayout", "PresentationNode", "nested-remainder-layout.bin"),
-    ("compiledSdkNestedRemainderCatalog", "EditorCatalogWireSnapshot", "nested-remainder-catalog.bin"),
+    ("compiledSdkNestedRemainderCatalog", "EditorCatalog", "nested-remainder-catalog.bin"),
 ]:
     data = base64.b64encode((args.directory / file_name).read_bytes()).decode()
     lines.append(f"final {name} = skir.{wire_type}.serializer.fromBytes(base64Decode(")

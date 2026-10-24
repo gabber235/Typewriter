@@ -2,24 +2,29 @@ package com.typewritermc.codegen
 
 import com.squareup.kotlinpoet.ClassName
 import com.squareup.kotlinpoet.CodeBlock
-import com.typewritermc.types.CollectionKind
-import com.typewritermc.types.DeclaredTypeId
-import com.typewritermc.types.EndpointId
-import com.typewritermc.types.EnumVariant
-import com.typewritermc.types.FieldDeclaration
-import com.typewritermc.types.FieldOwner
-import com.typewritermc.types.FloatWidth
-import com.typewritermc.types.IntegerWidth
-import com.typewritermc.types.ParameterKey
-import com.typewritermc.types.RepresentationTemplate
-import com.typewritermc.types.ScalarKind
-import com.typewritermc.types.TypeDefinition
-import com.typewritermc.types.TypeDefinitionId
-import com.typewritermc.types.TypeId
-import com.typewritermc.types.TypeParameter
-import com.typewritermc.types.TypeTemplate
-import com.typewritermc.types.TypeUse
+import com.typewritermc.types.named
+import com.typewritermc.types.unknownVariant
+import skirout.editor.v1.type_catalog.CollectionKind
+import skirout.editor.v1.type_catalog.DeclaredTypeId
+import skirout.editor.v1.type_catalog.EndpointId
+import skirout.editor.v1.type_catalog.EnumVariant
+import skirout.editor.v1.type_catalog.FieldDeclaration
+import skirout.editor.v1.type_catalog.FieldOwner
+import skirout.editor.v1.type_catalog.FloatWidth
+import skirout.editor.v1.type_catalog.IntegerWidth
+import skirout.editor.v1.type_catalog.NamedTypeTemplate
+import skirout.editor.v1.type_catalog.NamedTypeUse
+import skirout.editor.v1.type_catalog.ParameterKey
+import skirout.editor.v1.type_catalog.RepresentationTemplate
+import skirout.editor.v1.type_catalog.ScalarKind
+import skirout.editor.v1.type_catalog.TypeDefinition
+import skirout.editor.v1.type_catalog.TypeDefinitionId
+import skirout.editor.v1.type_catalog.TypeId
+import skirout.editor.v1.type_catalog.TypeParameter
+import skirout.editor.v1.type_catalog.TypeTemplate
+import skirout.editor.v1.type_catalog.TypeUse
 import java.util.Collections
+import kotlin.reflect.KClass
 
 /** `emptyList()` when empty, inline for one item, otherwise one item per line. */
 internal fun Iterable<CodeBlock>.listCode(): CodeBlock {
@@ -97,109 +102,166 @@ internal fun namedArguments(vararg arguments: Pair<String, CodeBlock>): CodeBloc
 internal class DefinitionReferences(
     private val owners: Map<TypeDefinitionId, ClassName>,
     private val self: TypeDefinitionId? = null,
-    /** Code for ids without an owner object; only closed registries such as the canonical read models state ids inline. */
-    private val unowned: (TypeDefinitionId) -> CodeBlock = { error("No generated definition owns $it.") },
 ) {
     fun code(id: TypeDefinitionId): CodeBlock =
         when (id) {
             self -> CodeBlock.of("id")
             in owners -> CodeBlock.of("%T.id", owners.getValue(id))
-            else -> unowned(id)
+            else -> error("No generated definition owns $id.")
         }
 
     /** References as seen from inside the owner of [definition]. */
-    fun inside(definition: TypeDefinitionId): DefinitionReferences = DefinitionReferences(owners, definition, unowned)
+    fun inside(definition: TypeDefinitionId): DefinitionReferences = DefinitionReferences(owners, definition)
 }
 
 /** The single literal statement of an id, used only for an owner's own `id` property. */
 internal fun TypeDefinitionId.declarationCode(): CodeBlock {
     val identity =
-        when (val identity = type) {
-            is TypeId.Declared -> CodeBlock.of("%T(%T.parse(%S))", TypeId.Declared::class, DeclaredTypeId::class, identity.id.toString())
-            is TypeId.Qualified -> CodeBlock.of("%T(%S,♢%S)", TypeId.Qualified::class, identity.namespace, identity.name)
+        when (val identity = typeId) {
+            is TypeId.DeclaredWrapper -> {
+                CodeBlock.of(
+                    "%T(%T(value·=·%S))",
+                    TypeId.DeclaredWrapper::class,
+                    DeclaredTypeId::class,
+                    identity.value.value,
+                )
+            }
+
+            is TypeId.QualifiedWrapper -> {
+                CodeBlock.of(
+                    "%T.createQualified(namespace·=·%S,♢name·=·%S)",
+                    TypeId::class,
+                    identity.value.namespace,
+                    identity.value.name,
+                )
+            }
+
+            else -> {
+                unknownVariant(identity)
+            }
         }
-    return CodeBlock.of("%T(%L,♢%L)", TypeDefinitionId::class, identity, revision)
+    return CodeBlock.of("%T(typeId·=·%L,♢revision·=·%L)", TypeDefinitionId::class, identity, revision)
 }
 
 context(references: DefinitionReferences)
 internal fun TypeDefinitionId.kotlinCode(): CodeBlock = references.code(this)
 
 context(_: DefinitionReferences)
-internal fun ParameterKey.kotlinCode(): CodeBlock = CodeBlock.of("%T(%L,♢%L)", ParameterKey::class, owner.kotlinCode(), index)
+internal fun ParameterKey.kotlinCode(): CodeBlock =
+    CodeBlock.of("%T(owner·=·%L,♢index·=·%L)", ParameterKey::class, owner.kotlinCode(), index)
 
 context(_: DefinitionReferences)
 internal fun TypeUse.kotlinCode(): CodeBlock =
     when (this) {
-        is TypeUse.Named -> {
-            CodeBlock.of(
-                "%T(%L,♢%L)",
-                TypeUse.Named::class,
-                definition.kotlinCode(),
-                arguments.map { it.kotlinCode() }.listCode(),
-            )
-        }
-
-        is TypeUse.Nullable -> {
-            CodeBlock.of("%T(%L)", TypeUse.Nullable::class, value.kotlinCode())
-        }
-
-        is TypeUse.Scalar -> {
-            CodeBlock.of("%T(%L)", TypeUse.Scalar::class, kind.kotlinCode())
-        }
+        is TypeUse.NamedWrapper -> createNamedCode(TypeUse::class, value.definition.kotlinCode(), value.arguments.map { it.kotlinCode() })
+        is TypeUse.NullableWrapper -> CodeBlock.of("%T.createNullable(value·=·%L)", TypeUse::class, value.value.kotlinCode())
+        is TypeUse.ScalarWrapper -> CodeBlock.of("%T(%L)", TypeUse.ScalarWrapper::class, value.kotlinCode())
+        else -> unknownVariant(this)
     }
+
+context(_: DefinitionReferences)
+internal fun NamedTypeUse.kotlinCode(): CodeBlock = namedUseCode(definition.kotlinCode(), arguments.map { it.kotlinCode() })
 
 context(_: DefinitionReferences)
 internal fun TypeTemplate.kotlinCode(): CodeBlock =
     when (this) {
-        is TypeTemplate.Named -> {
-            CodeBlock.of("%T(%L,♢%L)", TypeTemplate.Named::class, definition.kotlinCode(), arguments.map { it.kotlinCode() }.listCode())
+        is TypeTemplate.NamedWrapper -> {
+            createNamedCode(
+                TypeTemplate::class,
+                value.definition.kotlinCode(),
+                value.arguments.map { it.kotlinCode() },
+            )
         }
 
-        is TypeTemplate.Parameter -> {
-            CodeBlock.of("%T(%L)", TypeTemplate.Parameter::class, key.kotlinCode())
+        is TypeTemplate.ParameterWrapper -> {
+            CodeBlock.of("%T(%L)", TypeTemplate.ParameterWrapper::class, value.kotlinCode())
         }
 
-        is TypeTemplate.Nullable -> {
-            CodeBlock.of("%T(%L)", TypeTemplate.Nullable::class, value.kotlinCode())
+        is TypeTemplate.NullableWrapper -> {
+            CodeBlock.of("%T.createNullable(value·=·%L)", TypeTemplate::class, value.value.kotlinCode())
         }
 
-        is TypeTemplate.Scalar -> {
-            CodeBlock.of("%T(%L)", TypeTemplate.Scalar::class, kind.kotlinCode())
+        is TypeTemplate.ScalarWrapper -> {
+            CodeBlock.of("%T(%L)", TypeTemplate.ScalarWrapper::class, value.kotlinCode())
+        }
+
+        else -> {
+            unknownVariant(this)
         }
     }
+
+context(_: DefinitionReferences)
+internal fun NamedTypeTemplate.kotlinCode(): CodeBlock =
+    CodeBlock.of(
+        "%T(definition·=·%L,♢arguments·=·%L)",
+        NamedTypeTemplate::class,
+        definition.kotlinCode(),
+        arguments.map { it.kotlinCode() }.listCode(),
+    )
 
 /** The complete type use of a template without free parameters. */
 context(_: DefinitionReferences)
-internal fun TypeTemplate.completeUseCode(): CodeBlock =
-    when (this) {
-        is TypeTemplate.Parameter -> {
-            error("A free parameter does not form a complete type use")
-        }
+internal fun TypeTemplate.completeUseCode(): CodeBlock = useCode { error("A free parameter does not form a complete type use") }
 
-        is TypeTemplate.Named -> {
-            CodeBlock.of("%T(%L,♢%L)", TypeUse.Named::class, definition.kotlinCode(), arguments.map { it.completeUseCode() }.listCode())
-        }
-
-        is TypeTemplate.Nullable -> {
-            CodeBlock.of("%T(%L)", TypeUse.Nullable::class, value.completeUseCode())
-        }
-
-        is TypeTemplate.Scalar -> {
-            CodeBlock.of("%T(%L)", TypeUse.Scalar::class, kind.kotlinCode())
-        }
-    }
+/** The complete named application of a template without free parameters. */
+context(_: DefinitionReferences)
+internal fun NamedTypeTemplate.completeUseCode(): CodeBlock = namedUseCode(definition.kotlinCode(), arguments.map { it.completeUseCode() })
 
 internal fun ScalarKind.kotlinCode(): CodeBlock =
     when (this) {
-        ScalarKind.Unit -> CodeBlock.of("%T", ScalarKind.Unit::class)
-        ScalarKind.Boolean -> CodeBlock.of("%T", ScalarKind.Boolean::class)
-        ScalarKind.Text -> CodeBlock.of("%T", ScalarKind.Text::class)
-        ScalarKind.Bytes -> CodeBlock.of("%T", ScalarKind.Bytes::class)
-        ScalarKind.Decimal -> CodeBlock.of("%T", ScalarKind.Decimal::class)
-        ScalarKind.Timestamp -> CodeBlock.of("%T", ScalarKind.Timestamp::class)
-        ScalarKind.Duration -> CodeBlock.of("%T", ScalarKind.Duration::class)
-        is ScalarKind.Integer -> CodeBlock.of("%T(%T.%L)", ScalarKind.Integer::class, IntegerWidth::class, width.name)
-        is ScalarKind.Float -> CodeBlock.of("%T(%T.%L)", ScalarKind.Float::class, FloatWidth::class, width.name)
+        ScalarKind.UNIT -> CodeBlock.of("%T", ScalarKind.UNIT::class)
+        ScalarKind.BOOLEAN -> CodeBlock.of("%T", ScalarKind.BOOLEAN::class)
+        ScalarKind.TEXT -> CodeBlock.of("%T", ScalarKind.TEXT::class)
+        ScalarKind.BYTES -> CodeBlock.of("%T", ScalarKind.BYTES::class)
+        ScalarKind.DECIMAL -> CodeBlock.of("%T", ScalarKind.DECIMAL::class)
+        ScalarKind.TIMESTAMP -> CodeBlock.of("%T", ScalarKind.TIMESTAMP::class)
+        ScalarKind.DURATION -> CodeBlock.of("%T", ScalarKind.DURATION::class)
+        is ScalarKind.IntegerWrapper -> CodeBlock.of("%T.createInteger(width·=·%L)", ScalarKind::class, value.width.kotlinCode())
+        is ScalarKind.FloatWrapper -> CodeBlock.of("%T.createFloat(width·=·%L)", ScalarKind::class, value.width.kotlinCode())
+        else -> unknownVariant(this)
+    }
+
+private fun IntegerWidth.kotlinCode(): CodeBlock = CodeBlock.of("%T", this::class)
+
+private fun FloatWidth.kotlinCode(): CodeBlock = CodeBlock.of("%T", this::class)
+
+private fun CollectionKind.kotlinCode(): CodeBlock = CodeBlock.of("%T", this::class)
+
+/** `createNamed` of the Skir enum [type], the shortcut for its named variant. */
+private fun createNamedCode(
+    type: KClass<*>,
+    definition: CodeBlock,
+    arguments: List<CodeBlock>,
+): CodeBlock = CodeBlock.of("%T.createNamed(definition·=·%L,♢arguments·=·%L)", type, definition, arguments.listCode())
+
+private fun namedUseCode(
+    definition: CodeBlock,
+    arguments: List<CodeBlock>,
+): CodeBlock = CodeBlock.of("%T(definition·=·%L,♢arguments·=·%L)", NamedTypeUse::class, definition, arguments.listCode())
+
+/** The type use of this template, with each parameter supplied by [parameter]. */
+context(_: DefinitionReferences)
+private fun TypeTemplate.useCode(parameter: (ParameterKey) -> CodeBlock): CodeBlock =
+    when (this) {
+        is TypeTemplate.ParameterWrapper -> {
+            parameter(value)
+        }
+
+        is TypeTemplate.NamedWrapper -> {
+            createNamedCode(TypeUse::class, value.definition.kotlinCode(), value.arguments.map { it.useCode(parameter) })
+        }
+
+        is TypeTemplate.NullableWrapper -> {
+            CodeBlock.of("%T.createNullable(value·=·%L)", TypeUse::class, value.value.useCode(parameter))
+        }
+
+        is TypeTemplate.ScalarWrapper -> {
+            CodeBlock.of("%T(%L)", TypeUse.ScalarWrapper::class, value.kotlinCode())
+        }
+
+        else -> {
+            unknownVariant(this)
+        }
     }
 
 /** Kotlin expressions that supply the runtime type use of each type parameter. */
@@ -217,29 +279,19 @@ internal value class TypeParameterBindings private constructor(
 
 /** The type use of this template with each parameter replaced by its runtime binding. */
 context(bindings: TypeParameterBindings, _: DefinitionReferences)
-internal fun TypeTemplate.appliedUseCode(): CodeBlock =
-    when (this) {
-        is TypeTemplate.Parameter -> {
-            bindings[key]
-        }
+internal fun TypeTemplate.appliedUseCode(): CodeBlock = useCode { key -> bindings[key] }
 
-        is TypeTemplate.Named -> {
-            CodeBlock.of("%T(%L,♢%L)", TypeUse.Named::class, definition.kotlinCode(), arguments.map { it.appliedUseCode() }.listCode())
-        }
-
-        is TypeTemplate.Nullable -> {
-            CodeBlock.of("%T(%L)", TypeUse.Nullable::class, value.appliedUseCode())
-        }
-
-        is TypeTemplate.Scalar -> {
-            CodeBlock.of("%T(%L)", TypeUse.Scalar::class, kind.kotlinCode())
-        }
-    }
+/** The named application of this named template with each parameter replaced by its runtime binding. */
+context(bindings: TypeParameterBindings, _: DefinitionReferences)
+internal fun TypeTemplate.appliedNamedUseCode(): CodeBlock {
+    val named = requireNotNull(named) { "Only a named template forms a named application." }
+    return namedUseCode(named.definition.kotlinCode(), named.arguments.map { it.useCode { key -> bindings[key] } })
+}
 
 context(_: DefinitionReferences)
 internal fun TypeParameter.kotlinCode(): CodeBlock =
     CodeBlock.of(
-        "%T(key = %L,♢name = %S,♢bounds = %L)",
+        "%T(key·=·%L,♢name·=·%S,♢bounds·=·%L)",
         TypeParameter::class,
         key.kotlinCode(),
         name,
@@ -247,7 +299,8 @@ internal fun TypeParameter.kotlinCode(): CodeBlock =
     )
 
 context(_: DefinitionReferences)
-internal fun FieldOwner.kotlinCode(): CodeBlock = CodeBlock.of("%T(%L,♢%S)", FieldOwner::class, definition.kotlinCode(), name)
+internal fun FieldOwner.kotlinCode(): CodeBlock =
+    CodeBlock.of("%T(definition·=·%L,♢name·=·%S)", FieldOwner::class, definition.kotlinCode(), name)
 
 context(_: DefinitionReferences)
 internal fun FieldDeclaration.kotlinCode(): CodeBlock =
@@ -265,39 +318,59 @@ internal fun FieldDeclaration.kotlinCode(): CodeBlock =
 context(_: DefinitionReferences)
 internal fun RepresentationTemplate.kotlinCode(): CodeBlock =
     when (this) {
-        is RepresentationTemplate.Scalar -> {
-            CodeBlock.of("%T(%L)", RepresentationTemplate.Scalar::class, kind.kotlinCode())
+        is RepresentationTemplate.ScalarWrapper -> {
+            CodeBlock.of("%T.createScalar(kind·=·%L)", RepresentationTemplate::class, value.kind.kotlinCode())
         }
 
-        is RepresentationTemplate.Record -> {
+        is RepresentationTemplate.RecordWrapper -> {
             CodeBlock.of(
-                "%T%L",
-                RepresentationTemplate.Record::class,
+                "%T.createRecord%L",
+                RepresentationTemplate::class,
                 namedArguments(
-                    "fields" to fields.map { it.kotlinCode() }.listCode(),
-                    "abstract" to CodeBlock.of("%L", abstract),
+                    "fields" to value.fields.map { it.kotlinCode() }.listCode(),
+                    "abstract_" to CodeBlock.of("%L", value.abstract_),
                 ),
             )
         }
 
-        is RepresentationTemplate.Sequence -> {
-            CodeBlock.of("%T(%L,♢%T.%L)", RepresentationTemplate.Sequence::class, item.kotlinCode(), CollectionKind::class, kind.name)
-        }
-
-        is RepresentationTemplate.Mapping -> {
-            CodeBlock.of("%T(%L,♢%L)", RepresentationTemplate.Mapping::class, key.kotlinCode(), value.kotlinCode())
-        }
-
-        is RepresentationTemplate.Enumeration -> {
+        is RepresentationTemplate.SequenceWrapper -> {
             CodeBlock.of(
-                "%T(%L)",
-                RepresentationTemplate.Enumeration::class,
-                cases.map { CodeBlock.of("%T(%S)", EnumVariant::class, it.key) }.listCode(),
+                "%T.createSequence(item·=·%L,♢kind·=·%L)",
+                RepresentationTemplate::class,
+                value.item.kotlinCode(),
+                value.kind.kotlinCode(),
             )
         }
 
-        is RepresentationTemplate.Link -> {
-            CodeBlock.of("%T(%T(%S),♢%L)", RepresentationTemplate.Link::class, EndpointId::class, endpoint.value, target.kotlinCode())
+        is RepresentationTemplate.MappingWrapper -> {
+            CodeBlock.of(
+                "%T.createMapping(key·=·%L,♢value·=·%L)",
+                RepresentationTemplate::class,
+                value.key.kotlinCode(),
+                value.value.kotlinCode(),
+            )
+        }
+
+        is RepresentationTemplate.EnumerationWrapper -> {
+            CodeBlock.of(
+                "%T.createEnumeration(cases·=·%L)",
+                RepresentationTemplate::class,
+                value.cases.map { CodeBlock.of("%T(key·=·%S)", EnumVariant::class, it.key) }.listCode(),
+            )
+        }
+
+        is RepresentationTemplate.LinkWrapper -> {
+            CodeBlock.of(
+                "%T.createLink(endpoint·=·%T(value·=·%S),♢target·=·%L)",
+                RepresentationTemplate::class,
+                EndpointId::class,
+                value.endpoint.value,
+                value.target.kotlinCode(),
+            )
+        }
+
+        else -> {
+            unknownVariant(this)
         }
     }
 
@@ -320,49 +393,49 @@ internal fun TypeDefinition.referencedIds(): Set<TypeDefinitionId> {
 
     fun visit(template: TypeTemplate) {
         when (template) {
-            is TypeTemplate.Named -> {
-                ids += template.definition
-                template.arguments.forEach(::visit)
+            is TypeTemplate.NamedWrapper -> {
+                ids += template.value.definition
+                template.value.arguments.forEach(::visit)
             }
 
-            is TypeTemplate.Nullable -> {
-                visit(template.value)
+            is TypeTemplate.NullableWrapper -> {
+                visit(template.value.value)
             }
 
-            is TypeTemplate.Parameter -> {
-                ids += template.key.owner
+            is TypeTemplate.ParameterWrapper -> {
+                ids += template.value.owner
             }
 
-            is TypeTemplate.Scalar -> {
+            else -> {
                 Unit
             }
         }
     }
     parameters.forEach { parameter -> parameter.bounds.forEach(::visit) }
-    parents.forEach(::visit)
+    parents.forEach { parent -> visit(TypeTemplate.NamedWrapper(parent)) }
     when (val representation = representation) {
-        is RepresentationTemplate.Record -> {
-            representation.fields.forEach { field ->
+        is RepresentationTemplate.RecordWrapper -> {
+            representation.value.fields.forEach { field ->
                 ids += field.owner.definition
                 ids += field.overrides.map(FieldOwner::definition)
                 visit(field.type)
             }
         }
 
-        is RepresentationTemplate.Sequence -> {
-            visit(representation.item)
+        is RepresentationTemplate.SequenceWrapper -> {
+            visit(representation.value.item)
         }
 
-        is RepresentationTemplate.Mapping -> {
-            visit(representation.key)
-            visit(representation.value)
+        is RepresentationTemplate.MappingWrapper -> {
+            visit(representation.value.key)
+            visit(representation.value.value)
         }
 
-        is RepresentationTemplate.Link -> {
-            visit(representation.target)
+        is RepresentationTemplate.LinkWrapper -> {
+            visit(representation.value.target)
         }
 
-        is RepresentationTemplate.Enumeration, is RepresentationTemplate.Scalar -> {
+        else -> {
             Unit
         }
     }

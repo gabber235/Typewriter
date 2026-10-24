@@ -1,17 +1,23 @@
 package com.typewritermc.presentation
 
+import com.typewritermc.authoring.root
 import com.typewritermc.expression.Expr
 import com.typewritermc.expression.Handled
 import com.typewritermc.expression.literal
+import com.typewritermc.types.requireValid
+import com.typewritermc.types.use
 import skirout.editor.v1.binding.BindingRef
-import skirout.editor.v1.expression.ExpressionNode
 import skirout.editor.v1.presentation.ChildrenElement
+import skirout.editor.v1.presentation.CrossAxisAlignment
+import skirout.editor.v1.presentation.FlexFit
 import skirout.editor.v1.presentation.GridChildrenLayout
+import skirout.editor.v1.presentation.MainAxisAlignment
+import skirout.editor.v1.presentation.PresentationAlignment
 import skirout.editor.v1.presentation.PresentationElement
 import skirout.editor.v1.presentation.PresentationNode
+import skirout.editor.v1.presentation.PresentationTransitionPolicy
 import skirout.editor.v1.presentation.WrapChildrenLayout
-import skirout.editor.v1.presentation.CrossAxisAlignment as WireCrossAxisAlignment
-import skirout.editor.v1.presentation.MainAxisAlignment as WireMainAxisAlignment
+import skirout.editor.v1.type_catalog.ValuePath
 
 internal class RuntimeLayout(
     private val state: PresentationBuildState,
@@ -27,11 +33,12 @@ internal class RuntimeLayout(
     override val role get() = state.role
     override val subject: PresentationSubjectExpressions
         get() {
-            state.type(com.typewritermc.types.ResourceIdDefinition.use)
+            state.type(com.typewritermc.types.ResourceIdDefinition.use.use)
             return PresentationSubjectExpressions(
                 com.typewritermc.expression.inputExpression(
-                    com.typewritermc.expression.ExpressionBindingId("presentation.subject.identifier"),
-                    com.typewritermc.authoring.ValuePath(),
+                    skirout.editor.v1.type_catalog
+                        .ExpressionBindingId(value = "presentation.subject.identifier"),
+                    ValuePath.root,
                 ),
             )
         }
@@ -56,8 +63,8 @@ internal class RuntimeLayout(
                         layout =
                             skirout.editor.v1.presentation.AxisChildrenLayout(
                                 spacing = spacing,
-                                mainAxisAlignment = WireMainAxisAlignment.START,
-                                crossAxisAlignment = WireCrossAxisAlignment.CENTER,
+                                mainAxisAlignment = MainAxisAlignment.START,
+                                crossAxisAlignment = CrossAxisAlignment.CENTER,
                                 clipOverflow = true,
                             ),
                     ),
@@ -137,13 +144,13 @@ internal class RuntimeLayout(
     }
 
     private fun configuredScope(node: PresentationNode): PresentationNode =
-        if (base.bindingId == CONFIGURED_VALUE.wire() && base.path.segments.isEmpty()) {
+        if (base.bindingId == CONFIGURED_VALUE && base.path.segments.isEmpty()) {
             node
         } else {
             state.node(
                 PresentationElement.createScopedBinding(
                     binding = base,
-                    scopeBindingId = CONFIGURED_VALUE.wire(),
+                    scopeBindingId = CONFIGURED_VALUE,
                     child = node,
                 ),
             )
@@ -226,8 +233,8 @@ internal class RuntimeLayout(
                             WrapChildrenLayout(
                                 spacing = spacing,
                                 runSpacing = runSpacing,
-                                mainAxisAlignment = WireMainAxisAlignment.START,
-                                crossAxisAlignment = WireCrossAxisAlignment.START,
+                                mainAxisAlignment = MainAxisAlignment.START,
+                                crossAxisAlignment = CrossAxisAlignment.START,
                             ),
                     ),
                 ),
@@ -267,7 +274,7 @@ internal class RuntimeLayout(
         target +=
             state.node(
                 PresentationElement.ChildrenWrapper(
-                    ChildrenElement.createStack(children = children.children, alignment = alignment?.wire()),
+                    ChildrenElement.createStack(children = children.children, alignment = alignment),
                 ),
             )
     }
@@ -315,7 +322,7 @@ internal class RuntimeLayout(
                     backgroundColor = style.background?.wire(),
                     radius = style.radius.wire(),
                     foregroundColor = style.foreground?.wire(),
-                    transition = style.transition?.wire(),
+                    transition = style.transition?.requireValid(),
                     shadows = style.shadows.map { it.wire() },
                 ),
             )
@@ -360,7 +367,7 @@ internal class RuntimeLayout(
             state.node(
                 PresentationElement.createTransform(
                     child = child(body),
-                    origin = style.origin.wire(),
+                    origin = style.origin,
                     perspective = style.perspective,
                     scale = style.scale?.wire(),
                     rotateX = style.rotateX?.wire(),
@@ -368,7 +375,7 @@ internal class RuntimeLayout(
                     rotateZ = style.rotateZ?.wire(),
                     translateX = style.translateX?.wire(),
                     translateY = style.translateY?.wire(),
-                    transition = style.transition?.wire(),
+                    transition = style.transition?.requireValid(),
                 ),
             )
     }
@@ -394,7 +401,7 @@ internal class RuntimeLayout(
             state.node(
                 PresentationElement.createAlign(
                     child = child(body),
-                    alignment = alignment.wire(),
+                    alignment = alignment,
                 ),
             )
     }
@@ -500,7 +507,7 @@ private class RuntimeStackLayout(
                 bottom = bottom?.wire(),
                 width = width?.wire(),
                 height = height?.wire(),
-                transition = transition?.wire(),
+                transition = transition?.requireValid(),
             ),
         )
     }

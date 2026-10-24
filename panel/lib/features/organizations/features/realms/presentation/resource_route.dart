@@ -289,7 +289,7 @@ class ResourceHeading extends ConsumerWidget {
               ?leading,
               ResourceIcon(
                 icon: appearance.icon,
-                color: appearance.accent,
+                color: appearance.accentColor,
                 size: 32,
               ),
               Expanded(

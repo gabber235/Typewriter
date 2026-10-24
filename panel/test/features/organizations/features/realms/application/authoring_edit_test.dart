@@ -365,24 +365,20 @@ void main() {
   });
 
   test("commit rejection reports each located value problem", () {
-    final response = skir.CommitPreparedEditResponse.wrapResult(
-      skir.CommitResult.wrapRejected([
-        skir.ValueProblem(
-          location: skir.ValueLocation(
-            resource: skir.ResourceId(value: "page:created"),
-            path: skir.ValuePath(
-              segments: [
-                skir.PathSegment.createField(name: "book"),
-                skir.PathSegment.createItem(
-                  id: skir.ItemId(value: "page:item"),
-                ),
-              ],
-            ),
+    final response = skir.CommitPreparedEditResponse.wrapRejectedError([
+      skir.ValueProblem(
+        location: skir.ValueLocation(
+          resource: skir.ResourceId(value: "page:created"),
+          path: skir.ValuePath(
+            segments: [
+              skir.PathSegment.createField(name: "book"),
+              skir.PathSegment.createItem(id: skir.ItemId(value: "page:item")),
+            ],
           ),
-          code: "item_missing",
         ),
-      ]),
-    );
+        code: "item_missing",
+      ),
+    ]);
 
     expect(
       response.rejectionMessage,
@@ -1424,7 +1420,7 @@ _parentFixture({
   final declaredStyleTemplate = nullableStyle
       ? skir.TypeTemplate.createNullable(value: styleTemplate)
       : styleTemplate;
-  final catalogSnapshot = skir.EditorCatalogWireSnapshot(
+  final catalogSnapshot = skir.EditorCatalog(
     resourceDisplays: const [],
     resourceOperations: const [],
     generation: skir.CatalogGeneration(value: generation),
@@ -1805,7 +1801,7 @@ _pageCreationFixture({bool ambiguous = false}) {
   );
   final pageParent = template(page);
   final generation = skir.CatalogGeneration(value: "catalog:page creation");
-  final snapshot = skir.EditorCatalogWireSnapshot(
+  final snapshot = skir.EditorCatalog(
     resourceDisplays: const [],
     resourceOperations: const [],
     generation: generation,
@@ -2107,7 +2103,7 @@ _relationFixture({
     arguments: const [],
   );
   final checked = CheckedEditorCatalog(
-    skir.EditorCatalogWireSnapshot(
+    skir.EditorCatalog(
       resourceDisplays: const [],
       resourceOperations: const [],
       generation: fixture.snapshot.generation,
@@ -2227,7 +2223,7 @@ _collectionRepairFixture() {
     effectiveFields: fields,
     ancestorTemplates: const [],
   );
-  final catalogSnapshot = skir.EditorCatalogWireSnapshot(
+  final catalogSnapshot = skir.EditorCatalog(
     resourceDisplays: const [],
     resourceOperations: const [],
     generation: skir.CatalogGeneration(value: "catalog:collection-repair"),

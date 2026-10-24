@@ -1,9 +1,9 @@
 package com.typewritermc.realm.compiler
 
-import com.typewritermc.checking.DiagnosticSeverity
 import com.typewritermc.engine.CompilationResult
-import com.typewritermc.engine.CompilationRoot
 import com.typewritermc.realm.authoring.AuthoringView
+import skirout.editor.v1.compilation_root.CompilationRoot
+import skirout.editor.v1.diagnostic.DiagnosticSeverity
 
 /** Preserves every root result and validates output ownership before storage. */
 internal class CompiledArtifactProducerRegistry(
@@ -46,7 +46,7 @@ internal class CompiledArtifactProducerRegistry(
                         }
                     }
                     results.filterIsInstance<CompilationResult.Blocked>().forEach { result ->
-                        require(result.diagnostics.any { it.severity == DiagnosticSeverity.Error }) {
+                        require(result.diagnostics.any { it.severity == DiagnosticSeverity.ERROR }) {
                             "A blocked root must contain a blocking diagnostic."
                         }
                     }

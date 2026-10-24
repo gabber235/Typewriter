@@ -1,12 +1,17 @@
 package com.typewritermc.realm.compiler
 
 import com.typewritermc.authoring.CompletenessResult
-import com.typewritermc.authoring.TypeSelection
 import com.typewritermc.authoring.complete
+import com.typewritermc.authoring.payload
+import com.typewritermc.authoring.use
 import com.typewritermc.realm.authoring.AuthoringView
 import com.typewritermc.realm.checking.CapturedCheckReport
-import com.typewritermc.types.DataValue
 import com.typewritermc.types.catalog.Resolution
+import com.typewritermc.types.named
+import com.typewritermc.types.record
+import com.typewritermc.types.use
+import skirout.editor.v1.type_catalog.DataValue
+import skirout.editor.v1.type_catalog.TypeSelection
 
 internal fun testAssessment(
     view: AuthoringView,
@@ -14,9 +19,9 @@ internal fun testAssessment(
 ): CapturedAssessment {
     val resources =
         view.resources.mapValues { (id, record) ->
-            val actual = (record.configuration as? TypeSelection.Complete)?.use
-            val checked = actual?.let { (view.catalog.checked.resolve(it) as? Resolution.Ready)?.value }
-            val complete = checked?.complete(DataValue.Named(actual, DataValue.Record(record.fields)))
+            val actual = (record.configuration as? TypeSelection.CompleteWrapper)?.use
+            val checked = actual?.let { (view.catalog.checked.resolve(it.use) as? Resolution.Ready)?.value }
+            val complete = checked?.complete(DataValue.named(actual, DataValue.RecordWrapper(record.payload)))
             when (complete) {
                 is CompletenessResult.Complete -> {
                     ResourceReadiness.Ready(complete.value, bindings.single { it.actual == actual })
@@ -25,7 +30,11 @@ internal fun testAssessment(
                 is CompletenessResult.Unfinished -> {
                     ResourceReadiness.Blocked(
                         complete.locations.map {
-                            compilationDiagnostic("unfinished_value", "A required value is unfinished.", location = it.copy(resource = id))
+                            compilationDiagnostic(
+                                "unfinished_value",
+                                "A required value is unfinished.",
+                                location = it.copy(resource = id),
+                            )
                         },
                     )
                 }

@@ -1,50 +1,71 @@
 package com.typewritermc.realm.repository
 
-import com.typewritermc.authoring.AuthoringRecord
-import com.typewritermc.authoring.ConnectIntent
-import com.typewritermc.authoring.CounterpartChoice
-import com.typewritermc.authoring.EditIntent
-import com.typewritermc.authoring.ItemId
-import com.typewritermc.authoring.LinkOccurrence
-import com.typewritermc.authoring.LinkOccurrenceId
-import com.typewritermc.authoring.LinkProjection
 import com.typewritermc.authoring.LocatedPortableValue
-import com.typewritermc.authoring.PathSegment
-import com.typewritermc.authoring.PreparedContent
-import com.typewritermc.authoring.PreparedEdit
 import com.typewritermc.authoring.RealmRootDefinition
 import com.typewritermc.authoring.RealmSectionDefinition
-import com.typewritermc.authoring.RelationProjectionDelta
-import com.typewritermc.authoring.StructuralResult
-import com.typewritermc.authoring.TypeSelection
-import com.typewritermc.authoring.ValueLocation
-import com.typewritermc.authoring.ValuePath
-import com.typewritermc.authoring.ValueProblem
 import com.typewritermc.authoring.ValueReplacement
 import com.typewritermc.authoring.definition
+import com.typewritermc.authoring.id
 import com.typewritermc.authoring.item
 import com.typewritermc.authoring.locate
+import com.typewritermc.authoring.of
+import com.typewritermc.authoring.payload
+import com.typewritermc.authoring.record
+import com.typewritermc.authoring.root
+import com.typewritermc.authoring.use
 import com.typewritermc.authoring.validateStructure
 import com.typewritermc.authoring.writeField
 import com.typewritermc.realm.authoring.authoredTypeAt
 import com.typewritermc.services.libs.utils.sha256Hex
-import com.typewritermc.types.CollectionKind
-import com.typewritermc.types.DataValue
-import com.typewritermc.types.EndpointBindingTemplate
-import com.typewritermc.types.EndpointCardinality
-import com.typewritermc.types.EndpointId
-import com.typewritermc.types.LinkTarget
-import com.typewritermc.types.ListItem
-import com.typewritermc.types.RelationContract
-import com.typewritermc.types.RelationDeletePolicy
-import com.typewritermc.types.ResourceId
-import com.typewritermc.types.TypeDefinitionId
-import com.typewritermc.types.TypeUse
+import com.typewritermc.types.actualType
 import com.typewritermc.types.catalog.CheckedCatalog
 import com.typewritermc.types.catalog.Resolution
-import com.typewritermc.types.catalog.ResolvedRepresentation
+import com.typewritermc.types.endpoint
+import com.typewritermc.types.fields
 import com.typewritermc.types.isAcyclic
+import com.typewritermc.types.items
+import com.typewritermc.types.listValue
+import com.typewritermc.types.named
 import com.typewritermc.types.ownsResources
+import com.typewritermc.types.payload
+import com.typewritermc.types.record
+import com.typewritermc.types.setValue
+import com.typewritermc.types.toResourceId
+import com.typewritermc.types.toSkir
+import com.typewritermc.types.unknownVariant
+import com.typewritermc.types.use
+import skirout.editor.v1.authoring.ConnectIntent
+import skirout.editor.v1.authoring.CounterpartChoice
+import skirout.editor.v1.authoring.EditIntent
+import skirout.editor.v1.authoring.LinkOccurrence
+import skirout.editor.v1.authoring.LinkOccurrenceId
+import skirout.editor.v1.authoring.PreparedEdit
+import skirout.editor.v1.authoring.RelationProjectionDelta
+import skirout.editor.v1.authoring_facts.LinkProjection
+import skirout.editor.v1.catalog.EndpointBindingTemplate
+import skirout.editor.v1.catalog.EndpointCardinality
+import skirout.editor.v1.catalog.PreparedContent
+import skirout.editor.v1.catalog.RelationContract
+import skirout.editor.v1.catalog.RelationDeletePolicy
+import skirout.editor.v1.diagnostic.StructuralResult
+import skirout.editor.v1.diagnostic.ValueProblem
+import skirout.editor.v1.type_catalog.AuthoringRecord
+import skirout.editor.v1.type_catalog.CollectionKind
+import skirout.editor.v1.type_catalog.DataValue
+import skirout.editor.v1.type_catalog.EndpointId
+import skirout.editor.v1.type_catalog.ItemId
+import skirout.editor.v1.type_catalog.LinkTarget
+import skirout.editor.v1.type_catalog.ListItem
+import skirout.editor.v1.type_catalog.NamedTypeUse
+import skirout.editor.v1.type_catalog.PathSegment
+import skirout.editor.v1.type_catalog.ResolvedRepresentation
+import skirout.editor.v1.type_catalog.ResourceId
+import skirout.editor.v1.type_catalog.SequenceResolvedRepresentation
+import skirout.editor.v1.type_catalog.TypeDefinitionId
+import skirout.editor.v1.type_catalog.TypeSelection
+import skirout.editor.v1.type_catalog.TypeUse
+import skirout.editor.v1.type_catalog.ValueLocation
+import skirout.editor.v1.type_catalog.ValuePath
 
 internal sealed interface MutationPlanningResult {
     data class Accepted(
@@ -57,8 +78,8 @@ internal sealed interface MutationPlanningResult {
 }
 
 private data class AuthoredCollection(
-    val type: TypeUse.Named,
-    val representation: ResolvedRepresentation.Sequence,
+    val type: NamedTypeUse,
+    val representation: SequenceResolvedRepresentation,
 )
 
 /**
@@ -103,7 +124,7 @@ internal class AuthoringMutationPlanner(
         val afterSet = projection.projections.toSet()
         val relations =
             RelationProjectionDelta(
-                removed = (beforeSet - afterSet).sortedBy(::projectionKey),
+                removals = (beforeSet - afterSet).sortedBy(::projectionKey),
                 created = (afterSet - beforeSet).sortedBy(::projectionKey),
                 metadataChanged = emptyList(),
             )
@@ -130,57 +151,61 @@ internal class AuthoringMutationPlanner(
             if (problems.isNotEmpty()) return@forEachIndexed
             if (index < deletionRunEnd) return@forEachIndexed
             when (intent) {
-                is EditIntent.CreateResource -> {
+                is EditIntent.CreateResourceWrapper -> {
                     create(resources, removed, intent, problems)
                 }
 
-                is EditIntent.DeleteResource -> {
+                is EditIntent.DeleteResourceWrapper -> {
                     val requested = linkedSetOf<ResourceId>()
                     deletionRunEnd = index
                     while (deletionRunEnd < edit.intents.size) {
-                        val deleting = edit.intents[deletionRunEnd] as? EditIntent.DeleteResource ?: break
-                        requested += deleting.id
+                        val deleting = edit.intents[deletionRunEnd] as? EditIntent.DeleteResourceWrapper ?: break
+                        requested += deleting.value.id
                         deletionRunEnd++
                     }
                     delete(resources, removed, requested, problems)
                 }
 
-                is EditIntent.SetValue -> {
-                    val before = resourceLinks(resources, intent.at.resource)
-                    update(resources, intent.at, intent.value, problems)
-                    synchronizeValueMutation(before, resources, intent.at.resource, batchIdentity, index, problems)
+                is EditIntent.SetValueWrapper -> {
+                    val before = resourceLinks(resources, intent.value.at.resource)
+                    update(resources, intent.value.at, intent.value.value, problems)
+                    synchronizeValueMutation(before, resources, intent.value.at.resource, batchIdentity, index, problems)
                 }
 
-                is EditIntent.Insert -> {
-                    val before = resourceLinks(resources, intent.at.resource)
+                is EditIntent.InsertWrapper -> {
+                    val before = resourceLinks(resources, intent.value.at.resource)
                     insert(resources, intent, problems)
-                    synchronizeValueMutation(before, resources, intent.at.resource, batchIdentity, index, problems)
+                    synchronizeValueMutation(before, resources, intent.value.at.resource, batchIdentity, index, problems)
                 }
 
-                is EditIntent.Remove -> {
-                    val before = resourceLinks(resources, intent.at.resource)
+                is EditIntent.RemoveWrapper -> {
+                    val before = resourceLinks(resources, intent.value.at.resource)
                     remove(resources, intent, problems)
-                    synchronizeValueMutation(before, resources, intent.at.resource, batchIdentity, index, problems)
+                    synchronizeValueMutation(before, resources, intent.value.at.resource, batchIdentity, index, problems)
                 }
 
-                is EditIntent.Move -> {
+                is EditIntent.MoveWrapper -> {
                     move(resources, intent, problems)
                 }
 
-                is EditIntent.ConnectRelation -> {
+                is EditIntent.ConnectRelationWrapper -> {
                     connect(resources, intent, batchIdentity, index, problems)
                 }
 
-                is EditIntent.DisconnectRelation -> {
-                    disconnect(resources, intent.occurrence, problems)
+                is EditIntent.DisconnectRelationWrapper -> {
+                    disconnect(resources, intent.value, problems)
                 }
 
-                is EditIntent.Retag -> {
+                is EditIntent.RetagWrapper -> {
                     retag(resources, intent, problems)
                 }
 
-                is EditIntent.ConfigureResource -> {
+                is EditIntent.ConfigureResourceWrapper -> {
                     configureResource(resources, intent, problems)
+                }
+
+                else -> {
+                    unknownVariant(intent)
                 }
             }
         }
@@ -200,8 +225,9 @@ internal class AuthoringMutationPlanner(
         val problems = mutableListOf<ValueProblem>()
         resources.filterKeys { it in affected }.forEach { (id, record) ->
             when (val structural = record.validateStructure(catalog)) {
-                StructuralResult.Valid -> Unit
-                is StructuralResult.Invalid -> problems += structural.problems.map { it.on(id) }
+                StructuralResult.VALID -> Unit
+                is StructuralResult.InvalidWrapper -> problems += structural.value.map { it.on(id) }
+                else -> unknownVariant(structural)
             }
         }
         val affectedLocations =
@@ -220,15 +246,15 @@ internal class AuthoringMutationPlanner(
     private fun create(
         resources: MutableMap<ResourceId, AuthoringRecord>,
         removed: MutableSet<ResourceId>,
-        intent: EditIntent.CreateResource,
+        intent: EditIntent.CreateResourceWrapper,
         problems: MutableList<ValueProblem>,
     ) {
-        if (intent.id in resources) {
-            problems += problem(intent.id, "resource_already_exists")
+        if (intent.value.id in resources) {
+            problems += problem(intent.value.id, "resource_already_exists")
             return
         }
-        resources[intent.id] = intent.record
-        removed -= intent.id
+        resources[intent.value.id] = intent.value.record
+        removed -= intent.value.id
     }
 
     private fun delete(
@@ -279,6 +305,7 @@ internal class AuthoringMutationPlanner(
                     RelationDeletePolicy.RESTRICT -> problems += problem(current, "relation_restricts_deletion")
                     RelationDeletePolicy.CASCADE -> error("Cascade closure is incomplete.")
                     RelationDeletePolicy.CLEAR -> clearCounterpart(resources, current, link, problems)
+                    else -> unknownVariant(endpoint.onDelete)
                 }
             }
         if (problems.isNotEmpty()) return
@@ -296,127 +323,135 @@ internal class AuthoringMutationPlanner(
     ) {
         val record = resources[location.resource]
         if (record == null) {
-            problems += ValueProblem(location, "resource_missing")
+            problems += ValueProblem(location = location, code = "resource_missing")
             return
         }
         val updated = record.set(location.path, value)
-        if (updated == null) problems += ValueProblem(location, "location_missing") else resources[location.resource] = updated
+        if (updated == null) {
+            problems += ValueProblem(location = location, code = "location_missing")
+        } else {
+            resources[location.resource] = updated
+        }
     }
 
     private fun insert(
         resources: MutableMap<ResourceId, AuthoringRecord>,
-        intent: EditIntent.Insert,
+        intent: EditIntent.InsertWrapper,
         problems: MutableList<ValueProblem>,
     ) {
-        val record = resources[intent.at.resource]
+        val record = resources[intent.value.at.resource]
         if (record == null) {
-            problems += ValueProblem(intent.at, "expected_collection")
+            problems += ValueProblem(location = intent.value.at, code = "expected_collection")
             return
         }
-        val current = record.collectionValue(intent.at, problems) ?: return
+        val current = record.collectionValue(intent.value.at, problems) ?: return
         val items = current.itemsOrNull() ?: return
-        if (items.any { it.id == intent.item.id }) {
-            problems += ValueProblem(intent.at, "duplicate_item_id")
+        if (items.any { it.id == intent.value.item.id }) {
+            problems += ValueProblem(location = intent.value.at, code = "duplicate_item_id")
             return
         }
-        val index = insertionIndex(items, intent.after)
+        val index = insertionIndex(items, intent.value.after)
         if (index == null) {
-            problems += ValueProblem(intent.at, "anchor_missing")
+            problems += ValueProblem(location = intent.value.at, code = "anchor_missing")
             return
         }
-        val next = items.toMutableList().also { it.add(index, intent.item) }
-        update(resources, intent.at, current.withItems(next), problems)
+        val next = items.toMutableList().also { it.add(index, intent.value.item) }
+        update(resources, intent.value.at, current.withItems(next), problems)
     }
 
     private fun remove(
         resources: MutableMap<ResourceId, AuthoringRecord>,
-        intent: EditIntent.Remove,
+        intent: EditIntent.RemoveWrapper,
         problems: MutableList<ValueProblem>,
     ) {
-        val current = resources[intent.at.resource]?.valueAt(intent.at.path)
+        val current = resources[intent.value.at.resource]?.valueAt(intent.value.at.path)
         if (current == null) {
-            problems += ValueProblem(intent.at, "expected_collection")
+            problems += ValueProblem(location = intent.value.at, code = "expected_collection")
             return
         }
         val items = current.itemsOrNull()
         if (items == null) {
-            problems += ValueProblem(intent.at, "expected_collection")
+            problems += ValueProblem(location = intent.value.at, code = "expected_collection")
             return
         }
-        if (items.none { it.id == intent.item }) {
-            problems += ValueProblem(intent.at, "item_missing")
+        if (items.none { it.id == intent.value.item }) {
+            problems += ValueProblem(location = intent.value.at, code = "item_missing")
             return
         }
-        update(resources, intent.at, current.withItems(items.filterNot { it.id == intent.item }), problems)
+        update(resources, intent.value.at, current.withItems(items.filterNot { it.id == intent.value.item }), problems)
     }
 
     private fun move(
         resources: MutableMap<ResourceId, AuthoringRecord>,
-        intent: EditIntent.Move,
+        intent: EditIntent.MoveWrapper,
         problems: MutableList<ValueProblem>,
     ) {
-        if (intent.item == intent.after) {
-            problems += ValueProblem(intent.at, "item_cannot_follow_itself")
+        if (intent.value.item == intent.value.after) {
+            problems += ValueProblem(location = intent.value.at, code = "item_cannot_follow_itself")
             return
         }
-        val current = resources[intent.at.resource]?.valueAt(intent.at.path)
+        val current = resources[intent.value.at.resource]?.valueAt(intent.value.at.path)
         if (current == null) {
-            problems += ValueProblem(intent.at, "item_missing")
+            problems += ValueProblem(location = intent.value.at, code = "item_missing")
             return
         }
         val items = current.itemsOrNull()
-        val moving = items?.singleOrNull { it.id == intent.item }
+        val moving = items?.singleOrNull { it.id == intent.value.item }
         if (items == null || moving == null) {
-            problems += ValueProblem(intent.at, "item_missing")
+            problems += ValueProblem(location = intent.value.at, code = "item_missing")
             return
         }
-        val without = items.filterNot { it.id == intent.item }
-        val index = insertionIndex(without, intent.after)
+        val without = items.filterNot { it.id == intent.value.item }
+        val index = insertionIndex(without, intent.value.after)
         if (index == null) {
-            problems += ValueProblem(intent.at, "anchor_missing")
+            problems += ValueProblem(location = intent.value.at, code = "anchor_missing")
             return
         }
         val next = without.toMutableList().also { it.add(index, moving) }
-        update(resources, intent.at, current.withItems(next), problems)
+        update(resources, intent.value.at, current.withItems(next), problems)
     }
 
     private fun connect(
         resources: MutableMap<ResourceId, AuthoringRecord>,
-        intent: EditIntent.ConnectRelation,
+        intent: EditIntent.ConnectRelationWrapper,
         batch: String,
         ordinal: Int,
         problems: MutableList<ValueProblem>,
     ) {
-        val source = intent.intent.source
+        val source = intent.value.source
         if (source.source != source.id.location.resource) {
-            problems += ValueProblem(source.id.location, "source_location_resource_mismatch")
+            problems += ValueProblem(location = source.id.location, code = "source_location_resource_mismatch")
             return
         }
         val contract = contracts.singleOrNull { it.first.id == source.id.endpoint || it.second.id == source.id.endpoint }
         if (contract == null) {
-            problems += ValueProblem(source.id.location, "unknown_endpoint")
+            problems += ValueProblem(location = source.id.location, code = "unknown_endpoint")
             return
         }
         val oppositeEndpoint = if (contract.first.id == source.id.endpoint) contract.second.id else contract.first.id
         val counterpartLocation =
-            when (val counterpart = intent.intent.counterpart) {
+            when (val counterpart = intent.value.counterpart) {
                 null -> {
-                    val targetRecord = resources[intent.intent.target]
+                    val targetRecord = resources[intent.value.target]
                     val binding =
                         targetRecord?.let {
                             ResourceValueMapper.counterpartBinding(
                                 oppositeEndpoint,
-                                intent.intent.target,
+                                intent.value.target,
                                 it,
                                 catalog,
                             )
                         } ?: CounterpartBinding.Missing
                     when (binding) {
                         is CounterpartBinding.Scalar -> {
-                            val target = LinkTarget(source.source, source.id.location.path)
+                            val target = LinkTarget(resource = source.source, opposite = source.id.location.path)
                             clearPreviousOpposite(
                                 resources,
-                                LinkOccurrence(LinkOccurrenceId(oppositeEndpoint, binding.location), intent.intent.target, target),
+                                LinkOccurrence(
+                                    id = LinkOccurrenceId(endpoint = oppositeEndpoint, location = binding.location),
+                                    source = intent.value.target,
+                                    target = target,
+                                ),
                                 target,
                                 problems,
                             )
@@ -429,7 +464,7 @@ internal class AuthoringMutationPlanner(
                                 resources,
                                 binding.location,
                                 oppositeEndpoint,
-                                LinkTarget(source.source, source.id.location.path),
+                                LinkTarget(resource = source.source, opposite = source.id.location.path),
                                 batch,
                                 ordinal,
                                 problems,
@@ -437,7 +472,7 @@ internal class AuthoringMutationPlanner(
                         }
 
                         CounterpartBinding.ExplicitChoice -> {
-                            problems += ValueProblem(source.id.location, "counterpart_choice_required")
+                            problems += ValueProblem(location = source.id.location, code = "counterpart_choice_required")
                             return
                         }
 
@@ -447,24 +482,25 @@ internal class AuthoringMutationPlanner(
                     }
                 }
 
-                is CounterpartChoice.Existing -> {
-                    val existing = counterpart.occurrence
-                    if (existing.source != intent.intent.target || existing.id.location.resource != intent.intent.target) {
-                        problems += ValueProblem(existing.id.location, "counterpart_resource_mismatch")
+                is CounterpartChoice.ExistingWrapper -> {
+                    val existing = counterpart.value
+                    val target = intent.value.target
+                    if (existing.source != target || existing.id.location.resource != target) {
+                        problems += ValueProblem(location = existing.id.location, code = "counterpart_resource_mismatch")
                         return
                     }
                     if (existing.id.endpoint != oppositeEndpoint) {
-                        problems += ValueProblem(existing.id.location, "counterpart_endpoint_mismatch")
+                        problems += ValueProblem(location = existing.id.location, code = "counterpart_endpoint_mismatch")
                         return
                     }
                     if (existing.id.location == source.id.location) {
-                        problems += ValueProblem(existing.id.location, "self_link_requires_distinct_occurrences")
+                        problems += ValueProblem(location = existing.id.location, code = "self_link_requires_distinct_occurrences")
                         return
                     }
                     clearPreviousOpposite(
                         resources,
                         existing,
-                        LinkTarget(source.source, source.id.location.path),
+                        LinkTarget(resource = source.source, opposite = source.id.location.path),
                         problems,
                     )
                     if (problems.isNotEmpty()) return
@@ -472,48 +508,48 @@ internal class AuthoringMutationPlanner(
                         resources,
                         existing.id.location,
                         existing.id.endpoint,
-                        LinkTarget(source.source, source.id.location.path),
+                        LinkTarget(resource = source.source, opposite = source.id.location.path),
                         problems,
                     )
                     existing.id.location
                 }
 
-                is CounterpartChoice.New -> {
-                    if (counterpart.containing.resource != intent.intent.target) {
-                        problems += ValueProblem(counterpart.containing, "counterpart_resource_mismatch")
+                is CounterpartChoice.NewWrapper -> {
+                    if (counterpart.value.containing.resource != intent.value.target) {
+                        problems += ValueProblem(location = counterpart.value.containing, code = "counterpart_resource_mismatch")
                         return
                     }
                     val prepared =
-                        (counterpart.prepared.content as? PreparedContent.Record)?.record
+                        (counterpart.value.prepared.content as? PreparedContent.RecordWrapper)?.record
                             ?: run {
-                                problems += ValueProblem(counterpart.containing, "counterpart_requires_record")
+                                problems += ValueProblem(location = counterpart.value.containing, code = "counterpart_requires_record")
                                 return
                             }
-                    val actual = (prepared.configuration as? TypeSelection.Complete)?.use
+                    val actual = (prepared.configuration as? TypeSelection.CompleteWrapper)?.use
                     if (actual == null) {
-                        problems += ValueProblem(counterpart.containing, "counterpart_type_pending")
+                        problems += ValueProblem(location = counterpart.value.containing, code = "counterpart_type_pending")
                         return
                     }
-                    val materialized = DataValue.Named(actual, DataValue.Record(prepared.fields))
-                    val targetRecord = resources[intent.intent.target]
-                    val collection = targetRecord?.declaredCollection(counterpart.containing)
+                    val materialized = DataValue.named(actual, DataValue.RecordWrapper(prepared.payload))
+                    val targetRecord = resources[intent.value.target]
+                    val collection = targetRecord?.declaredCollection(counterpart.value.containing)
                     val embedded =
                         if (collection != null) {
-                            val current = targetRecord.collectionValue(counterpart.containing, problems) ?: return
-                            val item = deterministicItem(batch, ordinal, counterpart.containing)
+                            val current = targetRecord.collectionValue(counterpart.value.containing, problems) ?: return
+                            val item = deterministicItem(batch, ordinal, counterpart.value.containing)
                             insert(
                                 resources,
-                                EditIntent.Insert(
-                                    counterpart.containing,
-                                    current.itemsOrNull()?.lastOrNull()?.id,
-                                    ListItem(item, materialized),
+                                EditIntent.createInsert(
+                                    at = counterpart.value.containing,
+                                    after = current.itemsOrNull()?.lastOrNull()?.id,
+                                    item = ListItem(id = item, value = materialized),
                                 ),
                                 problems,
                             )
-                            counterpart.containing.item(item)
+                            counterpart.value.containing.item(item)
                         } else {
-                            update(resources, counterpart.containing, materialized, problems)
-                            counterpart.containing
+                            update(resources, counterpart.value.containing, materialized, problems)
+                            counterpart.value.containing
                         }
                     if (problems.isNotEmpty()) return
                     val resolvedTargetRecord = targetRecord ?: return
@@ -521,12 +557,12 @@ internal class AuthoringMutationPlanner(
                         ResourceValueMapper
                             .declaredLocations(
                                 oppositeEndpoint,
-                                intent.intent.target,
+                                intent.value.target,
                                 resolvedTargetRecord,
                                 catalog,
                             ).filter { it.path.startsWith(embedded.path) }
                     if (locations.size != 1) {
-                        problems += ValueProblem(counterpart.containing, "new_counterpart_location_ambiguous")
+                        problems += ValueProblem(location = counterpart.value.containing, code = "new_counterpart_location_ambiguous")
                         return
                     }
                     val location = locations.single()
@@ -534,14 +570,18 @@ internal class AuthoringMutationPlanner(
                         resources,
                         location,
                         oppositeEndpoint,
-                        LinkTarget(source.source, source.id.location.path),
+                        LinkTarget(resource = source.source, opposite = source.id.location.path),
                         problems,
                     )
                     location
                 }
+
+                else -> {
+                    unknownVariant(counterpart)
+                }
             }
         if (problems.isNotEmpty()) return
-        val sourceTarget = LinkTarget(intent.intent.target, counterpartLocation?.path)
+        val sourceTarget = LinkTarget(resource = intent.value.target, opposite = counterpartLocation?.path)
         clearPreviousOpposite(resources, source, sourceTarget, problems)
         if (problems.isNotEmpty()) return
         writeLink(
@@ -571,24 +611,26 @@ internal class AuthoringMutationPlanner(
         intended.values.filter { previous[it.id] != it }.forEachIndexed { offset, occurrence ->
             val contract = contracts.singleOrNull { it.first.id == occurrence.id.endpoint || it.second.id == occurrence.id.endpoint }
             if (contract == null) {
-                problems += ValueProblem(occurrence.id.location, "unknown_endpoint")
+                problems += ValueProblem(location = occurrence.id.location, code = "unknown_endpoint")
                 return@forEachIndexed
             }
             val oppositeEndpoint = if (contract.first.id == occurrence.id.endpoint) contract.second.id else contract.first.id
             val counterpart =
                 occurrence.target.opposite?.let { path ->
-                    val location = ValueLocation(occurrence.target.resource, path)
-                    CounterpartChoice.Existing(
+                    val location = ValueLocation(resource = occurrence.target.resource, path = path)
+                    CounterpartChoice.ExistingWrapper(
                         LinkOccurrence(
-                            LinkOccurrenceId(oppositeEndpoint, location),
-                            occurrence.target.resource,
-                            LinkTarget(occurrence.source, occurrence.id.location.path),
+                            id = LinkOccurrenceId(endpoint = oppositeEndpoint, location = location),
+                            source = occurrence.target.resource,
+                            target = LinkTarget(resource = occurrence.source, opposite = occurrence.id.location.path),
                         ),
                     )
                 }
             connect(
                 resources,
-                EditIntent.ConnectRelation(ConnectIntent(occurrence, occurrence.target.resource, counterpart)),
+                EditIntent.ConnectRelationWrapper(
+                    ConnectIntent(source = occurrence, target = occurrence.target.resource, counterpart = counterpart),
+                ),
                 batch,
                 ordinal + offset,
                 problems,
@@ -602,7 +644,7 @@ internal class AuthoringMutationPlanner(
         problems: MutableList<ValueProblem>,
     ) {
         val opposite = occurrence.target.opposite ?: return
-        val location = ValueLocation(occurrence.target.resource, opposite)
+        val location = ValueLocation(resource = occurrence.target.resource, path = opposite)
         val current = resourceLinks(resources, location.resource).singleOrNull { it.id.location == location } ?: return
         if (current.target.resource == occurrence.source && current.target.opposite == occurrence.id.location.path) {
             clearLocation(resources, location, problems)
@@ -618,7 +660,7 @@ internal class AuthoringMutationPlanner(
         val current = resourceLinks(resources, proposed.source).singleOrNull { it.id == proposed.id } ?: return
         if (current.target == target) return
         val opposite = current.target.opposite ?: return
-        val location = ValueLocation(current.target.resource, opposite)
+        val location = ValueLocation(resource = current.target.resource, path = opposite)
         val other =
             resourceLinks(resources, location.resource).singleOrNull {
                 it.id.location == location && it.target.resource == current.source
@@ -635,13 +677,13 @@ internal class AuthoringMutationPlanner(
     ) {
         val record = resources[location.resource]
         if (record == null) {
-            problems += ValueProblem(location, "resource_missing")
+            problems += ValueProblem(location = location, code = "resource_missing")
             return
         }
         val current = record.valueAt(location.path)
         if (current == null) {
-            val item = location.path.segments.lastOrNull() as? PathSegment.Item
-            val collection = location.copy(path = ValuePath(location.path.segments.dropLast(1)))
+            val item = location.path.segments.lastOrNull() as? PathSegment.ItemWrapper
+            val collection = location.copy(path = ValuePath(segments = location.path.segments.dropLast(1)))
             val binding =
                 ResourceValueMapper.counterpartBinding(
                     endpoint,
@@ -653,16 +695,20 @@ internal class AuthoringMutationPlanner(
                 val named = record.authoredTypeAt(location.path, catalog).namedType()
                 val values = record.collectionValue(collection, problems)?.itemsOrNull()
                 if (named == null) {
-                    problems += ValueProblem(location, "expected_named_link")
+                    problems += ValueProblem(location = location, code = "expected_named_link")
                     return
                 }
                 if (values == null) return
                 insert(
                     resources,
-                    EditIntent.Insert(
-                        collection,
-                        values.lastOrNull()?.id,
-                        ListItem(item.id, DataValue.Named(named, DataValue.Link(endpoint, target))),
+                    EditIntent.createInsert(
+                        at = collection,
+                        after = values.lastOrNull()?.id,
+                        item =
+                            ListItem(
+                                id = item.id,
+                                value = DataValue.named(named, DataValue.createLink(endpoint = endpoint, target = target)),
+                            ),
                     ),
                     problems,
                 )
@@ -671,10 +717,10 @@ internal class AuthoringMutationPlanner(
         }
         val named = current?.namedType() ?: record.authoredTypeAt(location.path, catalog).namedType()
         if (named == null) {
-            problems += ValueProblem(location, "expected_named_link")
+            problems += ValueProblem(location = location, code = "expected_named_link")
             return
         }
-        update(resources, location, DataValue.Named(named, DataValue.Link(endpoint, target)), problems)
+        update(resources, location, DataValue.named(named, DataValue.createLink(endpoint = endpoint, target = target)), problems)
     }
 
     private fun appendDirectLink(
@@ -688,7 +734,7 @@ internal class AuthoringMutationPlanner(
     ): ValueLocation? {
         val record = resources[collection.resource]
         if (record == null) {
-            problems += ValueProblem(collection, "expected_collection")
+            problems += ValueProblem(location = collection, code = "expected_collection")
             return null
         }
         val current = record.collectionValue(collection, problems) ?: return null
@@ -697,15 +743,15 @@ internal class AuthoringMutationPlanner(
         val location = collection.item(item)
         val named = record.authoredTypeAt(location.path, catalog).namedType()
         if (named == null) {
-            problems += ValueProblem(location, "expected_named_link")
+            problems += ValueProblem(location = location, code = "expected_named_link")
             return null
         }
         insert(
             resources,
-            EditIntent.Insert(
-                collection,
-                items.lastOrNull()?.id,
-                ListItem(item, DataValue.Named(named, DataValue.Link(endpoint, target))),
+            EditIntent.createInsert(
+                at = collection,
+                after = items.lastOrNull()?.id,
+                item = ListItem(id = item, value = DataValue.named(named, DataValue.createLink(endpoint = endpoint, target = target))),
             ),
             problems,
         )
@@ -718,32 +764,33 @@ internal class AuthoringMutationPlanner(
     ): DataValue? {
         val current = valueAt(location.path)
         if (current == null) {
-            problems += ValueProblem(location, "expected_collection")
+            problems += ValueProblem(location = location, code = "expected_collection")
             return null
         }
         if (current.itemsOrNull() != null) return current
-        if (current != DataValue.Unfilled) {
-            problems += ValueProblem(location, "expected_collection")
+        if (current != DataValue.UNFILLED) {
+            problems += ValueProblem(location = location, code = "expected_collection")
             return null
         }
         val collection = declaredCollection(location)
         if (collection == null) {
-            problems += ValueProblem(location, "expected_collection")
+            problems += ValueProblem(location = location, code = "expected_collection")
             return null
         }
         val payload =
             when (collection.representation.kind) {
-                CollectionKind.List -> DataValue.ListValue(emptyList())
-                CollectionKind.Set -> DataValue.SetValue(emptyList())
+                CollectionKind.LIST -> DataValue.listValue(emptyList())
+                CollectionKind.SET -> DataValue.setValue(emptyList())
+                else -> unknownVariant(collection.representation.kind)
             }
-        return DataValue.Named(collection.type, payload)
+        return DataValue.named(collection.type, payload)
     }
 
     private fun AuthoringRecord.declaredCollection(location: ValueLocation): AuthoredCollection? {
         val type = authoredTypeAt(location.path, catalog).namedType() ?: return null
-        val checked = (catalog.resolve(type) as? Resolution.Ready)?.value ?: return null
-        val representation = checked.schema.representation as? ResolvedRepresentation.Sequence ?: return null
-        return AuthoredCollection(type, representation)
+        val checked = (catalog.resolve(type.use) as? Resolution.Ready)?.value ?: return null
+        val representation = checked.schema.representation as? ResolvedRepresentation.SequenceWrapper ?: return null
+        return AuthoredCollection(type, representation.value)
     }
 
     private fun disconnect(
@@ -753,15 +800,15 @@ internal class AuthoringMutationPlanner(
     ) {
         val current = resourceLinks(resources, occurrence.location.resource).singleOrNull { it.id == occurrence }
         if (current == null) {
-            problems += ValueProblem(occurrence.location, "link_occurrence_missing")
+            problems += ValueProblem(location = occurrence.location, code = "link_occurrence_missing")
             return
         }
         clearLocation(resources, occurrence.location, problems)
         current.target.opposite?.let { opposite ->
-            val other = ValueLocation(current.target.resource, opposite)
+            val other = ValueLocation(resource = current.target.resource, path = opposite)
             val oppositeValue = resources[other.resource]?.valueAt(other.path)
-            val oppositeLink = (oppositeValue as? DataValue.Named)?.payload as? DataValue.Link
-            if (oppositeLink != null && oppositeLink.target.resource == current.source) {
+            val oppositeLink = (oppositeValue as? DataValue.NamedWrapper)?.payload as? DataValue.LinkWrapper
+            if (oppositeLink != null && oppositeLink.value.target.resource == current.source) {
                 clearLocation(resources, other, problems)
             }
         }
@@ -769,44 +816,44 @@ internal class AuthoringMutationPlanner(
 
     private fun retag(
         resources: MutableMap<ResourceId, AuthoringRecord>,
-        intent: EditIntent.Retag,
+        intent: EditIntent.RetagWrapper,
         problems: MutableList<ValueProblem>,
     ) {
-        val record = resources[intent.at.resource]
+        val record = resources[intent.value.at.resource]
         if (record == null) {
-            problems += ValueProblem(intent.at, "resource_missing")
+            problems += ValueProblem(location = intent.value.at, code = "resource_missing")
             return
         }
-        if (intent.at.path.segments
+        if (intent.value.at.path.segments
                 .isEmpty()
         ) {
-            problems += ValueProblem(intent.at, "resource_configuration_requires_preview")
+            problems += ValueProblem(location = intent.value.at, code = "resource_configuration_requires_preview")
             return
         }
-        val current = record.valueAt(intent.at.path) as? DataValue.Named
+        val current = record.valueAt(intent.value.at.path) as? DataValue.NamedWrapper
         if (current == null) {
-            problems += ValueProblem(intent.at, "expected_named")
+            problems += ValueProblem(location = intent.value.at, code = "expected_named")
             return
         }
-        update(resources, intent.at, current.copy(actualType = intent.type), problems)
+        update(resources, intent.value.at, DataValue.named(intent.value.type, current.payload), problems)
     }
 
     private fun configureResource(
         resources: MutableMap<ResourceId, AuthoringRecord>,
-        intent: EditIntent.ConfigureResource,
+        intent: EditIntent.ConfigureResourceWrapper,
         problems: MutableList<ValueProblem>,
     ) {
-        val location = ValueLocation(intent.resource, ValuePath())
-        val record = resources[intent.resource]
+        val location = ValueLocation.of(intent.value.resource)
+        val record = resources[intent.value.resource]
         if (record == null) {
-            problems += ValueProblem(location, "resource_missing")
+            problems += ValueProblem(location = location, code = "resource_missing")
             return
         }
-        if (record.configuration.definition != intent.configuration.definition) {
-            problems += ValueProblem(location, "type_argument_definition_changed")
+        if (record.configuration.definition != intent.value.configuration.definition) {
+            problems += ValueProblem(location = location, code = "type_argument_definition_changed")
             return
         }
-        resources[intent.resource] = record.copy(configuration = intent.configuration)
+        resources[intent.value.resource] = record.copy(configuration = intent.value.configuration)
     }
 
     private fun clearCounterpart(
@@ -819,11 +866,11 @@ internal class AuthoringMutationPlanner(
             buildList {
                 val firstLocation = projection.firstLocation
                 if (projection.first != deleted && firstLocation != null) {
-                    add(ValueLocation(projection.first, firstLocation))
+                    add(ValueLocation.of(projection.first, firstLocation))
                 }
                 val secondLocation = projection.secondLocation
                 if (projection.second != deleted && secondLocation != null) {
-                    add(ValueLocation(projection.second, secondLocation))
+                    add(ValueLocation.of(projection.second, secondLocation))
                 }
             }
         candidates.forEach { clearLocation(resources, it, problems) }
@@ -835,13 +882,13 @@ internal class AuthoringMutationPlanner(
         problems: MutableList<ValueProblem>,
     ) {
         val last = location.path.segments.lastOrNull()
-        if (last is PathSegment.Item) {
-            val parent = location.copy(path = ValuePath(location.path.segments.dropLast(1)))
-            remove(resources, EditIntent.Remove(parent, last.id), problems)
+        if (last is PathSegment.ItemWrapper) {
+            val parent = location.copy(path = ValuePath(segments = location.path.segments.dropLast(1)))
+            remove(resources, EditIntent.createRemove(at = parent, item = last.id), problems)
             return
         }
-        val nullable = resources[location.resource]?.authoredTypeAt(location.path, catalog) is TypeUse.Nullable
-        update(resources, location, if (nullable) DataValue.Null else DataValue.Unfilled, problems)
+        val nullable = resources[location.resource]?.authoredTypeAt(location.path, catalog) is TypeUse.NullableWrapper
+        update(resources, location, if (nullable) DataValue.NULL else DataValue.UNFILLED, problems)
     }
 }
 
@@ -930,7 +977,7 @@ private fun validateCardinality(
     val byContract = projections.groupBy { it.contract }
     contracts.forEach { contract ->
         val links = byContract[contract.id].orEmpty()
-        if (contract.first.cardinality == EndpointCardinality.One) {
+        if (contract.first.cardinality == EndpointCardinality.ONE) {
             links
                 .groupBy { it.second }
                 .filterValues { grouped -> grouped.size > 1 && grouped.any { it.first in affected || it.second in affected } }
@@ -938,7 +985,7 @@ private fun validateCardinality(
                     problems += problem(resource, "first_endpoint_cardinality_exceeded")
                 }
         }
-        if (contract.second.cardinality == EndpointCardinality.One) {
+        if (contract.second.cardinality == EndpointCardinality.ONE) {
             links
                 .groupBy { it.first }
                 .filterValues { grouped -> grouped.size > 1 && grouped.any { it.first in affected || it.second in affected } }
@@ -988,42 +1035,42 @@ private fun validateAcyclic(
 }
 
 internal fun AuthoringRecord.valueAt(path: ValuePath): DataValue? =
-    (DataValue.Record(fields).locate(path) as? LocatedPortableValue.Value)?.value
+    (DataValue.RecordWrapper(payload).locate(path) as? LocatedPortableValue.Value)?.value
 
 private fun AuthoringRecord.set(
     path: ValuePath,
     value: DataValue,
 ): AuthoringRecord? {
-    if (path.segments.isEmpty()) return (value as? DataValue.Record)?.let { copy(fields = it.fields) }
+    if (path.segments.isEmpty()) return (value as? DataValue.RecordWrapper)?.let { copy(fields = it.value.fields) }
     val updated =
-        (DataValue.Record(fields).writeField(path, value) as? ValueReplacement.Replaced)
-            ?.value as? DataValue.Record
+        (DataValue.RecordWrapper(payload).writeField(path, value) as? ValueReplacement.Replaced)
+            ?.value as? DataValue.RecordWrapper
             ?: return null
-    return copy(fields = updated.fields)
+    return copy(fields = updated.value.fields)
 }
 
 private fun DataValue?.itemsOrNull(): List<ListItem>? =
     when (this) {
-        is DataValue.Named -> payload.itemsOrNull()
-        is DataValue.ListValue -> items
-        is DataValue.SetValue -> items
+        is DataValue.NamedWrapper -> payload.itemsOrNull()
+        is DataValue.ListValueWrapper -> items
+        is DataValue.SetValueWrapper -> items
         else -> null
     }
 
 private fun DataValue.withItems(items: List<ListItem>): DataValue =
     when (this) {
-        is DataValue.Named -> copy(payload = payload.withItems(items))
-        is DataValue.ListValue -> copy(items = items)
-        is DataValue.SetValue -> copy(items = items)
+        is DataValue.NamedWrapper -> DataValue.named(actualType, payload.withItems(items))
+        is DataValue.ListValueWrapper -> DataValue.listValue(items)
+        is DataValue.SetValueWrapper -> DataValue.setValue(items)
         else -> error("Expected a collection value.")
     }
 
-private fun DataValue.namedType(): TypeUse.Named? = (this as? DataValue.Named)?.actualType
+private fun DataValue.namedType(): NamedTypeUse? = (this as? DataValue.NamedWrapper)?.actualType
 
-private fun TypeUse?.namedType(): TypeUse.Named? =
+private fun TypeUse?.namedType(): NamedTypeUse? =
     when (this) {
-        is TypeUse.Named -> this
-        is TypeUse.Nullable -> value.namedType()
+        is TypeUse.NamedWrapper -> value
+        is TypeUse.NullableWrapper -> value.value.namedType()
         else -> null
     }
 
@@ -1032,8 +1079,8 @@ private fun deterministicItem(
     ordinal: Int,
     containing: ValueLocation,
 ): ItemId {
-    val content = "$batch:$ordinal:${containing.resource.value}:${containing.path}"
-    return ItemId("relation:${content.sha256Hex()}")
+    val content = "$batch:$ordinal:${containing.resource.value}:${ValuePath.serializer.toJsonCode(containing.path)}"
+    return ItemId(value = "relation:${content.sha256Hex()}")
 }
 
 private fun ValuePath.startsWith(prefix: ValuePath): Boolean =
@@ -1049,10 +1096,11 @@ private fun ValueProblem.on(resource: ResourceId): ValueProblem = copy(location 
 private fun problem(
     resource: ResourceId,
     code: String,
-): ValueProblem = ValueProblem(ValueLocation(resource, ValuePath()), code)
+): ValueProblem = ValueProblem(location = ValueLocation.of(resource), code = code)
 
 private fun projectionKey(value: LinkProjection): String =
-    "${value.contract.value}:${value.first.value}:${value.second.value}:${value.firstLocation}:${value.secondLocation}"
+    "${value.contract.value}:${value.first.value}:${value.second.value}:" +
+        "${value.firstLocation?.let(ValuePath.serializer::toJsonCode)}:${value.secondLocation?.let(ValuePath.serializer::toJsonCode)}"
 
 private fun projectionEndpoints(value: LinkProjection): String = "${value.contract.value}:${value.first.value}:${value.second.value}"
 

@@ -1,18 +1,10 @@
 //! Resolve paths used by macro expansions.
 //!
 //! Components invoke these macros through `wasmcloud_utils`, while the utility crate also uses
-//! them internally to define its own response implementations. Expansions therefore choose the
-//! caller visible crate path or the current crate path before emitting runtime references.
+//! them internally in its own tests and helpers. Expansions therefore choose the caller visible
+//! crate path or the current crate path before emitting runtime references.
 
 use syn::{Ident, Path};
-
-pub(crate) fn skir_response_trait_path() -> syn::Path {
-    if is_internal_call() {
-        return syn::parse_quote! { crate::SkirResponse };
-    }
-
-    syn::parse_quote! { ::wasmcloud_utils::SkirResponse }
-}
 
 pub(crate) fn utils_path() -> syn::Path {
     if is_internal_call() {

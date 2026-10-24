@@ -2785,11 +2785,11 @@ sealed class ResolveResourceOperationsResult private constructor() {
     enum class Kind {
         UNKNOWN,
         RESOLVED_WRAPPER,
-        STALE_OBSERVATION_WRAPPER,
-        INVALID_WRAPPER,
-        CATALOG_CHANGED_WRAPPER,
-        PERMISSION_DENIED_WRAPPER,
-        FAILED_WRAPPER,
+        STALE_OBSERVATION_ERROR_WRAPPER,
+        INVALID_ERROR_WRAPPER,
+        CATALOG_CHANGED_ERROR_WRAPPER,
+        PERMISSION_DENIED_ERROR_WRAPPER,
+        FAILED_ERROR_WRAPPER,
         INTERNAL_ERROR_WRAPPER,
     }
 
@@ -2826,93 +2826,93 @@ sealed class ResolveResourceOperationsResult private constructor() {
         }
     }
 
-    class StaleObservationWrapper private constructor (
+    class StaleObservationErrorWrapper private constructor (
         val value: skirout.editor.v1.resource_operations.StaleAuthoringObservation,
     ) : skirout.editor.v1.resource_operations.ResolveResourceOperationsResult() {
         constructor(
             value: skirout.editor.v1.resource_operations.StaleAuthoringObservation_OrMutable,
         ): this(value.toFrozen()) {}
 
-        override val kind get() = Kind.STALE_OBSERVATION_WRAPPER;
+        override val kind get() = Kind.STALE_OBSERVATION_ERROR_WRAPPER;
 
         override fun equals(other: kotlin.Any?): kotlin.Boolean {
-            return other is skirout.editor.v1.resource_operations.ResolveResourceOperationsResult.StaleObservationWrapper && value == other.value;
+            return other is skirout.editor.v1.resource_operations.ResolveResourceOperationsResult.StaleObservationErrorWrapper && value == other.value;
         }
 
         override fun hashCode(): kotlin.Int {
-            return this.value.hashCode() + -1006347130;
+            return this.value.hashCode() + -961309425;
         }
     }
 
-    class InvalidWrapper private constructor (
+    class InvalidErrorWrapper private constructor (
         val value: skirout.editor.v1.resource_operations.ResourceOperationFailure,
     ) : skirout.editor.v1.resource_operations.ResolveResourceOperationsResult() {
         constructor(
             value: skirout.editor.v1.resource_operations.ResourceOperationFailure_OrMutable,
         ): this(value.toFrozen()) {}
 
-        override val kind get() = Kind.INVALID_WRAPPER;
+        override val kind get() = Kind.INVALID_ERROR_WRAPPER;
 
         override fun equals(other: kotlin.Any?): kotlin.Boolean {
-            return other is skirout.editor.v1.resource_operations.ResolveResourceOperationsResult.InvalidWrapper && value == other.value;
+            return other is skirout.editor.v1.resource_operations.ResolveResourceOperationsResult.InvalidErrorWrapper && value == other.value;
         }
 
         override fun hashCode(): kotlin.Int {
-            return this.value.hashCode() + 1959784951;
+            return this.value.hashCode() + -849636928;
         }
     }
 
-    class CatalogChangedWrapper private constructor (
+    class CatalogChangedErrorWrapper private constructor (
         val value: skirout.editor.v1.authoring.CatalogChanged,
     ) : skirout.editor.v1.resource_operations.ResolveResourceOperationsResult() {
         constructor(
             value: skirout.editor.v1.authoring.CatalogChanged_OrMutable,
         ): this(value.toFrozen()) {}
 
-        override val kind get() = Kind.CATALOG_CHANGED_WRAPPER;
+        override val kind get() = Kind.CATALOG_CHANGED_ERROR_WRAPPER;
 
         override fun equals(other: kotlin.Any?): kotlin.Boolean {
-            return other is skirout.editor.v1.resource_operations.ResolveResourceOperationsResult.CatalogChangedWrapper && value == other.value;
+            return other is skirout.editor.v1.resource_operations.ResolveResourceOperationsResult.CatalogChangedErrorWrapper && value == other.value;
         }
 
         override fun hashCode(): kotlin.Int {
-            return this.value.hashCode() + 1862877326;
+            return this.value.hashCode() + -760261865;
         }
     }
 
-    class PermissionDeniedWrapper private constructor (
+    class PermissionDeniedErrorWrapper private constructor (
         val value: skirout.editor.v1.resource_operations.ResourceOperationFailure,
     ) : skirout.editor.v1.resource_operations.ResolveResourceOperationsResult() {
         constructor(
             value: skirout.editor.v1.resource_operations.ResourceOperationFailure_OrMutable,
         ): this(value.toFrozen()) {}
 
-        override val kind get() = Kind.PERMISSION_DENIED_WRAPPER;
+        override val kind get() = Kind.PERMISSION_DENIED_ERROR_WRAPPER;
 
         override fun equals(other: kotlin.Any?): kotlin.Boolean {
-            return other is skirout.editor.v1.resource_operations.ResolveResourceOperationsResult.PermissionDeniedWrapper && value == other.value;
+            return other is skirout.editor.v1.resource_operations.ResolveResourceOperationsResult.PermissionDeniedErrorWrapper && value == other.value;
         }
 
         override fun hashCode(): kotlin.Int {
-            return this.value.hashCode() + 330128395;
+            return this.value.hashCode() + -1996612396;
         }
     }
 
-    class FailedWrapper private constructor (
+    class FailedErrorWrapper private constructor (
         val value: skirout.editor.v1.resource_operations.ResourceOperationFailure,
     ) : skirout.editor.v1.resource_operations.ResolveResourceOperationsResult() {
         constructor(
             value: skirout.editor.v1.resource_operations.ResourceOperationFailure_OrMutable,
         ): this(value.toFrozen()) {}
 
-        override val kind get() = Kind.FAILED_WRAPPER;
+        override val kind get() = Kind.FAILED_ERROR_WRAPPER;
 
         override fun equals(other: kotlin.Any?): kotlin.Boolean {
-            return other is skirout.editor.v1.resource_operations.ResolveResourceOperationsResult.FailedWrapper && value == other.value;
+            return other is skirout.editor.v1.resource_operations.ResolveResourceOperationsResult.FailedErrorWrapper && value == other.value;
         }
 
         override fun hashCode(): kotlin.Int {
-            return this.value.hashCode() + -1281977283;
+            return this.value.hashCode() + -2011895930;
         }
     }
 
@@ -2964,61 +2964,61 @@ sealed class ResolveResourceOperationsResult private constructor() {
             )
         );
 
-        /** Shortcut for `StaleObservationWrapper(skirout.editor.v1.resource_operations.StaleAuthoringObservation(...))`. */
+        /** Shortcut for `StaleObservationErrorWrapper(skirout.editor.v1.resource_operations.StaleAuthoringObservation(...))`. */
         @kotlin.Suppress("UNUSED_PARAMETER")
-        fun createStaleObservation(
+        fun createStaleObservationError(
             _mustNameArguments: _MustNameArguments =
                 _MustNameArguments,
             actual: skirout.editor.v1.authoring.AuthoringObservationId_OrMutable,
-        ) = StaleObservationWrapper(
+        ) = StaleObservationErrorWrapper(
             skirout.editor.v1.resource_operations.StaleAuthoringObservation(
                 actual = actual,
             )
         );
 
-        /** Shortcut for `InvalidWrapper(skirout.editor.v1.resource_operations.ResourceOperationFailure(...))`. */
+        /** Shortcut for `InvalidErrorWrapper(skirout.editor.v1.resource_operations.ResourceOperationFailure(...))`. */
         @kotlin.Suppress("UNUSED_PARAMETER")
-        fun createInvalid(
+        fun createInvalidError(
             _mustNameArguments: _MustNameArguments =
                 _MustNameArguments,
             diagnostics: kotlin.collections.Iterable<skirout.editor.v1.authoring.AuthoringDiagnostic_OrMutable>,
-        ) = InvalidWrapper(
+        ) = InvalidErrorWrapper(
             skirout.editor.v1.resource_operations.ResourceOperationFailure(
                 diagnostics = diagnostics,
             )
         );
 
-        /** Shortcut for `CatalogChangedWrapper(skirout.editor.v1.authoring.CatalogChanged(...))`. */
+        /** Shortcut for `CatalogChangedErrorWrapper(skirout.editor.v1.authoring.CatalogChanged(...))`. */
         @kotlin.Suppress("UNUSED_PARAMETER")
-        fun createCatalogChanged(
+        fun createCatalogChangedError(
             _mustNameArguments: _MustNameArguments =
                 _MustNameArguments,
             actualGeneration: skirout.editor.v1.type_catalog.CatalogGeneration_OrMutable,
-        ) = CatalogChangedWrapper(
+        ) = CatalogChangedErrorWrapper(
             skirout.editor.v1.authoring.CatalogChanged(
                 actualGeneration = actualGeneration,
             )
         );
 
-        /** Shortcut for `PermissionDeniedWrapper(skirout.editor.v1.resource_operations.ResourceOperationFailure(...))`. */
+        /** Shortcut for `PermissionDeniedErrorWrapper(skirout.editor.v1.resource_operations.ResourceOperationFailure(...))`. */
         @kotlin.Suppress("UNUSED_PARAMETER")
-        fun createPermissionDenied(
+        fun createPermissionDeniedError(
             _mustNameArguments: _MustNameArguments =
                 _MustNameArguments,
             diagnostics: kotlin.collections.Iterable<skirout.editor.v1.authoring.AuthoringDiagnostic_OrMutable>,
-        ) = PermissionDeniedWrapper(
+        ) = PermissionDeniedErrorWrapper(
             skirout.editor.v1.resource_operations.ResourceOperationFailure(
                 diagnostics = diagnostics,
             )
         );
 
-        /** Shortcut for `FailedWrapper(skirout.editor.v1.resource_operations.ResourceOperationFailure(...))`. */
+        /** Shortcut for `FailedErrorWrapper(skirout.editor.v1.resource_operations.ResourceOperationFailure(...))`. */
         @kotlin.Suppress("UNUSED_PARAMETER")
-        fun createFailed(
+        fun createFailedError(
             _mustNameArguments: _MustNameArguments =
                 _MustNameArguments,
             diagnostics: kotlin.collections.Iterable<skirout.editor.v1.authoring.AuthoringDiagnostic_OrMutable>,
-        ) = FailedWrapper(
+        ) = FailedErrorWrapper(
             skirout.editor.v1.resource_operations.ResourceOperationFailure(
                 diagnostics = diagnostics,
             )
@@ -3730,12 +3730,12 @@ sealed class AuthoringActionResult private constructor() {
         UNKNOWN,
         NEEDS_INPUT_WRAPPER,
         PREVIEW_WRAPPER,
-        STALE_OBSERVATION_WRAPPER,
-        INVALID_WRAPPER,
-        UNAVAILABLE_WRAPPER,
-        CATALOG_CHANGED_WRAPPER,
-        PERMISSION_DENIED_WRAPPER,
-        FAILED_WRAPPER,
+        STALE_OBSERVATION_ERROR_WRAPPER,
+        INVALID_ERROR_WRAPPER,
+        UNAVAILABLE_ERROR_WRAPPER,
+        CATALOG_CHANGED_ERROR_WRAPPER,
+        PERMISSION_DENIED_ERROR_WRAPPER,
+        FAILED_ERROR_WRAPPER,
         INTERNAL_ERROR_WRAPPER,
     }
 
@@ -3790,111 +3790,111 @@ sealed class AuthoringActionResult private constructor() {
         }
     }
 
-    class StaleObservationWrapper private constructor (
+    class StaleObservationErrorWrapper private constructor (
         val value: skirout.editor.v1.resource_operations.StaleAuthoringObservation,
     ) : skirout.editor.v1.resource_operations.AuthoringActionResult() {
         constructor(
             value: skirout.editor.v1.resource_operations.StaleAuthoringObservation_OrMutable,
         ): this(value.toFrozen()) {}
 
-        override val kind get() = Kind.STALE_OBSERVATION_WRAPPER;
+        override val kind get() = Kind.STALE_OBSERVATION_ERROR_WRAPPER;
 
         override fun equals(other: kotlin.Any?): kotlin.Boolean {
-            return other is skirout.editor.v1.resource_operations.AuthoringActionResult.StaleObservationWrapper && value == other.value;
+            return other is skirout.editor.v1.resource_operations.AuthoringActionResult.StaleObservationErrorWrapper && value == other.value;
         }
 
         override fun hashCode(): kotlin.Int {
-            return this.value.hashCode() + -1006347130;
+            return this.value.hashCode() + -961309425;
         }
     }
 
-    class InvalidWrapper private constructor (
+    class InvalidErrorWrapper private constructor (
         val value: skirout.editor.v1.resource_operations.ResourceOperationFailure,
     ) : skirout.editor.v1.resource_operations.AuthoringActionResult() {
         constructor(
             value: skirout.editor.v1.resource_operations.ResourceOperationFailure_OrMutable,
         ): this(value.toFrozen()) {}
 
-        override val kind get() = Kind.INVALID_WRAPPER;
+        override val kind get() = Kind.INVALID_ERROR_WRAPPER;
 
         override fun equals(other: kotlin.Any?): kotlin.Boolean {
-            return other is skirout.editor.v1.resource_operations.AuthoringActionResult.InvalidWrapper && value == other.value;
+            return other is skirout.editor.v1.resource_operations.AuthoringActionResult.InvalidErrorWrapper && value == other.value;
         }
 
         override fun hashCode(): kotlin.Int {
-            return this.value.hashCode() + 1959784951;
+            return this.value.hashCode() + -849636928;
         }
     }
 
-    class UnavailableWrapper private constructor (
+    class UnavailableErrorWrapper private constructor (
         val value: skirout.editor.v1.resource_operations.ResourceOperationFailure,
     ) : skirout.editor.v1.resource_operations.AuthoringActionResult() {
         constructor(
             value: skirout.editor.v1.resource_operations.ResourceOperationFailure_OrMutable,
         ): this(value.toFrozen()) {}
 
-        override val kind get() = Kind.UNAVAILABLE_WRAPPER;
+        override val kind get() = Kind.UNAVAILABLE_ERROR_WRAPPER;
 
         override fun equals(other: kotlin.Any?): kotlin.Boolean {
-            return other is skirout.editor.v1.resource_operations.AuthoringActionResult.UnavailableWrapper && value == other.value;
+            return other is skirout.editor.v1.resource_operations.AuthoringActionResult.UnavailableErrorWrapper && value == other.value;
         }
 
         override fun hashCode(): kotlin.Int {
-            return this.value.hashCode() + -665462704;
+            return this.value.hashCode() + -160984743;
         }
     }
 
-    class CatalogChangedWrapper private constructor (
+    class CatalogChangedErrorWrapper private constructor (
         val value: skirout.editor.v1.authoring.CatalogChanged,
     ) : skirout.editor.v1.resource_operations.AuthoringActionResult() {
         constructor(
             value: skirout.editor.v1.authoring.CatalogChanged_OrMutable,
         ): this(value.toFrozen()) {}
 
-        override val kind get() = Kind.CATALOG_CHANGED_WRAPPER;
+        override val kind get() = Kind.CATALOG_CHANGED_ERROR_WRAPPER;
 
         override fun equals(other: kotlin.Any?): kotlin.Boolean {
-            return other is skirout.editor.v1.resource_operations.AuthoringActionResult.CatalogChangedWrapper && value == other.value;
+            return other is skirout.editor.v1.resource_operations.AuthoringActionResult.CatalogChangedErrorWrapper && value == other.value;
         }
 
         override fun hashCode(): kotlin.Int {
-            return this.value.hashCode() + 1862877326;
+            return this.value.hashCode() + -760261865;
         }
     }
 
-    class PermissionDeniedWrapper private constructor (
+    class PermissionDeniedErrorWrapper private constructor (
         val value: skirout.editor.v1.resource_operations.ResourceOperationFailure,
     ) : skirout.editor.v1.resource_operations.AuthoringActionResult() {
         constructor(
             value: skirout.editor.v1.resource_operations.ResourceOperationFailure_OrMutable,
         ): this(value.toFrozen()) {}
 
-        override val kind get() = Kind.PERMISSION_DENIED_WRAPPER;
+        override val kind get() = Kind.PERMISSION_DENIED_ERROR_WRAPPER;
 
         override fun equals(other: kotlin.Any?): kotlin.Boolean {
-            return other is skirout.editor.v1.resource_operations.AuthoringActionResult.PermissionDeniedWrapper && value == other.value;
+            return other is skirout.editor.v1.resource_operations.AuthoringActionResult.PermissionDeniedErrorWrapper && value == other.value;
         }
 
         override fun hashCode(): kotlin.Int {
-            return this.value.hashCode() + 330128395;
+            return this.value.hashCode() + -1996612396;
         }
     }
 
-    class FailedWrapper private constructor (
+    class FailedErrorWrapper private constructor (
         val value: skirout.editor.v1.resource_operations.ResourceOperationFailure,
     ) : skirout.editor.v1.resource_operations.AuthoringActionResult() {
         constructor(
             value: skirout.editor.v1.resource_operations.ResourceOperationFailure_OrMutable,
         ): this(value.toFrozen()) {}
 
-        override val kind get() = Kind.FAILED_WRAPPER;
+        override val kind get() = Kind.FAILED_ERROR_WRAPPER;
 
         override fun equals(other: kotlin.Any?): kotlin.Boolean {
-            return other is skirout.editor.v1.resource_operations.AuthoringActionResult.FailedWrapper && value == other.value;
+            return other is skirout.editor.v1.resource_operations.AuthoringActionResult.FailedErrorWrapper && value == other.value;
         }
 
         override fun hashCode(): kotlin.Int {
-            return this.value.hashCode() + -1281977283;
+            return this.value.hashCode() + -2011895930;
         }
     }
 
@@ -3974,73 +3974,73 @@ sealed class AuthoringActionResult private constructor() {
             )
         );
 
-        /** Shortcut for `StaleObservationWrapper(skirout.editor.v1.resource_operations.StaleAuthoringObservation(...))`. */
+        /** Shortcut for `StaleObservationErrorWrapper(skirout.editor.v1.resource_operations.StaleAuthoringObservation(...))`. */
         @kotlin.Suppress("UNUSED_PARAMETER")
-        fun createStaleObservation(
+        fun createStaleObservationError(
             _mustNameArguments: _MustNameArguments =
                 _MustNameArguments,
             actual: skirout.editor.v1.authoring.AuthoringObservationId_OrMutable,
-        ) = StaleObservationWrapper(
+        ) = StaleObservationErrorWrapper(
             skirout.editor.v1.resource_operations.StaleAuthoringObservation(
                 actual = actual,
             )
         );
 
-        /** Shortcut for `InvalidWrapper(skirout.editor.v1.resource_operations.ResourceOperationFailure(...))`. */
+        /** Shortcut for `InvalidErrorWrapper(skirout.editor.v1.resource_operations.ResourceOperationFailure(...))`. */
         @kotlin.Suppress("UNUSED_PARAMETER")
-        fun createInvalid(
+        fun createInvalidError(
             _mustNameArguments: _MustNameArguments =
                 _MustNameArguments,
             diagnostics: kotlin.collections.Iterable<skirout.editor.v1.authoring.AuthoringDiagnostic_OrMutable>,
-        ) = InvalidWrapper(
+        ) = InvalidErrorWrapper(
             skirout.editor.v1.resource_operations.ResourceOperationFailure(
                 diagnostics = diagnostics,
             )
         );
 
-        /** Shortcut for `UnavailableWrapper(skirout.editor.v1.resource_operations.ResourceOperationFailure(...))`. */
+        /** Shortcut for `UnavailableErrorWrapper(skirout.editor.v1.resource_operations.ResourceOperationFailure(...))`. */
         @kotlin.Suppress("UNUSED_PARAMETER")
-        fun createUnavailable(
+        fun createUnavailableError(
             _mustNameArguments: _MustNameArguments =
                 _MustNameArguments,
             diagnostics: kotlin.collections.Iterable<skirout.editor.v1.authoring.AuthoringDiagnostic_OrMutable>,
-        ) = UnavailableWrapper(
+        ) = UnavailableErrorWrapper(
             skirout.editor.v1.resource_operations.ResourceOperationFailure(
                 diagnostics = diagnostics,
             )
         );
 
-        /** Shortcut for `CatalogChangedWrapper(skirout.editor.v1.authoring.CatalogChanged(...))`. */
+        /** Shortcut for `CatalogChangedErrorWrapper(skirout.editor.v1.authoring.CatalogChanged(...))`. */
         @kotlin.Suppress("UNUSED_PARAMETER")
-        fun createCatalogChanged(
+        fun createCatalogChangedError(
             _mustNameArguments: _MustNameArguments =
                 _MustNameArguments,
             actualGeneration: skirout.editor.v1.type_catalog.CatalogGeneration_OrMutable,
-        ) = CatalogChangedWrapper(
+        ) = CatalogChangedErrorWrapper(
             skirout.editor.v1.authoring.CatalogChanged(
                 actualGeneration = actualGeneration,
             )
         );
 
-        /** Shortcut for `PermissionDeniedWrapper(skirout.editor.v1.resource_operations.ResourceOperationFailure(...))`. */
+        /** Shortcut for `PermissionDeniedErrorWrapper(skirout.editor.v1.resource_operations.ResourceOperationFailure(...))`. */
         @kotlin.Suppress("UNUSED_PARAMETER")
-        fun createPermissionDenied(
+        fun createPermissionDeniedError(
             _mustNameArguments: _MustNameArguments =
                 _MustNameArguments,
             diagnostics: kotlin.collections.Iterable<skirout.editor.v1.authoring.AuthoringDiagnostic_OrMutable>,
-        ) = PermissionDeniedWrapper(
+        ) = PermissionDeniedErrorWrapper(
             skirout.editor.v1.resource_operations.ResourceOperationFailure(
                 diagnostics = diagnostics,
             )
         );
 
-        /** Shortcut for `FailedWrapper(skirout.editor.v1.resource_operations.ResourceOperationFailure(...))`. */
+        /** Shortcut for `FailedErrorWrapper(skirout.editor.v1.resource_operations.ResourceOperationFailure(...))`. */
         @kotlin.Suppress("UNUSED_PARAMETER")
-        fun createFailed(
+        fun createFailedError(
             _mustNameArguments: _MustNameArguments =
                 _MustNameArguments,
             diagnostics: kotlin.collections.Iterable<skirout.editor.v1.authoring.AuthoringDiagnostic_OrMutable>,
-        ) = FailedWrapper(
+        ) = FailedErrorWrapper(
             skirout.editor.v1.resource_operations.ResourceOperationFailure(
                 diagnostics = diagnostics,
             )
@@ -4585,11 +4585,11 @@ sealed class ResolveDropCandidatesResult private constructor() {
     enum class Kind {
         UNKNOWN,
         RESOLVED_WRAPPER,
-        STALE_OBSERVATION_WRAPPER,
-        INVALID_WRAPPER,
-        CATALOG_CHANGED_WRAPPER,
-        PERMISSION_DENIED_WRAPPER,
-        FAILED_WRAPPER,
+        STALE_OBSERVATION_ERROR_WRAPPER,
+        INVALID_ERROR_WRAPPER,
+        CATALOG_CHANGED_ERROR_WRAPPER,
+        PERMISSION_DENIED_ERROR_WRAPPER,
+        FAILED_ERROR_WRAPPER,
         INTERNAL_ERROR_WRAPPER,
     }
 
@@ -4626,93 +4626,93 @@ sealed class ResolveDropCandidatesResult private constructor() {
         }
     }
 
-    class StaleObservationWrapper private constructor (
+    class StaleObservationErrorWrapper private constructor (
         val value: skirout.editor.v1.resource_operations.StaleAuthoringObservation,
     ) : skirout.editor.v1.resource_operations.ResolveDropCandidatesResult() {
         constructor(
             value: skirout.editor.v1.resource_operations.StaleAuthoringObservation_OrMutable,
         ): this(value.toFrozen()) {}
 
-        override val kind get() = Kind.STALE_OBSERVATION_WRAPPER;
+        override val kind get() = Kind.STALE_OBSERVATION_ERROR_WRAPPER;
 
         override fun equals(other: kotlin.Any?): kotlin.Boolean {
-            return other is skirout.editor.v1.resource_operations.ResolveDropCandidatesResult.StaleObservationWrapper && value == other.value;
+            return other is skirout.editor.v1.resource_operations.ResolveDropCandidatesResult.StaleObservationErrorWrapper && value == other.value;
         }
 
         override fun hashCode(): kotlin.Int {
-            return this.value.hashCode() + -1006347130;
+            return this.value.hashCode() + -961309425;
         }
     }
 
-    class InvalidWrapper private constructor (
+    class InvalidErrorWrapper private constructor (
         val value: skirout.editor.v1.resource_operations.ResourceOperationFailure,
     ) : skirout.editor.v1.resource_operations.ResolveDropCandidatesResult() {
         constructor(
             value: skirout.editor.v1.resource_operations.ResourceOperationFailure_OrMutable,
         ): this(value.toFrozen()) {}
 
-        override val kind get() = Kind.INVALID_WRAPPER;
+        override val kind get() = Kind.INVALID_ERROR_WRAPPER;
 
         override fun equals(other: kotlin.Any?): kotlin.Boolean {
-            return other is skirout.editor.v1.resource_operations.ResolveDropCandidatesResult.InvalidWrapper && value == other.value;
+            return other is skirout.editor.v1.resource_operations.ResolveDropCandidatesResult.InvalidErrorWrapper && value == other.value;
         }
 
         override fun hashCode(): kotlin.Int {
-            return this.value.hashCode() + 1959784951;
+            return this.value.hashCode() + -849636928;
         }
     }
 
-    class CatalogChangedWrapper private constructor (
+    class CatalogChangedErrorWrapper private constructor (
         val value: skirout.editor.v1.authoring.CatalogChanged,
     ) : skirout.editor.v1.resource_operations.ResolveDropCandidatesResult() {
         constructor(
             value: skirout.editor.v1.authoring.CatalogChanged_OrMutable,
         ): this(value.toFrozen()) {}
 
-        override val kind get() = Kind.CATALOG_CHANGED_WRAPPER;
+        override val kind get() = Kind.CATALOG_CHANGED_ERROR_WRAPPER;
 
         override fun equals(other: kotlin.Any?): kotlin.Boolean {
-            return other is skirout.editor.v1.resource_operations.ResolveDropCandidatesResult.CatalogChangedWrapper && value == other.value;
+            return other is skirout.editor.v1.resource_operations.ResolveDropCandidatesResult.CatalogChangedErrorWrapper && value == other.value;
         }
 
         override fun hashCode(): kotlin.Int {
-            return this.value.hashCode() + 1862877326;
+            return this.value.hashCode() + -760261865;
         }
     }
 
-    class PermissionDeniedWrapper private constructor (
+    class PermissionDeniedErrorWrapper private constructor (
         val value: skirout.editor.v1.resource_operations.ResourceOperationFailure,
     ) : skirout.editor.v1.resource_operations.ResolveDropCandidatesResult() {
         constructor(
             value: skirout.editor.v1.resource_operations.ResourceOperationFailure_OrMutable,
         ): this(value.toFrozen()) {}
 
-        override val kind get() = Kind.PERMISSION_DENIED_WRAPPER;
+        override val kind get() = Kind.PERMISSION_DENIED_ERROR_WRAPPER;
 
         override fun equals(other: kotlin.Any?): kotlin.Boolean {
-            return other is skirout.editor.v1.resource_operations.ResolveDropCandidatesResult.PermissionDeniedWrapper && value == other.value;
+            return other is skirout.editor.v1.resource_operations.ResolveDropCandidatesResult.PermissionDeniedErrorWrapper && value == other.value;
         }
 
         override fun hashCode(): kotlin.Int {
-            return this.value.hashCode() + 330128395;
+            return this.value.hashCode() + -1996612396;
         }
     }
 
-    class FailedWrapper private constructor (
+    class FailedErrorWrapper private constructor (
         val value: skirout.editor.v1.resource_operations.ResourceOperationFailure,
     ) : skirout.editor.v1.resource_operations.ResolveDropCandidatesResult() {
         constructor(
             value: skirout.editor.v1.resource_operations.ResourceOperationFailure_OrMutable,
         ): this(value.toFrozen()) {}
 
-        override val kind get() = Kind.FAILED_WRAPPER;
+        override val kind get() = Kind.FAILED_ERROR_WRAPPER;
 
         override fun equals(other: kotlin.Any?): kotlin.Boolean {
-            return other is skirout.editor.v1.resource_operations.ResolveDropCandidatesResult.FailedWrapper && value == other.value;
+            return other is skirout.editor.v1.resource_operations.ResolveDropCandidatesResult.FailedErrorWrapper && value == other.value;
         }
 
         override fun hashCode(): kotlin.Int {
-            return this.value.hashCode() + -1281977283;
+            return this.value.hashCode() + -2011895930;
         }
     }
 
@@ -4752,61 +4752,61 @@ sealed class ResolveDropCandidatesResult private constructor() {
          */
         val UNKNOWN = @kotlin.Suppress("DEPRECATION") Unknown(Kind.UNKNOWN, null);
 
-        /** Shortcut for `StaleObservationWrapper(skirout.editor.v1.resource_operations.StaleAuthoringObservation(...))`. */
+        /** Shortcut for `StaleObservationErrorWrapper(skirout.editor.v1.resource_operations.StaleAuthoringObservation(...))`. */
         @kotlin.Suppress("UNUSED_PARAMETER")
-        fun createStaleObservation(
+        fun createStaleObservationError(
             _mustNameArguments: _MustNameArguments =
                 _MustNameArguments,
             actual: skirout.editor.v1.authoring.AuthoringObservationId_OrMutable,
-        ) = StaleObservationWrapper(
+        ) = StaleObservationErrorWrapper(
             skirout.editor.v1.resource_operations.StaleAuthoringObservation(
                 actual = actual,
             )
         );
 
-        /** Shortcut for `InvalidWrapper(skirout.editor.v1.resource_operations.ResourceOperationFailure(...))`. */
+        /** Shortcut for `InvalidErrorWrapper(skirout.editor.v1.resource_operations.ResourceOperationFailure(...))`. */
         @kotlin.Suppress("UNUSED_PARAMETER")
-        fun createInvalid(
+        fun createInvalidError(
             _mustNameArguments: _MustNameArguments =
                 _MustNameArguments,
             diagnostics: kotlin.collections.Iterable<skirout.editor.v1.authoring.AuthoringDiagnostic_OrMutable>,
-        ) = InvalidWrapper(
+        ) = InvalidErrorWrapper(
             skirout.editor.v1.resource_operations.ResourceOperationFailure(
                 diagnostics = diagnostics,
             )
         );
 
-        /** Shortcut for `CatalogChangedWrapper(skirout.editor.v1.authoring.CatalogChanged(...))`. */
+        /** Shortcut for `CatalogChangedErrorWrapper(skirout.editor.v1.authoring.CatalogChanged(...))`. */
         @kotlin.Suppress("UNUSED_PARAMETER")
-        fun createCatalogChanged(
+        fun createCatalogChangedError(
             _mustNameArguments: _MustNameArguments =
                 _MustNameArguments,
             actualGeneration: skirout.editor.v1.type_catalog.CatalogGeneration_OrMutable,
-        ) = CatalogChangedWrapper(
+        ) = CatalogChangedErrorWrapper(
             skirout.editor.v1.authoring.CatalogChanged(
                 actualGeneration = actualGeneration,
             )
         );
 
-        /** Shortcut for `PermissionDeniedWrapper(skirout.editor.v1.resource_operations.ResourceOperationFailure(...))`. */
+        /** Shortcut for `PermissionDeniedErrorWrapper(skirout.editor.v1.resource_operations.ResourceOperationFailure(...))`. */
         @kotlin.Suppress("UNUSED_PARAMETER")
-        fun createPermissionDenied(
+        fun createPermissionDeniedError(
             _mustNameArguments: _MustNameArguments =
                 _MustNameArguments,
             diagnostics: kotlin.collections.Iterable<skirout.editor.v1.authoring.AuthoringDiagnostic_OrMutable>,
-        ) = PermissionDeniedWrapper(
+        ) = PermissionDeniedErrorWrapper(
             skirout.editor.v1.resource_operations.ResourceOperationFailure(
                 diagnostics = diagnostics,
             )
         );
 
-        /** Shortcut for `FailedWrapper(skirout.editor.v1.resource_operations.ResourceOperationFailure(...))`. */
+        /** Shortcut for `FailedErrorWrapper(skirout.editor.v1.resource_operations.ResourceOperationFailure(...))`. */
         @kotlin.Suppress("UNUSED_PARAMETER")
-        fun createFailed(
+        fun createFailedError(
             _mustNameArguments: _MustNameArguments =
                 _MustNameArguments,
             diagnostics: kotlin.collections.Iterable<skirout.editor.v1.authoring.AuthoringDiagnostic_OrMutable>,
-        ) = FailedWrapper(
+        ) = FailedErrorWrapper(
             skirout.editor.v1.resource_operations.ResourceOperationFailure(
                 diagnostics = diagnostics,
             )
@@ -5334,56 +5334,56 @@ private object _SerializerRegistry {
         );
         AuthoringActionResultSerializerImpl.addWrapperVariant(
             3,
-            "stale_observation",
-            skirout.editor.v1.resource_operations.AuthoringActionResult.Kind.STALE_OBSERVATION_WRAPPER.ordinal,
+            "stale_observation_error",
+            skirout.editor.v1.resource_operations.AuthoringActionResult.Kind.STALE_OBSERVATION_ERROR_WRAPPER.ordinal,
             _SerializerRegistry.StaleAuthoringObservationSerializer,
             "",
-            { skirout.editor.v1.resource_operations.AuthoringActionResult.StaleObservationWrapper(it) },
+            { skirout.editor.v1.resource_operations.AuthoringActionResult.StaleObservationErrorWrapper(it) },
             { it.value },
         );
         AuthoringActionResultSerializerImpl.addWrapperVariant(
             4,
-            "invalid",
-            skirout.editor.v1.resource_operations.AuthoringActionResult.Kind.INVALID_WRAPPER.ordinal,
+            "invalid_error",
+            skirout.editor.v1.resource_operations.AuthoringActionResult.Kind.INVALID_ERROR_WRAPPER.ordinal,
             _SerializerRegistry.ResourceOperationFailureSerializer,
             "",
-            { skirout.editor.v1.resource_operations.AuthoringActionResult.InvalidWrapper(it) },
+            { skirout.editor.v1.resource_operations.AuthoringActionResult.InvalidErrorWrapper(it) },
             { it.value },
         );
         AuthoringActionResultSerializerImpl.addWrapperVariant(
             5,
-            "unavailable",
-            skirout.editor.v1.resource_operations.AuthoringActionResult.Kind.UNAVAILABLE_WRAPPER.ordinal,
+            "unavailable_error",
+            skirout.editor.v1.resource_operations.AuthoringActionResult.Kind.UNAVAILABLE_ERROR_WRAPPER.ordinal,
             _SerializerRegistry.ResourceOperationFailureSerializer,
             "",
-            { skirout.editor.v1.resource_operations.AuthoringActionResult.UnavailableWrapper(it) },
+            { skirout.editor.v1.resource_operations.AuthoringActionResult.UnavailableErrorWrapper(it) },
             { it.value },
         );
         AuthoringActionResultSerializerImpl.addWrapperVariant(
             6,
-            "catalog_changed",
-            skirout.editor.v1.resource_operations.AuthoringActionResult.Kind.CATALOG_CHANGED_WRAPPER.ordinal,
+            "catalog_changed_error",
+            skirout.editor.v1.resource_operations.AuthoringActionResult.Kind.CATALOG_CHANGED_ERROR_WRAPPER.ordinal,
             skirout.editor.v1.authoring.CatalogChanged.serializer,
             "",
-            { skirout.editor.v1.resource_operations.AuthoringActionResult.CatalogChangedWrapper(it) },
+            { skirout.editor.v1.resource_operations.AuthoringActionResult.CatalogChangedErrorWrapper(it) },
             { it.value },
         );
         AuthoringActionResultSerializerImpl.addWrapperVariant(
             7,
-            "permission_denied",
-            skirout.editor.v1.resource_operations.AuthoringActionResult.Kind.PERMISSION_DENIED_WRAPPER.ordinal,
+            "permission_denied_error",
+            skirout.editor.v1.resource_operations.AuthoringActionResult.Kind.PERMISSION_DENIED_ERROR_WRAPPER.ordinal,
             _SerializerRegistry.ResourceOperationFailureSerializer,
             "",
-            { skirout.editor.v1.resource_operations.AuthoringActionResult.PermissionDeniedWrapper(it) },
+            { skirout.editor.v1.resource_operations.AuthoringActionResult.PermissionDeniedErrorWrapper(it) },
             { it.value },
         );
         AuthoringActionResultSerializerImpl.addWrapperVariant(
             8,
-            "failed",
-            skirout.editor.v1.resource_operations.AuthoringActionResult.Kind.FAILED_WRAPPER.ordinal,
+            "failed_error",
+            skirout.editor.v1.resource_operations.AuthoringActionResult.Kind.FAILED_ERROR_WRAPPER.ordinal,
             _SerializerRegistry.ResourceOperationFailureSerializer,
             "",
-            { skirout.editor.v1.resource_operations.AuthoringActionResult.FailedWrapper(it) },
+            { skirout.editor.v1.resource_operations.AuthoringActionResult.FailedErrorWrapper(it) },
             { it.value },
         );
         AuthoringActionResultSerializerImpl.addWrapperVariant(
@@ -5929,47 +5929,47 @@ private object _SerializerRegistry {
         );
         ResolveDropCandidatesResultSerializerImpl.addWrapperVariant(
             2,
-            "stale_observation",
-            skirout.editor.v1.resource_operations.ResolveDropCandidatesResult.Kind.STALE_OBSERVATION_WRAPPER.ordinal,
+            "stale_observation_error",
+            skirout.editor.v1.resource_operations.ResolveDropCandidatesResult.Kind.STALE_OBSERVATION_ERROR_WRAPPER.ordinal,
             _SerializerRegistry.StaleAuthoringObservationSerializer,
             "",
-            { skirout.editor.v1.resource_operations.ResolveDropCandidatesResult.StaleObservationWrapper(it) },
+            { skirout.editor.v1.resource_operations.ResolveDropCandidatesResult.StaleObservationErrorWrapper(it) },
             { it.value },
         );
         ResolveDropCandidatesResultSerializerImpl.addWrapperVariant(
             3,
-            "invalid",
-            skirout.editor.v1.resource_operations.ResolveDropCandidatesResult.Kind.INVALID_WRAPPER.ordinal,
+            "invalid_error",
+            skirout.editor.v1.resource_operations.ResolveDropCandidatesResult.Kind.INVALID_ERROR_WRAPPER.ordinal,
             _SerializerRegistry.ResourceOperationFailureSerializer,
             "",
-            { skirout.editor.v1.resource_operations.ResolveDropCandidatesResult.InvalidWrapper(it) },
+            { skirout.editor.v1.resource_operations.ResolveDropCandidatesResult.InvalidErrorWrapper(it) },
             { it.value },
         );
         ResolveDropCandidatesResultSerializerImpl.addWrapperVariant(
             4,
-            "catalog_changed",
-            skirout.editor.v1.resource_operations.ResolveDropCandidatesResult.Kind.CATALOG_CHANGED_WRAPPER.ordinal,
+            "catalog_changed_error",
+            skirout.editor.v1.resource_operations.ResolveDropCandidatesResult.Kind.CATALOG_CHANGED_ERROR_WRAPPER.ordinal,
             skirout.editor.v1.authoring.CatalogChanged.serializer,
             "",
-            { skirout.editor.v1.resource_operations.ResolveDropCandidatesResult.CatalogChangedWrapper(it) },
+            { skirout.editor.v1.resource_operations.ResolveDropCandidatesResult.CatalogChangedErrorWrapper(it) },
             { it.value },
         );
         ResolveDropCandidatesResultSerializerImpl.addWrapperVariant(
             5,
-            "permission_denied",
-            skirout.editor.v1.resource_operations.ResolveDropCandidatesResult.Kind.PERMISSION_DENIED_WRAPPER.ordinal,
+            "permission_denied_error",
+            skirout.editor.v1.resource_operations.ResolveDropCandidatesResult.Kind.PERMISSION_DENIED_ERROR_WRAPPER.ordinal,
             _SerializerRegistry.ResourceOperationFailureSerializer,
             "",
-            { skirout.editor.v1.resource_operations.ResolveDropCandidatesResult.PermissionDeniedWrapper(it) },
+            { skirout.editor.v1.resource_operations.ResolveDropCandidatesResult.PermissionDeniedErrorWrapper(it) },
             { it.value },
         );
         ResolveDropCandidatesResultSerializerImpl.addWrapperVariant(
             6,
-            "failed",
-            skirout.editor.v1.resource_operations.ResolveDropCandidatesResult.Kind.FAILED_WRAPPER.ordinal,
+            "failed_error",
+            skirout.editor.v1.resource_operations.ResolveDropCandidatesResult.Kind.FAILED_ERROR_WRAPPER.ordinal,
             _SerializerRegistry.ResourceOperationFailureSerializer,
             "",
-            { skirout.editor.v1.resource_operations.ResolveDropCandidatesResult.FailedWrapper(it) },
+            { skirout.editor.v1.resource_operations.ResolveDropCandidatesResult.FailedErrorWrapper(it) },
             { it.value },
         );
         ResolveDropCandidatesResultSerializerImpl.addWrapperVariant(
@@ -6014,47 +6014,47 @@ private object _SerializerRegistry {
         );
         ResolveResourceOperationsResultSerializerImpl.addWrapperVariant(
             2,
-            "stale_observation",
-            skirout.editor.v1.resource_operations.ResolveResourceOperationsResult.Kind.STALE_OBSERVATION_WRAPPER.ordinal,
+            "stale_observation_error",
+            skirout.editor.v1.resource_operations.ResolveResourceOperationsResult.Kind.STALE_OBSERVATION_ERROR_WRAPPER.ordinal,
             _SerializerRegistry.StaleAuthoringObservationSerializer,
             "",
-            { skirout.editor.v1.resource_operations.ResolveResourceOperationsResult.StaleObservationWrapper(it) },
+            { skirout.editor.v1.resource_operations.ResolveResourceOperationsResult.StaleObservationErrorWrapper(it) },
             { it.value },
         );
         ResolveResourceOperationsResultSerializerImpl.addWrapperVariant(
             3,
-            "invalid",
-            skirout.editor.v1.resource_operations.ResolveResourceOperationsResult.Kind.INVALID_WRAPPER.ordinal,
+            "invalid_error",
+            skirout.editor.v1.resource_operations.ResolveResourceOperationsResult.Kind.INVALID_ERROR_WRAPPER.ordinal,
             _SerializerRegistry.ResourceOperationFailureSerializer,
             "",
-            { skirout.editor.v1.resource_operations.ResolveResourceOperationsResult.InvalidWrapper(it) },
+            { skirout.editor.v1.resource_operations.ResolveResourceOperationsResult.InvalidErrorWrapper(it) },
             { it.value },
         );
         ResolveResourceOperationsResultSerializerImpl.addWrapperVariant(
             4,
-            "catalog_changed",
-            skirout.editor.v1.resource_operations.ResolveResourceOperationsResult.Kind.CATALOG_CHANGED_WRAPPER.ordinal,
+            "catalog_changed_error",
+            skirout.editor.v1.resource_operations.ResolveResourceOperationsResult.Kind.CATALOG_CHANGED_ERROR_WRAPPER.ordinal,
             skirout.editor.v1.authoring.CatalogChanged.serializer,
             "",
-            { skirout.editor.v1.resource_operations.ResolveResourceOperationsResult.CatalogChangedWrapper(it) },
+            { skirout.editor.v1.resource_operations.ResolveResourceOperationsResult.CatalogChangedErrorWrapper(it) },
             { it.value },
         );
         ResolveResourceOperationsResultSerializerImpl.addWrapperVariant(
             5,
-            "permission_denied",
-            skirout.editor.v1.resource_operations.ResolveResourceOperationsResult.Kind.PERMISSION_DENIED_WRAPPER.ordinal,
+            "permission_denied_error",
+            skirout.editor.v1.resource_operations.ResolveResourceOperationsResult.Kind.PERMISSION_DENIED_ERROR_WRAPPER.ordinal,
             _SerializerRegistry.ResourceOperationFailureSerializer,
             "",
-            { skirout.editor.v1.resource_operations.ResolveResourceOperationsResult.PermissionDeniedWrapper(it) },
+            { skirout.editor.v1.resource_operations.ResolveResourceOperationsResult.PermissionDeniedErrorWrapper(it) },
             { it.value },
         );
         ResolveResourceOperationsResultSerializerImpl.addWrapperVariant(
             6,
-            "failed",
-            skirout.editor.v1.resource_operations.ResolveResourceOperationsResult.Kind.FAILED_WRAPPER.ordinal,
+            "failed_error",
+            skirout.editor.v1.resource_operations.ResolveResourceOperationsResult.Kind.FAILED_ERROR_WRAPPER.ordinal,
             _SerializerRegistry.ResourceOperationFailureSerializer,
             "",
-            { skirout.editor.v1.resource_operations.ResolveResourceOperationsResult.FailedWrapper(it) },
+            { skirout.editor.v1.resource_operations.ResolveResourceOperationsResult.FailedErrorWrapper(it) },
             { it.value },
         );
         ResolveResourceOperationsResultSerializerImpl.addWrapperVariant(

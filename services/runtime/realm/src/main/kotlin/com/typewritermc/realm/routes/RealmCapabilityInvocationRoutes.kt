@@ -1,5 +1,8 @@
 package com.typewritermc.realm.routes
 
+import com.typewritermc.protocol.transport.RealmRouteScope
+import com.typewritermc.protocol.transport.generated.editorCapabilityCommandInvoke
+import com.typewritermc.protocol.transport.generated.editorCapabilityComputationInvoke
 import com.typewritermc.services.libs.communicator.router.CommunicatorRoutesBuilder
 
 /**
@@ -9,12 +12,12 @@ import com.typewritermc.services.libs.communicator.router.CommunicatorRoutesBuil
  */
 internal class RealmCapabilityInvocationRoutes(
     private val source: RealmCapabilityInvocationSource,
-    private val contracts: EditorContracts,
+    private val address: RealmRouteScope,
 ) {
     /** Registers computation and command calls while leaving validation and dispatch ownership with [source]. */
     fun register(builder: CommunicatorRoutesBuilder) =
         with(builder) {
-            unary(contracts.invokeRealmComputation) { call -> source.computation(call.request) }
-            unary(contracts.invokeRealmCommand) { call -> source.command(call.request) }
+            unary(address.editorCapabilityComputationInvoke) { call -> source.computation(call.request) }
+            unary(address.editorCapabilityCommandInvoke) { call -> source.command(call.request) }
         }
 }

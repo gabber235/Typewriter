@@ -3,33 +3,17 @@
 package com.typewritermc.realm.checking
 
 import com.typewritermc.authoring.AppliedNativeArguments
-import com.typewritermc.authoring.AuthoringRecord
 import com.typewritermc.authoring.Availability
 import com.typewritermc.authoring.GeneratedSdkApi
-import com.typewritermc.authoring.ItemId
-import com.typewritermc.authoring.NativeBindingId
-import com.typewritermc.authoring.PathSegment
-import com.typewritermc.authoring.TypeSelection
-import com.typewritermc.authoring.ValueLocation
-import com.typewritermc.authoring.ValuePath
 import com.typewritermc.authoring.boundPath
-import com.typewritermc.checking.CatalogGeneration
-import com.typewritermc.checking.DiagnosticSeverity
-import com.typewritermc.checking.DiagnosticTemplate
+import com.typewritermc.authoring.of
+import com.typewritermc.authoring.root
 import com.typewritermc.checking.RealmCheckProvider
 import com.typewritermc.checking.RealmChecks
 import com.typewritermc.checking.ResourceTypeMatch
 import com.typewritermc.checking.TypedSelection
 import com.typewritermc.checking.check
-import com.typewritermc.configuration.ConfigurationRecipe
-import com.typewritermc.configuration.FieldPatternSegment
-import com.typewritermc.configuration.OwnedRule
-import com.typewritermc.configuration.RelativeFieldPattern
-import com.typewritermc.configuration.RepresentationKind
-import com.typewritermc.configuration.RuleDescriptor
-import com.typewritermc.configuration.RuleId
-import com.typewritermc.configuration.RuleOrigin
-import com.typewritermc.discovery.ContributionKey
+import com.typewritermc.configuration.field
 import com.typewritermc.discovery.OwnedCheck
 import com.typewritermc.discovery.OwnedConfiguration
 import com.typewritermc.discovery.OwnedNativeBinding
@@ -37,7 +21,7 @@ import com.typewritermc.discovery.OwnedPresentation
 import com.typewritermc.discovery.OwnedProviderRegistry
 import com.typewritermc.discovery.ProviderLease
 import com.typewritermc.discovery.ProviderOrigin
-import com.typewritermc.expression.ExpressionBindingId
+import com.typewritermc.discovery.contributionKey
 import com.typewritermc.imprint.ArtifactId
 import com.typewritermc.imprint.ContributionName
 import com.typewritermc.imprint.ContributionSourceId
@@ -48,27 +32,18 @@ import com.typewritermc.realm.authoring.InMemoryAuthoringViewStore
 import com.typewritermc.realm.compiler.AuthoringAcceptance
 import com.typewritermc.realm.compiler.CapturedAssessment
 import com.typewritermc.realm.repository.conflicts
-import com.typewritermc.types.CollectionKind
-import com.typewritermc.types.DataValue
-import com.typewritermc.types.DeclarationOwner
-import com.typewritermc.types.FieldDeclaration
-import com.typewritermc.types.FieldOwner
 import com.typewritermc.types.GeneratedNativeField
 import com.typewritermc.types.GeneratedRecordNativeBinding
-import com.typewritermc.types.ListItem
-import com.typewritermc.types.MapRow
 import com.typewritermc.types.NativeBinding
 import com.typewritermc.types.NativeBindingFactory
-import com.typewritermc.types.ParameterKey
-import com.typewritermc.types.RepresentationTemplate
-import com.typewritermc.types.ResourceId
-import com.typewritermc.types.ScalarKind
-import com.typewritermc.types.TypeDefinition
-import com.typewritermc.types.TypeDefinitionId
-import com.typewritermc.types.TypeId
-import com.typewritermc.types.TypeParameter
-import com.typewritermc.types.TypeTemplate
-import com.typewritermc.types.TypeUse
+import com.typewritermc.types.mapValue
+import com.typewritermc.types.named
+import com.typewritermc.types.namedUse
+import com.typewritermc.types.qualified
+import com.typewritermc.types.record
+import com.typewritermc.types.setValue
+import com.typewritermc.types.template
+import com.typewritermc.types.use
 import de.infix.testBalloon.framework.core.testSuite
 import io.kotest.assertions.throwables.shouldThrow
 import io.kotest.matchers.shouldBe
@@ -78,7 +53,42 @@ import kotlinx.coroutines.asCoroutineDispatcher
 import kotlinx.coroutines.test.StandardTestDispatcher
 import kotlinx.coroutines.test.advanceUntilIdle
 import kotlinx.coroutines.test.runTest
+import skirout.editor.v1.catalog.ConfigurationRecipe
+import skirout.editor.v1.catalog.OwnedRule
+import skirout.editor.v1.catalog.RepresentationKind
+import skirout.editor.v1.catalog.RuleDescriptor
+import skirout.editor.v1.checking.CheckInstanceId
+import skirout.editor.v1.checking.CheckOutcome
+import skirout.editor.v1.diagnostic.DiagnosticSeverity
+import skirout.editor.v1.diagnostic.DiagnosticTemplate
 import skirout.editor.v1.expression.ExpressionNode
+import skirout.editor.v1.type_catalog.AuthoringRecord
+import skirout.editor.v1.type_catalog.CatalogGeneration
+import skirout.editor.v1.type_catalog.CollectionKind
+import skirout.editor.v1.type_catalog.DataValue
+import skirout.editor.v1.type_catalog.DeclarationOwner
+import skirout.editor.v1.type_catalog.ExpressionBindingId
+import skirout.editor.v1.type_catalog.FieldDeclaration
+import skirout.editor.v1.type_catalog.FieldOwner
+import skirout.editor.v1.type_catalog.FieldPatternSegment
+import skirout.editor.v1.type_catalog.ItemId
+import skirout.editor.v1.type_catalog.ListItem
+import skirout.editor.v1.type_catalog.MapRow
+import skirout.editor.v1.type_catalog.NativeBindingId
+import skirout.editor.v1.type_catalog.ParameterKey
+import skirout.editor.v1.type_catalog.PathSegment
+import skirout.editor.v1.type_catalog.RelativeFieldPattern
+import skirout.editor.v1.type_catalog.RepresentationTemplate
+import skirout.editor.v1.type_catalog.ResourceId
+import skirout.editor.v1.type_catalog.RuleId
+import skirout.editor.v1.type_catalog.RuleOrigin
+import skirout.editor.v1.type_catalog.ScalarKind
+import skirout.editor.v1.type_catalog.TypeDefinition
+import skirout.editor.v1.type_catalog.TypeDefinitionId
+import skirout.editor.v1.type_catalog.TypeParameter
+import skirout.editor.v1.type_catalog.TypeSelection
+import skirout.editor.v1.type_catalog.ValueLocation
+import skirout.editor.v1.type_catalog.ValuePath
 import java.util.concurrent.ConcurrentHashMap
 import java.util.concurrent.CountDownLatch
 import java.util.concurrent.Executors
@@ -102,7 +112,7 @@ val RealmCheckRuntimeTest by testSuite {
                 runtime.evaluateCapture(
                     CheckAdmissionTarget.CapturedAcceptance(
                         store.capture().use {
-                            it.root.copy(catalog = TestCatalogLease(generation = CatalogGeneration("wrong")))
+                            it.root.copy(catalog = TestCatalogLease(generation = CatalogGeneration(value = "wrong")))
                         },
                     ),
                 )
@@ -123,8 +133,8 @@ val RealmCheckRuntimeTest by testSuite {
             }
         val owned =
             listOf(
-                OwnedCheck(PROVIDER_ORIGIN, RuleOrigin(TEST_TYPE, 8), provider),
-                OwnedCheck(PROVIDER_ORIGIN, RuleOrigin(TEST_TYPE, 9), provider),
+                OwnedCheck(PROVIDER_ORIGIN, RuleOrigin(owner = TEST_TYPE, ordinal = 8), provider),
+                OwnedCheck(PROVIDER_ORIGIN, RuleOrigin(owner = TEST_TYPE, ordinal = 9), provider),
             )
         val providers = TestCheckProviders(owned, failOnRetain = 2)
         val catalog = TestCatalogLease(providers = providers)
@@ -152,7 +162,7 @@ val RealmCheckRuntimeTest by testSuite {
                     realm { }
                 }
             }
-        val providers = TestCheckProviders(listOf(OwnedCheck(PROVIDER_ORIGIN, RuleOrigin(TEST_TYPE, 10), provider)))
+        val providers = TestCheckProviders(listOf(OwnedCheck(PROVIDER_ORIGIN, RuleOrigin(owner = TEST_TYPE, ordinal = 10), provider)))
         val catalog = TestCatalogLease(providers = providers)
         val base =
             InMemoryAuthoringViewStore(
@@ -186,19 +196,35 @@ val RealmCheckRuntimeTest by testSuite {
                 object : RealmCheckProvider {
                     override fun RealmChecks.register() {
                         each(TestDraftType(ResourceTypeMatch.Definition(TEST_TYPE))) { draft ->
-                            executions.computeIfAbsent(draft.binding.location.resource) { AtomicInteger() }.incrementAndGet()
-                            check(read(boundPath<String>(location(draft.binding.location.resource, "name"), TEXT_USE))) { it == "valid" }
-                                .error("Name is invalid.", draft.binding.location)
+                            executions
+                                .computeIfAbsent(
+                                    draft.binding.location.resource,
+                                ) { AtomicInteger() }
+                                .incrementAndGet()
+                            check(
+                                read(
+                                    boundPath<String>(
+                                        location(
+                                            draft.binding.location.resource,
+                                            "name",
+                                        ),
+                                        TEXT_USE,
+                                    ),
+                                ),
+                            ) {
+                                it ==
+                                    "valid"
+                            }.error("Name is invalid.", draft.binding.location)
                         }
                         realm {
                             check(Availability.Available(false)) { it }
-                                .error("Realm is invalid.", ValueLocation(ResourceId("realm"), ValuePath()))
+                                .error("Realm is invalid.", ValueLocation.of(ResourceId(value = "realm")))
                         }
                     }
                 }
-            val providers = TestCheckProviders(listOf(OwnedCheck(PROVIDER_ORIGIN, RuleOrigin(TEST_TYPE, 5), provider)))
+            val providers = TestCheckProviders(listOf(OwnedCheck(PROVIDER_ORIGIN, RuleOrigin(owner = TEST_TYPE, ordinal = 5), provider)))
             val catalog = TestCatalogLease(providers = providers)
-            val first = ResourceId("first")
+            val first = ResourceId(value = "first")
             val initial = record(name = "bad")
             val store =
                 InMemoryAuthoringViewStore(
@@ -214,7 +240,7 @@ val RealmCheckRuntimeTest by testSuite {
             runtime.findings().map { it.ticket.instance.rule.localIndex }.toSet() shouldBe setOf(0, 1)
             executions.getValue(first).get() shouldBe 1
 
-            val second = ResourceId("second")
+            val second = ResourceId(value = "second")
             val added = record(name = "bad")
             val addedTokens =
                 tokensFor(mapOf(second to added), catalog.generation, "added")
@@ -246,7 +272,7 @@ val RealmCheckRuntimeTest by testSuite {
             executions.getValue(first).get() shouldBe 1
             executions.getValue(second).get() shouldBe 2
 
-            val secondRoot = ValueLocation(second, ValuePath())
+            val secondRoot = ValueLocation.of(second)
             val removal =
                 store.install(
                     store.prepare(
@@ -276,7 +302,7 @@ val RealmCheckRuntimeTest by testSuite {
                     }
                 }
             }
-        val providers = TestCheckProviders(listOf(OwnedCheck(PROVIDER_ORIGIN, RuleOrigin(TEST_TYPE, 6), provider)))
+        val providers = TestCheckProviders(listOf(OwnedCheck(PROVIDER_ORIGIN, RuleOrigin(owner = TEST_TYPE, ordinal = 6), provider)))
         val catalog = TestCatalogLease(providers = providers)
         val store =
             InMemoryAuthoringViewStore(
@@ -305,7 +331,7 @@ val RealmCheckRuntimeTest by testSuite {
 
     test("currentIncompleteResultPublishesPartialFindingsAndDrainCompletes") {
         runTest {
-            val resource = ResourceId("page")
+            val resource = ResourceId(value = "page")
             val provider =
                 object : RealmCheckProvider {
                     override fun RealmChecks.register() {
@@ -320,11 +346,11 @@ val RealmCheckRuntimeTest by testSuite {
                                 ),
                             )
                             check(Availability.Available(false)) { it }
-                                .error("Partial finding.", ValueLocation(resource, ValuePath()))
+                                .error("Partial finding.", ValueLocation.of(resource))
                         }
                     }
                 }
-            val providers = TestCheckProviders(listOf(OwnedCheck(PROVIDER_ORIGIN, RuleOrigin(TEST_TYPE, 11), provider)))
+            val providers = TestCheckProviders(listOf(OwnedCheck(PROVIDER_ORIGIN, RuleOrigin(owner = TEST_TYPE, ordinal = 11), provider)))
             val catalog = TestCatalogLease(providers = providers)
             val authored = record(name = "valid")
             val store =
@@ -345,9 +371,8 @@ val RealmCheckRuntimeTest by testSuite {
 
             val finding = runtime.findings().single()
             finding.outcome shouldBe
-                com.typewritermc.checking.CheckOutcome
-                    .Incomplete("graph traversal limit exceeded")
-            finding.status shouldBe com.typewritermc.checking.FindingStatus.Current
+                CheckOutcome.IncompleteWrapper("graph traversal limit exceeded")
+            finding.status shouldBe skirout.editor.v1.checking.FindingStatus.CURRENT
             finding.findings.map { it.message } shouldBe listOf("Partial finding.")
 
             runtime.close()
@@ -357,28 +382,43 @@ val RealmCheckRuntimeTest by testSuite {
 
     test("portableConfigurationRuleRunsForCurrentAndCapturedChecks") {
         runTest {
-            val origin = RuleOrigin(TEST_TYPE, 20)
-            val path = RelativeFieldPattern(listOf(FieldPatternSegment.Field("name")))
+            val origin = RuleOrigin(owner = TEST_TYPE, ordinal = 20)
+            val path = RelativeFieldPattern(segments = listOf(FieldPatternSegment.field("name")))
             val rule =
                 OwnedRule(
-                    id = RuleId(origin, 0),
+                    id = RuleId(origin = origin, localIndex = 0),
                     descriptor =
                         RuleDescriptor(
-                            ExpressionNode.createRuleUnary(
-                                operation = skirout.editor.v1.expression.RuleUnaryOperation.NON_EMPTY,
-                                source =
-                                    com.typewritermc.expression
-                                        .input<Any?>(ExpressionBindingId("configured_value"))
-                                        .toNode(),
-                            ),
+                            predicate =
+                                ExpressionNode.createRuleUnary(
+                                    operation = skirout.editor.v1.expression.RuleUnaryOperation.NON_EMPTY,
+                                    source =
+                                        com.typewritermc.expression
+                                            .input<Any?>(ExpressionBindingId(value = "configured_value"))
+                                            .toNode(),
+                                ),
                         ),
-                    diagnostic = DiagnosticTemplate("name_empty", "Name must not be empty.", DiagnosticSeverity.Error, listOf(path)),
+                    diagnostic =
+                        DiagnosticTemplate(
+                            code = "name_empty",
+                            message = "Name must not be empty.",
+                            severity = DiagnosticSeverity.ERROR,
+                            targets = listOf(path),
+                        ),
                 )
             val catalog =
                 TestCatalogLease(
-                    configuration = listOf(ConfigurationRecipe(origin, path, RepresentationKind.Text, listOf(rule))),
+                    configuration =
+                        listOf(
+                            ConfigurationRecipe(
+                                origin = origin,
+                                relativePath = path,
+                                representationCondition = RepresentationKind.TEXT,
+                                rules = listOf(rule),
+                            ),
+                        ),
                 )
-            val resource = ResourceId("element")
+            val resource = ResourceId(value = "element")
             val authored = record(name = "")
             val store =
                 InMemoryAuthoringViewStore(
@@ -392,7 +432,7 @@ val RealmCheckRuntimeTest by testSuite {
             runtime.drain()
 
             val current = runtime.findings().single()
-            current.ticket.instance.rule shouldBe RuleId(origin, 0)
+            current.ticket.instance.rule shouldBe RuleId(origin = origin, localIndex = 0)
             current.ticket.instance.location shouldBe location(resource, "name")
             current.findings.map { it.code } shouldBe listOf("name_empty")
 
@@ -410,7 +450,7 @@ val RealmCheckRuntimeTest by testSuite {
 
     test("capturedNeedsInputBlocksOtherwiseCompleteAndNativeConstructibleResource") {
         runTest {
-            val resource = ResourceId("complete")
+            val resource = ResourceId(value = "complete")
             val unavailable = location(resource, "computed")
             val provider =
                 object : RealmCheckProvider {
@@ -421,7 +461,7 @@ val RealmCheckRuntimeTest by testSuite {
                         }
                     }
                 }
-            val providers = TestCheckProviders(listOf(OwnedCheck(PROVIDER_ORIGIN, RuleOrigin(TEST_TYPE, 21), provider)))
+            val providers = TestCheckProviders(listOf(OwnedCheck(PROVIDER_ORIGIN, RuleOrigin(owner = TEST_TYPE, ordinal = 21), provider)))
             val catalog = TestCatalogLease(providers = providers, nativeBindingFactories = listOf(TestResourceNativeBindingFactory))
             val authored = record(name = "ready")
             val store =
@@ -450,48 +490,56 @@ val RealmCheckRuntimeTest by testSuite {
 
     test("capturedAcceptanceRejectsCanonicalDuplicateSetValuesAndMapKeysAtExactItems") {
         runTest {
-            val resource = ResourceId("duplicates")
+            val resource = ResourceId(value = "duplicates")
             val repeated =
-                DataValue.Named(
+                DataValue.named(
                     DUPLICATE_VALUE_USE,
-                    DataValue.Record(
+                    DataValue.record(
                         linkedMapOf(
-                            "first" to DataValue.StringValue("same"),
-                            "second" to DataValue.StringValue("value"),
+                            "first" to DataValue.StringValueWrapper("same"),
+                            "second" to DataValue.StringValueWrapper("value"),
                         ),
                     ),
                 )
             val equivalent =
-                DataValue.Named(
+                DataValue.named(
                     DUPLICATE_VALUE_USE,
-                    DataValue.Record(
+                    DataValue.record(
                         linkedMapOf(
-                            "second" to DataValue.StringValue("value"),
-                            "first" to DataValue.StringValue("same"),
+                            "second" to DataValue.StringValueWrapper("value"),
+                            "first" to DataValue.StringValueWrapper("same"),
                         ),
                     ),
                 )
             val authored =
-                AuthoringRecord(
-                    TypeSelection.Complete(TypeUse.Named(TEST_TYPE)),
+                AuthoringRecord.of(
+                    TypeSelection.CompleteWrapper(TEST_TYPE.namedUse()),
                     mapOf(
                         "values" to
-                            DataValue.Named(
+                            DataValue.named(
                                 DUPLICATE_SET_USE,
-                                DataValue.SetValue(
+                                DataValue.setValue(
                                     listOf(
-                                        ListItem(ItemId("set_first"), repeated),
-                                        ListItem(ItemId("set_duplicate"), equivalent),
+                                        ListItem(id = ItemId(value = "set_first"), value = repeated),
+                                        ListItem(id = ItemId(value = "set_duplicate"), value = equivalent),
                                     ),
                                 ),
                             ),
                         "mapping" to
-                            DataValue.Named(
+                            DataValue.named(
                                 DUPLICATE_MAP_USE,
-                                DataValue.MapValue(
+                                DataValue.mapValue(
                                     listOf(
-                                        MapRow(ItemId("map_first"), repeated, DataValue.StringValue("one")),
-                                        MapRow(ItemId("map_duplicate"), equivalent, DataValue.StringValue("two")),
+                                        MapRow(
+                                            id = ItemId(value = "map_first"),
+                                            key = repeated,
+                                            value = DataValue.StringValueWrapper("one"),
+                                        ),
+                                        MapRow(
+                                            id = ItemId(value = "map_duplicate"),
+                                            key = equivalent,
+                                            value = DataValue.StringValueWrapper("two"),
+                                        ),
                                     ),
                                 ),
                             ),
@@ -515,21 +563,28 @@ val RealmCheckRuntimeTest by testSuite {
                         )
                 }
 
-            intrinsic.map { it.code } shouldBe listOf("duplicate_set_value", "duplicate_map_key")
+            intrinsic.map { it.code } shouldBe listOf("duplicate_map_key", "duplicate_set_value")
             intrinsic.map { it.primary } shouldBe
                 listOf(
-                    ValueLocation(
-                        resource,
-                        ValuePath(listOf(PathSegment.Field("values"), PathSegment.Item(ItemId("set_duplicate")))),
-                    ),
-                    ValueLocation(
+                    ValueLocation.of(
                         resource,
                         ValuePath(
-                            listOf(
-                                PathSegment.Field("mapping"),
-                                PathSegment.Item(ItemId("map_duplicate")),
-                                PathSegment.MapKey,
-                            ),
+                            segments =
+                                listOf(
+                                    PathSegment.createField(name = "mapping"),
+                                    PathSegment.createItem(id = ItemId(value = "map_duplicate")),
+                                    PathSegment.MAP_KEY,
+                                ),
+                        ),
+                    ),
+                    ValueLocation.of(
+                        resource,
+                        ValuePath(
+                            segments =
+                                listOf(
+                                    PathSegment.createField(name = "values"),
+                                    PathSegment.createItem(id = ItemId(value = "set_duplicate")),
+                                ),
                         ),
                     ),
                 )
@@ -541,11 +596,11 @@ val RealmCheckRuntimeTest by testSuite {
 
     test("capturedAcceptanceBlocksAnOtherwiseValidResourceWithPendingConfiguration") {
         runTest {
-            val resource = ResourceId("pending")
+            val resource = ResourceId(value = "pending")
             val catalog = TestCatalogLease(nativeBindingFactories = listOf(TestResourceNativeBindingFactory))
             val authored =
                 record(name = "ready").copy(
-                    configuration = TypeSelection.Pending(TEST_TYPE, emptyList()),
+                    configuration = TypeSelection.createPending(definition = TEST_TYPE, arguments = emptyList()),
                 )
             val store =
                 InMemoryAuthoringViewStore(
@@ -558,13 +613,13 @@ val RealmCheckRuntimeTest by testSuite {
 
             blocked.evidence.getValue(blocked.findings.single().id).expectations shouldBe
                 listOf(
-                    com.typewritermc.authoring.EditExpectation
-                        .Resource(resource, authored),
+                    skirout.editor.v1.authoring_facts.EditExpectation
+                        .createResource(id = resource, expected = authored),
                 )
             blocked.findings
                 .map { it.code } shouldBe listOf("pending_type")
             blocked.findings
-                .map { it.primary } shouldBe listOf(ValueLocation(resource, ValuePath()))
+                .map { it.primary } shouldBe listOf(ValueLocation.of(resource))
 
             runtime.close()
             store.close()
@@ -573,28 +628,43 @@ val RealmCheckRuntimeTest by testSuite {
 
     test("boundedSubjectDiscoveryPublishesFailureAndBlocksCapturedCoverageWithoutDroppingPartialSubjects") {
         runTest {
-            val origin = RuleOrigin(TEST_TYPE, 22)
-            val path = RelativeFieldPattern(listOf(FieldPatternSegment.Field("name")))
+            val origin = RuleOrigin(owner = TEST_TYPE, ordinal = 22)
+            val path = RelativeFieldPattern(segments = listOf(FieldPatternSegment.field("name")))
             val rule =
                 OwnedRule(
-                    id = RuleId(origin, 0),
+                    id = RuleId(origin = origin, localIndex = 0),
                     descriptor =
                         RuleDescriptor(
-                            ExpressionNode.createRuleUnary(
-                                operation = skirout.editor.v1.expression.RuleUnaryOperation.NON_EMPTY,
-                                source =
-                                    com.typewritermc.expression
-                                        .input<Any?>(ExpressionBindingId("configured_value"))
-                                        .toNode(),
-                            ),
+                            predicate =
+                                ExpressionNode.createRuleUnary(
+                                    operation = skirout.editor.v1.expression.RuleUnaryOperation.NON_EMPTY,
+                                    source =
+                                        com.typewritermc.expression
+                                            .input<Any?>(ExpressionBindingId(value = "configured_value"))
+                                            .toNode(),
+                                ),
                         ),
-                    diagnostic = DiagnosticTemplate("name_empty", "Name must not be empty.", DiagnosticSeverity.Error, listOf(path)),
+                    diagnostic =
+                        DiagnosticTemplate(
+                            code = "name_empty",
+                            message = "Name must not be empty.",
+                            severity = DiagnosticSeverity.ERROR,
+                            targets = listOf(path),
+                        ),
                 )
             val catalog =
                 TestCatalogLease(
-                    configuration = listOf(ConfigurationRecipe(origin, path, RepresentationKind.Text, listOf(rule))),
+                    configuration =
+                        listOf(
+                            ConfigurationRecipe(
+                                origin = origin,
+                                relativePath = path,
+                                representationCondition = RepresentationKind.TEXT,
+                                rules = listOf(rule),
+                            ),
+                        ),
                 )
-            val resource = ResourceId("element")
+            val resource = ResourceId(value = "element")
             val authored = record(name = "valid")
             val store =
                 InMemoryAuthoringViewStore(
@@ -615,7 +685,7 @@ val RealmCheckRuntimeTest by testSuite {
             val current = runtime.findings()
             current.any { it.ticket.instance.location == location(resource, "name") } shouldBe true
             val discovery = current.single { it.ticket.instance.location == DISCOVERY_LOCATION_FOR_TEST }
-            discovery.outcome.shouldBeInstanceOf<com.typewritermc.checking.CheckOutcome.Incomplete>()
+            discovery.outcome.shouldBeInstanceOf<CheckOutcome.IncompleteWrapper>()
             discovery.findings.map { it.code } shouldBe listOf("check_discovery_incomplete")
 
             val captured = runtime.evaluateCapture(CheckAdmissionTarget.CapturedAcceptance(store.capture().use { it.root }))
@@ -623,7 +693,7 @@ val RealmCheckRuntimeTest by testSuite {
             captured.results.any { it.ticket.instance.location == location(resource, "name") } shouldBe true
             captured.results.any {
                 it.ticket.instance.location == DISCOVERY_LOCATION_FOR_TEST &&
-                    it.outcome is com.typewritermc.checking.CheckOutcome.Incomplete
+                    it.outcome is CheckOutcome.IncompleteWrapper
             } shouldBe true
 
             runtime.close()
@@ -634,7 +704,7 @@ val RealmCheckRuntimeTest by testSuite {
     test("removedEachSubjectKeepsWorkerAndProviderLeaseUntilWorkerStops") {
         val started = CountDownLatch(1)
         val release = CountDownLatch(1)
-        val resource = ResourceId("page")
+        val resource = ResourceId(value = "page")
         val provider =
             object : RealmCheckProvider {
                 override fun RealmChecks.register() {
@@ -650,7 +720,7 @@ val RealmCheckRuntimeTest by testSuite {
                     }
                 }
             }
-        val providers = TestCheckProviders(listOf(OwnedCheck(PROVIDER_ORIGIN, RuleOrigin(TEST_TYPE, 12), provider)))
+        val providers = TestCheckProviders(listOf(OwnedCheck(PROVIDER_ORIGIN, RuleOrigin(owner = TEST_TYPE, ordinal = 12), provider)))
         val catalog = TestCatalogLease(providers = providers)
         val authored = record(name = "valid")
         val store =
@@ -691,13 +761,21 @@ val RealmCheckRuntimeTest by testSuite {
         val blocked = CountDownLatch(1)
         val replacement = CountDownLatch(1)
         val release = CountDownLatch(1)
-        val resource = ResourceId("page")
+        val resource = ResourceId(value = "page")
         val provider =
             object : RealmCheckProvider {
                 override fun RealmChecks.register() {
                     each(TestDraftType(ResourceTypeMatch.Definition(TEST_TYPE))) { draft ->
                         val execution = executions.incrementAndGet()
-                        read(boundPath<String>(location(draft.binding.location.resource, "name"), TEXT_USE))
+                        read(
+                            boundPath<String>(
+                                location(
+                                    draft.binding.location.resource,
+                                    "name",
+                                ),
+                                TEXT_USE,
+                            ),
+                        )
                         if (execution == 2) {
                             blocked.countDown()
                             while (release.count > 0) {
@@ -713,7 +791,7 @@ val RealmCheckRuntimeTest by testSuite {
                     }
                 }
             }
-        val providers = TestCheckProviders(listOf(OwnedCheck(PROVIDER_ORIGIN, RuleOrigin(TEST_TYPE, 13), provider)))
+        val providers = TestCheckProviders(listOf(OwnedCheck(PROVIDER_ORIGIN, RuleOrigin(owner = TEST_TYPE, ordinal = 13), provider)))
         val catalog = TestCatalogLease(providers = providers)
         val initial = record(name = "first")
         val store =
@@ -770,13 +848,21 @@ val RealmCheckRuntimeTest by testSuite {
                 override fun RealmChecks.register() {
                     each(TestDraftType(ResourceTypeMatch.Definition(TEST_TYPE))) { draft ->
                         executions.incrementAndGet()
-                        read(boundPath<String>(location(draft.binding.location.resource, "name"), TEXT_USE))
+                        read(
+                            boundPath<String>(
+                                location(
+                                    draft.binding.location.resource,
+                                    "name",
+                                ),
+                                TEXT_USE,
+                            ),
+                        )
                     }
                 }
             }
-        val providers = TestCheckProviders(listOf(OwnedCheck(PROVIDER_ORIGIN, RuleOrigin(TEST_TYPE, 7), provider)))
+        val providers = TestCheckProviders(listOf(OwnedCheck(PROVIDER_ORIGIN, RuleOrigin(owner = TEST_TYPE, ordinal = 7), provider)))
         val catalog = TestCatalogLease(providers = providers)
-        val resource = ResourceId("page")
+        val resource = ResourceId(value = "page")
         val initial = record(name = "old")
         val store =
             InMemoryAuthoringViewStore(
@@ -822,74 +908,77 @@ private data class TestNativeResource(
     val numbers: List<*>,
 )
 
-private val DUPLICATE_VALUE_TYPE = TypeDefinitionId(TypeId.Qualified("test", "canonical_value"), 1)
-private val DUPLICATE_SET_TYPE = TypeDefinitionId(TypeId.Qualified("test", "canonical_set"), 1)
-private val DUPLICATE_MAP_TYPE = TypeDefinitionId(TypeId.Qualified("test", "canonical_map"), 1)
-private val DUPLICATE_SET_PARAMETER = ParameterKey(DUPLICATE_SET_TYPE, 0)
-private val DUPLICATE_MAP_KEY_PARAMETER = ParameterKey(DUPLICATE_MAP_TYPE, 0)
-private val DUPLICATE_MAP_VALUE_PARAMETER = ParameterKey(DUPLICATE_MAP_TYPE, 1)
-private val DUPLICATE_VALUE_USE = TypeUse.Named(DUPLICATE_VALUE_TYPE)
-private val DUPLICATE_SET_USE = TypeUse.Named(DUPLICATE_SET_TYPE, listOf(DUPLICATE_VALUE_USE))
+private val DUPLICATE_VALUE_TYPE = TypeDefinitionId.qualified("test", "canonical_value")
+private val DUPLICATE_SET_TYPE = TypeDefinitionId.qualified("test", "canonical_set")
+private val DUPLICATE_MAP_TYPE = TypeDefinitionId.qualified("test", "canonical_map")
+private val DUPLICATE_SET_PARAMETER = ParameterKey(owner = DUPLICATE_SET_TYPE, index = 0)
+private val DUPLICATE_MAP_KEY_PARAMETER = ParameterKey(owner = DUPLICATE_MAP_TYPE, index = 0)
+private val DUPLICATE_MAP_VALUE_PARAMETER = ParameterKey(owner = DUPLICATE_MAP_TYPE, index = 1)
+private val DUPLICATE_VALUE_USE = DUPLICATE_VALUE_TYPE.namedUse()
+private val DUPLICATE_SET_USE = DUPLICATE_SET_TYPE.namedUse(listOf(DUPLICATE_VALUE_USE.use))
 private val DUPLICATE_MAP_USE =
-    TypeUse.Named(
-        DUPLICATE_MAP_TYPE,
-        listOf(DUPLICATE_VALUE_USE, TypeUse.Scalar(ScalarKind.Text)),
-    )
+    DUPLICATE_MAP_TYPE.namedUse(listOf(DUPLICATE_VALUE_USE.use, ScalarKind.TEXT.use))
 private val DUPLICATE_DEFINITIONS =
     listOf(
-        TypeDefinition(
-            TEST_TYPE,
+        TypeDefinition.partial(
+            id = TEST_TYPE,
             representation =
-                RepresentationTemplate.Record(
-                    listOf(
-                        FieldDeclaration(
-                            FieldOwner(TEST_TYPE, "values"),
-                            TypeTemplate.Named(DUPLICATE_SET_TYPE, listOf(TypeTemplate.Named(DUPLICATE_VALUE_TYPE))),
-                        ),
-                        FieldDeclaration(
-                            FieldOwner(TEST_TYPE, "mapping"),
-                            TypeTemplate.Named(
-                                DUPLICATE_MAP_TYPE,
-                                listOf(TypeTemplate.Named(DUPLICATE_VALUE_TYPE), TypeTemplate.Scalar(ScalarKind.Text)),
+                RepresentationTemplate.createRecord(
+                    fields =
+                        listOf(
+                            FieldDeclaration.partial(
+                                owner = FieldOwner(definition = TEST_TYPE, name = "values"),
+                                type = DUPLICATE_SET_TYPE.template(listOf(DUPLICATE_VALUE_TYPE.template())),
+                            ),
+                            FieldDeclaration.partial(
+                                owner = FieldOwner(definition = TEST_TYPE, name = "mapping"),
+                                type = DUPLICATE_MAP_TYPE.template(listOf(DUPLICATE_VALUE_TYPE.template(), ScalarKind.TEXT.template)),
                             ),
                         ),
-                    ),
+                    abstract_ = false,
                 ),
         ),
-        TypeDefinition(
-            DUPLICATE_VALUE_TYPE,
+        TypeDefinition.partial(
+            id = DUPLICATE_VALUE_TYPE,
             representation =
-                RepresentationTemplate.Record(
-                    listOf(
-                        FieldDeclaration(FieldOwner(DUPLICATE_VALUE_TYPE, "first"), TypeTemplate.Scalar(ScalarKind.Text)),
-                        FieldDeclaration(FieldOwner(DUPLICATE_VALUE_TYPE, "second"), TypeTemplate.Scalar(ScalarKind.Text)),
-                    ),
+                RepresentationTemplate.createRecord(
+                    fields =
+                        listOf(
+                            FieldDeclaration.partial(
+                                owner = FieldOwner(definition = DUPLICATE_VALUE_TYPE, name = "first"),
+                                type = ScalarKind.TEXT.template,
+                            ),
+                            FieldDeclaration.partial(
+                                owner = FieldOwner(definition = DUPLICATE_VALUE_TYPE, name = "second"),
+                                type = ScalarKind.TEXT.template,
+                            ),
+                        ),
+                    abstract_ = false,
                 ),
         ),
-        TypeDefinition(
-            DUPLICATE_SET_TYPE,
-            parameters = listOf(TypeParameter(DUPLICATE_SET_PARAMETER, "T")),
-            representation =
-                RepresentationTemplate.Sequence(TypeTemplate.Parameter(DUPLICATE_SET_PARAMETER), CollectionKind.Set),
+        TypeDefinition.partial(
+            id = DUPLICATE_SET_TYPE,
+            parameters = listOf(TypeParameter.partial(key = DUPLICATE_SET_PARAMETER, name = "T")),
+            representation = RepresentationTemplate.createSequence(item = DUPLICATE_SET_PARAMETER.template, kind = CollectionKind.SET),
         ),
-        TypeDefinition(
-            DUPLICATE_MAP_TYPE,
+        TypeDefinition.partial(
+            id = DUPLICATE_MAP_TYPE,
             parameters =
                 listOf(
-                    TypeParameter(DUPLICATE_MAP_KEY_PARAMETER, "K"),
-                    TypeParameter(DUPLICATE_MAP_VALUE_PARAMETER, "V"),
+                    TypeParameter.partial(key = DUPLICATE_MAP_KEY_PARAMETER, name = "K"),
+                    TypeParameter.partial(key = DUPLICATE_MAP_VALUE_PARAMETER, name = "V"),
                 ),
             representation =
-                RepresentationTemplate.Mapping(
-                    TypeTemplate.Parameter(DUPLICATE_MAP_KEY_PARAMETER),
-                    TypeTemplate.Parameter(DUPLICATE_MAP_VALUE_PARAMETER),
+                RepresentationTemplate.createMapping(
+                    key = DUPLICATE_MAP_KEY_PARAMETER.template,
+                    value = DUPLICATE_MAP_VALUE_PARAMETER.template,
                 ),
         ),
     )
 
 private object TestResourceNativeBindingFactory : NativeBindingFactory {
     override val definition = TEST_TYPE
-    override val provider = NativeBindingId("test.resource")
+    override val provider = NativeBindingId(value = "test.resource")
 
     override fun bind(
         actual: com.typewritermc.types.catalog.CheckedType,
@@ -904,7 +993,7 @@ private object TestResourceNativeBindingFactory : NativeBindingFactory {
                 listOf(
                     GeneratedNativeField("name", { arguments.resolver.bind(TEXT_USE) }, TestNativeResource::name),
                     GeneratedNativeField("count", { arguments.resolver.bind(INT_USE) }, TestNativeResource::count),
-                    GeneratedNativeField("numbers", { arguments.resolver.bind(LIST_USE) }, TestNativeResource::numbers),
+                    GeneratedNativeField("numbers", { arguments.resolver.bind(LIST_USE.use) }, TestNativeResource::numbers),
                 ),
             construct = { fields ->
                 TestNativeResource(
@@ -924,7 +1013,7 @@ private class BlockingFirstReplaceIndex : ReverseDependencyIndex {
 
     override fun replace(
         instance: CheckInstanceId,
-        observations: List<com.typewritermc.authoring.EditExpectation>,
+        observations: List<skirout.editor.v1.authoring_facts.EditExpectation>,
     ) {
         if (first.compareAndSet(true, false)) {
             entered.countDown()
@@ -1004,25 +1093,26 @@ private val PROVIDER_ORIGIN =
     ProviderOrigin(
         owner =
             DeclarationOwner(
-                ContributionKey(
-                    source = ContributionSourceId("test:checks"),
-                    sourcePart = "checks",
-                    producer = ProducerId("tests"),
-                    name = ContributionName("realm"),
-                ),
-                "checks",
+                source =
+                    contributionKey(
+                        source = ContributionSourceId("test:checks"),
+                        sourcePart = "checks",
+                        producer = ProducerId("tests"),
+                        name = ContributionName("realm"),
+                    ),
+                localIdentity = "checks",
             ),
         artifact = ArtifactId("test:checks"),
         sourcePart = "checks",
     )
 
 private val DISCOVERY_LOCATION_FOR_TEST =
-    ValueLocation(
-        ResourceId("typewriter.discovery"),
+    ValueLocation.of(
+        ResourceId(value = "typewriter.discovery"),
         ValuePath(
-            listOf(
-                com.typewritermc.authoring.PathSegment
-                    .Field("subjects"),
-            ),
+            segments =
+                listOf(
+                    PathSegment.createField(name = "subjects"),
+                ),
         ),
     )

@@ -259,7 +259,7 @@ _PageFixture _pageFixture() {
     _inspector(entryType, "entry.inspector"),
     _inspector(cueType, "cue.inspector"),
   ];
-  final snapshot = skir.EditorCatalogWireSnapshot(
+  final snapshot = skir.EditorCatalog(
     resourceDisplays: [
       for (final type in [entryType, cueType])
         nameResourceDisplay(

@@ -12,15 +12,13 @@ enum EditorDiagnosticCode {
   permissionDenied,
 }
 
-enum EditorDiagnosticSeverity { information, warning, error }
-
 @freezed
 abstract class EditorDiagnostic with _$EditorDiagnostic {
   const factory EditorDiagnostic({
     required EditorDiagnosticCode code,
     required String message,
     skir.ValuePath? path,
-    @Default(EditorDiagnosticSeverity.error) EditorDiagnosticSeverity severity,
+    @Default(skir.DiagnosticSeverity.error) skir.DiagnosticSeverity severity,
     @Default({}) Map<String, String> details,
   }) = _EditorDiagnostic;
   const EditorDiagnostic._();

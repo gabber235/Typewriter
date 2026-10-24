@@ -294,6 +294,7 @@ impl QueryServiceBindingResponse_ServiceNotFoundError {
 pub enum QueryServiceBindingResponse {
     Unknown(Option<crate::skir_client::UnrecognizedVariant<QueryServiceBindingResponse>>),
     Binding(Box<QueryServiceBindingResponse_Binding>),
+    /// Service not found.
     ServiceNotFoundError(Box<QueryServiceBindingResponse_ServiceNotFoundError>),
     InternalError(Box<crate::skirout::base::kernel::v1::errors::InternalError>),
 }
@@ -491,6 +492,7 @@ pub enum EnsureRegistrationLeaseResponse {
     Unknown(Option<crate::skir_client::UnrecognizedVariant<EnsureRegistrationLeaseResponse>>),
     Issued(Box<RegistrationLease>),
     AlreadyBound(Box<EnsureRegistrationLeaseResponse_AlreadyBound>),
+    /// Service not found.
     ServiceNotFoundError(Box<EnsureRegistrationLeaseResponse_ServiceNotFoundError>),
     InternalError(Box<crate::skirout::base::kernel::v1::errors::InternalError>),
 }
@@ -654,7 +656,7 @@ fn initialize_module_serializers() {
                 crate::skir_client::internal::struct_serializer_from_static(
                     QueryServiceBindingResponse_ServiceNotFoundError::_adapter(),
                 ),
-                "",
+                "Service not found.",
                 |v| QueryServiceBindingResponse::ServiceNotFoundError(Box::new(v)),
                 |x| match x {
                     QueryServiceBindingResponse::ServiceNotFoundError(b) => b.as_ref(),
@@ -748,7 +750,7 @@ fn initialize_module_serializers() {
                 crate::skir_client::internal::struct_serializer_from_static(
                     EnsureRegistrationLeaseResponse_ServiceNotFoundError::_adapter(),
                 ),
-                "",
+                "Service not found.",
                 |v| EnsureRegistrationLeaseResponse::ServiceNotFoundError(Box::new(v)),
                 |x| match x {
                     EnsureRegistrationLeaseResponse::ServiceNotFoundError(b) => b.as_ref(),

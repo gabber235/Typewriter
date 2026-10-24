@@ -5,18 +5,17 @@ import "package:typewriter_panel/typewriter_panel.dart";
 /// Builds a catalog wire snapshot whose sections are empty unless supplied.
 ///
 /// The generation defaults to the one of the empty default snapshot.
-skir.EditorCatalogWireSnapshot testCatalogSnapshot({
+skir.EditorCatalog testCatalogSnapshot({
   skir.CatalogGeneration? generation,
   List<skir.PublishedType> types = const [],
   List<skir.RelationContract> relations = const [],
   skir.TypeDefinitionId? realmRoot,
   List<skir.PresentationDescriptor> presentations = const [],
   List<skir.PresentationMaterial> presentationMaterials = const [],
-}) => skir.EditorCatalogWireSnapshot(
+}) => skir.EditorCatalog(
   resourceDisplays: const [],
   resourceOperations: const [],
-  generation:
-      generation ?? skir.EditorCatalogWireSnapshot.defaultInstance.generation,
+  generation: generation ?? skir.EditorCatalog.defaultInstance.generation,
   types: types,
   relations: relations,
   realmRoot: realmRoot ?? skir.TypeDefinitionId.defaultInstance,

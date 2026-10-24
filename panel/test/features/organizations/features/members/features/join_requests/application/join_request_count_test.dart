@@ -15,9 +15,9 @@ void main() {
   );
 
   group("join request count", () {
-    OrganizationJoinRequest createRequest({required bool expired}) {
+    skir.OrganizationJoinRequest createRequest({required bool expired}) {
       final now = DateTime.now();
-      return OrganizationJoinRequest(
+      return skir.OrganizationJoinRequest(
         requestId: skir.recordId(
           "request_to_join:req-${now.millisecondsSinceEpoch}-${expired ? "exp" : "active"}",
         ),

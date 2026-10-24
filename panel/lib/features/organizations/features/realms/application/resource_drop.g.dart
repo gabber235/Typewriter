@@ -73,7 +73,7 @@ final class DropCandidatesProvider
   }
 }
 
-String _$dropCandidatesHash() => r'5f93cf10e7b0c64586508b02f900a83de9f2a11e';
+String _$dropCandidatesHash() => r'6729641b83a2465c21ef7d0df7878b8c69fa9023';
 
 /// Fetched once when a drag starts, so hovering is a local lookup. Retries a
 /// stale observation once, as [resourceOperations] does.

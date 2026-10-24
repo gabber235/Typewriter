@@ -61,6 +61,12 @@ impl ComponentConfiguration {
         self.subscriptions.push(subject.into());
         self
     }
+    /// Adds broker subscriptions for the component, such as a generated `SUBSCRIPTIONS` list.
+    pub fn subscriptions(mut self, subjects: &[&str]) -> Self {
+        self.subscriptions
+            .extend(subjects.iter().map(|subject| (*subject).to_owned()));
+        self
+    }
 }
 
 /// Fixture specific configuration hook generated or declared by a component test crate.
@@ -215,6 +221,11 @@ impl<F: FixtureDeclaration> FixtureBuilder<F> {
     pub fn messaging_subscription(self, subject: impl Into<String>) -> Self {
         self.messaging()
             .primary(|component| component.subscription(subject))
+    }
+    /// Subscribes the primary component to every subject, such as its generated `SUBSCRIPTIONS`.
+    pub fn messaging_subscriptions(self, subjects: &[&str]) -> Self {
+        self.messaging()
+            .primary(|component| component.subscriptions(subjects))
     }
     pub fn interface(mut self, interface: WitInterface) -> Self {
         self.interfaces.push(interface);

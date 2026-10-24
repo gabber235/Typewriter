@@ -206,19 +206,19 @@ skir.PresentationNode _inspectorRuntimeStatus(
   skir.PresentationElement.createStatus(
     value: _portableRead(binding),
     cases: [
-      for (final status in TopologyRuntimeStatus.values)
+      for (final status in ChildRuntimeStatusKey.all)
         _inspectorStatusCase(
-          status.name,
+          status.key,
           childRuntimeStatusLabel(status),
           switch (status) {
-            TopologyRuntimeStatus.active => skir.StatusTone.active,
-            TopologyRuntimeStatus.staging => skir.StatusTone.inProgress,
-            TopologyRuntimeStatus.quiescing => skir.StatusTone.paused,
-            TopologyRuntimeStatus.drifted ||
-            TopologyRuntimeStatus.rolledBack => skir.StatusTone.warning,
-            TopologyRuntimeStatus.failed => skir.StatusTone.danger,
-            TopologyRuntimeStatus.absent => skir.StatusTone.inactive,
-            TopologyRuntimeStatus.unknown => skir.StatusTone.unknownStatus,
+            skir.ChildRuntimeStatus.active => skir.StatusTone.active,
+            skir.ChildRuntimeStatus.staging => skir.StatusTone.inProgress,
+            skir.ChildRuntimeStatus.quiescing => skir.StatusTone.paused,
+            skir.ChildRuntimeStatus.drifted ||
+            skir.ChildRuntimeStatus.rolledBack => skir.StatusTone.warning,
+            skir.ChildRuntimeStatus.failed => skir.StatusTone.danger,
+            skir.ChildRuntimeStatus.absent => skir.StatusTone.inactive,
+            skir.ChildRuntimeStatus_unknown() => skir.StatusTone.unknownStatus,
           },
         ),
     ],
@@ -238,17 +238,17 @@ skir.PresentationNode _inspectorHostStatus(
   skir.PresentationElement.createStatus(
     value: _portableRead(binding),
     cases: [
-      for (final status in TopologyHostStatus.values)
+      for (final status in HostRuntimeStatusKey.all)
         _inspectorStatusCase(
-          status.name,
+          status.key,
           hostRuntimeStatusLabel(status),
           switch (status) {
-            TopologyHostStatus.active => skir.StatusTone.active,
-            TopologyHostStatus.reconciling => skir.StatusTone.inProgress,
-            TopologyHostStatus.drifted => skir.StatusTone.warning,
-            TopologyHostStatus.failed => skir.StatusTone.danger,
-            TopologyHostStatus.offline => skir.StatusTone.offline,
-            TopologyHostStatus.unknown => skir.StatusTone.unknownStatus,
+            skir.HostRuntimeStatus.active => skir.StatusTone.active,
+            skir.HostRuntimeStatus.reconciling => skir.StatusTone.inProgress,
+            skir.HostRuntimeStatus.drifted => skir.StatusTone.warning,
+            skir.HostRuntimeStatus.failed => skir.StatusTone.danger,
+            skir.HostRuntimeStatus.offline => skir.StatusTone.offline,
+            skir.HostRuntimeStatus_unknown() => skir.StatusTone.unknownStatus,
           },
         ),
     ],

@@ -4,80 +4,102 @@ import com.typewritermc.authoring.AppliedNativeArguments
 import com.typewritermc.authoring.CaptureResult
 import com.typewritermc.authoring.CompleteValue
 import com.typewritermc.authoring.DefaultInitializationRuntime
-import com.typewritermc.authoring.InitializationDiagnostic
-import com.typewritermc.authoring.InitializationRequest
-import com.typewritermc.authoring.InputAnswer
-import com.typewritermc.authoring.ItemId
-import com.typewritermc.authoring.NativeBindingId
 import com.typewritermc.authoring.NativeConstructionPlan
-import com.typewritermc.authoring.PathSegment
-import com.typewritermc.authoring.PreparationOperation
-import com.typewritermc.authoring.PreparationStep
-import com.typewritermc.authoring.PreparationTarget
-import com.typewritermc.authoring.PreparedContent
-import com.typewritermc.authoring.RequiredInput
-import com.typewritermc.authoring.TypeSelection
-import com.typewritermc.authoring.ValuePath
+import com.typewritermc.authoring.fieldMap
 import com.typewritermc.authoring.materialize
-import com.typewritermc.authoring.skir.SkirAuthoringOperationCodec
-import com.typewritermc.checking.CatalogGeneration
-import com.typewritermc.types.CollectionKind
-import com.typewritermc.types.DataValue
-import com.typewritermc.types.EndpointId
 import com.typewritermc.types.FactoryNativeBindingRegistry
-import com.typewritermc.types.FieldDeclaration
-import com.typewritermc.types.FieldOwner
-import com.typewritermc.types.LinkTarget
-import com.typewritermc.types.ListItem
-import com.typewritermc.types.MapRow
 import com.typewritermc.types.NativeBinding
 import com.typewritermc.types.NativeBindingFactory
-import com.typewritermc.types.RepresentationTemplate
 import com.typewritermc.types.ResourceId
-import com.typewritermc.types.ScalarKind
-import com.typewritermc.types.TypeDefinition
-import com.typewritermc.types.TypeDefinitionId
-import com.typewritermc.types.TypeId
-import com.typewritermc.types.TypeTemplate
-import com.typewritermc.types.TypeUse
 import com.typewritermc.types.catalog.CheckedType
 import com.typewritermc.types.catalog.DefaultCheckedCatalog
-import com.typewritermc.types.skir.getOrThrow
+import com.typewritermc.types.field
+import com.typewritermc.types.fields
+import com.typewritermc.types.items
+import com.typewritermc.types.listValue
+import com.typewritermc.types.mapValue
+import com.typewritermc.types.named
+import com.typewritermc.types.namedTemplate
+import com.typewritermc.types.namedUse
+import com.typewritermc.types.payload
+import com.typewritermc.types.qualified
+import com.typewritermc.types.record
+import com.typewritermc.types.requireValid
+import com.typewritermc.types.rows
+import com.typewritermc.types.template
+import com.typewritermc.types.toSkir
+import com.typewritermc.types.use
 import de.infix.testBalloon.framework.core.testSuite
 import io.kotest.matchers.shouldBe
+import skirout.editor.v1.catalog.InputAnswer
+import skirout.editor.v1.catalog.PreparationOperation
+import skirout.editor.v1.catalog.PreparationTarget
+import skirout.editor.v1.catalog.PrepareValueResult
+import skirout.editor.v1.catalog.PreparedContent
+import skirout.editor.v1.catalog.RequiredInput
+import skirout.editor.v1.catalog.ValuePreparationRequest
+import skirout.editor.v1.diagnostic.InitializationDiagnostic
+import skirout.editor.v1.type_catalog.CatalogGeneration
+import skirout.editor.v1.type_catalog.CollectionKind
+import skirout.editor.v1.type_catalog.DataValue
+import skirout.editor.v1.type_catalog.EndpointId
+import skirout.editor.v1.type_catalog.FieldDeclaration
+import skirout.editor.v1.type_catalog.FieldOwner
+import skirout.editor.v1.type_catalog.ItemId
+import skirout.editor.v1.type_catalog.LinkTarget
+import skirout.editor.v1.type_catalog.ListItem
+import skirout.editor.v1.type_catalog.MapRow
+import skirout.editor.v1.type_catalog.NamedTypeUse
+import skirout.editor.v1.type_catalog.NativeBindingId
+import skirout.editor.v1.type_catalog.PathSegment
+import skirout.editor.v1.type_catalog.RepresentationTemplate
+import skirout.editor.v1.type_catalog.ScalarKind
+import skirout.editor.v1.type_catalog.TypeDefinition
+import skirout.editor.v1.type_catalog.TypeDefinitionId
+import skirout.editor.v1.type_catalog.TypeSelection
+import skirout.editor.v1.type_catalog.ValuePath
 
 val ResumableInitializationTest by testSuite {
     test("required references are reported in a record without constructor defaults") {
         val fixture = resumeFixture()
-        val step = fixture.runtime.stepNow(PreparationOperation.Start(fixture.request)) as PreparationStep.NeedsInput
-        step.draft.requiredInputs shouldBe listOf(RequiredInput(path("settings", "target"), LINK_USE))
+        val step = fixture.runtime.stepNow(PreparationOperation.StartWrapper(fixture.request)) as PrepareValueResult.NeedsInputWrapper
+        step.value.requiredInputs shouldBe listOf(RequiredInput(path = path("settings", "target"), expected = LINK_USE.use))
         val ready =
             fixture.runtime.stepNow(
-                PreparationOperation.Resume(step.draft, listOf(InputAnswer(path("settings", "target"), reference()))),
-            ) as PreparationStep.Ready
+                PreparationOperation.createResume(
+                    draft = step.value,
+                    answers = listOf(InputAnswer(path = path("settings", "target"), value = reference())),
+                ),
+            ) as PrepareValueResult.ReadyWrapper
         ready.value.findings shouldBe emptyList()
     }
     test("nested pending defaults resume while unrelated captures remain frozen") {
         val fixture = resumeFixture(defaultedSettings = true)
-        val first = fixture.runtime.stepNow(PreparationOperation.Start(fixture.request)) as PreparationStep.NeedsInput
+        val first = fixture.runtime.stepNow(PreparationOperation.StartWrapper(fixture.request)) as PrepareValueResult.NeedsInputWrapper
         fixture.marker.calls shouldBe 1
         fixture.settings.calls shouldBe 0
-        first.draft.pendingDefaults shouldBe setOf(path("settings", "label"))
-        val unchanged = fixture.runtime.stepNow(PreparationOperation.Resume(first.draft, emptyList())) as PreparationStep.NeedsInput
-        unchanged.draft shouldBe first.draft
+        first.value.pendingDefaults shouldBe setOf(path("settings", "label"))
+        val unchanged =
+            fixture.runtime.stepNow(
+                PreparationOperation.createResume(draft = first.value, answers = emptyList()),
+            ) as PrepareValueResult.NeedsInputWrapper
+        unchanged.value shouldBe first.value
         fixture.marker.calls shouldBe 1
         fixture.settings.calls shouldBe 0
         val resumed =
             fixture.runtime.stepNow(
-                PreparationOperation.Resume(first.draft, listOf(InputAnswer(path("settings", "target"), reference()))),
-            ) as PreparationStep.Ready
+                PreparationOperation.createResume(
+                    draft = first.value,
+                    answers = listOf(InputAnswer(path = path("settings", "target"), value = reference())),
+                ),
+            ) as PrepareValueResult.ReadyWrapper
         fixture.marker.calls shouldBe 1
         fixture.settings.calls shouldBe 1
-        val fields = (resumed.value.content as PreparedContent.Record).record.fields
-        val marker = (fields.getValue("marker") as DataValue.Named).payload as DataValue.Record
-        marker.fields.getValue("id") shouldBe DataValue.StringValue("capture:1")
-        val settings = (fields.getValue("settings") as DataValue.Named).payload as DataValue.Record
-        settings.fields.getValue("label") shouldBe DataValue.StringValue("capture:1")
+        val fields = (resumed.value.content as PreparedContent.RecordWrapper).value.fieldMap
+        val marker = (fields.getValue("marker") as DataValue.NamedWrapper).payload as DataValue.RecordWrapper
+        marker.field("id") shouldBe DataValue.StringValueWrapper("capture:1")
+        val settings = (fields.getValue("settings") as DataValue.NamedWrapper).payload as DataValue.RecordWrapper
+        settings.field("label") shouldBe DataValue.StringValueWrapper("capture:1")
         resumed.value.findings shouldBe emptyList()
     }
     test("nested reference answers preserve list and map item identity") {
@@ -85,103 +107,152 @@ val ResumableInitializationTest by testSuite {
         val nested = id("CollectionSettings")
         val list = id("SettingsList")
         val mapping = id("SettingsMap")
-        val nestedUse = TypeUse.Named(nested, emptyList())
-        val listUse = TypeUse.Named(list, emptyList())
-        val mapUse = TypeUse.Named(mapping, emptyList())
+        val nestedUse = nested.namedUse(emptyList())
+        val listUse = list.namedUse(emptyList())
+        val mapUse = mapping.namedUse(emptyList())
         val catalog =
             DefaultCheckedCatalog(
                 GENERATION,
                 listOf(
                     resourceDefinition(),
                     linkDefinition(),
-                    TypeDefinition(
-                        nested,
+                    TypeDefinition.partial(
+                        id = nested,
                         representation =
-                            RepresentationTemplate.Record(
-                                listOf(
-                                    FieldDeclaration(FieldOwner(nested, "target"), LINK_USE.template()),
-                                ),
+                            RepresentationTemplate.createRecord(
+                                fields =
+                                    listOf(
+                                        FieldDeclaration.partial(
+                                            owner = FieldOwner(definition = nested, name = "target"),
+                                            type = LINK_USE.template(),
+                                        ),
+                                    ),
+                                abstract_ = false,
                             ),
                     ),
-                    TypeDefinition(
-                        list,
-                        representation = RepresentationTemplate.Sequence(TypeTemplate.Named(nested, emptyList()), CollectionKind.List),
-                    ),
-                    TypeDefinition(
-                        mapping,
+                    TypeDefinition.partial(
+                        id = list,
                         representation =
-                            RepresentationTemplate.Mapping(
-                                TypeTemplate.Scalar(ScalarKind.Text),
-                                TypeTemplate.Named(nested, emptyList()),
+                            RepresentationTemplate.createSequence(
+                                item = nested.template(emptyList()),
+                                kind = CollectionKind.LIST,
                             ),
                     ),
-                    TypeDefinition(
-                        root,
+                    TypeDefinition.partial(
+                        id = mapping,
                         representation =
-                            RepresentationTemplate.Record(
-                                listOf(
-                                    FieldDeclaration(FieldOwner(root, "items"), TypeTemplate.Named(list, emptyList())),
-                                    FieldDeclaration(FieldOwner(root, "mapping"), TypeTemplate.Named(mapping, emptyList())),
-                                ),
+                            RepresentationTemplate.createMapping(
+                                key = ScalarKind.TEXT.template,
+                                value = nested.template(emptyList()),
+                            ),
+                    ),
+                    TypeDefinition.partial(
+                        id = root,
+                        representation =
+                            RepresentationTemplate.createRecord(
+                                fields =
+                                    listOf(
+                                        FieldDeclaration.partial(
+                                            owner = FieldOwner(definition = root, name = "items"),
+                                            type = list.template(emptyList()),
+                                        ),
+                                        FieldDeclaration.partial(
+                                            owner = FieldOwner(definition = root, name = "mapping"),
+                                            type = mapping.template(emptyList()),
+                                        ),
+                                    ),
+                                abstract_ = false,
                             ),
                     ),
                 ),
             )
-        val listItem = ItemId("list-item")
-        val mapItem = ItemId("map-item")
-        val value = DataValue.Named(nestedUse, DataValue.Record(mapOf("target" to DataValue.Unfilled)))
+        val listItem = ItemId(value = "list-item")
+        val mapItem = ItemId(value = "map-item")
+        val value = DataValue.named(nestedUse, DataValue.record(mapOf("target" to DataValue.UNFILLED)))
         val supplied =
-            DataValue.Record(
+            DataValue.record(
                 mapOf(
-                    "items" to DataValue.Named(listUse, DataValue.ListValue(listOf(ListItem(listItem, value)))),
-                    "mapping" to DataValue.Named(mapUse, DataValue.MapValue(listOf(MapRow(mapItem, DataValue.StringValue("key"), value)))),
+                    "items" to DataValue.named(listUse, DataValue.listValue(listOf(ListItem(id = listItem, value = value)))),
+                    "mapping" to
+                        DataValue.named(
+                            mapUse,
+                            DataValue.mapValue(listOf(MapRow(id = mapItem, key = DataValue.StringValueWrapper("key"), value = value))),
+                        ),
                 ),
             )
         val runtime = DefaultInitializationRuntime(catalog, FactoryNativeBindingRegistry(catalog, emptyList()))
-        val first = runtime.stepNow(PreparationOperation.Start(request(root).copy(supplied = supplied))) as PreparationStep.NeedsInput
-        val listPath = ValuePath(path("items").segments + PathSegment.Item(listItem) + PathSegment.Field("target"))
-        val mapPath = ValuePath(path("mapping").segments + PathSegment.Item(mapItem) + PathSegment.MapValue + PathSegment.Field("target"))
-        first.draft.requiredInputs
+        val first =
+            runtime.stepNow(
+                PreparationOperation.StartWrapper(request(root).copy(suppliedValue = supplied)),
+            ) as PrepareValueResult.NeedsInputWrapper
+        val listPath =
+            ValuePath(
+                segments =
+                    path("items").segments + PathSegment.createItem(id = listItem) + PathSegment.createField(name = "target"),
+            )
+        val mapPath =
+            ValuePath(
+                segments =
+                    path("mapping").segments + PathSegment.createItem(id = mapItem) + PathSegment.MAP_VALUE +
+                        PathSegment.createField(name = "target"),
+            )
+        first.value.requiredInputs
             .map { it.path }
             .toSet() shouldBe setOf(listPath, mapPath)
         val ready =
             runtime.stepNow(
-                PreparationOperation.Resume(
-                    first.draft,
-                    listOf(
-                        InputAnswer(listPath, reference()),
-                        InputAnswer(mapPath, reference()),
-                    ),
+                PreparationOperation.createResume(
+                    draft = first.value,
+                    answers =
+                        listOf(
+                            InputAnswer(path = listPath, value = reference()),
+                            InputAnswer(path = mapPath, value = reference()),
+                        ),
                 ),
-            ) as PreparationStep.Ready
-        val record = (ready.value.content as PreparedContent.Record).record
-        val items = ((record.fields.getValue("items") as DataValue.Named).payload as DataValue.ListValue).items
+            ) as PrepareValueResult.ReadyWrapper
+        val record = (ready.value.content as PreparedContent.RecordWrapper).value
+        val items = ((record.fieldMap.getValue("items") as DataValue.NamedWrapper).payload as DataValue.ListValueWrapper).items
         items.single().id shouldBe listItem
-        val rows = ((record.fields.getValue("mapping") as DataValue.Named).payload as DataValue.MapValue).rows
+        val rows = ((record.fieldMap.getValue("mapping") as DataValue.NamedWrapper).payload as DataValue.MapValueWrapper).rows
         rows.single().id shouldBe mapItem
     }
     test("continuations and answers round trip through the current wire") {
         val fixture = resumeFixture(defaultedSettings = true)
-        val step = fixture.runtime.stepNow(PreparationOperation.Start(fixture.request))
-        SkirAuthoringOperationCodec.decode(SkirAuthoringOperationCodec.encode(step).getOrThrow()).getOrThrow() shouldBe step
-        val draft = (step as PreparationStep.NeedsInput).draft
-        val operation = PreparationOperation.Resume(draft, listOf(InputAnswer(path("settings", "target"), reference())))
-        SkirAuthoringOperationCodec.decode(SkirAuthoringOperationCodec.encode(operation).getOrThrow()).getOrThrow() shouldBe operation
+        val step = fixture.runtime.stepNow(PreparationOperation.StartWrapper(fixture.request))
+        PrepareValueResult.serializer.fromBytes(PrepareValueResult.serializer.toBytes(step).toByteArray()) shouldBe step
+        val draft = (step as PrepareValueResult.NeedsInputWrapper).value
+        val operation =
+            PreparationOperation.createResume(
+                draft = draft,
+                answers = listOf(InputAnswer(path = path("settings", "target"), value = reference())),
+            )
+        PreparationOperation.serializer
+            .fromBytes(PreparationOperation.serializer.toBytes(operation).toByteArray())
+            .requireValid() shouldBe operation
     }
     test("invalid paths, duplicate answers and forged pending defaults are rejected without capture") {
         val fixture = resumeFixture(defaultedSettings = true)
-        val first = fixture.runtime.stepNow(PreparationOperation.Start(fixture.request)) as PreparationStep.NeedsInput
-        val answer = InputAnswer(path("settings", "target"), reference())
+        val first = fixture.runtime.stepNow(PreparationOperation.StartWrapper(fixture.request)) as PrepareValueResult.NeedsInputWrapper
+        val answer = InputAnswer(path = path("settings", "target"), value = reference())
         val invalidOperations =
             listOf(
-                PreparationOperation.Resume(first.draft, listOf(answer, answer)),
-                PreparationOperation.Resume(first.draft, listOf(InputAnswer(path("absent"), reference()))),
-                PreparationOperation.Resume(first.draft, listOf(InputAnswer(answer.path, DataValue.StringValue("wrong")))),
-                PreparationOperation.Resume(first.draft.copy(pendingDefaults = setOf(answer.path)), listOf(answer)),
-                PreparationOperation.Resume(first.draft.copy(catalog = CatalogGeneration("old")), listOf(answer)),
+                PreparationOperation.createResume(draft = first.value, answers = listOf(answer, answer)),
+                PreparationOperation.createResume(
+                    draft = first.value,
+                    answers = listOf(InputAnswer(path = path("absent"), value = reference())),
+                ),
+                PreparationOperation.createResume(
+                    draft = first.value,
+                    answers = listOf(InputAnswer(path = answer.path, value = DataValue.StringValueWrapper("wrong"))),
+                ),
+                PreparationOperation.createResume(draft = first.value.copy(pendingDefaults = setOf(answer.path)), answers = listOf(answer)),
+                PreparationOperation.createResume(
+                    draft = first.value.copy(catalog = CatalogGeneration(value = "old")),
+                    answers = listOf(answer),
+                ),
             )
         invalidOperations.forEach {
-            (fixture.runtime.stepNow(it) is PreparationStep.Unavailable) shouldBe true
+            (fixture.runtime.stepNow(it) is PrepareValueResult.UnavailableErrorWrapper) shouldBe true
         }
         fixture.settings.calls shouldBe 0
         fixture.marker.calls shouldBe 1
@@ -190,52 +261,71 @@ val ResumableInitializationTest by testSuite {
         val abstractId = id("Abstract")
         val concreteId = id("Concrete")
         val ownerId = id("Owner")
-        val concreteUse = TypeUse.Named(concreteId, emptyList())
+        val concreteUse = concreteId.namedUse(emptyList())
         val catalog =
             DefaultCheckedCatalog(
                 GENERATION,
                 listOf(
                     resourceDefinition(),
                     linkDefinition(),
-                    TypeDefinition(abstractId, representation = RepresentationTemplate.Record(emptyList(), abstract = true)),
-                    TypeDefinition(
-                        concreteId,
-                        parents = listOf(TypeTemplate.Named(abstractId, emptyList())),
-                        representation =
-                            RepresentationTemplate.Record(
-                                listOf(
-                                    FieldDeclaration(FieldOwner(concreteId, "target"), LINK_USE.template()),
-                                ),
-                            ),
+                    TypeDefinition.partial(
+                        id = abstractId,
+                        representation = RepresentationTemplate.createRecord(fields = emptyList(), abstract_ = true),
                     ),
-                    TypeDefinition(
-                        ownerId,
+                    TypeDefinition.partial(
+                        id = concreteId,
                         representation =
-                            RepresentationTemplate.Record(
-                                listOf(
-                                    FieldDeclaration(FieldOwner(ownerId, "choice"), TypeTemplate.Named(abstractId, emptyList())),
-                                ),
+                            RepresentationTemplate.createRecord(
+                                fields =
+                                    listOf(
+                                        FieldDeclaration.partial(
+                                            owner = FieldOwner(definition = concreteId, name = "target"),
+                                            type = LINK_USE.template(),
+                                        ),
+                                    ),
+                                abstract_ = false,
+                            ),
+                        parents = listOf(abstractId.namedTemplate(emptyList())),
+                    ),
+                    TypeDefinition.partial(
+                        id = ownerId,
+                        representation =
+                            RepresentationTemplate.createRecord(
+                                fields =
+                                    listOf(
+                                        FieldDeclaration.partial(
+                                            owner = FieldOwner(definition = ownerId, name = "choice"),
+                                            type = abstractId.template(emptyList()),
+                                        ),
+                                    ),
+                                abstract_ = false,
                             ),
                     ),
                 ),
             )
         val runtime = DefaultInitializationRuntime(catalog, FactoryNativeBindingRegistry(catalog, emptyList()))
-        val start = runtime.stepNow(PreparationOperation.Start(request(ownerId))) as PreparationStep.NeedsInput
-        start.draft.requiredInputs
+        val start = runtime.stepNow(PreparationOperation.StartWrapper(request(ownerId))) as PrepareValueResult.NeedsInputWrapper
+        start.value.requiredInputs
             .single()
             .path shouldBe path("choice")
         val next =
             runtime.stepNow(
-                PreparationOperation.Resume(
-                    start.draft,
-                    listOf(InputAnswer(path("choice"), DataValue.Named(concreteUse, DataValue.Record(emptyMap())))),
+                PreparationOperation.createResume(
+                    draft = start.value,
+                    answers =
+                        listOf(
+                            InputAnswer(path = path("choice"), value = DataValue.named(concreteUse, DataValue.record(emptyMap()))),
+                        ),
                 ),
-            ) as PreparationStep.NeedsInput
-        next.draft.requiredInputs shouldBe listOf(RequiredInput(path("choice", "target"), LINK_USE))
+            ) as PrepareValueResult.NeedsInputWrapper
+        next.value.requiredInputs shouldBe listOf(RequiredInput(path = path("choice", "target"), expected = LINK_USE.use))
         (
             runtime.stepNow(
-                PreparationOperation.Resume(next.draft, listOf(InputAnswer(path("choice", "target"), reference()))),
-            ) is PreparationStep.Ready
+                PreparationOperation.createResume(
+                    draft = next.value,
+                    answers = listOf(InputAnswer(path = path("choice", "target"), value = reference())),
+                ),
+            ) is PrepareValueResult.ReadyWrapper
         ) shouldBe
             true
     }
@@ -244,14 +334,17 @@ val ResumableInitializationTest by testSuite {
         val ordinary = fixture.runtime.prepareNow(fixture.request)
         ordinary.findings.any { it.code == "unfinished_constructor_input" } shouldBe true
         val failing = resumeFixture(failMarker = true)
-        val unavailable = failing.runtime.stepNow(PreparationOperation.Start(failing.request)) as PreparationStep.Unavailable
-        val content = (unavailable.materialize().content as PreparedContent.Record).record.fields
+        val unavailable =
+            failing.runtime.stepNow(
+                PreparationOperation.StartWrapper(failing.request),
+            ) as PrepareValueResult.UnavailableErrorWrapper
+        val content = (unavailable.materialize().content as PreparedContent.RecordWrapper).value.fieldMap
         content.keys shouldBe setOf("settings", "marker")
-        unavailable.draft.findings.any { it.code == "test_capture_failed" } shouldBe true
+        unavailable.value.findings.any { it.code == "test_capture_failed" } shouldBe true
     }
     test("a valid default reference is retained without an input prompt") {
         val referenceId = id("DefaultReference")
-        val field = FieldOwner(referenceId, "target")
+        val field = FieldOwner(definition = referenceId, name = "target")
         val plan = CountingPlan(field, value = reference())
         val catalog =
             DefaultCheckedCatalog(
@@ -259,26 +352,30 @@ val ResumableInitializationTest by testSuite {
                 listOf(
                     resourceDefinition(),
                     linkDefinition(),
-                    TypeDefinition(
-                        referenceId,
+                    TypeDefinition.partial(
+                        id = referenceId,
                         representation =
-                            RepresentationTemplate.Record(
-                                listOf(FieldDeclaration(field, LINK_USE.template(), hasConstructorDefault = true)),
+                            RepresentationTemplate.createRecord(
+                                fields =
+                                    listOf(
+                                        FieldDeclaration.partial(owner = field, type = LINK_USE.template(), hasConstructorDefault = true),
+                                    ),
+                                abstract_ = false,
                             ),
                     ),
                 ),
             )
         val runtime =
             DefaultInitializationRuntime(catalog, FactoryNativeBindingRegistry(catalog, listOf(ResumePlanFactory(referenceId, plan))))
-        val ready = runtime.stepNow(PreparationOperation.Start(request(referenceId))) as PreparationStep.Ready
-        ((ready.value.content as PreparedContent.Record).record.fields.getValue("target")) shouldBe reference()
+        val ready = runtime.stepNow(PreparationOperation.StartWrapper(request(referenceId))) as PrepareValueResult.ReadyWrapper
+        ((ready.value.content as PreparedContent.RecordWrapper).value.fieldMap.getValue("target")) shouldBe reference()
         plan.calls shouldBe 1
     }
 }
 
 private data class ResumeFixture(
     val runtime: DefaultInitializationRuntime,
-    val request: InitializationRequest,
+    val request: ValuePreparationRequest,
     val marker: CountingPlan,
     val settings: CountingPlan,
 )
@@ -290,14 +387,20 @@ private fun resumeFixture(
     val root = id("Root")
     val settings = id("Settings")
     val marker = id("Marker")
-    val markerPlan = CountingPlan(FieldOwner(marker, "id"), fail = failMarker)
-    val settingsPlan = CountingPlan(FieldOwner(settings, "label"))
+    val markerPlan = CountingPlan(FieldOwner(definition = marker, name = "id"), fail = failMarker)
+    val settingsPlan = CountingPlan(FieldOwner(definition = settings, name = "label"))
     val settingsFields =
         buildList {
-            add(FieldDeclaration(FieldOwner(settings, "target"), LINK_USE.template()))
+            add(
+                FieldDeclaration.partial(owner = FieldOwner(definition = settings, name = "target"), type = LINK_USE.template()),
+            )
             if (defaultedSettings) {
                 add(
-                    FieldDeclaration(FieldOwner(settings, "label"), TypeTemplate.Scalar(ScalarKind.Text), hasConstructorDefault = true),
+                    FieldDeclaration.partial(
+                        owner = FieldOwner(definition = settings, name = "label"),
+                        type = ScalarKind.TEXT.template,
+                        hasConstructorDefault = true,
+                    ),
                 )
             }
         }
@@ -307,28 +410,41 @@ private fun resumeFixture(
             listOf(
                 resourceDefinition(),
                 linkDefinition(),
-                TypeDefinition(
-                    root,
+                TypeDefinition.partial(
+                    id = root,
                     representation =
-                        RepresentationTemplate.Record(
-                            listOf(
-                                FieldDeclaration(FieldOwner(root, "settings"), TypeTemplate.Named(settings, emptyList())),
-                                FieldDeclaration(FieldOwner(root, "marker"), TypeTemplate.Named(marker, emptyList())),
-                            ),
+                        RepresentationTemplate.createRecord(
+                            fields =
+                                listOf(
+                                    FieldDeclaration.partial(
+                                        owner = FieldOwner(definition = root, name = "settings"),
+                                        type = settings.template(emptyList()),
+                                    ),
+                                    FieldDeclaration.partial(
+                                        owner = FieldOwner(definition = root, name = "marker"),
+                                        type = marker.template(emptyList()),
+                                    ),
+                                ),
+                            abstract_ = false,
                         ),
                 ),
-                TypeDefinition(settings, representation = RepresentationTemplate.Record(settingsFields)),
-                TypeDefinition(
-                    marker,
+                TypeDefinition.partial(
+                    id = settings,
+                    representation = RepresentationTemplate.createRecord(fields = settingsFields, abstract_ = false),
+                ),
+                TypeDefinition.partial(
+                    id = marker,
                     representation =
-                        RepresentationTemplate.Record(
-                            listOf(
-                                FieldDeclaration(
-                                    FieldOwner(marker, "id"),
-                                    TypeTemplate.Scalar(ScalarKind.Text),
-                                    hasConstructorDefault = true,
+                        RepresentationTemplate.createRecord(
+                            fields =
+                                listOf(
+                                    FieldDeclaration.partial(
+                                        owner = FieldOwner(definition = marker, name = "id"),
+                                        type = ScalarKind.TEXT.template,
+                                        hasConstructorDefault = true,
+                                    ),
                                 ),
-                            ),
+                            abstract_ = false,
                         ),
                 ),
             ),
@@ -360,9 +476,13 @@ private class CountingPlan(
     ): CaptureResult {
         calls++
         return if (fail) {
-            CaptureResult.Unavailable(listOf(InitializationDiagnostic(field, "test_capture_failed", "Capture failed.")))
+            CaptureResult.Unavailable(
+                listOf(
+                    InitializationDiagnostic(field = field, code = "test_capture_failed", message = "Capture failed.", relativePath = null),
+                ),
+            )
         } else {
-            CaptureResult.Captured(mapOf(field to (value ?: DataValue.StringValue("capture:$calls"))))
+            CaptureResult.Captured(mapOf(field to (value ?: DataValue.StringValueWrapper("capture:$calls"))))
         }
     }
 }
@@ -371,7 +491,7 @@ private class ResumePlanFactory(
     override val definition: TypeDefinitionId,
     override val constructionPlan: NativeConstructionPlan,
 ) : NativeBindingFactory {
-    override val provider = NativeBindingId("test.resume")
+    override val provider = NativeBindingId(value = "test.resume")
 
     override fun bind(
         actual: CheckedType,
@@ -379,28 +499,36 @@ private class ResumePlanFactory(
     ): NativeBinding<*> = error("Preparation does not decode complete records.")
 }
 
-private val GENERATION = CatalogGeneration("resume")
+private val GENERATION = CatalogGeneration(value = "resume")
 private val RESOURCE_ID = id("Resource")
 private val LINK_ID = id("Reference")
-private val LINK_USE = TypeUse.Named(LINK_ID, emptyList())
-private val ENDPOINT = EndpointId("required-reference")
+private val LINK_USE = LINK_ID.namedUse(emptyList())
+private val ENDPOINT = EndpointId(value = "required-reference")
 
-private fun id(name: String) = TypeDefinitionId(TypeId.Qualified("test.resume", name), 1)
+private fun id(name: String) = TypeDefinitionId.qualified("test.resume", name)
 
-private fun TypeUse.Named.template() = TypeTemplate.Named(definition, emptyList())
+private fun NamedTypeUse.template() = definition.template(emptyList())
 
-private fun resourceDefinition() = TypeDefinition(RESOURCE_ID, representation = RepresentationTemplate.Record(emptyList()))
+private fun resourceDefinition() =
+    TypeDefinition.partial(id = RESOURCE_ID, representation = RepresentationTemplate.createRecord(fields = emptyList(), abstract_ = false))
 
 private fun linkDefinition() =
-    TypeDefinition(LINK_ID, representation = RepresentationTemplate.Link(ENDPOINT, TypeTemplate.Named(RESOURCE_ID, emptyList())))
-
-private fun request(id: TypeDefinitionId) =
-    InitializationRequest(
-        GENERATION,
-        PreparationTarget.Record(TypeSelection.Complete(TypeUse.Named(id, emptyList()))),
-        DataValue.Record(emptyMap()),
+    TypeDefinition.partial(
+        id = LINK_ID,
+        representation = RepresentationTemplate.createLink(endpoint = ENDPOINT, target = RESOURCE_ID.template(emptyList())),
     )
 
-private fun path(vararg fields: String) = ValuePath(fields.map(PathSegment::Field))
+private fun request(id: TypeDefinitionId) =
+    ValuePreparationRequest(
+        catalog = GENERATION,
+        target = PreparationTarget.RecordWrapper(TypeSelection.CompleteWrapper(id.namedUse(emptyList()))),
+        suppliedValue = DataValue.record(emptyMap()),
+    )
 
-private fun reference() = DataValue.Named(LINK_USE, DataValue.Link(ENDPOINT, LinkTarget(ResourceId("reserved-target"), null)))
+private fun path(vararg fields: String) = ValuePath(segments = fields.map { PathSegment.createField(name = it) })
+
+private fun reference() =
+    DataValue.named(
+        LINK_USE,
+        DataValue.createLink(endpoint = ENDPOINT, target = LinkTarget(resource = ResourceId("reserved-target").toSkir(), opposite = null)),
+    )

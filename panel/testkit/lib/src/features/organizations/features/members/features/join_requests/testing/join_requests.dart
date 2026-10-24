@@ -8,11 +8,11 @@ import "package:typewriter_testkit/src/shared/testing/testing.dart";
 // Join Request Mocks
 // ============================================================================
 
-OrganizationJoinRequest generateRandomJoinRequest() {
+skir.OrganizationJoinRequest generateRandomJoinRequest() {
   final expiresAt = DateTime.now().add(
     Duration(minutes: faker.randomGenerator.integer(60, min: 5)),
   );
-  return OrganizationJoinRequest(
+  return skir.OrganizationJoinRequest(
     requestId: skir.recordId("request_to_join:${faker.guid.guid()}"),
     userId: skir.recordId("user:${faker.guid.guid()}"),
     userName: faker.person.name(),
@@ -29,13 +29,13 @@ class OrganizationJoinRequestsMock extends OrganizationJoinRequests {
 
   final DisplayState displayState;
   final void Function(
-    OrganizationJoinRequest request,
-    List<OrganizationRole> roles,
+    skir.OrganizationJoinRequest request,
+    List<skir.OrganizationRole> roles,
   )?
   onApprove;
 
   @override
-  Stream<List<OrganizationJoinRequest>> build() async* {
+  Stream<List<skir.OrganizationJoinRequest>> build() async* {
     yield await displayState.generate(generateRandomJoinRequest);
   }
 }

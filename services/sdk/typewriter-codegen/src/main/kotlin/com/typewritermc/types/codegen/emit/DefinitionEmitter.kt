@@ -16,12 +16,13 @@ import com.typewritermc.codegen.declarationCode
 import com.typewritermc.codegen.kotlinCode
 import com.typewritermc.types.Color
 import com.typewritermc.types.Icon
-import com.typewritermc.types.TypeDefinition
-import com.typewritermc.types.TypeDefinitionId
 import com.typewritermc.types.TypeDisplay
-import com.typewritermc.types.TypeUse
 import com.typewritermc.types.codegen.SdkDeclaration
 import com.typewritermc.types.codegen.SdkEmitter
+import skirout.editor.v1.type_catalog.NamedTypeUse
+import skirout.editor.v1.type_catalog.TypeDefinition
+import skirout.editor.v1.type_catalog.TypeDefinitionId
+import skirout.editor.v1.type_catalog.TypeUse
 import kotlin.reflect.KClass
 import com.typewritermc.codegen.TypewriterApi as Api
 
@@ -35,7 +36,7 @@ internal object DefinitionEmitter : SdkEmitter {
     override fun FileSpec.Builder.emit(declaration: SdkDeclaration) {
         val names = declaration.names
         val parameterCount = declaration.typeVariables.size
-        val named = TypeUse.Named::class.asClassName()
+        val named = NamedTypeUse::class.asClassName()
         addType(
             TypeSpec
                 .objectBuilder(names.definition)
@@ -76,7 +77,7 @@ internal object DefinitionEmitter : SdkEmitter {
                             "require(arguments.size == %L) { %S }",
                             parameterCount,
                             "${names.source.simpleNames.joinToString(".")} requires $parameterCount type arguments.",
-                        ).addStatement("return %T(id,♢arguments)", named)
+                        ).addStatement("return %T(definition·=·id,♢arguments·=·arguments)", named)
                         .build(),
                 ).apply {
                     if (!declaration.generic) {

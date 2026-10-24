@@ -3,18 +3,24 @@ package com.typewritermc.capability
 import com.typewritermc.authoring.CompletenessResult
 import com.typewritermc.authoring.GeneratedSdkApi
 import com.typewritermc.authoring.complete
-import com.typewritermc.types.DataValue
 import com.typewritermc.types.NativeBinding
 import com.typewritermc.types.NativeBindingException
 import com.typewritermc.types.NativeBindingRegistry
-import com.typewritermc.types.ResourceId
-import com.typewritermc.types.TypeUse
 import com.typewritermc.types.catalog.CheckedCatalog
 import com.typewritermc.types.catalog.Resolution
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.FlowCollector
 import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.flow.map
+import skirout.editor.v1.capability.CapabilityDefinition
+import skirout.editor.v1.capability.CommandCapabilityDefinition
+import skirout.editor.v1.capability.ComputationCapabilityDefinition
+import skirout.editor.v1.capability.PanelInstruction
+import skirout.editor.v1.capability.SearchCapabilityDefinition
+import skirout.editor.v1.search.RealmSearchQuery
+import skirout.editor.v1.type_catalog.CapabilityId
+import skirout.editor.v1.type_catalog.DataValue
+import skirout.editor.v1.type_catalog.TypeUse
 import kotlin.reflect.KClass
 
 sealed interface RealmCapabilityRef<Request : Any> {
@@ -39,39 +45,12 @@ data class RealmCommandCapabilityRef<Request : Any>(
     override val requestType: KClass<Request>,
 ) : RealmCapabilityRef<Request>
 
-data class RealmSearchQuery(
-    val normalizedQuery: String,
-    val terms: List<String> = emptyList(),
-    val selectors: List<RealmSearchSelector> = emptyList(),
-    val selectorExpression: RealmSearchSelectorExpression? = null,
-)
-
-data class RealmSearchSelector(
-    val id: String,
-    val key: String,
-    val value: String?,
-)
-
-sealed interface RealmSearchSelectorExpression {
-    data class Selector(
-        val id: String,
-    ) : RealmSearchSelectorExpression
-
-    data class And(
-        val left: RealmSearchSelectorExpression,
-        val right: RealmSearchSelectorExpression,
-    ) : RealmSearchSelectorExpression
-
-    data class Or(
-        val left: RealmSearchSelectorExpression,
-        val right: RealmSearchSelectorExpression,
-    ) : RealmSearchSelectorExpression
-
-    data class Not(
-        val expression: RealmSearchSelectorExpression,
-    ) : RealmSearchSelectorExpression
-}
-
+/**
+ * One search invocation: the decoded [payload] and the editor [query] as it arrived on the wire.
+ *
+ * The Realm validates the query before invoking a provider, so selector identities and keys are non blank and the
+ * selector expression contains only known variants.
+ */
 data class RealmSearchRequest<Request : Any>(
     val payload: Request,
     val query: RealmSearchQuery,
@@ -128,33 +107,6 @@ interface RealmCommandContext : RealmInvocationContext
 class RealmCapabilityPermissionDeniedException(
     message: String,
 ) : RuntimeException(message)
-
-data class ResourceAddress(
-    val type: TypeUse,
-    val identity: DataValue,
-)
-
-enum class NotificationSeverity {
-    INFO,
-    SUCCESS,
-    WARNING,
-    ERROR,
-}
-
-sealed interface PanelInstruction {
-    data class InvalidateResource(
-        val resource: ResourceAddress,
-    ) : PanelInstruction
-
-    data class OpenResource(
-        val resource: ResourceAddress,
-    ) : PanelInstruction
-
-    data class Notify(
-        val severity: NotificationSeverity,
-        val message: String,
-    ) : PanelInstruction
-}
 
 data class RealmCommandOutcome(
     val instructions: List<PanelInstruction> = emptyList(),
@@ -216,12 +168,15 @@ class RealmCapabilityRuntime(
         }
 }
 
+/** A Realm capability implementation; [definition] is the catalog form of its kind specific descriptor. */
 sealed interface RealmCapabilityProvider {
-    val descriptor: RealmCapabilityDescriptor
+    val definition: CapabilityDefinition
 }
 
 interface RealmSearchCapabilityProvider : RealmCapabilityProvider {
-    override val descriptor: RealmCapabilityDescriptor.Search
+    val descriptor: SearchCapabilityDefinition
+
+    override val definition: CapabilityDefinition get() = CapabilityDefinition.SearchWrapper(descriptor)
 
     fun invoke(
         context: RealmSearchContext,
@@ -232,7 +187,9 @@ interface RealmSearchCapabilityProvider : RealmCapabilityProvider {
 }
 
 interface RealmComputationCapabilityProvider : RealmCapabilityProvider {
-    override val descriptor: RealmCapabilityDescriptor.Computation
+    val descriptor: ComputationCapabilityDefinition
+
+    override val definition: CapabilityDefinition get() = CapabilityDefinition.ComputationWrapper(descriptor)
 
     suspend fun invoke(
         context: RealmComputationContext,
@@ -242,7 +199,9 @@ interface RealmComputationCapabilityProvider : RealmCapabilityProvider {
 }
 
 interface RealmCommandCapabilityProvider : RealmCapabilityProvider {
-    override val descriptor: RealmCapabilityDescriptor.Command
+    val descriptor: CommandCapabilityDefinition
+
+    override val definition: CapabilityDefinition get() = CapabilityDefinition.CommandWrapper(descriptor)
 
     suspend fun invoke(
         context: RealmCommandContext,
@@ -254,9 +213,9 @@ interface RealmCommandCapabilityProvider : RealmCapabilityProvider {
 class RealmCapabilityRegistry(
     providers: Collection<RealmCapabilityProvider>,
 ) {
-    private val providersById = providers.associateBy { it.descriptor.id }
+    private val providersById = providers.associateBy { it.definition.id }
 
-    val descriptors: List<RealmCapabilityDescriptor> = providers.map(RealmCapabilityProvider::descriptor).sortedBy { it.id.value }
+    val definitions: List<CapabilityDefinition> = providers.map(RealmCapabilityProvider::definition).sortedBy { it.id.value }
 
     init {
         require(providersById.size == providers.size) { "Realm capability ids must be unique." }

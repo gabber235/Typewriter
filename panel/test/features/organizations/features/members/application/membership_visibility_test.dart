@@ -13,11 +13,14 @@ void main() {
   test("expiry timer removes a request without manual invalidation", () {
     fakeAsync((async) {
       final clock = async.getClock(DateTime.utc(2026));
-      final request = OrganizationJoinRequest(
+      final request = skir.OrganizationJoinRequest(
         requestId: skir.recordId("request_to_join:soon_expired"),
         userId: skir.recordId("user:soon_expired"),
         requestedAt: clock.now(),
         expiresAt: clock.now().add(const Duration(milliseconds: 200)),
+        userName: null,
+        userEmail: null,
+        userAvatarUrl: null,
       );
       final container = ProviderContainer.test(
         overrides: [
@@ -29,7 +32,7 @@ void main() {
         ],
       );
       addTearDown(container.dispose);
-      final observations = <List<OrganizationJoinRequest>>[];
+      final observations = <List<skir.OrganizationJoinRequest>>[];
       final subscription = container.listen(
         visibleOrganizationJoinRequestsProvider,
         (_, next) {
@@ -62,27 +65,37 @@ void main() {
   test(
     "derived visibility filters expiry without changing confirmed snapshots",
     () async {
-      final activeRequest = OrganizationJoinRequest(
+      final activeRequest = skir.OrganizationJoinRequest(
         requestId: skir.recordId("request_to_join:active"),
         userId: skir.recordId("user:active"),
         requestedAt: DateTime.utc(2025),
         expiresAt: DateTime.utc(2100),
+        userName: null,
+        userEmail: null,
+        userAvatarUrl: null,
       );
-      final expiredRequest = OrganizationJoinRequest(
+      final expiredRequest = skir.OrganizationJoinRequest(
         requestId: skir.recordId("request_to_join:expired"),
         userId: skir.recordId("user:expired"),
         requestedAt: DateTime.utc(2020),
         expiresAt: DateTime.utc(2021),
+        userName: null,
+        userEmail: null,
+        userAvatarUrl: null,
       );
-      final activeCode = OrganizationJoinCode(
+      final activeCode = skir.JoinCode(
         code: skir.recordId("join_code:active"),
         createdAt: DateTime.utc(2025),
         expiresAt: null,
+        singleUse: true,
+        autoAccept: skir.JoinCode_AutoAccept(roleIds: const []),
       );
-      final expiredCode = OrganizationJoinCode(
+      final expiredCode = skir.JoinCode(
         code: skir.recordId("join_code:expired"),
         createdAt: DateTime.utc(2020),
         expiresAt: DateTime.utc(2021),
+        singleUse: true,
+        autoAccept: skir.JoinCode_AutoAccept(roleIds: const []),
       );
       final container = ProviderContainer.test(
         overrides: [
@@ -100,8 +113,8 @@ void main() {
       );
       addTearDown(container.dispose);
 
-      final requestsReady = Completer<List<OrganizationJoinRequest>>();
-      final codesReady = Completer<List<OrganizationJoinCode>>();
+      final requestsReady = Completer<List<skir.OrganizationJoinRequest>>();
+      final codesReady = Completer<List<skir.JoinCode>>();
       final requestsSubscription = container.listen(
         visibleOrganizationJoinRequestsProvider,
         (_, next) {

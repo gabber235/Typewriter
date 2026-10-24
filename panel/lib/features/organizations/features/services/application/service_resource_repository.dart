@@ -40,7 +40,7 @@ final class ServiceResourceRepository {
   ///
   /// Topology watches are owned by the provider layer. This request is scoped
   /// to the repository session and does not create a watch lifetime.
-  Future<OrganizationTopology> topology() async {
+  Future<skir.OrganizationTopologySnapshot> topology() async {
     final operation = skir.WatchOrganizationTopologyRequest().operation(
       userId: session.requireUserId(),
       organizationId: organization,
@@ -59,7 +59,7 @@ final class ServiceResourceRepository {
 
   /// Fetches the current service identity snapshot for refresh or initial
   /// state.
-  Future<List<Service>> services() async {
+  Future<List<skir.Service>> services() async {
     final operation = skir.WatchOrganizationServicesRequest().operation(
       userId: session.requireUserId(),
       organizationId: organization,
@@ -72,7 +72,7 @@ final class ServiceResourceRepository {
     session.checkActive();
     return switch (response) {
       skir.WatchOrganizationServicesResponse_listWrapper(:final value) =>
-        value.map(Service.fromSkir).toList(),
+        value.map((service) => service.requireKnown()).toList(),
       _ => throw StateError("The services request did not return a snapshot"),
     };
   }
@@ -85,11 +85,9 @@ final class ServiceResourceRepository {
 
   /// Publishes a backend service identity result to canonical service
   /// consumers.
-  void acceptService(Service service) {
+  void acceptService(skir.Service service) {
     session.checkActive();
-    _identities.add(
-      skir.OrganizationServicesChanged.wrapUpdate(service.toSkir()),
-    );
+    _identities.add(skir.OrganizationServicesChanged.wrapUpdate(service));
   }
 
   /// Publishes one confirmed service removal to canonical consumers.
@@ -108,14 +106,6 @@ final class ServiceResourceRepository {
         organizationId: organization,
       ),
       label: "Bind service",
-      classify: (response) => switch (response) {
-        skir.BindServiceResponse_successWrapper() =>
-          MutationResponseDisposition.confirmed,
-        skir.BindServiceResponse_unknown() ||
-        skir.BindServiceResponse_internalErrorWrapper() =>
-          MutationResponseDisposition.uncertain,
-        _ => MutationResponseDisposition.rejected,
-      },
       onResponse: _integrateBinding,
     );
   }
@@ -125,11 +115,7 @@ final class ServiceResourceRepository {
       case skir.BindServiceResponse_successWrapper():
         final values = await services();
         session.checkActive();
-        _identities.add(
-          skir.OrganizationServicesChanged.wrapReplace(
-            values.map((service) => service.toSkir()).toList(),
-          ),
-        );
+        _identities.add(skir.OrganizationServicesChanged.wrapReplace(values));
       case skir.BindServiceResponse_invalidRegistrationTokenErrorWrapper() ||
           skir.BindServiceResponse_organizationNotFoundErrorWrapper() ||
           skir.BindServiceResponse_internalErrorWrapper() ||
@@ -148,14 +134,6 @@ final class ServiceResourceRepository {
       ),
       resources: {(organization, service)},
       label: "Unbind service: ${service.id}",
-      classify: (response) => switch (response) {
-        skir.UnbindServiceResponse_successWrapper() =>
-          MutationResponseDisposition.confirmed,
-        skir.UnbindServiceResponse_unknown() ||
-        skir.UnbindServiceResponse_internalErrorWrapper() =>
-          MutationResponseDisposition.uncertain,
-        _ => MutationResponseDisposition.rejected,
-      },
       onResponse: (response) => _integrateUnbinding(response, service),
     );
   }
@@ -196,14 +174,6 @@ final class ServiceResourceRepository {
       ),
       resources: {(organization, host)},
       label: "Apply Host configuration: ${host.id}",
-      classify: (response) => switch (response) {
-        skir.ConfigureServiceHostResponse_successWrapper() =>
-          MutationResponseDisposition.confirmed,
-        skir.ConfigureServiceHostResponse_unknown() ||
-        skir.ConfigureServiceHostResponse_internalErrorWrapper() =>
-          MutationResponseDisposition.uncertain,
-        _ => MutationResponseDisposition.rejected,
-      },
       onResponse: _integrateConfiguration,
     );
   }
@@ -247,14 +217,6 @@ final class ServiceResourceRepository {
       ),
       resources: {(organization, service)},
       label: "Update service: ${service.id}",
-      classify: (response) => switch (response) {
-        skir.UpdateOrganizationServiceResponse_successWrapper() =>
-          MutationResponseDisposition.confirmed,
-        skir.UpdateOrganizationServiceResponse_unknown() ||
-        skir.UpdateOrganizationServiceResponse_internalErrorWrapper() =>
-          MutationResponseDisposition.uncertain,
-        _ => MutationResponseDisposition.rejected,
-      },
       onResponse: _integrateRename,
     );
   }
@@ -264,11 +226,11 @@ final class ServiceResourceRepository {
   ) async {
     switch (response) {
       case skir.UpdateOrganizationServiceResponse_successWrapper(:final value):
-        acceptService(Service.fromSkir(value));
+        acceptService(value.requireKnown());
       case skir.UpdateOrganizationServiceResponse_conflictErrorWrapper(
         :final value,
       ):
-        acceptService(Service.fromSkir(value.actual));
+        acceptService(value.actual.requireKnown());
       case skir.UpdateOrganizationServiceResponse_unknown() ||
           skir.UpdateOrganizationServiceResponse_internalErrorWrapper() ||
           skir.UpdateOrganizationServiceResponse_invalidRecordIdErrorWrapper() ||

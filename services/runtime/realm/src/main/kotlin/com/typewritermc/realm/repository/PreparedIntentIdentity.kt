@@ -1,26 +1,22 @@
 package com.typewritermc.realm.repository
 
-import com.typewritermc.authoring.AuthoringRecord
-import com.typewritermc.authoring.CounterpartChoice
-import com.typewritermc.authoring.EditIntent
-import com.typewritermc.authoring.ItemId
-import com.typewritermc.authoring.LinkOccurrence
-import com.typewritermc.authoring.LinkOccurrenceId
-import com.typewritermc.authoring.PreparedEdit
-import com.typewritermc.authoring.PreparedValue
-import com.typewritermc.authoring.TypeSelection
-import com.typewritermc.authoring.ValueLocation
-import com.typewritermc.realm.authoring.authoringStorageJson
 import com.typewritermc.services.libs.utils.sha256Hex
-import com.typewritermc.types.DataValue
-import com.typewritermc.types.ListItem
-import com.typewritermc.types.ResourceId
-import com.typewritermc.types.TypeUse
-import kotlinx.serialization.KSerializer
-import kotlinx.serialization.json.JsonArray
-import kotlinx.serialization.json.JsonElement
-import kotlinx.serialization.json.JsonObject
-import kotlinx.serialization.json.JsonPrimitive
+import com.typewritermc.types.unknownVariant
+import skirout.editor.v1.authoring.CounterpartChoice
+import skirout.editor.v1.authoring.EditIntent
+import skirout.editor.v1.authoring.LinkOccurrence
+import skirout.editor.v1.authoring.LinkOccurrenceId
+import skirout.editor.v1.authoring.PreparedEdit
+import skirout.editor.v1.catalog.PreparedValue
+import skirout.editor.v1.type_catalog.AuthoringRecord
+import skirout.editor.v1.type_catalog.DataValue
+import skirout.editor.v1.type_catalog.ItemId
+import skirout.editor.v1.type_catalog.ListItem
+import skirout.editor.v1.type_catalog.NamedTypeUse
+import skirout.editor.v1.type_catalog.ResourceId
+import skirout.editor.v1.type_catalog.TypeSelection
+import skirout.editor.v1.type_catalog.ValueLocation
+import build.skir.Serializer as SkirSerializer
 
 /** Derives stable counterpart item identities from intent without retaining operation history. */
 internal fun canonicalPreparedIntentDigest(edit: PreparedEdit): String =
@@ -28,124 +24,119 @@ internal fun canonicalPreparedIntentDigest(edit: PreparedEdit): String =
 
 private fun EditIntent.canonical(): String =
     when (this) {
-        is EditIntent.CreateResource -> {
-            frame("create", canonical(ResourceId.serializer(), id), canonical(AuthoringRecord.serializer(), record))
+        is EditIntent.CreateResourceWrapper -> {
+            frame("create", canonical(ResourceId.serializer, value.id), canonical(AuthoringRecord.serializer, value.record))
         }
 
-        is EditIntent.DeleteResource -> {
-            frame("delete", canonical(ResourceId.serializer(), id))
+        is EditIntent.DeleteResourceWrapper -> {
+            frame("delete", canonical(ResourceId.serializer, value.id))
         }
 
-        is EditIntent.SetValue -> {
+        is EditIntent.SetValueWrapper -> {
             frame(
                 "set",
-                canonical(ValueLocation.serializer(), at),
-                canonical(
-                    DataValue
-                        .serializer(),
-                    value,
-                ),
+                canonical(ValueLocation.serializer, value.at),
+                canonical(DataValue.serializer, value.value),
             )
         }
 
-        is EditIntent.Insert -> {
+        is EditIntent.InsertWrapper -> {
             frame(
                 "insert",
-                canonical(ValueLocation.serializer(), at),
-                after.canonicalNullable(),
-                canonical(
-                    ListItem
-                        .serializer(),
-                    item,
-                ),
+                canonical(ValueLocation.serializer, value.at),
+                value.after.canonicalNullable(),
+                canonical(ListItem.serializer, value.item),
             )
         }
 
-        is EditIntent.Remove -> {
-            frame("remove", canonical(ValueLocation.serializer(), at), canonical(ItemId.serializer(), item))
+        is EditIntent.RemoveWrapper -> {
+            frame("remove", canonical(ValueLocation.serializer, value.at), canonical(ItemId.serializer, value.item))
         }
 
-        is EditIntent.Move -> {
+        is EditIntent.MoveWrapper -> {
             frame(
                 "move",
-                canonical(ValueLocation.serializer(), at),
-                canonical(ItemId.serializer(), item),
-                after.canonicalNullable(),
+                canonical(ValueLocation.serializer, value.at),
+                canonical(ItemId.serializer, value.item),
+                value.after.canonicalNullable(),
             )
         }
 
-        is EditIntent.ConnectRelation -> {
-            val value = intent
+        is EditIntent.ConnectRelationWrapper -> {
+            val connect = value
             val counterpart =
-                when (val choice = value.counterpart) {
+                when (val choice = connect.counterpart) {
                     null -> {
                         frame("none")
                     }
 
-                    is CounterpartChoice.Existing -> {
+                    is CounterpartChoice.ExistingWrapper -> {
                         frame(
                             "existing",
                             canonical(
-                                LinkOccurrence
-                                    .serializer(),
-                                choice.occurrence,
+                                LinkOccurrence.serializer,
+                                choice.value,
                             ),
                         )
                     }
 
-                    is CounterpartChoice.New -> {
+                    is CounterpartChoice.NewWrapper -> {
                         frame(
                             "new",
-                            canonical(ValueLocation.serializer(), choice.containing),
+                            canonical(ValueLocation.serializer, choice.value.containing),
                             canonical(
-                                PreparedValue
-                                    .serializer(),
-                                choice.prepared,
+                                PreparedValue.serializer,
+                                choice.value.prepared,
                             ),
                         )
+                    }
+
+                    else -> {
+                        unknownVariant(choice)
                     }
                 }
             frame(
                 "connect",
                 canonical(
-                    LinkOccurrence
-                        .serializer(),
-                    value.source,
+                    LinkOccurrence.serializer,
+                    connect.source,
                 ),
-                canonical(ResourceId.serializer(), value.target),
+                canonical(ResourceId.serializer, connect.target),
                 counterpart,
             )
         }
 
-        is EditIntent.DisconnectRelation -> {
+        is EditIntent.DisconnectRelationWrapper -> {
             frame(
                 "disconnect",
                 canonical(
-                    LinkOccurrenceId
-                        .serializer(),
-                    occurrence,
+                    LinkOccurrenceId.serializer,
+                    value,
                 ),
             )
         }
 
-        is EditIntent.Retag -> {
-            frame("retag", canonical(ValueLocation.serializer(), at), canonical(TypeUse.Named.serializer(), type))
+        is EditIntent.RetagWrapper -> {
+            frame("retag", canonical(ValueLocation.serializer, value.at), canonical(NamedTypeUse.serializer, value.type))
         }
 
-        is EditIntent.ConfigureResource -> {
+        is EditIntent.ConfigureResourceWrapper -> {
             frame(
                 "configure_resource",
-                canonical(ResourceId.serializer(), resource),
+                canonical(ResourceId.serializer, value.resource),
                 canonical(
-                    TypeSelection
-                        .serializer(),
-                    configuration,
+                    TypeSelection.serializer,
+                    value.configuration,
                 ),
             )
+        }
+
+        else -> {
+            unknownVariant(this)
         }
     }
 
-private fun ItemId?.canonicalNullable(): String = if (this == null) frame("none") else frame("item", canonical(ItemId.serializer(), this))
+private fun ItemId?.canonicalNullable(): String = if (this == null) frame("none") else frame("item", canonical(ItemId.serializer, this))
 
 private fun frame(
     kind: String,
@@ -156,14 +147,8 @@ private fun frame(
         values.forEach { value -> append(value.length).append(':').append(value) }
     }
 
+/** Skir values have one dense JSON form, so it identifies them directly. */
 private fun <T> canonical(
-    serializer: KSerializer<T>,
+    serializer: SkirSerializer<T>,
     value: T,
-): String = authoringStorageJson.encodeToJsonElement(serializer, value).canonical().toString()
-
-private fun JsonElement.canonical(): JsonElement =
-    when (this) {
-        is JsonObject -> JsonObject(entries.sortedBy { it.key }.associate { it.key to it.value.canonical() })
-        is JsonArray -> JsonArray(map(JsonElement::canonical))
-        is JsonPrimitive -> this
-    }
+): String = serializer.toJsonCode(value)

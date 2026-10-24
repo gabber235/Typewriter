@@ -328,9 +328,7 @@ class _GalleryHost extends ChangeNotifier
       const PortablePresentationCapabilities();
   @override
   PortablePresentationDocument get document => PortablePresentationDocument(
-    catalog: CheckedEditorCatalog(
-      skir.EditorCatalogWireSnapshot.defaultInstance,
-    ),
+    catalog: CheckedEditorCatalog(skir.EditorCatalog.defaultInstance),
     root: root,
     bindings: {
       _status: PortablePresentationBinding(
@@ -408,9 +406,9 @@ class _GalleryHost extends ChangeNotifier
                 ),
                 arguments: [],
               ),
-              appearance: ResourceAppearance(
+              appearance: skir.ResourceAppearance(
                 label: indexed.$2.value,
-                accent: const Color(0xff7354bf),
+                accent: const Color(0xff7354bf).toSkirColor(),
                 icon: skir.Icon.wrapIconify("material-symbols:flag"),
               ),
               value: skir.DataValue.wrapStringValue(indexed.$2.value),

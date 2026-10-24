@@ -135,10 +135,8 @@ void main() {
         skir.DataValue.serializer.toBytes(value),
       );
       catalog = CheckedEditorCatalog(
-        skir.EditorCatalogWireSnapshot.serializer.fromBytes(
-          skir.EditorCatalogWireSnapshot.serializer.toBytes(
-            compiledSdkControlCatalog,
-          ),
+        skir.EditorCatalog.serializer.fromBytes(
+          skir.EditorCatalog.serializer.toBytes(compiledSdkControlCatalog),
         ),
       );
       await pumpHost(createHost());

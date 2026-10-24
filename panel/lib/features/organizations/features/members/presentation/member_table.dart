@@ -16,7 +16,7 @@ class MembersTable extends HookConsumerWidget {
     super.key,
   });
 
-  final List<OrganizationMember> members;
+  final List<skir.OrganizationMember> members;
   final ValueNotifier<Set<skir.RecordId>> selectedIds;
   final Future<void> Function() onRemoveSelection;
 
@@ -147,7 +147,7 @@ class MembersTable extends HookConsumerWidget {
   TableRow _buildMemberRow(
     BuildContext context,
     WidgetRef ref,
-    OrganizationMember member,
+    skir.OrganizationMember member,
     bool isSelected,
     ValueNotifier<skir.RecordId?> focusedMemberId,
     ThemeData theme,
@@ -282,7 +282,7 @@ class MembersTable extends HookConsumerWidget {
                   vertical: context.spacing.space2,
                 ),
                 child: RoleMultiselectDropdown(
-                  selectedRoles: member.roles,
+                  selectedRoles: member.roles.toList(),
                   onRolesChanged: (newRoles) {
                     ref
                         .executeMembership(

@@ -1,3 +1,5 @@
+import "package:typewriter_panel/infrastructure/protocols/skir/skir.dart"
+    as skir;
 import "package:typewriter_panel/typewriter_panel.dart";
 
 /// Local editor for generation options.
@@ -17,7 +19,7 @@ class JoinCodeSettings extends HookConsumerWidget {
 
   final ValueChanged<JoinCodeOptions> onOptionsChanged;
   final JoinCodeOptions initialOptions;
-  final List<OrganizationRole> availableRoles;
+  final List<skir.OrganizationRole> availableRoles;
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {

@@ -1,39 +1,33 @@
 package com.typewritermc.realm.routes
 
-import com.typewritermc.capability.CapabilityId
-import com.typewritermc.capability.NotificationSeverity
-import com.typewritermc.capability.PanelInstruction
-import com.typewritermc.capability.RealmCapabilityDescriptor
 import com.typewritermc.capability.RealmCapabilityPermissionDeniedException
 import com.typewritermc.capability.RealmCapabilityRegistry
 import com.typewritermc.capability.RealmCapabilityRuntime
 import com.typewritermc.capability.RealmCommandContext
 import com.typewritermc.capability.RealmComputationContext
 import com.typewritermc.realm.catalog.RealmCatalogStore
-import com.typewritermc.types.TypeDefinitionId
-import com.typewritermc.types.TypeId
-import com.typewritermc.types.TypeTemplate
-import com.typewritermc.types.TypeUse
-import com.typewritermc.types.skir.SkirConversionResult
-import com.typewritermc.types.skir.SkirDataValueCodec
-import com.typewritermc.types.skir.SkirTypeCodec
-import com.typewritermc.types.skir.getOrThrow
+import com.typewritermc.types.isValid
+import com.typewritermc.types.payload
+import com.typewritermc.types.qualified
+import com.typewritermc.types.requirePortable
 import com.typewritermc.types.toTemplate
+import com.typewritermc.types.use
+import skirout.editor.v1.capability.CapabilityDefinition
 import skirout.editor.v1.capability.CapabilityInvocationRequest
 import skirout.editor.v1.capability.CommandResult
 import skirout.editor.v1.capability.ComputationResult
 import skirout.editor.v1.capability.InvocationId
+import skirout.editor.v1.capability.NotificationSeverity
+import skirout.editor.v1.capability.PanelInstruction
 import skirout.editor.v1.capability.ResourceAddress
 import skirout.editor.v1.diagnostic.Diagnostic
 import skirout.editor.v1.diagnostic.DiagnosticSeverity
+import skirout.editor.v1.type_catalog.CapabilityId
 import skirout.editor.v1.type_catalog.CatalogGeneration
 import skirout.editor.v1.type_catalog.DataValue
 import skirout.editor.v1.type_catalog.DiagnosticId
 import skirout.editor.v1.type_catalog.RuleOrigin
-import skirout.editor.v1.capability.NotificationSeverity as WireNotificationSeverity
-import skirout.editor.v1.capability.PanelInstruction as WirePanelInstruction
-import skirout.editor.v1.type_catalog.TypeTemplate as SkirTypeTemplate
-import skirout.editor.v1.type_catalog.TypeUse as SkirTypeUse
+import skirout.editor.v1.type_catalog.TypeDefinitionId
 
 /**
  * Dispatches editor computation and command invocations through a retained Realm catalog.
@@ -55,30 +49,31 @@ class RealmCapabilityInvocationSource(
             }
             val registry = RealmCapabilityRegistry(it.capabilities)
             val descriptor =
-                registry.descriptors
-                    .filterIsInstance<RealmCapabilityDescriptor.Computation>()
-                    .singleOrNull { descriptor -> descriptor.id.value == request.capabilityId.value }
+                registry.definitions
+                    .filterIsInstance<CapabilityDefinition.ComputationWrapper>()
+                    .map { it.value }
+                    .singleOrNull { descriptor -> descriptor.capabilityId == request.capabilityId }
                     ?: return invalidComputation(request, "Realm computation capability is unavailable")
             val expected =
-                request.expectedResultType?.decode()
+                request.expectedResultType?.takeIf { it.isValid }
                     ?: return invalidComputation(request, "Realm computation result type is required")
             if (expected != descriptor.resultType.toTemplate()) {
                 return invalidComputation(request, "Realm computation result type does not match its capability")
             }
             return try {
-                val payload = SkirDataValueCodec.decode(request.payload).getOrThrow()
+                val payload = request.payload.requirePortable()
                 val value =
-                    registry.requireComputation(CapabilityId(request.capabilityId.value)).invoke(
+                    registry.requireComputation(request.capabilityId).invoke(
                         ComputationContext(request.invocationId.value),
                         RealmCapabilityRuntime(it.checked, it.nativeBindings),
                         payload,
                     )
                 ComputationResult.createSuccess(
                     invocationId = request.invocationId,
-                    value = SkirDataValueCodec.encode(value).getOrThrow(),
+                    value = value.requirePortable(),
                 )
             } catch (failure: RealmCapabilityPermissionDeniedException) {
-                ComputationResult.createPermissionDenied(
+                ComputationResult.createPermissionDeniedError(
                     invocationId = request.invocationId,
                     message = failure.message ?: "Permission denied",
                 )
@@ -98,27 +93,28 @@ class RealmCapabilityInvocationSource(
             }
             val registry = RealmCapabilityRegistry(it.capabilities)
             val descriptor =
-                registry.descriptors
-                    .filterIsInstance<RealmCapabilityDescriptor.Command>()
-                    .singleOrNull { descriptor -> descriptor.id.value == request.capabilityId.value }
+                registry.definitions
+                    .filterIsInstance<CapabilityDefinition.CommandWrapper>()
+                    .map { it.value }
+                    .singleOrNull { descriptor -> descriptor.capabilityId == request.capabilityId }
                     ?: return invalidCommand(request, "Realm command capability is unavailable")
             if (request.expectedResultType != null) {
                 return invalidCommand(request, "Realm command result type must be absent")
             }
             return try {
-                val payload = SkirDataValueCodec.decode(request.payload).getOrThrow()
+                val payload = request.payload.requirePortable()
                 val outcome =
-                    registry.requireCommand(descriptor.id).invoke(
+                    registry.requireCommand(descriptor.capabilityId).invoke(
                         CommandContext(request.invocationId.value),
                         RealmCapabilityRuntime(it.checked, it.nativeBindings),
                         payload,
                     )
                 CommandResult.createSuccess(
                     invocationId = request.invocationId,
-                    instructions = outcome.instructions.map { instruction -> instruction.toWire() },
+                    instructions = outcome.instructions.map { instruction -> instruction.requireValid() },
                 )
             } catch (failure: RealmCapabilityPermissionDeniedException) {
-                CommandResult.createPermissionDenied(
+                CommandResult.createPermissionDeniedError(
                     invocationId = request.invocationId,
                     message = failure.message ?: "Permission denied",
                 )
@@ -163,11 +159,11 @@ private data class CommandContext(
 private fun InvocationValidationFailure.toComputationResult(invocationId: InvocationId): ComputationResult =
     when (this) {
         is InvocationValidationFailure.Invalid -> {
-            ComputationResult.createInvalid(invocationId = invocationId, diagnostics = listOf(realmDiagnostic(message)))
+            ComputationResult.createInvalidError(invocationId = invocationId, diagnostics = listOf(realmDiagnostic(message)))
         }
 
         is InvocationValidationFailure.Stale -> {
-            ComputationResult.createStaleGeneration(
+            ComputationResult.createStaleGenerationError(
                 invocationId = invocationId,
                 actualGeneration = CatalogGeneration(value = actualGeneration),
             )
@@ -177,28 +173,22 @@ private fun InvocationValidationFailure.toComputationResult(invocationId: Invoca
 private fun InvocationValidationFailure.toCommandResult(invocationId: InvocationId): CommandResult =
     when (this) {
         is InvocationValidationFailure.Invalid -> {
-            CommandResult.createInvalid(invocationId = invocationId, diagnostics = listOf(realmDiagnostic(message)))
+            CommandResult.createInvalidError(invocationId = invocationId, diagnostics = listOf(realmDiagnostic(message)))
         }
 
         is InvocationValidationFailure.Stale -> {
-            CommandResult.createStaleGeneration(
+            CommandResult.createStaleGenerationError(
                 invocationId = invocationId,
                 actualGeneration = CatalogGeneration(value = actualGeneration),
             )
         }
     }
 
-private fun SkirTypeTemplate.decode(): TypeTemplate? =
-    when (val result = SkirTypeCodec.decode(this)) {
-        is SkirConversionResult.Success -> result.value
-        is SkirConversionResult.Failure -> null
-    }
-
 private fun invalidComputation(
     request: CapabilityInvocationRequest,
     message: String,
 ): ComputationResult =
-    ComputationResult.createInvalid(
+    ComputationResult.createInvalidError(
         invocationId = request.invocationId,
         diagnostics = listOf(realmDiagnostic(message)),
     )
@@ -207,7 +197,7 @@ private fun unavailableComputation(
     request: CapabilityInvocationRequest,
     message: String,
 ): ComputationResult =
-    ComputationResult.createUnavailable(
+    ComputationResult.createUnavailableError(
         invocationId = request.invocationId,
         diagnostics = listOf(realmDiagnostic(message)),
     )
@@ -216,7 +206,7 @@ private fun invalidCommand(
     request: CapabilityInvocationRequest,
     message: String,
 ): CommandResult =
-    CommandResult.createInvalid(
+    CommandResult.createInvalidError(
         invocationId = request.invocationId,
         diagnostics = listOf(realmDiagnostic(message)),
     )
@@ -225,57 +215,39 @@ private fun unavailableCommand(
     request: CapabilityInvocationRequest,
     message: String,
 ): CommandResult =
-    CommandResult.createUnavailable(
+    CommandResult.createUnavailableError(
         invocationId = request.invocationId,
         diagnostics = listOf(realmDiagnostic(message)),
     )
 
-private fun PanelInstruction.toWire(): WirePanelInstruction =
+/** Checks a panel instruction a command returned; resource identities return in canonical notation. */
+private fun PanelInstruction.requireValid(): PanelInstruction =
     when (this) {
-        is PanelInstruction.InvalidateResource -> {
-            WirePanelInstruction.createInvalidateResource(
-                resource = resource.type.toWireResource(SkirDataValueCodec.encode(resource.identity).getOrThrow()),
-            )
+        is PanelInstruction.InvalidateResourceWrapper -> {
+            PanelInstruction.createInvalidateResource(resource = value.resource.requireValid())
         }
 
-        is PanelInstruction.OpenResource -> {
-            WirePanelInstruction.createOpenResource(
-                resource = resource.type.toWireResource(SkirDataValueCodec.encode(resource.identity).getOrThrow()),
-            )
+        is PanelInstruction.OpenResourceWrapper -> {
+            PanelInstruction.createOpenResource(resource = value.resource.requireValid())
         }
 
-        is PanelInstruction.Notify -> {
-            WirePanelInstruction.createNotify(severity = severity.toWire(), message = message)
+        is PanelInstruction.NotifyWrapper -> {
+            apply { require(value.severity != NotificationSeverity.UNKNOWN) { "Unknown notification severity." } }
+        }
+
+        else -> {
+            throw IllegalArgumentException("Unknown panel instruction.")
         }
     }
 
-private fun TypeUse.toWireResource(identity: DataValue) =
-    ResourceAddress(
-        resourceType = SkirTypeCodec.encode(this).getOrThrow(),
-        identity = identity,
-    )
-
-private fun NotificationSeverity.toWire(): WireNotificationSeverity =
-    when (this) {
-        NotificationSeverity.INFO -> WireNotificationSeverity.INFO
-        NotificationSeverity.SUCCESS -> WireNotificationSeverity.SUCCESS
-        NotificationSeverity.WARNING -> WireNotificationSeverity.WARNING
-        NotificationSeverity.ERROR -> WireNotificationSeverity.ERROR
-    }
+private fun ResourceAddress.requireValid(): ResourceAddress = copy(identity = identity.requirePortable())
 
 internal fun realmDiagnostic(message: String): Diagnostic =
     Diagnostic(
         id =
             DiagnosticId(value = "realm:capability"),
         origin =
-            RuleOrigin(
-                owner =
-                    (
-                        SkirTypeCodec.encode(TypeUse.Named(REALM_CAPABILITY_DIAGNOSTIC_TYPE)).getOrThrow() as
-                            SkirTypeUse.NamedWrapper
-                    ).value.definition,
-                ordinal = 0,
-            ),
+            RuleOrigin(owner = REALM_CAPABILITY_DIAGNOSTIC_TYPE, ordinal = 0),
         code = "realm_capability",
         message = message,
         severity = DiagnosticSeverity.ERROR,
@@ -284,4 +256,4 @@ internal fun realmDiagnostic(message: String): Diagnostic =
     )
 
 private val REALM_CAPABILITY_DIAGNOSTIC_TYPE =
-    TypeDefinitionId(TypeId.Qualified("typewriter", "realm_capability"), 1)
+    TypeDefinitionId.qualified("typewriter", "realm_capability")

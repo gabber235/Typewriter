@@ -67,16 +67,20 @@ method GenerateOrganizationJoinCode(
     event: OrganizationJoinCodesChanged;
   };
 
+  /// Roles not found.
   roles_not_found_error: struct {
     role_ids: [RecordId];
   };
+  /// Roles not assignable.
   roles_not_assignable_error: struct {
     role_ids: [RecordId];
   };
+  /// Invalid expiration duration.
   invalid_expiration_error: struct {
     duration: Duration;
   };
 
+  /// Record IDs from an unexpected table.
   invalid_record_id_error: InvalidRecordIdError;
 } = 804958;
 
@@ -93,9 +97,11 @@ method RevokeOrganizationJoinCode(
     event: OrganizationJoinCodesChanged;
   };
 
+  /// Join code not found.
   code_not_found_error: struct {
     code_id: RecordId;
   };
 
+  /// Record IDs from an unexpected table.
   invalid_record_id_error: InvalidRecordIdError;
 } = 510187;

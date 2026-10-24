@@ -1,115 +1,299 @@
 diff --git a/dist/index.d.ts b/dist/index.d.ts
-index 103eadeefb8923cc4128f82d2d1cef35da255f3f..da13c39ea2a8c74f2fb3e851867b7832df643c41 100644
+index 103eadeefb8923cc4128f82d2d1cef35da255f3f..8c82f27a0859f8dd82560323d650ca36f8548f45 100644
 --- a/dist/index.d.ts
 +++ b/dist/index.d.ts
-@@ -12,5 +12,38 @@ declare class KotlinCodeGenerator implements CodeGenerator<Config> {
+@@ -10,6 +10,7 @@ declare class KotlinCodeGenerator implements CodeGenerator<Config> {
+         packagePrefix: z.ZodOptional<z.ZodString>;
+     }, z.core.$strict>;
      generateCode(input: CodeGenerator.Input<Config>): CodeGenerator.Output;
++    symbols(input: CodeGenerator.Input<Config>): CodeGenerator.SymbolProvider;
  }
  export declare const GENERATOR: KotlinCodeGenerator;
-+export interface KotlinBindingReference {
-+    readonly language: "kotlin";
-+    readonly packageName: string;
-+    readonly symbol: string;
-+}
-+export interface MethodNames {
-+    readonly module: string;
-+    readonly name: string;
-+    readonly method: KotlinBindingReference;
-+    readonly requestType: string;
-+    readonly responseType: string;
-+}
-+export interface RecordNames {
-+    readonly key: string;
-+    readonly type: string;
-+    readonly fields: ReadonlyArray<{
-+        readonly sourceName: string;
-+        readonly targetName: string;
-+    }>;
-+}
-+export interface LanguageBindings {
-+    readonly language: "kotlin";
-+    readonly methods: ReadonlyArray<MethodNames>;
-+    readonly records: ReadonlyArray<RecordNames>;
-+}
-+export interface BindingInput {
-+    readonly modules: readonly object[];
-+    readonly recordMap: ReadonlyMap<string, object>;
-+    readonly config: {
-+        readonly packagePrefix?: string;
-+    };
-+}
-+export declare function exportBindings(publicInput: BindingInput): LanguageBindings;
  export {};
- //# sourceMappingURL=index.d.ts.map
-\ No newline at end of file
 diff --git a/dist/index.js b/dist/index.js
-index d5d2d9ea8cbd9bfba681900bfb72e8b81741eaad..0424f3cb3065702c705b79df3fd3d87898c60294 100644
+index d5d2d9ea8cbd9bfba681900bfb72e8b81741eaad..5453be520fe0533ae452b110000201873fe4f3e5 100644
 --- a/dist/index.js
 +++ b/dist/index.js
-@@ -702,4 +702,33 @@ function docToCommentText(doc) {
-         .join("");
+@@ -1,6 +1,6 @@
+ import { convertCase, simpleHash, } from "skir-internal";
+ import { z } from "zod";
+-import { Namer, toEnumConstantName } from "./naming.js";
++import { getKindConstantName, Namer, toEnumConstantName } from "./naming.js";
+ import { TypeSpeller } from "./type_speller.js";
+ const Config = z.strictObject({
+     packagePrefix: z
+@@ -25,6 +25,19 @@ class KotlinCodeGenerator {
+         }
+         return { files: outputFiles };
+     }
++    symbols(input) {
++        const namer = new Namer(input.config.packagePrefix ?? "");
++        // Fully qualified references compile without imports.
++        const symbol = (reference) => ({
++            reference,
++            imports: [],
++        });
++        return {
++            record: (location) => symbol(namer.getClassName(location).qualifiedName),
++            method: (module, method) => symbol(`${namer.modulePackage(module.path)}.${method.name.text}`),
++            variant: (location, variant) => symbol(`${namer.getClassName(location).qualifiedName}.Kind.${getKindConstantName(variant)}`),
++        };
++    }
  }
- export const GENERATOR = new KotlinCodeGenerator();
-+export function exportBindings(publicInput) {
-+    const input = publicInput;
-+    const namer = new Namer(input.config.packagePrefix ?? "");
-+    const typeSpeller = new TypeSpeller(input.recordMap, namer);
-+    return {
-+        language: "kotlin",
-+        methods: input.modules.flatMap((module) => module.methods.map((method) => ({
-+            module: module.path,
-+            name: method.name.text,
-+            method: {
-+                language: "kotlin",
-+                packageName: namer.modulePackage(module.path),
-+                symbol: method.name.text,
-+            },
-+            requestType: typeSpeller.getKotlinType(method.requestType, "frozen"),
-+            responseType: typeSpeller.getKotlinType(method.responseType, "frozen"),
-+        }))),
-+        records: [...input.recordMap.values()].map((location) => ({
-+            key: location.record.key,
-+            type: namer.getClassName(location).qualifiedName,
-+            fields: location.record.recordType === "struct"
-+                ? location.record.fields.map((field) => ({
-+                    sourceName: field.name.text,
-+                    targetName: namer.structFieldToKotlinName(field),
-+                }))
-+                : [],
-+        })),
-+    };
-+}
- //# sourceMappingURL=index.js.map
-\ No newline at end of file
+ // Generates the code for one Kotlin file.
+ class KotlinSourceFileGenerator {
+@@ -53,11 +66,7 @@ class KotlinSourceFileGenerator {
+       //   implementation("build.skir:skir-client:latest.release")
+       // to your build.gradle.kts file
+ 
+-      `, `package ${this.packagePrefix}skirout.`, this.inModule.path
+-            .replace(/\.skir$/, "")
+-            .replace(/^@/, "external/")
+-            .replace(/-/g, "_")
+-            .replace(/\//g, "."), ";\n\n", "import build.skir.internal.MustNameArguments as _MustNameArguments;\n", "import build.skir.internal.UnrecognizedFields as _UnrecognizedFields;\n", "import build.skir.internal.UnrecognizedVariant as _UnrecognizedVariant;\n\n");
++      `, `package ${this.namer.modulePackage(this.inModule.path)}`, ";\n\n", "import build.skir.internal.MustNameArguments as _MustNameArguments;\n", "import build.skir.internal.UnrecognizedFields as _UnrecognizedFields;\n", "import build.skir.internal.UnrecognizedVariant as _UnrecognizedVariant;\n\n");
+         this.writeClassesForRecords(this.inModule.records.filter(
+         // Only retain top-level records.
+         // Nested records will be processed from within their ancestors.
+@@ -106,11 +115,11 @@ class KotlinSourceFileGenerator {
+             }
+             else if (!field.type) {
+                 const constantName = toEnumConstantName(field);
+-                this.push(`${serializerImpl}.addConstantVariant(\n`, `${field.number},\n`, `"${field.name.text}",\n`, `${qualifiedName}.Kind.${constantName}_CONST.ordinal,\n`, `${toKotlinStringLiteral(field.doc.text)},\n`, `${qualifiedName}.${constantName},\n`, ");\n");
++                this.push(`${serializerImpl}.addConstantVariant(\n`, `${field.number},\n`, `"${field.name.text}",\n`, `${qualifiedName}.Kind.${getKindConstantName(field)}.ordinal,\n`, `${toKotlinStringLiteral(field.doc.text)},\n`, `${qualifiedName}.${constantName},\n`, ");\n");
+             }
+             else {
+                 const wrapperClassName = convertCase(field.name.text, "UpperCamel") + "Wrapper";
+-                this.push(`${serializerImpl}.addWrapperVariant(\n`, `${field.number},\n`, `"${field.name.text}",\n`, `${qualifiedName}.Kind.${toEnumConstantName(field)}_WRAPPER.ordinal,\n`, `${typeSpeller.getSerializerExpression(field.type, this.inModule.path)},\n`, `${toKotlinStringLiteral(field.doc.text)},\n`, `{ ${qualifiedName}.${wrapperClassName}(it) },\n`, "{ it.value },\n", ");\n");
++                this.push(`${serializerImpl}.addWrapperVariant(\n`, `${field.number},\n`, `"${field.name.text}",\n`, `${qualifiedName}.Kind.${getKindConstantName(field)}.ordinal,\n`, `${typeSpeller.getSerializerExpression(field.type, this.inModule.path)},\n`, `${toKotlinStringLiteral(field.doc.text)},\n`, `{ ${qualifiedName}.${wrapperClassName}(it) },\n`, "{ it.value },\n", ");\n");
+             }
+         }
+         for (const removedNumber of record.record.removedNumbers) {
+@@ -300,14 +309,14 @@ class KotlinSourceFileGenerator {
+         this.push(commentify([docToCommentText(record.record.doc), "\nDeeply immutable."]), `sealed class ${className.name} private constructor() {\n`, `/** The kind of variant held by a \`${className.name}\`. */\n`, "enum class Kind {\n", //
+         "UNKNOWN,\n");
+         for (const variant of constantVariants) {
+-            this.push(`${toEnumConstantName(variant)}_CONST,\n`);
++            this.push(`${getKindConstantName(variant)},\n`);
+         }
+         for (const variant of wrapperVariants) {
+-            this.push(toEnumConstantName(variant), "_WRAPPER,\n");
++            this.push(`${getKindConstantName(variant)},\n`);
+         }
+         this.push("}\n\n", 'class Unknown @kotlin.Deprecated("For internal use", kotlin.ReplaceWith("', qualifiedName, '.UNKNOWN")) internal constructor(\n', `internal val _kind: Kind,\n`, `internal override val _unrecognized: _UnrecognizedVariant<${qualifiedName}>?,\n`, `) : ${qualifiedName}() {\n`, "override val kind get() = _kind;\n\n", "override fun equals(other: kotlin.Any?): kotlin.Boolean {\n", `return other is ${qualifiedName} && other.kind == kind;\n`, "}\n\n", "override fun hashCode(): kotlin.Int {\n", "return kind.ordinal;\n", "}\n\n", "}\n\n");
+         for (const constantVariant of constantVariants) {
+-            const kindExpr = `Kind.${convertCase(constantVariant.name.text, "UPPER_UNDERSCORE")}_CONST`;
++            const kindExpr = `Kind.${getKindConstantName(constantVariant)}`;
+             const constantName = toEnumConstantName(constantVariant);
+             this.push(commentify(docToCommentText(constantVariant.doc)), `object ${constantName} : ${qualifiedName}() {\n`, `override val kind get() = ${kindExpr};\n\n`, "override fun equals(other: kotlin.Any?): kotlin.Boolean {\n", `return other is ${qualifiedName} && other.kind == ${kindExpr};\n`, "}\n\n", "override fun hashCode(): kotlin.Int {\n", `return ${kindExpr}.ordinal;\n`, "}\n\n", `}\n\n`);
+         }
+@@ -328,9 +337,7 @@ class KotlinSourceFileGenerator {
+             else {
+                 this.push(`class ${wrapperClassName} private constructor (\n`, `val value: ${frozenType},\n`, `) : ${qualifiedName}() {\n`, "constructor(\n", `value: ${initializerType},\n`, `): this(${this.toFrozenExpression("value", valueType)}) {}\n\n`);
+             }
+-            const kindExpr = "Kind." +
+-                convertCase(wrapperVariant.name.text, "UPPER_UNDERSCORE") +
+-                "_WRAPPER";
++            const kindExpr = `Kind.${getKindConstantName(wrapperVariant)}`;
+             this.push(`override val kind get() = ${kindExpr};\n\n`, "override fun equals(other: kotlin.Any?): kotlin.Boolean {\n", `return other is ${qualifiedName}.${wrapperClassName} && value == other.value;\n`, "}\n\n", "override fun hashCode(): kotlin.Int {\n", "return this.value.hashCode() + ", String(simpleHash(wrapperVariant.name.text) | 0), ";\n", "}\n\n", "}\n\n");
+         }
+         this.push(`internal open val _unrecognized: _UnrecognizedVariant<${qualifiedName}>? get() = null;\n\n`, "abstract val kind: Kind;\n\n", "override fun toString(): kotlin.String {\n", "return build.skir.internal.toStringImpl(\n", "this,\n", `_SerializerRegistry.${typeSpeller.getRegistrySerializerName(record)}Impl,\n`, ")\n", "}\n\n", "companion object {\n", commentify([
 diff --git a/dist/naming.d.ts b/dist/naming.d.ts
-index fb2b96cce69a629dba86270f38c562eb322a5e06..007bcfbcc21c9819ddc897979e5e4968e1e9f4de 100644
+index fb2b96cce69a629dba86270f38c562eb322a5e06..5cc287f69c7dda417204335def30b5b3b8ce34e8 100644
 --- a/dist/naming.d.ts
 +++ b/dist/naming.d.ts
-@@ -6,6 +6,7 @@ export declare class Namer {
+@@ -6,8 +6,12 @@ export declare class Namer {
      structFieldToKotlinName(field: Field | string): string;
      /** Returns the name of the frozen Kotlin class for the given record. */
      getClassName(record: RecordLocation): ClassName;
++    /** Returns the package of the Kotlin file generated for the given module. */
 +    modulePackage(modulePath: string): string;
  }
  export declare function toEnumConstantName(field: Field): string;
++/** Returns the constant of the generated Kind enum for the given variant. */
++export declare function getKindConstantName(variant: Field): string;
  export interface ClassName {
+     /** The name right after the 'class' keyword.. */
+     name: string;
 diff --git a/dist/naming.js b/dist/naming.js
-index 22353ea204fae8c1a3fe352b59a78b10405fc3df..35bf537d347334a38fcaa242e9dd11ce29eafabd 100644
+index 22353ea204fae8c1a3fe352b59a78b10405fc3df..420b0499d4fcc052f6365f199d169f98746eb423 100644
 --- a/dist/naming.js
 +++ b/dist/naming.js
-@@ -47,6 +47,15 @@ export class Namer {
-         const qualifiedName = `${this.packagePrefix}skirout.${importPath}.${parts.join(".")}`;
-         return { name, qualifiedName };
-     }
-+    modulePackage(modulePath) {
-+        return (this.packagePrefix +
-+            "skirout." +
-+            modulePath
-+                .replace(/\.skir$/, "")
-+                .replace(/^@/, "external/")
-+                .replace(/-/g, "_")
-+                .replace(/\//g, "."));
+@@ -38,14 +38,17 @@ export class Namer {
+             parts.push(name);
+         }
+         const name = parts.at(-1);
+-        const path = record.modulePath;
+-        const importPath = path
++        const qualifiedName = `${this.modulePackage(record.modulePath)}.${parts.join(".")}`;
++        return { name, qualifiedName };
 +    }
++    /** Returns the package of the Kotlin file generated for the given module. */
++    modulePackage(modulePath) {
++        const importPath = modulePath
+             .replace(/\.skir$/, "")
+             .replace(/^@/, "external/")
+             .replace(/-/g, "_")
+             .replace(/\//g, ".");
+-        const qualifiedName = `${this.packagePrefix}skirout.${importPath}.${parts.join(".")}`;
+-        return { name, qualifiedName };
++        return `${this.packagePrefix}skirout.${importPath}`;
+     }
  }
  const KOTLIN_HARD_KEYWORDS = new Set([
-     "abstract",
+@@ -117,6 +120,10 @@ const GENERATED_STRUCT_SYMBOLS = new Set([
+ export function toEnumConstantName(field) {
+     return convertCase(field.name.text, "UPPER_UNDERSCORE");
+ }
++/** Returns the constant of the generated Kind enum for the given variant. */
++export function getKindConstantName(variant) {
++    return toEnumConstantName(variant) + (variant.type ? "_WRAPPER" : "_CONST");
++}
+ /** Generated types nested within a struct class. */
+ const STRUCT_NESTED_TYPE_NAMES = new Set(["Mutable"]);
+ /** Generated types nested within an enum class. */
+diff --git a/src/index.ts b/src/index.ts
+index 1a43e9a21d0d938da05f998407e0130479688f3c..03243678bfb76d19e4ec00f17ba6436c1c4e80b4 100644
+--- a/src/index.ts
++++ b/src/index.ts
+@@ -12,7 +12,7 @@ import {
+   simpleHash,
+ } from "skir-internal";
+ import { z } from "zod";
+-import { Namer, toEnumConstantName } from "./naming.js";
++import { getKindConstantName, Namer, toEnumConstantName } from "./naming.js";
+ import { TypeSpeller } from "./type_speller.js";
+ 
+ const Config = z.strictObject({
+@@ -46,6 +46,24 @@ class KotlinCodeGenerator implements CodeGenerator<Config> {
+     }
+     return { files: outputFiles };
+   }
++
++  symbols(input: CodeGenerator.Input<Config>): CodeGenerator.SymbolProvider {
++    const namer = new Namer(input.config.packagePrefix ?? "");
++    // Fully qualified references compile without imports.
++    const symbol = (reference: string): CodeGenerator.Symbol => ({
++      reference,
++      imports: [],
++    });
++    return {
++      record: (location) => symbol(namer.getClassName(location).qualifiedName),
++      method: (module, method) =>
++        symbol(`${namer.modulePackage(module.path)}.${method.name.text}`),
++      variant: (location, variant) =>
++        symbol(
++          `${namer.getClassName(location).qualifiedName}.Kind.${getKindConstantName(variant)}`,
++        ),
++    };
++  }
+ }
+ 
+ // Generates the code for one Kotlin file.
+@@ -80,12 +98,7 @@ class KotlinSourceFileGenerator {
+       // to your build.gradle.kts file
+ 
+       `,
+-      `package ${this.packagePrefix}skirout.`,
+-      this.inModule.path
+-        .replace(/\.skir$/, "")
+-        .replace(/^@/, "external/")
+-        .replace(/-/g, "_")
+-        .replace(/\//g, "."),
++      `package ${this.namer.modulePackage(this.inModule.path)}`,
+       ";\n\n",
+       "import build.skir.internal.MustNameArguments as _MustNameArguments;\n",
+       "import build.skir.internal.UnrecognizedFields as _UnrecognizedFields;\n",
+@@ -189,7 +202,7 @@ class KotlinSourceFileGenerator {
+           `${serializerImpl}.addConstantVariant(\n`,
+           `${field.number},\n`,
+           `"${field.name.text}",\n`,
+-          `${qualifiedName}.Kind.${constantName}_CONST.ordinal,\n`,
++          `${qualifiedName}.Kind.${getKindConstantName(field)}.ordinal,\n`,
+           `${toKotlinStringLiteral(field.doc.text)},\n`,
+           `${qualifiedName}.${constantName},\n`,
+           ");\n",
+@@ -201,7 +214,7 @@ class KotlinSourceFileGenerator {
+           `${serializerImpl}.addWrapperVariant(\n`,
+           `${field.number},\n`,
+           `"${field.name.text}",\n`,
+-          `${qualifiedName}.Kind.${toEnumConstantName(field)}_WRAPPER.ordinal,\n`,
++          `${qualifiedName}.Kind.${getKindConstantName(field)}.ordinal,\n`,
+           `${typeSpeller.getSerializerExpression(field.type, this.inModule.path)},\n`,
+           `${toKotlinStringLiteral(field.doc.text)},\n`,
+           `{ ${qualifiedName}.${wrapperClassName}(it) },\n`,
+@@ -520,10 +533,10 @@ class KotlinSourceFileGenerator {
+       "UNKNOWN,\n",
+     );
+     for (const variant of constantVariants) {
+-      this.push(`${toEnumConstantName(variant)}_CONST,\n`);
++      this.push(`${getKindConstantName(variant)},\n`);
+     }
+     for (const variant of wrapperVariants) {
+-      this.push(toEnumConstantName(variant), "_WRAPPER,\n");
++      this.push(`${getKindConstantName(variant)},\n`);
+     }
+     this.push(
+       "}\n\n",
+@@ -543,7 +556,7 @@ class KotlinSourceFileGenerator {
+       "}\n\n", // class Unknown
+     );
+     for (const constantVariant of constantVariants) {
+-      const kindExpr = `Kind.${convertCase(constantVariant.name.text, "UPPER_UNDERSCORE")}_CONST`;
++      const kindExpr = `Kind.${getKindConstantName(constantVariant)}`;
+       const constantName = toEnumConstantName(constantVariant);
+       this.push(
+         commentify(docToCommentText(constantVariant.doc)),
+@@ -586,10 +599,7 @@ class KotlinSourceFileGenerator {
+           `): this(${this.toFrozenExpression("value", valueType)}) {}\n\n`,
+         );
+       }
+-      const kindExpr =
+-        "Kind." +
+-        convertCase(wrapperVariant.name.text, "UPPER_UNDERSCORE") +
+-        "_WRAPPER";
++      const kindExpr = `Kind.${getKindConstantName(wrapperVariant)}`;
+       this.push(
+         `override val kind get() = ${kindExpr};\n\n`,
+         "override fun equals(other: kotlin.Any?): kotlin.Boolean {\n",
+diff --git a/src/naming.ts b/src/naming.ts
+index ebc80de97b492a665ec3a1e192a0598fef38be18..6d69d84b5549fd2b42345fe1a95ba975d5f8db37 100644
+--- a/src/naming.ts
++++ b/src/naming.ts
+@@ -44,15 +44,19 @@ export class Namer {
+ 
+     const name = parts.at(-1)!;
+ 
+-    const path = record.modulePath;
+-    const importPath = path
++    const qualifiedName = `${this.modulePackage(record.modulePath)}.${parts.join(".")}`;
++
++    return { name, qualifiedName };
++  }
++
++  /** Returns the package of the Kotlin file generated for the given module. */
++  modulePackage(modulePath: string): string {
++    const importPath = modulePath
+       .replace(/\.skir$/, "")
+       .replace(/^@/, "external/")
+       .replace(/-/g, "_")
+       .replace(/\//g, ".");
+-    const qualifiedName = `${this.packagePrefix}skirout.${importPath}.${parts.join(".")}`;
+-
+-    return { name, qualifiedName };
++    return `${this.packagePrefix}skirout.${importPath}`;
+   }
+ }
+ 
+@@ -130,6 +134,11 @@ export function toEnumConstantName(field: Field): string {
+   return convertCase(field.name.text, "UPPER_UNDERSCORE");
+ }
+ 
++/** Returns the constant of the generated Kind enum for the given variant. */
++export function getKindConstantName(variant: Field): string {
++  return toEnumConstantName(variant) + (variant.type ? "_WRAPPER" : "_CONST");
++}
++
+ export interface ClassName {
+   /** The name right after the 'class' keyword.. */
+   name: string;

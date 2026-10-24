@@ -3314,6 +3314,8 @@ sealed class ApproveOrganizationJoinRequestsResponse {
   );
 
   /// Create a 'request_not_found_error' variant wrapping around the given value.
+  ///
+  /// Join requests not found.
   factory ApproveOrganizationJoinRequestsResponse.wrapRequestNotFoundError(
     ApproveOrganizationJoinRequestsResponse_RequestNotFoundError value,
   ) => ApproveOrganizationJoinRequestsResponse_requestNotFoundErrorWrapper._(
@@ -3331,6 +3333,8 @@ sealed class ApproveOrganizationJoinRequestsResponse {
   );
 
   /// Create a 'roles_not_found_error' variant wrapping around the given value.
+  ///
+  /// Roles not found.
   factory ApproveOrganizationJoinRequestsResponse.wrapRolesNotFoundError(
     ApproveOrganizationJoinRequestsResponse_RolesNotFoundError value,
   ) => ApproveOrganizationJoinRequestsResponse_rolesNotFoundErrorWrapper._(
@@ -3348,6 +3352,8 @@ sealed class ApproveOrganizationJoinRequestsResponse {
   );
 
   /// Create a 'roles_not_assignable_error' variant wrapping around the given value.
+  ///
+  /// Roles not assignable.
   factory ApproveOrganizationJoinRequestsResponse.wrapRolesNotAssignableError(
     ApproveOrganizationJoinRequestsResponse_RolesNotAssignableError value,
   ) => ApproveOrganizationJoinRequestsResponse_rolesNotAssignableErrorWrapper._(
@@ -3365,6 +3371,8 @@ sealed class ApproveOrganizationJoinRequestsResponse {
   );
 
   /// Create a 'roles_required_error' variant wrapping around the given value.
+  ///
+  /// At least one role is required.
   factory ApproveOrganizationJoinRequestsResponse.wrapRolesRequiredError(
     ApproveOrganizationJoinRequestsResponse_RolesRequiredError value,
   ) => ApproveOrganizationJoinRequestsResponse_rolesRequiredErrorWrapper._(
@@ -3378,6 +3386,8 @@ sealed class ApproveOrganizationJoinRequestsResponse {
       );
 
   /// Create a 'user_already_member_error' variant wrapping around the given value.
+  ///
+  /// Users are already members.
   factory ApproveOrganizationJoinRequestsResponse.wrapUserAlreadyMemberError(
     ApproveOrganizationJoinRequestsResponse_UserAlreadyMemberError value,
   ) => ApproveOrganizationJoinRequestsResponse_userAlreadyMemberErrorWrapper._(
@@ -3395,6 +3405,8 @@ sealed class ApproveOrganizationJoinRequestsResponse {
   );
 
   /// Create a 'invalid_selection_error' variant wrapping around the given value.
+  ///
+  /// Selection must contain distinct targets.
   factory ApproveOrganizationJoinRequestsResponse.wrapInvalidSelectionError(
     ApproveOrganizationJoinRequestsResponse_InvalidSelectionError value,
   ) => ApproveOrganizationJoinRequestsResponse_invalidSelectionErrorWrapper._(
@@ -3408,6 +3420,8 @@ sealed class ApproveOrganizationJoinRequestsResponse {
       );
 
   /// Create a 'invalid_record_id_error' variant wrapping around the given value.
+  ///
+  /// Record IDs from an unexpected table.
   factory ApproveOrganizationJoinRequestsResponse.wrapInvalidRecordIdError(
     _lib_kernel_v1_errors.InvalidRecordIdError value,
   ) => ApproveOrganizationJoinRequestsResponse_invalidRecordIdErrorWrapper._(
@@ -3461,7 +3475,7 @@ sealed class ApproveOrganizationJoinRequestsResponse {
         "request_not_found_error",
         "wrapRequestNotFoundError",
         ApproveOrganizationJoinRequestsResponse_RequestNotFoundError.serializer,
-        "",
+        "Join requests not found.",
         ApproveOrganizationJoinRequestsResponse_requestNotFoundErrorWrapper._,
         (it) => it.value,
         ordinal: ApproveOrganizationJoinRequestsResponse_kind
@@ -3473,7 +3487,7 @@ sealed class ApproveOrganizationJoinRequestsResponse {
         "roles_not_found_error",
         "wrapRolesNotFoundError",
         ApproveOrganizationJoinRequestsResponse_RolesNotFoundError.serializer,
-        "",
+        "Roles not found.",
         ApproveOrganizationJoinRequestsResponse_rolesNotFoundErrorWrapper._,
         (it) => it.value,
         ordinal: ApproveOrganizationJoinRequestsResponse_kind
@@ -3486,7 +3500,7 @@ sealed class ApproveOrganizationJoinRequestsResponse {
         "wrapRolesNotAssignableError",
         ApproveOrganizationJoinRequestsResponse_RolesNotAssignableError
             .serializer,
-        "",
+        "Roles not assignable.",
         ApproveOrganizationJoinRequestsResponse_rolesNotAssignableErrorWrapper
             ._,
         (it) => it.value,
@@ -3499,7 +3513,7 @@ sealed class ApproveOrganizationJoinRequestsResponse {
         "roles_required_error",
         "wrapRolesRequiredError",
         ApproveOrganizationJoinRequestsResponse_RolesRequiredError.serializer,
-        "",
+        "At least one role is required.",
         ApproveOrganizationJoinRequestsResponse_rolesRequiredErrorWrapper._,
         (it) => it.value,
         ordinal: ApproveOrganizationJoinRequestsResponse_kind
@@ -3512,7 +3526,7 @@ sealed class ApproveOrganizationJoinRequestsResponse {
         "wrapUserAlreadyMemberError",
         ApproveOrganizationJoinRequestsResponse_UserAlreadyMemberError
             .serializer,
-        "",
+        "Users are already members.",
         ApproveOrganizationJoinRequestsResponse_userAlreadyMemberErrorWrapper._,
         (it) => it.value,
         ordinal: ApproveOrganizationJoinRequestsResponse_kind
@@ -3525,7 +3539,7 @@ sealed class ApproveOrganizationJoinRequestsResponse {
         "wrapInvalidSelectionError",
         ApproveOrganizationJoinRequestsResponse_InvalidSelectionError
             .serializer,
-        "",
+        "Selection must contain distinct targets.",
         ApproveOrganizationJoinRequestsResponse_invalidSelectionErrorWrapper._,
         (it) => it.value,
         ordinal: ApproveOrganizationJoinRequestsResponse_kind
@@ -3537,7 +3551,7 @@ sealed class ApproveOrganizationJoinRequestsResponse {
         "invalid_record_id_error",
         "wrapInvalidRecordIdError",
         _lib_kernel_v1_errors.InvalidRecordIdError.serializer,
-        "",
+        "Record IDs from an unexpected table.",
         ApproveOrganizationJoinRequestsResponse_invalidRecordIdErrorWrapper._,
         (it) => it.value,
         ordinal: ApproveOrganizationJoinRequestsResponse_kind
@@ -4169,6 +4183,8 @@ sealed class DeclineOrganizationJoinRequestResponse {
   );
 
   /// Create a 'request_not_found_error' variant wrapping around the given value.
+  ///
+  /// Join request not found.
   factory DeclineOrganizationJoinRequestResponse.wrapRequestNotFoundError(
     DeclineOrganizationJoinRequestResponse_RequestNotFoundError value,
   ) => DeclineOrganizationJoinRequestResponse_requestNotFoundErrorWrapper._(
@@ -4185,6 +4201,8 @@ sealed class DeclineOrganizationJoinRequestResponse {
   );
 
   /// Create a 'invalid_record_id_error' variant wrapping around the given value.
+  ///
+  /// Record IDs from an unexpected table.
   factory DeclineOrganizationJoinRequestResponse.wrapInvalidRecordIdError(
     _lib_kernel_v1_errors.InvalidRecordIdError value,
   ) => DeclineOrganizationJoinRequestResponse_invalidRecordIdErrorWrapper._(
@@ -4237,7 +4255,7 @@ sealed class DeclineOrganizationJoinRequestResponse {
         "request_not_found_error",
         "wrapRequestNotFoundError",
         DeclineOrganizationJoinRequestResponse_RequestNotFoundError.serializer,
-        "",
+        "Join request not found.",
         DeclineOrganizationJoinRequestResponse_requestNotFoundErrorWrapper._,
         (it) => it.value,
         ordinal: DeclineOrganizationJoinRequestResponse_kind
@@ -4249,7 +4267,7 @@ sealed class DeclineOrganizationJoinRequestResponse {
         "invalid_record_id_error",
         "wrapInvalidRecordIdError",
         _lib_kernel_v1_errors.InvalidRecordIdError.serializer,
-        "",
+        "Record IDs from an unexpected table.",
         DeclineOrganizationJoinRequestResponse_invalidRecordIdErrorWrapper._,
         (it) => it.value,
         ordinal: DeclineOrganizationJoinRequestResponse_kind

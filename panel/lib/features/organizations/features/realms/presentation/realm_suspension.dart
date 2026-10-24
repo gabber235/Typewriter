@@ -1,3 +1,5 @@
+import "package:typewriter_panel/infrastructure/protocols/skir/skir.dart"
+    as skir;
 import "package:typewriter_panel/typewriter_panel.dart";
 
 /// Keeps realm content visible while blocking interaction when its connection
@@ -16,7 +18,7 @@ class RealmSuspensionBarrier extends StatelessWidget {
   });
 
   final RealmInteractionState interaction;
-  final TopologyRealm? realm;
+  final skir.RealmInstance? realm;
   final VoidCallback? onRetry;
   final Widget child;
 
@@ -85,7 +87,7 @@ class _RealmSuspensionVeil extends StatelessWidget {
   });
 
   final RealmConnectionState connectionState;
-  final TopologyRealm? realm;
+  final skir.RealmInstance? realm;
   final VoidCallback? onRetry;
 
   @override
@@ -132,7 +134,7 @@ class _ConnectionCard extends StatelessWidget {
   });
 
   final RealmConnectionState connectionState;
-  final TopologyRealm? realm;
+  final skir.RealmInstance? realm;
   final VoidCallback? onRetry;
 
   @override

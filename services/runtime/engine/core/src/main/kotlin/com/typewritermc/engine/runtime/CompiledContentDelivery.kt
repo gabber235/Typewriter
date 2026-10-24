@@ -1,27 +1,16 @@
 package com.typewritermc.engine.runtime
 
-import com.typewritermc.authoring.PublicationId
 import com.typewritermc.engine.LoadedPublishedContent
-import com.typewritermc.engine.PublishedContentCodec
+import com.typewritermc.engine.requireValid
 import com.typewritermc.loader.api.HostedMessagingSession
 import com.typewritermc.loader.api.HostedRuntimeHost
-import com.typewritermc.protocol.skir.fromBoundedBytes
-import com.typewritermc.protocol.transport.generated.RealmRouteScope
+import com.typewritermc.protocol.transport.RealmRouteScope
 import com.typewritermc.protocol.transport.generated.authoringCompiledChanged
 import com.typewritermc.protocol.transport.generated.authoringCompiledQuery
 import com.typewritermc.services.libs.communicator.client.Communicator
-import com.typewritermc.services.libs.communicator.contract.ResponseClassification
-import com.typewritermc.services.libs.communicator.contract.ResponseClassifier
-import com.typewritermc.services.libs.communicator.contract.ResponseOutcome
-import com.typewritermc.services.libs.communicator.contract.ResponsePolicy
-import com.typewritermc.services.libs.communicator.contract.ResponseVariant
-import com.typewritermc.services.libs.communicator.contract.WatchMessage
 import com.typewritermc.services.libs.communicator.result.CommunicationResult
 import com.typewritermc.services.libs.communicator.router.RouterResult
 import com.typewritermc.services.libs.communicator.router.communicatorRoutes
-import com.typewritermc.services.libs.communicator.transfer.BoundedByteTransferAssembler
-import com.typewritermc.services.libs.communicator.transfer.BoundedTransferChunk
-import com.typewritermc.services.libs.communicator.transport.Payload
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Job
@@ -34,16 +23,15 @@ import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.collectLatest
-import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.isActive
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import kotlinx.coroutines.withTimeoutOrNull
+import skirout.editor.v1.compiled_content.PublishedContent
 import skirout.editor.v1.compiled_content.QueryPublishedContentRequest
 import skirout.editor.v1.compiled_content.QueryPublishedContentResponse
-import java.util.UUID
+import skirout.editor.v1.type_catalog.PublicationId
 import kotlin.time.Duration.Companion.seconds
-import skirout.editor.v1.compiled_content.PublishedContent as WirePublishedContent
 
 /**
  * Owns delivery work for one engine activation and serializes calls to its application callback.
@@ -181,95 +169,26 @@ private fun RouterResult.requireDeliverySuccess(operation: String) {
     }
 }
 
+/**
+ * Fetches the descriptor of the selected publication, or null before any publication is selected.
+ *
+ * Transport failures, including replies the transport could not deliver complete, and internal error responses
+ * throw, so the delivery worker retries after one second.
+ */
 internal suspend fun fetchPublishedContent(
     communicator: Communicator,
     address: RealmRouteScope,
-): com.typewritermc.engine.PublishedContent? {
-    val id = UUID.randomUUID().toString()
-    val assembler = BoundedByteTransferAssembler(id)
-    var content: com.typewritermc.engine.PublishedContent? = null
-    val completed =
-        withTimeoutOrNull(30.seconds) {
-            communicator
-                .watch(
-                    publishedContentQuery(address),
-                    address,
-                    QueryPublishedContentRequest(transferId = id),
-                ).first { result ->
-                    when (result) {
-                        is CommunicationResult.Failure -> {
-                            throw result.error.cause ?: IllegalStateException("Published content query failed")
-                        }
-
-                        is CommunicationResult.Success -> {
-                            val response =
-                                when (val message = result.value) {
-                                    is WatchMessage.Initial -> message.value
-                                    is WatchMessage.Update -> message.value
-                                }
-                            when (response) {
-                                is QueryPublishedContentResponse.ChunkWrapper -> {
-                                    val chunk = response.value.transfer
-                                    val bytes =
-                                        assembler.accept(
-                                            BoundedTransferChunk(
-                                                chunk.transferId,
-                                                chunk.index,
-                                                chunk.chunkCount,
-                                                chunk.encodedSize,
-                                                chunk.sha256,
-                                                Payload.copyOf(chunk.payload.toByteArray()),
-                                            ),
-                                        )
-                                    if (bytes == null) {
-                                        false
-                                    } else {
-                                        content =
-                                            PublishedContentCodec.decode(
-                                                WirePublishedContent.serializer.fromBoundedBytes(bytes),
-                                            )
-                                        true
-                                    }
-                                }
-
-                                is QueryPublishedContentResponse.AbsentWrapper -> {
-                                    true
-                                }
-
-                                else -> {
-                                    error("Published content is unavailable")
-                                }
-                            }
-                        }
-                    }
-                }
-            true
+): PublishedContent? =
+    when (val result = communicator.request(address.authoringCompiledQuery, address, QueryPublishedContentRequest())) {
+        is CommunicationResult.Failure -> {
+            throw result.error.cause ?: IllegalStateException("Published content query failed")
         }
-    check(completed != null) { "Published content query exceeded thirty seconds" }
-    return content
-}
 
-private fun publishedContentQuery(address: RealmRouteScope) =
-    address.authoringCompiledQuery(
-        policy = ResponsePolicy(QueryPublishedContentResponse.createInternalError(), compiledContentResponseClassifier),
-        updates = compiledContentResponseClassifier,
-    )
-
-private val compiledContentResponseClassifier =
-    ResponseClassifier<QueryPublishedContentResponse> { response ->
-        ResponseClassification(
-            when (response) {
-                is QueryPublishedContentResponse.ChunkWrapper, is QueryPublishedContentResponse.AbsentWrapper -> ResponseOutcome.SUCCESS
-                is QueryPublishedContentResponse.InternalErrorWrapper -> ResponseOutcome.INTERNAL_ERROR
-                else -> ResponseOutcome.DOMAIN_ERROR
-            },
-            ResponseVariant.of(
-                when (response) {
-                    is QueryPublishedContentResponse.ChunkWrapper -> "chunk"
-                    is QueryPublishedContentResponse.AbsentWrapper -> "absent"
-                    is QueryPublishedContentResponse.InternalErrorWrapper -> "internal-error"
-                    else -> "unknown"
-                },
-            ),
-        )
+        is CommunicationResult.Success -> {
+            when (val response = result.value) {
+                is QueryPublishedContentResponse.ContentWrapper -> response.value.requireValid()
+                is QueryPublishedContentResponse.AbsentWrapper -> null
+                else -> error("Published content is unavailable")
+            }
+        }
     }

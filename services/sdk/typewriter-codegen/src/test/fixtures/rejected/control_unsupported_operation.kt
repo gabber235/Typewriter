@@ -2,7 +2,7 @@ package fixture
 
 import com.typewritermc.types.TypewriterType
 import com.typewritermc.types.Resource
-import com.typewritermc.types.PresentationRole
+import skirout.editor.v1.catalog.PresentationRole
 
 @TypewriterType(id = "a00000000000000000000000000000a2")
 data class TypedControl(val count: Int) : Resource

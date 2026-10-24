@@ -635,7 +635,7 @@ class ResourceDragSource extends HookConsumerWidget {
                         return ResourceDragFeedback(
                           label: appearance?.label ?? "Resource",
                           icon: appearance?.icon,
-                          accent: appearance?.accent,
+                          accent: appearance?.accentColor,
                           count: drag.subjects.length,
                         );
                       },

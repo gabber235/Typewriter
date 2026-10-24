@@ -1,24 +1,15 @@
 package com.typewritermc.realm.compiler
 
+import build.skir.Serializers
 import com.surrealdb.Surreal
-import com.typewritermc.authoring.PublicationId
-import com.typewritermc.checking.Diagnostic
-import com.typewritermc.engine.PublishedContent
-import kotlinx.serialization.builtins.ListSerializer
-
-sealed interface RegisteredCompiledState {
-    data object NotCompiled : RegisteredCompiledState
-
-    data class Active(
-        val publication: PublicationId,
-    ) : RegisteredCompiledState
-}
-
-data class PublicationReport(
-    val id: PublicationId,
-    val state: PublicationState,
-    val findings: List<Diagnostic>,
-)
+import com.typewritermc.engine.requireValid
+import com.typewritermc.realm.repository.utils.decodeSkir
+import com.typewritermc.types.requireValid
+import skirout.editor.v1.compiled_content.PublishedContent
+import skirout.editor.v1.diagnostic.Diagnostic
+import skirout.editor.v1.publication.PublicationReport
+import skirout.editor.v1.publication.PublicationState
+import skirout.editor.v1.type_catalog.PublicationId
 
 /** Reads the Realm selected runtime descriptor separately from the latest durable publication attempt report. */
 interface PublicationResults {
@@ -44,7 +35,7 @@ class SurrealRegisteredCompiledContentRepository(
             .singleOrNull()
             ?.getObject()
             ?.get("result")
-            ?.let { publicationsCodec.decode(PublishedContent.serializer(), it) }
+            ?.let { decodeSkir(PublishedContent.serializer, it).requireValid() }
     }
 
     override suspend fun latestReport(): PublicationReport? {
@@ -57,27 +48,29 @@ class SurrealRegisteredCompiledContentRepository(
                 .firstOrNull()
                 ?.getObject()
                 ?: return null
-        val findings = publicationsCodec.decode(ListSerializer(Diagnostic.serializer()), row.get("findings"))
+        val findings = decodeSkir(Serializers.list(Diagnostic.serializer), row.get("findings")).map { it.requireValid() }
         val state =
             when (row.get("state").getString()) {
-                "checking" -> PublicationState.Checking
-                "compiling" -> PublicationState.Compiling
-                "activating" -> PublicationState.Activating
-                "complete" -> PublicationState.Complete
-                "blocked" -> PublicationState.Blocked(findings)
-                "interrupted" -> PublicationState.Interrupted
+                "checking" -> PublicationState.CHECKING
+                "compiling" -> PublicationState.COMPILING
+                "activating" -> PublicationState.ACTIVATING
+                "complete" -> PublicationState.COMPLETE
+                "blocked" -> PublicationState.BlockedWrapper(findings)
+                "interrupted" -> PublicationState.INTERRUPTED
                 else -> error("Unknown publication state")
             }
         return PublicationReport(
-            PublicationId(
-                row
-                    .get("id")
-                    .getRecordId()
-                    .toString()
-                    .substringAfter(':'),
-            ),
-            state,
-            findings,
+            id =
+                PublicationId(
+                    value =
+                        row
+                            .get("id")
+                            .getRecordId()
+                            .toString()
+                            .substringAfter(':'),
+                ),
+            state = state,
+            findings = findings,
         )
     }
 }

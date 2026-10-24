@@ -24,6 +24,7 @@ macro_rules! export {
 pub mod database;
 pub mod http;
 pub mod publication;
+pub mod transport;
 pub mod wasmcloud;
 
 #[rustfmt::skip]
@@ -35,19 +36,19 @@ pub use skir_client;
 
 // Proc macros are re exported here so component crates use one public contract surface.
 pub use wasmcloud_utils_macros::{
-    read_query, skir_domain_result, skir_response, skir_transaction_outcome, skir_variant,
+    read_query, skir_domain_result, skir_transaction_outcome, skir_variant,
     transaction_outcome_index, transaction_outcome_index_file, transaction_query,
     transaction_query_file,
 };
 
-// Response classification and conversion from database outcomes.
+// Response classification and conversion from database outcomes. The transport generator
+// implements `SkirType` for every Skir record and `SkirResponse` for every Skir method response
+// in `transport_routes`.
+pub use database::SkirType;
 mod skir_response_trait;
 pub use skir_response_trait::{
-    SkirDomainResult, SkirDomainResultExt, SkirResponse, SkirResponseOutcome,
+    SkirDomainResult, SkirDomainResultExt, SkirResponse, SkirResponseOutcome, database_domain_slug,
 };
-
-// Response enums registered for dispatch and typed messaging replies.
-mod skir_responses;
 
 pub mod skir_utils;
 

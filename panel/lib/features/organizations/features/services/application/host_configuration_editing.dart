@@ -7,10 +7,10 @@ part of "services.dart";
 /// remain outside the draft and are never submitted as configuration.
 final class HostEditorSnapshot extends EditorSnapshot {
   const HostEditorSnapshot(this.host, this.topology);
-  final TopologyHost host;
-  final OrganizationTopology topology;
-  TopologyRealm? get _realm => topology.realmOwnedBy(host.hostId);
-  TopologyEngine? get _engine => topology.engineOwnedBy(host.hostId);
+  final skir.ServiceHost host;
+  final skir.OrganizationTopologySnapshot topology;
+  skir.RealmInstance? get _realm => topology.realmOwnedBy(host.hostId);
+  skir.EngineInstance? get _engine => topology.engineOwnedBy(host.hostId);
 
   Map<String, List<String>> get _realmTargets {
     final catalog = _engineTargetCatalog(
@@ -125,7 +125,7 @@ final class HostEditorSnapshot extends EditorSnapshot {
             is skir.DataValue_stringValueWrapper;
   }
 
-  TopologyEngineTarget? _decodeTarget(
+  skir.EngineTarget? _decodeTarget(
     String? value,
     Map<String, List<String>> targets,
   ) {
@@ -136,7 +136,7 @@ final class HostEditorSnapshot extends EditorSnapshot {
     final constraint = value.substring(separator + 1);
     if (!(targets[id]?.contains(constraint) ?? false)) return null;
 
-    return TopologyEngineTarget(engineId: id, versionConstraint: constraint);
+    return skir.EngineTarget(engineId: id, versionConstraint: constraint);
   }
 }
 
@@ -179,7 +179,7 @@ final class HostEditPersistence extends ValueEditPersistence {
       throw StateError("The host configuration is invalid");
     }
     TypedMutationResult observed(
-      TopologyConfigurationResult actual, {
+      skir.HostConfigurationChange actual, {
       required bool conflict,
     }) {
       final value = current._configurationValue(actual.realm, actual.engine);
@@ -197,17 +197,11 @@ final class HostEditPersistence extends ValueEditPersistence {
         .mapResponse(
           (response) => switch (response) {
             skir.ConfigureServiceHostResponse_successWrapper(:final value) =>
-              observed(
-                TopologyConfigurationResult.fromSkir(value),
-                conflict: false,
-              ),
+              observed(value, conflict: false),
             skir.ConfigureServiceHostResponse_conflictErrorWrapper(
               :final value,
             ) =>
-              observed(
-                TopologyConfigurationResult.fromSkir(value.actual),
-                conflict: true,
-              ),
+              observed(value.actual, conflict: true),
             skir.ConfigureServiceHostResponse_invalidConfigurationErrorWrapper(
               :final value,
             ) =>

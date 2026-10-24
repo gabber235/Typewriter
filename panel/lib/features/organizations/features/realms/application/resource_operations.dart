@@ -27,7 +27,7 @@ Future<skir.ResolvedResourceOperations> resourceOperations(
     switch (result) {
       case skir.ResolveResourceOperationsResult_resolvedWrapper(:final value):
         return value;
-      case skir.ResolveResourceOperationsResult_staleObservationWrapper():
+      case skir.ResolveResourceOperationsResult_staleObservationErrorWrapper():
         await workspace.refreshConfirmed();
       default:
         throw StateError(

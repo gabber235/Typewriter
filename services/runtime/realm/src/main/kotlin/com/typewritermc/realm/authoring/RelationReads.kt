@@ -1,14 +1,8 @@
 package com.typewritermc.realm.authoring
 
-import com.typewritermc.authoring.AuthoringRecord
-import com.typewritermc.authoring.ItemId
-import com.typewritermc.authoring.LinkOccurrence
-import com.typewritermc.authoring.LinkOccurrenceId
-import com.typewritermc.authoring.LinkProjection
-import com.typewritermc.authoring.TypeSelection
-import com.typewritermc.authoring.ValueLocation
-import com.typewritermc.authoring.ValuePath
 import com.typewritermc.authoring.item
+import com.typewritermc.authoring.of
+import com.typewritermc.authoring.use
 import com.typewritermc.checking.InputIdentity
 import com.typewritermc.operations.OperationOrigin
 import com.typewritermc.realm.checking.CapturedAuthoringReads
@@ -16,15 +10,26 @@ import com.typewritermc.realm.repository.CounterpartBinding
 import com.typewritermc.realm.repository.DeclaredLinkEvidence
 import com.typewritermc.realm.repository.ResourceValueMapper
 import com.typewritermc.realm.repository.valueAt
-import com.typewritermc.types.DataValue
-import com.typewritermc.types.EndpointId
-import com.typewritermc.types.LinkTarget
-import com.typewritermc.types.RelationContract
-import com.typewritermc.types.ResourceId
 import com.typewritermc.types.catalog.Resolution
-import com.typewritermc.types.catalog.ResolvedRepresentation
+import com.typewritermc.types.endpoint
 import com.typewritermc.types.isAcyclic
 import com.typewritermc.types.ownsResources
+import com.typewritermc.types.payload
+import com.typewritermc.types.toSkir
+import com.typewritermc.types.use
+import skirout.editor.v1.authoring.LinkOccurrence
+import skirout.editor.v1.authoring.LinkOccurrenceId
+import skirout.editor.v1.authoring_facts.LinkProjection
+import skirout.editor.v1.catalog.RelationContract
+import skirout.editor.v1.type_catalog.AuthoringRecord
+import skirout.editor.v1.type_catalog.DataValue
+import skirout.editor.v1.type_catalog.EndpointId
+import skirout.editor.v1.type_catalog.ItemId
+import skirout.editor.v1.type_catalog.LinkTarget
+import skirout.editor.v1.type_catalog.ResolvedRepresentation
+import skirout.editor.v1.type_catalog.ResourceId
+import skirout.editor.v1.type_catalog.TypeSelection
+import skirout.editor.v1.type_catalog.ValueLocation
 
 /**
  * Reads relation bindings, ownership and endpoint compatibility over one captured working graph.
@@ -67,7 +72,7 @@ internal class RelationReads(
     /** Records that the existence and type of [id] were read. */
     fun observeForm(id: ResourceId) {
         reads.observeInput(InputIdentity.Existence(id))
-        reads.observeInput(InputIdentity.Form(ValueLocation(id, ValuePath())))
+        reads.observeInput(InputIdentity.Form(ValueLocation.of(id)))
     }
 
     fun observe(source: LinkOccurrence) {
@@ -116,9 +121,9 @@ internal class RelationReads(
         val relation = contract(membership.id.endpoint)
         val endpoint = if (relation.first.id == membership.id.endpoint) relation.second.id else relation.first.id
         return LinkOccurrence(
-            LinkOccurrenceId(endpoint, ValueLocation(subject, inverse)),
-            subject,
-            LinkTarget(membership.source, membership.id.location.path),
+            id = LinkOccurrenceId(endpoint = endpoint, location = ValueLocation.of(subject, inverse)),
+            source = subject,
+            target = LinkTarget(resource = membership.source, opposite = membership.id.location.path),
         )
     }
 
@@ -147,14 +152,14 @@ internal class RelationReads(
     ): Boolean {
         val sourceRecord = resources[source.source] ?: return false
         val destination = resources[target] ?: return false
-        val actual = (destination.configuration as? TypeSelection.Complete)?.use ?: return false
+        val actual = (destination.configuration as? TypeSelection.CompleteWrapper)?.use ?: return false
         val expected =
             ResourceValueMapper.expectedTarget(source, sourceRecord, catalog.checked) ?: run {
                 val type = sourceRecord.authoredTypeAt(source.id.location.path, catalog.checked) ?: return false
                 val checked = catalog.checked.resolve(type) as? Resolution.Ready ?: return false
-                (checked.value.schema.representation as? ResolvedRepresentation.Link)?.target ?: return false
+                (checked.value.schema.representation as? ResolvedRepresentation.LinkWrapper)?.value?.target ?: return false
             }
-        return catalog.checked.isReadableAs(actual, expected)
+        return catalog.checked.isReadableAs(actual.use, expected)
     }
 
     /**
@@ -196,7 +201,7 @@ internal class RelationReads(
         while (pending.isNotEmpty()) {
             val id = pending.removeFirst()
             if (!visited.add(id)) continue
-            reads.observeInput(InputIdentity.Value(ValueLocation(id, ValuePath())))
+            reads.observeInput(InputIdentity.Value(ValueLocation.of(id)))
             reads.observeInput(InputIdentity.Incoming(id, null))
             if (id == other) return true
             next[id].orEmpty().forEach(pending::add)
@@ -214,16 +219,24 @@ internal class RelationReads(
         val record = recordOf(this)
         val locations = evidence.values.toMutableList()
         val collection = ResourceValueMapper.counterpartBinding(endpoint, this, record, catalog.checked) as? CounterpartBinding.Collection
-        if (collection != null && locations.none { links[LinkOccurrenceId(endpoint, it)]?.target?.resource == linked }) {
-            locations += collection.location.item(item("source:$this:$endpoint:$linked"))
+        if (collection != null &&
+            locations.none { links[LinkOccurrenceId(endpoint = endpoint, location = it)]?.target?.resource == linked }
+        ) {
+            locations += collection.location.item(item("source:$value:${endpoint.value}:${linked.value}"))
         }
         return locations.mapNotNull { at ->
             reads.observeInput(InputIdentity.Value(at))
-            val present = links[LinkOccurrenceId(endpoint, at)]
+            val present = links[LinkOccurrenceId(endpoint = endpoint, location = at)]
             val value = record.valueAt(at.path)
             if (present != null && present.target.resource != linked) return@mapNotNull null
             if (present == null && value != null && !value.unfilled()) return@mapNotNull null
-            val occurrence = present ?: LinkOccurrence(LinkOccurrenceId(endpoint, at), this, LinkTarget(linked, null))
+            val occurrence =
+                present
+                    ?: LinkOccurrence(
+                        id = LinkOccurrenceId(endpoint = endpoint, location = at),
+                        source = this,
+                        target = LinkTarget(resource = linked, opposite = null),
+                    )
             occurrence.takeIf { accepts(it, linked) }
         }
     }
@@ -236,10 +249,11 @@ internal class RelationReads(
 
     /** Non owning link occurrences held by [id] or pointing at it. */
     fun linksOf(id: ResourceId): List<LinkOccurrence> {
-        reads.observeInput(InputIdentity.Value(ValueLocation(id, ValuePath())))
+        reads.observeInput(InputIdentity.Value(ValueLocation.of(id)))
         reads.observeInput(InputIdentity.Incoming(id, null))
         return links.values.filter { occurrence ->
-            (occurrence.source == id || occurrence.target.resource == id) && !contract(occurrence.id.endpoint).ownsResources
+            (occurrence.source == id || occurrence.target.resource == id) &&
+                !contract(occurrence.id.endpoint).ownsResources
         }
     }
 }
@@ -248,7 +262,7 @@ private fun DeclaredLinkEvidence.isEmpty(): Boolean = values.isEmpty() && member
 
 internal fun DataValue.unfilled(): Boolean =
     when (this) {
-        DataValue.Unfilled, DataValue.Null -> true
-        is DataValue.Named -> payload.unfilled()
+        DataValue.UNFILLED, DataValue.NULL -> true
+        is DataValue.NamedWrapper -> payload.unfilled()
         else -> false
     }

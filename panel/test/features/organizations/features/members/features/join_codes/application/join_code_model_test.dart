@@ -4,12 +4,14 @@ import "package:typewriter_panel/infrastructure/protocols/skir/skir.dart"
 import "package:typewriter_panel/typewriter_panel.dart";
 
 void main() {
-  group("OrganizationJoinCode", () {
+  group("skir.JoinCode", () {
     test("isExpired returns true when expiresAt is in the past", () {
-      final code = OrganizationJoinCode(
+      final code = skir.JoinCode(
         code: skir.recordId("organization_join_code:ABC123"),
         createdAt: DateTime.now().subtract(const Duration(days: 2)),
         expiresAt: DateTime.now().subtract(const Duration(days: 1)),
+        singleUse: true,
+        autoAccept: skir.JoinCode_AutoAccept(roleIds: const []),
       );
 
       expect(code.isExpired, true);
@@ -18,10 +20,12 @@ void main() {
     });
 
     test("isExpired returns false when expiresAt is in the future", () {
-      final code = OrganizationJoinCode(
+      final code = skir.JoinCode(
         code: skir.recordId("organization_join_code:ABC123"),
         createdAt: DateTime.now(),
         expiresAt: DateTime.now().add(const Duration(days: 7)),
+        singleUse: true,
+        autoAccept: skir.JoinCode_AutoAccept(roleIds: const []),
       );
 
       expect(code.isExpired, false);
@@ -30,10 +34,12 @@ void main() {
     });
 
     test("neverExpires returns true when expiresAt is null", () {
-      final code = OrganizationJoinCode(
+      final code = skir.JoinCode(
         code: skir.recordId("organization_join_code:ABC123"),
         createdAt: DateTime.now(),
         expiresAt: null,
+        singleUse: true,
+        autoAccept: skir.JoinCode_AutoAccept(roleIds: const []),
       );
 
       expect(code.neverExpires, true);
@@ -42,9 +48,9 @@ void main() {
     });
   });
 
-  group("JoinCodeAutoAccept", () {
+  group("skir.JoinCode_AutoAccept", () {
     test("creates auto-accept config with role ids", () {
-      final autoAccept = JoinCodeAutoAccept(
+      final autoAccept = skir.JoinCode_AutoAccept(
         roleIds: [
           skir.recordId("organization_role:r1"),
           skir.recordId("organization_role:r2"),

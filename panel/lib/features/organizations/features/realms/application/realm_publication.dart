@@ -133,13 +133,13 @@ final class PublicationWorkDriver extends ChangeNotifier implements WorkDriver {
     };
   }
 
-  Future<skir.PublicationResult> _publish(
+  Future<skir.PublishAuthoringResponse> _publish(
     skir.PublicationCandidateId candidate,
     skir.PublicationViewId reviewed,
   ) async {
     if (_closed) throw StateError("Publication work is closed");
     if (view is! ReadyRealmPublication || _last?.id != reviewed) {
-      return skir.PublicationResult.wrapCandidateChanged(
+      return skir.PublishAuthoringResponse.wrapCandidateChangedError(
         skir.PublicationViewChanged(current: _last?.id ?? reviewed),
       );
     }
@@ -148,8 +148,10 @@ final class PublicationWorkDriver extends ChangeNotifier implements WorkDriver {
     try {
       final response = await work.execute(repository.preparePublish(candidate));
       return switch (response) {
-        skir.PublishAuthoringResponse_resultWrapper(:final value) => value,
-        _ => throw ApiException.internalServerError(),
+        skir.PublishAuthoringResponse_internalErrorWrapper() ||
+        skir.PublishAuthoringResponse_unknown() =>
+          throw ApiException.internalServerError(),
+        _ => response,
       };
     } finally {
       await _subscription?.cancel();

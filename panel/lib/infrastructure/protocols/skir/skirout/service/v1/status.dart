@@ -720,6 +720,8 @@ sealed class QueryServiceBindingResponse {
   );
 
   /// Create a 'service_not_found_error' variant wrapping around the given value.
+  ///
+  /// Service not found.
   factory QueryServiceBindingResponse.wrapServiceNotFoundError(
     QueryServiceBindingResponse_ServiceNotFoundError value,
   ) => QueryServiceBindingResponse_serviceNotFoundErrorWrapper._(value);
@@ -762,7 +764,7 @@ sealed class QueryServiceBindingResponse {
         "service_not_found_error",
         "wrapServiceNotFoundError",
         QueryServiceBindingResponse_ServiceNotFoundError.serializer,
-        "",
+        "Service not found.",
         QueryServiceBindingResponse_serviceNotFoundErrorWrapper._,
         (it) => it.value,
         ordinal: QueryServiceBindingResponse_kind
@@ -1254,6 +1256,8 @@ sealed class EnsureRegistrationLeaseResponse {
   );
 
   /// Create a 'service_not_found_error' variant wrapping around the given value.
+  ///
+  /// Service not found.
   factory EnsureRegistrationLeaseResponse.wrapServiceNotFoundError(
     EnsureRegistrationLeaseResponse_ServiceNotFoundError value,
   ) => EnsureRegistrationLeaseResponse_serviceNotFoundErrorWrapper._(value);
@@ -1307,7 +1311,7 @@ sealed class EnsureRegistrationLeaseResponse {
         "service_not_found_error",
         "wrapServiceNotFoundError",
         EnsureRegistrationLeaseResponse_ServiceNotFoundError.serializer,
-        "",
+        "Service not found.",
         EnsureRegistrationLeaseResponse_serviceNotFoundErrorWrapper._,
         (it) => it.value,
         ordinal: EnsureRegistrationLeaseResponse_kind

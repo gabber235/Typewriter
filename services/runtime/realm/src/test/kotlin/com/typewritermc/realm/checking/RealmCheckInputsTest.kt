@@ -1,93 +1,107 @@
 package com.typewritermc.realm.checking
 
-import com.typewritermc.authoring.AuthoringRecord
 import com.typewritermc.authoring.CompleteValue
 import com.typewritermc.authoring.DraftBinding
 import com.typewritermc.authoring.DraftExpectation
-import com.typewritermc.authoring.ItemId
-import com.typewritermc.authoring.PathSegment
 import com.typewritermc.authoring.ReadContext
-import com.typewritermc.authoring.TypeSelection
-import com.typewritermc.authoring.ValueLocation
-import com.typewritermc.authoring.ValuePath
+import com.typewritermc.authoring.id
+import com.typewritermc.authoring.of
+import com.typewritermc.authoring.root
+import com.typewritermc.authoring.with
 import com.typewritermc.checking.CheckInput
-import com.typewritermc.checking.CheckOutcome
 import com.typewritermc.checking.CheckRecipe
-import com.typewritermc.checking.DiagnosticSeverity
-import com.typewritermc.checking.DiagnosticTemplate
 import com.typewritermc.checking.RegisteredPredicate
-import com.typewritermc.configuration.FieldPatternSegment
-import com.typewritermc.configuration.RelativeFieldPattern
-import com.typewritermc.configuration.RuleOrigin
+import com.typewritermc.configuration.field
 import com.typewritermc.realm.authoring.AuthoringSeed
 import com.typewritermc.realm.authoring.InMemoryAuthoringViewStore
-import com.typewritermc.types.DataValue
-import com.typewritermc.types.FieldDeclaration
-import com.typewritermc.types.FieldOwner
-import com.typewritermc.types.IntegerWidth
-import com.typewritermc.types.ListItem
-import com.typewritermc.types.MapRow
-import com.typewritermc.types.ParameterKey
-import com.typewritermc.types.RepresentationTemplate
-import com.typewritermc.types.ResourceId
-import com.typewritermc.types.ScalarKind
-import com.typewritermc.types.TypeDefinition
-import com.typewritermc.types.TypeDefinitionId
-import com.typewritermc.types.TypeId
-import com.typewritermc.types.TypeParameter
-import com.typewritermc.types.TypeTemplate
-import com.typewritermc.types.TypeUse
 import com.typewritermc.types.catalog.Resolution
+import com.typewritermc.types.fields
+import com.typewritermc.types.integer
+import com.typewritermc.types.integerScalar
+import com.typewritermc.types.listValue
+import com.typewritermc.types.mapValue
+import com.typewritermc.types.named
+import com.typewritermc.types.namedUse
+import com.typewritermc.types.qualified
+import com.typewritermc.types.template
+import com.typewritermc.types.use
 import de.infix.testBalloon.framework.core.testSuite
 import io.kotest.matchers.shouldBe
 import io.kotest.matchers.types.shouldBeInstanceOf
+import skirout.editor.v1.checking.CheckOutcome
+import skirout.editor.v1.diagnostic.DiagnosticSeverity
+import skirout.editor.v1.diagnostic.DiagnosticTemplate
+import skirout.editor.v1.type_catalog.AuthoringRecord
+import skirout.editor.v1.type_catalog.DataValue
+import skirout.editor.v1.type_catalog.FieldDeclaration
+import skirout.editor.v1.type_catalog.FieldOwner
+import skirout.editor.v1.type_catalog.FieldPatternSegment
+import skirout.editor.v1.type_catalog.IntegerWidth
+import skirout.editor.v1.type_catalog.ItemId
+import skirout.editor.v1.type_catalog.ListItem
+import skirout.editor.v1.type_catalog.MapRow
+import skirout.editor.v1.type_catalog.ParameterKey
+import skirout.editor.v1.type_catalog.PathSegment
+import skirout.editor.v1.type_catalog.RelativeFieldPattern
+import skirout.editor.v1.type_catalog.RepresentationTemplate
+import skirout.editor.v1.type_catalog.ResourceId
+import skirout.editor.v1.type_catalog.RuleOrigin
+import skirout.editor.v1.type_catalog.TypeDefinition
+import skirout.editor.v1.type_catalog.TypeDefinitionId
+import skirout.editor.v1.type_catalog.TypeParameter
+import skirout.editor.v1.type_catalog.TypeSelection
+import skirout.editor.v1.type_catalog.TypeTemplate
+import skirout.editor.v1.type_catalog.ValueLocation
 import java.math.BigInteger
 import java.util.concurrent.atomic.AtomicInteger
 
 val RealmCheckInputsTest by testSuite {
     test("mapKeysAndValuesShareTheSameStableRowOccurrence") {
-        val mapParameterKey = ParameterKey(MAP_TYPE, 0)
-        val mapParameterValue = ParameterKey(MAP_TYPE, 1)
-        val mapUse = TypeUse.Named(MAP_TYPE, listOf(INT_USE, INT_USE))
+        val mapParameterKey = ParameterKey(owner = MAP_TYPE, index = 0)
+        val mapParameterValue = ParameterKey(owner = MAP_TYPE, index = 1)
+        val mapUse = MAP_TYPE.namedUse(listOf(INT_USE, INT_USE))
         val root =
-            TypeDefinition(
+            TypeDefinition.partial(
                 id = TEST_TYPE,
                 representation =
-                    RepresentationTemplate.Record(
-                        listOf(
-                            FieldDeclaration(
-                                FieldOwner(TEST_TYPE, "mapping"),
-                                TypeTemplate.Named(
-                                    MAP_TYPE,
-                                    listOf(TypeTemplate.Scalar(INT_KIND), TypeTemplate.Scalar(INT_KIND)),
+                    RepresentationTemplate.createRecord(
+                        fields =
+                            listOf(
+                                FieldDeclaration.partial(
+                                    owner = FieldOwner(definition = TEST_TYPE, name = "mapping"),
+                                    type = MAP_TYPE.template(listOf(INT_KIND.template, INT_KIND.template)),
                                 ),
                             ),
-                        ),
+                        abstract_ = false,
                     ),
             )
         val map =
-            TypeDefinition(
+            TypeDefinition.partial(
                 id = MAP_TYPE,
-                parameters = listOf(TypeParameter(mapParameterKey, "K"), TypeParameter(mapParameterValue, "V")),
+                parameters =
+                    listOf(
+                        TypeParameter.partial(key = mapParameterKey, name = "K"),
+                        TypeParameter.partial(key = mapParameterValue, name = "V"),
+                    ),
                 representation =
-                    RepresentationTemplate.Mapping(
-                        TypeTemplate.Parameter(mapParameterKey),
-                        TypeTemplate.Parameter(mapParameterValue),
+                    RepresentationTemplate.createMapping(
+                        key = mapParameterKey.template,
+                        value = mapParameterValue.template,
                     ),
             )
         val catalog = TestCatalogLease(definitions = listOf(root, map))
-        val resource = ResourceId("map")
+        val resource = ResourceId(value = "map")
         val record =
-            AuthoringRecord(
-                TypeSelection.Complete(TypeUse.Named(TEST_TYPE)),
+            AuthoringRecord.of(
+                TypeSelection.CompleteWrapper(TEST_TYPE.namedUse()),
                 mapOf(
                     "mapping" to
-                        DataValue.Named(
+                        DataValue.named(
                             mapUse,
-                            DataValue.MapValue(
+                            DataValue.mapValue(
                                 listOf(
-                                    MapRow(ItemId("a"), integer(1), integer(1)),
-                                    MapRow(ItemId("b"), integer(2), integer(2)),
+                                    MapRow(id = ItemId(value = "a"), key = integer(1), value = integer(1)),
+                                    MapRow(id = ItemId(value = "b"), key = integer(2), value = integer(2)),
                                 ),
                             ),
                         ),
@@ -95,15 +109,15 @@ val RealmCheckInputsTest by testSuite {
             )
         val calls = AtomicInteger()
         val predicate =
-            predicate(listOf(TypeTemplate.Scalar(INT_KIND), TypeTemplate.Scalar(INT_KIND))) { values ->
+            predicate(listOf(INT_KIND.template, INT_KIND.template)) { values ->
                 calls.incrementAndGet()
                 values[0].value == values[1].value
             }
         val recipe =
             recipe(
                 listOf(
-                    CheckInput(TEST_TYPE, pattern("mapping", FieldPatternSegment.Keys), TypeTemplate.Scalar(INT_KIND)),
-                    CheckInput(TEST_TYPE, pattern("mapping", FieldPatternSegment.Values), TypeTemplate.Scalar(INT_KIND)),
+                    CheckInput(TEST_TYPE, pattern("mapping", FieldPatternSegment.KEYS), INT_KIND.template),
+                    CheckInput(TEST_TYPE, pattern("mapping", FieldPatternSegment.VALUES), INT_KIND.template),
                 ),
                 predicate,
             )
@@ -113,7 +127,7 @@ val RealmCheckInputsTest by testSuite {
 
         val result = with(reads) { RealmCheckInputs().evaluate(recipe, binding(catalog, resource)) }
 
-        result.outcome shouldBe CheckOutcome.Finished
+        result.outcome shouldBe CheckOutcome.FINISHED
         result.findings.isEmpty() shouldBe true
         calls.get() shouldBe 2
         lease.close()
@@ -122,28 +136,24 @@ val RealmCheckInputsTest by testSuite {
 
     test("completeFindingsRemainVisibleWhenAnotherOccurrenceNeedsInput") {
         val catalog = TestCatalogLease()
-        val resource = ResourceId("list")
+        val resource = ResourceId(value = "list")
         val record =
-            record(numbers = emptyList()).copy(
-                fields =
-                    record(numbers = emptyList()).fields +
-                        (
-                            "numbers" to
-                                DataValue.Named(
-                                    LIST_USE,
-                                    DataValue.ListValue(
-                                        listOf(
-                                            ListItem(ItemId("missing"), DataValue.Unfilled),
-                                            ListItem(ItemId("known"), integer(2)),
-                                        ),
-                                    ),
-                                )
+            record(numbers = emptyList()).with(
+                "numbers",
+                DataValue.named(
+                    LIST_USE,
+                    DataValue.listValue(
+                        listOf(
+                            ListItem(id = ItemId(value = "missing"), value = DataValue.UNFILLED),
+                            ListItem(id = ItemId(value = "known"), value = integer(2)),
                         ),
+                    ),
+                ),
             )
         val recipe =
             recipe(
-                listOf(CheckInput(TEST_TYPE, pattern("numbers", FieldPatternSegment.Items), TypeTemplate.Scalar(INT_KIND))),
-                predicate(listOf(TypeTemplate.Scalar(INT_KIND))) { false },
+                listOf(CheckInput(TEST_TYPE, pattern("numbers", FieldPatternSegment.ITEMS), INT_KIND.template)),
+                predicate(listOf(INT_KIND.template)) { false },
             )
         val store = store(catalog, resource, record)
         val lease = store.capture()
@@ -151,7 +161,7 @@ val RealmCheckInputsTest by testSuite {
 
         val result = with(reads) { RealmCheckInputs().evaluate(recipe, binding(catalog, resource)) }
 
-        result.outcome.shouldBeInstanceOf<CheckOutcome.NeedsInput>()
+        result.outcome.shouldBeInstanceOf<CheckOutcome.NeedsInputWrapper>()
         result.findings.size shouldBe 1
         (
             result.findings
@@ -159,20 +169,20 @@ val RealmCheckInputsTest by testSuite {
                 .primary
                 ?.path
                 ?.segments
-                ?.last() as PathSegment.Item
-        ).id shouldBe ItemId("known")
+                ?.last() as PathSegment.ItemWrapper
+        ).id shouldBe ItemId(value = "known")
         lease.close()
         store.close()
     }
 
     test("occurrenceCartesianProductsStopAtTheCapturedReadBudget") {
         val catalog = TestCatalogLease()
-        val resource = ResourceId("list")
+        val resource = ResourceId(value = "list")
         val record = record(numbers = listOf("a" to 1, "b" to 2))
         val recipe =
             recipe(
-                listOf(CheckInput(TEST_TYPE, pattern("numbers", FieldPatternSegment.Items), TypeTemplate.Scalar(INT_KIND))),
-                predicate(listOf(TypeTemplate.Scalar(INT_KIND))) { true },
+                listOf(CheckInput(TEST_TYPE, pattern("numbers", FieldPatternSegment.ITEMS), INT_KIND.template)),
+                predicate(listOf(INT_KIND.template)) { true },
             )
         val store = store(catalog, resource, record)
         val lease = store.capture()
@@ -190,14 +200,14 @@ private fun recipe(
     inputs: List<CheckInput>,
     predicate: RegisteredPredicate,
 ) = CheckRecipe(
-    owner = RuleOrigin(TEST_TYPE, 0),
+    owner = RuleOrigin(owner = TEST_TYPE, ordinal = 0),
     inputs = inputs,
     predicate = predicate,
     diagnostic =
         DiagnosticTemplate(
             code = "test",
             message = "invalid",
-            severity = DiagnosticSeverity.Error,
+            severity = DiagnosticSeverity.ERROR,
             targets = listOf(inputs.first().path),
         ),
 )
@@ -214,19 +224,19 @@ private fun predicate(
 private fun pattern(
     field: String,
     descendant: FieldPatternSegment,
-) = RelativeFieldPattern(listOf(FieldPatternSegment.Field(field), descendant))
+) = RelativeFieldPattern(segments = listOf(FieldPatternSegment.field(field), descendant))
 
 private fun binding(
     catalog: TestCatalogLease,
     resource: ResourceId,
 ): DraftBinding {
-    val checked = (catalog.checked.resolve(TypeUse.Named(TEST_TYPE)) as Resolution.Ready).value
+    val checked = (catalog.checked.resolve(TEST_TYPE.use()) as Resolution.Ready).value
     return DraftBinding(
         catalog.generation,
         ReadContext(catalog.generation),
-        ValueLocation(resource, ValuePath()),
+        ValueLocation.of(resource),
         DraftExpectation.Complete(checked),
-        TypeSelection.Complete(TypeUse.Named(TEST_TYPE)),
+        TypeSelection.CompleteWrapper(TEST_TYPE.namedUse()),
     )
 }
 
@@ -242,7 +252,7 @@ private fun store(
     )
 }
 
-private fun integer(value: Int): DataValue.Integer = DataValue.Integer(BigInteger.valueOf(value.toLong()))
+private fun integer(value: Int): DataValue.IntegerWrapper = DataValue.integer(BigInteger.valueOf(value.toLong()))
 
-private val MAP_TYPE = TypeDefinitionId(TypeId.Qualified("typewriter", "map"), 1)
-private val INT_KIND = ScalarKind.Integer(IntegerWidth.SIGNED_32)
+private val MAP_TYPE = TypeDefinitionId.qualified("typewriter", "map")
+private val INT_KIND = integerScalar(IntegerWidth.SIGNED_THIRTY_TWO)

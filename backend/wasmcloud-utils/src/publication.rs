@@ -19,11 +19,12 @@ use crate::{
             topology::{OrganizationTopologyChanged, WatchHostExecutionResponse},
         },
     },
+    transport::{OrganizationScope, ServiceScope, UserScope},
     transport_routes::{
         HostExecutionWatchRoute, OrganizationJoinCodesWatchRoute,
-        OrganizationJoinRequestsWatchRoute, OrganizationMembersWatchRoute, OrganizationScope,
-        OrganizationServicesWatchRoute, OrganizationTopologyWatchRoute, ServiceScope,
-        UserJoinRequestsWatchRoute, UserOrganizationsWatchRoute, UserScope,
+        OrganizationJoinRequestsWatchRoute, OrganizationMembersWatchRoute,
+        OrganizationServicesWatchRoute, OrganizationTopologyWatchRoute, UserJoinRequestsWatchRoute,
+        UserOrganizationsWatchRoute,
     },
 };
 

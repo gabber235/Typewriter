@@ -99,14 +99,14 @@ BoundPresentationHost _topologyRuntimePortableHost({
 /// runtime facts for a combined selection; callers supply the common targets
 /// and eligible external Realms for that selection.
 BoundPresentationHost topologyHostPortableHost({
-  required TopologyHost host,
-  required Service? service,
+  required skir.ServiceHost host,
+  required skir.Service? service,
   required bool connected,
   required EditOwner configurationOwner,
   required EditOwner? identityOwner,
   required Map<String, List<String>> realmTargets,
   required Map<String, List<String>> engineTargets,
-  required List<TopologyRealm> realms,
+  required List<skir.RealmInstance> realms,
   bool configurationOnly = false,
 }) {
   final realmEnabled = _topologyBinding("host.configuration.realm.enabled");
@@ -143,7 +143,7 @@ BoundPresentationHost topologyHostPortableHost({
       host.entrypoint.formatted,
     ),
     "host.can_host_realm": skir.DataValue.wrapBoolean(host.canHostRealm),
-    "host.state": skir.DataValue.wrapStringValue(host.state.status.name),
+    "host.state": skir.DataValue.wrapStringValue(host.state.status.key),
     "host.message": skir.DataValue.wrapStringValue(
       host.state.message ?? "None",
     ),
@@ -559,7 +559,7 @@ List<_TopologySelectOption> _targetOptions(
       _TopologySelectOption(
         id: _encodeTarget(entry.key, version),
         label: _targetLabel(
-          TopologyEngineTarget(engineId: entry.key, versionConstraint: version),
+          skir.EngineTarget(engineId: entry.key, versionConstraint: version),
         ),
         value: _encodeTarget(entry.key, version),
       ),
@@ -602,7 +602,7 @@ skir.PresentationNode _portableSelect(
 );
 
 /// Builds the observational inspector without introducing another mutation owner.
-extension RealmPortablePresentation on TopologyRealm {
+extension RealmPortablePresentation on skir.RealmInstance {
   BoundPresentationHost portablePresentationHost() =>
       _topologyRuntimePortableHost(
         rootId: "realmInstance",
@@ -617,7 +617,7 @@ extension RealmPortablePresentation on TopologyRealm {
             _targetLabel(targetEngine),
           ),
           _RuntimeInspectorFields.runtimeStatus: skir.DataValue.wrapStringValue(
-            state.status.name,
+            state.status.key,
           ),
           _RuntimeInspectorFields.artifactVersion: skir
               .DataValue.wrapStringValue(state.activeArtifactVersion ?? "None"),
@@ -631,7 +631,7 @@ extension RealmPortablePresentation on TopologyRealm {
 }
 
 /// Builds the observational inspector without introducing another mutation owner.
-extension EnginePortablePresentation on TopologyEngine {
+extension EnginePortablePresentation on skir.EngineInstance {
   BoundPresentationHost portablePresentationHost() =>
       _topologyRuntimePortableHost(
         rootId: "engineInstance",
@@ -649,7 +649,7 @@ extension EnginePortablePresentation on TopologyEngine {
             _targetLabel(target),
           ),
           _RuntimeInspectorFields.runtimeStatus: skir.DataValue.wrapStringValue(
-            state.status.name,
+            state.status.key,
           ),
           _RuntimeInspectorFields.artifactVersion: skir
               .DataValue.wrapStringValue(state.activeArtifactVersion ?? "None"),

@@ -8,12 +8,12 @@ import com.typewritermc.loader.rollout.ExecutionRevision
 import com.typewritermc.loader.rollout.HostAssignmentRuntime
 import com.typewritermc.loader.rollout.HostExecutionObservation
 import com.typewritermc.loader.rollout.HostExecutionOwner
-import com.typewritermc.loader.rollout.ParticipantStatus
 import com.typewritermc.loader.rollout.RealmId
 import com.typewritermc.services.libs.registrar.ServiceId
 import de.infix.testBalloon.framework.core.testSuite
 import io.kotest.assertions.throwables.shouldThrow
 import io.kotest.matchers.shouldBe
+import skirout.service.v1.rollout.ParticipantStatus
 
 val HostExecutionOwnerTest by testSuite {
     test("initial empty and consecutive empty revisions are reported without runtime creation") {

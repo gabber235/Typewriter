@@ -1414,7 +1414,7 @@ final class _PortableRealmSearchSource extends _PortableLeafSearchSource {
                       guidance: guidance,
                     ),
             );
-          case skir.RealmPresentationSearchUpdate_unavailableWrapper(
+          case skir.RealmPresentationSearchUpdate_unavailableErrorWrapper(
             :final value,
           ):
             if (value.subscriptionId != subscriptionId) return;
@@ -1425,13 +1425,15 @@ final class _PortableRealmSearchSource extends _PortableLeafSearchSource {
                     "Realm search is unavailable",
               ),
             );
-          case skir.RealmPresentationSearchUpdate_staleObservationWrapper():
+          case skir.RealmPresentationSearchUpdate_staleObservationErrorWrapper():
             emit(
               _searchError(
                 providerPath,
                 "Saved resources changed. Review the operation input",
               ),
             );
+          case skir.RealmPresentationSearchUpdate_internalErrorWrapper():
+            emit(_searchError(providerPath, "Realm search is unavailable"));
           case skir.RealmPresentationSearchUpdate_unknown():
             emit(
               _searchError(

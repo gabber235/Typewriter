@@ -1,27 +1,33 @@
 package com.typewritermc.presentation
 
-import com.typewritermc.authoring.ValuePath
 import com.typewritermc.expression.Expr
-import com.typewritermc.expression.ExpressionBindingId
 import com.typewritermc.expression.ExpressionFactory
 import com.typewritermc.expression.Handled
 import com.typewritermc.expression.MayBeMissing
 import com.typewritermc.expression.literal
-import com.typewritermc.types.Color
 import com.typewritermc.types.Icon
 import com.typewritermc.types.Resource
 import com.typewritermc.types.ResourceId
-import com.typewritermc.types.TypeDefinitionId
-import com.typewritermc.types.TypeTemplate
 import skirout.editor.v1.action.EditorAction
 import skirout.editor.v1.expression.ExpressionNode
+import skirout.editor.v1.presentation.CollectionGraphDirection
+import skirout.editor.v1.presentation.CrossAxisAlignment
+import skirout.editor.v1.presentation.DateTimeZone
+import skirout.editor.v1.presentation.HeaderActionPlacement
+import skirout.editor.v1.presentation.HeaderActionTone
+import skirout.editor.v1.presentation.PresentationTextOverflow
+import skirout.editor.v1.presentation.PresentationTextTone
+import skirout.editor.v1.presentation.RelativeTimeStyle
+import skirout.editor.v1.presentation.TextParagraph
+import skirout.editor.v1.type_catalog.ExpressionBindingId
+import skirout.editor.v1.type_catalog.TypeTemplate
 import kotlin.time.Instant
 
 interface PresentationContent {
     fun text(
         value: Expr<String, Handled>,
         style: TextStyle = TextStyle(),
-        paragraph: TextParagraph = TextParagraph(),
+        paragraph: TextParagraph = textParagraph(),
     )
 
     fun richText(configure: RichTextScope.() -> Unit)
@@ -79,14 +85,14 @@ interface PresentationContent {
     fun dateTime(
         value: Expr<Instant, Handled>,
         format: Expr<String, Handled>,
-        zone: DateTimeZone = DateTimeZone.Local,
+        zone: DateTimeZone = DateTimeZone.LOCAL,
         configure: DisplayAppearanceScope.() -> Unit = {},
     )
 
     fun relativeTime(
         value: Expr<Instant, Handled>,
-        style: RelativeTimeStyle = RelativeTimeStyle.Compact,
-        zone: DateTimeZone = DateTimeZone.Local,
+        style: RelativeTimeStyle = RelativeTimeStyle.COMPACT,
+        zone: DateTimeZone = DateTimeZone.LOCAL,
         configure: DisplayAppearanceScope.() -> Unit = {},
     )
 }
@@ -267,17 +273,14 @@ sealed interface TextSizing {
     ) : TextSizing
 }
 
-enum class TextOverflow { Clip, Ellipsis }
-
-enum class TextTone { Primary, Secondary }
-
-data class TextParagraph(
-    val maximumLines: Int? = null,
-    val overflow: TextOverflow = TextOverflow.Clip,
-    val softWrap: Boolean = false,
-    val selectable: Boolean = false,
-    val tone: TextTone = TextTone.Primary,
-)
+/** The Skir [TextParagraph] policy of authored text, with the defaults text uses when a field is not given. */
+fun textParagraph(
+    maxLines: Int? = null,
+    overflow: PresentationTextOverflow = PresentationTextOverflow.CLIP,
+    softWrap: Boolean = false,
+    selectable: Boolean = false,
+    tone: PresentationTextTone = PresentationTextTone.PRIMARY,
+) = TextParagraph(maxLines = maxLines, overflow = overflow, softWrap = softWrap, selectable = selectable, tone = tone)
 
 data class IconOptions(
     val size: Double? = null,
@@ -302,17 +305,9 @@ data class StatusAppearance(
     val configure: DisplayAppearanceScope.() -> Unit = {},
 )
 
-enum class DateTimeZone { Local, Utc }
-
-enum class RelativeTimeStyle { Compact, Full }
-
 @JvmInline value class HeaderItemId(
     val value: String,
 )
-
-enum class HeaderActionTone { Neutral, Destructive }
-
-enum class HeaderActionPlacement { BeforeTitle, AfterTitle, End }
 
 data class HeaderActionConfirmation(
     val title: Expr<String, Handled>,
@@ -458,7 +453,7 @@ fun <Row, Key> collectionSource(
     configure: CollectionSourceScope<Row, Key>.() -> Unit,
 ): CollectionSource<Row, Key> {
     require(id.isNotBlank()) { "Collection source ids must not be blank." }
-    val rowBinding = ExpressionBindingId("collection.$id.row")
+    val rowBinding = ExpressionBindingId(value = "collection.$id.row")
     val scope = DefaultCollectionSourceScope<Row, Key>(rowBinding)
     scope.configure()
     return scope.build(id, rowType, CollectionRows.Supplied)
@@ -473,8 +468,8 @@ fun <R : Resource, Row, Key, Expressions : Any> CollectionProjection<R, Row, Exp
     configure: ProjectedCollectionSourceScope<Row, Key, Expressions>.() -> Unit = {},
 ): CollectionSource<Row, Key> {
     val projection = specification
-    val rowBinding = ExpressionBindingId("collection.${projection.sourceId}.row")
-    val resourceBinding = ExpressionBindingId("collection.${projection.sourceId}.resource")
+    val rowBinding = ExpressionBindingId(value = "collection.${projection.sourceId}.row")
+    val resourceBinding = ExpressionBindingId(value = "collection.${projection.sourceId}.resource")
     val scope = DefaultProjectedCollectionSourceScope<Row, Key, Expressions>(rowBinding, resourceBinding, expressions)
     scope.configure()
     return scope.build(projection, scope.key())
@@ -609,8 +604,6 @@ interface LookupScope<Row> {
     fun loading(body: Layout.() -> Unit)
 }
 
-enum class CollectionDirection { Forward, Reverse }
-
 enum class ConnectorAnchor { Start, Center }
 
 /** Arranges graph occurrences without changing their traversal or content. */
@@ -619,7 +612,7 @@ interface SequenceLayoutScope {
 
     fun column(
         spacing: Double = 0.0,
-        cross: CrossAxisAlignment = CrossAxisAlignment.Start,
+        cross: CrossAxisAlignment = CrossAxisAlignment.START,
     )
 
     fun hierarchy(
@@ -631,7 +624,7 @@ interface SequenceLayoutScope {
         leadingSpacing: Double = 16.0,
         itemAnchor: ConnectorAnchor = ConnectorAnchor.Center,
         flattenSingleItem: Boolean = true,
-        cross: CrossAxisAlignment = CrossAxisAlignment.Stretch,
+        cross: CrossAxisAlignment = CrossAxisAlignment.STRETCH,
     )
 }
 
@@ -675,7 +668,7 @@ interface GraphScope<Row, Key> {
 
     fun relation(
         id: String,
-        direction: CollectionDirection = CollectionDirection.Forward,
+        direction: CollectionGraphDirection = CollectionGraphDirection.FORWARD,
         maximumDepth: Int? = null,
     )
 

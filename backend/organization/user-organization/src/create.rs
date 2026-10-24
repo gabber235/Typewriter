@@ -7,7 +7,6 @@ use wasmcloud_utils::{
     },
     skir::base::organization::v1::organization::*,
     skir_domain_result, skir_variant,
-    wasmcloud::messaging::types::NatsMessage,
 };
 
 use wasmcloud_utils::database::organization::OrganizationRecord;
@@ -53,8 +52,7 @@ impl CreatedOrganization {
 /// after the database transaction.
 #[tracing::instrument(skip_all)]
 pub async fn handle_create(
-    _msg: NatsMessage,
-    scope: wasmcloud_utils::transport_routes::UserScope,
+    scope: wasmcloud_utils::transport::UserScope,
     request: CreateOrganizationRequest,
 ) -> Result<CreateOrganizationResponse, otel_wasi::Error> {
     let user_id = scope.user.as_str();

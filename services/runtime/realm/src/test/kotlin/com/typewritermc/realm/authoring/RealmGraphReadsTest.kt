@@ -1,25 +1,19 @@
 package com.typewritermc.realm.authoring
 
-import com.typewritermc.authoring.AuthoringRecord
 import com.typewritermc.authoring.Availability
 import com.typewritermc.authoring.DraftBinding
-import com.typewritermc.authoring.ItemId
 import com.typewritermc.authoring.LinkInspectionQuery
 import com.typewritermc.authoring.ReachabilityQuery
 import com.typewritermc.authoring.RelationSelection
 import com.typewritermc.authoring.ResourceDrafts
 import com.typewritermc.authoring.RouteQuery
 import com.typewritermc.authoring.TraversalBudget
-import com.typewritermc.authoring.TraversalDirection
-import com.typewritermc.authoring.TypeSelection
 import com.typewritermc.authoring.UnresolvedLink
-import com.typewritermc.authoring.ValueLocation
-import com.typewritermc.authoring.ValuePath
-import com.typewritermc.checking.CatalogGeneration
+import com.typewritermc.authoring.of
+import com.typewritermc.authoring.with
 import com.typewritermc.checking.InputIdentity
 import com.typewritermc.checking.InspectionCompletion
-import com.typewritermc.configuration.FieldPatternSegment
-import com.typewritermc.configuration.RelativeFieldPattern
+import com.typewritermc.configuration.field
 import com.typewritermc.discovery.OwnedCheckRecipe
 import com.typewritermc.discovery.OwnedProviderRegistry
 import com.typewritermc.realm.checking.CapturedAuthoringReads
@@ -27,66 +21,90 @@ import com.typewritermc.realm.checking.EmptyProviders
 import com.typewritermc.realm.checking.dependencies
 import com.typewritermc.realm.repository.conflicts
 import com.typewritermc.realm.repository.valueAt
-import com.typewritermc.types.CollectionKind
-import com.typewritermc.types.DataValue
-import com.typewritermc.types.EndpointBindingTemplate
-import com.typewritermc.types.EndpointCardinality
-import com.typewritermc.types.EndpointDefinition
-import com.typewritermc.types.EndpointId
-import com.typewritermc.types.EndpointSlot
 import com.typewritermc.types.FactoryNativeBindingRegistry
-import com.typewritermc.types.FieldDeclaration
-import com.typewritermc.types.FieldOwner
-import com.typewritermc.types.LinkTarget
-import com.typewritermc.types.ListItem
 import com.typewritermc.types.NativeBindingRegistry
-import com.typewritermc.types.ParameterKey
-import com.typewritermc.types.RelationContract
-import com.typewritermc.types.RelationDeletePolicy
-import com.typewritermc.types.RelationFamilyId
-import com.typewritermc.types.RelationId
-import com.typewritermc.types.RepresentationTemplate
-import com.typewritermc.types.ResourceId
-import com.typewritermc.types.ScalarKind
-import com.typewritermc.types.TypeDefinition
-import com.typewritermc.types.TypeDefinitionId
-import com.typewritermc.types.TypeId
-import com.typewritermc.types.TypeParameter
-import com.typewritermc.types.TypeTemplate
-import com.typewritermc.types.TypeUse
 import com.typewritermc.types.catalog.CheckedCatalog
 import com.typewritermc.types.catalog.DefaultCheckedCatalog
+import com.typewritermc.types.endpoint
+import com.typewritermc.types.fields
+import com.typewritermc.types.listValue
+import com.typewritermc.types.named
+import com.typewritermc.types.namedTemplate
+import com.typewritermc.types.namedUse
+import com.typewritermc.types.nullable
+import com.typewritermc.types.of
+import com.typewritermc.types.qualified
+import com.typewritermc.types.record
+import com.typewritermc.types.template
+import com.typewritermc.types.toResourceId
+import com.typewritermc.types.toSkir
 import de.infix.testBalloon.framework.core.testSuite
 import io.kotest.matchers.shouldBe
 import io.kotest.matchers.types.shouldBeInstanceOf
+import skirout.editor.v1.authoring_facts.TraversalDirection
+import skirout.editor.v1.catalog.EndpointBindingTemplate
+import skirout.editor.v1.catalog.EndpointCardinality
+import skirout.editor.v1.catalog.EndpointDefinition
+import skirout.editor.v1.catalog.EndpointSlot
+import skirout.editor.v1.catalog.RelationContract
+import skirout.editor.v1.catalog.RelationDeletePolicy
+import skirout.editor.v1.type_catalog.AuthoringRecord
+import skirout.editor.v1.type_catalog.CatalogGeneration
+import skirout.editor.v1.type_catalog.CollectionKind
+import skirout.editor.v1.type_catalog.DataValue
+import skirout.editor.v1.type_catalog.EndpointId
+import skirout.editor.v1.type_catalog.FieldDeclaration
+import skirout.editor.v1.type_catalog.FieldOwner
+import skirout.editor.v1.type_catalog.FieldPatternSegment
+import skirout.editor.v1.type_catalog.ItemId
+import skirout.editor.v1.type_catalog.LinkTarget
+import skirout.editor.v1.type_catalog.ListItem
+import skirout.editor.v1.type_catalog.ParameterKey
+import skirout.editor.v1.type_catalog.PathSegment
+import skirout.editor.v1.type_catalog.RelationFamilyId
+import skirout.editor.v1.type_catalog.RelationId
+import skirout.editor.v1.type_catalog.RelativeFieldPattern
+import skirout.editor.v1.type_catalog.RepresentationTemplate
+import skirout.editor.v1.type_catalog.ResourceId
+import skirout.editor.v1.type_catalog.ScalarKind
+import skirout.editor.v1.type_catalog.TypeDefinition
+import skirout.editor.v1.type_catalog.TypeDefinitionId
+import skirout.editor.v1.type_catalog.TypeParameter
+import skirout.editor.v1.type_catalog.TypeSelection
+import skirout.editor.v1.type_catalog.ValueLocation
+import skirout.editor.v1.type_catalog.ValuePath
 
 class RealmGraphReadsTest {
     fun traversalUsesTheSelectedStagedGraphWithBoundedBreadthFirstSearch() {
         val catalog = GraphCatalogLease()
-        val a = ResourceId("a")
-        val b = ResourceId("b")
-        val c = ResourceId("c")
-        val d = ResourceId("d")
-        val e = ResourceId("e")
-        val unrelated = ResourceId("unrelated")
+        val a = ResourceId(value = "a")
+        val b = ResourceId(value = "b")
+        val c = ResourceId(value = "c")
+        val d = ResourceId(value = "d")
+        val e = ResourceId(value = "e")
+        val unrelated = ResourceId(value = "unrelated")
         val original =
             mapOf(
-                a to graphRecord(a, listOf(b, c, ResourceId("missing_selected")), badTarget = ResourceId("missing_unrelated")),
+                a to
+                    graphRecord(
+                        a,
+                        listOf(b, c, ResourceId(value = "missing_selected")),
+                        badTarget = ResourceId(value = "missing_unrelated"),
+                    ),
                 b to graphRecord(b, listOf(d)),
                 c to graphRecord(c, listOf(d)),
                 d to graphRecord(d, listOf(a, e)),
                 e to graphRecord(e, emptyList()),
                 unrelated to
-                    graphRecord(unrelated, emptyList()).copy(
-                        fields =
-                            graphRecord(unrelated, emptyList()).fields +
-                                (
-                                    "bad" to
-                                        DataValue.Named(
-                                            BAD_LINK_USE,
-                                            DataValue.Link(EDGE_SOURCE, LinkTarget(e, null)),
-                                        )
-                                ),
+                    graphRecord(unrelated, emptyList()).with(
+                        "bad",
+                        DataValue.named(
+                            BAD_LINK_USE,
+                            DataValue.createLink(
+                                endpoint = EDGE_SOURCE,
+                                target = LinkTarget(resource = e, opposite = null),
+                            ),
+                        ),
                     ),
             )
         val store =
@@ -95,35 +113,35 @@ class RealmGraphReadsTest {
                 AuthoringSeed(original),
             )
         val lease = store.capture()
-        val selection = RelationSelection.Contracts(setOf(EDGE.id), TraversalDirection.Forward)
+        val selection = RelationSelection.Contracts(setOf(EDGE.id), TraversalDirection.FORWARD)
         val reads = CapturedAuthoringReads(lease.originalView())
 
         val reachable =
             with(reads) {
                 RealmGraphReads.reachable(
-                    ReachabilityQuery(setOf(a), selection, ResourceDrafts, maxDepth = 3),
+                    ReachabilityQuery(setOf(a.toResourceId()), selection, ResourceDrafts, maxDepth = 3),
                 )
             }
-        reachable.resources.map { it.id } shouldBe listOf(a, b, c, d, e)
+        reachable.resources.map { it.id.toSkir() } shouldBe listOf(a, b, c, d, e)
         reachable.resources
-            .map { it.id }
+            .map { it.id.toSkir() }
             .distinct()
             .size shouldBe 5
         reachable.failures.isEmpty() shouldBe true
         val unavailable = reachable.unresolved.single().shouldBeInstanceOf<UnresolvedLink.UnavailableTarget>()
-        unavailable.target shouldBe ResourceId("missing_selected")
+        unavailable.target.toSkir() shouldBe ResourceId(value = "missing_selected")
         reachable.completion.shouldBeInstanceOf<InspectionCompletion.Interrupted>()
         val dependencies = reads.observations().flatMapTo(linkedSetOf()) { it.dependencies() }
         (InputIdentity.Incoming(a, EDGE.id) in dependencies) shouldBe true
         (
             InputIdentity.Value(
-                ValueLocation(
+                ValueLocation.of(
                     a,
                     ValuePath(
-                        listOf(
-                            com.typewritermc.authoring.PathSegment
-                                .Field("outgoing"),
-                        ),
+                        segments =
+                            listOf(
+                                PathSegment.createField(name = "outgoing"),
+                            ),
                     ),
                 ),
             ) in dependencies
@@ -133,7 +151,7 @@ class RealmGraphReadsTest {
 
         val routes =
             with(reads) {
-                RealmGraphReads.routes(RouteQuery(setOf(a), d, selection, maxDepth = 3))
+                RealmGraphReads.routes(RouteQuery(setOf(a.toResourceId()), d.toResourceId(), selection, maxDepth = 3))
             }
         routes.paths.size shouldBe 2
         routes.paths.all { it.size == 2 } shouldBe true
@@ -143,8 +161,8 @@ class RealmGraphReadsTest {
             with(exactBudget) {
                 RealmGraphReads.routes(
                     RouteQuery(
-                        setOf(b),
-                        d,
+                        setOf(b.toResourceId()),
+                        d.toResourceId(),
                         selection,
                         maxDepth = 1,
                         budget = TraversalBudget(maxRoutes = 1),
@@ -159,8 +177,8 @@ class RealmGraphReadsTest {
             with(exactResourceBudget) {
                 RealmGraphReads.routes(
                     RouteQuery(
-                        setOf(b),
-                        d,
+                        setOf(b.toResourceId()),
+                        d.toResourceId(),
                         selection,
                         maxDepth = 1,
                         budget = TraversalBudget(maxResources = 2),
@@ -175,8 +193,8 @@ class RealmGraphReadsTest {
             with(truncatedResourceBudget) {
                 RealmGraphReads.routes(
                     RouteQuery(
-                        setOf(b),
-                        d,
+                        setOf(b.toResourceId()),
+                        d.toResourceId(),
                         selection,
                         maxDepth = 1,
                         budget = TraversalBudget(maxResources = 1),
@@ -191,8 +209,8 @@ class RealmGraphReadsTest {
             with(truncatedReads) {
                 RealmGraphReads.routes(
                     RouteQuery(
-                        setOf(a),
-                        d,
+                        setOf(a.toResourceId()),
+                        d.toResourceId(),
                         selection,
                         maxDepth = 3,
                         budget = TraversalBudget(maxRoutes = 1),
@@ -207,21 +225,21 @@ class RealmGraphReadsTest {
             with(reverse) {
                 RealmGraphReads.reachable(
                     ReachabilityQuery(
-                        setOf(d),
-                        RelationSelection.Contracts(setOf(EDGE.id), TraversalDirection.Reverse),
+                        setOf(d.toResourceId()),
+                        RelationSelection.Contracts(setOf(EDGE.id), TraversalDirection.REVERSE),
                         ResourceDrafts,
                         maxDepth = 1,
                     ),
                 )
             }
-        incoming.resources.mapTo(linkedSetOf()) { it.id } shouldBe setOf(b, c, d)
+        incoming.resources.mapTo(linkedSetOf()) { it.id.toSkir() } shouldBe setOf(b, c, d)
 
         val bounded = CapturedAuthoringReads(lease.originalView())
         val interrupted =
             with(bounded) {
                 RealmGraphReads.reachable(
                     ReachabilityQuery(
-                        setOf(a),
+                        setOf(a.toResourceId()),
                         selection,
                         ResourceDrafts,
                         budget = TraversalBudget(maxResources = 2),
@@ -235,20 +253,20 @@ class RealmGraphReadsTest {
         val staged =
             with(stagedReads) {
                 RealmGraphReads.reachable(
-                    ReachabilityQuery(setOf(a), selection, ResourceDrafts, maxDepth = 1),
+                    ReachabilityQuery(setOf(a.toResourceId()), selection, ResourceDrafts, maxDepth = 1),
                 )
             }
-        staged.resources.mapTo(linkedSetOf()) { it.id } shouldBe setOf(a, c)
-        staged.resources.any { it.id == b } shouldBe false
+        staged.resources.mapTo(linkedSetOf()) { it.id.toSkir() } shouldBe setOf(a, c)
+        staged.resources.any { it.id == b.toResourceId() } shouldBe false
 
         lease.close()
         store.close()
     }
 
     fun graphReadsUseTheCurrentStagedSnapshot() {
-        val source = ResourceId("source")
-        val originalTarget = ResourceId("original_target")
-        val stagedTarget = ResourceId("staged_target")
+        val source = ResourceId(value = "source")
+        val originalTarget = ResourceId(value = "original_target")
+        val stagedTarget = ResourceId(value = "staged_target")
         val store =
             InMemoryAuthoringViewStore(
                 GraphCatalogLease(),
@@ -261,15 +279,15 @@ class RealmGraphReadsTest {
                 ),
             )
         val lease = store.capture()
-        val selection = RelationSelection.Contracts(setOf(EDGE.id), TraversalDirection.Forward)
+        val selection = RelationSelection.Contracts(setOf(EDGE.id), TraversalDirection.FORWARD)
         val originalReads = CapturedAuthoringReads(lease.originalView())
         val originalReachable =
             with(originalReads) {
                 RealmGraphReads.reachable(
-                    ReachabilityQuery(setOf(source), selection, ResourceDrafts, maxDepth = 1),
+                    ReachabilityQuery(setOf(source.toResourceId()), selection, ResourceDrafts, maxDepth = 1),
                 )
             }
-        originalReachable.resources.mapTo(linkedSetOf()) { it.id } shouldBe setOf(source, originalTarget)
+        originalReachable.resources.mapTo(linkedSetOf()) { it.id.toSkir() } shouldBe setOf(source, originalTarget)
 
         val stagedReads =
             CapturedAuthoringReads(
@@ -278,21 +296,21 @@ class RealmGraphReadsTest {
         with(stagedReads) {
             val stagedReachable =
                 RealmGraphReads.reachable(
-                    ReachabilityQuery(setOf(source), selection, ResourceDrafts, maxDepth = 1),
+                    ReachabilityQuery(setOf(source.toResourceId()), selection, ResourceDrafts, maxDepth = 1),
                 )
-            stagedReachable.resources.mapTo(linkedSetOf()) { it.id } shouldBe setOf(source, stagedTarget)
-            val occurrence = RealmGraphReads.occurrences(LinkInspectionQuery(setOf(source), selection)).occurrences.single()
+            stagedReachable.resources.mapTo(linkedSetOf()) { it.id.toSkir() } shouldBe setOf(source, stagedTarget)
+            val occurrence = RealmGraphReads.occurrences(LinkInspectionQuery(setOf(source.toResourceId()), selection)).occurrences.single()
             val followed = RealmGraphReads.follow(occurrence).shouldBeInstanceOf<Availability.Available<DraftBinding>>()
             followed.value.location.resource shouldBe stagedTarget
         }
         val outgoing =
-            ValueLocation(
+            ValueLocation.of(
                 source,
                 ValuePath(
-                    listOf(
-                        com.typewritermc.authoring.PathSegment
-                            .Field("outgoing"),
-                    ),
+                    segments =
+                        listOf(
+                            PathSegment.createField(name = "outgoing"),
+                        ),
                 ),
             )
         val dependencies = stagedReads.observations().flatMapTo(linkedSetOf()) { it.dependencies() }
@@ -304,9 +322,13 @@ class RealmGraphReadsTest {
 
     fun pendingUnavailableTargetProducesAnUndecidedIncomingCandidate() {
         val catalog = GraphCatalogLease()
-        val source = ResourceId("source")
-        val target = ResourceId("pending_target")
-        val pending = graphRecord(target, emptyList()).copy(configuration = TypeSelection.Pending(graphDefinition("missing"), emptyList()))
+        val source = ResourceId(value = "source")
+        val target = ResourceId(value = "pending_target")
+        val pending =
+            graphRecord(
+                target,
+                emptyList(),
+            ).copy(configuration = TypeSelection.createPending(definition = graphDefinition("missing"), arguments = emptyList()))
         val resources = mapOf(source to graphRecord(source, listOf(target)), target to pending)
         val store =
             InMemoryAuthoringViewStore(
@@ -318,22 +340,22 @@ class RealmGraphReadsTest {
 
         val selection =
             with(reads) {
-                RealmGraphReads.incomingResources(target, RelationFamilyId("selected"))
+                RealmGraphReads.incomingResources(target, RelationFamilyId(value = "selected"))
             }
 
         selection.knownMatches.isEmpty() shouldBe true
-        selection.undecided.map { it.resource } shouldBe listOf(source)
+        selection.undecided.map { it.resource.toSkir() } shouldBe listOf(source)
         selection.completion.shouldBeInstanceOf<InspectionCompletion.Complete>()
         val identities = reads.observations().flatMapTo(linkedSetOf()) { it.dependencies() }
-        (InputIdentity.Form(ValueLocation(target, ValuePath())) in identities) shouldBe true
+        (InputIdentity.Form(ValueLocation.of(target)) in identities) shouldBe true
         lease.close()
         store.close()
     }
 
     fun unfilledLinkKeepsValidSiblingTraversalComplete() {
         val catalog = GraphCatalogLease()
-        val source = ResourceId("source")
-        val target = ResourceId("target")
+        val source = ResourceId(value = "source")
+        val target = ResourceId(value = "target")
         val resources =
             mapOf(
                 source to graphRecord(source, listOf(target)),
@@ -348,71 +370,72 @@ class RealmGraphReadsTest {
         val selection =
             RelationSelection.Contracts(
                 setOf(EDGE.id, BAD.id),
-                TraversalDirection.Forward,
+                TraversalDirection.FORWARD,
             )
 
         val reachableReads = CapturedAuthoringReads(lease.originalView())
         val reachable =
             with(reachableReads) {
                 RealmGraphReads.reachable(
-                    ReachabilityQuery(setOf(source), selection, ResourceDrafts, maxDepth = 1),
+                    ReachabilityQuery(setOf(source.toResourceId()), selection, ResourceDrafts, maxDepth = 1),
                 )
             }
-        reachable.resources.mapTo(linkedSetOf()) { it.id } shouldBe setOf(source, target)
+        reachable.resources.mapTo(linkedSetOf()) { it.id.toSkir() } shouldBe setOf(source, target)
         reachable.unresolved
             .filterIsInstance<UnresolvedLink.Unfilled>()
-            .single { it.occurrence.location.resource == source }
-            .occurrence.endpoint shouldBe BAD_ENDPOINT
+            .single {
+                it.occurrence.location.resource == source
+            }.occurrence.endpoint shouldBe BAD_ENDPOINT
         reachable.completion.shouldBeInstanceOf<InspectionCompletion.Complete>()
         val dependencies = reachableReads.observations().flatMapTo(linkedSetOf()) { it.dependencies() }
         (
             InputIdentity.Value(
-                ValueLocation(
+                ValueLocation.of(
                     source,
                     ValuePath(
-                        listOf(
-                            com.typewritermc.authoring.PathSegment
-                                .Field("bad"),
-                        ),
+                        segments =
+                            listOf(
+                                PathSegment.createField(name = "bad"),
+                            ),
                     ),
                 ),
             ) in dependencies
         ) shouldBe true
         (
             InputIdentity.Value(
-                ValueLocation(
+                ValueLocation.of(
                     source,
                     ValuePath(
-                        listOf(
-                            com.typewritermc.authoring.PathSegment
-                                .Field("outgoing"),
-                        ),
+                        segments =
+                            listOf(
+                                PathSegment.createField(name = "outgoing"),
+                            ),
                     ),
                 ),
             ) in dependencies
         ) shouldBe true
         (
             InputIdentity.Value(
-                ValueLocation(
+                ValueLocation.of(
                     source,
                     ValuePath(
-                        listOf(
-                            com.typewritermc.authoring.PathSegment
-                                .Field("buttons"),
-                        ),
+                        segments =
+                            listOf(
+                                PathSegment.createField(name = "buttons"),
+                            ),
                     ),
                 ),
             ) in dependencies
         ) shouldBe true
         (
             InputIdentity.Form(
-                ValueLocation(
+                ValueLocation.of(
                     source,
                     ValuePath(
-                        listOf(
-                            com.typewritermc.authoring.PathSegment
-                                .Field("optional"),
-                        ),
+                        segments =
+                            listOf(
+                                PathSegment.createField(name = "optional"),
+                            ),
                     ),
                 ),
             ) in dependencies
@@ -420,13 +443,13 @@ class RealmGraphReadsTest {
         listOf("message", "nested", "expanding").forEach { field ->
             (
                 InputIdentity.Form(
-                    ValueLocation(
+                    ValueLocation.of(
                         source,
                         ValuePath(
-                            listOf(
-                                com.typewritermc.authoring.PathSegment
-                                    .Field(field),
-                            ),
+                            segments =
+                                listOf(
+                                    PathSegment.createField(name = field),
+                                ),
                         ),
                     ),
                 ) in dependencies
@@ -435,18 +458,19 @@ class RealmGraphReadsTest {
 
         val routes =
             with(CapturedAuthoringReads(lease.originalView())) {
-                RealmGraphReads.routes(RouteQuery(setOf(source), target, selection, maxDepth = 1))
+                RealmGraphReads.routes(RouteQuery(setOf(source.toResourceId()), target.toResourceId(), selection, maxDepth = 1))
             }
         routes.paths.size shouldBe 1
         routes.unresolved
             .filterIsInstance<UnresolvedLink.Unfilled>()
-            .single { it.occurrence.location.resource == source }
-            .occurrence.endpoint shouldBe BAD_ENDPOINT
+            .single {
+                it.occurrence.location.resource == source
+            }.occurrence.endpoint shouldBe BAD_ENDPOINT
         routes.completion.shouldBeInstanceOf<InspectionCompletion.Complete>()
 
         val occurrences =
             with(CapturedAuthoringReads(lease.originalView())) {
-                RealmGraphReads.occurrences(LinkInspectionQuery(setOf(source), selection))
+                RealmGraphReads.occurrences(LinkInspectionQuery(setOf(source.toResourceId()), selection))
             }
         occurrences.occurrences.size shouldBe 1
         occurrences.occurrences
@@ -456,87 +480,84 @@ class RealmGraphReadsTest {
         occurrences.completion.shouldBeInstanceOf<InspectionCompletion.Complete>()
 
         val changedSource =
-            resources.getValue(source).copy(
-                fields =
-                    resources.getValue(source).fields +
-                        (
-                            "buttons" to
-                                DataValue.Named(
-                                    BUTTON_LIST_USE,
-                                    DataValue.ListValue(
-                                        listOf(
-                                            ListItem(
-                                                ItemId("button"),
-                                                DataValue.Named(
-                                                    BUTTON_USE,
-                                                    DataValue.Record(mapOf("target" to DataValue.Unfilled)),
-                                                ),
-                                            ),
+            resources
+                .getValue(source)
+                .with(
+                    "buttons",
+                    DataValue.named(
+                        BUTTON_LIST_USE,
+                        DataValue.listValue(
+                            listOf(
+                                ListItem(
+                                    id = ItemId(value = "button"),
+                                    value =
+                                        DataValue.named(
+                                            BUTTON_USE,
+                                            DataValue.record(mapOf("target" to DataValue.UNFILLED)),
                                         ),
-                                    ),
-                                )
-                        ) +
-                        (
-                            "optional" to
-                                DataValue.Named(
-                                    OPTIONAL_LINK_HOLDER_USE,
-                                    DataValue.Record(mapOf("target" to DataValue.Unfilled)),
-                                )
+                                ),
+                            ),
                         ),
-            )
+                    ),
+                ).with(
+                    "optional",
+                    DataValue.named(
+                        OPTIONAL_LINK_HOLDER_USE,
+                        DataValue.record(mapOf("target" to DataValue.UNFILLED)),
+                    ),
+                )
         val buttons =
-            ValueLocation(
+            ValueLocation.of(
                 source,
                 ValuePath(
-                    listOf(
-                        com.typewritermc.authoring.PathSegment
-                            .Field("buttons"),
-                    ),
+                    segments =
+                        listOf(
+                            PathSegment.createField(name = "buttons"),
+                        ),
                 ),
             )
         val optional =
-            ValueLocation(
+            ValueLocation.of(
                 source,
                 ValuePath(
-                    listOf(
-                        com.typewritermc.authoring.PathSegment
-                            .Field("optional"),
-                    ),
+                    segments =
+                        listOf(
+                            PathSegment.createField(name = "optional"),
+                        ),
                 ),
             )
         val button =
-            ValueLocation(
+            ValueLocation.of(
                 source,
                 ValuePath(
-                    listOf(
-                        com.typewritermc.authoring.PathSegment
-                            .Field("buttons"),
-                        com.typewritermc.authoring.PathSegment
-                            .Item(ItemId("button")),
-                    ),
+                    segments =
+                        listOf(
+                            PathSegment.createField(name = "buttons"),
+                            PathSegment.createItem(id = ItemId(value = "button")),
+                        ),
                 ),
             )
         val buttonTarget =
-            ValueLocation(
+            ValueLocation.of(
                 source,
                 ValuePath(
-                    button.path.segments +
-                        com.typewritermc.authoring.PathSegment
-                            .Field("target"),
+                    segments =
+                        button.path.segments +
+                            PathSegment.createField(name = "target"),
                 ),
             )
         val optionalTarget =
-            ValueLocation(
+            ValueLocation.of(
                 source,
                 ValuePath(
-                    optional.path.segments +
-                        com.typewritermc.authoring.PathSegment
-                            .Field("target"),
+                    segments =
+                        optional.path.segments +
+                            PathSegment.createField(name = "target"),
                 ),
             )
         val expected =
-            com.typewritermc.authoring.EditExpectation
-                .Value(buttons, resources.getValue(source).valueAt(buttons.path))
+            skirout.editor.v1.authoring_facts.EditExpectation
+                .createValue(at = buttons, expected = resources.getValue(source).valueAt(buttons.path))
         val actual =
             com.typewritermc.realm.repository
                 .CapturedAuthoringValues(mapOf(source to changedSource), emptyList())
@@ -552,8 +573,8 @@ class RealmGraphReadsTest {
                 RealmGraphReads
                     .reachable(
                         ReachabilityQuery(
-                            setOf(source),
-                            RelationSelection.Contracts(setOf(BAD.id), TraversalDirection.Forward),
+                            setOf(source.toResourceId()),
+                            RelationSelection.Contracts(setOf(BAD.id), TraversalDirection.FORWARD),
                             ResourceDrafts,
                             maxDepth = 0,
                         ),
@@ -563,28 +584,25 @@ class RealmGraphReadsTest {
         changedUnresolved.mapTo(linkedSetOf()) { it.occurrence.location.path } shouldBe
             setOf(
                 ValuePath(
-                    listOf(
-                        com.typewritermc.authoring.PathSegment
-                            .Field("bad"),
-                    ),
+                    segments =
+                        listOf(
+                            PathSegment.createField(name = "bad"),
+                        ),
                 ),
                 ValuePath(
-                    listOf(
-                        com.typewritermc.authoring.PathSegment
-                            .Field("buttons"),
-                        com.typewritermc.authoring.PathSegment
-                            .Item(ItemId("button")),
-                        com.typewritermc.authoring.PathSegment
-                            .Field("target"),
-                    ),
+                    segments =
+                        listOf(
+                            PathSegment.createField(name = "buttons"),
+                            PathSegment.createItem(id = ItemId(value = "button")),
+                            PathSegment.createField(name = "target"),
+                        ),
                 ),
                 ValuePath(
-                    listOf(
-                        com.typewritermc.authoring.PathSegment
-                            .Field("optional"),
-                        com.typewritermc.authoring.PathSegment
-                            .Field("target"),
-                    ),
+                    segments =
+                        listOf(
+                            PathSegment.createField(name = "optional"),
+                            PathSegment.createField(name = "target"),
+                        ),
                 ),
             )
         changedLease.close()
@@ -604,9 +622,9 @@ private class GraphCatalogLease(
     override val relations: List<RelationContract> = listOf(EDGE, BAD)
     override val endpointBindings: List<EndpointBindingTemplate> = listOf(EDGE_BINDING, BAD_BINDING)
 
-    override val configuration: List<com.typewritermc.configuration.ConfigurationRecipe> = emptyList()
+    override val configuration: List<skirout.editor.v1.catalog.ConfigurationRecipe> = emptyList()
     override val operations = com.typewritermc.operations.OperationCatalog()
-    override val placementFields = emptyMap<com.typewritermc.types.TypeDefinitionId, com.typewritermc.authoring.ValuePath>()
+    override val placementFields = emptyMap<TypeDefinitionId, ValuePath>()
 
     override fun retain(): AuthoringCatalogLease = GraphCatalogLease(generation)
 
@@ -618,38 +636,48 @@ private fun graphRecord(
     targets: List<ResourceId>,
     badTarget: ResourceId? = null,
 ): AuthoringRecord =
-    AuthoringRecord(
-        TypeSelection.Complete(NODE_USE),
+    AuthoringRecord.of(
+        TypeSelection.CompleteWrapper(NODE_USE),
         mapOf(
             "outgoing" to
-                DataValue.Named(
+                DataValue.named(
                     EDGE_LIST_USE,
-                    DataValue.ListValue(
+                    DataValue.listValue(
                         targets.mapIndexed { index, target ->
                             ListItem(
-                                ItemId("${source.value}_$index"),
-                                DataValue.Named(EDGE_LINK_USE, DataValue.Link(EDGE_SOURCE, LinkTarget(target, null))),
+                                id = ItemId(value = "${source.value}_$index"),
+                                value =
+                                    DataValue.named(
+                                        EDGE_LINK_USE,
+                                        DataValue.createLink(
+                                            endpoint = EDGE_SOURCE,
+                                            target = LinkTarget(resource = target, opposite = null),
+                                        ),
+                                    ),
                             )
                         },
                     ),
                 ),
             "bad" to
                 if (badTarget == null) {
-                    DataValue.Unfilled
+                    DataValue.UNFILLED
                 } else {
-                    DataValue.Named(BAD_LINK_USE, DataValue.Link(BAD_ENDPOINT, LinkTarget(badTarget, null)))
+                    DataValue.named(
+                        BAD_LINK_USE,
+                        DataValue.createLink(endpoint = BAD_ENDPOINT, target = LinkTarget(resource = badTarget, opposite = null)),
+                    )
                 },
-            "buttons" to DataValue.Named(BUTTON_LIST_USE, DataValue.ListValue(emptyList())),
-            "optional" to DataValue.Null,
-            "message" to DataValue.Unfilled,
-            "nested" to DataValue.Unfilled,
-            "expanding" to DataValue.Unfilled,
+            "buttons" to DataValue.named(BUTTON_LIST_USE, DataValue.listValue(emptyList())),
+            "optional" to DataValue.NULL,
+            "message" to DataValue.UNFILLED,
+            "nested" to DataValue.UNFILLED,
+            "expanding" to DataValue.UNFILLED,
         ),
     )
 
-private fun graphDefinition(name: String) = TypeDefinitionId(TypeId.Qualified("graph", name), 1)
+private fun graphDefinition(name: String) = TypeDefinitionId.qualified("graph", name)
 
-private val GRAPH_GENERATION = CatalogGeneration("graph_catalog")
+private val GRAPH_GENERATION = CatalogGeneration(value = "graph_catalog")
 private val NODE = graphDefinition("node")
 private val EDGE_LINK = graphDefinition("edge_link")
 private val EDGE_LIST = graphDefinition("edge_list")
@@ -662,181 +690,214 @@ private val LINK_MESSAGE = graphDefinition("link_message")
 private val BOX = graphDefinition("box")
 private val EXPANDING = graphDefinition("expanding")
 private val WRAPPER = graphDefinition("wrapper")
-private val BOX_PARAMETER = ParameterKey(BOX, 0)
-private val EXPANDING_PARAMETER = ParameterKey(EXPANDING, 0)
-private val WRAPPER_PARAMETER = ParameterKey(WRAPPER, 0)
-private val NODE_USE = TypeUse.Named(NODE)
-private val EDGE_LINK_USE = TypeUse.Named(EDGE_LINK)
-private val EDGE_LIST_USE = TypeUse.Named(EDGE_LIST)
-private val BAD_LINK_USE = TypeUse.Named(BAD_LINK)
-private val BUTTON_LIST_USE = TypeUse.Named(BUTTON_LIST)
-private val BUTTON_USE = TypeUse.Named(BUTTON)
-private val OPTIONAL_LINK_HOLDER_USE = TypeUse.Named(OPTIONAL_LINK_HOLDER)
-private val EDGE_SOURCE = EndpointId("edge:source")
-private val EDGE_TARGET = EndpointId("edge:target")
-private val BAD_ENDPOINT = EndpointId("bad:source")
-private val BAD_TARGET = EndpointId("bad:target")
+private val BOX_PARAMETER = ParameterKey(owner = BOX, index = 0)
+private val EXPANDING_PARAMETER = ParameterKey(owner = EXPANDING, index = 0)
+private val WRAPPER_PARAMETER = ParameterKey(owner = WRAPPER, index = 0)
+private val NODE_USE = NODE.namedUse()
+private val EDGE_LINK_USE = EDGE_LINK.namedUse()
+private val EDGE_LIST_USE = EDGE_LIST.namedUse()
+private val BAD_LINK_USE = BAD_LINK.namedUse()
+private val BUTTON_LIST_USE = BUTTON_LIST.namedUse()
+private val BUTTON_USE = BUTTON.namedUse()
+private val OPTIONAL_LINK_HOLDER_USE = OPTIONAL_LINK_HOLDER.namedUse()
+private val EDGE_SOURCE = EndpointId(value = "edge:source")
+private val EDGE_TARGET = EndpointId(value = "edge:target")
+private val BAD_ENDPOINT = EndpointId(value = "bad:source")
+private val BAD_TARGET = EndpointId(value = "bad:target")
 private val EDGE =
-    RelationContract(
-        RelationId("edge"),
+    RelationContract.of(
+        RelationId(value = "edge"),
         EndpointDefinition(
-            EDGE_SOURCE,
-            EndpointSlot.First,
-            TypeTemplate.Named(NODE),
-            EndpointCardinality.Many,
-            RelationDeletePolicy.CLEAR,
+            id = EDGE_SOURCE,
+            slot = EndpointSlot.FIRST,
+            resource = NODE.namedTemplate(),
+            cardinality = EndpointCardinality.MANY,
+            onDelete = RelationDeletePolicy.CLEAR,
         ),
         EndpointDefinition(
-            EDGE_TARGET,
-            EndpointSlot.Second,
-            TypeTemplate.Named(NODE),
-            EndpointCardinality.Many,
-            RelationDeletePolicy.CLEAR,
+            id = EDGE_TARGET,
+            slot = EndpointSlot.SECOND,
+            resource = NODE.namedTemplate(),
+            cardinality = EndpointCardinality.MANY,
+            onDelete = RelationDeletePolicy.CLEAR,
         ),
-        families = setOf(RelationFamilyId("selected")),
+        families = setOf(RelationFamilyId(value = "selected")),
     )
 private val BAD =
-    RelationContract(
-        RelationId("bad"),
+    RelationContract.of(
+        RelationId(value = "bad"),
         EndpointDefinition(
-            BAD_ENDPOINT,
-            EndpointSlot.First,
-            TypeTemplate.Named(NODE),
-            EndpointCardinality.Many,
-            RelationDeletePolicy.CLEAR,
+            id = BAD_ENDPOINT,
+            slot = EndpointSlot.FIRST,
+            resource = NODE.namedTemplate(),
+            cardinality = EndpointCardinality.MANY,
+            onDelete = RelationDeletePolicy.CLEAR,
         ),
         EndpointDefinition(
-            BAD_TARGET,
-            EndpointSlot.Second,
-            TypeTemplate.Named(NODE),
-            EndpointCardinality.Many,
-            RelationDeletePolicy.CLEAR,
+            id = BAD_TARGET,
+            slot = EndpointSlot.SECOND,
+            resource = NODE.namedTemplate(),
+            cardinality = EndpointCardinality.MANY,
+            onDelete = RelationDeletePolicy.CLEAR,
         ),
     )
 private val EDGE_BINDING =
     EndpointBindingTemplate(
-        EDGE_SOURCE,
-        TypeTemplate.Named(NODE),
-        NODE,
-        RelativeFieldPattern(listOf(FieldPatternSegment.Field("outgoing"), FieldPatternSegment.Items)),
-        TypeTemplate.Named(NODE),
+        endpoint = EDGE_SOURCE,
+        containingResource = NODE.namedTemplate(),
+        valueOwner = NODE,
+        relativePath = RelativeFieldPattern(segments = listOf(FieldPatternSegment.field("outgoing"), FieldPatternSegment.ITEMS)),
+        target = NODE.template(),
         containsCollection = true,
     )
 private val BAD_BINDING =
     EndpointBindingTemplate(
-        BAD_ENDPOINT,
-        TypeTemplate.Named(NODE),
-        NODE,
-        RelativeFieldPattern(listOf(FieldPatternSegment.Field("bad"))),
-        TypeTemplate.Named(NODE),
+        endpoint = BAD_ENDPOINT,
+        containingResource = NODE.namedTemplate(),
+        valueOwner = NODE,
+        relativePath = RelativeFieldPattern(segments = listOf(FieldPatternSegment.field("bad"))),
+        target = NODE.template(),
         containsCollection = false,
     )
 private val GRAPH_DEFINITIONS =
     listOf(
-        TypeDefinition(
-            NODE,
+        TypeDefinition.partial(
+            id = NODE,
             representation =
-                RepresentationTemplate.Record(
-                    listOf(
-                        FieldDeclaration(FieldOwner(NODE, "outgoing"), TypeTemplate.Named(EDGE_LIST)),
-                        FieldDeclaration(FieldOwner(NODE, "bad"), TypeTemplate.Named(BAD_LINK)),
-                        FieldDeclaration(FieldOwner(NODE, "buttons"), TypeTemplate.Named(BUTTON_LIST)),
-                        FieldDeclaration(
-                            FieldOwner(NODE, "optional"),
-                            TypeTemplate.Nullable(TypeTemplate.Named(OPTIONAL_LINK_HOLDER)),
-                        ),
-                        FieldDeclaration(FieldOwner(NODE, "message"), TypeTemplate.Named(ABSTRACT_MESSAGE)),
-                        FieldDeclaration(
-                            FieldOwner(NODE, "nested"),
-                            TypeTemplate.Named(
-                                BOX,
-                                listOf(TypeTemplate.Named(BOX, listOf(TypeTemplate.Named(BAD_LINK)))),
+                RepresentationTemplate.createRecord(
+                    fields =
+                        listOf(
+                            FieldDeclaration.partial(owner = FieldOwner(definition = NODE, name = "outgoing"), type = EDGE_LIST.template()),
+                            FieldDeclaration.partial(owner = FieldOwner(definition = NODE, name = "bad"), type = BAD_LINK.template()),
+                            FieldDeclaration.partial(
+                                owner = FieldOwner(definition = NODE, name = "buttons"),
+                                type = BUTTON_LIST.template(),
+                            ),
+                            FieldDeclaration.partial(
+                                owner = FieldOwner(definition = NODE, name = "optional"),
+                                type = OPTIONAL_LINK_HOLDER.template().nullable(),
+                            ),
+                            FieldDeclaration.partial(
+                                owner = FieldOwner(definition = NODE, name = "message"),
+                                type = ABSTRACT_MESSAGE.template(),
+                            ),
+                            FieldDeclaration.partial(
+                                owner = FieldOwner(definition = NODE, name = "nested"),
+                                type = BOX.template(listOf(BOX.template(listOf(BAD_LINK.template())))),
+                            ),
+                            FieldDeclaration.partial(
+                                owner = FieldOwner(definition = NODE, name = "expanding"),
+                                type = EXPANDING.template(listOf(ScalarKind.TEXT.template)),
                             ),
                         ),
-                        FieldDeclaration(
-                            FieldOwner(NODE, "expanding"),
-                            TypeTemplate.Named(EXPANDING, listOf(TypeTemplate.Scalar(ScalarKind.Text))),
+                    abstract_ = false,
+                ),
+        ),
+        TypeDefinition.partial(
+            id = EDGE_LINK,
+            representation = RepresentationTemplate.createLink(endpoint = EDGE_SOURCE, target = NODE.template()),
+        ),
+        TypeDefinition.partial(
+            id = EDGE_LIST,
+            representation = RepresentationTemplate.createSequence(item = EDGE_LINK.template(), kind = CollectionKind.LIST),
+        ),
+        TypeDefinition.partial(
+            id = BAD_LINK,
+            representation = RepresentationTemplate.createLink(endpoint = BAD_ENDPOINT, target = NODE.template()),
+        ),
+        TypeDefinition.partial(
+            id = BUTTON,
+            representation =
+                RepresentationTemplate.createRecord(
+                    fields =
+                        listOf(
+                            FieldDeclaration.partial(owner = FieldOwner(definition = BUTTON, name = "target"), type = BAD_LINK.template()),
                         ),
-                    ),
+                    abstract_ = false,
                 ),
         ),
-        TypeDefinition(
-            EDGE_LINK,
-            representation = RepresentationTemplate.Link(EDGE_SOURCE, TypeTemplate.Named(NODE)),
+        TypeDefinition.partial(
+            id = BUTTON_LIST,
+            representation = RepresentationTemplate.createSequence(item = BUTTON.template(), kind = CollectionKind.LIST),
         ),
-        TypeDefinition(
-            EDGE_LIST,
-            representation = RepresentationTemplate.Sequence(TypeTemplate.Named(EDGE_LINK), CollectionKind.List),
-        ),
-        TypeDefinition(
-            BAD_LINK,
-            representation = RepresentationTemplate.Link(BAD_ENDPOINT, TypeTemplate.Named(NODE)),
-        ),
-        TypeDefinition(
-            BUTTON,
+        TypeDefinition.partial(
+            id = OPTIONAL_LINK_HOLDER,
             representation =
-                RepresentationTemplate.Record(
-                    listOf(FieldDeclaration(FieldOwner(BUTTON, "target"), TypeTemplate.Named(BAD_LINK))),
+                RepresentationTemplate.createRecord(
+                    fields =
+                        listOf(
+                            FieldDeclaration.partial(
+                                owner = FieldOwner(definition = OPTIONAL_LINK_HOLDER, name = "target"),
+                                type = BAD_LINK.template(),
+                            ),
+                        ),
+                    abstract_ = false,
                 ),
         ),
-        TypeDefinition(
-            BUTTON_LIST,
-            representation = RepresentationTemplate.Sequence(TypeTemplate.Named(BUTTON), CollectionKind.List),
+        TypeDefinition.partial(
+            id = ABSTRACT_MESSAGE,
+            representation = RepresentationTemplate.createRecord(fields = emptyList(), abstract_ = true),
         ),
-        TypeDefinition(
-            OPTIONAL_LINK_HOLDER,
+        TypeDefinition.partial(
+            id = LINK_MESSAGE,
             representation =
-                RepresentationTemplate.Record(
-                    listOf(FieldDeclaration(FieldOwner(OPTIONAL_LINK_HOLDER, "target"), TypeTemplate.Named(BAD_LINK))),
+                RepresentationTemplate.createRecord(
+                    fields =
+                        listOf(
+                            FieldDeclaration.partial(
+                                owner = FieldOwner(definition = LINK_MESSAGE, name = "target"),
+                                type = BAD_LINK.template(),
+                            ),
+                        ),
+                    abstract_ = false,
+                ),
+            parents = listOf(ABSTRACT_MESSAGE.namedTemplate()),
+        ),
+        TypeDefinition.partial(
+            id = BOX,
+            parameters = listOf(TypeParameter.partial(key = BOX_PARAMETER, name = "T")),
+            representation =
+                RepresentationTemplate.createRecord(
+                    fields =
+                        listOf(
+                            FieldDeclaration.partial(owner = FieldOwner(definition = BOX, name = "value"), type = BOX_PARAMETER.template),
+                        ),
+                    abstract_ = false,
                 ),
         ),
-        TypeDefinition(
-            ABSTRACT_MESSAGE,
-            representation = RepresentationTemplate.Record(emptyList(), abstract = true),
-        ),
-        TypeDefinition(
-            LINK_MESSAGE,
+        TypeDefinition.partial(
+            id = WRAPPER,
+            parameters = listOf(TypeParameter.partial(key = WRAPPER_PARAMETER, name = "T")),
             representation =
-                RepresentationTemplate.Record(
-                    listOf(FieldDeclaration(FieldOwner(LINK_MESSAGE, "target"), TypeTemplate.Named(BAD_LINK))),
-                ),
-            parents = listOf(TypeTemplate.Named(ABSTRACT_MESSAGE)),
-        ),
-        TypeDefinition(
-            BOX,
-            parameters = listOf(TypeParameter(BOX_PARAMETER, "T")),
-            representation =
-                RepresentationTemplate.Record(
-                    listOf(FieldDeclaration(FieldOwner(BOX, "value"), TypeTemplate.Parameter(BOX_PARAMETER))),
+                RepresentationTemplate.createRecord(
+                    fields =
+                        listOf(
+                            FieldDeclaration.partial(
+                                owner = FieldOwner(definition = WRAPPER, name = "value"),
+                                type = WRAPPER_PARAMETER.template,
+                            ),
+                        ),
+                    abstract_ = false,
                 ),
         ),
-        TypeDefinition(
-            WRAPPER,
-            parameters = listOf(TypeParameter(WRAPPER_PARAMETER, "T")),
+        TypeDefinition.partial(
+            id = EXPANDING,
+            parameters = listOf(TypeParameter.partial(key = EXPANDING_PARAMETER, name = "T")),
             representation =
-                RepresentationTemplate.Record(
-                    listOf(FieldDeclaration(FieldOwner(WRAPPER, "value"), TypeTemplate.Parameter(WRAPPER_PARAMETER))),
-                ),
-        ),
-        TypeDefinition(
-            EXPANDING,
-            parameters = listOf(TypeParameter(EXPANDING_PARAMETER, "T")),
-            representation =
-                RepresentationTemplate.Record(
-                    listOf(
-                        FieldDeclaration(
-                            FieldOwner(EXPANDING, "next"),
-                            TypeTemplate.Named(
-                                EXPANDING,
-                                listOf(
-                                    TypeTemplate.Named(
-                                        WRAPPER,
-                                        listOf(TypeTemplate.Parameter(EXPANDING_PARAMETER)),
+                RepresentationTemplate.createRecord(
+                    fields =
+                        listOf(
+                            FieldDeclaration.partial(
+                                owner = FieldOwner(definition = EXPANDING, name = "next"),
+                                type =
+                                    EXPANDING.template(
+                                        listOf(
+                                            WRAPPER.template(listOf(EXPANDING_PARAMETER.template)),
+                                        ),
                                     ),
-                                ),
                             ),
                         ),
-                    ),
+                    abstract_ = false,
                 ),
         ),
     )

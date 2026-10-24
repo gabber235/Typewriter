@@ -209,9 +209,7 @@ void main() {
         ),
       );
       final host = BoundPresentationHost(
-        catalog: CheckedEditorCatalog(
-          skir.EditorCatalogWireSnapshot.defaultInstance,
-        ),
+        catalog: CheckedEditorCatalog(skir.EditorCatalog.defaultInstance),
         root: () => root,
         bindings: [
           BoundPresentationBinding(
@@ -957,7 +955,7 @@ final class _DiagnosticTextHost extends ChangeNotifier
 
   BoundPresentationHost _createDelegate(String generation) {
     final snapshot =
-        (skir.EditorCatalogWireSnapshot.defaultInstance.toMutable()
+        (skir.EditorCatalog.defaultInstance.toMutable()
               ..generation = skir.CatalogGeneration(value: generation))
             .toFrozen();
     return BoundPresentationHost(

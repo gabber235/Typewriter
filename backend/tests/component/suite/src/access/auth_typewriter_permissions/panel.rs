@@ -1,3 +1,7 @@
+//! Panel grants checked against subjects and consumer names written out by hand. These are a
+//! deliberate oracle independent of the transport generator, so a generator change that alters a
+//! grant fails here instead of updating the expectation with it.
+
 use base64::{Engine as _, engine::general_purpose::URL_SAFE_NO_PAD};
 use component_test::{TestContext, TestResult, component_test};
 use json_matcher::assert_jm;
@@ -93,11 +97,12 @@ async fn panel_login_upserts_user_and_grants_personal_permissions(
             .contains(&"_INBOX.panel_user.0123456789abcdef0123456789abcdef.*".into())
     );
     assert!(
-        response
+        !response
             .permissions
             .publish
             .allow
-            .contains(&"$SYS.REQ.USER.INFO".into())
+            .iter()
+            .any(|subject| subject.starts_with("$SYS."))
     );
     assert_consumer_grant(
         &response.permissions.publish.allow,
@@ -180,7 +185,7 @@ async fn member_receives_all_organization_capabilities(
         .ok_or_else(|| anyhow::anyhow!("database handle missing"))?;
     database
         .seed(
-            "CREATE user:panel_user SET name = 'Existing User'; CREATE user:other_founder SET name = 'Other Founder'; CREATE organization:writers SET name = 'writers', founder = user:panel_user; CREATE organization:other SET name = 'other', founder = user:other_founder; CREATE service:writers_host_service SET name = 'writers_host_service', role = { type: 'host', version: '1.0.0' }, organization = organization:writers; CREATE service_host:writers_host SET service_id = service:writers_host_service, entrypoint = 'PAPER', can_host_realm = true, supported_engines = [{ engine_id: 'paper' }]; CREATE realm_instance:quests SET owner_host_id = service_host:writers_host, target_engine = { engine_id: 'paper', version_constraint: '^1' }; CREATE service:other_host_service SET name = 'other_host_service', role = { type: 'host', version: '1.0.0' }, organization = organization:other; CREATE service_host:other_host SET service_id = service:other_host_service, entrypoint = 'PAPER', can_host_realm = true, supported_engines = [{ engine_id: 'paper' }]; CREATE realm_instance:other_realm SET owner_host_id = service_host:other_host, target_engine = { engine_id: 'paper', version_constraint: '^1' };",
+            "CREATE user:panel_user SET name = 'Existing User'; CREATE user:other_founder SET name = 'Other Founder'; CREATE organization:writers SET name = 'writers', founder = user:panel_user; CREATE organization:other SET name = 'other', founder = user:other_founder;",
         )
         .execute()
         .await?;
@@ -219,25 +224,25 @@ async fn member_receives_all_organization_capabilities(
         "cloud.to.user.panel_user.organization.writers.services.bind",
         "cloud.to.user.panel_user.organization.writers.topology.watch",
         "cloud.to.user.panel_user.organization.writers.topology.configure",
-        "service.to.quests.organization.writers.realm.editor.catalog.fetch",
-        "service.to.quests.organization.writers.realm.editor.catalog.invalidate",
-        "service.to.quests.organization.writers.realm.editor.presentation.search",
-        "service.to.quests.organization.writers.realm.editor.presentation.search.cancel",
-        "service.to.quests.organization.writers.realm.editor.capability.computation.invoke",
-        "service.to.quests.organization.writers.realm.editor.capability.command.invoke",
-        "service.to.quests.organization.writers.realm.editor.creation.prepare",
-        "service.to.quests.organization.writers.realm.shared.catalog.fetch",
-        "service.to.quests.organization.writers.realm.shared.publish",
-        "service.to.quests.organization.writers.realm.shared.blob.read",
-        "service.to.quests.organization.writers.realm.editor.authoring.state.query",
-        "service.to.quests.organization.writers.realm.editor.authoring.edit.commit",
-        "service.to.quests.organization.writers.realm.editor.authoring.type.preview",
-        "service.to.quests.organization.writers.realm.editor.authoring.type.commit",
-        "service.to.quests.organization.writers.realm.editor.authoring.search",
-        "service.to.quests.organization.writers.realm.editor.authoring.publish",
-        "service.to.quests.organization.writers.realm.editor.authoring.publication.watch",
-        "service.to.quests.organization.writers.realm.editor.authoring.compiled.status.query",
-        "service.to.quests.organization.writers.realm.editor.authoring.compiled.query",
+        "service.to.*.organization.writers.realm.editor.catalog.fetch",
+        "service.to.*.organization.writers.realm.editor.catalog.invalidate",
+        "service.to.*.organization.writers.realm.editor.presentation.search",
+        "service.to.*.organization.writers.realm.editor.presentation.search.cancel",
+        "service.to.*.organization.writers.realm.editor.capability.computation.invoke",
+        "service.to.*.organization.writers.realm.editor.capability.command.invoke",
+        "service.to.*.organization.writers.realm.editor.creation.prepare",
+        "service.to.*.organization.writers.realm.shared.catalog.fetch",
+        "service.to.*.organization.writers.realm.shared.publish",
+        "service.to.*.organization.writers.realm.shared.blob.read",
+        "service.to.*.organization.writers.realm.editor.authoring.state.query",
+        "service.to.*.organization.writers.realm.editor.authoring.edit.commit",
+        "service.to.*.organization.writers.realm.editor.authoring.type.preview",
+        "service.to.*.organization.writers.realm.editor.authoring.type.commit",
+        "service.to.*.organization.writers.realm.editor.authoring.search",
+        "service.to.*.organization.writers.realm.editor.authoring.publish",
+        "service.to.*.organization.writers.realm.editor.authoring.publication.watch",
+        "service.to.*.organization.writers.realm.editor.authoring.compiled.status.query",
+        "service.to.*.organization.writers.realm.editor.authoring.compiled.query",
         "typewriter.presence.organization.writers.user.panel_user",
     ] {
         assert!(
@@ -246,8 +251,10 @@ async fn member_receives_all_organization_capabilities(
         );
     }
     assert!(
-        publish.iter().all(|subject| subject
-            != "service.to.quests.organization.writers.realm.editor.elements.fetch")
+        publish
+            .iter()
+            .all(|subject| subject
+                != "service.to.*.organization.writers.realm.editor.elements.fetch")
     );
     for obsolete in [
         "compiled.content.watch",
@@ -264,14 +271,11 @@ async fn member_receives_all_organization_capabilities(
     for required in [
         "cloud.from.organization.writers.services.watch",
         "cloud.from.organization.writers.topology.watch",
-        "service.from.quests.organization.writers.realm.editor.catalog.invalidate",
-        "service.from.quests.organization.writers.realm.editor.catalog.fetch.*",
-        "service.from.quests.organization.writers.realm.editor.presentation.search",
-        "service.from.quests.organization.writers.realm.editor.authoring.changed",
-        "service.from.quests.organization.writers.realm.editor.authoring.state.query.*",
-        "service.from.quests.organization.writers.realm.editor.authoring.compiled.changed",
-        "service.from.quests.organization.writers.realm.editor.authoring.compiled.query.*",
-        "service.from.quests.organization.writers.realm.editor.authoring.publication.watch",
+        "service.from.*.organization.writers.realm.editor.catalog.invalidate",
+        "service.from.*.organization.writers.realm.editor.presentation.search",
+        "service.from.*.organization.writers.realm.editor.authoring.changed",
+        "service.from.*.organization.writers.realm.editor.authoring.compiled.changed",
+        "service.from.*.organization.writers.realm.editor.authoring.publication.watch",
         "typewriter.presence.organization.writers.user.*",
     ] {
         assert!(
@@ -284,6 +288,11 @@ async fn member_receives_all_organization_capabilities(
         "editor.authoring.compiled.activated",
         "editor.authoring.compiled.watch",
         "editor.authoring.snapshot.query.*",
+        // Bulk reads reply on the session inbox; members never subscribe to other transfers.
+        "editor.catalog.fetch.*",
+        "editor.authoring.state.query.*",
+        "editor.authoring.compiled.query.*",
+        "editor.authoring.publication.query.*",
     ] {
         assert!(subscribe.iter().all(|subject| !subject.ends_with(obsolete)));
     }
@@ -291,8 +300,59 @@ async fn member_receives_all_organization_capabilities(
         publish
             .iter()
             .chain(subscribe)
-            .all(|subject| !subject.contains("other_realm")
-                && !subject.contains("organization.other"))
+            .all(|subject| !subject.contains("organization.other"))
+    );
+    Ok(())
+}
+
+#[component_test(AuthTypewriterPermissions)]
+async fn member_reaches_every_realm_of_its_organization_only(
+    context: &mut TestContext<AuthTypewriterPermissions>,
+) -> TestResult {
+    let database = context
+        .extension::<DatabaseHandle>()
+        .ok_or_else(|| anyhow::anyhow!("database handle missing"))?;
+    database
+        .seed(
+            "CREATE user:panel_user SET name = 'Existing User'; CREATE organization:writers SET name = 'writers', founder = user:panel_user;",
+        )
+        .execute()
+        .await?;
+
+    let response = request_permissions(
+        context,
+        "auth.permissions.typewriter-panel",
+        &request("panel_user", Some(organization_id())),
+    )
+    .await?;
+
+    let publish = &response.permissions.publish.allow;
+    let subscribe = &response.permissions.subscribe.allow;
+    // A realm created after connect is reachable without a new connection: no realm is enumerated.
+    assert!(
+        publish.contains(&"service.to.*.organization.writers.realm.editor.catalog.fetch".into())
+    );
+    assert!(
+        subscribe.contains(
+            &"service.from.*.organization.writers.realm.editor.catalog.invalidate".into()
+        )
+    );
+    let realm_grants = publish
+        .iter()
+        .chain(subscribe)
+        .filter(|subject| subject.starts_with("service."));
+    for subject in realm_grants {
+        assert!(
+            subject.starts_with("service.to.*.organization.writers.realm.")
+                || subject.starts_with("service.from.*.organization.writers.realm."),
+            "realm grant outside the organization: {subject}"
+        );
+    }
+    assert!(
+        publish
+            .iter()
+            .chain(subscribe)
+            .all(|subject| !subject.ends_with('>') && !subject.contains(".organization.*."))
     );
     Ok(())
 }
@@ -306,7 +366,7 @@ async fn punctuation_in_record_keys_remains_raw_in_generated_grants(
         .ok_or_else(|| anyhow::anyhow!("database handle missing"))?;
     database
         .seed(
-            "CREATE user:panel_user SET name = 'Existing User'; CREATE organization:`writers-world` SET name = 'writers_world', founder = user:panel_user; CREATE service:writers_host_service SET name = 'writers_host_service', role = { type: 'host', version: '1.0.0' }, organization = organization:`writers-world`; CREATE service_host:writers_host SET service_id = service:writers_host_service, entrypoint = 'PAPER', can_host_realm = true, supported_engines = [{ engine_id: 'paper' }]; CREATE realm_instance:`quest-world` SET owner_host_id = service_host:writers_host, target_engine = { engine_id: 'paper', version_constraint: '^1' };",
+            "CREATE user:panel_user SET name = 'Existing User'; CREATE organization:`writers-world` SET name = 'writers_world', founder = user:panel_user;",
         )
         .execute()
         .await?;
@@ -325,11 +385,15 @@ async fn punctuation_in_record_keys_remains_raw_in_generated_grants(
         response.tags,
         ["user:panel_user", "organization:writers-world"]
     );
-    assert!(response.permissions.publish.allow.contains(
-        &"service.to.quest-world.organization.writers-world.realm.editor.catalog.fetch".into()
-    ));
+    assert!(
+        response
+            .permissions
+            .publish
+            .allow
+            .contains(&"service.to.*.organization.writers-world.realm.editor.catalog.fetch".into())
+    );
     assert!(response.permissions.subscribe.allow.contains(
-        &"service.from.quest-world.organization.writers-world.realm.editor.catalog.fetch.*".into()
+        &"service.from.*.organization.writers-world.realm.editor.catalog.invalidate".into()
     ));
     assert!(
         response

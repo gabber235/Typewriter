@@ -3,26 +3,25 @@
 package com.typewritermc.presentation
 
 import com.typewritermc.authoring.GeneratedSdkApi
-import com.typewritermc.discovery.GraphDirection
 import com.typewritermc.discovery.checkedGeneratedScope
 import com.typewritermc.expression.Expr
-import com.typewritermc.expression.ExpressionBindingId
 import com.typewritermc.expression.Handled
-import com.typewritermc.types.CollectionKind
-import com.typewritermc.types.TypeTemplate
-import com.typewritermc.types.skir.SkirAuthoringValueCodec
-import com.typewritermc.types.skir.SkirTypeCodec
-import com.typewritermc.types.skir.getOrThrow
+import com.typewritermc.types.template
 import com.typewritermc.types.toTemplate
+import com.typewritermc.types.unknownVariant
+import com.typewritermc.types.use
 import skirout.editor.v1.binding.BindingRef
 import skirout.editor.v1.expression.ExpressionNode
 import skirout.editor.v1.presentation.BoundControl
+import skirout.editor.v1.presentation.GraphDirection
+import skirout.editor.v1.presentation.LinkRejectionDisplay
 import skirout.editor.v1.presentation.PresentationElement
 import skirout.editor.v1.presentation.PresentationNode
 import skirout.editor.v1.presentation.ResourcesLayout
-import skirout.editor.v1.presentation.GraphDirection as WireGraphDirection
+import skirout.editor.v1.type_catalog.CollectionKind
+import skirout.editor.v1.type_catalog.ExpressionBindingId
+import skirout.editor.v1.type_catalog.TypeTemplate
 import skirout.editor.v1.presentation.PresentationProperties as WirePresentationProperties
-import skirout.editor.v1.type_catalog.ExpressionBindingId as WireExpressionBindingId
 import skirout.editor.v1.type_catalog.ValuePath as WireValuePath
 
 /**
@@ -166,8 +165,8 @@ internal class RuntimeControlBinding(
                 allowAdd = add,
                 allowRemove = remove,
                 allowReorder = reorder,
-                itemBindingId = WireExpressionBindingId(value = "list_item"),
-                indexBindingId = WireExpressionBindingId(value = "list_index"),
+                itemBindingId = ExpressionBindingId(value = "list_item"),
+                indexBindingId = ExpressionBindingId(value = "list_index"),
                 appearance = appearance,
                 content = content,
             )
@@ -189,7 +188,7 @@ internal class RuntimeControlBinding(
                 itemPresentation = body,
                 allowAdd = add,
                 allowRemove = remove,
-                itemBindingId = WireExpressionBindingId(value = "set_item"),
+                itemBindingId = ExpressionBindingId(value = "set_item"),
                 appearance = appearance,
                 content = content,
             )
@@ -213,8 +212,8 @@ internal class RuntimeControlBinding(
                 valuePresentation = values,
                 allowAdd = add,
                 allowRemove = remove,
-                keyBindingId = WireExpressionBindingId(value = "map_key"),
-                valueBindingId = WireExpressionBindingId(value = "map_value"),
+                keyBindingId = ExpressionBindingId(value = "map_key"),
+                valueBindingId = ExpressionBindingId(value = "map_value"),
                 appearance = appearance,
                 content = content,
             )
@@ -263,16 +262,10 @@ internal class RuntimeControlBinding(
                 .partial()
                 .toMutable()
         RuntimeGraphAppearanceScope(draft).configure()
-        val wireDirection =
-            when (direction) {
-                GraphDirection.LEFT_TO_RIGHT -> WireGraphDirection.LEFT_TO_RIGHT
-                GraphDirection.RIGHT_TO_LEFT -> WireGraphDirection.RIGHT_TO_LEFT
-                GraphDirection.TOP_TO_BOTTOM -> WireGraphDirection.TOP_TO_BOTTOM
-                GraphDirection.BOTTOM_TO_TOP -> WireGraphDirection.BOTTOM_TO_TOP
-            }
+        require(direction != GraphDirection.UNKNOWN) { "Unknown graph direction." }
         resources(
             ResourcesLayout.createGraph(
-                direction = wireDirection,
+                direction = direction,
                 appearance = draft.toFrozen(),
             ),
         )
@@ -315,9 +308,9 @@ internal class RuntimeControlBinding(
         scope.configure()
         resources(
             ResourcesLayout.createTree(
-                path = SkirAuthoringValueCodec.encode(path.path).getOrThrow(),
+                path = path.path,
                 group = scope.group,
-                groupBindingId = groupBinding.wire(),
+                groupBindingId = groupBinding,
                 connectors = null,
                 initiallyExpanded = scope.initiallyExpanded,
             ),
@@ -337,7 +330,7 @@ internal class RuntimeControlBinding(
                 control = it,
                 layout = layout,
                 order = resourceOrder,
-                itemBindingId = RESOURCES_ITEM.wire(),
+                itemBindingId = RESOURCES_ITEM,
             )
         }
     }
@@ -350,22 +343,24 @@ internal class RuntimeControlBinding(
                     type: AppliedPresentation<Subtype>,
                     label: Expr<String, Handled>?,
                 ) {
-                    state.type(type.type)
+                    state.type(type.type.use)
                     val id =
-                        requireNotNull(state.presentationId(type.reference, state.type.rebind(type.type.toTemplate()))) {
+                        requireNotNull(state.presentationId(type.reference, state.type.rebind(type.type.toTemplate().template))) {
                             "A concrete form presentation must be registered before use."
                         }
+                    // Without an authored label the form is named by the readable Skir JSON of its definition id,
+                    // a stable spelling that does not depend on Kotlin object formatting.
+                    val fallback =
+                        skirout.editor.v1.type_catalog.TypeDefinitionId.serializer
+                            .toJsonCode(type.type.definition, build.skir.JsonFlavor.READABLE)
                     forms +=
                         skirout.editor.v1.presentation.ConcreteTypePresentation(
-                            concreteType = SkirTypeCodec.encode(type.type).getOrThrow(),
-                            label =
-                                expression(label ?: type.type.definition.toString()),
+                            concreteType = type.type.use,
+                            label = expression(label ?: fallback),
                             presentation =
                                 state.node(
                                     PresentationElement.createInvocation(
-                                        presentationId =
-                                            skirout.editor.v1.type_catalog
-                                                .PresentationId(namespace = id.namespace, name = id.name),
+                                        presentationId = id,
                                         arguments = emptyList(),
                                     ),
                                 ),
@@ -434,11 +429,7 @@ internal class RuntimeControlBinding(
                         skirout.editor.v1.presentation
                             .LinkCandidatePolicyId(value = p.value)
                     },
-                rejectionDisplay =
-                    when (rejection) {
-                        LinkRejectionDisplay.Hidden -> skirout.editor.v1.presentation.LinkRejectionDisplay.HIDDEN
-                        LinkRejectionDisplay.DisabledWithReason -> skirout.editor.v1.presentation.LinkRejectionDisplay.DISABLED
-                    },
+                rejectionDisplay = rejection,
                 sourceId = source?.id,
                 appearance = appearance,
                 content = content,
@@ -493,7 +484,7 @@ internal class RuntimeControlBinding(
 }
 
 /** Binds each member's link while a resources layout evaluates its order. */
-private val RESOURCES_ITEM = ExpressionBindingId("resources_item")
+private val RESOURCES_ITEM = ExpressionBindingId(value = "resources_item")
 
 private fun BindingRef.nested(
     slot: NestedPresentationSlot,
@@ -508,29 +499,30 @@ private fun BindingRef.nested(
         NestedPresentationSlot.Items -> {
             val bindingId =
                 when (requireNotNull(nested.collectionKind)) {
-                    CollectionKind.List -> "list_item"
-                    CollectionKind.Set -> "set_item"
+                    CollectionKind.LIST -> "list_item"
+                    CollectionKind.SET -> "set_item"
+                    else -> unknownVariant(nested.collectionKind)
                 }
             BindingRef(
                 path = WireValuePath(segments = emptyList()),
-                bindingId = ExpressionBindingId(bindingId).wire(),
+                bindingId = ExpressionBindingId(value = bindingId),
             )
         }
 
         NestedPresentationSlot.Keys -> {
             BindingRef(
                 path = WireValuePath(segments = emptyList()),
-                bindingId = ExpressionBindingId("map_key").wire(),
+                bindingId = ExpressionBindingId(value = "map_key"),
             )
         }
 
         NestedPresentationSlot.Values -> {
-            if (checked.type is TypeTemplate.Nullable) {
+            if (checked.type is TypeTemplate.NullableWrapper) {
                 this
             } else {
                 BindingRef(
                     path = WireValuePath(segments = emptyList()),
-                    bindingId = ExpressionBindingId("map_value").wire(),
+                    bindingId = ExpressionBindingId(value = "map_value"),
                 )
             }
         }

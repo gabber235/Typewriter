@@ -1,105 +1,98 @@
 package com.typewritermc.realm.routes
 
-import com.typewritermc.authoring.ArgumentSelection
-import com.typewritermc.authoring.AuthoringRecord
-import com.typewritermc.authoring.CheckExecutionId
-import com.typewritermc.authoring.CommitResult
-import com.typewritermc.authoring.EditExpectation
-import com.typewritermc.authoring.EditIntent
-import com.typewritermc.authoring.PreparedEdit
-import com.typewritermc.authoring.PreparedEditResult
-import com.typewritermc.authoring.TypeSelection
-import com.typewritermc.authoring.ValueLocation
-import com.typewritermc.authoring.ValuePath
-import com.typewritermc.authoring.skir.SkirAuthoringOperationCodec
-import com.typewritermc.checking.CatalogGeneration
-import com.typewritermc.checking.CheckOutcome
-import com.typewritermc.checking.FindingStatus
+import com.typewritermc.authoring.of
+import com.typewritermc.authoring.requireValid
+import com.typewritermc.authoring.root
 import com.typewritermc.checking.InputIdentity
 import com.typewritermc.realm.authoring.AuthoringLease
 import com.typewritermc.realm.authoring.AuthoringSeed
 import com.typewritermc.realm.authoring.AuthoringViewDelta
 import com.typewritermc.realm.authoring.AuthoringViewStore
 import com.typewritermc.realm.authoring.InMemoryAuthoringViewStore
-import com.typewritermc.realm.authoring.TypeArgumentChangePreview
 import com.typewritermc.realm.authoring.TypeArgumentOperations
-import com.typewritermc.realm.authoring.TypePreviewResult
 import com.typewritermc.realm.catalog.RealmCatalogStore
 import com.typewritermc.realm.catalog.installTestCatalog
-import com.typewritermc.realm.checking.CheckInstanceId
-import com.typewritermc.realm.checking.CheckTicket
-import com.typewritermc.realm.checking.FindingSet
 import com.typewritermc.realm.checking.TestCatalogLease
 import com.typewritermc.realm.checking.record
 import com.typewritermc.realm.repository.AuthoringRepository
 import com.typewritermc.services.libs.communicator.router.communicatorRoutes
-import com.typewritermc.types.DataValue
-import com.typewritermc.types.ResourceId
-import com.typewritermc.types.TypeDefinitionId
-import com.typewritermc.types.TypeId
-import com.typewritermc.types.TypeUse
-import com.typewritermc.types.skir.SkirAuthoringValueCodec
-import com.typewritermc.types.skir.getOrThrow
+import com.typewritermc.types.namedUse
+import com.typewritermc.types.qualified
+import com.typewritermc.types.requireValid
 import de.infix.testBalloon.framework.core.testSuite
 import io.kotest.matchers.shouldBe
 import kotlinx.coroutines.test.runTest
 import skirout.editor.v1.authoring.CommitPreparedEditResponse
+import skirout.editor.v1.authoring.EditIntent
+import skirout.editor.v1.authoring.PrepareTypeArgumentChangeResponse
+import skirout.editor.v1.authoring.PreparedEdit
 import skirout.editor.v1.authoring.PreviewTypeArgumentChangeRequest
 import skirout.editor.v1.authoring.PreviewTypeArgumentChangeResponse
 import skirout.editor.v1.authoring.QueryAuthoringStateRequest
 import skirout.editor.v1.authoring.QueryAuthoringStateResponse
+import skirout.editor.v1.authoring.TypeArgumentChangePreview
+import skirout.editor.v1.authoring_facts.EditExpectation
+import skirout.editor.v1.checking.CheckInstanceId
+import skirout.editor.v1.checking.CheckOutcome
+import skirout.editor.v1.checking.CheckTicket
+import skirout.editor.v1.checking.FindingSet
+import skirout.editor.v1.checking.FindingStatus
+import skirout.editor.v1.type_catalog.ArgumentSelection
+import skirout.editor.v1.type_catalog.AuthoringRecord
+import skirout.editor.v1.type_catalog.CatalogGeneration
+import skirout.editor.v1.type_catalog.CheckExecutionId
+import skirout.editor.v1.type_catalog.DataValue
+import skirout.editor.v1.type_catalog.ResourceId
+import skirout.editor.v1.type_catalog.TypeDefinitionId
+import skirout.editor.v1.type_catalog.TypeSelection
+import skirout.editor.v1.type_catalog.ValueLocation
 import skirout.editor.v1.authoring.AuthoringState as SkirAuthoringState
-import skirout.editor.v1.authoring.EditIntent as SkirEditIntent
-import skirout.editor.v1.authoring.TypePreviewResult as SkirTypePreviewResult
-import skirout.editor.v1.authoring_facts.EditExpectation as SkirEditExpectation
 import skirout.editor.v1.checking.CheckOutcome as SkirCheckOutcome
-import skirout.editor.v1.checking.FindingStatus as SkirFindingStatus
 import skirout.editor.v1.type_catalog.AuthoringRecord as SkirAuthoringRecord
-import skirout.editor.v1.type_catalog.CatalogGeneration as SkirCatalogGeneration
-import skirout.editor.v1.type_catalog.DataValue as SkirDataValue
 import skirout.editor.v1.type_catalog.FieldValue as SkirFieldValue
-import skirout.editor.v1.type_catalog.ResourceId as SkirResourceId
 
 val AuthoringRoutesTest by testSuite {
     test("current state query returns current findings without revision tokens") {
         runTest {
             val catalogs = RealmCatalogStore().also { it.installTestCatalog("catalog") }
-            val catalogIdentity = InputIdentity.Catalog(CatalogGeneration("catalog"))
-            val tombstone = InputIdentity.Existence(ResourceId("removed"))
+            val catalogIdentity = InputIdentity.Catalog(CatalogGeneration(value = "catalog"))
+            val tombstone = InputIdentity.Existence(ResourceId(value = "removed"))
             val views =
                 InMemoryAuthoringViewStore(
                     catalogs.captureCurrent(),
                     AuthoringSeed(emptyMap()),
                 )
-            val missing = com.typewritermc.authoring.ValueLocation(ResourceId("resource"), com.typewritermc.authoring.ValuePath())
+            val missing = ValueLocation.of(ResourceId(value = "resource"))
             val finding =
                 FindingSet(
                     ticket =
                         CheckTicket(
                             instance =
                                 CheckInstanceId(
-                                    com.typewritermc.configuration.RuleId(
-                                        com.typewritermc.configuration.RuleOrigin(
-                                            TypeDefinitionId(TypeId.Qualified("test", "rule"), 1),
-                                            3,
+                                    rule =
+                                        skirout.editor.v1.type_catalog.RuleId(
+                                            origin =
+                                                skirout.editor.v1.type_catalog.RuleOrigin(
+                                                    owner = TypeDefinitionId.qualified("test", "rule"),
+                                                    ordinal = 3,
+                                                ),
+                                            localIndex = 7,
                                         ),
-                                        7,
-                                    ),
-                                    missing,
+                                    location = missing,
                                 ),
                             incarnation = "catalog:1",
-                            execution = CheckExecutionId("execution:1"),
-                            catalog = CatalogGeneration("catalog"),
+                            execution = CheckExecutionId(value = "execution:1"),
+                            catalog = CatalogGeneration(value = "catalog"),
                         ),
                     expectations = emptyList(),
-                    outcome = CheckOutcome.NeedsInput(listOf(missing)),
+                    outcome = CheckOutcome.NeedsInputWrapper(listOf(missing)),
                     findings = emptyList(),
-                    status = FindingStatus.Outdated,
+                    status = FindingStatus.OUTDATED,
                 )
             try {
-                RouteFixture { contracts, _, _ ->
+                RouteFixture { address, _ ->
                     communicatorRoutes {
-                        AuthoringRoutes(RecordingAuthoringRepository(), views, { listOf(finding) }, contracts = contracts)
+                        AuthoringRoutes(RecordingAuthoringRepository(), views, { listOf(finding) }, address = address)
                             .register(this)
                     }
                 }.use { fixture ->
@@ -108,8 +101,7 @@ val AuthoringRoutesTest by testSuite {
                             .request(
                                 "editor.authoring.state.query",
                                 QueryAuthoringStateRequest(
-                                    generation = SkirCatalogGeneration(value = "catalog"),
-                                    transferId = "snapshot_tokens",
+                                    generation = CatalogGeneration(value = "catalog"),
                                 ),
                                 QueryAuthoringStateRequest.serializer,
                                 QueryAuthoringStateResponse.serializer,
@@ -123,12 +115,12 @@ val AuthoringRoutesTest by testSuite {
                         .ticket.instance.rule.localIndex shouldBe 7
                     response.findings
                         .single()
-                        .status shouldBe SkirFindingStatus.CURRENT
+                        .status shouldBe FindingStatus.CURRENT
                     response.findings
                         .single()
                         .outcome shouldBe
                         SkirCheckOutcome.NeedsInputWrapper(
-                            listOf(SkirAuthoringValueCodec.encode(missing).getOrThrow()),
+                            listOf(missing),
                         )
                 }
             } finally {
@@ -143,26 +135,25 @@ val AuthoringRoutesTest by testSuite {
             val repository = RecordingAuthoringRepository()
             val prepared =
                 PreparedEdit(
-                    catalog = CatalogGeneration("catalog"),
+                    catalog = CatalogGeneration(value = "catalog"),
                     expectations = emptyList(),
                     intents = emptyList(),
                 )
-            RouteFixture { contracts, _, _ ->
+            RouteFixture { address, _ ->
                 communicatorRoutes {
-                    AuthoringRoutes(repository, MissingViewStore, { emptyList() }, contracts = contracts).register(this)
+                    AuthoringRoutes(repository, MissingViewStore, { emptyList() }, address = address).register(this)
                 }
             }.use { fixture ->
                 val response =
                     fixture.request(
                         "editor.authoring.edit.commit",
-                        SkirAuthoringOperationCodec.encode(prepared).getOrThrow(),
+                        prepared,
                         skirout.editor.v1.authoring.PreparedEdit.serializer,
                         CommitPreparedEditResponse.serializer,
                     )
 
                 repository.received shouldBe prepared
-                response as CommitPreparedEditResponse.ResultWrapper
-                response.value shouldBe SkirAuthoringOperationCodec.encode(repository.result).getOrThrow()
+                response shouldBe repository.result
             }
         }
     }
@@ -173,17 +164,17 @@ val AuthoringRoutesTest by testSuite {
                 val repository = RecordingAuthoringRepository()
                 val prepared =
                     PreparedEdit(
-                        catalog = CatalogGeneration("catalog"),
-                        expectations = listOf(EditExpectation.ResourceExists(ResourceId("resource"), false)),
+                        catalog = CatalogGeneration(value = "catalog"),
+                        expectations = listOf(EditExpectation.createResourceExists(id = ResourceId(value = "resource"), expected = false)),
                         intents =
                             listOf(
-                                EditIntent.CreateResource(
-                                    ResourceId("resource"),
-                                    record(name = "created"),
+                                EditIntent.createCreateResource(
+                                    id = ResourceId(value = "resource"),
+                                    record = record(name = "created"),
                                 ),
                             ),
                     )
-                val wire = SkirAuthoringOperationCodec.encode(prepared).getOrThrow()
+                val wire = prepared
                 val serializer = skirout.editor.v1.authoring.PreparedEdit.serializer
                 val invalidPayload =
                     when (invalidInput) {
@@ -200,13 +191,13 @@ val AuthoringRoutesTest by testSuite {
                         }
 
                         "unknown intent" -> {
-                            serializer.toBytes(wire.copy(intents = listOf(SkirEditIntent.UNKNOWN))).toByteArray()
+                            serializer.toBytes(wire.copy(intents = listOf(EditIntent.UNKNOWN))).toByteArray()
                         }
 
                         "unknown expectation" -> {
                             serializer
                                 .toBytes(
-                                    wire.copy(expectations = listOf(SkirEditExpectation.UNKNOWN)),
+                                    wire.copy(expectations = listOf(EditExpectation.UNKNOWN)),
                                 ).toByteArray()
                         }
 
@@ -215,9 +206,9 @@ val AuthoringRoutesTest by testSuite {
                         }
                     }
 
-                RouteFixture { contracts, _, _ ->
+                RouteFixture { address, _ ->
                     communicatorRoutes {
-                        AuthoringRoutes(repository, MissingViewStore, { emptyList() }, contracts = contracts).register(this)
+                        AuthoringRoutes(repository, MissingViewStore, { emptyList() }, address = address).register(this)
                     }
                 }.use { fixture ->
                     val invalidResponse =
@@ -237,8 +228,7 @@ val AuthoringRoutesTest by testSuite {
                             CommitPreparedEditResponse.serializer,
                         )
                     repository.received shouldBe prepared
-                    recoveredResponse as CommitPreparedEditResponse.ResultWrapper
-                    recoveredResponse.value shouldBe SkirAuthoringOperationCodec.encode(repository.result).getOrThrow()
+                    recoveredResponse shouldBe repository.result
                 }
             }
         }
@@ -248,7 +238,7 @@ val AuthoringRoutesTest by testSuite {
         runTest {
             val repository = RecordingAuthoringRepository()
             val encoded = validPreparedEditWire()
-            val configuration = SkirAuthoringValueCodec.encode(record()).getOrThrow().configuration
+            val configuration = record().configuration
             val duplicate =
                 SkirAuthoringRecord(
                     configuration = configuration,
@@ -258,16 +248,16 @@ val AuthoringRoutesTest by testSuite {
                 encoded.copy(
                     intents =
                         listOf(
-                            SkirEditIntent.createCreateResource(
-                                id = SkirResourceId(value = "duplicate"),
+                            EditIntent.createCreateResource(
+                                id = ResourceId(value = "duplicate"),
                                 record = duplicate,
                             ),
                         ),
                 )
 
-            RouteFixture { contracts, _, _ ->
+            RouteFixture { address, _ ->
                 communicatorRoutes {
-                    AuthoringRoutes(repository, MissingViewStore, { emptyList() }, contracts = contracts).register(this)
+                    AuthoringRoutes(repository, MissingViewStore, { emptyList() }, address = address).register(this)
                 }
             }.use { fixture ->
                 val response =
@@ -292,16 +282,16 @@ val AuthoringRoutesTest by testSuite {
                 encoded.copy(
                     intents =
                         listOf(
-                            SkirEditIntent.createSetValue(
-                                at = SkirAuthoringValueCodec.encode(ValueLocation(ResourceId("resource"), ValuePath())).getOrThrow(),
-                                value = SkirDataValue.createRecord(fields = duplicateWireFields()),
+                            EditIntent.createSetValue(
+                                at = ValueLocation.of(ResourceId(value = "resource")),
+                                value = DataValue.createRecord(fields = duplicateWireFields()),
                             ),
                         ),
                 )
 
-            RouteFixture { contracts, _, _ ->
+            RouteFixture { address, _ ->
                 communicatorRoutes {
-                    AuthoringRoutes(repository, MissingViewStore, { emptyList() }, contracts = contracts).register(this)
+                    AuthoringRoutes(repository, MissingViewStore, { emptyList() }, address = address).register(this)
                 }
             }.use { fixture ->
                 val response =
@@ -321,7 +311,7 @@ val AuthoringRoutesTest by testSuite {
     test("type argument preview route preserves an unfinished selection and configuration repair") {
         runTest {
             val catalog = TestCatalogLease()
-            val resource = ResourceId("resource")
+            val resource = ResourceId(value = "resource")
             val authored = record(name = "kept")
             val views =
                 InMemoryAuthoringViewStore(
@@ -329,20 +319,20 @@ val AuthoringRoutesTest by testSuite {
                     AuthoringSeed(mapOf(resource to authored)),
                 )
             val requested =
-                TypeSelection.Pending(
-                    com.typewritermc.realm.checking.TEST_TYPE,
-                    listOf(ArgumentSelection.Unfilled),
+                TypeSelection.createPending(
+                    definition = com.typewritermc.realm.checking.TEST_TYPE,
+                    arguments = listOf(ArgumentSelection.UNFILLED),
                 )
             val typeArguments = RecordingTypeArgumentOperations()
             try {
-                RouteFixture { contracts, _, _ ->
+                RouteFixture { address, _ ->
                     communicatorRoutes {
                         AuthoringRoutes(
                             RecordingAuthoringRepository(),
                             views,
                             { emptyList() },
                             typeArguments,
-                            contracts,
+                            address,
                         ).register(this)
                     }
                 }.use { fixture ->
@@ -350,19 +340,19 @@ val AuthoringRoutesTest by testSuite {
                         fixture.request(
                             "editor.authoring.type.preview",
                             PreviewTypeArgumentChangeRequest(
-                                resource = SkirResourceId(value = resource.value),
-                                requested = SkirAuthoringValueCodec.encode(requested).getOrThrow(),
-                                catalog = SkirCatalogGeneration(value = catalog.generation.value),
+                                resource = ResourceId(value = resource.value),
+                                requested = requested,
+                                catalog = catalog.generation,
                             ),
                             PreviewTypeArgumentChangeRequest.serializer,
                             PreviewTypeArgumentChangeResponse.serializer,
-                        ) as PreviewTypeArgumentChangeResponse.ResultWrapper
+                        ) as PreviewTypeArgumentChangeResponse.ReadyWrapper
 
                     typeArguments.requested shouldBe requested
-                    val ready = response.value as SkirTypePreviewResult.ReadyWrapper
-                    SkirAuthoringValueCodec.decode(ready.value.next).getOrThrow() shouldBe requested
-                    val edit = SkirAuthoringOperationCodec.decode(ready.value.edit).getOrThrow()
-                    edit.intents shouldBe listOf(EditIntent.ConfigureResource(resource, requested))
+                    val ready = response
+                    ready.value.next.requireValid() shouldBe requested
+                    val edit = ready.value.edit.requireValid()
+                    edit.intents shouldBe listOf(EditIntent.createConfigureResource(resource = resource, configuration = requested))
                 }
             } finally {
                 views.close()
@@ -373,13 +363,13 @@ val AuthoringRoutesTest by testSuite {
     test("snapshot query preserves unavailable resource identity and unrelated resources") {
         runTest {
             val catalog = TestCatalogLease()
-            val unavailable = ResourceId("unavailable")
-            val available = ResourceId("available")
-            val unavailableType = TypeDefinitionId(TypeId.Qualified("removed", "resource"), 1)
+            val unavailable = ResourceId(value = "unavailable")
+            val available = ResourceId(value = "available")
+            val unavailableType = TypeDefinitionId.qualified("removed", "resource")
             val unavailableRecord =
-                AuthoringRecord(
-                    configuration = TypeSelection.Complete(TypeUse.Named(unavailableType)),
-                    fields = mapOf("legacy" to DataValue.StringValue("preserved")),
+                AuthoringRecord.of(
+                    configuration = TypeSelection.CompleteWrapper(unavailableType.namedUse()),
+                    fields = mapOf("legacy" to DataValue.StringValueWrapper("preserved")),
                 )
             val resources = mapOf(unavailable to unavailableRecord, available to record(name = "book"))
             val views =
@@ -388,9 +378,9 @@ val AuthoringRoutesTest by testSuite {
                     AuthoringSeed(resources),
                 )
             try {
-                RouteFixture { contracts, _, _ ->
+                RouteFixture { address, _ ->
                     communicatorRoutes {
-                        AuthoringRoutes(RecordingAuthoringRepository(), views, { emptyList() }, contracts = contracts)
+                        AuthoringRoutes(RecordingAuthoringRepository(), views, { emptyList() }, address = address)
                             .register(this)
                     }
                 }.use { fixture ->
@@ -399,8 +389,7 @@ val AuthoringRoutesTest by testSuite {
                             .request(
                                 "editor.authoring.state.query",
                                 QueryAuthoringStateRequest(
-                                    generation = SkirCatalogGeneration(value = catalog.generation.value),
-                                    transferId = "snapshot_unavailable_resource",
+                                    generation = catalog.generation,
                                 ),
                                 QueryAuthoringStateRequest.serializer,
                                 QueryAuthoringStateResponse.serializer,
@@ -408,7 +397,7 @@ val AuthoringRoutesTest by testSuite {
 
                     response.resources.map { it.id.value }.toSet() shouldBe setOf("available", "unavailable")
                     val unavailableWire = response.resources.single { it.id.value == unavailable.value }
-                    SkirAuthoringValueCodec.decode(unavailableWire.content).getOrThrow() shouldBe unavailableRecord
+                    unavailableWire.content.requireValid() shouldBe unavailableRecord
                 }
             } finally {
                 views.close()
@@ -417,32 +406,26 @@ val AuthoringRoutesTest by testSuite {
     }
 }
 
-private fun QueryAuthoringStateResponse.decodeSnapshot(): SkirAuthoringState {
-    val chunk = (this as QueryAuthoringStateResponse.ChunkWrapper).value.transfer
-    return SkirAuthoringState.serializer.fromBytes(chunk.payload)
-}
+private fun QueryAuthoringStateResponse.decodeSnapshot(): SkirAuthoringState = (this as QueryAuthoringStateResponse.StateWrapper).value
 
 private fun validPreparedEditWire() =
-    SkirAuthoringOperationCodec
-        .encode(
-            PreparedEdit(
-                catalog = CatalogGeneration("catalog"),
-                expectations = emptyList(),
-                intents = emptyList(),
-            ),
-        ).getOrThrow()
+    PreparedEdit(
+        catalog = CatalogGeneration(value = "catalog"),
+        expectations = emptyList(),
+        intents = emptyList(),
+    )
 
 private fun duplicateWireFields(): List<SkirFieldValue> =
     listOf(
-        SkirFieldValue(name = "name", value = SkirDataValue.StringValueWrapper("first")),
-        SkirFieldValue(name = "name", value = SkirDataValue.StringValueWrapper("second")),
+        SkirFieldValue(name = "name", value = DataValue.StringValueWrapper("first")),
+        SkirFieldValue(name = "name", value = DataValue.StringValueWrapper("second")),
     )
 
 private class RecordingAuthoringRepository : AuthoringRepository {
-    val result = CommitResult.Committed
+    val result = CommitPreparedEditResponse.COMMITTED
     var received: PreparedEdit? = null
 
-    override suspend fun commit(edit: PreparedEdit): CommitResult {
+    override suspend fun commit(edit: PreparedEdit): CommitPreparedEditResponse {
         received = edit
         return result
     }
@@ -455,9 +438,9 @@ private class RecordingTypeArgumentOperations : TypeArgumentOperations {
         resource: ResourceId,
         requested: TypeSelection,
         snapshot: AuthoringLease,
-    ): TypePreviewResult {
+    ): PreviewTypeArgumentChangeResponse {
         this.requested = requested
-        return TypePreviewResult.Ready(
+        return PreviewTypeArgumentChangeResponse.ReadyWrapper(
             TypeArgumentChangePreview(
                 resource = resource,
                 next = requested,
@@ -465,7 +448,7 @@ private class RecordingTypeArgumentOperations : TypeArgumentOperations {
                     PreparedEdit(
                         catalog = snapshot.root.catalog.generation,
                         expectations = emptyList(),
-                        intents = listOf(EditIntent.ConfigureResource(resource, requested)),
+                        intents = listOf(EditIntent.createConfigureResource(resource = resource, configuration = requested)),
                     ),
                 linkRepairs = emptyList(),
                 clearedLocations = emptyList(),
@@ -473,7 +456,8 @@ private class RecordingTypeArgumentOperations : TypeArgumentOperations {
         )
     }
 
-    override suspend fun prepare(preview: TypeArgumentChangePreview): PreparedEditResult = PreparedEditResult.Prepared(preview.edit)
+    override suspend fun prepare(preview: TypeArgumentChangePreview): PrepareTypeArgumentChangeResponse =
+        PrepareTypeArgumentChangeResponse.createPrepared(edit = preview.edit.requireValid())
 }
 
 private data object MissingViewStore : AuthoringViewStore {

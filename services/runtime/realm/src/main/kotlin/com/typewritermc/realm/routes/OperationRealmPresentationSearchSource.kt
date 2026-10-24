@@ -1,6 +1,5 @@
 package com.typewritermc.realm.routes
 
-import com.typewritermc.capability.CapabilityId
 import com.typewritermc.operations.CandidateSearch
 import com.typewritermc.operations.OperationInvocation
 import com.typewritermc.operations.OperationResourceOption
@@ -14,13 +13,12 @@ import com.typewritermc.realm.authoring.guarded
 import com.typewritermc.realm.authoring.operationObservation
 import com.typewritermc.realm.checking.CapturedAuthoringReads
 import com.typewritermc.services.libs.utils.rethrowExceptional
-import com.typewritermc.types.DataValue
 import com.typewritermc.types.NativeBinding
-import com.typewritermc.types.ResourceId
 import com.typewritermc.types.catalog.Resolution
-import com.typewritermc.types.skir.SkirDataValueCodec
-import com.typewritermc.types.skir.SkirTypeCodec
-import com.typewritermc.types.skir.getOrThrow
+import com.typewritermc.types.payload
+import com.typewritermc.types.requirePortable
+import com.typewritermc.types.requireValid
+import com.typewritermc.types.toSkir
 import com.typewritermc.types.toTemplate
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.CoroutineStart
@@ -32,7 +30,10 @@ import skirout.editor.v1.resource_operations.StaleAuthoringObservation
 import skirout.editor.v1.search.RealmPresentationSearchRequest
 import skirout.editor.v1.search.RealmPresentationSearchStatus
 import skirout.editor.v1.search.RealmPresentationSearchUpdate
+import skirout.editor.v1.type_catalog.CapabilityId
+import skirout.editor.v1.type_catalog.DataValue
 import java.util.concurrent.ConcurrentHashMap
+import com.typewritermc.types.ResourceId as AuthorResourceId
 
 /**
  * Searches the declared candidates of one operation input field, the source of the search input generated forms show
@@ -70,14 +71,14 @@ internal class OperationRealmPresentationSearchSource(
             invocation = context.invocation.decodeInvocation()
             baseline = lease.operationObservation(captured.confirmed, captured.upserts, captured.removals)
             search =
-                requireNotNull(baseline.catalog.operations.candidateSearch(CapabilityId(request.capabilityId.value))) {
+                requireNotNull(baseline.catalog.operations.candidateSearch(request.capabilityId)) {
                     "The operation search is unavailable."
                 }
-            require(SkirTypeCodec.decode(request.resultType).getOrThrow() == search.descriptor.resultType.toTemplate()) {
+            require(request.resultType.requireValid() == search.descriptor.resultType.toTemplate()) {
                 "The operation search result type is invalid."
             }
             require(
-                SkirDataValueCodec.decode(request.payload).getOrThrow() is DataValue.StringValue,
+                request.payload.requirePortable() is DataValue.StringValueWrapper,
             ) { "The operation search payload is invalid." }
             require(search.operation in invocation.applicableIn(baseline, CapturedAuthoringReads(AuthoredReadView.Original(baseline)))) {
                 "The operation does not apply to the search selection."
@@ -111,10 +112,10 @@ internal class OperationRealmPresentationSearchSource(
                             .guarded(reads) {
                                 search.field
                                     .acceptedCandidates(invocation.targets, RealmOperationReads(reads))
-                                    .filterIsInstance<ResourceId>()
+                                    .filterIsInstance<AuthorResourceId>()
                                     .mapNotNull { id ->
                                         active.ensureActive()
-                                        val record = baseline.resources[id] ?: return@mapNotNull null
+                                        val record = baseline.resources[id.toSkir()] ?: return@mapNotNull null
                                         val label = with(reads) { baseline.catalog.displays.label(record, baseline.catalog.checked) }
                                         OperationResourceOption(id, label ?: "Unnamed resource")
                                     }.filter { query.isEmpty() || query in it.label.lowercase() }
@@ -125,7 +126,7 @@ internal class OperationRealmPresentationSearchSource(
                         options
                             .take(MAX_RESULTS)
                             .sortedWith(compareBy({ it.label.lowercase() }, { it.id.value }))
-                            .map { SkirDataValueCodec.encode(resultBinding.encode(it)).getOrThrow() }
+                            .map { resultBinding.encode(it).requirePortable() }
                     val actual = views.read { it.observationId }
                     if (actual != captured.confirmed) {
                         updates.publish(staleSearch(request.subscriptionId, actual))
@@ -184,7 +185,7 @@ internal class OperationRealmPresentationSearchSource(
 internal fun staleSearch(
     subscriptionId: String,
     actual: String,
-) = RealmPresentationSearchUpdate.createStaleObservation(
+) = RealmPresentationSearchUpdate.createStaleObservationError(
     subscriptionId = subscriptionId,
     observation =
         StaleAuthoringObservation(

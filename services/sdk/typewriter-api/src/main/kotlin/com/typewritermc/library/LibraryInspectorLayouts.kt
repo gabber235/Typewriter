@@ -2,7 +2,6 @@ package com.typewritermc.library
 
 import com.typewritermc.expression.Expr
 import com.typewritermc.expression.Handled
-import com.typewritermc.expression.MissingPolicy
 import com.typewritermc.expression.emptyListExpression
 import com.typewritermc.expression.eq
 import com.typewritermc.expression.gt
@@ -18,7 +17,6 @@ import com.typewritermc.presentation.CollectionSource
 import com.typewritermc.presentation.ConnectorEndpointMarker
 import com.typewritermc.presentation.ConnectorStyle
 import com.typewritermc.presentation.ContainerStyle
-import com.typewritermc.presentation.CrossAxisAlignment
 import com.typewritermc.presentation.GraphNodeScope
 import com.typewritermc.presentation.Layout
 import com.typewritermc.presentation.PresentationBorder
@@ -26,14 +24,13 @@ import com.typewritermc.presentation.PresentationColor
 import com.typewritermc.presentation.PresentationInput
 import com.typewritermc.presentation.PresentationInsets
 import com.typewritermc.presentation.PresentationRadius
-import com.typewritermc.presentation.TextParagraph
 import com.typewritermc.presentation.asPresentationColor
 import com.typewritermc.presentation.projectedCollectionSource
+import com.typewritermc.presentation.textParagraph
 import com.typewritermc.presentation.withAlpha
 import com.typewritermc.types.Color
 import com.typewritermc.types.ResourceId
-import skirout.editor.v1.expression.ExpressionNode
-import skirout.editor.v1.expression.RuleUnaryOperation
+import skirout.editor.v1.presentation.CrossAxisAlignment
 
 internal fun Layout.inspectorSection(
     id: String,
@@ -56,7 +53,7 @@ internal fun Layout.inspectorSection(
 internal fun Layout.inspectorLayout(content: AxisLayout.() -> Unit) {
     column(
         spacing = 12.0,
-        cross = CrossAxisAlignment.Stretch,
+        cross = CrossAxisAlignment.STRETCH,
         body = content,
     )
 }
@@ -84,7 +81,7 @@ internal fun Layout.tagInheritanceSection(
             collectionGraph(source) {
                 roots(roots)
                 relation("parents")
-                rootSequence { column(spacing = 12.0, cross = CrossAxisAlignment.Stretch) }
+                rootSequence { column(spacing = 12.0, cross = CrossAxisAlignment.STRETCH) }
                 childrenSequence {
                     val ownerColor =
                         TagCollectionRowExpressionsFactory
@@ -128,21 +125,21 @@ private fun GraphNodeScope<TagCollectionRow>.tagInheritanceNode() {
     val count = children.size.orElse(literal(0))
     val accent = tag.color.orElse(literal(Color(0xff9e9e9eu))).asPresentationColor()
     val label = tag.name.orIfBlank("Unnamed tag")
-    column(cross = CrossAxisAlignment.Stretch) {
+    column(cross = CrossAxisAlignment.STRETCH) {
         showIf(
             count gte 2,
             whenFalse = {
-                column(cross = CrossAxisAlignment.Stretch) {
+                column(cross = CrossAxisAlignment.STRETCH) {
                     tagInheritanceCard(label, accent)
                     showIf(count eq literal(1)) { descendants() }
                 }
             },
         ) {
-            column(cross = CrossAxisAlignment.Stretch) {
+            column(cross = CrossAxisAlignment.STRETCH) {
                 section(
                     border = PresentationBorder.Sides(start = PresentationBorder.Side(width = 4.0, color = accent)),
                     header = {
-                        title { column(cross = CrossAxisAlignment.Stretch) { tagInheritanceCard(label, accent) } }
+                        title { column(cross = CrossAxisAlignment.STRETCH) { tagInheritanceCard(label, accent) } }
                         expanded(initially = false)
                         padding(header = PresentationInsets(0.0, 0.0, 0.0, 0.0), content = PresentationInsets(0.0, 0.0, 0.0, 0.0))
                     },
@@ -165,7 +162,7 @@ private fun Layout.tagInheritanceCard(
         ),
     ) {
         padding(PresentationInsets(start = 12.0, top = 8.0, end = 12.0, bottom = 8.0)) {
-            text(label, paragraph = TextParagraph(softWrap = true))
+            text(label, paragraph = textParagraph(softWrap = true))
         }
     }
 }

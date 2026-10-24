@@ -101,7 +101,7 @@ void main() {
       );
       expect(
         tester.widget<SurfaceContainer>(cover.first).decoration.color,
-        appearance.accent,
+        appearance.accentColor,
       );
       List<double?> spineTops() => [
         for (final spine in tester.widgetList<AnimatedPositionedDirectional>(

@@ -1,15 +1,16 @@
 package com.typewritermc.presentation
 
 import com.typewritermc.expression.Expr
-import com.typewritermc.expression.ExpressionBindingId
 import com.typewritermc.expression.MayBeMissing
-import com.typewritermc.types.IntegerWidth
 import com.typewritermc.types.ResourceId
 import com.typewritermc.types.ResourceIdDefinition
-import com.typewritermc.types.ScalarKind
-import com.typewritermc.types.TypeUse
+import com.typewritermc.types.integerScalar
+import com.typewritermc.types.use
 import skirout.editor.v1.presentation.HostContextInput
 import skirout.editor.v1.presentation.PresentationContextSource
+import skirout.editor.v1.type_catalog.ExpressionBindingId
+import skirout.editor.v1.type_catalog.IntegerWidth
+import skirout.editor.v1.type_catalog.TypeUse
 import kotlin.reflect.KClass
 
 /**
@@ -43,7 +44,7 @@ sealed interface PresentationContextValueType<Value : Any> {
 inline fun <reified Value : Any> presentationContextKey(id: String): PresentationContextKey<Value> {
     require(id.isNotBlank()) { "Caller input identity must not be blank." }
     return PresentationContextKey(
-        ExpressionBindingId("context:$id"),
+        ExpressionBindingId(value = "context:$id"),
         PresentationContextSource.CALLER,
         PresentationContextValueType.Registered(Value::class),
     )
@@ -53,11 +54,11 @@ inline fun <reified Value : Any> presentationContextKey(id: String): Presentatio
 object EditorContext {
     /** The resource routed in the workspace, missing when nothing is routed. */
     val activeResource: PresentationContextKey<ResourceId> =
-        hostContext(HostContextInput.ACTIVE_RESOURCE, ResourceIdDefinition.use)
+        hostContext(HostContextInput.ACTIVE_RESOURCE, ResourceIdDefinition.use.use)
 
     /** Number of resources in the current selection, missing outside a selection surface. */
     val selectionCount: PresentationContextKey<Int> =
-        hostContext(HostContextInput.SELECTION_COUNT, TypeUse.Scalar(ScalarKind.Integer(IntegerWidth.SIGNED_32)))
+        hostContext(HostContextInput.SELECTION_COUNT, integerScalar(IntegerWidth.SIGNED_THIRTY_TWO).use)
 }
 
 /**
@@ -69,7 +70,7 @@ private fun <Value : Any> hostContext(
     type: TypeUse,
 ): PresentationContextKey<Value> =
     PresentationContextKey(
-        ExpressionBindingId("context:host.${input.kind.name.removeSuffix("_CONST").lowercase()}"),
+        ExpressionBindingId(value = "context:host.${input.kind.name.removeSuffix("_CONST").lowercase()}"),
         PresentationContextSource.HostWrapper(input),
         PresentationContextValueType.Fixed(type),
     )

@@ -1,13 +1,15 @@
 package com.typewritermc.presentation
 
-import com.typewritermc.authoring.PathSegment
-import com.typewritermc.authoring.ValuePath
 import com.typewritermc.expression.Expr
-import com.typewritermc.expression.ExpressionBindingId
 import com.typewritermc.expression.Handled
 import com.typewritermc.expression.inputExpression
+import com.typewritermc.types.requireValid
 import skirout.editor.v1.expression.ExpressionNode
+import skirout.editor.v1.presentation.ControlDensity
 import skirout.editor.v1.presentation.PresentationNode
+import skirout.editor.v1.type_catalog.ExpressionBindingId
+import skirout.editor.v1.type_catalog.PathSegment
+import skirout.editor.v1.type_catalog.ValuePath
 import skirout.editor.v1.presentation.CollectionAppearance as WireCollectionAppearance
 import skirout.editor.v1.presentation.CollectionContent as WireCollectionContent
 import skirout.editor.v1.presentation.ResourceGraphAppearance as WireResourceGraphAppearance
@@ -30,7 +32,7 @@ internal class RuntimeCollectionAppearance(
         target.itemForeground = value.foreground?.wire()
         target.itemBorder = value.border?.wire()
         target.itemRadius = value.radius.wire()
-        target.itemTransition = value.transition?.wire()
+        target.itemTransition = value.transition?.requireValid()
         target.itemShadows = value.shadows.map { it.wire() }
     }
 }
@@ -361,7 +363,7 @@ internal class RuntimeCollectionOperationAppearance(
     }
 
     override fun operationDensity(value: ControlDensity) {
-        target.operationDensity = value.wire()
+        target.operationDensity = value
     }
 }
 
@@ -452,5 +454,5 @@ internal class RuntimeTreeScope(
         initiallyExpanded = value
     }
 
-    private fun groupField(name: String) = ValuePath(listOf(PathSegment.Field(name)))
+    private fun groupField(name: String) = ValuePath(segments = listOf(PathSegment.createField(name = name)))
 }

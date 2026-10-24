@@ -1,38 +1,44 @@
 package com.typewritermc.discovery
 
-import com.typewritermc.checking.CatalogGeneration
-import com.typewritermc.types.FieldDeclaration
-import com.typewritermc.types.FieldOwner
-import com.typewritermc.types.ParameterKey
-import com.typewritermc.types.RepresentationTemplate
-import com.typewritermc.types.ScalarKind
 import com.typewritermc.types.StandardTypes
-import com.typewritermc.types.TypeDefinition
-import com.typewritermc.types.TypeDefinitionId
-import com.typewritermc.types.TypeId
-import com.typewritermc.types.TypeParameter
-import com.typewritermc.types.TypeTemplate
-import com.typewritermc.types.catalog.DeclarationDiagnostic
 import com.typewritermc.types.catalog.DefaultCheckedCatalog
+import com.typewritermc.types.catalog.of
+import com.typewritermc.types.namedTemplate
+import com.typewritermc.types.namedUse
+import com.typewritermc.types.qualified
+import com.typewritermc.types.template
+import com.typewritermc.types.use
 import de.infix.testBalloon.framework.core.testSuite
 import io.kotest.matchers.shouldBe
+import skirout.editor.v1.diagnostic.DeclarationDiagnostic
+import skirout.editor.v1.type_catalog.CatalogGeneration
+import skirout.editor.v1.type_catalog.FieldDeclaration
+import skirout.editor.v1.type_catalog.FieldOwner
+import skirout.editor.v1.type_catalog.NamedTypeTemplate
+import skirout.editor.v1.type_catalog.ParameterKey
+import skirout.editor.v1.type_catalog.RepresentationTemplate
+import skirout.editor.v1.type_catalog.ScalarKind
+import skirout.editor.v1.type_catalog.TypeDefinition
+import skirout.editor.v1.type_catalog.TypeDefinitionId
+import skirout.editor.v1.type_catalog.TypeParameter
+import skirout.editor.v1.type_catalog.TypeTemplate
 
 val CatalogRecommendationsTest by testSuite {
     test("counts direct and nested complete custom uses") {
         val weighted = id("Weighted")
         val source = id("Source")
-        val weightedText = TypeTemplate.Named(weighted, listOf(TypeTemplate.Scalar(ScalarKind.Text)))
+        val weightedText = weighted.namedTemplate(listOf(ScalarKind.TEXT.template))
         val definitions =
             listOf(
-                TypeDefinition(
-                    weighted,
-                    parameters = listOf(TypeParameter(ParameterKey(weighted, 0), "T")),
-                    representation = RepresentationTemplate.Record(emptyList()),
+                TypeDefinition.partial(
+                    id = weighted,
+                    parameters = listOf(TypeParameter.partial(key = ParameterKey(owner = weighted, index = 0), name = "T")),
+                    representation = RepresentationTemplate.createRecord(fields = emptyList(), abstract_ = false),
                 ),
                 record(
                     source,
-                    field(source, "primary", weightedText),
-                    field(source, "choices", TypeTemplate.Named(StandardTypes.list, listOf(weightedText))),
+                    field(source, "primary", weightedText.template),
+                    field(source, "choices", StandardTypes.list.template(listOf(weightedText.template))),
                 ),
             ).associateBy(TypeDefinition::id)
 
@@ -47,17 +53,23 @@ val CatalogRecommendationsTest by testSuite {
         val child = id("Child")
         val definitions =
             listOf(
-                TypeDefinition(available, representation = RepresentationTemplate.Record(emptyList())),
-                TypeDefinition(unavailable, representation = RepresentationTemplate.Record(emptyList())),
-                record(parent, field(parent, "value", TypeTemplate.Named(available))),
+                TypeDefinition.partial(
+                    id = available,
+                    representation = RepresentationTemplate.createRecord(fields = emptyList(), abstract_ = false),
+                ),
+                TypeDefinition.partial(
+                    id = unavailable,
+                    representation = RepresentationTemplate.createRecord(fields = emptyList(), abstract_ = false),
+                ),
+                record(parent, field(parent, "value", available.template())),
                 record(
                     child,
-                    FieldDeclaration(
-                        owner = FieldOwner(child, "value"),
-                        type = TypeTemplate.Named(available),
-                        overrides = listOf(FieldOwner(parent, "value")),
+                    FieldDeclaration.partial(
+                        owner = FieldOwner(definition = child, name = "value"),
+                        type = available.template(),
+                        overrides = listOf(FieldOwner(definition = parent, name = "value")),
                     ),
-                    field(child, "invalid", TypeTemplate.Named(unavailable)),
+                    field(child, "invalid", unavailable.template()),
                 ),
             ).associateBy(TypeDefinition::id)
 
@@ -71,12 +83,18 @@ val CatalogRecommendationsTest by testSuite {
         val source = id("Source")
         val definitions =
             listOf(
-                TypeDefinition(alpha, representation = RepresentationTemplate.Record(emptyList())),
-                TypeDefinition(beta, representation = RepresentationTemplate.Record(emptyList())),
+                TypeDefinition.partial(
+                    id = alpha,
+                    representation = RepresentationTemplate.createRecord(fields = emptyList(), abstract_ = false),
+                ),
+                TypeDefinition.partial(
+                    id = beta,
+                    representation = RepresentationTemplate.createRecord(fields = emptyList(), abstract_ = false),
+                ),
                 record(
                     source,
-                    field(source, "beta", TypeTemplate.Named(beta)),
-                    field(source, "alpha", TypeTemplate.Named(alpha)),
+                    field(source, "beta", beta.template()),
+                    field(source, "alpha", alpha.template()),
                 ),
             ).associateBy(TypeDefinition::id)
 
@@ -84,27 +102,25 @@ val CatalogRecommendationsTest by testSuite {
     }
 }
 
-private fun id(name: String) = TypeDefinitionId(TypeId.Qualified("recommendation", name), 1)
+private fun id(name: String) = TypeDefinitionId.qualified("recommendation", name)
 
 private fun field(
     owner: TypeDefinitionId,
     name: String,
     type: TypeTemplate,
-) = FieldDeclaration(FieldOwner(owner, name), type)
+) = FieldDeclaration.partial(owner = FieldOwner(definition = owner, name = name), type = type)
 
 private fun record(
     id: TypeDefinitionId,
     vararg fields: FieldDeclaration,
-) = TypeDefinition(id, representation = RepresentationTemplate.Record(fields.toList()))
+) = TypeDefinition.partial(id = id, representation = RepresentationTemplate.createRecord(fields = fields.toList(), abstract_ = false))
 
-private fun TypeTemplate.Named.toUse() =
-    com.typewritermc.types.TypeUse.Named(
-        definition,
+private fun NamedTypeTemplate.toUse() =
+    definition.namedUse(
         arguments.map {
             when (it) {
-                is TypeTemplate.Scalar -> {
-                    com.typewritermc.types.TypeUse
-                        .Scalar(it.kind)
+                is TypeTemplate.ScalarWrapper -> {
+                    it.value.use
                 }
 
                 else -> {
@@ -118,7 +134,7 @@ private fun catalog(
     definitions: Map<TypeDefinitionId, TypeDefinition>,
     unavailable: TypeDefinitionId? = null,
 ) = DefaultCheckedCatalog(
-    CatalogGeneration("recommendations"),
+    CatalogGeneration(value = "recommendations"),
     StandardTypes.definitions + definitions.values,
-    quarantine = listOfNotNull(unavailable?.let { DeclarationDiagnostic(it, "fixture_unavailable") }),
+    quarantine = listOfNotNull(unavailable?.let { DeclarationDiagnostic.of(it, "fixture_unavailable") }),
 )

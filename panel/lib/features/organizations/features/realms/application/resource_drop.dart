@@ -128,7 +128,7 @@ Future<DropCandidateIndex> dropCandidates(Ref ref, ResourceDrag drag) async {
             for (final candidates in value) candidates.operation: candidates,
           },
         );
-      case skir.ResolveDropCandidatesResult_staleObservationWrapper():
+      case skir.ResolveDropCandidatesResult_staleObservationErrorWrapper():
         await workspace.refreshConfirmed();
       default:
         throw StateError("Drop targets are unavailable. Refresh the Realm");

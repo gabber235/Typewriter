@@ -2,8 +2,6 @@ package com.typewritermc.elements
 
 import com.typewritermc.authoring.defaultLabel
 import com.typewritermc.expression.accent
-import com.typewritermc.expression.color
-import com.typewritermc.expression.display
 import com.typewritermc.expression.icon
 import com.typewritermc.expression.label
 import com.typewritermc.expression.literal
@@ -15,13 +13,10 @@ import com.typewritermc.expression.trim
 import com.typewritermc.library.fields
 import com.typewritermc.library.pageLocation
 import com.typewritermc.presentation.EditorContext
-import com.typewritermc.presentation.asPresentationColor
 import com.typewritermc.presentation.icon
 import com.typewritermc.presentation.resource
 import com.typewritermc.presentation.searchDescription
-import com.typewritermc.types.Color
-import com.typewritermc.types.Icon
-import com.typewritermc.types.PresentationRole
+import skirout.editor.v1.catalog.PresentationRole
 
 object ElementSdkProvider : ElementConfiguration {
     override fun ElementConfigurationScope.configure() {

@@ -2212,6 +2212,8 @@ sealed class UpdateOrganizationMemberRolesResponse {
   );
 
   /// Create a 'user_not_found_error' variant wrapping around the given value.
+  ///
+  /// Users not found.
   factory UpdateOrganizationMemberRolesResponse.wrapUserNotFoundError(
     UpdateOrganizationMemberRolesResponse_UserNotFoundError value,
   ) => UpdateOrganizationMemberRolesResponse_userNotFoundErrorWrapper._(value);
@@ -2225,6 +2227,8 @@ sealed class UpdateOrganizationMemberRolesResponse {
   );
 
   /// Create a 'roles_not_found_error' variant wrapping around the given value.
+  ///
+  /// Roles not found.
   factory UpdateOrganizationMemberRolesResponse.wrapRolesNotFoundError(
     UpdateOrganizationMemberRolesResponse_RolesNotFoundError value,
   ) => UpdateOrganizationMemberRolesResponse_rolesNotFoundErrorWrapper._(value);
@@ -2238,6 +2242,8 @@ sealed class UpdateOrganizationMemberRolesResponse {
   );
 
   /// Create a 'roles_not_assignable_error' variant wrapping around the given value.
+  ///
+  /// Roles not assignable.
   factory UpdateOrganizationMemberRolesResponse.wrapRolesNotAssignableError(
     UpdateOrganizationMemberRolesResponse_RolesNotAssignableError value,
   ) => UpdateOrganizationMemberRolesResponse_rolesNotAssignableErrorWrapper._(
@@ -2258,6 +2264,8 @@ sealed class UpdateOrganizationMemberRolesResponse {
   );
 
   /// Create a 'roles_required_error' variant wrapping around the given value.
+  ///
+  /// At least one role is required.
   factory UpdateOrganizationMemberRolesResponse.wrapRolesRequiredError(
     UpdateOrganizationMemberRolesResponse_RolesRequiredError value,
   ) => UpdateOrganizationMemberRolesResponse_rolesRequiredErrorWrapper._(value);
@@ -2271,6 +2279,8 @@ sealed class UpdateOrganizationMemberRolesResponse {
   );
 
   /// Create a 'founder_role_required_error' variant wrapping around the given value.
+  ///
+  /// Founder role is required.
   factory UpdateOrganizationMemberRolesResponse.wrapFounderRoleRequiredError(
     UpdateOrganizationMemberRolesResponse_FounderRoleRequiredError value,
   ) => UpdateOrganizationMemberRolesResponse_founderRoleRequiredErrorWrapper._(
@@ -2284,6 +2294,8 @@ sealed class UpdateOrganizationMemberRolesResponse {
       );
 
   /// Create a 'invalid_selection_error' variant wrapping around the given value.
+  ///
+  /// Selection must contain distinct targets.
   factory UpdateOrganizationMemberRolesResponse.wrapInvalidSelectionError(
     UpdateOrganizationMemberRolesResponse_InvalidSelectionError value,
   ) => UpdateOrganizationMemberRolesResponse_invalidSelectionErrorWrapper._(
@@ -2297,6 +2309,8 @@ sealed class UpdateOrganizationMemberRolesResponse {
       );
 
   /// Create a 'invalid_record_id_error' variant wrapping around the given value.
+  ///
+  /// Record IDs from an unexpected table.
   factory UpdateOrganizationMemberRolesResponse.wrapInvalidRecordIdError(
     _lib_kernel_v1_errors.InvalidRecordIdError value,
   ) => UpdateOrganizationMemberRolesResponse_invalidRecordIdErrorWrapper._(
@@ -2349,7 +2363,7 @@ sealed class UpdateOrganizationMemberRolesResponse {
         "user_not_found_error",
         "wrapUserNotFoundError",
         UpdateOrganizationMemberRolesResponse_UserNotFoundError.serializer,
-        "",
+        "Users not found.",
         UpdateOrganizationMemberRolesResponse_userNotFoundErrorWrapper._,
         (it) => it.value,
         ordinal: UpdateOrganizationMemberRolesResponse_kind
@@ -2361,7 +2375,7 @@ sealed class UpdateOrganizationMemberRolesResponse {
         "roles_not_found_error",
         "wrapRolesNotFoundError",
         UpdateOrganizationMemberRolesResponse_RolesNotFoundError.serializer,
-        "",
+        "Roles not found.",
         UpdateOrganizationMemberRolesResponse_rolesNotFoundErrorWrapper._,
         (it) => it.value,
         ordinal: UpdateOrganizationMemberRolesResponse_kind
@@ -2374,7 +2388,7 @@ sealed class UpdateOrganizationMemberRolesResponse {
         "wrapRolesNotAssignableError",
         UpdateOrganizationMemberRolesResponse_RolesNotAssignableError
             .serializer,
-        "",
+        "Roles not assignable.",
         UpdateOrganizationMemberRolesResponse_rolesNotAssignableErrorWrapper._,
         (it) => it.value,
         ordinal: UpdateOrganizationMemberRolesResponse_kind
@@ -2386,7 +2400,7 @@ sealed class UpdateOrganizationMemberRolesResponse {
         "roles_required_error",
         "wrapRolesRequiredError",
         UpdateOrganizationMemberRolesResponse_RolesRequiredError.serializer,
-        "",
+        "At least one role is required.",
         UpdateOrganizationMemberRolesResponse_rolesRequiredErrorWrapper._,
         (it) => it.value,
         ordinal: UpdateOrganizationMemberRolesResponse_kind
@@ -2399,7 +2413,7 @@ sealed class UpdateOrganizationMemberRolesResponse {
         "wrapFounderRoleRequiredError",
         UpdateOrganizationMemberRolesResponse_FounderRoleRequiredError
             .serializer,
-        "",
+        "Founder role is required.",
         UpdateOrganizationMemberRolesResponse_founderRoleRequiredErrorWrapper._,
         (it) => it.value,
         ordinal: UpdateOrganizationMemberRolesResponse_kind
@@ -2411,7 +2425,7 @@ sealed class UpdateOrganizationMemberRolesResponse {
         "invalid_selection_error",
         "wrapInvalidSelectionError",
         UpdateOrganizationMemberRolesResponse_InvalidSelectionError.serializer,
-        "",
+        "Selection must contain distinct targets.",
         UpdateOrganizationMemberRolesResponse_invalidSelectionErrorWrapper._,
         (it) => it.value,
         ordinal: UpdateOrganizationMemberRolesResponse_kind
@@ -2423,7 +2437,7 @@ sealed class UpdateOrganizationMemberRolesResponse {
         "invalid_record_id_error",
         "wrapInvalidRecordIdError",
         _lib_kernel_v1_errors.InvalidRecordIdError.serializer,
-        "",
+        "Record IDs from an unexpected table.",
         UpdateOrganizationMemberRolesResponse_invalidRecordIdErrorWrapper._,
         (it) => it.value,
         ordinal: UpdateOrganizationMemberRolesResponse_kind
@@ -3173,6 +3187,8 @@ sealed class RemoveOrganizationMemberResponse {
   );
 
   /// Create a 'user_not_member_error' variant wrapping around the given value.
+  ///
+  /// User is not a member.
   factory RemoveOrganizationMemberResponse.wrapUserNotMemberError(
     RemoveOrganizationMemberResponse_UserNotMemberError value,
   ) => RemoveOrganizationMemberResponse_userNotMemberErrorWrapper._(value);
@@ -3185,6 +3201,8 @@ sealed class RemoveOrganizationMemberResponse {
   );
 
   /// Create a 'founder_cannot_be_removed_error' variant wrapping around the given value.
+  ///
+  /// Founder cannot be removed.
   factory RemoveOrganizationMemberResponse.wrapFounderCannotBeRemovedError(
     RemoveOrganizationMemberResponse_FounderCannotBeRemovedError value,
   ) => RemoveOrganizationMemberResponse_founderCannotBeRemovedErrorWrapper._(
@@ -3201,6 +3219,8 @@ sealed class RemoveOrganizationMemberResponse {
   );
 
   /// Create a 'invalid_record_id_error' variant wrapping around the given value.
+  ///
+  /// Record IDs from an unexpected table.
   factory RemoveOrganizationMemberResponse.wrapInvalidRecordIdError(
     _lib_kernel_v1_errors.InvalidRecordIdError value,
   ) => RemoveOrganizationMemberResponse_invalidRecordIdErrorWrapper._(value);
@@ -3248,7 +3268,7 @@ sealed class RemoveOrganizationMemberResponse {
         "user_not_member_error",
         "wrapUserNotMemberError",
         RemoveOrganizationMemberResponse_UserNotMemberError.serializer,
-        "",
+        "User is not a member.",
         RemoveOrganizationMemberResponse_userNotMemberErrorWrapper._,
         (it) => it.value,
         ordinal: RemoveOrganizationMemberResponse_kind
@@ -3260,7 +3280,7 @@ sealed class RemoveOrganizationMemberResponse {
         "founder_cannot_be_removed_error",
         "wrapFounderCannotBeRemovedError",
         RemoveOrganizationMemberResponse_FounderCannotBeRemovedError.serializer,
-        "",
+        "Founder cannot be removed.",
         RemoveOrganizationMemberResponse_founderCannotBeRemovedErrorWrapper._,
         (it) => it.value,
         ordinal: RemoveOrganizationMemberResponse_kind
@@ -3272,7 +3292,7 @@ sealed class RemoveOrganizationMemberResponse {
         "invalid_record_id_error",
         "wrapInvalidRecordIdError",
         _lib_kernel_v1_errors.InvalidRecordIdError.serializer,
-        "",
+        "Record IDs from an unexpected table.",
         RemoveOrganizationMemberResponse_invalidRecordIdErrorWrapper._,
         (it) => it.value,
         ordinal: RemoveOrganizationMemberResponse_kind

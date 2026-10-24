@@ -1,38 +1,52 @@
 package com.typewritermc.realm.compiler
 
-import com.typewritermc.authoring.AuthoringRecord
 import com.typewritermc.authoring.CompilationUnitDefinition
-import com.typewritermc.authoring.DiagnosticId
-import com.typewritermc.authoring.TypeSelection
-import com.typewritermc.authoring.ValueLocation
-import com.typewritermc.authoring.ValuePath
+import com.typewritermc.authoring.definition
 import com.typewritermc.authoring.descendants
-import com.typewritermc.checking.Diagnostic
-import com.typewritermc.checking.DiagnosticSeverity
-import com.typewritermc.configuration.RuleOrigin
-import com.typewritermc.engine.CompilationContext
-import com.typewritermc.engine.CompiledEdge
-import com.typewritermc.engine.CompiledEdgeOrigin
-import com.typewritermc.engine.CompiledResource
-import com.typewritermc.engine.CompiledResourceKey
+import com.typewritermc.authoring.of
+import com.typewritermc.authoring.payload
+import com.typewritermc.authoring.root
+import com.typewritermc.authoring.text
+import com.typewritermc.authoring.use
 import com.typewritermc.engine.ContentDigest
 import com.typewritermc.engine.RESOURCE_GRAPH_FORMAT_REVISION
 import com.typewritermc.engine.ResourceGraphCompileResult
-import com.typewritermc.engine.ResourceGraphShard
-import com.typewritermc.engine.RuntimeCompilationFacts
-import com.typewritermc.engine.RuntimeRelationFact
+import com.typewritermc.engine.Root
 import com.typewritermc.engine.canonicalized
+import com.typewritermc.engine.dataValue
 import com.typewritermc.engine.relation
 import com.typewritermc.engine.semanticDigest
 import com.typewritermc.realm.authoring.AuthoringView
 import com.typewritermc.services.libs.utils.sha256Hex
-import com.typewritermc.types.DataValue
-import com.typewritermc.types.EndpointSlot
-import com.typewritermc.types.RelationId
-import com.typewritermc.types.ResourceId
+import com.typewritermc.types.actualType
 import com.typewritermc.types.catalog.CheckedCatalog
 import com.typewritermc.types.catalog.runtimeDefinitions
+import com.typewritermc.types.endpoint
+import com.typewritermc.types.named
 import com.typewritermc.types.ownsResources
+import com.typewritermc.types.record
+import com.typewritermc.types.toSkir
+import com.typewritermc.types.unknownVariant
+import com.typewritermc.types.use
+import skirout.editor.v1.catalog.EndpointSlot
+import skirout.editor.v1.compiled_content.CompilationContext
+import skirout.editor.v1.compiled_content.CompiledEdge
+import skirout.editor.v1.compiled_content.CompiledEdgeOrigin
+import skirout.editor.v1.compiled_content.CompiledResource
+import skirout.editor.v1.compiled_content.CompiledResourceKey
+import skirout.editor.v1.compiled_content.ResourceGraphShard
+import skirout.editor.v1.compiled_content.RuntimeCompilationFacts
+import skirout.editor.v1.compiled_content.RuntimeRelationFact
+import skirout.editor.v1.diagnostic.Diagnostic
+import skirout.editor.v1.diagnostic.DiagnosticSeverity
+import skirout.editor.v1.type_catalog.AuthoringRecord
+import skirout.editor.v1.type_catalog.DataValue
+import skirout.editor.v1.type_catalog.DiagnosticId
+import skirout.editor.v1.type_catalog.RelationId
+import skirout.editor.v1.type_catalog.ResourceId
+import skirout.editor.v1.type_catalog.RuleOrigin
+import skirout.editor.v1.type_catalog.TypeSelection
+import skirout.editor.v1.type_catalog.ValueLocation
 
 /**
  * Compiles a compilation unit and its ownership closure from one assessed authoring view.
@@ -62,8 +76,8 @@ internal class OwnershipClosureCompiler(
                 .filter { it.id in ownershipRelations }
                 .flatMap { relation ->
                     listOf(
-                        relation.first.id to EndpointSlot.First,
-                        relation.second.id to EndpointSlot.Second,
+                        relation.first.id to EndpointSlot.FIRST,
+                        relation.second.id to EndpointSlot.SECOND,
                     )
                 }.groupBy({ it.first }, { it.second })
         val childrenByOwner =
@@ -71,8 +85,9 @@ internal class OwnershipClosureCompiler(
                 .flatMap { occurrence ->
                     ownershipEndpoints[occurrence.id.endpoint].orEmpty().map { slot ->
                         when (slot) {
-                            EndpointSlot.First -> occurrence.source to occurrence.target.resource
-                            EndpointSlot.Second -> occurrence.target.resource to occurrence.source
+                            EndpointSlot.FIRST -> occurrence.source to occurrence.target.resource
+                            EndpointSlot.SECOND -> occurrence.target.resource to occurrence.source
+                            else -> unknownVariant(slot)
                         }
                     }
                 }.groupBy({ it.first }, { it.second })
@@ -89,7 +104,8 @@ internal class OwnershipClosureCompiler(
         diagnostics +=
             projected.problems
                 .filter { problem ->
-                    problem.location.resource in owned || occurrencesByLocation[problem.location]?.target?.resource in owned
+                    problem.location.resource in owned ||
+                        occurrencesByLocation[problem.location]?.target?.resource in owned
                 }.map { problem ->
                     val occurrence = occurrencesByLocation[problem.location]
                     val missingOwned =
@@ -102,9 +118,9 @@ internal class OwnershipClosureCompiler(
                             if (missingOwned) {
                                 "Owned resource ${occurrence.target.resource.value} is absent from the captured snapshot."
                             } else {
-                                "Captured link projection is invalid at ${problem.location}."
+                                "Captured link projection is invalid at ${problem.location.resource.value} ${problem.location.path.text}."
                             },
-                        severity = DiagnosticSeverity.Error,
+                        severity = DiagnosticSeverity.ERROR,
                         source = occurrence?.source ?: problem.location.resource,
                         location = problem.location,
                         target = occurrence?.target?.resource,
@@ -115,13 +131,13 @@ internal class OwnershipClosureCompiler(
                 .filter { projection -> projection.first in owned || projection.second in owned }
                 .map { projection ->
                     CompiledEdge(
-                        source = CompiledResourceKey(projection.first, CompilationContext.Root),
-                        target = CompiledResourceKey(projection.second, CompilationContext.Root),
+                        source = CompiledResourceKey(source = projection.first, context = CompilationContext.Root),
+                        target = CompiledResourceKey(source = projection.second, context = CompilationContext.Root),
                         origin =
-                            CompiledEdgeOrigin.Relation(
-                                projection.contract,
-                                projection.firstLocation,
-                                projection.secondLocation,
+                            CompiledEdgeOrigin.createRelation(
+                                relation = projection.contract,
+                                firstLocation = projection.firstLocation,
+                                secondLocation = projection.secondLocation,
                             ),
                     )
                 }
@@ -137,8 +153,12 @@ internal class OwnershipClosureCompiler(
                         "Resource readiness belongs to another captured catalog."
                     }
                     val actual =
-                        (record.configuration as? TypeSelection.Complete)?.use ?: error("Ready resource has a pending configuration.")
-                    check(actual == state.binding.actual && state.value.value == DataValue.Named(actual, DataValue.Record(record.fields))) {
+                        (record.configuration as? TypeSelection.CompleteWrapper)?.use
+                            ?: error("Ready resource has a pending configuration.")
+                    check(
+                        actual == state.binding.actual &&
+                            state.value.value == DataValue.named(actual, DataValue.RecordWrapper(record.payload)),
+                    ) {
                         "Resource readiness belongs to another captured value."
                     }
                 }
@@ -151,9 +171,11 @@ internal class OwnershipClosureCompiler(
                     append("format:").append(formatRevision)
                     append("|catalog:").append(snapshot.catalog.generation.value)
                     append("|root:").append(root.value)
-                    resources.forEach { (id, record) -> append("|resource:").append(id.value).append(':').append(record) }
+                    resources.forEach { (id, record) ->
+                        append("|resource:").append(id.value).append(':').append(AuthoringRecord.serializer.toJsonCode(record))
+                    }
                     projectedEdges.sortedWith(compareBy({ it.source.source.value }, { it.target.source.value })).forEach { edge ->
-                        append("|edge:").append(edge)
+                        append("|edge:").append(CompiledEdge.serializer.toJsonCode(edge))
                     }
                 },
             )
@@ -166,16 +188,16 @@ internal class OwnershipClosureCompiler(
         val facts =
             RuntimeCompilationFacts(
                 formatRevision = formatRevision,
-                root = CompiledResourceKey(root, CompilationContext.Root),
+                root = CompiledResourceKey(source = root, context = CompilationContext.Root),
                 resources = runtimeResources,
                 edges = projectedEdges,
                 types =
                     snapshot.catalog.checked.runtimeDefinitions(
                         runtimeResources.flatMap { resource ->
-                            resource.value
+                            resource.dataValue
                                 .descendants()
                                 .mapNotNull { located ->
-                                    (located.value as? DataValue.Named)?.actualType
+                                    (located.value as? DataValue.NamedWrapper)?.actualType?.use
                                 }.toList()
                         },
                     ),
@@ -184,14 +206,14 @@ internal class OwnershipClosureCompiler(
                         .filter { relation -> relation.id in relationIds }
                         .map { relation ->
                             RuntimeRelationFact(
-                                relation.id,
-                                relation.ownsResources,
+                                relation = relation.id,
+                                ownsResources = relation.ownsResources,
                             )
                         },
             )
         val canonical = facts.canonicalized()
         return ResourceGraphCompileResult.Success(
-            shard = ResourceGraphShard(canonical.semanticDigest(), canonical),
+            shard = ResourceGraphShard(digest = canonical.semanticDigest().value, facts = canonical),
             inputFingerprint = fingerprint,
         )
     }
@@ -203,7 +225,7 @@ internal fun ResourceId.isCompilationUnit(): Boolean = snapshot.resources[this]?
 
 /** Whether this record is a complete compilation unit, which the resource graph producer compiles as a root. */
 internal fun AuthoringRecord.isCompilationUnit(catalog: CheckedCatalog): Boolean {
-    val selection = configuration as? TypeSelection.Complete ?: return false
+    val selection = configuration as? TypeSelection.CompleteWrapper ?: return false
     return catalog.isNominalSubtype(selection.use.definition, CompilationUnitDefinition.id)
 }
 
@@ -212,14 +234,14 @@ private fun AuthoringRecord.compile(
     id: ResourceId,
     readiness: ResourceReadiness.Ready,
 ): CompiledResource {
-    val actual = (configuration as TypeSelection.Complete).use
+    val actual = (configuration as TypeSelection.CompleteWrapper).use
     val binding = readiness.binding
     return CompiledResource(
-        key = CompiledResourceKey(id, CompilationContext.Root),
+        key = CompiledResourceKey(source = id, context = CompilationContext.Root),
         actualType = actual,
         bindingProvider = binding.provider,
         bindingSignature = binding.signature,
-        value = readiness.value.value as DataValue.Named,
+        value = (readiness.value.value as DataValue.NamedWrapper).value,
     )
 }
 
@@ -228,20 +250,20 @@ private fun digest(value: String): ContentDigest = ContentDigest(value.sha256Hex
 internal fun compilationDiagnostic(
     code: String,
     message: String,
-    severity: DiagnosticSeverity = DiagnosticSeverity.Error,
+    severity: DiagnosticSeverity = DiagnosticSeverity.ERROR,
     source: ResourceId? = null,
     target: ResourceId? = null,
     location: ValueLocation? =
         source?.let {
-            ValueLocation(it, ValuePath())
+            ValueLocation.of(it)
         },
 ): Diagnostic =
     Diagnostic(
-        DiagnosticId("publication:compiler:$location:${target?.value}:$code"),
-        RuleOrigin(PUBLICATION_DIAGNOSTIC_TYPE, 0),
-        code,
-        message,
-        severity,
-        location,
-        target?.let { listOf(ValueLocation(it, ValuePath())) }.orEmpty(),
+        id = DiagnosticId(value = "publication:compiler:${location?.let(ValueLocation.serializer::toJsonCode)}:${target?.value}:$code"),
+        origin = RuleOrigin(owner = PUBLICATION_DIAGNOSTIC_TYPE, ordinal = 0),
+        code = code,
+        message = message,
+        severity = severity,
+        primary = location,
+        related = target?.let { listOf(ValueLocation.of(it)) }.orEmpty(),
     )

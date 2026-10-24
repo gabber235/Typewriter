@@ -67,10 +67,10 @@ void main() {
       final fixture = ResourceCreationFixture.library();
       final document = fixture.libraryDocument();
       // A nullable back reference prepares as null instead of asking.
-      skir.PreparationStep prepare(skir.PreparationOperation operation) =>
+      skir.PrepareValueResult prepare(skir.PreparationOperation operation) =>
           switch (fixturePreparationStep(document, operation)) {
-            skir.PreparationStep_needsInputWrapper(:final value) =>
-              skir.PreparationStep.wrapReady(
+            skir.PrepareValueResult_needsInputWrapper(:final value) =>
+              skir.PrepareValueResult.wrapReady(
                 skir.PreparedValue(
                   content: skir.PreparedContent.wrapRecord(
                     switch ((value.content
@@ -499,7 +499,7 @@ final class _Harness {
 
   /// Replaces the fixture preparation, as a Realm with other value rules
   /// would answer.
-  final skir.PreparationStep Function(skir.PreparationOperation)? prepare;
+  final skir.PrepareValueResult Function(skir.PreparationOperation)? prepare;
   final AuthoringDocument document;
   final ResourceCreationRequest request;
   final CreationContext context;
@@ -561,17 +561,14 @@ final class _Harness {
 /// TYPEWRITER_CREATION_FIXTURE_DIR names a directory, such as
 /// services/runtime/realm/src/test/resources/creation.
 void _capture({
-  required skir.EditorCatalogWireSnapshot catalog,
+  required skir.EditorCatalog catalog,
   required skir.PreparedEdit seed,
   required skir.PreparedEdit edit,
 }) {
   final directory = Platform.environment["TYPEWRITER_CREATION_FIXTURE_DIR"];
   if (directory == null || directory.isEmpty) return;
   for (final (name, bytes) in [
-    (
-      "catalog.skir",
-      skir.EditorCatalogWireSnapshot.serializer.toBytes(catalog),
-    ),
+    ("catalog.skir", skir.EditorCatalog.serializer.toBytes(catalog)),
     ("seed.skir", skir.PreparedEdit.serializer.toBytes(seed)),
     ("edit.skir", skir.PreparedEdit.serializer.toBytes(edit)),
   ]) {

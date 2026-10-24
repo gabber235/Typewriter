@@ -1,6 +1,8 @@
 package com.typewritermc.realm.routes
 
-import com.typewritermc.protocol.transport.generated.RealmRouteScope
+import com.typewritermc.protocol.transport.RealmRouteScope
+import com.typewritermc.protocol.transport.generated.editorPresentationSearch
+import com.typewritermc.protocol.transport.generated.editorPresentationSearchCancel
 import com.typewritermc.services.libs.communicator.router.CommunicatorRoutesBuilder
 import skirout.editor.v1.search.CancelRealmPresentationSearchResult
 import skirout.editor.v1.search.RealmPresentationSearchUpdate
@@ -13,7 +15,6 @@ import skirout.editor.v1.search.RealmPresentationSearchUpdate
  */
 internal class RealmPresentationSearchRoutes(
     private val source: RealmPresentationSearchSource,
-    private val contracts: EditorContracts,
     private val realmAddress: RealmRouteScope,
 ) {
     /**
@@ -24,21 +25,21 @@ internal class RealmPresentationSearchRoutes(
      */
     fun register(builder: CommunicatorRoutesBuilder) =
         with(builder) {
-            unary(contracts.cancelRealmPresentationSearch) { call ->
+            unary(realmAddress.editorPresentationSearchCancel) { call ->
                 if (source.cancel(call.request.subscriptionId)) {
                     CancelRealmPresentationSearchResult.CANCELED
                 } else {
-                    CancelRealmPresentationSearchResult.NOT_FOUND
+                    CancelRealmPresentationSearchResult.NOT_FOUND_ERROR
                 }
             }
-            watch(contracts.watchRealmPresentationSearch) { call ->
+            watch(realmAddress.editorPresentationSearch) { call ->
                 invalidRealmPresentationSearchRequest(call.request)?.let { return@watch it }
 
                 val response =
                     source.watch(call.request) { update ->
                         call.communicator
                             .publishUpdate(
-                                contracts.watchRealmPresentationSearch,
+                                realmAddress.editorPresentationSearch,
                                 realmAddress,
                                 update.forSubscription(call.request.subscriptionId),
                             ).requirePublished()
@@ -52,8 +53,8 @@ private fun RealmPresentationSearchUpdate.forSubscription(subscriptionId: String
     val actualSubscriptionId =
         when (this) {
             is RealmPresentationSearchUpdate.SnapshotWrapper -> value.subscriptionId
-            is RealmPresentationSearchUpdate.UnavailableWrapper -> value.subscriptionId
-            is RealmPresentationSearchUpdate.StaleObservationWrapper -> value.subscriptionId
+            is RealmPresentationSearchUpdate.UnavailableErrorWrapper -> value.subscriptionId
+            is RealmPresentationSearchUpdate.StaleObservationErrorWrapper -> value.subscriptionId
             else -> null
         }
     if (actualSubscriptionId == subscriptionId) return this

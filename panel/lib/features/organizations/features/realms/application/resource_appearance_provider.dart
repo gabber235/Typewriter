@@ -11,7 +11,7 @@ part "resource_appearance_provider.g.dart";
 /// resources do not recompute it. A missing resource has no appearance;
 /// callers render their own missing state instead of a raw id.
 @riverpod
-ResourceAppearance? resourceAppearance(
+skir.ResourceAppearance? resourceAppearance(
   Ref ref,
   AuthoringScope scope,
   skir.ResourceId id,

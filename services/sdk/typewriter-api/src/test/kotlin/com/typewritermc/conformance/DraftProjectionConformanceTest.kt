@@ -10,14 +10,8 @@ import com.typewritermc.authoring.DraftBinding
 import com.typewritermc.authoring.DraftExpectation
 import com.typewritermc.authoring.DraftView
 import com.typewritermc.authoring.GeneratedSdkApi
-import com.typewritermc.authoring.ItemId
 import com.typewritermc.authoring.MapDraft
-import com.typewritermc.authoring.PartialSchema
-import com.typewritermc.authoring.PathSegment
 import com.typewritermc.authoring.ReadContext
-import com.typewritermc.authoring.TypeSelection
-import com.typewritermc.authoring.ValueLocation
-import com.typewritermc.authoring.ValuePath
 import com.typewritermc.authoring.draftViewProjection
 import com.typewritermc.authoring.field
 import com.typewritermc.authoring.item
@@ -26,53 +20,73 @@ import com.typewritermc.authoring.mapDraftProjection
 import com.typewritermc.authoring.mapKey
 import com.typewritermc.authoring.mapValue
 import com.typewritermc.authoring.nativeReadProjection
-import com.typewritermc.checking.CatalogGeneration
+import com.typewritermc.authoring.of
+import com.typewritermc.authoring.root
+import com.typewritermc.authoring.use
 import com.typewritermc.checking.PartialSelection
 import com.typewritermc.checking.TypedSelection
-import com.typewritermc.expression.EvaluationDiagnostic
 import com.typewritermc.library.TagDefinition
 import com.typewritermc.library.TagDraftType
-import com.typewritermc.types.DataValue
-import com.typewritermc.types.IntegerWidth
-import com.typewritermc.types.ListItem
-import com.typewritermc.types.MapRow
 import com.typewritermc.types.ResourceId
-import com.typewritermc.types.ScalarKind
 import com.typewritermc.types.StandardTypes
-import com.typewritermc.types.TypeDefinitionId
-import com.typewritermc.types.TypeId
-import com.typewritermc.types.TypeUse
+import com.typewritermc.types.actualType
+import com.typewritermc.types.bigInteger
 import com.typewritermc.types.canonicalValueKey
+import com.typewritermc.types.field
+import com.typewritermc.types.integer
+import com.typewritermc.types.integerScalar
+import com.typewritermc.types.items
+import com.typewritermc.types.listValue
+import com.typewritermc.types.mapValue
+import com.typewritermc.types.named
+import com.typewritermc.types.namedUse
+import com.typewritermc.types.qualified
+import com.typewritermc.types.record
+import com.typewritermc.types.rows
 import com.typewritermc.types.unwrapNamed
+import com.typewritermc.types.use
 import de.infix.testBalloon.framework.core.testSuite
 import io.kotest.matchers.shouldBe
+import skirout.editor.v1.expression.EvaluationDiagnostic
+import skirout.editor.v1.type_catalog.CatalogGeneration
+import skirout.editor.v1.type_catalog.DataValue
+import skirout.editor.v1.type_catalog.IntegerWidth
+import skirout.editor.v1.type_catalog.ItemId
+import skirout.editor.v1.type_catalog.ListItem
+import skirout.editor.v1.type_catalog.MapRow
+import skirout.editor.v1.type_catalog.PartialSchema
+import skirout.editor.v1.type_catalog.ScalarKind
+import skirout.editor.v1.type_catalog.TypeDefinitionId
+import skirout.editor.v1.type_catalog.TypeSelection
+import skirout.editor.v1.type_catalog.TypeUse
+import skirout.editor.v1.type_catalog.ValueLocation
 import java.math.BigInteger
 
 val DraftProjectionConformanceTest by testSuite {
     test("generated nested drafts preserve partial fields and reject another immutable read view") {
         val resource = ResourceId("draft:tag")
-        val root = ValueLocation(resource, ValuePath())
+        val root = ValueLocation.of(resource)
         val placement = root.field("placement")
         val placementUse = com.typewritermc.authoring.GraphPlacementDefinition.use
-        val generation = CatalogGeneration("draft catalog")
+        val generation = CatalogGeneration(value = "draft catalog")
         val original =
             FixtureDraftReads(
                 generation,
                 mapOf(
                     placement to
-                        DataValue.Named(
+                        DataValue.named(
                             placementUse,
-                            DataValue.Record(
+                            DataValue.record(
                                 mapOf(
-                                    "x" to DataValue.Integer(BigInteger.valueOf(7)),
-                                    "y" to DataValue.Unfilled,
-                                    "width" to DataValue.Integer(BigInteger.ONE),
-                                    "height" to DataValue.Integer(BigInteger.ONE),
+                                    "x" to DataValue.integer(BigInteger.valueOf(7)),
+                                    "y" to DataValue.UNFILLED,
+                                    "width" to DataValue.integer(BigInteger.ONE),
+                                    "height" to DataValue.integer(BigInteger.ONE),
                                 ),
                             ),
                         ),
-                    placement.field("x") to DataValue.Integer(BigInteger.valueOf(7)),
-                    placement.field("y") to DataValue.Unfilled,
+                    placement.field("x") to DataValue.integer(BigInteger.valueOf(7)),
+                    placement.field("y") to DataValue.UNFILLED,
                 ),
             )
         val staged = FixtureDraftReads(generation, original.values)
@@ -81,8 +95,10 @@ val DraftProjectionConformanceTest by testSuite {
                 generation,
                 original.readContext,
                 root,
-                DraftExpectation.PartialRoot(PartialSchema(emptyList(), emptyList(), emptyList())),
-                TypeSelection.Complete(TagDefinition.use),
+                DraftExpectation.PartialRoot(
+                    PartialSchema(knownFields = emptyList(), dependentFields = emptyList(), pendingArguments = emptyList()),
+                ),
+                TypeSelection.CompleteWrapper(TagDefinition.use),
             )
         val tag = TagDraftType.bind(binding)
 
@@ -97,15 +113,19 @@ val DraftProjectionConformanceTest by testSuite {
     }
 
     test("collection projections retain item identity and their captured read view") {
-        val root = ValueLocation(ResourceId("draft:list"), ValuePath())
-        val first = ItemId("first")
-        val listUse = TypeUse.Named(StandardTypes.list, listOf(INT_USE))
+        val root = ValueLocation.of(ResourceId("draft:list"))
+        val first = ItemId(value = "first")
+        val listUse = StandardTypes.list.namedUse(listOf(INT_USE))
         val reads =
             FixtureDraftReads(
-                CatalogGeneration("list catalog"),
+                CatalogGeneration(value = "list catalog"),
                 mapOf(
-                    root to DataValue.Named(listUse, DataValue.ListValue(listOf(ListItem(first, DataValue.Integer(BigInteger.TEN))))),
-                    root.item(first) to DataValue.Integer(BigInteger.TEN),
+                    root to
+                        DataValue.named(
+                            listUse,
+                            DataValue.listValue(listOf(ListItem(id = first, value = DataValue.integer(BigInteger.TEN)))),
+                        ),
+                    root.item(first) to DataValue.integer(BigInteger.TEN),
                 ),
                 mapOf(root to listOf(first)),
             )
@@ -124,39 +144,43 @@ val DraftProjectionConformanceTest by testSuite {
     }
 
     test("map draft lookup compares authored record meaning and reports duplicate ambiguity as unavailable") {
-        val root = ValueLocation(ResourceId("draft:map"), ValuePath())
-        val first = ItemId("first")
-        val duplicate = ItemId("duplicate")
-        val unique = ItemId("unique")
-        val unfinished = ItemId("unfinished")
-        val keyUse = TypeUse.Named(FIXTURE_KEY_ID, emptyList())
-        val mapUse = TypeUse.Named(StandardTypes.map, listOf(keyUse, TEXT_USE))
-        val meaningfulKey = DataValue.Named(keyUse, DataValue.Record(mapOf("code" to DataValue.StringValue("same"))))
-        val uniqueKey = DataValue.Named(keyUse, DataValue.Record(mapOf("code" to DataValue.StringValue("unique"))))
+        val root = ValueLocation.of(ResourceId("draft:map"))
+        val first = ItemId(value = "first")
+        val duplicate = ItemId(value = "duplicate")
+        val unique = ItemId(value = "unique")
+        val unfinished = ItemId(value = "unfinished")
+        val keyUse = FIXTURE_KEY_ID.namedUse(emptyList())
+        val mapUse = StandardTypes.map.namedUse(listOf(keyUse.use, TEXT_USE))
+        val meaningfulKey = DataValue.named(keyUse, DataValue.record(mapOf("code" to DataValue.StringValueWrapper("same"))))
+        val uniqueKey = DataValue.named(keyUse, DataValue.record(mapOf("code" to DataValue.StringValueWrapper("unique"))))
         val reads =
             FixtureDraftReads(
-                CatalogGeneration("map catalog"),
+                CatalogGeneration(value = "map catalog"),
                 mapOf(
                     root to
-                        DataValue.Named(
+                        DataValue.named(
                             mapUse,
-                            DataValue.MapValue(
+                            DataValue.mapValue(
                                 listOf(
-                                    MapRow(first, meaningfulKey, DataValue.StringValue("first value")),
-                                    MapRow(duplicate, meaningfulKey, DataValue.StringValue("duplicate value")),
-                                    MapRow(unique, uniqueKey, DataValue.StringValue("unique value")),
-                                    MapRow(unfinished, DataValue.Unfilled, DataValue.StringValue("unfinished value")),
+                                    MapRow(id = first, key = meaningfulKey, value = DataValue.StringValueWrapper("first value")),
+                                    MapRow(id = duplicate, key = meaningfulKey, value = DataValue.StringValueWrapper("duplicate value")),
+                                    MapRow(id = unique, key = uniqueKey, value = DataValue.StringValueWrapper("unique value")),
+                                    MapRow(
+                                        id = unfinished,
+                                        key = DataValue.UNFILLED,
+                                        value = DataValue.StringValueWrapper("unfinished value"),
+                                    ),
                                 ),
                             ),
                         ),
                     root.item(first).mapKey() to meaningfulKey,
-                    root.item(first).mapValue() to DataValue.StringValue("first value"),
+                    root.item(first).mapValue() to DataValue.StringValueWrapper("first value"),
                     root.item(duplicate).mapKey() to meaningfulKey,
-                    root.item(duplicate).mapValue() to DataValue.StringValue("duplicate value"),
+                    root.item(duplicate).mapValue() to DataValue.StringValueWrapper("duplicate value"),
                     root.item(unique).mapKey() to uniqueKey,
-                    root.item(unique).mapValue() to DataValue.StringValue("unique value"),
-                    root.item(unfinished).mapKey() to DataValue.Unfilled,
-                    root.item(unfinished).mapValue() to DataValue.StringValue("unfinished value"),
+                    root.item(unique).mapValue() to DataValue.StringValueWrapper("unique value"),
+                    root.item(unfinished).mapKey() to DataValue.UNFILLED,
+                    root.item(unfinished).mapValue() to DataValue.StringValueWrapper("unfinished value"),
                 ),
                 mapOf(root to listOf(first, duplicate, unique, unfinished)),
             )
@@ -187,7 +211,7 @@ private class FixtureKeyDraft(
     override val catalog = binding.catalog
     override val readContext = binding.readContext
     override val location = binding.location
-    override val actualType = Availability.Available((binding.actual as TypeSelection.Complete).use)
+    override val actualType = Availability.Available((binding.actual as TypeSelection.CompleteWrapper).use)
 }
 
 private class FixtureDraftReads(
@@ -199,12 +223,12 @@ private class FixtureDraftReads(
 
     override fun <T> read(path: BoundPath<T>): Availability<T> {
         val value = values[path.location] ?: return Availability.Unavailable(listOf(path.location))
-        if (value == DataValue.Unfilled || value == DataValue.Null) return Availability.Unavailable(listOf(path.location))
+        if (value == DataValue.UNFILLED || value == DataValue.NULL) return Availability.Unavailable(listOf(path.location))
         val native: Any =
             when (val payload = value.unwrapNamed()) {
-                is DataValue.Integer -> payload.value.intValueExact()
-                is DataValue.StringValue -> payload.value
-                is DataValue.Boolean -> payload.value
+                is DataValue.IntegerWrapper -> payload.bigInteger.intValueExact()
+                is DataValue.StringValueWrapper -> payload.value
+                is DataValue.BooleanWrapper -> payload.value
                 else -> return failed("unsupported_fixture_read", path.location)
             }
         @Suppress("UNCHECKED_CAST")
@@ -221,29 +245,31 @@ private class FixtureDraftReads(
 
     override fun presence(path: BoundPath<*>): Availability<Boolean> =
         when (values[path.location]) {
-            null, DataValue.Unfilled -> Availability.Unavailable(listOf(path.location))
-            DataValue.Null -> Availability.Available(false)
+            null, DataValue.UNFILLED -> Availability.Unavailable(listOf(path.location))
+            DataValue.NULL -> Availability.Available(false)
             else -> Availability.Available(true)
         }
 
     override fun binding(path: BoundPath<*>): Availability<DraftBinding> {
         val value = values[path.location] ?: return Availability.Unavailable(listOf(path.location))
-        if (value == DataValue.Unfilled || value == DataValue.Null) return Availability.Unavailable(listOf(path.location))
-        val named = value as? DataValue.Named ?: return failed("expected_named_binding", path.location)
+        if (value == DataValue.UNFILLED || value == DataValue.NULL) return Availability.Unavailable(listOf(path.location))
+        val named = value as? DataValue.NamedWrapper ?: return failed("expected_named_binding", path.location)
         return Availability.Available(
             DraftBinding(
                 catalog,
                 readContext,
                 path.location,
-                DraftExpectation.PartialRoot(PartialSchema(emptyList(), emptyList(), emptyList())),
-                TypeSelection.Complete(named.actualType),
+                DraftExpectation.PartialRoot(
+                    PartialSchema(knownFields = emptyList(), dependentFields = emptyList(), pendingArguments = emptyList()),
+                ),
+                TypeSelection.CompleteWrapper(named.actualType),
             ),
         )
     }
 
     override fun canonicalValueKey(path: BoundPath<*>): Availability<String> {
         val value = values[path.location] ?: return Availability.Unavailable(listOf(path.location))
-        if (value == DataValue.Unfilled || value == DataValue.Null) return Availability.Unavailable(listOf(path.location))
+        if (value == DataValue.UNFILLED || value == DataValue.NULL) return Availability.Unavailable(listOf(path.location))
         return Availability.Available(value.canonicalValueKey())
     }
 
@@ -255,8 +281,8 @@ private class FixtureDraftReads(
 private fun <T> failed(
     code: String,
     location: ValueLocation,
-): Availability<T> = Availability.Failed(EvaluationDiagnostic(code, code, listOf(location)))
+): Availability<T> = Availability.Failed(EvaluationDiagnostic(code = code, message = code, locations = listOf(location)))
 
-private val INT_USE = TypeUse.Scalar(ScalarKind.Integer(IntegerWidth.SIGNED_32))
-private val TEXT_USE = TypeUse.Scalar(ScalarKind.Text)
-private val FIXTURE_KEY_ID = TypeDefinitionId(TypeId.Qualified("test", "DraftKey"), 1)
+private val INT_USE = integerScalar(IntegerWidth.SIGNED_THIRTY_TWO).use
+private val TEXT_USE = ScalarKind.TEXT.use
+private val FIXTURE_KEY_ID = TypeDefinitionId.qualified("test", "DraftKey")

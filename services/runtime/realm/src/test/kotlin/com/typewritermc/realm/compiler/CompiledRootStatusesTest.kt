@@ -1,46 +1,53 @@
 package com.typewritermc.realm.compiler
 
-import com.typewritermc.authoring.PublicationId
-import com.typewritermc.checking.CatalogGeneration
-import com.typewritermc.engine.CompilationProjectionId
-import com.typewritermc.engine.CompilationRoot
-import com.typewritermc.engine.CompiledArtifactReference
-import com.typewritermc.engine.CompiledBlobPointer
 import com.typewritermc.engine.ContentDigest
-import com.typewritermc.engine.PublishedContent
-import com.typewritermc.engine.PublishedOutput
 import com.typewritermc.realm.authoring.AuthoringSeed
 import com.typewritermc.realm.authoring.AuthoringView
 import com.typewritermc.realm.authoring.InMemoryAuthoringViewStore
 import com.typewritermc.realm.checking.TestCatalogLease
-import com.typewritermc.types.ResourceId
 import de.infix.testBalloon.framework.core.testSuite
 import io.kotest.matchers.shouldBe
+import skirout.editor.v1.compilation_root.CompilationProjectionId
+import skirout.editor.v1.compilation_root.CompilationRoot
+import skirout.editor.v1.compiled_content.CompilationStatusSelection
+import skirout.editor.v1.compiled_content.CompiledArtifactReference
+import skirout.editor.v1.compiled_content.CompiledBlobPointer
+import skirout.editor.v1.compiled_content.CompiledResourceState
+import skirout.editor.v1.compiled_content.PublishedContent
+import skirout.editor.v1.compiled_content.PublishedOutput
+import skirout.editor.v1.publication.PublicationReport
+import skirout.editor.v1.type_catalog.CatalogGeneration
+import skirout.editor.v1.type_catalog.PublicationId
+import skirout.editor.v1.type_catalog.ResourceId
 
 val CompiledRootStatusesTest by testSuite {
     test("all roots combines producer roots with the selected publication in stable order") {
-        val current = CompilationRoot(CompilationProjectionId("current"), ResourceId("b"))
-        val active = CompilationRoot(CompilationProjectionId("active"), ResourceId("a"))
+        val current = CompilationRoot(projection = CompilationProjectionId(value = "current"), resource = ResourceId(value = "b"))
+        val active = CompilationRoot(projection = CompilationProjectionId(value = "active"), resource = ResourceId(value = "a"))
         val views = InMemoryAuthoringViewStore(TestCatalogLease(), AuthoringSeed(emptyMap()))
         views.capture().use { capture ->
             val publication = published(active)
             val statuses = CompiledRootStatuses(registry(current), selected(publication))
 
-            val result = statuses.query(capture.root, CompilationStatusSelection.All)
+            val result = statuses.query(capture.root, CompilationStatusSelection.ALL_ROOTS)
 
             result.keys.toList() shouldBe listOf(active, current)
-            result.getValue(active) shouldBe RegisteredCompiledState.Active(publication.publication)
-            result.getValue(current) shouldBe RegisteredCompiledState.NotCompiled
+            result.getValue(active) shouldBe
+                CompiledResourceState.ActiveWrapper(
+                    skirout.editor.v1.type_catalog
+                        .PublicationId(value = publication.publication.value),
+                )
+            result.getValue(current) shouldBe CompiledResourceState.NOT_COMPILED
         }
         views.close()
     }
 
     test("an empty supplied selection queries no roots") {
-        val active = CompilationRoot(CompilationProjectionId("active"), ResourceId("a"))
+        val active = CompilationRoot(projection = CompilationProjectionId(value = "active"), resource = ResourceId(value = "a"))
         val views = InMemoryAuthoringViewStore(TestCatalogLease(), AuthoringSeed(emptyMap()))
         views.capture().use { capture ->
             CompiledRootStatuses(registry(active), selected(published(active)))
-                .query(capture.root, CompilationStatusSelection.Supplied(emptySet())) shouldBe emptyMap()
+                .query(capture.root, CompilationStatusSelection.SuppliedRootsWrapper(emptySet())) shouldBe emptyMap()
         }
         views.close()
     }
@@ -70,20 +77,21 @@ private fun selected(content: PublishedContent) =
 
 private fun published(root: CompilationRoot): PublishedContent =
     PublishedContent(
-        publication = PublicationId("selected"),
+        publication = PublicationId(value = "selected"),
         formatRevision = com.typewritermc.engine.PUBLISHED_CONTENT_FORMAT_REVISION,
-        catalog = CatalogGeneration("catalog"),
+        catalog = CatalogGeneration(value = "catalog"),
         implementationToken = "implementation",
         outputs =
             listOf(
                 PublishedOutput(
-                    CompiledArtifactReference(
-                        root = root,
-                        formatRevision = 2,
-                        mediaType = "application/fixture",
-                        semanticDigest = ContentDigest("1".repeat(64)),
-                    ),
-                    CompiledBlobPointer(ContentDigest("2".repeat(64)), 1),
+                    reference =
+                        CompiledArtifactReference(
+                            root = root,
+                            formatRevision = 2,
+                            mediaType = "application/fixture",
+                            semanticDigest = ContentDigest("1".repeat(64)).value,
+                        ),
+                    blob = CompiledBlobPointer(digest = ContentDigest("2".repeat(64)).value, size = 1),
                 ),
             ),
     )

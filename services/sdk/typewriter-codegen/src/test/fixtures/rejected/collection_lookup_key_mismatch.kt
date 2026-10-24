@@ -4,7 +4,7 @@ import com.typewritermc.expression.literal
 import com.typewritermc.library.coreTagCollectionProjection
 import com.typewritermc.presentation.projectedCollectionSource
 import com.typewritermc.types.One
-import com.typewritermc.types.PresentationRole
+import skirout.editor.v1.catalog.PresentationRole
 import com.typewritermc.types.Ref
 import com.typewritermc.types.ReferenceContract
 import com.typewritermc.types.Resource

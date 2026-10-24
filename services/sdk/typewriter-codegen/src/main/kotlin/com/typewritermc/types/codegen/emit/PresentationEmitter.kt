@@ -16,8 +16,6 @@ import com.squareup.kotlinpoet.TypeSpec
 import com.squareup.kotlinpoet.UNIT
 import com.squareup.kotlinpoet.asClassName
 import com.typewritermc.discovery.GeneratedContract
-import com.typewritermc.types.PresentationRole
-import com.typewritermc.types.RepresentationTemplate
 import com.typewritermc.types.codegen.FieldShape
 import com.typewritermc.types.codegen.SdkDeclaration
 import com.typewritermc.types.codegen.SdkEmitter
@@ -25,6 +23,8 @@ import com.typewritermc.types.codegen.nestedPresentationScopes
 import com.typewritermc.types.codegen.parameterizedOrSelf
 import com.typewritermc.types.codegen.presentationControl
 import com.typewritermc.types.codegen.rawClass
+import skirout.editor.v1.catalog.PresentationRole
+import skirout.editor.v1.type_catalog.RepresentationTemplate
 import kotlin.reflect.KClass
 import com.typewritermc.codegen.TypewriterApi as Api
 
@@ -49,9 +49,8 @@ internal object PresentationEmitter : SdkEmitter {
                             FunSpec
                                 .getterBuilder()
                                 .addStatement(
-                                    "return setOf(%T.%L)",
+                                    "return setOf(%T.INSPECTOR)",
                                     PresentationRole::class,
-                                    PresentationRole.INSPECTOR.name,
                                 ).build(),
                         ).build(),
                 ).addProperty(
@@ -199,7 +198,7 @@ private class RootPresentation(
 )
 
 private fun SdkDeclaration.rootPresentation(): RootPresentation? {
-    if (!abstract && definition.representation is RepresentationTemplate.Record) return null
+    if (!abstract && definition.representation is RepresentationTemplate.RecordWrapper) return null
     val shape =
         when (val own = shape) {
             is FieldShape.Record -> own.copy(native = starType, arguments = emptyList())

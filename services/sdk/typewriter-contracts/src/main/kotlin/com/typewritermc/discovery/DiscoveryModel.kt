@@ -4,6 +4,10 @@ import com.typewritermc.imprint.ContributionName
 import com.typewritermc.imprint.ContributionSourceId
 import com.typewritermc.imprint.ProducerId
 import kotlinx.serialization.Serializable
+import skirout.editor.v1.type_catalog.ContributionKey
+import skirout.editor.v1.type_catalog.ContributionName as SkirContributionName
+import skirout.editor.v1.type_catalog.ContributionSourceId as SkirContributionSourceId
+import skirout.editor.v1.type_catalog.ProducerId as SkirProducerId
 
 private val SEGMENT_PATTERN = Regex("[A-Za-z0-9][A-Za-z0-9_.]*")
 
@@ -22,18 +26,16 @@ object DiscoveryDomains {
     val Execution = DiscoveryDomainId("execution")
 }
 
-@Serializable
-data class ContributionKey(
-    val source: ContributionSourceId,
-    val sourcePart: String,
-    val producer: ProducerId,
-    val name: ContributionName,
-)
-
-@Serializable
-enum class GraphDirection {
-    LEFT_TO_RIGHT,
-    RIGHT_TO_LEFT,
-    TOP_TO_BOTTOM,
-    BOTTOM_TO_TOP,
-}
+/** The key of one contribution, built from the imprint ids, which check their own syntax. */
+fun contributionKey(
+    source: ContributionSourceId,
+    sourcePart: String,
+    producer: ProducerId,
+    name: ContributionName,
+): ContributionKey =
+    ContributionKey(
+        source = SkirContributionSourceId(value = source.value),
+        sourcePart = sourcePart,
+        producer = SkirProducerId(value = producer.value),
+        name = SkirContributionName(value = name.value),
+    )

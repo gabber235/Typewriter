@@ -103,34 +103,23 @@ final class AuthoringResourceRepository {
     required skir.CatalogGeneration generation,
   }) async {
     session.checkActive();
-    final transferId = uuid.v4();
-    final request = skir.QueryAuthoringStateRequest(
-      generation: generation,
-      transferId: transferId,
-    );
-    final responses = request.watch(
-      session.transport,
-      organizationId: organization,
-      realmId: realm,
-    );
-    final assembler = authoringStateTransferAssembler();
-    final result = await assembler.assemble(
-      responses.map(
-        (response) => switch (response) {
-          skir.QueryAuthoringStateResponse_chunkWrapper(:final value) => value,
-          skir.QueryAuthoringStateResponse_catalogChangedWrapper(
-            :final value,
-          ) =>
-            throw CatalogGenerationChanged(value.actualGeneration),
-          skir.QueryAuthoringStateResponse_unavailableWrapper(:final value) =>
-            throw AuthoringStateTransferUnavailable(value),
-          _ => throw ApiException.internalServerError(),
-        },
-      ),
+    final operation = skir.QueryAuthoringStateRequest(generation: generation)
+        .operation(organizationId: organization, realmId: realm);
+    final response = await session.transport.request(
+      operation.subject,
+      operation.requestBytes,
+      operation.responseSerializer,
       cancelled: _disposed.future,
     );
     session.checkActive();
-    return result;
+    return switch (response) {
+      skir.QueryAuthoringStateResponse_stateWrapper(:final value) => value,
+      skir.QueryAuthoringStateResponse_catalogChangedErrorWrapper(
+        :final value,
+      ) =>
+        throw CatalogGenerationChanged(value.actualGeneration),
+      _ => throw ApiException.internalServerError(),
+    };
   }
 
   Future<skir.SearchAuthoringResponse> search(
@@ -150,7 +139,7 @@ final class AuthoringResourceRepository {
     return response;
   }
 
-  Future<skir.TypePreviewResult> previewTypeArgumentChange(
+  Future<skir.PreviewTypeArgumentChangeResponse> previewTypeArgumentChange(
     skir.PreviewTypeArgumentChangeRequest request,
   ) async {
     session.checkActive();
@@ -165,9 +154,10 @@ final class AuthoringResourceRepository {
     );
     session.checkActive();
     return switch (response) {
-      skir.PreviewTypeArgumentChangeResponse_resultWrapper(:final value) =>
-        value,
-      _ => throw ApiException.internalServerError(),
+      skir.PreviewTypeArgumentChangeResponse_internalErrorWrapper() ||
+      skir.PreviewTypeArgumentChangeResponse_unknown() =>
+        throw ApiException.internalServerError(),
+      _ => response,
     };
   }
 
@@ -182,20 +172,10 @@ final class AuthoringResourceRepository {
       for (final resource in edit.editedResources)
         (organization, realm, resource),
     },
-    classify: (response) => switch (response) {
-      skir.CommitPreparedEditResponse_resultWrapper(
-        value: skir.CommitResult.committed,
-      ) =>
-        MutationResponseDisposition.confirmed,
-      skir.CommitPreparedEditResponse_internalErrorWrapper() ||
-      skir.CommitPreparedEditResponse_unknown() =>
-        MutationResponseDisposition.uncertain,
-      _ => MutationResponseDisposition.rejected,
-    },
     rejectionMessage: (response) => response.rejectionMessage,
   );
 
-  Future<skir.PreparedEditResult> prepareTypeArgumentChange(
+  Future<skir.PrepareTypeArgumentChangeResponse> prepareTypeArgumentChange(
     skir.TypeArgumentChangePreview preview,
   ) async {
     session.checkActive();
@@ -210,9 +190,10 @@ final class AuthoringResourceRepository {
     );
     session.checkActive();
     return switch (response) {
-      skir.PrepareTypeArgumentChangeResponse_resultWrapper(:final value) =>
-        value,
-      _ => throw ApiException.internalServerError(),
+      skir.PrepareTypeArgumentChangeResponse_internalErrorWrapper() ||
+      skir.PrepareTypeArgumentChangeResponse_unknown() =>
+        throw ApiException.internalServerError(),
+      _ => response,
     };
   }
 
@@ -253,18 +234,12 @@ final class AuthoringResourceRepository {
 extension CommitPreparedEditResponseMessaging
     on skir.CommitPreparedEditResponse {
   String get rejectionMessage => switch (this) {
-    skir.CommitPreparedEditResponse_resultWrapper(:final value) =>
+    skir.CommitPreparedEditResponse_rejectedErrorWrapper(:final value) =>
       value.rejectionMessage,
-    _ => "The operation was rejected",
-  };
-}
-
-extension CommitResultMessaging on skir.CommitResult {
-  String get rejectionMessage => switch (this) {
-    skir.CommitResult_rejectedWrapper(:final value) => value.rejectionMessage,
-    skir.CommitResult_conflictWrapper() =>
+    skir.CommitPreparedEditResponse_conflictErrorWrapper() =>
       "The Realm changed before this edit was saved",
-    skir.CommitResult_catalogChangedWrapper() => "The editor catalog changed",
+    skir.CommitPreparedEditResponse_catalogChangedErrorWrapper() =>
+      "The editor catalog changed",
     _ => "The operation was rejected",
   };
 }
@@ -334,28 +309,4 @@ extension PreparedEditResources on skir.PreparedEdit {
       }
     }
   }
-}
-
-/// Assembles one authored snapshot whose chunks share its catalog generation.
-GenerationCheckedTransferAssembler<
-  skir.AuthoringStateTransferChunk,
-  skir.CatalogGeneration,
-  skir.AuthoringState
->
-authoringStateTransferAssembler() => GenerationCheckedTransferAssembler(
-  subject: "authored snapshot",
-  chunkGeneration: (chunk) => chunk.generation,
-  chunkTransfer: (chunk) => chunk.transfer,
-  decode: skir.AuthoringState.serializer.fromBytes,
-  decodedGeneration: (state) => state.generation,
-);
-
-final class AuthoringStateTransferUnavailable implements Exception {
-  const AuthoringStateTransferUnavailable(this.value);
-
-  final skir.AuthoringTransferUnavailable value;
-
-  @override
-  String toString() =>
-      "The authored snapshot is ${value.encodedSize} bytes, above the ${value.maxEncodedSize} byte transfer limit";
 }

@@ -2,6 +2,9 @@ package com.typewritermc.types
 
 import de.infix.testBalloon.framework.core.testSuite
 import io.kotest.matchers.shouldBe
+import skirout.editor.v1.type_catalog.DataValue
+import skirout.editor.v1.type_catalog.ListItem
+import skirout.editor.v1.type_catalog.MapRow
 import java.io.File
 import java.net.URLClassLoader
 import java.nio.file.Path

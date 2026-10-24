@@ -3,11 +3,22 @@ package com.typewritermc.presentation
 import com.typewritermc.dsl.TypewriterDsl
 import com.typewritermc.expression.Expr
 import com.typewritermc.expression.Handled
-
-/** Native input paint shared by group defaults and local control overrides. */
-enum class ControlDensity { Comfortable, Compact }
-
-enum class TextAlignment { Start, Center, End }
+import skirout.editor.v1.presentation.ButtonVariant
+import skirout.editor.v1.presentation.BytesEditingEncoding
+import skirout.editor.v1.presentation.ChoicePresentation
+import skirout.editor.v1.presentation.ColorEditingRepresentation
+import skirout.editor.v1.presentation.ColorPickerFormat
+import skirout.editor.v1.presentation.ControlDensity
+import skirout.editor.v1.presentation.DateTimePickerPresentation
+import skirout.editor.v1.presentation.InputTextAlignment
+import skirout.editor.v1.presentation.NumericSteppers
+import skirout.editor.v1.presentation.SliderInteraction
+import skirout.editor.v1.presentation.SliderOrientation
+import skirout.editor.v1.presentation.SliderValueDisplay
+import skirout.editor.v1.presentation.TextCapitalization
+import skirout.editor.v1.presentation.TextPurpose
+import skirout.editor.v1.presentation.TogglePosition
+import skirout.editor.v1.presentation.TogglePresentation
 
 interface GlyphContentScope {
     fun icon(
@@ -60,14 +71,12 @@ interface TextEntryAppearanceScope : InputAppearanceScope {
 
     fun descriptionStyle(value: TextStyle)
 
-    fun alignment(value: TextAlignment)
+    fun alignment(value: InputTextAlignment)
 }
 
 interface TextEntryInteractionScope {
     fun selectAllOnFocus(value: Boolean = true)
 }
-
-enum class NumericSteppers { Hidden, Inline }
 
 interface NumericInteractionScope<N> {
     fun minimum(value: N)
@@ -109,10 +118,6 @@ sealed interface TextLines {
         }
     }
 }
-
-enum class TextPurpose { Plain, Email, Url, Password }
-
-enum class TextCapitalization { None, Words, Sentences, Characters }
 
 sealed interface TextLengthPolicy {
     val maximum: Int
@@ -174,24 +179,6 @@ interface ValueMappingScope<V> {
 
     fun display(body: ValueExpressionScope<V>.() -> Expr<String, Handled>)
 }
-
-enum class DateTimePickerPresentation { Calendar, Text }
-
-enum class ColorEditingRepresentation { Hex, Rgb, Hsl }
-
-enum class ColorPickerFormat { Hex, Rgb, Hsl }
-
-enum class BytesEditingEncoding { Hexadecimal, Base64 }
-
-enum class TogglePresentation { Switch, Checkbox }
-
-enum class TogglePosition { Leading, Trailing }
-
-enum class SliderValueDisplay { Hidden, WhileInteracting, Always }
-
-enum class SliderOrientation { Horizontal, Vertical }
-
-enum class SliderInteraction { TapAndDrag, DragOnly }
 
 interface PopupAppearanceScope {
     fun minimumPopupWidth(value: Double)
@@ -334,10 +321,6 @@ interface SliderInputScope<N> : InputAppearanceScope {
 
     fun trackHeight(value: Double)
 }
-
-enum class ChoicePresentation { Automatic, Dropdown, Segmented, Radio }
-
-enum class PopupSide { Automatic, Above, Below }
 
 interface SelectInputScope<V> :
     TextEntryAppearanceScope,

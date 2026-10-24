@@ -8,11 +8,13 @@ const _userId = "user1";
 final _organizationId = skir.recordId("organization:org1");
 const _subject = "cloud.to.user.user1.organization.org1.roles.watch";
 
-OrganizationRole _role(String id, {String? name}) => OrganizationRole(
+skir.OrganizationRole _role(String id, {String? name}) => skir.OrganizationRole(
   roleId: skir.recordId("organization_role:$id"),
   name: name ?? "Role $id",
-  color: const Color(0xff2196f3),
+  color: const Color(0xff2196f3).toSkirColor(),
+  defaultRole: false,
   assignable: true,
+  deletable: false,
 );
 
 Future<void> _waitFor(bool Function() condition) async {
@@ -45,10 +47,10 @@ final class _Harness {
 
   final FakeNatsClient nats = FakeNatsClient();
   late final ProviderContainer container;
-  late final ProviderSubscription<AsyncValue<List<OrganizationRole>>>
+  late final ProviderSubscription<AsyncValue<List<skir.OrganizationRole>>>
   subscription;
   skir.WatchOrganizationRolesResponse response;
-  AsyncValue<List<OrganizationRole>> value = const AsyncLoading();
+  AsyncValue<List<skir.OrganizationRole>> value = const AsyncLoading();
 
   Future<void> start() => _waitFor(() => value.hasValue || value.hasError);
 
@@ -70,8 +72,8 @@ void main() {
   test("requests the exact role snapshot operation", () async {
     final harness = _Harness(
       skir.WatchOrganizationRolesResponse.wrapList([
-        _role("one").toSkir(),
-        _role("two").toSkir(),
+        _role("one"),
+        _role("two"),
       ]),
     );
     addTearDown(harness.dispose);
@@ -92,14 +94,14 @@ void main() {
 
   test("provider invalidation reloads the authoritative snapshot", () async {
     final harness = _Harness(
-      skir.WatchOrganizationRolesResponse.wrapList([_role("one").toSkir()]),
+      skir.WatchOrganizationRolesResponse.wrapList([_role("one")]),
     );
     addTearDown(harness.dispose);
     await harness.start();
 
     final updated = _role("one", name: "Updated");
     await harness.reload(
-      skir.WatchOrganizationRolesResponse.wrapList([updated.toSkir()]),
+      skir.WatchOrganizationRolesResponse.wrapList([updated]),
     );
 
     expect(harness.value.requireValue, [updated]);
@@ -128,7 +130,7 @@ void main() {
 
   test("role change response is rejected at the snapshot boundary", () async {
     final harness = _Harness(
-      skir.WatchOrganizationRolesResponse.wrapAdd(_role("one").toSkir()),
+      skir.WatchOrganizationRolesResponse.wrapAdd(_role("one")),
     );
     addTearDown(harness.dispose);
     await harness.start();

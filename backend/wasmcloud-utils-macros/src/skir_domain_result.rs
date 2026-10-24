@@ -2,7 +2,8 @@
 //!
 //! Database helpers expose expected domain failures as slugs. This macro keeps the success path
 //! as the expression result and turns known slugs into an early `Ok(response)`. Callers can add
-//! constructors for payloadful variants; the runtime response contract handles payloadless ones.
+//! constructors that fill variant payloads; otherwise the generated
+//! `SkirResponse::domain_error_from_slug` builds the variant with a default payload.
 
 use convert_case::{Case, Casing};
 use proc_macro2::TokenStream;

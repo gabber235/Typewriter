@@ -1,10 +1,13 @@
 package com.typewritermc.realm.compiler
 
-import com.typewritermc.engine.CompilationRoot
 import com.typewritermc.engine.CompiledArtifact
-import com.typewritermc.engine.CompiledArtifactReference
 import com.typewritermc.engine.PUBLISHED_CONTENT_FORMAT_REVISION
-import com.typewritermc.engine.PublishedContent
+import skirout.editor.v1.compilation_root.CompilationRoot
+import skirout.editor.v1.compiled_content.CompiledArtifactReference
+import skirout.editor.v1.compiled_content.PublishedContent
+import skirout.editor.v1.publication.EngineImplementationInputs
+import skirout.editor.v1.publication.PublicationChange
+import skirout.editor.v1.publication.PublicationDelta
 
 /** Semantic release contents independent of storage pointers or publication IDs. */
 data class PublicationRuntimeContent(
@@ -25,40 +28,28 @@ data class PublicationRuntimeContent(
             engine: EngineImplementationInputs,
         ) = PublicationRuntimeContent(
             PUBLISHED_CONTENT_FORMAT_REVISION,
-            artifacts.associate { it.root to CompiledArtifactReference(it.root, it.formatRevision, it.mediaType, it.semanticDigest) },
+            artifacts.associate {
+                it.root to
+                    CompiledArtifactReference(
+                        root = it.root,
+                        formatRevision = it.formatRevision,
+                        mediaType = it.mediaType,
+                        semanticDigest = it.semanticDigest.value,
+                    )
+            },
             engine.token.value,
         )
     }
 }
 
-sealed interface PublicationChange {
-    data class RootAdded(
-        val root: CompilationRoot,
-    ) : PublicationChange
-
-    data class RootUpdated(
-        val root: CompilationRoot,
-    ) : PublicationChange
-
-    data class RootRemoved(
-        val root: CompilationRoot,
-    ) : PublicationChange
-
-    data object RequirementsChanged : PublicationChange
+/** A releasable change set: nonempty with distinct changes, the first one first. */
+internal fun publicationDelta(changes: List<PublicationChange>): PublicationDelta {
+    require(changes.isNotEmpty()) { "A publication delta needs at least one change." }
+    require(changes.distinct().size == changes.size) { "Publication delta changes must be distinct." }
+    return PublicationDelta(first = changes.first(), additional = changes.drop(1))
 }
 
-/** A release requires at least one change in what the runtime receives. */
-@ConsistentCopyVisibility
-data class PublicationDelta internal constructor(
-    val first: PublicationChange,
-    val additional: List<PublicationChange> = emptyList(),
-) {
-    val allChanges: List<PublicationChange> get() = listOf(first) + additional
-
-    init {
-        require(allChanges.distinct().size == allChanges.size)
-    }
-}
+val PublicationDelta.allChanges: List<PublicationChange> get() = listOf(first) + additional
 
 sealed interface PublicationComparison {
     data object Unchanged : PublicationComparison
@@ -74,7 +65,7 @@ sealed interface PublicationComparison {
             engine: EngineImplementationInputs,
         ): PublicationComparison {
             val changes = confirmedChanges(selected, artifacts, artifacts.mapTo(linkedSetOf()) { it.root }, engine)
-            return if (changes.isEmpty()) Unchanged else Changed(PublicationDelta(changes.first(), changes.drop(1)))
+            return if (changes.isEmpty()) Unchanged else Changed(publicationDelta(changes))
         }
 
         /** Failed roots remain pending. Successful roots and definite removals can still be compared. */
@@ -102,20 +93,20 @@ sealed interface PublicationComparison {
                 artifacts.associate { artifact ->
                     artifact.root to
                         CompiledArtifactReference(
-                            artifact.root,
-                            artifact.formatRevision,
-                            artifact.mediaType,
-                            artifact.semanticDigest,
+                            root = artifact.root,
+                            formatRevision = artifact.formatRevision,
+                            mediaType = artifact.mediaType,
+                            semanticDigest = artifact.semanticDigest.value,
                         )
                 }
             val ordering = compareBy<CompilationRoot>({ it.projection.value }, { it.resource.value })
             return buildList {
                 (old.keys + candidateRoots).sortedWith(ordering).forEach { root ->
                     when {
-                        root !in candidateRoots -> add(PublicationChange.RootRemoved(root))
+                        root !in candidateRoots -> add(PublicationChange.RootRemovedWrapper(root))
                         root !in next -> Unit
-                        root !in old -> add(PublicationChange.RootAdded(root))
-                        old[root] != next[root] -> add(PublicationChange.RootUpdated(root))
+                        root !in old -> add(PublicationChange.RootAddedWrapper(root))
+                        old[root] != next[root] -> add(PublicationChange.RootUpdatedWrapper(root))
                     }
                 }
                 if (selected != null &&
@@ -124,7 +115,7 @@ sealed interface PublicationComparison {
                             selected.implementationToken != engine.token.value
                     )
                 ) {
-                    add(PublicationChange.RequirementsChanged)
+                    add(PublicationChange.REQUIREMENTS_CHANGED)
                 }
             }
         }

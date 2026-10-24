@@ -1,7 +1,5 @@
 package com.typewritermc.realm.routes
 
-import com.typewritermc.capability.CapabilityId
-import com.typewritermc.capability.RealmCapabilityDescriptor
 import com.typewritermc.capability.RealmCapabilityRegistry
 import com.typewritermc.capability.RealmCapabilityRuntime
 import com.typewritermc.capability.RealmSearchContext
@@ -16,10 +14,10 @@ import com.typewritermc.realm.authoring.operationObservation
 import com.typewritermc.realm.catalog.RealmCatalogLease
 import com.typewritermc.realm.catalog.RealmCatalogStore
 import com.typewritermc.realm.checking.CapturedAuthoringReads
-import com.typewritermc.types.skir.SkirConversionResult
-import com.typewritermc.types.skir.SkirDataValueCodec
-import com.typewritermc.types.skir.SkirTypeCodec
-import com.typewritermc.types.skir.getOrThrow
+import com.typewritermc.types.isValid
+import com.typewritermc.types.payload
+import com.typewritermc.types.requirePortable
+import com.typewritermc.types.toSkir
 import com.typewritermc.types.toTemplate
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.CoroutineScope
@@ -27,9 +25,11 @@ import kotlinx.coroutines.CoroutineStart
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.flow.collect
 import kotlinx.coroutines.launch
+import skirout.editor.v1.capability.CapabilityDefinition
 import skirout.editor.v1.search.RealmPresentationSearchRequest
 import skirout.editor.v1.search.RealmPresentationSearchStatus
 import skirout.editor.v1.search.RealmPresentationSearchUpdate
+import skirout.editor.v1.type_catalog.CapabilityId
 import skirout.editor.v1.type_catalog.DataValue
 import java.util.concurrent.ConcurrentHashMap
 
@@ -76,7 +76,7 @@ class CapabilityRealmPresentationSearchSource(
         updates: RealmPresentationSearchUpdatePublisher,
     ): RealmPresentationSearchUpdate {
         cancel(request.subscriptionId)
-        val capability = CapabilityId(request.capabilityId.value)
+        val capability = request.capabilityId
         if (views.read { it.catalog.operations.candidateSearch(capability) != null }) {
             return operationSearch.watch(request, updates)
         }
@@ -107,19 +107,19 @@ class CapabilityRealmPresentationSearchSource(
                 try {
                     val registry = RealmCapabilityRegistry(catalog.capabilities)
                     val provider = registry.requireSearch(capability)
-                    val payload = SkirDataValueCodec.decode(request.payload).getOrThrow()
+                    val payload = request.payload.requirePortable()
                     provider
                         .invoke(
                             SearchContext(request.subscriptionId, operation?.context),
                             RealmCapabilityRuntime(catalog.checked, catalog.nativeBindings),
                             payload,
-                            request.query.toDomain(),
+                            request.query,
                         ).updates
                         .collect { update ->
                             operation?.requireCurrent()
                             when (update) {
                                 is RealmSearchUpdate.Partial -> {
-                                    values += update.values.map { value -> SkirDataValueCodec.encode(value).getOrThrow() }
+                                    values += update.values.map { value -> value.requirePortable() }
                                     updates.publish(
                                         searchSnapshot(
                                             request.subscriptionId,
@@ -188,7 +188,7 @@ class CapabilityRealmPresentationSearchSource(
             val invocation = context.invocation.decodeInvocation()
             val captured = context.context.decodeWorkingContext()
             val baseline = lease.operationObservation(captured.confirmed, captured.upserts, captured.removals)
-            require(invocation.targets.all { it in baseline.resources }) { "The operation search selection changed." }
+            require(invocation.targets.all { it.toSkir() in baseline.resources }) { "The operation search selection changed." }
             require(invocation.origin.occurrences.all { baseline.links[it.id] == it }) { "The operation search origin changed." }
             return CapturedOperationSearch(
                 lease,
@@ -212,20 +212,14 @@ class CapabilityRealmPresentationSearchSource(
         }
         val descriptor =
             RealmCapabilityRegistry(catalog.capabilities)
-                .descriptors
-                .filterIsInstance<RealmCapabilityDescriptor.Search>()
-                .singleOrNull { it.id.value == request.capabilityId.value }
+                .definitions
+                .filterIsInstance<CapabilityDefinition.SearchWrapper>()
+                .map { it.value }
+                .singleOrNull { it.capabilityId == request.capabilityId }
                 ?: return searchError(request.subscriptionId, "Realm search capability is unavailable")
         val resultType =
-            when (val decoded = SkirTypeCodec.decode(request.resultType)) {
-                is SkirConversionResult.Success -> {
-                    decoded.value
-                }
-
-                is SkirConversionResult.Failure -> {
-                    return searchError(request.subscriptionId, "Realm search result type is invalid")
-                }
-            }
+            request.resultType.takeIf { it.isValid }
+                ?: return searchError(request.subscriptionId, "Realm search result type is invalid")
         if (resultType != descriptor.resultType.toTemplate()) {
             return searchError(request.subscriptionId, "Realm search result type does not match its capability")
         }
@@ -275,7 +269,7 @@ private fun searchError(
 ): RealmPresentationSearchUpdate =
     RealmPresentationSearchUpdate.createSnapshot(
         subscriptionId = subscriptionId,
-        status = RealmPresentationSearchStatus.ERROR,
+        status = RealmPresentationSearchStatus.SEARCH_FAILED_ERROR,
         values = emptyList(),
         guidance = emptyList(),
         diagnostics = listOf(realmDiagnostic(message)),
@@ -285,7 +279,7 @@ internal fun unavailableRealmPresentationSearchUpdate(
     subscriptionId: String,
     message: String = "Realm presentation search source is unavailable",
 ): RealmPresentationSearchUpdate =
-    RealmPresentationSearchUpdate.createUnavailable(
+    RealmPresentationSearchUpdate.createUnavailableError(
         subscriptionId = subscriptionId,
         diagnostics = listOf(realmDiagnostic(message)),
     )

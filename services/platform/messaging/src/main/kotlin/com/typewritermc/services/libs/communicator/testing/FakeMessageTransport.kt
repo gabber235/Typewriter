@@ -81,7 +81,10 @@ class FakeMessageTransport(
     /** Configures the next subscription to return [error]. */
     fun failNextSubscribe(error: TransportError) = synchronized(lock) { subscribeFailures.addLast(error) }
 
-    /** Delivers [delivery] to every currently matching active subscription. Terminal deliveries close those subscriptions. */
+    /**
+     * Delivers [delivery] to every currently matching active subscription. Terminal deliveries close those
+     * subscriptions; a responder failure does not, as on a reply channel.
+     */
     fun deliver(delivery: TransportDelivery) {
         val targets =
             synchronized(lock) {
@@ -194,7 +197,9 @@ class FakeMessageTransport(
                         false
                     } else {
                         channel.trySend(delivery)
-                        if (delivery !is TransportDelivery.Message) {
+                        if (delivery !is TransportDelivery.Message &&
+                            !(delivery is TransportDelivery.Failure && delivery.isResponderFailure)
+                        ) {
                             closed = true
                             channel.close()
                             subscriptions.remove(this).also { if (it) recorded += Action.SubscriptionClose(pattern) }

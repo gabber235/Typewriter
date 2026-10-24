@@ -222,7 +222,7 @@ void main() {
       final definition = skir.TypeDefinition(
         id: skir.TypeDefinitionId(
           typeId: skir.TypeId.createQualified(
-            namespace: "typewriter.read",
+            namespace: canonicalReadNamespace,
             name: "custom",
           ),
           revision: 1,
@@ -236,8 +236,7 @@ void main() {
       );
       expect(
         () => CheckedEditorCatalog(
-          (skir.EditorCatalogWireSnapshot.mutable()
-                ..types = [_published(definition)])
+          (skir.EditorCatalog.mutable()..types = [_published(definition)])
               .toFrozen(),
         ),
         throwsFormatException,

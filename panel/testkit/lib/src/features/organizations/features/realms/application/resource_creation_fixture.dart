@@ -444,8 +444,8 @@ final class ResourceCreationFixture {
       ),
     );
     final content = switch (step) {
-      skir.PreparationStep_readyWrapper(:final value) => value.content,
-      skir.PreparationStep_needsInputWrapper(:final value) => value.content,
+      skir.PrepareValueResult_readyWrapper(:final value) => value.content,
+      skir.PrepareValueResult_needsInputWrapper(:final value) => value.content,
       _ => throw StateError("Fixture cannot initialize $name"),
     };
     return (content as skir.PreparedContent_recordWrapper).value;
@@ -463,7 +463,7 @@ final class ResourceCreationFixture {
   AuthoringDocument document({bool existing = false}) {
     final realm = _realm();
     final catalog = CheckedEditorCatalog(
-      skir.EditorCatalogWireSnapshot(
+      skir.EditorCatalog(
         resourceDisplays: const [],
         resourceOperations: const [],
         generation: generation,
@@ -504,8 +504,9 @@ final class ResourceCreationFixture {
           ),
         );
         final content = switch (step) {
-          skir.PreparationStep_readyWrapper(:final value) => value.content,
-          skir.PreparationStep_needsInputWrapper(:final value) => value.content,
+          skir.PrepareValueResult_readyWrapper(:final value) => value.content,
+          skir.PrepareValueResult_needsInputWrapper(:final value) =>
+            value.content,
           _ => throw StateError("Fixture cannot initialize $name"),
         };
         edit.create(id, (content as skir.PreparedContent_recordWrapper).value);

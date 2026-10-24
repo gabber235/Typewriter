@@ -1,23 +1,20 @@
 package com.typewritermc.discovery
 
 import com.typewritermc.authoring.AuthoredReads
-import com.typewritermc.authoring.AuthoringRecord
 import com.typewritermc.authoring.Availability
 import com.typewritermc.authoring.BoundCollectionPath
 import com.typewritermc.authoring.BoundPath
 import com.typewritermc.authoring.DisplayFormulas
 import com.typewritermc.authoring.DraftBinding
-import com.typewritermc.authoring.ItemId
 import com.typewritermc.authoring.ReadContext
 import com.typewritermc.authoring.RealmRootDefinition
-import com.typewritermc.authoring.TypeSelection
-import com.typewritermc.checking.CatalogGeneration
+import com.typewritermc.authoring.of
+import com.typewritermc.authoring.payload
+import com.typewritermc.authoring.use
 import com.typewritermc.checking.PartialSelection
 import com.typewritermc.checking.TypedSelection
 import com.typewritermc.elements.CueDefinition
 import com.typewritermc.expression.DefaultExpressionEvaluator
-import com.typewritermc.expression.EvaluationBudget
-import com.typewritermc.expression.ExpressionBindingId
 import com.typewritermc.expression.ExpressionBindings
 import com.typewritermc.expression.ExpressionValueReader
 import com.typewritermc.expression.input
@@ -32,30 +29,44 @@ import com.typewritermc.library.fields
 import com.typewritermc.presentation.RuntimePresentationQueries
 import com.typewritermc.types.Color
 import com.typewritermc.types.ColorDefinition
-import com.typewritermc.types.DataValue
-import com.typewritermc.types.EndpointCardinality
-import com.typewritermc.types.EndpointDefinition
-import com.typewritermc.types.EndpointId
-import com.typewritermc.types.EndpointSlot
 import com.typewritermc.types.Icon
 import com.typewritermc.types.RESOURCE_OWNERSHIP_FAMILY_ID
-import com.typewritermc.types.RelationContract
-import com.typewritermc.types.RelationDeletePolicy
-import com.typewritermc.types.RelationFamilyId
-import com.typewritermc.types.RelationId
-import com.typewritermc.types.RepresentationTemplate
 import com.typewritermc.types.ResourceId
-import com.typewritermc.types.ResourceTarget
-import com.typewritermc.types.TypeDefinition
-import com.typewritermc.types.TypeDefinitionId
 import com.typewritermc.types.TypeDisplay
-import com.typewritermc.types.TypeId
-import com.typewritermc.types.TypeTemplate
-import com.typewritermc.types.TypeUse
-import com.typewritermc.types.catalog.DeclarationOrigin
+import com.typewritermc.types.fields
+import com.typewritermc.types.integer
+import com.typewritermc.types.named
+import com.typewritermc.types.namedTemplate
+import com.typewritermc.types.namedUse
+import com.typewritermc.types.of
+import com.typewritermc.types.qualified
+import com.typewritermc.types.record
+import com.typewritermc.types.type
+import com.typewritermc.types.use
 import de.infix.testBalloon.framework.core.testSuite
 import io.kotest.matchers.collections.shouldNotContain
 import io.kotest.matchers.shouldBe
+import skirout.editor.v1.catalog.EndpointCardinality
+import skirout.editor.v1.catalog.EndpointDefinition
+import skirout.editor.v1.catalog.EndpointSlot
+import skirout.editor.v1.catalog.RelationContract
+import skirout.editor.v1.catalog.RelationDeletePolicy
+import skirout.editor.v1.diagnostic.DeclarationOrigin
+import skirout.editor.v1.expression.EvaluationBudget
+import skirout.editor.v1.type_catalog.AuthoringRecord
+import skirout.editor.v1.type_catalog.CatalogGeneration
+import skirout.editor.v1.type_catalog.DataValue
+import skirout.editor.v1.type_catalog.EndpointId
+import skirout.editor.v1.type_catalog.ExpressionBindingId
+import skirout.editor.v1.type_catalog.ItemId
+import skirout.editor.v1.type_catalog.RelationFamilyId
+import skirout.editor.v1.type_catalog.RelationId
+import skirout.editor.v1.type_catalog.RepresentationTemplate
+import skirout.editor.v1.type_catalog.ResourceTarget
+import skirout.editor.v1.type_catalog.TypeDefinition
+import skirout.editor.v1.type_catalog.TypeDefinitionId
+import skirout.editor.v1.type_catalog.TypeSelection
+import skirout.editor.v1.type_catalog.TypeUse
 
 val ResourceDisplayAssemblyTest by testSuite {
     test("a book with a blank title is labelled with its type name, and a titled book with its title") {
@@ -71,12 +82,15 @@ val ResourceDisplayAssemblyTest by testSuite {
         val displays = assembly.displays
 
         displays.displayFor(BookDefinition.id, assembly.checked)?.target shouldBe
-            ResourceTarget.Type(TypeTemplate.Named(BookDefinition.id))
+            ResourceTarget.type(BookDefinition.id.namedTemplate())
         displays.displayFor(fixturePage, assembly.checked)?.target shouldBe
-            ResourceTarget.Type(TypeTemplate.Named(PageDefinition.id))
-        displays.displayFor(CueDefinition.id, assembly.checked)?.target shouldBe ResourceTarget.AnyResource
+            ResourceTarget.type(PageDefinition.id.namedTemplate())
+        displays.displayFor(CueDefinition.id, assembly.checked)?.target shouldBe ResourceTarget.ANY_RESOURCE
         assembly.label(
-            AuthoringRecord(TypeSelection.Complete(TypeUse.Named(fixturePage)), mapOf("name" to DataValue.StringValue("Intro"))),
+            AuthoringRecord.of(
+                TypeSelection.CompleteWrapper(fixturePage.namedUse()),
+                mapOf("name" to DataValue.StringValueWrapper("Intro")),
+            ),
         ) shouldBe
             "Intro"
     }
@@ -89,20 +103,20 @@ val ResourceDisplayAssemblyTest by testSuite {
                 searchKeys =
                     mapOf(fixtureResource to "fixture"),
             )
-        val record = AuthoringRecord(TypeSelection.Complete(TypeUse.Named(fixtureResource)), emptyMap())
+        val record = AuthoringRecord.of(TypeSelection.CompleteWrapper(fixtureResource.namedUse()), emptyMap())
         val formulas = assembly.displays.displayFor(fixtureResource, assembly.checked)!!
 
-        formulas.target shouldBe ResourceTarget.AnyResource
+        formulas.target shouldBe ResourceTarget.ANY_RESOURCE
         assembly.label(record) shouldBe "Fixture resource"
         assembly.evaluate(formulas.accent, record) shouldBe
-            DataValue.Named(ColorDefinition.use, DataValue.Integer(0xFF123456u.toString().toBigInteger()))
+            DataValue.named(ColorDefinition.use, DataValue.integer(0xFF123456u.toString().toBigInteger()))
     }
 
     test("a display formula that reads a host context input is rejected") {
         val contextual =
-            displayProvider(ResourceTarget.Type(TypeTemplate.Named(BookDefinition.id))) {
+            displayProvider(ResourceTarget.type(BookDefinition.id.namedTemplate())) {
                 DisplayFormulas(
-                    label = input<String>(ExpressionBindingId("context:active")).orElse(literal("Book")),
+                    label = input<String>(ExpressionBindingId(value = "context:active")).orElse(literal("Book")),
                     accent = literal(Color(0xFF000000u)),
                     icon = literal(Icon.Iconify("mdi:book")),
                 )
@@ -111,9 +125,9 @@ val ResourceDisplayAssemblyTest by testSuite {
 
         assembly.diagnosticCodes(BookDefinition.id) shouldBe listOf("display_reads_context")
         val otherResource =
-            displayProvider(ResourceTarget.Type(TypeTemplate.Named(BookDefinition.id))) {
+            displayProvider(ResourceTarget.type(BookDefinition.id.namedTemplate())) {
                 val other =
-                    RuntimePresentationQueries(mapOf(Book::class to TypeTemplate.Named(BookDefinition.id)))
+                    RuntimePresentationQueries(mapOf(Book::class to BookDefinition.id.namedTemplate()))
                         .resource(literal(ResourceId("other")), Book::class)
                 DisplayFormulas(
                     label = other.fields.title.orElse(literal("Book")),
@@ -122,7 +136,7 @@ val ResourceDisplayAssemblyTest by testSuite {
                 )
             }
         assemble(displays = listOf(otherResource)).diagnosticCodes(BookDefinition.id) shouldBe listOf("display_reads_context")
-        assembly.snapshot.resourceDisplays.none {
+        assembly.editorCatalog.resourceDisplays.none {
             it.label ==
                 contextual.provider
                     .formulas()
@@ -133,7 +147,7 @@ val ResourceDisplayAssemblyTest by testSuite {
     }
 
     test("two displays for one target are rejected and the resource falls back to a less specific display") {
-        val target = ResourceTarget.Type(TypeTemplate.Named(BookDefinition.id))
+        val target = ResourceTarget.type(BookDefinition.id.namedTemplate())
         val constant = { label: String ->
             displayProvider(target) {
                 DisplayFormulas(literal(label), literal(Color(0xFF000000u)), literal(Icon.Iconify("mdi:book")))
@@ -142,33 +156,37 @@ val ResourceDisplayAssemblyTest by testSuite {
         val assembly = assemble(displays = listOf(constant("First"), constant("Second")), includeGenerated = false)
 
         assembly.diagnosticCodes(BookDefinition.id) shouldBe listOf("duplicate_resource_display")
-        assembly.snapshot.resourceDisplays
-            .map { it.target } shouldBe listOf(ResourceTarget.AnyResource)
+        assembly.editorCatalog.resourceDisplays
+            .map { it.target } shouldBe listOf(skirout.editor.v1.type_catalog.ResourceTarget.ANY_RESOURCE)
         assembly.label(book(title = "")) shouldBe "Book"
     }
 
     test("an extension's any resource display is rejected while the framework default keeps naming every resource") {
         val extension =
-            displayProvider(ResourceTarget.AnyResource) {
+            displayProvider(ResourceTarget.ANY_RESOURCE) {
                 DisplayFormulas(literal("Extension"), literal(Color(0xFF000000u)), literal(Icon.Iconify("mdi:book")))
             }
         val assembly = assemble(displays = listOf(extension), includeGenerated = false)
 
-        val duplicate = assembly.snapshot.diagnostics.single { it.code == "duplicate_resource_display" }
-        duplicate.origins shouldBe listOf(DeclarationOrigin(extension.origin.owner))
-        assembly.snapshot.resourceDisplays
-            .map { it.target } shouldBe listOf(ResourceTarget.AnyResource)
+        val duplicate = assembly.editorCatalog.diagnostics.single { it.code == "duplicate_resource_display" }
+        duplicate.origins shouldBe
+            listOf(
+                skirout.editor.v1.diagnostic
+                    .DeclarationOrigin(owner = extension.origin.owner),
+            )
+        assembly.editorCatalog.resourceDisplays
+            .map { it.target } shouldBe listOf(skirout.editor.v1.type_catalog.ResourceTarget.ANY_RESOURCE)
         assembly.label(book(title = "")) shouldBe "Book"
     }
 
     test("the realm root and its sections publish no search key and never conflict with a resource's") {
         val owner = fixtureType(fixtureResource)
         val ownership =
-            RelationContract(
-                id = RelationId("fixture.ownership"),
-                first = endpoint("fixture.owner", EndpointSlot.First, fixtureResource),
-                second = endpoint("fixture.owned", EndpointSlot.Second, BookDefinition.id),
-                families = setOf(RelationFamilyId(RESOURCE_OWNERSHIP_FAMILY_ID)),
+            RelationContract.of(
+                id = RelationId(value = "fixture.ownership"),
+                first = endpoint("fixture.owner", EndpointSlot.FIRST, fixtureResource),
+                second = endpoint("fixture.owned", EndpointSlot.SECOND, BookDefinition.id),
+                families = setOf(RelationFamilyId(value = RESOURCE_OWNERSHIP_FAMILY_ID)),
             )
         val assembly =
             assemble(
@@ -176,7 +194,7 @@ val ResourceDisplayAssemblyTest by testSuite {
                 searchKeys = mapOf(fixtureResource to "library"),
                 relations = listOf(ownership),
             )
-        val keys = assembly.snapshot.types.associate { it.definition.id to it.searchKey }
+        val keys = assembly.editorCatalog.types.associate { it.definition.id to it.searchKey }
 
         listOf(RealmRootDefinition.id, LibraryDefinition.id, TaxonomyDefinition.id).map(keys::getValue) shouldBe
             listOf(null, null, null)
@@ -188,18 +206,18 @@ val ResourceDisplayAssemblyTest by testSuite {
     test("two owner types with one search key are rejected and publish no search key") {
         val owner = fixtureType(fixtureResource)
         val ownership =
-            RelationContract(
-                id = RelationId("fixture.ownership"),
-                first = endpoint("fixture.owner", EndpointSlot.First, fixtureResource),
-                second = endpoint("fixture.owned", EndpointSlot.Second, BookDefinition.id),
-                families = setOf(RelationFamilyId(RESOURCE_OWNERSHIP_FAMILY_ID)),
+            RelationContract.of(
+                id = RelationId(value = "fixture.ownership"),
+                first = endpoint("fixture.owner", EndpointSlot.FIRST, fixtureResource),
+                second = endpoint("fixture.owned", EndpointSlot.SECOND, BookDefinition.id),
+                families = setOf(RelationFamilyId(value = RESOURCE_OWNERSHIP_FAMILY_ID)),
             )
         val bookOwnership =
-            RelationContract(
-                id = RelationId("fixture.book_ownership"),
-                first = endpoint("fixture.book", EndpointSlot.First, BookDefinition.id),
-                second = endpoint("fixture.book_owned", EndpointSlot.Second, fixtureResource),
-                families = setOf(RelationFamilyId(RESOURCE_OWNERSHIP_FAMILY_ID)),
+            RelationContract.of(
+                id = RelationId(value = "fixture.book_ownership"),
+                first = endpoint("fixture.book", EndpointSlot.FIRST, BookDefinition.id),
+                second = endpoint("fixture.book_owned", EndpointSlot.SECOND, fixtureResource),
+                families = setOf(RelationFamilyId(value = RESOURCE_OWNERSHIP_FAMILY_ID)),
             )
         val assembly =
             assemble(
@@ -210,14 +228,14 @@ val ResourceDisplayAssemblyTest by testSuite {
 
         assembly.diagnosticCodes(BookDefinition.id) shouldBe listOf("duplicate_search_key")
         assembly.diagnosticCodes(fixtureResource) shouldBe listOf("duplicate_search_key")
-        assembly.snapshot.types
+        assembly.editorCatalog.types
             .filter { it.definition.id == BookDefinition.id || it.definition.id == fixtureResource }
             .map { it.searchKey } shouldBe listOf(null, null)
     }
 }
 
-private val fixtureResource = TypeDefinitionId(TypeId.Qualified("fixture", "DisplayResource"), 1)
-private val fixturePage = TypeDefinitionId(TypeId.Qualified("fixture", "DisplayPage"), 1)
+private val fixtureResource = TypeDefinitionId.qualified("fixture", "DisplayResource")
+private val fixturePage = TypeDefinitionId.qualified("fixture", "DisplayPage")
 
 private fun fixtureType(
     id: TypeDefinitionId,
@@ -225,10 +243,17 @@ private fun fixtureType(
     display: TypeDisplay? = null,
 ) = id to
     Pair(
-        TypeDefinition(
-            id,
-            representation = RepresentationTemplate.Record(emptyList()),
-            parents = listOfNotNull(parent).map { TypeTemplate.Named(it) },
+        TypeDefinition.partial(
+            id = id,
+            representation =
+                RepresentationTemplate.createRecord(
+                    fields = emptyList(),
+                    abstract_ = false,
+                ),
+            parents =
+                listOfNotNull(parent).map {
+                    it.namedTemplate()
+                },
         ),
         display,
     )
@@ -237,17 +262,23 @@ private fun endpoint(
     id: String,
     slot: EndpointSlot,
     resource: TypeDefinitionId,
-) = EndpointDefinition(EndpointId(id), slot, TypeTemplate.Named(resource), EndpointCardinality.Many, RelationDeletePolicy.CLEAR)
+) = EndpointDefinition(
+    id = EndpointId(value = id),
+    slot = slot,
+    resource = resource.namedTemplate(),
+    cardinality = EndpointCardinality.MANY,
+    onDelete = RelationDeletePolicy.CLEAR,
+)
 
 private fun book(title: String) =
-    AuthoringRecord(
-        TypeSelection.Complete(BookDefinition.use),
+    AuthoringRecord.of(
+        TypeSelection.CompleteWrapper(BookDefinition.use),
         mapOf(
-            "title" to DataValue.StringValue(title),
-            "icon" to DataValue.Unfilled,
-            "color" to DataValue.Unfilled,
-            "tags" to DataValue.Unfilled,
-            "pages" to DataValue.Unfilled,
+            "title" to DataValue.StringValueWrapper(title),
+            "icon" to DataValue.UNFILLED,
+            "color" to DataValue.UNFILLED,
+            "tags" to DataValue.UNFILLED,
+            "pages" to DataValue.UNFILLED,
         ),
     )
 
@@ -274,7 +305,7 @@ private fun assemble(
     val generated = generatedTypeProviders().distinctBy { it.definition.id }
     val generatedDisplays =
         generatedProviders<GeneratedResourceDisplayProvider>(GeneratedProviderKind.ResourceDisplay)
-            .filter { includeGenerated || it.target == ResourceTarget.AnyResource }
+            .filter { includeGenerated || it.target == ResourceTarget.ANY_RESOURCE }
             .map { OwnedResourceDisplay(origin, it) }
     return CatalogContributions(
         declarations =
@@ -284,11 +315,11 @@ private fun assemble(
                 },
         relations = generatedProviders<GeneratedRelationProvider>(GeneratedProviderKind.Relation).map { it.contract } + relations,
         displays = generatedDisplays + displays,
-    ).assemble(CatalogAssemblyContext(CatalogGeneration("resource displays")))
+    ).assemble(CatalogAssemblyContext(CatalogGeneration(value = "resource displays")))
 }
 
 private fun CatalogAssembly.diagnosticCodes(type: TypeDefinitionId): List<String> =
-    snapshot.diagnostics.filter { it.affected == type }.map { it.code }
+    editorCatalog.diagnostics.filter { it.affected == type }.map { it.code }
 
 private fun CatalogAssembly.label(record: AuthoringRecord): String? = with(DisplayReads) { displays.label(record, checked) }
 
@@ -297,8 +328,8 @@ private fun CatalogAssembly.evaluate(
     formula: com.typewritermc.expression.CheckedExpressionProgram,
     record: AuthoringRecord,
 ): DataValue? {
-    val subject = DataValue.Named((record.configuration as TypeSelection.Complete).use, DataValue.Record(record.fields))
-    val types = snapshot.types.associateBy { it.definition.id }
+    val subject = DataValue.named((record.configuration as TypeSelection.CompleteWrapper).use, DataValue.RecordWrapper(record.payload))
+    val types = editorCatalog.types.associateBy { it.definition.id }
     val queries =
         object : com.typewritermc.expression.CanonicalQueryReader {
             override val catalog = checked
@@ -315,15 +346,15 @@ private fun CatalogAssembly.evaluate(
                 .evaluateChecked(
                     formula,
                     ExpressionBindings(emptyMap()),
-                    EvaluationBudget(1_000, 1_000),
-                    mapOf(ExpressionBindingId("configured_value") to subject),
+                    EvaluationBudget(maxSteps = 1_000, maxCollectionItems = 1_000),
+                    mapOf(ExpressionBindingId(value = "configured_value") to subject),
                 )
         }
     return (result as? Availability.Available)?.value
 }
 
 private object DisplayReads : AuthoredReads {
-    override val catalog = CatalogGeneration("resource displays")
+    override val catalog = CatalogGeneration(value = "resource displays")
     override val readContext = ReadContext(catalog)
 
     override fun <T> read(path: BoundPath<T>): Availability<T> = error("Display formulas read portable values")

@@ -25,8 +25,8 @@ spec:
             - core-handler
             - core
             - jetstream
-          config:
-            core-subscriptions: auth.permissions.typewriter-panel:typewriter.auth-auth-typewriter-permissions,auth.permissions.typewriter-services:typewriter.auth-auth-typewriter-permissions
+          configFrom:
+            - name: auth-typewriter-permissions-nats-subscriptions # generated, see nats-subscriptions.generated.yaml
         - namespace: seamlezz
           package: surrealdb
           version: "0.4.0"

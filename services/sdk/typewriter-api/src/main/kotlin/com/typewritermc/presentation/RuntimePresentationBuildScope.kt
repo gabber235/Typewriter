@@ -3,13 +3,10 @@
 package com.typewritermc.presentation
 
 import com.typewritermc.authoring.GeneratedSdkApi
-import com.typewritermc.authoring.ValuePath
 import com.typewritermc.expression.Expr
 import com.typewritermc.expression.ExpressionFactory
 import com.typewritermc.expression.Handled
 import com.typewritermc.expression.MayBeMissing
-import com.typewritermc.types.Resource
-import com.typewritermc.types.ResourceId
 import skirout.editor.v1.binding.BindingRef
 import skirout.editor.v1.presentation.PresentationElement
 import skirout.editor.v1.presentation.PresentationNode

@@ -1,17 +1,16 @@
 package com.typewritermc.realm.routes
 
-import com.typewritermc.authoring.AuthoringRecord
-import com.typewritermc.authoring.CounterpartChoice
-import com.typewritermc.authoring.ValueLocation
-import com.typewritermc.authoring.skir.SkirAuthoringOperationCodec
-import com.typewritermc.capability.CapabilityId
+import com.typewritermc.authoring.text
 import com.typewritermc.capability.RealmCapabilityPermissionDeniedException
-import com.typewritermc.checking.CatalogGeneration
 import com.typewritermc.operations.OperationInvocation
 import com.typewritermc.operations.OperationOrigin
-import com.typewritermc.operations.PreparationChoice
-import com.typewritermc.operations.PreparationChoiceAnswer
 import com.typewritermc.operations.PreparationChoices
+import com.typewritermc.operations.choiceId
+import com.typewritermc.operations.requireValid
+import com.typewritermc.protocol.transport.RealmRouteScope
+import com.typewritermc.protocol.transport.generated.authoringActionPrepare
+import com.typewritermc.protocol.transport.generated.resourceDropCandidatesResolve
+import com.typewritermc.protocol.transport.generated.resourceOperationsResolve
 import com.typewritermc.realm.authoring.OperationCatalogChanged
 import com.typewritermc.realm.authoring.OperationPreparationResult
 import com.typewritermc.realm.authoring.OperationResolutionFailure
@@ -19,31 +18,29 @@ import com.typewritermc.realm.authoring.ResourceOperationRuntime
 import com.typewritermc.realm.authoring.StaleOperationObservation
 import com.typewritermc.services.libs.communicator.router.CommunicatorRoutesBuilder
 import com.typewritermc.services.libs.utils.rethrowExceptional
-import com.typewritermc.types.ResourceId
-import com.typewritermc.types.skir.SkirAuthoringValueCodec
-import com.typewritermc.types.skir.SkirDataValueCodec
-import com.typewritermc.types.skir.SkirOperationCodec
-import com.typewritermc.types.skir.getOrThrow
+import com.typewritermc.types.requirePortable
+import com.typewritermc.types.requireValid
+import com.typewritermc.types.toResourceId
+import com.typewritermc.types.toResourceIds
+import com.typewritermc.types.unknownVariant
 import skirout.editor.v1.authoring.AuthoringDiagnostic
 import skirout.editor.v1.authoring.AuthoringObservationId
+import skirout.editor.v1.authoring.CounterpartChoice
 import skirout.editor.v1.resource_operations.AuthoringActionResult
 import skirout.editor.v1.resource_operations.OperationInputProblem
 import skirout.editor.v1.resource_operations.OperationSelectionEffect
 import skirout.editor.v1.resource_operations.OperationWorkingContext
-import skirout.editor.v1.resource_operations.PreparationChoiceId
-import skirout.editor.v1.resource_operations.PreparationCounterpartOption
-import skirout.editor.v1.resource_operations.PreparationSourceOption
 import skirout.editor.v1.resource_operations.PrepareAuthoringActionRequest
 import skirout.editor.v1.resource_operations.ResolveDropCandidatesRequest
 import skirout.editor.v1.resource_operations.ResolveDropCandidatesResult
 import skirout.editor.v1.resource_operations.ResolveResourceOperationsRequest
 import skirout.editor.v1.resource_operations.ResolveResourceOperationsResult
-import skirout.editor.v1.authoring.CounterpartChoice as WireCounterpart
+import skirout.editor.v1.type_catalog.AuthoringRecord
+import skirout.editor.v1.type_catalog.CapabilityId
+import skirout.editor.v1.type_catalog.CatalogGeneration
+import skirout.editor.v1.type_catalog.ResourceId
+import skirout.editor.v1.type_catalog.ValueLocation
 import skirout.editor.v1.resource_operations.OperationInvocation as SkirOperationInvocation
-import skirout.editor.v1.resource_operations.PreparationChoice as WireChoice
-import skirout.editor.v1.resource_operations.PreparationChoiceAnswer as WireAnswer
-import skirout.editor.v1.type_catalog.CatalogGeneration as SkirCatalogGeneration
-import skirout.editor.v1.type_catalog.ResourceId as SkirResourceId
 
 /**
  * Adapts operation requests on generated Realm routes into validated working observations.
@@ -54,13 +51,13 @@ import skirout.editor.v1.type_catalog.ResourceId as SkirResourceId
  */
 internal class ResourceOperationRoutes(
     private val runtime: ResourceOperationRuntime,
-    private val contracts: EditorContracts,
+    private val address: RealmRouteScope,
 ) {
     fun register(builder: CommunicatorRoutesBuilder) =
         with(builder) {
-            unary(contracts.resolveResourceOperations) { call -> resolve(call.request) }
-            unary(contracts.resolveDropCandidates) { call -> resolveDropCandidates(call.request) }
-            unary(contracts.prepareAuthoringAction) { call -> prepare(call.request) }
+            unary(address.resourceOperationsResolve) { call -> resolve(call.request) }
+            unary(address.resourceDropCandidatesResolve) { call -> resolveDropCandidates(call.request) }
+            unary(address.authoringActionPrepare) { call -> prepare(call.request) }
         }
 
     internal fun resolve(request: ResolveResourceOperationsRequest): ResolveResourceOperationsResult =
@@ -69,21 +66,21 @@ internal class ResourceOperationRoutes(
             val resolved =
                 runtime.resolve(
                     request.invocation.decodeInvocation(),
-                    CatalogGeneration(request.invocation.catalog.value),
+                    request.invocation.catalog,
                     context.confirmed,
                     context.upserts,
                     context.removals,
                 )
-            ResolveResourceOperationsResult.ResolvedWrapper(SkirOperationCodec.encode(resolved).getOrThrow())
+            ResolveResourceOperationsResult.ResolvedWrapper(resolved)
         } catch (stale: StaleOperationObservation) {
-            ResolveResourceOperationsResult.createStaleObservation(actual = AuthoringObservationId(value = stale.actual))
+            ResolveResourceOperationsResult.createStaleObservationError(actual = AuthoringObservationId(value = stale.actual))
         } catch (stale: OperationCatalogChanged) {
-            ResolveResourceOperationsResult.createCatalogChanged(
+            ResolveResourceOperationsResult.createCatalogChangedError(
                 actualGeneration =
-                    SkirCatalogGeneration(value = stale.actual.value),
+                    stale.actual,
             )
         } catch (denied: RealmCapabilityPermissionDeniedException) {
-            ResolveResourceOperationsResult.createPermissionDenied(
+            ResolveResourceOperationsResult.createPermissionDeniedError(
                 diagnostics =
                     listOf(
                         operationDiagnostic(
@@ -94,7 +91,7 @@ internal class ResourceOperationRoutes(
             )
         } catch (failed: OperationResolutionFailure) {
             if (failed.cause is RealmCapabilityPermissionDeniedException) {
-                ResolveResourceOperationsResult.createPermissionDenied(
+                ResolveResourceOperationsResult.createPermissionDeniedError(
                     diagnostics =
                         listOf(
                             operationDiagnostic(
@@ -104,7 +101,7 @@ internal class ResourceOperationRoutes(
                         ),
                 )
             } else {
-                ResolveResourceOperationsResult.createFailed(
+                ResolveResourceOperationsResult.createFailedError(
                     diagnostics =
                         listOf(
                             operationDiagnostic(
@@ -116,7 +113,7 @@ internal class ResourceOperationRoutes(
             }
         } catch (invalid: IllegalArgumentException) {
             invalid.rethrowExceptional()
-            ResolveResourceOperationsResult.createInvalid(
+            ResolveResourceOperationsResult.createInvalidError(
                 diagnostics =
                     listOf(
                         operationDiagnostic(
@@ -133,33 +130,33 @@ internal class ResourceOperationRoutes(
             val candidates =
                 runtime.resolveDropCandidates(
                     request.invocation.decodeInvocation(),
-                    CatalogGeneration(request.invocation.catalog.value),
+                    request.invocation.catalog,
                     context.confirmed,
                     context.upserts,
                     context.removals,
                 )
-            ResolveDropCandidatesResult.ResolvedWrapper(SkirOperationCodec.encode(candidates).getOrThrow())
+            ResolveDropCandidatesResult.ResolvedWrapper(candidates)
         } catch (stale: StaleOperationObservation) {
-            ResolveDropCandidatesResult.createStaleObservation(actual = AuthoringObservationId(value = stale.actual))
+            ResolveDropCandidatesResult.createStaleObservationError(actual = AuthoringObservationId(value = stale.actual))
         } catch (stale: OperationCatalogChanged) {
-            ResolveDropCandidatesResult.createCatalogChanged(actualGeneration = SkirCatalogGeneration(value = stale.actual.value))
+            ResolveDropCandidatesResult.createCatalogChangedError(actualGeneration = stale.actual)
         } catch (denied: RealmCapabilityPermissionDeniedException) {
-            ResolveDropCandidatesResult.createPermissionDenied(
+            ResolveDropCandidatesResult.createPermissionDeniedError(
                 diagnostics = listOf(operationDiagnostic("permission_denied", denied.message ?: "Permission denied")),
             )
         } catch (failed: OperationResolutionFailure) {
             if (failed.cause is RealmCapabilityPermissionDeniedException) {
-                ResolveDropCandidatesResult.createPermissionDenied(
+                ResolveDropCandidatesResult.createPermissionDeniedError(
                     diagnostics = listOf(operationDiagnostic("permission_denied", failed.cause?.message ?: "Permission denied")),
                 )
             } else {
-                ResolveDropCandidatesResult.createFailed(
+                ResolveDropCandidatesResult.createFailedError(
                     diagnostics = listOf(operationDiagnostic("resolution_failed", failed.message ?: "Drop candidates failed")),
                 )
             }
         } catch (invalid: IllegalArgumentException) {
             invalid.rethrowExceptional()
-            ResolveDropCandidatesResult.createInvalid(
+            ResolveDropCandidatesResult.createInvalidError(
                 diagnostics =
                     listOf(operationDiagnostic("invalid_operation_context", invalid.message ?: "The operation context is invalid")),
             )
@@ -170,60 +167,31 @@ internal class ResourceOperationRoutes(
             require(request.inputRevision >= 0) { "The operation input revision is invalid." }
             require(request.capability.value.isNotBlank()) { "The authoring capability is required." }
             val context = request.context.decodeWorkingContext()
-            val choices =
-                request.choices.map { answer ->
-                    when (answer) {
-                        is WireAnswer.SourceWrapper -> {
-                            answer.value.choiceId.value to
-                                PreparationChoiceAnswer.Source(SkirAuthoringValueCodec.decode(answer.value.occurrence).getOrThrow())
-                        }
-
-                        is WireAnswer.CounterpartWrapper -> {
-                            answer.value.choiceId.value to
-                                PreparationChoiceAnswer.Counterpart(answer.value.counterpart.decodeCounterpart())
-                        }
-
-                        else -> {
-                            error("Unknown operation choice answer")
-                        }
-                    }
-                }
-            require(
-                choices
-                    .map {
-                        it.first
-                    }.distinct()
-                    .size == choices.size && choices.all { it.first.isNotBlank() },
-            ) { "Operation choices require unique identities." }
+            val choices = request.choices.map { it.requireValid() }
+            require(choices.map { it.choiceId }.distinct().size == choices.size) { "Operation choices require unique identities." }
             when (
                 val result =
                     runtime.prepare(
                         request.invocation.decodeInvocation(),
-                        CatalogGeneration(request.invocation.catalog.value),
-                        CapabilityId(request.capability.value),
+                        request.invocation.catalog,
+                        request.capability,
                         context.confirmed,
                         context.upserts,
                         context.removals,
                         request.input?.let {
-                            SkirDataValueCodec.decode(it).getOrThrow()
+                            it.requirePortable()
                         },
-                        PreparationChoices(choices.toMap()),
+                        PreparationChoices(choices),
                     )
             ) {
                 is OperationPreparationResult.Preview -> {
                     AuthoringActionResult.createPreview(
                         invocationId = request.invocation.invocationId,
                         inputRevision = request.inputRevision,
-                        edit = SkirAuthoringOperationCodec.encode(result.edit).getOrThrow(),
-                        confirmation = result.confirmation?.let(SkirOperationCodec::encode),
+                        edit = result.edit,
+                        confirmation = result.confirmation,
                         selection =
-                            result.selection?.let {
-                                OperationSelectionEffect.ReplaceWrapper(
-                                    it.map { id ->
-                                        SkirResourceId(value = id.value)
-                                    },
-                                )
-                            }
+                            result.selection?.let(OperationSelectionEffect::ReplaceWrapper)
                                 ?: OperationSelectionEffect.UNCHANGED,
                     )
                 }
@@ -232,21 +200,21 @@ internal class ResourceOperationRoutes(
                     AuthoringActionResult.createNeedsInput(
                         invocationId = request.invocation.invocationId,
                         inputRevision = request.inputRevision,
-                        normalizedInput = result.input?.let { SkirDataValueCodec.encode(it).getOrThrow() },
+                        normalizedInput = result.input?.requirePortable(),
                         problems =
                             result.missing.map {
                                 OperationInputProblem(
-                                    path = SkirAuthoringValueCodec.encode(it).getOrThrow(),
+                                    path = it,
                                     code = "required",
                                     message = "Complete this input",
                                 )
                             },
-                        choices = result.choices.map { it.toWire() },
+                        choices = result.choices,
                     )
                 }
 
                 is OperationPreparationResult.Invalid -> {
-                    AuthoringActionResult.createInvalid(
+                    AuthoringActionResult.createInvalidError(
                         diagnostics =
                             result.problems.map {
                                 operationDiagnostic(it.code, it.code.replace('_', ' '), it.location)
@@ -255,14 +223,14 @@ internal class ResourceOperationRoutes(
                 }
 
                 is OperationPreparationResult.Unavailable -> {
-                    AuthoringActionResult.createUnavailable(
+                    AuthoringActionResult.createUnavailableError(
                         diagnostics = listOf(operationDiagnostic("operation_unavailable", result.reason)),
                     )
                 }
 
                 is OperationPreparationResult.Failed -> {
                     if (result.cause is RealmCapabilityPermissionDeniedException) {
-                        AuthoringActionResult.createPermissionDenied(
+                        AuthoringActionResult.createPermissionDeniedError(
                             diagnostics =
                                 listOf(
                                     operationDiagnostic(
@@ -272,7 +240,7 @@ internal class ResourceOperationRoutes(
                                 ),
                         )
                     } else {
-                        AuthoringActionResult.createFailed(
+                        AuthoringActionResult.createFailedError(
                             diagnostics =
                                 listOf(
                                     operationDiagnostic(
@@ -285,15 +253,15 @@ internal class ResourceOperationRoutes(
                 }
             }
         } catch (stale: StaleOperationObservation) {
-            AuthoringActionResult.createStaleObservation(actual = AuthoringObservationId(value = stale.actual))
+            AuthoringActionResult.createStaleObservationError(actual = AuthoringObservationId(value = stale.actual))
         } catch (stale: OperationCatalogChanged) {
-            AuthoringActionResult.createCatalogChanged(
+            AuthoringActionResult.createCatalogChangedError(
                 actualGeneration =
-                    SkirCatalogGeneration(value = stale.actual.value),
+                    stale.actual,
             )
         } catch (failed: OperationResolutionFailure) {
             if (failed.cause is RealmCapabilityPermissionDeniedException) {
-                AuthoringActionResult.createPermissionDenied(
+                AuthoringActionResult.createPermissionDeniedError(
                     diagnostics =
                         listOf(
                             operationDiagnostic(
@@ -303,7 +271,7 @@ internal class ResourceOperationRoutes(
                         ),
                 )
             } else {
-                AuthoringActionResult.createFailed(
+                AuthoringActionResult.createFailedError(
                     diagnostics =
                         listOf(
                             operationDiagnostic(
@@ -315,7 +283,7 @@ internal class ResourceOperationRoutes(
             }
         } catch (invalid: IllegalArgumentException) {
             invalid.rethrowExceptional()
-            AuthoringActionResult.createInvalid(
+            AuthoringActionResult.createInvalidError(
                 diagnostics =
                     listOf(
                         operationDiagnostic(
@@ -335,8 +303,8 @@ internal data class DecodedOperationContext(
 
 internal fun OperationWorkingContext.decodeWorkingContext(): DecodedOperationContext {
     require(confirmedObservation.value.isNotBlank()) { "The saved authoring observation is required." }
-    val upserts = overlay.upserts.map { ResourceId(it.resource.value) to SkirAuthoringValueCodec.decode(it.content).getOrThrow() }
-    val removals = overlay.removals.map { ResourceId(it.value) }
+    val upserts = overlay.upserts.map { it.resource.requireValid() to it.content.requireValid() }
+    val removals = overlay.removals.map { it.requireValid() }
     require(
         upserts
             .map {
@@ -351,93 +319,10 @@ internal fun SkirOperationInvocation.decodeInvocation(): OperationInvocation {
     require(catalog.value.isNotBlank()) { "The catalog generation is required." }
     return OperationInvocation(
         invocationId.value,
-        targets.map {
-            ResourceId(it.value)
-        },
-        OperationOrigin(
-            origin.container?.let {
-                ResourceId(it.value)
-            },
-            origin.occurrences.map { SkirAuthoringValueCodec.decode(it).getOrThrow() },
-        ),
+        targets.toResourceIds(),
+        OperationOrigin(origin.container?.toResourceId(), origin.occurrences.map { it.requireValid() }),
     )
 }
-
-private fun PreparationChoice.toWire(): WireChoice =
-    when (this) {
-        is PreparationChoice.Source -> {
-            WireChoice.createSource(
-                choiceId = PreparationChoiceId(value = id),
-                label = label,
-                candidates =
-                    candidates.map {
-                        PreparationSourceOption(
-                            label =
-                                it.id.location.path
-                                    .toString(),
-                            occurrence = SkirAuthoringValueCodec.encode(it).getOrThrow(),
-                        )
-                    },
-            )
-        }
-
-        is PreparationChoice.Counterpart -> {
-            WireChoice.createCounterpart(
-                choiceId = PreparationChoiceId(value = id),
-                label = label,
-                source = SkirAuthoringValueCodec.encode(source).getOrThrow(),
-                candidates =
-                    candidates.map {
-                        PreparationCounterpartOption(
-                            label =
-                                when (it) {
-                                    is CounterpartChoice.Existing -> {
-                                        it.occurrence.id.location.path
-                                            .toString()
-                                    }
-
-                                    is CounterpartChoice.New -> {
-                                        "Create in ${it.containing.path}"
-                                    }
-                                },
-                            counterpart = it.toWire(),
-                        )
-                    },
-            )
-        }
-    }
-
-private fun CounterpartChoice.toWire(): WireCounterpart =
-    when (this) {
-        is CounterpartChoice.Existing -> {
-            WireCounterpart.ExistingWrapper(SkirAuthoringValueCodec.encode(occurrence).getOrThrow())
-        }
-
-        is CounterpartChoice.New -> {
-            WireCounterpart.createNew(
-                containing = SkirAuthoringValueCodec.encode(containing).getOrThrow(),
-                prepared = SkirAuthoringOperationCodec.encode(prepared).getOrThrow(),
-            )
-        }
-    }
-
-private fun WireCounterpart.decodeCounterpart(): CounterpartChoice =
-    when (this) {
-        is WireCounterpart.ExistingWrapper -> {
-            CounterpartChoice.Existing(SkirAuthoringValueCodec.decode(value).getOrThrow())
-        }
-
-        is WireCounterpart.NewWrapper -> {
-            CounterpartChoice.New(
-                SkirAuthoringValueCodec.decode(value.containing).getOrThrow(),
-                SkirAuthoringOperationCodec.decode(value.prepared).getOrThrow(),
-            )
-        }
-
-        else -> {
-            throw IllegalArgumentException("Unknown counterpart choice")
-        }
-    }
 
 private fun operationDiagnostic(
     code: String,
@@ -446,9 +331,6 @@ private fun operationDiagnostic(
 ) = AuthoringDiagnostic(
     code = code,
     message = message,
-    resource =
-        location?.let {
-            SkirResourceId(value = it.resource.value)
-        },
-    path = location?.let { SkirAuthoringValueCodec.encode(it.path).getOrThrow() },
+    resource = location?.resource,
+    path = location?.path,
 )

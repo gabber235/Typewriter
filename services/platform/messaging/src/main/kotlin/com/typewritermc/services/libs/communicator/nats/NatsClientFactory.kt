@@ -55,11 +55,6 @@ internal interface NatsClientAdapter {
 
     suspend fun publish(message: NatsClientMessage)
 
-    suspend fun request(
-        message: NatsClientMessage,
-        timeoutMs: Long,
-    ): NatsClientMessage
-
     suspend fun subscribe(
         subject: String,
         queueGroup: String?,
@@ -133,11 +128,6 @@ private class RealNatsClientAdapter(
     override suspend fun publish(message: NatsClientMessage) {
         client.publish(message.subject, message.payload?.toByteArray(), message.headers, message.replyTo)
     }
-
-    override suspend fun request(
-        message: NatsClientMessage,
-        timeoutMs: Long,
-    ): NatsClientMessage = client.request(message.subject, message.payload?.toByteArray(), message.headers, timeoutMs).toAdapterMessage()
 
     override suspend fun subscribe(
         subject: String,

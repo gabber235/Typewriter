@@ -106,19 +106,19 @@ void main() {
 
   testWidgets("shows offline realm details", (tester) async {
     var retries = 0;
-    final realm = TopologyRealm(
+    final realm = skir.RealmInstance(
       realmId: skir.recordId("realm:test"),
-      ownerHost: TopologyOwnerHost(
+      ownerHost: skir.OwnerHost(
         id: skir.recordId("service:test"),
         name: "story_realm",
       ),
       revision: 1,
-      targetEngine: const TopologyEngineTarget(
+      targetEngine: skir.EngineTarget(
         engineId: "typewritermc:paper",
         versionConstraint: "*",
       ),
-      state: TopologyRuntimeState(
-        status: TopologyRuntimeStatus.absent,
+      state: skir.ChildRuntimeState(
+        status: skir.ChildRuntimeStatus.absent,
         activeArtifactVersion: null,
         message: null,
         updatedAt: DateTime.now().subtract(const Duration(minutes: 4)),

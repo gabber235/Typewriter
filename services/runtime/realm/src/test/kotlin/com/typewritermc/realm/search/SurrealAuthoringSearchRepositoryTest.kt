@@ -1,39 +1,46 @@
 package com.typewritermc.realm.search
 
 import com.surrealdb.Surreal
-import com.typewritermc.authoring.ArgumentSelection
-import com.typewritermc.authoring.AuthoringRecord
 import com.typewritermc.authoring.RealmRootDefinition
-import com.typewritermc.authoring.TypeSelection
+import com.typewritermc.authoring.of
 import com.typewritermc.realm.authoring.AuthoringCatalogLease
 import com.typewritermc.realm.authoring.AuthoringView
 import com.typewritermc.realm.checking.TestCatalogLease
 import com.typewritermc.realm.repository.ResourceValueMapper
 import com.typewritermc.realm.repository.utils.surrealRecordId
 import com.typewritermc.realm.schema.openTestDatabase
-import com.typewritermc.types.DataValue
-import com.typewritermc.types.EndpointCardinality
-import com.typewritermc.types.EndpointDefinition
-import com.typewritermc.types.EndpointSlot
-import com.typewritermc.types.LinkTarget
-import com.typewritermc.types.ParameterKey
 import com.typewritermc.types.RESOURCE_OWNERSHIP_FAMILY_ID
-import com.typewritermc.types.RelationContract
-import com.typewritermc.types.RelationDeletePolicy
-import com.typewritermc.types.RelationFamilyId
-import com.typewritermc.types.RelationId
-import com.typewritermc.types.RepresentationTemplate
-import com.typewritermc.types.ResourceId
-import com.typewritermc.types.TypeDefinition
-import com.typewritermc.types.TypeDefinitionId
-import com.typewritermc.types.TypeId
-import com.typewritermc.types.TypeParameter
-import com.typewritermc.types.TypeTemplate
-import com.typewritermc.types.TypeUse
 import com.typewritermc.types.catalog.DefaultCheckedCatalog
 import com.typewritermc.types.endpointId
+import com.typewritermc.types.namedTemplate
+import com.typewritermc.types.namedUse
+import com.typewritermc.types.of
+import com.typewritermc.types.qualified
+import com.typewritermc.types.template
+import com.typewritermc.types.use
 import de.infix.testBalloon.framework.core.testSuite
 import io.kotest.matchers.shouldBe
+import skirout.editor.v1.catalog.EndpointCardinality
+import skirout.editor.v1.catalog.EndpointDefinition
+import skirout.editor.v1.catalog.EndpointSlot
+import skirout.editor.v1.catalog.RelationContract
+import skirout.editor.v1.catalog.RelationDeletePolicy
+import skirout.editor.v1.type_catalog.ArgumentSelection
+import skirout.editor.v1.type_catalog.AuthoringRecord
+import skirout.editor.v1.type_catalog.DataValue
+import skirout.editor.v1.type_catalog.FieldDeclaration
+import skirout.editor.v1.type_catalog.FieldOwner
+import skirout.editor.v1.type_catalog.LinkTarget
+import skirout.editor.v1.type_catalog.NamedTypeUse
+import skirout.editor.v1.type_catalog.ParameterKey
+import skirout.editor.v1.type_catalog.RelationFamilyId
+import skirout.editor.v1.type_catalog.RelationId
+import skirout.editor.v1.type_catalog.RepresentationTemplate
+import skirout.editor.v1.type_catalog.ResourceId
+import skirout.editor.v1.type_catalog.TypeDefinition
+import skirout.editor.v1.type_catalog.TypeDefinitionId
+import skirout.editor.v1.type_catalog.TypeParameter
+import skirout.editor.v1.type_catalog.TypeSelection
 
 class SurrealAuthoringSearchRepositoryTest {
     fun indexedSearchPagesPastIncompatibleCandidates() {
@@ -42,23 +49,30 @@ class SurrealAuthoringSearchRepositoryTest {
         val incompatible = definition("incompatible")
         val catalog =
             DefaultCheckedCatalog(
-                com.typewritermc.checking.CatalogGeneration("catalog"),
+                skirout.editor.v1.type_catalog
+                    .CatalogGeneration(value = "catalog"),
                 listOf(
-                    TypeDefinition(parent, representation = RepresentationTemplate.Record(emptyList(), abstract = true)),
-                    TypeDefinition(
-                        compatible,
-                        representation = RepresentationTemplate.Record(emptyList()),
-                        parents = listOf(TypeTemplate.Named(parent)),
+                    TypeDefinition.partial(
+                        id = parent,
+                        representation = RepresentationTemplate.createRecord(fields = emptyList(), abstract_ = true),
                     ),
-                    TypeDefinition(incompatible, representation = RepresentationTemplate.Record(emptyList())),
+                    TypeDefinition.partial(
+                        id = compatible,
+                        representation = RepresentationTemplate.createRecord(fields = emptyList(), abstract_ = false),
+                        parents = listOf(parent.namedTemplate()),
+                    ),
+                    TypeDefinition.partial(
+                        id = incompatible,
+                        representation = RepresentationTemplate.createRecord(fields = emptyList(), abstract_ = false),
+                    ),
                 ),
             )
         Surreal().use { database ->
             openSearchDatabase(database)
             repeat(256) { index ->
-                database.insertSearchRow("a_${index.toString().padStart(3, '0')}", TypeUse.Named(incompatible))
+                database.insertSearchRow("a_${index.toString().padStart(3, '0')}", incompatible.namedUse())
             }
-            database.insertSearchRow("z_compatible", TypeUse.Named(compatible))
+            database.insertSearchRow("z_compatible", compatible.namedUse())
 
             val results =
                 SurrealAuthoringSearchRepository(database)
@@ -71,7 +85,7 @@ class SurrealAuthoringSearchRepositoryTest {
                         limit = 100,
                     )
 
-            results.map { it.resource } shouldBe listOf(ResourceId("z_compatible"))
+            results.map { it.resource } shouldBe listOf(ResourceId(value = "z_compatible"))
         }
     }
 
@@ -79,23 +93,29 @@ class SurrealAuthoringSearchRepositoryTest {
         val type = definition("resource")
         val catalog =
             DefaultCheckedCatalog(
-                com.typewritermc.checking.CatalogGeneration("catalog"),
-                listOf(TypeDefinition(type, representation = RepresentationTemplate.Record(emptyList()))),
+                skirout.editor.v1.type_catalog
+                    .CatalogGeneration(value = "catalog"),
+                listOf(
+                    TypeDefinition.partial(
+                        id = type,
+                        representation = RepresentationTemplate.createRecord(fields = emptyList(), abstract_ = false),
+                    ),
+                ),
             )
         Surreal().use { database ->
             openSearchDatabase(database)
-            database.insertSearchRow("inside", TypeUse.Named(type))
-            database.insertSearchRow("outside", TypeUse.Named(type))
+            database.insertSearchRow("inside", type.namedUse())
+            database.insertSearchRow("outside", type.namedUse())
             val results =
                 SurrealAuthoringSearchRepository(database).search(
                     searchView(catalog),
                     "",
-                    setOf(ResourceId("inside")),
+                    setOf(ResourceId(value = "inside")),
                     emptySet(),
                     null,
                     10,
                 )
-            results.map { it.resource } shouldBe listOf(ResourceId("inside"))
+            results.map { it.resource } shouldBe listOf(ResourceId(value = "inside"))
         }
     }
 
@@ -103,25 +123,32 @@ class SurrealAuthoringSearchRepositoryTest {
         val box = definition("box")
         val first = definition("first")
         val second = definition("second")
-        val parameter = ParameterKey(box, 0)
+        val parameter = ParameterKey(owner = box, index = 0)
         val catalog =
             DefaultCheckedCatalog(
-                com.typewritermc.checking.CatalogGeneration("catalog"),
+                skirout.editor.v1.type_catalog
+                    .CatalogGeneration(value = "catalog"),
                 listOf(
-                    TypeDefinition(
-                        box,
-                        parameters = listOf(TypeParameter(parameter, "T")),
-                        representation = RepresentationTemplate.Record(emptyList()),
+                    TypeDefinition.partial(
+                        id = box,
+                        parameters = listOf(TypeParameter.partial(key = parameter, name = "T")),
+                        representation = RepresentationTemplate.createRecord(fields = emptyList(), abstract_ = false),
                     ),
-                    TypeDefinition(first, representation = RepresentationTemplate.Record(emptyList())),
-                    TypeDefinition(second, representation = RepresentationTemplate.Record(emptyList())),
+                    TypeDefinition.partial(
+                        id = first,
+                        representation = RepresentationTemplate.createRecord(fields = emptyList(), abstract_ = false),
+                    ),
+                    TypeDefinition.partial(
+                        id = second,
+                        representation = RepresentationTemplate.createRecord(fields = emptyList(), abstract_ = false),
+                    ),
                 ),
             )
         Surreal().use { database ->
             openSearchDatabase(database)
             database.insertSearchRow(
                 "pending",
-                TypeSelection.Pending(box, listOf(ArgumentSelection.Chosen(TypeUse.Named(first)))),
+                TypeSelection.createPending(definition = box, arguments = listOf(ArgumentSelection.ChosenWrapper(first.use()))),
             )
             val repository = SurrealAuthoringSearchRepository(database)
 
@@ -132,7 +159,7 @@ class SurrealAuthoringSearchRepositoryTest {
                         query = "",
                         contexts = emptySet(),
                         roots = emptySet(),
-                        target = TypeUse.Named(box, listOf(TypeUse.Named(first))),
+                        target = box.namedUse(listOf(first.use())),
                         limit = 10,
                     )
             val mismatched =
@@ -142,11 +169,11 @@ class SurrealAuthoringSearchRepositoryTest {
                         query = "",
                         contexts = emptySet(),
                         roots = emptySet(),
-                        target = TypeUse.Named(box, listOf(TypeUse.Named(second))),
+                        target = box.namedUse(listOf(second.use())),
                         limit = 10,
                     )
 
-            matching.map { it.resource } shouldBe listOf(ResourceId("pending"))
+            matching.map { it.resource } shouldBe listOf(ResourceId(value = "pending"))
             mismatched.map { it.resource } shouldBe emptyList<ResourceId>()
         }
     }
@@ -155,22 +182,29 @@ class SurrealAuthoringSearchRepositoryTest {
         val section = definition("section")
         val catalog =
             DefaultCheckedCatalog(
-                com.typewritermc.checking.CatalogGeneration("catalog"),
+                skirout.editor.v1.type_catalog
+                    .CatalogGeneration(value = "catalog"),
                 listOf(
-                    TypeDefinition(RealmRootDefinition.id, representation = RepresentationTemplate.Record(emptyList())),
-                    TypeDefinition(section, representation = RepresentationTemplate.Record(emptyList())),
+                    TypeDefinition.partial(
+                        id = RealmRootDefinition.id,
+                        representation = RepresentationTemplate.createRecord(fields = emptyList(), abstract_ = false),
+                    ),
+                    TypeDefinition.partial(
+                        id = section,
+                        representation = RepresentationTemplate.createRecord(fields = emptyList(), abstract_ = false),
+                    ),
                 ),
             )
         Surreal().use { database ->
             openSearchDatabase(database)
-            database.insertSearchRow("root", TypeUse.Named(RealmRootDefinition.id))
-            database.insertSearchRow("section", TypeUse.Named(section))
+            database.insertSearchRow("root", RealmRootDefinition.id.namedUse())
+            database.insertSearchRow("section", section.namedUse())
 
             val results =
                 SurrealAuthoringSearchRepository(database)
                     .search(searchView(catalog), "", emptySet(), emptySet(), null, 10)
 
-            results.map { it.resource } shouldBe listOf(ResourceId("section"))
+            results.map { it.resource } shouldBe listOf(ResourceId(value = "section"))
         }
     }
 
@@ -178,8 +212,14 @@ class SurrealAuthoringSearchRepositoryTest {
         val type = definition("book")
         val catalog =
             DefaultCheckedCatalog(
-                com.typewritermc.checking.CatalogGeneration("catalog"),
-                listOf(TypeDefinition(type, representation = RepresentationTemplate.Record(emptyList()))),
+                skirout.editor.v1.type_catalog
+                    .CatalogGeneration(value = "catalog"),
+                listOf(
+                    TypeDefinition.partial(
+                        id = type,
+                        representation = RepresentationTemplate.createRecord(fields = emptyList(), abstract_ = false),
+                    ),
+                ),
             )
         Surreal().use { database ->
             openSearchDatabase(database)
@@ -191,7 +231,7 @@ class SurrealAuthoringSearchRepositoryTest {
                     "DEFINE INDEX resource_approximate ON resource FIELDS search.text " +
                     "FULLTEXT ANALYZER authoring_approximate BM25;",
             )
-            database.insertSearchRow("book", TypeUse.Named(type), "Metadata verification 20261004")
+            database.insertSearchRow("book", type.namedUse(), "Metadata verification 20261004")
 
             val results =
                 SurrealAuthoringSearchRepository(database)
@@ -204,7 +244,7 @@ class SurrealAuthoringSearchRepositoryTest {
                         limit = 10,
                     )
 
-            results.map { it.resource } shouldBe listOf(ResourceId("book"))
+            results.map { it.resource } shouldBe listOf(ResourceId(value = "book"))
         }
     }
 }
@@ -216,30 +256,30 @@ private fun openSearchDatabase(database: Surreal) {
 
 private fun Surreal.insertSearchRow(
     id: String,
-    type: TypeUse.Named,
+    type: NamedTypeUse,
     text: String = "",
-) = insertSearchRow(id, TypeSelection.Complete(type), text)
+) = insertSearchRow(id, TypeSelection.CompleteWrapper(type), text)
 
 private fun Surreal.insertSearchRow(
     id: String,
     selection: TypeSelection,
     text: String = "",
 ) {
-    val resource = ResourceId(id)
-    val record = AuthoringRecord(selection, emptyMap())
+    val resource = ResourceId(value = id)
+    val record = AuthoringRecord.of(selection, emptyMap())
     query(
         "CREATE ONLY \$resource CONTENT { content: \$content, search: { text: \$text } };",
         mapOf(
             "resource" to resource.surrealRecordId(),
             "content" to
-                com.typewritermc.realm.authoring.authoredDatabaseValues
-                    .encode(AuthoringRecord.serializer(), record),
+                com.typewritermc.realm.repository.utils
+                    .encodeSkir(AuthoringRecord.serializer, record),
             "text" to text,
         ),
     ).take(0)
 }
 
-private fun definition(name: String): TypeDefinitionId = TypeDefinitionId(TypeId.Qualified("test", name), 1)
+private fun definition(name: String): TypeDefinitionId = TypeDefinitionId.qualified("test", name)
 
 private fun searchView(checked: com.typewritermc.types.catalog.CheckedCatalog): AuthoringView {
     val lease =
@@ -256,84 +296,90 @@ val SurrealAuthoringSearchRepositoryTestSuite by testSuite {
         val type = definition("node")
         val ownedLink = definition("owned_link")
         val relatedLink = definition("related_link")
-        val ownership = RelationId("ownership")
-        val related = RelationId("related")
+        val ownership = RelationId(value = "ownership")
+        val related = RelationId(value = "related")
 
         fun contract(
             id: RelationId,
             owns: Boolean,
-        ) = RelationContract(
+        ) = RelationContract.of(
             id,
             EndpointDefinition(
-                id.endpointId(EndpointSlot.First),
-                EndpointSlot.First,
-                TypeTemplate.Named(type),
-                EndpointCardinality.One,
-                RelationDeletePolicy.CLEAR,
+                id = id.endpointId(EndpointSlot.FIRST),
+                slot = EndpointSlot.FIRST,
+                resource = type.namedTemplate(),
+                cardinality = EndpointCardinality.ONE,
+                onDelete = RelationDeletePolicy.CLEAR,
             ),
             EndpointDefinition(
-                id.endpointId(EndpointSlot.Second),
-                EndpointSlot.Second,
-                TypeTemplate.Named(type),
-                EndpointCardinality.One,
-                RelationDeletePolicy.CLEAR,
+                id = id.endpointId(EndpointSlot.SECOND),
+                slot = EndpointSlot.SECOND,
+                resource = type.namedTemplate(),
+                cardinality = EndpointCardinality.ONE,
+                onDelete = RelationDeletePolicy.CLEAR,
             ),
-            if (owns) setOf(RelationFamilyId(RESOURCE_OWNERSHIP_FAMILY_ID)) else emptySet(),
+            if (owns) setOf(RelationFamilyId(value = RESOURCE_OWNERSHIP_FAMILY_ID)) else emptySet(),
         )
         val lease =
             TestCatalogLease(
                 definitions =
                     listOf(
-                        TypeDefinition(
-                            type,
+                        TypeDefinition.partial(
+                            id = type,
                             representation =
-                                RepresentationTemplate.Record(
-                                    listOf(
-                                        com.typewritermc.types.FieldDeclaration(
-                                            com.typewritermc.types.FieldOwner(type, "owned"),
-                                            TypeTemplate.Named(ownedLink),
+                                RepresentationTemplate.createRecord(
+                                    fields =
+                                        listOf(
+                                            FieldDeclaration.partial(
+                                                owner = FieldOwner(definition = type, name = "owned"),
+                                                type = ownedLink.template(),
+                                            ),
+                                            FieldDeclaration.partial(
+                                                owner = FieldOwner(definition = type, name = "related"),
+                                                type = relatedLink.template(),
+                                            ),
                                         ),
-                                        com.typewritermc.types.FieldDeclaration(
-                                            com.typewritermc.types.FieldOwner(type, "related"),
-                                            TypeTemplate.Named(relatedLink),
-                                        ),
-                                    ),
+                                    abstract_ = false,
                                 ),
                         ),
-                        TypeDefinition(
-                            ownedLink,
+                        TypeDefinition.partial(
+                            id = ownedLink,
                             representation =
-                                RepresentationTemplate.Link(
-                                    ownership.endpointId(EndpointSlot.First),
-                                    TypeTemplate.Named(type),
+                                RepresentationTemplate.createLink(
+                                    endpoint = ownership.endpointId(EndpointSlot.FIRST),
+                                    target = type.template(),
                                 ),
                         ),
-                        TypeDefinition(
-                            relatedLink,
-                            representation = RepresentationTemplate.Link(related.endpointId(EndpointSlot.First), TypeTemplate.Named(type)),
+                        TypeDefinition.partial(
+                            id = relatedLink,
+                            representation =
+                                RepresentationTemplate.createLink(
+                                    endpoint = related.endpointId(EndpointSlot.FIRST),
+                                    target = type.template(),
+                                ),
                         ),
                     ),
                 relations = listOf(contract(ownership, true), contract(related, false)),
             )
-        val root = ResourceId("root")
-        val child = ResourceId("child")
-        val grandchild = ResourceId("grandchild")
-        val outside = ResourceId("outside")
+        val root = ResourceId(value = "root")
+        val child = ResourceId(value = "child")
+        val grandchild = ResourceId(value = "grandchild")
+        val outside = ResourceId(value = "outside")
 
         fun link(
             id: RelationId,
             target: ResourceId,
-        ) = DataValue.Link(
-            id.endpointId(EndpointSlot.First),
-            LinkTarget(target, null),
+        ) = DataValue.createLink(
+            endpoint = id.endpointId(EndpointSlot.FIRST),
+            target = LinkTarget(resource = target, opposite = null),
         )
-        val selected = TypeSelection.Complete(TypeUse.Named(type))
+        val selected = TypeSelection.CompleteWrapper(type.namedUse())
         val resources =
             mapOf(
-                root to AuthoringRecord(selected, mapOf("owned" to link(ownership, child), "related" to link(related, outside))),
-                child to AuthoringRecord(selected, mapOf("owned" to link(ownership, grandchild))),
-                grandchild to AuthoringRecord(selected, mapOf("owned" to link(ownership, root))),
-                outside to AuthoringRecord(selected, emptyMap()),
+                root to AuthoringRecord.of(selected, mapOf("owned" to link(ownership, child), "related" to link(related, outside))),
+                child to AuthoringRecord.of(selected, mapOf("owned" to link(ownership, grandchild))),
+                grandchild to AuthoringRecord.of(selected, mapOf("owned" to link(ownership, root))),
+                outside to AuthoringRecord.of(selected, emptyMap()),
             )
         val occurrences = ResourceValueMapper.discover(resources).associateBy { it.id }
         val view = AuthoringView(lease, resources, occurrences)

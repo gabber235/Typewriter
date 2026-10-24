@@ -115,17 +115,19 @@ final class _AuthoredResourceInspectionState
                 preview,
               );
               return switch (prepared) {
-                skir.PreparedEditResult_preparedWrapper(:final value) =>
+                skir.PrepareTypeArgumentChangeResponse_preparedWrapper(
+                  :final value,
+                ) =>
                   _binding.stagePrepared(
                     label: "Change type arguments",
                     edit: value.edit,
                   ),
-                skir.PreparedEditResult_needsInputWrapper() =>
+                skir.PrepareTypeArgumentChangeResponse_needsInputWrapper() =>
                   const EditStageResult.rejected(
                     "The type change needs more input",
                     null,
                   ),
-                skir.PreparedEditResult_rejectedWrapper() =>
+                skir.PrepareTypeArgumentChangeResponse_rejectedErrorWrapper() =>
                   const EditStageResult.rejected(
                     "The Realm rejected the type change",
                     null,

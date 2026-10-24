@@ -1,3 +1,5 @@
+use crate::SkirType;
+
 /// Runtime classification for a Skir response variant.
 #[derive(Clone, Copy, Debug, Eq, PartialEq)]
 pub enum SkirResponseOutcome {
@@ -22,16 +24,20 @@ impl SkirResponseOutcome {
 
 /// Contract shared by every typed SKIR response enum.
 ///
-/// The `skir_response!` macro supplies the implementation. Response handlers use this
-/// trait to serialize replies, classify telemetry, expose a stable variant slug, and
+/// The transport generator implements it for every Skir method response from the variant
+/// names: `internal_error` and the unknown variant are internal errors, a name ending in
+/// `_error` is a domain error, and any other variant is a success. Response handlers use
+/// this trait to serialize replies, classify telemetry, expose a stable variant slug, and
 /// construct the fallback response used when a handler fails before producing a domain
 /// result.
-pub trait SkirResponse: Sized {
+pub trait SkirResponse: SkirType {
     /// Serialize the response using its generated SKIR serializer.
     ///
     /// The bytes are the wire payload for messaging replies and do not include a
     /// transport envelope.
-    fn to_skir_bytes(&self) -> Vec<u8>;
+    fn to_skir_bytes(&self) -> Vec<u8> {
+        Self::serializer().to_bytes(self)
+    }
 
     /// Classify this variant for handler control flow and telemetry.
     fn outcome(&self) -> SkirResponseOutcome;
@@ -41,8 +47,8 @@ pub trait SkirResponse: Sized {
 
     /// Return the caller facing message for this variant.
     ///
-    /// Payload fields may be included when the response declaration defines a
-    /// payload aware message.
+    /// The message is the variant's Skir doc comment, or its slug when the variant is
+    /// undocumented. Payloads never contribute, so the message carries no request data.
     fn variant_message(&self) -> String;
 
     /// Construct the generic internal error sent when a handler returns an error.
@@ -51,10 +57,10 @@ pub trait SkirResponse: Sized {
     /// caller as the typed response.
     fn internal_error() -> Self;
 
-    /// Construct a default domain-error response for a known slug.
+    /// Construct a domain error response with a default payload for a known slug.
     ///
-    /// Response variants that need payload data should return `None` here and be
-    /// constructed by call-site overrides in `skir_domain_result!`.
+    /// Every domain error variant is known. Variants whose payload carries call site data
+    /// are filled by the overrides of `skir_domain_result!`, which take precedence.
     fn domain_error_from_slug(_slug: &str) -> Option<Self> {
         None
     }
@@ -164,8 +170,9 @@ where
 /// Remove the prefix SurrealDB adds when a structured `THROW` crosses a query block.
 ///
 /// Only this known wrapper is removed. Other messages remain unchanged so unknown
-/// database failures are not mistaken for domain slugs.
-fn database_domain_slug(message: &str) -> &str {
+/// database failures are not mistaken for domain slugs. Pass the result to
+/// [`SkirResponse::domain_error_from_slug`] to build the matching domain response.
+pub fn database_domain_slug(message: &str) -> &str {
     message.trim_start_matches("An error occurred: ")
 }
 

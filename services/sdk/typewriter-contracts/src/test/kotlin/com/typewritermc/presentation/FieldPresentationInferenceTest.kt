@@ -1,18 +1,16 @@
 package com.typewritermc.presentation
 
-import com.typewritermc.checking.CatalogGeneration
-import com.typewritermc.configuration.RepresentationKind
-import com.typewritermc.types.PresentationId
-import com.typewritermc.types.PresentationRole
-import com.typewritermc.types.ScalarKind
-import com.typewritermc.types.TypeTemplate
-import com.typewritermc.types.catalog.EditorCatalogSnapshot
-import com.typewritermc.types.catalog.toWire
-import com.typewritermc.types.skir.getOrThrow
+import com.typewritermc.authoring.field
+import com.typewritermc.authoring.root
+import com.typewritermc.types.qualified
 import de.infix.testBalloon.framework.core.testSuite
 import io.kotest.assertions.throwables.shouldThrow
 import io.kotest.matchers.shouldBe
 import skirout.editor.v1.binding.BindingRef
+import skirout.editor.v1.catalog.PresentationMaterial
+import skirout.editor.v1.catalog.PresentationRole
+import skirout.editor.v1.catalog.PresentationTarget
+import skirout.editor.v1.catalog.RepresentationKind
 import skirout.editor.v1.presentation.AxisChild
 import skirout.editor.v1.presentation.AxisChildrenElement
 import skirout.editor.v1.presentation.BoundControl
@@ -22,8 +20,13 @@ import skirout.editor.v1.presentation.PresentationElement
 import skirout.editor.v1.presentation.PresentationNode
 import skirout.editor.v1.presentation.PresentationProperties
 import skirout.editor.v1.presentation.TextControl
+import skirout.editor.v1.type_catalog.CatalogGeneration
 import skirout.editor.v1.type_catalog.ExpressionBindingId
 import skirout.editor.v1.type_catalog.PathSegment
+import skirout.editor.v1.type_catalog.PresentationId
+import skirout.editor.v1.type_catalog.ScalarKind
+import skirout.editor.v1.type_catalog.TypeDefinitionId
+import skirout.editor.v1.type_catalog.TypeTemplate
 import skirout.editor.v1.type_catalog.ValuePath
 
 val FieldPresentationInferenceTest by testSuite {
@@ -225,7 +228,7 @@ val FieldPresentationInferenceTest by testSuite {
                                     binding =
                                         BindingRef(
                                             bindingId = ExpressionBindingId(value = "alias"),
-                                            path = ValuePath(segments = emptyList()),
+                                            path = ValuePath.root,
                                         ),
                                 ),
                         ),
@@ -269,7 +272,7 @@ val FieldPresentationInferenceTest by testSuite {
     }
 
     test("an alias to the owner record can still select the owned field") {
-        val rootBinding = BindingRef(bindingId = ExpressionBindingId(value = "configured_value"), path = ValuePath(segments = emptyList()))
+        val rootBinding = BindingRef(bindingId = ExpressionBindingId(value = "configured_value"), path = ValuePath.root)
         val aliased =
             fieldNode("name").copy(
                 element =
@@ -450,7 +453,7 @@ val FieldPresentationInferenceTest by testSuite {
                                     binding =
                                         BindingRef(
                                             bindingId = ExpressionBindingId(value = "owned"),
-                                            path = ValuePath(segments = emptyList()),
+                                            path = ValuePath.root,
                                         ),
                                 ),
                         ),
@@ -531,7 +534,7 @@ val FieldPresentationInferenceTest by testSuite {
         val control = fieldControl("name")
         listOf(
             control.binding.copy(bindingId = ExpressionBindingId(value = "list_item")),
-            control.binding.copy(path = ValuePath(segments = emptyList())),
+            control.binding.copy(path = ValuePath.root),
             control.binding.copy(
                 path = ValuePath(segments = listOf(PathSegment.createField(name = "nested"), PathSegment.createField(name = "name"))),
             ),
@@ -683,35 +686,26 @@ val FieldPresentationInferenceTest by testSuite {
         val layout = column("root", fieldNode("name"), partNode("details", fieldNode("message")), remainder("rest"))
         val material =
             PresentationMaterial(
-                provider = PresentationId("test", "fields"),
-                target = PresentationTarget.Representation(RepresentationKind.Record),
-                subject = TypeTemplate.Scalar(ScalarKind.Text),
+                provider = PresentationId(namespace = "test", name = "fields"),
+                target = PresentationTarget.RepresentationWrapper(RepresentationKind.RECORD),
                 role = PresentationRole.INSPECTOR,
                 layout = layout,
                 dependencies = PresentationDependencies.partial(),
+                subject = TypeTemplate.ScalarWrapper(ScalarKind.TEXT),
                 inheritableNodes = layout.inferInheritableNodes(),
             )
         val wire =
-            EditorCatalogSnapshot(
-                generation = CatalogGeneration("field defaults"),
-                types = emptyList(),
-                relations = emptyList(),
-                resourceDisplays = emptyList(),
-                realmRoot =
-                    com.typewritermc.types.TypeDefinitionId(
-                        com.typewritermc.types.TypeId
-                            .Qualified("test", "realm.root"),
-                        1,
-                    ),
-                presentations = emptyList(),
+            skirout.editor.v1.catalog.EditorCatalog.partial(
+                generation =
+                    skirout.editor.v1.type_catalog
+                        .CatalogGeneration(value = "field defaults"),
+                realmRoot = TypeDefinitionId.qualified("test", "realm.root"),
                 presentationMaterials = listOf(material),
-                configuration = emptyList(),
-                diagnostics = emptyList(),
-            ).toWire()
+            )
         val decoded =
-            skirout.editor.v1.catalog.EditorCatalogWireSnapshot.serializer
+            skirout.editor.v1.catalog.EditorCatalog.serializer
                 .fromBytes(
-                    skirout.editor.v1.catalog.EditorCatalogWireSnapshot.serializer
+                    skirout.editor.v1.catalog.EditorCatalog.serializer
                         .toBytes(wire),
                 ).presentationMaterials
                 .single()
@@ -725,7 +719,7 @@ private fun fieldControl(field: String): BoundControl =
         binding =
             BindingRef(
                 bindingId = ExpressionBindingId(value = "configured_value"),
-                path = ValuePath(segments = listOf(PathSegment.createField(name = field))),
+                path = ValuePath.root.field(field),
             ),
     )
 
@@ -757,15 +751,7 @@ private fun partNode(
             PresentationElement.createPart(
                 key =
                     skirout.editor.v1.presentation.PresentationPartId(
-                        owner =
-                            com.typewritermc.types.skir.SkirTypeCodec
-                                .encode(
-                                    com.typewritermc.types.TypeDefinitionId(
-                                        com.typewritermc.types.TypeId
-                                            .Qualified("test", "PartOwner"),
-                                        1,
-                                    ),
-                                ).getOrThrow(),
+                        owner = TypeDefinitionId.qualified("test", "PartOwner"),
                         name = name,
                     ),
                 body = body,

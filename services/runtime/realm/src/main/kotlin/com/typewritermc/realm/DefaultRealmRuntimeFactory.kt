@@ -4,8 +4,6 @@ package com.typewritermc.realm
 
 import ch.qos.logback.classic.Level
 import com.typewritermc.authoring.DefaultInitializationRuntime
-import com.typewritermc.checking.CatalogGeneration
-import com.typewritermc.checking.InputToken
 import com.typewritermc.discovery.CatalogAssembly
 import com.typewritermc.discovery.CatalogAssemblyContext
 import com.typewritermc.discovery.CatalogCallback
@@ -25,7 +23,6 @@ import com.typewritermc.presentation.PresentationRuntime
 import com.typewritermc.realm.authoring.PreparationEvaluator
 import com.typewritermc.realm.catalog.RealmCatalogIncarnation
 import com.typewritermc.realm.catalog.RealmCatalogStore
-import com.typewritermc.realm.compiler.EngineImplementationInputs
 import com.typewritermc.realm.compiler.StagedEngineImplementationSource
 import com.typewritermc.realm.deployment.ManagedRealmRuntime
 import com.typewritermc.realm.deployment.RealmRuntimeFactory
@@ -44,10 +41,17 @@ import com.typewritermc.services.libs.telemetry.serviceTelemetry
 import com.typewritermc.services.libs.utils.CoroutineDelayScheduler
 import com.typewritermc.services.libs.utils.RetryPolicy
 import com.typewritermc.services.libs.utils.closeAll
+import com.typewritermc.types.canonicalText
+import com.typewritermc.types.template
+import com.typewritermc.types.unknownVariant
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.cancel
+import skirout.editor.v1.publication.EngineImplementationInputs
+import skirout.editor.v1.type_catalog.CatalogGeneration
+import skirout.editor.v1.type_catalog.InputToken
+import skirout.editor.v1.type_catalog.ResourceTarget
 import java.nio.file.Path
 import java.util.UUID
 import java.util.concurrent.atomic.AtomicBoolean
@@ -84,7 +88,7 @@ class DefaultRealmRuntimeFactory : RealmRuntimeFactory {
             deployment = loaded
             // The loader can change catalog behavior without changing the deployment artifacts.
             // Identify this assembled catalog so clients cannot reuse a previous runtime's definitions.
-            val generation = CatalogGeneration(UUID.randomUUID().toString())
+            val generation = CatalogGeneration(value = UUID.randomUUID().toString())
             val telemetry = context.host.openTelemetry.serviceTelemetry("realm", REALM_VERSION)
             val assembly =
                 telemetry.mainSpan(
@@ -96,7 +100,7 @@ class DefaultRealmRuntimeFactory : RealmRuntimeFactory {
                         loaded.providers.contributions.assemble(
                             CatalogAssemblyContext(
                                 generation = generation,
-                                capabilities = loaded.providers.capabilities.map { it.provider.descriptor },
+                                capabilities = loaded.providers.capabilities.map { it.provider.definition },
                             ),
                         )
                     main.annotate {
@@ -131,7 +135,7 @@ class DefaultRealmRuntimeFactory : RealmRuntimeFactory {
                         },
                     engine =
                         StagedEngineImplementationSource(
-                            EngineImplementationInputs(InputToken(context.publicationTarget.fingerprint())),
+                            EngineImplementationInputs(token = InputToken(value = context.publicationTarget.fingerprint())),
                         ),
                 )
             return DefaultManagedRealmRuntime(
@@ -290,18 +294,29 @@ internal fun CatalogAssembly.reportCallbackFailures() {
             when (val callback = failure.callback) {
                 is CatalogCallback.Configuration -> {
                     attribute("catalog.callback.kind", "configuration")
-                    attribute("catalog.subject", callback.target.toString())
+                    attribute("catalog.subject", callback.target.canonicalText)
                 }
 
                 is CatalogCallback.Presentation -> {
                     attribute("catalog.callback.kind", "presentation")
-                    attribute("catalog.subject", callback.subject.toString())
-                    attribute("presentation.role", callback.role.name)
+                    attribute("catalog.subject", callback.subject.canonicalText)
+                    attribute(
+                        "presentation.role",
+                        callback.role.kind.name
+                            .removeSuffix("_CONST"),
+                    )
                 }
 
                 is CatalogCallback.Display -> {
                     attribute("catalog.callback.kind", "display")
-                    attribute("catalog.subject", callback.target.toString())
+                    attribute(
+                        "catalog.subject",
+                        when (val target = callback.target) {
+                            is ResourceTarget.TypeWrapper -> target.template.template.canonicalText
+                            ResourceTarget.ANY_RESOURCE -> "any_resource"
+                            else -> unknownVariant(target)
+                        },
+                    )
                 }
             }
             exception(failure.cause)

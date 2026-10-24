@@ -1,3 +1,5 @@
+import "package:typewriter_panel/infrastructure/protocols/skir/skir.dart"
+    as skir;
 import "package:typewriter_panel/typewriter_panel.dart";
 
 /// Responsive member row for touch layouts.
@@ -18,7 +20,7 @@ class MemberTabletCard extends HookConsumerWidget {
     super.key,
   });
 
-  final OrganizationMember member;
+  final skir.OrganizationMember member;
   final bool isSelected;
   final ValueChanged<bool> onSelectionChanged;
   final VoidCallback onSelectAll;
@@ -194,7 +196,7 @@ class MemberTabletCard extends HookConsumerWidget {
                             .when(
                               data: (allRoles) => RoleMultiselectChips(
                                 availableRoles: allRoles,
-                                selectedRoles: member.roles,
+                                selectedRoles: member.roles.toList(),
                                 onRolesChanged: (newRoles) {
                                   ref
                                       .executeMembership(

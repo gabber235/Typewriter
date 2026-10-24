@@ -44,6 +44,19 @@ import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
 import kotlinx.coroutines.withContext
 import kotlinx.coroutines.withTimeoutOrNull
+import skirout.service.v1.rollout.ActiveParticipant
+import skirout.service.v1.rollout.ActiveProjection
+import skirout.service.v1.rollout.ApplyRolloutCommandRequest
+import skirout.service.v1.rollout.ApplyRolloutCommandResponse
+import skirout.service.v1.rollout.ParticipantPhase
+import skirout.service.v1.rollout.ParticipantStatus
+import skirout.service.v1.rollout.ProjectionHealth
+import skirout.service.v1.rollout.ProjectionReference
+import skirout.service.v1.rollout.RecoverableParticipantState
+import skirout.service.v1.rollout.RollbackTarget
+import skirout.service.v1.rollout.RolloutAttempt
+import skirout.service.v1.rollout.RolloutCommand
+import skirout.service.v1.rollout.StagedCandidate
 import java.nio.file.Path
 import java.util.concurrent.TimeoutException
 import kotlin.io.path.createDirectories
@@ -67,12 +80,12 @@ interface VerifiedArtifactSource {
 }
 
 /**
- * Publishes participant lifecycle observations.
+ * Observes every participant lifecycle transition on this host, such as the host execution report.
  *
- * Delivery can fail separately from the runtime transition; direct status probes provide another observation path.
+ * The coordinator does not depend on these observations; it queries participant status directly.
  */
-fun interface ParticipantStatePublisher {
-    suspend fun publish(event: ParticipantStateChanged)
+fun interface ParticipantStatusListener {
+    fun changed(status: ParticipantStatus)
 }
 
 /**
@@ -89,7 +102,7 @@ class HostRolloutParticipant(
     private val host: HostedRuntimeHost,
     private val projections: ProjectionSource,
     private val artifacts: VerifiedArtifactSource,
-    private val states: ParticipantStatePublisher,
+    private val statuses: ParticipantStatusListener,
     private val scope: CoroutineScope,
     private val runtimeLoader: HostedRuntimeStager = HostedRuntimeLoader(),
     private val lifecycleTimeout: Duration = 30.seconds,
@@ -102,97 +115,102 @@ class HostRolloutParticipant(
     private var healthMonitor: Job? = null
 
     @Volatile
-    private var currentActiveProjection: ActiveProjectionReference? = null
+    private var currentActiveProjection: ActiveProjection? = null
 
-    val activeProjection: ActiveProjectionReference?
+    val activeProjection: ActiveProjection?
         get() = currentActiveProjection
 
-    /** Rejects commands addressed to another Realm or host before taking the lifecycle mutex. */
-    fun accepts(envelope: RolloutEnvelope): Boolean = envelope.realmId == realmId && serviceId in envelope.participants
-
-    /** Returns the local state for probe [attempt], including the active projection health when present. */
-    suspend fun currentStatus(attempt: RolloutAttempt): ParticipantStatus =
-        commands.withLock {
+    /** Returns the local status for the queried [attempt], including the active projection health when present. */
+    suspend fun status(attempt: RolloutAttempt): ParticipantStatus {
+        attempt.requireValid()
+        return commands.withLock {
             when (val state = localState) {
-                LocalParticipantState.Empty -> {
-                    ParticipantStatus.Idle(attempt, serviceId)
-                }
-
-                is LocalParticipantState.Staged -> {
-                    ParticipantStatus.Staged(state.attempt, serviceId, state.reference, state.baseline.toContract())
-                }
-
-                is LocalParticipantState.Active -> {
-                    state.toContract(serviceId)
-                }
+                LocalParticipantState.Empty -> status(attempt, ParticipantPhase.IDLE)
+                is LocalParticipantState.Staged -> status(state.attempt, state.stagedPhase())
+                is LocalParticipantState.Active -> state.toContract()
             }
         }
+    }
 
-    /** Applies one command atomically with respect to other commands and reports rejection without hiding internal failure. */
-    suspend fun handle(envelope: RolloutEnvelope): CommandAcceptance =
-        telemetry.artifactSpan(
+    /**
+     * Applies one command atomically with respect to other commands, or returns null when the command does not list
+     * this host. Stale and conflicting attempts, rejections and failures reply with their error variant, each naming
+     * this host so the coordinator can stop collecting early.
+     */
+    suspend fun apply(request: ApplyRolloutCommandRequest): ApplyRolloutCommandResponse? {
+        request.requireValid()
+        val attempt = request.attempt
+        val command = request.command
+        val reference = command.projectionOf(serviceId.value) ?: return null
+        return telemetry.artifactSpan(
             "artifact.rollout.command",
             "artifact-rollout-command-failed",
         ) { span ->
             span?.annotate {
                 attribute("realm.id", realmId.value)
                 attribute("service.id", serviceId.value)
-                attribute("rollout.attempt", envelope.attempt.ordinal)
-                attribute("deployment.generation", envelope.attempt.generation.value)
-                attribute("rollout.command", envelope.command.kind.name)
+                attribute("rollout.attempt", attempt.ordinal)
+                attribute("deployment.generation", attempt.generation)
+                attribute("rollout.command", command.commandKind.label)
             }
-            handleCommand(envelope, span).also { acceptance ->
-                span?.annotate {
-                    attribute("rollout.command_accepted", acceptance.accepted)
-                    attribute("rollout.command_internal_failure", acceptance.internalFailure)
-                }
-            }
+            applyCommand(attempt, command, reference, span)
         }
+    }
 
-    private suspend fun handleCommand(
-        envelope: RolloutEnvelope,
+    private suspend fun applyCommand(
+        attempt: RolloutAttempt,
+        command: RolloutCommand,
+        reference: ProjectionReference,
         span: MainSpanScope?,
-    ): CommandAcceptance {
-        require(accepts(envelope)) { "Host is not a participant in this rollout." }
-        return commands.withLock {
-            val reference = envelope.projections.getValue(serviceId)
-            if (envelope.attempt.ordinal < latestAttemptOrdinal) {
+    ): ApplyRolloutCommandResponse =
+        commands.withLock {
+            val id = serviceId.value
+            if (attempt.ordinal < latestAttemptOrdinal) {
                 span?.annotate { attribute("rollout.command_stale", true) }
-                return@withLock CommandAcceptance(serviceId, false, "Rollout attempt is stale.")
+                return@withLock ApplyRolloutCommandResponse.createStaleAttemptError(serviceId = id)
             }
-            if (envelope.attempt.ordinal == latestAttemptOrdinal && latestAttemptReference != null && latestAttemptReference != reference) {
+            if (attempt.ordinal == latestAttemptOrdinal && latestAttemptReference != null && latestAttemptReference != reference) {
                 span?.annotate { attribute("rollout.command_conflict", true) }
-                return@withLock CommandAcceptance(serviceId, false, "Rollout attempt conflicts with another projection.")
+                return@withLock ApplyRolloutCommandResponse.createAttemptConflictError(serviceId = id)
             }
-            latestAttemptOrdinal = envelope.attempt.ordinal
+            latestAttemptOrdinal = attempt.ordinal
             latestAttemptReference = reference
             try {
-                when (val command = envelope.command) {
-                    RolloutCommand.Stage -> stage(envelope.attempt, reference)
-                    RolloutCommand.Commit -> commit(envelope.attempt, reference)
-                    RolloutCommand.Abort -> abort(envelope.attempt, reference)
-                    is RolloutCommand.Rollback -> rollback(envelope.attempt, reference, command.targets.getValue(serviceId))
+                when (command) {
+                    is RolloutCommand.StageWrapper -> {
+                        stage(attempt, reference)
+                    }
+
+                    is RolloutCommand.CommitWrapper -> {
+                        commit(attempt, reference)
+                    }
+
+                    is RolloutCommand.AbortWrapper -> {
+                        abort(attempt, reference)
+                    }
+
+                    is RolloutCommand.RollBackWrapper -> {
+                        rollback(attempt, reference, requireNotNull(command.value.participants.findByKey(id)).target)
+                    }
+
+                    else -> {
+                        error("Rollout command is unknown.")
+                    }
                 }
-                CommandAcceptance(serviceId, true)
+                ApplyRolloutCommandResponse.createAccepted(serviceId = id)
             } catch (rejection: CommandRejectedException) {
-                CommandAcceptance(serviceId, false, rejection.message)
+                ApplyRolloutCommandResponse.createCommandRejectedError(serviceId = id, reason = rejection.message.orEmpty())
             } catch (failure: Throwable) {
                 failure.rethrowExceptional()
                 span?.recordDegraded(ErrorSlug.of("artifact-rollout-command-internal-failure"), failure)
-                val recoverable = localState.toRecoverable()
-                publish(
-                    ParticipantStatus.Failed(
-                        attempt = envelope.attempt,
-                        serviceId = serviceId,
-                        command = envelope.command.kind,
-                        recoverable = recoverable,
-                        reason = failure.message ?: "Rollout command failed.",
-                    ),
+                val reason = failure.message ?: "Rollout command failed."
+                observe(
+                    attempt,
+                    ParticipantPhase.createFailed(command = command.commandKind, recoverable = localState.toRecoverable(), reason = reason),
                 )
-                CommandAcceptance(serviceId, false, failure.message, internalFailure = true)
+                ApplyRolloutCommandResponse.createCommandFailedError(serviceId = id, reason = reason)
             }
         }
-    }
 
     private suspend fun stage(
         attempt: RolloutAttempt,
@@ -203,7 +221,7 @@ class HostRolloutParticipant(
                 if (state.reference == reference && state.attempt == attempt) return
                 if (state.reference == reference && attempt.ordinal > state.attempt.ordinal) {
                     localState = state.copy(attempt = attempt)
-                    publish(ParticipantStatus.Staged(attempt, serviceId, reference, state.baseline.toContract()))
+                    observe(attempt, state.stagedPhase())
                     return
                 }
                 rejectUnless(attempt.ordinal > state.attempt.ordinal) { "The rollout attempt conflicts with another staged projection." }
@@ -216,7 +234,7 @@ class HostRolloutParticipant(
             LocalParticipantState.Empty -> {}
         }
         val baseline = localState.activeOrNull()
-        publish(ParticipantStatus.Staging(attempt, serviceId, reference, baseline.toContract()))
+        observe(attempt, ParticipantPhase.createStaging(candidate = reference, baseline = baseline?.activeProjection()))
         val projection = projections.fetch(reference)
         val replacement = stageProjection(reference, projection)
         val previousStaged = localState as? LocalParticipantState.Staged
@@ -227,7 +245,7 @@ class HostRolloutParticipant(
             throw failure
         }
         localState = LocalParticipantState.Staged(attempt, reference, replacement, baseline)
-        publish(ParticipantStatus.Staged(attempt, serviceId, reference, baseline.toContract()))
+        observe(attempt, ParticipantPhase.createStaged(candidate = reference, baseline = baseline?.activeProjection()))
     }
 
     private suspend fun commit(
@@ -241,7 +259,7 @@ class HostRolloutParticipant(
         requireNotNull(staged)
         rejectUnless(staged.reference == reference) { "Another projection is staged." }
         rejectUnless(staged.attempt == attempt) { "The staged projection belongs to another rollout attempt." }
-        publish(ParticipantStatus.Committing(attempt, serviceId, reference, staged.baseline.toContract()))
+        observe(attempt, ParticipantPhase.createCommitting(candidate = reference, baseline = staged.baseline?.activeProjection()))
         val baseline = staged.baseline
         try {
             baseline?.projection?.quiesce()
@@ -266,10 +284,10 @@ class HostRolloutParticipant(
     ) {
         val staged = localState as? LocalParticipantState.Staged
         if (staged == null || staged.reference != reference) return
-        publish(ParticipantStatus.Aborting(attempt, serviceId, reference, staged.baseline.toContract()))
+        observe(attempt, ParticipantPhase.createAborting(candidate = reference, baseline = staged.baseline?.activeProjection()))
         staged.projection.close()
         localState = staged.baseline?.copy(attempt = attempt) ?: LocalParticipantState.Empty
-        publishCurrent(attempt)
+        observeCurrent(attempt)
     }
 
     private suspend fun rollback(
@@ -282,7 +300,7 @@ class HostRolloutParticipant(
             rejectUnless(staged.reference == failedReference) { "The rollback command does not identify the staged projection." }
             staged.projection.close()
             localState = staged.baseline?.copy(attempt = attempt) ?: LocalParticipantState.Empty
-            publishCurrent(attempt)
+            observeCurrent(attempt)
             return
         }
         val active = localState as? LocalParticipantState.Active
@@ -291,35 +309,19 @@ class HostRolloutParticipant(
         requireNotNull(active)
         rejectUnless(active.reference == failedReference) { "The rollback command does not identify the active projection." }
         when (target) {
-            RollbackTarget.Empty -> {
+            is RollbackTarget.ProjectionWrapper -> {
+                rejectUnless(active.retained != null) { "The requested rollback projection is not retained." }
+                rejectUnless(active.retained?.reference == target.value) { "Retained projection differs from the rollback target." }
+            }
+
+            else -> {
                 rejectUnless(active.retained == null) { "Rollback target is empty while a retained projection exists." }
             }
-
-            is RollbackTarget.Projection -> {
-                rejectUnless(active.retained != null) { "The requested rollback projection is not retained." }
-                rejectUnless(active.retained?.reference == target.reference) { "Retained projection differs from the rollback target." }
-            }
         }
-        publish(ParticipantStatus.RollingBack(attempt, serviceId, failedReference, target))
+        observe(attempt, ParticipantPhase.createRollingBack(failed = failedReference, target = target))
         stopHealthMonitor()
         when (target) {
-            RollbackTarget.Empty -> {
-                try {
-                    active.projection.quiesce()
-                } catch (failure: Throwable) {
-                    monitorHealth(active)
-                    throw failure
-                }
-                try {
-                    active.projection.close()
-                } finally {
-                    localState = LocalParticipantState.Empty
-                    currentActiveProjection = null
-                }
-                publish(ParticipantStatus.Idle(attempt, serviceId))
-            }
-
-            is RollbackTarget.Projection -> {
+            is RollbackTarget.ProjectionWrapper -> {
                 val retained = requireNotNull(active.retained)
                 try {
                     active.projection.quiesce()
@@ -336,6 +338,22 @@ class HostRolloutParticipant(
                 localState = restored
                 monitorHealth(restored)
             }
+
+            else -> {
+                try {
+                    active.projection.quiesce()
+                } catch (failure: Throwable) {
+                    monitorHealth(active)
+                    throw failure
+                }
+                try {
+                    active.projection.close()
+                } finally {
+                    localState = LocalParticipantState.Empty
+                    currentActiveProjection = null
+                }
+                observe(attempt, ParticipantPhase.IDLE)
+            }
         }
     }
 
@@ -351,7 +369,7 @@ class HostRolloutParticipant(
                 attribute("realm.id", realmId.value)
                 attribute("service.id", serviceId.value)
                 attribute("projection.digest", reference.blob.value)
-                attribute("deployment.generation", reference.generation.value)
+                attribute("deployment.generation", reference.generation)
             }
             stageProjectionContents(reference, projection)
         }
@@ -506,7 +524,7 @@ class HostRolloutParticipant(
 
     private suspend fun monitorHealth(active: LocalParticipantState.Active) {
         stopHealthMonitor()
-        currentActiveProjection = ActiveProjectionReference(active.reference, active.projection.health.value)
+        currentActiveProjection = active.activeProjection()
         healthMonitor =
             scope.launch {
                 active.projection.health.collect { health ->
@@ -514,31 +532,35 @@ class HostRolloutParticipant(
                         commands.withLock {
                             (localState as? LocalParticipantState.Active)?.takeIf { it.reference == active.reference }
                         } ?: return@collect
-                    currentActiveProjection = ActiveProjectionReference(current.reference, health)
-                    publish(current.toContract(serviceId, health))
+                    currentActiveProjection = current.activeProjection(health)
+                    statuses.changed(current.toContract(health))
                 }
             }
     }
 
-    private suspend fun publishCurrent(attempt: RolloutAttempt) {
+    private fun observeCurrent(attempt: RolloutAttempt) {
         when (val current = localState) {
-            LocalParticipantState.Empty -> {
-                publish(ParticipantStatus.Idle(attempt, serviceId))
-            }
-
-            is LocalParticipantState.Staged -> {
-                publish(ParticipantStatus.Staged(current.attempt, serviceId, current.reference, current.baseline.toContract()))
-            }
-
-            is LocalParticipantState.Active -> {
-                publish(current.toContract(serviceId))
-            }
+            LocalParticipantState.Empty -> observe(attempt, ParticipantPhase.IDLE)
+            is LocalParticipantState.Staged -> observe(current.attempt, current.stagedPhase())
+            is LocalParticipantState.Active -> statuses.changed(current.toContract())
         }
     }
 
-    private suspend fun publish(status: ParticipantStatus) {
-        states.publish(ParticipantStateChanged(realmId, status))
-    }
+    private fun observe(
+        attempt: RolloutAttempt,
+        phase: ParticipantPhase,
+    ) = statuses.changed(status(attempt, phase))
+
+    private fun status(
+        attempt: RolloutAttempt,
+        phase: ParticipantPhase,
+    ) = ParticipantStatus(serviceId = serviceId.value, attempt = attempt, phase = phase)
+
+    private fun LocalParticipantState.Staged.stagedPhase() =
+        ParticipantPhase.createStaged(candidate = reference, baseline = baseline?.activeProjection())
+
+    private fun LocalParticipantState.Active.toContract(health: ProjectionHealth = projection.health.value) =
+        status(attempt, ParticipantPhase.ActiveWrapper(activeParticipant(health)))
 
     private suspend fun stopHealthMonitor() {
         healthMonitor?.cancelAndJoin()
@@ -570,15 +592,11 @@ class HostRolloutParticipant(
             val projection: LocalProjection,
             val retained: Active?,
         ) : LocalParticipantState {
-            fun toContract(
-                serviceId: ServiceId,
-                health: RuntimeHealthSnapshot = projection.health.value,
-            ) = ParticipantStatus.Active(
-                attempt,
-                serviceId,
-                ActiveProjectionReference(reference, health),
-                retained?.let { RetainedProjection.Present(it.reference) } ?: RetainedProjection.None,
-            )
+            fun activeProjection(health: ProjectionHealth = projection.health.value) =
+                ActiveProjection(projection = reference, health = health)
+
+            fun activeParticipant(health: ProjectionHealth = projection.health.value) =
+                ActiveParticipant(current = activeProjection(health), retained = retained?.reference)
         }
     }
 
@@ -594,11 +612,11 @@ class HostRolloutParticipant(
         scope: CoroutineScope,
         private val lifecycleTimeout: Duration,
     ) {
-        private val mutableHealth = MutableStateFlow(valuesAtConstruction(runtimes).toSnapshot())
-        val health: StateFlow<RuntimeHealthSnapshot> = mutableHealth
+        private val mutableHealth = MutableStateFlow(runtimes.map { it.runtime.health.value }.toProjectionHealth())
+        val health: StateFlow<ProjectionHealth> = mutableHealth
         private val healthMonitor =
             scope.launch {
-                combine(runtimes.map { it.runtime.health }) { values -> values.toSnapshot() }
+                combine(runtimes.map { it.runtime.health }) { values -> values.toList().toProjectionHealth() }
                     .collect { mutableHealth.value = it }
             }
 
@@ -683,44 +701,23 @@ class HostRolloutParticipant(
                 throw TimeoutException("Hosted runtime $operationName exceeded lifecycle deadline of $lifecycleTimeout")
             }
         }
-
-        companion object {
-            private fun valuesAtConstruction(runtimes: List<LoadedHostedRuntime>) = runtimes.map { it.runtime.health.value }.toTypedArray()
-        }
     }
 }
-
-private fun Array<RuntimeHealth>.toSnapshot(): RuntimeHealthSnapshot {
-    val unhealthy = filterIsInstance<RuntimeHealth.Unhealthy>()
-    return when {
-        unhealthy.isNotEmpty() -> RuntimeHealthSnapshot.Unhealthy(unhealthy.map(RuntimeHealth.Unhealthy::reason))
-        all { it == RuntimeHealth.Healthy } -> RuntimeHealthSnapshot.Healthy
-        else -> RuntimeHealthSnapshot.Staged
-    }
-}
-
-private fun HostRolloutParticipant.LocalParticipantState?.toContract(): ActiveBaseline =
-    (this as? HostRolloutParticipant.LocalParticipantState.Active)
-        ?.let { ActiveBaseline.Present(ActiveProjectionReference(it.reference, it.projection.health.value)) }
-        ?: ActiveBaseline.Empty
 
 private fun HostRolloutParticipant.LocalParticipantState.activeOrNull() = this as? HostRolloutParticipant.LocalParticipantState.Active
 
 private fun HostRolloutParticipant.LocalParticipantState.toRecoverable(): RecoverableParticipantState =
     when (this) {
         HostRolloutParticipant.LocalParticipantState.Empty -> {
-            RecoverableParticipantState.Empty
+            RecoverableParticipantState.EMPTY
         }
 
         is HostRolloutParticipant.LocalParticipantState.Active -> {
-            RecoverableParticipantState.Active(
-                ActiveProjectionReference(reference, projection.health.value),
-                retained?.let { RetainedProjection.Present(it.reference) } ?: RetainedProjection.None,
-            )
+            RecoverableParticipantState.ActiveWrapper(activeParticipant())
         }
 
         is HostRolloutParticipant.LocalParticipantState.Staged -> {
-            RecoverableParticipantState.Staged(reference, baseline.toContract())
+            RecoverableParticipantState.StagedWrapper(StagedCandidate(candidate = reference, baseline = baseline?.activeProjection()))
         }
     }
 
@@ -744,8 +741,8 @@ private suspend fun HostRolloutParticipant.LocalParticipantState.close() {
 
 private fun RollbackTarget.matches(reference: ProjectionReference?): Boolean =
     when (this) {
-        RollbackTarget.Empty -> reference == null
-        is RollbackTarget.Projection -> reference == this.reference
+        is RollbackTarget.ProjectionWrapper -> reference == value
+        else -> reference == null
     }
 
 private suspend fun HostRolloutParticipant.LocalProjection.closePreserving(failure: Throwable) {

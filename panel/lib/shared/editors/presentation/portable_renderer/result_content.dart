@@ -24,7 +24,7 @@ final class PortableResultContent extends StatelessWidget {
   final PortablePresentationScope scope;
   final SearchResultRowContext row;
   final SearchResultDensity density;
-  final ResourceAppearance? appearance;
+  final skir.ResourceAppearance? appearance;
 
   /// What kind of result this is, such as the resource type name.
   final String kindLabel;
@@ -42,7 +42,7 @@ final class PortableResultContent extends StatelessWidget {
       row: row,
       density: density,
       title: appearance?.label,
-      accent: appearance?.accent,
+      accent: appearance?.accentColor,
       leading: appearance == null ? null : ResourceIcon(icon: appearance!.icon),
       kindLabel: kindLabel,
       footer: footer,

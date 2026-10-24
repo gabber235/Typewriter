@@ -1,16 +1,19 @@
 package com.typewritermc.configuration
 
-import com.typewritermc.types.DataValue
-import com.typewritermc.types.ScalarKind
+import com.typewritermc.types.bigInteger
 import com.typewritermc.types.catalog.CheckedType
-import com.typewritermc.types.catalog.DeclarationDiagnostic
 import com.typewritermc.types.catalog.Resolution
+import com.typewritermc.types.catalog.of
 import com.typewritermc.types.catalog.resolve
-import com.typewritermc.types.skir.SkirDataValueCodec
-import com.typewritermc.types.skir.getOrThrow
+import com.typewritermc.types.payload
+import com.typewritermc.types.requirePortable
+import com.typewritermc.types.use
+import skirout.editor.v1.catalog.OwnedRule
+import skirout.editor.v1.diagnostic.DeclarationDiagnostic
 import skirout.editor.v1.expression.BoundDirection
 import skirout.editor.v1.expression.ExpressionNode
 import skirout.editor.v1.expression.SizeBoundMetric
+import skirout.editor.v1.type_catalog.DataValue
 import java.math.BigDecimal
 
 class DefaultPortableRuleCompiler : PortableRuleCompiler {
@@ -57,7 +60,7 @@ class DefaultPredicateReasoner : PredicateReasoner {
                 )
         val sizeConflict = sizeLower != null && sizeUpper != null && sizeLower > sizeUpper
         if (!numericConflict && !sizeConflict) return null
-        return DeclarationDiagnostic(
+        return DeclarationDiagnostic.of(
             rules
                 .first()
                 .rule.id.origin.owner,
@@ -145,31 +148,28 @@ private sealed interface Constraint {
     ) : Constraint
 }
 
-private fun ExpressionNode.literalValue(): DataValue? =
-    (this as? ExpressionNode.LiteralWrapper)?.value?.let {
-        SkirDataValueCodec.decode(it).getOrThrow()
-    }
+private fun ExpressionNode.literalValue(): DataValue? = (this as? ExpressionNode.LiteralWrapper)?.value?.requirePortable()
 
 private fun DataValue?.number(): BigDecimal? =
     when (this) {
-        is DataValue.Integer -> value.toBigDecimal()
-        is DataValue.Decimal -> value.toBigDecimalOrNull()
-        is DataValue.Float -> BigDecimal.valueOf(value)
-        is DataValue.Named -> payload.number()
+        is DataValue.IntegerWrapper -> value.toBigDecimal()
+        is DataValue.DecimalWrapper -> value.toBigDecimalOrNull()
+        is DataValue.FloatWrapper -> BigDecimal.valueOf(value)
+        is DataValue.NamedWrapper -> payload.number()
         else -> null
     }
 
 private fun DataValue?.integer(): Int? =
     when (this) {
-        is DataValue.Integer -> runCatching { value.intValueExact() }.getOrNull()
-        is DataValue.Named -> payload.integer()
+        is DataValue.IntegerWrapper -> runCatching { bigInteger.intValueExact() }.getOrNull()
+        is DataValue.NamedWrapper -> payload.integer()
         else -> null
     }
 
 private fun DataValue?.booleanOrTrue(): Boolean =
     when (this) {
-        is DataValue.Boolean -> value
-        is DataValue.Named -> payload.booleanOrTrue()
+        is DataValue.BooleanWrapper -> value
+        is DataValue.NamedWrapper -> payload.booleanOrTrue()
         else -> true
     }
 

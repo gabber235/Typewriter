@@ -1,7 +1,8 @@
 package com.typewritermc.checking
 
 import com.typewritermc.authoring.AuthoredReads
-import com.typewritermc.authoring.ValueLocation
+import skirout.editor.v1.diagnostic.Diagnostic
+import skirout.editor.v1.type_catalog.ValueLocation
 
 interface RealmCheckProvider {
     fun RealmChecks.register()

@@ -1,86 +1,73 @@
 package com.typewritermc.authoring
 
-import com.typewritermc.types.DataValue
-import com.typewritermc.types.FieldOwner
-import com.typewritermc.types.ParameterKey
-import com.typewritermc.types.TypeDefinitionId
-import com.typewritermc.types.TypeTemplate
-import com.typewritermc.types.TypeUse
-import com.typewritermc.types.catalog.ResolvedField
-import kotlinx.serialization.SerialName
-import kotlinx.serialization.Serializable
+import com.typewritermc.types.with
+import skirout.editor.v1.type_catalog.ArgumentSelection
+import skirout.editor.v1.type_catalog.AuthoringRecord
+import skirout.editor.v1.type_catalog.DataValue
+import skirout.editor.v1.type_catalog.FieldOwner
+import skirout.editor.v1.type_catalog.FieldValue
+import skirout.editor.v1.type_catalog.NamedTypeUse
+import skirout.editor.v1.type_catalog.ParameterKey
+import skirout.editor.v1.type_catalog.RecordPayload
+import skirout.editor.v1.type_catalog.ResolvedField
+import skirout.editor.v1.type_catalog.TypeDefinitionId
+import skirout.editor.v1.type_catalog.TypeSelection
+import skirout.editor.v1.type_catalog.TypeTemplate
+import skirout.editor.v1.type_catalog.TypeUse
 
-@Serializable
-sealed interface ArgumentSelection {
-    @Serializable
-    @SerialName("chosen")
-    data class Chosen(
-        val type: TypeUse,
-    ) : ArgumentSelection
-
-    @Serializable
-    @SerialName("unfilled")
-    data object Unfilled : ArgumentSelection
-}
-
-/**
- * Tracks authored type arguments while a record is being edited.
+/*
+ * A resource's authored content is the generated Skir AuthoringRecord: its type selection, kept separately from its
+ * field payload so partially configured records remain editable, and its fields. A pending selection retains an
+ * unfilled argument without inventing a concrete type; a complete one describes filled type arguments, not completed
+ * field values or a successful catalog check. Nested nominal values still carry their own actual types.
  *
- * [Pending] can retain an unfilled argument without inventing a concrete type. [Complete] describes filled type
- * arguments, not completed field values or a successful catalog check.
+ * Record fields are kept in name order, so two records with the same fields are equal and encode to the same bytes.
+ * The factory below establishes that order, and requireValid restores it for records that enter from outside.
  */
-@Serializable
-sealed interface TypeSelection {
-    @Serializable
-    @SerialName("complete")
-    data class Complete(
-        val use: TypeUse.Named,
-    ) : TypeSelection
 
-    @Serializable
-    @SerialName("pending")
-    data class Pending(
-        val definition: TypeDefinitionId,
-        val arguments: List<ArgumentSelection>,
-    ) : TypeSelection
-}
+fun AuthoringRecord.Companion.of(
+    configuration: TypeSelection,
+    fields: Map<String, DataValue> = emptyMap(),
+): AuthoringRecord =
+    AuthoringRecord(
+        configuration = configuration,
+        fields = fields.entries.sortedBy { it.key }.map { (name, value) -> FieldValue(name = name, value = value) },
+    )
 
-/**
- * The selected type, complete or pending. An extension rather than a member: an interface property would become a
- * field of the selection's canonical read model, which [TypeSelection.Pending.definition] would then override.
- */
+/** A record with the fields of [payload], which are already in name order. */
+fun AuthoringRecord.Companion.of(
+    configuration: TypeSelection,
+    payload: RecordPayload,
+): AuthoringRecord = AuthoringRecord(configuration = configuration, fields = payload.fields)
+
+/** The fields by name, in name order. */
+val AuthoringRecord.fieldMap: Map<String, DataValue> get() = fields.associateTo(LinkedHashMap()) { it.name to it.value }
+
+/** The fields as a record payload. */
+val AuthoringRecord.payload: RecordPayload get() = RecordPayload(fields = fields)
+
+/** Returns the value of the field named [name], or null when the record has no such field. */
+fun AuthoringRecord.field(name: String): DataValue? = fields.findByKey(name)?.value
+
+/** Returns this record with [name] set to [value], keeping the fields in name order. */
+fun AuthoringRecord.with(
+    name: String,
+    value: DataValue,
+): AuthoringRecord = copy(fields = payload.with(name, value).fields)
+
+val TypeSelection.CompleteWrapper.use: NamedTypeUse get() = value
+
+val TypeSelection.PendingWrapper.definition: TypeDefinitionId get() = value.definition
+
+val TypeSelection.PendingWrapper.arguments: List<ArgumentSelection> get() = value.arguments
+
+val ArgumentSelection.ChosenWrapper.type: TypeUse get() = value
+
+/** The selected type, complete or pending. */
 val TypeSelection.definition: TypeDefinitionId
     get() =
         when (this) {
-            is TypeSelection.Complete -> use.definition
-            is TypeSelection.Pending -> definition
+            is TypeSelection.CompleteWrapper -> value.definition
+            is TypeSelection.PendingWrapper -> value.definition
+            else -> throw IllegalArgumentException("Unknown type selection variant.")
         }
-
-/**
- * Stores a resource's type selection separately from its field payload so partially configured records remain editable.
- * Nested nominal values still carry their own actual types in [DataValue.Named].
- */
-@Serializable
-data class AuthoringRecord(
-    val configuration: TypeSelection,
-    val fields: Map<String, DataValue>,
-)
-
-@Serializable
-data class ArgumentLocation(
-    val index: Int,
-)
-
-@Serializable
-data class DependentField(
-    val owner: FieldOwner,
-    val type: TypeTemplate,
-    val missing: Set<ParameterKey>,
-)
-
-@Serializable
-data class PartialSchema(
-    val knownFields: List<ResolvedField>,
-    val dependentFields: List<DependentField>,
-    val pendingArguments: List<ArgumentLocation>,
-)

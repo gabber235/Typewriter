@@ -9,36 +9,31 @@ import com.typewritermc.authoring.BoundCollectionPath
 import com.typewritermc.authoring.BoundPath
 import com.typewritermc.authoring.CompletenessResult
 import com.typewritermc.authoring.GeneratedSdkApi
-import com.typewritermc.authoring.NativeBindingId
-import com.typewritermc.authoring.PortableValue
 import com.typewritermc.authoring.complete
-import com.typewritermc.checking.CatalogGeneration
+import com.typewritermc.authoring.of
+import com.typewritermc.authoring.root
 import com.typewritermc.checking.PartialSelection
 import com.typewritermc.checking.TypedSelection
 import com.typewritermc.configuration.ConfigurationCollectionScope
 import com.typewritermc.configuration.ConfigurationProvider
 import com.typewritermc.configuration.DefaultConfigurationCollectionScope
-import com.typewritermc.configuration.FieldPatternSegment
 import com.typewritermc.configuration.Integer
 import com.typewritermc.configuration.NestedConfigurationScope
 import com.typewritermc.configuration.NullableField
-import com.typewritermc.configuration.RelativeFieldPattern
-import com.typewritermc.configuration.RepresentationKind
 import com.typewritermc.configuration.Text
+import com.typewritermc.configuration.field
+import com.typewritermc.configuration.name
+import com.typewritermc.configuration.root
 import com.typewritermc.discovery.CatalogAssemblyContext
 import com.typewritermc.discovery.CatalogContributions
-import com.typewritermc.discovery.ContributionKey
 import com.typewritermc.discovery.OwnedConfiguration
 import com.typewritermc.discovery.OwnedNativeBinding
 import com.typewritermc.discovery.OwnedPresentation
 import com.typewritermc.discovery.OwnedTypeDeclaration
 import com.typewritermc.discovery.ProviderOrigin
 import com.typewritermc.discovery.assemble
-import com.typewritermc.discovery.immutableCopy
+import com.typewritermc.discovery.contributionKey
 import com.typewritermc.expression.DefaultExpressionEvaluator
-import com.typewritermc.expression.EvaluationBudget
-import com.typewritermc.expression.EvaluationDiagnostic
-import com.typewritermc.expression.ExpressionBindingId
 import com.typewritermc.expression.ExpressionBindings
 import com.typewritermc.expression.ExpressionValueReader
 import com.typewritermc.expression.PortableExpressionLimits
@@ -50,38 +45,74 @@ import com.typewritermc.imprint.ArtifactId
 import com.typewritermc.imprint.ContributionName
 import com.typewritermc.imprint.ContributionSourceId
 import com.typewritermc.imprint.ProducerId
-import com.typewritermc.presentation.PresentationDescriptor
-import com.typewritermc.presentation.PresentationMaterial
 import com.typewritermc.presentation.PresentationProvider
-import com.typewritermc.presentation.PresentationTarget
-import com.typewritermc.types.DataValue
-import com.typewritermc.types.DeclarationOwner
-import com.typewritermc.types.FieldDeclaration
-import com.typewritermc.types.FieldOwner
-import com.typewritermc.types.FloatWidth
+import com.typewritermc.presentation.of
 import com.typewritermc.types.GeneratedNativeField
 import com.typewritermc.types.GeneratedRecordNativeBinding
 import com.typewritermc.types.GeneratedScalarNativeBinding
-import com.typewritermc.types.IntegerWidth
 import com.typewritermc.types.NativeBinding
 import com.typewritermc.types.NativeBindingException
 import com.typewritermc.types.NativeBindingFactory
-import com.typewritermc.types.RelationDeletePolicy
-import com.typewritermc.types.RepresentationTemplate
 import com.typewritermc.types.ResourceId
-import com.typewritermc.types.ScalarKind
 import com.typewritermc.types.StandardTypes
-import com.typewritermc.types.TypeDefinition
-import com.typewritermc.types.TypeDefinitionId
-import com.typewritermc.types.TypeId
-import com.typewritermc.types.TypeTemplate
-import com.typewritermc.types.TypeUse
-import com.typewritermc.types.catalog.DeclarationStatus
-import com.typewritermc.types.skir.getOrThrow
+import com.typewritermc.types.catalog.of
+import com.typewritermc.types.field
+import com.typewritermc.types.fields
+import com.typewritermc.types.floatScalar
+import com.typewritermc.types.integer
+import com.typewritermc.types.integerScalar
+import com.typewritermc.types.listValue
+import com.typewritermc.types.mapValue
+import com.typewritermc.types.named
+import com.typewritermc.types.namedTemplate
+import com.typewritermc.types.namedUse
+import com.typewritermc.types.nullable
+import com.typewritermc.types.qualified
+import com.typewritermc.types.record
+import com.typewritermc.types.rows
+import com.typewritermc.types.setValue
+import com.typewritermc.types.template
+import com.typewritermc.types.use
 import de.infix.testBalloon.framework.core.testSuite
 import io.kotest.assertions.throwables.shouldThrow
 import io.kotest.matchers.shouldBe
+import skirout.editor.v1.catalog.DeclarationStatus
+import skirout.editor.v1.catalog.PresentationDescriptor
+import skirout.editor.v1.catalog.PresentationMaterial
+import skirout.editor.v1.catalog.PresentationTarget
+import skirout.editor.v1.catalog.RelationDeletePolicy
+import skirout.editor.v1.catalog.RepresentationKind
+import skirout.editor.v1.diagnostic.DiagnosticSeverity
+import skirout.editor.v1.expression.EvaluationBudget
+import skirout.editor.v1.expression.EvaluationDiagnostic
 import skirout.editor.v1.expression.ExpressionNode
+import skirout.editor.v1.type_catalog.CatalogGeneration
+import skirout.editor.v1.type_catalog.DataValue
+import skirout.editor.v1.type_catalog.DeclarationOwner
+import skirout.editor.v1.type_catalog.EndpointId
+import skirout.editor.v1.type_catalog.ExpressionBindingId
+import skirout.editor.v1.type_catalog.FieldDeclaration
+import skirout.editor.v1.type_catalog.FieldOwner
+import skirout.editor.v1.type_catalog.FieldPatternSegment
+import skirout.editor.v1.type_catalog.FloatWidth
+import skirout.editor.v1.type_catalog.IntegerWidth
+import skirout.editor.v1.type_catalog.NativeBindingId
+import skirout.editor.v1.type_catalog.ParameterKey
+import skirout.editor.v1.type_catalog.PathSegment
+import skirout.editor.v1.type_catalog.RelativeFieldPattern
+import skirout.editor.v1.type_catalog.RepresentationTemplate
+import skirout.editor.v1.type_catalog.ResolvedRepresentation
+import skirout.editor.v1.type_catalog.RuleId
+import skirout.editor.v1.type_catalog.RuleOrigin
+import skirout.editor.v1.type_catalog.ScalarKind
+import skirout.editor.v1.type_catalog.TypeDefinition
+import skirout.editor.v1.type_catalog.TypeDefinitionId
+import skirout.editor.v1.type_catalog.TypeParameter
+import skirout.editor.v1.type_catalog.TypeTemplate
+import skirout.editor.v1.type_catalog.TypeUse
+import skirout.editor.v1.type_catalog.ValueLocation
+import skirout.editor.v1.type_catalog.ValuePath
+import skirout.editor.v1.typed_value.PortableValue
 import kotlin.reflect.KClass
 
 val SdkRuntimeConformanceTest by testSuite {
@@ -98,34 +129,32 @@ val SdkRuntimeConformanceTest by testSuite {
                 .where { title eq literal("Requested") }
         val predicate = requireNotNull(selection.predicate)
         val location =
-            com.typewritermc.authoring.ValueLocation(
+            ValueLocation.of(
                 ResourceId("book:requested"),
-                com.typewritermc.authoring.ValuePath(),
+                ValuePath.root,
             )
-        val evaluator = DefaultExpressionEvaluator(ExpressionValueReader { DataValue.StringValue("Requested").available() })
+        val evaluator = DefaultExpressionEvaluator(ExpressionValueReader { DataValue.StringValueWrapper("Requested").available() })
 
         with(EmptyReads) {
             evaluator.evaluate(
                 predicate,
-                ExpressionBindings(mapOf(ExpressionBindingId("configured_value") to location)),
-                EvaluationBudget(100, 100),
-            ) shouldBe Availability.Available(DataValue.Boolean(true))
+                ExpressionBindings(mapOf(ExpressionBindingId(value = "configured_value") to location)),
+                EvaluationBudget(maxSteps = 100, maxCollectionItems = 100),
+            ) shouldBe Availability.Available(DataValue.BooleanWrapper(true))
         }
     }
 
-    fun localNode(path: com.typewritermc.authoring.ValuePath) =
+    fun localNode(path: ValuePath) =
         ExpressionNode.createLocal(
             depth = 0,
             slot = 0,
             path =
-                com.typewritermc.types.skir.SkirAuthoringValueCodec
-                    .encode(path)
-                    .getOrThrow(),
+            path,
         )
 
     test("portable evaluation short circuits fallback and preserves named scalar semantics") {
-        val location = com.typewritermc.authoring.ValueLocation(ResourceId("expression:test"), com.typewritermc.authoring.ValuePath())
-        val binding = ExpressionBindingId("value")
+        val location = ValueLocation.of(ResourceId("expression:test"))
+        val binding = ExpressionBindingId(value = "value")
         var reads = 0
         var result: Availability<DataValue> = Availability.Unavailable(listOf(location))
         val evaluator =
@@ -136,31 +165,31 @@ val SdkRuntimeConformanceTest by testSuite {
                 },
             )
         val bindings = ExpressionBindings(mapOf(binding to location))
-        val budget = EvaluationBudget(100, 100)
-        val read = testInput(binding, com.typewritermc.authoring.ValuePath())
+        val budget = EvaluationBudget(maxSteps = 100, maxCollectionItems = 100)
+        val read = testInput(binding, ValuePath.root)
 
         with(EmptyReads) {
             evaluator.evaluate(
-                ExpressionNode.createAnd(left = testLiteral(DataValue.Boolean(false)), right = read),
+                ExpressionNode.createAnd(left = testLiteral(DataValue.BooleanWrapper(false)), right = read),
                 bindings,
                 budget,
             ) shouldBe
-                Availability.Available(DataValue.Boolean(false))
+                Availability.Available(DataValue.BooleanWrapper(false))
             reads shouldBe 0
             evaluator.evaluate(
-                ExpressionNode.createOrElse(input = read, fallback = testLiteral(DataValue.StringValue("fallback"))),
+                ExpressionNode.createOrElse(input = read, fallback = testLiteral(DataValue.StringValueWrapper("fallback"))),
                 bindings,
                 budget,
-            ) shouldBe Availability.Available(DataValue.StringValue("fallback"))
-            result = DataValue.Named(TEST_CODE_USE, DataValue.StringValue("chapter")).available()
+            ) shouldBe Availability.Available(DataValue.StringValueWrapper("fallback"))
+            result = DataValue.named(TEST_CODE_USE, DataValue.StringValueWrapper("chapter")).available()
             evaluator.evaluate(
                 ExpressionNode.createRuleUnary(operation = skirout.editor.v1.expression.RuleUnaryOperation.NON_BLANK, source = read),
                 bindings,
                 budget,
-            ) shouldBe Availability.Available(DataValue.Boolean(true))
-            result = Availability.Failed(EvaluationDiagnostic("read_failed", "broken", listOf(location)))
+            ) shouldBe Availability.Available(DataValue.BooleanWrapper(true))
+            result = Availability.Failed(EvaluationDiagnostic(code = "read_failed", message = "broken", locations = listOf(location)))
             evaluator.evaluate(
-                ExpressionNode.createOrElse(input = read, fallback = testLiteral(DataValue.StringValue("hidden"))),
+                ExpressionNode.createOrElse(input = read, fallback = testLiteral(DataValue.StringValueWrapper("hidden"))),
                 bindings,
                 budget,
             ) shouldBe result
@@ -168,19 +197,24 @@ val SdkRuntimeConformanceTest by testSuite {
     }
 
     test("portable evaluation bounds expression depth without evaluating a short circuited branch") {
-        var nested: ExpressionNode = testLiteral(DataValue.Boolean(true))
+        var nested: ExpressionNode = testLiteral(DataValue.BooleanWrapper(true))
         repeat(PortableExpressionLimits.MAX_DEPTH + 1) {
-            nested = ExpressionNode.createAnd(left = testLiteral(DataValue.Boolean(true)), right = nested)
+            nested = ExpressionNode.createAnd(left = testLiteral(DataValue.BooleanWrapper(true)), right = nested)
         }
         val evaluator = DefaultExpressionEvaluator(ExpressionValueReader { error("No reads expected") })
         with(EmptyReads) {
-            val failed = evaluator.evaluate(nested, ExpressionBindings(emptyMap()), EvaluationBudget(100_000, 100))
+            val failed =
+                evaluator.evaluate(
+                    nested,
+                    ExpressionBindings(emptyMap()),
+                    EvaluationBudget(maxSteps = 100_000, maxCollectionItems = 100),
+                )
             (failed as Availability.Failed).diagnostic.code shouldBe "expression_depth_limit"
             evaluator.evaluate(
-                ExpressionNode.createAnd(left = testLiteral(DataValue.Boolean(false)), right = nested),
+                ExpressionNode.createAnd(left = testLiteral(DataValue.BooleanWrapper(false)), right = nested),
                 ExpressionBindings(emptyMap()),
-                EvaluationBudget(100_000, 100),
-            ) shouldBe Availability.Available(DataValue.Boolean(false))
+                EvaluationBudget(maxSteps = 100_000, maxCollectionItems = 100),
+            ) shouldBe Availability.Available(DataValue.BooleanWrapper(false))
         }
     }
 
@@ -190,13 +224,13 @@ val SdkRuntimeConformanceTest by testSuite {
         fun nonBlank(value: String) =
             ExpressionNode.createRuleUnary(
                 operation = skirout.editor.v1.expression.RuleUnaryOperation.NON_BLANK,
-                source = testLiteral(DataValue.StringValue(value)),
+                source = testLiteral(DataValue.StringValueWrapper(value)),
             )
 
         fun trim(value: String) =
             ExpressionNode.createTextUnary(
                 operation = skirout.editor.v1.expression.TextUnaryOperation.TRIM,
-                source = testLiteral(DataValue.StringValue(value)),
+                source = testLiteral(DataValue.StringValueWrapper(value)),
             )
 
         with(EmptyReads) {
@@ -204,25 +238,25 @@ val SdkRuntimeConformanceTest by testSuite {
                 evaluator.evaluate(
                     nonBlank(whitespace),
                     ExpressionBindings(emptyMap()),
-                    EvaluationBudget(10, 0),
-                ) shouldBe Availability.Available(DataValue.Boolean(false))
+                    EvaluationBudget(maxSteps = 10, maxCollectionItems = 0),
+                ) shouldBe Availability.Available(DataValue.BooleanWrapper(false))
             }
             evaluator.evaluate(
                 nonBlank("\u001C"),
                 ExpressionBindings(emptyMap()),
-                EvaluationBudget(10, 0),
-            ) shouldBe Availability.Available(DataValue.Boolean(true))
+                EvaluationBudget(maxSteps = 10, maxCollectionItems = 0),
+            ) shouldBe Availability.Available(DataValue.BooleanWrapper(true))
             evaluator.evaluate(
                 trim("\uFEFF value \u0085"),
                 ExpressionBindings(emptyMap()),
-                EvaluationBudget(10, 0),
-            ) shouldBe Availability.Available(DataValue.StringValue("value"))
+                EvaluationBudget(maxSteps = 10, maxCollectionItems = 0),
+            ) shouldBe Availability.Available(DataValue.StringValueWrapper("value"))
         }
     }
 
     test("portable regular expressions reject host specific and unsafe declaration syntax") {
         val scope = DefaultConfigurationCollectionScope(TEST_CODE_ID)
-        textField(scope, RelativeFieldPattern(), TypeTemplate.Scalar(ScalarKind.Text)).regex("[a-z]+:[a-z]+")
+        textField(scope, RelativeFieldPattern.root, ScalarKind.TEXT.template).regex("[a-z]+:[a-z]+")
 
         listOf(
             "\\Qliteral\\E",
@@ -239,7 +273,7 @@ val SdkRuntimeConformanceTest by testSuite {
             "a$*",
         ).forEach { pattern ->
             shouldThrow<IllegalArgumentException> {
-                textField(DefaultConfigurationCollectionScope(TEST_CODE_ID), RelativeFieldPattern(), TypeTemplate.Scalar(ScalarKind.Text))
+                textField(DefaultConfigurationCollectionScope(TEST_CODE_ID), RelativeFieldPattern.root, ScalarKind.TEXT.template)
                     .regex(pattern)
             }
         }
@@ -253,21 +287,41 @@ val SdkRuntimeConformanceTest by testSuite {
             pattern: String,
         ) = ExpressionNode.createRegexTest(
             mode = skirout.editor.v1.expression.RegexMatchMode.FULL_MATCH,
-            source = testLiteral(DataValue.StringValue(value)),
-            pattern = testLiteral(DataValue.StringValue(pattern)),
+            source = testLiteral(DataValue.StringValueWrapper(value)),
+            pattern = testLiteral(DataValue.StringValueWrapper(pattern)),
         )
 
         with(EmptyReads) {
-            evaluator.evaluate(fullMatch("\u00A0", "\\s"), ExpressionBindings(emptyMap()), EvaluationBudget(10, 0)) shouldBe
-                Availability.Available(DataValue.Boolean(true))
-            evaluator.evaluate(fullMatch("\u00A0", "[\\s]"), ExpressionBindings(emptyMap()), EvaluationBudget(10, 0)) shouldBe
-                Availability.Available(DataValue.Boolean(true))
-            evaluator.evaluate(fullMatch("😀", "."), ExpressionBindings(emptyMap()), EvaluationBudget(10, 0)) shouldBe
-                Availability.Available(DataValue.Boolean(true))
-            evaluator.evaluate(fullMatch("\u0085", "."), ExpressionBindings(emptyMap()), EvaluationBudget(10, 0)) shouldBe
-                Availability.Available(DataValue.Boolean(true))
-            evaluator.evaluate(fullMatch("\n", "."), ExpressionBindings(emptyMap()), EvaluationBudget(10, 0)) shouldBe
-                Availability.Available(DataValue.Boolean(false))
+            evaluator.evaluate(
+                fullMatch("\u00A0", "\\s"),
+                ExpressionBindings(emptyMap()),
+                EvaluationBudget(maxSteps = 10, maxCollectionItems = 0),
+            ) shouldBe
+                Availability.Available(DataValue.BooleanWrapper(true))
+            evaluator.evaluate(
+                fullMatch("\u00A0", "[\\s]"),
+                ExpressionBindings(emptyMap()),
+                EvaluationBudget(maxSteps = 10, maxCollectionItems = 0),
+            ) shouldBe
+                Availability.Available(DataValue.BooleanWrapper(true))
+            evaluator.evaluate(
+                fullMatch("😀", "."),
+                ExpressionBindings(emptyMap()),
+                EvaluationBudget(maxSteps = 10, maxCollectionItems = 0),
+            ) shouldBe
+                Availability.Available(DataValue.BooleanWrapper(true))
+            evaluator.evaluate(
+                fullMatch("\u0085", "."),
+                ExpressionBindings(emptyMap()),
+                EvaluationBudget(maxSteps = 10, maxCollectionItems = 0),
+            ) shouldBe
+                Availability.Available(DataValue.BooleanWrapper(true))
+            evaluator.evaluate(
+                fullMatch("\n", "."),
+                ExpressionBindings(emptyMap()),
+                EvaluationBudget(maxSteps = 10, maxCollectionItems = 0),
+            ) shouldBe
+                Availability.Available(DataValue.BooleanWrapper(false))
         }
     }
 
@@ -279,8 +333,8 @@ val SdkRuntimeConformanceTest by testSuite {
             pattern: String,
         ) = ExpressionNode.createRegexTest(
             mode = skirout.editor.v1.expression.RegexMatchMode.SEARCH,
-            source = testLiteral(DataValue.StringValue(source)),
-            pattern = testLiteral(DataValue.StringValue(pattern)),
+            source = testLiteral(DataValue.StringValueWrapper(source)),
+            pattern = testLiteral(DataValue.StringValueWrapper(pattern)),
         )
 
         fun replace(
@@ -288,9 +342,9 @@ val SdkRuntimeConformanceTest by testSuite {
             pattern: String,
             replacement: String,
         ) = ExpressionNode.createRegexReplace(
-            source = testLiteral(DataValue.StringValue(source)),
-            pattern = testLiteral(DataValue.StringValue(pattern)),
-            replacement = testLiteral(DataValue.StringValue(replacement)),
+            source = testLiteral(DataValue.StringValueWrapper(source)),
+            pattern = testLiteral(DataValue.StringValueWrapper(pattern)),
+            replacement = testLiteral(DataValue.StringValueWrapper(replacement)),
         )
 
         with(EmptyReads) {
@@ -298,7 +352,7 @@ val SdkRuntimeConformanceTest by testSuite {
                 evaluator.evaluate(
                     search("x".repeat(200), "^$"),
                     ExpressionBindings(emptyMap()),
-                    EvaluationBudget(50, 0),
+                    EvaluationBudget(maxSteps = 50, maxCollectionItems = 0),
                 )
             (anchorSearch as Availability.Failed).diagnostic.code shouldBe "expression_step_limit"
 
@@ -306,7 +360,7 @@ val SdkRuntimeConformanceTest by testSuite {
                 evaluator.evaluate(
                     replace("", "", "replacement".repeat(20)),
                     ExpressionBindings(emptyMap()),
-                    EvaluationBudget(30, 0),
+                    EvaluationBudget(maxSteps = 30, maxCollectionItems = 0),
                 )
             (replacementOutput as Availability.Failed).diagnostic.code shouldBe "expression_step_limit"
         }
@@ -318,7 +372,7 @@ val SdkRuntimeConformanceTest by testSuite {
         context(reads: AuthoredReads)
         fun replace(
             values: List<DataValue>,
-            budget: EvaluationBudget = EvaluationBudget(100, 100),
+            budget: EvaluationBudget = EvaluationBudget(maxSteps = 100, maxCollectionItems = 100),
         ): Availability<DataValue> =
             evaluator.evaluate(
                 ExpressionNode.createTextReplace(
@@ -333,7 +387,7 @@ val SdkRuntimeConformanceTest by testSuite {
         context(reads: AuthoredReads)
         fun split(
             values: List<DataValue>,
-            budget: EvaluationBudget = EvaluationBudget(100, 100),
+            budget: EvaluationBudget = EvaluationBudget(maxSteps = 100, maxCollectionItems = 100),
         ): Availability<DataValue> =
             evaluator.evaluate(
                 ExpressionNode.createTextSplit(source = testLiteral(values[0]), separator = testLiteral(values[1])),
@@ -344,7 +398,7 @@ val SdkRuntimeConformanceTest by testSuite {
         context(reads: AuthoredReads)
         fun join(
             values: List<DataValue>,
-            budget: EvaluationBudget = EvaluationBudget(100, 100),
+            budget: EvaluationBudget = EvaluationBudget(maxSteps = 100, maxCollectionItems = 100),
         ): Availability<DataValue> =
             evaluator.evaluate(
                 ExpressionNode.createTextJoin(source = testLiteral(values[0]), separator = testLiteral(values[1])),
@@ -355,7 +409,7 @@ val SdkRuntimeConformanceTest by testSuite {
         context(reads: AuthoredReads)
         fun interpolate(
             values: List<DataValue>,
-            budget: EvaluationBudget = EvaluationBudget(100, 100),
+            budget: EvaluationBudget = EvaluationBudget(maxSteps = 100, maxCollectionItems = 100),
         ): Availability<DataValue> =
             evaluator.evaluate(
                 ExpressionNode.createTextInterpolate(parts = values.map(::testLiteral)),
@@ -365,48 +419,59 @@ val SdkRuntimeConformanceTest by testSuite {
 
         with(EmptyReads) {
             replace(
-                listOf(DataValue.StringValue("😀"), DataValue.StringValue(""), DataValue.StringValue("_")),
-            ) shouldBe Availability.Available(DataValue.StringValue("_😀_"))
+                listOf(DataValue.StringValueWrapper("😀"), DataValue.StringValueWrapper(""), DataValue.StringValueWrapper("_")),
+            ) shouldBe Availability.Available(DataValue.StringValueWrapper("_😀_"))
 
             split(
-                listOf(DataValue.StringValue("😀x"), DataValue.StringValue("")),
+                listOf(DataValue.StringValueWrapper("😀x"), DataValue.StringValueWrapper("")),
             ) shouldBe
                 Availability.Available(
-                    DataValue.ListValue(
+                    DataValue.listValue(
                         listOf(
-                            com.typewritermc.types.ListItem(
-                                com.typewritermc.authoring.ItemId("split.0"),
-                                DataValue.StringValue("😀"),
+                            skirout.editor.v1.type_catalog.ListItem(
+                                id =
+                                    skirout.editor.v1.type_catalog
+                                        .ItemId(value = "split.0"),
+                                value = DataValue.StringValueWrapper("😀"),
                             ),
-                            com.typewritermc.types.ListItem(
-                                com.typewritermc.authoring.ItemId("split.1"),
-                                DataValue.StringValue("x"),
+                            skirout.editor.v1.type_catalog.ListItem(
+                                id =
+                                    skirout.editor.v1.type_catalog
+                                        .ItemId(value = "split.1"),
+                                value = DataValue.StringValueWrapper("x"),
                             ),
                         ),
                     ),
                 )
             split(
-                listOf(DataValue.StringValue(""), DataValue.StringValue("")),
-            ) shouldBe Availability.Available(DataValue.ListValue(emptyList()))
+                listOf(DataValue.StringValueWrapper(""), DataValue.StringValueWrapper("")),
+            ) shouldBe Availability.Available(DataValue.listValue(emptyList()))
 
-            val large = DataValue.StringValue("value".repeat(20))
+            val large = DataValue.StringValueWrapper("value".repeat(20))
             listOf(
                 replace(
-                    listOf(DataValue.StringValue("a"), DataValue.StringValue(""), large),
-                    EvaluationBudget(30, 100),
+                    listOf(DataValue.StringValueWrapper("a"), DataValue.StringValueWrapper(""), large),
+                    EvaluationBudget(maxSteps = 30, maxCollectionItems = 100),
                 ),
                 join(
                     listOf(
-                        DataValue.ListValue(
-                            listOf(com.typewritermc.types.ListItem(com.typewritermc.authoring.ItemId("only"), large)),
+                        DataValue.listValue(
+                            listOf(
+                                skirout.editor.v1.type_catalog.ListItem(
+                                    id =
+                                        skirout.editor.v1.type_catalog
+                                            .ItemId(value = "only"),
+                                    value = large,
+                                ),
+                            ),
                         ),
-                        DataValue.StringValue(""),
+                        DataValue.StringValueWrapper(""),
                     ),
-                    EvaluationBudget(30, 100),
+                    EvaluationBudget(maxSteps = 30, maxCollectionItems = 100),
                 ),
                 interpolate(
                     listOf(large),
-                    EvaluationBudget(30, 100),
+                    EvaluationBudget(maxSteps = 30, maxCollectionItems = 100),
                 ),
             ).forEach { result ->
                 (result as Availability.Failed).diagnostic.code shouldBe "expression_step_limit"
@@ -414,94 +479,118 @@ val SdkRuntimeConformanceTest by testSuite {
 
             val splitLimit =
                 split(
-                    listOf(DataValue.StringValue("😀x"), DataValue.StringValue("")),
-                    EvaluationBudget(100, 1),
+                    listOf(DataValue.StringValueWrapper("😀x"), DataValue.StringValueWrapper("")),
+                    EvaluationBudget(maxSteps = 100, maxCollectionItems = 1),
                 )
             (splitLimit as Availability.Failed).diagnostic.code shouldBe "expression_collection_limit"
         }
     }
 
     test("collection evaluation uses semantic equality propagates unfinished members and counts visited items") {
-        val location = com.typewritermc.authoring.ValueLocation(ResourceId("collection:test"), com.typewritermc.authoring.ValuePath())
-        val binding = ExpressionBindingId("items")
-        val item = ExpressionBindingId("item")
+        val location = ValueLocation.of(ResourceId("collection:test"))
+        val binding = ExpressionBindingId(value = "items")
+        val item = ExpressionBindingId(value = "item")
         var value: DataValue =
-            DataValue.ListValue(
+            DataValue.listValue(
                 listOf(
-                    com.typewritermc.types.ListItem(com.typewritermc.authoring.ItemId("first"), DataValue.StringValue("same")),
-                    com.typewritermc.types.ListItem(com.typewritermc.authoring.ItemId("second"), DataValue.StringValue("same")),
+                    skirout.editor.v1.type_catalog.ListItem(
+                        id =
+                            skirout.editor.v1.type_catalog
+                                .ItemId(value = "first"),
+                        value = DataValue.StringValueWrapper("same"),
+                    ),
+                    skirout.editor.v1.type_catalog.ListItem(
+                        id =
+                            skirout.editor.v1.type_catalog
+                                .ItemId(value = "second"),
+                        value = DataValue.StringValueWrapper("same"),
+                    ),
                 ),
             )
         val evaluator = DefaultExpressionEvaluator(ExpressionValueReader { value.available() })
         val bindings = ExpressionBindings(mapOf(binding to location))
-        val input = testInput(binding, com.typewritermc.authoring.ValuePath())
+        val input = testInput(binding, ValuePath.root)
         with(EmptyReads) {
             evaluator.evaluate(
                 ExpressionNode.createRuleUnary(operation = skirout.editor.v1.expression.RuleUnaryOperation.UNIQUE, source = input),
                 bindings,
-                EvaluationBudget(100, 10),
-            ) shouldBe Availability.Available(DataValue.Boolean(false))
+                EvaluationBudget(maxSteps = 100, maxCollectionItems = 10),
+            ) shouldBe Availability.Available(DataValue.BooleanWrapper(false))
             value =
-                DataValue.ListValue(
+                DataValue.listValue(
                     listOf(
-                        com.typewritermc.types.ListItem(
-                            com.typewritermc.authoring.ItemId("unfinished"),
-                            DataValue.Record(mapOf("valid" to DataValue.Unfilled)),
+                        skirout.editor.v1.type_catalog.ListItem(
+                            id =
+                                skirout.editor.v1.type_catalog
+                                    .ItemId(value = "unfinished"),
+                            value = DataValue.record(mapOf("valid" to DataValue.UNFILLED)),
                         ),
                     ),
                 )
             evaluator.evaluate(
-                ExpressionNode.createUniqueBy(source = input, body = localNode(com.typewritermc.authoring.ValuePath())),
+                ExpressionNode.createUniqueBy(source = input, body = localNode(ValuePath.root)),
                 bindings,
-                EvaluationBudget(100, 10),
+                EvaluationBudget(maxSteps = 100, maxCollectionItems = 10),
             ) shouldBe
                 Availability.Unavailable(
                     listOf(
                         location.copy(
                             path =
-                                com.typewritermc.authoring.ValuePath(
-                                    listOf(
-                                        com.typewritermc.authoring.PathSegment
-                                            .Item(com.typewritermc.authoring.ItemId("unfinished")),
-                                    ),
+                                ValuePath(
+                                    segments =
+                                        listOf(
+                                            PathSegment.createItem(
+                                                id =
+                                                    skirout.editor.v1.type_catalog
+                                                        .ItemId(value = "unfinished"),
+                                            ),
+                                        ),
                                 ),
                         ),
                     ),
                 )
 
             value =
-                DataValue.ListValue(
+                DataValue.listValue(
                     listOf(
-                        com.typewritermc.types.ListItem(
-                            com.typewritermc.authoring.ItemId("known one"),
-                            DataValue.StringValue("same"),
+                        skirout.editor.v1.type_catalog.ListItem(
+                            id =
+                                skirout.editor.v1.type_catalog
+                                    .ItemId(value = "known one"),
+                            value = DataValue.StringValueWrapper("same"),
                         ),
-                        com.typewritermc.types.ListItem(
-                            com.typewritermc.authoring.ItemId("known two"),
-                            DataValue.StringValue("same"),
+                        skirout.editor.v1.type_catalog.ListItem(
+                            id =
+                                skirout.editor.v1.type_catalog
+                                    .ItemId(value = "known two"),
+                            value = DataValue.StringValueWrapper("same"),
                         ),
-                        com.typewritermc.types.ListItem(
-                            com.typewritermc.authoring.ItemId("unfinished"),
-                            DataValue.Record(mapOf("valid" to DataValue.Unfilled)),
+                        skirout.editor.v1.type_catalog.ListItem(
+                            id =
+                                skirout.editor.v1.type_catalog
+                                    .ItemId(value = "unfinished"),
+                            value = DataValue.record(mapOf("valid" to DataValue.UNFILLED)),
                         ),
                     ),
                 )
             evaluator.evaluate(
                 ExpressionNode.CollectionSizeWrapper(input),
                 bindings,
-                EvaluationBudget(100, 10),
-            ) shouldBe Availability.Available(DataValue.Integer(3.toBigInteger()))
+                EvaluationBudget(maxSteps = 100, maxCollectionItems = 10),
+            ) shouldBe Availability.Available(DataValue.integer(3.toBigInteger()))
             evaluator.evaluate(
                 ExpressionNode.createRuleUnary(operation = skirout.editor.v1.expression.RuleUnaryOperation.UNIQUE, source = input),
                 bindings,
-                EvaluationBudget(100, 10),
-            ) shouldBe Availability.Available(DataValue.Boolean(false))
+                EvaluationBudget(maxSteps = 100, maxCollectionItems = 10),
+            ) shouldBe Availability.Available(DataValue.BooleanWrapper(false))
             value =
-                DataValue.ListValue(
+                DataValue.listValue(
                     listOf(
-                        com.typewritermc.types.ListItem(
-                            com.typewritermc.authoring.ItemId("unfinished"),
-                            DataValue.Record(mapOf("valid" to DataValue.Unfilled)),
+                        skirout.editor.v1.type_catalog.ListItem(
+                            id =
+                                skirout.editor.v1.type_catalog
+                                    .ItemId(value = "unfinished"),
+                            value = DataValue.record(mapOf("valid" to DataValue.UNFILLED)),
                         ),
                     ),
                 )
@@ -510,173 +599,211 @@ val SdkRuntimeConformanceTest by testSuite {
                     source = input,
                     body =
                         localNode(
-                            com.typewritermc.authoring.ValuePath(
-                                listOf(
-                                    com.typewritermc.authoring.PathSegment
-                                        .Field("valid"),
-                                ),
+                            ValuePath(
+                                segments =
+                                    listOf(
+                                        PathSegment.createField(name = "valid"),
+                                    ),
                             ),
                         ),
                 ),
                 bindings,
-                EvaluationBudget(100, 10),
+                EvaluationBudget(maxSteps = 100, maxCollectionItems = 10),
             ) shouldBe
                 Availability.Unavailable(
                     listOf(
                         location.copy(
                             path =
-                                com.typewritermc.authoring.ValuePath(
-                                    listOf(
-                                        com.typewritermc.authoring.PathSegment
-                                            .Item(com.typewritermc.authoring.ItemId("unfinished")),
-                                        com.typewritermc.authoring.PathSegment
-                                            .Field("valid"),
-                                    ),
+                                ValuePath(
+                                    segments =
+                                        listOf(
+                                            PathSegment.createItem(
+                                                id =
+                                                    skirout.editor.v1.type_catalog
+                                                        .ItemId(value = "unfinished"),
+                                            ),
+                                            PathSegment.createField(name = "valid"),
+                                        ),
                                 ),
                         ),
                     ),
                 )
 
             value =
-                DataValue.ListValue(
+                DataValue.listValue(
                     listOf(
-                        com.typewritermc.types.ListItem(com.typewritermc.authoring.ItemId("yes"), DataValue.Boolean(true)),
-                        com.typewritermc.types.ListItem(com.typewritermc.authoring.ItemId("no"), DataValue.Boolean(false)),
+                        skirout.editor.v1.type_catalog.ListItem(
+                            id =
+                                skirout.editor.v1.type_catalog
+                                    .ItemId(value = "yes"),
+                            value = DataValue.BooleanWrapper(true),
+                        ),
+                        skirout.editor.v1.type_catalog.ListItem(
+                            id =
+                                skirout.editor.v1.type_catalog
+                                    .ItemId(value = "no"),
+                            value = DataValue.BooleanWrapper(false),
+                        ),
                     ),
                 )
             evaluator.evaluate(
-                ExpressionNode.createAny(source = input, body = localNode(com.typewritermc.authoring.ValuePath())),
+                ExpressionNode.createAny(source = input, body = localNode(ValuePath.root)),
                 bindings,
-                EvaluationBudget(100, 1),
-            ) shouldBe Availability.Available(DataValue.Boolean(true))
+                EvaluationBudget(maxSteps = 100, maxCollectionItems = 1),
+            ) shouldBe Availability.Available(DataValue.BooleanWrapper(true))
         }
     }
 
     test("map access preserves named key identity and retains unfinished key uncertainty") {
-        val location = com.typewritermc.authoring.ValueLocation(ResourceId("map:test"), com.typewritermc.authoring.ValuePath())
-        val binding = ExpressionBindingId("map")
-        var value: DataValue = DataValue.MapValue(emptyList())
+        val location = ValueLocation.of(ResourceId("map:test"))
+        val binding = ExpressionBindingId(value = "map")
+        var value: DataValue = DataValue.mapValue(emptyList())
         val evaluator = DefaultExpressionEvaluator(ExpressionValueReader { value.available() })
-        val input = testInput(binding, com.typewritermc.authoring.ValuePath())
+        val input = testInput(binding, ValuePath.root)
 
         fun access(key: DataValue) = ExpressionNode.createCollectionAccess(source = input, index = testLiteral(key))
 
         value =
-            DataValue.MapValue(
+            DataValue.mapValue(
                 listOf(
-                    com.typewritermc.types.MapRow(
-                        com.typewritermc.authoring.ItemId("target"),
-                        DataValue.StringValue("target"),
-                        DataValue.StringValue("available"),
+                    skirout.editor.v1.type_catalog.MapRow(
+                        id =
+                            skirout.editor.v1.type_catalog
+                                .ItemId(value = "target"),
+                        key = DataValue.StringValueWrapper("target"),
+                        value = DataValue.StringValueWrapper("available"),
                     ),
-                    com.typewritermc.types.MapRow(
-                        com.typewritermc.authoring.ItemId("duplicate one"),
-                        DataValue.StringValue("duplicate"),
-                        DataValue.StringValue("one"),
+                    skirout.editor.v1.type_catalog.MapRow(
+                        id =
+                            skirout.editor.v1.type_catalog
+                                .ItemId(value = "duplicate one"),
+                        key = DataValue.StringValueWrapper("duplicate"),
+                        value = DataValue.StringValueWrapper("one"),
                     ),
-                    com.typewritermc.types.MapRow(
-                        com.typewritermc.authoring.ItemId("duplicate two"),
-                        DataValue.StringValue("duplicate"),
-                        DataValue.StringValue("two"),
+                    skirout.editor.v1.type_catalog.MapRow(
+                        id =
+                            skirout.editor.v1.type_catalog
+                                .ItemId(value = "duplicate two"),
+                        key = DataValue.StringValueWrapper("duplicate"),
+                        value = DataValue.StringValueWrapper("two"),
                     ),
-                    com.typewritermc.types.MapRow(
-                        com.typewritermc.authoring.ItemId("unfinished"),
-                        DataValue.Unfilled,
-                        DataValue.Unfilled,
+                    skirout.editor.v1.type_catalog.MapRow(
+                        id =
+                            skirout.editor.v1.type_catalog
+                                .ItemId(value = "unfinished"),
+                        key = DataValue.UNFILLED,
+                        value = DataValue.UNFILLED,
                     ),
                 ),
             )
         with(EmptyReads) {
             evaluator.evaluate(
-                access(DataValue.StringValue("target")),
+                access(DataValue.StringValueWrapper("target")),
                 ExpressionBindings(mapOf(binding to location)),
-                EvaluationBudget(100, 100),
+                EvaluationBudget(maxSteps = 100, maxCollectionItems = 100),
             ) shouldBe
                 Availability.Unavailable(
                     listOf(
                         location.copy(
                             path =
-                                com.typewritermc.authoring.ValuePath(
-                                    listOf(
-                                        com.typewritermc.authoring.PathSegment
-                                            .Item(com.typewritermc.authoring.ItemId("target")),
-                                        com.typewritermc.authoring.PathSegment.MapValue,
-                                    ),
+                                ValuePath(
+                                    segments =
+                                        listOf(
+                                            PathSegment.createItem(
+                                                id =
+                                                    skirout.editor.v1.type_catalog
+                                                        .ItemId(value = "target"),
+                                            ),
+                                            PathSegment.MAP_VALUE,
+                                        ),
                                 ),
                         ),
                         location.copy(
                             path =
-                                com.typewritermc.authoring.ValuePath(
-                                    listOf(
-                                        com.typewritermc.authoring.PathSegment
-                                            .Item(com.typewritermc.authoring.ItemId("unfinished")),
-                                        com.typewritermc.authoring.PathSegment.MapKey,
-                                    ),
+                                ValuePath(
+                                    segments =
+                                        listOf(
+                                            PathSegment.createItem(
+                                                id =
+                                                    skirout.editor.v1.type_catalog
+                                                        .ItemId(value = "unfinished"),
+                                            ),
+                                            PathSegment.MAP_KEY,
+                                        ),
                                 ),
                         ),
                     ),
                 )
 
             value =
-                (value as DataValue.MapValue).copy(
-                    rows =
-                        (value as DataValue.MapValue).rows.map { row ->
-                            if (row.id.value == "unfinished") row.copy(key = DataValue.StringValue("other")) else row
-                        },
+                DataValue.mapValue(
+                    (value as DataValue.MapValueWrapper).rows.map { row ->
+                        if (row.id.value == "unfinished") row.copy(key = DataValue.StringValueWrapper("other")) else row
+                    },
                 )
             evaluator.evaluate(
-                access(DataValue.StringValue("target")),
+                access(DataValue.StringValueWrapper("target")),
                 ExpressionBindings(mapOf(binding to location)),
-                EvaluationBudget(100, 100),
-            ) shouldBe Availability.Available(DataValue.StringValue("available"))
+                EvaluationBudget(maxSteps = 100, maxCollectionItems = 100),
+            ) shouldBe Availability.Available(DataValue.StringValueWrapper("available"))
 
-            val namedKey = DataValue.Named(TEST_CODE_USE, DataValue.StringValue("wrapped"))
+            val namedKey = DataValue.named(TEST_CODE_USE, DataValue.StringValueWrapper("wrapped"))
             value =
-                DataValue.MapValue(
+                DataValue.mapValue(
                     listOf(
-                        com.typewritermc.types.MapRow(
-                            com.typewritermc.authoring.ItemId("named"),
-                            namedKey,
-                            DataValue.StringValue("named value"),
+                        skirout.editor.v1.type_catalog.MapRow(
+                            id =
+                                skirout.editor.v1.type_catalog
+                                    .ItemId(value = "named"),
+                            key = namedKey,
+                            value = DataValue.StringValueWrapper("named value"),
                         ),
                     ),
                 )
             evaluator.evaluate(
                 access(namedKey),
                 ExpressionBindings(mapOf(binding to location)),
-                EvaluationBudget(100, 100),
-            ) shouldBe Availability.Available(DataValue.StringValue("named value"))
+                EvaluationBudget(maxSteps = 100, maxCollectionItems = 100),
+            ) shouldBe Availability.Available(DataValue.StringValueWrapper("named value"))
 
             value =
-                DataValue.MapValue(
+                DataValue.mapValue(
                     listOf(
-                        com.typewritermc.types.MapRow(
-                            com.typewritermc.authoring.ItemId("first"),
-                            DataValue.StringValue("same"),
-                            DataValue.StringValue("one"),
+                        skirout.editor.v1.type_catalog.MapRow(
+                            id =
+                                skirout.editor.v1.type_catalog
+                                    .ItemId(value = "first"),
+                            key = DataValue.StringValueWrapper("same"),
+                            value = DataValue.StringValueWrapper("one"),
                         ),
-                        com.typewritermc.types.MapRow(
-                            com.typewritermc.authoring.ItemId("second"),
-                            DataValue.StringValue("same"),
-                            DataValue.StringValue("two"),
+                        skirout.editor.v1.type_catalog.MapRow(
+                            id =
+                                skirout.editor.v1.type_catalog
+                                    .ItemId(value = "second"),
+                            key = DataValue.StringValueWrapper("same"),
+                            value = DataValue.StringValueWrapper("two"),
                         ),
                     ),
                 )
             evaluator.evaluate(
-                access(DataValue.StringValue("same")),
+                access(DataValue.StringValueWrapper("same")),
                 ExpressionBindings(mapOf(binding to location)),
-                EvaluationBudget(100, 100),
+                EvaluationBudget(maxSteps = 100, maxCollectionItems = 100),
             ) shouldBe
                 Availability.Unavailable(
                     listOf("first", "second").map { id ->
                         location.copy(
                             path =
-                                com.typewritermc.authoring.ValuePath(
-                                    listOf(
-                                        com.typewritermc.authoring.PathSegment
-                                            .Item(com.typewritermc.authoring.ItemId(id)),
-                                        com.typewritermc.authoring.PathSegment.MapValue,
-                                    ),
+                                ValuePath(
+                                    segments =
+                                        listOf(
+                                            PathSegment.createItem(
+                                                id =
+                                                    skirout.editor.v1.type_catalog
+                                                        .ItemId(value = id),
+                                            ),
+                                            PathSegment.MAP_VALUE,
+                                        ),
                                 ),
                         )
                     },
@@ -690,7 +817,7 @@ val SdkRuntimeConformanceTest by testSuite {
         val counterProvider =
             object : ConfigurationProvider {
                 override fun collect(scope: ConfigurationCollectionScope): com.typewritermc.configuration.CollectedConfiguration {
-                    integerField(scope, RelativeFieldPattern(listOf(FieldPatternSegment.Field("count"))))
+                    integerField(scope, RelativeFieldPattern(segments = listOf(FieldPatternSegment.field("count"))))
                         .check { it > 0 }
                         .error("positive count")
                     return scope.collected()
@@ -699,7 +826,7 @@ val SdkRuntimeConformanceTest by testSuite {
         val chapterProvider =
             object : ConfigurationProvider {
                 override fun collect(scope: ConfigurationCollectionScope): com.typewritermc.configuration.CollectedConfiguration {
-                    textField(scope, RelativeFieldPattern(), TypeTemplate.Scalar(ScalarKind.Text))
+                    textField(scope, RelativeFieldPattern.root, ScalarKind.TEXT.template)
                         .check { it.isNotBlank() }
                         .error("nonblank code")
                     return scope.collected()
@@ -718,19 +845,19 @@ val SdkRuntimeConformanceTest by testSuite {
                         OwnedConfiguration(origin, TEST_CODE_ID, chapterProvider),
                     ),
                 nativeBindings = listOf(OwnedNativeBinding(origin, TestCodeNativeBindingFactory)),
-            ).assemble(CatalogAssemblyContext(CatalogGeneration("typed checks")))
+            ).assemble(CatalogAssemblyContext(CatalogGeneration(value = "typed checks")))
         val integer =
             assembly.checked
                 .resolve(INT_USE)
                 .ready()
-                .complete(DataValue.Integer(5.toBigInteger()))
+                .complete(DataValue.integer(5.toBigInteger()))
                 .complete()
         val chapterUse = TEST_CODE_USE
         val chapter =
             assembly.checked
-                .resolve(chapterUse)
+                .resolve(chapterUse.use)
                 .ready()
-                .complete(DataValue.Named(chapterUse, DataValue.StringValue("chapter")))
+                .complete(DataValue.named(chapterUse, DataValue.StringValueWrapper("chapter")))
                 .complete()
 
         assembly.checks
@@ -738,11 +865,11 @@ val SdkRuntimeConformanceTest by testSuite {
             .recipe.predicate
             .invoke(listOf(integer)) shouldBe true
         val chapterCheck = assembly.checks.single { it.recipe.owner.owner == TEST_CODE_ID }.recipe
-        chapterCheck.inputs.single().expected shouldBe TypeTemplate.Scalar(ScalarKind.Text)
+        chapterCheck.inputs.single().expected shouldBe ScalarKind.TEXT.template
         chapterCheck.predicate.invoke(listOf(chapter)) shouldBe true
 
         val helpers = DefaultConfigurationCollectionScope(counter.id)
-        integerField(helpers, RelativeFieldPattern(listOf(FieldPatternSegment.Field("count")))).minimum(3)
+        integerField(helpers, RelativeFieldPattern(segments = listOf(FieldPatternSegment.field("count")))).minimum(3)
         val rule =
             helpers
                 .collected()
@@ -751,16 +878,20 @@ val SdkRuntimeConformanceTest by testSuite {
                 .rules
                 .single()
                 .descriptor.predicate
-        val configured = ExpressionBindingId("configured_value")
-        val location = com.typewritermc.authoring.ValueLocation(ResourceId("counter:1"), com.typewritermc.authoring.ValuePath())
-        val evaluator = DefaultExpressionEvaluator(ExpressionValueReader { DataValue.Integer(5.toBigInteger()).available() })
+        val configured = ExpressionBindingId(value = "configured_value")
+        val location = ValueLocation.of(ResourceId("counter:1"))
+        val evaluator = DefaultExpressionEvaluator(ExpressionValueReader { DataValue.integer(5.toBigInteger()).available() })
         with(EmptyReads) {
-            evaluator.evaluate(rule, ExpressionBindings(mapOf(configured to location)), EvaluationBudget(100, 100)) shouldBe
-                Availability.Available(DataValue.Boolean(true))
+            evaluator.evaluate(
+                rule,
+                ExpressionBindings(mapOf(configured to location)),
+                EvaluationBudget(maxSteps = 100, maxCollectionItems = 100),
+            ) shouldBe
+                Availability.Available(DataValue.BooleanWrapper(true))
         }
 
         val unsigned = DefaultConfigurationCollectionScope(counter.id)
-        unsignedIntegerField(unsigned, RelativeFieldPattern(listOf(FieldPatternSegment.Field("count"))))
+        unsignedIntegerField(unsigned, RelativeFieldPattern(segments = listOf(FieldPatternSegment.field("count"))))
             .minimum(ULong.MAX_VALUE - 1uL)
         val unsignedRule =
             unsigned
@@ -772,28 +903,28 @@ val SdkRuntimeConformanceTest by testSuite {
                 .descriptor.predicate
         val unsignedEvaluator =
             DefaultExpressionEvaluator(
-                ExpressionValueReader { DataValue.Integer(ULong.MAX_VALUE.toString().toBigInteger()).available() },
+                ExpressionValueReader { DataValue.integer(ULong.MAX_VALUE.toString().toBigInteger()).available() },
             )
         with(EmptyReads) {
             unsignedEvaluator.evaluate(
                 unsignedRule,
                 ExpressionBindings(mapOf(configured to location)),
-                EvaluationBudget(100, 100),
-            ) shouldBe Availability.Available(DataValue.Boolean(true))
+                EvaluationBudget(maxSteps = 100, maxCollectionItems = 100),
+            ) shouldBe Availability.Available(DataValue.BooleanWrapper(true))
         }
     }
 
     test("nullable scalar and nested record configuration retain physical authored paths") {
         val owner = definitionId("Nullable")
         val scalar = DefaultConfigurationCollectionScope(owner)
-        nullableTextField(scalar, RelativeFieldPattern(listOf(FieldPatternSegment.Field("text")))).whenPresent {
+        nullableTextField(scalar, RelativeFieldPattern(segments = listOf(FieldPatternSegment.field("text")))).whenPresent {
             nonBlank()
             check { it.isNotBlank() }.error("present text is nonblank")
         }
         val scalarConfiguration = scalar.collected()
         scalarConfiguration.recipes
             .single()
-            .relativePath.segments shouldBe listOf(FieldPatternSegment.Field("text"))
+            .relativePath.segments shouldBe listOf(FieldPatternSegment.field("text"))
         scalarConfiguration.checks
             .single()
             .inputs
@@ -802,8 +933,8 @@ val SdkRuntimeConformanceTest by testSuite {
 
         val nested = DefaultConfigurationCollectionScope(owner)
         integerField(
-            nested.nested(RelativeFieldPattern(listOf(FieldPatternSegment.Field("style")))),
-            RelativeFieldPattern(listOf(FieldPatternSegment.Field("repetitions"))),
+            nested.nested(RelativeFieldPattern(segments = listOf(FieldPatternSegment.field("style")))),
+            RelativeFieldPattern(segments = listOf(FieldPatternSegment.field("repetitions"))),
         ).check { it > 0 }.error("present repetitions are positive")
         nested
             .collected()
@@ -812,7 +943,7 @@ val SdkRuntimeConformanceTest by testSuite {
             .inputs
             .single()
             .path.segments shouldBe
-            listOf(FieldPatternSegment.Field("style"), FieldPatternSegment.Field("repetitions"))
+            listOf(FieldPatternSegment.field("style"), FieldPatternSegment.field("repetitions"))
     }
 
     test("abstract native fields collections and nullable values dispatch by concrete type tag") {
@@ -834,7 +965,7 @@ val SdkRuntimeConformanceTest by testSuite {
                         OwnedNativeBinding(origin, TestMessageActionNativeBindingFactory),
                         OwnedNativeBinding(origin, TestTreeNativeBindingFactory),
                     ),
-            ).assemble(CatalogAssemblyContext(CatalogGeneration("polymorphic native")))
+            ).assemble(CatalogAssemblyContext(CatalogGeneration(value = "polymorphic native")))
         val checked = assembly.checked.resolve(TEST_MESSAGE_ACTION_USE).ready()
         val binding = assembly.bindings.bind(checked)
         val original =
@@ -869,9 +1000,9 @@ val SdkRuntimeConformanceTest by testSuite {
                     ),
                 nativeBindings = listOf(OwnedNativeBinding(origin, TestTextMessageNativeBindingFactory)),
             )
-        val first = contributions.assemble(CatalogAssemblyContext(CatalogGeneration("first generation")))
-        val second = contributions.assemble(CatalogAssemblyContext(CatalogGeneration("second generation")))
-        val stale = first.checked.resolve(TypeUse.Named(TEST_TEXT_MESSAGE_ID)).ready()
+        val first = contributions.assemble(CatalogAssemblyContext(CatalogGeneration(value = "first generation")))
+        val second = contributions.assemble(CatalogAssemblyContext(CatalogGeneration(value = "second generation")))
+        val stale = first.checked.resolve(TEST_TEXT_MESSAGE_ID.use()).ready()
 
         shouldThrow<NativeBindingException> { second.bindings.bind(stale) }.code shouldBe "catalog_generation_mismatch"
     }
@@ -881,26 +1012,28 @@ val SdkRuntimeConformanceTest by testSuite {
         val assembly =
             CatalogContributions(
                 declarations = listOf(OwnedTypeDeclaration(origin, TEST_PORTABLE_RECORD_DEFINITION)),
-            ).assemble(CatalogAssemblyContext(CatalogGeneration("portable bindings")))
-        val payload = DataValue.Record(mapOf("label" to DataValue.StringValue("opaque")))
-        val value = DataValue.Named(TEST_PORTABLE_RECORD_USE, payload)
-        val checked = assembly.checked.resolve(TEST_PORTABLE_RECORD_USE).ready()
+            ).assemble(CatalogAssemblyContext(CatalogGeneration(value = "portable bindings")))
+        val payload = DataValue.record(mapOf("label" to DataValue.StringValueWrapper("opaque")))
+        val value = DataValue.named(TEST_PORTABLE_RECORD_USE, payload)
+        val checked = assembly.checked.resolve(TEST_PORTABLE_RECORD_USE.use).ready()
 
         @Suppress("UNCHECKED_CAST")
         val binding = assembly.bindings.bind(checked) as NativeBinding<PortableValue>
         val decoded = binding.decode(checked.complete(value).complete())
-        decoded shouldBe PortableValue(TEST_PORTABLE_RECORD_USE, payload)
+        decoded shouldBe PortableValue(actualType = TEST_PORTABLE_RECORD_USE.use, payload = payload)
         binding.encode(decoded) shouldBe value
 
-        val listChecked = assembly.checked.resolve(TEST_PORTABLE_RECORD_LIST_USE).ready()
+        val listChecked = assembly.checked.resolve(TEST_PORTABLE_RECORD_LIST_USE.use).ready()
         val authoredList =
-            DataValue.Named(
+            DataValue.named(
                 TEST_PORTABLE_RECORD_LIST_USE,
-                DataValue.ListValue(
+                DataValue.listValue(
                     listOf(
-                        com.typewritermc.types.ListItem(
-                            com.typewritermc.authoring.ItemId("opaque"),
-                            value,
+                        skirout.editor.v1.type_catalog.ListItem(
+                            id =
+                                skirout.editor.v1.type_catalog
+                                    .ItemId(value = "opaque"),
+                            value = value,
                         ),
                     ),
                 ),
@@ -909,24 +1042,26 @@ val SdkRuntimeConformanceTest by testSuite {
         @Suppress("UNCHECKED_CAST")
         val listBinding = assembly.bindings.bind(listChecked) as NativeBinding<List<PortableValue>>
         val portableList = listBinding.decode(listChecked.complete(authoredList).complete())
-        portableList shouldBe listOf(PortableValue(TEST_PORTABLE_RECORD_USE, payload))
+        portableList shouldBe listOf(PortableValue(actualType = TEST_PORTABLE_RECORD_USE.use, payload = payload))
         listBinding.encode(portableList) shouldBe
-            DataValue.Named(
+            DataValue.named(
                 TEST_PORTABLE_RECORD_LIST_USE,
-                DataValue.ListValue(
+                DataValue.listValue(
                     listOf(
-                        com.typewritermc.types.ListItem(
-                            com.typewritermc.authoring.ItemId("native:0"),
-                            value,
+                        skirout.editor.v1.type_catalog.ListItem(
+                            id =
+                                skirout.editor.v1.type_catalog
+                                    .ItemId(value = "native:0"),
+                            value = value,
                         ),
                     ),
                 ),
             )
 
         shouldThrow<NativeBindingException> {
-            binding.encode(PortableValue(TEST_CODE_USE, payload))
+            binding.encode(PortableValue(actualType = TEST_CODE_USE.use, payload = payload))
         }.code shouldBe "wrong_portable_actual_type"
-        val invalid = checked.complete(DataValue.Named(TEST_PORTABLE_RECORD_USE, DataValue.Record(emptyMap())))
+        val invalid = checked.complete(DataValue.named(TEST_PORTABLE_RECORD_USE, DataValue.record(emptyMap())))
         (invalid as CompletenessResult.Invalid).problems.single().code shouldBe "missing_field"
     }
 
@@ -936,26 +1071,37 @@ val SdkRuntimeConformanceTest by testSuite {
             CatalogContributions(
                 declarations = listOf(OwnedTypeDeclaration(origin, TEST_IDENTITY_KEY_DEFINITION)),
                 nativeBindings = listOf(OwnedNativeBinding(origin, TestIdentityKeyNativeBindingFactory)),
-            ).assemble(CatalogAssemblyContext(CatalogGeneration("canonical native duplicates")))
+            ).assemble(CatalogAssemblyContext(CatalogGeneration(value = "canonical native duplicates")))
         val first =
-            DataValue.Named(
+            DataValue.named(
                 TEST_IDENTITY_KEY_USE,
-                DataValue.Record(mapOf("value" to DataValue.StringValue("same"))),
+                DataValue.record(mapOf("value" to DataValue.StringValueWrapper("same"))),
             )
         val second =
-            DataValue.Named(
+            DataValue.named(
                 TEST_IDENTITY_KEY_USE,
-                DataValue.Record(mapOf("value" to DataValue.StringValue("same"))),
+                DataValue.record(mapOf("value" to DataValue.StringValueWrapper("same"))),
             )
 
-        val setChecked = assembly.checked.resolve(TEST_IDENTITY_KEY_SET_USE).ready()
+        val setChecked = assembly.checked.resolve(TEST_IDENTITY_KEY_SET_USE.use).ready()
         val setValue =
-            DataValue.Named(
+            DataValue.named(
                 TEST_IDENTITY_KEY_SET_USE,
-                DataValue.SetValue(
+                DataValue.setValue(
                     listOf(
-                        com.typewritermc.types.ListItem(com.typewritermc.authoring.ItemId("first"), first),
-                        com.typewritermc.types.ListItem(com.typewritermc.authoring.ItemId("second"), second),
+                        skirout.editor.v1.type_catalog
+                            .ListItem(
+                                id =
+                                    skirout.editor.v1.type_catalog
+                                        .ItemId(value = "first"),
+                                value = first,
+                            ),
+                        skirout.editor.v1.type_catalog.ListItem(
+                            id =
+                                skirout.editor.v1.type_catalog
+                                    .ItemId(value = "second"),
+                            value = second,
+                        ),
                     ),
                 ),
             )
@@ -964,21 +1110,25 @@ val SdkRuntimeConformanceTest by testSuite {
             setBinding.decode(setChecked.complete(setValue).complete())
         }.code shouldBe "duplicate_set_value"
 
-        val mapChecked = assembly.checked.resolve(TEST_IDENTITY_KEY_MAP_USE).ready()
+        val mapChecked = assembly.checked.resolve(TEST_IDENTITY_KEY_MAP_USE.use).ready()
         val mapValue =
-            DataValue.Named(
+            DataValue.named(
                 TEST_IDENTITY_KEY_MAP_USE,
-                DataValue.MapValue(
+                DataValue.mapValue(
                     listOf(
-                        com.typewritermc.types.MapRow(
-                            com.typewritermc.authoring.ItemId("first"),
-                            first,
-                            DataValue.StringValue("one"),
+                        skirout.editor.v1.type_catalog.MapRow(
+                            id =
+                                skirout.editor.v1.type_catalog
+                                    .ItemId(value = "first"),
+                            key = first,
+                            value = DataValue.StringValueWrapper("one"),
                         ),
-                        com.typewritermc.types.MapRow(
-                            com.typewritermc.authoring.ItemId("second"),
-                            second,
-                            DataValue.StringValue("two"),
+                        skirout.editor.v1.type_catalog.MapRow(
+                            id =
+                                skirout.editor.v1.type_catalog
+                                    .ItemId(value = "second"),
+                            key = second,
+                            value = DataValue.StringValueWrapper("two"),
                         ),
                     ),
                 ),
@@ -992,34 +1142,34 @@ val SdkRuntimeConformanceTest by testSuite {
     test("float32 native binding preserves exact width and rejects precision loss") {
         val assembly =
             CatalogContributions(declarations = emptyList()).assemble(
-                CatalogAssemblyContext(CatalogGeneration("float32 native width")),
+                CatalogAssemblyContext(CatalogGeneration(value = "float32 native width")),
             )
-        val use = TypeUse.Scalar(ScalarKind.Float(FloatWidth.FLOAT_32))
+        val use = floatScalar(FloatWidth.THIRTY_TWO).use
         val checked = assembly.checked.resolve(use).ready()
 
         @Suppress("UNCHECKED_CAST")
         val binding = assembly.bindings.bind(checked) as NativeBinding<Float>
         val original = 1.25f
         val encoded = binding.encode(original)
-        encoded shouldBe DataValue.Float(original.toDouble())
+        encoded shouldBe DataValue.FloatWrapper(original.toDouble())
         binding.decode(checked.complete(encoded).complete()) shouldBe original
 
-        val imprecise = checked.complete(DataValue.Float(0.1)) as CompletenessResult.Invalid
+        val imprecise = checked.complete(DataValue.FloatWrapper(0.1)) as CompletenessResult.Invalid
         imprecise.problems.single().code shouldBe "float32_precision_loss"
     }
 
     test("catalog assembly isolates duplicate declarations and incompatible inherited fields") {
         val origin = providerOrigin("catalog_conflicts")
-        val left = recordDefinition("Left", "value", TypeTemplate.Scalar(ScalarKind.Text))
+        val left = recordDefinition("Left", "value", ScalarKind.TEXT.template)
         val right = recordDefinition("Right", "value", INT)
         val childId = definitionId("Child")
         val child =
-            TypeDefinition(
-                childId,
-                representation = RepresentationTemplate.Record(emptyList(), abstract = false),
-                parents = listOf(TypeTemplate.Named(left.id), TypeTemplate.Named(right.id)),
+            TypeDefinition.partial(
+                id = childId,
+                representation = RepresentationTemplate.createRecord(fields = emptyList(), abstract_ = false),
+                parents = listOf(left.id.namedTemplate(), right.id.namedTemplate()),
             )
-        val duplicate = recordDefinition("Duplicate", "value", TypeTemplate.Scalar(ScalarKind.Text))
+        val duplicate = recordDefinition("Duplicate", "value", ScalarKind.TEXT.template)
         val assembly =
             CatalogContributions(
                 declarations =
@@ -1030,70 +1180,82 @@ val SdkRuntimeConformanceTest by testSuite {
                         OwnedTypeDeclaration(origin, duplicate),
                         OwnedTypeDeclaration(providerOrigin("duplicate_owner"), duplicate),
                     ),
-            ).assemble(CatalogAssemblyContext(CatalogGeneration("catalog conflicts")))
+            ).assemble(CatalogAssemblyContext(CatalogGeneration(value = "catalog conflicts")))
 
-        assembly.snapshot.types
+        assembly.editorCatalog.types
             .single { it.definition.id == childId }
             .status shouldBe
-            DeclarationStatus.Unavailable(
+            DeclarationStatus.UnavailableWrapper(
                 listOf(
-                    com.typewritermc.types.catalog.DeclarationDiagnostic(
+                    skirout.editor.v1.diagnostic.DeclarationDiagnostic.of(
                         childId,
                         "ambiguous_inherited_field",
-                        field = RelativeFieldPattern(listOf(FieldPatternSegment.Field("value"))),
+                        field = RelativeFieldPattern(segments = listOf(FieldPatternSegment.field("value"))),
                     ),
                 ),
             )
-        assembly.snapshot.types.count { it.definition.id == duplicate.id } shouldBe 1
+        assembly.editorCatalog.types.count { it.definition.id == duplicate.id } shouldBe 1
         (
-            assembly.snapshot.types
+            assembly.editorCatalog.types
                 .single { it.definition.id == duplicate.id }
-                .status is DeclarationStatus.Unavailable
+                .status is skirout.editor.v1.catalog.DeclarationStatus.UnavailableWrapper
         ) shouldBe true
     }
 
     test("catalog assembly retains competing field defaults without invalidating their types") {
         val origin = providerOrigin("field_presentation_conflicts")
-        val root = recordDefinition("PresentationRoot", "value", TypeTemplate.Scalar(ScalarKind.Text))
+        val root = recordDefinition("PresentationRoot", "value", ScalarKind.TEXT.template)
         val textNamed =
-            TypeDefinition(
-                definitionId("TextNamed"),
-                representation = RepresentationTemplate.Record(emptyList()),
-                parents = listOf(TypeTemplate.Named(root.id)),
+            TypeDefinition.partial(
+                id = definitionId("TextNamed"),
+                representation = RepresentationTemplate.createRecord(fields = emptyList(), abstract_ = false),
+                parents = listOf(root.id.namedTemplate()),
             )
         val choiceNamed =
-            TypeDefinition(
-                definitionId("ChoiceNamed"),
-                representation = RepresentationTemplate.Record(emptyList()),
-                parents = listOf(TypeTemplate.Named(root.id)),
+            TypeDefinition.partial(
+                id = definitionId("ChoiceNamed"),
+                representation = RepresentationTemplate.createRecord(fields = emptyList(), abstract_ = false),
+                parents = listOf(root.id.namedTemplate()),
             )
         val conflicted =
-            TypeDefinition(
-                definitionId("ConflictedPresentationChild"),
-                representation = RepresentationTemplate.Record(emptyList()),
-                parents = listOf(TypeTemplate.Named(textNamed.id), TypeTemplate.Named(choiceNamed.id)),
+            TypeDefinition.partial(
+                id = definitionId("ConflictedPresentationChild"),
+                representation = RepresentationTemplate.createRecord(fields = emptyList(), abstract_ = false),
+                parents = listOf(textNamed.id.namedTemplate(), choiceNamed.id.namedTemplate()),
             )
         val resolved =
-            TypeDefinition(
-                definitionId("ResolvedPresentationChild"),
-                representation = RepresentationTemplate.Record(emptyList()),
-                parents = listOf(TypeTemplate.Named(textNamed.id), TypeTemplate.Named(choiceNamed.id)),
+            TypeDefinition.partial(
+                id = definitionId("ResolvedPresentationChild"),
+                representation = RepresentationTemplate.createRecord(fields = emptyList(), abstract_ = false),
+                parents = listOf(textNamed.id.namedTemplate(), choiceNamed.id.namedTemplate()),
             )
         val unrelated =
-            TypeDefinition(
-                definitionId("UnrelatedPresentationChild"),
-                representation = RepresentationTemplate.Record(emptyList()),
-                parents = listOf(TypeTemplate.Named(root.id)),
+            TypeDefinition.partial(
+                id = definitionId("UnrelatedPresentationChild"),
+                representation = RepresentationTemplate.createRecord(fields = emptyList(), abstract_ = false),
+                parents = listOf(root.id.namedTemplate()),
             )
-        val textProvider = com.typewritermc.types.PresentationId("test", "text named")
-        val choiceProvider = com.typewritermc.types.PresentationId("test", "choice named")
-        val resolvedProvider = com.typewritermc.types.PresentationId("test", "resolved child")
-        val textEditor = com.typewritermc.types.PresentationId("test", "text editor")
-        val choiceEditor = com.typewritermc.types.PresentationId("test", "choice editor")
-        val resolvedEditor = com.typewritermc.types.PresentationId("test", "resolved editor")
-        val textTarget = PresentationTarget.Named(TypeTemplate.Named(textNamed.id))
-        val choiceTarget = PresentationTarget.Named(TypeTemplate.Named(choiceNamed.id))
-        val resolvedTarget = PresentationTarget.Named(TypeTemplate.Named(resolved.id))
+        val textProvider =
+            skirout.editor.v1.type_catalog
+                .PresentationId(namespace = "test", name = "text named")
+        val choiceProvider =
+            skirout.editor.v1.type_catalog
+                .PresentationId(namespace = "test", name = "choice named")
+        val resolvedProvider =
+            skirout.editor.v1.type_catalog
+                .PresentationId(namespace = "test", name = "resolved child")
+        val textEditor =
+            skirout.editor.v1.type_catalog
+                .PresentationId(namespace = "test", name = "text editor")
+        val choiceEditor =
+            skirout.editor.v1.type_catalog
+                .PresentationId(namespace = "test", name = "choice editor")
+        val resolvedEditor =
+            skirout.editor.v1.type_catalog
+                .PresentationId(namespace = "test", name = "resolved editor")
+        val textTarget = PresentationTarget.NamedWrapper(textNamed.id.namedTemplate())
+        val choiceTarget = PresentationTarget.NamedWrapper(choiceNamed.id.namedTemplate())
+        val resolvedTarget = PresentationTarget.NamedWrapper(resolved.id.namedTemplate())
         val materials =
             listOf(
                 fieldPresentationMaterial(textProvider, textTarget, textEditor),
@@ -1113,48 +1275,62 @@ val SdkRuntimeConformanceTest by testSuite {
                         OwnedTypeDeclaration(origin, definition)
                     },
                 presentations = descriptors,
-            ).assemble(CatalogAssemblyContext(CatalogGeneration("field presentation conflicts")))
+            ).assemble(CatalogAssemblyContext(CatalogGeneration(value = "field presentation conflicts")))
 
-        assembly.snapshot.types
+        assembly.editorCatalog.types
             .filter { it.definition.id in setOf(conflicted.id, resolved.id, unrelated.id) }
-            .forEach { it.status shouldBe DeclarationStatus.Ready }
-        assembly.snapshot.presentationMaterials.forEach { material ->
+            .forEach { it.status shouldBe skirout.editor.v1.catalog.DeclarationStatus.READY }
+        assembly.editorCatalog.presentationMaterials.forEach { material ->
             material.inheritableNodes shouldBe listOf("field choice")
         }
-        assembly.snapshot.diagnostics.none { it.code == "conflicting_field_presentation" } shouldBe true
+        assembly.editorCatalog.diagnostics.none { it.code == "conflicting_field_presentation" } shouldBe true
     }
 
     test("catalog assembly rejects an inferred control outside its owning record") {
         val origin = providerOrigin("invalid_field_presentation")
-        val definition = recordDefinition("InvalidPresentationField", "actual", TypeTemplate.Scalar(ScalarKind.Text))
-        val provider = com.typewritermc.types.PresentationId("test", "invalid field")
-        val target = PresentationTarget.Named(TypeTemplate.Named(definition.id))
-        val material = fieldPresentationMaterial(provider, target, com.typewritermc.types.PresentationId("test", "text"))
+        val definition = recordDefinition("InvalidPresentationField", "actual", ScalarKind.TEXT.template)
+        val provider =
+            skirout.editor.v1.type_catalog
+                .PresentationId(namespace = "test", name = "invalid field")
+        val target = PresentationTarget.NamedWrapper(definition.id.namedTemplate())
+        val material =
+            fieldPresentationMaterial(
+                provider,
+                target,
+                skirout.editor.v1.type_catalog
+                    .PresentationId(namespace = "test", name = "text"),
+            )
         val assembly =
             CatalogContributions(
                 declarations = listOf(OwnedTypeDeclaration(origin, definition)),
                 presentations = listOf(ownedPresentation(origin, provider, target, material)),
-            ).assemble(CatalogAssemblyContext(CatalogGeneration("invalid field")))
+            ).assemble(CatalogAssemblyContext(CatalogGeneration(value = "invalid field")))
         val status =
-            assembly.snapshot.types
+            assembly.editorCatalog.types
                 .single { it.definition.id == definition.id }
-                .status as DeclarationStatus.Unavailable
-        status.reasons.map { it.code } shouldBe listOf("presentation_material_build_failed")
+                .status as skirout.editor.v1.catalog.DeclarationStatus.UnavailableWrapper
+        status.value.map { it.code } shouldBe listOf("presentation_material_build_failed")
     }
 
     test("catalog assembly admits bounded atomic parts and rejects foreign owners or owner remainders") {
         val origin = providerOrigin("atomic_parts")
-        val definition = recordDefinition("PartOwner", "value", TypeTemplate.Scalar(ScalarKind.Text))
-        val foreign = recordDefinition("ForeignPartOwner", "value", TypeTemplate.Scalar(ScalarKind.Text))
-        val provider = com.typewritermc.types.PresentationId("test", "atomic part")
-        val target = PresentationTarget.Named(TypeTemplate.Named(definition.id))
-        val base = fieldPresentationMaterial(provider, target, com.typewritermc.types.PresentationId("test", "text"))
+        val definition = recordDefinition("PartOwner", "value", ScalarKind.TEXT.template)
+        val foreign = recordDefinition("ForeignPartOwner", "value", ScalarKind.TEXT.template)
+        val provider =
+            skirout.editor.v1.type_catalog
+                .PresentationId(namespace = "test", name = "atomic part")
+        val target = PresentationTarget.NamedWrapper(definition.id.namedTemplate())
+        val base =
+            fieldPresentationMaterial(
+                provider,
+                target,
+                skirout.editor.v1.type_catalog
+                    .PresentationId(namespace = "test", name = "text"),
+            )
         val ownKey =
             skirout.editor.v1.presentation.PresentationPartId(
                 owner =
-                    com.typewritermc.types.skir.SkirTypeCodec
-                        .encode(definition.id)
-                        .getOrThrow(),
+                    definition.id,
                 name = "details",
             )
         val part =
@@ -1173,9 +1349,7 @@ val SdkRuntimeConformanceTest by testSuite {
                             key =
                                 ownKey.copy(
                                     owner =
-                                        com.typewritermc.types.skir.SkirTypeCodec
-                                            .encode(foreign.id)
-                                            .getOrThrow(),
+                                        foreign.id,
                                 ),
                             body = base.layout,
                         ),
@@ -1201,80 +1375,74 @@ val SdkRuntimeConformanceTest by testSuite {
                 CatalogContributions(
                     declarations = listOf(OwnedTypeDeclaration(origin, definition), OwnedTypeDeclaration(origin, foreign)),
                     presentations = listOf(ownedPresentation(origin, provider, target, base.copy(layout = layout))),
-                ).assemble(CatalogAssemblyContext(CatalogGeneration("atomic parts")))
+                ).assemble(CatalogAssemblyContext(CatalogGeneration(value = "atomic parts")))
             val status =
-                assembly.snapshot.types
+                assembly.editorCatalog.types
                     .single { it.definition.id == definition.id }
                     .status
             if (admitted) {
-                status shouldBe DeclarationStatus.Ready
-                assembly.snapshot.presentationMaterials
+                status shouldBe skirout.editor.v1.catalog.DeclarationStatus.READY
+                assembly.editorCatalog.presentationMaterials
                     .single()
                     .inheritableNodes shouldBe listOf("part")
             } else {
-                (status as DeclarationStatus.Unavailable).reasons.map { it.code } shouldBe listOf("presentation_material_build_failed")
+                (status as skirout.editor.v1.catalog.DeclarationStatus.UnavailableWrapper).value.map { it.code } shouldBe
+                    listOf("presentation_material_build_failed")
             }
         }
     }
 
     test("published materials own immutable inferred references") {
         val references = mutableListOf("node")
-        val material =
+        val published =
             fieldPresentationMaterial(
-                com.typewritermc.types.PresentationId("test", "immutable fields"),
-                PresentationTarget.Named(TypeTemplate.Named(definitionId("ImmutablePresentation"))),
-                com.typewritermc.types.PresentationId("test", "text"),
+                skirout.editor.v1.type_catalog
+                    .PresentationId(namespace = "test", name = "immutable fields"),
+                PresentationTarget.NamedWrapper(definitionId("ImmutablePresentation").namedTemplate()),
+                skirout.editor.v1.type_catalog
+                    .PresentationId(namespace = "test", name = "text"),
             ).copy(inheritableNodes = references)
-        val snapshot =
-            com.typewritermc.types.catalog.EditorCatalogSnapshot(
-                generation = CatalogGeneration("immutable fields"),
-                types = emptyList(),
-                relations = emptyList(),
-                resourceDisplays = emptyList(),
-                realmRoot = com.typewritermc.authoring.RealmRootDefinition.id,
-                presentations = emptyList(),
-                presentationMaterials = listOf(material),
-                configuration = emptyList(),
-                diagnostics = emptyList(),
-            )
-        val published = snapshot.immutableCopy()
         references.clear()
-        published.presentationMaterials.single().inheritableNodes shouldBe
-            listOf("node")
+        published.inheritableNodes shouldBe listOf("node")
     }
 
-    test("catalog assembly owns one immutable portable snapshot graph") {
+    test("catalog assembly owns one immutable published catalog graph") {
         val id = definitionId("ImmutableSnapshot")
-        val argumentList = mutableListOf<TypeTemplate>(TypeTemplate.Scalar(ScalarKind.Text))
+        val argumentList = mutableListOf<TypeTemplate>(ScalarKind.TEXT.template)
         val fieldList =
             mutableListOf(
-                FieldDeclaration(
-                    FieldOwner(id, "items"),
-                    TypeTemplate.Named(StandardTypes.list, argumentList),
+                FieldDeclaration.partial(
+                    owner = FieldOwner(definition = id, name = "items"),
+                    type = StandardTypes.list.template(argumentList),
                 ),
             )
-        val definition = TypeDefinition(id, representation = RepresentationTemplate.Record(fieldList))
-        val fallbackParents = mutableListOf(com.typewritermc.types.PresentationRole.WORKSPACE)
-        val endpointPath = mutableListOf<com.typewritermc.configuration.FieldPatternSegment>(FieldPatternSegment.Field("items"))
+        val definition =
+            TypeDefinition.partial(id = id, representation = RepresentationTemplate.createRecord(fields = fieldList, abstract_ = false))
+        val fallbackParents =
+            mutableListOf<skirout.editor.v1.catalog.PresentationRole>(skirout.editor.v1.catalog.PresentationRole.WORKSPACE)
+        val endpointPath = mutableListOf<skirout.editor.v1.type_catalog.FieldPatternSegment>(FieldPatternSegment.field("items"))
         val rules =
             mutableListOf(
-                com.typewritermc.configuration.OwnedRule(
-                    com.typewritermc.configuration.RuleId(com.typewritermc.configuration.RuleOrigin(id, 0), 0),
-                    com.typewritermc.configuration.RuleDescriptor(testLiteral(DataValue.Boolean(true))),
-                    com.typewritermc.checking.DiagnosticTemplate(
-                        "valid",
-                        "valid",
-                        com.typewritermc.checking.DiagnosticSeverity.Error,
-                        mutableListOf(RelativeFieldPattern()),
-                    ),
+                skirout.editor.v1.catalog.OwnedRule(
+                    id = RuleId(origin = RuleOrigin(owner = id, ordinal = 0), localIndex = 0),
+                    descriptor =
+                        skirout.editor.v1.catalog
+                            .RuleDescriptor(predicate = testLiteral(DataValue.BooleanWrapper(true))),
+                    diagnostic =
+                        skirout.editor.v1.diagnostic.DiagnosticTemplate(
+                            code = "valid",
+                            message = "valid",
+                            severity = DiagnosticSeverity.ERROR,
+                            targets = mutableListOf(RelativeFieldPattern.root),
+                        ),
                 ),
             )
         val recipe =
-            com.typewritermc.configuration.ConfigurationRecipe(
-                com.typewritermc.configuration.RuleOrigin(id, 0),
-                RelativeFieldPattern(),
-                RepresentationKind.Record,
-                rules,
+            skirout.editor.v1.catalog.ConfigurationRecipe(
+                origin = RuleOrigin(owner = id, ordinal = 0),
+                relativePath = RelativeFieldPattern.root,
+                representationCondition = RepresentationKind.RECORD,
+                rules = rules,
             )
         val origin = providerOrigin("immutable_snapshot")
         val configuration =
@@ -1288,68 +1456,69 @@ val SdkRuntimeConformanceTest by testSuite {
                 configurations = listOf(OwnedConfiguration(origin, id, configuration)),
             ).assemble(
                 CatalogAssemblyContext(
-                    generation = CatalogGeneration("immutable snapshot"),
+                    generation = CatalogGeneration(value = "immutable snapshot"),
                     endpointBindings =
                         mutableListOf(
-                            com.typewritermc.types.EndpointBindingTemplate(
-                                com.typewritermc.types.EndpointId("immutable:endpoint"),
-                                TypeTemplate.Named(id),
-                                id,
-                                RelativeFieldPattern(endpointPath),
-                                TypeTemplate.Named(StandardTypes.list, argumentList),
-                                true,
+                            skirout.editor.v1.catalog.EndpointBindingTemplate(
+                                endpoint = EndpointId(value = "immutable:endpoint"),
+                                containingResource = id.namedTemplate(),
+                                valueOwner = id,
+                                relativePath = RelativeFieldPattern(segments = endpointPath),
+                                target = StandardTypes.list.template(argumentList),
+                                containsCollection = true,
                             ),
                         ),
                     roleFallbacks =
                         mutableListOf(
-                            com.typewritermc.presentation.RoleFallback(
-                                com.typewritermc.types.PresentationRole.INSPECTOR,
-                                fallbackParents,
+                            skirout.editor.v1.catalog.RoleFallback(
+                                role = skirout.editor.v1.catalog.PresentationRole.INSPECTOR,
+                                parents = fallbackParents,
                             ),
                         ),
                 ),
             )
 
-        fieldList += FieldDeclaration(FieldOwner(id, "late"), TypeTemplate.Scalar(ScalarKind.Text))
+        fieldList +=
+            FieldDeclaration.partial(owner = FieldOwner(definition = id, name = "late"), type = ScalarKind.TEXT.template)
         argumentList[0] = INT
-        fallbackParents += com.typewritermc.types.PresentationRole.RESOURCE_SEARCH_RESULT
-        endpointPath += FieldPatternSegment.Items
+        fallbackParents += skirout.editor.v1.catalog.PresentationRole.RESOURCE_SEARCH_RESULT
+        endpointPath += FieldPatternSegment.ITEMS
         rules.clear()
 
-        val published = assembly.snapshot.types.single { it.definition.id == id }
-        val publishedField = (published.definition.representation as RepresentationTemplate.Record).fields.single()
-        (publishedField.type as TypeTemplate.Named).arguments shouldBe listOf(TypeTemplate.Scalar(ScalarKind.Text))
-        assembly.snapshot.configuration
+        val published = assembly.editorCatalog.types.single { it.definition.id == id }
+        val publishedField = (published.definition.representation as RepresentationTemplate.RecordWrapper).value.fields.single()
+        (publishedField.type as TypeTemplate.NamedWrapper).value.arguments shouldBe listOf(ScalarKind.TEXT.template)
+        assembly.configuration
             .single()
             .rules.size shouldBe 1
-        assembly.snapshot.endpointBindings
+        assembly.endpointBindings
             .single()
             .relativePath.segments shouldBe
-            listOf(FieldPatternSegment.Field("items"))
-        assembly.snapshot.roleFallbacks
+            listOf(FieldPatternSegment.field("items"))
+        assembly.editorCatalog.roleFallbacks
             .single()
             .parents shouldBe
-            listOf(com.typewritermc.types.PresentationRole.WORKSPACE)
-        val checked = assembly.checked.resolve(TypeUse.Named(id)).ready()
-        (checked.schema.representation as com.typewritermc.types.catalog.ResolvedRepresentation.Record).fields.size shouldBe 1
+            listOf(skirout.editor.v1.catalog.PresentationRole.WORKSPACE)
+        val checked = assembly.checked.resolve(id.use()).ready()
+        (checked.schema.representation as ResolvedRepresentation.RecordWrapper).value.fields.size shouldBe 1
     }
 
     test("catalog assembly reasons across inherited mandatory rules") {
         val parent = recordDefinition("BoundedParent", "value", INT)
         val child =
-            TypeDefinition(
-                definitionId("BoundedChild"),
-                representation = RepresentationTemplate.Record(emptyList()),
-                parents = listOf(TypeTemplate.Named(parent.id)),
+            TypeDefinition.partial(
+                id = definitionId("BoundedChild"),
+                representation = RepresentationTemplate.createRecord(fields = emptyList(), abstract_ = false),
+                parents = listOf(parent.id.namedTemplate()),
             )
         val origin = providerOrigin("inherited_rules")
         val minimum =
             configurationProvider { scope ->
-                integerField(scope, RelativeFieldPattern(listOf(FieldPatternSegment.Field("value")))).minimum(10)
+                integerField(scope, RelativeFieldPattern(segments = listOf(FieldPatternSegment.field("value")))).minimum(10)
             }
         val maximum =
             configurationProvider { scope ->
-                integerField(scope, RelativeFieldPattern(listOf(FieldPatternSegment.Field("value")))).maximum(5)
+                integerField(scope, RelativeFieldPattern(segments = listOf(FieldPatternSegment.field("value")))).maximum(5)
             }
         val assembly =
             CatalogContributions(
@@ -1359,28 +1528,35 @@ val SdkRuntimeConformanceTest by testSuite {
                         OwnedConfiguration(origin, parent.id, minimum),
                         OwnedConfiguration(providerOrigin("child_rules"), child.id, maximum),
                     ),
-            ).assemble(CatalogAssemblyContext(CatalogGeneration("inherited rules")))
+            ).assemble(CatalogAssemblyContext(CatalogGeneration(value = "inherited rules")))
 
-        assembly.snapshot.types
+        assembly.editorCatalog.types
             .single { it.definition.id == parent.id }
-            .status shouldBe DeclarationStatus.Ready
+            .status shouldBe skirout.editor.v1.catalog.DeclarationStatus.READY
         val childStatus =
-            assembly.snapshot.types
+            assembly.editorCatalog.types
                 .single { it.definition.id == child.id }
-                .status as DeclarationStatus.Unavailable
-        childStatus.reasons.map { it.code } shouldBe listOf("contradictory_configuration_rules")
+                .status as skirout.editor.v1.catalog.DeclarationStatus.UnavailableWrapper
+        childStatus.value.map { it.code } shouldBe listOf("contradictory_configuration_rules")
     }
 
     test("generic representation rules receive semantic validation") {
         val genericId = definitionId("GenericTextRule")
-        val parameter = com.typewritermc.types.ParameterKey(genericId, 0)
+        val parameter = ParameterKey(owner = genericId, index = 0)
         val generic =
-            TypeDefinition(
-                genericId,
-                parameters = listOf(com.typewritermc.types.TypeParameter(parameter, "T")),
+            TypeDefinition.partial(
+                id = genericId,
+                parameters = listOf(TypeParameter.partial(key = parameter, name = "T")),
                 representation =
-                    RepresentationTemplate.Record(
-                        listOf(FieldDeclaration(FieldOwner(genericId, "value"), TypeTemplate.Parameter(parameter))),
+                    RepresentationTemplate.createRecord(
+                        fields =
+                            listOf(
+                                FieldDeclaration.partial(
+                                    owner = FieldOwner(definition = genericId, name = "value"),
+                                    type = parameter.template,
+                                ),
+                            ),
+                        abstract_ = false,
                     ),
             )
         val origin = providerOrigin("generic_rules")
@@ -1388,8 +1564,8 @@ val SdkRuntimeConformanceTest by testSuite {
             configurationProvider { scope ->
                 textField(
                     scope,
-                    RelativeFieldPattern(listOf(FieldPatternSegment.Field("value"))),
-                    TypeTemplate.Scalar(ScalarKind.Text),
+                    RelativeFieldPattern(segments = listOf(FieldPatternSegment.field("value"))),
+                    ScalarKind.TEXT.template,
                 ).apply {
                     minimumLength(10)
                     maximumLength(5)
@@ -1399,13 +1575,13 @@ val SdkRuntimeConformanceTest by testSuite {
             CatalogContributions(
                 declarations = listOf(OwnedTypeDeclaration(origin, generic)),
                 configurations = listOf(OwnedConfiguration(origin, generic.id, rules)),
-            ).assemble(CatalogAssemblyContext(CatalogGeneration("generic rules")))
+            ).assemble(CatalogAssemblyContext(CatalogGeneration(value = "generic rules")))
 
         val status =
-            assembly.snapshot.types
+            assembly.editorCatalog.types
                 .single { it.definition.id == generic.id }
-                .status as DeclarationStatus.Unavailable
-        status.reasons.map { it.code } shouldBe listOf("contradictory_configuration_rules")
+                .status as skirout.editor.v1.catalog.DeclarationStatus.UnavailableWrapper
+        status.value.map { it.code } shouldBe listOf("contradictory_configuration_rules")
     }
 }
 
@@ -1424,7 +1600,7 @@ private fun integerField(
     @Suppress("UNCHECKED_CAST")
     return scope.field(
         path,
-        RepresentationKind.Integer,
+        RepresentationKind.INTEGER,
         INT,
         Integer::class as KClass<Integer<Int>>,
     )
@@ -1434,7 +1610,7 @@ private fun textField(
     scope: ConfigurationCollectionScope,
     path: RelativeFieldPattern,
     expected: TypeTemplate,
-): Text = scope.field(path, RepresentationKind.Text, expected, Text::class)
+): Text = scope.field(path, RepresentationKind.TEXT, expected, Text::class)
 
 private fun unsignedIntegerField(
     scope: ConfigurationCollectionScope,
@@ -1443,8 +1619,8 @@ private fun unsignedIntegerField(
     @Suppress("UNCHECKED_CAST")
     return scope.field(
         path,
-        RepresentationKind.Integer,
-        TypeTemplate.Scalar(ScalarKind.Integer(IntegerWidth.UNSIGNED_64)),
+        RepresentationKind.INTEGER,
+        integerScalar(IntegerWidth.UNSIGNED_SIXTY_FOUR).template,
         Integer::class as KClass<Integer<ULong>>,
     )
 }
@@ -1456,18 +1632,18 @@ private fun nullableTextField(
     @Suppress("UNCHECKED_CAST")
     return scope.field(
         path,
-        RepresentationKind.Text,
-        TypeTemplate.Nullable(TypeTemplate.Scalar(ScalarKind.Text)),
+        RepresentationKind.TEXT,
+        ScalarKind.TEXT.template.nullable(),
         NullableField::class as KClass<NullableField<String, Text>>,
         mapOf(
-            FieldPatternSegment.Values to
+            FieldPatternSegment.VALUES to
                 NestedConfigurationScope(
-                    RepresentationKind.Text,
-                    TypeTemplate.Scalar(ScalarKind.Text),
+                    RepresentationKind.TEXT,
+                    ScalarKind.TEXT.template,
                     Text::class,
                     com.typewritermc.configuration.TextExpressionsFactory,
                 ) { nested ->
-                    textField(nested, RelativeFieldPattern(), TypeTemplate.Scalar(ScalarKind.Text))
+                    textField(nested, RelativeFieldPattern.root, ScalarKind.TEXT.template)
                 },
         ),
     )
@@ -1479,28 +1655,31 @@ private fun recordDefinition(
     type: TypeTemplate,
 ): TypeDefinition {
     val id = definitionId(name)
-    return TypeDefinition(
-        id,
+    return TypeDefinition.partial(
+        id = id,
         representation =
-            RepresentationTemplate.Record(
-                listOf(FieldDeclaration(FieldOwner(id, field), type)),
-                abstract = false,
+            RepresentationTemplate.createRecord(
+                fields =
+                    listOf(
+                        FieldDeclaration.partial(owner = FieldOwner(definition = id, name = field), type = type),
+                    ),
+                abstract_ = false,
             ),
     )
 }
 
 private fun fieldPresentationMaterial(
-    provider: com.typewritermc.types.PresentationId,
+    provider: skirout.editor.v1.type_catalog.PresentationId,
     target: PresentationTarget,
-    selected: com.typewritermc.types.PresentationId,
+    selected: skirout.editor.v1.type_catalog.PresentationId,
 ): PresentationMaterial {
     val binding =
         skirout.editor.v1.binding.BindingRef(
             path =
-                skirout.editor.v1.type_catalog.ValuePath(
+                ValuePath(
                     segments =
                         listOf(
-                            skirout.editor.v1.type_catalog.PathSegment.FieldWrapper(
+                            PathSegment.FieldWrapper(
                                 skirout.editor.v1.type_catalog
                                     .FieldPathSegment(name = "value"),
                             ),
@@ -1535,29 +1714,33 @@ private fun fieldPresentationMaterial(
             header = null,
         )
     return PresentationMaterial(
-        provider = provider,
+        provider =
+            skirout.editor.v1.type_catalog
+                .PresentationId(namespace = provider.namespace, name = provider.name),
         target = target,
-        subject = (target as PresentationTarget.Named).type,
-        role = com.typewritermc.types.PresentationRole.INSPECTOR,
+        role = skirout.editor.v1.catalog.PresentationRole.INSPECTOR,
         layout = layout,
         dependencies =
             skirout.editor.v1.presentation.PresentationDependencies
                 .partial(),
+        subject =
+            (target as PresentationTarget.NamedWrapper).value.template,
+        inheritableNodes = emptyList(),
     )
 }
 
 private fun ownedPresentation(
     origin: ProviderOrigin,
-    id: com.typewritermc.types.PresentationId,
+    id: skirout.editor.v1.type_catalog.PresentationId,
     target: PresentationTarget,
     material: PresentationMaterial,
 ): OwnedPresentation {
     val descriptor =
-        PresentationDescriptor(
+        PresentationDescriptor.of(
             id = id,
             owner = origin.owner,
             target = target,
-            roles = setOf(com.typewritermc.types.PresentationRole.INSPECTOR),
+            roles = setOf(skirout.editor.v1.catalog.PresentationRole.INSPECTOR),
             priority = 0,
         )
     return OwnedPresentation(
@@ -1571,11 +1754,11 @@ private fun ownedPresentation(
 }
 
 private fun providerOrigin(name: String): ProviderOrigin {
-    val key = ContributionKey(ContributionSourceId("test"), "main", ProducerId("sdk"), ContributionName(name))
-    return ProviderOrigin(DeclarationOwner(key, name), ArtifactId("test:sdk"), "main")
+    val key = contributionKey(ContributionSourceId("test"), "main", ProducerId("sdk"), ContributionName(name))
+    return ProviderOrigin(DeclarationOwner(source = key, localIdentity = name), ArtifactId("test:sdk"), "main")
 }
 
-private fun definitionId(name: String): TypeDefinitionId = TypeDefinitionId(TypeId.Qualified("test", name), 1)
+private fun definitionId(name: String): TypeDefinitionId = TypeDefinitionId.qualified("test", name)
 
 private fun <T> com.typewritermc.types.catalog.Resolution<T>.ready(): T = (this as com.typewritermc.types.catalog.Resolution.Ready).value
 
@@ -1584,7 +1767,7 @@ private fun com.typewritermc.authoring.CompletenessResult.complete() = (this as 
 private fun DataValue.available(): Availability<DataValue> = Availability.Available(this)
 
 private object EmptyReads : AuthoredReads {
-    override val catalog: CatalogGeneration = CatalogGeneration("expression catalog")
+    override val catalog: CatalogGeneration = CatalogGeneration(value = "expression catalog")
     override val readContext = com.typewritermc.authoring.ReadContext(catalog)
 
     override fun <T> read(path: BoundPath<T>): Availability<T> = error("Portable reads use the expression reader in this fixture.")
@@ -1602,7 +1785,7 @@ private object EmptyReads : AuthoredReads {
     override fun canonicalValueKey(path: BoundPath<*>): Availability<String> =
         error("Portable reads use the expression reader in this fixture.")
 
-    override fun members(path: BoundCollectionPath): List<com.typewritermc.authoring.ItemId> = emptyList()
+    override fun members(path: BoundCollectionPath): List<skirout.editor.v1.type_catalog.ItemId> = emptyList()
 
     override fun <D> select(query: TypedSelection<D>): PartialSelection<D> = error("Selections are not used in this fixture.")
 }
@@ -1614,7 +1797,7 @@ private value class TestCode(
 
 private object TestCodeNativeBindingFactory : NativeBindingFactory {
     override val definition: TypeDefinitionId = TEST_CODE_ID
-    override val provider: NativeBindingId = NativeBindingId("test.code")
+    override val provider: NativeBindingId = NativeBindingId(value = "test.code")
 
     override fun bind(
         actual: com.typewritermc.types.catalog.CheckedType,
@@ -1657,7 +1840,7 @@ private class TestIdentityKey(
 
 private object TestTextMessageNativeBindingFactory : NativeBindingFactory {
     override val definition = TEST_TEXT_MESSAGE_ID
-    override val provider = NativeBindingId("test.text_message")
+    override val provider = NativeBindingId(value = "test.text_message")
 
     override fun bind(
         actual: com.typewritermc.types.catalog.CheckedType,
@@ -1675,7 +1858,7 @@ private object TestTextMessageNativeBindingFactory : NativeBindingFactory {
 
 private object TestTranslationMessageNativeBindingFactory : NativeBindingFactory {
     override val definition = TEST_TRANSLATION_MESSAGE_ID
-    override val provider = NativeBindingId("test.translation_message")
+    override val provider = NativeBindingId(value = "test.translation_message")
 
     override fun bind(
         actual: com.typewritermc.types.catalog.CheckedType,
@@ -1693,7 +1876,7 @@ private object TestTranslationMessageNativeBindingFactory : NativeBindingFactory
 
 private object TestMessageActionNativeBindingFactory : NativeBindingFactory {
     override val definition = TEST_MESSAGE_ACTION_ID
-    override val provider = NativeBindingId("test.message_action")
+    override val provider = NativeBindingId(value = "test.message_action")
 
     override fun bind(
         actual: com.typewritermc.types.catalog.CheckedType,
@@ -1724,14 +1907,14 @@ private object TestMessageActionNativeBindingFactory : NativeBindingFactory {
 
 private object TestTreeNativeBindingFactory : NativeBindingFactory {
     override val definition = TEST_TREE_ID
-    override val provider = NativeBindingId("test.tree")
+    override val provider = NativeBindingId(value = "test.tree")
 
     override fun bind(
         actual: com.typewritermc.types.catalog.CheckedType,
         arguments: AppliedNativeArguments,
     ): NativeBinding<*> {
-        val treeUse = actual.use as TypeUse.Named
-        val childrenUse = TypeUse.Named(StandardTypes.list, listOf(treeUse))
+        val treeUse = actual.use as TypeUse.NamedWrapper
+        val childrenUse = StandardTypes.list.use(listOf(treeUse))
         return GeneratedRecordNativeBinding(
             checked = actual,
             provider = provider,
@@ -1756,7 +1939,7 @@ private object TestTreeNativeBindingFactory : NativeBindingFactory {
 
 private object TestIdentityKeyNativeBindingFactory : NativeBindingFactory {
     override val definition = TEST_IDENTITY_KEY_ID
-    override val provider = NativeBindingId("test.identity_key")
+    override val provider = NativeBindingId(value = "test.identity_key")
 
     override fun bind(
         actual: com.typewritermc.types.catalog.CheckedType,
@@ -1772,12 +1955,13 @@ private object TestIdentityKeyNativeBindingFactory : NativeBindingFactory {
         )
 }
 
-private val INT = TypeTemplate.Scalar(ScalarKind.Integer(IntegerWidth.SIGNED_32))
-private val INT_USE = TypeUse.Scalar(ScalarKind.Integer(IntegerWidth.SIGNED_32))
-private val TEXT_USE = TypeUse.Scalar(ScalarKind.Text)
+private val INT = integerScalar(IntegerWidth.SIGNED_THIRTY_TWO).template
+private val INT_USE = integerScalar(IntegerWidth.SIGNED_THIRTY_TWO).use
+private val TEXT_USE = ScalarKind.TEXT.use
 private val TEST_CODE_ID = definitionId("TestCode")
-private val TEST_CODE_USE = TypeUse.Named(TEST_CODE_ID)
-private val TEST_CODE_DEFINITION = TypeDefinition(TEST_CODE_ID, representation = RepresentationTemplate.Scalar(ScalarKind.Text))
+private val TEST_CODE_USE = TEST_CODE_ID.namedUse()
+private val TEST_CODE_DEFINITION =
+    TypeDefinition.partial(id = TEST_CODE_ID, representation = RepresentationTemplate.createScalar(kind = ScalarKind.TEXT))
 private val TEST_MESSAGE_ID = definitionId("TestMessage")
 private val TEST_TEXT_MESSAGE_ID = definitionId("TestTextMessage")
 private val TEST_TRANSLATION_MESSAGE_ID = definitionId("TestTranslationMessage")
@@ -1785,96 +1969,124 @@ private val TEST_MESSAGE_ACTION_ID = definitionId("TestMessageAction")
 private val TEST_TREE_ID = definitionId("TestTree")
 private val TEST_IDENTITY_KEY_ID = definitionId("TestIdentityKey")
 private val TEST_PORTABLE_RECORD_ID = definitionId("TestPortableRecord")
-private val TEST_TREE_PARAMETER = com.typewritermc.types.ParameterKey(TEST_TREE_ID, 0)
-private val TEST_MESSAGE_USE = TypeUse.Named(TEST_MESSAGE_ID)
-private val TEST_MESSAGE_LIST_USE = TypeUse.Named(StandardTypes.list, listOf(TEST_MESSAGE_USE))
-private val TEST_OPTIONAL_MESSAGE_USE = TypeUse.Nullable(TEST_MESSAGE_USE)
-private val TEST_MESSAGE_ACTION_USE = TypeUse.Named(TEST_MESSAGE_ACTION_ID)
-private val TEST_TEXT_TREE_USE = TypeUse.Named(TEST_TREE_ID, listOf(TEXT_USE))
-private val TEST_IDENTITY_KEY_USE = TypeUse.Named(TEST_IDENTITY_KEY_ID)
-private val TEST_IDENTITY_KEY_SET_USE = TypeUse.Named(StandardTypes.set, listOf(TEST_IDENTITY_KEY_USE))
-private val TEST_IDENTITY_KEY_MAP_USE = TypeUse.Named(StandardTypes.map, listOf(TEST_IDENTITY_KEY_USE, TEXT_USE))
-private val TEST_PORTABLE_RECORD_USE = TypeUse.Named(TEST_PORTABLE_RECORD_ID)
-private val TEST_PORTABLE_RECORD_LIST_USE = TypeUse.Named(StandardTypes.list, listOf(TEST_PORTABLE_RECORD_USE))
+private val TEST_TREE_PARAMETER = ParameterKey(owner = TEST_TREE_ID, index = 0)
+private val TEST_MESSAGE_USE = TEST_MESSAGE_ID.use()
+private val TEST_MESSAGE_LIST_USE = StandardTypes.list.use(listOf(TEST_MESSAGE_USE))
+private val TEST_OPTIONAL_MESSAGE_USE = TEST_MESSAGE_USE.nullable()
+private val TEST_MESSAGE_ACTION_USE = TEST_MESSAGE_ACTION_ID.use()
+private val TEST_TEXT_TREE_USE = TEST_TREE_ID.use(listOf(TEXT_USE))
+private val TEST_IDENTITY_KEY_USE = TEST_IDENTITY_KEY_ID.namedUse()
+private val TEST_IDENTITY_KEY_SET_USE = StandardTypes.set.namedUse(listOf(TEST_IDENTITY_KEY_USE.use))
+private val TEST_IDENTITY_KEY_MAP_USE = StandardTypes.map.namedUse(listOf(TEST_IDENTITY_KEY_USE.use, TEXT_USE))
+private val TEST_PORTABLE_RECORD_USE = TEST_PORTABLE_RECORD_ID.namedUse()
+private val TEST_PORTABLE_RECORD_LIST_USE = StandardTypes.list.namedUse(listOf(TEST_PORTABLE_RECORD_USE.use))
 private val TEST_PORTABLE_RECORD_DEFINITION =
-    TypeDefinition(
-        TEST_PORTABLE_RECORD_ID,
+    TypeDefinition.partial(
+        id = TEST_PORTABLE_RECORD_ID,
         representation =
-            RepresentationTemplate.Record(
-                listOf(
-                    FieldDeclaration(
-                        FieldOwner(TEST_PORTABLE_RECORD_ID, "label"),
-                        TypeTemplate.Scalar(ScalarKind.Text),
+            RepresentationTemplate.createRecord(
+                fields =
+                    listOf(
+                        FieldDeclaration.partial(
+                            owner = FieldOwner(definition = TEST_PORTABLE_RECORD_ID, name = "label"),
+                            type = ScalarKind.TEXT.template,
+                        ),
                     ),
-                ),
+                abstract_ = false,
             ),
     )
 private val TEST_IDENTITY_KEY_DEFINITION =
-    TypeDefinition(
-        TEST_IDENTITY_KEY_ID,
+    TypeDefinition.partial(
+        id = TEST_IDENTITY_KEY_ID,
         representation =
-            RepresentationTemplate.Record(
-                listOf(
-                    FieldDeclaration(
-                        FieldOwner(TEST_IDENTITY_KEY_ID, "value"),
-                        TypeTemplate.Scalar(ScalarKind.Text),
+            RepresentationTemplate.createRecord(
+                fields =
+                    listOf(
+                        FieldDeclaration.partial(
+                            owner = FieldOwner(definition = TEST_IDENTITY_KEY_ID, name = "value"),
+                            type = ScalarKind.TEXT.template,
+                        ),
                     ),
-                ),
+                abstract_ = false,
             ),
     )
 private val TEST_MESSAGE_DEFINITION =
-    TypeDefinition(TEST_MESSAGE_ID, representation = RepresentationTemplate.Record(emptyList(), abstract = true))
+    TypeDefinition.partial(
+        id = TEST_MESSAGE_ID,
+        representation = RepresentationTemplate.createRecord(fields = emptyList(), abstract_ = true),
+    )
 private val TEST_TEXT_MESSAGE_DEFINITION =
-    TypeDefinition(
-        TEST_TEXT_MESSAGE_ID,
+    TypeDefinition.partial(
+        id = TEST_TEXT_MESSAGE_ID,
         representation =
-            RepresentationTemplate.Record(
-                listOf(FieldDeclaration(FieldOwner(TEST_TEXT_MESSAGE_ID, "text"), TypeTemplate.Scalar(ScalarKind.Text))),
+            RepresentationTemplate.createRecord(
+                fields =
+                    listOf(
+                        FieldDeclaration.partial(
+                            owner = FieldOwner(definition = TEST_TEXT_MESSAGE_ID, name = "text"),
+                            type = ScalarKind.TEXT.template,
+                        ),
+                    ),
+                abstract_ = false,
             ),
-        parents = listOf(TypeTemplate.Named(TEST_MESSAGE_ID)),
+        parents = listOf(TEST_MESSAGE_ID.namedTemplate()),
     )
 private val TEST_TRANSLATION_MESSAGE_DEFINITION =
-    TypeDefinition(
-        TEST_TRANSLATION_MESSAGE_ID,
+    TypeDefinition.partial(
+        id = TEST_TRANSLATION_MESSAGE_ID,
         representation =
-            RepresentationTemplate.Record(
-                listOf(FieldDeclaration(FieldOwner(TEST_TRANSLATION_MESSAGE_ID, "key"), TypeTemplate.Scalar(ScalarKind.Text))),
+            RepresentationTemplate.createRecord(
+                fields =
+                    listOf(
+                        FieldDeclaration.partial(
+                            owner = FieldOwner(definition = TEST_TRANSLATION_MESSAGE_ID, name = "key"),
+                            type = ScalarKind.TEXT.template,
+                        ),
+                    ),
+                abstract_ = false,
             ),
-        parents = listOf(TypeTemplate.Named(TEST_MESSAGE_ID)),
+        parents = listOf(TEST_MESSAGE_ID.namedTemplate()),
     )
 private val TEST_MESSAGE_ACTION_DEFINITION =
-    TypeDefinition(
-        TEST_MESSAGE_ACTION_ID,
+    TypeDefinition.partial(
+        id = TEST_MESSAGE_ACTION_ID,
         representation =
-            RepresentationTemplate.Record(
-                listOf(
-                    FieldDeclaration(FieldOwner(TEST_MESSAGE_ACTION_ID, "message"), TypeTemplate.Named(TEST_MESSAGE_ID)),
-                    FieldDeclaration(
-                        FieldOwner(TEST_MESSAGE_ACTION_ID, "messages"),
-                        TypeTemplate.Named(StandardTypes.list, listOf(TypeTemplate.Named(TEST_MESSAGE_ID))),
+            RepresentationTemplate.createRecord(
+                fields =
+                    listOf(
+                        FieldDeclaration.partial(
+                            owner = FieldOwner(definition = TEST_MESSAGE_ACTION_ID, name = "message"),
+                            type = TEST_MESSAGE_ID.template(),
+                        ),
+                        FieldDeclaration.partial(
+                            owner = FieldOwner(definition = TEST_MESSAGE_ACTION_ID, name = "messages"),
+                            type = StandardTypes.list.template(listOf(TEST_MESSAGE_ID.template())),
+                        ),
+                        FieldDeclaration.partial(
+                            owner = FieldOwner(definition = TEST_MESSAGE_ACTION_ID, name = "optional"),
+                            type = TEST_MESSAGE_ID.template().nullable(),
+                        ),
                     ),
-                    FieldDeclaration(
-                        FieldOwner(TEST_MESSAGE_ACTION_ID, "optional"),
-                        TypeTemplate.Nullable(TypeTemplate.Named(TEST_MESSAGE_ID)),
-                    ),
-                ),
+                abstract_ = false,
             ),
     )
 private val TEST_TREE_DEFINITION =
-    TypeDefinition(
-        TEST_TREE_ID,
-        parameters = listOf(com.typewritermc.types.TypeParameter(TEST_TREE_PARAMETER, "T")),
+    TypeDefinition.partial(
+        id = TEST_TREE_ID,
+        parameters = listOf(TypeParameter.partial(key = TEST_TREE_PARAMETER, name = "T")),
         representation =
-            RepresentationTemplate.Record(
-                listOf(
-                    FieldDeclaration(FieldOwner(TEST_TREE_ID, "value"), TypeTemplate.Parameter(TEST_TREE_PARAMETER)),
-                    FieldDeclaration(
-                        FieldOwner(TEST_TREE_ID, "children"),
-                        TypeTemplate.Named(
-                            StandardTypes.list,
-                            listOf(TypeTemplate.Named(TEST_TREE_ID, listOf(TypeTemplate.Parameter(TEST_TREE_PARAMETER)))),
+            RepresentationTemplate.createRecord(
+                fields =
+                    listOf(
+                        FieldDeclaration.partial(
+                            owner = FieldOwner(definition = TEST_TREE_ID, name = "value"),
+                            type = TEST_TREE_PARAMETER.template,
+                        ),
+                        FieldDeclaration.partial(
+                            owner = FieldOwner(definition = TEST_TREE_ID, name = "children"),
+                            type = StandardTypes.list.template(listOf(TEST_TREE_ID.template(listOf(TEST_TREE_PARAMETER.template)))),
                         ),
                     ),
-                ),
+                abstract_ = false,
             ),
     )

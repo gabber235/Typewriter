@@ -1,15 +1,13 @@
 package com.typewritermc.realm
 
 import com.surrealdb.Surreal
-import com.typewritermc.authoring.CommitResult
-import com.typewritermc.authoring.PreparedEdit
 import com.typewritermc.discovery.DeploymentFacts
 import com.typewritermc.discovery.RuntimeCleanupOwner
 import com.typewritermc.discovery.RuntimeRegistrar
 import com.typewritermc.discovery.RuntimeScope
 import com.typewritermc.loader.api.HostedMessagingSession
 import com.typewritermc.loader.api.HostedRuntimeHost
-import com.typewritermc.protocol.transport.generated.RealmRouteScope
+import com.typewritermc.protocol.transport.RealmRouteScope
 import com.typewritermc.realm.authoring.AuthoringCatalogLease
 import com.typewritermc.realm.authoring.AuthoringViewStore
 import com.typewritermc.realm.authoring.InMemoryAuthoringViewStore
@@ -61,6 +59,8 @@ import kotlinx.coroutines.launch
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
 import kotlinx.coroutines.withContext
+import skirout.editor.v1.authoring.CommitPreparedEditResponse
+import skirout.editor.v1.authoring.PreparedEdit
 
 /**
  * Owns the active Realm authoring services between activation and quiescence.
@@ -309,9 +309,9 @@ private class CheckingAuthoringRepository(
     private val checks: RealmCheckRuntime,
     private val events: EditorUpdatePublisher,
 ) : AuthoringRepository {
-    override suspend fun commit(edit: PreparedEdit): CommitResult =
+    override suspend fun commit(edit: PreparedEdit): CommitPreparedEditResponse =
         delegate.commit(edit).also { result ->
-            if (result is CommitResult.Committed) {
+            if (result is CommitPreparedEditResponse.COMMITTED) {
                 checks.invalidateCurrent()
                 events.committed()
             }

@@ -27,7 +27,7 @@ final organizationsProvider = OrganizationsProvider._();
 /// authority. Mutations apply their returned event immediately, avoiding a
 /// second request while preserving the same sequence rules.
 final class OrganizationsProvider
-    extends $StreamNotifierProvider<Organizations, List<OrganizationData>> {
+    extends $StreamNotifierProvider<Organizations, List<skir.Organization>> {
   /// Owns the current user's organization list projection.
   ///
   /// The provider combines an initial snapshot with ordered change events. A
@@ -54,7 +54,7 @@ final class OrganizationsProvider
   Organizations create() => Organizations();
 }
 
-String _$organizationsHash() => r'bc553d234848d952d06eb26265a45adafa49a4ec';
+String _$organizationsHash() => r'4fdfc782308cb8e6eda04399426dbccb514cad96';
 
 /// Owns the current user's organization list projection.
 ///
@@ -64,22 +64,26 @@ String _$organizationsHash() => r'bc553d234848d952d06eb26265a45adafa49a4ec';
 /// authority. Mutations apply their returned event immediately, avoiding a
 /// second request while preserving the same sequence rules.
 
-abstract class _$Organizations extends $StreamNotifier<List<OrganizationData>> {
-  Stream<List<OrganizationData>> build();
+abstract class _$Organizations
+    extends $StreamNotifier<List<skir.Organization>> {
+  Stream<List<skir.Organization>> build();
   @$mustCallSuper
   @override
   WhenComplete runBuild() {
     final ref =
         this.ref
-            as $Ref<AsyncValue<List<OrganizationData>>, List<OrganizationData>>;
+            as $Ref<
+              AsyncValue<List<skir.Organization>>,
+              List<skir.Organization>
+            >;
     final element =
         ref.element
             as $ClassProviderElement<
               AnyNotifier<
-                AsyncValue<List<OrganizationData>>,
-                List<OrganizationData>
+                AsyncValue<List<skir.Organization>>,
+                List<skir.Organization>
               >,
-              AsyncValue<List<OrganizationData>>,
+              AsyncValue<List<skir.Organization>>,
               Object?,
               Object?
             >;
@@ -160,7 +164,7 @@ final organizationProvider = OrganizationProvider._();
 /// until the route has an identity or the membership stream contains that
 /// identity, which prevents nested pages from using stale organization data.
 final class OrganizationProvider
-    extends $AsyncNotifierProvider<Organization, OrganizationData?> {
+    extends $AsyncNotifierProvider<Organization, skir.Organization?> {
   /// Selects the routed organization from the user's canonical organization list.
   ///
   /// This is a read projection, not a second organization cache. It stays null
@@ -185,7 +189,7 @@ final class OrganizationProvider
   Organization create() => Organization();
 }
 
-String _$organizationHash() => r'45b1ea19bda17c75a1327fff03857ac4732f2038';
+String _$organizationHash() => r'd4cda6e0dfe3677f2e7f8da86e9848e23c4308df';
 
 /// Selects the routed organization from the user's canonical organization list.
 ///
@@ -193,18 +197,18 @@ String _$organizationHash() => r'45b1ea19bda17c75a1327fff03857ac4732f2038';
 /// until the route has an identity or the membership stream contains that
 /// identity, which prevents nested pages from using stale organization data.
 
-abstract class _$Organization extends $AsyncNotifier<OrganizationData?> {
-  FutureOr<OrganizationData?> build();
+abstract class _$Organization extends $AsyncNotifier<skir.Organization?> {
+  FutureOr<skir.Organization?> build();
   @$mustCallSuper
   @override
   WhenComplete runBuild() {
     final ref =
-        this.ref as $Ref<AsyncValue<OrganizationData?>, OrganizationData?>;
+        this.ref as $Ref<AsyncValue<skir.Organization?>, skir.Organization?>;
     final element =
         ref.element
             as $ClassProviderElement<
-              AnyNotifier<AsyncValue<OrganizationData?>, OrganizationData?>,
-              AsyncValue<OrganizationData?>,
+              AnyNotifier<AsyncValue<skir.Organization?>, skir.Organization?>,
+              AsyncValue<skir.Organization?>,
               Object?,
               Object?
             >;

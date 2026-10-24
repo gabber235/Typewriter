@@ -8,19 +8,20 @@ use tokio::{
     process::{Child, Command},
     sync::mpsc,
 };
-use wasmcloud_utils::transport_routes::{
-    GrantScope, GrantSet, RealmRole, RealmScope, SubjectToken,
-};
+use wasmcloud_utils::transport::{GrantSet, RealmScope, SubjectToken};
+use wasmcloud_utils::transport_routes::{MAX_RESPONSE_CHUNKS, REPLY_TTL_MS, RealmRole};
 
 use crate::services::service_response_permission;
 
-const REQUEST_SUBJECT: &str = "typewriter.organization.writers.realm.quests.hosts.probe";
+const REQUEST_SUBJECT: &str = "service.from.quests.organization.writers.realm.rollout.probe";
 const READINESS_SUBJECT: &str = "fixture.ready";
 const PASSWORD: &str = "fixture-secret";
 const FIRST_REPLY: &str = "_INBOX.requester.first";
 const ARBITRARY_REPLY: &str = "_INBOX.requester.arbitrary";
 const ARBITRARY_VALID_REPLY: &str = "_INBOX.requester.arbitrary_valid";
 const EXPIRED_REPLY: &str = "_INBOX.requester.expired";
+/// The reply message limit every service response permission carries.
+const MAX_REPLY_MESSAGES: i32 = MAX_RESPONSE_CHUNKS as i32;
 
 struct Broker {
     _directory: tempfile::TempDir,
@@ -45,7 +46,7 @@ impl Drop for Broker {
 }
 
 #[tokio::test]
-async fn response_permissions_admit_one_reply_per_responder() -> Result<()> {
+async fn response_permissions_admit_every_frame_of_one_reply_per_responder() -> Result<()> {
     let mut grants = GrantSet::default();
     RealmScope {
         organization: SubjectToken::try_from("writers")
@@ -53,14 +54,14 @@ async fn response_permissions_admit_one_reply_per_responder() -> Result<()> {
         realm: SubjectToken::try_from("quests")
             .map_err(|error| anyhow::anyhow!(error.to_string()))?,
     }
-    .grant(RealmRole::Participant, &mut grants);
+    .grant(RealmRole::RealmParticipant, &mut grants);
     assert!(grants.subscribe.contains(REQUEST_SUBJECT));
 
     let mut response = service_response_permission();
-    assert_eq!(response.max_messages, Some(1));
+    assert_eq!(response.max_messages, Some(MAX_REPLY_MESSAGES));
     assert_eq!(
         response.ttl.as_ref().map(|duration| duration.milliseconds),
-        Some(300_000)
+        Some(REPLY_TTL_MS)
     );
     response
         .ttl
@@ -108,18 +109,30 @@ async fn exercise_response_permissions(endpoint: &str) -> Result<()> {
     assert_eq!(first_request.reply.as_deref(), Some(FIRST_REPLY));
     assert_eq!(second_request.reply.as_deref(), Some(FIRST_REPLY));
 
-    first.publish(FIRST_REPLY, "first".into()).await?;
+    // Each responder may send every frame of one reply, and not one message more.
+    for frame in 0..MAX_REPLY_MESSAGES {
+        first
+            .publish(FIRST_REPLY, format!("first {frame}").into())
+            .await?;
+    }
     second.publish(FIRST_REPLY, "second".into()).await?;
     first.flush().await?;
     second.flush().await?;
-    let mut bodies = [
-        receive(&mut replies).await?.payload.to_vec(),
-        receive(&mut replies).await?.payload.to_vec(),
-    ];
+    let mut bodies = Vec::new();
+    for _ in 0..=MAX_REPLY_MESSAGES {
+        bodies.push(String::from_utf8(
+            receive(&mut replies).await?.payload.to_vec(),
+        )?);
+    }
     bodies.sort();
-    assert_eq!(bodies, [b"first".to_vec(), b"second".to_vec()]);
+    let mut expected: Vec<String> = (0..MAX_REPLY_MESSAGES)
+        .map(|frame| format!("first {frame}"))
+        .chain(["second".to_owned()])
+        .collect();
+    expected.sort();
+    assert_eq!(bodies, expected);
 
-    first.publish(FIRST_REPLY, "duplicate".into()).await?;
+    first.publish(FIRST_REPLY, "one too many".into()).await?;
     first.flush().await?;
     assert_publish_violation(&mut first_violations).await?;
     assert_no_message(&mut replies).await?;

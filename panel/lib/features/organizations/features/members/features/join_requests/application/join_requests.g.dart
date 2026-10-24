@@ -28,7 +28,7 @@ final class OrganizationJoinRequestsProvider
     extends
         $StreamNotifierProvider<
           OrganizationJoinRequests,
-          List<OrganizationJoinRequest>
+          List<skir.OrganizationJoinRequest>
         > {
   /// Owns the current organization moderation projection.
   ///
@@ -56,7 +56,7 @@ final class OrganizationJoinRequestsProvider
 }
 
 String _$organizationJoinRequestsHash() =>
-    r'2f2e17bfe3cdb98d119d573cfb83494df30d8135';
+    r'647008a815a2b837371c2487cc93681b864b4d95';
 
 /// Owns the current organization moderation projection.
 ///
@@ -66,25 +66,25 @@ String _$organizationJoinRequestsHash() =>
 /// visibility providers while this owner retains the complete server snapshot.
 
 abstract class _$OrganizationJoinRequests
-    extends $StreamNotifier<List<OrganizationJoinRequest>> {
-  Stream<List<OrganizationJoinRequest>> build();
+    extends $StreamNotifier<List<skir.OrganizationJoinRequest>> {
+  Stream<List<skir.OrganizationJoinRequest>> build();
   @$mustCallSuper
   @override
   WhenComplete runBuild() {
     final ref =
         this.ref
             as $Ref<
-              AsyncValue<List<OrganizationJoinRequest>>,
-              List<OrganizationJoinRequest>
+              AsyncValue<List<skir.OrganizationJoinRequest>>,
+              List<skir.OrganizationJoinRequest>
             >;
     final element =
         ref.element
             as $ClassProviderElement<
               AnyNotifier<
-                AsyncValue<List<OrganizationJoinRequest>>,
-                List<OrganizationJoinRequest>
+                AsyncValue<List<skir.OrganizationJoinRequest>>,
+                List<skir.OrganizationJoinRequest>
               >,
-              AsyncValue<List<OrganizationJoinRequest>>,
+              AsyncValue<List<skir.OrganizationJoinRequest>>,
               Object?,
               Object?
             >;

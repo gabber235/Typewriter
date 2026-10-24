@@ -139,9 +139,9 @@ void main() {
         PortableResourceProjection(
           resource: compiledInheritanceTagId,
           configuration: record.configuration,
-          appearance: ResourceAppearance(
+          appearance: skir.ResourceAppearance(
             label: "Inheritance subject",
-            accent: const Color(0xff607d8b),
+            accent: const Color(0xff607d8b).toSkirColor(),
             icon: skir.Icon.wrapIconify("material-symbols:category"),
           ),
           value: value,
@@ -1056,8 +1056,7 @@ void main() {
       ],
     );
     final host = _BindingHost(
-      catalog: skir.EditorCatalogWireSnapshot.defaultInstance
-          .asTrustedLocalCatalog(),
+      catalog: skir.EditorCatalog.defaultInstance.asTrustedLocalCatalog(),
       expected: _integerType,
       onWrite: (reference, value) => writes.add((reference, value)),
     );
@@ -1152,8 +1151,7 @@ void main() {
       },
       budget: skir.EvaluationBudget(maxSteps: 100, maxCollectionItems: 100),
       host: _BindingHost(
-        catalog: skir.EditorCatalogWireSnapshot.defaultInstance
-            .asTrustedLocalCatalog(),
+        catalog: skir.EditorCatalog.defaultInstance.asTrustedLocalCatalog(),
         expected: _integerType,
         documentBindings: {
           root: PortablePresentationBinding(
@@ -2060,7 +2058,7 @@ _linkCollectionFixture({
     subject: rootTemplate,
   );
   final checked = CheckedEditorCatalog(
-    skir.EditorCatalogWireSnapshot(
+    skir.EditorCatalog(
       resourceDisplays: [nameResourceDisplay(rootTemplate)],
       resourceOperations: const [],
       generation: skir.CatalogGeneration(value: "catalog:links"),
@@ -2530,9 +2528,7 @@ final class _TestPortableHost extends ChangeNotifier
     skir.PresentationRole? role,
     List<PortablePresentationDiagnostic> diagnostics = const [],
   }) : _document = PortablePresentationDocument(
-         catalog: CheckedEditorCatalog(
-           skir.EditorCatalogWireSnapshot.defaultInstance,
-         ),
+         catalog: CheckedEditorCatalog(skir.EditorCatalog.defaultInstance),
          root: root,
          bindings: {
            _bindingId: PortablePresentationBinding(
@@ -2725,7 +2721,7 @@ CheckedEditorCatalog _collectionCatalog() {
     ancestorTemplates: const [],
   );
   return CheckedEditorCatalog(
-    skir.EditorCatalogWireSnapshot(
+    skir.EditorCatalog(
       resourceDisplays: const [],
       resourceOperations: const [],
       generation: skir.CatalogGeneration(value: "catalog:test"),
@@ -2874,7 +2870,7 @@ final _polymorphicNode = presentationNode(
   ),
 );
 final _polymorphicCatalog = CheckedEditorCatalog(
-  skir.EditorCatalogWireSnapshot(
+  skir.EditorCatalog(
     resourceDisplays: const [],
     resourceOperations: const [],
     generation: skir.CatalogGeneration(value: "test"),
@@ -3470,8 +3466,7 @@ void registerCompiledSdkControlTests() {
             : skir.ExpressionBindingId(value: "map_value");
         final writes = <(skir.BindingRef, skir.DataValue)>[];
         final host = _BindingHost(
-          catalog: skir.EditorCatalogWireSnapshot.defaultInstance
-              .asTrustedLocalCatalog(),
+          catalog: skir.EditorCatalog.defaultInstance.asTrustedLocalCatalog(),
           expected: family == "typed"
               ? skir.TypeUse.wrapScalar(skir.ScalarKind.text)
               : _integerType,
@@ -3535,8 +3530,7 @@ void registerCompiledSdkControlTests() {
         ) as skir.AxisChild_fixedWrapper).value;
         final writes = <(skir.BindingRef, skir.DataValue)>[];
         final host = _BindingHost(
-          catalog: skir.EditorCatalogWireSnapshot.defaultInstance
-              .asTrustedLocalCatalog(),
+          catalog: skir.EditorCatalog.defaultInstance.asTrustedLocalCatalog(),
           expected: scenario.$4,
           onWrite: (reference, changed) => writes.add((reference, changed)),
         );
@@ -3713,7 +3707,7 @@ void registerRemainingFieldsTests() {
         ancestorTemplates: const [],
       );
       final catalog =
-          (skir.EditorCatalogWireSnapshot.mutable()
+          (skir.EditorCatalog.mutable()
                 ..generation = skir.CatalogGeneration(value: "remainder proof")
                 ..types = [published])
               .toFrozen()

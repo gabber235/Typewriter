@@ -1091,6 +1091,7 @@ sealed class UpdateOrganizationMemberRolesResponse private constructor() {
         }
     }
 
+    /** Users not found. */
     class UserNotFoundErrorWrapper private constructor (
         val value: skirout.organization.v1.member.UpdateOrganizationMemberRolesResponse.UserNotFoundError,
     ) : skirout.organization.v1.member.UpdateOrganizationMemberRolesResponse() {
@@ -1109,6 +1110,7 @@ sealed class UpdateOrganizationMemberRolesResponse private constructor() {
         }
     }
 
+    /** Roles not found. */
     class RolesNotFoundErrorWrapper private constructor (
         val value: skirout.organization.v1.member.UpdateOrganizationMemberRolesResponse.RolesNotFoundError,
     ) : skirout.organization.v1.member.UpdateOrganizationMemberRolesResponse() {
@@ -1127,6 +1129,7 @@ sealed class UpdateOrganizationMemberRolesResponse private constructor() {
         }
     }
 
+    /** Roles not assignable. */
     class RolesNotAssignableErrorWrapper private constructor (
         val value: skirout.organization.v1.member.UpdateOrganizationMemberRolesResponse.RolesNotAssignableError,
     ) : skirout.organization.v1.member.UpdateOrganizationMemberRolesResponse() {
@@ -1145,6 +1148,7 @@ sealed class UpdateOrganizationMemberRolesResponse private constructor() {
         }
     }
 
+    /** At least one role is required. */
     class RolesRequiredErrorWrapper private constructor (
         val value: skirout.organization.v1.member.UpdateOrganizationMemberRolesResponse.RolesRequiredError,
     ) : skirout.organization.v1.member.UpdateOrganizationMemberRolesResponse() {
@@ -1163,6 +1167,7 @@ sealed class UpdateOrganizationMemberRolesResponse private constructor() {
         }
     }
 
+    /** Founder role is required. */
     class FounderRoleRequiredErrorWrapper private constructor (
         val value: skirout.organization.v1.member.UpdateOrganizationMemberRolesResponse.FounderRoleRequiredError,
     ) : skirout.organization.v1.member.UpdateOrganizationMemberRolesResponse() {
@@ -1181,6 +1186,7 @@ sealed class UpdateOrganizationMemberRolesResponse private constructor() {
         }
     }
 
+    /** Selection must contain distinct targets. */
     class InvalidSelectionErrorWrapper private constructor (
         val value: skirout.organization.v1.member.UpdateOrganizationMemberRolesResponse.InvalidSelectionError,
     ) : skirout.organization.v1.member.UpdateOrganizationMemberRolesResponse() {
@@ -1199,6 +1205,7 @@ sealed class UpdateOrganizationMemberRolesResponse private constructor() {
         }
     }
 
+    /** Record IDs from an unexpected table. */
     class InvalidRecordIdErrorWrapper private constructor (
         val value: skirout.kernel.v1.errors.InvalidRecordIdError,
     ) : skirout.organization.v1.member.UpdateOrganizationMemberRolesResponse() {
@@ -2383,6 +2390,7 @@ sealed class RemoveOrganizationMemberResponse private constructor() {
         }
     }
 
+    /** User is not a member. */
     class UserNotMemberErrorWrapper private constructor (
         val value: skirout.organization.v1.member.RemoveOrganizationMemberResponse.UserNotMemberError,
     ) : skirout.organization.v1.member.RemoveOrganizationMemberResponse() {
@@ -2401,6 +2409,7 @@ sealed class RemoveOrganizationMemberResponse private constructor() {
         }
     }
 
+    /** Founder cannot be removed. */
     class FounderCannotBeRemovedErrorWrapper private constructor (
         val value: skirout.organization.v1.member.RemoveOrganizationMemberResponse.FounderCannotBeRemovedError,
     ) : skirout.organization.v1.member.RemoveOrganizationMemberResponse() {
@@ -2419,6 +2428,7 @@ sealed class RemoveOrganizationMemberResponse private constructor() {
         }
     }
 
+    /** Record IDs from an unexpected table. */
     class InvalidRecordIdErrorWrapper private constructor (
         val value: skirout.kernel.v1.errors.InvalidRecordIdError,
     ) : skirout.organization.v1.member.RemoveOrganizationMemberResponse() {
@@ -3353,7 +3363,7 @@ private object _SerializerRegistry {
             "user_not_member_error",
             skirout.organization.v1.member.RemoveOrganizationMemberResponse.Kind.USER_NOT_MEMBER_ERROR_WRAPPER.ordinal,
             _SerializerRegistry.RemoveOrganizationMemberResponse_UserNotMemberErrorSerializer,
-            "",
+            "User is not a member.",
             { skirout.organization.v1.member.RemoveOrganizationMemberResponse.UserNotMemberErrorWrapper(it) },
             { it.value },
         );
@@ -3362,7 +3372,7 @@ private object _SerializerRegistry {
             "founder_cannot_be_removed_error",
             skirout.organization.v1.member.RemoveOrganizationMemberResponse.Kind.FOUNDER_CANNOT_BE_REMOVED_ERROR_WRAPPER.ordinal,
             _SerializerRegistry.RemoveOrganizationMemberResponse_FounderCannotBeRemovedErrorSerializer,
-            "",
+            "Founder cannot be removed.",
             { skirout.organization.v1.member.RemoveOrganizationMemberResponse.FounderCannotBeRemovedErrorWrapper(it) },
             { it.value },
         );
@@ -3371,7 +3381,7 @@ private object _SerializerRegistry {
             "invalid_record_id_error",
             skirout.organization.v1.member.RemoveOrganizationMemberResponse.Kind.INVALID_RECORD_ID_ERROR_WRAPPER.ordinal,
             skirout.kernel.v1.errors.InvalidRecordIdError.serializer,
-            "",
+            "Record IDs from an unexpected table.",
             { skirout.organization.v1.member.RemoveOrganizationMemberResponse.InvalidRecordIdErrorWrapper(it) },
             { it.value },
         );
@@ -3457,7 +3467,7 @@ private object _SerializerRegistry {
             "user_not_found_error",
             skirout.organization.v1.member.UpdateOrganizationMemberRolesResponse.Kind.USER_NOT_FOUND_ERROR_WRAPPER.ordinal,
             _SerializerRegistry.UpdateOrganizationMemberRolesResponse_UserNotFoundErrorSerializer,
-            "",
+            "Users not found.",
             { skirout.organization.v1.member.UpdateOrganizationMemberRolesResponse.UserNotFoundErrorWrapper(it) },
             { it.value },
         );
@@ -3466,7 +3476,7 @@ private object _SerializerRegistry {
             "roles_not_found_error",
             skirout.organization.v1.member.UpdateOrganizationMemberRolesResponse.Kind.ROLES_NOT_FOUND_ERROR_WRAPPER.ordinal,
             _SerializerRegistry.UpdateOrganizationMemberRolesResponse_RolesNotFoundErrorSerializer,
-            "",
+            "Roles not found.",
             { skirout.organization.v1.member.UpdateOrganizationMemberRolesResponse.RolesNotFoundErrorWrapper(it) },
             { it.value },
         );
@@ -3475,7 +3485,7 @@ private object _SerializerRegistry {
             "roles_not_assignable_error",
             skirout.organization.v1.member.UpdateOrganizationMemberRolesResponse.Kind.ROLES_NOT_ASSIGNABLE_ERROR_WRAPPER.ordinal,
             _SerializerRegistry.UpdateOrganizationMemberRolesResponse_RolesNotAssignableErrorSerializer,
-            "",
+            "Roles not assignable.",
             { skirout.organization.v1.member.UpdateOrganizationMemberRolesResponse.RolesNotAssignableErrorWrapper(it) },
             { it.value },
         );
@@ -3484,7 +3494,7 @@ private object _SerializerRegistry {
             "roles_required_error",
             skirout.organization.v1.member.UpdateOrganizationMemberRolesResponse.Kind.ROLES_REQUIRED_ERROR_WRAPPER.ordinal,
             _SerializerRegistry.UpdateOrganizationMemberRolesResponse_RolesRequiredErrorSerializer,
-            "",
+            "At least one role is required.",
             { skirout.organization.v1.member.UpdateOrganizationMemberRolesResponse.RolesRequiredErrorWrapper(it) },
             { it.value },
         );
@@ -3493,7 +3503,7 @@ private object _SerializerRegistry {
             "founder_role_required_error",
             skirout.organization.v1.member.UpdateOrganizationMemberRolesResponse.Kind.FOUNDER_ROLE_REQUIRED_ERROR_WRAPPER.ordinal,
             _SerializerRegistry.UpdateOrganizationMemberRolesResponse_FounderRoleRequiredErrorSerializer,
-            "",
+            "Founder role is required.",
             { skirout.organization.v1.member.UpdateOrganizationMemberRolesResponse.FounderRoleRequiredErrorWrapper(it) },
             { it.value },
         );
@@ -3502,7 +3512,7 @@ private object _SerializerRegistry {
             "invalid_selection_error",
             skirout.organization.v1.member.UpdateOrganizationMemberRolesResponse.Kind.INVALID_SELECTION_ERROR_WRAPPER.ordinal,
             _SerializerRegistry.UpdateOrganizationMemberRolesResponse_InvalidSelectionErrorSerializer,
-            "",
+            "Selection must contain distinct targets.",
             { skirout.organization.v1.member.UpdateOrganizationMemberRolesResponse.InvalidSelectionErrorWrapper(it) },
             { it.value },
         );
@@ -3511,7 +3521,7 @@ private object _SerializerRegistry {
             "invalid_record_id_error",
             skirout.organization.v1.member.UpdateOrganizationMemberRolesResponse.Kind.INVALID_RECORD_ID_ERROR_WRAPPER.ordinal,
             skirout.kernel.v1.errors.InvalidRecordIdError.serializer,
-            "",
+            "Record IDs from an unexpected table.",
             { skirout.organization.v1.member.UpdateOrganizationMemberRolesResponse.InvalidRecordIdErrorWrapper(it) },
             { it.value },
         );

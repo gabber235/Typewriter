@@ -3,18 +3,15 @@
 package com.typewritermc.presentation
 
 import com.typewritermc.authoring.GeneratedSdkApi
-import com.typewritermc.authoring.ItemId
-import com.typewritermc.authoring.PathSegment
-import com.typewritermc.authoring.ValuePath
-import com.typewritermc.checking.CatalogGeneration
-import com.typewritermc.configuration.RepresentationKind
+import com.typewritermc.authoring.field
+import com.typewritermc.authoring.root
 import com.typewritermc.discovery.CatalogAssemblyContext
 import com.typewritermc.discovery.CatalogContributions
-import com.typewritermc.discovery.ContributionKey
 import com.typewritermc.discovery.OwnedPresentation
 import com.typewritermc.discovery.OwnedTypeDeclaration
 import com.typewritermc.discovery.ProviderOrigin
 import com.typewritermc.discovery.assemble
+import com.typewritermc.discovery.contributionKey
 import com.typewritermc.expression.eq
 import com.typewritermc.expression.literal
 import com.typewritermc.expression.orElse
@@ -23,50 +20,87 @@ import com.typewritermc.imprint.ContributionName
 import com.typewritermc.imprint.ContributionSourceId
 import com.typewritermc.imprint.ProducerId
 import com.typewritermc.library.coreTagCollectionProjection
-import com.typewritermc.types.DataValue
-import com.typewritermc.types.DeclarationOwner
-import com.typewritermc.types.FieldDeclaration
-import com.typewritermc.types.FieldOwner
-import com.typewritermc.types.IntegerWidth
-import com.typewritermc.types.ListItem
-import com.typewritermc.types.ParameterKey
-import com.typewritermc.types.PresentationRole
-import com.typewritermc.types.RepresentationTemplate
+import com.typewritermc.presentation.of
 import com.typewritermc.types.Resource
 import com.typewritermc.types.ResourceId
-import com.typewritermc.types.ScalarKind
 import com.typewritermc.types.StandardTypes
-import com.typewritermc.types.TypeDefinition
-import com.typewritermc.types.TypeDefinitionId
-import com.typewritermc.types.TypeId
-import com.typewritermc.types.TypeParameter
-import com.typewritermc.types.TypeTemplate
-import com.typewritermc.types.TypeUse
-import com.typewritermc.types.catalog.DeclarationStatus
 import com.typewritermc.types.catalog.DefaultCheckedCatalog
 import com.typewritermc.types.catalog.Resolution
 import com.typewritermc.types.catalog.apply
-import com.typewritermc.types.skir.SkirTypeCodec
-import com.typewritermc.types.skir.getOrThrow
+import com.typewritermc.types.field
+import com.typewritermc.types.integer
+import com.typewritermc.types.integerScalar
+import com.typewritermc.types.listValue
+import com.typewritermc.types.mapValue
+import com.typewritermc.types.named
+import com.typewritermc.types.namedTemplate
+import com.typewritermc.types.namedUse
+import com.typewritermc.types.nullable
+import com.typewritermc.types.of
+import com.typewritermc.types.qualified
+import com.typewritermc.types.record
+import com.typewritermc.types.requirePortable
+import com.typewritermc.types.requireValid
+import com.typewritermc.types.rows
+import com.typewritermc.types.setValue
+import com.typewritermc.types.template
 import com.typewritermc.types.text
+import com.typewritermc.types.use
 import de.infix.testBalloon.framework.core.testSuite
 import io.kotest.matchers.shouldBe
+import skirout.editor.v1.catalog.DeclarationStatus
+import skirout.editor.v1.catalog.PresentationDescriptor
+import skirout.editor.v1.catalog.PresentationRole
+import skirout.editor.v1.catalog.PresentationTarget
+import skirout.editor.v1.catalog.RepresentationKind
+import skirout.editor.v1.catalog.RoleFallback
 import skirout.editor.v1.expression.ExpressionNode
 import skirout.editor.v1.presentation.ChildrenElement
+import skirout.editor.v1.presentation.CollectionGraphDirection
+import skirout.editor.v1.presentation.ControlDensity
+import skirout.editor.v1.presentation.CrossAxisAlignment
+import skirout.editor.v1.presentation.FlexFit
+import skirout.editor.v1.presentation.ImageFit
+import skirout.editor.v1.presentation.MainAxisAlignment
+import skirout.editor.v1.presentation.PresentationAlignment
 import skirout.editor.v1.presentation.PresentationElement
+import skirout.editor.v1.presentation.PresentationInteractionState
 import skirout.editor.v1.presentation.PresentationNode
+import skirout.editor.v1.presentation.PresentationTextTone
+import skirout.editor.v1.type_catalog.CatalogGeneration
+import skirout.editor.v1.type_catalog.DataValue
+import skirout.editor.v1.type_catalog.DeclarationOwner
+import skirout.editor.v1.type_catalog.EndpointId
+import skirout.editor.v1.type_catalog.FieldDeclaration
+import skirout.editor.v1.type_catalog.FieldOwner
+import skirout.editor.v1.type_catalog.IntegerWidth
+import skirout.editor.v1.type_catalog.ItemId
+import skirout.editor.v1.type_catalog.ListItem
+import skirout.editor.v1.type_catalog.ParameterKey
+import skirout.editor.v1.type_catalog.PathSegment
+import skirout.editor.v1.type_catalog.RepresentationTemplate
+import skirout.editor.v1.type_catalog.ScalarKind
+import skirout.editor.v1.type_catalog.TypeDefinition
+import skirout.editor.v1.type_catalog.TypeDefinitionId
+import skirout.editor.v1.type_catalog.TypeParameter
+import skirout.editor.v1.type_catalog.TypeUse
+import skirout.editor.v1.type_catalog.ValuePath
 
 val DefaultPresentationRuntimeTest by testSuite {
     test("caller inputs register one typed dependency without copying canonical facts") {
-        val catalog = DefaultCheckedCatalog(CatalogGeneration("caller inputs"), StandardTypes.definitions)
-        val checked = catalog.ready(TypeUse.Scalar(ScalarKind.Text))
+        val catalog = DefaultCheckedCatalog(CatalogGeneration(value = "caller inputs"), StandardTypes.definitions)
+        val checked = catalog.ready(ScalarKind.TEXT.use)
         val key = presentationContextKey<ResourceId>("test.active_resource")
         val result =
             DefaultPresentationRuntime().build(
                 PresentationBuildBinding(
                     checked.presentationTemplate(),
                     PresentationRole.RESOURCE_SEARCH_RESULT,
-                    mapOf(ResourceId::class to TypeTemplate.Named(com.typewritermc.types.ResourceIdDefinition.id)),
+                    mapOf(
+                        ResourceId::class to
+                            com.typewritermc.types.ResourceIdDefinition.id
+                                .namedTemplate(),
+                    ),
                 ),
             ) { build ->
                 build.text(
@@ -85,12 +119,12 @@ val DefaultPresentationRuntimeTest by testSuite {
         val input = result.dependencies.contextInputs.single()
         input.bindingId.value shouldBe "context:test.active_resource"
         input.source shouldBe skirout.editor.v1.presentation.PresentationContextSource.CALLER
-        input.valueType shouldBe SkirTypeCodec.encode(com.typewritermc.types.ResourceIdDefinition.use).getOrThrow()
+        input.valueType shouldBe com.typewritermc.types.ResourceIdDefinition.use.use
     }
 
     test("host inputs declare their host source and the host contract's value types") {
-        val catalog = DefaultCheckedCatalog(CatalogGeneration("host inputs"), StandardTypes.definitions)
-        val checked = catalog.ready(TypeUse.Scalar(ScalarKind.Text))
+        val catalog = DefaultCheckedCatalog(CatalogGeneration(value = "host inputs"), StandardTypes.definitions)
+        val checked = catalog.ready(ScalarKind.TEXT.use)
         val result =
             DefaultPresentationRuntime().build(
                 PresentationBuildBinding(checked.presentationTemplate(), PresentationRole.RESOURCE_SEARCH_RESULT),
@@ -111,7 +145,7 @@ val DefaultPresentationRuntimeTest by testSuite {
                 ),
             )
         active.bindingId.value shouldBe EditorContext.activeResource.binding.value
-        active.valueType shouldBe SkirTypeCodec.encode(com.typewritermc.types.ResourceIdDefinition.use).getOrThrow()
+        active.valueType shouldBe com.typewritermc.types.ResourceIdDefinition.use.use
         val count =
             inputs.getValue(
                 skirout.editor.v1.presentation.PresentationContextSource.HostWrapper(
@@ -120,25 +154,29 @@ val DefaultPresentationRuntimeTest by testSuite {
             )
         count.bindingId.value shouldBe EditorContext.selectionCount.binding.value
         count.valueType shouldBe
-            SkirTypeCodec.encode(TypeUse.Scalar(ScalarKind.Integer(com.typewritermc.types.IntegerWidth.SIGNED_32))).getOrThrow()
+            integerScalar(IntegerWidth.SIGNED_THIRTY_TWO).use
         inputs.size shouldBe 2
     }
 
     test("callable part keys compile declarations requests and typed exclusions with canonical owner identity") {
-        val id = TypeDefinitionId(TypeId.Qualified("test", "PartOwner"), 1)
+        val id = TypeDefinitionId.qualified("test", "PartOwner")
         val catalog =
             DefaultCheckedCatalog(
-                CatalogGeneration("parts"),
-                StandardTypes.definitions + TypeDefinition(id, representation = RepresentationTemplate.Record(emptyList())),
+                CatalogGeneration(value = "parts"),
+                StandardTypes.definitions +
+                    TypeDefinition.partial(
+                        id = id,
+                        representation = RepresentationTemplate.createRecord(fields = emptyList(), abstract_ = false),
+                    ),
             )
-        val checked = catalog.ready(TypeUse.Named(id))
+        val checked = catalog.ready(id.use())
         val heading = presentationPart<String>("heading")
         val result =
             DefaultPresentationRuntime().build(
                 PresentationBuildBinding(
                     checked.presentationTemplate(),
                     PresentationRole.INSPECTOR,
-                    mapOf(String::class to TypeTemplate.Named(id)),
+                    mapOf(String::class to id.namedTemplate()),
                 ),
             ) { build ->
                 with(build) {
@@ -153,7 +191,7 @@ val DefaultPresentationRuntimeTest by testSuite {
         val request = (nodes[1] as skirout.editor.v1.presentation.AxisChild.FixedWrapper).value.element as PresentationElement.PartWrapper
         val rest =
             (nodes[2] as skirout.editor.v1.presentation.AxisChild.FixedWrapper).value.element as PresentationElement.RemainingFieldsWrapper
-        definition.value.key.owner shouldBe SkirTypeCodec.encode(id).getOrThrow()
+        definition.value.key.owner shouldBe id
         definition.value.key.name shouldBe "heading"
         (definition.value.body != null) shouldBe true
         request.value.body shouldBe null
@@ -162,27 +200,40 @@ val DefaultPresentationRuntimeTest by testSuite {
     }
 
     test("nested record part requests bind the configured record to their field") {
-        val nestedId = TypeDefinitionId(TypeId.Qualified("test", "NestedPartOwner"), 1)
-        val rootId = TypeDefinitionId(TypeId.Qualified("test", "PartEnvelope"), 1)
-        val nested = TypeDefinition(nestedId, representation = RepresentationTemplate.Record(emptyList()))
+        val nestedId = TypeDefinitionId.qualified("test", "NestedPartOwner")
+        val rootId = TypeDefinitionId.qualified("test", "PartEnvelope")
+        val nested =
+            TypeDefinition.partial(
+                id = nestedId,
+                representation = RepresentationTemplate.createRecord(fields = emptyList(), abstract_ = false),
+            )
         val root =
-            TypeDefinition(
-                rootId,
+            TypeDefinition.partial(
+                id = rootId,
                 representation =
-                    RepresentationTemplate.Record(
-                        listOf(
-                            FieldDeclaration(FieldOwner(rootId, "details"), TypeTemplate.Named(nestedId)),
-                        ),
+                    RepresentationTemplate.createRecord(
+                        fields =
+                            listOf(
+                                FieldDeclaration.partial(
+                                    owner = FieldOwner(definition = rootId, name = "details"),
+                                    type = nestedId.template(),
+                                ),
+                            ),
+                        abstract_ = false,
                     ),
             )
-        val catalog = DefaultCheckedCatalog(CatalogGeneration("nested part request"), StandardTypes.definitions + listOf(nested, root))
+        val catalog =
+            DefaultCheckedCatalog(
+                CatalogGeneration(value = "nested part request"),
+                StandardTypes.definitions + listOf(nested, root),
+            )
         val heading = presentationPart<String>("heading")
         val result =
             DefaultPresentationRuntime().build(
                 PresentationBuildBinding(
-                    catalog.ready(TypeUse.Named(rootId)).presentationTemplate(),
+                    catalog.ready(rootId.use()).presentationTemplate(),
                     PresentationRole.INSPECTOR,
-                    mapOf(String::class to TypeTemplate.Named(nestedId)),
+                    mapOf(String::class to nestedId.namedTemplate()),
                 ),
             ) { build ->
                 @Suppress("UNCHECKED_CAST")
@@ -201,19 +252,18 @@ val DefaultPresentationRuntimeTest by testSuite {
                 .element as PresentationElement.ScopedBindingWrapper
         scope.value.binding.path.segments shouldBe
             listOf(
-                skirout.editor.v1.type_catalog.PathSegment
-                    .createField(name = "details"),
+                PathSegment.createField(name = "details"),
             )
         scope.value.scopeBindingId.value shouldBe "configured_value"
         val part = scope.value.child.element as PresentationElement.PartWrapper
-        part.value.key.owner shouldBe SkirTypeCodec.encode(nestedId).getOrThrow()
+        part.value.key.owner shouldBe nestedId
         part.value.body shouldBe null
         result.layout.inferInheritableNodes() shouldBe emptyList()
     }
 
     test("clipped fixed and repeated rows preserve one line layout") {
-        val catalog = DefaultCheckedCatalog(CatalogGeneration("clipped rows"), StandardTypes.definitions)
-        val checked = catalog.ready(TypeUse.Scalar(ScalarKind.Text))
+        val catalog = DefaultCheckedCatalog(CatalogGeneration(value = "clipped rows"), StandardTypes.definitions)
+        val checked = catalog.ready(ScalarKind.TEXT.use)
         val result =
             DefaultPresentationRuntime().build(
                 PresentationBuildBinding(checked.presentationTemplate(), PresentationRole.RESOURCE_SEARCH_RESULT),
@@ -239,8 +289,8 @@ val DefaultPresentationRuntimeTest by testSuite {
     }
 
     test("headers acquire data scopes only when explicitly declared") {
-        val catalog = DefaultCheckedCatalog(CatalogGeneration("header diagnostics"), StandardTypes.definitions)
-        val checked = catalog.ready(TypeUse.Scalar(ScalarKind.Text))
+        val catalog = DefaultCheckedCatalog(CatalogGeneration(value = "header diagnostics"), StandardTypes.definitions)
+        val checked = catalog.ready(ScalarKind.TEXT.use)
         val result =
             DefaultPresentationRuntime().build(
                 PresentationBuildBinding(checked.presentationTemplate(), PresentationRole.INSPECTOR),
@@ -262,8 +312,8 @@ val DefaultPresentationRuntimeTest by testSuite {
 
     for (count in 0..2) {
         test("presentation bodies preserve their content with $count nodes") {
-            val catalog = DefaultCheckedCatalog(CatalogGeneration("presentation bodies"), StandardTypes.definitions)
-            val checked = catalog.ready(TypeUse.Scalar(ScalarKind.Text))
+            val catalog = DefaultCheckedCatalog(CatalogGeneration(value = "presentation bodies"), StandardTypes.definitions)
+            val checked = catalog.ready(ScalarKind.TEXT.use)
             val result =
                 DefaultPresentationRuntime().build(
                     PresentationBuildBinding(checked.presentationTemplate(), PresentationRole.WORKSPACE),
@@ -298,8 +348,8 @@ val DefaultPresentationRuntimeTest by testSuite {
     }
 
     test("display families lower their declared options through shared appearance and glyph delegates") {
-        val catalog = DefaultCheckedCatalog(CatalogGeneration("display options"), StandardTypes.definitions)
-        val checked = catalog.ready(TypeUse.Scalar(ScalarKind.Text))
+        val catalog = DefaultCheckedCatalog(CatalogGeneration(value = "display options"), StandardTypes.definitions)
+        val checked = catalog.ready(ScalarKind.TEXT.use)
         val color = literalColor(com.typewritermc.types.Color(0xff3366ccu))
         val result =
             DefaultPresentationRuntime().build(
@@ -309,7 +359,7 @@ val DefaultPresentationRuntimeTest by testSuite {
                     image(literal("https://example.test/image.png")) {
                         width(80.0)
                         height(literal(60.0))
-                        fit(ImageFit.Cover)
+                        fit(ImageFit.COVER)
                         radius(PresentationRadius.Small)
                     }
                     badge(literal("Ready")) {
@@ -320,7 +370,7 @@ val DefaultPresentationRuntimeTest by testSuite {
                     chip(literal("Label")) {
                         noIcon()
                         noBorder()
-                        density(ControlDensity.Compact)
+                        density(ControlDensity.COMPACT)
                     }
                     progress(literal(3), literal(10)) {
                         color(color)
@@ -342,7 +392,7 @@ val DefaultPresentationRuntimeTest by testSuite {
                         endIndent(6.0)
                     }
                     tabs {
-                        density(ControlDensity.Compact)
+                        density(ControlDensity.COMPACT)
                         spacing(4.0)
                         contentSpacing(10.0)
                         tab("first", literal("First"), icon = "book") { text(literal("Content")) }
@@ -365,7 +415,7 @@ val DefaultPresentationRuntimeTest by testSuite {
                     }
                     relativeTime(literal(kotlin.time.Instant.fromEpochMilliseconds(1000))) {
                         noIcon()
-                        density(ControlDensity.Compact)
+                        density(ControlDensity.COMPACT)
                     }
                 }
             }
@@ -406,22 +456,27 @@ val DefaultPresentationRuntimeTest by testSuite {
     }
 
     test("field publication captures metadata after control selection and direct row fields share width") {
-        val id = TypeDefinitionId(TypeId.Qualified("test", "ConfiguredCoordinates"), 1)
-        val number = TypeTemplate.Scalar(ScalarKind.Integer(IntegerWidth.SIGNED_32))
+        val id = TypeDefinitionId.qualified("test", "ConfiguredCoordinates")
+        val number = integerScalar(IntegerWidth.SIGNED_THIRTY_TWO).template
         val definition =
-            TypeDefinition(
-                id,
+            TypeDefinition.partial(
+                id = id,
                 representation =
-                    RepresentationTemplate.Record(
-                        listOf(FieldDeclaration(FieldOwner(id, "x"), number), FieldDeclaration(FieldOwner(id, "y"), number)),
+                    RepresentationTemplate.createRecord(
+                        fields =
+                            listOf(
+                                FieldDeclaration.partial(owner = FieldOwner(definition = id, name = "x"), type = number),
+                                FieldDeclaration.partial(owner = FieldOwner(definition = id, name = "y"), type = number),
+                            ),
+                        abstract_ = false,
                     ),
             )
-        val catalog = DefaultCheckedCatalog(CatalogGeneration("configured coordinates"), listOf(definition))
-        val checked = catalog.ready(TypeUse.Named(id))
+        val catalog = DefaultCheckedCatalog(CatalogGeneration(value = "configured coordinates"), listOf(definition))
+        val checked = catalog.ready(id.use())
 
         fun NumericInputScope<Int>.coordinateInput() {
             step(2)
-            density(ControlDensity.Compact)
+            density(ControlDensity.COMPACT)
             selectAllOnFocus()
             textStyle(TextStyle(weight = 500))
         }
@@ -489,11 +544,11 @@ val DefaultPresentationRuntimeTest by testSuite {
     }
 
     test("appearance defaults are immutable sparse wrappers and local controls stay sparse") {
-        val catalog = DefaultCheckedCatalog(CatalogGeneration("input appearance"), StandardTypes.definitions)
-        val checked = catalog.ready(TypeUse.Scalar(ScalarKind.Text))
+        val catalog = DefaultCheckedCatalog(CatalogGeneration(value = "input appearance"), StandardTypes.definitions)
+        val checked = catalog.ready(ScalarKind.TEXT.use)
         val shared =
             inputAppearance {
-                density(ControlDensity.Compact)
+                density(ControlDensity.COMPACT)
                 textStyle(TextStyle(weight = 600))
                 noBorder()
             }
@@ -524,8 +579,8 @@ val DefaultPresentationRuntimeTest by testSuite {
     }
 
     test("default control receives metadata authored after prefix and no explicit editor") {
-        val catalog = DefaultCheckedCatalog(CatalogGeneration("default metadata"), StandardTypes.definitions)
-        val checked = catalog.ready(TypeUse.Scalar(ScalarKind.Text))
+        val catalog = DefaultCheckedCatalog(CatalogGeneration(value = "default metadata"), StandardTypes.definitions)
+        val checked = catalog.ready(ScalarKind.TEXT.use)
         val result =
             DefaultPresentationRuntime().build(
                 PresentationBuildBinding(checked.presentationTemplate(), PresentationRole.WORKSPACE),
@@ -545,13 +600,13 @@ val DefaultPresentationRuntimeTest by testSuite {
     }
 
     test("surface policies serialize through ordinary presentation nodes") {
-        val catalog = DefaultCheckedCatalog(CatalogGeneration("surface policies"), StandardTypes.definitions)
-        val checked = catalog.ready(TypeUse.Scalar(ScalarKind.Text))
+        val catalog = DefaultCheckedCatalog(CatalogGeneration(value = "surface policies"), StandardTypes.definitions)
+        val checked = catalog.ready(ScalarKind.TEXT.use)
         val accent = literalColor(com.typewritermc.types.Color(0x803366ccu))
         val fill =
             stateColor(accent.withAlpha(0.2)) {
-                whenAll(PresentationInteractionState.Selected, color = accent)
-                whenAll(PresentationInteractionState.Hovered, color = accent.withAlpha(0.5))
+                whenAll(PresentationInteractionState.SELECTED, color = accent)
+                whenAll(PresentationInteractionState.HOVERED, color = accent.withAlpha(0.5))
             }
         val result =
             DefaultPresentationRuntime().build(
@@ -562,10 +617,10 @@ val DefaultPresentationRuntimeTest by testSuite {
                         background = fill,
                         foreground = ambientBackground().on(),
                         radius = PresentationRadius.Large,
-                        transition = stateTransition(PresentationTransition(milliseconds = 100)),
+                        transition = stateTransition(transition(milliseconds = 100)),
                     ),
                 ) {
-                    align(PresentationAlignment.Center) { text(literal("Adventure")) }
+                    align(PresentationAlignment.CENTER) { text(literal("Adventure")) }
                 }
             }
         val container = (result.layout.singleFixed().element as PresentationElement.ContainerWrapper).value
@@ -587,8 +642,8 @@ val DefaultPresentationRuntimeTest by testSuite {
     }
 
     test("resource headings compose ordinary nodes with identity and pane context") {
-        val catalog = DefaultCheckedCatalog(CatalogGeneration("headings"), StandardTypes.definitions)
-        val checked = catalog.ready(TypeUse.Scalar(ScalarKind.Text))
+        val catalog = DefaultCheckedCatalog(CatalogGeneration(value = "headings"), StandardTypes.definitions)
+        val checked = catalog.ready(ScalarKind.TEXT.use)
         val result =
             DefaultPresentationRuntime().build(
                 PresentationBuildBinding(checked.presentationTemplate(), PresentationRole.INSPECTOR),
@@ -615,16 +670,10 @@ val DefaultPresentationRuntimeTest by testSuite {
                 .fixedChildren()
         val title = (paragraphs.first().element as PresentationElement.TextWrapper).value
         val fit = title.sizing as skirout.editor.v1.presentation.TextSizing.FitWrapper
-        com.typewritermc.types.skir.SkirDataValueCodec
-            .decode(
-                (fit.value.minimum as skirout.editor.v1.expression.ExpressionNode.LiteralWrapper).value,
-            ).getOrThrow() shouldBe
-            DataValue.Float(18.0)
-        com.typewritermc.types.skir.SkirDataValueCodec
-            .decode(
-                (fit.value.maximum as skirout.editor.v1.expression.ExpressionNode.LiteralWrapper).value,
-            ).getOrThrow() shouldBe
-            DataValue.Float(40.0)
+        ((fit.value.minimum as skirout.editor.v1.expression.ExpressionNode.LiteralWrapper).value).requirePortable() shouldBe
+            DataValue.FloatWrapper(18.0)
+        ((fit.value.maximum as skirout.editor.v1.expression.ExpressionNode.LiteralWrapper).value).requirePortable() shouldBe
+            DataValue.FloatWrapper(40.0)
         title.paragraph.maxLines shouldBe 1
         title.paragraph.selectable shouldBe true
         title.paragraph.overflow shouldBe skirout.editor.v1.presentation.PresentationTextOverflow.ELLIPSIS
@@ -644,15 +693,15 @@ val DefaultPresentationRuntimeTest by testSuite {
     }
 
     test("rich paragraphs serialize sizing and paragraph behavior") {
-        val catalog = DefaultCheckedCatalog(CatalogGeneration("rich sizing"), StandardTypes.definitions)
-        val checked = catalog.ready(TypeUse.Scalar(ScalarKind.Text))
+        val catalog = DefaultCheckedCatalog(CatalogGeneration(value = "rich sizing"), StandardTypes.definitions)
+        val checked = catalog.ready(ScalarKind.TEXT.use)
         val result =
             DefaultPresentationRuntime().build(
                 PresentationBuildBinding(checked.presentationTemplate(), PresentationRole.INSPECTOR),
             ) { build ->
                 build.richText {
                     sizing(TextSizing.Fit(literal(18.0), literal(40.0)))
-                    paragraph(TextParagraph(maximumLines = 2, softWrap = true, selectable = true, tone = TextTone.Secondary))
+                    paragraph(textParagraph(maxLines = 2, softWrap = true, selectable = true, tone = PresentationTextTone.SECONDARY))
                     style(TextStyleOverride(color = literal(com.typewritermc.types.Color(0xff123456u)).asPresentationColor(), weight = 500))
                     run(literal("First"))
                     run(literal("Second"), TextStyleOverride(weight = 700))
@@ -675,24 +724,26 @@ val DefaultPresentationRuntimeTest by testSuite {
     }
 
     test("builds one symbolic generic material and applies it to concrete uses") {
-        val id = TypeDefinitionId(TypeId.Qualified("test", "Weighted"), 1)
-        val parameter = ParameterKey(id, 0)
+        val id = TypeDefinitionId.qualified("test", "Weighted")
+        val parameter = ParameterKey(owner = id, index = 0)
         val definition =
-            TypeDefinition(
+            TypeDefinition.partial(
                 id = id,
-                parameters = listOf(TypeParameter(parameter, "T")),
+                parameters = listOf(TypeParameter.partial(key = parameter, name = "T")),
                 representation =
-                    RepresentationTemplate.Record(
-                        listOf(
-                            FieldDeclaration(FieldOwner(id, "value"), TypeTemplate.Parameter(parameter)),
-                            FieldDeclaration(
-                                FieldOwner(id, "weight"),
-                                TypeTemplate.Scalar(ScalarKind.Integer(IntegerWidth.SIGNED_32)),
+                    RepresentationTemplate.createRecord(
+                        fields =
+                            listOf(
+                                FieldDeclaration.partial(owner = FieldOwner(definition = id, name = "value"), type = parameter.template),
+                                FieldDeclaration.partial(
+                                    owner = FieldOwner(definition = id, name = "weight"),
+                                    type = integerScalar(IntegerWidth.SIGNED_THIRTY_TWO).template,
+                                ),
                             ),
-                        ),
+                        abstract_ = false,
                     ),
             )
-        val target = PresentationTarget.Named(TypeTemplate.Named(id, listOf(TypeTemplate.Parameter(parameter))))
+        val target = PresentationTarget.NamedWrapper(id.namedTemplate(listOf(parameter.template)))
         val descriptor = descriptor("weighted", target, 0, PresentationRole.INSPECTOR)
         val origin = ProviderOrigin(descriptor.owner, ArtifactId("test:presentation"), "main")
         val runtime = DefaultPresentationRuntime()
@@ -711,7 +762,7 @@ val DefaultPresentationRuntimeTest by testSuite {
                                     minimum(literal(0))
                                     step(1)
                                     placeholder("Weight")
-                                    density(ControlDensity.Compact)
+                                    density(ControlDensity.COMPACT)
                                     onComplete {
                                         @Suppress("UNCHECKED_CAST")
                                         if (invalidMapping) {
@@ -733,17 +784,17 @@ val DefaultPresentationRuntimeTest by testSuite {
             CatalogContributions(
                 declarations = listOf(OwnedTypeDeclaration(origin, definition)),
                 presentations = listOf(OwnedPresentation(origin, descriptor, provider)),
-            ).assemble(CatalogAssemblyContext(CatalogGeneration("symbolic presentation")))
+            ).assemble(CatalogAssemblyContext(CatalogGeneration(value = "symbolic presentation")))
 
-        val material = assembly.snapshot.presentationMaterials.single()
+        val material = assembly.editorCatalog.presentationMaterials.single()
         material.target shouldBe target
         val valueNode =
             material.layout
                 .fixedChildren()
                 .first()
                 .element as PresentationElement.TypedFieldWrapper
-        val expected = SkirTypeCodec.decode(valueNode.value.expectedType).getOrThrow()
-        expected shouldBe TypeTemplate.Parameter(parameter)
+        val expected = valueNode.value.expectedType.requireValid()
+        expected shouldBe parameter.template
         val weight = material.layout.fixedChildren()[1].element as PresentationElement.NumericInputWrapper
         weight.value.appearance?.density shouldBe skirout.editor.v1.presentation.ControlDensity.COMPACT
         (weight.value.options.minimum != null) shouldBe true
@@ -753,42 +804,48 @@ val DefaultPresentationRuntimeTest by testSuite {
         (weight.value.mappings?.display != null) shouldBe true
         (weight.value.control.label != null) shouldBe true
 
-        val text = mapOf(parameter to TypeUse.Scalar(ScalarKind.Text))
-        val integer = mapOf(parameter to TypeUse.Scalar(ScalarKind.Integer(IntegerWidth.SIGNED_32)))
-        (target.type.apply(text) as Resolution.Ready).value shouldBe TypeUse.Named(id, listOf(TypeUse.Scalar(ScalarKind.Text)))
-        (target.type.apply(integer) as Resolution.Ready).value shouldBe
-            TypeUse.Named(id, listOf(TypeUse.Scalar(ScalarKind.Integer(IntegerWidth.SIGNED_32))))
-        (expected.apply(text) as Resolution.Ready).value shouldBe TypeUse.Scalar(ScalarKind.Text)
+        val text = mapOf(parameter to ScalarKind.TEXT.use)
+        val integer = mapOf(parameter to integerScalar(IntegerWidth.SIGNED_THIRTY_TWO).use)
+        (target.value.apply(text) as Resolution.Ready).value shouldBe id.namedUse(listOf(ScalarKind.TEXT.use))
+        (target.value.apply(integer) as Resolution.Ready).value shouldBe
+            id.namedUse(listOf(integerScalar(IntegerWidth.SIGNED_THIRTY_TWO).use))
+        (expected.apply(text) as Resolution.Ready).value shouldBe ScalarKind.TEXT.use
         (expected.apply(integer) as Resolution.Ready).value shouldBe
-            TypeUse.Scalar(ScalarKind.Integer(IntegerWidth.SIGNED_32))
+            integerScalar(IntegerWidth.SIGNED_THIRTY_TWO).use
         invalidMapping = true
         val rejected =
             CatalogContributions(
                 declarations = listOf(OwnedTypeDeclaration(origin, definition)),
                 presentations = listOf(OwnedPresentation(origin, descriptor, provider)),
-            ).assemble(CatalogAssemblyContext(CatalogGeneration("invalid symbolic presentation")))
-        rejected.snapshot.presentationMaterials.isEmpty() shouldBe true
-        rejected.snapshot.diagnostics.isNotEmpty() shouldBe true
+            ).assemble(CatalogAssemblyContext(CatalogGeneration(value = "invalid symbolic presentation")))
+        rejected.editorCatalog.presentationMaterials.isEmpty() shouldBe true
+        rejected.editorCatalog.diagnostics.isNotEmpty() shouldBe true
     }
 
     test("isolates a named presentation with an invalid collection projection") {
-        val subjectId = TypeDefinitionId(TypeId.Qualified("test", "InvalidCollectionSubject"), 1)
-        val unrelatedId = TypeDefinitionId(TypeId.Qualified("test", "UnrelatedCollectionSubject"), 1)
+        val subjectId = TypeDefinitionId.qualified("test", "InvalidCollectionSubject")
+        val unrelatedId = TypeDefinitionId.qualified("test", "UnrelatedCollectionSubject")
         val subject =
-            TypeDefinition(
-                subjectId,
+            TypeDefinition.partial(
+                id = subjectId,
                 representation =
-                    RepresentationTemplate.Record(
-                        listOf(
-                            FieldDeclaration(
-                                FieldOwner(subjectId, "title"),
-                                TypeTemplate.Scalar(ScalarKind.Text),
+                    RepresentationTemplate.createRecord(
+                        fields =
+                            listOf(
+                                FieldDeclaration.partial(
+                                    owner = FieldOwner(definition = subjectId, name = "title"),
+                                    type = ScalarKind.TEXT.template,
+                                ),
                             ),
-                        ),
+                        abstract_ = false,
                     ),
             )
-        val unrelated = TypeDefinition(unrelatedId, representation = RepresentationTemplate.Record(emptyList()))
-        val target = PresentationTarget.Named(TypeTemplate.Named(subjectId))
+        val unrelated =
+            TypeDefinition.partial(
+                id = unrelatedId,
+                representation = RepresentationTemplate.createRecord(fields = emptyList(), abstract_ = false),
+            )
+        val target = PresentationTarget.NamedWrapper(subjectId.namedTemplate())
         val descriptor = descriptor("invalid collection", target, 0, PresentationRole.INSPECTOR)
         val origin = ProviderOrigin(descriptor.owner, ArtifactId("test:invalid-collection"), "main")
         val projection =
@@ -796,15 +853,15 @@ val DefaultPresentationRuntimeTest by testSuite {
                 specification =
                     CollectionProjectionSpec(
                         sourceId = "invalid",
-                        root = TypeTemplate.Named(subjectId),
-                        rowType = TypeTemplate.Scalar(ScalarKind.Integer(IntegerWidth.SIGNED_32)),
+                        root = subjectId.namedTemplate(),
+                        rowType = integerScalar(IntegerWidth.SIGNED_THIRTY_TWO).template,
                         fields =
                             listOf(
                                 CollectionProjectionFieldSpec(
-                                    target = ValuePath(),
+                                    target = ValuePath.root,
                                     source =
                                         CollectionProjectionValueSpec.Content(
-                                            ValuePath(listOf(PathSegment.Field("title"))),
+                                            ValuePath.root.field("title"),
                                         ),
                                 ),
                             ),
@@ -833,52 +890,67 @@ val DefaultPresentationRuntimeTest by testSuite {
                 presentations = listOf(OwnedPresentation(origin, descriptor, provider)),
             ).assemble(
                 CatalogAssemblyContext(
-                    CatalogGeneration("invalid presentation collection"),
+                    CatalogGeneration(value = "invalid presentation collection"),
                     relations = rootOwnership(subjectId),
                 ),
             )
 
         val status =
-            assembly.snapshot.types
+            assembly.editorCatalog.types
                 .single { it.definition.id == subjectId }
-                .status as DeclarationStatus.Unavailable
-        status.reasons.map { it.code } shouldBe listOf("invalid_presentation_collection_dependency")
-        assembly.snapshot.types
+                .status as skirout.editor.v1.catalog.DeclarationStatus.UnavailableWrapper
+        status.value.map { it.code } shouldBe listOf("invalid_presentation_collection_dependency")
+        assembly.editorCatalog.types
             .single { it.definition.id == unrelatedId }
-            .status shouldBe DeclarationStatus.Ready
-        assembly.snapshot.presentationMaterials shouldBe emptyList()
+            .status shouldBe skirout.editor.v1.catalog.DeclarationStatus.READY
+        assembly.editorCatalog.presentationMaterials shouldBe emptyList()
     }
 
     test("admits readable projection mappings from declared resource roots") {
-        val baseId = TypeDefinitionId(TypeId.Qualified("test", "ProjectionBase"), 1)
-        val childId = TypeDefinitionId(TypeId.Qualified("test", "ProjectionChild"), 1)
-        val resourceId = TypeDefinitionId(TypeId.Qualified("test", "ProjectionResource"), 1)
+        val baseId = TypeDefinitionId.qualified("test", "ProjectionBase")
+        val childId = TypeDefinitionId.qualified("test", "ProjectionChild")
+        val resourceId = TypeDefinitionId.qualified("test", "ProjectionResource")
         val base =
-            TypeDefinition(
-                baseId,
+            TypeDefinition.partial(
+                id = baseId,
                 representation =
-                    RepresentationTemplate.Record(
-                        listOf(FieldDeclaration(FieldOwner(baseId, "title"), TypeTemplate.Scalar(ScalarKind.Text))),
+                    RepresentationTemplate.createRecord(
+                        fields =
+                            listOf(
+                                FieldDeclaration.partial(
+                                    owner = FieldOwner(definition = baseId, name = "title"),
+                                    type = ScalarKind.TEXT.template,
+                                ),
+                            ),
+                        abstract_ = false,
                     ),
             )
         val child =
-            TypeDefinition(
-                childId,
-                representation = RepresentationTemplate.Record(emptyList()),
-                parents = listOf(TypeTemplate.Named(baseId)),
+            TypeDefinition.partial(
+                id = childId,
+                representation = RepresentationTemplate.createRecord(fields = emptyList(), abstract_ = false),
+                parents = listOf(baseId.namedTemplate()),
             )
         val resource =
-            TypeDefinition(
-                resourceId,
+            TypeDefinition.partial(
+                id = resourceId,
                 representation =
-                    RepresentationTemplate.Record(
-                        listOf(
-                            FieldDeclaration(FieldOwner(resourceId, "child"), TypeTemplate.Named(childId)),
-                            FieldDeclaration(FieldOwner(resourceId, "selected"), TypeTemplate.Scalar(ScalarKind.Text)),
-                        ),
+                    RepresentationTemplate.createRecord(
+                        fields =
+                            listOf(
+                                FieldDeclaration.partial(
+                                    owner = FieldOwner(definition = resourceId, name = "child"),
+                                    type = childId.template(),
+                                ),
+                                FieldDeclaration.partial(
+                                    owner = FieldOwner(definition = resourceId, name = "selected"),
+                                    type = ScalarKind.TEXT.template,
+                                ),
+                            ),
+                        abstract_ = false,
                     ),
             )
-        val target = PresentationTarget.Named(TypeTemplate.Named(resourceId))
+        val target = PresentationTarget.NamedWrapper(resourceId.namedTemplate())
         val descriptor = descriptor("valid collection", target, 0, PresentationRole.INSPECTOR)
         val origin = ProviderOrigin(descriptor.owner, ArtifactId("test:valid-collection"), "main")
         val projection =
@@ -886,15 +958,15 @@ val DefaultPresentationRuntimeTest by testSuite {
                 specification =
                     CollectionProjectionSpec(
                         sourceId = "valid",
-                        root = TypeTemplate.Named(resourceId),
-                        rowType = TypeTemplate.Named(baseId),
+                        root = resourceId.namedTemplate(),
+                        rowType = baseId.template(),
                         fields =
                             listOf(
                                 CollectionProjectionFieldSpec(
-                                    target = ValuePath(),
+                                    target = ValuePath.root,
                                     source =
                                         CollectionProjectionValueSpec.Content(
-                                            ValuePath(listOf(PathSegment.Field("child"))),
+                                            ValuePath.root.field("child"),
                                         ),
                                 ),
                             ),
@@ -924,15 +996,15 @@ val DefaultPresentationRuntimeTest by testSuite {
                 presentations = listOf(OwnedPresentation(origin, descriptor, provider)),
             ).assemble(
                 CatalogAssemblyContext(
-                    CatalogGeneration("valid presentation collection"),
+                    CatalogGeneration(value = "valid presentation collection"),
                     relations = rootOwnership(resourceId),
                 ),
             )
 
-        assembly.snapshot.types
+        assembly.editorCatalog.types
             .single { it.definition.id == resourceId }
-            .status shouldBe DeclarationStatus.Ready
-        assembly.snapshot.presentationMaterials
+            .status shouldBe skirout.editor.v1.catalog.DeclarationStatus.READY
+        assembly.editorCatalog.presentationMaterials
             .single()
             .dependencies.collections
             .single()
@@ -940,35 +1012,51 @@ val DefaultPresentationRuntimeTest by testSuite {
     }
 
     test("isolates collections with missing resources invalid bounds or invalid literals") {
-        val missingId = TypeDefinitionId(TypeId.Qualified("test", "MissingResourceCollection"), 1)
-        val literalId = TypeDefinitionId(TypeId.Qualified("test", "InvalidLiteralCollection"), 1)
-        val boundedId = TypeDefinitionId(TypeId.Qualified("test", "InvalidBoundCollection"), 1)
-        val unrelatedId = TypeDefinitionId(TypeId.Qualified("test", "ValidUnrelatedCollection"), 1)
-        val baseId = TypeDefinitionId(TypeId.Qualified("test", "CollectionBound"), 1)
-        val genericId = TypeDefinitionId(TypeId.Qualified("test", "BoundedCollectionRow"), 1)
-        val parameter = ParameterKey(genericId, 0)
-        val selected = TypeTemplate.Scalar(ScalarKind.Text)
+        val missingId = TypeDefinitionId.qualified("test", "MissingResourceCollection")
+        val literalId = TypeDefinitionId.qualified("test", "InvalidLiteralCollection")
+        val boundedId = TypeDefinitionId.qualified("test", "InvalidBoundCollection")
+        val unrelatedId = TypeDefinitionId.qualified("test", "ValidUnrelatedCollection")
+        val baseId = TypeDefinitionId.qualified("test", "CollectionBound")
+        val genericId = TypeDefinitionId.qualified("test", "BoundedCollectionRow")
+        val parameter = ParameterKey(owner = genericId, index = 0)
+        val selected = ScalarKind.TEXT.template
 
         fun subject(id: TypeDefinitionId): TypeDefinition =
-            TypeDefinition(
-                id,
+            TypeDefinition.partial(
+                id = id,
                 representation =
-                    RepresentationTemplate.Record(
-                        listOf(
-                            FieldDeclaration(FieldOwner(id, "title"), TypeTemplate.Scalar(ScalarKind.Text)),
-                            FieldDeclaration(FieldOwner(id, "selected"), selected),
-                        ),
+                    RepresentationTemplate.createRecord(
+                        fields =
+                            listOf(
+                                FieldDeclaration.partial(
+                                    owner = FieldOwner(definition = id, name = "title"),
+                                    type = ScalarKind.TEXT.template,
+                                ),
+                                FieldDeclaration.partial(owner = FieldOwner(definition = id, name = "selected"), type = selected),
+                            ),
+                        abstract_ = false,
                     ),
             )
 
-        val base = TypeDefinition(baseId, representation = RepresentationTemplate.Record(emptyList()))
+        val base =
+            TypeDefinition.partial(
+                id = baseId,
+                representation = RepresentationTemplate.createRecord(fields = emptyList(), abstract_ = false),
+            )
         val generic =
-            TypeDefinition(
-                genericId,
-                parameters = listOf(TypeParameter(parameter, "T", bounds = listOf(TypeTemplate.Named(baseId)))),
+            TypeDefinition.partial(
+                id = genericId,
+                parameters = listOf(TypeParameter(key = parameter, name = "T", bounds = listOf(baseId.template()))),
                 representation =
-                    RepresentationTemplate.Record(
-                        listOf(FieldDeclaration(FieldOwner(genericId, "value"), TypeTemplate.Parameter(parameter))),
+                    RepresentationTemplate.createRecord(
+                        fields =
+                            listOf(
+                                FieldDeclaration.partial(
+                                    owner = FieldOwner(definition = genericId, name = "value"),
+                                    type = parameter.template,
+                                ),
+                            ),
+                        abstract_ = false,
                     ),
             )
         val projections =
@@ -976,14 +1064,14 @@ val DefaultPresentationRuntimeTest by testSuite {
                 missingId to
                     CollectionProjectionSpec(
                         sourceId = "missing-resource",
-                        root = TypeTemplate.Named(missingId),
-                        rowType = TypeTemplate.Scalar(ScalarKind.Text),
+                        root = missingId.namedTemplate(),
+                        rowType = ScalarKind.TEXT.template,
                         fields =
                             listOf(
                                 CollectionProjectionFieldSpec(
-                                    ValuePath(),
+                                    ValuePath.root,
                                     CollectionProjectionValueSpec.Content(
-                                        ValuePath(listOf(PathSegment.Field("title"))),
+                                        ValuePath.root.field("title"),
                                     ),
                                 ),
                             ),
@@ -991,30 +1079,27 @@ val DefaultPresentationRuntimeTest by testSuite {
                 literalId to
                     CollectionProjectionSpec(
                         sourceId = "invalid-literal",
-                        root = TypeTemplate.Named(literalId),
-                        rowType = TypeTemplate.Scalar(ScalarKind.Integer(IntegerWidth.SIGNED_32)),
+                        root = literalId.namedTemplate(),
+                        rowType = integerScalar(IntegerWidth.SIGNED_THIRTY_TWO).template,
                         fields =
                             listOf(
                                 CollectionProjectionFieldSpec(
-                                    ValuePath(),
-                                    CollectionProjectionValueSpec.Literal(DataValue.StringValue("wrong")),
+                                    ValuePath.root,
+                                    CollectionProjectionValueSpec.Literal(DataValue.StringValueWrapper("wrong")),
                                 ),
                             ),
                     ),
                 boundedId to
                     CollectionProjectionSpec(
                         sourceId = "invalid-bound",
-                        root = TypeTemplate.Named(boundedId),
+                        root = boundedId.namedTemplate(),
                         rowType =
-                            TypeTemplate.Named(
-                                genericId,
-                                listOf(TypeTemplate.Scalar(ScalarKind.Text)),
-                            ),
+                            genericId.template(listOf(ScalarKind.TEXT.template)),
                         fields =
                             listOf(
                                 CollectionProjectionFieldSpec(
-                                    ValuePath(listOf(PathSegment.Field("value"))),
-                                    CollectionProjectionValueSpec.Literal(DataValue.StringValue("value")),
+                                    ValuePath.root.field("value"),
+                                    CollectionProjectionValueSpec.Literal(DataValue.StringValueWrapper("value")),
                                 ),
                             ),
                     ),
@@ -1022,13 +1107,14 @@ val DefaultPresentationRuntimeTest by testSuite {
         val origin =
             ProviderOrigin(
                 DeclarationOwner(
-                    ContributionKey(
-                        ContributionSourceId("test"),
-                        "main",
-                        ProducerId("test"),
-                        ContributionName("invalid_collections"),
-                    ),
-                    "invalid-collections",
+                    source =
+                        contributionKey(
+                            ContributionSourceId("test"),
+                            "main",
+                            ProducerId("test"),
+                            ContributionName("invalid_collections"),
+                        ),
+                    localIdentity = "invalid-collections",
                 ),
                 ArtifactId("test:invalid-collections"),
                 "main",
@@ -1036,7 +1122,7 @@ val DefaultPresentationRuntimeTest by testSuite {
         val runtime = DefaultPresentationRuntime()
         val ownedPresentations =
             projections.map { (id, specification) ->
-                val target = PresentationTarget.Named(TypeTemplate.Named(id))
+                val target = PresentationTarget.NamedWrapper(id.namedTemplate())
                 val descriptor = descriptor(specification.sourceId, target, 0, PresentationRole.INSPECTOR)
                 val projection =
                     CollectionProjection<ProjectionFixtureResource, Any, ProjectionFixtureExpressions>(
@@ -1075,29 +1161,29 @@ val DefaultPresentationRuntimeTest by testSuite {
                 presentations = ownedPresentations,
             ).assemble(
                 CatalogAssemblyContext(
-                    CatalogGeneration("invalid collection admission"),
+                    CatalogGeneration(value = "invalid collection admission"),
                     relations = rootOwnership(literalId, boundedId),
                 ),
             )
 
         projections.keys.forEach { id ->
             val status =
-                assembly.snapshot.types
+                assembly.editorCatalog.types
                     .single { it.definition.id == id }
-                    .status as DeclarationStatus.Unavailable
-            status.reasons.map { it.code } shouldBe listOf("invalid_presentation_collection_dependency")
+                    .status as skirout.editor.v1.catalog.DeclarationStatus.UnavailableWrapper
+            status.value.map { it.code } shouldBe listOf("invalid_presentation_collection_dependency")
         }
-        assembly.snapshot.types
+        assembly.editorCatalog.types
             .single { it.definition.id == unrelatedId }
-            .status shouldBe DeclarationStatus.Ready
-        assembly.snapshot.presentationMaterials shouldBe emptyList()
+            .status shouldBe skirout.editor.v1.catalog.DeclarationStatus.READY
+        assembly.editorCatalog.presentationMaterials shouldBe emptyList()
     }
 
     test("resolves one presentation reference by its checked binding without mutating rejected registrations") {
         val reference = object : PresentationReference {}
-        val catalog = DefaultCheckedCatalog(CatalogGeneration("reference targets"), StandardTypes.definitions)
-        val text = descriptor("text reference", PresentationTarget.Representation(RepresentationKind.Text), 0)
-        val boolean = descriptor("boolean reference", PresentationTarget.Representation(RepresentationKind.Boolean), 0)
+        val catalog = DefaultCheckedCatalog(CatalogGeneration(value = "reference targets"), StandardTypes.definitions)
+        val text = descriptor("text reference", PresentationTarget.RepresentationWrapper(RepresentationKind.TEXT), 0)
+        val boolean = descriptor("boolean reference", PresentationTarget.RepresentationWrapper(RepresentationKind.BOOLEAN), 0)
         val first = DefaultPresentationRuntime()
         val second = DefaultPresentationRuntime()
 
@@ -1106,7 +1192,7 @@ val DefaultPresentationRuntimeTest by testSuite {
         first.register(reference, text)
 
         runCatching {
-            first.register(reference, text.copy(target = PresentationTarget.Representation(RepresentationKind.Integer)))
+            first.register(reference, text.copy(target = PresentationTarget.RepresentationWrapper(RepresentationKind.INTEGER)))
         }.isFailure shouldBe true
 
         fun selected(
@@ -1115,36 +1201,37 @@ val DefaultPresentationRuntimeTest by testSuite {
         ): String =
             runtime
                 .build(
-                    PresentationBuildBinding(catalog.ready(TypeUse.Scalar(kind)).presentationTemplate(), PresentationRole.WORKSPACE),
+                    PresentationBuildBinding(catalog.ready(kind.use).presentationTemplate(), PresentationRole.WORKSPACE),
                 ) {
                     it.invoke(reference) {}
                 }.dependencies.presentations
                 .single()
                 .name
 
-        selected(first, ScalarKind.Text) shouldBe text.id.name
-        selected(first, ScalarKind.Boolean) shouldBe boolean.id.name
-        runCatching { selected(second, ScalarKind.Text) }.isFailure shouldBe true
+        selected(first, ScalarKind.TEXT) shouldBe text.id.name
+        selected(first, ScalarKind.BOOLEAN) shouldBe boolean.id.name
+        runCatching { selected(second, ScalarKind.TEXT) }.isFailure shouldBe true
     }
 
     test("builds scalar field controls and remaining field exclusions") {
-        val id = TypeDefinitionId(TypeId.Qualified("test", "PresentationSubject"), 1)
+        val id = TypeDefinitionId.qualified("test", "PresentationSubject")
         val definition =
-            TypeDefinition(
-                id,
+            TypeDefinition.partial(
+                id = id,
                 representation =
-                    RepresentationTemplate.Record(
-                        listOf(
-                            FieldDeclaration(
-                                FieldOwner(id, "title"),
-                                TypeTemplate.Scalar(ScalarKind.Text),
+                    RepresentationTemplate.createRecord(
+                        fields =
+                            listOf(
+                                FieldDeclaration.partial(
+                                    owner = FieldOwner(definition = id, name = "title"),
+                                    type = ScalarKind.TEXT.template,
+                                ),
                             ),
-                        ),
-                        abstract = false,
+                        abstract_ = false,
                     ),
             )
-        val catalog = DefaultCheckedCatalog(CatalogGeneration("presentation runtime"), listOf(definition))
-        val checked = (catalog.resolve(TypeUse.Named(id)) as Resolution.Ready).value
+        val catalog = DefaultCheckedCatalog(CatalogGeneration(value = "presentation runtime"), listOf(definition))
+        val checked = (catalog.resolve(id.use()) as Resolution.Ready).value
         val runtime = DefaultPresentationRuntime()
         val root =
             runtime.build(PresentationBuildBinding(checked.presentationTemplate(), PresentationRole.WORKSPACE)) { build ->
@@ -1168,36 +1255,41 @@ val DefaultPresentationRuntimeTest by testSuite {
     }
 
     test("dispatches value class mangled link controls") {
-        val resourceId = TypeDefinitionId(TypeId.Qualified("test", "LinkTargetResource"), 1)
-        val linkId = TypeDefinitionId(TypeId.Qualified("test", "LinkValue"), 1)
-        val subjectId = TypeDefinitionId(TypeId.Qualified("test", "LinkControlSubject"), 1)
-        val linkType = TypeTemplate.Named(linkId)
+        val resourceId = TypeDefinitionId.qualified("test", "LinkTargetResource")
+        val linkId = TypeDefinitionId.qualified("test", "LinkValue")
+        val subjectId = TypeDefinitionId.qualified("test", "LinkControlSubject")
+        val linkType = linkId.template()
         val definitions =
             StandardTypes.definitions +
-                TypeDefinition(resourceId, representation = RepresentationTemplate.Record(emptyList())) +
-                TypeDefinition(
-                    linkId,
+                TypeDefinition.partial(
+                    id = resourceId,
+                    representation = RepresentationTemplate.createRecord(fields = emptyList(), abstract_ = false),
+                ) +
+                TypeDefinition.partial(
+                    id = linkId,
                     representation =
-                        RepresentationTemplate.Link(
-                            com.typewritermc.types.EndpointId("test:link"),
-                            TypeTemplate.Named(resourceId),
+                        RepresentationTemplate.createLink(
+                            endpoint = EndpointId(value = "test:link"),
+                            target = resourceId.template(),
                         ),
                 ) +
-                TypeDefinition(
-                    subjectId,
+                TypeDefinition.partial(
+                    id = subjectId,
                     representation =
-                        RepresentationTemplate.Record(
-                            listOf(
-                                FieldDeclaration(FieldOwner(subjectId, "link"), linkType),
-                                FieldDeclaration(
-                                    FieldOwner(subjectId, "links"),
-                                    TypeTemplate.Named(StandardTypes.set, listOf(linkType)),
+                        RepresentationTemplate.createRecord(
+                            fields =
+                                listOf(
+                                    FieldDeclaration.partial(owner = FieldOwner(definition = subjectId, name = "link"), type = linkType),
+                                    FieldDeclaration.partial(
+                                        owner = FieldOwner(definition = subjectId, name = "links"),
+                                        type = StandardTypes.set.template(listOf(linkType)),
+                                    ),
                                 ),
-                            ),
+                            abstract_ = false,
                         ),
                 )
-        val catalog = DefaultCheckedCatalog(CatalogGeneration("mangled link controls"), definitions)
-        val checked = catalog.ready(TypeUse.Named(subjectId))
+        val catalog = DefaultCheckedCatalog(CatalogGeneration(value = "mangled link controls"), definitions)
+        val checked = catalog.ready(subjectId.use())
         val result =
             DefaultPresentationRuntime().build(
                 PresentationBuildBinding(checked.presentationTemplate(), PresentationRole.INSPECTOR),
@@ -1237,26 +1329,28 @@ val DefaultPresentationRuntimeTest by testSuite {
     }
 
     test("preserves layout kinds and control options") {
-        val id = TypeDefinitionId(TypeId.Qualified("test", "PresentationInventory"), 1)
+        val id = TypeDefinitionId.qualified("test", "PresentationInventory")
         val definition =
-            TypeDefinition(
-                id,
+            TypeDefinition.partial(
+                id = id,
                 representation =
-                    RepresentationTemplate.Record(
-                        listOf(
-                            FieldDeclaration(FieldOwner(id, "title"), TypeTemplate.Scalar(ScalarKind.Text)),
-                            FieldDeclaration(
-                                FieldOwner(id, "amount"),
-                                TypeTemplate.Scalar(
-                                    com.typewritermc.types.ScalarKind
-                                        .Integer(com.typewritermc.types.IntegerWidth.SIGNED_32),
+                    RepresentationTemplate.createRecord(
+                        fields =
+                            listOf(
+                                FieldDeclaration.partial(
+                                    owner = FieldOwner(definition = id, name = "title"),
+                                    type = ScalarKind.TEXT.template,
+                                ),
+                                FieldDeclaration.partial(
+                                    owner = FieldOwner(definition = id, name = "amount"),
+                                    type = integerScalar(IntegerWidth.SIGNED_THIRTY_TWO).template,
                                 ),
                             ),
-                        ),
+                        abstract_ = false,
                     ),
             )
-        val catalog = DefaultCheckedCatalog(CatalogGeneration("presentation inventory"), listOf(definition))
-        val checked = (catalog.resolve(TypeUse.Named(id)) as Resolution.Ready).value
+        val catalog = DefaultCheckedCatalog(CatalogGeneration(value = "presentation inventory"), listOf(definition))
+        val checked = (catalog.resolve(id.use()) as Resolution.Ready).value
         val root =
             DefaultPresentationRuntime().build(
                 PresentationBuildBinding(checked.presentationTemplate(), PresentationRole.WORKSPACE),
@@ -1267,7 +1361,7 @@ val DefaultPresentationRuntimeTest by testSuite {
                     @Suppress("UNCHECKED_CAST")
                     val amount: PresentedField<Int, NumberControl<Int>> =
                         field("amount", NumberControl::class as kotlin.reflect.KClass<NumberControl<Int>>)
-                    row(4.0, MainAxisAlignment.SpaceBetween, CrossAxisAlignment.Stretch) {
+                    row(4.0, MainAxisAlignment.SPACE_BETWEEN, CrossAxisAlignment.STRETCH) {
                         fixed {
                             title {
                                 icon("book")
@@ -1277,7 +1371,7 @@ val DefaultPresentationRuntimeTest by testSuite {
                                 }
                             }
                         }
-                        flexible(2, FlexFit.Tight) {
+                        flexible(2, FlexFit.TIGHT) {
                             amount { sliderInput(0, 10) { divisions(5) } }
                         }
                     }
@@ -1334,63 +1428,68 @@ val DefaultPresentationRuntimeTest by testSuite {
     }
 
     test("binds composite callbacks to their nested schema and lexical values") {
-        val wrapperId = TypeDefinitionId(TypeId.Qualified("test", "Code"), 1)
-        val positionId = TypeDefinitionId(TypeId.Qualified("test", "Position"), 1)
-        val subjectId = TypeDefinitionId(TypeId.Qualified("test", "CompositeSubject"), 1)
-        val integer = ScalarKind.Integer(com.typewritermc.types.IntegerWidth.SIGNED_32)
+        val wrapperId = TypeDefinitionId.qualified("test", "Code")
+        val positionId = TypeDefinitionId.qualified("test", "Position")
+        val subjectId = TypeDefinitionId.qualified("test", "CompositeSubject")
+        val integer = integerScalar(IntegerWidth.SIGNED_THIRTY_TWO)
         val position =
-            TypeDefinition(
-                positionId,
+            TypeDefinition.partial(
+                id = positionId,
                 representation =
-                    RepresentationTemplate.Record(
-                        listOf(
-                            FieldDeclaration(FieldOwner(positionId, "x"), TypeTemplate.Scalar(integer)),
-                            FieldDeclaration(FieldOwner(positionId, "y"), TypeTemplate.Scalar(integer)),
-                        ),
+                    RepresentationTemplate.createRecord(
+                        fields =
+                            listOf(
+                                FieldDeclaration.partial(owner = FieldOwner(definition = positionId, name = "x"), type = integer.template),
+                                FieldDeclaration.partial(owner = FieldOwner(definition = positionId, name = "y"), type = integer.template),
+                            ),
+                        abstract_ = false,
                     ),
             )
-        val wrapper = TypeDefinition(wrapperId, representation = RepresentationTemplate.Scalar(ScalarKind.Text))
+        val wrapper =
+            TypeDefinition.partial(id = wrapperId, representation = RepresentationTemplate.createScalar(kind = ScalarKind.TEXT))
         val subject =
-            TypeDefinition(
-                subjectId,
+            TypeDefinition.partial(
+                id = subjectId,
                 representation =
-                    RepresentationTemplate.Record(
-                        listOf(
-                            FieldDeclaration(
-                                FieldOwner(subjectId, "list"),
-                                TypeTemplate.Named(StandardTypes.list, listOf(TypeTemplate.Scalar(ScalarKind.Text))),
-                            ),
-                            FieldDeclaration(
-                                FieldOwner(subjectId, "set"),
-                                TypeTemplate.Named(StandardTypes.set, listOf(TypeTemplate.Scalar(ScalarKind.Text))),
-                            ),
-                            FieldDeclaration(
-                                FieldOwner(subjectId, "map"),
-                                TypeTemplate.Named(
-                                    StandardTypes.map,
-                                    listOf(
-                                        TypeTemplate.Scalar(ScalarKind.Text),
-                                        TypeTemplate.Nullable(TypeTemplate.Scalar(integer)),
-                                    ),
+                    RepresentationTemplate.createRecord(
+                        fields =
+                            listOf(
+                                FieldDeclaration.partial(
+                                    owner = FieldOwner(definition = subjectId, name = "list"),
+                                    type = StandardTypes.list.template(listOf(ScalarKind.TEXT.template)),
+                                ),
+                                FieldDeclaration.partial(
+                                    owner = FieldOwner(definition = subjectId, name = "set"),
+                                    type = StandardTypes.set.template(listOf(ScalarKind.TEXT.template)),
+                                ),
+                                FieldDeclaration.partial(
+                                    owner = FieldOwner(definition = subjectId, name = "map"),
+                                    type =
+                                        StandardTypes.map.template(
+                                            listOf(
+                                                ScalarKind.TEXT.template,
+                                                integer.template.nullable(),
+                                            ),
+                                        ),
+                                ),
+                                FieldDeclaration.partial(
+                                    owner = FieldOwner(definition = subjectId, name = "code"),
+                                    type = wrapperId.template(),
+                                ),
+                                FieldDeclaration.partial(
+                                    owner = FieldOwner(definition = subjectId, name = "position"),
+                                    type = positionId.template(),
                                 ),
                             ),
-                            FieldDeclaration(
-                                FieldOwner(subjectId, "code"),
-                                TypeTemplate.Named(wrapperId),
-                            ),
-                            FieldDeclaration(
-                                FieldOwner(subjectId, "position"),
-                                TypeTemplate.Named(positionId),
-                            ),
-                        ),
+                        abstract_ = false,
                     ),
             )
         val catalog =
             DefaultCheckedCatalog(
-                CatalogGeneration("nested presentation callbacks"),
+                CatalogGeneration(value = "nested presentation callbacks"),
                 StandardTypes.definitions + wrapper + position + subject,
             )
-        val checked = catalog.ready(TypeUse.Named(subjectId))
+        val checked = catalog.ready(subjectId.use())
         val root =
             DefaultPresentationRuntime().build(
                 PresentationBuildBinding(checked.presentationTemplate(), PresentationRole.WORKSPACE),
@@ -1506,28 +1605,26 @@ val DefaultPresentationRuntimeTest by testSuite {
             directory.mkdirs()
             java.io.File(directory, "composite-layout.bin").writeBytes(PresentationNode.serializer.toBytes(root.layout).toByteArray())
             val value =
-                DataValue.Record(
+                DataValue.record(
                     mapOf(
-                        "list" to DataValue.ListValue(emptyList()),
-                        "set" to DataValue.SetValue(emptyList()),
-                        "map" to DataValue.MapValue(emptyList()),
-                        "code" to DataValue.Named(TypeUse.Named(wrapperId), DataValue.StringValue("Authored code")),
+                        "list" to DataValue.listValue(emptyList()),
+                        "set" to DataValue.setValue(emptyList()),
+                        "map" to DataValue.mapValue(emptyList()),
+                        "code" to DataValue.named(wrapperId.namedUse(), DataValue.StringValueWrapper("Authored code")),
                         "position" to
-                            DataValue.Named(
-                                TypeUse.Named(positionId),
-                                DataValue.Record(
+                            DataValue.named(
+                                positionId.namedUse(),
+                                DataValue.record(
                                     mapOf(
-                                        "x" to DataValue.Integer(java.math.BigInteger.valueOf(7)),
-                                        "y" to DataValue.Integer(java.math.BigInteger.valueOf(8)),
+                                        "x" to DataValue.integer(java.math.BigInteger.valueOf(7)),
+                                        "y" to DataValue.integer(java.math.BigInteger.valueOf(8)),
                                     ),
                                 ),
                             ),
                     ),
                 )
             val encoded =
-                com.typewritermc.types.skir.SkirDataValueCodec
-                    .encode(value)
-                    .getOrThrow()
+                value.requirePortable()
             java.io
                 .File(
                     directory,
@@ -1546,7 +1643,7 @@ val DefaultPresentationRuntimeTest by testSuite {
                 ProviderOrigin(
                     descriptor(
                         "nested remainder",
-                        PresentationTarget.Named(TypeTemplate.Named(subjectId)),
+                        PresentationTarget.NamedWrapper(subjectId.namedTemplate()),
                         0,
                         PresentationRole.WORKSPACE,
                     ).owner,
@@ -1559,14 +1656,14 @@ val DefaultPresentationRuntimeTest by testSuite {
                         listOf(wrapper, position, subject).map {
                             OwnedTypeDeclaration(owner, it)
                         },
-                ).assemble(CatalogAssemblyContext(CatalogGeneration("nested remainder fixture")))
-            val wire = SkirTypeCodec.encode(assembly.snapshot).getOrThrow()
+                ).assemble(CatalogAssemblyContext(CatalogGeneration(value = "nested remainder fixture")))
+            val wire = assembly.editorCatalog
             java.io
                 .File(
                     directory,
                     "nested-remainder-catalog.bin",
                 ).writeBytes(
-                    skirout.editor.v1.catalog.EditorCatalogWireSnapshot.serializer
+                    skirout.editor.v1.catalog.EditorCatalog.serializer
                         .toBytes(wire)
                         .toByteArray(),
                 )
@@ -1598,10 +1695,7 @@ val DefaultPresentationRuntimeTest by testSuite {
                     "nullable-layout.bin",
                 ).writeBytes(PresentationNode.serializer.toBytes(map.value.valuePresentation!!).toByteArray())
             val value =
-                com.typewritermc.types.skir.SkirDataValueCodec
-                    .encode(
-                        DataValue.Integer(java.math.BigInteger.valueOf(42)),
-                    ).getOrThrow()
+                DataValue.integer(java.math.BigInteger.valueOf(42))
             java.io
                 .File(
                     output,
@@ -1629,42 +1723,56 @@ val DefaultPresentationRuntimeTest by testSuite {
     }
 
     test("nested named controls remain local to their record and collection binders") {
-        val positionId = TypeDefinitionId(TypeId.Qualified("test", "NestedChoicePosition"), 1)
-        val subjectId = TypeDefinitionId(TypeId.Qualified("test", "NestedChoiceSubject"), 1)
-        val integer = ScalarKind.Integer(com.typewritermc.types.IntegerWidth.SIGNED_32)
+        val positionId = TypeDefinitionId.qualified("test", "NestedChoicePosition")
+        val subjectId = TypeDefinitionId.qualified("test", "NestedChoiceSubject")
+        val integer = integerScalar(IntegerWidth.SIGNED_THIRTY_TWO)
         val position =
-            TypeDefinition(
-                positionId,
+            TypeDefinition.partial(
+                id = positionId,
                 representation =
-                    RepresentationTemplate.Record(
-                        listOf(FieldDeclaration(FieldOwner(positionId, "x"), TypeTemplate.Scalar(integer))),
+                    RepresentationTemplate.createRecord(
+                        fields =
+                            listOf(
+                                FieldDeclaration.partial(owner = FieldOwner(definition = positionId, name = "x"), type = integer.template),
+                            ),
+                        abstract_ = false,
                     ),
             )
         val subject =
-            TypeDefinition(
-                subjectId,
+            TypeDefinition.partial(
+                id = subjectId,
                 representation =
-                    RepresentationTemplate.Record(
-                        listOf(
-                            FieldDeclaration(FieldOwner(subjectId, "style"), TypeTemplate.Named(positionId)),
-                            FieldDeclaration(
-                                FieldOwner(subjectId, "buttons"),
-                                TypeTemplate.Named(StandardTypes.list, listOf(TypeTemplate.Named(positionId))),
+                    RepresentationTemplate.createRecord(
+                        fields =
+                            listOf(
+                                FieldDeclaration.partial(
+                                    owner = FieldOwner(definition = subjectId, name = "style"),
+                                    type = positionId.template(),
+                                ),
+                                FieldDeclaration.partial(
+                                    owner = FieldOwner(definition = subjectId, name = "buttons"),
+                                    type = StandardTypes.list.template(listOf(positionId.template())),
+                                ),
                             ),
-                        ),
+                        abstract_ = false,
                     ),
             )
         val catalog =
             DefaultCheckedCatalog(
-                CatalogGeneration("nested explicit presentation paths"),
+                CatalogGeneration(value = "nested explicit presentation paths"),
                 StandardTypes.definitions + position + subject,
             )
-        val checked = catalog.ready(TypeUse.Named(subjectId))
-        val selected = com.typewritermc.types.PresentationId("test", "special numeric")
+        val checked = catalog.ready(subjectId.use())
+        val selected =
+            skirout.editor.v1.type_catalog
+                .PresentationId(namespace = "test", name = "special numeric")
         val reference = object : PresentationReference {}
         val runtime =
             DefaultPresentationRuntime().also {
-                it.register(reference, descriptor("special numeric", PresentationTarget.Representation(RepresentationKind.Integer), 0))
+                it.register(
+                    reference,
+                    descriptor("special numeric", PresentationTarget.RepresentationWrapper(RepresentationKind.INTEGER), 0),
+                )
             }
         val layout =
             runtime.build(PresentationBuildBinding(checked.presentationTemplate(), PresentationRole.INSPECTOR)) { build ->
@@ -1708,46 +1816,45 @@ val DefaultPresentationRuntimeTest by testSuite {
                     buttons { listInput { items { recordInput { fields { x(using = reference) } } } } }
                 }
             }
-        val material =
-            PresentationMaterial(
-                provider = com.typewritermc.types.PresentationId("test", "nested choices"),
-                target = PresentationTarget.Named(TypeTemplate.Named(subjectId)),
-                subject = TypeTemplate.Named(subjectId),
-                role = PresentationRole.INSPECTOR,
-                layout = layout.layout,
-                dependencies = layout.dependencies,
-            )
-
-        material.layout.inferInheritableNodes().size shouldBe 3
+        layout.layout.inferInheritableNodes().size shouldBe 3
     }
 
     test("builds scoped collection match and invocation data nodes with lexical bindings") {
-        val id = TypeDefinitionId(TypeId.Qualified("test", "PresentationDataSubject"), 1)
+        val id = TypeDefinitionId.qualified("test", "PresentationDataSubject")
         val definition =
-            TypeDefinition(
-                id,
+            TypeDefinition.partial(
+                id = id,
                 representation =
-                    RepresentationTemplate.Record(
-                        listOf(FieldDeclaration(FieldOwner(id, "title"), TypeTemplate.Scalar(ScalarKind.Text))),
+                    RepresentationTemplate.createRecord(
+                        fields =
+                            listOf(
+                                FieldDeclaration.partial(
+                                    owner = FieldOwner(definition = id, name = "title"),
+                                    type = ScalarKind.TEXT.template,
+                                ),
+                            ),
+                        abstract_ = false,
                     ),
             )
-        val catalog = DefaultCheckedCatalog(CatalogGeneration("presentation data"), listOf(definition))
-        val checked = catalog.ready(TypeUse.Named(id))
+        val catalog = DefaultCheckedCatalog(CatalogGeneration(value = "presentation data"), listOf(definition))
+        val checked = catalog.ready(id.use())
         val reference = object : PresentationReference {}
-        val referenceId = com.typewritermc.types.PresentationId("test", "invoked")
+        val referenceId =
+            skirout.editor.v1.type_catalog
+                .PresentationId(namespace = "test", name = "invoked")
         val parameter = presentationParameter<String>("title")
         val runtime =
             DefaultPresentationRuntime().also {
-                it.register(reference, descriptor("invoked", PresentationTarget.Named(TypeTemplate.Named(id)), 0))
+                it.register(reference, descriptor("invoked", PresentationTarget.NamedWrapper(id.namedTemplate()), 0))
             }
         val repeatedSource =
             com.typewritermc.expression.portableLiteral<List<String>>(
-                DataValue.ListValue(
-                    listOf(ListItem(ItemId("first"), DataValue.StringValue("value"))),
+                DataValue.listValue(
+                    listOf(ListItem(id = ItemId(value = "first"), value = DataValue.StringValueWrapper("value"))),
                 ),
             )
         val source =
-            collectionSource<String, String>("rows", TypeTemplate.Scalar(ScalarKind.Text)) {
+            collectionSource<String, String>("rows", ScalarKind.TEXT.template) {
                 key(row)
                 relations("children", repeatedSource)
             }
@@ -1769,14 +1876,14 @@ val DefaultPresentationRuntimeTest by testSuite {
                     }
                     collectionGraph(source) {
                         root(title.input)
-                        relation("children", CollectionDirection.Reverse, maximumDepth = 4)
+                        relation("children", CollectionGraphDirection.REVERSE, maximumDepth = 4)
                         node {
                             text(row.orElse(literal("missing node")))
                             descendants()
                         }
                     }
                     polymorphicMatch(title.input) {
-                        case(AppliedPresentation<String>(TypeUse.Named(id), reference)) {
+                        case(AppliedPresentation<String>(id.namedUse(), reference)) {
                             text(value.orElse(literal("missing value")))
                         }
                         fallback { text(literal("fallback")) }
@@ -1791,7 +1898,7 @@ val DefaultPresentationRuntimeTest by testSuite {
         root.dependencies.presentations
             .single()
             .name shouldBe "invoked"
-        root.dependencies.types.single() shouldBe SkirTypeCodec.encode(TypeUse.Named(id)).getOrThrow()
+        root.dependencies.types.single() shouldBe id.use()
 
         val elements = root.layout.fixedChildren().map(PresentationNode::element)
         val repeated = elements[0] as PresentationElement.RepeatedWrapper
@@ -1811,12 +1918,10 @@ val DefaultPresentationRuntimeTest by testSuite {
                     "typed-layout.bin",
                 ).writeBytes(PresentationNode.serializer.toBytes(root.layout.fixedChildren()[2]).toByteArray())
             val value =
-                com.typewritermc.types.skir.SkirDataValueCodec
-                    .encode(
-                        DataValue.Record(
-                            mapOf("title" to DataValue.StringValue("Authored title")),
-                        ),
-                    ).getOrThrow()
+                DataValue
+                    .record(
+                        mapOf("title" to DataValue.StringValueWrapper("Authored title")),
+                    ).requirePortable()
             java.io
                 .File(
                     output,
@@ -1858,7 +1963,7 @@ val DefaultPresentationRuntimeTest by testSuite {
             .binding.path.segments.size shouldBe 1
 
         val other =
-            collectionSource<Boolean, String>("rows", TypeTemplate.Scalar(ScalarKind.Boolean)) {
+            collectionSource<Boolean, String>("rows", ScalarKind.BOOLEAN.template) {
                 key(literal("same key type"))
             }
         val otherResult =
@@ -1874,7 +1979,7 @@ val DefaultPresentationRuntimeTest by testSuite {
         otherResult.dependencies.collections
             .single()
             .rowType shouldBe
-            SkirTypeCodec.encode(TypeTemplate.Scalar(ScalarKind.Boolean)).getOrThrow()
+            ScalarKind.BOOLEAN.template
         otherResult.dependencies.presentations shouldBe emptyList()
 
         runCatching {
@@ -1915,25 +2020,26 @@ val DefaultPresentationRuntimeTest by testSuite {
     }
 
     test("selects specific presentations before priority and preserves fallback order") {
-        val id = TypeDefinitionId(TypeId.Qualified("test", "RegistrySubject"), 1)
-        val definition = TypeDefinition(id, representation = RepresentationTemplate.Record(emptyList()))
-        val catalog = DefaultCheckedCatalog(CatalogGeneration("presentation registry"), listOf(definition))
-        val checked = (catalog.resolve(TypeUse.Named(id)) as Resolution.Ready).value
+        val id = TypeDefinitionId.qualified("test", "RegistrySubject")
+        val definition =
+            TypeDefinition.partial(id = id, representation = RepresentationTemplate.createRecord(fields = emptyList(), abstract_ = false))
+        val catalog = DefaultCheckedCatalog(CatalogGeneration(value = "presentation registry"), listOf(definition))
+        val checked = (catalog.resolve(id.use()) as Resolution.Ready).value
         val representation =
-            descriptor("generic", PresentationTarget.Representation(com.typewritermc.configuration.RepresentationKind.Record), 100)
-        val named = descriptor("specific", PresentationTarget.Named(TypeTemplate.Named(id)), 10)
+            descriptor("generic", PresentationTarget.RepresentationWrapper(skirout.editor.v1.catalog.RepresentationKind.RECORD), 100)
+        val named = descriptor("specific", PresentationTarget.NamedWrapper(id.namedTemplate()), 10)
         val fallbackFirst =
-            descriptor("fallback first", PresentationTarget.Named(TypeTemplate.Named(id)), 10, PresentationRole.REFERENCE_PREVIEW)
+            descriptor("fallback first", PresentationTarget.NamedWrapper(id.namedTemplate()), 10, PresentationRole.REFERENCE_PREVIEW)
         val fallbackSecond =
-            descriptor("fallback second", PresentationTarget.Named(TypeTemplate.Named(id)), 100, PresentationRole.RESOURCE_SEARCH_RESULT)
+            descriptor("fallback second", PresentationTarget.NamedWrapper(id.namedTemplate()), 100, PresentationRole.RESOURCE_SEARCH_RESULT)
         val registry =
             DefaultPresentationRegistry(
                 catalog,
                 listOf(representation, named, fallbackFirst, fallbackSecond),
                 listOf(
                     RoleFallback(
-                        PresentationRole.REFERENCE_PICKER_RESULT,
-                        listOf(PresentationRole.REFERENCE_PREVIEW, PresentationRole.RESOURCE_SEARCH_RESULT),
+                        role = PresentationRole.REFERENCE_PICKER_RESULT,
+                        parents = listOf(PresentationRole.REFERENCE_PREVIEW, PresentationRole.RESOURCE_SEARCH_RESULT),
                     ),
                 ),
             )
@@ -1944,11 +2050,12 @@ val DefaultPresentationRuntimeTest by testSuite {
     }
 
     test("reference pickers fall back to previews without sharing editing or search roles") {
-        val id = TypeDefinitionId(TypeId.Qualified("test", "ReferenceTarget"), 1)
-        val definition = TypeDefinition(id, representation = RepresentationTemplate.Record(emptyList()))
-        val catalog = DefaultCheckedCatalog(CatalogGeneration("reference fallback"), listOf(definition))
-        val checked = (catalog.resolve(TypeUse.Named(id)) as Resolution.Ready).value
-        val preview = descriptor("preview", PresentationTarget.Named(TypeTemplate.Named(id)), 0, PresentationRole.REFERENCE_PREVIEW)
+        val id = TypeDefinitionId.qualified("test", "ReferenceTarget")
+        val definition =
+            TypeDefinition.partial(id = id, representation = RepresentationTemplate.createRecord(fields = emptyList(), abstract_ = false))
+        val catalog = DefaultCheckedCatalog(CatalogGeneration(value = "reference fallback"), listOf(definition))
+        val checked = (catalog.resolve(id.use()) as Resolution.Ready).value
+        val preview = descriptor("preview", PresentationTarget.NamedWrapper(id.namedTemplate()), 0, PresentationRole.REFERENCE_PREVIEW)
         val registry = DefaultPresentationRegistry(catalog, listOf(preview), com.typewritermc.discovery.DEFAULT_ROLE_FALLBACKS)
 
         (registry.select(PresentationRole.REFERENCE_PICKER_RESULT, checked) as PresentationSelection.Selected)
@@ -1964,11 +2071,12 @@ val DefaultPresentationRuntimeTest by testSuite {
     }
 
     test("inspector presentations do not satisfy workspace selection") {
-        val id = TypeDefinitionId(TypeId.Qualified("test", "RoleSubject"), 1)
-        val definition = TypeDefinition(id, representation = RepresentationTemplate.Record(emptyList()))
-        val catalog = DefaultCheckedCatalog(CatalogGeneration("role separation"), listOf(definition))
-        val checked = (catalog.resolve(TypeUse.Named(id)) as Resolution.Ready).value
-        val inspector = descriptor("inspector", PresentationTarget.Named(TypeTemplate.Named(id)), 10, PresentationRole.INSPECTOR)
+        val id = TypeDefinitionId.qualified("test", "RoleSubject")
+        val definition =
+            TypeDefinition.partial(id = id, representation = RepresentationTemplate.createRecord(fields = emptyList(), abstract_ = false))
+        val catalog = DefaultCheckedCatalog(CatalogGeneration(value = "role separation"), listOf(definition))
+        val checked = (catalog.resolve(id.use()) as Resolution.Ready).value
+        val inspector = descriptor("inspector", PresentationTarget.NamedWrapper(id.namedTemplate()), 10, PresentationRole.INSPECTOR)
         val registry = DefaultPresentationRegistry(catalog, listOf(inspector))
 
         (registry.select(PresentationRole.INSPECTOR, checked) as PresentationSelection.Selected).descriptor.id shouldBe inspector.id
@@ -1977,49 +2085,45 @@ val DefaultPresentationRuntimeTest by testSuite {
     }
 
     test("reports incomparable generic presentation targets as a conflict before priority") {
-        val pairId = TypeDefinitionId(TypeId.Qualified("test", "Pair"), 1)
-        val first = ParameterKey(pairId, 0)
-        val second = ParameterKey(pairId, 1)
+        val pairId = TypeDefinitionId.qualified("test", "Pair")
+        val first = ParameterKey(owner = pairId, index = 0)
+        val second = ParameterKey(owner = pairId, index = 1)
         val definition =
-            TypeDefinition(
-                pairId,
-                listOf(TypeParameter(first, "A"), TypeParameter(second, "B")),
-                RepresentationTemplate.Record(emptyList()),
+            TypeDefinition.partial(
+                id = pairId,
+                parameters =
+                    listOf(
+                        TypeParameter.partial(key = first, name = "A"),
+                        TypeParameter.partial(key = second, name = "B"),
+                    ),
+                representation = RepresentationTemplate.createRecord(fields = emptyList(), abstract_ = false),
             )
-        val catalog = DefaultCheckedCatalog(CatalogGeneration("incomparable presentations"), StandardTypes.definitions + definition)
+        val catalog = DefaultCheckedCatalog(CatalogGeneration(value = "incomparable presentations"), StandardTypes.definitions + definition)
         val actual =
             catalog.ready(
-                TypeUse.Named(
-                    pairId,
+                pairId.use(
                     listOf(
-                        TypeUse.Scalar(ScalarKind.Text),
-                        TypeUse.Named(StandardTypes.list, listOf(TypeUse.Scalar(ScalarKind.Text))),
+                        ScalarKind.TEXT.use,
+                        StandardTypes.list.use(listOf(ScalarKind.TEXT.use)),
                     ),
                 ),
             )
         val left =
             descriptor(
                 "left",
-                PresentationTarget.Named(
-                    TypeTemplate.Named(
-                        pairId,
-                        listOf(TypeTemplate.Scalar(ScalarKind.Text), TypeTemplate.Parameter(first)),
-                    ),
+                PresentationTarget.NamedWrapper(
+                    pairId.namedTemplate(listOf(ScalarKind.TEXT.template, first.template)),
                 ),
                 10,
             )
         val right =
             descriptor(
                 "right",
-                PresentationTarget.Named(
-                    TypeTemplate.Named(
-                        pairId,
+                PresentationTarget.NamedWrapper(
+                    pairId.namedTemplate(
                         listOf(
-                            TypeTemplate.Parameter(first),
-                            TypeTemplate.Named(
-                                StandardTypes.list,
-                                listOf(TypeTemplate.Scalar(ScalarKind.Text)),
-                            ),
+                            first.template,
+                            StandardTypes.list.template(listOf(ScalarKind.TEXT.template)),
                         ),
                     ),
                 ),
@@ -2031,42 +2135,37 @@ val DefaultPresentationRuntimeTest by testSuite {
     }
 
     test("selects repeated generic parameters before a broader target") {
-        val pairId = TypeDefinitionId(TypeId.Qualified("test", "RepeatedPair"), 1)
-        val first = ParameterKey(pairId, 0)
-        val second = ParameterKey(pairId, 1)
+        val pairId = TypeDefinitionId.qualified("test", "RepeatedPair")
+        val first = ParameterKey(owner = pairId, index = 0)
+        val second = ParameterKey(owner = pairId, index = 1)
         val definition =
-            TypeDefinition(
-                pairId,
-                listOf(TypeParameter(first, "A"), TypeParameter(second, "B")),
-                RepresentationTemplate.Record(emptyList()),
+            TypeDefinition.partial(
+                id = pairId,
+                parameters =
+                    listOf(
+                        TypeParameter.partial(key = first, name = "A"),
+                        TypeParameter.partial(key = second, name = "B"),
+                    ),
+                representation = RepresentationTemplate.createRecord(fields = emptyList(), abstract_ = false),
             )
-        val catalog = DefaultCheckedCatalog(CatalogGeneration("repeated parameter presentation"), listOf(definition))
+        val catalog = DefaultCheckedCatalog(CatalogGeneration(value = "repeated parameter presentation"), listOf(definition))
         val actual =
             catalog.ready(
-                TypeUse.Named(
-                    pairId,
-                    listOf(TypeUse.Scalar(ScalarKind.Text), TypeUse.Scalar(ScalarKind.Text)),
-                ),
+                pairId.use(listOf(ScalarKind.TEXT.use, ScalarKind.TEXT.use)),
             )
         val repeated =
             descriptor(
                 "repeated",
-                PresentationTarget.Named(
-                    TypeTemplate.Named(
-                        pairId,
-                        listOf(TypeTemplate.Parameter(first), TypeTemplate.Parameter(first)),
-                    ),
+                PresentationTarget.NamedWrapper(
+                    pairId.namedTemplate(listOf(first.template, first.template)),
                 ),
                 10,
             )
         val broad =
             descriptor(
                 "broad",
-                PresentationTarget.Named(
-                    TypeTemplate.Named(
-                        pairId,
-                        listOf(TypeTemplate.Parameter(first), TypeTemplate.Parameter(second)),
-                    ),
+                PresentationTarget.NamedWrapper(
+                    pairId.namedTemplate(listOf(first.template, second.template)),
                 ),
                 100,
             )
@@ -2077,33 +2176,36 @@ val DefaultPresentationRuntimeTest by testSuite {
     }
 
     test("matches presentation arguments through readable nominal subtypes") {
-        val rewardId = TypeDefinitionId(TypeId.Qualified("test", "Reward"), 1)
-        val coinId = TypeDefinitionId(TypeId.Qualified("test", "CoinReward"), 1)
-        val variableId = TypeDefinitionId(TypeId.Qualified("test", "Variable"), 1)
-        val variableParameter = ParameterKey(variableId, 0)
+        val rewardId = TypeDefinitionId.qualified("test", "Reward")
+        val coinId = TypeDefinitionId.qualified("test", "CoinReward")
+        val variableId = TypeDefinitionId.qualified("test", "Variable")
+        val variableParameter = ParameterKey(owner = variableId, index = 0)
         val catalog =
             DefaultCheckedCatalog(
-                CatalogGeneration("readable presentation argument"),
+                CatalogGeneration(value = "readable presentation argument"),
                 listOf(
-                    TypeDefinition(rewardId, representation = RepresentationTemplate.Record(emptyList(), abstract = true)),
-                    TypeDefinition(
-                        coinId,
-                        representation = RepresentationTemplate.Record(emptyList()),
-                        parents = listOf(TypeTemplate.Named(rewardId)),
+                    TypeDefinition.partial(
+                        id = rewardId,
+                        representation = RepresentationTemplate.createRecord(fields = emptyList(), abstract_ = true),
                     ),
-                    TypeDefinition(
-                        variableId,
-                        parameters = listOf(TypeParameter(variableParameter, "T")),
-                        representation = RepresentationTemplate.Record(emptyList()),
+                    TypeDefinition.partial(
+                        id = coinId,
+                        representation = RepresentationTemplate.createRecord(fields = emptyList(), abstract_ = false),
+                        parents = listOf(rewardId.namedTemplate()),
+                    ),
+                    TypeDefinition.partial(
+                        id = variableId,
+                        parameters = listOf(TypeParameter.partial(key = variableParameter, name = "T")),
+                        representation = RepresentationTemplate.createRecord(fields = emptyList(), abstract_ = false),
                     ),
                 ),
             )
-        val actual = catalog.ready(TypeUse.Named(variableId, listOf(TypeUse.Named(coinId))))
+        val actual = catalog.ready(variableId.use(listOf(coinId.use())))
         val broad =
             descriptor(
                 "reward variable",
-                PresentationTarget.Named(
-                    TypeTemplate.Named(variableId, listOf(TypeTemplate.Named(rewardId))),
+                PresentationTarget.NamedWrapper(
+                    variableId.namedTemplate(listOf(rewardId.template())),
                 ),
                 10,
             )
@@ -2114,41 +2216,44 @@ val DefaultPresentationRuntimeTest by testSuite {
     }
 
     test("selects a concrete generic argument before its readable base argument") {
-        val rewardId = TypeDefinitionId(TypeId.Qualified("test", "SpecificReward"), 1)
-        val coinId = TypeDefinitionId(TypeId.Qualified("test", "SpecificCoinReward"), 1)
-        val variableId = TypeDefinitionId(TypeId.Qualified("test", "SpecificVariable"), 1)
-        val variableParameter = ParameterKey(variableId, 0)
+        val rewardId = TypeDefinitionId.qualified("test", "SpecificReward")
+        val coinId = TypeDefinitionId.qualified("test", "SpecificCoinReward")
+        val variableId = TypeDefinitionId.qualified("test", "SpecificVariable")
+        val variableParameter = ParameterKey(owner = variableId, index = 0)
         val catalog =
             DefaultCheckedCatalog(
-                CatalogGeneration("specific readable presentation argument"),
+                CatalogGeneration(value = "specific readable presentation argument"),
                 listOf(
-                    TypeDefinition(rewardId, representation = RepresentationTemplate.Record(emptyList(), abstract = true)),
-                    TypeDefinition(
-                        coinId,
-                        representation = RepresentationTemplate.Record(emptyList()),
-                        parents = listOf(TypeTemplate.Named(rewardId)),
+                    TypeDefinition.partial(
+                        id = rewardId,
+                        representation = RepresentationTemplate.createRecord(fields = emptyList(), abstract_ = true),
                     ),
-                    TypeDefinition(
-                        variableId,
-                        parameters = listOf(TypeParameter(variableParameter, "T")),
-                        representation = RepresentationTemplate.Record(emptyList()),
+                    TypeDefinition.partial(
+                        id = coinId,
+                        representation = RepresentationTemplate.createRecord(fields = emptyList(), abstract_ = false),
+                        parents = listOf(rewardId.namedTemplate()),
+                    ),
+                    TypeDefinition.partial(
+                        id = variableId,
+                        parameters = listOf(TypeParameter.partial(key = variableParameter, name = "T")),
+                        representation = RepresentationTemplate.createRecord(fields = emptyList(), abstract_ = false),
                     ),
                 ),
             )
-        val actual = catalog.ready(TypeUse.Named(variableId, listOf(TypeUse.Named(coinId))))
+        val actual = catalog.ready(variableId.use(listOf(coinId.use())))
         val concrete =
             descriptor(
                 "coin variable",
-                PresentationTarget.Named(
-                    TypeTemplate.Named(variableId, listOf(TypeTemplate.Named(coinId))),
+                PresentationTarget.NamedWrapper(
+                    variableId.namedTemplate(listOf(coinId.template())),
                 ),
                 10,
             )
         val broad =
             descriptor(
                 "reward variable",
-                PresentationTarget.Named(
-                    TypeTemplate.Named(variableId, listOf(TypeTemplate.Named(rewardId))),
+                PresentationTarget.NamedWrapper(
+                    variableId.namedTemplate(listOf(rewardId.template())),
                 ),
                 100,
             )
@@ -2167,16 +2272,18 @@ private fun descriptor(
     priority: Int,
     role: PresentationRole = PresentationRole.WORKSPACE,
 ): PresentationDescriptor =
-    PresentationDescriptor(
-        com.typewritermc.types.PresentationId("test", name),
+    PresentationDescriptor.of(
+        skirout.editor.v1.type_catalog
+            .PresentationId(namespace = "test", name = name),
         DeclarationOwner(
-            ContributionKey(
-                ContributionSourceId("test"),
-                "main",
-                ProducerId("test"),
-                ContributionName(name.replace(' ', '_')),
-            ),
-            name,
+            source =
+                contributionKey(
+                    ContributionSourceId("test"),
+                    "main",
+                    ProducerId("test"),
+                    ContributionName(name.replace(' ', '_')),
+                ),
+            localIdentity = name,
         ),
         target,
         setOf(role),
@@ -2238,26 +2345,34 @@ private fun ownedResource(
     )
 
 /** Lets the realm root own [members], as every concrete resource type must be owned. */
-private fun rootOwnership(vararg members: TypeDefinitionId): List<com.typewritermc.types.RelationContract> =
+private fun rootOwnership(vararg members: TypeDefinitionId): List<skirout.editor.v1.catalog.RelationContract> =
     members.mapIndexed { index, member ->
-        com.typewritermc.types.RelationContract(
-            id = com.typewritermc.types.RelationId("test.root.owns.$index"),
+        skirout.editor.v1.catalog.RelationContract.of(
+            id =
+                skirout.editor.v1.type_catalog
+                    .RelationId(value = "test.root.owns.$index"),
             first =
-                com.typewritermc.types.EndpointDefinition(
-                    com.typewritermc.types.EndpointId("test.root.owns.$index:first"),
-                    com.typewritermc.types.EndpointSlot.First,
-                    TypeTemplate.Named(com.typewritermc.authoring.RealmRootDefinition.id),
-                    com.typewritermc.types.EndpointCardinality.One,
-                    com.typewritermc.types.RelationDeletePolicy.CASCADE,
+                skirout.editor.v1.catalog.EndpointDefinition(
+                    id = EndpointId(value = "test.root.owns.$index:first"),
+                    slot = skirout.editor.v1.catalog.EndpointSlot.FIRST,
+                    resource =
+                        com.typewritermc.authoring.RealmRootDefinition.id
+                            .namedTemplate(),
+                    cardinality = skirout.editor.v1.catalog.EndpointCardinality.ONE,
+                    onDelete = skirout.editor.v1.catalog.RelationDeletePolicy.CASCADE,
                 ),
             second =
-                com.typewritermc.types.EndpointDefinition(
-                    com.typewritermc.types.EndpointId("test.root.owns.$index:second"),
-                    com.typewritermc.types.EndpointSlot.Second,
-                    TypeTemplate.Named(member),
-                    com.typewritermc.types.EndpointCardinality.Many,
-                    com.typewritermc.types.RelationDeletePolicy.CLEAR,
+                skirout.editor.v1.catalog.EndpointDefinition(
+                    id = EndpointId(value = "test.root.owns.$index:second"),
+                    slot = skirout.editor.v1.catalog.EndpointSlot.SECOND,
+                    resource = member.namedTemplate(),
+                    cardinality = skirout.editor.v1.catalog.EndpointCardinality.MANY,
+                    onDelete = skirout.editor.v1.catalog.RelationDeletePolicy.CLEAR,
                 ),
-            families = setOf(com.typewritermc.types.RelationFamilyId(com.typewritermc.types.RESOURCE_OWNERSHIP_FAMILY_ID)),
+            families =
+                setOf(
+                    skirout.editor.v1.type_catalog
+                        .RelationFamilyId(value = com.typewritermc.types.RESOURCE_OWNERSHIP_FAMILY_ID),
+                ),
         )
     }

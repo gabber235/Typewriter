@@ -308,12 +308,12 @@ Widget _buildAuthoredLinkChoiceResult(
         ],
       );
       // The reference picker is a modal, so its rows are cards.
-      Widget fallback(ResourceAppearance? appearance, String? problem) =>
+      Widget fallback(skir.ResourceAppearance? appearance, String? problem) =>
           SearchResultRow(
             row: row,
             density: SearchResultDensity.card,
             title: appearance?.label ?? choice.label,
-            accent: appearance?.accent,
+            accent: appearance?.accentColor,
             leading: appearance == null
                 ? Icon(switch (choice.kind) {
                     _AuthoredLinkChoiceKind.automatic => Icons.link,
@@ -330,7 +330,7 @@ Widget _buildAuthoredLinkChoiceResult(
       Widget render(
         skir.PresentationNode node,
         PortablePresentationScope targetScope,
-        ResourceAppearance appearance,
+        skir.ResourceAppearance appearance,
       ) => PortableResultContent(
         node: node,
         appearance: appearance,

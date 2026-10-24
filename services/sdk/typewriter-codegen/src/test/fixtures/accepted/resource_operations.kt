@@ -1,6 +1,6 @@
 package fixture
 
-import com.typewritermc.checking.CatalogGeneration
+import skirout.editor.v1.type_catalog.CatalogGeneration
 import com.typewritermc.discovery.*
 import com.typewritermc.imprint.ArtifactId
 import com.typewritermc.library.TagOperation
@@ -99,7 +99,7 @@ fun main(args: Array<String>) {
             DiscoveryDomains.Realm,
             runtimeServices = mapOf(PresentationRuntime::class.java to DefaultPresentationRuntime()),
         ).use { deployment ->
-            val assembly = deployment.providers.contributions.assemble(CatalogAssemblyContext(CatalogGeneration("fixture")))
+            val assembly = deployment.providers.contributions.assemble(CatalogAssemblyContext(CatalogGeneration(value = "fixture")))
             check(assembly.operations.diagnostics.isEmpty()) { assembly.operations.failures.joinToString { it.cause.stackTraceToString() } }
             val fixture = assembly.operations.operations.filter { it.definition.id.artifact == "fixture" }
             check(fixture.map { it.definition.presentation.label }.toSet() == setOf("Reset reward", "Rename", "Touch everything"))

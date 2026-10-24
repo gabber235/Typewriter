@@ -3,14 +3,29 @@ package com.typewritermc.types
 import com.typewritermc.authoring.CaptureResult
 import com.typewritermc.authoring.CompleteValue
 import com.typewritermc.authoring.CompletenessResult
-import com.typewritermc.authoring.NativeBindingId
-import com.typewritermc.authoring.PortableValue
 import com.typewritermc.authoring.complete
-import com.typewritermc.checking.Diagnostic
 import com.typewritermc.types.catalog.CheckedCatalog
 import com.typewritermc.types.catalog.CheckedType
 import com.typewritermc.types.catalog.Resolution
-import com.typewritermc.types.catalog.ResolvedRepresentation
+import skirout.editor.v1.diagnostic.Diagnostic
+import skirout.editor.v1.type_catalog.CollectionKind
+import skirout.editor.v1.type_catalog.DataValue
+import skirout.editor.v1.type_catalog.EndpointId
+import skirout.editor.v1.type_catalog.FieldOwner
+import skirout.editor.v1.type_catalog.FloatWidth
+import skirout.editor.v1.type_catalog.IntegerWidth
+import skirout.editor.v1.type_catalog.ItemId
+import skirout.editor.v1.type_catalog.LinkTarget
+import skirout.editor.v1.type_catalog.ListItem
+import skirout.editor.v1.type_catalog.MapRow
+import skirout.editor.v1.type_catalog.NamedTypeUse
+import skirout.editor.v1.type_catalog.NativeBindingId
+import skirout.editor.v1.type_catalog.ResolvedRepresentation
+import skirout.editor.v1.type_catalog.ScalarKind
+import skirout.editor.v1.type_catalog.TypeDefinitionId
+import skirout.editor.v1.type_catalog.TypeTemplate
+import skirout.editor.v1.type_catalog.TypeUse
+import skirout.editor.v1.typed_value.PortableValue
 import java.math.BigDecimal
 import java.math.BigInteger
 
@@ -95,8 +110,8 @@ class FactoryNativeBindingRegistry(
 
     override fun defaultedFields(actual: CheckedType): Set<FieldOwner> {
         requireCurrentCatalog(actual)
-        val use = actual.use as? TypeUse.Named ?: return emptySet()
-        return defaultedFields(use.definition)
+        val use = actual.use as? TypeUse.NamedWrapper ?: return emptySet()
+        return defaultedFields(use.value.definition)
     }
 
     override fun defaultedFields(definition: TypeDefinitionId): Set<FieldOwner> {
@@ -120,7 +135,7 @@ class FactoryNativeBindingRegistry(
         if (expectedUse == value.schema.use) return bind(value.schema).decode(value)
         val checked = resolve(expectedUse)
         val authored = value.value
-        val portable = if (authored is DataValue.Named) authored.payload else authored
+        val portable = if (authored is DataValue.NamedWrapper) authored.payload else authored
         val complete =
             when (val result = checked.complete(portable)) {
                 is CompletenessResult.Complete -> {
@@ -143,14 +158,14 @@ class FactoryNativeBindingRegistry(
         supplied: Map<FieldOwner, CompleteValue>,
     ): CaptureResult {
         requireCurrentCatalog(actual)
-        val use = actual.use as? TypeUse.Named ?: return CaptureResult.Captured(emptyMap())
-        val candidates = factoriesByDefinition[use.definition].orEmpty()
+        val use = actual.use as? TypeUse.NamedWrapper ?: return CaptureResult.Captured(emptyMap())
+        val candidates = factoriesByDefinition[use.value.definition].orEmpty()
         if (candidates.isEmpty()) return CaptureResult.Captured(emptyMap())
         require(candidates.size == 1) {
-            "Expected one native binding factory for ${use.definition}, found ${candidates.size}."
+            "Expected one native binding factory for ${use.value.definition}, found ${candidates.size}."
         }
         val plan = candidates.single().constructionPlan ?: return CaptureResult.Captured(emptyMap())
-        return plan.sample(appliedArguments(use), supplied)
+        return plan.sample(appliedArguments(use.value), supplied)
     }
 
     private fun requireCurrentCatalog(actual: CheckedType) {
@@ -166,41 +181,45 @@ class FactoryNativeBindingRegistry(
 
     private fun createBinding(actual: CheckedType): NativeBinding<*> =
         when (val use = actual.use) {
-            is TypeUse.Scalar -> {
+            is TypeUse.ScalarWrapper -> {
                 ScalarNativeBinding(actual, use)
             }
 
-            is TypeUse.Nullable -> {
-                NullableNativeBinding(actual, use) { binding(resolve(use.value)) }
+            is TypeUse.NullableWrapper -> {
+                NullableNativeBinding(actual, use) { binding(resolve(use.value.value)) }
             }
 
-            is TypeUse.Named -> {
-                collectionBinding(actual, use) ?: run {
-                    val candidates = factoriesByDefinition[use.definition].orEmpty()
+            is TypeUse.NamedWrapper -> {
+                collectionBinding(actual, use.value) ?: run {
+                    val candidates = factoriesByDefinition[use.value.definition].orEmpty()
                     if (candidates.isEmpty()) {
-                        val record = actual.schema.representation as? ResolvedRepresentation.Record
-                        if (record?.abstract == true) {
-                            PolymorphicNativeBinding(actual, use, catalog, this)
+                        val record = actual.schema.representation as? ResolvedRepresentation.RecordWrapper
+                        if (record?.value?.abstract_ == true) {
+                            PolymorphicNativeBinding(actual, use.value, catalog, this)
                         } else {
-                            PortableNativeBinding(actual, use)
+                            PortableNativeBinding(actual, use.value)
                         }
                     } else {
                         require(candidates.size == 1) {
-                            "Expected one native binding factory for ${use.definition}, found ${candidates.size}."
+                            "Expected one native binding factory for ${use.value.definition}, found ${candidates.size}."
                         }
                         FactoryCheckedNativeBinding(
                             actual,
                             candidates.single().bind(
                                 actual,
-                                appliedArguments(use),
+                                appliedArguments(use.value),
                             ),
                         )
                     }
                 }
             }
+
+            else -> {
+                unknownVariant(use)
+            }
         }
 
-    private fun appliedArguments(use: TypeUse.Named): com.typewritermc.authoring.AppliedNativeArguments =
+    private fun appliedArguments(use: NamedTypeUse): com.typewritermc.authoring.AppliedNativeArguments =
         com.typewritermc.authoring.AppliedNativeArguments(
             use.arguments,
             use.arguments.map { binding(resolve(it)) },
@@ -215,27 +234,28 @@ class FactoryNativeBindingRegistry(
 
     private fun collectionBinding(
         actual: CheckedType,
-        use: TypeUse.Named,
+        use: NamedTypeUse,
     ): NativeBinding<*>? =
         when (val representation = actual.schema.representation) {
-            is ResolvedRepresentation.Sequence -> {
-                when (representation.kind) {
-                    CollectionKind.List -> ListNativeBinding(use, actual) { binding(resolve(representation.item)) }
-                    CollectionKind.Set -> SetNativeBinding(use, actual) { binding(resolve(representation.item)) }
+            is ResolvedRepresentation.SequenceWrapper -> {
+                when (representation.value.kind) {
+                    CollectionKind.LIST -> ListNativeBinding(use, actual) { binding(resolve(representation.value.item)) }
+                    CollectionKind.SET -> SetNativeBinding(use, actual) { binding(resolve(representation.value.item)) }
+                    else -> unknownVariant(representation.value.kind)
                 }
             }
 
-            is ResolvedRepresentation.Mapping -> {
+            is ResolvedRepresentation.MappingWrapper -> {
                 MapNativeBinding(
                     use,
                     actual,
-                    resolveKey = { binding(resolve(representation.key)) },
-                    resolveValue = { binding(resolve(representation.value)) },
+                    resolveKey = { binding(resolve(representation.value.key)) },
+                    resolveValue = { binding(resolve(representation.value.value)) },
                 )
             }
 
-            is ResolvedRepresentation.Link -> {
-                LinkNativeBinding(use, actual, representation.endpoint)
+            is ResolvedRepresentation.LinkWrapper -> {
+                LinkNativeBinding(use, actual, representation.value.endpoint)
             }
 
             else -> {
@@ -246,31 +266,37 @@ class FactoryNativeBindingRegistry(
 
 private fun TypeTemplate.concreteFor(actual: TypeUse): TypeUse =
     when (this) {
-        is TypeTemplate.Parameter -> {
+        is TypeTemplate.ParameterWrapper -> {
             actual
         }
 
-        is TypeTemplate.Scalar -> {
-            TypeUse.Scalar(kind)
+        is TypeTemplate.ScalarWrapper -> {
+            value.use
         }
 
-        is TypeTemplate.Nullable -> {
-            if (actual is TypeUse.Nullable) {
-                TypeUse.Nullable(
-                    value.concreteFor(actual.value),
-                )
+        is TypeTemplate.NullableWrapper -> {
+            if (actual is TypeUse.NullableWrapper) {
+                value.value.concreteFor(actual.value.value).nullable()
             } else {
-                TypeUse.Nullable(value.concreteFor(actual))
+                value.value.concreteFor(actual).nullable()
             }
         }
 
-        is TypeTemplate.Named -> {
-            val named = actual as? TypeUse.Named
-            if (named?.definition == definition && named.arguments.size == arguments.size) {
-                TypeUse.Named(definition, arguments.zip(named.arguments).map { (template, argument) -> template.concreteFor(argument) })
+        is TypeTemplate.NamedWrapper -> {
+            val named = actual as? TypeUse.NamedWrapper
+            if (named?.value?.definition == value.definition && named.value.arguments.size == value.arguments.size) {
+                value.definition.use(
+                    value.arguments.zip(named.value.arguments).map { (template, argument) ->
+                        template.concreteFor(argument)
+                    },
+                )
             } else {
                 actual
             }
+        }
+
+        else -> {
+            unknownVariant(this)
         }
     }
 
@@ -284,7 +310,7 @@ private class DeferredNativeBinding(
     override val provider: NativeBindingId
         get() = requireDelegate().provider
     override val signature: String
-        get() = delegate?.signature ?: checked.use.toString()
+        get() = delegate?.signature ?: checked.use.canonicalText
     override val actualType: TypeUse
         get() = checked.use
     override val nativeClass: kotlin.reflect.KClass<*>?
@@ -311,37 +337,39 @@ private class DeferredNativeBinding(
             )
 }
 
-private val FRAMEWORK_NATIVE_BINDING = NativeBindingId("typewriter.framework")
+private val FRAMEWORK_NATIVE_BINDING = NativeBindingId(value = "typewriter.framework")
 
 private class PortableNativeBinding(
     override val checked: CheckedType,
-    override val actualType: TypeUse.Named,
+    private val application: NamedTypeUse,
 ) : NativeBinding<PortableValue>,
     GeneratedCheckedNativeBinding {
-    override val provider: NativeBindingId = NativeBindingId("typewriter.portable")
-    override val signature: String = "portable($actualType)"
+    override val actualType: TypeUse = application.use
+    override val provider: NativeBindingId = NativeBindingId(value = "typewriter.portable")
+    override val signature: String = "portable(${actualType.canonicalText})"
     override val opaque: Boolean = true
 
     override fun encode(value: PortableValue): DataValue {
         if (value.actualType != actualType) {
             throw NativeBindingException("wrong_portable_actual_type", "The portable value type does not match its native binding.")
         }
-        return DataValue.Named(actualType, value.payload)
+        return DataValue.named(application, value.payload)
     }
 
-    override fun decode(value: CompleteValue): PortableValue = PortableValue(actualType, value.payload<DataValue>())
+    override fun decode(value: CompleteValue): PortableValue = PortableValue(actualType = actualType, payload = value.payload<DataValue>())
 }
 
 private class PolymorphicNativeBinding(
     override val checked: CheckedType,
-    override val actualType: TypeUse.Named,
+    private val application: NamedTypeUse,
     private val catalog: CheckedCatalog,
     private val registry: FactoryNativeBindingRegistry,
 ) : NativeBinding<Any>,
     GeneratedCheckedNativeBinding,
     AuthoredNativeBinding {
-    override val provider: NativeBindingId = NativeBindingId("typewriter.polymorphic")
-    override val signature: String = "polymorphic($actualType)"
+    override val actualType: TypeUse = application.use
+    override val provider: NativeBindingId = NativeBindingId(value = "typewriter.polymorphic")
+    override val signature: String = "polymorphic(${actualType.canonicalText})"
 
     override fun encode(value: Any): DataValue {
         val candidates =
@@ -363,13 +391,13 @@ private class PolymorphicNativeBinding(
 
     override fun decodeAuthored(value: DataValue): Any {
         val named =
-            value as? DataValue.Named
+            value as? DataValue.NamedWrapper
                 ?: throw NativeBindingException("missing_polymorphic_type_tag", "A polymorphic value requires its concrete named type.")
-        if (!catalog.isReadableAs(named.actualType, actualType)) {
+        if (!catalog.isReadableAs(named.actualType.use, actualType)) {
             throw NativeBindingException("unreadable_polymorphic_type", "The concrete value is not readable as its declared type.")
         }
         val concrete =
-            when (val resolution = catalog.resolve(named.actualType)) {
+            when (val resolution = catalog.resolve(named.actualType.use)) {
                 is Resolution.Ready -> {
                     resolution.value
                 }
@@ -416,90 +444,98 @@ private class FactoryCheckedNativeBinding(
 
 private class ScalarNativeBinding(
     override val checked: CheckedType,
-    override val actualType: TypeUse.Scalar,
+    override val actualType: TypeUse.ScalarWrapper,
 ) : NativeBinding<Any?>,
     CheckedNativeBinding {
     override val provider: NativeBindingId = FRAMEWORK_NATIVE_BINDING
-    override val signature: String = actualType.toString()
+    override val signature: String = actualType.canonicalText
 
     override fun encode(value: Any?): DataValue =
-        when (val kind = actualType.kind) {
-            ScalarKind.Unit -> {
-                DataValue.Unit
+        when (val kind = actualType.value) {
+            ScalarKind.UNIT -> {
+                DataValue.UNIT
             }
 
-            ScalarKind.Boolean -> {
-                DataValue.Boolean(value as Boolean)
+            ScalarKind.BOOLEAN -> {
+                DataValue.BooleanWrapper(value as Boolean)
             }
 
-            ScalarKind.Text -> {
-                DataValue.StringValue(value as String)
+            ScalarKind.TEXT -> {
+                DataValue.StringValueWrapper(value as String)
             }
 
-            ScalarKind.Bytes -> {
-                DataValue.Bytes(value as ByteArray)
+            ScalarKind.BYTES -> {
+                DataValue.bytes(value as ByteArray)
             }
 
-            is ScalarKind.Integer -> {
-                DataValue.Integer(value.toBigInteger(kind.width))
+            is ScalarKind.IntegerWrapper -> {
+                DataValue.integer(value.toBigInteger(kind.value.width))
             }
 
-            is ScalarKind.Float -> {
-                when (kind.width) {
-                    FloatWidth.FLOAT_32 -> {
+            is ScalarKind.FloatWrapper -> {
+                when (kind.value.width) {
+                    FloatWidth.THIRTY_TWO -> {
                         val number =
                             value as? Float
                                 ?: throw NativeBindingException("wrong_native_float", "Float32 requires a Kotlin Float value.")
-                        DataValue.Float(number.toDouble())
+                        DataValue.FloatWrapper(number.toDouble())
                     }
 
-                    FloatWidth.FLOAT_64 -> {
+                    FloatWidth.SIXTY_FOUR -> {
                         val number =
                             value as? Double
                                 ?: throw NativeBindingException("wrong_native_float", "Float64 requires a Kotlin Double value.")
-                        DataValue.Float(number)
+                        DataValue.FloatWrapper(number)
+                    }
+
+                    else -> {
+                        unknownVariant(kind.value.width)
                     }
                 }
             }
 
-            ScalarKind.Decimal -> {
-                DataValue.Decimal((value as BigDecimal).toPlainString())
+            ScalarKind.DECIMAL -> {
+                DataValue.DecimalWrapper((value as BigDecimal).toPlainString())
             }
 
-            ScalarKind.Timestamp -> {
-                DataValue.Timestamp(value as kotlin.time.Instant)
+            ScalarKind.TIMESTAMP -> {
+                DataValue.timestamp(value as kotlin.time.Instant)
             }
 
-            ScalarKind.Duration -> {
-                DataValue.Duration(value as kotlin.time.Duration)
+            ScalarKind.DURATION -> {
+                DataValue.duration(value as kotlin.time.Duration)
+            }
+
+            else -> {
+                unknownVariant(kind)
             }
         }
 
     override fun decode(value: CompleteValue): Any? =
-        when (val kind = actualType.kind) {
-            ScalarKind.Unit -> {
+        when (val kind = actualType.value) {
+            ScalarKind.UNIT -> {
                 Unit
             }
 
-            ScalarKind.Boolean -> {
-                (value.value as DataValue.Boolean).value
+            ScalarKind.BOOLEAN -> {
+                (value.value as DataValue.BooleanWrapper).value
             }
 
-            ScalarKind.Text -> {
-                (value.value as DataValue.StringValue).value
+            ScalarKind.TEXT -> {
+                (value.value as DataValue.StringValueWrapper).value
             }
 
-            ScalarKind.Bytes -> {
-                (value.value as DataValue.Bytes).toByteArray()
+            ScalarKind.BYTES -> {
+                (value.value as DataValue.BytesWrapper).value.toByteArray()
             }
 
-            is ScalarKind.Integer -> {
-                (value.value as DataValue.Integer).value.toNativeInteger(kind.width)
+            is ScalarKind.IntegerWrapper -> {
+                (value.value as DataValue.IntegerWrapper).bigInteger.toNativeInteger(kind.value.width)
             }
 
-            is ScalarKind.Float -> {
-                val number = (value.value as DataValue.Float).value
-                if (kind.width == FloatWidth.FLOAT_32) {
+            is ScalarKind.FloatWrapper -> {
+                val number = (value.value as DataValue.FloatWrapper).value
+                if (kind.value.width == FloatWidth.THIRTY_TWO) {
                     val narrowed = number.toFloat()
                     if (!narrowed.isFinite()) throw NativeBindingException("float32_out_of_range", "Float32 value is out of range.")
                     if (narrowed.toDouble() != number) {
@@ -514,23 +550,27 @@ private class ScalarNativeBinding(
                 }
             }
 
-            ScalarKind.Decimal -> {
-                BigDecimal((value.value as DataValue.Decimal).value)
+            ScalarKind.DECIMAL -> {
+                BigDecimal((value.value as DataValue.DecimalWrapper).value)
             }
 
-            ScalarKind.Timestamp -> {
-                (value.value as DataValue.Timestamp).value
+            ScalarKind.TIMESTAMP -> {
+                (value.value as DataValue.TimestampWrapper).instant
             }
 
-            ScalarKind.Duration -> {
-                (value.value as DataValue.Duration).value
+            ScalarKind.DURATION -> {
+                (value.value as DataValue.DurationWrapper).duration
+            }
+
+            else -> {
+                unknownVariant(kind)
             }
         }
 }
 
 private class NullableNativeBinding(
     override val checked: CheckedType,
-    override val actualType: TypeUse.Nullable,
+    override val actualType: TypeUse.NullableWrapper,
     resolveInner: () -> NativeBinding<*>,
 ) : NativeBinding<Any?>,
     CheckedNativeBinding {
@@ -538,62 +578,67 @@ private class NullableNativeBinding(
     private val inner by lazy(LazyThreadSafetyMode.SYNCHRONIZED, resolveInner)
     override val signature: String get() = "nullable(${inner.signature})"
 
-    override fun encode(value: Any?): DataValue = if (value == null) DataValue.Null else inner.encodeAny(value)
+    override fun encode(value: Any?): DataValue = if (value == null) DataValue.NULL else inner.encodeAny(value)
 
-    override fun decode(value: CompleteValue): Any? = if (value.value == DataValue.Null) null else inner.decodeAuthoredAny(value.value)
+    override fun decode(value: CompleteValue): Any? = if (value.value == DataValue.NULL) null else inner.decodeAuthoredAny(value.value)
 }
 
 private class ListNativeBinding(
-    override val actualType: TypeUse.Named,
+    private val application: NamedTypeUse,
     override val checked: CheckedType,
     resolveItem: () -> NativeBinding<*>,
 ) : NativeBinding<List<*>>,
     CheckedNativeBinding {
+    override val actualType: TypeUse = application.use
     override val provider: NativeBindingId = FRAMEWORK_NATIVE_BINDING
     private val item by lazy(LazyThreadSafetyMode.SYNCHRONIZED, resolveItem)
     override val signature: String get() = "list(${item.signature})"
 
     override fun encode(value: List<*>): DataValue =
-        DataValue.Named(
-            actualType,
-            DataValue.ListValue(
+        DataValue.named(
+            application,
+            DataValue.listValue(
                 value.mapIndexed {
                     index,
                     element,
                     ->
-                    com.typewritermc.types.ListItem(generatedItemId(index), item.encodeAny(element))
+                    ListItem(id = generatedItemId(index), value = item.encodeAny(element))
                 },
             ),
         )
 
-    override fun decode(value: CompleteValue): List<*> = value.payload<DataValue.ListValue>().items.map { item.decodeAuthoredAny(it.value) }
+    override fun decode(value: CompleteValue): List<*> =
+        value.payload<DataValue.ListValueWrapper>().items.map {
+            item.decodeAuthoredAny(it.value)
+        }
 }
 
 private class SetNativeBinding(
-    override val actualType: TypeUse.Named,
+    private val application: NamedTypeUse,
     override val checked: CheckedType,
     resolveItem: () -> NativeBinding<*>,
 ) : NativeBinding<Set<*>>,
     CheckedNativeBinding {
+    override val actualType: TypeUse = application.use
     override val provider: NativeBindingId = FRAMEWORK_NATIVE_BINDING
     private val item by lazy(LazyThreadSafetyMode.SYNCHRONIZED, resolveItem)
     override val signature: String get() = "set(${item.signature})"
 
     override fun encode(value: Set<*>): DataValue =
-        DataValue.Named(
-            actualType,
-            DataValue.SetValue(
+        DataValue.named(
+            application,
+            DataValue.setValue(
                 value.mapIndexed {
                     index,
                     element,
                     ->
-                    com.typewritermc.types.ListItem(generatedItemId(index), item.encodeAny(element))
+                    ListItem(id = generatedItemId(index), value = item.encodeAny(element))
                 },
             ),
         )
 
     override fun decode(value: CompleteValue): Set<*> {
-        val authored = value.payload<DataValue.SetValue>().items.map { it.value }
+        val authored = value.payload<DataValue.SetValueWrapper>().items.map { it.value }
         if (authored.map(DataValue::canonicalValueKey).distinct().size != authored.size) {
             throw NativeBindingException("duplicate_set_value", "A native Set cannot preserve duplicate authored values.")
         }
@@ -606,29 +651,30 @@ private class SetNativeBinding(
 }
 
 private class MapNativeBinding(
-    override val actualType: TypeUse.Named,
+    private val application: NamedTypeUse,
     override val checked: CheckedType,
     resolveKey: () -> NativeBinding<*>,
     resolveValue: () -> NativeBinding<*>,
 ) : NativeBinding<Map<*, *>>,
     CheckedNativeBinding {
+    override val actualType: TypeUse = application.use
     override val provider: NativeBindingId = FRAMEWORK_NATIVE_BINDING
     private val key by lazy(LazyThreadSafetyMode.SYNCHRONIZED, resolveKey)
     private val value by lazy(LazyThreadSafetyMode.SYNCHRONIZED, resolveValue)
     override val signature: String get() = "map(${key.signature},${value.signature})"
 
     override fun encode(value: Map<*, *>): DataValue =
-        DataValue.Named(
-            actualType,
-            DataValue.MapValue(
+        DataValue.named(
+            application,
+            DataValue.mapValue(
                 value.entries.mapIndexed { index, entry ->
-                    MapRow(generatedItemId(index), key.encodeAny(entry.key), this.value.encodeAny(entry.value))
+                    MapRow(id = generatedItemId(index), key = key.encodeAny(entry.key), value = this.value.encodeAny(entry.value))
                 },
             ),
         )
 
     override fun decode(value: CompleteValue): Map<*, *> {
-        val authored = value.payload<DataValue.MapValue>().rows
+        val authored = value.payload<DataValue.MapValueWrapper>().rows
         if (authored.map { it.key.canonicalValueKey() }.distinct().size != authored.size) {
             throw NativeBindingException("duplicate_map_key", "A native Map cannot preserve duplicate authored keys.")
         }
@@ -644,26 +690,28 @@ private class MapNativeBinding(
 }
 
 private class LinkNativeBinding(
-    override val actualType: TypeUse.Named,
+    private val application: NamedTypeUse,
     override val checked: CheckedType,
     private val endpoint: EndpointId,
 ) : NativeBinding<Ref<*, *>>,
     CheckedNativeBinding {
+    override val actualType: TypeUse = application.use
     override val provider: NativeBindingId = FRAMEWORK_NATIVE_BINDING
     override val signature: String = "link(${endpoint.value})"
 
     override fun encode(value: Ref<*, *>): DataValue =
-        DataValue.Named(
-            actualType,
-            DataValue.Link(endpoint, LinkTarget(value.target, value.opposite)),
+        DataValue.named(
+            application,
+            DataValue.createLink(endpoint = endpoint, target = LinkTarget(resource = value.target.toSkir(), opposite = value.opposite)),
         )
 
     override fun decode(value: CompleteValue): Ref<*, *> {
-        val link = value.payload<DataValue.Link>()
+        val link = value.payload<DataValue.LinkWrapper>()
         if (link.endpoint != endpoint) {
             throw NativeBindingException("wrong_link_endpoint", "The authored link endpoint does not match its native binding.")
         }
-        return Ref<RelationshipEndpoint<Resource, Resource>, Resource>(link.target.resource, link.target.opposite)
+        val target = link.value.target
+        return Ref<RelationshipEndpoint<Resource, Resource>, Resource>(target.resource.toResourceId(), target.opposite)
     }
 }
 
@@ -695,7 +743,7 @@ private fun CompletenessResult.requireComplete(): CompleteValue =
     }
 
 private inline fun <reified T : DataValue> CompleteValue.payload(): T {
-    val payload = (value as? DataValue.Named)?.payload ?: value
+    val payload = (value as? DataValue.NamedWrapper)?.payload ?: value
     return payload as? T ?: throw NativeBindingException("wrong_native_representation", "Expected ${T::class.simpleName}.")
 }
 
@@ -710,19 +758,20 @@ private fun Any?.toBigInteger(width: IntegerWidth): BigInteger =
         is UInt -> BigInteger(toString())
         is ULong -> BigInteger(toString())
         is BigInteger -> this
-        else -> throw NativeBindingException("wrong_native_integer", "Unsupported ${width.name} native integer value.")
+        else -> throw NativeBindingException("wrong_native_integer", "Unsupported $width native integer value.")
     }
 
 private fun BigInteger.toNativeInteger(width: IntegerWidth): Any =
     when (width) {
-        IntegerWidth.SIGNED_8 -> toByte()
-        IntegerWidth.SIGNED_16 -> toShort()
-        IntegerWidth.SIGNED_32 -> toInt()
-        IntegerWidth.SIGNED_64 -> toLong()
-        IntegerWidth.UNSIGNED_8 -> toInt().toUByte()
-        IntegerWidth.UNSIGNED_16 -> toInt().toUShort()
-        IntegerWidth.UNSIGNED_32 -> toLong().toUInt()
-        IntegerWidth.UNSIGNED_64 -> toString().toULong()
+        IntegerWidth.SIGNED_EIGHT -> toByte()
+        IntegerWidth.SIGNED_SIXTEEN -> toShort()
+        IntegerWidth.SIGNED_THIRTY_TWO -> toInt()
+        IntegerWidth.SIGNED_SIXTY_FOUR -> toLong()
+        IntegerWidth.UNSIGNED_EIGHT -> toInt().toUByte()
+        IntegerWidth.UNSIGNED_SIXTEEN -> toInt().toUShort()
+        IntegerWidth.UNSIGNED_THIRTY_TWO -> toLong().toUInt()
+        IntegerWidth.UNSIGNED_SIXTY_FOUR -> toString().toULong()
+        else -> unknownVariant(width)
     }
 
-private fun generatedItemId(index: Int): com.typewritermc.authoring.ItemId = com.typewritermc.authoring.ItemId("native:$index")
+private fun generatedItemId(index: Int): ItemId = ItemId(value = "native:$index")

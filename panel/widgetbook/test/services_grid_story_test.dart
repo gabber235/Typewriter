@@ -16,25 +16,25 @@ void main() {
       "STANDALONE",
     });
     expect(topology.hosts.map((host) => host.state.status).toSet(), {
-      TopologyHostStatus.active,
-      TopologyHostStatus.reconciling,
-      TopologyHostStatus.drifted,
-      TopologyHostStatus.failed,
-      TopologyHostStatus.offline,
+      skir.HostRuntimeStatus.active,
+      skir.HostRuntimeStatus.reconciling,
+      skir.HostRuntimeStatus.drifted,
+      skir.HostRuntimeStatus.failed,
+      skir.HostRuntimeStatus.offline,
     });
     expect(
       {
-        ...topology.realmInstances.map((realm) => realm.state.status),
-        ...topology.engineInstances.map((engine) => engine.state.status),
+        ...topology.realms.map((realm) => realm.state.status),
+        ...topology.engines.map((engine) => engine.state.status),
       },
       {
-        TopologyRuntimeStatus.absent,
-        TopologyRuntimeStatus.staging,
-        TopologyRuntimeStatus.active,
-        TopologyRuntimeStatus.quiescing,
-        TopologyRuntimeStatus.failed,
-        TopologyRuntimeStatus.rolledBack,
-        TopologyRuntimeStatus.drifted,
+        skir.ChildRuntimeStatus.absent,
+        skir.ChildRuntimeStatus.staging,
+        skir.ChildRuntimeStatus.active,
+        skir.ChildRuntimeStatus.quiescing,
+        skir.ChildRuntimeStatus.failed,
+        skir.ChildRuntimeStatus.rolledBack,
+        skir.ChildRuntimeStatus.drifted,
       },
     );
     expect(
@@ -121,8 +121,8 @@ void main() {
     tester,
   ) async {
     final scenario = completeTopologyScenario();
-    final failed = scenario.topology.realmInstances.firstWhere(
-      (realm) => realm.state.status == TopologyRuntimeStatus.failed,
+    final failed = scenario.topology.realms.firstWhere(
+      (realm) => realm.state.status == skir.ChildRuntimeStatus.failed,
     );
     await tester.pumpWidget(
       runtimeInspectorStory(
@@ -139,7 +139,7 @@ void main() {
     expect(find.byType(TextFormField), findsNothing);
     expect(tester.takeException(), isNull);
 
-    final engine = scenario.topology.engineInstances.last;
+    final engine = scenario.topology.engines.last;
     await tester.pumpWidget(
       runtimeInspectorStory(
         host: engine.portablePresentationHost(),
@@ -244,19 +244,20 @@ void main() {
 class _StoryServices extends CanonicalOrganizationServices {
   _StoryServices(this.services);
 
-  final List<Service> services;
+  final List<skir.Service> services;
 
   @override
-  Stream<List<Service>> build(skir.RecordId organizationId) =>
+  Stream<List<skir.Service>> build(skir.RecordId organizationId) =>
       Stream.value(services);
 }
 
 class _StoryTopology extends OrganizationTopologyController {
   _StoryTopology(this.topology);
 
-  final OrganizationTopology topology;
+  final skir.OrganizationTopologySnapshot topology;
 
   @override
-  Stream<OrganizationTopology> build(skir.RecordId organizationId) =>
-      Stream.value(topology);
+  Stream<skir.OrganizationTopologySnapshot> build(
+    skir.RecordId organizationId,
+  ) => Stream.value(topology);
 }

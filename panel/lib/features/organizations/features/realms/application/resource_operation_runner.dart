@@ -252,7 +252,7 @@ final class ResourceOperationRunner {
             retryMessage = staged is EditStageRejected
                 ? staged.message
                 : "The operation made no changes";
-          case skir.AuthoringActionResult_staleObservationWrapper():
+          case skir.AuthoringActionResult_staleObservationErrorWrapper():
             await workspace.refreshConfirmed();
             answers.clear();
             choices = [];
@@ -371,7 +371,7 @@ final class ResourceOperationRunner {
             await for (final update in commands.watchSearch(scoped)) {
               if (!mutationAllowed || input.revision != revision) return;
               if (update
-                  is skir.RealmPresentationSearchUpdate_staleObservationWrapper) {
+                  is skir.RealmPresentationSearchUpdate_staleObservationErrorWrapper) {
                 stale = true;
                 break;
               }
@@ -480,13 +480,13 @@ final class ResourceOperationRunner {
 
   String _failure(skir.AuthoringActionResult result) {
     final diagnostics = switch (result) {
-      skir.AuthoringActionResult_invalidWrapper(:final value) =>
+      skir.AuthoringActionResult_invalidErrorWrapper(:final value) =>
         value.diagnostics,
-      skir.AuthoringActionResult_unavailableWrapper(:final value) =>
+      skir.AuthoringActionResult_unavailableErrorWrapper(:final value) =>
         value.diagnostics,
-      skir.AuthoringActionResult_permissionDeniedWrapper(:final value) =>
+      skir.AuthoringActionResult_permissionDeniedErrorWrapper(:final value) =>
         value.diagnostics,
-      skir.AuthoringActionResult_failedWrapper(:final value) =>
+      skir.AuthoringActionResult_failedErrorWrapper(:final value) =>
         value.diagnostics,
       _ => null,
     };

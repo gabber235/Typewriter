@@ -94,9 +94,9 @@ void main() {
               ),
               row: _row(),
               density: density,
-              appearance: ResourceAppearance(
+              appearance: skir.ResourceAppearance(
                 label: "Main story",
-                accent: accent,
+                accent: accent.toSkirColor(),
                 icon: icon,
               ),
               kindLabel: "Book",
@@ -143,9 +143,9 @@ void main() {
         ),
         row: _row(),
         density: SearchResultDensity.card,
-        appearance: ResourceAppearance(
+        appearance: skir.ResourceAppearance(
           label: "Lost tag",
-          accent: const Color(0xff9e9e9e),
+          accent: const Color(0xff9e9e9e).toSkirColor(),
           icon: skir.Icon.wrapIconify("material-symbols:book"),
         ),
         kindLabel: "Tag",

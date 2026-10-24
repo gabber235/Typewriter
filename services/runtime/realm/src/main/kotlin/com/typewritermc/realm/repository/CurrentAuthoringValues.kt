@@ -1,15 +1,20 @@
 package com.typewritermc.realm.repository
 
-import com.typewritermc.authoring.AuthoringRecord
-import com.typewritermc.authoring.EditExpectation
-import com.typewritermc.authoring.ExpectationConflict
-import com.typewritermc.authoring.LinkProjection
-import com.typewritermc.authoring.TraversalDirection
-import com.typewritermc.authoring.TypeSelection
-import com.typewritermc.authoring.ValueLocation
-import com.typewritermc.types.DataValue
-import com.typewritermc.types.RelationId
-import com.typewritermc.types.ResourceId
+import com.typewritermc.authoring.links
+import com.typewritermc.authoring.resourceIds
+import com.typewritermc.types.actualType
+import com.typewritermc.types.toSkir
+import com.typewritermc.types.unknownVariant
+import skirout.editor.v1.authoring_facts.EditExpectation
+import skirout.editor.v1.authoring_facts.ExpectationConflict
+import skirout.editor.v1.authoring_facts.LinkProjection
+import skirout.editor.v1.authoring_facts.TraversalDirection
+import skirout.editor.v1.type_catalog.AuthoringRecord
+import skirout.editor.v1.type_catalog.DataValue
+import skirout.editor.v1.type_catalog.RelationId
+import skirout.editor.v1.type_catalog.ResourceId
+import skirout.editor.v1.type_catalog.TypeSelection
+import skirout.editor.v1.type_catalog.ValueLocation
 
 internal interface CurrentAuthoringValues {
     fun value(at: ValueLocation): DataValue?
@@ -20,7 +25,7 @@ internal interface CurrentAuthoringValues {
         if (at.path.segments.isEmpty()) {
             resource(at.resource)?.configuration
         } else {
-            (value(at) as? DataValue.Named)?.actualType?.let(TypeSelection::Complete)
+            (value(at) as? DataValue.NamedWrapper)?.actualType?.let(TypeSelection::CompleteWrapper)
         }
 
     fun resourceIds(): Set<ResourceId>
@@ -50,25 +55,52 @@ internal class CapturedAuthoringValues(
         projections.filterTo(linkedSetOf()) { projection ->
             projection.contract == contract &&
                 when (direction) {
-                    TraversalDirection.Forward -> projection.first == resource
-                    TraversalDirection.Reverse -> projection.second == resource
-                    TraversalDirection.Both -> projection.first == resource || projection.second == resource
+                    TraversalDirection.FORWARD -> projection.first == resource
+                    TraversalDirection.REVERSE -> projection.second == resource
+                    TraversalDirection.BOTH -> projection.first == resource || projection.second == resource
+                    else -> unknownVariant(direction)
                 }
         }
 }
 
 internal fun CurrentAuthoringValues.actual(expected: EditExpectation): EditExpectation =
     when (expected) {
-        is EditExpectation.Value -> expected.copy(expected = value(expected.at))
-        is EditExpectation.Resource -> expected.copy(expected = resource(expected.id))
-        is EditExpectation.ResourceExists -> expected.copy(expected = resource(expected.id) != null)
-        is EditExpectation.Configuration -> expected.copy(expected = configuration(expected.at))
-        is EditExpectation.ResourceIds -> expected.copy(expected = resourceIds())
-        is EditExpectation.Links -> expected.copy(expected = links(expected.resource, expected.contract, expected.direction))
+        is EditExpectation.ValueWrapper -> {
+            EditExpectation.ValueWrapper(expected.value.copy(expected = value(expected.value.at)))
+        }
+
+        is EditExpectation.ResourceWrapper -> {
+            EditExpectation.ResourceWrapper(expected.value.copy(expected = resource(expected.value.id)))
+        }
+
+        is EditExpectation.ResourceExistsWrapper -> {
+            EditExpectation.ResourceExistsWrapper(expected.value.copy(expected = resource(expected.value.id) != null))
+        }
+
+        is EditExpectation.ConfigurationWrapper -> {
+            EditExpectation.ConfigurationWrapper(expected.value.copy(expected = configuration(expected.value.at)))
+        }
+
+        is EditExpectation.ResourceIdsWrapper -> {
+            EditExpectation.resourceIds(resourceIds())
+        }
+
+        is EditExpectation.LinksWrapper -> {
+            EditExpectation.links(
+                expected.value.resource,
+                expected.value.contract,
+                expected.value.direction,
+                links(expected.value.resource, expected.value.contract, expected.value.direction),
+            )
+        }
+
+        else -> {
+            unknownVariant(expected)
+        }
     }
 
 internal fun CurrentAuthoringValues.conflicts(expectations: List<EditExpectation>): List<ExpectationConflict> =
     expectations.mapNotNull { expected ->
         val actual = actual(expected)
-        if (actual == expected) null else ExpectationConflict(expected, actual)
+        if (actual == expected) null else ExpectationConflict(expected = expected, actual = actual)
     }

@@ -10,12 +10,11 @@ use wasmcloud_utils::{
     database::{RecordId, read_query},
     skir::base::service::v1::topology::{
         GetServiceMessagingScopeRequest, GetServiceMessagingScopeResponse,
-        GetServiceMessagingScopeResponse_NotFound, ServiceMessagingScope,
+        GetServiceMessagingScopeResponse_NotFoundError, ServiceMessagingScope,
     },
     skir_utils::RecordIdKeyIdentity,
     skir_variant,
-    transport_routes::ServiceScope,
-    wasmcloud::messaging::types::NatsMessage,
+    transport::ServiceScope,
 };
 
 #[derive(Debug, Deserialize)]
@@ -33,7 +32,6 @@ struct MessagingScopeRecord {
 /// has both Realm relationships absent. An unbound record cannot form the required organization
 /// scope and fails result decoding.
 pub async fn handle(
-    _msg: NatsMessage,
     scope: ServiceScope,
     _request: GetServiceMessagingScopeRequest,
 ) -> Result<GetServiceMessagingScopeResponse, otel_wasi::Error> {
@@ -74,6 +72,6 @@ pub async fn handle(
             attached_realm: scope.attached_realm.map(Into::into),
             _unrecognized: None,
         })),
-        None => skir_variant!(GetServiceMessagingScopeResponse::NotFound {}),
+        None => skir_variant!(GetServiceMessagingScopeResponse::NotFoundError {}),
     })
 }

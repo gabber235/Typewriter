@@ -2,21 +2,15 @@ package com.typewritermc.realm.compiler
 
 import com.typewritermc.authoring.CompleteValue
 import com.typewritermc.authoring.CompletenessResult
-import com.typewritermc.authoring.DiagnosticId
-import com.typewritermc.authoring.EditExpectation
-import com.typewritermc.authoring.NativeBindingId
-import com.typewritermc.authoring.PathSegment
-import com.typewritermc.authoring.TypeSelection
-import com.typewritermc.authoring.ValueLocation
-import com.typewritermc.authoring.ValuePath
 import com.typewritermc.authoring.append
 import com.typewritermc.authoring.complete
-import com.typewritermc.checking.CatalogGeneration
-import com.typewritermc.checking.CheckOutcome
-import com.typewritermc.checking.Diagnostic
-import com.typewritermc.checking.DiagnosticSeverity
-import com.typewritermc.checking.InputToken
-import com.typewritermc.configuration.RuleOrigin
+import com.typewritermc.authoring.of
+import com.typewritermc.authoring.payload
+import com.typewritermc.authoring.root
+import com.typewritermc.authoring.use
+import com.typewritermc.checking.diagnostics
+import com.typewritermc.checking.locations
+import com.typewritermc.checking.reason
 import com.typewritermc.realm.authoring.AuthoringLease
 import com.typewritermc.realm.authoring.AuthoringView
 import com.typewritermc.realm.authoring.AuthoringViewStore
@@ -25,27 +19,44 @@ import com.typewritermc.realm.checking.CheckAdmissionTarget
 import com.typewritermc.realm.checking.RealmCheckRuntime
 import com.typewritermc.services.libs.utils.rethrowExceptional
 import com.typewritermc.services.libs.utils.sha256Hex
-import com.typewritermc.types.DataValue
 import com.typewritermc.types.NativeBindingException
-import com.typewritermc.types.ResourceId
-import com.typewritermc.types.TypeDefinitionId
-import com.typewritermc.types.TypeId
-import com.typewritermc.types.TypeUse
 import com.typewritermc.types.canonicalValueKey
 import com.typewritermc.types.catalog.Resolution
+import com.typewritermc.types.fields
+import com.typewritermc.types.items
+import com.typewritermc.types.named
+import com.typewritermc.types.payload
+import com.typewritermc.types.qualified
+import com.typewritermc.types.record
+import com.typewritermc.types.rows
+import com.typewritermc.types.toResourceId
+import com.typewritermc.types.toSkir
+import com.typewritermc.types.unknownVariant
+import com.typewritermc.types.use
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
-import kotlinx.serialization.Serializable
+import skirout.editor.v1.authoring_facts.EditExpectation
+import skirout.editor.v1.checking.CheckOutcome
+import skirout.editor.v1.diagnostic.Diagnostic
+import skirout.editor.v1.diagnostic.DiagnosticSeverity
+import skirout.editor.v1.publication.DiagnosticEvidence
+import skirout.editor.v1.publication.EngineImplementationInputs
+import skirout.editor.v1.type_catalog.CatalogGeneration
+import skirout.editor.v1.type_catalog.DataValue
+import skirout.editor.v1.type_catalog.DiagnosticId
+import skirout.editor.v1.type_catalog.NamedTypeUse
+import skirout.editor.v1.type_catalog.NativeBindingId
+import skirout.editor.v1.type_catalog.PathSegment
+import skirout.editor.v1.type_catalog.ResourceId
+import skirout.editor.v1.type_catalog.RuleOrigin
+import skirout.editor.v1.type_catalog.TypeDefinitionId
+import skirout.editor.v1.type_catalog.TypeSelection
+import skirout.editor.v1.type_catalog.ValueLocation
 
 data class NativeBindingRequirement(
-    val actual: TypeUse.Named,
+    val actual: NamedTypeUse,
     val provider: NativeBindingId,
     val signature: String,
-)
-
-@Serializable
-data class EngineImplementationInputs(
-    val token: InputToken,
 )
 
 /**
@@ -82,53 +93,6 @@ class StagedEngineImplementationSource(
         }
 }
 
-/** Classifies diagnostics once at the saved candidate evaluation boundary. */
-sealed interface PublicationNotice {
-    val diagnostic: Diagnostic
-
-    @ConsistentCopyVisibility
-    data class Information internal constructor(
-        override val diagnostic: Diagnostic,
-    ) : PublicationNotice {
-        init {
-            require(diagnostic.severity == DiagnosticSeverity.Info)
-        }
-    }
-
-    @ConsistentCopyVisibility
-    data class Warning internal constructor(
-        override val diagnostic: Diagnostic,
-    ) : PublicationNotice {
-        init {
-            require(diagnostic.severity == DiagnosticSeverity.Warning)
-        }
-    }
-}
-
-@ConsistentCopyVisibility
-data class PublicationBlocker internal constructor(
-    val diagnostic: Diagnostic,
-) {
-    init {
-        require(diagnostic.severity == DiagnosticSeverity.Error)
-    }
-}
-
-/** A blocking assessment always has at least one reason. */
-data class PublicationBlockers(
-    val first: PublicationBlocker,
-    val additional: List<PublicationBlocker> = emptyList(),
-) {
-    val all: List<PublicationBlocker> get() = listOf(first) + additional
-
-    companion object {
-        fun from(findings: List<Diagnostic>): PublicationBlockers {
-            val blockers = findings.map(::PublicationBlocker)
-            return PublicationBlockers(blockers.first(), blockers.drop(1))
-        }
-    }
-}
-
 internal sealed interface ResourceReadiness {
     data class Ready(
         val value: CompleteValue,
@@ -143,12 +107,6 @@ internal sealed interface ResourceReadiness {
         }
     }
 }
-
-/** Authoring facts required for a saved finding to describe a working value. */
-data class DiagnosticEvidence(
-    val catalog: CatalogGeneration,
-    val expectations: List<EditExpectation>,
-)
 
 internal data class CapturedAssessment(
     val resources: Map<ResourceId, ResourceReadiness>,
@@ -192,31 +150,35 @@ internal class AuthoringAcceptance(
                     .flatMap { result ->
                         val emitted =
                             when (val outcome = result.outcome) {
-                                CheckOutcome.Finished -> {
+                                CheckOutcome.FINISHED -> {
                                     result.findings
                                 }
 
-                                is CheckOutcome.NeedsInput -> {
+                                is CheckOutcome.NeedsInputWrapper -> {
                                     result.findings +
                                         outcome.locations.ifEmpty { listOf(result.ticket.instance.location) }.map { location ->
                                             publicationDiagnostic("check_needs_input", "A required check input is unavailable.", location)
                                         }
                                 }
 
-                                is CheckOutcome.Failed -> {
+                                is CheckOutcome.FailedWrapper -> {
                                     result.findings + outcome.diagnostics
                                 }
 
-                                is CheckOutcome.Incomplete -> {
+                                is CheckOutcome.IncompleteWrapper -> {
                                     result.findings +
                                         publicationDiagnostic("check_incomplete", outcome.reason, result.ticket.instance.location)
+                                }
+
+                                else -> {
+                                    unknownVariant(outcome)
                                 }
                             }
                         emitted.forEach { finding ->
                             evidence[finding.id] =
                                 DiagnosticEvidence(
-                                    snapshot.root.catalog.generation,
-                                    (evidence[finding.id]?.expectations.orEmpty() + result.expectations).distinct(),
+                                    catalog = snapshot.root.catalog.generation,
+                                    expectations = (evidence[finding.id]?.expectations.orEmpty() + result.expectations).distinct(),
                                 )
                         }
                         emitted
@@ -228,43 +190,51 @@ internal class AuthoringAcceptance(
                 fun blocked() {
                     val own = findings.drop(firstFinding)
                     resources[id] = ResourceReadiness.Blocked(own)
-                    val witness = DiagnosticEvidence(snapshot.root.catalog.generation, listOf(EditExpectation.Resource(id, record)))
+                    val witness =
+                        DiagnosticEvidence(
+                            catalog = snapshot.root.catalog.generation,
+                            expectations = listOf(EditExpectation.createResource(id = id, expected = record)),
+                        )
                     own.forEach { evidence[it.id] = witness }
                 }
-                val actual = (record.configuration as? TypeSelection.Complete)?.use
+                val actual = (record.configuration as? TypeSelection.CompleteWrapper)?.use
                 if (actual == null) {
                     findings +=
                         publicationDiagnostic(
                             "pending_type",
                             "Resource ${id.value} has incomplete type arguments.",
-                            ValueLocation(id, ValuePath()),
+                            ValueLocation.of(id),
                         )
                     blocked()
                     return@forEach
                 }
                 val resolved =
                     snapshot.root.catalog.checked
-                        .resolve(actual)
+                        .resolve(actual.use)
                 val checked = (resolved as? Resolution.Ready)?.value
                 if (checked == null) {
                     findings +=
                         publicationDiagnostic(
                             "unresolved_type",
                             "Resource ${id.value} uses an unavailable type.",
-                            ValueLocation(id, ValuePath()),
+                            ValueLocation.of(id),
                         )
                     blocked()
                     return@forEach
                 }
-                val value = DataValue.Named(actual, DataValue.Record(record.fields))
-                intrinsicCollectionProblems(value, ValueLocation(id, ValuePath())).forEach { problem ->
+                val value = DataValue.named(actual, DataValue.RecordWrapper(record.payload))
+                intrinsicCollectionProblems(value, ValueLocation.of(id)).forEach { problem ->
                     findings += publicationDiagnostic(problem.code, problem.message, problem.location)
                 }
                 when (val complete = checked.complete(value)) {
                     is CompletenessResult.Unfinished -> {
                         complete.locations.forEach { location ->
                             findings +=
-                                publicationDiagnostic("unfinished_value", "A required value is unfinished.", location.copy(resource = id))
+                                publicationDiagnostic(
+                                    "unfinished_value",
+                                    "A required value is unfinished.",
+                                    location.copy(resource = id),
+                                )
                         }
                     }
 
@@ -302,7 +272,7 @@ internal class AuthoringAcceptance(
                                 publicationDiagnostic(
                                     code,
                                     failure.message ?: "Native construction failed.",
-                                    ValueLocation(id, ValuePath()),
+                                    ValueLocation.of(id),
                                 )
                         }
                     }
@@ -329,23 +299,23 @@ private fun intrinsicCollectionProblems(
 ): List<IntrinsicCollectionProblem> =
     buildList {
         when (value) {
-            is DataValue.Named -> {
+            is DataValue.NamedWrapper -> {
                 addAll(intrinsicCollectionProblems(value.payload, at))
             }
 
-            is DataValue.Record -> {
-                value.fields.forEach { (name, field) ->
-                    addAll(intrinsicCollectionProblems(field, at.append(PathSegment.Field(name))))
+            is DataValue.RecordWrapper -> {
+                value.fields.forEach { field ->
+                    addAll(intrinsicCollectionProblems(field.value, at.append(PathSegment.createField(name = field.name))))
                 }
             }
 
-            is DataValue.ListValue -> {
+            is DataValue.ListValueWrapper -> {
                 value.items.forEach { item ->
-                    addAll(intrinsicCollectionProblems(item.value, at.append(PathSegment.Item(item.id))))
+                    addAll(intrinsicCollectionProblems(item.value, at.append(PathSegment.createItem(id = item.id))))
                 }
             }
 
-            is DataValue.SetValue -> {
+            is DataValue.SetValueWrapper -> {
                 value.items
                     .groupBy { item -> item.value.canonicalValueKey() }
                     .values
@@ -356,16 +326,16 @@ private fun intrinsicCollectionProblems(
                             IntrinsicCollectionProblem(
                                 "duplicate_set_value",
                                 "A set contains the same authored value more than once.",
-                                at.append(PathSegment.Item(duplicate.id)),
+                                at.append(PathSegment.createItem(id = duplicate.id)),
                             ),
                         )
                     }
                 value.items.forEach { item ->
-                    addAll(intrinsicCollectionProblems(item.value, at.append(PathSegment.Item(item.id))))
+                    addAll(intrinsicCollectionProblems(item.value, at.append(PathSegment.createItem(id = item.id))))
                 }
             }
 
-            is DataValue.MapValue -> {
+            is DataValue.MapValueWrapper -> {
                 value.rows
                     .groupBy { row -> row.key.canonicalValueKey() }
                     .values
@@ -376,14 +346,14 @@ private fun intrinsicCollectionProblems(
                             IntrinsicCollectionProblem(
                                 "duplicate_map_key",
                                 "A map contains the same authored key more than once.",
-                                at.append(PathSegment.Item(duplicate.id), PathSegment.MapKey),
+                                at.append(PathSegment.createItem(id = duplicate.id), PathSegment.MAP_KEY),
                             ),
                         )
                     }
                 value.rows.forEach { row ->
-                    val rowLocation = at.append(PathSegment.Item(row.id))
-                    addAll(intrinsicCollectionProblems(row.key, rowLocation.append(PathSegment.MapKey)))
-                    addAll(intrinsicCollectionProblems(row.value, rowLocation.append(PathSegment.MapValue)))
+                    val rowLocation = at.append(PathSegment.createItem(id = row.id))
+                    addAll(intrinsicCollectionProblems(row.key, rowLocation.append(PathSegment.MAP_KEY)))
+                    addAll(intrinsicCollectionProblems(row.value, rowLocation.append(PathSegment.MAP_VALUE)))
                 }
             }
 
@@ -403,14 +373,17 @@ internal fun publicationDiagnostic(
     location: ValueLocation? = null,
 ): Diagnostic =
     Diagnostic(
-        id = DiagnosticId("publication:${"$location\u0000$code\u0000$message".sha256Hex()}"),
-        origin = RuleOrigin(PUBLICATION_DIAGNOSTIC_TYPE, 0),
+        id =
+            DiagnosticId(
+                value = "publication:${"${location?.let(ValueLocation.serializer::toJsonCode)}\u0000$code\u0000$message".sha256Hex()}",
+            ),
+        origin = RuleOrigin(owner = PUBLICATION_DIAGNOSTIC_TYPE, ordinal = 0),
         code = code,
         message = message,
-        severity = DiagnosticSeverity.Error,
+        severity = DiagnosticSeverity.ERROR,
         primary = location,
         related = emptyList(),
     )
 
 internal val PUBLICATION_DIAGNOSTIC_TYPE =
-    TypeDefinitionId(TypeId.Qualified("typewriter", "publication"), 1)
+    TypeDefinitionId.qualified("typewriter", "publication")

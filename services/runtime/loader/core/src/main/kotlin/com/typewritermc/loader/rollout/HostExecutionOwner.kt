@@ -3,6 +3,7 @@ package com.typewritermc.loader.rollout
 import com.typewritermc.loader.api.HostedMessagingSession
 import com.typewritermc.loader.api.RuntimePlacement
 import com.typewritermc.services.libs.registrar.ServiceId
+import skirout.service.v1.rollout.ParticipantStatus
 
 /** Identifies the backend service and monotonic assignment revision that produced an execution intent. */
 data class ExecutionRevision(

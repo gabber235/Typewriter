@@ -2,16 +2,16 @@ package com.typewritermc.engine.conformance
 
 import com.typewritermc.authoring.GraphPlacement
 import com.typewritermc.authoring.HierarchyPath
-import com.typewritermc.discovery.GraphDirection
 import com.typewritermc.elements.Element
 import com.typewritermc.library.Book
 import com.typewritermc.library.BookPages
 import com.typewritermc.library.Page
 import com.typewritermc.library.PageElements
-import com.typewritermc.types.PresentationRole
 import com.typewritermc.types.Ref
 import com.typewritermc.types.TypewriterDisplay
 import com.typewritermc.types.TypewriterType
+import skirout.editor.v1.catalog.PresentationRole
+import skirout.editor.v1.presentation.GraphDirection
 
 /**
  * Defines the element role exported by the conformance capability.

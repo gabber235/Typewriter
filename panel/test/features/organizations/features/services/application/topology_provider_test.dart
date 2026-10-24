@@ -65,7 +65,7 @@ Future<void> _waitFor(bool Function() condition) async {
 
 Future<skir.ConfigureServiceHostResponse> _configureHost(
   ProviderContainer container,
-  TopologyHost host,
+  skir.ServiceHost host,
   skir.HostExecutionConfiguration execution,
 ) {
   final repository = container
@@ -80,25 +80,23 @@ void main() {
   topologyStateTests();
   topologyLifecycleTests();
   test("runtime reports cannot publish configuration early or revive removed children", () {
-    final initial = OrganizationTopology(
-      hosts: [TopologyHost.fromSkir(_host())],
-      realmInstances: [TopologyRealm.fromSkir(_realm())],
-      engineInstances: [],
+    final initial = skir.OrganizationTopologySnapshot(
+      hosts: [_host()],
+      realms: [_realm()],
+      engines: [],
     );
     final early = initial.applyHostObservation(
-      TopologyHost.fromSkir(
-        _host(
-          revision: 2,
-          state: skir.HostRuntimeState(
-            status: skir.HostRuntimeStatus.active,
-            message: null,
-            updatedAt: DateTime.utc(2026),
-          ),
+      _host(
+        revision: 2,
+        state: skir.HostRuntimeState(
+          status: skir.HostRuntimeStatus.active,
+          message: null,
+          updatedAt: DateTime.utc(2026),
         ),
       ),
     );
     expect(early.hosts.single.revision, 1);
-    expect(early.hosts.single.state.status, TopologyHostStatus.active);
+    expect(early.hosts.single.state.status, skir.HostRuntimeStatus.active);
     final removed = early.applyConfiguration(
       skir.HostConfigurationChange(
         host: _host(revision: 2),
@@ -109,11 +107,9 @@ void main() {
     );
     expect(removed.hosts.single.revision, 2);
 
-    expect(removed.hosts.single.state.status, TopologyHostStatus.active);
+    expect(removed.hosts.single.state.status, skir.HostRuntimeStatus.active);
     expect(
-      removed
-          .applyRealmObservation(TopologyRealm.fromSkir(_realm()))
-          .realmInstances,
+      removed.applyRealmObservation(_realm().realmId, _realm().state).realms,
       isEmpty,
     );
   });
@@ -139,7 +135,7 @@ void main() {
     );
     addTearDown(container.dispose);
     addTearDown(nats.dispose);
-    AsyncValue<OrganizationTopology> value = const AsyncLoading();
+    AsyncValue<skir.OrganizationTopologySnapshot> value = const AsyncLoading();
     final subscription = container.listen(
       organizationTopologyProvider,
       (previous, next) => value = next,
@@ -163,7 +159,7 @@ void main() {
       isA<skir.WatchOrganizationTopologyRequest>(),
     );
 
-    Future<OrganizationTopology> emit(
+    Future<skir.OrganizationTopologySnapshot> emit(
       skir.OrganizationTopologyChanged event,
     ) async {
       final previous = value;
@@ -187,17 +183,11 @@ void main() {
         ),
       ),
     );
-    expect(listed.hosts, [
-      TopologyHost.fromSkir(_host()),
-      TopologyHost.fromSkir(_host(id: "host2")),
-    ]);
-    expect(
-      listed.realmOwnedBy(_host().hostId),
-      TopologyRealm.fromSkir(_realm()),
-    );
-    expect(listed.realmInstances.single.ownerHost.name, "host_1");
-    expect(listed.engineInstances.single.ownerHost.name, "paper_eu");
-    expect(listed.engineInstances.single.realm.ownerHost.name, "host_1");
+    expect(listed.hosts, [_host(), _host(id: "host2")]);
+    expect(listed.realmOwnedBy(_host().hostId), _realm());
+    expect(listed.realms.single.ownerHost.name, "host_1");
+    expect(listed.engines.single.ownerHost.name, "paper_eu");
+    expect(listed.engines.single.realm.ownerHost.name, "host_1");
 
     final updated = await emit(
       skir.OrganizationTopologyChanged.wrapObservationsReported(
@@ -227,8 +217,8 @@ void main() {
       ),
     );
     expect(configured.hosts.first.revision, 3);
-    expect(configured.realmInstances.single.realmId, _realm().realmId);
-    expect(configured.engineInstances, isEmpty);
+    expect(configured.realms.single.realmId, _realm().realmId);
+    expect(configured.engines, isEmpty);
 
     final removed = await emit(
       skir.OrganizationTopologyChanged.wrapReplace(
@@ -242,7 +232,7 @@ void main() {
         ),
       ),
     );
-    expect(removed.realmInstances, isEmpty);
+    expect(removed.realms, isEmpty);
   });
 
   test("delayed reconnect snapshot preserves accepted configuration with incoming membership", () async {
@@ -271,7 +261,7 @@ void main() {
       (_, _) {},
     );
     addTearDown(subscription.close);
-    OrganizationTopology? current() =>
+    skir.OrganizationTopologySnapshot? current() =>
         container.read(organizationTopologyProvider).value;
     await _waitFor(() => current()?.hosts.length == 1);
     final reply = Completer<Uint8List>();
@@ -316,18 +306,18 @@ void main() {
         ),
       ),
     );
-    await _waitFor(() => current()?.realmInstances.isEmpty == true);
+    await _waitFor(() => current()?.realms.isEmpty == true);
     expect(current()!.hosts.single.revision, 3);
     expect(current()!.hosts.single.entrypoint, "CONFIRMED");
     expect(
       current()!.hosts.single.topologyRevision,
-      const TopologyRevision(desired: 3, applied: 2),
+      skir.ReconciledRevision(desired: 3, applied: 2),
     );
     expect(
       current()!.hosts.single.state.status,
-      TopologyHostStatus.reconciling,
+      skir.HostRuntimeStatus.reconciling,
     );
-    expect(current()!.engineInstances, isEmpty);
+    expect(current()!.engines, isEmpty);
     nats.emitMessageOnSubject(
       _listenSubject,
       skir.OrganizationTopologyChanged.serializer.toBytes(
@@ -347,52 +337,57 @@ void main() {
       ),
     );
     await _waitFor(
-      () => current()?.hosts.single.state.status == TopologyHostStatus.active,
+      () =>
+          current()?.hosts.single.state.status == skir.HostRuntimeStatus.active,
     );
     expect(current()!.hosts.single.revision, 3);
     expect(current()!.hosts.single.entrypoint, "CONFIRMED");
   });
 
   test("replacement keeps surviving child progress and forgets removed child history", () {
-    final incoming = OrganizationTopology(
-      hosts: [TopologyHost.fromSkir(_host())],
-      realmInstances: [TopologyRealm.fromSkir(_realm())],
-      engineInstances: [TopologyEngine.fromSkir(_engine())],
+    final incoming = skir.OrganizationTopologySnapshot(
+      hosts: [_host()],
+      realms: [_realm()],
+      engines: [_engine()],
     );
-    final latest = incoming.copyWith(
-      realmInstances: [
-        incoming.realmInstances.single.copyWith(
-          revision: 4,
-          targetEngine: const TopologyEngineTarget(
-            engineId: "paper",
-            versionConstraint: "^2",
-          ),
-          state: incoming.realmInstances.single.state.copyWith(
-            status: TopologyRuntimeStatus.active,
-            updatedAt: DateTime.utc(2027),
-          ),
-        ),
-      ],
-      engineInstances: [
-        incoming.engineInstances.single.copyWith(
-          revision: 5,
-          target: const TopologyEngineTarget(
-            engineId: "paper",
-            versionConstraint: "^3",
-          ),
-          state: incoming.engineInstances.single.state.copyWith(
-            status: TopologyRuntimeStatus.failed,
-            updatedAt: DateTime.utc(2027),
-          ),
-        ),
-      ],
-    );
+    final latest =
+        (incoming.toMutable()
+              ..realms = [
+                (incoming.realms.single.toMutable()
+                      ..revision = 4
+                      ..targetEngine = skir.EngineTarget(
+                        engineId: "paper",
+                        versionConstraint: "^2",
+                      )
+                      ..state =
+                          (incoming.realms.single.state.toMutable()
+                                ..status = skir.ChildRuntimeStatus.active
+                                ..updatedAt = DateTime.utc(2027))
+                              .toFrozen())
+                    .toFrozen(),
+              ]
+              ..engines = [
+                (incoming.engines.single.toMutable()
+                      ..revision = 5
+                      ..target = skir.EngineTarget(
+                        engineId: "paper",
+                        versionConstraint: "^3",
+                      )
+                      ..state =
+                          (incoming.engines.single.state.toMutable()
+                                ..status = skir.ChildRuntimeStatus.failed
+                                ..updatedAt = DateTime.utc(2027))
+                              .toFrozen())
+                    .toFrozen(),
+              ])
+            .toFrozen();
     final merged = incoming.reconcileSnapshot(latest);
-    expect(merged.realmInstances, latest.realmInstances);
-    expect(merged.engineInstances, latest.engineInstances);
-    final removed = OrganizationTopology.empty.reconcileSnapshot(merged);
-    expect(removed.realmInstances, isEmpty);
-    expect(removed.engineInstances, isEmpty);
+    expect(merged.realms, latest.realms);
+    expect(merged.engines, latest.engines);
+    final removed = skir.OrganizationTopologySnapshot.defaultInstance
+        .reconcileSnapshot(merged);
+    expect(removed.realms, isEmpty);
+    expect(removed.engines, isEmpty);
     expect(incoming.reconcileSnapshot(removed), incoming);
   });
 
@@ -429,7 +424,7 @@ void main() {
       );
       addTearDown(container.dispose);
       addTearDown(nats.dispose);
-      final values = <OrganizationTopology>[];
+      final values = <skir.OrganizationTopologySnapshot>[];
       final listener = container.listen(organizationTopologyProvider, (
         _,
         next,
@@ -439,8 +434,8 @@ void main() {
       addTearDown(listener.close);
       await _waitFor(
         () =>
-            values.lastOrNull?.realmInstances.single.state.status ==
-            TopologyRuntimeStatus.failed,
+            values.lastOrNull?.realms.single.state.status ==
+            skir.ChildRuntimeStatus.failed,
       );
 
       status = skir.ChildRuntimeStatus.active;
@@ -451,8 +446,8 @@ void main() {
           .refresh();
       await _waitFor(
         () =>
-            values.lastOrNull?.realmInstances.single.state.status ==
-            TopologyRuntimeStatus.active,
+            values.lastOrNull?.realms.single.state.status ==
+            skir.ChildRuntimeStatus.active,
       );
 
       expect(
@@ -556,8 +551,7 @@ void main() {
       expect(requests, 1);
       first.complete(response);
       expect(
-        (await container.read(organizationTopologyProvider.future))
-            .realmInstances,
+        (await container.read(organizationTopologyProvider.future)).realms,
         hasLength(1),
       );
 
@@ -581,14 +575,20 @@ void main() {
         engine: null,
         removedResources: [],
       );
-      final configured = OrganizationTopology.empty.applyConfiguration(change);
-      final newerState = configured.hosts.single.state.copyWith(
-        status: TopologyHostStatus.failed,
-        updatedAt: DateTime.utc(2026),
-      );
-      final observed = configured.copyWith(
-        hosts: [configured.hosts.single.copyWith(state: newerState)],
-      );
+      final configured = skir.OrganizationTopologySnapshot.defaultInstance
+          .applyConfiguration(change);
+      final newerState =
+          (configured.hosts.single.state.toMutable()
+                ..status = skir.HostRuntimeStatus.failed
+                ..updatedAt = DateTime.utc(2026))
+              .toFrozen();
+      final observed =
+          (configured.toMutable()
+                ..hosts = [
+                  (configured.hosts.single.toMutable()..state = newerState)
+                      .toFrozen(),
+                ])
+              .toFrozen();
       expect(observed.applyConfiguration(change), observed);
       final old = skir.HostConfigurationChange(
         host: _host(revision: 2),

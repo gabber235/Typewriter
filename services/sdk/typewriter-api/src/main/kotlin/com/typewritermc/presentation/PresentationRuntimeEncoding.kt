@@ -1,17 +1,15 @@
 package com.typewritermc.presentation
 
 import com.typewritermc.expression.Expr
-import com.typewritermc.expression.ExpressionBindingId
-import com.typewritermc.types.DataValue
-import com.typewritermc.types.skir.SkirTypeCodec
-import com.typewritermc.types.skir.getOrThrow
+import com.typewritermc.types.field
+import com.typewritermc.types.integer
+import com.typewritermc.types.requirePortable
 import skirout.editor.v1.binding.BindingRef
 import skirout.editor.v1.expression.ExpressionNode
+import skirout.editor.v1.type_catalog.DataValue
+import skirout.editor.v1.type_catalog.ExpressionBindingId
 import skirout.editor.v1.type_catalog.FieldPathSegment
 import java.math.BigInteger
-import skirout.editor.v1.presentation.CrossAxisAlignment as WireCrossAxisAlignment
-import skirout.editor.v1.presentation.MainAxisAlignment as WireMainAxisAlignment
-import skirout.editor.v1.type_catalog.ExpressionBindingId as WireExpressionBindingId
 import skirout.editor.v1.type_catalog.PathSegment as WirePathSegment
 import skirout.editor.v1.type_catalog.ValuePath as WireValuePath
 
@@ -28,23 +26,17 @@ internal fun BindingRef.field(name: String): BindingRef =
         bindingId = bindingId,
     )
 
-internal fun ExpressionBindingId.wire(): WireExpressionBindingId = WireExpressionBindingId(value = value)
-
 internal fun expression(value: Any?): skirout.editor.v1.expression.ExpressionNode =
     when (value) {
         is String -> {
             ExpressionNode.LiteralWrapper(
-                com.typewritermc.types.skir.SkirDataValueCodec
-                    .encode(DataValue.StringValue(value))
-                    .getOrThrow(),
+                DataValue.StringValueWrapper(value),
             )
         }
 
         is Boolean -> {
             ExpressionNode.LiteralWrapper(
-                com.typewritermc.types.skir.SkirDataValueCodec
-                    .encode(DataValue.Boolean(value))
-                    .getOrThrow(),
+                DataValue.BooleanWrapper(value),
             )
         }
 
@@ -78,25 +70,19 @@ internal fun expression(value: Any?): skirout.editor.v1.expression.ExpressionNod
 
         is ULong -> {
             ExpressionNode.LiteralWrapper(
-                com.typewritermc.types.skir.SkirDataValueCodec
-                    .encode(DataValue.Integer(BigInteger(value.toString())))
-                    .getOrThrow(),
+                DataValue.integer(BigInteger(value.toString())),
             )
         }
 
         is Float -> {
             ExpressionNode.LiteralWrapper(
-                com.typewritermc.types.skir.SkirDataValueCodec
-                    .encode(DataValue.Float(value.toDouble()))
-                    .getOrThrow(),
+                DataValue.FloatWrapper(value.toDouble()).requirePortable(),
             )
         }
 
         is Double -> {
             ExpressionNode.LiteralWrapper(
-                com.typewritermc.types.skir.SkirDataValueCodec
-                    .encode(DataValue.Float(value))
-                    .getOrThrow(),
+                DataValue.FloatWrapper(value).requirePortable(),
             )
         }
 
@@ -111,28 +97,8 @@ internal fun expression(value: Any?): skirout.editor.v1.expression.ExpressionNod
 
 internal fun integerExpression(value: Long): skirout.editor.v1.expression.ExpressionNode =
     ExpressionNode.LiteralWrapper(
-        com.typewritermc.types.skir.SkirDataValueCodec
-            .encode(DataValue.Integer(BigInteger.valueOf(value)))
-            .getOrThrow(),
+        DataValue.integer(BigInteger.valueOf(value)),
     )
-
-internal fun MainAxisAlignment.wire(): WireMainAxisAlignment =
-    when (this) {
-        MainAxisAlignment.Start -> WireMainAxisAlignment.START
-        MainAxisAlignment.Center -> WireMainAxisAlignment.CENTER
-        MainAxisAlignment.End -> WireMainAxisAlignment.END
-        MainAxisAlignment.SpaceBetween -> WireMainAxisAlignment.SPACE_BETWEEN
-        MainAxisAlignment.SpaceAround -> WireMainAxisAlignment.SPACE_AROUND
-        MainAxisAlignment.SpaceEvenly -> WireMainAxisAlignment.SPACE_EVENLY
-    }
-
-internal fun CrossAxisAlignment.wire(): WireCrossAxisAlignment =
-    when (this) {
-        CrossAxisAlignment.Start -> WireCrossAxisAlignment.START
-        CrossAxisAlignment.Center -> WireCrossAxisAlignment.CENTER
-        CrossAxisAlignment.End -> WireCrossAxisAlignment.END
-        CrossAxisAlignment.Stretch -> WireCrossAxisAlignment.STRETCH
-    }
 
 internal fun PresentationBorder.wire(): skirout.editor.v1.presentation.PresentationBorder =
     when (this) {
@@ -187,4 +153,4 @@ internal fun PresentationInsets.wire(): skirout.editor.v1.presentation.Presentat
         bottom = bottom,
     )
 
-internal val CONFIGURED_VALUE = ExpressionBindingId("configured_value")
+internal val CONFIGURED_VALUE = ExpressionBindingId(value = "configured_value")

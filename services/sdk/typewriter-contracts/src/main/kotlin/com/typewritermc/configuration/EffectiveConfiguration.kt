@@ -1,17 +1,14 @@
 package com.typewritermc.configuration
 
-import com.typewritermc.types.catalog.AppliedSchema
-import kotlinx.serialization.Serializable
+import skirout.editor.v1.catalog.ConfigurationRecipe
+import skirout.editor.v1.catalog.OwnedRule
+import skirout.editor.v1.type_catalog.AppliedSchema
+import skirout.editor.v1.type_catalog.RelativeFieldPattern
 
-@Serializable
-data class ConfigurationRecipe(
-    val origin: RuleOrigin,
-    val relativePath: RelativeFieldPattern,
-    val representationCondition: RepresentationKind?,
-    val rules: List<OwnedRule>,
+data class EffectiveFieldConfiguration(
+    val guarantees: List<OwnedRule>,
 )
 
-@Serializable
 data class EffectiveConfiguration(
     val fields: Map<RelativeFieldPattern, EffectiveFieldConfiguration>,
 )

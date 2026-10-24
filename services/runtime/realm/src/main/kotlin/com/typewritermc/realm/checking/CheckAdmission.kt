@@ -1,43 +1,14 @@
 package com.typewritermc.realm.checking
 
-import com.typewritermc.authoring.CheckExecutionId
-import com.typewritermc.authoring.EditExpectation
-import com.typewritermc.authoring.ValueLocation
-import com.typewritermc.checking.CatalogGeneration
-import com.typewritermc.checking.CheckOutcome
-import com.typewritermc.checking.Diagnostic
-import com.typewritermc.checking.FindingStatus
-import com.typewritermc.configuration.RuleId
 import com.typewritermc.realm.authoring.AuthoringView
 import com.typewritermc.realm.authoring.AuthoringViewStore
 import com.typewritermc.realm.repository.conflicts
-
-data class CheckInstanceId(
-    val rule: RuleId,
-    val location: ValueLocation,
-)
-
-data class CheckTicket(
-    val instance: CheckInstanceId,
-    val incarnation: String,
-    val execution: CheckExecutionId,
-    val catalog: CatalogGeneration,
-)
-
-data class CheckResult(
-    val ticket: CheckTicket,
-    val outcome: CheckOutcome,
-    val expectations: List<EditExpectation>,
-    val findings: List<Diagnostic>,
-)
-
-data class FindingSet(
-    val ticket: CheckTicket,
-    val expectations: List<EditExpectation>,
-    val outcome: CheckOutcome,
-    val findings: List<Diagnostic>,
-    val status: FindingStatus,
-)
+import skirout.editor.v1.checking.CheckInstanceId
+import skirout.editor.v1.checking.CheckOutcome
+import skirout.editor.v1.checking.CheckResult
+import skirout.editor.v1.checking.CheckTicket
+import skirout.editor.v1.checking.FindingSet
+import skirout.editor.v1.diagnostic.Diagnostic
 
 sealed interface CheckAdmissionTarget {
     data object CurrentFindings : CheckAdmissionTarget
@@ -92,7 +63,9 @@ class DefaultCheckAdmission(
     ): AdmissionResult =
         views.read { current ->
             if (executions.ticket(result.ticket.instance) != result.ticket) return@read AdmissionResult.Discarded
-            if (current.catalog.generation != result.ticket.catalog || current.values.conflicts(result.expectations).isNotEmpty()) {
+            if (current.catalog.generation != result.ticket.catalog ||
+                current.values.conflicts(result.expectations).isNotEmpty()
+            ) {
                 return@read AdmissionResult.RetryRequired
             }
             install()
@@ -104,7 +77,7 @@ class DefaultCheckAdmission(
         target: CheckAdmissionTarget.CapturedAcceptance,
     ): AdmissionResult {
         if (result.ticket.catalog != target.catalog) return AdmissionResult.Discarded
-        if (result.outcome != CheckOutcome.Finished) return AdmissionResult.RetryRequired
+        if (result.outcome != CheckOutcome.FINISHED) return AdmissionResult.RetryRequired
         return if (target.view.values
                 .conflicts(result.expectations)
                 .isEmpty()

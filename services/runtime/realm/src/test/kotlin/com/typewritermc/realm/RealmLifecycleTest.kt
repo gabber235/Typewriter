@@ -2,22 +2,18 @@ package com.typewritermc.realm
 
 import build.skir.Serializer
 import com.surrealdb.Surreal
-import com.typewritermc.authoring.AuthoringRecord
 import com.typewritermc.authoring.RealmRootDefinition
-import com.typewritermc.authoring.RelationProjectionDelta
-import com.typewritermc.authoring.TypeSelection
 import com.typewritermc.authoring.definition
-import com.typewritermc.checking.CatalogGeneration
-import com.typewritermc.checking.InputToken
+import com.typewritermc.authoring.of
 import com.typewritermc.discovery.CatalogAssemblyContext
 import com.typewritermc.discovery.CatalogContributions
-import com.typewritermc.discovery.ContributionKey
 import com.typewritermc.discovery.DeploymentFacts
 import com.typewritermc.discovery.DiscoveryDomains
 import com.typewritermc.discovery.GeneratedProviderLoader
 import com.typewritermc.discovery.OwnedTypeDeclaration
 import com.typewritermc.discovery.ProviderOrigin
 import com.typewritermc.discovery.assemble
+import com.typewritermc.discovery.contributionKey
 import com.typewritermc.imprint.ArtifactId
 import com.typewritermc.imprint.ContributionName
 import com.typewritermc.imprint.ContributionSourceId
@@ -39,7 +35,6 @@ import com.typewritermc.realm.authoring.PreparationEvaluator
 import com.typewritermc.realm.catalog.RealmCatalogIncarnation
 import com.typewritermc.realm.catalog.RealmCatalogStore
 import com.typewritermc.realm.catalog.installTestCatalog
-import com.typewritermc.realm.compiler.EngineImplementationInputs
 import com.typewritermc.realm.compiler.StagedEngineImplementationSource
 import com.typewritermc.realm.repository.AuthoringMutationPlan
 import com.typewritermc.realm.repository.SurrealAuthoringStorage
@@ -63,21 +58,11 @@ import com.typewritermc.services.libs.telemetry.mainSpan
 import com.typewritermc.services.libs.telemetry.testing.TelemetryTestHarness
 import com.typewritermc.services.libs.utils.DelayScheduler
 import com.typewritermc.services.libs.utils.RetryPolicy
-import com.typewritermc.types.DataValue
-import com.typewritermc.types.DeclarationOwner
-import com.typewritermc.types.FieldDeclaration
-import com.typewritermc.types.FieldOwner
-import com.typewritermc.types.RepresentationTemplate
-import com.typewritermc.types.ResourceId
-import com.typewritermc.types.ScalarKind
-import com.typewritermc.types.TypeDefinition
-import com.typewritermc.types.TypeDefinitionId
-import com.typewritermc.types.TypeId
-import com.typewritermc.types.TypeTemplate
-import com.typewritermc.types.TypeUse
-import com.typewritermc.types.skir.SkirAuthoringValueCodec
-import com.typewritermc.types.skir.SkirTypeCodec
-import com.typewritermc.types.skir.getOrThrow
+import com.typewritermc.types.namedUse
+import com.typewritermc.types.payload
+import com.typewritermc.types.qualified
+import com.typewritermc.types.requireValid
+import com.typewritermc.types.template
 import de.infix.testBalloon.framework.core.testSuite
 import io.kotest.matchers.ints.shouldBeGreaterThan
 import io.kotest.matchers.shouldBe
@@ -93,13 +78,25 @@ import kotlinx.coroutines.withTimeout
 import kotlinx.coroutines.yield
 import skirout.editor.v1.authoring.QueryAuthoringStateRequest
 import skirout.editor.v1.authoring.QueryAuthoringStateResponse
+import skirout.editor.v1.authoring.RelationProjectionDelta
 import skirout.editor.v1.catalog.CatalogFetchRequest
 import skirout.editor.v1.catalog.CatalogFetchResult
-import skirout.editor.v1.catalog.EditorCatalogWireSnapshot
+import skirout.editor.v1.publication.EngineImplementationInputs
+import skirout.editor.v1.type_catalog.AuthoringRecord
+import skirout.editor.v1.type_catalog.CatalogGeneration
+import skirout.editor.v1.type_catalog.DataValue
+import skirout.editor.v1.type_catalog.DeclarationOwner
+import skirout.editor.v1.type_catalog.FieldDeclaration
+import skirout.editor.v1.type_catalog.FieldOwner
+import skirout.editor.v1.type_catalog.InputToken
+import skirout.editor.v1.type_catalog.RepresentationTemplate
+import skirout.editor.v1.type_catalog.ResourceId
+import skirout.editor.v1.type_catalog.ScalarKind
+import skirout.editor.v1.type_catalog.TypeDefinition
+import skirout.editor.v1.type_catalog.TypeDefinitionId
+import skirout.editor.v1.type_catalog.TypeSelection
 import kotlin.time.Duration
 import kotlin.time.Duration.Companion.seconds
-import skirout.editor.v1.authoring.AuthoringState as SkirAuthoringState
-import skirout.editor.v1.type_catalog.CatalogGeneration as SkirCatalogGeneration
 
 @OptIn(ExperimentalCoroutinesApi::class)
 val RealmLifecycleTest by testSuite {
@@ -324,22 +321,17 @@ val RealmLifecycleTest by testSuite {
                         session,
                         "editor.authoring.state.query",
                         QueryAuthoringStateRequest(
-                            generation = SkirCatalogGeneration(value = incarnation.assembly.snapshot.generation.value),
-                            transferId = "lifecycle_structure",
+                            generation = incarnation.assembly.checked.generation,
                         ),
                         QueryAuthoringStateRequest.serializer,
                         QueryAuthoringStateResponse.serializer,
-                    ) as QueryAuthoringStateResponse.ChunkWrapper
+                    ) as QueryAuthoringStateResponse.StateWrapper
                 val state =
-                    SkirAuthoringState.serializer.fromBytes(
-                        response.value.transfer.payload
-                            .toByteArray(),
-                    )
+                    response.value
                 state.resources
                     .map {
-                        SkirAuthoringValueCodec
-                            .decode(it.content)
-                            .getOrThrow()
+                        it.content
+                            .requireValid()
                             .configuration.definition
                     }.sortedBy { it.toString() } shouldBe
                     listOf(RealmRootDefinition.id, LibraryDefinition.id, TaxonomyDefinition.id).sortedBy { it.toString() }
@@ -351,19 +343,19 @@ val RealmLifecycleTest by testSuite {
 
     test("Realm startup preserves unavailable authored data while serving unrelated resources") {
         runTest {
-            val valid = TypeDefinitionId(TypeId.Qualified("lifecycle", "valid"), 1)
-            val unavailable = TypeDefinitionId(TypeId.Qualified("lifecycle", "unavailable"), 1)
-            val availableResource = ResourceId("available")
-            val unavailableResource = ResourceId("unavailable")
+            val valid = TypeDefinitionId.qualified("lifecycle", "valid")
+            val unavailable = TypeDefinitionId.qualified("lifecycle", "unavailable")
+            val availableResource = ResourceId(value = "available")
+            val unavailableResource = ResourceId(value = "unavailable")
             val availableRecord =
-                AuthoringRecord(
-                    TypeSelection.Complete(TypeUse.Named(valid)),
-                    mapOf("name" to DataValue.StringValue("Book")),
+                AuthoringRecord.of(
+                    TypeSelection.CompleteWrapper(valid.namedUse()),
+                    mapOf("name" to DataValue.StringValueWrapper("Book")),
                 )
             val unavailableRecord =
-                AuthoringRecord(
-                    TypeSelection.Complete(TypeUse.Named(unavailable)),
-                    mapOf("legacy" to DataValue.StringValue("preserved")),
+                AuthoringRecord.of(
+                    TypeSelection.CompleteWrapper(unavailable.namedUse()),
+                    mapOf("legacy" to DataValue.StringValueWrapper("preserved")),
                 )
             val resources = mapOf(availableResource to availableRecord, unavailableResource to unavailableRecord)
             val incarnation = lifecycleIsolationCatalog(valid, unavailable)
@@ -382,17 +374,14 @@ val RealmLifecycleTest by testSuite {
                     fixture.request(
                         session,
                         "editor.catalog.fetch",
-                        CatalogFetchRequest(expectedGeneration = null, transferId = "lifecycle_catalog"),
+                        CatalogFetchRequest(expectedGeneration = null),
                         CatalogFetchRequest.serializer,
                         CatalogFetchResult.serializer,
-                    ) as CatalogFetchResult.ChunkWrapper
+                    ) as CatalogFetchResult.CatalogWrapper
                 val catalog =
-                    EditorCatalogWireSnapshot.serializer.fromBytes(
-                        catalogResult.value.transfer.payload
-                            .toByteArray(),
-                    )
-                catalog.generation.value shouldBe incarnation.assembly.snapshot.generation.value
-                catalog.types.map { SkirTypeCodec.decode(it.definition).getOrThrow().id }.containsAll(listOf(valid, unavailable)) shouldBe
+                    catalogResult.value
+                catalog.generation.value shouldBe incarnation.assembly.checked.generation.value
+                catalog.types.map { it.definition.requireValid().id }.containsAll(listOf(valid, unavailable)) shouldBe
                     true
 
                 val snapshotResult =
@@ -400,19 +389,15 @@ val RealmLifecycleTest by testSuite {
                         session,
                         "editor.authoring.state.query",
                         QueryAuthoringStateRequest(
-                            generation = SkirCatalogGeneration(value = incarnation.assembly.snapshot.generation.value),
-                            transferId = "lifecycle_snapshot",
+                            generation = incarnation.assembly.checked.generation,
                         ),
                         QueryAuthoringStateRequest.serializer,
                         QueryAuthoringStateResponse.serializer,
-                    ) as QueryAuthoringStateResponse.ChunkWrapper
+                    ) as QueryAuthoringStateResponse.StateWrapper
                 val snapshot =
-                    SkirAuthoringState.serializer.fromBytes(
-                        snapshotResult.value.transfer.payload
-                            .toByteArray(),
-                    )
+                    snapshotResult.value
                 snapshot.resources.associate { resource ->
-                    resource.id.value to SkirAuthoringValueCodec.decode(resource.content).getOrThrow()
+                    resource.id.value to resource.content.requireValid()
                 } shouldBe
                     mapOf(
                         availableResource.value to availableRecord,
@@ -430,24 +415,38 @@ private fun lifecycleIsolationCatalog(
     unavailable: TypeDefinitionId,
 ): RealmCatalogIncarnation {
     fun origin(name: String): ProviderOrigin {
-        val key = ContributionKey(ContributionSourceId("lifecycle"), "main", ProducerId("test"), ContributionName(name))
-        return ProviderOrigin(DeclarationOwner(key, name), ArtifactId("test:lifecycle"), "main")
+        val key = contributionKey(ContributionSourceId("lifecycle"), "main", ProducerId("test"), ContributionName(name))
+        return ProviderOrigin(DeclarationOwner(source = key, localIdentity = name), ArtifactId("test:lifecycle"), "main")
     }
 
     val validDefinition =
-        TypeDefinition(
-            valid,
+        TypeDefinition.partial(
+            id = valid,
             representation =
-                RepresentationTemplate.Record(
-                    listOf(FieldDeclaration(FieldOwner(valid, "name"), TypeTemplate.Scalar(ScalarKind.Text))),
+                RepresentationTemplate.createRecord(
+                    fields =
+                        listOf(
+                            FieldDeclaration.partial(
+                                owner = FieldOwner(definition = valid, name = "name"),
+                                type = ScalarKind.TEXT.template,
+                            ),
+                        ),
+                    abstract_ = false,
                 ),
         )
     val unavailableDefinition =
-        TypeDefinition(
-            unavailable,
+        TypeDefinition.partial(
+            id = unavailable,
             representation =
-                RepresentationTemplate.Record(
-                    listOf(FieldDeclaration(FieldOwner(unavailable, "legacy"), TypeTemplate.Scalar(ScalarKind.Text))),
+                RepresentationTemplate.createRecord(
+                    fields =
+                        listOf(
+                            FieldDeclaration.partial(
+                                owner = FieldOwner(definition = unavailable, name = "legacy"),
+                                type = ScalarKind.TEXT.template,
+                            ),
+                        ),
+                    abstract_ = false,
                 ),
         )
     val contributions =
@@ -460,7 +459,7 @@ private fun lifecycleIsolationCatalog(
                 ),
         )
     val deployment = GeneratedProviderLoader().load(emptyList(), DeploymentFacts(), DiscoveryDomains.Realm)
-    val assembly = contributions.assemble(CatalogAssemblyContext(CatalogGeneration("lifecycle_isolation")))
+    val assembly = contributions.assemble(CatalogAssemblyContext(CatalogGeneration(value = "lifecycle_isolation")))
     return RealmCatalogIncarnation(assembly, deployment)
 }
 
@@ -503,7 +502,7 @@ private class RealmLifecycleFixture(
                                 AuthoringMutationPlan(
                                     initialSeed.resources,
                                     emptySet(),
-                                    RelationProjectionDelta(emptyList(), emptyList(), emptyList()),
+                                    RelationProjectionDelta(removals = emptyList(), created = emptyList(), metadataChanged = emptyList()),
                                 ),
                             )
                         }
@@ -518,7 +517,14 @@ private class RealmLifecycleFixture(
             registrars = emptyList(),
             facts = DeploymentFacts(),
             preparationEvaluator = PreparationEvaluator { _, _ -> error("Preparation is not used by lifecycle tests.") },
-            engine = StagedEngineImplementationSource(EngineImplementationInputs(InputToken("engine"))),
+            engine =
+                StagedEngineImplementationSource(
+                    EngineImplementationInputs(
+                        token =
+                            skirout.editor.v1.type_catalog
+                                .InputToken(value = "engine"),
+                    ),
+                ),
             catalogActivator =
                 catalogActivator ?: RealmCatalogActivator { repository, catalog ->
                     repository.activateCatalog(catalog, install = {}, publish = {})

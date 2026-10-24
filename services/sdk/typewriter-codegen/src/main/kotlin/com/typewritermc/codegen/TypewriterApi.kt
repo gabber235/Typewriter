@@ -39,7 +39,7 @@ internal object TypewriterApi {
     val ReadContext = ClassName(AUTHORING, "ReadContext")
     val ReadProjection = ClassName(AUTHORING, "ReadProjection")
     val DisplayFormulas = ClassName(AUTHORING, "DisplayFormulas")
-    val ResourceAppearance = ClassName(AUTHORING, "ResourceAppearance")
+    val ResourceAppearance = ClassName("skirout.editor.v1.catalog", "ResourceAppearance") // the Skir read model
     val ResourceDisplayScope = ClassName(AUTHORING, "ResourceDisplayScope")
     val ResourceDisplaySubject = ClassName(AUTHORING, "ResourceDisplaySubject")
     val ResourceDraft = ClassName(AUTHORING, "ResourceDraft")
@@ -72,7 +72,6 @@ internal object TypewriterApi {
     val RealmSearchCapabilityProvider = ClassName(CAPABILITY, "RealmSearchCapabilityProvider")
     val RealmSearchCapabilityRef = ClassName(CAPABILITY, "RealmSearchCapabilityRef")
     val RealmSearchContext = ClassName(CAPABILITY, "RealmSearchContext")
-    val RealmSearchQuery = ClassName(CAPABILITY, "RealmSearchQuery")
     val RealmSearchRequest = ClassName(CAPABILITY, "RealmSearchRequest")
     val mapValues = MemberName(CAPABILITY, "mapValues", isExtension = true)
 
@@ -142,9 +141,6 @@ internal object TypewriterApi {
     val RuntimeRegistrarDescriptor = ClassName(DISCOVERY, "RuntimeRegistrarDescriptor")
 
     // Expression
-    val CanonicalReadDescriptor = ClassName(EXPRESSION, "CanonicalReadDescriptor")
-    val CanonicalReadModel = ClassName(EXPRESSION, "CanonicalReadModel")
-    val CanonicalReadModelRegistry = ClassName(EXPRESSION, "CanonicalReadModelRegistry")
     val Expr = ClassName(EXPRESSION, "Expr")
     val ExpressionFactory = ClassName(EXPRESSION, "ExpressionFactory")
     val Handled = ClassName(EXPRESSION, "Handled")

@@ -1,39 +1,26 @@
 package com.typewritermc.realm.authoring
 
 import com.typewritermc.authoring.AuthoredReads
-import com.typewritermc.authoring.AuthoringRecord
 import com.typewritermc.authoring.CompletenessResult
 import com.typewritermc.authoring.EditContext
-import com.typewritermc.authoring.ItemId
 import com.typewritermc.authoring.PlacementAnchor
-import com.typewritermc.authoring.PreparedEdit
 import com.typewritermc.authoring.ResourceDraft
 import com.typewritermc.authoring.ResourceDrafts
-import com.typewritermc.authoring.TypeSelection
-import com.typewritermc.authoring.ValueLocation
-import com.typewritermc.authoring.ValuePath
-import com.typewritermc.authoring.ValueProblem
 import com.typewritermc.authoring.complete
-import com.typewritermc.capability.CapabilityId
-import com.typewritermc.checking.CatalogGeneration
+import com.typewritermc.authoring.definition
+import com.typewritermc.authoring.of
+import com.typewritermc.authoring.root
+import com.typewritermc.authoring.use
 import com.typewritermc.checking.InputIdentity
 import com.typewritermc.discovery.ProviderOrigin
 import com.typewritermc.operations.AuthoringGraphFacts
 import com.typewritermc.operations.BoundResourceOperation
-import com.typewritermc.operations.DropCandidates
 import com.typewritermc.operations.NeedsChoices
-import com.typewritermc.operations.OperationAvailability
-import com.typewritermc.operations.OperationCardinality
-import com.typewritermc.operations.OperationConfirmation
 import com.typewritermc.operations.OperationIdentities
 import com.typewritermc.operations.OperationInvocation
 import com.typewritermc.operations.OperationPreparation
 import com.typewritermc.operations.OperationReads
-import com.typewritermc.operations.OperationTargets
-import com.typewritermc.operations.PreparationChoice
 import com.typewritermc.operations.PreparationChoices
-import com.typewritermc.operations.ResolvedResourceOperation
-import com.typewritermc.operations.ResolvedResourceOperations
 import com.typewritermc.operations.UnavailableAuthoredValue
 import com.typewritermc.operations.UnfinishedOperationInput
 import com.typewritermc.operations.asClosedUse
@@ -41,11 +28,33 @@ import com.typewritermc.operations.requireAuthored
 import com.typewritermc.realm.checking.CapturedAuthoringReads
 import com.typewritermc.realm.repository.AuthoringPlanRejected
 import com.typewritermc.services.libs.utils.rethrowExceptional
-import com.typewritermc.types.DataValue
-import com.typewritermc.types.ResourceId
-import com.typewritermc.types.ResourceTarget
-import com.typewritermc.types.TypeTemplate
+import com.typewritermc.types.template
+import com.typewritermc.types.toResourceIds
+import com.typewritermc.types.toSkir
+import com.typewritermc.types.unknownVariant
+import com.typewritermc.types.use
+import skirout.editor.v1.authoring.PreparedEdit
+import skirout.editor.v1.diagnostic.ValueProblem
+import skirout.editor.v1.operation.OperationAvailability
+import skirout.editor.v1.operation.OperationCardinality
+import skirout.editor.v1.operation.OperationConfirmation
+import skirout.editor.v1.operation.ResolvedResourceOperation
+import skirout.editor.v1.operation.ResolvedResourceOperations
+import skirout.editor.v1.resource_operations.DropCandidates
+import skirout.editor.v1.resource_operations.PreparationChoice
+import skirout.editor.v1.type_catalog.AuthoringRecord
+import skirout.editor.v1.type_catalog.CapabilityId
+import skirout.editor.v1.type_catalog.CatalogGeneration
+import skirout.editor.v1.type_catalog.DataValue
+import skirout.editor.v1.type_catalog.ItemId
+import skirout.editor.v1.type_catalog.NamedTypeTemplate
+import skirout.editor.v1.type_catalog.ResourceId
+import skirout.editor.v1.type_catalog.ResourceTarget
+import skirout.editor.v1.type_catalog.TypeSelection
+import skirout.editor.v1.type_catalog.ValueLocation
+import skirout.editor.v1.type_catalog.ValuePath
 import java.util.UUID
+import com.typewritermc.types.ResourceId as AuthorResourceId
 
 internal sealed interface OperationPreparationResult {
     data class Preview(
@@ -107,21 +116,19 @@ internal class ResourceOperationRuntime(
                     .mapNotNull { operation ->
                         val reads = CapturedAuthoringReads(AuthoredReadView.Original(view))
                         val availability = operation.evaluate(invocation.targets, RealmOperationReads(reads), reads)
-                        if (availability ==
-                            OperationAvailability.Hidden
-                        ) {
+                        if (availability == OperationAvailability.HIDDEN) {
                             null
                         } else {
-                            ResolvedResourceOperation(operation.definition, availability)
+                            ResolvedResourceOperation(definition = operation.definition, availability = availability)
                         }
                     }.sortedWith(
                         compareBy(
-                            { it.definition.presentation.group.ordinal },
+                            { it.definition.presentation.group.kind.ordinal },
                             { it.definition.presentation.order },
                             { it.definition.capability.value },
                         ),
                     )
-            ResolvedResourceOperations(operations)
+            ResolvedResourceOperations(operations = operations)
         }
 
     /**
@@ -143,20 +150,20 @@ internal class ResourceOperationRuntime(
                     val field = operation.dropField ?: return@mapNotNull null
                     val captured = CapturedAuthoringReads(AuthoredReadView.Original(view))
                     val reads = RealmOperationReads(captured)
-                    if (operation.evaluate(invocation.targets, reads, captured) != OperationAvailability.Enabled) return@mapNotNull null
+                    if (operation.evaluate(invocation.targets, reads, captured) != OperationAvailability.ENABLED) return@mapNotNull null
                     val destinations =
                         operation.guarded(captured) {
                             field
                                 .acceptedCandidates(invocation.targets, reads)
-                                .filterIsInstance<ResourceId>()
+                                .filterIsInstance<AuthorResourceId>()
                                 .filterNot { it in invocation.targets }
                                 .distinct()
                                 .take(DROP_CANDIDATE_LIMIT + 1)
                                 .toList()
                         }
                     DropCandidates(
-                        operation.definition.id,
-                        destinations.take(DROP_CANDIDATE_LIMIT),
+                        operation = operation.definition.id,
+                        destinations = destinations.take(DROP_CANDIDATE_LIMIT).toSkir(),
                         complete = destinations.size <= DROP_CANDIDATE_LIMIT,
                     )
                 }
@@ -182,17 +189,19 @@ internal class ResourceOperationRuntime(
             }
             val session = RuntimeOperationPreparation(invocation, choices, edit)
             when (val available = operation.evaluate(invocation.targets, session, edit.capturedReads)) {
-                OperationAvailability.Enabled -> Unit
+                OperationAvailability.ENABLED -> Unit
 
-                is OperationAvailability.Disabled -> return OperationPreparationResult.Unavailable(available.reason)
+                is OperationAvailability.DisabledWrapper -> return OperationPreparationResult.Unavailable(available.value)
 
-                OperationAvailability.Hidden -> return OperationPreparationResult.Unavailable(
+                OperationAvailability.HIDDEN -> return OperationPreparationResult.Unavailable(
                     "This operation does not apply to the captured selection",
                 )
+
+                else -> error("Unknown operation availability.")
             }
             validateOrigin(invocation, baseline, edit.capturedReads)
             operation.input.schema?.let { schema ->
-                when (val checked = schema.complete(input ?: DataValue.Unfilled)) {
+                when (val checked = schema.complete(input ?: DataValue.UNFILLED)) {
                     is CompletenessResult.Unfinished -> return OperationPreparationResult.NeedsInput(
                         input,
                         emptyList(),
@@ -212,7 +221,9 @@ internal class ResourceOperationRuntime(
             } catch (unfinished: UnfinishedOperationInput) {
                 OperationPreparationResult.NeedsInput(input, emptyList(), unfinished.paths)
             } catch (missing: UnavailableAuthoredValue) {
-                OperationPreparationResult.Invalid(missing.locations.map { ValueProblem(it, "required_authored_value_missing") })
+                OperationPreparationResult.Invalid(
+                    missing.locations.map { ValueProblem(location = it, code = "required_authored_value_missing") },
+                )
             } catch (rejected: AuthoringPlanRejected) {
                 OperationPreparationResult.Invalid(rejected.problems)
             } catch (failure: Exception) {
@@ -236,7 +247,7 @@ internal class ResourceOperationRuntime(
 
     /** Availability of this operation for [subjects]; a callback failure or incomplete read is a resolution failure. */
     private fun BoundResourceOperation.evaluate(
-        subjects: List<ResourceId>,
+        subjects: List<AuthorResourceId>,
         reads: OperationReads,
         captured: CapturedAuthoringReads,
     ): OperationAvailability = guarded(captured) { availability(subjects, reads) }
@@ -260,13 +271,14 @@ internal fun OperationInvocation.applicableIn(
     view: AuthoringView,
     reads: CapturedAuthoringReads,
 ): List<BoundResourceOperation> {
-    val records = targets.map { id -> requireNotNull(view.resources[id]) { "The operation target is unavailable" } }
-    targets.forEach { id ->
+    val ids = targets.toSkir()
+    val records = ids.map { id -> requireNotNull(view.resources[id]) { "The operation target is unavailable" } }
+    ids.forEach { id ->
         reads.observeInput(InputIdentity.Existence(id))
-        reads.observeInput(InputIdentity.Form(ValueLocation(id, ValuePath())))
+        reads.observeInput(InputIdentity.Form(ValueLocation.of(id)))
     }
     return view.catalog.operations.operations
-        .filter { it.definition.targets.covers(records, view) }
+        .filter { it.covers(records, view) }
 }
 
 /** Runs [body] for this operation and checks its reads; a failure or incomplete read is a resolution failure. */
@@ -286,34 +298,40 @@ internal fun <T> BoundResourceOperation.guarded(
         throw OperationResolutionFailure(origin, failure)
     }
 
-private fun OperationTargets.covers(
+private fun BoundResourceOperation.covers(
     records: List<AuthoringRecord>,
     view: AuthoringView,
 ): Boolean {
     val count =
-        when (cardinality) {
-            OperationCardinality.Single -> records.size == 1
-            OperationCardinality.Selection -> records.isNotEmpty()
+        when (definition.targets.cardinality) {
+            OperationCardinality.SINGLE -> records.size == 1
+            OperationCardinality.SELECTION -> records.isNotEmpty()
+            else -> false
         }
     return count &&
-        when (val subject = subject) {
-            ResourceTarget.AnyResource -> true
-            is ResourceTarget.Type -> records.all { it.matches(subject.template, view) }
+        when (val subject = target) {
+            ResourceTarget.ANY_RESOURCE -> true
+            is ResourceTarget.TypeWrapper -> records.all { it.matches(subject.template, view) }
+            else -> unknownVariant(subject)
         }
 }
 
 private fun AuthoringRecord.matches(
-    target: TypeTemplate.Named,
+    target: NamedTypeTemplate,
     view: AuthoringView,
 ): Boolean =
     when (val actual = configuration) {
-        is TypeSelection.Complete -> {
-            view.catalog.checked.isReadableAs(actual.use, target.asClosedUse())
+        is TypeSelection.CompleteWrapper -> {
+            view.catalog.checked.isReadableAs(actual.use.use, target.asClosedUse().use)
         }
 
-        is TypeSelection.Pending -> {
+        is TypeSelection.PendingWrapper -> {
             target.arguments.isEmpty() &&
                 view.catalog.checked.isNominalSubtype(actual.definition, target.definition)
+        }
+
+        else -> {
+            unknownVariant(actual)
         }
     }
 
@@ -326,7 +344,7 @@ internal class RealmOperationReads(
 ) : OperationReads,
     AuthoredReads by captured,
     AuthoringGraphFacts by RealmGraphFacts(RelationReads(captured)) {
-    override fun resourceDraft(id: ResourceId): ResourceDraft = captured.resourceDraft(id)
+    override fun resourceDraft(id: AuthorResourceId): ResourceDraft = captured.resourceDraft(id.toSkir())
 }
 
 /** One preparation attempt: authored reads, graph facts and edits, all staged into [edit]. */
@@ -344,9 +362,9 @@ internal class RuntimeOperationPreparation(
 
     override val identities: OperationIdentities =
         object : OperationIdentities {
-            override fun resource(key: String) = ResourceId(identity("resource", key))
+            override fun resource(key: String) = AuthorResourceId(identity("resource", key))
 
-            override fun item(key: String) = ItemId(identity("item", key))
+            override fun item(key: String) = ItemId(value = identity("item", key))
 
             private fun identity(
                 kind: String,
@@ -357,35 +375,37 @@ internal class RuntimeOperationPreparation(
     var selection: List<ResourceId>? = null
         private set
 
-    override fun resourceDraft(id: ResourceId): ResourceDraft = edit.capturedReads.resourceDraft(id)
+    override fun resourceDraft(id: AuthorResourceId): ResourceDraft = edit.capturedReads.resourceDraft(id.toSkir())
 
-    override fun selectAfterStaging(ids: List<ResourceId>) {
-        require(ids.all { it in edit.session.resources }) { "The result selection contains an absent resource" }
-        selection = ids.distinct()
+    override fun selectAfterStaging(ids: List<AuthorResourceId>) {
+        val selected = ids.toSkir()
+        require(selected.all { it in edit.session.resources }) { "The result selection contains an absent resource" }
+        selection = selected.distinct()
     }
 
-    override suspend fun delete(ids: List<ResourceId>) = edit.deleteAll(ids)
+    override suspend fun delete(ids: List<AuthorResourceId>) = edit.deleteAll(ids.toSkir())
 
-    override suspend fun duplicate(roots: List<ResourceId>): List<ResourceId> = cloner.duplicateOwned(roots)
+    override suspend fun duplicate(roots: List<AuthorResourceId>): List<AuthorResourceId> =
+        cloner.duplicateOwned(roots.toSkir()).toResourceIds()
 
     override suspend fun move(
-        ids: List<ResourceId>,
-        destination: ResourceId,
+        ids: List<AuthorResourceId>,
+        destination: AuthorResourceId,
         anchor: PlacementAnchor?,
     ) {
-        val moved = relationEdits.move(ids, destination)
-        with(layouts) { moved.placeIn(destination, anchor) }
+        val moved = relationEdits.move(ids.toSkir(), destination.toSkir())
+        with(layouts) { moved.placeIn(destination.toSkir(), anchor) }
     }
 
     override suspend fun link(
-        ids: List<ResourceId>,
-        target: ResourceId,
-    ) = relationEdits.link(ids, target)
+        ids: List<AuthorResourceId>,
+        target: AuthorResourceId,
+    ) = relationEdits.link(ids.toSkir(), target.toSkir())
 
     override suspend fun unlink(
-        ids: List<ResourceId>,
-        target: ResourceId,
-    ) = relationEdits.unlink(ids, target)
+        ids: List<AuthorResourceId>,
+        target: AuthorResourceId,
+    ) = relationEdits.unlink(ids.toSkir(), target.toSkir())
 }
 
 /** [id] bound as a draft of any resource; an unreadable binding fails the read. */

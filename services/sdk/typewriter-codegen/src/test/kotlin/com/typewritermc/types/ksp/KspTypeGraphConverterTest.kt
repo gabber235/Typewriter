@@ -8,22 +8,26 @@ import com.google.devtools.ksp.symbol.KSType
 import com.google.devtools.ksp.symbol.KSTypeArgument
 import com.google.devtools.ksp.symbol.KSTypeParameter
 import com.google.devtools.ksp.symbol.Nullability
-import com.typewritermc.types.EndpointId
-import com.typewritermc.types.ParameterKey
-import com.typewritermc.types.RepresentationTemplate
-import com.typewritermc.types.ScalarKind
-import com.typewritermc.types.TypeTemplate
-import com.typewritermc.types.TypeUse
+import com.typewritermc.types.integerScalar
+import com.typewritermc.types.nullable
+import com.typewritermc.types.template
+import com.typewritermc.types.use
 import de.infix.testBalloon.framework.core.testSuite
 import io.kotest.matchers.shouldBe
 import io.mockk.every
 import io.mockk.mockk
+import skirout.editor.v1.type_catalog.EndpointId
+import skirout.editor.v1.type_catalog.IntegerWidth
+import skirout.editor.v1.type_catalog.ParameterKey
+import skirout.editor.v1.type_catalog.RepresentationTemplate
+import skirout.editor.v1.type_catalog.ScalarKind
+import skirout.editor.v1.type_catalog.TypeUse
 
 val KspTypeGraphConverterTest by testSuite {
     test("scalar conversion produces a complete use") {
         val result = KspTypeGraphConverter().convert(classType("kotlin.String")) as KspTypeConversionResult.Success
 
-        result.root shouldBe TypeUse.Scalar(ScalarKind.Text)
+        result.root shouldBe ScalarKind.TEXT.use
         result.definitions shouldBe emptyList()
     }
 
@@ -46,13 +50,13 @@ val KspTypeGraphConverterTest by testSuite {
                 )
 
             val result = KspTypeGraphConverter().convertDeclaration(child) as KspTypeConversionResult.Success
-            val childDefinition = result.definitions.single { it.id == (result.root as TypeUse.Named).definition }
-            val parameter = TypeTemplate.Parameter(ParameterKey(childDefinition.id, 0))
+            val childDefinition = result.definitions.single { it.id == (result.root as TypeUse.NamedWrapper).value.definition }
+            val parameter = ParameterKey(owner = childDefinition.id, index = 0).template
             childDefinition.parents
                 .single()
                 .arguments
                 .single() shouldBe
-                if (markedNullable) TypeTemplate.Nullable(parameter) else parameter
+                if (markedNullable) parameter.nullable() else parameter
         }
 
         verifyArgument(markedNullable = true)
@@ -80,21 +84,27 @@ val KspTypeGraphConverterTest by testSuite {
                 "com.typewritermc.types.Ref",
                 listOf(argument(type(endpoint)), argument(classType("kotlin.String"))),
             )
-        val endpointId = EndpointId("example.relation:source")
+        val endpointId = EndpointId(value = "example.relation:source")
 
         val result =
             KspTypeGraphConverter(linkPolicy = KspLinkPolicy { endpointId }).convert(reference) as
                 KspTypeConversionResult.Success
 
         val definition = result.definitions.single()
-        result.root shouldBe TypeUse.Named(definition.id, listOf(TypeUse.Scalar(ScalarKind.Text)))
+        result.root shouldBe definition.id.use(listOf(ScalarKind.TEXT.use))
         result.definitions.single().representation shouldBe
-            RepresentationTemplate.Link(endpointId, TypeTemplate.Parameter(definition.parameters.single().key))
+            RepresentationTemplate.createLink(
+                endpoint = endpointId,
+                target =
+                    definition.parameters
+                        .single()
+                        .key.template,
+            )
     }
 
     test("one generated endpoint retains each concrete target as an application argument") {
         val endpoint = classDeclaration("example.SourceEndpoint")
-        val endpointId = EndpointId("example.relation:source")
+        val endpointId = EndpointId(value = "example.relation:source")
         val converter = KspTypeGraphConverter(linkPolicy = KspLinkPolicy { endpointId })
         val text =
             converter.convert(
@@ -112,15 +122,15 @@ val KspTypeGraphConverterTest by testSuite {
             ) as KspTypeConversionResult.Success
 
         text.definitions.single().id shouldBe integer.definitions.single().id
-        text.root shouldBe TypeUse.Named(text.definitions.single().id, listOf(TypeUse.Scalar(ScalarKind.Text)))
+        text.root shouldBe
+            text.definitions
+                .single()
+                .id
+                .use(listOf(ScalarKind.TEXT.use))
         integer.root shouldBe
-            TypeUse.Named(
-                integer.definitions.single().id,
+            integer.definitions.single().id.use(
                 listOf(
-                    TypeUse.Scalar(
-                        com.typewritermc.types.ScalarKind
-                            .Integer(com.typewritermc.types.IntegerWidth.SIGNED_32),
-                    ),
+                    integerScalar(IntegerWidth.SIGNED_THIRTY_TWO).use,
                 ),
             )
     }

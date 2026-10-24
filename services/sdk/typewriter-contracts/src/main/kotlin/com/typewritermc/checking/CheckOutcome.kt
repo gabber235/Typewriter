@@ -1,30 +1,11 @@
 package com.typewritermc.checking
 
-import com.typewritermc.authoring.ValueLocation
-import kotlinx.serialization.SerialName
-import kotlinx.serialization.Serializable
+import skirout.editor.v1.checking.CheckOutcome
+import skirout.editor.v1.diagnostic.Diagnostic
+import skirout.editor.v1.type_catalog.ValueLocation
 
-@Serializable
-sealed interface CheckOutcome {
-    @Serializable
-    @SerialName("finished")
-    data object Finished : CheckOutcome
+val CheckOutcome.NeedsInputWrapper.locations: List<ValueLocation> get() = value
 
-    @Serializable
-    @SerialName("needs_input")
-    data class NeedsInput(
-        val locations: List<ValueLocation>,
-    ) : CheckOutcome
+val CheckOutcome.FailedWrapper.diagnostics: List<Diagnostic> get() = value
 
-    @Serializable
-    @SerialName("failed")
-    data class Failed(
-        val diagnostics: List<Diagnostic>,
-    ) : CheckOutcome
-
-    @Serializable
-    @SerialName("incomplete")
-    data class Incomplete(
-        val reason: String,
-    ) : CheckOutcome
-}
+val CheckOutcome.IncompleteWrapper.reason: String get() = value

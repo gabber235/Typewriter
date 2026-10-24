@@ -25,7 +25,7 @@ class BulkJoinRequestActions extends HookConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final theme = Theme.of(context);
-    final bulkRoles = useState<List<OrganizationRole>>([]);
+    final bulkRoles = useState<List<skir.OrganizationRole>>([]);
     final isAccepting = useState(false);
 
     final roleDropdown = RoleMultiselectDropdown(
@@ -38,7 +38,7 @@ class BulkJoinRequestActions extends HookConsumerWidget {
       if (isAccepting.value) return;
       isAccepting.value = true;
       final ids = Set<skir.RecordId>.unmodifiable(selectedIds);
-      final roles = List<OrganizationRole>.unmodifiable(bulkRoles.value);
+      final roles = List<skir.OrganizationRole>.unmodifiable(bulkRoles.value);
       try {
         await ref.executeMembership(
           ref.membershipCommands.approve(ids, roles),

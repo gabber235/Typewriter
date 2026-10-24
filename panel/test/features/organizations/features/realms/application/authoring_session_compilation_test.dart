@@ -18,11 +18,8 @@ void main() {
             scope,
             initial: publicationObservation(readyPublicationStatus()),
           )
-          ..send = () async => SubmissionConfirmed(
-            skir.PublishAuthoringResponse.wrapResult(
-              skir.PublicationResult.noChanges,
-            ),
-          );
+          ..send = () async =>
+              SubmissionConfirmed(skir.PublishAuthoringResponse.noChanges);
     final driver = PublicationWorkDriver(scope, source, work)..start();
     addTearDown(() async {
       driver.dispose();
@@ -38,7 +35,7 @@ void main() {
     expect(driver.view, isA<CheckingRealmPublication>());
     expect(
       await stale.invoke(),
-      isA<skir.PublicationResult_candidateChangedWrapper>(),
+      isA<skir.PublishAuthoringResponse_candidateChangedErrorWrapper>(),
     );
     expect(source.candidates, isEmpty);
     final blocked = blockedPublicationStatus();
@@ -88,15 +85,11 @@ void main() {
     expect(driver.view, isA<RequestActiveRealmPublication>());
     expect(
       await command.invoke(),
-      isA<skir.PublicationResult_candidateChangedWrapper>(),
+      isA<skir.PublishAuthoringResponse_candidateChangedErrorWrapper>(),
     );
     expect(source.candidates, hasLength(1));
     response.complete(
-      SubmissionConfirmed(
-        skir.PublishAuthoringResponse.wrapResult(
-          skir.PublicationResult.noChanges,
-        ),
-      ),
+      SubmissionConfirmed(skir.PublishAuthoringResponse.noChanges),
     );
     await first;
     await waitForPublication(() => driver.view is ReadyRealmPublication);
@@ -136,7 +129,7 @@ void main() {
     expect(work.submissions.single.canReplay, isFalse);
     expect(
       await command.invoke(),
-      isA<skir.PublicationResult_candidateChangedWrapper>(),
+      isA<skir.PublishAuthoringResponse_candidateChangedErrorWrapper>(),
     );
     expect(source.candidates, hasLength(1));
   });

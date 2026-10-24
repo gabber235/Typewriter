@@ -1,14 +1,14 @@
 package com.typewritermc.configuration
 
-import com.typewritermc.authoring.ArgumentSelection
-import com.typewritermc.authoring.PartialSchema
-import com.typewritermc.authoring.PathSegment
-import com.typewritermc.authoring.TypeSelection
-import com.typewritermc.authoring.ValuePath
+import com.typewritermc.authoring.arguments
+import com.typewritermc.authoring.definition
+import com.typewritermc.authoring.name
+import com.typewritermc.authoring.root
+import com.typewritermc.authoring.type
+import com.typewritermc.authoring.use
 import com.typewritermc.expression.CanonicalReadModels
 import com.typewritermc.expression.CheckedExpressionProgram
 import com.typewritermc.expression.CheckedQueryCall
-import com.typewritermc.expression.ExpressionBindingId
 import com.typewritermc.expression.ExpressionOccurrence
 import com.typewritermc.expression.PortableExpressionLimits
 import com.typewritermc.expression.children
@@ -19,23 +19,25 @@ import com.typewritermc.expression.nominalExpressionType
 import com.typewritermc.expression.nominalUseOrNull
 import com.typewritermc.expression.resourceSourceOrNull
 import com.typewritermc.expression.sourceExpression
-import com.typewritermc.types.DataValue
-import com.typewritermc.types.FloatWidth
-import com.typewritermc.types.IntegerWidth
 import com.typewritermc.types.ResourceIdDefinition
-import com.typewritermc.types.ScalarKind
 import com.typewritermc.types.StandardTypes
-import com.typewritermc.types.TypeDefinitionId
-import com.typewritermc.types.TypeUse
+import com.typewritermc.types.actualType
 import com.typewritermc.types.catalog.CheckedType
-import com.typewritermc.types.catalog.DeclarationDiagnostic
 import com.typewritermc.types.catalog.Resolution
-import com.typewritermc.types.catalog.ResolvedRepresentation
+import com.typewritermc.types.catalog.of
 import com.typewritermc.types.catalog.resolve
-import com.typewritermc.types.skir.SkirAuthoringValueCodec
-import com.typewritermc.types.skir.SkirConversionResult
-import com.typewritermc.types.skir.SkirDataValueCodec
-import com.typewritermc.types.skir.SkirTypeCodec
+import com.typewritermc.types.fields
+import com.typewritermc.types.floatScalar
+import com.typewritermc.types.integerScalar
+import com.typewritermc.types.isValid
+import com.typewritermc.types.items
+import com.typewritermc.types.namedUse
+import com.typewritermc.types.portableOrNull
+import com.typewritermc.types.rows
+import com.typewritermc.types.unknownVariant
+import com.typewritermc.types.use
+import com.typewritermc.types.validOrNull
+import skirout.editor.v1.diagnostic.DeclarationDiagnostic
 import skirout.editor.v1.expression.BoundDirection
 import skirout.editor.v1.expression.EntryBranch
 import skirout.editor.v1.expression.ExpressionMappingType
@@ -54,6 +56,19 @@ import skirout.editor.v1.expression.TextCompareOperation
 import skirout.editor.v1.expression.TextUnaryOperation
 import skirout.editor.v1.expression.TimestampBoundDirection
 import skirout.editor.v1.expression.ValueCompareOperation
+import skirout.editor.v1.type_catalog.ArgumentSelection
+import skirout.editor.v1.type_catalog.DataValue
+import skirout.editor.v1.type_catalog.ExpressionBindingId
+import skirout.editor.v1.type_catalog.FloatWidth
+import skirout.editor.v1.type_catalog.IntegerWidth
+import skirout.editor.v1.type_catalog.PartialSchema
+import skirout.editor.v1.type_catalog.PathSegment
+import skirout.editor.v1.type_catalog.ResolvedRepresentation
+import skirout.editor.v1.type_catalog.ScalarKind
+import skirout.editor.v1.type_catalog.TypeDefinitionId
+import skirout.editor.v1.type_catalog.TypeSelection
+import skirout.editor.v1.type_catalog.TypeUse
+import skirout.editor.v1.type_catalog.ValuePath
 import java.util.Collections
 import java.util.IdentityHashMap
 
@@ -85,7 +100,7 @@ class PortableExpressionChecker(
         return if (codes.isEmpty()) {
             Resolution.Ready(CheckedExpressionProgram(body, expectedOutput, invocation.queries.toMap()))
         } else {
-            Resolution.Invalid(codes.map { DeclarationDiagnostic(affected, it) })
+            Resolution.Invalid(codes.map { DeclarationDiagnostic.of(affected, it) })
         }
     }
 
@@ -132,15 +147,15 @@ class PortableExpressionChecker(
     ): List<DeclarationDiagnostic> =
         checkExpressionCodes(
             body,
-            mapOf(ExpressionBindingId("configured_value") to nominalExpressionType(subject.use)),
-            nominalExpressionType(TypeUse.Scalar(ScalarKind.Boolean), true),
-        ).map { DeclarationDiagnostic(requireNotNull(owner), it) }
+            mapOf(ExpressionBindingId(value = "configured_value") to nominalExpressionType(subject.use)),
+            nominalExpressionType(ScalarKind.BOOLEAN.use, true),
+        ).map { DeclarationDiagnostic.of(requireNotNull(owner), it) }
 
     internal fun checkRuleStructure(body: ExpressionNode): List<DeclarationDiagnostic> =
         checkExpressionStructure(
             body,
-            setOf(ExpressionBindingId("configured_value")),
-        ).map { DeclarationDiagnostic(requireNotNull(owner), it) }
+            setOf(ExpressionBindingId(value = "configured_value")),
+        ).map { DeclarationDiagnostic.of(requireNotNull(owner), it) }
 
     private fun validateStructure(
         root: ExpressionNode,
@@ -154,7 +169,7 @@ class PortableExpressionChecker(
             demand(depth <= PortableExpressionLimits.MAX_DEPTH, "expression_depth_limit")
             when (node) {
                 is ExpressionNode.InputWrapper -> {
-                    demand(ExpressionBindingId(node.value.binding.value) in bindings, "unknown_expression_binding")
+                    demand(ExpressionBindingId(value = node.value.binding.value) in bindings, "unknown_expression_binding")
                     decodePath(node.value.path)
                 }
 
@@ -242,11 +257,7 @@ class PortableExpressionChecker(
         demand(known, "unknown_expression_operation")
     }
 
-    private fun decodePath(path: skirout.editor.v1.type_catalog.ValuePath): ValuePath =
-        when (val decoded = SkirAuthoringValueCodec.decode(path)) {
-            is SkirConversionResult.Success -> decoded.value
-            is SkirConversionResult.Failure -> fail("invalid_expression_path")
-        }
+    private fun decodePath(path: ValuePath): ValuePath = path.validOrNull() ?: fail("invalid_expression_path")
 
     private inner class Invocation(
         bindings: Map<ExpressionBindingId, ExpressionType>,
@@ -332,22 +343,22 @@ class PortableExpressionChecker(
         private fun scalar(
             kind: ScalarKind,
             missing: Boolean = false,
-        ) = nominalExpressionType(TypeUse.Scalar(kind), missing)
+        ) = nominalExpressionType(kind.use, missing)
 
-        private fun boolean(missing: Boolean = false) = scalar(ScalarKind.Boolean, missing)
+        private fun boolean(missing: Boolean = false) = scalar(ScalarKind.BOOLEAN, missing)
 
-        private fun integer(missing: Boolean = false) = scalar(ScalarKind.Integer(IntegerWidth.SIGNED_64), missing)
+        private fun integer(missing: Boolean = false) = scalar(integerScalar(IntegerWidth.SIGNED_SIXTY_FOUR), missing)
 
-        private fun text(missing: Boolean = false) = scalar(ScalarKind.Text, missing)
+        private fun text(missing: Boolean = false) = scalar(ScalarKind.TEXT, missing)
 
         /** Whether [actual] is a proper nominal subtype of [expected], such as an Iconify icon where an icon is expected. */
         private fun isNominalSubtype(
             actual: TypeUse?,
             expected: TypeUse?,
         ): Boolean {
-            if (actual !is TypeUse.Named || expected !is TypeUse.Named || actual == expected) return false
+            if (actual !is TypeUse.NamedWrapper || expected !is TypeUse.NamedWrapper || actual == expected) return false
             val resolved = resolveType(actual) as? Resolution.Ready ?: return false
-            return expected in resolved.value.schema.ancestors
+            return expected.value in resolved.value.schema.ancestors
         }
 
         private fun ready(use: TypeUse): CheckedType =
@@ -359,19 +370,23 @@ class PortableExpressionChecker(
         private fun canonical(type: ExpressionType): ExpressionType {
             val use = type.nominalUseOrNull() ?: return type
             return when {
-                use is TypeUse.Nullable -> {
+                use is TypeUse.NullableWrapper -> {
                     ExpressionType(
-                        value = ExpressionValueType.NullableWrapper(nominalExpressionType(use.value)),
+                        value = ExpressionValueType.NullableWrapper(nominalExpressionType(use.value.value)),
                         mayBeMissing = type.mayBeMissing,
                     )
                 }
 
-                use is TypeUse.Named && use.definition == StandardTypes.list && use.arguments.size == 1 -> {
-                    listExpressionType(nominalExpressionType(use.arguments.single()), type.mayBeMissing)
+                use is TypeUse.NamedWrapper && use.value.definition == StandardTypes.list && use.value.arguments.size == 1 -> {
+                    listExpressionType(nominalExpressionType(use.value.arguments.single()), type.mayBeMissing)
                 }
 
-                use is TypeUse.Named && use.definition == StandardTypes.map && use.arguments.size == 2 -> {
-                    mapExpressionType(nominalExpressionType(use.arguments[0]), nominalExpressionType(use.arguments[1]), type.mayBeMissing)
+                use is TypeUse.NamedWrapper && use.value.definition == StandardTypes.map && use.value.arguments.size == 2 -> {
+                    mapExpressionType(
+                        nominalExpressionType(use.value.arguments[0]),
+                        nominalExpressionType(use.value.arguments[1]),
+                        type.mayBeMissing,
+                    )
                 }
 
                 else -> {
@@ -382,15 +397,15 @@ class PortableExpressionChecker(
 
         private fun scalarKind(type: ExpressionType): ScalarKind? {
             val use = type.nominalUseOrNull() ?: return null
-            if (use is TypeUse.Nullable) return null
-            return (ready(use).schema.representation as? ResolvedRepresentation.Scalar)?.kind
+            if (use is TypeUse.NullableWrapper) return null
+            return (ready(use).schema.representation as? ResolvedRepresentation.ScalarWrapper)?.value?.kind
         }
 
         private fun numericFamily(type: ExpressionType): Int? =
             when (scalarKind(type)) {
-                is ScalarKind.Integer -> 0
-                is ScalarKind.Float -> 1
-                ScalarKind.Decimal -> 2
+                is ScalarKind.IntegerWrapper -> 0
+                is ScalarKind.FloatWrapper -> 1
+                ScalarKind.DECIMAL -> 2
                 else -> null
             }
 
@@ -521,14 +536,14 @@ class PortableExpressionChecker(
 
                 is ExpressionValueType.NominalWrapper -> {
                     when (val represented = ready(requireNotNull(source.nominalUseOrNull())).schema.representation) {
-                        is ResolvedRepresentation.Sequence -> {
-                            nominalExpressionType(represented.item)
+                        is ResolvedRepresentation.SequenceWrapper -> {
+                            nominalExpressionType(represented.value.item)
                         }
 
-                        is ResolvedRepresentation.Mapping -> {
+                        is ResolvedRepresentation.MappingWrapper -> {
                             entryExpressionType(
-                                nominalExpressionType(represented.key),
-                                nominalExpressionType(represented.value),
+                                nominalExpressionType(represented.value.key),
+                                nominalExpressionType(represented.value.value),
                             )
                         }
 
@@ -559,25 +574,29 @@ class PortableExpressionChecker(
                 missing = missing || current.mayBeMissing
                 current =
                     when (segment) {
-                        is PathSegment.Item -> {
+                        is PathSegment.ItemWrapper -> {
                             missing = true
                             collectionItem(current)
                         }
 
-                        PathSegment.MapKey -> {
+                        PathSegment.MAP_KEY -> {
                             (canonical(current).value as? ExpressionValueType.EntryWrapper)?.value?.key
                                 ?: fail("invalid_expression_path")
                         }
 
-                        PathSegment.MapValue -> {
+                        PathSegment.MAP_VALUE -> {
                             (canonical(current).value as? ExpressionValueType.EntryWrapper)?.value?.value
                                 ?: fail("invalid_expression_path")
                         }
 
-                        is PathSegment.Field -> {
+                        is PathSegment.FieldWrapper -> {
                             val checked = ready(current.nominalUseOrNull() ?: fail("invalid_expression_path"))
                             val field = checked.schema.fields.singleOrNull { it.key == segment.name } ?: fail("invalid_expression_path")
                             nominalExpressionType(field.type, true)
+                        }
+
+                        else -> {
+                            unknownVariant(segment)
                         }
                     }
             }
@@ -586,60 +605,60 @@ class PortableExpressionChecker(
 
         private fun literal(value: DataValue): ExpressionType =
             when (value) {
-                DataValue.Null -> {
+                DataValue.NULL -> {
                     ExpressionType(value = ExpressionValueType.NULL_VALUE, mayBeMissing = false)
                 }
 
-                is DataValue.Named -> {
-                    nominalExpressionType(value.actualType)
+                is DataValue.NamedWrapper -> {
+                    nominalExpressionType(value.actualType.use)
                 }
 
-                is DataValue.Boolean -> {
+                is DataValue.BooleanWrapper -> {
                     boolean()
                 }
 
-                is DataValue.Integer -> {
+                is DataValue.IntegerWrapper -> {
                     integer().also(literalTypes::add)
                 }
 
-                is DataValue.Float -> {
-                    scalar(ScalarKind.Float(FloatWidth.FLOAT_64)).also(literalTypes::add)
+                is DataValue.FloatWrapper -> {
+                    scalar(floatScalar(FloatWidth.SIXTY_FOUR)).also(literalTypes::add)
                 }
 
-                is DataValue.Decimal -> {
-                    scalar(ScalarKind.Decimal).also(literalTypes::add)
+                is DataValue.DecimalWrapper -> {
+                    scalar(ScalarKind.DECIMAL).also(literalTypes::add)
                 }
 
-                is DataValue.StringValue -> {
+                is DataValue.StringValueWrapper -> {
                     text()
                 }
 
-                is DataValue.Bytes -> {
-                    scalar(ScalarKind.Bytes)
+                is DataValue.BytesWrapper -> {
+                    scalar(ScalarKind.BYTES)
                 }
 
-                is DataValue.Timestamp -> {
-                    scalar(ScalarKind.Timestamp)
+                is DataValue.TimestampWrapper -> {
+                    scalar(ScalarKind.TIMESTAMP)
                 }
 
-                is DataValue.Duration -> {
-                    scalar(ScalarKind.Duration)
+                is DataValue.DurationWrapper -> {
+                    scalar(ScalarKind.DURATION)
                 }
 
-                DataValue.Unit -> {
-                    scalar(ScalarKind.Unit)
+                DataValue.UNIT -> {
+                    scalar(ScalarKind.UNIT)
                 }
 
-                is DataValue.ListValue -> {
+                is DataValue.ListValueWrapper -> {
                     listExpressionType(literalItems(value.items.map { it.value }))
                 }
 
-                is DataValue.SetValue -> {
+                is DataValue.SetValueWrapper -> {
                     val item = literalItems(value.items.map { it.value }).nominalUseOrNull() ?: fail("expression_type_inference_failed")
-                    nominalExpressionType(TypeUse.Named(StandardTypes.set, listOf(item)))
+                    nominalExpressionType(StandardTypes.set.use(listOf(item)))
                 }
 
-                is DataValue.MapValue -> {
+                is DataValue.MapValueWrapper -> {
                     demand(value.rows.isNotEmpty(), "expression_type_inference_failed")
                     mapExpressionType(literalItems(value.rows.map { it.key }), literalItems(value.rows.map { it.value }))
                 }
@@ -650,7 +669,7 @@ class PortableExpressionChecker(
             }
 
         private fun literalItems(items: List<DataValue>): ExpressionType {
-            val populated = items.filter { it != DataValue.Unfilled }
+            val populated = items.filter { it != DataValue.UNFILLED }
             demand(populated.isNotEmpty(), "expression_type_inference_failed")
             val inferred = populated.map(::literal).reduce(::join)
             return withMissing(inferred, inferred.mayBeMissing || populated.size != items.size)
@@ -683,10 +702,7 @@ class PortableExpressionChecker(
             return when (node) {
                 is ExpressionNode.LiteralWrapper -> {
                     literal(
-                        when (val decoded = SkirDataValueCodec.decode(node.value)) {
-                            is SkirConversionResult.Success -> decoded.value
-                            is SkirConversionResult.Failure -> fail("invalid_expression_literal")
-                        },
+                        node.value.portableOrNull() ?: fail("invalid_expression_literal"),
                     )
                 }
 
@@ -699,7 +715,7 @@ class PortableExpressionChecker(
                 }
 
                 is ExpressionNode.FieldWrapper, is ExpressionNode.EntryProjectionWrapper -> {
-                    inferProjection(node, ValuePath(), frames, occurrence)
+                    inferProjection(node, ValuePath.root, frames, occurrence)
                 }
 
                 is ExpressionNode.AndWrapper -> {
@@ -712,7 +728,7 @@ class PortableExpressionChecker(
 
                 is ExpressionNode.ConditionalWrapper -> {
                     val test = child(node.value.test, 0)
-                    requireKind(test, ScalarKind.Boolean)
+                    requireKind(test, ScalarKind.BOOLEAN)
                     val yes: ExpressionType
                     val no: ExpressionType
                     if (isUntypedEmpty(node.value.yes) && !isUntypedEmpty(node.value.no)) {
@@ -794,9 +810,9 @@ class PortableExpressionChecker(
                 is ExpressionNode.SortByWrapper -> {
                     val input = child(node.value.source, 0)
                     val item = collectionItem(input)
-                    val order = node.value.descending?.let { child(it, 1).also { requireKind(it, ScalarKind.Boolean) } }
+                    val order = node.value.descending?.let { child(it, 1).also { requireKind(it, ScalarKind.BOOLEAN) } }
                     val key = infer(node.value.key, frames + listOf(listOf(item)), occurrence.child(2))
-                    demand(scalarKind(key) is ScalarKind.Text || numericFamily(key) != null, "invalid_collection_sort_key")
+                    demand(scalarKind(key) is ScalarKind.TEXT || numericFamily(key) != null, "invalid_collection_sort_key")
                     withMissing(input, input.mayBeMissing || key.mayBeMissing || order?.mayBeMissing == true)
                 }
 
@@ -821,11 +837,11 @@ class PortableExpressionChecker(
 
         private fun untypedEmpty(node: ExpressionNode): DataValue? {
             val raw = (node as? ExpressionNode.LiteralWrapper)?.value ?: return null
-            val value = (SkirDataValueCodec.decode(raw) as? SkirConversionResult.Success)?.value ?: return null
+            val value = raw.portableOrNull() ?: return null
             return when (value) {
-                is DataValue.ListValue -> value.takeIf { it.items.isEmpty() }
-                is DataValue.SetValue -> value.takeIf { it.items.isEmpty() }
-                is DataValue.MapValue -> value.takeIf { it.rows.isEmpty() }
+                is DataValue.ListValueWrapper -> value.takeIf { it.items.isEmpty() }
+                is DataValue.SetValueWrapper -> value.takeIf { it.items.isEmpty() }
+                is DataValue.MapValueWrapper -> value.takeIf { it.rows.isEmpty() }
                 else -> null
             }
         }
@@ -842,9 +858,9 @@ class PortableExpressionChecker(
             val use = known.nominalUseOrNull()
             val matches =
                 when (empty) {
-                    is DataValue.ListValue -> known.value is ExpressionValueType.ListWrapper
-                    is DataValue.MapValue -> known.value is ExpressionValueType.MapWrapper
-                    is DataValue.SetValue -> use is TypeUse.Named && use.definition == StandardTypes.set
+                    is DataValue.ListValueWrapper -> known.value is ExpressionValueType.ListWrapper
+                    is DataValue.MapValueWrapper -> known.value is ExpressionValueType.MapWrapper
+                    is DataValue.SetValueWrapper -> use is TypeUse.NamedWrapper && use.value.definition == StandardTypes.set
                     else -> false
                 }
             return if (matches) withMissing(known, false) else null
@@ -854,7 +870,7 @@ class PortableExpressionChecker(
             id: String,
             path: ValuePath,
         ): ExpressionType {
-            val key = ExpressionBindingId(id)
+            val key = ExpressionBindingId(value = id)
             val selection = partialBindings[key]
             if (selection == null) {
                 val input = bindings[key] ?: fail("unknown_expression_binding")
@@ -862,25 +878,25 @@ class PortableExpressionChecker(
                 return project(input, path)
             }
             val missing = bindings[key]?.mayBeMissing ?: true
-            if (selection is TypeSelection.Complete) {
-                ready(selection.use)
-                return project(nominalExpressionType(selection.use, missing), path)
+            if (selection is TypeSelection.CompleteWrapper) {
+                ready(selection.use.use)
+                return project(nominalExpressionType(selection.use.use, missing), path)
             }
-            selection as TypeSelection.Pending
-            val complete = selection.arguments.map { (it as? ArgumentSelection.Chosen)?.type }
+            selection as TypeSelection.PendingWrapper
+            val complete = selection.arguments.map { (it as? ArgumentSelection.ChosenWrapper)?.type }
             if (complete.all { it != null }) {
-                val use = TypeUse.Named(selection.definition, complete.filterNotNull())
-                ready(use)
-                return project(nominalExpressionType(use, missing), path)
+                val use = selection.definition.namedUse(complete.filterNotNull())
+                ready(use.use)
+                return project(nominalExpressionType(use.use, missing), path)
             }
-            val field = path.segments.firstOrNull() as? PathSegment.Field ?: fail("invalid_expression_path")
+            val field = path.segments.firstOrNull() as? PathSegment.FieldWrapper ?: fail("invalid_expression_path")
             val schema =
                 when (val resolved = resolvePartial?.invoke(selection)) {
                     is Resolution.Ready -> resolved.value
                     else -> fail("invalid_expression_path")
                 }
             val known = schema.knownFields.singleOrNull { it.key == field.name } ?: fail("invalid_expression_path")
-            return project(nominalExpressionType(known.type, missing), ValuePath(path.segments.drop(1)))
+            return project(nominalExpressionType(known.type, missing), ValuePath(segments = path.segments.drop(1)))
         }
 
         private fun inferProjection(
@@ -893,7 +909,7 @@ class PortableExpressionChecker(
                 is ExpressionNode.FieldWrapper -> {
                     inferProjection(
                         node.value.source,
-                        ValuePath(listOf(PathSegment.Field(node.value.name)) + suffix.segments),
+                        ValuePath(segments = listOf(PathSegment.createField(name = node.value.name)) + suffix.segments),
                         frames,
                         occurrence.child(0),
                     )
@@ -902,24 +918,24 @@ class PortableExpressionChecker(
                 is ExpressionNode.EntryProjectionWrapper -> {
                     val segment =
                         when (node.value.branch) {
-                            EntryBranch.KEY -> PathSegment.MapKey
-                            EntryBranch.VALUE -> PathSegment.MapValue
+                            EntryBranch.KEY -> PathSegment.MAP_KEY
+                            EntryBranch.VALUE -> PathSegment.MAP_VALUE
                             else -> fail("unknown_expression_operation")
                         }
-                    inferProjection(node.value.source, ValuePath(listOf(segment) + suffix.segments), frames, occurrence.child(0))
+                    inferProjection(node.value.source, ValuePath(segments = listOf(segment) + suffix.segments), frames, occurrence.child(0))
                 }
 
                 is ExpressionNode.InputWrapper -> {
                     inputType(
                         node.value.binding.value,
-                        ValuePath(decodePath(node.value.path).segments + suffix.segments),
+                        ValuePath(segments = decodePath(node.value.path).segments + suffix.segments),
                     )
                 }
 
                 is ExpressionNode.LocalWrapper -> {
                     project(
                         frameValue(frames, node.value.depth, node.value.slot),
-                        ValuePath(decodePath(node.value.path).segments + suffix.segments),
+                        ValuePath(segments = decodePath(node.value.path).segments + suffix.segments),
                     )
                 }
 
@@ -936,22 +952,22 @@ class PortableExpressionChecker(
             val missing = input.mayBeMissing || body.mayBeMissing
             return when (node) {
                 is ExpressionNode.AnyWrapper, is ExpressionNode.AllWrapper, is ExpressionNode.NoneWrapper -> {
-                    requireKind(body, ScalarKind.Boolean)
+                    requireKind(body, ScalarKind.BOOLEAN)
                     boolean(missing)
                 }
 
                 is ExpressionNode.FilterWrapper -> {
-                    requireKind(body, ScalarKind.Boolean)
+                    requireKind(body, ScalarKind.BOOLEAN)
                     withMissing(input, missing)
                 }
 
                 is ExpressionNode.FindWrapper, is ExpressionNode.FindLastWrapper -> {
-                    requireKind(body, ScalarKind.Boolean)
+                    requireKind(body, ScalarKind.BOOLEAN)
                     withMissing(nullable(collectionItem(input)), missing)
                 }
 
                 is ExpressionNode.CountWrapper -> {
-                    requireKind(body, ScalarKind.Boolean)
+                    requireKind(body, ScalarKind.BOOLEAN)
                     integer(missing)
                 }
 
@@ -974,18 +990,21 @@ class PortableExpressionChecker(
             kind: ScalarKind,
         ) {
             val actual = scalarKind(type)
-            demand(if (kind is ScalarKind.Integer) actual is ScalarKind.Integer else actual == kind, "invalid_expression_operand_type")
+            demand(
+                if (kind is ScalarKind.IntegerWrapper) actual is ScalarKind.IntegerWrapper else actual == kind,
+                "invalid_expression_operand_type",
+            )
         }
 
         private fun requireNumber(type: ExpressionType) = demand(numericFamily(type) != null, "invalid_expression_operand_type")
 
         private fun booleanResult(values: List<ExpressionType>): ExpressionType {
-            values.forEach { requireKind(it, ScalarKind.Boolean) }
+            values.forEach { requireKind(it, ScalarKind.BOOLEAN) }
             return boolean(values.any { it.mayBeMissing })
         }
 
         private fun requireSized(type: ExpressionType) {
-            if (scalarKind(type) in setOf(ScalarKind.Text, ScalarKind.Bytes)) return
+            if (scalarKind(type) in setOf(ScalarKind.TEXT, ScalarKind.BYTES)) return
             collectionItem(type)
         }
 
@@ -1003,8 +1022,13 @@ class PortableExpressionChecker(
 
                 is ExpressionValueType.NominalWrapper -> {
                     val use = type.nominalUseOrNull() ?: fail("invalid_expression_type")
-                    val mapping = ready(use).schema.representation as? ResolvedRepresentation.Mapping
-                    mapping?.let { ExpressionMappingType(key = nominalExpressionType(it.key), value = nominalExpressionType(it.value)) }
+                    val mapping = ready(use).schema.representation as? ResolvedRepresentation.MappingWrapper
+                    mapping?.let {
+                        ExpressionMappingType(
+                            key = nominalExpressionType(it.value.key),
+                            value = nominalExpressionType(it.value.value),
+                        )
+                    }
                 }
 
                 else -> {
@@ -1021,7 +1045,7 @@ class PortableExpressionChecker(
             fun kinds(vararg kinds: ScalarKind) = kinds.forEachIndexed { index, kind -> requireKind(args[index], kind) }
 
             fun numbers() = sameNumbers(args)
-            val integerKind = ScalarKind.Integer(IntegerWidth.SIGNED_64)
+            val integerKind = integerScalar(IntegerWidth.SIGNED_SIXTY_FOUR)
             val result =
                 when (node) {
                     is ExpressionNode.IsNullWrapper -> {
@@ -1030,12 +1054,12 @@ class PortableExpressionChecker(
 
                     is ExpressionNode.LinkTargetWrapper -> {
                         val use = args.single().nominalUseOrNull() ?: fail("invalid_expression_operand_type")
-                        demand(ready(use).schema.representation is ResolvedRepresentation.Link, "invalid_expression_operand_type")
-                        nominalExpressionType(ResourceIdDefinition.use)
+                        demand(ready(use).schema.representation is ResolvedRepresentation.LinkWrapper, "invalid_expression_operand_type")
+                        nominalExpressionType(ResourceIdDefinition.use.use)
                     }
 
                     is ExpressionNode.BooleanNotWrapper -> {
-                        kinds(ScalarKind.Boolean)
+                        kinds(ScalarKind.BOOLEAN)
                         boolean()
                     }
 
@@ -1047,44 +1071,44 @@ class PortableExpressionChecker(
 
                     is ExpressionNode.TextUnaryWrapper -> {
                         demand(node.value.operation != TextUnaryOperation.UNKNOWN, "unknown_expression_operation")
-                        kinds(ScalarKind.Text)
+                        kinds(ScalarKind.TEXT)
                         text()
                     }
 
                     is ExpressionNode.TextCompareWrapper -> {
                         demand(node.value.operation != TextCompareOperation.UNKNOWN, "unknown_expression_operation")
-                        kinds(ScalarKind.Text, ScalarKind.Text)
+                        kinds(ScalarKind.TEXT, ScalarKind.TEXT)
                         boolean()
                     }
 
                     is ExpressionNode.TextLengthWrapper -> {
-                        kinds(ScalarKind.Text)
+                        kinds(ScalarKind.TEXT)
                         integer()
                     }
 
                     is ExpressionNode.TextHasLineBreakWrapper -> {
-                        kinds(ScalarKind.Text)
+                        kinds(ScalarKind.TEXT)
                         boolean()
                     }
 
                     is ExpressionNode.TextReplaceWrapper, is ExpressionNode.RegexReplaceWrapper -> {
-                        kinds(ScalarKind.Text, ScalarKind.Text, ScalarKind.Text)
+                        kinds(ScalarKind.TEXT, ScalarKind.TEXT, ScalarKind.TEXT)
                         text()
                     }
 
                     is ExpressionNode.TextSplitWrapper -> {
-                        kinds(ScalarKind.Text, ScalarKind.Text)
+                        kinds(ScalarKind.TEXT, ScalarKind.TEXT)
                         listExpressionType(text())
                     }
 
                     is ExpressionNode.TextJoinWrapper -> {
-                        requireKind(collectionItem(args[0]), ScalarKind.Text)
-                        requireKind(args[1], ScalarKind.Text)
+                        requireKind(collectionItem(args[0]), ScalarKind.TEXT)
+                        requireKind(args[1], ScalarKind.TEXT)
                         text()
                     }
 
                     is ExpressionNode.TextSubstringWrapper -> {
-                        kinds(ScalarKind.Text, integerKind)
+                        kinds(ScalarKind.TEXT, integerKind)
                         args.drop(2).forEach { requireKind(it, integerKind) }
                         text()
                     }
@@ -1095,12 +1119,12 @@ class PortableExpressionChecker(
 
                     is ExpressionNode.RegexTestWrapper -> {
                         demand(node.value.mode != RegexMatchMode.UNKNOWN, "unknown_expression_operation")
-                        kinds(ScalarKind.Text, ScalarKind.Text)
+                        kinds(ScalarKind.TEXT, ScalarKind.TEXT)
                         boolean()
                     }
 
                     is ExpressionNode.RegexCaptureWrapper -> {
-                        kinds(ScalarKind.Text, ScalarKind.Text, integerKind)
+                        kinds(ScalarKind.TEXT, ScalarKind.TEXT, integerKind)
                         text()
                     }
 
@@ -1122,24 +1146,24 @@ class PortableExpressionChecker(
 
                     is ExpressionNode.NumberRoundWrapper -> {
                         val type = sameNumbers(args.take(2))
-                        requireKind(args[2], ScalarKind.Text)
+                        requireKind(args[2], ScalarKind.TEXT)
                         type
                     }
 
                     is ExpressionNode.NumberFormatWrapper -> {
                         requireNumber(args[0])
                         requireKind(args[1], integerKind)
-                        requireKind(args[2], ScalarKind.Text)
+                        requireKind(args[2], ScalarKind.TEXT)
                         text()
                     }
 
                     is ExpressionNode.DurationFormatWrapper -> {
-                        kinds(ScalarKind.Duration, ScalarKind.Text, integerKind)
+                        kinds(ScalarKind.DURATION, ScalarKind.TEXT, integerKind)
                         text()
                     }
 
                     is ExpressionNode.TimestampFormatWrapper -> {
-                        kinds(ScalarKind.Timestamp, ScalarKind.Text, ScalarKind.Text, ScalarKind.Text)
+                        kinds(ScalarKind.TIMESTAMP, ScalarKind.TEXT, ScalarKind.TEXT, ScalarKind.TEXT)
                         text()
                     }
 
@@ -1181,7 +1205,7 @@ class PortableExpressionChecker(
                     is ExpressionNode.RuleUnaryWrapper -> {
                         when (node.value.operation) {
                             RuleUnaryOperation.NON_EMPTY -> requireSized(args.single())
-                            RuleUnaryOperation.NON_BLANK, RuleUnaryOperation.SINGLE_LINE -> kinds(ScalarKind.Text)
+                            RuleUnaryOperation.NON_BLANK, RuleUnaryOperation.SINGLE_LINE -> kinds(ScalarKind.TEXT)
                             RuleUnaryOperation.POSITIVE, RuleUnaryOperation.NON_NEGATIVE -> requireNumber(args.single())
                             RuleUnaryOperation.UNIQUE -> collectionItem(args.single())
                             RuleUnaryOperation.OPAQUE -> kinds(integerKind)
@@ -1195,7 +1219,7 @@ class PortableExpressionChecker(
                         demand(node.value.direction != BoundDirection.UNKNOWN, "unknown_expression_operation")
                         when (node.value.metric) {
                             SizeBoundMetric.TEXT_LENGTH -> requireSized(args[0])
-                            SizeBoundMetric.TEXT_LINES -> requireKind(args[0], ScalarKind.Text)
+                            SizeBoundMetric.TEXT_LINES -> requireKind(args[0], ScalarKind.TEXT)
                             SizeBoundMetric.COLLECTION_ITEMS -> collectionItem(args[0])
                             else -> fail("unknown_expression_operation")
                         }
@@ -1216,7 +1240,7 @@ class PortableExpressionChecker(
                     is ExpressionNode.RuleNumericBoundWrapper -> {
                         demand(node.value.direction != BoundDirection.UNKNOWN, "unknown_expression_operation")
                         sameNumbers(args.take(2))
-                        requireKind(args[2], ScalarKind.Boolean)
+                        requireKind(args[2], ScalarKind.BOOLEAN)
                         boolean()
                     }
 
@@ -1238,7 +1262,7 @@ class PortableExpressionChecker(
 
                     is ExpressionNode.RuleTimestampBoundWrapper -> {
                         demand(node.value.direction != TimestampBoundDirection.UNKNOWN, "unknown_expression_operation")
-                        kinds(ScalarKind.Timestamp, ScalarKind.Timestamp)
+                        kinds(ScalarKind.TIMESTAMP, ScalarKind.TIMESTAMP)
                         boolean()
                     }
 
@@ -1271,18 +1295,17 @@ class PortableExpressionChecker(
             when (val resource = query.resourceSourceOrNull()) {
                 is ResourceQuerySource.ReferenceWrapper -> {
                     val use = source.nominalUseOrNull() ?: fail("invalid_resource_reference_query")
-                    val link = ready(use).schema.representation as? ResolvedRepresentation.Link ?: fail("invalid_resource_reference_query")
-                    target = link.target
+                    val link =
+                        ready(use).schema.representation as? ResolvedRepresentation.LinkWrapper ?: fail("invalid_resource_reference_query")
+                    target = link.value.target
                     reference = true
                 }
 
                 is ResourceQuerySource.IdentityWrapper -> {
-                    demand(source.nominalUseOrNull() == ResourceIdDefinition.use, "resource_query_requires_identity")
+                    demand(source.nominalUseOrNull() == ResourceIdDefinition.use.use, "resource_query_requires_identity")
                     target =
-                        when (val decoded = SkirTypeCodec.decode(resource.value.target)) {
-                            is SkirConversionResult.Success -> decoded.value as? TypeUse.Named ?: fail("invalid_resource_query_witness")
-                            is SkirConversionResult.Failure -> fail("invalid_resource_query_witness")
-                        }
+                        resource.value.target.takeIf { it is TypeUse.NamedWrapper && it.isValid }
+                            ?: fail("invalid_resource_query_witness")
                     ready(target)
                 }
 
@@ -1297,7 +1320,7 @@ class PortableExpressionChecker(
             val output =
                 when (query) {
                     is ExpressionQuery.ResourceIdentityWrapper -> {
-                        ResourceIdDefinition.use
+                        ResourceIdDefinition.use.use
                     }
 
                     is ExpressionQuery.ResourceValueWrapper -> {
@@ -1305,15 +1328,15 @@ class PortableExpressionChecker(
                     }
 
                     is ExpressionQuery.ResourceConfigurationWrapper, is ExpressionQuery.ValueConfigurationWrapper -> {
-                        CanonicalReadModels.typeSelection.type
+                        CanonicalReadModels.typeSelection.use.use
                     }
 
                     is ExpressionQuery.CatalogDeclarationWrapper -> {
                         demand(
-                            compatible(source, nominalExpressionType(CanonicalReadModels.typeSelection.type)),
+                            compatible(source, nominalExpressionType(CanonicalReadModels.typeSelection.use.use)),
                             "catalog_query_requires_selection",
                         )
-                        CanonicalReadModels.publishedType.type
+                        CanonicalReadModels.publishedType.use.use
                     }
 
                     else -> {

@@ -18,6 +18,7 @@ import "package:skir_client/skir_client.dart" as _skir;
 import "./diagnostic.dart" as _lib_editor_v1_diagnostic;
 import "./resource_operations.dart" as _lib_editor_v1_resource_operations;
 import "./type_catalog.dart" as _lib_editor_v1_type_catalog;
+import "../../kernel/v1/errors.dart" as _lib_kernel_v1_errors;
 
 // -----------------------------------------------------------------------------
 // struct RealmSearchSelector
@@ -1220,7 +1221,7 @@ final class RealmPresentationSearchRequest_mutable
 ///     case RealmPresentationSearchStatus_unknown(): { ... }
 ///     case RealmPresentationSearchStatus.loading: { ... }
 ///     case RealmPresentationSearchStatus.ready: { ... }
-///     case RealmPresentationSearchStatus.error: { ... }
+///     case RealmPresentationSearchStatus.searchFailedError: { ... }
 ///   }
 ///   ```
 ///
@@ -1233,7 +1234,8 @@ sealed class RealmPresentationSearchStatus {
 
   static const loading = _RealmPresentationSearchStatus_consts.loadingConst;
   static const ready = _RealmPresentationSearchStatus_consts.readyConst;
-  static const error = _RealmPresentationSearchStatus_consts.errorConst;
+  static const searchFailedError =
+      _RealmPresentationSearchStatus_consts.searchFailedErrorConst;
 
   /// Returns the kind of variant held by this RealmPresentationSearchStatus.
   RealmPresentationSearchStatus_kind get kind;
@@ -1249,7 +1251,13 @@ sealed class RealmPresentationSearchStatus {
         loading,
       );
       _serializerBuilder.addConstantVariant(2, "ready", "ready", "", ready);
-      _serializerBuilder.addConstantVariant(3, "error", "error", "", error);
+      _serializerBuilder.addConstantVariant(
+        3,
+        "search_failed_error",
+        "searchFailedError",
+        "",
+        searchFailedError,
+      );
       _serializerBuilder.finalize();
     }
     return _serializerBuilder.serializer;
@@ -1272,7 +1280,7 @@ enum RealmPresentationSearchStatus_kind {
   unknown(0),
   loadingConst(1),
   readyConst(2),
-  errorConst(3);
+  searchFailedErrorConst(3);
 
   final _core.int _ordinal;
 
@@ -1305,7 +1313,9 @@ enum _RealmPresentationSearchStatus_consts
     implements RealmPresentationSearchStatus {
   loadingConst(RealmPresentationSearchStatus_kind.loadingConst),
   readyConst(RealmPresentationSearchStatus_kind.readyConst),
-  errorConst(RealmPresentationSearchStatus_kind.errorConst);
+  searchFailedErrorConst(
+    RealmPresentationSearchStatus_kind.searchFailedErrorConst,
+  );
 
   @_core.override
   final RealmPresentationSearchStatus_kind kind;
@@ -1333,7 +1343,8 @@ sealed class RealmPresentationSearchSnapshot_orMutable {
 }
 
 /// Complete values accumulated for this subscription so far, not an incremental append batch.
-/// loading allows further snapshots; ready marks producer completion; error carries diagnostics.
+/// loading allows further snapshots; ready marks producer completion; search_failed_error carries
+/// diagnostics.
 ///
 /// Deeply immutable.
 final class RealmPresentationSearchSnapshot
@@ -1495,7 +1506,7 @@ final class RealmPresentationSearchSnapshot
 
   static final _serializerBuilder = _skir.internal__StructSerializerBuilder(
     recordId: "editor/v1/search.skir:RealmPresentationSearchSnapshot",
-    doc: "Complete values accumulated for this subscription so far, not an incremental append batch.\nloading allows further snapshots; ready marks producer completion; error carries diagnostics.",
+    doc: "Complete values accumulated for this subscription so far, not an incremental append batch.\nloading allows further snapshots; ready marks producer completion; search_failed_error carries\ndiagnostics.",
     defaultInstance: defaultInstance,
     newMutable: (it) => (it != null) ? it.toMutable() : mutable(),
     toFrozen: (RealmPresentationSearchSnapshot_mutable it) => it.toFrozen(),
@@ -1727,20 +1738,20 @@ final class RealmPresentationSearchUnavailable_mutable
 }
 
 // -----------------------------------------------------------------------------
-// struct RealmPresentationSearchUpdate.StaleObservation
+// struct RealmPresentationSearchUpdate.StaleObservationError
 // -----------------------------------------------------------------------------
 
-sealed class RealmPresentationSearchUpdate_StaleObservation_orMutable {
+sealed class RealmPresentationSearchUpdate_StaleObservationError_orMutable {
   _core.String get subscriptionId;
   _lib_editor_v1_resource_operations.StaleAuthoringObservation_orMutable
   get observation;
 
-  RealmPresentationSearchUpdate_StaleObservation toFrozen();
+  RealmPresentationSearchUpdate_StaleObservationError toFrozen();
 }
 
 /// Deeply immutable.
-final class RealmPresentationSearchUpdate_StaleObservation
-    implements RealmPresentationSearchUpdate_StaleObservation_orMutable {
+final class RealmPresentationSearchUpdate_StaleObservationError
+    implements RealmPresentationSearchUpdate_StaleObservationError_orMutable {
   @_core.override
   final _core.String subscriptionId;
   @_core.override
@@ -1748,23 +1759,23 @@ final class RealmPresentationSearchUpdate_StaleObservation
   observation;
   _skir.internal__UnrecognizedFields? _u;
 
-  factory RealmPresentationSearchUpdate_StaleObservation({
+  factory RealmPresentationSearchUpdate_StaleObservationError({
     required _core.String subscriptionId,
     required _lib_editor_v1_resource_operations.StaleAuthoringObservation_orMutable
     observation,
-  }) => RealmPresentationSearchUpdate_StaleObservation._(
+  }) => RealmPresentationSearchUpdate_StaleObservationError._(
     subscriptionId,
     observation.toFrozen(),
   );
 
-  RealmPresentationSearchUpdate_StaleObservation._(
+  RealmPresentationSearchUpdate_StaleObservationError._(
     this.subscriptionId,
     this.observation,
   );
 
   /// Default instance with all fields set to their default values.
   static final defaultInstance =
-      RealmPresentationSearchUpdate_StaleObservation._(
+      RealmPresentationSearchUpdate_StaleObservationError._(
         "",
         _lib_editor_v1_resource_operations
             .StaleAuthoringObservation
@@ -1773,22 +1784,22 @@ final class RealmPresentationSearchUpdate_StaleObservation
 
   /// Returns a new mutable instance.
   /// Fields are initialized to their default values.
-  static RealmPresentationSearchUpdate_StaleObservation_mutable mutable() =>
-      RealmPresentationSearchUpdate_StaleObservation_mutable._(
-        "",
-        _lib_editor_v1_resource_operations
-            .StaleAuthoringObservation
-            .defaultInstance,
-      );
+  static RealmPresentationSearchUpdate_StaleObservationError_mutable
+  mutable() => RealmPresentationSearchUpdate_StaleObservationError_mutable._(
+    "",
+    _lib_editor_v1_resource_operations
+        .StaleAuthoringObservation
+        .defaultInstance,
+  );
 
   /// Returns this instance (no-op).
   @_core.Deprecated("This instance is already frozen.")
   @_core.override
-  RealmPresentationSearchUpdate_StaleObservation toFrozen() => this;
+  RealmPresentationSearchUpdate_StaleObservationError toFrozen() => this;
 
   /// Returns a mutable shallow copy of this instance.
-  RealmPresentationSearchUpdate_StaleObservation_mutable toMutable() =>
-      RealmPresentationSearchUpdate_StaleObservation_mutable._(
+  RealmPresentationSearchUpdate_StaleObservationError_mutable toMutable() =>
+      RealmPresentationSearchUpdate_StaleObservationError_mutable._(
         this.subscriptionId,
         this.observation,
       );
@@ -1796,7 +1807,8 @@ final class RealmPresentationSearchUpdate_StaleObservation
   @_core.override
   _core.bool operator ==(other) {
     if (_core.identical(this, other)) return true;
-    if (other is! RealmPresentationSearchUpdate_StaleObservation) return false;
+    if (other is! RealmPresentationSearchUpdate_StaleObservationError)
+      return false;
     return _skir.internal__listEquality.equals(
       _equality_proxy,
       other._equality_proxy,
@@ -1811,10 +1823,10 @@ final class RealmPresentationSearchUpdate_StaleObservation
   @_core.override
   _core.String toString() => _skir.internal__stringify(this, serializer);
 
-  /// Serializer for `RealmPresentationSearchUpdate_StaleObservation` instances.
+  /// Serializer for `RealmPresentationSearchUpdate_StaleObservationError` instances.
   static _skir.StructSerializer<
-    RealmPresentationSearchUpdate_StaleObservation,
-    RealmPresentationSearchUpdate_StaleObservation_mutable
+    RealmPresentationSearchUpdate_StaleObservationError,
+    RealmPresentationSearchUpdate_StaleObservationError_mutable
   >
   get serializer {
     if (_serializerBuilder.mustInitialize()) {
@@ -1842,27 +1854,27 @@ final class RealmPresentationSearchUpdate_StaleObservation
   }
 
   static final _serializerBuilder = _skir.internal__StructSerializerBuilder(
-    recordId:
-        "editor/v1/search.skir:RealmPresentationSearchUpdate.StaleObservation",
+    recordId: "editor/v1/search.skir:RealmPresentationSearchUpdate.StaleObservationError",
     doc: "",
     defaultInstance: defaultInstance,
     newMutable: (it) => (it != null) ? it.toMutable() : mutable(),
-    toFrozen: (RealmPresentationSearchUpdate_StaleObservation_mutable it) =>
-        it.toFrozen(),
+    toFrozen: (
+      RealmPresentationSearchUpdate_StaleObservationError_mutable it,
+    ) => it.toFrozen(),
     getUnrecognizedFields: (it) => it._u,
     setUnrecognizedFields: (it, u) => it._u = u,
   );
 }
 
-/// Mutable version of [RealmPresentationSearchUpdate_StaleObservation].
-final class RealmPresentationSearchUpdate_StaleObservation_mutable
-    implements RealmPresentationSearchUpdate_StaleObservation_orMutable {
+/// Mutable version of [RealmPresentationSearchUpdate_StaleObservationError].
+final class RealmPresentationSearchUpdate_StaleObservationError_mutable
+    implements RealmPresentationSearchUpdate_StaleObservationError_orMutable {
   _core.String subscriptionId;
   _lib_editor_v1_resource_operations.StaleAuthoringObservation_orMutable
   observation;
   _skir.internal__UnrecognizedFields? _u;
 
-  RealmPresentationSearchUpdate_StaleObservation_mutable._(
+  RealmPresentationSearchUpdate_StaleObservationError_mutable._(
     this.subscriptionId,
     this.observation,
   );
@@ -1884,8 +1896,8 @@ final class RealmPresentationSearchUpdate_StaleObservation_mutable
 
   /// Returns a deeply immutable copy of this instance.
   @_core.override
-  RealmPresentationSearchUpdate_StaleObservation toFrozen() =>
-      RealmPresentationSearchUpdate_StaleObservation(
+  RealmPresentationSearchUpdate_StaleObservationError toFrozen() =>
+      RealmPresentationSearchUpdate_StaleObservationError(
         subscriptionId: this.subscriptionId,
         observation: this.observation,
       ).._u = this._u;
@@ -1900,8 +1912,9 @@ final class RealmPresentationSearchUpdate_StaleObservation_mutable
 ///   switch (e) {
 ///     case RealmPresentationSearchUpdate_unknown(): { ... }
 ///     case RealmPresentationSearchUpdate_snapshot(:var value): { ... }
-///     case RealmPresentationSearchUpdate_unavailable(:var value): { ... }
-///     case RealmPresentationSearchUpdate_staleObservation(:var value): { ... }
+///     case RealmPresentationSearchUpdate_unavailableError(:var value): { ... }
+///     case RealmPresentationSearchUpdate_staleObservationError(:var value): { ... }
+///     case RealmPresentationSearchUpdate_internalError(:var value): { ... }
 ///   }
 ///   ```
 ///
@@ -1935,39 +1948,50 @@ sealed class RealmPresentationSearchUpdate {
     ),
   );
 
-  /// Create a 'unavailable' variant wrapping around the given value.
-  factory RealmPresentationSearchUpdate.wrapUnavailable(
+  /// Create a 'unavailable_error' variant wrapping around the given value.
+  factory RealmPresentationSearchUpdate.wrapUnavailableError(
     RealmPresentationSearchUnavailable value,
-  ) => RealmPresentationSearchUpdate_unavailableWrapper._(value);
+  ) => RealmPresentationSearchUpdate_unavailableErrorWrapper._(value);
 
-  /// Same as `wrapUnavailable(RealmPresentationSearchUnavailable(...))`.
-  factory RealmPresentationSearchUpdate.createUnavailable({
+  /// Same as `wrapUnavailableError(RealmPresentationSearchUnavailable(...))`.
+  factory RealmPresentationSearchUpdate.createUnavailableError({
     required _core.String subscriptionId,
     required _core.Iterable<_lib_editor_v1_diagnostic.Diagnostic_orMutable>
     diagnostics,
-  }) => RealmPresentationSearchUpdate.wrapUnavailable(
+  }) => RealmPresentationSearchUpdate.wrapUnavailableError(
     RealmPresentationSearchUnavailable(
       subscriptionId: subscriptionId,
       diagnostics: diagnostics,
     ),
   );
 
-  /// Create a 'stale_observation' variant wrapping around the given value.
-  factory RealmPresentationSearchUpdate.wrapStaleObservation(
-    RealmPresentationSearchUpdate_StaleObservation value,
-  ) => RealmPresentationSearchUpdate_staleObservationWrapper._(value);
+  /// Create a 'stale_observation_error' variant wrapping around the given value.
+  factory RealmPresentationSearchUpdate.wrapStaleObservationError(
+    RealmPresentationSearchUpdate_StaleObservationError value,
+  ) => RealmPresentationSearchUpdate_staleObservationErrorWrapper._(value);
 
-  /// Same as `wrapStaleObservation(RealmPresentationSearchUpdate_StaleObservation(...))`.
-  factory RealmPresentationSearchUpdate.createStaleObservation({
+  /// Same as `wrapStaleObservationError(RealmPresentationSearchUpdate_StaleObservationError(...))`.
+  factory RealmPresentationSearchUpdate.createStaleObservationError({
     required _core.String subscriptionId,
     required _lib_editor_v1_resource_operations.StaleAuthoringObservation_orMutable
     observation,
-  }) => RealmPresentationSearchUpdate.wrapStaleObservation(
-    RealmPresentationSearchUpdate_StaleObservation(
+  }) => RealmPresentationSearchUpdate.wrapStaleObservationError(
+    RealmPresentationSearchUpdate_StaleObservationError(
       subscriptionId: subscriptionId,
       observation: observation,
     ),
   );
+
+  /// Create a 'internal_error' variant wrapping around the given value.
+  factory RealmPresentationSearchUpdate.wrapInternalError(
+    _lib_kernel_v1_errors.InternalError value,
+  ) => RealmPresentationSearchUpdate_internalErrorWrapper._(value);
+
+  /// Same as `wrapInternalError(_lib_kernel_v1_errors.InternalError(...))`.
+  factory RealmPresentationSearchUpdate.createInternalError() =>
+      RealmPresentationSearchUpdate.wrapInternalError(
+        _lib_kernel_v1_errors.InternalError(),
+      );
 
   /// Returns the kind of variant held by this RealmPresentationSearchUpdate.
   RealmPresentationSearchUpdate_kind get kind;
@@ -1987,24 +2011,37 @@ sealed class RealmPresentationSearchUpdate {
       );
       _serializerBuilder.addWrapperVariant(
         2,
-        "unavailable",
-        "wrapUnavailable",
+        "unavailable_error",
+        "wrapUnavailableError",
         RealmPresentationSearchUnavailable.serializer,
         "",
-        RealmPresentationSearchUpdate_unavailableWrapper._,
+        RealmPresentationSearchUpdate_unavailableErrorWrapper._,
         (it) => it.value,
-        ordinal: RealmPresentationSearchUpdate_kind.unavailableWrapper._ordinal,
+        ordinal:
+            RealmPresentationSearchUpdate_kind.unavailableErrorWrapper._ordinal,
       );
       _serializerBuilder.addWrapperVariant(
         3,
-        "stale_observation",
-        "wrapStaleObservation",
-        RealmPresentationSearchUpdate_StaleObservation.serializer,
+        "stale_observation_error",
+        "wrapStaleObservationError",
+        RealmPresentationSearchUpdate_StaleObservationError.serializer,
         "",
-        RealmPresentationSearchUpdate_staleObservationWrapper._,
+        RealmPresentationSearchUpdate_staleObservationErrorWrapper._,
+        (it) => it.value,
+        ordinal: RealmPresentationSearchUpdate_kind
+            .staleObservationErrorWrapper
+            ._ordinal,
+      );
+      _serializerBuilder.addWrapperVariant(
+        4,
+        "internal_error",
+        "wrapInternalError",
+        _lib_kernel_v1_errors.InternalError.serializer,
+        "",
+        RealmPresentationSearchUpdate_internalErrorWrapper._,
         (it) => it.value,
         ordinal:
-            RealmPresentationSearchUpdate_kind.staleObservationWrapper._ordinal,
+            RealmPresentationSearchUpdate_kind.internalErrorWrapper._ordinal,
       );
       _serializerBuilder.finalize();
     }
@@ -2027,8 +2064,9 @@ sealed class RealmPresentationSearchUpdate {
 enum RealmPresentationSearchUpdate_kind {
   unknown(0),
   snapshotWrapper(1),
-  unavailableWrapper(2),
-  staleObservationWrapper(3);
+  unavailableErrorWrapper(2),
+  staleObservationErrorWrapper(3),
+  internalErrorWrapper(4);
 
   final _core.int _ordinal;
 
@@ -2086,26 +2124,37 @@ final class RealmPresentationSearchUpdate_snapshotWrapper
       RealmPresentationSearchUpdate_kind.snapshotWrapper;
 }
 
-final class RealmPresentationSearchUpdate_unavailableWrapper
+final class RealmPresentationSearchUpdate_unavailableErrorWrapper
     extends _RealmPresentationSearchUpdate_wrapper {
   final RealmPresentationSearchUnavailable value;
 
-  RealmPresentationSearchUpdate_unavailableWrapper._(this.value);
+  RealmPresentationSearchUpdate_unavailableErrorWrapper._(this.value);
 
   @_core.override
   RealmPresentationSearchUpdate_kind get kind =>
-      RealmPresentationSearchUpdate_kind.unavailableWrapper;
+      RealmPresentationSearchUpdate_kind.unavailableErrorWrapper;
 }
 
-final class RealmPresentationSearchUpdate_staleObservationWrapper
+final class RealmPresentationSearchUpdate_staleObservationErrorWrapper
     extends _RealmPresentationSearchUpdate_wrapper {
-  final RealmPresentationSearchUpdate_StaleObservation value;
+  final RealmPresentationSearchUpdate_StaleObservationError value;
 
-  RealmPresentationSearchUpdate_staleObservationWrapper._(this.value);
+  RealmPresentationSearchUpdate_staleObservationErrorWrapper._(this.value);
 
   @_core.override
   RealmPresentationSearchUpdate_kind get kind =>
-      RealmPresentationSearchUpdate_kind.staleObservationWrapper;
+      RealmPresentationSearchUpdate_kind.staleObservationErrorWrapper;
+}
+
+final class RealmPresentationSearchUpdate_internalErrorWrapper
+    extends _RealmPresentationSearchUpdate_wrapper {
+  final _lib_kernel_v1_errors.InternalError value;
+
+  RealmPresentationSearchUpdate_internalErrorWrapper._(this.value);
+
+  @_core.override
+  RealmPresentationSearchUpdate_kind get kind =>
+      RealmPresentationSearchUpdate_kind.internalErrorWrapper;
 }
 
 // -----------------------------------------------------------------------------
@@ -2223,8 +2272,8 @@ final class CancelRealmPresentationSearchRequest_mutable
 ///   switch (e) {
 ///     case CancelRealmPresentationSearchResult_unknown(): { ... }
 ///     case CancelRealmPresentationSearchResult.canceled: { ... }
-///     case CancelRealmPresentationSearchResult.notFound: { ... }
-///     case CancelRealmPresentationSearchResult.unavailable: { ... }
+///     case CancelRealmPresentationSearchResult.notFoundError: { ... }
+///     case CancelRealmPresentationSearchResult_internalError(:var value): { ... }
 ///   }
 ///   ```
 ///
@@ -2237,10 +2286,19 @@ sealed class CancelRealmPresentationSearchResult {
 
   static const canceled =
       _CancelRealmPresentationSearchResult_consts.canceledConst;
-  static const notFound =
-      _CancelRealmPresentationSearchResult_consts.notFoundConst;
-  static const unavailable =
-      _CancelRealmPresentationSearchResult_consts.unavailableConst;
+  static const notFoundError =
+      _CancelRealmPresentationSearchResult_consts.notFoundErrorConst;
+
+  /// Create a 'internal_error' variant wrapping around the given value.
+  factory CancelRealmPresentationSearchResult.wrapInternalError(
+    _lib_kernel_v1_errors.InternalError value,
+  ) => CancelRealmPresentationSearchResult_internalErrorWrapper._(value);
+
+  /// Same as `wrapInternalError(_lib_kernel_v1_errors.InternalError(...))`.
+  factory CancelRealmPresentationSearchResult.createInternalError() =>
+      CancelRealmPresentationSearchResult.wrapInternalError(
+        _lib_kernel_v1_errors.InternalError(),
+      );
 
   /// Returns the kind of variant held by this CancelRealmPresentationSearchResult.
   CancelRealmPresentationSearchResult_kind get kind;
@@ -2258,17 +2316,22 @@ sealed class CancelRealmPresentationSearchResult {
       );
       _serializerBuilder.addConstantVariant(
         2,
-        "not_found",
-        "notFound",
+        "not_found_error",
+        "notFoundError",
         "",
-        notFound,
+        notFoundError,
       );
-      _serializerBuilder.addConstantVariant(
+      _serializerBuilder.addWrapperVariant(
         3,
-        "unavailable",
-        "unavailable",
+        "internal_error",
+        "wrapInternalError",
+        _lib_kernel_v1_errors.InternalError.serializer,
         "",
-        unavailable,
+        CancelRealmPresentationSearchResult_internalErrorWrapper._,
+        (it) => it.value,
+        ordinal: CancelRealmPresentationSearchResult_kind
+            .internalErrorWrapper
+            ._ordinal,
       );
       _serializerBuilder.finalize();
     }
@@ -2292,8 +2355,8 @@ sealed class CancelRealmPresentationSearchResult {
 enum CancelRealmPresentationSearchResult_kind {
   unknown(0),
   canceledConst(1),
-  notFoundConst(2),
-  unavailableConst(3);
+  notFoundErrorConst(2),
+  internalErrorWrapper(3);
 
   final _core.int _ordinal;
 
@@ -2327,8 +2390,9 @@ final class CancelRealmPresentationSearchResult_unknown
 enum _CancelRealmPresentationSearchResult_consts
     implements CancelRealmPresentationSearchResult {
   canceledConst(CancelRealmPresentationSearchResult_kind.canceledConst),
-  notFoundConst(CancelRealmPresentationSearchResult_kind.notFoundConst),
-  unavailableConst(CancelRealmPresentationSearchResult_kind.unavailableConst);
+  notFoundErrorConst(
+    CancelRealmPresentationSearchResult_kind.notFoundErrorConst,
+  );
 
   @_core.override
   final CancelRealmPresentationSearchResult_kind kind;
@@ -2340,6 +2404,37 @@ enum _CancelRealmPresentationSearchResult_consts
     this,
     CancelRealmPresentationSearchResult.serializer,
   );
+}
+
+sealed class _CancelRealmPresentationSearchResult_wrapper
+    implements CancelRealmPresentationSearchResult {
+  _core.dynamic get value;
+
+  @_core.override
+  _core.bool operator ==(other) {
+    if (other is! _CancelRealmPresentationSearchResult_wrapper) return false;
+    return kind == other.kind && value == other.value;
+  }
+
+  @_core.override
+  _core.int get hashCode => (kind._ordinal * 31) ^ value.hashCode;
+
+  @_core.override
+  _core.String toString() => _skir.internal__stringify(
+    this,
+    CancelRealmPresentationSearchResult.serializer,
+  );
+}
+
+final class CancelRealmPresentationSearchResult_internalErrorWrapper
+    extends _CancelRealmPresentationSearchResult_wrapper {
+  final _lib_kernel_v1_errors.InternalError value;
+
+  CancelRealmPresentationSearchResult_internalErrorWrapper._(this.value);
+
+  @_core.override
+  CancelRealmPresentationSearchResult_kind get kind =>
+      CancelRealmPresentationSearchResult_kind.internalErrorWrapper;
 }
 
 final _skir.Method<
@@ -2354,7 +2449,8 @@ watchRealmPresentationSearchMethod = _skir.Method(
   "",
 );
 
-/// Requests cancellation of a source owned search job. not_found also covers work already retired.
+/// Requests cancellation of a source owned search job. not_found_error also covers work already
+/// retired.
 final _skir.Method<
   CancelRealmPresentationSearchRequest,
   CancelRealmPresentationSearchResult
@@ -2364,5 +2460,5 @@ cancelRealmPresentationSearchMethod = _skir.Method(
   920007,
   CancelRealmPresentationSearchRequest.serializer,
   CancelRealmPresentationSearchResult.serializer,
-  "Requests cancellation of a source owned search job. not_found also covers work already retired.",
+  "Requests cancellation of a source owned search job. not_found_error also covers work already\nretired.",
 );

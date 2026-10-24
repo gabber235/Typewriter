@@ -21,16 +21,18 @@ class _Harness {
     String serviceName = "Paper",
   }) async {
     final nats = FakeNatsClient();
-    final service = Service(
+    final service = skir.Service(
       serviceId: skir.recordId("service:paper"),
       revision: 1,
       name: serviceName,
-      role: HostServiceRole(version: "1.0.0"),
+      role: skir.ServiceRole.createHost(version: "1.0.0"),
       createdAt: DateTime.utc(2026, 8, 21),
-      state: ServiceState(
-        status: ServiceStateStatus.online,
+      state: skir.ServiceState(
+        status: skir.ServiceStatus.online,
         lastSeen: DateTime.now(),
       ),
+      organization: null,
+      registration: null,
     );
 
     final host = skir.ServiceHost(
@@ -80,13 +82,10 @@ class _Harness {
       state: skir.ChildRuntimeState.defaultInstance,
     );
 
-    final topology = OrganizationTopology(
-      hosts: [
-        TopologyHost.fromSkir(host),
-        if (secondHost != null) TopologyHost.fromSkir(secondHost),
-      ],
-      realmInstances: realms.map(TopologyRealm.fromSkir).toList(),
-      engineInstances: [],
+    final topology = skir.OrganizationTopologySnapshot(
+      hosts: [host, ?secondHost],
+      realms: realms.toList(),
+      engines: [],
     );
 
     nats
@@ -103,7 +102,7 @@ class _Harness {
       ..registerHandler(
         "cloud.to.user.user1.organization.${_organizationId.id}.services.watch",
         (_) => skir.WatchOrganizationServicesResponse.serializer.toBytes(
-          skir.WatchOrganizationServicesResponse.wrapList([service.toSkir()]),
+          skir.WatchOrganizationServicesResponse.wrapList([service]),
         ),
       );
     final container = ProviderContainer.test(
@@ -160,13 +159,14 @@ class _Harness {
 
   final FakeNatsClient nats;
   final ProviderContainer container;
-  final Service service;
+  final skir.Service service;
   final skir.ServiceHost host;
   final skir.ServiceHost? secondHost;
   final skir.RealmInstance realm;
   final InspectableSelectable selectable;
-  final ProviderSubscription<AsyncValue<List<Service>>> servicesSubscription;
-  final ProviderSubscription<AsyncValue<OrganizationTopology>>
+  final ProviderSubscription<AsyncValue<List<skir.Service>>>
+  servicesSubscription;
+  final ProviderSubscription<AsyncValue<skir.OrganizationTopologySnapshot>>
   topologySubscription;
 
   void respond(String subject, Uint8List Function(Uint8List) handler) {
@@ -207,23 +207,25 @@ ValueEditing _configurationSource(InspectionBindings owners) =>
 class _SeededServices extends CanonicalOrganizationServices {
   _SeededServices(this.services);
 
-  final List<Service> services;
+  final List<skir.Service> services;
 
   @override
-  Stream<List<Service>> build(skir.RecordId organizationId) =>
+  Stream<List<skir.Service>> build(skir.RecordId organizationId) =>
       Stream.value(services);
 }
 
 class _SeededTopology extends OrganizationTopologyController {
   _SeededTopology(this.topology);
 
-  final OrganizationTopology topology;
+  final skir.OrganizationTopologySnapshot topology;
 
-  void replace(OrganizationTopology value) => state = AsyncData(value);
+  void replace(skir.OrganizationTopologySnapshot value) =>
+      state = AsyncData(value);
 
   @override
-  Stream<OrganizationTopology> build(skir.RecordId organizationId) =>
-      Stream.value(topology);
+  Stream<skir.OrganizationTopologySnapshot> build(
+    skir.RecordId organizationId,
+  ) => Stream.value(topology);
 }
 
 skir.ServiceHost _hostWithRevision(skir.ServiceHost host, int revision) =>

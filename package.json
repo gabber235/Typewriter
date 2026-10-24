@@ -4,11 +4,12 @@
   "type": "module",
   "devDependencies": {
     "@commitlint/cli": "^21.2.3",
+    "@types/bun": "1.3.14",
+    "@types/node": "26.6.5",
     "conventional-changelog-conventionalcommits": "^10.4.1",
     "lefthook": "2.2.2",
     "skir-internal": "0.2.21",
-    "typescript": "7.0.2",
-    "@types/node": "26.6.5"
+    "typescript": "7.0.2"
   },
   "dependencies": {
     "skir": "1.2.24",
@@ -16,21 +17,23 @@
     "skir-rust-gen": "0.1.5",
     "skir-dart-gen": "1.0.9",
     "zod": "4.6.7",
-    "typewriter-transport-skir-bridge": "workspace:*"
+    "yaml": "2.9.1",
+    "typewriter-transport": "workspace:*"
   },
   "trustedDependencies": [
     "lefthook"
   ],
   "patchedDependencies": {
+    "skir-internal@0.2.21": "services/protocol/transport-generator/dependency-patches/skir-internal@0.2.21.patch",
     "skir-kotlin-gen@1.0.12": "services/protocol/transport-generator/dependency-patches/skir-kotlin-gen@1.0.12.patch",
     "skir-dart-gen@1.0.9": "services/protocol/transport-generator/dependency-patches/skir-dart-gen@1.0.9.patch",
     "skir-rust-gen@0.1.5": "services/protocol/transport-generator/dependency-patches/skir-rust-gen@0.1.5.patch"
   },
   "scripts": {
     "generate:protocol": "bun services/protocol/generate.ts",
-    "test:transport-metadata": "bun test services/protocol/transport-generator/skir-bridge/test"
+    "test:transport-generator": "bun test services/protocol/transport-generator"
   },
   "workspaces": [
-    "services/protocol/transport-generator/skir-bridge"
+    "services/protocol/transport-generator"
   ]
 }

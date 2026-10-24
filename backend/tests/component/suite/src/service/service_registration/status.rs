@@ -7,29 +7,6 @@ use wasmcloud_utils::skir::base::service::v1::status::{
 
 use super::{ServiceRegistration, database, request};
 
-#[component_test(ServiceRegistration)]
-async fn unmatched_route_is_rejected(context: &mut TestContext<ServiceRegistration>) -> TestResult {
-    let database = database(context)?;
-    let before = database.query_json("SELECT * FROM service").await?;
-    let messaging = context.messaging()?;
-    messaging
-        .publish(
-            "typewriter.from.service.unmatched.execution.unknown",
-            Vec::new(),
-        )
-        .await?;
-    messaging.wait_idle().await?;
-    let span = context
-        .wait_for_span("handle-message", std::time::Duration::from_secs(2))
-        .await?;
-    assert!(span.attributes.iter().any(|attribute| {
-        attribute.key.as_str() == "exception.slug"
-            && attribute.value.to_string() == "dispatch-action-unknown"
-    }));
-    assert_eq!(database.query_json("SELECT * FROM service").await?, before);
-    Ok(())
-}
-
 async fn query_binding(
     context: &TestContext<ServiceRegistration>,
     service_id: &str,

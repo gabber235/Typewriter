@@ -38,7 +38,6 @@ import {
   TypeUse,
   ValuePath,
 } from "editor/v1/type_catalog.skir";
-import { BoundedTransferChunk } from "kernel/v1/bounded_transfer.skir";
 import { Color } from "kernel/v1/color.skir";
 import { InternalError } from "kernel/v1/errors.skir";
 import { Icon } from "kernel/v1/icon.skir";
@@ -214,10 +213,11 @@ struct RoleFallback(810900019) {
   parents: [PresentationRole] = 1;
 }
 
-/// One coherent generation of authoring types, relations, presentations, capabilities, and operations.
-/// Generation changes invalidate client assumptions across the whole snapshot; they are separate
-/// from saved resource observations and selected compiled publications.
-struct EditorCatalogWireSnapshot(810900020) {
+/// The complete editor catalog of one installed generation: one coherent set of authoring types,
+/// relations, presentations, capabilities, and operations. Generation changes invalidate client
+/// assumptions across the whole catalog; they are separate from saved resource observations and
+/// selected compiled publications.
+struct EditorCatalog(810900020) {
   generation: CatalogGeneration = 0;
   types: [PublishedType] = 1;
   relations: [RelationContract] = 2;
@@ -235,64 +235,47 @@ struct EditorCatalogWireSnapshot(810900020) {
   realm_root: TypeDefinitionId = 13;
 }
 
-struct CatalogTransferChunk(810900021) {
-  generation: CatalogGeneration = 0;
-  transfer: BoundedTransferChunk = 1;
-}
-
-enum CatalogUnavailableReason(810900022) {
-  encoded_size_limit = 1;
-}
-
-struct CatalogUnavailable(810900023) {
-  generation: CatalogGeneration = 0;
-  reason: CatalogUnavailableReason = 1;
-  encoded_size: int64 = 2;
-  max_encoded_size: int64 = 3;
-}
-
-struct CatalogFetchRequest(810900024) {
+struct CatalogFetchRequest(810900021) {
   expected_generation: CatalogGeneration? = 0;
-  transfer_id: string = 1;
 }
 
-enum CatalogFetchResult(810900025) {
-  chunk: CatalogTransferChunk = 1;
-  generation_changed: CatalogGeneration = 2;
-  unavailable: CatalogUnavailable = 3;
-  internal_error: InternalError = 4;
+/// The installed catalog, or its actual generation when it differs from the expected one.
+enum CatalogFetchResult(810900022) {
+  catalog: EditorCatalog = 1;
+  generation_changed_error: CatalogGeneration = 2;
+  internal_error: InternalError = 3;
 }
 
 /// Announces the installed catalog generation so clients can fetch current declarations.
 /// Delivery is an invalidation hint, rather than a durable history of catalog transitions.
-struct CatalogInvalidated(810900026) {
+struct CatalogInvalidated(810900023) {
   generation: CatalogGeneration = 0;
 }
 
-enum PreparationTarget(810900027) {
+enum PreparationTarget(810900024) {
   value: TypeUse = 1;
   record: TypeSelection = 2;
 }
 
-struct ValuePreparationRequest(810900028) {
+struct ValuePreparationRequest(810900025) {
   catalog: CatalogGeneration = 0;
   target: PreparationTarget = 1;
   supplied_value: DataValue? = 2;
 }
 
-enum PreparedContent(810900029) {
+enum PreparedContent(810900026) {
   value: DataValue = 1;
   record: AuthoringRecord = 2;
 }
 
 /// Proposed editable content after value preparation. It may carry initialization findings;
 /// preparation does not save a resource or establish that authored content is publishable.
-struct PreparedValue(810900030) {
+struct PreparedValue(810900027) {
   content: PreparedContent = 0;
   findings: [InitializationDiagnostic] = 1;
 }
 
-struct RequiredInput(810900031) {
+struct RequiredInput(810900028) {
   path: ValuePath = 0;
   expected: TypeUse = 1;
 }
@@ -300,7 +283,7 @@ struct RequiredInput(810900031) {
 /// Caller retained continuation for deferred constructor defaults and required input.
 /// Resume validates catalog, target, pending default paths, and supplied answers. The runtime
 /// retains no preparation session behind this value, and constructor sampling may execute provider code.
-struct PreparationDraft(810900032) {
+struct PreparationDraft(810900029) {
   catalog: CatalogGeneration = 0;
   target: PreparationTarget = 1;
   content: PreparedContent = 2;
@@ -309,12 +292,12 @@ struct PreparationDraft(810900032) {
   findings: [InitializationDiagnostic] = 5;
 }
 
-struct InputAnswer(810900033) {
+struct InputAnswer(810900030) {
   path: ValuePath = 0;
   value: DataValue = 1;
 }
 
-enum PreparationOperation(810900034) {
+enum PreparationOperation(810900031) {
   start: ValuePreparationRequest = 1;
   resume: struct {
     draft: PreparationDraft = 0;
@@ -324,19 +307,15 @@ enum PreparationOperation(810900034) {
 
 /// Separates prepared editable content from a continuation needing caller input or unavailable
 /// preparation. ready describes completion of initialization, not saved authoring or publication.
-enum PreparationStep(810900035) {
+enum PrepareValueResult(810900032) {
   ready: PreparedValue = 1;
   needs_input: PreparationDraft = 2;
-  unavailable: PreparationDraft = 3;
+  unavailable_error: PreparationDraft = 3;
+  catalog_changed_error: CatalogGeneration = 4;
+  internal_error: InternalError = 5;
 }
 
-enum PrepareValueResult(810900036) {
-  prepared: PreparationStep = 1;
-  catalog_changed: CatalogGeneration = 2;
-  internal_error: InternalError = 3;
-}
-
-struct EndpointBindingTemplate(810900037) {
+struct EndpointBindingTemplate(810900033) {
   endpoint: EndpointId = 0;
   containing_resource: NamedTypeTemplate = 1;
   value_owner: TypeDefinitionId = 2;
@@ -345,9 +324,18 @@ struct EndpointBindingTemplate(810900037) {
   contains_collection: bool = 5;
 }
 
-struct TypeRecommendation(810900038) {
+struct TypeRecommendation(810900034) {
   type: NamedTypeUse = 0;
   occurrences: int64 = 1;
+}
+
+/// What the most specific [ResourceDisplayFormulas] of one resource evaluate to: its label, accent
+/// and icon. Editors evaluate it and bind it to resource presentations as a read model; it is never
+/// stored.
+struct ResourceAppearance(810900035) {
+  label: string = 0;
+  accent: Color = 1;
+  icon: Icon = 2;
 }
 
 method FetchEditorCatalog(
@@ -356,7 +344,10 @@ method FetchEditorCatalog(
 
 method WatchEditorCatalog(
   struct {}
-): CatalogInvalidated = 920002;
+): enum {
+  invalidated: CatalogInvalidated = 1;
+  internal_error: InternalError = 2;
+} = 920002;
 
 method PrepareValue(
   PreparationOperation

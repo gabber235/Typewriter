@@ -4,6 +4,7 @@ package com.typewritermc.presentation
 
 import com.typewritermc.authoring.GeneratedSdkApi
 import com.typewritermc.expression.ExpressionFactories
+import skirout.editor.v1.catalog.PresentationDescriptor
 import skirout.editor.v1.presentation.PresentationNode
 import java.util.IdentityHashMap
 
@@ -34,7 +35,7 @@ class DefaultPresentationRuntime : PresentationRuntime {
     private fun resolve(
         reference: PresentationReference,
         binding: CheckedPresentationTemplate,
-    ): com.typewritermc.types.PresentationId? =
+    ): skirout.editor.v1.type_catalog.PresentationId? =
         synchronized(presentations) {
             binding.select(presentations[reference].orEmpty())?.id
         }

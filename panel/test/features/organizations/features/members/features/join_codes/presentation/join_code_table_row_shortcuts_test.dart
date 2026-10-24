@@ -15,9 +15,12 @@ void main() {
     var clears = 0;
     var copies = 0;
 
-    final code = OrganizationJoinCode(
+    final code = skir.JoinCode(
       code: skir.recordId("join_code:code"),
       createdAt: DateTime.utc(2024),
+      expiresAt: null,
+      singleUse: true,
+      autoAccept: skir.JoinCode_AutoAccept(roleIds: const []),
     );
 
     await tester.pumpWidget(
@@ -69,9 +72,12 @@ void main() {
     var clears = 0;
     var copies = 0;
     var revokes = 0;
-    final code = OrganizationJoinCode(
+    final code = skir.JoinCode(
       code: skir.recordId("join_code:selected"),
       createdAt: DateTime.utc(2024),
+      expiresAt: null,
+      singleUse: true,
+      autoAccept: skir.JoinCode_AutoAccept(roleIds: const []),
     );
 
     await tester.pumpWidget(

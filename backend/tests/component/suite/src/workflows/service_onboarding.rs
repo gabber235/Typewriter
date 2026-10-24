@@ -16,6 +16,7 @@ use wasmcloud_utils::{
     },
     skir_client::UnrecognizedValues,
     skir_variant,
+    transport_routes::service_registration,
 };
 
 struct Authentik;
@@ -44,9 +45,7 @@ impl FixtureSpec for ServiceOnboarding {
                     .secret_environment("AUTHENTIK_TOKEN", "fixture-token")
             })
             .dependency("service-registration", |component| {
-                component
-                    .subscription("typewriter.from.service.*.registration.ensure")
-                    .subscription("typewriter.from.user.*.organization.*.services.*")
+                component.subscriptions(service_registration::SUBSCRIPTIONS)
             })
             .messaging()
             .otel()

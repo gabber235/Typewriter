@@ -15,7 +15,6 @@ use wasmcloud_utils::{
     skir_transaction_outcome,
     skir_utils::{IntoSkirRecordIds, IntoSurrealRecordIds, RecordIdKeyIdentity},
     skir_variant,
-    wasmcloud::messaging::types::NatsMessage,
 };
 
 #[derive(Clone, Debug, Serialize, Deserialize)]
@@ -77,8 +76,7 @@ impl ApprovalOutcome {
 /// use a different sequence and are published by the corresponding mutation path.
 #[tracing::instrument(skip_all)]
 pub async fn handle_watch(
-    _msg: NatsMessage,
-    scope: wasmcloud_utils::transport_routes::OrganizationActorScope,
+    scope: wasmcloud_utils::transport::OrganizationActorScope,
     _request: WatchOrganizationJoinRequestsRequest,
 ) -> Result<WatchOrganizationJoinRequestsResponse, otel_wasi::Error> {
     let actor_id = scope.user.as_str();
@@ -103,8 +101,7 @@ pub async fn handle_watch(
 /// member projections, while each affected user also receives request and organization changes.
 #[tracing::instrument(skip_all)]
 pub async fn handle_approve(
-    _msg: NatsMessage,
-    scope: wasmcloud_utils::transport_routes::OrganizationActorScope,
+    scope: wasmcloud_utils::transport::OrganizationActorScope,
     req: ApproveOrganizationJoinRequestsRequest,
 ) -> Result<ApproveOrganizationJoinRequestsResponse, otel_wasi::Error> {
     let actor_id = scope.user.as_str();
@@ -187,7 +184,7 @@ pub async fn handle_approve(
         ..Default::default()
     };
     wasmcloud_utils::transport_routes::OrganizationJoinRequestsWatchRoute::delivery(
-        &wasmcloud_utils::transport_routes::OrganizationScope::try_from(org_id)?,
+        &wasmcloud_utils::transport::OrganizationScope::try_from(org_id)?,
     )
     .persist(join_requests_event.clone())
     .await?;
@@ -205,7 +202,7 @@ pub async fn handle_approve(
         ..Default::default()
     };
     wasmcloud_utils::transport_routes::OrganizationMembersWatchRoute::delivery(
-        &wasmcloud_utils::transport_routes::OrganizationScope::try_from(org_id)?,
+        &wasmcloud_utils::transport::OrganizationScope::try_from(org_id)?,
     )
     .persist(members_event.clone())
     .await?;
@@ -223,7 +220,7 @@ pub async fn handle_approve(
             ..Default::default()
         };
         wasmcloud_utils::transport_routes::UserJoinRequestsWatchRoute::delivery(
-            &wasmcloud_utils::transport_routes::UserScope::try_from(user_id)?,
+            &wasmcloud_utils::transport::UserScope::try_from(user_id)?,
         )
         .persist(user_request_event)
         .await?;
@@ -235,7 +232,7 @@ pub async fn handle_approve(
             ..Default::default()
         };
         wasmcloud_utils::transport_routes::UserOrganizationsWatchRoute::delivery(
-            &wasmcloud_utils::transport_routes::UserScope::try_from(user_id)?,
+            &wasmcloud_utils::transport::UserScope::try_from(user_id)?,
         )
         .persist(user_organization_event)
         .await?;
@@ -263,8 +260,7 @@ pub async fn handle_approve(
 /// separately so both projections can converge.
 #[tracing::instrument(skip_all)]
 pub async fn handle_decline(
-    _msg: NatsMessage,
-    scope: wasmcloud_utils::transport_routes::OrganizationActorScope,
+    scope: wasmcloud_utils::transport::OrganizationActorScope,
     req: DeclineOrganizationJoinRequestRequest,
 ) -> Result<DeclineOrganizationJoinRequestResponse, otel_wasi::Error> {
     let actor_id = scope.user.as_str();
@@ -345,7 +341,7 @@ pub async fn handle_decline(
         ..Default::default()
     };
     wasmcloud_utils::transport_routes::OrganizationJoinRequestsWatchRoute::delivery(
-        &wasmcloud_utils::transport_routes::OrganizationScope::try_from(org_id)?,
+        &wasmcloud_utils::transport::OrganizationScope::try_from(org_id)?,
     )
     .persist(event.clone())
     .await?;
@@ -356,7 +352,7 @@ pub async fn handle_decline(
     };
     let user_id = row.request.user.id.key.raw_identity()?;
     wasmcloud_utils::transport_routes::UserJoinRequestsWatchRoute::delivery(
-        &wasmcloud_utils::transport_routes::UserScope::try_from(user_id)?,
+        &wasmcloud_utils::transport::UserScope::try_from(user_id)?,
     )
     .persist(user_event)
     .await?;

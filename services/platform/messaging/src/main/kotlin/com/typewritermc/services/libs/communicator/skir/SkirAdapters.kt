@@ -5,16 +5,14 @@ import build.skir.UnrecognizedValuesPolicy
 import build.skir.service.Method
 import com.typewritermc.protocol.skir.fromBoundedBytes
 import com.typewritermc.services.libs.communicator.address.AddressTemplate
-import com.typewritermc.services.libs.communicator.address.MessageAddress
+import com.typewritermc.services.libs.communicator.contract.EventContract
 import com.typewritermc.services.libs.communicator.contract.OperationName
 import com.typewritermc.services.libs.communicator.contract.PayloadCodec
-import com.typewritermc.services.libs.communicator.contract.ResponseClassifier
 import com.typewritermc.services.libs.communicator.contract.ResponsePolicy
 import com.typewritermc.services.libs.communicator.contract.ScatterContract
 import com.typewritermc.services.libs.communicator.contract.UnaryContract
 import com.typewritermc.services.libs.communicator.contract.WatchContract
 import com.typewritermc.services.libs.communicator.transport.Payload
-import com.typewritermc.services.libs.telemetry.ErrorSlug
 import kotlin.time.Duration
 import kotlin.time.Duration.Companion.seconds
 
@@ -33,13 +31,15 @@ fun <Value : Any> Serializer<Value>.asPayloadCodec(
         override fun decode(payload: Payload): Value = fromBoundedBytes(payload.toByteArray(), unrecognizedValues)
     }
 
-/** Creates a unary contract using the request and response serializers declared by [method]. */
+/**
+ * Creates a unary contract using the request and response serializers declared by [method]. Failures are reported
+ * under [OperationName.failureSlug] of [name].
+ */
 fun <Address : Any, Request : Any, Response : Any> skirUnaryContract(
     method: Method<Request, Response>,
     name: OperationName,
     address: AddressTemplate<Address>,
     responsePolicy: ResponsePolicy<Response>,
-    failureSlug: ErrorSlug,
     timeout: Duration = 10.seconds,
 ): UnaryContract<Address, Request, Response> =
     UnaryContract(
@@ -49,16 +49,18 @@ fun <Address : Any, Request : Any, Response : Any> skirUnaryContract(
         method.responseSerializer.asPayloadCodec(),
         responsePolicy,
         timeout,
-        failureSlug,
+        name.failureSlug,
     )
 
-/** Creates a scatter contract using [method] for both request and response serialization. */
+/**
+ * Creates a scatter contract using [method] for both request and response serialization. Failures are reported
+ * under [OperationName.failureSlug] of [name].
+ */
 fun <Address : Any, Request : Any, Response : Any> skirScatterContract(
     method: Method<Request, Response>,
     name: OperationName,
     address: AddressTemplate<Address>,
     responsePolicy: ResponsePolicy<Response>,
-    failureSlug: ErrorSlug,
 ): ScatterContract<Address, Request, Response> =
     ScatterContract(
         name,
@@ -66,10 +68,13 @@ fun <Address : Any, Request : Any, Response : Any> skirScatterContract(
         method.requestSerializer.asPayloadCodec(),
         method.responseSerializer.asPayloadCodec(),
         responsePolicy,
-        failureSlug,
+        name.failureSlug,
     )
 
-/** Creates a watch contract from [method] for the initial exchange and [updateSerializer] for updates. */
+/**
+ * Creates a watch contract from [method] for the initial exchange and [updateSerializer] for updates. Failures are
+ * reported under [OperationName.failureSlug] of [name].
+ */
 fun <Address : Any, Request : Any, Initial : Any, Update : Any> skirWatchContract(
     method: Method<Request, Initial>,
     updateSerializer: Serializer<Update>,
@@ -77,11 +82,8 @@ fun <Address : Any, Request : Any, Initial : Any, Update : Any> skirWatchContrac
     requestAddress: AddressTemplate<Address>,
     updateAddress: AddressTemplate<Address>,
     initialPolicy: ResponsePolicy<Initial>,
-    updateClassifier: ResponseClassifier<Update>,
-    failureSlug: ErrorSlug,
     timeout: Duration = 10.seconds,
     updateFilter: (Request, Update) -> Boolean = { _, _ -> true },
-    updateAddressResolver: ((Address, Request) -> MessageAddress)? = null,
 ): WatchContract<Address, Request, Initial, Update> =
     WatchContract(
         name,
@@ -91,9 +93,14 @@ fun <Address : Any, Request : Any, Initial : Any, Update : Any> skirWatchContrac
         method.responseSerializer.asPayloadCodec(),
         updateSerializer.asPayloadCodec(),
         initialPolicy,
-        updateClassifier,
         timeout,
-        failureSlug,
+        name.failureSlug,
         updateFilter,
-        updateAddressResolver,
     )
+
+/** Creates an event contract encoding events with [serializer]. Failures are reported under [OperationName.failureSlug] of [name]. */
+fun <Address : Any, Event : Any> skirEventContract(
+    serializer: Serializer<Event>,
+    name: OperationName,
+    address: AddressTemplate<Address>,
+): EventContract<Address, Event> = EventContract(name, address, serializer.asPayloadCodec(), name.failureSlug)

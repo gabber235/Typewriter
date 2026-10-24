@@ -8,7 +8,7 @@ import "package:typewriter_panel/typewriter_panel.dart";
 /// resolve inheritance, substitute generic arguments, collect declarations,
 /// or derive effective fields. Callers must supply the same final wire shape
 /// that a checked catalog snapshot would contain.
-extension TrustedLocalEditorCatalog on skir.EditorCatalogWireSnapshot {
+extension TrustedLocalEditorCatalog on skir.EditorCatalog {
   CheckedEditorCatalog asTrustedLocalCatalog() {
     final typesById = <skir.TypeDefinitionId, skir.PublishedType>{};
     for (final published in types) {

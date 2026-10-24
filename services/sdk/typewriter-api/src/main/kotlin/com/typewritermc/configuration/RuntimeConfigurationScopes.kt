@@ -6,6 +6,7 @@ import com.typewritermc.expression.ExpressionFactory
 import com.typewritermc.expression.MissingPolicy
 import com.typewritermc.types.Ref
 import com.typewritermc.types.Resource
+import skirout.editor.v1.type_catalog.FieldPatternSegment
 import java.math.BigDecimal
 import kotlin.reflect.KClass
 import kotlin.time.Duration
@@ -166,7 +167,7 @@ private class RuntimeNullable<V, S>(
     Field<V?, NullableExpressions<V>> by RuntimeField(binding) {
     override fun notNull() = binding.helper(ConfigurationRuleHelper.NOT_NULL, emptyList())
 
-    override fun whenPresent(configure: Configuration<S>) = binding.nested(configure, FieldPatternSegment.Values, samePath = true)
+    override fun whenPresent(configure: Configuration<S>) = binding.nested(configure, FieldPatternSegment.VALUES, samePath = true)
 }
 
 private class RuntimeCollection<V, E>(
@@ -189,7 +190,7 @@ private class RuntimeList<T, S, E>(
     private val binding: RuntimeConfigurationBinding,
 ) : ListField<T, S, E>,
     CollectionField<List<T>, ListExpressions<T>> by RuntimeCollection(binding) {
-    override fun items(configure: Configuration<S>) = binding.nested(configure, FieldPatternSegment.Items)
+    override fun items(configure: Configuration<S>) = binding.nested(configure, FieldPatternSegment.ITEMS)
 
     override fun unique() = binding.helper(ConfigurationRuleHelper.UNIQUE, emptyList())
 
@@ -200,16 +201,16 @@ private class RuntimeSet<T, S>(
     private val binding: RuntimeConfigurationBinding,
 ) : SetField<T, S>,
     CollectionField<Set<T>, SetExpressions<T>> by RuntimeCollection(binding) {
-    override fun items(configure: Configuration<S>) = binding.nested(configure, FieldPatternSegment.Items)
+    override fun items(configure: Configuration<S>) = binding.nested(configure, FieldPatternSegment.ITEMS)
 }
 
 private class RuntimeMap<K, V, KS, VS>(
     private val binding: RuntimeConfigurationBinding,
 ) : MapField<K, V, KS, VS>,
     CollectionField<Map<K, V>, MapExpressions<K, V>> by RuntimeCollection(binding) {
-    override fun keys(configure: Configuration<KS>) = binding.nested(configure, FieldPatternSegment.Keys)
+    override fun keys(configure: Configuration<KS>) = binding.nested(configure, FieldPatternSegment.KEYS)
 
-    override fun values(configure: Configuration<VS>) = binding.nested(configure, FieldPatternSegment.Values)
+    override fun values(configure: Configuration<VS>) = binding.nested(configure, FieldPatternSegment.VALUES)
 }
 
 internal fun <S : Any> RuntimeConfigurationBinding.createScope(scope: KClass<S>): S {

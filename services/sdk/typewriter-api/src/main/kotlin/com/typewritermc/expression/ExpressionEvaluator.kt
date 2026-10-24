@@ -2,23 +2,43 @@ package com.typewritermc.expression
 
 import com.typewritermc.authoring.AuthoredReads
 import com.typewritermc.authoring.Availability
-import com.typewritermc.authoring.PathSegment
-import com.typewritermc.authoring.ValueLocation
-import com.typewritermc.authoring.ValuePath
 import com.typewritermc.authoring.append
-import com.typewritermc.types.DataValue
-import com.typewritermc.types.ListItem
-import com.typewritermc.types.MapRow
+import com.typewritermc.authoring.field
+import com.typewritermc.authoring.id
+import com.typewritermc.authoring.name
+import com.typewritermc.authoring.of
+import com.typewritermc.authoring.payload
+import com.typewritermc.authoring.record
+import com.typewritermc.authoring.root
+import com.typewritermc.authoring.use
+import com.typewritermc.types.actualType
+import com.typewritermc.types.bigInteger
 import com.typewritermc.types.canonicalValueKey
-import com.typewritermc.types.skir.SkirAuthoringValueCodec
-import com.typewritermc.types.skir.SkirConversionResult
-import com.typewritermc.types.skir.SkirDataValueCodec
-import com.typewritermc.types.skir.getOrThrow
+import com.typewritermc.types.duration
+import com.typewritermc.types.field
+import com.typewritermc.types.fields
+import com.typewritermc.types.instant
+import com.typewritermc.types.integer
+import com.typewritermc.types.items
+import com.typewritermc.types.listValue
+import com.typewritermc.types.mapValue
+import com.typewritermc.types.named
+import com.typewritermc.types.payload
+import com.typewritermc.types.record
+import com.typewritermc.types.requirePortable
+import com.typewritermc.types.requireValid
+import com.typewritermc.types.rows
+import com.typewritermc.types.setValue
+import com.typewritermc.types.toResourceId
+import com.typewritermc.types.unknownVariant
 import com.typewritermc.types.unwrapNamed
+import com.typewritermc.types.use
 import kotlinx.coroutines.CancellationException
 import skirout.editor.v1.expression.BoundDirection
 import skirout.editor.v1.expression.ConditionalExpression
 import skirout.editor.v1.expression.EntryBranch
+import skirout.editor.v1.expression.EvaluationBudget
+import skirout.editor.v1.expression.EvaluationDiagnostic
 import skirout.editor.v1.expression.ExpressionNode
 import skirout.editor.v1.expression.ExpressionQuery
 import skirout.editor.v1.expression.NumberArithmeticOperation
@@ -32,6 +52,14 @@ import skirout.editor.v1.expression.TextCompareOperation
 import skirout.editor.v1.expression.TextUnaryOperation
 import skirout.editor.v1.expression.TimestampBoundDirection
 import skirout.editor.v1.expression.ValueCompareOperation
+import skirout.editor.v1.type_catalog.DataValue
+import skirout.editor.v1.type_catalog.ExpressionBindingId
+import skirout.editor.v1.type_catalog.ListItem
+import skirout.editor.v1.type_catalog.MapRow
+import skirout.editor.v1.type_catalog.PathSegment
+import skirout.editor.v1.type_catalog.TypeSelection
+import skirout.editor.v1.type_catalog.ValueLocation
+import skirout.editor.v1.type_catalog.ValuePath
 import java.math.BigDecimal
 import java.math.MathContext
 
@@ -253,14 +281,14 @@ private class EvaluatorState(
                 is ExpressionNode.FieldWrapper -> {
                     field(
                         expression.value.source,
-                        ValuePath(listOf(PathSegment.Field(expression.value.name))),
+                        ValuePath.root.field(expression.value.name),
                     )
                 }
 
                 is ExpressionNode.EntryProjectionWrapper -> {
                     field(
                         expression.value.source,
-                        ValuePath(listOf(expression.value.branch.pathSegment())),
+                        ValuePath(segments = listOf(expression.value.branch.pathSegment())),
                     )
                 }
 
@@ -273,20 +301,21 @@ private class EvaluatorState(
         } catch (failure: OperationFailure) {
             Availability.Failed(
                 EvaluationDiagnostic(
-                    failure.code,
-                    failure.message.orEmpty(),
-                    (
-                        observedLocations +
-                            frames.flatten().mapNotNull { it.location }
-                    ).distinct(),
+                    code = failure.code,
+                    message = failure.message.orEmpty(),
+                    locations =
+                        (
+                            observedLocations +
+                                frames.flatten().mapNotNull { it.location }
+                        ).distinct(),
                 ),
             )
         } catch (failure: Exception) {
             Availability.Failed(
                 EvaluationDiagnostic(
-                    "expression_evaluation_failed",
-                    failure.message ?: failure::class.simpleName.orEmpty(),
-                    (observedLocations + frames.flatten().mapNotNull { it.location }).distinct(),
+                    code = "expression_evaluation_failed",
+                    message = failure.message ?: failure::class.simpleName.orEmpty(),
+                    locations = (observedLocations + frames.flatten().mapNotNull { it.location }).distinct(),
                 ),
             )
         } finally {
@@ -333,7 +362,7 @@ private class EvaluatorState(
             }
             when (val node = root) {
                 is ExpressionNode.FieldWrapper -> {
-                    reversed += PathSegment.Field(node.value.name)
+                    reversed += PathSegment.createField(name = node.value.name)
                     root = node.value.source
                 }
 
@@ -353,7 +382,7 @@ private class EvaluatorState(
         ) {
             return null
         }
-        return Projection(root, ValuePath(reversed.asReversed()), occurrence, reversed.size)
+        return Projection(root, ValuePath(segments = reversed.asReversed()), occurrence, reversed.size)
     }
 
     private fun local(
@@ -370,8 +399,11 @@ private class EvaluatorState(
         repeat(projection.descents) { step() }
         return when (val root = projection.root) {
             is ExpressionNode.InputWrapper -> {
-                val binding = ExpressionBindingId(root.value.binding.value)
-                val path = SkirAuthoringValueCodec.decode(root.value.path).getOrThrow().append(projection.path)
+                val binding = ExpressionBindingId(value = root.value.binding.value)
+                val path =
+                    root.value.path
+                        .requireValid()
+                        .append(projection.path)
                 val value = inputValues[binding]
                 if (value != null) {
                     projected(value.at(path))
@@ -385,11 +417,14 @@ private class EvaluatorState(
 
             is ExpressionNode.LocalWrapper -> {
                 val value = local(root.value.depth, root.value.slot)
-                val path = SkirAuthoringValueCodec.decode(root.value.path).getOrThrow().append(projection.path)
+                val path =
+                    root.value.path
+                        .requireValid()
+                        .append(projection.path)
                 value.location?.append(path)?.let { observedLocations += it }
                 val selected = value.value.at(path)
                 if (selected ==
-                    DataValue.Unfilled
+                    DataValue.UNFILLED
                 ) {
                     Availability.Unavailable(listOfNotNull(value.location?.append(path)))
                 } else {
@@ -411,7 +446,7 @@ private class EvaluatorState(
     private fun readAt(location: ValueLocation): Availability<DataValue> {
         observedLocations += location
         return when (val result = reader.read(location)) {
-            is Availability.Available -> if (result.value == DataValue.Unfilled) Availability.Unavailable(listOf(location)) else result
+            is Availability.Available -> if (result.value == DataValue.UNFILLED) Availability.Unavailable(listOf(location)) else result
             is Availability.Unavailable -> result
             is Availability.Failed -> result
         }
@@ -424,7 +459,7 @@ private class EvaluatorState(
     ): Availability<DataValue> {
         val value = child(source, 0)
         if (value !is Availability.Available) return value
-        if (value.value.unwrapNamed() == DataValue.Null || value.value == DataValue.Unfilled) return Availability.Unavailable(emptyList())
+        if (value.value.unwrapNamed() == DataValue.NULL || value.value == DataValue.UNFILLED) return Availability.Unavailable(emptyList())
         return projected(value.value.at(path))
     }
 
@@ -498,7 +533,7 @@ private class EvaluatorState(
         val operation = expression.kind
         val fields =
             suffix.segments.map { segment ->
-                (segment as? PathSegment.Field)?.name
+                (segment as? PathSegment.FieldWrapper)?.name
                     ?: throw OperationFailure("invalid_model_projection", "Canonical model projection requires fields.")
             }
         val contract =
@@ -506,14 +541,11 @@ private class EvaluatorState(
         val source = evaluateAt(expression.sourceExpression(), occurrence.child(0))
         if (source !is Availability.Available) return source
         if (operation == ExpressionQuery.Kind.VALUE_CONFIGURATION_WRAPPER) {
-            val named = source.value as? DataValue.Named ?: return Availability.Unavailable(emptyList())
+            val named = source.value as? DataValue.NamedWrapper ?: return Availability.Unavailable(emptyList())
             return projected(
-                CanonicalReadModels.encode(
-                    com.typewritermc.authoring.TypeSelection
-                        .Complete(named.actualType),
+                readModel(
+                    TypeSelection.CompleteWrapper(named.actualType),
                     fields,
-                    ::step,
-                    ::consumeItems,
                 ),
             )
         }
@@ -524,27 +556,39 @@ private class EvaluatorState(
             throw OperationFailure("query_catalog_mismatch", "Canonical queries must use the authored read catalog.")
         }
         if (operation == ExpressionQuery.Kind.CATALOG_DECLARATION_WRAPPER) {
-            val selection = CanonicalReadModels.typeSelection.decode(source.value)
+            // Temporary bridge until data values are Skir values: the selection is read back through its Skir read model.
+            val selection =
+                CanonicalReadModels.typeSelection.decode(source.value.requirePortable())
             val definition =
                 when (selection) {
-                    is com.typewritermc.authoring.TypeSelection.Complete -> selection.use.definition
-                    is com.typewritermc.authoring.TypeSelection.Pending -> selection.definition
+                    is TypeSelection.CompleteWrapper -> selection.value.definition
+                    is TypeSelection.PendingWrapper -> selection.value.definition
+                    else -> throw OperationFailure("invalid_type_selection", "The type selection variant is unknown.")
                 }
-            return when (val declaration = query.declaration(definition)) {
-                is Availability.Available -> projected(CanonicalReadModels.encode(declaration.value, fields, ::step, ::consumeItems))
-                is Availability.Unavailable -> declaration
-                is Availability.Failed -> declaration
+            return when (val declaration = query.declaration(definition.requireValid())) {
+                is Availability.Available -> {
+                    projected(project(CanonicalReadModels.publishedType.encode(declaration.value, fields)))
+                }
+
+                is Availability.Unavailable -> {
+                    declaration
+                }
+
+                is Availability.Failed -> {
+                    declaration
+                }
             }
         }
         val id =
             if (contract.sourceIsReference) {
                 val link =
-                    source.value.unwrapNamed() as? DataValue.Link
+                    source.value.unwrapNamed() as? DataValue.LinkWrapper
                         ?: throw OperationFailure("expected_link", "The query receiver is not a relationship.")
-                link.target.resource
+                link.value.target.resource
+                    .toResourceId()
             } else {
                 val named =
-                    source.value as? DataValue.Named
+                    source.value as? DataValue.NamedWrapper
                         ?: throw OperationFailure("expected_resource_identity", "Resource queries require a typed identity.")
                 if (named.actualType !=
                     com.typewritermc.types.ResourceIdDefinition.use
@@ -555,14 +599,14 @@ private class EvaluatorState(
             }
         val path = suffix
         val location =
-            ValueLocation(
+            ValueLocation.of(
                 id,
                 if (operation ==
                     ExpressionQuery.Kind.RESOURCE_VALUE_WRAPPER
                 ) {
                     path
                 } else {
-                    com.typewritermc.authoring.ValuePath()
+                    ValuePath.root
                 },
             )
         observedLocations += location
@@ -573,10 +617,10 @@ private class EvaluatorState(
                 is Availability.Failed -> return selected
             }
         val expected = requireNotNull(contract.targetType)
-        val readable = query.catalog.knownApplications(record.configuration).any { query.catalog.isReadableAs(it, expected) }
+        val readable = query.catalog.knownApplications(record.configuration).any { query.catalog.isReadableAs(it.use, expected) }
         if (!readable) {
             if (!contract.sourceIsReference ||
-                record.configuration is com.typewritermc.authoring.TypeSelection.Pending
+                record.configuration is TypeSelection.PendingWrapper
             ) {
                 return Availability.Unavailable(listOf(location))
             }
@@ -584,23 +628,24 @@ private class EvaluatorState(
         }
         return when (operation) {
             ExpressionQuery.Kind.RESOURCE_IDENTITY_WRAPPER -> {
-                available(DataValue.Named(com.typewritermc.types.ResourceIdDefinition.use, DataValue.StringValue(id.value)))
+                available(DataValue.named(com.typewritermc.types.ResourceIdDefinition.use, DataValue.StringValueWrapper(id.value)))
             }
 
             ExpressionQuery.Kind.RESOURCE_CONFIGURATION_WRAPPER -> {
-                projected(CanonicalReadModels.encode(record.configuration, fields, ::step, ::consumeItems))
+                projected(readModel(record.configuration, fields))
             }
 
             ExpressionQuery.Kind.RESOURCE_VALUE_WRAPPER -> {
-                var payload: DataValue = DataValue.Record(record.fields)
+                var payload: DataValue = DataValue.RecordWrapper(record.payload)
                 for (field in fields) {
                     step()
                     val current = payload.unwrapNamed()
-                    if (current == DataValue.Null || current == DataValue.Unfilled) return Availability.Unavailable(listOf(location))
+                    if (current == DataValue.NULL || current == DataValue.UNFILLED) return Availability.Unavailable(listOf(location))
                     val currentRecord =
-                        current as? DataValue.Record ?: throw OperationFailure("expected_record", "The expression value is not a record.")
+                        current as? DataValue.RecordWrapper
+                            ?: throw OperationFailure("expected_record", "The expression value is not a record.")
                     payload =
-                        currentRecord.fields[field] ?: if (record.configuration is com.typewritermc.authoring.TypeSelection.Complete) {
+                        currentRecord.field(field) ?: if (record.configuration is TypeSelection.CompleteWrapper) {
                             throw OperationFailure("record_field_absent", "A complete record is missing a declared field.")
                         } else {
                             return Availability.Unavailable(listOf(location))
@@ -608,10 +653,10 @@ private class EvaluatorState(
                 }
                 val configuration = record.configuration
                 if (fields.isEmpty() &&
-                    configuration is com.typewritermc.authoring.TypeSelection.Complete
+                    configuration is TypeSelection.CompleteWrapper
                 ) {
                     payload =
-                        DataValue.Named(configuration.use, payload)
+                        DataValue.named(configuration.use, payload)
                 }
                 if (fields.isEmpty()) chargeProjection(payload)
                 projected(payload)
@@ -634,25 +679,25 @@ private class EvaluatorState(
         }
         step()
         when (value) {
-            is DataValue.Named -> {
+            is DataValue.NamedWrapper -> {
                 chargeProjection(value.payload, depth + 1)
             }
 
-            is DataValue.Record -> {
-                value.fields.values.forEach { chargeProjection(it, depth + 1) }
+            is DataValue.RecordWrapper -> {
+                value.fields.forEach { chargeProjection(it.value, depth + 1) }
             }
 
-            is DataValue.ListValue -> {
+            is DataValue.ListValueWrapper -> {
                 consumeItems(value.items.size)
                 value.items.forEach { chargeProjection(it.value, depth + 1) }
             }
 
-            is DataValue.SetValue -> {
+            is DataValue.SetValueWrapper -> {
                 consumeItems(value.items.size)
                 value.items.forEach { chargeProjection(it.value, depth + 1) }
             }
 
-            is DataValue.MapValue -> {
+            is DataValue.MapValueWrapper -> {
                 consumeItems(value.rows.size)
                 value.rows.forEach {
                     chargeProjection(it.key, depth + 1)
@@ -669,9 +714,22 @@ private class EvaluatorState(
         }
     }
 
+    /** Projects a type selection through its Skir read model. Temporary bridge until type selections are Skir values. */
+    private fun readModel(
+        selection: TypeSelection,
+        fields: List<String>,
+    ): DataValue = project(CanonicalReadModels.typeSelection.encode(selection, fields))
+
+    private fun project(value: skirout.editor.v1.type_catalog.DataValue): DataValue = value.requirePortable()
+
+    private fun <T> CanonicalReadModel<T>.encode(
+        value: T,
+        fields: List<String>,
+    ) = CanonicalReadModels.encode(value, serializer.typeDescriptor, fields, ::step, ::consumeItems)
+
     private fun projected(value: DataValue): Availability<DataValue> =
         if (value ==
-            DataValue.Unfilled
+            DataValue.UNFILLED
         ) {
             Availability.Unavailable(emptyList())
         } else {
@@ -685,14 +743,14 @@ private class EvaluatorState(
         val entries = value.collectionEntries()
         val complete = entries.filterNot { it.value.containsUnfilled() }
         val keys = complete.map { it.value.canonicalValueKey() }
-        if (keys.distinct().size != keys.size) return available(DataValue.Boolean(false))
+        if (keys.distinct().size != keys.size) return available(DataValue.BooleanWrapper(false))
         val unfinished = entries.filter { it.value.containsUnfilled() }
         if (unfinished.isNotEmpty()) {
             return Availability.Unavailable(
                 unfinished.mapNotNull { entry -> location?.let(entry::location) },
             )
         }
-        return available(DataValue.Boolean(true))
+        return available(DataValue.BooleanWrapper(true))
     }
 
     private fun collectionAccess(
@@ -703,15 +761,15 @@ private class EvaluatorState(
         val key = values[1]
         val result =
             when {
-                collection is DataValue.ListValue && key.unwrapNamed() is DataValue.Integer -> {
-                    val index = (key.unwrapNamed() as DataValue.Integer).value.intValueExact()
+                collection is DataValue.ListValueWrapper && key.unwrapNamed() is DataValue.IntegerWrapper -> {
+                    val index = (key.unwrapNamed() as DataValue.IntegerWrapper).bigInteger.intValueExact()
                     val item =
                         collection.items.getOrNull(index)
                             ?: throw OperationFailure("collection_key_absent", "The collection key or index is absent.")
-                    item.value to location?.append(ValuePath(listOf(PathSegment.Item(item.id))))
+                    item.value to location?.append(ValuePath(segments = listOf(PathSegment.createItem(id = item.id))))
                 }
 
-                collection is DataValue.MapValue -> {
+                collection is DataValue.MapValueWrapper -> {
                     val unfinished = collection.rows.filter { it.key.containsUnfilled() }
                     val matches =
                         collection.rows
@@ -720,10 +778,10 @@ private class EvaluatorState(
                     if (matches.size > 1 || unfinished.isNotEmpty()) {
                         return Availability.Unavailable(
                             matches.mapNotNull { row ->
-                                location?.append(ValuePath(listOf(PathSegment.Item(row.id), PathSegment.MapValue)))
+                                location?.append(ValuePath(segments = listOf(PathSegment.createItem(id = row.id), PathSegment.MAP_VALUE)))
                             } +
                                 unfinished.mapNotNull { row ->
-                                    location?.append(ValuePath(listOf(PathSegment.Item(row.id), PathSegment.MapKey)))
+                                    location?.append(ValuePath(segments = listOf(PathSegment.createItem(id = row.id), PathSegment.MAP_KEY)))
                                 },
                         )
                     }
@@ -731,24 +789,24 @@ private class EvaluatorState(
                         throw OperationFailure("collection_key_absent", "The collection key or index is absent.")
                     }
                     val row = matches.single()
-                    row.value to location?.append(ValuePath(listOf(PathSegment.Item(row.id), PathSegment.MapValue)))
+                    row.value to location?.append(ValuePath(segments = listOf(PathSegment.createItem(id = row.id), PathSegment.MAP_VALUE)))
                 }
 
-                collection is DataValue.Record && key.unwrapNamed() is DataValue.StringValue -> {
-                    val field = (key.unwrapNamed() as DataValue.StringValue).value
+                collection is DataValue.RecordWrapper && key.unwrapNamed() is DataValue.StringValueWrapper -> {
+                    val field = (key.unwrapNamed() as DataValue.StringValueWrapper).value
                     val value =
-                        collection.fields[field]
+                        collection.field(field)
                             ?: throw OperationFailure("collection_key_absent", "The collection key or index is absent.")
-                    value to location?.append(ValuePath(listOf(PathSegment.Field(field))))
+                    value to location?.append(ValuePath.root.field(field))
                 }
 
-                collection is DataValue.StringValue && key.unwrapNamed() is DataValue.Integer -> {
-                    val index = (key.unwrapNamed() as DataValue.Integer).value.intValueExact()
+                collection is DataValue.StringValueWrapper && key.unwrapNamed() is DataValue.IntegerWrapper -> {
+                    val index = (key.unwrapNamed() as DataValue.IntegerWrapper).bigInteger.intValueExact()
                     val value =
                         collection.value
                             .getOrNull(index)
                             ?.toString()
-                            ?.let(DataValue::StringValue)
+                            ?.let(DataValue::StringValueWrapper)
                             ?: throw OperationFailure("collection_key_absent", "The collection key or index is absent.")
                     value to location
                 }
@@ -773,23 +831,23 @@ private class EvaluatorState(
         val key = expected.canonicalValueKey()
         val candidates =
             when (collection) {
-                is DataValue.ListValue -> {
+                is DataValue.ListValueWrapper -> {
                     collection.items.map { it.id to it.value }
                 }
 
-                is DataValue.SetValue -> {
+                is DataValue.SetValueWrapper -> {
                     collection.items.map { it.id to it.value }
                 }
 
-                is DataValue.MapValue -> {
+                is DataValue.MapValueWrapper -> {
                     collection.rows.map { it.id to it.key }
                 }
 
-                is DataValue.Record -> {
+                is DataValue.RecordWrapper -> {
                     val field =
-                        (expected.unwrapNamed() as? DataValue.StringValue)?.value
+                        (expected.unwrapNamed() as? DataValue.StringValueWrapper)?.value
                             ?: throw OperationFailure("expected_collection", "The expression value is not a collection.")
-                    return available(DataValue.Boolean(field in collection.fields))
+                    return available(DataValue.BooleanWrapper(collection.field(field) != null))
                 }
 
                 else -> {
@@ -797,15 +855,15 @@ private class EvaluatorState(
                 }
             }
         if (candidates.any { (_, value) -> !value.containsUnfilled() && value.canonicalValueKey() == key }) {
-            return available(DataValue.Boolean(true))
+            return available(DataValue.BooleanWrapper(true))
         }
         val unfinished = candidates.filter { (_, value) -> value.containsUnfilled() }
         if (unfinished.isNotEmpty()) {
             return Availability.Unavailable(
-                unfinished.mapNotNull { (id, _) -> location?.append(ValuePath(listOf(PathSegment.Item(id)))) },
+                unfinished.mapNotNull { (id, _) -> location?.append(ValuePath(segments = listOf(PathSegment.createItem(id = id)))) },
             )
         }
-        return available(DataValue.Boolean(false))
+        return available(DataValue.BooleanWrapper(false))
     }
 
     context(reads: AuthoredReads)
@@ -817,10 +875,10 @@ private class EvaluatorState(
         val first = child(left, 0)
         if (first !is Availability.Available) return first
         val value = first.value.boolean()
-        if ((conjunction && !value) || (!conjunction && value)) return available(DataValue.Boolean(value))
+        if ((conjunction && !value) || (!conjunction && value)) return available(DataValue.BooleanWrapper(value))
         val second = child(right, 1)
         if (second !is Availability.Available) return second
-        return available(DataValue.Boolean(second.value.boolean()))
+        return available(DataValue.BooleanWrapper(second.value.boolean()))
     }
 
     context(reads: AuthoredReads)
@@ -834,7 +892,7 @@ private class EvaluatorState(
     private fun orElse(expression: OrElseExpression): Availability<DataValue> =
         when (val input = child(expression.input, 0)) {
             is Availability.Available -> {
-                if (input.value == DataValue.Null || input.value == DataValue.Unfilled) child(expression.fallback, 1) else input
+                if (input.value == DataValue.NULL || input.value == DataValue.UNFILLED) child(expression.fallback, 1) else input
             }
 
             is Availability.Unavailable -> {
@@ -950,13 +1008,13 @@ private class EvaluatorState(
                     }
                     results += entry to body.value
                     if (operation == ExpressionNode.Kind.ANY_WRAPPER && body.value.boolean()) {
-                        return available(DataValue.Boolean(true))
+                        return available(DataValue.BooleanWrapper(true))
                     }
                     if (operation == ExpressionNode.Kind.ALL_WRAPPER && !body.value.boolean()) {
-                        return available(DataValue.Boolean(false))
+                        return available(DataValue.BooleanWrapper(false))
                     }
                     if (operation == ExpressionNode.Kind.NONE_WRAPPER && body.value.boolean()) {
-                        return available(DataValue.Boolean(false))
+                        return available(DataValue.BooleanWrapper(false))
                     }
                     if (operation == ExpressionNode.Kind.FIND_WRAPPER && body.value.boolean()) {
                         if (unavailable.isNotEmpty()) return Availability.Unavailable(unavailable.toList())
@@ -975,24 +1033,24 @@ private class EvaluatorState(
         }
         if (operation == ExpressionNode.Kind.UNIQUE_BY_WRAPPER) {
             val keys = results.map { it.second.canonicalValueKey() }
-            if (keys.distinct().size != keys.size) return available(DataValue.Boolean(false))
+            if (keys.distinct().size != keys.size) return available(DataValue.BooleanWrapper(false))
         }
         if (unavailable.isNotEmpty()) return Availability.Unavailable(unavailable.toList())
         return when (operation) {
             ExpressionNode.Kind.ANY_WRAPPER -> {
-                available(DataValue.Boolean(false))
+                available(DataValue.BooleanWrapper(false))
             }
 
             ExpressionNode.Kind.ALL_WRAPPER, ExpressionNode.Kind.NONE_WRAPPER -> {
-                available(DataValue.Boolean(true))
+                available(DataValue.BooleanWrapper(true))
             }
 
             ExpressionNode.Kind.UNIQUE_BY_WRAPPER -> {
-                available(DataValue.Boolean(true))
+                available(DataValue.BooleanWrapper(true))
             }
 
             ExpressionNode.Kind.MAP_WRAPPER -> {
-                available(DataValue.ListValue(results.map { (entry, value) -> ListItem(entry.id, value) }))
+                available(DataValue.listValue(results.map { (entry, value) -> ListItem(id = entry.id, value = value) }))
             }
 
             ExpressionNode.Kind.FILTER_WRAPPER -> {
@@ -1001,15 +1059,15 @@ private class EvaluatorState(
             }
 
             ExpressionNode.Kind.FIND_WRAPPER -> {
-                available(DataValue.Null)
+                available(DataValue.NULL)
             }
 
             ExpressionNode.Kind.FIND_LAST_WRAPPER -> {
-                available(results.lastOrNull { it.second.boolean() }?.first?.value ?: DataValue.Null)
+                available(results.lastOrNull { it.second.boolean() }?.first?.value ?: DataValue.NULL)
             }
 
             ExpressionNode.Kind.COUNT_WRAPPER -> {
-                available(DataValue.Integer(results.count { it.second.boolean() }.toBigInteger()))
+                available(DataValue.integer(results.count { it.second.boolean() }.toBigInteger()))
             }
 
             ExpressionNode.Kind.DISTINCT_BY_WRAPPER -> {
@@ -1035,10 +1093,10 @@ private class EvaluatorState(
                 val flattened =
                     results.flatMap { (outer, value) ->
                         value.collectionEntries().map { inner ->
-                            ListItem(nestedItemId(outer.id, inner.id), inner.value)
+                            ListItem(id = nestedItemId(outer.id, inner.id), value = inner.value)
                         }
                     }
-                available(DataValue.ListValue(flattened))
+                available(DataValue.listValue(flattened))
             }
 
             else -> {
@@ -1057,7 +1115,7 @@ private class EvaluatorState(
         sourceLocation: ValueLocation?,
     ): Availability<DataValue> {
         val fold = operation == ExpressionNode.Kind.FOLD_WRAPPER
-        if (!fold && entries.isEmpty()) return available(DataValue.Null)
+        if (!fold && entries.isEmpty()) return available(DataValue.NULL)
         var accumulator = if (fold) arguments.single() else entries.first().value
         var accumulatorLocation =
             if (fold) {
@@ -1188,16 +1246,16 @@ private class EvaluatorState(
             is ExpressionNode.InputWrapper -> {
                 bindings.locations[
                     ExpressionBindingId(
-                        root.value.binding.value,
+                        value = root.value.binding.value,
                     ),
-                ]?.append(SkirAuthoringValueCodec.decode(root.value.path).getOrThrow())?.append(projection.path)
+                ]?.append(root.value.path.requireValid())?.append(projection.path)
             }
 
             is ExpressionNode.LocalWrapper -> {
                 local(
                     root.value.depth,
                     root.value.slot,
-                ).location?.append(SkirAuthoringValueCodec.decode(root.value.path).getOrThrow())?.append(projection.path)
+                ).location?.append(root.value.path.requireValid())?.append(projection.path)
             }
 
             else -> {
@@ -1220,10 +1278,10 @@ internal class OperationFailure(
 ) : IllegalArgumentException(message)
 
 private data class CollectionEntry(
-    val id: com.typewritermc.authoring.ItemId,
+    val id: skirout.editor.v1.type_catalog.ItemId,
     val value: DataValue,
 ) {
-    fun location(base: ValueLocation): ValueLocation = base.append(ValuePath(listOf(PathSegment.Item(id))))
+    fun location(base: ValueLocation): ValueLocation = base.append(ValuePath(segments = listOf(PathSegment.createItem(id = id))))
 }
 
 private data class LocalBinding(
@@ -1233,17 +1291,17 @@ private data class LocalBinding(
 
 private fun DataValue.collectionEntries(): List<CollectionEntry> =
     when (val value = unwrapNamed()) {
-        is DataValue.ListValue -> {
+        is DataValue.ListValueWrapper -> {
             value.items.map { CollectionEntry(it.id, it.value) }
         }
 
-        is DataValue.SetValue -> {
+        is DataValue.SetValueWrapper -> {
             value.items.map { CollectionEntry(it.id, it.value) }
         }
 
-        is DataValue.MapValue -> {
+        is DataValue.MapValueWrapper -> {
             value.rows.map { row ->
-                CollectionEntry(row.id, DataValue.Record(mapOf("key" to row.key, "value" to row.value)))
+                CollectionEntry(row.id, DataValue.record(mapOf("key" to row.key, "value" to row.value)))
             }
         }
 
@@ -1254,23 +1312,23 @@ private fun DataValue.collectionEntries(): List<CollectionEntry> =
 
 private fun DataValue.reorder(entries: List<CollectionEntry>): DataValue =
     when (this) {
-        is DataValue.Named -> {
-            copy(payload = payload.reorder(entries))
+        is DataValue.NamedWrapper -> {
+            DataValue.named(actualType, payload.reorder(entries))
         }
 
-        is DataValue.ListValue -> {
+        is DataValue.ListValueWrapper -> {
             val byId = items.associateBy(ListItem::id)
-            copy(items = entries.map { entry -> requireNotNull(byId[entry.id]) })
+            DataValue.listValue(entries.map { entry -> requireNotNull(byId[entry.id]) })
         }
 
-        is DataValue.SetValue -> {
+        is DataValue.SetValueWrapper -> {
             val byId = items.associateBy(ListItem::id)
-            copy(items = entries.map { entry -> requireNotNull(byId[entry.id]) })
+            DataValue.setValue(entries.map { entry -> requireNotNull(byId[entry.id]) })
         }
 
-        is DataValue.MapValue -> {
+        is DataValue.MapValueWrapper -> {
             val byId = rows.associateBy(MapRow::id)
-            copy(rows = entries.map { entry -> requireNotNull(byId[entry.id]) })
+            DataValue.mapValue(entries.map { entry -> requireNotNull(byId[entry.id]) })
         }
 
         else -> {
@@ -1278,27 +1336,28 @@ private fun DataValue.reorder(entries: List<CollectionEntry>): DataValue =
         }
     }
 
-private fun groupByKey(results: List<Pair<CollectionEntry, DataValue>>): DataValue.MapValue {
+private fun groupByKey(results: List<Pair<CollectionEntry, DataValue>>): DataValue.MapValueWrapper {
     val groups = linkedMapOf<String, Pair<DataValue, MutableList<CollectionEntry>>>()
     results.forEach { (entry, key) ->
         groups.getOrPut(key.canonicalValueKey()) { key to mutableListOf() }.second += entry
     }
-    return DataValue.MapValue(
+    return DataValue.mapValue(
         groups.values.map { (key, entries) ->
             MapRow(
-                entries.first().id,
-                key,
-                DataValue.ListValue(entries.map { entry -> ListItem(entry.id, entry.value) }),
+                id = entries.first().id,
+                key = key,
+                value = DataValue.listValue(entries.map { entry -> ListItem(id = entry.id, value = entry.value) }),
             )
         },
     )
 }
 
 private fun nestedItemId(
-    outer: com.typewritermc.authoring.ItemId,
-    inner: com.typewritermc.authoring.ItemId,
-): com.typewritermc.authoring.ItemId =
-    com.typewritermc.authoring.ItemId("${outer.value.length}:${outer.value}${inner.value.length}:${inner.value}")
+    outer: skirout.editor.v1.type_catalog.ItemId,
+    inner: skirout.editor.v1.type_catalog.ItemId,
+): skirout.editor.v1.type_catalog.ItemId =
+    skirout.editor.v1.type_catalog
+        .ItemId(value = "${outer.value.length}:${outer.value}${inner.value.length}:${inner.value}")
 
 private fun nonnegativeCount(value: DataValue): Int {
     val count = integer(value)
@@ -1313,12 +1372,31 @@ private fun comparePortable(
     val first = left.unwrapNamed()
     val second = right.unwrapNamed()
     return when {
-        first is DataValue.Integer || first is DataValue.Float || first is DataValue.Decimal -> compareNumbers(listOf(first, second))
-        first is DataValue.StringValue && second is DataValue.StringValue -> compareCodePoints(first.value, second.value)
-        first is DataValue.Boolean && second is DataValue.Boolean -> first.value.compareTo(second.value)
-        first is DataValue.Timestamp && second is DataValue.Timestamp -> first.value.compareTo(second.value)
-        first is DataValue.Duration && second is DataValue.Duration -> first.value.compareTo(second.value)
-        else -> throw OperationFailure("collection_value_not_ordered", "The collection key does not have portable ordering semantics.")
+        first is DataValue.IntegerWrapper || first is DataValue.FloatWrapper || first is DataValue.DecimalWrapper -> {
+            compareNumbers(
+                listOf(first, second),
+            )
+        }
+
+        first is DataValue.StringValueWrapper && second is DataValue.StringValueWrapper -> {
+            compareCodePoints(first.value, second.value)
+        }
+
+        first is DataValue.BooleanWrapper && second is DataValue.BooleanWrapper -> {
+            first.value.compareTo(second.value)
+        }
+
+        first is DataValue.TimestampWrapper && second is DataValue.TimestampWrapper -> {
+            first.value.compareTo(second.value)
+        }
+
+        first is DataValue.DurationWrapper && second is DataValue.DurationWrapper -> {
+            first.duration.compareTo(second.duration)
+        }
+
+        else -> {
+            throw OperationFailure("collection_value_not_ordered", "The collection key does not have portable ordering semantics.")
+        }
     }
 }
 
@@ -1341,23 +1419,23 @@ private fun DataValue.at(path: ValuePath): DataValue {
         current = current.unwrapNamed()
         current =
             when (segment) {
-                is PathSegment.Field -> {
-                    (current as? DataValue.Record)?.fields?.get(segment.name)
+                is PathSegment.FieldWrapper -> {
+                    (current as? DataValue.RecordWrapper)?.field(segment.name)
                 }
 
-                is PathSegment.Item -> {
+                is PathSegment.ItemWrapper -> {
                     when (current) {
-                        is DataValue.ListValue -> {
+                        is DataValue.ListValueWrapper -> {
                             current.items.firstOrNull { it.id == segment.id }?.value
                         }
 
-                        is DataValue.SetValue -> {
+                        is DataValue.SetValueWrapper -> {
                             current.items.firstOrNull { it.id == segment.id }?.value
                         }
 
-                        is DataValue.MapValue -> {
+                        is DataValue.MapValueWrapper -> {
                             current.rows.firstOrNull { it.id == segment.id }?.let {
-                                DataValue.Record(mapOf("key" to it.key, "value" to it.value))
+                                DataValue.record(mapOf("key" to it.key, "value" to it.value))
                             }
                         }
 
@@ -1367,12 +1445,16 @@ private fun DataValue.at(path: ValuePath): DataValue {
                     }
                 }
 
-                PathSegment.MapKey -> {
-                    (current as? DataValue.Record)?.fields?.get("key")
+                PathSegment.MAP_KEY -> {
+                    (current as? DataValue.RecordWrapper)?.field("key")
                 }
 
-                PathSegment.MapValue -> {
-                    (current as? DataValue.Record)?.fields?.get("value")
+                PathSegment.MAP_VALUE -> {
+                    (current as? DataValue.RecordWrapper)?.field("value")
+                }
+
+                else -> {
+                    unknownVariant(segment)
                 }
             } ?: throw OperationFailure("missing_expression_path", "The expression path does not exist.")
     }
@@ -1380,7 +1462,7 @@ private fun DataValue.at(path: ValuePath): DataValue {
 }
 
 private fun DataValue.boolean(): Boolean =
-    (unwrapNamed() as? DataValue.Boolean)?.value
+    (unwrapNamed() as? DataValue.BooleanWrapper)?.value
         ?: throw OperationFailure("expected_boolean", "The expression value is not Boolean.")
 
 private fun available(value: DataValue): Availability<DataValue> = Availability.Available(value)
@@ -1394,20 +1476,20 @@ private fun scalarValue(
     when (node) {
         is ExpressionNode.TextUnaryWrapper -> {
             when (node.value.operation) {
-                TextUnaryOperation.VALUE -> primitive(values) { DataValue.StringValue(text(it)) }
-                TextUnaryOperation.TRIM -> primitive(values) { DataValue.StringValue(text(it).portableTrim()) }
-                TextUnaryOperation.LOWER -> primitive(values) { DataValue.StringValue(text(it).lowercase()) }
-                TextUnaryOperation.UPPER -> primitive(values) { DataValue.StringValue(text(it).uppercase()) }
-                TextUnaryOperation.TITLE -> primitive(values) { DataValue.StringValue(text(it).titleCase()) }
+                TextUnaryOperation.VALUE -> primitive(values) { DataValue.StringValueWrapper(text(it)) }
+                TextUnaryOperation.TRIM -> primitive(values) { DataValue.StringValueWrapper(text(it).portableTrim()) }
+                TextUnaryOperation.LOWER -> primitive(values) { DataValue.StringValueWrapper(text(it).lowercase()) }
+                TextUnaryOperation.UPPER -> primitive(values) { DataValue.StringValueWrapper(text(it).uppercase()) }
+                TextUnaryOperation.TITLE -> primitive(values) { DataValue.StringValueWrapper(text(it).titleCase()) }
                 else -> unknownVariant()
             }
         }
 
         is ExpressionNode.TextCompareWrapper -> {
             when (node.value.operation) {
-                TextCompareOperation.CONTAINS -> primitive(values) { DataValue.Boolean(text(it[0]).contains(text(it[1]))) }
-                TextCompareOperation.STARTS_WITH -> primitive(values) { DataValue.Boolean(text(it[0]).startsWith(text(it[1]))) }
-                TextCompareOperation.ENDS_WITH -> primitive(values) { DataValue.Boolean(text(it[0]).endsWith(text(it[1]))) }
+                TextCompareOperation.CONTAINS -> primitive(values) { DataValue.BooleanWrapper(text(it[0]).contains(text(it[1]))) }
+                TextCompareOperation.STARTS_WITH -> primitive(values) { DataValue.BooleanWrapper(text(it[0]).startsWith(text(it[1]))) }
+                TextCompareOperation.ENDS_WITH -> primitive(values) { DataValue.BooleanWrapper(text(it[0]).endsWith(text(it[1]))) }
                 else -> unknownVariant()
             }
         }
@@ -1416,13 +1498,13 @@ private fun scalarValue(
             when (node.value.operation) {
                 ValueCompareOperation.EQUAL -> {
                     primitive(values) {
-                        DataValue.Boolean(it[0].canonicalValueKey() == it[1].canonicalValueKey())
+                        DataValue.BooleanWrapper(it[0].canonicalValueKey() == it[1].canonicalValueKey())
                     }
                 }
 
                 ValueCompareOperation.NOT_EQUAL -> {
                     primitive(values) {
-                        DataValue.Boolean(it[0].canonicalValueKey() != it[1].canonicalValueKey())
+                        DataValue.BooleanWrapper(it[0].canonicalValueKey() != it[1].canonicalValueKey())
                     }
                 }
 
@@ -1434,10 +1516,10 @@ private fun scalarValue(
 
         is ExpressionNode.NumberCompareWrapper -> {
             when (node.value.operation) {
-                NumberCompareOperation.GREATER -> primitive(values) { DataValue.Boolean(compareNumbers(it) > 0) }
-                NumberCompareOperation.GREATER_EQUAL -> primitive(values) { DataValue.Boolean(compareNumbers(it) >= 0) }
-                NumberCompareOperation.LESS -> primitive(values) { DataValue.Boolean(compareNumbers(it) < 0) }
-                NumberCompareOperation.LESS_EQUAL -> primitive(values) { DataValue.Boolean(compareNumbers(it) <= 0) }
+                NumberCompareOperation.GREATER -> primitive(values) { DataValue.BooleanWrapper(compareNumbers(it) > 0) }
+                NumberCompareOperation.GREATER_EQUAL -> primitive(values) { DataValue.BooleanWrapper(compareNumbers(it) >= 0) }
+                NumberCompareOperation.LESS -> primitive(values) { DataValue.BooleanWrapper(compareNumbers(it) < 0) }
+                NumberCompareOperation.LESS_EQUAL -> primitive(values) { DataValue.BooleanWrapper(compareNumbers(it) <= 0) }
                 else -> unknownVariant()
             }
         }
@@ -1456,42 +1538,42 @@ private fun scalarValue(
         is ExpressionNode.RuleUnaryWrapper -> {
             when (node.value.operation) {
                 RuleUnaryOperation.NON_EMPTY -> {
-                    primitive(values) { DataValue.Boolean(size(it.single()) > 0) }
+                    primitive(values) { DataValue.BooleanWrapper(size(it.single()) > 0) }
                 }
 
                 RuleUnaryOperation.NON_BLANK -> {
-                    primitive(values) { DataValue.Boolean(!text(it).portableIsBlank()) }
+                    primitive(values) { DataValue.BooleanWrapper(!text(it).portableIsBlank()) }
                 }
 
                 RuleUnaryOperation.SINGLE_LINE -> {
-                    primitive(values) { DataValue.Boolean(!text(it).hasLineBreak()) }
+                    primitive(values) { DataValue.BooleanWrapper(!text(it).hasLineBreak()) }
                 }
 
                 RuleUnaryOperation.POSITIVE -> {
-                    primitive(values) { DataValue.Boolean(number(it[0]) > BigDecimal.ZERO) }
+                    primitive(values) { DataValue.BooleanWrapper(number(it[0]) > BigDecimal.ZERO) }
                 }
 
                 RuleUnaryOperation.NON_NEGATIVE -> {
-                    primitive(values) { DataValue.Boolean(number(it[0]) >= BigDecimal.ZERO) }
+                    primitive(values) { DataValue.BooleanWrapper(number(it[0]) >= BigDecimal.ZERO) }
                 }
 
                 RuleUnaryOperation.UNIQUE -> {
                     primitive(values) {
                         val values = it.single().collectionEntries().map { entry -> entry.value.canonicalValueKey() }
-                        DataValue.Boolean(values.distinct().size == values.size)
+                        DataValue.BooleanWrapper(values.distinct().size == values.size)
                     }
                 }
 
                 RuleUnaryOperation.NOT_NULL -> {
-                    primitive(values) { DataValue.Boolean(it.single() != DataValue.Null) }
+                    primitive(values) { DataValue.BooleanWrapper(it.single() != DataValue.NULL) }
                 }
 
                 RuleUnaryOperation.OPAQUE -> {
                     primitive(values) {
                         val bits =
-                            (it.single().unwrapNamed() as? DataValue.Integer)?.value
+                            (it.single().unwrapNamed() as? DataValue.IntegerWrapper)?.bigInteger
                                 ?: throw OperationFailure("expected_color", "The color representation is not an integer.")
-                        DataValue.Boolean(bits.shiftRight(24).and(java.math.BigInteger.valueOf(255)).toInt() == 255)
+                        DataValue.BooleanWrapper(bits.shiftRight(24).and(java.math.BigInteger.valueOf(255)).toInt() == 255)
                     }
                 }
 
@@ -1505,13 +1587,13 @@ private fun scalarValue(
             when (node.value.mode) {
                 RegexMatchMode.SEARCH -> {
                     primitiveWithSteps(values, consumeStep) { values, consumeStep ->
-                        DataValue.Boolean(regex(values).containsMatchIn(text(values[0]), consumeStep))
+                        DataValue.BooleanWrapper(regex(values).containsMatchIn(text(values[0]), consumeStep))
                     }
                 }
 
                 RegexMatchMode.FULL_MATCH -> {
                     primitiveWithSteps(values, consumeStep) { values, consumeStep ->
-                        DataValue.Boolean(regex(values).matches(text(values), consumeStep))
+                        DataValue.BooleanWrapper(regex(values).matches(text(values), consumeStep))
                     }
                 }
 
@@ -1523,8 +1605,8 @@ private fun scalarValue(
 
         is ExpressionNode.RuleTimestampBoundWrapper -> {
             when (node.value.direction) {
-                TimestampBoundDirection.NOT_BEFORE -> primitive(values) { DataValue.Boolean(timestamp(it[0]) >= timestamp(it[1])) }
-                TimestampBoundDirection.NOT_AFTER -> primitive(values) { DataValue.Boolean(timestamp(it[0]) <= timestamp(it[1])) }
+                TimestampBoundDirection.NOT_BEFORE -> primitive(values) { DataValue.BooleanWrapper(timestamp(it[0]) >= timestamp(it[1])) }
+                TimestampBoundDirection.NOT_AFTER -> primitive(values) { DataValue.BooleanWrapper(timestamp(it[0]) <= timestamp(it[1])) }
                 else -> unknownVariant()
             }
         }
@@ -1533,13 +1615,13 @@ private fun scalarValue(
             when (node.value.direction) {
                 BoundDirection.MINIMUM -> {
                     primitive(values) {
-                        DataValue.Boolean(if (it[2].boolean()) compareNumbers(it) >= 0 else compareNumbers(it) > 0)
+                        DataValue.BooleanWrapper(if (it[2].boolean()) compareNumbers(it) >= 0 else compareNumbers(it) > 0)
                     }
                 }
 
                 BoundDirection.MAXIMUM -> {
                     primitive(values) {
-                        DataValue.Boolean(if (it[2].boolean()) compareNumbers(it) <= 0 else compareNumbers(it) < 0)
+                        DataValue.BooleanWrapper(if (it[2].boolean()) compareNumbers(it) <= 0 else compareNumbers(it) < 0)
                     }
                 }
 
@@ -1550,11 +1632,11 @@ private fun scalarValue(
         }
 
         is ExpressionNode.TextLengthWrapper -> {
-            primitive(values) { DataValue.Integer(text(it).codePointCount().toBigInteger()) }
+            primitive(values) { DataValue.integer(text(it).codePointCount().toBigInteger()) }
         }
 
         is ExpressionNode.TextHasLineBreakWrapper -> {
-            primitive(values) { DataValue.Boolean(text(it).hasLineBreak()) }
+            primitive(values) { DataValue.BooleanWrapper(text(it).hasLineBreak()) }
         }
 
         is ExpressionNode.TextReplaceWrapper -> {
@@ -1563,7 +1645,7 @@ private fun scalarValue(
                 val target = text(values[1])
                 val replacement = text(values[2])
                 chargeLiteralReplacement(source, target, replacement, consumeStep)
-                DataValue.StringValue(
+                DataValue.StringValueWrapper(
                     if (target.isEmpty()) {
                         replaceBetweenCodePoints(source, replacement)
                     } else {
@@ -1579,9 +1661,14 @@ private fun scalarValue(
                 val separator = text(values[1])
                 consumeItems(literalSplitItemCount(source, separator))
                 val parts = if (separator.isEmpty()) source.splitIntoCodePoints() else source.split(separator)
-                DataValue.ListValue(
+                DataValue.listValue(
                     parts.mapIndexed { index, value ->
-                        ListItem(com.typewritermc.authoring.ItemId("split.$index"), DataValue.StringValue(value))
+                        ListItem(
+                            id =
+                                skirout.editor.v1.type_catalog
+                                    .ItemId(value = "split.$index"),
+                            value = DataValue.StringValueWrapper(value),
+                        )
                     },
                 )
             }
@@ -1595,7 +1682,7 @@ private fun scalarValue(
                     if (index > 0) chargeCodePoints(separator, consumeStep)
                     chargeCodePoints(value, consumeStep)
                 }
-                DataValue.StringValue(values.joinToString(separator))
+                DataValue.StringValueWrapper(values.joinToString(separator))
             }
         }
 
@@ -1611,7 +1698,7 @@ private fun scalarValue(
                 val match =
                     regex(values).find(input, consumeStep)
                         ?: throw OperationFailure("regex_no_match", "The regular expression did not match.")
-                DataValue.StringValue(
+                DataValue.StringValueWrapper(
                     match.group(input, group)
                         ?: throw OperationFailure("regex_group_absent", "The regular expression capture group is absent."),
                 )
@@ -1622,7 +1709,7 @@ private fun scalarValue(
             primitiveWithSteps(values, consumeStep) { values, consumeStep ->
                 val pattern = regex(values)
                 try {
-                    DataValue.StringValue(pattern.replace(text(values[0]), text(values[2]), consumeStep))
+                    DataValue.StringValueWrapper(pattern.replace(text(values[0]), text(values[2]), consumeStep))
                 } catch (_: PortableRegexCompileFailure) {
                     throw OperationFailure("invalid_regex_replacement", "The regular expression replacement is invalid.")
                 }
@@ -1630,20 +1717,23 @@ private fun scalarValue(
         }
 
         is ExpressionNode.IsNullWrapper -> {
-            primitive(values) { DataValue.Boolean(it.single() == DataValue.Null) }
+            primitive(values) { DataValue.BooleanWrapper(it.single() == DataValue.NULL) }
         }
 
         is ExpressionNode.LinkTargetWrapper -> {
             primitive(values) {
                 val link =
-                    it.single().unwrapNamed() as? DataValue.Link
+                    it.single().unwrapNamed() as? DataValue.LinkWrapper
                         ?: throw OperationFailure("expected_link", "The expression value is not a relationship link.")
-                DataValue.Named(com.typewritermc.types.ResourceIdDefinition.use, DataValue.StringValue(link.target.resource.value))
+                DataValue.named(
+                    com.typewritermc.types.ResourceIdDefinition.use,
+                    DataValue.StringValueWrapper(link.value.target.resource.value),
+                )
             }
         }
 
         is ExpressionNode.BooleanNotWrapper -> {
-            primitive(values) { DataValue.Boolean(!it.single().boolean()) }
+            primitive(values) { DataValue.BooleanWrapper(!it.single().boolean()) }
         }
 
         is ExpressionNode.NumberNegateWrapper -> {
@@ -1656,24 +1746,30 @@ private fun scalarValue(
 
         is ExpressionNode.NumberFormatWrapper -> {
             primitiveWithBudgets(values, consumeStep, consumeItems) { values, consumeStep, _ ->
-                formatPortableNumber(values).also { result -> chargeCodePoints((result as DataValue.StringValue).value, consumeStep) }
+                formatPortableNumber(values).also { result ->
+                    chargeCodePoints((result as DataValue.StringValueWrapper).value, consumeStep)
+                }
             }
         }
 
         is ExpressionNode.DurationFormatWrapper -> {
             primitiveWithBudgets(values, consumeStep, consumeItems) { values, consumeStep, _ ->
-                formatPortableDuration(values).also { result -> chargeCodePoints((result as DataValue.StringValue).value, consumeStep) }
+                formatPortableDuration(values).also { result ->
+                    chargeCodePoints((result as DataValue.StringValueWrapper).value, consumeStep)
+                }
             }
         }
 
         is ExpressionNode.TimestampFormatWrapper -> {
             primitiveWithBudgets(values, consumeStep, consumeItems) { values, consumeStep, _ ->
-                formatPortableTimestamp(values).also { result -> chargeCodePoints((result as DataValue.StringValue).value, consumeStep) }
+                formatPortableTimestamp(values).also { result ->
+                    chargeCodePoints((result as DataValue.StringValueWrapper).value, consumeStep)
+                }
             }
         }
 
         is ExpressionNode.CollectionSizeWrapper -> {
-            primitive(values) { DataValue.Integer(size(it.single()).toBigInteger()) }
+            primitive(values) { DataValue.integer(size(it.single()).toBigInteger()) }
         }
 
         is ExpressionNode.CollectionAccessWrapper -> {
@@ -1690,7 +1786,7 @@ private fun scalarValue(
 
         is ExpressionNode.RuleOneOfWrapper -> {
             primitive(values) { values ->
-                DataValue.Boolean(
+                DataValue.BooleanWrapper(
                     values.drop(1).any { it.canonicalValueKey() == values[0].canonicalValueKey() },
                 )
             }
@@ -1698,14 +1794,14 @@ private fun scalarValue(
 
         is ExpressionNode.RuleNumericRangeWrapper -> {
             primitive(values) {
-                DataValue.Boolean(number(it[0]) >= number(it[1]) && number(it[0]) <= number(it[2]))
+                DataValue.BooleanWrapper(number(it[0]) >= number(it[1]) && number(it[0]) <= number(it[2]))
             }
         }
 
         is ExpressionNode.RuleMultipleOfWrapper -> {
             primitive(values) {
                 val divisor = number(it[1])
-                DataValue.Boolean(
+                DataValue.BooleanWrapper(
                     divisor.compareTo(BigDecimal.ZERO) != 0 && number(it[0]).remainder(divisor).compareTo(BigDecimal.ZERO) == 0,
                 )
             }
@@ -1713,14 +1809,14 @@ private fun scalarValue(
 
         is ExpressionNode.RuleMaximumScaleWrapper -> {
             primitive(values) {
-                DataValue.Boolean(number(it[0]).stripTrailingZeros().scale() <= integer(it[1]))
+                DataValue.BooleanWrapper(number(it[0]).stripTrailingZeros().scale() <= integer(it[1]))
             }
         }
 
         is ExpressionNode.TextInterpolateWrapper -> {
             values.map(DataValue::displayText).let { rendered ->
                 rendered.forEach { chargeCodePoints(it, consumeStep) }
-                DataValue.StringValue(rendered.joinToString(""))
+                DataValue.StringValueWrapper(rendered.joinToString(""))
             }
         }
 
@@ -1732,7 +1828,7 @@ private fun scalarValue(
                         SizeBoundMetric.TEXT_LINES -> lineCount(text(values[0]))
                         else -> unknownVariant()
                     }
-                DataValue.Boolean(
+                DataValue.BooleanWrapper(
                     when (node.value.direction) {
                         BoundDirection.MINIMUM -> measured >= integer(values[1])
                         BoundDirection.MAXIMUM -> measured <= integer(values[1])
@@ -1748,7 +1844,7 @@ private fun scalarValue(
                     SizeRangeMetric.TEXT_LENGTH, SizeRangeMetric.COLLECTION_ITEMS -> Unit
                     else -> unknownVariant()
                 }
-                DataValue.Boolean(size(values[0]) in integer(values[1])..integer(values[2]))
+                DataValue.BooleanWrapper(size(values[0]) in integer(values[1])..integer(values[2]))
             }
         }
 
@@ -1788,16 +1884,16 @@ private fun arithmetic(
     val unwrapped = values.map(DataValue::unwrapNamed)
     if (operation == Arithmetic.Negate) {
         return when (val value = unwrapped.single()) {
-            is DataValue.Integer -> {
-                DataValue.Integer(value.value.negate())
+            is DataValue.IntegerWrapper -> {
+                DataValue.integer(value.bigInteger.negate())
             }
 
-            is DataValue.Float -> {
-                DataValue.Float(finite(-value.value))
+            is DataValue.FloatWrapper -> {
+                DataValue.FloatWrapper(finite(-value.value))
             }
 
-            is DataValue.Decimal -> {
-                DataValue.Decimal(
+            is DataValue.DecimalWrapper -> {
+                DataValue.DecimalWrapper(
                     value.value
                         .toBigDecimal()
                         .negate()
@@ -1810,9 +1906,9 @@ private fun arithmetic(
             }
         }
     }
-    if (unwrapped.all { it is DataValue.Integer }) {
-        var result = (unwrapped.first() as DataValue.Integer).value
-        unwrapped.drop(1).map { (it as DataValue.Integer).value }.forEach { operand ->
+    if (unwrapped.all { it is DataValue.IntegerWrapper }) {
+        var result = (unwrapped.first() as DataValue.IntegerWrapper).bigInteger
+        unwrapped.drop(1).map { (it as DataValue.IntegerWrapper).bigInteger }.forEach { operand ->
             if ((operation == Arithmetic.Divide || operation == Arithmetic.Remainder) && operand.signum() == 0) {
                 throw OperationFailure("division_by_zero", "Division by zero is not defined.")
             }
@@ -1826,11 +1922,11 @@ private fun arithmetic(
                     Arithmetic.Negate -> error("Negation is unary.")
                 }
         }
-        return DataValue.Integer(result)
+        return DataValue.integer(result)
     }
-    if (unwrapped.all { it is DataValue.Float }) {
-        var result = (unwrapped.first() as DataValue.Float).value
-        unwrapped.drop(1).map { (it as DataValue.Float).value }.forEach { operand ->
+    if (unwrapped.all { it is DataValue.FloatWrapper }) {
+        var result = (unwrapped.first() as DataValue.FloatWrapper).value
+        unwrapped.drop(1).map { (it as DataValue.FloatWrapper).value }.forEach { operand ->
             result =
                 when (operation) {
                     Arithmetic.Add -> result + operand
@@ -1842,11 +1938,11 @@ private fun arithmetic(
                 }
             result = finite(result)
         }
-        return DataValue.Float(result)
+        return DataValue.FloatWrapper(result)
     }
-    if (unwrapped.all { it is DataValue.Decimal }) {
-        var result = (unwrapped.first() as DataValue.Decimal).value.toBigDecimal()
-        unwrapped.drop(1).map { (it as DataValue.Decimal).value.toBigDecimal() }.forEach { operand ->
+    if (unwrapped.all { it is DataValue.DecimalWrapper }) {
+        var result = (unwrapped.first() as DataValue.DecimalWrapper).value.toBigDecimal()
+        unwrapped.drop(1).map { (it as DataValue.DecimalWrapper).value.toBigDecimal() }.forEach { operand ->
             if ((operation == Arithmetic.Divide || operation == Arithmetic.Remainder) && operand.compareTo(BigDecimal.ZERO) == 0) {
                 throw OperationFailure("division_by_zero", "Division by zero is not defined.")
             }
@@ -1860,7 +1956,7 @@ private fun arithmetic(
                     Arithmetic.Negate -> error("Negation is unary.")
                 }
         }
-        return DataValue.Decimal(result.canonicalString())
+        return DataValue.DecimalWrapper(result.canonicalString())
     }
     throw OperationFailure("numeric_family_mismatch", "Arithmetic operands must use one numeric representation.")
 }
@@ -1879,7 +1975,7 @@ private fun substring(values: List<DataValue>): DataValue {
     }
     val startIndex = source.offsetByCodePoints(0, start)
     val endIndex = source.offsetByCodePoints(0, end)
-    return DataValue.StringValue(source.substring(startIndex, endIndex))
+    return DataValue.StringValueWrapper(source.substring(startIndex, endIndex))
 }
 
 private fun BigDecimal.canonicalString(): String = stripTrailingZeros().toPlainString()
@@ -2000,24 +2096,24 @@ private fun collectionAccess(values: List<DataValue>): DataValue {
     val collection = values[0].unwrapNamed()
     val key = values[1].unwrapNamed()
     return when {
-        collection is DataValue.ListValue && key is DataValue.Integer -> {
-            collection.items.getOrNull(key.value.intValueExact())?.value
+        collection is DataValue.ListValueWrapper && key is DataValue.IntegerWrapper -> {
+            collection.items.getOrNull(key.bigInteger.intValueExact())?.value
         }
 
-        collection is DataValue.MapValue -> {
+        collection is DataValue.MapValueWrapper -> {
             collection.rows.firstOrNull { it.key.canonicalValueKey() == key.canonicalValueKey() }?.value
         }
 
-        collection is DataValue.Record && key is DataValue.StringValue -> {
-            collection.fields[key.value]
+        collection is DataValue.RecordWrapper && key is DataValue.StringValueWrapper -> {
+            collection.field(key.value)
         }
 
-        collection is DataValue.StringValue && key is DataValue.Integer -> {
-            val index = key.value.intValueExact()
+        collection is DataValue.StringValueWrapper && key is DataValue.IntegerWrapper -> {
+            val index = key.bigInteger.intValueExact()
             collection.value
                 .getOrNull(index)
                 ?.toString()
-                ?.let(DataValue::StringValue)
+                ?.let(DataValue::StringValueWrapper)
         }
 
         else -> {
@@ -2026,25 +2122,25 @@ private fun collectionAccess(values: List<DataValue>): DataValue {
     } ?: throw OperationFailure("collection_key_absent", "The collection key or index is absent.")
 }
 
-private fun collectionContains(values: List<DataValue>): DataValue.Boolean {
+private fun collectionContains(values: List<DataValue>): DataValue.BooleanWrapper {
     val collection = values[0].unwrapNamed()
     val expected = values[1].unwrapNamed()
     val key = expected.canonicalValueKey()
     val contains =
         when (collection) {
-            is DataValue.ListValue -> collection.items.any { it.value.canonicalValueKey() == key }
-            is DataValue.SetValue -> collection.items.any { it.value.canonicalValueKey() == key }
-            is DataValue.MapValue -> collection.rows.any { it.key.canonicalValueKey() == key }
-            is DataValue.Record -> (expected as? DataValue.StringValue)?.value in collection.fields
+            is DataValue.ListValueWrapper -> collection.items.any { it.value.canonicalValueKey() == key }
+            is DataValue.SetValueWrapper -> collection.items.any { it.value.canonicalValueKey() == key }
+            is DataValue.MapValueWrapper -> collection.rows.any { it.key.canonicalValueKey() == key }
+            is DataValue.RecordWrapper -> (expected as? DataValue.StringValueWrapper)?.value?.let(collection::field) != null
             else -> throw OperationFailure("expected_collection", "The expression value is not a collection.")
         }
-    return DataValue.Boolean(contains)
+    return DataValue.BooleanWrapper(contains)
 }
 
 private fun colorWithAlpha(values: List<DataValue>): DataValue {
     val original = values[0]
     val color =
-        (original.unwrapNamed() as? DataValue.Integer)?.value
+        (original.unwrapNamed() as? DataValue.IntegerWrapper)?.bigInteger
             ?: throw OperationFailure("expected_color", "The color representation is not an integer.")
     val alpha = integer(values[1])
     if (alpha !in 0..255) throw OperationFailure("color_alpha_range", "Color alpha must be between zero and 255.")
@@ -2054,28 +2150,29 @@ private fun colorWithAlpha(values: List<DataValue>): DataValue {
                 .valueOf(alpha.toLong())
                 .shiftLeft(24),
         )
-    val payload = DataValue.Integer(replaced)
-    return if (original is DataValue.Named) original.copy(payload = payload) else payload
+    val payload = DataValue.integer(replaced)
+    return if (original is DataValue.NamedWrapper) DataValue.named(original.actualType, payload) else payload
 }
 
 private fun DataValue.displayText(): String =
     when (val value = unwrapNamed()) {
-        DataValue.Unfilled, DataValue.Null, DataValue.Unit -> ""
-        is DataValue.Boolean -> value.value.toString()
-        is DataValue.Integer -> value.value.toString()
-        is DataValue.Float -> value.value.toString()
-        is DataValue.Decimal -> value.value
-        is DataValue.StringValue -> value.value
-        is DataValue.Bytes -> "${value.value.size} bytes"
-        is DataValue.Timestamp -> value.value.toString()
-        is DataValue.Duration -> value.value.toString()
-        is DataValue.EnumCase -> value.key
-        is DataValue.ListValue -> "${value.items.size} items"
-        is DataValue.SetValue -> "${value.items.size} items"
-        is DataValue.MapValue -> "${value.rows.size} entries"
-        is DataValue.Record -> "record"
-        is DataValue.Link -> value.target.toString()
-        is DataValue.Named -> error("Named values are unwrapped recursively.")
+        DataValue.UNFILLED, DataValue.NULL, DataValue.UNIT -> ""
+        is DataValue.BooleanWrapper -> value.value.toString()
+        is DataValue.IntegerWrapper -> value.value.toString()
+        is DataValue.FloatWrapper -> value.value.toString()
+        is DataValue.DecimalWrapper -> value.value
+        is DataValue.StringValueWrapper -> value.value
+        is DataValue.BytesWrapper -> "${value.value.size} bytes"
+        is DataValue.TimestampWrapper -> value.instant.toString()
+        is DataValue.DurationWrapper -> value.duration.toString()
+        is DataValue.EnumCaseWrapper -> value.value
+        is DataValue.ListValueWrapper -> "${value.items.size} items"
+        is DataValue.SetValueWrapper -> "${value.items.size} items"
+        is DataValue.MapValueWrapper -> "${value.rows.size} entries"
+        is DataValue.RecordWrapper -> "record"
+        is DataValue.LinkWrapper -> value.value.target.resource.value
+        is DataValue.NamedWrapper -> error("Named values are unwrapped recursively.")
+        else -> unknownVariant(value)
     }
 
 private fun String.titleCase(): String =
@@ -2084,34 +2181,34 @@ private fun String.titleCase(): String =
 
 private fun number(value: DataValue): BigDecimal =
     when (val scalar = value.unwrapNamed()) {
-        is DataValue.Integer -> scalar.value.toBigDecimal()
-        is DataValue.Float -> BigDecimal.valueOf(scalar.value)
-        is DataValue.Decimal -> scalar.value.toBigDecimal()
+        is DataValue.IntegerWrapper -> scalar.value.toBigDecimal()
+        is DataValue.FloatWrapper -> BigDecimal.valueOf(scalar.value)
+        is DataValue.DecimalWrapper -> scalar.value.toBigDecimal()
         else -> throw OperationFailure("expected_number", "The expression value is not numeric.")
     }
 
 private fun integer(value: DataValue): Int =
-    (value.unwrapNamed() as? DataValue.Integer)?.value?.intValueExact()
+    (value.unwrapNamed() as? DataValue.IntegerWrapper)?.bigInteger?.intValueExact()
         ?: throw OperationFailure("expected_integer", "The expression value is not an integer.")
 
 private fun text(values: List<DataValue>): String = text(values.first())
 
 private fun text(value: DataValue): String =
-    (value.unwrapNamed() as? DataValue.StringValue)?.value
+    (value.unwrapNamed() as? DataValue.StringValueWrapper)?.value
         ?: throw OperationFailure("expected_text", "The expression value is not text.")
 
 private fun timestamp(value: DataValue): kotlin.time.Instant =
-    (value.unwrapNamed() as? DataValue.Timestamp)?.value
+    (value.unwrapNamed() as? DataValue.TimestampWrapper)?.instant
         ?: throw OperationFailure("expected_timestamp", "The expression value is not a timestamp.")
 
 private fun size(value: DataValue): Int =
     when (val unwrapped = value.unwrapNamed()) {
-        is DataValue.StringValue -> unwrapped.value.codePointCount()
-        is DataValue.Bytes -> unwrapped.value.size
-        is DataValue.ListValue -> unwrapped.items.size
-        is DataValue.SetValue -> unwrapped.items.size
-        is DataValue.MapValue -> unwrapped.rows.size
-        is DataValue.Record -> unwrapped.fields.size
+        is DataValue.StringValueWrapper -> unwrapped.value.codePointCount()
+        is DataValue.BytesWrapper -> unwrapped.value.size
+        is DataValue.ListValueWrapper -> unwrapped.items.size
+        is DataValue.SetValueWrapper -> unwrapped.items.size
+        is DataValue.MapValueWrapper -> unwrapped.rows.size
+        is DataValue.RecordWrapper -> unwrapped.fields.size
         else -> throw OperationFailure("expected_sized_value", "The expression value has no size.")
     }
 
@@ -2125,12 +2222,12 @@ private fun String.hasLineBreak(): Boolean = any { it == '\n' || it == '\r' || i
 
 private fun DataValue.containsUnfilled(): Boolean =
     when (this) {
-        DataValue.Unfilled -> true
-        is DataValue.Named -> payload.containsUnfilled()
-        is DataValue.Record -> fields.values.any(DataValue::containsUnfilled)
-        is DataValue.ListValue -> items.any { it.value.containsUnfilled() }
-        is DataValue.SetValue -> items.any { it.value.containsUnfilled() }
-        is DataValue.MapValue -> rows.any { it.key.containsUnfilled() || it.value.containsUnfilled() }
+        DataValue.UNFILLED -> true
+        is DataValue.NamedWrapper -> payload.containsUnfilled()
+        is DataValue.RecordWrapper -> fields.any { it.value.containsUnfilled() }
+        is DataValue.ListValueWrapper -> items.any { it.value.containsUnfilled() }
+        is DataValue.SetValueWrapper -> items.any { it.value.containsUnfilled() }
+        is DataValue.MapValueWrapper -> rows.any { it.key.containsUnfilled() || it.value.containsUnfilled() }
         else -> false
     }
 
@@ -2186,24 +2283,20 @@ private val PORTABLE_WHITESPACE =
 
 private fun EntryBranch.pathSegment(): PathSegment =
     when (this) {
-        EntryBranch.KEY -> PathSegment.MapKey
-        EntryBranch.VALUE -> PathSegment.MapValue
+        EntryBranch.KEY -> PathSegment.MAP_KEY
+        EntryBranch.VALUE -> PathSegment.MAP_VALUE
         else -> throw OperationFailure("unknown_expression_variant", "Unknown entry branch.")
     }
 
-private fun decodeLiteral(value: skirout.editor.v1.type_catalog.DataValue): DataValue =
-    when (val decoded = SkirDataValueCodec.decode(value)) {
-        is SkirConversionResult.Success -> {
-            decoded.value
+private fun decodeLiteral(value: DataValue): DataValue =
+    try {
+        value.requirePortable()
+    } catch (invalid: IllegalArgumentException) {
+        // Retain specific numeric budget failures without admitting malformed scalar payloads.
+        when (value) {
+            is DataValue.FloatWrapper -> value.displayDecimal()
+            is DataValue.DecimalWrapper -> value.displayDecimal()
+            else -> Unit
         }
-
-        is SkirConversionResult.Failure -> {
-            // Retain specific numeric budget failures without admitting malformed scalar payloads.
-            when (value) {
-                is skirout.editor.v1.type_catalog.DataValue.FloatWrapper -> DataValue.Float(value.value).displayDecimal()
-                is skirout.editor.v1.type_catalog.DataValue.DecimalWrapper -> DataValue.Decimal(value.value).displayDecimal()
-                else -> Unit
-            }
-            throw OperationFailure("invalid_expression_literal", decoded.diagnostics.joinToString())
-        }
+        throw OperationFailure("invalid_expression_literal", invalid.message ?: "The expression literal is not portable.")
     }

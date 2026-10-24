@@ -17,29 +17,31 @@ import com.typewritermc.codegen.declarationCode
 import com.typewritermc.codegen.kotlinCode
 import com.typewritermc.codegen.namedArguments
 import com.typewritermc.codegen.setCode
-import com.typewritermc.types.EndpointCardinality
-import com.typewritermc.types.EndpointDefinition
-import com.typewritermc.types.EndpointId
 import com.typewritermc.types.EndpointSlot
-import com.typewritermc.types.RelationContract
 import com.typewritermc.types.RelationDeletePolicy
-import com.typewritermc.types.RelationFamilyId
-import com.typewritermc.types.RelationId
 import com.typewritermc.types.RelationshipEndpoint
-import com.typewritermc.types.TypeDefinition
-import com.typewritermc.types.TypeDefinitionId
-import com.typewritermc.types.TypeTemplate
 import com.typewritermc.types.TypewriterGeneratedEndpoint
 import com.typewritermc.types.ksp.relationLinkDefinition
 import com.typewritermc.types.ksp.relationLinkId
+import skirout.editor.v1.catalog.EndpointCardinality
+import skirout.editor.v1.catalog.EndpointDefinition
+import skirout.editor.v1.catalog.RelationContract
+import skirout.editor.v1.type_catalog.EndpointId
+import skirout.editor.v1.type_catalog.NamedTypeTemplate
+import skirout.editor.v1.type_catalog.RelationFamilyId
+import skirout.editor.v1.type_catalog.RelationId
+import skirout.editor.v1.type_catalog.TypeDefinition
+import skirout.editor.v1.type_catalog.TypeDefinitionId
 import com.typewritermc.codegen.TypewriterApi as Api
+import skirout.editor.v1.catalog.EndpointSlot as CatalogEndpointSlot
+import skirout.editor.v1.catalog.RelationDeletePolicy as CatalogDeletePolicy
 
 /** One endpoint of a reference contract, resolved for emission. */
 internal class SdkEndpoint(
     val name: String,
     val slot: EndpointSlot,
     val resource: TypeName,
-    val resourceTemplate: TypeTemplate.Named,
+    val resourceTemplate: NamedTypeTemplate,
     val cardinality: EndpointCardinality,
     val onDelete: RelationDeletePolicy,
 )
@@ -66,7 +68,7 @@ internal class SdkRelation(
     fun linkId(endpoint: SdkEndpoint): TypeDefinitionId = relationLinkId(endpointClass(endpoint).canonicalName)
 
     fun linkDefinition(endpoint: SdkEndpoint): TypeDefinition =
-        relationLinkDefinition(endpointClass(endpoint).canonicalName, EndpointId("$id:${endpoint.slot.name.lowercase()}"))
+        relationLinkDefinition(endpointClass(endpoint).canonicalName, EndpointId(value = "$id:${endpoint.slot.name.lowercase()}"))
 
     companion object {
         /** Name of the object nested in each endpoint interface that owns its link definition. */
@@ -80,19 +82,20 @@ internal fun SdkRelation.file(): FileSpec {
         TypeSpec
             .objectBuilder(name)
             .addSuperinterface(Api.GeneratedRelationProvider)
-            .addProperty(PropertySpec.builder("id", RelationId::class).initializer("%T(%S)", RelationId::class, id).build())
+            .addProperty(PropertySpec.builder("id", RelationId::class).initializer("%T(value = %S)", RelationId::class, id).build())
             .addTypes(endpoints.map(::endpointType))
             .addProperty(
                 PropertySpec
                     .builder("contract", RelationContract::class, KModifier.OVERRIDE)
                     .initializer(
-                        "%T%L",
+                        "%T.%M%L",
                         RelationContract::class,
+                        RELATION_CONTRACT_OF,
                         namedArguments(
                             "id" to CodeBlock.of("id"),
                             "first" to endpointDefinition(first),
                             "second" to endpointDefinition(second),
-                            "families" to families.map { CodeBlock.of("%T(%S)", RelationFamilyId::class, it) }.setCode(),
+                            "families" to families.map { CodeBlock.of("%T(value = %S)", RelationFamilyId::class, it) }.setCode(),
                         ),
                     ).build(),
             ).build()
@@ -108,7 +111,7 @@ private fun SdkRelation.endpointType(endpoint: SdkEndpoint): TypeSpec {
                 .builder(TypewriterGeneratedEndpoint::class)
                 .addMember("%S", id)
                 .addMember("%T.%L", EndpointSlot::class, endpoint.slot.name)
-                .addMember("%L", opposite(endpoint).cardinality == EndpointCardinality.Many)
+                .addMember("%L", opposite(endpoint).cardinality == EndpointCardinality.MANY)
                 .build(),
         ).addSuperinterface(RelationshipEndpoint::class.asClassName().parameterizedBy(endpoint.resource, opposite(endpoint).resource))
         .addType(
@@ -130,12 +133,15 @@ private fun SdkRelation.endpointDefinition(endpoint: SdkEndpoint): CodeBlock =
         "%T%L",
         EndpointDefinition::class,
         namedArguments(
-            "id" to CodeBlock.of("id.%M(%T.%L)", ENDPOINT_ID, EndpointSlot::class, endpoint.slot.name),
-            "slot" to CodeBlock.of("%T.%L", EndpointSlot::class, endpoint.slot.name),
+            "id" to CodeBlock.of("id.%M(%T.%L)", ENDPOINT_ID, CatalogEndpointSlot::class, endpoint.slot.name.uppercase()),
+            "slot" to CodeBlock.of("%T.%L", CatalogEndpointSlot::class, endpoint.slot.name.uppercase()),
             "resource" to context(references) { endpoint.resourceTemplate.kotlinCode() },
-            "cardinality" to CodeBlock.of("%T.%L", EndpointCardinality::class, endpoint.cardinality.name),
-            "onDelete" to CodeBlock.of("%T.%L", RelationDeletePolicy::class, endpoint.onDelete.name),
+            "cardinality" to
+                CodeBlock.of("%T.%L", EndpointCardinality::class, if (endpoint.cardinality == EndpointCardinality.MANY) "MANY" else "ONE"),
+            "onDelete" to CodeBlock.of("%T.%L", CatalogDeletePolicy::class, endpoint.onDelete.name),
         ),
     )
 
-private val ENDPOINT_ID = MemberName(RelationId::class.asClassName().packageName, "endpointId", isExtension = true)
+private val ENDPOINT_ID = MemberName("com.typewritermc.types", "endpointId", isExtension = true)
+
+private val RELATION_CONTRACT_OF = MemberName("com.typewritermc.types", "of", isExtension = true)

@@ -1,17 +1,22 @@
 package com.typewritermc.realm.repository
 
-import com.typewritermc.authoring.AuthoringRecord
-import com.typewritermc.authoring.CounterpartChoice
-import com.typewritermc.authoring.EditExpectation
-import com.typewritermc.authoring.EditIntent
-import com.typewritermc.authoring.PathSegment
-import com.typewritermc.authoring.PreparedEdit
-import com.typewritermc.authoring.RelationProjectionDelta
-import com.typewritermc.authoring.TraversalDirection
-import com.typewritermc.authoring.ValueLocation
-import com.typewritermc.authoring.ValuePath
-import com.typewritermc.types.RelationId
-import com.typewritermc.types.ResourceId
+import com.typewritermc.authoring.links
+import com.typewritermc.authoring.of
+import com.typewritermc.types.toResourceId
+import com.typewritermc.types.toSkir
+import com.typewritermc.types.unknownVariant
+import skirout.editor.v1.authoring.CounterpartChoice
+import skirout.editor.v1.authoring.EditIntent
+import skirout.editor.v1.authoring.PreparedEdit
+import skirout.editor.v1.authoring.RelationProjectionDelta
+import skirout.editor.v1.authoring_facts.EditExpectation
+import skirout.editor.v1.authoring_facts.TraversalDirection
+import skirout.editor.v1.type_catalog.AuthoringRecord
+import skirout.editor.v1.type_catalog.PathSegment
+import skirout.editor.v1.type_catalog.RelationId
+import skirout.editor.v1.type_catalog.ResourceId
+import skirout.editor.v1.type_catalog.ValueLocation
+import skirout.editor.v1.type_catalog.ValuePath
 
 /** Derives mandatory guards independently of client supplied expectations. */
 internal fun CurrentAuthoringValues.requiredExpectations(
@@ -23,98 +28,114 @@ internal fun CurrentAuthoringValues.requiredExpectations(
     val required = linkedSetOf<EditExpectation>()
 
     fun expectValue(at: ValueLocation) {
-        required += EditExpectation.Value(at, value(at))
+        required += EditExpectation.createValue(at = at, expected = value(at))
     }
 
     fun expectResource(id: ResourceId) {
-        required += EditExpectation.Resource(id, resource(id))
+        required += EditExpectation.createResource(id = id, expected = resource(id))
     }
 
     fun path(at: ValueLocation) {
-        required += EditExpectation.ResourceExists(at.resource, resource(at.resource) != null)
+        required += EditExpectation.createResourceExists(id = at.resource, expected = resource(at.resource) != null)
         for (length in 0..at.path.segments.size) {
-            val parent = at.copy(path = ValuePath(at.path.segments.take(length)))
-            required += EditExpectation.Configuration(parent, configuration(parent))
+            val parent = at.copy(path = ValuePath(segments = at.path.segments.take(length)))
+            required += EditExpectation.createConfiguration(at = parent, expected = configuration(parent))
         }
     }
 
     fun links(id: ResourceId) {
         relations.forEach { relation ->
-            required += EditExpectation.Links(id, relation, TraversalDirection.Both, links(id, relation, TraversalDirection.Both))
+            required += EditExpectation.links(id, relation, TraversalDirection.BOTH, links(id, relation, TraversalDirection.BOTH))
         }
     }
 
     val occurrences = ResourceValueMapper.discover(resources).associateBy { it.id }
     edit.intents.forEach { intent ->
         when (intent) {
-            is EditIntent.CreateResource -> {
-                required += EditExpectation.ResourceExists(intent.id, resource(intent.id) != null)
+            is EditIntent.CreateResourceWrapper -> {
+                required += EditExpectation.createResourceExists(id = intent.value.id, expected = resource(intent.value.id) != null)
             }
 
-            is EditIntent.DeleteResource -> {
-                expectResource(intent.id)
-                links(intent.id)
+            is EditIntent.DeleteResourceWrapper -> {
+                expectResource(intent.value.id)
+                links(intent.value.id)
             }
 
-            is EditIntent.SetValue -> {
-                path(intent.at)
-                expectValue(intent.at)
+            is EditIntent.SetValueWrapper -> {
+                path(intent.value.at)
+                expectValue(intent.value.at)
             }
 
-            is EditIntent.Insert -> {
-                path(intent.at)
-                expectValue(intent.at)
+            is EditIntent.InsertWrapper -> {
+                path(intent.value.at)
+                expectValue(intent.value.at)
             }
 
-            is EditIntent.Remove -> {
-                path(intent.at)
-                expectValue(intent.at)
+            is EditIntent.RemoveWrapper -> {
+                path(intent.value.at)
+                expectValue(intent.value.at)
             }
 
-            is EditIntent.Move -> {
-                path(intent.at)
-                expectValue(intent.at)
+            is EditIntent.MoveWrapper -> {
+                path(intent.value.at)
+                expectValue(intent.value.at)
             }
 
-            is EditIntent.ConnectRelation -> {
-                path(intent.intent.source.id.location)
-                expectValue(intent.intent.source.id.location)
-                path(ValueLocation(intent.intent.target, ValuePath()))
-                links(intent.intent.source.source)
-                links(intent.intent.target)
-                when (val counterpart = intent.intent.counterpart) {
+            is EditIntent.ConnectRelationWrapper -> {
+                path(intent.value.source.id.location)
+                expectValue(intent.value.source.id.location)
+                path(ValueLocation.of(intent.value.target))
+                links(
+                    intent.value.source.source,
+                )
+                links(intent.value.target)
+                when (val counterpart = intent.value.counterpart) {
                     null -> {
                         Unit
                     }
 
-                    is CounterpartChoice.Existing -> {
-                        path(counterpart.occurrence.id.location)
-                        expectValue(counterpart.occurrence.id.location)
+                    is CounterpartChoice.ExistingWrapper -> {
+                        path(counterpart.value.id.location)
+                        expectValue(counterpart.value.id.location)
                     }
 
-                    is CounterpartChoice.New -> {
-                        path(counterpart.containing)
-                        expectValue(counterpart.containing)
+                    is CounterpartChoice.NewWrapper -> {
+                        path(counterpart.value.containing)
+                        expectValue(counterpart.value.containing)
+                    }
+
+                    else -> {
+                        unknownVariant(counterpart)
                     }
                 }
             }
 
-            is EditIntent.DisconnectRelation -> {
-                path(intent.occurrence.location)
-                expectValue(intent.occurrence.location)
-                links(intent.occurrence.location.resource)
-                occurrences[intent.occurrence]?.target?.resource?.let(::links)
+            is EditIntent.DisconnectRelationWrapper -> {
+                path(intent.value.location)
+                expectValue(intent.value.location)
+                links(
+                    intent.value.location.resource,
+                )
+                occurrences[intent.value]
+                    ?.target
+                    ?.resource
+
+                    ?.let(::links)
             }
 
-            is EditIntent.Retag -> {
-                path(intent.at)
-                expectValue(intent.at)
-                links(intent.at.resource)
+            is EditIntent.RetagWrapper -> {
+                path(intent.value.at)
+                expectValue(intent.value.at)
+                links(intent.value.at.resource)
             }
 
-            is EditIntent.ConfigureResource -> {
-                expectResource(intent.resource)
-                links(intent.resource)
+            is EditIntent.ConfigureResourceWrapper -> {
+                expectResource(intent.value.resource)
+                links(intent.value.resource)
+            }
+
+            else -> {
+                unknownVariant(intent)
             }
         }
     }
@@ -122,18 +143,18 @@ internal fun CurrentAuthoringValues.requiredExpectations(
         expectResource(it)
         links(it)
     }
-    val delta = plan?.relations ?: RelationProjectionDelta(emptyList(), emptyList(), emptyList())
-    (delta.removed + delta.created + delta.metadataChanged).forEach { edge ->
+    val delta = plan?.relations ?: RelationProjectionDelta(removals = emptyList(), created = emptyList(), metadataChanged = emptyList())
+    (delta.removals + delta.created + delta.metadataChanged).forEach { edge ->
         links(edge.first)
         links(edge.second)
         listOfNotNull(
-            edge.firstLocation?.let { ValueLocation(edge.first, it) },
-            edge.secondLocation?.let { ValueLocation(edge.second, it) },
+            edge.firstLocation?.let { ValueLocation.of(edge.first, it) },
+            edge.secondLocation?.let { ValueLocation.of(edge.second, it) },
         ).forEach { at ->
             path(at)
             expectValue(at)
-            val item = at.path.segments.indexOfLast { it is PathSegment.Item }
-            if (item >= 0) expectValue(at.copy(path = ValuePath(at.path.segments.take(item))))
+            val item = at.path.segments.indexOfLast { it is PathSegment.ItemWrapper }
+            if (item >= 0) expectValue(at.copy(path = ValuePath(segments = at.path.segments.take(item))))
         }
     }
     return required.toList()
@@ -141,28 +162,32 @@ internal fun CurrentAuthoringValues.requiredExpectations(
 
 internal fun EditExpectation.sameFact(other: EditExpectation): Boolean =
     when (this) {
-        is EditExpectation.Value -> {
-            other is EditExpectation.Value && at == other.at
+        is EditExpectation.ValueWrapper -> {
+            other is EditExpectation.ValueWrapper && value.at == other.value.at
         }
 
-        is EditExpectation.Resource -> {
-            other is EditExpectation.Resource && id == other.id
+        is EditExpectation.ResourceWrapper -> {
+            other is EditExpectation.ResourceWrapper && value.id == other.value.id
         }
 
-        is EditExpectation.ResourceExists -> {
-            other is EditExpectation.ResourceExists && id == other.id
+        is EditExpectation.ResourceExistsWrapper -> {
+            other is EditExpectation.ResourceExistsWrapper && value.id == other.value.id
         }
 
-        is EditExpectation.Configuration -> {
-            other is EditExpectation.Configuration && at == other.at
+        is EditExpectation.ConfigurationWrapper -> {
+            other is EditExpectation.ConfigurationWrapper && value.at == other.value.at
         }
 
-        is EditExpectation.ResourceIds -> {
-            other is EditExpectation.ResourceIds
+        is EditExpectation.ResourceIdsWrapper -> {
+            other is EditExpectation.ResourceIdsWrapper
         }
 
-        is EditExpectation.Links -> {
-            other is EditExpectation.Links && resource == other.resource && contract == other.contract &&
-                direction == other.direction
+        is EditExpectation.LinksWrapper -> {
+            other is EditExpectation.LinksWrapper && value.resource == other.value.resource && value.contract == other.value.contract &&
+                value.direction == other.value.direction
+        }
+
+        else -> {
+            unknownVariant(this)
         }
     }

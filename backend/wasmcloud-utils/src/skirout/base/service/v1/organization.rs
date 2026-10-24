@@ -362,9 +362,13 @@ pub enum UpdateOrganizationServiceResponse {
     Unknown(Option<crate::skir_client::UnrecognizedVariant<UpdateOrganizationServiceResponse>>),
     InternalError(Box<crate::skirout::base::kernel::v1::errors::InternalError>),
     Success(Box<crate::skirout::base::service::v1::service::Service>),
+    /// Service changed elsewhere.
     ConflictError(Box<UpdateOrganizationServiceResponse_ConflictError>),
+    /// Service not found in organization.
     ServiceNotFoundError(Box<UpdateOrganizationServiceResponse_ServiceNotFoundError>),
+    /// Service update is invalid.
     ValidationError(Box<ServiceUpdateValidationError>),
+    /// Record IDs from an unexpected table.
     InvalidRecordIdError(Box<crate::skirout::base::kernel::v1::errors::InvalidRecordIdError>),
 }
 
@@ -605,7 +609,7 @@ fn initialize_module_serializers() {
                 crate::skir_client::internal::struct_serializer_from_static(
                     UpdateOrganizationServiceResponse_ConflictError::_adapter(),
                 ),
-                "",
+                "Service changed elsewhere.",
                 |v| UpdateOrganizationServiceResponse::ConflictError(Box::new(v)),
                 |x| match x {
                     UpdateOrganizationServiceResponse::ConflictError(b) => b.as_ref(),
@@ -619,7 +623,7 @@ fn initialize_module_serializers() {
                 crate::skir_client::internal::struct_serializer_from_static(
                     UpdateOrganizationServiceResponse_ServiceNotFoundError::_adapter(),
                 ),
-                "",
+                "Service not found in organization.",
                 |v| UpdateOrganizationServiceResponse::ServiceNotFoundError(Box::new(v)),
                 |x| match x {
                     UpdateOrganizationServiceResponse::ServiceNotFoundError(b) => b.as_ref(),
@@ -633,7 +637,7 @@ fn initialize_module_serializers() {
                 crate::skir_client::internal::enum_serializer_from_static(
                     ServiceUpdateValidationError::_adapter(),
                 ),
-                "",
+                "Service update is invalid.",
                 |v| UpdateOrganizationServiceResponse::ValidationError(Box::new(v)),
                 |x| match x {
                     UpdateOrganizationServiceResponse::ValidationError(b) => b.as_ref(),
@@ -645,7 +649,7 @@ fn initialize_module_serializers() {
                 6,
                 6,
                 crate::skirout::base::kernel::v1::errors::InvalidRecordIdError::serializer(),
-                "",
+                "Record IDs from an unexpected table.",
                 |v| UpdateOrganizationServiceResponse::InvalidRecordIdError(Box::new(v)),
                 |x| match x {
                     UpdateOrganizationServiceResponse::InvalidRecordIdError(b) => b.as_ref(),

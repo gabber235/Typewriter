@@ -954,9 +954,7 @@ class _Fixture {
   }) async {
     final host = BoundPresentationHost(
       readOnly: readOnly,
-      catalog: CheckedEditorCatalog(
-        skir.EditorCatalogWireSnapshot.defaultInstance,
-      ),
+      catalog: CheckedEditorCatalog(skir.EditorCatalog.defaultInstance),
       root: () =>
           (skir.PresentationNode.mutable()
                 ..nodeId = "fixture"

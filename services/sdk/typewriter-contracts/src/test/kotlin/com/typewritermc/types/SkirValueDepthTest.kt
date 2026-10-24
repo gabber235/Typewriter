@@ -1,48 +1,34 @@
 package com.typewritermc.types
 
 import com.typewritermc.protocol.skir.fromBoundedBytes
-import com.typewritermc.types.skir.SkirConversionResult
-import com.typewritermc.types.skir.SkirDataValueCodec
 import de.infix.testBalloon.framework.core.testSuite
+import io.kotest.assertions.throwables.shouldThrow
 import io.kotest.matchers.shouldBe
 import io.kotest.matchers.types.shouldBeInstanceOf
+import io.kotest.matchers.types.shouldBeSameInstanceAs
 import skirout.editor.v1.authoring.EditIntent
 import skirout.editor.v1.authoring.PreparedEdit
 import skirout.editor.v1.type_catalog.CatalogGeneration
+import skirout.editor.v1.type_catalog.DataValue
 import skirout.editor.v1.type_catalog.ValueLocation
 import java.util.concurrent.TimeUnit
 import java.util.concurrent.atomic.AtomicReference
-import skirout.editor.v1.type_catalog.DataValue as WireValue
 import skirout.editor.v1.type_catalog.FieldValue as WireField
 
 val SkirValueDepthTest by testSuite {
-    test("deep authored encoding returns a diagnostic rather than overflowing") {
-        var value: DataValue = DataValue.Unfilled
-        repeat(10_000) { value = DataValue.Record(mapOf("child" to value)) }
+    test("deep values fail the portable check rather than overflowing") {
+        var value: DataValue = DataValue.UNFILLED
+        repeat(10_000) { value = DataValue.record(mapOf("child" to value)) }
 
-        val result = SkirDataValueCodec.encode(value).shouldBeInstanceOf<SkirConversionResult.Failure>()
-        result.diagnostics.single().message shouldBe "Authored value exceeds the supported nesting depth."
+        shouldThrow<IllegalArgumentException> { value.requirePortable() }.message shouldBe
+            "Authored value exceeds the supported nesting depth."
     }
 
-    test("deep wire decoding returns a diagnostic rather than overflowing") {
-        var value: WireValue = WireValue.UNFILLED
-        repeat(10_000) { value = WireValue.createRecord(fields = listOf(WireField(name = "child", value = value))) }
+    test("the portable check admits the authored nesting boundary") {
+        val supported = wireValue(512)
 
-        val result = SkirDataValueCodec.decode(value).shouldBeInstanceOf<SkirConversionResult.Failure>()
-        result.diagnostics.single().message shouldBe "Authored value exceeds the supported nesting depth."
-    }
-
-    test("encode and decode admit the same value nesting boundary") {
-        var value: DataValue = DataValue.Unfilled
-        repeat(512) { value = DataValue.Record(mapOf("child" to value)) }
-
-        val encoded = SkirDataValueCodec.encode(value).shouldBeInstanceOf<SkirConversionResult.Success<*>>()
-        val decoded = SkirDataValueCodec.decode(encoded.value as WireValue).shouldBeInstanceOf<SkirConversionResult.Success<*>>()
-        decoded.value shouldBe value
-
-        SkirDataValueCodec
-            .encode(DataValue.Record(mapOf("child" to value)))
-            .shouldBeInstanceOf<SkirConversionResult.Failure>()
+        supported.requirePortable() shouldBeSameInstanceAs supported
+        shouldThrow<IllegalArgumentException> { wireValue(513).requirePortable() }
     }
 
     test("raw prepared edit binary decoding admits the authored boundary and rejects excessive depth") {
@@ -65,13 +51,13 @@ val SkirValueDepthTest by testSuite {
     }
 }
 
-private fun wireValue(depth: Int): WireValue {
-    var value: WireValue = WireValue.UNFILLED
-    repeat(depth) { value = WireValue.createRecord(fields = listOf(WireField(name = "child", value = value))) }
+private fun wireValue(depth: Int): DataValue {
+    var value: DataValue = DataValue.UNFILLED
+    repeat(depth) { value = DataValue.createRecord(fields = listOf(WireField(name = "child", value = value))) }
     return value
 }
 
-private fun preparedEdit(value: WireValue): PreparedEdit =
+private fun preparedEdit(value: DataValue): PreparedEdit =
     PreparedEdit(
         catalog = CatalogGeneration(value = "catalog"),
         expectations = emptyList(),

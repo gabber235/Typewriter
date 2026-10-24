@@ -11,7 +11,7 @@ import "package:typewriter_panel/typewriter_panel.dart";
 class JoinRequestsList extends HookConsumerWidget {
   const JoinRequestsList({required this.requests, super.key});
 
-  final List<OrganizationJoinRequest> requests;
+  final List<skir.OrganizationJoinRequest> requests;
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -190,7 +190,7 @@ class JoinRequestsList extends HookConsumerWidget {
 
   Widget _child(
     BuildContext context,
-    OrganizationJoinRequest request,
+    skir.OrganizationJoinRequest request,
     ValueNotifier<Set<skir.RecordId>> selectedIds,
     Future<void> Function() onDeclineSelection,
     Animation<double> animation, {

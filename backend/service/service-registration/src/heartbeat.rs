@@ -4,37 +4,33 @@
 //! the current time. Bound services additionally publish the resulting service projection to
 //! their organization's watch subject; unbound services remain database only.
 
-use wasmcloud_utils::database::service::ServiceStatusRecord;
-
 use otel_wasi::ResultWithSlug;
 use wasmcloud_utils::{
-    database::{RecordId, transaction_query},
+    database::{RecordId, SkirDb, transaction_query},
     skir::base::service::v1::{
         lifecycle::ServiceHeartbeatNotification, organization::OrganizationServicesChanged,
+        service::ServiceStatus,
     },
     skir_utils::RecordIdKeyIdentity,
-    transport_routes::ServiceScope,
-    wasmcloud::messaging::types::NatsMessage,
+    transport::ServiceScope,
 };
 
 use wasmcloud_utils::database::service::ServiceRecord;
 
-#[tracing::instrument(skip(msg, scope, _event))]
+#[tracing::instrument(skip(scope, _event))]
 /// Marks the service online and propagates the new state when it belongs to an organization.
 ///
 /// The notification body carries no state to merge. Its subject identifies the service, while
 /// `update_state` owns the database write and the conditional organization publication.
 pub async fn handle_heartbeat(
-    msg: NatsMessage,
     scope: ServiceScope,
     _event: ServiceHeartbeatNotification,
 ) -> Result<(), otel_wasi::Error> {
-    let _ = msg;
     otel_wasi::main_attribute!("service.id" = scope.service.to_string());
 
     update_state(
         &RecordId::new("service", scope.service.as_str()),
-        &ServiceStatusRecord::Online,
+        ServiceStatus::Online,
     )
     .await
 }
@@ -47,7 +43,7 @@ pub async fn handle_heartbeat(
 /// event because there is no organization projection to update.
 pub(crate) async fn update_state(
     service_id: &RecordId,
-    status: &ServiceStatusRecord,
+    status: ServiceStatus,
 ) -> Result<(), otel_wasi::Error> {
     let result = transaction_query!(
         Option<ServiceRecord>,
@@ -64,7 +60,7 @@ pub(crate) async fn update_state(
         "#,
     )
     .bind("service_id", service_id)
-    .bind("status", status.to_string())
+    .bind("status", SkirDb(status.clone()))
     .execute()
     .await
     .error_with_slug("service-state-update-query-failed")?
@@ -93,11 +89,11 @@ pub(crate) async fn update_state(
     let organization_id = organization.key.raw_identity()?;
 
     wasmcloud_utils::transport_routes::OrganizationServicesWatchRoute::delivery(
-        &wasmcloud_utils::transport_routes::OrganizationScope::try_from(organization_id)?,
+        &wasmcloud_utils::transport::OrganizationScope::try_from(organization_id)?,
     )
     .publish(OrganizationServicesChanged::Update(Box::new(service)))
     .await?;
 
-    otel_wasi::main_attribute!("service.state" = status.to_string());
+    otel_wasi::main_attribute!("service.state" = format!("{status:?}"));
     Ok(())
 }

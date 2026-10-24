@@ -8,6 +8,7 @@ import com.typewritermc.services.libs.communicator.nats.NatsConnection
 import com.typewritermc.services.libs.communicator.nats.NatsConnectionConfiguration
 import com.typewritermc.services.libs.communicator.nats.NatsMessageTransport
 import com.typewritermc.services.libs.communicator.router.RouterOptions
+import com.typewritermc.services.libs.communicator.transfer.TransportLimits
 import com.typewritermc.services.libs.communicator.transport.MessageTransport
 import com.typewritermc.services.libs.telemetry.ServiceTelemetry
 import com.typewritermc.services.libs.telemetry.serviceTelemetry
@@ -57,7 +58,7 @@ val CommunicatorKoinModuleTest by testSuite {
                         }
                     }
                 }
-            val app = koinApplication { modules(dependencies, communicatorModule()) }
+            val app = koinApplication { modules(dependencies, communicatorModule(TEST_LIMITS)) }
             try {
                 shouldThrowAny { app.koin.get<Communicator>() }
             } finally {
@@ -89,7 +90,7 @@ val CommunicatorKoinModuleTest by testSuite {
                         single { configurationProvider }
                         single { authenticationProvider }
                     },
-                    communicatorModule(),
+                    communicatorModule(TEST_LIMITS),
                 )
             }
 
@@ -113,6 +114,8 @@ private fun application(options: RouterOptions = RouterOptions()) =
                 }
                 single<NatsAuthenticationProvider> { NatsAuthenticationProvider { NatsAuthentication() } }
             },
-            communicatorModule(options),
+            communicatorModule(TEST_LIMITS, options),
         )
     }
+
+private val TEST_LIMITS = TransportLimits(chunkBytes = 512 * 1024, maxChunks = 64)

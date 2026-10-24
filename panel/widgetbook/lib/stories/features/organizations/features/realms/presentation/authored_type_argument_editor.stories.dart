@@ -82,7 +82,7 @@ CheckedEditorCatalog _catalog({required bool twoArguments}) {
     ),
   );
   return CheckedEditorCatalog(
-    skir.EditorCatalogWireSnapshot(
+    skir.EditorCatalog(
       resourceDisplays: const [],
       resourceOperations: const [],
       generation: skir.CatalogGeneration(value: "catalog:rewards"),
@@ -184,24 +184,25 @@ class AuthoredTypeArgumentEditorStory extends HookWidget {
               enabled: enabled,
               disabledMessage: "Connect to the Realm to change type arguments",
               preview: (requested) async => switch (outcome) {
-                TypePreviewOutcome.ready => skir.TypePreviewResult.createReady(
-                  resource: _resource,
-                  next: requested,
-                  edit: skir.PreparedEdit(
-                    catalog: catalog.snapshot.generation,
-                    expectations: const [],
-                    intents: const [],
-                  ),
-                  linkRepairs: const [],
-                  clearedLocations: [
-                    skir.ValueLocation(
-                      resource: _resource,
-                      path: editorRootPath.field("amount"),
+                TypePreviewOutcome.ready =>
+                  skir.PreviewTypeArgumentChangeResponse.createReady(
+                    resource: _resource,
+                    next: requested,
+                    edit: skir.PreparedEdit(
+                      catalog: catalog.snapshot.generation,
+                      expectations: const [],
+                      intents: const [],
                     ),
-                  ],
-                ),
+                    linkRepairs: const [],
+                    clearedLocations: [
+                      skir.ValueLocation(
+                        resource: _resource,
+                        path: editorRootPath.field("amount"),
+                      ),
+                    ],
+                  ),
                 TypePreviewOutcome.rejected =>
-                  skir.TypePreviewResult.wrapRejected([
+                  skir.PreviewTypeArgumentChangeResponse.wrapRejectedError([
                     skir.ValueProblem(
                       location: skir.ValueLocation(
                         resource: _resource,

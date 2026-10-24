@@ -20,8 +20,7 @@ use wasmcloud_utils::{
         OrganizationTopologyChanged, RegisterServiceHostRequest, RegisterServiceHostResponse,
     },
     skir_utils::RecordIdKeyIdentity,
-    transport_routes::ServiceScope,
-    wasmcloud::messaging::types::NatsMessage,
+    transport::ServiceScope,
 };
 
 #[derive(Debug, Deserialize)]
@@ -38,7 +37,6 @@ struct RegisterHostResult {
 /// Repeated equal advertisements return the existing revision and publish nothing. Changed
 /// advertisements are committed before the organization topology update is published.
 pub async fn handle(
-    _msg: NatsMessage,
     scope: ServiceScope,
     request: RegisterServiceHostRequest,
 ) -> Result<RegisterServiceHostResponse, otel_wasi::Error> {
@@ -129,7 +127,7 @@ pub async fn handle(
     if result.changed {
         let organization_id = result.organization_id.key.raw_identity()?;
         wasmcloud_utils::transport_routes::OrganizationTopologyWatchRoute::delivery(
-            &wasmcloud_utils::transport_routes::OrganizationScope::try_from(organization_id)?,
+            &wasmcloud_utils::transport::OrganizationScope::try_from(organization_id)?,
         )
         .publish(OrganizationTopologyChanged::HostAdvertised(Box::new(
             host.clone(),

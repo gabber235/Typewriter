@@ -92,7 +92,7 @@ class ServiceHostIdentifier extends SelectableIdentifier {
             identityOwner: null,
             realmTargets: configurationSnapshot._realmTargets,
             engineTargets: configurationSnapshot._engineTargets,
-            realms: topology.realmInstances
+            realms: topology.realms
                 .where((realm) => realm.ownerHost.id != host.hostId)
                 .toList(),
           ),
@@ -148,7 +148,7 @@ class RealmInstanceIdentifier extends SelectableIdentifier {
     if (servicesState.mapUnready<Selectable>() case final state?) return state;
 
     final topology = topologyState.requireValue;
-    final realm = topology.realmInstances.firstWhereOrNull(
+    final realm = topology.realms.firstWhereOrNull(
       (candidate) => candidate.realmId == realmId,
     );
     if (realm == null) {
@@ -210,7 +210,7 @@ class EngineInstanceIdentifier extends SelectableIdentifier {
     if (servicesState.mapUnready<Selectable>() case final state?) return state;
 
     final topology = topologyState.requireValue;
-    final engine = topology.engineInstances.firstWhereOrNull(
+    final engine = topology.engines.firstWhereOrNull(
       (candidate) => candidate.engineId == engineId,
     );
     if (engine == null) {
@@ -242,7 +242,7 @@ class EngineInstanceIdentifier extends SelectableIdentifier {
 
 /// Builds the selectable target catalog advertised by a set of hosts.
 Map<String, List<String>> _engineTargetCatalog(
-  Iterable<TopologySupportedEngine> engines,
+  Iterable<skir.SupportedEngine> engines,
 ) {
   final versions = <String, Set<String>>{};
   for (final engine in engines) {
@@ -255,34 +255,34 @@ Map<String, List<String>> _engineTargetCatalog(
 }
 
 /// Converts host runtime state to the stable label used by inspectors.
-String hostRuntimeStatusLabel(TopologyHostStatus status) => switch (status) {
-  TopologyHostStatus.offline => "Offline",
-  TopologyHostStatus.reconciling => "Reconciling",
-  TopologyHostStatus.active => "Active",
-  TopologyHostStatus.failed => "Failed",
-  TopologyHostStatus.drifted => "Drifted",
-  TopologyHostStatus.unknown => "Unknown",
-};
+String hostRuntimeStatusLabel(skir.HostRuntimeStatus status) =>
+    switch (status) {
+      skir.HostRuntimeStatus.offline => "Offline",
+      skir.HostRuntimeStatus.reconciling => "Reconciling",
+      skir.HostRuntimeStatus.active => "Active",
+      skir.HostRuntimeStatus.failed => "Failed",
+      skir.HostRuntimeStatus.drifted => "Drifted",
+      skir.HostRuntimeStatus_unknown() => "Unknown",
+    };
 
 /// Gives topology cards and inspectors one stable child lifecycle label.
 ///
 /// Unknown wire values remain visible so forward compatibility does not hide
 /// runtime state from operators.
-String childRuntimeStatusLabel(TopologyRuntimeStatus status) =>
+String childRuntimeStatusLabel(skir.ChildRuntimeStatus status) =>
     switch (status) {
-      TopologyRuntimeStatus.absent => "Absent",
-      TopologyRuntimeStatus.staging => "Staging",
-      TopologyRuntimeStatus.active => "Active",
-      TopologyRuntimeStatus.quiescing => "Quiescing",
-      TopologyRuntimeStatus.failed => "Failed",
-      TopologyRuntimeStatus.rolledBack => "Rolled back",
-      TopologyRuntimeStatus.drifted => "Drifted",
-      TopologyRuntimeStatus.unknown => "Unknown",
+      skir.ChildRuntimeStatus.absent => "Absent",
+      skir.ChildRuntimeStatus.staging => "Staging",
+      skir.ChildRuntimeStatus.active => "Active",
+      skir.ChildRuntimeStatus.quiescing => "Quiescing",
+      skir.ChildRuntimeStatus.failed => "Failed",
+      skir.ChildRuntimeStatus.rolledBack => "Rolled back",
+      skir.ChildRuntimeStatus.drifted => "Drifted",
+      skir.ChildRuntimeStatus_unknown() => "Unknown",
     };
 
 /// Formats a target for display while preserving its engine constraint.
-String _targetLabel(TopologyEngineTarget target) =>
-    target.versionConstraint == "*"
+String _targetLabel(skir.EngineTarget target) => target.versionConstraint == "*"
     ? target.engineId
     : "${target.engineId} ${target.versionConstraint}";
 

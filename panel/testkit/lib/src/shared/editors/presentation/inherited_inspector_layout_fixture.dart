@@ -165,7 +165,7 @@ final class InheritedInspectorLayoutScenario {
     final message = _field(inspectorMessageDefinition, "message");
     final other = _field(inspectorMessageDefinition, "other");
     catalog = CheckedEditorCatalog(
-      (skir.EditorCatalogWireSnapshot.mutable()
+      (skir.EditorCatalog.mutable()
             ..generation = skir.CatalogGeneration(value: "inherited inspector")
             ..types = [
               _published(inspectorElementDefinition, [name], [name], const []),

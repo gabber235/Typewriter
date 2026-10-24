@@ -1,16 +1,15 @@
 package com.typewritermc.presentation
 
-import com.typewritermc.authoring.ValuePath
 import com.typewritermc.expression.Expr
-import com.typewritermc.expression.ExpressionBindingId
 import com.typewritermc.expression.Handled
 import com.typewritermc.expression.MayBeMissing
-import com.typewritermc.types.TypeTemplate
-import com.typewritermc.types.skir.SkirAuthoringValueCodec
-import com.typewritermc.types.skir.SkirDataValueCodec
-import com.typewritermc.types.skir.SkirTypeCodec
-import com.typewritermc.types.skir.getOrThrow
+import com.typewritermc.types.fields
+import com.typewritermc.types.items
+import com.typewritermc.types.requirePortable
 import skirout.editor.v1.expression.ExpressionNode
+import skirout.editor.v1.presentation.CollectionGraphDirection
+import skirout.editor.v1.presentation.CrossAxisAlignment
+import skirout.editor.v1.presentation.MainAxisAlignment
 import skirout.editor.v1.presentation.PresentationCollectionDefinition
 import skirout.editor.v1.presentation.PresentationCollectionProjection
 import skirout.editor.v1.presentation.PresentationCollectionProjectionField
@@ -18,8 +17,6 @@ import skirout.editor.v1.presentation.PresentationCollectionProjectionValue
 import skirout.editor.v1.presentation.PresentationCollectionRelationDefinition
 import skirout.editor.v1.presentation.PresentationElement
 import skirout.editor.v1.presentation.PresentationNode
-import skirout.editor.v1.presentation.CrossAxisAlignment as WireCrossAxisAlignment
-import skirout.editor.v1.presentation.MainAxisAlignment as WireMainAxisAlignment
 
 internal fun <V, ItemScope> RuntimePresentationData.renderRepeated(
     source: Expr<List<V>, Handled>,
@@ -51,7 +48,7 @@ internal fun <V, ItemScope> RuntimePresentationData.renderRepeated(
         state.node(
             PresentationElement.createRepeated(
                 source = expression(source),
-                itemBindingId = binding.wire(),
+                itemBindingId = binding,
                 presentation =
                     skirout.editor.v1.presentation.SequencePresentation(
                         item = state.column(itemNodes),
@@ -116,7 +113,7 @@ internal fun <Row, Key> RuntimePresentationData.renderCollectionGraph(
     val childSlot = "graph.child.${childBinding.value}"
     var roots: ExpressionNode? = null
     var relation: String? = null
-    var graphDirection = CollectionDirection.Forward
+    var graphDirection: CollectionGraphDirection = CollectionGraphDirection.FORWARD
     var graphMaximumDepth: Int? = null
     var node: PresentationNode? = null
     var rootSequence: skirout.editor.v1.presentation.SequencePresentation? = null
@@ -193,7 +190,7 @@ internal fun <Row, Key> RuntimePresentationData.renderCollectionGraph(
 
             override fun relation(
                 id: String,
-                direction: CollectionDirection,
+                direction: CollectionGraphDirection,
                 maximumDepth: Int?,
             ) {
                 require(id.isNotBlank()) { "Collection graph relation ids must not be blank." }
@@ -231,15 +228,11 @@ internal fun <Row, Key> RuntimePresentationData.renderCollectionGraph(
                 roots = requireNotNull(roots) { "Collection graph roots are required." },
                 rootSequence = rootSequence ?: sequence(rootItem),
                 relationId = requireNotNull(relation) { "Collection graph relation is required." },
-                direction =
-                    when (graphDirection) {
-                        CollectionDirection.Forward -> skirout.editor.v1.presentation.CollectionGraphDirection.FORWARD
-                        CollectionDirection.Reverse -> skirout.editor.v1.presentation.CollectionGraphDirection.REVERSE
-                    },
+                direction = graphDirection,
                 maximumDepth = graphMaximumDepth,
                 node = requireNotNull(node) { "Collection graph node content is required." },
-                childrenBindingId = childrenBinding.wire(),
-                childBindingId = childBinding.wire(),
+                childrenBindingId = childrenBinding,
+                childBindingId = childBinding,
                 children = childSequence ?: sequence(childItem),
             ),
         )
@@ -258,8 +251,8 @@ private fun RuntimePresentationData.sequence(
             skirout.editor.v1.presentation.SequenceLayout.ChildrenWrapper(
                 skirout.editor.v1.presentation.ChildrenLayout.createColumn(
                     spacing = 0.0,
-                    mainAxisAlignment = WireMainAxisAlignment.START,
-                    crossAxisAlignment = WireCrossAxisAlignment.START,
+                    mainAxisAlignment = MainAxisAlignment.START,
+                    crossAxisAlignment = CrossAxisAlignment.START,
                     clipOverflow = false,
                 ),
             ),
@@ -274,8 +267,8 @@ private class RuntimeSequenceLayoutScope : SequenceLayoutScope {
             skirout.editor.v1.presentation.SequenceLayout.ChildrenWrapper(
                 skirout.editor.v1.presentation.ChildrenLayout.createRow(
                     spacing = spacing,
-                    mainAxisAlignment = WireMainAxisAlignment.START,
-                    crossAxisAlignment = WireCrossAxisAlignment.CENTER,
+                    mainAxisAlignment = MainAxisAlignment.START,
+                    crossAxisAlignment = CrossAxisAlignment.CENTER,
                     clipOverflow = true,
                 ),
             ),
@@ -291,8 +284,8 @@ private class RuntimeSequenceLayoutScope : SequenceLayoutScope {
             skirout.editor.v1.presentation.SequenceLayout.ChildrenWrapper(
                 skirout.editor.v1.presentation.ChildrenLayout.createColumn(
                     spacing = spacing,
-                    mainAxisAlignment = WireMainAxisAlignment.START,
-                    crossAxisAlignment = cross.wire(),
+                    mainAxisAlignment = MainAxisAlignment.START,
+                    crossAxisAlignment = cross,
                     clipOverflow = false,
                 ),
             ),
@@ -327,7 +320,7 @@ private class RuntimeSequenceLayoutScope : SequenceLayoutScope {
                         ConnectorAnchor.Center -> skirout.editor.v1.presentation.ConnectorAnchor.CENTER
                     },
                 flattenSingleItem = expression(flattenSingleItem),
-                crossAxisAlignment = cross.wire(),
+                crossAxisAlignment = cross,
             ),
         )
     }
@@ -346,8 +339,8 @@ private class RuntimeSequenceLayoutScope : SequenceLayoutScope {
 internal fun CollectionSource<*, *>.wire(state: PresentationBuildState): PresentationCollectionDefinition =
     PresentationCollectionDefinition(
         sourceId = id,
-        rowType = SkirTypeCodec.encode(rowType).getOrThrow(),
-        rowBindingId = rowBinding.wire(),
+        rowType = rowType,
+        rowBindingId = rowBinding,
         key = expression(key),
         selectability = expression(selectability),
         relations =
@@ -359,27 +352,24 @@ internal fun CollectionSource<*, *>.wire(state: PresentationBuildState): Present
             },
         projection =
             (rows as? CollectionRows.Projected)?.let { projected ->
-                val root =
-                    SkirTypeCodec.encode(projected.projection.root).getOrThrow()
-                        as skirout.editor.v1.type_catalog.TypeTemplate.NamedWrapper
                 PresentationCollectionProjection(
-                    root = root.value,
-                    resourceBindingId = projected.resourceBinding.wire(),
+                    root = projected.projection.root,
+                    resourceBindingId = projected.resourceBinding,
                     fields =
                         projected.projection.fields.map { field ->
                             PresentationCollectionProjectionField(
-                                target = SkirAuthoringValueCodec.encode(field.target).getOrThrow(),
+                                target = field.target,
                                 source =
                                     when (val source = field.source) {
                                         is CollectionProjectionValueSpec.Content -> {
                                             PresentationCollectionProjectionValue.ContentWrapper(
-                                                SkirAuthoringValueCodec.encode(source.path).getOrThrow(),
+                                                source.path,
                                             )
                                         }
 
                                         is CollectionProjectionValueSpec.Literal -> {
                                             PresentationCollectionProjectionValue.LiteralWrapper(
-                                                SkirDataValueCodec.encode(source.value).getOrThrow(),
+                                                source.value.requirePortable(),
                                             )
                                         }
                                     },

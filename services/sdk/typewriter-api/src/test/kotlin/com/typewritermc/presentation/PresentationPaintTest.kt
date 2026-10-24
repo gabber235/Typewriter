@@ -3,39 +3,39 @@
 package com.typewritermc.presentation
 
 import com.typewritermc.authoring.GeneratedSdkApi
-import com.typewritermc.checking.CatalogGeneration
 import com.typewritermc.expression.literal
-import com.typewritermc.presentation.PresentationInteractionState.Focused
-import com.typewritermc.presentation.PresentationInteractionState.Hovered
-import com.typewritermc.presentation.PresentationInteractionState.Selected
 import com.typewritermc.types.Color
-import com.typewritermc.types.PresentationRole
-import com.typewritermc.types.ScalarKind
 import com.typewritermc.types.StandardTypes
-import com.typewritermc.types.TypeUse
 import com.typewritermc.types.catalog.DefaultCheckedCatalog
 import com.typewritermc.types.catalog.Resolution
+import com.typewritermc.types.use
 import de.infix.testBalloon.framework.core.testSuite
 import io.kotest.assertions.throwables.shouldThrow
 import io.kotest.matchers.shouldBe
 import io.kotest.matchers.string.shouldContain
 import io.kotest.matchers.types.shouldBeInstanceOf
+import skirout.editor.v1.catalog.PresentationRole
 import skirout.editor.v1.expression.ExpressionNode
 import skirout.editor.v1.presentation.ChildrenElement
+import skirout.editor.v1.presentation.PresentationAlignment
+import skirout.editor.v1.presentation.PresentationCurve
 import skirout.editor.v1.presentation.PresentationElement
+import skirout.editor.v1.presentation.PresentationInteractionState
+import skirout.editor.v1.presentation.PresentationInteractionState.FOCUSED
+import skirout.editor.v1.presentation.PresentationInteractionState.HOVERED
+import skirout.editor.v1.presentation.PresentationInteractionState.SELECTED
 import skirout.editor.v1.presentation.PresentationNode
 import skirout.editor.v1.presentation.StackChild
+import skirout.editor.v1.type_catalog.CatalogGeneration
 import skirout.editor.v1.type_catalog.DataValue
-import skirout.editor.v1.presentation.PresentationAlignment as WireAlignment
+import skirout.editor.v1.type_catalog.ScalarKind
 import skirout.editor.v1.presentation.PresentationColor as WireColor
-import skirout.editor.v1.presentation.PresentationCurve as WireCurve
-import skirout.editor.v1.presentation.PresentationInteractionState as WireState
 import skirout.editor.v1.presentation.PresentationNumber as WireNumber
 
 val PresentationPaintTest by testSuite {
     fun build(content: (PresentationBuildScope) -> Unit): PresentationNode {
-        val catalog = DefaultCheckedCatalog(CatalogGeneration("paint"), StandardTypes.definitions)
-        val checked = (catalog.resolve(TypeUse.Scalar(ScalarKind.Text)) as Resolution.Ready).value
+        val catalog = DefaultCheckedCatalog(CatalogGeneration(value = "paint"), StandardTypes.definitions)
+        val checked = (catalog.resolve(ScalarKind.TEXT.use) as Resolution.Ready).value
         return DefaultPresentationRuntime()
             .build(PresentationBuildBinding(checked.presentationTemplate(), PresentationRole.ITEM), content)
             .layout
@@ -45,11 +45,11 @@ val PresentationPaintTest by testSuite {
     test("a stack keeps flow and positioned children in declaration order with its alignment") {
         val stack =
             build { scope ->
-                scope.stack(alignment = PresentationAlignment.BottomEnd) {
+                scope.stack(alignment = PresentationAlignment.BOTTOM_END) {
                     text(literal("Under"))
                     positioned(
                         top = number(4.0),
-                        end = stateNumber(fallback = 2.0) { whenAll(Selected, value = 8.0) },
+                        end = stateNumber(fallback = 2.0) { whenAll(SELECTED, value = 8.0) },
                         width = number(30.0),
                     ) {
                         text(literal("Edge"))
@@ -62,7 +62,7 @@ val PresentationPaintTest by testSuite {
                 .shouldBeInstanceOf<ChildrenElement.StackWrapper>()
                 .value
 
-        stack.alignment shouldBe WireAlignment.BOTTOM_END
+        stack.alignment shouldBe PresentationAlignment.BOTTOM_END
         stack.children.map { it.kind } shouldBe
             listOf(StackChild.Kind.FLOW_WRAPPER, StackChild.Kind.POSITIONED_WRAPPER, StackChild.Kind.POSITIONED_WRAPPER)
         val edge = stack.children[1].shouldBeInstanceOf<StackChild.PositionedWrapper>().value
@@ -73,7 +73,7 @@ val PresentationPaintTest by testSuite {
         end.fallback.literal() shouldBe 2.0
         end.rules
             .single()
-            .match.required shouldBe listOf(WireState.SELECTED)
+            .match.required shouldBe listOf(PresentationInteractionState.SELECTED)
         end.rules
             .single()
             .value
@@ -93,17 +93,18 @@ val PresentationPaintTest by testSuite {
     }
 
     test("transitions pick a curve per entered state and default to the fallback") {
-        val policy = selectMotion.wire()
+        val policy = selectMotion
 
         policy.fallback.milliseconds shouldBe 300
-        policy.fallback.curve shouldBe WireCurve.EMPHASIZED
+        policy.fallback.curve shouldBe PresentationCurve.EMPHASIZED
         val selected = policy.rules.single()
-        selected.match.required shouldBe listOf(WireState.SELECTED)
+        selected.match.required shouldBe listOf(PresentationInteractionState.SELECTED)
         selected.transition.milliseconds shouldBe 750
         selected.transition.curve
-            .shouldBeInstanceOf<WireCurve.ElasticOutWrapper>()
+            .shouldBeInstanceOf<PresentationCurve.ElasticOutWrapper>()
             .value shouldBe 0.9
-        shouldThrow<IllegalArgumentException> { PresentationTransition(milliseconds = -1) }
+        shouldThrow<IllegalArgumentException> { transition(milliseconds = -1) }
+        shouldThrow<IllegalArgumentException> { transition(milliseconds = 10, curve = PresentationCurve.ElasticOutWrapper(0.0)) }
     }
 
     test("size, transform and container shadows encode their paint") {
@@ -113,9 +114,9 @@ val PresentationPaintTest by testSuite {
                 scope.size(width = 175.0, maximumHeight = 230.0) {
                     transform(
                         TransformStyle(
-                            origin = PresentationAlignment.CenterStart,
+                            origin = PresentationAlignment.CENTER_START,
                             perspective = 0.002,
-                            rotateY = stateNumber(fallback = 0.0) { whenAll(Selected, excluded = setOf(Hovered), value = 0.05) },
+                            rotateY = stateNumber(fallback = 0.0) { whenAll(SELECTED, excluded = setOf(HOVERED), value = 0.05) },
                             translateX = number(3.0),
                             transition = selectMotion,
                         ),
@@ -141,13 +142,13 @@ val PresentationPaintTest by testSuite {
                 .element
                 .shouldBeInstanceOf<PresentationElement.TransformWrapper>()
                 .value
-        transform.origin shouldBe WireAlignment.CENTER_START
+        transform.origin shouldBe PresentationAlignment.CENTER_START
         transform.perspective shouldBe 0.002
         transform.scale shouldBe null
         val rotate = transform.rotateY.shouldBeInstanceOf<WireNumber.StatesWrapper>().value
         rotate.rules
             .single()
-            .match.excluded shouldBe listOf(WireState.HOVERED)
+            .match.excluded shouldBe listOf(PresentationInteractionState.HOVERED)
         transform.translateX?.literal() shouldBe 3.0
         transform.transition?.rules?.size shouldBe 1
         val container =
@@ -169,7 +170,7 @@ val PresentationPaintTest by testSuite {
         val color =
             brightnessColor(
                 light = accent.adjusted(lightness = 0.3, chroma = -0.3),
-                dark = stateColor(accent) { whenAll(Focused, color = accent.adjusted(lightness = -0.5)) },
+                dark = stateColor(accent) { whenAll(FOCUSED, color = accent.adjusted(lightness = -0.5)) },
             ).wire()
 
         val brightness = color.shouldBeInstanceOf<WireColor.BrightnessWrapper>().value

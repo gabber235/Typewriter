@@ -3,19 +3,32 @@ package com.typewritermc.presentation
 import com.typewritermc.expression.Expr
 import com.typewritermc.expression.Handled
 import com.typewritermc.expression.children
-import com.typewritermc.types.CollectionKind
-import com.typewritermc.types.PresentationRole
-import com.typewritermc.types.TypeDefinitionId
-import com.typewritermc.types.TypeTemplate
-import com.typewritermc.types.TypeUse
 import com.typewritermc.types.catalog.CheckedType
 import com.typewritermc.types.catalog.Resolution
-import com.typewritermc.types.catalog.ResolvedRepresentation
 import com.typewritermc.types.catalog.apply
 import com.typewritermc.types.catalog.isNominalSubtype
 import com.typewritermc.types.catalog.resolve
+import com.typewritermc.types.template
 import com.typewritermc.types.toTemplate
+import com.typewritermc.types.use
+import skirout.editor.v1.catalog.PresentationDescriptor
+import skirout.editor.v1.catalog.PresentationRole
 import skirout.editor.v1.expression.ExpressionNode
+import skirout.editor.v1.presentation.ConnectionAxis
+import skirout.editor.v1.presentation.ConnectionExpressionScope
+import skirout.editor.v1.presentation.CrossAxisAlignment
+import skirout.editor.v1.presentation.FlexFit
+import skirout.editor.v1.presentation.MainAxisAlignment
+import skirout.editor.v1.presentation.PresentationAlignment
+import skirout.editor.v1.presentation.PresentationAnchorSelector
+import skirout.editor.v1.presentation.PresentationTransitionPolicy
+import skirout.editor.v1.type_catalog.CollectionKind
+import skirout.editor.v1.type_catalog.EndpointId
+import skirout.editor.v1.type_catalog.NamedTypeTemplate
+import skirout.editor.v1.type_catalog.ResolvedRepresentation
+import skirout.editor.v1.type_catalog.TypeDefinitionId
+import skirout.editor.v1.type_catalog.TypeTemplate
+import skirout.editor.v1.type_catalog.TypeUse
 
 /**
  * What one presentation build is for: the subject [type], the requested [role], the native classes of published
@@ -24,8 +37,8 @@ import skirout.editor.v1.expression.ExpressionNode
 class PresentationBuildBinding(
     val type: CheckedPresentationTemplate,
     val role: PresentationRole,
-    internal val nativeTypes: Map<kotlin.reflect.KClass<*>, TypeTemplate.Named> = emptyMap(),
-    internal val ownershipEndpoints: Set<com.typewritermc.types.EndpointId> = emptySet(),
+    internal val nativeTypes: Map<kotlin.reflect.KClass<*>, NamedTypeTemplate> = emptyMap(),
+    internal val ownershipEndpoints: Set<EndpointId> = emptySet(),
 )
 
 class CheckedPresentationTemplate internal constructor(
@@ -35,9 +48,9 @@ class CheckedPresentationTemplate internal constructor(
     private val descriptorSelector: (TypeTemplate, List<PresentationDescriptor>) -> PresentationDescriptor?,
     private val expressionChecker: (
         ExpressionNode,
-        Map<com.typewritermc.expression.ExpressionBindingId, TypeTemplate>,
+        Map<skirout.editor.v1.type_catalog.ExpressionBindingId, TypeTemplate>,
         TypeTemplate?,
-        Set<com.typewritermc.expression.ExpressionBindingId>,
+        Set<skirout.editor.v1.type_catalog.ExpressionBindingId>,
         Boolean,
     ) -> List<String>,
     private val payloadResolver: (TypeTemplate) -> TypeTemplate,
@@ -107,16 +120,16 @@ class CheckedPresentationTemplate internal constructor(
     /** The codes of every problem of [body]; a null [expected] accepts a result of any type, such as an order key. */
     internal fun checkExpression(
         body: ExpressionNode,
-        bindings: Map<com.typewritermc.expression.ExpressionBindingId, TypeTemplate>,
+        bindings: Map<skirout.editor.v1.type_catalog.ExpressionBindingId, TypeTemplate>,
         expected: TypeTemplate?,
-        present: Set<com.typewritermc.expression.ExpressionBindingId> = emptySet(),
+        present: Set<skirout.editor.v1.type_catalog.ExpressionBindingId> = emptySet(),
         mayBeMissing: Boolean = false,
     ): List<String> = expressionChecker(body, bindings, expected, present, mayBeMissing)
 }
 
 /** A link type: the endpoint of its relation on the side of the resource holding it, and its target type. */
 internal data class PresentationLinkTemplate(
-    val endpoint: com.typewritermc.types.EndpointId,
+    val endpoint: EndpointId,
     val target: TypeTemplate,
 )
 
@@ -160,19 +173,19 @@ fun CheckedType.presentationTemplate(): CheckedPresentationTemplate {
                 }
 
                 NestedPresentationSlot.Items -> {
-                    val representation = checked.schema.representation as? ResolvedRepresentation.Sequence
-                    representation?.let { PresentationNestedTemplate(it.item.toTemplate(), it.kind) }
+                    val representation = checked.schema.representation as? ResolvedRepresentation.SequenceWrapper
+                    representation?.let { PresentationNestedTemplate(it.value.item.toTemplate(), it.value.kind) }
                 }
 
                 NestedPresentationSlot.Keys -> {
-                    val representation = checked.schema.representation as? ResolvedRepresentation.Mapping
-                    representation?.let { PresentationNestedTemplate(it.key.toTemplate()) }
+                    val representation = checked.schema.representation as? ResolvedRepresentation.MappingWrapper
+                    representation?.let { PresentationNestedTemplate(it.value.key.toTemplate()) }
                 }
 
                 NestedPresentationSlot.Values -> {
                     when (val representation = checked.schema.representation) {
-                        is ResolvedRepresentation.Mapping -> PresentationNestedTemplate(representation.value.toTemplate())
-                        else -> (checked.use as? TypeUse.Nullable)?.let { PresentationNestedTemplate(it.value.toTemplate()) }
+                        is ResolvedRepresentation.MappingWrapper -> PresentationNestedTemplate(representation.value.value.toTemplate())
+                        else -> (checked.use as? TypeUse.NullableWrapper)?.let { PresentationNestedTemplate(it.value.value.toTemplate()) }
                     }
                 }
             }
@@ -188,11 +201,11 @@ fun CheckedType.presentationTemplate(): CheckedPresentationTemplate {
         },
         payloadResolver = { parent ->
             val checked = resolve(parent)
-            (checked.schema.representation as? ResolvedRepresentation.Scalar)?.let { TypeTemplate.Scalar(it.kind) } ?: parent
+            (checked.schema.representation as? ResolvedRepresentation.ScalarWrapper)?.let { it.value.kind.template } ?: parent
         },
         linkResolver = { parent ->
-            (resolve(parent).schema.representation as? ResolvedRepresentation.Link)?.let { link ->
-                PresentationLinkTemplate(link.endpoint, link.target.toTemplate())
+            (resolve(parent).schema.representation as? ResolvedRepresentation.LinkWrapper)?.let { link ->
+                PresentationLinkTemplate(link.value.endpoint, link.value.target.toTemplate())
             }
         },
         subtypeChecker = { actual, expected -> isNominalSubtype(actual, expected) },
@@ -225,15 +238,15 @@ interface Layout :
 
     fun row(
         spacing: Double = 0.0,
-        main: MainAxisAlignment = MainAxisAlignment.Start,
-        cross: CrossAxisAlignment = CrossAxisAlignment.Center,
+        main: MainAxisAlignment = MainAxisAlignment.START,
+        cross: CrossAxisAlignment = CrossAxisAlignment.CENTER,
         body: AxisLayout.() -> Unit,
     )
 
     fun column(
         spacing: Double = 0.0,
-        main: MainAxisAlignment = MainAxisAlignment.Start,
-        cross: CrossAxisAlignment = CrossAxisAlignment.Center,
+        main: MainAxisAlignment = MainAxisAlignment.START,
+        cross: CrossAxisAlignment = CrossAxisAlignment.CENTER,
         body: AxisLayout.() -> Unit,
     )
 
@@ -346,7 +359,7 @@ interface AxisLayout : Layout {
 
     fun flexible(
         flex: Int = 1,
-        fit: FlexFit = FlexFit.Loose,
+        fit: FlexFit = FlexFit.LOOSE,
         body: Layout.() -> Unit,
     )
 }
@@ -379,12 +392,6 @@ interface RemainingFields {
 
     fun exclude(field: PresentedField<*, *>)
 }
-
-enum class MainAxisAlignment { Start, Center, End, SpaceBetween, SpaceAround, SpaceEvenly }
-
-enum class CrossAxisAlignment { Start, Center, End, Stretch }
-
-enum class FlexFit { Tight, Loose }
 
 data class PresentationInsets(
     val start: Double,
@@ -466,8 +473,6 @@ interface AdaptiveLeadingScope {
     fun minimumCenterWidth(value: Double)
 }
 
-enum class PresentationAlignment { TopStart, TopCenter, TopEnd, CenterStart, Center, CenterEnd, BottomStart, BottomCenter, BottomEnd }
-
 data class PresentationOffset(
     val x: Expr<Double, Handled>,
     val y: Expr<Double, Handled>,
@@ -485,16 +490,6 @@ interface AnchorPointScope {
     fun exportToParent(value: Boolean = true)
 }
 
-sealed interface AnchorSelector {
-    data class Local(
-        val id: String,
-    ) : AnchorSelector
-
-    data class ExportedGroup(
-        val id: String,
-    ) : AnchorSelector
-}
-
 sealed interface ConnectorPath {
     data object Straight : ConnectorPath
 
@@ -507,8 +502,6 @@ sealed interface ConnectorPath {
         val targetControlOffset: PresentationOffset,
     ) : ConnectorPath
 }
-
-enum class ConnectionAxis { Horizontal, Vertical }
 
 sealed interface ConnectorBundlePath {
     data class Orthogonal(
@@ -537,19 +530,17 @@ data class ConnectorStyle(
     val endMarker: ConnectorEndpointMarker? = null,
 )
 
-enum class ConnectionExpressionScope { Layer, Source, Target }
-
 data class ConnectorMarker(
     val node: Layout.() -> Unit,
     val position: Expr<Double, Handled>,
     val alignToPath: Expr<Boolean, Handled>,
-    val scope: ConnectionExpressionScope = ConnectionExpressionScope.Layer,
+    val scope: ConnectionExpressionScope = ConnectionExpressionScope.LAYER,
 )
 
 interface ConnectionScope {
-    fun source(value: AnchorSelector)
+    fun source(value: PresentationAnchorSelector)
 
-    fun target(value: AnchorSelector)
+    fun target(value: PresentationAnchorSelector)
 
     fun path(value: ConnectorPath)
 
@@ -561,9 +552,9 @@ interface ConnectionScope {
 }
 
 interface ConnectionBundleScope {
-    fun source(value: AnchorSelector)
+    fun source(value: PresentationAnchorSelector)
 
-    fun targets(value: AnchorSelector)
+    fun targets(value: PresentationAnchorSelector)
 
     fun path(value: ConnectorBundlePath)
 
@@ -591,9 +582,9 @@ interface PresentationContextExpressions {
 
 internal fun checkPresentationExpression(
     body: ExpressionNode,
-    bindings: Map<com.typewritermc.expression.ExpressionBindingId, TypeTemplate>,
+    bindings: Map<skirout.editor.v1.type_catalog.ExpressionBindingId, TypeTemplate>,
     expected: TypeTemplate?,
-    present: Set<com.typewritermc.expression.ExpressionBindingId>,
+    present: Set<skirout.editor.v1.type_catalog.ExpressionBindingId>,
     resolve: (TypeUse) -> Resolution<CheckedType>,
     mayBeMissing: Boolean = false,
 ): List<String> {
@@ -616,10 +607,15 @@ internal fun checkPresentationExpression(
     }
 }
 
-private fun ExpressionNode.referencedBindingIds(): Set<com.typewritermc.expression.ExpressionBindingId> =
+private fun ExpressionNode.referencedBindingIds(): Set<skirout.editor.v1.type_catalog.ExpressionBindingId> =
     buildSet {
         fun visit(node: ExpressionNode) {
-            if (node is ExpressionNode.InputWrapper) add(com.typewritermc.expression.ExpressionBindingId(node.value.binding.value))
+            if (node is ExpressionNode.InputWrapper) {
+                add(
+                    skirout.editor.v1.type_catalog
+                        .ExpressionBindingId(value = node.value.binding.value),
+                )
+            }
             node.children().forEach { visit(it.node) }
         }
         visit(this@referencedBindingIds)

@@ -6922,14 +6922,17 @@ dependencies = [
 name = "wasmcloud-utils"
 version = "0.0.1"
 dependencies = [
+ "base64 0.23.1",
  "opentelemetry",
  "otel-wasi",
  "serde",
  "serde_json",
+ "sha2 0.10.9",
  "skir-client",
  "surrealdb-component-sdk",
  "surrealdb-types",
  "tracing",
+ "uuid",
  "wasmcloud-utils-macros",
  "wit-bindgen 0.62.0",
 ]

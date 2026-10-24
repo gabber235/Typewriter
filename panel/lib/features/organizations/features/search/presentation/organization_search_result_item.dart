@@ -1,3 +1,5 @@
+import "package:typewriter_panel/infrastructure/protocols/skir/skir.dart"
+    as skir;
 import "package:typewriter_panel/typewriter_panel.dart";
 
 class OrganizationSearchResultItem extends StatelessWidget {
@@ -13,7 +15,7 @@ class OrganizationSearchResultItem extends StatelessWidget {
   });
 
   factory OrganizationSearchResultItem.organization({
-    required OrganizationData organization,
+    required skir.Organization organization,
     bool selected = false,
     bool focused = false,
     bool loading = false,

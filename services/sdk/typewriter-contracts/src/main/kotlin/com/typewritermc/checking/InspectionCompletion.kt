@@ -1,9 +1,9 @@
 package com.typewritermc.checking
 
-import com.typewritermc.authoring.ValueLocation
 import com.typewritermc.types.ResourceId
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
+import skirout.editor.v1.type_catalog.ValueLocation
 
 @Serializable
 sealed interface InspectionCompletion {
@@ -18,7 +18,6 @@ sealed interface InspectionCompletion {
     ) : InspectionCompletion
 }
 
-@Serializable
 data class UndecidedCandidate(
     val resource: ResourceId,
     val inputs: List<ValueLocation>,

@@ -748,12 +748,19 @@ pub enum UpdateOrganizationMemberRolesResponse {
     Unknown(Option<crate::skir_client::UnrecognizedVariant<UpdateOrganizationMemberRolesResponse>>),
     InternalError(Box<crate::skirout::base::kernel::v1::errors::InternalError>),
     Success(Box<UpdateOrganizationMemberRolesResponse_Success>),
+    /// Users not found.
     UserNotFoundError(Box<UpdateOrganizationMemberRolesResponse_UserNotFoundError>),
+    /// Roles not found.
     RolesNotFoundError(Box<UpdateOrganizationMemberRolesResponse_RolesNotFoundError>),
+    /// Roles not assignable.
     RolesNotAssignableError(Box<UpdateOrganizationMemberRolesResponse_RolesNotAssignableError>),
+    /// At least one role is required.
     RolesRequiredError(Box<UpdateOrganizationMemberRolesResponse_RolesRequiredError>),
+    /// Founder role is required.
     FounderRoleRequiredError(Box<UpdateOrganizationMemberRolesResponse_FounderRoleRequiredError>),
+    /// Selection must contain distinct targets.
     InvalidSelectionError(Box<UpdateOrganizationMemberRolesResponse_InvalidSelectionError>),
+    /// Record IDs from an unexpected table.
     InvalidRecordIdError(Box<crate::skirout::base::kernel::v1::errors::InvalidRecordIdError>),
 }
 
@@ -1010,8 +1017,11 @@ pub enum RemoveOrganizationMemberResponse {
     Unknown(Option<crate::skir_client::UnrecognizedVariant<RemoveOrganizationMemberResponse>>),
     InternalError(Box<crate::skirout::base::kernel::v1::errors::InternalError>),
     Success(Box<RemoveOrganizationMemberResponse_Success>),
+    /// User is not a member.
     UserNotMemberError(Box<RemoveOrganizationMemberResponse_UserNotMemberError>),
+    /// Founder cannot be removed.
     FounderCannotBeRemovedError(Box<RemoveOrganizationMemberResponse_FounderCannotBeRemovedError>),
+    /// Record IDs from an unexpected table.
     InvalidRecordIdError(Box<crate::skirout::base::kernel::v1::errors::InvalidRecordIdError>),
 }
 
@@ -1441,7 +1451,7 @@ fn initialize_module_serializers() {
                 crate::skir_client::internal::struct_serializer_from_static(
                     UpdateOrganizationMemberRolesResponse_UserNotFoundError::_adapter(),
                 ),
-                "",
+                "Users not found.",
                 |v| UpdateOrganizationMemberRolesResponse::UserNotFoundError(Box::new(v)),
                 |x| match x {
                     UpdateOrganizationMemberRolesResponse::UserNotFoundError(b) => b.as_ref(),
@@ -1455,7 +1465,7 @@ fn initialize_module_serializers() {
                 crate::skir_client::internal::struct_serializer_from_static(
                     UpdateOrganizationMemberRolesResponse_RolesNotFoundError::_adapter(),
                 ),
-                "",
+                "Roles not found.",
                 |v| UpdateOrganizationMemberRolesResponse::RolesNotFoundError(Box::new(v)),
                 |x| match x {
                     UpdateOrganizationMemberRolesResponse::RolesNotFoundError(b) => b.as_ref(),
@@ -1469,7 +1479,7 @@ fn initialize_module_serializers() {
                 crate::skir_client::internal::struct_serializer_from_static(
                     UpdateOrganizationMemberRolesResponse_RolesNotAssignableError::_adapter(),
                 ),
-                "",
+                "Roles not assignable.",
                 |v| UpdateOrganizationMemberRolesResponse::RolesNotAssignableError(Box::new(v)),
                 |x| match x {
                     UpdateOrganizationMemberRolesResponse::RolesNotAssignableError(b) => b.as_ref(),
@@ -1483,7 +1493,7 @@ fn initialize_module_serializers() {
                 crate::skir_client::internal::struct_serializer_from_static(
                     UpdateOrganizationMemberRolesResponse_RolesRequiredError::_adapter(),
                 ),
-                "",
+                "At least one role is required.",
                 |v| UpdateOrganizationMemberRolesResponse::RolesRequiredError(Box::new(v)),
                 |x| match x {
                     UpdateOrganizationMemberRolesResponse::RolesRequiredError(b) => b.as_ref(),
@@ -1497,7 +1507,7 @@ fn initialize_module_serializers() {
                 crate::skir_client::internal::struct_serializer_from_static(
                     UpdateOrganizationMemberRolesResponse_FounderRoleRequiredError::_adapter(),
                 ),
-                "",
+                "Founder role is required.",
                 |v| UpdateOrganizationMemberRolesResponse::FounderRoleRequiredError(Box::new(v)),
                 |x| match x {
                     UpdateOrganizationMemberRolesResponse::FounderRoleRequiredError(b) => {
@@ -1513,7 +1523,7 @@ fn initialize_module_serializers() {
                 crate::skir_client::internal::struct_serializer_from_static(
                     UpdateOrganizationMemberRolesResponse_InvalidSelectionError::_adapter(),
                 ),
-                "",
+                "Selection must contain distinct targets.",
                 |v| UpdateOrganizationMemberRolesResponse::InvalidSelectionError(Box::new(v)),
                 |x| match x {
                     UpdateOrganizationMemberRolesResponse::InvalidSelectionError(b) => b.as_ref(),
@@ -1525,7 +1535,7 @@ fn initialize_module_serializers() {
                 9,
                 9,
                 crate::skirout::base::kernel::v1::errors::InvalidRecordIdError::serializer(),
-                "",
+                "Record IDs from an unexpected table.",
                 |v| UpdateOrganizationMemberRolesResponse::InvalidRecordIdError(Box::new(v)),
                 |x| match x {
                     UpdateOrganizationMemberRolesResponse::InvalidRecordIdError(b) => b.as_ref(),
@@ -1633,7 +1643,7 @@ fn initialize_module_serializers() {
                 crate::skir_client::internal::struct_serializer_from_static(
                     RemoveOrganizationMemberResponse_UserNotMemberError::_adapter(),
                 ),
-                "",
+                "User is not a member.",
                 |v| RemoveOrganizationMemberResponse::UserNotMemberError(Box::new(v)),
                 |x| match x {
                     RemoveOrganizationMemberResponse::UserNotMemberError(b) => b.as_ref(),
@@ -1647,7 +1657,7 @@ fn initialize_module_serializers() {
                 crate::skir_client::internal::struct_serializer_from_static(
                     RemoveOrganizationMemberResponse_FounderCannotBeRemovedError::_adapter(),
                 ),
-                "",
+                "Founder cannot be removed.",
                 |v| RemoveOrganizationMemberResponse::FounderCannotBeRemovedError(Box::new(v)),
                 |x| match x {
                     RemoveOrganizationMemberResponse::FounderCannotBeRemovedError(b) => b.as_ref(),
@@ -1659,7 +1669,7 @@ fn initialize_module_serializers() {
                 5,
                 5,
                 crate::skirout::base::kernel::v1::errors::InvalidRecordIdError::serializer(),
-                "",
+                "Record IDs from an unexpected table.",
                 |v| RemoveOrganizationMemberResponse::InvalidRecordIdError(Box::new(v)),
                 |x| match x {
                     RemoveOrganizationMemberResponse::InvalidRecordIdError(b) => b.as_ref(),

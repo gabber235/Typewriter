@@ -4,7 +4,9 @@ import com.typewritermc.expression.Expr
 import com.typewritermc.expression.Handled
 import skirout.editor.v1.presentation.DisplayAppearance
 import skirout.editor.v1.presentation.DividerAppearance
+import skirout.editor.v1.presentation.ImageFit
 import skirout.editor.v1.presentation.ImageOptions
+import skirout.editor.v1.presentation.PresentationAlignment
 import skirout.editor.v1.presentation.ProgressAppearance
 import skirout.editor.v1.presentation.TooltipAppearance
 import skirout.editor.v1.presentation.InputAppearance as WireInputAppearance
@@ -31,20 +33,11 @@ internal class RuntimeImageScope(
     }
 
     override fun fit(value: ImageFit) {
-        target.fit =
-            when (value) {
-                ImageFit.Contain -> skirout.editor.v1.presentation.ImageFit.CONTAIN
-                ImageFit.Cover -> skirout.editor.v1.presentation.ImageFit.COVER
-                ImageFit.Fill -> skirout.editor.v1.presentation.ImageFit.FILL
-                ImageFit.FitWidth -> skirout.editor.v1.presentation.ImageFit.FIT_WIDTH
-                ImageFit.FitHeight -> skirout.editor.v1.presentation.ImageFit.FIT_HEIGHT
-                ImageFit.None -> skirout.editor.v1.presentation.ImageFit.NONE
-                ImageFit.ScaleDown -> skirout.editor.v1.presentation.ImageFit.SCALE_DOWN
-            }
+        target.fit = value
     }
 
     override fun alignment(value: PresentationAlignment) {
-        target.alignment = value.wire()
+        target.alignment = value
     }
 
     override fun radius(value: PresentationRadius) {

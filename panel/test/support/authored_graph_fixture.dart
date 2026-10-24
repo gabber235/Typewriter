@@ -102,7 +102,7 @@ final class AuthoredGraphFixture {
       target: named(target),
       containsCollection: collection,
     );
-    final snapshot = receivedEditorCatalogWireSnapshot().toMutable()
+    final snapshot = receivedEditorCatalog().toMutable()
       ..types = [
         record("MoveInput", {
           "destination": skir.TypeTemplate.wrapScalar(skir.ScalarKind.text),

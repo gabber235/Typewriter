@@ -14,7 +14,10 @@ void topologyLifecycleTests() {
     final provider = organizationTopologyControllerProvider(_organizationId);
     container.listen(provider, (_, _) {});
 
-    expect(await container.read(provider.future), OrganizationTopology.empty);
+    expect(
+      await container.read(provider.future),
+      skir.OrganizationTopologySnapshot.defaultInstance,
+    );
     expect(nats.subscriptionSubjects, isEmpty);
     expect(nats.requests, isEmpty);
   });
@@ -52,7 +55,7 @@ void topologyLifecycleTests() {
     await container.read(provider.future);
     final command = _configureHost(
       container,
-      TopologyHost.fromSkir(_host()),
+      _host(),
       skir.HostExecutionConfiguration(realm: null, primaryEngine: null),
     );
     await _waitFor(

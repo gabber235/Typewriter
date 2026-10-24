@@ -6,7 +6,7 @@ import "package:typewriter_panel/typewriter_panel.dart";
 void main() {
   group("JoinRequest expiration", () {
     test("isExpired returns false when expiresAt is in the future", () {
-      final request = OrganizationJoinRequest(
+      final request = skir.OrganizationJoinRequest(
         requestId: skir.recordId("request_to_join:req-1"),
         userId: skir.recordId("user:user-1"),
         userName: "Test User",
@@ -20,7 +20,7 @@ void main() {
     });
 
     test("isExpired returns true when expiresAt is in the past", () {
-      final request = OrganizationJoinRequest(
+      final request = skir.OrganizationJoinRequest(
         requestId: skir.recordId("request_to_join:req-1"),
         userId: skir.recordId("user:user-1"),
         userName: "Test User",
@@ -35,7 +35,7 @@ void main() {
 
     test("remainingDuration calculates correctly for future expiry", () {
       final expiresAt = DateTime.now().add(const Duration(hours: 2));
-      final request = OrganizationJoinRequest(
+      final request = skir.OrganizationJoinRequest(
         requestId: skir.recordId("request_to_join:req-1"),
         userId: skir.recordId("user:user-1"),
         userName: "Test User",
@@ -51,7 +51,7 @@ void main() {
     });
 
     test("remainingDuration returns zero for past expiry", () {
-      final request = OrganizationJoinRequest(
+      final request = skir.OrganizationJoinRequest(
         requestId: skir.recordId("request_to_join:req-1"),
         userId: skir.recordId("user:user-1"),
         userName: "Test User",
@@ -67,10 +67,12 @@ void main() {
 
   group("JoinCode expiration", () {
     test("isExpired returns false when expiresAt is null (never expires)", () {
-      final code = OrganizationJoinCode(
+      final code = skir.JoinCode(
         code: skir.recordId("organization_join_code:ABC123"),
         createdAt: DateTime.now(),
         expiresAt: null,
+        singleUse: true,
+        autoAccept: skir.JoinCode_AutoAccept(roleIds: const []),
       );
 
       expect(code.isExpired, isFalse);
@@ -78,10 +80,12 @@ void main() {
     });
 
     test("isExpired returns false when expiresAt is in the future", () {
-      final code = OrganizationJoinCode(
+      final code = skir.JoinCode(
         code: skir.recordId("organization_join_code:ABC123"),
         createdAt: DateTime.now(),
         expiresAt: DateTime.now().add(const Duration(days: 7)),
+        singleUse: true,
+        autoAccept: skir.JoinCode_AutoAccept(roleIds: const []),
       );
 
       expect(code.isExpired, isFalse);
@@ -89,30 +93,36 @@ void main() {
     });
 
     test("isExpired returns true when expiresAt is in the past", () {
-      final code = OrganizationJoinCode(
+      final code = skir.JoinCode(
         code: skir.recordId("organization_join_code:ABC123"),
         createdAt: DateTime.now().subtract(const Duration(days: 14)),
         expiresAt: DateTime.now().subtract(const Duration(days: 7)),
+        singleUse: true,
+        autoAccept: skir.JoinCode_AutoAccept(roleIds: const []),
       );
 
       expect(code.isExpired, isTrue);
     });
 
     test("remainingDuration returns null when never expires", () {
-      final code = OrganizationJoinCode(
+      final code = skir.JoinCode(
         code: skir.recordId("organization_join_code:ABC123"),
         createdAt: DateTime.now(),
         expiresAt: null,
+        singleUse: true,
+        autoAccept: skir.JoinCode_AutoAccept(roleIds: const []),
       );
 
       expect(code.remainingDuration, isNull);
     });
 
     test("remainingDuration returns zero for past expiry", () {
-      final code = OrganizationJoinCode(
+      final code = skir.JoinCode(
         code: skir.recordId("organization_join_code:ABC123"),
         createdAt: DateTime.now().subtract(const Duration(days: 14)),
         expiresAt: DateTime.now().subtract(const Duration(days: 1)),
+        singleUse: true,
+        autoAccept: skir.JoinCode_AutoAccept(roleIds: const []),
       );
 
       expect(code.remainingDuration, Duration.zero);
@@ -121,7 +131,7 @@ void main() {
 
   group("UserJoinRequest expiration", () {
     test("isExpired returns false when expiresAt is in the future", () {
-      final request = UserJoinRequest(
+      final request = skir.UserJoinRequest(
         requestId: skir.recordId("request_to_join:req-1"),
         organizationId: skir.recordId("organization:org-1"),
         organizationName: "Test Org",
@@ -134,7 +144,7 @@ void main() {
     });
 
     test("isExpired returns true when expiresAt is in the past", () {
-      final request = UserJoinRequest(
+      final request = skir.UserJoinRequest(
         requestId: skir.recordId("request_to_join:req-1"),
         organizationId: skir.recordId("organization:org-1"),
         organizationName: "Test Org",
@@ -147,7 +157,7 @@ void main() {
     });
 
     test("remainingDuration returns zero for expired request", () {
-      final request = UserJoinRequest(
+      final request = skir.UserJoinRequest(
         requestId: skir.recordId("request_to_join:req-1"),
         organizationId: skir.recordId("organization:org-1"),
         organizationName: "Test Org",
@@ -157,38 +167,6 @@ void main() {
       );
 
       expect(request.remainingDuration, Duration.zero);
-    });
-  });
-
-  group("MemberRole model", () {
-    test("creates role with all fields", () {
-      final role = OrganizationRole(
-        roleId: skir.recordId("organization_role:role-1"),
-        name: "Editor",
-        color: Colors.blue,
-        defaultRole: true,
-        assignable: true,
-        deletable: false,
-      );
-
-      expect(role.roleId, skir.recordId("organization_role:role-1"));
-      expect(role.name, "Editor");
-      expect(role.color, Colors.blue);
-      expect(role.defaultRole, isTrue);
-      expect(role.assignable, isTrue);
-      expect(role.deletable, isFalse);
-    });
-
-    test("uses correct defaults", () {
-      final role = OrganizationRole(
-        roleId: skir.recordId("organization_role:role-1"),
-        name: "Member",
-        color: Colors.grey,
-      );
-
-      expect(role.defaultRole, isFalse);
-      expect(role.assignable, isFalse);
-      expect(role.deletable, isFalse);
     });
   });
 

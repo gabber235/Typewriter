@@ -2,32 +2,34 @@ package com.typewritermc.discovery
 
 import com.typewritermc.authoring.RealmRootDefinition
 import com.typewritermc.authoring.RealmSectionDefinition
-import com.typewritermc.checking.CatalogGeneration
 import com.typewritermc.imprint.ArtifactId
 import com.typewritermc.imprint.ContributionName
 import com.typewritermc.imprint.ContributionSourceId
 import com.typewritermc.imprint.ProducerId
-import com.typewritermc.types.DeclarationOwner
-import com.typewritermc.types.EndpointCardinality
-import com.typewritermc.types.EndpointDefinition
-import com.typewritermc.types.EndpointId
-import com.typewritermc.types.EndpointSlot
-import com.typewritermc.types.ParameterKey
 import com.typewritermc.types.RESOURCE_OWNERSHIP_FAMILY_ID
-import com.typewritermc.types.RelationContract
-import com.typewritermc.types.RelationDeletePolicy
-import com.typewritermc.types.RelationFamilyId
-import com.typewritermc.types.RelationId
-import com.typewritermc.types.RepresentationTemplate
-import com.typewritermc.types.TypeDefinition
-import com.typewritermc.types.TypeDefinitionId
-import com.typewritermc.types.TypeId
-import com.typewritermc.types.TypeParameter
-import com.typewritermc.types.TypeTemplate
-import com.typewritermc.types.catalog.DeclarationStatus
+import com.typewritermc.types.catalog.reasons
+import com.typewritermc.types.namedTemplate
+import com.typewritermc.types.of
+import com.typewritermc.types.qualified
 import de.infix.testBalloon.framework.core.testSuite
 import io.kotest.matchers.shouldBe
+import skirout.editor.v1.catalog.DeclarationStatus
+import skirout.editor.v1.catalog.EndpointCardinality
+import skirout.editor.v1.catalog.EndpointDefinition
+import skirout.editor.v1.catalog.EndpointSlot
 import skirout.editor.v1.catalog.RESOURCE_OWNERSHIP_FAMILY
+import skirout.editor.v1.catalog.RelationContract
+import skirout.editor.v1.catalog.RelationDeletePolicy
+import skirout.editor.v1.type_catalog.CatalogGeneration
+import skirout.editor.v1.type_catalog.DeclarationOwner
+import skirout.editor.v1.type_catalog.EndpointId
+import skirout.editor.v1.type_catalog.ParameterKey
+import skirout.editor.v1.type_catalog.RelationFamilyId
+import skirout.editor.v1.type_catalog.RelationId
+import skirout.editor.v1.type_catalog.RepresentationTemplate
+import skirout.editor.v1.type_catalog.TypeDefinition
+import skirout.editor.v1.type_catalog.TypeDefinitionId
+import skirout.editor.v1.type_catalog.TypeParameter
 
 val RealmStructureAssemblyTest by testSuite {
     test("the ownership family annotation id is the editor contract's ownership family") {
@@ -35,22 +37,19 @@ val RealmStructureAssemblyTest by testSuite {
     }
 
     test("reserved read identities cannot replace intrinsic schemas or isolate unrelated declarations") {
-        val reserved = TypeDefinitionId(TypeId.Qualified("typewriter.read", "UnfamiliarModel"), 1)
+        val reserved = TypeDefinitionId.qualified(com.typewritermc.expression.CANONICAL_READ_NAMESPACE, "UnfamiliarModel")
         val healthy = id("Healthy")
         val assembly = assemble(listOf(record(reserved), record(healthy)))
-        assembly.snapshot.types
-            .single { it.definition.id == reserved }
-            .status
-            .codes() shouldBe setOf("reserved_intrinsic_type_identity")
-        assembly.checked.definition(healthy) shouldBe DeclarationStatus.Ready
+        assembly.checked.definition(reserved).codes() shouldBe setOf("reserved_intrinsic_type_identity")
+        assembly.checked.definition(healthy) shouldBe DeclarationStatus.READY
     }
 
     test("publishes the realm root type and keeps the root available without an owner") {
         val assembly = assemble(structure())
 
-        assembly.snapshot.realmRoot shouldBe RealmRootDefinition.id
-        assembly.checked.definition(RealmRootDefinition.id) shouldBe DeclarationStatus.Ready
-        assembly.checked.definition(section) shouldBe DeclarationStatus.Ready
+        assembly.editorCatalog.realmRoot shouldBe RealmRootDefinition.id
+        assembly.checked.definition(RealmRootDefinition.id) shouldBe DeclarationStatus.READY
+        assembly.checked.definition(section) shouldBe DeclarationStatus.READY
     }
 
     test("rejects a concrete resource type that no ownership relation owns") {
@@ -64,7 +63,7 @@ val RealmStructureAssemblyTest by testSuite {
             )
 
         assembly.checked.definition(loose).codes() shouldBe setOf("unowned_resource_type")
-        assembly.checked.definition(owned) shouldBe DeclarationStatus.Ready
+        assembly.checked.definition(owned) shouldBe DeclarationStatus.READY
     }
 
     test("an owned abstract member owns its concrete descendants and plain values need no owner") {
@@ -83,8 +82,8 @@ val RealmStructureAssemblyTest by testSuite {
                 listOf(sectionsRelation, ownership("section.members", section, member)),
             )
 
-        assembly.checked.definition(concrete) shouldBe DeclarationStatus.Ready
-        assembly.checked.definition(value) shouldBe DeclarationStatus.Ready
+        assembly.checked.definition(concrete) shouldBe DeclarationStatus.READY
+        assembly.checked.definition(value) shouldBe DeclarationStatus.READY
     }
 
     test("rejects a generic realm section type") {
@@ -92,9 +91,9 @@ val RealmStructureAssemblyTest by testSuite {
         val declaration =
             TypeDefinition(
                 id = generic,
-                parameters = listOf(TypeParameter(ParameterKey(generic, 0), "T", emptyList())),
-                representation = RepresentationTemplate.Record(emptyList(), abstract = false),
-                parents = listOf(TypeTemplate.Named(RealmSectionDefinition.id)),
+                parameters = listOf(TypeParameter.partial(key = ParameterKey(owner = generic, index = 0), name = "T")),
+                representation = RepresentationTemplate.createRecord(fields = emptyList(), abstract_ = false),
+                parents = listOf(RealmSectionDefinition.id.namedTemplate()),
             )
 
         val assembly = assemble(structure() + OwnedTypeDeclaration(origin, declaration, searchKey = "generic"))
@@ -120,7 +119,7 @@ private fun assemble(
     relations: List<RelationContract> = listOf(sectionsRelation),
 ): CatalogAssembly =
     CatalogContributions(declarations = declarations, relations = relations)
-        .assemble(CatalogAssemblyContext(CatalogGeneration("realm structure")))
+        .assemble(CatalogAssemblyContext(CatalogGeneration(value = "realm structure")))
 
 @JvmName("assembleDefinitions")
 private fun assemble(definitions: List<TypeDefinition>): CatalogAssembly = assemble(definitions.map { OwnedTypeDeclaration(origin, it) })
@@ -135,55 +134,63 @@ private fun record(
     id: TypeDefinitionId,
     abstract: Boolean = false,
     parents: List<TypeDefinitionId> = emptyList(),
-) = TypeDefinition(
+) = TypeDefinition.partial(
     id = id,
-    representation = RepresentationTemplate.Record(emptyList(), abstract),
-    parents = parents.map(TypeTemplate::Named),
+    representation =
+        RepresentationTemplate.createRecord(
+            fields = emptyList(),
+            abstract_ = abstract,
+        ),
+    parents =
+        parents.map {
+            it.namedTemplate()
+        },
 )
 
 private fun ownership(
     relation: String,
     owner: TypeDefinitionId,
     member: TypeDefinitionId,
-) = RelationContract(
-    id = RelationId(relation),
+) = RelationContract.of(
+    id = RelationId(value = relation),
     first =
         EndpointDefinition(
-            EndpointId("$relation:first"),
-            EndpointSlot.First,
-            TypeTemplate.Named(owner),
-            EndpointCardinality.One,
-            RelationDeletePolicy.CASCADE,
+            id = EndpointId(value = "$relation:first"),
+            slot = EndpointSlot.FIRST,
+            resource = owner.namedTemplate(),
+            cardinality = EndpointCardinality.ONE,
+            onDelete = RelationDeletePolicy.CASCADE,
         ),
     second =
         EndpointDefinition(
-            EndpointId("$relation:second"),
-            EndpointSlot.Second,
-            TypeTemplate.Named(member),
-            EndpointCardinality.Many,
-            RelationDeletePolicy.CLEAR,
+            id = EndpointId(value = "$relation:second"),
+            slot = EndpointSlot.SECOND,
+            resource = member.namedTemplate(),
+            cardinality = EndpointCardinality.MANY,
+            onDelete = RelationDeletePolicy.CLEAR,
         ),
-    families = setOf(RelationFamilyId(RESOURCE_OWNERSHIP_FAMILY_ID)),
+    families = setOf(RelationFamilyId(value = RESOURCE_OWNERSHIP_FAMILY_ID)),
 )
 
 private fun DeclarationStatus.codes(): Set<String> =
-    (this as? DeclarationStatus.Unavailable)?.reasons.orEmpty().mapTo(linkedSetOf()) {
+    (this as? DeclarationStatus.UnavailableWrapper)?.reasons.orEmpty().mapTo(linkedSetOf()) {
         it.code
     }
 
-private fun id(name: String) = TypeDefinitionId(TypeId.Qualified("structure", name), 1)
+private fun id(name: String) = TypeDefinitionId.qualified("structure", name)
 
 private val origin =
     ProviderOrigin(
         owner =
             DeclarationOwner(
-                ContributionKey(
-                    ContributionSourceId("test"),
-                    "main",
-                    ProducerId("sdk"),
-                    ContributionName("realm_structure"),
-                ),
-                "realm structure",
+                source =
+                    contributionKey(
+                        ContributionSourceId("test"),
+                        "main",
+                        ProducerId("sdk"),
+                        ContributionName("realm_structure"),
+                    ),
+                localIdentity = "realm structure",
             ),
         artifact = ArtifactId("test:realm_structure"),
         sourcePart = "main",

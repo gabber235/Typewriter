@@ -2,9 +2,7 @@
 
 package com.typewritermc.authoring
 
-import com.typewritermc.checking.CatalogGeneration
 import com.typewritermc.expression.Expr
-import com.typewritermc.expression.ExpressionBindingId
 import com.typewritermc.expression.ExpressionFactory
 import com.typewritermc.expression.MayBeMissing
 import com.typewritermc.expression.MissingPolicy
@@ -15,35 +13,37 @@ import com.typewritermc.expression.orElse
 import com.typewritermc.presentation.DefaultPresentationRuntime
 import com.typewritermc.presentation.PresentationBuildBinding
 import com.typewritermc.presentation.presentationTemplate
-import com.typewritermc.types.PresentationRole
-import com.typewritermc.types.TypeUse
 import com.typewritermc.types.catalog.DefaultCheckedCatalog
 import com.typewritermc.types.catalog.Resolution
+import com.typewritermc.types.use
 import de.infix.testBalloon.framework.core.testSuite
 import io.kotest.matchers.shouldBe
-import skirout.editor.v1.expression.ExpressionNode
+import skirout.editor.v1.catalog.PresentationRole
 import skirout.editor.v1.presentation.AxisChild
 import skirout.editor.v1.presentation.ChildrenElement
 import skirout.editor.v1.presentation.PresentationElement
+import skirout.editor.v1.type_catalog.CatalogGeneration
+import skirout.editor.v1.type_catalog.ExpressionBindingId
+import skirout.editor.v1.type_catalog.ValuePath
 
 val GeneratedPresentationScopeTest by testSuite {
     test("generated record value field remains distinct from the configured value") {
         val configured =
-            com.typewritermc.expression.input<Any?>(ExpressionBindingId("configured_value"))
+            com.typewritermc.expression.input<Any?>(ExpressionBindingId(value = "configured_value"))
         val expressions = ValueFieldExpressionsFactory.create(configured)
 
         expressions.value.toNode() shouldBe
             com.typewritermc.expression
                 .input<Any?>(
-                    ExpressionBindingId("configured_value"),
-                    ValuePath(listOf(PathSegment.Field("value"))),
+                    ExpressionBindingId(value = "configured_value"),
+                    ValuePath.root.field("value"),
                 ).toNode()
     }
 
     test("generated record expressions compile into symbolic presentation conditions") {
         val catalog =
             DefaultCheckedCatalog(
-                CatalogGeneration("generated presentation"),
+                CatalogGeneration(value = "generated presentation"),
                 listOf(
                     PlacementDefinition.definition,
                     TimelineCuePlacementDefinition.definition,
@@ -52,7 +52,7 @@ val GeneratedPresentationScopeTest by testSuite {
             )
         val checked =
             (
-                catalog.resolve(TypeUse.Named(TimelineSegmentPlacementDefinition.id)) as
+                catalog.resolve(TimelineSegmentPlacementDefinition.id.use()) as
                     Resolution.Ready
             ).value
         val root =

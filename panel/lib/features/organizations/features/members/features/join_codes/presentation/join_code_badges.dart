@@ -1,3 +1,5 @@
+import "package:typewriter_panel/infrastructure/protocols/skir/skir.dart"
+    as skir;
 import "package:typewriter_panel/typewriter_panel.dart";
 
 /// Summarizes admission policy that affects how a code can be used.
@@ -5,7 +7,7 @@ import "package:typewriter_panel/typewriter_panel.dart";
 class JoinCodeTypeBadges extends StatelessWidget {
   const JoinCodeTypeBadges({required this.code, super.key});
 
-  final OrganizationJoinCode code;
+  final skir.JoinCode code;
 
   @override
   Widget build(BuildContext context) {

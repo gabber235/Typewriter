@@ -9,6 +9,7 @@ import com.squareup.kotlinpoet.FileSpec
 import com.squareup.kotlinpoet.FunSpec
 import com.squareup.kotlinpoet.KModifier
 import com.squareup.kotlinpoet.LambdaTypeName
+import com.squareup.kotlinpoet.MemberName
 import com.squareup.kotlinpoet.ParameterSpec
 import com.squareup.kotlinpoet.ParameterizedTypeName.Companion.parameterizedBy
 import com.squareup.kotlinpoet.PropertySpec
@@ -16,12 +17,8 @@ import com.squareup.kotlinpoet.TypeName
 import com.squareup.kotlinpoet.TypeSpec
 import com.squareup.kotlinpoet.asClassName
 import com.squareup.kotlinpoet.joinToCode
-import com.typewritermc.authoring.TypeSelection
-import com.typewritermc.authoring.ValueLocation
-import com.typewritermc.checking.CatalogGeneration
 import com.typewritermc.codegen.appliedUseCode
 import com.typewritermc.types.ResourceId
-import com.typewritermc.types.TypeUse
 import com.typewritermc.types.codegen.SdkDeclaration
 import com.typewritermc.types.codegen.SdkEmitter
 import com.typewritermc.types.codegen.SdkField
@@ -29,6 +26,11 @@ import com.typewritermc.types.codegen.containsParameter
 import com.typewritermc.types.codegen.draftProjection
 import com.typewritermc.types.codegen.draftType
 import com.typewritermc.types.codegen.parameterizedOrSelf
+import com.typewritermc.types.template
+import skirout.editor.v1.type_catalog.CatalogGeneration
+import skirout.editor.v1.type_catalog.NamedTypeUse
+import skirout.editor.v1.type_catalog.TypeSelection
+import skirout.editor.v1.type_catalog.ValueLocation
 import com.typewritermc.codegen.TypewriterApi as Api
 
 /** `XDraft`, its projection, the exact draft of generic declarations and the draft types of resources. */
@@ -82,21 +84,27 @@ internal object DraftEmitter : SdkEmitter {
             .addProperty(delegated("location", ValueLocation::class.asClassName(), "binding.location"))
             .addProperty(
                 PropertySpec
-                    .builder("actualType", Api.Availability.parameterizedBy(TypeUse.Named::class.asClassName()), KModifier.OVERRIDE)
+                    .builder("actualType", Api.Availability.parameterizedBy(NamedTypeUse::class.asClassName()), KModifier.OVERRIDE)
                     .initializer(
                         CodeBlock
                             .builder()
                             .beginControlFlow("when (val selected = binding.actual)")
-                            .addStatement("is %T·->♢%T(selected.use)", TypeSelection.Complete::class, Api.AvailabilityAvailable)
+                            .addStatement("is %T·->♢%T(selected.value)", TypeSelection.CompleteWrapper::class, Api.AvailabilityAvailable)
                             .addStatement(
                                 "is %T·->♢%T(listOf(binding.location))",
-                                TypeSelection.Pending::class,
+                                TypeSelection.PendingWrapper::class,
                                 Api.AvailabilityUnavailable,
-                            ).endControlFlow()
+                            ).addStatement("else·->♢%M(selected)", UNKNOWN_VARIANT)
+                            .endControlFlow()
                             .build(),
                     ).build(),
-            ).apply { if (resource) addProperty(delegated("id", ResourceId::class.asClassName(), "binding.location.resource")) }
-            .addProperties(fields.map { draftField(it) })
+            ).apply {
+                if (resource) {
+                    addProperty(
+                        delegated("id", ResourceId::class.asClassName(), CodeBlock.of("binding.location.resource.%M()", TO_RESOURCE_ID)),
+                    )
+                }
+            }.addProperties(fields.map { draftField(it) })
             .addFunctions(fields.filterNot { it.template.containsParameter }.flatMap { editMethods(it) })
             .build()
     }
@@ -105,6 +113,12 @@ internal object DraftEmitter : SdkEmitter {
         name: String,
         type: TypeName,
         value: String,
+    ): PropertySpec = delegated(name, type, CodeBlock.of("%L", value))
+
+    private fun delegated(
+        name: String,
+        type: TypeName,
+        value: CodeBlock,
     ): PropertySpec =
         PropertySpec
             .builder(name, type, KModifier.OVERRIDE)
@@ -228,7 +242,7 @@ internal object DraftEmitter : SdkEmitter {
             .addSuperinterface(Api.DraftType.parameterizedBy(exactDraftClass))
             .addProperty(
                 PropertySpec
-                    .builder("application", TypeUse.Named::class.asClassName(), KModifier.PRIVATE)
+                    .builder("application", NamedTypeUse::class.asClassName(), KModifier.PRIVATE)
                     .initializer("%T.applied(listOf(%L))", names.definition, uses)
                     .build(),
             ).addProperty(
@@ -276,3 +290,6 @@ internal object DraftEmitter : SdkEmitter {
             .addStatement("return %M(this,♢%L,♢predicate)", Api.compileSelection, factory)
             .build()
 }
+
+private val UNKNOWN_VARIANT = MemberName("com.typewritermc.types", "unknownVariant")
+private val TO_RESOURCE_ID = MemberName("com.typewritermc.types", "toResourceId", isExtension = true)

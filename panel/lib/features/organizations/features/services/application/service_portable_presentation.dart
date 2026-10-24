@@ -21,7 +21,7 @@ final _portableOptionalTimestampType = skir.TypeUse.createNullable(
   value: _portableTimestampType,
 );
 
-final _servicePortableCatalog = skir.EditorCatalogWireSnapshot.defaultInstance
+final _servicePortableCatalog = skir.EditorCatalog.defaultInstance
     .asTrustedLocalCatalog();
 
 /// Binds service observations and an existing name edit owner to portable UI.
@@ -29,7 +29,7 @@ final _servicePortableCatalog = skir.EditorCatalogWireSnapshot.defaultInstance
 /// Runtime bindings capture this service snapshot. Name writes delegate to
 /// [EditOwner], including its validation and commit policy; the presentation
 /// host does not submit transport commands directly.
-extension ServicePortablePresentation on Service {
+extension ServicePortablePresentation on skir.Service {
   BoundPresentationHost portablePresentationHost({
     required bool connected,
     required EditOwner identityOwner,

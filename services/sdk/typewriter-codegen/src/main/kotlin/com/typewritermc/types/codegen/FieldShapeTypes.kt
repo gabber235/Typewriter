@@ -12,16 +12,22 @@ import com.squareup.kotlinpoet.asTypeName
 import com.squareup.kotlinpoet.joinToCode
 import com.typewritermc.codegen.DefinitionReferences
 import com.typewritermc.codegen.TypeParameterBindings
+import com.typewritermc.codegen.appliedNamedUseCode
 import com.typewritermc.codegen.appliedUseCode
 import com.typewritermc.codegen.kotlinCode
 import com.typewritermc.codegen.mapCode
-import com.typewritermc.configuration.FieldPatternSegment
-import com.typewritermc.configuration.RelativeFieldPattern
-import com.typewritermc.configuration.RepresentationKind
-import com.typewritermc.types.CollectionKind
-import com.typewritermc.types.ScalarKind
-import com.typewritermc.types.TypeTemplate
-import com.typewritermc.types.TypeUse
+import com.typewritermc.configuration.name
+import com.typewritermc.configuration.root
+import com.typewritermc.types.nullable
+import com.typewritermc.types.template
+import com.typewritermc.types.unknownVariant
+import skirout.editor.v1.catalog.RepresentationKind
+import skirout.editor.v1.type_catalog.CollectionKind
+import skirout.editor.v1.type_catalog.FieldPatternSegment
+import skirout.editor.v1.type_catalog.RelativeFieldPattern
+import skirout.editor.v1.type_catalog.ScalarKind
+import skirout.editor.v1.type_catalog.TypeTemplate
+import skirout.editor.v1.type_catalog.TypeUse
 import java.math.BigDecimal
 import kotlin.reflect.KClass
 import com.typewritermc.codegen.TypewriterApi as Api
@@ -52,12 +58,16 @@ internal val FieldShape.configurationScope: TypeName
 
             is FieldShape.Sequence -> {
                 when (kind) {
-                    CollectionKind.List -> {
+                    CollectionKind.LIST -> {
                         Api.ListField.parameterizedBy(item.configurationValue, item.configurationScope, item.expressionScope)
                     }
 
-                    CollectionKind.Set -> {
+                    CollectionKind.SET -> {
                         Api.SetField.parameterizedBy(item.configurationValue, item.configurationScope)
+                    }
+
+                    else -> {
+                        unknownVariant(kind)
                     }
                 }
             }
@@ -98,8 +108,8 @@ internal val FieldShape.configurationValue: TypeName
 internal val FieldShape.configurationExpected: TypeTemplate
     get() =
         when (this) {
-            is FieldShape.Nullable -> TypeTemplate.Nullable(value.configurationExpected)
-            is FieldShape.Wrapped -> TypeTemplate.Scalar(kind)
+            is FieldShape.Nullable -> value.configurationExpected.nullable()
+            is FieldShape.Wrapped -> kind.template
             else -> template
         }
 
@@ -129,8 +139,9 @@ internal val FieldShape.expressionScope: TypeName
 
             is FieldShape.Sequence -> {
                 when (kind) {
-                    CollectionKind.List -> Api.ListExpressions.parameterizedBy(item.native)
-                    CollectionKind.Set -> Api.SetExpressions.parameterizedBy(item.native)
+                    CollectionKind.LIST -> Api.ListExpressions.parameterizedBy(item.native)
+                    CollectionKind.SET -> Api.SetExpressions.parameterizedBy(item.native)
+                    else -> unknownVariant(kind)
                 }
             }
 
@@ -181,8 +192,8 @@ internal val FieldShape.presentationControl: TypeName
 
             is FieldShape.Sequence -> {
                 when {
-                    kind == CollectionKind.List && item is FieldShape.Link -> Api.ResourcesControl.parameterizedBy(item.target)
-                    kind == CollectionKind.List -> Api.ListControl.parameterizedBy(item.presentationNested)
+                    kind == CollectionKind.LIST && item is FieldShape.Link -> Api.ResourcesControl.parameterizedBy(item.target)
+                    kind == CollectionKind.LIST -> Api.ListControl.parameterizedBy(item.presentationNested)
                     else -> Api.SetControl.parameterizedBy(item.presentationNested)
                 }
             }
@@ -222,11 +233,11 @@ internal val FieldShape.representationKind: RepresentationKind
             is FieldShape.Scalar -> kind.representationKind
             is FieldShape.Wrapped -> kind.representationKind
             is FieldShape.Color -> kind.representationKind
-            is FieldShape.Link -> RepresentationKind.Link
-            is FieldShape.Sequence -> if (kind == CollectionKind.List) RepresentationKind.List else RepresentationKind.Set
-            is FieldShape.Mapping -> RepresentationKind.Map
-            is FieldShape.Enumeration -> RepresentationKind.Enum
-            is FieldShape.Record, is FieldShape.Parameter -> RepresentationKind.Record
+            is FieldShape.Link -> RepresentationKind.LINK
+            is FieldShape.Sequence -> if (kind == CollectionKind.LIST) RepresentationKind.LIST else RepresentationKind.SET
+            is FieldShape.Mapping -> RepresentationKind.MAP
+            is FieldShape.Enumeration -> RepresentationKind.ENUMERATION
+            is FieldShape.Record, is FieldShape.Parameter -> RepresentationKind.RECORD
         }
 
 /** The read side type exposed on drafts; type parameters map to the draft's `D<index>` variables. */
@@ -257,7 +268,7 @@ internal fun FieldShape.draftType(draftVariables: List<TypeVariableName>): TypeN
         }
 
         is FieldShape.Sequence -> {
-            (if (kind == CollectionKind.List) Api.DraftList else Api.DraftSet).parameterizedBy(item.draftType(draftVariables))
+            (if (kind == CollectionKind.LIST) Api.DraftList else Api.DraftSet).parameterizedBy(item.draftType(draftVariables))
         }
 
         is FieldShape.Mapping -> {
@@ -296,8 +307,8 @@ internal fun FieldShape.draftProjection(): CodeBlock =
         is FieldShape.Sequence -> {
             CodeBlock.of(
                 "%M(%L,♢%L)",
-                if (kind == CollectionKind.List) Api.listDraftProjection else Api.setDraftProjection,
-                template.appliedUseCode(),
+                if (kind == CollectionKind.LIST) Api.listDraftProjection else Api.setDraftProjection,
+                template.appliedNamedUseCode(),
                 item.draftProjection(),
             )
         }
@@ -306,7 +317,7 @@ internal fun FieldShape.draftProjection(): CodeBlock =
             CodeBlock.of(
                 "%M(%L,♢%L,♢%L)",
                 Api.mapDraftProjection,
-                template.appliedUseCode(),
+                template.appliedNamedUseCode(),
                 key.draftProjection(),
                 value.draftProjection(),
             )
@@ -342,8 +353,8 @@ private fun FieldShape.representationProjection(
         "%M<%T>(%L,♢%T(%L))",
         Api.representationReadProjection,
         representation,
-        template.appliedUseCode(),
-        TypeUse.Scalar::class,
+        template.appliedNamedUseCode(),
+        TypeUse.ScalarWrapper::class,
         kind.kotlinCode(),
     )
 
@@ -352,9 +363,9 @@ context(_: DefinitionReferences)
 internal fun FieldShape.nestedConfigurationScopes(): CodeBlock {
     val slots =
         when (this) {
-            is FieldShape.Nullable -> listOf(FieldPatternSegment.Values to value)
-            is FieldShape.Sequence -> listOf(FieldPatternSegment.Items to item)
-            is FieldShape.Mapping -> listOf(FieldPatternSegment.Keys to key, FieldPatternSegment.Values to value)
+            is FieldShape.Nullable -> listOf(FieldPatternSegment.VALUES to value)
+            is FieldShape.Sequence -> listOf(FieldPatternSegment.ITEMS to item)
+            is FieldShape.Mapping -> listOf(FieldPatternSegment.KEYS to key, FieldPatternSegment.VALUES to value)
             else -> emptyList()
         }
     return slots.map { (segment, shape) -> segment.kotlinCode() to shape.nestedConfigurationDescriptor() }.mapCode()
@@ -366,11 +377,11 @@ private fun FieldShape.nestedConfigurationDescriptor(): CodeBlock =
         "%T(%T.%L,♢%L,♢%T::class,♢%T) { nested ->\n⇥%L\n⇤}",
         Api.NestedConfigurationScope,
         RepresentationKind::class,
-        representationKind.name,
+        representationKind.constant,
         configurationExpected.kotlinCode(),
         configurationScope.rawClass,
         expressionFactory,
-        configurationScopeCreation("nested", RelativeFieldPattern()),
+        configurationScopeCreation("nested", RelativeFieldPattern.root),
     )
 
 /**
@@ -395,7 +406,7 @@ internal fun FieldShape.configurationScopeCreation(
             collection,
             pattern.kotlinCode(),
             RepresentationKind::class,
-            representationKind.name,
+            representationKind.constant,
             configurationExpected.kotlinCode(),
             configurationScope.rawClass,
             KClass::class.asClassName().parameterizedBy(configurationScope),
@@ -442,77 +453,115 @@ private fun FieldShape.nestedPresentationDescriptor(): CodeBlock =
 internal val TypeTemplate.containsParameter: Boolean
     get() =
         when (this) {
-            is TypeTemplate.Parameter -> true
-            is TypeTemplate.Named -> arguments.any { it.containsParameter }
-            is TypeTemplate.Nullable -> value.containsParameter
-            is TypeTemplate.Scalar -> false
+            is TypeTemplate.ParameterWrapper -> true
+            is TypeTemplate.NamedWrapper -> value.arguments.any { it.containsParameter }
+            is TypeTemplate.NullableWrapper -> value.value.containsParameter
+            is TypeTemplate.ScalarWrapper -> false
+            else -> unknownVariant(this)
         }
 
 internal fun RelativeFieldPattern.kotlinCode(): CodeBlock =
     if (segments.isEmpty()) {
-        CodeBlock.of("%T()", RelativeFieldPattern::class)
+        CodeBlock.of("%T.%M", RelativeFieldPattern::class, ROOT_PATTERN)
     } else {
-        CodeBlock.of("%T(listOf(%L))", RelativeFieldPattern::class, segments.map { it.kotlinCode() }.joinToCode(",♢"))
+        CodeBlock.of("%T(segments = listOf(%L))", RelativeFieldPattern::class, segments.map { it.kotlinCode() }.joinToCode(",♢"))
     }
 
 internal fun FieldPatternSegment.kotlinCode(): CodeBlock =
     when (this) {
-        is FieldPatternSegment.Field -> CodeBlock.of("%T(%S)", FieldPatternSegment.Field::class, name)
-        FieldPatternSegment.Items -> CodeBlock.of("%T", FieldPatternSegment.Items::class)
-        FieldPatternSegment.Keys -> CodeBlock.of("%T", FieldPatternSegment.Keys::class)
-        FieldPatternSegment.Values -> CodeBlock.of("%T", FieldPatternSegment.Values::class)
+        is FieldPatternSegment.FieldWrapper -> CodeBlock.of("%T.%M(%S)", FieldPatternSegment::class, FIELD_SEGMENT, name)
+        FieldPatternSegment.ITEMS -> CodeBlock.of("%T.ITEMS", FieldPatternSegment::class)
+        FieldPatternSegment.KEYS -> CodeBlock.of("%T.KEYS", FieldPatternSegment::class)
+        FieldPatternSegment.VALUES -> CodeBlock.of("%T.VALUES", FieldPatternSegment::class)
+        else -> unknownVariant(this)
     }
+
+/** The name of the generated constant of this representation kind, which emitted code refers to. */
+internal val RepresentationKind.constant: String get() = kind.name.removeSuffix("_CONST")
+
+private val ROOT_PATTERN = MemberName("com.typewritermc.configuration", "root", isExtension = true)
+
+private val FIELD_SEGMENT = MemberName("com.typewritermc.configuration", "field", isExtension = true)
 
 private fun ClassName.factory(): ClassName = peerClass(simpleName + "Factory")
 
 private fun ScalarKind.configurationScope(native: TypeName): TypeName =
     when (this) {
-        ScalarKind.Text -> Api.Text
-        is ScalarKind.Integer -> Api.Integer.parameterizedBy(native)
-        is ScalarKind.Float -> Api.Real.parameterizedBy(native)
-        ScalarKind.Decimal -> Api.Decimal
-        ScalarKind.Boolean -> Api.BooleanField
-        ScalarKind.Bytes -> Api.Bytes
-        ScalarKind.Timestamp -> Api.TimestampField
-        ScalarKind.Duration -> Api.DurationField
-        ScalarKind.Unit -> Api.RecordField.parameterizedBy(UNIT, Api.GenericValueExpressions.parameterizedBy(UNIT))
+        ScalarKind.TEXT -> Api.Text
+        is ScalarKind.IntegerWrapper -> Api.Integer.parameterizedBy(native)
+        is ScalarKind.FloatWrapper -> Api.Real.parameterizedBy(native)
+        ScalarKind.DECIMAL -> Api.Decimal
+        ScalarKind.BOOLEAN -> Api.BooleanField
+        ScalarKind.BYTES -> Api.Bytes
+        ScalarKind.TIMESTAMP -> Api.TimestampField
+        ScalarKind.DURATION -> Api.DurationField
+        ScalarKind.UNIT -> Api.RecordField.parameterizedBy(UNIT, Api.GenericValueExpressions.parameterizedBy(UNIT))
+        else -> unknownVariant(this)
     }
 
 private fun ScalarKind.expressionScope(native: TypeName): TypeName =
     when (this) {
-        ScalarKind.Text -> Api.TextExpressions
-        is ScalarKind.Integer, is ScalarKind.Float -> Api.NumberExpressions.parameterizedBy(native.copy(nullable = false))
-        ScalarKind.Decimal -> Api.NumberExpressions.parameterizedBy(BigDecimal::class.asTypeName())
-        ScalarKind.Boolean -> Api.BooleanExpressions
-        ScalarKind.Bytes -> Api.BytesExpressions
-        ScalarKind.Timestamp -> Api.TimestampExpressions
-        ScalarKind.Duration -> Api.DurationExpressions
-        ScalarKind.Unit -> Api.GenericValueExpressions.parameterizedBy(UNIT)
+        ScalarKind.TEXT -> Api.TextExpressions
+        is ScalarKind.IntegerWrapper, is ScalarKind.FloatWrapper -> Api.NumberExpressions.parameterizedBy(native.copy(nullable = false))
+        ScalarKind.DECIMAL -> Api.NumberExpressions.parameterizedBy(BigDecimal::class.asTypeName())
+        ScalarKind.BOOLEAN -> Api.BooleanExpressions
+        ScalarKind.BYTES -> Api.BytesExpressions
+        ScalarKind.TIMESTAMP -> Api.TimestampExpressions
+        ScalarKind.DURATION -> Api.DurationExpressions
+        ScalarKind.UNIT -> Api.GenericValueExpressions.parameterizedBy(UNIT)
+        else -> unknownVariant(this)
     }
 
 private fun ScalarKind.presentationControl(native: TypeName): TypeName =
     when (this) {
-        ScalarKind.Text -> Api.TextControl
-        is ScalarKind.Integer, is ScalarKind.Float, ScalarKind.Decimal -> Api.NumberControl.parameterizedBy(native.copy(nullable = false))
-        ScalarKind.Boolean -> Api.BooleanControl
-        ScalarKind.Bytes -> Api.BytesControl
-        ScalarKind.Timestamp -> Api.DateTimeControl
-        ScalarKind.Duration -> Api.DurationControl
-        ScalarKind.Unit -> Api.Control
+        ScalarKind.TEXT -> {
+            Api.TextControl
+        }
+
+        is ScalarKind.IntegerWrapper, is ScalarKind.FloatWrapper, ScalarKind.DECIMAL -> {
+            Api.NumberControl.parameterizedBy(
+                native.copy(nullable = false),
+            )
+        }
+
+        ScalarKind.BOOLEAN -> {
+            Api.BooleanControl
+        }
+
+        ScalarKind.BYTES -> {
+            Api.BytesControl
+        }
+
+        ScalarKind.TIMESTAMP -> {
+            Api.DateTimeControl
+        }
+
+        ScalarKind.DURATION -> {
+            Api.DurationControl
+        }
+
+        ScalarKind.UNIT -> {
+            Api.Control
+        }
+
+        else -> {
+            unknownVariant(this)
+        }
     }
 
 internal val ScalarKind.representationKind: RepresentationKind
     get() =
         when (this) {
-            ScalarKind.Unit -> RepresentationKind.Unit
-            ScalarKind.Boolean -> RepresentationKind.Boolean
-            ScalarKind.Text -> RepresentationKind.Text
-            ScalarKind.Bytes -> RepresentationKind.Bytes
-            is ScalarKind.Integer -> RepresentationKind.Integer
-            is ScalarKind.Float -> RepresentationKind.Float
-            ScalarKind.Decimal -> RepresentationKind.Decimal
-            ScalarKind.Timestamp -> RepresentationKind.Timestamp
-            ScalarKind.Duration -> RepresentationKind.Duration
+            ScalarKind.UNIT -> RepresentationKind.UNIT
+            ScalarKind.BOOLEAN -> RepresentationKind.BOOLEAN
+            ScalarKind.TEXT -> RepresentationKind.TEXT
+            ScalarKind.BYTES -> RepresentationKind.BYTES
+            is ScalarKind.IntegerWrapper -> RepresentationKind.INTEGER
+            is ScalarKind.FloatWrapper -> RepresentationKind.FLOAT
+            ScalarKind.DECIMAL -> RepresentationKind.DECIMAL
+            ScalarKind.TIMESTAMP -> RepresentationKind.TIMESTAMP
+            ScalarKind.DURATION -> RepresentationKind.DURATION
+            else -> unknownVariant(this)
         }
 
 /** A generic draft projection is a function named like the projection object of a non generic declaration. */

@@ -15,9 +15,9 @@ class _ServiceHostSelectable
 
   @override
   final ServiceHostIdentifier id;
-  final TopologyHost host;
-  final Service? service;
-  final OrganizationTopology topology;
+  final skir.ServiceHost host;
+  final skir.Service? service;
+  final skir.OrganizationTopologySnapshot topology;
   final bool connected;
   final ValueEditingRegistration configurationTarget;
   final Future<void> Function()? onUnbind;
@@ -62,7 +62,7 @@ class _ServiceHostSelectable
         identityOwner: identityOwner,
         realmTargets: _realmTargets,
         engineTargets: _engineTargets,
-        realms: topology.realmInstances
+        realms: topology.realms
             .where((realm) => realm.ownerHost.id != host.hostId)
             .toList(),
       ),
@@ -114,7 +114,7 @@ final class _ServiceHostConfigurationPortableSurface
       identityOwner: null,
       realmTargets: _commonTargets(hosts.map((host) => host._realmTargets)),
       engineTargets: _commonTargets(hosts.map((host) => host._engineTargets)),
-      realms: first.topology.realmInstances
+      realms: first.topology.realms
           .where((realm) => !selectedHostIds.contains(realm.ownerHost.id))
           .toList(),
       configurationOnly: true,

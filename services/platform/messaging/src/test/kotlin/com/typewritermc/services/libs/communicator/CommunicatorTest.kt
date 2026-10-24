@@ -23,6 +23,7 @@ import com.typewritermc.services.libs.communicator.result.CommunicationResult
 import com.typewritermc.services.libs.communicator.router.RouterResult
 import com.typewritermc.services.libs.communicator.router.communicatorRoutes
 import com.typewritermc.services.libs.communicator.testing.FakeMessageTransport
+import com.typewritermc.services.libs.communicator.transfer.TransferTooLarge
 import com.typewritermc.services.libs.communicator.transport.InboundMessage
 import com.typewritermc.services.libs.communicator.transport.MessageHeaders
 import com.typewritermc.services.libs.communicator.transport.MessageTransport
@@ -119,7 +120,6 @@ private val watch =
         strings,
         strings,
         successPolicy,
-        successPolicy,
         2.seconds,
         ErrorSlug.of("book-watch-failed"),
     )
@@ -158,6 +158,42 @@ val CommunicatorTest by testSuite {
                 span.attributes[AttributeKey.longKey("messaging.reply.count")] shouldBe 2L
                 span.attributes[AttributeKey.stringKey("messaging.destination.name")] shouldBe "service.realm.get"
                 span.attributes[AttributeKey.stringKey("operation.outcome")] shouldBe "success"
+            }
+        }
+    }
+
+    test("scatter reports one responder's transfer failure and keeps collecting") {
+        runTest {
+            fixture().use { (client, fake, _) ->
+                val result =
+                    async {
+                        client
+                            .scatter(
+                                scatter,
+                                Target("realm"),
+                                "probe",
+                                ScatterPolicy(2.seconds) { responses -> responses.size == 1 },
+                            ).toList()
+                    }
+                runCurrent()
+                val inbox =
+                    requireNotNull(
+                        fake.actions
+                            .filterIsInstance<FakeMessageTransport.Action.Publish>()
+                            .single()
+                            .message.replyTo,
+                    )
+                val tooLarge = TransferTooLarge(size = 10, limit = 5)
+
+                fake.deliver(TransportDelivery.Failure(TransportError.Failure(tooLarge)))
+                fake.deliver(TransportDelivery.Message(InboundMessage(inbox, "host-b".encodeToByteArray())))
+
+                result.await() shouldBe
+                    listOf(
+                        CommunicationResult.Failure(CommunicationError.Transport(scatter.failureSlug, tooLarge)),
+                        CommunicationResult.Success("host-b"),
+                    )
+                fake.activeSubscriptionCount shouldBe 0
             }
         }
     }
@@ -421,38 +457,6 @@ val CommunicatorTest by testSuite {
         }
     }
 
-    test("publish update classifier failures are recorded by producer telemetry") {
-        runTest {
-            fixture().use { (client, _, harness) ->
-                val programmerError = IllegalStateException("classifier")
-                val policy =
-                    ResponsePolicy<String>("internal") { value ->
-                        if (value == "update") throw programmerError
-                        ResponseClassification(ResponseOutcome.INTERNAL_ERROR, ResponseVariant.of("internal"))
-                    }
-                val contract =
-                    WatchContract(
-                        watch.name,
-                        requestAddress,
-                        updateAddress,
-                        strings,
-                        strings,
-                        strings,
-                        successPolicy,
-                        policy,
-                        watch.timeout,
-                        watch.failureSlug,
-                    )
-                val thrown = shouldThrow<Throwable> { client.publishUpdate(contract, Target("a"), "update") }
-                generateSequence(thrown) { it.cause }.contains(programmerError) shouldBe true
-                val span = harness.finishedSpans().single()
-                span.name shouldBe "book.watch publish"
-                span.status.statusCode shouldBe StatusCode.ERROR
-                span.attributes[AttributeKey.stringKey("messaging.destination.template")] shouldBe "service.{id}.updates"
-            }
-        }
-    }
-
     test("typed internal response is success without exception based span failure") {
         runTest {
             fixture().use { (client, fake, harness) ->
@@ -527,101 +531,6 @@ val CommunicatorTest by testSuite {
         }
     }
 
-    test("scoped watches isolate simultaneous buffered responses") {
-        runTest {
-            fixture(deliveryBufferCapacity = 0).use { (client, fake, _) ->
-                val scoped =
-                    WatchContract(
-                        watch.name,
-                        watch.requestAddress,
-                        watch.updateAddress,
-                        watch.requestCodec,
-                        watch.initialCodec,
-                        watch.updateCodec,
-                        watch.initialPolicy,
-                        watch.updateClassifier,
-                        watch.timeout,
-                        watch.failureSlug,
-                        updateAddressResolver = { address, request ->
-                            require(request.matches(Regex("[A-Za-z0-9_-]{1,64}")))
-                            MessageAddress.of("${watch.updateAddress.render(address).value}.$request")
-                        },
-                    )
-                fake.respondWith { message, _ ->
-                    fake.deliver(
-                        TransportDelivery.Message(
-                            InboundMessage(
-                                MessageAddress.of("service.a.updates.first"),
-                                "terminal-first".encodeToByteArray(),
-                            ),
-                        ),
-                    )
-                    TransportResult.Success(InboundMessage(message.address, "initial-first".encodeToByteArray()))
-                }
-                fake.respondWith { message, _ ->
-                    fake.deliver(
-                        TransportDelivery.Message(
-                            InboundMessage(
-                                MessageAddress.of("service.a.updates.second"),
-                                "chunk-second".encodeToByteArray(),
-                            ),
-                        ),
-                    )
-                    TransportResult.Success(InboundMessage(message.address, "initial-second".encodeToByteArray()))
-                }
-
-                val first = async { client.watch(scoped, Target("a"), "first").take(2).toList() }
-                val second = async { client.watch(scoped, Target("a"), "second").take(2).toList() }
-                runCurrent()
-
-                fake.actions
-                    .filterIsInstance<FakeMessageTransport.Action.Subscribe>()
-                    .map { it.pattern.value }
-                    .toSet() shouldBe
-                    setOf("service.a.updates.first", "service.a.updates.second")
-                first.await() shouldBe
-                    listOf(
-                        CommunicationResult.Success(WatchMessage.Initial("initial-first")),
-                        CommunicationResult.Success(WatchMessage.Update("terminal-first")),
-                    )
-                second.await() shouldBe
-                    listOf(
-                        CommunicationResult.Success(WatchMessage.Initial("initial-second")),
-                        CommunicationResult.Success(WatchMessage.Update("chunk-second")),
-                    )
-                fake.activeSubscriptionCount shouldBe 0
-            }
-        }
-    }
-
-    test("scoped watch rejects an unsafe request token before subscribing") {
-        runTest {
-            fixture().use { (client, fake, _) ->
-                val scoped =
-                    WatchContract(
-                        watch.name,
-                        watch.requestAddress,
-                        watch.updateAddress,
-                        watch.requestCodec,
-                        watch.initialCodec,
-                        watch.updateCodec,
-                        watch.initialPolicy,
-                        watch.updateClassifier,
-                        watch.timeout,
-                        watch.failureSlug,
-                        updateAddressResolver = { address, request ->
-                            MessageAddress.of("${watch.updateAddress.render(address).value}.$request")
-                        },
-                    )
-
-                shouldThrow<IllegalArgumentException> {
-                    client.watch(scoped, Target("a"), "unsafe.token").toList()
-                }
-                fake.actions shouldBe emptyList()
-            }
-        }
-    }
-
     test("watch update filter isolates resource updates") {
         runTest {
             fixture().use { (client, fake, _) ->
@@ -637,7 +546,6 @@ val CommunicatorTest by testSuite {
                         watch.initialCodec,
                         watch.updateCodec,
                         watch.initialPolicy,
-                        watch.updateClassifier,
                         watch.timeout,
                         watch.failureSlug,
                         updateFilter = { request, update -> request == update },

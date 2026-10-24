@@ -8,15 +8,10 @@ import com.typewritermc.loader.LoaderServiceConnection
 import com.typewritermc.loader.api.RuntimePlacement
 import com.typewritermc.loader.deployment.PrimaryEngineTarget
 import com.typewritermc.loader.deployment.RealmLoaderIntent
-import com.typewritermc.protocol.transport.generated.ServiceRouteScope
+import com.typewritermc.protocol.transport.ServiceRouteScope
 import com.typewritermc.protocol.transport.generated.hostExecutionReport
 import com.typewritermc.protocol.transport.generated.hostExecutionWatch
 import com.typewritermc.protocol.transport.generated.serviceHostRegister
-import com.typewritermc.services.libs.communicator.contract.ResponseClassification
-import com.typewritermc.services.libs.communicator.contract.ResponseClassifier
-import com.typewritermc.services.libs.communicator.contract.ResponseOutcome
-import com.typewritermc.services.libs.communicator.contract.ResponsePolicy
-import com.typewritermc.services.libs.communicator.contract.ResponseVariant
 import com.typewritermc.services.libs.communicator.contract.WatchMessage
 import com.typewritermc.services.libs.communicator.result.CommunicationResult
 import com.typewritermc.services.libs.registrar.RegistrarResult
@@ -31,6 +26,11 @@ import kotlinx.coroutines.flow.flatMapLatest
 import kotlinx.coroutines.flow.flow
 import skirout.kernel.v1.record_id.RecordId
 import skirout.kernel.v1.record_id.RecordIdKey
+import skirout.service.v1.rollout.ParticipantPhase
+import skirout.service.v1.rollout.ParticipantStatus
+import skirout.service.v1.rollout.ProjectionHealth
+import skirout.service.v1.rollout.ProjectionReference
+import skirout.service.v1.rollout.RecoverableParticipantState
 import skirout.service.v1.topology.ChildRuntimeState
 import skirout.service.v1.topology.ChildRuntimeStatus
 import skirout.service.v1.topology.RegisterServiceHostRequest
@@ -43,38 +43,6 @@ import skirout.service.v1.topology.WatchHostExecutionResponse
 import java.time.Clock
 import java.time.Instant
 import kotlin.time.Duration.Companion.seconds
-
-private val hostRegistrationClassifier =
-    ResponseClassifier<RegisterServiceHostResponse> { response ->
-        when (response) {
-            is RegisterServiceHostResponse.SuccessWrapper -> classification(ResponseOutcome.SUCCESS, "success")
-            is RegisterServiceHostResponse.InternalErrorWrapper -> classification(ResponseOutcome.INTERNAL_ERROR, "internal-error")
-            else -> classification(ResponseOutcome.DOMAIN_ERROR, "unknown")
-        }
-    }
-internal val hostRegistrationResponsePolicy =
-    ResponsePolicy(RegisterServiceHostResponse.createInternalError(), hostRegistrationClassifier)
-internal val hostExecutionResponseClassifier =
-    ResponseClassifier<WatchHostExecutionResponse> { response ->
-        when (response) {
-            is WatchHostExecutionResponse.DesiredWrapper -> classification(ResponseOutcome.SUCCESS, "desired")
-            is WatchHostExecutionResponse.InternalErrorWrapper -> classification(ResponseOutcome.INTERNAL_ERROR, "internal-error")
-            else -> classification(ResponseOutcome.DOMAIN_ERROR, "unknown")
-        }
-    }
-internal val hostExecutionResponsePolicy =
-    ResponsePolicy(WatchHostExecutionResponse.createInternalError(), hostExecutionResponseClassifier)
-private val hostExecutionReportClassifier =
-    ResponseClassifier<ReportHostExecutionResponse> { response ->
-        when (response) {
-            is ReportHostExecutionResponse.SuccessWrapper -> classification(ResponseOutcome.SUCCESS, "success")
-            is ReportHostExecutionResponse.StaleRevisionErrorWrapper -> classification(ResponseOutcome.DOMAIN_ERROR, "stale-revision")
-            is ReportHostExecutionResponse.InternalErrorWrapper -> classification(ResponseOutcome.INTERNAL_ERROR, "internal-error")
-            else -> classification(ResponseOutcome.DOMAIN_ERROR, "unknown")
-        }
-    }
-internal val hostExecutionReportResponsePolicy =
-    ResponsePolicy(ReportHostExecutionResponse.createInternalError(), hostExecutionReportClassifier)
 
 /**
  * Registers host capabilities and watches backend execution assignments through ready messaging generations.
@@ -99,9 +67,8 @@ class BackendArtifactHostAssignmentSource(
                     }
                 flow {
                     val address = ServiceRouteScope(ready.session.identity.serviceId.value)
-                    val registrationContract = address.serviceHostRegister(hostRegistrationResponsePolicy)
-                    val executionContract =
-                        address.hostExecutionWatch(hostExecutionResponsePolicy, hostExecutionResponseClassifier)
+                    val registrationContract = address.serviceHostRegister
+                    val executionContract = address.hostExecutionWatch
                     while (true) {
                         val registration = communicator.request(registrationContract, address, registrationRequest())
                         val registered =
@@ -203,7 +170,7 @@ internal class BackendHostExecutionReporter(
         when (
             val result =
                 session.communicator.request(
-                    scope.hostExecutionReport(hostExecutionReportResponsePolicy),
+                    scope.hostExecutionReport,
                     scope,
                     request,
                 )
@@ -232,86 +199,91 @@ internal fun ParticipantStatus.toChildRuntimeState(
     now: Instant,
     placement: RuntimePlacement,
 ): ChildRuntimeState {
+    val phase = phase
     val status =
-        when (this) {
-            is ParticipantStatus.Idle -> {
-                ChildRuntimeStatus.ABSENT
-            }
-
-            is ParticipantStatus.Staging, is ParticipantStatus.Staged -> {
+        when (phase) {
+            is ParticipantPhase.StagingWrapper, is ParticipantPhase.StagedWrapper, is ParticipantPhase.CommittingWrapper -> {
                 ChildRuntimeStatus.STAGING
             }
 
-            is ParticipantStatus.Committing -> {
-                ChildRuntimeStatus.STAGING
-            }
-
-            is ParticipantStatus.Active -> {
-                when (current.health) {
-                    RuntimeHealthSnapshot.Healthy -> ChildRuntimeStatus.ACTIVE
-                    RuntimeHealthSnapshot.Staged -> ChildRuntimeStatus.STAGING
-                    is RuntimeHealthSnapshot.Unhealthy -> ChildRuntimeStatus.FAILED
+            is ParticipantPhase.ActiveWrapper -> {
+                when (phase.value.current.health) {
+                    ProjectionHealth.HEALTHY -> ChildRuntimeStatus.ACTIVE
+                    ProjectionHealth.STAGED -> ChildRuntimeStatus.STAGING
+                    else -> ChildRuntimeStatus.FAILED
                 }
             }
 
-            is ParticipantStatus.Aborting -> {
+            is ParticipantPhase.AbortingWrapper, is ParticipantPhase.RollingBackWrapper -> {
                 ChildRuntimeStatus.QUIESCING
             }
 
-            is ParticipantStatus.RollingBack -> {
-                ChildRuntimeStatus.QUIESCING
-            }
-
-            is ParticipantStatus.Failed -> {
+            is ParticipantPhase.FailedWrapper -> {
                 ChildRuntimeStatus.FAILED
+            }
+
+            else -> {
+                ChildRuntimeStatus.ABSENT
             }
         }
     val message =
-        when (this) {
-            is ParticipantStatus.Active -> (current.health as? RuntimeHealthSnapshot.Unhealthy)?.reasons?.joinToString("; ")
-            is ParticipantStatus.Failed -> reason
-            else -> null
+        when (phase) {
+            is ParticipantPhase.ActiveWrapper -> {
+                (phase.value.current.health as? ProjectionHealth.UnhealthyWrapper)?.value?.reasons?.joinToString("; ")
+            }
+
+            is ParticipantPhase.FailedWrapper -> {
+                phase.value.reason
+            }
+
+            else -> {
+                null
+            }
         }
-    val activeArtifactVersion = projectionReference()?.runtimeVersions?.get(placement)?.value
-    return ChildRuntimeState(status = status, activeArtifactVersion = activeArtifactVersion, message = message, updatedAt = now)
+    return ChildRuntimeState(
+        status = status,
+        activeArtifactVersion = phase.projectionReference()?.runtimeVersion(placement),
+        message = message,
+        updatedAt = now,
+    )
 }
 
-private fun ParticipantStatus.projectionReference(): ProjectionReference? =
+private fun ParticipantPhase.projectionReference(): ProjectionReference? =
     when (this) {
-        is ParticipantStatus.Idle -> {
-            null
+        is ParticipantPhase.StagingWrapper -> {
+            value.candidate
         }
 
-        is ParticipantStatus.Staging -> {
-            candidate
+        is ParticipantPhase.StagedWrapper -> {
+            value.candidate
         }
 
-        is ParticipantStatus.Staged -> {
-            candidate
+        is ParticipantPhase.CommittingWrapper -> {
+            value.candidate
         }
 
-        is ParticipantStatus.Committing -> {
-            candidate
+        is ParticipantPhase.ActiveWrapper -> {
+            value.current.projection
         }
 
-        is ParticipantStatus.Active -> {
-            current.projection
+        is ParticipantPhase.AbortingWrapper -> {
+            value.candidate
         }
 
-        is ParticipantStatus.Aborting -> {
-            candidate
+        is ParticipantPhase.RollingBackWrapper -> {
+            value.failed
         }
 
-        is ParticipantStatus.RollingBack -> {
-            failed
-        }
-
-        is ParticipantStatus.Failed -> {
-            when (val state = recoverable) {
-                RecoverableParticipantState.Empty -> null
-                is RecoverableParticipantState.Active -> state.current.projection
-                is RecoverableParticipantState.Staged -> state.candidate
+        is ParticipantPhase.FailedWrapper -> {
+            when (val state = value.recoverable) {
+                is RecoverableParticipantState.ActiveWrapper -> state.value.current.projection
+                is RecoverableParticipantState.StagedWrapper -> state.value.candidate
+                else -> null
             }
+        }
+
+        else -> {
+            null
         }
     }
 
@@ -320,8 +292,3 @@ private fun RecordId.stringKey(): String =
         is RecordIdKey.StringWrapper -> value.value
         else -> error("Topology record ids must use string keys.")
     }
-
-private fun classification(
-    outcome: ResponseOutcome,
-    variant: String,
-) = ResponseClassification(outcome, ResponseVariant.of(variant))

@@ -9,7 +9,7 @@ const openRealmCommandId = SearchCommandId("realm.open");
 SearchCommand openRealmCommand({
   required skir.RecordId organizationId,
   required ValueListenable<AsyncValue<Map<skir.RecordId, bool>>> availability,
-}) => SearchCommand.single<TopologyRealm>(
+}) => SearchCommand.single<skir.RealmInstance>(
   id: openRealmCommandId,
   presentation: const SearchCommandPresentation(
     label: "Open Realm",

@@ -10,20 +10,24 @@ const _unbindSubject = "cloud.to.user.user1.organization.org1.services.unbind";
 const _watchSubject = "cloud.to.user.user1.organization.org1.services.watch";
 final _organizationId = skir.recordId("organization:org1");
 
-Service _service({String name = "Original", int revision = 1}) => Service(
-  serviceId: skir.recordId("service:service1"),
-  revision: revision,
-  name: name,
-  role: HostServiceRole(version: "1"),
-  createdAt: DateTime.utc(2025),
-);
+skir.Service _service({String name = "Original", int revision = 1}) =>
+    skir.Service(
+      serviceId: skir.recordId("service:service1"),
+      revision: revision,
+      name: name,
+      role: skir.ServiceRole.createHost(version: "1"),
+      createdAt: DateTime.utc(2025),
+      organization: null,
+      registration: null,
+      state: null,
+    );
 
 class _Harness {
   _Harness() {
     nats.registerHandler(
       _watchSubject,
       (_) => skir.WatchOrganizationServicesResponse.serializer.toBytes(
-        skir.WatchOrganizationServicesResponse.wrapList([_service().toSkir()]),
+        skir.WatchOrganizationServicesResponse.wrapList([_service()]),
       ),
     );
     container = ProviderContainer.test(
@@ -40,7 +44,7 @@ class _Harness {
 
   final FakeNatsClient nats = FakeNatsClient();
   late final ProviderContainer container;
-  ProviderSubscription<AsyncValue<List<Service>>>? subscription;
+  ProviderSubscription<AsyncValue<List<skir.Service>>>? subscription;
 
   Future<void> ready() async {
     subscription = container.listen(
@@ -54,7 +58,7 @@ class _Harness {
     nats.registerHandler(subject, handler);
   }
 
-  void observe(Service service) => container
+  void observe(skir.Service service) => container
       .read(resourceRepositoriesProvider)
       .services(_organizationId)
       .acceptService(service);
@@ -70,7 +74,7 @@ extension _ServiceRepositoryCommands on ProviderContainer {
   ServiceResourceRepository get _services =>
       read(resourceRepositoriesProvider).services(_organizationId);
 
-  Future<TypedMutationResult> updateService(Service service) {
+  Future<TypedMutationResult> updateService(skir.Service service) {
     final snapshot = service.editorSnapshot;
     return read(localWorkControllerProvider).execute(
       ServiceEditPersistence(_services, service.serviceId).prepareValue(
@@ -183,7 +187,7 @@ void main() {
       (data) => skir.UpdateOrganizationServiceResponse.serializer.toBytes(
         skir.UpdateOrganizationServiceResponse.createConflictError(
           expectedRevision: 1,
-          actual: actual.toSkir(),
+          actual: actual,
         ),
       ),
     );

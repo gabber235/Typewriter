@@ -1,22 +1,23 @@
 package com.typewritermc.realm.repository
 
 import com.surrealdb.Surreal
-import com.typewritermc.authoring.AuthoringRecord
-import com.typewritermc.authoring.CommitResult
-import com.typewritermc.authoring.EditExpectation
-import com.typewritermc.authoring.PreparedEdit
-import com.typewritermc.authoring.ValueLocation
-import com.typewritermc.authoring.ValuePath
-import com.typewritermc.authoring.ValueProblem
+import com.typewritermc.authoring.of
 import com.typewritermc.realm.authoring.AuthoringCatalogLease
 import com.typewritermc.realm.authoring.AuthoringViewDelta
 import com.typewritermc.realm.authoring.AuthoringViewStore
-import com.typewritermc.realm.authoring.authoredDatabaseValues
+import com.typewritermc.realm.repository.utils.encodeSkir
 import com.typewritermc.realm.repository.utils.inTransaction
 import com.typewritermc.realm.repository.utils.surrealRecordId
 import com.typewritermc.realm.search.authoredSearchText
+import com.typewritermc.types.unknownVariant
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
+import skirout.editor.v1.authoring.CommitPreparedEditResponse
+import skirout.editor.v1.authoring.PreparedEdit
+import skirout.editor.v1.authoring_facts.EditExpectation
+import skirout.editor.v1.diagnostic.ValueProblem
+import skirout.editor.v1.type_catalog.AuthoringRecord
+import skirout.editor.v1.type_catalog.ValueLocation
 
 /**
  * Owns admission of prepared edits into the saved authoring state for one Realm.
@@ -52,10 +53,14 @@ internal class RealmAuthoringOwner(
         }
     }
 
-    override suspend fun commit(edit: PreparedEdit): CommitResult =
+    override suspend fun commit(edit: PreparedEdit): CommitPreparedEditResponse =
         admission.withLock {
             views.read { current ->
-                if (edit.catalog != current.catalog.generation) return@read CommitResult.CatalogChanged(current.catalog.generation)
+                if (edit.catalog !=
+                    current.catalog.generation
+                ) {
+                    return@read CommitPreparedEditResponse.CatalogChangedErrorWrapper(current.catalog.generation)
+                }
                 val projections =
                     ResourceValueMapper.project(
                         current.links.values,
@@ -65,11 +70,11 @@ internal class RealmAuthoringOwner(
                     )
                 val values = CapturedAuthoringValues(current.resources, projections.projections)
                 val conflicts = values.conflicts(edit.expectations)
-                if (conflicts.isNotEmpty()) return@read CommitResult.Conflict(conflicts)
+                if (conflicts.isNotEmpty()) return@read CommitPreparedEditResponse.ConflictErrorWrapper(conflicts)
                 val planner = AuthoringMutationPlanner(current.catalog.checked, current.catalog.relations, current.catalog.endpointBindings)
                 val plan =
                     when (val planned = planner.plan(current.resources, edit)) {
-                        is MutationPlanningResult.Rejected -> return@read CommitResult.Rejected(planned.problems)
+                        is MutationPlanningResult.Rejected -> return@read CommitPreparedEditResponse.RejectedErrorWrapper(planned.problems)
                         is MutationPlanningResult.Accepted -> planned.plan
                     }
                 val required =
@@ -81,8 +86,8 @@ internal class RealmAuthoringOwner(
                     )
                 val missing = required.filter { fact -> edit.expectations.none { it.sameFact(fact) } }
                 if (missing.isNotEmpty()) {
-                    return@read CommitResult.Rejected(
-                        missing.map { ValueProblem(it.location(), "missing_expectation") },
+                    return@read CommitPreparedEditResponse.RejectedErrorWrapper(
+                        missing.map { ValueProblem(location = it.location(), code = "missing_expectation") },
                     )
                 }
                 val next = views.prepare(AuthoringViewDelta(plan.resources, plan.removedResources))
@@ -94,7 +99,7 @@ internal class RealmAuthoringOwner(
                     throw failure
                 }
                 views.install(next)
-                CommitResult.Committed
+                CommitPreparedEditResponse.COMMITTED
             }
         }
 }
@@ -115,7 +120,7 @@ internal class SurrealAuthoringStorage(
                         "UPSERT ONLY \$resource SET content = \$content, search = \$search;",
                         mapOf(
                             "resource" to id.surrealRecordId(),
-                            "content" to authoredDatabaseValues.encode(AuthoringRecord.serializer(), record),
+                            "content" to encodeSkir(AuthoringRecord.serializer, record),
                             "search" to mapOf("text" to authoredSearchText(id, record)),
                         ),
                     ).take(0)
@@ -134,10 +139,11 @@ internal class SurrealAuthoringStorage(
  */
 internal fun EditExpectation.location(): ValueLocation =
     when (this) {
-        is EditExpectation.Value -> at
-        is EditExpectation.Configuration -> at
-        is EditExpectation.Resource -> ValueLocation(id, ValuePath())
-        is EditExpectation.ResourceExists -> ValueLocation(id, ValuePath())
-        is EditExpectation.Links -> ValueLocation(resource, ValuePath())
-        is EditExpectation.ResourceIds -> error("Resource id set expectations are never required for commit admission.")
+        is EditExpectation.ValueWrapper -> value.at
+        is EditExpectation.ConfigurationWrapper -> value.at
+        is EditExpectation.ResourceWrapper -> ValueLocation.of(value.id)
+        is EditExpectation.ResourceExistsWrapper -> ValueLocation.of(value.id)
+        is EditExpectation.LinksWrapper -> ValueLocation.of(value.resource)
+        is EditExpectation.ResourceIdsWrapper -> error("Resource id set expectations are never required for commit admission.")
+        else -> unknownVariant(this)
     }

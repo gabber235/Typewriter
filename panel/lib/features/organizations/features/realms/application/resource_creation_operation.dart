@@ -81,7 +81,7 @@ final class _ResourceCreationOperation {
     skir.ValuePreparationRequest request,
     skir.ValueLocation at,
     CreationContext creationContext, {
-    required void Function(skir.PreparationStep) publish,
+    required void Function(skir.PrepareValueResult) publish,
   }) async {
     var step = await commands.prepareStep(
       skir.PreparationOperation.wrapStart(request),
@@ -92,7 +92,7 @@ final class _ResourceCreationOperation {
       _checkCurrent();
       publish(step);
       switch (step) {
-        case skir.PreparationStep_readyWrapper(:final value):
+        case skir.PrepareValueResult_readyWrapper(:final value):
           try {
             await _resolveDefaults(
               value.recordContent,
@@ -111,13 +111,17 @@ final class _ResourceCreationOperation {
             retry = back.target;
             answered.removeRange(index, answered.length);
           }
-        case skir.PreparationStep_unavailableWrapper(:final value):
+        case skir.PrepareValueResult_unavailableErrorWrapper(:final value):
           throw StateError(
             value.findings.map((finding) => finding.message).join("\n"),
           );
-        case skir.PreparationStep_unknown():
+        case skir.PrepareValueResult_catalogChangedErrorWrapper(:final value):
+          throw CatalogGenerationChanged(value);
+        case skir.PrepareValueResult_internalErrorWrapper():
+          throw ApiException.internalServerError();
+        case skir.PrepareValueResult_unknown():
           throw StateError("Realm returned an unknown preparation outcome");
-        case skir.PreparationStep_needsInputWrapper(:final value):
+        case skir.PrepareValueResult_needsInputWrapper(:final value):
           final input = value.requiredInputs.firstOrNull;
           if (input == null) {
             throw StateError("Preparation cannot make progress");
@@ -695,7 +699,7 @@ final class _ResourceCreationOperation {
       final question =
           retry ??
           _checkpoint(
-            skir.PreparationStep.wrapReady(
+            skir.PrepareValueResult.wrapReady(
               skir.PreparedValue(
                 content: skir.PreparedContent.wrapRecord(record),
                 findings: const [],
@@ -942,7 +946,7 @@ final class _ResourceCreationOperation {
     if (_embedded.isNotEmpty ||
         _values.isNotEmpty ||
         _nodes.values.any(
-          (node) => node.step is! skir.PreparationStep_readyWrapper,
+          (node) => node.step is! skir.PrepareValueResult_readyWrapper,
         )) {
       throw StateError("Creation still requires a value");
     }

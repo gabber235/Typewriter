@@ -1,19 +1,11 @@
 package com.typewritermc.realm.authoring
 
-import com.typewritermc.authoring.ArgumentSelection
-import com.typewritermc.authoring.AuthoringRecord
-import com.typewritermc.authoring.InitializationRequest
-import com.typewritermc.authoring.PreparationOperation
-import com.typewritermc.authoring.PreparationStep
-import com.typewritermc.authoring.PreparationTarget
-import com.typewritermc.authoring.PreparedContent
-import com.typewritermc.authoring.PreparedValue
-import com.typewritermc.authoring.TypeSelection
-import com.typewritermc.checking.CatalogGeneration
+import com.typewritermc.authoring.of
 import com.typewritermc.realm.checking.TestCatalogLease
-import com.typewritermc.types.DataValue
-import com.typewritermc.types.TypeDefinitionId
-import com.typewritermc.types.TypeId
+import com.typewritermc.types.fieldMap
+import com.typewritermc.types.fields
+import com.typewritermc.types.qualified
+import com.typewritermc.types.record
 import de.infix.testBalloon.framework.core.testSuite
 import io.kotest.assertions.throwables.shouldThrow
 import io.kotest.matchers.shouldBe
@@ -21,6 +13,18 @@ import kotlinx.coroutines.CompletableDeferred
 import kotlinx.coroutines.async
 import kotlinx.coroutines.awaitAll
 import kotlinx.coroutines.test.runTest
+import skirout.editor.v1.catalog.PreparationOperation
+import skirout.editor.v1.catalog.PreparationTarget
+import skirout.editor.v1.catalog.PrepareValueResult
+import skirout.editor.v1.catalog.PreparedContent
+import skirout.editor.v1.catalog.PreparedValue
+import skirout.editor.v1.catalog.ValuePreparationRequest
+import skirout.editor.v1.type_catalog.ArgumentSelection
+import skirout.editor.v1.type_catalog.AuthoringRecord
+import skirout.editor.v1.type_catalog.CatalogGeneration
+import skirout.editor.v1.type_catalog.DataValue
+import skirout.editor.v1.type_catalog.TypeDefinitionId
+import skirout.editor.v1.type_catalog.TypeSelection
 import java.util.concurrent.atomic.AtomicInteger
 
 val PreparationCoordinatorTestSuite by testSuite {
@@ -35,7 +39,7 @@ val PreparationCoordinatorTestSuite by testSuite {
                         PreparationEvaluator { _, _ ->
                             val value = evaluations.incrementAndGet()
                             release.await()
-                            PreparationStep.Ready(prepared(value.toString()))
+                            PrepareValueResult.ReadyWrapper(prepared(value.toString()))
                         },
                 )
             val request = request()
@@ -54,9 +58,11 @@ val PreparationCoordinatorTestSuite by testSuite {
                     catalog = { TestCatalogLease(CATALOG) },
                     evaluator =
                         PreparationEvaluator { request, _ ->
-                            val supplied = ((request as PreparationOperation.Start).request.supplied as DataValue.Record).fields
-                            val seed = supplied.getValue("seed") as DataValue.StringValue
-                            PreparationStep.Ready(prepared(seed.value))
+                            val supplied =
+                                ((request as PreparationOperation.StartWrapper).value.suppliedValue as DataValue.RecordWrapper)
+                                    .value.fieldMap
+                            val seed = supplied.getValue("seed") as DataValue.StringValueWrapper
+                            PrepareValueResult.ReadyWrapper(prepared(seed.value))
                         },
                 )
             coordinator.prepare(request("first")) shouldBe prepared("first")
@@ -69,36 +75,37 @@ val PreparationCoordinatorTestSuite by testSuite {
             val coordinator =
                 PreparationCoordinator(
                     catalog = { TestCatalogLease(generation) },
-                    evaluator = PreparationEvaluator { _, _ -> PreparationStep.Ready(prepared("captured")) },
+                    evaluator = PreparationEvaluator { _, _ -> PrepareValueResult.ReadyWrapper(prepared("captured")) },
                 )
             val request = request()
             coordinator.prepare(request) shouldBe prepared("captured")
-            generation = CatalogGeneration("next")
+            generation = CatalogGeneration(value = "next")
             shouldThrow<PreparationCatalogChanged> { coordinator.prepare(request) }.actual shouldBe generation
         }
     }
 }
 
 private fun request(supplied: String = "seed") =
-    InitializationRequest(
+    ValuePreparationRequest(
         catalog = CATALOG,
         target =
-            PreparationTarget.Record(
-                TypeSelection.Pending(CREATION_TYPE, listOf(ArgumentSelection.Unfilled)),
+            PreparationTarget.RecordWrapper(
+                TypeSelection.createPending(definition = CREATION_TYPE, arguments = listOf(ArgumentSelection.UNFILLED)),
             ),
-        supplied = DataValue.Record(mapOf("seed" to DataValue.StringValue(supplied))),
+        suppliedValue = DataValue.record(mapOf("seed" to DataValue.StringValueWrapper(supplied))),
     )
 
 private fun prepared(value: String) =
     PreparedValue(
-        PreparedContent.Record(
-            AuthoringRecord(
-                configuration = TypeSelection.Pending(CREATION_TYPE, listOf(ArgumentSelection.Unfilled)),
-                fields = mapOf("value" to DataValue.StringValue(value)),
+        content =
+            PreparedContent.RecordWrapper(
+                AuthoringRecord.of(
+                    configuration = TypeSelection.createPending(definition = CREATION_TYPE, arguments = listOf(ArgumentSelection.UNFILLED)),
+                    fields = mapOf("value" to DataValue.StringValueWrapper(value)),
+                ),
             ),
-        ),
-        emptyList(),
+        findings = emptyList(),
     )
 
-private val CATALOG = CatalogGeneration("catalog")
-private val CREATION_TYPE = TypeDefinitionId(TypeId.Qualified("creation", "value"), 1)
+private val CATALOG = CatalogGeneration(value = "catalog")
+private val CREATION_TYPE = TypeDefinitionId.qualified("creation", "value")

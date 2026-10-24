@@ -1,3 +1,5 @@
+import "package:typewriter_panel/infrastructure/protocols/skir/skir.dart"
+    as skir;
 import "package:typewriter_panel/typewriter_panel.dart";
 
 /// Collects the roles required before one request can be approved.
@@ -15,10 +17,10 @@ class JoinRequestApproval extends StatelessWidget {
     super.key,
   });
 
-  final OrganizationJoinRequest request;
-  final List<OrganizationRole> selectedRoles;
-  final AsyncValue<List<OrganizationRole>> rolesAsync;
-  final ValueChanged<List<OrganizationRole>> onRolesChanged;
+  final skir.OrganizationJoinRequest request;
+  final List<skir.OrganizationRole> selectedRoles;
+  final AsyncValue<List<skir.OrganizationRole>> rolesAsync;
+  final ValueChanged<List<skir.OrganizationRole>> onRolesChanged;
   final Future<void> Function() onConfirm;
 
   @override

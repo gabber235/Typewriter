@@ -1,26 +1,34 @@
 package com.typewritermc.realm.authoring
 
-import com.typewritermc.authoring.ConnectIntent
-import com.typewritermc.authoring.CounterpartChoice
 import com.typewritermc.authoring.DefaultInitializationRuntime
-import com.typewritermc.authoring.InitializationRequest
-import com.typewritermc.authoring.LinkOccurrence
-import com.typewritermc.authoring.LinkOccurrenceId
-import com.typewritermc.authoring.PreparationTarget
-import com.typewritermc.authoring.PreparedContent
-import com.typewritermc.authoring.TypeSelection
+import com.typewritermc.authoring.record
+import com.typewritermc.authoring.text
 import com.typewritermc.checking.InputIdentity
 import com.typewritermc.operations.OperationPreparation
-import com.typewritermc.operations.PreparationChoice
 import com.typewritermc.operations.PreparationChoices
 import com.typewritermc.realm.repository.CounterpartBinding
 import com.typewritermc.realm.repository.ResourceValueMapper
 import com.typewritermc.realm.repository.valueAt
-import com.typewritermc.types.LinkTarget
-import com.typewritermc.types.ResourceId
-import com.typewritermc.types.TypeUse
 import com.typewritermc.types.catalog.Resolution
-import com.typewritermc.types.catalog.ResolvedRepresentation
+import com.typewritermc.types.toResourceId
+import com.typewritermc.types.toSkir
+import com.typewritermc.types.unknownVariant
+import skirout.editor.v1.authoring.ConnectIntent
+import skirout.editor.v1.authoring.CounterpartChoice
+import skirout.editor.v1.authoring.LinkOccurrence
+import skirout.editor.v1.authoring.LinkOccurrenceId
+import skirout.editor.v1.catalog.PreparationTarget
+import skirout.editor.v1.catalog.PreparedContent
+import skirout.editor.v1.catalog.ValuePreparationRequest
+import skirout.editor.v1.resource_operations.PreparationChoice
+import skirout.editor.v1.resource_operations.PreparationChoiceId
+import skirout.editor.v1.resource_operations.PreparationCounterpartOption
+import skirout.editor.v1.resource_operations.PreparationSourceOption
+import skirout.editor.v1.type_catalog.LinkTarget
+import skirout.editor.v1.type_catalog.ResolvedRepresentation
+import skirout.editor.v1.type_catalog.ResourceId
+import skirout.editor.v1.type_catalog.TypeSelection
+import skirout.editor.v1.type_catalog.TypeUse
 
 /** Prepares ownership transfers and links through the same session used by menus and drops. */
 internal class OperationRelationPreparation(
@@ -49,7 +57,7 @@ internal class OperationRelationPreparation(
             require(sources.isNotEmpty()) { "The destination does not accept this resource" }
             val source =
                 sources.singleOrNull() ?: operation.choices.require(
-                    PreparationChoice.Source("owner-source:$subject:$destination", "Choose owning reference", sources),
+                    sourceChoice("owner-source:${subject.value}:${destination.value}", "Choose owning reference", sources),
                 )
             relations.observe(source)
             moved += subject
@@ -59,7 +67,9 @@ internal class OperationRelationPreparation(
         ownerSide.forEach { (membership, source) ->
             val subject = membership.target.resource
             operation.disconnect(membership.id)
-            operation.connect(ConnectIntent(source, subject, counterpartFor(source, subject, operation.choices)))
+            operation.connect(
+                ConnectIntent(source = source, target = subject, counterpart = counterpartFor(source, subject, operation.choices)),
+            )
         }
         return moved
     }
@@ -80,7 +90,7 @@ internal class OperationRelationPreparation(
                         candidates.single()
                     } else {
                         operation.choices.require(
-                            PreparationChoice.Source("link-source:$subject:$target", "Choose source reference", candidates),
+                            sourceChoice("link-source:${subject.value}:${target.value}", "Choose source reference", candidates),
                         )
                     }
                 relations.observe(selected)
@@ -116,14 +126,7 @@ internal class OperationRelationPreparation(
     ): CounterpartChoice? {
         val candidates = counterpartCandidates(source, target)
         if (candidates.size == 1) return candidates.single()
-        return answers.require(
-            PreparationChoice.Counterpart(
-                "counterpart:${source.id}:$target",
-                "Choose inverse counterpart",
-                source,
-                candidates.filterNotNull(),
-            ),
-        )
+        return answers.require(counterpartChoice(source, target, candidates.filterNotNull()))
     }
 
     private fun assignCounterparts(
@@ -133,7 +136,7 @@ internal class OperationRelationPreparation(
     ): List<ConnectIntent> {
         val candidates = sources.map { counterpartCandidates(it, target) }
 
-        fun slot(choice: CounterpartChoice?): LinkOccurrenceId? = (choice as? CounterpartChoice.Existing)?.occurrence?.id
+        fun slot(choice: CounterpartChoice?): LinkOccurrenceId? = (choice as? CounterpartChoice.ExistingWrapper)?.value?.id
         var attempts = 0
 
         fun feasible(
@@ -159,17 +162,10 @@ internal class OperationRelationPreparation(
                 if (valid.size == 1) {
                     valid.single()
                 } else {
-                    answers.require(
-                        PreparationChoice.Counterpart(
-                            "counterpart:${source.id}:$target",
-                            "Choose inverse counterpart",
-                            source,
-                            valid.filterNotNull(),
-                        ),
-                    )
+                    answers.require(counterpartChoice(source, target, valid.filterNotNull()))
                 }
             slot(choice)?.let(reserved::add)
-            ConnectIntent(source, target, choice)
+            ConnectIntent(source = source, target = target, counterpart = choice)
         }
     }
 
@@ -193,12 +189,16 @@ internal class OperationRelationPreparation(
         val candidates: MutableList<CounterpartChoice> =
             locations
                 .filter { at ->
-                    val old = current[LinkOccurrenceId(opposite, at)]
+                    val old = current[LinkOccurrenceId(endpoint = opposite, location = at)]
                     (old?.target?.resource == source.source && old.target.opposite == source.id.location.path) ||
                         record.valueAt(at.path)?.unfilled() != false
                 }.mapTo(mutableListOf()) { at ->
-                    CounterpartChoice.Existing(
-                        LinkOccurrence(LinkOccurrenceId(opposite, at), target, LinkTarget(source.source, source.id.location.path)),
+                    CounterpartChoice.ExistingWrapper(
+                        LinkOccurrence(
+                            id = LinkOccurrenceId(endpoint = opposite, location = at),
+                            source = target,
+                            target = LinkTarget(resource = source.source, opposite = source.id.location.path),
+                        ),
                     )
                 }
         if (binding is CounterpartBinding.ExplicitChoice) {
@@ -207,21 +207,21 @@ internal class OperationRelationPreparation(
                 relations.reads.observeInput(InputIdentity.Membership(containing))
                 val collectionType = record.authoredTypeAt(containing.path, catalog.checked) ?: return@forEach
                 val checked = catalog.checked.resolve(collectionType) as? Resolution.Ready ?: return@forEach
-                val sequence = checked.value.schema.representation as? ResolvedRepresentation.Sequence ?: return@forEach
-                val itemType = sequence.item as? TypeUse.Named ?: return@forEach
+                val sequence = checked.value.schema.representation as? ResolvedRepresentation.SequenceWrapper ?: return@forEach
+                val itemType = sequence.value.item as? TypeUse.NamedWrapper ?: return@forEach
                 val itemSchema = catalog.checked.resolve(itemType) as? Resolution.Ready ?: return@forEach
-                if (itemSchema.value.schema.representation !is ResolvedRepresentation.Record) return@forEach
+                if (itemSchema.value.schema.representation !is ResolvedRepresentation.RecordWrapper) return@forEach
                 val prepared =
                     DefaultInitializationRuntime(catalog.checked, catalog.nativeBindings).prepareNow(
-                        InitializationRequest(
-                            catalog.generation,
-                            PreparationTarget.Record(TypeSelection.Complete(itemType)),
-                            null,
+                        ValuePreparationRequest(
+                            catalog = catalog.generation,
+                            target = PreparationTarget.RecordWrapper(TypeSelection.CompleteWrapper(itemType.value)),
+                            suppliedValue = null,
                         ),
                     )
-                val materialized = (prepared.content as? PreparedContent.Record)?.record ?: return@forEach
+                val materialized = (prepared.content as? PreparedContent.RecordWrapper)?.record ?: return@forEach
                 if (ResourceValueMapper.declaredLocations(opposite, target, materialized, catalog.checked).size == 1) {
-                    candidates += CounterpartChoice.New(containing, prepared)
+                    candidates += CounterpartChoice.createNew(containing = containing, prepared = prepared)
                 }
             }
         }
@@ -229,3 +229,36 @@ internal class OperationRelationPreparation(
         return candidates
     }
 }
+
+/** A choice among [candidates] for the reference that holds a link; each option is labelled by its value path. */
+private fun sourceChoice(
+    id: String,
+    label: String,
+    candidates: List<LinkOccurrence>,
+): PreparationChoice.Source =
+    PreparationChoice.Source(
+        choiceId = PreparationChoiceId(value = id),
+        label = label,
+        candidates = candidates.map { PreparationSourceOption(label = it.id.location.path.text, occurrence = it) },
+    )
+
+/** A choice among [candidates] for the inverse of [source] on [target]: an existing slot or a new record. */
+private fun counterpartChoice(
+    source: LinkOccurrence,
+    target: ResourceId,
+    candidates: List<CounterpartChoice>,
+): PreparationChoice.Counterpart =
+    PreparationChoice.Counterpart(
+        choiceId = PreparationChoiceId(value = "counterpart:${LinkOccurrenceId.serializer.toJsonCode(source.id)}:${target.value}"),
+        label = "Choose inverse counterpart",
+        source = source,
+        candidates = candidates.map { PreparationCounterpartOption(label = it.optionLabel, counterpart = it) },
+    )
+
+private val CounterpartChoice.optionLabel: String
+    get() =
+        when (this) {
+            is CounterpartChoice.ExistingWrapper -> value.id.location.path.text
+            is CounterpartChoice.NewWrapper -> "Create in ${value.containing.path.text}"
+            else -> unknownVariant(this)
+        }

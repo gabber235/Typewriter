@@ -1,23 +1,24 @@
 package com.typewritermc.presentation
 
-import com.typewritermc.presentation.PresentationCurve.ElasticOut
-import com.typewritermc.presentation.PresentationCurve.Emphasized
-import com.typewritermc.presentation.PresentationInteractionState.Focused
-import com.typewritermc.presentation.PresentationInteractionState.Hovered
-import com.typewritermc.presentation.PresentationInteractionState.Selected
+import skirout.editor.v1.presentation.PresentationAlignment
+import skirout.editor.v1.presentation.PresentationCurve
+import skirout.editor.v1.presentation.PresentationInteractionState.FOCUSED
+import skirout.editor.v1.presentation.PresentationInteractionState.HOVERED
+import skirout.editor.v1.presentation.PresentationInteractionState.SELECTED
+import skirout.editor.v1.presentation.PresentationTransitionPolicy
 
 /** Springs into the selected state and eases back out of it: the motion of cards that react to being picked. */
 val selectMotion: PresentationTransitionPolicy =
-    stateTransition(fallback = PresentationTransition(milliseconds = 300, curve = Emphasized)) {
-        whenAll(Selected, transition = PresentationTransition(milliseconds = 750, curve = ElasticOut(period = 0.9)))
+    stateTransition(fallback = transition(milliseconds = 300, curve = PresentationCurve.EMPHASIZED)) {
+        whenAll(SELECTED, transition = transition(milliseconds = 750, curve = PresentationCurve.ElasticOutWrapper(0.9)))
     }
 
 /** Grows and tilts [body] slightly while it is hovered. */
 fun Layout.hoverLift(body: Layout.() -> Unit) =
     transform(
         TransformStyle(
-            scale = stateNumber(fallback = 1.0) { whenAll(Hovered, value = 1.05) },
-            rotateZ = stateNumber(fallback = 0.0) { whenAll(Hovered, value = 0.005) },
+            scale = stateNumber(fallback = 1.0) { whenAll(HOVERED, value = 1.05) },
+            rotateZ = stateNumber(fallback = 0.0) { whenAll(HOVERED, value = 0.005) },
             transition = selectMotion,
         ),
         body,
@@ -32,10 +33,10 @@ fun Layout.focusRing(
         border =
             PresentationBorder.All(
                 width = 2.0,
-                color = stateColor(accent.withAlpha(0.0)) { whenAll(Focused, color = accent) },
+                color = stateColor(accent.withAlpha(0.0)) { whenAll(FOCUSED, color = accent) },
             ),
         radius = PresentationRadius.Large,
-        transition = stateTransition(PresentationTransition(milliseconds = 120)),
+        transition = stateTransition(transition(milliseconds = 120)),
     ),
     body,
 )
@@ -56,10 +57,10 @@ fun Layout.stackedCard(
             fill {
                 transform(
                     TransformStyle(
-                        origin = PresentationAlignment.CenterStart,
+                        origin = PresentationAlignment.CENTER_START,
                         perspective = 0.002,
-                        rotateY = stateNumber(fallback = 0.0) { whenAll(Selected, value = 0.05) },
-                        scale = stateNumber(fallback = 1.0) { whenAll(Selected, value = 0.9) },
+                        rotateY = stateNumber(fallback = 0.0) { whenAll(SELECTED, value = 0.05) },
+                        scale = stateNumber(fallback = 1.0) { whenAll(SELECTED, value = 0.9) },
                         transition = selectMotion,
                     ),
                 ) {
@@ -95,11 +96,11 @@ private fun StackLayout.spineLayer(
     accent: PresentationColor,
     layer: SpineLayer,
 ) {
-    val edge = stateNumber(fallback = layer.rest) { whenAll(Selected, value = layer.raised) }
+    val edge = stateNumber(fallback = layer.rest) { whenAll(SELECTED, value = layer.raised) }
     positioned(
         top = edge,
         bottom = edge,
-        end = stateNumber(fallback = layer.restEnd) { whenAll(Selected, value = layer.raisedEnd) },
+        end = stateNumber(fallback = layer.restEnd) { whenAll(SELECTED, value = layer.raisedEnd) },
         width = number(30.0),
         transition = selectMotion,
     ) {

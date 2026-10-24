@@ -232,14 +232,14 @@ Future<void> handleRealmCommandResult(
             await reportStatus("The command returned an unknown instruction");
         }
       }
-    case skir.CommandResult_invalidWrapper(:final value):
-    case skir.CommandResult_unavailableWrapper(:final value):
+    case skir.CommandResult_invalidErrorWrapper(:final value):
+    case skir.CommandResult_unavailableErrorWrapper(:final value):
       await reportStatus(
         value.diagnostics.map((item) => item.message).join("\n"),
       );
-    case skir.CommandResult_permissionDeniedWrapper(:final value):
+    case skir.CommandResult_permissionDeniedErrorWrapper(:final value):
       await reportStatus(value.message);
-    case skir.CommandResult_staleGenerationWrapper():
+    case skir.CommandResult_staleGenerationErrorWrapper():
       await reload();
       if (isCurrent()) {
         await reportStatus(

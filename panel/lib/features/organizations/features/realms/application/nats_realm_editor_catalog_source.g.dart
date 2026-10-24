@@ -103,13 +103,13 @@ final realmCatalogTransferProvider = RealmCatalogTransferFamily._();
 final class RealmCatalogTransferProvider
     extends
         $FunctionalProvider<
-          AsyncValue<skir.EditorCatalogWireSnapshot>,
-          skir.EditorCatalogWireSnapshot,
-          FutureOr<skir.EditorCatalogWireSnapshot>
+          AsyncValue<skir.EditorCatalog>,
+          skir.EditorCatalog,
+          FutureOr<skir.EditorCatalog>
         >
     with
-        $FutureModifier<skir.EditorCatalogWireSnapshot>,
-        $FutureProvider<skir.EditorCatalogWireSnapshot> {
+        $FutureModifier<skir.EditorCatalog>,
+        $FutureProvider<skir.EditorCatalog> {
   RealmCatalogTransferProvider._({
     required RealmCatalogTransferFamily super.from,
     required (skir.RecordId, skir.RecordId, String) super.argument,
@@ -133,12 +133,12 @@ final class RealmCatalogTransferProvider
 
   @$internal
   @override
-  $FutureProviderElement<skir.EditorCatalogWireSnapshot> $createElement(
+  $FutureProviderElement<skir.EditorCatalog> $createElement(
     $ProviderPointer pointer,
   ) => $FutureProviderElement(pointer);
 
   @override
-  FutureOr<skir.EditorCatalogWireSnapshot> create(Ref ref) {
+  FutureOr<skir.EditorCatalog> create(Ref ref) {
     final argument = this.argument as (skir.RecordId, skir.RecordId, String);
     return realmCatalogTransfer(ref, argument.$1, argument.$2, argument.$3);
   }
@@ -155,12 +155,12 @@ final class RealmCatalogTransferProvider
 }
 
 String _$realmCatalogTransferHash() =>
-    r'0e71d278632e6ffc3108f758987d80075addc6d2';
+    r'fe5eea8ded18a51129dcbe083b6f9c2572222191';
 
 final class RealmCatalogTransferFamily extends $Family
     with
         $FunctionalFamilyOverride<
-          FutureOr<skir.EditorCatalogWireSnapshot>,
+          FutureOr<skir.EditorCatalog>,
           (skir.RecordId, skir.RecordId, String)
         > {
   RealmCatalogTransferFamily._()

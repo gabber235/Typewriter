@@ -31,14 +31,14 @@ const _roleNames = [
   "Guest",
 ];
 
-List<OrganizationRole> presetRoles() {
+List<skir.OrganizationRole> presetRoles() {
   final presetRoles = List.generate(_roleNames.length, (i) {
     final isFirst = i == 0;
     final isLast = i == _roleNames.length - 1;
-    return OrganizationRole(
+    return skir.OrganizationRole(
       roleId: skir.recordId("organization_role:${faker.guid.guid()}"),
       name: _roleNames[i],
-      color: _roleColors[i],
+      color: _roleColors[i].toSkirColor(),
       deletable: !isFirst && !isLast,
       assignable: !isFirst,
       defaultRole: isLast,
@@ -52,8 +52,8 @@ List<OrganizationRole> presetRoles() {
 // Organization Member Mocks
 // ============================================================================
 
-OrganizationMember generateRandomMember({
-  List<OrganizationRole>? availableRoles,
+skir.OrganizationMember generateRandomMember({
+  List<skir.OrganizationRole>? availableRoles,
 }) {
   final roles = availableRoles != null
       ? (availableRoles.toList()..shuffle())
@@ -61,7 +61,7 @@ OrganizationMember generateRandomMember({
             .toList()
       : presetRoles();
 
-  return OrganizationMember(
+  return skir.OrganizationMember(
     userId: skir.recordId("user:${faker.guid.guid()}"),
     name: faker.person.name(),
     email: faker.internet.email(),
@@ -75,10 +75,10 @@ OrganizationMember generateRandomMember({
 class OrganizationRolesMock extends OrganizationRoles {
   OrganizationRolesMock({required this.roles});
 
-  final List<OrganizationRole> roles;
+  final List<skir.OrganizationRole> roles;
 
   @override
-  Stream<List<OrganizationRole>> build() async* {
+  Stream<List<skir.OrganizationRole>> build() async* {
     yield roles;
   }
 }
@@ -89,7 +89,7 @@ class OrganizationMembersMock extends OrganizationMembers {
   final DisplayState displayState;
 
   @override
-  Stream<List<OrganizationMember>> build() async* {
+  Stream<List<skir.OrganizationMember>> build() async* {
     final availableRoles = await ref.watch(organizationRolesProvider.future);
     yield await displayState.generate(
       () => generateRandomMember(availableRoles: availableRoles),

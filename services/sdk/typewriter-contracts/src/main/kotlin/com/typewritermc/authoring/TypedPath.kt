@@ -1,43 +1,82 @@
 package com.typewritermc.authoring
 
 import com.typewritermc.types.ResourceId
-import com.typewritermc.types.TypeDefinitionId
-import com.typewritermc.types.TypeUse
-import kotlinx.serialization.SerialName
-import kotlinx.serialization.Serializable
+import com.typewritermc.types.toSkir
+import skirout.editor.v1.type_catalog.ItemId
+import skirout.editor.v1.type_catalog.PathSegment
+import skirout.editor.v1.type_catalog.TypeDefinitionId
+import skirout.editor.v1.type_catalog.TypeUse
+import skirout.editor.v1.type_catalog.ValueLocation
+import skirout.editor.v1.type_catalog.ValuePath
 
-@JvmInline
-@Serializable
-value class ItemId(
-    val value: String,
-) {
-    init {
-        require(value.isNotBlank()) { "Item ids must not be blank." }
-    }
-}
+/*
+ * Value paths and locations are the generated Skir ValuePath, PathSegment and ValueLocation. A path addresses one value
+ * within a resource or bound value by field name and stable collection item identity, so it survives reordering. The
+ * helpers below build and extend them; requireValid checks paths and locations that enter from outside.
+ */
 
-@Serializable
-data class ValuePath(
-    val segments: List<PathSegment> = emptyList(),
-)
+/** The path of the whole resource or bound value. */
+val ValuePath.Companion.root: ValuePath get() = ValuePath.partial()
 
-@Serializable
-data class ValueLocation(
-    val resource: ResourceId,
-    val path: ValuePath,
-)
+/** The location of [path] within the resource identified by the author facing [resource] id. */
+fun ValueLocation.Companion.of(
+    resource: ResourceId,
+    path: ValuePath = ValuePath.root,
+): ValueLocation = ValueLocation(resource = resource.toSkir(), path = path)
 
-fun ValuePath.append(vararg segments: PathSegment): ValuePath = ValuePath(this.segments + segments)
+fun ValueLocation.Companion.of(
+    resource: skirout.editor.v1.type_catalog.ResourceId,
+    path: ValuePath = ValuePath.root,
+): ValueLocation = ValueLocation(resource = resource, path = path)
 
-fun ValuePath.append(relative: ValuePath): ValuePath = ValuePath(segments + relative.segments)
+/**
+ * A compact readable form of this path for messages and labels: field names joined by dots, `[id]` for a collection
+ * item and `key` or `value` for the branch of a map row.
+ */
+val ValuePath.text: String
+    get() =
+        buildString {
+            segments.forEach { segment ->
+                when (segment) {
+                    is PathSegment.FieldWrapper -> {
+                        if (isNotEmpty()) append('.')
+                        append(segment.value.name)
+                    }
 
-fun ValuePath.field(name: String): ValuePath = append(PathSegment.Field(name))
+                    is PathSegment.ItemWrapper -> {
+                        append('[').append(segment.value.id.value).append(']')
+                    }
 
-fun ValuePath.item(id: ItemId): ValuePath = append(PathSegment.Item(id))
+                    PathSegment.MAP_KEY -> {
+                        append(".key")
+                    }
 
-fun ValuePath.mapKey(): ValuePath = append(PathSegment.MapKey)
+                    PathSegment.MAP_VALUE -> {
+                        append(".value")
+                    }
 
-fun ValuePath.mapValue(): ValuePath = append(PathSegment.MapValue)
+                    else -> {
+                        append(".unknown")
+                    }
+                }
+            }
+        }
+
+val PathSegment.FieldWrapper.name: String get() = value.name
+
+val PathSegment.ItemWrapper.id: ItemId get() = value.id
+
+fun ValuePath.append(vararg segments: PathSegment): ValuePath = ValuePath(segments = this.segments + segments)
+
+fun ValuePath.append(relative: ValuePath): ValuePath = ValuePath(segments = segments + relative.segments)
+
+fun ValuePath.field(name: String): ValuePath = append(PathSegment.createField(name = name))
+
+fun ValuePath.item(id: ItemId): ValuePath = append(PathSegment.createItem(id = id))
+
+fun ValuePath.mapKey(): ValuePath = append(PathSegment.MAP_KEY)
+
+fun ValuePath.mapValue(): ValuePath = append(PathSegment.MAP_VALUE)
 
 fun ValueLocation.append(vararg segments: PathSegment): ValueLocation = copy(path = path.append(*segments))
 
@@ -50,29 +89,6 @@ fun ValueLocation.item(id: ItemId): ValueLocation = copy(path = path.item(id))
 fun ValueLocation.mapKey(): ValueLocation = copy(path = path.mapKey())
 
 fun ValueLocation.mapValue(): ValueLocation = copy(path = path.mapValue())
-
-@Serializable
-sealed interface PathSegment {
-    @Serializable
-    @SerialName("field")
-    data class Field(
-        val name: String,
-    ) : PathSegment
-
-    @Serializable
-    @SerialName("item")
-    data class Item(
-        val id: ItemId,
-    ) : PathSegment
-
-    @Serializable
-    @SerialName("map_key")
-    data object MapKey : PathSegment
-
-    @Serializable
-    @SerialName("map_value")
-    data object MapValue : PathSegment
-}
 
 class TypedPath<Owner, Value> internal constructor(
     val owner: TypeDefinitionId,
@@ -89,7 +105,7 @@ class BoundCollectionPath internal constructor(
     val location: ValueLocation,
 )
 
-fun <O, V> TypedPath<O, V>.bind(resource: ResourceId): BoundPath<V> = BoundPath(ValueLocation(resource, path), expected)
+fun <O, V> TypedPath<O, V>.bind(resource: ResourceId): BoundPath<V> = BoundPath(ValueLocation.of(resource, path), expected)
 
 @GeneratedSdkApi
 fun <O, V> typedPath(

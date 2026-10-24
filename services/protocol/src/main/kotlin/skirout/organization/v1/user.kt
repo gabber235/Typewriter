@@ -674,6 +674,7 @@ sealed class SubmitUserJoinRequestResponse private constructor() {
         }
     }
 
+    /** Join code not found. */
     class CodeNotFoundErrorWrapper private constructor (
         val value: skirout.organization.v1.user.SubmitUserJoinRequestResponse.CodeNotFoundError,
     ) : skirout.organization.v1.user.SubmitUserJoinRequestResponse() {
@@ -692,6 +693,7 @@ sealed class SubmitUserJoinRequestResponse private constructor() {
         }
     }
 
+    /** User is already a member of this organization. */
     class AlreadyMemberErrorWrapper private constructor (
         val value: skirout.organization.v1.user.SubmitUserJoinRequestResponse.AlreadyMemberError,
     ) : skirout.organization.v1.user.SubmitUserJoinRequestResponse() {
@@ -710,6 +712,7 @@ sealed class SubmitUserJoinRequestResponse private constructor() {
         }
     }
 
+    /** No assignable roles are available for this organization. */
     class NoAssignableRolesErrorWrapper private constructor (
         val value: skirout.organization.v1.user.SubmitUserJoinRequestResponse.NoAssignableRolesError,
     ) : skirout.organization.v1.user.SubmitUserJoinRequestResponse() {
@@ -728,6 +731,7 @@ sealed class SubmitUserJoinRequestResponse private constructor() {
         }
     }
 
+    /** User already has the maximum number of pending join requests. */
     class MaxPendingRequestsErrorWrapper private constructor (
         val value: skirout.organization.v1.user.SubmitUserJoinRequestResponse.MaxPendingRequestsError,
     ) : skirout.organization.v1.user.SubmitUserJoinRequestResponse() {
@@ -746,6 +750,7 @@ sealed class SubmitUserJoinRequestResponse private constructor() {
         }
     }
 
+    /** User already has a pending join request for this organization. */
     class PendingRequestExistsErrorWrapper private constructor (
         val value: skirout.organization.v1.user.SubmitUserJoinRequestResponse.PendingRequestExistsError,
     ) : skirout.organization.v1.user.SubmitUserJoinRequestResponse() {
@@ -764,6 +769,7 @@ sealed class SubmitUserJoinRequestResponse private constructor() {
         }
     }
 
+    /** Record IDs from an unexpected table. */
     class InvalidRecordIdErrorWrapper private constructor (
         val value: skirout.kernel.v1.errors.InvalidRecordIdError,
     ) : skirout.organization.v1.user.SubmitUserJoinRequestResponse() {
@@ -1851,6 +1857,7 @@ sealed class CancelUserJoinRequestResponse private constructor() {
         }
     }
 
+    /** Join request not found. */
     class RequestNotFoundErrorWrapper private constructor (
         val value: skirout.organization.v1.user.CancelUserJoinRequestResponse.RequestNotFoundError,
     ) : skirout.organization.v1.user.CancelUserJoinRequestResponse() {
@@ -1869,6 +1876,7 @@ sealed class CancelUserJoinRequestResponse private constructor() {
         }
     }
 
+    /** Record IDs from an unexpected table. */
     class InvalidRecordIdErrorWrapper private constructor (
         val value: skirout.kernel.v1.errors.InvalidRecordIdError,
     ) : skirout.organization.v1.user.CancelUserJoinRequestResponse() {
@@ -2506,7 +2514,7 @@ private object _SerializerRegistry {
             "request_not_found_error",
             skirout.organization.v1.user.CancelUserJoinRequestResponse.Kind.REQUEST_NOT_FOUND_ERROR_WRAPPER.ordinal,
             _SerializerRegistry.CancelUserJoinRequestResponse_RequestNotFoundErrorSerializer,
-            "",
+            "Join request not found.",
             { skirout.organization.v1.user.CancelUserJoinRequestResponse.RequestNotFoundErrorWrapper(it) },
             { it.value },
         );
@@ -2515,7 +2523,7 @@ private object _SerializerRegistry {
             "invalid_record_id_error",
             skirout.organization.v1.user.CancelUserJoinRequestResponse.Kind.INVALID_RECORD_ID_ERROR_WRAPPER.ordinal,
             skirout.kernel.v1.errors.InvalidRecordIdError.serializer,
-            "",
+            "Record IDs from an unexpected table.",
             { skirout.organization.v1.user.CancelUserJoinRequestResponse.InvalidRecordIdErrorWrapper(it) },
             { it.value },
         );
@@ -2586,7 +2594,7 @@ private object _SerializerRegistry {
             "code_not_found_error",
             skirout.organization.v1.user.SubmitUserJoinRequestResponse.Kind.CODE_NOT_FOUND_ERROR_WRAPPER.ordinal,
             _SerializerRegistry.SubmitUserJoinRequestResponse_CodeNotFoundErrorSerializer,
-            "",
+            "Join code not found.",
             { skirout.organization.v1.user.SubmitUserJoinRequestResponse.CodeNotFoundErrorWrapper(it) },
             { it.value },
         );
@@ -2595,7 +2603,7 @@ private object _SerializerRegistry {
             "already_member_error",
             skirout.organization.v1.user.SubmitUserJoinRequestResponse.Kind.ALREADY_MEMBER_ERROR_WRAPPER.ordinal,
             _SerializerRegistry.SubmitUserJoinRequestResponse_AlreadyMemberErrorSerializer,
-            "",
+            "User is already a member of this organization.",
             { skirout.organization.v1.user.SubmitUserJoinRequestResponse.AlreadyMemberErrorWrapper(it) },
             { it.value },
         );
@@ -2604,7 +2612,7 @@ private object _SerializerRegistry {
             "no_assignable_roles_error",
             skirout.organization.v1.user.SubmitUserJoinRequestResponse.Kind.NO_ASSIGNABLE_ROLES_ERROR_WRAPPER.ordinal,
             _SerializerRegistry.SubmitUserJoinRequestResponse_NoAssignableRolesErrorSerializer,
-            "",
+            "No assignable roles are available for this organization.",
             { skirout.organization.v1.user.SubmitUserJoinRequestResponse.NoAssignableRolesErrorWrapper(it) },
             { it.value },
         );
@@ -2613,7 +2621,7 @@ private object _SerializerRegistry {
             "max_pending_requests_error",
             skirout.organization.v1.user.SubmitUserJoinRequestResponse.Kind.MAX_PENDING_REQUESTS_ERROR_WRAPPER.ordinal,
             _SerializerRegistry.SubmitUserJoinRequestResponse_MaxPendingRequestsErrorSerializer,
-            "",
+            "User already has the maximum number of pending join requests.",
             { skirout.organization.v1.user.SubmitUserJoinRequestResponse.MaxPendingRequestsErrorWrapper(it) },
             { it.value },
         );
@@ -2622,7 +2630,7 @@ private object _SerializerRegistry {
             "pending_request_exists_error",
             skirout.organization.v1.user.SubmitUserJoinRequestResponse.Kind.PENDING_REQUEST_EXISTS_ERROR_WRAPPER.ordinal,
             _SerializerRegistry.SubmitUserJoinRequestResponse_PendingRequestExistsErrorSerializer,
-            "",
+            "User already has a pending join request for this organization.",
             { skirout.organization.v1.user.SubmitUserJoinRequestResponse.PendingRequestExistsErrorWrapper(it) },
             { it.value },
         );
@@ -2631,7 +2639,7 @@ private object _SerializerRegistry {
             "invalid_record_id_error",
             skirout.organization.v1.user.SubmitUserJoinRequestResponse.Kind.INVALID_RECORD_ID_ERROR_WRAPPER.ordinal,
             skirout.kernel.v1.errors.InvalidRecordIdError.serializer,
-            "",
+            "Record IDs from an unexpected table.",
             { skirout.organization.v1.user.SubmitUserJoinRequestResponse.InvalidRecordIdErrorWrapper(it) },
             { it.value },
         );

@@ -1,13 +1,15 @@
 package com.typewritermc.discovery
 
 import com.typewritermc.capability.RealmCapabilityProvider
-import com.typewritermc.configuration.RuleOrigin
 import com.typewritermc.imprint.ArtifactId
 import com.typewritermc.imprint.ContributionName
 import com.typewritermc.imprint.ContributionSourceId
 import com.typewritermc.imprint.ProducerId
-import com.typewritermc.types.DeclarationOwner
+import com.typewritermc.presentation.requireValid
 import com.typewritermc.types.NativeBindingFactory
+import com.typewritermc.types.requireValid
+import skirout.editor.v1.type_catalog.DeclarationOwner
+import skirout.editor.v1.type_catalog.RuleOrigin
 import java.net.URL
 import java.net.URLClassLoader
 import java.nio.file.Files
@@ -395,14 +397,14 @@ class GeneratedProviderLoader {
         entry: GeneratedProviderIndexEntry,
     ): ProviderOrigin {
         val key =
-            ContributionKey(
+            contributionKey(
                 source = artifact.source,
                 sourcePart = entry.sourcePart,
                 producer = GENERATED_PROVIDER_PRODUCER,
                 name = ContributionName(entry.providerClass.replace('$', '_')),
             )
         return ProviderOrigin(
-            owner = DeclarationOwner(key, entry.providerClass),
+            owner = DeclarationOwner(source = key, localIdentity = entry.providerClass).requireValid(),
             artifact = artifact.artifact,
             sourcePart = entry.sourcePart,
         )
@@ -414,15 +416,15 @@ class GeneratedProviderLoader {
         domain: DiscoveryDomainId,
     ): LoadedGeneratedProviders {
         val declarations = mutableListOf<OwnedTypeDeclaration>()
-        val relations = mutableListOf<com.typewritermc.types.RelationContract>()
-        val endpointBindings = mutableListOf<com.typewritermc.types.EndpointBindingTemplate>()
+        val relations = mutableListOf<skirout.editor.v1.catalog.RelationContract>()
+        val endpointBindings = mutableListOf<skirout.editor.v1.catalog.EndpointBindingTemplate>()
         val configurations = mutableListOf<OwnedConfiguration>()
         val presentations = mutableListOf<OwnedPresentation>()
         val nativeBindings = mutableListOf<OwnedNativeBinding>()
         val checks = mutableListOf<Pair<LoadedProvider, GeneratedCheckProvider>>()
         val capabilities = mutableListOf<OwnedRealmCapability>()
         val registrars = mutableListOf<OwnedRuntimeRegistrar>()
-        val registrarIds = mutableSetOf<Pair<ContributionSourceId, RuntimeRegistrarId>>()
+        val registrarIds = mutableSetOf<Pair<String, RuntimeRegistrarId>>()
         val collectionProjections = mutableListOf<OwnedCollectionProjection>()
         val operations = mutableListOf<com.typewritermc.operations.OperationDeclaration>()
         val displays = mutableListOf<OwnedResourceDisplay>()
@@ -433,7 +435,13 @@ class GeneratedProviderLoader {
                 GeneratedProviderKind.Type -> {
                     val provider = loadedProvider.require<GeneratedTypeProvider>()
                     declarations +=
-                        OwnedTypeDeclaration(origin, provider.definition, provider.display, provider.nativeClass, provider.searchKey)
+                        OwnedTypeDeclaration(
+                            origin,
+                            provider.definition.requireValid(),
+                            provider.display,
+                            provider.nativeClass,
+                            provider.searchKey,
+                        )
                 }
 
                 GeneratedProviderKind.NativeBinding -> {
@@ -441,12 +449,12 @@ class GeneratedProviderLoader {
                 }
 
                 GeneratedProviderKind.Relation -> {
-                    relations += loadedProvider.require<GeneratedRelationProvider>().contract
+                    relations += loadedProvider.require<GeneratedRelationProvider>().contract.requireValid()
                 }
 
                 GeneratedProviderKind.EndpointBindings -> {
                     endpointBindings +=
-                        loadedProvider.require<GeneratedEndpointBindingsProvider>().bindings
+                        loadedProvider.require<GeneratedEndpointBindingsProvider>().bindings.onEach { it.requireValid() }
                 }
 
                 GeneratedProviderKind.Configuration -> {
@@ -456,7 +464,7 @@ class GeneratedProviderLoader {
 
                 GeneratedProviderKind.Presentation -> {
                     val provider = loadedProvider.require<GeneratedPresentationProvider>()
-                    presentations += OwnedPresentation(origin, provider.descriptor(origin), provider, provider.reference)
+                    presentations += OwnedPresentation(origin, provider.descriptor(origin).requireValid(), provider, provider.reference)
                 }
 
                 GeneratedProviderKind.Check -> {
@@ -475,8 +483,8 @@ class GeneratedProviderLoader {
                 GeneratedProviderKind.Registrar -> {
                     val provider = loadedProvider.require<GeneratedRuntimeRegistrarProvider>()
                     if (domain in provider.descriptor.domains) {
-                        require(registrarIds.add(origin.owner.source.source to provider.descriptor.id)) {
-                            "Duplicate runtime registrar ${provider.descriptor.id} in contribution source ${origin.owner.source.source}."
+                        require(registrarIds.add(origin.owner.source.source.value to provider.descriptor.id)) {
+                            "Duplicate runtime registrar ${provider.descriptor.id} in contribution source ${origin.owner.source.source.value}."
                         }
                         registrars += OwnedRuntimeRegistrar(origin, provider.descriptor, provider.bind(owners.instantiator))
                     }
@@ -487,7 +495,11 @@ class GeneratedProviderLoader {
                 }
 
                 GeneratedProviderKind.ResourceDisplay -> {
-                    displays += OwnedResourceDisplay(origin, loadedProvider.require<GeneratedResourceDisplayProvider>())
+                    displays +=
+                        OwnedResourceDisplay(
+                            origin,
+                            loadedProvider.require<GeneratedResourceDisplayProvider>().also { it.target.requireValid() },
+                        )
                 }
 
                 GeneratedProviderKind.CollectionProjection -> {
@@ -502,7 +514,7 @@ class GeneratedProviderLoader {
         val ownedChecks =
             checks.groupBy { it.second.target }.flatMap { (target, providers) ->
                 providers.sortedBy { it.first.origin.owner.localIdentity }.mapIndexed { ordinal, (loadedProvider, provider) ->
-                    OwnedCheck(loadedProvider.origin, RuleOrigin(target, ordinal), provider)
+                    OwnedCheck(loadedProvider.origin, RuleOrigin(owner = target, ordinal = ordinal), provider)
                 }
             }
         return LoadedGeneratedProviders(

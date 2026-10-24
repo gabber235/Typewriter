@@ -1,21 +1,25 @@
 package com.typewritermc.operations
 
 import com.typewritermc.authoring.PlacementAnchor
-import com.typewritermc.presentation.ButtonVariant
 import com.typewritermc.types.ResourceId
 import com.typewritermc.types.TypewriterType
+import skirout.editor.v1.operation.OperationAvailability
+import skirout.editor.v1.operation.OperationGroup
+import skirout.editor.v1.operation.OperationInspector
+import skirout.editor.v1.operation.OperationShortcut
+import skirout.editor.v1.presentation.ButtonVariant
 
 /** Deletes the selected resources together with everything they own. Singletons cannot be deleted. */
 object Delete : ResourceOperation<Unit> {
     override fun ResourceOperationSpec<Unit>.declare(): PreparedOperation {
         appearance {
             icon("mdi:delete-outline")
-            group(OperationGroup.Destructive)
-            inspector(OperationInspector.Button(ButtonVariant.Filled))
+            group(OperationGroup.DESTRUCTIVE)
+            inspector(OperationInspector.ButtonWrapper(ButtonVariant.FILLED))
         }
         confirm("Delete the selected resources and their owned contents?") { title("Delete resources") }
-        gestures { shortcut(OperationShortcut.Delete) }
-        availableWhen { if (subjects.any { it.isSingleton }) OperationAvailability.Hidden else OperationAvailability.Enabled }
+        gestures { shortcut(OperationShortcut.DELETE) }
+        availableWhen { if (subjects.any { it.isSingleton }) OperationAvailability.HIDDEN else OperationAvailability.ENABLED }
         return prepare { subjects.delete() }
     }
 }
@@ -25,10 +29,10 @@ object Duplicate : ResourceOperation<Unit> {
     override fun ResourceOperationSpec<Unit>.declare(): PreparedOperation {
         appearance {
             icon("mdi:content-copy")
-            group(OperationGroup.Organize, order = 40)
+            group(OperationGroup.ORGANIZE, order = 40)
         }
         availableWhen {
-            if (subjects.any { it.isSingleton }) OperationAvailability.Hidden else subjects.cloneability.availability()
+            if (subjects.any { it.isSingleton }) OperationAvailability.HIDDEN else subjects.cloneability.availability()
         }
         return prepare { selectAfterStaging(subjects.duplicate()) }
     }
@@ -50,7 +54,7 @@ object MoveToOwner : ResourceOperation<MoveToOwnerInput> {
         appearance {
             label("Move to")
             icon("mdi:folder-move-outline")
-            group(OperationGroup.Organize, order = 10)
+            group(OperationGroup.ORGANIZE, order = 10)
         }
         input {
             MoveToOwnerInputFields.destination {
@@ -66,7 +70,7 @@ object MoveToOwner : ResourceOperation<MoveToOwnerInput> {
             }
         }
         availableWhen {
-            if (subjects.any { !it.canBeOwned || it.isSingleton }) OperationAvailability.Hidden else OperationAvailability.Enabled
+            if (subjects.any { !it.canBeOwned || it.isSingleton }) OperationAvailability.HIDDEN else OperationAvailability.ENABLED
         }
         return prepare { subjects.moveTo(destination = input.destination, anchor = input.anchor) }
     }
@@ -85,7 +89,7 @@ object LinkWith : ResourceOperation<LinkWithInput> {
     override fun ResourceOperationSpec<LinkWithInput>.declare(): PreparedOperation {
         appearance {
             icon("mdi:link-variant")
-            group(OperationGroup.Organize, order = 20)
+            group(OperationGroup.ORGANIZE, order = 20)
         }
         input {
             LinkWithInputFields.target {
@@ -95,9 +99,9 @@ object LinkWith : ResourceOperation<LinkWithInput> {
         }
         availableWhen {
             when {
-                subjects.any { it.isSingleton } -> OperationAvailability.Hidden
-                subjects.linkTargets().none() -> OperationAvailability.Hidden
-                else -> OperationAvailability.Enabled
+                subjects.any { it.isSingleton } -> OperationAvailability.HIDDEN
+                subjects.linkTargets().none() -> OperationAvailability.HIDDEN
+                else -> OperationAvailability.ENABLED
             }
         }
         return prepare { subjects.linkWith(input.target) }
@@ -114,7 +118,7 @@ object Unlink : ResourceOperation<UnlinkInput> {
     override fun ResourceOperationSpec<UnlinkInput>.declare(): PreparedOperation {
         appearance {
             icon("mdi:link-variant-off")
-            group(OperationGroup.Organize, order = 30)
+            group(OperationGroup.ORGANIZE, order = 30)
         }
         input {
             UnlinkInputFields.target {
@@ -123,7 +127,7 @@ object Unlink : ResourceOperation<UnlinkInput> {
             }
         }
         availableWhen {
-            if (subjects.all { it.links().none() }) OperationAvailability.Hidden else OperationAvailability.Enabled
+            if (subjects.all { it.links().none() }) OperationAvailability.HIDDEN else OperationAvailability.ENABLED
         }
         return prepare { subjects.unlinkFrom(input.target) }
     }
@@ -134,15 +138,15 @@ object LinkWithDuplicate : ResourceOperation<Unit> {
     override fun ResourceOperationSpec<Unit>.declare(): PreparedOperation {
         appearance {
             icon("mdi:link-variant-plus")
-            group(OperationGroup.Organize, order = 50)
+            group(OperationGroup.ORGANIZE, order = 50)
         }
         singleSubject()
         availableWhen {
             val subject = subjects.single()
-            if (subject.isSingleton) return@availableWhen OperationAvailability.Hidden
+            if (subject.isSingleton) return@availableWhen OperationAvailability.HIDDEN
             when (subject.linkCapacity) {
-                LinkCapacity.None -> OperationAvailability.Hidden
-                LinkCapacity.Full -> OperationAvailability.Disabled("No compatible outgoing reference has room for another link")
+                LinkCapacity.None -> OperationAvailability.HIDDEN
+                LinkCapacity.Full -> OperationAvailability.DisabledWrapper("No compatible outgoing reference has room for another link")
                 LinkCapacity.Available -> subjects.cloneability.availability()
             }
         }
@@ -156,6 +160,6 @@ object LinkWithDuplicate : ResourceOperation<Unit> {
 
 private fun Cloneability.availability(): OperationAvailability =
     when (this) {
-        Cloneability.Allowed -> OperationAvailability.Enabled
-        is Cloneability.Blocked -> OperationAvailability.Disabled(reason)
+        Cloneability.Allowed -> OperationAvailability.ENABLED
+        is Cloneability.Blocked -> OperationAvailability.DisabledWrapper(reason)
     }

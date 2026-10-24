@@ -3,87 +3,87 @@ import "package:typewriter_panel/infrastructure/protocols/skir/skir.dart"
 import "package:typewriter_panel/typewriter_panel.dart";
 
 typedef CompleteTopologyScenario = ({
-  OrganizationTopology topology,
-  List<Service> services,
+  skir.OrganizationTopologySnapshot topology,
+  List<skir.Service> services,
 });
 
 CompleteTopologyScenario completeTopologyScenario() {
   final paperAlpha = _host(
     id: "paper-alpha",
     entrypoint: "PAPER",
-    status: TopologyHostStatus.active,
+    status: skir.HostRuntimeStatus.active,
   );
   final paperBeta = _host(
     id: "paper-beta",
     entrypoint: "PAPER",
-    status: TopologyHostStatus.reconciling,
+    status: skir.HostRuntimeStatus.reconciling,
     appliedRevision: 3,
     canHostRealm: false,
   );
   final realmControl = _host(
     id: "realm-control",
     entrypoint: "STANDALONE",
-    status: TopologyHostStatus.drifted,
+    status: skir.HostRuntimeStatus.drifted,
     appliedRevision: 2,
   );
   final paperOffline = _host(
     id: "paper-offline",
     entrypoint: "PAPER",
-    status: TopologyHostStatus.offline,
+    status: skir.HostRuntimeStatus.offline,
     canHostRealm: false,
   );
   final standaloneFailed = _host(
     id: "standalone-failed",
     entrypoint: "STANDALONE",
-    status: TopologyHostStatus.failed,
+    status: skir.HostRuntimeStatus.failed,
     message: "Realm process exited unexpectedly",
   );
   final standaloneQuiescing = _host(
     id: "standalone-quiescing",
     entrypoint: "STANDALONE",
-    status: TopologyHostStatus.active,
+    status: skir.HostRuntimeStatus.active,
   );
 
   final paperRollback = _host(
     id: "paper-rollback",
     entrypoint: "PAPER",
-    status: TopologyHostStatus.active,
+    status: skir.HostRuntimeStatus.active,
     canHostRealm: false,
   );
   final standaloneAbsent = _host(
     id: "standalone-absent",
     entrypoint: "STANDALONE",
-    status: TopologyHostStatus.active,
+    status: skir.HostRuntimeStatus.active,
   );
 
   final alphaRealm = _realm(
     id: "adventure",
     host: paperAlpha,
-    status: TopologyRuntimeStatus.active,
+    status: skir.ChildRuntimeStatus.active,
   );
   final stagingRealm = _realm(
     id: "creative",
     host: realmControl,
-    status: TopologyRuntimeStatus.staging,
+    status: skir.ChildRuntimeStatus.staging,
   );
   final failedRealm = _realm(
     id: "survival",
     host: standaloneFailed,
-    status: TopologyRuntimeStatus.failed,
+    status: skir.ChildRuntimeStatus.failed,
     message: "Manifest activation failed",
   );
   final quiescingRealm = _realm(
     id: "events",
     host: standaloneQuiescing,
-    status: TopologyRuntimeStatus.quiescing,
+    status: skir.ChildRuntimeStatus.quiescing,
   );
   final absentRealm = _realm(
     id: "minigames",
     host: standaloneAbsent,
-    status: TopologyRuntimeStatus.absent,
+    status: skir.ChildRuntimeStatus.absent,
   );
 
-  final topology = OrganizationTopology(
+  final topology = skir.OrganizationTopologySnapshot(
     hosts: [
       paperAlpha,
       paperBeta,
@@ -94,31 +94,31 @@ CompleteTopologyScenario completeTopologyScenario() {
       paperRollback,
       standaloneAbsent,
     ],
-    realmInstances: [
+    realms: [
       alphaRealm,
       stagingRealm,
       failedRealm,
       quiescingRealm,
       absentRealm,
     ],
-    engineInstances: [
+    engines: [
       _engine(
         id: "paper-alpha",
         host: paperAlpha,
         realm: alphaRealm,
-        status: TopologyRuntimeStatus.active,
+        status: skir.ChildRuntimeStatus.active,
       ),
       _engine(
         id: "paper-beta",
         host: paperBeta,
         realm: alphaRealm,
-        status: TopologyRuntimeStatus.drifted,
+        status: skir.ChildRuntimeStatus.drifted,
       ),
       _engine(
         id: "paper-rollback",
         host: paperRollback,
         realm: quiescingRealm,
-        status: TopologyRuntimeStatus.rolledBack,
+        status: skir.ChildRuntimeStatus.rolledBack,
       ),
     ],
   );
@@ -160,114 +160,111 @@ CompleteTopologyScenario completeTopologyScenario() {
   );
 }
 
-TopologyHost _host({
+skir.ServiceHost _host({
   required String id,
   required String entrypoint,
-  required TopologyHostStatus status,
+  required skir.HostRuntimeStatus status,
   int desiredRevision = 4,
   int? appliedRevision,
   bool canHostRealm = true,
   String? message,
-}) => TopologyHost(
+}) => skir.ServiceHost(
   hostId: skir.recordId("service_host:$id"),
   serviceId: skir.recordId("service:$id"),
   revision: desiredRevision,
   entrypoint: entrypoint,
   canHostRealm: canHostRealm,
   supportedEngines: [
-    TopologySupportedEngine(
+    skir.SupportedEngine(
       engineId: entrypoint == "PAPER" ? "paper" : "conformance",
     ),
   ],
-  topologyRevision: TopologyRevision(
+  topologyRevision: skir.ReconciledRevision(
     desired: desiredRevision,
     applied: appliedRevision ?? desiredRevision,
   ),
-  state: TopologyHostState(
+  state: skir.HostRuntimeState(
     status: status,
     message: message,
     updatedAt: DateTime.utc(2026, 8, 22, 10, 30),
   ),
 );
 
-TopologyRealm _realm({
+skir.RealmInstance _realm({
   required String id,
-  required TopologyHost host,
-  required TopologyRuntimeStatus status,
+  required skir.ServiceHost host,
+  required skir.ChildRuntimeStatus status,
   String? message,
-}) => TopologyRealm(
+}) => skir.RealmInstance(
   realmId: skir.recordId("realm_instance:$id"),
   ownerHost: _ownerHost(host),
   revision: 3,
-  targetEngine: const TopologyEngineTarget(
-    engineId: "paper",
-    versionConstraint: "^1",
-  ),
+  targetEngine: skir.EngineTarget(engineId: "paper", versionConstraint: "^1"),
   state: _runtimeState(status, message: message),
 );
 
-TopologyEngine _engine({
+skir.EngineInstance _engine({
   required String id,
-  required TopologyHost host,
-  required TopologyRealm realm,
-  required TopologyRuntimeStatus status,
-}) => TopologyEngine(
+  required skir.ServiceHost host,
+  required skir.RealmInstance realm,
+  required skir.ChildRuntimeStatus status,
+}) => skir.EngineInstance(
   engineId: skir.recordId("engine_instance:$id"),
   ownerHost: _ownerHost(host),
-  realm: TopologyRealmInfo(realmId: realm.realmId, ownerHost: realm.ownerHost),
+  realm: skir.RealmInfo(realmId: realm.realmId, ownerHost: realm.ownerHost),
   revision: 5,
-  target: const TopologyEngineTarget(
-    engineId: "paper",
-    versionConstraint: "^1",
-  ),
+  target: skir.EngineTarget(engineId: "paper", versionConstraint: "^1"),
   state: _runtimeState(status),
 );
 
-TopologyOwnerHost _ownerHost(TopologyHost host) => TopologyOwnerHost(
+skir.OwnerHost _ownerHost(skir.ServiceHost host) => skir.OwnerHost(
   id: host.hostId,
   name: host.serviceId.id.replaceAll("-", "_"),
 );
 
-TopologyRuntimeState _runtimeState(
-  TopologyRuntimeStatus status, {
+skir.ChildRuntimeState _runtimeState(
+  skir.ChildRuntimeStatus status, {
   String? message,
-}) => TopologyRuntimeState(
+}) => skir.ChildRuntimeState(
   status: status,
-  activeArtifactVersion: status == TopologyRuntimeStatus.absent
+  activeArtifactVersion: status == skir.ChildRuntimeStatus.absent
       ? null
       : "1.4.2",
   message: message,
   updatedAt: DateTime.utc(2026, 8, 22, 10, 30),
 );
 
-Service _hostService(TopologyHost host, {required bool online}) => Service(
-  serviceId: host.serviceId,
-  revision: host.revision,
-  name: host.hostId.id.replaceAll("-", "_"),
-  role: HostServiceRole(version: "1.0.0"),
-  createdAt: DateTime.utc(2026, 8, 19),
-  organization: skir.recordId("organization:story"),
-  state: ServiceState(
-    status: online ? ServiceStateStatus.online : ServiceStateStatus.offline,
-    lastSeen: online ? DateTime.now() : DateTime.utc(2026, 8, 21),
-  ),
-);
+skir.Service _hostService(skir.ServiceHost host, {required bool online}) =>
+    skir.Service(
+      serviceId: host.serviceId,
+      revision: host.revision,
+      name: host.hostId.id.replaceAll("-", "_"),
+      role: skir.ServiceRole.createHost(version: "1.0.0"),
+      createdAt: DateTime.utc(2026, 8, 19),
+      organization: skir.recordId("organization:story"),
+      state: skir.ServiceState(
+        status: online ? skir.ServiceStatus.online : skir.ServiceStatus.offline,
+        lastSeen: online ? DateTime.now() : DateTime.utc(2026, 8, 21),
+      ),
+      registration: null,
+    );
 
-Service _customService({
+skir.Service _customService({
   required String id,
   required String name,
   required String role,
   required String version,
   required bool online,
-}) => Service(
+}) => skir.Service(
   serviceId: skir.recordId("service:$id"),
   revision: 1,
   name: name,
-  role: CustomServiceRole(name: role, version: version),
+  role: skir.ServiceRole.createCustom(name: role, version: version),
   createdAt: DateTime.utc(2026, 8, 19),
   organization: skir.recordId("organization:story"),
-  state: ServiceState(
-    status: online ? ServiceStateStatus.online : ServiceStateStatus.offline,
+  state: skir.ServiceState(
+    status: online ? skir.ServiceStatus.online : skir.ServiceStatus.offline,
     lastSeen: online ? DateTime.now() : DateTime.utc(2026, 8, 20),
   ),
+  registration: null,
 );

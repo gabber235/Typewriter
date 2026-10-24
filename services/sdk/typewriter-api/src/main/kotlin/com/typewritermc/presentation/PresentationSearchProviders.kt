@@ -1,10 +1,5 @@
 package com.typewritermc.presentation
 
-import com.typewritermc.expression.Expr
-import com.typewritermc.expression.Handled
-import com.typewritermc.types.skir.SkirTypeCodec
-import com.typewritermc.types.skir.getOrThrow
-
 internal fun DefaultSearchProviderSpec<*>.wire(
     state: PresentationBuildState,
     result: skirout.editor.v1.presentation.SearchResultMapping,
@@ -50,14 +45,14 @@ private fun SearchProviderDescription<*>.wire(
                         )
                     },
                 resultPath = resultPath,
-                resultType = SkirTypeCodec.encode(resultType).getOrThrow(),
+                resultType = resultType,
                 result = result,
                 contextBindings =
                     contexts.map { context ->
                         skirout.editor.v1.presentation.HttpJsonContextBinding(
-                            bindingId = context.binding.wire(),
+                            bindingId = context.binding,
                             path = context.path,
-                            valueType = SkirTypeCodec.encode(context.type).getOrThrow(),
+                            valueType = context.type,
                         )
                     },
                 selectors = selectors,
@@ -68,9 +63,7 @@ private fun SearchProviderDescription<*>.wire(
         is SearchProviderDescription.RealmCallback<*> -> {
             state.capability(capability)
             skirout.editor.v1.presentation.SearchProvider.createRealmCallback(
-                capabilityId =
-                    skirout.editor.v1.type_catalog
-                        .CapabilityId(value = capability.value),
+                capabilityId = capability,
                 payload = payload,
                 result = result,
                 selectors = selectors,

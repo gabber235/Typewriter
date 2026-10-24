@@ -2,46 +2,17 @@ import "package:typewriter_panel/infrastructure/protocols/skir/skir.dart"
     as skir;
 import "package:typewriter_panel/typewriter_panel.dart";
 
-part "roles.freezed.dart";
 part "roles.g.dart";
 
-/// Role metadata used by membership editors.
+/// Role presentation used by membership editors.
 ///
-/// [assignable] advertises whether ordinary role changes may select this role;
-/// the server still authorizes commands. Protected roles remain visible as part
-/// of a member's authoritative projection, but these controls cannot edit them.
-@freezed
-abstract class OrganizationRole with _$OrganizationRole {
-  @Assert("name != \"\"", "Name must not be empty.")
-  const factory OrganizationRole({
-    required skir.RecordId roleId,
-    required String name,
-    required Color color,
-    @Default(false) bool defaultRole,
-    @Default(false) bool assignable,
-    @Default(false) bool deletable,
-  }) = _OrganizationRole;
-
-  const OrganizationRole._();
-
-  factory OrganizationRole.fromSkir(skir.OrganizationRole role) =>
-      OrganizationRole(
-        roleId: role.roleId,
-        name: role.name,
-        color: role.color.toFlutterColor(),
-        defaultRole: role.defaultRole,
-        assignable: role.assignable,
-        deletable: role.deletable,
-      );
-
-  skir.OrganizationRole toSkir() => skir.OrganizationRole(
-    roleId: roleId,
-    name: name,
-    color: color.toSkirColor(),
-    defaultRole: defaultRole,
-    assignable: assignable,
-    deletable: deletable,
-  );
+/// [skir.OrganizationRole.assignable] advertises whether ordinary role changes
+/// may select this role; the server still authorizes commands. Protected roles
+/// remain visible as part of a member's authoritative projection, but these
+/// controls cannot edit them.
+extension OrganizationRoleAppearance on skir.OrganizationRole {
+  /// The role color as a Flutter value.
+  Color get displayColor => color.toFlutterColor();
 }
 
 /// Loads the role catalog for the selected organization.
@@ -52,7 +23,7 @@ abstract class OrganizationRole with _$OrganizationRole {
 @riverpod
 class OrganizationRoles extends _$OrganizationRoles {
   @override
-  Stream<List<OrganizationRole>> build() async* {
+  Stream<List<skir.OrganizationRole>> build() async* {
     final userId = await ref.watch(userIdProvider.future);
     if (!ref.mounted) return;
 
@@ -78,9 +49,9 @@ class OrganizationRoles extends _$OrganizationRoles {
 }
 
 extension OrganizationRoleSnapshot on skir.WatchOrganizationRolesResponse {
-  List<OrganizationRole> readRoleSnapshot() => switch (this) {
+  List<skir.OrganizationRole> readRoleSnapshot() => switch (this) {
     skir.WatchOrganizationRolesResponse_listWrapper(:final value) =>
-      value.map(OrganizationRole.fromSkir).toList(),
+      value.toList(),
     skir.WatchOrganizationRolesResponse_unknown() =>
       throw ApiException.unknownResponseMessage(),
     skir.WatchOrganizationRolesResponse_internalErrorWrapper() =>

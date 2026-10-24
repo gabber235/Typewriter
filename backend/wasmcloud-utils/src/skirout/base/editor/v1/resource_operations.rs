@@ -868,11 +868,11 @@ impl ResolveResourceOperationsRequest {
 pub enum ResolveResourceOperationsResult {
     Unknown(Option<crate::skir_client::UnrecognizedVariant<ResolveResourceOperationsResult>>),
     Resolved(Box<crate::skirout::base::editor::v1::operation::ResolvedResourceOperations>),
-    StaleObservation(Box<StaleAuthoringObservation>),
-    Invalid(Box<ResourceOperationFailure>),
-    CatalogChanged(Box<crate::skirout::base::editor::v1::authoring::CatalogChanged>),
-    PermissionDenied(Box<ResourceOperationFailure>),
-    Failed(Box<ResourceOperationFailure>),
+    StaleObservationError(Box<StaleAuthoringObservation>),
+    InvalidError(Box<ResourceOperationFailure>),
+    CatalogChangedError(Box<crate::skirout::base::editor::v1::authoring::CatalogChanged>),
+    PermissionDeniedError(Box<ResourceOperationFailure>),
+    FailedError(Box<ResourceOperationFailure>),
     InternalError(Box<crate::skirout::base::kernel::v1::errors::InternalError>),
 }
 
@@ -892,11 +892,11 @@ impl ResolveResourceOperationsResult {
                 |x: &ResolveResourceOperationsResult| match x {
                     ResolveResourceOperationsResult::Unknown(_) => 0,
                     ResolveResourceOperationsResult::Resolved(_) => 1,
-                    ResolveResourceOperationsResult::StaleObservation(_) => 2,
-                    ResolveResourceOperationsResult::Invalid(_) => 3,
-                    ResolveResourceOperationsResult::CatalogChanged(_) => 4,
-                    ResolveResourceOperationsResult::PermissionDenied(_) => 5,
-                    ResolveResourceOperationsResult::Failed(_) => 6,
+                    ResolveResourceOperationsResult::StaleObservationError(_) => 2,
+                    ResolveResourceOperationsResult::InvalidError(_) => 3,
+                    ResolveResourceOperationsResult::CatalogChangedError(_) => 4,
+                    ResolveResourceOperationsResult::PermissionDeniedError(_) => 5,
+                    ResolveResourceOperationsResult::FailedError(_) => 6,
                     ResolveResourceOperationsResult::InternalError(_) => 7,
                 },
                 |u| ResolveResourceOperationsResult::Unknown(Some(u)),
@@ -1077,12 +1077,12 @@ pub enum AuthoringActionResult {
     Unknown(Option<crate::skir_client::UnrecognizedVariant<AuthoringActionResult>>),
     NeedsInput(Box<AuthoringActionNeedsInput>),
     Preview(Box<AuthoringActionPreview>),
-    StaleObservation(Box<StaleAuthoringObservation>),
-    Invalid(Box<ResourceOperationFailure>),
-    Unavailable(Box<ResourceOperationFailure>),
-    CatalogChanged(Box<crate::skirout::base::editor::v1::authoring::CatalogChanged>),
-    PermissionDenied(Box<ResourceOperationFailure>),
-    Failed(Box<ResourceOperationFailure>),
+    StaleObservationError(Box<StaleAuthoringObservation>),
+    InvalidError(Box<ResourceOperationFailure>),
+    UnavailableError(Box<ResourceOperationFailure>),
+    CatalogChangedError(Box<crate::skirout::base::editor::v1::authoring::CatalogChanged>),
+    PermissionDeniedError(Box<ResourceOperationFailure>),
+    FailedError(Box<ResourceOperationFailure>),
     InternalError(Box<crate::skirout::base::kernel::v1::errors::InternalError>),
 }
 
@@ -1102,12 +1102,12 @@ impl AuthoringActionResult {
                     AuthoringActionResult::Unknown(_) => 0,
                     AuthoringActionResult::NeedsInput(_) => 1,
                     AuthoringActionResult::Preview(_) => 2,
-                    AuthoringActionResult::StaleObservation(_) => 3,
-                    AuthoringActionResult::Invalid(_) => 4,
-                    AuthoringActionResult::Unavailable(_) => 5,
-                    AuthoringActionResult::CatalogChanged(_) => 6,
-                    AuthoringActionResult::PermissionDenied(_) => 7,
-                    AuthoringActionResult::Failed(_) => 8,
+                    AuthoringActionResult::StaleObservationError(_) => 3,
+                    AuthoringActionResult::InvalidError(_) => 4,
+                    AuthoringActionResult::UnavailableError(_) => 5,
+                    AuthoringActionResult::CatalogChangedError(_) => 6,
+                    AuthoringActionResult::PermissionDeniedError(_) => 7,
+                    AuthoringActionResult::FailedError(_) => 8,
                     AuthoringActionResult::InternalError(_) => 9,
                 },
                 |u| AuthoringActionResult::Unknown(Some(u)),
@@ -1272,11 +1272,11 @@ impl ResolveDropCandidatesRequest {
 pub enum ResolveDropCandidatesResult {
     Unknown(Option<crate::skir_client::UnrecognizedVariant<ResolveDropCandidatesResult>>),
     Resolved(Vec<DropCandidates>),
-    StaleObservation(Box<StaleAuthoringObservation>),
-    Invalid(Box<ResourceOperationFailure>),
-    CatalogChanged(Box<crate::skirout::base::editor::v1::authoring::CatalogChanged>),
-    PermissionDenied(Box<ResourceOperationFailure>),
-    Failed(Box<ResourceOperationFailure>),
+    StaleObservationError(Box<StaleAuthoringObservation>),
+    InvalidError(Box<ResourceOperationFailure>),
+    CatalogChangedError(Box<crate::skirout::base::editor::v1::authoring::CatalogChanged>),
+    PermissionDeniedError(Box<ResourceOperationFailure>),
+    FailedError(Box<ResourceOperationFailure>),
     InternalError(Box<crate::skirout::base::kernel::v1::errors::InternalError>),
 }
 
@@ -1296,11 +1296,11 @@ impl ResolveDropCandidatesResult {
                 |x: &ResolveDropCandidatesResult| match x {
                     ResolveDropCandidatesResult::Unknown(_) => 0,
                     ResolveDropCandidatesResult::Resolved(_) => 1,
-                    ResolveDropCandidatesResult::StaleObservation(_) => 2,
-                    ResolveDropCandidatesResult::Invalid(_) => 3,
-                    ResolveDropCandidatesResult::CatalogChanged(_) => 4,
-                    ResolveDropCandidatesResult::PermissionDenied(_) => 5,
-                    ResolveDropCandidatesResult::Failed(_) => 6,
+                    ResolveDropCandidatesResult::StaleObservationError(_) => 2,
+                    ResolveDropCandidatesResult::InvalidError(_) => 3,
+                    ResolveDropCandidatesResult::CatalogChangedError(_) => 4,
+                    ResolveDropCandidatesResult::PermissionDeniedError(_) => 5,
+                    ResolveDropCandidatesResult::FailedError(_) => 6,
                     ResolveDropCandidatesResult::InternalError(_) => 7,
                 },
                 |u| ResolveDropCandidatesResult::Unknown(Some(u)),
@@ -1833,70 +1833,70 @@ fn initialize_module_serializers() {
                 },
             );
             (*a).add_wrapper_variant(
-                "stale_observation",
+                "stale_observation_error",
                 2,
                 2,
                 crate::skir_client::internal::struct_serializer_from_static(
                     StaleAuthoringObservation::_adapter(),
                 ),
                 "",
-                |v| ResolveResourceOperationsResult::StaleObservation(Box::new(v)),
+                |v| ResolveResourceOperationsResult::StaleObservationError(Box::new(v)),
                 |x| match x {
-                    ResolveResourceOperationsResult::StaleObservation(b) => b.as_ref(),
+                    ResolveResourceOperationsResult::StaleObservationError(b) => b.as_ref(),
                     _ => unreachable!(),
                 },
             );
             (*a).add_wrapper_variant(
-                "invalid",
+                "invalid_error",
                 3,
                 3,
                 crate::skir_client::internal::struct_serializer_from_static(
                     ResourceOperationFailure::_adapter(),
                 ),
                 "",
-                |v| ResolveResourceOperationsResult::Invalid(Box::new(v)),
+                |v| ResolveResourceOperationsResult::InvalidError(Box::new(v)),
                 |x| match x {
-                    ResolveResourceOperationsResult::Invalid(b) => b.as_ref(),
+                    ResolveResourceOperationsResult::InvalidError(b) => b.as_ref(),
                     _ => unreachable!(),
                 },
             );
             (*a).add_wrapper_variant(
-                "catalog_changed",
+                "catalog_changed_error",
                 4,
                 4,
                 crate::skirout::base::editor::v1::authoring::CatalogChanged::serializer(),
                 "",
-                |v| ResolveResourceOperationsResult::CatalogChanged(Box::new(v)),
+                |v| ResolveResourceOperationsResult::CatalogChangedError(Box::new(v)),
                 |x| match x {
-                    ResolveResourceOperationsResult::CatalogChanged(b) => b.as_ref(),
+                    ResolveResourceOperationsResult::CatalogChangedError(b) => b.as_ref(),
                     _ => unreachable!(),
                 },
             );
             (*a).add_wrapper_variant(
-                "permission_denied",
+                "permission_denied_error",
                 5,
                 5,
                 crate::skir_client::internal::struct_serializer_from_static(
                     ResourceOperationFailure::_adapter(),
                 ),
                 "",
-                |v| ResolveResourceOperationsResult::PermissionDenied(Box::new(v)),
+                |v| ResolveResourceOperationsResult::PermissionDeniedError(Box::new(v)),
                 |x| match x {
-                    ResolveResourceOperationsResult::PermissionDenied(b) => b.as_ref(),
+                    ResolveResourceOperationsResult::PermissionDeniedError(b) => b.as_ref(),
                     _ => unreachable!(),
                 },
             );
             (*a).add_wrapper_variant(
-                "failed",
+                "failed_error",
                 6,
                 6,
                 crate::skir_client::internal::struct_serializer_from_static(
                     ResourceOperationFailure::_adapter(),
                 ),
                 "",
-                |v| ResolveResourceOperationsResult::Failed(Box::new(v)),
+                |v| ResolveResourceOperationsResult::FailedError(Box::new(v)),
                 |x| match x {
-                    ResolveResourceOperationsResult::Failed(b) => b.as_ref(),
+                    ResolveResourceOperationsResult::FailedError(b) => b.as_ref(),
                     _ => unreachable!(),
                 },
             );
@@ -2114,84 +2114,84 @@ fn initialize_module_serializers() {
                 },
             );
             (*a).add_wrapper_variant(
-                "stale_observation",
+                "stale_observation_error",
                 3,
                 3,
                 crate::skir_client::internal::struct_serializer_from_static(
                     StaleAuthoringObservation::_adapter(),
                 ),
                 "",
-                |v| AuthoringActionResult::StaleObservation(Box::new(v)),
+                |v| AuthoringActionResult::StaleObservationError(Box::new(v)),
                 |x| match x {
-                    AuthoringActionResult::StaleObservation(b) => b.as_ref(),
+                    AuthoringActionResult::StaleObservationError(b) => b.as_ref(),
                     _ => unreachable!(),
                 },
             );
             (*a).add_wrapper_variant(
-                "invalid",
+                "invalid_error",
                 4,
                 4,
                 crate::skir_client::internal::struct_serializer_from_static(
                     ResourceOperationFailure::_adapter(),
                 ),
                 "",
-                |v| AuthoringActionResult::Invalid(Box::new(v)),
+                |v| AuthoringActionResult::InvalidError(Box::new(v)),
                 |x| match x {
-                    AuthoringActionResult::Invalid(b) => b.as_ref(),
+                    AuthoringActionResult::InvalidError(b) => b.as_ref(),
                     _ => unreachable!(),
                 },
             );
             (*a).add_wrapper_variant(
-                "unavailable",
+                "unavailable_error",
                 5,
                 5,
                 crate::skir_client::internal::struct_serializer_from_static(
                     ResourceOperationFailure::_adapter(),
                 ),
                 "",
-                |v| AuthoringActionResult::Unavailable(Box::new(v)),
+                |v| AuthoringActionResult::UnavailableError(Box::new(v)),
                 |x| match x {
-                    AuthoringActionResult::Unavailable(b) => b.as_ref(),
+                    AuthoringActionResult::UnavailableError(b) => b.as_ref(),
                     _ => unreachable!(),
                 },
             );
             (*a).add_wrapper_variant(
-                "catalog_changed",
+                "catalog_changed_error",
                 6,
                 6,
                 crate::skirout::base::editor::v1::authoring::CatalogChanged::serializer(),
                 "",
-                |v| AuthoringActionResult::CatalogChanged(Box::new(v)),
+                |v| AuthoringActionResult::CatalogChangedError(Box::new(v)),
                 |x| match x {
-                    AuthoringActionResult::CatalogChanged(b) => b.as_ref(),
+                    AuthoringActionResult::CatalogChangedError(b) => b.as_ref(),
                     _ => unreachable!(),
                 },
             );
             (*a).add_wrapper_variant(
-                "permission_denied",
+                "permission_denied_error",
                 7,
                 7,
                 crate::skir_client::internal::struct_serializer_from_static(
                     ResourceOperationFailure::_adapter(),
                 ),
                 "",
-                |v| AuthoringActionResult::PermissionDenied(Box::new(v)),
+                |v| AuthoringActionResult::PermissionDeniedError(Box::new(v)),
                 |x| match x {
-                    AuthoringActionResult::PermissionDenied(b) => b.as_ref(),
+                    AuthoringActionResult::PermissionDeniedError(b) => b.as_ref(),
                     _ => unreachable!(),
                 },
             );
             (*a).add_wrapper_variant(
-                "failed",
+                "failed_error",
                 8,
                 8,
                 crate::skir_client::internal::struct_serializer_from_static(
                     ResourceOperationFailure::_adapter(),
                 ),
                 "",
-                |v| AuthoringActionResult::Failed(Box::new(v)),
+                |v| AuthoringActionResult::FailedError(Box::new(v)),
                 |x| match x {
-                    AuthoringActionResult::Failed(b) => b.as_ref(),
+                    AuthoringActionResult::FailedError(b) => b.as_ref(),
                     _ => unreachable!(),
                 },
             );
@@ -2318,70 +2318,70 @@ fn initialize_module_serializers() {
                 },
             );
             (*a).add_wrapper_variant(
-                "stale_observation",
+                "stale_observation_error",
                 2,
                 2,
                 crate::skir_client::internal::struct_serializer_from_static(
                     StaleAuthoringObservation::_adapter(),
                 ),
                 "",
-                |v| ResolveDropCandidatesResult::StaleObservation(Box::new(v)),
+                |v| ResolveDropCandidatesResult::StaleObservationError(Box::new(v)),
                 |x| match x {
-                    ResolveDropCandidatesResult::StaleObservation(b) => b.as_ref(),
+                    ResolveDropCandidatesResult::StaleObservationError(b) => b.as_ref(),
                     _ => unreachable!(),
                 },
             );
             (*a).add_wrapper_variant(
-                "invalid",
+                "invalid_error",
                 3,
                 3,
                 crate::skir_client::internal::struct_serializer_from_static(
                     ResourceOperationFailure::_adapter(),
                 ),
                 "",
-                |v| ResolveDropCandidatesResult::Invalid(Box::new(v)),
+                |v| ResolveDropCandidatesResult::InvalidError(Box::new(v)),
                 |x| match x {
-                    ResolveDropCandidatesResult::Invalid(b) => b.as_ref(),
+                    ResolveDropCandidatesResult::InvalidError(b) => b.as_ref(),
                     _ => unreachable!(),
                 },
             );
             (*a).add_wrapper_variant(
-                "catalog_changed",
+                "catalog_changed_error",
                 4,
                 4,
                 crate::skirout::base::editor::v1::authoring::CatalogChanged::serializer(),
                 "",
-                |v| ResolveDropCandidatesResult::CatalogChanged(Box::new(v)),
+                |v| ResolveDropCandidatesResult::CatalogChangedError(Box::new(v)),
                 |x| match x {
-                    ResolveDropCandidatesResult::CatalogChanged(b) => b.as_ref(),
+                    ResolveDropCandidatesResult::CatalogChangedError(b) => b.as_ref(),
                     _ => unreachable!(),
                 },
             );
             (*a).add_wrapper_variant(
-                "permission_denied",
+                "permission_denied_error",
                 5,
                 5,
                 crate::skir_client::internal::struct_serializer_from_static(
                     ResourceOperationFailure::_adapter(),
                 ),
                 "",
-                |v| ResolveDropCandidatesResult::PermissionDenied(Box::new(v)),
+                |v| ResolveDropCandidatesResult::PermissionDeniedError(Box::new(v)),
                 |x| match x {
-                    ResolveDropCandidatesResult::PermissionDenied(b) => b.as_ref(),
+                    ResolveDropCandidatesResult::PermissionDeniedError(b) => b.as_ref(),
                     _ => unreachable!(),
                 },
             );
             (*a).add_wrapper_variant(
-                "failed",
+                "failed_error",
                 6,
                 6,
                 crate::skir_client::internal::struct_serializer_from_static(
                     ResourceOperationFailure::_adapter(),
                 ),
                 "",
-                |v| ResolveDropCandidatesResult::Failed(Box::new(v)),
+                |v| ResolveDropCandidatesResult::FailedError(Box::new(v)),
                 |x| match x {
-                    ResolveDropCandidatesResult::Failed(b) => b.as_ref(),
+                    ResolveDropCandidatesResult::FailedError(b) => b.as_ref(),
                     _ => unreachable!(),
                 },
             );

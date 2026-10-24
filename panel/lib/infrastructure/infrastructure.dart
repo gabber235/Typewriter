@@ -8,4 +8,3 @@ library;
 export "messaging/messaging.dart";
 export "observability/observability.dart";
 export "protocols/skir/converters.dart";
-export "protocols/skir/realm_search_query_codec.dart";

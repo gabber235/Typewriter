@@ -5,7 +5,7 @@ import "package:typewriter_panel/typewriter_panel.dart";
 
 void main() {
   final catalog = CheckedEditorCatalog(
-    (skir.EditorCatalogWireSnapshot.mutable()
+    (skir.EditorCatalog.mutable()
           ..types = [
             skir.PublishedType(
               searchKey: null,

@@ -15,6 +15,7 @@ import {
   TypeTemplate,
   TypeUse,
 } from "editor/v1/type_catalog.skir";
+import { InternalError } from "kernel/v1/errors.skir";
 
 /// Caller correlation identity. It does not imply durable command storage or automatic deduplication.
 struct InvocationId(811200001) {
@@ -115,18 +116,20 @@ struct CapabilityFailure(811200017) {
 
 enum ComputationResult(811200018) {
   success: ComputationSuccess = 1;
-  invalid: CapabilityFailure = 2;
-  unavailable: CapabilityFailure = 3;
-  permission_denied: CapabilityPermissionDenied = 4;
-  stale_generation: StaleCatalogGeneration = 5;
+  invalid_error: CapabilityFailure = 2;
+  unavailable_error: CapabilityFailure = 3;
+  permission_denied_error: CapabilityPermissionDenied = 4;
+  stale_generation_error: StaleCatalogGeneration = 5;
+  internal_error: InternalError = 6;
 }
 
 enum CommandResult(811200019) {
   success: CommandSuccess = 1;
-  invalid: CapabilityFailure = 2;
-  unavailable: CapabilityFailure = 3;
-  permission_denied: CapabilityPermissionDenied = 4;
-  stale_generation: StaleCatalogGeneration = 5;
+  invalid_error: CapabilityFailure = 2;
+  unavailable_error: CapabilityFailure = 3;
+  permission_denied_error: CapabilityPermissionDenied = 4;
+  stale_generation_error: StaleCatalogGeneration = 5;
+  internal_error: InternalError = 6;
 }
 
 struct AuthoringCapabilityDefinition(811200020) {
