@@ -943,7 +943,7 @@ pub fn issue_service_identity_method()
         crate::skir_client::Method<IssueServiceIdentityRequest, IssueServiceIdentityResponse>,
     > = std::sync::LazyLock::new(|| crate::skir_client::Method {
         name: "IssueServiceIdentity".to_string(),
-        number: 672941_i64,
+        number: 930201_i64,
         request_serializer: IssueServiceIdentityRequest::serializer(),
         response_serializer: IssueServiceIdentityResponse::serializer(),
         doc: "".to_string(),

@@ -7,14 +7,13 @@ import com.typewritermc.services.libs.filetransfer.blob.ArtifactDigest
 /**
  * Collects retention roots before blob garbage collection.
  *
- * Current and previous deployments, shared descriptors, transfers, accepted candidates, and rollout projections
+ * Current and previous deployments, shared descriptors, accepted candidates, and rollout projections
  * protect their digests. The caller supplies a coherent view and coordinates concurrent publication.
  */
 data class DigestProtectionState(
     val currentDeployment: DeploymentSnapshot?,
     val previousDeployment: DeploymentSnapshot?,
     val currentSharedArtifacts: Collection<SharedArtifactDescriptor>,
-    val activeTransferDigests: Set<ArtifactDigest>,
     val acceptedCandidateDigests: Set<ArtifactDigest>,
     val rolloutProjectionDigests: Set<ArtifactDigest>,
 ) {
@@ -24,7 +23,6 @@ data class DigestProtectionState(
             currentDeployment?.content?.digests()?.let(::addAll)
             previousDeployment?.content?.digests()?.let(::addAll)
             currentSharedArtifacts.mapNotNullTo(this) { it.digest }
-            addAll(activeTransferDigests)
             addAll(acceptedCandidateDigests)
             addAll(rolloutProjectionDigests)
         }

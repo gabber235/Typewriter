@@ -2,14 +2,21 @@ package com.typewritermc.services.libs.communicator.nats
 
 import com.typewritermc.services.libs.communicator.address.AddressPattern
 import com.typewritermc.services.libs.communicator.address.MessageAddress
-import com.typewritermc.services.libs.communicator.transfer.REPLY_ASSEMBLY_BUDGET
-import com.typewritermc.services.libs.communicator.transfer.ReplyAssembler
-import com.typewritermc.services.libs.communicator.transfer.ReplyPlan
+import com.typewritermc.services.libs.communicator.transfer.Assembly
+import com.typewritermc.services.libs.communicator.transfer.FrameChannel
+import com.typewritermc.services.libs.communicator.transfer.FramePacing
+import com.typewritermc.services.libs.communicator.transfer.PayloadAssembler
+import com.typewritermc.services.libs.communicator.transfer.PayloadFrame
+import com.typewritermc.services.libs.communicator.transfer.PayloadHeaders
+import com.typewritermc.services.libs.communicator.transfer.PayloadPlan
 import com.typewritermc.services.libs.communicator.transfer.TransferFailure
+import com.typewritermc.services.libs.communicator.transfer.TransferRejected
 import com.typewritermc.services.libs.communicator.transfer.TransferTooLarge
 import com.typewritermc.services.libs.communicator.transfer.TransportLimits
-import com.typewritermc.services.libs.communicator.transfer.interruptedReplyHeaders
-import com.typewritermc.services.libs.communicator.transfer.planReply
+import com.typewritermc.services.libs.communicator.transfer.interruptedHeaders
+import com.typewritermc.services.libs.communicator.transfer.planPayload
+import com.typewritermc.services.libs.communicator.transfer.sendInWindows
+import com.typewritermc.services.libs.communicator.transfer.transferFailure
 import com.typewritermc.services.libs.communicator.transfer.withFraming
 import com.typewritermc.services.libs.communicator.transport.InboundMessage
 import com.typewritermc.services.libs.communicator.transport.MessageHeaders
@@ -25,7 +32,6 @@ import com.typewritermc.services.libs.communicator.transport.TransportResult
 import com.typewritermc.services.libs.communicator.transport.TransportSubscription
 import com.typewritermc.services.libs.utils.rethrowExceptional
 import kotlinx.coroutines.NonCancellable
-import kotlinx.coroutines.channels.ChannelResult
 import kotlinx.coroutines.channels.ReceiveChannel
 import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.flow.Flow
@@ -43,14 +49,19 @@ import kotlinx.coroutines.withContext
 import kotlinx.coroutines.withTimeoutOrNull
 import java.util.UUID
 import kotlin.time.Duration
+import kotlin.time.TimeMark
 
 /**
  * Adapts core NATS messaging through a borrowed connected [NatsConnection].
  *
  * Operations fail when disconnected. Subscription creation waits for activation and flushes before returning so
- * callers can safely issue a subsequent request. Replies above [TransportLimits.chunkBytes] travel as frames on the
- * requester's reply address: [reply] splits them and [request] and reply channels reassemble them, so communicators
- * only ever see complete replies. No persistence or application delivery acknowledgment is added.
+ * callers can safely issue a subsequent request. Payloads above [TransportLimits.chunkBytes] travel as frames:
+ * [reply] splits large replies on the requester's reply address, in credit windows when the route's
+ * [TransportLimits.replyCredit] holds and streamed otherwise, and [request] splits large requests on the route
+ * address in credit windows when the route allows it. Receivers answer each window end with the next grant, so
+ * communicators only ever see complete payloads. [limits] are the manifest defaults; a call may pass its route's.
+ * Their frame inactivity bounds how long a sender waits for a credit and a requester for the next frame.
+ * No persistence or application delivery acknowledgment is added.
  */
 class NatsMessageTransport(
     private val connection: NatsConnection,
@@ -62,7 +73,7 @@ class NatsMessageTransport(
     override suspend fun openReplyChannel(): TransportResult<ReplyChannel> =
         when (val inbox = openInbox()) {
             is TransportResult.Failure -> inbox
-            is TransportResult.Success -> TransportResult.Success(NatsReplyChannel(inbox.value, limits))
+            is TransportResult.Success -> TransportResult.Success(NatsReplyChannel(inbox.value, limits, ::publish))
         }
 
     /** Publishes [message] when the connection is currently usable. */
@@ -72,57 +83,92 @@ class NatsMessageTransport(
     }
 
     /**
-     * Publishes a reply as one plain message, or as frames when it exceeds [TransportLimits.chunkBytes].
+     * Publishes a reply as one plain message, or as frames when it exceeds the chunk size.
      *
-     * A reply above [TransportLimits.maxEncodedSize] sends one too large failure frame and fails with
-     * [TransferTooLarge]. A frame that cannot be published is followed by an interrupted frame, so the requester
-     * fails at once instead of waiting for its assembly budget, and the publish failure is returned.
+     * A reply above the route's [TransportLimits.replyMaxBytes] sends one too large failure message and fails with
+     * [TransferTooLarge]. When the route's [TransportLimits.replyCredit] holds, the last frame of each window waits
+     * for the requester's credit, so the reply never runs more than one window ahead; otherwise every frame streams
+     * at once. A framed reply to a request [received] longer ago than the route's reply time to live stops as
+     * [TransferInterrupted][com.typewritermc.services.libs.communicator.transfer.TransferInterrupted], since NATS no
+     * longer delivers its frames. A failure part way is followed by an interrupted frame, so the requester fails at
+     * once, and the failure is returned.
      */
-    override suspend fun reply(message: OutboundMessage): TransportResult<Unit> =
-        when (val plan = limits.planReply(message.payload)) {
-            ReplyPlan.Single -> {
+    override suspend fun reply(
+        message: OutboundMessage,
+        limits: TransportLimits?,
+        received: TimeMark?,
+    ): TransportResult<Unit> {
+        val route = limits ?: this.limits
+        return when (val plan = route.planPayload(message.payload, route.replyMaxBytes)) {
+            PayloadPlan.Single -> {
                 publish(message)
             }
 
-            is ReplyPlan.TooLarge -> {
+            is PayloadPlan.TooLarge -> {
                 when (val published = publish(message.framed(Payload.Empty, plan.headers))) {
                     is TransportResult.Failure -> published
                     is TransportResult.Success -> TransportResult.Failure(TransportError.Failure(TransferTooLarge(plan.size, plan.limit)))
                 }
             }
 
-            is ReplyPlan.Framed -> {
-                publishFrames(message, plan)
+            is PayloadPlan.Framed -> {
+                val pacing =
+                    FramePacing(
+                        windowFrames = route.windowFrames.takeIf { route.replyCredit },
+                        inactivity = route.frameInactivity,
+                        deadline = received?.plus(route.replyTtl),
+                    )
+                val sent = plan.sendInWindows(MessageFrames(message, route), pacing, false, route.frameInactivity)
+                when (sent) {
+                    is TransportResult.Failure -> sent
+                    is TransportResult.Success -> TransportResult.Success(Unit)
+                }
             }
         }
-
-    private suspend fun publishFrames(
-        message: OutboundMessage,
-        plan: ReplyPlan.Framed,
-    ): TransportResult<Unit> {
-        for (frame in plan.frames) {
-            val published = publish(message.framed(frame.payload, frame.headers))
-            if (published is TransportResult.Failure) {
-                publish(message.framed(Payload.Empty, interruptedReplyHeaders(plan.replyId)))
-                return published
-            }
-        }
-        return TransportResult.Success(Unit)
     }
 
     /**
      * Requests through a fresh transport owned inbox; caller-provided reply subjects are rejected.
      *
-     * The first reply message must arrive within [timeout] and the remaining frames of a framed reply within the
-     * thirty second assembly budget after it. Timeouts, no responders and framing failures are result values; the
-     * inbox and every retained frame are released on every exit, including cancellation.
+     * A request above the chunk size travels as frames in credit windows when the route's
+     * [TransportLimits.requestMaxBytes] allows it and fails with [TransferTooLarge] before any frame otherwise. The
+     * first reply message must arrive within [timeout] and each further frame of a framed reply within the frame
+     * inactivity bound. Timeouts, no responders and framing failures are result values; every inbox and retained
+     * frame is released on every exit, including cancellation.
      */
     override suspend fun request(
         message: OutboundMessage,
         timeout: Duration,
+        limits: TransportLimits?,
     ): TransportResult<InboundMessage> {
         require(message.replyTo == null) { "NATS requests cannot specify replyTo" }
         timeout.toPositiveMilliseconds("Request timeout")
+        val route = limits ?: this.limits
+        return when (val plan = route.planPayload(message.payload, route.requestMaxBytes)) {
+            PayloadPlan.Single -> {
+                exchange(message, timeout, route)
+            }
+
+            is PayloadPlan.TooLarge -> {
+                TransportResult.Failure(TransportError.Failure(TransferTooLarge(plan.size, plan.limit)))
+            }
+
+            is PayloadPlan.Framed -> {
+                val pacing = FramePacing(route.windowFrames, route.frameInactivity)
+                when (val sent = plan.sendInWindows(MessageFrames(message, route), pacing, true, timeout)) {
+                    is TransportResult.Failure -> sent
+                    is TransportResult.Success -> TransportResult.Success(requireNotNull(sent.value))
+                }
+            }
+        }
+    }
+
+    /** Publishes [message] with a fresh inbox as its reply address and returns the complete answer. */
+    private suspend fun exchange(
+        message: OutboundMessage,
+        timeout: Duration,
+        route: TransportLimits,
+    ): TransportResult<InboundMessage> {
         val inbox =
             when (val opened = openInbox()) {
                 is TransportResult.Failure -> return opened
@@ -131,7 +177,7 @@ class NatsMessageTransport(
         try {
             val published = publish(message.copy(replyTo = inbox.address))
             if (published is TransportResult.Failure) return published
-            return awaitReply(inbox.subscription.deliveries, timeout)
+            return awaitReply(inbox.subscription.deliveries, timeout, route)
         } finally {
             withContext(NonCancellable) { inbox.subscription.close() }
         }
@@ -140,33 +186,33 @@ class NatsMessageTransport(
     private suspend fun awaitReply(
         deliveries: Flow<TransportDelivery>,
         timeout: Duration,
+        route: TransportLimits,
     ): TransportResult<InboundMessage> =
         coroutineScope {
             val frames = deliveries.produceIn(this)
             try {
-                val assembler = ReplyAssembler(limits)
-                val first = withTimeoutOrNull(timeout) { frames.receiveCatching() } ?: return@coroutineScope replyTimeout()
-                withTimeoutOrNull(REPLY_ASSEMBLY_BUDGET) { frames.assemble(first, assembler) } ?: replyTimeout()
+                frames.receiveAssembled(PayloadAssembler(route, route.replyMaxBytes), timeout, route.frameInactivity)
             } finally {
                 frames.cancel()
             }
         }
 
-    private suspend fun ReceiveChannel<TransportDelivery>.assemble(
-        first: ChannelResult<TransportDelivery>,
-        assembler: ReplyAssembler,
+    /** Receives until one payload is complete; the first message within [timeout], each later frame within the inactivity bound. */
+    private suspend fun ReceiveChannel<TransportDelivery>.receiveAssembled(
+        assembler: PayloadAssembler,
+        timeout: Duration,
+        inactivity: Duration,
     ): TransportResult<InboundMessage> {
-        var received = first
+        var wait = timeout
         while (true) {
+            val received = withTimeoutOrNull(wait) { receiveCatching() } ?: return replyTimeout()
+            wait = inactivity
             when (val delivery = received.getOrNull() ?: TransportDelivery.Completed) {
                 is TransportDelivery.Message -> {
-                    val reply =
-                        try {
-                            assembler.accept(delivery.message)
-                        } catch (failure: TransferFailure) {
-                            return TransportResult.Failure(TransportError.Failure(failure))
-                        }
-                    if (reply != null) return TransportResult.Success(reply)
+                    when (val assembled = assembler.deliver(delivery.message, ::publish)) {
+                        is TransportResult.Failure -> return assembled
+                        is TransportResult.Success -> assembled.value?.let { return TransportResult.Success(it) }
+                    }
                 }
 
                 is TransportDelivery.Failure -> {
@@ -177,7 +223,23 @@ class NatsMessageTransport(
                     return TransportResult.Failure(TransportError.Unavailable(IllegalStateException("NATS reply inbox closed")))
                 }
             }
-            received = receiveCatching()
+        }
+    }
+
+    /** The frames of one outbound payload: published on its address, window ends exchanged for their answer. */
+    private inner class MessageFrames(
+        private val message: OutboundMessage,
+        private val route: TransportLimits,
+    ) : FrameChannel {
+        override suspend fun publish(frame: PayloadFrame) = publish(message.framed(frame.payload, frame.headers))
+
+        override suspend fun request(
+            frame: PayloadFrame,
+            timeout: Duration,
+        ) = exchange(message.framed(frame.payload, frame.headers).copy(replyTo = null), timeout, route)
+
+        override suspend fun interrupt(payloadId: String) {
+            publish(message.framed(Payload.Empty, interruptedHeaders(payloadId)).copy(replyTo = null))
         }
     }
 
@@ -231,41 +293,76 @@ private class NatsInbox(
 )
 
 /**
- * A reply channel whose deliveries are complete replies. Each collection assembles frames by reply id. A framing
- * failure belongs to one responder's reply: it is delivered as a [TransportDelivery.Failure] whose cause is the
- * [TransferFailure], and the channel keeps delivering the other responders' replies. Only a failure of the
- * underlying subscription ends the deliveries.
+ * A reply channel whose deliveries are complete replies. Each collection assembles frames by payload id and answers
+ * every window end with its credit. A framing failure belongs to one responder's reply: it is delivered as a
+ * [TransportDelivery.Failure] whose cause is the [TransferFailure], and the channel keeps delivering the other
+ * responders' replies. Only a failure of the underlying subscription ends the deliveries.
  */
 private class NatsReplyChannel(
     private val inbox: NatsInbox,
     private val limits: TransportLimits,
+    private val publish: suspend (OutboundMessage) -> TransportResult<Unit>,
 ) : ReplyChannel {
     override val address: MessageAddress get() = inbox.address
 
     override val deliveries: Flow<TransportDelivery> =
         flow {
-            val assembler = ReplyAssembler(limits)
+            val assembler = PayloadAssembler(limits, limits.replyMaxBytes)
             inbox.subscription.deliveries
-                .mapNotNull { delivery -> delivery.assembledBy(assembler) }
-                .collect { emit(it) }
+                .mapNotNull { delivery ->
+                    when (delivery) {
+                        is TransportDelivery.Message -> {
+                            when (val assembled = assembler.deliver(delivery.message, publish)) {
+                                is TransportResult.Failure -> TransportDelivery.Failure(assembled.error)
+                                is TransportResult.Success -> assembled.value?.let(TransportDelivery::Message)
+                            }
+                        }
+
+                        else -> {
+                            delivery
+                        }
+                    }
+                }.collect { emit(it) }
         }
 
     override suspend fun close() = inbox.subscription.close()
 }
 
-private fun TransportDelivery.assembledBy(assembler: ReplyAssembler): TransportDelivery? =
-    when (this) {
-        is TransportDelivery.Message -> {
-            try {
-                assembler.accept(message)?.let(TransportDelivery::Message)
-            } catch (failure: TransferFailure) {
-                TransportDelivery.Failure(TransportError.Failure(failure))
+/**
+ * Accepts one received message: a complete payload, nothing yet, or a failure of this sender's payload. A window end
+ * is answered through [publish] on its reply address.
+ */
+private suspend fun PayloadAssembler.deliver(
+    message: InboundMessage,
+    publish: suspend (OutboundMessage) -> TransportResult<Unit>,
+): TransportResult<InboundMessage?> =
+    try {
+        when (val assembled = accept(message)) {
+            is Assembly.Complete -> {
+                TransportResult.Success(assembled.message)
+            }
+
+            is Assembly.Answer -> {
+                val answered = publish(OutboundMessage(requireNotNull(message.replyTo), Payload.Empty, headers = assembled.headers))
+                // Refusing a sender's window also ends this receiver's wait for the payload.
+                val refusal = assembled.headers.first(PayloadHeaders.FAILURE)?.let { transferFailure(it, assembled.headers) }
+                when {
+                    answered is TransportResult.Failure -> answered
+                    refusal != null -> TransportResult.Failure(TransportError.Failure(refusal))
+                    else -> TransportResult.Success(null)
+                }
+            }
+
+            Assembly.Waiting -> {
+                TransportResult.Success(null)
+            }
+
+            is Assembly.Failed -> {
+                TransportResult.Failure(TransportError.Failure(assembled.failure))
             }
         }
-
-        else -> {
-            this
-        }
+    } catch (rejected: TransferRejected) {
+        TransportResult.Failure(TransportError.Failure(rejected))
     }
 
 private fun OutboundMessage.framed(

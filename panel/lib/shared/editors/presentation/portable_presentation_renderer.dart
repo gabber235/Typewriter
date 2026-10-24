@@ -37,6 +37,10 @@ part "portable_renderer/scope.dart";
 part "portable_renderer/structured_inputs.dart";
 part "portable_renderer/style.dart";
 part "portable_search_input.dart";
+part "portable_renderer/choice_inputs.dart";
+part "portable_renderer/temporal_inputs.dart";
+part "portable_renderer/slider_input.dart";
+part "portable_renderer/color_input.dart";
 
 /// Renders a node in a caller owned scope. A standalone entry creates diagnostic
 /// membership around the supplied operation results, but does not own the host.

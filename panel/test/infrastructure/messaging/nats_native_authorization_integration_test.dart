@@ -377,9 +377,14 @@ void main() {
       final current = container.read(natsProvider);
       final realm = skir.recordId("realm_instance:fixture-realm");
       final organization = skir.recordId("organization:fixture-organization");
-      final repositories = container.read(resourceRepositoriesProvider);
-      expect(repositories.transport.client, same(current));
-      final repository = repositories.authoring(organization, realm);
+      final session = container.read(resourceSessionProvider);
+      expect(session.transport.client, same(current));
+      final repository = AuthoringResourceRepository(
+        session,
+        organization,
+        realm,
+      );
+      addTearDown(repository.dispose);
       final changes = <skir.AuthoringChanged>[];
       var invalidations = 0;
       final changesSubscription = repository.changes.listen(changes.add);
@@ -425,6 +430,8 @@ void main() {
       final retried = container.read(natsProvider);
       expect(retried, same(clients.last));
       expect(retried.connectionSession, _retrySession);
+      // AuthoringSession rebinds its repository when the connection is replaced.
+      await repository.rebindTransport(retried);
       await _waitUntil(
         "closure of the replaced connection",
         () => current.connectionState is NatsClosed,
@@ -433,7 +440,7 @@ void main() {
         "invalidation after retained repository rebind",
         () => invalidations > invalidationsBeforeRetry,
       );
-      expect(repositories.authoring(organization, realm), same(repository));
+      expect(container.read(resourceSessionProvider), same(session));
       await publishChange("catalog:retried");
       await _waitUntil(
         "delivery on the rebound retained repository",

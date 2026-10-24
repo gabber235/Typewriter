@@ -29,7 +29,7 @@ class FakeApp extends StatelessWidget {
           _ => ThemeMode.light,
         };
     return ProviderScope(
-      overrides: overrides,
+      overrides: [...appOverrides(), ...overrides],
       // Disable retry logic for both tests and widgetbooks to make them more deterministic.
       retry: (retryCount, error) => null,
       child: MaterialApp(

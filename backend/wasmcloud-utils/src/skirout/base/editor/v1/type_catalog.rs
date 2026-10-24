@@ -1354,45 +1354,6 @@ impl TypeDefinition {
 }
 
 // ==============================================================================
-// struct ResourceId
-// ==============================================================================
-
-#[derive(Clone, Debug, PartialEq, Default)]
-pub struct ResourceId {
-    pub value: String,
-    /// Set this to None when you're creating a struct.
-    pub _unrecognized: Option<crate::skir_client::UnrecognizedFields<ResourceId>>,
-}
-
-impl ResourceId {
-    pub fn default_ref() -> &'static ResourceId {
-        static D: std::sync::LazyLock<ResourceId> = std::sync::LazyLock::new(ResourceId::default);
-        &D
-    }
-}
-
-impl ResourceId {
-    fn _adapter() -> &'static crate::skir_client::internal::StructAdapter<ResourceId> {
-        static ADAPTER: std::sync::LazyLock<
-            crate::skir_client::internal::StructAdapter<ResourceId>,
-        > = std::sync::LazyLock::new(|| {
-            crate::skir_client::internal::StructAdapter::new(
-                "editor/v1/type_catalog.skir",
-                "ResourceId",
-                "",
-                |x: &ResourceId| &x._unrecognized,
-                |x: &mut ResourceId, u| x._unrecognized = u,
-            )
-        });
-        &*ADAPTER
-    }
-    pub fn serializer() -> crate::skir_client::Serializer<ResourceId> {
-        initialize_module_serializers();
-        crate::skir_client::internal::struct_serializer_from_static(ResourceId::_adapter())
-    }
-}
-
-// ==============================================================================
 // struct ItemId
 // ==============================================================================
 
@@ -1440,7 +1401,7 @@ impl ItemId {
 /// An absent opposite path allows a relation authored on only one side.
 #[derive(Clone, Debug, PartialEq, Default)]
 pub struct LinkTarget {
-    pub resource: ResourceId,
+    pub resource: crate::skirout::base::kernel::v1::resource_id::ResourceId,
     pub opposite: Option<ValuePath>,
     /// Set this to None when you're creating a struct.
     pub _unrecognized: Option<crate::skir_client::UnrecognizedFields<LinkTarget>>,
@@ -2605,7 +2566,7 @@ impl PathSegment {
 
 #[derive(Clone, Debug, PartialEq, Default)]
 pub struct ValueLocation {
-    pub resource: ResourceId,
+    pub resource: crate::skirout::base::kernel::v1::resource_id::ResourceId,
     pub path: ValuePath,
     /// Set this to None when you're creating a struct.
     pub _unrecognized: Option<crate::skir_client::UnrecognizedFields<ValueLocation>>,
@@ -4699,19 +4660,6 @@ fn initialize_module_serializers() {
             (*a).finalize();
         }
         unsafe {
-            let a: *mut crate::skir_client::internal::StructAdapter<ResourceId> =
-                ResourceId::_adapter() as *const _ as *mut _;
-            (*a).add_field(
-                "value",
-                0,
-                crate::skir_client::Serializer::string(),
-                "",
-                |x: &ResourceId| &x.value,
-                |x: &mut ResourceId, v| x.value = v,
-            );
-            (*a).finalize();
-        }
-        unsafe {
             let a: *mut crate::skir_client::internal::StructAdapter<ItemId> =
                 ItemId::_adapter() as *const _ as *mut _;
             (*a).add_field(
@@ -4730,7 +4678,7 @@ fn initialize_module_serializers() {
             (*a).add_field(
                 "resource",
                 0,
-                crate::skir_client::internal::struct_serializer_from_static(ResourceId::_adapter()),
+                crate::skirout::base::kernel::v1::resource_id::ResourceId::serializer(),
                 "",
                 |x: &LinkTarget| &x.resource,
                 |x: &mut LinkTarget, v| x.resource = v,
@@ -5392,7 +5340,7 @@ fn initialize_module_serializers() {
             (*a).add_field(
                 "resource",
                 0,
-                crate::skir_client::internal::struct_serializer_from_static(ResourceId::_adapter()),
+                crate::skirout::base::kernel::v1::resource_id::ResourceId::serializer(),
                 "",
                 |x: &ValueLocation| &x.resource,
                 |x: &mut ValueLocation, v| x.resource = v,

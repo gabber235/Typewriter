@@ -166,17 +166,21 @@ abstract interface class NatsClient {
   /// Terminal failure values retain their typed cause for recovery decisions.
   Stream<NatsConnectionState> get connectionStateChanges;
 
-  /// Sends a request and waits for its complete reply.
+  /// Sends a request of a route bounded by [limits] and waits for its
+  /// complete reply.
   ///
-  /// The first reply message must arrive within [timeout]; a large reply
-  /// arrives as frames that the transport reassembles within its assembly
-  /// budget, failing with a [TransferFailure] when it cannot complete. When
-  /// [cancelled] completes first, collection stops and the request fails with
+  /// A payload above a ceiling of [limits] fails with [TransferTooLarge]; a
+  /// request fails before any frame is sent. A large request travels as
+  /// frames in credit windows and a large reply as streamed frames, failing
+  /// with a [TransferFailure] when it cannot complete. The first reply message
+  /// must arrive within [timeout] and each next frame within the frame
+  /// inactivity of [limits]. When [cancelled] completes first, the request stops and fails with
   /// [TransferCancelled]. Headers are transport metadata and are not part of
   /// the payload contract.
   Future<NatsMessage> request(
     String subject,
     Uint8List payload, {
+    required TransportLimits limits,
     Map<String, String> headers = const {},
     Duration timeout = const Duration(seconds: 10),
     Future<void>? cancelled,

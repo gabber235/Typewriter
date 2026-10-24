@@ -9,11 +9,9 @@ import com.typewritermc.loader.api.artifact.SharedArtifactId
 import com.typewritermc.loader.api.artifact.SharedArtifactProvenance
 import com.typewritermc.loader.api.artifact.SharedArtifactRevision
 import com.typewritermc.protocol.transport.RealmRouteScope
-import com.typewritermc.protocol.transport.generated.sharedBlobBegin
-import com.typewritermc.protocol.transport.generated.sharedBlobComplete
+import com.typewritermc.protocol.transport.generated.sharedBlobFetch
 import com.typewritermc.protocol.transport.generated.sharedBlobMetadata
-import com.typewritermc.protocol.transport.generated.sharedBlobRead
-import com.typewritermc.protocol.transport.generated.sharedBlobWrite
+import com.typewritermc.protocol.transport.generated.sharedBlobStore
 import com.typewritermc.protocol.transport.generated.sharedCatalogFetch
 import com.typewritermc.protocol.transport.generated.sharedPublish
 import com.typewritermc.services.libs.communicator.router.CommunicatorRoutesBuilder
@@ -21,17 +19,15 @@ import com.typewritermc.services.libs.filetransfer.blob.ArtifactDigest
 import com.typewritermc.services.libs.filetransfer.blob.BlobMetadata
 import com.typewritermc.services.libs.filetransfer.blob.BlobResult
 import com.typewritermc.services.libs.filetransfer.blob.DigestAlgorithm
-import com.typewritermc.services.libs.filetransfer.blob.TransferId
+import com.typewritermc.services.libs.filetransfer.blob.StoreResult
 import okio.ByteString.Companion.toByteString
-import skirout.service.v1.artifact.BeginArtifactBlobWriteResponse
-import skirout.service.v1.artifact.CompleteArtifactBlobWriteResponse
 import skirout.service.v1.artifact.FetchArtifactBlobMetadataResponse
+import skirout.service.v1.artifact.FetchArtifactBlobResponse
 import skirout.service.v1.artifact.FetchSharedArtifactCatalogResponse
 import skirout.service.v1.artifact.ProducerMetadataEntry
 import skirout.service.v1.artifact.PublishSharedArtifactRequest
 import skirout.service.v1.artifact.PublishSharedArtifactResponse
-import skirout.service.v1.artifact.ReadArtifactBlobResponse
-import skirout.service.v1.artifact.WriteArtifactBlobChunkResponse
+import skirout.service.v1.artifact.StoreArtifactBlobResponse
 import skirout.service.v1.artifact.ArtifactDigest as SkirArtifactDigest
 import skirout.service.v1.artifact.BlobMetadata as SkirBlobMetadata
 import skirout.service.v1.artifact.DigestAlgorithm as SkirDigestAlgorithm
@@ -65,62 +61,29 @@ class StableRealmArtifactRoutes(
                 is BlobResult.Success -> FetchArtifactBlobMetadataResponse.SuccessWrapper(result.value.toSkir())
                 BlobResult.NotFound -> FetchArtifactBlobMetadataResponse.createNotFoundError()
                 is BlobResult.Invalid -> FetchArtifactBlobMetadataResponse.createInvalidError(reason = result.reason)
-                is BlobResult.Conflict -> FetchArtifactBlobMetadataResponse.createInvalidError(reason = result.reason)
             }
         }
-        unaryAt(address.sharedBlobRead, address) { call ->
-            when (val result = artifacts.read(call.request.digest.toApi(), call.request.offset, call.request.maximumBytes)) {
-                is BlobResult.Success -> {
-                    ReadArtifactBlobResponse.createSuccess(
-                        offset = result.value.offset,
-                        bytes = result.value.bytes.toByteString(),
-                        complete = result.value.complete,
-                    )
-                }
+        unaryAt(address.sharedBlobFetch, address, parallelism = BLOB_ROUTE_PARALLELISM) { call -> fetch(call.request.digest.toApi()) }
+        unaryAt(address.sharedBlobStore, address, parallelism = BLOB_ROUTE_PARALLELISM) { call ->
+            when (val result = artifacts.store(call.request.expected.toApi(), call.request.content.toByteArray())) {
+                is StoreResult.Stored -> StoreArtifactBlobResponse.SuccessWrapper(result.metadata.toSkir())
+                is StoreResult.Invalid -> StoreArtifactBlobResponse.createInvalidError(reason = result.reason)
+            }
+        }
+    }
 
-                BlobResult.NotFound -> {
-                    ReadArtifactBlobResponse.createNotFoundError()
-                }
-
-                is BlobResult.Invalid -> {
-                    ReadArtifactBlobResponse.createInvalidError(reason = result.reason)
-                }
-
-                is BlobResult.Conflict -> {
-                    ReadArtifactBlobResponse.createInvalidError(reason = result.reason)
-                }
-            }
+    /** Answers a blob fetch; the stored size decides first, so a blob too large to transfer is never read or hashed. */
+    private suspend fun fetch(digest: ArtifactDigest): FetchArtifactBlobResponse {
+        val stored = artifacts.metadata(digest)
+        if (stored is BlobResult.Success && stored.value.size > TRANSFERRED_BLOB_MAX_BYTES) {
+            return FetchArtifactBlobResponse.createInvalidError(
+                reason = "Blob of ${stored.value.size} bytes exceeds the $TRANSFERRED_BLOB_MAX_BYTES byte transfer ceiling.",
+            )
         }
-        unaryAt(address.sharedBlobBegin, address) { call ->
-            when (val result = artifacts.beginWrite(TransferId(call.request.transferId), call.request.expected.toApi())) {
-                is BlobResult.Success -> BeginArtifactBlobWriteResponse.createAccepted(offset = result.value.offset)
-                BlobResult.NotFound -> BeginArtifactBlobWriteResponse.createInvalidError(reason = "Transfer was not found.")
-                is BlobResult.Invalid -> BeginArtifactBlobWriteResponse.createInvalidError(reason = result.reason)
-                is BlobResult.Conflict -> BeginArtifactBlobWriteResponse.createConflictError(reason = result.reason)
-            }
-        }
-        unaryAt(address.sharedBlobWrite, address) { call ->
-            when (
-                val result =
-                    artifacts.write(
-                        TransferId(call.request.transferId),
-                        call.request.offset,
-                        call.request.bytes.toByteArray(),
-                    )
-            ) {
-                is BlobResult.Success -> WriteArtifactBlobChunkResponse.createAccepted(offset = result.value)
-                BlobResult.NotFound -> WriteArtifactBlobChunkResponse.createNotFoundError()
-                is BlobResult.Invalid -> WriteArtifactBlobChunkResponse.createInvalidError(reason = result.reason)
-                is BlobResult.Conflict -> WriteArtifactBlobChunkResponse.createConflictError(reason = result.reason)
-            }
-        }
-        unaryAt(address.sharedBlobComplete, address) { call ->
-            when (val result = artifacts.complete(TransferId(call.request.transferId))) {
-                is BlobResult.Success -> CompleteArtifactBlobWriteResponse.SuccessWrapper(result.value.toSkir())
-                BlobResult.NotFound -> CompleteArtifactBlobWriteResponse.createNotFoundError()
-                is BlobResult.Invalid -> CompleteArtifactBlobWriteResponse.createInvalidError(reason = result.reason)
-                is BlobResult.Conflict -> CompleteArtifactBlobWriteResponse.createConflictError(reason = result.reason)
-            }
+        return when (val result = artifacts.fetch(digest)) {
+            is BlobResult.Success -> FetchArtifactBlobResponse.createSuccess(content = result.value.toByteString())
+            BlobResult.NotFound -> FetchArtifactBlobResponse.createNotFoundError()
+            is BlobResult.Invalid -> FetchArtifactBlobResponse.createInvalidError(reason = result.reason)
         }
     }
 
@@ -150,3 +113,9 @@ class StableRealmArtifactRoutes(
         }
     }
 }
+
+/**
+ * Workers of each blob route. A blob in flight sits in memory several times over (file bytes, wire encoding and
+ * frames), so two concurrent transfers bound a host at about 1 GiB for 128 MiB blobs; larger files stay local imports.
+ */
+private const val BLOB_ROUTE_PARALLELISM = 2

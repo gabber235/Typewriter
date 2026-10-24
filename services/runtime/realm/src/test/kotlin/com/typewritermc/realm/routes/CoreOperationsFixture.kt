@@ -36,11 +36,11 @@ import com.typewritermc.presentation.PresentationRuntime
 import com.typewritermc.protocol.transport.RealmRouteScope
 import com.typewritermc.realm.authoring.AuthoringSeed
 import com.typewritermc.realm.authoring.InMemoryAuthoringViewStore
-import com.typewritermc.realm.authoring.ResourceOperationRuntime
 import com.typewritermc.realm.catalog.RealmCatalogIncarnation
 import com.typewritermc.realm.catalog.RealmCatalogStore
-import com.typewritermc.realm.repository.AuthoringMutationPlanner
-import com.typewritermc.realm.repository.MutationPlanningResult
+import com.typewritermc.realm.edit.AuthoringMutationPlanner
+import com.typewritermc.realm.edit.MutationPlanningResult
+import com.typewritermc.realm.operation.ResourceOperationRuntime
 import com.typewritermc.realm.testBook
 import com.typewritermc.realm.testTag
 import com.typewritermc.realm.withRealmStructure
@@ -80,11 +80,11 @@ import skirout.editor.v1.type_catalog.FieldOwner
 import skirout.editor.v1.type_catalog.ItemId
 import skirout.editor.v1.type_catalog.PathSegment
 import skirout.editor.v1.type_catalog.RepresentationTemplate
-import skirout.editor.v1.type_catalog.ResourceId
 import skirout.editor.v1.type_catalog.TypeDefinition
 import skirout.editor.v1.type_catalog.TypeDefinitionId
 import skirout.editor.v1.type_catalog.TypeSelection
 import skirout.editor.v1.type_catalog.ValuePath
+import skirout.kernel.v1.resource_id.ResourceId
 import java.nio.file.Path
 
 /**
@@ -388,7 +388,7 @@ internal class CoreOperationsFixture(
                     .CatalogGeneration(value = catalogGeneration()),
             targets =
                 ids.map {
-                    skirout.editor.v1.type_catalog
+                    skirout.kernel.v1.resource_id
                         .ResourceId(value = it)
                 },
             origin = OperationOrigin(container = null, occurrences = emptyList()),
@@ -423,7 +423,7 @@ internal class CoreOperationsFixture(
     fun plan(edit: PreparedEdit): MutationPlanningResult =
         views.capture().use { lease ->
             val catalog = lease.root.catalog
-            AuthoringMutationPlanner(catalog.checked, catalog.relations, catalog.endpointBindings).plan(lease.root.resources, edit)
+            AuthoringMutationPlanner(catalog.checked, catalog.relations).plan(lease.root.resources, edit)
         }
 
     /** Prepares [request] through the wire route and replays its preview edit onto the saved resources. */

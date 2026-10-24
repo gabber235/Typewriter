@@ -6304,7 +6304,7 @@ val ConfigureServiceHost: build.skir.service.Method<
 > by kotlin.lazy {
     build.skir.service.Method(
         "ConfigureServiceHost",
-        934201,
+        930901,
         skirout.service.v1.topology.ConfigureServiceHostRequest.serializer,
         skirout.service.v1.topology.ConfigureServiceHostResponse.serializer,
         "",
@@ -6317,7 +6317,7 @@ val WatchOrganizationTopology: build.skir.service.Method<
 > by kotlin.lazy {
     build.skir.service.Method(
         "WatchOrganizationTopology",
-        934202,
+        930902,
         skirout.service.v1.topology.WatchOrganizationTopologyRequest.serializer,
         skirout.service.v1.topology.WatchOrganizationTopologyResponse.serializer,
         "",
@@ -6330,7 +6330,7 @@ val WatchHostExecution: build.skir.service.Method<
 > by kotlin.lazy {
     build.skir.service.Method(
         "WatchHostExecution",
-        934203,
+        930903,
         skirout.service.v1.topology.WatchHostExecutionRequest.serializer,
         skirout.service.v1.topology.WatchHostExecutionResponse.serializer,
         "",
@@ -6343,7 +6343,7 @@ val ReportHostExecution: build.skir.service.Method<
 > by kotlin.lazy {
     build.skir.service.Method(
         "ReportHostExecution",
-        934204,
+        930904,
         skirout.service.v1.topology.ReportHostExecutionRequest.serializer,
         skirout.service.v1.topology.ReportHostExecutionResponse.serializer,
         "",
@@ -6356,7 +6356,7 @@ val GetServiceMessagingScope: build.skir.service.Method<
 > by kotlin.lazy {
     build.skir.service.Method(
         "GetServiceMessagingScope",
-        934205,
+        930905,
         skirout.service.v1.topology.GetServiceMessagingScopeRequest.serializer,
         skirout.service.v1.topology.GetServiceMessagingScopeResponse.serializer,
         "",
@@ -6369,7 +6369,7 @@ val RegisterServiceHost: build.skir.service.Method<
 > by kotlin.lazy {
     build.skir.service.Method(
         "RegisterServiceHost",
-        934206,
+        930906,
         skirout.service.v1.topology.RegisterServiceHostRequest.serializer,
         skirout.service.v1.topology.RegisterServiceHostResponse.serializer,
         "",

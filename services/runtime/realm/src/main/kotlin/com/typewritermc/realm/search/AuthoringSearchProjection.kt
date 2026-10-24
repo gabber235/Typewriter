@@ -6,7 +6,7 @@ import com.typewritermc.types.payload
 import com.typewritermc.types.rows
 import skirout.editor.v1.type_catalog.AuthoringRecord
 import skirout.editor.v1.type_catalog.DataValue
-import skirout.editor.v1.type_catalog.ResourceId
+import skirout.kernel.v1.resource_id.ResourceId
 
 /** Derived search terms are stored beside the canonical resource in its write transaction. */
 internal fun authoredSearchText(

@@ -22,12 +22,12 @@ import {
   CapabilityId,
   CatalogGeneration,
   DataValue,
-  ResourceId,
   ValuePath,
 } from "editor/v1/type_catalog.skir";
 import { InternalError } from "kernel/v1/errors.skir";
+import { ResourceId } from "kernel/v1/resource_id.skir";
 
-struct OperationOrigin(812500001) {
+struct OperationOrigin(84160001) {
   container: ResourceId? = 0;
   occurrences: [LinkOccurrence] = 1;
 }
@@ -35,47 +35,47 @@ struct OperationOrigin(812500001) {
 /// Captures the operation selection and its exact origin occurrences under one catalog.
 /// invocation_id correlates requests and supplies stable preparation allocation identity; it does
 /// not make requests durable or guarantee server deduplication.
-struct OperationInvocation(812500002) {
+struct OperationInvocation(84160002) {
   invocation_id: InvocationId = 0;
   catalog: CatalogGeneration = 1;
   targets: [ResourceId] = 2;
   origin: OperationOrigin = 3;
 }
 
-struct OperationResourceUpsert(812500003) {
+struct OperationResourceUpsert(84160003) {
   resource: ResourceId = 0;
   content: AuthoringRecord = 1;
 }
 
 /// Proposed replacements and removals layered over the confirmed saved observation for this request.
 /// These values are validated before callbacks run and are not saved by resolve or preparation.
-struct OperationWorkingOverlay(812500004) {
+struct OperationWorkingOverlay(84160004) {
   upserts: [OperationResourceUpsert] = 0;
   removals: [ResourceId] = 1;
 }
 
 /// Couples a local overlay to the saved observation it was built from. A stale observation must
 /// be refreshed rather than silently applying the overlay to a different saved graph.
-struct OperationWorkingContext(812500005) {
+struct OperationWorkingContext(84160005) {
   confirmed_observation: AuthoringObservationId = 0;
   overlay: OperationWorkingOverlay = 1;
 }
 
-struct PreparationChoiceId(812500006) {
+struct PreparationChoiceId(84160006) {
   value: string = 0;
 }
 
-struct PreparationSourceOption(812500007) {
+struct PreparationSourceOption(84160007) {
   label: string = 0;
   occurrence: LinkOccurrence = 1;
 }
 
-struct PreparationCounterpartOption(812500008) {
+struct PreparationCounterpartOption(84160008) {
   label: string = 0;
   counterpart: CounterpartChoice = 1;
 }
 
-enum PreparationChoice(812500009) {
+enum PreparationChoice(84160009) {
   source: struct {
     choice_id: PreparationChoiceId = 0;
     label: string = 1;
@@ -89,7 +89,7 @@ enum PreparationChoice(812500009) {
   } = 2;
 }
 
-enum PreparationChoiceAnswer(812500010) {
+enum PreparationChoiceAnswer(84160010) {
   source: struct {
     choice_id: PreparationChoiceId = 0;
     occurrence: LinkOccurrence = 1;
@@ -100,31 +100,31 @@ enum PreparationChoiceAnswer(812500010) {
   } = 2;
 }
 
-struct OperationInputProblem(812500011) {
+struct OperationInputProblem(84160011) {
   path: ValuePath = 0;
   code: string = 1;
   message: string = 2;
 }
 
-enum OperationSelectionEffect(812500012) {
+enum OperationSelectionEffect(84160012) {
   unchanged = 1;
   replace: [ResourceId] = 2;
 }
 
-struct StaleAuthoringObservation(812500013) {
+struct StaleAuthoringObservation(84160013) {
   actual: AuthoringObservationId = 0;
 }
 
-struct ResourceOperationFailure(812500014) {
+struct ResourceOperationFailure(84160014) {
   diagnostics: [AuthoringDiagnostic] = 0;
 }
 
-struct ResolveResourceOperationsRequest(812500015) {
+struct ResolveResourceOperationsRequest(84160015) {
   invocation: OperationInvocation = 0;
   context: OperationWorkingContext = 1;
 }
 
-enum ResolveResourceOperationsResult(812500016) {
+enum ResolveResourceOperationsResult(84160016) {
   resolved: ResolvedResourceOperations = 1;
   stale_observation_error: StaleAuthoringObservation = 2;
   invalid_error: ResourceOperationFailure = 3;
@@ -136,7 +136,7 @@ enum ResolveResourceOperationsResult(812500016) {
 
 /// Replays preparation with current input and choice answers. input_revision orders client responses;
 /// it is echoed in successful preparation results and is independent of saved resource versions.
-struct PrepareAuthoringActionRequest(812500017) {
+struct PrepareAuthoringActionRequest(84160017) {
   invocation: OperationInvocation = 0;
   capability: CapabilityId = 1;
   context: OperationWorkingContext = 2;
@@ -145,7 +145,7 @@ struct PrepareAuthoringActionRequest(812500017) {
   choices: [PreparationChoiceAnswer] = 5;
 }
 
-struct AuthoringActionNeedsInput(812500018) {
+struct AuthoringActionNeedsInput(84160018) {
   invocation_id: InvocationId = 0;
   input_revision: int32 = 1;
   normalized_input: DataValue? = 2;
@@ -155,7 +155,7 @@ struct AuthoringActionNeedsInput(812500018) {
 
 /// Proposed edit and client effects after preparation. Selection replacement applies when the
 /// preview is staged; confirmation describes the proposed action and does not persist it.
-struct AuthoringActionPreview(812500019) {
+struct AuthoringActionPreview(84160019) {
   invocation_id: InvocationId = 0;
   input_revision: int32 = 1;
   edit: PreparedEdit = 2;
@@ -166,7 +166,7 @@ struct AuthoringActionPreview(812500019) {
 /// Separates missing interactive input from a usable preview, stale baseline, unavailable action,
 /// validation rejection, permission failure, and callback failure. Refresh catalog or saved state
 /// when requested before attempting preparation again.
-enum AuthoringActionResult(812500020) {
+enum AuthoringActionResult(84160020) {
   needs_input: AuthoringActionNeedsInput = 1;
   preview: AuthoringActionPreview = 2;
   stale_observation_error: StaleAuthoringObservation = 3;
@@ -179,7 +179,7 @@ enum AuthoringActionResult(812500020) {
 }
 
 /// Gives operation input search the same selection, working observation, and input revision as preparation.
-struct OperationSearchContext(812500021) {
+struct OperationSearchContext(84160021) {
   invocation: OperationInvocation = 0;
   context: OperationWorkingContext = 1;
   input_revision: int32 = 2;
@@ -187,21 +187,21 @@ struct OperationSearchContext(812500021) {
 
 /// Destinations one operation accepts for the dragged resources, from its declared candidates and
 /// accepts. complete is false when the list was capped.
-struct DropCandidates(812500022) {
+struct DropCandidates(84160022) {
   operation: ResourceOperationId = 0;
   destinations: [ResourceId] = 1;
   complete: bool = 2;
 }
 
 /// invocation targets are the dragged resources.
-struct ResolveDropCandidatesRequest(812500023) {
+struct ResolveDropCandidatesRequest(84160023) {
   invocation: OperationInvocation = 0;
   context: OperationWorkingContext = 1;
 }
 
 /// Resolved once when a drag starts, so hovering is a local lookup. Only enabled operations that
 /// declare a drop field contribute candidates.
-enum ResolveDropCandidatesResult(812500024) {
+enum ResolveDropCandidatesResult(84160024) {
   resolved: [DropCandidates] = 1;
   stale_observation_error: StaleAuthoringObservation = 2;
   invalid_error: ResourceOperationFailure = 3;
@@ -213,12 +213,12 @@ enum ResolveDropCandidatesResult(812500024) {
 
 method ResolveResourceOperations(
   ResolveResourceOperationsRequest
-): ResolveResourceOperationsResult = 920015;
+): ResolveResourceOperationsResult = 941601;
 
 method PrepareAuthoringAction(
   PrepareAuthoringActionRequest
-): AuthoringActionResult = 920016;
+): AuthoringActionResult = 941602;
 
 method ResolveDropCandidates(
   ResolveDropCandidatesRequest
-): ResolveDropCandidatesResult = 920017;
+): ResolveDropCandidatesResult = 941603;

@@ -1,11 +1,11 @@
-import { ResourceId } from "editor/v1/type_catalog.skir";
+import { ResourceId } from "kernel/v1/resource_id.skir";
 
-struct CompilationProjectionId(811100001) {
+struct CompilationProjectionId(84090001) {
   value: string = 0;
 }
 /// Identifies one compiler owned output root without interpreting its domain payload.
 /// The projection selects the compiler family; resource identifies the authored root within that family.
-struct CompilationRoot(811100002) {
+struct CompilationRoot(84090002) {
   projection: CompilationProjectionId = 0;
   resource: ResourceId = 1;
 }

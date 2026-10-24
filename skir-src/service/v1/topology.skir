@@ -5,22 +5,22 @@ import {
 import { RecordId } from "kernel/v1/record_id.skir";
 
 // Separates the latest configuration requested by the control plane from the latest configuration applied by the host.
-struct ReconciledRevision {
+struct ReconciledRevision(83090001) {
   desired: int64;
   applied: int64;
 }
 
 // Selects an engine artifact and the version constraint a host must satisfy.
-struct EngineTarget {
+struct EngineTarget(83090002) {
   engine_id: string;
   version_constraint: string;
 }
 
-struct SupportedEngine {
+struct SupportedEngine(83090003) {
   engine_id: string;
 }
 
-enum HostRuntimeStatus {
+enum HostRuntimeStatus(83090004) {
   offline;
   reconciling;
   active;
@@ -29,13 +29,13 @@ enum HostRuntimeStatus {
 }
 
 // Host observation reported by the runtime. Message is diagnostic context, not configuration.
-struct HostRuntimeState {
+struct HostRuntimeState(83090005) {
   status: HostRuntimeStatus;
   message: string?;
   updated_at: timestamp;
 }
 
-enum ChildRuntimeStatus {
+enum ChildRuntimeStatus(83090006) {
   absent;
   staging;
   active;
@@ -46,7 +46,7 @@ enum ChildRuntimeStatus {
 }
 
 // Runtime observation for a Realm or engine hosted by a service host. Active artifact version is present only when known.
-struct ChildRuntimeState {
+struct ChildRuntimeState(83090007) {
   status: ChildRuntimeStatus;
   active_artifact_version: string?;
   message: string?;
@@ -55,7 +55,7 @@ struct ChildRuntimeState {
 
 // A service host registered in an organization. It owns the desired child assignments and reports their runtime state.
 // revision protects host configuration writes. topology_revision tracks reconciliation separately from that write revision.
-struct ServiceHost {
+struct ServiceHost(83090008) {
   host_id: RecordId;
   service_id: RecordId;
   revision: int64;
@@ -67,13 +67,13 @@ struct ServiceHost {
 }
 
 // Embedded host identity used by child resources and configuration results.
-struct OwnerHost {
+struct OwnerHost(83090009) {
   id: RecordId;
   name: string;
 }
 
 // Desired and observed state for a Realm runtime assigned to one host. Its revision changes when its target changes.
-struct RealmInstance {
+struct RealmInstance(83090010) {
   realm_id: RecordId;
   owner_host: OwnerHost;
   revision: int64;
@@ -82,13 +82,13 @@ struct RealmInstance {
 }
 
 // Reduced Realm reference embedded in an engine instance.
-struct RealmInfo {
+struct RealmInfo(83090011) {
   realm_id: RecordId;
   owner_host: OwnerHost;
 }
 
 // Desired and observed state for an engine runtime, including the Realm it is attached to.
-struct EngineInstance {
+struct EngineInstance(83090012) {
   engine_id: RecordId;
   owner_host: OwnerHost;
   realm: RealmInfo;
@@ -98,12 +98,12 @@ struct EngineInstance {
 }
 
 // Configuration for creating or updating the Realm owned by the selected host.
-struct HostedRealmConfiguration {
+struct HostedRealmConfiguration(83090013) {
   primary_engine: EngineTarget;
 }
 
 // Chooses whether the primary engine uses the host owned Realm or an existing Realm.
-enum EngineRealmSelection {
+enum EngineRealmSelection(83090014) {
   hosted_realm;
   existing_realm: struct {
     realm_id: RecordId;
@@ -111,20 +111,20 @@ enum EngineRealmSelection {
 }
 
 // Configuration for the primary engine and the Realm to which it is attached.
-struct HostedEngineConfiguration {
+struct HostedEngineConfiguration(83090015) {
   target: EngineTarget;
   realm: EngineRealmSelection;
 }
 
 // Complete desired execution configuration for a host. Null removes that hosted role.
-struct HostExecutionConfiguration {
+struct HostExecutionConfiguration(83090016) {
   realm: HostedRealmConfiguration?;
   primary_engine: HostedEngineConfiguration?;
 }
 
 // Canonical result of a host configuration attempt, including current child resources and removals.
 // It is also the payload used to reconcile organization topology projections after a committed change.
-struct HostConfigurationChange {
+struct HostConfigurationChange(83090017) {
   host: ServiceHost;
   realm: RealmInstance?;
   engine: EngineInstance?;
@@ -164,33 +164,33 @@ method ConfigureServiceHost(
   /// Record IDs from an unexpected table.
   invalid_record_id_error: InvalidRecordIdError;
   internal_error: InternalError;
-} = 934201;
+} = 930901;
 
-struct OrganizationTopologySnapshot {
+struct OrganizationTopologySnapshot(83090018) {
   hosts: [ServiceHost];
   realms: [RealmInstance];
   engines: [EngineInstance];
 }
 
-struct RealmRuntimeObservation {
+struct RealmRuntimeObservation(83090019) {
   realm_id: RecordId;
   state: ChildRuntimeState;
 }
 
-struct EngineRuntimeObservation {
+struct EngineRuntimeObservation(83090020) {
   engine_id: RecordId;
   state: ChildRuntimeState;
 }
 
 // The published host read model and current states of all assigned children after a runtime report.
 // A child omitted by the report retains its previously stored state in this projection.
-struct HostExecutionObservation {
+struct HostExecutionObservation(83090021) {
   host: ServiceHost;
   realm: RealmRuntimeObservation?;
   engine: EngineRuntimeObservation?;
 }
 
-enum OrganizationTopologyChanged {
+enum OrganizationTopologyChanged(83090022) {
   replace: OrganizationTopologySnapshot;
   configuration_changed: HostConfigurationChange;
   observations_reported: HostExecutionObservation;
@@ -203,7 +203,7 @@ method WatchOrganizationTopology(
 ): enum {
   list: OrganizationTopologySnapshot;
   internal_error: InternalError;
-} = 934202;
+} = 930902;
 
 // Reads the desired child assignments for one service host. The topology revision identifies the assignment version to report.
 method WatchHostExecution(
@@ -216,7 +216,7 @@ method WatchHostExecution(
   };
 
   internal_error: InternalError;
-} = 934203;
+} = 930903;
 
 // Reports runtime observations for the assignment revision received from WatchHostExecution. Stale reports are rejected.
 // The host is marked applied only when this report includes an active observation for every assigned child.
@@ -232,10 +232,10 @@ method ReportHostExecution(
   /// Host topology revision is stale.
   stale_revision_error: struct {};
   internal_error: InternalError;
-} = 934204;
+} = 930904;
 
 // Identifies the organization and Realm relationships needed to route messages for a service.
-struct ServiceMessagingScope {
+struct ServiceMessagingScope(83090023) {
   organization_id: string;
   owned_realm: RecordId?;
   attached_realm: RecordId?;
@@ -251,7 +251,7 @@ method GetServiceMessagingScope(
   /// Service messaging scope not found.
   not_found_error: struct {};
   internal_error: InternalError;
-} = 934205;
+} = 930905;
 
 // Registers a service host and advertises the engine artifacts and Realm capability it supports.
 method RegisterServiceHost(
@@ -263,4 +263,4 @@ method RegisterServiceHost(
 ): enum {
   success: ServiceHost;
   internal_error: InternalError;
-} = 934206;
+} = 930906;

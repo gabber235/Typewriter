@@ -22,13 +22,14 @@ import "./diagnostic.dart" as _lib_editor_v1_diagnostic;
 import "./type_catalog.dart" as _lib_editor_v1_type_catalog;
 import "./typed_value.dart" as _lib_editor_v1_typed_value;
 import "../../kernel/v1/errors.dart" as _lib_kernel_v1_errors;
+import "../../kernel/v1/resource_id.dart" as _lib_kernel_v1_resource_id;
 
 // -----------------------------------------------------------------------------
 // struct AuthoringResource
 // -----------------------------------------------------------------------------
 
 sealed class AuthoringResource_orMutable {
-  _lib_editor_v1_type_catalog.ResourceId_orMutable get id;
+  _lib_kernel_v1_resource_id.ResourceId_orMutable get id;
   _lib_editor_v1_type_catalog.AuthoringRecord_orMutable get content;
 
   AuthoringResource toFrozen();
@@ -37,13 +38,13 @@ sealed class AuthoringResource_orMutable {
 /// Deeply immutable.
 final class AuthoringResource implements AuthoringResource_orMutable {
   @_core.override
-  final _lib_editor_v1_type_catalog.ResourceId id;
+  final _lib_kernel_v1_resource_id.ResourceId id;
   @_core.override
   final _lib_editor_v1_type_catalog.AuthoringRecord content;
   _skir.internal__UnrecognizedFields? _u;
 
   factory AuthoringResource({
-    required _lib_editor_v1_type_catalog.ResourceId_orMutable id,
+    required _lib_kernel_v1_resource_id.ResourceId_orMutable id,
     required _lib_editor_v1_type_catalog.AuthoringRecord_orMutable content,
   }) => AuthoringResource._(id.toFrozen(), content.toFrozen());
 
@@ -51,14 +52,14 @@ final class AuthoringResource implements AuthoringResource_orMutable {
 
   /// Default instance with all fields set to their default values.
   static final defaultInstance = AuthoringResource._(
-    _lib_editor_v1_type_catalog.ResourceId.defaultInstance,
+    _lib_kernel_v1_resource_id.ResourceId.defaultInstance,
     _lib_editor_v1_type_catalog.AuthoringRecord.defaultInstance,
   );
 
   /// Returns a new mutable instance.
   /// Fields are initialized to their default values.
   static AuthoringResource_mutable mutable() => AuthoringResource_mutable._(
-    _lib_editor_v1_type_catalog.ResourceId.defaultInstance,
+    _lib_kernel_v1_resource_id.ResourceId.defaultInstance,
     _lib_editor_v1_type_catalog.AuthoringRecord.defaultInstance,
   );
 
@@ -97,7 +98,7 @@ final class AuthoringResource implements AuthoringResource_orMutable {
         "id",
         "id",
         0,
-        _lib_editor_v1_type_catalog.ResourceId.serializer,
+        _lib_kernel_v1_resource_id.ResourceId.serializer,
         "",
         (it) => it.id,
         (it, v) => it.id = v,
@@ -129,7 +130,7 @@ final class AuthoringResource implements AuthoringResource_orMutable {
 
 /// Mutable version of [AuthoringResource].
 final class AuthoringResource_mutable implements AuthoringResource_orMutable {
-  _lib_editor_v1_type_catalog.ResourceId_orMutable id;
+  _lib_kernel_v1_resource_id.ResourceId_orMutable id;
   _lib_editor_v1_type_catalog.AuthoringRecord_orMutable content;
   _skir.internal__UnrecognizedFields? _u;
 
@@ -137,12 +138,12 @@ final class AuthoringResource_mutable implements AuthoringResource_orMutable {
 
   /// If the value of [id] is already mutable, returns it as-is.
   /// Otherwise, makes a mutable copy, assigns it back to [id] and returns it.
-  _lib_editor_v1_type_catalog.ResourceId_mutable get mutableId {
+  _lib_kernel_v1_resource_id.ResourceId_mutable get mutableId {
     final value = this.id;
-    if (value is _lib_editor_v1_type_catalog.ResourceId_mutable) {
+    if (value is _lib_kernel_v1_resource_id.ResourceId_mutable) {
       return value;
     } else {
-      return this.id = (value as _lib_editor_v1_type_catalog.ResourceId)
+      return this.id = (value as _lib_kernel_v1_resource_id.ResourceId)
           .toMutable();
     }
   }
@@ -316,7 +317,7 @@ final class LinkOccurrenceId_mutable implements LinkOccurrenceId_orMutable {
 
 sealed class LinkOccurrence_orMutable {
   LinkOccurrenceId_orMutable get id;
-  _lib_editor_v1_type_catalog.ResourceId_orMutable get source;
+  _lib_kernel_v1_resource_id.ResourceId_orMutable get source;
   _lib_editor_v1_type_catalog.LinkTarget_orMutable get target;
 
   LinkOccurrence toFrozen();
@@ -327,14 +328,14 @@ final class LinkOccurrence implements LinkOccurrence_orMutable {
   @_core.override
   final LinkOccurrenceId id;
   @_core.override
-  final _lib_editor_v1_type_catalog.ResourceId source;
+  final _lib_kernel_v1_resource_id.ResourceId source;
   @_core.override
   final _lib_editor_v1_type_catalog.LinkTarget target;
   _skir.internal__UnrecognizedFields? _u;
 
   factory LinkOccurrence({
     required LinkOccurrenceId_orMutable id,
-    required _lib_editor_v1_type_catalog.ResourceId_orMutable source,
+    required _lib_kernel_v1_resource_id.ResourceId_orMutable source,
     required _lib_editor_v1_type_catalog.LinkTarget_orMutable target,
   }) => LinkOccurrence._(id.toFrozen(), source.toFrozen(), target.toFrozen());
 
@@ -343,7 +344,7 @@ final class LinkOccurrence implements LinkOccurrence_orMutable {
   /// Default instance with all fields set to their default values.
   static final defaultInstance = LinkOccurrence._(
     LinkOccurrenceId.defaultInstance,
-    _lib_editor_v1_type_catalog.ResourceId.defaultInstance,
+    _lib_kernel_v1_resource_id.ResourceId.defaultInstance,
     _lib_editor_v1_type_catalog.LinkTarget.defaultInstance,
   );
 
@@ -351,7 +352,7 @@ final class LinkOccurrence implements LinkOccurrence_orMutable {
   /// Fields are initialized to their default values.
   static LinkOccurrence_mutable mutable() => LinkOccurrence_mutable._(
     LinkOccurrenceId.defaultInstance,
-    _lib_editor_v1_type_catalog.ResourceId.defaultInstance,
+    _lib_kernel_v1_resource_id.ResourceId.defaultInstance,
     _lib_editor_v1_type_catalog.LinkTarget.defaultInstance,
   );
 
@@ -399,7 +400,7 @@ final class LinkOccurrence implements LinkOccurrence_orMutable {
         "source",
         "source",
         1,
-        _lib_editor_v1_type_catalog.ResourceId.serializer,
+        _lib_kernel_v1_resource_id.ResourceId.serializer,
         "",
         (it) => it.source,
         (it, v) => it.source = v,
@@ -432,7 +433,7 @@ final class LinkOccurrence implements LinkOccurrence_orMutable {
 /// Mutable version of [LinkOccurrence].
 final class LinkOccurrence_mutable implements LinkOccurrence_orMutable {
   LinkOccurrenceId_orMutable id;
-  _lib_editor_v1_type_catalog.ResourceId_orMutable source;
+  _lib_kernel_v1_resource_id.ResourceId_orMutable source;
   _lib_editor_v1_type_catalog.LinkTarget_orMutable target;
   _skir.internal__UnrecognizedFields? _u;
 
@@ -451,12 +452,12 @@ final class LinkOccurrence_mutable implements LinkOccurrence_orMutable {
 
   /// If the value of [source] is already mutable, returns it as-is.
   /// Otherwise, makes a mutable copy, assigns it back to [source] and returns it.
-  _lib_editor_v1_type_catalog.ResourceId_mutable get mutableSource {
+  _lib_kernel_v1_resource_id.ResourceId_mutable get mutableSource {
     final value = this.source;
-    if (value is _lib_editor_v1_type_catalog.ResourceId_mutable) {
+    if (value is _lib_kernel_v1_resource_id.ResourceId_mutable) {
       return value;
     } else {
-      return this.source = (value as _lib_editor_v1_type_catalog.ResourceId)
+      return this.source = (value as _lib_kernel_v1_resource_id.ResourceId)
           .toMutable();
     }
   }
@@ -713,7 +714,7 @@ final class RelationProjectionDelta_mutable
 // -----------------------------------------------------------------------------
 
 sealed class PresentationSubject_orMutable {
-  _lib_editor_v1_type_catalog.ResourceId_orMutable get resource;
+  _lib_kernel_v1_resource_id.ResourceId_orMutable get resource;
   _lib_editor_v1_type_catalog.AuthoringRecord_orMutable get content;
 
   PresentationSubject toFrozen();
@@ -725,13 +726,13 @@ sealed class PresentationSubject_orMutable {
 /// Deeply immutable.
 final class PresentationSubject implements PresentationSubject_orMutable {
   @_core.override
-  final _lib_editor_v1_type_catalog.ResourceId resource;
+  final _lib_kernel_v1_resource_id.ResourceId resource;
   @_core.override
   final _lib_editor_v1_type_catalog.AuthoringRecord content;
   _skir.internal__UnrecognizedFields? _u;
 
   factory PresentationSubject({
-    required _lib_editor_v1_type_catalog.ResourceId_orMutable resource,
+    required _lib_kernel_v1_resource_id.ResourceId_orMutable resource,
     required _lib_editor_v1_type_catalog.AuthoringRecord_orMutable content,
   }) => PresentationSubject._(resource.toFrozen(), content.toFrozen());
 
@@ -739,14 +740,14 @@ final class PresentationSubject implements PresentationSubject_orMutable {
 
   /// Default instance with all fields set to their default values.
   static final defaultInstance = PresentationSubject._(
-    _lib_editor_v1_type_catalog.ResourceId.defaultInstance,
+    _lib_kernel_v1_resource_id.ResourceId.defaultInstance,
     _lib_editor_v1_type_catalog.AuthoringRecord.defaultInstance,
   );
 
   /// Returns a new mutable instance.
   /// Fields are initialized to their default values.
   static PresentationSubject_mutable mutable() => PresentationSubject_mutable._(
-    _lib_editor_v1_type_catalog.ResourceId.defaultInstance,
+    _lib_kernel_v1_resource_id.ResourceId.defaultInstance,
     _lib_editor_v1_type_catalog.AuthoringRecord.defaultInstance,
   );
 
@@ -788,7 +789,7 @@ final class PresentationSubject implements PresentationSubject_orMutable {
         "resource",
         "resource",
         0,
-        _lib_editor_v1_type_catalog.ResourceId.serializer,
+        _lib_kernel_v1_resource_id.ResourceId.serializer,
         "",
         (it) => it.resource,
         (it, v) => it.resource = v,
@@ -821,7 +822,7 @@ final class PresentationSubject implements PresentationSubject_orMutable {
 /// Mutable version of [PresentationSubject].
 final class PresentationSubject_mutable
     implements PresentationSubject_orMutable {
-  _lib_editor_v1_type_catalog.ResourceId_orMutable resource;
+  _lib_kernel_v1_resource_id.ResourceId_orMutable resource;
   _lib_editor_v1_type_catalog.AuthoringRecord_orMutable content;
   _skir.internal__UnrecognizedFields? _u;
 
@@ -829,12 +830,12 @@ final class PresentationSubject_mutable
 
   /// If the value of [resource] is already mutable, returns it as-is.
   /// Otherwise, makes a mutable copy, assigns it back to [resource] and returns it.
-  _lib_editor_v1_type_catalog.ResourceId_mutable get mutableResource {
+  _lib_kernel_v1_resource_id.ResourceId_mutable get mutableResource {
     final value = this.resource;
-    if (value is _lib_editor_v1_type_catalog.ResourceId_mutable) {
+    if (value is _lib_kernel_v1_resource_id.ResourceId_mutable) {
       return value;
     } else {
-      return this.resource = (value as _lib_editor_v1_type_catalog.ResourceId)
+      return this.resource = (value as _lib_kernel_v1_resource_id.ResourceId)
           .toMutable();
     }
   }
@@ -865,7 +866,7 @@ final class PresentationSubject_mutable
 sealed class AuthoringDiagnostic_orMutable {
   _core.String get code;
   _core.String get message;
-  _lib_editor_v1_type_catalog.ResourceId_orMutable? get resource;
+  _lib_kernel_v1_resource_id.ResourceId_orMutable? get resource;
   _lib_editor_v1_type_catalog.ValuePath_orMutable? get path;
 
   AuthoringDiagnostic toFrozen();
@@ -878,7 +879,7 @@ final class AuthoringDiagnostic implements AuthoringDiagnostic_orMutable {
   @_core.override
   final _core.String message;
   @_core.override
-  final _lib_editor_v1_type_catalog.ResourceId? resource;
+  final _lib_kernel_v1_resource_id.ResourceId? resource;
   @_core.override
   final _lib_editor_v1_type_catalog.ValuePath? path;
   _skir.internal__UnrecognizedFields? _u;
@@ -886,7 +887,7 @@ final class AuthoringDiagnostic implements AuthoringDiagnostic_orMutable {
   factory AuthoringDiagnostic({
     required _core.String code,
     required _core.String message,
-    required _lib_editor_v1_type_catalog.ResourceId_orMutable? resource,
+    required _lib_kernel_v1_resource_id.ResourceId_orMutable? resource,
     required _lib_editor_v1_type_catalog.ValuePath_orMutable? path,
   }) => AuthoringDiagnostic._(
     code,
@@ -971,7 +972,7 @@ final class AuthoringDiagnostic implements AuthoringDiagnostic_orMutable {
         "resource",
         2,
         _skir.Serializers.optional(
-          _lib_editor_v1_type_catalog.ResourceId.serializer,
+          _lib_kernel_v1_resource_id.ResourceId.serializer,
         ),
         "",
         (it) => it.resource,
@@ -1009,7 +1010,7 @@ final class AuthoringDiagnostic_mutable
     implements AuthoringDiagnostic_orMutable {
   _core.String code;
   _core.String message;
-  _lib_editor_v1_type_catalog.ResourceId_orMutable? resource;
+  _lib_kernel_v1_resource_id.ResourceId_orMutable? resource;
   _lib_editor_v1_type_catalog.ValuePath_orMutable? path;
   _skir.internal__UnrecognizedFields? _u;
 
@@ -2140,7 +2141,7 @@ final class MoveIntent_mutable implements MoveIntent_orMutable {
 // -----------------------------------------------------------------------------
 
 sealed class CreateResourceIntent_orMutable {
-  _lib_editor_v1_type_catalog.ResourceId_orMutable get id;
+  _lib_kernel_v1_resource_id.ResourceId_orMutable get id;
   _lib_editor_v1_type_catalog.AuthoringRecord_orMutable get record;
 
   CreateResourceIntent toFrozen();
@@ -2149,13 +2150,13 @@ sealed class CreateResourceIntent_orMutable {
 /// Deeply immutable.
 final class CreateResourceIntent implements CreateResourceIntent_orMutable {
   @_core.override
-  final _lib_editor_v1_type_catalog.ResourceId id;
+  final _lib_kernel_v1_resource_id.ResourceId id;
   @_core.override
   final _lib_editor_v1_type_catalog.AuthoringRecord record;
   _skir.internal__UnrecognizedFields? _u;
 
   factory CreateResourceIntent({
-    required _lib_editor_v1_type_catalog.ResourceId_orMutable id,
+    required _lib_kernel_v1_resource_id.ResourceId_orMutable id,
     required _lib_editor_v1_type_catalog.AuthoringRecord_orMutable record,
   }) => CreateResourceIntent._(id.toFrozen(), record.toFrozen());
 
@@ -2163,7 +2164,7 @@ final class CreateResourceIntent implements CreateResourceIntent_orMutable {
 
   /// Default instance with all fields set to their default values.
   static final defaultInstance = CreateResourceIntent._(
-    _lib_editor_v1_type_catalog.ResourceId.defaultInstance,
+    _lib_kernel_v1_resource_id.ResourceId.defaultInstance,
     _lib_editor_v1_type_catalog.AuthoringRecord.defaultInstance,
   );
 
@@ -2171,7 +2172,7 @@ final class CreateResourceIntent implements CreateResourceIntent_orMutable {
   /// Fields are initialized to their default values.
   static CreateResourceIntent_mutable mutable() =>
       CreateResourceIntent_mutable._(
-        _lib_editor_v1_type_catalog.ResourceId.defaultInstance,
+        _lib_kernel_v1_resource_id.ResourceId.defaultInstance,
         _lib_editor_v1_type_catalog.AuthoringRecord.defaultInstance,
       );
 
@@ -2213,7 +2214,7 @@ final class CreateResourceIntent implements CreateResourceIntent_orMutable {
         "id",
         "id",
         0,
-        _lib_editor_v1_type_catalog.ResourceId.serializer,
+        _lib_kernel_v1_resource_id.ResourceId.serializer,
         "",
         (it) => it.id,
         (it, v) => it.id = v,
@@ -2246,7 +2247,7 @@ final class CreateResourceIntent implements CreateResourceIntent_orMutable {
 /// Mutable version of [CreateResourceIntent].
 final class CreateResourceIntent_mutable
     implements CreateResourceIntent_orMutable {
-  _lib_editor_v1_type_catalog.ResourceId_orMutable id;
+  _lib_kernel_v1_resource_id.ResourceId_orMutable id;
   _lib_editor_v1_type_catalog.AuthoringRecord_orMutable record;
   _skir.internal__UnrecognizedFields? _u;
 
@@ -2254,12 +2255,12 @@ final class CreateResourceIntent_mutable
 
   /// If the value of [id] is already mutable, returns it as-is.
   /// Otherwise, makes a mutable copy, assigns it back to [id] and returns it.
-  _lib_editor_v1_type_catalog.ResourceId_mutable get mutableId {
+  _lib_kernel_v1_resource_id.ResourceId_mutable get mutableId {
     final value = this.id;
-    if (value is _lib_editor_v1_type_catalog.ResourceId_mutable) {
+    if (value is _lib_kernel_v1_resource_id.ResourceId_mutable) {
       return value;
     } else {
-      return this.id = (value as _lib_editor_v1_type_catalog.ResourceId)
+      return this.id = (value as _lib_kernel_v1_resource_id.ResourceId)
           .toMutable();
     }
   }
@@ -2287,7 +2288,7 @@ final class CreateResourceIntent_mutable
 // -----------------------------------------------------------------------------
 
 sealed class DeleteResourceIntent_orMutable {
-  _lib_editor_v1_type_catalog.ResourceId_orMutable get id;
+  _lib_kernel_v1_resource_id.ResourceId_orMutable get id;
 
   DeleteResourceIntent toFrozen();
 }
@@ -2295,25 +2296,25 @@ sealed class DeleteResourceIntent_orMutable {
 /// Deeply immutable.
 final class DeleteResourceIntent implements DeleteResourceIntent_orMutable {
   @_core.override
-  final _lib_editor_v1_type_catalog.ResourceId id;
+  final _lib_kernel_v1_resource_id.ResourceId id;
   _skir.internal__UnrecognizedFields? _u;
 
   factory DeleteResourceIntent({
-    required _lib_editor_v1_type_catalog.ResourceId_orMutable id,
+    required _lib_kernel_v1_resource_id.ResourceId_orMutable id,
   }) => DeleteResourceIntent._(id.toFrozen());
 
   DeleteResourceIntent._(this.id);
 
   /// Default instance with all fields set to their default values.
   static final defaultInstance = DeleteResourceIntent._(
-    _lib_editor_v1_type_catalog.ResourceId.defaultInstance,
+    _lib_kernel_v1_resource_id.ResourceId.defaultInstance,
   );
 
   /// Returns a new mutable instance.
   /// Fields are initialized to their default values.
   static DeleteResourceIntent_mutable mutable() =>
       DeleteResourceIntent_mutable._(
-        _lib_editor_v1_type_catalog.ResourceId.defaultInstance,
+        _lib_kernel_v1_resource_id.ResourceId.defaultInstance,
       );
 
   /// Returns this instance (no-op).
@@ -2354,7 +2355,7 @@ final class DeleteResourceIntent implements DeleteResourceIntent_orMutable {
         "id",
         "id",
         0,
-        _lib_editor_v1_type_catalog.ResourceId.serializer,
+        _lib_kernel_v1_resource_id.ResourceId.serializer,
         "",
         (it) => it.id,
         (it, v) => it.id = v,
@@ -2378,19 +2379,19 @@ final class DeleteResourceIntent implements DeleteResourceIntent_orMutable {
 /// Mutable version of [DeleteResourceIntent].
 final class DeleteResourceIntent_mutable
     implements DeleteResourceIntent_orMutable {
-  _lib_editor_v1_type_catalog.ResourceId_orMutable id;
+  _lib_kernel_v1_resource_id.ResourceId_orMutable id;
   _skir.internal__UnrecognizedFields? _u;
 
   DeleteResourceIntent_mutable._(this.id);
 
   /// If the value of [id] is already mutable, returns it as-is.
   /// Otherwise, makes a mutable copy, assigns it back to [id] and returns it.
-  _lib_editor_v1_type_catalog.ResourceId_mutable get mutableId {
+  _lib_kernel_v1_resource_id.ResourceId_mutable get mutableId {
     final value = this.id;
-    if (value is _lib_editor_v1_type_catalog.ResourceId_mutable) {
+    if (value is _lib_kernel_v1_resource_id.ResourceId_mutable) {
       return value;
     } else {
-      return this.id = (value as _lib_editor_v1_type_catalog.ResourceId)
+      return this.id = (value as _lib_kernel_v1_resource_id.ResourceId)
           .toMutable();
     }
   }
@@ -2575,7 +2576,7 @@ sealed class CounterpartChoice {
   /// Same as `wrapExisting(LinkOccurrence(...))`.
   factory CounterpartChoice.createExisting({
     required LinkOccurrenceId_orMutable id,
-    required _lib_editor_v1_type_catalog.ResourceId_orMutable source,
+    required _lib_kernel_v1_resource_id.ResourceId_orMutable source,
     required _lib_editor_v1_type_catalog.LinkTarget_orMutable target,
   }) => CounterpartChoice.wrapExisting(
     LinkOccurrence(id: id, source: source, target: target),
@@ -2708,7 +2709,7 @@ final class CounterpartChoice_newWrapper extends _CounterpartChoice_wrapper {
 
 sealed class ConnectIntent_orMutable {
   LinkOccurrence_orMutable get source;
-  _lib_editor_v1_type_catalog.ResourceId_orMutable get target;
+  _lib_kernel_v1_resource_id.ResourceId_orMutable get target;
   CounterpartChoice? get counterpart;
 
   ConnectIntent toFrozen();
@@ -2719,14 +2720,14 @@ final class ConnectIntent implements ConnectIntent_orMutable {
   @_core.override
   final LinkOccurrence source;
   @_core.override
-  final _lib_editor_v1_type_catalog.ResourceId target;
+  final _lib_kernel_v1_resource_id.ResourceId target;
   @_core.override
   final CounterpartChoice? counterpart;
   _skir.internal__UnrecognizedFields? _u;
 
   factory ConnectIntent({
     required LinkOccurrence_orMutable source,
-    required _lib_editor_v1_type_catalog.ResourceId_orMutable target,
+    required _lib_kernel_v1_resource_id.ResourceId_orMutable target,
     required CounterpartChoice? counterpart,
   }) => ConnectIntent._(source.toFrozen(), target.toFrozen(), counterpart);
 
@@ -2735,7 +2736,7 @@ final class ConnectIntent implements ConnectIntent_orMutable {
   /// Default instance with all fields set to their default values.
   static final defaultInstance = ConnectIntent._(
     LinkOccurrence.defaultInstance,
-    _lib_editor_v1_type_catalog.ResourceId.defaultInstance,
+    _lib_kernel_v1_resource_id.ResourceId.defaultInstance,
     null,
   );
 
@@ -2743,7 +2744,7 @@ final class ConnectIntent implements ConnectIntent_orMutable {
   /// Fields are initialized to their default values.
   static ConnectIntent_mutable mutable() => ConnectIntent_mutable._(
     LinkOccurrence.defaultInstance,
-    _lib_editor_v1_type_catalog.ResourceId.defaultInstance,
+    _lib_kernel_v1_resource_id.ResourceId.defaultInstance,
     null,
   );
 
@@ -2795,7 +2796,7 @@ final class ConnectIntent implements ConnectIntent_orMutable {
         "target",
         "target",
         1,
-        _lib_editor_v1_type_catalog.ResourceId.serializer,
+        _lib_kernel_v1_resource_id.ResourceId.serializer,
         "",
         (it) => it.target,
         (it, v) => it.target = v,
@@ -2828,7 +2829,7 @@ final class ConnectIntent implements ConnectIntent_orMutable {
 /// Mutable version of [ConnectIntent].
 final class ConnectIntent_mutable implements ConnectIntent_orMutable {
   LinkOccurrence_orMutable source;
-  _lib_editor_v1_type_catalog.ResourceId_orMutable target;
+  _lib_kernel_v1_resource_id.ResourceId_orMutable target;
   CounterpartChoice? counterpart;
   _skir.internal__UnrecognizedFields? _u;
 
@@ -2847,12 +2848,12 @@ final class ConnectIntent_mutable implements ConnectIntent_orMutable {
 
   /// If the value of [target] is already mutable, returns it as-is.
   /// Otherwise, makes a mutable copy, assigns it back to [target] and returns it.
-  _lib_editor_v1_type_catalog.ResourceId_mutable get mutableTarget {
+  _lib_kernel_v1_resource_id.ResourceId_mutable get mutableTarget {
     final value = this.target;
-    if (value is _lib_editor_v1_type_catalog.ResourceId_mutable) {
+    if (value is _lib_kernel_v1_resource_id.ResourceId_mutable) {
       return value;
     } else {
-      return this.target = (value as _lib_editor_v1_type_catalog.ResourceId)
+      return this.target = (value as _lib_kernel_v1_resource_id.ResourceId)
           .toMutable();
     }
   }
@@ -3012,7 +3013,7 @@ final class RetagIntent_mutable implements RetagIntent_orMutable {
 // -----------------------------------------------------------------------------
 
 sealed class ResourceConfigurationIntent_orMutable {
-  _lib_editor_v1_type_catalog.ResourceId_orMutable get resource;
+  _lib_kernel_v1_resource_id.ResourceId_orMutable get resource;
   _lib_editor_v1_type_catalog.TypeSelection get configuration;
 
   ResourceConfigurationIntent toFrozen();
@@ -3022,13 +3023,13 @@ sealed class ResourceConfigurationIntent_orMutable {
 final class ResourceConfigurationIntent
     implements ResourceConfigurationIntent_orMutable {
   @_core.override
-  final _lib_editor_v1_type_catalog.ResourceId resource;
+  final _lib_kernel_v1_resource_id.ResourceId resource;
   @_core.override
   final _lib_editor_v1_type_catalog.TypeSelection configuration;
   _skir.internal__UnrecognizedFields? _u;
 
   factory ResourceConfigurationIntent({
-    required _lib_editor_v1_type_catalog.ResourceId_orMutable resource,
+    required _lib_kernel_v1_resource_id.ResourceId_orMutable resource,
     required _lib_editor_v1_type_catalog.TypeSelection configuration,
   }) => ResourceConfigurationIntent._(resource.toFrozen(), configuration);
 
@@ -3036,7 +3037,7 @@ final class ResourceConfigurationIntent
 
   /// Default instance with all fields set to their default values.
   static final defaultInstance = ResourceConfigurationIntent._(
-    _lib_editor_v1_type_catalog.ResourceId.defaultInstance,
+    _lib_kernel_v1_resource_id.ResourceId.defaultInstance,
     _lib_editor_v1_type_catalog.TypeSelection.unknown,
   );
 
@@ -3044,7 +3045,7 @@ final class ResourceConfigurationIntent
   /// Fields are initialized to their default values.
   static ResourceConfigurationIntent_mutable mutable() =>
       ResourceConfigurationIntent_mutable._(
-        _lib_editor_v1_type_catalog.ResourceId.defaultInstance,
+        _lib_kernel_v1_resource_id.ResourceId.defaultInstance,
         _lib_editor_v1_type_catalog.TypeSelection.unknown,
       );
 
@@ -3086,7 +3087,7 @@ final class ResourceConfigurationIntent
         "resource",
         "resource",
         0,
-        _lib_editor_v1_type_catalog.ResourceId.serializer,
+        _lib_kernel_v1_resource_id.ResourceId.serializer,
         "",
         (it) => it.resource,
         (it, v) => it.resource = v,
@@ -3119,7 +3120,7 @@ final class ResourceConfigurationIntent
 /// Mutable version of [ResourceConfigurationIntent].
 final class ResourceConfigurationIntent_mutable
     implements ResourceConfigurationIntent_orMutable {
-  _lib_editor_v1_type_catalog.ResourceId_orMutable resource;
+  _lib_kernel_v1_resource_id.ResourceId_orMutable resource;
   _lib_editor_v1_type_catalog.TypeSelection configuration;
   _skir.internal__UnrecognizedFields? _u;
 
@@ -3127,12 +3128,12 @@ final class ResourceConfigurationIntent_mutable
 
   /// If the value of [resource] is already mutable, returns it as-is.
   /// Otherwise, makes a mutable copy, assigns it back to [resource] and returns it.
-  _lib_editor_v1_type_catalog.ResourceId_mutable get mutableResource {
+  _lib_kernel_v1_resource_id.ResourceId_mutable get mutableResource {
     final value = this.resource;
-    if (value is _lib_editor_v1_type_catalog.ResourceId_mutable) {
+    if (value is _lib_kernel_v1_resource_id.ResourceId_mutable) {
       return value;
     } else {
-      return this.resource = (value as _lib_editor_v1_type_catalog.ResourceId)
+      return this.resource = (value as _lib_kernel_v1_resource_id.ResourceId)
           .toMutable();
     }
   }
@@ -3181,7 +3182,7 @@ sealed class EditIntent {
 
   /// Same as `wrapCreateResource(CreateResourceIntent(...))`.
   factory EditIntent.createCreateResource({
-    required _lib_editor_v1_type_catalog.ResourceId_orMutable id,
+    required _lib_kernel_v1_resource_id.ResourceId_orMutable id,
     required _lib_editor_v1_type_catalog.AuthoringRecord_orMutable record,
   }) => EditIntent.wrapCreateResource(
     CreateResourceIntent(id: id, record: record),
@@ -3193,7 +3194,7 @@ sealed class EditIntent {
 
   /// Same as `wrapDeleteResource(DeleteResourceIntent(...))`.
   factory EditIntent.createDeleteResource({
-    required _lib_editor_v1_type_catalog.ResourceId_orMutable id,
+    required _lib_kernel_v1_resource_id.ResourceId_orMutable id,
   }) => EditIntent.wrapDeleteResource(DeleteResourceIntent(id: id));
 
   /// Create a 'set_value' variant wrapping around the given value.
@@ -3245,7 +3246,7 @@ sealed class EditIntent {
   /// Same as `wrapConnectRelation(ConnectIntent(...))`.
   factory EditIntent.createConnectRelation({
     required LinkOccurrence_orMutable source,
-    required _lib_editor_v1_type_catalog.ResourceId_orMutable target,
+    required _lib_kernel_v1_resource_id.ResourceId_orMutable target,
     required CounterpartChoice? counterpart,
   }) => EditIntent.wrapConnectRelation(
     ConnectIntent(source: source, target: target, counterpart: counterpart),
@@ -3279,7 +3280,7 @@ sealed class EditIntent {
 
   /// Same as `wrapConfigureResource(ResourceConfigurationIntent(...))`.
   factory EditIntent.createConfigureResource({
-    required _lib_editor_v1_type_catalog.ResourceId_orMutable resource,
+    required _lib_kernel_v1_resource_id.ResourceId_orMutable resource,
     required _lib_editor_v1_type_catalog.TypeSelection configuration,
   }) => EditIntent.wrapConfigureResource(
     ResourceConfigurationIntent(
@@ -4258,7 +4259,7 @@ final class LinkRepairIntent_removeWrapper extends _LinkRepairIntent_wrapper {
 // -----------------------------------------------------------------------------
 
 sealed class TypeArgumentChangePreview_orMutable {
-  _lib_editor_v1_type_catalog.ResourceId_orMutable get resource;
+  _lib_kernel_v1_resource_id.ResourceId_orMutable get resource;
   _lib_editor_v1_type_catalog.TypeSelection get next;
   PreparedEdit_orMutable get edit;
   _core.Iterable<LinkRepairIntent> get linkRepairs;
@@ -4275,7 +4276,7 @@ sealed class TypeArgumentChangePreview_orMutable {
 final class TypeArgumentChangePreview
     implements TypeArgumentChangePreview_orMutable {
   @_core.override
-  final _lib_editor_v1_type_catalog.ResourceId resource;
+  final _lib_kernel_v1_resource_id.ResourceId resource;
   @_core.override
   final _lib_editor_v1_type_catalog.TypeSelection next;
   @_core.override
@@ -4288,7 +4289,7 @@ final class TypeArgumentChangePreview
   _skir.internal__UnrecognizedFields? _u;
 
   factory TypeArgumentChangePreview({
-    required _lib_editor_v1_type_catalog.ResourceId_orMutable resource,
+    required _lib_kernel_v1_resource_id.ResourceId_orMutable resource,
     required _lib_editor_v1_type_catalog.TypeSelection next,
     required PreparedEdit_orMutable edit,
     required _core.Iterable<LinkRepairIntent> linkRepairs,
@@ -4312,7 +4313,7 @@ final class TypeArgumentChangePreview
 
   /// Default instance with all fields set to their default values.
   static final defaultInstance = TypeArgumentChangePreview._(
-    _lib_editor_v1_type_catalog.ResourceId.defaultInstance,
+    _lib_kernel_v1_resource_id.ResourceId.defaultInstance,
     _lib_editor_v1_type_catalog.TypeSelection.unknown,
     PreparedEdit.defaultInstance,
     _skir.KeyedIterable.empty,
@@ -4323,7 +4324,7 @@ final class TypeArgumentChangePreview
   /// Fields are initialized to their default values.
   static TypeArgumentChangePreview_mutable mutable() =>
       TypeArgumentChangePreview_mutable._(
-        _lib_editor_v1_type_catalog.ResourceId.defaultInstance,
+        _lib_kernel_v1_resource_id.ResourceId.defaultInstance,
         _lib_editor_v1_type_catalog.TypeSelection.unknown,
         PreparedEdit.defaultInstance,
         _skir.KeyedIterable.empty,
@@ -4380,7 +4381,7 @@ final class TypeArgumentChangePreview
         "resource",
         "resource",
         0,
-        _lib_editor_v1_type_catalog.ResourceId.serializer,
+        _lib_kernel_v1_resource_id.ResourceId.serializer,
         "",
         (it) => it.resource,
         (it, v) => it.resource = v,
@@ -4442,7 +4443,7 @@ final class TypeArgumentChangePreview
 /// Mutable version of [TypeArgumentChangePreview].
 final class TypeArgumentChangePreview_mutable
     implements TypeArgumentChangePreview_orMutable {
-  _lib_editor_v1_type_catalog.ResourceId_orMutable resource;
+  _lib_kernel_v1_resource_id.ResourceId_orMutable resource;
   _lib_editor_v1_type_catalog.TypeSelection next;
   PreparedEdit_orMutable edit;
   _core.Iterable<LinkRepairIntent> linkRepairs;
@@ -4460,12 +4461,12 @@ final class TypeArgumentChangePreview_mutable
 
   /// If the value of [resource] is already mutable, returns it as-is.
   /// Otherwise, makes a mutable copy, assigns it back to [resource] and returns it.
-  _lib_editor_v1_type_catalog.ResourceId_mutable get mutableResource {
+  _lib_kernel_v1_resource_id.ResourceId_mutable get mutableResource {
     final value = this.resource;
-    if (value is _lib_editor_v1_type_catalog.ResourceId_mutable) {
+    if (value is _lib_kernel_v1_resource_id.ResourceId_mutable) {
       return value;
     } else {
-      return this.resource = (value as _lib_editor_v1_type_catalog.ResourceId)
+      return this.resource = (value as _lib_kernel_v1_resource_id.ResourceId)
           .toMutable();
     }
   }
@@ -4620,7 +4621,7 @@ final class ArgumentLocation_mutable implements ArgumentLocation_orMutable {
 // -----------------------------------------------------------------------------
 
 sealed class AuthoringSearchHit_orMutable {
-  _lib_editor_v1_type_catalog.ResourceId_orMutable get resource;
+  _lib_kernel_v1_resource_id.ResourceId_orMutable get resource;
   PresentationSubject_orMutable get subject;
   _lib_editor_v1_typed_value.PortableValue_orMutable get context;
 
@@ -4630,7 +4631,7 @@ sealed class AuthoringSearchHit_orMutable {
 /// Deeply immutable.
 final class AuthoringSearchHit implements AuthoringSearchHit_orMutable {
   @_core.override
-  final _lib_editor_v1_type_catalog.ResourceId resource;
+  final _lib_kernel_v1_resource_id.ResourceId resource;
   @_core.override
   final PresentationSubject subject;
   @_core.override
@@ -4638,7 +4639,7 @@ final class AuthoringSearchHit implements AuthoringSearchHit_orMutable {
   _skir.internal__UnrecognizedFields? _u;
 
   factory AuthoringSearchHit({
-    required _lib_editor_v1_type_catalog.ResourceId_orMutable resource,
+    required _lib_kernel_v1_resource_id.ResourceId_orMutable resource,
     required PresentationSubject_orMutable subject,
     required _lib_editor_v1_typed_value.PortableValue_orMutable context,
   }) => AuthoringSearchHit._(
@@ -4651,7 +4652,7 @@ final class AuthoringSearchHit implements AuthoringSearchHit_orMutable {
 
   /// Default instance with all fields set to their default values.
   static final defaultInstance = AuthoringSearchHit._(
-    _lib_editor_v1_type_catalog.ResourceId.defaultInstance,
+    _lib_kernel_v1_resource_id.ResourceId.defaultInstance,
     PresentationSubject.defaultInstance,
     _lib_editor_v1_typed_value.PortableValue.defaultInstance,
   );
@@ -4659,7 +4660,7 @@ final class AuthoringSearchHit implements AuthoringSearchHit_orMutable {
   /// Returns a new mutable instance.
   /// Fields are initialized to their default values.
   static AuthoringSearchHit_mutable mutable() => AuthoringSearchHit_mutable._(
-    _lib_editor_v1_type_catalog.ResourceId.defaultInstance,
+    _lib_kernel_v1_resource_id.ResourceId.defaultInstance,
     PresentationSubject.defaultInstance,
     _lib_editor_v1_typed_value.PortableValue.defaultInstance,
   );
@@ -4699,7 +4700,7 @@ final class AuthoringSearchHit implements AuthoringSearchHit_orMutable {
         "resource",
         "resource",
         0,
-        _lib_editor_v1_type_catalog.ResourceId.serializer,
+        _lib_kernel_v1_resource_id.ResourceId.serializer,
         "",
         (it) => it.resource,
         (it, v) => it.resource = v,
@@ -4740,7 +4741,7 @@ final class AuthoringSearchHit implements AuthoringSearchHit_orMutable {
 
 /// Mutable version of [AuthoringSearchHit].
 final class AuthoringSearchHit_mutable implements AuthoringSearchHit_orMutable {
-  _lib_editor_v1_type_catalog.ResourceId_orMutable resource;
+  _lib_kernel_v1_resource_id.ResourceId_orMutable resource;
   PresentationSubject_orMutable subject;
   _lib_editor_v1_typed_value.PortableValue_orMutable context;
   _skir.internal__UnrecognizedFields? _u;
@@ -4749,12 +4750,12 @@ final class AuthoringSearchHit_mutable implements AuthoringSearchHit_orMutable {
 
   /// If the value of [resource] is already mutable, returns it as-is.
   /// Otherwise, makes a mutable copy, assigns it back to [resource] and returns it.
-  _lib_editor_v1_type_catalog.ResourceId_mutable get mutableResource {
+  _lib_kernel_v1_resource_id.ResourceId_mutable get mutableResource {
     final value = this.resource;
-    if (value is _lib_editor_v1_type_catalog.ResourceId_mutable) {
+    if (value is _lib_kernel_v1_resource_id.ResourceId_mutable) {
       return value;
     } else {
-      return this.resource = (value as _lib_editor_v1_type_catalog.ResourceId)
+      return this.resource = (value as _lib_kernel_v1_resource_id.ResourceId)
           .toMutable();
     }
   }
@@ -5430,7 +5431,7 @@ sealed class SearchAuthoringRequest_orMutable {
   _core.String get query;
   _core.Iterable<_lib_editor_v1_type_catalog.TypeDefinitionId_orMutable>
   get roots;
-  _core.Iterable<_lib_editor_v1_type_catalog.ResourceId_orMutable> get contexts;
+  _core.Iterable<_lib_kernel_v1_resource_id.ResourceId_orMutable> get contexts;
   _lib_editor_v1_type_catalog.NamedTypeUse_orMutable? get target;
 
   SearchAuthoringRequest toFrozen();
@@ -5445,7 +5446,7 @@ final class SearchAuthoringRequest implements SearchAuthoringRequest_orMutable {
   @_core.override
   final _core.Iterable<_lib_editor_v1_type_catalog.TypeDefinitionId> roots;
   @_core.override
-  final _core.Iterable<_lib_editor_v1_type_catalog.ResourceId> contexts;
+  final _core.Iterable<_lib_kernel_v1_resource_id.ResourceId> contexts;
   @_core.override
   final _lib_editor_v1_type_catalog.NamedTypeUse? target;
   _skir.internal__UnrecognizedFields? _u;
@@ -5457,7 +5458,7 @@ final class SearchAuthoringRequest implements SearchAuthoringRequest_orMutable {
       _lib_editor_v1_type_catalog.TypeDefinitionId_orMutable
     >
     roots,
-    required _core.Iterable<_lib_editor_v1_type_catalog.ResourceId_orMutable>
+    required _core.Iterable<_lib_kernel_v1_resource_id.ResourceId_orMutable>
     contexts,
     required _lib_editor_v1_type_catalog.NamedTypeUse_orMutable? target,
   }) => SearchAuthoringRequest._(
@@ -5576,7 +5577,7 @@ final class SearchAuthoringRequest implements SearchAuthoringRequest_orMutable {
         "contexts",
         3,
         _skir.Serializers.iterable(
-          _lib_editor_v1_type_catalog.ResourceId.serializer,
+          _lib_kernel_v1_resource_id.ResourceId.serializer,
         ),
         "",
         (it) => it.contexts,
@@ -5615,7 +5616,7 @@ final class SearchAuthoringRequest_mutable
   _lib_editor_v1_type_catalog.CatalogGeneration_orMutable generation;
   _core.String query;
   _core.Iterable<_lib_editor_v1_type_catalog.TypeDefinitionId_orMutable> roots;
-  _core.Iterable<_lib_editor_v1_type_catalog.ResourceId_orMutable> contexts;
+  _core.Iterable<_lib_kernel_v1_resource_id.ResourceId_orMutable> contexts;
   _lib_editor_v1_type_catalog.NamedTypeUse_orMutable? target;
   _skir.internal__UnrecognizedFields? _u;
 
@@ -5656,12 +5657,12 @@ final class SearchAuthoringRequest_mutable
 
   /// If the value of [contexts] is already mutable, returns it as-is.
   /// Otherwise, makes a mutable copy, assigns it back to [contexts] and returns it.
-  _core.List<_lib_editor_v1_type_catalog.ResourceId_orMutable>
+  _core.List<_lib_kernel_v1_resource_id.ResourceId_orMutable>
   get mutableContexts {
     final value = this.contexts;
     if (value
         is _skir.internal__MutableList<
-          _lib_editor_v1_type_catalog.ResourceId_orMutable
+          _lib_kernel_v1_resource_id.ResourceId_orMutable
         >) {
       return value;
     } else {
@@ -6162,7 +6163,7 @@ final class CommitPreparedEditResponse_internalErrorWrapper
 // -----------------------------------------------------------------------------
 
 sealed class PreviewTypeArgumentChangeRequest_orMutable {
-  _lib_editor_v1_type_catalog.ResourceId_orMutable get resource;
+  _lib_kernel_v1_resource_id.ResourceId_orMutable get resource;
   _lib_editor_v1_type_catalog.TypeSelection get requested;
   _lib_editor_v1_type_catalog.CatalogGeneration_orMutable get catalog;
 
@@ -6173,7 +6174,7 @@ sealed class PreviewTypeArgumentChangeRequest_orMutable {
 final class PreviewTypeArgumentChangeRequest
     implements PreviewTypeArgumentChangeRequest_orMutable {
   @_core.override
-  final _lib_editor_v1_type_catalog.ResourceId resource;
+  final _lib_kernel_v1_resource_id.ResourceId resource;
   @_core.override
   final _lib_editor_v1_type_catalog.TypeSelection requested;
   @_core.override
@@ -6181,7 +6182,7 @@ final class PreviewTypeArgumentChangeRequest
   _skir.internal__UnrecognizedFields? _u;
 
   factory PreviewTypeArgumentChangeRequest({
-    required _lib_editor_v1_type_catalog.ResourceId_orMutable resource,
+    required _lib_kernel_v1_resource_id.ResourceId_orMutable resource,
     required _lib_editor_v1_type_catalog.TypeSelection requested,
     required _lib_editor_v1_type_catalog.CatalogGeneration_orMutable catalog,
   }) => PreviewTypeArgumentChangeRequest._(
@@ -6198,7 +6199,7 @@ final class PreviewTypeArgumentChangeRequest
 
   /// Default instance with all fields set to their default values.
   static final defaultInstance = PreviewTypeArgumentChangeRequest._(
-    _lib_editor_v1_type_catalog.ResourceId.defaultInstance,
+    _lib_kernel_v1_resource_id.ResourceId.defaultInstance,
     _lib_editor_v1_type_catalog.TypeSelection.unknown,
     _lib_editor_v1_type_catalog.CatalogGeneration.defaultInstance,
   );
@@ -6207,7 +6208,7 @@ final class PreviewTypeArgumentChangeRequest
   /// Fields are initialized to their default values.
   static PreviewTypeArgumentChangeRequest_mutable mutable() =>
       PreviewTypeArgumentChangeRequest_mutable._(
-        _lib_editor_v1_type_catalog.ResourceId.defaultInstance,
+        _lib_kernel_v1_resource_id.ResourceId.defaultInstance,
         _lib_editor_v1_type_catalog.TypeSelection.unknown,
         _lib_editor_v1_type_catalog.CatalogGeneration.defaultInstance,
       );
@@ -6258,7 +6259,7 @@ final class PreviewTypeArgumentChangeRequest
         "resource",
         "resource",
         0,
-        _lib_editor_v1_type_catalog.ResourceId.serializer,
+        _lib_kernel_v1_resource_id.ResourceId.serializer,
         "",
         (it) => it.resource,
         (it, v) => it.resource = v,
@@ -6300,7 +6301,7 @@ final class PreviewTypeArgumentChangeRequest
 /// Mutable version of [PreviewTypeArgumentChangeRequest].
 final class PreviewTypeArgumentChangeRequest_mutable
     implements PreviewTypeArgumentChangeRequest_orMutable {
-  _lib_editor_v1_type_catalog.ResourceId_orMutable resource;
+  _lib_kernel_v1_resource_id.ResourceId_orMutable resource;
   _lib_editor_v1_type_catalog.TypeSelection requested;
   _lib_editor_v1_type_catalog.CatalogGeneration_orMutable catalog;
   _skir.internal__UnrecognizedFields? _u;
@@ -6313,12 +6314,12 @@ final class PreviewTypeArgumentChangeRequest_mutable
 
   /// If the value of [resource] is already mutable, returns it as-is.
   /// Otherwise, makes a mutable copy, assigns it back to [resource] and returns it.
-  _lib_editor_v1_type_catalog.ResourceId_mutable get mutableResource {
+  _lib_kernel_v1_resource_id.ResourceId_mutable get mutableResource {
     final value = this.resource;
-    if (value is _lib_editor_v1_type_catalog.ResourceId_mutable) {
+    if (value is _lib_kernel_v1_resource_id.ResourceId_mutable) {
       return value;
     } else {
-      return this.resource = (value as _lib_editor_v1_type_catalog.ResourceId)
+      return this.resource = (value as _lib_kernel_v1_resource_id.ResourceId)
           .toMutable();
     }
   }
@@ -6375,7 +6376,7 @@ sealed class PreviewTypeArgumentChangeResponse {
 
   /// Same as `wrapReady(TypeArgumentChangePreview(...))`.
   factory PreviewTypeArgumentChangeResponse.createReady({
-    required _lib_editor_v1_type_catalog.ResourceId_orMutable resource,
+    required _lib_kernel_v1_resource_id.ResourceId_orMutable resource,
     required _lib_editor_v1_type_catalog.TypeSelection next,
     required PreparedEdit_orMutable edit,
     required _core.Iterable<LinkRepairIntent> linkRepairs,
@@ -6851,7 +6852,7 @@ final class PrepareTypeArgumentChangeResponse_internalErrorWrapper
 final _skir.Method<QueryAuthoringStateRequest, QueryAuthoringStateResponse>
 queryAuthoringStateMethod = _skir.Method(
   "QueryAuthoringState",
-  920010,
+  940201,
   QueryAuthoringStateRequest.serializer,
   QueryAuthoringStateResponse.serializer,
   "Returns the retained saved snapshot for one catalog generation.",
@@ -6860,7 +6861,7 @@ queryAuthoringStateMethod = _skir.Method(
 final _skir.Method<SearchAuthoringRequest, SearchAuthoringResponse>
 searchAuthoringMethod = _skir.Method(
   "SearchAuthoring",
-  920011,
+  940202,
   SearchAuthoringRequest.serializer,
   SearchAuthoringResponse.serializer,
   "",
@@ -6873,7 +6874,7 @@ searchAuthoringMethod = _skir.Method(
 final _skir.Method<PreparedEdit, CommitPreparedEditResponse>
 commitPreparedEditMethod = _skir.Method(
   "CommitPreparedEdit",
-  920012,
+  940203,
   PreparedEdit.serializer,
   CommitPreparedEditResponse.serializer,
   "committed confirms installation of saved authoring state. It does not confirm check completion,\ncompilation, publication selection, or engine application. conflict_error requires refreshing\noriginal facts; rejected_error reports invalid intent or missing guards; catalog_changed_error\nrequires a new catalog.",
@@ -6885,7 +6886,7 @@ final _skir.Method<
 >
 previewTypeArgumentChangeMethod = _skir.Method(
   "PreviewTypeArgumentChange",
-  920013,
+  940204,
   PreviewTypeArgumentChangeRequest.serializer,
   PreviewTypeArgumentChangeResponse.serializer,
   "",
@@ -6895,7 +6896,7 @@ previewTypeArgumentChangeMethod = _skir.Method(
 final _skir.Method<TypeArgumentChangePreview, PrepareTypeArgumentChangeResponse>
 prepareTypeArgumentChangeMethod = _skir.Method(
   "PrepareTypeArgumentChange",
-  920014,
+  940205,
   TypeArgumentChangePreview.serializer,
   PrepareTypeArgumentChangeResponse.serializer,
   "Revalidates a preview and returns proposed intent. CommitPreparedEdit performs the separate saved write.",

@@ -125,6 +125,9 @@ async fn panel_login_upserts_user_and_grants_personal_permissions(
             .chain(&response.permissions.subscribe.allow)
             .all(|subject| !subject.contains('>'))
     );
+    // Replies to the panel stream without credit, so a panel connection never answers a message:
+    // a response permission would let it publish once to any reply subject it names.
+    assert!(response.permissions.response.is_none());
     let database = context
         .extension::<DatabaseHandle>()
         .ok_or_else(|| anyhow::anyhow!("database handle missing"))?;
@@ -233,7 +236,8 @@ async fn member_receives_all_organization_capabilities(
         "service.to.*.organization.writers.realm.editor.creation.prepare",
         "service.to.*.organization.writers.realm.shared.catalog.fetch",
         "service.to.*.organization.writers.realm.shared.publish",
-        "service.to.*.organization.writers.realm.shared.blob.read",
+        "service.to.*.organization.writers.realm.shared.blob.fetch",
+        "service.to.*.organization.writers.realm.shared.blob.store",
         "service.to.*.organization.writers.realm.editor.authoring.state.query",
         "service.to.*.organization.writers.realm.editor.authoring.edit.commit",
         "service.to.*.organization.writers.realm.editor.authoring.type.preview",

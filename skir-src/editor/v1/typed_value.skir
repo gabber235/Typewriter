@@ -5,7 +5,7 @@ import {
 
 /// Carries a closed type and portable payload together when the receiver cannot infer the
 /// type from its surrounding binding. Receiving this pair does not replace schema validation.
-struct PortableValue(810200001) {
+struct PortableValue(84190001) {
   actual_type: TypeUse = 0;
   payload: DataValue = 1;
 }

@@ -2,6 +2,7 @@ package com.typewritermc.services.libs.communicator.testing
 
 import com.typewritermc.services.libs.communicator.address.AddressPattern
 import com.typewritermc.services.libs.communicator.address.MessageAddress
+import com.typewritermc.services.libs.communicator.transfer.TransportLimits
 import com.typewritermc.services.libs.communicator.transport.InboundMessage
 import com.typewritermc.services.libs.communicator.transport.MessageTransport
 import com.typewritermc.services.libs.communicator.transport.MessagingSystem
@@ -112,6 +113,7 @@ class FakeMessageTransport(
     override suspend fun request(
         message: OutboundMessage,
         timeout: Duration,
+        limits: TransportLimits?,
     ): TransportResult<InboundMessage> {
         val responder =
             synchronized(lock) {

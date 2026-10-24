@@ -5,11 +5,7 @@ import com.typewritermc.authoring.of
 import com.typewritermc.authoring.use
 import com.typewritermc.checking.InputIdentity
 import com.typewritermc.operations.OperationOrigin
-import com.typewritermc.realm.checking.CapturedAuthoringReads
-import com.typewritermc.realm.repository.CounterpartBinding
-import com.typewritermc.realm.repository.DeclaredLinkEvidence
-import com.typewritermc.realm.repository.ResourceValueMapper
-import com.typewritermc.realm.repository.valueAt
+import com.typewritermc.realm.catalog.AuthoringCatalogLease
 import com.typewritermc.types.catalog.Resolution
 import com.typewritermc.types.endpoint
 import com.typewritermc.types.isAcyclic
@@ -27,9 +23,9 @@ import skirout.editor.v1.type_catalog.EndpointId
 import skirout.editor.v1.type_catalog.ItemId
 import skirout.editor.v1.type_catalog.LinkTarget
 import skirout.editor.v1.type_catalog.ResolvedRepresentation
-import skirout.editor.v1.type_catalog.ResourceId
 import skirout.editor.v1.type_catalog.TypeSelection
 import skirout.editor.v1.type_catalog.ValueLocation
+import skirout.kernel.v1.resource_id.ResourceId
 
 /**
  * Reads relation bindings, ownership and endpoint compatibility over one captured working graph.

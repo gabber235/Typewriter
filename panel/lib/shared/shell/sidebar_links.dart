@@ -1,0 +1,259 @@
+part of "sidebar.dart";
+
+/// Labels a group of related links in the sidebar.
+class SidebarHeader extends StatelessWidget {
+  const SidebarHeader({required this.text, super.key});
+  final String text;
+
+  @override
+  Widget build(BuildContext context) {
+    return Padding(
+      padding: EdgeInsets.only(
+        top: context.spacing.space5,
+        bottom: context.spacing.space2,
+        left: context.spacing.space3,
+        right: context.spacing.space3,
+      ),
+      child: Row(
+        children: [
+          Text(
+            text.toUpperCase(),
+            style: Theme.of(context).textTheme.labelSmall,
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+/// Navigates to an internal route and reflects the active route selection.
+///
+/// The route controller is read from the nearest [StackRouterScope]. If no
+/// controller is available, the link remains visible but cannot be activated.
+class SidebarLink extends HookConsumerWidget {
+  const SidebarLink({
+    required this.icon,
+    required this.text,
+    required this.route,
+    this.trailing,
+    this.expand = true,
+    super.key,
+  });
+  final Widget icon;
+  final String text;
+  final PageRouteInfo route;
+  final Widget? trailing;
+  final bool expand;
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final focusNode = useFocusNode(
+      debugLabel: "SidebarLink-${text.snakeCase()}",
+    );
+    ref.watch(currentRouteProvider);
+    final scope = StackRouterScope.of(context, watch: true);
+    final router = scope?.controller;
+    final selected =
+        router?.isRouteActive(route.flattened.last.routeName) ?? false;
+
+    final color = selected
+        ? Theme.of(context).colorScheme.onSurface
+        : Theme.of(context).colorScheme.onSurfaceVariant;
+    final backgroundColor = selected
+        ? Theme.of(context).colorScheme.surfaceContainerHighest
+        : Colors.transparent;
+
+    return Surface(
+      color: backgroundColor,
+      child: Material(
+        color: backgroundColor,
+        borderRadius: context.shapes.mediumBorderRadius,
+        child: InkWell(
+          focusNode: focusNode,
+          onTap: router != null
+              ? () {
+                  if (!selected) {
+                    router.navigate(route);
+                  }
+                }
+              : null,
+          hoverColor: Theme.of(context).colorScheme.onSurface
+              .withValues(alpha: 0.1),
+          borderRadius: context.shapes.mediumBorderRadius,
+          child: Padding(
+            padding: EdgeInsets.symmetric(
+              vertical: context.spacing.space2,
+              horizontal: context.spacing.space3,
+            ),
+            child: Row(
+              spacing: context.spacing.space3,
+              children: [
+                IconTheme(
+                  data: IconThemeData(color: color, size: 20),
+                  child: icon,
+                ),
+
+                if (expand)
+                  Expanded(
+                    child: Text(
+                      text,
+                      style: Theme.of(context).textTheme.bodyMedium!
+                          .copyWith(color: color, fontSize: 14),
+                    ),
+                  )
+                else
+                  Text(
+                    text,
+                    style: Theme.of(context).textTheme.bodyMedium!
+                        .copyWith(color: color, fontSize: 14),
+                  ),
+
+                ?trailing,
+              ],
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+/// Opens an external destination from the sidebar.
+class ExternalSidebarLink extends StatelessWidget {
+  const ExternalSidebarLink({
+    required this.icon,
+    required this.text,
+    required this.url,
+    this.trailing,
+    this.expand = true,
+    super.key,
+  });
+
+  final Widget icon;
+  final String text;
+  final String url;
+  final Widget? trailing;
+  final bool expand;
+
+  @override
+  Widget build(BuildContext context) {
+    final color = Theme.of(context).colorScheme.onSurfaceVariant;
+    final uri = Uri.parse(url);
+
+    return Surface(
+      color: Colors.transparent,
+      child: Material(
+        color: Colors.transparent,
+        borderRadius: context.shapes.mediumBorderRadius,
+        child: InkWell(
+          onTap: uri.launchExternally,
+          hoverColor: Theme.of(context).colorScheme.onSurface
+              .withValues(alpha: 0.1),
+          borderRadius: context.shapes.mediumBorderRadius,
+          child: Padding(
+            padding: EdgeInsets.symmetric(
+              vertical: context.spacing.space2,
+              horizontal: context.spacing.space3,
+            ),
+            child: Row(
+              spacing: context.spacing.space3,
+              children: [
+                IconTheme(
+                  data: IconThemeData(color: color, size: 20),
+                  child: icon,
+                ),
+
+                if (expand)
+                  Expanded(
+                    child: Text(
+                      text,
+                      style: Theme.of(context).textTheme.bodyMedium!
+                          .copyWith(color: color, fontSize: 14),
+                    ),
+                  )
+                else
+                  Text(
+                    text,
+                    style: Theme.of(context).textTheme.bodyMedium!
+                        .copyWith(color: color, fontSize: 14),
+                  ),
+
+                ?trailing,
+                IconTheme(
+                  data: IconThemeData(color: color, size: 18),
+                  child: Icones(MaterialSymbols.open_in_new),
+                ),
+              ],
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+/// Renders support, documentation, and account actions at the sidebar footer.
+class FooterSidebarLinks extends StatelessWidget {
+  const FooterSidebarLinks({
+    this.compact = false,
+    this.expand = true,
+    super.key,
+  });
+
+  final bool compact;
+  final bool expand;
+
+  @override
+  Widget build(BuildContext context) {
+    return Column(
+      crossAxisAlignment: .start,
+      children: [
+        if (!compact) ...[
+          SupportSidebarLink(expand: expand),
+          DocumentationSidebarLink(expand: expand),
+        ],
+        UserMenu(compact: compact, expand: expand),
+      ],
+    );
+  }
+}
+
+/// Support community destination opened by the sidebar support action.
+const discordUrl = "https://discord.gg/j5WWscvQkW";
+
+/// Sidebar link to the Typewriter support community.
+class SupportSidebarLink extends StatelessWidget {
+  const SupportSidebarLink({super.key, this.expand = false});
+
+  final bool expand;
+
+  @override
+  Widget build(BuildContext context) {
+    return ExternalSidebarLink(
+      icon: Icones(MaterialSymbols.contact_support_rounded),
+      text: "Support",
+      url: discordUrl,
+      expand: expand,
+    );
+  }
+}
+
+/// Typewriter documentation destination opened by sidebar actions.
+const docsUrl = "https://docs.typewritermc.com";
+
+/// Sidebar link to the Typewriter documentation.
+class DocumentationSidebarLink extends StatelessWidget {
+  const DocumentationSidebarLink({super.key, this.expand = false});
+
+  final bool expand;
+
+  @override
+  Widget build(BuildContext context) {
+    return ExternalSidebarLink(
+      icon: Icones(MaterialSymbols.book_outline),
+      text: "Docs",
+      url: docsUrl,
+      expand: expand,
+    );
+  }
+}

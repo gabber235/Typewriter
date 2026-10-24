@@ -2,7 +2,7 @@
 //!
 //! The generated `transport_routes` module declares one type per manifest route, the role grants
 //! of each scope and one dispatcher per backend component. Everything route independent lives
-//! here: subject tokens and scopes, grant sets, the route contracts, reply framing, and the serving
+//! here: subject tokens and scopes, grant sets, the route contracts, payload framing, and the serving
 //! of matched messages.
 
 mod frame;
@@ -17,9 +17,11 @@ pub(crate) mod test_support;
 mod dispatch_test;
 
 pub use frame::{
-    CHUNK_HEADER, FAILURE_HEADER, LIMIT_HEADER, REPLY_HEADER, ReplyFrame, ReplyPlan, SHA256_HEADER,
-    SIZE_HEADER, interrupted_frame, plan_reply, unusable_reply_slug,
+    BUSY, CHUNK_HEADER, CREDIT_HEADER, FAILURE_HEADER, INCOMPLETE, INTERRUPTED, LIMIT_HEADER,
+    PAYLOAD_HEADER, PayloadFrame, PayloadPlan, REJECTED, ReplyPacing, SHA256_HEADER, SIZE_HEADER,
+    TOO_LARGE, credit, interrupted_frame, plan_reply, unusable_reply_slug,
 };
+pub(crate) use frame::{FrameSink, send_reply_frames};
 pub use grant::GrantSet;
 pub use route::{
     EventDelivery, EventRoute, OutboundEventRoute, OutboundRequestRoute, PersistentEventRoute,

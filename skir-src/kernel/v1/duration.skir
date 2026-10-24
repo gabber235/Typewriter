@@ -1,5 +1,5 @@
 // Shared elapsed time value. The canonical unit is milliseconds.
 // Consumers translate this value to native duration types only at their boundaries.
-struct Duration {
+struct Duration(80020001) {
   milliseconds: int64;
 }

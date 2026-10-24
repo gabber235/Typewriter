@@ -9,6 +9,7 @@ export "current_interaction_mode.dart";
 export "directional_interaction_mode.dart";
 export "input_field_mode_coordinator.dart";
 export "interaction_mode.dart";
+export "interaction_suspension.dart";
 export "mode_display.dart";
 export "mode_shortcut.dart";
 export "modes/modes.dart";

@@ -16,6 +16,7 @@ import "dart:core" as _core;
 import "package:skir_client/skir_client.dart" as _skir;
 
 import "../../kernel/v1/duration.dart" as _lib_kernel_v1_duration;
+import "../../kernel/v1/resource_id.dart" as _lib_kernel_v1_resource_id;
 
 // -----------------------------------------------------------------------------
 // struct DeclaredTypeId
@@ -4155,99 +4156,6 @@ final class TypeDefinition_mutable implements TypeDefinition_orMutable {
 }
 
 // -----------------------------------------------------------------------------
-// struct ResourceId
-// -----------------------------------------------------------------------------
-
-sealed class ResourceId_orMutable {
-  _core.String get value;
-
-  ResourceId toFrozen();
-}
-
-/// Deeply immutable.
-final class ResourceId implements ResourceId_orMutable {
-  @_core.override
-  final _core.String value;
-  _skir.internal__UnrecognizedFields? _u;
-
-  factory ResourceId({required _core.String value}) => ResourceId._(value);
-
-  ResourceId._(this.value);
-
-  /// Default instance with all fields set to their default values.
-  static final defaultInstance = ResourceId._("");
-
-  /// Returns a new mutable instance.
-  /// Fields are initialized to their default values.
-  static ResourceId_mutable mutable() => ResourceId_mutable._("");
-
-  /// Returns this instance (no-op).
-  @_core.Deprecated("This instance is already frozen.")
-  @_core.override
-  ResourceId toFrozen() => this;
-
-  /// Returns a mutable shallow copy of this instance.
-  ResourceId_mutable toMutable() => ResourceId_mutable._(this.value);
-
-  @_core.override
-  _core.bool operator ==(other) {
-    if (_core.identical(this, other)) return true;
-    if (other is! ResourceId) return false;
-    return _skir.internal__listEquality.equals(
-      _equality_proxy,
-      other._equality_proxy,
-    );
-  }
-
-  @_core.override
-  _core.int get hashCode => _skir.internal__listEquality.hash(_equality_proxy);
-
-  _core.List get _equality_proxy => [this.value];
-
-  @_core.override
-  _core.String toString() => _skir.internal__stringify(this, serializer);
-
-  /// Serializer for `ResourceId` instances.
-  static _skir.StructSerializer<ResourceId, ResourceId_mutable> get serializer {
-    if (_serializerBuilder.mustInitialize()) {
-      _serializerBuilder.addField(
-        "value",
-        "value",
-        0,
-        _skir.Serializers.string,
-        "",
-        (it) => it.value,
-        (it, v) => it.value = v,
-      );
-      _serializerBuilder.finalize();
-    }
-    return _serializerBuilder.serializer;
-  }
-
-  static final _serializerBuilder = _skir.internal__StructSerializerBuilder(
-    recordId: "editor/v1/type_catalog.skir:ResourceId",
-    doc: "",
-    defaultInstance: defaultInstance,
-    newMutable: (it) => (it != null) ? it.toMutable() : mutable(),
-    toFrozen: (ResourceId_mutable it) => it.toFrozen(),
-    getUnrecognizedFields: (it) => it._u,
-    setUnrecognizedFields: (it, u) => it._u = u,
-  );
-}
-
-/// Mutable version of [ResourceId].
-final class ResourceId_mutable implements ResourceId_orMutable {
-  _core.String value;
-  _skir.internal__UnrecognizedFields? _u;
-
-  ResourceId_mutable._(this.value);
-
-  /// Returns a deeply immutable copy of this instance.
-  @_core.override
-  ResourceId toFrozen() => ResourceId(value: this.value).._u = this._u;
-}
-
-// -----------------------------------------------------------------------------
 // struct ItemId
 // -----------------------------------------------------------------------------
 
@@ -4348,7 +4256,7 @@ final class ItemId_mutable implements ItemId_orMutable {
 // -----------------------------------------------------------------------------
 
 sealed class LinkTarget_orMutable {
-  ResourceId_orMutable get resource;
+  _lib_kernel_v1_resource_id.ResourceId_orMutable get resource;
   ValuePath_orMutable? get opposite;
 
   LinkTarget toFrozen();
@@ -4360,13 +4268,13 @@ sealed class LinkTarget_orMutable {
 /// Deeply immutable.
 final class LinkTarget implements LinkTarget_orMutable {
   @_core.override
-  final ResourceId resource;
+  final _lib_kernel_v1_resource_id.ResourceId resource;
   @_core.override
   final ValuePath? opposite;
   _skir.internal__UnrecognizedFields? _u;
 
   factory LinkTarget({
-    required ResourceId_orMutable resource,
+    required _lib_kernel_v1_resource_id.ResourceId_orMutable resource,
     required ValuePath_orMutable? opposite,
   }) => LinkTarget._(
     resource.toFrozen(),
@@ -4376,12 +4284,17 @@ final class LinkTarget implements LinkTarget_orMutable {
   LinkTarget._(this.resource, this.opposite);
 
   /// Default instance with all fields set to their default values.
-  static final defaultInstance = LinkTarget._(ResourceId.defaultInstance, null);
+  static final defaultInstance = LinkTarget._(
+    _lib_kernel_v1_resource_id.ResourceId.defaultInstance,
+    null,
+  );
 
   /// Returns a new mutable instance.
   /// Fields are initialized to their default values.
-  static LinkTarget_mutable mutable() =>
-      LinkTarget_mutable._(ResourceId.defaultInstance, null);
+  static LinkTarget_mutable mutable() => LinkTarget_mutable._(
+    _lib_kernel_v1_resource_id.ResourceId.defaultInstance,
+    null,
+  );
 
   /// Returns this instance (no-op).
   @_core.Deprecated("This instance is already frozen.")
@@ -4417,7 +4330,7 @@ final class LinkTarget implements LinkTarget_orMutable {
         "resource",
         "resource",
         0,
-        ResourceId.serializer,
+        _lib_kernel_v1_resource_id.ResourceId.serializer,
         "",
         (it) => it.resource,
         (it, v) => it.resource = v,
@@ -4449,7 +4362,7 @@ final class LinkTarget implements LinkTarget_orMutable {
 
 /// Mutable version of [LinkTarget].
 final class LinkTarget_mutable implements LinkTarget_orMutable {
-  ResourceId_orMutable resource;
+  _lib_kernel_v1_resource_id.ResourceId_orMutable resource;
   ValuePath_orMutable? opposite;
   _skir.internal__UnrecognizedFields? _u;
 
@@ -4457,12 +4370,13 @@ final class LinkTarget_mutable implements LinkTarget_orMutable {
 
   /// If the value of [resource] is already mutable, returns it as-is.
   /// Otherwise, makes a mutable copy, assigns it back to [resource] and returns it.
-  ResourceId_mutable get mutableResource {
+  _lib_kernel_v1_resource_id.ResourceId_mutable get mutableResource {
     final value = this.resource;
-    if (value is ResourceId_mutable) {
+    if (value is _lib_kernel_v1_resource_id.ResourceId_mutable) {
       return value;
     } else {
-      return this.resource = (value as ResourceId).toMutable();
+      return this.resource = (value as _lib_kernel_v1_resource_id.ResourceId)
+          .toMutable();
     }
   }
 
@@ -7995,7 +7909,7 @@ final class PathSegment_itemWrapper extends _PathSegment_wrapper {
 // -----------------------------------------------------------------------------
 
 sealed class ValueLocation_orMutable {
-  ResourceId_orMutable get resource;
+  _lib_kernel_v1_resource_id.ResourceId_orMutable get resource;
   ValuePath_orMutable get path;
 
   ValueLocation toFrozen();
@@ -8004,13 +7918,13 @@ sealed class ValueLocation_orMutable {
 /// Deeply immutable.
 final class ValueLocation implements ValueLocation_orMutable {
   @_core.override
-  final ResourceId resource;
+  final _lib_kernel_v1_resource_id.ResourceId resource;
   @_core.override
   final ValuePath path;
   _skir.internal__UnrecognizedFields? _u;
 
   factory ValueLocation({
-    required ResourceId_orMutable resource,
+    required _lib_kernel_v1_resource_id.ResourceId_orMutable resource,
     required ValuePath_orMutable path,
   }) => ValueLocation._(resource.toFrozen(), path.toFrozen());
 
@@ -8018,14 +7932,14 @@ final class ValueLocation implements ValueLocation_orMutable {
 
   /// Default instance with all fields set to their default values.
   static final defaultInstance = ValueLocation._(
-    ResourceId.defaultInstance,
+    _lib_kernel_v1_resource_id.ResourceId.defaultInstance,
     ValuePath.defaultInstance,
   );
 
   /// Returns a new mutable instance.
   /// Fields are initialized to their default values.
   static ValueLocation_mutable mutable() => ValueLocation_mutable._(
-    ResourceId.defaultInstance,
+    _lib_kernel_v1_resource_id.ResourceId.defaultInstance,
     ValuePath.defaultInstance,
   );
 
@@ -8064,7 +7978,7 @@ final class ValueLocation implements ValueLocation_orMutable {
         "resource",
         "resource",
         0,
-        ResourceId.serializer,
+        _lib_kernel_v1_resource_id.ResourceId.serializer,
         "",
         (it) => it.resource,
         (it, v) => it.resource = v,
@@ -8096,7 +8010,7 @@ final class ValueLocation implements ValueLocation_orMutable {
 
 /// Mutable version of [ValueLocation].
 final class ValueLocation_mutable implements ValueLocation_orMutable {
-  ResourceId_orMutable resource;
+  _lib_kernel_v1_resource_id.ResourceId_orMutable resource;
   ValuePath_orMutable path;
   _skir.internal__UnrecognizedFields? _u;
 
@@ -8104,12 +8018,13 @@ final class ValueLocation_mutable implements ValueLocation_orMutable {
 
   /// If the value of [resource] is already mutable, returns it as-is.
   /// Otherwise, makes a mutable copy, assigns it back to [resource] and returns it.
-  ResourceId_mutable get mutableResource {
+  _lib_kernel_v1_resource_id.ResourceId_mutable get mutableResource {
     final value = this.resource;
-    if (value is ResourceId_mutable) {
+    if (value is _lib_kernel_v1_resource_id.ResourceId_mutable) {
       return value;
     } else {
-      return this.resource = (value as ResourceId).toMutable();
+      return this.resource = (value as _lib_kernel_v1_resource_id.ResourceId)
+          .toMutable();
     }
   }
 

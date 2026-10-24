@@ -1,12 +1,18 @@
 //! Generated transport routes. Do not edit; regenerate with `bun run generate:protocol`.
 mod skir_types;
-/// The most bytes of an encoded reply that one reply frame carries.
-pub const RESPONSE_CHUNK_BYTES: usize = 524288;
-/// The most frames one reply may have, and so the most messages a responder may send to one
-/// requester inbox.
-pub const MAX_RESPONSE_CHUNKS: usize = 64;
+/// The most bytes of an encoded payload that one frame carries.
+pub const CHUNK_BYTES: usize = 524288;
+/// How many frames a sender may send before the receiver grants the next window.
+pub const WINDOW_FRAMES: usize = 8;
+/// The largest encoded reply a backend component sends; components serve no route that raises it.
+pub const REPLY_MAX_BYTES: usize = 33554432;
+/// How long in milliseconds a sender waits for a credit and a receiver for the next frame.
+pub const FRAME_INACTIVITY_MS: u32 = 30000;
 /// How long in milliseconds a responder may send replies after it received a request.
 pub const REPLY_TTL_MS: i64 = 300000;
+/// How many messages a service connection may send in answer to one received request: the frames
+/// of the largest reply any service role serves. None when no service role answers.
+pub const SERVICE_RESPONSE_LIMIT: Option<u32> = Some(256);
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 pub enum RealmRole {
     RealmCoordinator,
@@ -186,16 +192,10 @@ impl crate::transport::RealmScope {
                     "service.to.{realm}.organization.{organization}.realm.shared.blob.metadata"
                 ));
                 grants.subscribe.insert(format!(
-                    "service.to.{realm}.organization.{organization}.realm.shared.blob.read"
+                    "service.to.{realm}.organization.{organization}.realm.shared.blob.fetch"
                 ));
                 grants.subscribe.insert(format!(
-                    "service.to.{realm}.organization.{organization}.realm.shared.blob.begin"
-                ));
-                grants.subscribe.insert(format!(
-                    "service.to.{realm}.organization.{organization}.realm.shared.blob.write"
-                ));
-                grants.subscribe.insert(format!(
-                    "service.to.{realm}.organization.{organization}.realm.shared.blob.complete"
+                    "service.to.{realm}.organization.{organization}.realm.shared.blob.store"
                 ));
                 grants.publish.insert(format!(
                     "service.from.{realm}.organization.{organization}.realm.rollout.probe"
@@ -232,16 +232,10 @@ impl crate::transport::RealmScope {
                     "service.to.{realm}.organization.{organization}.realm.shared.blob.metadata"
                 ));
                 grants.publish.insert(format!(
-                    "service.to.{realm}.organization.{organization}.realm.shared.blob.read"
+                    "service.to.{realm}.organization.{organization}.realm.shared.blob.fetch"
                 ));
                 grants.publish.insert(format!(
-                    "service.to.{realm}.organization.{organization}.realm.shared.blob.begin"
-                ));
-                grants.publish.insert(format!(
-                    "service.to.{realm}.organization.{organization}.realm.shared.blob.write"
-                ));
-                grants.publish.insert(format!(
-                    "service.to.{realm}.organization.{organization}.realm.shared.blob.complete"
+                    "service.to.{realm}.organization.{organization}.realm.shared.blob.store"
                 ));
                 grants.subscribe.insert(format!(
                     "service.from.{realm}.organization.{organization}.realm.rollout.probe"
@@ -583,16 +577,10 @@ impl crate::transport::OrganizationActorScope {
                     "service.to.*.organization.{organization}.realm.shared.blob.metadata"
                 ));
                 grants.publish.insert(format!(
-                    "service.to.*.organization.{organization}.realm.shared.blob.read"
+                    "service.to.*.organization.{organization}.realm.shared.blob.fetch"
                 ));
                 grants.publish.insert(format!(
-                    "service.to.*.organization.{organization}.realm.shared.blob.begin"
-                ));
-                grants.publish.insert(format!(
-                    "service.to.*.organization.{organization}.realm.shared.blob.write"
-                ));
-                grants.publish.insert(format!(
-                    "service.to.*.organization.{organization}.realm.shared.blob.complete"
+                    "service.to.*.organization.{organization}.realm.shared.blob.store"
                 ));
                 grants.publish.insert(format!(
                     "typewriter.presence.organization.{organization}.user.{user}"
@@ -717,6 +705,7 @@ impl crate::transport::RequestRoute for UserOrganizationCreateRoute {
     type Request = crate::skirout::base::organization::v1::organization::CreateOrganizationRequest;
     type Response =
         crate::skirout::base::organization::v1::organization::CreateOrganizationResponse;
+    const REPLY_CREDIT: bool = false;
     fn method() -> &'static crate::skir_client::Method<Self::Request, Self::Response> {
         crate::skirout::base::organization::v1::organization::create_organization_method()
     }
@@ -726,6 +715,7 @@ impl crate::transport::RequestRoute for UserOrganizationsWatchRoute {
     type Scope = crate::transport::UserScope;
     type Request = crate::skirout::base::organization::v1::user::WatchUserOrganizationsRequest;
     type Response = crate::skirout::base::organization::v1::user::WatchUserOrganizationsResponse;
+    const REPLY_CREDIT: bool = false;
     fn method() -> &'static crate::skir_client::Method<Self::Request, Self::Response> {
         crate::skirout::base::organization::v1::user::watch_user_organizations_method()
     }
@@ -735,6 +725,7 @@ impl crate::transport::RequestRoute for UserJoinRequestsWatchRoute {
     type Scope = crate::transport::UserScope;
     type Request = crate::skirout::base::organization::v1::user::WatchUserJoinRequestsRequest;
     type Response = crate::skirout::base::organization::v1::user::WatchUserJoinRequestsResponse;
+    const REPLY_CREDIT: bool = false;
     fn method() -> &'static crate::skir_client::Method<Self::Request, Self::Response> {
         crate::skirout::base::organization::v1::user::watch_user_join_requests_method()
     }
@@ -744,6 +735,7 @@ impl crate::transport::RequestRoute for UserJoinRequestSubmitRoute {
     type Scope = crate::transport::UserScope;
     type Request = crate::skirout::base::organization::v1::user::SubmitUserJoinRequestRequest;
     type Response = crate::skirout::base::organization::v1::user::SubmitUserJoinRequestResponse;
+    const REPLY_CREDIT: bool = false;
     fn method() -> &'static crate::skir_client::Method<Self::Request, Self::Response> {
         crate::skirout::base::organization::v1::user::submit_user_join_request_method()
     }
@@ -753,6 +745,7 @@ impl crate::transport::RequestRoute for UserJoinRequestCancelRoute {
     type Scope = crate::transport::UserScope;
     type Request = crate::skirout::base::organization::v1::user::CancelUserJoinRequestRequest;
     type Response = crate::skirout::base::organization::v1::user::CancelUserJoinRequestResponse;
+    const REPLY_CREDIT: bool = false;
     fn method() -> &'static crate::skir_client::Method<Self::Request, Self::Response> {
         crate::skirout::base::organization::v1::user::cancel_user_join_request_method()
     }
@@ -763,6 +756,7 @@ impl crate::transport::RequestRoute for OrganizationMembersWatchRoute {
     type Request = crate::skirout::base::organization::v1::member::WatchOrganizationMembersRequest;
     type Response =
         crate::skirout::base::organization::v1::member::WatchOrganizationMembersResponse;
+    const REPLY_CREDIT: bool = false;
     fn method() -> &'static crate::skir_client::Method<Self::Request, Self::Response> {
         crate::skirout::base::organization::v1::member::watch_organization_members_method()
     }
@@ -774,6 +768,7 @@ impl crate::transport::RequestRoute for OrganizationMembersUpdateRoute {
         crate::skirout::base::organization::v1::member::UpdateOrganizationMemberRolesRequest;
     type Response =
         crate::skirout::base::organization::v1::member::UpdateOrganizationMemberRolesResponse;
+    const REPLY_CREDIT: bool = false;
     fn method() -> &'static crate::skir_client::Method<Self::Request, Self::Response> {
         crate::skirout::base::organization::v1::member::update_organization_member_roles_method()
     }
@@ -784,6 +779,7 @@ impl crate::transport::RequestRoute for OrganizationMemberRemoveRoute {
     type Request = crate::skirout::base::organization::v1::member::RemoveOrganizationMemberRequest;
     type Response =
         crate::skirout::base::organization::v1::member::RemoveOrganizationMemberResponse;
+    const REPLY_CREDIT: bool = false;
     fn method() -> &'static crate::skir_client::Method<Self::Request, Self::Response> {
         crate::skirout::base::organization::v1::member::remove_organization_member_method()
     }
@@ -795,6 +791,7 @@ impl crate::transport::RequestRoute for OrganizationJoinRequestsWatchRoute {
         crate::skirout::base::organization::v1::join_request::WatchOrganizationJoinRequestsRequest;
     type Response =
         crate::skirout::base::organization::v1::join_request::WatchOrganizationJoinRequestsResponse;
+    const REPLY_CREDIT: bool = false;
     fn method() -> &'static crate::skir_client::Method<Self::Request, Self::Response> {
         crate::skirout::base::organization::v1::join_request::watch_organization_join_requests_method()
     }
@@ -804,6 +801,7 @@ impl crate::transport::RequestRoute for OrganizationJoinRequestsApproveRoute {
     type Scope = crate::transport::OrganizationActorScope;
     type Request = crate::skirout::base::organization::v1::join_request::ApproveOrganizationJoinRequestsRequest;
     type Response = crate::skirout::base::organization::v1::join_request::ApproveOrganizationJoinRequestsResponse;
+    const REPLY_CREDIT: bool = false;
     fn method() -> &'static crate::skir_client::Method<Self::Request, Self::Response> {
         crate::skirout::base::organization::v1::join_request::approve_organization_join_requests_method()
     }
@@ -814,6 +812,7 @@ impl crate::transport::RequestRoute for OrganizationJoinRequestDeclineRoute {
     type Request =
         crate::skirout::base::organization::v1::join_request::DeclineOrganizationJoinRequestRequest;
     type Response = crate::skirout::base::organization::v1::join_request::DeclineOrganizationJoinRequestResponse;
+    const REPLY_CREDIT: bool = false;
     fn method() -> &'static crate::skir_client::Method<Self::Request, Self::Response> {
         crate::skirout::base::organization::v1::join_request::decline_organization_join_request_method()
     }
@@ -825,6 +824,7 @@ impl crate::transport::RequestRoute for OrganizationJoinCodesWatchRoute {
         crate::skirout::base::organization::v1::join_codes::WatchOrganizationJoinCodesRequest;
     type Response =
         crate::skirout::base::organization::v1::join_codes::WatchOrganizationJoinCodesResponse;
+    const REPLY_CREDIT: bool = false;
     fn method() -> &'static crate::skir_client::Method<Self::Request, Self::Response> {
         crate::skirout::base::organization::v1::join_codes::watch_organization_join_codes_method()
     }
@@ -836,6 +836,7 @@ impl crate::transport::RequestRoute for OrganizationJoinCodeGenerateRoute {
         crate::skirout::base::organization::v1::join_codes::GenerateOrganizationJoinCodeRequest;
     type Response =
         crate::skirout::base::organization::v1::join_codes::GenerateOrganizationJoinCodeResponse;
+    const REPLY_CREDIT: bool = false;
     fn method() -> &'static crate::skir_client::Method<Self::Request, Self::Response> {
         crate::skirout::base::organization::v1::join_codes::generate_organization_join_code_method()
     }
@@ -847,6 +848,7 @@ impl crate::transport::RequestRoute for OrganizationJoinCodeRevokeRoute {
         crate::skirout::base::organization::v1::join_codes::RevokeOrganizationJoinCodeRequest;
     type Response =
         crate::skirout::base::organization::v1::join_codes::RevokeOrganizationJoinCodeResponse;
+    const REPLY_CREDIT: bool = false;
     fn method() -> &'static crate::skir_client::Method<Self::Request, Self::Response> {
         crate::skirout::base::organization::v1::join_codes::revoke_organization_join_code_method()
     }
@@ -856,6 +858,7 @@ impl crate::transport::RequestRoute for OrganizationRolesWatchRoute {
     type Scope = crate::transport::OrganizationActorScope;
     type Request = crate::skirout::base::organization::v1::role::WatchOrganizationRolesRequest;
     type Response = crate::skirout::base::organization::v1::role::WatchOrganizationRolesResponse;
+    const REPLY_CREDIT: bool = false;
     fn method() -> &'static crate::skir_client::Method<Self::Request, Self::Response> {
         crate::skirout::base::organization::v1::role::watch_organization_roles_method()
     }
@@ -865,6 +868,7 @@ impl crate::transport::RequestRoute for ServiceBindingQueryRoute {
     type Scope = crate::transport::ServiceScope;
     type Request = crate::skirout::base::service::v1::status::QueryServiceBindingRequest;
     type Response = crate::skirout::base::service::v1::status::QueryServiceBindingResponse;
+    const REPLY_CREDIT: bool = true;
     fn method() -> &'static crate::skir_client::Method<Self::Request, Self::Response> {
         crate::skirout::base::service::v1::status::query_service_binding_method()
     }
@@ -880,6 +884,7 @@ impl crate::transport::RequestRoute for RegistrationLeaseEnsureRoute {
     type Scope = crate::transport::ServiceScope;
     type Request = crate::skirout::base::service::v1::status::EnsureRegistrationLeaseRequest;
     type Response = crate::skirout::base::service::v1::status::EnsureRegistrationLeaseResponse;
+    const REPLY_CREDIT: bool = true;
     fn method() -> &'static crate::skir_client::Method<Self::Request, Self::Response> {
         crate::skirout::base::service::v1::status::ensure_registration_lease_method()
     }
@@ -889,6 +894,7 @@ impl crate::transport::RequestRoute for ServiceMessagingScopeRoute {
     type Scope = crate::transport::ServiceScope;
     type Request = crate::skirout::base::service::v1::topology::GetServiceMessagingScopeRequest;
     type Response = crate::skirout::base::service::v1::topology::GetServiceMessagingScopeResponse;
+    const REPLY_CREDIT: bool = true;
     fn method() -> &'static crate::skir_client::Method<Self::Request, Self::Response> {
         crate::skirout::base::service::v1::topology::get_service_messaging_scope_method()
     }
@@ -904,6 +910,7 @@ impl crate::transport::RequestRoute for ServiceBindRoute {
     type Scope = crate::transport::OrganizationActorScope;
     type Request = crate::skirout::base::service::v1::registration::BindServiceRequest;
     type Response = crate::skirout::base::service::v1::registration::BindServiceResponse;
+    const REPLY_CREDIT: bool = false;
     fn method() -> &'static crate::skir_client::Method<Self::Request, Self::Response> {
         crate::skirout::base::service::v1::registration::bind_service_method()
     }
@@ -915,6 +922,7 @@ impl crate::transport::RequestRoute for OrganizationServicesWatchRoute {
         crate::skirout::base::service::v1::organization::WatchOrganizationServicesRequest;
     type Response =
         crate::skirout::base::service::v1::organization::WatchOrganizationServicesResponse;
+    const REPLY_CREDIT: bool = false;
     fn method() -> &'static crate::skir_client::Method<Self::Request, Self::Response> {
         crate::skirout::base::service::v1::organization::watch_organization_services_method()
     }
@@ -926,6 +934,7 @@ impl crate::transport::RequestRoute for OrganizationServiceUpdateRoute {
         crate::skirout::base::service::v1::organization::UpdateOrganizationServiceRequest;
     type Response =
         crate::skirout::base::service::v1::organization::UpdateOrganizationServiceResponse;
+    const REPLY_CREDIT: bool = false;
     fn method() -> &'static crate::skir_client::Method<Self::Request, Self::Response> {
         crate::skirout::base::service::v1::organization::update_organization_service_method()
     }
@@ -935,6 +944,7 @@ impl crate::transport::RequestRoute for ServiceUnbindRoute {
     type Scope = crate::transport::OrganizationActorScope;
     type Request = crate::skirout::base::service::v1::registration::UnbindServiceRequest;
     type Response = crate::skirout::base::service::v1::registration::UnbindServiceResponse;
+    const REPLY_CREDIT: bool = false;
     fn method() -> &'static crate::skir_client::Method<Self::Request, Self::Response> {
         crate::skirout::base::service::v1::registration::unbind_service_method()
     }
@@ -944,6 +954,7 @@ impl crate::transport::RequestRoute for ServiceTopologyConfigureRoute {
     type Scope = crate::transport::OrganizationActorScope;
     type Request = crate::skirout::base::service::v1::topology::ConfigureServiceHostRequest;
     type Response = crate::skirout::base::service::v1::topology::ConfigureServiceHostResponse;
+    const REPLY_CREDIT: bool = false;
     fn method() -> &'static crate::skir_client::Method<Self::Request, Self::Response> {
         crate::skirout::base::service::v1::topology::configure_service_host_method()
     }
@@ -953,6 +964,7 @@ impl crate::transport::RequestRoute for OrganizationTopologyWatchRoute {
     type Scope = crate::transport::OrganizationActorScope;
     type Request = crate::skirout::base::service::v1::topology::WatchOrganizationTopologyRequest;
     type Response = crate::skirout::base::service::v1::topology::WatchOrganizationTopologyResponse;
+    const REPLY_CREDIT: bool = false;
     fn method() -> &'static crate::skir_client::Method<Self::Request, Self::Response> {
         crate::skirout::base::service::v1::topology::watch_organization_topology_method()
     }
@@ -962,6 +974,7 @@ impl crate::transport::RequestRoute for ServiceHostRegisterRoute {
     type Scope = crate::transport::ServiceScope;
     type Request = crate::skirout::base::service::v1::topology::RegisterServiceHostRequest;
     type Response = crate::skirout::base::service::v1::topology::RegisterServiceHostResponse;
+    const REPLY_CREDIT: bool = true;
     fn method() -> &'static crate::skir_client::Method<Self::Request, Self::Response> {
         crate::skirout::base::service::v1::topology::register_service_host_method()
     }
@@ -971,6 +984,7 @@ impl crate::transport::RequestRoute for HostExecutionWatchRoute {
     type Scope = crate::transport::ServiceScope;
     type Request = crate::skirout::base::service::v1::topology::WatchHostExecutionRequest;
     type Response = crate::skirout::base::service::v1::topology::WatchHostExecutionResponse;
+    const REPLY_CREDIT: bool = true;
     fn method() -> &'static crate::skir_client::Method<Self::Request, Self::Response> {
         crate::skirout::base::service::v1::topology::watch_host_execution_method()
     }
@@ -980,6 +994,7 @@ impl crate::transport::RequestRoute for HostExecutionReportRoute {
     type Scope = crate::transport::ServiceScope;
     type Request = crate::skirout::base::service::v1::topology::ReportHostExecutionRequest;
     type Response = crate::skirout::base::service::v1::topology::ReportHostExecutionResponse;
+    const REPLY_CREDIT: bool = true;
     fn method() -> &'static crate::skir_client::Method<Self::Request, Self::Response> {
         crate::skirout::base::service::v1::topology::report_host_execution_method()
     }
@@ -989,6 +1004,7 @@ impl crate::transport::RequestRoute for PanelPermissionResolveRoute {
     type Scope = crate::transport::InternalComponentScope;
     type Request = crate::skirout::base::access::v1::permission::GetEntityPermissionRequest;
     type Response = crate::skirout::base::access::v1::permission::GetEntityPermissionResponse;
+    const REPLY_CREDIT: bool = true;
     fn method() -> &'static crate::skir_client::Method<Self::Request, Self::Response> {
         crate::skirout::base::access::v1::permission::get_entity_permission_method()
     }
@@ -1003,6 +1019,7 @@ impl crate::transport::RequestRoute for ServicesPermissionResolveRoute {
     type Scope = crate::transport::InternalComponentScope;
     type Request = crate::skirout::base::access::v1::permission::GetEntityPermissionRequest;
     type Response = crate::skirout::base::access::v1::permission::GetEntityPermissionResponse;
+    const REPLY_CREDIT: bool = true;
     fn method() -> &'static crate::skir_client::Method<Self::Request, Self::Response> {
         crate::skirout::base::access::v1::permission::get_entity_permission_method()
     }
@@ -3661,21 +3678,23 @@ impl crate::SkirResponse
         }
     }
 }
-impl crate::SkirResponse for crate::skirout::base::service::v1::artifact::ReadArtifactBlobResponse {
+impl crate::SkirResponse
+    for crate::skirout::base::service::v1::artifact::FetchArtifactBlobResponse
+{
     fn outcome(&self) -> crate::SkirResponseOutcome {
         match self {
-            crate::skirout::base::service::v1::artifact::ReadArtifactBlobResponse::Success(_) => crate::SkirResponseOutcome::Success,
-            crate::skirout::base::service::v1::artifact::ReadArtifactBlobResponse::NotFoundError(_) | crate::skirout::base::service::v1::artifact::ReadArtifactBlobResponse::InvalidError(_) => crate::SkirResponseOutcome::DomainError,
+            crate::skirout::base::service::v1::artifact::FetchArtifactBlobResponse::Success(_) => crate::SkirResponseOutcome::Success,
+            crate::skirout::base::service::v1::artifact::FetchArtifactBlobResponse::NotFoundError(_) | crate::skirout::base::service::v1::artifact::FetchArtifactBlobResponse::InvalidError(_) => crate::SkirResponseOutcome::DomainError,
             // internal_error and the generated unknown variant
             _ => crate::SkirResponseOutcome::InternalError,
         }
     }
     fn variant_slug(&self) -> &'static str {
         match self {
-            crate::skirout::base::service::v1::artifact::ReadArtifactBlobResponse::Success(_) => "success",
-            crate::skirout::base::service::v1::artifact::ReadArtifactBlobResponse::NotFoundError(_) => "not-found-error",
-            crate::skirout::base::service::v1::artifact::ReadArtifactBlobResponse::InvalidError(_) => "invalid-error",
-            crate::skirout::base::service::v1::artifact::ReadArtifactBlobResponse::InternalError(_) => "internal-error",
+            crate::skirout::base::service::v1::artifact::FetchArtifactBlobResponse::Success(_) => "success",
+            crate::skirout::base::service::v1::artifact::FetchArtifactBlobResponse::NotFoundError(_) => "not-found-error",
+            crate::skirout::base::service::v1::artifact::FetchArtifactBlobResponse::InvalidError(_) => "invalid-error",
+            crate::skirout::base::service::v1::artifact::FetchArtifactBlobResponse::InternalError(_) => "internal-error",
             _ => "unknown",
         }
     }
@@ -3683,35 +3702,34 @@ impl crate::SkirResponse for crate::skirout::base::service::v1::artifact::ReadAr
         self.variant_slug().to_owned()
     }
     fn internal_error() -> Self {
-        crate::skirout::base::service::v1::artifact::ReadArtifactBlobResponse::InternalError(
+        crate::skirout::base::service::v1::artifact::FetchArtifactBlobResponse::InternalError(
             ::std::default::Default::default(),
         )
     }
     fn domain_error_from_slug(slug: &str) -> Option<Self> {
         match slug {
-            "not-found-error" => Some(crate::skirout::base::service::v1::artifact::ReadArtifactBlobResponse::NotFoundError(::std::default::Default::default())),
-            "invalid-error" => Some(crate::skirout::base::service::v1::artifact::ReadArtifactBlobResponse::InvalidError(::std::default::Default::default())),
+            "not-found-error" => Some(crate::skirout::base::service::v1::artifact::FetchArtifactBlobResponse::NotFoundError(::std::default::Default::default())),
+            "invalid-error" => Some(crate::skirout::base::service::v1::artifact::FetchArtifactBlobResponse::InvalidError(::std::default::Default::default())),
             _ => None,
         }
     }
 }
 impl crate::SkirResponse
-    for crate::skirout::base::service::v1::artifact::BeginArtifactBlobWriteResponse
+    for crate::skirout::base::service::v1::artifact::StoreArtifactBlobResponse
 {
     fn outcome(&self) -> crate::SkirResponseOutcome {
         match self {
-            crate::skirout::base::service::v1::artifact::BeginArtifactBlobWriteResponse::Accepted(_) => crate::SkirResponseOutcome::Success,
-            crate::skirout::base::service::v1::artifact::BeginArtifactBlobWriteResponse::InvalidError(_) | crate::skirout::base::service::v1::artifact::BeginArtifactBlobWriteResponse::ConflictError(_) => crate::SkirResponseOutcome::DomainError,
+            crate::skirout::base::service::v1::artifact::StoreArtifactBlobResponse::Success(_) => crate::SkirResponseOutcome::Success,
+            crate::skirout::base::service::v1::artifact::StoreArtifactBlobResponse::InvalidError(_) => crate::SkirResponseOutcome::DomainError,
             // internal_error and the generated unknown variant
             _ => crate::SkirResponseOutcome::InternalError,
         }
     }
     fn variant_slug(&self) -> &'static str {
         match self {
-            crate::skirout::base::service::v1::artifact::BeginArtifactBlobWriteResponse::Accepted(_) => "accepted",
-            crate::skirout::base::service::v1::artifact::BeginArtifactBlobWriteResponse::InvalidError(_) => "invalid-error",
-            crate::skirout::base::service::v1::artifact::BeginArtifactBlobWriteResponse::ConflictError(_) => "conflict-error",
-            crate::skirout::base::service::v1::artifact::BeginArtifactBlobWriteResponse::InternalError(_) => "internal-error",
+            crate::skirout::base::service::v1::artifact::StoreArtifactBlobResponse::Success(_) => "success",
+            crate::skirout::base::service::v1::artifact::StoreArtifactBlobResponse::InvalidError(_) => "invalid-error",
+            crate::skirout::base::service::v1::artifact::StoreArtifactBlobResponse::InternalError(_) => "internal-error",
             _ => "unknown",
         }
     }
@@ -3719,88 +3737,13 @@ impl crate::SkirResponse
         self.variant_slug().to_owned()
     }
     fn internal_error() -> Self {
-        crate::skirout::base::service::v1::artifact::BeginArtifactBlobWriteResponse::InternalError(
+        crate::skirout::base::service::v1::artifact::StoreArtifactBlobResponse::InternalError(
             ::std::default::Default::default(),
         )
     }
     fn domain_error_from_slug(slug: &str) -> Option<Self> {
         match slug {
-            "invalid-error" => Some(crate::skirout::base::service::v1::artifact::BeginArtifactBlobWriteResponse::InvalidError(::std::default::Default::default())),
-            "conflict-error" => Some(crate::skirout::base::service::v1::artifact::BeginArtifactBlobWriteResponse::ConflictError(::std::default::Default::default())),
-            _ => None,
-        }
-    }
-}
-impl crate::SkirResponse
-    for crate::skirout::base::service::v1::artifact::WriteArtifactBlobChunkResponse
-{
-    fn outcome(&self) -> crate::SkirResponseOutcome {
-        match self {
-            crate::skirout::base::service::v1::artifact::WriteArtifactBlobChunkResponse::Accepted(_) => crate::SkirResponseOutcome::Success,
-            crate::skirout::base::service::v1::artifact::WriteArtifactBlobChunkResponse::NotFoundError(_) | crate::skirout::base::service::v1::artifact::WriteArtifactBlobChunkResponse::InvalidError(_) | crate::skirout::base::service::v1::artifact::WriteArtifactBlobChunkResponse::ConflictError(_) => crate::SkirResponseOutcome::DomainError,
-            // internal_error and the generated unknown variant
-            _ => crate::SkirResponseOutcome::InternalError,
-        }
-    }
-    fn variant_slug(&self) -> &'static str {
-        match self {
-            crate::skirout::base::service::v1::artifact::WriteArtifactBlobChunkResponse::Accepted(_) => "accepted",
-            crate::skirout::base::service::v1::artifact::WriteArtifactBlobChunkResponse::NotFoundError(_) => "not-found-error",
-            crate::skirout::base::service::v1::artifact::WriteArtifactBlobChunkResponse::InvalidError(_) => "invalid-error",
-            crate::skirout::base::service::v1::artifact::WriteArtifactBlobChunkResponse::ConflictError(_) => "conflict-error",
-            crate::skirout::base::service::v1::artifact::WriteArtifactBlobChunkResponse::InternalError(_) => "internal-error",
-            _ => "unknown",
-        }
-    }
-    fn variant_message(&self) -> String {
-        self.variant_slug().to_owned()
-    }
-    fn internal_error() -> Self {
-        crate::skirout::base::service::v1::artifact::WriteArtifactBlobChunkResponse::InternalError(
-            ::std::default::Default::default(),
-        )
-    }
-    fn domain_error_from_slug(slug: &str) -> Option<Self> {
-        match slug {
-            "not-found-error" => Some(crate::skirout::base::service::v1::artifact::WriteArtifactBlobChunkResponse::NotFoundError(::std::default::Default::default())),
-            "invalid-error" => Some(crate::skirout::base::service::v1::artifact::WriteArtifactBlobChunkResponse::InvalidError(::std::default::Default::default())),
-            "conflict-error" => Some(crate::skirout::base::service::v1::artifact::WriteArtifactBlobChunkResponse::ConflictError(::std::default::Default::default())),
-            _ => None,
-        }
-    }
-}
-impl crate::SkirResponse
-    for crate::skirout::base::service::v1::artifact::CompleteArtifactBlobWriteResponse
-{
-    fn outcome(&self) -> crate::SkirResponseOutcome {
-        match self {
-            crate::skirout::base::service::v1::artifact::CompleteArtifactBlobWriteResponse::Success(_) => crate::SkirResponseOutcome::Success,
-            crate::skirout::base::service::v1::artifact::CompleteArtifactBlobWriteResponse::NotFoundError(_) | crate::skirout::base::service::v1::artifact::CompleteArtifactBlobWriteResponse::InvalidError(_) | crate::skirout::base::service::v1::artifact::CompleteArtifactBlobWriteResponse::ConflictError(_) => crate::SkirResponseOutcome::DomainError,
-            // internal_error and the generated unknown variant
-            _ => crate::SkirResponseOutcome::InternalError,
-        }
-    }
-    fn variant_slug(&self) -> &'static str {
-        match self {
-            crate::skirout::base::service::v1::artifact::CompleteArtifactBlobWriteResponse::Success(_) => "success",
-            crate::skirout::base::service::v1::artifact::CompleteArtifactBlobWriteResponse::NotFoundError(_) => "not-found-error",
-            crate::skirout::base::service::v1::artifact::CompleteArtifactBlobWriteResponse::InvalidError(_) => "invalid-error",
-            crate::skirout::base::service::v1::artifact::CompleteArtifactBlobWriteResponse::ConflictError(_) => "conflict-error",
-            crate::skirout::base::service::v1::artifact::CompleteArtifactBlobWriteResponse::InternalError(_) => "internal-error",
-            _ => "unknown",
-        }
-    }
-    fn variant_message(&self) -> String {
-        self.variant_slug().to_owned()
-    }
-    fn internal_error() -> Self {
-        crate::skirout::base::service::v1::artifact::CompleteArtifactBlobWriteResponse::InternalError(::std::default::Default::default())
-    }
-    fn domain_error_from_slug(slug: &str) -> Option<Self> {
-        match slug {
-            "not-found-error" => Some(crate::skirout::base::service::v1::artifact::CompleteArtifactBlobWriteResponse::NotFoundError(::std::default::Default::default())),
-            "invalid-error" => Some(crate::skirout::base::service::v1::artifact::CompleteArtifactBlobWriteResponse::InvalidError(::std::default::Default::default())),
-            "conflict-error" => Some(crate::skirout::base::service::v1::artifact::CompleteArtifactBlobWriteResponse::ConflictError(::std::default::Default::default())),
+            "invalid-error" => Some(crate::skirout::base::service::v1::artifact::StoreArtifactBlobResponse::InvalidError(::std::default::Default::default())),
             _ => None,
         }
     }

@@ -2664,7 +2664,7 @@ val WatchOrganizationJoinCodes: build.skir.service.Method<
 > by kotlin.lazy {
     build.skir.service.Method(
         "WatchOrganizationJoinCodes",
-        690316,
+        920101,
         skirout.organization.v1.join_codes.WatchOrganizationJoinCodesRequest.serializer,
         skirout.organization.v1.join_codes.WatchOrganizationJoinCodesResponse.serializer,
         "",
@@ -2677,7 +2677,7 @@ val GenerateOrganizationJoinCode: build.skir.service.Method<
 > by kotlin.lazy {
     build.skir.service.Method(
         "GenerateOrganizationJoinCode",
-        804958,
+        920102,
         skirout.organization.v1.join_codes.GenerateOrganizationJoinCodeRequest.serializer,
         skirout.organization.v1.join_codes.GenerateOrganizationJoinCodeResponse.serializer,
         "",
@@ -2690,7 +2690,7 @@ val RevokeOrganizationJoinCode: build.skir.service.Method<
 > by kotlin.lazy {
     build.skir.service.Method(
         "RevokeOrganizationJoinCode",
-        510187,
+        920103,
         skirout.organization.v1.join_codes.RevokeOrganizationJoinCodeRequest.serializer,
         skirout.organization.v1.join_codes.RevokeOrganizationJoinCodeResponse.serializer,
         "",

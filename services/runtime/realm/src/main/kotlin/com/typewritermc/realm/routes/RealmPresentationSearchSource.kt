@@ -9,11 +9,11 @@ import com.typewritermc.operations.OperationInvocation
 import com.typewritermc.realm.authoring.AuthoredReadView
 import com.typewritermc.realm.authoring.AuthoringLease
 import com.typewritermc.realm.authoring.AuthoringViewStore
-import com.typewritermc.realm.authoring.StaleOperationObservation
-import com.typewritermc.realm.authoring.operationObservation
+import com.typewritermc.realm.authoring.CapturedAuthoringReads
 import com.typewritermc.realm.catalog.RealmCatalogLease
 import com.typewritermc.realm.catalog.RealmCatalogStore
-import com.typewritermc.realm.checking.CapturedAuthoringReads
+import com.typewritermc.realm.operation.StaleOperationObservation
+import com.typewritermc.realm.operation.operationObservation
 import com.typewritermc.types.isValid
 import com.typewritermc.types.payload
 import com.typewritermc.types.requirePortable

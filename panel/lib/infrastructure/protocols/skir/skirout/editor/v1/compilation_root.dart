@@ -15,7 +15,7 @@ import "dart:core" as _core;
 
 import "package:skir_client/skir_client.dart" as _skir;
 
-import "./type_catalog.dart" as _lib_editor_v1_type_catalog;
+import "../../kernel/v1/resource_id.dart" as _lib_kernel_v1_resource_id;
 
 // -----------------------------------------------------------------------------
 // struct CompilationProjectionId
@@ -126,7 +126,7 @@ final class CompilationProjectionId_mutable
 
 sealed class CompilationRoot_orMutable {
   CompilationProjectionId_orMutable get projection;
-  _lib_editor_v1_type_catalog.ResourceId_orMutable get resource;
+  _lib_kernel_v1_resource_id.ResourceId_orMutable get resource;
 
   CompilationRoot toFrozen();
 }
@@ -139,12 +139,12 @@ final class CompilationRoot implements CompilationRoot_orMutable {
   @_core.override
   final CompilationProjectionId projection;
   @_core.override
-  final _lib_editor_v1_type_catalog.ResourceId resource;
+  final _lib_kernel_v1_resource_id.ResourceId resource;
   _skir.internal__UnrecognizedFields? _u;
 
   factory CompilationRoot({
     required CompilationProjectionId_orMutable projection,
-    required _lib_editor_v1_type_catalog.ResourceId_orMutable resource,
+    required _lib_kernel_v1_resource_id.ResourceId_orMutable resource,
   }) => CompilationRoot._(projection.toFrozen(), resource.toFrozen());
 
   CompilationRoot._(this.projection, this.resource);
@@ -152,14 +152,14 @@ final class CompilationRoot implements CompilationRoot_orMutable {
   /// Default instance with all fields set to their default values.
   static final defaultInstance = CompilationRoot._(
     CompilationProjectionId.defaultInstance,
-    _lib_editor_v1_type_catalog.ResourceId.defaultInstance,
+    _lib_kernel_v1_resource_id.ResourceId.defaultInstance,
   );
 
   /// Returns a new mutable instance.
   /// Fields are initialized to their default values.
   static CompilationRoot_mutable mutable() => CompilationRoot_mutable._(
     CompilationProjectionId.defaultInstance,
-    _lib_editor_v1_type_catalog.ResourceId.defaultInstance,
+    _lib_kernel_v1_resource_id.ResourceId.defaultInstance,
   );
 
   /// Returns this instance (no-op).
@@ -206,7 +206,7 @@ final class CompilationRoot implements CompilationRoot_orMutable {
         "resource",
         "resource",
         1,
-        _lib_editor_v1_type_catalog.ResourceId.serializer,
+        _lib_kernel_v1_resource_id.ResourceId.serializer,
         "",
         (it) => it.resource,
         (it, v) => it.resource = v,
@@ -230,7 +230,7 @@ final class CompilationRoot implements CompilationRoot_orMutable {
 /// Mutable version of [CompilationRoot].
 final class CompilationRoot_mutable implements CompilationRoot_orMutable {
   CompilationProjectionId_orMutable projection;
-  _lib_editor_v1_type_catalog.ResourceId_orMutable resource;
+  _lib_kernel_v1_resource_id.ResourceId_orMutable resource;
   _skir.internal__UnrecognizedFields? _u;
 
   CompilationRoot_mutable._(this.projection, this.resource);
@@ -248,12 +248,12 @@ final class CompilationRoot_mutable implements CompilationRoot_orMutable {
 
   /// If the value of [resource] is already mutable, returns it as-is.
   /// Otherwise, makes a mutable copy, assigns it back to [resource] and returns it.
-  _lib_editor_v1_type_catalog.ResourceId_mutable get mutableResource {
+  _lib_kernel_v1_resource_id.ResourceId_mutable get mutableResource {
     final value = this.resource;
-    if (value is _lib_editor_v1_type_catalog.ResourceId_mutable) {
+    if (value is _lib_kernel_v1_resource_id.ResourceId_mutable) {
       return value;
     } else {
-      return this.resource = (value as _lib_editor_v1_type_catalog.ResourceId)
+      return this.resource = (value as _lib_kernel_v1_resource_id.ResourceId)
           .toMutable();
     }
   }

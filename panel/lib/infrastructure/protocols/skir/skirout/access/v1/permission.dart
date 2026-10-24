@@ -1264,7 +1264,7 @@ final class GetEntityPermissionResponse_internalErrorWrapper
 final _skir.Method<GetEntityPermissionRequest, GetEntityPermissionResponse>
 getEntityPermissionMethod = _skir.Method(
   "GetEntityPermission",
-  209684,
+  910101,
   GetEntityPermissionRequest.serializer,
   GetEntityPermissionResponse.serializer,
   "",

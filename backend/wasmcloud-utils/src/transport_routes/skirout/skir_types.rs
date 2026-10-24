@@ -4174,11 +4174,6 @@ impl crate::SkirType for crate::skirout::base::editor::v1::type_catalog::TypeDef
         Self::serializer()
     }
 }
-impl crate::SkirType for crate::skirout::base::editor::v1::type_catalog::ResourceId {
-    fn serializer() -> crate::skir_client::Serializer<Self> {
-        Self::serializer()
-    }
-}
 impl crate::SkirType for crate::skirout::base::editor::v1::type_catalog::ItemId {
     fn serializer() -> crate::skir_client::Serializer<Self> {
         Self::serializer()
@@ -4631,6 +4626,11 @@ impl crate::SkirType for crate::skirout::base::kernel::v1::record_id::RecordIdVa
     }
 }
 impl crate::SkirType for crate::skirout::base::kernel::v1::record_id::ObjectRecordIdValue {
+    fn serializer() -> crate::skir_client::Serializer<Self> {
+        Self::serializer()
+    }
+}
+impl crate::SkirType for crate::skirout::base::kernel::v1::resource_id::ResourceId {
     fn serializer() -> crate::skir_client::Serializer<Self> {
         Self::serializer()
     }
@@ -5381,11 +5381,6 @@ impl crate::SkirType for crate::skirout::base::service::v1::artifact::BlobMetada
         Self::serializer()
     }
 }
-impl crate::SkirType for crate::skirout::base::service::v1::artifact::BlobChunk {
-    fn serializer() -> crate::skir_client::Serializer<Self> {
-        Self::serializer()
-    }
-}
 impl crate::SkirType for crate::skirout::base::service::v1::artifact::SharedArtifactDescriptor {
     fn serializer() -> crate::skir_client::Serializer<Self> {
         Self::serializer()
@@ -5472,152 +5467,58 @@ impl crate::SkirType
         !matches!(self, crate::skirout::base::service::v1::artifact::PublishSharedArtifactResponse::Published(_) | crate::skirout::base::service::v1::artifact::PublishSharedArtifactResponse::Unchanged(_) | crate::skirout::base::service::v1::artifact::PublishSharedArtifactResponse::ConflictError(_) | crate::skirout::base::service::v1::artifact::PublishSharedArtifactResponse::InternalError(_))
     }
 }
-impl crate::SkirType for crate::skirout::base::service::v1::artifact::ReadArtifactBlobRequest {
+impl crate::SkirType for crate::skirout::base::service::v1::artifact::FetchArtifactBlobRequest {
     fn serializer() -> crate::skir_client::Serializer<Self> {
         Self::serializer()
     }
 }
 impl crate::SkirType
-    for crate::skirout::base::service::v1::artifact::ReadArtifactBlobResponse_NotFoundError
+    for crate::skirout::base::service::v1::artifact::FetchArtifactBlobResponse_Success
 {
     fn serializer() -> crate::skir_client::Serializer<Self> {
         Self::serializer()
     }
 }
 impl crate::SkirType
-    for crate::skirout::base::service::v1::artifact::ReadArtifactBlobResponse_InvalidError
+    for crate::skirout::base::service::v1::artifact::FetchArtifactBlobResponse_NotFoundError
 {
     fn serializer() -> crate::skir_client::Serializer<Self> {
         Self::serializer()
     }
 }
-impl crate::SkirType for crate::skirout::base::service::v1::artifact::ReadArtifactBlobResponse {
+impl crate::SkirType
+    for crate::skirout::base::service::v1::artifact::FetchArtifactBlobResponse_InvalidError
+{
+    fn serializer() -> crate::skir_client::Serializer<Self> {
+        Self::serializer()
+    }
+}
+impl crate::SkirType for crate::skirout::base::service::v1::artifact::FetchArtifactBlobResponse {
     fn serializer() -> crate::skir_client::Serializer<Self> {
         Self::serializer()
     }
     fn is_unknown(&self) -> bool {
-        !matches!(self, crate::skirout::base::service::v1::artifact::ReadArtifactBlobResponse::Success(_) | crate::skirout::base::service::v1::artifact::ReadArtifactBlobResponse::NotFoundError(_) | crate::skirout::base::service::v1::artifact::ReadArtifactBlobResponse::InvalidError(_) | crate::skirout::base::service::v1::artifact::ReadArtifactBlobResponse::InternalError(_))
+        !matches!(self, crate::skirout::base::service::v1::artifact::FetchArtifactBlobResponse::Success(_) | crate::skirout::base::service::v1::artifact::FetchArtifactBlobResponse::NotFoundError(_) | crate::skirout::base::service::v1::artifact::FetchArtifactBlobResponse::InvalidError(_) | crate::skirout::base::service::v1::artifact::FetchArtifactBlobResponse::InternalError(_))
     }
 }
-impl crate::SkirType
-    for crate::skirout::base::service::v1::artifact::BeginArtifactBlobWriteRequest
-{
+impl crate::SkirType for crate::skirout::base::service::v1::artifact::StoreArtifactBlobRequest {
     fn serializer() -> crate::skir_client::Serializer<Self> {
         Self::serializer()
     }
 }
 impl crate::SkirType
-    for crate::skirout::base::service::v1::artifact::BeginArtifactBlobWriteResponse_Accepted
+    for crate::skirout::base::service::v1::artifact::StoreArtifactBlobResponse_InvalidError
 {
     fn serializer() -> crate::skir_client::Serializer<Self> {
         Self::serializer()
     }
 }
-impl crate::SkirType
-    for crate::skirout::base::service::v1::artifact::BeginArtifactBlobWriteResponse_InvalidError
-{
-    fn serializer() -> crate::skir_client::Serializer<Self> {
-        Self::serializer()
-    }
-}
-impl crate::SkirType
-    for crate::skirout::base::service::v1::artifact::BeginArtifactBlobWriteResponse_ConflictError
-{
-    fn serializer() -> crate::skir_client::Serializer<Self> {
-        Self::serializer()
-    }
-}
-impl crate::SkirType
-    for crate::skirout::base::service::v1::artifact::BeginArtifactBlobWriteResponse
-{
+impl crate::SkirType for crate::skirout::base::service::v1::artifact::StoreArtifactBlobResponse {
     fn serializer() -> crate::skir_client::Serializer<Self> {
         Self::serializer()
     }
     fn is_unknown(&self) -> bool {
-        !matches!(self, crate::skirout::base::service::v1::artifact::BeginArtifactBlobWriteResponse::Accepted(_) | crate::skirout::base::service::v1::artifact::BeginArtifactBlobWriteResponse::InvalidError(_) | crate::skirout::base::service::v1::artifact::BeginArtifactBlobWriteResponse::ConflictError(_) | crate::skirout::base::service::v1::artifact::BeginArtifactBlobWriteResponse::InternalError(_))
-    }
-}
-impl crate::SkirType
-    for crate::skirout::base::service::v1::artifact::WriteArtifactBlobChunkRequest
-{
-    fn serializer() -> crate::skir_client::Serializer<Self> {
-        Self::serializer()
-    }
-}
-impl crate::SkirType
-    for crate::skirout::base::service::v1::artifact::WriteArtifactBlobChunkResponse_Accepted
-{
-    fn serializer() -> crate::skir_client::Serializer<Self> {
-        Self::serializer()
-    }
-}
-impl crate::SkirType
-    for crate::skirout::base::service::v1::artifact::WriteArtifactBlobChunkResponse_NotFoundError
-{
-    fn serializer() -> crate::skir_client::Serializer<Self> {
-        Self::serializer()
-    }
-}
-impl crate::SkirType
-    for crate::skirout::base::service::v1::artifact::WriteArtifactBlobChunkResponse_InvalidError
-{
-    fn serializer() -> crate::skir_client::Serializer<Self> {
-        Self::serializer()
-    }
-}
-impl crate::SkirType
-    for crate::skirout::base::service::v1::artifact::WriteArtifactBlobChunkResponse_ConflictError
-{
-    fn serializer() -> crate::skir_client::Serializer<Self> {
-        Self::serializer()
-    }
-}
-impl crate::SkirType
-    for crate::skirout::base::service::v1::artifact::WriteArtifactBlobChunkResponse
-{
-    fn serializer() -> crate::skir_client::Serializer<Self> {
-        Self::serializer()
-    }
-    fn is_unknown(&self) -> bool {
-        !matches!(self, crate::skirout::base::service::v1::artifact::WriteArtifactBlobChunkResponse::Accepted(_) | crate::skirout::base::service::v1::artifact::WriteArtifactBlobChunkResponse::NotFoundError(_) | crate::skirout::base::service::v1::artifact::WriteArtifactBlobChunkResponse::InvalidError(_) | crate::skirout::base::service::v1::artifact::WriteArtifactBlobChunkResponse::ConflictError(_) | crate::skirout::base::service::v1::artifact::WriteArtifactBlobChunkResponse::InternalError(_))
-    }
-}
-impl crate::SkirType
-    for crate::skirout::base::service::v1::artifact::CompleteArtifactBlobWriteRequest
-{
-    fn serializer() -> crate::skir_client::Serializer<Self> {
-        Self::serializer()
-    }
-}
-impl crate::SkirType
-    for crate::skirout::base::service::v1::artifact::CompleteArtifactBlobWriteResponse_NotFoundError
-{
-    fn serializer() -> crate::skir_client::Serializer<Self> {
-        Self::serializer()
-    }
-}
-impl crate::SkirType
-    for crate::skirout::base::service::v1::artifact::CompleteArtifactBlobWriteResponse_InvalidError
-{
-    fn serializer() -> crate::skir_client::Serializer<Self> {
-        Self::serializer()
-    }
-}
-impl crate::SkirType
-    for crate::skirout::base::service::v1::artifact::CompleteArtifactBlobWriteResponse_ConflictError
-{
-    fn serializer() -> crate::skir_client::Serializer<Self> {
-        Self::serializer()
-    }
-}
-impl crate::SkirType
-    for crate::skirout::base::service::v1::artifact::CompleteArtifactBlobWriteResponse
-{
-    fn serializer() -> crate::skir_client::Serializer<Self> {
-        Self::serializer()
-    }
-    fn is_unknown(&self) -> bool {
-        !matches!(self, crate::skirout::base::service::v1::artifact::CompleteArtifactBlobWriteResponse::Success(_) | crate::skirout::base::service::v1::artifact::CompleteArtifactBlobWriteResponse::NotFoundError(_) | crate::skirout::base::service::v1::artifact::CompleteArtifactBlobWriteResponse::InvalidError(_) | crate::skirout::base::service::v1::artifact::CompleteArtifactBlobWriteResponse::ConflictError(_) | crate::skirout::base::service::v1::artifact::CompleteArtifactBlobWriteResponse::InternalError(_))
+        !matches!(self, crate::skirout::base::service::v1::artifact::StoreArtifactBlobResponse::Success(_) | crate::skirout::base::service::v1::artifact::StoreArtifactBlobResponse::InvalidError(_) | crate::skirout::base::service::v1::artifact::StoreArtifactBlobResponse::InternalError(_))
     }
 }
 impl crate::SkirType

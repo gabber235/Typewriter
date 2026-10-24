@@ -11,11 +11,11 @@ import com.typewritermc.protocol.transport.RealmRouteScope
 import com.typewritermc.protocol.transport.generated.authoringActionPrepare
 import com.typewritermc.protocol.transport.generated.resourceDropCandidatesResolve
 import com.typewritermc.protocol.transport.generated.resourceOperationsResolve
-import com.typewritermc.realm.authoring.OperationCatalogChanged
-import com.typewritermc.realm.authoring.OperationPreparationResult
-import com.typewritermc.realm.authoring.OperationResolutionFailure
-import com.typewritermc.realm.authoring.ResourceOperationRuntime
-import com.typewritermc.realm.authoring.StaleOperationObservation
+import com.typewritermc.realm.operation.OperationCatalogChanged
+import com.typewritermc.realm.operation.OperationPreparationResult
+import com.typewritermc.realm.operation.OperationResolutionFailure
+import com.typewritermc.realm.operation.ResourceOperationRuntime
+import com.typewritermc.realm.operation.StaleOperationObservation
 import com.typewritermc.services.libs.communicator.router.CommunicatorRoutesBuilder
 import com.typewritermc.services.libs.utils.rethrowExceptional
 import com.typewritermc.types.requirePortable
@@ -38,8 +38,8 @@ import skirout.editor.v1.resource_operations.ResolveResourceOperationsResult
 import skirout.editor.v1.type_catalog.AuthoringRecord
 import skirout.editor.v1.type_catalog.CapabilityId
 import skirout.editor.v1.type_catalog.CatalogGeneration
-import skirout.editor.v1.type_catalog.ResourceId
 import skirout.editor.v1.type_catalog.ValueLocation
+import skirout.kernel.v1.resource_id.ResourceId
 import skirout.editor.v1.resource_operations.OperationInvocation as SkirOperationInvocation
 
 /**

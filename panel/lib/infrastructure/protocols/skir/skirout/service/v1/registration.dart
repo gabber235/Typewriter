@@ -1294,7 +1294,7 @@ final class UnbindServiceResponse_serviceNotFoundErrorWrapper
 final _skir.Method<BindServiceRequest, BindServiceResponse> bindServiceMethod =
     _skir.Method(
       "BindService",
-      304691,
+      930501,
       BindServiceRequest.serializer,
       BindServiceResponse.serializer,
       "",
@@ -1303,7 +1303,7 @@ final _skir.Method<BindServiceRequest, BindServiceResponse> bindServiceMethod =
 final _skir.Method<UnbindServiceRequest, UnbindServiceResponse>
 unbindServiceMethod = _skir.Method(
   "UnbindService",
-  950343,
+  930502,
   UnbindServiceRequest.serializer,
   UnbindServiceResponse.serializer,
   "",

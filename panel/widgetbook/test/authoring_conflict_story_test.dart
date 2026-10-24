@@ -1,6 +1,6 @@
 import "package:flutter_test/flutter_test.dart";
 import "package:typewriter_panel/typewriter_panel.dart";
-import "package:widgetbook_workspace/stories/features/organizations/features/realms/presentation/authoring_conflict.stories.dart";
+import "package:widgetbook_workspace/stories/authoring/presentation/authoring_conflict.stories.dart";
 
 void main() {
   for (final keepMine in [false, true]) {

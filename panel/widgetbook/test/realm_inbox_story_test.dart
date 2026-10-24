@@ -1,7 +1,7 @@
 import "package:flutter_test/flutter_test.dart";
 import "package:typewriter_panel/typewriter_panel.dart";
-import "package:widgetbook_workspace/stories/features/organizations/features/realms/presentation/realm_inbox.stories.dart";
-import "package:widgetbook_workspace/stories/features/organizations/features/realms/presentation/realm_inbox_story_fixture.dart";
+import "package:widgetbook_workspace/stories/features/realms/presentation/realm_inbox.stories.dart";
+import "package:widgetbook_workspace/stories/features/realms/presentation/realm_inbox_story_fixture.dart";
 
 void main() {
   for (final scenario in RealmInboxScenario.values) {

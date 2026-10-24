@@ -1,30 +1,29 @@
 import "package:typewriter_panel/typewriter_panel.dart";
 
-/// Provides the operation registry for a subtree of selectable UI.
+/// Provides the operation source for a subtree of selectable UI.
 ///
-/// The app shell installs generic operations above route content. Inspectors,
-/// context menus and shortcuts use this list for generic selectables. Realm
-/// authoring resources instead project their available resource operations.
+/// The app shell installs its source above route content. Inspectors, context
+/// menus and shortcuts ask this source which operations a selection offers.
 class SelectionOperationsRoot extends InheritedWidget {
   const SelectionOperationsRoot({
-    required this.operations,
+    required this.source,
     required super.child,
     super.key,
   });
 
-  /// Operations available to descendants in their declared order.
-  final List<SelectionOperation> operations;
+  /// Where descendants get their operations.
+  final SelectionOperationSource source;
 
-  static List<SelectionOperation> of(BuildContext context) {
+  static SelectionOperationSource of(BuildContext context) {
     final root = context
         .dependOnInheritedWidgetOfExactType<SelectionOperationsRoot>();
     assert(root != null, () {
       throw FlutterError("No SelectionOperationsRoot found in context");
     }());
-    return root!.operations;
+    return root!.source;
   }
 
   @override
   bool updateShouldNotify(SelectionOperationsRoot oldWidget) =>
-      operations != oldWidget.operations;
+      source != oldWidget.source;
 }

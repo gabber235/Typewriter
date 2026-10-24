@@ -1228,7 +1228,7 @@ val QueryServiceBinding: build.skir.service.Method<
 > by kotlin.lazy {
     build.skir.service.Method(
         "QueryServiceBinding",
-        955610,
+        930801,
         skirout.service.v1.status.QueryServiceBindingRequest.serializer,
         skirout.service.v1.status.QueryServiceBindingResponse.serializer,
         "",
@@ -1241,7 +1241,7 @@ val EnsureRegistrationLease: build.skir.service.Method<
 > by kotlin.lazy {
     build.skir.service.Method(
         "EnsureRegistrationLease",
-        955611,
+        930802,
         skirout.service.v1.status.EnsureRegistrationLeaseRequest.serializer,
         skirout.service.v1.status.EnsureRegistrationLeaseResponse.serializer,
         "",

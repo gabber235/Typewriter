@@ -29,9 +29,6 @@ import com.typewritermc.checking.PartialSelection
 import com.typewritermc.checking.ResourceTypeMatch
 import com.typewritermc.checking.UndecidedCandidate
 import com.typewritermc.expression.operations.HostFailure
-import com.typewritermc.realm.checking.CapturedAuthoringReads
-import com.typewritermc.realm.repository.LinkSchemaCapabilities
-import com.typewritermc.realm.repository.ResourceValueMapper
 import com.typewritermc.types.catalog.Resolution
 import com.typewritermc.types.endpoint
 import com.typewritermc.types.record
@@ -49,10 +46,10 @@ import skirout.editor.v1.expression.EvaluationDiagnostic
 import skirout.editor.v1.type_catalog.AuthoringRecord
 import skirout.editor.v1.type_catalog.DataValue
 import skirout.editor.v1.type_catalog.RelationFamilyId
-import skirout.editor.v1.type_catalog.ResourceId
 import skirout.editor.v1.type_catalog.TypeSelection
 import skirout.editor.v1.type_catalog.ValueLocation
 import skirout.editor.v1.type_catalog.ValuePath
+import skirout.kernel.v1.resource_id.ResourceId
 
 /** Traverses only the graph derived from the retained authored reads. */
 internal object RealmGraphReads {

@@ -3,7 +3,7 @@ import "package:typewriter_panel/infrastructure/protocols/skir/skir.dart"
     as skir;
 import "package:typewriter_panel/typewriter_panel.dart";
 import "package:typewriter_testkit/typewriter_testkit.dart";
-import "package:widgetbook_workspace/stories/features/organizations/features/realms/presentation/authored_presentation_renderer.stories.dart";
+import "package:widgetbook_workspace/stories/authoring/presentation/authored_presentation_renderer.stories.dart";
 
 void main() {
   testWidgets(

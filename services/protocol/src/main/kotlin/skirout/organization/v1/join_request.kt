@@ -3725,7 +3725,7 @@ val WatchOrganizationJoinRequests: build.skir.service.Method<
 > by kotlin.lazy {
     build.skir.service.Method(
         "WatchOrganizationJoinRequests",
-        399821,
+        920201,
         skirout.organization.v1.join_request.WatchOrganizationJoinRequestsRequest.serializer,
         skirout.organization.v1.join_request.WatchOrganizationJoinRequestsResponse.serializer,
         "",
@@ -3738,7 +3738,7 @@ val ApproveOrganizationJoinRequests: build.skir.service.Method<
 > by kotlin.lazy {
     build.skir.service.Method(
         "ApproveOrganizationJoinRequests",
-        167357,
+        920202,
         skirout.organization.v1.join_request.ApproveOrganizationJoinRequestsRequest.serializer,
         skirout.organization.v1.join_request.ApproveOrganizationJoinRequestsResponse.serializer,
         "",
@@ -3751,7 +3751,7 @@ val DeclineOrganizationJoinRequest: build.skir.service.Method<
 > by kotlin.lazy {
     build.skir.service.Method(
         "DeclineOrganizationJoinRequest",
-        329306,
+        920203,
         skirout.organization.v1.join_request.DeclineOrganizationJoinRequestRequest.serializer,
         skirout.organization.v1.join_request.DeclineOrganizationJoinRequestResponse.serializer,
         "",

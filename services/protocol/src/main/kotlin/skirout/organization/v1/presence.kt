@@ -592,7 +592,7 @@ class RealmPresence private constructor(
 
 sealed interface ResourcePresence_OrMutable {
     val realmId: skirout.kernel.v1.record_id.RecordId_OrMutable;
-    val resourceId: skirout.editor.v1.type_catalog.ResourceId_OrMutable;
+    val resourceId: skirout.kernel.v1.resource_id.ResourceId_OrMutable;
 
     fun toFrozen(): skirout.organization.v1.presence.ResourcePresence;
 }
@@ -601,7 +601,7 @@ sealed interface ResourcePresence_OrMutable {
 @kotlin.Suppress("UNUSED_PARAMETER")
 class ResourcePresence private constructor(
     override val realmId: skirout.kernel.v1.record_id.RecordId,
-    override val resourceId: skirout.editor.v1.type_catalog.ResourceId,
+    override val resourceId: skirout.kernel.v1.resource_id.ResourceId,
     internal val _unrecognizedFields: _UnrecognizedFields<skirout.organization.v1.presence.ResourcePresence>? =
         null,
 ): skirout.organization.v1.presence.ResourcePresence_OrMutable {
@@ -609,7 +609,7 @@ class ResourcePresence private constructor(
         _mustNameArguments: _MustNameArguments =
             _MustNameArguments,
         realmId: skirout.kernel.v1.record_id.RecordId_OrMutable,
-        resourceId: skirout.editor.v1.type_catalog.ResourceId_OrMutable,
+        resourceId: skirout.kernel.v1.resource_id.ResourceId_OrMutable,
         _unrecognizedFields: _UnrecognizedFields<skirout.organization.v1.presence.ResourcePresence>? =
             null,
     ): this(
@@ -633,7 +633,7 @@ class ResourcePresence private constructor(
             _MustNameArguments,
         realmId: skirout.kernel.v1.record_id.RecordId_OrMutable =
             this.realmId,
-        resourceId: skirout.editor.v1.type_catalog.ResourceId_OrMutable =
+        resourceId: skirout.kernel.v1.resource_id.ResourceId_OrMutable =
             this.resourceId,
     ) = skirout.organization.v1.presence.ResourcePresence(
         realmId.toFrozen(),
@@ -665,8 +665,8 @@ class ResourcePresence private constructor(
             _MustNameArguments,
         override var realmId: skirout.kernel.v1.record_id.RecordId_OrMutable =
             skirout.kernel.v1.record_id.RecordId.partial(),
-        override var resourceId: skirout.editor.v1.type_catalog.ResourceId_OrMutable =
-            skirout.editor.v1.type_catalog.ResourceId.partial(),
+        override var resourceId: skirout.kernel.v1.resource_id.ResourceId_OrMutable =
+            skirout.kernel.v1.resource_id.ResourceId.partial(),
         internal var _unrecognizedFields: _UnrecognizedFields<skirout.organization.v1.presence.ResourcePresence>? =
             null,
     ): skirout.organization.v1.presence.ResourcePresence_OrMutable {
@@ -697,15 +697,15 @@ class ResourcePresence private constructor(
          * If the value of [resourceId] is already mutable, returns it as-is.
          * Otherwise, makes a mutable copy, assigns it back to [resourceId] and returns it.
          */
-        val mutableResourceId: skirout.editor.v1.type_catalog.ResourceId.Mutable get() {
+        val mutableResourceId: skirout.kernel.v1.resource_id.ResourceId.Mutable get() {
             var value = this.resourceId;
             return when (value) {
-                is skirout.editor.v1.type_catalog.ResourceId -> {
+                is skirout.kernel.v1.resource_id.ResourceId -> {
                     value = value.toMutable();
                     this.resourceId = value;
                     return value;
                 }
-                is skirout.editor.v1.type_catalog.ResourceId.Mutable -> value;
+                is skirout.kernel.v1.resource_id.ResourceId.Mutable -> value;
             }
         }
     }
@@ -714,7 +714,7 @@ class ResourcePresence private constructor(
         private val default =
             skirout.organization.v1.presence.ResourcePresence(
                 skirout.kernel.v1.record_id.RecordId.partial(),
-                skirout.editor.v1.type_catalog.ResourceId.partial(),
+                skirout.kernel.v1.resource_id.ResourceId.partial(),
             );
 
         /** Returns an instance with all fields set to their default values. */
@@ -730,8 +730,8 @@ class ResourcePresence private constructor(
                 _MustNameArguments,
             realmId: skirout.kernel.v1.record_id.RecordId_OrMutable =
                 skirout.kernel.v1.record_id.RecordId.partial(),
-            resourceId: skirout.editor.v1.type_catalog.ResourceId_OrMutable =
-                skirout.editor.v1.type_catalog.ResourceId.partial(),
+            resourceId: skirout.kernel.v1.resource_id.ResourceId_OrMutable =
+                skirout.kernel.v1.resource_id.ResourceId.partial(),
         ) = skirout.organization.v1.presence.ResourcePresence(
             realmId = realmId,
             resourceId = resourceId,
@@ -985,7 +985,7 @@ sealed class PresenceLocation private constructor() {
             _mustNameArguments: _MustNameArguments =
                 _MustNameArguments,
             realmId: skirout.kernel.v1.record_id.RecordId_OrMutable,
-            resourceId: skirout.editor.v1.type_catalog.ResourceId_OrMutable,
+            resourceId: skirout.kernel.v1.resource_id.ResourceId_OrMutable,
         ) = ResourceWrapper(
             skirout.organization.v1.presence.ResourcePresence(
                 realmId = realmId,
@@ -1654,7 +1654,7 @@ private object _SerializerRegistry {
             "resource_id",
             "resourceId",
             1,
-            skirout.editor.v1.type_catalog.ResourceId.serializer,
+            skirout.kernel.v1.resource_id.ResourceId.serializer,
             "",
             { it.resourceId },
             { mut, v -> mut.resourceId = v },

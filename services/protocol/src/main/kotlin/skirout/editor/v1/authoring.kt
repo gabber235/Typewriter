@@ -21,7 +21,7 @@ import build.skir.internal.UnrecognizedFields as _UnrecognizedFields;
 import build.skir.internal.UnrecognizedVariant as _UnrecognizedVariant;
 
 sealed interface AuthoringResource_OrMutable {
-    val id: skirout.editor.v1.type_catalog.ResourceId_OrMutable;
+    val id: skirout.kernel.v1.resource_id.ResourceId_OrMutable;
     val content: skirout.editor.v1.type_catalog.AuthoringRecord_OrMutable;
 
     fun toFrozen(): skirout.editor.v1.authoring.AuthoringResource;
@@ -30,7 +30,7 @@ sealed interface AuthoringResource_OrMutable {
 /** Deeply immutable. */
 @kotlin.Suppress("UNUSED_PARAMETER")
 class AuthoringResource private constructor(
-    override val id: skirout.editor.v1.type_catalog.ResourceId,
+    override val id: skirout.kernel.v1.resource_id.ResourceId,
     override val content: skirout.editor.v1.type_catalog.AuthoringRecord,
     internal val _unrecognizedFields: _UnrecognizedFields<skirout.editor.v1.authoring.AuthoringResource>? =
         null,
@@ -38,7 +38,7 @@ class AuthoringResource private constructor(
     constructor(
         _mustNameArguments: _MustNameArguments =
             _MustNameArguments,
-        id: skirout.editor.v1.type_catalog.ResourceId_OrMutable,
+        id: skirout.kernel.v1.resource_id.ResourceId_OrMutable,
         content: skirout.editor.v1.type_catalog.AuthoringRecord_OrMutable,
         _unrecognizedFields: _UnrecognizedFields<skirout.editor.v1.authoring.AuthoringResource>? =
             null,
@@ -61,7 +61,7 @@ class AuthoringResource private constructor(
     fun copy(
         _mustNameArguments: _MustNameArguments =
             _MustNameArguments,
-        id: skirout.editor.v1.type_catalog.ResourceId_OrMutable =
+        id: skirout.kernel.v1.resource_id.ResourceId_OrMutable =
             this.id,
         content: skirout.editor.v1.type_catalog.AuthoringRecord_OrMutable =
             this.content,
@@ -93,8 +93,8 @@ class AuthoringResource private constructor(
     class Mutable internal constructor(
         _mustNameArguments: _MustNameArguments =
             _MustNameArguments,
-        override var id: skirout.editor.v1.type_catalog.ResourceId_OrMutable =
-            skirout.editor.v1.type_catalog.ResourceId.partial(),
+        override var id: skirout.kernel.v1.resource_id.ResourceId_OrMutable =
+            skirout.kernel.v1.resource_id.ResourceId.partial(),
         override var content: skirout.editor.v1.type_catalog.AuthoringRecord_OrMutable =
             skirout.editor.v1.type_catalog.AuthoringRecord.partial(),
         internal var _unrecognizedFields: _UnrecognizedFields<skirout.editor.v1.authoring.AuthoringResource>? =
@@ -111,15 +111,15 @@ class AuthoringResource private constructor(
          * If the value of [id] is already mutable, returns it as-is.
          * Otherwise, makes a mutable copy, assigns it back to [id] and returns it.
          */
-        val mutableId: skirout.editor.v1.type_catalog.ResourceId.Mutable get() {
+        val mutableId: skirout.kernel.v1.resource_id.ResourceId.Mutable get() {
             var value = this.id;
             return when (value) {
-                is skirout.editor.v1.type_catalog.ResourceId -> {
+                is skirout.kernel.v1.resource_id.ResourceId -> {
                     value = value.toMutable();
                     this.id = value;
                     return value;
                 }
-                is skirout.editor.v1.type_catalog.ResourceId.Mutable -> value;
+                is skirout.kernel.v1.resource_id.ResourceId.Mutable -> value;
             }
         }
 
@@ -143,7 +143,7 @@ class AuthoringResource private constructor(
     companion object {
         private val default =
             skirout.editor.v1.authoring.AuthoringResource(
-                skirout.editor.v1.type_catalog.ResourceId.partial(),
+                skirout.kernel.v1.resource_id.ResourceId.partial(),
                 skirout.editor.v1.type_catalog.AuthoringRecord.partial(),
             );
 
@@ -158,8 +158,8 @@ class AuthoringResource private constructor(
         fun partial(
             _mustNameArguments: _MustNameArguments =
                 _MustNameArguments,
-            id: skirout.editor.v1.type_catalog.ResourceId_OrMutable =
-                skirout.editor.v1.type_catalog.ResourceId.partial(),
+            id: skirout.kernel.v1.resource_id.ResourceId_OrMutable =
+                skirout.kernel.v1.resource_id.ResourceId.partial(),
             content: skirout.editor.v1.type_catalog.AuthoringRecord_OrMutable =
                 skirout.editor.v1.type_catalog.AuthoringRecord.partial(),
         ) = skirout.editor.v1.authoring.AuthoringResource(
@@ -338,7 +338,7 @@ class LinkOccurrenceId private constructor(
 
 sealed interface LinkOccurrence_OrMutable {
     val id: skirout.editor.v1.authoring.LinkOccurrenceId_OrMutable;
-    val source: skirout.editor.v1.type_catalog.ResourceId_OrMutable;
+    val source: skirout.kernel.v1.resource_id.ResourceId_OrMutable;
     val target: skirout.editor.v1.type_catalog.LinkTarget_OrMutable;
 
     fun toFrozen(): skirout.editor.v1.authoring.LinkOccurrence;
@@ -348,7 +348,7 @@ sealed interface LinkOccurrence_OrMutable {
 @kotlin.Suppress("UNUSED_PARAMETER")
 class LinkOccurrence private constructor(
     override val id: skirout.editor.v1.authoring.LinkOccurrenceId,
-    override val source: skirout.editor.v1.type_catalog.ResourceId,
+    override val source: skirout.kernel.v1.resource_id.ResourceId,
     override val target: skirout.editor.v1.type_catalog.LinkTarget,
     internal val _unrecognizedFields: _UnrecognizedFields<skirout.editor.v1.authoring.LinkOccurrence>? =
         null,
@@ -357,7 +357,7 @@ class LinkOccurrence private constructor(
         _mustNameArguments: _MustNameArguments =
             _MustNameArguments,
         id: skirout.editor.v1.authoring.LinkOccurrenceId_OrMutable,
-        source: skirout.editor.v1.type_catalog.ResourceId_OrMutable,
+        source: skirout.kernel.v1.resource_id.ResourceId_OrMutable,
         target: skirout.editor.v1.type_catalog.LinkTarget_OrMutable,
         _unrecognizedFields: _UnrecognizedFields<skirout.editor.v1.authoring.LinkOccurrence>? =
             null,
@@ -384,7 +384,7 @@ class LinkOccurrence private constructor(
             _MustNameArguments,
         id: skirout.editor.v1.authoring.LinkOccurrenceId_OrMutable =
             this.id,
-        source: skirout.editor.v1.type_catalog.ResourceId_OrMutable =
+        source: skirout.kernel.v1.resource_id.ResourceId_OrMutable =
             this.source,
         target: skirout.editor.v1.type_catalog.LinkTarget_OrMutable =
             this.target,
@@ -419,8 +419,8 @@ class LinkOccurrence private constructor(
             _MustNameArguments,
         override var id: skirout.editor.v1.authoring.LinkOccurrenceId_OrMutable =
             skirout.editor.v1.authoring.LinkOccurrenceId.partial(),
-        override var source: skirout.editor.v1.type_catalog.ResourceId_OrMutable =
-            skirout.editor.v1.type_catalog.ResourceId.partial(),
+        override var source: skirout.kernel.v1.resource_id.ResourceId_OrMutable =
+            skirout.kernel.v1.resource_id.ResourceId.partial(),
         override var target: skirout.editor.v1.type_catalog.LinkTarget_OrMutable =
             skirout.editor.v1.type_catalog.LinkTarget.partial(),
         internal var _unrecognizedFields: _UnrecognizedFields<skirout.editor.v1.authoring.LinkOccurrence>? =
@@ -454,15 +454,15 @@ class LinkOccurrence private constructor(
          * If the value of [source] is already mutable, returns it as-is.
          * Otherwise, makes a mutable copy, assigns it back to [source] and returns it.
          */
-        val mutableSource: skirout.editor.v1.type_catalog.ResourceId.Mutable get() {
+        val mutableSource: skirout.kernel.v1.resource_id.ResourceId.Mutable get() {
             var value = this.source;
             return when (value) {
-                is skirout.editor.v1.type_catalog.ResourceId -> {
+                is skirout.kernel.v1.resource_id.ResourceId -> {
                     value = value.toMutable();
                     this.source = value;
                     return value;
                 }
-                is skirout.editor.v1.type_catalog.ResourceId.Mutable -> value;
+                is skirout.kernel.v1.resource_id.ResourceId.Mutable -> value;
             }
         }
 
@@ -487,7 +487,7 @@ class LinkOccurrence private constructor(
         private val default =
             skirout.editor.v1.authoring.LinkOccurrence(
                 skirout.editor.v1.authoring.LinkOccurrenceId.partial(),
-                skirout.editor.v1.type_catalog.ResourceId.partial(),
+                skirout.kernel.v1.resource_id.ResourceId.partial(),
                 skirout.editor.v1.type_catalog.LinkTarget.partial(),
             );
 
@@ -504,8 +504,8 @@ class LinkOccurrence private constructor(
                 _MustNameArguments,
             id: skirout.editor.v1.authoring.LinkOccurrenceId_OrMutable =
                 skirout.editor.v1.authoring.LinkOccurrenceId.partial(),
-            source: skirout.editor.v1.type_catalog.ResourceId_OrMutable =
-                skirout.editor.v1.type_catalog.ResourceId.partial(),
+            source: skirout.kernel.v1.resource_id.ResourceId_OrMutable =
+                skirout.kernel.v1.resource_id.ResourceId.partial(),
             target: skirout.editor.v1.type_catalog.LinkTarget_OrMutable =
                 skirout.editor.v1.type_catalog.LinkTarget.partial(),
         ) = skirout.editor.v1.authoring.LinkOccurrence(
@@ -715,7 +715,7 @@ class RelationProjectionDelta private constructor(
 }
 
 sealed interface PresentationSubject_OrMutable {
-    val resource: skirout.editor.v1.type_catalog.ResourceId_OrMutable;
+    val resource: skirout.kernel.v1.resource_id.ResourceId_OrMutable;
     val content: skirout.editor.v1.type_catalog.AuthoringRecord_OrMutable;
 
     fun toFrozen(): skirout.editor.v1.authoring.PresentationSubject;
@@ -729,7 +729,7 @@ sealed interface PresentationSubject_OrMutable {
  */
 @kotlin.Suppress("UNUSED_PARAMETER")
 class PresentationSubject private constructor(
-    override val resource: skirout.editor.v1.type_catalog.ResourceId,
+    override val resource: skirout.kernel.v1.resource_id.ResourceId,
     override val content: skirout.editor.v1.type_catalog.AuthoringRecord,
     internal val _unrecognizedFields: _UnrecognizedFields<skirout.editor.v1.authoring.PresentationSubject>? =
         null,
@@ -737,7 +737,7 @@ class PresentationSubject private constructor(
     constructor(
         _mustNameArguments: _MustNameArguments =
             _MustNameArguments,
-        resource: skirout.editor.v1.type_catalog.ResourceId_OrMutable,
+        resource: skirout.kernel.v1.resource_id.ResourceId_OrMutable,
         content: skirout.editor.v1.type_catalog.AuthoringRecord_OrMutable,
         _unrecognizedFields: _UnrecognizedFields<skirout.editor.v1.authoring.PresentationSubject>? =
             null,
@@ -760,7 +760,7 @@ class PresentationSubject private constructor(
     fun copy(
         _mustNameArguments: _MustNameArguments =
             _MustNameArguments,
-        resource: skirout.editor.v1.type_catalog.ResourceId_OrMutable =
+        resource: skirout.kernel.v1.resource_id.ResourceId_OrMutable =
             this.resource,
         content: skirout.editor.v1.type_catalog.AuthoringRecord_OrMutable =
             this.content,
@@ -792,8 +792,8 @@ class PresentationSubject private constructor(
     class Mutable internal constructor(
         _mustNameArguments: _MustNameArguments =
             _MustNameArguments,
-        override var resource: skirout.editor.v1.type_catalog.ResourceId_OrMutable =
-            skirout.editor.v1.type_catalog.ResourceId.partial(),
+        override var resource: skirout.kernel.v1.resource_id.ResourceId_OrMutable =
+            skirout.kernel.v1.resource_id.ResourceId.partial(),
         override var content: skirout.editor.v1.type_catalog.AuthoringRecord_OrMutable =
             skirout.editor.v1.type_catalog.AuthoringRecord.partial(),
         internal var _unrecognizedFields: _UnrecognizedFields<skirout.editor.v1.authoring.PresentationSubject>? =
@@ -810,15 +810,15 @@ class PresentationSubject private constructor(
          * If the value of [resource] is already mutable, returns it as-is.
          * Otherwise, makes a mutable copy, assigns it back to [resource] and returns it.
          */
-        val mutableResource: skirout.editor.v1.type_catalog.ResourceId.Mutable get() {
+        val mutableResource: skirout.kernel.v1.resource_id.ResourceId.Mutable get() {
             var value = this.resource;
             return when (value) {
-                is skirout.editor.v1.type_catalog.ResourceId -> {
+                is skirout.kernel.v1.resource_id.ResourceId -> {
                     value = value.toMutable();
                     this.resource = value;
                     return value;
                 }
-                is skirout.editor.v1.type_catalog.ResourceId.Mutable -> value;
+                is skirout.kernel.v1.resource_id.ResourceId.Mutable -> value;
             }
         }
 
@@ -842,7 +842,7 @@ class PresentationSubject private constructor(
     companion object {
         private val default =
             skirout.editor.v1.authoring.PresentationSubject(
-                skirout.editor.v1.type_catalog.ResourceId.partial(),
+                skirout.kernel.v1.resource_id.ResourceId.partial(),
                 skirout.editor.v1.type_catalog.AuthoringRecord.partial(),
             );
 
@@ -857,8 +857,8 @@ class PresentationSubject private constructor(
         fun partial(
             _mustNameArguments: _MustNameArguments =
                 _MustNameArguments,
-            resource: skirout.editor.v1.type_catalog.ResourceId_OrMutable =
-                skirout.editor.v1.type_catalog.ResourceId.partial(),
+            resource: skirout.kernel.v1.resource_id.ResourceId_OrMutable =
+                skirout.kernel.v1.resource_id.ResourceId.partial(),
             content: skirout.editor.v1.type_catalog.AuthoringRecord_OrMutable =
                 skirout.editor.v1.type_catalog.AuthoringRecord.partial(),
         ) = skirout.editor.v1.authoring.PresentationSubject(
@@ -878,7 +878,7 @@ class PresentationSubject private constructor(
 sealed interface AuthoringDiagnostic_OrMutable {
     val code: kotlin.String;
     val message: kotlin.String;
-    val resource: skirout.editor.v1.type_catalog.ResourceId_OrMutable?;
+    val resource: skirout.kernel.v1.resource_id.ResourceId_OrMutable?;
     val path: skirout.editor.v1.type_catalog.ValuePath_OrMutable?;
 
     fun toFrozen(): skirout.editor.v1.authoring.AuthoringDiagnostic;
@@ -889,7 +889,7 @@ sealed interface AuthoringDiagnostic_OrMutable {
 class AuthoringDiagnostic private constructor(
     override val code: kotlin.String,
     override val message: kotlin.String,
-    override val resource: skirout.editor.v1.type_catalog.ResourceId?,
+    override val resource: skirout.kernel.v1.resource_id.ResourceId?,
     override val path: skirout.editor.v1.type_catalog.ValuePath?,
     internal val _unrecognizedFields: _UnrecognizedFields<skirout.editor.v1.authoring.AuthoringDiagnostic>? =
         null,
@@ -899,7 +899,7 @@ class AuthoringDiagnostic private constructor(
             _MustNameArguments,
         code: kotlin.String,
         message: kotlin.String,
-        resource: skirout.editor.v1.type_catalog.ResourceId_OrMutable?,
+        resource: skirout.kernel.v1.resource_id.ResourceId_OrMutable?,
         path: skirout.editor.v1.type_catalog.ValuePath_OrMutable?,
         _unrecognizedFields: _UnrecognizedFields<skirout.editor.v1.authoring.AuthoringDiagnostic>? =
             null,
@@ -930,7 +930,7 @@ class AuthoringDiagnostic private constructor(
             this.code,
         message: kotlin.String =
             this.message,
-        resource: skirout.editor.v1.type_catalog.ResourceId_OrMutable? =
+        resource: skirout.kernel.v1.resource_id.ResourceId_OrMutable? =
             this.resource,
         path: skirout.editor.v1.type_catalog.ValuePath_OrMutable? =
             this.path,
@@ -968,7 +968,7 @@ class AuthoringDiagnostic private constructor(
             "",
         override var message: kotlin.String =
             "",
-        override var resource: skirout.editor.v1.type_catalog.ResourceId_OrMutable? =
+        override var resource: skirout.kernel.v1.resource_id.ResourceId_OrMutable? =
             null,
         override var path: skirout.editor.v1.type_catalog.ValuePath_OrMutable? =
             null,
@@ -1009,7 +1009,7 @@ class AuthoringDiagnostic private constructor(
                 "",
             message: kotlin.String =
                 "",
-            resource: skirout.editor.v1.type_catalog.ResourceId_OrMutable? =
+            resource: skirout.kernel.v1.resource_id.ResourceId_OrMutable? =
                 null,
             path: skirout.editor.v1.type_catalog.ValuePath_OrMutable? =
                 null,
@@ -2173,7 +2173,7 @@ class MoveIntent private constructor(
 }
 
 sealed interface CreateResourceIntent_OrMutable {
-    val id: skirout.editor.v1.type_catalog.ResourceId_OrMutable;
+    val id: skirout.kernel.v1.resource_id.ResourceId_OrMutable;
     val record: skirout.editor.v1.type_catalog.AuthoringRecord_OrMutable;
 
     fun toFrozen(): skirout.editor.v1.authoring.CreateResourceIntent;
@@ -2182,7 +2182,7 @@ sealed interface CreateResourceIntent_OrMutable {
 /** Deeply immutable. */
 @kotlin.Suppress("UNUSED_PARAMETER")
 class CreateResourceIntent private constructor(
-    override val id: skirout.editor.v1.type_catalog.ResourceId,
+    override val id: skirout.kernel.v1.resource_id.ResourceId,
     override val record: skirout.editor.v1.type_catalog.AuthoringRecord,
     internal val _unrecognizedFields: _UnrecognizedFields<skirout.editor.v1.authoring.CreateResourceIntent>? =
         null,
@@ -2190,7 +2190,7 @@ class CreateResourceIntent private constructor(
     constructor(
         _mustNameArguments: _MustNameArguments =
             _MustNameArguments,
-        id: skirout.editor.v1.type_catalog.ResourceId_OrMutable,
+        id: skirout.kernel.v1.resource_id.ResourceId_OrMutable,
         record: skirout.editor.v1.type_catalog.AuthoringRecord_OrMutable,
         _unrecognizedFields: _UnrecognizedFields<skirout.editor.v1.authoring.CreateResourceIntent>? =
             null,
@@ -2213,7 +2213,7 @@ class CreateResourceIntent private constructor(
     fun copy(
         _mustNameArguments: _MustNameArguments =
             _MustNameArguments,
-        id: skirout.editor.v1.type_catalog.ResourceId_OrMutable =
+        id: skirout.kernel.v1.resource_id.ResourceId_OrMutable =
             this.id,
         record: skirout.editor.v1.type_catalog.AuthoringRecord_OrMutable =
             this.record,
@@ -2245,8 +2245,8 @@ class CreateResourceIntent private constructor(
     class Mutable internal constructor(
         _mustNameArguments: _MustNameArguments =
             _MustNameArguments,
-        override var id: skirout.editor.v1.type_catalog.ResourceId_OrMutable =
-            skirout.editor.v1.type_catalog.ResourceId.partial(),
+        override var id: skirout.kernel.v1.resource_id.ResourceId_OrMutable =
+            skirout.kernel.v1.resource_id.ResourceId.partial(),
         override var record: skirout.editor.v1.type_catalog.AuthoringRecord_OrMutable =
             skirout.editor.v1.type_catalog.AuthoringRecord.partial(),
         internal var _unrecognizedFields: _UnrecognizedFields<skirout.editor.v1.authoring.CreateResourceIntent>? =
@@ -2263,15 +2263,15 @@ class CreateResourceIntent private constructor(
          * If the value of [id] is already mutable, returns it as-is.
          * Otherwise, makes a mutable copy, assigns it back to [id] and returns it.
          */
-        val mutableId: skirout.editor.v1.type_catalog.ResourceId.Mutable get() {
+        val mutableId: skirout.kernel.v1.resource_id.ResourceId.Mutable get() {
             var value = this.id;
             return when (value) {
-                is skirout.editor.v1.type_catalog.ResourceId -> {
+                is skirout.kernel.v1.resource_id.ResourceId -> {
                     value = value.toMutable();
                     this.id = value;
                     return value;
                 }
-                is skirout.editor.v1.type_catalog.ResourceId.Mutable -> value;
+                is skirout.kernel.v1.resource_id.ResourceId.Mutable -> value;
             }
         }
 
@@ -2295,7 +2295,7 @@ class CreateResourceIntent private constructor(
     companion object {
         private val default =
             skirout.editor.v1.authoring.CreateResourceIntent(
-                skirout.editor.v1.type_catalog.ResourceId.partial(),
+                skirout.kernel.v1.resource_id.ResourceId.partial(),
                 skirout.editor.v1.type_catalog.AuthoringRecord.partial(),
             );
 
@@ -2310,8 +2310,8 @@ class CreateResourceIntent private constructor(
         fun partial(
             _mustNameArguments: _MustNameArguments =
                 _MustNameArguments,
-            id: skirout.editor.v1.type_catalog.ResourceId_OrMutable =
-                skirout.editor.v1.type_catalog.ResourceId.partial(),
+            id: skirout.kernel.v1.resource_id.ResourceId_OrMutable =
+                skirout.kernel.v1.resource_id.ResourceId.partial(),
             record: skirout.editor.v1.type_catalog.AuthoringRecord_OrMutable =
                 skirout.editor.v1.type_catalog.AuthoringRecord.partial(),
         ) = skirout.editor.v1.authoring.CreateResourceIntent(
@@ -2329,7 +2329,7 @@ class CreateResourceIntent private constructor(
 }
 
 sealed interface DeleteResourceIntent_OrMutable {
-    val id: skirout.editor.v1.type_catalog.ResourceId_OrMutable;
+    val id: skirout.kernel.v1.resource_id.ResourceId_OrMutable;
 
     fun toFrozen(): skirout.editor.v1.authoring.DeleteResourceIntent;
 }
@@ -2337,14 +2337,14 @@ sealed interface DeleteResourceIntent_OrMutable {
 /** Deeply immutable. */
 @kotlin.Suppress("UNUSED_PARAMETER")
 class DeleteResourceIntent private constructor(
-    override val id: skirout.editor.v1.type_catalog.ResourceId,
+    override val id: skirout.kernel.v1.resource_id.ResourceId,
     internal val _unrecognizedFields: _UnrecognizedFields<skirout.editor.v1.authoring.DeleteResourceIntent>? =
         null,
 ): skirout.editor.v1.authoring.DeleteResourceIntent_OrMutable {
     constructor(
         _mustNameArguments: _MustNameArguments =
             _MustNameArguments,
-        id: skirout.editor.v1.type_catalog.ResourceId_OrMutable,
+        id: skirout.kernel.v1.resource_id.ResourceId_OrMutable,
         _unrecognizedFields: _UnrecognizedFields<skirout.editor.v1.authoring.DeleteResourceIntent>? =
             null,
     ): this(
@@ -2364,7 +2364,7 @@ class DeleteResourceIntent private constructor(
     fun copy(
         _mustNameArguments: _MustNameArguments =
             _MustNameArguments,
-        id: skirout.editor.v1.type_catalog.ResourceId_OrMutable =
+        id: skirout.kernel.v1.resource_id.ResourceId_OrMutable =
             this.id,
     ) = skirout.editor.v1.authoring.DeleteResourceIntent(
         id.toFrozen(),
@@ -2393,8 +2393,8 @@ class DeleteResourceIntent private constructor(
     class Mutable internal constructor(
         _mustNameArguments: _MustNameArguments =
             _MustNameArguments,
-        override var id: skirout.editor.v1.type_catalog.ResourceId_OrMutable =
-            skirout.editor.v1.type_catalog.ResourceId.partial(),
+        override var id: skirout.kernel.v1.resource_id.ResourceId_OrMutable =
+            skirout.kernel.v1.resource_id.ResourceId.partial(),
         internal var _unrecognizedFields: _UnrecognizedFields<skirout.editor.v1.authoring.DeleteResourceIntent>? =
             null,
     ): skirout.editor.v1.authoring.DeleteResourceIntent_OrMutable {
@@ -2408,15 +2408,15 @@ class DeleteResourceIntent private constructor(
          * If the value of [id] is already mutable, returns it as-is.
          * Otherwise, makes a mutable copy, assigns it back to [id] and returns it.
          */
-        val mutableId: skirout.editor.v1.type_catalog.ResourceId.Mutable get() {
+        val mutableId: skirout.kernel.v1.resource_id.ResourceId.Mutable get() {
             var value = this.id;
             return when (value) {
-                is skirout.editor.v1.type_catalog.ResourceId -> {
+                is skirout.kernel.v1.resource_id.ResourceId -> {
                     value = value.toMutable();
                     this.id = value;
                     return value;
                 }
-                is skirout.editor.v1.type_catalog.ResourceId.Mutable -> value;
+                is skirout.kernel.v1.resource_id.ResourceId.Mutable -> value;
             }
         }
     }
@@ -2424,7 +2424,7 @@ class DeleteResourceIntent private constructor(
     companion object {
         private val default =
             skirout.editor.v1.authoring.DeleteResourceIntent(
-                skirout.editor.v1.type_catalog.ResourceId.partial(),
+                skirout.kernel.v1.resource_id.ResourceId.partial(),
             );
 
         /** Returns an instance with all fields set to their default values. */
@@ -2438,8 +2438,8 @@ class DeleteResourceIntent private constructor(
         fun partial(
             _mustNameArguments: _MustNameArguments =
                 _MustNameArguments,
-            id: skirout.editor.v1.type_catalog.ResourceId_OrMutable =
-                skirout.editor.v1.type_catalog.ResourceId.partial(),
+            id: skirout.kernel.v1.resource_id.ResourceId_OrMutable =
+                skirout.kernel.v1.resource_id.ResourceId.partial(),
         ) = skirout.editor.v1.authoring.DeleteResourceIntent(
             id = id,
             _unrecognizedFields = null,
@@ -2693,7 +2693,7 @@ sealed class CounterpartChoice private constructor() {
             _mustNameArguments: _MustNameArguments =
                 _MustNameArguments,
             id: skirout.editor.v1.authoring.LinkOccurrenceId_OrMutable,
-            source: skirout.editor.v1.type_catalog.ResourceId_OrMutable,
+            source: skirout.kernel.v1.resource_id.ResourceId_OrMutable,
             target: skirout.editor.v1.type_catalog.LinkTarget_OrMutable,
         ) = ExistingWrapper(
             skirout.editor.v1.authoring.LinkOccurrence(
@@ -2727,7 +2727,7 @@ sealed class CounterpartChoice private constructor() {
 
 sealed interface ConnectIntent_OrMutable {
     val source: skirout.editor.v1.authoring.LinkOccurrence_OrMutable;
-    val target: skirout.editor.v1.type_catalog.ResourceId_OrMutable;
+    val target: skirout.kernel.v1.resource_id.ResourceId_OrMutable;
     val counterpart: skirout.editor.v1.authoring.CounterpartChoice?;
 
     fun toFrozen(): skirout.editor.v1.authoring.ConnectIntent;
@@ -2737,7 +2737,7 @@ sealed interface ConnectIntent_OrMutable {
 @kotlin.Suppress("UNUSED_PARAMETER")
 class ConnectIntent private constructor(
     override val source: skirout.editor.v1.authoring.LinkOccurrence,
-    override val target: skirout.editor.v1.type_catalog.ResourceId,
+    override val target: skirout.kernel.v1.resource_id.ResourceId,
     override val counterpart: skirout.editor.v1.authoring.CounterpartChoice?,
     internal val _unrecognizedFields: _UnrecognizedFields<skirout.editor.v1.authoring.ConnectIntent>? =
         null,
@@ -2746,7 +2746,7 @@ class ConnectIntent private constructor(
         _mustNameArguments: _MustNameArguments =
             _MustNameArguments,
         source: skirout.editor.v1.authoring.LinkOccurrence_OrMutable,
-        target: skirout.editor.v1.type_catalog.ResourceId_OrMutable,
+        target: skirout.kernel.v1.resource_id.ResourceId_OrMutable,
         counterpart: skirout.editor.v1.authoring.CounterpartChoice?,
         _unrecognizedFields: _UnrecognizedFields<skirout.editor.v1.authoring.ConnectIntent>? =
             null,
@@ -2773,7 +2773,7 @@ class ConnectIntent private constructor(
             _MustNameArguments,
         source: skirout.editor.v1.authoring.LinkOccurrence_OrMutable =
             this.source,
-        target: skirout.editor.v1.type_catalog.ResourceId_OrMutable =
+        target: skirout.kernel.v1.resource_id.ResourceId_OrMutable =
             this.target,
         counterpart: skirout.editor.v1.authoring.CounterpartChoice? =
             this.counterpart,
@@ -2808,8 +2808,8 @@ class ConnectIntent private constructor(
             _MustNameArguments,
         override var source: skirout.editor.v1.authoring.LinkOccurrence_OrMutable =
             skirout.editor.v1.authoring.LinkOccurrence.partial(),
-        override var target: skirout.editor.v1.type_catalog.ResourceId_OrMutable =
-            skirout.editor.v1.type_catalog.ResourceId.partial(),
+        override var target: skirout.kernel.v1.resource_id.ResourceId_OrMutable =
+            skirout.kernel.v1.resource_id.ResourceId.partial(),
         override var counterpart: skirout.editor.v1.authoring.CounterpartChoice? =
             null,
         internal var _unrecognizedFields: _UnrecognizedFields<skirout.editor.v1.authoring.ConnectIntent>? =
@@ -2843,15 +2843,15 @@ class ConnectIntent private constructor(
          * If the value of [target] is already mutable, returns it as-is.
          * Otherwise, makes a mutable copy, assigns it back to [target] and returns it.
          */
-        val mutableTarget: skirout.editor.v1.type_catalog.ResourceId.Mutable get() {
+        val mutableTarget: skirout.kernel.v1.resource_id.ResourceId.Mutable get() {
             var value = this.target;
             return when (value) {
-                is skirout.editor.v1.type_catalog.ResourceId -> {
+                is skirout.kernel.v1.resource_id.ResourceId -> {
                     value = value.toMutable();
                     this.target = value;
                     return value;
                 }
-                is skirout.editor.v1.type_catalog.ResourceId.Mutable -> value;
+                is skirout.kernel.v1.resource_id.ResourceId.Mutable -> value;
             }
         }
     }
@@ -2860,7 +2860,7 @@ class ConnectIntent private constructor(
         private val default =
             skirout.editor.v1.authoring.ConnectIntent(
                 skirout.editor.v1.authoring.LinkOccurrence.partial(),
-                skirout.editor.v1.type_catalog.ResourceId.partial(),
+                skirout.kernel.v1.resource_id.ResourceId.partial(),
                 null,
             );
 
@@ -2877,8 +2877,8 @@ class ConnectIntent private constructor(
                 _MustNameArguments,
             source: skirout.editor.v1.authoring.LinkOccurrence_OrMutable =
                 skirout.editor.v1.authoring.LinkOccurrence.partial(),
-            target: skirout.editor.v1.type_catalog.ResourceId_OrMutable =
-                skirout.editor.v1.type_catalog.ResourceId.partial(),
+            target: skirout.kernel.v1.resource_id.ResourceId_OrMutable =
+                skirout.kernel.v1.resource_id.ResourceId.partial(),
             counterpart: skirout.editor.v1.authoring.CounterpartChoice? =
                 null,
         ) = skirout.editor.v1.authoring.ConnectIntent(
@@ -3053,7 +3053,7 @@ class RetagIntent private constructor(
 }
 
 sealed interface ResourceConfigurationIntent_OrMutable {
-    val resource: skirout.editor.v1.type_catalog.ResourceId_OrMutable;
+    val resource: skirout.kernel.v1.resource_id.ResourceId_OrMutable;
     val configuration: skirout.editor.v1.type_catalog.TypeSelection;
 
     fun toFrozen(): skirout.editor.v1.authoring.ResourceConfigurationIntent;
@@ -3062,7 +3062,7 @@ sealed interface ResourceConfigurationIntent_OrMutable {
 /** Deeply immutable. */
 @kotlin.Suppress("UNUSED_PARAMETER")
 class ResourceConfigurationIntent private constructor(
-    override val resource: skirout.editor.v1.type_catalog.ResourceId,
+    override val resource: skirout.kernel.v1.resource_id.ResourceId,
     override val configuration: skirout.editor.v1.type_catalog.TypeSelection,
     internal val _unrecognizedFields: _UnrecognizedFields<skirout.editor.v1.authoring.ResourceConfigurationIntent>? =
         null,
@@ -3070,7 +3070,7 @@ class ResourceConfigurationIntent private constructor(
     constructor(
         _mustNameArguments: _MustNameArguments =
             _MustNameArguments,
-        resource: skirout.editor.v1.type_catalog.ResourceId_OrMutable,
+        resource: skirout.kernel.v1.resource_id.ResourceId_OrMutable,
         configuration: skirout.editor.v1.type_catalog.TypeSelection,
         _unrecognizedFields: _UnrecognizedFields<skirout.editor.v1.authoring.ResourceConfigurationIntent>? =
             null,
@@ -3093,7 +3093,7 @@ class ResourceConfigurationIntent private constructor(
     fun copy(
         _mustNameArguments: _MustNameArguments =
             _MustNameArguments,
-        resource: skirout.editor.v1.type_catalog.ResourceId_OrMutable =
+        resource: skirout.kernel.v1.resource_id.ResourceId_OrMutable =
             this.resource,
         configuration: skirout.editor.v1.type_catalog.TypeSelection =
             this.configuration,
@@ -3125,8 +3125,8 @@ class ResourceConfigurationIntent private constructor(
     class Mutable internal constructor(
         _mustNameArguments: _MustNameArguments =
             _MustNameArguments,
-        override var resource: skirout.editor.v1.type_catalog.ResourceId_OrMutable =
-            skirout.editor.v1.type_catalog.ResourceId.partial(),
+        override var resource: skirout.kernel.v1.resource_id.ResourceId_OrMutable =
+            skirout.kernel.v1.resource_id.ResourceId.partial(),
         override var configuration: skirout.editor.v1.type_catalog.TypeSelection =
             skirout.editor.v1.type_catalog.TypeSelection.UNKNOWN,
         internal var _unrecognizedFields: _UnrecognizedFields<skirout.editor.v1.authoring.ResourceConfigurationIntent>? =
@@ -3143,15 +3143,15 @@ class ResourceConfigurationIntent private constructor(
          * If the value of [resource] is already mutable, returns it as-is.
          * Otherwise, makes a mutable copy, assigns it back to [resource] and returns it.
          */
-        val mutableResource: skirout.editor.v1.type_catalog.ResourceId.Mutable get() {
+        val mutableResource: skirout.kernel.v1.resource_id.ResourceId.Mutable get() {
             var value = this.resource;
             return when (value) {
-                is skirout.editor.v1.type_catalog.ResourceId -> {
+                is skirout.kernel.v1.resource_id.ResourceId -> {
                     value = value.toMutable();
                     this.resource = value;
                     return value;
                 }
-                is skirout.editor.v1.type_catalog.ResourceId.Mutable -> value;
+                is skirout.kernel.v1.resource_id.ResourceId.Mutable -> value;
             }
         }
     }
@@ -3159,7 +3159,7 @@ class ResourceConfigurationIntent private constructor(
     companion object {
         private val default =
             skirout.editor.v1.authoring.ResourceConfigurationIntent(
-                skirout.editor.v1.type_catalog.ResourceId.partial(),
+                skirout.kernel.v1.resource_id.ResourceId.partial(),
                 skirout.editor.v1.type_catalog.TypeSelection.UNKNOWN,
             );
 
@@ -3174,8 +3174,8 @@ class ResourceConfigurationIntent private constructor(
         fun partial(
             _mustNameArguments: _MustNameArguments =
                 _MustNameArguments,
-            resource: skirout.editor.v1.type_catalog.ResourceId_OrMutable =
-                skirout.editor.v1.type_catalog.ResourceId.partial(),
+            resource: skirout.kernel.v1.resource_id.ResourceId_OrMutable =
+                skirout.kernel.v1.resource_id.ResourceId.partial(),
             configuration: skirout.editor.v1.type_catalog.TypeSelection =
                 skirout.editor.v1.type_catalog.TypeSelection.UNKNOWN,
         ) = skirout.editor.v1.authoring.ResourceConfigurationIntent(
@@ -3432,7 +3432,7 @@ sealed class EditIntent private constructor() {
         fun createCreateResource(
             _mustNameArguments: _MustNameArguments =
                 _MustNameArguments,
-            id: skirout.editor.v1.type_catalog.ResourceId_OrMutable,
+            id: skirout.kernel.v1.resource_id.ResourceId_OrMutable,
             record: skirout.editor.v1.type_catalog.AuthoringRecord_OrMutable,
         ) = CreateResourceWrapper(
             skirout.editor.v1.authoring.CreateResourceIntent(
@@ -3446,7 +3446,7 @@ sealed class EditIntent private constructor() {
         fun createDeleteResource(
             _mustNameArguments: _MustNameArguments =
                 _MustNameArguments,
-            id: skirout.editor.v1.type_catalog.ResourceId_OrMutable,
+            id: skirout.kernel.v1.resource_id.ResourceId_OrMutable,
         ) = DeleteResourceWrapper(
             skirout.editor.v1.authoring.DeleteResourceIntent(
                 id = id,
@@ -3519,7 +3519,7 @@ sealed class EditIntent private constructor() {
             _mustNameArguments: _MustNameArguments =
                 _MustNameArguments,
             source: skirout.editor.v1.authoring.LinkOccurrence_OrMutable,
-            target: skirout.editor.v1.type_catalog.ResourceId_OrMutable,
+            target: skirout.kernel.v1.resource_id.ResourceId_OrMutable,
             counterpart: skirout.editor.v1.authoring.CounterpartChoice?,
         ) = ConnectRelationWrapper(
             skirout.editor.v1.authoring.ConnectIntent(
@@ -3562,7 +3562,7 @@ sealed class EditIntent private constructor() {
         fun createConfigureResource(
             _mustNameArguments: _MustNameArguments =
                 _MustNameArguments,
-            resource: skirout.editor.v1.type_catalog.ResourceId_OrMutable,
+            resource: skirout.kernel.v1.resource_id.ResourceId_OrMutable,
             configuration: skirout.editor.v1.type_catalog.TypeSelection,
         ) = ConfigureResourceWrapper(
             skirout.editor.v1.authoring.ResourceConfigurationIntent(
@@ -4224,7 +4224,7 @@ sealed class LinkRepairIntent private constructor() {
 }
 
 sealed interface TypeArgumentChangePreview_OrMutable {
-    val resource: skirout.editor.v1.type_catalog.ResourceId_OrMutable;
+    val resource: skirout.kernel.v1.resource_id.ResourceId_OrMutable;
     val next: skirout.editor.v1.type_catalog.TypeSelection;
     val edit: skirout.editor.v1.authoring.PreparedEdit_OrMutable;
     val linkRepairs: kotlin.collections.List<skirout.editor.v1.authoring.LinkRepairIntent>;
@@ -4241,7 +4241,7 @@ sealed interface TypeArgumentChangePreview_OrMutable {
  */
 @kotlin.Suppress("UNUSED_PARAMETER")
 class TypeArgumentChangePreview private constructor(
-    override val resource: skirout.editor.v1.type_catalog.ResourceId,
+    override val resource: skirout.kernel.v1.resource_id.ResourceId,
     override val next: skirout.editor.v1.type_catalog.TypeSelection,
     override val edit: skirout.editor.v1.authoring.PreparedEdit,
     override val linkRepairs: kotlin.collections.List<skirout.editor.v1.authoring.LinkRepairIntent>,
@@ -4252,7 +4252,7 @@ class TypeArgumentChangePreview private constructor(
     constructor(
         _mustNameArguments: _MustNameArguments =
             _MustNameArguments,
-        resource: skirout.editor.v1.type_catalog.ResourceId_OrMutable,
+        resource: skirout.kernel.v1.resource_id.ResourceId_OrMutable,
         next: skirout.editor.v1.type_catalog.TypeSelection,
         edit: skirout.editor.v1.authoring.PreparedEdit_OrMutable,
         linkRepairs: kotlin.collections.Iterable<skirout.editor.v1.authoring.LinkRepairIntent>,
@@ -4284,7 +4284,7 @@ class TypeArgumentChangePreview private constructor(
     fun copy(
         _mustNameArguments: _MustNameArguments =
             _MustNameArguments,
-        resource: skirout.editor.v1.type_catalog.ResourceId_OrMutable =
+        resource: skirout.kernel.v1.resource_id.ResourceId_OrMutable =
             this.resource,
         next: skirout.editor.v1.type_catalog.TypeSelection =
             this.next,
@@ -4325,8 +4325,8 @@ class TypeArgumentChangePreview private constructor(
     class Mutable internal constructor(
         _mustNameArguments: _MustNameArguments =
             _MustNameArguments,
-        override var resource: skirout.editor.v1.type_catalog.ResourceId_OrMutable =
-            skirout.editor.v1.type_catalog.ResourceId.partial(),
+        override var resource: skirout.kernel.v1.resource_id.ResourceId_OrMutable =
+            skirout.kernel.v1.resource_id.ResourceId.partial(),
         override var next: skirout.editor.v1.type_catalog.TypeSelection =
             skirout.editor.v1.type_catalog.TypeSelection.UNKNOWN,
         override var edit: skirout.editor.v1.authoring.PreparedEdit_OrMutable =
@@ -4352,15 +4352,15 @@ class TypeArgumentChangePreview private constructor(
          * If the value of [resource] is already mutable, returns it as-is.
          * Otherwise, makes a mutable copy, assigns it back to [resource] and returns it.
          */
-        val mutableResource: skirout.editor.v1.type_catalog.ResourceId.Mutable get() {
+        val mutableResource: skirout.kernel.v1.resource_id.ResourceId.Mutable get() {
             var value = this.resource;
             return when (value) {
-                is skirout.editor.v1.type_catalog.ResourceId -> {
+                is skirout.kernel.v1.resource_id.ResourceId -> {
                     value = value.toMutable();
                     this.resource = value;
                     return value;
                 }
-                is skirout.editor.v1.type_catalog.ResourceId.Mutable -> value;
+                is skirout.kernel.v1.resource_id.ResourceId.Mutable -> value;
             }
         }
 
@@ -4416,7 +4416,7 @@ class TypeArgumentChangePreview private constructor(
     companion object {
         private val default =
             skirout.editor.v1.authoring.TypeArgumentChangePreview(
-                skirout.editor.v1.type_catalog.ResourceId.partial(),
+                skirout.kernel.v1.resource_id.ResourceId.partial(),
                 skirout.editor.v1.type_catalog.TypeSelection.UNKNOWN,
                 skirout.editor.v1.authoring.PreparedEdit.partial(),
                 build.skir.internal.emptyFrozenList<skirout.editor.v1.authoring.LinkRepairIntent>(),
@@ -4434,8 +4434,8 @@ class TypeArgumentChangePreview private constructor(
         fun partial(
             _mustNameArguments: _MustNameArguments =
                 _MustNameArguments,
-            resource: skirout.editor.v1.type_catalog.ResourceId_OrMutable =
-                skirout.editor.v1.type_catalog.ResourceId.partial(),
+            resource: skirout.kernel.v1.resource_id.ResourceId_OrMutable =
+                skirout.kernel.v1.resource_id.ResourceId.partial(),
             next: skirout.editor.v1.type_catalog.TypeSelection =
                 skirout.editor.v1.type_catalog.TypeSelection.UNKNOWN,
             edit: skirout.editor.v1.authoring.PreparedEdit_OrMutable =
@@ -4571,7 +4571,7 @@ class ArgumentLocation private constructor(
 }
 
 sealed interface AuthoringSearchHit_OrMutable {
-    val resource: skirout.editor.v1.type_catalog.ResourceId_OrMutable;
+    val resource: skirout.kernel.v1.resource_id.ResourceId_OrMutable;
     val subject: skirout.editor.v1.authoring.PresentationSubject_OrMutable;
     val context: skirout.editor.v1.typed_value.PortableValue_OrMutable;
 
@@ -4581,7 +4581,7 @@ sealed interface AuthoringSearchHit_OrMutable {
 /** Deeply immutable. */
 @kotlin.Suppress("UNUSED_PARAMETER")
 class AuthoringSearchHit private constructor(
-    override val resource: skirout.editor.v1.type_catalog.ResourceId,
+    override val resource: skirout.kernel.v1.resource_id.ResourceId,
     override val subject: skirout.editor.v1.authoring.PresentationSubject,
     override val context: skirout.editor.v1.typed_value.PortableValue,
     internal val _unrecognizedFields: _UnrecognizedFields<skirout.editor.v1.authoring.AuthoringSearchHit>? =
@@ -4590,7 +4590,7 @@ class AuthoringSearchHit private constructor(
     constructor(
         _mustNameArguments: _MustNameArguments =
             _MustNameArguments,
-        resource: skirout.editor.v1.type_catalog.ResourceId_OrMutable,
+        resource: skirout.kernel.v1.resource_id.ResourceId_OrMutable,
         subject: skirout.editor.v1.authoring.PresentationSubject_OrMutable,
         context: skirout.editor.v1.typed_value.PortableValue_OrMutable,
         _unrecognizedFields: _UnrecognizedFields<skirout.editor.v1.authoring.AuthoringSearchHit>? =
@@ -4616,7 +4616,7 @@ class AuthoringSearchHit private constructor(
     fun copy(
         _mustNameArguments: _MustNameArguments =
             _MustNameArguments,
-        resource: skirout.editor.v1.type_catalog.ResourceId_OrMutable =
+        resource: skirout.kernel.v1.resource_id.ResourceId_OrMutable =
             this.resource,
         subject: skirout.editor.v1.authoring.PresentationSubject_OrMutable =
             this.subject,
@@ -4651,8 +4651,8 @@ class AuthoringSearchHit private constructor(
     class Mutable internal constructor(
         _mustNameArguments: _MustNameArguments =
             _MustNameArguments,
-        override var resource: skirout.editor.v1.type_catalog.ResourceId_OrMutable =
-            skirout.editor.v1.type_catalog.ResourceId.partial(),
+        override var resource: skirout.kernel.v1.resource_id.ResourceId_OrMutable =
+            skirout.kernel.v1.resource_id.ResourceId.partial(),
         override var subject: skirout.editor.v1.authoring.PresentationSubject_OrMutable =
             skirout.editor.v1.authoring.PresentationSubject.partial(),
         override var context: skirout.editor.v1.typed_value.PortableValue_OrMutable =
@@ -4672,15 +4672,15 @@ class AuthoringSearchHit private constructor(
          * If the value of [resource] is already mutable, returns it as-is.
          * Otherwise, makes a mutable copy, assigns it back to [resource] and returns it.
          */
-        val mutableResource: skirout.editor.v1.type_catalog.ResourceId.Mutable get() {
+        val mutableResource: skirout.kernel.v1.resource_id.ResourceId.Mutable get() {
             var value = this.resource;
             return when (value) {
-                is skirout.editor.v1.type_catalog.ResourceId -> {
+                is skirout.kernel.v1.resource_id.ResourceId -> {
                     value = value.toMutable();
                     this.resource = value;
                     return value;
                 }
-                is skirout.editor.v1.type_catalog.ResourceId.Mutable -> value;
+                is skirout.kernel.v1.resource_id.ResourceId.Mutable -> value;
             }
         }
 
@@ -4720,7 +4720,7 @@ class AuthoringSearchHit private constructor(
     companion object {
         private val default =
             skirout.editor.v1.authoring.AuthoringSearchHit(
-                skirout.editor.v1.type_catalog.ResourceId.partial(),
+                skirout.kernel.v1.resource_id.ResourceId.partial(),
                 skirout.editor.v1.authoring.PresentationSubject.partial(),
                 skirout.editor.v1.typed_value.PortableValue.partial(),
             );
@@ -4736,8 +4736,8 @@ class AuthoringSearchHit private constructor(
         fun partial(
             _mustNameArguments: _MustNameArguments =
                 _MustNameArguments,
-            resource: skirout.editor.v1.type_catalog.ResourceId_OrMutable =
-                skirout.editor.v1.type_catalog.ResourceId.partial(),
+            resource: skirout.kernel.v1.resource_id.ResourceId_OrMutable =
+                skirout.kernel.v1.resource_id.ResourceId.partial(),
             subject: skirout.editor.v1.authoring.PresentationSubject_OrMutable =
                 skirout.editor.v1.authoring.PresentationSubject.partial(),
             context: skirout.editor.v1.typed_value.PortableValue_OrMutable =
@@ -5334,7 +5334,7 @@ sealed interface SearchAuthoringRequest_OrMutable {
     val generation: skirout.editor.v1.type_catalog.CatalogGeneration_OrMutable;
     val query: kotlin.String;
     val roots: kotlin.collections.List<skirout.editor.v1.type_catalog.TypeDefinitionId_OrMutable>;
-    val contexts: kotlin.collections.List<skirout.editor.v1.type_catalog.ResourceId_OrMutable>;
+    val contexts: kotlin.collections.List<skirout.kernel.v1.resource_id.ResourceId_OrMutable>;
     val target: skirout.editor.v1.type_catalog.NamedTypeUse_OrMutable?;
 
     fun toFrozen(): skirout.editor.v1.authoring.SearchAuthoringRequest;
@@ -5346,7 +5346,7 @@ class SearchAuthoringRequest private constructor(
     override val generation: skirout.editor.v1.type_catalog.CatalogGeneration,
     override val query: kotlin.String,
     override val roots: kotlin.collections.List<skirout.editor.v1.type_catalog.TypeDefinitionId>,
-    override val contexts: kotlin.collections.List<skirout.editor.v1.type_catalog.ResourceId>,
+    override val contexts: kotlin.collections.List<skirout.kernel.v1.resource_id.ResourceId>,
     override val target: skirout.editor.v1.type_catalog.NamedTypeUse?,
     internal val _unrecognizedFields: _UnrecognizedFields<skirout.editor.v1.authoring.SearchAuthoringRequest>? =
         null,
@@ -5357,7 +5357,7 @@ class SearchAuthoringRequest private constructor(
         generation: skirout.editor.v1.type_catalog.CatalogGeneration_OrMutable,
         query: kotlin.String,
         roots: kotlin.collections.Iterable<skirout.editor.v1.type_catalog.TypeDefinitionId_OrMutable>,
-        contexts: kotlin.collections.Iterable<skirout.editor.v1.type_catalog.ResourceId_OrMutable>,
+        contexts: kotlin.collections.Iterable<skirout.kernel.v1.resource_id.ResourceId_OrMutable>,
         target: skirout.editor.v1.type_catalog.NamedTypeUse_OrMutable?,
         _unrecognizedFields: _UnrecognizedFields<skirout.editor.v1.authoring.SearchAuthoringRequest>? =
             null,
@@ -5392,7 +5392,7 @@ class SearchAuthoringRequest private constructor(
             this.query,
         roots: kotlin.collections.Iterable<skirout.editor.v1.type_catalog.TypeDefinitionId_OrMutable> =
             this.roots,
-        contexts: kotlin.collections.Iterable<skirout.editor.v1.type_catalog.ResourceId_OrMutable> =
+        contexts: kotlin.collections.Iterable<skirout.kernel.v1.resource_id.ResourceId_OrMutable> =
             this.contexts,
         target: skirout.editor.v1.type_catalog.NamedTypeUse_OrMutable? =
             this.target,
@@ -5433,8 +5433,8 @@ class SearchAuthoringRequest private constructor(
             "",
         override var roots: kotlin.collections.List<skirout.editor.v1.type_catalog.TypeDefinitionId_OrMutable> =
             build.skir.internal.emptyFrozenList<skirout.editor.v1.type_catalog.TypeDefinitionId>(),
-        override var contexts: kotlin.collections.List<skirout.editor.v1.type_catalog.ResourceId_OrMutable> =
-            build.skir.internal.emptyFrozenList<skirout.editor.v1.type_catalog.ResourceId>(),
+        override var contexts: kotlin.collections.List<skirout.kernel.v1.resource_id.ResourceId_OrMutable> =
+            build.skir.internal.emptyFrozenList<skirout.kernel.v1.resource_id.ResourceId>(),
         override var target: skirout.editor.v1.type_catalog.NamedTypeUse_OrMutable? =
             null,
         internal var _unrecognizedFields: _UnrecognizedFields<skirout.editor.v1.authoring.SearchAuthoringRequest>? =
@@ -5486,7 +5486,7 @@ class SearchAuthoringRequest private constructor(
          * If the value of [contexts] is already mutable, returns it as-is.
          * Otherwise, makes a mutable copy, assigns it back to [contexts] and returns it.
          */
-        val mutableContexts: kotlin.collections.MutableList<skirout.editor.v1.type_catalog.ResourceId_OrMutable> get() {
+        val mutableContexts: kotlin.collections.MutableList<skirout.kernel.v1.resource_id.ResourceId_OrMutable> get() {
             var value = this.contexts;
             return when (value) {
                 is build.skir.internal.MutableList -> value;
@@ -5505,7 +5505,7 @@ class SearchAuthoringRequest private constructor(
                 skirout.editor.v1.type_catalog.CatalogGeneration.partial(),
                 "",
                 build.skir.internal.emptyFrozenList<skirout.editor.v1.type_catalog.TypeDefinitionId>(),
-                build.skir.internal.emptyFrozenList<skirout.editor.v1.type_catalog.ResourceId>(),
+                build.skir.internal.emptyFrozenList<skirout.kernel.v1.resource_id.ResourceId>(),
                 null,
             );
 
@@ -5526,8 +5526,8 @@ class SearchAuthoringRequest private constructor(
                 "",
             roots: kotlin.collections.Iterable<skirout.editor.v1.type_catalog.TypeDefinitionId_OrMutable> =
                 build.skir.internal.emptyFrozenList<skirout.editor.v1.type_catalog.TypeDefinitionId>(),
-            contexts: kotlin.collections.Iterable<skirout.editor.v1.type_catalog.ResourceId_OrMutable> =
-                build.skir.internal.emptyFrozenList<skirout.editor.v1.type_catalog.ResourceId>(),
+            contexts: kotlin.collections.Iterable<skirout.kernel.v1.resource_id.ResourceId_OrMutable> =
+                build.skir.internal.emptyFrozenList<skirout.kernel.v1.resource_id.ResourceId>(),
             target: skirout.editor.v1.type_catalog.NamedTypeUse_OrMutable? =
                 null,
         ) = skirout.editor.v1.authoring.SearchAuthoringRequest(
@@ -5879,7 +5879,7 @@ sealed class CommitPreparedEditResponse private constructor() {
 }
 
 sealed interface PreviewTypeArgumentChangeRequest_OrMutable {
-    val resource: skirout.editor.v1.type_catalog.ResourceId_OrMutable;
+    val resource: skirout.kernel.v1.resource_id.ResourceId_OrMutable;
     val requested: skirout.editor.v1.type_catalog.TypeSelection;
     val catalog: skirout.editor.v1.type_catalog.CatalogGeneration_OrMutable;
 
@@ -5889,7 +5889,7 @@ sealed interface PreviewTypeArgumentChangeRequest_OrMutable {
 /** Deeply immutable. */
 @kotlin.Suppress("UNUSED_PARAMETER")
 class PreviewTypeArgumentChangeRequest private constructor(
-    override val resource: skirout.editor.v1.type_catalog.ResourceId,
+    override val resource: skirout.kernel.v1.resource_id.ResourceId,
     override val requested: skirout.editor.v1.type_catalog.TypeSelection,
     override val catalog: skirout.editor.v1.type_catalog.CatalogGeneration,
     internal val _unrecognizedFields: _UnrecognizedFields<skirout.editor.v1.authoring.PreviewTypeArgumentChangeRequest>? =
@@ -5898,7 +5898,7 @@ class PreviewTypeArgumentChangeRequest private constructor(
     constructor(
         _mustNameArguments: _MustNameArguments =
             _MustNameArguments,
-        resource: skirout.editor.v1.type_catalog.ResourceId_OrMutable,
+        resource: skirout.kernel.v1.resource_id.ResourceId_OrMutable,
         requested: skirout.editor.v1.type_catalog.TypeSelection,
         catalog: skirout.editor.v1.type_catalog.CatalogGeneration_OrMutable,
         _unrecognizedFields: _UnrecognizedFields<skirout.editor.v1.authoring.PreviewTypeArgumentChangeRequest>? =
@@ -5924,7 +5924,7 @@ class PreviewTypeArgumentChangeRequest private constructor(
     fun copy(
         _mustNameArguments: _MustNameArguments =
             _MustNameArguments,
-        resource: skirout.editor.v1.type_catalog.ResourceId_OrMutable =
+        resource: skirout.kernel.v1.resource_id.ResourceId_OrMutable =
             this.resource,
         requested: skirout.editor.v1.type_catalog.TypeSelection =
             this.requested,
@@ -5959,8 +5959,8 @@ class PreviewTypeArgumentChangeRequest private constructor(
     class Mutable internal constructor(
         _mustNameArguments: _MustNameArguments =
             _MustNameArguments,
-        override var resource: skirout.editor.v1.type_catalog.ResourceId_OrMutable =
-            skirout.editor.v1.type_catalog.ResourceId.partial(),
+        override var resource: skirout.kernel.v1.resource_id.ResourceId_OrMutable =
+            skirout.kernel.v1.resource_id.ResourceId.partial(),
         override var requested: skirout.editor.v1.type_catalog.TypeSelection =
             skirout.editor.v1.type_catalog.TypeSelection.UNKNOWN,
         override var catalog: skirout.editor.v1.type_catalog.CatalogGeneration_OrMutable =
@@ -5980,15 +5980,15 @@ class PreviewTypeArgumentChangeRequest private constructor(
          * If the value of [resource] is already mutable, returns it as-is.
          * Otherwise, makes a mutable copy, assigns it back to [resource] and returns it.
          */
-        val mutableResource: skirout.editor.v1.type_catalog.ResourceId.Mutable get() {
+        val mutableResource: skirout.kernel.v1.resource_id.ResourceId.Mutable get() {
             var value = this.resource;
             return when (value) {
-                is skirout.editor.v1.type_catalog.ResourceId -> {
+                is skirout.kernel.v1.resource_id.ResourceId -> {
                     value = value.toMutable();
                     this.resource = value;
                     return value;
                 }
-                is skirout.editor.v1.type_catalog.ResourceId.Mutable -> value;
+                is skirout.kernel.v1.resource_id.ResourceId.Mutable -> value;
             }
         }
 
@@ -6012,7 +6012,7 @@ class PreviewTypeArgumentChangeRequest private constructor(
     companion object {
         private val default =
             skirout.editor.v1.authoring.PreviewTypeArgumentChangeRequest(
-                skirout.editor.v1.type_catalog.ResourceId.partial(),
+                skirout.kernel.v1.resource_id.ResourceId.partial(),
                 skirout.editor.v1.type_catalog.TypeSelection.UNKNOWN,
                 skirout.editor.v1.type_catalog.CatalogGeneration.partial(),
             );
@@ -6028,8 +6028,8 @@ class PreviewTypeArgumentChangeRequest private constructor(
         fun partial(
             _mustNameArguments: _MustNameArguments =
                 _MustNameArguments,
-            resource: skirout.editor.v1.type_catalog.ResourceId_OrMutable =
-                skirout.editor.v1.type_catalog.ResourceId.partial(),
+            resource: skirout.kernel.v1.resource_id.ResourceId_OrMutable =
+                skirout.kernel.v1.resource_id.ResourceId.partial(),
             requested: skirout.editor.v1.type_catalog.TypeSelection =
                 skirout.editor.v1.type_catalog.TypeSelection.UNKNOWN,
             catalog: skirout.editor.v1.type_catalog.CatalogGeneration_OrMutable =
@@ -6189,7 +6189,7 @@ sealed class PreviewTypeArgumentChangeResponse private constructor() {
         fun createReady(
             _mustNameArguments: _MustNameArguments =
                 _MustNameArguments,
-            resource: skirout.editor.v1.type_catalog.ResourceId_OrMutable,
+            resource: skirout.kernel.v1.resource_id.ResourceId_OrMutable,
             next: skirout.editor.v1.type_catalog.TypeSelection,
             edit: skirout.editor.v1.authoring.PreparedEdit_OrMutable,
             linkRepairs: kotlin.collections.Iterable<skirout.editor.v1.authoring.LinkRepairIntent>,
@@ -6373,7 +6373,7 @@ val QueryAuthoringState: build.skir.service.Method<
 > by kotlin.lazy {
     build.skir.service.Method(
         "QueryAuthoringState",
-        920010,
+        940201,
         skirout.editor.v1.authoring.QueryAuthoringStateRequest.serializer,
         skirout.editor.v1.authoring.QueryAuthoringStateResponse.serializer,
         "Returns the retained saved snapshot for one catalog generation.",
@@ -6386,7 +6386,7 @@ val SearchAuthoring: build.skir.service.Method<
 > by kotlin.lazy {
     build.skir.service.Method(
         "SearchAuthoring",
-        920011,
+        940202,
         skirout.editor.v1.authoring.SearchAuthoringRequest.serializer,
         skirout.editor.v1.authoring.SearchAuthoringResponse.serializer,
         "",
@@ -6405,7 +6405,7 @@ val CommitPreparedEdit: build.skir.service.Method<
 > by kotlin.lazy {
     build.skir.service.Method(
         "CommitPreparedEdit",
-        920012,
+        940203,
         skirout.editor.v1.authoring.PreparedEdit.serializer,
         skirout.editor.v1.authoring.CommitPreparedEditResponse.serializer,
         "committed confirms installation of saved authoring state. It does not confirm check completion,\ncompilation, publication selection, or engine application. conflict_error requires refreshing\noriginal facts; rejected_error reports invalid intent or missing guards; catalog_changed_error\nrequires a new catalog.",
@@ -6418,7 +6418,7 @@ val PreviewTypeArgumentChange: build.skir.service.Method<
 > by kotlin.lazy {
     build.skir.service.Method(
         "PreviewTypeArgumentChange",
-        920013,
+        940204,
         skirout.editor.v1.authoring.PreviewTypeArgumentChangeRequest.serializer,
         skirout.editor.v1.authoring.PreviewTypeArgumentChangeResponse.serializer,
         "",
@@ -6432,7 +6432,7 @@ val PrepareTypeArgumentChange: build.skir.service.Method<
 > by kotlin.lazy {
     build.skir.service.Method(
         "PrepareTypeArgumentChange",
-        920014,
+        940205,
         skirout.editor.v1.authoring.TypeArgumentChangePreview.serializer,
         skirout.editor.v1.authoring.PrepareTypeArgumentChangeResponse.serializer,
         "Revalidates a preview and returns proposed intent. CommitPreparedEdit performs the separate saved write.",
@@ -6963,7 +6963,7 @@ private object _SerializerRegistry {
             "resource",
             2,
             build.skir.Serializers.optional(
-                skirout.editor.v1.type_catalog.ResourceId.serializer,
+                skirout.kernel.v1.resource_id.ResourceId.serializer,
             ),
             "",
             { it.resource },
@@ -7021,7 +7021,7 @@ private object _SerializerRegistry {
             "id",
             "id",
             0,
-            skirout.editor.v1.type_catalog.ResourceId.serializer,
+            skirout.kernel.v1.resource_id.ResourceId.serializer,
             "",
             { it.id },
             { mut, v -> mut.id = v },
@@ -7041,7 +7041,7 @@ private object _SerializerRegistry {
             "resource",
             "resource",
             0,
-            skirout.editor.v1.type_catalog.ResourceId.serializer,
+            skirout.kernel.v1.resource_id.ResourceId.serializer,
             "",
             { it.resource },
             { mut, v -> mut.resource = v },
@@ -7225,7 +7225,7 @@ private object _SerializerRegistry {
             "target",
             "target",
             1,
-            skirout.editor.v1.type_catalog.ResourceId.serializer,
+            skirout.kernel.v1.resource_id.ResourceId.serializer,
             "",
             { it.target },
             { mut, v -> mut.target = v },
@@ -7267,7 +7267,7 @@ private object _SerializerRegistry {
             "id",
             "id",
             0,
-            skirout.editor.v1.type_catalog.ResourceId.serializer,
+            skirout.kernel.v1.resource_id.ResourceId.serializer,
             "",
             { it.id },
             { mut, v -> mut.id = v },
@@ -7287,7 +7287,7 @@ private object _SerializerRegistry {
             "id",
             "id",
             0,
-            skirout.editor.v1.type_catalog.ResourceId.serializer,
+            skirout.kernel.v1.resource_id.ResourceId.serializer,
             "",
             { it.id },
             { mut, v -> mut.id = v },
@@ -7430,7 +7430,7 @@ private object _SerializerRegistry {
             "source",
             "source",
             1,
-            skirout.editor.v1.type_catalog.ResourceId.serializer,
+            skirout.kernel.v1.resource_id.ResourceId.serializer,
             "",
             { it.source },
             { mut, v -> mut.source = v },
@@ -7627,7 +7627,7 @@ private object _SerializerRegistry {
             "resource",
             "resource",
             0,
-            skirout.editor.v1.type_catalog.ResourceId.serializer,
+            skirout.kernel.v1.resource_id.ResourceId.serializer,
             "",
             { it.resource },
             { mut, v -> mut.resource = v },
@@ -7647,7 +7647,7 @@ private object _SerializerRegistry {
             "resource",
             "resource",
             0,
-            skirout.editor.v1.type_catalog.ResourceId.serializer,
+            skirout.kernel.v1.resource_id.ResourceId.serializer,
             "",
             { it.resource },
             { mut, v -> mut.resource = v },
@@ -7824,7 +7824,7 @@ private object _SerializerRegistry {
             "resource",
             "resource",
             0,
-            skirout.editor.v1.type_catalog.ResourceId.serializer,
+            skirout.kernel.v1.resource_id.ResourceId.serializer,
             "",
             { it.resource },
             { mut, v -> mut.resource = v },
@@ -7894,7 +7894,7 @@ private object _SerializerRegistry {
             "contexts",
             3,
             build.skir.Serializers.list(
-                skirout.editor.v1.type_catalog.ResourceId.serializer,
+                skirout.kernel.v1.resource_id.ResourceId.serializer,
             ),
             "",
             { it.contexts },
@@ -7975,7 +7975,7 @@ private object _SerializerRegistry {
             "resource",
             "resource",
             0,
-            skirout.editor.v1.type_catalog.ResourceId.serializer,
+            skirout.kernel.v1.resource_id.ResourceId.serializer,
             "",
             { it.resource },
             { mut, v -> mut.resource = v },

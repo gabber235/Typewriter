@@ -4,6 +4,7 @@
 library;
 
 export "app/app.dart";
+export "authoring/authoring.dart";
 // Generated parts consume the dependency library through this import.
 // ignore: invalid_export_of_internal_element
 export "dependencies.dart";

@@ -4,7 +4,7 @@ import com.typewritermc.engine.requireValid
 import com.typewritermc.protocol.transport.RealmRouteScope
 import com.typewritermc.protocol.transport.generated.authoringCompiledStatusQuery
 import com.typewritermc.realm.authoring.AuthoringViewStore
-import com.typewritermc.realm.compiler.CompiledRootStatuses
+import com.typewritermc.realm.publication.CompiledRootStatuses
 import com.typewritermc.services.libs.communicator.router.CommunicatorRoutesBuilder
 import skirout.editor.v1.compiled_content.CompilationStatusSelection
 import skirout.editor.v1.compiled_content.CompiledResourceStatus

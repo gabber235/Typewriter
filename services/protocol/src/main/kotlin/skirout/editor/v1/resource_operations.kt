@@ -21,7 +21,7 @@ import build.skir.internal.UnrecognizedFields as _UnrecognizedFields;
 import build.skir.internal.UnrecognizedVariant as _UnrecognizedVariant;
 
 sealed interface OperationOrigin_OrMutable {
-    val container: skirout.editor.v1.type_catalog.ResourceId_OrMutable?;
+    val container: skirout.kernel.v1.resource_id.ResourceId_OrMutable?;
     val occurrences: kotlin.collections.List<skirout.editor.v1.authoring.LinkOccurrence_OrMutable>;
 
     fun toFrozen(): skirout.editor.v1.resource_operations.OperationOrigin;
@@ -30,7 +30,7 @@ sealed interface OperationOrigin_OrMutable {
 /** Deeply immutable. */
 @kotlin.Suppress("UNUSED_PARAMETER")
 class OperationOrigin private constructor(
-    override val container: skirout.editor.v1.type_catalog.ResourceId?,
+    override val container: skirout.kernel.v1.resource_id.ResourceId?,
     override val occurrences: kotlin.collections.List<skirout.editor.v1.authoring.LinkOccurrence>,
     internal val _unrecognizedFields: _UnrecognizedFields<skirout.editor.v1.resource_operations.OperationOrigin>? =
         null,
@@ -38,7 +38,7 @@ class OperationOrigin private constructor(
     constructor(
         _mustNameArguments: _MustNameArguments =
             _MustNameArguments,
-        container: skirout.editor.v1.type_catalog.ResourceId_OrMutable?,
+        container: skirout.kernel.v1.resource_id.ResourceId_OrMutable?,
         occurrences: kotlin.collections.Iterable<skirout.editor.v1.authoring.LinkOccurrence_OrMutable>,
         _unrecognizedFields: _UnrecognizedFields<skirout.editor.v1.resource_operations.OperationOrigin>? =
             null,
@@ -61,7 +61,7 @@ class OperationOrigin private constructor(
     fun copy(
         _mustNameArguments: _MustNameArguments =
             _MustNameArguments,
-        container: skirout.editor.v1.type_catalog.ResourceId_OrMutable? =
+        container: skirout.kernel.v1.resource_id.ResourceId_OrMutable? =
             this.container,
         occurrences: kotlin.collections.Iterable<skirout.editor.v1.authoring.LinkOccurrence_OrMutable> =
             this.occurrences,
@@ -93,7 +93,7 @@ class OperationOrigin private constructor(
     class Mutable internal constructor(
         _mustNameArguments: _MustNameArguments =
             _MustNameArguments,
-        override var container: skirout.editor.v1.type_catalog.ResourceId_OrMutable? =
+        override var container: skirout.kernel.v1.resource_id.ResourceId_OrMutable? =
             null,
         override var occurrences: kotlin.collections.List<skirout.editor.v1.authoring.LinkOccurrence_OrMutable> =
             build.skir.internal.emptyFrozenList<skirout.editor.v1.authoring.LinkOccurrence>(),
@@ -142,7 +142,7 @@ class OperationOrigin private constructor(
         fun partial(
             _mustNameArguments: _MustNameArguments =
                 _MustNameArguments,
-            container: skirout.editor.v1.type_catalog.ResourceId_OrMutable? =
+            container: skirout.kernel.v1.resource_id.ResourceId_OrMutable? =
                 null,
             occurrences: kotlin.collections.Iterable<skirout.editor.v1.authoring.LinkOccurrence_OrMutable> =
                 build.skir.internal.emptyFrozenList<skirout.editor.v1.authoring.LinkOccurrence>(),
@@ -163,7 +163,7 @@ class OperationOrigin private constructor(
 sealed interface OperationInvocation_OrMutable {
     val invocationId: skirout.editor.v1.capability.InvocationId_OrMutable;
     val catalog: skirout.editor.v1.type_catalog.CatalogGeneration_OrMutable;
-    val targets: kotlin.collections.List<skirout.editor.v1.type_catalog.ResourceId_OrMutable>;
+    val targets: kotlin.collections.List<skirout.kernel.v1.resource_id.ResourceId_OrMutable>;
     val origin: skirout.editor.v1.resource_operations.OperationOrigin_OrMutable;
 
     fun toFrozen(): skirout.editor.v1.resource_operations.OperationInvocation;
@@ -180,7 +180,7 @@ sealed interface OperationInvocation_OrMutable {
 class OperationInvocation private constructor(
     override val invocationId: skirout.editor.v1.capability.InvocationId,
     override val catalog: skirout.editor.v1.type_catalog.CatalogGeneration,
-    override val targets: kotlin.collections.List<skirout.editor.v1.type_catalog.ResourceId>,
+    override val targets: kotlin.collections.List<skirout.kernel.v1.resource_id.ResourceId>,
     override val origin: skirout.editor.v1.resource_operations.OperationOrigin,
     internal val _unrecognizedFields: _UnrecognizedFields<skirout.editor.v1.resource_operations.OperationInvocation>? =
         null,
@@ -190,7 +190,7 @@ class OperationInvocation private constructor(
             _MustNameArguments,
         invocationId: skirout.editor.v1.capability.InvocationId_OrMutable,
         catalog: skirout.editor.v1.type_catalog.CatalogGeneration_OrMutable,
-        targets: kotlin.collections.Iterable<skirout.editor.v1.type_catalog.ResourceId_OrMutable>,
+        targets: kotlin.collections.Iterable<skirout.kernel.v1.resource_id.ResourceId_OrMutable>,
         origin: skirout.editor.v1.resource_operations.OperationOrigin_OrMutable,
         _unrecognizedFields: _UnrecognizedFields<skirout.editor.v1.resource_operations.OperationInvocation>? =
             null,
@@ -221,7 +221,7 @@ class OperationInvocation private constructor(
             this.invocationId,
         catalog: skirout.editor.v1.type_catalog.CatalogGeneration_OrMutable =
             this.catalog,
-        targets: kotlin.collections.Iterable<skirout.editor.v1.type_catalog.ResourceId_OrMutable> =
+        targets: kotlin.collections.Iterable<skirout.kernel.v1.resource_id.ResourceId_OrMutable> =
             this.targets,
         origin: skirout.editor.v1.resource_operations.OperationOrigin_OrMutable =
             this.origin,
@@ -259,8 +259,8 @@ class OperationInvocation private constructor(
             skirout.editor.v1.capability.InvocationId.partial(),
         override var catalog: skirout.editor.v1.type_catalog.CatalogGeneration_OrMutable =
             skirout.editor.v1.type_catalog.CatalogGeneration.partial(),
-        override var targets: kotlin.collections.List<skirout.editor.v1.type_catalog.ResourceId_OrMutable> =
-            build.skir.internal.emptyFrozenList<skirout.editor.v1.type_catalog.ResourceId>(),
+        override var targets: kotlin.collections.List<skirout.kernel.v1.resource_id.ResourceId_OrMutable> =
+            build.skir.internal.emptyFrozenList<skirout.kernel.v1.resource_id.ResourceId>(),
         override var origin: skirout.editor.v1.resource_operations.OperationOrigin_OrMutable =
             skirout.editor.v1.resource_operations.OperationOrigin.partial(),
         internal var _unrecognizedFields: _UnrecognizedFields<skirout.editor.v1.resource_operations.OperationInvocation>? =
@@ -311,7 +311,7 @@ class OperationInvocation private constructor(
          * If the value of [targets] is already mutable, returns it as-is.
          * Otherwise, makes a mutable copy, assigns it back to [targets] and returns it.
          */
-        val mutableTargets: kotlin.collections.MutableList<skirout.editor.v1.type_catalog.ResourceId_OrMutable> get() {
+        val mutableTargets: kotlin.collections.MutableList<skirout.kernel.v1.resource_id.ResourceId_OrMutable> get() {
             var value = this.targets;
             return when (value) {
                 is build.skir.internal.MutableList -> value;
@@ -345,7 +345,7 @@ class OperationInvocation private constructor(
             skirout.editor.v1.resource_operations.OperationInvocation(
                 skirout.editor.v1.capability.InvocationId.partial(),
                 skirout.editor.v1.type_catalog.CatalogGeneration.partial(),
-                build.skir.internal.emptyFrozenList<skirout.editor.v1.type_catalog.ResourceId>(),
+                build.skir.internal.emptyFrozenList<skirout.kernel.v1.resource_id.ResourceId>(),
                 skirout.editor.v1.resource_operations.OperationOrigin.partial(),
             );
 
@@ -364,8 +364,8 @@ class OperationInvocation private constructor(
                 skirout.editor.v1.capability.InvocationId.partial(),
             catalog: skirout.editor.v1.type_catalog.CatalogGeneration_OrMutable =
                 skirout.editor.v1.type_catalog.CatalogGeneration.partial(),
-            targets: kotlin.collections.Iterable<skirout.editor.v1.type_catalog.ResourceId_OrMutable> =
-                build.skir.internal.emptyFrozenList<skirout.editor.v1.type_catalog.ResourceId>(),
+            targets: kotlin.collections.Iterable<skirout.kernel.v1.resource_id.ResourceId_OrMutable> =
+                build.skir.internal.emptyFrozenList<skirout.kernel.v1.resource_id.ResourceId>(),
             origin: skirout.editor.v1.resource_operations.OperationOrigin_OrMutable =
                 skirout.editor.v1.resource_operations.OperationOrigin.partial(),
         ) = skirout.editor.v1.resource_operations.OperationInvocation(
@@ -385,7 +385,7 @@ class OperationInvocation private constructor(
 }
 
 sealed interface OperationResourceUpsert_OrMutable {
-    val resource: skirout.editor.v1.type_catalog.ResourceId_OrMutable;
+    val resource: skirout.kernel.v1.resource_id.ResourceId_OrMutable;
     val content: skirout.editor.v1.type_catalog.AuthoringRecord_OrMutable;
 
     fun toFrozen(): skirout.editor.v1.resource_operations.OperationResourceUpsert;
@@ -394,7 +394,7 @@ sealed interface OperationResourceUpsert_OrMutable {
 /** Deeply immutable. */
 @kotlin.Suppress("UNUSED_PARAMETER")
 class OperationResourceUpsert private constructor(
-    override val resource: skirout.editor.v1.type_catalog.ResourceId,
+    override val resource: skirout.kernel.v1.resource_id.ResourceId,
     override val content: skirout.editor.v1.type_catalog.AuthoringRecord,
     internal val _unrecognizedFields: _UnrecognizedFields<skirout.editor.v1.resource_operations.OperationResourceUpsert>? =
         null,
@@ -402,7 +402,7 @@ class OperationResourceUpsert private constructor(
     constructor(
         _mustNameArguments: _MustNameArguments =
             _MustNameArguments,
-        resource: skirout.editor.v1.type_catalog.ResourceId_OrMutable,
+        resource: skirout.kernel.v1.resource_id.ResourceId_OrMutable,
         content: skirout.editor.v1.type_catalog.AuthoringRecord_OrMutable,
         _unrecognizedFields: _UnrecognizedFields<skirout.editor.v1.resource_operations.OperationResourceUpsert>? =
             null,
@@ -425,7 +425,7 @@ class OperationResourceUpsert private constructor(
     fun copy(
         _mustNameArguments: _MustNameArguments =
             _MustNameArguments,
-        resource: skirout.editor.v1.type_catalog.ResourceId_OrMutable =
+        resource: skirout.kernel.v1.resource_id.ResourceId_OrMutable =
             this.resource,
         content: skirout.editor.v1.type_catalog.AuthoringRecord_OrMutable =
             this.content,
@@ -457,8 +457,8 @@ class OperationResourceUpsert private constructor(
     class Mutable internal constructor(
         _mustNameArguments: _MustNameArguments =
             _MustNameArguments,
-        override var resource: skirout.editor.v1.type_catalog.ResourceId_OrMutable =
-            skirout.editor.v1.type_catalog.ResourceId.partial(),
+        override var resource: skirout.kernel.v1.resource_id.ResourceId_OrMutable =
+            skirout.kernel.v1.resource_id.ResourceId.partial(),
         override var content: skirout.editor.v1.type_catalog.AuthoringRecord_OrMutable =
             skirout.editor.v1.type_catalog.AuthoringRecord.partial(),
         internal var _unrecognizedFields: _UnrecognizedFields<skirout.editor.v1.resource_operations.OperationResourceUpsert>? =
@@ -475,15 +475,15 @@ class OperationResourceUpsert private constructor(
          * If the value of [resource] is already mutable, returns it as-is.
          * Otherwise, makes a mutable copy, assigns it back to [resource] and returns it.
          */
-        val mutableResource: skirout.editor.v1.type_catalog.ResourceId.Mutable get() {
+        val mutableResource: skirout.kernel.v1.resource_id.ResourceId.Mutable get() {
             var value = this.resource;
             return when (value) {
-                is skirout.editor.v1.type_catalog.ResourceId -> {
+                is skirout.kernel.v1.resource_id.ResourceId -> {
                     value = value.toMutable();
                     this.resource = value;
                     return value;
                 }
-                is skirout.editor.v1.type_catalog.ResourceId.Mutable -> value;
+                is skirout.kernel.v1.resource_id.ResourceId.Mutable -> value;
             }
         }
 
@@ -507,7 +507,7 @@ class OperationResourceUpsert private constructor(
     companion object {
         private val default =
             skirout.editor.v1.resource_operations.OperationResourceUpsert(
-                skirout.editor.v1.type_catalog.ResourceId.partial(),
+                skirout.kernel.v1.resource_id.ResourceId.partial(),
                 skirout.editor.v1.type_catalog.AuthoringRecord.partial(),
             );
 
@@ -522,8 +522,8 @@ class OperationResourceUpsert private constructor(
         fun partial(
             _mustNameArguments: _MustNameArguments =
                 _MustNameArguments,
-            resource: skirout.editor.v1.type_catalog.ResourceId_OrMutable =
-                skirout.editor.v1.type_catalog.ResourceId.partial(),
+            resource: skirout.kernel.v1.resource_id.ResourceId_OrMutable =
+                skirout.kernel.v1.resource_id.ResourceId.partial(),
             content: skirout.editor.v1.type_catalog.AuthoringRecord_OrMutable =
                 skirout.editor.v1.type_catalog.AuthoringRecord.partial(),
         ) = skirout.editor.v1.resource_operations.OperationResourceUpsert(
@@ -542,7 +542,7 @@ class OperationResourceUpsert private constructor(
 
 sealed interface OperationWorkingOverlay_OrMutable {
     val upserts: kotlin.collections.List<skirout.editor.v1.resource_operations.OperationResourceUpsert_OrMutable>;
-    val removals: kotlin.collections.List<skirout.editor.v1.type_catalog.ResourceId_OrMutable>;
+    val removals: kotlin.collections.List<skirout.kernel.v1.resource_id.ResourceId_OrMutable>;
 
     fun toFrozen(): skirout.editor.v1.resource_operations.OperationWorkingOverlay;
 }
@@ -556,7 +556,7 @@ sealed interface OperationWorkingOverlay_OrMutable {
 @kotlin.Suppress("UNUSED_PARAMETER")
 class OperationWorkingOverlay private constructor(
     override val upserts: kotlin.collections.List<skirout.editor.v1.resource_operations.OperationResourceUpsert>,
-    override val removals: kotlin.collections.List<skirout.editor.v1.type_catalog.ResourceId>,
+    override val removals: kotlin.collections.List<skirout.kernel.v1.resource_id.ResourceId>,
     internal val _unrecognizedFields: _UnrecognizedFields<skirout.editor.v1.resource_operations.OperationWorkingOverlay>? =
         null,
 ): skirout.editor.v1.resource_operations.OperationWorkingOverlay_OrMutable {
@@ -564,7 +564,7 @@ class OperationWorkingOverlay private constructor(
         _mustNameArguments: _MustNameArguments =
             _MustNameArguments,
         upserts: kotlin.collections.Iterable<skirout.editor.v1.resource_operations.OperationResourceUpsert_OrMutable>,
-        removals: kotlin.collections.Iterable<skirout.editor.v1.type_catalog.ResourceId_OrMutable>,
+        removals: kotlin.collections.Iterable<skirout.kernel.v1.resource_id.ResourceId_OrMutable>,
         _unrecognizedFields: _UnrecognizedFields<skirout.editor.v1.resource_operations.OperationWorkingOverlay>? =
             null,
     ): this(
@@ -588,7 +588,7 @@ class OperationWorkingOverlay private constructor(
             _MustNameArguments,
         upserts: kotlin.collections.Iterable<skirout.editor.v1.resource_operations.OperationResourceUpsert_OrMutable> =
             this.upserts,
-        removals: kotlin.collections.Iterable<skirout.editor.v1.type_catalog.ResourceId_OrMutable> =
+        removals: kotlin.collections.Iterable<skirout.kernel.v1.resource_id.ResourceId_OrMutable> =
             this.removals,
     ) = skirout.editor.v1.resource_operations.OperationWorkingOverlay(
         build.skir.internal.toFrozenList(upserts, { it.toFrozen() }),
@@ -620,8 +620,8 @@ class OperationWorkingOverlay private constructor(
             _MustNameArguments,
         override var upserts: kotlin.collections.List<skirout.editor.v1.resource_operations.OperationResourceUpsert_OrMutable> =
             build.skir.internal.emptyFrozenList<skirout.editor.v1.resource_operations.OperationResourceUpsert>(),
-        override var removals: kotlin.collections.List<skirout.editor.v1.type_catalog.ResourceId_OrMutable> =
-            build.skir.internal.emptyFrozenList<skirout.editor.v1.type_catalog.ResourceId>(),
+        override var removals: kotlin.collections.List<skirout.kernel.v1.resource_id.ResourceId_OrMutable> =
+            build.skir.internal.emptyFrozenList<skirout.kernel.v1.resource_id.ResourceId>(),
         internal var _unrecognizedFields: _UnrecognizedFields<skirout.editor.v1.resource_operations.OperationWorkingOverlay>? =
             null,
     ): skirout.editor.v1.resource_operations.OperationWorkingOverlay_OrMutable {
@@ -652,7 +652,7 @@ class OperationWorkingOverlay private constructor(
          * If the value of [removals] is already mutable, returns it as-is.
          * Otherwise, makes a mutable copy, assigns it back to [removals] and returns it.
          */
-        val mutableRemovals: kotlin.collections.MutableList<skirout.editor.v1.type_catalog.ResourceId_OrMutable> get() {
+        val mutableRemovals: kotlin.collections.MutableList<skirout.kernel.v1.resource_id.ResourceId_OrMutable> get() {
             var value = this.removals;
             return when (value) {
                 is build.skir.internal.MutableList -> value;
@@ -669,7 +669,7 @@ class OperationWorkingOverlay private constructor(
         private val default =
             skirout.editor.v1.resource_operations.OperationWorkingOverlay(
                 build.skir.internal.emptyFrozenList<skirout.editor.v1.resource_operations.OperationResourceUpsert>(),
-                build.skir.internal.emptyFrozenList<skirout.editor.v1.type_catalog.ResourceId>(),
+                build.skir.internal.emptyFrozenList<skirout.kernel.v1.resource_id.ResourceId>(),
             );
 
         /** Returns an instance with all fields set to their default values. */
@@ -685,8 +685,8 @@ class OperationWorkingOverlay private constructor(
                 _MustNameArguments,
             upserts: kotlin.collections.Iterable<skirout.editor.v1.resource_operations.OperationResourceUpsert_OrMutable> =
                 build.skir.internal.emptyFrozenList<skirout.editor.v1.resource_operations.OperationResourceUpsert>(),
-            removals: kotlin.collections.Iterable<skirout.editor.v1.type_catalog.ResourceId_OrMutable> =
-                build.skir.internal.emptyFrozenList<skirout.editor.v1.type_catalog.ResourceId>(),
+            removals: kotlin.collections.Iterable<skirout.kernel.v1.resource_id.ResourceId_OrMutable> =
+                build.skir.internal.emptyFrozenList<skirout.kernel.v1.resource_id.ResourceId>(),
         ) = skirout.editor.v1.resource_operations.OperationWorkingOverlay(
             upserts = upserts,
             removals = removals,
@@ -2330,10 +2330,10 @@ sealed class OperationSelectionEffect private constructor() {
     }
 
     class ReplaceWrapper private constructor (
-        val value: kotlin.collections.List<skirout.editor.v1.type_catalog.ResourceId>,
+        val value: kotlin.collections.List<skirout.kernel.v1.resource_id.ResourceId>,
     ) : skirout.editor.v1.resource_operations.OperationSelectionEffect() {
         constructor(
-            value: kotlin.collections.Iterable<skirout.editor.v1.type_catalog.ResourceId_OrMutable>,
+            value: kotlin.collections.Iterable<skirout.kernel.v1.resource_id.ResourceId_OrMutable>,
         ): this(build.skir.internal.toFrozenList(value, { it.toFrozen() })) {}
 
         override val kind get() = Kind.REPLACE_WRAPPER;
@@ -4240,7 +4240,7 @@ class OperationSearchContext private constructor(
 
 sealed interface DropCandidates_OrMutable {
     val operation: skirout.editor.v1.operation.ResourceOperationId_OrMutable;
-    val destinations: kotlin.collections.List<skirout.editor.v1.type_catalog.ResourceId_OrMutable>;
+    val destinations: kotlin.collections.List<skirout.kernel.v1.resource_id.ResourceId_OrMutable>;
     val complete: kotlin.Boolean;
 
     fun toFrozen(): skirout.editor.v1.resource_operations.DropCandidates;
@@ -4255,7 +4255,7 @@ sealed interface DropCandidates_OrMutable {
 @kotlin.Suppress("UNUSED_PARAMETER")
 class DropCandidates private constructor(
     override val operation: skirout.editor.v1.operation.ResourceOperationId,
-    override val destinations: kotlin.collections.List<skirout.editor.v1.type_catalog.ResourceId>,
+    override val destinations: kotlin.collections.List<skirout.kernel.v1.resource_id.ResourceId>,
     override val complete: kotlin.Boolean,
     internal val _unrecognizedFields: _UnrecognizedFields<skirout.editor.v1.resource_operations.DropCandidates>? =
         null,
@@ -4264,7 +4264,7 @@ class DropCandidates private constructor(
         _mustNameArguments: _MustNameArguments =
             _MustNameArguments,
         operation: skirout.editor.v1.operation.ResourceOperationId_OrMutable,
-        destinations: kotlin.collections.Iterable<skirout.editor.v1.type_catalog.ResourceId_OrMutable>,
+        destinations: kotlin.collections.Iterable<skirout.kernel.v1.resource_id.ResourceId_OrMutable>,
         complete: kotlin.Boolean,
         _unrecognizedFields: _UnrecognizedFields<skirout.editor.v1.resource_operations.DropCandidates>? =
             null,
@@ -4291,7 +4291,7 @@ class DropCandidates private constructor(
             _MustNameArguments,
         operation: skirout.editor.v1.operation.ResourceOperationId_OrMutable =
             this.operation,
-        destinations: kotlin.collections.Iterable<skirout.editor.v1.type_catalog.ResourceId_OrMutable> =
+        destinations: kotlin.collections.Iterable<skirout.kernel.v1.resource_id.ResourceId_OrMutable> =
             this.destinations,
         complete: kotlin.Boolean =
             this.complete,
@@ -4326,8 +4326,8 @@ class DropCandidates private constructor(
             _MustNameArguments,
         override var operation: skirout.editor.v1.operation.ResourceOperationId_OrMutable =
             skirout.editor.v1.operation.ResourceOperationId.partial(),
-        override var destinations: kotlin.collections.List<skirout.editor.v1.type_catalog.ResourceId_OrMutable> =
-            build.skir.internal.emptyFrozenList<skirout.editor.v1.type_catalog.ResourceId>(),
+        override var destinations: kotlin.collections.List<skirout.kernel.v1.resource_id.ResourceId_OrMutable> =
+            build.skir.internal.emptyFrozenList<skirout.kernel.v1.resource_id.ResourceId>(),
         override var complete: kotlin.Boolean =
             false,
         internal var _unrecognizedFields: _UnrecognizedFields<skirout.editor.v1.resource_operations.DropCandidates>? =
@@ -4361,7 +4361,7 @@ class DropCandidates private constructor(
          * If the value of [destinations] is already mutable, returns it as-is.
          * Otherwise, makes a mutable copy, assigns it back to [destinations] and returns it.
          */
-        val mutableDestinations: kotlin.collections.MutableList<skirout.editor.v1.type_catalog.ResourceId_OrMutable> get() {
+        val mutableDestinations: kotlin.collections.MutableList<skirout.kernel.v1.resource_id.ResourceId_OrMutable> get() {
             var value = this.destinations;
             return when (value) {
                 is build.skir.internal.MutableList -> value;
@@ -4378,7 +4378,7 @@ class DropCandidates private constructor(
         private val default =
             skirout.editor.v1.resource_operations.DropCandidates(
                 skirout.editor.v1.operation.ResourceOperationId.partial(),
-                build.skir.internal.emptyFrozenList<skirout.editor.v1.type_catalog.ResourceId>(),
+                build.skir.internal.emptyFrozenList<skirout.kernel.v1.resource_id.ResourceId>(),
                 false,
             );
 
@@ -4395,8 +4395,8 @@ class DropCandidates private constructor(
                 _MustNameArguments,
             operation: skirout.editor.v1.operation.ResourceOperationId_OrMutable =
                 skirout.editor.v1.operation.ResourceOperationId.partial(),
-            destinations: kotlin.collections.Iterable<skirout.editor.v1.type_catalog.ResourceId_OrMutable> =
-                build.skir.internal.emptyFrozenList<skirout.editor.v1.type_catalog.ResourceId>(),
+            destinations: kotlin.collections.Iterable<skirout.kernel.v1.resource_id.ResourceId_OrMutable> =
+                build.skir.internal.emptyFrozenList<skirout.kernel.v1.resource_id.ResourceId>(),
             complete: kotlin.Boolean =
                 false,
         ) = skirout.editor.v1.resource_operations.DropCandidates(
@@ -4835,7 +4835,7 @@ val ResolveResourceOperations: build.skir.service.Method<
 > by kotlin.lazy {
     build.skir.service.Method(
         "ResolveResourceOperations",
-        920015,
+        941601,
         skirout.editor.v1.resource_operations.ResolveResourceOperationsRequest.serializer,
         skirout.editor.v1.resource_operations.ResolveResourceOperationsResult.serializer,
         "",
@@ -4848,7 +4848,7 @@ val PrepareAuthoringAction: build.skir.service.Method<
 > by kotlin.lazy {
     build.skir.service.Method(
         "PrepareAuthoringAction",
-        920016,
+        941602,
         skirout.editor.v1.resource_operations.PrepareAuthoringActionRequest.serializer,
         skirout.editor.v1.resource_operations.AuthoringActionResult.serializer,
         "",
@@ -4861,7 +4861,7 @@ val ResolveDropCandidates: build.skir.service.Method<
 > by kotlin.lazy {
     build.skir.service.Method(
         "ResolveDropCandidates",
-        920017,
+        941603,
         skirout.editor.v1.resource_operations.ResolveDropCandidatesRequest.serializer,
         skirout.editor.v1.resource_operations.ResolveDropCandidatesResult.serializer,
         "",
@@ -5411,7 +5411,7 @@ private object _SerializerRegistry {
             "destinations",
             1,
             build.skir.Serializers.list(
-                skirout.editor.v1.type_catalog.ResourceId.serializer,
+                skirout.kernel.v1.resource_id.ResourceId.serializer,
             ),
             "",
             { it.destinations },
@@ -5480,7 +5480,7 @@ private object _SerializerRegistry {
             "targets",
             2,
             build.skir.Serializers.list(
-                skirout.editor.v1.type_catalog.ResourceId.serializer,
+                skirout.kernel.v1.resource_id.ResourceId.serializer,
             ),
             "",
             { it.targets },
@@ -5502,7 +5502,7 @@ private object _SerializerRegistry {
             "container",
             0,
             build.skir.Serializers.optional(
-                skirout.editor.v1.type_catalog.ResourceId.serializer,
+                skirout.kernel.v1.resource_id.ResourceId.serializer,
             ),
             "",
             { it.container },
@@ -5525,7 +5525,7 @@ private object _SerializerRegistry {
             "resource",
             "resource",
             0,
-            skirout.editor.v1.type_catalog.ResourceId.serializer,
+            skirout.kernel.v1.resource_id.ResourceId.serializer,
             "",
             { it.resource },
             { mut, v -> mut.resource = v },
@@ -5582,7 +5582,7 @@ private object _SerializerRegistry {
             "replace",
             skirout.editor.v1.resource_operations.OperationSelectionEffect.Kind.REPLACE_WRAPPER.ordinal,
             build.skir.Serializers.list(
-                skirout.editor.v1.type_catalog.ResourceId.serializer,
+                skirout.kernel.v1.resource_id.ResourceId.serializer,
             ),
             "",
             { skirout.editor.v1.resource_operations.OperationSelectionEffect.ReplaceWrapper(it) },
@@ -5626,7 +5626,7 @@ private object _SerializerRegistry {
             "removals",
             1,
             build.skir.Serializers.list(
-                skirout.editor.v1.type_catalog.ResourceId.serializer,
+                skirout.kernel.v1.resource_id.ResourceId.serializer,
             ),
             "",
             { it.removals },

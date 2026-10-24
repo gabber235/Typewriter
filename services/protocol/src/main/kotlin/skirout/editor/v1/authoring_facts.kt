@@ -22,8 +22,8 @@ import build.skir.internal.UnrecognizedVariant as _UnrecognizedVariant;
 
 sealed interface LinkProjection_OrMutable {
     val contract: skirout.editor.v1.type_catalog.RelationId_OrMutable;
-    val first: skirout.editor.v1.type_catalog.ResourceId_OrMutable;
-    val second: skirout.editor.v1.type_catalog.ResourceId_OrMutable;
+    val first: skirout.kernel.v1.resource_id.ResourceId_OrMutable;
+    val second: skirout.kernel.v1.resource_id.ResourceId_OrMutable;
     val firstLocation: skirout.editor.v1.type_catalog.ValuePath_OrMutable?;
     val secondLocation: skirout.editor.v1.type_catalog.ValuePath_OrMutable?;
 
@@ -39,8 +39,8 @@ sealed interface LinkProjection_OrMutable {
 @kotlin.Suppress("UNUSED_PARAMETER")
 class LinkProjection private constructor(
     override val contract: skirout.editor.v1.type_catalog.RelationId,
-    override val first: skirout.editor.v1.type_catalog.ResourceId,
-    override val second: skirout.editor.v1.type_catalog.ResourceId,
+    override val first: skirout.kernel.v1.resource_id.ResourceId,
+    override val second: skirout.kernel.v1.resource_id.ResourceId,
     override val firstLocation: skirout.editor.v1.type_catalog.ValuePath?,
     override val secondLocation: skirout.editor.v1.type_catalog.ValuePath?,
     internal val _unrecognizedFields: _UnrecognizedFields<skirout.editor.v1.authoring_facts.LinkProjection>? =
@@ -50,8 +50,8 @@ class LinkProjection private constructor(
         _mustNameArguments: _MustNameArguments =
             _MustNameArguments,
         contract: skirout.editor.v1.type_catalog.RelationId_OrMutable,
-        first: skirout.editor.v1.type_catalog.ResourceId_OrMutable,
-        second: skirout.editor.v1.type_catalog.ResourceId_OrMutable,
+        first: skirout.kernel.v1.resource_id.ResourceId_OrMutable,
+        second: skirout.kernel.v1.resource_id.ResourceId_OrMutable,
         firstLocation: skirout.editor.v1.type_catalog.ValuePath_OrMutable?,
         secondLocation: skirout.editor.v1.type_catalog.ValuePath_OrMutable?,
         _unrecognizedFields: _UnrecognizedFields<skirout.editor.v1.authoring_facts.LinkProjection>? =
@@ -83,9 +83,9 @@ class LinkProjection private constructor(
             _MustNameArguments,
         contract: skirout.editor.v1.type_catalog.RelationId_OrMutable =
             this.contract,
-        first: skirout.editor.v1.type_catalog.ResourceId_OrMutable =
+        first: skirout.kernel.v1.resource_id.ResourceId_OrMutable =
             this.first,
-        second: skirout.editor.v1.type_catalog.ResourceId_OrMutable =
+        second: skirout.kernel.v1.resource_id.ResourceId_OrMutable =
             this.second,
         firstLocation: skirout.editor.v1.type_catalog.ValuePath_OrMutable? =
             this.firstLocation,
@@ -124,10 +124,10 @@ class LinkProjection private constructor(
             _MustNameArguments,
         override var contract: skirout.editor.v1.type_catalog.RelationId_OrMutable =
             skirout.editor.v1.type_catalog.RelationId.partial(),
-        override var first: skirout.editor.v1.type_catalog.ResourceId_OrMutable =
-            skirout.editor.v1.type_catalog.ResourceId.partial(),
-        override var second: skirout.editor.v1.type_catalog.ResourceId_OrMutable =
-            skirout.editor.v1.type_catalog.ResourceId.partial(),
+        override var first: skirout.kernel.v1.resource_id.ResourceId_OrMutable =
+            skirout.kernel.v1.resource_id.ResourceId.partial(),
+        override var second: skirout.kernel.v1.resource_id.ResourceId_OrMutable =
+            skirout.kernel.v1.resource_id.ResourceId.partial(),
         override var firstLocation: skirout.editor.v1.type_catalog.ValuePath_OrMutable? =
             null,
         override var secondLocation: skirout.editor.v1.type_catalog.ValuePath_OrMutable? =
@@ -165,15 +165,15 @@ class LinkProjection private constructor(
          * If the value of [first] is already mutable, returns it as-is.
          * Otherwise, makes a mutable copy, assigns it back to [first] and returns it.
          */
-        val mutableFirst: skirout.editor.v1.type_catalog.ResourceId.Mutable get() {
+        val mutableFirst: skirout.kernel.v1.resource_id.ResourceId.Mutable get() {
             var value = this.first;
             return when (value) {
-                is skirout.editor.v1.type_catalog.ResourceId -> {
+                is skirout.kernel.v1.resource_id.ResourceId -> {
                     value = value.toMutable();
                     this.first = value;
                     return value;
                 }
-                is skirout.editor.v1.type_catalog.ResourceId.Mutable -> value;
+                is skirout.kernel.v1.resource_id.ResourceId.Mutable -> value;
             }
         }
 
@@ -181,15 +181,15 @@ class LinkProjection private constructor(
          * If the value of [second] is already mutable, returns it as-is.
          * Otherwise, makes a mutable copy, assigns it back to [second] and returns it.
          */
-        val mutableSecond: skirout.editor.v1.type_catalog.ResourceId.Mutable get() {
+        val mutableSecond: skirout.kernel.v1.resource_id.ResourceId.Mutable get() {
             var value = this.second;
             return when (value) {
-                is skirout.editor.v1.type_catalog.ResourceId -> {
+                is skirout.kernel.v1.resource_id.ResourceId -> {
                     value = value.toMutable();
                     this.second = value;
                     return value;
                 }
-                is skirout.editor.v1.type_catalog.ResourceId.Mutable -> value;
+                is skirout.kernel.v1.resource_id.ResourceId.Mutable -> value;
             }
         }
     }
@@ -198,8 +198,8 @@ class LinkProjection private constructor(
         private val default =
             skirout.editor.v1.authoring_facts.LinkProjection(
                 skirout.editor.v1.type_catalog.RelationId.partial(),
-                skirout.editor.v1.type_catalog.ResourceId.partial(),
-                skirout.editor.v1.type_catalog.ResourceId.partial(),
+                skirout.kernel.v1.resource_id.ResourceId.partial(),
+                skirout.kernel.v1.resource_id.ResourceId.partial(),
                 null,
                 null,
             );
@@ -217,10 +217,10 @@ class LinkProjection private constructor(
                 _MustNameArguments,
             contract: skirout.editor.v1.type_catalog.RelationId_OrMutable =
                 skirout.editor.v1.type_catalog.RelationId.partial(),
-            first: skirout.editor.v1.type_catalog.ResourceId_OrMutable =
-                skirout.editor.v1.type_catalog.ResourceId.partial(),
-            second: skirout.editor.v1.type_catalog.ResourceId_OrMutable =
-                skirout.editor.v1.type_catalog.ResourceId.partial(),
+            first: skirout.kernel.v1.resource_id.ResourceId_OrMutable =
+                skirout.kernel.v1.resource_id.ResourceId.partial(),
+            second: skirout.kernel.v1.resource_id.ResourceId_OrMutable =
+                skirout.kernel.v1.resource_id.ResourceId.partial(),
             firstLocation: skirout.editor.v1.type_catalog.ValuePath_OrMutable? =
                 null,
             secondLocation: skirout.editor.v1.type_catalog.ValuePath_OrMutable? =
@@ -435,10 +435,10 @@ sealed class EditExpectation private constructor() {
     }
 
     class ResourceIdsWrapper private constructor (
-        val value: kotlin.collections.List<skirout.editor.v1.type_catalog.ResourceId>,
+        val value: kotlin.collections.List<skirout.kernel.v1.resource_id.ResourceId>,
     ) : skirout.editor.v1.authoring_facts.EditExpectation() {
         constructor(
-            value: kotlin.collections.Iterable<skirout.editor.v1.type_catalog.ResourceId_OrMutable>,
+            value: kotlin.collections.Iterable<skirout.kernel.v1.resource_id.ResourceId_OrMutable>,
         ): this(build.skir.internal.toFrozenList(value, { it.toFrozen() })) {}
 
         override val kind get() = Kind.RESOURCE_IDS_WRAPPER;
@@ -507,7 +507,7 @@ sealed class EditExpectation private constructor() {
         fun createResource(
             _mustNameArguments: _MustNameArguments =
                 _MustNameArguments,
-            id: skirout.editor.v1.type_catalog.ResourceId_OrMutable,
+            id: skirout.kernel.v1.resource_id.ResourceId_OrMutable,
             expected: skirout.editor.v1.type_catalog.AuthoringRecord_OrMutable?,
         ) = ResourceWrapper(
             skirout.editor.v1.authoring_facts.EditExpectation.Resource(
@@ -521,7 +521,7 @@ sealed class EditExpectation private constructor() {
         fun createResourceExists(
             _mustNameArguments: _MustNameArguments =
                 _MustNameArguments,
-            id: skirout.editor.v1.type_catalog.ResourceId_OrMutable,
+            id: skirout.kernel.v1.resource_id.ResourceId_OrMutable,
             expected: kotlin.Boolean,
         ) = ResourceExistsWrapper(
             skirout.editor.v1.authoring_facts.EditExpectation.ResourceExists(
@@ -549,7 +549,7 @@ sealed class EditExpectation private constructor() {
         fun createLinks(
             _mustNameArguments: _MustNameArguments =
                 _MustNameArguments,
-            resource: skirout.editor.v1.type_catalog.ResourceId_OrMutable,
+            resource: skirout.kernel.v1.resource_id.ResourceId_OrMutable,
             contract: skirout.editor.v1.type_catalog.RelationId_OrMutable,
             direction: skirout.editor.v1.authoring_facts.TraversalDirection,
             expected: kotlin.collections.Iterable<skirout.editor.v1.authoring_facts.LinkProjection_OrMutable>,
@@ -710,7 +710,7 @@ sealed class EditExpectation private constructor() {
     }
 
     sealed interface Resource_OrMutable {
-        val id: skirout.editor.v1.type_catalog.ResourceId_OrMutable;
+        val id: skirout.kernel.v1.resource_id.ResourceId_OrMutable;
         val expected: skirout.editor.v1.type_catalog.AuthoringRecord_OrMutable?;
 
         fun toFrozen(): skirout.editor.v1.authoring_facts.EditExpectation.Resource;
@@ -719,7 +719,7 @@ sealed class EditExpectation private constructor() {
     /** Deeply immutable. */
     @kotlin.Suppress("UNUSED_PARAMETER")
     class Resource private constructor(
-        override val id: skirout.editor.v1.type_catalog.ResourceId,
+        override val id: skirout.kernel.v1.resource_id.ResourceId,
         override val expected: skirout.editor.v1.type_catalog.AuthoringRecord?,
         internal val _unrecognizedFields: _UnrecognizedFields<skirout.editor.v1.authoring_facts.EditExpectation.Resource>? =
             null,
@@ -727,7 +727,7 @@ sealed class EditExpectation private constructor() {
         constructor(
             _mustNameArguments: _MustNameArguments =
                 _MustNameArguments,
-            id: skirout.editor.v1.type_catalog.ResourceId_OrMutable,
+            id: skirout.kernel.v1.resource_id.ResourceId_OrMutable,
             expected: skirout.editor.v1.type_catalog.AuthoringRecord_OrMutable?,
             _unrecognizedFields: _UnrecognizedFields<skirout.editor.v1.authoring_facts.EditExpectation.Resource>? =
                 null,
@@ -750,7 +750,7 @@ sealed class EditExpectation private constructor() {
         fun copy(
             _mustNameArguments: _MustNameArguments =
                 _MustNameArguments,
-            id: skirout.editor.v1.type_catalog.ResourceId_OrMutable =
+            id: skirout.kernel.v1.resource_id.ResourceId_OrMutable =
                 this.id,
             expected: skirout.editor.v1.type_catalog.AuthoringRecord_OrMutable? =
                 this.expected,
@@ -782,8 +782,8 @@ sealed class EditExpectation private constructor() {
         class Mutable internal constructor(
             _mustNameArguments: _MustNameArguments =
                 _MustNameArguments,
-            override var id: skirout.editor.v1.type_catalog.ResourceId_OrMutable =
-                skirout.editor.v1.type_catalog.ResourceId.partial(),
+            override var id: skirout.kernel.v1.resource_id.ResourceId_OrMutable =
+                skirout.kernel.v1.resource_id.ResourceId.partial(),
             override var expected: skirout.editor.v1.type_catalog.AuthoringRecord_OrMutable? =
                 null,
             internal var _unrecognizedFields: _UnrecognizedFields<skirout.editor.v1.authoring_facts.EditExpectation.Resource>? =
@@ -800,15 +800,15 @@ sealed class EditExpectation private constructor() {
              * If the value of [id] is already mutable, returns it as-is.
              * Otherwise, makes a mutable copy, assigns it back to [id] and returns it.
              */
-            val mutableId: skirout.editor.v1.type_catalog.ResourceId.Mutable get() {
+            val mutableId: skirout.kernel.v1.resource_id.ResourceId.Mutable get() {
                 var value = this.id;
                 return when (value) {
-                    is skirout.editor.v1.type_catalog.ResourceId -> {
+                    is skirout.kernel.v1.resource_id.ResourceId -> {
                         value = value.toMutable();
                         this.id = value;
                         return value;
                     }
-                    is skirout.editor.v1.type_catalog.ResourceId.Mutable -> value;
+                    is skirout.kernel.v1.resource_id.ResourceId.Mutable -> value;
                 }
             }
         }
@@ -816,7 +816,7 @@ sealed class EditExpectation private constructor() {
         companion object {
             private val default =
                 skirout.editor.v1.authoring_facts.EditExpectation.Resource(
-                    skirout.editor.v1.type_catalog.ResourceId.partial(),
+                    skirout.kernel.v1.resource_id.ResourceId.partial(),
                     null,
                 );
 
@@ -831,8 +831,8 @@ sealed class EditExpectation private constructor() {
             fun partial(
                 _mustNameArguments: _MustNameArguments =
                     _MustNameArguments,
-                id: skirout.editor.v1.type_catalog.ResourceId_OrMutable =
-                    skirout.editor.v1.type_catalog.ResourceId.partial(),
+                id: skirout.kernel.v1.resource_id.ResourceId_OrMutable =
+                    skirout.kernel.v1.resource_id.ResourceId.partial(),
                 expected: skirout.editor.v1.type_catalog.AuthoringRecord_OrMutable? =
                     null,
             ) = skirout.editor.v1.authoring_facts.EditExpectation.Resource(
@@ -850,7 +850,7 @@ sealed class EditExpectation private constructor() {
     }
 
     sealed interface ResourceExists_OrMutable {
-        val id: skirout.editor.v1.type_catalog.ResourceId_OrMutable;
+        val id: skirout.kernel.v1.resource_id.ResourceId_OrMutable;
         val expected: kotlin.Boolean;
 
         fun toFrozen(): skirout.editor.v1.authoring_facts.EditExpectation.ResourceExists;
@@ -859,7 +859,7 @@ sealed class EditExpectation private constructor() {
     /** Deeply immutable. */
     @kotlin.Suppress("UNUSED_PARAMETER")
     class ResourceExists private constructor(
-        override val id: skirout.editor.v1.type_catalog.ResourceId,
+        override val id: skirout.kernel.v1.resource_id.ResourceId,
         override val expected: kotlin.Boolean,
         internal val _unrecognizedFields: _UnrecognizedFields<skirout.editor.v1.authoring_facts.EditExpectation.ResourceExists>? =
             null,
@@ -867,7 +867,7 @@ sealed class EditExpectation private constructor() {
         constructor(
             _mustNameArguments: _MustNameArguments =
                 _MustNameArguments,
-            id: skirout.editor.v1.type_catalog.ResourceId_OrMutable,
+            id: skirout.kernel.v1.resource_id.ResourceId_OrMutable,
             expected: kotlin.Boolean,
             _unrecognizedFields: _UnrecognizedFields<skirout.editor.v1.authoring_facts.EditExpectation.ResourceExists>? =
                 null,
@@ -890,7 +890,7 @@ sealed class EditExpectation private constructor() {
         fun copy(
             _mustNameArguments: _MustNameArguments =
                 _MustNameArguments,
-            id: skirout.editor.v1.type_catalog.ResourceId_OrMutable =
+            id: skirout.kernel.v1.resource_id.ResourceId_OrMutable =
                 this.id,
             expected: kotlin.Boolean =
                 this.expected,
@@ -922,8 +922,8 @@ sealed class EditExpectation private constructor() {
         class Mutable internal constructor(
             _mustNameArguments: _MustNameArguments =
                 _MustNameArguments,
-            override var id: skirout.editor.v1.type_catalog.ResourceId_OrMutable =
-                skirout.editor.v1.type_catalog.ResourceId.partial(),
+            override var id: skirout.kernel.v1.resource_id.ResourceId_OrMutable =
+                skirout.kernel.v1.resource_id.ResourceId.partial(),
             override var expected: kotlin.Boolean =
                 false,
             internal var _unrecognizedFields: _UnrecognizedFields<skirout.editor.v1.authoring_facts.EditExpectation.ResourceExists>? =
@@ -940,15 +940,15 @@ sealed class EditExpectation private constructor() {
              * If the value of [id] is already mutable, returns it as-is.
              * Otherwise, makes a mutable copy, assigns it back to [id] and returns it.
              */
-            val mutableId: skirout.editor.v1.type_catalog.ResourceId.Mutable get() {
+            val mutableId: skirout.kernel.v1.resource_id.ResourceId.Mutable get() {
                 var value = this.id;
                 return when (value) {
-                    is skirout.editor.v1.type_catalog.ResourceId -> {
+                    is skirout.kernel.v1.resource_id.ResourceId -> {
                         value = value.toMutable();
                         this.id = value;
                         return value;
                     }
-                    is skirout.editor.v1.type_catalog.ResourceId.Mutable -> value;
+                    is skirout.kernel.v1.resource_id.ResourceId.Mutable -> value;
                 }
             }
         }
@@ -956,7 +956,7 @@ sealed class EditExpectation private constructor() {
         companion object {
             private val default =
                 skirout.editor.v1.authoring_facts.EditExpectation.ResourceExists(
-                    skirout.editor.v1.type_catalog.ResourceId.partial(),
+                    skirout.kernel.v1.resource_id.ResourceId.partial(),
                     false,
                 );
 
@@ -971,8 +971,8 @@ sealed class EditExpectation private constructor() {
             fun partial(
                 _mustNameArguments: _MustNameArguments =
                     _MustNameArguments,
-                id: skirout.editor.v1.type_catalog.ResourceId_OrMutable =
-                    skirout.editor.v1.type_catalog.ResourceId.partial(),
+                id: skirout.kernel.v1.resource_id.ResourceId_OrMutable =
+                    skirout.kernel.v1.resource_id.ResourceId.partial(),
                 expected: kotlin.Boolean =
                     false,
             ) = skirout.editor.v1.authoring_facts.EditExpectation.ResourceExists(
@@ -1130,7 +1130,7 @@ sealed class EditExpectation private constructor() {
     }
 
     sealed interface Links_OrMutable {
-        val resource: skirout.editor.v1.type_catalog.ResourceId_OrMutable;
+        val resource: skirout.kernel.v1.resource_id.ResourceId_OrMutable;
         val contract: skirout.editor.v1.type_catalog.RelationId_OrMutable;
         val direction: skirout.editor.v1.authoring_facts.TraversalDirection;
         val expected: kotlin.collections.List<skirout.editor.v1.authoring_facts.LinkProjection_OrMutable>;
@@ -1141,7 +1141,7 @@ sealed class EditExpectation private constructor() {
     /** Deeply immutable. */
     @kotlin.Suppress("UNUSED_PARAMETER")
     class Links private constructor(
-        override val resource: skirout.editor.v1.type_catalog.ResourceId,
+        override val resource: skirout.kernel.v1.resource_id.ResourceId,
         override val contract: skirout.editor.v1.type_catalog.RelationId,
         override val direction: skirout.editor.v1.authoring_facts.TraversalDirection,
         override val expected: kotlin.collections.List<skirout.editor.v1.authoring_facts.LinkProjection>,
@@ -1151,7 +1151,7 @@ sealed class EditExpectation private constructor() {
         constructor(
             _mustNameArguments: _MustNameArguments =
                 _MustNameArguments,
-            resource: skirout.editor.v1.type_catalog.ResourceId_OrMutable,
+            resource: skirout.kernel.v1.resource_id.ResourceId_OrMutable,
             contract: skirout.editor.v1.type_catalog.RelationId_OrMutable,
             direction: skirout.editor.v1.authoring_facts.TraversalDirection,
             expected: kotlin.collections.Iterable<skirout.editor.v1.authoring_facts.LinkProjection_OrMutable>,
@@ -1180,7 +1180,7 @@ sealed class EditExpectation private constructor() {
         fun copy(
             _mustNameArguments: _MustNameArguments =
                 _MustNameArguments,
-            resource: skirout.editor.v1.type_catalog.ResourceId_OrMutable =
+            resource: skirout.kernel.v1.resource_id.ResourceId_OrMutable =
                 this.resource,
             contract: skirout.editor.v1.type_catalog.RelationId_OrMutable =
                 this.contract,
@@ -1218,8 +1218,8 @@ sealed class EditExpectation private constructor() {
         class Mutable internal constructor(
             _mustNameArguments: _MustNameArguments =
                 _MustNameArguments,
-            override var resource: skirout.editor.v1.type_catalog.ResourceId_OrMutable =
-                skirout.editor.v1.type_catalog.ResourceId.partial(),
+            override var resource: skirout.kernel.v1.resource_id.ResourceId_OrMutable =
+                skirout.kernel.v1.resource_id.ResourceId.partial(),
             override var contract: skirout.editor.v1.type_catalog.RelationId_OrMutable =
                 skirout.editor.v1.type_catalog.RelationId.partial(),
             override var direction: skirout.editor.v1.authoring_facts.TraversalDirection =
@@ -1242,15 +1242,15 @@ sealed class EditExpectation private constructor() {
              * If the value of [resource] is already mutable, returns it as-is.
              * Otherwise, makes a mutable copy, assigns it back to [resource] and returns it.
              */
-            val mutableResource: skirout.editor.v1.type_catalog.ResourceId.Mutable get() {
+            val mutableResource: skirout.kernel.v1.resource_id.ResourceId.Mutable get() {
                 var value = this.resource;
                 return when (value) {
-                    is skirout.editor.v1.type_catalog.ResourceId -> {
+                    is skirout.kernel.v1.resource_id.ResourceId -> {
                         value = value.toMutable();
                         this.resource = value;
                         return value;
                     }
-                    is skirout.editor.v1.type_catalog.ResourceId.Mutable -> value;
+                    is skirout.kernel.v1.resource_id.ResourceId.Mutable -> value;
                 }
             }
 
@@ -1290,7 +1290,7 @@ sealed class EditExpectation private constructor() {
         companion object {
             private val default =
                 skirout.editor.v1.authoring_facts.EditExpectation.Links(
-                    skirout.editor.v1.type_catalog.ResourceId.partial(),
+                    skirout.kernel.v1.resource_id.ResourceId.partial(),
                     skirout.editor.v1.type_catalog.RelationId.partial(),
                     skirout.editor.v1.authoring_facts.TraversalDirection.UNKNOWN,
                     build.skir.internal.emptyFrozenList<skirout.editor.v1.authoring_facts.LinkProjection>(),
@@ -1307,8 +1307,8 @@ sealed class EditExpectation private constructor() {
             fun partial(
                 _mustNameArguments: _MustNameArguments =
                     _MustNameArguments,
-                resource: skirout.editor.v1.type_catalog.ResourceId_OrMutable =
-                    skirout.editor.v1.type_catalog.ResourceId.partial(),
+                resource: skirout.kernel.v1.resource_id.ResourceId_OrMutable =
+                    skirout.kernel.v1.resource_id.ResourceId.partial(),
                 contract: skirout.editor.v1.type_catalog.RelationId_OrMutable =
                     skirout.editor.v1.type_catalog.RelationId.partial(),
                 direction: skirout.editor.v1.authoring_facts.TraversalDirection =
@@ -1613,7 +1613,7 @@ private object _SerializerRegistry {
             "resource_ids",
             skirout.editor.v1.authoring_facts.EditExpectation.Kind.RESOURCE_IDS_WRAPPER.ordinal,
             build.skir.Serializers.list(
-                skirout.editor.v1.type_catalog.ResourceId.serializer,
+                skirout.kernel.v1.resource_id.ResourceId.serializer,
             ),
             "",
             { skirout.editor.v1.authoring_facts.EditExpectation.ResourceIdsWrapper(it) },
@@ -1656,7 +1656,7 @@ private object _SerializerRegistry {
             "resource",
             "resource",
             0,
-            skirout.editor.v1.type_catalog.ResourceId.serializer,
+            skirout.kernel.v1.resource_id.ResourceId.serializer,
             "",
             { it.resource },
             { mut, v -> mut.resource = v },
@@ -1696,7 +1696,7 @@ private object _SerializerRegistry {
             "id",
             "id",
             0,
-            skirout.editor.v1.type_catalog.ResourceId.serializer,
+            skirout.kernel.v1.resource_id.ResourceId.serializer,
             "",
             { it.id },
             { mut, v -> mut.id = v },
@@ -1718,7 +1718,7 @@ private object _SerializerRegistry {
             "id",
             "id",
             0,
-            skirout.editor.v1.type_catalog.ResourceId.serializer,
+            skirout.kernel.v1.resource_id.ResourceId.serializer,
             "",
             { it.id },
             { mut, v -> mut.id = v },
@@ -1789,7 +1789,7 @@ private object _SerializerRegistry {
             "first",
             "first",
             1,
-            skirout.editor.v1.type_catalog.ResourceId.serializer,
+            skirout.kernel.v1.resource_id.ResourceId.serializer,
             "",
             { it.first },
             { mut, v -> mut.first = v },
@@ -1798,7 +1798,7 @@ private object _SerializerRegistry {
             "second",
             "second",
             2,
-            skirout.editor.v1.type_catalog.ResourceId.serializer,
+            skirout.kernel.v1.resource_id.ResourceId.serializer,
             "",
             { it.second },
             { mut, v -> mut.second = v },

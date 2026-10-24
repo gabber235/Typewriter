@@ -1,9 +1,7 @@
 package com.typewritermc.realm.authoring
 
 import com.typewritermc.authoring.ReadContext
-import com.typewritermc.authoring.RealmRootDefinition
 import com.typewritermc.authoring.RelationSelection
-import com.typewritermc.authoring.ResourceDisplayCatalog
 import com.typewritermc.authoring.field
 import com.typewritermc.authoring.item
 import com.typewritermc.authoring.mapKey
@@ -12,18 +10,11 @@ import com.typewritermc.authoring.of
 import com.typewritermc.authoring.payload
 import com.typewritermc.authoring.root
 import com.typewritermc.checking.InputIdentity
-import com.typewritermc.discovery.OwnedCheckRecipe
-import com.typewritermc.discovery.OwnedProviderRegistry
-import com.typewritermc.operations.OperationCatalog
-import com.typewritermc.realm.repository.CapturedAuthoringValues
-import com.typewritermc.realm.repository.ResourceValueMapper
-import com.typewritermc.types.NativeBindingRegistry
-import com.typewritermc.types.catalog.CheckedCatalog
+import com.typewritermc.realm.catalog.AuthoringCatalogLease
 import com.typewritermc.types.field
 import com.typewritermc.types.fields
 import com.typewritermc.types.immutableMapCopy
 import com.typewritermc.types.items
-import com.typewritermc.types.ownsResources
 import com.typewritermc.types.payload
 import com.typewritermc.types.record
 import com.typewritermc.types.rows
@@ -32,58 +23,15 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import skirout.editor.v1.authoring.LinkOccurrence
 import skirout.editor.v1.authoring.LinkOccurrenceId
-import skirout.editor.v1.catalog.ConfigurationRecipe
-import skirout.editor.v1.catalog.EndpointBindingTemplate
-import skirout.editor.v1.catalog.RelationContract
 import skirout.editor.v1.type_catalog.AuthoringRecord
-import skirout.editor.v1.type_catalog.CatalogGeneration
 import skirout.editor.v1.type_catalog.DataValue
-import skirout.editor.v1.type_catalog.RelationId
-import skirout.editor.v1.type_catalog.ResourceId
 import skirout.editor.v1.type_catalog.SelectionId
-import skirout.editor.v1.type_catalog.TypeDefinitionId
 import skirout.editor.v1.type_catalog.ValueLocation
-import skirout.editor.v1.type_catalog.ValuePath
+import skirout.kernel.v1.resource_id.ResourceId
 import java.util.IdentityHashMap
 import java.util.UUID
 import java.util.concurrent.ConcurrentHashMap
 import java.util.concurrent.atomic.AtomicBoolean
-
-/**
- * Retains every executable catalog service used by one immutable authoring view.
- *
- * The catalog owner supplies a lease that can be retained independently. Closing a view releases only the
- * retain acquired for that view. Provider callbacks therefore cannot unload while a retained view is
- * still evaluating.
- */
-interface AuthoringCatalogLease : AutoCloseable {
-    val generation: CatalogGeneration
-    val checked: CheckedCatalog
-    val nativeBindings: NativeBindingRegistry
-    val providers: OwnedProviderRegistry
-    val checks: List<OwnedCheckRecipe>
-    val relations: List<RelationContract>
-    val endpointBindings: List<EndpointBindingTemplate>
-    val configuration: List<ConfigurationRecipe>
-    val operations: OperationCatalog
-
-    /** The realm root type of this catalog, whose single instance owns every realm section. */
-    val realmRoot: TypeDefinitionId
-        get() = RealmRootDefinition.id
-
-    /** The published placement field of each declared type that has one; other types are absent. */
-    val placementFields: Map<TypeDefinitionId, ValuePath>
-
-    /** The resource displays that name resources; a catalog without declared displays names none. */
-    val displays: ResourceDisplayCatalog
-        get() = ResourceDisplayCatalog()
-
-    fun retain(): AuthoringCatalogLease
-}
-
-/** Identifies the relations of this catalog that belong to the resource ownership family. */
-val AuthoringCatalogLease.ownershipRelationIds: Set<RelationId>
-    get() = relations.filter { it.ownsResources }.mapTo(hashSetOf(), RelationContract::id)
 
 /**
  * Captures saved resources and their catalog as the baseline for one authoring observation.

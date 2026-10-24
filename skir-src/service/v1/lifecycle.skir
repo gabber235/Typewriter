@@ -1,9 +1,9 @@
 // Sent by a service registrar while its authenticated messaging runtime is ready.
 // The registration service records the service as online and refreshes last_seen. It emits an organization
 // service update only when the service is organization bound. This is liveness, not identity or binding proof.
-struct ServiceHeartbeatNotification {}
+struct ServiceHeartbeatNotification(83030001) {}
 
 // Sent during orderly registrar shutdown before its messaging runtime is closed.
 // The registration service records the service as offline. Missing shutdown is therefore distinguishable from
 // an explicit offline transition, and consumers can use last_seen to assess stale liveness.
-struct ServiceShutdownNotification {}
+struct ServiceShutdownNotification(83030002) {}

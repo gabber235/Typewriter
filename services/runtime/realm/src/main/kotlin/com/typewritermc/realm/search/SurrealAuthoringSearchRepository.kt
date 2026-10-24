@@ -4,12 +4,12 @@ import com.surrealdb.Surreal
 import com.typewritermc.authoring.definition
 import com.typewritermc.authoring.use
 import com.typewritermc.realm.authoring.AuthoringView
-import com.typewritermc.realm.authoring.ownershipRelationIds
-import com.typewritermc.realm.repository.ResourceValueMapper
-import com.typewritermc.realm.repository.utils.decodeSkir
-import com.typewritermc.realm.repository.utils.inPreviewTransaction
-import com.typewritermc.realm.repository.utils.surrealRecordId
-import com.typewritermc.realm.repository.utils.toResourceId
+import com.typewritermc.realm.authoring.ResourceValueMapper
+import com.typewritermc.realm.catalog.ownershipRelationIds
+import com.typewritermc.realm.storage.decodeSkir
+import com.typewritermc.realm.storage.inPreviewTransaction
+import com.typewritermc.realm.storage.surrealRecordId
+import com.typewritermc.realm.storage.toResourceId
 import com.typewritermc.types.catalog.CheckedCatalog
 import com.typewritermc.types.requireValid
 import com.typewritermc.types.unknownVariant
@@ -17,9 +17,9 @@ import com.typewritermc.types.use
 import skirout.editor.v1.type_catalog.AuthoringRecord
 import skirout.editor.v1.type_catalog.NamedTypeUse
 import skirout.editor.v1.type_catalog.RelationId
-import skirout.editor.v1.type_catalog.ResourceId
 import skirout.editor.v1.type_catalog.TypeDefinitionId
 import skirout.editor.v1.type_catalog.TypeSelection
+import skirout.kernel.v1.resource_id.ResourceId
 
 internal data class IndexedAuthoringSearchCandidate(
     val resource: ResourceId,

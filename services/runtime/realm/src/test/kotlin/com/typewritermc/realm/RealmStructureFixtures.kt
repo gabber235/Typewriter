@@ -29,7 +29,7 @@ import com.typewritermc.library.Taxonomy
 import com.typewritermc.library.TaxonomyDefinition
 import com.typewritermc.presentation.DefaultPresentationRuntime
 import com.typewritermc.presentation.PresentationRuntime
-import com.typewritermc.realm.authoring.AuthoringCatalogLease
+import com.typewritermc.realm.catalog.AuthoringCatalogLease
 import com.typewritermc.realm.catalog.RealmCatalogIncarnation
 import com.typewritermc.types.NativeBinding
 import com.typewritermc.types.Ref
@@ -48,10 +48,10 @@ import skirout.editor.v1.type_catalog.DataValue
 import skirout.editor.v1.type_catalog.ItemId
 import skirout.editor.v1.type_catalog.LinkTarget
 import skirout.editor.v1.type_catalog.PathSegment
-import skirout.editor.v1.type_catalog.ResourceId
 import skirout.editor.v1.type_catalog.TypeDefinitionId
 import skirout.editor.v1.type_catalog.TypeSelection
 import skirout.editor.v1.type_catalog.ValuePath
+import skirout.kernel.v1.resource_id.ResourceId
 import java.nio.file.Path
 
 /** Resource ids of the realm root and the core sections in test resource graphs. */

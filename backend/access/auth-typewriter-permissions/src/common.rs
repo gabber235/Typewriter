@@ -6,9 +6,11 @@
 //! authorization facts.
 
 use serde::{Deserialize, Serialize};
-use wasmcloud_utils::skir::base::access::v1::permission::{
-    Permission, Permissions, ResponsePermission,
+use wasmcloud_utils::skir::base::{
+    access::v1::permission::{Permission, Permissions, ResponsePermission},
+    kernel::v1::duration::Duration,
 };
+use wasmcloud_utils::transport_routes::REPLY_TTL_MS;
 
 #[derive(Debug, Serialize, Deserialize, Clone)]
 /// Optional identity provider data used to enrich a durable Typewriter user record.
@@ -100,6 +102,26 @@ pub fn build_permissions(
             _unrecognized: None,
         },
         response,
+        _unrecognized: None,
+    }
+}
+
+/// Lets a connection answer each request it receives within [`REPLY_TTL_MS`] with up to
+/// `max_messages` messages.
+///
+/// A service sends every frame of its largest reply to the requester's inbox and grants credits
+/// to framed requests and replies ([`SERVICE_RESPONSE_LIMIT`]); callers map an absent generated
+/// limit to no response permission. Panel connections never get one: see
+/// [`crate::users::panel_permissions`].
+///
+/// [`SERVICE_RESPONSE_LIMIT`]: wasmcloud_utils::transport_routes::SERVICE_RESPONSE_LIMIT
+pub(crate) fn response_permission(max_messages: u32) -> ResponsePermission {
+    ResponsePermission {
+        max_messages: Some(max_messages as i32),
+        ttl: Some(Duration {
+            milliseconds: REPLY_TTL_MS,
+            _unrecognized: None,
+        }),
         _unrecognized: None,
     }
 }

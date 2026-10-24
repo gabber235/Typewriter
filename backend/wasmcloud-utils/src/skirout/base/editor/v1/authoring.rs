@@ -19,7 +19,7 @@
 
 #[derive(Clone, Debug, PartialEq, Default)]
 pub struct AuthoringResource {
-    pub id: crate::skirout::base::editor::v1::type_catalog::ResourceId,
+    pub id: crate::skirout::base::kernel::v1::resource_id::ResourceId,
     pub content: crate::skirout::base::editor::v1::type_catalog::AuthoringRecord,
     /// Set this to None when you're creating a struct.
     pub _unrecognized: Option<crate::skir_client::UnrecognizedFields<AuthoringResource>>,
@@ -103,7 +103,7 @@ impl LinkOccurrenceId {
 #[derive(Clone, Debug, PartialEq, Default)]
 pub struct LinkOccurrence {
     pub id: LinkOccurrenceId,
-    pub source: crate::skirout::base::editor::v1::type_catalog::ResourceId,
+    pub source: crate::skirout::base::kernel::v1::resource_id::ResourceId,
     pub target: crate::skirout::base::editor::v1::type_catalog::LinkTarget,
     /// Set this to None when you're creating a struct.
     pub _unrecognized: Option<crate::skir_client::UnrecognizedFields<LinkOccurrence>>,
@@ -191,7 +191,7 @@ impl RelationProjectionDelta {
 /// Catalog choices use CatalogPresentationSubject instead because they have no resource instance.
 #[derive(Clone, Debug, PartialEq, Default)]
 pub struct PresentationSubject {
-    pub resource: crate::skirout::base::editor::v1::type_catalog::ResourceId,
+    pub resource: crate::skirout::base::kernel::v1::resource_id::ResourceId,
     pub content: crate::skirout::base::editor::v1::type_catalog::AuthoringRecord,
     /// Set this to None when you're creating a struct.
     pub _unrecognized: Option<crate::skir_client::UnrecognizedFields<PresentationSubject>>,
@@ -234,7 +234,7 @@ impl PresentationSubject {
 pub struct AuthoringDiagnostic {
     pub code: String,
     pub message: String,
-    pub resource: Option<crate::skirout::base::editor::v1::type_catalog::ResourceId>,
+    pub resource: Option<crate::skirout::base::kernel::v1::resource_id::ResourceId>,
     pub path: Option<crate::skirout::base::editor::v1::type_catalog::ValuePath>,
     /// Set this to None when you're creating a struct.
     pub _unrecognized: Option<crate::skir_client::UnrecognizedFields<AuthoringDiagnostic>>,
@@ -567,7 +567,7 @@ impl MoveIntent {
 
 #[derive(Clone, Debug, PartialEq, Default)]
 pub struct CreateResourceIntent {
-    pub id: crate::skirout::base::editor::v1::type_catalog::ResourceId,
+    pub id: crate::skirout::base::kernel::v1::resource_id::ResourceId,
     pub record: crate::skirout::base::editor::v1::type_catalog::AuthoringRecord,
     /// Set this to None when you're creating a struct.
     pub _unrecognized: Option<crate::skir_client::UnrecognizedFields<CreateResourceIntent>>,
@@ -608,7 +608,7 @@ impl CreateResourceIntent {
 
 #[derive(Clone, Debug, PartialEq, Default)]
 pub struct DeleteResourceIntent {
-    pub id: crate::skirout::base::editor::v1::type_catalog::ResourceId,
+    pub id: crate::skirout::base::kernel::v1::resource_id::ResourceId,
     /// Set this to None when you're creating a struct.
     pub _unrecognized: Option<crate::skir_client::UnrecognizedFields<DeleteResourceIntent>>,
 }
@@ -736,7 +736,7 @@ impl CounterpartChoice {
 #[derive(Clone, Debug, PartialEq, Default)]
 pub struct ConnectIntent {
     pub source: LinkOccurrence,
-    pub target: crate::skirout::base::editor::v1::type_catalog::ResourceId,
+    pub target: crate::skirout::base::kernel::v1::resource_id::ResourceId,
     pub counterpart: Option<CounterpartChoice>,
     /// Set this to None when you're creating a struct.
     pub _unrecognized: Option<crate::skir_client::UnrecognizedFields<ConnectIntent>>,
@@ -817,7 +817,7 @@ impl RetagIntent {
 
 #[derive(Clone, Debug, PartialEq, Default)]
 pub struct ResourceConfigurationIntent {
-    pub resource: crate::skirout::base::editor::v1::type_catalog::ResourceId,
+    pub resource: crate::skirout::base::kernel::v1::resource_id::ResourceId,
     pub configuration: crate::skirout::base::editor::v1::type_catalog::TypeSelection,
     /// Set this to None when you're creating a struct.
     pub _unrecognized: Option<crate::skir_client::UnrecognizedFields<ResourceConfigurationIntent>>,
@@ -1142,7 +1142,7 @@ impl LinkRepairIntent {
 /// Preparation rechecks expectations and regenerates repairs before yielding a committable edit.
 #[derive(Clone, Debug, PartialEq, Default)]
 pub struct TypeArgumentChangePreview {
-    pub resource: crate::skirout::base::editor::v1::type_catalog::ResourceId,
+    pub resource: crate::skirout::base::kernel::v1::resource_id::ResourceId,
     pub next: crate::skirout::base::editor::v1::type_catalog::TypeSelection,
     pub edit: PreparedEdit,
     pub link_repairs: Vec<LinkRepairIntent>,
@@ -1229,7 +1229,7 @@ impl ArgumentLocation {
 
 #[derive(Clone, Debug, PartialEq, Default)]
 pub struct AuthoringSearchHit {
-    pub resource: crate::skirout::base::editor::v1::type_catalog::ResourceId,
+    pub resource: crate::skirout::base::kernel::v1::resource_id::ResourceId,
     pub subject: PresentationSubject,
     pub context: crate::skirout::base::editor::v1::typed_value::PortableValue,
     /// Set this to None when you're creating a struct.
@@ -1457,7 +1457,7 @@ pub struct SearchAuthoringRequest {
     pub generation: crate::skirout::base::editor::v1::type_catalog::CatalogGeneration,
     pub query: String,
     pub roots: Vec<crate::skirout::base::editor::v1::type_catalog::TypeDefinitionId>,
-    pub contexts: Vec<crate::skirout::base::editor::v1::type_catalog::ResourceId>,
+    pub contexts: Vec<crate::skirout::base::kernel::v1::resource_id::ResourceId>,
     pub target: Option<crate::skirout::base::editor::v1::type_catalog::NamedTypeUse>,
     /// Set this to None when you're creating a struct.
     pub _unrecognized: Option<crate::skir_client::UnrecognizedFields<SearchAuthoringRequest>>,
@@ -1607,7 +1607,7 @@ impl CommitPreparedEditResponse {
 
 #[derive(Clone, Debug, PartialEq, Default)]
 pub struct PreviewTypeArgumentChangeRequest {
-    pub resource: crate::skirout::base::editor::v1::type_catalog::ResourceId,
+    pub resource: crate::skirout::base::kernel::v1::resource_id::ResourceId,
     pub requested: crate::skirout::base::editor::v1::type_catalog::TypeSelection,
     pub catalog: crate::skirout::base::editor::v1::type_catalog::CatalogGeneration,
     /// Set this to None when you're creating a struct.
@@ -1767,7 +1767,7 @@ fn initialize_module_serializers() {
             (*a).add_field(
                 "id",
                 0,
-                crate::skirout::base::editor::v1::type_catalog::ResourceId::serializer(),
+                crate::skirout::base::kernel::v1::resource_id::ResourceId::serializer(),
                 "",
                 |x: &AuthoringResource| &x.id,
                 |x: &mut AuthoringResource, v| x.id = v,
@@ -1819,7 +1819,7 @@ fn initialize_module_serializers() {
             (*a).add_field(
                 "source",
                 1,
-                crate::skirout::base::editor::v1::type_catalog::ResourceId::serializer(),
+                crate::skirout::base::kernel::v1::resource_id::ResourceId::serializer(),
                 "",
                 |x: &LinkOccurrence| &x.source,
                 |x: &mut LinkOccurrence, v| x.source = v,
@@ -1875,7 +1875,7 @@ fn initialize_module_serializers() {
             (*a).add_field(
                 "resource",
                 0,
-                crate::skirout::base::editor::v1::type_catalog::ResourceId::serializer(),
+                crate::skirout::base::kernel::v1::resource_id::ResourceId::serializer(),
                 "",
                 |x: &PresentationSubject| &x.resource,
                 |x: &mut PresentationSubject, v| x.resource = v,
@@ -1913,7 +1913,7 @@ fn initialize_module_serializers() {
                 "resource",
                 2,
                 crate::skir_client::Serializer::optional(
-                    crate::skirout::base::editor::v1::type_catalog::ResourceId::serializer(),
+                    crate::skirout::base::kernel::v1::resource_id::ResourceId::serializer(),
                 ),
                 "",
                 |x: &AuthoringDiagnostic| &x.resource,
@@ -2126,7 +2126,7 @@ fn initialize_module_serializers() {
             (*a).add_field(
                 "id",
                 0,
-                crate::skirout::base::editor::v1::type_catalog::ResourceId::serializer(),
+                crate::skirout::base::kernel::v1::resource_id::ResourceId::serializer(),
                 "",
                 |x: &CreateResourceIntent| &x.id,
                 |x: &mut CreateResourceIntent, v| x.id = v,
@@ -2147,7 +2147,7 @@ fn initialize_module_serializers() {
             (*a).add_field(
                 "id",
                 0,
-                crate::skirout::base::editor::v1::type_catalog::ResourceId::serializer(),
+                crate::skirout::base::kernel::v1::resource_id::ResourceId::serializer(),
                 "",
                 |x: &DeleteResourceIntent| &x.id,
                 |x: &mut DeleteResourceIntent, v| x.id = v,
@@ -2224,7 +2224,7 @@ fn initialize_module_serializers() {
             (*a).add_field(
                 "target",
                 1,
-                crate::skirout::base::editor::v1::type_catalog::ResourceId::serializer(),
+                crate::skirout::base::kernel::v1::resource_id::ResourceId::serializer(),
                 "",
                 |x: &ConnectIntent| &x.target,
                 |x: &mut ConnectIntent, v| x.target = v,
@@ -2270,7 +2270,7 @@ fn initialize_module_serializers() {
             (*a).add_field(
                 "resource",
                 0,
-                crate::skirout::base::editor::v1::type_catalog::ResourceId::serializer(),
+                crate::skirout::base::kernel::v1::resource_id::ResourceId::serializer(),
                 "",
                 |x: &ResourceConfigurationIntent| &x.resource,
                 |x: &mut ResourceConfigurationIntent, v| x.resource = v,
@@ -2537,7 +2537,7 @@ fn initialize_module_serializers() {
             (*a).add_field(
                 "resource",
                 0,
-                crate::skirout::base::editor::v1::type_catalog::ResourceId::serializer(),
+                crate::skirout::base::kernel::v1::resource_id::ResourceId::serializer(),
                 "",
                 |x: &TypeArgumentChangePreview| &x.resource,
                 |x: &mut TypeArgumentChangePreview, v| x.resource = v,
@@ -2603,7 +2603,7 @@ fn initialize_module_serializers() {
             (*a).add_field(
                 "resource",
                 0,
-                crate::skirout::base::editor::v1::type_catalog::ResourceId::serializer(),
+                crate::skirout::base::kernel::v1::resource_id::ResourceId::serializer(),
                 "",
                 |x: &AuthoringSearchHit| &x.resource,
                 |x: &mut AuthoringSearchHit, v| x.resource = v,
@@ -2767,7 +2767,7 @@ fn initialize_module_serializers() {
                 "contexts",
                 3,
                 crate::skir_client::Serializer::array(
-                    crate::skirout::base::editor::v1::type_catalog::ResourceId::serializer(),
+                    crate::skirout::base::kernel::v1::resource_id::ResourceId::serializer(),
                 ),
                 "",
                 |x: &SearchAuthoringRequest| &x.contexts,
@@ -2896,7 +2896,7 @@ fn initialize_module_serializers() {
             (*a).add_field(
                 "resource",
                 0,
-                crate::skirout::base::editor::v1::type_catalog::ResourceId::serializer(),
+                crate::skirout::base::kernel::v1::resource_id::ResourceId::serializer(),
                 "",
                 |x: &PreviewTypeArgumentChangeRequest| &x.resource,
                 |x: &mut PreviewTypeArgumentChangeRequest, v| x.resource = v,
@@ -3071,7 +3071,7 @@ pub fn query_authoring_state_method()
         crate::skir_client::Method<QueryAuthoringStateRequest, QueryAuthoringStateResponse>,
     > = std::sync::LazyLock::new(|| crate::skir_client::Method {
         name: "QueryAuthoringState".to_string(),
-        number: 920010_i64,
+        number: 940201_i64,
         request_serializer: QueryAuthoringStateRequest::serializer(),
         response_serializer: QueryAuthoringStateResponse::serializer(),
         doc: "Returns the retained saved snapshot for one catalog generation.".to_string(),
@@ -3085,7 +3085,7 @@ pub fn search_authoring_method()
         crate::skir_client::Method<SearchAuthoringRequest, SearchAuthoringResponse>,
     > = std::sync::LazyLock::new(|| crate::skir_client::Method {
         name: "SearchAuthoring".to_string(),
-        number: 920011_i64,
+        number: 940202_i64,
         request_serializer: SearchAuthoringRequest::serializer(),
         response_serializer: SearchAuthoringResponse::serializer(),
         doc: "".to_string(),
@@ -3104,7 +3104,7 @@ pub fn commit_prepared_edit_method()
     > = std::sync::LazyLock::new(|| {
         crate::skir_client::Method {
             name: "CommitPreparedEdit".to_string(),
-            number: 920012_i64,
+            number: 940203_i64,
             request_serializer: PreparedEdit::serializer(),
             response_serializer: CommitPreparedEditResponse::serializer(),
             doc: "committed confirms installation of saved authoring state. It does not confirm check completion,\ncompilation, publication selection, or engine application. conflict_error requires refreshing\noriginal facts; rejected_error reports invalid intent or missing guards; catalog_changed_error\nrequires a new catalog.".to_string(),
@@ -3124,7 +3124,7 @@ pub fn preview_type_argument_change_method() -> &'static crate::skir_client::Met
         >,
     > = std::sync::LazyLock::new(|| crate::skir_client::Method {
         name: "PreviewTypeArgumentChange".to_string(),
-        number: 920013_i64,
+        number: 940204_i64,
         request_serializer: PreviewTypeArgumentChangeRequest::serializer(),
         response_serializer: PreviewTypeArgumentChangeResponse::serializer(),
         doc: "".to_string(),
@@ -3141,7 +3141,7 @@ pub fn prepare_type_argument_change_method()
     > = std::sync::LazyLock::new(|| {
         crate::skir_client::Method {
             name: "PrepareTypeArgumentChange".to_string(),
-            number: 920014_i64,
+            number: 940205_i64,
             request_serializer: TypeArgumentChangePreview::serializer(),
             response_serializer: PrepareTypeArgumentChangeResponse::serializer(),
             doc: "Revalidates a preview and returns proposed intent. CommitPreparedEdit performs the separate saved write.".to_string(),

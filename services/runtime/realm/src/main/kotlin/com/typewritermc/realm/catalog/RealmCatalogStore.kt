@@ -9,7 +9,6 @@ import com.typewritermc.discovery.OwnedProviderRegistry
 import com.typewritermc.discovery.RetainedOwnedProviderRegistry
 import com.typewritermc.operations.OperationCatalog
 import com.typewritermc.presentation.CollectionProjectionSpec
-import com.typewritermc.realm.authoring.AuthoringCatalogLease
 import com.typewritermc.services.libs.utils.closeAll
 import com.typewritermc.types.NativeBindingRegistry
 import com.typewritermc.types.catalog.CheckedCatalog
@@ -18,7 +17,6 @@ import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.SharedFlow
 import skirout.editor.v1.catalog.ConfigurationRecipe
 import skirout.editor.v1.catalog.EditorCatalog
-import skirout.editor.v1.catalog.EndpointBindingTemplate
 import skirout.editor.v1.catalog.RelationContract
 import skirout.editor.v1.type_catalog.CatalogGeneration
 import skirout.editor.v1.type_catalog.TypeDefinitionId
@@ -129,7 +127,6 @@ class RealmCatalogStore : AutoCloseable {
         override val providers: OwnedProviderRegistry get() = retention.providers
         override val checks: List<OwnedCheckRecipe> get() = assembly.checks
         override val relations: List<RelationContract> get() = assembly.relations
-        override val endpointBindings: List<EndpointBindingTemplate> get() = assembly.endpointBindings
         override val configuration: List<ConfigurationRecipe> get() = assembly.configuration
         override val realmRoot: TypeDefinitionId get() = assembly.editorCatalog.realmRoot
         override val operations: OperationCatalog get() = assembly.operations

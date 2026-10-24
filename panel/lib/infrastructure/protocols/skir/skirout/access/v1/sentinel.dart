@@ -399,7 +399,7 @@ final _skir.Method<
 >
 getSentinelCredentialsMethod = _skir.Method(
   "GetSentinelCredentials",
-  403062,
+  910201,
   GetSentinelCredentialsRequest.serializer,
   GetSentinelCredentialsResponse.serializer,
   "",

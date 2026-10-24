@@ -7112,7 +7112,7 @@ final class WatchEditorCatalogResponse_internalErrorWrapper
 final _skir.Method<CatalogFetchRequest, CatalogFetchResult>
 fetchEditorCatalogMethod = _skir.Method(
   "FetchEditorCatalog",
-  920001,
+  940601,
   CatalogFetchRequest.serializer,
   CatalogFetchResult.serializer,
   "",
@@ -7121,7 +7121,7 @@ fetchEditorCatalogMethod = _skir.Method(
 final _skir.Method<WatchEditorCatalogRequest, WatchEditorCatalogResponse>
 watchEditorCatalogMethod = _skir.Method(
   "WatchEditorCatalog",
-  920002,
+  940602,
   WatchEditorCatalogRequest.serializer,
   WatchEditorCatalogResponse.serializer,
   "",
@@ -7130,7 +7130,7 @@ watchEditorCatalogMethod = _skir.Method(
 final _skir.Method<PreparationOperation, PrepareValueResult>
 prepareValueMethod = _skir.Method(
   "PrepareValue",
-  920003,
+  940603,
   PreparationOperation.serializer,
   PrepareValueResult.serializer,
   "",

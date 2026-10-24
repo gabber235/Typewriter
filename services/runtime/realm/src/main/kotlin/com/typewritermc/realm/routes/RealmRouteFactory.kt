@@ -3,12 +3,12 @@ package com.typewritermc.realm.routes
 import com.typewritermc.authoring.InitializationRuntime
 import com.typewritermc.protocol.transport.RealmRouteScope
 import com.typewritermc.realm.authoring.AuthoringViewStore
-import com.typewritermc.realm.authoring.ResourceOperationRuntime
 import com.typewritermc.realm.checking.RealmCheckRuntime
-import com.typewritermc.realm.compiler.CompiledRootStatuses
-import com.typewritermc.realm.compiler.PublicationResults
-import com.typewritermc.realm.compiler.RealmPublicationCoordinator
-import com.typewritermc.realm.repository.AuthoringRepository
+import com.typewritermc.realm.edit.AuthoringRepository
+import com.typewritermc.realm.operation.ResourceOperationRuntime
+import com.typewritermc.realm.publication.CompiledRootStatuses
+import com.typewritermc.realm.publication.PublicationResults
+import com.typewritermc.realm.publication.RealmPublicationCoordinator
 import com.typewritermc.realm.search.AuthoringSearchRepository
 import com.typewritermc.services.libs.communicator.client.Communicator
 import com.typewritermc.services.libs.communicator.router.CommunicatorRoutes

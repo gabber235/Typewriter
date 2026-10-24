@@ -50,24 +50,24 @@ func (m *Typewriter) ProtocolGenerationCheck(
 }
 
 // +check
-// TransportGeneratorCheck typechecks the transport Skir generator and runs its tests against the committed
-// route manifest and Skir sources.
-func (m *Typewriter) TransportGeneratorCheck(
+// SkirGenCheck typechecks the repository Skir generator and runs its tests against the committed
+// route manifest, operations manifest and Skir sources.
+func (m *Typewriter) SkirGenCheck(
 	// +optional
 	// +defaultPath="/"
-	// +ignore=["*", "!package.json", "!bun.lock", "!skir.yml", "!skir-src", "!services/protocol/generate.ts", "!services/protocol/transport-routes.yaml", "!services/protocol/transport-generator", "!services/protocol/unicode", "**/node_modules"]
+	// +ignore=["*", "!package.json", "!bun.lock", "!skir.yml", "!skir-src", "!services/protocol/generate.ts", "!services/protocol/transport-routes.yaml", "!services/protocol/skir-gen", "!services/protocol/unicode", "**/node_modules"]
 	source *dagger.Directory,
 ) *dagger.Container {
 	return m.skirContainer(source).
-		WithExec([]string{"bun", "run", "--cwd", "services/protocol/transport-generator", "check"}).
-		WithExec([]string{"bun", "run", "test:transport-generator"})
+		WithExec([]string{"bun", "run", "--cwd", "services/protocol/skir-gen", "check"}).
+		WithExec([]string{"bun", "run", "test:skir-gen"})
 }
 
 // +check
 func (m *Typewriter) SkirCheck(
 	// +optional
 	// +defaultPath="/"
-	// +ignore=["*", "!package.json", "!bun.lock", "!skir.yml", "!skir-src", "!services/protocol/transport-generator", "**/node_modules"]
+	// +ignore=["*", "!package.json", "!bun.lock", "!skir.yml", "!skir-src", "!services/protocol/skir-gen", "**/node_modules"]
 	source *dagger.Directory,
 ) (*dagger.Changeset, error) {
 	generated := m.skirContainer(source).
@@ -81,7 +81,7 @@ func (m *Typewriter) SkirCheck(
 func (m *Typewriter) SkirFormat(
 	// +optional
 	// +defaultPath="/"
-	// +ignore=["*", "!package.json", "!bun.lock", "!skir.yml", "!skir-src", "!services/protocol/transport-generator", "**/node_modules"]
+	// +ignore=["*", "!package.json", "!bun.lock", "!skir.yml", "!skir-src", "!services/protocol/skir-gen", "**/node_modules"]
 	source *dagger.Directory,
 ) (*dagger.Changeset, error) {
 	generated := m.skirContainer(source).
@@ -95,7 +95,7 @@ func (m *Typewriter) SkirFormat(
 func (m *Typewriter) SkirSnapshot(
 	// +optional
 	// +defaultPath="/"
-	// +ignore=["*", "!package.json", "!bun.lock", "!skir.yml", "!skir-src", "!services/protocol/transport-generator", "**/node_modules"]
+	// +ignore=["*", "!package.json", "!bun.lock", "!skir.yml", "!skir-src", "!services/protocol/skir-gen", "**/node_modules"]
 	source *dagger.Directory,
 ) (*dagger.Changeset, error) {
 	generated := m.skirContainer(source).

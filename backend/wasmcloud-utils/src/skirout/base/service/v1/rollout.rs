@@ -2570,7 +2570,7 @@ pub fn probe_realm_hosts_method()
         crate::skir_client::Method<ProbeRealmHostsRequest, ProbeRealmHostsResponse>,
     > = std::sync::LazyLock::new(|| crate::skir_client::Method {
         name: "ProbeRealmHosts".to_string(),
-        number: 910008_i64,
+        number: 930601_i64,
         request_serializer: ProbeRealmHostsRequest::serializer(),
         response_serializer: ProbeRealmHostsResponse::serializer(),
         doc: "".to_string(),
@@ -2584,7 +2584,7 @@ pub fn apply_rollout_command_method()
         crate::skir_client::Method<ApplyRolloutCommandRequest, ApplyRolloutCommandResponse>,
     > = std::sync::LazyLock::new(|| crate::skir_client::Method {
         name: "ApplyRolloutCommand".to_string(),
-        number: 910009_i64,
+        number: 930602_i64,
         request_serializer: ApplyRolloutCommandRequest::serializer(),
         response_serializer: ApplyRolloutCommandResponse::serializer(),
         doc: "".to_string(),
@@ -2600,7 +2600,7 @@ pub fn query_participant_status_method() -> &'static crate::skir_client::Method<
         crate::skir_client::Method<QueryParticipantStatusRequest, QueryParticipantStatusResponse>,
     > = std::sync::LazyLock::new(|| crate::skir_client::Method {
         name: "QueryParticipantStatus".to_string(),
-        number: 910010_i64,
+        number: 930603_i64,
         request_serializer: QueryParticipantStatusRequest::serializer(),
         response_serializer: QueryParticipantStatusResponse::serializer(),
         doc: "".to_string(),

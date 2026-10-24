@@ -14,7 +14,7 @@ import { OrganizationRole } from "organization/v1/role.skir";
 
 // OrganizationJoinRequest is the moderation view of one unexpired request.
 // Profile fields are optional because the organization may not have every user profile attribute.
-struct OrganizationJoinRequest {
+struct OrganizationJoinRequest(82020001) {
   request_id: RecordId;
   user_id: RecordId;
   user_name: string?;
@@ -26,7 +26,7 @@ struct OrganizationJoinRequest {
 
 // UserJoinRequest is the requesting user's view of one unexpired request.
 // It carries organization display data because this view is not scoped to one organization.
-struct UserJoinRequest {
+struct UserJoinRequest(82020002) {
   request_id: RecordId;
   organization_id: RecordId;
   organization_name: string;
@@ -36,40 +36,40 @@ struct UserJoinRequest {
 }
 
 // Current unexpired requests for one organization and that organization's request sequence.
-struct OrganizationJoinRequestsSnapshot {
+struct OrganizationJoinRequestsSnapshot(82020003) {
   sequence: int64;
   values: [OrganizationJoinRequest];
 }
 
-enum OrganizationJoinRequestsChange {
+enum OrganizationJoinRequestsChange(82020004) {
   add: OrganizationJoinRequest;
   remove: RecordId;
 }
 
 // Organization request changes. Consumers apply them in sequence order and refresh when a sequence gap appears.
-struct OrganizationJoinRequestsChanged {
+struct OrganizationJoinRequestsChanged(82020005) {
   sequence: int64;
   changes: [OrganizationJoinRequestsChange];
 }
 
 // Current unexpired requests for one user and that user's request sequence.
-struct UserJoinRequestsSnapshot {
+struct UserJoinRequestsSnapshot(82020006) {
   sequence: int64;
   values: [UserJoinRequest];
 }
 
-enum UserJoinRequestsChange {
+enum UserJoinRequestsChange(82020007) {
   add: UserJoinRequest;
   remove: RecordId;
 }
 
 // User request changes. This sequence is independent from the organization request sequence for the same request.
-struct UserJoinRequestsChanged {
+struct UserJoinRequestsChanged(82020008) {
   sequence: int64;
   changes: [UserJoinRequestsChange];
 }
 
-struct AutoAcceptedMember {
+struct AutoAcceptedMember(82020009) {
   organization_id: RecordId;
   organization_name: string;
   organization_logo_url: string?;
@@ -84,9 +84,9 @@ method WatchOrganizationJoinRequests(
 
   snapshot: OrganizationJoinRequestsSnapshot;
   changed: OrganizationJoinRequestsChanged;
-} = 399821;
+} = 920201;
 
-struct ApprovedOrganizationJoinRequest {
+struct ApprovedOrganizationJoinRequest(82020010) {
   request_id: RecordId;
   member: OrganizationMember;
 }
@@ -128,7 +128,7 @@ method ApproveOrganizationJoinRequests(
   invalid_selection_error: struct {};
   /// Record IDs from an unexpected table.
   invalid_record_id_error: InvalidRecordIdError;
-} = 167357;
+} = 920202;
 
 // Declines one request and removes it from both the organization and user pending request views.
 // The response event is the organization event; the user stream also receives its corresponding removal.
@@ -150,4 +150,4 @@ method DeclineOrganizationJoinRequest(
 
   /// Record IDs from an unexpected table.
   invalid_record_id_error: InvalidRecordIdError;
-} = 329306;
+} = 920203;

@@ -8,10 +8,12 @@ import com.typewritermc.services.libs.communicator.address.AddressTemplate
 import com.typewritermc.services.libs.communicator.contract.EventContract
 import com.typewritermc.services.libs.communicator.contract.OperationName
 import com.typewritermc.services.libs.communicator.contract.PayloadCodec
+import com.typewritermc.services.libs.communicator.contract.ReplyAddressRule
 import com.typewritermc.services.libs.communicator.contract.ResponsePolicy
 import com.typewritermc.services.libs.communicator.contract.ScatterContract
 import com.typewritermc.services.libs.communicator.contract.UnaryContract
 import com.typewritermc.services.libs.communicator.contract.WatchContract
+import com.typewritermc.services.libs.communicator.transfer.TransportLimits
 import com.typewritermc.services.libs.communicator.transport.Payload
 import kotlin.time.Duration
 import kotlin.time.Duration.Companion.seconds
@@ -40,7 +42,9 @@ fun <Address : Any, Request : Any, Response : Any> skirUnaryContract(
     name: OperationName,
     address: AddressTemplate<Address>,
     responsePolicy: ResponsePolicy<Response>,
+    replyAddresses: ReplyAddressRule<Address>,
     timeout: Duration = 10.seconds,
+    limits: TransportLimits? = null,
 ): UnaryContract<Address, Request, Response> =
     UnaryContract(
         name,
@@ -48,8 +52,10 @@ fun <Address : Any, Request : Any, Response : Any> skirUnaryContract(
         method.requestSerializer.asPayloadCodec(),
         method.responseSerializer.asPayloadCodec(),
         responsePolicy,
+        replyAddresses,
         timeout,
         name.failureSlug,
+        limits,
     )
 
 /**
@@ -61,6 +67,8 @@ fun <Address : Any, Request : Any, Response : Any> skirScatterContract(
     name: OperationName,
     address: AddressTemplate<Address>,
     responsePolicy: ResponsePolicy<Response>,
+    replyAddresses: ReplyAddressRule<Address>,
+    limits: TransportLimits? = null,
 ): ScatterContract<Address, Request, Response> =
     ScatterContract(
         name,
@@ -68,7 +76,9 @@ fun <Address : Any, Request : Any, Response : Any> skirScatterContract(
         method.requestSerializer.asPayloadCodec(),
         method.responseSerializer.asPayloadCodec(),
         responsePolicy,
+        replyAddresses,
         name.failureSlug,
+        limits,
     )
 
 /**
@@ -82,8 +92,10 @@ fun <Address : Any, Request : Any, Initial : Any, Update : Any> skirWatchContrac
     requestAddress: AddressTemplate<Address>,
     updateAddress: AddressTemplate<Address>,
     initialPolicy: ResponsePolicy<Initial>,
+    replyAddresses: ReplyAddressRule<Address>,
     timeout: Duration = 10.seconds,
     updateFilter: (Request, Update) -> Boolean = { _, _ -> true },
+    limits: TransportLimits? = null,
 ): WatchContract<Address, Request, Initial, Update> =
     WatchContract(
         name,
@@ -93,9 +105,11 @@ fun <Address : Any, Request : Any, Initial : Any, Update : Any> skirWatchContrac
         method.responseSerializer.asPayloadCodec(),
         updateSerializer.asPayloadCodec(),
         initialPolicy,
+        replyAddresses,
         timeout,
         name.failureSlug,
         updateFilter,
+        limits,
     )
 
 /** Creates an event contract encoding events with [serializer]. Failures are reported under [OperationName.failureSlug] of [name]. */

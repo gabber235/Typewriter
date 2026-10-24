@@ -1,32 +1,32 @@
 // Presence is an ephemeral panel collaboration signal. It is not durable organization state and has no snapshot or recovery method.
 // Panels publish active heartbeats with a session sequence and publish left when a session closes. Consumers may expire stale sessions when heartbeats stop.
 
-import { ResourceId } from "editor/v1/type_catalog.skir";
 import { RecordId } from "kernel/v1/record_id.skir";
+import { ResourceId } from "kernel/v1/resource_id.skir";
 
-struct OrganizationPresence(812400001) {}
+struct OrganizationPresence(82050001) {}
 
-struct MembersPresence(812400002) {}
+struct MembersPresence(82050002) {}
 
-struct ServicesPresence(812400003) {}
+struct ServicesPresence(82050003) {}
 
-struct ServicePresence(812400004) {
+struct ServicePresence(82050004) {
   service_id: RecordId = 0;
 }
 
-struct RealmsPresence(812400005) {}
+struct RealmsPresence(82050005) {}
 
-struct RealmPresence(812400006) {
+struct RealmPresence(82050006) {
   realm_id: RecordId = 0;
 }
 
 // One authored resource of a realm, such as a page, a section or a tag, opened on its own surface.
-struct ResourcePresence(812400007) {
+struct ResourcePresence(82050007) {
   realm_id: RecordId = 0;
   resource_id: ResourceId = 1;
 }
 
-enum PresenceLocation(812400008) {
+enum PresenceLocation(82050008) {
   organization: OrganizationPresence = 1;
   members: MembersPresence = 2;
   services: ServicesPresence = 3;
@@ -37,19 +37,19 @@ enum PresenceLocation(812400008) {
 }
 
 // One active panel heartbeat. Sequence increases within a session so consumers can ignore repeated or out of order messages.
-struct PanelPresence(812400009) {
+struct PanelPresence(82050009) {
   session_id: string = 0;
   sequence: int64 = 1;
   location: PresenceLocation = 2;
 }
 
 // Explicit end of a panel session. Missing this event is handled by consumer expiry.
-struct PresenceLeft(812400010) {
+struct PresenceLeft(82050010) {
   session_id: string = 0;
 }
 
 // Best effort session lifecycle event. Unknown events are safe to ignore for forward compatibility.
-enum PresenceEvent(812400011) {
+enum PresenceEvent(82050011) {
   active: PanelPresence = 1;
   left: PresenceLeft = 2;
 }

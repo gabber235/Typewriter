@@ -10,8 +10,7 @@ use otel_wasi::{main_attribute, wasi_error};
 use serde::{Deserialize, Serialize};
 use wasmcloud_utils::{
     skir::base::{
-        access::v1::permission::{Permissions, ResponsePermission},
-        kernel::v1::duration::Duration,
+        access::v1::permission::Permissions,
         kernel::v1::record_id::{RecordId, RecordIdKey},
         service::v1::status::{
             QueryServiceBindingRequest, QueryServiceBindingResponse, ServiceBinding,
@@ -23,12 +22,12 @@ use wasmcloud_utils::{
     skir_utils::RecordIdKeyIdentity,
     transport::{GrantSet, RealmScope, ServiceScope, SubjectToken, request_route},
     transport_routes::{
-        MAX_RESPONSE_CHUNKS, REPLY_TTL_MS, RealmRole, ServiceBindingQueryRoute,
-        ServiceMessagingScopeRoute, ServiceRole, service_reply_inbox_prefix,
+        RealmRole, SERVICE_RESPONSE_LIMIT, ServiceBindingQueryRoute, ServiceMessagingScopeRoute,
+        ServiceRole, service_reply_inbox_prefix,
     },
 };
 
-use crate::common::build_permissions;
+use crate::common::{build_permissions, response_permission};
 
 #[derive(Debug, Serialize, Deserialize, Clone, Default)]
 /// Claims consumed when deriving policy for a service identity.
@@ -85,7 +84,7 @@ pub async fn handle_service(
     let permissions = build_permissions(
         grants.publish.into_iter().collect(),
         grants.subscribe.into_iter().collect(),
-        Some(service_response_permission()),
+        SERVICE_RESPONSE_LIMIT.map(response_permission),
     );
 
     main_attribute!(
@@ -94,19 +93,6 @@ pub async fn handle_service(
     );
 
     Ok((permissions, tags))
-}
-
-/// Lets a service answer each request it receives within [`REPLY_TTL_MS`]. A framed reply sends up
-/// to [`MAX_RESPONSE_CHUNKS`] frames to the requester's inbox, so that is the reply message limit.
-pub(crate) fn service_response_permission() -> ResponsePermission {
-    ResponsePermission {
-        max_messages: Some(MAX_RESPONSE_CHUNKS as i32),
-        ttl: Some(Duration {
-            milliseconds: REPLY_TTL_MS,
-            _unrecognized: None,
-        }),
-        _unrecognized: None,
-    }
 }
 
 /// Read the durable binding without renewing a registration lease.

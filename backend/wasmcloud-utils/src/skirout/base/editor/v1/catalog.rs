@@ -3119,7 +3119,7 @@ pub fn fetch_editor_catalog_method()
         crate::skir_client::Method<CatalogFetchRequest, CatalogFetchResult>,
     > = std::sync::LazyLock::new(|| crate::skir_client::Method {
         name: "FetchEditorCatalog".to_string(),
-        number: 920001_i64,
+        number: 940601_i64,
         request_serializer: CatalogFetchRequest::serializer(),
         response_serializer: CatalogFetchResult::serializer(),
         doc: "".to_string(),
@@ -3133,7 +3133,7 @@ pub fn watch_editor_catalog_method()
         crate::skir_client::Method<WatchEditorCatalogRequest, WatchEditorCatalogResponse>,
     > = std::sync::LazyLock::new(|| crate::skir_client::Method {
         name: "WatchEditorCatalog".to_string(),
-        number: 920002_i64,
+        number: 940602_i64,
         request_serializer: WatchEditorCatalogRequest::serializer(),
         response_serializer: WatchEditorCatalogResponse::serializer(),
         doc: "".to_string(),
@@ -3147,7 +3147,7 @@ pub fn prepare_value_method()
         crate::skir_client::Method<PreparationOperation, PrepareValueResult>,
     > = std::sync::LazyLock::new(|| crate::skir_client::Method {
         name: "PrepareValue".to_string(),
-        number: 920003_i64,
+        number: 940603_i64,
         request_serializer: PreparationOperation::serializer(),
         response_serializer: PrepareValueResult::serializer(),
         doc: "".to_string(),

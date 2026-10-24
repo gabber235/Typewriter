@@ -9,8 +9,7 @@ import com.typewritermc.checking.InputIdentity
 import com.typewritermc.operations.AuthoringGraphFacts
 import com.typewritermc.operations.Cloneability
 import com.typewritermc.operations.LinkCapacity
-import com.typewritermc.realm.repository.CounterpartBinding
-import com.typewritermc.realm.repository.ResourceValueMapper
+import com.typewritermc.realm.catalog.ownershipRelationIds
 import com.typewritermc.types.catalog.Resolution
 import com.typewritermc.types.ownsResources
 import com.typewritermc.types.toResourceId
@@ -19,10 +18,10 @@ import com.typewritermc.types.toSkir
 import com.typewritermc.types.use
 import skirout.editor.v1.type_catalog.ItemId
 import skirout.editor.v1.type_catalog.ResolvedRepresentation
-import skirout.editor.v1.type_catalog.ResourceId
 import skirout.editor.v1.type_catalog.TypeSelection
 import skirout.editor.v1.type_catalog.TypeUse
 import skirout.editor.v1.type_catalog.ValueLocation
+import skirout.kernel.v1.resource_id.ResourceId
 import com.typewritermc.types.ResourceId as AuthorResourceId
 
 /**

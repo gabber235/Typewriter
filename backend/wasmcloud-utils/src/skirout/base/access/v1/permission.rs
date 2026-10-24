@@ -635,7 +635,7 @@ pub fn get_entity_permission_method()
         crate::skir_client::Method<GetEntityPermissionRequest, GetEntityPermissionResponse>,
     > = std::sync::LazyLock::new(|| crate::skir_client::Method {
         name: "GetEntityPermission".to_string(),
-        number: 209684_i64,
+        number: 910101_i64,
         request_serializer: GetEntityPermissionRequest::serializer(),
         response_serializer: GetEntityPermissionResponse::serializer(),
         doc: "".to_string(),

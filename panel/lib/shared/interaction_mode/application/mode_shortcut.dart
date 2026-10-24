@@ -4,7 +4,7 @@ import "package:typewriter_panel/typewriter_panel.dart";
 ///
 /// [GlobalModeShortcut] reads this capability from the current mode and gives
 /// the shortcuts to a managed action set. The set is scoped by focus and is
-/// disabled while realm interaction is suspended.
+/// disabled while interaction is suspended.
 mixin ModeShortcut on InteractionMode {
   /// Creates the actions offered while this mode is current and active.
   ///

@@ -25,7 +25,7 @@ fun ValueLocation.Companion.of(
 ): ValueLocation = ValueLocation(resource = resource.toSkir(), path = path)
 
 fun ValueLocation.Companion.of(
-    resource: skirout.editor.v1.type_catalog.ResourceId,
+    resource: skirout.kernel.v1.resource_id.ResourceId,
     path: ValuePath = ValuePath.root,
 ): ValueLocation = ValueLocation(resource = resource, path = path)
 

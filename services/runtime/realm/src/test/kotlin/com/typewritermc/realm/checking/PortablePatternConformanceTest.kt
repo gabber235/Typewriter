@@ -3,7 +3,12 @@ package com.typewritermc.realm.checking
 import build.skir.JsonFlavor
 import com.typewritermc.authoring.of
 import com.typewritermc.realm.authoring.AuthoringSeed
+import com.typewritermc.realm.authoring.CapturedAuthoringReads
 import com.typewritermc.realm.authoring.InMemoryAuthoringViewStore
+import com.typewritermc.realm.authoring.TEST_TYPE
+import com.typewritermc.realm.authoring.TestCatalogLease
+import com.typewritermc.realm.authoring.location
+import com.typewritermc.realm.authoring.record
 import com.typewritermc.types.integer
 import com.typewritermc.types.listValue
 import com.typewritermc.types.mapValue
@@ -42,7 +47,6 @@ import skirout.editor.v1.type_catalog.ListItem
 import skirout.editor.v1.type_catalog.MapRow
 import skirout.editor.v1.type_catalog.PathSegment
 import skirout.editor.v1.type_catalog.RelativeFieldPattern
-import skirout.editor.v1.type_catalog.ResourceId
 import skirout.editor.v1.type_catalog.RuleId
 import skirout.editor.v1.type_catalog.RuleOrigin
 import skirout.editor.v1.type_catalog.TypeDefinitionId
@@ -50,6 +54,7 @@ import skirout.editor.v1.type_catalog.TypeSelection
 import skirout.editor.v1.type_catalog.TypeUse
 import skirout.editor.v1.type_catalog.ValueLocation
 import skirout.editor.v1.type_catalog.ValuePath
+import skirout.kernel.v1.resource_id.ResourceId
 import java.nio.file.Files
 import java.nio.file.Path
 

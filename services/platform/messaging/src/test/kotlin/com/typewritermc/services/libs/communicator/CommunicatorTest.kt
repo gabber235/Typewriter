@@ -10,6 +10,7 @@ import com.typewritermc.services.libs.communicator.client.ScatterPolicy
 import com.typewritermc.services.libs.communicator.contract.EventContract
 import com.typewritermc.services.libs.communicator.contract.OperationName
 import com.typewritermc.services.libs.communicator.contract.PayloadCodec
+import com.typewritermc.services.libs.communicator.contract.ReplyAddressRule
 import com.typewritermc.services.libs.communicator.contract.ResponseClassification
 import com.typewritermc.services.libs.communicator.contract.ResponseOutcome
 import com.typewritermc.services.libs.communicator.contract.ResponsePolicy
@@ -90,6 +91,10 @@ private val successPolicy =
             )
         },
     )
+
+/** Answers every reply address; CommunicatorRouterTest covers the reply rule itself. */
+private val anyReply = ReplyAddressRule<Any> { _, _ -> true }
+
 private val unary =
     UnaryContract(
         OperationName.of("book.get"),
@@ -97,6 +102,7 @@ private val unary =
         strings,
         strings,
         successPolicy,
+        anyReply,
         2.seconds,
         ErrorSlug.of("book-get-failed"),
     )
@@ -107,6 +113,7 @@ private val scatter =
         strings,
         strings,
         successPolicy,
+        anyReply,
         ErrorSlug.of("host-probe-failed"),
     )
 private val event =
@@ -120,6 +127,7 @@ private val watch =
         strings,
         strings,
         successPolicy,
+        anyReply,
         2.seconds,
         ErrorSlug.of("book-watch-failed"),
     )
@@ -277,6 +285,7 @@ val CommunicatorTest by testSuite {
                         throwingCodec(true),
                         strings,
                         successPolicy,
+                        anyReply,
                         1.seconds,
                         unary.failureSlug,
                     )
@@ -546,6 +555,7 @@ val CommunicatorTest by testSuite {
                         watch.initialCodec,
                         watch.updateCodec,
                         watch.initialPolicy,
+                        watch.replyAddresses,
                         watch.timeout,
                         watch.failureSlug,
                         updateFilter = { request, update -> request == update },
@@ -737,6 +747,7 @@ private fun throwingWatchFixture(
             override suspend fun request(
                 message: OutboundMessage,
                 timeout: kotlin.time.Duration,
+                limits: com.typewritermc.services.libs.communicator.transfer.TransportLimits?,
             ) = TransportResult.Success(InboundMessage(message.address, "initial".encodeToByteArray()))
 
             override suspend fun subscribe(

@@ -18,13 +18,13 @@ import {
 import { InternalError } from "kernel/v1/errors.skir";
 
 /// Captured implementation requirements used to fence candidate assessment and publication selection.
-struct EngineImplementationInputs(811600001) {
+struct EngineImplementationInputs(84150001) {
   token: InputToken = 0;
 }
 
 /// Durable attempt progress, separate from review status. complete means the Realm selected its
 /// descriptor, while blocked or interrupted attempts do not replace the prior selected publication.
-enum PublicationState(811600002) {
+enum PublicationState(84150002) {
   checking = 1;
   compiling = 2;
   activating = 3;
@@ -33,14 +33,14 @@ enum PublicationState(811600002) {
   interrupted = 6;
 }
 
-struct PublicationAttempt(811600003) {
+struct PublicationAttempt(84150003) {
   id: PublicationId = 0;
   catalog: CatalogGeneration = 1;
   engine_inputs: EngineImplementationInputs = 2;
   state: PublicationState = 3;
 }
 
-struct PublicationReport(811600004) {
+struct PublicationReport(84150004) {
   id: PublicationId = 0;
   state: PublicationState = 1;
   findings: [Diagnostic] = 2;
@@ -48,28 +48,28 @@ struct PublicationReport(811600004) {
 
 /// Identifies one releasable Ready assessment tied to exact saved inputs, baseline, and engine requirements.
 /// A newer review may invalidate it even when no resource revision counter is exposed.
-struct PublicationCandidateId(811600005) {
+struct PublicationCandidateId(84150005) {
   value: string = 0;
 }
 /// Identifies one emitted review state, including checking and failure states without a candidate.
 /// It is a freshness identity rather than a sortable publication or resource revision.
-struct PublicationViewId(811600006) {
+struct PublicationViewId(84150006) {
   value: string = 0;
 }
 
-enum PublicationBaseline(811600007) {
+enum PublicationBaseline(84150007) {
   initial = 1;
   selected: PublicationId = 2;
 }
 
 /// Original facts under which a publication diagnostic applies to an authored value.
 /// Consumers compare this evidence with their working state before presenting it as current.
-struct DiagnosticEvidence(811600008) {
+struct DiagnosticEvidence(84150008) {
   catalog: CatalogGeneration = 0;
   expectations: [EditExpectation] = 1;
 }
 
-struct PublicationDiagnosticDetails(811600009) {
+struct PublicationDiagnosticDetails(84150009) {
   id: DiagnosticId = 0;
   origin: RuleOrigin = 1;
   code: string = 2;
@@ -80,39 +80,39 @@ struct PublicationDiagnosticDetails(811600009) {
 }
 
 // Severity is determined by the variant, not another independent field.
-enum PublicationNotice(811600010) {
+enum PublicationNotice(84150010) {
   information: PublicationDiagnosticDetails = 1;
   warning: PublicationDiagnosticDetails = 2;
 }
-struct PublicationBlocker(811600011) {
+struct PublicationBlocker(84150011) {
   details: PublicationDiagnosticDetails = 0;
 }
 
 /// Semantic runtime changes relative to selection. A root update compares artifact meaning and
 /// format, independently of blob storage location or a newly allocated publication identity.
-enum PublicationChange(811600012) {
+enum PublicationChange(84150012) {
   root_added: CompilationRoot = 1;
   root_updated: CompilationRoot = 2;
   root_removed: CompilationRoot = 3;
   requirements_changed = 4;
 }
 /// A releasable change set is nonempty by construction; additional entries extend its first change.
-struct PublicationDelta(811600013) {
+struct PublicationDelta(84150013) {
   first: PublicationChange = 0;
   additional: [PublicationChange] = 1;
 }
-struct PublicationBlockers(811600014) {
+struct PublicationBlockers(84150014) {
   first: PublicationBlocker = 0;
   additional: [PublicationBlocker] = 1;
 }
 
-enum PublicationActivationPhase(811600015) {
+enum PublicationActivationPhase(84150015) {
   storing = 1;
   activating = 2;
 }
 
 // Later saved work can be reviewed during activation without authorizing it.
-struct PublicationPendingReview(811600016) {
+struct PublicationPendingReview(84150016) {
   findings: [FindingSet] = 0;
   confirmed_changes: [PublicationChange] = 1;
   pending_roots: [CompilationRoot] = 2;
@@ -120,7 +120,7 @@ struct PublicationPendingReview(811600016) {
   notices: [PublicationNotice] = 4;
 }
 
-enum PublicationFailure(811600017) {
+enum PublicationFailure(84150017) {
   evaluation_interrupted: string = 1;
   implementation_unavailable: string = 2;
   publication_interrupted: PublicationId = 3;
@@ -129,7 +129,7 @@ enum PublicationFailure(811600017) {
 /// Current saved review state. ready authorizes only its issued candidate; blocked can still
 /// report confirmed changes while failed roots remain pending. During publishing, releasing is
 /// frozen and next describes later saved work without adding it to the in progress release.
-enum PublicationStatus(811600018) {
+enum PublicationStatus(84150018) {
   empty: struct {
     notices: [PublicationNotice] = 0;
   } = 1;
@@ -166,12 +166,12 @@ enum PublicationStatus(811600018) {
     findings: [FindingSet] = 2;
   } = 7;
 }
-struct PublicationView(811600019) {
+struct PublicationView(84150019) {
   id: PublicationViewId = 0;
   status: PublicationStatus = 1;
 }
 /// Invalidation hint naming the current review view. Query that exact identity to read its content.
-struct PublicationViewChanged(811600020) {
+struct PublicationViewChanged(84150020) {
   current: PublicationViewId = 0;
 }
 
@@ -193,14 +193,14 @@ method PublishAuthoring(
   no_changes = 5;
   candidate_changed_error: PublicationViewChanged = 6;
   internal_error: InternalError = 7;
-} = 920018;
+} = 941501;
 /// Returns the current review view identity; later identities arrive as update hints.
 method WatchPublication(
   struct {}
 ): enum {
   view_changed: PublicationViewChanged = 1;
   internal_error: InternalError = 2;
-} = 920019;
+} = 941502;
 
 /// Returns one immutable review view, or the current view identity when expected is no longer
 /// current. Later invalidations require a separate query.
@@ -212,4 +212,4 @@ method QueryPublicationView(
   view: PublicationView = 1;
   view_changed_error: PublicationViewChanged = 2;
   internal_error: InternalError = 3;
-} = 920020;
+} = 941503;

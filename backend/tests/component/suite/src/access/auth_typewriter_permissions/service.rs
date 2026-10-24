@@ -16,6 +16,7 @@ use wasmcloud_utils::{
         },
     },
     skir_variant,
+    transport_routes::SERVICE_RESPONSE_LIMIT,
 };
 
 use super::{AuthTypewriterPermissions, request_permission_response, request_permissions};
@@ -172,7 +173,11 @@ async fn attached_service_receives_only_its_realm_permissions(
         .response
         .as_ref()
         .ok_or_else(|| anyhow::anyhow!("service response permission missing"))?;
-    assert_eq!(response_permission.max_messages, Some(64));
+    // A service may send every frame of the largest reply any service role serves.
+    assert_eq!(
+        response_permission.max_messages,
+        SERVICE_RESPONSE_LIMIT.map(|limit| limit as i32)
+    );
     assert_eq!(
         response_permission
             .ttl
@@ -211,10 +216,8 @@ async fn attached_service_receives_only_its_realm_permissions(
         "shared.catalog.fetch",
         "shared.publish",
         "shared.blob.metadata",
-        "shared.blob.read",
-        "shared.blob.begin",
-        "shared.blob.write",
-        "shared.blob.complete",
+        "shared.blob.fetch",
+        "shared.blob.store",
     ] {
         assert!(publish.contains(&format!(
             "service.to.quests.organization.writers.realm.{suffix}"
@@ -301,11 +304,9 @@ async fn realm_service_executes_realm_routes_and_coordinates_hosts(
         "editor.authoring.publish",
         "editor.authoring.publication.watch",
         "editor.authoring.compiled.status.query",
-        "shared.blob.begin",
-        "shared.blob.complete",
+        "shared.blob.fetch",
         "shared.blob.metadata",
-        "shared.blob.read",
-        "shared.blob.write",
+        "shared.blob.store",
         "shared.catalog.fetch",
         "shared.publish",
     ] {
@@ -339,10 +340,8 @@ async fn realm_service_executes_realm_routes_and_coordinates_hosts(
         "shared.catalog.fetch",
         "shared.publish",
         "shared.blob.metadata",
-        "shared.blob.read",
-        "shared.blob.begin",
-        "shared.blob.write",
-        "shared.blob.complete",
+        "shared.blob.fetch",
+        "shared.blob.store",
     ] {
         assert!(publish.contains(&format!(
             "service.to.quests.organization.writers.realm.{suffix}"

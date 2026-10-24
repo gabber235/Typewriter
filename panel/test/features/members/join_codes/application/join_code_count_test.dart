@@ -1,0 +1,141 @@
+import "package:flutter_test/flutter_test.dart";
+import "package:typewriter_panel/infrastructure/protocols/skir/skir.dart"
+    as skir;
+import "package:typewriter_panel/typewriter_panel.dart";
+
+import "support/join_codes_test_support.dart";
+
+void main() {
+  Future<int> getCount(ProviderContainer container) => readProviderValue(
+    (listener) => container.listen(
+      joinCodeCountProvider,
+      listener,
+      fireImmediately: true,
+    ),
+  );
+
+  group("join code count", () {
+    var codeCounter = 0;
+
+    skir.JoinCode createCode({bool? expired, bool neverExpires = false}) {
+      codeCounter++;
+      final now = DateTime.now();
+      DateTime? expiresAt;
+      if (!neverExpires) {
+        expiresAt = expired ?? false
+            ? now.subtract(const Duration(days: 1))
+            : now.add(const Duration(days: 7));
+      }
+      return skir.JoinCode(
+        code: skir.recordId("organization_join_code:CODE-$codeCounter"),
+        createdAt: now.subtract(const Duration(days: 1)),
+        expiresAt: expiresAt,
+        singleUse: true,
+        autoAccept: skir.JoinCode_AutoAccept(roleIds: const []),
+      );
+    }
+
+    test("returns 0 when provider is loading", () {
+      final container = ProviderContainer.test(
+        overrides: [
+          ...appOverrides(),
+          organizationJoinCodesProvider.overrideWith(
+            LoadingJoinCodesNotifier.new,
+          ),
+        ],
+      );
+
+      expect(container.read(joinCodeCountProvider), 0);
+    });
+
+    test("returns 0 for empty list", () async {
+      final container = ProviderContainer.test(
+        overrides: [
+          ...appOverrides(),
+          organizationJoinCodesProvider.overrideWith(
+            () => MockJoinCodesNotifier([]),
+          ),
+        ],
+      );
+
+      await readJoinCodes(container);
+      expect(await getCount(container), 0);
+    });
+
+    test("returns 0 when all codes are expired", () async {
+      final expiredCodes = [
+        createCode(expired: true),
+        createCode(expired: true),
+      ];
+
+      final container = ProviderContainer.test(
+        overrides: [
+          ...appOverrides(),
+          organizationJoinCodesProvider.overrideWith(
+            () => MockJoinCodesNotifier(expiredCodes),
+          ),
+        ],
+      );
+
+      await readJoinCodes(container);
+      expect(await getCount(container), 0);
+    });
+
+    test("counts never-expires codes as active", () async {
+      final codes = [createCode(neverExpires: true)];
+
+      final container = ProviderContainer.test(
+        overrides: [
+          ...appOverrides(),
+          organizationJoinCodesProvider.overrideWith(
+            () => MockJoinCodesNotifier(codes),
+          ),
+        ],
+      );
+
+      await readJoinCodes(container);
+      expect(await getCount(container), 1);
+    });
+
+    test("counts active and never-expires codes excluding expired", () async {
+      final mixedCodes = [
+        createCode(expired: false),
+        createCode(expired: true),
+        createCode(neverExpires: true),
+      ];
+
+      final container = ProviderContainer.test(
+        overrides: [
+          ...appOverrides(),
+          organizationJoinCodesProvider.overrideWith(
+            () => MockJoinCodesNotifier(mixedCodes),
+          ),
+        ],
+      );
+
+      await readJoinCodes(container);
+      expect(await getCount(container), 2);
+    });
+
+    test("counts all non-expired codes", () async {
+      final activeCodes = [
+        createCode(expired: false),
+        createCode(expired: false),
+        createCode(neverExpires: true),
+        createCode(neverExpires: true),
+      ];
+
+      final container = ProviderContainer.test(
+        overrides: [
+          ...appOverrides(),
+          organizationJoinCodesProvider.overrideWith(
+            () => MockJoinCodesNotifier(activeCodes),
+          ),
+        ],
+      );
+
+      await readJoinCodes(container);
+      expect(await getCount(container), 4);
+    });
+  });
+}

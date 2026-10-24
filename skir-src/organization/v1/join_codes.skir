@@ -10,7 +10,7 @@ import { RecordId } from "kernel/v1/record_id.skir";
 
 // JoinCode is the persisted invitation identity and its admission policy.
 // A null expiry means the code does not expire. Auto accepted roles are validated as assignable before the code is created.
-struct JoinCode {
+struct JoinCode(82010001) {
   code: RecordId;
   created_at: timestamp;
   expires_at: timestamp?;
@@ -21,18 +21,18 @@ struct JoinCode {
 }
 
 // Current active codes and the organization sequence at the same read point.
-struct OrganizationJoinCodesSnapshot {
+struct OrganizationJoinCodesSnapshot(82010002) {
   sequence: int64;
   values: [JoinCode];
 }
 
-enum OrganizationJoinCodesChange {
+enum OrganizationJoinCodesChange(82010003) {
   add: JoinCode;
   remove: RecordId;
 }
 
 // Changes to the active code projection. Consumers apply changes only when sequence advances and refresh on a gap.
-struct OrganizationJoinCodesChanged {
+struct OrganizationJoinCodesChanged(82010004) {
   sequence: int64;
   changes: [OrganizationJoinCodesChange];
 }
@@ -45,7 +45,7 @@ method WatchOrganizationJoinCodes(
 
   snapshot: OrganizationJoinCodesSnapshot;
   changed: OrganizationJoinCodesChanged;
-} = 690316;
+} = 920101;
 
 // Creates an invitation code and emits its add change after the transaction commits.
 method GenerateOrganizationJoinCode(
@@ -82,7 +82,7 @@ method GenerateOrganizationJoinCode(
 
   /// Record IDs from an unexpected table.
   invalid_record_id_error: InvalidRecordIdError;
-} = 804958;
+} = 920102;
 
 // Removes an active invitation code and emits its remove change after the transaction commits.
 // An expired or already removed code is reported as not found.
@@ -104,4 +104,4 @@ method RevokeOrganizationJoinCode(
 
   /// Record IDs from an unexpected table.
   invalid_record_id_error: InvalidRecordIdError;
-} = 510187;
+} = 920103;

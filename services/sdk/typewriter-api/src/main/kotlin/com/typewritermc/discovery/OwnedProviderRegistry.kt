@@ -79,3 +79,32 @@ data class CatalogContributions(
     val operations: List<com.typewritermc.operations.OperationDeclaration> = emptyList(),
     val displays: List<OwnedResourceDisplay> = emptyList(),
 )
+
+internal class ImmutableOwnedProviderRegistry(
+    private val ownedConfigurations: List<OwnedConfiguration>,
+    private val ownedPresentations: List<OwnedPresentation>,
+    private val ownedNativeBindings: List<OwnedNativeBinding>,
+    private val ownedChecks: List<OwnedCheck>,
+) : OwnedProviderRegistry {
+    override fun retain(origin: ProviderOrigin): ProviderLease {
+        require(
+            ownedConfigurations.any { it.origin == origin } ||
+                ownedPresentations.any { it.origin == origin } ||
+                ownedNativeBindings.any { it.origin == origin } ||
+                ownedChecks.any { it.origin == origin },
+        ) { "Unknown provider origin $origin." }
+        return ImmutableProviderLease
+    }
+
+    override fun configurations(): List<OwnedConfiguration> = ownedConfigurations
+
+    override fun presentations(): List<OwnedPresentation> = ownedPresentations
+
+    override fun nativeBindings(): List<OwnedNativeBinding> = ownedNativeBindings
+
+    override fun checks(): List<OwnedCheck> = ownedChecks
+}
+
+private data object ImmutableProviderLease : ProviderLease {
+    override fun close() = Unit
+}

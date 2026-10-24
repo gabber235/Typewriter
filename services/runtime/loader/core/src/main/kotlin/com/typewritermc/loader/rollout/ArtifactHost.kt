@@ -441,16 +441,13 @@ internal class AssignmentRuntime(
                     currentDeployment = current?.snapshot,
                     previousDeployment = previous?.snapshot,
                     currentSharedArtifacts = shared.artifacts,
-                    activeTransferDigests = localBlobs.activeTransferDigests(),
                     acceptedCandidateDigests = accepted.mapTo(mutableSetOf()) { it.artifact.digest },
                     rolloutProjectionDigests = projectionDigests,
                 )
-            val expiredTransfers = localBlobs.removeExpiredTransfers()
             val deleted = localBlobs.collectGarbage(protection.protectedDigests())
             span?.annotate {
                 attribute("realm.id", assignment.realmId.value)
                 attribute("service.id", serviceId.value)
-                attribute("maintenance.expired_transfer_count", expiredTransfers.toLong())
                 attribute("maintenance.deleted_count", deleted.toLong())
             }
         }

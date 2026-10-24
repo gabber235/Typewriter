@@ -1,7 +1,7 @@
 //! Messaging helpers shared by wasmCloud components.
 //!
 //! This module owns the transport boundary for broker messages, including trace context
-//! propagation, reply framing, request and reply error slugs, and typed SKIR replies.
+//! propagation, payload framing, request and reply error slugs, and typed SKIR replies.
 //! Generated transport routes own subject parsing and construction.
 
 use otel_wasi::ResultWithSlug;
@@ -30,13 +30,20 @@ fn current_trace_headers() -> Option<Vec<types::HeaderEntry>> {
 /// Reply on the subject carried by a broker message.
 ///
 /// The input must contain `reply_to`. A reply above the generated chunk size travels as frames
-/// (see [`crate::transport::plan_reply`]); a frame that cannot be published is followed by an
-/// interrupted frame so the requester fails at once. A reply above the transport limit sends one
-/// too large frame and fails with `transport-transfer-too-large`. Broker failures use
-/// `message-reply-failed`, and an input without `reply_to` fails with `message-no-reply-to`.
+/// (see [`crate::transport::plan_reply`]) paced by `pacing`. With credit, the last frame of each
+/// window that is not the final frame goes out as a request on the requester's inbox, whose answer
+/// must grant the next window within [`crate::transport_routes::FRAME_INACTIVITY_MS`]; without
+/// credit every frame streams at once. A frame that cannot be sent, a missing credit
+/// (`transport-credit-missing`), a failure answer (the slug of its failure), an unanswered window
+/// end (`transport-credit-failed`) or a reply past its time to live
+/// (`transport-transfer-interrupted`) is followed by an interrupted frame so the requester fails
+/// at once. A reply above the reply ceiling sends one too large message and fails with
+/// `transport-transfer-too-large`. Broker failures use `message-reply-failed`, and an input without
+/// `reply_to` fails with `message-no-reply-to`.
 pub async fn reply(
     reply_to: types::NatsMessage,
     data: impl Into<Vec<u8>>,
+    pacing: transport::ReplyPacing,
 ) -> Result<(), otel_wasi::Error> {
     let Some(subject) = reply_to.reply_to else {
         return Err(otel_wasi::Error::new(
@@ -45,25 +52,47 @@ pub async fn reply(
         ));
     };
     match transport::plan_reply(data.into()) {
-        transport::ReplyPlan::Single(body) => publish_reply(&subject, body, Vec::new()).await,
-        transport::ReplyPlan::TooLarge { size, frame } => {
+        transport::PayloadPlan::Single(body) => publish_reply(&subject, body, Vec::new()).await,
+        transport::PayloadPlan::TooLarge { size, frame } => {
             publish_reply(&subject, frame.body, frame.headers).await?;
             Err(otel_wasi::Error::new(
                 "transport-transfer-too-large",
                 format!("the reply of {size} bytes exceeds the transport limit"),
             ))
         }
-        transport::ReplyPlan::Framed { reply_id, frames } => {
-            for frame in frames {
-                if let Err(error) = publish_reply(&subject, frame.body, frame.headers).await {
-                    let interrupted = transport::interrupted_frame(&reply_id);
-                    // The requester learns at once; the original publish failure stays the result.
-                    let _ = publish_reply(&subject, interrupted.body, interrupted.headers).await;
-                    return Err(error);
-                }
-            }
-            Ok(())
+        transport::PayloadPlan::Framed { payload_id, frames } => {
+            transport::send_reply_frames(
+                &mut ReplySink { subject: &subject },
+                &payload_id,
+                frames,
+                pacing,
+            )
+            .await
         }
+    }
+}
+
+/// The requester's reply subject, as the destination of a framed reply.
+struct ReplySink<'a> {
+    subject: &'a str,
+}
+
+impl transport::FrameSink for ReplySink<'_> {
+    async fn publish(&mut self, frame: transport::PayloadFrame) -> Result<(), otel_wasi::Error> {
+        publish_reply(self.subject, frame.body, frame.headers).await
+    }
+
+    async fn request(
+        &mut self,
+        frame: transport::PayloadFrame,
+        timeout_ms: u32,
+    ) -> Result<types::NatsMessage, otel_wasi::Error> {
+        core::request(
+            reply_message(self.subject, frame.body, frame.headers),
+            timeout_ms,
+        )
+        .await
+        .error_with_slug("transport-credit-failed")
     }
 }
 
@@ -72,19 +101,27 @@ async fn publish_reply(
     body: Vec<u8>,
     framing: Vec<(&'static str, String)>,
 ) -> Result<(), otel_wasi::Error> {
+    core::publish(reply_message(subject, body, framing))
+        .await
+        .map_err(|e| otel_wasi::Error::new("message-reply-failed", e.to_string()))
+}
+
+fn reply_message(
+    subject: &str,
+    body: Vec<u8>,
+    framing: Vec<(&'static str, String)>,
+) -> types::NatsMessage {
     let mut headers = current_trace_headers().unwrap_or_default();
     headers.extend(framing.into_iter().map(|(name, value)| types::HeaderEntry {
         name: name.to_owned(),
         value,
     }));
-    core::publish(types::NatsMessage {
+    types::NatsMessage {
         subject: subject.to_owned(),
         reply_to: None,
         body,
         headers: (!headers.is_empty()).then_some(headers),
-    })
-    .await
-    .map_err(|e| otel_wasi::Error::new("message-reply-failed", e.to_string()))
+    }
 }
 
 /// Publish a message with an explicit reply subject.
@@ -180,12 +217,13 @@ pub async fn persist(
 pub async fn reply_handler_result<R>(
     msg: types::NatsMessage,
     result: Result<R, otel_wasi::Error>,
+    pacing: transport::ReplyPacing,
 ) -> Result<(), otel_wasi::Error>
 where
     R: crate::SkirResponse,
 {
     match result {
-        Ok(response) => reply_response(msg, response).await,
+        Ok(response) => reply_response(msg, response, pacing).await,
         Err(error) => {
             let response = R::internal_error();
 
@@ -195,13 +233,17 @@ where
                 "messaging.response.success" = false,
             );
 
-            reply(msg, response.to_skir_bytes()).await?;
+            reply(msg, response.to_skir_bytes(), pacing).await?;
             Err(error)
         }
     }
 }
 
-async fn reply_response<R>(msg: types::NatsMessage, response: R) -> Result<(), otel_wasi::Error>
+async fn reply_response<R>(
+    msg: types::NatsMessage,
+    response: R,
+    pacing: transport::ReplyPacing,
+) -> Result<(), otel_wasi::Error>
 where
     R: crate::SkirResponse,
 {
@@ -219,7 +261,7 @@ where
         otel_wasi::main_attribute!("messaging.response.message" = message.clone(),);
     }
 
-    reply(msg, response.to_skir_bytes()).await?;
+    reply(msg, response.to_skir_bytes(), pacing).await?;
 
     match outcome {
         crate::SkirResponseOutcome::Success | crate::SkirResponseOutcome::DomainError => Ok(()),

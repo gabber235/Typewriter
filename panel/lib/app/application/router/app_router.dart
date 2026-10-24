@@ -50,7 +50,7 @@ Raw<AppRouter> appRouter(Ref ref) {
 /// validate realm existence or realm specific access. Navigation admission consults [workSessionLoss]
 /// before leaving the current local work scope, including platform URL changes.
 @AutoRouterConfig(replaceInRouteName: "Page,Route")
-class AppRouter extends RootStackRouter {
+class AppRouter extends NavigationRouter {
   AppRouter(
     this.access,
     this.workSessionLoss, {
@@ -80,7 +80,7 @@ class AppRouter extends RootStackRouter {
   final _WorkSessionLossGuard _workSessionLossGuard;
   final WorkSessionLossPopConfirmation? confirmWorkSessionPop;
 
-  /// Changes when a new route command supersedes pending navigation work.
+  @override
   int get navigationRevision => _navigationRevision;
   int _navigationRevision = 0;
 
@@ -403,26 +403,4 @@ extension RouteExtensions on Route {
         .join(", ");
     return "${route.name}($params)";
   }
-}
-
-/// Exposes the router's current path as reactive application state.
-@riverpod
-class CurrentRoute extends _$CurrentRoute {
-  @override
-  String build() {
-    final router = ref.watch(appRouterProvider);
-    return router.currentPath;
-  }
-}
-
-/// Reads an inherited path parameter from the router's active top route.
-///
-/// A missing parameter returns null. Consumers use this provider for route
-/// scoped resource lookup and should handle that absence before constructing an
-/// identifier.
-@riverpod
-String? routeParam(Ref ref, String id) {
-  final router = ref.watch(appRouterProvider);
-  final params = router.topRoute.inheritedPathParams;
-  return params.optString(id);
 }

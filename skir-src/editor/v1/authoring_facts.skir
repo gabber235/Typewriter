@@ -7,15 +7,15 @@ import {
   AuthoringRecord,
   DataValue,
   RelationId,
-  ResourceId,
   TypeSelection,
   ValueLocation,
   ValuePath,
 } from "editor/v1/type_catalog.skir";
+import { ResourceId } from "kernel/v1/resource_id.skir";
 
 /// One directed relation edge derived from authored references. Nullable endpoint locations allow
 /// a relation to be authored on only one side; present locations retain exact occurrence identity.
-struct LinkProjection(812300001) {
+struct LinkProjection(84030001) {
   contract: RelationId = 0;
   first: ResourceId = 1;
   second: ResourceId = 2;
@@ -23,7 +23,7 @@ struct LinkProjection(812300001) {
   second_location: ValuePath? = 4;
 }
 
-enum TraversalDirection(812300002) {
+enum TraversalDirection(84030002) {
   forward = 1;
   reverse = 2;
   both = 3;
@@ -31,7 +31,7 @@ enum TraversalDirection(812300002) {
 
 /// Records a saved fact required by proposed work. Missing values and absent resources are valid
 /// observations. Staged writes do not replace this original evidence with their proposed output.
-enum EditExpectation(812300003) {
+enum EditExpectation(84030003) {
   value: struct {
     at: ValueLocation = 0;
     expected: DataValue? = 1;
@@ -58,7 +58,7 @@ enum EditExpectation(812300003) {
 }
 
 /// Pairs a required original fact with the current saved fact so the caller can refresh before retrying.
-struct ExpectationConflict(812300004) {
+struct ExpectationConflict(84030004) {
   expected: EditExpectation = 0;
   actual: EditExpectation = 1;
 }

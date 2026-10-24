@@ -2,9 +2,9 @@ import "package:typewriter_panel/typewriter_panel.dart";
 
 /// Registers shortcuts for operations available to the current selection.
 ///
-/// Generic operations come from the nearest [SelectionOperationsRoot]; authoring
-/// resources use their Realm operation affordances. [selectedProvider] supplies
-/// the resolved batch, including retained data during provider refresh.
+/// Operations come from the source of the nearest [SelectionOperationsRoot].
+/// [selectedProvider] supplies the resolved batch, including retained data
+/// during provider refresh.
 class SelectionOperationShortcuts extends ConsumerWidget {
   const SelectionOperationShortcuts({
     required this.child,
@@ -21,11 +21,11 @@ class SelectionOperationShortcuts extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final selected = ref.watch(selectedProvider).value;
-    final operations = selectionOperationsFor(
-      ref,
-      context,
-      selected,
-    ).whereType<ShortcutableOperation>();
+    final operations = selected == null || selected.isEmpty
+        ? const <ShortcutableOperation>[]
+        : SelectionOperationsRoot.of(context)
+              .operationsFor(ref, selected)
+              .whereType<ShortcutableOperation>();
 
     return ManagedActionSet(
       shortcuts: [

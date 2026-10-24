@@ -2115,7 +2115,7 @@ pub fn watch_organization_join_requests_method() -> &'static crate::skir_client:
         >,
     > = std::sync::LazyLock::new(|| crate::skir_client::Method {
         name: "WatchOrganizationJoinRequests".to_string(),
-        number: 399821_i64,
+        number: 920201_i64,
         request_serializer: WatchOrganizationJoinRequestsRequest::serializer(),
         response_serializer: WatchOrganizationJoinRequestsResponse::serializer(),
         doc: "".to_string(),
@@ -2134,7 +2134,7 @@ pub fn approve_organization_join_requests_method() -> &'static crate::skir_clien
         >,
     > = std::sync::LazyLock::new(|| crate::skir_client::Method {
         name: "ApproveOrganizationJoinRequests".to_string(),
-        number: 167357_i64,
+        number: 920202_i64,
         request_serializer: ApproveOrganizationJoinRequestsRequest::serializer(),
         response_serializer: ApproveOrganizationJoinRequestsResponse::serializer(),
         doc: "".to_string(),
@@ -2153,7 +2153,7 @@ pub fn decline_organization_join_request_method() -> &'static crate::skir_client
         >,
     > = std::sync::LazyLock::new(|| crate::skir_client::Method {
         name: "DeclineOrganizationJoinRequest".to_string(),
-        number: 329306_i64,
+        number: 920203_i64,
         request_serializer: DeclineOrganizationJoinRequestRequest::serializer(),
         response_serializer: DeclineOrganizationJoinRequestResponse::serializer(),
         doc: "".to_string(),

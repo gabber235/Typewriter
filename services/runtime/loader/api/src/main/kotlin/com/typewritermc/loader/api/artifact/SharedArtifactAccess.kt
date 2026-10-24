@@ -140,9 +140,9 @@ data class SharedArtifactCatalog(
 )
 
 /**
- * Combines immutable blob transfer with revisioned logical artifact publication for a Realm.
+ * Combines immutable blob storage with revisioned logical artifact publication for a Realm.
  *
- * Upload and complete bytes before publishing their descriptor. Deletion creates a tombstone rather than
+ * Store bytes before publishing their descriptor. Deletion creates a tombstone rather than
  * immediately removing blob bytes; retention and garbage collection belong to the host.
  */
 interface SharedArtifactAccess : BlobEndpoint {

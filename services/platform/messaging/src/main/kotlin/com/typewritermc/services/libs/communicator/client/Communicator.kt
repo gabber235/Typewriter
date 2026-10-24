@@ -18,6 +18,7 @@ import com.typewritermc.services.libs.communicator.router.CommunicatorRoutes
 import com.typewritermc.services.libs.communicator.router.RouterOptions
 import com.typewritermc.services.libs.communicator.telemetry.MessageHeadersGetter
 import com.typewritermc.services.libs.communicator.telemetry.MessageHeadersSetter
+import com.typewritermc.services.libs.communicator.transfer.TransportLimits
 import com.typewritermc.services.libs.communicator.transport.InboundMessage
 import com.typewritermc.services.libs.communicator.transport.MessageHeaders
 import com.typewritermc.services.libs.communicator.transport.MessageTransport
@@ -54,6 +55,7 @@ import kotlinx.coroutines.withContext
 import kotlinx.coroutines.withTimeoutOrNull
 import java.util.concurrent.atomic.AtomicReference
 import kotlin.time.Duration
+import kotlin.time.TimeMark
 
 /**
  * Executes typed messaging contracts with telemetry, classification, and trace propagation.
@@ -244,7 +246,7 @@ class Communicator(
                 )
             val message = outbound(contract.requestAddress.render(address), payload, headers)
             annotate { attribute("messaging.destination.name", message.address.value) }
-            val inbound = classifyTransport(contract.failureSlug, transport.request(message, effectiveTimeout))
+            val inbound = classifyTransport(contract.failureSlug, transport.request(message, effectiveTimeout, contract.limits))
             val response =
                 classify(block = { contract.responseCodec.decode(inbound.payload) }, error = {
                     CommunicationError.Decode(contract.failureSlug, it)
@@ -348,9 +350,13 @@ class Communicator(
         classification: ResponseClassification,
         failureSlug: ErrorSlug,
         headers: MessageHeaders = MessageHeaders.Empty,
+        limits: TransportLimits? = null,
+        received: TimeMark? = null,
     ): CommunicationResult<Unit> =
         operation(name, "publish", failureSlug, SpanKind.PRODUCER, template) { annotate ->
-            publishResponse(destination, response, codec, classification, failureSlug, headers, annotate, transport::reply)
+            publishResponse(destination, response, codec, classification, failureSlug, headers, annotate) {
+                transport.reply(it, limits, received)
+            }
         }.responseResult()
 
     private suspend fun <Response : Any> publishResponse(
@@ -435,6 +441,7 @@ class Communicator(
                                     contract.requestCodec,
                                     contract.initialCodec,
                                     contract.initialPolicy,
+                                    contract.replyAddresses,
                                     contract.timeout,
                                     contract.failureSlug,
                                 ),

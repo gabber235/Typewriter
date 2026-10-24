@@ -34,7 +34,7 @@ import com.typewritermc.operations.capability
 import com.typewritermc.operations.collectOperation
 import com.typewritermc.operations.fillOnDrop
 import com.typewritermc.realm.TestRealmStructure
-import com.typewritermc.realm.repository.MutationPlanningResult
+import com.typewritermc.realm.edit.MutationPlanningResult
 import com.typewritermc.realm.testTag
 import com.typewritermc.types.Ref
 import com.typewritermc.types.endpointId
@@ -63,10 +63,10 @@ import skirout.editor.v1.resource_operations.ResolveResourceOperationsResult
 import skirout.editor.v1.type_catalog.AuthoringRecord
 import skirout.editor.v1.type_catalog.DataValue
 import skirout.editor.v1.type_catalog.RelationId
-import skirout.editor.v1.type_catalog.ResourceId
 import skirout.editor.v1.type_catalog.ResourceTarget
 import skirout.editor.v1.type_catalog.ValueLocation
 import skirout.editor.v1.type_catalog.ValuePath
+import skirout.kernel.v1.resource_id.ResourceId
 
 val ResourceOperationRoutesTest by testSuite {
     test("every resource gets the core operations its graph facts allow") {

@@ -112,7 +112,7 @@ class _CreateOrganization extends HookConsumerWidget {
       return;
     }
 
-    final navigator = ref.read(appRouterProvider);
+    final navigator = ref.read(navigationRouterProvider);
     final logoUrl = _buildIconUrl(nameController.text, seed);
 
     try {

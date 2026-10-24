@@ -3324,7 +3324,7 @@ pub fn configure_service_host_method()
         crate::skir_client::Method<ConfigureServiceHostRequest, ConfigureServiceHostResponse>,
     > = std::sync::LazyLock::new(|| crate::skir_client::Method {
         name: "ConfigureServiceHost".to_string(),
-        number: 934201_i64,
+        number: 930901_i64,
         request_serializer: ConfigureServiceHostRequest::serializer(),
         response_serializer: ConfigureServiceHostResponse::serializer(),
         doc: "".to_string(),
@@ -3343,7 +3343,7 @@ pub fn watch_organization_topology_method() -> &'static crate::skir_client::Meth
         >,
     > = std::sync::LazyLock::new(|| crate::skir_client::Method {
         name: "WatchOrganizationTopology".to_string(),
-        number: 934202_i64,
+        number: 930902_i64,
         request_serializer: WatchOrganizationTopologyRequest::serializer(),
         response_serializer: WatchOrganizationTopologyResponse::serializer(),
         doc: "".to_string(),
@@ -3357,7 +3357,7 @@ pub fn watch_host_execution_method()
         crate::skir_client::Method<WatchHostExecutionRequest, WatchHostExecutionResponse>,
     > = std::sync::LazyLock::new(|| crate::skir_client::Method {
         name: "WatchHostExecution".to_string(),
-        number: 934203_i64,
+        number: 930903_i64,
         request_serializer: WatchHostExecutionRequest::serializer(),
         response_serializer: WatchHostExecutionResponse::serializer(),
         doc: "".to_string(),
@@ -3371,7 +3371,7 @@ pub fn report_host_execution_method()
         crate::skir_client::Method<ReportHostExecutionRequest, ReportHostExecutionResponse>,
     > = std::sync::LazyLock::new(|| crate::skir_client::Method {
         name: "ReportHostExecution".to_string(),
-        number: 934204_i64,
+        number: 930904_i64,
         request_serializer: ReportHostExecutionRequest::serializer(),
         response_serializer: ReportHostExecutionResponse::serializer(),
         doc: "".to_string(),
@@ -3390,7 +3390,7 @@ pub fn get_service_messaging_scope_method() -> &'static crate::skir_client::Meth
         >,
     > = std::sync::LazyLock::new(|| crate::skir_client::Method {
         name: "GetServiceMessagingScope".to_string(),
-        number: 934205_i64,
+        number: 930905_i64,
         request_serializer: GetServiceMessagingScopeRequest::serializer(),
         response_serializer: GetServiceMessagingScopeResponse::serializer(),
         doc: "".to_string(),
@@ -3404,7 +3404,7 @@ pub fn register_service_host_method()
         crate::skir_client::Method<RegisterServiceHostRequest, RegisterServiceHostResponse>,
     > = std::sync::LazyLock::new(|| crate::skir_client::Method {
         name: "RegisterServiceHost".to_string(),
-        number: 934206_i64,
+        number: 930906_i64,
         request_serializer: RegisterServiceHostRequest::serializer(),
         response_serializer: RegisterServiceHostResponse::serializer(),
         doc: "".to_string(),

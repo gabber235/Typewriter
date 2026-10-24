@@ -460,7 +460,7 @@ impl CompilationContext {
 /// Identifies a resource in a compiled occurrence.
 #[derive(Clone, Debug, PartialEq, Default)]
 pub struct CompiledResourceKey {
-    pub source: crate::skirout::base::editor::v1::type_catalog::ResourceId,
+    pub source: crate::skirout::base::kernel::v1::resource_id::ResourceId,
     pub context: CompilationContext,
     /// Set this to None when you're creating a struct.
     pub _unrecognized: Option<crate::skir_client::UnrecognizedFields<CompiledResourceKey>>,
@@ -1332,7 +1332,7 @@ fn initialize_module_serializers() {
             (*a).add_field(
                 "source",
                 0,
-                crate::skirout::base::editor::v1::type_catalog::ResourceId::serializer(),
+                crate::skirout::base::kernel::v1::resource_id::ResourceId::serializer(),
                 "",
                 |x: &CompiledResourceKey| &x.source,
                 |x: &mut CompiledResourceKey, v| x.source = v,
@@ -1735,7 +1735,7 @@ pub fn query_published_content_method()
     > = std::sync::LazyLock::new(|| {
         crate::skir_client::Method {
             name: "QueryPublishedContent".to_string(),
-            number: 920008_i64,
+            number: 941001_i64,
             request_serializer: QueryPublishedContentRequest::serializer(),
             response_serializer: QueryPublishedContentResponse::serializer(),
             doc: "Returns the descriptor of the selected publication, or absent before any publication is selected.".to_string(),
@@ -1755,7 +1755,7 @@ pub fn query_compiled_resource_status_method() -> &'static crate::skir_client::M
         >,
     > = std::sync::LazyLock::new(|| crate::skir_client::Method {
         name: "QueryCompiledResourceStatus".to_string(),
-        number: 920009_i64,
+        number: 941002_i64,
         request_serializer: QueryCompiledResourceStatusRequest::serializer(),
         response_serializer: QueryCompiledResourceStatusResponse::serializer(),
         doc: "".to_string(),

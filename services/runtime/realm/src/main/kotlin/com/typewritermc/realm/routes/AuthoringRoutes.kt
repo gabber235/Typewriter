@@ -8,11 +8,11 @@ import com.typewritermc.protocol.transport.generated.authoringStateQuery
 import com.typewritermc.protocol.transport.generated.authoringTypeCommit
 import com.typewritermc.protocol.transport.generated.authoringTypePreview
 import com.typewritermc.realm.authoring.AuthoringViewStore
-import com.typewritermc.realm.authoring.DefaultTypeArgumentOperations
-import com.typewritermc.realm.authoring.TypeArgumentOperations
-import com.typewritermc.realm.authoring.requireValid
-import com.typewritermc.realm.repository.AuthoringRepository
-import com.typewritermc.realm.repository.ResourceValueMapper
+import com.typewritermc.realm.authoring.ResourceValueMapper
+import com.typewritermc.realm.edit.AuthoringRepository
+import com.typewritermc.realm.operation.DefaultTypeArgumentOperations
+import com.typewritermc.realm.operation.TypeArgumentOperations
+import com.typewritermc.realm.operation.requireValid
 import com.typewritermc.services.libs.communicator.router.CommunicatorRoutesBuilder
 import com.typewritermc.types.catalog.of
 import com.typewritermc.types.requireValid
@@ -25,7 +25,7 @@ import skirout.editor.v1.checking.FindingSet
 import skirout.editor.v1.diagnostic.DeclarationDiagnostic
 import skirout.editor.v1.type_catalog.CatalogGeneration
 import skirout.editor.v1.type_catalog.RelationId
-import skirout.editor.v1.type_catalog.ResourceId
+import skirout.kernel.v1.resource_id.ResourceId
 import skirout.editor.v1.authoring.AuthoringResource as SkirAuthoringResource
 import skirout.editor.v1.authoring.AuthoringState as SkirAuthoringState
 import skirout.editor.v1.authoring.CatalogChanged as SkirCatalogChanged

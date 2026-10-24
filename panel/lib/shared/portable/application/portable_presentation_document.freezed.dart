@@ -1,0 +1,1345 @@
+// GENERATED CODE - DO NOT MODIFY BY HAND
+// coverage:ignore-file
+// ignore_for_file: type=lint, type=warning, deprecated_member_use, deprecated_member_use_from_same_package
+// ignore_for_file: unused_element, deprecated_member_use, deprecated_member_use_from_same_package, use_function_type_syntax_for_parameters, unnecessary_const, avoid_init_to_null, invalid_override_different_default_values_named, prefer_expression_function_bodies, annotate_overrides, invalid_annotation_target, unnecessary_question_mark
+
+part of 'portable_presentation_document.dart';
+
+// **************************************************************************
+// FreezedGenerator
+// **************************************************************************
+
+// GENERATED CODE - DO NOT MODIFY BY HAND
+// dart format off
+T _$identity<T>(T value) => value;
+/// @nodoc
+mixin _$PortablePresentationBindingSchema {
+
+
+
+
+
+@override
+bool operator ==(Object other) {
+    return identical(this, other) || (other.runtimeType == runtimeType&&other is PortablePresentationBindingSchema);
+}
+
+
+@override
+int get hashCode => runtimeType.hashCode;
+
+@override
+String toString() {
+    return 'PortablePresentationBindingSchema()';
+}
+
+
+}
+
+/// @nodoc
+class $PortablePresentationBindingSchemaCopyWith<$Res>  {
+$PortablePresentationBindingSchemaCopyWith(PortablePresentationBindingSchema _, $Res Function(PortablePresentationBindingSchema) __);
+}
+
+
+/// Adds pattern-matching-related methods to [PortablePresentationBindingSchema].
+extension PortablePresentationBindingSchemaPatterns on PortablePresentationBindingSchema {
+/// A variant of `map` that fallback to returning `orElse`.
+///
+/// It is equivalent to doing:
+/// ```dart
+/// switch (sealedClass) {
+///   case final Subclass value:
+///     return ...;
+///   case _:
+///     return orElse();
+/// }
+/// ```
+
+@optionalTypeArgs TResult maybeMap<TResult extends Object?>({TResult Function( CompletePortablePresentationBinding value)?  complete,TResult Function( PartialPortablePresentationBinding value)?  partial,required TResult orElse(),}){
+final _that = this;
+switch (_that) {
+case CompletePortablePresentationBinding() when complete != null:
+return complete(_that);case PartialPortablePresentationBinding() when partial != null:
+return partial(_that);case _:
+  return orElse();
+
+}
+}
+/// A `switch`-like method, using callbacks.
+///
+/// Callbacks receives the raw object, upcasted.
+/// It is equivalent to doing:
+/// ```dart
+/// switch (sealedClass) {
+///   case final Subclass value:
+///     return ...;
+///   case final Subclass2 value:
+///     return ...;
+/// }
+/// ```
+
+@optionalTypeArgs TResult map<TResult extends Object?>({required TResult Function( CompletePortablePresentationBinding value)  complete,required TResult Function( PartialPortablePresentationBinding value)  partial,}){
+final _that = this;
+switch (_that) {
+case CompletePortablePresentationBinding():
+return complete(_that);case PartialPortablePresentationBinding():
+return partial(_that);}
+}
+/// A variant of `map` that fallback to returning `null`.
+///
+/// It is equivalent to doing:
+/// ```dart
+/// switch (sealedClass) {
+///   case final Subclass value:
+///     return ...;
+///   case _:
+///     return null;
+/// }
+/// ```
+
+@optionalTypeArgs TResult? mapOrNull<TResult extends Object?>({TResult? Function( CompletePortablePresentationBinding value)?  complete,TResult? Function( PartialPortablePresentationBinding value)?  partial,}){
+final _that = this;
+switch (_that) {
+case CompletePortablePresentationBinding() when complete != null:
+return complete(_that);case PartialPortablePresentationBinding() when partial != null:
+return partial(_that);case _:
+  return null;
+
+}
+}
+/// A variant of `when` that fallback to an `orElse` callback.
+///
+/// It is equivalent to doing:
+/// ```dart
+/// switch (sealedClass) {
+///   case Subclass(:final field):
+///     return ...;
+///   case _:
+///     return orElse();
+/// }
+/// ```
+
+@optionalTypeArgs TResult maybeWhen<TResult extends Object?>({TResult Function( skir.TypeUse use)?  complete,TResult Function( skir.TypeSelection selection)?  partial,required TResult orElse(),}) {final _that = this;
+switch (_that) {
+case CompletePortablePresentationBinding() when complete != null:
+return complete(_that.use);case PartialPortablePresentationBinding() when partial != null:
+return partial(_that.selection);case _:
+  return orElse();
+
+}
+}
+/// A `switch`-like method, using callbacks.
+///
+/// As opposed to `map`, this offers destructuring.
+/// It is equivalent to doing:
+/// ```dart
+/// switch (sealedClass) {
+///   case Subclass(:final field):
+///     return ...;
+///   case Subclass2(:final field2):
+///     return ...;
+/// }
+/// ```
+
+@optionalTypeArgs TResult when<TResult extends Object?>({required TResult Function( skir.TypeUse use)  complete,required TResult Function( skir.TypeSelection selection)  partial,}) {final _that = this;
+switch (_that) {
+case CompletePortablePresentationBinding():
+return complete(_that.use);case PartialPortablePresentationBinding():
+return partial(_that.selection);}
+}
+/// A variant of `when` that fallback to returning `null`
+///
+/// It is equivalent to doing:
+/// ```dart
+/// switch (sealedClass) {
+///   case Subclass(:final field):
+///     return ...;
+///   case _:
+///     return null;
+/// }
+/// ```
+
+@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>({TResult? Function( skir.TypeUse use)?  complete,TResult? Function( skir.TypeSelection selection)?  partial,}) {final _that = this;
+switch (_that) {
+case CompletePortablePresentationBinding() when complete != null:
+return complete(_that.use);case PartialPortablePresentationBinding() when partial != null:
+return partial(_that.selection);case _:
+  return null;
+
+}
+}
+
+}
+
+/// @nodoc
+
+
+class CompletePortablePresentationBinding implements PortablePresentationBindingSchema {
+  const CompletePortablePresentationBinding(this.use);
+  
+
+ final  skir.TypeUse use;
+
+/// Create a copy of PortablePresentationBindingSchema
+/// with the given fields replaced by the non-null parameter values.
+@JsonKey(includeFromJson: false, includeToJson: false)
+@pragma('vm:prefer-inline')
+$CompletePortablePresentationBindingCopyWith<CompletePortablePresentationBinding> get copyWith => _$CompletePortablePresentationBindingCopyWithImpl<CompletePortablePresentationBinding>(this, _$identity);
+
+
+
+@override
+bool operator ==(Object other) {
+    return identical(this, other) || (other.runtimeType == runtimeType&&other is CompletePortablePresentationBinding&&(identical(other.use, use) || other.use == use));
+}
+
+
+@override
+int get hashCode {
+    return Object.hash(runtimeType,use);
+}
+
+@override
+String toString() {
+    return 'PortablePresentationBindingSchema.complete(use: $use)';
+}
+
+
+}
+
+/// @nodoc
+abstract mixin class $CompletePortablePresentationBindingCopyWith<$Res> implements $PortablePresentationBindingSchemaCopyWith<$Res> {
+  factory $CompletePortablePresentationBindingCopyWith(CompletePortablePresentationBinding value, $Res Function(CompletePortablePresentationBinding) _then) = _$CompletePortablePresentationBindingCopyWithImpl;
+@useResult
+$Res call({
+ skir.TypeUse use
+});
+
+
+
+
+}
+/// @nodoc
+class _$CompletePortablePresentationBindingCopyWithImpl<$Res>
+    implements $CompletePortablePresentationBindingCopyWith<$Res> {
+  _$CompletePortablePresentationBindingCopyWithImpl(this._self, this._then);
+
+  final CompletePortablePresentationBinding _self;
+  final $Res Function(CompletePortablePresentationBinding) _then;
+
+/// Create a copy of PortablePresentationBindingSchema
+/// with the given fields replaced by the non-null parameter values.
+@pragma('vm:prefer-inline') $Res call({Object? use = null,}) {
+  return _then(CompletePortablePresentationBinding(
+null == use ? _self.use : use // ignore: cast_nullable_to_non_nullable
+as skir.TypeUse,
+  ));
+}
+
+
+}
+
+/// @nodoc
+
+
+class PartialPortablePresentationBinding implements PortablePresentationBindingSchema {
+  const PartialPortablePresentationBinding(this.selection);
+  
+
+ final  skir.TypeSelection selection;
+
+/// Create a copy of PortablePresentationBindingSchema
+/// with the given fields replaced by the non-null parameter values.
+@JsonKey(includeFromJson: false, includeToJson: false)
+@pragma('vm:prefer-inline')
+$PartialPortablePresentationBindingCopyWith<PartialPortablePresentationBinding> get copyWith => _$PartialPortablePresentationBindingCopyWithImpl<PartialPortablePresentationBinding>(this, _$identity);
+
+
+
+@override
+bool operator ==(Object other) {
+    return identical(this, other) || (other.runtimeType == runtimeType&&other is PartialPortablePresentationBinding&&(identical(other.selection, selection) || other.selection == selection));
+}
+
+
+@override
+int get hashCode {
+    return Object.hash(runtimeType,selection);
+}
+
+@override
+String toString() {
+    return 'PortablePresentationBindingSchema.partial(selection: $selection)';
+}
+
+
+}
+
+/// @nodoc
+abstract mixin class $PartialPortablePresentationBindingCopyWith<$Res> implements $PortablePresentationBindingSchemaCopyWith<$Res> {
+  factory $PartialPortablePresentationBindingCopyWith(PartialPortablePresentationBinding value, $Res Function(PartialPortablePresentationBinding) _then) = _$PartialPortablePresentationBindingCopyWithImpl;
+@useResult
+$Res call({
+ skir.TypeSelection selection
+});
+
+
+
+
+}
+/// @nodoc
+class _$PartialPortablePresentationBindingCopyWithImpl<$Res>
+    implements $PartialPortablePresentationBindingCopyWith<$Res> {
+  _$PartialPortablePresentationBindingCopyWithImpl(this._self, this._then);
+
+  final PartialPortablePresentationBinding _self;
+  final $Res Function(PartialPortablePresentationBinding) _then;
+
+/// Create a copy of PortablePresentationBindingSchema
+/// with the given fields replaced by the non-null parameter values.
+@pragma('vm:prefer-inline') $Res call({Object? selection = null,}) {
+  return _then(PartialPortablePresentationBinding(
+null == selection ? _self.selection : selection // ignore: cast_nullable_to_non_nullable
+as skir.TypeSelection,
+  ));
+}
+
+
+}
+
+/// @nodoc
+mixin _$PortablePresentationBinding {
+
+ PortablePresentationBindingSchema get schema; skir.DataValue get value; bool get editable; skir.ValueLocation? get location;
+/// Create a copy of PortablePresentationBinding
+/// with the given fields replaced by the non-null parameter values.
+@JsonKey(includeFromJson: false, includeToJson: false)
+@pragma('vm:prefer-inline')
+$PortablePresentationBindingCopyWith<PortablePresentationBinding> get copyWith => _$PortablePresentationBindingCopyWithImpl<PortablePresentationBinding>(this as PortablePresentationBinding, _$identity);
+
+
+
+@override
+bool operator ==(Object other) {
+  final _this = this as PortablePresentationBinding;
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is PortablePresentationBinding&&(identical(other.schema, _this.schema) || other.schema == _this.schema)&&(identical(other.value, _this.value) || other.value == _this.value)&&(identical(other.editable, _this.editable) || other.editable == _this.editable)&&(identical(other.location, _this.location) || other.location == _this.location));
+}
+
+
+@override
+int get hashCode {
+  final _this = this as PortablePresentationBinding;
+  return Object.hash(runtimeType,_this.schema,_this.value,_this.editable,_this.location);
+}
+
+@override
+String toString() {
+  final _this = this as PortablePresentationBinding;
+  return 'PortablePresentationBinding(schema: ${_this.schema}, value: ${_this.value}, editable: ${_this.editable}, location: ${_this.location})';
+}
+
+
+}
+
+/// @nodoc
+abstract mixin class $PortablePresentationBindingCopyWith<$Res>  {
+  factory $PortablePresentationBindingCopyWith(PortablePresentationBinding value, $Res Function(PortablePresentationBinding) _then) = _$PortablePresentationBindingCopyWithImpl;
+@useResult
+$Res call({
+ PortablePresentationBindingSchema schema, skir.DataValue value, bool editable, skir.ValueLocation? location
+});
+
+
+$PortablePresentationBindingSchemaCopyWith<$Res> get schema;
+
+}
+/// @nodoc
+class _$PortablePresentationBindingCopyWithImpl<$Res>
+    implements $PortablePresentationBindingCopyWith<$Res> {
+  _$PortablePresentationBindingCopyWithImpl(this._self, this._then);
+
+  final PortablePresentationBinding _self;
+  final $Res Function(PortablePresentationBinding) _then;
+
+/// Create a copy of PortablePresentationBinding
+/// with the given fields replaced by the non-null parameter values.
+@pragma('vm:prefer-inline') @override $Res call({Object? schema = null,Object? value = null,Object? editable = null,Object? location = freezed,}) {
+  return _then(PortablePresentationBinding(
+schema: null == schema ? _self.schema : schema // ignore: cast_nullable_to_non_nullable
+as PortablePresentationBindingSchema,value: null == value ? _self.value : value // ignore: cast_nullable_to_non_nullable
+as skir.DataValue,editable: null == editable ? _self.editable : editable // ignore: cast_nullable_to_non_nullable
+as bool,location: freezed == location ? _self.location : location // ignore: cast_nullable_to_non_nullable
+as skir.ValueLocation?,
+  ));
+}
+/// Create a copy of PortablePresentationBinding
+/// with the given fields replaced by the non-null parameter values.
+@override
+@pragma('vm:prefer-inline')
+$PortablePresentationBindingSchemaCopyWith<$Res> get schema {
+  
+  return $PortablePresentationBindingSchemaCopyWith<$Res>(_self.schema, (value) {
+    return _then(_self.copyWith(schema: value));
+  });
+}
+}
+
+
+/// Adds pattern-matching-related methods to [PortablePresentationBinding].
+extension PortablePresentationBindingPatterns on PortablePresentationBinding {
+/// A variant of `map` that fallback to returning `orElse`.
+///
+/// It is equivalent to doing:
+/// ```dart
+/// switch (sealedClass) {
+///   case final Subclass value:
+///     return ...;
+///   case _:
+///     return orElse();
+/// }
+/// ```
+
+@optionalTypeArgs TResult maybeMap<TResult extends Object?>(TResult Function( _PortablePresentationBinding value)?  $default,{required TResult orElse(),}){
+final _that = this;
+switch (_that) {
+case _PortablePresentationBinding() when $default != null:
+return $default(_that);case _:
+  return orElse();
+
+}
+}
+/// A `switch`-like method, using callbacks.
+///
+/// Callbacks receives the raw object, upcasted.
+/// It is equivalent to doing:
+/// ```dart
+/// switch (sealedClass) {
+///   case final Subclass value:
+///     return ...;
+///   case final Subclass2 value:
+///     return ...;
+/// }
+/// ```
+
+@optionalTypeArgs TResult map<TResult extends Object?>(TResult Function( _PortablePresentationBinding value)  $default,){
+final _that = this;
+switch (_that) {
+case _PortablePresentationBinding():
+return $default(_that);case _:
+  throw StateError('Unexpected subclass');
+
+}
+}
+/// A variant of `map` that fallback to returning `null`.
+///
+/// It is equivalent to doing:
+/// ```dart
+/// switch (sealedClass) {
+///   case final Subclass value:
+///     return ...;
+///   case _:
+///     return null;
+/// }
+/// ```
+
+@optionalTypeArgs TResult? mapOrNull<TResult extends Object?>(TResult? Function( _PortablePresentationBinding value)?  $default,){
+final _that = this;
+switch (_that) {
+case _PortablePresentationBinding() when $default != null:
+return $default(_that);case _:
+  return null;
+
+}
+}
+/// A variant of `when` that fallback to an `orElse` callback.
+///
+/// It is equivalent to doing:
+/// ```dart
+/// switch (sealedClass) {
+///   case Subclass(:final field):
+///     return ...;
+///   case _:
+///     return orElse();
+/// }
+/// ```
+
+@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function( PortablePresentationBindingSchema schema,  skir.DataValue value,  bool editable,  skir.ValueLocation? location)?  $default,{required TResult orElse(),}) {final _that = this;
+switch (_that) {
+case _PortablePresentationBinding() when $default != null:
+return $default(_that.schema,_that.value,_that.editable,_that.location);case _:
+  return orElse();
+
+}
+}
+/// A `switch`-like method, using callbacks.
+///
+/// As opposed to `map`, this offers destructuring.
+/// It is equivalent to doing:
+/// ```dart
+/// switch (sealedClass) {
+///   case Subclass(:final field):
+///     return ...;
+///   case Subclass2(:final field2):
+///     return ...;
+/// }
+/// ```
+
+@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function( PortablePresentationBindingSchema schema,  skir.DataValue value,  bool editable,  skir.ValueLocation? location)  $default,) {final _that = this;
+switch (_that) {
+case _PortablePresentationBinding():
+return $default(_that.schema,_that.value,_that.editable,_that.location);case _:
+  throw StateError('Unexpected subclass');
+
+}
+}
+/// A variant of `when` that fallback to returning `null`
+///
+/// It is equivalent to doing:
+/// ```dart
+/// switch (sealedClass) {
+///   case Subclass(:final field):
+///     return ...;
+///   case _:
+///     return null;
+/// }
+/// ```
+
+@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function( PortablePresentationBindingSchema schema,  skir.DataValue value,  bool editable,  skir.ValueLocation? location)?  $default,) {final _that = this;
+switch (_that) {
+case _PortablePresentationBinding() when $default != null:
+return $default(_that.schema,_that.value,_that.editable,_that.location);case _:
+  return null;
+
+}
+}
+
+}
+
+/// @nodoc
+
+
+class _PortablePresentationBinding implements PortablePresentationBinding {
+  const _PortablePresentationBinding({required this.schema, required this.value, this.editable = false, this.location});
+  
+
+@override final  PortablePresentationBindingSchema schema;
+@override final  skir.DataValue value;
+@override@JsonKey() final  bool editable;
+@override final  skir.ValueLocation? location;
+
+/// Create a copy of PortablePresentationBinding
+/// with the given fields replaced by the non-null parameter values.
+@override @JsonKey(includeFromJson: false, includeToJson: false)
+@pragma('vm:prefer-inline')
+_$PortablePresentationBindingCopyWith<_PortablePresentationBinding> get copyWith => __$PortablePresentationBindingCopyWithImpl<_PortablePresentationBinding>(this, _$identity);
+
+
+
+@override
+bool operator ==(Object other) {
+    return identical(this, other) || (other.runtimeType == runtimeType&&other is _PortablePresentationBinding&&(identical(other.schema, schema) || other.schema == schema)&&(identical(other.value, value) || other.value == value)&&(identical(other.editable, editable) || other.editable == editable)&&(identical(other.location, location) || other.location == location));
+}
+
+
+@override
+int get hashCode {
+    return Object.hash(runtimeType,schema,value,editable,location);
+}
+
+@override
+String toString() {
+    return 'PortablePresentationBinding(schema: $schema, value: $value, editable: $editable, location: $location)';
+}
+
+
+}
+
+/// @nodoc
+abstract mixin class _$PortablePresentationBindingCopyWith<$Res> implements $PortablePresentationBindingCopyWith<$Res> {
+  factory _$PortablePresentationBindingCopyWith(_PortablePresentationBinding value, $Res Function(_PortablePresentationBinding) _then) = __$PortablePresentationBindingCopyWithImpl;
+@override @useResult
+$Res call({
+ PortablePresentationBindingSchema schema, skir.DataValue value, bool editable, skir.ValueLocation? location
+});
+
+
+@override $PortablePresentationBindingSchemaCopyWith<$Res> get schema;
+
+}
+/// @nodoc
+class __$PortablePresentationBindingCopyWithImpl<$Res>
+    implements _$PortablePresentationBindingCopyWith<$Res> {
+  __$PortablePresentationBindingCopyWithImpl(this._self, this._then);
+
+  final _PortablePresentationBinding _self;
+  final $Res Function(_PortablePresentationBinding) _then;
+
+/// Create a copy of PortablePresentationBinding
+/// with the given fields replaced by the non-null parameter values.
+@override @pragma('vm:prefer-inline') $Res call({Object? schema = null,Object? value = null,Object? editable = null,Object? location = freezed,}) {
+  return _then(_PortablePresentationBinding(
+schema: null == schema ? _self.schema : schema // ignore: cast_nullable_to_non_nullable
+as PortablePresentationBindingSchema,value: null == value ? _self.value : value // ignore: cast_nullable_to_non_nullable
+as skir.DataValue,editable: null == editable ? _self.editable : editable // ignore: cast_nullable_to_non_nullable
+as bool,location: freezed == location ? _self.location : location // ignore: cast_nullable_to_non_nullable
+as skir.ValueLocation?,
+  ));
+}
+
+/// Create a copy of PortablePresentationBinding
+/// with the given fields replaced by the non-null parameter values.
+@override
+@pragma('vm:prefer-inline')
+$PortablePresentationBindingSchemaCopyWith<$Res> get schema {
+  
+  return $PortablePresentationBindingSchemaCopyWith<$Res>(_self.schema, (value) {
+    return _then(_self.copyWith(schema: value));
+  });
+}
+}
+
+/// @nodoc
+mixin _$PortablePresentationDocument {
+
+ CheckedEditorCatalog get catalog; skir.PresentationNode get root; Map<skir.ExpressionBindingId, PortablePresentationBinding> get bindings; skir.EvaluationBudget get budget; PortableExpressionQueries? get queries; ResourceDiagnosticReader get resourceDiagnostics; List<PortablePresentationDiagnostic> get diagnostics; PortableDiagnosticFallback get diagnosticFallback; skir.PresentationRole? get role; skir.PresentationMaterial? get material;/// Values the presentation reads from its surroundings: the material's
+/// declarations, or those of a presentation built without material.
+ List<skir.PresentationContextInput> get contextInputs; Set<skir.PresentationId> get activePresentations; Map<String, skir.PresentationNode> get slots;
+
+
+
+@override
+bool operator ==(Object other) {
+  final _this = this as PortablePresentationDocument;
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is PortablePresentationDocument&&(identical(other.catalog, _this.catalog) || other.catalog == _this.catalog)&&(identical(other.root, _this.root) || other.root == _this.root)&&const DeepCollectionEquality().equals(other.bindings, _this.bindings)&&(identical(other.budget, _this.budget) || other.budget == _this.budget)&&(identical(other.queries, _this.queries) || other.queries == _this.queries)&&(identical(other.resourceDiagnostics, _this.resourceDiagnostics) || other.resourceDiagnostics == _this.resourceDiagnostics)&&const DeepCollectionEquality().equals(other.diagnostics, _this.diagnostics)&&(identical(other.diagnosticFallback, _this.diagnosticFallback) || other.diagnosticFallback == _this.diagnosticFallback)&&(identical(other.role, _this.role) || other.role == _this.role)&&(identical(other.material, _this.material) || other.material == _this.material)&&const DeepCollectionEquality().equals(other.contextInputs, _this.contextInputs)&&const DeepCollectionEquality().equals(other.activePresentations, _this.activePresentations)&&const DeepCollectionEquality().equals(other.slots, _this.slots));
+}
+
+
+@override
+int get hashCode {
+  final _this = this as PortablePresentationDocument;
+  return Object.hash(runtimeType,_this.catalog,_this.root,const DeepCollectionEquality().hash(_this.bindings),_this.budget,_this.queries,_this.resourceDiagnostics,const DeepCollectionEquality().hash(_this.diagnostics),_this.diagnosticFallback,_this.role,_this.material,const DeepCollectionEquality().hash(_this.contextInputs),const DeepCollectionEquality().hash(_this.activePresentations),const DeepCollectionEquality().hash(_this.slots));
+}
+
+@override
+String toString() {
+  final _this = this as PortablePresentationDocument;
+  return 'PortablePresentationDocument(catalog: ${_this.catalog}, root: ${_this.root}, bindings: ${_this.bindings}, budget: ${_this.budget}, queries: ${_this.queries}, resourceDiagnostics: ${_this.resourceDiagnostics}, diagnostics: ${_this.diagnostics}, diagnosticFallback: ${_this.diagnosticFallback}, role: ${_this.role}, material: ${_this.material}, contextInputs: ${_this.contextInputs}, activePresentations: ${_this.activePresentations}, slots: ${_this.slots})';
+}
+
+
+}
+
+
+
+
+
+/// @nodoc
+
+
+class _PortablePresentationDocument extends PortablePresentationDocument {
+  const _PortablePresentationDocument({required this.catalog, required this.root, required  Map<skir.ExpressionBindingId, PortablePresentationBinding> bindings, required this.budget, required this.queries, required this.resourceDiagnostics, required  List<PortablePresentationDiagnostic> diagnostics, required this.diagnosticFallback, required this.role, required this.material, required  List<skir.PresentationContextInput> contextInputs, required  Set<skir.PresentationId> activePresentations, required  Map<String, skir.PresentationNode> slots}): _bindings = bindings,_diagnostics = diagnostics,_contextInputs = contextInputs,_activePresentations = activePresentations,_slots = slots,super._();
+  
+
+@override final  CheckedEditorCatalog catalog;
+@override final  skir.PresentationNode root;
+ final  Map<skir.ExpressionBindingId, PortablePresentationBinding> _bindings;
+@override Map<skir.ExpressionBindingId, PortablePresentationBinding> get bindings {
+  if (_bindings is EqualUnmodifiableMapView) return _bindings;
+  // ignore: implicit_dynamic_type
+  return EqualUnmodifiableMapView(_bindings);
+}
+
+@override final  skir.EvaluationBudget budget;
+@override final  PortableExpressionQueries? queries;
+@override final  ResourceDiagnosticReader resourceDiagnostics;
+ final  List<PortablePresentationDiagnostic> _diagnostics;
+@override List<PortablePresentationDiagnostic> get diagnostics {
+  if (_diagnostics is EqualUnmodifiableListView) return _diagnostics;
+  // ignore: implicit_dynamic_type
+  return EqualUnmodifiableListView(_diagnostics);
+}
+
+@override final  PortableDiagnosticFallback diagnosticFallback;
+@override final  skir.PresentationRole? role;
+@override final  skir.PresentationMaterial? material;
+/// Values the presentation reads from its surroundings: the material's
+/// declarations, or those of a presentation built without material.
+ final  List<skir.PresentationContextInput> _contextInputs;
+/// Values the presentation reads from its surroundings: the material's
+/// declarations, or those of a presentation built without material.
+@override List<skir.PresentationContextInput> get contextInputs {
+  if (_contextInputs is EqualUnmodifiableListView) return _contextInputs;
+  // ignore: implicit_dynamic_type
+  return EqualUnmodifiableListView(_contextInputs);
+}
+
+ final  Set<skir.PresentationId> _activePresentations;
+@override Set<skir.PresentationId> get activePresentations {
+  if (_activePresentations is EqualUnmodifiableSetView) return _activePresentations;
+  // ignore: implicit_dynamic_type
+  return EqualUnmodifiableSetView(_activePresentations);
+}
+
+ final  Map<String, skir.PresentationNode> _slots;
+@override Map<String, skir.PresentationNode> get slots {
+  if (_slots is EqualUnmodifiableMapView) return _slots;
+  // ignore: implicit_dynamic_type
+  return EqualUnmodifiableMapView(_slots);
+}
+
+
+
+
+
+@override
+bool operator ==(Object other) {
+    return identical(this, other) || (other.runtimeType == runtimeType&&other is _PortablePresentationDocument&&(identical(other.catalog, catalog) || other.catalog == catalog)&&(identical(other.root, root) || other.root == root)&&const DeepCollectionEquality().equals(other.bindings, _bindings)&&(identical(other.budget, budget) || other.budget == budget)&&(identical(other.queries, queries) || other.queries == queries)&&(identical(other.resourceDiagnostics, resourceDiagnostics) || other.resourceDiagnostics == resourceDiagnostics)&&const DeepCollectionEquality().equals(other.diagnostics, _diagnostics)&&(identical(other.diagnosticFallback, diagnosticFallback) || other.diagnosticFallback == diagnosticFallback)&&(identical(other.role, role) || other.role == role)&&(identical(other.material, material) || other.material == material)&&const DeepCollectionEquality().equals(other.contextInputs, _contextInputs)&&const DeepCollectionEquality().equals(other.activePresentations, _activePresentations)&&const DeepCollectionEquality().equals(other.slots, _slots));
+}
+
+
+@override
+int get hashCode {
+    return Object.hash(runtimeType,catalog,root,const DeepCollectionEquality().hash(_bindings),budget,queries,resourceDiagnostics,const DeepCollectionEquality().hash(_diagnostics),diagnosticFallback,role,material,const DeepCollectionEquality().hash(_contextInputs),const DeepCollectionEquality().hash(_activePresentations),const DeepCollectionEquality().hash(_slots));
+}
+
+@override
+String toString() {
+    return 'PortablePresentationDocument._value(catalog: $catalog, root: $root, bindings: $bindings, budget: $budget, queries: $queries, resourceDiagnostics: $resourceDiagnostics, diagnostics: $diagnostics, diagnosticFallback: $diagnosticFallback, role: $role, material: $material, contextInputs: $contextInputs, activePresentations: $activePresentations, slots: $slots)';
+}
+
+
+}
+
+
+
+
+/// @nodoc
+mixin _$PortableInvocationContext {
+
+ Map<skir.ExpressionBindingId, PortableExpressionBinding> get bindings; skir.CatalogGeneration get catalogGeneration; PortableExpressionQueries? get queries; ResourceDiagnosticReader get resourceDiagnostics; List<skir.ValueLocation> get expressionReads;
+
+
+
+@override
+bool operator ==(Object other) {
+  final _this = this as PortableInvocationContext;
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is PortableInvocationContext&&const DeepCollectionEquality().equals(other.bindings, _this.bindings)&&(identical(other.catalogGeneration, _this.catalogGeneration) || other.catalogGeneration == _this.catalogGeneration)&&(identical(other.queries, _this.queries) || other.queries == _this.queries)&&(identical(other.resourceDiagnostics, _this.resourceDiagnostics) || other.resourceDiagnostics == _this.resourceDiagnostics)&&const DeepCollectionEquality().equals(other.expressionReads, _this.expressionReads));
+}
+
+
+@override
+int get hashCode {
+  final _this = this as PortableInvocationContext;
+  return Object.hash(runtimeType,const DeepCollectionEquality().hash(_this.bindings),_this.catalogGeneration,_this.queries,_this.resourceDiagnostics,const DeepCollectionEquality().hash(_this.expressionReads));
+}
+
+@override
+String toString() {
+  final _this = this as PortableInvocationContext;
+  return 'PortableInvocationContext(bindings: ${_this.bindings}, catalogGeneration: ${_this.catalogGeneration}, queries: ${_this.queries}, resourceDiagnostics: ${_this.resourceDiagnostics}, expressionReads: ${_this.expressionReads})';
+}
+
+
+}
+
+
+
+
+
+/// @nodoc
+
+
+class _PortableInvocationContext extends PortableInvocationContext {
+  const _PortableInvocationContext({required  Map<skir.ExpressionBindingId, PortableExpressionBinding> bindings, required this.catalogGeneration, required this.queries, required this.resourceDiagnostics, required  List<skir.ValueLocation> expressionReads}): _bindings = bindings,_expressionReads = expressionReads,super._();
+  
+
+ final  Map<skir.ExpressionBindingId, PortableExpressionBinding> _bindings;
+@override Map<skir.ExpressionBindingId, PortableExpressionBinding> get bindings {
+  if (_bindings is EqualUnmodifiableMapView) return _bindings;
+  // ignore: implicit_dynamic_type
+  return EqualUnmodifiableMapView(_bindings);
+}
+
+@override final  skir.CatalogGeneration catalogGeneration;
+@override final  PortableExpressionQueries? queries;
+@override final  ResourceDiagnosticReader resourceDiagnostics;
+ final  List<skir.ValueLocation> _expressionReads;
+@override List<skir.ValueLocation> get expressionReads {
+  if (_expressionReads is EqualUnmodifiableListView) return _expressionReads;
+  // ignore: implicit_dynamic_type
+  return EqualUnmodifiableListView(_expressionReads);
+}
+
+
+
+
+
+@override
+bool operator ==(Object other) {
+    return identical(this, other) || (other.runtimeType == runtimeType&&other is _PortableInvocationContext&&const DeepCollectionEquality().equals(other.bindings, _bindings)&&(identical(other.catalogGeneration, catalogGeneration) || other.catalogGeneration == catalogGeneration)&&(identical(other.queries, queries) || other.queries == queries)&&(identical(other.resourceDiagnostics, resourceDiagnostics) || other.resourceDiagnostics == resourceDiagnostics)&&const DeepCollectionEquality().equals(other.expressionReads, _expressionReads));
+}
+
+
+@override
+int get hashCode {
+    return Object.hash(runtimeType,const DeepCollectionEquality().hash(_bindings),catalogGeneration,queries,resourceDiagnostics,const DeepCollectionEquality().hash(_expressionReads));
+}
+
+@override
+String toString() {
+    return 'PortableInvocationContext._value(bindings: $bindings, catalogGeneration: $catalogGeneration, queries: $queries, resourceDiagnostics: $resourceDiagnostics, expressionReads: $expressionReads)';
+}
+
+
+}
+
+
+
+
+/// @nodoc
+mixin _$PortablePresentationCapabilities {
+
+ Future<void> Function(skir.CapabilityId capabilityId, skir.DataValue payload)? get invokeCommand; Stream<skir.RealmPresentationSearchUpdate> Function(skir.RealmPresentationSearchRequest request)? get watchSearch; Future<void> Function()? get reload; ValueChanged<skir.ResourceId>? get openResource; Future<PortablePresentationWriteResult> Function(skir.EditorAction action, PortableInvocationContext context)? get resourceAction; Future<skir.PreparedValue> Function(skir.ValuePreparationRequest request)? get prepareValue;
+/// Create a copy of PortablePresentationCapabilities
+/// with the given fields replaced by the non-null parameter values.
+@JsonKey(includeFromJson: false, includeToJson: false)
+@pragma('vm:prefer-inline')
+$PortablePresentationCapabilitiesCopyWith<PortablePresentationCapabilities> get copyWith => _$PortablePresentationCapabilitiesCopyWithImpl<PortablePresentationCapabilities>(this as PortablePresentationCapabilities, _$identity);
+
+
+
+@override
+bool operator ==(Object other) {
+  final _this = this as PortablePresentationCapabilities;
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is PortablePresentationCapabilities&&(identical(other.invokeCommand, _this.invokeCommand) || other.invokeCommand == _this.invokeCommand)&&(identical(other.watchSearch, _this.watchSearch) || other.watchSearch == _this.watchSearch)&&(identical(other.reload, _this.reload) || other.reload == _this.reload)&&(identical(other.openResource, _this.openResource) || other.openResource == _this.openResource)&&(identical(other.resourceAction, _this.resourceAction) || other.resourceAction == _this.resourceAction)&&(identical(other.prepareValue, _this.prepareValue) || other.prepareValue == _this.prepareValue));
+}
+
+
+@override
+int get hashCode {
+  final _this = this as PortablePresentationCapabilities;
+  return Object.hash(runtimeType,_this.invokeCommand,_this.watchSearch,_this.reload,_this.openResource,_this.resourceAction,_this.prepareValue);
+}
+
+@override
+String toString() {
+  final _this = this as PortablePresentationCapabilities;
+  return 'PortablePresentationCapabilities(invokeCommand: ${_this.invokeCommand}, watchSearch: ${_this.watchSearch}, reload: ${_this.reload}, openResource: ${_this.openResource}, resourceAction: ${_this.resourceAction}, prepareValue: ${_this.prepareValue})';
+}
+
+
+}
+
+/// @nodoc
+abstract mixin class $PortablePresentationCapabilitiesCopyWith<$Res>  {
+  factory $PortablePresentationCapabilitiesCopyWith(PortablePresentationCapabilities value, $Res Function(PortablePresentationCapabilities) _then) = _$PortablePresentationCapabilitiesCopyWithImpl;
+@useResult
+$Res call({
+ Future<void> Function(skir.CapabilityId capabilityId, skir.DataValue payload)? invokeCommand, Stream<skir.RealmPresentationSearchUpdate> Function(skir.RealmPresentationSearchRequest request)? watchSearch, Future<void> Function()? reload, ValueChanged<skir.ResourceId>? openResource, Future<PortablePresentationWriteResult> Function(skir.EditorAction action, PortableInvocationContext context)? resourceAction, Future<skir.PreparedValue> Function(skir.ValuePreparationRequest request)? prepareValue
+});
+
+
+
+
+}
+/// @nodoc
+class _$PortablePresentationCapabilitiesCopyWithImpl<$Res>
+    implements $PortablePresentationCapabilitiesCopyWith<$Res> {
+  _$PortablePresentationCapabilitiesCopyWithImpl(this._self, this._then);
+
+  final PortablePresentationCapabilities _self;
+  final $Res Function(PortablePresentationCapabilities) _then;
+
+/// Create a copy of PortablePresentationCapabilities
+/// with the given fields replaced by the non-null parameter values.
+@pragma('vm:prefer-inline') @override $Res call({Object? invokeCommand = freezed,Object? watchSearch = freezed,Object? reload = freezed,Object? openResource = freezed,Object? resourceAction = freezed,Object? prepareValue = freezed,}) {
+  return _then(PortablePresentationCapabilities(
+invokeCommand: freezed == invokeCommand ? _self.invokeCommand : invokeCommand // ignore: cast_nullable_to_non_nullable
+as Future<void> Function(skir.CapabilityId capabilityId, skir.DataValue payload)?,watchSearch: freezed == watchSearch ? _self.watchSearch : watchSearch // ignore: cast_nullable_to_non_nullable
+as Stream<skir.RealmPresentationSearchUpdate> Function(skir.RealmPresentationSearchRequest request)?,reload: freezed == reload ? _self.reload : reload // ignore: cast_nullable_to_non_nullable
+as Future<void> Function()?,openResource: freezed == openResource ? _self.openResource : openResource // ignore: cast_nullable_to_non_nullable
+as ValueChanged<skir.ResourceId>?,resourceAction: freezed == resourceAction ? _self.resourceAction : resourceAction // ignore: cast_nullable_to_non_nullable
+as Future<PortablePresentationWriteResult> Function(skir.EditorAction action, PortableInvocationContext context)?,prepareValue: freezed == prepareValue ? _self.prepareValue : prepareValue // ignore: cast_nullable_to_non_nullable
+as Future<skir.PreparedValue> Function(skir.ValuePreparationRequest request)?,
+  ));
+}
+
+}
+
+
+/// Adds pattern-matching-related methods to [PortablePresentationCapabilities].
+extension PortablePresentationCapabilitiesPatterns on PortablePresentationCapabilities {
+/// A variant of `map` that fallback to returning `orElse`.
+///
+/// It is equivalent to doing:
+/// ```dart
+/// switch (sealedClass) {
+///   case final Subclass value:
+///     return ...;
+///   case _:
+///     return orElse();
+/// }
+/// ```
+
+@optionalTypeArgs TResult maybeMap<TResult extends Object?>(TResult Function( _PortablePresentationCapabilities value)?  $default,{required TResult orElse(),}){
+final _that = this;
+switch (_that) {
+case _PortablePresentationCapabilities() when $default != null:
+return $default(_that);case _:
+  return orElse();
+
+}
+}
+/// A `switch`-like method, using callbacks.
+///
+/// Callbacks receives the raw object, upcasted.
+/// It is equivalent to doing:
+/// ```dart
+/// switch (sealedClass) {
+///   case final Subclass value:
+///     return ...;
+///   case final Subclass2 value:
+///     return ...;
+/// }
+/// ```
+
+@optionalTypeArgs TResult map<TResult extends Object?>(TResult Function( _PortablePresentationCapabilities value)  $default,){
+final _that = this;
+switch (_that) {
+case _PortablePresentationCapabilities():
+return $default(_that);case _:
+  throw StateError('Unexpected subclass');
+
+}
+}
+/// A variant of `map` that fallback to returning `null`.
+///
+/// It is equivalent to doing:
+/// ```dart
+/// switch (sealedClass) {
+///   case final Subclass value:
+///     return ...;
+///   case _:
+///     return null;
+/// }
+/// ```
+
+@optionalTypeArgs TResult? mapOrNull<TResult extends Object?>(TResult? Function( _PortablePresentationCapabilities value)?  $default,){
+final _that = this;
+switch (_that) {
+case _PortablePresentationCapabilities() when $default != null:
+return $default(_that);case _:
+  return null;
+
+}
+}
+/// A variant of `when` that fallback to an `orElse` callback.
+///
+/// It is equivalent to doing:
+/// ```dart
+/// switch (sealedClass) {
+///   case Subclass(:final field):
+///     return ...;
+///   case _:
+///     return orElse();
+/// }
+/// ```
+
+@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function( Future<void> Function(skir.CapabilityId capabilityId, skir.DataValue payload)? invokeCommand,  Stream<skir.RealmPresentationSearchUpdate> Function(skir.RealmPresentationSearchRequest request)? watchSearch,  Future<void> Function()? reload,  ValueChanged<skir.ResourceId>? openResource,  Future<PortablePresentationWriteResult> Function(skir.EditorAction action, PortableInvocationContext context)? resourceAction,  Future<skir.PreparedValue> Function(skir.ValuePreparationRequest request)? prepareValue)?  $default,{required TResult orElse(),}) {final _that = this;
+switch (_that) {
+case _PortablePresentationCapabilities() when $default != null:
+return $default(_that.invokeCommand,_that.watchSearch,_that.reload,_that.openResource,_that.resourceAction,_that.prepareValue);case _:
+  return orElse();
+
+}
+}
+/// A `switch`-like method, using callbacks.
+///
+/// As opposed to `map`, this offers destructuring.
+/// It is equivalent to doing:
+/// ```dart
+/// switch (sealedClass) {
+///   case Subclass(:final field):
+///     return ...;
+///   case Subclass2(:final field2):
+///     return ...;
+/// }
+/// ```
+
+@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function( Future<void> Function(skir.CapabilityId capabilityId, skir.DataValue payload)? invokeCommand,  Stream<skir.RealmPresentationSearchUpdate> Function(skir.RealmPresentationSearchRequest request)? watchSearch,  Future<void> Function()? reload,  ValueChanged<skir.ResourceId>? openResource,  Future<PortablePresentationWriteResult> Function(skir.EditorAction action, PortableInvocationContext context)? resourceAction,  Future<skir.PreparedValue> Function(skir.ValuePreparationRequest request)? prepareValue)  $default,) {final _that = this;
+switch (_that) {
+case _PortablePresentationCapabilities():
+return $default(_that.invokeCommand,_that.watchSearch,_that.reload,_that.openResource,_that.resourceAction,_that.prepareValue);case _:
+  throw StateError('Unexpected subclass');
+
+}
+}
+/// A variant of `when` that fallback to returning `null`
+///
+/// It is equivalent to doing:
+/// ```dart
+/// switch (sealedClass) {
+///   case Subclass(:final field):
+///     return ...;
+///   case _:
+///     return null;
+/// }
+/// ```
+
+@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function( Future<void> Function(skir.CapabilityId capabilityId, skir.DataValue payload)? invokeCommand,  Stream<skir.RealmPresentationSearchUpdate> Function(skir.RealmPresentationSearchRequest request)? watchSearch,  Future<void> Function()? reload,  ValueChanged<skir.ResourceId>? openResource,  Future<PortablePresentationWriteResult> Function(skir.EditorAction action, PortableInvocationContext context)? resourceAction,  Future<skir.PreparedValue> Function(skir.ValuePreparationRequest request)? prepareValue)?  $default,) {final _that = this;
+switch (_that) {
+case _PortablePresentationCapabilities() when $default != null:
+return $default(_that.invokeCommand,_that.watchSearch,_that.reload,_that.openResource,_that.resourceAction,_that.prepareValue);case _:
+  return null;
+
+}
+}
+
+}
+
+/// @nodoc
+
+
+class _PortablePresentationCapabilities implements PortablePresentationCapabilities {
+  const _PortablePresentationCapabilities({this.invokeCommand, this.watchSearch, this.reload, this.openResource, this.resourceAction, this.prepareValue});
+  
+
+@override final  Future<void> Function(skir.CapabilityId capabilityId, skir.DataValue payload)? invokeCommand;
+@override final  Stream<skir.RealmPresentationSearchUpdate> Function(skir.RealmPresentationSearchRequest request)? watchSearch;
+@override final  Future<void> Function()? reload;
+@override final  ValueChanged<skir.ResourceId>? openResource;
+@override final  Future<PortablePresentationWriteResult> Function(skir.EditorAction action, PortableInvocationContext context)? resourceAction;
+@override final  Future<skir.PreparedValue> Function(skir.ValuePreparationRequest request)? prepareValue;
+
+/// Create a copy of PortablePresentationCapabilities
+/// with the given fields replaced by the non-null parameter values.
+@override @JsonKey(includeFromJson: false, includeToJson: false)
+@pragma('vm:prefer-inline')
+_$PortablePresentationCapabilitiesCopyWith<_PortablePresentationCapabilities> get copyWith => __$PortablePresentationCapabilitiesCopyWithImpl<_PortablePresentationCapabilities>(this, _$identity);
+
+
+
+@override
+bool operator ==(Object other) {
+    return identical(this, other) || (other.runtimeType == runtimeType&&other is _PortablePresentationCapabilities&&(identical(other.invokeCommand, invokeCommand) || other.invokeCommand == invokeCommand)&&(identical(other.watchSearch, watchSearch) || other.watchSearch == watchSearch)&&(identical(other.reload, reload) || other.reload == reload)&&(identical(other.openResource, openResource) || other.openResource == openResource)&&(identical(other.resourceAction, resourceAction) || other.resourceAction == resourceAction)&&(identical(other.prepareValue, prepareValue) || other.prepareValue == prepareValue));
+}
+
+
+@override
+int get hashCode {
+    return Object.hash(runtimeType,invokeCommand,watchSearch,reload,openResource,resourceAction,prepareValue);
+}
+
+@override
+String toString() {
+    return 'PortablePresentationCapabilities(invokeCommand: $invokeCommand, watchSearch: $watchSearch, reload: $reload, openResource: $openResource, resourceAction: $resourceAction, prepareValue: $prepareValue)';
+}
+
+
+}
+
+/// @nodoc
+abstract mixin class _$PortablePresentationCapabilitiesCopyWith<$Res> implements $PortablePresentationCapabilitiesCopyWith<$Res> {
+  factory _$PortablePresentationCapabilitiesCopyWith(_PortablePresentationCapabilities value, $Res Function(_PortablePresentationCapabilities) _then) = __$PortablePresentationCapabilitiesCopyWithImpl;
+@override @useResult
+$Res call({
+ Future<void> Function(skir.CapabilityId capabilityId, skir.DataValue payload)? invokeCommand, Stream<skir.RealmPresentationSearchUpdate> Function(skir.RealmPresentationSearchRequest request)? watchSearch, Future<void> Function()? reload, ValueChanged<skir.ResourceId>? openResource, Future<PortablePresentationWriteResult> Function(skir.EditorAction action, PortableInvocationContext context)? resourceAction, Future<skir.PreparedValue> Function(skir.ValuePreparationRequest request)? prepareValue
+});
+
+
+
+
+}
+/// @nodoc
+class __$PortablePresentationCapabilitiesCopyWithImpl<$Res>
+    implements _$PortablePresentationCapabilitiesCopyWith<$Res> {
+  __$PortablePresentationCapabilitiesCopyWithImpl(this._self, this._then);
+
+  final _PortablePresentationCapabilities _self;
+  final $Res Function(_PortablePresentationCapabilities) _then;
+
+/// Create a copy of PortablePresentationCapabilities
+/// with the given fields replaced by the non-null parameter values.
+@override @pragma('vm:prefer-inline') $Res call({Object? invokeCommand = freezed,Object? watchSearch = freezed,Object? reload = freezed,Object? openResource = freezed,Object? resourceAction = freezed,Object? prepareValue = freezed,}) {
+  return _then(_PortablePresentationCapabilities(
+invokeCommand: freezed == invokeCommand ? _self.invokeCommand : invokeCommand // ignore: cast_nullable_to_non_nullable
+as Future<void> Function(skir.CapabilityId capabilityId, skir.DataValue payload)?,watchSearch: freezed == watchSearch ? _self.watchSearch : watchSearch // ignore: cast_nullable_to_non_nullable
+as Stream<skir.RealmPresentationSearchUpdate> Function(skir.RealmPresentationSearchRequest request)?,reload: freezed == reload ? _self.reload : reload // ignore: cast_nullable_to_non_nullable
+as Future<void> Function()?,openResource: freezed == openResource ? _self.openResource : openResource // ignore: cast_nullable_to_non_nullable
+as ValueChanged<skir.ResourceId>?,resourceAction: freezed == resourceAction ? _self.resourceAction : resourceAction // ignore: cast_nullable_to_non_nullable
+as Future<PortablePresentationWriteResult> Function(skir.EditorAction action, PortableInvocationContext context)?,prepareValue: freezed == prepareValue ? _self.prepareValue : prepareValue // ignore: cast_nullable_to_non_nullable
+as Future<skir.PreparedValue> Function(skir.ValuePreparationRequest request)?,
+  ));
+}
+
+
+}
+
+/// @nodoc
+mixin _$PortablePresentationWriteResult {
+
+
+
+
+
+@override
+bool operator ==(Object other) {
+    return identical(this, other) || (other.runtimeType == runtimeType&&other is PortablePresentationWriteResult);
+}
+
+
+@override
+int get hashCode => runtimeType.hashCode;
+
+@override
+String toString() {
+    return 'PortablePresentationWriteResult()';
+}
+
+
+}
+
+/// @nodoc
+class $PortablePresentationWriteResultCopyWith<$Res>  {
+$PortablePresentationWriteResultCopyWith(PortablePresentationWriteResult _, $Res Function(PortablePresentationWriteResult) __);
+}
+
+
+/// Adds pattern-matching-related methods to [PortablePresentationWriteResult].
+extension PortablePresentationWriteResultPatterns on PortablePresentationWriteResult {
+/// A variant of `map` that fallback to returning `orElse`.
+///
+/// It is equivalent to doing:
+/// ```dart
+/// switch (sealedClass) {
+///   case final Subclass value:
+///     return ...;
+///   case _:
+///     return orElse();
+/// }
+/// ```
+
+@optionalTypeArgs TResult maybeMap<TResult extends Object?>({TResult Function( PortablePresentationWriteApplied value)?  applied,TResult Function( PortablePresentationWriteRejected value)?  rejected,required TResult orElse(),}){
+final _that = this;
+switch (_that) {
+case PortablePresentationWriteApplied() when applied != null:
+return applied(_that);case PortablePresentationWriteRejected() when rejected != null:
+return rejected(_that);case _:
+  return orElse();
+
+}
+}
+/// A `switch`-like method, using callbacks.
+///
+/// Callbacks receives the raw object, upcasted.
+/// It is equivalent to doing:
+/// ```dart
+/// switch (sealedClass) {
+///   case final Subclass value:
+///     return ...;
+///   case final Subclass2 value:
+///     return ...;
+/// }
+/// ```
+
+@optionalTypeArgs TResult map<TResult extends Object?>({required TResult Function( PortablePresentationWriteApplied value)  applied,required TResult Function( PortablePresentationWriteRejected value)  rejected,}){
+final _that = this;
+switch (_that) {
+case PortablePresentationWriteApplied():
+return applied(_that);case PortablePresentationWriteRejected():
+return rejected(_that);}
+}
+/// A variant of `map` that fallback to returning `null`.
+///
+/// It is equivalent to doing:
+/// ```dart
+/// switch (sealedClass) {
+///   case final Subclass value:
+///     return ...;
+///   case _:
+///     return null;
+/// }
+/// ```
+
+@optionalTypeArgs TResult? mapOrNull<TResult extends Object?>({TResult? Function( PortablePresentationWriteApplied value)?  applied,TResult? Function( PortablePresentationWriteRejected value)?  rejected,}){
+final _that = this;
+switch (_that) {
+case PortablePresentationWriteApplied() when applied != null:
+return applied(_that);case PortablePresentationWriteRejected() when rejected != null:
+return rejected(_that);case _:
+  return null;
+
+}
+}
+/// A variant of `when` that fallback to an `orElse` callback.
+///
+/// It is equivalent to doing:
+/// ```dart
+/// switch (sealedClass) {
+///   case Subclass(:final field):
+///     return ...;
+///   case _:
+///     return orElse();
+/// }
+/// ```
+
+@optionalTypeArgs TResult maybeWhen<TResult extends Object?>({TResult Function()?  applied,TResult Function( List<PortablePresentationDiagnostic> diagnostics)?  rejected,required TResult orElse(),}) {final _that = this;
+switch (_that) {
+case PortablePresentationWriteApplied() when applied != null:
+return applied();case PortablePresentationWriteRejected() when rejected != null:
+return rejected(_that.diagnostics);case _:
+  return orElse();
+
+}
+}
+/// A `switch`-like method, using callbacks.
+///
+/// As opposed to `map`, this offers destructuring.
+/// It is equivalent to doing:
+/// ```dart
+/// switch (sealedClass) {
+///   case Subclass(:final field):
+///     return ...;
+///   case Subclass2(:final field2):
+///     return ...;
+/// }
+/// ```
+
+@optionalTypeArgs TResult when<TResult extends Object?>({required TResult Function()  applied,required TResult Function( List<PortablePresentationDiagnostic> diagnostics)  rejected,}) {final _that = this;
+switch (_that) {
+case PortablePresentationWriteApplied():
+return applied();case PortablePresentationWriteRejected():
+return rejected(_that.diagnostics);}
+}
+/// A variant of `when` that fallback to returning `null`
+///
+/// It is equivalent to doing:
+/// ```dart
+/// switch (sealedClass) {
+///   case Subclass(:final field):
+///     return ...;
+///   case _:
+///     return null;
+/// }
+/// ```
+
+@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>({TResult? Function()?  applied,TResult? Function( List<PortablePresentationDiagnostic> diagnostics)?  rejected,}) {final _that = this;
+switch (_that) {
+case PortablePresentationWriteApplied() when applied != null:
+return applied();case PortablePresentationWriteRejected() when rejected != null:
+return rejected(_that.diagnostics);case _:
+  return null;
+
+}
+}
+
+}
+
+/// @nodoc
+
+
+class PortablePresentationWriteApplied implements PortablePresentationWriteResult {
+  const PortablePresentationWriteApplied();
+  
+
+
+
+
+
+
+@override
+bool operator ==(Object other) {
+    return identical(this, other) || (other.runtimeType == runtimeType&&other is PortablePresentationWriteApplied);
+}
+
+
+@override
+int get hashCode => runtimeType.hashCode;
+
+@override
+String toString() {
+    return 'PortablePresentationWriteResult.applied()';
+}
+
+
+}
+
+
+
+
+/// @nodoc
+
+
+class PortablePresentationWriteRejected implements PortablePresentationWriteResult {
+  const PortablePresentationWriteRejected( List<PortablePresentationDiagnostic> diagnostics): _diagnostics = diagnostics;
+  
+
+ final  List<PortablePresentationDiagnostic> _diagnostics;
+ List<PortablePresentationDiagnostic> get diagnostics {
+  if (_diagnostics is EqualUnmodifiableListView) return _diagnostics;
+  // ignore: implicit_dynamic_type
+  return EqualUnmodifiableListView(_diagnostics);
+}
+
+
+/// Create a copy of PortablePresentationWriteResult
+/// with the given fields replaced by the non-null parameter values.
+@JsonKey(includeFromJson: false, includeToJson: false)
+@pragma('vm:prefer-inline')
+$PortablePresentationWriteRejectedCopyWith<PortablePresentationWriteRejected> get copyWith => _$PortablePresentationWriteRejectedCopyWithImpl<PortablePresentationWriteRejected>(this, _$identity);
+
+
+
+@override
+bool operator ==(Object other) {
+    return identical(this, other) || (other.runtimeType == runtimeType&&other is PortablePresentationWriteRejected&&const DeepCollectionEquality().equals(other.diagnostics, _diagnostics));
+}
+
+
+@override
+int get hashCode {
+    return Object.hash(runtimeType,const DeepCollectionEquality().hash(_diagnostics));
+}
+
+@override
+String toString() {
+    return 'PortablePresentationWriteResult.rejected(diagnostics: $diagnostics)';
+}
+
+
+}
+
+/// @nodoc
+abstract mixin class $PortablePresentationWriteRejectedCopyWith<$Res> implements $PortablePresentationWriteResultCopyWith<$Res> {
+  factory $PortablePresentationWriteRejectedCopyWith(PortablePresentationWriteRejected value, $Res Function(PortablePresentationWriteRejected) _then) = _$PortablePresentationWriteRejectedCopyWithImpl;
+@useResult
+$Res call({
+ List<PortablePresentationDiagnostic> diagnostics
+});
+
+
+
+
+}
+/// @nodoc
+class _$PortablePresentationWriteRejectedCopyWithImpl<$Res>
+    implements $PortablePresentationWriteRejectedCopyWith<$Res> {
+  _$PortablePresentationWriteRejectedCopyWithImpl(this._self, this._then);
+
+  final PortablePresentationWriteRejected _self;
+  final $Res Function(PortablePresentationWriteRejected) _then;
+
+/// Create a copy of PortablePresentationWriteResult
+/// with the given fields replaced by the non-null parameter values.
+@pragma('vm:prefer-inline') $Res call({Object? diagnostics = null,}) {
+  return _then(PortablePresentationWriteRejected(
+null == diagnostics ? _self._diagnostics : diagnostics // ignore: cast_nullable_to_non_nullable
+as List<PortablePresentationDiagnostic>,
+  ));
+}
+
+
+}
+
+// dart format on

@@ -70,6 +70,7 @@ void main() {
       final response = await client.request(
         "allowed.echo",
         Uint8List.fromList([1, 2, 3]),
+        limits: transportLimits,
         headers: const {"traceparent": "integration-trace"},
       );
       final request = await received.future;
@@ -77,7 +78,11 @@ void main() {
       expect(response.payload, [1, 2, 3]);
       expect(request.headers?.first("traceparent"), "integration-trace");
       await expectLater(
-        client.request("allowed.missing", Uint8List(0)),
+        client.request(
+          "allowed.missing",
+          Uint8List(0),
+          limits: transportLimits,
+        ),
         throwsA(
           isA<NatsClientException>().having(
             (error) => error.kind,

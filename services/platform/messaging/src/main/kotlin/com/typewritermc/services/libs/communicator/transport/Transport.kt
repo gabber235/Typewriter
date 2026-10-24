@@ -3,12 +3,14 @@ package com.typewritermc.services.libs.communicator.transport
 import com.typewritermc.services.libs.communicator.address.AddressPattern
 import com.typewritermc.services.libs.communicator.address.MessageAddress
 import com.typewritermc.services.libs.communicator.transfer.TransferFailure
+import com.typewritermc.services.libs.communicator.transfer.TransportLimits
 import kotlinx.coroutines.flow.Flow
 import java.util.ArrayList
 import java.util.Collections
 import java.util.LinkedHashMap
 import java.util.Locale
 import kotlin.time.Duration
+import kotlin.time.TimeMark
 
 /** Immutable, case-insensitive, multi-value message headers with validated names and values. */
 class MessageHeaders private constructor(
@@ -85,10 +87,8 @@ class MessageHeaders private constructor(
 
 /** Immutable binary content with defensive input and output copies. */
 class Payload private constructor(
-    source: ByteArray,
+    private val content: ByteArray,
 ) {
-    private val content = source.copyOf()
-
     val size: Int get() = content.size
 
     fun isEmpty(): Boolean = content.isEmpty()
@@ -104,7 +104,14 @@ class Payload private constructor(
     companion object {
         val Empty = Payload(byteArrayOf())
 
-        fun copyOf(source: ByteArray): Payload = Payload(source)
+        fun copyOf(source: ByteArray): Payload = Payload(source.copyOf())
+
+        /** The bytes of [source] from [from] until [to], copied once. */
+        internal fun slice(
+            source: ByteArray,
+            from: Int,
+            to: Int,
+        ): Payload = Payload(source.copyOfRange(from, to))
     }
 }
 
@@ -273,13 +280,24 @@ interface MessageTransport {
      * A transport whose messages have a size limit splits a large reply into frames that its [request] and
      * [openReplyChannel] side reassembles, and fails with a
      * [TransferFailure][com.typewritermc.services.libs.communicator.transfer.TransferFailure] cause when a reply
-     * cannot be delivered complete. The default publishes the reply as one message.
+     * cannot be delivered complete. [limits] are the route's; null uses the transport's own. [received] marks when the
+     * request arrived, which starts the reply time to live: a framed reply still sending past it stops. The default
+     * publishes the reply as one message.
      */
-    suspend fun reply(message: OutboundMessage): TransportResult<Unit> = publish(message)
+    suspend fun reply(
+        message: OutboundMessage,
+        limits: TransportLimits? = null,
+        received: TimeMark? = null,
+    ): TransportResult<Unit> = publish(message)
 
+    /**
+     * Sends a request and waits for its single, complete reply. A transport whose messages have a size limit splits
+     * a request above one chunk into frames when the route's [limits] allow it; null uses the transport's own.
+     */
     suspend fun request(
         message: OutboundMessage,
         timeout: Duration,
+        limits: TransportLimits? = null,
     ): TransportResult<InboundMessage>
 
     suspend fun subscribe(

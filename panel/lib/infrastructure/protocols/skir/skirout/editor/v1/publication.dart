@@ -21,6 +21,7 @@ import "./compilation_root.dart" as _lib_editor_v1_compilation_root;
 import "./diagnostic.dart" as _lib_editor_v1_diagnostic;
 import "./type_catalog.dart" as _lib_editor_v1_type_catalog;
 import "../../kernel/v1/errors.dart" as _lib_kernel_v1_errors;
+import "../../kernel/v1/resource_id.dart" as _lib_kernel_v1_resource_id;
 
 // -----------------------------------------------------------------------------
 // struct EngineImplementationInputs
@@ -1838,7 +1839,7 @@ sealed class PublicationChange {
   factory PublicationChange.createRootAdded({
     required _lib_editor_v1_compilation_root.CompilationProjectionId_orMutable
     projection,
-    required _lib_editor_v1_type_catalog.ResourceId_orMutable resource,
+    required _lib_kernel_v1_resource_id.ResourceId_orMutable resource,
   }) => PublicationChange.wrapRootAdded(
     _lib_editor_v1_compilation_root.CompilationRoot(
       projection: projection,
@@ -1855,7 +1856,7 @@ sealed class PublicationChange {
   factory PublicationChange.createRootUpdated({
     required _lib_editor_v1_compilation_root.CompilationProjectionId_orMutable
     projection,
-    required _lib_editor_v1_type_catalog.ResourceId_orMutable resource,
+    required _lib_kernel_v1_resource_id.ResourceId_orMutable resource,
   }) => PublicationChange.wrapRootUpdated(
     _lib_editor_v1_compilation_root.CompilationRoot(
       projection: projection,
@@ -1872,7 +1873,7 @@ sealed class PublicationChange {
   factory PublicationChange.createRootRemoved({
     required _lib_editor_v1_compilation_root.CompilationProjectionId_orMutable
     projection,
-    required _lib_editor_v1_type_catalog.ResourceId_orMutable resource,
+    required _lib_kernel_v1_resource_id.ResourceId_orMutable resource,
   }) => PublicationChange.wrapRootRemoved(
     _lib_editor_v1_compilation_root.CompilationRoot(
       projection: projection,
@@ -5872,7 +5873,7 @@ final class QueryPublicationViewResponse_internalErrorWrapper
 final _skir.Method<PublishAuthoringRequest, PublishAuthoringResponse>
 publishAuthoringMethod = _skir.Method(
   "PublishAuthoring",
-  920018,
+  941501,
   PublishAuthoringRequest.serializer,
   PublishAuthoringResponse.serializer,
   "Releases only the issued candidate while its captured saved inputs and engine requirements still\nmatch. Reports release admission and selection: activated identifies the newly selected\npublication, not an acknowledgement from engine hosts; publishing means another release currently\nowns the publication gate; candidate_changed_error requires a fresh review.",
@@ -5882,7 +5883,7 @@ publishAuthoringMethod = _skir.Method(
 final _skir.Method<WatchPublicationRequest, WatchPublicationResponse>
 watchPublicationMethod = _skir.Method(
   "WatchPublication",
-  920019,
+  941502,
   WatchPublicationRequest.serializer,
   WatchPublicationResponse.serializer,
   "Returns the current review view identity; later identities arrive as update hints.",
@@ -5893,7 +5894,7 @@ watchPublicationMethod = _skir.Method(
 final _skir.Method<QueryPublicationViewRequest, QueryPublicationViewResponse>
 queryPublicationViewMethod = _skir.Method(
   "QueryPublicationView",
-  920020,
+  941503,
   QueryPublicationViewRequest.serializer,
   QueryPublicationViewResponse.serializer,
   "Returns one immutable review view, or the current view identity when expected is no longer\ncurrent. Later invalidations require a separate query.",

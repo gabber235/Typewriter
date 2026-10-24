@@ -37,4 +37,4 @@ method IssueServiceIdentity(
   builtin_role_name_forbidden_error: struct {};
   /// Identity provider unavailable.
   identity_provider_unavailable_error: struct {};
-} = 672941;
+} = 930201;

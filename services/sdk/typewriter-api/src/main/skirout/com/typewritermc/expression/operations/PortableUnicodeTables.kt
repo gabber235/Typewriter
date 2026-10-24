@@ -1,5 +1,5 @@
 // Generated from operations.yaml's pinned Unicode 17.0.0 release by
-// services/protocol/transport-generator/src/operations/unicode.ts. Do not edit.
+// services/protocol/skir-gen/src/operations/unicode.ts. Do not edit.
 
 package com.typewritermc.expression.operations
 

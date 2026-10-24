@@ -1534,7 +1534,7 @@ pub fn watch_organization_join_codes_method() -> &'static crate::skir_client::Me
         >,
     > = std::sync::LazyLock::new(|| crate::skir_client::Method {
         name: "WatchOrganizationJoinCodes".to_string(),
-        number: 690316_i64,
+        number: 920101_i64,
         request_serializer: WatchOrganizationJoinCodesRequest::serializer(),
         response_serializer: WatchOrganizationJoinCodesResponse::serializer(),
         doc: "".to_string(),
@@ -1553,7 +1553,7 @@ pub fn generate_organization_join_code_method() -> &'static crate::skir_client::
         >,
     > = std::sync::LazyLock::new(|| crate::skir_client::Method {
         name: "GenerateOrganizationJoinCode".to_string(),
-        number: 804958_i64,
+        number: 920102_i64,
         request_serializer: GenerateOrganizationJoinCodeRequest::serializer(),
         response_serializer: GenerateOrganizationJoinCodeResponse::serializer(),
         doc: "".to_string(),
@@ -1572,7 +1572,7 @@ pub fn revoke_organization_join_code_method() -> &'static crate::skir_client::Me
         >,
     > = std::sync::LazyLock::new(|| crate::skir_client::Method {
         name: "RevokeOrganizationJoinCode".to_string(),
-        number: 510187_i64,
+        number: 920103_i64,
         request_serializer: RevokeOrganizationJoinCodeRequest::serializer(),
         response_serializer: RevokeOrganizationJoinCodeResponse::serializer(),
         doc: "".to_string(),

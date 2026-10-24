@@ -1,0 +1,17 @@
+{
+  "name": "typewriter-skir-gen",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "check": "tsc -p tsconfig.json"
+  },
+  "exports": {
+    "./routes/rust": "./src/routes/rust.ts",
+    "./routes/kotlin": "./src/routes/kotlin.ts",
+    "./routes/dart": "./src/routes/dart.ts",
+    "./operations/kotlin": "./src/operations/kotlin.ts",
+    "./operations/dart": "./src/operations/dart.ts",
+    "./routes/subscriptions": "./src/routes/subscriptions.ts",
+    "./contracts": "./src/contracts/index.ts"
+  }
+}

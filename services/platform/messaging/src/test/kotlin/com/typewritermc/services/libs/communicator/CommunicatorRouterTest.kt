@@ -9,6 +9,7 @@ import com.typewritermc.services.libs.communicator.client.Communicator
 import com.typewritermc.services.libs.communicator.contract.EventContract
 import com.typewritermc.services.libs.communicator.contract.OperationName
 import com.typewritermc.services.libs.communicator.contract.PayloadCodec
+import com.typewritermc.services.libs.communicator.contract.ReplyAddressRule
 import com.typewritermc.services.libs.communicator.contract.ResponseClassification
 import com.typewritermc.services.libs.communicator.contract.ResponseOutcome
 import com.typewritermc.services.libs.communicator.contract.ResponsePolicy
@@ -61,6 +62,14 @@ private val routerPolicy =
             ResponseVariant.of(if (it == "internal") "internal" else "success"),
         )
     }
+
+/** The router routes answer `reply.*` inboxes, and `reply.{id}.*` ones only for the target they name. */
+private val routerReplies =
+    ReplyAddressRule<RouterTarget> { target, reply ->
+        val tokens = reply.value.split('.')
+        tokens[0] == "reply" && (tokens.size == 2 || (tokens.size == 3 && tokens[1] == target.id))
+    }
+
 private val routerUnary =
     UnaryContract(
         OperationName.of("router.get"),
@@ -68,6 +77,7 @@ private val routerUnary =
         routerCodec,
         routerCodec,
         routerPolicy,
+        replyAddresses = routerReplies,
         failureSlug = ErrorSlug.of("router-get-failed"),
     )
 private val routerEvent =
@@ -349,6 +359,7 @@ val CommunicatorRouterTest by testSuite {
                     routerCodec,
                     routerCodec,
                     policy,
+                    replyAddresses = routerReplies,
                     failureSlug = ErrorSlug.of("router-classified-failed"),
                 )
             val fixture = routerFixture(communicatorRoutes { unary(contract) { it.request } }, this)
@@ -372,6 +383,59 @@ val CommunicatorRouterTest by testSuite {
                         "internal",
                     )
                 spans.map { it.status.statusCode.name } shouldBe listOf("UNSET", "UNSET")
+                fixture.router.stop()
+            }
+        }
+    }
+
+    test("a request whose reply address its route does not answer is dropped with a warning before its handler runs") {
+        runTest {
+            var handled = 0
+            val fixture = routerFixture(communicatorRoutes { unary(routerUnary) { handled++.let { "ok" } } }, this)
+            fixture.use { fixture ->
+                fixture.router.start()
+                fixture.fake.deliver(message("router.a.get", "request", "service.to.victim.get"))
+                fixture.fake.deliver(message("router.a.get", "request", "reply.b.inbox"))
+                runCurrent()
+                handled shouldBe 0
+                fixture.fake.actions.filterIsInstance<FakeMessageTransport.Action.Publish>() shouldBe emptyList()
+                val refusals =
+                    fixture.harness.finishedLogs().filter { it.eventName == "messaging.reply.refused" }
+                refusals.map { it.severity.name } shouldBe listOf("WARN", "WARN")
+                refusals.map {
+                    it.attributes.get(
+                        io.opentelemetry.api.common.AttributeKey
+                            .stringKey("messaging.reply.address"),
+                    )
+                } shouldBe listOf("service.to.victim.get", "reply.b.inbox")
+                refusals.map {
+                    it.attributes.get(
+                        io.opentelemetry.api.common.AttributeKey
+                            .stringKey("messaging.destination.name"),
+                    )
+                } shouldBe listOf("router.a.get", "router.a.get")
+                refusals.map {
+                    it.attributes.get(
+                        io.opentelemetry.api.common.AttributeKey
+                            .stringKey("messaging.operation.name"),
+                    )
+                } shouldBe listOf("router.get", "router.get")
+                fixture.router.stop()
+            }
+        }
+    }
+
+    test("a request is answered on a reply address its route admits, including the inbox of the target it names") {
+        runTest {
+            val fixture = routerFixture(communicatorRoutes { unary(routerUnary) { "ok" } }, this)
+            fixture.use { fixture ->
+                fixture.router.start()
+                fixture.fake.deliver(message("router.a.get", "request", "reply.one"))
+                fixture.fake.deliver(message("router.a.get", "request", "reply.a.inbox"))
+                runCurrent()
+                fixture.fake.actions
+                    .filterIsInstance<FakeMessageTransport.Action.Publish>()
+                    .map { it.message.address.value } shouldBe listOf("reply.one", "reply.a.inbox")
                 fixture.router.stop()
             }
         }

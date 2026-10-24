@@ -2633,7 +2633,7 @@ final _skir.Method<
 >
 watchUserOrganizationsMethod = _skir.Method(
   "WatchUserOrganizations",
-  246975,
+  920701,
   WatchUserOrganizationsRequest.serializer,
   WatchUserOrganizationsResponse.serializer,
   "",
@@ -2642,7 +2642,7 @@ watchUserOrganizationsMethod = _skir.Method(
 final _skir.Method<WatchUserJoinRequestsRequest, WatchUserJoinRequestsResponse>
 watchUserJoinRequestsMethod = _skir.Method(
   "WatchUserJoinRequests",
-  939197,
+  920702,
   WatchUserJoinRequestsRequest.serializer,
   WatchUserJoinRequestsResponse.serializer,
   "",
@@ -2651,7 +2651,7 @@ watchUserJoinRequestsMethod = _skir.Method(
 final _skir.Method<SubmitUserJoinRequestRequest, SubmitUserJoinRequestResponse>
 submitUserJoinRequestMethod = _skir.Method(
   "SubmitUserJoinRequest",
-  4962,
+  920703,
   SubmitUserJoinRequestRequest.serializer,
   SubmitUserJoinRequestResponse.serializer,
   "",
@@ -2660,7 +2660,7 @@ submitUserJoinRequestMethod = _skir.Method(
 final _skir.Method<CancelUserJoinRequestRequest, CancelUserJoinRequestResponse>
 cancelUserJoinRequestMethod = _skir.Method(
   "CancelUserJoinRequest",
-  387737,
+  920704,
   CancelUserJoinRequestRequest.serializer,
   CancelUserJoinRequestResponse.serializer,
   "",

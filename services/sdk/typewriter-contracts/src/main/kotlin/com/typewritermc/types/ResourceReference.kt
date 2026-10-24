@@ -13,7 +13,7 @@ import kotlinx.serialization.json.JsonDecoder
 import kotlinx.serialization.json.JsonElement
 import kotlinx.serialization.json.JsonEncoder
 import skirout.editor.v1.type_catalog.ValuePath
-import skirout.editor.v1.type_catalog.ResourceId as SkirResourceId
+import skirout.kernel.v1.resource_id.ResourceId as SkirResourceId
 
 interface Resource
 

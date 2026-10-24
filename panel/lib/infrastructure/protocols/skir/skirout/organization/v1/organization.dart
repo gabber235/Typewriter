@@ -1453,7 +1453,7 @@ final class DeleteOrganizationResponse_invalidRecordIdErrorWrapper
 final _skir.Method<CreateOrganizationRequest, CreateOrganizationResponse>
 createOrganizationMethod = _skir.Method(
   "CreateOrganization",
-  336038,
+  920401,
   CreateOrganizationRequest.serializer,
   CreateOrganizationResponse.serializer,
   "",
@@ -1462,7 +1462,7 @@ createOrganizationMethod = _skir.Method(
 final _skir.Method<DeleteOrganizationRequest, DeleteOrganizationResponse>
 deleteOrganizationMethod = _skir.Method(
   "DeleteOrganization",
-  627251,
+  920402,
   DeleteOrganizationRequest.serializer,
   DeleteOrganizationResponse.serializer,
   "",

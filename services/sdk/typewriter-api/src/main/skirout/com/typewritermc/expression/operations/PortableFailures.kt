@@ -8,8 +8,8 @@ import skirout.editor.v1.type_catalog.DataValue
 import skirout.editor.v1.type_catalog.LinkValue
 import skirout.editor.v1.type_catalog.ListItem
 import skirout.editor.v1.type_catalog.MapRow
-import skirout.editor.v1.type_catalog.ResourceId
 import skirout.editor.v1.type_catalog.TypeUse
+import skirout.kernel.v1.resource_id.ResourceId
 
 /** Failures operation kernels raise. */
 object KernelFailure {

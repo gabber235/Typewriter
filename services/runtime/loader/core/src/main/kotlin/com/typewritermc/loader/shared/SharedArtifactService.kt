@@ -11,12 +11,10 @@ import com.typewritermc.loader.api.artifact.SharedArtifactRevision
 import com.typewritermc.loader.api.artifact.SharedCatalogRevision
 import com.typewritermc.loader.artifactSpan
 import com.typewritermc.services.libs.filetransfer.blob.ArtifactDigest
-import com.typewritermc.services.libs.filetransfer.blob.BlobChunk
 import com.typewritermc.services.libs.filetransfer.blob.BlobEndpoint
 import com.typewritermc.services.libs.filetransfer.blob.BlobMetadata
 import com.typewritermc.services.libs.filetransfer.blob.BlobResult
-import com.typewritermc.services.libs.filetransfer.blob.BlobWriteSession
-import com.typewritermc.services.libs.filetransfer.blob.TransferId
+import com.typewritermc.services.libs.filetransfer.blob.StoreResult
 import com.typewritermc.services.libs.telemetry.ServiceTelemetry
 
 /**
@@ -122,24 +120,12 @@ class SharedArtifactService(
 
     override suspend fun metadata(digest: ArtifactDigest): BlobResult<BlobMetadata> = blobs.metadata(digest)
 
-    override suspend fun read(
-        digest: ArtifactDigest,
-        offset: Long,
-        maximumBytes: Int,
-    ): BlobResult<BlobChunk> = blobs.read(digest, offset, maximumBytes)
+    override suspend fun fetch(digest: ArtifactDigest): BlobResult<ByteArray> = blobs.fetch(digest)
 
-    override suspend fun beginWrite(
-        transfer: TransferId,
+    override suspend fun store(
         expected: BlobMetadata,
-    ): BlobResult<BlobWriteSession> = blobs.beginWrite(transfer, expected)
-
-    override suspend fun write(
-        transfer: TransferId,
-        offset: Long,
-        bytes: ByteArray,
-    ): BlobResult<Long> = blobs.write(transfer, offset, bytes)
-
-    override suspend fun complete(transfer: TransferId): BlobResult<BlobMetadata> = blobs.complete(transfer)
+        content: ByteArray,
+    ): StoreResult = blobs.store(expected, content)
 }
 
 private fun SharedArtifactDescriptor.sameContentAndMetadata(command: PublishSharedArtifact): Boolean =

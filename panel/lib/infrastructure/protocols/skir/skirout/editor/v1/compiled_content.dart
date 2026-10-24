@@ -18,6 +18,7 @@ import "package:skir_client/skir_client.dart" as _skir;
 import "./compilation_root.dart" as _lib_editor_v1_compilation_root;
 import "./type_catalog.dart" as _lib_editor_v1_type_catalog;
 import "../../kernel/v1/errors.dart" as _lib_kernel_v1_errors;
+import "../../kernel/v1/resource_id.dart" as _lib_kernel_v1_resource_id;
 
 // -----------------------------------------------------------------------------
 // struct CompiledBlobPointer
@@ -1488,7 +1489,7 @@ final class CompilationContext_mutable implements CompilationContext_orMutable {
 // -----------------------------------------------------------------------------
 
 sealed class CompiledResourceKey_orMutable {
-  _lib_editor_v1_type_catalog.ResourceId_orMutable get source;
+  _lib_kernel_v1_resource_id.ResourceId_orMutable get source;
   CompilationContext_orMutable get context;
 
   CompiledResourceKey toFrozen();
@@ -1499,13 +1500,13 @@ sealed class CompiledResourceKey_orMutable {
 /// Deeply immutable.
 final class CompiledResourceKey implements CompiledResourceKey_orMutable {
   @_core.override
-  final _lib_editor_v1_type_catalog.ResourceId source;
+  final _lib_kernel_v1_resource_id.ResourceId source;
   @_core.override
   final CompilationContext context;
   _skir.internal__UnrecognizedFields? _u;
 
   factory CompiledResourceKey({
-    required _lib_editor_v1_type_catalog.ResourceId_orMutable source,
+    required _lib_kernel_v1_resource_id.ResourceId_orMutable source,
     required CompilationContext_orMutable context,
   }) => CompiledResourceKey._(source.toFrozen(), context.toFrozen());
 
@@ -1513,14 +1514,14 @@ final class CompiledResourceKey implements CompiledResourceKey_orMutable {
 
   /// Default instance with all fields set to their default values.
   static final defaultInstance = CompiledResourceKey._(
-    _lib_editor_v1_type_catalog.ResourceId.defaultInstance,
+    _lib_kernel_v1_resource_id.ResourceId.defaultInstance,
     CompilationContext.defaultInstance,
   );
 
   /// Returns a new mutable instance.
   /// Fields are initialized to their default values.
   static CompiledResourceKey_mutable mutable() => CompiledResourceKey_mutable._(
-    _lib_editor_v1_type_catalog.ResourceId.defaultInstance,
+    _lib_kernel_v1_resource_id.ResourceId.defaultInstance,
     CompilationContext.defaultInstance,
   );
 
@@ -1562,7 +1563,7 @@ final class CompiledResourceKey implements CompiledResourceKey_orMutable {
         "source",
         "source",
         0,
-        _lib_editor_v1_type_catalog.ResourceId.serializer,
+        _lib_kernel_v1_resource_id.ResourceId.serializer,
         "",
         (it) => it.source,
         (it, v) => it.source = v,
@@ -1595,7 +1596,7 @@ final class CompiledResourceKey implements CompiledResourceKey_orMutable {
 /// Mutable version of [CompiledResourceKey].
 final class CompiledResourceKey_mutable
     implements CompiledResourceKey_orMutable {
-  _lib_editor_v1_type_catalog.ResourceId_orMutable source;
+  _lib_kernel_v1_resource_id.ResourceId_orMutable source;
   CompilationContext_orMutable context;
   _skir.internal__UnrecognizedFields? _u;
 
@@ -1603,12 +1604,12 @@ final class CompiledResourceKey_mutable
 
   /// If the value of [source] is already mutable, returns it as-is.
   /// Otherwise, makes a mutable copy, assigns it back to [source] and returns it.
-  _lib_editor_v1_type_catalog.ResourceId_mutable get mutableSource {
+  _lib_kernel_v1_resource_id.ResourceId_mutable get mutableSource {
     final value = this.source;
-    if (value is _lib_editor_v1_type_catalog.ResourceId_mutable) {
+    if (value is _lib_kernel_v1_resource_id.ResourceId_mutable) {
       return value;
     } else {
-      return this.source = (value as _lib_editor_v1_type_catalog.ResourceId)
+      return this.source = (value as _lib_kernel_v1_resource_id.ResourceId)
           .toMutable();
     }
   }
@@ -3700,7 +3701,7 @@ final class QueryCompiledResourceStatusResponse_internalErrorWrapper
 final _skir.Method<QueryPublishedContentRequest, QueryPublishedContentResponse>
 queryPublishedContentMethod = _skir.Method(
   "QueryPublishedContent",
-  920008,
+  941001,
   QueryPublishedContentRequest.serializer,
   QueryPublishedContentResponse.serializer,
   "Returns the descriptor of the selected publication, or absent before any publication is selected.",
@@ -3712,7 +3713,7 @@ final _skir.Method<
 >
 queryCompiledResourceStatusMethod = _skir.Method(
   "QueryCompiledResourceStatus",
-  920009,
+  941002,
   QueryCompiledResourceStatusRequest.serializer,
   QueryCompiledResourceStatusResponse.serializer,
   "",

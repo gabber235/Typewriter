@@ -9,22 +9,6 @@ import skirout.editor.v1.authoring_facts.EditExpectation
 import skirout.editor.v1.checking.CheckInstanceId
 import skirout.editor.v1.type_catalog.ValueLocation
 
-interface ObservationRecorder {
-    fun observe(expectation: EditExpectation)
-
-    fun captured(): List<EditExpectation>
-}
-
-class DefaultObservationRecorder : ObservationRecorder {
-    private val expectations = linkedSetOf<EditExpectation>()
-
-    override fun observe(expectation: EditExpectation) {
-        expectations += expectation
-    }
-
-    override fun captured(): List<EditExpectation> = expectations.toList()
-}
-
 internal fun EditExpectation.dependencies(): Set<InputIdentity> =
     when (this) {
         is EditExpectation.ValueWrapper -> {

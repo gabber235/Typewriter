@@ -31,7 +31,10 @@ void main() {
     "session loss reads live work through the production router graph",
     () async {
       final container = ProviderContainer.test(
-        overrides: [userIdProvider.overrideWith((ref) async => "user")],
+        overrides: [
+          ...appOverrides(),
+          userIdProvider.overrideWith((ref) async => "user"),
+        ],
       );
       await container.read(userIdProvider.future);
       final owner = container.read(workSessionLossProvider);
@@ -94,7 +97,10 @@ void main() {
     "initial deep link admits navigation with live local work providers",
     () async {
       final container = ProviderContainer.test(
-        overrides: [userIdProvider.overrideWith((ref) async => "user")],
+        overrides: [
+          ...appOverrides(),
+          userIdProvider.overrideWith((ref) async => "user"),
+        ],
       );
       await container.read(userIdProvider.future);
       final router = container.read(appRouterProvider);
@@ -127,7 +133,10 @@ void main() {
 
   test("account and router share the application scoped coordinator and disposal ends consent", () {
     final container = ProviderContainer.test(
-      overrides: [localWorkScopeProvider.overrideWithValue(_scope("one"))],
+      overrides: [
+        ...appOverrides(),
+        localWorkScopeProvider.overrideWithValue(_scope("one")),
+      ],
     );
     final accountPolicy = container.read(workSessionLossProvider);
     final router = container.read(appRouterProvider);

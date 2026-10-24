@@ -8,7 +8,7 @@ import "package:typewriter_panel/typewriter_panel.dart";
 ///
 /// Place this above the surfaces that should receive the current mode's
 /// shortcuts. The subtree must own focus for [ManagedActionSet] to activate its
-/// actions. Realm suspension deliberately supplies an empty action set.
+/// actions. Interaction suspension deliberately supplies an empty action set.
 ///
 /// Example usage:
 /// ```dart
@@ -26,7 +26,7 @@ class GlobalModeShortcut extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    if (ref.watch(realmInteractionProvider).suspended) {
+    if (ref.watch(interactionSuspendedProvider)) {
       return ManagedActionSet(shortcuts: [], child: child);
     }
 

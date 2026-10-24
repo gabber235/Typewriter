@@ -87,6 +87,7 @@ val SkirAdaptersTest by testSuite {
                 name = OperationName.of("service-status"),
                 address = statusAddress,
                 responsePolicy = statusPolicy,
+                replyAddresses = { _, _ -> true },
             )
         val request = QueryServiceBindingRequest()
         contract.name shouldBe OperationName.of("service-status")

@@ -4,11 +4,16 @@
 # derives every subject family prefix and every role grant from the parties and the role
 # declarations below; backend/AGENTS.md describes the subject families.
 
-# Reply framing shared by every transport. A reply above chunk_bytes travels as frames of at most
-# chunk_bytes on the requester's reply inbox; a reply needing more than max_chunks frames fails as
-# too large. max_chunks also bounds how many messages a service may send to one reply inbox, and
-# reply_ttl_ms how long after a request it may send them, so no requester waits longer.
-limits: { chunk_bytes: 524288, max_chunks: 64, reply_ttl_ms: 300000 }
+# Payload framing shared by every transport. A payload above chunk_bytes travels as frames of at
+# most chunk_bytes. Requests are single messages unless a route raises request_max_bytes; a framed
+# request flows in credit windows of window_frames, the receiver granting each next window. Replies
+# may be framed up to reply_max_bytes. A reply waits for credit only on routes no panel role calls:
+# granting credit is a NATS response, and panel connections hold no response permission, so replies
+# to the panel stream without credit. A payload above its ceiling fails as too large before any
+# frame is sent. A sender waits frame_inactivity_ms for a credit and a receiver as long for the next
+# frame. reply_ttl_ms bounds a whole exchange: a reply still sending then stops as interrupted. The
+# generator derives each service role's NATS response limit from the largest framed reply it serves.
+limits: { chunk_bytes: 524288, window_frames: 8, request_max_bytes: 524288, reply_max_bytes: 33554432, frame_inactivity_ms: 30000, reply_ttl_ms: 300000 }
 
 roles:
   authenticated_user: { side: panel, personal: user }
@@ -621,45 +626,27 @@ routes:
       operation: shared.blob.metadata
       request: shared.blob.metadata
 
-  - name: shared_blob_read
+  - name: shared_blob_fetch
     scope: realm
     callers: [{ role: organization_member }, { role: realm_participant }]
     server: { role: realm_coordinator }
     flow:
       kind: unary
-      method: "service/v1/artifact.skir:ReadArtifactBlob"
-      operation: shared.blob.read
-      request: shared.blob.read
+      method: "service/v1/artifact.skir:FetchArtifactBlob"
+      operation: shared.blob.fetch
+      request: shared.blob.fetch
+      reply_max_bytes: 134217728
 
-  - name: shared_blob_begin
+  - name: shared_blob_store
     scope: realm
     callers: [{ role: organization_member }, { role: realm_participant }]
     server: { role: realm_coordinator }
     flow:
       kind: unary
-      method: "service/v1/artifact.skir:BeginArtifactBlobWrite"
-      operation: shared.blob.begin
-      request: shared.blob.begin
-
-  - name: shared_blob_write
-    scope: realm
-    callers: [{ role: organization_member }, { role: realm_participant }]
-    server: { role: realm_coordinator }
-    flow:
-      kind: unary
-      method: "service/v1/artifact.skir:WriteArtifactBlobChunk"
-      operation: shared.blob.write
-      request: shared.blob.write
-
-  - name: shared_blob_complete
-    scope: realm
-    callers: [{ role: organization_member }, { role: realm_participant }]
-    server: { role: realm_coordinator }
-    flow:
-      kind: unary
-      method: "service/v1/artifact.skir:CompleteArtifactBlobWrite"
-      operation: shared.blob.complete
-      request: shared.blob.complete
+      method: "service/v1/artifact.skir:StoreArtifactBlob"
+      operation: shared.blob.store
+      request: shared.blob.store
+      request_max_bytes: 134217728
 
   - name: rollout_probe
     scope: realm

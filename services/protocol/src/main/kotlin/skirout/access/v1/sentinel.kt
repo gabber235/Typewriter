@@ -339,7 +339,7 @@ val GetSentinelCredentials: build.skir.service.Method<
 > by kotlin.lazy {
     build.skir.service.Method(
         "GetSentinelCredentials",
-        403062,
+        910201,
         skirout.access.v1.sentinel.GetSentinelCredentialsRequest.serializer,
         skirout.access.v1.sentinel.GetSentinelCredentialsResponse.serializer,
         "",

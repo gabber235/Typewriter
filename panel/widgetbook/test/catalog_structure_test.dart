@@ -5,7 +5,7 @@ void main() {
   test("catalog navigation follows source ownership", () {
     expect(
       directories.map((node) => node.name),
-      orderedEquals(["app", "features", "shared"]),
+      orderedEquals(["app", "authoring", "features", "shared"]),
     );
   });
 }

@@ -2,9 +2,9 @@ package com.typewritermc.realm.routes
 
 import com.typewritermc.realm.authoring.AuthoringSeed
 import com.typewritermc.realm.authoring.InMemoryAuthoringViewStore
-import com.typewritermc.realm.checking.TEST_TYPE
-import com.typewritermc.realm.checking.TestCatalogLease
-import com.typewritermc.realm.checking.record
+import com.typewritermc.realm.authoring.TEST_TYPE
+import com.typewritermc.realm.authoring.TestCatalogLease
+import com.typewritermc.realm.authoring.record
 import com.typewritermc.realm.search.AuthoringSearchRepository
 import com.typewritermc.realm.search.IndexedAuthoringSearchCandidate
 import com.typewritermc.services.libs.communicator.router.communicatorRoutes
@@ -22,9 +22,9 @@ import skirout.editor.v1.authoring.SearchAuthoringResponse
 import skirout.editor.v1.type_catalog.CatalogGeneration
 import skirout.editor.v1.type_catalog.DataValue
 import skirout.editor.v1.type_catalog.NamedTypeUse
-import skirout.editor.v1.type_catalog.ResourceId
 import skirout.editor.v1.type_catalog.ScalarKind
 import skirout.editor.v1.type_catalog.TypeDefinitionId
+import skirout.kernel.v1.resource_id.ResourceId
 
 val AuthoringSearchRoutesTest by testSuite {
     test("authoring search route returns typed subjects and readable descriptors") {

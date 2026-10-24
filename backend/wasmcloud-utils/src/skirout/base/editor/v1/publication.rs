@@ -2704,7 +2704,7 @@ pub fn publish_authoring_method()
     > = std::sync::LazyLock::new(|| {
         crate::skir_client::Method {
             name: "PublishAuthoring".to_string(),
-            number: 920018_i64,
+            number: 941501_i64,
             request_serializer: PublishAuthoringRequest::serializer(),
             response_serializer: PublishAuthoringResponse::serializer(),
             doc: "Releases only the issued candidate while its captured saved inputs and engine requirements still\nmatch. Reports release admission and selection: activated identifies the newly selected\npublication, not an acknowledgement from engine hosts; publishing means another release currently\nowns the publication gate; candidate_changed_error requires a fresh review.".to_string(),
@@ -2720,7 +2720,7 @@ pub fn watch_publication_method()
         crate::skir_client::Method<WatchPublicationRequest, WatchPublicationResponse>,
     > = std::sync::LazyLock::new(|| crate::skir_client::Method {
         name: "WatchPublication".to_string(),
-        number: 920019_i64,
+        number: 941502_i64,
         request_serializer: WatchPublicationRequest::serializer(),
         response_serializer: WatchPublicationResponse::serializer(),
         doc: "Returns the current review view identity; later identities arrive as update hints."
@@ -2738,7 +2738,7 @@ pub fn query_publication_view_method()
     > = std::sync::LazyLock::new(|| {
         crate::skir_client::Method {
             name: "QueryPublicationView".to_string(),
-            number: 920020_i64,
+            number: 941503_i64,
             request_serializer: QueryPublicationViewRequest::serializer(),
             response_serializer: QueryPublicationViewResponse::serializer(),
             doc: "Returns one immutable review view, or the current view identity when expected is no longer\ncurrent. Later invalidations require a separate query.".to_string(),

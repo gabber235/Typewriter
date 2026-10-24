@@ -1697,7 +1697,7 @@ pub fn watch_organization_members_method() -> &'static crate::skir_client::Metho
         >,
     > = std::sync::LazyLock::new(|| crate::skir_client::Method {
         name: "WatchOrganizationMembers".to_string(),
-        number: 638484_i64,
+        number: 920301_i64,
         request_serializer: WatchOrganizationMembersRequest::serializer(),
         response_serializer: WatchOrganizationMembersResponse::serializer(),
         doc: "".to_string(),
@@ -1716,7 +1716,7 @@ pub fn update_organization_member_roles_method() -> &'static crate::skir_client:
         >,
     > = std::sync::LazyLock::new(|| crate::skir_client::Method {
         name: "UpdateOrganizationMemberRoles".to_string(),
-        number: 813953_i64,
+        number: 920302_i64,
         request_serializer: UpdateOrganizationMemberRolesRequest::serializer(),
         response_serializer: UpdateOrganizationMemberRolesResponse::serializer(),
         doc: "".to_string(),
@@ -1735,7 +1735,7 @@ pub fn remove_organization_member_method() -> &'static crate::skir_client::Metho
         >,
     > = std::sync::LazyLock::new(|| crate::skir_client::Method {
         name: "RemoveOrganizationMember".to_string(),
-        number: 291414_i64,
+        number: 920303_i64,
         request_serializer: RemoveOrganizationMemberRequest::serializer(),
         response_serializer: RemoveOrganizationMemberResponse::serializer(),
         doc: "".to_string(),

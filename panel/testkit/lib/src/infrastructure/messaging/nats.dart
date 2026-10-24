@@ -101,6 +101,7 @@ final class FakeNatsClient implements NatsClient {
   Future<NatsMessage> request(
     String subject,
     Uint8List payload, {
+    required TransportLimits limits,
     Map<String, String> headers = const {},
     Duration timeout = const Duration(seconds: 10),
     Future<void>? cancelled,

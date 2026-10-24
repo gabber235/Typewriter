@@ -16,24 +16,24 @@ import {
   ValuePath,
 } from "editor/v1/type_catalog.skir";
 
-enum DiagnosticSeverity(810300001) {
+enum DiagnosticSeverity(84110001) {
   information = 1;
   warning = 2;
   error = 3;
 }
 
-struct DeclarationOrigin(810300002) {
+struct DeclarationOrigin(84110002) {
   owner: DeclarationOwner = 0;
 }
 
-struct DeclarationDiagnostic(810300003) {
+struct DeclarationDiagnostic(84110003) {
   affected: TypeDefinitionId = 0;
   code: string = 1;
   origins: [DeclarationOrigin] = 2;
   field: RelativeFieldPattern? = 3;
 }
 
-struct DiagnosticTemplate(810300004) {
+struct DiagnosticTemplate(84110004) {
   code: string = 0;
   message: string = 1;
   severity: DiagnosticSeverity = 2;
@@ -44,7 +44,7 @@ struct DiagnosticTemplate(810300004) {
   targets: [RelativeFieldPattern] = 3;
 }
 
-struct Diagnostic(810300005) {
+struct Diagnostic(84110005) {
   id: DiagnosticId = 0;
   origin: RuleOrigin = 1;
   code: string = 2;
@@ -54,32 +54,32 @@ struct Diagnostic(810300005) {
   related: [ValueLocation] = 6;
 }
 
-struct ValueProblem(810300006) {
+struct ValueProblem(84110006) {
   location: ValueLocation = 0;
   code: string = 1;
 }
 
-struct InitializationDiagnostic(810300007) {
+struct InitializationDiagnostic(84110007) {
   field: FieldOwner? = 0;
   code: string = 1;
   message: string = 2;
   relative_path: ValuePath? = 3;
 }
 
-struct CompleteValue(810300008) {
+struct CompleteValue(84110008) {
   schema: CheckedType = 0;
   value: DataValue = 1;
 }
 
 /// Reports whether authored shape is valid under its schema, independently of unfinished input.
-enum StructuralResult(810300009) {
+enum StructuralResult(84110009) {
   valid = 1;
   invalid: [ValueProblem] = 2;
 }
 
 /// Distinguishes a value ready for native decoding from unfinished locations and invalid shape.
 /// Schema resolution alone does not prove this value specific result.
-enum CompletenessResult(810300010) {
+enum CompletenessResult(84110010) {
   complete: CompleteValue = 1;
   unfinished: [ValueLocation] = 2;
   invalid: [ValueProblem] = 3;

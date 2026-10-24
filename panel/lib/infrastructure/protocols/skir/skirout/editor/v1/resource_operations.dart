@@ -20,13 +20,14 @@ import "./capability.dart" as _lib_editor_v1_capability;
 import "./operation.dart" as _lib_editor_v1_operation;
 import "./type_catalog.dart" as _lib_editor_v1_type_catalog;
 import "../../kernel/v1/errors.dart" as _lib_kernel_v1_errors;
+import "../../kernel/v1/resource_id.dart" as _lib_kernel_v1_resource_id;
 
 // -----------------------------------------------------------------------------
 // struct OperationOrigin
 // -----------------------------------------------------------------------------
 
 sealed class OperationOrigin_orMutable {
-  _lib_editor_v1_type_catalog.ResourceId_orMutable? get container;
+  _lib_kernel_v1_resource_id.ResourceId_orMutable? get container;
   _core.Iterable<_lib_editor_v1_authoring.LinkOccurrence_orMutable>
   get occurrences;
 
@@ -36,13 +37,13 @@ sealed class OperationOrigin_orMutable {
 /// Deeply immutable.
 final class OperationOrigin implements OperationOrigin_orMutable {
   @_core.override
-  final _lib_editor_v1_type_catalog.ResourceId? container;
+  final _lib_kernel_v1_resource_id.ResourceId? container;
   @_core.override
   final _core.Iterable<_lib_editor_v1_authoring.LinkOccurrence> occurrences;
   _skir.internal__UnrecognizedFields? _u;
 
   factory OperationOrigin({
-    required _lib_editor_v1_type_catalog.ResourceId_orMutable? container,
+    required _lib_kernel_v1_resource_id.ResourceId_orMutable? container,
     required _core.Iterable<_lib_editor_v1_authoring.LinkOccurrence_orMutable>
     occurrences,
   }) => OperationOrigin._(
@@ -99,7 +100,7 @@ final class OperationOrigin implements OperationOrigin_orMutable {
         "container",
         0,
         _skir.Serializers.optional(
-          _lib_editor_v1_type_catalog.ResourceId.serializer,
+          _lib_kernel_v1_resource_id.ResourceId.serializer,
         ),
         "",
         (it) => it.container,
@@ -134,7 +135,7 @@ final class OperationOrigin implements OperationOrigin_orMutable {
 
 /// Mutable version of [OperationOrigin].
 final class OperationOrigin_mutable implements OperationOrigin_orMutable {
-  _lib_editor_v1_type_catalog.ResourceId_orMutable? container;
+  _lib_kernel_v1_resource_id.ResourceId_orMutable? container;
   _core.Iterable<_lib_editor_v1_authoring.LinkOccurrence_orMutable> occurrences;
   _skir.internal__UnrecognizedFields? _u;
 
@@ -169,7 +170,7 @@ final class OperationOrigin_mutable implements OperationOrigin_orMutable {
 sealed class OperationInvocation_orMutable {
   _lib_editor_v1_capability.InvocationId_orMutable get invocationId;
   _lib_editor_v1_type_catalog.CatalogGeneration_orMutable get catalog;
-  _core.Iterable<_lib_editor_v1_type_catalog.ResourceId_orMutable> get targets;
+  _core.Iterable<_lib_kernel_v1_resource_id.ResourceId_orMutable> get targets;
   OperationOrigin_orMutable get origin;
 
   OperationInvocation toFrozen();
@@ -186,7 +187,7 @@ final class OperationInvocation implements OperationInvocation_orMutable {
   @_core.override
   final _lib_editor_v1_type_catalog.CatalogGeneration catalog;
   @_core.override
-  final _core.Iterable<_lib_editor_v1_type_catalog.ResourceId> targets;
+  final _core.Iterable<_lib_kernel_v1_resource_id.ResourceId> targets;
   @_core.override
   final OperationOrigin origin;
   _skir.internal__UnrecognizedFields? _u;
@@ -194,7 +195,7 @@ final class OperationInvocation implements OperationInvocation_orMutable {
   factory OperationInvocation({
     required _lib_editor_v1_capability.InvocationId_orMutable invocationId,
     required _lib_editor_v1_type_catalog.CatalogGeneration_orMutable catalog,
-    required _core.Iterable<_lib_editor_v1_type_catalog.ResourceId_orMutable>
+    required _core.Iterable<_lib_kernel_v1_resource_id.ResourceId_orMutable>
     targets,
     required OperationOrigin_orMutable origin,
   }) => OperationInvocation._(
@@ -294,7 +295,7 @@ final class OperationInvocation implements OperationInvocation_orMutable {
         "targets",
         2,
         _skir.Serializers.iterable(
-          _lib_editor_v1_type_catalog.ResourceId.serializer,
+          _lib_kernel_v1_resource_id.ResourceId.serializer,
         ),
         "",
         (it) => it.targets,
@@ -330,7 +331,7 @@ final class OperationInvocation_mutable
     implements OperationInvocation_orMutable {
   _lib_editor_v1_capability.InvocationId_orMutable invocationId;
   _lib_editor_v1_type_catalog.CatalogGeneration_orMutable catalog;
-  _core.Iterable<_lib_editor_v1_type_catalog.ResourceId_orMutable> targets;
+  _core.Iterable<_lib_kernel_v1_resource_id.ResourceId_orMutable> targets;
   OperationOrigin_orMutable origin;
   _skir.internal__UnrecognizedFields? _u;
 
@@ -367,12 +368,12 @@ final class OperationInvocation_mutable
 
   /// If the value of [targets] is already mutable, returns it as-is.
   /// Otherwise, makes a mutable copy, assigns it back to [targets] and returns it.
-  _core.List<_lib_editor_v1_type_catalog.ResourceId_orMutable>
+  _core.List<_lib_kernel_v1_resource_id.ResourceId_orMutable>
   get mutableTargets {
     final value = this.targets;
     if (value
         is _skir.internal__MutableList<
-          _lib_editor_v1_type_catalog.ResourceId_orMutable
+          _lib_kernel_v1_resource_id.ResourceId_orMutable
         >) {
       return value;
     } else {
@@ -406,7 +407,7 @@ final class OperationInvocation_mutable
 // -----------------------------------------------------------------------------
 
 sealed class OperationResourceUpsert_orMutable {
-  _lib_editor_v1_type_catalog.ResourceId_orMutable get resource;
+  _lib_kernel_v1_resource_id.ResourceId_orMutable get resource;
   _lib_editor_v1_type_catalog.AuthoringRecord_orMutable get content;
 
   OperationResourceUpsert toFrozen();
@@ -416,13 +417,13 @@ sealed class OperationResourceUpsert_orMutable {
 final class OperationResourceUpsert
     implements OperationResourceUpsert_orMutable {
   @_core.override
-  final _lib_editor_v1_type_catalog.ResourceId resource;
+  final _lib_kernel_v1_resource_id.ResourceId resource;
   @_core.override
   final _lib_editor_v1_type_catalog.AuthoringRecord content;
   _skir.internal__UnrecognizedFields? _u;
 
   factory OperationResourceUpsert({
-    required _lib_editor_v1_type_catalog.ResourceId_orMutable resource,
+    required _lib_kernel_v1_resource_id.ResourceId_orMutable resource,
     required _lib_editor_v1_type_catalog.AuthoringRecord_orMutable content,
   }) => OperationResourceUpsert._(resource.toFrozen(), content.toFrozen());
 
@@ -430,7 +431,7 @@ final class OperationResourceUpsert
 
   /// Default instance with all fields set to their default values.
   static final defaultInstance = OperationResourceUpsert._(
-    _lib_editor_v1_type_catalog.ResourceId.defaultInstance,
+    _lib_kernel_v1_resource_id.ResourceId.defaultInstance,
     _lib_editor_v1_type_catalog.AuthoringRecord.defaultInstance,
   );
 
@@ -438,7 +439,7 @@ final class OperationResourceUpsert
   /// Fields are initialized to their default values.
   static OperationResourceUpsert_mutable mutable() =>
       OperationResourceUpsert_mutable._(
-        _lib_editor_v1_type_catalog.ResourceId.defaultInstance,
+        _lib_kernel_v1_resource_id.ResourceId.defaultInstance,
         _lib_editor_v1_type_catalog.AuthoringRecord.defaultInstance,
       );
 
@@ -480,7 +481,7 @@ final class OperationResourceUpsert
         "resource",
         "resource",
         0,
-        _lib_editor_v1_type_catalog.ResourceId.serializer,
+        _lib_kernel_v1_resource_id.ResourceId.serializer,
         "",
         (it) => it.resource,
         (it, v) => it.resource = v,
@@ -513,7 +514,7 @@ final class OperationResourceUpsert
 /// Mutable version of [OperationResourceUpsert].
 final class OperationResourceUpsert_mutable
     implements OperationResourceUpsert_orMutable {
-  _lib_editor_v1_type_catalog.ResourceId_orMutable resource;
+  _lib_kernel_v1_resource_id.ResourceId_orMutable resource;
   _lib_editor_v1_type_catalog.AuthoringRecord_orMutable content;
   _skir.internal__UnrecognizedFields? _u;
 
@@ -521,12 +522,12 @@ final class OperationResourceUpsert_mutable
 
   /// If the value of [resource] is already mutable, returns it as-is.
   /// Otherwise, makes a mutable copy, assigns it back to [resource] and returns it.
-  _lib_editor_v1_type_catalog.ResourceId_mutable get mutableResource {
+  _lib_kernel_v1_resource_id.ResourceId_mutable get mutableResource {
     final value = this.resource;
-    if (value is _lib_editor_v1_type_catalog.ResourceId_mutable) {
+    if (value is _lib_kernel_v1_resource_id.ResourceId_mutable) {
       return value;
     } else {
-      return this.resource = (value as _lib_editor_v1_type_catalog.ResourceId)
+      return this.resource = (value as _lib_kernel_v1_resource_id.ResourceId)
           .toMutable();
     }
   }
@@ -556,7 +557,7 @@ final class OperationResourceUpsert_mutable
 
 sealed class OperationWorkingOverlay_orMutable {
   _core.Iterable<OperationResourceUpsert_orMutable> get upserts;
-  _core.Iterable<_lib_editor_v1_type_catalog.ResourceId_orMutable> get removals;
+  _core.Iterable<_lib_kernel_v1_resource_id.ResourceId_orMutable> get removals;
 
   OperationWorkingOverlay toFrozen();
 }
@@ -570,12 +571,12 @@ final class OperationWorkingOverlay
   @_core.override
   final _core.Iterable<OperationResourceUpsert> upserts;
   @_core.override
-  final _core.Iterable<_lib_editor_v1_type_catalog.ResourceId> removals;
+  final _core.Iterable<_lib_kernel_v1_resource_id.ResourceId> removals;
   _skir.internal__UnrecognizedFields? _u;
 
   factory OperationWorkingOverlay({
     required _core.Iterable<OperationResourceUpsert_orMutable> upserts,
-    required _core.Iterable<_lib_editor_v1_type_catalog.ResourceId_orMutable>
+    required _core.Iterable<_lib_kernel_v1_resource_id.ResourceId_orMutable>
     removals,
   }) => OperationWorkingOverlay._(
     _skir.internal__frozenMappedCopy(upserts, (it) => it.toFrozen()),
@@ -646,7 +647,7 @@ final class OperationWorkingOverlay
         "removals",
         1,
         _skir.Serializers.iterable(
-          _lib_editor_v1_type_catalog.ResourceId.serializer,
+          _lib_kernel_v1_resource_id.ResourceId.serializer,
         ),
         "",
         (it) => it.removals,
@@ -672,7 +673,7 @@ final class OperationWorkingOverlay
 final class OperationWorkingOverlay_mutable
     implements OperationWorkingOverlay_orMutable {
   _core.Iterable<OperationResourceUpsert_orMutable> upserts;
-  _core.Iterable<_lib_editor_v1_type_catalog.ResourceId_orMutable> removals;
+  _core.Iterable<_lib_kernel_v1_resource_id.ResourceId_orMutable> removals;
   _skir.internal__UnrecognizedFields? _u;
 
   OperationWorkingOverlay_mutable._(this.upserts, this.removals);
@@ -691,12 +692,12 @@ final class OperationWorkingOverlay_mutable
 
   /// If the value of [removals] is already mutable, returns it as-is.
   /// Otherwise, makes a mutable copy, assigns it back to [removals] and returns it.
-  _core.List<_lib_editor_v1_type_catalog.ResourceId_orMutable>
+  _core.List<_lib_kernel_v1_resource_id.ResourceId_orMutable>
   get mutableRemovals {
     final value = this.removals;
     if (value
         is _skir.internal__MutableList<
-          _lib_editor_v1_type_catalog.ResourceId_orMutable
+          _lib_kernel_v1_resource_id.ResourceId_orMutable
         >) {
       return value;
     } else {
@@ -2446,7 +2447,7 @@ sealed class OperationSelectionEffect {
 
   /// Create a 'replace' variant wrapping around the given value.
   factory OperationSelectionEffect.wrapReplace(
-    _core.Iterable<_lib_editor_v1_type_catalog.ResourceId> value,
+    _core.Iterable<_lib_kernel_v1_resource_id.ResourceId> value,
   ) => OperationSelectionEffect_replaceWrapper._(value);
 
   /// Returns the kind of variant held by this OperationSelectionEffect.
@@ -2467,7 +2468,7 @@ sealed class OperationSelectionEffect {
         "replace",
         "wrapReplace",
         _skir.Serializers.iterable(
-          _lib_editor_v1_type_catalog.ResourceId.serializer,
+          _lib_kernel_v1_resource_id.ResourceId.serializer,
         ),
         "",
         OperationSelectionEffect_replaceWrapper._,
@@ -2556,7 +2557,7 @@ sealed class _OperationSelectionEffect_wrapper
 
 final class OperationSelectionEffect_replaceWrapper
     extends _OperationSelectionEffect_wrapper {
-  final _core.Iterable<_lib_editor_v1_type_catalog.ResourceId> value;
+  final _core.Iterable<_lib_kernel_v1_resource_id.ResourceId> value;
 
   OperationSelectionEffect_replaceWrapper._(this.value);
 
@@ -4716,7 +4717,7 @@ final class OperationSearchContext_mutable
 
 sealed class DropCandidates_orMutable {
   _lib_editor_v1_operation.ResourceOperationId_orMutable get operation;
-  _core.Iterable<_lib_editor_v1_type_catalog.ResourceId_orMutable>
+  _core.Iterable<_lib_kernel_v1_resource_id.ResourceId_orMutable>
   get destinations;
   _core.bool get complete;
 
@@ -4731,14 +4732,14 @@ final class DropCandidates implements DropCandidates_orMutable {
   @_core.override
   final _lib_editor_v1_operation.ResourceOperationId operation;
   @_core.override
-  final _core.Iterable<_lib_editor_v1_type_catalog.ResourceId> destinations;
+  final _core.Iterable<_lib_kernel_v1_resource_id.ResourceId> destinations;
   @_core.override
   final _core.bool complete;
   _skir.internal__UnrecognizedFields? _u;
 
   factory DropCandidates({
     required _lib_editor_v1_operation.ResourceOperationId_orMutable operation,
-    required _core.Iterable<_lib_editor_v1_type_catalog.ResourceId_orMutable>
+    required _core.Iterable<_lib_kernel_v1_resource_id.ResourceId_orMutable>
     destinations,
     required _core.bool complete,
   }) => DropCandidates._(
@@ -4816,7 +4817,7 @@ final class DropCandidates implements DropCandidates_orMutable {
         "destinations",
         1,
         _skir.Serializers.iterable(
-          _lib_editor_v1_type_catalog.ResourceId.serializer,
+          _lib_kernel_v1_resource_id.ResourceId.serializer,
         ),
         "",
         (it) => it.destinations,
@@ -4850,7 +4851,7 @@ final class DropCandidates implements DropCandidates_orMutable {
 /// Mutable version of [DropCandidates].
 final class DropCandidates_mutable implements DropCandidates_orMutable {
   _lib_editor_v1_operation.ResourceOperationId_orMutable operation;
-  _core.Iterable<_lib_editor_v1_type_catalog.ResourceId_orMutable> destinations;
+  _core.Iterable<_lib_kernel_v1_resource_id.ResourceId_orMutable> destinations;
   _core.bool complete;
   _skir.internal__UnrecognizedFields? _u;
 
@@ -4870,12 +4871,12 @@ final class DropCandidates_mutable implements DropCandidates_orMutable {
 
   /// If the value of [destinations] is already mutable, returns it as-is.
   /// Otherwise, makes a mutable copy, assigns it back to [destinations] and returns it.
-  _core.List<_lib_editor_v1_type_catalog.ResourceId_orMutable>
+  _core.List<_lib_kernel_v1_resource_id.ResourceId_orMutable>
   get mutableDestinations {
     final value = this.destinations;
     if (value
         is _skir.internal__MutableList<
-          _lib_editor_v1_type_catalog.ResourceId_orMutable
+          _lib_kernel_v1_resource_id.ResourceId_orMutable
         >) {
       return value;
     } else {
@@ -5395,7 +5396,7 @@ final _skir.Method<
 >
 resolveResourceOperationsMethod = _skir.Method(
   "ResolveResourceOperations",
-  920015,
+  941601,
   ResolveResourceOperationsRequest.serializer,
   ResolveResourceOperationsResult.serializer,
   "",
@@ -5404,7 +5405,7 @@ resolveResourceOperationsMethod = _skir.Method(
 final _skir.Method<PrepareAuthoringActionRequest, AuthoringActionResult>
 prepareAuthoringActionMethod = _skir.Method(
   "PrepareAuthoringAction",
-  920016,
+  941602,
   PrepareAuthoringActionRequest.serializer,
   AuthoringActionResult.serializer,
   "",
@@ -5413,7 +5414,7 @@ prepareAuthoringActionMethod = _skir.Method(
 final _skir.Method<ResolveDropCandidatesRequest, ResolveDropCandidatesResult>
 resolveDropCandidatesMethod = _skir.Method(
   "ResolveDropCandidates",
-  920017,
+  941603,
   ResolveDropCandidatesRequest.serializer,
   ResolveDropCandidatesResult.serializer,
   "",

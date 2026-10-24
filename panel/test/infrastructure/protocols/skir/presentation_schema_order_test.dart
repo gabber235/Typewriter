@@ -10,7 +10,7 @@ void main() {
   test("presentation record identifiers ascend in file order", () {
     final source = sourceFile.readAsStringSync();
     final identifiers = RegExp(
-      r"^(?:struct|enum) [^(]+\(810800([0-9]{3})\)",
+      r"^(?:struct|enum) [^(]+\(8[0-9]{3}([0-9]{4})\)",
       multiLine: true,
     ).allMatches(source).map((match) => int.parse(match.group(1)!)).toList();
 
@@ -24,7 +24,7 @@ void main() {
   test("presentation element ordinals ascend in declaration order", () {
     final source = sourceFile.readAsStringSync();
     final body = RegExp(
-      r"enum PresentationElement\(810800[0-9]{3}\) \{([\s\S]+?)\n\}",
+      r"enum PresentationElement\([0-9]+\) \{([\s\S]+?)\n\}",
     ).firstMatch(source)!.group(1)!;
     final ordinals = RegExp(
       r"= ([0-9]+);$",

@@ -46,7 +46,7 @@ final class InspectionSession extends ChangeNotifier {
     final selection = ref.read(inspectedSelectionProvider).value;
     if (selection == null) return;
 
-    final router = ref.read(appRouterProvider);
+    final router = ref.read(navigationRouterProvider);
     final path = router.currentPath;
     final container = ref.container;
 
@@ -252,7 +252,7 @@ final class InspectorDestination extends WorkDestination {
   }
 
   final ProviderContainer container;
-  final AppRouter router;
+  final NavigationRouter router;
   final String path;
   final Object identity;
   late final ProviderSubscription<List<SelectableIdentifier>> _selection;

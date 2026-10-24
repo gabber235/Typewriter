@@ -22,6 +22,9 @@ import kotlinx.coroutines.withTimeout
 import kotlinx.coroutines.yield
 import kotlin.time.Duration.Companion.seconds
 
+/** The session reply inbox prefix of the panel member whose requests the fixture delivers. */
+private const val PANEL_REPLY_INBOX = "_INBOX.member.0123456789abcdef0123456789abcdef"
+
 internal class RouteFixture(
     routes: (RealmRouteScope, Communicator) -> CommunicatorRoutes,
 ) : AutoCloseable {
@@ -49,7 +52,7 @@ internal class RouteFixture(
         payload: ByteArray,
         responseSerializer: Serializer<Response>,
     ): Response {
-        val reply = MessageAddress.of("test.reply.${replySequence++}")
+        val reply = MessageAddress.of("$PANEL_REPLY_INBOX.${replySequence++}")
         transport.deliver(
             TransportDelivery.Message(
                 InboundMessage(

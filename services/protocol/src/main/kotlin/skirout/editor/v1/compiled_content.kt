@@ -1398,7 +1398,7 @@ class CompilationContext private constructor(
 }
 
 sealed interface CompiledResourceKey_OrMutable {
-    val source: skirout.editor.v1.type_catalog.ResourceId_OrMutable;
+    val source: skirout.kernel.v1.resource_id.ResourceId_OrMutable;
     val context: skirout.editor.v1.compiled_content.CompilationContext_OrMutable;
 
     fun toFrozen(): skirout.editor.v1.compiled_content.CompiledResourceKey;
@@ -1411,7 +1411,7 @@ sealed interface CompiledResourceKey_OrMutable {
  */
 @kotlin.Suppress("UNUSED_PARAMETER")
 class CompiledResourceKey private constructor(
-    override val source: skirout.editor.v1.type_catalog.ResourceId,
+    override val source: skirout.kernel.v1.resource_id.ResourceId,
     override val context: skirout.editor.v1.compiled_content.CompilationContext,
     internal val _unrecognizedFields: _UnrecognizedFields<skirout.editor.v1.compiled_content.CompiledResourceKey>? =
         null,
@@ -1419,7 +1419,7 @@ class CompiledResourceKey private constructor(
     constructor(
         _mustNameArguments: _MustNameArguments =
             _MustNameArguments,
-        source: skirout.editor.v1.type_catalog.ResourceId_OrMutable,
+        source: skirout.kernel.v1.resource_id.ResourceId_OrMutable,
         context: skirout.editor.v1.compiled_content.CompilationContext_OrMutable,
         _unrecognizedFields: _UnrecognizedFields<skirout.editor.v1.compiled_content.CompiledResourceKey>? =
             null,
@@ -1442,7 +1442,7 @@ class CompiledResourceKey private constructor(
     fun copy(
         _mustNameArguments: _MustNameArguments =
             _MustNameArguments,
-        source: skirout.editor.v1.type_catalog.ResourceId_OrMutable =
+        source: skirout.kernel.v1.resource_id.ResourceId_OrMutable =
             this.source,
         context: skirout.editor.v1.compiled_content.CompilationContext_OrMutable =
             this.context,
@@ -1474,8 +1474,8 @@ class CompiledResourceKey private constructor(
     class Mutable internal constructor(
         _mustNameArguments: _MustNameArguments =
             _MustNameArguments,
-        override var source: skirout.editor.v1.type_catalog.ResourceId_OrMutable =
-            skirout.editor.v1.type_catalog.ResourceId.partial(),
+        override var source: skirout.kernel.v1.resource_id.ResourceId_OrMutable =
+            skirout.kernel.v1.resource_id.ResourceId.partial(),
         override var context: skirout.editor.v1.compiled_content.CompilationContext_OrMutable =
             skirout.editor.v1.compiled_content.CompilationContext.partial(),
         internal var _unrecognizedFields: _UnrecognizedFields<skirout.editor.v1.compiled_content.CompiledResourceKey>? =
@@ -1492,15 +1492,15 @@ class CompiledResourceKey private constructor(
          * If the value of [source] is already mutable, returns it as-is.
          * Otherwise, makes a mutable copy, assigns it back to [source] and returns it.
          */
-        val mutableSource: skirout.editor.v1.type_catalog.ResourceId.Mutable get() {
+        val mutableSource: skirout.kernel.v1.resource_id.ResourceId.Mutable get() {
             var value = this.source;
             return when (value) {
-                is skirout.editor.v1.type_catalog.ResourceId -> {
+                is skirout.kernel.v1.resource_id.ResourceId -> {
                     value = value.toMutable();
                     this.source = value;
                     return value;
                 }
-                is skirout.editor.v1.type_catalog.ResourceId.Mutable -> value;
+                is skirout.kernel.v1.resource_id.ResourceId.Mutable -> value;
             }
         }
 
@@ -1524,7 +1524,7 @@ class CompiledResourceKey private constructor(
     companion object {
         private val default =
             skirout.editor.v1.compiled_content.CompiledResourceKey(
-                skirout.editor.v1.type_catalog.ResourceId.partial(),
+                skirout.kernel.v1.resource_id.ResourceId.partial(),
                 skirout.editor.v1.compiled_content.CompilationContext.partial(),
             );
 
@@ -1539,8 +1539,8 @@ class CompiledResourceKey private constructor(
         fun partial(
             _mustNameArguments: _MustNameArguments =
                 _MustNameArguments,
-            source: skirout.editor.v1.type_catalog.ResourceId_OrMutable =
-                skirout.editor.v1.type_catalog.ResourceId.partial(),
+            source: skirout.kernel.v1.resource_id.ResourceId_OrMutable =
+                skirout.kernel.v1.resource_id.ResourceId.partial(),
             context: skirout.editor.v1.compiled_content.CompilationContext_OrMutable =
                 skirout.editor.v1.compiled_content.CompilationContext.partial(),
         ) = skirout.editor.v1.compiled_content.CompiledResourceKey(
@@ -3417,7 +3417,7 @@ val QueryPublishedContent: build.skir.service.Method<
 > by kotlin.lazy {
     build.skir.service.Method(
         "QueryPublishedContent",
-        920008,
+        941001,
         skirout.editor.v1.compiled_content.QueryPublishedContentRequest.serializer,
         skirout.editor.v1.compiled_content.QueryPublishedContentResponse.serializer,
         "Returns the descriptor of the selected publication, or absent before any publication is selected.",
@@ -3430,7 +3430,7 @@ val QueryCompiledResourceStatus: build.skir.service.Method<
 > by kotlin.lazy {
     build.skir.service.Method(
         "QueryCompiledResourceStatus",
-        920009,
+        941002,
         skirout.editor.v1.compiled_content.QueryCompiledResourceStatusRequest.serializer,
         skirout.editor.v1.compiled_content.QueryCompiledResourceStatusResponse.serializer,
         "",
@@ -3956,7 +3956,7 @@ private object _SerializerRegistry {
             "source",
             "source",
             0,
-            skirout.editor.v1.type_catalog.ResourceId.serializer,
+            skirout.kernel.v1.resource_id.ResourceId.serializer,
             "",
             { it.source },
             { mut, v -> mut.source = v },

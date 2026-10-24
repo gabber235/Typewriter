@@ -6,7 +6,7 @@ import { RecordId } from "kernel/v1/record_id.skir";
 // Binding consumes the valid registration lease and clears registration. Unbinding clears both organization and
 // registration. Revision is owned by the registration service and advances for mutable service metadata changes,
 // allowing organization clients to perform compare and set updates without treating liveness as a rename conflict.
-struct Service {
+struct Service(83070001) {
   service_id: RecordId;
   revision: int64;
   name: string;
@@ -19,7 +19,7 @@ struct Service {
 
 // The issued role is part of identity and is validated before the service account and record are created.
 // A host role is required before the registration service accepts host execution registration.
-enum ServiceRole {
+enum ServiceRole(83070002) {
   host: struct {
     version: string;
   } = 1;
@@ -31,14 +31,14 @@ enum ServiceRole {
 
 // Liveness state written by heartbeat and orderly shutdown notifications. Online means a heartbeat was accepted;
 // offline means an orderly shutdown was accepted. Neither state changes organization binding or grants authority.
-enum ServiceStatus {
+enum ServiceStatus(83070003) {
   online;
   offline;
 }
 
 // A service registrar owns these observations. last_seen records when the registration service accepted the latest
 // liveness notification. A missing or delayed notification is not the same protocol event as an accepted shutdown.
-struct ServiceState {
+struct ServiceState(83070004) {
   status: ServiceStatus;
   last_seen: timestamp;
 }
@@ -46,7 +46,7 @@ struct ServiceState {
 // Temporary capability for binding an unbound service to an organization. EnsureRegistrationLease creates or renews it
 // only while the service is unbound. BindService requires an unexpired token, then consumes it atomically with the
 // organization binding, so the lease cannot substitute for an established binding or durable identity.
-struct ServiceRegistration {
+struct ServiceRegistration(83070005) {
   token: string;
   expires_at: timestamp;
 }

@@ -6966,7 +6966,7 @@ final class RegisterServiceHostResponse_internalErrorWrapper
 final _skir.Method<ConfigureServiceHostRequest, ConfigureServiceHostResponse>
 configureServiceHostMethod = _skir.Method(
   "ConfigureServiceHost",
-  934201,
+  930901,
   ConfigureServiceHostRequest.serializer,
   ConfigureServiceHostResponse.serializer,
   "",
@@ -6978,7 +6978,7 @@ final _skir.Method<
 >
 watchOrganizationTopologyMethod = _skir.Method(
   "WatchOrganizationTopology",
-  934202,
+  930902,
   WatchOrganizationTopologyRequest.serializer,
   WatchOrganizationTopologyResponse.serializer,
   "",
@@ -6987,7 +6987,7 @@ watchOrganizationTopologyMethod = _skir.Method(
 final _skir.Method<WatchHostExecutionRequest, WatchHostExecutionResponse>
 watchHostExecutionMethod = _skir.Method(
   "WatchHostExecution",
-  934203,
+  930903,
   WatchHostExecutionRequest.serializer,
   WatchHostExecutionResponse.serializer,
   "",
@@ -6996,7 +6996,7 @@ watchHostExecutionMethod = _skir.Method(
 final _skir.Method<ReportHostExecutionRequest, ReportHostExecutionResponse>
 reportHostExecutionMethod = _skir.Method(
   "ReportHostExecution",
-  934204,
+  930904,
   ReportHostExecutionRequest.serializer,
   ReportHostExecutionResponse.serializer,
   "",
@@ -7008,7 +7008,7 @@ final _skir.Method<
 >
 getServiceMessagingScopeMethod = _skir.Method(
   "GetServiceMessagingScope",
-  934205,
+  930905,
   GetServiceMessagingScopeRequest.serializer,
   GetServiceMessagingScopeResponse.serializer,
   "",
@@ -7017,7 +7017,7 @@ getServiceMessagingScopeMethod = _skir.Method(
 final _skir.Method<RegisterServiceHostRequest, RegisterServiceHostResponse>
 registerServiceHostMethod = _skir.Method(
   "RegisterServiceHost",
-  934206,
+  930906,
   RegisterServiceHostRequest.serializer,
   RegisterServiceHostResponse.serializer,
   "",

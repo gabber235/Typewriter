@@ -41,7 +41,7 @@ use wasmcloud_utils::{
         Permissions,
     },
     skir_client::UnrecognizedValues::Drop,
-    transport::{InternalComponentScope, request_route},
+    transport::{InternalComponentScope, ReplyPacing, request_route},
     transport_routes::{PanelPermissionResolveRoute, ServicesPermissionResolveRoute},
     wasmcloud::messaging::{core_handler::Guest, reply, types},
 };
@@ -64,6 +64,11 @@ impl Guest for AuthCallout {
 }
 
 async fn handle_message_async(msg: types::NatsMessage) -> Result<(), otel_wasi::Error> {
+    // The NATS server waits for one unframed answer, so the reply never waits for credit.
+    let pacing = ReplyPacing {
+        credit: false,
+        received: std::time::Instant::now(),
+    };
     main_attribute!(
         "messaging.destination.name" = msg.subject.clone(),
         "messaging.reply_to.present" = msg.reply_to.is_some(),
@@ -130,7 +135,7 @@ async fn handle_message_async(msg: types::NatsMessage) -> Result<(), otel_wasi::
     };
     main_attribute!("auth.response.encoded.size" = data.len() as i64);
 
-    if let Err(e) = reply(msg, data).await {
+    if let Err(e) = reply(msg, data, pacing).await {
         main_attribute!("auth.outcome" = "failed");
         return Err(e);
     }

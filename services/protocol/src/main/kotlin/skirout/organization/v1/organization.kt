@@ -1309,7 +1309,7 @@ val CreateOrganization: build.skir.service.Method<
 > by kotlin.lazy {
     build.skir.service.Method(
         "CreateOrganization",
-        336038,
+        920401,
         skirout.organization.v1.organization.CreateOrganizationRequest.serializer,
         skirout.organization.v1.organization.CreateOrganizationResponse.serializer,
         "",
@@ -1322,7 +1322,7 @@ val DeleteOrganization: build.skir.service.Method<
 > by kotlin.lazy {
     build.skir.service.Method(
         "DeleteOrganization",
-        627251,
+        920402,
         skirout.organization.v1.organization.DeleteOrganizationRequest.serializer,
         skirout.organization.v1.organization.DeleteOrganizationResponse.serializer,
         "",

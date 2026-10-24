@@ -8,7 +8,7 @@ const coreSelectionOperations = <SelectionOperation>[
 
 /// Defines an action available for the current resolved selection.
 ///
-/// Instances are registered by [SelectionOperationsRoot]. Availability is
+/// Instances are registered through a [SelectionOperationSource]. Availability is
 /// evaluated against the resolved selection, while execution reads the latest
 /// provider state at invocation so menus, shortcuts and inspector controls share
 /// one operation implementation. An operation may retain that captured batch

@@ -209,7 +209,7 @@ class _Harness {
             valueListenable: registryEnabled,
             builder: (context, enabled, child) {
               return SelectionOperationsRoot(
-                operations: [if (enabled) operation],
+                source: RegisteredSelectionOperations([if (enabled) operation]),
                 child: Align(
                   alignment: moveOnSelection && selected
                       ? Alignment.centerRight

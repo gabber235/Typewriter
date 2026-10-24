@@ -8,7 +8,7 @@ import {
 import { RecordId } from "kernel/v1/record_id.skir";
 import { OrganizationRole } from "organization/v1/role.skir";
 
-struct OrganizationMember {
+struct OrganizationMember(82030001) {
   user_id: RecordId;
   name: string?;
   email: string?;
@@ -17,18 +17,18 @@ struct OrganizationMember {
   joined_at: timestamp;
 }
 
-struct OrganizationMembersSnapshot {
+struct OrganizationMembersSnapshot(82030002) {
   sequence: int64;
   values: [OrganizationMember];
 }
 
-enum OrganizationMembersChange {
+enum OrganizationMembersChange(82030003) {
   add: OrganizationMember;
   update: OrganizationMember;
   remove: RecordId;
 }
 
-struct OrganizationMembersChanged {
+struct OrganizationMembersChanged(82030004) {
   sequence: int64;
   changes: [OrganizationMembersChange];
 }
@@ -40,7 +40,7 @@ method WatchOrganizationMembers(
   internal_error: InternalError;
 
   snapshot: OrganizationMembersSnapshot;
-} = 638484;
+} = 920301;
 
 // Applies one assignable role selection to every selected member in one transaction.
 // Protected roles remain assigned. Any invalid target rejects the complete selection, so the response never describes a partial update.
@@ -78,7 +78,7 @@ method UpdateOrganizationMemberRoles(
   invalid_selection_error: struct {};
   /// Record IDs from an unexpected table.
   invalid_record_id_error: InvalidRecordIdError;
-} = 813953;
+} = 920302;
 
 // Removes one membership and publishes the corresponding organization change.
 // The original founder cannot be removed while the organization exists. Other members cannot be
@@ -105,4 +105,4 @@ method RemoveOrganizationMember(
 
   /// Record IDs from an unexpected table.
   invalid_record_id_error: InvalidRecordIdError;
-} = 291414;
+} = 920303;

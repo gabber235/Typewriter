@@ -19,7 +19,7 @@
 
 #[derive(Clone, Debug, PartialEq, Default)]
 pub struct OperationOrigin {
-    pub container: Option<crate::skirout::base::editor::v1::type_catalog::ResourceId>,
+    pub container: Option<crate::skirout::base::kernel::v1::resource_id::ResourceId>,
     pub occurrences: Vec<crate::skirout::base::editor::v1::authoring::LinkOccurrence>,
     /// Set this to None when you're creating a struct.
     pub _unrecognized: Option<crate::skir_client::UnrecognizedFields<OperationOrigin>>,
@@ -65,7 +65,7 @@ impl OperationOrigin {
 pub struct OperationInvocation {
     pub invocation_id: crate::skirout::base::editor::v1::capability::InvocationId,
     pub catalog: crate::skirout::base::editor::v1::type_catalog::CatalogGeneration,
-    pub targets: Vec<crate::skirout::base::editor::v1::type_catalog::ResourceId>,
+    pub targets: Vec<crate::skirout::base::kernel::v1::resource_id::ResourceId>,
     pub origin: OperationOrigin,
     /// Set this to None when you're creating a struct.
     pub _unrecognized: Option<crate::skir_client::UnrecognizedFields<OperationInvocation>>,
@@ -106,7 +106,7 @@ impl OperationInvocation {
 
 #[derive(Clone, Debug, PartialEq, Default)]
 pub struct OperationResourceUpsert {
-    pub resource: crate::skirout::base::editor::v1::type_catalog::ResourceId,
+    pub resource: crate::skirout::base::kernel::v1::resource_id::ResourceId,
     pub content: crate::skirout::base::editor::v1::type_catalog::AuthoringRecord,
     /// Set this to None when you're creating a struct.
     pub _unrecognized: Option<crate::skir_client::UnrecognizedFields<OperationResourceUpsert>>,
@@ -152,7 +152,7 @@ impl OperationResourceUpsert {
 #[derive(Clone, Debug, PartialEq, Default)]
 pub struct OperationWorkingOverlay {
     pub upserts: Vec<OperationResourceUpsert>,
-    pub removals: Vec<crate::skirout::base::editor::v1::type_catalog::ResourceId>,
+    pub removals: Vec<crate::skirout::base::kernel::v1::resource_id::ResourceId>,
     /// Set this to None when you're creating a struct.
     pub _unrecognized: Option<crate::skir_client::UnrecognizedFields<OperationWorkingOverlay>>,
 }
@@ -689,7 +689,7 @@ impl OperationInputProblem {
 pub enum OperationSelectionEffect {
     Unknown(Option<crate::skir_client::UnrecognizedVariant<OperationSelectionEffect>>),
     Unchanged,
-    Replace(Vec<crate::skirout::base::editor::v1::type_catalog::ResourceId>),
+    Replace(Vec<crate::skirout::base::kernel::v1::resource_id::ResourceId>),
 }
 
 impl Default for OperationSelectionEffect {
@@ -1182,7 +1182,7 @@ impl OperationSearchContext {
 #[derive(Clone, Debug, PartialEq, Default)]
 pub struct DropCandidates {
     pub operation: crate::skirout::base::editor::v1::operation::ResourceOperationId,
-    pub destinations: Vec<crate::skirout::base::editor::v1::type_catalog::ResourceId>,
+    pub destinations: Vec<crate::skirout::base::kernel::v1::resource_id::ResourceId>,
     pub complete: bool,
     /// Set this to None when you're creating a struct.
     pub _unrecognized: Option<crate::skir_client::UnrecognizedFields<DropCandidates>>,
@@ -1336,7 +1336,7 @@ fn initialize_module_serializers() {
                 "container",
                 0,
                 crate::skir_client::Serializer::optional(
-                    crate::skirout::base::editor::v1::type_catalog::ResourceId::serializer(),
+                    crate::skirout::base::kernel::v1::resource_id::ResourceId::serializer(),
                 ),
                 "",
                 |x: &OperationOrigin| &x.container,
@@ -1377,7 +1377,7 @@ fn initialize_module_serializers() {
                 "targets",
                 2,
                 crate::skir_client::Serializer::array(
-                    crate::skirout::base::editor::v1::type_catalog::ResourceId::serializer(),
+                    crate::skirout::base::kernel::v1::resource_id::ResourceId::serializer(),
                 ),
                 "",
                 |x: &OperationInvocation| &x.targets,
@@ -1401,7 +1401,7 @@ fn initialize_module_serializers() {
             (*a).add_field(
                 "resource",
                 0,
-                crate::skirout::base::editor::v1::type_catalog::ResourceId::serializer(),
+                crate::skirout::base::kernel::v1::resource_id::ResourceId::serializer(),
                 "",
                 |x: &OperationResourceUpsert| &x.resource,
                 |x: &mut OperationResourceUpsert, v| x.resource = v,
@@ -1435,7 +1435,7 @@ fn initialize_module_serializers() {
                 "removals",
                 1,
                 crate::skir_client::Serializer::array(
-                    crate::skirout::base::editor::v1::type_catalog::ResourceId::serializer(),
+                    crate::skirout::base::kernel::v1::resource_id::ResourceId::serializer(),
                 ),
                 "",
                 |x: &OperationWorkingOverlay| &x.removals,
@@ -1751,7 +1751,7 @@ fn initialize_module_serializers() {
                 2,
                 2,
                 crate::skir_client::Serializer::array(
-                    crate::skirout::base::editor::v1::type_catalog::ResourceId::serializer(),
+                    crate::skirout::base::kernel::v1::resource_id::ResourceId::serializer(),
                 ),
                 "",
                 |v| OperationSelectionEffect::Replace(v),
@@ -2257,7 +2257,7 @@ fn initialize_module_serializers() {
                 "destinations",
                 1,
                 crate::skir_client::Serializer::array(
-                    crate::skirout::base::editor::v1::type_catalog::ResourceId::serializer(),
+                    crate::skirout::base::kernel::v1::resource_id::ResourceId::serializer(),
                 ),
                 "",
                 |x: &DropCandidates| &x.destinations,
@@ -2418,7 +2418,7 @@ pub fn resolve_resource_operations_method() -> &'static crate::skir_client::Meth
         >,
     > = std::sync::LazyLock::new(|| crate::skir_client::Method {
         name: "ResolveResourceOperations".to_string(),
-        number: 920015_i64,
+        number: 941601_i64,
         request_serializer: ResolveResourceOperationsRequest::serializer(),
         response_serializer: ResolveResourceOperationsResult::serializer(),
         doc: "".to_string(),
@@ -2432,7 +2432,7 @@ pub fn prepare_authoring_action_method()
         crate::skir_client::Method<PrepareAuthoringActionRequest, AuthoringActionResult>,
     > = std::sync::LazyLock::new(|| crate::skir_client::Method {
         name: "PrepareAuthoringAction".to_string(),
-        number: 920016_i64,
+        number: 941602_i64,
         request_serializer: PrepareAuthoringActionRequest::serializer(),
         response_serializer: AuthoringActionResult::serializer(),
         doc: "".to_string(),
@@ -2446,7 +2446,7 @@ pub fn resolve_drop_candidates_method()
         crate::skir_client::Method<ResolveDropCandidatesRequest, ResolveDropCandidatesResult>,
     > = std::sync::LazyLock::new(|| crate::skir_client::Method {
         name: "ResolveDropCandidates".to_string(),
-        number: 920017_i64,
+        number: 941603_i64,
         request_serializer: ResolveDropCandidatesRequest::serializer(),
         response_serializer: ResolveDropCandidatesResult::serializer(),
         doc: "".to_string(),

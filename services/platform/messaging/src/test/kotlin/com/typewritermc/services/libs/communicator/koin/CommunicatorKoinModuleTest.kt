@@ -20,6 +20,8 @@ import io.kotest.matchers.types.shouldBeSameInstanceAs
 import io.opentelemetry.api.OpenTelemetry
 import org.koin.dsl.koinApplication
 import org.koin.dsl.module
+import kotlin.time.Duration.Companion.minutes
+import kotlin.time.Duration.Companion.seconds
 
 val CommunicatorKoinModuleTest by testSuite {
     test("resolves exact singleton wiring from mandatory application bindings") {
@@ -118,4 +120,14 @@ private fun application(options: RouterOptions = RouterOptions()) =
         )
     }
 
-private val TEST_LIMITS = TransportLimits(chunkBytes = 512 * 1024, maxChunks = 64)
+private val TEST_LIMITS =
+    TransportLimits(
+        chunkBytes = 512 * 1024,
+        windowFrames = 8,
+        requestMaxBytes = 512L * 1024,
+        replyMaxBytes =
+            32L * 1024 * 1024,
+        frameInactivity = 30.seconds,
+        replyTtl = 5.minutes,
+        replyCredit = false,
+    )

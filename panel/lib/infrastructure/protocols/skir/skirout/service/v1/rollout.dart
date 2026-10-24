@@ -4979,7 +4979,7 @@ final class QueryParticipantStatusResponse_internalErrorWrapper
 final _skir.Method<ProbeRealmHostsRequest, ProbeRealmHostsResponse>
 probeRealmHostsMethod = _skir.Method(
   "ProbeRealmHosts",
-  910008,
+  930601,
   ProbeRealmHostsRequest.serializer,
   ProbeRealmHostsResponse.serializer,
   "",
@@ -4988,7 +4988,7 @@ probeRealmHostsMethod = _skir.Method(
 final _skir.Method<ApplyRolloutCommandRequest, ApplyRolloutCommandResponse>
 applyRolloutCommandMethod = _skir.Method(
   "ApplyRolloutCommand",
-  910009,
+  930602,
   ApplyRolloutCommandRequest.serializer,
   ApplyRolloutCommandResponse.serializer,
   "",
@@ -5000,7 +5000,7 @@ final _skir.Method<
 >
 queryParticipantStatusMethod = _skir.Method(
   "QueryParticipantStatus",
-  910010,
+  930603,
   QueryParticipantStatusRequest.serializer,
   QueryParticipantStatusResponse.serializer,
   "",

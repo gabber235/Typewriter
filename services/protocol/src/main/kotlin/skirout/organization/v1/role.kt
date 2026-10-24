@@ -532,7 +532,7 @@ val WatchOrganizationRoles: build.skir.service.Method<
 > by kotlin.lazy {
     build.skir.service.Method(
         "WatchOrganizationRoles",
-        49267,
+        920601,
         skirout.organization.v1.role.WatchOrganizationRolesRequest.serializer,
         skirout.organization.v1.role.WatchOrganizationRolesResponse.serializer,
         "",
