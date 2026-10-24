@@ -21,6 +21,11 @@ pub trait RequestRoute {
     type Request: 'static;
     type Response: 'static;
 
+    /// Whether a framed reply waits for the requester's credit at each window end. The generator
+    /// enables it only when no panel role calls the route: panel connections hold no response
+    /// permission, so they cannot grant credit.
+    const REPLY_CREDIT: bool;
+
     fn method() -> &'static Method<Self::Request, Self::Response>;
 }
 

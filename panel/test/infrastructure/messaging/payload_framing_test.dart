@@ -10,6 +10,7 @@ const _limits = TransportLimits(
   windowFrames: 2,
   requestMaxBytes: 64,
   replyMaxBytes: 64,
+  frameInactivity: Duration(seconds: 1),
 );
 
 /// One frame as a sender publishes it.
@@ -186,42 +187,18 @@ void main() {
       expect(completed, [first, second]);
     });
 
-    test("a window end whose frames arrived is granted the next window", () {
-      final frames = _frames(_bytes(28));
-      final assembler = _assembler();
-      final answers = <NatsHeaders>[];
-
-      expect(assembler.accept(frames[0].headers, frames[0].payload), isNull);
+    test("failure answers name their transfer failure", () {
       expect(
-        assembler.accept(
-          frames[1].headers,
-          frames[1].payload,
-          answer: answers.add,
-        ),
-        isNull,
+        TransferFailure.named(PayloadHeaders.busy, NatsHeaders()),
+        isA<TransferBusy>(),
       );
-
-      expect(answers.single.first(PayloadHeaders.credit), "4");
-      expect(answers.single.first(PayloadHeaders.failure), isNull);
-    });
-
-    test("a window end missing an earlier frame is answered incomplete", () {
-      final frames = _frames(_bytes(28));
-      final assembler = _assembler();
-      final answers = <NatsHeaders>[];
-
       expect(
-        () => assembler.accept(
-          frames[1].headers,
-          frames[1].payload,
-          answer: answers.add,
-        ),
-        throwsA(isA<TransferRejected>()),
+        TransferFailure.named(PayloadHeaders.rejected, NatsHeaders()),
+        isA<TransferRejected>(),
       );
-      expect(answers.single.first(PayloadHeaders.payload), "payload");
       expect(
-        answers.single.first(PayloadHeaders.failure),
-        PayloadHeaders.incomplete,
+        TransferFailure.named(PayloadHeaders.incomplete, NatsHeaders()),
+        isA<TransferRejected>(),
       );
     });
   });
@@ -295,52 +272,27 @@ void main() {
       });
     });
 
-    /// Sends [frames] to [inbox] the way a responder sends a framed reply:
-    /// each window end is a request whose answer lands in [answers], and the
-    /// final frame is published. Frames in [dropped] are lost on the way.
-    Future<void> sendReply(
+    /// Streams [frames] to [inbox] the way a responder sends a framed reply
+    /// to the panel: every frame is published at once, none waits for a
+    /// credit. Frames in [dropped] are lost on the way.
+    Future<void> streamReply(
       String inbox,
-      List<_Frame> frames,
-      List<NatsHeaders> answers, {
+      List<_Frame> frames, {
       Set<int> dropped = const {},
     }) async {
-      var granted = _limits.windowFrames;
-      var index = 0;
-      while (true) {
-        for (; index < min(granted, frames.length) - 1; index++) {
-          if (dropped.contains(index)) continue;
-          await responder.publish(
-            inbox,
-            frames[index].payload,
-            headers: frames[index].headers,
-          );
-        }
-        final frame = frames[index];
-        if (index == frames.length - 1) {
-          await responder.publish(inbox, frame.payload, headers: frame.headers);
-          return;
-        }
-        final answer = await responder.request(
-          inbox,
-          frame.payload,
-          headers: frame.headers,
-          timeout: const Duration(seconds: 5),
-        );
-        answers.add(answer.headers!);
-        final credit = answer.headers!.first(PayloadHeaders.credit);
-        if (credit == null) return;
-        granted = int.parse(credit);
-        index++;
+      for (final (index, frame) in frames.indexed) {
+        if (dropped.contains(index)) continue;
+        await responder.publish(inbox, frame.payload, headers: frame.headers);
       }
     }
 
     test(
-      "a framed reply above one window completes and each window is granted",
+      "a streamed reply of many windows completes without any credit",
       () async {
-        final payload = _bytes(27);
-        final answers = <NatsHeaders>[];
-        receive = (request) =>
-            sendReply(request.replySubject!, _frames(payload), answers);
+        final payload = _bytes(_limits.replyMaxBytes);
+        final frames = _frames(payload);
+        expect(frames.length, greaterThan(_limits.windowFrames * 4));
+        receive = (request) => streamReply(request.replySubject!, frames);
 
         final response = await client.request(
           _subject,
@@ -349,36 +301,29 @@ void main() {
         );
 
         expect(response.payload, payload);
-        expect(answers.map((answer) => answer.first(PayloadHeaders.credit)), [
-          "4",
-          "6",
-          "7",
-        ]);
       },
       skip: skipReason,
       timeout: const Timeout(Duration(seconds: 30)),
     );
 
     test(
-      "a dropped reply frame is answered incomplete and fails the request",
+      "a dropped reply frame fails the request on the inactivity bound",
       () async {
-        final answers = <NatsHeaders>[];
-        final sent = Completer<void>();
-        receive = (request) => sendReply(
+        receive = (request) => streamReply(
           request.replySubject!,
           _frames(_bytes(27)),
-          answers,
           dropped: {0},
-        ).then(sent.complete, onError: sent.completeError);
+        );
 
         await expectLater(
           client.request(_subject, Uint8List(0), limits: _limits),
-          throwsA(isA<TransferRejected>()),
-        );
-        await sent.future;
-        expect(
-          answers.single.first(PayloadHeaders.failure),
-          PayloadHeaders.incomplete,
+          throwsA(
+            isA<NatsClientException>().having(
+              (failure) => failure.kind,
+              "kind",
+              NatsFailureKind.timeout,
+            ),
+          ),
         );
       },
       skip: skipReason,
@@ -462,7 +407,7 @@ void main() {
 
         await expectLater(
           client.request(_subject, _bytes(21), limits: _limits),
-          throwsA(isA<TransferRejected>()),
+          throwsA(isA<TransferBusy>()),
         );
         expect(await interrupted.future, PayloadHeaders.interrupted);
       },

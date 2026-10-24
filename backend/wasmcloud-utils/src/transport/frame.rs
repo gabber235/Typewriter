@@ -5,20 +5,28 @@
 //! headers `Typewriter-Payload` (the payload id), `Typewriter-Chunk` (`index/count`),
 //! `Typewriter-Size` and `Typewriter-Sha256` of the complete payload.
 //!
-//! Frames flow in credit windows. The sender may send the frames below its current grant, which
-//! starts at [`WINDOW_FRAMES`]. The last frame of a window that is not the final frame goes out as
-//! a request; the receiver answers it with `Typewriter-Credit`, the new grant, or with a
-//! `Typewriter-Transfer-Failure` that ends the transfer. Every other frame is only published. A
-//! sender waits at most [`INACTIVITY_MS`] for a credit, and a sender that fails after its first
-//! frame publishes an interrupted frame so the receiver drops its assembly at once.
+//! A reply to a route whose generated `REPLY_CREDIT` holds flows in credit windows. The sender may
+//! send the frames below its current grant, which starts at [`WINDOW_FRAMES`]. The last frame of a
+//! window that is not the final frame goes out as a request; the receiver answers it with
+//! `Typewriter-Credit`, the new grant, or with a `Typewriter-Transfer-Failure` that ends the
+//! transfer. Every other frame is only published. A sender waits at most [`FRAME_INACTIVITY_MS`]
+//! for a credit. A reply to a route a panel role calls streams every frame without waiting, because
+//! granting a credit is a NATS response and panel connections hold no response permission. A reply
+//! still sending [`REPLY_TTL_MS`] after its request arrived stops, since NATS no longer delivers it.
+//! A sender that fails after its first frame publishes an interrupted frame so the receiver drops
+//! its assembly at once.
 //!
 //! Components only send framed replies: they never receive framed requests, and as requesters they
 //! receive only the first message of a reply. A reply above [`REPLY_MAX_BYTES`] is not framed; one
 //! `Typewriter-Transfer-Failure: too-large` message carries its size and the limit instead.
 
+use std::time::{Duration, Instant};
+
 use sha2::{Digest, Sha256};
 
-use crate::transport_routes::{CHUNK_BYTES, REPLY_MAX_BYTES, WINDOW_FRAMES};
+use crate::transport_routes::{
+    CHUNK_BYTES, FRAME_INACTIVITY_MS, REPLY_MAX_BYTES, REPLY_TTL_MS, WINDOW_FRAMES,
+};
 use crate::wasmcloud::messaging::types::NatsMessage;
 
 /// Header naming the payload a frame belongs to.
@@ -30,7 +38,7 @@ pub const SIZE_HEADER: &str = "Typewriter-Size";
 /// Header carrying the lowercase hexadecimal SHA 256 digest of the complete payload.
 pub const SHA256_HEADER: &str = "Typewriter-Sha256";
 /// Header of a message that ends a transfer without its payload; its value is one of
-/// [`TOO_LARGE`], [`INTERRUPTED`], [`INCOMPLETE`] or [`BUSY`].
+/// [`TOO_LARGE`], [`INTERRUPTED`], [`INCOMPLETE`], [`BUSY`] or [`REJECTED`].
 pub const FAILURE_HEADER: &str = "Typewriter-Transfer-Failure";
 /// Header carrying the largest payload size the direction carries, on a [`TOO_LARGE`] failure.
 pub const LIMIT_HEADER: &str = "Typewriter-Limit";
@@ -45,11 +53,33 @@ pub const INTERRUPTED: &str = "interrupted";
 pub const INCOMPLETE: &str = "incomplete";
 /// Failure: the receiver holds no room for another assembly.
 pub const BUSY: &str = "busy";
+/// Failure: the receiver rejected a frame that broke the framing rules and dropped the payload.
+pub const REJECTED: &str = "rejected";
 
-/// How long in milliseconds a sender waits for the credit answering a window end, and how long a
-/// receiver keeps an assembly without a new frame. The services and panel transports use the same
-/// bound.
-pub const INACTIVITY_MS: u32 = 30_000;
+/// How a component sends the frames of one reply.
+#[derive(Clone, Copy, Debug)]
+pub struct ReplyPacing {
+    /// Whether each window end waits for the requester's credit: the generated `REPLY_CREDIT` of
+    /// the route the request arrived on.
+    pub credit: bool,
+    /// When the request arrived, which starts its reply time to live.
+    pub received: Instant,
+}
+
+impl ReplyPacing {
+    /// The pacing of a reply to `Route`, whose request arrived at `received`.
+    pub fn of<Route: super::RequestRoute>(received: Instant) -> Self {
+        Self {
+            credit: Route::REPLY_CREDIT,
+            received,
+        }
+    }
+
+    /// The moment a reply stops, [`REPLY_TTL_MS`] after its request arrived.
+    fn deadline(&self) -> Instant {
+        self.received + Duration::from_millis(REPLY_TTL_MS.unsigned_abs())
+    }
+}
 
 /// One message of a framed payload: its framing headers and its slice of the encoded payload.
 #[derive(Clone, Debug, PartialEq, Eq)]
@@ -136,36 +166,55 @@ pub fn credit(answer: &NatsMessage) -> Option<usize> {
     header(answer, CREDIT_HEADER)?.parse().ok()
 }
 
-/// Where a framed reply goes: plain publishes, and requests for window ends.
+/// Where a framed reply goes: plain publishes, and requests for window ends answered within
+/// `timeout_ms`.
 pub(crate) trait FrameSink {
     async fn publish(&mut self, frame: PayloadFrame) -> Result<(), otel_wasi::Error>;
-    async fn request(&mut self, frame: PayloadFrame) -> Result<NatsMessage, otel_wasi::Error>;
+    async fn request(
+        &mut self,
+        frame: PayloadFrame,
+        timeout_ms: u32,
+    ) -> Result<NatsMessage, otel_wasi::Error>;
 }
 
-/// Sends the frames of one reply in credit windows of [`WINDOW_FRAMES`].
+/// Sends the frames of one reply as `pacing` says: in credit windows of [`WINDOW_FRAMES`], or
+/// streamed without waiting.
 ///
-/// The final frame is only published, since a reply ends without an answer. On any failure an
-/// interrupted frame follows, and the original failure stays the result.
+/// The final frame is only published, since a reply ends without an answer. A reply past its time
+/// to live fails with `transport-transfer-interrupted`. On any failure an interrupted frame
+/// follows, and the original failure stays the result.
 pub(crate) async fn send_reply_frames(
     sink: &mut impl FrameSink,
     payload_id: &str,
     frames: Vec<PayloadFrame>,
+    pacing: ReplyPacing,
 ) -> Result<(), otel_wasi::Error> {
-    send_frames_within(sink, payload_id, frames, WINDOW_FRAMES).await
+    let window_frames = pacing.credit.then_some(WINDOW_FRAMES);
+    send_frames_within(sink, payload_id, frames, window_frames, pacing.deadline()).await
 }
 
 async fn send_frames_within(
     sink: &mut impl FrameSink,
     payload_id: &str,
     frames: Vec<PayloadFrame>,
-    window_frames: usize,
+    window_frames: Option<usize>,
+    deadline: Instant,
 ) -> Result<(), otel_wasi::Error> {
     let count = frames.len();
-    let mut granted = window_frames.min(count);
+    let mut granted = window_frames.unwrap_or(count).min(count);
     for (index, frame) in frames.into_iter().enumerate() {
         let sent = index + 1;
-        let result = if sent == granted && sent < count {
-            match sink.request(frame).await {
+        let remaining = deadline.saturating_duration_since(Instant::now());
+        let result = if remaining.is_zero() {
+            Err(otel_wasi::Error::new(
+                "transport-transfer-interrupted",
+                "the reply outlived its time to live before every frame was sent",
+            ))
+        } else if sent == granted && sent < count {
+            let timeout_ms = u32::try_from(remaining.as_millis())
+                .unwrap_or(u32::MAX)
+                .min(FRAME_INACTIVITY_MS);
+            match sink.request(frame, timeout_ms).await {
                 Ok(answer) => next_grant(&answer, sent).map(|grant| granted = grant.min(count)),
                 Err(error) => Err(error),
             }
@@ -315,7 +364,11 @@ mod tests {
             Ok(())
         }
 
-        async fn request(&mut self, frame: PayloadFrame) -> Result<NatsMessage, otel_wasi::Error> {
+        async fn request(
+            &mut self,
+            frame: PayloadFrame,
+            _timeout_ms: u32,
+        ) -> Result<NatsMessage, otel_wasi::Error> {
             self.sent.push(Sent::Requested(label(&frame)));
             self.answers
                 .pop_front()
@@ -324,8 +377,27 @@ mod tests {
     }
 
     fn send(receiver: &mut Receiver, frames: usize, window: usize) -> Result<(), otel_wasi::Error> {
+        send_paced(receiver, frames, Some(window), far_deadline())
+    }
+
+    fn send_paced(
+        receiver: &mut Receiver,
+        frames: usize,
+        window: Option<usize>,
+        deadline: Instant,
+    ) -> Result<(), otel_wasi::Error> {
         let (payload_id, frames) = framed(vec![7; frames], 1);
-        block_on(send_frames_within(receiver, &payload_id, frames, window))
+        block_on(send_frames_within(
+            receiver,
+            &payload_id,
+            frames,
+            window,
+            deadline,
+        ))
+    }
+
+    fn far_deadline() -> Instant {
+        Instant::now() + Duration::from_secs(3_600)
     }
 
     #[test]
@@ -449,6 +521,34 @@ mod tests {
     }
 
     #[test]
+    fn a_reply_without_credit_streams_every_frame() {
+        let mut receiver = Receiver::default();
+        send_paced(&mut receiver, 20, None, far_deadline()).unwrap();
+        assert_eq!(
+            receiver.sent,
+            (0..20)
+                .map(|index| Sent::Published(format!("{index}/20")))
+                .collect::<Vec<_>>()
+        );
+    }
+
+    #[test]
+    fn the_route_decides_whether_its_reply_waits_for_credit() {
+        use crate::transport_routes::{ServiceBindingQueryRoute, UserOrganizationCreateRoute};
+        let received = Instant::now();
+        assert!(!ReplyPacing::of::<UserOrganizationCreateRoute>(received).credit);
+        assert!(ReplyPacing::of::<ServiceBindingQueryRoute>(received).credit);
+    }
+
+    #[test]
+    fn a_reply_past_its_time_to_live_stops_as_interrupted() {
+        let mut receiver = Receiver::default();
+        let error = send_paced(&mut receiver, 3, None, Instant::now()).unwrap_err();
+        assert_eq!(error.slug(), "transport-transfer-interrupted");
+        assert_eq!(receiver.sent, [Sent::Published(INTERRUPTED.to_owned())]);
+    }
+
+    #[test]
     fn a_window_end_without_usable_credit_interrupts_the_reply() {
         let failing = [
             (answer(&[]), "transport-credit-missing"),
@@ -516,6 +616,7 @@ mod tests {
             (INTERRUPTED, "transport-transfer-interrupted"),
             (INCOMPLETE, "transport-transfer-rejected"),
             (BUSY, "transport-transfer-rejected"),
+            (REJECTED, "transport-transfer-rejected"),
             ("unknown", "transport-transfer-rejected"),
         ] {
             assert_eq!(

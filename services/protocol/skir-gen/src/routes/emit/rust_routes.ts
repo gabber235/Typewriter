@@ -116,6 +116,7 @@ export function emitRequestRoute(
     `    type Scope = ${scopeType(route.scope)};`,
     `    type Request = ${symbols.record(method.request).reference};`,
     `    type Response = ${symbols.record(method.response).reference};`,
+    `    const REPLY_CREDIT: bool = ${route.limits.replyCredit};`,
     "    fn method() -> &'static crate::skir_client::Method<Self::Request, Self::Response> {",
     `        ${symbols.method(method.module, method.method).reference}`,
     "    }",

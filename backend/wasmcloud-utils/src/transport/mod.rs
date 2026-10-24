@@ -17,9 +17,9 @@ pub(crate) mod test_support;
 mod dispatch_test;
 
 pub use frame::{
-    BUSY, CHUNK_HEADER, CREDIT_HEADER, FAILURE_HEADER, INACTIVITY_MS, INCOMPLETE, INTERRUPTED,
-    LIMIT_HEADER, PAYLOAD_HEADER, PayloadFrame, PayloadPlan, SHA256_HEADER, SIZE_HEADER, TOO_LARGE,
-    credit, interrupted_frame, plan_reply, unusable_reply_slug,
+    BUSY, CHUNK_HEADER, CREDIT_HEADER, FAILURE_HEADER, INCOMPLETE, INTERRUPTED, LIMIT_HEADER,
+    PAYLOAD_HEADER, PayloadFrame, PayloadPlan, REJECTED, ReplyPacing, SHA256_HEADER, SIZE_HEADER,
+    TOO_LARGE, credit, interrupted_frame, plan_reply, unusable_reply_slug,
 };
 pub(crate) use frame::{FrameSink, send_reply_frames};
 pub use grant::GrantSet;

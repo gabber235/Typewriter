@@ -55,6 +55,7 @@ import kotlinx.coroutines.withContext
 import kotlinx.coroutines.withTimeoutOrNull
 import java.util.concurrent.atomic.AtomicReference
 import kotlin.time.Duration
+import kotlin.time.TimeMark
 
 /**
  * Executes typed messaging contracts with telemetry, classification, and trace propagation.
@@ -350,9 +351,12 @@ class Communicator(
         failureSlug: ErrorSlug,
         headers: MessageHeaders = MessageHeaders.Empty,
         limits: TransportLimits? = null,
+        received: TimeMark? = null,
     ): CommunicationResult<Unit> =
         operation(name, "publish", failureSlug, SpanKind.PRODUCER, template) { annotate ->
-            publishResponse(destination, response, codec, classification, failureSlug, headers, annotate) { transport.reply(it, limits) }
+            publishResponse(destination, response, codec, classification, failureSlug, headers, annotate) {
+                transport.reply(it, limits, received)
+            }
         }.responseResult()
 
     private suspend fun <Response : Any> publishResponse(

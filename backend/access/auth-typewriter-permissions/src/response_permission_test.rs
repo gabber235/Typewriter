@@ -10,13 +10,18 @@ use tokio::{
     process::{Child, Command},
     sync::mpsc,
 };
-use wasmcloud_utils::skir::base::access::v1::permission::ResponsePermission;
-use wasmcloud_utils::transport::{CREDIT_HEADER, GrantSet, RealmScope, SubjectToken};
+use wasmcloud_utils::skir::base::access::v1::permission::{Permissions, ResponsePermission};
+use wasmcloud_utils::transport::{
+    CHUNK_HEADER, ConnectionSession, GrantSet, OrganizationActorScope, PAYLOAD_HEADER, RealmScope,
+    SubjectToken, UserScope,
+};
 use wasmcloud_utils::transport_routes::{
-    PANEL_RESPONSE_LIMIT, REPLY_TTL_MS, RealmRole, SERVICE_RESPONSE_LIMIT, WINDOW_FRAMES,
+    OrganizationActorRole, REPLY_TTL_MS, RealmRole, SERVICE_RESPONSE_LIMIT, UserRole,
+    WINDOW_FRAMES, panel_reply_inbox_prefix,
 };
 
 use crate::common::response_permission;
+use crate::users::panel_permissions;
 
 const REQUEST_SUBJECT: &str = "service.from.quests.organization.writers.realm.rollout.probe";
 const READINESS_SUBJECT: &str = "fixture.ready";
@@ -25,10 +30,11 @@ const FIRST_REPLY: &str = "_INBOX.requester.first";
 const ARBITRARY_REPLY: &str = "_INBOX.requester.arbitrary";
 const ARBITRARY_VALID_REPLY: &str = "_INBOX.requester.arbitrary_valid";
 const EXPIRED_REPLY: &str = "_INBOX.requester.expired";
-/// The panel inbox a framed reply arrives on.
-const PANEL_REPLY: &str = "_INBOX.panel.reply";
-/// The private inbox of a sender waiting for the credit answering a window end.
-const SENDER_CREDIT: &str = "_INBOX.sender.credit";
+/// A subject outside every panel grant, which a self answer must never reach.
+const SECRET_SUBJECT: &str = "secret.outside.panel.grants";
+const PANEL_USER: &str = "alice";
+const PANEL_ORGANIZATION: &str = "writers";
+const PANEL_SESSION: &str = "0123456789abcdef0123456789abcdef";
 
 struct Broker {
     _directory: tempfile::TempDir,
@@ -73,6 +79,20 @@ impl<'a> FixtureUser<'a> {
             publish: subjects(publish),
             subscribe: subjects(subscribe),
             response: None,
+        }
+    }
+
+    /// A broker user holding exactly the policy the auth callout hands out.
+    fn granted(name: &'a str, permissions: &Permissions) -> Result<Self> {
+        let user = Self {
+            name,
+            publish: permissions.publish.allow.iter().cloned().collect(),
+            subscribe: permissions.subscribe.allow.iter().cloned().collect(),
+            response: None,
+        };
+        match &permissions.response {
+            Some(response) => user.responding(response),
+            None => Ok(user),
         }
     }
 
@@ -135,68 +155,173 @@ async fn a_service_sends_at_most_its_reply_limit_to_each_requester() -> Result<(
     cleanup
 }
 
+fn token(value: &str) -> Result<SubjectToken> {
+    SubjectToken::try_from(value).map_err(|error| anyhow::anyhow!(error.to_string()))
+}
+
+/// The grants a panel user of [`PANEL_ORGANIZATION`] receives, as `users::handle_panel_user`
+/// derives them.
+fn panel_grants() -> Result<GrantSet> {
+    let session = ConnectionSession::try_from(PANEL_SESSION)
+        .map_err(|error| anyhow::anyhow!(error.to_string()))?;
+    let mut grants = GrantSet::default();
+    UserScope {
+        user: token(PANEL_USER)?,
+    }
+    .grant(UserRole::AuthenticatedUser, &session, &mut grants);
+    grants.subscribe.insert(format!(
+        "{}.*",
+        panel_reply_inbox_prefix(&token(PANEL_USER)?, &session)
+    ));
+    OrganizationActorScope {
+        user: token(PANEL_USER)?,
+        organization: token(PANEL_ORGANIZATION)?,
+    }
+    .grant(
+        OrganizationActorRole::OrganizationMember,
+        &session,
+        &mut grants,
+    );
+    Ok(grants)
+}
+
+/// The panel's own presence subject, which it both publishes and subscribes to.
+fn panel_presence() -> String {
+    format!("typewriter.presence.organization.{PANEL_ORGANIZATION}.user.{PANEL_USER}")
+}
+
 #[tokio::test]
-async fn a_panel_connection_answers_each_window_end_with_one_credit() -> Result<()> {
-    let limit = PANEL_RESPONSE_LIMIT.context("the panel must answer window ends")?;
-    let response = response_permission(limit);
-    assert_eq!(
-        response.ttl.as_ref().map(|duration| duration.milliseconds),
-        Some(REPLY_TTL_MS)
+async fn a_panel_user_cannot_answer_its_own_message_to_reach_another_subject() -> Result<()> {
+    let permissions = panel_permissions(panel_grants()?);
+    assert!(permissions.response.is_none());
+    let presence = panel_presence();
+    assert!(permissions.publish.allow.contains(&presence));
+    assert!(
+        !permissions
+            .publish
+            .allow
+            .iter()
+            .any(|subject| subject == SECRET_SUBJECT)
     );
 
+    // The same grants with a response permission show that the self loop is real.
+    let escalating = Permissions {
+        response: Some(response_permission(1)),
+        ..permissions.clone()
+    };
     let users = [
-        FixtureUser::new("sender", &["_INBOX.panel.*"], &["_INBOX.sender.*"]),
-        FixtureUser::new("panel", &[], &["_INBOX.panel.*"]).responding(&response)?,
+        FixtureUser::granted("panel", &permissions)?,
+        FixtureUser::granted("escalating", &escalating)?,
+        FixtureUser::new("watcher", &[], &[SECRET_SUBJECT]),
     ];
     let broker = start_broker(&server_config(&users)).await?;
-    let result = exercise_panel_credits(&broker.endpoint).await;
+    let result = exercise_self_answers(&broker.endpoint, &presence).await;
     let cleanup = broker.close().await;
     result?;
     cleanup
 }
 
-async fn exercise_panel_credits(endpoint: &str) -> Result<()> {
-    let sender = connect(endpoint, "sender", None).await?;
+/// Publishes on the presence subject with the secret subject as reply, receives the echo and
+/// answers it: the panel is refused while a connection with a response permission gets through.
+async fn exercise_self_answers(endpoint: &str, presence: &str) -> Result<()> {
+    let watcher = connect(endpoint, "watcher", None).await?;
+    let mut secrets = watcher.subscribe(SECRET_SUBJECT).await?;
+    confirm_subscriptions(&watcher).await?;
+
     let (panel_events, mut panel_violations) = mpsc::unbounded_channel();
     let panel = connect(endpoint, "panel", Some(panel_events)).await?;
-    let mut frames = panel.subscribe(PANEL_REPLY).await?;
+    self_answer(&panel, presence).await?;
+    assert_publish_violation(&mut panel_violations).await?;
+    assert_no_message(&mut secrets).await?;
+
+    let escalating = connect(endpoint, "escalating", None).await?;
+    self_answer(&escalating, presence).await?;
+    assert_eq!(receive(&mut secrets).await?.payload, "self answer");
+    Ok(())
+}
+
+async fn self_answer(client: &Client, presence: &str) -> Result<()> {
+    let wildcard = presence
+        .rsplit_once('.')
+        .map(|(prefix, _)| format!("{prefix}.*"))
+        .context("presence subject has a user token")?;
+    let mut echoes = client.subscribe(wildcard).await?;
+    confirm_subscriptions(client).await?;
+    client
+        .publish_with_reply(presence.to_owned(), SECRET_SUBJECT, "presence".into())
+        .await?;
+    client.flush().await?;
+    let echo = receive(&mut echoes).await?;
+    let reply = echo
+        .reply
+        .context("the echo carries the named reply subject")?;
+    assert_eq!(reply.as_str(), SECRET_SUBJECT);
+    client.publish(reply, "self answer".into()).await?;
+    client.flush().await?;
+    Ok(())
+}
+
+#[tokio::test]
+async fn a_panel_user_receives_every_frame_of_a_streamed_reply() -> Result<()> {
+    let permissions = panel_permissions(panel_grants()?);
+    let request =
+        format!("service.to.quests.organization.{PANEL_ORGANIZATION}.realm.editor.catalog.fetch");
+    let inbox_prefix = permissions
+        .subscribe
+        .allow
+        .iter()
+        .find(|subject| subject.starts_with("_INBOX."))
+        .context("the panel holds a reply inbox")?
+        .trim_end_matches('*')
+        .to_owned();
+    let limit = SERVICE_RESPONSE_LIMIT.context("services must answer requests")?;
+    let users = [
+        FixtureUser::granted("panel", &permissions)?,
+        FixtureUser::new("service", &[], &[&request]).responding(&response_permission(limit))?,
+    ];
+    let broker = start_broker(&server_config(&users)).await?;
+    let result = exercise_streamed_reply(&broker.endpoint, &request, &inbox_prefix).await;
+    let cleanup = broker.close().await;
+    result?;
+    cleanup
+}
+
+/// The service streams more than one window of frames without waiting for any credit, and the
+/// panel's inbox receives every one of them in order.
+async fn exercise_streamed_reply(endpoint: &str, request: &str, inbox_prefix: &str) -> Result<()> {
+    let service = connect(endpoint, "service", None).await?;
+    let mut requests = service.subscribe(request.to_owned()).await?;
+    confirm_subscriptions(&service).await?;
+    let panel = connect(endpoint, "panel", None).await?;
+    let inbox = format!("{inbox_prefix}reply");
+    let mut replies = panel.subscribe(inbox.clone()).await?;
     confirm_subscriptions(&panel).await?;
-    let mut credits = sender.subscribe(SENDER_CREDIT).await?;
-    sender.flush().await?;
 
-    // Two consecutive window ends: each one earns exactly one credit, and nothing more.
-    for window in 1..=2 {
-        sender
-            .publish_with_reply(PANEL_REPLY, SENDER_CREDIT, "window end".into())
-            .await?;
-        sender.flush().await?;
-        let window_end = receive(&mut frames).await?;
-        let reply = window_end
-            .reply
-            .context("a window end carries a reply subject")?;
-        assert_eq!(reply.as_str(), SENDER_CREDIT);
+    panel
+        .publish_with_reply(request.to_owned(), inbox.clone(), "fetch".into())
+        .await?;
+    panel.flush().await?;
+    let received = receive(&mut requests).await?;
+    let reply = received
+        .reply
+        .context("the request carries the panel inbox")?;
+    assert_eq!(reply.as_str(), inbox);
 
-        let grant = ((window + 1) * WINDOW_FRAMES).to_string();
+    let count = 2 * WINDOW_FRAMES + 1;
+    for index in 0..count {
         let mut headers = async_nats::HeaderMap::new();
-        headers.insert(CREDIT_HEADER, grant.as_str());
-        panel
-            .publish_with_headers(reply.clone(), headers, "".into())
+        headers.insert(PAYLOAD_HEADER, "payload");
+        headers.insert(CHUNK_HEADER, format!("{index}/{count}").as_str());
+        service
+            .publish_with_headers(reply.clone(), headers, format!("frame {index}").into())
             .await?;
-        panel.flush().await?;
-        let credit = receive(&mut credits).await?;
+    }
+    service.flush().await?;
+    for index in 0..count {
         assert_eq!(
-            credit
-                .headers
-                .as_ref()
-                .and_then(|headers| headers.get(CREDIT_HEADER))
-                .map(|value| value.as_str()),
-            Some(grant.as_str())
+            receive(&mut replies).await?.payload,
+            format!("frame {index}")
         );
-
-        panel.publish(reply, "second credit".into()).await?;
-        panel.flush().await?;
-        assert_publish_violation(&mut panel_violations).await?;
-        assert_no_message(&mut credits).await?;
     }
     Ok(())
 }

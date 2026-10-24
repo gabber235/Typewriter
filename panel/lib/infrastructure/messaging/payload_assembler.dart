@@ -4,12 +4,15 @@ import "package:typewriter_panel/typewriter_panel.dart";
 /// frames.
 ///
 /// A payload of at most [chunkBytes] travels as one plain message. A larger
-/// one travels as frames of at most [chunkBytes] in credit windows of
-/// [windowFrames]: the receiver grants each next window, so a sender never
-/// runs more than one window ahead of a slow receiver. A payload above its
-/// direction's ceiling is never sent; the sender fails with
+/// one travels as frames of at most [chunkBytes]. A framed request flows in
+/// credit windows of [windowFrames]: the receiver grants each next window, so
+/// the panel never runs more than one window ahead of a slow receiver. Replies
+/// to the panel stream every frame without credit, because granting a credit
+/// is a NATS response and panel connections hold no response permission. A
+/// payload above its direction's ceiling is never sent; the sender fails with
 /// [TransferTooLarge]. Requests are single messages unless a route raises
-/// [requestMaxBytes]; replies may be framed up to [replyMaxBytes]. The
+/// [requestMaxBytes]; replies may be framed up to [replyMaxBytes]. The panel
+/// waits [frameInactivity] for a credit and for the next frame of a reply. The
 /// generated `transportLimits` carries the manifest defaults, and a route that
 /// raises a ceiling carries its own.
 final class TransportLimits {
@@ -18,6 +21,7 @@ final class TransportLimits {
     required this.windowFrames,
     required this.requestMaxBytes,
     required this.replyMaxBytes,
+    required this.frameInactivity,
   }) : assert(chunkBytes > 0, "Transfer chunk size must be positive"),
        assert(windowFrames > 0, "A credit window holds at least one frame"),
        assert(
@@ -37,13 +41,13 @@ final class TransportLimits {
   /// The largest encoded reply a route carries.
   final int replyMaxBytes;
 
+  /// How long a sender waits for a window's credit and a receiver waits for
+  /// the next frame before it gives the payload up.
+  final Duration frameInactivity;
+
   /// The most frames a payload of at most [maxBytes] splits into.
   int maxFrames(int maxBytes) => (maxBytes + chunkBytes - 1) ~/ chunkBytes;
 }
-
-/// How long a sender waits for a window's credit and a receiver waits for the
-/// next frame before it gives the payload up.
-const frameInactivity = Duration(seconds: 30);
 
 /// A payload the transport could not deliver complete.
 sealed class TransferFailure implements Exception {
@@ -66,8 +70,10 @@ sealed class TransferFailure implements Exception {
           "The receiver missed a frame of the payload",
         );
       case PayloadHeaders.busy:
+        return const TransferBusy();
+      case PayloadHeaders.rejected:
         return const TransferRejected(
-          "The receiver is assembling as many bytes as it holds",
+          "The receiver rejected a frame of the payload",
         );
       default:
         return const TransferRejected("Unknown transfer failure");
@@ -100,6 +106,15 @@ final class TransferInterrupted extends TransferFailure {
 
   @override
   String get message => "The sender stopped before every frame was sent";
+}
+
+/// The receiver already holds its bound of assembling bytes and refused
+/// another payload; the same payload may succeed later.
+final class TransferBusy extends TransferFailure {
+  const TransferBusy();
+
+  @override
+  String get message => "The receiver is assembling as many bytes as it holds";
 }
 
 /// A frame or answer broke the framing rules: malformed headers, changed
@@ -141,10 +156,15 @@ abstract final class PayloadHeaders {
   /// Answer to a payload that would exceed the receiver's bound of assembling
   /// bytes.
   static const busy = "busy";
+
+  /// Answer to a window end whose payload broke the framing rules, so the
+  /// receiver dropped it.
+  static const rejected = "rejected";
 }
 
-/// Assembles the framed payloads arriving at one receiver, grouping frames by
-/// payload id, and decides the answer of each window end.
+/// Assembles the framed replies arriving at the panel, grouping frames by
+/// payload id. Replies to the panel stream without credit, so the assembler
+/// never answers a frame.
 ///
 /// The failure header is checked before anything else, so too large and
 /// interrupted payloads never decode as empty ones. A message without a
@@ -167,18 +187,7 @@ final class PayloadAssembler {
 
   /// Accepts one message and returns its complete payload bytes, or null
   /// while frames are missing.
-  ///
-  /// A frame accepted with [answer] ends a window, because its sender waits on
-  /// the frame's reply subject. Unless the frame completes its payload,
-  /// [answer] receives the headers of that reply: the credit for the next
-  /// window when every frame up to this one arrived, and otherwise the
-  /// incomplete failure, after which the assembly is gone and this call
-  /// throws [TransferRejected].
-  Uint8List? accept(
-    NatsHeaders? headers,
-    Uint8List payload, {
-    void Function(NatsHeaders answer)? answer,
-  }) {
+  Uint8List? accept(NatsHeaders? headers, Uint8List payload) {
     final payloadId = headers?.first(PayloadHeaders.payload);
     if (headers?.first(PayloadHeaders.failure) case final failure?) {
       if (payloadId != null) _pending.remove(payloadId);
@@ -192,29 +201,8 @@ final class PayloadAssembler {
         () => _PayloadParts(frame.count, frame.size, frame.digest),
       );
       final bytes = parts.accept(frame);
-      if (bytes != null) {
-        _pending.remove(payloadId);
-        return bytes;
-      }
-      if (answer == null) return null;
-      if (frame.index == frame.count - 1 ||
-          !parts.receivedThrough(frame.index)) {
-        _pending.remove(payloadId);
-        answer(
-          NatsHeaders(
-            entries: [
-              MapEntry(PayloadHeaders.payload, payloadId),
-              const MapEntry(PayloadHeaders.failure, PayloadHeaders.incomplete),
-            ],
-          ),
-        );
-        throw const TransferRejected("A frame of the payload never arrived");
-      }
-      final credit = min(frame.index + 1 + limits.windowFrames, frame.count);
-      answer(
-        NatsHeaders(entries: [MapEntry(PayloadHeaders.credit, "$credit")]),
-      );
-      return null;
+      if (bytes != null) _pending.remove(payloadId);
+      return bytes;
     } on TransferRejected {
       _pending.remove(payloadId);
       rethrow;
@@ -270,10 +258,6 @@ final class _PayloadParts {
   final List<Uint8List?> _parts;
   var _received = 0;
   var _retained = 0;
-
-  /// Whether every frame up to and including [index] has arrived.
-  bool receivedThrough(int index) =>
-      _parts.take(index + 1).every((part) => part != null);
 
   Uint8List? accept(_Frame frame) {
     if (frame.count != count || frame.size != size || frame.digest != digest) {

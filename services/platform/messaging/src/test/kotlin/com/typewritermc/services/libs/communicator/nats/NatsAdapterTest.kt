@@ -37,6 +37,7 @@ import kotlinx.coroutines.yield
 import kotlin.time.Duration
 import kotlin.time.Duration.Companion.microseconds
 import kotlin.time.Duration.Companion.milliseconds
+import kotlin.time.Duration.Companion.minutes
 import kotlin.time.Duration.Companion.seconds
 
 @ExperimentalCoroutinesApi
@@ -522,4 +523,7 @@ private val TEST_LIMITS =
         requestMaxBytes = 512L * 1024,
         replyMaxBytes =
             32L * 1024 * 1024,
+        frameInactivity = 30.seconds,
+        replyTtl = 5.minutes,
+        replyCredit = false,
     )

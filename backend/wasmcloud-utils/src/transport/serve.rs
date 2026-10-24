@@ -4,8 +4,11 @@
 //! tokens and hand the message to [`serve_request`] or [`serve_event`]. Messages are moved, never
 //! cloned, from the dispatcher through decoding into the reply.
 
+use std::time::Instant;
+
 use otel_wasi::Error;
 
+use super::frame::ReplyPacing;
 use super::route::{EventRoute, RequestRoute, decode};
 use crate::SkirResponse;
 use crate::wasmcloud::messaging::{self, types::NatsMessage};
@@ -23,8 +26,9 @@ pub async fn serve_request<Route: RequestRoute>(
 where
     Route::Response: SkirResponse,
 {
+    let pacing = ReplyPacing::of::<Route>(Instant::now());
     let result = handle::<Route>(&msg.body, scope, handler).await;
-    messaging::reply_handler_result(msg, result).await
+    messaging::reply_handler_result(msg, result, pacing).await
 }
 
 /// Decodes a matched request and runs its handler, skipping it on an invalid scope or request.
@@ -80,6 +84,8 @@ mod tests {
     struct PermissionRoute;
 
     impl RequestRoute for PermissionRoute {
+        const REPLY_CREDIT: bool = false;
+
         type Scope = ServiceScope;
         type Request = GetEntityPermissionRequest;
         type Response = GetEntityPermissionResponse;

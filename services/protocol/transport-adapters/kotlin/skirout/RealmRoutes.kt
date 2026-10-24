@@ -540,6 +540,9 @@ val RealmRouteScope.sharedBlobFetch get() = skirUnaryContract(
     limits = TRANSPORT_LIMITS.copy(replyMaxBytes = 134217728),
 )
 
+/** The largest content a shared_blob_fetch reply moves: its 134217728 byte ceiling less the Skir envelope. */
+const val SHARED_BLOB_FETCH_REPLY_CONTENT_MAX_BYTES: Long = 134152192L
+
 private val sharedBlobStoreRequestAddress = "service.to.{realm}.organization.{organization}.realm.shared.blob.store".realmTemplate()
 val RealmRouteScope.sharedBlobStore get() = skirUnaryContract(
     method = StoreArtifactBlob, name = OperationName.of("shared.blob.store"),
@@ -547,20 +550,26 @@ val RealmRouteScope.sharedBlobStore get() = skirUnaryContract(
     limits = TRANSPORT_LIMITS.copy(requestMaxBytes = 134217728),
 )
 
+/** The largest content a shared_blob_store request moves: its 134217728 byte ceiling less the Skir envelope. */
+const val SHARED_BLOB_STORE_REQUEST_CONTENT_MAX_BYTES: Long = 134152192L
+
 private val rolloutProbeRequestAddress = "service.from.{realm}.organization.{organization}.realm.rollout.probe".realmTemplate()
 val RealmRouteScope.rolloutProbe get() = skirScatterContract(
     method = ProbeRealmHosts, name = OperationName.of("realm.rollout.probe"),
     address = rolloutProbeRequestAddress.subscribedAt(this), responsePolicy = probeRealmHostsResponsePolicy,
+    limits = TRANSPORT_LIMITS.copy(replyCredit = true),
 )
 
 private val rolloutCommandRequestAddress = "service.from.{realm}.organization.{organization}.realm.rollout.command".realmTemplate()
 val RealmRouteScope.rolloutCommand get() = skirScatterContract(
     method = ApplyRolloutCommand, name = OperationName.of("realm.rollout.command"),
     address = rolloutCommandRequestAddress.subscribedAt(this), responsePolicy = applyRolloutCommandResponsePolicy,
+    limits = TRANSPORT_LIMITS.copy(replyCredit = true),
 )
 
 private val rolloutStatusRequestAddress = "service.from.{realm}.organization.{organization}.realm.rollout.status".realmTemplate()
 val RealmRouteScope.rolloutStatus get() = skirScatterContract(
     method = QueryParticipantStatus, name = OperationName.of("realm.rollout.status"),
     address = rolloutStatusRequestAddress.subscribedAt(this), responsePolicy = queryParticipantStatusResponsePolicy,
+    limits = TRANSPORT_LIMITS.copy(replyCredit = true),
 )

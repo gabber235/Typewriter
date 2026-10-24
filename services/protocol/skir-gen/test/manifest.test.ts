@@ -9,7 +9,14 @@ import { committedManifest, MANIFEST_PATH, manifestSource } from "./support.js";
 
 /** The committed manifest as plain YAML data, the independent view admission must preserve. */
 const RAW = parseYaml(readFileSync(MANIFEST_PATH, "utf8")) as {
-  limits: { chunk_bytes: number; window_frames: number; request_max_bytes: number; reply_max_bytes: number; reply_ttl_ms: number };
+  limits: {
+    chunk_bytes: number;
+    window_frames: number;
+    request_max_bytes: number;
+    reply_max_bytes: number;
+    frame_inactivity_ms: number;
+    reply_ttl_ms: number;
+  };
   routes: Array<{ flow: { kind: string; method?: string; payload?: string; updates?: { payload: string } } }>;
 };
 
@@ -56,7 +63,9 @@ describe("manifest admission", () => {
       windowFrames: RAW.limits.window_frames,
       requestMaxBytes: RAW.limits.request_max_bytes,
       replyMaxBytes: RAW.limits.reply_max_bytes,
+      frameInactivityMs: RAW.limits.frame_inactivity_ms,
       replyTtlMs: RAW.limits.reply_ttl_ms,
+      replyCredit: false,
     });
     const source = manifestSource(unary("sample_route", "{ role: authenticated_user }", "user.{user}.sample"), [
       "user-organization",
@@ -72,6 +81,9 @@ describe("manifest admission", () => {
     );
     expect(() => parseManifest(source.replace(/, reply_ttl_ms: \d+/u, ""), "routes.yaml")).toThrow(
       "limits.reply_ttl_ms",
+    );
+    expect(() => parseManifest(source.replace(/, frame_inactivity_ms: \d+/u, ""), "routes.yaml")).toThrow(
+      "limits.frame_inactivity_ms",
     );
   });
 

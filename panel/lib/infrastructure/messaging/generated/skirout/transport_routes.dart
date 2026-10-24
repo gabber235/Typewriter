@@ -1719,6 +1719,7 @@ extension SharedBlobFetchRouteNats
         windowFrames: 8,
         requestMaxBytes: 524288,
         replyMaxBytes: 134217728,
+        frameInactivity: Duration(milliseconds: 30000),
       ),
     );
   }
@@ -1748,6 +1749,7 @@ extension SharedBlobStoreRouteNats
         windowFrames: 8,
         requestMaxBytes: 134217728,
         replyMaxBytes: 33554432,
+        frameInactivity: Duration(milliseconds: 30000),
       ),
     );
   }
@@ -2565,6 +2567,7 @@ const transportLimits = TransportLimits(
   windowFrames: 8,
   requestMaxBytes: 524288,
   replyMaxBytes: 33554432,
+  frameInactivity: Duration(milliseconds: 30000),
 );
 
 /// Names a connection's persistent projection consumer. The backend grants the same name.
