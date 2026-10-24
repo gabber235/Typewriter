@@ -441,6 +441,7 @@ class Communicator(
                                     contract.requestCodec,
                                     contract.initialCodec,
                                     contract.initialPolicy,
+                                    contract.replyAddresses,
                                     contract.timeout,
                                     contract.failureSlug,
                                 ),

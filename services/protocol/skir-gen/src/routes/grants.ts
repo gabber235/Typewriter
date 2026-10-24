@@ -32,7 +32,8 @@ export const CONSUMER_NAME = {
  * The reply inbox prefix of a requester on each side: the root followed by these identity values,
  * dot separated, such as `_INBOX.{user}.{session}`. A requester's reply inboxes are single tokens
  * below its prefix, and the backend grants each connection the subscription to exactly those.
- * Emitted into Rust, Dart and Kotlin, so the grant and the clients' inboxes always agree.
+ * Emitted into Rust, Dart and Kotlin, so the grant and the clients' inboxes always agree, and the
+ * Kotlin servers answer exactly these inboxes (see replies.ts).
  */
 export const REPLY_INBOX = {
   root: "_INBOX",

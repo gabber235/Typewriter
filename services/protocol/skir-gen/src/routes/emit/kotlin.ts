@@ -4,14 +4,22 @@ import { UNKNOWN_SLUG, type Outcome, type OutcomeResponse } from "../../outcomes
 import { importedKotlinSymbol, kotlinWrapperClass } from "../../symbols.js";
 import { lowerCamel, quoted } from "../../text.js";
 import { REPLY_INBOX } from "../grants.js";
-import { ENVELOPE_HEADROOM_BYTES, type Channel, type TransportLimits } from "../manifest.js";
+import {
+  ENVELOPE_HEADROOM_BYTES,
+  type Channel,
+  type RoleDeclarations,
+  type TransportLimits,
+} from "../manifest.js";
+import { IDENTITY_PARAMETERS, replyInboxes, replyInboxText } from "../replies.js";
 import {
   clientSubject,
   hasSide,
+  routeChannel,
   type ResolvedMethod,
   type ResolvedRoute,
   type ResolvedRoutes,
 } from "../resolve.js";
+import type { Parameter } from "../subject.js";
 
 const COMMUNICATOR = "com.typewritermc.services.libs.communicator";
 
@@ -22,6 +30,7 @@ const GENERATED_PACKAGE = "com.typewritermc.protocol.transport.generated";
 
 const ROUTE_IMPORTS = [
   `${COMMUNICATOR}.contract.OperationName`,
+  `${COMMUNICATOR}.contract.ReplyAddressRule`,
   `${COMMUNICATOR}.contract.ResponseClassification`,
   `${COMMUNICATOR}.contract.ResponsePolicy`,
 ];
@@ -122,12 +131,35 @@ const val ${name}: Long = ${maxBytes - ENVELOPE_HEADROOM_BYTES}L`;
   ];
 }
 
+/** The generated matcher of each reply inbox side, such as `isPanelReplyInbox`. */
+const REPLY_INBOX_MATCHERS = { panel: "isPanelReplyInbox", service: "isServiceReplyInbox" } as const;
+
+/** The Kotlin scope property holding a bound identity, such as `serviceId` on `ServiceRouteScope`. */
+const scopeProperty = (parameter: Parameter) => `${parameter}Id`;
+
+/**
+ * The `replyAddresses` argument of a request route: the server answers only reply inboxes of its
+ * callers, each bound to the caller the route scope names. See {@link replyInboxes}.
+ */
+function replyAddresses(route: ResolvedRoute, roles: RoleDeclarations): string {
+  const callers = routeChannel(route, "request")?.publishers ?? [];
+  const shapes = replyInboxes(callers, route.scope, roles);
+  const checks = shapes.map((shape) => {
+    const bindings = shape.bound.map((parameter) => `, ${parameter} = scope.${scopeProperty(parameter)}`);
+    return `${REPLY_INBOX_MATCHERS[shape.side]}(reply${bindings.join("")})`;
+  });
+  const scope = shapes.some((shape) => shape.bound.length > 0) ? "scope" : "_";
+  const comment = shapes.length === 0 ? "no caller inbox" : shapes.map(replyInboxText).join(", ");
+  return `\n    // Answers ${comment}.\n    replyAddresses = ReplyAddressRule { ${scope}, reply -> ${checks.length === 0 ? "false" : checks.join(" || ")} },`;
+}
+
 function routeFile(
   routes: readonly ResolvedRoute[],
   realm: boolean,
   path: string,
   symbols: CodeGenerator.SymbolProvider,
   defaults: TransportLimits,
+  roles: RoleDeclarations,
 ): CodeGenerator.OutputFile {
   const scope = realm ? "RealmRouteScope" : "ServiceRouteScope";
   const template = realm ? "realmTemplate()" : "serviceTemplate()";
@@ -161,7 +193,7 @@ function routeFile(
         blocks.push(`private val ${requestAddress} = ${kotlinString(serviceSubject(route, "request"))}.${template}
 val ${scope}.${name} get() = ${contract}(
     method = ${method.name}, name = OperationName.of(${operation}),
-    address = ${requestAddress}.subscribedAt(this), responsePolicy = ${policyOf(flow.method)},${routeLimits(route, defaults)}
+    address = ${requestAddress}.subscribedAt(this), responsePolicy = ${policyOf(flow.method)},${replyAddresses(route, roles)}${routeLimits(route, defaults)}
 )`);
         break;
       }
@@ -174,7 +206,7 @@ private val ${updateAddress} = ${kotlinString(serviceSubject(route, "updates"))}
 val ${scope}.${name} get() = ${contract}(
     method = ${method.name}, updateSerializer = ${update}.serializer,
     name = OperationName.of(${operation}), requestAddress = ${requestAddress}.subscribedAt(this),
-    updateAddress = ${updateAddress}, initialPolicy = ${policyOf(flow.method)},${routeLimits(route, defaults)}
+    updateAddress = ${updateAddress}, initialPolicy = ${policyOf(flow.method)},${replyAddresses(route, roles)}${routeLimits(route, defaults)}
 )`);
         break;
       }
@@ -225,7 +257,35 @@ val TRANSPORT_LIMITS =
   return { path: "TransportLimits.kt", code: kotlinFile(GENERATED_PACKAGE, imports, blocks) };
 }
 
-/** The service reply inbox prefix rule of {@link REPLY_INBOX}, which the backend grants. */
+/**
+ * The matcher of one side's reply inboxes, `isPanelReplyInbox(reply, user)`: the root, one token per
+ * identity value and one reply token, each identity that names a subject identity optionally bound.
+ */
+function replyInboxMatcher(side: "panel" | "service"): string {
+  const values = REPLY_INBOX[side];
+  const pattern = [REPLY_INBOX.root, ...values.map((value) => `{${value}}`), "{token}"].join(".");
+  const bindable = values.flatMap((value, index) => {
+    const parameter = IDENTITY_PARAMETERS[value];
+    return parameter ? [{ parameter, index: index + 1 }] : [];
+  });
+  const parameters = bindable.map(({ parameter }) => `${parameter}: String? = null`);
+  const checks = [
+    `tokens.size == ${values.length + 2}`,
+    `tokens[0] == ${kotlinString(REPLY_INBOX.root)}`,
+    ...bindable.map(({ parameter, index }) => `(${parameter} == null || tokens[${index}] == ${parameter})`),
+  ];
+  const names = bindable.map(({ parameter }) => `[${parameter}]`).join(", ");
+  return `/**
+ * Whether [reply] is a ${side} reply inbox, \`${pattern}\`${names ? `, of ${names} when given` : ""}. A server answers only
+ * the reply inboxes of its route's callers, so a request cannot aim the answer at a subject its sender may not publish.
+ */
+fun ${REPLY_INBOX_MATCHERS[side]}(${["reply: MessageAddress", ...parameters].join(", ")}): Boolean {
+    val tokens = reply.value.split('.')
+    return ${checks.join(" &&\n        ")}
+}`;
+}
+
+/** The service reply inbox prefix rule of {@link REPLY_INBOX}, which the backend grants, and every side's matcher. */
 function replyInboxFile(): CodeGenerator.OutputFile {
   const values = REPLY_INBOX.service;
   const pattern = [REPLY_INBOX.root, ...values.map((value) => `{${value}}`)].join(".");
@@ -236,13 +296,16 @@ function replyInboxFile(): CodeGenerator.OutputFile {
  * it, and the backend grants the connection exactly those.
  */
 fun serviceReplyInboxPrefix(${parameters}): String = "${prefix}"`;
-  return { path: "ReplyInboxes.kt", code: kotlinFile(GENERATED_PACKAGE, [], [block]) };
+  const imports = [`import ${COMMUNICATOR}.address.MessageAddress`];
+  const blocks = [block, replyInboxMatcher("panel"), replyInboxMatcher("service")];
+  return { path: "ReplyInboxes.kt", code: kotlinFile(GENERATED_PACKAGE, imports, blocks) };
 }
 
 /**
  * Emits the Kotlin contracts of the routes a service role takes part in for the services runtime:
  * realm routes, the service routes of the registered service, the payload framing limits and reply
- * time to live, and the service reply inbox prefix.
+ * time to live, the service reply inbox prefix, and the reply inbox matchers each request contract
+ * answers its callers by.
  */
 export function emitKotlin(
   { limits, roles, routes }: ResolvedRoutes,
@@ -261,6 +324,7 @@ export function emitKotlin(
       "RealmRoutes.kt",
       symbols,
       limits,
+      roles,
     ),
     routeFile(
       serviceRoutes.filter((route) => route.scope === "service"),
@@ -268,6 +332,7 @@ export function emitKotlin(
       "ServiceRegistrationRoutes.kt",
       symbols,
       limits,
+      roles,
     ),
     limitsFile(limits),
     replyInboxFile(),

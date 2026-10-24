@@ -7,6 +7,7 @@ import com.typewritermc.services.libs.communicator.address.addressValuesOf
 import com.typewritermc.services.libs.communicator.client.Communicator
 import com.typewritermc.services.libs.communicator.contract.OperationName
 import com.typewritermc.services.libs.communicator.contract.PayloadCodec
+import com.typewritermc.services.libs.communicator.contract.ReplyAddressRule
 import com.typewritermc.services.libs.communicator.contract.ResponseClassification
 import com.typewritermc.services.libs.communicator.contract.ResponseOutcome
 import com.typewritermc.services.libs.communicator.contract.ResponsePolicy
@@ -407,6 +408,9 @@ private val bytesCodec =
         override fun decode(payload: Payload) = payload.toByteArray()
     }
 
+/** Answers the reply inboxes MemoryNatsBroker connections use. */
+private val brokerInboxes = ReplyAddressRule<Any> { _, reply -> reply.value.startsWith("_INBOX.") }
+
 private val UPLOAD =
     UnaryContract(
         OperationName.of("upload.put"),
@@ -420,6 +424,7 @@ private val UPLOAD =
                 ResponseClassification(ResponseOutcome.SUCCESS, ResponseVariant.of("success"))
             }
         },
+        replyAddresses = brokerInboxes,
         timeout = 5.seconds,
         failureSlug = ErrorSlug.of("upload-put-failed"),
         limits = ROUTER_LIMITS,

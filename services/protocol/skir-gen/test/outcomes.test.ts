@@ -172,6 +172,8 @@ method Ping(struct {}): enum {
     expect(realm!.code).toContain(`val RealmRouteScope.ping get() = skirUnaryContract(
     method = Ping, name = OperationName.of("test.ping"),
     address = pingRequestAddress.subscribedAt(this), responsePolicy = pingResponsePolicy,
+    // Answers _INBOX.*.*.*.
+    replyAddresses = ReplyAddressRule { _, reply -> isPanelReplyInbox(reply) },
 )`);
   });
 

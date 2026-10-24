@@ -3,6 +3,7 @@ package com.typewritermc.protocol.transport.generated
 import com.typewritermc.protocol.transport.ServiceRouteScope
 import com.typewritermc.protocol.transport.serviceTemplate
 import com.typewritermc.services.libs.communicator.contract.OperationName
+import com.typewritermc.services.libs.communicator.contract.ReplyAddressRule
 import com.typewritermc.services.libs.communicator.contract.ResponseClassification
 import com.typewritermc.services.libs.communicator.contract.ResponsePolicy
 import com.typewritermc.services.libs.communicator.skir.skirEventContract
@@ -86,6 +87,8 @@ val ServiceRouteScope.serviceBindingQuery get() = skirWatchContract(
     method = QueryServiceBinding, updateSerializer = skirout.service.v1.registration.ServiceBoundNotification.serializer,
     name = OperationName.of("registrar.binding"), requestAddress = serviceBindingQueryRequestAddress.subscribedAt(this),
     updateAddress = serviceBindingQueryUpdateAddress, initialPolicy = queryServiceBindingResponsePolicy,
+    // Answers _INBOX.{service}.*.
+    replyAddresses = ReplyAddressRule { scope, reply -> isServiceReplyInbox(reply, service = scope.serviceId) },
     limits = TRANSPORT_LIMITS.copy(replyCredit = true),
 )
 
@@ -93,6 +96,8 @@ private val registrationLeaseEnsureRequestAddress = "cloud.to.service.{service}.
 val ServiceRouteScope.registrationLeaseEnsure get() = skirUnaryContract(
     method = EnsureRegistrationLease, name = OperationName.of("registrar.registration.ensure"),
     address = registrationLeaseEnsureRequestAddress.subscribedAt(this), responsePolicy = ensureRegistrationLeaseResponsePolicy,
+    // Answers _INBOX.{service}.*.
+    replyAddresses = ReplyAddressRule { scope, reply -> isServiceReplyInbox(reply, service = scope.serviceId) },
     limits = TRANSPORT_LIMITS.copy(replyCredit = true),
 )
 
@@ -100,6 +105,8 @@ private val serviceMessagingScopeRequestAddress = "cloud.to.service.{service}.me
 val ServiceRouteScope.serviceMessagingScope get() = skirUnaryContract(
     method = GetServiceMessagingScope, name = OperationName.of("registrar.messaging.scope"),
     address = serviceMessagingScopeRequestAddress.subscribedAt(this), responsePolicy = getServiceMessagingScopeResponsePolicy,
+    // Answers _INBOX.{service}.*.
+    replyAddresses = ReplyAddressRule { scope, reply -> isServiceReplyInbox(reply, service = scope.serviceId) },
     limits = TRANSPORT_LIMITS.copy(replyCredit = true),
 )
 
@@ -107,6 +114,8 @@ private val serviceHostRegisterRequestAddress = "cloud.to.service.{service}.exec
 val ServiceRouteScope.serviceHostRegister get() = skirUnaryContract(
     method = RegisterServiceHost, name = OperationName.of("registrar.execution.register"),
     address = serviceHostRegisterRequestAddress.subscribedAt(this), responsePolicy = registerServiceHostResponsePolicy,
+    // Answers _INBOX.{service}.*.
+    replyAddresses = ReplyAddressRule { scope, reply -> isServiceReplyInbox(reply, service = scope.serviceId) },
     limits = TRANSPORT_LIMITS.copy(replyCredit = true),
 )
 
@@ -116,6 +125,8 @@ val ServiceRouteScope.hostExecutionWatch get() = skirWatchContract(
     method = WatchHostExecution, updateSerializer = skirout.service.v1.topology.WatchHostExecutionResponse.serializer,
     name = OperationName.of("registrar.execution.watch"), requestAddress = hostExecutionWatchRequestAddress.subscribedAt(this),
     updateAddress = hostExecutionWatchUpdateAddress, initialPolicy = watchHostExecutionResponsePolicy,
+    // Answers _INBOX.{service}.*.
+    replyAddresses = ReplyAddressRule { scope, reply -> isServiceReplyInbox(reply, service = scope.serviceId) },
     limits = TRANSPORT_LIMITS.copy(replyCredit = true),
 )
 
@@ -123,6 +134,8 @@ private val hostExecutionReportRequestAddress = "cloud.to.service.{service}.exec
 val ServiceRouteScope.hostExecutionReport get() = skirUnaryContract(
     method = ReportHostExecution, name = OperationName.of("registrar.execution.report"),
     address = hostExecutionReportRequestAddress.subscribedAt(this), responsePolicy = reportHostExecutionResponsePolicy,
+    // Answers _INBOX.{service}.*.
+    replyAddresses = ReplyAddressRule { scope, reply -> isServiceReplyInbox(reply, service = scope.serviceId) },
     limits = TRANSPORT_LIMITS.copy(replyCredit = true),
 )
 

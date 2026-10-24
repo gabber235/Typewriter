@@ -3,6 +3,7 @@ package com.typewritermc.protocol.transport.generated
 import com.typewritermc.protocol.transport.RealmRouteScope
 import com.typewritermc.protocol.transport.realmTemplate
 import com.typewritermc.services.libs.communicator.contract.OperationName
+import com.typewritermc.services.libs.communicator.contract.ReplyAddressRule
 import com.typewritermc.services.libs.communicator.contract.ResponseClassification
 import com.typewritermc.services.libs.communicator.contract.ResponsePolicy
 import com.typewritermc.services.libs.communicator.skir.skirEventContract
@@ -383,6 +384,8 @@ private val editorCatalogFetchRequestAddress = "service.to.{realm}.organization.
 val RealmRouteScope.editorCatalogFetch get() = skirUnaryContract(
     method = FetchEditorCatalog, name = OperationName.of("editor.catalog.fetch"),
     address = editorCatalogFetchRequestAddress.subscribedAt(this), responsePolicy = catalogFetchResultPolicy,
+    // Answers _INBOX.*.*.*.
+    replyAddresses = ReplyAddressRule { _, reply -> isPanelReplyInbox(reply) },
 )
 
 private val editorCatalogWatchRequestAddress = "service.to.{realm}.organization.{organization}.realm.editor.catalog.invalidate".realmTemplate()
@@ -391,12 +394,16 @@ val RealmRouteScope.editorCatalogWatch get() = skirWatchContract(
     method = WatchEditorCatalog, updateSerializer = skirout.editor.v1.catalog.CatalogInvalidated.serializer,
     name = OperationName.of("editor.catalog.invalidate"), requestAddress = editorCatalogWatchRequestAddress.subscribedAt(this),
     updateAddress = editorCatalogWatchUpdateAddress, initialPolicy = watchEditorCatalogResponsePolicy,
+    // Answers _INBOX.*.*.*.
+    replyAddresses = ReplyAddressRule { _, reply -> isPanelReplyInbox(reply) },
 )
 
 private val editorValuePrepareRequestAddress = "service.to.{realm}.organization.{organization}.realm.editor.creation.prepare".realmTemplate()
 val RealmRouteScope.editorValuePrepare get() = skirUnaryContract(
     method = PrepareValue, name = OperationName.of("editor.creation.prepare"),
     address = editorValuePrepareRequestAddress.subscribedAt(this), responsePolicy = prepareValueResultPolicy,
+    // Answers _INBOX.*.*.*.
+    replyAddresses = ReplyAddressRule { _, reply -> isPanelReplyInbox(reply) },
 )
 
 private val editorPresentationSearchRequestAddress = "service.to.{realm}.organization.{organization}.realm.editor.presentation.search".realmTemplate()
@@ -405,72 +412,96 @@ val RealmRouteScope.editorPresentationSearch get() = skirWatchContract(
     method = WatchRealmPresentationSearch, updateSerializer = skirout.editor.v1.search.RealmPresentationSearchUpdate.serializer,
     name = OperationName.of("editor.presentation.search"), requestAddress = editorPresentationSearchRequestAddress.subscribedAt(this),
     updateAddress = editorPresentationSearchUpdateAddress, initialPolicy = realmPresentationSearchUpdatePolicy,
+    // Answers _INBOX.*.*.*.
+    replyAddresses = ReplyAddressRule { _, reply -> isPanelReplyInbox(reply) },
 )
 
 private val editorPresentationSearchCancelRequestAddress = "service.to.{realm}.organization.{organization}.realm.editor.presentation.search.cancel".realmTemplate()
 val RealmRouteScope.editorPresentationSearchCancel get() = skirUnaryContract(
     method = CancelRealmPresentationSearch, name = OperationName.of("editor.presentation.search.cancel"),
     address = editorPresentationSearchCancelRequestAddress.subscribedAt(this), responsePolicy = cancelRealmPresentationSearchResultPolicy,
+    // Answers _INBOX.*.*.*.
+    replyAddresses = ReplyAddressRule { _, reply -> isPanelReplyInbox(reply) },
 )
 
 private val editorCapabilityComputationInvokeRequestAddress = "service.to.{realm}.organization.{organization}.realm.editor.capability.computation.invoke".realmTemplate()
 val RealmRouteScope.editorCapabilityComputationInvoke get() = skirUnaryContract(
     method = InvokeRealmComputation, name = OperationName.of("editor.capability.computation.invoke"),
     address = editorCapabilityComputationInvokeRequestAddress.subscribedAt(this), responsePolicy = computationResultPolicy,
+    // Answers _INBOX.*.*.*.
+    replyAddresses = ReplyAddressRule { _, reply -> isPanelReplyInbox(reply) },
 )
 
 private val editorCapabilityCommandInvokeRequestAddress = "service.to.{realm}.organization.{organization}.realm.editor.capability.command.invoke".realmTemplate()
 val RealmRouteScope.editorCapabilityCommandInvoke get() = skirUnaryContract(
     method = InvokeRealmCommand, name = OperationName.of("editor.capability.command.invoke"),
     address = editorCapabilityCommandInvokeRequestAddress.subscribedAt(this), responsePolicy = commandResultPolicy,
+    // Answers _INBOX.*.*.*.
+    replyAddresses = ReplyAddressRule { _, reply -> isPanelReplyInbox(reply) },
 )
 
 private val resourceOperationsResolveRequestAddress = "service.to.{realm}.organization.{organization}.realm.editor.resources.operations.resolve".realmTemplate()
 val RealmRouteScope.resourceOperationsResolve get() = skirUnaryContract(
     method = ResolveResourceOperations, name = OperationName.of("editor.resources.operations.resolve"),
     address = resourceOperationsResolveRequestAddress.subscribedAt(this), responsePolicy = resolveResourceOperationsResultPolicy,
+    // Answers _INBOX.*.*.*.
+    replyAddresses = ReplyAddressRule { _, reply -> isPanelReplyInbox(reply) },
 )
 
 private val resourceDropCandidatesResolveRequestAddress = "service.to.{realm}.organization.{organization}.realm.editor.resources.drops.resolve".realmTemplate()
 val RealmRouteScope.resourceDropCandidatesResolve get() = skirUnaryContract(
     method = ResolveDropCandidates, name = OperationName.of("editor.resources.drops.resolve"),
     address = resourceDropCandidatesResolveRequestAddress.subscribedAt(this), responsePolicy = resolveDropCandidatesResultPolicy,
+    // Answers _INBOX.*.*.*.
+    replyAddresses = ReplyAddressRule { _, reply -> isPanelReplyInbox(reply) },
 )
 
 private val authoringActionPrepareRequestAddress = "service.to.{realm}.organization.{organization}.realm.editor.resources.actions.prepare".realmTemplate()
 val RealmRouteScope.authoringActionPrepare get() = skirUnaryContract(
     method = PrepareAuthoringAction, name = OperationName.of("editor.resources.actions.prepare"),
     address = authoringActionPrepareRequestAddress.subscribedAt(this), responsePolicy = authoringActionResultPolicy,
+    // Answers _INBOX.*.*.*.
+    replyAddresses = ReplyAddressRule { _, reply -> isPanelReplyInbox(reply) },
 )
 
 private val authoringStateQueryRequestAddress = "service.to.{realm}.organization.{organization}.realm.editor.authoring.state.query".realmTemplate()
 val RealmRouteScope.authoringStateQuery get() = skirUnaryContract(
     method = QueryAuthoringState, name = OperationName.of("editor.authoring.state.query"),
     address = authoringStateQueryRequestAddress.subscribedAt(this), responsePolicy = queryAuthoringStateResponsePolicy,
+    // Answers _INBOX.*.*.*.
+    replyAddresses = ReplyAddressRule { _, reply -> isPanelReplyInbox(reply) },
 )
 
 private val authoringEditCommitRequestAddress = "service.to.{realm}.organization.{organization}.realm.editor.authoring.edit.commit".realmTemplate()
 val RealmRouteScope.authoringEditCommit get() = skirUnaryContract(
     method = CommitPreparedEdit, name = OperationName.of("editor.authoring.edit.commit"),
     address = authoringEditCommitRequestAddress.subscribedAt(this), responsePolicy = commitPreparedEditResponsePolicy,
+    // Answers _INBOX.*.*.*.
+    replyAddresses = ReplyAddressRule { _, reply -> isPanelReplyInbox(reply) },
 )
 
 private val authoringTypePreviewRequestAddress = "service.to.{realm}.organization.{organization}.realm.editor.authoring.type.preview".realmTemplate()
 val RealmRouteScope.authoringTypePreview get() = skirUnaryContract(
     method = PreviewTypeArgumentChange, name = OperationName.of("editor.authoring.type.preview"),
     address = authoringTypePreviewRequestAddress.subscribedAt(this), responsePolicy = previewTypeArgumentChangeResponsePolicy,
+    // Answers _INBOX.*.*.*.
+    replyAddresses = ReplyAddressRule { _, reply -> isPanelReplyInbox(reply) },
 )
 
 private val authoringTypeCommitRequestAddress = "service.to.{realm}.organization.{organization}.realm.editor.authoring.type.commit".realmTemplate()
 val RealmRouteScope.authoringTypeCommit get() = skirUnaryContract(
     method = PrepareTypeArgumentChange, name = OperationName.of("editor.authoring.type.commit"),
     address = authoringTypeCommitRequestAddress.subscribedAt(this), responsePolicy = prepareTypeArgumentChangeResponsePolicy,
+    // Answers _INBOX.*.*.*.
+    replyAddresses = ReplyAddressRule { _, reply -> isPanelReplyInbox(reply) },
 )
 
 private val authoringSearchRequestAddress = "service.to.{realm}.organization.{organization}.realm.editor.authoring.search".realmTemplate()
 val RealmRouteScope.authoringSearch get() = skirUnaryContract(
     method = SearchAuthoring, name = OperationName.of("editor.authoring.search"),
     address = authoringSearchRequestAddress.subscribedAt(this), responsePolicy = searchAuthoringResponsePolicy,
+    // Answers _INBOX.*.*.*.
+    replyAddresses = ReplyAddressRule { _, reply -> isPanelReplyInbox(reply) },
 )
 
 private val authoringChangedAddress = "service.from.{realm}.organization.{organization}.realm.editor.authoring.changed".realmTemplate()
@@ -482,6 +513,8 @@ private val authoringCompiledQueryRequestAddress = "service.to.{realm}.organizat
 val RealmRouteScope.authoringCompiledQuery get() = skirUnaryContract(
     method = QueryPublishedContent, name = OperationName.of("editor.authoring.compiled.query"),
     address = authoringCompiledQueryRequestAddress.subscribedAt(this), responsePolicy = queryPublishedContentResponsePolicy,
+    // Answers _INBOX.*.*.*, _INBOX.*.*.
+    replyAddresses = ReplyAddressRule { _, reply -> isPanelReplyInbox(reply) || isServiceReplyInbox(reply) },
 )
 
 private val authoringCompiledChangedAddress = "service.from.{realm}.organization.{organization}.realm.editor.authoring.compiled.changed".realmTemplate()
@@ -493,18 +526,24 @@ private val authoringCompiledStatusQueryRequestAddress = "service.to.{realm}.org
 val RealmRouteScope.authoringCompiledStatusQuery get() = skirUnaryContract(
     method = QueryCompiledResourceStatus, name = OperationName.of("editor.authoring.compiled.status.query"),
     address = authoringCompiledStatusQueryRequestAddress.subscribedAt(this), responsePolicy = queryCompiledResourceStatusResponsePolicy,
+    // Answers _INBOX.*.*.*.
+    replyAddresses = ReplyAddressRule { _, reply -> isPanelReplyInbox(reply) },
 )
 
 private val authoringPublishRequestAddress = "service.to.{realm}.organization.{organization}.realm.editor.authoring.publish".realmTemplate()
 val RealmRouteScope.authoringPublish get() = skirUnaryContract(
     method = PublishAuthoring, name = OperationName.of("editor.authoring.publish"),
     address = authoringPublishRequestAddress.subscribedAt(this), responsePolicy = publishAuthoringResponsePolicy,
+    // Answers _INBOX.*.*.*.
+    replyAddresses = ReplyAddressRule { _, reply -> isPanelReplyInbox(reply) },
 )
 
 private val authoringPublicationQueryRequestAddress = "service.to.{realm}.organization.{organization}.realm.editor.authoring.publication.query".realmTemplate()
 val RealmRouteScope.authoringPublicationQuery get() = skirUnaryContract(
     method = QueryPublicationView, name = OperationName.of("editor.authoring.publication.query"),
     address = authoringPublicationQueryRequestAddress.subscribedAt(this), responsePolicy = queryPublicationViewResponsePolicy,
+    // Answers _INBOX.*.*.*.
+    replyAddresses = ReplyAddressRule { _, reply -> isPanelReplyInbox(reply) },
 )
 
 private val authoringPublicationWatchRequestAddress = "service.to.{realm}.organization.{organization}.realm.editor.authoring.publication.watch".realmTemplate()
@@ -513,30 +552,40 @@ val RealmRouteScope.authoringPublicationWatch get() = skirWatchContract(
     method = WatchPublication, updateSerializer = skirout.editor.v1.publication.PublicationViewChanged.serializer,
     name = OperationName.of("editor.authoring.publication.watch"), requestAddress = authoringPublicationWatchRequestAddress.subscribedAt(this),
     updateAddress = authoringPublicationWatchUpdateAddress, initialPolicy = watchPublicationResponsePolicy,
+    // Answers _INBOX.*.*.*.
+    replyAddresses = ReplyAddressRule { _, reply -> isPanelReplyInbox(reply) },
 )
 
 private val sharedCatalogFetchRequestAddress = "service.to.{realm}.organization.{organization}.realm.shared.catalog.fetch".realmTemplate()
 val RealmRouteScope.sharedCatalogFetch get() = skirUnaryContract(
     method = FetchSharedArtifactCatalog, name = OperationName.of("shared.catalog.fetch"),
     address = sharedCatalogFetchRequestAddress.subscribedAt(this), responsePolicy = fetchSharedArtifactCatalogResponsePolicy,
+    // Answers _INBOX.*.*.*, _INBOX.*.*.
+    replyAddresses = ReplyAddressRule { _, reply -> isPanelReplyInbox(reply) || isServiceReplyInbox(reply) },
 )
 
 private val sharedPublishRequestAddress = "service.to.{realm}.organization.{organization}.realm.shared.publish".realmTemplate()
 val RealmRouteScope.sharedPublish get() = skirUnaryContract(
     method = PublishSharedArtifact, name = OperationName.of("shared.publish"),
     address = sharedPublishRequestAddress.subscribedAt(this), responsePolicy = publishSharedArtifactResponsePolicy,
+    // Answers _INBOX.*.*.*, _INBOX.*.*.
+    replyAddresses = ReplyAddressRule { _, reply -> isPanelReplyInbox(reply) || isServiceReplyInbox(reply) },
 )
 
 private val sharedBlobMetadataRequestAddress = "service.to.{realm}.organization.{organization}.realm.shared.blob.metadata".realmTemplate()
 val RealmRouteScope.sharedBlobMetadata get() = skirUnaryContract(
     method = FetchArtifactBlobMetadata, name = OperationName.of("shared.blob.metadata"),
     address = sharedBlobMetadataRequestAddress.subscribedAt(this), responsePolicy = fetchArtifactBlobMetadataResponsePolicy,
+    // Answers _INBOX.*.*.*, _INBOX.*.*.
+    replyAddresses = ReplyAddressRule { _, reply -> isPanelReplyInbox(reply) || isServiceReplyInbox(reply) },
 )
 
 private val sharedBlobFetchRequestAddress = "service.to.{realm}.organization.{organization}.realm.shared.blob.fetch".realmTemplate()
 val RealmRouteScope.sharedBlobFetch get() = skirUnaryContract(
     method = FetchArtifactBlob, name = OperationName.of("shared.blob.fetch"),
     address = sharedBlobFetchRequestAddress.subscribedAt(this), responsePolicy = fetchArtifactBlobResponsePolicy,
+    // Answers _INBOX.*.*.*, _INBOX.*.*.
+    replyAddresses = ReplyAddressRule { _, reply -> isPanelReplyInbox(reply) || isServiceReplyInbox(reply) },
     limits = TRANSPORT_LIMITS.copy(replyMaxBytes = 134217728),
 )
 
@@ -547,6 +596,8 @@ private val sharedBlobStoreRequestAddress = "service.to.{realm}.organization.{or
 val RealmRouteScope.sharedBlobStore get() = skirUnaryContract(
     method = StoreArtifactBlob, name = OperationName.of("shared.blob.store"),
     address = sharedBlobStoreRequestAddress.subscribedAt(this), responsePolicy = storeArtifactBlobResponsePolicy,
+    // Answers _INBOX.*.*.*, _INBOX.*.*.
+    replyAddresses = ReplyAddressRule { _, reply -> isPanelReplyInbox(reply) || isServiceReplyInbox(reply) },
     limits = TRANSPORT_LIMITS.copy(requestMaxBytes = 134217728),
 )
 
@@ -557,6 +608,8 @@ private val rolloutProbeRequestAddress = "service.from.{realm}.organization.{org
 val RealmRouteScope.rolloutProbe get() = skirScatterContract(
     method = ProbeRealmHosts, name = OperationName.of("realm.rollout.probe"),
     address = rolloutProbeRequestAddress.subscribedAt(this), responsePolicy = probeRealmHostsResponsePolicy,
+    // Answers _INBOX.*.*.
+    replyAddresses = ReplyAddressRule { _, reply -> isServiceReplyInbox(reply) },
     limits = TRANSPORT_LIMITS.copy(replyCredit = true),
 )
 
@@ -564,6 +617,8 @@ private val rolloutCommandRequestAddress = "service.from.{realm}.organization.{o
 val RealmRouteScope.rolloutCommand get() = skirScatterContract(
     method = ApplyRolloutCommand, name = OperationName.of("realm.rollout.command"),
     address = rolloutCommandRequestAddress.subscribedAt(this), responsePolicy = applyRolloutCommandResponsePolicy,
+    // Answers _INBOX.*.*.
+    replyAddresses = ReplyAddressRule { _, reply -> isServiceReplyInbox(reply) },
     limits = TRANSPORT_LIMITS.copy(replyCredit = true),
 )
 
@@ -571,5 +626,7 @@ private val rolloutStatusRequestAddress = "service.from.{realm}.organization.{or
 val RealmRouteScope.rolloutStatus get() = skirScatterContract(
     method = QueryParticipantStatus, name = OperationName.of("realm.rollout.status"),
     address = rolloutStatusRequestAddress.subscribedAt(this), responsePolicy = queryParticipantStatusResponsePolicy,
+    // Answers _INBOX.*.*.
+    replyAddresses = ReplyAddressRule { _, reply -> isServiceReplyInbox(reply) },
     limits = TRANSPORT_LIMITS.copy(replyCredit = true),
 )

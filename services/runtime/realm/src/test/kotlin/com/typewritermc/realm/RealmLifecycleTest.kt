@@ -461,6 +461,9 @@ private fun lifecycleIsolationCatalog(
     return RealmCatalogIncarnation(assembly, deployment)
 }
 
+/** The session reply inbox prefix of the panel member whose requests the fixture delivers. */
+private const val PANEL_REPLY_INBOX = "_INBOX.member.0123456789abcdef0123456789abcdef"
+
 private class RealmLifecycleFixture(
     scope: kotlinx.coroutines.CoroutineScope,
     catalog: RealmCatalogIncarnation? = null,
@@ -542,7 +545,7 @@ private class RealmLifecycleFixture(
         requestSerializer: Serializer<Request>,
         responseSerializer: Serializer<Response>,
     ): Response {
-        val reply = MessageAddress.of("test.lifecycle.reply.${replySequence++}")
+        val reply = MessageAddress.of("$PANEL_REPLY_INBOX.${replySequence++}")
         session.transport.deliver(
             TransportDelivery.Message(
                 InboundMessage(

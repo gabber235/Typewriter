@@ -45,6 +45,7 @@ import com.typewritermc.protocol.transport.RealmRouteScope
 import com.typewritermc.protocol.transport.generated.rolloutCommand
 import com.typewritermc.protocol.transport.generated.rolloutProbe
 import com.typewritermc.protocol.transport.generated.rolloutStatus
+import com.typewritermc.protocol.transport.generated.serviceReplyInboxPrefix
 import com.typewritermc.services.libs.communicator.address.MessageAddress
 import com.typewritermc.services.libs.communicator.client.Communicator
 import com.typewritermc.services.libs.communicator.contract.ResponseOutcome
@@ -101,6 +102,9 @@ import java.util.zip.ZipEntry
 import java.util.zip.ZipOutputStream
 import kotlin.time.Duration.Companion.milliseconds
 import kotlin.time.Duration.Companion.seconds
+
+/** The reply inbox prefix of the rollout coordinator whose requests the tests deliver. */
+private val COORDINATOR_REPLY_INBOX = serviceReplyInboxPrefix("coordinator")
 
 @OptIn(ExperimentalCoroutinesApi::class)
 val HostRolloutParticipantTest by testSuite {
@@ -390,7 +394,7 @@ val HostRolloutParticipantTest by testSuite {
                         InboundMessage(
                             commandContract.requestAddress.render(address),
                             commandContract.requestCodec.encode(command).toByteArray(),
-                            MessageAddress.of("reply.command"),
+                            MessageAddress.of("$COORDINATOR_REPLY_INBOX.command"),
                         ),
                     ),
                 )
@@ -404,7 +408,7 @@ val HostRolloutParticipantTest by testSuite {
                         InboundMessage(
                             statusContract.requestAddress.render(address),
                             statusContract.requestCodec.encode(QueryParticipantStatusRequest(attempt = attempt)).toByteArray(),
-                            MessageAddress.of("reply.status"),
+                            MessageAddress.of("$COORDINATOR_REPLY_INBOX.status"),
                         ),
                     ),
                 )
@@ -413,7 +417,7 @@ val HostRolloutParticipantTest by testSuite {
                         InboundMessage(
                             probeContract.requestAddress.render(address),
                             probeContract.requestCodec.encode(ProbeRealmHostsRequest.partial()).toByteArray(),
-                            MessageAddress.of("reply.presence"),
+                            MessageAddress.of("$COORDINATOR_REPLY_INBOX.presence"),
                         ),
                     ),
                 )
@@ -421,7 +425,8 @@ val HostRolloutParticipantTest by testSuite {
                 fake.actions
                     .filterIsInstance<FakeMessageTransport.Action.Publish>()
                     .map { it.message.address.value }
-                    .toSet() shouldBe setOf("reply.command", "reply.status", "reply.presence")
+                    .toSet() shouldBe
+                    setOf("$COORDINATOR_REPLY_INBOX.command", "$COORDINATOR_REPLY_INBOX.status", "$COORDINATOR_REPLY_INBOX.presence")
             } finally {
                 router.stop()
                 fixture.participant.close()

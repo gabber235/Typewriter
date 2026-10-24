@@ -1,6 +1,7 @@
 package com.typewritermc.services.libs.communicator.contract
 
 import com.typewritermc.services.libs.communicator.address.AddressTemplate
+import com.typewritermc.services.libs.communicator.address.MessageAddress
 import com.typewritermc.services.libs.communicator.transfer.TransportLimits
 import com.typewritermc.services.libs.communicator.transport.Payload
 import com.typewritermc.services.libs.telemetry.ErrorSlug
@@ -121,11 +122,27 @@ interface PayloadCodec<Value : Any> {
 }
 
 /**
+ * Decides which reply addresses a request route's server answers on, given the request's parsed [Address].
+ *
+ * A request names its own reply address and a server holds a response permission, so a server answering any address
+ * would publish its reply, credits and failure answers wherever the requester points it, including subjects the
+ * requester may not publish to. The router drops a request whose reply address the rule refuses before anything is
+ * published or handled. Generated routes admit exactly their callers' reply inboxes.
+ */
+fun interface ReplyAddressRule<in Address : Any> {
+    fun admits(
+        address: Address,
+        reply: MessageAddress,
+    ): Boolean
+}
+
+/**
  * Defines a typed request with one reply, timeout, response semantics, and failure identity.
  *
  * A contract is metadata shared by caller and router; constructing it creates no subscription. Domain and internal
  * errors remain decoded responses; codec and transport failures are reported separately by the communicator.
- * [limits] bound how large its request and reply may be; null uses the transport's limits.
+ * [limits] bound how large its request and reply may be; null uses the transport's limits. A server answers only reply
+ * addresses [replyAddresses] admits.
  */
 class UnaryContract<Address : Any, Request : Any, Response : Any>(
     val name: OperationName,
@@ -133,6 +150,7 @@ class UnaryContract<Address : Any, Request : Any, Response : Any>(
     val requestCodec: PayloadCodec<Request>,
     val responseCodec: PayloadCodec<Response>,
     val responsePolicy: ResponsePolicy<Response>,
+    val replyAddresses: ReplyAddressRule<Address>,
     val timeout: Duration = 10.seconds,
     val failureSlug: ErrorSlug,
     val limits: TransportLimits? = null,
@@ -146,7 +164,8 @@ class UnaryContract<Address : Any, Request : Any, Response : Any>(
  * Defines a request that can receive replies from multiple listeners through one reply channel.
  *
  * Collection lifetime and completion policy are supplied by the caller. Responders may deliberately decline to
- * reply, so callers must decide how missing replies are handled.
+ * reply, so callers must decide how missing replies are handled. Listeners answer only reply addresses
+ * [replyAddresses] admits.
  */
 class ScatterContract<Address : Any, Request : Any, Response : Any>(
     val name: OperationName,
@@ -154,6 +173,7 @@ class ScatterContract<Address : Any, Request : Any, Response : Any>(
     val requestCodec: PayloadCodec<Request>,
     val responseCodec: PayloadCodec<Response>,
     val responsePolicy: ResponsePolicy<Response>,
+    val replyAddresses: ReplyAddressRule<Address>,
     val failureSlug: ErrorSlug,
     val limits: TransportLimits? = null,
 )
@@ -176,7 +196,7 @@ class EventContract<Address : Any, Event : Any>(
  * The client subscribes before requesting initial state to reduce lost updates. Snapshot and update consistency
  * still belongs to the application protocol; this metadata provides no transactional snapshot boundary. Consumers
  * must define reconnect, duplicate, and revision handling. Updates carry no outcome of their own: every delivered
- * update is a success.
+ * update is a success. A server answers only reply addresses [replyAddresses] admits.
  */
 class WatchContract<Address : Any, Request : Any, Initial : Any, Update : Any>(
     val name: OperationName,
@@ -186,6 +206,7 @@ class WatchContract<Address : Any, Request : Any, Initial : Any, Update : Any>(
     val initialCodec: PayloadCodec<Initial>,
     val updateCodec: PayloadCodec<Update>,
     val initialPolicy: ResponsePolicy<Initial>,
+    val replyAddresses: ReplyAddressRule<Address>,
     val timeout: Duration = 10.seconds,
     val failureSlug: ErrorSlug,
     val updateFilter: (Request, Update) -> Boolean = { _, _ -> true },
@@ -204,6 +225,7 @@ fun <Address : Any, Request : Any, Initial : Any, Update : Any> WatchContract<Ad
         requestCodec = requestCodec,
         responseCodec = initialCodec,
         responsePolicy = initialPolicy,
+        replyAddresses = replyAddresses,
         timeout = timeout,
         failureSlug = failureSlug,
         limits = limits,
