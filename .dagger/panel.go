@@ -191,7 +191,7 @@ authorization {
 			"test",
 			"--no-pub",
 			"--concurrency=2",
-			"test/infrastructure/messaging/chunked_reply_test.dart",
+			"test/infrastructure/messaging/payload_framing_test.dart",
 			"test/infrastructure/messaging/nats_core_client_integration_test.dart",
 			"test/infrastructure/messaging/nats_native_authorization_integration_test.dart",
 		})
