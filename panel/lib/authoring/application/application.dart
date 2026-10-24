@@ -38,6 +38,7 @@ export "realm_editing_binding.dart";
 export "realm_editing_registration.dart";
 export "realm_publication.dart";
 export "realm_publication_view.dart";
+export "realm_routes.dart";
 export "realm_surface_navigation.dart";
 export "resource_appearance_provider.dart";
 export "resource_creation.dart";

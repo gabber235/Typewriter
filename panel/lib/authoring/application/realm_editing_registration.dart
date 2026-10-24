@@ -82,8 +82,7 @@ extension RealmEditingRegistration on LocalWork {
         ),
       );
     },
-    destination: (ref) =>
-        RealmWorkDestination(ref.read(navigationRouterProvider), scope),
+    destination: (ref) => RealmWorkDestination.of(ref, scope),
   );
 }
 
@@ -157,10 +156,22 @@ extension RealmEditingWidgetRef on WidgetRef {
 }
 
 final class RealmWorkDestination extends WorkDestination {
-  RealmWorkDestination(this.router, this.scope) {
+  RealmWorkDestination(this.router, this.route, this.scope) {
     router.addListener(notifyListeners);
   }
+
+  /// The destination of [scope], navigating to its realm route.
+  factory RealmWorkDestination.of(Ref ref, AuthoringScope scope) =>
+      RealmWorkDestination(
+        ref.read(navigationRouterProvider),
+        ref.read(realmRoutesProvider).realm(scope),
+        scope,
+      );
+
   final NavigationRouter router;
+
+  /// The realm route [open] navigates to.
+  final PageRouteInfo<Object?> route;
   final AuthoringScope scope;
   @override
   bool get isCurrent {
@@ -172,12 +183,7 @@ final class RealmWorkDestination extends WorkDestination {
 
   @override
   Future<void> open() async {
-    await router.navigate(
-      OrganizationRoute(
-        organizationId: scope.organizationId.id,
-        children: [RealmRoute(realmId: scope.realmId.id)],
-      ),
-    );
+    await router.navigate(route);
   }
 
   @override
