@@ -63,7 +63,12 @@ import kotlin.time.TestTimeSource
 import kotlin.time.TimeMark
 import kotlin.time.TimeSource
 
-/** Covers payload framing of [NatsMessageTransport] and the router over an in memory NATS broker. */
+/**
+ * Covers the framing logic of [NatsMessageTransport] and the router over an in memory NATS broker: frame and credit
+ * sequences, dropped and altered frames, ceilings, time to live and assembly bounds. NATS semantics the memory broker
+ * does not model, max_payload and response permissions, are covered by `PayloadFramingOnNatsTest` in
+ * protocol-transport against a real nats-server.
+ */
 val PayloadFramingTest by testSuite {
     test("a payload within one chunk is one plain message") {
         coroutineScope {
