@@ -19,6 +19,7 @@ import com.typewritermc.services.libs.filetransfer.blob.ArtifactDigest
 import com.typewritermc.services.libs.filetransfer.blob.BlobMetadata
 import com.typewritermc.services.libs.filetransfer.blob.BlobResult
 import com.typewritermc.services.libs.filetransfer.blob.DigestAlgorithm
+import com.typewritermc.services.libs.filetransfer.blob.MAXIMUM_TRANSFERRED_BLOB_SIZE
 import com.typewritermc.services.libs.filetransfer.blob.StoreResult
 import okio.ByteString.Companion.toByteString
 import skirout.service.v1.artifact.FetchArtifactBlobMetadataResponse
@@ -63,18 +64,27 @@ class StableRealmArtifactRoutes(
                 is BlobResult.Invalid -> FetchArtifactBlobMetadataResponse.createInvalidError(reason = result.reason)
             }
         }
-        unaryAt(address.sharedBlobFetch, address, parallelism = BLOB_ROUTE_PARALLELISM) { call ->
-            when (val result = artifacts.fetch(call.request.digest.toApi())) {
-                is BlobResult.Success -> FetchArtifactBlobResponse.createSuccess(content = result.value.toByteString())
-                BlobResult.NotFound -> FetchArtifactBlobResponse.createNotFoundError()
-                is BlobResult.Invalid -> FetchArtifactBlobResponse.createInvalidError(reason = result.reason)
-            }
-        }
+        unaryAt(address.sharedBlobFetch, address, parallelism = BLOB_ROUTE_PARALLELISM) { call -> fetch(call.request.digest.toApi()) }
         unaryAt(address.sharedBlobStore, address, parallelism = BLOB_ROUTE_PARALLELISM) { call ->
             when (val result = artifacts.store(call.request.expected.toApi(), call.request.content.toByteArray())) {
                 is StoreResult.Stored -> StoreArtifactBlobResponse.SuccessWrapper(result.metadata.toSkir())
                 is StoreResult.Invalid -> StoreArtifactBlobResponse.createInvalidError(reason = result.reason)
             }
+        }
+    }
+
+    /** Answers a blob fetch; the stored size decides first, so a blob too large to transfer is never read or hashed. */
+    private suspend fun fetch(digest: ArtifactDigest): FetchArtifactBlobResponse {
+        val stored = artifacts.metadata(digest)
+        if (stored is BlobResult.Success && stored.value.size > MAXIMUM_TRANSFERRED_BLOB_SIZE) {
+            return FetchArtifactBlobResponse.createInvalidError(
+                reason = "Blob of ${stored.value.size} bytes exceeds the $MAXIMUM_TRANSFERRED_BLOB_SIZE byte transfer ceiling.",
+            )
+        }
+        return when (val result = artifacts.fetch(digest)) {
+            is BlobResult.Success -> FetchArtifactBlobResponse.createSuccess(content = result.value.toByteString())
+            BlobResult.NotFound -> FetchArtifactBlobResponse.createNotFoundError()
+            is BlobResult.Invalid -> FetchArtifactBlobResponse.createInvalidError(reason = result.reason)
         }
     }
 

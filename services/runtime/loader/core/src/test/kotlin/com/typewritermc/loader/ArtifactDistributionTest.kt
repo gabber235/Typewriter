@@ -20,6 +20,7 @@ import com.typewritermc.loader.api.RuntimePlacement
 import com.typewritermc.loader.api.artifact.ProducerMetadata
 import com.typewritermc.loader.api.artifact.PublishResult
 import com.typewritermc.loader.api.artifact.PublishSharedArtifact
+import com.typewritermc.loader.api.artifact.SharedArtifactAccess
 import com.typewritermc.loader.api.artifact.SharedArtifactId
 import com.typewritermc.loader.api.artifact.SharedArtifactProvenance
 import com.typewritermc.loader.artifact.ArtifactCoordinate
@@ -71,6 +72,7 @@ import com.typewritermc.services.libs.communicator.testing.MemoryNatsBroker
 import com.typewritermc.services.libs.filetransfer.blob.ArtifactDigest
 import com.typewritermc.services.libs.filetransfer.blob.BlobMetadata
 import com.typewritermc.services.libs.filetransfer.blob.BlobResult
+import com.typewritermc.services.libs.filetransfer.blob.MAXIMUM_TRANSFERRED_BLOB_SIZE
 import com.typewritermc.services.libs.filetransfer.blob.StoreResult
 import com.typewritermc.services.libs.registrar.ServiceId
 import com.typewritermc.services.libs.telemetry.testing.TelemetryTestHarness
@@ -79,6 +81,7 @@ import io.kotest.assertions.throwables.shouldThrow
 import io.kotest.matchers.collections.shouldContainExactly
 import io.kotest.matchers.shouldBe
 import io.kotest.matchers.shouldNotBe
+import io.kotest.matchers.string.shouldContain
 import io.opentelemetry.api.trace.propagation.W3CTraceContextPropagator
 import io.opentelemetry.context.propagation.ContextPropagators
 import kotlinx.coroutines.Dispatchers
@@ -435,6 +438,42 @@ val ArtifactDistributionTest by testSuite {
                         }.groupingBy { it.subject.endsWith(".shared.blob.store") }
                         .eachCount()
                 frames shouldBe mapOf(true to 81, false to 81)
+            } finally {
+                router.stop()
+                harness.close()
+            }
+        }
+    }
+
+    test("a blob above the transfer ceiling is answered invalid from its size without being read") {
+        withContext(Dispatchers.Default) {
+            val broker = MemoryNatsBroker()
+            val harness = TelemetryTestHarness.create()
+            val propagators = ContextPropagators.create(W3CTraceContextPropagator.getInstance())
+            val root = Files.createTempDirectory("typewriter-oversized-blobs")
+            val realmBlobs = FileDigestBlobStore(root)
+            val digest = ArtifactDigest.sha256("an oversized realm jar".encodeToByteArray())
+            // A sparse file: its size exceeds the ceiling without writing the bytes.
+            val path = realmBlobs.pathFor(digest)
+            Files.createDirectories(path.parent)
+            java.io.RandomAccessFile(path.toFile(), "rw").use { it.setLength(MAXIMUM_TRANSFERRED_BLOB_SIZE + 1) }
+            val service = SharedArtifactService("quests", realmBlobs, FileSharedArtifactRepository(root.resolve("shared.cbor")))
+            val shared =
+                object : SharedArtifactAccess by service {
+                    override suspend fun fetch(digest: ArtifactDigest): BlobResult<ByteArray> =
+                        error("An oversized blob must not be read")
+                }
+            val address = RealmRouteScope(realmId = "quests", organizationId = "writers")
+            val realmHost = Communicator(broker.transport(TRANSPORT_LIMITS), harness.telemetry, propagators)
+            val router = realmHost.createRouter(communicatorRoutes { StableRealmArtifactRoutes(shared).register(this, address) }, this)
+            try {
+                router.start() shouldBe RouterResult.Success
+                val remote =
+                    CommunicatorBlobEndpoint(Communicator(broker.transport(TRANSPORT_LIMITS), harness.telemetry, propagators), address)
+
+                val fetched = remote.fetch(digest)
+
+                (fetched as BlobResult.Invalid).reason shouldContain "transfer ceiling"
             } finally {
                 router.stop()
                 harness.close()
