@@ -5,6 +5,8 @@ description: Investigate local Typewriter failures using Greptime traces, logs, 
 
 Use the project MCP for local telemetry. Bootstrap and endpoint settings: [adapter README](../../../tools/typewriter-mcp/README.md).
 
+Do not ask for a time window or instance. Unless the user names them, use the last 30 minutes UTC and the single local Realm, and investigate the newest failure in that window.
+
 Start with the incident's UTC window, entity identity, and expected transition. Use `telemetry_health` to check connectivity, then `telemetry_schema` with a table and column substring. Discover actual columns before constructing filters. Widen time or scope only when evidence warrants it.
 
 For SQL use explicit columns, timestamp bounds, ordering, and LIMIT. `max_rows` bounds output, not query cost. Unsupported SQL fails closed. The adapter is a query guard, not a database permission boundary. Never bypass a rejected write through another client.

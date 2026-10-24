@@ -33,6 +33,18 @@ in the composition root). `module_graph_test.dart` names every violating file, l
 
 Prefer annotated generated Riverpod providers over manual provider declarations. Use manual declarations only when Riverpod generation cannot express the required behavior.
 
+## Widgets
+
+Prefer `HookConsumerWidget` or `HookWidget` over `StatefulWidget` and `ConsumerStatefulWidget`. Keep local state, controllers, and lifecycles in hooks.
+
+Never write `build` with an expression body (`=>`). Always use a block body.
+
+In `build`, use `ref.watch`. Use `ref.read` only inside callbacks such as `onPressed`.
+
+## Extension methods
+
+Prefer extension methods and getters over top level functions when behavior has a clear primary receiver. Use top level functions only for factories, entry points, and coordination with no natural receiver.
+
 ## Keyboard accessibility
 
 Every UI component and interaction must be fully usable with a keyboard alone. Users must never need a mouse to operate the web panel.
@@ -45,7 +57,7 @@ When adding keyboard shortcuts, prefer invoking an existing Intent instead of ha
 
 Prefer Freezed for immutable Dart models instead of manually implementing immutable classes or using typedef. This includes union and sealed model shapes, which should use Freezed unions instead of manually implemented class hierarchies. Use an ordinary class when the object is intentionally mutable or Freezed cannot express the required behavior cleanly.
 
-Use Freezed value objects instead of typedef record aliases for state and scope models.
+Never declare typedef record aliases. Use a Freezed value object.
 
 Use `mapUnready` instead of `whenData` so previous values survive reload.
 
