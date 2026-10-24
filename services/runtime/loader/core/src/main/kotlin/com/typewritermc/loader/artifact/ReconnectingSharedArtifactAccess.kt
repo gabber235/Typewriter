@@ -16,13 +16,13 @@ import com.typewritermc.protocol.transport.generated.sharedCatalogFetch
 import com.typewritermc.protocol.transport.generated.sharedPublish
 import com.typewritermc.services.libs.communicator.client.Communicator
 import com.typewritermc.services.libs.communicator.contract.UnaryContract
-import com.typewritermc.services.libs.communicator.result.CommunicationResult
 import com.typewritermc.services.libs.filetransfer.blob.ArtifactDigest
 import com.typewritermc.services.libs.filetransfer.blob.BlobMetadata
 import com.typewritermc.services.libs.filetransfer.blob.BlobResult
 import com.typewritermc.services.libs.filetransfer.blob.DigestAlgorithm
 import com.typewritermc.services.libs.filetransfer.blob.StoreResult
 import com.typewritermc.services.libs.utils.rethrowExceptional
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.filterNotNull
 import kotlinx.coroutines.flow.first
@@ -32,6 +32,9 @@ import skirout.service.v1.artifact.FetchSharedArtifactCatalogResponse
 import skirout.service.v1.artifact.ProducerMetadataEntry
 import skirout.service.v1.artifact.PublishSharedArtifactRequest
 import skirout.service.v1.artifact.PublishSharedArtifactResponse
+import kotlin.time.Duration
+import kotlin.time.Duration.Companion.milliseconds
+import kotlin.time.Duration.Companion.seconds
 import skirout.service.v1.artifact.ArtifactDigest as SkirArtifactDigest
 import skirout.service.v1.artifact.DigestAlgorithm as SkirDigestAlgorithm
 import skirout.service.v1.artifact.ProducerMetadata as SkirProducerMetadata
@@ -42,8 +45,10 @@ import skirout.service.v1.artifact.SharedArtifactProvenance as SkirSharedArtifac
 /**
  * Maintains shared artifact access across messaging session replacement.
  *
- * Requests wait for a nonnull session. Communication failure waits for a different session id before retrying,
- * without a local timeout. Blob calls move whole content, so a retry repeats the call: fetch is a pure read and
+ * Requests wait for a nonnull session. Each failure names its recovery: a lost session waits for a different session
+ * id before retrying, without a local timeout; a transient failure such as a busy receiver retries after the pauses
+ * of [BACK_OFF_DELAYS] and then fails; a failure that would repeat, such as content above the transfer ceiling or a
+ * rejected frame, fails at once. Blob calls move whole content, so a retry repeats the call: fetch is a pure read and
  * store is idempotent by digest. Bound operations with caller cancellation or a suitable timeout.
  */
 class ReconnectingSharedArtifactAccess(
@@ -83,16 +88,33 @@ class ReconnectingSharedArtifactAccess(
 
     private suspend fun <Value> withSessionRetry(block: suspend (HostedMessagingSession) -> Value): Value {
         var session = sessions.filterNotNull().first()
+        var backOffs = 0
         while (true) {
             try {
                 return block(session)
             } catch (failure: RealmArtifactCommunicationException) {
-                val failedId = session.id
-                session = sessions.filterNotNull().first { it.id != failedId }
+                when (failure.recovery) {
+                    ArtifactRecovery.NEW_SESSION -> {
+                        val failedId = session.id
+                        session = sessions.filterNotNull().first { it.id != failedId }
+                    }
+
+                    ArtifactRecovery.BACK_OFF -> {
+                        delay(BACK_OFF_DELAYS.getOrNull(backOffs++) ?: throw failure)
+                        session = sessions.filterNotNull().first()
+                    }
+
+                    ArtifactRecovery.NONE -> {
+                        throw failure
+                    }
+                }
             }
         }
     }
 }
+
+/** The pauses before each retry of a transient failure; the call fails once they are spent. */
+internal val BACK_OFF_DELAYS: List<Duration> = listOf(250.milliseconds, 500.milliseconds, 1.seconds, 2.seconds, 4.seconds)
 
 /** Encodes shared artifact catalog and mutation operations for one Realm session. */
 private class CommunicatorSharedMetadataClient(
@@ -109,7 +131,7 @@ private class CommunicatorSharedMetadataClient(
             }
 
             else -> {
-                throw RealmArtifactCommunicationException("Realm shared artifact catalog is unavailable.")
+                throw realmArtifactUnavailable("Realm shared artifact catalog is unavailable.")
             }
         }
 
@@ -162,24 +184,12 @@ private class CommunicatorSharedMetadataClient(
             }
 
             else -> {
-                throw RealmArtifactCommunicationException("Realm shared artifact publication is unavailable.")
+                throw realmArtifactUnavailable("Realm shared artifact publication is unavailable.")
             }
         }
 
     private suspend fun <Request : Any, Response : Any> request(
         contract: UnaryContract<RealmRouteScope, Request, Response>,
         value: Request,
-    ): Response =
-        when (val result = communicator.request(contract, address, value)) {
-            is CommunicationResult.Success -> {
-                result.value
-            }
-
-            is CommunicationResult.Failure -> {
-                throw RealmArtifactCommunicationException(
-                    "Realm shared artifact request failed: ${result.error}",
-                    result.error.cause,
-                )
-            }
-        }
+    ): Response = communicator.artifactRequest(contract, address, value)
 }
