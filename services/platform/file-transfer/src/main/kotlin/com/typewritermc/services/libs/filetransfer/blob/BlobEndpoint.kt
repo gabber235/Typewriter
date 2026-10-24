@@ -6,9 +6,6 @@ import java.security.MessageDigest
 /** The largest blob a host stores, including local imports that never cross the transport. */
 const val MAXIMUM_BLOB_SIZE: Long = 512L * 1024L * 1024L
 
-/** The largest blob that crosses the transport; equals max_bytes of the blob routes in transport-routes.yaml. */
-const val MAXIMUM_TRANSFERRED_BLOB_SIZE: Long = 128L * 1024L * 1024L
-
 @Serializable
 enum class DigestAlgorithm {
     SHA_256,

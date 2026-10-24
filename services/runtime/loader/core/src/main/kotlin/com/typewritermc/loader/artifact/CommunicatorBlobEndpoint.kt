@@ -1,6 +1,8 @@
 package com.typewritermc.loader.artifact
 
 import com.typewritermc.protocol.transport.RealmRouteScope
+import com.typewritermc.protocol.transport.generated.SHARED_BLOB_FETCH_REPLY_CONTENT_MAX_BYTES
+import com.typewritermc.protocol.transport.generated.SHARED_BLOB_STORE_REQUEST_CONTENT_MAX_BYTES
 import com.typewritermc.protocol.transport.generated.sharedBlobFetch
 import com.typewritermc.protocol.transport.generated.sharedBlobMetadata
 import com.typewritermc.protocol.transport.generated.sharedBlobStore
@@ -23,6 +25,14 @@ import skirout.service.v1.artifact.FetchArtifactBlobRequest
 import skirout.service.v1.artifact.FetchArtifactBlobResponse
 import skirout.service.v1.artifact.StoreArtifactBlobRequest
 import skirout.service.v1.artifact.StoreArtifactBlobResponse
+
+/**
+ * The largest blob that crosses the transport: the smaller content ceiling of the store request and the fetch reply,
+ * which the generator derives from their route ceilings less the Skir envelope, so a blob that passes this check
+ * always fits both encoded payloads.
+ */
+internal val TRANSFERRED_BLOB_MAX_BYTES: Long =
+    minOf(SHARED_BLOB_STORE_REQUEST_CONTENT_MAX_BYTES, SHARED_BLOB_FETCH_REPLY_CONTENT_MAX_BYTES)
 
 /** How reconnecting access answers one failed Realm artifact request. */
 internal enum class ArtifactRecovery {

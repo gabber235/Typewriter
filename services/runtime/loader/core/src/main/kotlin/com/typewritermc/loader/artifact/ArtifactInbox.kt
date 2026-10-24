@@ -13,7 +13,6 @@ import com.typewritermc.services.libs.filetransfer.blob.ArtifactDigest
 import com.typewritermc.services.libs.filetransfer.blob.BlobMetadata
 import com.typewritermc.services.libs.filetransfer.blob.BlobResult
 import com.typewritermc.services.libs.filetransfer.blob.DigestAlgorithm
-import com.typewritermc.services.libs.filetransfer.blob.MAXIMUM_TRANSFERRED_BLOB_SIZE
 import com.typewritermc.services.libs.filetransfer.blob.requireStored
 import com.typewritermc.services.libs.telemetry.EventProjection
 import com.typewritermc.services.libs.telemetry.LogSeverity
@@ -88,7 +87,7 @@ interface CandidateRepository {
  *
  * Two observations separated by [stableDuration] must agree before import. Invalid imports become quarantine
  * diagnostics; accepted files are not moved. Capability JARs are rejected because only engines distribute
- * capabilities. Kinds that remote hosts fetch are rejected above [MAXIMUM_TRANSFERRED_BLOB_SIZE], so an oversized
+ * capabilities. Kinds that remote hosts fetch are rejected above [TRANSFERRED_BLOB_MAX_BYTES], so an oversized
  * artifact fails at import instead of at rollout; Realm JARs run on the host that imports them. [run] owns a watch service and also rescans periodically.
  */
 class ArtifactInboxReconciler(
@@ -180,8 +179,8 @@ class ArtifactInboxReconciler(
             val manifest = readManifest(path)
             val kind = manifest.kind()
             require(kind != ArtifactKind.CAPABILITY) { "Capability JARs are accepted only as bundled engine content." }
-            require(kind == ArtifactKind.REALM || observation.size <= MAXIMUM_TRANSFERRED_BLOB_SIZE) {
-                "${kind.name.lowercase()} artifacts are fetched by remote hosts and may not exceed $MAXIMUM_TRANSFERRED_BLOB_SIZE bytes."
+            require(kind == ArtifactKind.REALM || observation.size <= TRANSFERRED_BLOB_MAX_BYTES) {
+                "${kind.name.lowercase()} artifacts are fetched by remote hosts and may not exceed $TRANSFERRED_BLOB_MAX_BYTES bytes."
             }
             ensureBlob(path, BlobMetadata(digest, observation.size))
             val revision = candidates.reserveImportRevision()

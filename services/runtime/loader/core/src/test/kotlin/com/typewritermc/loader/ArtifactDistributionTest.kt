@@ -30,6 +30,7 @@ import com.typewritermc.loader.artifact.DeploymentArtifact
 import com.typewritermc.loader.artifact.FileCandidateRepository
 import com.typewritermc.loader.artifact.FileDigestBlobStore
 import com.typewritermc.loader.artifact.StableRealmArtifactRoutes
+import com.typewritermc.loader.artifact.TRANSFERRED_BLOB_MAX_BYTES
 import com.typewritermc.loader.artifact.toApi
 import com.typewritermc.loader.artifact.toSkir
 import com.typewritermc.loader.deployment.DeploymentContent
@@ -72,7 +73,6 @@ import com.typewritermc.services.libs.communicator.testing.MemoryNatsBroker
 import com.typewritermc.services.libs.filetransfer.blob.ArtifactDigest
 import com.typewritermc.services.libs.filetransfer.blob.BlobMetadata
 import com.typewritermc.services.libs.filetransfer.blob.BlobResult
-import com.typewritermc.services.libs.filetransfer.blob.MAXIMUM_TRANSFERRED_BLOB_SIZE
 import com.typewritermc.services.libs.filetransfer.blob.StoreResult
 import com.typewritermc.services.libs.registrar.ServiceId
 import com.typewritermc.services.libs.telemetry.testing.TelemetryTestHarness
@@ -481,7 +481,7 @@ val ArtifactDistributionTest by testSuite {
             // A sparse file: its size exceeds the ceiling without writing the bytes.
             val path = realmBlobs.pathFor(digest)
             Files.createDirectories(path.parent)
-            java.io.RandomAccessFile(path.toFile(), "rw").use { it.setLength(MAXIMUM_TRANSFERRED_BLOB_SIZE + 1) }
+            java.io.RandomAccessFile(path.toFile(), "rw").use { it.setLength(TRANSFERRED_BLOB_MAX_BYTES + 1) }
             val service = SharedArtifactService("quests", realmBlobs, FileSharedArtifactRepository(root.resolve("shared.cbor")))
             val shared =
                 object : SharedArtifactAccess by service {

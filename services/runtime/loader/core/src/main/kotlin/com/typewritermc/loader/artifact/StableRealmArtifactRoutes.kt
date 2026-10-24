@@ -19,7 +19,6 @@ import com.typewritermc.services.libs.filetransfer.blob.ArtifactDigest
 import com.typewritermc.services.libs.filetransfer.blob.BlobMetadata
 import com.typewritermc.services.libs.filetransfer.blob.BlobResult
 import com.typewritermc.services.libs.filetransfer.blob.DigestAlgorithm
-import com.typewritermc.services.libs.filetransfer.blob.MAXIMUM_TRANSFERRED_BLOB_SIZE
 import com.typewritermc.services.libs.filetransfer.blob.StoreResult
 import okio.ByteString.Companion.toByteString
 import skirout.service.v1.artifact.FetchArtifactBlobMetadataResponse
@@ -76,9 +75,9 @@ class StableRealmArtifactRoutes(
     /** Answers a blob fetch; the stored size decides first, so a blob too large to transfer is never read or hashed. */
     private suspend fun fetch(digest: ArtifactDigest): FetchArtifactBlobResponse {
         val stored = artifacts.metadata(digest)
-        if (stored is BlobResult.Success && stored.value.size > MAXIMUM_TRANSFERRED_BLOB_SIZE) {
+        if (stored is BlobResult.Success && stored.value.size > TRANSFERRED_BLOB_MAX_BYTES) {
             return FetchArtifactBlobResponse.createInvalidError(
-                reason = "Blob of ${stored.value.size} bytes exceeds the $MAXIMUM_TRANSFERRED_BLOB_SIZE byte transfer ceiling.",
+                reason = "Blob of ${stored.value.size} bytes exceeds the $TRANSFERRED_BLOB_MAX_BYTES byte transfer ceiling.",
             )
         }
         return when (val result = artifacts.fetch(digest)) {
