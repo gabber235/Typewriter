@@ -16,10 +16,11 @@ import com.typewritermc.services.libs.communicator.contract.operationOutcome
 import com.typewritermc.services.libs.communicator.result.CommunicationResult
 import com.typewritermc.services.libs.communicator.telemetry.MessageHeadersGetter
 import com.typewritermc.services.libs.communicator.transfer.Assembly
-import com.typewritermc.services.libs.communicator.transfer.FRAME_INACTIVITY
 import com.typewritermc.services.libs.communicator.transfer.PayloadAssembler
+import com.typewritermc.services.libs.communicator.transfer.PayloadHeaders
 import com.typewritermc.services.libs.communicator.transfer.TransferRejected
 import com.typewritermc.services.libs.communicator.transfer.TransportLimits
+import com.typewritermc.services.libs.communicator.transfer.failureHeaders
 import com.typewritermc.services.libs.communicator.transport.ConsumerGroup
 import com.typewritermc.services.libs.communicator.transport.InboundMessage
 import com.typewritermc.services.libs.communicator.transport.MessageHeaders
@@ -63,6 +64,8 @@ import kotlinx.coroutines.withContext
 import kotlinx.coroutines.withTimeoutOrNull
 import kotlin.time.Duration
 import kotlin.time.Duration.Companion.seconds
+import kotlin.time.TimeMark
+import kotlin.time.TimeSource
 
 /** Marks the typed communicator routes DSL. */
 @DslMarker
@@ -127,14 +130,13 @@ data class IncomingWatchCall<Address : Any, Request : Any, Initial : Any, Update
  *
  * Parallel workers can complete messages out of arrival order. Use route parallelism one where handler ordering is
  * part of the application contract. [maxAssemblingBytes] bounds the framed requests one route assembles at once, and
- * an assembly without a new frame for [frameInactivity] is dropped.
+ * an assembly without a new frame for its route's frame inactivity is dropped.
  */
 data class RouterOptions(
     val maxInFlight: Int = 16,
     val defaultRouteParallelism: Int = 16,
     val shutdownTimeout: Duration = 30.seconds,
     val maxAssemblingBytes: Long = 192L * 1024L * 1024L,
-    val frameInactivity: Duration = FRAME_INACTIVITY,
 ) {
     init {
         require(maxInFlight > 0) { "maxInFlight must be positive" }
@@ -192,8 +194,13 @@ class CommunicatorRoutesBuilder internal constructor() {
         parallelism: Int? = null,
         consumerGroup: ConsumerGroup? = null,
         handler: UnaryHandler<A, Q, R>,
-    ) = add(parallelism, contract.requestAddress.subscriptionPattern, consumerGroup, contract.framing(consumerGroup)) { router, message ->
-        router.unary(contract, handler, message)
+    ) = add(
+        parallelism,
+        contract.requestAddress.subscriptionPattern,
+        consumerGroup,
+        contract.framing(consumerGroup),
+    ) { router, message, received ->
+        router.unary(contract, handler, message, received)
     }
 
     /** Registers a unary route restricted to the concrete address rendered from [address]. */
@@ -208,8 +215,8 @@ class CommunicatorRoutesBuilder internal constructor() {
         contract.requestAddress.subscribedAt(address).subscriptionPattern,
         consumerGroup,
         contract.framing(consumerGroup),
-    ) { router, message ->
-        router.unary(contract, handler, message)
+    ) { router, message, received ->
+        router.unary(contract, handler, message, received)
     }
 
     /** Registers a fanout request route without a consumer group, allowing every matching listener to receive it. */
@@ -217,8 +224,8 @@ class CommunicatorRoutesBuilder internal constructor() {
         contract: ScatterContract<A, Q, R>,
         parallelism: Int? = null,
         handler: ScatterHandler<A, Q, R>,
-    ) = add(parallelism, contract.requestAddress.subscriptionPattern, null) { router, message ->
-        router.scatter(contract, handler, message)
+    ) = add(parallelism, contract.requestAddress.subscriptionPattern, null) { router, message, received ->
+        router.scatter(contract, handler, message, received)
     }
 
     /** Registers a scatter route subscribed at one concrete address. */
@@ -227,8 +234,8 @@ class CommunicatorRoutesBuilder internal constructor() {
         address: A,
         parallelism: Int? = null,
         handler: ScatterHandler<A, Q, R>,
-    ) = add(parallelism, contract.requestAddress.subscribedAt(address).subscriptionPattern, null) { router, message ->
-        router.scatter(contract, handler, message)
+    ) = add(parallelism, contract.requestAddress.subscribedAt(address).subscriptionPattern, null) { router, message, received ->
+        router.scatter(contract, handler, message, received)
     }
 
     /** Registers an event route using the contract's publication pattern. */
@@ -237,7 +244,7 @@ class CommunicatorRoutesBuilder internal constructor() {
         parallelism: Int? = null,
         consumerGroup: ConsumerGroup? = null,
         handler: EventHandler<A, E>,
-    ) = add(parallelism, contract.address.subscriptionPattern, consumerGroup) { router, message ->
+    ) = add(parallelism, contract.address.subscriptionPattern, consumerGroup) { router, message, _ ->
         router.event(contract, handler, message)
     }
 
@@ -248,7 +255,7 @@ class CommunicatorRoutesBuilder internal constructor() {
         parallelism: Int? = null,
         consumerGroup: ConsumerGroup? = null,
         handler: EventHandler<A, E>,
-    ) = add(parallelism, contract.address.subscribedAt(address).subscriptionPattern, consumerGroup) { router, message ->
+    ) = add(parallelism, contract.address.subscribedAt(address).subscriptionPattern, consumerGroup) { router, message, _ ->
         router.event(contract, handler, message)
     }
 
@@ -258,8 +265,8 @@ class CommunicatorRoutesBuilder internal constructor() {
         parallelism: Int? = null,
         consumerGroup: ConsumerGroup? = null,
         handler: WatchHandler<A, Q, I, U>,
-    ) = add(parallelism, contract.requestAddress.subscriptionPattern, consumerGroup) { router, message ->
-        router.watch(contract, handler, message)
+    ) = add(parallelism, contract.requestAddress.subscriptionPattern, consumerGroup) { router, message, received ->
+        router.watch(contract, handler, message, received)
     }
 
     /** Registers a watch request route restricted to the concrete request address rendered from [address]. */
@@ -269,8 +276,8 @@ class CommunicatorRoutesBuilder internal constructor() {
         parallelism: Int? = null,
         consumerGroup: ConsumerGroup? = null,
         handler: WatchHandler<A, Q, I, U>,
-    ) = add(parallelism, contract.requestAddress.subscribedAt(address).subscriptionPattern, consumerGroup) { router, message ->
-        router.watch(contract, handler, message)
+    ) = add(parallelism, contract.requestAddress.subscribedAt(address).subscriptionPattern, consumerGroup) { router, message, received ->
+        router.watch(contract, handler, message, received)
     }
 
     private fun add(
@@ -278,7 +285,7 @@ class CommunicatorRoutesBuilder internal constructor() {
         pattern: AddressPattern,
         group: ConsumerGroup?,
         framing: TransportLimits? = null,
-        process: suspend (CommunicatorRouter, InboundMessage) -> Unit,
+        process: suspend (CommunicatorRouter, InboundMessage, TimeMark) -> Unit,
     ) {
         if (parallelism != null) require(parallelism > 0) { "Route parallelism must be positive" }
         routes += Route(pattern, parallelism, group, framing, process)
@@ -306,7 +313,20 @@ internal data class Route(
     val group: ConsumerGroup?,
     /** Set for a route whose requests may arrive in frames; its runtime assembles them before dispatch. */
     val framing: TransportLimits?,
-    val process: suspend (CommunicatorRouter, InboundMessage) -> Unit,
+    /** Handles one complete message, received at the mark that starts its reply time to live. */
+    val process: suspend (CommunicatorRouter, InboundMessage, TimeMark) -> Unit,
+)
+
+/** A complete message queued for a route worker, with the mark of the moment it arrived. */
+internal class Received(
+    val message: InboundMessage,
+    val at: TimeMark,
+)
+
+/** How a route sends the reply to one request: by the route's [limits], or the transport's when null, timed from [received]. */
+private class Replying(
+    val limits: TransportLimits?,
+    val received: TimeMark,
 )
 
 /**
@@ -507,18 +527,18 @@ class CommunicatorRouter internal constructor(
         val parallelism = route.parallelism ?: options.defaultRouteParallelism
         val routePermits = Semaphore(parallelism)
         val assembler =
-            route.framing?.let { PayloadAssembler(it, it.requestMaxBytes, options.maxAssemblingBytes, options.frameInactivity) }
+            route.framing?.let { PayloadAssembler(it, it.requestMaxBytes, options.maxAssemblingBytes) }
         val channel =
-            Channel<InboundMessage>(parallelism, onUndeliveredElement = {
+            Channel<Received>(parallelism, onUndeliveredElement = {
                 permits.release()
                 routePermits.release()
             })
         val workers =
             List(parallelism) {
                 scope.launch {
-                    for (message in channel) {
+                    for (received in channel) {
                         try {
-                            route.process(this@CommunicatorRouter, message)
+                            route.process(this@CommunicatorRouter, received.message, received.at)
                         } catch (failure: Throwable) {
                             val exceptional = failure.findExceptional()
                             if (exceptional != null) {
@@ -545,7 +565,7 @@ class CommunicatorRouter internal constructor(
                                 try {
                                     permits.acquire()
                                     try {
-                                        channel.send(request)
+                                        channel.send(Received(request, TimeSource.Monotonic.markNow()))
                                     } catch (failure: Throwable) {
                                         permits.release()
                                         throw failure
@@ -578,7 +598,7 @@ class CommunicatorRouter internal constructor(
             assembler?.let {
                 scope.launch {
                     while (true) {
-                        delay(options.frameInactivity / 2)
+                        delay(requireNotNull(route.framing).frameInactivity / 2)
                         it.sweep()
                     }
                 }
@@ -588,8 +608,9 @@ class CommunicatorRouter internal constructor(
 
     /**
      * Assembles one message of a route whose requests may be framed and returns the complete request, or null while
-     * frames are missing. A window end is answered with its credit or failure on its reply address; a rejected frame
-     * drops its assembly, and the sender learns it at its next window end.
+     * frames are missing. A window end is answered with its credit or failure on its reply address. A rejected frame
+     * drops its assembly; when it ends a window it is answered rejected, so the sender fails at once, and otherwise
+     * the sender learns it at its next window end.
      */
     private suspend fun assembled(
         assembler: PayloadAssembler,
@@ -600,6 +621,9 @@ class CommunicatorRouter internal constructor(
                 try {
                     assembler.accept(message)
                 } catch (_: TransferRejected) {
+                    val replyTo = message.replyTo ?: return null
+                    val payloadId = message.headers.first(PayloadHeaders.PAYLOAD) ?: return null
+                    transport.publish(OutboundMessage(replyTo, Payload.Empty, headers = failureHeaders(payloadId, PayloadHeaders.REJECTED)))
                     return null
                 }
         ) {
@@ -649,7 +673,8 @@ class CommunicatorRouter internal constructor(
         contract: UnaryContract<A, Q, R>,
         handler: UnaryHandler<A, Q, R>,
         message: InboundMessage,
-    ) = replying(contract, message) { main, address, request ->
+        received: TimeMark,
+    ) = replying(contract, message, received) { main, address, request ->
         context(main) {
             handler.handle(
                 IncomingUnaryCall(address, request, message.headers, message.address, contract, communicator),
@@ -661,7 +686,8 @@ class CommunicatorRouter internal constructor(
         contract: ScatterContract<A, Q, R>,
         handler: ScatterHandler<A, Q, R>,
         message: InboundMessage,
-    ) = scatterReplying(contract, message) { main, address, request ->
+        received: TimeMark,
+    ) = scatterReplying(contract, message, received) { main, address, request ->
         context(main) {
             handler.handle(
                 IncomingUnaryCall(
@@ -679,6 +705,7 @@ class CommunicatorRouter internal constructor(
     private suspend fun <A : Any, Q : Any, R : Any> scatterReplying(
         contract: ScatterContract<A, Q, R>,
         message: InboundMessage,
+        received: TimeMark,
         handler: suspend (MainSpanScope, A, Q) -> R?,
     ) = consume(contract.name, contract.requestAddress.template, contract.failureSlug, message) { main ->
         val replyTo =
@@ -704,7 +731,7 @@ class CommunicatorRouter internal constructor(
                     contract.failureSlug,
                     replyTo,
                     original,
-                    contract.limits,
+                    Replying(contract.limits, received),
                 )
                 throw original
             }
@@ -719,7 +746,7 @@ class CommunicatorRouter internal constructor(
             replyTo,
             response,
             classification,
-            contract.limits,
+            Replying(contract.limits, received),
         )
         classification.operationOutcome(Unit)
     }
@@ -728,7 +755,8 @@ class CommunicatorRouter internal constructor(
         contract: WatchContract<A, Q, I, U>,
         handler: WatchHandler<A, Q, I, U>,
         message: InboundMessage,
-    ) = replying(contract, message) { main, address, request ->
+        received: TimeMark,
+    ) = replying(contract, message, received) { main, address, request ->
         context(main) {
             handler.handle(
                 IncomingWatchCall(address, request, message.headers, message.address, contract, communicator),
@@ -751,6 +779,7 @@ class CommunicatorRouter internal constructor(
     private suspend fun <A : Any, Q : Any, R : Any> replying(
         contract: UnaryContract<A, Q, R>,
         message: InboundMessage,
+        received: TimeMark,
         handler: suspend (MainSpanScope, A, Q) -> R,
     ) = replying(
         contract.name,
@@ -760,7 +789,7 @@ class CommunicatorRouter internal constructor(
         contract.responseCodec,
         contract.responsePolicy,
         contract.failureSlug,
-        contract.limits,
+        Replying(contract.limits, received),
         message,
         handler,
     )
@@ -768,6 +797,7 @@ class CommunicatorRouter internal constructor(
     private suspend fun <A : Any, Q : Any, R : Any> replying(
         contract: WatchContract<A, Q, R, *>,
         message: InboundMessage,
+        received: TimeMark,
         handler: suspend (MainSpanScope, A, Q) -> R,
     ) = replying(
         contract.name,
@@ -777,7 +807,7 @@ class CommunicatorRouter internal constructor(
         contract.initialCodec,
         contract.initialPolicy,
         contract.failureSlug,
-        contract.limits,
+        Replying(contract.limits, received),
         message,
         handler,
     )
@@ -790,7 +820,7 @@ class CommunicatorRouter internal constructor(
         responseCodec: PayloadCodec<R>,
         policy: ResponsePolicy<R>,
         slug: ErrorSlug,
-        limits: TransportLimits?,
+        replying: Replying,
         message: InboundMessage,
         handler: suspend (MainSpanScope, A, Q) -> R,
     ) = consume(name, template.template, slug, message) { main ->
@@ -804,7 +834,7 @@ class CommunicatorRouter internal constructor(
                 handler(main, requireNotNull(template.match(message.address)), requestCodec.decode(message.payload))
             } catch (original: Throwable) {
                 original.rethrowExceptional()
-                sendInternalFailure(main, name, responseTemplate, responseCodec, policy, slug, replyTo, original, limits)
+                sendInternalFailure(main, name, responseTemplate, responseCodec, policy, slug, replyTo, original, replying)
                 throw original
             }
         val classification =
@@ -812,11 +842,11 @@ class CommunicatorRouter internal constructor(
                 policy.classify(response)
             } catch (original: Throwable) {
                 original.rethrowExceptional()
-                sendInternalFailure(main, name, responseTemplate, responseCodec, policy, slug, replyTo, original, limits)
+                sendInternalFailure(main, name, responseTemplate, responseCodec, policy, slug, replyTo, original, replying)
                 throw original
             }
         annotateResponse(main, classification)
-        sendReply(name, responseTemplate, responseCodec, slug, replyTo, response, classification, limits)
+        sendReply(name, responseTemplate, responseCodec, slug, replyTo, response, classification, replying)
         classification.operationOutcome(Unit)
     }
 
@@ -829,13 +859,13 @@ class CommunicatorRouter internal constructor(
         slug: ErrorSlug,
         replyTo: MessageAddress,
         original: Throwable,
-        limits: TransportLimits?,
+        replying: Replying,
     ) {
         try {
             val response = policy.internalFailureResponse
             val classification = policy.classify(response)
             annotateResponse(main, classification)
-            sendReply(name, template, codec, slug, replyTo, response, classification, limits)
+            sendReply(name, template, codec, slug, replyTo, response, classification, replying)
         } catch (secondary: Throwable) {
             secondary.rethrowExceptional()
             val wrapped = SluggedException.wrap(slug, secondary)
@@ -861,7 +891,7 @@ class CommunicatorRouter internal constructor(
         replyTo: MessageAddress,
         response: R,
         classification: ResponseClassification,
-        limits: TransportLimits?,
+        replying: Replying,
     ) {
         val sent =
             communicator.sendResponse(
@@ -872,7 +902,8 @@ class CommunicatorRouter internal constructor(
                 codec,
                 classification,
                 slug,
-                limits = limits,
+                limits = replying.limits,
+                received = replying.received,
             )
         if (sent is CommunicationResult.Failure) {
             throw SluggedException.wrap(sent.error.slug, sent.error.cause ?: IllegalStateException("Reply failed"))
@@ -925,7 +956,7 @@ class CommunicatorRouter internal constructor(
     private data class Runtime(
         val route: Route,
         val subscription: TransportSubscription,
-        val channel: Channel<InboundMessage>,
+        val channel: Channel<Received>,
         val collector: Job,
         val workers: List<Job>,
         val sweeper: Job?,

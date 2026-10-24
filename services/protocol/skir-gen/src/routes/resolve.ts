@@ -225,25 +225,37 @@ function resolveFlow(
 }
 
 /**
- * The manifest limits with the ceilings a request route raises. Backend components cannot assemble a
- * framed request: each invocation is stateless and its subscriptions are static ConfigMaps. Their
- * replies are framed by one shared ceiling, so a route they serve keeps the manifest defaults.
+ * The manifest limits with the ceilings a request route raises and whether its replies wait for
+ * credit. Granting credit is a NATS response, and panel connections hold no response permission, so
+ * a route's replies wait for credit only when no caller runs on the panel, and a panel role never
+ * serves a request. Backend components cannot assemble a framed request: each invocation is
+ * stateless and its subscriptions are static ConfigMaps. Their replies are framed by one shared
+ * ceiling, so a route they serve keeps the manifest ceilings.
  */
-function routeLimits(route: Route, defaults: TransportLimits, at: RouteAt): TransportLimits {
-  if (route.flow.kind === "event") return defaults;
+function routeLimits(route: Route, roles: RoleDeclarations, defaults: TransportLimits, at: RouteAt): TransportLimits {
+  if (route.flow.kind === "event" || !("server" in route)) return defaults;
+  const panel = (party: Party) => "role" in party && roles.get(party.role)?.side === "panel";
+  if (panel(route.server)) {
+    throw routeError(
+      within(at, "server"),
+      "a panel role cannot serve requests: panel connections hold no response permission",
+    );
+  }
+  const unary = route.flow.kind === "unary" ? route.flow : undefined;
   const limits = {
     ...defaults,
-    requestMaxBytes: (route.flow.kind === "unary" ? route.flow.request_max_bytes : undefined) ?? defaults.requestMaxBytes,
-    replyMaxBytes: route.flow.reply_max_bytes ?? defaults.replyMaxBytes,
+    requestMaxBytes: unary?.request_max_bytes ?? defaults.requestMaxBytes,
+    replyMaxBytes: unary?.reply_max_bytes ?? defaults.replyMaxBytes,
+    replyCredit: !route.callers.some(panel),
   };
-  if ("server" in route && "component" in route.server) {
+  if ("component" in route.server) {
     if (limits.requestMaxBytes > limits.chunkBytes) {
       throw routeError(
         within(at, "flow.request_max_bytes"),
         "a backend component cannot receive framed requests; remove request_max_bytes",
       );
     }
-    if (route.flow.reply_max_bytes !== undefined) {
+    if (unary?.reply_max_bytes !== undefined) {
       throw routeError(
         within(at, "flow.reply_max_bytes"),
         "a backend component frames every reply by the manifest reply_max_bytes; remove the route ceiling",
@@ -277,7 +289,7 @@ export function resolveRoutes(
     } catch (error) {
       throw routeError(at, (error as Error).message);
     }
-    return { route, at, channels, grants, limits: routeLimits(route, manifest.limits, at) };
+    return { route, at, channels, grants, limits: routeLimits(route, roles, manifest.limits, at) };
   });
   const routes = located.map(
     ({ route, at, channels, grants, limits }): ResolvedRoute => ({

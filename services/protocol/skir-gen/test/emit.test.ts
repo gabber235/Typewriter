@@ -1,6 +1,7 @@
 import { describe, expect, test } from "bun:test";
 
 import { generatorFor, type Target } from "../src/routes/index.js";
+import { ENVELOPE_HEADROOM_BYTES } from "../src/routes/manifest.js";
 import { emitDart } from "../src/routes/emit/dart.js";
 import { emitKotlin } from "../src/routes/emit/kotlin.js";
 import { emitRust } from "../src/routes/emit/rust.js";
@@ -135,25 +136,55 @@ describe("route emission", () => {
 describe("payload framing limits", () => {
   test("every language receives the manifest limits", async () => {
     const { input, resolved } = await committedRoutes();
-    const { chunkBytes, windowFrames, requestMaxBytes, replyMaxBytes, replyTtlMs } = resolved.limits;
+    const { chunkBytes, windowFrames, requestMaxBytes, replyMaxBytes, frameInactivityMs, replyTtlMs } = resolved.limits;
     const providers = symbolProviders(input);
     const kotlin = emitKotlin(resolved, providers.kotlin).find((file) => file.path === "TransportLimits.kt");
     expect(kotlin!.code).toContain("import com.typewritermc.services.libs.communicator.transfer.TransportLimits");
     expect(kotlin!.code).toContain(`        chunkBytes = ${chunkBytes},
         windowFrames = ${windowFrames},
         requestMaxBytes = ${requestMaxBytes},
-        replyMaxBytes = ${replyMaxBytes},`);
-    expect(kotlin!.code).toContain(`val TRANSPORT_REPLY_TTL: Duration = ${replyTtlMs}.milliseconds`);
+        replyMaxBytes = ${replyMaxBytes},
+        frameInactivity = ${frameInactivityMs}.milliseconds,
+        replyTtl = ${replyTtlMs}.milliseconds,
+        replyCredit = false,`);
     const [dart] = emitDart(resolved, providers.dart);
     expect(dart!.code).toContain(`    chunkBytes: ${chunkBytes},
     windowFrames: ${windowFrames},
     requestMaxBytes: ${requestMaxBytes},
-    replyMaxBytes: ${replyMaxBytes},`);
+    replyMaxBytes: ${replyMaxBytes},
+    frameInactivity: Duration(milliseconds: ${frameInactivityMs}),`);
     const [rust] = emitRust(resolved, providers.rust, input);
     expect(rust!.code).toContain(`pub const CHUNK_BYTES: usize = ${chunkBytes};`);
     expect(rust!.code).toContain(`pub const WINDOW_FRAMES: usize = ${windowFrames};`);
     expect(rust!.code).toContain(`pub const REPLY_MAX_BYTES: usize = ${replyMaxBytes};`);
     expect(rust!.code).toContain(`pub const REPLY_TTL_MS: i64 = ${replyTtlMs};`);
+    expect(rust!.code).toContain(`pub const FRAME_INACTIVITY_MS: u32 = ${frameInactivityMs};`);
+    expect(rust!.code).not.toContain("PANEL_RESPONSE_LIMIT");
+  });
+
+  test("a route that only services call waits for reply credit and the others stream", async () => {
+    const { input, resolved } = await committedRoutes();
+    const providers = symbolProviders(input);
+    const [realm] = emitKotlin(resolved, providers.kotlin);
+    const command = section(realm!.code, "val RealmRouteScope.rolloutCommand get() =", "\n)\n");
+    expect(command).toContain("limits = TRANSPORT_LIMITS.copy(replyCredit = true),");
+    const catalog = section(realm!.code, "val RealmRouteScope.editorCatalogFetch get() =", "\n)\n");
+    expect(catalog).not.toContain("limits =");
+    const [rust] = emitRust(resolved, providers.rust, input);
+    const create = section(rust!.code, "impl crate::transport::RequestRoute for UserOrganizationCreateRoute {", "\n}\n");
+    expect(create).toContain("const REPLY_CREDIT: bool = false;");
+  });
+
+  test("a route that raises a ceiling exposes its content ceiling below the Skir envelope", async () => {
+    const { input, resolved } = await committedRoutes();
+    const [realm] = emitKotlin(resolved, symbolProviders(input).kotlin);
+    expect(realm!.code).toContain(
+      `const val SHARED_BLOB_STORE_REQUEST_CONTENT_MAX_BYTES: Long = ${134217728 - ENVELOPE_HEADROOM_BYTES}L`,
+    );
+    expect(realm!.code).toContain(
+      `const val SHARED_BLOB_FETCH_REPLY_CONTENT_MAX_BYTES: Long = ${134217728 - ENVELOPE_HEADROOM_BYTES}L`,
+    );
+    expect(realm!.code).not.toContain("SHARED_BLOB_METADATA_");
   });
 
   test("a route that raises a ceiling carries its own limits and the others the defaults", async () => {
@@ -168,7 +199,7 @@ describe("payload framing limits", () => {
     expect(metadata).not.toContain("limits =");
     const [dart] = emitDart(resolved, providers.dart);
     expect(dart!.code).toContain(
-      "limits: const TransportLimits(chunkBytes: 524288, windowFrames: 8, requestMaxBytes: 134217728, replyMaxBytes: 33554432),",
+      "limits: const TransportLimits(chunkBytes: 524288, windowFrames: 8, requestMaxBytes: 134217728, replyMaxBytes: 33554432, frameInactivity: Duration(milliseconds: 30000)),",
     );
     expect(dart!.code).toContain("limits: transportLimits,");
   });

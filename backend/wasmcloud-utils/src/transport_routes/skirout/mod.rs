@@ -6,11 +6,10 @@ pub const CHUNK_BYTES: usize = 524288;
 pub const WINDOW_FRAMES: usize = 8;
 /// The largest encoded reply a backend component sends; components serve no route that raises it.
 pub const REPLY_MAX_BYTES: usize = 33554432;
+/// How long in milliseconds a sender waits for a credit and a receiver for the next frame.
+pub const FRAME_INACTIVITY_MS: u32 = 30000;
 /// How long in milliseconds a responder may send replies after it received a request.
 pub const REPLY_TTL_MS: i64 = 300000;
-/// How many messages a panel connection may send in answer to one received request: one credit
-/// per window end of a framed reply. None when the panel never answers.
-pub const PANEL_RESPONSE_LIMIT: Option<u32> = Some(1);
 /// How many messages a service connection may send in answer to one received request: the frames
 /// of the largest reply any service role serves. None when no service role answers.
 pub const SERVICE_RESPONSE_LIMIT: Option<u32> = Some(256);
@@ -706,6 +705,7 @@ impl crate::transport::RequestRoute for UserOrganizationCreateRoute {
     type Request = crate::skirout::base::organization::v1::organization::CreateOrganizationRequest;
     type Response =
         crate::skirout::base::organization::v1::organization::CreateOrganizationResponse;
+    const REPLY_CREDIT: bool = false;
     fn method() -> &'static crate::skir_client::Method<Self::Request, Self::Response> {
         crate::skirout::base::organization::v1::organization::create_organization_method()
     }
@@ -715,6 +715,7 @@ impl crate::transport::RequestRoute for UserOrganizationsWatchRoute {
     type Scope = crate::transport::UserScope;
     type Request = crate::skirout::base::organization::v1::user::WatchUserOrganizationsRequest;
     type Response = crate::skirout::base::organization::v1::user::WatchUserOrganizationsResponse;
+    const REPLY_CREDIT: bool = false;
     fn method() -> &'static crate::skir_client::Method<Self::Request, Self::Response> {
         crate::skirout::base::organization::v1::user::watch_user_organizations_method()
     }
@@ -724,6 +725,7 @@ impl crate::transport::RequestRoute for UserJoinRequestsWatchRoute {
     type Scope = crate::transport::UserScope;
     type Request = crate::skirout::base::organization::v1::user::WatchUserJoinRequestsRequest;
     type Response = crate::skirout::base::organization::v1::user::WatchUserJoinRequestsResponse;
+    const REPLY_CREDIT: bool = false;
     fn method() -> &'static crate::skir_client::Method<Self::Request, Self::Response> {
         crate::skirout::base::organization::v1::user::watch_user_join_requests_method()
     }
@@ -733,6 +735,7 @@ impl crate::transport::RequestRoute for UserJoinRequestSubmitRoute {
     type Scope = crate::transport::UserScope;
     type Request = crate::skirout::base::organization::v1::user::SubmitUserJoinRequestRequest;
     type Response = crate::skirout::base::organization::v1::user::SubmitUserJoinRequestResponse;
+    const REPLY_CREDIT: bool = false;
     fn method() -> &'static crate::skir_client::Method<Self::Request, Self::Response> {
         crate::skirout::base::organization::v1::user::submit_user_join_request_method()
     }
@@ -742,6 +745,7 @@ impl crate::transport::RequestRoute for UserJoinRequestCancelRoute {
     type Scope = crate::transport::UserScope;
     type Request = crate::skirout::base::organization::v1::user::CancelUserJoinRequestRequest;
     type Response = crate::skirout::base::organization::v1::user::CancelUserJoinRequestResponse;
+    const REPLY_CREDIT: bool = false;
     fn method() -> &'static crate::skir_client::Method<Self::Request, Self::Response> {
         crate::skirout::base::organization::v1::user::cancel_user_join_request_method()
     }
@@ -752,6 +756,7 @@ impl crate::transport::RequestRoute for OrganizationMembersWatchRoute {
     type Request = crate::skirout::base::organization::v1::member::WatchOrganizationMembersRequest;
     type Response =
         crate::skirout::base::organization::v1::member::WatchOrganizationMembersResponse;
+    const REPLY_CREDIT: bool = false;
     fn method() -> &'static crate::skir_client::Method<Self::Request, Self::Response> {
         crate::skirout::base::organization::v1::member::watch_organization_members_method()
     }
@@ -763,6 +768,7 @@ impl crate::transport::RequestRoute for OrganizationMembersUpdateRoute {
         crate::skirout::base::organization::v1::member::UpdateOrganizationMemberRolesRequest;
     type Response =
         crate::skirout::base::organization::v1::member::UpdateOrganizationMemberRolesResponse;
+    const REPLY_CREDIT: bool = false;
     fn method() -> &'static crate::skir_client::Method<Self::Request, Self::Response> {
         crate::skirout::base::organization::v1::member::update_organization_member_roles_method()
     }
@@ -773,6 +779,7 @@ impl crate::transport::RequestRoute for OrganizationMemberRemoveRoute {
     type Request = crate::skirout::base::organization::v1::member::RemoveOrganizationMemberRequest;
     type Response =
         crate::skirout::base::organization::v1::member::RemoveOrganizationMemberResponse;
+    const REPLY_CREDIT: bool = false;
     fn method() -> &'static crate::skir_client::Method<Self::Request, Self::Response> {
         crate::skirout::base::organization::v1::member::remove_organization_member_method()
     }
@@ -784,6 +791,7 @@ impl crate::transport::RequestRoute for OrganizationJoinRequestsWatchRoute {
         crate::skirout::base::organization::v1::join_request::WatchOrganizationJoinRequestsRequest;
     type Response =
         crate::skirout::base::organization::v1::join_request::WatchOrganizationJoinRequestsResponse;
+    const REPLY_CREDIT: bool = false;
     fn method() -> &'static crate::skir_client::Method<Self::Request, Self::Response> {
         crate::skirout::base::organization::v1::join_request::watch_organization_join_requests_method()
     }
@@ -793,6 +801,7 @@ impl crate::transport::RequestRoute for OrganizationJoinRequestsApproveRoute {
     type Scope = crate::transport::OrganizationActorScope;
     type Request = crate::skirout::base::organization::v1::join_request::ApproveOrganizationJoinRequestsRequest;
     type Response = crate::skirout::base::organization::v1::join_request::ApproveOrganizationJoinRequestsResponse;
+    const REPLY_CREDIT: bool = false;
     fn method() -> &'static crate::skir_client::Method<Self::Request, Self::Response> {
         crate::skirout::base::organization::v1::join_request::approve_organization_join_requests_method()
     }
@@ -803,6 +812,7 @@ impl crate::transport::RequestRoute for OrganizationJoinRequestDeclineRoute {
     type Request =
         crate::skirout::base::organization::v1::join_request::DeclineOrganizationJoinRequestRequest;
     type Response = crate::skirout::base::organization::v1::join_request::DeclineOrganizationJoinRequestResponse;
+    const REPLY_CREDIT: bool = false;
     fn method() -> &'static crate::skir_client::Method<Self::Request, Self::Response> {
         crate::skirout::base::organization::v1::join_request::decline_organization_join_request_method()
     }
@@ -814,6 +824,7 @@ impl crate::transport::RequestRoute for OrganizationJoinCodesWatchRoute {
         crate::skirout::base::organization::v1::join_codes::WatchOrganizationJoinCodesRequest;
     type Response =
         crate::skirout::base::organization::v1::join_codes::WatchOrganizationJoinCodesResponse;
+    const REPLY_CREDIT: bool = false;
     fn method() -> &'static crate::skir_client::Method<Self::Request, Self::Response> {
         crate::skirout::base::organization::v1::join_codes::watch_organization_join_codes_method()
     }
@@ -825,6 +836,7 @@ impl crate::transport::RequestRoute for OrganizationJoinCodeGenerateRoute {
         crate::skirout::base::organization::v1::join_codes::GenerateOrganizationJoinCodeRequest;
     type Response =
         crate::skirout::base::organization::v1::join_codes::GenerateOrganizationJoinCodeResponse;
+    const REPLY_CREDIT: bool = false;
     fn method() -> &'static crate::skir_client::Method<Self::Request, Self::Response> {
         crate::skirout::base::organization::v1::join_codes::generate_organization_join_code_method()
     }
@@ -836,6 +848,7 @@ impl crate::transport::RequestRoute for OrganizationJoinCodeRevokeRoute {
         crate::skirout::base::organization::v1::join_codes::RevokeOrganizationJoinCodeRequest;
     type Response =
         crate::skirout::base::organization::v1::join_codes::RevokeOrganizationJoinCodeResponse;
+    const REPLY_CREDIT: bool = false;
     fn method() -> &'static crate::skir_client::Method<Self::Request, Self::Response> {
         crate::skirout::base::organization::v1::join_codes::revoke_organization_join_code_method()
     }
@@ -845,6 +858,7 @@ impl crate::transport::RequestRoute for OrganizationRolesWatchRoute {
     type Scope = crate::transport::OrganizationActorScope;
     type Request = crate::skirout::base::organization::v1::role::WatchOrganizationRolesRequest;
     type Response = crate::skirout::base::organization::v1::role::WatchOrganizationRolesResponse;
+    const REPLY_CREDIT: bool = false;
     fn method() -> &'static crate::skir_client::Method<Self::Request, Self::Response> {
         crate::skirout::base::organization::v1::role::watch_organization_roles_method()
     }
@@ -854,6 +868,7 @@ impl crate::transport::RequestRoute for ServiceBindingQueryRoute {
     type Scope = crate::transport::ServiceScope;
     type Request = crate::skirout::base::service::v1::status::QueryServiceBindingRequest;
     type Response = crate::skirout::base::service::v1::status::QueryServiceBindingResponse;
+    const REPLY_CREDIT: bool = true;
     fn method() -> &'static crate::skir_client::Method<Self::Request, Self::Response> {
         crate::skirout::base::service::v1::status::query_service_binding_method()
     }
@@ -869,6 +884,7 @@ impl crate::transport::RequestRoute for RegistrationLeaseEnsureRoute {
     type Scope = crate::transport::ServiceScope;
     type Request = crate::skirout::base::service::v1::status::EnsureRegistrationLeaseRequest;
     type Response = crate::skirout::base::service::v1::status::EnsureRegistrationLeaseResponse;
+    const REPLY_CREDIT: bool = true;
     fn method() -> &'static crate::skir_client::Method<Self::Request, Self::Response> {
         crate::skirout::base::service::v1::status::ensure_registration_lease_method()
     }
@@ -878,6 +894,7 @@ impl crate::transport::RequestRoute for ServiceMessagingScopeRoute {
     type Scope = crate::transport::ServiceScope;
     type Request = crate::skirout::base::service::v1::topology::GetServiceMessagingScopeRequest;
     type Response = crate::skirout::base::service::v1::topology::GetServiceMessagingScopeResponse;
+    const REPLY_CREDIT: bool = true;
     fn method() -> &'static crate::skir_client::Method<Self::Request, Self::Response> {
         crate::skirout::base::service::v1::topology::get_service_messaging_scope_method()
     }
@@ -893,6 +910,7 @@ impl crate::transport::RequestRoute for ServiceBindRoute {
     type Scope = crate::transport::OrganizationActorScope;
     type Request = crate::skirout::base::service::v1::registration::BindServiceRequest;
     type Response = crate::skirout::base::service::v1::registration::BindServiceResponse;
+    const REPLY_CREDIT: bool = false;
     fn method() -> &'static crate::skir_client::Method<Self::Request, Self::Response> {
         crate::skirout::base::service::v1::registration::bind_service_method()
     }
@@ -904,6 +922,7 @@ impl crate::transport::RequestRoute for OrganizationServicesWatchRoute {
         crate::skirout::base::service::v1::organization::WatchOrganizationServicesRequest;
     type Response =
         crate::skirout::base::service::v1::organization::WatchOrganizationServicesResponse;
+    const REPLY_CREDIT: bool = false;
     fn method() -> &'static crate::skir_client::Method<Self::Request, Self::Response> {
         crate::skirout::base::service::v1::organization::watch_organization_services_method()
     }
@@ -915,6 +934,7 @@ impl crate::transport::RequestRoute for OrganizationServiceUpdateRoute {
         crate::skirout::base::service::v1::organization::UpdateOrganizationServiceRequest;
     type Response =
         crate::skirout::base::service::v1::organization::UpdateOrganizationServiceResponse;
+    const REPLY_CREDIT: bool = false;
     fn method() -> &'static crate::skir_client::Method<Self::Request, Self::Response> {
         crate::skirout::base::service::v1::organization::update_organization_service_method()
     }
@@ -924,6 +944,7 @@ impl crate::transport::RequestRoute for ServiceUnbindRoute {
     type Scope = crate::transport::OrganizationActorScope;
     type Request = crate::skirout::base::service::v1::registration::UnbindServiceRequest;
     type Response = crate::skirout::base::service::v1::registration::UnbindServiceResponse;
+    const REPLY_CREDIT: bool = false;
     fn method() -> &'static crate::skir_client::Method<Self::Request, Self::Response> {
         crate::skirout::base::service::v1::registration::unbind_service_method()
     }
@@ -933,6 +954,7 @@ impl crate::transport::RequestRoute for ServiceTopologyConfigureRoute {
     type Scope = crate::transport::OrganizationActorScope;
     type Request = crate::skirout::base::service::v1::topology::ConfigureServiceHostRequest;
     type Response = crate::skirout::base::service::v1::topology::ConfigureServiceHostResponse;
+    const REPLY_CREDIT: bool = false;
     fn method() -> &'static crate::skir_client::Method<Self::Request, Self::Response> {
         crate::skirout::base::service::v1::topology::configure_service_host_method()
     }
@@ -942,6 +964,7 @@ impl crate::transport::RequestRoute for OrganizationTopologyWatchRoute {
     type Scope = crate::transport::OrganizationActorScope;
     type Request = crate::skirout::base::service::v1::topology::WatchOrganizationTopologyRequest;
     type Response = crate::skirout::base::service::v1::topology::WatchOrganizationTopologyResponse;
+    const REPLY_CREDIT: bool = false;
     fn method() -> &'static crate::skir_client::Method<Self::Request, Self::Response> {
         crate::skirout::base::service::v1::topology::watch_organization_topology_method()
     }
@@ -951,6 +974,7 @@ impl crate::transport::RequestRoute for ServiceHostRegisterRoute {
     type Scope = crate::transport::ServiceScope;
     type Request = crate::skirout::base::service::v1::topology::RegisterServiceHostRequest;
     type Response = crate::skirout::base::service::v1::topology::RegisterServiceHostResponse;
+    const REPLY_CREDIT: bool = true;
     fn method() -> &'static crate::skir_client::Method<Self::Request, Self::Response> {
         crate::skirout::base::service::v1::topology::register_service_host_method()
     }
@@ -960,6 +984,7 @@ impl crate::transport::RequestRoute for HostExecutionWatchRoute {
     type Scope = crate::transport::ServiceScope;
     type Request = crate::skirout::base::service::v1::topology::WatchHostExecutionRequest;
     type Response = crate::skirout::base::service::v1::topology::WatchHostExecutionResponse;
+    const REPLY_CREDIT: bool = true;
     fn method() -> &'static crate::skir_client::Method<Self::Request, Self::Response> {
         crate::skirout::base::service::v1::topology::watch_host_execution_method()
     }
@@ -969,6 +994,7 @@ impl crate::transport::RequestRoute for HostExecutionReportRoute {
     type Scope = crate::transport::ServiceScope;
     type Request = crate::skirout::base::service::v1::topology::ReportHostExecutionRequest;
     type Response = crate::skirout::base::service::v1::topology::ReportHostExecutionResponse;
+    const REPLY_CREDIT: bool = true;
     fn method() -> &'static crate::skir_client::Method<Self::Request, Self::Response> {
         crate::skirout::base::service::v1::topology::report_host_execution_method()
     }
@@ -978,6 +1004,7 @@ impl crate::transport::RequestRoute for PanelPermissionResolveRoute {
     type Scope = crate::transport::InternalComponentScope;
     type Request = crate::skirout::base::access::v1::permission::GetEntityPermissionRequest;
     type Response = crate::skirout::base::access::v1::permission::GetEntityPermissionResponse;
+    const REPLY_CREDIT: bool = true;
     fn method() -> &'static crate::skir_client::Method<Self::Request, Self::Response> {
         crate::skirout::base::access::v1::permission::get_entity_permission_method()
     }
@@ -992,6 +1019,7 @@ impl crate::transport::RequestRoute for ServicesPermissionResolveRoute {
     type Scope = crate::transport::InternalComponentScope;
     type Request = crate::skirout::base::access::v1::permission::GetEntityPermissionRequest;
     type Response = crate::skirout::base::access::v1::permission::GetEntityPermissionResponse;
+    const REPLY_CREDIT: bool = true;
     fn method() -> &'static crate::skir_client::Method<Self::Request, Self::Response> {
         crate::skirout::base::access::v1::permission::get_entity_permission_method()
     }

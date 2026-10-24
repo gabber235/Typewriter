@@ -10,6 +10,7 @@ import java.util.Collections
 import java.util.LinkedHashMap
 import java.util.Locale
 import kotlin.time.Duration
+import kotlin.time.TimeMark
 
 /** Immutable, case-insensitive, multi-value message headers with validated names and values. */
 class MessageHeaders private constructor(
@@ -279,12 +280,14 @@ interface MessageTransport {
      * A transport whose messages have a size limit splits a large reply into frames that its [request] and
      * [openReplyChannel] side reassembles, and fails with a
      * [TransferFailure][com.typewritermc.services.libs.communicator.transfer.TransferFailure] cause when a reply
-     * cannot be delivered complete. [limits] are the route's; null uses the transport's own. The default publishes
-     * the reply as one message.
+     * cannot be delivered complete. [limits] are the route's; null uses the transport's own. [received] marks when the
+     * request arrived, which starts the reply time to live: a framed reply still sending past it stops. The default
+     * publishes the reply as one message.
      */
     suspend fun reply(
         message: OutboundMessage,
         limits: TransportLimits? = null,
+        received: TimeMark? = null,
     ): TransportResult<Unit> = publish(message)
 
     /**

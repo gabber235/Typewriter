@@ -29,18 +29,21 @@ fn current_trace_headers() -> Option<Vec<types::HeaderEntry>> {
 
 /// Reply on the subject carried by a broker message.
 ///
-/// The input must contain `reply_to`. A reply above the generated chunk size travels as frames in
-/// credit windows (see [`crate::transport::plan_reply`]): the last frame of each window that is not
-/// the final frame goes out as a request on the requester's inbox, whose answer must grant the next
-/// window within [`crate::transport::INACTIVITY_MS`]. A frame that cannot be sent, a missing credit
-/// (`transport-credit-missing`), a failure answer (the slug of its failure) or an unanswered window
-/// end (`transport-credit-failed`) is followed by an interrupted frame so the requester fails at
-/// once. A reply above the reply ceiling sends one too large message and fails with
+/// The input must contain `reply_to`. A reply above the generated chunk size travels as frames
+/// (see [`crate::transport::plan_reply`]) paced by `pacing`. With credit, the last frame of each
+/// window that is not the final frame goes out as a request on the requester's inbox, whose answer
+/// must grant the next window within [`crate::transport_routes::FRAME_INACTIVITY_MS`]; without
+/// credit every frame streams at once. A frame that cannot be sent, a missing credit
+/// (`transport-credit-missing`), a failure answer (the slug of its failure), an unanswered window
+/// end (`transport-credit-failed`) or a reply past its time to live
+/// (`transport-transfer-interrupted`) is followed by an interrupted frame so the requester fails
+/// at once. A reply above the reply ceiling sends one too large message and fails with
 /// `transport-transfer-too-large`. Broker failures use `message-reply-failed`, and an input without
 /// `reply_to` fails with `message-no-reply-to`.
 pub async fn reply(
     reply_to: types::NatsMessage,
     data: impl Into<Vec<u8>>,
+    pacing: transport::ReplyPacing,
 ) -> Result<(), otel_wasi::Error> {
     let Some(subject) = reply_to.reply_to else {
         return Err(otel_wasi::Error::new(
@@ -58,8 +61,13 @@ pub async fn reply(
             ))
         }
         transport::PayloadPlan::Framed { payload_id, frames } => {
-            transport::send_reply_frames(&mut ReplySink { subject: &subject }, &payload_id, frames)
-                .await
+            transport::send_reply_frames(
+                &mut ReplySink { subject: &subject },
+                &payload_id,
+                frames,
+                pacing,
+            )
+            .await
         }
     }
 }
@@ -77,10 +85,11 @@ impl transport::FrameSink for ReplySink<'_> {
     async fn request(
         &mut self,
         frame: transport::PayloadFrame,
+        timeout_ms: u32,
     ) -> Result<types::NatsMessage, otel_wasi::Error> {
         core::request(
             reply_message(self.subject, frame.body, frame.headers),
-            transport::INACTIVITY_MS,
+            timeout_ms,
         )
         .await
         .error_with_slug("transport-credit-failed")
@@ -208,12 +217,13 @@ pub async fn persist(
 pub async fn reply_handler_result<R>(
     msg: types::NatsMessage,
     result: Result<R, otel_wasi::Error>,
+    pacing: transport::ReplyPacing,
 ) -> Result<(), otel_wasi::Error>
 where
     R: crate::SkirResponse,
 {
     match result {
-        Ok(response) => reply_response(msg, response).await,
+        Ok(response) => reply_response(msg, response, pacing).await,
         Err(error) => {
             let response = R::internal_error();
 
@@ -223,13 +233,17 @@ where
                 "messaging.response.success" = false,
             );
 
-            reply(msg, response.to_skir_bytes()).await?;
+            reply(msg, response.to_skir_bytes(), pacing).await?;
             Err(error)
         }
     }
 }
 
-async fn reply_response<R>(msg: types::NatsMessage, response: R) -> Result<(), otel_wasi::Error>
+async fn reply_response<R>(
+    msg: types::NatsMessage,
+    response: R,
+    pacing: transport::ReplyPacing,
+) -> Result<(), otel_wasi::Error>
 where
     R: crate::SkirResponse,
 {
@@ -247,7 +261,7 @@ where
         otel_wasi::main_attribute!("messaging.response.message" = message.clone(),);
     }
 
-    reply(msg, response.to_skir_bytes()).await?;
+    reply(msg, response.to_skir_bytes(), pacing).await?;
 
     match outcome {
         crate::SkirResponseOutcome::Success | crate::SkirResponseOutcome::DomainError => Ok(()),

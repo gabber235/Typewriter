@@ -499,23 +499,38 @@ static String? userIdFromSubject(
 }
 
 /** The manifest payload framing limits; a route that raises a ceiling carries its own. */
-function limits({ chunkBytes, windowFrames, requestMaxBytes, replyMaxBytes }: TransportLimits): Lines {
+function limits(manifest: TransportLimits): Lines {
   return lines(`/// Payload framing limits of the transport route manifest; routes that raise a ceiling carry their own.
-const transportLimits = TransportLimits(
-    chunkBytes: ${chunkBytes},
-    windowFrames: ${windowFrames},
-    requestMaxBytes: ${requestMaxBytes},
-    replyMaxBytes: ${replyMaxBytes},
-);`);
+const transportLimits = ${transportLimits(manifest, "\n    ")};`);
+}
+
+/**
+ * A Dart TransportLimits constructor call. The panel never answers a request, so whether replies
+ * wait for credit is no concern of its limits: every reply it receives streams without credit.
+ */
+function transportLimits(
+  { chunkBytes, windowFrames, requestMaxBytes, replyMaxBytes, frameInactivityMs }: TransportLimits,
+  separator: string,
+): string {
+  const fields = [
+    `chunkBytes: ${chunkBytes}`,
+    `windowFrames: ${windowFrames}`,
+    `requestMaxBytes: ${requestMaxBytes}`,
+    `replyMaxBytes: ${replyMaxBytes}`,
+    `frameInactivity: Duration(milliseconds: ${frameInactivityMs})`,
+  ];
+  return separator === " "
+    ? `TransportLimits(${fields.join(", ")})`
+    : `TransportLimits(${fields.map((field) => `${separator}${field},`).join("")}\n)`;
 }
 
 /** The limits a route operation carries: the manifest defaults or the route's raised ceilings. */
 function routeLimits(route: ResolvedRoute, defaults: TransportLimits): string {
-  const { chunkBytes, windowFrames, requestMaxBytes, replyMaxBytes } = route.limits;
+  const { requestMaxBytes, replyMaxBytes } = route.limits;
   if (requestMaxBytes === defaults.requestMaxBytes && replyMaxBytes === defaults.replyMaxBytes) {
     return "transportLimits";
   }
-  return `const TransportLimits(chunkBytes: ${chunkBytes}, windowFrames: ${windowFrames}, requestMaxBytes: ${requestMaxBytes}, replyMaxBytes: ${replyMaxBytes})`;
+  return `const ${transportLimits(route.limits, " ")}`;
 }
 
 function dartName(route: ResolvedRoute): string {

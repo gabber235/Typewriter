@@ -13,6 +13,7 @@ wit_bindgen::generate!({
     generate_all,
 });
 
+use wasmcloud_utils::transport;
 use wasmcloud_utils::wasmcloud::messaging::{self, core_handler::Guest, types};
 
 struct Component;
@@ -28,7 +29,11 @@ impl Guest for Component {
     async fn handle_message(message: types::NatsMessage) -> Result<(), otel_wasi::Error> {
         // Ignore unrelated subjects so the dependency remains safe to compose with other routes.
         if message.subject == "dependency.echo" {
-            messaging::reply(message.clone(), message.body).await?;
+            let pacing = transport::ReplyPacing {
+                credit: false,
+                received: std::time::Instant::now(),
+            };
+            messaging::reply(message.clone(), message.body, pacing).await?;
         }
         Ok::<(), otel_wasi::Error>(())
     }

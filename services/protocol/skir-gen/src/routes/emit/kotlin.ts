@@ -4,7 +4,7 @@ import { UNKNOWN_SLUG, type Outcome, type OutcomeResponse } from "../../outcomes
 import { importedKotlinSymbol, kotlinWrapperClass } from "../../symbols.js";
 import { lowerCamel, quoted } from "../../text.js";
 import { REPLY_INBOX } from "../grants.js";
-import type { Channel, TransportLimits } from "../manifest.js";
+import { ENVELOPE_HEADROOM_BYTES, type Channel, type TransportLimits } from "../manifest.js";
 import {
   clientSubject,
   hasSide,
@@ -91,16 +91,35 @@ ${arms.join("\n")}
 }
 
 /**
- * The `limits` argument of a route that raises a manifest ceiling, or nothing: a contract without
- * limits uses the transport's, which the services NATS transport is constructed with from
- * TRANSPORT_LIMITS.
+ * The `limits` argument of a route whose limits differ from the manifest defaults, or nothing: a
+ * contract without limits uses the transport's, which the services NATS transport is constructed
+ * with from TRANSPORT_LIMITS. A route differs when it raises a ceiling or when its framed replies
+ * wait for credit.
  */
 function routeLimits(route: ResolvedRoute, defaults: TransportLimits): string {
-  const raised = [
+  const changed = [
     ...(route.limits.requestMaxBytes === defaults.requestMaxBytes ? [] : [`requestMaxBytes = ${route.limits.requestMaxBytes}`]),
     ...(route.limits.replyMaxBytes === defaults.replyMaxBytes ? [] : [`replyMaxBytes = ${route.limits.replyMaxBytes}`]),
+    ...(route.limits.replyCredit === defaults.replyCredit ? [] : [`replyCredit = ${route.limits.replyCredit}`]),
   ];
-  return raised.length === 0 ? "" : `\n    limits = TRANSPORT_LIMITS.copy(${raised.join(", ")}),`;
+  return changed.length === 0 ? "" : `\n    limits = TRANSPORT_LIMITS.copy(${changed.join(", ")}),`;
+}
+
+/**
+ * The content ceilings of a route that raises a payload ceiling: the largest `bytes` content its
+ * request or reply moves, which is the raised ceiling less {@link ENVELOPE_HEADROOM_BYTES}. Code that
+ * admits content checks against these, so admitted content always fits the encoded payload.
+ */
+function contentCeilings(route: ResolvedRoute, defaults: TransportLimits): string[] {
+  const constant = (direction: "request" | "reply", maxBytes: number) => {
+    const name = `${route.name.toUpperCase()}_${direction.toUpperCase()}_CONTENT_MAX_BYTES`;
+    return `/** The largest content a ${route.name} ${direction} moves: its ${maxBytes} byte ceiling less the Skir envelope. */
+const val ${name}: Long = ${maxBytes - ENVELOPE_HEADROOM_BYTES}L`;
+  };
+  return [
+    ...(route.limits.requestMaxBytes === defaults.requestMaxBytes ? [] : [constant("request", route.limits.requestMaxBytes)]),
+    ...(route.limits.replyMaxBytes === defaults.replyMaxBytes ? [] : [constant("reply", route.limits.replyMaxBytes)]),
+  ];
 }
 
 function routeFile(
@@ -168,30 +187,39 @@ val ${scope}.${name} get() = ${contract}(
         break;
       }
     }
+    blocks.push(...contentCeilings(route, defaults));
   }
   return { path, code: kotlinFile(GENERATED_PACKAGE, imports, [...policies.values(), ...blocks]) };
 }
 
 /**
- * The manifest payload framing limits, which the services NATS transport is constructed with, and the
- * reply time to live, which bounds how long a service waits for replies it requested.
+ * The manifest payload framing limits, which the services NATS transport is constructed with. Their
+ * reply time to live also bounds how long a service waits for replies it requested.
  */
-function limitsFile({ chunkBytes, windowFrames, requestMaxBytes, replyMaxBytes, replyTtlMs }: TransportLimits): CodeGenerator.OutputFile {
+function limitsFile({
+  chunkBytes,
+  windowFrames,
+  requestMaxBytes,
+  replyMaxBytes,
+  frameInactivityMs,
+  replyTtlMs,
+  replyCredit,
+}: TransportLimits): CodeGenerator.OutputFile {
   const blocks = [
-    `/** Payload framing limits of the transport route manifest; routes that raise a ceiling carry their own. */
+    `/** Payload framing limits of the transport route manifest; routes whose limits differ carry their own. */
 val TRANSPORT_LIMITS =
     TransportLimits(
         chunkBytes = ${chunkBytes},
         windowFrames = ${windowFrames},
         requestMaxBytes = ${requestMaxBytes},
         replyMaxBytes = ${replyMaxBytes},
+        frameInactivity = ${frameInactivityMs}.milliseconds,
+        replyTtl = ${replyTtlMs}.milliseconds,
+        replyCredit = ${replyCredit},
     )`,
-    `/** How long a responder may send replies after it received a request, so no requester waits longer. */
-val TRANSPORT_REPLY_TTL: Duration = ${replyTtlMs}.milliseconds`,
   ];
   const imports = [
     `import ${COMMUNICATOR}.transfer.TransportLimits`,
-    "import kotlin.time.Duration",
     "import kotlin.time.Duration.Companion.milliseconds",
   ];
   return { path: "TransportLimits.kt", code: kotlinFile(GENERATED_PACKAGE, imports, blocks) };

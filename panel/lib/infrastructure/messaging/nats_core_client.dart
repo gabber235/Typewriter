@@ -194,9 +194,9 @@ final class NatsCoreClient implements NatsClient {
   /// [TransferTooLarge] before any frame is sent. A request larger than one
   /// chunk travels in credit windows, and the answer to its final frame is the
   /// reply. Every reply message passes through one [PayloadAssembler]: a plain
-  /// reply completes at once, each window end of a framed reply is answered on
-  /// its reply subject, and the reply completes when every frame arrived and
-  /// verified. Collection stops on every exit.
+  /// reply completes at once, and a framed reply, which streams without
+  /// credit, completes when every frame arrived and verified. Collection stops
+  /// on every exit.
   @override
   Future<NatsMessage> request(
     String subject,
@@ -238,7 +238,8 @@ final class NatsCoreClient implements NatsClient {
   ///
   /// Frames inside a window are published; the last frame of each window is
   /// sent as a request whose answer carries the credit, the index below which
-  /// the next frames may go, and is awaited for [frameInactivity]. The final
+  /// the next frames may go, and is awaited for the route's frame inactivity.
+  /// The final
   /// frame is sent as a request whose answer is the route's reply, collected
   /// like any other. A failure header on an answer fails the transfer, and a
   /// credit on the answer to the final frame is a protocol error. On any
@@ -285,7 +286,7 @@ final class NatsCoreClient implements NatsClient {
             subject,
             framed.bytes(index),
             headers: framed.headers(index),
-            timeout: frameInactivity,
+            timeout: limits.frameInactivity,
           ),
           cancelled,
         );
@@ -333,11 +334,10 @@ final class NatsCoreClient implements NatsClient {
   /// Sends one message as a request and collects its reply.
   ///
   /// The first reply message must arrive within [timeout] and every next frame
-  /// within [frameInactivity]. Window ends of a framed reply are answered with
-  /// their credit, so the responder never runs more than one window ahead and
-  /// the inbox buffers about one window. When [finalFrame], the message is the
-  /// last frame of a framed request, and a credit in its answer is a protocol
-  /// error rather than a reply.
+  /// within the route's frame inactivity. A framed reply streams without
+  /// credit, so the inbox buffers every frame of the largest reply. When
+  /// [finalFrame], the message is the last frame of a framed request, and a
+  /// credit in its answer is a protocol error rather than a reply.
   Future<NatsMessage> _collect(
     NatsConnection connection,
     String subject,
@@ -349,7 +349,7 @@ final class NatsCoreClient implements NatsClient {
     bool finalFrame = false,
   }) async {
     final maxFrames = limits.maxFrames(limits.replyMaxBytes);
-    final bufferedFrames = limits.windowFrames + _bufferedFrameMargin;
+    final bufferedFrames = maxFrames + _bufferedFrameMargin;
     final NatsRequestMany replies;
     try {
       replies = await connection.requestMany(
@@ -359,11 +359,9 @@ final class NatsCoreClient implements NatsClient {
         options: NatsRequestManyOptions(
           // Each frame restarts the inactivity bound below, so this lifetime
           // only ends a reply whose every frame arrived just in time.
-          timeout: timeout + frameInactivity * (maxFrames + 1),
+          timeout: timeout + limits.frameInactivity * (maxFrames + 1),
           maximumBufferedMessages: bufferedFrames,
-          maximumBufferedBytes:
-              min(limits.replyMaxBytes, limits.chunkBytes * bufferedFrames) +
-              _framingAllowance,
+          maximumBufferedBytes: limits.replyMaxBytes + _framingAllowance,
         ),
       );
     } on NatsClientException {
@@ -386,7 +384,7 @@ final class NatsCoreClient implements NatsClient {
       (message) {
         if (reply.isCompleted) return;
         deadline.cancel();
-        deadline = Timer(frameInactivity, () => fail(timedOut));
+        deadline = Timer(limits.frameInactivity, () => fail(timedOut));
         final messageHeaders = message.headers;
         if (_statusFailure(messageHeaders) case final failure?) {
           fail(failure);
@@ -401,15 +399,8 @@ final class NatsCoreClient implements NatsClient {
           );
           return;
         }
-        final inbox = message.replySubject;
         try {
-          final bytes = assembler.accept(
-            messageHeaders,
-            message.payload,
-            answer: inbox == null
-                ? null
-                : (answer) => _answerWindowEnd(connection, inbox, answer),
-          );
+          final bytes = assembler.accept(messageHeaders, message.payload);
           if (bytes != null) {
             reply.complete(NatsMessage(bytes, subject: message.subject));
           }
@@ -429,21 +420,6 @@ final class NatsCoreClient implements NatsClient {
       await subscription.cancel();
       await replies.stop();
     }
-  }
-
-  /// Answers a window end of a framed reply on its reply subject. A lost
-  /// answer stalls the responder, which then gives the reply up; the request
-  /// fails on its inactivity bound.
-  void _answerWindowEnd(
-    NatsConnection connection,
-    String inbox,
-    NatsHeaders answer,
-  ) {
-    unawaited(
-      connection
-          .publish(inbox, const [], headers: answer)
-          .catchError((Object _) {}),
-    );
   }
 
   @override
@@ -664,8 +640,8 @@ final class NatsCoreClient implements NatsClient {
 /// Room for the headers of the buffered frames on top of their bytes.
 const _framingAllowance = 64 * 1024;
 
-/// Reply messages buffered beyond one credit window: a duplicate frame and an
-/// interrupted frame may arrive while a window is still being consumed.
+/// Reply messages buffered beyond the frames of the largest reply: a duplicate
+/// frame and an interrupted frame may arrive while the reply is consumed.
 const _bufferedFrameMargin = 2;
 
 /// Waits for [operation] unless [cancelled] completes first, which fails with

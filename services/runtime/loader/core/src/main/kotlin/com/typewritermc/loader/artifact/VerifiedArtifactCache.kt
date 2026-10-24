@@ -4,7 +4,6 @@ import com.typewritermc.loader.rollout.VerifiedArtifactSource
 import com.typewritermc.services.libs.filetransfer.blob.ArtifactDigest
 import com.typewritermc.services.libs.filetransfer.blob.BlobEndpoint
 import com.typewritermc.services.libs.filetransfer.blob.BlobResult
-import com.typewritermc.services.libs.filetransfer.blob.MAXIMUM_TRANSFERRED_BLOB_SIZE
 import com.typewritermc.services.libs.filetransfer.blob.requireStored
 import com.typewritermc.services.libs.filetransfer.blob.requireValue
 import java.nio.file.Path
@@ -22,7 +21,7 @@ class VerifiedArtifactCache(
     override suspend fun fetch(digest: ArtifactDigest): Path {
         if (cache.metadata(digest) is BlobResult.Success) return cache.pathFor(digest)
         val expected = source.metadata(digest).requireValue()
-        require(expected.digest == digest && expected.size <= MAXIMUM_TRANSFERRED_BLOB_SIZE) { "Artifact $digest cannot be transferred." }
+        require(expected.digest == digest && expected.size <= TRANSFERRED_BLOB_MAX_BYTES) { "Artifact $digest cannot be transferred." }
         cache.store(expected, source.fetch(digest).requireValue()).requireStored()
         return cache.pathFor(digest)
     }

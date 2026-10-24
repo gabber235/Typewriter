@@ -170,11 +170,11 @@ abstract interface class NatsClient {
   /// complete reply.
   ///
   /// A payload above a ceiling of [limits] fails with [TransferTooLarge]; a
-  /// request fails before any frame is sent. A large payload travels as
-  /// frames in credit windows in either direction, failing with a
-  /// [TransferFailure] when it cannot complete. The first reply message must
-  /// arrive within [timeout] and each next frame within [frameInactivity].
-  /// When [cancelled] completes first, the request stops and fails with
+  /// request fails before any frame is sent. A large request travels as
+  /// frames in credit windows and a large reply as streamed frames, failing
+  /// with a [TransferFailure] when it cannot complete. The first reply message
+  /// must arrive within [timeout] and each next frame within the frame
+  /// inactivity of [limits]. When [cancelled] completes first, the request stops and fails with
   /// [TransferCancelled]. Headers are transport metadata and are not part of
   /// the payload contract.
   Future<NatsMessage> request(

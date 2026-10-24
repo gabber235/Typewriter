@@ -21,12 +21,23 @@ use wasmcloud_utils::transport::{
     ConnectionSession, GrantSet, OrganizationActorScope, SubjectToken, UserScope,
 };
 use wasmcloud_utils::transport_routes::{
-    OrganizationActorRole, PANEL_RESPONSE_LIMIT, UserRole, panel_reply_inbox_prefix,
+    OrganizationActorRole, UserRole, panel_reply_inbox_prefix,
 };
 
-use crate::common::{
-    AuthentikClaims, TrustedUserProfile, User, build_permissions, response_permission,
-};
+use crate::common::{AuthentikClaims, TrustedUserProfile, User, build_permissions};
+
+/// The NATS policy of a panel connection: exactly its granted subjects and no response permission.
+///
+/// Replies to the panel stream without credit and the panel serves no request, so it never has to
+/// answer a message. A response permission would let a panel user answer its own message on a
+/// subject it both publishes and subscribes to, and so publish once to any reply subject it names.
+pub(crate) fn panel_permissions(grants: GrantSet) -> Permissions {
+    build_permissions(
+        grants.publish.into_iter().collect(),
+        grants.subscribe.into_iter().collect(),
+        None,
+    )
+}
 
 /// Derive NATS policy and tags for one authenticated panel user.
 ///
@@ -124,11 +135,7 @@ pub async fn handle_panel_user(
         }
     }
 
-    let permissions = build_permissions(
-        grants.publish.into_iter().collect(),
-        grants.subscribe.into_iter().collect(),
-        PANEL_RESPONSE_LIMIT.map(response_permission),
-    );
+    let permissions = panel_permissions(grants);
 
     main_attribute!(
         "auth.permissions.publish.allow.count" = permissions.publish.allow.len() as i64,

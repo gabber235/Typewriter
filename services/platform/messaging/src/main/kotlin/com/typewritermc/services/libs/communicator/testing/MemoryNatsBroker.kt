@@ -8,7 +8,6 @@ import com.typewritermc.services.libs.communicator.nats.NatsClientSubscription
 import com.typewritermc.services.libs.communicator.nats.NatsConnection
 import com.typewritermc.services.libs.communicator.nats.NatsConnectionConfiguration
 import com.typewritermc.services.libs.communicator.nats.NatsMessageTransport
-import com.typewritermc.services.libs.communicator.transfer.FRAME_INACTIVITY
 import com.typewritermc.services.libs.communicator.transfer.TransportLimits
 import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.flow.Flow
@@ -54,10 +53,7 @@ class MemoryNatsBroker(
     val published: List<BrokerMessage> get() = synchronized(lock) { history.toList() }
 
     /** A connected transport of one client of this broker. */
-    suspend fun transport(
-        limits: TransportLimits,
-        inactivity: Duration = FRAME_INACTIVITY,
-    ): NatsMessageTransport {
+    suspend fun transport(limits: TransportLimits): NatsMessageTransport {
         val prefix = "_INBOX.${UUID.randomUUID().toString().replace("-", "")}."
         val connection =
             NatsConnection(
@@ -66,7 +62,7 @@ class MemoryNatsBroker(
                 { _, _ -> Client() },
             )
         connection.connect()
-        return NatsMessageTransport(connection, limits, inactivity)
+        return NatsMessageTransport(connection, limits)
     }
 
     private fun publish(message: NatsClientMessage) {

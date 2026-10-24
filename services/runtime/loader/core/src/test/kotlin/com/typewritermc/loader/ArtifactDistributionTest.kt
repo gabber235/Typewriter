@@ -20,6 +20,7 @@ import com.typewritermc.loader.api.RuntimePlacement
 import com.typewritermc.loader.api.artifact.ProducerMetadata
 import com.typewritermc.loader.api.artifact.PublishResult
 import com.typewritermc.loader.api.artifact.PublishSharedArtifact
+import com.typewritermc.loader.api.artifact.SharedArtifactAccess
 import com.typewritermc.loader.api.artifact.SharedArtifactId
 import com.typewritermc.loader.api.artifact.SharedArtifactProvenance
 import com.typewritermc.loader.artifact.ArtifactCoordinate
@@ -29,6 +30,7 @@ import com.typewritermc.loader.artifact.DeploymentArtifact
 import com.typewritermc.loader.artifact.FileCandidateRepository
 import com.typewritermc.loader.artifact.FileDigestBlobStore
 import com.typewritermc.loader.artifact.StableRealmArtifactRoutes
+import com.typewritermc.loader.artifact.TRANSFERRED_BLOB_MAX_BYTES
 import com.typewritermc.loader.artifact.toApi
 import com.typewritermc.loader.artifact.toSkir
 import com.typewritermc.loader.deployment.DeploymentContent
@@ -79,6 +81,7 @@ import io.kotest.assertions.throwables.shouldThrow
 import io.kotest.matchers.collections.shouldContainExactly
 import io.kotest.matchers.shouldBe
 import io.kotest.matchers.shouldNotBe
+import io.kotest.matchers.string.shouldContain
 import io.opentelemetry.api.trace.propagation.W3CTraceContextPropagator
 import io.opentelemetry.context.propagation.ContextPropagators
 import kotlinx.coroutines.Dispatchers
@@ -115,13 +118,17 @@ import skirout.service.v1.topology.RealmInstance
 import skirout.service.v1.topology.WatchHostExecutionResponse
 import java.nio.file.Files
 import java.nio.file.Path
+import java.nio.file.attribute.FileTime
+import java.time.Clock
 import java.time.Instant
+import java.time.ZoneOffset
 import java.util.zip.ZipEntry
 import java.util.zip.ZipOutputStream
 import kotlin.time.Duration
 import kotlin.time.Duration.Companion.milliseconds
 import kotlin.time.Duration.Companion.seconds
 import kotlin.time.TestTimeSource
+import java.time.Duration as JavaDuration
 
 val ArtifactDistributionTest by testSuite {
     test("Realm deployment selection requires one unambiguous Realm host and permits no primary engine") {
@@ -375,17 +382,38 @@ val ArtifactDistributionTest by testSuite {
         }
     }
 
-    test("storing content that is already present succeeds without change, so a lost reply can be retried") {
+    test("storing content that is already present succeeds and refreshes it, so a lost reply can be retried") {
         runTest {
-            val store = FileDigestBlobStore(Files.createTempDirectory("typewriter-blobs-retry"))
+            val now = Instant.parse("2026-10-24T12:00:00Z")
+            val store = FileDigestBlobStore(Files.createTempDirectory("typewriter-blobs-retry"), Clock.fixed(now, ZoneOffset.UTC))
             val bytes = "retried artifact content".encodeToByteArray()
             val expected = BlobMetadata(ArtifactDigest.sha256(bytes), bytes.size.toLong())
+            store.store(expected, bytes) shouldBe StoreResult.Stored(expected)
+            val path = store.pathFor(expected.digest)
+            Files.setLastModifiedTime(path, FileTime.from(now.minus(JavaDuration.ofDays(30))))
 
             store.store(expected, bytes) shouldBe StoreResult.Stored(expected)
-            val stored = Files.getLastModifiedTime(store.pathFor(expected.digest))
-            store.store(expected, bytes) shouldBe StoreResult.Stored(expected)
 
-            Files.getLastModifiedTime(store.pathFor(expected.digest)) shouldBe stored
+            // Collection counts the grace period from the latest store, so publication can still reference the blob.
+            Files.getLastModifiedTime(path).toInstant() shouldBe now
+            store.collectGarbage(emptySet()) shouldBe 0
+            store.fetch(expected.digest).shouldSucceed() shouldBe bytes
+        }
+    }
+
+    test("storing verified content over a corrupt blob repairs it, while unverified content leaves it") {
+        runTest {
+            val store = FileDigestBlobStore(Files.createTempDirectory("typewriter-blobs-repair"))
+            val bytes = "content that is repaired".encodeToByteArray()
+            val expected = BlobMetadata(ArtifactDigest.sha256(bytes), bytes.size.toLong())
+            store.store(expected, bytes) shouldBe StoreResult.Stored(expected)
+            val corrupt = "content that is r3paired".encodeToByteArray()
+            Files.write(store.pathFor(expected.digest), corrupt)
+
+            (store.store(expected, "forged content of the size".encodeToByteArray()) is StoreResult.Invalid) shouldBe true
+            Files.readAllBytes(store.pathFor(expected.digest)) shouldBe corrupt
+
+            store.store(expected, bytes) shouldBe StoreResult.Stored(expected)
             store.fetch(expected.digest).shouldSucceed() shouldBe bytes
         }
     }
@@ -435,6 +463,41 @@ val ArtifactDistributionTest by testSuite {
                         }.groupingBy { it.subject.endsWith(".shared.blob.store") }
                         .eachCount()
                 frames shouldBe mapOf(true to 81, false to 81)
+            } finally {
+                router.stop()
+                harness.close()
+            }
+        }
+    }
+
+    test("a blob above the transfer ceiling is answered invalid from its size without being read") {
+        withContext(Dispatchers.Default) {
+            val broker = MemoryNatsBroker()
+            val harness = TelemetryTestHarness.create()
+            val propagators = ContextPropagators.create(W3CTraceContextPropagator.getInstance())
+            val root = Files.createTempDirectory("typewriter-oversized-blobs")
+            val realmBlobs = FileDigestBlobStore(root)
+            val digest = ArtifactDigest.sha256("an oversized realm jar".encodeToByteArray())
+            // A sparse file: its size exceeds the ceiling without writing the bytes.
+            val path = realmBlobs.pathFor(digest)
+            Files.createDirectories(path.parent)
+            java.io.RandomAccessFile(path.toFile(), "rw").use { it.setLength(TRANSFERRED_BLOB_MAX_BYTES + 1) }
+            val service = SharedArtifactService("quests", realmBlobs, FileSharedArtifactRepository(root.resolve("shared.cbor")))
+            val shared =
+                object : SharedArtifactAccess by service {
+                    override suspend fun fetch(digest: ArtifactDigest): BlobResult<ByteArray> = error("An oversized blob must not be read")
+                }
+            val address = RealmRouteScope(realmId = "quests", organizationId = "writers")
+            val realmHost = Communicator(broker.transport(TRANSPORT_LIMITS), harness.telemetry, propagators)
+            val router = realmHost.createRouter(communicatorRoutes { StableRealmArtifactRoutes(shared).register(this, address) }, this)
+            try {
+                router.start() shouldBe RouterResult.Success
+                val remote =
+                    CommunicatorBlobEndpoint(Communicator(broker.transport(TRANSPORT_LIMITS), harness.telemetry, propagators), address)
+
+                val fetched = remote.fetch(digest)
+
+                (fetched as BlobResult.Invalid).reason shouldContain "transfer ceiling"
             } finally {
                 router.stop()
                 harness.close()

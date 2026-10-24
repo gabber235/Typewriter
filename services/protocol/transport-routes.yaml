@@ -5,12 +5,15 @@
 # declarations below; backend/AGENTS.md describes the subject families.
 
 # Payload framing shared by every transport. A payload above chunk_bytes travels as frames of at
-# most chunk_bytes in credit windows of window_frames: the receiver grants each next window.
-# Requests are single messages unless a route raises request_max_bytes; replies may be framed up to
-# reply_max_bytes. A payload above its ceiling fails as too large before any frame is sent.
-# reply_ttl_ms bounds a whole exchange. The generator derives each role's NATS response limit from
-# the largest framed reply it serves.
-limits: { chunk_bytes: 524288, window_frames: 8, request_max_bytes: 524288, reply_max_bytes: 33554432, reply_ttl_ms: 300000 }
+# most chunk_bytes. Requests are single messages unless a route raises request_max_bytes; a framed
+# request flows in credit windows of window_frames, the receiver granting each next window. Replies
+# may be framed up to reply_max_bytes. A reply waits for credit only on routes no panel role calls:
+# granting credit is a NATS response, and panel connections hold no response permission, so replies
+# to the panel stream without credit. A payload above its ceiling fails as too large before any
+# frame is sent. A sender waits frame_inactivity_ms for a credit and a receiver as long for the next
+# frame. reply_ttl_ms bounds a whole exchange: a reply still sending then stops as interrupted. The
+# generator derives each service role's NATS response limit from the largest framed reply it serves.
+limits: { chunk_bytes: 524288, window_frames: 8, request_max_bytes: 524288, reply_max_bytes: 33554432, frame_inactivity_ms: 30000, reply_ttl_ms: 300000 }
 
 roles:
   authenticated_user: { side: panel, personal: user }

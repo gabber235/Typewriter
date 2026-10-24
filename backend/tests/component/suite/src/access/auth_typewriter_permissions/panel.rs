@@ -125,21 +125,9 @@ async fn panel_login_upserts_user_and_grants_personal_permissions(
             .chain(&response.permissions.subscribe.allow)
             .all(|subject| !subject.contains('>'))
     );
-    // The panel answers each window end of a framed reply with exactly one credit, within the
-    // reply TTL.
-    let response_permission = response
-        .permissions
-        .response
-        .as_ref()
-        .ok_or_else(|| anyhow::anyhow!("panel response permission missing"))?;
-    assert_eq!(response_permission.max_messages, Some(1));
-    assert_eq!(
-        response_permission
-            .ttl
-            .as_ref()
-            .map(|duration| duration.milliseconds),
-        Some(300_000)
-    );
+    // Replies to the panel stream without credit, so a panel connection never answers a message:
+    // a response permission would let it publish once to any reply subject it names.
+    assert!(response.permissions.response.is_none());
     let database = context
         .extension::<DatabaseHandle>()
         .ok_or_else(|| anyhow::anyhow!("database handle missing"))?;

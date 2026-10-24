@@ -77,8 +77,9 @@ const ROLES = `roles:
 
 /** The committed payload framing limits, appended so inline route lines keep their positions. */
 const LIMITS = (() => {
-  const { chunkBytes, windowFrames, requestMaxBytes, replyMaxBytes, replyTtlMs } = committedManifest().limits;
-  return `limits: { chunk_bytes: ${chunkBytes}, window_frames: ${windowFrames}, request_max_bytes: ${requestMaxBytes}, reply_max_bytes: ${replyMaxBytes}, reply_ttl_ms: ${replyTtlMs} }\n`;
+  const { chunkBytes, windowFrames, requestMaxBytes, replyMaxBytes, frameInactivityMs, replyTtlMs } =
+    committedManifest().limits;
+  return `limits: { chunk_bytes: ${chunkBytes}, window_frames: ${windowFrames}, request_max_bytes: ${requestMaxBytes}, reply_max_bytes: ${replyMaxBytes}, frame_inactivity_ms: ${frameInactivityMs}, reply_ttl_ms: ${replyTtlMs} }\n`;
 })();
 
 /**

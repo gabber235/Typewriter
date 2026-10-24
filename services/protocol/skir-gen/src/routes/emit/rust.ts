@@ -17,7 +17,7 @@ import {
 } from "../manifest.js";
 import { methodResponses } from "../../outcomes.js";
 import type { ResolvedRoutes } from "../resolve.js";
-import { sideResponseLimit } from "../responses.js";
+import { serviceResponseLimit } from "../responses.js";
 import { scopeParameters } from "../subject.js";
 import { emitDispatchers } from "./rust_dispatch.js";
 import { emitResponses } from "./rust_responses.js";
@@ -192,11 +192,11 @@ function emitGrants({ roles, routes }: ResolvedRoutes): string[] {
 }
 
 /**
- * The manifest payload framing limits, which bound component replies, and the response limits of
- * the panel and service connections, which the backend grants.
+ * The manifest payload framing limits, which bound component replies, and the response limit of
+ * service connections, which the backend grants. Panel connections get no response permission.
  */
 function emitLimits({ limits, roles, routes }: ResolvedRoutes): string[] {
-  const { chunkBytes, windowFrames, replyMaxBytes, replyTtlMs } = limits;
+  const { chunkBytes, windowFrames, replyMaxBytes, frameInactivityMs, replyTtlMs } = limits;
   const option = (value: number | null) => (value === null ? "None" : `Some(${value})`);
   return [
     "/// The most bytes of an encoded payload that one frame carries.",
@@ -205,14 +205,13 @@ function emitLimits({ limits, roles, routes }: ResolvedRoutes): string[] {
     `pub const WINDOW_FRAMES: usize = ${windowFrames};`,
     "/// The largest encoded reply a backend component sends; components serve no route that raises it.",
     `pub const REPLY_MAX_BYTES: usize = ${replyMaxBytes};`,
+    "/// How long in milliseconds a sender waits for a credit and a receiver for the next frame.",
+    `pub const FRAME_INACTIVITY_MS: u32 = ${frameInactivityMs};`,
     "/// How long in milliseconds a responder may send replies after it received a request.",
     `pub const REPLY_TTL_MS: i64 = ${replyTtlMs};`,
-    "/// How many messages a panel connection may send in answer to one received request: one credit",
-    "/// per window end of a framed reply. None when the panel never answers.",
-    `pub const PANEL_RESPONSE_LIMIT: Option<u32> = ${option(sideResponseLimit("panel", roles, routes))};`,
     "/// How many messages a service connection may send in answer to one received request: the frames",
     "/// of the largest reply any service role serves. None when no service role answers.",
-    `pub const SERVICE_RESPONSE_LIMIT: Option<u32> = ${option(sideResponseLimit("service", roles, routes))};`,
+    `pub const SERVICE_RESPONSE_LIMIT: Option<u32> = ${option(serviceResponseLimit(roles, routes))};`,
   ];
 }
 

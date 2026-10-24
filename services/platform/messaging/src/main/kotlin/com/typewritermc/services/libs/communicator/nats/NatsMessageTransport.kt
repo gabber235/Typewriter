@@ -3,8 +3,8 @@ package com.typewritermc.services.libs.communicator.nats
 import com.typewritermc.services.libs.communicator.address.AddressPattern
 import com.typewritermc.services.libs.communicator.address.MessageAddress
 import com.typewritermc.services.libs.communicator.transfer.Assembly
-import com.typewritermc.services.libs.communicator.transfer.FRAME_INACTIVITY
 import com.typewritermc.services.libs.communicator.transfer.FrameChannel
+import com.typewritermc.services.libs.communicator.transfer.FramePacing
 import com.typewritermc.services.libs.communicator.transfer.PayloadAssembler
 import com.typewritermc.services.libs.communicator.transfer.PayloadFrame
 import com.typewritermc.services.libs.communicator.transfer.PayloadHeaders
@@ -49,22 +49,23 @@ import kotlinx.coroutines.withContext
 import kotlinx.coroutines.withTimeoutOrNull
 import java.util.UUID
 import kotlin.time.Duration
+import kotlin.time.TimeMark
 
 /**
  * Adapts core NATS messaging through a borrowed connected [NatsConnection].
  *
  * Operations fail when disconnected. Subscription creation waits for activation and flushes before returning so
- * callers can safely issue a subsequent request. Payloads above [TransportLimits.chunkBytes] travel as frames in
- * credit windows: [reply] splits large replies on the requester's reply address, [request] splits large requests on
- * the route address when the route allows it, and both sides answer each window end with the next grant, so
+ * callers can safely issue a subsequent request. Payloads above [TransportLimits.chunkBytes] travel as frames:
+ * [reply] splits large replies on the requester's reply address, in credit windows when the route's
+ * [TransportLimits.replyCredit] holds and streamed otherwise, and [request] splits large requests on the route
+ * address in credit windows when the route allows it. Receivers answer each window end with the next grant, so
  * communicators only ever see complete payloads. [limits] are the manifest defaults; a call may pass its route's.
- * [inactivity] bounds how long a sender waits for a credit and a requester for the next frame.
+ * Their frame inactivity bounds how long a sender waits for a credit and a requester for the next frame.
  * No persistence or application delivery acknowledgment is added.
  */
 class NatsMessageTransport(
     private val connection: NatsConnection,
     private val limits: TransportLimits,
-    private val inactivity: Duration = FRAME_INACTIVITY,
 ) : MessageTransport {
     override val system: MessagingSystem = MessagingSystem.of("nats")
 
@@ -72,7 +73,7 @@ class NatsMessageTransport(
     override suspend fun openReplyChannel(): TransportResult<ReplyChannel> =
         when (val inbox = openInbox()) {
             is TransportResult.Failure -> inbox
-            is TransportResult.Success -> TransportResult.Success(NatsReplyChannel(inbox.value, limits, inactivity, ::publish))
+            is TransportResult.Success -> TransportResult.Success(NatsReplyChannel(inbox.value, limits, ::publish))
         }
 
     /** Publishes [message] when the connection is currently usable. */
@@ -82,16 +83,20 @@ class NatsMessageTransport(
     }
 
     /**
-     * Publishes a reply as one plain message, or as frames in credit windows when it exceeds the chunk size.
+     * Publishes a reply as one plain message, or as frames when it exceeds the chunk size.
      *
      * A reply above the route's [TransportLimits.replyMaxBytes] sends one too large failure message and fails with
-     * [TransferTooLarge]. The last frame of each window waits for the requester's credit, so the reply never runs
-     * more than one window ahead. A failure part way is followed by an interrupted frame, so the requester fails at
+     * [TransferTooLarge]. When the route's [TransportLimits.replyCredit] holds, the last frame of each window waits
+     * for the requester's credit, so the reply never runs more than one window ahead; otherwise every frame streams
+     * at once. A framed reply to a request [received] longer ago than the route's reply time to live stops as
+     * [TransferInterrupted][com.typewritermc.services.libs.communicator.transfer.TransferInterrupted], since NATS no
+     * longer delivers its frames. A failure part way is followed by an interrupted frame, so the requester fails at
      * once, and the failure is returned.
      */
     override suspend fun reply(
         message: OutboundMessage,
         limits: TransportLimits?,
+        received: TimeMark?,
     ): TransportResult<Unit> {
         val route = limits ?: this.limits
         return when (val plan = route.planPayload(message.payload, route.replyMaxBytes)) {
@@ -107,7 +112,13 @@ class NatsMessageTransport(
             }
 
             is PayloadPlan.Framed -> {
-                val sent = plan.sendInWindows(MessageFrames(message, route), route.windowFrames, false, inactivity, inactivity)
+                val pacing =
+                    FramePacing(
+                        windowFrames = route.windowFrames.takeIf { route.replyCredit },
+                        inactivity = route.frameInactivity,
+                        deadline = received?.plus(route.replyTtl),
+                    )
+                val sent = plan.sendInWindows(MessageFrames(message, route), pacing, false, route.frameInactivity)
                 when (sent) {
                     is TransportResult.Failure -> sent
                     is TransportResult.Success -> TransportResult.Success(Unit)
@@ -143,7 +154,8 @@ class NatsMessageTransport(
             }
 
             is PayloadPlan.Framed -> {
-                when (val sent = plan.sendInWindows(MessageFrames(message, route), route.windowFrames, true, inactivity, timeout)) {
+                val pacing = FramePacing(route.windowFrames, route.frameInactivity)
+                when (val sent = plan.sendInWindows(MessageFrames(message, route), pacing, true, timeout)) {
                     is TransportResult.Failure -> sent
                     is TransportResult.Success -> TransportResult.Success(requireNotNull(sent.value))
                 }
@@ -179,7 +191,7 @@ class NatsMessageTransport(
         coroutineScope {
             val frames = deliveries.produceIn(this)
             try {
-                frames.receiveAssembled(PayloadAssembler(route, route.replyMaxBytes, inactivity = inactivity), timeout)
+                frames.receiveAssembled(PayloadAssembler(route, route.replyMaxBytes), timeout, route.frameInactivity)
             } finally {
                 frames.cancel()
             }
@@ -189,6 +201,7 @@ class NatsMessageTransport(
     private suspend fun ReceiveChannel<TransportDelivery>.receiveAssembled(
         assembler: PayloadAssembler,
         timeout: Duration,
+        inactivity: Duration,
     ): TransportResult<InboundMessage> {
         var wait = timeout
         while (true) {
@@ -288,14 +301,13 @@ private class NatsInbox(
 private class NatsReplyChannel(
     private val inbox: NatsInbox,
     private val limits: TransportLimits,
-    private val inactivity: Duration,
     private val publish: suspend (OutboundMessage) -> TransportResult<Unit>,
 ) : ReplyChannel {
     override val address: MessageAddress get() = inbox.address
 
     override val deliveries: Flow<TransportDelivery> =
         flow {
-            val assembler = PayloadAssembler(limits, limits.replyMaxBytes, inactivity = inactivity)
+            val assembler = PayloadAssembler(limits, limits.replyMaxBytes)
             inbox.subscription.deliveries
                 .mapNotNull { delivery ->
                     when (delivery) {

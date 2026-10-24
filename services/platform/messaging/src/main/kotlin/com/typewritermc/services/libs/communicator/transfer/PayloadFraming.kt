@@ -12,28 +12,37 @@ import java.io.ByteArrayOutputStream
 import java.util.UUID
 import kotlin.time.ComparableTimeMark
 import kotlin.time.Duration
-import kotlin.time.Duration.Companion.seconds
+import kotlin.time.TimeMark
 import kotlin.time.TimeSource
 
 /**
  * Bounds how a transport splits one payload, a request or a reply, into frames.
  *
  * A payload of at most [chunkBytes] travels as one plain message. A larger one travels as frames of at most
- * [chunkBytes] in windows of [windowFrames]: the receiver grants each next window, so a sender never runs more
- * than one window ahead of a slow receiver. A payload above its direction's ceiling is never sent. Requests are
- * single messages unless a route raises [requestMaxBytes]; replies may be framed up to [replyMaxBytes]. The
- * generated `TRANSPORT_LIMITS` carries the manifest defaults, and a route that raises a ceiling carries its own.
+ * [chunkBytes]. A framed request flows in windows of [windowFrames]: the receiver grants each next window, so a
+ * sender never runs more than one window ahead of a slow receiver. A framed reply does too when [replyCredit]
+ * holds, and otherwise streams every frame without waiting; the generator enables reply credit only on routes no
+ * panel role calls, because granting a credit is a NATS response and panel connections hold no response
+ * permission. A payload above its direction's ceiling is never sent. Requests are single messages unless a route
+ * raises [requestMaxBytes]; replies may be framed up to [replyMaxBytes]. A sender waits [frameInactivity] for a
+ * credit and a receiver as long for the next frame. A responder may send its reply for [replyTtl] after it
+ * received the request; a framed reply still sending then stops as interrupted. The generated `TRANSPORT_LIMITS`
+ * carries the manifest defaults, and a route whose limits differ carries its own.
  */
 data class TransportLimits(
     val chunkBytes: Int,
     val windowFrames: Int,
     val requestMaxBytes: Long,
     val replyMaxBytes: Long,
+    val frameInactivity: Duration,
+    val replyTtl: Duration,
+    val replyCredit: Boolean,
 ) {
     init {
         require(chunkBytes > 0) { "Transfer chunk size must be positive." }
         require(windowFrames > 0) { "A credit window holds at least one frame." }
         require(requestMaxBytes >= chunkBytes && replyMaxBytes >= chunkBytes) { "A direction carries at least one chunk." }
+        require(frameInactivity.isPositive() && replyTtl.isPositive()) { "Frame inactivity and reply time to live must be positive." }
     }
 
     /** Whether a request of this route may arrive in frames, so its server must assemble. */
@@ -57,7 +66,9 @@ class TransferTooLarge(
 ) : TransferFailure("The payload of $size bytes exceeds the $limit byte transfer limit")
 
 /** The sender stopped part way, so the payload can never complete. */
-class TransferInterrupted : TransferFailure("The sender stopped before every frame was sent")
+class TransferInterrupted(
+    reason: String = "The sender stopped before every frame was sent",
+) : TransferFailure(reason)
 
 /** The receiver already holds its bound of assembling bytes and refused another payload. */
 class TransferBusy : TransferFailure("The receiver is assembling as many bytes as it holds")
@@ -69,12 +80,6 @@ class TransferBusy : TransferFailure("The receiver is assembling as many bytes a
 class TransferRejected(
     reason: String,
 ) : TransferFailure(reason)
-
-/**
- * How long a sender waits for a window's credit and a receiver keeps an assembly without a new frame. The reply time
- * to live still bounds a whole exchange.
- */
-internal val FRAME_INACTIVITY: Duration = 30.seconds
 
 /** Header names and failure values of the payload framing wire format, shared with the panel and backend transports. */
 internal object PayloadHeaders {
@@ -96,6 +101,9 @@ internal object PayloadHeaders {
 
     /** Answer to a payload that would exceed the receiver's bound of assembling bytes. */
     const val BUSY = "busy"
+
+    /** Answer to a window end whose payload broke the framing rules, so the receiver dropped it. */
+    const val REJECTED = "rejected"
 
     val all = listOf(PAYLOAD, CHUNK, SIZE, SHA256, FAILURE, LIMIT, CREDIT)
 }
@@ -192,30 +200,42 @@ internal interface FrameChannel {
 }
 
 /**
- * Sends this plan in credit windows of [windowFrames]. Frames inside a window are published; the last frame of each
- * window is sent as a request, and its answer carries [PayloadHeaders.CREDIT], the index below which the next frames
- * may go.
+ * How a sender paces the frames of one payload: in credit windows of [windowFrames], or streamed without waiting
+ * when [windowFrames] is null. A sender with a [deadline] stops as interrupted once it passes, and never waits for
+ * a credit beyond it.
+ */
+internal class FramePacing(
+    val windowFrames: Int?,
+    val inactivity: Duration,
+    val deadline: TimeMark? = null,
+)
+
+/**
+ * Sends this plan as [pacing] says. Frames inside a window are published; the last frame of each window is sent as a
+ * request, and its answer carries [PayloadHeaders.CREDIT], the index below which the next frames may go. A streamed
+ * payload has a single window holding every frame.
  *
  * When [finalAnswered], the final frame is also sent as a request: its answer is the route's response, awaited for
  * [responseTimeout] and returned. Otherwise the final frame is only published and the result is null. A failure
  * header on an answer fails the transfer, and a credit on the answer to a final request frame is a protocol error,
- * never a response. On any failure the receiver is told with an interrupted frame.
+ * never a response. On any failure, including a passed deadline, the receiver is told with an interrupted frame.
  */
 internal suspend fun PayloadPlan.Framed.sendInWindows(
     channel: FrameChannel,
-    windowFrames: Int,
+    pacing: FramePacing,
     finalAnswered: Boolean,
-    inactivity: Duration,
     responseTimeout: Duration,
 ): TransportResult<InboundMessage?> {
-    var granted = windowFrames
+    var granted = pacing.windowFrames ?: frames.size
     var index = 0
     while (true) {
         val windowEnd = minOf(granted, frames.size)
         while (index < windowEnd - 1) {
+            pacing.expired()?.let { return interrupted(channel, it) }
             channel.publish(frames[index]).onFailure { failure -> return interrupted(channel, failure) }
             index++
         }
+        pacing.expired()?.let { return interrupted(channel, it) }
         val final = index == frames.size - 1
         if (final && !finalAnswered) {
             return when (val published = channel.publish(frames[index])) {
@@ -223,8 +243,9 @@ internal suspend fun PayloadPlan.Framed.sendInWindows(
                 is TransportResult.Success -> TransportResult.Success(null)
             }
         }
+        val creditWait = pacing.deadline?.let { minOf(pacing.inactivity, -it.elapsedNow()) } ?: pacing.inactivity
         val answer =
-            when (val asked = channel.request(frames[index], if (final) responseTimeout else inactivity)) {
+            when (val asked = channel.request(frames[index], if (final) responseTimeout else creditWait)) {
                 is TransportResult.Failure -> return interrupted(channel, asked.error)
                 is TransportResult.Success -> asked.value
             }
@@ -240,6 +261,12 @@ internal suspend fun PayloadPlan.Framed.sendInWindows(
         granted = credit?.takeIf { it > index } ?: return protocolError(channel, "The receiver granted no credit")
     }
 }
+
+/** The failure of a sender whose deadline passed, or null while it may still send. */
+private fun FramePacing.expired(): TransportError? =
+    deadline?.takeIf { it.hasPassedNow() }?.let {
+        TransportError.Failure(TransferInterrupted("The reply outlived its time to live before every frame was sent"))
+    }
 
 private inline fun TransportResult<Unit>.onFailure(block: (TransportError) -> Nothing) {
     if (this is TransportResult.Failure) block(error)
@@ -259,8 +286,13 @@ private suspend fun PayloadPlan.Framed.protocolError(
 ): TransportResult<Nothing> = interrupted(channel, TransportError.Failure(TransferRejected(reason)))
 
 /** Headers of the frame that tells the receiver payload [payloadId] stopped part way. */
-internal fun interruptedHeaders(payloadId: String): MessageHeaders =
-    MessageHeaders.of(PayloadHeaders.PAYLOAD to payloadId, PayloadHeaders.FAILURE to PayloadHeaders.INTERRUPTED)
+internal fun interruptedHeaders(payloadId: String): MessageHeaders = failureHeaders(payloadId, PayloadHeaders.INTERRUPTED)
+
+/** Headers of a message that ends payload [payloadId] with [failure]. */
+internal fun failureHeaders(
+    payloadId: String,
+    failure: String,
+): MessageHeaders = MessageHeaders.of(PayloadHeaders.PAYLOAD to payloadId, PayloadHeaders.FAILURE to failure)
 
 /** Returns these headers with every [framing] header set, replacing values of the same name. */
 internal fun MessageHeaders.withFraming(framing: MessageHeaders): MessageHeaders =
@@ -300,6 +332,10 @@ internal fun transferFailure(
             TransferBusy()
         }
 
+        PayloadHeaders.REJECTED -> {
+            TransferRejected("The receiver rejected a frame of the payload")
+        }
+
         else -> {
             TransferRejected("Unknown transfer failure")
         }
@@ -334,17 +370,18 @@ internal sealed interface Assembly {
  * framing headers, so a caller never decodes partial bytes. A frame that carries a reply address ends a window: the
  * answer is the next grant when every earlier frame has arrived, and an incomplete failure otherwise. The receiver
  * holds at most [maxPendingBytes] across all assemblies; a payload that would exceed it is refused and its window
- * end is answered busy. [sweep] drops assemblies idle for [inactivity]; owners that receive frames from senders that
- * may vanish call it on a timer. Access is serialized because route workers run in parallel. A rejected frame throws
+ * end is answered busy. [sweep] drops assemblies idle for the limits' frame inactivity; owners that receive frames
+ * from senders that may vanish call it on a timer. Access is serialized because route workers run in parallel. A rejected frame throws
  * [TransferRejected] and drops its assembly.
  */
 internal class PayloadAssembler(
     private val limits: TransportLimits,
     private val maxBytes: Long,
     private val maxPendingBytes: Long = maxBytes,
-    private val inactivity: Duration = FRAME_INACTIVITY,
     private val clock: TimeSource.WithComparableMarks = TimeSource.Monotonic,
 ) {
+    private val inactivity = limits.frameInactivity
+
     private val mutex = Mutex()
     private val pending = mutableMapOf<String, PendingPayload>()
     private val refused = mutableMapOf<String, ComparableTimeMark>()
@@ -410,7 +447,7 @@ internal class PayloadAssembler(
     private fun failureAnswer(
         payloadId: String,
         failure: String,
-    ): Assembly = Assembly.Answer(MessageHeaders.of(PayloadHeaders.PAYLOAD to payloadId, PayloadHeaders.FAILURE to failure))
+    ): Assembly = Assembly.Answer(failureHeaders(payloadId, failure))
 
     private fun parseFrame(
         headers: MessageHeaders,

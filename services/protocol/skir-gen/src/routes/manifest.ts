@@ -145,7 +145,8 @@ const Operation = z.string().regex(/^[a-z][a-z0-9_]*(\.[a-z][a-z0-9_]*)*$/, {
 
 /**
  * A payload ceiling in bytes; a route raises the manifest default only when it moves larger values. Only unary
- * requests may be framed: a scatter request is published to every listener and a watch request opens a stream.
+ * routes may raise one: a scatter request is published to every listener and a watch request opens a stream, so
+ * neither may be framed, and their clients collect replies by the manifest reply ceiling.
  */
 const MaxBytes = z.int().positive();
 
@@ -164,14 +165,12 @@ const Flow = z.discriminatedUnion("kind", [
     operation: Operation,
     request: Address,
     updates: Updates,
-    reply_max_bytes: MaxBytes.optional(),
   }),
   z.strictObject({
     kind: z.literal("scatter"),
     method: Reference,
     operation: Operation,
     request: Address,
-    reply_max_bytes: MaxBytes.optional(),
   }),
   z.strictObject({
     kind: z.literal("event"),
@@ -236,18 +235,37 @@ export function routeParties(route: Route): readonly Party[] {
 
 /**
  * How the transports split a large request or reply; see transport-routes.yaml. A payload above
- * `chunkBytes` travels as frames of at most `chunkBytes` in credit windows of `windowFrames`.
- * Requests are bounded by `requestMaxBytes` and replies by `replyMaxBytes`; the manifest declares
- * the defaults and a request route may raise either for itself. A service may answer a request for
- * `replyTtlMs` after receiving it, so a requester never needs to wait longer.
+ * `chunkBytes` travels as frames of at most `chunkBytes`. Framed requests flow in credit windows of
+ * `windowFrames`; framed replies do too when `replyCredit` holds, and otherwise stream without
+ * waiting. Requests are bounded by `requestMaxBytes` and replies by `replyMaxBytes`; the manifest
+ * declares the defaults and a unary route may raise either for itself. A sender waits at most
+ * `frameInactivityMs` for a credit and a receiver as long for the next frame. A service may answer
+ * a request for `replyTtlMs` after receiving it, so a requester never needs to wait longer.
  */
 export interface TransportLimits {
   readonly chunkBytes: number;
   readonly windowFrames: number;
   readonly requestMaxBytes: number;
   readonly replyMaxBytes: number;
+  readonly frameInactivityMs: number;
   readonly replyTtlMs: number;
+  /**
+   * Whether a framed reply waits for the requester's credit at each window end. Granting a credit
+   * is a NATS response, and panel connections hold no response permission: one would let a panel
+   * user answer its own message on a subject it both publishes and subscribes to, and so publish
+   * once to any reply subject it names. Replies stream without credit by default; the resolver
+   * enables credit for a route only when none of its callers runs on the panel.
+   */
+  readonly replyCredit: boolean;
 }
+
+/**
+ * Bytes a raised payload ceiling reserves for the Skir record around the `bytes` content it moves:
+ * the other fields, their keys and the length prefixes. A route that raises a ceiling to move
+ * content carries at most its ceiling less this headroom, so content that passes a size check
+ * always fits the encoded payload.
+ */
+export const ENVELOPE_HEADROOM_BYTES = 64 * 1024;
 
 /** The admitted route manifest. */
 export interface Manifest {
@@ -263,6 +281,7 @@ const Limits = z.strictObject({
   window_frames: z.int().positive(),
   request_max_bytes: MaxBytes,
   reply_max_bytes: MaxBytes,
+  frame_inactivity_ms: z.int().positive(),
   reply_ttl_ms: z.int().positive(),
 });
 
@@ -394,7 +413,9 @@ export function parseManifest(source: string, file: string): Manifest {
       windowFrames: limits.window_frames,
       requestMaxBytes: limits.request_max_bytes,
       replyMaxBytes: limits.reply_max_bytes,
+      frameInactivityMs: limits.frame_inactivity_ms,
       replyTtlMs: limits.reply_ttl_ms,
+      replyCredit: false,
     },
     roles: new Map(Object.entries(roles).map(([name, role]) => [name, { name, ...role }])),
     components: new Map(Object.entries(components)),

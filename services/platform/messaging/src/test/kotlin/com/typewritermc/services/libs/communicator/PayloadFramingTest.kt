@@ -56,10 +56,12 @@ import kotlinx.coroutines.flow.toList
 import kotlinx.coroutines.launch
 import java.util.Collections
 import java.util.concurrent.atomic.AtomicInteger
-import kotlin.time.Duration
 import kotlin.time.Duration.Companion.milliseconds
+import kotlin.time.Duration.Companion.minutes
 import kotlin.time.Duration.Companion.seconds
 import kotlin.time.TestTimeSource
+import kotlin.time.TimeMark
+import kotlin.time.TimeSource
 
 /** Covers payload framing of [NatsMessageTransport] and the router over an in memory NATS broker. */
 val PayloadFramingTest by testSuite {
@@ -94,6 +96,38 @@ val PayloadFramingTest by testSuite {
         }
     }
 
+    test("a framed reply on a route without reply credit streams every frame and the requester grants nothing") {
+        coroutineScope {
+            val broker = MemoryNatsBroker()
+            val reply = bytes(LIMITS.chunkBytes * 6 + 5)
+            val server = launch { serveReplies(broker.transport(STREAMED), reply) }
+
+            broker.request(bytes(1), STREAMED) shouldBe reply
+
+            val frames = broker.replies().filter { it.header("Typewriter-Payload") != null }
+            frames.map { it.header("Typewriter-Chunk") } shouldBe (0 until 7).map { "$it/7" }
+            frames.filter { it.replyTo != null } shouldBe emptyList()
+            broker.published.mapNotNull { it.header("Typewriter-Credit") } shouldBe emptyList()
+            server.cancelAndJoin()
+        }
+    }
+
+    test("a framed reply past its time to live stops as interrupted on both sides") {
+        coroutineScope {
+            val broker = MemoryNatsBroker()
+            val limits = LIMITS.copy(replyTtl = 1.seconds)
+            val results = Collections.synchronizedList(mutableListOf<TransportResult<Unit>>())
+            val received = TimeSource.Monotonic.markNow() - 2.seconds
+            val server = launch { serveReplies(broker.transport(limits), bytes(LIMITS.chunkBytes * 6 + 5), results, received) }
+
+            shouldThrow<TransferInterrupted> { broker.request(bytes(1)) }
+
+            broker.replies().filter { it.header("Typewriter-Chunk") != null } shouldBe emptyList()
+            results.awaitSingle().failureCause().shouldBeInstanceOf<TransferInterrupted>()
+            server.cancelAndJoin()
+        }
+    }
+
     test("a sender never runs more than one window ahead of a receiver that grants no credit") {
         coroutineScope {
             val broker =
@@ -108,9 +142,15 @@ val PayloadFramingTest by testSuite {
                 })
             val results = Collections.synchronizedList(mutableListOf<TransportResult<Unit>>())
             val server =
-                launch { serveReplies(broker.transport(LIMITS, inactivity = 200.milliseconds), bytes(LIMITS.chunkBytes * 6 + 5), results) }
+                launch {
+                    serveReplies(
+                        broker.transport(LIMITS.copy(frameInactivity = 200.milliseconds)),
+                        bytes(LIMITS.chunkBytes * 6 + 5),
+                        results,
+                    )
+                }
 
-            shouldThrow<TransferInterrupted> { broker.request(bytes(1), inactivity = 5.seconds) }
+            shouldThrow<TransferInterrupted> { broker.request(bytes(1)) }
 
             val frames = broker.replies().filter { it.header("Typewriter-Chunk") != null }
             frames.size shouldBe LIMITS.windowFrames
@@ -184,6 +224,30 @@ val PayloadFramingTest by testSuite {
                 .filter { it.subject == UPLOAD_SUBJECT }
                 .last()
                 .header("Typewriter-Transfer-Failure") shouldBe "interrupted"
+        }
+    }
+
+    test("a rejected window end is answered rejected, so the sender fails at once") {
+        routerFixture(intercept = { message ->
+            if (message.subject == UPLOAD_SUBJECT && message.header("Typewriter-Chunk") == "1/6") {
+                listOf(
+                    message.copy(
+                        headers =
+                            message.headers.filterKeys { !it.equals("Typewriter-Size", ignoreCase = true) } +
+                                ("Typewriter-Size" to listOf("1")),
+                    ),
+                )
+            } else {
+                listOf(message)
+            }
+        }) { broker, client ->
+            val started = TimeSource.Monotonic.markNow()
+
+            client.uploadFailure(bytes(LIMITS.chunkBytes * 5 + 3)).shouldBeInstanceOf<TransferRejected>()
+
+            (started.elapsedNow() < ROUTER_LIMITS.frameInactivity) shouldBe true
+            handled.get() shouldBe 0
+            broker.published.mapNotNull { it.header("Typewriter-Transfer-Failure") } shouldBe listOf("rejected", "interrupted")
         }
     }
 
@@ -266,7 +330,7 @@ val PayloadFramingTest by testSuite {
 
     test("an abandoned upload is freed by the sweep") {
         val time = TestTimeSource()
-        val assembler = PayloadAssembler(LIMITS, LIMITS.requestMaxBytes, inactivity = 30.seconds, clock = time)
+        val assembler = PayloadAssembler(LIMITS.copy(frameInactivity = 30.seconds), LIMITS.requestMaxBytes, clock = time)
         val plan = LIMITS.planPayload(Payload.copyOf(bytes(LIMITS.chunkBytes * 6)), LIMITS.requestMaxBytes) as PayloadPlan.Framed
         plan.frames.take(3).forEach { assembler.accept(InboundMessage(REQUEST, it.payload, headers = it.headers)) }
 
@@ -303,7 +367,23 @@ val PayloadFramingTest by testSuite {
     }
 }
 
-private val LIMITS = TransportLimits(chunkBytes = 64, windowFrames = 2, requestMaxBytes = 64L * 16, replyMaxBytes = 64L * 16)
+/** Limits of a route between services, whose framed replies wait for credit. */
+private val LIMITS =
+    TransportLimits(
+        chunkBytes = 64,
+        windowFrames = 2,
+        requestMaxBytes = 64L * 16,
+        replyMaxBytes = 64L * 16,
+        frameInactivity = 5.seconds,
+        replyTtl = 5.minutes,
+        replyCredit = true,
+    )
+
+/** Limits of a route a panel role calls, whose framed replies stream without credit. */
+private val STREAMED = LIMITS.copy(replyCredit = false)
+
+/** The router fixture's limits: a short inactivity, so a missing answer would show as a slow failure. */
+private val ROUTER_LIMITS = LIMITS.copy(frameInactivity = 1.seconds)
 
 private val REQUEST = MessageAddress.of("service.to.quests.organization.writers.realm.editor.catalog.fetch")
 
@@ -337,7 +417,7 @@ private val UPLOAD =
         },
         timeout = 5.seconds,
         failureSlug = ErrorSlug.of("upload-put-failed"),
-        limits = LIMITS,
+        limits = ROUTER_LIMITS,
     )
 
 private val handled = AtomicInteger()
@@ -368,7 +448,7 @@ private suspend fun routerFixture(
     val broker = MemoryNatsBroker(intercept)
     val harness = TelemetryTestHarness.create()
     val propagators = ContextPropagators.create(W3CTraceContextPropagator.getInstance())
-    val serverTransport = broker.transport(LIMITS, inactivity = 1.seconds)
+    val serverTransport = broker.transport(ROUTER_LIMITS)
     val routes =
         communicatorRoutes {
             unaryAt(UPLOAD, UploadTarget("quests")) { call ->
@@ -384,11 +464,11 @@ private suspend fun routerFixture(
             harness.telemetry,
             propagators,
             this,
-            options.copy(frameInactivity = 1.seconds),
+            options,
         )
     try {
         router.start() shouldBe RouterResult.Success
-        val clientTransport = broker.transport(LIMITS, inactivity = 1.seconds)
+        val clientTransport = broker.transport(ROUTER_LIMITS)
         block(broker, UploadClient(Communicator(clientTransport, harness.telemetry, propagators)))
     } finally {
         router.stop()
@@ -396,17 +476,18 @@ private suspend fun routerFixture(
     }
 }
 
-/** Answers every request on [REQUEST] with [reply] and records the reply results. */
+/** Answers every request on [REQUEST] with [reply], as if each arrived at [received], and records the reply results. */
 private suspend fun serveReplies(
     transport: NatsMessageTransport,
     reply: ByteArray,
     results: MutableList<TransportResult<Unit>> = mutableListOf(),
+    received: TimeMark? = null,
 ) = coroutineScope {
     val subscription = (transport.subscribe(AddressPattern.of(REQUEST.value)) as TransportResult.Success).value
     try {
         subscription.deliveries.collect { delivery ->
             val message = (delivery as? TransportDelivery.Message)?.message ?: return@collect
-            launch { results += transport.reply(OutboundMessage(requireNotNull(message.replyTo), reply)) }
+            launch { results += transport.reply(OutboundMessage(requireNotNull(message.replyTo), reply), received = received) }
         }
     } finally {
         subscription.close()
@@ -416,9 +497,9 @@ private suspend fun serveReplies(
 /** Requests from a fresh client and returns the complete reply, throwing its transfer failure. */
 private suspend fun MemoryNatsBroker.request(
     payload: ByteArray,
-    inactivity: Duration = 5.seconds,
+    limits: TransportLimits = LIMITS,
 ): ByteArray {
-    val transport = transport(LIMITS, inactivity)
+    val transport = transport(limits)
     while (activeSubscriptionCount == 0) kotlinx.coroutines.yield()
     return when (val result = transport.request(OutboundMessage(REQUEST, payload), 5.seconds)) {
         is TransportResult.Success -> result.value.payload.toByteArray()
