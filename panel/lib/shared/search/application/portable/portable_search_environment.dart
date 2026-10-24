@@ -17,6 +17,7 @@ final class PortableSearchEnvironment {
     this.watchRealm,
     this.collectionHost,
     this.material,
+    this.subject,
   });
 
   final CheckedEditorCatalog catalog;
@@ -32,27 +33,58 @@ final class PortableSearchEnvironment {
   final PortableCollectionProjectionHost? collectionHost;
   final skir.PresentationMaterial? material;
 
+  /// The subject of [material], whose type arguments close the templates of
+  /// the bindings the search declares.
+  final skir.TypeSelection? subject;
+
+  /// A copy whose invocation context also binds [bindings].
+  PortableSearchEnvironment withBindings(
+    Map<skir.ExpressionBindingId, PortableExpressionBinding> bindings,
+  ) => PortableSearchEnvironment(
+    catalog: catalog,
+    budget: budget,
+    context: context.withBindings(bindings),
+    http: http,
+    historyStorage: historyStorage,
+    historyNamespace: historyNamespace,
+    watchRealm: watchRealm,
+    collectionHost: collectionHost,
+    material: material,
+    subject: subject,
+  );
+
+  /// The type [template] declares in this search's material.
+  skir.TypeUse? declaredType(skir.TypeTemplate template) =>
+      catalog.declaredBindingType(template, subject);
+
+  /// [value] bound as [declaration] declares it.
+  PortableExpressionBinding declared(
+    skir.BindingDeclaration declaration,
+    skir.DataValue value,
+  ) => PortableExpressionBinding(
+    value: value,
+    schema: switch (declaredType(declaration.type)) {
+      final use? => CompletePortablePresentationBinding(use),
+      null => null,
+    },
+  );
+
+  /// The bindings search expressions see: the invocation context, the query,
+  /// every selector value and, for row expressions, the [row].
   Map<skir.ExpressionBindingId, PortableExpressionBinding> expressionBindings({
     required SearchQueryContext query,
-    required skir.ExpressionBindingId queryBindingId,
+    required skir.BindingDeclaration queryBinding,
     required Iterable<skir.SearchSelectorDefinition> selectors,
-    skir.ExpressionBindingId? rowBinding,
-    skir.DataValue? rowValue,
-    PortablePresentationBindingSchema? rowSchema,
+    (skir.BindingDeclaration, skir.DataValue)? row,
   }) {
     final bindings = <skir.ExpressionBindingId, PortableExpressionBinding>{
       ...context.bindings,
-      queryBindingId: PortableExpressionBinding(
-        value: skir.DataValue.wrapStringValue(query.normalizedQuery),
-        schema: CompletePortablePresentationBinding(
-          skir.TypeUse.wrapScalar(skir.ScalarKind.text),
-        ),
+      queryBinding.id: declared(
+        queryBinding,
+        skir.DataValue.wrapStringValue(query.normalizedQuery),
       ),
-      if (rowBinding != null && rowValue != null)
-        rowBinding: PortableExpressionBinding(
-          value: rowValue,
-          schema: rowSchema,
-        ),
+      if (row case (final declaration, final value))
+        declaration.id: declared(declaration, value),
     };
     for (final definition in selectors) {
       final values = query.selectors
@@ -60,23 +92,9 @@ final class PortableSearchEnvironment {
           .map((value) => value.value)
           .whereType<String>()
           .toList(growable: false);
-      bindings[definition.valueBindingId] = PortableExpressionBinding(
-        schema: CompletePortablePresentationBinding(
-          definition.multiplicity == skir.SearchSelectorMultiplicity.multiple
-              ? skir.TypeUse.createNamed(
-                  definition: skir.TypeDefinitionId(
-                    typeId: skir.TypeId.createQualified(
-                      namespace: "typewriter",
-                      name: "List",
-                    ),
-                    revision: 1,
-                  ),
-                  arguments: [skir.TypeUse.wrapScalar(skir.ScalarKind.text)],
-                )
-              : skir.TypeUse.wrapScalar(skir.ScalarKind.text),
-        ),
-        value:
-            definition.multiplicity == skir.SearchSelectorMultiplicity.multiple
+      bindings[definition.valueBinding.id] = declared(
+        definition.valueBinding,
+        definition.multiplicity == skir.SearchSelectorMultiplicity.multiple
             ? skir.DataValue.createListValue(
                 items: [
                   for (final (index, value) in values.indexed)
@@ -95,26 +113,32 @@ final class PortableSearchEnvironment {
     return Map.unmodifiable(bindings);
   }
 
+  /// Evaluates [expression] over [bindings] in this search's material.
+  PortableExpressionResult evaluateWith(
+    Map<skir.ExpressionBindingId, PortableExpressionBinding> bindings,
+    skir.ExpressionNode expression,
+  ) => PortableExpressionEvaluator.located(
+    bindings,
+    budget: budget,
+    catalog: catalog,
+    queries: context.queries,
+    subject: subject,
+  ).evaluate(expression);
+
   PortableExpressionResult evaluate(
     skir.ExpressionNode expression, {
     required SearchQueryContext query,
-    required skir.ExpressionBindingId queryBindingId,
+    required skir.BindingDeclaration queryBinding,
     required Iterable<skir.SearchSelectorDefinition> selectors,
-    skir.ExpressionBindingId? rowBinding,
-    skir.DataValue? rowValue,
-    PortablePresentationBindingSchema? rowSchema,
-  }) => catalog.evaluateExpression(
-    expression,
-    bindings: expressionBindings(
+    (skir.BindingDeclaration, skir.DataValue)? row,
+  }) => evaluateWith(
+    expressionBindings(
       query: query,
-      queryBindingId: queryBindingId,
+      queryBinding: queryBinding,
       selectors: selectors,
-      rowBinding: rowBinding,
-      rowValue: rowValue,
-      rowSchema: rowSchema,
+      row: row,
     ),
-    budget: budget,
-    queries: context.queries,
+    expression,
   );
 
   PortableExpressionBinding? binding(skir.ExpressionBindingId id) =>

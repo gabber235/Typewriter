@@ -38,7 +38,19 @@ AuthoringDocument compiledEntryNodeDocument({
       for (final material in snapshot.presentationMaterials)
         if (material.provider == selected.material.provider &&
             material.role == selected.material.role)
-          (material.toFrozen().toMutable()..layout = compiledEntryGraphLayout)
+          (material.toFrozen().toMutable()
+                ..layout = compiledEntryGraphLayout(
+                  catalog
+                      .collectionItemType(
+                        catalog
+                            .fields(pageSelection)
+                            .singleWhere(
+                              (field) => field.template.key == "elements",
+                            )
+                            .type,
+                      )!
+                      .portableTemplate,
+                ))
               .toFrozen()
         else
           material,
@@ -254,26 +266,31 @@ AuthoringDocument compiledEntryNodeDocument({
 }
 
 /// A fixture page workspace using the production resources graph and bindings.
-final compiledEntryGraphLayout = skir.PresentationNode(
-  nodeId: "entry-fixture.graph",
-  properties: skir.PresentationProperties.defaultInstance,
-  header: null,
-  element: skir.PresentationElement.createResources(
-    control: skir.BoundControl(
-      binding: skir.BindingRef(
-        bindingId: skir.ExpressionBindingId(value: "configured_value"),
-        path: editorRootPath.field("elements"),
+/// [element] is the type of one member link of the page elements.
+skir.PresentationNode compiledEntryGraphLayout(skir.TypeTemplate element) =>
+    skir.PresentationNode(
+      nodeId: "entry-fixture.graph",
+      properties: skir.PresentationProperties.defaultInstance,
+      header: null,
+      element: skir.PresentationElement.createResources(
+        control: skir.BoundControl(
+          binding: skir.BindingRef(
+            bindingId: skir.ExpressionBindingId(value: "configured_value"),
+            path: editorRootPath.field("elements"),
+          ),
+          label: null,
+          description: null,
+          prefix: null,
+          semanticLabel: null,
+        ),
+        layout: skir.ResourcesLayout.createGraph(
+          direction: skir.GraphDirection.leftToRight,
+          appearance: null,
+        ),
+        order: null,
+        itemBinding: skir.BindingDeclaration(
+          id: skir.ExpressionBindingId(value: "resources.item"),
+          type: element,
+        ),
       ),
-      label: null,
-      description: null,
-      prefix: null,
-      semanticLabel: null,
-    ),
-    layout: skir.ResourcesLayout.createGraph(
-      direction: skir.GraphDirection.leftToRight,
-      appearance: null,
-    ),
-    order: null,
-    itemBindingId: skir.ExpressionBindingId(value: "resources.item"),
-  ),
-);
+    );

@@ -2,10 +2,13 @@ package com.typewritermc.presentation
 
 import com.typewritermc.expression.Expr
 import com.typewritermc.expression.Handled
+import com.typewritermc.expression.literal
 import skirout.editor.v1.presentation.PresentationAlignment
 import skirout.editor.v1.presentation.PresentationAnchorSelector
 
-internal class RuntimeAnchorScope : AnchorScope {
+internal class RuntimeAnchorScope(
+    private val state: PresentationBuildState,
+) : AnchorScope {
     private val anchors = mutableListOf<skirout.editor.v1.presentation.PresentationAnchorPoint>()
 
     override fun point(
@@ -14,13 +17,14 @@ internal class RuntimeAnchorScope : AnchorScope {
     ) {
         require(id.isNotBlank()) { "Anchor id must not be blank." }
         require(anchors.none { it.anchorId == id }) { "Anchor ids must be unique within one layout." }
-        anchors += RuntimeAnchorPointScope(id).apply(configure).build()
+        anchors += RuntimeAnchorPointScope(state, id).apply(configure).build()
     }
 
     fun build(): List<skirout.editor.v1.presentation.PresentationAnchorPoint> = anchors.toList()
 }
 
 private class RuntimeAnchorPointScope(
+    private val state: PresentationBuildState,
     private val id: String,
 ) : AnchorPointScope {
     private val groups = linkedSetOf<String>()
@@ -55,8 +59,8 @@ private class RuntimeAnchorPointScope(
             anchorId = id,
             groupIds = groups,
             alignment = alignment,
-            offset = offset?.wire(),
-            visibleIf = visibleIf?.let(::expression),
+            offset = offset?.wire(state),
+            visibleIf = visibleIf?.let { state.lower(it, BOOLEAN_SLOT) },
             exportToParent = exportToParent,
         )
 }
@@ -121,10 +125,10 @@ private class RuntimeConnectionScope(
         skirout.editor.v1.presentation.AnchoredConnection(
             source = requireNotNull(source) { "Connection source anchor is required." },
             target = requireNotNull(target) { "Connection target anchor is required." },
-            path = path.wire(),
-            style = requireNotNull(style) { "Connection style is required." }.wire(),
+            path = path.wire(state),
+            style = requireNotNull(style) { "Connection style is required." }.wire(state),
             markers = markers.map { it.wire(state) },
-            visibleIf = visibleIf?.let(::expression),
+            visibleIf = visibleIf?.let { state.lower(it, BOOLEAN_SLOT) },
         )
 }
 
@@ -176,22 +180,22 @@ private class RuntimeConnectionBundleScope(
         skirout.editor.v1.presentation.AnchoredConnectionBundle(
             source = requireNotNull(source) { "Connection bundle source anchor is required." },
             targets = requireNotNull(targets) { "Connection bundle target anchors are required." },
-            path = path.wire(),
-            trunkStyle = requireNotNull(trunkStyle) { "Connection bundle trunk style is required." }.wire(),
-            branchStyle = requireNotNull(branchStyle) { "Connection bundle branch style is required." }.wire(),
+            path = path.wire(state),
+            trunkStyle = requireNotNull(trunkStyle) { "Connection bundle trunk style is required." }.wire(state),
+            branchStyle = requireNotNull(branchStyle) { "Connection bundle branch style is required." }.wire(state),
             trunkMarkers = trunkMarkers.map { it.wire(state) },
             branchMarkers = branchMarkers.map { it.wire(state) },
-            visibleIf = visibleIf?.let(::expression),
+            visibleIf = visibleIf?.let { state.lower(it, BOOLEAN_SLOT) },
         )
 }
 
-private fun PresentationOffset.wire(): skirout.editor.v1.presentation.PresentationOffset =
+private fun PresentationOffset.wire(state: PresentationBuildState): skirout.editor.v1.presentation.PresentationOffset =
     skirout.editor.v1.presentation.PresentationOffset(
-        x = expression(x),
-        y = expression(y),
+        x = state.lower(x, DOUBLE_SLOT),
+        y = state.lower(y, DOUBLE_SLOT),
     )
 
-private fun ConnectorPath.wire(): skirout.editor.v1.presentation.ConnectionPath =
+private fun ConnectorPath.wire(state: PresentationBuildState): skirout.editor.v1.presentation.ConnectionPath =
     when (this) {
         ConnectorPath.Straight -> {
             skirout.editor.v1.presentation.ConnectionPath.STRAIGHT
@@ -199,19 +203,19 @@ private fun ConnectorPath.wire(): skirout.editor.v1.presentation.ConnectionPath 
 
         is ConnectorPath.Orthogonal -> {
             skirout.editor.v1.presentation.ConnectionPath.createOrthogonal(
-                bendPosition = expression(bendPosition),
+                bendPosition = state.lower(bendPosition, DOUBLE_SLOT),
             )
         }
 
         is ConnectorPath.Curved -> {
             skirout.editor.v1.presentation.ConnectionPath.createCurved(
-                sourceControlOffset = sourceControlOffset.wire(),
-                targetControlOffset = targetControlOffset.wire(),
+                sourceControlOffset = sourceControlOffset.wire(state),
+                targetControlOffset = targetControlOffset.wire(state),
             )
         }
     }
 
-private fun ConnectorBundlePath.wire(): skirout.editor.v1.presentation.ConnectionBundlePath =
+private fun ConnectorBundlePath.wire(state: PresentationBuildState): skirout.editor.v1.presentation.ConnectionBundlePath =
     when (this) {
         ConnectorBundlePath.Fan -> {
             skirout.editor.v1.presentation.ConnectionBundlePath.FAN
@@ -220,34 +224,34 @@ private fun ConnectorBundlePath.wire(): skirout.editor.v1.presentation.Connectio
         is ConnectorBundlePath.Orthogonal -> {
             skirout.editor.v1.presentation.ConnectionBundlePath.createOrthogonal(
                 axis = axis,
-                bendPosition = expression(bendPosition),
+                bendPosition = state.lower(bendPosition, DOUBLE_SLOT),
             )
         }
     }
 
-internal fun ConnectorStyle.wire(): skirout.editor.v1.presentation.ConnectorStyle =
+internal fun ConnectorStyle.wire(state: PresentationBuildState): skirout.editor.v1.presentation.ConnectorStyle =
     skirout.editor.v1.presentation.ConnectorStyle(
         stroke =
             skirout.editor.v1.presentation.ConnectorStroke(
-                color = color.wire(),
-                width = expression(width),
+                color = color.wire(state),
+                width = state.lower(width, DOUBLE_SLOT),
             ),
-        cornerRadius = expression(cornerRadius),
-        startMarker = startMarker?.wire(),
-        endMarker = endMarker?.wire(),
+        cornerRadius = state.lower(cornerRadius, DOUBLE_SLOT),
+        startMarker = startMarker?.wire(state),
+        endMarker = endMarker?.wire(state),
     )
 
-private fun ConnectorEndpointMarker.wire(): skirout.editor.v1.presentation.ConnectorEndpointMarker =
+private fun ConnectorEndpointMarker.wire(state: PresentationBuildState): skirout.editor.v1.presentation.ConnectorEndpointMarker =
     when (this) {
         is ConnectorEndpointMarker.Arrow -> {
             skirout.editor.v1.presentation.ConnectorEndpointMarker.createArrow(
-                size = expression(size),
+                size = state.lower(size, DOUBLE_SLOT),
             )
         }
 
         is ConnectorEndpointMarker.Circle -> {
             skirout.editor.v1.presentation.ConnectorEndpointMarker.createCircle(
-                diameter = expression(diameter),
+                diameter = state.lower(diameter, DOUBLE_SLOT),
             )
         }
     }
@@ -255,7 +259,7 @@ private fun ConnectorEndpointMarker.wire(): skirout.editor.v1.presentation.Conne
 private fun ConnectorMarker.wire(state: PresentationBuildState): skirout.editor.v1.presentation.ConnectionMarker =
     skirout.editor.v1.presentation.ConnectionMarker(
         node = state.presentation(node),
-        position = expression(position),
-        alignToPath = expression(alignToPath),
+        position = state.lower(position, DOUBLE_SLOT),
+        alignToPath = state.lower(alignToPath, BOOLEAN_SLOT),
         scope = scope,
     )

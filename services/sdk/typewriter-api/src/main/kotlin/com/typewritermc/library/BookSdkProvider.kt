@@ -4,24 +4,26 @@ import com.typewritermc.expression.Expr
 import com.typewritermc.expression.Handled
 import com.typewritermc.expression.accent
 import com.typewritermc.expression.emptyListExpression
-import com.typewritermc.expression.gt
 import com.typewritermc.expression.icon
 import com.typewritermc.expression.label
 import com.typewritermc.expression.literal
 import com.typewritermc.expression.map
 import com.typewritermc.expression.orElse
-import com.typewritermc.expression.orIfBlank
+import com.typewritermc.expression.shortcuts.gt
+import com.typewritermc.expression.shortcuts.orIfBlank
+import com.typewritermc.expression.shortcuts.take
+import com.typewritermc.expression.shortcuts.trim
 import com.typewritermc.expression.size
-import com.typewritermc.expression.take
 import com.typewritermc.expression.target
-import com.typewritermc.expression.trim
 import com.typewritermc.presentation.AppliedPresentation
 import com.typewritermc.presentation.ContainerStyle
+import com.typewritermc.presentation.FontWeight
 import com.typewritermc.presentation.IconOptions
 import com.typewritermc.presentation.Layout
 import com.typewritermc.presentation.PresentationColor
 import com.typewritermc.presentation.PresentationInsets
 import com.typewritermc.presentation.PresentationRadius
+import com.typewritermc.presentation.Spacing
 import com.typewritermc.presentation.TextSizing
 import com.typewritermc.presentation.TextStyle
 import com.typewritermc.presentation.adjusted
@@ -102,7 +104,7 @@ object LibraryWorkspace : LibraryPresentation {
 
     override fun LibraryPresentationScope.present() {
         books {
-            grid(itemExtent = 240.0, aspectRatio = 0.72, spacing = 16.0)
+            grid(itemExtent = 240.0, aspectRatio = 0.72, spacing = Spacing(16.0))
         }
     }
 }
@@ -116,7 +118,7 @@ object BookOutline : BookPresentation {
             order { resource.fields.name.orElse(literal("")) }
             tree(path = PageFields.chapter) {
                 group {
-                    text(group.name)
+                    text(group.name.orElse(literal("")))
                     button(
                         label = literal("New page"),
                         action = createResource(type = PageDefinition.id, owner = BookFields.pages) { PageFields.chapter(group.path) },
@@ -145,7 +147,7 @@ object BookSearchPresentation : BookPresentation {
     override fun BookPresentationScope.present() {
         val accent = appearance.accent.asPresentationColor()
         repeated<Ref<BookTags.Book, Tag>, Ref<BookTags.Book, Tag>>(bookTags()) {
-            clippedRow(spacing = 4.0)
+            clippedRow(spacing = Spacing(4.0))
             val tag = item.resource
             showIf(tag.exists, whenFalse = { searchChip(literal("Unavailable tag"), accent) }) {
                 searchChip(
@@ -179,7 +181,7 @@ object BookItemPresentation : BookPresentation {
                                     style =
                                         TextStyle(
                                             sizing = TextSizing.Fit(minimum = literal(12.0), maximum = literal(16.0)),
-                                            weight = 700,
+                                            weight = FontWeight(700),
                                         ),
                                 )
                             }
@@ -213,9 +215,9 @@ private fun Layout.bookTagBars(
                     ),
             ),
         ) {
-            padding(PresentationInsets(4.0, 4.0, 4.0, 4.0)) {
+            padding(PresentationInsets.all(Spacing(4.0))) {
                 repeated<Ref<BookTags.Book, Tag>, Ref<BookTags.Book, Tag>>(tags.take(literal(limit)).orElse(emptyListExpression())) {
-                    column(spacing = 5.0, cross = CrossAxisAlignment.STRETCH)
+                    column(spacing = Spacing(5.0), cross = CrossAxisAlignment.STRETCH)
                     val color =
                         item.resource.fields.color
                             .orElse(literal(UNTAGGED))

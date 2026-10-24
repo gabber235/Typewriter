@@ -81,10 +81,8 @@ final class AuthoringEdit implements PortableAuthoringEdit {
       List.unmodifiable(_initializationFindings);
 
   @override
-  void observeExpressionReads(Iterable<PortableExpressionRead> reads) {
-    for (final read in reads) {
-      final location = read.location;
-      if (location == null) continue;
+  void observeExpressionReads(Iterable<skir.ValueLocation> reads) {
+    for (final location in reads) {
       _observePath(location);
       _observe(_value(at: location));
     }
@@ -92,7 +90,7 @@ final class AuthoringEdit implements PortableAuthoringEdit {
 
   @override
   bool stageExpressionEdit(
-    Iterable<PortableExpressionRead> reads,
+    Iterable<skir.ValueLocation> reads,
     bool Function(PortableAuthoringEdit edit) edit,
   ) {
     final branch = fork();
@@ -1036,13 +1034,12 @@ final class AuthoringEdit implements PortableAuthoringEdit {
                   (binding) => binding.template.endpoint == oppositeEndpoint,
                 ) ??
             const <AppliedEndpointBinding>[]) {
-      for (final path in expandAuthoredPattern(
-        staged,
-        binding.template.relativePath,
-      )) {
-        if (path.isAtOrBelow(embedded.path)) {
-          locations.add(skir.ValueLocation(resource: target, path: path));
-        }
+      for (final location
+          in skir.DataValue.createRecord(fields: staged.fields).expandPattern(
+            skir.ValueLocation(resource: target, path: editorRootPath),
+            binding.template.relativePath,
+          )) {
+        if (location.path.isAtOrBelow(embedded.path)) locations.add(location);
       }
     }
     return locations.length == 1 ? locations.single : null;

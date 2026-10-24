@@ -96,12 +96,12 @@ extension ResourceAppearanceCatalog on CheckedEditorCatalog {
     };
     skir.DataValue? evaluate(skir.ExpressionNode? formula) {
       if (formula == null) return null;
-      return switch (evaluateExpression(
-        formula,
-        bindings: bindings,
+      return switch (PortableExpressionEvaluator.located(
+        bindings,
         budget: _displayBudget,
         queries: queries,
-      )) {
+        subject: record.configuration,
+      ).evaluate(formula)) {
         PortableExpressionAvailable(:final value) => value,
         _ => null,
       };

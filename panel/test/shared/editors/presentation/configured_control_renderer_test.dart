@@ -207,20 +207,32 @@ void main() {
       );
       final mappings = skir.ValueMappings(
         completion: skir.ExpressionMapping(
-          inputBinding: candidate,
-          body: skir.ExpressionNode.createNumberRound(
-            source: read,
-            increment: literalExpression(skir.DataValue.wrapFloat(0.5)),
-            rounding: textLiteral("NearestTiesToEven"),
+          inputBinding: declareBinding(
+            candidate,
+            scalarTemplate(
+              skir.ScalarKind.createFloat(width: skir.FloatWidth.sixtyFour),
+            ),
           ),
+          body: portableCall("number.round", [
+            read,
+            literalExpression(skir.DataValue.wrapFloat(0.5)),
+            skir.ExpressionNode.wrapLiteral(
+              skir.RoundingMode.nearestTiesToEven.toDataValue(),
+            ),
+          ]),
         ),
         display: skir.ExpressionMapping(
-          inputBinding: candidate,
-          body: skir.ExpressionNode.createNumberFormat(
-            source: read,
-            fractionDigits: literalExpression(skir.DataValue.wrapInteger("2")),
-            locale: textLiteral("en_US"),
+          inputBinding: declareBinding(
+            candidate,
+            scalarTemplate(
+              skir.ScalarKind.createFloat(width: skir.FloatWidth.sixtyFour),
+            ),
           ),
+          body: portableCall("number.format", [
+            read,
+            literalExpression(skir.DataValue.wrapInteger("2")),
+            textLiteral("en-US"),
+          ]),
         ),
       );
       final control =
@@ -323,15 +335,17 @@ void main() {
               ..mappings = skir.ValueMappings(
                 display: null,
                 completion: skir.ExpressionMapping(
-                  inputBinding: candidate,
-                  body: skir.ExpressionNode.createNumberRound(
-                    source: skir.ExpressionNode.createInput(
+                  inputBinding: declareBinding(candidate, use.portableTemplate),
+                  body: portableCall("number.round", [
+                    skir.ExpressionNode.createInput(
                       binding: candidate,
                       path: editorRootPath,
                     ),
-                    increment: literalExpression(skir.DataValue.wrapFloat(0.1)),
-                    rounding: textLiteral("NearestTiesToEven"),
-                  ),
+                    literalExpression(skir.DataValue.wrapFloat(0.1)),
+                    skir.ExpressionNode.wrapLiteral(
+                      skir.RoundingMode.nearestTiesToEven.toDataValue(),
+                    ),
+                  ]),
                 ),
               ))
             .toFrozen();
@@ -608,7 +622,14 @@ void main() {
                     bindingId: number,
                     path: editorRootPath,
                   ),
-                  scopeBindingId: configured,
+                  scopeBinding: declareBinding(
+                    configured,
+                    scalarTemplate(
+                      skir.ScalarKind.createFloat(
+                        width: skir.FloatWidth.sixtyFour,
+                      ),
+                    ),
+                  ),
                   child: presentationNode(
                     "number",
                     skir.PresentationElement.wrapNumericInput(

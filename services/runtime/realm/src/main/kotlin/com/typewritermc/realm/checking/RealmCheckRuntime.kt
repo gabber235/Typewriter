@@ -534,10 +534,10 @@ class RealmCheckRuntime(
                                                 Diagnostic(
                                                     id = DiagnosticId(value = "check:${nextDiagnostic.getAndIncrement()}"),
                                                     origin = plan.ownedRule.id.origin,
-                                                    code = evaluation.diagnostic.code,
+                                                    code = evaluation.diagnostic.failure.value,
                                                     message = evaluation.diagnostic.message,
                                                     severity = DiagnosticSeverity.ERROR,
-                                                    primary = evaluation.diagnostic.locations.firstOrNull(),
+                                                    primary = evaluation.diagnostic.locations.firstOrNull() ?: subject.location,
                                                     related = evaluation.diagnostic.locations.drop(1),
                                                 ),
                                             ),
@@ -866,7 +866,7 @@ internal fun ViewReadHealth.outcome(origin: RuleOrigin): CheckOutcome =
                     Diagnostic(
                         id = DiagnosticId(value = "evaluation:$index:${failure.hashCode()}"),
                         origin = origin,
-                        code = failure.code,
+                        code = failure.failure.value,
                         message = failure.message,
                         severity = DiagnosticSeverity.ERROR,
                         primary = failure.locations.firstOrNull(),

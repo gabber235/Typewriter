@@ -1,0 +1,81 @@
+{
+  "cases": [
+    {
+      "id": "duration_from_milliseconds",
+      "expression": {
+        "kind": "call",
+        "value": {
+          "operation": {"value": "duration.from_milliseconds"},
+          "type_arguments": [],
+          "arguments": [{"kind": "literal", "value": {"kind": "integer", "value": "90500"}}]
+        }
+      },
+      "expected": {"available": {"duration": "90500"}, "reads": []}
+    },
+    {
+      "id": "duration_from_milliseconds_maximum",
+      "expression": {
+        "kind": "call",
+        "value": {
+          "operation": {"value": "duration.from_milliseconds"},
+          "type_arguments": [],
+          "arguments": [{"kind": "literal", "value": {"kind": "integer", "value": "9007199254740991"}}]
+        }
+      },
+      "expected": {"available": {"duration": "9007199254740991"}, "reads": []}
+    },
+    {
+      "id": "duration_from_milliseconds_beyond_maximum",
+      "expression": {
+        "kind": "call",
+        "value": {
+          "operation": {"value": "duration.from_milliseconds"},
+          "type_arguments": [],
+          "arguments": [{"kind": "literal", "value": {"kind": "integer", "value": "9007199254740992"}}]
+        }
+      },
+      "expected": {"failed": "duration_range", "reads": []}
+    },
+    {
+      "id": "duration_from_milliseconds_beyond_minimum",
+      "expression": {
+        "kind": "call",
+        "value": {
+          "operation": {"value": "duration.from_milliseconds"},
+          "type_arguments": [],
+          "arguments": [{"kind": "literal", "value": {"kind": "integer", "value": "-9007199254740992"}}]
+        }
+      },
+      "expected": {"failed": "duration_range", "reads": []}
+    },
+    {
+      "id": "duration_to_milliseconds",
+      "expression": {
+        "kind": "call",
+        "value": {
+          "operation": {"value": "duration.to_milliseconds"},
+          "type_arguments": [],
+          "arguments": [{"kind": "literal", "value": {"kind": "duration", "value": {"value": {"milliseconds": -1500}}}}]
+        }
+      },
+      "check": {
+        "resultType": {
+          "value": {
+            "kind": "nominal",
+            "value": {"kind": "scalar", "value": {"kind": "integer", "value": {"width": "signed_sixty_four"}}}
+          },
+          "may_be_missing": true
+        },
+        "failures": [],
+        "inferredType": {
+          "value": {
+            "kind": "nominal",
+            "value": {"kind": "scalar", "value": {"kind": "integer", "value": {"width": "signed_sixty_four"}}}
+          },
+          "may_be_missing": false
+        }
+      },
+      "expected": {"available": {"integer": "-1500"}, "reads": []}
+    }
+  ]
+}

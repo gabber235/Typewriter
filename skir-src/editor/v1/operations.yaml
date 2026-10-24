@@ -1,0 +1,1088 @@
+# Builtin primitives of the portable expression language.
+#
+# Read by the operations module of the Skir generator (skir.yml), like transport-routes.yaml. A
+# primitive is an operation no composition of other primitives can express with the same result
+# (missing data, failures and list item identities included), without asymptotically more work
+# and without losing an early exit. Everything else is a Kotlin shortcut over these primitives
+# (services/sdk/typewriter-api/.../expression/shortcuts/) and never appears here.
+#
+# The id is the key. profile rule runs on both hosts, so Realm implements it; profile panel runs
+# only in the panel (localized formatting, time zones, authored resource reads). Every operation
+# and every failure needs a case in skir-src/editor/v1/fixtures/operations/.
+#
+# Signature words (resolved by src/operations/resolve.ts; anything else is rejected):
+#   text boolean int32 integer float decimal bytes duration timestamp resource_id
+#                        catalog scalars; a parameter accepts any width of its numeric family,
+#                        a result has the declared width (integer is 64 bits)
+#   <enum> <record>      a declaration below; <read model> a framework read model
+#   A..Z                 a type parameter with a bound: any, numeric (integer, float or decimal
+#                        of any width, one family per call), integer, sized (text, bytes or a
+#                        collection) or ordered (text, a number, boolean, timestamp or duration)
+#   list<T> set<T> map<K, V> entry<K, V> link<T>
+#   items<T>             a list, a set, or a map's entries (records with key and value)
+#   each<T, R>           a lambda the call evaluates for every item of the first argument
+#   step<A, T>           a lambda (accumulator, item) the kernel drives
+#   comparator<T>        a lambda (left, right) returning int32 the kernel drives
+#   apply<T, R>          a lambda the kernel runs once with one value
+#   T?                   explicit null allowed (not missing data)
+#   partial<X>           may contain unfilled entries; the kernel decides
+#   located<X>           partial, and the kernel also receives entry locations
+#   maybe<X>             (result only) missing data at locations the kernel names
+#   field_of<X>          a literal field name of record type X
+#   field_type<X, p>     the type of the field parameter p names
+#   representation<X>    the payload type of the named type X
+#   T...                 variadic, last parameter only
+#   word = case          (enum parameters only) the default case
+#
+# uses: meter            a budget for work that grows with the input
+# uses: types            the catalog's type facts (ancestors, enum cases, value admission)
+# uses: resources        authored resource access (profile panel only)
+# item_ids:              how a list, set or map result names its items: source (the source items'
+#                        identities), positional (0, 1, ...), nested (outer and inner identity),
+#                        grouped (a group takes its first member's identity), prefixed (the
+#                        argument position, then the source identity)
+#
+# Not provided:
+#   now(), random()        Evaluation is pure: results are cached per build and reads become
+#                          save conflict witnesses. Current time can enter as a context binding.
+#   exp, log, sin, cos,    Not bit identical across the JVM, the Dart VM and browsers (only + - * /
+#   fractional power       and sqrt are). Would need an fdlibm port to both hosts.
+#   locale collation       No CLDR collator in Dart, and java.text.Collator is not CLDR.
+#   hashing, URL parsing   No product need; both would be shortcuts under the rule anyway.
+
+unicode: 17.0.0
+
+enums:
+  rounding_mode:
+    type: 467745c1c9534484864d2d63c72c7aae
+    doc: How number.round resolves a value between two multiples of its increment.
+    cases: [nearest_ties_to_even, nearest_ties_away, toward_zero, floor, ceiling]
+  sort_direction:
+    type: 99d0453e6d814766b9032b4676f3a255
+    doc: The order collection.sort_by produces.
+    cases: [ascending, descending]
+  unicode_form:
+    type: c01027913879448aa695e7f3416a8528
+    doc: A Unicode normalization form (UAX 15).
+    cases: [nfc, nfd, nfkc, nfkd]
+  plural_category:
+    type: d15ae2d6248442e3a046d8cf29a7ddd5
+    doc: A CLDR plural category.
+    cases: [zero, one, two, few, many, other]
+  name_style:
+    type: 95689e829ff84ed38fecd9e141453465
+    doc: The width of a localized month or weekday name.
+    cases: [wide, abbreviated, narrow]
+
+records:
+  regex_match:
+    type: 02497871dba44c569055b535aa0644c9
+    doc: One regular expression match, in code points. Groups that did not take part are null.
+    fields: [text: text, start: int32, end: int32, groups: list<text?>]
+  date_time_fields:
+    type: 181a978464f44e999afe4076426cc239
+    doc: >-
+      Calendar fields of an instant at a fixed offset, proleptic Gregorian. Weekday 1 is Monday.
+      timestamp.from_fields ignores weekday and day_of_year.
+    fields:
+      - year: int32
+      - month: int32
+      - day: int32
+      - hour: int32
+      - minute: int32
+      - second: int32
+      - millisecond: int32
+      - weekday: int32
+      - day_of_year: int32
+
+read_models:
+  type_selection: editor/v1/type_catalog.skir:TypeSelection
+  published_type: editor/v1/catalog.skir:PublishedType
+
+failures:
+  substring_range: The start or end index is outside the text, or the end is before the start.
+  empty_separator: The separator is empty.
+  invalid_code_point: A value is not a Unicode scalar value.
+  invalid_number_text: The text is not a number in the expected syntax.
+  invalid_radix: The radix is outside 2 to 36.
+  invalid_duration_text: The text is not an ISO 8601 duration.
+  invalid_timestamp_text: The text is not an RFC 3339 timestamp.
+  regex_limit: The pattern or input exceeds its size limit.
+  invalid_regex: The pattern is outside the portable subset.
+  non_finite_number: Floating point arithmetic produced an infinite or undefined value.
+  division_by_zero: The divisor is zero.
+  invalid_rounding_increment: The rounding increment is not positive.
+  negative_exponent: The exponent is negative.
+  negative_square_root: The value is negative.
+  inexact_conversion: The value has no exact representation in the target type.
+  negative_shift: The shift distance is negative.
+  invalid_byte: A value is outside 0 to 255.
+  magnitude_limit: An integer or decimal result would have more than 20000 digits.
+  duration_range: The duration is outside the representable range.
+  timestamp_range: The timestamp is outside the representable range.
+  invalid_calendar_date: The fields do not name a valid date and time.
+  unknown_time_zone: The zone is not an IANA time zone.
+  invalid_locale: The locale is not a valid BCP 47 language tag.
+  invalid_month: The month is outside 1 to 12.
+  invalid_weekday: The weekday is outside 1 to 7.
+  collection_key_absent: The index or key is absent.
+  slice_range: The start or end index is outside the list, or the end is before the start.
+  invalid_range_step: The range step is zero.
+  invalid_json: The text is not canonical value JSON.
+  incompatible_value: The value does not have the requested type.
+
+evaluator_failures:
+  expression_step_limit: The evaluation exceeded its step budget.
+  expression_collection_limit: The evaluation exceeded its collection item budget.
+  expression_depth_limit: The evaluation nested too deeply.
+  unknown_expression: The expression node is of a kind this host does not know.
+  unknown_expression_binding: The expression names a binding the host did not supply.
+  invalid_expression_local: A local refers outside its frames.
+  invalid_expression_literal: A literal is not a portable value.
+  unknown_operation: The call names an operation this host does not know.
+  invalid_argument_count: The call has the wrong number of arguments.
+  ill_typed_argument: An argument does not have its declared type.
+  integer_out_of_range: An integer argument is outside the 32 bit range its parameter accepts.
+  outside_rule_profile: Realm reached a profile panel operation.
+  expression_result_not_boolean: A predicate did not produce a boolean value.
+
+check_failures:
+  unknown_operation: The call names no declared operation.
+  invalid_argument_count: The call has the wrong number of arguments.
+  invalid_operand_type: An argument does not fit its parameter.
+  numeric_family_mismatch: Numeric operands mix integer, float and decimal.
+  invalid_type_argument: A type argument is missing, extra or not a valid type.
+  literal_required: The parameter only accepts a literal.
+  incompatible_expression_types: The branches of a conditional or fallback have no common type.
+  incompatible_expression_result_type: The result does not fit the slot.
+  expression_result_may_be_missing: The slot does not accept missing data.
+  expression_type_inference_failed: A literal has no type, such as an empty list without context.
+  invalid_expression_type: A declared type does not resolve in the catalog.
+  invalid_expression_literal: A literal is not a portable value.
+  unknown_expression: The expression node is of an unknown kind.
+  unknown_expression_binding: The expression names an unknown binding.
+  invalid_expression_local: A local refers outside its frames.
+  invalid_expression_path: A path does not exist on its type.
+  invalid_lambda: A lambda argument is missing, misplaced or has the wrong arity.
+  outside_rule_profile: A rule calls a profile panel operation.
+  expression_depth_limit: The expression is nested too deeply.
+
+host_failures:
+  untracked_expression_reads: Portable expressions require Realm snapshot reads.
+  selection_evaluator_unavailable: No selection predicate evaluator is installed.
+  check_callback_failed: A Kotlin check callback threw.
+  native_read_failed: Reading an authored value through its Kotlin type threw.
+  representation_read_failed: Reading an authored representation through its Kotlin type threw.
+  expected_named_representation: A representation read requires a named authored value.
+  invalid_representation: The authored representation does not match the requested type.
+  unreadable_value: The authored value is not readable as the requested type.
+  invalid_value: The authored value does not match its checked schema.
+  expected_named_binding: A draft binding requires a named authored value.
+  unreadable_binding: The authored value is not readable as the requested draft type.
+  expected_collection: The authored value is not a collection.
+  expected_value: The path ends at a map row rather than a value.
+  expected_record: A field was read from a value that is not a record.
+  expected_map_row: A map key or value was read outside a map row.
+  value_depth_limit: The authored value nests too deeply.
+  resource_binding_failed: The resource could not be bound to its captured catalog.
+  unresolved_type: A type does not resolve in the captured catalog.
+  unresolved_partial_type: A pending type selection does not resolve in the captured catalog.
+  inconsistent_graph_projection: The declared graph projection is inconsistent.
+  read_context_mismatch: The draft view belongs to a different snapshot or catalog generation.
+  unexpected_null: A nonnullable collection contains null.
+  multiple_selection_matches: More than one value matched a selection that takes one.
+
+operations:
+  # VALUE
+
+  value.equals:
+    doc: Whether two values are structurally equal. Collection item identities are ignored.
+    profile: rule
+    dsl: { name: eq, infix: true }
+    type_parameters: { T: any }
+    parameters: [first: T, second: T]
+    result: boolean
+
+  value.compare:
+    doc: >-
+      -1, 0 or 1 as first orders before, equal to or after second. Text orders by code point,
+      numbers by value, false before true, timestamps and durations chronologically.
+    profile: rule
+    dsl: { name: compare }
+    type_parameters: { O: ordered }
+    parameters: [first: O, second: O]
+    result: int32
+
+  value.is_null:
+    doc: Whether the value is the explicit null. Missing data is not null.
+    profile: rule
+    dsl: { name: isNull }
+    type_parameters: { T: any }
+    parameters: [value: T?]
+    result: boolean
+
+  value.to_text:
+    doc: >-
+      Canonical text of a value. Integers and decimals in plain notation, floats as ECMAScript
+      Number::toString, timestamps as RFC 3339 in UTC with milliseconds, durations as ISO 8601,
+      booleans as true or false, enum cases by name, text unchanged, other values as to_json.
+    profile: rule
+    dsl: { name: toText }
+    type_parameters: { T: any }
+    parameters: [value: T]
+    result: text
+
+  value.to_json:
+    doc: >-
+      The value as canonical Skir readable JSON of its DataValue, without whitespace and with default
+      fields omitted.
+    profile: rule
+    dsl: { name: toJson }
+    type_parameters: { T: any }
+    parameters: [value: T]
+    result: text
+
+  value.from_json:
+    doc: Parses canonical Skir readable JSON of a DataValue that the catalog admits as X.
+    profile: rule
+    dsl: hand
+    type_parameters: { X: any }
+    parameters: [json: text]
+    uses: [types]
+    failures: [invalid_json, incompatible_value]
+    result: X
+
+  value.let:
+    doc: Evaluates value once and runs body with it bound as a lambda local.
+    profile: rule
+    dsl: { name: let, receiver: false }
+    type_parameters: { T: any, R: any }
+    parameters:
+      - value: T
+      - body: apply<T, R>
+    result: R
+
+  value.instance_of:
+    doc: Whether the value's actual type is X or a descendant of X.
+    profile: rule
+    dsl: hand
+    type_parameters: { T: any, X: any }
+    parameters: [value: T]
+    uses: [types]
+    result: boolean
+
+  value.cast:
+    doc: The value as X when its actual type is X or a descendant of X, otherwise null.
+    profile: rule
+    dsl: hand
+    type_parameters: { T: any, X: any }
+    parameters: [value: T]
+    uses: [types]
+    result: X?
+
+  value.wrap:
+    doc: A value of the named type X over its representation.
+    profile: rule
+    dsl: hand
+    type_parameters: { X: any }
+    parameters: [payload: representation<X>]
+    result: X
+
+  value.unwrap:
+    doc: The representation of a value of the named type X.
+    profile: rule
+    dsl: hand
+    type_parameters: { X: any }
+    parameters: [value: X]
+    result: representation<X>
+
+  value.configuration:
+    doc: The actual type of a named value, as a type selection; missing at no location for structural values.
+    profile: panel
+    dsl: { name: configuration }
+    type_parameters: { T: any }
+    parameters: [value: T]
+    result: maybe<type_selection>
+
+  boolean.not:
+    doc: The negation.
+    profile: rule
+    dsl: { name: not }
+    parameters: [value: boolean]
+    result: boolean
+
+  # TEXT (indexes and lengths count code points)
+
+  text.length:
+    doc: The number of code points.
+    profile: rule
+    dsl: { name: length, property: true }
+    parameters: [value: text]
+    result: int32
+
+  text.substring:
+    doc: The code points from start up to, not including, end.
+    profile: rule
+    parameters: [value: text, start: int32, end: int32]
+    failures: [substring_range]
+    result: text
+
+  text.index_of:
+    doc: The index of the first occurrence of needle at or after from, or -1. Stops at the first hit.
+    profile: rule
+    parameters: [value: text, needle: text, from: int32]
+    result: int32
+
+  text.last_index_of:
+    doc: The index of the last occurrence of needle starting at or before from, or -1. Scans from the end.
+    profile: rule
+    parameters: [value: text, needle: text, from: int32]
+    result: int32
+
+  text.split:
+    doc: The parts between occurrences of separator, including empty ones.
+    profile: rule
+    parameters: [value: text, separator: text]
+    failures: [empty_separator]
+    result: list<text>
+    item_ids: positional
+
+  text.join:
+    doc: The parts joined with separator between them.
+    profile: rule
+    parameters: [parts: list<text>, separator: text]
+    result: text
+
+  text.trim_start:
+    doc: Removes portable whitespace (Unicode White_Space and U+FEFF) from the start.
+    profile: rule
+    parameters: [value: text]
+    result: text
+
+  text.trim_end:
+    doc: Removes portable whitespace (Unicode White_Space and U+FEFF) from the end.
+    profile: rule
+    parameters: [value: text]
+    result: text
+
+  text.code_points:
+    doc: The code points.
+    profile: rule
+    parameters: [value: text]
+    result: list<int32>
+    item_ids: positional
+
+  text.from_code_points:
+    doc: The text of these code points.
+    profile: rule
+    dsl: { name: codePointsToText }
+    parameters: [points: list<int32>]
+    failures: [invalid_code_point]
+    result: text
+
+  text.lower:
+    doc: Full lowercase mapping of the pinned Unicode release, root locale, with Final_Sigma.
+    profile: rule
+    dsl: { name: lowercase }
+    parameters: [value: text]
+    result: text
+
+  text.upper:
+    doc: Full uppercase mapping of the pinned Unicode release, root locale.
+    profile: rule
+    dsl: { name: uppercase }
+    parameters: [value: text]
+    result: text
+
+  text.title:
+    doc: >-
+      Titlecases the first code point of every word (a word starts the text or follows
+      whitespace) and lowercases the rest, with the pinned Unicode release.
+    profile: rule
+    dsl: { name: titlecase }
+    parameters: [value: text]
+    result: text
+
+  text.fold_case:
+    doc: Full case folding of the pinned Unicode release, for caseless comparison.
+    profile: rule
+    parameters: [value: text]
+    result: text
+
+  text.normalize:
+    doc: The Unicode normalization form of the text.
+    profile: rule
+    parameters: [value: text, form: unicode_form]
+    result: text
+
+  text.parse_integer:
+    doc: Parses an optionally signed integer of digits in radix. No whitespace or prefixes.
+    profile: rule
+    parameters: [value: text, radix: int32]
+    failures: [invalid_number_text, invalid_radix, magnitude_limit]
+    result: integer
+
+  text.parse_decimal:
+    doc: Parses an optionally signed decimal number in plain or exponent notation.
+    profile: rule
+    parameters: [value: text]
+    failures: [invalid_number_text, magnitude_limit]
+    result: decimal
+
+  text.parse_float:
+    doc: Parses an optionally signed finite floating point number in plain or exponent notation.
+    profile: rule
+    parameters: [value: text]
+    failures: [invalid_number_text]
+    result: float
+
+  text.parse_duration:
+    doc: Parses an ISO 8601 duration of days, hours, minutes and seconds, such as PT1M30.5S.
+    profile: rule
+    parameters: [value: text]
+    failures: [invalid_duration_text, duration_range]
+    result: duration
+
+  text.parse_timestamp:
+    doc: Parses an RFC 3339 timestamp.
+    profile: rule
+    parameters: [value: text]
+    failures: [invalid_timestamp_text, timestamp_range]
+    result: timestamp
+
+  # REGEX (the portable subset, matched by code point)
+
+  regex.find:
+    doc: The first match of pattern in value, or null. Stops at the first match.
+    profile: rule
+    parameters: [value: text, pattern: text]
+    uses: [meter]
+    failures: [regex_limit, invalid_regex]
+    result: regex_match?
+
+  regex.find_all:
+    doc: Every non overlapping match of pattern in value, left to right.
+    profile: rule
+    parameters: [value: text, pattern: text]
+    uses: [meter]
+    failures: [regex_limit, invalid_regex]
+    result: list<regex_match>
+    item_ids: positional
+
+  regex.replace:
+    doc: >-
+      Replaces every match of pattern. In replacement, $n inserts group n (the longest digit run naming an
+      existing group; empty when it did not take part) and $$ a dollar sign; any other $ fails invalid_regex.
+    profile: rule
+    dsl: { name: replaceRegex }
+    parameters: [value: text, pattern: text, replacement: text]
+    uses: [meter]
+    failures: [regex_limit, invalid_regex]
+    result: text
+
+  # NUMBERS (N is one family per call; the result has the widest operand width)
+
+  number.add:
+    doc: The sum.
+    profile: rule
+    dsl: { operator: plus }
+    type_parameters: { N: numeric }
+    parameters: [first: N, second: N, rest: N...]
+    failures: [non_finite_number]
+    result: N
+
+  number.subtract:
+    doc: The difference.
+    profile: rule
+    dsl: { operator: minus }
+    type_parameters: { N: numeric }
+    parameters: [first: N, second: N]
+    failures: [non_finite_number]
+    result: N
+
+  number.multiply:
+    doc: The product.
+    profile: rule
+    dsl: { operator: times }
+    type_parameters: { N: numeric }
+    parameters: [first: N, second: N, rest: N...]
+    failures: [non_finite_number, magnitude_limit]
+    result: N
+
+  number.divide:
+    doc: >-
+      The quotient. Integers truncate toward zero; decimals round to 34 significant digits,
+      half even; floats follow IEEE 754.
+    profile: rule
+    dsl: { operator: div }
+    type_parameters: { N: numeric }
+    parameters: [dividend: N, divisor: N]
+    failures: [division_by_zero, non_finite_number]
+    result: N
+
+  number.remainder:
+    doc: The remainder of truncating division; it has the sign of the dividend.
+    profile: rule
+    dsl: { operator: rem }
+    type_parameters: { N: numeric }
+    parameters: [dividend: N, divisor: N]
+    failures: [division_by_zero, non_finite_number]
+    result: N
+
+  number.round:
+    doc: Rounds value to a multiple of increment.
+    profile: rule
+    type_parameters: { N: numeric }
+    parameters: [value: N, increment: N, mode: rounding_mode = nearest_ties_to_even]
+    failures: [invalid_rounding_increment, non_finite_number]
+    result: N
+
+  number.power:
+    doc: >-
+      Value raised to a nonnegative integer exponent, where any value to the power 0 is 1; exact for
+      integers and decimals.
+    profile: rule
+    type_parameters: { N: numeric }
+    parameters: [value: N, exponent: int32]
+    failures: [negative_exponent, non_finite_number, magnitude_limit]
+    result: N
+
+  number.sqrt:
+    doc: >-
+      The square root. Integers round down; decimals round to 34 significant digits, half even;
+      floats follow IEEE 754.
+    profile: rule
+    type_parameters: { N: numeric }
+    parameters: [value: N]
+    failures: [negative_square_root]
+    result: N
+
+  number.convert:
+    doc: The value as the numeric type M when it is exactly representable there.
+    profile: rule
+    dsl: hand
+    type_parameters: { N: numeric, M: numeric }
+    parameters: [value: N]
+    failures: [inexact_conversion]
+    result: M
+
+  number.format:
+    doc: >-
+      The value with exactly fraction_digits fraction digits (rounded half even; a float from its shortest
+      round trip decimal) and the locale's CLDR digits, grouping and symbols. Locale und uses no grouping.
+      More than 20000 fraction digits, or a result of more than 20000 digits, fails magnitude_limit.
+    profile: panel
+    dsl: { name: formatNumber }
+    type_parameters: { N: numeric }
+    parameters: [value: N, fraction_digits: int32, locale: text]
+    failures: [invalid_locale, magnitude_limit]
+    result: text
+
+  number.plural_category:
+    doc: >-
+      The CLDR plural category of the value in the locale, from the plural operands of its exact decimal
+      value (a float through its shortest round trip decimal). A magnitude of 10^21 or more, or more than
+      20 fraction digits, is beyond the platform plural rules and fails magnitude_limit.
+    profile: panel
+    type_parameters: { N: numeric }
+    parameters: [value: N, locale: text]
+    failures: [invalid_locale, magnitude_limit]
+    result: plural_category
+
+  integer.gcd:
+    doc: Greatest common divisor of the absolute values; gcd(0, 0) is 0.
+    profile: rule
+    type_parameters: { I: integer }
+    parameters: [first: I, second: I]
+    result: I
+
+  integer.bit_and:
+    doc: Bitwise and, in two's complement.
+    profile: rule
+    dsl: { name: and, infix: true }
+    type_parameters: { I: integer }
+    parameters: [first: I, second: I, rest: I...]
+    result: I
+
+  integer.bit_or:
+    doc: Bitwise or, in two's complement.
+    profile: rule
+    dsl: { name: or, infix: true }
+    type_parameters: { I: integer }
+    parameters: [first: I, second: I, rest: I...]
+    result: I
+
+  integer.bit_xor:
+    doc: Bitwise exclusive or, in two's complement.
+    profile: rule
+    dsl: { name: xor, infix: true }
+    type_parameters: { I: integer }
+    parameters: [first: I, second: I, rest: I...]
+    result: I
+
+  integer.bit_not:
+    doc: Bitwise complement, in two's complement (the negation minus one).
+    profile: rule
+    dsl: { name: inv }
+    type_parameters: { I: integer }
+    parameters: [value: I]
+    result: I
+
+  integer.shift_left:
+    doc: Shifts left by bits, multiplying by two to the power of bits.
+    profile: rule
+    dsl: { name: shl, infix: true }
+    type_parameters: { I: integer }
+    parameters: [value: I, bits: int32]
+    failures: [negative_shift, magnitude_limit]
+    result: I
+
+  integer.shift_right:
+    doc: Arithmetic shift right by bits, rounding toward negative infinity.
+    profile: rule
+    dsl: { name: shr, infix: true }
+    type_parameters: { I: integer }
+    parameters: [value: I, bits: int32]
+    failures: [negative_shift]
+    result: I
+
+  decimal.scale:
+    doc: The number of fraction digits of the canonical decimal, without trailing zeros.
+    profile: rule
+    parameters: [value: decimal]
+    result: int32
+
+  # BYTES
+
+  bytes.to_list:
+    doc: The bytes as integers from 0 to 255.
+    profile: rule
+    dsl: { name: toByteList }
+    parameters: [value: bytes]
+    result: list<int32>
+    item_ids: positional
+
+  bytes.from_list:
+    doc: The bytes of integers from 0 to 255.
+    profile: rule
+    dsl: { name: toBytes }
+    parameters: [values: list<int32>]
+    failures: [invalid_byte]
+    result: bytes
+
+  # TIME (timestamps have millisecond precision)
+
+  duration.from_milliseconds:
+    doc: The duration of a number of milliseconds.
+    profile: rule
+    dsl: { name: millisecondsToDuration }
+    parameters: [milliseconds: integer]
+    failures: [duration_range]
+    result: duration
+
+  duration.to_milliseconds:
+    doc: The whole milliseconds of the duration, truncated toward zero.
+    profile: rule
+    dsl: { name: toMilliseconds }
+    parameters: [value: duration]
+    result: integer
+
+  timestamp.from_epoch_milliseconds:
+    doc: The timestamp a number of milliseconds after 1970-01-01T00:00:00Z.
+    profile: rule
+    dsl: { name: epochMillisecondsToTimestamp }
+    parameters: [milliseconds: integer]
+    failures: [timestamp_range]
+    result: timestamp
+
+  timestamp.to_epoch_milliseconds:
+    doc: The milliseconds since 1970-01-01T00:00:00Z.
+    profile: rule
+    dsl: { name: toEpochMilliseconds }
+    parameters: [value: timestamp]
+    result: integer
+
+  timestamp.fields:
+    doc: The calendar fields of the timestamp at a fixed offset from UTC, proleptic Gregorian.
+    profile: rule
+    parameters: [value: timestamp, offset: duration]
+    failures: [timestamp_range]
+    result: date_time_fields
+
+  timestamp.from_fields:
+    doc: The timestamp of calendar fields at a fixed offset from UTC; weekday and day_of_year are ignored.
+    profile: rule
+    dsl: { name: toTimestamp }
+    parameters: [fields: date_time_fields, offset: duration]
+    failures: [invalid_calendar_date, timestamp_range]
+    result: timestamp
+
+  timestamp.zone_offset:
+    doc: The offset from UTC of an IANA time zone at the timestamp.
+    profile: panel
+    parameters: [value: timestamp, zone: text]
+    failures: [unknown_time_zone]
+    result: duration
+
+  timestamp.month_name:
+    doc: The CLDR name of month 1 to 12 in the locale.
+    profile: panel
+    dsl: { name: monthName }
+    parameters: [month: int32, locale: text, style: name_style]
+    failures: [invalid_month, invalid_locale]
+    result: text
+
+  timestamp.weekday_name:
+    doc: The CLDR name of weekday 1 (Monday) to 7 in the locale.
+    profile: panel
+    dsl: { name: weekdayName }
+    parameters: [weekday: int32, locale: text, style: name_style]
+    failures: [invalid_weekday, invalid_locale]
+    result: text
+
+  # COLLECTIONS
+
+  list.of:
+    doc: A list of the values.
+    profile: rule
+    dsl: { name: listExpr, receiver: false }
+    type_parameters: { T: any }
+    parameters: [values: T...]
+    result: list<T>
+    item_ids: positional
+
+  entry.of:
+    doc: A map entry of key and value.
+    profile: rule
+    dsl: { name: entryOf, receiver: false }
+    type_parameters: { K: any, V: any }
+    parameters: [key: K, value: V]
+    result: entry<K, V>
+
+  collection.size:
+    doc: The number of items, including unfilled ones.
+    profile: rule
+    dsl: { name: size, property: true }
+    type_parameters: { T: any }
+    parameters: [source: partial<items<T>>]
+    result: int32
+
+  collection.contains:
+    doc: Whether an item equals value. Stops at the first hit.
+    profile: rule
+    type_parameters: { T: any }
+    parameters: [source: items<T>, value: T]
+    result: boolean
+
+  list.index_of:
+    doc: The index of the first item equal to value, or -1. Stops at the first hit.
+    profile: rule
+    type_parameters: { T: any }
+    parameters: [source: list<T>, value: T]
+    result: int32
+
+  list.last_index_of:
+    doc: The index of the last item equal to value, or -1. Scans from the end.
+    profile: rule
+    type_parameters: { T: any }
+    parameters: [source: list<T>, value: T]
+    result: int32
+
+  list.at:
+    doc: The item at index; missing while that item is unfilled.
+    profile: rule
+    dsl: { operator: get }
+    type_parameters: { T: any }
+    parameters: [source: located<list<T>>, index: int32]
+    failures: [collection_key_absent]
+    result: maybe<T>
+
+  list.slice:
+    doc: The items from start up to, not including, end.
+    profile: rule
+    type_parameters: { T: any }
+    parameters: [source: list<T>, start: int32, end: int32]
+    failures: [slice_range]
+    result: list<T>
+    item_ids: source
+
+  list.reverse:
+    doc: The items in reverse order.
+    profile: rule
+    dsl: { name: reversed }
+    type_parameters: { T: any }
+    parameters: [source: list<T>]
+    result: list<T>
+    item_ids: source
+
+  list.concat:
+    doc: The items of every list in order.
+    profile: rule
+    dsl: { operator: plus }
+    type_parameters: { T: any }
+    parameters: [first: list<T>, second: list<T>, rest: list<T>...]
+    result: list<T>
+    item_ids: prefixed
+
+  list.flatten:
+    doc: The items of every inner list in order.
+    profile: rule
+    type_parameters: { T: any }
+    parameters: [source: list<list<T>>]
+    result: list<T>
+    item_ids: nested
+
+  list.range:
+    doc: The integers from start, by step, up to but not including end.
+    profile: rule
+    dsl: { name: rangeExpr, receiver: false }
+    parameters: [start: int32, end: int32, step: int32]
+    uses: [meter]
+    failures: [invalid_range_step]
+    result: list<int32>
+    item_ids: positional
+
+  list.zip:
+    doc: Entries pairing items at equal positions; the shorter list decides the length.
+    profile: rule
+    dsl: { name: zip, infix: true }
+    type_parameters: { A: any, B: any }
+    parameters: [first: list<A>, second: list<B>]
+    result: list<entry<A, B>>
+    item_ids: source
+
+  list.scan:
+    doc: Every accumulator of a left fold, starting with initial.
+    profile: rule
+    type_parameters: { T: any, A: any }
+    parameters:
+      - source: items<T>
+      - initial: A
+      - step: step<A, T>
+    result: list<A>
+    item_ids: positional
+
+  collection.map:
+    doc: The body's result for every item, keeping the item identities.
+    profile: rule
+    type_parameters: { T: any, R: any }
+    parameters:
+      - source: items<T>
+      - body: each<T, R>
+    result: list<R>
+    item_ids: source
+
+  collection.filter:
+    doc: The items whose predicate is true, keeping their identities.
+    profile: rule
+    type_parameters: { T: any }
+    parameters:
+      - source: items<T>
+      - predicate: each<T, boolean>
+    result: list<T>
+    item_ids: source
+
+  collection.group_by:
+    doc: The items grouped by key, in order of first occurrence.
+    profile: rule
+    type_parameters: { T: any, K: any }
+    parameters:
+      - source: items<T>
+      - key: each<T, K>
+    result: map<K, list<T>>
+    item_ids: grouped
+
+  collection.sort_by:
+    doc: The items ordered by key; equal keys keep their order.
+    profile: rule
+    dsl: { name: sortedBy }
+    type_parameters: { T: any, O: ordered }
+    parameters:
+      - source: items<T>
+      - key: each<T, O>
+      - direction: sort_direction = ascending
+    result: list<T>
+    item_ids: source
+
+  collection.sort_with:
+    doc: The items ordered by comparator; equal items keep their order.
+    profile: rule
+    dsl: { name: sortedWith }
+    type_parameters: { T: any }
+    parameters: [source: items<T>, comparator: comparator<T>]
+    uses: [meter]
+    result: list<T>
+    item_ids: source
+
+  collection.fold:
+    doc: Folds the items from initial, left to right.
+    profile: rule
+    type_parameters: { T: any, A: any }
+    parameters:
+      - source: items<T>
+      - initial: A
+      - step: step<A, T>
+    result: A
+
+  collection.to_list:
+    doc: The items as a list.
+    profile: rule
+    type_parameters: { T: any }
+    parameters: [source: items<T>]
+    result: list<T>
+    item_ids: source
+
+  collection.to_set:
+    doc: The distinct items as a set; the first occurrence of equal items is kept.
+    profile: rule
+    type_parameters: { T: any }
+    parameters: [source: items<T>]
+    result: set<T>
+    item_ids: source
+
+  set.intersect:
+    doc: The items of first that second contains.
+    profile: rule
+    dsl: { name: intersect, infix: true }
+    type_parameters: { T: any }
+    parameters: [first: set<T>, second: set<T>]
+    result: set<T>
+    item_ids: source
+
+  set.difference:
+    doc: The items of first that second does not contain.
+    profile: rule
+    dsl: { name: subtract, infix: true }
+    type_parameters: { T: any }
+    parameters: [first: set<T>, second: set<T>]
+    result: set<T>
+    item_ids: source
+
+  map.get:
+    doc: The value of key; missing while that value is unfilled or a key is unfilled.
+    profile: rule
+    dsl: { operator: get }
+    type_parameters: { K: any, V: any }
+    parameters:
+      - source: located<map<K, V>>
+      - key: K
+    failures: [collection_key_absent]
+    result: maybe<V>
+
+  map.contains_key:
+    doc: Whether a row has the key.
+    profile: rule
+    type_parameters: { K: any, V: any }
+    parameters:
+      - source: map<K, V>
+      - key: K
+    result: boolean
+
+  map.from_entries:
+    doc: The map of the entries; a later entry replaces an equal key and keeps the first position.
+    profile: rule
+    dsl: { name: toMap }
+    type_parameters: { K: any, V: any }
+    parameters:
+      - source: items<entry<K, V>>
+    result: map<K, V>
+    item_ids: source
+
+  map.map_values:
+    doc: The map with every value replaced by the body's result for its entry.
+    profile: rule
+    type_parameters: { K: any, V: any, R: any }
+    parameters:
+      - source: map<K, V>
+      - body: each<entry<K, V>, R>
+    result: map<K, R>
+    item_ids: source
+
+  # RECORDS, ENUMS, LINKS, RESOURCES, CATALOG
+
+  record.with_field:
+    doc: The record with one field replaced.
+    profile: rule
+    dsl: hand
+    type_parameters: { X: any }
+    parameters:
+      - source: X
+      - field: field_of<X>
+      - value: field_type<X, field>
+    result: X
+
+  enum.from_name:
+    doc: The case of the enumeration E with the name, or null.
+    profile: rule
+    dsl: hand
+    type_parameters: { E: any }
+    parameters: [name: text]
+    uses: [types]
+    result: E?
+
+  enum.cases:
+    doc: Every case of the enumeration E in declaration order.
+    profile: rule
+    dsl: hand
+    type_parameters: { E: any }
+    parameters: []
+    uses: [types]
+    result: list<E>
+    item_ids: positional
+
+  link.target:
+    doc: The identity of the resource the link names.
+    profile: rule
+    dsl: { name: target, property: true }
+    type_parameters: { T: any }
+    parameters: [reference: link<T>]
+    result: resource_id
+
+  resource.value:
+    doc: >-
+      The resource's fields as a record of its configured type. Reads the resource; missing at its root
+      when the link is stale.
+    profile: panel
+    type_parameters: { T: any }
+    parameters: [reference: link<T>]
+    uses: [resources]
+    result: maybe<T>
+
+  resource.value_of:
+    doc: >-
+      The fields of a resource of type T or a descendant, as a record of its configured type. Reads the
+      resource; missing at its root when there is no such resource or it is not a T.
+    profile: panel
+    dsl: hand
+    type_parameters: { T: any }
+    parameters: [identity: resource_id]
+    uses: [resources]
+    result: maybe<T>
+
+  resource.identity:
+    doc: >-
+      The identity of the resource the link names. Reads the resource; missing at its root when the link
+      is stale.
+    profile: panel
+    type_parameters: { T: any }
+    parameters: [reference: link<T>]
+    uses: [resources]
+    result: maybe<resource_id>
+
+  resource.configuration:
+    doc: >-
+      The type selection of a resource by identity. Reads the resource; missing at its root when there
+      is none.
+    profile: panel
+    parameters: [identity: resource_id]
+    uses: [resources]
+    result: maybe<type_selection>
+
+  catalog.declaration:
+    doc: >-
+      The published declaration of the type a selection names; missing at no location when the catalog
+      lacks it.
+    profile: panel
+    parameters: [selection: type_selection]
+    uses: [resources]
+    result: maybe<published_type>

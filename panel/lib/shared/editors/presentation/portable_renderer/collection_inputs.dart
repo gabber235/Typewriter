@@ -11,8 +11,8 @@ extension _PortableCollectionInputRendering
     context: context,
     control: control.control,
     itemPresentation: control.itemPresentation,
-    itemBindingId: control.itemBindingId,
-    indexBindingId: control.indexBindingId,
+    itemBinding: control.itemBinding,
+    indexBinding: control.indexBinding,
     allowAdd: control.allowAdd,
     allowRemove: control.allowRemove,
     allowReorder: control.allowReorder,
@@ -31,8 +31,8 @@ extension _PortableCollectionInputRendering
     context: context,
     control: control.control,
     itemPresentation: control.itemPresentation,
-    itemBindingId: control.itemBindingId,
-    indexBindingId: null,
+    itemBinding: control.itemBinding,
+    indexBinding: null,
     allowAdd: control.allowAdd,
     allowRemove: control.allowRemove,
     allowReorder: false,
@@ -46,8 +46,8 @@ extension _PortableCollectionInputRendering
     required BuildContext context,
     required skir.BoundControl control,
     required skir.PresentationNode? itemPresentation,
-    required skir.ExpressionBindingId itemBindingId,
-    required skir.ExpressionBindingId? indexBindingId,
+    required skir.BindingDeclaration itemBinding,
+    required skir.BindingDeclaration? indexBinding,
     required bool allowAdd,
     required bool allowRemove,
     required bool allowReorder,
@@ -115,20 +115,21 @@ extension _PortableCollectionInputRendering
                 ],
               ),
             );
-            var itemScope = childScope.withBinding(reference, itemBindingId);
+            var itemScope = childScope.withBinding(reference, itemBinding);
             if (itemScope == null) {
               return _diagnostic(
                 "Collection item ${item.id.value} is unavailable",
               );
             }
-            if (indexBindingId != null) {
-              itemScope = itemScope.withValues({
-                indexBindingId: skir.DataValue.wrapInteger(index.toString()),
-              });
+            if (indexBinding != null) {
+              itemScope = itemScope.declare(
+                indexBinding,
+                skir.DataValue.wrapInteger(index.toString()),
+              );
             }
             final editor = prepareListChild(
               itemPresentation,
-              itemBindingId,
+              itemBinding.id,
               itemScope,
             );
             return collectionRowWithFocus(
@@ -338,22 +339,22 @@ extension _PortableCollectionInputRendering
       bindingId: control.control.binding.bindingId,
       path: skir.ValuePath(segments: [...base, skir.PathSegment.mapValue]),
     );
-    final keyScope = childScope.withBinding(keyReference, control.keyBindingId);
+    final keyScope = childScope.withBinding(keyReference, control.keyBinding);
     final valueScope = childScope.withBinding(
       valueReference,
-      control.valueBindingId,
+      control.valueBinding,
     );
     if (keyScope == null || valueScope == null) {
       return _diagnostic("Map row ${row.id.value} is unavailable");
     }
     final key = prepareListChild(
       control.keyPresentation,
-      control.keyBindingId,
+      control.keyBinding.id,
       keyScope,
     );
     final value = prepareListChild(
       control.valuePresentation,
-      control.valueBindingId,
+      control.valueBinding.id,
       valueScope,
     );
     final scalarPair = key.effectiveInline && value.effectiveInline;

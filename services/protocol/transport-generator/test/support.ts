@@ -6,6 +6,8 @@ import { parse } from "yaml";
 import { z } from "zod";
 
 import { Config } from "../src/config.js";
+import { OperationsConfig } from "../src/operations/index.js";
+import { parseOperations } from "../src/operations/manifest.js";
 import { parseManifest, type Manifest } from "../src/routes/manifest.js";
 import { resolveRoutes, type ResolvedRoute, type ResolvedRoutes } from "../src/routes/resolve.js";
 import { compileSkirSources } from "../src/skir_sources.js";
@@ -96,3 +98,12 @@ export const EMPTY_INPUT: CodeGenerator.Input<unknown> = {
   recordMap: new Map(),
   config: {},
 };
+
+/** The config skir.yml gives the Dart operations target, the only one that takes every option. */
+export const OPERATIONS_CONFIG = OperationsConfig.parse(generatorConfig("typewriter-transport/operations/dart"));
+
+/** Parses the committed operations manifest skir.yml configures. */
+export function committedOperations() {
+  const path = repository(OPERATIONS_CONFIG.manifest);
+  return parseOperations(readFileSync(path, "utf8"), path);
+}

@@ -1,0 +1,1182 @@
+{
+  "cases": [
+    {
+      "id": "timestamp_from_epoch_milliseconds_zero",
+      "expression": {
+        "kind": "call",
+        "value": {
+          "operation": {"value": "timestamp.from_epoch_milliseconds"},
+          "type_arguments": [],
+          "arguments": [{"kind": "literal", "value": {"kind": "integer", "value": "0"}}]
+        }
+      },
+      "expected": {"available": {"timestamp": "1970-01-01T00:00:00.000Z"}, "reads": []}
+    },
+    {
+      "id": "timestamp_from_epoch_milliseconds_minimum",
+      "expression": {
+        "kind": "call",
+        "value": {
+          "operation": {"value": "timestamp.from_epoch_milliseconds"},
+          "type_arguments": [],
+          "arguments": [{"kind": "literal", "value": {"kind": "integer", "value": "-62135596800000"}}]
+        }
+      },
+      "expected": {"available": {"timestamp": "0001-01-01T00:00:00.000Z"}, "reads": []}
+    },
+    {
+      "id": "timestamp_from_epoch_milliseconds_maximum",
+      "expression": {
+        "kind": "call",
+        "value": {
+          "operation": {"value": "timestamp.from_epoch_milliseconds"},
+          "type_arguments": [],
+          "arguments": [{"kind": "literal", "value": {"kind": "integer", "value": "253402300799999"}}]
+        }
+      },
+      "expected": {"available": {"timestamp": "9999-12-31T23:59:59.999Z"}, "reads": []}
+    },
+    {
+      "id": "timestamp_from_epoch_milliseconds_before_range",
+      "expression": {
+        "kind": "call",
+        "value": {
+          "operation": {"value": "timestamp.from_epoch_milliseconds"},
+          "type_arguments": [],
+          "arguments": [{"kind": "literal", "value": {"kind": "integer", "value": "-62135596800001"}}]
+        }
+      },
+      "expected": {"failed": "timestamp_range", "reads": []}
+    },
+    {
+      "id": "timestamp_from_epoch_milliseconds_after_range",
+      "expression": {
+        "kind": "call",
+        "value": {
+          "operation": {"value": "timestamp.from_epoch_milliseconds"},
+          "type_arguments": [],
+          "arguments": [{"kind": "literal", "value": {"kind": "integer", "value": "253402300800000"}}]
+        }
+      },
+      "expected": {"failed": "timestamp_range", "reads": []}
+    },
+    {
+      "id": "timestamp_to_epoch_milliseconds",
+      "expression": {
+        "kind": "call",
+        "value": {
+          "operation": {"value": "timestamp.to_epoch_milliseconds"},
+          "type_arguments": [],
+          "arguments": [
+            {
+              "kind": "literal",
+              "value": {
+                "kind": "timestamp",
+                "value": {"unix_millis": 1704164645006, "formatted": "2024-01-02T03:04:05.006Z"}
+              }
+            }
+          ]
+        }
+      },
+      "check": {
+        "resultType": {
+          "value": {
+            "kind": "nominal",
+            "value": {"kind": "scalar", "value": {"kind": "integer", "value": {"width": "signed_sixty_four"}}}
+          },
+          "may_be_missing": true
+        },
+        "failures": [],
+        "inferredType": {
+          "value": {
+            "kind": "nominal",
+            "value": {"kind": "scalar", "value": {"kind": "integer", "value": {"width": "signed_sixty_four"}}}
+          },
+          "may_be_missing": false
+        }
+      },
+      "expected": {"available": {"integer": "1704164645006"}, "reads": []}
+    },
+    {
+      "id": "timestamp_fields_offset_crosses_leap_day",
+      "expression": {
+        "kind": "call",
+        "value": {
+          "operation": {"value": "timestamp.fields"},
+          "type_arguments": [],
+          "arguments": [
+            {
+              "kind": "literal",
+              "value": {
+                "kind": "timestamp",
+                "value": {"unix_millis": 1709249400250, "formatted": "2024-02-29T23:30:00.250Z"}
+              }
+            },
+            {"kind": "literal", "value": {"kind": "duration", "value": {"value": {"milliseconds": 3600000}}}}
+          ]
+        }
+      },
+      "expected": {
+        "available": {
+          "named": {
+            "declared": "181a978464f44e999afe4076426cc239",
+            "revision": 1,
+            "arguments": [],
+            "payload": {
+              "record": {
+                "day": {"integer": "1"},
+                "dayOfYear": {"integer": "61"},
+                "hour": {"integer": "0"},
+                "millisecond": {"integer": "250"},
+                "minute": {"integer": "30"},
+                "month": {"integer": "3"},
+                "second": {"integer": "0"},
+                "weekday": {"integer": "5"},
+                "year": {"integer": "2024"}
+              }
+            }
+          }
+        },
+        "reads": []
+      }
+    },
+    {
+      "id": "timestamp_fields_negative_offset_crosses_year",
+      "expression": {
+        "kind": "call",
+        "value": {
+          "operation": {"value": "timestamp.fields"},
+          "type_arguments": [],
+          "arguments": [
+            {
+              "kind": "literal",
+              "value": {
+                "kind": "timestamp",
+                "value": {"unix_millis": 1704067200000, "formatted": "2024-01-01T00:00:00.000Z"}
+              }
+            },
+            {"kind": "literal", "value": {"kind": "duration", "value": {"value": {"milliseconds": -1}}}}
+          ]
+        }
+      },
+      "expected": {
+        "available": {
+          "named": {
+            "declared": "181a978464f44e999afe4076426cc239",
+            "revision": 1,
+            "arguments": [],
+            "payload": {
+              "record": {
+                "day": {"integer": "31"},
+                "dayOfYear": {"integer": "365"},
+                "hour": {"integer": "23"},
+                "millisecond": {"integer": "999"},
+                "minute": {"integer": "59"},
+                "month": {"integer": "12"},
+                "second": {"integer": "59"},
+                "weekday": {"integer": "7"},
+                "year": {"integer": "2023"}
+              }
+            }
+          }
+        },
+        "reads": []
+      }
+    },
+    {
+      "id": "timestamp_fields_minimum",
+      "expression": {
+        "kind": "call",
+        "value": {
+          "operation": {"value": "timestamp.fields"},
+          "type_arguments": [],
+          "arguments": [
+            {
+              "kind": "literal",
+              "value": {
+                "kind": "timestamp",
+                "value": {"unix_millis": -62135596800000, "formatted": "0001-01-01T00:00:00Z"}
+              }
+            },
+            {"kind": "literal", "value": {"kind": "duration", "value": {}}}
+          ]
+        }
+      },
+      "expected": {
+        "available": {
+          "named": {
+            "declared": "181a978464f44e999afe4076426cc239",
+            "revision": 1,
+            "arguments": [],
+            "payload": {
+              "record": {
+                "day": {"integer": "1"},
+                "dayOfYear": {"integer": "1"},
+                "hour": {"integer": "0"},
+                "millisecond": {"integer": "0"},
+                "minute": {"integer": "0"},
+                "month": {"integer": "1"},
+                "second": {"integer": "0"},
+                "weekday": {"integer": "1"},
+                "year": {"integer": "1"}
+              }
+            }
+          }
+        },
+        "reads": []
+      }
+    },
+    {
+      "id": "timestamp_fields_outside_range",
+      "expression": {
+        "kind": "call",
+        "value": {
+          "operation": {"value": "timestamp.fields"},
+          "type_arguments": [],
+          "arguments": [
+            {
+              "kind": "literal",
+              "value": {
+                "kind": "timestamp",
+                "value": {"unix_millis": 253402300799999, "formatted": "9999-12-31T23:59:59.999Z"}
+              }
+            },
+            {"kind": "literal", "value": {"kind": "duration", "value": {"value": {"milliseconds": 1}}}}
+          ]
+        }
+      },
+      "expected": {"failed": "timestamp_range", "reads": []}
+    },
+    {
+      "id": "timestamp_from_fields_ignores_weekday_and_day_of_year",
+      "expression": {
+        "kind": "call",
+        "value": {
+          "operation": {"value": "timestamp.from_fields"},
+          "type_arguments": [],
+          "arguments": [
+            {
+              "kind": "literal",
+              "value": {
+                "kind": "named",
+                "value": {
+                  "actual_type": {
+                    "definition": {
+                      "type_id": {"kind": "declared", "value": {"value": "181a978464f44e999afe4076426cc239"}},
+                      "revision": 1
+                    },
+                    "arguments": []
+                  },
+                  "payload": {
+                    "kind": "record",
+                    "value": {
+                      "fields": [
+                        {"name": "day", "value": {"kind": "integer", "value": "29"}},
+                        {"name": "dayOfYear", "value": {"kind": "integer", "value": "400"}},
+                        {"name": "hour", "value": {"kind": "integer", "value": "12"}},
+                        {"name": "millisecond", "value": {"kind": "integer", "value": "0"}},
+                        {"name": "minute", "value": {"kind": "integer", "value": "0"}},
+                        {"name": "month", "value": {"kind": "integer", "value": "2"}},
+                        {"name": "second", "value": {"kind": "integer", "value": "0"}},
+                        {"name": "weekday", "value": {"kind": "integer", "value": "9"}},
+                        {"name": "year", "value": {"kind": "integer", "value": "2024"}}
+                      ]
+                    }
+                  }
+                }
+              }
+            },
+            {"kind": "literal", "value": {"kind": "duration", "value": {"value": {"milliseconds": 7200000}}}}
+          ]
+        }
+      },
+      "expected": {"available": {"timestamp": "2024-02-29T10:00:00.000Z"}, "reads": []}
+    },
+    {
+      "id": "timestamp_from_fields_century_leap_year",
+      "expression": {
+        "kind": "call",
+        "value": {
+          "operation": {"value": "timestamp.from_fields"},
+          "type_arguments": [],
+          "arguments": [
+            {
+              "kind": "literal",
+              "value": {
+                "kind": "named",
+                "value": {
+                  "actual_type": {
+                    "definition": {
+                      "type_id": {"kind": "declared", "value": {"value": "181a978464f44e999afe4076426cc239"}},
+                      "revision": 1
+                    },
+                    "arguments": []
+                  },
+                  "payload": {
+                    "kind": "record",
+                    "value": {
+                      "fields": [
+                        {"name": "day", "value": {"kind": "integer", "value": "29"}},
+                        {"name": "dayOfYear", "value": {"kind": "integer", "value": "0"}},
+                        {"name": "hour", "value": {"kind": "integer", "value": "0"}},
+                        {"name": "millisecond", "value": {"kind": "integer", "value": "1"}},
+                        {"name": "minute", "value": {"kind": "integer", "value": "0"}},
+                        {"name": "month", "value": {"kind": "integer", "value": "2"}},
+                        {"name": "second", "value": {"kind": "integer", "value": "0"}},
+                        {"name": "weekday", "value": {"kind": "integer", "value": "0"}},
+                        {"name": "year", "value": {"kind": "integer", "value": "2000"}}
+                      ]
+                    }
+                  }
+                }
+              }
+            },
+            {"kind": "literal", "value": {"kind": "duration", "value": {}}}
+          ]
+        }
+      },
+      "expected": {"available": {"timestamp": "2000-02-29T00:00:00.001Z"}, "reads": []}
+    },
+    {
+      "id": "timestamp_from_fields_century_not_leap",
+      "expression": {
+        "kind": "call",
+        "value": {
+          "operation": {"value": "timestamp.from_fields"},
+          "type_arguments": [],
+          "arguments": [
+            {
+              "kind": "literal",
+              "value": {
+                "kind": "named",
+                "value": {
+                  "actual_type": {
+                    "definition": {
+                      "type_id": {"kind": "declared", "value": {"value": "181a978464f44e999afe4076426cc239"}},
+                      "revision": 1
+                    },
+                    "arguments": []
+                  },
+                  "payload": {
+                    "kind": "record",
+                    "value": {
+                      "fields": [
+                        {"name": "day", "value": {"kind": "integer", "value": "29"}},
+                        {"name": "dayOfYear", "value": {"kind": "integer", "value": "0"}},
+                        {"name": "hour", "value": {"kind": "integer", "value": "0"}},
+                        {"name": "millisecond", "value": {"kind": "integer", "value": "0"}},
+                        {"name": "minute", "value": {"kind": "integer", "value": "0"}},
+                        {"name": "month", "value": {"kind": "integer", "value": "2"}},
+                        {"name": "second", "value": {"kind": "integer", "value": "0"}},
+                        {"name": "weekday", "value": {"kind": "integer", "value": "0"}},
+                        {"name": "year", "value": {"kind": "integer", "value": "1900"}}
+                      ]
+                    }
+                  }
+                }
+              }
+            },
+            {"kind": "literal", "value": {"kind": "duration", "value": {}}}
+          ]
+        }
+      },
+      "expected": {"failed": "invalid_calendar_date", "reads": []}
+    },
+    {
+      "id": "timestamp_from_fields_month_13",
+      "expression": {
+        "kind": "call",
+        "value": {
+          "operation": {"value": "timestamp.from_fields"},
+          "type_arguments": [],
+          "arguments": [
+            {
+              "kind": "literal",
+              "value": {
+                "kind": "named",
+                "value": {
+                  "actual_type": {
+                    "definition": {
+                      "type_id": {"kind": "declared", "value": {"value": "181a978464f44e999afe4076426cc239"}},
+                      "revision": 1
+                    },
+                    "arguments": []
+                  },
+                  "payload": {
+                    "kind": "record",
+                    "value": {
+                      "fields": [
+                        {"name": "day", "value": {"kind": "integer", "value": "1"}},
+                        {"name": "dayOfYear", "value": {"kind": "integer", "value": "0"}},
+                        {"name": "hour", "value": {"kind": "integer", "value": "0"}},
+                        {"name": "millisecond", "value": {"kind": "integer", "value": "0"}},
+                        {"name": "minute", "value": {"kind": "integer", "value": "0"}},
+                        {"name": "month", "value": {"kind": "integer", "value": "13"}},
+                        {"name": "second", "value": {"kind": "integer", "value": "0"}},
+                        {"name": "weekday", "value": {"kind": "integer", "value": "0"}},
+                        {"name": "year", "value": {"kind": "integer", "value": "2024"}}
+                      ]
+                    }
+                  }
+                }
+              }
+            },
+            {"kind": "literal", "value": {"kind": "duration", "value": {}}}
+          ]
+        }
+      },
+      "expected": {"failed": "invalid_calendar_date", "reads": []}
+    },
+    {
+      "id": "timestamp_from_fields_second_60",
+      "expression": {
+        "kind": "call",
+        "value": {
+          "operation": {"value": "timestamp.from_fields"},
+          "type_arguments": [],
+          "arguments": [
+            {
+              "kind": "literal",
+              "value": {
+                "kind": "named",
+                "value": {
+                  "actual_type": {
+                    "definition": {
+                      "type_id": {"kind": "declared", "value": {"value": "181a978464f44e999afe4076426cc239"}},
+                      "revision": 1
+                    },
+                    "arguments": []
+                  },
+                  "payload": {
+                    "kind": "record",
+                    "value": {
+                      "fields": [
+                        {"name": "day", "value": {"kind": "integer", "value": "1"}},
+                        {"name": "dayOfYear", "value": {"kind": "integer", "value": "0"}},
+                        {"name": "hour", "value": {"kind": "integer", "value": "0"}},
+                        {"name": "millisecond", "value": {"kind": "integer", "value": "0"}},
+                        {"name": "minute", "value": {"kind": "integer", "value": "0"}},
+                        {"name": "month", "value": {"kind": "integer", "value": "1"}},
+                        {"name": "second", "value": {"kind": "integer", "value": "60"}},
+                        {"name": "weekday", "value": {"kind": "integer", "value": "0"}},
+                        {"name": "year", "value": {"kind": "integer", "value": "2024"}}
+                      ]
+                    }
+                  }
+                }
+              }
+            },
+            {"kind": "literal", "value": {"kind": "duration", "value": {}}}
+          ]
+        }
+      },
+      "expected": {"failed": "invalid_calendar_date", "reads": []}
+    },
+    {
+      "id": "timestamp_from_fields_millisecond_1000",
+      "expression": {
+        "kind": "call",
+        "value": {
+          "operation": {"value": "timestamp.from_fields"},
+          "type_arguments": [],
+          "arguments": [
+            {
+              "kind": "literal",
+              "value": {
+                "kind": "named",
+                "value": {
+                  "actual_type": {
+                    "definition": {
+                      "type_id": {"kind": "declared", "value": {"value": "181a978464f44e999afe4076426cc239"}},
+                      "revision": 1
+                    },
+                    "arguments": []
+                  },
+                  "payload": {
+                    "kind": "record",
+                    "value": {
+                      "fields": [
+                        {"name": "day", "value": {"kind": "integer", "value": "1"}},
+                        {"name": "dayOfYear", "value": {"kind": "integer", "value": "0"}},
+                        {"name": "hour", "value": {"kind": "integer", "value": "0"}},
+                        {"name": "millisecond", "value": {"kind": "integer", "value": "1000"}},
+                        {"name": "minute", "value": {"kind": "integer", "value": "0"}},
+                        {"name": "month", "value": {"kind": "integer", "value": "1"}},
+                        {"name": "second", "value": {"kind": "integer", "value": "0"}},
+                        {"name": "weekday", "value": {"kind": "integer", "value": "0"}},
+                        {"name": "year", "value": {"kind": "integer", "value": "2024"}}
+                      ]
+                    }
+                  }
+                }
+              }
+            },
+            {"kind": "literal", "value": {"kind": "duration", "value": {}}}
+          ]
+        }
+      },
+      "expected": {"failed": "invalid_calendar_date", "reads": []}
+    },
+    {
+      "id": "timestamp_from_fields_year_zero",
+      "expression": {
+        "kind": "call",
+        "value": {
+          "operation": {"value": "timestamp.from_fields"},
+          "type_arguments": [],
+          "arguments": [
+            {
+              "kind": "literal",
+              "value": {
+                "kind": "named",
+                "value": {
+                  "actual_type": {
+                    "definition": {
+                      "type_id": {"kind": "declared", "value": {"value": "181a978464f44e999afe4076426cc239"}},
+                      "revision": 1
+                    },
+                    "arguments": []
+                  },
+                  "payload": {
+                    "kind": "record",
+                    "value": {
+                      "fields": [
+                        {"name": "day", "value": {"kind": "integer", "value": "1"}},
+                        {"name": "dayOfYear", "value": {"kind": "integer", "value": "0"}},
+                        {"name": "hour", "value": {"kind": "integer", "value": "0"}},
+                        {"name": "millisecond", "value": {"kind": "integer", "value": "0"}},
+                        {"name": "minute", "value": {"kind": "integer", "value": "0"}},
+                        {"name": "month", "value": {"kind": "integer", "value": "1"}},
+                        {"name": "second", "value": {"kind": "integer", "value": "0"}},
+                        {"name": "weekday", "value": {"kind": "integer", "value": "0"}},
+                        {"name": "year", "value": {"kind": "integer", "value": "0"}}
+                      ]
+                    }
+                  }
+                }
+              }
+            },
+            {"kind": "literal", "value": {"kind": "duration", "value": {}}}
+          ]
+        }
+      },
+      "expected": {"failed": "timestamp_range", "reads": []}
+    },
+    {
+      "id": "timestamp_from_fields_offset_leaves_range",
+      "expression": {
+        "kind": "call",
+        "value": {
+          "operation": {"value": "timestamp.from_fields"},
+          "type_arguments": [],
+          "arguments": [
+            {
+              "kind": "literal",
+              "value": {
+                "kind": "named",
+                "value": {
+                  "actual_type": {
+                    "definition": {
+                      "type_id": {"kind": "declared", "value": {"value": "181a978464f44e999afe4076426cc239"}},
+                      "revision": 1
+                    },
+                    "arguments": []
+                  },
+                  "payload": {
+                    "kind": "record",
+                    "value": {
+                      "fields": [
+                        {"name": "day", "value": {"kind": "integer", "value": "1"}},
+                        {"name": "dayOfYear", "value": {"kind": "integer", "value": "0"}},
+                        {"name": "hour", "value": {"kind": "integer", "value": "0"}},
+                        {"name": "millisecond", "value": {"kind": "integer", "value": "0"}},
+                        {"name": "minute", "value": {"kind": "integer", "value": "0"}},
+                        {"name": "month", "value": {"kind": "integer", "value": "1"}},
+                        {"name": "second", "value": {"kind": "integer", "value": "0"}},
+                        {"name": "weekday", "value": {"kind": "integer", "value": "0"}},
+                        {"name": "year", "value": {"kind": "integer", "value": "1"}}
+                      ]
+                    }
+                  }
+                }
+              }
+            },
+            {"kind": "literal", "value": {"kind": "duration", "value": {"value": {"milliseconds": 1}}}}
+          ]
+        }
+      },
+      "expected": {"failed": "timestamp_range", "reads": []}
+    },
+    {
+      "id": "timestamp_zone_offset_utc",
+      "expression": {
+        "kind": "call",
+        "value": {
+          "operation": {"value": "timestamp.zone_offset"},
+          "type_arguments": [],
+          "arguments": [
+            {
+              "kind": "literal",
+              "value": {
+                "kind": "timestamp",
+                "value": {"unix_millis": 1705320000000, "formatted": "2024-01-15T12:00:00Z"}
+              }
+            },
+            {"kind": "literal", "value": {"kind": "string_value", "value": "UTC"}}
+          ]
+        }
+      },
+      "expected": {"available": {"duration": "0"}, "reads": []}
+    },
+    {
+      "id": "timestamp_zone_offset_winter",
+      "expression": {
+        "kind": "call",
+        "value": {
+          "operation": {"value": "timestamp.zone_offset"},
+          "type_arguments": [],
+          "arguments": [
+            {
+              "kind": "literal",
+              "value": {
+                "kind": "timestamp",
+                "value": {"unix_millis": 1705320000000, "formatted": "2024-01-15T12:00:00Z"}
+              }
+            },
+            {"kind": "literal", "value": {"kind": "string_value", "value": "Europe/Amsterdam"}}
+          ]
+        }
+      },
+      "expected": {"available": {"duration": "3600000"}, "reads": []}
+    },
+    {
+      "id": "timestamp_zone_offset_summer",
+      "expression": {
+        "kind": "call",
+        "value": {
+          "operation": {"value": "timestamp.zone_offset"},
+          "type_arguments": [],
+          "arguments": [
+            {
+              "kind": "literal",
+              "value": {
+                "kind": "timestamp",
+                "value": {"unix_millis": 1721044800000, "formatted": "2024-07-15T12:00:00Z"}
+              }
+            },
+            {"kind": "literal", "value": {"kind": "string_value", "value": "Europe/Amsterdam"}}
+          ]
+        }
+      },
+      "expected": {"available": {"duration": "7200000"}, "reads": []}
+    },
+    {
+      "id": "timestamp_zone_offset_before_transition",
+      "expression": {
+        "kind": "call",
+        "value": {
+          "operation": {"value": "timestamp.zone_offset"},
+          "type_arguments": [],
+          "arguments": [
+            {
+              "kind": "literal",
+              "value": {
+                "kind": "timestamp",
+                "value": {"unix_millis": 1711846799999, "formatted": "2024-03-31T00:59:59.999Z"}
+              }
+            },
+            {"kind": "literal", "value": {"kind": "string_value", "value": "Europe/Amsterdam"}}
+          ]
+        }
+      },
+      "expected": {"available": {"duration": "3600000"}, "reads": []}
+    },
+    {
+      "id": "timestamp_zone_offset_at_transition",
+      "expression": {
+        "kind": "call",
+        "value": {
+          "operation": {"value": "timestamp.zone_offset"},
+          "type_arguments": [],
+          "arguments": [
+            {
+              "kind": "literal",
+              "value": {
+                "kind": "timestamp",
+                "value": {"unix_millis": 1711846800000, "formatted": "2024-03-31T01:00:00Z"}
+              }
+            },
+            {"kind": "literal", "value": {"kind": "string_value", "value": "Europe/Amsterdam"}}
+          ]
+        }
+      },
+      "expected": {"available": {"duration": "7200000"}, "reads": []}
+    },
+    {
+      "id": "timestamp_zone_offset_negative",
+      "expression": {
+        "kind": "call",
+        "value": {
+          "operation": {"value": "timestamp.zone_offset"},
+          "type_arguments": [],
+          "arguments": [
+            {
+              "kind": "literal",
+              "value": {
+                "kind": "timestamp",
+                "value": {"unix_millis": 1705320000000, "formatted": "2024-01-15T12:00:00Z"}
+              }
+            },
+            {"kind": "literal", "value": {"kind": "string_value", "value": "America/New_York"}}
+          ]
+        }
+      },
+      "expected": {"available": {"duration": "-18000000"}, "reads": []}
+    },
+    {
+      "id": "timestamp_zone_offset_half_hour",
+      "expression": {
+        "kind": "call",
+        "value": {
+          "operation": {"value": "timestamp.zone_offset"},
+          "type_arguments": [],
+          "arguments": [
+            {
+              "kind": "literal",
+              "value": {
+                "kind": "timestamp",
+                "value": {"unix_millis": 1705320000000, "formatted": "2024-01-15T12:00:00Z"}
+              }
+            },
+            {"kind": "literal", "value": {"kind": "string_value", "value": "Asia/Kolkata"}}
+          ]
+        }
+      },
+      "expected": {"available": {"duration": "19800000"}, "reads": []}
+    },
+    {
+      "id": "timestamp_zone_offset_unknown_zone",
+      "expression": {
+        "kind": "call",
+        "value": {
+          "operation": {"value": "timestamp.zone_offset"},
+          "type_arguments": [],
+          "arguments": [
+            {
+              "kind": "literal",
+              "value": {
+                "kind": "timestamp",
+                "value": {"unix_millis": 1705320000000, "formatted": "2024-01-15T12:00:00Z"}
+              }
+            },
+            {"kind": "literal", "value": {"kind": "string_value", "value": "Mars/Olympus_Mons"}}
+          ]
+        }
+      },
+      "expected": {"failed": "unknown_time_zone", "reads": []}
+    },
+    {
+      "id": "timestamp_month_name_wide",
+      "expression": {
+        "kind": "call",
+        "value": {
+          "operation": {"value": "timestamp.month_name"},
+          "type_arguments": [],
+          "arguments": [
+            {"kind": "literal", "value": {"kind": "integer", "value": "1"}},
+            {"kind": "literal", "value": {"kind": "string_value", "value": "en"}},
+            {
+              "kind": "literal",
+              "value": {
+                "kind": "named",
+                "value": {
+                  "actual_type": {
+                    "definition": {
+                      "type_id": {"kind": "declared", "value": {"value": "95689e829ff84ed38fecd9e141453465"}},
+                      "revision": 1
+                    },
+                    "arguments": []
+                  },
+                  "payload": {"kind": "enum_case", "value": "Wide"}
+                }
+              }
+            }
+          ]
+        }
+      },
+      "expected": {"available": {"string": "January"}, "reads": []}
+    },
+    {
+      "id": "timestamp_month_name_abbreviated",
+      "expression": {
+        "kind": "call",
+        "value": {
+          "operation": {"value": "timestamp.month_name"},
+          "type_arguments": [],
+          "arguments": [
+            {"kind": "literal", "value": {"kind": "integer", "value": "12"}},
+            {"kind": "literal", "value": {"kind": "string_value", "value": "en"}},
+            {
+              "kind": "literal",
+              "value": {
+                "kind": "named",
+                "value": {
+                  "actual_type": {
+                    "definition": {
+                      "type_id": {"kind": "declared", "value": {"value": "95689e829ff84ed38fecd9e141453465"}},
+                      "revision": 1
+                    },
+                    "arguments": []
+                  },
+                  "payload": {"kind": "enum_case", "value": "Abbreviated"}
+                }
+              }
+            }
+          ]
+        }
+      },
+      "expected": {"available": {"string": "Dec"}, "reads": []}
+    },
+    {
+      "id": "timestamp_month_name_narrow",
+      "expression": {
+        "kind": "call",
+        "value": {
+          "operation": {"value": "timestamp.month_name"},
+          "type_arguments": [],
+          "arguments": [
+            {"kind": "literal", "value": {"kind": "integer", "value": "5"}},
+            {"kind": "literal", "value": {"kind": "string_value", "value": "en"}},
+            {
+              "kind": "literal",
+              "value": {
+                "kind": "named",
+                "value": {
+                  "actual_type": {
+                    "definition": {
+                      "type_id": {"kind": "declared", "value": {"value": "95689e829ff84ed38fecd9e141453465"}},
+                      "revision": 1
+                    },
+                    "arguments": []
+                  },
+                  "payload": {"kind": "enum_case", "value": "Narrow"}
+                }
+              }
+            }
+          ]
+        }
+      },
+      "expected": {"available": {"string": "M"}, "reads": []}
+    },
+    {
+      "id": "timestamp_month_name_german",
+      "expression": {
+        "kind": "call",
+        "value": {
+          "operation": {"value": "timestamp.month_name"},
+          "type_arguments": [],
+          "arguments": [
+            {"kind": "literal", "value": {"kind": "integer", "value": "3"}},
+            {"kind": "literal", "value": {"kind": "string_value", "value": "de"}},
+            {
+              "kind": "literal",
+              "value": {
+                "kind": "named",
+                "value": {
+                  "actual_type": {
+                    "definition": {
+                      "type_id": {"kind": "declared", "value": {"value": "95689e829ff84ed38fecd9e141453465"}},
+                      "revision": 1
+                    },
+                    "arguments": []
+                  },
+                  "payload": {"kind": "enum_case", "value": "Wide"}
+                }
+              }
+            }
+          ]
+        }
+      },
+      "expected": {"available": {"string": "März"}, "reads": []}
+    },
+    {
+      "id": "timestamp_month_name_13",
+      "expression": {
+        "kind": "call",
+        "value": {
+          "operation": {"value": "timestamp.month_name"},
+          "type_arguments": [],
+          "arguments": [
+            {"kind": "literal", "value": {"kind": "integer", "value": "13"}},
+            {"kind": "literal", "value": {"kind": "string_value", "value": "en"}},
+            {
+              "kind": "literal",
+              "value": {
+                "kind": "named",
+                "value": {
+                  "actual_type": {
+                    "definition": {
+                      "type_id": {"kind": "declared", "value": {"value": "95689e829ff84ed38fecd9e141453465"}},
+                      "revision": 1
+                    },
+                    "arguments": []
+                  },
+                  "payload": {"kind": "enum_case", "value": "Wide"}
+                }
+              }
+            }
+          ]
+        }
+      },
+      "expected": {"failed": "invalid_month", "reads": []}
+    },
+    {
+      "id": "timestamp_month_name_zero",
+      "expression": {
+        "kind": "call",
+        "value": {
+          "operation": {"value": "timestamp.month_name"},
+          "type_arguments": [],
+          "arguments": [
+            {"kind": "literal", "value": {"kind": "integer", "value": "0"}},
+            {"kind": "literal", "value": {"kind": "string_value", "value": "en"}},
+            {
+              "kind": "literal",
+              "value": {
+                "kind": "named",
+                "value": {
+                  "actual_type": {
+                    "definition": {
+                      "type_id": {"kind": "declared", "value": {"value": "95689e829ff84ed38fecd9e141453465"}},
+                      "revision": 1
+                    },
+                    "arguments": []
+                  },
+                  "payload": {"kind": "enum_case", "value": "Wide"}
+                }
+              }
+            }
+          ]
+        }
+      },
+      "expected": {"failed": "invalid_month", "reads": []}
+    },
+    {
+      "id": "timestamp_month_name_invalid_locale",
+      "expression": {
+        "kind": "call",
+        "value": {
+          "operation": {"value": "timestamp.month_name"},
+          "type_arguments": [],
+          "arguments": [
+            {"kind": "literal", "value": {"kind": "integer", "value": "1"}},
+            {"kind": "literal", "value": {"kind": "string_value", "value": "%%"}},
+            {
+              "kind": "literal",
+              "value": {
+                "kind": "named",
+                "value": {
+                  "actual_type": {
+                    "definition": {
+                      "type_id": {"kind": "declared", "value": {"value": "95689e829ff84ed38fecd9e141453465"}},
+                      "revision": 1
+                    },
+                    "arguments": []
+                  },
+                  "payload": {"kind": "enum_case", "value": "Wide"}
+                }
+              }
+            }
+          ]
+        }
+      },
+      "expected": {"failed": "invalid_locale", "reads": []}
+    },
+    {
+      "id": "timestamp_weekday_name_monday_first",
+      "expression": {
+        "kind": "call",
+        "value": {
+          "operation": {"value": "timestamp.weekday_name"},
+          "type_arguments": [],
+          "arguments": [
+            {"kind": "literal", "value": {"kind": "integer", "value": "1"}},
+            {"kind": "literal", "value": {"kind": "string_value", "value": "en"}},
+            {
+              "kind": "literal",
+              "value": {
+                "kind": "named",
+                "value": {
+                  "actual_type": {
+                    "definition": {
+                      "type_id": {"kind": "declared", "value": {"value": "95689e829ff84ed38fecd9e141453465"}},
+                      "revision": 1
+                    },
+                    "arguments": []
+                  },
+                  "payload": {"kind": "enum_case", "value": "Wide"}
+                }
+              }
+            }
+          ]
+        }
+      },
+      "expected": {"available": {"string": "Monday"}, "reads": []}
+    },
+    {
+      "id": "timestamp_weekday_name_sunday_last",
+      "expression": {
+        "kind": "call",
+        "value": {
+          "operation": {"value": "timestamp.weekday_name"},
+          "type_arguments": [],
+          "arguments": [
+            {"kind": "literal", "value": {"kind": "integer", "value": "7"}},
+            {"kind": "literal", "value": {"kind": "string_value", "value": "en"}},
+            {
+              "kind": "literal",
+              "value": {
+                "kind": "named",
+                "value": {
+                  "actual_type": {
+                    "definition": {
+                      "type_id": {"kind": "declared", "value": {"value": "95689e829ff84ed38fecd9e141453465"}},
+                      "revision": 1
+                    },
+                    "arguments": []
+                  },
+                  "payload": {"kind": "enum_case", "value": "Abbreviated"}
+                }
+              }
+            }
+          ]
+        }
+      },
+      "expected": {"available": {"string": "Sun"}, "reads": []}
+    },
+    {
+      "id": "timestamp_weekday_name_narrow",
+      "expression": {
+        "kind": "call",
+        "value": {
+          "operation": {"value": "timestamp.weekday_name"},
+          "type_arguments": [],
+          "arguments": [
+            {"kind": "literal", "value": {"kind": "integer", "value": "3"}},
+            {"kind": "literal", "value": {"kind": "string_value", "value": "en"}},
+            {
+              "kind": "literal",
+              "value": {
+                "kind": "named",
+                "value": {
+                  "actual_type": {
+                    "definition": {
+                      "type_id": {"kind": "declared", "value": {"value": "95689e829ff84ed38fecd9e141453465"}},
+                      "revision": 1
+                    },
+                    "arguments": []
+                  },
+                  "payload": {"kind": "enum_case", "value": "Narrow"}
+                }
+              }
+            }
+          ]
+        }
+      },
+      "expected": {"available": {"string": "W"}, "reads": []}
+    },
+    {
+      "id": "timestamp_weekday_name_german",
+      "expression": {
+        "kind": "call",
+        "value": {
+          "operation": {"value": "timestamp.weekday_name"},
+          "type_arguments": [],
+          "arguments": [
+            {"kind": "literal", "value": {"kind": "integer", "value": "1"}},
+            {"kind": "literal", "value": {"kind": "string_value", "value": "de"}},
+            {
+              "kind": "literal",
+              "value": {
+                "kind": "named",
+                "value": {
+                  "actual_type": {
+                    "definition": {
+                      "type_id": {"kind": "declared", "value": {"value": "95689e829ff84ed38fecd9e141453465"}},
+                      "revision": 1
+                    },
+                    "arguments": []
+                  },
+                  "payload": {"kind": "enum_case", "value": "Wide"}
+                }
+              }
+            }
+          ]
+        }
+      },
+      "expected": {"available": {"string": "Montag"}, "reads": []}
+    },
+    {
+      "id": "timestamp_weekday_name_eight",
+      "expression": {
+        "kind": "call",
+        "value": {
+          "operation": {"value": "timestamp.weekday_name"},
+          "type_arguments": [],
+          "arguments": [
+            {"kind": "literal", "value": {"kind": "integer", "value": "8"}},
+            {"kind": "literal", "value": {"kind": "string_value", "value": "en"}},
+            {
+              "kind": "literal",
+              "value": {
+                "kind": "named",
+                "value": {
+                  "actual_type": {
+                    "definition": {
+                      "type_id": {"kind": "declared", "value": {"value": "95689e829ff84ed38fecd9e141453465"}},
+                      "revision": 1
+                    },
+                    "arguments": []
+                  },
+                  "payload": {"kind": "enum_case", "value": "Wide"}
+                }
+              }
+            }
+          ]
+        }
+      },
+      "expected": {"failed": "invalid_weekday", "reads": []}
+    },
+    {
+      "id": "timestamp_weekday_name_invalid_locale",
+      "expression": {
+        "kind": "call",
+        "value": {
+          "operation": {"value": "timestamp.weekday_name"},
+          "type_arguments": [],
+          "arguments": [
+            {"kind": "literal", "value": {"kind": "integer", "value": "1"}},
+            {"kind": "literal", "value": {"kind": "string_value", "value": "%%"}},
+            {
+              "kind": "literal",
+              "value": {
+                "kind": "named",
+                "value": {
+                  "actual_type": {
+                    "definition": {
+                      "type_id": {"kind": "declared", "value": {"value": "95689e829ff84ed38fecd9e141453465"}},
+                      "revision": 1
+                    },
+                    "arguments": []
+                  },
+                  "payload": {"kind": "enum_case", "value": "Wide"}
+                }
+              }
+            }
+          ]
+        }
+      },
+      "expected": {"failed": "invalid_locale", "reads": []}
+    }
+  ]
+}

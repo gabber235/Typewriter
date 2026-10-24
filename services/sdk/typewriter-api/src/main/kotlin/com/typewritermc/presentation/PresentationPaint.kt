@@ -82,13 +82,13 @@ fun stateNumber(
 ): PresentationNumber = stateNumber(literal(fallback), configure)
 
 /**
- * An animated change of [milliseconds] that progresses along [curve], such as
- * `transition(750, PresentationCurve.ElasticOutWrapper(0.9))` for a spring whose overshoot period is 0.9.
+ * An animated change of [length] that progresses along [curve], such as
+ * `transition(DisplayDelay(750), PresentationCurve.ElasticOutWrapper(0.9))` for a spring whose overshoot period is 0.9.
  */
 fun transition(
-    milliseconds: Int,
+    length: DisplayDelay,
     curve: PresentationCurve = PresentationCurve.LINEAR,
-): PresentationTransition = PresentationTransition(milliseconds = milliseconds, curve = curve).requireValid()
+): PresentationTransition = PresentationTransition(milliseconds = length.milliseconds, curve = curve).requireValid()
 
 /** Rejects negative durations, elastic periods that are not finite and positive, and unknown curves. */
 internal fun PresentationTransition.requireValid(): PresentationTransition =
@@ -176,23 +176,23 @@ data class TransformStyle(
     }
 }
 
-internal fun PresentationNumber.wire(): WireNumber =
+internal fun PresentationNumber.wire(state: PresentationBuildState): WireNumber =
     when (this) {
         is PresentationNumber.Value -> {
-            WireNumber.ValueWrapper(expression(expression))
+            WireNumber.ValueWrapper(state.lower(expression, DOUBLE_SLOT))
         }
 
         is PresentationNumber.States -> {
             WireNumber.createStates(
-                rules = rules.map { rule -> WireStateNumberRule(match = rule.match, value = expression(rule.value)) },
-                fallback = expression(fallback),
+                rules = rules.map { rule -> WireStateNumberRule(match = rule.match, value = state.lower(rule.value, DOUBLE_SLOT)) },
+                fallback = state.lower(fallback, DOUBLE_SLOT),
             )
         }
     }
 
-internal fun PresentationShadow.wire(): WireShadow =
+internal fun PresentationShadow.wire(state: PresentationBuildState): WireShadow =
     WireShadow(
-        color = color.wire(),
+        color = color.wire(state),
         blur = blur,
         spread = spread,
         offsetX = offsetX,

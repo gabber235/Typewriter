@@ -1,0 +1,35 @@
+{
+  "cases": [
+    {
+      "id": "link_target",
+      "expression": {
+        "kind": "call",
+        "value": {
+          "operation": {"value": "link.target"},
+          "type_arguments": [],
+          "arguments": [
+            {
+              "kind": "literal",
+              "value": {
+                "kind": "link",
+                "value": {"endpoint": {"value": "fixture.author"}, "target": {"resource": {"value": "book_1"}}}
+              }
+            }
+          ]
+        }
+      },
+      "expected": {
+        "available": {
+          "named": {
+            "namespace": "kotlin",
+            "name": "com.typewritermc.types.ResourceId",
+            "revision": 1,
+            "arguments": [],
+            "payload": {"string": "book_1"}
+          }
+        },
+        "reads": []
+      }
+    }
+  ]
+}

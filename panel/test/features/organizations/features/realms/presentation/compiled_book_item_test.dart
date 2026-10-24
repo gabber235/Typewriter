@@ -17,15 +17,8 @@ void main() {
     skir.PresentationRole.item,
   ) as SelectedEditorPresentation;
 
-  test("the compiled book item passes admission", () {
+  test("the compiled book item is the selected item presentation", () {
     expect(selected.material.provider.name, contains("BookItemPresentation"));
-    expect(
-      catalog.presentationExpressionProblems(
-        selected.material,
-        record.configuration,
-      ),
-      isEmpty,
-    );
   });
 
   testWidgets(

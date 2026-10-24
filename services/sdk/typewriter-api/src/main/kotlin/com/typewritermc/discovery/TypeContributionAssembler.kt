@@ -27,6 +27,7 @@ import com.typewritermc.presentation.CheckedPresentationTemplate
 import com.typewritermc.presentation.NestedPresentationSlot
 import com.typewritermc.presentation.PresentationBuildBinding
 import com.typewritermc.presentation.PresentationNestedTemplate
+import com.typewritermc.presentation.PresentationTyping
 import com.typewritermc.presentation.inferInheritableNodes
 import com.typewritermc.presentation.selectMostSpecificDescriptors
 import com.typewritermc.presentation.validateInheritableNodes
@@ -198,7 +199,8 @@ fun CatalogContributions.assemble(context: CatalogAssemblyContext): CatalogAssem
     val reservedDeclarations =
         assembledDeclarations.filter {
             (it.definition.id.typeId as? TypeId.QualifiedWrapper)?.value?.namespace ==
-                com.typewritermc.expression.CANONICAL_READ_NAMESPACE
+                com.typewritermc.expression.CANONICAL_READ_NAMESPACE ||
+                OpaqueParameters.isReserved(it.definition.id)
         }
     val reservedDiagnostics =
         reservedDeclarations.map { owned ->
@@ -222,6 +224,11 @@ fun CatalogContributions.assemble(context: CatalogAssemblyContext): CatalogAssem
     val collectedCandidates = collectionResults.filterIsInstance<ConfigurationCollectionResult.Collected>().map { it.value }
     val configurationFailures = collectionResults.filterIsInstance<ConfigurationCollectionResult.Failed>()
     val ruleDiagnostics = configurationRuleDiagnostics(collectedCandidates, definitionIndex, structural)
+    val opaqueParameters = OpaqueParameters(definitionIndex.values)
+    // Presentation expressions and resource displays of generic types check against opaque stand ins of free parameters.
+    val presentationCatalog =
+        DefaultCheckedCatalog(context.generation, definitions + opaqueParameters.definitions, quarantine = reservedDiagnostics)
+    val presentationTyping = PresentationTyping(presentationCatalog::resolve, opaqueParameters)
     val materialCollection =
         collectPresentationMaterials(
             presentations,
@@ -229,6 +236,7 @@ fun CatalogContributions.assemble(context: CatalogAssemblyContext): CatalogAssem
             nativeBindings,
             definitionIndex,
             structural,
+            presentationTyping,
             resourceTypes,
             publishedRelations.ownershipEndpoints(),
         )
@@ -264,7 +272,8 @@ fun CatalogContributions.assemble(context: CatalogAssemblyContext): CatalogAssem
             )
         }
     val conflictingKeys = searchKeyConflicts.values.flatten().toSet()
-    val displayCollection = collectResourceDisplays(displays, definitionIndex, searchKeys.keys.sortedBy { it.canonicalText }, checked)
+    val displayCollection =
+        collectResourceDisplays(displays, definitionIndex, searchKeys.keys.sortedBy { it.canonicalText }, checked, presentationTyping)
     val placementDiagnostics = mutableListOf<DeclarationDiagnostic>()
     val placementFields = linkedMapOf<TypeDefinitionId, ValuePath>()
     val published =
@@ -329,7 +338,8 @@ fun CatalogContributions.assemble(context: CatalogAssemblyContext): CatalogAssem
                     }.map(CollectedPresentationMaterial::material),
             configuration = recipes,
             diagnostics =
-                diagnostics + placementDiagnostics + boundOperations.diagnostics + searchKeyDiagnostics + displayCollection.diagnostics,
+                diagnostics + placementDiagnostics + boundOperations.diagnostics + searchKeyDiagnostics + displayCollection.diagnostics +
+                    materialCollection.rejected,
             endpointBindings = publishedBindings,
             capabilities =
                 (context.capabilities + boundOperations.capabilities)
@@ -449,9 +459,15 @@ private class CollectedPresentationMaterial(
     val material: PresentationMaterial,
 )
 
+/**
+ * Materials that built, the [failures] that make a type unavailable, and the [rejected] materials whose build
+ * failed. A rejected material is dropped on its own: its subject type stays available, so the next applicable
+ * material or the default presentation takes its place, and the cause stays in [callbackFailures].
+ */
 private data class PresentationMaterialCollection(
     val materials: List<CollectedPresentationMaterial>,
     val failures: List<DeclarationDiagnostic>,
+    val rejected: List<DeclarationDiagnostic>,
     val callbackFailures: List<CatalogCallbackFailure>,
 )
 
@@ -461,11 +477,13 @@ private fun collectPresentationMaterials(
     nativeBindings: List<OwnedNativeBinding>,
     definitions: Map<TypeDefinitionId, TypeDefinition>,
     catalog: CheckedCatalog,
+    typing: PresentationTyping,
     resourceTypes: Set<TypeDefinitionId>,
     ownershipEndpoints: Set<EndpointId>,
 ): PresentationMaterialCollection {
     val materials = mutableListOf<CollectedPresentationMaterial>()
     val failures = mutableListOf<DeclarationDiagnostic>()
+    val rejected = mutableListOf<DeclarationDiagnostic>()
     val callbackFailures = mutableListOf<CatalogCallbackFailure>()
     val nativeTypes =
         (
@@ -502,7 +520,7 @@ private fun collectPresentationMaterials(
                 )
         }
         subjects.forEach { subject ->
-            val template = subject.presentationTemplate(definitions, catalog)
+            val template = subject.presentationTemplate(definitions, catalog, typing)
             owned.descriptor.roles.sortedBy { it.kind.ordinal }.forEach { role ->
                 try {
                     val result = owned.provider.build(PresentationBuildBinding(template, role, nativeTypes, ownershipEndpoints))
@@ -558,7 +576,7 @@ private fun collectPresentationMaterials(
                         )
                     val affected = (subject as? TypeTemplate.NamedWrapper)?.value?.definition
                     if (affected != null) {
-                        failures +=
+                        rejected +=
                             DeclarationDiagnostic.of(
                                 affected = affected,
                                 code = "presentation_material_build_failed",
@@ -569,7 +587,7 @@ private fun collectPresentationMaterials(
             }
         }
     }
-    return PresentationMaterialCollection(materials, failures, callbackFailures)
+    return PresentationMaterialCollection(materials, failures, rejected, callbackFailures)
 }
 
 private fun skirout.editor.v1.presentation.PresentationDependencies.validCollections(
@@ -578,16 +596,6 @@ private fun skirout.editor.v1.presentation.PresentationDependencies.validCollect
     catalog: CheckedCatalog,
     resourceTypes: Set<TypeDefinitionId>,
 ): Boolean {
-    if (contextInputs.map { it.bindingId }.distinct().size != contextInputs.size) return false
-    if (!contextInputs.all { input ->
-            input.bindingId.value.startsWith("context:") &&
-                input.source.kind != skirout.editor.v1.presentation.PresentationContextSource.Kind.UNKNOWN &&
-                input.valueType.isValid &&
-                catalog.resolve(input.valueType) is Resolution.Ready
-        }
-    ) {
-        return false
-    }
     val parameters = subject.parameterKeys()
     val parameterBounds =
         parameters.associateWith { key ->
@@ -598,7 +606,7 @@ private fun skirout.editor.v1.presentation.PresentationDependencies.validCollect
                 ?: return false
         }
     return collections.all { collection ->
-        val rowType = collection.rowType.takeIf { it.isValid } ?: return@all false
+        val rowType = collection.rowBinding.type.takeIf { it.isValid } ?: return@all false
         if (!rowType.isValidMaterialTemplate(definitions, parameterBounds, catalog)) return@all false
         collection.projection?.isValid(rowType, definitions, parameterBounds, catalog, resourceTypes) ?: true
     }
@@ -1148,14 +1156,13 @@ private fun TypeTemplate.representation(
 private fun TypeTemplate.presentationTemplate(
     definitions: Map<TypeDefinitionId, TypeDefinition>,
     catalog: CheckedCatalog,
+    typing: PresentationTyping,
 ): CheckedPresentationTemplate =
     CheckedPresentationTemplate(
         type = this,
         fieldResolver = { parent, name -> parent.unwrapNullable().field(name, definitions) },
         nestedResolver = { parent, slot -> parent.presentationNested(slot, definitions) },
-        expressionChecker = { body, bindings, expected, present, mayBeMissing ->
-            com.typewritermc.presentation.checkPresentationExpression(body, bindings, expected, present, catalog::resolve, mayBeMissing)
-        },
+        typing = typing,
         payloadResolver = { parent ->
             val scalar = (parent.unwrapNullable().representation(definitions)?.first as? RepresentationTemplate.ScalarWrapper)?.value?.kind
             if (scalar == null) parent.unwrapNullable() else scalar.template

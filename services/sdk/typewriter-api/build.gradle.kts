@@ -5,6 +5,12 @@ plugins {
     `java-library`
 }
 
+kotlin {
+    sourceSets.named("main") {
+        kotlin.srcDir("src/main/skirout")
+    }
+}
+
 dependencies {
     api(project(":typewriter-contracts"))
     api(platform(libs.koin.bom))

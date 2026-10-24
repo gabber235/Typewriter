@@ -22,6 +22,11 @@ import com.typewritermc.discovery.OwnedProviderRegistry
 import com.typewritermc.discovery.ProviderLease
 import com.typewritermc.discovery.ProviderOrigin
 import com.typewritermc.discovery.contributionKey
+import com.typewritermc.expression.eq
+import com.typewritermc.expression.isInstance
+import com.typewritermc.expression.length
+import com.typewritermc.expression.literal
+import com.typewritermc.expression.not
 import com.typewritermc.imprint.ArtifactId
 import com.typewritermc.imprint.ContributionName
 import com.typewritermc.imprint.ContributionSourceId
@@ -51,6 +56,7 @@ import io.kotest.matchers.types.shouldBeInstanceOf
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.asCoroutineDispatcher
 import kotlinx.coroutines.test.StandardTestDispatcher
+import kotlinx.coroutines.test.TestScope
 import kotlinx.coroutines.test.advanceUntilIdle
 import kotlinx.coroutines.test.runTest
 import skirout.editor.v1.catalog.ConfigurationRecipe
@@ -381,71 +387,11 @@ val RealmCheckRuntimeTest by testSuite {
     }
 
     test("portableConfigurationRuleRunsForCurrentAndCapturedChecks") {
-        runTest {
-            val origin = RuleOrigin(owner = TEST_TYPE, ordinal = 20)
-            val path = RelativeFieldPattern(segments = listOf(FieldPatternSegment.field("name")))
-            val rule =
-                OwnedRule(
-                    id = RuleId(origin = origin, localIndex = 0),
-                    descriptor =
-                        RuleDescriptor(
-                            predicate =
-                                ExpressionNode.createRuleUnary(
-                                    operation = skirout.editor.v1.expression.RuleUnaryOperation.NON_EMPTY,
-                                    source =
-                                        com.typewritermc.expression
-                                            .input<Any?>(ExpressionBindingId(value = "configured_value"))
-                                            .toNode(),
-                                ),
-                        ),
-                    diagnostic =
-                        DiagnosticTemplate(
-                            code = "name_empty",
-                            message = "Name must not be empty.",
-                            severity = DiagnosticSeverity.ERROR,
-                            targets = listOf(path),
-                        ),
-                )
-            val catalog =
-                TestCatalogLease(
-                    configuration =
-                        listOf(
-                            ConfigurationRecipe(
-                                origin = origin,
-                                relativePath = path,
-                                representationCondition = RepresentationKind.TEXT,
-                                rules = listOf(rule),
-                            ),
-                        ),
-                )
-            val resource = ResourceId(value = "element")
-            val authored = record(name = "")
-            val store =
-                InMemoryAuthoringViewStore(
-                    catalog,
-                    AuthoringSeed(mapOf(resource to authored)),
-                )
-            val runtime = RealmCheckRuntime(store, StandardTestDispatcher(testScheduler))
+        runTest { assertPortableRuleReportsAnEmptyName(nameIsNotEmpty()) }
+    }
 
-            runtime.reloadCatalog()
-            advanceUntilIdle()
-            runtime.drain()
-
-            val current = runtime.findings().single()
-            current.ticket.instance.rule shouldBe RuleId(origin = origin, localIndex = 0)
-            current.ticket.instance.location shouldBe location(resource, "name")
-            current.findings.map { it.code } shouldBe listOf("name_empty")
-
-            val captured = runtime.evaluateCapture(CheckAdmissionTarget.CapturedAcceptance(store.capture().use { it.root }))
-            captured.complete shouldBe true
-            captured.results
-                .single()
-                .findings
-                .map { it.code } shouldBe listOf("name_empty")
-
-            runtime.close()
-            store.close()
-        }
+    test("portableRuleEvaluatesTypedOperationsAgainstTheSnapshotCatalog") {
+        runTest { assertPortableRuleReportsAnEmptyName(nameIsNotText()) }
     }
 
     test("capturedNeedsInputBlocksOtherwiseCompleteAndNativeConstructibleResource") {
@@ -636,13 +582,7 @@ val RealmCheckRuntimeTest by testSuite {
                     descriptor =
                         RuleDescriptor(
                             predicate =
-                                ExpressionNode.createRuleUnary(
-                                    operation = skirout.editor.v1.expression.RuleUnaryOperation.NON_EMPTY,
-                                    source =
-                                        com.typewritermc.expression
-                                            .input<Any?>(ExpressionBindingId(value = "configured_value"))
-                                            .toNode(),
-                                ),
+                                nameIsNotEmpty(),
                         ),
                     diagnostic =
                         DiagnosticTemplate(
@@ -1116,3 +1056,84 @@ private val DISCOVERY_LOCATION_FOR_TEST =
                 ),
         ),
     )
+
+/**
+ * Runs a portable configuration rule over an authored record whose name is empty and expects the current and captured
+ * checks to report the rule's finding, so the rule evaluated to false on Realm.
+ */
+@OptIn(ExperimentalCoroutinesApi::class)
+private suspend fun TestScope.assertPortableRuleReportsAnEmptyName(predicate: ExpressionNode) {
+    val origin = RuleOrigin(owner = TEST_TYPE, ordinal = 20)
+    val path = RelativeFieldPattern(segments = listOf(FieldPatternSegment.field("name")))
+    val rule =
+        OwnedRule(
+            id = RuleId(origin = origin, localIndex = 0),
+            descriptor =
+                RuleDescriptor(
+                    predicate =
+                    predicate,
+                ),
+            diagnostic =
+                DiagnosticTemplate(
+                    code = "name_empty",
+                    message = "Name must not be empty.",
+                    severity = DiagnosticSeverity.ERROR,
+                    targets = listOf(path),
+                ),
+        )
+    val catalog =
+        TestCatalogLease(
+            configuration =
+                listOf(
+                    ConfigurationRecipe(
+                        origin = origin,
+                        relativePath = path,
+                        representationCondition = RepresentationKind.TEXT,
+                        rules = listOf(rule),
+                    ),
+                ),
+        )
+    val resource = ResourceId(value = "element")
+    val authored = record(name = "")
+    val store =
+        InMemoryAuthoringViewStore(
+            catalog,
+            AuthoringSeed(mapOf(resource to authored)),
+        )
+    val runtime = RealmCheckRuntime(store, StandardTestDispatcher(testScheduler))
+
+    runtime.reloadCatalog()
+    advanceUntilIdle()
+    runtime.drain()
+
+    val current = runtime.findings().single()
+    current.ticket.instance.rule shouldBe RuleId(origin = origin, localIndex = 0)
+    current.ticket.instance.location shouldBe location(resource, "name")
+    current.findings.map { it.code } shouldBe listOf("name_empty")
+
+    val captured = runtime.evaluateCapture(CheckAdmissionTarget.CapturedAcceptance(store.capture().use { it.root }))
+    captured.complete shouldBe true
+    captured.results
+        .single()
+        .findings
+        .map { it.code } shouldBe listOf("name_empty")
+
+    runtime.close()
+    store.close()
+}
+
+/** The rule predicate "the configured text is not empty", built from portable primitives. */
+private fun nameIsNotEmpty(): ExpressionNode =
+    (
+        com.typewritermc.expression
+            .input<String>(ExpressionBindingId(value = "configured_value"))
+            .length eq literal(0)
+    ).not().toNode()
+
+/** The rule predicate "the configured value is not text", which needs the catalog's type facts to evaluate. */
+private fun nameIsNotText(): ExpressionNode =
+    com.typewritermc.expression
+        .input<String>(ExpressionBindingId(value = "configured_value"))
+        .isInstance(ScalarKind.TEXT.use)
+        .not()
+        .toNode()

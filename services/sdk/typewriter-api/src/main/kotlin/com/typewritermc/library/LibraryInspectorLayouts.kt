@@ -4,12 +4,12 @@ import com.typewritermc.expression.Expr
 import com.typewritermc.expression.Handled
 import com.typewritermc.expression.emptyListExpression
 import com.typewritermc.expression.eq
-import com.typewritermc.expression.gt
-import com.typewritermc.expression.gte
 import com.typewritermc.expression.literal
 import com.typewritermc.expression.map
 import com.typewritermc.expression.orElse
-import com.typewritermc.expression.orIfBlank
+import com.typewritermc.expression.shortcuts.gt
+import com.typewritermc.expression.shortcuts.gte
+import com.typewritermc.expression.shortcuts.orIfBlank
 import com.typewritermc.expression.size
 import com.typewritermc.expression.target
 import com.typewritermc.presentation.AxisLayout
@@ -24,6 +24,7 @@ import com.typewritermc.presentation.PresentationColor
 import com.typewritermc.presentation.PresentationInput
 import com.typewritermc.presentation.PresentationInsets
 import com.typewritermc.presentation.PresentationRadius
+import com.typewritermc.presentation.Spacing
 import com.typewritermc.presentation.asPresentationColor
 import com.typewritermc.presentation.projectedCollectionSource
 import com.typewritermc.presentation.textParagraph
@@ -52,7 +53,7 @@ internal fun Layout.inspectorSection(
 
 internal fun Layout.inspectorLayout(content: AxisLayout.() -> Unit) {
     column(
-        spacing = 12.0,
+        spacing = Spacing(12.0),
         cross = CrossAxisAlignment.STRETCH,
         body = content,
     )
@@ -81,7 +82,7 @@ internal fun Layout.tagInheritanceSection(
             collectionGraph(source) {
                 roots(roots)
                 relation("parents")
-                rootSequence { column(spacing = 12.0, cross = CrossAxisAlignment.STRETCH) }
+                rootSequence { column(spacing = Spacing(12.0), cross = CrossAxisAlignment.STRETCH) }
                 childrenSequence {
                     val ownerColor =
                         TagCollectionRowExpressionsFactory
@@ -141,7 +142,7 @@ private fun GraphNodeScope<TagCollectionRow>.tagInheritanceNode() {
                     header = {
                         title { column(cross = CrossAxisAlignment.STRETCH) { tagInheritanceCard(label, accent) } }
                         expanded(initially = false)
-                        padding(header = PresentationInsets(0.0, 0.0, 0.0, 0.0), content = PresentationInsets(0.0, 0.0, 0.0, 0.0))
+                        padding(header = PresentationInsets.all(Spacing.NONE), content = PresentationInsets.all(Spacing.NONE))
                     },
                 ) { descendants() }
             }
@@ -161,7 +162,7 @@ private fun Layout.tagInheritanceCard(
             radius = PresentationRadius.Small,
         ),
     ) {
-        padding(PresentationInsets(start = 12.0, top = 8.0, end = 12.0, bottom = 8.0)) {
+        padding(PresentationInsets(start = Spacing(12.0), top = Spacing(8.0), end = Spacing(12.0), bottom = Spacing(8.0))) {
             text(label, paragraph = textParagraph(softWrap = true))
         }
     }
@@ -174,9 +175,9 @@ internal fun Layout.librarySubjectLayout(
     adaptiveLeading {
         leading(leadingContent)
         center { text(label) }
-        padding(PresentationInsets(8.0, 8.0, 8.0, 8.0))
-        compactPadding(PresentationInsets(4.0, 4.0, 4.0, 4.0))
-        gap(12.0)
+        padding(PresentationInsets.all(Spacing(8.0)))
+        compactPadding(PresentationInsets.all(Spacing(4.0)))
+        gap(Spacing(12.0))
         minimumCenterWidth(80.0)
     }
 }

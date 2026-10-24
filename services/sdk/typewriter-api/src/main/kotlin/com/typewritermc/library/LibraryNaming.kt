@@ -4,7 +4,7 @@ import com.typewritermc.authoring.defaultAccent
 import com.typewritermc.authoring.defaultIcon
 import com.typewritermc.authoring.defaultLabel
 import com.typewritermc.expression.orElse
-import com.typewritermc.expression.orIfBlank
+import com.typewritermc.expression.shortcuts.orIfBlank
 
 /** A Book names itself by its title and marks itself with its own color and icon. */
 object BookNaming : BookDisplay {

@@ -2,7 +2,7 @@ package com.typewritermc.presentation
 
 import com.typewritermc.expression.Expr
 import com.typewritermc.expression.Handled
-import skirout.editor.v1.action.EditorAction
+import com.typewritermc.expression.literal
 import skirout.editor.v1.presentation.ButtonVariant
 import skirout.editor.v1.presentation.PresentationElement
 import skirout.editor.v1.presentation.PresentationNode
@@ -13,10 +13,10 @@ internal class RuntimePresentationInteractions(
 ) : PresentationInteractions {
     override fun button(
         label: Expr<String, Handled>,
-        action: EditorAction,
+        action: PresentationAction,
         configure: ButtonScope.() -> Unit,
     ) {
-        state.action(action)
+        val wireAction = state.action(action)
         val visual =
             skirout.editor.v1.presentation.InputAppearance
                 .partial()
@@ -27,7 +27,7 @@ internal class RuntimePresentationInteractions(
                 .toMutable()
         var icon: PresentationNode? = null
         RuntimeButtonScope(
-            RuntimeActionAppearance(RuntimeTextEntryAppearance(visual), draft),
+            RuntimeActionAppearance(state, RuntimeTextEntryAppearance(state, visual), draft),
             RuntimeGlyphContent(state) {
                 icon =
                     (it as? skirout.editor.v1.presentation.InputAdornment.ContentWrapper)?.value
@@ -36,17 +36,22 @@ internal class RuntimePresentationInteractions(
         draft.appearance = visual.toFrozen()
         target +=
             state.node(
-                PresentationElement.createButton(label = expression(label), action = action, appearance = draft.toFrozen(), icon = icon),
+                PresentationElement.createButton(
+                    label = state.lower(label, TEXT_SLOT),
+                    action = wireAction,
+                    appearance = draft.toFrozen(),
+                    icon = icon,
+                ),
             )
     }
 
     override fun iconButton(
         icon: Expr<String, Handled>,
         semanticLabel: Expr<String, Handled>,
-        action: EditorAction,
+        action: PresentationAction,
         configure: IconButtonScope.() -> Unit,
     ) {
-        state.action(action)
+        val wireAction = state.action(action)
         val visual =
             skirout.editor.v1.presentation.InputAppearance
                 .partial()
@@ -55,14 +60,14 @@ internal class RuntimePresentationInteractions(
             skirout.editor.v1.presentation.ActionAppearance
                 .partial()
                 .toMutable()
-        RuntimeIconButtonScope(RuntimeActionAppearance(RuntimeTextEntryAppearance(visual), draft)).configure()
+        RuntimeIconButtonScope(RuntimeActionAppearance(state, RuntimeTextEntryAppearance(state, visual), draft)).configure()
         draft.appearance = visual.toFrozen()
         target +=
             state.node(
                 PresentationElement.createIconButton(
-                    icon = expression(icon),
-                    semanticLabel = expression(semanticLabel),
-                    action = action,
+                    icon = state.lower(icon, TEXT_SLOT),
+                    semanticLabel = state.lower(semanticLabel, TEXT_SLOT),
+                    action = wireAction,
                     appearance = draft.toFrozen(),
                 ),
             )
@@ -81,12 +86,12 @@ internal class RuntimePresentationInteractions(
             skirout.editor.v1.presentation.TooltipAppearance
                 .partial()
                 .toMutable()
-        RuntimeTooltipAppearanceScope(RuntimeTextEntryAppearance(visual), draft).configure()
+        RuntimeTooltipAppearanceScope(RuntimeTextEntryAppearance(state, visual), draft).configure()
         draft.appearance = visual.toFrozen()
         target +=
             state.node(
                 PresentationElement.createTooltip(
-                    message = expression(message),
+                    message = state.lower(message, TEXT_SLOT),
                     child = state.presentation(body),
                     appearance = draft.toFrozen(),
                 ),
@@ -114,13 +119,17 @@ internal class RuntimePresentationInteractions(
                 .partial()
                 .toMutable()
         val scope =
-            RuntimeMenuScope(RuntimeActionAppearance(RuntimeTextEntryAppearance(visual), draft), RuntimePopupAppearance(popup), state)
+            RuntimeMenuScope(
+                RuntimeActionAppearance(state, RuntimeTextEntryAppearance(state, visual), draft),
+                RuntimePopupAppearance(state, popup),
+                state,
+            )
         scope.body()
         draft.appearance = visual.toFrozen()
         target +=
             state.node(
                 PresentationElement.createMenu(
-                    label = label?.let(::expression),
+                    label = label?.let { state.lower(it, TEXT_SLOT) },
                     items = scope.items.toList(),
                     appearance = draft.toFrozen(),
                     popup = popup.toFrozen(),
@@ -130,6 +139,7 @@ internal class RuntimePresentationInteractions(
 }
 
 internal class RuntimeActionAppearance(
+    private val state: PresentationBuildState,
     appearance: InputAppearanceScope,
     private val target: skirout.editor.v1.presentation.ActionAppearance.Mutable,
 ) : ActionAppearanceScope,
@@ -139,11 +149,11 @@ internal class RuntimeActionAppearance(
     }
 
     override fun tooltip(value: String) {
-        target.tooltip = expression(value)
+        target.tooltip = state.lower(literal(value), TEXT_SLOT)
     }
 
     override fun tooltip(value: Expr<String, Handled>) {
-        target.tooltip = expression(value)
+        target.tooltip = state.lower(value, TEXT_SLOT)
     }
 }
 
@@ -160,28 +170,29 @@ internal class RuntimeIconButtonScope(
     ActionAppearanceScope by appearance
 
 internal class RuntimeMenuItemScope(
+    private val state: PresentationBuildState,
     glyph: GlyphContentScope,
     private val target: skirout.editor.v1.presentation.MenuItem.Mutable,
 ) : MenuItemScope,
     GlyphContentScope by glyph {
     override fun description(value: String) {
-        target.description = expression(value)
+        target.description = state.lower(literal(value), TEXT_SLOT)
     }
 
     override fun description(value: Expr<String, Handled>) {
-        target.description = expression(value)
+        target.description = state.lower(value, TEXT_SLOT)
     }
 
     override fun enabledIf(value: Expr<Boolean, Handled>) {
-        target.enabledIf = expression(value)
+        target.enabledIf = state.lower(value, BOOLEAN_SLOT)
     }
 
     override fun disabledReason(value: String) {
-        target.disabledReason = expression(value)
+        target.disabledReason = state.lower(literal(value), TEXT_SLOT)
     }
 
     override fun disabledReason(value: Expr<String, Handled>) {
-        target.disabledReason = expression(value)
+        target.disabledReason = state.lower(value, TEXT_SLOT)
     }
 }
 
@@ -197,17 +208,17 @@ internal class RuntimeMenuScope(
     override fun item(
         id: String,
         label: Expr<String, Handled>,
-        action: EditorAction,
+        action: PresentationAction,
         configure: MenuItemScope.() -> Unit,
     ) {
         require(id.isNotBlank() && items.none { it.itemId == id }) { "Menu item identifiers must be nonempty and unique." }
-        state.action(action)
+        val wireAction = state.action(action)
         val draft =
             skirout.editor.v1.presentation
                 .MenuItem(
                     itemId = id,
-                    label = expression(label),
-                    action = action,
+                    label = state.lower(label, TEXT_SLOT),
+                    action = wireAction,
                     icon = null,
                     description = null,
                     enabledIf = null,
@@ -215,7 +226,7 @@ internal class RuntimeMenuScope(
                     separator = false,
                 ).toMutable()
         val glyph = RuntimeGlyphContent(state) { draft.icon = (it as? skirout.editor.v1.presentation.InputAdornment.ContentWrapper)?.value }
-        RuntimeMenuItemScope(glyph, draft).configure()
+        RuntimeMenuItemScope(state, glyph, draft).configure()
         items += draft.toFrozen()
     }
 
@@ -224,7 +235,7 @@ internal class RuntimeMenuScope(
         items +=
             skirout.editor.v1.presentation.MenuItem(
                 itemId = id,
-                label = expression(""),
+                label = state.lower(literal(""), TEXT_SLOT),
                 action = null,
                 icon = null,
                 description = null,

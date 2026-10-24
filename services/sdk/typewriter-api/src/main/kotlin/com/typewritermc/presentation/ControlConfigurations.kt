@@ -5,7 +5,6 @@ import com.typewritermc.expression.Expr
 import com.typewritermc.expression.Handled
 import skirout.editor.v1.presentation.ButtonVariant
 import skirout.editor.v1.presentation.BytesEditingEncoding
-import skirout.editor.v1.presentation.ChoicePresentation
 import skirout.editor.v1.presentation.ColorEditingRepresentation
 import skirout.editor.v1.presentation.ColorPickerFormat
 import skirout.editor.v1.presentation.ControlDensity
@@ -326,9 +325,14 @@ interface SelectInputScope<V> :
     TextEntryAppearanceScope,
     InputContentScope,
     PopupAppearanceScope {
-    val query: Expr<String, Handled>
+    /** Shows the choices as a dropdown; only a dropdown can also accept a custom value. */
+    fun dropdown(configure: DropdownChoiceScope<V>.() -> Unit = {})
 
-    fun presentation(value: ChoicePresentation)
+    /** Shows the choices as a row of segments. */
+    fun segmented()
+
+    /** Shows the choices as radio buttons. */
+    fun radio()
 
     fun filtering(value: Boolean = true)
 
@@ -357,8 +361,15 @@ interface SelectInputScope<V> :
         id: String,
         value: Expr<String, Handled>,
     )
+}
 
-    fun customValue(value: Expr<V, Handled>)
+/** A dropdown of choices, which may accept a value typed into it besides its options. */
+interface DropdownChoiceScope<V> {
+    /**
+     * Accepts a custom value: [parse] maps the typed query, its receiver, to the value it names, or to a missing
+     * value when the query names none.
+     */
+    fun customValue(parse: Expr<String, Handled>.() -> Expr<V, com.typewritermc.expression.MissingPolicy>)
 }
 
 interface ActionAppearanceScope : InputAppearanceScope {
@@ -393,21 +404,19 @@ interface MenuScope :
     fun item(
         id: String,
         label: Expr<String, Handled>,
-        action: skirout.editor.v1.action.EditorAction,
+        action: PresentationAction,
         configure: MenuItemScope.() -> Unit = {},
     )
 
     fun separator(id: String)
 }
 
-/** Reusable sparse paint. Expressions acquire their context at wrapper application. */
-typealias InputAppearance = skirout.editor.v1.presentation.InputAppearance
+/** Reusable sparse paint. Its expressions are lowered and checked where [InputAppearanceLayout.withInputAppearance] applies it. */
+class InputAppearance internal constructor(
+    internal val configure: TextEntryAppearanceScope.() -> Unit,
+)
 
-fun inputAppearance(configure: TextEntryAppearanceScope.() -> Unit): InputAppearance {
-    val draft = InputAppearance.partial().toMutable()
-    RuntimeTextEntryAppearance(draft).configure()
-    return draft.toFrozen()
-}
+fun inputAppearance(configure: TextEntryAppearanceScope.() -> Unit): InputAppearance = InputAppearance(configure)
 
 interface InputAppearanceLayout {
     fun withInputAppearance(

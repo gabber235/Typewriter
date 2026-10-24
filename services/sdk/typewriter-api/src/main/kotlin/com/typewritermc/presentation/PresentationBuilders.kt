@@ -8,7 +8,6 @@ import com.typewritermc.expression.literal
 import com.typewritermc.types.Icon
 import com.typewritermc.types.Resource
 import com.typewritermc.types.ResourceId
-import skirout.editor.v1.action.EditorAction
 import skirout.editor.v1.expression.ExpressionNode
 import skirout.editor.v1.presentation.CollectionGraphDirection
 import skirout.editor.v1.presentation.CrossAxisAlignment
@@ -144,14 +143,14 @@ interface PresentationData {
 interface PresentationInteractions {
     fun button(
         label: Expr<String, Handled>,
-        action: skirout.editor.v1.action.EditorAction,
+        action: PresentationAction,
         configure: ButtonScope.() -> Unit = {},
     )
 
     fun iconButton(
         icon: Expr<String, Handled>,
         semanticLabel: Expr<String, Handled>,
-        action: skirout.editor.v1.action.EditorAction,
+        action: PresentationAction,
         configure: IconButtonScope.() -> Unit = {},
     )
 
@@ -170,9 +169,9 @@ interface PresentationInteractions {
 }
 
 interface TabsScope : InputAppearanceScope {
-    fun spacing(value: Double)
+    fun spacing(value: Spacing)
 
-    fun contentSpacing(value: Double)
+    fun contentSpacing(value: Spacing)
 
     fun tab(
         id: String,
@@ -247,7 +246,7 @@ interface ConnectionsScope {
 
 data class TextStyle(
     val color: PresentationColor? = null,
-    val weight: Int? = null,
+    val weight: FontWeight? = null,
     val sizing: TextSizing? = null,
     val lineHeight: Double? = null,
 ) {
@@ -258,7 +257,7 @@ data class TextStyle(
 
 data class TextStyleOverride(
     val color: PresentationColor? = null,
-    val weight: Int? = null,
+    val weight: FontWeight? = null,
 )
 
 /** Logical font size policy. Fit bounds must resolve to positive whole sizes. */
@@ -322,7 +321,7 @@ interface HeaderButtonScope {
 
     fun tooltip(value: Expr<String, Handled>)
 
-    fun action(value: EditorAction)
+    fun action(value: PresentationAction)
 
     fun priority(value: Expr<Int, Handled>)
 
@@ -342,7 +341,7 @@ interface HeaderToggleScope {
 
     fun checked(value: Expr<Boolean, Handled>)
 
-    fun action(value: EditorAction)
+    fun action(value: PresentationAction)
 
     fun tooltip(value: Expr<String, Handled>)
 
@@ -404,9 +403,11 @@ sealed interface CollectionRows {
     ) : CollectionRows
 }
 
+/** A relation of collection rows to the rows whose keys [targets] produces: one key, or a list when [many]. */
 data class CollectionRelation<Key>(
     val id: String,
-    val targets: ExpressionNode,
+    val targets: Expr<*, Handled>,
+    val many: Boolean,
 )
 
 interface CollectionSourceScope<Row, Key> {
@@ -496,23 +497,24 @@ private class DefaultCollectionSourceScope<Row, Key>(
         id: String,
         target: Expr<Key, Handled>,
     ) {
-        addRelation(id, target.toNode())
+        addRelation(id, target, many = false)
     }
 
     override fun relations(
         id: String,
         targets: Expr<List<Key>, Handled>,
     ) {
-        addRelation(id, targets.toNode())
+        addRelation(id, targets, many = true)
     }
 
     private fun addRelation(
         id: String,
-        targets: ExpressionNode,
+        targets: Expr<*, Handled>,
+        many: Boolean,
     ) {
         require(id.isNotBlank()) { "Collection relation ids must not be blank." }
         require(relations.none { it.id == id }) { "Collection relation ids must be unique within one source." }
-        relations += CollectionRelation(id, targets)
+        relations += CollectionRelation(id, targets, many)
     }
 
     fun build(
@@ -550,23 +552,24 @@ private class DefaultProjectedCollectionSourceScope<Row, Key, Expressions : Any>
         id: String,
         target: Expr<Key, Handled>,
     ) {
-        addRelation(id, target.toNode())
+        addRelation(id, target, many = false)
     }
 
     override fun relations(
         id: String,
         targets: Expr<List<Key>, Handled>,
     ) {
-        addRelation(id, targets.toNode())
+        addRelation(id, targets, many = true)
     }
 
     private fun addRelation(
         id: String,
-        targets: ExpressionNode,
+        targets: Expr<*, Handled>,
+        many: Boolean,
     ) {
         require(id.isNotBlank()) { "Collection relation ids must not be blank." }
         require(relations.none { it.id == id }) { "Collection relation ids must be unique within one source." }
-        relations += CollectionRelation(id, targets)
+        relations += CollectionRelation(id, targets, many)
     }
 
     fun build(
@@ -608,10 +611,10 @@ enum class ConnectorAnchor { Start, Center }
 
 /** Arranges graph occurrences without changing their traversal or content. */
 interface SequenceLayoutScope {
-    fun clippedRow(spacing: Double = 0.0)
+    fun clippedRow(spacing: Spacing = Spacing.NONE)
 
     fun column(
-        spacing: Double = 0.0,
+        spacing: Spacing = Spacing.NONE,
         cross: CrossAxisAlignment = CrossAxisAlignment.START,
     )
 
@@ -619,9 +622,9 @@ interface SequenceLayoutScope {
         unaryConnector: ConnectorStyle,
         trunkConnector: ConnectorStyle,
         branchConnector: ConnectorStyle,
-        itemSpacing: Double = 24.0,
-        indentation: Double = 16.0,
-        leadingSpacing: Double = 16.0,
+        itemSpacing: Spacing = Spacing(24.0),
+        indentation: Spacing = Spacing(16.0),
+        leadingSpacing: Spacing = Spacing(16.0),
         itemAnchor: ConnectorAnchor = ConnectorAnchor.Center,
         flattenSingleItem: Boolean = true,
         cross: CrossAxisAlignment = CrossAxisAlignment.STRETCH,

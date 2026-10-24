@@ -84,8 +84,7 @@ void main() {
         ..contextInputs = [
           skir.PresentationContextInput(
             source: skir.PresentationContextSource.caller,
-            bindingId: imported,
-            valueType: contextType,
+            binding: declareBinding(imported, contextType.portableTemplate),
           ),
         ];
       final nested = SelectedEditorPresentation(
@@ -1657,7 +1656,7 @@ void main() {
             ],
           ),
         ),
-        itemBindingId: itemBinding,
+        itemBinding: declareBinding(itemBinding, textTemplate),
         presentation: skir.SequencePresentation(
           item: presentationNode(
             "hierarchy.item",
@@ -1797,8 +1796,8 @@ void main() {
               allowAdd: allowAdd,
               allowRemove: true,
               allowReorder: true,
-              itemBindingId: skir.ExpressionBindingId(value: "item"),
-              indexBindingId: skir.ExpressionBindingId(value: "index"),
+              itemBinding: declareNamedBinding("item", textTemplate),
+              indexBinding: declareNamedBinding("index", int32Template),
               appearance: appearance,
               content: content,
             ),
@@ -1848,8 +1847,8 @@ void main() {
               valuePresentation: null,
               allowAdd: true,
               allowRemove: true,
-              keyBindingId: skir.ExpressionBindingId(value: "key"),
-              valueBindingId: skir.ExpressionBindingId(value: "map_value"),
+              keyBinding: declareNamedBinding("key", textTemplate),
+              valueBinding: declareNamedBinding("map_value", textTemplate),
               appearance: null,
               content: null,
             ),
@@ -2020,8 +2019,7 @@ _linkCollectionFixture({
   final collectionRowBinding = skir.ExpressionBindingId(value: "row");
   final collectionDefinition = skir.PresentationCollectionDefinition(
     sourceId: "nodes",
-    rowType: rootTemplate,
-    rowBindingId: collectionRowBinding,
+    rowBinding: declareBinding(collectionRowBinding, rootTemplate),
     key: skir.ExpressionNode.createInput(
       binding: collectionResourceBinding,
       path: skir.ValuePath(segments: const []),
@@ -2035,7 +2033,10 @@ _linkCollectionFixture({
         definition: rootDefinition,
         arguments: const [],
       ),
-      resourceBindingId: collectionResourceBinding,
+      resourceBinding: declareBinding(
+        collectionResourceBinding,
+        skir.TypeUse.wrapNamed(skir.resourceIdType).portableTemplate,
+      ),
       fields: const [],
     ),
   );
@@ -2348,7 +2349,7 @@ _linkCollectionFixture({
                     ),
                     allowAdd: true,
                     allowRemove: true,
-                    itemBindingId: itemBinding,
+                    itemBinding: declareBinding(itemBinding, linkTemplate),
                     appearance: collectionAppearance,
                     content: null,
                   ),

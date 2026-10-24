@@ -16,6 +16,7 @@ const skirSources = "skir-src";
 const dartOutputs = [
   "panel/lib/infrastructure/protocols/skir/skirout",
   "panel/lib/infrastructure/messaging/generated/skirout",
+  "panel/lib/infrastructure/protocols/operations/skirout",
 ];
 
 function run(command: string, args: string[], cwd?: string): void {

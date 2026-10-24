@@ -296,7 +296,11 @@ skir.PresentationNode _aliasCollection(skir.PresentationNode root) {
         bindingId: configuredValueBindingId,
         path: editorRootPath,
       ),
-      scopeBindingId: alias,
+      scopeBinding: declareBinding(
+        alias,
+        skir.TypeUse.wrapNamed(CollectionEditorScenario.ownerType)
+            .portableTemplate,
+      ),
       child: child,
     ),
   );

@@ -8,7 +8,9 @@ import com.typewritermc.discovery.CatalogAssembly
 import com.typewritermc.discovery.CatalogAssemblyContext
 import com.typewritermc.discovery.assemble
 import com.typewritermc.expression.Handled
+import com.typewritermc.expression.descendants
 import com.typewritermc.expression.inputExpression
+import com.typewritermc.expression.listExpr
 import com.typewritermc.expression.literal
 import com.typewritermc.expression.name
 import com.typewritermc.expression.orElse
@@ -123,7 +125,13 @@ val CorePlacesTest by testSuite {
         val reads = nodes.flatMap { it.appearanceReads() }.toSet()
         reads shouldBe setOf("label", "accent", "icon")
         val bars = nodes.firstNotNullOf { (it.element as? PresentationElement.RepeatedWrapper)?.value }
-        (bars.source as ExpressionNode.OrElseWrapper).value.input.shouldBeInstanceOf<ExpressionNode.TakeWrapper>()
+        val limited = (bars.source as ExpressionNode.OrElseWrapper).value.value
+        limited
+            .descendants()
+            .filterIsInstance<ExpressionNode.CallWrapper>()
+            .map { it.value.operation.value }
+            .toList() shouldContain
+            "list.slice"
     }
 
     test("the book outline groups pages by chapter and creates a page into the book from each group") {
@@ -168,6 +176,14 @@ val CorePlacesTest by testSuite {
         shouldThrow<IllegalArgumentException> {
             build {
                 pages {
+                    order { listExpr(resource.fields.name.orElse(literal(""))) }
+                    list()
+                }
+            }
+        }.message shouldContain "not of an ordered type"
+        shouldThrow<IllegalArgumentException> {
+            build {
+                pages {
                     order { resource.fields.name.orElse(literal("")) }
                     graph(GraphDirection.TOP_TO_BOTTOM)
                 }
@@ -197,7 +213,7 @@ val CorePlacesTest by testSuite {
 }
 
 /** Builds a Book workspace whose only content is a button running the action [action] creates. */
-private fun CatalogAssembly.bookBuild(): (() -> EditorAction) -> Unit {
+private fun CatalogAssembly.bookBuild(): (() -> com.typewritermc.presentation.PresentationAction) -> Unit {
     val checked = (checked.resolve(BookDefinition.use.use) as Resolution.Ready).value
     val ownership =
         relations

@@ -14,7 +14,7 @@ import skirout.editor.v1.type_catalog.NamedTypeUse
 /** Settings shared by collection editors without changing item identity or writes. */
 @TypewriterDsl
 interface CollectionAppearanceScope {
-    fun itemSpacing(value: Double)
+    fun itemSpacing(value: Spacing)
 
     fun itemPadding(value: PresentationInsets)
 
@@ -232,7 +232,7 @@ interface ResourcesControl<R : Resource> : ListControl<LinkControl<R>> {
     fun grid(
         itemExtent: Double = 200.0,
         aspectRatio: Double = 1.0,
-        spacing: Double = 12.0,
+        spacing: Spacing = Spacing(12.0),
     )
 
     /** Shows members as rows. */
@@ -266,11 +266,14 @@ interface TreeGroupScope : Layout {
     val group: HierarchyGroupExpressions
 }
 
-/** The group a tree header renders: its full [path], last path segment as [name], and member resources. */
+/**
+ * The group a tree header renders: its full [path], last path segment as [name], and member resources. Like any
+ * field of a record value, each may be missing.
+ */
 class HierarchyGroupExpressions internal constructor(
-    val path: Expr<HierarchyPath, Handled>,
-    val name: Expr<String, Handled>,
-    val members: Expr<List<com.typewritermc.types.ResourceId>, Handled>,
+    val path: Expr<HierarchyPath, com.typewritermc.expression.MayBeMissing>,
+    val name: Expr<String, com.typewritermc.expression.MayBeMissing>,
+    val members: Expr<List<com.typewritermc.types.ResourceId>, com.typewritermc.expression.MayBeMissing>,
 )
 
 interface SetControl<ItemScope> : Control {

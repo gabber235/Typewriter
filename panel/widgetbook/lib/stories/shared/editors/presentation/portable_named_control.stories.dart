@@ -110,7 +110,7 @@ class PortableNamedControlHostStory extends HookWidget {
     PortablePresentationWriteResult write(
       skir.BindingRef reference,
       skir.DataValue value, {
-      Iterable<PortableExpressionRead> reads = const [],
+      Iterable<skir.ValueLocation> reads = const [],
     }) {
       element.value = skir.DataValue.createRecord(
         fields: [skir.FieldValue(name: "style", value: value)],
@@ -141,10 +141,6 @@ class PortableNamedControlHostStory extends HookWidget {
                 content: null,
               ),
               bindings: bindings,
-              budget: skir.EvaluationBudget(
-                maxSteps: 100,
-                maxCollectionItems: 100,
-              ),
               setBinding: write,
               unavailableBuilder: (context, message) =>
                   Text(message, style: TextStyle(color: context.colors.danger)),

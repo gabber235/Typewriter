@@ -3,10 +3,12 @@ package com.typewritermc.presentation
 import com.typewritermc.expression.Expr
 import com.typewritermc.expression.Handled
 import com.typewritermc.expression.MayBeMissing
-import com.typewritermc.types.fields
-import com.typewritermc.types.items
+import com.typewritermc.expression.literal
+import com.typewritermc.types.ResourceIdDefinition
 import com.typewritermc.types.requirePortable
+import com.typewritermc.types.template
 import skirout.editor.v1.expression.ExpressionNode
+import skirout.editor.v1.presentation.BindingDeclaration
 import skirout.editor.v1.presentation.CollectionGraphDirection
 import skirout.editor.v1.presentation.CrossAxisAlignment
 import skirout.editor.v1.presentation.MainAxisAlignment
@@ -17,47 +19,51 @@ import skirout.editor.v1.presentation.PresentationCollectionProjectionValue
 import skirout.editor.v1.presentation.PresentationCollectionRelationDefinition
 import skirout.editor.v1.presentation.PresentationElement
 import skirout.editor.v1.presentation.PresentationNode
+import skirout.editor.v1.type_catalog.TypeTemplate
 
 internal fun <V, ItemScope> RuntimePresentationData.renderRepeated(
     source: Expr<List<V>, Handled>,
     items: SequenceScope<ItemScope>.() -> Unit,
 ) {
-    val binding = state.bindingId("repeated.item")
-    val itemNodes = mutableListOf<PresentationNode>()
-    val itemLayout = state.scope(itemNodes)
-    var empty: PresentationNode? = null
-    var separator: PresentationNode? = null
-    val sequenceLayout = RuntimeSequenceLayoutScope()
-    val scope =
-        object : SequenceScope<ItemScope>, Layout by itemLayout, SequenceLayoutScope by sequenceLayout {
-            override val item =
-                com.typewritermc.expression.inputExpression<ItemScope, MayBeMissing>(binding)
+    val (body, sourceType) = state.lowerInferred(source, "repeated source")
+    val itemType = requireNotNull(state.itemType(sourceType)) { "A repeated source must be a list." }
+    state.introduce("repeated.item", itemType) { item ->
+        val itemNodes = mutableListOf<PresentationNode>()
+        val itemLayout = state.scope(itemNodes)
+        var empty: PresentationNode? = null
+        var separator: PresentationNode? = null
+        val sequenceLayout = RuntimeSequenceLayoutScope(state)
+        val scope =
+            object : SequenceScope<ItemScope>, Layout by itemLayout, SequenceLayoutScope by sequenceLayout {
+                override val item =
+                    com.typewritermc.expression.inputExpression<ItemScope, MayBeMissing>(item.id)
 
-            override fun empty(body: Layout.() -> Unit) {
-                check(empty == null) { "A repeated presentation may declare empty content once." }
-                empty = state.presentation(body)
-            }
+                override fun empty(body: Layout.() -> Unit) {
+                    check(empty == null) { "A repeated presentation may declare empty content once." }
+                    empty = state.presentation(body)
+                }
 
-            override fun separator(body: Layout.() -> Unit) {
-                check(separator == null) { "A repeated presentation may declare one separator." }
-                separator = state.presentation(body)
+                override fun separator(body: Layout.() -> Unit) {
+                    check(separator == null) { "A repeated presentation may declare one separator." }
+                    separator = state.presentation(body)
+                }
             }
-        }
-    state.withTarget(itemNodes) { scope.items() }
-    target +=
-        state.node(
-            PresentationElement.createRepeated(
-                source = expression(source),
-                itemBindingId = binding,
-                presentation =
-                    skirout.editor.v1.presentation.SequencePresentation(
-                        item = state.column(itemNodes),
-                        empty = empty,
-                        separator = separator,
-                        layout = sequenceLayout.build(),
-                    ),
-            ),
-        )
+        state.withTarget(itemNodes) { scope.items() }
+        target +=
+            state.node(
+                PresentationElement.createRepeated(
+                    source = body,
+                    itemBinding = item,
+                    presentation =
+                        skirout.editor.v1.presentation.SequencePresentation(
+                            item = state.column(itemNodes),
+                            empty = empty,
+                            separator = separator,
+                            layout = sequenceLayout.build(),
+                        ),
+                ),
+            )
+    }
 }
 
 internal fun <Row, Key> RuntimePresentationData.renderCollectionLookup(
@@ -89,7 +95,7 @@ internal fun <Row, Key> RuntimePresentationData.renderCollectionLookup(
                 loading = state.presentation(body)
             }
         }
-    scope.configure()
+    state.declareRow(source) { scope.configure() }
     target +=
         state.node(
             PresentationElement.createCollectionLookup(
@@ -107,10 +113,25 @@ internal fun <Row, Key> RuntimePresentationData.renderCollectionGraph(
     configure: GraphScope<Row, Key>.() -> Unit,
 ) {
     state.collection(source)
-    val childrenBinding = state.bindingId("graph.children")
-    val childBinding = state.bindingId("graph.child")
-    val rootSlot = "graph.root.${childrenBinding.value}"
-    val childSlot = "graph.child.${childBinding.value}"
+    val keyType = state.keyType(source)
+    state.declareRow(source) {
+        state.introduce("graph.children", listSlot(source.rowType)) { childrenBinding ->
+            state.introduce("graph.child", source.rowType) { childBinding ->
+                renderCollectionGraph(source, keyType, childrenBinding, childBinding, configure)
+            }
+        }
+    }
+}
+
+private fun <Row, Key> RuntimePresentationData.renderCollectionGraph(
+    source: CollectionSource<Row, Key>,
+    keyType: TypeTemplate,
+    childrenBinding: BindingDeclaration,
+    childBinding: BindingDeclaration,
+    configure: GraphScope<Row, Key>.() -> Unit,
+) {
+    val rootSlot = "graph.root.${childrenBinding.id.value}"
+    val childSlot = "graph.child.${childBinding.id.value}"
     var roots: ExpressionNode? = null
     var relation: String? = null
     var graphDirection: CollectionGraphDirection = CollectionGraphDirection.FORWARD
@@ -124,7 +145,7 @@ internal fun <Row, Key> RuntimePresentationData.renderCollectionGraph(
         object : GraphScope<Row, Key> {
             override fun rootSequence(body: GraphRootSequenceScope<Row>.() -> Unit) {
                 check(rootSequence == null) { "Collection graph root layout may be declared once." }
-                val layout = RuntimeSequenceLayoutScope()
+                val layout = RuntimeSequenceLayoutScope(state)
                 var empty: PresentationNode? = null
                 val sequenceScope =
                     object : GraphRootSequenceScope<Row>, SequenceLayoutScope by layout {
@@ -148,13 +169,13 @@ internal fun <Row, Key> RuntimePresentationData.renderCollectionGraph(
 
             override fun childrenSequence(body: GraphChildrenSequenceScope<Row>.() -> Unit) {
                 check(childSequence == null) { "Collection graph child layout may be declared once." }
-                val layout = RuntimeSequenceLayoutScope()
+                val layout = RuntimeSequenceLayoutScope(state)
                 val sequenceScope =
                     object : GraphChildrenSequenceScope<Row>, SequenceLayoutScope by layout {
                         override val parent =
                             com.typewritermc.expression.inputExpression<Row, MayBeMissing>(source.rowBinding)
                         override val item =
-                            com.typewritermc.expression.inputExpression<Row, MayBeMissing>(childBinding)
+                            com.typewritermc.expression.inputExpression<Row, MayBeMissing>(childBinding.id)
                     }
                 sequenceScope.body()
                 childSequence =
@@ -166,26 +187,18 @@ internal fun <Row, Key> RuntimePresentationData.renderCollectionGraph(
                     )
             }
 
-            override fun root(binding: PresentationInput<Key, *>) {
-                check(roots == null) { "Collection graph roots may be declared once." }
-                roots =
-                    ExpressionNode.createInput(binding = binding.binding.bindingId, path = binding.binding.path)
-            }
+            override fun root(binding: PresentationInput<Key, *>) = root(binding.read())
 
-            override fun roots(binding: PresentationInput<List<Key>, *>) {
-                check(roots == null) { "Collection graph roots may be declared once." }
-                roots =
-                    ExpressionNode.createInput(binding = binding.binding.bindingId, path = binding.binding.path)
-            }
+            override fun roots(binding: PresentationInput<List<Key>, *>) = roots(binding.read())
 
             override fun root(value: Expr<Key, MayBeMissing>) {
                 check(roots == null) { "Collection graph roots may be declared once." }
-                roots = value.toNode()
+                roots = state.lower(value, keyType, mayBeMissing = true)
             }
 
             override fun roots(value: Expr<List<Key>, MayBeMissing>) {
                 check(roots == null) { "Collection graph roots may be declared once." }
-                roots = value.toNode()
+                roots = state.lower(value, listSlot(keyType), mayBeMissing = true)
             }
 
             override fun relation(
@@ -210,7 +223,7 @@ internal fun <Row, Key> RuntimePresentationData.renderCollectionGraph(
                         override val row =
                             com.typewritermc.expression.inputExpression<Row, MayBeMissing>(source.rowBinding)
                         override val children =
-                            com.typewritermc.expression.inputExpression<List<Row>, MayBeMissing>(childrenBinding)
+                            com.typewritermc.expression.inputExpression<List<Row>, MayBeMissing>(childrenBinding.id)
 
                         override fun descendants() {
                             state.currentTarget += state.node(PresentationElement.createSlot(slotId = childSlot))
@@ -231,8 +244,8 @@ internal fun <Row, Key> RuntimePresentationData.renderCollectionGraph(
                 direction = graphDirection,
                 maximumDepth = graphMaximumDepth,
                 node = requireNotNull(node) { "Collection graph node content is required." },
-                childrenBindingId = childrenBinding,
-                childBindingId = childBinding,
+                childrenBinding = childrenBinding,
+                childBinding = childBinding,
                 children = childSequence ?: sequence(childItem),
             ),
         )
@@ -258,15 +271,16 @@ private fun RuntimePresentationData.sequence(
             ),
     )
 
-private class RuntimeSequenceLayoutScope : SequenceLayoutScope {
+private class RuntimeSequenceLayoutScope(
+    private val state: PresentationBuildState,
+) : SequenceLayoutScope {
     private var layout: skirout.editor.v1.presentation.SequenceLayout? = null
 
-    override fun clippedRow(spacing: Double) {
-        require(spacing.isFinite() && spacing >= 0) { "Sequence spacing must be finite and nonnegative." }
+    override fun clippedRow(spacing: Spacing) {
         set(
             skirout.editor.v1.presentation.SequenceLayout.ChildrenWrapper(
                 skirout.editor.v1.presentation.ChildrenLayout.createRow(
-                    spacing = spacing,
+                    spacing = spacing.pixels,
                     mainAxisAlignment = MainAxisAlignment.START,
                     crossAxisAlignment = CrossAxisAlignment.CENTER,
                     clipOverflow = true,
@@ -276,14 +290,13 @@ private class RuntimeSequenceLayoutScope : SequenceLayoutScope {
     }
 
     override fun column(
-        spacing: Double,
+        spacing: Spacing,
         cross: CrossAxisAlignment,
     ) {
-        require(spacing.isFinite() && spacing >= 0) { "Sequence spacing must be finite and nonnegative." }
         set(
             skirout.editor.v1.presentation.SequenceLayout.ChildrenWrapper(
                 skirout.editor.v1.presentation.ChildrenLayout.createColumn(
-                    spacing = spacing,
+                    spacing = spacing.pixels,
                     mainAxisAlignment = MainAxisAlignment.START,
                     crossAxisAlignment = cross,
                     clipOverflow = false,
@@ -296,30 +309,27 @@ private class RuntimeSequenceLayoutScope : SequenceLayoutScope {
         unaryConnector: ConnectorStyle,
         trunkConnector: ConnectorStyle,
         branchConnector: ConnectorStyle,
-        itemSpacing: Double,
-        indentation: Double,
-        leadingSpacing: Double,
+        itemSpacing: Spacing,
+        indentation: Spacing,
+        leadingSpacing: Spacing,
         itemAnchor: ConnectorAnchor,
         flattenSingleItem: Boolean,
         cross: CrossAxisAlignment,
     ) {
-        require(listOf(itemSpacing, indentation, leadingSpacing).all { it.isFinite() && it >= 0 }) {
-            "Hierarchy spacing must be finite and nonnegative."
-        }
         set(
             skirout.editor.v1.presentation.SequenceLayout.createHierarchy(
-                unaryConnector = unaryConnector.wire(),
-                trunkConnector = trunkConnector.wire(),
-                branchConnector = branchConnector.wire(),
-                itemSpacing = expression(itemSpacing),
-                indentation = expression(indentation),
-                leadingSpacing = expression(leadingSpacing),
+                unaryConnector = unaryConnector.wire(state),
+                trunkConnector = trunkConnector.wire(state),
+                branchConnector = branchConnector.wire(state),
+                itemSpacing = state.lower(literal(itemSpacing.pixels), DOUBLE_SLOT),
+                indentation = state.lower(literal(indentation.pixels), DOUBLE_SLOT),
+                leadingSpacing = state.lower(literal(leadingSpacing.pixels), DOUBLE_SLOT),
                 itemAnchor =
                     when (itemAnchor) {
                         ConnectorAnchor.Start -> skirout.editor.v1.presentation.ConnectorAnchor.START
                         ConnectorAnchor.Center -> skirout.editor.v1.presentation.ConnectorAnchor.CENTER
                     },
-                flattenSingleItem = expression(flattenSingleItem),
+                flattenSingleItem = state.lower(literal(flattenSingleItem), BOOLEAN_SLOT),
                 crossAxisAlignment = cross,
             ),
         )
@@ -336,45 +346,71 @@ private class RuntimeSequenceLayoutScope : SequenceLayoutScope {
     }
 }
 
+/**
+ * The wire definition of this source. Its key, selectability and relation targets read the row binding, and a
+ * projected source's also the resource binding, so they are lowered while those are declared.
+ */
 internal fun CollectionSource<*, *>.wire(state: PresentationBuildState): PresentationCollectionDefinition =
-    PresentationCollectionDefinition(
-        sourceId = id,
-        rowType = rowType,
-        rowBindingId = rowBinding,
-        key = expression(key),
-        selectability = expression(selectability),
-        relations =
-            relations.map { relation ->
-                PresentationCollectionRelationDefinition(
-                    relationId = relation.id,
-                    targets = relation.targets,
-                )
-            },
-        projection =
-            (rows as? CollectionRows.Projected)?.let { projected ->
-                PresentationCollectionProjection(
-                    root = projected.projection.root,
-                    resourceBindingId = projected.resourceBinding,
-                    fields =
-                        projected.projection.fields.map { field ->
-                            PresentationCollectionProjectionField(
-                                target = field.target,
-                                source =
-                                    when (val source = field.source) {
-                                        is CollectionProjectionValueSpec.Content -> {
-                                            PresentationCollectionProjectionValue.ContentWrapper(
-                                                source.path,
-                                            )
-                                        }
+    state.declareRow(this) { row ->
+        val keyType = state.keyType(this)
+        PresentationCollectionDefinition(
+            sourceId = id,
+            rowBinding = row,
+            key = state.lower(key, keyType),
+            selectability = state.lower(selectability, BOOLEAN_SLOT),
+            relations =
+                relations.map { relation ->
+                    PresentationCollectionRelationDefinition(
+                        relationId = relation.id,
+                        targets = state.lower(relation.targets, if (relation.many) listSlot(keyType) else keyType),
+                    )
+                },
+            projection =
+                (rows as? CollectionRows.Projected)?.let { projected ->
+                    PresentationCollectionProjection(
+                        root = projected.projection.root,
+                        resourceBinding = BindingDeclaration(id = projected.resourceBinding, type = ResourceIdDefinition.id.template()),
+                        fields =
+                            projected.projection.fields.map { field ->
+                                PresentationCollectionProjectionField(
+                                    target = field.target,
+                                    source =
+                                        when (val source = field.source) {
+                                            is CollectionProjectionValueSpec.Content -> {
+                                                PresentationCollectionProjectionValue.ContentWrapper(source.path)
+                                            }
 
-                                        is CollectionProjectionValueSpec.Literal -> {
-                                            PresentationCollectionProjectionValue.LiteralWrapper(
-                                                source.value.requirePortable(),
-                                            )
-                                        }
-                                    },
-                            )
-                        },
-                )
-            },
-    )
+                                            is CollectionProjectionValueSpec.Literal -> {
+                                                PresentationCollectionProjectionValue.LiteralWrapper(source.value.requirePortable())
+                                            }
+                                        },
+                                )
+                            },
+                    )
+                },
+        )
+    }
+
+/**
+ * Runs [body] with the row binding of [source] declared, typed as its rows; rows of a projected source may be
+ * missing, and its resource binding is declared too.
+ */
+internal fun <R> PresentationBuildState.declareRow(
+    source: CollectionSource<*, *>,
+    body: (BindingDeclaration) -> R,
+): R =
+    when (val rows = source.rows) {
+        CollectionRows.Supplied -> {
+            declare(source.rowBinding, source.rowType, mayBeMissing = false, body)
+        }
+
+        is CollectionRows.Projected -> {
+            declare(rows.resourceBinding, ResourceIdDefinition.id.template(), mayBeMissing = false) {
+                declare(source.rowBinding, source.rowType, mayBeMissing = true, body)
+            }
+        }
+    }
+
+/** The type of the keys of [source], inferred from its key expression over one row. */
+internal fun PresentationBuildState.keyType(source: CollectionSource<*, *>): TypeTemplate =
+    declareRow(source) { lowerInferred(source.key).second }

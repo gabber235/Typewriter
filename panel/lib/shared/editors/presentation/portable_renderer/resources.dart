@@ -66,8 +66,9 @@ extension _PortableResourcesRendering on PortablePresentationNodeRenderer {
         layout;
   }
 
-  /// Members sorted by the element's order key, keeping link order between
-  /// equal keys. Null when a key cannot be evaluated.
+  /// Members sorted by the element's order key in `value.compare` order,
+  /// keeping link order between equal keys and missing keys last. Null when
+  /// a key cannot be evaluated or two keys have no common order.
   List<PortableResourceMember>? _orderedMembers(
     skir.ResourcesElement element,
     List<PortableResourceMember> members,
@@ -75,26 +76,10 @@ extension _PortableResourcesRendering on PortablePresentationNodeRenderer {
   ) {
     final order = element.order;
     if (order == null) return members;
-    final itemType = scope.catalog?.collectionItemType(
-      scope.host?.expectedType(
-        element.control.binding,
-        context: scope.invocation,
-      ),
-    );
     final keys = <skir.ResourceId, skir.DataValue?>{};
     for (final member in members) {
       final evaluated = scope
-          .copyWith(
-            bindings: {
-              ...scope.bindings,
-              element.itemBindingId: PortableExpressionBinding(
-                value: member.link,
-                schema: itemType == null
-                    ? null
-                    : CompletePortablePresentationBinding(itemType),
-              ),
-            },
-          )
+          .declare(element.itemBinding, member.link)
           .evaluate(order);
       switch (evaluated) {
         case PortableExpressionAvailable(:final value):
@@ -105,14 +90,18 @@ extension _PortableResourcesRendering on PortablePresentationNodeRenderer {
           return null;
       }
     }
-    final indexed = members.indexed.toList()
-      ..sort((left, right) {
+    final indexed = members.indexed.toList();
+    try {
+      indexed.sort((left, right) {
         final compared = _compareOrderKeys(
           keys[left.$2.resource],
           keys[right.$2.resource],
         );
         return compared != 0 ? compared : left.$1.compareTo(right.$1);
       });
+    } on skir.PortableOperationFailure {
+      return null;
+    }
     return [for (final (_, member) in indexed) member];
   }
 
@@ -685,16 +674,9 @@ class _ResourceTreeGroupHeader extends StatelessWidget {
         ? Text(group.name, overflow: TextOverflow.ellipsis)
         : PortablePresentationNodeRenderer(
             node: node,
-            scope: scope.copyWith(
-              bindings: {
-                ...scope.bindings,
-                layout.groupBindingId: PortableExpressionBinding(
-                  value: _hierarchyGroupValue(scope.catalog, group),
-                  schema: CompletePortablePresentationBinding(
-                    skir.TypeUse.wrapNamed(hierarchyGroupUse),
-                  ),
-                ),
-              },
+            scope: scope.declare(
+              layout.groupBinding,
+              _hierarchyGroupValue(scope.catalog, group),
             ),
           );
     final row = Padding(
@@ -783,31 +765,13 @@ skir.DataValue _hierarchyGroupValue(
   );
 }
 
-/// Orders evaluated keys: missing keys last, then text, numbers and booleans
-/// by their natural order, and anything else by canonical text.
+/// Orders evaluated keys as `value.compare` does, with missing keys last.
+/// Keys without a common order throw [skir.PortableOperationFailure].
 int _compareOrderKeys(skir.DataValue? left, skir.DataValue? right) {
   if (left == null || right == null) {
     return left == null ? (right == null ? 0 : 1) : -1;
   }
-  final a = left.authoredPayload;
-  final b = right.authoredPayload;
-  double? number(skir.DataValue value) => switch (value) {
-    skir.DataValue_integerWrapper(:final value) => double.tryParse(value),
-    skir.DataValue_floatWrapper(:final value) => value,
-    skir.DataValue_decimalWrapper(:final value) => double.tryParse(value),
-    _ => null,
-  };
-  if ((number(a), number(b)) case (final x?, final y?)) return x.compareTo(y);
-  if ((a.authoredString, b.authoredString) case (final x?, final y?)) {
-    return x.toLowerCase().compareTo(y.toLowerCase());
-  }
-  if ((a, b) case (
-    skir.DataValue_booleanWrapper(value: final x),
-    skir.DataValue_booleanWrapper(value: final y),
-  )) {
-    return x == y ? 0 : (x ? 1 : -1);
-  }
-  return canonicalAuthoredValue(a).compareTo(canonicalAuthoredValue(b));
+  return portableCompare(left, right);
 }
 
 enum _ResourceMemberAction { disconnect, delete }

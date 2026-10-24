@@ -256,7 +256,10 @@ skir.PresentationNode _projections() {
                 .toFrozen(),
       ),
       order: null,
-      itemBindingId: skir.ExpressionBindingId(value: "gallery.item"),
+      itemBinding: declareNamedBinding(
+        "gallery.item",
+        skir.TypeTemplate.unknown,
+      ),
     ),
   );
   final timeline = presentationNode(
@@ -275,7 +278,10 @@ skir.PresentationNode _projections() {
                 .toFrozen(),
       ),
       order: null,
-      itemBindingId: skir.ExpressionBindingId(value: "gallery.item"),
+      itemBinding: declareNamedBinding(
+        "gallery.item",
+        skir.TypeTemplate.unknown,
+      ),
     ),
   );
   return presentationNode(

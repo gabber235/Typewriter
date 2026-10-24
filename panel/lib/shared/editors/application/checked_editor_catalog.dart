@@ -194,8 +194,6 @@ final class CheckedEditorCatalog {
     }
   }
 
-  late final expressionPrograms = PortableExpressionPrograms(this);
-
   final skir.EditorCatalog snapshot;
   final Map<skir.TypeDefinitionId, skir.PublishedType> _types;
 
@@ -321,6 +319,8 @@ final class CheckedEditorCatalog {
     return MissingEditorPresentation(requested);
   }
 
+  /// Materials were checked when Realm built them, for every application of
+  /// their subject, so selection only matches identity and target.
   skir.PresentationMaterial? presentationMaterial(
     skir.PresentationId id,
     skir.TypeSelection actual,
@@ -328,9 +328,7 @@ final class CheckedEditorCatalog {
       .where(
         (material) =>
             material.provider == id &&
-            _presentationTargetMatches(material.target, actual) &&
-            (actual is skir.TypeSelection_pendingWrapper ||
-                presentationExpressionProblems(material, actual).isEmpty),
+            _presentationTargetMatches(material.target, actual),
       )
       .firstOrNull;
 
@@ -349,17 +347,12 @@ final class CheckedEditorCatalog {
           !_fieldMaterialSubjectMatches(material, actualOwner)) {
         continue;
       }
-      final expressionProblems =
-          actualOwner is skir.TypeSelection_pendingWrapper
-          ? const <String>[]
-          : presentationExpressionProblems(material, actualOwner);
       final references =
           _fieldPresentationIndex[material]!
               .where((reference) => reference.identity.field == field)
               .toList(growable: true)
             ..removeWhere(
               (reference) =>
-                  expressionProblems.isEmpty &&
                   reference is _ValidFieldPresentation &&
                   switch (reference.node.element) {
                     skir.PresentationElement_defaultPresentationWrapper(
@@ -375,24 +368,12 @@ final class CheckedEditorCatalog {
           .firstOrNull;
       if (descriptor == null) continue;
       for (final reference in references) {
-        final checked =
-            reference is _ValidFieldPresentation &&
-                expressionProblems.isNotEmpty
-            ? _CheckedFieldPresentation.invalid(
-                identity: reference.identity,
-                material: material,
-                diagnostic:
-                    "Field presentation ${material.provider.namespace}:${material.provider.name} "
-                    "for $field at ${reference.identity.nodeId}: "
-                    "the source expressions are invalid (${expressionProblems.join(", ")})",
-              )
-            : reference;
         byProvider
             .putIfAbsent(descriptor.id, () => [])
             .add(
               _FieldPresentationCandidate(
                 descriptor: descriptor,
-                reference: checked,
+                reference: reference,
               ),
             );
       }
@@ -661,6 +642,17 @@ final class CheckedEditorCatalog {
 
   skir.TypeUse? concreteType(skir.TypeTemplate template) =>
       _concreteTemplateType(template);
+
+  /// The type of a binding a presentation declares: [template] closed over
+  /// the type arguments of the material [subject], or taken as written when
+  /// there is no subject. Null when the catalog cannot apply it, such as for
+  /// a pending subject argument.
+  skir.TypeUse? declaredBindingType(
+    skir.TypeTemplate template,
+    skir.TypeSelection? subject,
+  ) => subject == null
+      ? concreteType(template)
+      : applyTemplate(template, subject);
 
   /// The published placement field of the selected type, or null when the
   /// type declares none. Layout reads and writes go through this path instead
@@ -1414,9 +1406,7 @@ final class CheckedEditorCatalog {
               candidate.provider == descriptor.id && candidate.role == role,
         )
         .firstOrNull;
-    if (material == null ||
-        (actual is! skir.TypeSelection_pendingWrapper &&
-            presentationExpressionProblems(material, actual).isNotEmpty)) {
+    if (material == null) {
       return UnavailableEditorPresentation(
         role: role,
         presentation: descriptor.id,

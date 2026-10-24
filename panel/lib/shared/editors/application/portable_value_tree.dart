@@ -231,74 +231,75 @@ extension PortableRecordTree on skir.AuthoringRecord {
   }
 }
 
-Iterable<skir.ValuePath> expandAuthoredPattern(
-  skir.AuthoringRecord record,
-  skir.RelativeFieldPattern pattern,
-) sync* {
-  final segments = pattern.segments.toList(growable: false);
-
-  Iterable<skir.ValuePath> expand(skir.ValuePath path, int index) sync* {
-    if (index == segments.length) {
-      yield path;
-      return;
+/// Expands owner relative field patterns over an authored value with Realm's
+/// semantics (`CapturedAuthoringReads.expand`), so local rule feedback and
+/// saved checks address the same locations.
+extension PortablePatternExpansion on skir.DataValue {
+  /// Locations [pattern] reaches from [owner], where this value sits.
+  ///
+  /// A field step yields the field location unless the parent value is null
+  /// (a named null included), even when the field is absent or unfilled. The
+  /// `items` step yields list and set items and, for a map, each row's key then
+  /// value; `keys` and `values` yield map row keys or values. A wildcard over
+  /// anything else, including an absent, unfilled or null value, yields
+  /// nothing. Locations keep expansion order.
+  List<skir.ValueLocation> expandPattern(
+    skir.ValueLocation owner,
+    skir.RelativeFieldPattern pattern,
+  ) {
+    var reached = <(skir.ValuePath, skir.DataValue?)>[(owner.path, this)];
+    for (final segment in pattern.segments) {
+      reached = [
+        for (final (path, value) in reached)
+          ..._expandPatternStep(path, value?.authoredPayload, segment),
+      ];
     }
-    final segment = segments[index];
-    switch (segment) {
-      case skir.FieldPatternSegment_fieldWrapper(:final value):
-        final next = skir.ValuePath(
-          segments: [
-            ...path.segments,
-            skir.PathSegment.createField(name: value.name),
-          ],
-        );
-        if (record.readAt(next) is PortablePathValue<skir.DataValue>) {
-          yield* expand(next, index + 1);
-        }
-      case final value when value == skir.FieldPatternSegment.items:
-        final collection = switch (record.readAt(path)) {
-          PortablePathValue(value: final value) => value.authoredItems,
-          PortablePathUnavailable() => null,
-        };
-        for (final item in collection ?? const <skir.ListItem>[]) {
-          yield* expand(
-            skir.ValuePath(
-              segments: [
-                ...path.segments,
-                skir.PathSegment.createItem(id: item.id),
-              ],
-            ),
-            index + 1,
-          );
-        }
-      case final branch
-          when branch == skir.FieldPatternSegment.keys ||
-              branch == skir.FieldPatternSegment.values:
-        final payload = switch (record.readAt(path)) {
-          PortablePathValue(value: final value) => value.authoredPayload,
-          PortablePathUnavailable() => null,
-        };
-        if (payload case skir.DataValue_mapValueWrapper(:final value)) {
-          for (final row in value.rows) {
-            yield* expand(
-              skir.ValuePath(
-                segments: [
-                  ...path.segments,
-                  skir.PathSegment.createItem(id: row.id),
-                  if (branch == skir.FieldPatternSegment.keys)
-                    skir.PathSegment.mapKey,
-                  if (branch == skir.FieldPatternSegment.values)
-                    skir.PathSegment.mapValue,
-                ],
-              ),
-              index + 1,
-            );
-          }
-        }
-      default:
-    }
+    return [
+      for (final (path, _) in reached)
+        skir.ValueLocation(resource: owner.resource, path: path),
+    ];
   }
+}
 
-  yield* expand(skir.ValuePath(segments: const []), 0);
+List<(skir.ValuePath, skir.DataValue?)> _expandPatternStep(
+  skir.ValuePath path,
+  skir.DataValue? payload,
+  skir.FieldPatternSegment segment,
+) {
+  skir.ValuePath item(skir.ItemId id, [skir.PathSegment? branch]) =>
+      skir.ValuePath(
+        segments: [
+          ...path.segments,
+          skir.PathSegment.createItem(id: id),
+          ?branch,
+        ],
+      );
+  final rows = switch (payload) {
+    skir.DataValue_mapValueWrapper(:final value) => value.rows,
+    _ => const <skir.MapRow>[],
+  };
+  return switch (segment) {
+    skir.FieldPatternSegment_fieldWrapper(:final value) =>
+      payload == skir.DataValue.null_
+          ? const []
+          : [(path.field(value.name), payload?.authoredField(value.name))],
+    skir.FieldPatternSegment.items => [
+      for (final entry in payload?.authoredItems ?? const <skir.ListItem>[])
+        (item(entry.id), entry.value),
+      for (final row in rows) ...[
+        (item(row.id, skir.PathSegment.mapKey), row.key),
+        (item(row.id, skir.PathSegment.mapValue), row.value),
+      ],
+    ],
+    skir.FieldPatternSegment.keys => [
+      for (final row in rows) (item(row.id, skir.PathSegment.mapKey), row.key),
+    ],
+    skir.FieldPatternSegment.values => [
+      for (final row in rows)
+        (item(row.id, skir.PathSegment.mapValue), row.value),
+    ],
+    _ => const [],
+  };
 }
 
 PortablePathResult<Object> _unwrapForPath(Object value) {

@@ -1,0 +1,60 @@
+{
+  "cases": [
+    {
+      "id": "boolean_not_true",
+      "expression": {
+        "kind": "call",
+        "value": {
+          "operation": {"value": "boolean.not"},
+          "type_arguments": [],
+          "arguments": [{"kind": "literal", "value": {"kind": "boolean", "value": true}}]
+        }
+      },
+      "check": {
+        "resultType": {
+          "value": {"kind": "nominal", "value": {"kind": "scalar", "value": "boolean"}},
+          "may_be_missing": true
+        },
+        "failures": [],
+        "inferredType": {
+          "value": {"kind": "nominal", "value": {"kind": "scalar", "value": "boolean"}},
+          "may_be_missing": false
+        }
+      },
+      "expected": {"available": {"boolean": false}, "reads": []}
+    },
+    {
+      "id": "boolean_not_false",
+      "expression": {
+        "kind": "call",
+        "value": {
+          "operation": {"value": "boolean.not"},
+          "type_arguments": [],
+          "arguments": [{"kind": "literal", "value": {"kind": "boolean", "value": false}}]
+        }
+      },
+      "expected": {"available": {"boolean": true}, "reads": []}
+    },
+    {
+      "id": "boolean_not_missing_input",
+      "expression": {
+        "kind": "call",
+        "value": {
+          "operation": {"value": "boolean.not"},
+          "type_arguments": [],
+          "arguments": [
+            {
+              "kind": "input",
+              "value": {
+                "binding": {"value": "subject"},
+                "path": {"segments": [{"kind": "field", "value": {"name": "flag"}}]}
+              }
+            }
+          ]
+        }
+      },
+      "inputs": {"subject": {"value": {"record": {"flag": {"unfilled": true}}}}},
+      "expected": {"unavailable": ["subject.flag"], "reads": ["subject.flag"]}
+    }
+  ]
+}

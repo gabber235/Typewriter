@@ -20,7 +20,7 @@ void main() {
     final layout = _node(
       skir.PresentationElement.createScopedBinding(
         binding: _reference(configured, "name"),
-        scopeBindingId: configured,
+        scopeBinding: _untyped(configured),
         child: part,
       ),
     );
@@ -78,7 +78,7 @@ void main() {
     skir.PresentationNode scoped(skir.PresentationNode child) => _node(
       skir.PresentationElement.createScopedBinding(
         binding: _reference(configured, "name"),
-        scopeBindingId: configured,
+        scopeBinding: _untyped(configured),
         child: child,
       ),
     );
@@ -156,7 +156,7 @@ void main() {
             bindingId: skir.ExpressionBindingId(value: "missing"),
             path: skir.ValuePath.defaultInstance,
           ),
-          scopeBindingId: alias,
+          scopeBinding: _untyped(alias),
           child: _field("value", alias),
         ),
       ),
@@ -174,7 +174,7 @@ void main() {
       final provider = skir.SearchProvider.wrapStaticValues(
         (skir.StaticSearchProvider.defaultInstance.toMutable()
               ..result = (skir.SearchResultMapping.defaultInstance.toMutable()
-                ..bindingId = configured
+                ..binding = _untyped(configured)
                 ..presentation = item))
             .toFrozen(),
       );
@@ -187,7 +187,7 @@ void main() {
                     bindingId: configured,
                     path: skir.ValuePath.defaultInstance,
                   ))
-                ..summaryBindingId = configured
+                ..summaryBinding = _untyped(configured)
                 ..summary = item
                 ..provider = provider)
               .toFrozen(),
@@ -260,7 +260,7 @@ void main() {
                 skir.PresentationElement.wrapScopedBinding(
                   skir.ScopedBindingElement(
                     binding: _reference(configured, "position"),
-                    scopeBindingId: configured,
+                    scopeBinding: _untyped(configured),
                     child: _field("X", configured),
                   ),
                 ),
@@ -283,7 +283,7 @@ void main() {
         (skir.ListControl.defaultInstance.toMutable()
               ..control = (skir.BoundControl.defaultInstance.toMutable()
                 ..binding = _reference(configured, "items"))
-              ..itemBindingId = item
+              ..itemBinding = _untyped(item)
               ..itemPresentation = _field("width", item))
             .toFrozen();
     final explicit =
@@ -376,3 +376,8 @@ skir.PresentationNode _column(List<skir.PresentationNode> nodes) => _node(
     ),
   ),
 );
+
+/// Declares [id] without a type: the index tracks authored addresses and never
+/// reads binding types.
+skir.BindingDeclaration _untyped(skir.ExpressionBindingId id) =>
+    declareBinding(id, skir.TypeTemplate.unknown);

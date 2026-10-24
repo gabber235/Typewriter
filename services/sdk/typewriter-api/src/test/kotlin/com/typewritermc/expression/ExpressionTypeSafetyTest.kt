@@ -1,6 +1,7 @@
 package com.typewritermc.expression
 
 import com.typewritermc.authoring.root
+import com.typewritermc.expression.operations.PortableOperationCatalog
 import com.typewritermc.library.BookExpressions
 import com.typewritermc.types.ResourceId
 import com.typewritermc.types.named
@@ -36,7 +37,7 @@ val ExpressionTypeSafetyTest by testSuite {
             portableExpression(testInput(ExpressionBindingId(value = "items"), ValuePath.root))
         val expression: Expr<Int, MayBeMissing> = input.size
 
-        expression.toNode().shouldBeInstanceOf<ExpressionNode.CollectionSizeWrapper>()
+        (expression.toNode() as ExpressionNode.CallWrapper).value.operation.value shouldBe "collection.size"
     }
 
     test("relationship target projection exposes the resource key") {
@@ -49,8 +50,12 @@ val ExpressionTypeSafetyTest by testSuite {
             )
         val projected =
             with(FixtureReads) {
-                DefaultExpressionEvaluator(ExpressionValueReader { error("No authored read expected") }).evaluate(
-                    ExpressionNode.LinkTargetWrapper(source),
+                DefaultExpressionEvaluator(ExpressionValueReader { error("No authored read expected") }, testPortableTypes()).evaluate(
+                    ExpressionNode.createCall(
+                        operation = PortableOperationCatalog.LINK_TARGET.id,
+                        typeArguments = emptyList(),
+                        arguments = listOf(source),
+                    ),
                     ExpressionBindings(emptyMap()),
                     EvaluationBudget(maxSteps = 20, maxCollectionItems = 20),
                 )

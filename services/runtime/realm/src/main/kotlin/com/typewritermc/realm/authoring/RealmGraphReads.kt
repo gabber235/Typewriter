@@ -28,6 +28,7 @@ import com.typewritermc.checking.InspectionCompletion
 import com.typewritermc.checking.PartialSelection
 import com.typewritermc.checking.ResourceTypeMatch
 import com.typewritermc.checking.UndecidedCandidate
+import com.typewritermc.expression.operations.HostFailure
 import com.typewritermc.realm.checking.CapturedAuthoringReads
 import com.typewritermc.realm.repository.LinkSchemaCapabilities
 import com.typewritermc.realm.repository.ResourceValueMapper
@@ -218,8 +219,8 @@ private class CapturedGraph(
             if (reportedProblems.add(problem)) {
                 reads.recordFailure(
                     EvaluationDiagnostic(
-                        code = problem.code,
-                        message = "Declared graph projection is inconsistent.",
+                        failure = HostFailure.InconsistentGraphProjection,
+                        message = "Declared graph projection is inconsistent: ${problem.code}.",
                         locations = listOf(problem.location),
                     ),
                 )

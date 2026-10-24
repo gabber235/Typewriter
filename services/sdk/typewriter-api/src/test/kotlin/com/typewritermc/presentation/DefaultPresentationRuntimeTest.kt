@@ -45,6 +45,7 @@ import com.typewritermc.types.rows
 import com.typewritermc.types.setValue
 import com.typewritermc.types.template
 import com.typewritermc.types.text
+import com.typewritermc.types.toTemplate
 import com.typewritermc.types.use
 import de.infix.testBalloon.framework.core.testSuite
 import io.kotest.matchers.shouldBe
@@ -88,7 +89,11 @@ import skirout.editor.v1.type_catalog.ValuePath
 
 val DefaultPresentationRuntimeTest by testSuite {
     test("caller inputs register one typed dependency without copying canonical facts") {
-        val catalog = DefaultCheckedCatalog(CatalogGeneration(value = "caller inputs"), StandardTypes.definitions)
+        val catalog =
+            DefaultCheckedCatalog(
+                CatalogGeneration(value = "caller inputs"),
+                StandardTypes.definitions + com.typewritermc.types.ResourceIdDefinition.definition,
+            )
         val checked = catalog.ready(ScalarKind.TEXT.use)
         val key = presentationContextKey<ResourceId>("test.active_resource")
         val result =
@@ -117,13 +122,19 @@ val DefaultPresentationRuntimeTest by testSuite {
                 )
             }
         val input = result.dependencies.contextInputs.single()
-        input.bindingId.value shouldBe "context:test.active_resource"
+        input.binding.id.value shouldBe "context:test.active_resource"
         input.source shouldBe skirout.editor.v1.presentation.PresentationContextSource.CALLER
-        input.valueType shouldBe com.typewritermc.types.ResourceIdDefinition.use.use
+        input.binding.type shouldBe
+            com.typewritermc.types.ResourceIdDefinition.use.use
+                .toTemplate()
     }
 
     test("host inputs declare their host source and the host contract's value types") {
-        val catalog = DefaultCheckedCatalog(CatalogGeneration(value = "host inputs"), StandardTypes.definitions)
+        val catalog =
+            DefaultCheckedCatalog(
+                CatalogGeneration(value = "host inputs"),
+                StandardTypes.definitions + com.typewritermc.types.ResourceIdDefinition.definition,
+            )
         val checked = catalog.ready(ScalarKind.TEXT.use)
         val result =
             DefaultPresentationRuntime().build(
@@ -144,17 +155,19 @@ val DefaultPresentationRuntimeTest by testSuite {
                     skirout.editor.v1.presentation.HostContextInput.ACTIVE_RESOURCE,
                 ),
             )
-        active.bindingId.value shouldBe EditorContext.activeResource.binding.value
-        active.valueType shouldBe com.typewritermc.types.ResourceIdDefinition.use.use
+        active.binding.id.value shouldBe EditorContext.activeResource.binding.value
+        active.binding.type shouldBe
+            com.typewritermc.types.ResourceIdDefinition.use.use
+                .toTemplate()
         val count =
             inputs.getValue(
                 skirout.editor.v1.presentation.PresentationContextSource.HostWrapper(
                     skirout.editor.v1.presentation.HostContextInput.SELECTION_COUNT,
                 ),
             )
-        count.bindingId.value shouldBe EditorContext.selectionCount.binding.value
-        count.valueType shouldBe
-            integerScalar(IntegerWidth.SIGNED_THIRTY_TWO).use
+        count.binding.id.value shouldBe EditorContext.selectionCount.binding.value
+        count.binding.type shouldBe
+            integerScalar(IntegerWidth.SIGNED_THIRTY_TWO).template
         inputs.size shouldBe 2
     }
 
@@ -254,7 +267,7 @@ val DefaultPresentationRuntimeTest by testSuite {
             listOf(
                 PathSegment.createField(name = "details"),
             )
-        scope.value.scopeBindingId.value shouldBe "configured_value"
+        scope.value.scopeBinding.id.value shouldBe "configured_value"
         val part = scope.value.child.element as PresentationElement.PartWrapper
         part.value.key.owner shouldBe nestedId
         part.value.body shouldBe null
@@ -268,12 +281,16 @@ val DefaultPresentationRuntimeTest by testSuite {
             DefaultPresentationRuntime().build(
                 PresentationBuildBinding(checked.presentationTemplate(), PresentationRole.RESOURCE_SEARCH_RESULT),
             ) { build ->
-                build.clippedRow(spacing = 4.0) {
+                build.clippedRow(spacing = Spacing(4.0)) {
                     text(literal("Book"))
                     text(literal("Page"))
                 }
-                build.repeated<String, String>(com.typewritermc.expression.emptyListExpression()) {
-                    clippedRow(spacing = 4.0)
+                build.repeated<String, String>(
+                    com.typewritermc.expression.portableLiteral(
+                        DataValue.listValue(listOf(ListItem(id = ItemId(value = "only"), value = DataValue.StringValueWrapper("Book")))),
+                    ),
+                ) {
+                    clippedRow(spacing = Spacing(4.0))
                     text(item.orElse(literal("")))
                 }
             }
@@ -363,7 +380,7 @@ val DefaultPresentationRuntimeTest by testSuite {
                         radius(PresentationRadius.Small)
                     }
                     badge(literal("Ready")) {
-                        textStyle(TextStyle(weight = 500))
+                        textStyle(TextStyle(weight = FontWeight(500)))
                         fill(color)
                         icon("book", size = 14.0)
                     }
@@ -379,8 +396,8 @@ val DefaultPresentationRuntimeTest by testSuite {
                         radius(PresentationRadius.Small)
                     }
                     tooltip(literal("Details"), configure = {
-                        waitMilliseconds(250)
-                        showMilliseconds(2000)
+                        waitDelay(DisplayDelay(250))
+                        showDelay(DisplayDelay(2000))
                         preferBelow(false)
                         fill(color)
                     }) { text(literal("Help")) }
@@ -393,8 +410,8 @@ val DefaultPresentationRuntimeTest by testSuite {
                     }
                     tabs {
                         density(ControlDensity.COMPACT)
-                        spacing(4.0)
-                        contentSpacing(10.0)
+                        spacing(Spacing(4.0))
+                        contentSpacing(Spacing(10.0))
                         tab("first", literal("First"), icon = "book") { text(literal("Content")) }
                     }
                     status(
@@ -404,14 +421,14 @@ val DefaultPresentationRuntimeTest by testSuite {
                                 true,
                                 StatusAppearance("Active", "active") {
                                     noIcon()
-                                    textStyle(TextStyle(weight = 600))
+                                    textStyle(TextStyle(weight = FontWeight(600)))
                                 },
                             ),
                         ),
                     )
                     dateTime(literal(kotlin.time.Instant.fromEpochMilliseconds(1000)), literal("yyyy")) {
                         noIcon()
-                        textStyle(TextStyle(weight = 500))
+                        textStyle(TextStyle(weight = FontWeight(500)))
                     }
                     relativeTime(literal(kotlin.time.Instant.fromEpochMilliseconds(1000))) {
                         noIcon()
@@ -478,7 +495,7 @@ val DefaultPresentationRuntimeTest by testSuite {
             step(2)
             density(ControlDensity.COMPACT)
             selectAllOnFocus()
-            textStyle(TextStyle(weight = 500))
+            textStyle(TextStyle(weight = FontWeight(500)))
         }
         val result =
             DefaultPresentationRuntime().build(
@@ -549,7 +566,7 @@ val DefaultPresentationRuntimeTest by testSuite {
         val shared =
             inputAppearance {
                 density(ControlDensity.COMPACT)
-                textStyle(TextStyle(weight = 600))
+                textStyle(TextStyle(weight = FontWeight(600)))
                 noBorder()
             }
         val result =
@@ -569,13 +586,13 @@ val DefaultPresentationRuntimeTest by testSuite {
                 }
             }
         val wrapper = (result.layout.singleFixed().element as PresentationElement.AppearanceDefaultsWrapper).value
-        wrapper.appearance shouldBe shared
+        wrapper.appearance.density shouldBe ControlDensity.COMPACT
         wrapper.appearance.valueStyle?.weight shouldBe 600
+        wrapper.appearance.valueStyle?.sizing shouldBe null
         val input = (wrapper.child.singleFixed().element as PresentationElement.TextInputWrapper).value
         input.appearance?.density shouldBe null
         input.appearance?.valueStyle?.weight shouldBe null
         (input.appearance?.valueStyle?.sizing != null) shouldBe true
-        shared.valueStyle?.sizing shouldBe null
     }
 
     test("default control receives metadata authored after prefix and no explicit editor") {
@@ -617,7 +634,7 @@ val DefaultPresentationRuntimeTest by testSuite {
                         background = fill,
                         foreground = ambientBackground().on(),
                         radius = PresentationRadius.Large,
-                        transition = stateTransition(transition(milliseconds = 100)),
+                        transition = stateTransition(transition(DisplayDelay(100))),
                     ),
                 ) {
                     align(PresentationAlignment.CENTER) { text(literal("Adventure")) }
@@ -642,7 +659,12 @@ val DefaultPresentationRuntimeTest by testSuite {
     }
 
     test("resource headings compose ordinary nodes with identity and pane context") {
-        val catalog = DefaultCheckedCatalog(CatalogGeneration(value = "headings"), StandardTypes.definitions)
+        val catalog =
+            DefaultCheckedCatalog(
+                CatalogGeneration(value = "headings"),
+                StandardTypes.definitions + com.typewritermc.types.ResourceIdDefinition.definition +
+                    com.typewritermc.types.ColorDefinition.definition,
+            )
         val checked = catalog.ready(ScalarKind.TEXT.use)
         val result =
             DefaultPresentationRuntime().build(
@@ -653,10 +675,10 @@ val DefaultPresentationRuntimeTest by testSuite {
                 }
             }
         val conditional = result.layout.singleFixed().element as PresentationElement.ConditionalWrapper
-        val condition = conditional.value.condition as skirout.editor.v1.expression.ExpressionNode.ValueCompareWrapper
-        condition.value.operation shouldBe skirout.editor.v1.expression.ValueCompareOperation.EQUAL
-        val count = condition.value.left as skirout.editor.v1.expression.ExpressionNode.OrElseWrapper
-        (count.value.input as skirout.editor.v1.expression.ExpressionNode.InputWrapper).value.binding.value shouldBe
+        val condition = (conditional.value.condition as skirout.editor.v1.expression.ExpressionNode.CallWrapper).value
+        condition.operation.value shouldBe "value.equals"
+        val count = condition.arguments[0] as skirout.editor.v1.expression.ExpressionNode.OrElseWrapper
+        (count.value.value as skirout.editor.v1.expression.ExpressionNode.InputWrapper).value.binding.value shouldBe
             EditorContext.selectionCount.binding.value
         result.dependencies.contextInputs
             .single()
@@ -687,8 +709,9 @@ val DefaultPresentationRuntimeTest by testSuite {
         idText.paragraph.selectable shouldBe true
         idText.paragraph.softWrap shouldBe true
         val identifier = idText.value as skirout.editor.v1.expression.ExpressionNode.OrElseWrapper
-        val representation = identifier.value.input as skirout.editor.v1.expression.ExpressionNode.TextUnaryWrapper
-        val identityRead = representation.value.source as skirout.editor.v1.expression.ExpressionNode.InputWrapper
+        val representation = (identifier.value.value as skirout.editor.v1.expression.ExpressionNode.CallWrapper).value
+        representation.operation.value shouldBe "value.unwrap"
+        val identityRead = representation.arguments.single() as skirout.editor.v1.expression.ExpressionNode.InputWrapper
         identityRead.value.binding.value shouldBe "presentation.subject.identifier"
     }
 
@@ -702,9 +725,14 @@ val DefaultPresentationRuntimeTest by testSuite {
                 build.richText {
                     sizing(TextSizing.Fit(literal(18.0), literal(40.0)))
                     paragraph(textParagraph(maxLines = 2, softWrap = true, selectable = true, tone = PresentationTextTone.SECONDARY))
-                    style(TextStyleOverride(color = literal(com.typewritermc.types.Color(0xff123456u)).asPresentationColor(), weight = 500))
+                    style(
+                        TextStyleOverride(
+                            color = literal(com.typewritermc.types.Color(0xff123456u)).asPresentationColor(),
+                            weight = FontWeight(500),
+                        ),
+                    )
                     run(literal("First"))
-                    run(literal("Second"), TextStyleOverride(weight = 700))
+                    run(literal("Second"), TextStyleOverride(weight = FontWeight(700)))
                 }
             }
         val text = (result.layout.singleFixed().element as PresentationElement.RichTextWrapper).value
@@ -1361,7 +1389,7 @@ val DefaultPresentationRuntimeTest by testSuite {
                     @Suppress("UNCHECKED_CAST")
                     val amount: PresentedField<Int, NumberControl<Int>> =
                         field("amount", NumberControl::class as kotlin.reflect.KClass<NumberControl<Int>>)
-                    row(4.0, MainAxisAlignment.SPACE_BETWEEN, CrossAxisAlignment.STRETCH) {
+                    row(Spacing(4.0), MainAxisAlignment.SPACE_BETWEEN, CrossAxisAlignment.STRETCH) {
                         fixed {
                             title {
                                 icon("book")
@@ -1375,11 +1403,11 @@ val DefaultPresentationRuntimeTest by testSuite {
                             amount { sliderInput(0, 10) { divisions(5) } }
                         }
                     }
-                    wrap(2.0, 3.0) { divider() }
-                    grid(2, 4.0, 5.0) { divider() }
+                    wrap(Spacing(2.0), Spacing(3.0)) { divider() }
+                    grid(2, Spacing(4.0), Spacing(5.0)) { divider() }
                     stack { divider() }
                     section(PresentationBorder.All(1.0, literalColor(com.typewritermc.types.Color(0xff3366ccu)))) { divider() }
-                    padding(PresentationInsets(1.0, 2.0, 3.0, 4.0)) { divider() }
+                    padding(PresentationInsets(Spacing(1.0), Spacing(2.0), Spacing(3.0), Spacing(4.0))) { divider() }
                     container(
                         ContainerStyle(
                             background =
@@ -1393,7 +1421,7 @@ val DefaultPresentationRuntimeTest by testSuite {
                     title {
                         selectInput(
                             listOf(SelectOption("one", literal("One"), literal("one"))),
-                        ) { customValue(query) }
+                        ) { dropdown { customValue { this } } }
                     }
                 }
             }
@@ -1597,7 +1625,7 @@ val DefaultPresentationRuntimeTest by testSuite {
             .binding.path.segments.size shouldBe 2
         val scopedRemainder = nestedChildren.last().element as PresentationElement.ScopedBindingWrapper
         scopedRemainder.value.binding.path.segments.size shouldBe 1
-        scopedRemainder.value.scopeBindingId.value shouldBe "configured_value"
+        scopedRemainder.value.scopeBinding.id.value shouldBe "configured_value"
         (scopedRemainder.value.child.element is PresentationElement.RemainingFieldsWrapper) shouldBe true
 
         System.getenv("TYPEWRITER_CONTROL_FIXTURE_DIR")?.let { output ->
@@ -1836,7 +1864,7 @@ val DefaultPresentationRuntimeTest by testSuite {
                         abstract_ = false,
                     ),
             )
-        val catalog = DefaultCheckedCatalog(CatalogGeneration(value = "presentation data"), listOf(definition))
+        val catalog = DefaultCheckedCatalog(CatalogGeneration(value = "presentation data"), StandardTypes.definitions + definition)
         val checked = catalog.ready(id.use())
         val reference = object : PresentationReference {}
         val referenceId =
@@ -1884,7 +1912,7 @@ val DefaultPresentationRuntimeTest by testSuite {
                     }
                     polymorphicMatch(title.input) {
                         case(AppliedPresentation<String>(id.namedUse(), reference)) {
-                            text(value.orElse(literal("missing value")))
+                            text(literal("subject case"))
                         }
                         fallback { text(literal("fallback")) }
                     }
@@ -1902,14 +1930,14 @@ val DefaultPresentationRuntimeTest by testSuite {
 
         val elements = root.layout.fixedChildren().map(PresentationNode::element)
         val repeated = elements[0] as PresentationElement.RepeatedWrapper
-        repeated.value.itemBindingId.value
+        repeated.value.itemBinding.id.value
             .startsWith("presentation.repeated.item") shouldBe true
         (repeated.value.presentation.empty != null) shouldBe true
         val scoped = elements[1] as PresentationElement.ScopedBindingWrapper
         scoped.value.child
             .singleFixed()
             .boundControl()
-            .binding.bindingId shouldBe scoped.value.scopeBindingId
+            .binding.bindingId shouldBe scoped.value.scopeBinding.id
         val typed = elements[2] as PresentationElement.TypedFieldWrapper
         System.getenv("TYPEWRITER_CONTROL_FIXTURE_DIR")?.let { output ->
             java.io
@@ -1978,7 +2006,7 @@ val DefaultPresentationRuntimeTest by testSuite {
             }
         otherResult.dependencies.collections
             .single()
-            .rowType shouldBe
+            .rowBinding.type shouldBe
             ScalarKind.BOOLEAN.template
         otherResult.dependencies.presentations shouldBe emptyList()
 

@@ -6,6 +6,7 @@ import com.typewritermc.authoring.GeneratedSdkApi
 import com.typewritermc.discovery.checkedGeneratedScope
 import com.typewritermc.expression.Expr
 import com.typewritermc.expression.Handled
+import com.typewritermc.expression.literal
 import com.typewritermc.types.template
 import com.typewritermc.types.toTemplate
 import com.typewritermc.types.unknownVariant
@@ -51,23 +52,23 @@ internal class RuntimeControlBinding(
     private val factories = RuntimeInputConfigurationFactories(state, checked.payloadType())
 
     override fun label(text: String) {
-        label = expression(text)
+        label = state.lower(literal(text), TEXT_SLOT)
     }
 
     override fun label(text: Expr<String, Handled>) {
-        label = expression(text)
+        label = state.lower(text, TEXT_SLOT)
     }
 
     override fun description(text: Expr<String, Handled>) {
-        description = expression(text)
+        description = state.lower(text, TEXT_SLOT)
     }
 
     override fun semanticLabel(text: Expr<String, Handled>) {
-        semanticLabel = expression(text)
+        semanticLabel = state.lower(text, TEXT_SLOT)
     }
 
     override fun enabledIf(condition: Expr<Boolean, Handled>) {
-        enabledIf = expression(condition)
+        enabledIf = state.lower(condition, BOOLEAN_SLOT)
     }
 
     override fun readOnly(value: Boolean) {
@@ -107,7 +108,7 @@ internal class RuntimeControlBinding(
         minimum: N,
         maximum: N,
         configure: SliderInputScope<N>.() -> Unit,
-    ) = select(factories.slider(minimum, maximum, configure))
+    ) = select(factories.slider(numberLiteral(minimum), numberLiteral(maximum), configure))
 
     fun <N> sliderInput(
         minimum: Expr<N, Handled>,
@@ -116,14 +117,18 @@ internal class RuntimeControlBinding(
     ) = select(factories.slider(minimum, maximum, configure))
 
     fun <V, Row> searchInput(configure: SearchInputScope<V, Row>.() -> Unit) {
-        val scope = RuntimeSearchInputScope<V, Row>(state, author)
-        scope.configure()
-        select(scope::element)
+        val element =
+            state.declare(SEARCH_QUERY, TEXT_SLOT, mayBeMissing = false) { query ->
+                val scope = RuntimeSearchInputScope<V, Row>(state, author, checked.type)
+                scope.configure()
+                scope.finish(query)
+            }
+        select(element)
     }
 
     fun <Scope> namedInput(configure: NamedInputScope<Scope>.() -> Unit) {
         val draft = CollectionConfigurationDraft()
-        val scope = RuntimeNamedInputScope<Scope>(draft.appearance())
+        val scope = RuntimeNamedInputScope<Scope>(draft.appearance(state))
         scope.configure()
         val body = nestedPresentation(scope.payload ?: {}, NestedPresentationSlot.Payload)
         val appearance = draft.appearance.toFrozen()
@@ -140,7 +145,7 @@ internal class RuntimeControlBinding(
 
     fun <Fields : Layout> recordInput(configure: RecordInputScope<Fields>.() -> Unit) {
         val draft = CollectionConfigurationDraft()
-        val scope = RuntimeRecordInputScope<Fields>(draft.appearance())
+        val scope = RuntimeRecordInputScope<Fields>(draft.appearance(state))
         scope.configure()
         val body = nestedPresentation(scope.fields ?: {}, NestedPresentationSlot.Fields)
         val appearance = draft.appearance.toFrozen()
@@ -150,7 +155,7 @@ internal class RuntimeControlBinding(
 
     fun <Scope> listInput(configure: ListInputScope<Scope>.() -> Unit) {
         val draft = CollectionConfigurationDraft()
-        val scope = RuntimeListInputScope<Scope>(draft.appearance(), draft.operations(state, author), state, draft)
+        val scope = RuntimeListInputScope<Scope>(draft.appearance(state), draft.operations(state, author), state, draft)
         scope.configure()
         val body = nestedPresentation(scope.items ?: {}, NestedPresentationSlot.Items)
         val appearance = draft.appearance.toFrozen()
@@ -165,8 +170,15 @@ internal class RuntimeControlBinding(
                 allowAdd = add,
                 allowRemove = remove,
                 allowReorder = reorder,
-                itemBindingId = ExpressionBindingId(value = "list_item"),
-                indexBindingId = ExpressionBindingId(value = "list_index"),
+                itemBinding = slotBinding("list_item", NestedPresentationSlot.Items),
+                indexBinding =
+                    skirout.editor.v1.presentation.BindingDeclaration(
+                        id = ExpressionBindingId(value = "list_index"),
+                        type =
+                            com.typewritermc.types
+                                .integerScalar(skirout.editor.v1.type_catalog.IntegerWidth.SIGNED_THIRTY_TWO)
+                                .template,
+                    ),
                 appearance = appearance,
                 content = content,
             )
@@ -175,7 +187,7 @@ internal class RuntimeControlBinding(
 
     fun <Scope> collectionInput(configure: SetInputScope<Scope>.() -> Unit) {
         val draft = CollectionConfigurationDraft()
-        val scope = RuntimeSetInputScope<Scope>(draft.appearance(), draft.operations(state, author))
+        val scope = RuntimeSetInputScope<Scope>(draft.appearance(state), draft.operations(state, author))
         scope.configure()
         val body = nestedPresentation(scope.items ?: {}, NestedPresentationSlot.Items)
         val appearance = draft.appearance.toFrozen()
@@ -188,7 +200,7 @@ internal class RuntimeControlBinding(
                 itemPresentation = body,
                 allowAdd = add,
                 allowRemove = remove,
-                itemBindingId = ExpressionBindingId(value = "set_item"),
+                itemBinding = slotBinding("set_item", NestedPresentationSlot.Items),
                 appearance = appearance,
                 content = content,
             )
@@ -197,7 +209,7 @@ internal class RuntimeControlBinding(
 
     fun <K, V> mapInput(configure: MapInputScope<K, V>.() -> Unit) {
         val draft = CollectionConfigurationDraft()
-        val scope = RuntimeMapInputScope<K, V>(draft.appearance(), draft.operations(state, author), draft.content)
+        val scope = RuntimeMapInputScope<K, V>(state, draft.appearance(state), draft.operations(state, author), draft.content)
         scope.configure()
         val keys = nestedPresentation(scope.keys ?: {}, NestedPresentationSlot.Keys)
         val values = nestedPresentation(scope.values ?: {}, NestedPresentationSlot.Values)
@@ -212,8 +224,8 @@ internal class RuntimeControlBinding(
                 valuePresentation = values,
                 allowAdd = add,
                 allowRemove = remove,
-                keyBindingId = ExpressionBindingId(value = "map_key"),
-                valueBindingId = ExpressionBindingId(value = "map_value"),
+                keyBinding = slotBinding("map_key", NestedPresentationSlot.Keys),
+                valueBinding = slotBinding("map_value", NestedPresentationSlot.Values),
                 appearance = appearance,
                 content = content,
             )
@@ -221,7 +233,7 @@ internal class RuntimeControlBinding(
     }
 
     fun <Scope> nullableInput(configure: NullableInputScope<Scope>.() -> Unit) {
-        val scope = RuntimeNullableInputScope<Scope>()
+        val scope = RuntimeNullableInputScope<Scope>(state)
         scope.configure()
         val body = nestedPresentation(scope.value ?: {}, NestedPresentationSlot.Values)
         select {
@@ -236,6 +248,10 @@ internal class RuntimeControlBinding(
 
     private var resourceOrder: ExpressionNode? = null
 
+    /**
+     * Sorts the members by [key], evaluated with each member's link bound. The key has an ordered type (text, a number,
+     * boolean, timestamp or duration), compared as value.compare compares; any other key throws.
+     */
     fun order(key: ResourceItemScope<*>.() -> Expr<*, Handled>) {
         check(resourceOrder == null) { "A resources layout may declare one order." }
         val scope =
@@ -250,7 +266,8 @@ internal class RuntimeControlBinding(
                         ),
                     )
             }
-        resourceOrder = expression(scope.key())
+        resourceOrder =
+            state.declare(RESOURCES_ITEM, memberLink(), mayBeMissing = false) { state.lowerOrderKey(scope.key(), "resources order") }
     }
 
     fun graph(
@@ -261,7 +278,7 @@ internal class RuntimeControlBinding(
             skirout.editor.v1.presentation.ResourceGraphAppearance
                 .partial()
                 .toMutable()
-        RuntimeGraphAppearanceScope(draft).configure()
+        RuntimeGraphAppearanceScope(state, draft).configure()
         require(direction != GraphDirection.UNKNOWN) { "Unknown graph direction." }
         resources(
             ResourcesLayout.createGraph(
@@ -276,23 +293,22 @@ internal class RuntimeControlBinding(
             skirout.editor.v1.presentation.ResourceTimelineAppearance
                 .partial()
                 .toMutable()
-        RuntimeTimelineAppearanceScope(draft).configure()
+        RuntimeTimelineAppearanceScope(state, draft).configure()
         resources(ResourcesLayout.createTimeline(appearance = draft.toFrozen()))
     }
 
     fun grid(
         itemExtent: Double,
         aspectRatio: Double,
-        spacing: Double,
+        spacing: Spacing,
     ) {
         require(itemExtent.isFinite() && itemExtent > 0) { "Grid item extents must be finite and positive." }
         require(aspectRatio.isFinite() && aspectRatio > 0) { "Grid aspect ratios must be finite and positive." }
-        require(spacing.isFinite() && spacing >= 0) { "Grid spacing must be finite and nonnegative." }
         resources(
             ResourcesLayout.createGrid(
-                itemExtent = expression(itemExtent),
-                aspectRatio = expression(aspectRatio),
-                spacing = expression(spacing),
+                itemExtent = state.lower(literal(itemExtent), DOUBLE_SLOT),
+                aspectRatio = state.lower(literal(aspectRatio), DOUBLE_SLOT),
+                spacing = state.lower(literal(spacing.pixels), DOUBLE_SLOT),
             ),
         )
     }
@@ -303,37 +319,42 @@ internal class RuntimeControlBinding(
         path: com.typewritermc.authoring.TypedPath<*, com.typewritermc.authoring.HierarchyPath>,
         configure: TreeScope.() -> Unit,
     ) {
-        val groupBinding = state.bindingId("resources.group")
-        val scope = RuntimeTreeScope(state, groupBinding)
-        scope.configure()
-        resources(
-            ResourcesLayout.createTree(
-                path = path.path,
-                group = scope.group,
-                groupBindingId = groupBinding,
-                connectors = null,
-                initiallyExpanded = scope.initiallyExpanded,
-            ),
-        )
+        val group = com.typewritermc.authoring.HierarchyGroupDefinition.id
+        state.type(group.use())
+        state.introduce("resources.group", group.template(), mayBeMissing = false) { groupBinding ->
+            val scope = RuntimeTreeScope(state, groupBinding)
+            scope.configure()
+            resources(
+                ResourcesLayout.createTree(
+                    path = path.path,
+                    group = scope.group,
+                    groupBinding = groupBinding,
+                    connectors = null,
+                    initiallyExpanded = scope.initiallyExpanded,
+                ),
+            )
+        }
     }
 
     private fun resources(layout: ResourcesLayout) {
-        resourceOrder?.let { order ->
-            require(layout !is ResourcesLayout.GraphWrapper && layout !is ResourcesLayout.TimelineWrapper) {
-                "Graph and timeline layouts place members by their placements and cannot declare an order."
-            }
-            val link = requireNotNull(checked.itemsOrNull()) { "A resources layout presents a collection of links." }.type
-            state.checkOrder(order, RESOURCES_ITEM, link)
+        require(resourceOrder == null || (layout !is ResourcesLayout.GraphWrapper && layout !is ResourcesLayout.TimelineWrapper)) {
+            "Graph and timeline layouts place members by their placements and cannot declare an order."
         }
         select {
             PresentationElement.createResources(
                 control = it,
                 layout = layout,
                 order = resourceOrder,
-                itemBindingId = RESOURCES_ITEM,
+                itemBinding =
+                    skirout.editor.v1.presentation
+                        .BindingDeclaration(id = RESOURCES_ITEM, type = memberLink()),
             )
         }
     }
+
+    /** The link type of one member of the presented link collection. */
+    private fun memberLink(): TypeTemplate =
+        requireNotNull(checked.itemsOrNull()) { "A resources layout presents a collection of links." }.type
 
     fun <V> polymorphicInput(configure: PolymorphicInputScope<V>.() -> Unit) {
         val forms = mutableListOf<skirout.editor.v1.presentation.ConcreteTypePresentation>()
@@ -356,7 +377,7 @@ internal class RuntimeControlBinding(
                     forms +=
                         skirout.editor.v1.presentation.ConcreteTypePresentation(
                             concreteType = type.type.use,
-                            label = expression(label ?: fallback),
+                            label = state.lower(label ?: literal(fallback), TEXT_SLOT),
                             presentation =
                                 state.node(
                                     PresentationElement.createInvocation(
@@ -372,9 +393,9 @@ internal class RuntimeControlBinding(
         val scope =
             RuntimePolymorphicInputScope(
                 formScope,
-                common.appearance(),
+                common.appearance(state),
                 common.content(state, author),
-                collection.appearance(),
+                collection.appearance(state),
                 collection.content,
                 state,
             )
@@ -407,10 +428,10 @@ internal class RuntimeControlBinding(
         val draft = CollectionConfigurationDraft()
         val scope =
             RuntimeLinkInputScope(
-                common.appearance(),
+                common.appearance(state),
                 common.content(state, author),
-                common.popup(),
-                draft.appearance(),
+                common.popup(state),
+                draft.appearance(state),
                 draft.content,
                 state,
             )
@@ -440,6 +461,13 @@ internal class RuntimeControlBinding(
         }
     }
 
+    /** Declares the binding [id] of a collection editor, typed as the element at [slot]. */
+    private fun slotBinding(
+        id: String,
+        slot: NestedPresentationSlot,
+    ) = skirout.editor.v1.presentation
+        .BindingDeclaration(id = ExpressionBindingId(value = id), type = checked.nested(slot).type.type)
+
     private fun <Scope> nestedPresentation(
         block: ControlConfiguration<Scope>,
         slot: NestedPresentationSlot,
@@ -448,14 +476,32 @@ internal class RuntimeControlBinding(
         val children = mutableListOf<PresentationNode>()
         val child = checked.nested(slot)
         val childBinding = fieldBinding.nested(slot, checked, child)
-        val build = state.scope(children, checked = child.type, base = childBinding)
+        // An item, key or value of a collection is a binding of its own while its presentation is built.
+        val name = "$field.$slot"
+        if (childBinding == fieldBinding) return nestedChildren(block, descriptor, children, name, child, childBinding)
+        return state.declare(
+            childBinding.bindingId,
+            child.type.type,
+        ) { nestedChildren(block, descriptor, children, name, child, childBinding) }
+    }
+
+    private fun <Scope> nestedChildren(
+        block: ControlConfiguration<Scope>,
+        descriptor: NestedPresentationScope,
+        children: MutableList<PresentationNode>,
+        name: String,
+        child: CheckedPresentationNested,
+        childBinding: BindingRef,
+    ): PresentationNode? {
+        val slot = child.type
+        val build = state.scope(children, checked = slot, base = childBinding)
         var childControl: RuntimeControlBinding? = null
         val receiver =
             descriptor.create?.invoke(build) ?: if (Layout::class.java.isAssignableFrom(descriptor.control.java)) {
                 build
             } else {
                 val handler =
-                    RuntimeControlBinding(state, children, "$field.$slot", childBinding, child.type, descriptor.nested, null, build)
+                    RuntimeControlBinding(state, children, name, childBinding, slot, descriptor.nested, null, build)
                 childControl = handler
                 state.controls.create(descriptor.control, handler)
             }

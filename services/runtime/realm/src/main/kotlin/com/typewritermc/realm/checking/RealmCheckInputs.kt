@@ -11,6 +11,7 @@ import com.typewritermc.checking.CheckEvaluation
 import com.typewritermc.checking.CheckInput
 import com.typewritermc.checking.CheckRecipe
 import com.typewritermc.configuration.name
+import com.typewritermc.expression.operations.HostFailure
 import com.typewritermc.services.libs.utils.rethrowExceptional
 import com.typewritermc.types.catalog.CheckedCatalog
 import com.typewritermc.types.catalog.CheckedType
@@ -91,7 +92,7 @@ class RealmCheckInputs(
                 return failed(
                     recipe,
                     EvaluationDiagnostic(
-                        code = "check_callback_failed",
+                        failure = HostFailure.CheckCallbackFailed,
                         message = failure.message ?: failure::class.simpleName.orEmpty(),
                         locations = tuple.candidates.map(InputCandidate::location),
                     ),
@@ -135,7 +136,7 @@ class RealmCheckInputs(
             Diagnostic(
                 id = ids(),
                 origin = recipe.owner,
-                code = failure.code,
+                code = failure.failure.value,
                 message = failure.message,
                 severity = DiagnosticSeverity.ERROR,
                 primary = failure.locations.firstOrNull(),

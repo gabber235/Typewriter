@@ -181,7 +181,7 @@ val FrameworkCatalogCreationTest by testSuite {
             listOf(left, top, right, bottom)
         } shouldBe listOf(4.0, 4.0, 4.0, 4.0)
         requireNotNull((leading.leading.element as PresentationElement.IconWrapper).value.size)
-            .evaluate(emptyMap()) shouldBe DataValue.FloatWrapper(18.0)
+            .evaluate() shouldBe DataValue.FloatWrapper(18.0)
         System.getenv("TYPEWRITER_CONTROL_FIXTURE_DIR")?.let { output ->
             java.io.File(output).mkdirs()
             java.io.File(output, "element-graph-layout.bin").writeBytes(
@@ -663,66 +663,20 @@ private fun WireExpressionNode.appearanceField(): String? {
     return (input.path.segments.single() as WirePathSegment.FieldWrapper).value.name
 }
 
-private fun WireExpressionNode.evaluate(bindings: Map<WireExpressionBindingId, DataValue>): DataValue? =
-    when (this) {
-        is WireExpressionNode.LiteralWrapper -> {
-            value.requirePortable()
-        }
-
-        is WireExpressionNode.InputWrapper -> {
-            bindings[value.binding]?.at(value.path)
-        }
-
-        is WireExpressionNode.RuleUnaryWrapper -> {
-            require(value.operation == skirout.editor.v1.expression.RuleUnaryOperation.NON_BLANK)
-            DataValue.BooleanWrapper((value.source.evaluate(bindings) as? DataValue.StringValueWrapper)?.value?.isNotBlank() == true)
-        }
-
-        is WireExpressionNode.ConditionalWrapper -> {
-            if ((value.test.evaluate(bindings) as? DataValue.BooleanWrapper)?.value == true) {
-                value.yes.evaluate(bindings)
-            } else {
-                value.no.evaluate(bindings)
-            }
-        }
-
-        is WireExpressionNode.OrElseWrapper -> {
-            value.input.evaluate(bindings).let { resolved ->
-                if (resolved == null || resolved == DataValue.NULL || resolved == DataValue.UNFILLED) {
-                    value.fallback.evaluate(bindings)
-                } else {
-                    resolved
-                }
-            }
-        }
-
-        else -> {
-            error("The material expression uses an unsupported test operation")
-        }
-    }
-
-private fun DataValue.at(path: WireValuePath): DataValue? {
-    var current = this
-    for (wireSegment in path.segments) {
-        while (current is DataValue.NamedWrapper) current = current.payload
-        val segment =
-            (WireValuePath(segments = listOf(wireSegment)))
-                .requireValid()
-                .segments
-                .single()
-        current =
-            when (segment) {
-                is PathSegment.FieldWrapper -> {
-                    (current as? DataValue.RecordWrapper)?.field(segment.name)
-                }
-
-                else -> {
-                    null
-                }
-            } ?: return null
-    }
-    return current
-}
+/** The value of a closed material expression, evaluated by the portable evaluator. */
+private fun WireExpressionNode.evaluate(): DataValue? =
+    with(com.typewritermc.expression.FixtureReads) {
+        com.typewritermc.expression
+            .DefaultExpressionEvaluator(
+                com.typewritermc.expression.ExpressionValueReader { error("A closed expression reads nothing.") },
+                com.typewritermc.expression.testPortableTypes(),
+            ).evaluate(
+                this@evaluate,
+                com.typewritermc.expression.ExpressionBindings(emptyMap()),
+                skirout.editor.v1.expression
+                    .EvaluationBudget(maxSteps = 100, maxCollectionItems = 100),
+            )
+    }.let { (it as? com.typewritermc.authoring.Availability.Available)?.value }
 
 private fun generatedProviderEntries(): List<com.typewritermc.discovery.GeneratedProviderIndexEntry> {
     val resources =

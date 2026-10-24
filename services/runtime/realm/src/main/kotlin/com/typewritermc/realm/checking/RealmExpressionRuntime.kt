@@ -6,6 +6,9 @@ import com.typewritermc.authoring.DraftBinding
 import com.typewritermc.expression.DefaultExpressionEvaluator
 import com.typewritermc.expression.ExpressionBindings
 import com.typewritermc.expression.ExpressionValueReader
+import com.typewritermc.expression.operations.CatalogPortableTypes
+import com.typewritermc.expression.operations.EvaluatorFailure
+import com.typewritermc.expression.operations.HostFailure
 import com.typewritermc.types.unwrapNamed
 import skirout.editor.v1.expression.EvaluationBudget
 import skirout.editor.v1.expression.EvaluationDiagnostic
@@ -26,7 +29,7 @@ internal class RealmExpressionRuntime(
             reads as? CapturedAuthoringReads
                 ?: return Availability.Failed(
                     EvaluationDiagnostic(
-                        code = "untracked_expression_reads",
+                        failure = HostFailure.UntrackedExpressionReads,
                         message = "Portable expressions require Realm snapshot reads.",
                         locations = listOf(location),
                     ),
@@ -34,6 +37,7 @@ internal class RealmExpressionRuntime(
         val evaluator =
             DefaultExpressionEvaluator(
                 ExpressionValueReader { requested -> snapshot.authoredValue(requested) },
+                CatalogPortableTypes(snapshot.view.original.catalog.checked),
             )
         val result =
             with(reads) {
@@ -49,7 +53,7 @@ internal class RealmExpressionRuntime(
                     result.value.unwrapNamed() as? DataValue.BooleanWrapper
                         ?: return Availability.Failed(
                             EvaluationDiagnostic(
-                                code = "expression_result_not_boolean",
+                                failure = EvaluatorFailure.ExpressionResultNotBoolean,
                                 message = "The portable predicate did not produce a boolean value.",
                                 locations = listOf(location),
                             ),

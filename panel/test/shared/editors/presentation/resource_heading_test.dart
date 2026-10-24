@@ -118,7 +118,7 @@ void main() {
                   required operations,
                 }) {
                   observed =
-                      bindings[panelSelectionCountInput.bindingId]?.value ==
+                      bindings[panelSelectionCountInput.binding.id]?.value ==
                       skir.DataValue.wrapInteger("2");
                   return PortablePresentationScope(
                     operations: operations,

@@ -21,3 +21,15 @@ generators:
     config:
       manifest: ./services/protocol/transport-routes.yaml
       dartImportUriPrefix: package:typewriter_panel/infrastructure/protocols/skir/skirout/
+  - mod: typewriter-transport/operations/kotlin
+    outDir: ./services/sdk/typewriter-api/src/main/skirout
+    config:
+      manifest: ./skir-src/editor/v1/operations.yaml
+      unicodeData: ./services/protocol/unicode
+  - mod: typewriter-transport/operations/dart
+    outDir: ./panel/lib/infrastructure/protocols/operations/skirout
+    config:
+      manifest: ./skir-src/editor/v1/operations.yaml
+      unicodeData: ./services/protocol/unicode
+      dartImportUriPrefix: package:typewriter_panel/infrastructure/protocols/skir/skirout/
+      dartRuntimeImport: package:typewriter_panel/infrastructure/protocols/operations/portable_operation_runtime.dart

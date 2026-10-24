@@ -39,8 +39,11 @@ import com.typewritermc.expression.ExpressionValueReader
 import com.typewritermc.expression.PortableExpressionLimits
 import com.typewritermc.expression.eq
 import com.typewritermc.expression.literal
+import com.typewritermc.expression.operations.EvaluatorFailure
+import com.typewritermc.expression.operations.PortableOperationCatalog
 import com.typewritermc.expression.testInput
 import com.typewritermc.expression.testLiteral
+import com.typewritermc.expression.testPortableTypes
 import com.typewritermc.imprint.ArtifactId
 import com.typewritermc.imprint.ContributionName
 import com.typewritermc.imprint.ContributionSourceId
@@ -86,6 +89,7 @@ import skirout.editor.v1.diagnostic.DiagnosticSeverity
 import skirout.editor.v1.expression.EvaluationBudget
 import skirout.editor.v1.expression.EvaluationDiagnostic
 import skirout.editor.v1.expression.ExpressionNode
+import skirout.editor.v1.expression.FailureId
 import skirout.editor.v1.type_catalog.CatalogGeneration
 import skirout.editor.v1.type_catalog.DataValue
 import skirout.editor.v1.type_catalog.DeclarationOwner
@@ -133,7 +137,8 @@ val SdkRuntimeConformanceTest by testSuite {
                 ResourceId("book:requested"),
                 ValuePath.root,
             )
-        val evaluator = DefaultExpressionEvaluator(ExpressionValueReader { DataValue.StringValueWrapper("Requested").available() })
+        val evaluator =
+            DefaultExpressionEvaluator(ExpressionValueReader { DataValue.StringValueWrapper("Requested").available() }, testPortableTypes())
 
         with(EmptyReads) {
             evaluator.evaluate(
@@ -152,7 +157,7 @@ val SdkRuntimeConformanceTest by testSuite {
             path,
         )
 
-    test("portable evaluation short circuits fallback and preserves named scalar semantics") {
+    test("portable evaluation short circuits, falls back on missing data and reads named scalars through their representation") {
         val location = ValueLocation.of(ResourceId("expression:test"))
         val binding = ExpressionBindingId(value = "value")
         var reads = 0
@@ -163,6 +168,7 @@ val SdkRuntimeConformanceTest by testSuite {
                     reads += 1
                     result
                 },
+                testPortableTypes(),
             )
         val bindings = ExpressionBindings(mapOf(binding to location))
         val budget = EvaluationBudget(maxSteps = 100, maxCollectionItems = 100)
@@ -177,19 +183,26 @@ val SdkRuntimeConformanceTest by testSuite {
                 Availability.Available(DataValue.BooleanWrapper(false))
             reads shouldBe 0
             evaluator.evaluate(
-                ExpressionNode.createOrElse(input = read, fallback = testLiteral(DataValue.StringValueWrapper("fallback"))),
+                ExpressionNode.createOrElse(value = read, fallback = testLiteral(DataValue.StringValueWrapper("fallback"))),
                 bindings,
                 budget,
             ) shouldBe Availability.Available(DataValue.StringValueWrapper("fallback"))
             result = DataValue.named(TEST_CODE_USE, DataValue.StringValueWrapper("chapter")).available()
             evaluator.evaluate(
-                ExpressionNode.createRuleUnary(operation = skirout.editor.v1.expression.RuleUnaryOperation.NON_BLANK, source = read),
+                ExpressionNode.createCall(
+                    operation = PortableOperationCatalog.TEXT_LENGTH.id,
+                    typeArguments = emptyList(),
+                    arguments = listOf(read),
+                ),
                 bindings,
                 budget,
-            ) shouldBe Availability.Available(DataValue.BooleanWrapper(true))
-            result = Availability.Failed(EvaluationDiagnostic(code = "read_failed", message = "broken", locations = listOf(location)))
+            ) shouldBe Availability.Available(DataValue.integer(7.toBigInteger()))
+            result =
+                Availability.Failed(
+                    EvaluationDiagnostic(failure = FailureId(value = "read_failed"), message = "broken", locations = listOf(location)),
+                )
             evaluator.evaluate(
-                ExpressionNode.createOrElse(input = read, fallback = testLiteral(DataValue.StringValueWrapper("hidden"))),
+                ExpressionNode.createOrElse(value = read, fallback = testLiteral(DataValue.StringValueWrapper("hidden"))),
                 bindings,
                 budget,
             ) shouldBe result
@@ -201,7 +214,7 @@ val SdkRuntimeConformanceTest by testSuite {
         repeat(PortableExpressionLimits.MAX_DEPTH + 1) {
             nested = ExpressionNode.createAnd(left = testLiteral(DataValue.BooleanWrapper(true)), right = nested)
         }
-        val evaluator = DefaultExpressionEvaluator(ExpressionValueReader { error("No reads expected") })
+        val evaluator = DefaultExpressionEvaluator(ExpressionValueReader { error("No reads expected") }, testPortableTypes())
         with(EmptyReads) {
             val failed =
                 evaluator.evaluate(
@@ -209,605 +222,12 @@ val SdkRuntimeConformanceTest by testSuite {
                     ExpressionBindings(emptyMap()),
                     EvaluationBudget(maxSteps = 100_000, maxCollectionItems = 100),
                 )
-            (failed as Availability.Failed).diagnostic.code shouldBe "expression_depth_limit"
+            (failed as Availability.Failed).diagnostic.failure shouldBe EvaluatorFailure.ExpressionDepthLimit
             evaluator.evaluate(
                 ExpressionNode.createAnd(left = testLiteral(DataValue.BooleanWrapper(false)), right = nested),
                 ExpressionBindings(emptyMap()),
                 EvaluationBudget(maxSteps = 100_000, maxCollectionItems = 100),
             ) shouldBe Availability.Available(DataValue.BooleanWrapper(false))
-        }
-    }
-
-    test("portable whitespace includes Unicode whitespace and BOM but excludes information separator") {
-        val evaluator = DefaultExpressionEvaluator(ExpressionValueReader { error("No reads expected") })
-
-        fun nonBlank(value: String) =
-            ExpressionNode.createRuleUnary(
-                operation = skirout.editor.v1.expression.RuleUnaryOperation.NON_BLANK,
-                source = testLiteral(DataValue.StringValueWrapper(value)),
-            )
-
-        fun trim(value: String) =
-            ExpressionNode.createTextUnary(
-                operation = skirout.editor.v1.expression.TextUnaryOperation.TRIM,
-                source = testLiteral(DataValue.StringValueWrapper(value)),
-            )
-
-        with(EmptyReads) {
-            listOf("\uFEFF", "\u0085", "\u00A0", "\u2007").forEach { whitespace ->
-                evaluator.evaluate(
-                    nonBlank(whitespace),
-                    ExpressionBindings(emptyMap()),
-                    EvaluationBudget(maxSteps = 10, maxCollectionItems = 0),
-                ) shouldBe Availability.Available(DataValue.BooleanWrapper(false))
-            }
-            evaluator.evaluate(
-                nonBlank("\u001C"),
-                ExpressionBindings(emptyMap()),
-                EvaluationBudget(maxSteps = 10, maxCollectionItems = 0),
-            ) shouldBe Availability.Available(DataValue.BooleanWrapper(true))
-            evaluator.evaluate(
-                trim("\uFEFF value \u0085"),
-                ExpressionBindings(emptyMap()),
-                EvaluationBudget(maxSteps = 10, maxCollectionItems = 0),
-            ) shouldBe Availability.Available(DataValue.StringValueWrapper("value"))
-        }
-    }
-
-    test("portable regular expressions reject host specific and unsafe declaration syntax") {
-        val scope = DefaultConfigurationCollectionScope(TEST_CODE_ID)
-        textField(scope, RelativeFieldPattern.root, ScalarKind.TEXT.template).regex("[a-z]+:[a-z]+")
-
-        listOf(
-            "\\Qliteral\\E",
-            "a++",
-            "[a-z&&[^b]]",
-            "(a+)+",
-            "(a)\\1",
-            "(?=a)a",
-            "a+a+",
-            "\\v",
-            "[\\v]",
-            "[\\S]",
-            "a^*",
-            "a$*",
-        ).forEach { pattern ->
-            shouldThrow<IllegalArgumentException> {
-                textField(DefaultConfigurationCollectionScope(TEST_CODE_ID), RelativeFieldPattern.root, ScalarKind.TEXT.template)
-                    .regex(pattern)
-            }
-        }
-    }
-
-    test("portable regular expressions normalize whitespace and Unicode dot semantics") {
-        val evaluator = DefaultExpressionEvaluator(ExpressionValueReader { error("No reads expected") })
-
-        fun fullMatch(
-            value: String,
-            pattern: String,
-        ) = ExpressionNode.createRegexTest(
-            mode = skirout.editor.v1.expression.RegexMatchMode.FULL_MATCH,
-            source = testLiteral(DataValue.StringValueWrapper(value)),
-            pattern = testLiteral(DataValue.StringValueWrapper(pattern)),
-        )
-
-        with(EmptyReads) {
-            evaluator.evaluate(
-                fullMatch("\u00A0", "\\s"),
-                ExpressionBindings(emptyMap()),
-                EvaluationBudget(maxSteps = 10, maxCollectionItems = 0),
-            ) shouldBe
-                Availability.Available(DataValue.BooleanWrapper(true))
-            evaluator.evaluate(
-                fullMatch("\u00A0", "[\\s]"),
-                ExpressionBindings(emptyMap()),
-                EvaluationBudget(maxSteps = 10, maxCollectionItems = 0),
-            ) shouldBe
-                Availability.Available(DataValue.BooleanWrapper(true))
-            evaluator.evaluate(
-                fullMatch("😀", "."),
-                ExpressionBindings(emptyMap()),
-                EvaluationBudget(maxSteps = 10, maxCollectionItems = 0),
-            ) shouldBe
-                Availability.Available(DataValue.BooleanWrapper(true))
-            evaluator.evaluate(
-                fullMatch("\u0085", "."),
-                ExpressionBindings(emptyMap()),
-                EvaluationBudget(maxSteps = 10, maxCollectionItems = 0),
-            ) shouldBe
-                Availability.Available(DataValue.BooleanWrapper(true))
-            evaluator.evaluate(
-                fullMatch("\n", "."),
-                ExpressionBindings(emptyMap()),
-                EvaluationBudget(maxSteps = 10, maxCollectionItems = 0),
-            ) shouldBe
-                Availability.Available(DataValue.BooleanWrapper(false))
-        }
-    }
-
-    test("portable regular expressions charge search and replacement output to the step budget") {
-        val evaluator = DefaultExpressionEvaluator(ExpressionValueReader { error("No reads expected") })
-
-        fun search(
-            source: String,
-            pattern: String,
-        ) = ExpressionNode.createRegexTest(
-            mode = skirout.editor.v1.expression.RegexMatchMode.SEARCH,
-            source = testLiteral(DataValue.StringValueWrapper(source)),
-            pattern = testLiteral(DataValue.StringValueWrapper(pattern)),
-        )
-
-        fun replace(
-            source: String,
-            pattern: String,
-            replacement: String,
-        ) = ExpressionNode.createRegexReplace(
-            source = testLiteral(DataValue.StringValueWrapper(source)),
-            pattern = testLiteral(DataValue.StringValueWrapper(pattern)),
-            replacement = testLiteral(DataValue.StringValueWrapper(replacement)),
-        )
-
-        with(EmptyReads) {
-            val anchorSearch =
-                evaluator.evaluate(
-                    search("x".repeat(200), "^$"),
-                    ExpressionBindings(emptyMap()),
-                    EvaluationBudget(maxSteps = 50, maxCollectionItems = 0),
-                )
-            (anchorSearch as Availability.Failed).diagnostic.code shouldBe "expression_step_limit"
-
-            val replacementOutput =
-                evaluator.evaluate(
-                    replace("", "", "replacement".repeat(20)),
-                    ExpressionBindings(emptyMap()),
-                    EvaluationBudget(maxSteps = 30, maxCollectionItems = 0),
-                )
-            (replacementOutput as Availability.Failed).diagnostic.code shouldBe "expression_step_limit"
-        }
-    }
-
-    test("portable text expansion uses character boundaries and evaluator budgets") {
-        val evaluator = DefaultExpressionEvaluator(ExpressionValueReader { error("No reads expected") })
-
-        context(reads: AuthoredReads)
-        fun replace(
-            values: List<DataValue>,
-            budget: EvaluationBudget = EvaluationBudget(maxSteps = 100, maxCollectionItems = 100),
-        ): Availability<DataValue> =
-            evaluator.evaluate(
-                ExpressionNode.createTextReplace(
-                    source = testLiteral(values[0]),
-                    target = testLiteral(values[1]),
-                    replacement = testLiteral(values[2]),
-                ),
-                ExpressionBindings(emptyMap()),
-                budget,
-            )
-
-        context(reads: AuthoredReads)
-        fun split(
-            values: List<DataValue>,
-            budget: EvaluationBudget = EvaluationBudget(maxSteps = 100, maxCollectionItems = 100),
-        ): Availability<DataValue> =
-            evaluator.evaluate(
-                ExpressionNode.createTextSplit(source = testLiteral(values[0]), separator = testLiteral(values[1])),
-                ExpressionBindings(emptyMap()),
-                budget,
-            )
-
-        context(reads: AuthoredReads)
-        fun join(
-            values: List<DataValue>,
-            budget: EvaluationBudget = EvaluationBudget(maxSteps = 100, maxCollectionItems = 100),
-        ): Availability<DataValue> =
-            evaluator.evaluate(
-                ExpressionNode.createTextJoin(source = testLiteral(values[0]), separator = testLiteral(values[1])),
-                ExpressionBindings(emptyMap()),
-                budget,
-            )
-
-        context(reads: AuthoredReads)
-        fun interpolate(
-            values: List<DataValue>,
-            budget: EvaluationBudget = EvaluationBudget(maxSteps = 100, maxCollectionItems = 100),
-        ): Availability<DataValue> =
-            evaluator.evaluate(
-                ExpressionNode.createTextInterpolate(parts = values.map(::testLiteral)),
-                ExpressionBindings(emptyMap()),
-                budget,
-            )
-
-        with(EmptyReads) {
-            replace(
-                listOf(DataValue.StringValueWrapper("😀"), DataValue.StringValueWrapper(""), DataValue.StringValueWrapper("_")),
-            ) shouldBe Availability.Available(DataValue.StringValueWrapper("_😀_"))
-
-            split(
-                listOf(DataValue.StringValueWrapper("😀x"), DataValue.StringValueWrapper("")),
-            ) shouldBe
-                Availability.Available(
-                    DataValue.listValue(
-                        listOf(
-                            skirout.editor.v1.type_catalog.ListItem(
-                                id =
-                                    skirout.editor.v1.type_catalog
-                                        .ItemId(value = "split.0"),
-                                value = DataValue.StringValueWrapper("😀"),
-                            ),
-                            skirout.editor.v1.type_catalog.ListItem(
-                                id =
-                                    skirout.editor.v1.type_catalog
-                                        .ItemId(value = "split.1"),
-                                value = DataValue.StringValueWrapper("x"),
-                            ),
-                        ),
-                    ),
-                )
-            split(
-                listOf(DataValue.StringValueWrapper(""), DataValue.StringValueWrapper("")),
-            ) shouldBe Availability.Available(DataValue.listValue(emptyList()))
-
-            val large = DataValue.StringValueWrapper("value".repeat(20))
-            listOf(
-                replace(
-                    listOf(DataValue.StringValueWrapper("a"), DataValue.StringValueWrapper(""), large),
-                    EvaluationBudget(maxSteps = 30, maxCollectionItems = 100),
-                ),
-                join(
-                    listOf(
-                        DataValue.listValue(
-                            listOf(
-                                skirout.editor.v1.type_catalog.ListItem(
-                                    id =
-                                        skirout.editor.v1.type_catalog
-                                            .ItemId(value = "only"),
-                                    value = large,
-                                ),
-                            ),
-                        ),
-                        DataValue.StringValueWrapper(""),
-                    ),
-                    EvaluationBudget(maxSteps = 30, maxCollectionItems = 100),
-                ),
-                interpolate(
-                    listOf(large),
-                    EvaluationBudget(maxSteps = 30, maxCollectionItems = 100),
-                ),
-            ).forEach { result ->
-                (result as Availability.Failed).diagnostic.code shouldBe "expression_step_limit"
-            }
-
-            val splitLimit =
-                split(
-                    listOf(DataValue.StringValueWrapper("😀x"), DataValue.StringValueWrapper("")),
-                    EvaluationBudget(maxSteps = 100, maxCollectionItems = 1),
-                )
-            (splitLimit as Availability.Failed).diagnostic.code shouldBe "expression_collection_limit"
-        }
-    }
-
-    test("collection evaluation uses semantic equality propagates unfinished members and counts visited items") {
-        val location = ValueLocation.of(ResourceId("collection:test"))
-        val binding = ExpressionBindingId(value = "items")
-        val item = ExpressionBindingId(value = "item")
-        var value: DataValue =
-            DataValue.listValue(
-                listOf(
-                    skirout.editor.v1.type_catalog.ListItem(
-                        id =
-                            skirout.editor.v1.type_catalog
-                                .ItemId(value = "first"),
-                        value = DataValue.StringValueWrapper("same"),
-                    ),
-                    skirout.editor.v1.type_catalog.ListItem(
-                        id =
-                            skirout.editor.v1.type_catalog
-                                .ItemId(value = "second"),
-                        value = DataValue.StringValueWrapper("same"),
-                    ),
-                ),
-            )
-        val evaluator = DefaultExpressionEvaluator(ExpressionValueReader { value.available() })
-        val bindings = ExpressionBindings(mapOf(binding to location))
-        val input = testInput(binding, ValuePath.root)
-        with(EmptyReads) {
-            evaluator.evaluate(
-                ExpressionNode.createRuleUnary(operation = skirout.editor.v1.expression.RuleUnaryOperation.UNIQUE, source = input),
-                bindings,
-                EvaluationBudget(maxSteps = 100, maxCollectionItems = 10),
-            ) shouldBe Availability.Available(DataValue.BooleanWrapper(false))
-            value =
-                DataValue.listValue(
-                    listOf(
-                        skirout.editor.v1.type_catalog.ListItem(
-                            id =
-                                skirout.editor.v1.type_catalog
-                                    .ItemId(value = "unfinished"),
-                            value = DataValue.record(mapOf("valid" to DataValue.UNFILLED)),
-                        ),
-                    ),
-                )
-            evaluator.evaluate(
-                ExpressionNode.createUniqueBy(source = input, body = localNode(ValuePath.root)),
-                bindings,
-                EvaluationBudget(maxSteps = 100, maxCollectionItems = 10),
-            ) shouldBe
-                Availability.Unavailable(
-                    listOf(
-                        location.copy(
-                            path =
-                                ValuePath(
-                                    segments =
-                                        listOf(
-                                            PathSegment.createItem(
-                                                id =
-                                                    skirout.editor.v1.type_catalog
-                                                        .ItemId(value = "unfinished"),
-                                            ),
-                                        ),
-                                ),
-                        ),
-                    ),
-                )
-
-            value =
-                DataValue.listValue(
-                    listOf(
-                        skirout.editor.v1.type_catalog.ListItem(
-                            id =
-                                skirout.editor.v1.type_catalog
-                                    .ItemId(value = "known one"),
-                            value = DataValue.StringValueWrapper("same"),
-                        ),
-                        skirout.editor.v1.type_catalog.ListItem(
-                            id =
-                                skirout.editor.v1.type_catalog
-                                    .ItemId(value = "known two"),
-                            value = DataValue.StringValueWrapper("same"),
-                        ),
-                        skirout.editor.v1.type_catalog.ListItem(
-                            id =
-                                skirout.editor.v1.type_catalog
-                                    .ItemId(value = "unfinished"),
-                            value = DataValue.record(mapOf("valid" to DataValue.UNFILLED)),
-                        ),
-                    ),
-                )
-            evaluator.evaluate(
-                ExpressionNode.CollectionSizeWrapper(input),
-                bindings,
-                EvaluationBudget(maxSteps = 100, maxCollectionItems = 10),
-            ) shouldBe Availability.Available(DataValue.integer(3.toBigInteger()))
-            evaluator.evaluate(
-                ExpressionNode.createRuleUnary(operation = skirout.editor.v1.expression.RuleUnaryOperation.UNIQUE, source = input),
-                bindings,
-                EvaluationBudget(maxSteps = 100, maxCollectionItems = 10),
-            ) shouldBe Availability.Available(DataValue.BooleanWrapper(false))
-            value =
-                DataValue.listValue(
-                    listOf(
-                        skirout.editor.v1.type_catalog.ListItem(
-                            id =
-                                skirout.editor.v1.type_catalog
-                                    .ItemId(value = "unfinished"),
-                            value = DataValue.record(mapOf("valid" to DataValue.UNFILLED)),
-                        ),
-                    ),
-                )
-            evaluator.evaluate(
-                ExpressionNode.createAny(
-                    source = input,
-                    body =
-                        localNode(
-                            ValuePath(
-                                segments =
-                                    listOf(
-                                        PathSegment.createField(name = "valid"),
-                                    ),
-                            ),
-                        ),
-                ),
-                bindings,
-                EvaluationBudget(maxSteps = 100, maxCollectionItems = 10),
-            ) shouldBe
-                Availability.Unavailable(
-                    listOf(
-                        location.copy(
-                            path =
-                                ValuePath(
-                                    segments =
-                                        listOf(
-                                            PathSegment.createItem(
-                                                id =
-                                                    skirout.editor.v1.type_catalog
-                                                        .ItemId(value = "unfinished"),
-                                            ),
-                                            PathSegment.createField(name = "valid"),
-                                        ),
-                                ),
-                        ),
-                    ),
-                )
-
-            value =
-                DataValue.listValue(
-                    listOf(
-                        skirout.editor.v1.type_catalog.ListItem(
-                            id =
-                                skirout.editor.v1.type_catalog
-                                    .ItemId(value = "yes"),
-                            value = DataValue.BooleanWrapper(true),
-                        ),
-                        skirout.editor.v1.type_catalog.ListItem(
-                            id =
-                                skirout.editor.v1.type_catalog
-                                    .ItemId(value = "no"),
-                            value = DataValue.BooleanWrapper(false),
-                        ),
-                    ),
-                )
-            evaluator.evaluate(
-                ExpressionNode.createAny(source = input, body = localNode(ValuePath.root)),
-                bindings,
-                EvaluationBudget(maxSteps = 100, maxCollectionItems = 1),
-            ) shouldBe Availability.Available(DataValue.BooleanWrapper(true))
-        }
-    }
-
-    test("map access preserves named key identity and retains unfinished key uncertainty") {
-        val location = ValueLocation.of(ResourceId("map:test"))
-        val binding = ExpressionBindingId(value = "map")
-        var value: DataValue = DataValue.mapValue(emptyList())
-        val evaluator = DefaultExpressionEvaluator(ExpressionValueReader { value.available() })
-        val input = testInput(binding, ValuePath.root)
-
-        fun access(key: DataValue) = ExpressionNode.createCollectionAccess(source = input, index = testLiteral(key))
-
-        value =
-            DataValue.mapValue(
-                listOf(
-                    skirout.editor.v1.type_catalog.MapRow(
-                        id =
-                            skirout.editor.v1.type_catalog
-                                .ItemId(value = "target"),
-                        key = DataValue.StringValueWrapper("target"),
-                        value = DataValue.StringValueWrapper("available"),
-                    ),
-                    skirout.editor.v1.type_catalog.MapRow(
-                        id =
-                            skirout.editor.v1.type_catalog
-                                .ItemId(value = "duplicate one"),
-                        key = DataValue.StringValueWrapper("duplicate"),
-                        value = DataValue.StringValueWrapper("one"),
-                    ),
-                    skirout.editor.v1.type_catalog.MapRow(
-                        id =
-                            skirout.editor.v1.type_catalog
-                                .ItemId(value = "duplicate two"),
-                        key = DataValue.StringValueWrapper("duplicate"),
-                        value = DataValue.StringValueWrapper("two"),
-                    ),
-                    skirout.editor.v1.type_catalog.MapRow(
-                        id =
-                            skirout.editor.v1.type_catalog
-                                .ItemId(value = "unfinished"),
-                        key = DataValue.UNFILLED,
-                        value = DataValue.UNFILLED,
-                    ),
-                ),
-            )
-        with(EmptyReads) {
-            evaluator.evaluate(
-                access(DataValue.StringValueWrapper("target")),
-                ExpressionBindings(mapOf(binding to location)),
-                EvaluationBudget(maxSteps = 100, maxCollectionItems = 100),
-            ) shouldBe
-                Availability.Unavailable(
-                    listOf(
-                        location.copy(
-                            path =
-                                ValuePath(
-                                    segments =
-                                        listOf(
-                                            PathSegment.createItem(
-                                                id =
-                                                    skirout.editor.v1.type_catalog
-                                                        .ItemId(value = "target"),
-                                            ),
-                                            PathSegment.MAP_VALUE,
-                                        ),
-                                ),
-                        ),
-                        location.copy(
-                            path =
-                                ValuePath(
-                                    segments =
-                                        listOf(
-                                            PathSegment.createItem(
-                                                id =
-                                                    skirout.editor.v1.type_catalog
-                                                        .ItemId(value = "unfinished"),
-                                            ),
-                                            PathSegment.MAP_KEY,
-                                        ),
-                                ),
-                        ),
-                    ),
-                )
-
-            value =
-                DataValue.mapValue(
-                    (value as DataValue.MapValueWrapper).rows.map { row ->
-                        if (row.id.value == "unfinished") row.copy(key = DataValue.StringValueWrapper("other")) else row
-                    },
-                )
-            evaluator.evaluate(
-                access(DataValue.StringValueWrapper("target")),
-                ExpressionBindings(mapOf(binding to location)),
-                EvaluationBudget(maxSteps = 100, maxCollectionItems = 100),
-            ) shouldBe Availability.Available(DataValue.StringValueWrapper("available"))
-
-            val namedKey = DataValue.named(TEST_CODE_USE, DataValue.StringValueWrapper("wrapped"))
-            value =
-                DataValue.mapValue(
-                    listOf(
-                        skirout.editor.v1.type_catalog.MapRow(
-                            id =
-                                skirout.editor.v1.type_catalog
-                                    .ItemId(value = "named"),
-                            key = namedKey,
-                            value = DataValue.StringValueWrapper("named value"),
-                        ),
-                    ),
-                )
-            evaluator.evaluate(
-                access(namedKey),
-                ExpressionBindings(mapOf(binding to location)),
-                EvaluationBudget(maxSteps = 100, maxCollectionItems = 100),
-            ) shouldBe Availability.Available(DataValue.StringValueWrapper("named value"))
-
-            value =
-                DataValue.mapValue(
-                    listOf(
-                        skirout.editor.v1.type_catalog.MapRow(
-                            id =
-                                skirout.editor.v1.type_catalog
-                                    .ItemId(value = "first"),
-                            key = DataValue.StringValueWrapper("same"),
-                            value = DataValue.StringValueWrapper("one"),
-                        ),
-                        skirout.editor.v1.type_catalog.MapRow(
-                            id =
-                                skirout.editor.v1.type_catalog
-                                    .ItemId(value = "second"),
-                            key = DataValue.StringValueWrapper("same"),
-                            value = DataValue.StringValueWrapper("two"),
-                        ),
-                    ),
-                )
-            evaluator.evaluate(
-                access(DataValue.StringValueWrapper("same")),
-                ExpressionBindings(mapOf(binding to location)),
-                EvaluationBudget(maxSteps = 100, maxCollectionItems = 100),
-            ) shouldBe
-                Availability.Unavailable(
-                    listOf("first", "second").map { id ->
-                        location.copy(
-                            path =
-                                ValuePath(
-                                    segments =
-                                        listOf(
-                                            PathSegment.createItem(
-                                                id =
-                                                    skirout.editor.v1.type_catalog
-                                                        .ItemId(value = id),
-                                            ),
-                                            PathSegment.MAP_VALUE,
-                                        ),
-                                ),
-                        )
-                    },
-                )
         }
     }
 
@@ -880,7 +300,8 @@ val SdkRuntimeConformanceTest by testSuite {
                 .descriptor.predicate
         val configured = ExpressionBindingId(value = "configured_value")
         val location = ValueLocation.of(ResourceId("counter:1"))
-        val evaluator = DefaultExpressionEvaluator(ExpressionValueReader { DataValue.integer(5.toBigInteger()).available() })
+        val evaluator =
+            DefaultExpressionEvaluator(ExpressionValueReader { DataValue.integer(5.toBigInteger()).available() }, testPortableTypes())
         with(EmptyReads) {
             evaluator.evaluate(
                 rule,
@@ -904,6 +325,7 @@ val SdkRuntimeConformanceTest by testSuite {
         val unsignedEvaluator =
             DefaultExpressionEvaluator(
                 ExpressionValueReader { DataValue.integer(ULong.MAX_VALUE.toString().toBigInteger()).available() },
+                testPortableTypes(),
             )
         with(EmptyReads) {
             unsignedEvaluator.evaluate(
@@ -1286,7 +708,7 @@ val SdkRuntimeConformanceTest by testSuite {
         assembly.editorCatalog.diagnostics.none { it.code == "conflicting_field_presentation" } shouldBe true
     }
 
-    test("catalog assembly rejects an inferred control outside its owning record") {
+    test("catalog assembly drops a material with an inferred control outside its owning record and keeps its type") {
         val origin = providerOrigin("invalid_field_presentation")
         val definition = recordDefinition("InvalidPresentationField", "actual", ScalarKind.TEXT.template)
         val provider =
@@ -1305,11 +727,12 @@ val SdkRuntimeConformanceTest by testSuite {
                 declarations = listOf(OwnedTypeDeclaration(origin, definition)),
                 presentations = listOf(ownedPresentation(origin, provider, target, material)),
             ).assemble(CatalogAssemblyContext(CatalogGeneration(value = "invalid field")))
-        val status =
-            assembly.editorCatalog.types
-                .single { it.definition.id == definition.id }
-                .status as skirout.editor.v1.catalog.DeclarationStatus.UnavailableWrapper
-        status.value.map { it.code } shouldBe listOf("presentation_material_build_failed")
+        assembly.editorCatalog.types
+            .single { it.definition.id == definition.id }
+            .status shouldBe skirout.editor.v1.catalog.DeclarationStatus.READY
+        assembly.editorCatalog.presentationMaterials shouldBe emptyList()
+        assembly.editorCatalog.diagnostics.map { it.affected to it.code } shouldBe
+            listOf(definition.id to "presentation_material_build_failed")
     }
 
     test("catalog assembly admits bounded atomic parts and rejects foreign owners or owner remainders") {
@@ -1376,18 +799,16 @@ val SdkRuntimeConformanceTest by testSuite {
                     declarations = listOf(OwnedTypeDeclaration(origin, definition), OwnedTypeDeclaration(origin, foreign)),
                     presentations = listOf(ownedPresentation(origin, provider, target, base.copy(layout = layout))),
                 ).assemble(CatalogAssemblyContext(CatalogGeneration(value = "atomic parts")))
-            val status =
-                assembly.editorCatalog.types
-                    .single { it.definition.id == definition.id }
-                    .status
+            assembly.editorCatalog.types
+                .single { it.definition.id == definition.id }
+                .status shouldBe skirout.editor.v1.catalog.DeclarationStatus.READY
             if (admitted) {
-                status shouldBe skirout.editor.v1.catalog.DeclarationStatus.READY
                 assembly.editorCatalog.presentationMaterials
                     .single()
                     .inheritableNodes shouldBe listOf("part")
             } else {
-                (status as skirout.editor.v1.catalog.DeclarationStatus.UnavailableWrapper).value.map { it.code } shouldBe
-                    listOf("presentation_material_build_failed")
+                assembly.editorCatalog.presentationMaterials shouldBe emptyList()
+                assembly.editorCatalog.diagnostics.map { it.code } shouldBe listOf("presentation_material_build_failed")
             }
         }
     }

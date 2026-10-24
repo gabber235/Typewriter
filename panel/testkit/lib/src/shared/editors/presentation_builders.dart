@@ -24,6 +24,31 @@ skir.ExpressionNode numberLiteral(double value) =>
 skir.ExpressionNode integerLiteral(int value) =>
     literalExpression(skir.DataValue.wrapInteger("$value"));
 
+/// The scalar type template of [kind].
+skir.TypeTemplate scalarTemplate(skir.ScalarKind kind) =>
+    skir.TypeTemplate.wrapScalar(kind);
+
+/// The text type template.
+final textTemplate = scalarTemplate(skir.ScalarKind.text);
+
+/// The type template of a signed 32 bit integer, the type of collection
+/// indexes.
+final int32Template = scalarTemplate(
+  skir.ScalarKind.createInteger(width: skir.IntegerWidth.signedThirtyTwo),
+);
+
+/// Declares the binding [id] of type [type].
+skir.BindingDeclaration declareBinding(
+  skir.ExpressionBindingId id,
+  skir.TypeTemplate type,
+) => skir.BindingDeclaration(id: id, type: type);
+
+/// Declares the binding named [id] of type [type].
+skir.BindingDeclaration declareNamedBinding(
+  String id,
+  skir.TypeTemplate type,
+) => declareBinding(skir.ExpressionBindingId(value: id), type);
+
 /// Reads [binding] at [path], or at the single [field] below its root.
 skir.ExpressionNode inputExpression(
   skir.ExpressionBindingId binding, {
@@ -51,7 +76,12 @@ skir.ExpressionNode localExpression(
 
 /// Reads field [name] from [source].
 skir.ExpressionNode fieldExpression(skir.ExpressionNode source, String name) =>
-    skir.ExpressionNode.createField(source: source, name: name);
+    skir.ExpressionNode.createField(
+      source: source,
+      path: skir.ValuePath(
+        segments: [skir.PathSegment.createField(name: name)],
+      ),
+    );
 
 /// A presentation node with default properties and no header.
 skir.PresentationNode presentationNode(

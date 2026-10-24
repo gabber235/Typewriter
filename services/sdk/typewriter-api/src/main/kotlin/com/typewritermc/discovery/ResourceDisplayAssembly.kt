@@ -6,30 +6,30 @@ import com.typewritermc.authoring.CheckedResourceDisplay
 import com.typewritermc.authoring.DefaultDisplay_ResourceDisplayProvider
 import com.typewritermc.authoring.GeneratedSdkApi
 import com.typewritermc.authoring.ResourceDisplaySubject
-import com.typewritermc.configuration.PortableExpressionChecker
-import com.typewritermc.expression.CheckedExpressionProgram
-import com.typewritermc.expression.children
-import com.typewritermc.expression.nominalExpressionType
+import com.typewritermc.expression.descendants
+import com.typewritermc.expression.operations.PortableOperationCatalog
+import com.typewritermc.presentation.LexicalBinding
+import com.typewritermc.presentation.PresentationTyping
 import com.typewritermc.types.ColorDefinition
 import com.typewritermc.types.IconDefinition
 import com.typewritermc.types.catalog.CheckedCatalog
-import com.typewritermc.types.catalog.Resolution
 import com.typewritermc.types.catalog.isReady
 import com.typewritermc.types.catalog.of
+import com.typewritermc.types.namedTemplate
 import com.typewritermc.types.qualified
 import com.typewritermc.types.template
+import com.typewritermc.types.toTemplate
 import com.typewritermc.types.unknownVariant
 import com.typewritermc.types.use
 import kotlinx.coroutines.CancellationException
 import skirout.editor.v1.diagnostic.DeclarationDiagnostic
 import skirout.editor.v1.diagnostic.DeclarationOrigin
 import skirout.editor.v1.expression.ExpressionNode
-import skirout.editor.v1.expression.ExpressionQuery
 import skirout.editor.v1.type_catalog.ResourceTarget
 import skirout.editor.v1.type_catalog.ScalarKind
 import skirout.editor.v1.type_catalog.TypeDefinition
 import skirout.editor.v1.type_catalog.TypeDefinitionId
-import skirout.editor.v1.type_catalog.TypeUse
+import skirout.editor.v1.type_catalog.TypeTemplate
 
 /** The displays a catalog publishes and the diagnostics of the ones it rejected. */
 internal class ResourceDisplayCollection(
@@ -55,6 +55,7 @@ internal fun collectResourceDisplays(
     definitions: Map<TypeDefinitionId, TypeDefinition>,
     resourceTypes: List<TypeDefinitionId>,
     checked: CheckedCatalog,
+    typing: PresentationTyping,
 ): ResourceDisplayCollection {
     val diagnostics = mutableListOf<DeclarationDiagnostic>()
     val callbackFailures = mutableListOf<CatalogCallbackFailure>()
@@ -86,10 +87,9 @@ internal fun collectResourceDisplays(
                     else -> unknownVariant(target)
                 }.mapNotNull { definitions[it] }
                     .filter { checked.isReady(it.id) }
-            val checker = PortableExpressionChecker(checked::resolve)
             val programs =
                 listOf(label to TEXT, accent to ColorDefinition.use.use, icon to IconDefinition.use.use).map { (node, expected) ->
-                    checker.checkAgainst(node, expected, subjects, affected)
+                    typing.checkAgainst(node, expected.toTemplate(), subjects)
                 }
             if (programs.any { it == null }) {
                 diagnostics += DeclarationDiagnostic.of(affected, "invalid_resource_display", origins)
@@ -116,28 +116,25 @@ internal fun collectResourceDisplays(
 }
 
 /**
- * The checked program of [node] for one result type, or null when it fails for one of [subjects]. A subject that
- * still has free type parameters is checked structurally only, as generic presentation material is. The program
- * is independent of the subject: its queries read the subject's type and other resources, never subject fields.
+ * [node] when it checks for one result type against every one of [subjects], or null when it fails for one. A
+ * generic subject binds its free type parameters to opaque stand ins, as generic presentation material does, so the
+ * formula is accepted only when it holds for every argument.
  */
-private fun PortableExpressionChecker.checkAgainst(
+private fun PresentationTyping.checkAgainst(
     node: ExpressionNode,
-    expected: TypeUse,
+    expected: TypeTemplate,
     subjects: List<TypeDefinition>,
-    affected: TypeDefinitionId,
-): CheckedExpressionProgram? {
-    if (checkExpressionStructure(node, setOf(ResourceDisplaySubject.binding)).isNotEmpty()) return null
-    val output = nominalExpressionType(expected, mayBeMissing = true)
-    var program: CheckedExpressionProgram? = null
-    for (subject in subjects) {
-        if (subject.parameters.isNotEmpty()) continue
-        val binding = mapOf(ResourceDisplaySubject.binding to nominalExpressionType(subject.id.use(), mayBeMissing = true))
-        when (val result = checkProgram(node, binding, output, affected)) {
-            is Resolution.Ready -> program = program ?: result.value
-            is Resolution.Invalid -> return null
+): ExpressionNode? {
+    val failed =
+        subjects.any { subject ->
+            val template =
+                TypeTemplate.NamedWrapper(
+                    subject.id.namedTemplate(subject.parameters.map { TypeTemplate.ParameterWrapper(it.key) }),
+                )
+            val binding = mapOf(ResourceDisplaySubject.binding to LexicalBinding(template, mayBeMissing = true))
+            check(node, binding, expected, mayBeMissing = true).isNotEmpty()
         }
-    }
-    return program ?: CheckedExpressionProgram(node, output, emptyMap())
+    return node.takeUnless { failed }
 }
 
 /**
@@ -145,15 +142,18 @@ private fun PortableExpressionChecker.checkAgainst(
  * value, or another resource. Reading the subject's type from the catalog stays allowed.
  */
 private fun ExpressionNode.readsContext(): Boolean =
-    (this is ExpressionNode.InputWrapper && value.binding.value != ResourceDisplaySubject.binding.value) ||
-        (this is ExpressionNode.QueryWrapper && value.readsResource) ||
-        children().any { it.node.readsContext() }
+    descendants().any { node ->
+        (node is ExpressionNode.InputWrapper && node.value.binding.value != ResourceDisplaySubject.binding.value) ||
+            (node is ExpressionNode.CallWrapper && node.value.operation in RESOURCE_READS)
+    }
 
-private val ExpressionQuery.readsResource: Boolean
-    get() =
-        this is ExpressionQuery.ResourceIdentityWrapper ||
-            this is ExpressionQuery.ResourceValueWrapper ||
-            this is ExpressionQuery.ResourceConfigurationWrapper
+private val RESOURCE_READS =
+    listOf(
+        PortableOperationCatalog.RESOURCE_VALUE,
+        PortableOperationCatalog.RESOURCE_VALUE_OF,
+        PortableOperationCatalog.RESOURCE_IDENTITY,
+        PortableOperationCatalog.RESOURCE_CONFIGURATION,
+    ).map { it.id }.toSet()
 
 /** The type a diagnostic of a declaration is reported on; any resource declarations report on the unpublished Resource. */
 internal val ResourceTarget.affected: TypeDefinitionId

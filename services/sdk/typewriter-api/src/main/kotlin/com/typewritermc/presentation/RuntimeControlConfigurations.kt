@@ -3,6 +3,8 @@ package com.typewritermc.presentation
 import com.typewritermc.expression.Expr
 import com.typewritermc.expression.Handled
 import com.typewritermc.expression.literal
+import com.typewritermc.expression.portableValue
+import com.typewritermc.types.canonicalText
 import com.typewritermc.types.integer
 import com.typewritermc.types.listValue
 import com.typewritermc.types.template
@@ -62,35 +64,36 @@ import skirout.editor.v1.presentation.ToggleInteractionOptions as WireToggleInte
 import skirout.editor.v1.presentation.ValueMappings as WireValueMappings
 
 internal class RuntimeTextEntryAppearance(
+    private val state: PresentationBuildState,
     private val target: WireInputAppearance.Mutable,
 ) : TextEntryAppearanceScope {
     override fun iconColor(value: PresentationColor) {
-        target.iconColor = value.wire()
+        target.iconColor = value.wire(state)
     }
 
     override fun iconSize(value: Double) {
         positiveSize(value)
-        target.iconSize = expression(value)
+        target.iconSize = state.lower(literal(value), DOUBLE_SLOT)
     }
 
     override fun iconSize(value: Expr<Double, Handled>) {
-        target.iconSize = expression(value)
+        target.iconSize = state.lower(value, DOUBLE_SLOT)
     }
 
     override fun textStyle(value: TextStyle) {
-        target.valueStyle = value.inputWire(target.valueStyle)
+        target.valueStyle = value.inputWire(state, target.valueStyle)
     }
 
     override fun placeholderStyle(value: TextStyle) {
-        target.placeholderStyle = value.inputWire(target.placeholderStyle)
+        target.placeholderStyle = value.inputWire(state, target.placeholderStyle)
     }
 
     override fun labelStyle(value: TextStyle) {
-        target.labelStyle = value.inputWire(target.labelStyle)
+        target.labelStyle = value.inputWire(state, target.labelStyle)
     }
 
     override fun descriptionStyle(value: TextStyle) {
-        target.descriptionStyle = value.inputWire(target.descriptionStyle)
+        target.descriptionStyle = value.inputWire(state, target.descriptionStyle)
     }
 
     override fun density(value: ControlDensity) {
@@ -98,16 +101,15 @@ internal class RuntimeTextEntryAppearance(
     }
 
     override fun padding(value: PresentationInsets) {
-        value.checkInputInsets()
         target.padding = value.wire()
     }
 
     override fun fill(value: PresentationColor) {
-        target.fill = value.wire()
+        target.fill = value.wire(state)
     }
 
     override fun border(value: PresentationBorder) {
-        target.border = WireBorderOverride.ValueWrapper(value.wire())
+        target.border = WireBorderOverride.ValueWrapper(value.wire(state))
     }
 
     override fun noBorder() {
@@ -115,7 +117,7 @@ internal class RuntimeTextEntryAppearance(
     }
 
     override fun radius(value: PresentationRadius) {
-        target.radius = value.wire()
+        target.radius = value.wire(state)
     }
 
     override fun alignment(value: InputTextAlignment) {
@@ -123,13 +125,15 @@ internal class RuntimeTextEntryAppearance(
     }
 }
 
-internal fun TextStyle.inputWire(previous: skirout.editor.v1.presentation.InputTextStyle_OrMutable? = null): WireInputTextStyle {
+internal fun TextStyle.inputWire(
+    state: PresentationBuildState,
+    previous: skirout.editor.v1.presentation.InputTextStyle_OrMutable? = null,
+): WireInputTextStyle {
     require(sizing !is TextSizing.Fit) { "Native input typography does not support fitted sizing." }
-    require(weight == null || weight in 1..1000) { "Font weight must be between one and one thousand." }
     return WireInputTextStyle(
-        color = color?.wire() ?: previous?.color,
-        weight = weight ?: previous?.weight,
-        sizing = sizing?.wire() ?: previous?.sizing,
+        color = color?.wire(state) ?: previous?.color,
+        weight = weight?.value ?: previous?.weight,
+        sizing = sizing?.wire(state) ?: previous?.sizing,
     )
 }
 
@@ -141,10 +145,6 @@ internal fun nonnegativeSize(value: Double) {
     require(value.isFinite() && value >= 0) { "Spacing must be finite and nonnegative." }
 }
 
-private fun PresentationInsets.checkInputInsets() {
-    listOf(start, top, end, bottom).forEach(::nonnegativeSize)
-}
-
 internal fun PresentationBuildState.iconNode(
     id: String,
     options: IconOptions,
@@ -153,10 +153,10 @@ internal fun PresentationBuildState.iconNode(
     options.size?.let(::positiveSize)
     return node(
         WirePresentationElement.createIcon(
-            name = expression(id),
+            name = lower(literal(id), TEXT_SLOT),
             semanticLabel = null,
-            color = options.color?.wire(),
-            size = options.size?.let(::expression),
+            color = options.color?.wire(this),
+            size = options.size?.let { lower(literal(it), DOUBLE_SLOT) },
         ),
     )
 }
@@ -179,20 +179,21 @@ internal class RuntimeGlyphContent(
 }
 
 internal class RuntimeInputContent(
+    private val state: PresentationBuildState,
     private val author: RuntimePresentationBuildScope,
     private val target: WireInputContent.Mutable,
     glyph: GlyphContentScope,
 ) : InputContentScope,
     GlyphContentScope by glyph {
     constructor(state: PresentationBuildState, author: RuntimePresentationBuildScope, target: WireInputContent.Mutable) :
-        this(author, target, RuntimeGlyphContent(state) { target.leading = it })
+        this(state, author, target, RuntimeGlyphContent(state) { target.leading = it })
 
     override fun placeholder(value: String) {
-        target.placeholder = expression(value)
+        target.placeholder = state.lower(literal(value), TEXT_SLOT)
     }
 
     override fun placeholder(value: Expr<String, Handled>) {
-        target.placeholder = expression(value)
+        target.placeholder = state.lower(value, TEXT_SLOT)
     }
 
     override fun prefix(body: Layout.() -> Unit) {
@@ -222,107 +223,98 @@ internal class RuntimeValueMappings<V>(
     private val payload: TypeTemplate,
 ) : ValueMappingScope<V> {
     override fun onComplete(body: ValueExpressionScope<V>.() -> Expr<V, Handled>) {
-        target.completion = mapping("completion", body)
+        target.completion = mapping("completion", payload, body)
     }
 
     override fun display(body: ValueExpressionScope<V>.() -> Expr<String, Handled>) {
-        target.display = mapping("display", body)
+        target.display = mapping("display", TEXT_SLOT, body)
     }
 
+    /** A mapping evaluated with the edited value bound as its input, producing a value of [output] type. */
     private fun <R> mapping(
         purpose: String,
+        output: TypeTemplate,
         body: ValueExpressionScope<V>.() -> Expr<R, Handled>,
-    ): WireExpressionMapping {
-        val input = state.bindingId("input.$purpose")
-        val receiver = RuntimeValueExpressionScope<V>(com.typewritermc.expression.inputExpression(input))
-        val result = receiver.body()
-        val output =
-            if (purpose ==
-                "display"
-            ) {
-                ScalarKind.TEXT.template
-            } else {
-                payload
-            }
-        state.checkMapping(result.toNode(), input, payload, output)
-        return WireExpressionMapping(inputBinding = input, body = expression(result))
-    }
+    ): WireExpressionMapping =
+        state.introduce("input.$purpose", payload, mayBeMissing = false) { input ->
+            val receiver = RuntimeValueExpressionScope<V>(com.typewritermc.expression.inputExpression(input.id))
+            WireExpressionMapping(inputBinding = input, body = state.lower(receiver.body(), output))
+        }
 }
 
 internal class RuntimePopupAppearance(
+    private val state: PresentationBuildState,
     private val target: WirePopupAppearance.Mutable,
 ) : PopupAppearanceScope {
     override fun minimumPopupWidth(value: Double) {
         nonnegativeSize(value)
-        target.minimumWidth = expression(value)
+        target.minimumWidth = state.lower(literal(value), DOUBLE_SLOT)
     }
 
     override fun minimumPopupWidth(value: Expr<Double, Handled>) {
-        target.minimumWidth = expression(value)
+        target.minimumWidth = state.lower(value, DOUBLE_SLOT)
     }
 
     override fun maximumPopupWidth(value: Double) {
         positiveSize(value)
-        target.maximumWidth = expression(value)
+        target.maximumWidth = state.lower(literal(value), DOUBLE_SLOT)
     }
 
     override fun maximumPopupWidth(value: Expr<Double, Handled>) {
-        target.maximumWidth = expression(value)
+        target.maximumWidth = state.lower(value, DOUBLE_SLOT)
     }
 
     override fun maximumExtent(value: Double) {
         positiveSize(value)
-        target.maximumExtent = expression(value)
+        target.maximumExtent = state.lower(literal(value), DOUBLE_SLOT)
     }
 
     override fun maximumExtent(value: Expr<Double, Handled>) {
-        target.maximumExtent = expression(value)
+        target.maximumExtent = state.lower(value, DOUBLE_SLOT)
     }
 
     override fun popupPadding(value: PresentationInsets) {
-        value.checkInputInsets()
         target.padding = value.wire()
     }
 
     override fun popupFill(value: PresentationColor) {
-        target.fill = value.wire()
+        target.fill = value.wire(state)
     }
 
     override fun popupBorder(value: PresentationBorder) {
-        target.border = value.wire()
+        target.border = value.wire(state)
     }
 
     override fun popupRadius(value: PresentationRadius) {
-        target.radius = value.wire()
+        target.radius = value.wire(state)
     }
 }
 
+/** Bounds and step of a numeric input, each checked against the edited [payload] type. */
 internal class RuntimeNumericInteraction<N>(
+    private val state: PresentationBuildState,
     private val target: WireNumericInteractionOptions.Mutable,
+    private val payload: TypeTemplate,
 ) : NumericInteractionScope<N> {
-    override fun minimum(value: N) {
-        target.minimum = expression(value)
-    }
+    override fun minimum(value: N) = minimum(numberLiteral(value))
 
     override fun minimum(value: Expr<N, Handled>) {
-        target.minimum = expression(value)
+        target.minimum = state.lower(value, payload)
     }
 
-    override fun maximum(value: N) {
-        target.maximum = expression(value)
-    }
+    override fun maximum(value: N) = maximum(numberLiteral(value))
 
     override fun maximum(value: Expr<N, Handled>) {
-        target.maximum = expression(value)
+        target.maximum = state.lower(value, payload)
     }
 
     override fun step(value: N) {
         require(value.toString().toBigDecimalOrNull()?.signum() == 1) { "Numeric step must be finite and positive." }
-        target.step = expression(value)
+        step(numberLiteral(value))
     }
 
     override fun step(value: Expr<N, Handled>) {
-        target.step = expression(value)
+        target.step = state.lower(value, payload)
     }
 
     override fun steppers(value: NumericSteppers) {
@@ -331,11 +323,11 @@ internal class RuntimeNumericInteraction<N>(
 
     override fun editingLocale(value: String) {
         require(value.isNotBlank())
-        target.editingLocale = expression(value)
+        target.editingLocale = state.lower(literal(value), TEXT_SLOT)
     }
 
     override fun editingLocale(value: Expr<String, Handled>) {
-        target.editingLocale = expression(value)
+        target.editingLocale = state.lower(value, TEXT_SLOT)
     }
 }
 
@@ -390,7 +382,7 @@ internal class InputConfigurationDraft {
     val mappings = WireValueMappings.partial().toMutable()
     val popup = WirePopupAppearance.partial().toMutable()
 
-    fun appearance() = RuntimeTextEntryAppearance(appearance)
+    fun appearance(state: PresentationBuildState) = RuntimeTextEntryAppearance(state, appearance)
 
     fun content(
         state: PresentationBuildState,
@@ -404,7 +396,7 @@ internal class InputConfigurationDraft {
         payload: TypeTemplate,
     ) = RuntimeValueMappings<V>(state, mappings, payload)
 
-    fun popup() = RuntimePopupAppearance(popup)
+    fun popup(state: PresentationBuildState) = RuntimePopupAppearance(state, popup)
 
     fun freeze() =
         FrozenInputConfiguration(appearance.toFrozen(), content.toFrozen(), entry.toFrozen(), mappings.toFrozen(), popup.toFrozen())
@@ -448,18 +440,35 @@ internal class RuntimeInputConfigurationFactories(
     private val state: PresentationBuildState,
     private val payload: TypeTemplate,
 ) {
+    /**
+     * Requires the edited value to be a scalar this control edits, such as a number for a numeric input. A free type
+     * parameter is no scalar, so a generic material cannot put such a control on a bare parameter.
+     */
+    private fun requirePayload(
+        control: String,
+        expected: String,
+        accepts: (ScalarKind) -> Boolean,
+    ) {
+        val kind = (payload as? TypeTemplate.ScalarWrapper)?.value
+        require(kind != null && accepts(kind)) { "A $control needs $expected, found ${payload.canonicalText}." }
+    }
+
+    private fun ScalarKind.isNumber(): Boolean =
+        this is ScalarKind.IntegerWrapper || this is ScalarKind.FloatWrapper || this == ScalarKind.DECIMAL
+
     fun <N> numeric(
         author: RuntimePresentationBuildScope,
         configure: NumericInputScope<N>.() -> Unit,
     ): (WireBoundControl) -> WirePresentationElement {
+        requirePayload("numeric input", "a number") { it.isNumber() }
         val common = InputConfigurationDraft()
         val options = WireNumericInteractionOptions.partial().toMutable()
         RuntimeNumericInputScope(
-            common.appearance(),
+            common.appearance(state),
             common.content(state, author),
             common.entry(),
             common.mappings<N>(state, payload),
-            RuntimeNumericInteraction<N>(options),
+            RuntimeNumericInteraction<N>(state, options, payload),
         ).configure()
         val frozen = common.freeze()
         val numeric = options.toFrozen()
@@ -481,10 +490,11 @@ internal class RuntimeInputConfigurationFactories(
         author: RuntimePresentationBuildScope,
         configure: TextInputScope.() -> Unit,
     ): (WireBoundControl) -> WirePresentationElement {
+        requirePayload("text input", "text") { it == ScalarKind.TEXT }
         val common = InputConfigurationDraft()
         val options = WireTextEditingOptions.partial().toMutable()
         RuntimeTextInputScope(
-            common.appearance(),
+            common.appearance(state),
             common.content(state, author),
             common.entry(),
             common.mappings<String>(state, payload),
@@ -510,15 +520,16 @@ internal class RuntimeInputConfigurationFactories(
         author: RuntimePresentationBuildScope,
         configure: DateTimeInputScope.() -> Unit,
     ): (WireBoundControl) -> WirePresentationElement {
+        requirePayload("date and time input", "a timestamp") { it == ScalarKind.TIMESTAMP }
         val common = InputConfigurationDraft()
         val options = WireDateTimeInteractionOptions.partial().toMutable()
-        val interaction = RuntimeDateTimeInteraction(options)
+        val interaction = RuntimeDateTimeInteraction(state, options)
         RuntimeDateTimeInputScope(
-            common.appearance(),
+            common.appearance(state),
             common.content(state, author),
             common.entry(),
             common.mappings<kotlin.time.Instant>(state, payload),
-            common.popup(),
+            common.popup(state),
             interaction,
         ).configure()
         require(interaction.includeDate != false || interaction.includeTime != false) { "Date or time must be included." }
@@ -547,10 +558,12 @@ internal class RuntimeInputConfigurationFactories(
         author: RuntimePresentationBuildScope,
         configure: DurationInputScope.() -> Unit,
     ): (WireBoundControl) -> WirePresentationElement {
+        requirePayload("duration input", "a duration") { it == ScalarKind.DURATION }
         val common = InputConfigurationDraft()
         val options = WireDurationInteractionOptions.partial().toMutable()
         RuntimeDurationInputScope(
-            common.appearance(),
+            state,
+            common.appearance(state),
             common.content(state, author),
             common.entry(),
             common.mappings<kotlin.time.Duration>(state, payload),
@@ -580,11 +593,12 @@ internal class RuntimeInputConfigurationFactories(
         val options = WireColorInteractionOptions.partial().toMutable()
         val receiver =
             RuntimeColorInputScope(
-                common.appearance(),
+                state,
+                common.appearance(state),
                 common.content(state, author),
                 common.entry(),
                 common.mappings<com.typewritermc.types.Color>(state, payload),
-                common.popup(),
+                common.popup(state),
                 options,
             )
         receiver.configure()
@@ -611,10 +625,11 @@ internal class RuntimeInputConfigurationFactories(
         author: RuntimePresentationBuildScope,
         configure: BytesInputScope.() -> Unit,
     ): (WireBoundControl) -> WirePresentationElement {
+        requirePayload("bytes input", "bytes") { it == ScalarKind.BYTES }
         val common = InputConfigurationDraft()
         val options = WireBytesInteractionOptions.partial().toMutable()
         RuntimeBytesInputScope(
-            common.appearance(),
+            common.appearance(state),
             common.content(state, author),
             common.entry(),
             common.mappings<List<Byte>>(state, payload),
@@ -637,9 +652,10 @@ internal class RuntimeInputConfigurationFactories(
     }
 
     fun toggle(configure: ToggleInputScope.() -> Unit): (WireBoundControl) -> WirePresentationElement {
+        requirePayload("toggle", "a boolean") { it == ScalarKind.BOOLEAN }
         val appearance = WireInputAppearance.partial().toMutable()
         val options = WireToggleInteractionOptions.partial().toMutable()
-        RuntimeToggleInputScope(RuntimeTextEntryAppearance(appearance), options).configure()
+        RuntimeToggleInputScope(state, RuntimeTextEntryAppearance(state, appearance), options).configure()
         val frozen = appearance.toFrozen()
         val native = options.toFrozen()
         return { control ->
@@ -648,19 +664,20 @@ internal class RuntimeInputConfigurationFactories(
     }
 
     fun <N> slider(
-        minimum: Any?,
-        maximum: Any?,
+        minimum: Expr<N, Handled>,
+        maximum: Expr<N, Handled>,
         configure: SliderInputScope<N>.() -> Unit,
     ): (WireBoundControl) -> WirePresentationElement {
+        requirePayload("slider", "a number") { it.isNumber() }
         val common = InputConfigurationDraft()
         val options = WireSliderInteractionOptions.partial().toMutable()
-        val receiver = RuntimeSliderInputScope(common.appearance(), common.mappings<N>(state, payload), options)
+        val receiver = RuntimeSliderInputScope(state, common.appearance(state), common.mappings<N>(state, payload), options)
         receiver.configure()
         val appearance = common.appearance.toFrozen()
         val mappings = common.mappings.toFrozen()
         val native = options.toFrozen()
-        val min = expression(minimum)
-        val max = expression(maximum)
+        val min = state.lower(minimum, payload)
+        val max = state.lower(maximum, payload)
         val divisions = receiver.divisions
         return { control ->
             WirePresentationElement.SliderInputWrapper(
@@ -686,7 +703,15 @@ internal class RuntimeInputConfigurationFactories(
         val common = InputConfigurationDraft()
         val options = WireSelectInteractionOptions.partial().toMutable()
         val receiver =
-            RuntimeSelectInputScope<V>(state, author, common.appearance(), common.content(state, author), common.popup(), options)
+            RuntimeSelectInputScope<V>(
+                state,
+                author,
+                common.appearance(state),
+                common.content(state, author),
+                common.popup(state),
+                options,
+                payload,
+            )
         receiver.configure()
         val frozen = common.freeze()
         val native = receiver.finish(values.map { it.id }.toSet())
@@ -694,8 +719,8 @@ internal class RuntimeInputConfigurationFactories(
             values.map {
                 WireSelectOption(
                     optionId = it.id,
-                    label = expression(it.label),
-                    value = expression(it.value),
+                    label = state.lower(it.label, TEXT_SLOT),
+                    value = state.lower(it.value, payload),
                     content = null,
                     enabledIf = null,
                     disabledReason = null,
@@ -724,7 +749,15 @@ internal class RuntimeInputConfigurationFactories(
         val common = InputConfigurationDraft()
         val options = WireSelectInteractionOptions.partial().toMutable()
         val receiver =
-            RuntimeSelectInputScope<V>(state, author, common.appearance(), common.content(state, author), common.popup(), options)
+            RuntimeSelectInputScope<V>(
+                state,
+                author,
+                common.appearance(state),
+                common.content(state, author),
+                common.popup(state),
+                options,
+                payload,
+            )
         receiver.configure()
         val frozen = common.freeze()
         val native = receiver.finish()
@@ -743,30 +776,31 @@ internal class RuntimeInputConfigurationFactories(
 }
 
 internal class RuntimeDateTimeInteraction(
+    private val state: PresentationBuildState,
     private val target: WireDateTimeInteractionOptions.Mutable,
 ) {
     var includeDate: Boolean? = null
     var includeTime: Boolean? = null
 
     fun minimum(value: kotlin.time.Instant) {
-        target.minimum = expression(literal(value))
+        target.minimum = state.lower(literal(value), TIMESTAMP_SLOT)
     }
 
     fun minimum(value: Expr<kotlin.time.Instant, Handled>) {
-        target.minimum = expression(value)
+        target.minimum = state.lower(value, TIMESTAMP_SLOT)
     }
 
     fun maximum(value: kotlin.time.Instant) {
-        target.maximum = expression(literal(value))
+        target.maximum = state.lower(literal(value), TIMESTAMP_SLOT)
     }
 
     fun maximum(value: Expr<kotlin.time.Instant, Handled>) {
-        target.maximum = expression(value)
+        target.maximum = state.lower(value, TIMESTAMP_SLOT)
     }
 
     fun timeIncrement(value: kotlin.time.Duration) {
         require(value.isPositive())
-        target.timeIncrement = expression(literal(value))
+        target.timeIncrement = state.lower(literal(value), DURATION_SLOT)
     }
 
     fun presentation(value: DateTimePickerPresentation) {
@@ -809,6 +843,7 @@ private class RuntimeDateTimeInputScope(
 }
 
 private class RuntimeDurationInputScope(
+    private val state: PresentationBuildState,
     appearance: TextEntryAppearanceScope,
     content: InputContentScope,
     entry: TextEntryInteractionScope,
@@ -820,32 +855,33 @@ private class RuntimeDurationInputScope(
     TextEntryInteractionScope by entry,
     ValueMappingScope<kotlin.time.Duration> by mappings {
     override fun minimum(value: kotlin.time.Duration) {
-        options.minimum = expression(literal(value))
+        options.minimum = state.lower(literal(value), DURATION_SLOT)
     }
 
     override fun minimum(value: Expr<kotlin.time.Duration, Handled>) {
-        options.minimum = expression(value)
+        options.minimum = state.lower(value, DURATION_SLOT)
     }
 
     override fun maximum(value: kotlin.time.Duration) {
-        options.maximum = expression(literal(value))
+        options.maximum = state.lower(literal(value), DURATION_SLOT)
     }
 
     override fun maximum(value: Expr<kotlin.time.Duration, Handled>) {
-        options.maximum = expression(value)
+        options.maximum = state.lower(value, DURATION_SLOT)
     }
 
     override fun step(value: kotlin.time.Duration) {
         require(value.isPositive())
-        options.step = expression(literal(value))
+        options.step = state.lower(literal(value), DURATION_SLOT)
     }
 
     override fun step(value: Expr<kotlin.time.Duration, Handled>) {
-        options.step = expression(value)
+        options.step = state.lower(value, DURATION_SLOT)
     }
 }
 
 private class RuntimeColorInputScope(
+    private val state: PresentationBuildState,
     appearance: TextEntryAppearanceScope,
     content: InputContentScope,
     entry: TextEntryInteractionScope,
@@ -892,17 +928,16 @@ private class RuntimeColorInputScope(
                         id =
                             skirout.editor.v1.type_catalog
                                 .ItemId(value = "swatch.$index"),
-                        value =
-                            skirout.editor.v1.type_catalog.DataValue
-                                .integer(color.argb.toString().toBigInteger()),
+                        value = color.portableValue(),
                     )
                 },
             )
-        options.offeredSwatches = expression(com.typewritermc.expression.portableLiteral<List<com.typewritermc.types.Color>>(colors))
+        options.offeredSwatches =
+            state.lower(com.typewritermc.expression.portableLiteral<List<com.typewritermc.types.Color>>(colors), listSlot(COLOR_SLOT))
     }
 
     override fun offeredSwatches(value: Expr<List<com.typewritermc.types.Color>, Handled>) {
-        options.offeredSwatches = expression(value)
+        options.offeredSwatches = state.lower(value, listSlot(COLOR_SLOT))
     }
 }
 
@@ -932,6 +967,7 @@ private class RuntimeBytesInputScope(
 }
 
 private class RuntimeToggleInputScope(
+    private val state: PresentationBuildState,
     appearance: InputAppearanceScope,
     private val options: WireToggleInteractionOptions.Mutable,
 ) : ToggleInputScope,
@@ -945,35 +981,36 @@ private class RuntimeToggleInputScope(
     }
 
     override fun trueLabel(value: String) {
-        options.trueLabel = expression(value)
+        options.trueLabel = state.lower(literal(value), TEXT_SLOT)
     }
 
     override fun trueLabel(value: Expr<String, Handled>) {
-        options.trueLabel = expression(value)
+        options.trueLabel = state.lower(value, TEXT_SLOT)
     }
 
     override fun falseLabel(value: String) {
-        options.falseLabel = expression(value)
+        options.falseLabel = state.lower(literal(value), TEXT_SLOT)
     }
 
     override fun falseLabel(value: Expr<String, Handled>) {
-        options.falseLabel = expression(value)
+        options.falseLabel = state.lower(value, TEXT_SLOT)
     }
 
     override fun thumbColor(value: PresentationColor) {
-        options.thumbColor = value.wire()
+        options.thumbColor = value.wire(state)
     }
 
     override fun trackColor(value: PresentationColor) {
-        options.trackColor = value.wire()
+        options.trackColor = value.wire(state)
     }
 
     override fun checkColor(value: PresentationColor) {
-        options.checkColor = value.wire()
+        options.checkColor = value.wire(state)
     }
 }
 
 private class RuntimeSliderInputScope<N>(
+    private val state: PresentationBuildState,
     appearance: InputAppearanceScope,
     private val mappings: ValueMappingScope<N>,
     private val options: WireSliderInteractionOptions.Mutable,
@@ -983,11 +1020,11 @@ private class RuntimeSliderInputScope<N>(
 
     override fun divisions(value: Int) {
         require(value > 0)
-        divisions = expression(value)
+        divisions = state.lower(literal(value), INT_SLOT)
     }
 
     override fun divisions(value: Expr<Int, Handled>) {
-        divisions = expression(value)
+        divisions = state.lower(value, INT_SLOT)
     }
 
     override fun display(body: ValueExpressionScope<N>.() -> Expr<String, Handled>) = mappings.display(body)
@@ -1009,15 +1046,15 @@ private class RuntimeSliderInputScope<N>(
     }
 
     override fun activeColor(value: PresentationColor) {
-        options.activeColor = value.wire()
+        options.activeColor = value.wire(state)
     }
 
     override fun inactiveColor(value: PresentationColor) {
-        options.inactiveColor = value.wire()
+        options.inactiveColor = value.wire(state)
     }
 
     override fun thumbColor(value: PresentationColor) {
-        options.thumbColor = value.wire()
+        options.thumbColor = value.wire(state)
     }
 
     override fun trackHeight(value: Double) {
@@ -1033,24 +1070,45 @@ internal class RuntimeSelectInputScope<V>(
     content: InputContentScope,
     popup: PopupAppearanceScope,
     private val options: WireSelectInteractionOptions.Mutable,
+    private val payload: TypeTemplate,
 ) : SelectInputScope<V>,
     TextEntryAppearanceScope by appearance,
     InputContentScope by content,
     PopupAppearanceScope by popup {
-    private val queryId = state.bindingId("select.query")
-    override val query = com.typewritermc.expression.inputExpression<String, Handled>(queryId)
     private val overrides = linkedMapOf<String, WireChoiceOptionAppearance.Mutable>()
-
-    init {
-        options.queryBindingId = queryId
-    }
 
     private fun option(id: String): WireChoiceOptionAppearance.Mutable {
         require(id.isNotBlank())
         return overrides.getOrPut(id) { WireChoiceOptionAppearance.partial(optionId = id).toMutable() }
     }
 
-    override fun presentation(value: ChoicePresentation) {
+    override fun dropdown(configure: DropdownChoiceScope<V>.() -> Unit) {
+        presentation(ChoicePresentation.DROPDOWN)
+        object : DropdownChoiceScope<V> {
+            override fun customValue(parse: Expr<String, Handled>.() -> Expr<V, com.typewritermc.expression.MissingPolicy>) {
+                check(options.customValue == null) { "A dropdown may declare one custom value." }
+                // The typed query is bound while the custom value is evaluated; a query that names no value is missing.
+                state.introduce("select.query", TEXT_SLOT, mayBeMissing = false) { query ->
+                    options.queryBinding = query
+                    options.customValue =
+                        state.lower(
+                            com.typewritermc.expression
+                                .inputExpression<String, Handled>(query.id)
+                                .parse(),
+                            payload,
+                            mayBeMissing = true,
+                        )
+                }
+            }
+        }.configure()
+    }
+
+    override fun segmented() = presentation(ChoicePresentation.SEGMENTED)
+
+    override fun radio() = presentation(ChoicePresentation.RADIO)
+
+    private fun presentation(value: ChoicePresentation) {
+        check(options.presentation == null) { "A choice input may declare one presentation." }
         options.presentation = value
     }
 
@@ -1060,15 +1118,15 @@ internal class RuntimeSelectInputScope<V>(
 
     override fun maximumMenuHeight(value: Double) {
         positiveSize(value)
-        options.maximumMenuHeight = expression(value)
+        options.maximumMenuHeight = state.lower(literal(value), DOUBLE_SLOT)
     }
 
     override fun maximumMenuHeight(value: Expr<Double, Handled>) {
-        options.maximumMenuHeight = expression(value)
+        options.maximumMenuHeight = state.lower(value, DOUBLE_SLOT)
     }
 
     override fun selectedTextStyle(value: TextStyle) {
-        options.selectedTextStyle = value.inputWire(options.selectedTextStyle)
+        options.selectedTextStyle = value.inputWire(state, options.selectedTextStyle)
     }
 
     override fun optionContent(
@@ -1082,25 +1140,21 @@ internal class RuntimeSelectInputScope<V>(
         id: String,
         value: Expr<Boolean, Handled>,
     ) {
-        option(id).enabledIf = expression(value)
+        option(id).enabledIf = state.lower(value, BOOLEAN_SLOT)
     }
 
     override fun optionDisabledReason(
         id: String,
         value: String,
     ) {
-        option(id).disabledReason = expression(value)
+        option(id).disabledReason = state.lower(literal(value), TEXT_SLOT)
     }
 
     override fun optionDisabledReason(
         id: String,
         value: Expr<String, Handled>,
     ) {
-        option(id).disabledReason = expression(value)
-    }
-
-    override fun customValue(value: Expr<V, Handled>) {
-        options.customValue = expression(value)
+        option(id).disabledReason = state.lower(value, TEXT_SLOT)
     }
 
     fun finish(allowed: Set<String>? = null): WireSelectInteractionOptions {
@@ -1109,3 +1163,15 @@ internal class RuntimeSelectInputScope<V>(
         return options.toFrozen()
     }
 }
+
+/** A literal of a Kotlin number of any family or signedness, for slots typed by the edited value. */
+@Suppress("UNCHECKED_CAST")
+internal fun <N> numberLiteral(value: N): Expr<N, Handled> =
+    when (value) {
+        is Number -> com.typewritermc.expression.numericLiteral(value)
+        is UByte -> literal(value)
+        is UShort -> literal(value)
+        is UInt -> literal(value)
+        is ULong -> literal(value)
+        else -> throw IllegalArgumentException("Numeric presentation values must be Kotlin numbers.")
+    } as Expr<N, Handled>

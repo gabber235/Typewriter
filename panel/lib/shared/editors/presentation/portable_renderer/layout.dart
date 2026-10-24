@@ -180,14 +180,6 @@ extension _PortableLayoutRendering on PortablePresentationNodeRenderer {
     if (evaluated is! PortableExpressionAvailable) {
       return _diagnostic("The repeated value is unavailable");
     }
-    final sourceSchema = childScope.expressionSchema(element.source);
-    final itemType = switch (sourceSchema) {
-      CompletePortablePresentationBinding(:final use) =>
-        (childScope.queries?.catalog ?? childScope.catalog)?.collectionItemType(
-          use,
-        ),
-      _ => null,
-    };
     final rows = switch (evaluated.value.authoredPayload) {
       skir.DataValue_listValueWrapper(:final value) ||
       skir.DataValue_setValueWrapper(:final value) => [
@@ -242,17 +234,12 @@ extension _PortableLayoutRendering on PortablePresentationNodeRenderer {
               ),
             );
       final itemScope = rowReference == null
-          ? childScope.withValues(
-              {element.itemBindingId: row.value},
-              schemas: {
-                if (itemType != null)
-                  element.itemBindingId: CompletePortablePresentationBinding(
-                    itemType,
-                  ),
-              },
+          ? childScope.declare(
+              element.itemBinding,
+              row.value,
               authoredOrigin: node.nodeId,
             )
-          : childScope.withBinding(rowReference, element.itemBindingId);
+          : childScope.withBinding(rowReference, element.itemBinding);
       children.add(
         itemScope == null
             ? _diagnostic("The repeated collection item is unavailable")

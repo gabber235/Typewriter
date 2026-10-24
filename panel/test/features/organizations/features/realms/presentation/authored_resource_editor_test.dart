@@ -551,24 +551,25 @@ void main() {
       final caller = skir.ExpressionBindingId(
         value: "context:test.page.caller",
       );
-      final callerType = skir.TypeUse.wrapNamed(frameworkResourceIdUse);
+      final callerType = skir.TypeUse.wrapNamed(skir.resourceIdType);
       final fallback = skir.ExpressionNode.createOrElse(
-        input: skir.ExpressionNode.createField(
-          source: skir.ExpressionNode.wrapQuery(
-            skir.ExpressionQuery.wrapResourceValue(
-              skir.ResourceQuerySource.createIdentity(
-                identity: skir.ExpressionNode.createInput(
-                  binding: caller,
-                  path: editorRootPath,
-                ),
-                target: skir.TypeUse.createNamed(
-                  definition: childType,
-                  arguments: const [],
-                ),
+        value: skir.ExpressionNode.createField(
+          source: portableCall(
+            "resource.value_of",
+            [
+              skir.ExpressionNode.createInput(
+                binding: caller,
+                path: editorRootPath,
               ),
-            ),
+            ],
+            typeArguments: [
+              skir.TypeTemplate.createNamed(
+                definition: childType,
+                arguments: const [],
+              ),
+            ],
           ),
-          name: "title",
+          path: editorRootPath.field("title"),
         ),
         fallback: skir.ExpressionNode.wrapLiteral(
           skir.DataValue.wrapStringValue("No caller supplied"),
@@ -585,8 +586,7 @@ void main() {
               ..contextInputs = [
                 skir.PresentationContextInput(
                   source: skir.PresentationContextSource.caller,
-                  bindingId: caller,
-                  valueType: callerType,
+                  binding: declareBinding(caller, callerType.portableTemplate),
                 ),
               ];
             return (material.toMutable()
@@ -608,7 +608,7 @@ void main() {
             searchKey: null,
             placementField: null,
             definition: skir.TypeDefinition(
-              id: frameworkResourceIdUse.definition,
+              id: skir.resourceIdType.definition,
               parameters: const [],
               representation: skir.RepresentationTemplate.createScalar(
                 kind: skir.ScalarKind.text,
@@ -648,21 +648,20 @@ void main() {
           ),
         ],
       ).toDocument();
-      final unbound = document.catalog.evaluateExpression(
-        fallback,
-        bindings: const {},
+      final unbound = PortableExpressionEvaluator.located(
+        const {},
         budget: skir.EvaluationBudget(maxSteps: 1000, maxCollectionItems: 100),
         queries: PortableExpressionQueries(
           catalog: document.catalog,
           authored: document,
         ),
-      );
+      ).evaluate(fallback);
       expect(
         unbound,
         isA<PortableExpressionFailed>().having(
-          (failure) => failure.code,
-          "failure code",
-          "unknown_expression_binding",
+          (failure) => failure.failure,
+          "failure",
+          skir.PortableFailures.unknownExpressionBinding,
         ),
       );
       await tester.pumpTestApp(
@@ -1171,8 +1170,9 @@ _emptyPageGraphFixture() {
                           appearance: null,
                         ),
                         order: null,
-                        itemBindingId: skir.ExpressionBindingId(
-                          value: "resources.item",
+                        itemBinding: declareNamedBinding(
+                          "resources.item",
+                          textTemplate,
                         ),
                       ),
                       header: null,
@@ -1354,19 +1354,23 @@ _numericFixture({
             skir.OwnedRule(
               id: ruleId,
               descriptor: skir.RuleDescriptor(
-                predicate: skir.ExpressionNode.createRuleNumericBound(
-                  direction: skir.BoundDirection.minimum,
-                  source: skir.ExpressionNode.createInput(
-                    binding: configured,
-                    path: skir.ValuePath(segments: const []),
-                  ),
-                  bound: skir.ExpressionNode.wrapLiteral(
-                    skir.DataValue.wrapInteger(minimum.toString()),
-                  ),
-                  inclusive: skir.ExpressionNode.wrapLiteral(
-                    skir.DataValue.wrapBoolean(true),
-                  ),
-                ),
+                // value >= minimum: the comparison is not -1.
+                predicate: portableCall("boolean.not", [
+                  portableCall("value.equals", [
+                    portableCall("value.compare", [
+                      skir.ExpressionNode.createInput(
+                        binding: configured,
+                        path: skir.ValuePath(segments: const []),
+                      ),
+                      skir.ExpressionNode.wrapLiteral(
+                        skir.DataValue.wrapInteger(minimum.toString()),
+                      ),
+                    ]),
+                    skir.ExpressionNode.wrapLiteral(
+                      skir.DataValue.wrapInteger("-1"),
+                    ),
+                  ]),
+                ]),
               ),
               diagnostic: skir.DiagnosticTemplate(
                 code: "minimum",
@@ -1713,13 +1717,22 @@ _fixture({
                   skir.OwnedRule(
                     id: titleRule,
                     descriptor: skir.RuleDescriptor(
-                      predicate: skir.ExpressionNode.createRuleUnary(
-                        operation: skir.RuleUnaryOperation.nonBlank,
-                        source: skir.ExpressionNode.createInput(
-                          binding: configuredValueBindingId,
-                          path: skir.ValuePath(segments: const []),
-                        ),
-                      ),
+                      // Not blank: the trimmed text is not empty.
+                      predicate: portableCall("boolean.not", [
+                        portableCall("value.equals", [
+                          portableCall("text.trim_start", [
+                            portableCall("text.trim_end", [
+                              skir.ExpressionNode.createInput(
+                                binding: configuredValueBindingId,
+                                path: skir.ValuePath(segments: const []),
+                              ),
+                            ]),
+                          ]),
+                          skir.ExpressionNode.wrapLiteral(
+                            skir.DataValue.wrapStringValue(""),
+                          ),
+                        ]),
+                      ]),
                     ),
                     diagnostic: skir.DiagnosticTemplate(
                       code: "non_blank",

@@ -4,11 +4,13 @@ import com.typewritermc.expression.Expr
 import com.typewritermc.expression.Handled
 import com.typewritermc.expression.literal
 import com.typewritermc.presentation.ContainerStyle
+import com.typewritermc.presentation.DisplayDelay
 import com.typewritermc.presentation.IconOptions
 import com.typewritermc.presentation.Layout
 import com.typewritermc.presentation.PresentationBorder
 import com.typewritermc.presentation.PresentationInsets
 import com.typewritermc.presentation.PresentationRadius
+import com.typewritermc.presentation.Spacing
 import com.typewritermc.presentation.TextSizing
 import com.typewritermc.presentation.TextStyle
 import com.typewritermc.presentation.asPresentationColor
@@ -46,17 +48,17 @@ fun Layout.entryNode(
             radius = PresentationRadius.Medium,
         ),
     ) {
-        padding(PresentationInsets(4.0, 4.0, 4.0, 4.0)) {
+        padding(PresentationInsets.all(Spacing(4.0))) {
             container(
                 ContainerStyle(
                     border = PresentationBorder.All(width = 3.0, color = outline),
                     radius = PresentationRadius.Small,
-                    transition = stateTransition(transition(milliseconds = 400)),
+                    transition = stateTransition(transition(DisplayDelay(400))),
                 ),
             ) {
                 adaptiveLeading {
-                    padding(PresentationInsets(12.0, 8.0, 12.0, 8.0))
-                    compactPadding(PresentationInsets(4.0, 4.0, 4.0, 4.0))
+                    padding(PresentationInsets(Spacing(12.0), Spacing(8.0), Spacing(12.0), Spacing(8.0)))
+                    compactPadding(PresentationInsets.all(Spacing(4.0)))
                     leading { icon(icon, IconOptions(size = 18.0)) }
                     center {
                         align(PresentationAlignment.CENTER) {

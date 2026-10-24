@@ -225,7 +225,7 @@ private class RuntimeResourcesControl<R : Resource>(
     override fun grid(
         itemExtent: Double,
         aspectRatio: Double,
-        spacing: Double,
+        spacing: Spacing,
     ) = binding.grid(itemExtent, aspectRatio, spacing)
 
     override fun list() = binding.list()

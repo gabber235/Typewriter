@@ -11,10 +11,8 @@ final class _AuthoredCollectionRow {
     required this.selectable,
     required this.scope,
     required this.authoredAddress,
-    this.schema,
   });
 
-  final PortablePresentationBindingSchema? schema;
   final skir.ResourceId resource;
   final skir.TypeSelection configuration;
   final String label;
@@ -184,30 +182,11 @@ extension _PortableCollectionRendering on PortablePresentationNodeRenderer {
         ],
       );
       final nodeScope = row.scope
-          .withValues(
-            {element.childrenBindingId: childValues},
-            schemas: {
-              if (row.schema case CompletePortablePresentationBinding(
-                :final use,
-              ))
-                element.childrenBindingId: CompletePortablePresentationBinding(
-                  skir.TypeUse.createNamed(
-                    definition: skir.TypeDefinitionId(
-                      typeId: skir.TypeId.createQualified(
-                        namespace: "typewriter",
-                        name: "List",
-                      ),
-                      revision: 1,
-                    ),
-                    arguments: [use],
-                  ),
-                ),
-            },
-          )
+          .declare(element.childrenBinding, childValues)
           .copyWith(
             authoredAliases: {
               ...row.scope.authoredAliases,
-              element.childrenBindingId: AuthoredBindingAddress(
+              element.childrenBinding.id: AuthoredBindingAddress(
                 root: row.authoredAddress.root,
                 path: const [],
               ),
@@ -220,7 +199,7 @@ extension _PortableCollectionRendering on PortablePresentationNodeRenderer {
             element.children,
             children,
             (child) => renderNode(occurrencesByKey[child.canonicalKey]!),
-            element.childBindingId,
+            element.childBinding,
             childSlot,
             nodeScope,
             itemKey: (child) => _CollectionGraphOccurrenceKey(
@@ -237,7 +216,7 @@ extension _PortableCollectionRendering on PortablePresentationNodeRenderer {
       element.rootSequence,
       [for (final root in projection.roots) rowsByKey[root.canonicalKey]!],
       (row) => renderNode(rootsByKey[row.canonicalKey]!),
-      collection.definition!.rowBindingId,
+      collection.definition!.rowBinding,
       rootSlot,
       childScope,
       itemKey: (row) => _CollectionGraphOccurrenceKey(
@@ -261,7 +240,7 @@ extension _PortableCollectionRendering on PortablePresentationNodeRenderer {
     skir.SequencePresentation sequence,
     List<_AuthoredCollectionRow> rows,
     Widget Function(_AuthoredCollectionRow row) content,
-    skir.ExpressionBindingId itemBinding,
+    skir.BindingDeclaration itemBinding,
     String slot,
     PortablePresentationScope fallbackScope, {
     required Object Function(_AuthoredCollectionRow row) itemKey,
@@ -286,14 +265,11 @@ extension _PortableCollectionRendering on PortablePresentationNodeRenderer {
       }
       final row = indexed.$2;
       final scope = row.scope
-          .withValues(
-            {itemBinding: row.row},
-            schemas: {itemBinding: ?row.schema},
-          )
+          .declare(itemBinding, row.row)
           .copyWith(
             authoredAliases: {
               ...row.scope.authoredAliases,
-              itemBinding: row.authoredAddress,
+              itemBinding.id: row.authoredAddress,
             },
           )
           .withSlotBuilders({slot: (_) => content(row)});
@@ -353,14 +329,13 @@ extension _PortableCollectionRendering on PortablePresentationNodeRenderer {
         problem: projected.problem,
       );
     }
-    final resourceBinding = definition.projection!.resourceBindingId;
+    final resourceBinding = definition.projection!.resourceBinding;
     return (
       definition: definition,
       rows: [
         for (final row in projected.rows)
           _AuthoredCollectionRow(
             resource: row.resource,
-            schema: row.schema,
             configuration: row.configuration,
             label: row.label,
             row: row.row,
@@ -378,22 +353,12 @@ extension _PortableCollectionRendering on PortablePresentationNodeRenderer {
               ],
             ),
             scope: scope
-                .withValues(
-                  {
-                    definition.rowBindingId: row.row,
-                    resourceBinding: row.resource.toExpressionValue(),
-                  },
-                  schemas: {
-                    definition.rowBindingId: ?row.schema,
-                    resourceBinding: CompletePortablePresentationBinding(
-                      skir.TypeUse.wrapNamed(frameworkResourceIdUse),
-                    ),
-                  },
-                )
+                .declare(definition.rowBinding, row.row)
+                .declare(resourceBinding, row.resource.toExpressionValue())
                 .copyWith(
                   authoredAliases: {
                     ...scope.authoredAliases,
-                    definition.rowBindingId: AuthoredBindingAddress(
+                    definition.rowBinding.id: AuthoredBindingAddress(
                       root: AuthoredBindingRoot.collection(sourceId),
                       path: [
                         AuthoredPathStep.exact(

@@ -5,8 +5,8 @@ import com.typewritermc.expression.Handled
 import com.typewritermc.expression.MayBeMissing
 import com.typewritermc.expression.eq
 import com.typewritermc.expression.literal
-import com.typewritermc.expression.neq
 import com.typewritermc.expression.orElse
+import com.typewritermc.expression.shortcuts.neq
 import com.typewritermc.types.Color
 import com.typewritermc.types.text
 import skirout.editor.v1.presentation.CrossAxisAlignment
@@ -26,10 +26,15 @@ fun Layout.resourceHeading(
     selectionCount: Expr<Int, MayBeMissing> = context.read(EditorContext.selectionCount),
 ) {
     showIf(selectionCount.orElse(literal(1)) eq literal(1)) {
-        column(spacing = 8.0, cross = CrossAxisAlignment.STRETCH) {
+        column(spacing = Spacing(8.0), cross = CrossAxisAlignment.STRETCH) {
             text(
                 title,
-                style = TextStyle(color = color.asPresentationColor(), weight = 700, sizing = TextSizing.Fit(literal(18.0), literal(40.0))),
+                style =
+                    TextStyle(
+                        color = color.asPresentationColor(),
+                        weight = FontWeight(700),
+                        sizing = TextSizing.Fit(literal(18.0), literal(40.0)),
+                    ),
                 paragraph = textParagraph(maxLines = 1, overflow = PresentationTextOverflow.ELLIPSIS, selectable = true),
             )
             if (identifier != null) {

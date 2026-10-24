@@ -152,7 +152,7 @@ abstract class ResourceIssues with _$ResourceIssues {
             skir.ValuePath(segments: const []),
           );
       }
-      for (final diagnostic in AuthoredRuleProjection.evaluate(
+      for (final check in AuthoredRuleProjection.evaluate(
         draft: document,
         catalog: document.catalog,
         resource: id,
@@ -160,8 +160,15 @@ abstract class ResourceIssues with _$ResourceIssues {
           maxSteps: 10000,
           maxCollectionItems: 10000,
         ),
-      ).diagnostics) {
-        add(ResourceIssue(diagnostic: diagnostic, current: true));
+      ).checks) {
+        for (final diagnostic in checkIssues(check.outcome, check.findings)) {
+          add(
+            ResourceIssue(
+              diagnostic: diagnostic.asPresentation(fallback: check.subject),
+              current: true,
+            ),
+          );
+        }
       }
     }
     for (final finding in document.initializationFindings) {
@@ -205,6 +212,17 @@ abstract class ResourceIssues with _$ResourceIssues {
       .toList();
 }
 
+/// Diagnostics one check shows: its findings plus a failed outcome's
+/// diagnostics. Saved and local checks both pass through here, so equal
+/// findings merge. A check that needs input or is incomplete shows nothing.
+Iterable<skir.Diagnostic> checkIssues(
+  skir.CheckOutcome outcome,
+  Iterable<skir.Diagnostic> findings,
+) => [
+  ...findings,
+  if (outcome case skir.CheckOutcome_failedWrapper(:final value)) ...value,
+];
+
 extension DiagnosticEvidenceApplicability on skir.DiagnosticEvidence {
   bool appliesTo(AuthoringDocument working) =>
       catalog == working.generation &&
@@ -228,11 +246,7 @@ extension PublicationIssueProjection on RealmPublicationView {
       _ => const <skir.FindingSet>[],
     };
     for (final set in findings) {
-      for (final diagnostic in [
-        ...set.findings,
-        if (set.outcome case skir.CheckOutcome_failedWrapper(:final value))
-          ...value,
-      ]) {
+      for (final diagnostic in checkIssues(set.outcome, set.findings)) {
         yield ResourceIssue(
           diagnostic: diagnostic.asPresentation(
             fallback: set.ticket.instance.location,

@@ -1,0 +1,719 @@
+{
+  "cases": [
+    {
+      "id": "map_get_returns_value",
+      "expression": {
+        "kind": "call",
+        "value": {
+          "operation": {"value": "map.get"},
+          "type_arguments": [],
+          "arguments": [
+            {"kind": "input", "value": {"binding": {"value": "subject"}, "path": {"segments": []}}},
+            {"kind": "literal", "value": {"kind": "string_value", "value": "answer"}}
+          ]
+        }
+      },
+      "inputs": {
+        "subject": {
+          "value": {"map": [{"id": "row", "key": {"string": "answer"}, "value": {"integer": "7"}}]},
+          "type": {
+            "value": {
+              "kind": "map",
+              "value": {
+                "key": {
+                  "value": {"kind": "nominal", "value": {"kind": "scalar", "value": "text"}},
+                  "may_be_missing": false
+                },
+                "value": {
+                  "value": {
+                    "kind": "nominal",
+                    "value": {"kind": "scalar", "value": {"kind": "integer", "value": {"width": "signed_thirty_two"}}}
+                  },
+                  "may_be_missing": false
+                }
+              }
+            },
+            "may_be_missing": false
+          }
+        }
+      },
+      "check": {
+        "resultType": {
+          "value": {
+            "kind": "nominal",
+            "value": {"kind": "scalar", "value": {"kind": "integer", "value": {"width": "signed_thirty_two"}}}
+          },
+          "may_be_missing": true
+        },
+        "failures": [],
+        "inferredType": {
+          "value": {
+            "kind": "nominal",
+            "value": {"kind": "scalar", "value": {"kind": "integer", "value": {"width": "signed_thirty_two"}}}
+          },
+          "may_be_missing": true
+        }
+      },
+      "expected": {"available": {"integer": "7"}, "reads": ["subject"]}
+    },
+    {
+      "id": "map_get_result_may_be_missing",
+      "expression": {
+        "kind": "call",
+        "value": {
+          "operation": {"value": "map.get"},
+          "type_arguments": [],
+          "arguments": [
+            {"kind": "input", "value": {"binding": {"value": "subject"}, "path": {"segments": []}}},
+            {"kind": "literal", "value": {"kind": "string_value", "value": "answer"}}
+          ]
+        }
+      },
+      "inputs": {
+        "subject": {
+          "value": {"map": [{"id": "row", "key": {"string": "answer"}, "value": {"integer": "7"}}]},
+          "type": {
+            "value": {
+              "kind": "map",
+              "value": {
+                "key": {
+                  "value": {"kind": "nominal", "value": {"kind": "scalar", "value": "text"}},
+                  "may_be_missing": false
+                },
+                "value": {
+                  "value": {
+                    "kind": "nominal",
+                    "value": {"kind": "scalar", "value": {"kind": "integer", "value": {"width": "signed_thirty_two"}}}
+                  },
+                  "may_be_missing": false
+                }
+              }
+            },
+            "may_be_missing": false
+          }
+        }
+      },
+      "check": {
+        "resultType": {
+          "value": {
+            "kind": "nominal",
+            "value": {"kind": "scalar", "value": {"kind": "integer", "value": {"width": "signed_thirty_two"}}}
+          },
+          "may_be_missing": false
+        },
+        "failures": ["expression_result_may_be_missing"],
+        "inferredType": {
+          "value": {
+            "kind": "nominal",
+            "value": {"kind": "scalar", "value": {"kind": "integer", "value": {"width": "signed_thirty_two"}}}
+          },
+          "may_be_missing": true
+        }
+      },
+      "expected": {"available": {"integer": "7"}, "reads": ["subject"]}
+    },
+    {
+      "id": "map_get_through_generic_mapping_alias",
+      "expression": {
+        "kind": "call",
+        "value": {
+          "operation": {"value": "map.get"},
+          "type_arguments": [],
+          "arguments": [
+            {"kind": "input", "value": {"binding": {"value": "subject"}, "path": {"segments": []}}},
+            {"kind": "literal", "value": {"kind": "string_value", "value": "answer"}}
+          ]
+        }
+      },
+      "inputs": {
+        "subject": {
+          "value": {
+            "named": {
+              "namespace": "fixture",
+              "name": "Dictionary",
+              "revision": 1,
+              "arguments": [
+                {"kind": "scalar", "value": "text"},
+                {"kind": "scalar", "value": {"kind": "integer", "value": {"width": "signed_thirty_two"}}}
+              ],
+              "payload": {"map": [{"id": "row", "key": {"string": "answer"}, "value": {"integer": "7"}}]}
+            }
+          },
+          "type": {
+            "value": {
+              "kind": "nominal",
+              "value": {
+                "kind": "named",
+                "value": {
+                  "definition": {
+                    "type_id": {"kind": "qualified", "value": {"namespace": "fixture", "name": "Dictionary"}},
+                    "revision": 1
+                  },
+                  "arguments": [
+                    {"kind": "scalar", "value": "text"},
+                    {"kind": "scalar", "value": {"kind": "integer", "value": {"width": "signed_thirty_two"}}}
+                  ]
+                }
+              }
+            },
+            "may_be_missing": false
+          }
+        }
+      },
+      "typeDefinitions": [
+        {
+          "id": {
+            "type_id": {"kind": "qualified", "value": {"namespace": "fixture", "name": "Dictionary"}},
+            "revision": 1
+          },
+          "parameters": [
+            {
+              "key": {
+                "owner": {
+                  "type_id": {"kind": "qualified", "value": {"namespace": "fixture", "name": "Dictionary"}},
+                  "revision": 1
+                },
+                "index": 0
+              },
+              "name": "K",
+              "bounds": []
+            },
+            {
+              "key": {
+                "owner": {
+                  "type_id": {"kind": "qualified", "value": {"namespace": "fixture", "name": "Dictionary"}},
+                  "revision": 1
+                },
+                "index": 1
+              },
+              "name": "V",
+              "bounds": []
+            }
+          ],
+          "parents": [],
+          "representation": {
+            "kind": "mapping",
+            "value": {
+              "key": {
+                "kind": "parameter",
+                "value": {
+                  "owner": {
+                    "type_id": {"kind": "qualified", "value": {"namespace": "fixture", "name": "Dictionary"}},
+                    "revision": 1
+                  },
+                  "index": 0
+                }
+              },
+              "value": {
+                "kind": "parameter",
+                "value": {
+                  "owner": {
+                    "type_id": {"kind": "qualified", "value": {"namespace": "fixture", "name": "Dictionary"}},
+                    "revision": 1
+                  },
+                  "index": 1
+                }
+              }
+            }
+          }
+        }
+      ],
+      "check": {
+        "resultType": {
+          "value": {
+            "kind": "nominal",
+            "value": {"kind": "scalar", "value": {"kind": "integer", "value": {"width": "signed_thirty_two"}}}
+          },
+          "may_be_missing": true
+        },
+        "failures": [],
+        "inferredType": {
+          "value": {
+            "kind": "nominal",
+            "value": {"kind": "scalar", "value": {"kind": "integer", "value": {"width": "signed_thirty_two"}}}
+          },
+          "may_be_missing": true
+        }
+      },
+      "expected": {"available": {"integer": "7"}, "reads": ["subject"]}
+    },
+    {
+      "id": "map_get_absent_key",
+      "expression": {
+        "kind": "call",
+        "value": {
+          "operation": {"value": "map.get"},
+          "type_arguments": [],
+          "arguments": [
+            {
+              "kind": "literal",
+              "value": {
+                "kind": "map_value",
+                "value": {
+                  "rows": [
+                    {
+                      "id": {"value": "r1"},
+                      "key": {"kind": "string_value", "value": "a"},
+                      "value": {"kind": "integer", "value": "1"}
+                    }
+                  ]
+                }
+              }
+            },
+            {"kind": "literal", "value": {"kind": "string_value", "value": "z"}}
+          ]
+        }
+      },
+      "expected": {"failed": "collection_key_absent", "reads": []}
+    },
+    {
+      "id": "map_get_structural_key",
+      "expression": {
+        "kind": "call",
+        "value": {
+          "operation": {"value": "map.get"},
+          "type_arguments": [],
+          "arguments": [
+            {
+              "kind": "literal",
+              "value": {
+                "kind": "map_value",
+                "value": {
+                  "rows": [
+                    {
+                      "id": {"value": "r1"},
+                      "key": {"kind": "decimal", "value": "1.50"},
+                      "value": {"kind": "string_value", "value": "x"}
+                    }
+                  ]
+                }
+              }
+            },
+            {"kind": "literal", "value": {"kind": "decimal", "value": "1.5"}}
+          ]
+        }
+      },
+      "expected": {"available": {"string": "x"}, "reads": []}
+    },
+    {
+      "id": "map_get_unfilled_value",
+      "expression": {
+        "kind": "call",
+        "value": {
+          "operation": {"value": "map.get"},
+          "type_arguments": [],
+          "arguments": [
+            {
+              "kind": "input",
+              "value": {
+                "binding": {"value": "subject"},
+                "path": {"segments": [{"kind": "field", "value": {"name": "scores"}}]}
+              }
+            },
+            {"kind": "literal", "value": {"kind": "string_value", "value": "a"}}
+          ]
+        }
+      },
+      "inputs": {
+        "subject": {
+          "value": {
+            "record": {
+              "scores": {
+                "map": [
+                  {"id": "r1", "key": {"string": "a"}, "value": {"unfilled": true}},
+                  {"id": "r2", "key": {"string": "b"}, "value": {"integer": "2"}}
+                ]
+              }
+            }
+          }
+        }
+      },
+      "expected": {"unavailable": ["subject.scores[r1].#value"], "reads": ["subject.scores"]}
+    },
+    {
+      "id": "map_get_complete_row_of_partial_map",
+      "expression": {
+        "kind": "call",
+        "value": {
+          "operation": {"value": "map.get"},
+          "type_arguments": [],
+          "arguments": [
+            {
+              "kind": "input",
+              "value": {
+                "binding": {"value": "subject"},
+                "path": {"segments": [{"kind": "field", "value": {"name": "scores"}}]}
+              }
+            },
+            {"kind": "literal", "value": {"kind": "string_value", "value": "b"}}
+          ]
+        }
+      },
+      "inputs": {
+        "subject": {
+          "value": {
+            "record": {
+              "scores": {
+                "map": [
+                  {"id": "r1", "key": {"string": "a"}, "value": {"unfilled": true}},
+                  {"id": "r2", "key": {"string": "b"}, "value": {"integer": "2"}}
+                ]
+              }
+            }
+          }
+        }
+      },
+      "expected": {"available": {"integer": "2"}, "reads": ["subject.scores"]}
+    },
+    {
+      "id": "map_get_unfilled_key_may_match",
+      "expression": {
+        "kind": "call",
+        "value": {
+          "operation": {"value": "map.get"},
+          "type_arguments": [],
+          "arguments": [
+            {
+              "kind": "input",
+              "value": {
+                "binding": {"value": "subject"},
+                "path": {"segments": [{"kind": "field", "value": {"name": "scores"}}]}
+              }
+            },
+            {"kind": "literal", "value": {"kind": "string_value", "value": "a"}}
+          ]
+        }
+      },
+      "inputs": {
+        "subject": {
+          "value": {
+            "record": {
+              "scores": {
+                "map": [
+                  {"id": "r1", "key": {"unfilled": true}, "value": {"integer": "1"}},
+                  {"id": "r2", "key": {"string": "b"}, "value": {"integer": "2"}}
+                ]
+              }
+            }
+          }
+        }
+      },
+      "expected": {"unavailable": ["subject.scores[r1].#key"], "reads": ["subject.scores"]}
+    },
+    {
+      "id": "map_get_complete_match_beats_unfilled_key",
+      "expression": {
+        "kind": "call",
+        "value": {
+          "operation": {"value": "map.get"},
+          "type_arguments": [],
+          "arguments": [
+            {
+              "kind": "input",
+              "value": {
+                "binding": {"value": "subject"},
+                "path": {"segments": [{"kind": "field", "value": {"name": "scores"}}]}
+              }
+            },
+            {"kind": "literal", "value": {"kind": "string_value", "value": "b"}}
+          ]
+        }
+      },
+      "inputs": {
+        "subject": {
+          "value": {
+            "record": {
+              "scores": {
+                "map": [
+                  {"id": "r1", "key": {"unfilled": true}, "value": {"integer": "1"}},
+                  {"id": "r2", "key": {"string": "b"}, "value": {"integer": "2"}}
+                ]
+              }
+            }
+          }
+        }
+      },
+      "expected": {"available": {"integer": "2"}, "reads": ["subject.scores"]}
+    },
+    {
+      "id": "map_get_unfilled_value_unlocated",
+      "expression": {
+        "kind": "call",
+        "value": {
+          "operation": {"value": "map.get"},
+          "type_arguments": [],
+          "arguments": [
+            {
+              "kind": "input",
+              "value": {
+                "binding": {"value": "subject"},
+                "path": {"segments": [{"kind": "field", "value": {"name": "scores"}}]}
+              }
+            },
+            {"kind": "literal", "value": {"kind": "string_value", "value": "a"}}
+          ]
+        }
+      },
+      "inputs": {
+        "subject": {
+          "value": {
+            "record": {
+              "scores": {
+                "map": [
+                  {"id": "r1", "key": {"string": "a"}, "value": {"unfilled": true}},
+                  {"id": "r2", "key": {"string": "b"}, "value": {"integer": "2"}}
+                ]
+              }
+            }
+          },
+          "located": false
+        }
+      },
+      "expected": {"unavailable": [], "reads": []}
+    },
+    {
+      "id": "map_contains_key",
+      "expression": {
+        "kind": "call",
+        "value": {
+          "operation": {"value": "map.contains_key"},
+          "type_arguments": [],
+          "arguments": [
+            {"kind": "input", "value": {"binding": {"value": "subject"}, "path": {"segments": []}}},
+            {"kind": "literal", "value": {"kind": "string_value", "value": "answer"}}
+          ]
+        }
+      },
+      "inputs": {
+        "subject": {
+          "value": {"map": [{"id": "row", "key": {"string": "answer"}, "value": {"integer": "7"}}]},
+          "type": {
+            "value": {
+              "kind": "map",
+              "value": {
+                "key": {
+                  "value": {"kind": "nominal", "value": {"kind": "scalar", "value": "text"}},
+                  "may_be_missing": false
+                },
+                "value": {
+                  "value": {
+                    "kind": "nominal",
+                    "value": {"kind": "scalar", "value": {"kind": "integer", "value": {"width": "signed_thirty_two"}}}
+                  },
+                  "may_be_missing": false
+                }
+              }
+            },
+            "may_be_missing": false
+          }
+        }
+      },
+      "check": {
+        "resultType": {
+          "value": {"kind": "nominal", "value": {"kind": "scalar", "value": "boolean"}},
+          "may_be_missing": false
+        },
+        "failures": [],
+        "inferredType": {
+          "value": {"kind": "nominal", "value": {"kind": "scalar", "value": "boolean"}},
+          "may_be_missing": false
+        }
+      },
+      "expected": {"available": {"boolean": true}, "reads": ["subject"]}
+    },
+    {
+      "id": "map_contains_key_absent",
+      "expression": {
+        "kind": "call",
+        "value": {
+          "operation": {"value": "map.contains_key"},
+          "type_arguments": [],
+          "arguments": [
+            {
+              "kind": "literal",
+              "value": {
+                "kind": "map_value",
+                "value": {
+                  "rows": [
+                    {
+                      "id": {"value": "r1"},
+                      "key": {"kind": "string_value", "value": "a"},
+                      "value": {"kind": "integer", "value": "1"}
+                    }
+                  ]
+                }
+              }
+            },
+            {"kind": "literal", "value": {"kind": "string_value", "value": "b"}}
+          ]
+        }
+      },
+      "expected": {"available": {"boolean": false}, "reads": []}
+    },
+    {
+      "id": "map_from_entries_later_key_replaces_value_in_place",
+      "expression": {
+        "kind": "call",
+        "value": {
+          "operation": {"value": "map.from_entries"},
+          "type_arguments": [],
+          "arguments": [
+            {
+              "kind": "literal",
+              "value": {
+                "kind": "list_value",
+                "value": {
+                  "items": [
+                    {
+                      "id": {"value": "a"},
+                      "value": {
+                        "kind": "record",
+                        "value": {
+                          "fields": [
+                            {"name": "key", "value": {"kind": "string_value", "value": "x"}},
+                            {"name": "value", "value": {"kind": "integer", "value": "1"}}
+                          ]
+                        }
+                      }
+                    },
+                    {
+                      "id": {"value": "b"},
+                      "value": {
+                        "kind": "record",
+                        "value": {
+                          "fields": [
+                            {"name": "key", "value": {"kind": "string_value", "value": "y"}},
+                            {"name": "value", "value": {"kind": "integer", "value": "2"}}
+                          ]
+                        }
+                      }
+                    },
+                    {
+                      "id": {"value": "c"},
+                      "value": {
+                        "kind": "record",
+                        "value": {
+                          "fields": [
+                            {"name": "key", "value": {"kind": "string_value", "value": "x"}},
+                            {"name": "value", "value": {"kind": "integer", "value": "3"}}
+                          ]
+                        }
+                      }
+                    }
+                  ]
+                }
+              }
+            }
+          ]
+        }
+      },
+      "expected": {
+        "available": {
+          "map": [
+            {"id": "a", "key": {"string": "x"}, "value": {"integer": "3"}},
+            {"id": "b", "key": {"string": "y"}, "value": {"integer": "2"}}
+          ]
+        },
+        "reads": []
+      }
+    },
+    {
+      "id": "map_from_entries_of_entry_calls",
+      "expression": {
+        "kind": "call",
+        "value": {
+          "operation": {"value": "map.from_entries"},
+          "type_arguments": [],
+          "arguments": [
+            {
+              "kind": "call",
+              "value": {
+                "operation": {"value": "list.of"},
+                "type_arguments": [],
+                "arguments": [
+                  {
+                    "kind": "call",
+                    "value": {
+                      "operation": {"value": "entry.of"},
+                      "type_arguments": [],
+                      "arguments": [
+                        {"kind": "literal", "value": {"kind": "string_value", "value": "k"}},
+                        {"kind": "literal", "value": {"kind": "integer", "value": "1"}}
+                      ]
+                    }
+                  }
+                ]
+              }
+            }
+          ]
+        }
+      },
+      "expected": {"available": {"map": [{"id": "0", "key": {"string": "k"}, "value": {"integer": "1"}}]}, "reads": []}
+    },
+    {
+      "id": "map_map_values_keeps_rows",
+      "expression": {
+        "kind": "call",
+        "value": {
+          "operation": {"value": "map.map_values"},
+          "type_arguments": [],
+          "arguments": [
+            {
+              "kind": "literal",
+              "value": {
+                "kind": "map_value",
+                "value": {
+                  "rows": [
+                    {
+                      "id": {"value": "r1"},
+                      "key": {"kind": "string_value", "value": "a"},
+                      "value": {"kind": "integer", "value": "1"}
+                    },
+                    {
+                      "id": {"value": "r2"},
+                      "key": {"kind": "string_value", "value": "b"},
+                      "value": {"kind": "integer", "value": "2"}
+                    }
+                  ]
+                }
+              }
+            },
+            {
+              "kind": "lambda",
+              "value": {
+                "arity": 1,
+                "body": {
+                  "kind": "call",
+                  "value": {
+                    "operation": {"value": "number.multiply"},
+                    "type_arguments": [],
+                    "arguments": [
+                      {
+                        "kind": "local",
+                        "value": {
+                          "depth": 0,
+                          "slot": 0,
+                          "path": {"segments": [{"kind": "field", "value": {"name": "value"}}]}
+                        }
+                      },
+                      {"kind": "literal", "value": {"kind": "integer", "value": "10"}}
+                    ]
+                  }
+                }
+              }
+            }
+          ]
+        }
+      },
+      "expected": {
+        "available": {
+          "map": [
+            {"id": "r1", "key": {"string": "a"}, "value": {"integer": "10"}},
+            {"id": "r2", "key": {"string": "b"}, "value": {"integer": "20"}}
+          ]
+        },
+        "reads": []
+      }
+    }
+  ]
+}

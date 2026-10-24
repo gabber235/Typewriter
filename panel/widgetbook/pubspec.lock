@@ -1355,8 +1355,8 @@ packages:
     dependency: transitive
     description:
       path: "."
-      ref: "6d2e035dbcb060002a7a9f8f32d8e6598c76befd"
-      resolved-ref: "6d2e035dbcb060002a7a9f8f32d8e6598c76befd"
+      ref: "695dcef4a72e7bfe120ae60620d24ac4344f8bd3"
+      resolved-ref: "695dcef4a72e7bfe120ae60620d24ac4344f8bd3"
       url: "https://github.com/gabber235/skir-dart-client.git"
     source: git
     version: "1.0.12"
@@ -1453,6 +1453,14 @@ packages:
       url: "https://pub.dev"
     source: hosted
     version: "0.7.14"
+  timezone:
+    dependency: transitive
+    description:
+      name: timezone
+      sha256: "9f4e5a1a0e4fef7dd3424842c0575db01bfb7a11730e8d55753fcd5c5c98767b"
+      url: "https://pub.dev"
+    source: hosted
+    version: "0.11.2"
   typed_data:
     dependency: transitive
     description:

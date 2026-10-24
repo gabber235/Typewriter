@@ -141,12 +141,12 @@ internal object NativeBindingEmitter : SdkEmitter {
                         .filter { it.classKind == ClassKind.ENUM_ENTRY }
                         .toList()
                 val key = CodeBlock.builder().beginControlFlow("when (value)")
-                cases.forEach { case -> key.addStatement("%T.%N·->♢%S", names.source, case.simpleName.asString(), case.serialKey) }
+                cases.forEach { case -> key.add("%T.%N·->♢%S\n", names.source, case.simpleName.asString(), case.serialKey) }
                 key.endControlFlow()
                 val construct = CodeBlock.builder().beginControlFlow("when (key)")
-                cases.forEach { case -> construct.addStatement("%S·->♢%T.%N", case.serialKey, names.source, case.simpleName.asString()) }
-                construct.addStatement(
-                    "else·->♢throw %T(%S,♢%P)",
+                cases.forEach { case -> construct.add("%S·->♢%T.%N\n", case.serialKey, names.source, case.simpleName.asString()) }
+                construct.add(
+                    "else·->♢throw %T(%S,♢%P)\n",
                     Api.NativeBindingException,
                     "unknown_enum_case",
                     "Unknown enum case \$key.",

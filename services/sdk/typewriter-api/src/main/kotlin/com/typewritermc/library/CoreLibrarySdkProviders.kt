@@ -10,14 +10,16 @@ import com.typewritermc.expression.literal
 import com.typewritermc.expression.map
 import com.typewritermc.expression.name
 import com.typewritermc.expression.orElse
-import com.typewritermc.expression.orIfBlank
+import com.typewritermc.expression.shortcuts.orIfBlank
+import com.typewritermc.expression.shortcuts.trim
 import com.typewritermc.expression.target
-import com.typewritermc.expression.trim
 import com.typewritermc.presentation.ContainerStyle
+import com.typewritermc.presentation.DisplayDelay
 import com.typewritermc.presentation.EditorContext
 import com.typewritermc.presentation.Layout
 import com.typewritermc.presentation.PresentationBorder
 import com.typewritermc.presentation.PresentationRadius
+import com.typewritermc.presentation.Spacing
 import com.typewritermc.presentation.ambientBackground
 import com.typewritermc.presentation.asPresentationColor
 import com.typewritermc.presentation.icon
@@ -120,7 +122,7 @@ private fun TagPresentationScope.tagGraphSurface(body: Layout.() -> Unit) {
             foreground = foreground,
             border = PresentationBorder.All(width = 2.0, color = outline),
             radius = PresentationRadius.Large,
-            transition = stateTransition(transition(milliseconds = 100)),
+            transition = stateTransition(transition(DisplayDelay(100))),
         ),
     ) {
         align(PresentationAlignment.CENTER, body)
@@ -169,7 +171,7 @@ object TagSearchPresentation : TagPresentation {
 
     override fun TagPresentationScope.present() {
         repeated<Ref<TagParents.Child, Tag>, Ref<TagParents.Child, Tag>>(expressions.parents.map { this }.orElse(emptyListExpression())) {
-            clippedRow(spacing = 4.0)
+            clippedRow(spacing = Spacing(4.0))
             val parent = item.resource
             showIf(parent.exists) {
                 searchChip(

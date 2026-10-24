@@ -3,12 +3,10 @@
 package com.typewritermc.authoring
 
 import com.typewritermc.authoring.record
-import com.typewritermc.expression.CanonicalQueryReader
-import com.typewritermc.expression.CheckedExpressionProgram
 import com.typewritermc.expression.DefaultExpressionEvaluator
 import com.typewritermc.expression.ExpressionBindings
 import com.typewritermc.expression.ExpressionValueReader
-import com.typewritermc.types.ResourceId
+import com.typewritermc.expression.operations.CatalogPortableTypes
 import com.typewritermc.types.catalog.CheckedCatalog
 import com.typewritermc.types.fields
 import com.typewritermc.types.named
@@ -19,23 +17,23 @@ import com.typewritermc.types.use
 import skirout.editor.v1.catalog.PublishedType
 import skirout.editor.v1.catalog.ResourceDisplayFormulas
 import skirout.editor.v1.expression.EvaluationBudget
+import skirout.editor.v1.expression.ExpressionNode
 import skirout.editor.v1.type_catalog.AuthoringRecord
 import skirout.editor.v1.type_catalog.DataValue
 import skirout.editor.v1.type_catalog.ResourceTarget
 import skirout.editor.v1.type_catalog.TypeDefinitionId
 import skirout.editor.v1.type_catalog.TypeSelection
-import skirout.editor.v1.type_catalog.ValueLocation
 
 /** One published resource display with its formulas checked against the catalog that published them. */
 class CheckedResourceDisplay(
     val target: ResourceTarget,
-    val label: CheckedExpressionProgram,
-    val accent: CheckedExpressionProgram,
-    val icon: CheckedExpressionProgram,
+    val label: ExpressionNode,
+    val accent: ExpressionNode,
+    val icon: ExpressionNode,
 ) {
     /** The wire form editors receive. */
     val formulas: ResourceDisplayFormulas
-        get() = ResourceDisplayFormulas(target = target, label = label.body, accent = accent.body, icon = icon.body)
+        get() = ResourceDisplayFormulas(target = target, label = label, accent = accent, icon = icon)
 }
 
 /**
@@ -72,7 +70,8 @@ class ResourceDisplayCatalog(
     /**
      * The label of [record] from its display. Display formulas read only their subject, so the record alone names
      * it. Null for a pending type selection, which has no complete subject value, and when the label is unavailable
-     * or fails within its budget.
+     * or fails within its budget. Kotlin evaluates the rule profile only, so a label that reaches a profile panel
+     * operation, such as the subject's published type name, fails here and is null; editors evaluate it in full.
      */
     context(reads: AuthoredReads)
     fun label(
@@ -85,28 +84,16 @@ class ResourceDisplayCatalog(
         val evaluator =
             DefaultExpressionEvaluator(
                 ExpressionValueReader { error("Display formulas read their subject as a local value.") },
-                queries = DisplayQueries(catalog),
+                CatalogPortableTypes(catalog),
             )
         val result =
-            evaluator.evaluateChecked(
+            evaluator.evaluateScoped(
                 display.label,
                 ExpressionBindings(emptyMap()),
-                DISPLAY_BUDGET,
                 mapOf(ResourceDisplaySubject.binding to subject),
+                DISPLAY_BUDGET,
             )
         return ((result as? Availability.Available)?.value?.unwrapNamed() as? DataValue.StringValueWrapper)?.value
-    }
-
-    /** Answers the declaration queries of display formulas; catalog assembly rejects formulas reading other resources. */
-    private inner class DisplayQueries(
-        override val catalog: CheckedCatalog,
-    ) : CanonicalQueryReader {
-        context(reads: AuthoredReads)
-        override fun resource(id: ResourceId): Availability<AuthoringRecord> = Availability.Unavailable(listOf(ValueLocation.of(id)))
-
-        context(reads: AuthoredReads)
-        override fun declaration(id: TypeDefinitionId): Availability<PublishedType> =
-            types[id]?.let { Availability.Available(it) } ?: Availability.Unavailable(emptyList())
     }
 }
 

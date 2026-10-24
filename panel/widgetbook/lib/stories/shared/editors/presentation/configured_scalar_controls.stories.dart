@@ -130,12 +130,19 @@ BoundPresentationHost _scalarHost({
   );
   final mappings = skir.ValueMappings(
     completion: skir.ExpressionMapping(
-      inputBinding: candidate,
-      body: skir.ExpressionNode.createNumberRound(
-        source: read,
-        increment: numberLiteral(0.5),
-        rounding: textLiteral("NearestTiesToEven"),
+      inputBinding: declareBinding(
+        candidate,
+        scalarTemplate(
+          skir.ScalarKind.createFloat(width: skir.FloatWidth.sixtyFour),
+        ),
       ),
+      body: portableCall("number.round", [
+        read,
+        numberLiteral(0.5),
+        skir.ExpressionNode.wrapLiteral(
+          skir.RoundingMode.nearestTiesToEven.toDataValue(),
+        ),
+      ]),
     ),
     display: null,
   );

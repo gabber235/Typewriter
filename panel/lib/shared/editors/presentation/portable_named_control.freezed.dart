@@ -15,7 +15,7 @@ T _$identity<T>(T value) => value;
 /// @nodoc
 mixin _$PortableNamedPayload {
 
- skir.BindingRef get reference; skir.NamedTypeUse get actualType; skir.DataValue get value; skir.ValueLocation get location; Map<skir.ExpressionBindingId, PortableExpressionBinding> get bindings; skir.EvaluationBudget get budget; PortableBindingSetter get setBinding;
+ skir.BindingRef get reference; skir.NamedTypeUse get actualType; skir.DataValue get value; skir.ValueLocation get location; PortableBindingSetter get setBinding;
 /// Create a copy of PortableNamedPayload
 /// with the given fields replaced by the non-null parameter values.
 @JsonKey(includeFromJson: false, includeToJson: false)
@@ -27,20 +27,20 @@ $PortableNamedPayloadCopyWith<PortableNamedPayload> get copyWith => _$PortableNa
 @override
 bool operator ==(Object other) {
   final _this = this as PortableNamedPayload;
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is PortableNamedPayload&&(identical(other.reference, _this.reference) || other.reference == _this.reference)&&(identical(other.actualType, _this.actualType) || other.actualType == _this.actualType)&&(identical(other.value, _this.value) || other.value == _this.value)&&(identical(other.location, _this.location) || other.location == _this.location)&&const DeepCollectionEquality().equals(other.bindings, _this.bindings)&&(identical(other.budget, _this.budget) || other.budget == _this.budget)&&(identical(other.setBinding, _this.setBinding) || other.setBinding == _this.setBinding));
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is PortableNamedPayload&&(identical(other.reference, _this.reference) || other.reference == _this.reference)&&(identical(other.actualType, _this.actualType) || other.actualType == _this.actualType)&&(identical(other.value, _this.value) || other.value == _this.value)&&(identical(other.location, _this.location) || other.location == _this.location)&&(identical(other.setBinding, _this.setBinding) || other.setBinding == _this.setBinding));
 }
 
 
 @override
 int get hashCode {
   final _this = this as PortableNamedPayload;
-  return Object.hash(runtimeType,_this.reference,_this.actualType,_this.value,_this.location,const DeepCollectionEquality().hash(_this.bindings),_this.budget,_this.setBinding);
+  return Object.hash(runtimeType,_this.reference,_this.actualType,_this.value,_this.location,_this.setBinding);
 }
 
 @override
 String toString() {
   final _this = this as PortableNamedPayload;
-  return 'PortableNamedPayload(reference: ${_this.reference}, actualType: ${_this.actualType}, value: ${_this.value}, location: ${_this.location}, bindings: ${_this.bindings}, budget: ${_this.budget}, setBinding: ${_this.setBinding})';
+  return 'PortableNamedPayload(reference: ${_this.reference}, actualType: ${_this.actualType}, value: ${_this.value}, location: ${_this.location}, setBinding: ${_this.setBinding})';
 }
 
 
@@ -51,7 +51,7 @@ abstract mixin class $PortableNamedPayloadCopyWith<$Res>  {
   factory $PortableNamedPayloadCopyWith(PortableNamedPayload value, $Res Function(PortableNamedPayload) _then) = _$PortableNamedPayloadCopyWithImpl;
 @useResult
 $Res call({
- skir.BindingRef reference, skir.NamedTypeUse actualType, skir.DataValue value, skir.ValueLocation location, Map<skir.ExpressionBindingId, PortableExpressionBinding> bindings, skir.EvaluationBudget budget, PortableBindingSetter setBinding
+ skir.BindingRef reference, skir.NamedTypeUse actualType, skir.DataValue value, skir.ValueLocation location, PortableBindingSetter setBinding
 });
 
 
@@ -68,15 +68,13 @@ class _$PortableNamedPayloadCopyWithImpl<$Res>
 
 /// Create a copy of PortableNamedPayload
 /// with the given fields replaced by the non-null parameter values.
-@pragma('vm:prefer-inline') @override $Res call({Object? reference = null,Object? actualType = null,Object? value = null,Object? location = null,Object? bindings = null,Object? budget = null,Object? setBinding = null,}) {
+@pragma('vm:prefer-inline') @override $Res call({Object? reference = null,Object? actualType = null,Object? value = null,Object? location = null,Object? setBinding = null,}) {
   return _then(PortableNamedPayload(
 reference: null == reference ? _self.reference : reference // ignore: cast_nullable_to_non_nullable
 as skir.BindingRef,actualType: null == actualType ? _self.actualType : actualType // ignore: cast_nullable_to_non_nullable
 as skir.NamedTypeUse,value: null == value ? _self.value : value // ignore: cast_nullable_to_non_nullable
 as skir.DataValue,location: null == location ? _self.location : location // ignore: cast_nullable_to_non_nullable
-as skir.ValueLocation,bindings: null == bindings ? _self.bindings : bindings // ignore: cast_nullable_to_non_nullable
-as Map<skir.ExpressionBindingId, PortableExpressionBinding>,budget: null == budget ? _self.budget : budget // ignore: cast_nullable_to_non_nullable
-as skir.EvaluationBudget,setBinding: null == setBinding ? _self.setBinding : setBinding // ignore: cast_nullable_to_non_nullable
+as skir.ValueLocation,setBinding: null == setBinding ? _self.setBinding : setBinding // ignore: cast_nullable_to_non_nullable
 as PortableBindingSetter,
   ));
 }
@@ -162,10 +160,10 @@ return $default(_that);case _:
 /// }
 /// ```
 
-@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function( skir.BindingRef reference,  skir.NamedTypeUse actualType,  skir.DataValue value,  skir.ValueLocation location,  Map<skir.ExpressionBindingId, PortableExpressionBinding> bindings,  skir.EvaluationBudget budget,  PortableBindingSetter setBinding)?  $default,{required TResult orElse(),}) {final _that = this;
+@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function( skir.BindingRef reference,  skir.NamedTypeUse actualType,  skir.DataValue value,  skir.ValueLocation location,  PortableBindingSetter setBinding)?  $default,{required TResult orElse(),}) {final _that = this;
 switch (_that) {
 case _PortableNamedPayload() when $default != null:
-return $default(_that.reference,_that.actualType,_that.value,_that.location,_that.bindings,_that.budget,_that.setBinding);case _:
+return $default(_that.reference,_that.actualType,_that.value,_that.location,_that.setBinding);case _:
   return orElse();
 
 }
@@ -183,10 +181,10 @@ return $default(_that.reference,_that.actualType,_that.value,_that.location,_tha
 /// }
 /// ```
 
-@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function( skir.BindingRef reference,  skir.NamedTypeUse actualType,  skir.DataValue value,  skir.ValueLocation location,  Map<skir.ExpressionBindingId, PortableExpressionBinding> bindings,  skir.EvaluationBudget budget,  PortableBindingSetter setBinding)  $default,) {final _that = this;
+@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function( skir.BindingRef reference,  skir.NamedTypeUse actualType,  skir.DataValue value,  skir.ValueLocation location,  PortableBindingSetter setBinding)  $default,) {final _that = this;
 switch (_that) {
 case _PortableNamedPayload():
-return $default(_that.reference,_that.actualType,_that.value,_that.location,_that.bindings,_that.budget,_that.setBinding);case _:
+return $default(_that.reference,_that.actualType,_that.value,_that.location,_that.setBinding);case _:
   throw StateError('Unexpected subclass');
 
 }
@@ -203,10 +201,10 @@ return $default(_that.reference,_that.actualType,_that.value,_that.location,_tha
 /// }
 /// ```
 
-@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function( skir.BindingRef reference,  skir.NamedTypeUse actualType,  skir.DataValue value,  skir.ValueLocation location,  Map<skir.ExpressionBindingId, PortableExpressionBinding> bindings,  skir.EvaluationBudget budget,  PortableBindingSetter setBinding)?  $default,) {final _that = this;
+@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function( skir.BindingRef reference,  skir.NamedTypeUse actualType,  skir.DataValue value,  skir.ValueLocation location,  PortableBindingSetter setBinding)?  $default,) {final _that = this;
 switch (_that) {
 case _PortableNamedPayload() when $default != null:
-return $default(_that.reference,_that.actualType,_that.value,_that.location,_that.bindings,_that.budget,_that.setBinding);case _:
+return $default(_that.reference,_that.actualType,_that.value,_that.location,_that.setBinding);case _:
   return null;
 
 }
@@ -218,21 +216,13 @@ return $default(_that.reference,_that.actualType,_that.value,_that.location,_tha
 
 
 class _PortableNamedPayload extends PortableNamedPayload {
-  const _PortableNamedPayload({required this.reference, required this.actualType, required this.value, required this.location, required  Map<skir.ExpressionBindingId, PortableExpressionBinding> bindings, required this.budget, required this.setBinding}): _bindings = bindings,super._();
+  const _PortableNamedPayload({required this.reference, required this.actualType, required this.value, required this.location, required this.setBinding}): super._();
   
 
 @override final  skir.BindingRef reference;
 @override final  skir.NamedTypeUse actualType;
 @override final  skir.DataValue value;
 @override final  skir.ValueLocation location;
- final  Map<skir.ExpressionBindingId, PortableExpressionBinding> _bindings;
-@override Map<skir.ExpressionBindingId, PortableExpressionBinding> get bindings {
-  if (_bindings is EqualUnmodifiableMapView) return _bindings;
-  // ignore: implicit_dynamic_type
-  return EqualUnmodifiableMapView(_bindings);
-}
-
-@override final  skir.EvaluationBudget budget;
 @override final  PortableBindingSetter setBinding;
 
 /// Create a copy of PortableNamedPayload
@@ -245,18 +235,18 @@ _$PortableNamedPayloadCopyWith<_PortableNamedPayload> get copyWith => __$Portabl
 
 @override
 bool operator ==(Object other) {
-    return identical(this, other) || (other.runtimeType == runtimeType&&other is _PortableNamedPayload&&(identical(other.reference, reference) || other.reference == reference)&&(identical(other.actualType, actualType) || other.actualType == actualType)&&(identical(other.value, value) || other.value == value)&&(identical(other.location, location) || other.location == location)&&const DeepCollectionEquality().equals(other.bindings, _bindings)&&(identical(other.budget, budget) || other.budget == budget)&&(identical(other.setBinding, setBinding) || other.setBinding == setBinding));
+    return identical(this, other) || (other.runtimeType == runtimeType&&other is _PortableNamedPayload&&(identical(other.reference, reference) || other.reference == reference)&&(identical(other.actualType, actualType) || other.actualType == actualType)&&(identical(other.value, value) || other.value == value)&&(identical(other.location, location) || other.location == location)&&(identical(other.setBinding, setBinding) || other.setBinding == setBinding));
 }
 
 
 @override
 int get hashCode {
-    return Object.hash(runtimeType,reference,actualType,value,location,const DeepCollectionEquality().hash(_bindings),budget,setBinding);
+    return Object.hash(runtimeType,reference,actualType,value,location,setBinding);
 }
 
 @override
 String toString() {
-    return 'PortableNamedPayload(reference: $reference, actualType: $actualType, value: $value, location: $location, bindings: $bindings, budget: $budget, setBinding: $setBinding)';
+    return 'PortableNamedPayload(reference: $reference, actualType: $actualType, value: $value, location: $location, setBinding: $setBinding)';
 }
 
 
@@ -267,7 +257,7 @@ abstract mixin class _$PortableNamedPayloadCopyWith<$Res> implements $PortableNa
   factory _$PortableNamedPayloadCopyWith(_PortableNamedPayload value, $Res Function(_PortableNamedPayload) _then) = __$PortableNamedPayloadCopyWithImpl;
 @override @useResult
 $Res call({
- skir.BindingRef reference, skir.NamedTypeUse actualType, skir.DataValue value, skir.ValueLocation location, Map<skir.ExpressionBindingId, PortableExpressionBinding> bindings, skir.EvaluationBudget budget, PortableBindingSetter setBinding
+ skir.BindingRef reference, skir.NamedTypeUse actualType, skir.DataValue value, skir.ValueLocation location, PortableBindingSetter setBinding
 });
 
 
@@ -284,15 +274,13 @@ class __$PortableNamedPayloadCopyWithImpl<$Res>
 
 /// Create a copy of PortableNamedPayload
 /// with the given fields replaced by the non-null parameter values.
-@override @pragma('vm:prefer-inline') $Res call({Object? reference = null,Object? actualType = null,Object? value = null,Object? location = null,Object? bindings = null,Object? budget = null,Object? setBinding = null,}) {
+@override @pragma('vm:prefer-inline') $Res call({Object? reference = null,Object? actualType = null,Object? value = null,Object? location = null,Object? setBinding = null,}) {
   return _then(_PortableNamedPayload(
 reference: null == reference ? _self.reference : reference // ignore: cast_nullable_to_non_nullable
 as skir.BindingRef,actualType: null == actualType ? _self.actualType : actualType // ignore: cast_nullable_to_non_nullable
 as skir.NamedTypeUse,value: null == value ? _self.value : value // ignore: cast_nullable_to_non_nullable
 as skir.DataValue,location: null == location ? _self.location : location // ignore: cast_nullable_to_non_nullable
-as skir.ValueLocation,bindings: null == bindings ? _self._bindings : bindings // ignore: cast_nullable_to_non_nullable
-as Map<skir.ExpressionBindingId, PortableExpressionBinding>,budget: null == budget ? _self.budget : budget // ignore: cast_nullable_to_non_nullable
-as skir.EvaluationBudget,setBinding: null == setBinding ? _self.setBinding : setBinding // ignore: cast_nullable_to_non_nullable
+as skir.ValueLocation,setBinding: null == setBinding ? _self.setBinding : setBinding // ignore: cast_nullable_to_non_nullable
 as PortableBindingSetter,
   ));
 }

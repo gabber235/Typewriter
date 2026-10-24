@@ -457,7 +457,7 @@ extension _CollectionEditorPreparation on PortablePresentationNodeRenderer {
     skir.ScopedBindingElement element,
     PortablePresentationScope scope,
   ) {
-    final nested = scope.withBinding(element.binding, element.scopeBindingId);
+    final nested = scope.withBinding(element.binding, element.scopeBinding);
     return nested == null
         ? const EditorSelection.failed("The scoped binding is unavailable")
         : EditorSelection.ready(node: element.child, scope: nested);

@@ -221,13 +221,12 @@ final class BoundPresentationHost extends ChangeNotifier
     if (editorAction case skir.EditorAction_localWrapper(
       value: skir.LocalEditorAction_setValueWrapper(:final value),
     )) {
-      final evaluated = (context.queries?.catalog ?? catalog)
-          .evaluateExpression(
-            value.value,
-            bindings: context.bindings,
-            budget: budget,
-            queries: context.queries,
-          );
+      final evaluated = PortableExpressionEvaluator.located(
+        context.bindings,
+        budget: budget,
+        catalog: context.queries?.catalog ?? catalog,
+        queries: context.queries,
+      ).evaluate(value.value);
       return switch (evaluated) {
         PortableExpressionAvailable(value: final replacement) => write(
           value.target,

@@ -1,0 +1,104 @@
+{
+  "cases": [
+    {
+      "id": "bytes_to_list",
+      "expression": {
+        "kind": "call",
+        "value": {
+          "operation": {"value": "bytes.to_list"},
+          "type_arguments": [],
+          "arguments": [{"kind": "literal", "value": {"kind": "bytes", "value": "hex:00ff10"}}]
+        }
+      },
+      "expected": {
+        "available": {
+          "list": [
+            {"id": "0", "value": {"integer": "0"}},
+            {"id": "1", "value": {"integer": "255"}},
+            {"id": "2", "value": {"integer": "16"}}
+          ]
+        },
+        "reads": []
+      }
+    },
+    {
+      "id": "bytes_to_list_empty",
+      "expression": {
+        "kind": "call",
+        "value": {
+          "operation": {"value": "bytes.to_list"},
+          "type_arguments": [],
+          "arguments": [{"kind": "literal", "value": {"kind": "bytes", "value": "hex:"}}]
+        }
+      },
+      "expected": {"available": {"list": []}, "reads": []}
+    },
+    {
+      "id": "bytes_from_list",
+      "expression": {
+        "kind": "call",
+        "value": {
+          "operation": {"value": "bytes.from_list"},
+          "type_arguments": [],
+          "arguments": [
+            {
+              "kind": "call",
+              "value": {
+                "operation": {"value": "list.of"},
+                "type_arguments": [],
+                "arguments": [
+                  {"kind": "literal", "value": {"kind": "integer", "value": "0"}},
+                  {"kind": "literal", "value": {"kind": "integer", "value": "255"}},
+                  {"kind": "literal", "value": {"kind": "integer", "value": "16"}}
+                ]
+              }
+            }
+          ]
+        }
+      },
+      "expected": {"available": {"bytes": "AP8Q"}, "reads": []}
+    },
+    {
+      "id": "bytes_from_list_above_255",
+      "expression": {
+        "kind": "call",
+        "value": {
+          "operation": {"value": "bytes.from_list"},
+          "type_arguments": [],
+          "arguments": [
+            {
+              "kind": "call",
+              "value": {
+                "operation": {"value": "list.of"},
+                "type_arguments": [],
+                "arguments": [{"kind": "literal", "value": {"kind": "integer", "value": "256"}}]
+              }
+            }
+          ]
+        }
+      },
+      "expected": {"failed": "invalid_byte", "reads": []}
+    },
+    {
+      "id": "bytes_from_list_negative",
+      "expression": {
+        "kind": "call",
+        "value": {
+          "operation": {"value": "bytes.from_list"},
+          "type_arguments": [],
+          "arguments": [
+            {
+              "kind": "call",
+              "value": {
+                "operation": {"value": "list.of"},
+                "type_arguments": [],
+                "arguments": [{"kind": "literal", "value": {"kind": "integer", "value": "-1"}}]
+              }
+            }
+          ]
+        }
+      },
+      "expected": {"failed": "invalid_byte", "reads": []}
+    }
+  ]
+}

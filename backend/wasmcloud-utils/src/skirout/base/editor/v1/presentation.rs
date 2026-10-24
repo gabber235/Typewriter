@@ -2816,13 +2816,56 @@ impl SequencePresentation {
 }
 
 // ==============================================================================
+// struct BindingDeclaration
+// ==============================================================================
+
+/// A binding a presentation introduces, with the type its expressions see. Templates may
+/// use the type parameters of the material that declares them.
+#[derive(Clone, Debug, PartialEq, Default)]
+pub struct BindingDeclaration {
+    pub id: crate::skirout::base::editor::v1::type_catalog::ExpressionBindingId,
+    pub type_: crate::skirout::base::editor::v1::type_catalog::TypeTemplate,
+    /// Set this to None when you're creating a struct.
+    pub _unrecognized: Option<crate::skir_client::UnrecognizedFields<BindingDeclaration>>,
+}
+
+impl BindingDeclaration {
+    pub fn default_ref() -> &'static BindingDeclaration {
+        static D: std::sync::LazyLock<BindingDeclaration> =
+            std::sync::LazyLock::new(BindingDeclaration::default);
+        &D
+    }
+}
+
+impl BindingDeclaration {
+    fn _adapter() -> &'static crate::skir_client::internal::StructAdapter<BindingDeclaration> {
+        static ADAPTER: std::sync::LazyLock<
+            crate::skir_client::internal::StructAdapter<BindingDeclaration>,
+        > = std::sync::LazyLock::new(|| {
+            crate::skir_client::internal::StructAdapter::new(
+                "editor/v1/presentation.skir",
+                "BindingDeclaration",
+                "A binding a presentation introduces, with the type its expressions see. Templates may\nuse the type parameters of the material that declares them.",
+                |x: &BindingDeclaration| &x._unrecognized,
+                |x: &mut BindingDeclaration, u| x._unrecognized = u,
+            )
+        });
+        &*ADAPTER
+    }
+    pub fn serializer() -> crate::skir_client::Serializer<BindingDeclaration> {
+        initialize_module_serializers();
+        crate::skir_client::internal::struct_serializer_from_static(BindingDeclaration::_adapter())
+    }
+}
+
+// ==============================================================================
 // struct RepeatedElement
 // ==============================================================================
 
 #[derive(Clone, Debug, PartialEq, Default)]
 pub struct RepeatedElement {
     pub source: crate::skirout::base::editor::v1::expression::ExpressionNode,
-    pub item_binding_id: crate::skirout::base::editor::v1::type_catalog::ExpressionBindingId,
+    pub item_binding: BindingDeclaration,
     pub presentation: SequencePresentation,
     /// Set this to None when you're creating a struct.
     pub _unrecognized: Option<crate::skir_client::UnrecognizedFields<RepeatedElement>>,
@@ -2864,7 +2907,7 @@ impl RepeatedElement {
 #[derive(Clone, Debug, PartialEq, Default)]
 pub struct ScopedBindingElement {
     pub binding: crate::skirout::base::editor::v1::binding::BindingRef,
-    pub scope_binding_id: crate::skirout::base::editor::v1::type_catalog::ExpressionBindingId,
+    pub scope_binding: BindingDeclaration,
     pub child: PresentationNode,
     /// Set this to None when you're creating a struct.
     pub _unrecognized: Option<crate::skir_client::UnrecognizedFields<ScopedBindingElement>>,
@@ -3006,8 +3049,8 @@ pub struct CollectionGraphElement {
     pub direction: CollectionGraphDirection,
     pub maximum_depth: Option<i32>,
     pub node: PresentationNode,
-    pub children_binding_id: crate::skirout::base::editor::v1::type_catalog::ExpressionBindingId,
-    pub child_binding_id: crate::skirout::base::editor::v1::type_catalog::ExpressionBindingId,
+    pub children_binding: BindingDeclaration,
+    pub child_binding: BindingDeclaration,
     pub children: SequencePresentation,
     /// Set this to None when you're creating a struct.
     pub _unrecognized: Option<crate::skir_client::UnrecognizedFields<CollectionGraphElement>>,
@@ -4610,8 +4653,8 @@ pub struct ListControl {
     pub allow_add: bool,
     pub allow_remove: bool,
     pub allow_reorder: bool,
-    pub item_binding_id: crate::skirout::base::editor::v1::type_catalog::ExpressionBindingId,
-    pub index_binding_id: crate::skirout::base::editor::v1::type_catalog::ExpressionBindingId,
+    pub item_binding: BindingDeclaration,
+    pub index_binding: BindingDeclaration,
     pub appearance: Option<CollectionAppearance>,
     pub content: Option<CollectionContent>,
     /// Set this to None when you're creating a struct.
@@ -4657,8 +4700,8 @@ pub struct MapControl {
     pub value_presentation: Option<PresentationNode>,
     pub allow_add: bool,
     pub allow_remove: bool,
-    pub key_binding_id: crate::skirout::base::editor::v1::type_catalog::ExpressionBindingId,
-    pub value_binding_id: crate::skirout::base::editor::v1::type_catalog::ExpressionBindingId,
+    pub key_binding: BindingDeclaration,
+    pub value_binding: BindingDeclaration,
     pub appearance: Option<CollectionAppearance>,
     pub content: Option<CollectionContent>,
     /// Set this to None when you're creating a struct.
@@ -4918,7 +4961,7 @@ impl PolymorphicMatchCase {
 #[derive(Clone, Debug, PartialEq, Default)]
 pub struct PolymorphicMatchElement {
     pub binding: crate::skirout::base::editor::v1::binding::BindingRef,
-    pub scope_binding_id: crate::skirout::base::editor::v1::type_catalog::ExpressionBindingId,
+    pub scope_binding: BindingDeclaration,
     pub cases: Vec<PolymorphicMatchCase>,
     pub fallback: Option<PresentationNode>,
     /// Set this to None when you're creating a struct.
@@ -5148,7 +5191,7 @@ impl SearchSelectorValues {
 pub struct SearchSelectorDefinition {
     pub selector_id: String,
     pub key: String,
-    pub value_binding_id: crate::skirout::base::editor::v1::type_catalog::ExpressionBindingId,
+    pub value_binding: BindingDeclaration,
     pub values: SearchSelectorValues,
     pub case_sensitive: bool,
     pub multiplicity: SearchSelectorMultiplicity,
@@ -5212,7 +5255,7 @@ impl SearchSelectorDefinition {
 
 #[derive(Clone, Debug, PartialEq, Default)]
 pub struct SearchResultMapping {
-    pub binding_id: crate::skirout::base::editor::v1::type_catalog::ExpressionBindingId,
+    pub binding: BindingDeclaration,
     pub key: crate::skirout::base::editor::v1::expression::ExpressionNode,
     pub selected_value: crate::skirout::base::editor::v1::expression::ExpressionNode,
     pub presentation: PresentationNode,
@@ -5315,9 +5358,8 @@ impl HttpQueryParameter {
 
 #[derive(Clone, Debug, PartialEq, Default)]
 pub struct HttpJsonContextBinding {
-    pub binding_id: crate::skirout::base::editor::v1::type_catalog::ExpressionBindingId,
+    pub binding: BindingDeclaration,
     pub path: String,
-    pub value_type: crate::skirout::base::editor::v1::type_catalog::TypeTemplate,
     /// Set this to None when you're creating a struct.
     pub _unrecognized: Option<crate::skir_client::UnrecognizedFields<HttpJsonContextBinding>>,
 }
@@ -6036,8 +6078,8 @@ impl SearchProvider {
 pub struct SearchControl {
     pub control: BoundControl,
     pub selection_mode: SearchSelectionMode,
-    pub query_binding_id: crate::skirout::base::editor::v1::type_catalog::ExpressionBindingId,
-    pub summary_binding_id: crate::skirout::base::editor::v1::type_catalog::ExpressionBindingId,
+    pub query_binding: BindingDeclaration,
+    pub summary_binding: BindingDeclaration,
     pub maximum_extent: crate::skirout::base::editor::v1::expression::ExpressionNode,
     pub provider: SearchProvider,
     pub summary: Option<PresentationNode>,
@@ -6734,12 +6776,12 @@ impl PresentationCollectionRelationDefinition {
 // ==============================================================================
 
 /// Authoritative typed schema for a collection referenced by presentation nodes.
-/// The row binding scopes key, selectability, and relation expressions to one row.
+/// The row binding scopes key, selectability, and relation expressions to one row; its type
+/// is the row type.
 #[derive(Clone, Debug, PartialEq, Default)]
 pub struct PresentationCollectionDefinition {
     pub source_id: String,
-    pub row_type: crate::skirout::base::editor::v1::type_catalog::TypeTemplate,
-    pub row_binding_id: crate::skirout::base::editor::v1::type_catalog::ExpressionBindingId,
+    pub row_binding: BindingDeclaration,
     pub key: crate::skirout::base::editor::v1::expression::ExpressionNode,
     pub selectability: crate::skirout::base::editor::v1::expression::ExpressionNode,
     pub relations:
@@ -6784,7 +6826,7 @@ impl PresentationCollectionDefinition {
             crate::skir_client::internal::StructAdapter::new(
                 "editor/v1/presentation.skir",
                 "PresentationCollectionDefinition",
-                "Authoritative typed schema for a collection referenced by presentation nodes.\nThe row binding scopes key, selectability, and relation expressions to one row.",
+                "Authoritative typed schema for a collection referenced by presentation nodes.\nThe row binding scopes key, selectability, and relation expressions to one row; its type\nis the row type.",
                 |x: &PresentationCollectionDefinition| &x._unrecognized,
                 |x: &mut PresentationCollectionDefinition, u| x._unrecognized = u,
             )
@@ -6902,7 +6944,7 @@ impl PresentationCollectionProjectionField {
 #[derive(Clone, Debug, PartialEq, Default)]
 pub struct PresentationCollectionProjection {
     pub root: crate::skirout::base::editor::v1::type_catalog::NamedTypeTemplate,
-    pub resource_binding_id: crate::skirout::base::editor::v1::type_catalog::ExpressionBindingId,
+    pub resource_binding: BindingDeclaration,
     pub fields: Vec<PresentationCollectionProjectionField>,
     /// Set this to None when you're creating a struct.
     pub _unrecognized:
@@ -6995,9 +7037,8 @@ impl PresentationInputAccess {
 
 #[derive(Clone, Debug, PartialEq, Default)]
 pub struct PresentationInput {
-    pub binding_id: crate::skirout::base::editor::v1::type_catalog::ExpressionBindingId,
+    pub binding: BindingDeclaration,
     pub name: String,
-    pub value_type: crate::skirout::base::editor::v1::type_catalog::TypeTemplate,
     pub access: PresentationInputAccess,
     /// Set this to None when you're creating a struct.
     pub _unrecognized: Option<crate::skir_client::UnrecognizedFields<PresentationInput>>,
@@ -7350,7 +7391,7 @@ pub struct SetControl {
     pub item_presentation: Option<PresentationNode>,
     pub allow_add: bool,
     pub allow_remove: bool,
-    pub item_binding_id: crate::skirout::base::editor::v1::type_catalog::ExpressionBindingId,
+    pub item_binding: BindingDeclaration,
     pub appearance: Option<CollectionAppearance>,
     pub content: Option<CollectionContent>,
     /// Set this to None when you're creating a struct.
@@ -7442,14 +7483,14 @@ impl GraphDirection {
 
 /// Lays out the resources of a bound link field, such as the elements of a page or the books
 /// of the library. Every member renders through its item presentation. Adding and removing
-/// members edits the link. `order` is evaluated with `item_binding_id` bound to each member's
+/// members edits the link. `order` is evaluated with `item_binding` bound to each member's
 /// link and sorts the members by its result; without it members keep link order.
 #[derive(Clone, Debug, PartialEq, Default)]
 pub struct ResourcesElement {
     pub control: BoundControl,
     pub layout: ResourcesLayout,
     pub order: Option<crate::skirout::base::editor::v1::expression::ExpressionNode>,
-    pub item_binding_id: crate::skirout::base::editor::v1::type_catalog::ExpressionBindingId,
+    pub item_binding: BindingDeclaration,
     /// Set this to None when you're creating a struct.
     pub _unrecognized: Option<crate::skir_client::UnrecognizedFields<ResourcesElement>>,
 }
@@ -7470,7 +7511,7 @@ impl ResourcesElement {
             crate::skir_client::internal::StructAdapter::new(
                 "editor/v1/presentation.skir",
                 "ResourcesElement",
-                "Lays out the resources of a bound link field, such as the elements of a page or the books\nof the library. Every member renders through its item presentation. Adding and removing\nmembers edits the link. `order` is evaluated with `item_binding_id` bound to each member's\nlink and sorts the members by its result; without it members keep link order.",
+                "Lays out the resources of a bound link field, such as the elements of a page or the books\nof the library. Every member renders through its item presentation. Adding and removing\nmembers edits the link. `order` is evaluated with `item_binding` bound to each member's\nlink and sorts the members by its result; without it members keep link order.",
                 |x: &ResourcesElement| &x._unrecognized,
                 |x: &mut ResourcesElement, u| x._unrecognized = u,
             )
@@ -8712,7 +8753,7 @@ impl NumericInteractionOptions {
 
 #[derive(Clone, Debug, PartialEq, Default)]
 pub struct ExpressionMapping {
-    pub input_binding: crate::skirout::base::editor::v1::type_catalog::ExpressionBindingId,
+    pub input_binding: BindingDeclaration,
     pub body: crate::skirout::base::editor::v1::expression::ExpressionNode,
     /// Set this to None when you're creating a struct.
     pub _unrecognized: Option<crate::skir_client::UnrecognizedFields<ExpressionMapping>>,
@@ -9350,8 +9391,7 @@ pub struct SelectInteractionOptions {
     pub filtering: Option<bool>,
     pub maximum_menu_height: Option<crate::skirout::base::editor::v1::expression::ExpressionNode>,
     pub selected_text_style: Option<InputTextStyle>,
-    pub query_binding_id:
-        Option<crate::skirout::base::editor::v1::type_catalog::ExpressionBindingId>,
+    pub query_binding: Option<BindingDeclaration>,
     pub custom_value: Option<crate::skirout::base::editor::v1::expression::ExpressionNode>,
     pub option_overrides: crate::skir_client::KeyedVec<ChoiceOptionAppearance_byOptionId>,
     /// Set this to None when you're creating a struct.
@@ -10995,13 +11035,12 @@ impl PresentationContextSource {
 // struct PresentationContextInput
 // ==============================================================================
 
-/// A value a presentation reads from its surroundings. Expressions read it through `binding_id`;
+/// A value a presentation reads from its surroundings. Expressions read it through `binding`;
 /// `source` says who supplies it, so a host fills its declared inputs without sharing binding names.
 #[derive(Clone, Debug, PartialEq, Default)]
 pub struct PresentationContextInput {
-    pub binding_id: crate::skirout::base::editor::v1::type_catalog::ExpressionBindingId,
+    pub binding: BindingDeclaration,
     pub source: PresentationContextSource,
-    pub value_type: crate::skirout::base::editor::v1::type_catalog::TypeUse,
     /// Set this to None when you're creating a struct.
     pub _unrecognized: Option<crate::skir_client::UnrecognizedFields<PresentationContextInput>>,
 }
@@ -11023,7 +11062,7 @@ impl PresentationContextInput {
             crate::skir_client::internal::StructAdapter::new(
                 "editor/v1/presentation.skir",
                 "PresentationContextInput",
-                "A value a presentation reads from its surroundings. Expressions read it through `binding_id`;\n`source` says who supplies it, so a host fills its declared inputs without sharing binding names.",
+                "A value a presentation reads from its surroundings. Expressions read it through `binding`;\n`source` says who supplies it, so a host fills its declared inputs without sharing binding names.",
                 |x: &PresentationContextInput| &x._unrecognized,
                 |x: &mut PresentationContextInput, u| x._unrecognized = u,
             )
@@ -11257,13 +11296,13 @@ impl GridResourcesLayout {
 // ==============================================================================
 
 /// Groups members by the hierarchy path at `path`, relative to each member. `group` renders
-/// each group header with `group_binding_id` bound to a HierarchyGroup value. Dropping a member
+/// each group header with `group_binding` bound to a HierarchyGroup value. Dropping a member
 /// onto a group rewrites its path field.
 #[derive(Clone, Debug, PartialEq, Default)]
 pub struct TreeResourcesLayout {
     pub path: crate::skirout::base::editor::v1::type_catalog::ValuePath,
     pub group: Option<PresentationNode>,
-    pub group_binding_id: crate::skirout::base::editor::v1::type_catalog::ExpressionBindingId,
+    pub group_binding: BindingDeclaration,
     pub connectors: Option<HierarchySequenceLayout>,
     pub initially_expanded: bool,
     /// Set this to None when you're creating a struct.
@@ -11286,7 +11325,7 @@ impl TreeResourcesLayout {
             crate::skir_client::internal::StructAdapter::new(
                 "editor/v1/presentation.skir",
                 "TreeResourcesLayout",
-                "Groups members by the hierarchy path at `path`, relative to each member. `group` renders\neach group header with `group_binding_id` bound to a HierarchyGroup value. Dropping a member\nonto a group rewrites its path field.",
+                "Groups members by the hierarchy path at `path`, relative to each member. `group` renders\neach group header with `group_binding` bound to a HierarchyGroup value. Dropping a member\nonto a group rewrites its path field.",
                 |x: &TreeResourcesLayout| &x._unrecognized,
                 |x: &mut TreeResourcesLayout, u| x._unrecognized = u,
             )
@@ -14289,6 +14328,27 @@ fn initialize_module_serializers() {
             (*a).finalize();
         }
         unsafe {
+            let a: *mut crate::skir_client::internal::StructAdapter<BindingDeclaration> =
+                BindingDeclaration::_adapter() as *const _ as *mut _;
+            (*a).add_field(
+                "id",
+                0,
+                crate::skirout::base::editor::v1::type_catalog::ExpressionBindingId::serializer(),
+                "",
+                |x: &BindingDeclaration| &x.id,
+                |x: &mut BindingDeclaration, v| x.id = v,
+            );
+            (*a).add_field(
+                "type",
+                1,
+                crate::skirout::base::editor::v1::type_catalog::TypeTemplate::serializer(),
+                "",
+                |x: &BindingDeclaration| &x.type_,
+                |x: &mut BindingDeclaration, v| x.type_ = v,
+            );
+            (*a).finalize();
+        }
+        unsafe {
             let a: *mut crate::skir_client::internal::StructAdapter<RepeatedElement> =
                 RepeatedElement::_adapter() as *const _ as *mut _;
             (*a).add_field(
@@ -14300,12 +14360,14 @@ fn initialize_module_serializers() {
                 |x: &mut RepeatedElement, v| x.source = v,
             );
             (*a).add_field(
-                "item_binding_id",
+                "item_binding",
                 1,
-                crate::skirout::base::editor::v1::type_catalog::ExpressionBindingId::serializer(),
+                crate::skir_client::internal::struct_serializer_from_static(
+                    BindingDeclaration::_adapter(),
+                ),
                 "",
-                |x: &RepeatedElement| &x.item_binding_id,
-                |x: &mut RepeatedElement, v| x.item_binding_id = v,
+                |x: &RepeatedElement| &x.item_binding,
+                |x: &mut RepeatedElement, v| x.item_binding = v,
             );
             (*a).add_field(
                 "presentation",
@@ -14331,12 +14393,14 @@ fn initialize_module_serializers() {
                 |x: &mut ScopedBindingElement, v| x.binding = v,
             );
             (*a).add_field(
-                "scope_binding_id",
+                "scope_binding",
                 1,
-                crate::skirout::base::editor::v1::type_catalog::ExpressionBindingId::serializer(),
+                crate::skir_client::internal::struct_serializer_from_static(
+                    BindingDeclaration::_adapter(),
+                ),
                 "",
-                |x: &ScopedBindingElement| &x.scope_binding_id,
-                |x: &mut ScopedBindingElement, v| x.scope_binding_id = v,
+                |x: &ScopedBindingElement| &x.scope_binding,
+                |x: &mut ScopedBindingElement, v| x.scope_binding = v,
             );
             (*a).add_field(
                 "child",
@@ -14476,20 +14540,24 @@ fn initialize_module_serializers() {
                 |x: &mut CollectionGraphElement, v| x.node = v,
             );
             (*a).add_field(
-                "children_binding_id",
+                "children_binding",
                 7,
-                crate::skirout::base::editor::v1::type_catalog::ExpressionBindingId::serializer(),
+                crate::skir_client::internal::struct_serializer_from_static(
+                    BindingDeclaration::_adapter(),
+                ),
                 "",
-                |x: &CollectionGraphElement| &x.children_binding_id,
-                |x: &mut CollectionGraphElement, v| x.children_binding_id = v,
+                |x: &CollectionGraphElement| &x.children_binding,
+                |x: &mut CollectionGraphElement, v| x.children_binding = v,
             );
             (*a).add_field(
-                "child_binding_id",
+                "child_binding",
                 8,
-                crate::skirout::base::editor::v1::type_catalog::ExpressionBindingId::serializer(),
+                crate::skir_client::internal::struct_serializer_from_static(
+                    BindingDeclaration::_adapter(),
+                ),
                 "",
-                |x: &CollectionGraphElement| &x.child_binding_id,
-                |x: &mut CollectionGraphElement, v| x.child_binding_id = v,
+                |x: &CollectionGraphElement| &x.child_binding,
+                |x: &mut CollectionGraphElement, v| x.child_binding = v,
             );
             (*a).add_field(
                 "children",
@@ -15951,20 +16019,24 @@ fn initialize_module_serializers() {
                 |x: &mut ListControl, v| x.allow_reorder = v,
             );
             (*a).add_field(
-                "item_binding_id",
+                "item_binding",
                 5,
-                crate::skirout::base::editor::v1::type_catalog::ExpressionBindingId::serializer(),
+                crate::skir_client::internal::struct_serializer_from_static(
+                    BindingDeclaration::_adapter(),
+                ),
                 "",
-                |x: &ListControl| &x.item_binding_id,
-                |x: &mut ListControl, v| x.item_binding_id = v,
+                |x: &ListControl| &x.item_binding,
+                |x: &mut ListControl, v| x.item_binding = v,
             );
             (*a).add_field(
-                "index_binding_id",
+                "index_binding",
                 6,
-                crate::skirout::base::editor::v1::type_catalog::ExpressionBindingId::serializer(),
+                crate::skir_client::internal::struct_serializer_from_static(
+                    BindingDeclaration::_adapter(),
+                ),
                 "",
-                |x: &ListControl| &x.index_binding_id,
-                |x: &mut ListControl, v| x.index_binding_id = v,
+                |x: &ListControl| &x.index_binding,
+                |x: &mut ListControl, v| x.index_binding = v,
             );
             (*a).add_field(
                 "appearance",
@@ -16046,20 +16118,24 @@ fn initialize_module_serializers() {
                 |x: &mut MapControl, v| x.allow_remove = v,
             );
             (*a).add_field(
-                "key_binding_id",
+                "key_binding",
                 5,
-                crate::skirout::base::editor::v1::type_catalog::ExpressionBindingId::serializer(),
+                crate::skir_client::internal::struct_serializer_from_static(
+                    BindingDeclaration::_adapter(),
+                ),
                 "",
-                |x: &MapControl| &x.key_binding_id,
-                |x: &mut MapControl, v| x.key_binding_id = v,
+                |x: &MapControl| &x.key_binding,
+                |x: &mut MapControl, v| x.key_binding = v,
             );
             (*a).add_field(
-                "value_binding_id",
+                "value_binding",
                 6,
-                crate::skirout::base::editor::v1::type_catalog::ExpressionBindingId::serializer(),
+                crate::skir_client::internal::struct_serializer_from_static(
+                    BindingDeclaration::_adapter(),
+                ),
                 "",
-                |x: &MapControl| &x.value_binding_id,
-                |x: &mut MapControl, v| x.value_binding_id = v,
+                |x: &MapControl| &x.value_binding,
+                |x: &mut MapControl, v| x.value_binding = v,
             );
             (*a).add_field(
                 "appearance",
@@ -16342,12 +16418,14 @@ fn initialize_module_serializers() {
                 |x: &mut PolymorphicMatchElement, v| x.binding = v,
             );
             (*a).add_field(
-                "scope_binding_id",
+                "scope_binding",
                 1,
-                crate::skirout::base::editor::v1::type_catalog::ExpressionBindingId::serializer(),
+                crate::skir_client::internal::struct_serializer_from_static(
+                    BindingDeclaration::_adapter(),
+                ),
                 "",
-                |x: &PolymorphicMatchElement| &x.scope_binding_id,
-                |x: &mut PolymorphicMatchElement, v| x.scope_binding_id = v,
+                |x: &PolymorphicMatchElement| &x.scope_binding,
+                |x: &mut PolymorphicMatchElement, v| x.scope_binding = v,
             );
             (*a).add_field(
                 "cases",
@@ -16442,12 +16520,14 @@ fn initialize_module_serializers() {
                 |x: &mut SearchSelectorDefinition, v| x.key = v,
             );
             (*a).add_field(
-                "value_binding_id",
+                "value_binding",
                 2,
-                crate::skirout::base::editor::v1::type_catalog::ExpressionBindingId::serializer(),
+                crate::skir_client::internal::struct_serializer_from_static(
+                    BindingDeclaration::_adapter(),
+                ),
                 "",
-                |x: &SearchSelectorDefinition| &x.value_binding_id,
-                |x: &mut SearchSelectorDefinition, v| x.value_binding_id = v,
+                |x: &SearchSelectorDefinition| &x.value_binding,
+                |x: &mut SearchSelectorDefinition, v| x.value_binding = v,
             );
             (*a).add_field(
                 "values",
@@ -16491,12 +16571,14 @@ fn initialize_module_serializers() {
             let a: *mut crate::skir_client::internal::StructAdapter<SearchResultMapping> =
                 SearchResultMapping::_adapter() as *const _ as *mut _;
             (*a).add_field(
-                "binding_id",
+                "binding",
                 0,
-                crate::skirout::base::editor::v1::type_catalog::ExpressionBindingId::serializer(),
+                crate::skir_client::internal::struct_serializer_from_static(
+                    BindingDeclaration::_adapter(),
+                ),
                 "",
-                |x: &SearchResultMapping| &x.binding_id,
-                |x: &mut SearchResultMapping, v| x.binding_id = v,
+                |x: &SearchResultMapping| &x.binding,
+                |x: &mut SearchResultMapping, v| x.binding = v,
             );
             (*a).add_field(
                 "key",
@@ -16569,12 +16651,14 @@ fn initialize_module_serializers() {
             let a: *mut crate::skir_client::internal::StructAdapter<HttpJsonContextBinding> =
                 HttpJsonContextBinding::_adapter() as *const _ as *mut _;
             (*a).add_field(
-                "binding_id",
+                "binding",
                 0,
-                crate::skirout::base::editor::v1::type_catalog::ExpressionBindingId::serializer(),
+                crate::skir_client::internal::struct_serializer_from_static(
+                    BindingDeclaration::_adapter(),
+                ),
                 "",
-                |x: &HttpJsonContextBinding| &x.binding_id,
-                |x: &mut HttpJsonContextBinding, v| x.binding_id = v,
+                |x: &HttpJsonContextBinding| &x.binding,
+                |x: &mut HttpJsonContextBinding, v| x.binding = v,
             );
             (*a).add_field(
                 "path",
@@ -16583,14 +16667,6 @@ fn initialize_module_serializers() {
                 "",
                 |x: &HttpJsonContextBinding| &x.path,
                 |x: &mut HttpJsonContextBinding, v| x.path = v,
-            );
-            (*a).add_field(
-                "value_type",
-                2,
-                crate::skirout::base::editor::v1::type_catalog::TypeTemplate::serializer(),
-                "",
-                |x: &HttpJsonContextBinding| &x.value_type,
-                |x: &mut HttpJsonContextBinding, v| x.value_type = v,
             );
             (*a).finalize();
         }
@@ -17281,20 +17357,24 @@ fn initialize_module_serializers() {
                 |x: &mut SearchControl, v| x.selection_mode = v,
             );
             (*a).add_field(
-                "query_binding_id",
+                "query_binding",
                 2,
-                crate::skirout::base::editor::v1::type_catalog::ExpressionBindingId::serializer(),
+                crate::skir_client::internal::struct_serializer_from_static(
+                    BindingDeclaration::_adapter(),
+                ),
                 "",
-                |x: &SearchControl| &x.query_binding_id,
-                |x: &mut SearchControl, v| x.query_binding_id = v,
+                |x: &SearchControl| &x.query_binding,
+                |x: &mut SearchControl, v| x.query_binding = v,
             );
             (*a).add_field(
-                "summary_binding_id",
+                "summary_binding",
                 3,
-                crate::skirout::base::editor::v1::type_catalog::ExpressionBindingId::serializer(),
+                crate::skir_client::internal::struct_serializer_from_static(
+                    BindingDeclaration::_adapter(),
+                ),
                 "",
-                |x: &SearchControl| &x.summary_binding_id,
-                |x: &mut SearchControl, v| x.summary_binding_id = v,
+                |x: &SearchControl| &x.summary_binding,
+                |x: &mut SearchControl, v| x.summary_binding = v,
             );
             (*a).add_field(
                 "maximum_extent",
@@ -18629,24 +18709,18 @@ fn initialize_module_serializers() {
                 |x: &mut PresentationCollectionDefinition, v| x.source_id = v,
             );
             (*a).add_field(
-                "row_type",
+                "row_binding",
                 1,
-                crate::skirout::base::editor::v1::type_catalog::TypeTemplate::serializer(),
+                crate::skir_client::internal::struct_serializer_from_static(
+                    BindingDeclaration::_adapter(),
+                ),
                 "",
-                |x: &PresentationCollectionDefinition| &x.row_type,
-                |x: &mut PresentationCollectionDefinition, v| x.row_type = v,
-            );
-            (*a).add_field(
-                "row_binding_id",
-                2,
-                crate::skirout::base::editor::v1::type_catalog::ExpressionBindingId::serializer(),
-                "",
-                |x: &PresentationCollectionDefinition| &x.row_binding_id,
-                |x: &mut PresentationCollectionDefinition, v| x.row_binding_id = v,
+                |x: &PresentationCollectionDefinition| &x.row_binding,
+                |x: &mut PresentationCollectionDefinition, v| x.row_binding = v,
             );
             (*a).add_field(
                 "key",
-                3,
+                2,
                 crate::skirout::base::editor::v1::expression::ExpressionNode::serializer(),
                 "",
                 |x: &PresentationCollectionDefinition| &x.key,
@@ -18654,7 +18728,7 @@ fn initialize_module_serializers() {
             );
             (*a).add_field(
                 "selectability",
-                4,
+                3,
                 crate::skirout::base::editor::v1::expression::ExpressionNode::serializer(),
                 "",
                 |x: &PresentationCollectionDefinition| &x.selectability,
@@ -18662,7 +18736,7 @@ fn initialize_module_serializers() {
             );
             (*a).add_field(
                 "relations",
-                5,
+                4,
                 crate::skir_client::Serializer::<
                     crate::skir_client::KeyedVec<
                         PresentationCollectionRelationDefinition_byRelationId,
@@ -18678,7 +18752,7 @@ fn initialize_module_serializers() {
             );
             (*a).add_field(
                 "projection",
-                6,
+                5,
                 crate::skir_client::Serializer::optional(
                     crate::skir_client::internal::struct_serializer_from_static(
                         PresentationCollectionProjection::_adapter(),
@@ -18757,12 +18831,14 @@ fn initialize_module_serializers() {
                 |x: &mut PresentationCollectionProjection, v| x.root = v,
             );
             (*a).add_field(
-                "resource_binding_id",
+                "resource_binding",
                 1,
-                crate::skirout::base::editor::v1::type_catalog::ExpressionBindingId::serializer(),
+                crate::skir_client::internal::struct_serializer_from_static(
+                    BindingDeclaration::_adapter(),
+                ),
                 "",
-                |x: &PresentationCollectionProjection| &x.resource_binding_id,
-                |x: &mut PresentationCollectionProjection, v| x.resource_binding_id = v,
+                |x: &PresentationCollectionProjection| &x.resource_binding,
+                |x: &mut PresentationCollectionProjection, v| x.resource_binding = v,
             );
             (*a).add_field(
                 "fields",
@@ -18789,12 +18865,14 @@ fn initialize_module_serializers() {
             let a: *mut crate::skir_client::internal::StructAdapter<PresentationInput> =
                 PresentationInput::_adapter() as *const _ as *mut _;
             (*a).add_field(
-                "binding_id",
+                "binding",
                 0,
-                crate::skirout::base::editor::v1::type_catalog::ExpressionBindingId::serializer(),
+                crate::skir_client::internal::struct_serializer_from_static(
+                    BindingDeclaration::_adapter(),
+                ),
                 "",
-                |x: &PresentationInput| &x.binding_id,
-                |x: &mut PresentationInput, v| x.binding_id = v,
+                |x: &PresentationInput| &x.binding,
+                |x: &mut PresentationInput, v| x.binding = v,
             );
             (*a).add_field(
                 "name",
@@ -18805,16 +18883,8 @@ fn initialize_module_serializers() {
                 |x: &mut PresentationInput, v| x.name = v,
             );
             (*a).add_field(
-                "value_type",
-                2,
-                crate::skirout::base::editor::v1::type_catalog::TypeTemplate::serializer(),
-                "",
-                |x: &PresentationInput| &x.value_type,
-                |x: &mut PresentationInput, v| x.value_type = v,
-            );
-            (*a).add_field(
                 "access",
-                3,
+                2,
                 crate::skir_client::internal::enum_serializer_from_static(
                     PresentationInputAccess::_adapter(),
                 ),
@@ -19110,12 +19180,14 @@ fn initialize_module_serializers() {
                 |x: &mut SetControl, v| x.allow_remove = v,
             );
             (*a).add_field(
-                "item_binding_id",
+                "item_binding",
                 4,
-                crate::skirout::base::editor::v1::type_catalog::ExpressionBindingId::serializer(),
+                crate::skir_client::internal::struct_serializer_from_static(
+                    BindingDeclaration::_adapter(),
+                ),
                 "",
-                |x: &SetControl| &x.item_binding_id,
-                |x: &mut SetControl, v| x.item_binding_id = v,
+                |x: &SetControl| &x.item_binding,
+                |x: &mut SetControl, v| x.item_binding = v,
             );
             (*a).add_field(
                 "appearance",
@@ -19186,12 +19258,14 @@ fn initialize_module_serializers() {
                 |x: &mut ResourcesElement, v| x.order = v,
             );
             (*a).add_field(
-                "item_binding_id",
+                "item_binding",
                 3,
-                crate::skirout::base::editor::v1::type_catalog::ExpressionBindingId::serializer(),
+                crate::skir_client::internal::struct_serializer_from_static(
+                    BindingDeclaration::_adapter(),
+                ),
                 "",
-                |x: &ResourcesElement| &x.item_binding_id,
-                |x: &mut ResourcesElement, v| x.item_binding_id = v,
+                |x: &ResourcesElement| &x.item_binding,
+                |x: &mut ResourcesElement, v| x.item_binding = v,
             );
             (*a).finalize();
         }
@@ -20085,7 +20159,9 @@ fn initialize_module_serializers() {
             (*a).add_field(
                 "input_binding",
                 0,
-                crate::skirout::base::editor::v1::type_catalog::ExpressionBindingId::serializer(),
+                crate::skir_client::internal::struct_serializer_from_static(
+                    BindingDeclaration::_adapter(),
+                ),
                 "",
                 |x: &ExpressionMapping| &x.input_binding,
                 |x: &mut ExpressionMapping, v| x.input_binding = v,
@@ -20592,15 +20668,16 @@ fn initialize_module_serializers() {
                 |x: &mut SelectInteractionOptions, v| x.selected_text_style = v,
             );
             (*a).add_field(
-                "query_binding_id",
+                "query_binding",
                 4,
                 crate::skir_client::Serializer::optional(
-                    crate::skirout::base::editor::v1::type_catalog::ExpressionBindingId::serializer(
+                    crate::skir_client::internal::struct_serializer_from_static(
+                        BindingDeclaration::_adapter(),
                     ),
                 ),
                 "",
-                |x: &SelectInteractionOptions| &x.query_binding_id,
-                |x: &mut SelectInteractionOptions, v| x.query_binding_id = v,
+                |x: &SelectInteractionOptions| &x.query_binding,
+                |x: &mut SelectInteractionOptions, v| x.query_binding = v,
             );
             (*a).add_field(
                 "custom_value",
@@ -22126,12 +22203,14 @@ fn initialize_module_serializers() {
             let a: *mut crate::skir_client::internal::StructAdapter<PresentationContextInput> =
                 PresentationContextInput::_adapter() as *const _ as *mut _;
             (*a).add_field(
-                "binding_id",
+                "binding",
                 0,
-                crate::skirout::base::editor::v1::type_catalog::ExpressionBindingId::serializer(),
+                crate::skir_client::internal::struct_serializer_from_static(
+                    BindingDeclaration::_adapter(),
+                ),
                 "",
-                |x: &PresentationContextInput| &x.binding_id,
-                |x: &mut PresentationContextInput, v| x.binding_id = v,
+                |x: &PresentationContextInput| &x.binding,
+                |x: &mut PresentationContextInput, v| x.binding = v,
             );
             (*a).add_field(
                 "source",
@@ -22142,14 +22221,6 @@ fn initialize_module_serializers() {
                 "",
                 |x: &PresentationContextInput| &x.source,
                 |x: &mut PresentationContextInput, v| x.source = v,
-            );
-            (*a).add_field(
-                "value_type",
-                2,
-                crate::skirout::base::editor::v1::type_catalog::TypeUse::serializer(),
-                "",
-                |x: &PresentationContextInput| &x.value_type,
-                |x: &mut PresentationContextInput, v| x.value_type = v,
             );
             (*a).finalize();
         }
@@ -22298,12 +22369,14 @@ fn initialize_module_serializers() {
                 |x: &mut TreeResourcesLayout, v| x.group = v,
             );
             (*a).add_field(
-                "group_binding_id",
+                "group_binding",
                 2,
-                crate::skirout::base::editor::v1::type_catalog::ExpressionBindingId::serializer(),
+                crate::skir_client::internal::struct_serializer_from_static(
+                    BindingDeclaration::_adapter(),
+                ),
                 "",
-                |x: &TreeResourcesLayout| &x.group_binding_id,
-                |x: &mut TreeResourcesLayout, v| x.group_binding_id = v,
+                |x: &TreeResourcesLayout| &x.group_binding,
+                |x: &mut TreeResourcesLayout, v| x.group_binding = v,
             );
             (*a).add_field(
                 "connectors",

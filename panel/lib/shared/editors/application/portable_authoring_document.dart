@@ -49,7 +49,7 @@ abstract interface class PortableAuthoringEdit
   /// Reads a value while recording the semantic fact this edit depends on.
   /// Display only reads should use [read] so they do not widen save conflicts.
   PortablePathResult<skir.DataValue> expect(skir.ValueLocation location);
-  void observeExpressionReads(Iterable<PortableExpressionRead> reads);
+  void observeExpressionReads(Iterable<skir.ValueLocation> reads);
 
   PortablePathResult<skir.AuthoringRecord> set(
     skir.ValueLocation location,
@@ -95,7 +95,7 @@ abstract interface class PortableAuthoringEdit
   /// Publishes a callback's branch and expression read witnesses only if the
   /// callback accepts. A false result abandons both mutations and witnesses.
   bool stageExpressionEdit(
-    Iterable<PortableExpressionRead> reads,
+    Iterable<skir.ValueLocation> reads,
     bool Function(PortableAuthoringEdit edit) edit,
   );
 

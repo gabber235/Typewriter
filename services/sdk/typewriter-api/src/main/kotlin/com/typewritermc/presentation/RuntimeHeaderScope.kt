@@ -2,6 +2,7 @@ package com.typewritermc.presentation
 
 import com.typewritermc.expression.Expr
 import com.typewritermc.expression.Handled
+import com.typewritermc.expression.literal
 import skirout.editor.v1.binding.BindingRef
 import skirout.editor.v1.expression.ExpressionNode
 import skirout.editor.v1.presentation.HeaderActionPlacement
@@ -27,7 +28,7 @@ internal class RuntimeHeaderScope(
         check(title == null) { "Presentation header title may be declared once." }
         title =
             skirout.editor.v1.presentation.PresentationHeaderTitle
-                .TextWrapper(expression(text))
+                .TextWrapper(state.lower(text, TEXT_SLOT))
     }
 
     override fun title(body: Layout.() -> Unit) {
@@ -38,7 +39,7 @@ internal class RuntimeHeaderScope(
     }
 
     override fun description(text: Expr<String, Handled>) {
-        description = expression(text)
+        description = state.lower(text, TEXT_SLOT)
     }
 
     override fun expanded(initially: Boolean) {
@@ -74,7 +75,7 @@ internal class RuntimeHeaderScope(
         configure: HeaderReorderScope.() -> Unit,
     ) {
         requireItemId(id)
-        items += RuntimeHeaderReorderScope(id).apply(configure).build()
+        items += RuntimeHeaderReorderScope(state, id).apply(configure).build()
     }
 
     private fun requireItemId(id: HeaderItemId) {
@@ -100,7 +101,9 @@ internal class RuntimeHeaderScope(
         }
 }
 
-private abstract class RuntimeHeaderActionScope {
+private abstract class RuntimeHeaderActionScope(
+    protected val state: PresentationBuildState,
+) {
     var tooltip: skirout.editor.v1.expression.ExpressionNode? = null
     var priority: skirout.editor.v1.expression.ExpressionNode? = null
     var visibleIf: skirout.editor.v1.expression.ExpressionNode? = null
@@ -109,30 +112,30 @@ private abstract class RuntimeHeaderActionScope {
     var placement: HeaderActionPlacement = HeaderActionPlacement.END
 
     fun setTooltip(value: Expr<String, Handled>) {
-        tooltip = expression(value)
+        tooltip = state.lower(value, TEXT_SLOT)
     }
 
     fun setPriority(value: Expr<Int, Handled>) {
-        priority = expression(value)
+        priority = state.lower(value, INT_SLOT)
     }
 
     fun setVisibleIf(value: Expr<Boolean, Handled>) {
-        visibleIf = expression(value)
+        visibleIf = state.lower(value, BOOLEAN_SLOT)
     }
 
     fun setEnabledIf(value: Expr<Boolean, Handled>) {
-        enabledIf = expression(value)
+        enabledIf = state.lower(value, BOOLEAN_SLOT)
     }
 
     fun setConfirmation(value: HeaderActionConfirmation) {
-        confirmation = value.wire()
+        confirmation = value.wire(state)
     }
 }
 
 private class RuntimeHeaderButtonScope(
     private val id: HeaderItemId,
-    private val state: PresentationBuildState,
-) : RuntimeHeaderActionScope(),
+    state: PresentationBuildState,
+) : RuntimeHeaderActionScope(state),
     HeaderButtonScope {
     private var icon: skirout.editor.v1.expression.ExpressionNode? = null
     private var label: skirout.editor.v1.expression.ExpressionNode? = null
@@ -140,18 +143,17 @@ private class RuntimeHeaderButtonScope(
     private var tone: HeaderActionTone = HeaderActionTone.NEUTRAL
 
     override fun icon(value: Expr<String, Handled>) {
-        icon = expression(value)
+        icon = state.lower(value, TEXT_SLOT)
     }
 
     override fun label(value: Expr<String, Handled>) {
-        label = expression(value)
+        label = state.lower(value, TEXT_SLOT)
     }
 
     override fun tooltip(value: Expr<String, Handled>) = setTooltip(value)
 
-    override fun action(value: skirout.editor.v1.action.EditorAction) {
-        state.action(value)
-        action = value
+    override fun action(value: PresentationAction) {
+        action = state.action(value)
     }
 
     override fun priority(value: Expr<Int, Handled>) = setPriority(value)
@@ -188,24 +190,23 @@ private class RuntimeHeaderButtonScope(
 
 private class RuntimeHeaderToggleScope(
     private val id: HeaderItemId,
-    private val state: PresentationBuildState,
-) : RuntimeHeaderActionScope(),
+    state: PresentationBuildState,
+) : RuntimeHeaderActionScope(state),
     HeaderToggleScope {
     private var label: skirout.editor.v1.expression.ExpressionNode? = null
     private var checked: skirout.editor.v1.expression.ExpressionNode? = null
     private var action: skirout.editor.v1.action.EditorAction? = null
 
     override fun label(value: Expr<String, Handled>) {
-        label = expression(value)
+        label = state.lower(value, TEXT_SLOT)
     }
 
     override fun checked(value: Expr<Boolean, Handled>) {
-        checked = expression(value)
+        checked = state.lower(value, BOOLEAN_SLOT)
     }
 
-    override fun action(value: skirout.editor.v1.action.EditorAction) {
-        state.action(value)
-        action = value
+    override fun action(value: PresentationAction) {
+        action = state.action(value)
     }
 
     override fun tooltip(value: Expr<String, Handled>) = setTooltip(value)
@@ -238,6 +239,7 @@ private class RuntimeHeaderToggleScope(
 }
 
 private class RuntimeHeaderReorderScope(
+    private val state: PresentationBuildState,
     private val id: HeaderItemId,
 ) : HeaderReorderScope {
     private var label: skirout.editor.v1.expression.ExpressionNode? = null
@@ -247,7 +249,7 @@ private class RuntimeHeaderReorderScope(
     private var enabledIf: skirout.editor.v1.expression.ExpressionNode? = null
 
     override fun label(value: Expr<String, Handled>) {
-        label = expression(value)
+        label = state.lower(value, TEXT_SLOT)
     }
 
     override fun source(value: PresentationInput<*, *>) {
@@ -255,15 +257,15 @@ private class RuntimeHeaderReorderScope(
     }
 
     override fun tooltip(value: Expr<String, Handled>) {
-        tooltip = expression(value)
+        tooltip = state.lower(value, TEXT_SLOT)
     }
 
     override fun visibleIf(value: Expr<Boolean, Handled>) {
-        visibleIf = expression(value)
+        visibleIf = state.lower(value, BOOLEAN_SLOT)
     }
 
     override fun enabledIf(value: Expr<Boolean, Handled>) {
-        enabledIf = expression(value)
+        enabledIf = state.lower(value, BOOLEAN_SLOT)
     }
 
     fun build(): skirout.editor.v1.presentation.HeaderItem =
@@ -281,11 +283,11 @@ private fun HeaderItemId.wire(): skirout.editor.v1.presentation.HeaderItemId =
     skirout.editor.v1.presentation
         .HeaderItemId(namespace = "generated", name = value)
 
-private fun HeaderActionConfirmation.wire(): skirout.editor.v1.presentation.HeaderActionConfirmation =
+private fun HeaderActionConfirmation.wire(state: PresentationBuildState): skirout.editor.v1.presentation.HeaderActionConfirmation =
     skirout.editor.v1.presentation.HeaderActionConfirmation(
-        title = expression(title),
-        message = expression(message),
-        confirmationLabel = expression(confirmationLabel),
+        title = state.lower(title, TEXT_SLOT),
+        message = state.lower(message, TEXT_SLOT),
+        confirmationLabel = state.lower(confirmationLabel, TEXT_SLOT),
     )
 
 private fun skirout.editor.v1.presentation.HeaderItem.itemName(): String =

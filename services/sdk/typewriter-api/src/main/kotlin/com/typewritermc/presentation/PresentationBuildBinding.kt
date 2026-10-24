@@ -46,13 +46,7 @@ class CheckedPresentationTemplate internal constructor(
     private val fieldResolver: (TypeTemplate, String) -> TypeTemplate?,
     private val nestedResolver: (TypeTemplate, NestedPresentationSlot) -> PresentationNestedTemplate?,
     private val descriptorSelector: (TypeTemplate, List<PresentationDescriptor>) -> PresentationDescriptor?,
-    private val expressionChecker: (
-        ExpressionNode,
-        Map<skirout.editor.v1.type_catalog.ExpressionBindingId, TypeTemplate>,
-        TypeTemplate?,
-        Set<skirout.editor.v1.type_catalog.ExpressionBindingId>,
-        Boolean,
-    ) -> List<String>,
+    internal val typing: PresentationTyping,
     private val payloadResolver: (TypeTemplate) -> TypeTemplate,
     private val linkResolver: (TypeTemplate) -> PresentationLinkTemplate?,
     private val subtypeChecker: (TypeDefinitionId, TypeDefinitionId) -> Boolean,
@@ -63,7 +57,7 @@ class CheckedPresentationTemplate internal constructor(
             fieldResolver = fieldResolver,
             nestedResolver = nestedResolver,
             descriptorSelector = descriptorSelector,
-            expressionChecker = expressionChecker,
+            typing = typing,
             payloadResolver = payloadResolver,
             linkResolver = linkResolver,
             subtypeChecker = subtypeChecker,
@@ -78,7 +72,7 @@ class CheckedPresentationTemplate internal constructor(
                     fieldResolver = fieldResolver,
                     nestedResolver = nestedResolver,
                     descriptorSelector = descriptorSelector,
-                    expressionChecker = expressionChecker,
+                    typing = typing,
                     payloadResolver = payloadResolver,
                     linkResolver = linkResolver,
                     subtypeChecker = subtypeChecker,
@@ -93,7 +87,7 @@ class CheckedPresentationTemplate internal constructor(
             fieldResolver,
             nestedResolver,
             descriptorSelector,
-            expressionChecker,
+            typing,
             payloadResolver,
             linkResolver,
             subtypeChecker,
@@ -116,15 +110,6 @@ class CheckedPresentationTemplate internal constructor(
     internal fun select(descriptors: List<PresentationDescriptor>): PresentationDescriptor? = descriptorSelector(type, descriptors)
 
     internal fun payloadType(): TypeTemplate = payloadResolver(type)
-
-    /** The codes of every problem of [body]; a null [expected] accepts a result of any type, such as an order key. */
-    internal fun checkExpression(
-        body: ExpressionNode,
-        bindings: Map<skirout.editor.v1.type_catalog.ExpressionBindingId, TypeTemplate>,
-        expected: TypeTemplate?,
-        present: Set<skirout.editor.v1.type_catalog.ExpressionBindingId> = emptySet(),
-        mayBeMissing: Boolean = false,
-    ): List<String> = expressionChecker(body, bindings, expected, present, mayBeMissing)
 }
 
 /** A link type: the endpoint of its relation on the side of the resource holding it, and its target type. */
@@ -190,15 +175,7 @@ fun CheckedType.presentationTemplate(): CheckedPresentationTemplate {
                 }
             }
         },
-        expressionChecker = {
-            body,
-            bindings,
-            expected,
-            present,
-            mayBeMissing,
-            ->
-            checkPresentationExpression(body, bindings, expected, present, this::resolve, mayBeMissing)
-        },
+        typing = PresentationTyping(this::resolve, com.typewritermc.discovery.OpaqueParameters(emptyList())),
         payloadResolver = { parent ->
             val checked = resolve(parent)
             (checked.schema.representation as? ResolvedRepresentation.ScalarWrapper)?.let { it.value.kind.template } ?: parent
@@ -232,34 +209,34 @@ interface Layout :
     val context: PresentationContextExpressions
 
     fun clippedRow(
-        spacing: Double = 0.0,
+        spacing: Spacing = Spacing.NONE,
         body: Layout.() -> Unit,
     )
 
     fun row(
-        spacing: Double = 0.0,
+        spacing: Spacing = Spacing.NONE,
         main: MainAxisAlignment = MainAxisAlignment.START,
         cross: CrossAxisAlignment = CrossAxisAlignment.CENTER,
         body: AxisLayout.() -> Unit,
     )
 
     fun column(
-        spacing: Double = 0.0,
+        spacing: Spacing = Spacing.NONE,
         main: MainAxisAlignment = MainAxisAlignment.START,
         cross: CrossAxisAlignment = CrossAxisAlignment.CENTER,
         body: AxisLayout.() -> Unit,
     )
 
     fun wrap(
-        spacing: Double = 0.0,
-        runSpacing: Double = 0.0,
+        spacing: Spacing = Spacing.NONE,
+        runSpacing: Spacing = Spacing.NONE,
         body: Layout.() -> Unit,
     )
 
     fun grid(
         columns: Int,
-        horizontalSpacing: Double = 0.0,
-        verticalSpacing: Double = 0.0,
+        horizontalSpacing: Spacing = Spacing.NONE,
+        verticalSpacing: Spacing = Spacing.NONE,
         body: Layout.() -> Unit,
     )
 
@@ -393,12 +370,18 @@ interface RemainingFields {
     fun exclude(field: PresentedField<*, *>)
 }
 
+/** Spacing around content on each side. */
 data class PresentationInsets(
-    val start: Double,
-    val top: Double,
-    val end: Double,
-    val bottom: Double,
-)
+    val start: Spacing,
+    val top: Spacing,
+    val end: Spacing,
+    val bottom: Spacing,
+) {
+    companion object {
+        /** The same [spacing] on every side. */
+        fun all(spacing: Spacing): PresentationInsets = PresentationInsets(spacing, spacing, spacing, spacing)
+    }
+}
 
 sealed interface PresentationBorder {
     data class All(
@@ -468,7 +451,7 @@ interface AdaptiveLeadingScope {
 
     fun compactPadding(value: PresentationInsets)
 
-    fun gap(value: Double)
+    fun gap(value: Spacing)
 
     fun minimumCenterWidth(value: Double)
 }
@@ -579,44 +562,3 @@ interface PresentationContextExpressions {
     /** Reads [key], declaring it as a context input of the presentation being built. */
     fun <Value : Any> read(key: PresentationContextKey<Value>): Expr<Value, com.typewritermc.expression.MayBeMissing>
 }
-
-internal fun checkPresentationExpression(
-    body: ExpressionNode,
-    bindings: Map<skirout.editor.v1.type_catalog.ExpressionBindingId, TypeTemplate>,
-    expected: TypeTemplate?,
-    present: Set<skirout.editor.v1.type_catalog.ExpressionBindingId>,
-    resolve: (TypeUse) -> Resolution<CheckedType>,
-    mayBeMissing: Boolean = false,
-): List<String> {
-    val checker = com.typewritermc.configuration.PortableExpressionChecker(resolve)
-    val structural = checker.checkExpressionStructure(body, bindings.keys)
-    if (structural.isNotEmpty()) return structural
-    // Free type parameters receive exact checking when material is applied to concrete arguments.
-    val result = expected?.let { it.apply(emptyMap()) as? Resolution.Ready ?: return structural }
-    val referenced = body.referencedBindingIds()
-    val applied =
-        bindings.filterKeys { it in referenced }.mapValues { (_, template) ->
-            (template.apply(emptyMap()) as? Resolution.Ready)?.value
-        }
-    if (applied.values.any { it == null }) return structural
-    val types = applied.mapValues { (id, use) -> com.typewritermc.expression.nominalExpressionType(requireNotNull(use), id !in present) }
-    return if (result == null) {
-        checker.checkAnyResultCodes(body, types)
-    } else {
-        checker.checkExpressionCodes(body, types, com.typewritermc.expression.nominalExpressionType(result.value, mayBeMissing))
-    }
-}
-
-private fun ExpressionNode.referencedBindingIds(): Set<skirout.editor.v1.type_catalog.ExpressionBindingId> =
-    buildSet {
-        fun visit(node: ExpressionNode) {
-            if (node is ExpressionNode.InputWrapper) {
-                add(
-                    skirout.editor.v1.type_catalog
-                        .ExpressionBindingId(value = node.value.binding.value),
-                )
-            }
-            node.children().forEach { visit(it.node) }
-        }
-        visit(this@referencedBindingIds)
-    }

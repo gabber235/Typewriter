@@ -33,7 +33,7 @@ abstract class HostContext with _$HostContext {
     skir.HostContextInput input,
   ) => switch (input.kind) {
     skir.HostContextInput_kind.activeResourceConst => skir.TypeUse.wrapNamed(
-      frameworkResourceIdUse,
+      skir.resourceIdType,
     ),
     skir.HostContextInput_kind.selectionCountConst => skir.TypeUse.wrapScalar(
       skir.ScalarKind.createInteger(width: skir.IntegerWidth.signedThirtyTwo),

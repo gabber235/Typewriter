@@ -11,9 +11,9 @@
 // layout overlay, while search providers supply data to search inputs.
 //
 // BindingRef identifies the value or scope an element consumes. ExpressionNode
-// supplies derived display, condition, and control values. ExpressionBindingId identifies
-// inputs introduced by a definition or temporary collection scope. These are
-// evaluation context, not presentation owned mutable state.
+// supplies derived display, condition, and control values. BindingDeclaration introduces
+// a typed input of a definition or temporary collection scope. These are evaluation
+// context, not presentation owned mutable state.
 
 import { EditorAction } from "editor/v1/action.skir";
 import { BindingRef } from "editor/v1/binding.skir";
@@ -463,24 +463,31 @@ struct SequencePresentation(810800062) {
   layout: SequenceLayout = 3;
 }
 
-struct RepeatedElement(810800063) {
+/// A binding a presentation introduces, with the type its expressions see. Templates may
+/// use the type parameters of the material that declares them.
+struct BindingDeclaration(810800063) {
+  id: ExpressionBindingId = 0;
+  type: TypeTemplate = 1;
+}
+
+struct RepeatedElement(810800064) {
   source: ExpressionNode = 0;
-  item_binding_id: ExpressionBindingId = 1;
+  item_binding: BindingDeclaration = 1;
   presentation: SequencePresentation = 2;
 }
 
-struct ScopedBindingElement(810800064) {
+struct ScopedBindingElement(810800065) {
   binding: BindingRef = 0;
-  scope_binding_id: ExpressionBindingId = 1;
+  scope_binding: BindingDeclaration = 1;
   child: PresentationNode = 2;
 }
 
-enum CollectionGraphDirection(810800065) {
+enum CollectionGraphDirection(810800066) {
   forward = 1;
   reverse = 2;
 }
 
-struct CollectionLookupElement(810800066) {
+struct CollectionLookupElement(810800067) {
   source_id: string = 0;
   key: BindingRef = 1;
   found: PresentationNode = 2;
@@ -488,7 +495,7 @@ struct CollectionLookupElement(810800066) {
   loading: PresentationNode? = 4;
 }
 
-struct CollectionGraphElement(810800067) {
+struct CollectionGraphElement(810800068) {
   source_id: string = 0;
   roots: ExpressionNode = 1;
   root_sequence: SequencePresentation = 2;
@@ -496,12 +503,12 @@ struct CollectionGraphElement(810800067) {
   direction: CollectionGraphDirection = 4;
   maximum_depth: int32? = 5;
   node: PresentationNode = 6;
-  children_binding_id: ExpressionBindingId = 7;
-  child_binding_id: ExpressionBindingId = 8;
+  children_binding: BindingDeclaration = 7;
+  child_binding: BindingDeclaration = 8;
   children: SequencePresentation = 9;
 }
 
-enum PresentationRadius(810800068) {
+enum PresentationRadius(810800069) {
   none = 1;
   small = 2;
   medium = 3;
@@ -509,7 +516,7 @@ enum PresentationRadius(810800068) {
   custom: ExpressionNode = 5;
 }
 
-struct ContainerLayout(810800069) {
+struct ContainerLayout(810800070) {
   child: PresentationNode = 0;
   border: PresentationBorder? = 1;
   background_color: PresentationColor? = 2;
@@ -521,7 +528,7 @@ struct ContainerLayout(810800069) {
   shadows: [PresentationShadow] = 6;
 }
 
-enum PresentationAlignment(810800070) {
+enum PresentationAlignment(810800071) {
   top_start = 1;
   top_center = 2;
   top_end = 3;
@@ -533,12 +540,12 @@ enum PresentationAlignment(810800070) {
   bottom_end = 9;
 }
 
-struct PresentationOffset(810800071) {
+struct PresentationOffset(810800072) {
   x: ExpressionNode = 0;
   y: ExpressionNode = 1;
 }
 
-struct PresentationAnchorPoint(810800072) {
+struct PresentationAnchorPoint(810800073) {
   anchor_id: string = 0;
   group_ids: [string] = 1;
   alignment: PresentationAlignment = 2;
@@ -547,65 +554,65 @@ struct PresentationAnchorPoint(810800072) {
   export_to_parent: bool = 5;
 }
 
-struct PresentationAnchorLayout(810800073) {
+struct PresentationAnchorLayout(810800074) {
   child: PresentationNode = 0;
   anchors: [PresentationAnchorPoint|anchor_id] = 1;
 }
 
-enum PresentationAnchorSelector(810800074) {
+enum PresentationAnchorSelector(810800075) {
   local: string = 1;
   exported_group: string = 2;
 }
 
-enum ConnectionExpressionScope(810800075) {
+enum ConnectionExpressionScope(810800076) {
   layer = 1;
   source = 2;
   target = 3;
 }
 
-struct ConnectorStroke(810800076) {
+struct ConnectorStroke(810800077) {
   color: PresentationColor = 0;
   width: ExpressionNode = 1;
 }
 
-struct ConnectionMarker(810800077) {
+struct ConnectionMarker(810800078) {
   node: PresentationNode = 0;
   position: ExpressionNode = 1;
   align_to_path: ExpressionNode = 2;
   scope: ConnectionExpressionScope = 3;
 }
 
-struct OrthogonalConnectionPath(810800078) {
+struct OrthogonalConnectionPath(810800079) {
   bend_position: ExpressionNode = 0;
 }
 
-struct CurvedConnectionPath(810800079) {
+struct CurvedConnectionPath(810800080) {
   source_control_offset: PresentationOffset = 0;
   target_control_offset: PresentationOffset = 1;
 }
 
-enum ConnectionPath(810800080) {
+enum ConnectionPath(810800081) {
   straight = 1;
   orthogonal: OrthogonalConnectionPath = 2;
   curved: CurvedConnectionPath = 3;
 }
 
-enum ConnectionAxis(810800081) {
+enum ConnectionAxis(810800082) {
   horizontal = 1;
   vertical = 2;
 }
 
-struct OrthogonalConnectionBundlePath(810800082) {
+struct OrthogonalConnectionBundlePath(810800083) {
   axis: ConnectionAxis = 0;
   bend_position: ExpressionNode = 1;
 }
 
-enum ConnectionBundlePath(810800083) {
+enum ConnectionBundlePath(810800084) {
   orthogonal: OrthogonalConnectionBundlePath = 1;
   fan = 2;
 }
 
-struct AnchoredConnection(810800084) {
+struct AnchoredConnection(810800085) {
   source: PresentationAnchorSelector = 0;
   target: PresentationAnchorSelector = 1;
   path: ConnectionPath = 2;
@@ -614,7 +621,7 @@ struct AnchoredConnection(810800084) {
   visible_if: ExpressionNode? = 5;
 }
 
-struct AnchoredConnectionBundle(810800085) {
+struct AnchoredConnectionBundle(810800086) {
   source: PresentationAnchorSelector = 0;
   targets: PresentationAnchorSelector = 1;
   path: ConnectionBundlePath = 2;
@@ -625,43 +632,43 @@ struct AnchoredConnectionBundle(810800085) {
   visible_if: ExpressionNode? = 7;
 }
 
-enum PresentationConnection(810800086) {
+enum PresentationConnection(810800087) {
   connection: AnchoredConnection = 1;
   bundle: AnchoredConnectionBundle = 2;
 }
 
-struct ConnectionLayerLayout(810800087) {
+struct ConnectionLayerLayout(810800088) {
   child: PresentationNode = 0;
   connections: [PresentationConnection] = 1;
 }
 
-struct ArrowConnectorMarker(810800088) {
+struct ArrowConnectorMarker(810800089) {
   size: ExpressionNode = 0;
 }
 
-struct CircleConnectorMarker(810800089) {
+struct CircleConnectorMarker(810800090) {
   diameter: ExpressionNode = 0;
 }
 
-enum ConnectorEndpointMarker(810800090) {
+enum ConnectorEndpointMarker(810800091) {
   arrow: ArrowConnectorMarker = 1;
   circle: CircleConnectorMarker = 2;
 }
 
-struct ConnectorStyle(810800091) {
+struct ConnectorStyle(810800092) {
   stroke: ConnectorStroke = 0;
   corner_radius: ExpressionNode = 1;
   start_marker: ConnectorEndpointMarker? = 2;
   end_marker: ConnectorEndpointMarker? = 3;
 }
 
-enum ConnectorAnchor(810800092) {
+enum ConnectorAnchor(810800093) {
   start = 1;
   center = 2;
   offset: ExpressionNode = 3;
 }
 
-struct HierarchySequenceLayout(810800093) {
+struct HierarchySequenceLayout(810800094) {
   unary_connector: ConnectorStyle = 0;
   trunk_connector: ConnectorStyle = 1;
   branch_connector: ConnectorStyle = 2;
@@ -673,13 +680,13 @@ struct HierarchySequenceLayout(810800093) {
   cross_axis_alignment: CrossAxisAlignment = 8;
 }
 
-enum SequenceLayout(810800094) {
+enum SequenceLayout(810800095) {
   children: ChildrenLayout = 1;
   hierarchy: HierarchySequenceLayout = 2;
 }
 
 // Shared contract for controls that edit a binding. Persistence and authorization remain with the owning editor.
-struct BoundControl(810800095) {
+struct BoundControl(810800096) {
   binding: BindingRef = 0;
   label: ExpressionNode? = 1;
   description: ExpressionNode? = 2;
@@ -687,7 +694,7 @@ struct BoundControl(810800095) {
   semantic_label: ExpressionNode? = 4;
 }
 
-struct ColorControl(810800096) {
+struct ColorControl(810800097) {
   control: BoundControl = 0;
   include_alpha: bool = 1;
   appearance: InputAppearance? = 2;
@@ -698,7 +705,7 @@ struct ColorControl(810800096) {
   options: ColorInteractionOptions? = 7;
 }
 
-struct DateTimeControl(810800097) {
+struct DateTimeControl(810800098) {
   control: BoundControl = 0;
   include_date: bool? = 1;
   include_time: bool? = 2;
@@ -710,7 +717,7 @@ struct DateTimeControl(810800097) {
   options: DateTimeInteractionOptions? = 8;
 }
 
-struct SelectOption(810800098) {
+struct SelectOption(810800099) {
   option_id: string = 0;
   label: ExpressionNode = 1;
   value: ExpressionNode = 2;
@@ -719,7 +726,7 @@ struct SelectOption(810800098) {
   disabled_reason: ExpressionNode? = 5;
 }
 
-struct SelectControl(810800099) {
+struct SelectControl(810800100) {
   control: BoundControl = 0;
   options: [SelectOption|option_id] = 1;
   allow_custom_value: bool = 2;
@@ -729,7 +736,7 @@ struct SelectControl(810800099) {
   options_config: SelectInteractionOptions? = 6;
 }
 
-struct SliderControl(810800100) {
+struct SliderControl(810800101) {
   control: BoundControl = 0;
   minimum: ExpressionNode = 1;
   maximum: ExpressionNode = 2;
@@ -739,44 +746,44 @@ struct SliderControl(810800100) {
   options: SliderInteractionOptions? = 6;
 }
 
-struct ListControl(810800101) {
+struct ListControl(810800102) {
   control: BoundControl = 0;
   item_presentation: PresentationNode? = 1;
   allow_add: bool = 2;
   allow_remove: bool = 3;
   allow_reorder: bool = 4;
-  item_binding_id: ExpressionBindingId = 5;
-  index_binding_id: ExpressionBindingId = 6;
+  item_binding: BindingDeclaration = 5;
+  index_binding: BindingDeclaration = 6;
   appearance: CollectionAppearance? = 7;
   content: CollectionContent? = 8;
 }
 
-struct MapControl(810800102) {
+struct MapControl(810800103) {
   control: BoundControl = 0;
   key_presentation: PresentationNode? = 1;
   value_presentation: PresentationNode? = 2;
   allow_add: bool = 3;
   allow_remove: bool = 4;
-  key_binding_id: ExpressionBindingId = 5;
-  value_binding_id: ExpressionBindingId = 6;
+  key_binding: BindingDeclaration = 5;
+  value_binding: BindingDeclaration = 6;
   appearance: CollectionAppearance? = 7;
   content: CollectionContent? = 8;
 }
 
-struct RecordControl(810800103) {
+struct RecordControl(810800104) {
   control: BoundControl = 0;
   field_presentation: PresentationNode? = 1;
   appearance: CollectionAppearance? = 2;
   content: CollectionContent? = 3;
 }
 
-struct ConcreteTypePresentation(810800104) {
+struct ConcreteTypePresentation(810800105) {
   concrete_type: TypeUse = 0;
   label: ExpressionNode = 1;
   presentation: PresentationNode? = 2;
 }
 
-struct PolymorphicControl(810800105) {
+struct PolymorphicControl(810800106) {
   control: BoundControl = 0;
   concrete_types: [ConcreteTypePresentation] = 1;
   appearance: CollectionAppearance? = 2;
@@ -786,88 +793,87 @@ struct PolymorphicControl(810800105) {
   search_hint: ExpressionNode? = 6;
 }
 
-struct NamedControl(810800106) {
+struct NamedControl(810800107) {
   control: BoundControl = 0;
   payload_presentation: PresentationNode? = 1;
   appearance: CollectionAppearance? = 2;
   content: CollectionContent? = 3;
 }
 
-struct PolymorphicMatchCase(810800107) {
+struct PolymorphicMatchCase(810800108) {
   concrete_type: TypeUse = 0;
   child: PresentationNode = 1;
 }
 
-struct PolymorphicMatchElement(810800108) {
+struct PolymorphicMatchElement(810800109) {
   binding: BindingRef = 0;
-  scope_binding_id: ExpressionBindingId = 1;
+  scope_binding: BindingDeclaration = 1;
   cases: [PolymorphicMatchCase] = 2;
   fallback: PresentationNode? = 3;
 }
 
-enum SearchSelectionMode(810800109) {
+enum SearchSelectionMode(810800110) {
   single = 1;
   multiple = 2;
 }
 
-enum SearchSelectorMultiplicity(810800110) {
+enum SearchSelectorMultiplicity(810800111) {
   single = 1;
   multiple = 2;
 }
 
-struct SearchSelectorEnumValues(810800111) {
+struct SearchSelectorEnumValues(810800112) {
   values: [string] = 0;
 }
 
-enum SearchSelectorValues(810800112) {
+enum SearchSelectorValues(810800113) {
   free_text = 1;
   enumeration: SearchSelectorEnumValues = 2;
 }
 
-struct SearchSelectorDefinition(810800113) {
+struct SearchSelectorDefinition(810800114) {
   selector_id: string = 0;
   key: string = 1;
-  value_binding_id: ExpressionBindingId = 2;
+  value_binding: BindingDeclaration = 2;
   values: SearchSelectorValues = 3;
   case_sensitive: bool = 4;
   multiplicity: SearchSelectorMultiplicity = 5;
   color: int64? = 6;
 }
 
-struct SearchResultMapping(810800114) {
-  binding_id: ExpressionBindingId = 0;
+struct SearchResultMapping(810800115) {
+  binding: BindingDeclaration = 0;
   key: ExpressionNode = 1;
   selected_value: ExpressionNode = 2;
   presentation: PresentationNode = 3;
   label: ExpressionNode? = 4;
 }
 
-struct HttpQueryParameter(810800115) {
+struct HttpQueryParameter(810800116) {
   name: string = 0;
   value: ExpressionNode = 1;
   omit_if_empty: bool = 2;
 }
 
-struct HttpJsonContextBinding(810800116) {
-  binding_id: ExpressionBindingId = 0;
+struct HttpJsonContextBinding(810800117) {
+  binding: BindingDeclaration = 0;
   path: string = 1;
-  value_type: TypeTemplate = 2;
 }
 
-struct StaticSearchProvider(810800117) {
+struct StaticSearchProvider(810800118) {
   values: ExpressionNode = 0;
   result: SearchResultMapping = 1;
   selectors: [SearchSelectorDefinition|selector_id] = 2;
 }
 
-struct CollectionSearchProvider(810800118) {
+struct CollectionSearchProvider(810800119) {
   source_id: string = 0;
   result: SearchResultMapping = 1;
   where: ExpressionNode? = 2;
   selectors: [SearchSelectorDefinition|selector_id] = 3;
 }
 
-struct HttpJsonSearchProvider(810800119) {
+struct HttpJsonSearchProvider(810800120) {
   uri: ExpressionNode = 0;
   parameters: [HttpQueryParameter|name] = 1;
   result_path: string = 2;
@@ -878,67 +884,67 @@ struct HttpJsonSearchProvider(810800119) {
   timeout_milliseconds: int64 = 7;
 }
 
-struct RealmCallbackSearchProvider(810800120) {
+struct RealmCallbackSearchProvider(810800121) {
   capability_id: CapabilityId = 0;
   payload: ExpressionNode = 1;
   result: SearchResultMapping = 2;
   selectors: [SearchSelectorDefinition|selector_id] = 3;
 }
 
-struct GatedSearchProvider(810800121) {
+struct GatedSearchProvider(810800122) {
   condition: ExpressionNode = 0;
   guidance: ExpressionNode? = 1;
   child: SearchProvider = 2;
 }
 
-struct DebouncedSearchProvider(810800122) {
+struct DebouncedSearchProvider(810800123) {
   duration_milliseconds: int64 = 0;
   child: SearchProvider = 1;
 }
 
-struct CachedSearchProvider(810800123) {
+struct CachedSearchProvider(810800124) {
   capacity: int32 = 0;
   retain_stale_results: bool = 1;
   child: SearchProvider = 2;
 }
 
-struct SearchRankingField(810800124) {
+struct SearchRankingField(810800125) {
   expression: ExpressionNode = 0;
   weight: int32 = 1;
 }
 
-struct RankedSearchProvider(810800125) {
+struct RankedSearchProvider(810800126) {
   fields: [SearchRankingField] = 0;
   child: SearchProvider = 1;
 }
 
-struct LimitedSearchProvider(810800126) {
+struct LimitedSearchProvider(810800127) {
   maximum: ExpressionNode = 0;
   child: SearchProvider = 1;
 }
 
-struct DistinctSearchProvider(810800127) {
+struct DistinctSearchProvider(810800128) {
   child: SearchProvider = 0;
 }
 
-struct HistoricalSearchProvider(810800128) {
+struct HistoricalSearchProvider(810800129) {
   history_key: string = 0;
   label: ExpressionNode = 1;
   capacity: int32 = 2;
   child: SearchProvider = 3;
 }
 
-struct SectionSearchProvider(810800129) {
+struct SectionSearchProvider(810800130) {
   section_id: string = 0;
   label: ExpressionNode = 1;
   child: SearchProvider = 2;
 }
 
-struct MergedSearchProvider(810800130) {
+struct MergedSearchProvider(810800131) {
   children: [SearchProvider] = 0;
 }
 
-enum SearchProvider(810800131) {
+enum SearchProvider(810800132) {
   static_values: StaticSearchProvider = 1;
   http_json: HttpJsonSearchProvider = 2;
   realm_callback: RealmCallbackSearchProvider = 3;
@@ -954,11 +960,11 @@ enum SearchProvider(810800131) {
   collection: CollectionSearchProvider = 13;
 }
 
-struct SearchControl(810800132) {
+struct SearchControl(810800133) {
   control: BoundControl = 0;
   selection_mode: SearchSelectionMode = 1;
-  query_binding_id: ExpressionBindingId = 2;
-  summary_binding_id: ExpressionBindingId = 3;
+  query_binding: BindingDeclaration = 2;
+  summary_binding: BindingDeclaration = 3;
   maximum_extent: ExpressionNode = 4;
   provider: SearchProvider = 5;
   summary: PresentationNode? = 6;
@@ -975,32 +981,32 @@ struct SearchControl(810800132) {
   loading: PresentationNode? = 17;
 }
 
-struct DefaultPresentationElement(810800133) {
+struct DefaultPresentationElement(810800134) {
   control: BoundControl = 0;
   presentation_id: PresentationId? = 1;
 }
 
 // Places controls for the complete edit transaction owning this binding.
 // Presentation placement does not change persistence policy or grant edit access.
-struct CommitControlsElement(810800134) {
+struct CommitControlsElement(810800135) {
   binding: BindingRef = 0;
 }
 
-struct ButtonElement(810800135) {
+struct ButtonElement(810800136) {
   label: ExpressionNode = 0;
   action: EditorAction = 1;
   appearance: ActionAppearance? = 2;
   icon: PresentationNode? = 3;
 }
 
-struct IconButtonElement(810800136) {
+struct IconButtonElement(810800137) {
   icon: ExpressionNode = 0;
   semantic_label: ExpressionNode = 1;
   action: EditorAction = 2;
   appearance: ActionAppearance? = 3;
 }
 
-struct MenuItem(810800137) {
+struct MenuItem(810800138) {
   item_id: string = 0;
   label: ExpressionNode = 1;
   action: EditorAction? = 2;
@@ -1011,20 +1017,20 @@ struct MenuItem(810800137) {
   separator: bool = 7;
 }
 
-struct MenuElement(810800138) {
+struct MenuElement(810800139) {
   label: ExpressionNode? = 0;
   items: [MenuItem|item_id] = 1;
   appearance: ActionAppearance? = 2;
   popup: PopupAppearance? = 3;
 }
 
-struct TooltipElement(810800139) {
+struct TooltipElement(810800140) {
   message: ExpressionNode = 0;
   child: PresentationNode = 1;
   appearance: TooltipAppearance? = 2;
 }
 
-enum PresentationElement(810800140) {
+enum PresentationElement(810800141) {
   children: ChildrenElement = 1;
   section: SectionLayout = 2;
   padding: PaddingLayout = 3;
@@ -1091,7 +1097,7 @@ enum PresentationElement(810800140) {
 
 /// Reusable portable layout with explicit typed inputs and dependencies. A renderer supplies
 /// current binding values and owns transient interaction state; the definition carries no widget lifecycle.
-struct PresentationDefinition(810800141) {
+struct PresentationDefinition(810800142) {
   presentation_id: PresentationId = 0;
   inputs: [PresentationInput] = 1;
   root: PresentationNode = 2;
@@ -1099,7 +1105,7 @@ struct PresentationDefinition(810800141) {
   primary_input: ExpressionBindingId? = 4;
 }
 
-struct PresentationDependencies(810800142) {
+struct PresentationDependencies(810800143) {
   types: [TypeUse] = 0;
   presentations: [PresentationId] = 1;
   conversions: [ConversionId] = 2;
@@ -1108,62 +1114,61 @@ struct PresentationDependencies(810800142) {
   context_inputs: [PresentationContextInput] = 5;
 }
 
-struct PresentationCollectionRelationDefinition(810800143) {
+struct PresentationCollectionRelationDefinition(810800144) {
   relation_id: string = 0;
   targets: ExpressionNode = 1;
 }
 
 /// Authoritative typed schema for a collection referenced by presentation nodes.
-/// The row binding scopes key, selectability, and relation expressions to one row.
-struct PresentationCollectionDefinition(810800144) {
+/// The row binding scopes key, selectability, and relation expressions to one row; its type
+/// is the row type.
+struct PresentationCollectionDefinition(810800145) {
   source_id: string = 0;
-  row_type: TypeTemplate = 1;
-  row_binding_id: ExpressionBindingId = 2;
-  key: ExpressionNode = 3;
-  selectability: ExpressionNode = 4;
-  relations: [PresentationCollectionRelationDefinition|relation_id] = 5;
-  projection: PresentationCollectionProjection? = 6;
+  row_binding: BindingDeclaration = 1;
+  key: ExpressionNode = 2;
+  selectability: ExpressionNode = 3;
+  relations: [PresentationCollectionRelationDefinition|relation_id] = 4;
+  projection: PresentationCollectionProjection? = 5;
 }
 
-enum PresentationCollectionProjectionValue(810800145) {
+enum PresentationCollectionProjectionValue(810800146) {
   content: ValuePath = 1;
   literal: DataValue = 2;
 }
 
-struct PresentationCollectionProjectionField(810800146) {
+struct PresentationCollectionProjectionField(810800147) {
   target: ValuePath = 0;
   source: PresentationCollectionProjectionValue = 1;
 }
 
-struct PresentationCollectionProjection(810800147) {
+struct PresentationCollectionProjection(810800148) {
   root: NamedTypeTemplate = 0;
-  resource_binding_id: ExpressionBindingId = 1;
+  resource_binding: BindingDeclaration = 1;
   fields: [PresentationCollectionProjectionField] = 2;
 }
 
-enum PresentationInputAccess(810800148) {
+enum PresentationInputAccess(810800149) {
   read = 1;
   edit = 2;
 }
 
-struct PresentationInput(810800149) {
-  binding_id: ExpressionBindingId = 0;
+struct PresentationInput(810800150) {
+  binding: BindingDeclaration = 0;
   name: string = 1;
-  value_type: TypeTemplate = 2;
-  access: PresentationInputAccess = 3;
+  access: PresentationInputAccess = 2;
 }
 
-struct PresentationArgument(810800150) {
+struct PresentationArgument(810800151) {
   input: ExpressionBindingId = 0;
   binding: BindingRef = 1;
 }
 
-struct PresentationInvocation(810800151) {
+struct PresentationInvocation(810800152) {
   presentation_id: PresentationId = 0;
   arguments: [PresentationArgument] = 1;
 }
 
-struct LinkControl(810800152) {
+struct LinkControl(810800153) {
   control: BoundControl = 0;
   allow_reorder: bool = 1;
   candidate_policy: LinkCandidatePolicyId? = 2;
@@ -1176,41 +1181,41 @@ struct LinkControl(810800152) {
   popup: PopupAppearance? = 9;
 }
 
-struct LinkCandidatePolicyId(810800153) {
+struct LinkCandidatePolicyId(810800154) {
   value: string = 0;
 }
 
-enum LinkRejectionDisplay(810800154) {
+enum LinkRejectionDisplay(810800155) {
   hidden = 1;
   disabled = 2;
 }
 
 /// Composes inherited inspector members and default controls for fields not claimed explicitly.
 /// Exclusions suppress named field patterns or reusable parts without copying their source layouts.
-struct RemainingFieldsElement(810800155) {
+struct RemainingFieldsElement(810800156) {
   excluded: [RelativeFieldPattern] = 0;
   excluded_parts: [PresentationPartId] = 1;
 }
 
-struct NullableControl(810800156) {
+struct NullableControl(810800157) {
   control: BoundControl = 0;
   value_presentation: PresentationNode? = 1;
   empty_text: ExpressionNode? = 2;
   clear_label: ExpressionNode? = 3;
 }
 
-struct SetControl(810800157) {
+struct SetControl(810800158) {
   control: BoundControl = 0;
   item_presentation: PresentationNode? = 1;
   allow_add: bool = 2;
   allow_remove: bool = 3;
-  item_binding_id: ExpressionBindingId = 4;
+  item_binding: BindingDeclaration = 4;
   appearance: CollectionAppearance? = 5;
   content: CollectionContent? = 6;
 }
 
 /// The direction a graph layout flows in, from sources to targets.
-enum GraphDirection(810800158) {
+enum GraphDirection(810800159) {
   left_to_right = 1;
   right_to_left = 2;
   top_to_bottom = 3;
@@ -1219,17 +1224,17 @@ enum GraphDirection(810800158) {
 
 /// Lays out the resources of a bound link field, such as the elements of a page or the books
 /// of the library. Every member renders through its item presentation. Adding and removing
-/// members edits the link. [order] is evaluated with [item_binding_id] bound to each member's
+/// members edits the link. [order] is evaluated with [item_binding] bound to each member's
 /// link and sorts the members by its result; without it members keep link order.
-struct ResourcesElement(810800159) {
+struct ResourcesElement(810800160) {
   control: BoundControl = 0;
   layout: ResourcesLayout = 1;
   order: ExpressionNode? = 2;
-  item_binding_id: ExpressionBindingId = 3;
+  item_binding: BindingDeclaration = 3;
 }
 
 /// How a resources element arranges its members.
-enum ResourcesLayout(810800160) {
+enum ResourcesLayout(810800161) {
   graph: GraphResourcesLayout = 1;
   timeline: TimelineResourcesLayout = 2;
   grid: GridResourcesLayout = 3;
@@ -1238,17 +1243,17 @@ enum ResourcesLayout(810800160) {
 }
 
 // Fit bounds are positive whole logical font sizes, with minimum at most maximum.
-struct TextFit(810800161) {
+struct TextFit(810800162) {
   minimum: ExpressionNode = 0;
   maximum: ExpressionNode = 1;
 }
 
-enum TextSizing(810800162) {
+enum TextSizing(810800163) {
   exact: ExpressionNode = 1;
   fit: TextFit = 2;
 }
 
-enum PresentationInteractionState(810800163) {
+enum PresentationInteractionState(810800164) {
   hovered = 1;
   selected = 2;
   focused = 3;
@@ -1264,12 +1269,12 @@ enum PresentationInteractionState(810800163) {
   drop_rejected = 10;
 }
 
-struct PresentationStateMatch(810800164) {
+struct PresentationStateMatch(810800165) {
   required: [PresentationInteractionState] = 0;
   excluded: [PresentationInteractionState] = 1;
 }
 
-enum PresentationThemeColor(810800165) {
+enum PresentationThemeColor(810800166) {
   primary = 1;
   on_primary = 2;
   surface = 3;
@@ -1278,43 +1283,43 @@ enum PresentationThemeColor(810800165) {
   focus_outline = 6;
 }
 
-enum PresentationAmbientColor(810800166) {
+enum PresentationAmbientColor(810800167) {
   background = 1;
   foreground = 2;
   secondary_foreground = 3;
 }
 
-enum PresentationContrastMode(810800167) {
+enum PresentationContrastMode(810800168) {
   tonal = 1;
   monochrome = 2;
 }
 
-struct PresentationContrastColor(810800168) {
+struct PresentationContrastColor(810800169) {
   source: PresentationColor = 0;
   mode: PresentationContrastMode = 1;
 }
 
-struct PresentationAlphaColor(810800169) {
+struct PresentationAlphaColor(810800170) {
   source: PresentationColor = 0;
   alpha: float64 = 1;
 }
 
-struct PresentationBlendColor(810800170) {
+struct PresentationBlendColor(810800171) {
   foreground: PresentationColor = 0;
   background: PresentationColor = 1;
 }
 
-struct PresentationStateColorRule(810800171) {
+struct PresentationStateColorRule(810800172) {
   match: PresentationStateMatch = 0;
   color: PresentationColor = 1;
 }
 
-struct PresentationStateColor(810800172) {
+struct PresentationStateColor(810800173) {
   rules: [PresentationStateColorRule] = 0;
   fallback: PresentationColor = 1;
 }
 
-enum PresentationColor(810800173) {
+enum PresentationColor(810800174) {
   value: ExpressionNode = 1;
   theme: PresentationThemeColor = 2;
   ambient: PresentationAmbientColor = 3;
@@ -1326,40 +1331,40 @@ enum PresentationColor(810800173) {
   brightness: PresentationBrightnessColor = 9;
 }
 
-struct AlignmentLayout(810800174) {
+struct AlignmentLayout(810800175) {
   child: PresentationNode = 0;
   alignment: PresentationAlignment = 1;
 }
 
-enum ControlDensity(810800175) {
+enum ControlDensity(810800176) {
   comfortable = 1;
   compact = 2;
 }
 
-enum InputTextAlignment(810800176) {
+enum InputTextAlignment(810800177) {
   start = 1;
   center = 2;
   end = 3;
 }
 
-struct InputTextStyle(810800177) {
+struct InputTextStyle(810800178) {
   color: PresentationColor? = 0;
   weight: int32? = 1;
   sizing: TextSizing? = 2;
 }
 
-enum BorderOverride(810800178) {
+enum BorderOverride(810800179) {
   none = 1;
   value: PresentationBorder = 2;
 }
 
-enum InputAdornment(810800179) {
+enum InputAdornment(810800180) {
   default = 1;
   none = 2;
   content: PresentationNode = 3;
 }
 
-struct InputAppearance(810800180) {
+struct InputAppearance(810800181) {
   icon_color: PresentationColor? = 0;
   icon_size: ExpressionNode? = 1;
   value_style: InputTextStyle? = 2;
@@ -1374,7 +1379,7 @@ struct InputAppearance(810800180) {
   radius: PresentationRadius? = 11;
 }
 
-struct InputContent(810800181) {
+struct InputContent(810800182) {
   placeholder: ExpressionNode? = 0;
   leading: InputAdornment? = 1;
   suffix: PresentationNode? = 2;
@@ -1382,21 +1387,21 @@ struct InputContent(810800181) {
 
 /// Supplies inherited input appearance within its child scope. Explicit descendant properties
 /// take precedence per property; expressions retain the bindings where their layer was declared.
-struct AppearanceDefaultsElement(810800182) {
+struct AppearanceDefaultsElement(810800183) {
   appearance: InputAppearance = 0;
   child: PresentationNode = 1;
 }
 
-struct TextEntryInteractionOptions(810800183) {
+struct TextEntryInteractionOptions(810800184) {
   select_all_on_focus: bool? = 0;
 }
 
-enum NumericSteppers(810800184) {
+enum NumericSteppers(810800185) {
   hidden = 1;
   inline = 2;
 }
 
-struct NumericInteractionOptions(810800185) {
+struct NumericInteractionOptions(810800186) {
   minimum: ExpressionNode? = 0;
   maximum: ExpressionNode? = 1;
   step: ExpressionNode? = 2;
@@ -1404,53 +1409,53 @@ struct NumericInteractionOptions(810800185) {
   editing_locale: ExpressionNode? = 4;
 }
 
-struct ExpressionMapping(810800186) {
-  input_binding: ExpressionBindingId = 0;
+struct ExpressionMapping(810800187) {
+  input_binding: BindingDeclaration = 0;
   body: ExpressionNode = 1;
 }
 
 /// Optional display and completion transforms for an edited value. They are evaluated in
 /// an explicit input binding; applying a mapped value still goes through the owning edit scope.
-struct ValueMappings(810800187) {
+struct ValueMappings(810800188) {
   completion: ExpressionMapping? = 0;
   display: ExpressionMapping? = 1;
 }
 
-struct MultipleTextLines(810800188) {
+struct MultipleTextLines(810800189) {
   minimum: int32 = 0;
   maximum: int32? = 1;
 }
 
-enum TextLines(810800189) {
+enum TextLines(810800190) {
   single = 1;
   multiple: MultipleTextLines = 2;
 }
 
-enum TextPurpose(810800190) {
+enum TextPurpose(810800191) {
   plain = 1;
   email = 2;
   url = 3;
   password = 4;
 }
 
-enum TextCapitalization(810800191) {
+enum TextCapitalization(810800192) {
   none = 1;
   words = 2;
   sentences = 3;
   characters = 4;
 }
 
-enum CharacterFilter(810800192) {
+enum CharacterFilter(810800193) {
   allow: string = 1;
   deny: string = 2;
 }
 
-struct TextLengthPolicy(810800193) {
+struct TextLengthPolicy(810800194) {
   maximum_graphemes: int32 = 0;
   enforce_after_composition: bool = 1;
 }
 
-struct TextEditingOptions(810800194) {
+struct TextEditingOptions(810800195) {
   lines: TextLines? = 0;
   purpose: TextPurpose? = 1;
   capitalization: TextCapitalization? = 2;
@@ -1459,7 +1464,7 @@ struct TextEditingOptions(810800194) {
   character_filters: [CharacterFilter] = 5;
 }
 
-struct NumericControl(810800195) {
+struct NumericControl(810800196) {
   control: BoundControl = 0;
   appearance: InputAppearance? = 1;
   content: InputContent? = 2;
@@ -1468,7 +1473,7 @@ struct NumericControl(810800195) {
   options: NumericInteractionOptions = 5;
 }
 
-struct TextControl(810800196) {
+struct TextControl(810800197) {
   control: BoundControl = 0;
   appearance: InputAppearance? = 1;
   content: InputContent? = 2;
@@ -1477,7 +1482,7 @@ struct TextControl(810800196) {
   options: TextEditingOptions = 5;
 }
 
-struct PopupAppearance(810800197) {
+struct PopupAppearance(810800198) {
   minimum_width: ExpressionNode? = 0;
   maximum_width: ExpressionNode? = 1;
   maximum_extent: ExpressionNode? = 2;
@@ -1487,30 +1492,30 @@ struct PopupAppearance(810800197) {
   radius: PresentationRadius? = 6;
 }
 
-enum PopupSide(810800198) {
+enum PopupSide(810800199) {
   automatic = 1;
   above = 2;
   below = 3;
 }
 
-enum ChoicePresentation(810800199) {
+enum ChoicePresentation(810800200) {
   automatic = 1;
   dropdown = 2;
   segmented = 3;
   radio = 4;
 }
 
-struct SelectInteractionOptions(810800200) {
+struct SelectInteractionOptions(810800201) {
   presentation: ChoicePresentation? = 0;
   filtering: bool? = 1;
   maximum_menu_height: ExpressionNode? = 2;
   selected_text_style: InputTextStyle? = 3;
-  query_binding_id: ExpressionBindingId? = 4;
+  query_binding: BindingDeclaration? = 4;
   custom_value: ExpressionNode? = 5;
   option_overrides: [ChoiceOptionAppearance|option_id] = 6;
 }
 
-struct EnumControl(810800201) {
+struct EnumControl(810800202) {
   control: BoundControl = 0;
   appearance: InputAppearance? = 1;
   content: InputContent? = 2;
@@ -1518,25 +1523,25 @@ struct EnumControl(810800201) {
   options: SelectInteractionOptions? = 4;
 }
 
-enum DateTimePickerPresentation(810800202) {
+enum DateTimePickerPresentation(810800203) {
   calendar = 1;
   text = 2;
 }
 
-struct DateTimeInteractionOptions(810800203) {
+struct DateTimeInteractionOptions(810800204) {
   minimum: ExpressionNode? = 0;
   maximum: ExpressionNode? = 1;
   time_increment: ExpressionNode? = 2;
   presentation: DateTimePickerPresentation? = 3;
 }
 
-struct DurationInteractionOptions(810800204) {
+struct DurationInteractionOptions(810800205) {
   minimum: ExpressionNode? = 0;
   maximum: ExpressionNode? = 1;
   step: ExpressionNode? = 2;
 }
 
-struct DurationControl(810800205) {
+struct DurationControl(810800206) {
   control: BoundControl = 0;
   appearance: InputAppearance? = 1;
   content: InputContent? = 2;
@@ -1545,19 +1550,19 @@ struct DurationControl(810800205) {
   options: DurationInteractionOptions? = 5;
 }
 
-enum ColorEditingRepresentation(810800206) {
+enum ColorEditingRepresentation(810800207) {
   hex = 1;
   rgb = 2;
   hsl = 3;
 }
 
-enum ColorPickerFormat(810800207) {
+enum ColorPickerFormat(810800208) {
   hex = 1;
   rgb = 2;
   hsl = 3;
 }
 
-struct ColorInteractionOptions(810800208) {
+struct ColorInteractionOptions(810800209) {
   editing_representation: ColorEditingRepresentation? = 0;
   picker_format: ColorPickerFormat? = 1;
   show_swatch: bool? = 2;
@@ -1566,18 +1571,18 @@ struct ColorInteractionOptions(810800208) {
   offered_swatches: ExpressionNode? = 5;
 }
 
-enum BytesEditingEncoding(810800209) {
+enum BytesEditingEncoding(810800210) {
   hexadecimal = 1;
   base64 = 2;
 }
 
-struct BytesInteractionOptions(810800210) {
+struct BytesInteractionOptions(810800211) {
   editing_encoding: BytesEditingEncoding? = 0;
   group_size: int32? = 1;
   show_count: bool? = 2;
 }
 
-struct BytesControl(810800211) {
+struct BytesControl(810800212) {
   control: BoundControl = 0;
   appearance: InputAppearance? = 1;
   content: InputContent? = 2;
@@ -1586,17 +1591,17 @@ struct BytesControl(810800211) {
   options: BytesInteractionOptions? = 5;
 }
 
-enum TogglePresentation(810800212) {
+enum TogglePresentation(810800213) {
   switch = 1;
   checkbox = 2;
 }
 
-enum TogglePosition(810800213) {
+enum TogglePosition(810800214) {
   leading = 1;
   trailing = 2;
 }
 
-struct ToggleInteractionOptions(810800214) {
+struct ToggleInteractionOptions(810800215) {
   presentation: TogglePresentation? = 0;
   position: TogglePosition? = 1;
   true_label: ExpressionNode? = 2;
@@ -1606,29 +1611,29 @@ struct ToggleInteractionOptions(810800214) {
   check_color: PresentationColor? = 6;
 }
 
-struct ToggleControl(810800215) {
+struct ToggleControl(810800216) {
   control: BoundControl = 0;
   appearance: InputAppearance? = 1;
   options: ToggleInteractionOptions? = 2;
 }
 
-enum SliderValueDisplay(810800216) {
+enum SliderValueDisplay(810800217) {
   hidden = 1;
   while_interacting = 2;
   always = 3;
 }
 
-enum SliderOrientation(810800217) {
+enum SliderOrientation(810800218) {
   horizontal = 1;
   vertical = 2;
 }
 
-enum SliderInteraction(810800218) {
+enum SliderInteraction(810800219) {
   tap_and_drag = 1;
   drag_only = 2;
 }
 
-struct SliderInteractionOptions(810800219) {
+struct SliderInteractionOptions(810800220) {
   show_value: SliderValueDisplay? = 0;
   show_ticks: bool? = 1;
   orientation: SliderOrientation? = 2;
@@ -1639,19 +1644,19 @@ struct SliderInteractionOptions(810800219) {
   track_height: float64? = 7;
 }
 
-enum ButtonVariant(810800220) {
+enum ButtonVariant(810800221) {
   filled = 1;
   outlined = 2;
   text = 3;
 }
 
-struct ActionAppearance(810800221) {
+struct ActionAppearance(810800222) {
   appearance: InputAppearance? = 0;
   variant: ButtonVariant? = 1;
   tooltip: ExpressionNode? = 2;
 }
 
-struct CollectionAppearance(810800222) {
+struct CollectionAppearance(810800223) {
   item_spacing: float64? = 0;
   item_padding: PresentationInsets? = 1;
   item_background: PresentationColor? = 2;
@@ -1662,7 +1667,7 @@ struct CollectionAppearance(810800222) {
   item_shadows: [PresentationShadow] = 7;
 }
 
-struct CollectionContent(810800223) {
+struct CollectionContent(810800224) {
   empty_text: ExpressionNode? = 0;
   empty: PresentationNode? = 1;
   add_label: ExpressionNode? = 2;
@@ -1680,13 +1685,13 @@ struct CollectionContent(810800223) {
   value_label: ExpressionNode? = 14;
 }
 
-struct ResourceGraphAppearance(810800224) {
+struct ResourceGraphAppearance(810800225) {
   cell_size: ExpressionNode? = 0;
   edge_color: PresentationColor? = 1;
   card_padding: PresentationInsets? = 2;
 }
 
-struct ResourceTimelineAppearance(810800225) {
+struct ResourceTimelineAppearance(810800226) {
   ruler_height: float64? = 0;
   track_padding: float64? = 1;
   lane_height: float64? = 2;
@@ -1701,14 +1706,14 @@ struct ResourceTimelineAppearance(810800225) {
   text_muted_color: PresentationColor? = 11;
 }
 
-struct ChoiceOptionAppearance(810800226) {
+struct ChoiceOptionAppearance(810800227) {
   option_id: string = 0;
   content: PresentationNode? = 1;
   enabled_if: ExpressionNode? = 2;
   disabled_reason: ExpressionNode? = 3;
 }
 
-enum ImageFit(810800227) {
+enum ImageFit(810800228) {
   contain = 1;
   cover = 2;
   fill = 3;
@@ -1718,7 +1723,7 @@ enum ImageFit(810800227) {
   scale_down = 7;
 }
 
-struct ImageOptions(810800228) {
+struct ImageOptions(810800229) {
   width: ExpressionNode? = 0;
   height: ExpressionNode? = 1;
   fit: ImageFit? = 2;
@@ -1726,26 +1731,26 @@ struct ImageOptions(810800228) {
   radius: PresentationRadius? = 4;
 }
 
-struct DisplayAppearance(810800229) {
+struct DisplayAppearance(810800230) {
   appearance: InputAppearance? = 0;
   icon: InputAdornment? = 1;
 }
 
-struct ProgressAppearance(810800230) {
+struct ProgressAppearance(810800231) {
   color: PresentationColor? = 0;
   background_color: PresentationColor? = 1;
   minimum_height: ExpressionNode? = 2;
   radius: PresentationRadius? = 3;
 }
 
-struct TooltipAppearance(810800231) {
+struct TooltipAppearance(810800232) {
   appearance: InputAppearance? = 0;
   wait_milliseconds: int32? = 1;
   show_milliseconds: int32? = 2;
   prefer_below: bool? = 3;
 }
 
-struct DividerAppearance(810800232) {
+struct DividerAppearance(810800233) {
   color: PresentationColor? = 0;
   thickness: ExpressionNode? = 1;
   space: ExpressionNode? = 2;
@@ -1754,7 +1759,7 @@ struct DividerAppearance(810800232) {
 }
 
 /// Context values every editor host supplies, declared once so presentations and hosts share no keys.
-enum HostContextInput(810800233) {
+enum HostContextInput(810800234) {
   /// The resource routed in the workspace, if any.
   active_resource = 1;
   /// Number of resources in the current selection.
@@ -1762,79 +1767,78 @@ enum HostContextInput(810800233) {
 }
 
 /// Who supplies a context value: the caller of a presentation by binding, or the editor host.
-enum PresentationContextSource(810800234) {
+enum PresentationContextSource(810800235) {
   caller = 1;
   host: HostContextInput = 2;
 }
 
-/// A value a presentation reads from its surroundings. Expressions read it through [binding_id];
+/// A value a presentation reads from its surroundings. Expressions read it through [binding];
 /// [source] says who supplies it, so a host fills its declared inputs without sharing binding names.
-struct PresentationContextInput(810800235) {
-  binding_id: ExpressionBindingId = 0;
+struct PresentationContextInput(810800236) {
+  binding: BindingDeclaration = 0;
   source: PresentationContextSource = 1;
-  value_type: TypeUse = 2;
 }
 
 /// An explicitly reusable inspector part, identified by its declaring contract.
-struct PresentationPartId(810800236) {
+struct PresentationPartId(810800237) {
   owner: TypeDefinitionId = 0;
   name: string = 1;
 }
 
 /// A body declares an atomic part. Without a body, this requests an inherited part.
-struct PresentationPartElement(810800237) {
+struct PresentationPartElement(810800238) {
   key: PresentationPartId = 0;
   body: PresentationNode? = 1;
 }
 
 /// Places members on a graph by their placement field, with edges from the relations among them.
-struct GraphResourcesLayout(810800238) {
+struct GraphResourcesLayout(810800239) {
   direction: GraphDirection = 0;
   appearance: ResourceGraphAppearance? = 1;
 }
 
 /// Places members on a timeline by their timeline placement.
-struct TimelineResourcesLayout(810800239) {
+struct TimelineResourcesLayout(810800240) {
   appearance: ResourceTimelineAppearance? = 0;
 }
 
 /// Shows members as cards of a fixed maximum extent and aspect ratio.
-struct GridResourcesLayout(810800240) {
+struct GridResourcesLayout(810800241) {
   item_extent: ExpressionNode = 0;
   aspect_ratio: ExpressionNode = 1;
   spacing: ExpressionNode = 2;
 }
 
 /// Groups members by the hierarchy path at [path], relative to each member. [group] renders
-/// each group header with [group_binding_id] bound to a HierarchyGroup value. Dropping a member
+/// each group header with [group_binding] bound to a HierarchyGroup value. Dropping a member
 /// onto a group rewrites its path field.
-struct TreeResourcesLayout(810800241) {
+struct TreeResourcesLayout(810800242) {
   path: ValuePath = 0;
   group: PresentationNode? = 1;
-  group_binding_id: ExpressionBindingId = 2;
+  group_binding: BindingDeclaration = 2;
   connectors: HierarchySequenceLayout? = 3;
   initially_expanded: bool = 4;
 }
 
 /// A number that may change with interaction state, in the unit of the field holding it.
-enum PresentationNumber(810800242) {
+enum PresentationNumber(810800243) {
   value: ExpressionNode = 1;
   states: PresentationStateNumber = 2;
 }
 
 /// The first rule matching the current interaction state wins; otherwise [fallback] applies.
-struct PresentationStateNumber(810800243) {
+struct PresentationStateNumber(810800244) {
   rules: [PresentationStateNumberRule] = 0;
   fallback: ExpressionNode = 1;
 }
 
-struct PresentationStateNumberRule(810800244) {
+struct PresentationStateNumberRule(810800245) {
   match: PresentationStateMatch = 0;
   value: ExpressionNode = 1;
 }
 
 /// How an animated change progresses over its duration.
-enum PresentationCurve(810800245) {
+enum PresentationCurve(810800246) {
   linear = 1;
   ease_in_out = 2;
   ease_out = 3;
@@ -1845,25 +1849,25 @@ enum PresentationCurve(810800245) {
   elastic_out: float64 = 5;
 }
 
-struct PresentationTransition(810800246) {
+struct PresentationTransition(810800247) {
   milliseconds: int32 = 0;
   curve: PresentationCurve = 1;
 }
 
 /// Chooses the transition for a change by the state being entered: the first rule matching
 /// the new interaction state animates the change; otherwise [fallback] does.
-struct PresentationTransitionPolicy(810800247) {
+struct PresentationTransitionPolicy(810800248) {
   rules: [PresentationStateTransitionRule] = 0;
   fallback: PresentationTransition = 1;
 }
 
-struct PresentationStateTransitionRule(810800248) {
+struct PresentationStateTransitionRule(810800249) {
   match: PresentationStateMatch = 0;
   transition: PresentationTransition = 1;
 }
 
 /// Blur, spread and offsets in logical pixels.
-struct PresentationShadow(810800249) {
+struct PresentationShadow(810800250) {
   color: PresentationColor = 0;
   blur: float64 = 1;
   spread: float64 = 2;
@@ -1873,19 +1877,19 @@ struct PresentationShadow(810800249) {
 
 /// Moves [source] in OkLch. Both adjustments range from minus one to one: negative lightness moves toward
 /// black and positive toward white; negative chroma desaturates and positive saturates.
-struct PresentationAdjustedColor(810800250) {
+struct PresentationAdjustedColor(810800251) {
   source: PresentationColor = 0;
   lightness: float64 = 1;
   chroma: float64 = 2;
 }
 
 /// Picks a color by the brightness of the editor theme.
-struct PresentationBrightnessColor(810800251) {
+struct PresentationBrightnessColor(810800252) {
   light: PresentationColor = 0;
   dark: PresentationColor = 1;
 }
 
-enum StackChild(810800252) {
+enum StackChild(810800253) {
   /// Sized and aligned by the stack.
   flow: PresentationNode = 1;
   positioned: PositionedStackChild = 2;
@@ -1893,7 +1897,7 @@ enum StackChild(810800252) {
 
 /// Insets and sizes in logical pixels relative to the stack. At most two of [start], [end]
 /// and [width] apply horizontally, and at most two of [top], [bottom] and [height] vertically.
-struct PositionedStackChild(810800253) {
+struct PositionedStackChild(810800254) {
   child: PresentationNode = 0;
   top: PresentationNumber? = 1;
   start: PresentationNumber? = 2;
@@ -1906,7 +1910,7 @@ struct PositionedStackChild(810800253) {
 }
 
 /// Constrains [child] in logical pixels. An exact width or height overrides its bounds.
-struct SizeLayout(810800254) {
+struct SizeLayout(810800255) {
   child: PresentationNode = 0;
   width: ExpressionNode? = 1;
   height: ExpressionNode? = 2;
@@ -1919,7 +1923,7 @@ struct SizeLayout(810800254) {
 /// Paints [child] transformed around [origin]. Paint only: layout and the host hit region keep
 /// the untransformed bounds. Rotations are in turns, translations in logical pixels, and
 /// [perspective] is the Matrix4 entry (3, 2); zero keeps the transform flat.
-struct TransformLayout(810800255) {
+struct TransformLayout(810800256) {
   child: PresentationNode = 0;
   origin: PresentationAlignment = 1;
   perspective: float64 = 2;

@@ -1,5 +1,6 @@
-import { isNode, LineCounter, parseDocument, type Document } from "yaml";
 import { z } from "zod";
+
+import { parseYamlManifest } from "../yaml.js";
 
 import { SubjectTemplate, scopeParameters, type Parameter } from "./subject.js";
 
@@ -348,11 +349,6 @@ function admitAddresses(
   }
 }
 
-/** A manifest that failed YAML parsing or schema admission; the message names the YAML path. */
-export class ManifestError extends Error {
-  override readonly name = "ManifestError";
-}
-
 /**
  * Parses and admits the transport route manifest. Duplicate YAML keys and unknown fields fail, as
  * do parties that name undeclared roles or components, components that take part in no route,
@@ -361,25 +357,7 @@ export class ManifestError extends Error {
  * `routes[3].flow.request` and the line.
  */
 export function parseManifest(source: string, file: string): Manifest {
-  const lineCounter = new LineCounter();
-  const document = parseDocument(source, { lineCounter, uniqueKeys: true });
-  const [syntaxError] = document.errors;
-  if (syntaxError) {
-    throw new ManifestError(`${file}: ${syntaxError.message}`);
-  }
-  const result = RawManifest.safeParse(document.toJS());
-  if (!result.success) {
-    throw new ManifestError(
-      result.error.issues
-        .map((issue) => {
-          const path = issue.path.filter((key) => typeof key !== "symbol");
-          const at = location(document, lineCounter, path);
-          return `${file}${at}: ${yamlPath(path)}: ${issue.message}`;
-        })
-        .join("\n"),
-    );
-  }
-  const { limits, roles, components, routes } = result.data;
+  const { limits, roles, components, routes } = parseYamlManifest(source, file, RawManifest).data;
   return {
     limits: {
       chunkBytes: limits.chunk_bytes,
@@ -394,28 +372,4 @@ export function parseManifest(source: string, file: string): Manifest {
         : { name, scope, callers: callers!, server: server!, flow },
     ),
   };
-}
-
-/** Formats a document path as `routes[3].flow.kind`. */
-export function yamlPath(path: ReadonlyArray<string | number>): string {
-  return path
-    .map((key, index) =>
-      typeof key === "number" ? `[${key}]` : index === 0 ? key : `.${key}`,
-    )
-    .join("");
-}
-
-function location(
-  document: Document,
-  lineCounter: LineCounter,
-  path: ReadonlyArray<string | number>,
-): string {
-  for (let length = path.length; length >= 0; length--) {
-    const node = document.getIn(path.slice(0, length), true);
-    if (isNode(node) && node.range) {
-      const { line, col } = lineCounter.linePos(node.range[0]);
-      return `:${line}:${col}`;
-    }
-  }
-  return "";
 }

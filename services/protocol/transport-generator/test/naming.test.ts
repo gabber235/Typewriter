@@ -5,6 +5,7 @@ import type { CodeGenerator, RecordLocation } from "skir-internal";
 import type { ResolvedRoute } from "../src/routes/resolve.js";
 import { kotlinWrapperClass, LANGUAGE_GENERATORS, symbolProviders } from "../src/symbols.js";
 import { Config } from "../src/config.js";
+import { OperationsConfig } from "../src/operations/index.js";
 import { committedRoutes, DART_PREFIX, generatorConfig, SKIR_GENERATORS } from "./support.js";
 
 /**
@@ -42,13 +43,25 @@ const last = (reference: string, separator: string) => reference.slice(reference
 
 describe("skir.yml configures the generators the providers assume", () => {
   test("every transport target reads one manifest with a valid config", () => {
-    const targets = SKIR_GENERATORS.filter((generator) => generator.mod.startsWith("typewriter-transport/"));
+    const targets = SKIR_GENERATORS.filter(
+      (generator) => generator.mod.startsWith("typewriter-transport/") && !generator.mod.startsWith("typewriter-transport/operations/"),
+    );
     expect(targets.map((generator) => generator.mod).sort()).toEqual([
       "typewriter-transport/dart",
       "typewriter-transport/kotlin",
       "typewriter-transport/rust",
     ]);
     const configs = targets.map((generator) => Config.parse(generator.config));
+    expect(new Set(configs.map((config) => config.manifest)).size).toBe(1);
+  });
+
+  test("every operations target reads one manifest with a valid config", () => {
+    const targets = SKIR_GENERATORS.filter((generator) => generator.mod.startsWith("typewriter-transport/operations/"));
+    expect(targets.map((generator) => generator.mod).sort()).toEqual([
+      "typewriter-transport/operations/dart",
+      "typewriter-transport/operations/kotlin",
+    ]);
+    const configs = targets.map((generator) => OperationsConfig.parse(generator.config));
     expect(new Set(configs.map((config) => config.manifest)).size).toBe(1);
   });
 

@@ -8,6 +8,8 @@
   "exports": {
     "./rust": "./src/rust.ts",
     "./kotlin": "./src/kotlin.ts",
-    "./dart": "./src/dart.ts"
+    "./dart": "./src/dart.ts",
+    "./operations/kotlin": "./src/operations/kotlin.ts",
+    "./operations/dart": "./src/operations/dart.ts"
   }
 }

@@ -11,7 +11,7 @@ void main() {
               searchKey: null,
               placementField: null,
               definition: skir.TypeDefinition(
-                id: frameworkResourceIdUse.definition,
+                id: skir.resourceIdType.definition,
                 parameters: const [],
                 representation: skir.RepresentationTemplate.createScalar(
                   kind: skir.ScalarKind.text,
@@ -27,12 +27,11 @@ void main() {
         .toFrozen(),
   );
   final origin = skir.ExpressionBindingId(value: "context:test.origin");
-  final type = skir.TypeUse.wrapNamed(frameworkResourceIdUse);
+  final type = skir.TypeUse.wrapNamed(skir.resourceIdType);
   final imports = [
     skir.PresentationContextInput(
       source: skir.PresentationContextSource.caller,
-      bindingId: origin,
-      valueType: type,
+      binding: skir.BindingDeclaration(id: origin, type: type.portableTemplate),
     ),
   ];
 
@@ -104,11 +103,10 @@ void main() {
   group("host inputs", () {
     final active = skir.ExpressionBindingId(value: "context:host.active");
     final activeInput = skir.PresentationContextInput(
-      bindingId: active,
+      binding: skir.BindingDeclaration(id: active, type: type.portableTemplate),
       source: skir.PresentationContextSource.wrapHost(
         skir.HostContextInput.activeResource,
       ),
-      valueType: type,
     );
 
     test("take their value from the host by declared source", () {
@@ -122,7 +120,7 @@ void main() {
 
       expect(normalized[active]?.value, routed.toExpressionValue());
       expect(
-        normalized[panelSelectionCountInput.bindingId]?.value,
+        normalized[panelSelectionCountInput.binding.id]?.value,
         skir.DataValue.wrapInteger("3"),
       );
     });
@@ -136,11 +134,13 @@ void main() {
 
     test("reject a type the host contract does not give", () {
       final mistyped = skir.PresentationContextInput(
-        bindingId: active,
+        binding: skir.BindingDeclaration(
+          id: active,
+          type: type.portableTemplate,
+        ),
         source: skir.PresentationContextSource.wrapHost(
           skir.HostContextInput.selectionCount,
         ),
-        valueType: type,
       );
 
       expect(
