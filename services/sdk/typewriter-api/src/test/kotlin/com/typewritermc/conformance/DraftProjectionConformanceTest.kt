@@ -1,3 +1,5 @@
+@file:OptIn(GeneratedSdkApi::class)
+
 package com.typewritermc.conformance
 
 import com.typewritermc.authoring.AuthoredReads
@@ -7,6 +9,7 @@ import com.typewritermc.authoring.BoundPath
 import com.typewritermc.authoring.DraftBinding
 import com.typewritermc.authoring.DraftExpectation
 import com.typewritermc.authoring.DraftView
+import com.typewritermc.authoring.GeneratedSdkApi
 import com.typewritermc.authoring.ItemId
 import com.typewritermc.authoring.MapDraft
 import com.typewritermc.authoring.PartialSchema

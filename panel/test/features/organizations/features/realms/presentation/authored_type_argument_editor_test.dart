@@ -359,26 +359,34 @@ _concreteResourceFixture() {
             display: _display(
               "Sequence",
               "material-symbols:account-tree",
-              "#2196F3",
+              0xff2196f3,
             ),
           ),
           published(
             staticPage,
             abstract: false,
             parents: [pageParent],
-            display: _display("Static", "material-symbols:push-pin", "#673AB7"),
+            display: _display(
+              "Static",
+              "material-symbols:push-pin",
+              0xff673ab7,
+            ),
           ),
           published(
             scene,
             abstract: false,
             parents: [pageParent],
-            display: _display("Scene", "material-symbols:movie", "#FF9800"),
+            display: _display("Scene", "material-symbols:movie", 0xffff9800),
           ),
           published(
             manifest,
             abstract: false,
             parents: [pageParent],
-            display: _display("Manifest", "material-symbols:schema", "#4CAF50"),
+            display: _display(
+              "Manifest",
+              "material-symbols:schema",
+              0xff4caf50,
+            ),
           ),
           published(unrelated, abstract: false),
         ],
@@ -489,12 +497,12 @@ skir.TypeDefinitionId _definition(String name) => skir.TypeDefinitionId(
   revision: 1,
 );
 
-skir.TypeDisplay _display(String name, String icon, String color) =>
+skir.TypeDisplay _display(String name, String icon, int argb) =>
     skir.TypeDisplay(
       name: name,
       description: "$name page",
       icon: icon,
-      color: color,
+      color: skir.Color(argb: argb.toSigned(32)),
     );
 
 Finder _searchResult(String label) => find.descendant(

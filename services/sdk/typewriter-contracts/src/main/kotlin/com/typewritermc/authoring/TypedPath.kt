@@ -91,15 +91,18 @@ class BoundCollectionPath internal constructor(
 
 fun <O, V> TypedPath<O, V>.bind(resource: ResourceId): BoundPath<V> = BoundPath(ValueLocation(resource, path), expected)
 
+@GeneratedSdkApi
 fun <O, V> typedPath(
     owner: TypeDefinitionId,
     path: ValuePath,
     expected: TypeUse,
 ): TypedPath<O, V> = TypedPath(owner, path, expected)
 
+@GeneratedSdkApi
 fun <V> boundPath(
     location: ValueLocation,
     expected: TypeUse,
 ): BoundPath<V> = BoundPath(location, expected)
 
+@GeneratedSdkApi
 fun boundCollectionPath(location: ValueLocation): BoundCollectionPath = BoundCollectionPath(location)

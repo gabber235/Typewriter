@@ -1,6 +1,5 @@
 package com.typewritermc.imprint.codegen
 
-import com.google.devtools.ksp.getAllSuperTypes
 import com.google.devtools.ksp.getConstructors
 import com.google.devtools.ksp.processing.CodeGenerator
 import com.google.devtools.ksp.processing.Dependencies
@@ -14,7 +13,9 @@ import com.google.devtools.ksp.symbol.KSAnnotated
 import com.google.devtools.ksp.symbol.KSClassDeclaration
 import com.google.devtools.ksp.symbol.Modifier
 import com.google.devtools.ksp.validate
+import com.squareup.kotlinpoet.ClassName
 import com.typewritermc.codegen.getSymbolsWithAnnotation
+import com.typewritermc.codegen.implements
 import com.typewritermc.imprint.HostedRuntimeEntrypointMetadata
 import com.typewritermc.imprint.HostedRuntimeEntrypointMetadataCodec
 import com.typewritermc.imprint.IMPRINT_RUNTIME_ENTRYPOINTS_PATH
@@ -54,7 +55,7 @@ private class ImprintRuntimeEntrypointProcessor(
             logger.error("Imprint runtime entrypoints must be visible qualified declarations.", declaration)
             return null
         }
-        if (declaration.getAllSuperTypes().none { it.declaration.qualifiedName?.asString() == HOSTED_RUNTIME_ENTRYPOINT }) {
+        if (!declaration.implements(HOSTED_RUNTIME_ENTRYPOINT)) {
             logger.error("Imprint runtime entrypoints must implement HostedRuntimeEntrypoint.", declaration)
             return null
         }
@@ -78,4 +79,5 @@ private class ImprintRuntimeEntrypointProcessor(
     }
 }
 
-private const val HOSTED_RUNTIME_ENTRYPOINT = "com.typewritermc.loader.api.HostedRuntimeEntrypoint"
+/** Loader API type the entrypoint implements; codegen cannot load the loader API. */
+private val HOSTED_RUNTIME_ENTRYPOINT = ClassName("com.typewritermc.loader.api", "HostedRuntimeEntrypoint")

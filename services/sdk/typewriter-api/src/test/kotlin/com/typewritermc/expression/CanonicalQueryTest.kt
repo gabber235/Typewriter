@@ -19,6 +19,7 @@ import com.typewritermc.checking.TypedSelection
 import com.typewritermc.configuration.PortableExpressionChecker
 import com.typewritermc.presentation.RuntimePresentationQueries
 import com.typewritermc.presentation.resource
+import com.typewritermc.types.Color
 import com.typewritermc.types.ColorDefinition
 import com.typewritermc.types.DataValue
 import com.typewritermc.types.EndpointId
@@ -90,7 +91,7 @@ val CanonicalQueryTest by testSuite {
         val body =
             resource.type.display.color
                 .toNode()
-        val program = queryProgram(body, TypeUse.Scalar(ScalarKind.Text))
+        val program = queryProgram(body, TypeUse.Named(ColorDefinition.id))
         val record =
             AuthoringRecord(
                 TypeSelection.Complete(TypeUse.Named(queryTypeId)),
@@ -99,16 +100,18 @@ val CanonicalQueryTest by testSuite {
                     "extra" to DataValue.Unfilled,
                 ),
             )
-        val first = QueryObservation(mapOf(ResourceId("result") to record), "#123456")
-        val second = QueryObservation(mapOf(ResourceId("result") to record), "#654321")
+        val first = QueryObservation(mapOf(ResourceId("result") to record), Color(0xFF123456u))
+        val second = QueryObservation(mapOf(ResourceId("result") to record), Color(0xFF654321u))
 
         fun evaluate(observation: QueryObservation) =
             with(QueryReads) {
                 DefaultExpressionEvaluator(ExpressionValueReader { error("Unexpected authored value read") }, queries = observation)
                     .evaluateChecked(program, ExpressionBindings(emptyMap()), EvaluationBudget(100, 100))
             }
-        evaluate(first) shouldBe Availability.Available(DataValue.StringValue("#123456"))
-        evaluate(second) shouldBe Availability.Available(DataValue.StringValue("#654321"))
+        evaluate(first) shouldBe
+            Availability.Available(DataValue.Named(ColorDefinition.use, DataValue.Integer(0xFF123456u.toString().toBigInteger())))
+        evaluate(second) shouldBe
+            Availability.Available(DataValue.Named(ColorDefinition.use, DataValue.Integer(0xFF654321u.toString().toBigInteger())))
     }
 
     test("query identity has the same representation as its caller literal") {
@@ -349,7 +352,7 @@ private fun queryProgram(
 
 private class QueryObservation(
     private val records: Map<ResourceId, AuthoringRecord>,
-    private val color: String = "#123456",
+    private val color: Color = Color(0xFF123456u),
 ) : CanonicalQueryReader {
     override val catalog: CheckedCatalog = queryCatalog
     var seenReadContext: ReadContext? = null

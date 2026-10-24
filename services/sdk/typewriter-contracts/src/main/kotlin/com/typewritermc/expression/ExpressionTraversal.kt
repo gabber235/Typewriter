@@ -167,10 +167,6 @@ fun ExpressionNode.children(): List<ExpressionChild> =
             listOf(ExpressionChild(0, value.source), ExpressionChild(1, value.value))
         }
 
-        is ExpressionNode.ColorParseWrapper -> {
-            listOf(ExpressionChild(0, value))
-        }
-
         is ExpressionNode.ColorWithAlphaWrapper -> {
             listOf(ExpressionChild(0, value.source), ExpressionChild(1, value.alpha))
         }

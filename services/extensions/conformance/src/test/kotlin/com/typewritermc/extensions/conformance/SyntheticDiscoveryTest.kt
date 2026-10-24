@@ -24,6 +24,7 @@ import com.typewritermc.discovery.GeneratedProviderInstantiator
 import com.typewritermc.discovery.GeneratedProviderKind
 import com.typewritermc.discovery.GeneratedTypeProvider
 import com.typewritermc.discovery.ProviderOrigin
+import com.typewritermc.discovery.RuntimeRegistrarId
 import com.typewritermc.discovery.RuntimeScope
 import com.typewritermc.imprint.ArtifactId
 import com.typewritermc.imprint.ContributionName
@@ -191,11 +192,11 @@ val SyntheticDiscoveryTest by testSuite {
     test("generated presentation composes concrete polymorphic controls with serialized paths") {
         val runtime = DefaultPresentationRuntime()
         val literal =
-            com_typewritermc_extensions_conformance_LiteralMessageEditorPresentation_LiteralMessagePresentationProvider(runtime)
+            LiteralMessageEditorPresentation_LiteralMessagePresentationProvider(runtime)
         val repeated =
-            com_typewritermc_extensions_conformance_RepeatedMessageEditorPresentation_RepeatedMessagePresentationProvider(runtime)
+            RepeatedMessageEditorPresentation_RepeatedMessagePresentationProvider(runtime)
         val entry =
-            com_typewritermc_extensions_conformance_SyntheticEntryEditorPresentation_SyntheticEntryPresentationProvider(runtime)
+            SyntheticEntryEditorPresentation_SyntheticEntryPresentationProvider(runtime)
         literal.descriptor(providerOrigin("literal"))
         repeated.descriptor(providerOrigin("repeated"))
         entry.descriptor(providerOrigin("entry"))
@@ -236,7 +237,7 @@ val SyntheticDiscoveryTest by testSuite {
 
             val provider = SyntheticRuntimeRegistrarGeneratedRegistrarProvider()
             provider.descriptor.domains shouldBe setOf(DiscoveryDomains.Execution)
-            provider.descriptor.id shouldBe "synthetic"
+            provider.descriptor.id shouldBe RuntimeRegistrarId("synthetic")
             val registrar =
                 provider.bind(
                     GeneratedProviderInstantiator { type -> type.getDeclaredConstructor().newInstance() },

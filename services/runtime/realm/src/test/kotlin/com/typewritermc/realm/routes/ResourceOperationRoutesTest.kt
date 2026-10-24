@@ -1,6 +1,9 @@
+@file:OptIn(GeneratedSdkApi::class)
+
 package com.typewritermc.realm.routes
 
 import com.typewritermc.authoring.AuthoringRecord
+import com.typewritermc.authoring.GeneratedSdkApi
 import com.typewritermc.authoring.GraphPlacement
 import com.typewritermc.authoring.ItemId
 import com.typewritermc.authoring.PathSegment

@@ -215,7 +215,7 @@ val GeneratedProviderLoaderTest by testSuite {
                     domain = domain,
                 ).use { deployment ->
                     val selected = deployment.providers.registrars.single()
-                    selected.descriptor.id shouldBe if (domain == DiscoveryDomains.Realm) "realm.runtime" else "shadow.runtime"
+                    selected.descriptor.id.value shouldBe if (domain == DiscoveryDomains.Realm) "realm.runtime" else "shadow.runtime"
                     selected.descriptor.domains shouldBe setOf(domain)
                     val eligibleConstructions =
                         if (domain == DiscoveryDomains.Realm) {
@@ -259,21 +259,21 @@ private class FailingOwner {
 }
 
 class ShadowRegistrar : GeneratedRuntimeRegistrarProvider {
-    override val descriptor = RuntimeRegistrarDescriptor("shadow.runtime", setOf(DiscoveryDomains.Execution))
+    override val descriptor = RuntimeRegistrarDescriptor(RuntimeRegistrarId("shadow.runtime"), setOf(DiscoveryDomains.Execution))
 
     override fun bind(instantiator: GeneratedProviderInstantiator): RuntimeRegistrar =
         instantiator.instantiate(ExecutionFixtureRegistrar::class.java) as RuntimeRegistrar
 }
 
 class DuplicateRegistrarProvider : GeneratedRuntimeRegistrarProvider {
-    override val descriptor = RuntimeRegistrarDescriptor("shadow.runtime", setOf(DiscoveryDomains.Execution))
+    override val descriptor = RuntimeRegistrarDescriptor(RuntimeRegistrarId("shadow.runtime"), setOf(DiscoveryDomains.Execution))
 
     override fun bind(instantiator: GeneratedProviderInstantiator): RuntimeRegistrar =
         instantiator.instantiate(ExecutionFixtureRegistrar::class.java) as RuntimeRegistrar
 }
 
 class RealmFixtureRegistrarProvider : GeneratedRuntimeRegistrarProvider {
-    override val descriptor = RuntimeRegistrarDescriptor("realm.runtime", setOf(DiscoveryDomains.Realm))
+    override val descriptor = RuntimeRegistrarDescriptor(RuntimeRegistrarId("realm.runtime"), setOf(DiscoveryDomains.Realm))
 
     override fun bind(instantiator: GeneratedProviderInstantiator): RuntimeRegistrar =
         instantiator.instantiate(RealmFixtureRegistrar::class.java) as RuntimeRegistrar

@@ -1,6 +1,9 @@
+@file:OptIn(GeneratedSdkApi::class)
+
 package com.typewritermc.realm.authoring
 
 import com.typewritermc.authoring.Availability
+import com.typewritermc.authoring.GeneratedSdkApi
 import com.typewritermc.authoring.PathSegment
 import com.typewritermc.authoring.ResourceDraft
 import com.typewritermc.authoring.TypeSelection

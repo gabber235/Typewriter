@@ -113,19 +113,6 @@ sealed class CheckedExpressionResult with _$CheckedExpressionResult {
   }) = CheckedExpressionInvalid;
 }
 
-skir.DataValue _namedColor(int value) => skir.DataValue.createNamed(
-  actualType: skir.NamedTypeUse(
-    definition: skir.TypeDefinitionId(
-      typeId: skir.TypeId.createDeclared(
-        value: "c15fe94d13fb4317924a0ad2072defe4",
-      ),
-      revision: 1,
-    ),
-    arguments: const [],
-  ),
-  payload: skir.DataValue.wrapInteger(value.toString()),
-);
-
 extension _CanonicalQueryEvaluation on PortableExpressionEvaluator {
   void _chargeCanonicalValue(skir.DataValue value, int depth) {
     _consumeStep();
@@ -561,6 +548,15 @@ final expressionColorUse = skir.NamedTypeUse(
     revision: 1,
   ),
   arguments: const [],
+);
+
+/// Builds the declared Color data value for an unsigned ARGB [argb].
+///
+/// Expression evaluation and canonical read projection share this shape so
+/// a projected protocol color equals the color the Kotlin evaluator produces.
+skir.DataValue colorValue(int argb) => skir.DataValue.createNamed(
+  actualType: expressionColorUse,
+  payload: skir.DataValue.wrapInteger(argb.toString()),
 );
 
 extension ExpressionTypes on CheckedEditorCatalog {

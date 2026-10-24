@@ -42,6 +42,7 @@ import {
   ValuePath,
 } from "editor/v1/type_catalog.skir";
 import { BoundedTransferChunk } from "kernel/v1/bounded_transfer.skir";
+import { Color } from "kernel/v1/color.skir";
 import { InternalError } from "kernel/v1/errors.skir";
 
 struct ResourceDefinitionId(810900001) {
@@ -115,7 +116,7 @@ struct TypeDisplay(810900011) {
   name: string = 0;
   description: string = 1;
   icon: string = 2;
-  color: string = 3;
+  color: Color = 3;
 }
 
 enum RepresentationKind(810900012) {

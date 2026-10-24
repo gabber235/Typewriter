@@ -2,31 +2,47 @@ package com.typewritermc.types.ksp
 
 import com.google.devtools.ksp.getAllSuperTypes
 import com.google.devtools.ksp.symbol.ClassKind
-import com.google.devtools.ksp.symbol.KSAnnotation
 import com.google.devtools.ksp.symbol.KSClassDeclaration
-import com.google.devtools.ksp.symbol.KSDeclaration
 import com.google.devtools.ksp.symbol.KSPropertyDeclaration
 import com.google.devtools.ksp.symbol.KSType
 import com.google.devtools.ksp.symbol.KSTypeParameter
 import com.google.devtools.ksp.symbol.Modifier
+import com.squareup.kotlinpoet.asClassName
+import com.typewritermc.codegen.KnownTypes
+import com.typewritermc.codegen.annotation
+import com.typewritermc.codegen.argument
+import com.typewritermc.codegen.enumArgumentOrNull
+import com.typewritermc.codegen.isOneOf
+import com.typewritermc.codegen.isType
 import com.typewritermc.codegen.portableScalarKind
+import com.typewritermc.codegen.rawAnnotation
+import com.typewritermc.codegen.serialName
+import com.typewritermc.codegen.valueClassScalarKind
 import com.typewritermc.types.DeclaredTypeId
 import com.typewritermc.types.EndpointId
+import com.typewritermc.types.EndpointSlot
 import com.typewritermc.types.EnumVariant
 import com.typewritermc.types.FieldDeclaration
 import com.typewritermc.types.FieldOwner
 import com.typewritermc.types.ParameterKey
+import com.typewritermc.types.Ref
 import com.typewritermc.types.RepresentationTemplate
+import com.typewritermc.types.Resource
 import com.typewritermc.types.ScalarKind
+import com.typewritermc.types.StandardTypes
 import com.typewritermc.types.TypeDefinition
 import com.typewritermc.types.TypeDefinitionId
 import com.typewritermc.types.TypeId
 import com.typewritermc.types.TypeParameter
 import com.typewritermc.types.TypeTemplate
 import com.typewritermc.types.TypeUse
+import com.typewritermc.types.TypewriterGeneratedEndpoint
+import com.typewritermc.types.TypewriterString
+import com.typewritermc.types.TypewriterType
 
+/** Assigns each declaration its definition id; null marks a declaration whose declared id is malformed. */
 fun interface KspTypeIdentityPolicy {
-    fun identity(declaration: KSClassDeclaration): TypeDefinitionId
+    fun identity(declaration: KSClassDeclaration): TypeDefinitionId?
 }
 
 fun interface KspLinkPolicy {
@@ -72,7 +88,7 @@ sealed interface KspTypeConversionResult {
  * bounds, inheritance, or representation compatibility.
  */
 class KspTypeGraphConverter(
-    private val identityPolicy: KspTypeIdentityPolicy = KspTypeIdentityPolicy(::defaultIdentity),
+    private val identityPolicy: KspTypeIdentityPolicy = KspTypeIdentityPolicy { it.typeDefinitionIdentity() },
     private val linkPolicy: KspLinkPolicy = KspLinkPolicy(::generatedEndpoint),
 ) {
     private val definitions = linkedMapOf<TypeDefinitionId, TypeDefinition>()
@@ -93,8 +109,9 @@ class KspTypeGraphConverter(
 
     fun convertDeclaration(declaration: KSClassDeclaration): KspTypeConversionResult {
         reset()
-        val identity = identityPolicy.identity(declaration)
-        buildDefinition(declaration, identity, listOf(declaration.simpleName.asString()))
+        val path = listOf(declaration.simpleName.asString())
+        val identity = identity(declaration, path) ?: return KspTypeConversionResult.Failure(diagnostics.toList())
+        buildDefinition(declaration, identity, path)
         return if (diagnostics.isEmpty()) {
             KspTypeConversionResult.Success(
                 root = TypeUse.Named(identity, emptyList()),
@@ -164,7 +181,7 @@ class KspTypeGraphConverter(
         if (owner == null) return failure(path, "A free type parameter has no declaration owner.")
         val index = owner.typeParameters.indexOf(parameter)
         if (index < 0) return failure(path, "A type parameter belongs to another declaration.")
-        return TypeTemplate.Parameter(ParameterKey(identityPolicy.identity(owner), index))
+        return TypeTemplate.Parameter(ParameterKey(identity(owner, path) ?: return null, index))
     }
 
     private fun classTemplate(
@@ -174,11 +191,10 @@ class KspTypeGraphConverter(
         path: List<String>,
     ): TypeTemplate? {
         type.portableScalarKind()?.let { return TypeTemplate.Scalar(it) }
-        val qualified = declaration.qualifiedName?.asString()
-        if (qualified == REFERENCE_TYPE) return referenceTemplate(type, owner, path)
-        if (qualified in LIST_TYPES || qualified in SET_TYPES || qualified in MAP_TYPES) {
-            val collectionName = requireNotNull(qualified)
-            ensureCollectionDefinition(collectionName)
+        if (declaration isType Ref::class.asClassName()) return referenceTemplate(type, owner, path)
+        val collection = declaration.collectionIdentity()
+        if (collection != null) {
+            ensureCollectionDefinition(collection)
             val arguments =
                 type.arguments.mapIndexed { index, argument ->
                     argument.type?.let { reference ->
@@ -187,9 +203,9 @@ class KspTypeGraphConverter(
                         ?: failure(path + "argument $index", "Star projections are not authorable.")
                 }
             if (arguments.any { it == null }) return null
-            return TypeTemplate.Named(collectionIdentity(collectionName), arguments.filterNotNull())
+            return TypeTemplate.Named(collection, arguments.filterNotNull())
         }
-        val identity = identityPolicy.identity(declaration)
+        val identity = identity(declaration, path) ?: return null
         buildDefinition(declaration, identity, path)
         val arguments =
             type.arguments.mapIndexed { index, argument ->
@@ -222,16 +238,8 @@ class KspTypeGraphConverter(
                 ?: return failure(path + "target", "A resource reference target cannot use a star projection.")
         val target = template(targetType, owner, path + "target", type.arguments[1].type?.explicitNullable == true) ?: return null
         val endpointName = endpointDeclaration.qualifiedName?.asString() ?: endpointDeclaration.simpleName.asString()
-        val identity = TypeDefinitionId(TypeId.Qualified("relation", endpointName), 1)
-        val targetParameter = ParameterKey(identity, 0)
-        definitions.putIfAbsent(
-            identity,
-            TypeDefinition(
-                identity,
-                parameters = listOf(TypeParameter(targetParameter, "Target")),
-                representation = RepresentationTemplate.Link(endpoint, TypeTemplate.Parameter(targetParameter)),
-            ),
-        )
+        val identity = relationLinkId(endpointName)
+        definitions.putIfAbsent(identity, relationLinkDefinition(endpointName, endpoint))
         ownedFields.putIfAbsent(identity, emptyList())
         return TypeTemplate.Named(identity, listOf(target))
     }
@@ -265,7 +273,7 @@ class KspTypeGraphConverter(
                 .mapNotNull { reference ->
                     val parent = reference.resolve()
                     val qualified = parent.declaration.qualifiedName?.asString()
-                    if (qualified == "kotlin.Any" || qualified == RESOURCE_MARKER ||
+                    if (qualified == "kotlin.Any" || parent.declaration isType Resource::class.asClassName() ||
                         (declaration.classKind == ClassKind.ENUM_CLASS && qualified == "kotlin.Enum")
                     ) {
                         return@mapNotNull null
@@ -273,7 +281,7 @@ class KspTypeGraphConverter(
                     template(parent, declaration, path + "parent") as? TypeTemplate.Named
                 }.toList()
         val fields =
-            if (declaration.hasAnnotation(TYPEWRITER_STRING_ANNOTATION) || declaration.valueClassScalarKind() != null) {
+            if ((declaration.annotation<TypewriterString>() != null) || declaration.valueClassScalarKind() != null) {
                 emptyList()
             } else {
                 ownedFields(declaration, identity, path)
@@ -281,7 +289,7 @@ class KspTypeGraphConverter(
         ownedFields[identity] = fields
         val representation =
             when {
-                declaration.hasAnnotation(TYPEWRITER_STRING_ANNOTATION) -> {
+                (declaration.annotation<TypewriterString>() != null) -> {
                     RepresentationTemplate.Scalar(ScalarKind.Text)
                 }
 
@@ -322,30 +330,16 @@ class KspTypeGraphConverter(
         visiting.remove(identity)
     }
 
-    private fun KSClassDeclaration.valueClassScalarKind(): ScalarKind? {
-        if (Modifier.VALUE !in modifiers && !hasAnnotation(JVM_INLINE_ANNOTATION)) return null
-        val parameter = primaryConstructor?.parameters?.singleOrNull() ?: return null
-        return parameter.type.resolve().portableScalarKind()
-    }
-
-    private fun ensureCollectionDefinition(qualified: String) {
-        val identity = collectionIdentity(qualified)
+    private fun ensureCollectionDefinition(identity: TypeDefinitionId) {
         if (identity in definitions) return
-        val parameterCount = if (qualified in MAP_TYPES) 2 else 1
-        val parameters =
-            (0 until parameterCount).map { index ->
-                TypeParameter(ParameterKey(identity, index), if (index == 0) "T" else "V")
-            }
-        val parameter = { index: Int -> TypeTemplate.Parameter(parameters[index].key) }
-        val representation =
-            when {
-                qualified in LIST_TYPES -> RepresentationTemplate.Sequence(parameter(0), com.typewritermc.types.CollectionKind.List)
-                qualified in SET_TYPES -> RepresentationTemplate.Sequence(parameter(0), com.typewritermc.types.CollectionKind.Set)
-                else -> RepresentationTemplate.Mapping(parameter(0), parameter(1))
-            }
-        definitions[identity] = TypeDefinition(identity, parameters, representation)
+        StandardTypes.definitions.single { it.id == identity }.let { definitions[identity] = it }
         ownedFields[identity] = emptyList()
     }
+
+    private fun identity(
+        declaration: KSClassDeclaration,
+        path: List<String>,
+    ): TypeDefinitionId? = identityPolicy.identity(declaration) ?: failure(path, "Typewriter type ids must be UUIDs.")
 
     private fun ownedFields(
         declaration: KSClassDeclaration,
@@ -367,7 +361,7 @@ class KspTypeGraphConverter(
                             parent.declarations
                                 .filterIsInstance<KSPropertyDeclaration>()
                                 .any { it.simpleName.asString() == property.simpleName.asString() }
-                        }.map { parent -> FieldOwner(identityPolicy.identity(parent), name) }
+                        }.mapNotNull { parent -> identity(parent, path + name)?.let { FieldOwner(it, name) } }
                         .distinct()
                         .toList()
                 OwnedFieldDeclaration(
@@ -390,42 +384,39 @@ class KspTypeGraphConverter(
     }
 }
 
-private fun defaultIdentity(declaration: KSClassDeclaration): TypeDefinitionId {
-    val annotation = declaration.annotation(TYPEWRITER_TYPE_ANNOTATION)
-    val id = annotation?.argument("id") as? String
-    val revision = annotation?.argument("revision") as? Int ?: 1
-    return if (id != null) {
-        TypeDefinitionId(TypeId.Declared(DeclaredTypeId.parse(id)), revision)
-    } else {
-        val qualified = declaration.qualifiedName?.asString() ?: declaration.simpleName.asString()
-        TypeDefinitionId(TypeId.Qualified("kotlin", qualified), 1)
-    }
+/**
+ * The identity of a declaration: its `@TypewriterType` id when declared, otherwise its qualified Kotlin name.
+ * Null when the declared id is not a UUID, so callers report it at the declaration instead of failing the KSP run.
+ */
+fun KSClassDeclaration.typeDefinitionIdentity(): TypeDefinitionId? {
+    val type =
+        annotation<TypewriterType>()
+            ?: return TypeDefinitionId(TypeId.Qualified("kotlin", qualifiedName?.asString() ?: simpleName.asString()), 1)
+    return type.identity()
+}
+
+/** The declared `@TypewriterType` identity of this declaration, or null when it declares none or a malformed one. */
+fun KSClassDeclaration.declaredTypeIdentity(): TypeDefinitionId? = annotation<TypewriterType>()?.identity()
+
+private fun TypewriterType.identity(): TypeDefinitionId? {
+    val declared = runCatching { DeclaredTypeId.parse(id) }.getOrNull() ?: return null
+    return TypeDefinitionId(TypeId.Declared(declared), revision)
 }
 
 private fun generatedEndpoint(declaration: KSClassDeclaration): EndpointId? {
-    val annotation = declaration.annotation(GENERATED_ENDPOINT_ANNOTATION) ?: return null
+    val annotation = declaration.rawAnnotation(TypewriterGeneratedEndpoint::class) ?: return null
     val relation = annotation.argument("relation") as? String ?: return null
-    val slot =
-        annotation
-            .argument("slot")
-            ?.toString()
-            ?.substringAfterLast('.')
-            ?.lowercase() ?: return null
-    return EndpointId("$relation:$slot")
+    val slot = annotation.enumArgumentOrNull<EndpointSlot>("slot") ?: return null
+    return EndpointId("$relation:${slot.name.lowercase()}")
 }
 
-private fun collectionIdentity(qualified: String): TypeDefinitionId =
-    TypeDefinitionId(
-        TypeId.Qualified(
-            "typewriter",
-            when (qualified) {
-                in LIST_TYPES -> "List"
-                in SET_TYPES -> "Set"
-                else -> "Map"
-            },
-        ),
-        1,
-    )
+private fun KSClassDeclaration.collectionIdentity(): TypeDefinitionId? =
+    when {
+        this isOneOf KnownTypes.lists -> StandardTypes.list
+        this isOneOf KnownTypes.sets -> StandardTypes.set
+        this isOneOf KnownTypes.maps -> StandardTypes.map
+        else -> null
+    }
 
 private val KSPropertyDeclaration.hasConstructorDefault: Boolean
     get() {
@@ -442,32 +433,3 @@ private val KSType.displayName: String
 
 private val com.google.devtools.ksp.symbol.KSTypeReference.explicitNullable: Boolean
     get() = resolve().isMarkedNullable
-
-private val KSDeclaration.serialName: String?
-    get() = annotation(SERIAL_NAME_ANNOTATION)?.argument("value") as? String
-
-private fun KSDeclaration.hasAnnotation(qualifiedName: String): Boolean = annotation(qualifiedName) != null
-
-private fun KSDeclaration.annotation(qualifiedName: String): KSAnnotation? =
-    annotations.firstOrNull {
-        it.annotationType
-            .resolve()
-            .declaration.qualifiedName
-            ?.asString() == qualifiedName
-    }
-
-private fun KSAnnotation.argument(name: String): Any? = arguments.firstOrNull { it.name?.asString() == name }?.value
-
-private const val TYPEWRITER_TYPE_ANNOTATION = "com.typewritermc.types.TypewriterType"
-private const val TYPEWRITER_STRING_ANNOTATION = "com.typewritermc.types.TypewriterString"
-private const val JVM_INLINE_ANNOTATION = "kotlin.jvm.JvmInline"
-private const val SERIAL_NAME_ANNOTATION = "kotlinx.serialization.SerialName"
-private const val RESOURCE_MARKER = "com.typewritermc.types.Resource"
-private const val REFERENCE_TYPE = "com.typewritermc.types.Ref"
-private const val GENERATED_ENDPOINT_ANNOTATION = "com.typewritermc.types.TypewriterGeneratedEndpoint"
-
-private val LIST_TYPES = setOf("kotlin.collections.List", "kotlin.collections.MutableList", "kotlin.collections.ArrayList")
-private val SET_TYPES =
-    setOf("kotlin.collections.Set", "kotlin.collections.MutableSet", "kotlin.collections.HashSet", "kotlin.collections.LinkedHashSet")
-private val MAP_TYPES =
-    setOf("kotlin.collections.Map", "kotlin.collections.MutableMap", "kotlin.collections.HashMap", "kotlin.collections.LinkedHashMap")

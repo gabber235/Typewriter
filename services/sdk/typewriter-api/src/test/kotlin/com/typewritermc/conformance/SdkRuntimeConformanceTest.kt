@@ -1,3 +1,5 @@
+@file:OptIn(GeneratedSdkApi::class)
+
 package com.typewritermc.conformance
 
 import com.typewritermc.authoring.AppliedNativeArguments
@@ -6,6 +8,7 @@ import com.typewritermc.authoring.Availability
 import com.typewritermc.authoring.BoundCollectionPath
 import com.typewritermc.authoring.BoundPath
 import com.typewritermc.authoring.CompletenessResult
+import com.typewritermc.authoring.GeneratedSdkApi
 import com.typewritermc.authoring.NativeBindingId
 import com.typewritermc.authoring.PortableValue
 import com.typewritermc.authoring.complete

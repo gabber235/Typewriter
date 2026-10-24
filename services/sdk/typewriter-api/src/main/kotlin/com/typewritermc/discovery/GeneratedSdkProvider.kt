@@ -15,31 +15,6 @@ import com.typewritermc.types.TypeDefinitionId
 import com.typewritermc.types.TypeDisplay
 import kotlin.reflect.KClass
 
-enum class GeneratedProviderKind(
-    val key: String,
-) {
-    Type("type"),
-    NativeBinding("nativeBinding"),
-    Resource("resource"),
-    Relation("relation"),
-    EndpointBindings("endpointBindings"),
-    Configuration("configuration"),
-    Presentation("presentation"),
-    Check("check"),
-    Capability("capability"),
-    Registrar("registrar"),
-    CollectionProjection("collectionProjection"),
-    ResourceOperation("resourceOperation"),
-}
-
-data class GeneratedProviderIndexEntry(
-    val kind: GeneratedProviderKind,
-    val providerClass: String,
-    val sourcePart: String,
-)
-
-const val GENERATED_PROVIDER_INDEX_PATH: String = "META-INF/typewriter/generated-providers"
-
 interface GeneratedTypeProvider {
     val definition: TypeDefinition
     val nativeClass: KClass<*>?
@@ -94,11 +69,10 @@ interface GeneratedCollectionProjectionProvider {
 
 /** Carries a registrar declaration identity and its eligible runtime domains through generated discovery. */
 data class RuntimeRegistrarDescriptor(
-    val id: String,
+    val id: RuntimeRegistrarId,
     val domains: Set<DiscoveryDomainId>,
 ) {
     init {
-        require(id.matches(Regex("[A-Za-z0-9][A-Za-z0-9_.]*"))) { "Runtime registrar ids must be safe path segments." }
         require(domains.isNotEmpty()) { "Runtime registrars must select at least one runtime domain." }
     }
 }

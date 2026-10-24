@@ -1,27 +1,60 @@
 package com.typewritermc.types.codegen
 
+import com.google.devtools.ksp.getClassDeclarationByName
 import com.google.devtools.ksp.processing.CodeGenerator
 import com.google.devtools.ksp.processing.Dependencies
 import com.google.devtools.ksp.processing.KSPLogger
 import com.google.devtools.ksp.processing.Resolver
 import com.google.devtools.ksp.symbol.ClassKind
 import com.google.devtools.ksp.symbol.KSClassDeclaration
-import com.google.devtools.ksp.symbol.KSPropertyDeclaration
 import com.google.devtools.ksp.symbol.KSType
-import com.google.devtools.ksp.symbol.Modifier
+import com.squareup.kotlinpoet.ANY
+import com.squareup.kotlinpoet.ClassName
+import com.squareup.kotlinpoet.CodeBlock
+import com.squareup.kotlinpoet.FunSpec
+import com.squareup.kotlinpoet.MAP
+import com.squareup.kotlinpoet.ParameterizedTypeName.Companion.parameterizedBy
+import com.squareup.kotlinpoet.PropertySpec
+import com.squareup.kotlinpoet.STRING
+import com.squareup.kotlinpoet.TypeSpec
+import com.squareup.kotlinpoet.TypeVariableName
+import com.squareup.kotlinpoet.WildcardTypeName
+import com.squareup.kotlinpoet.joinToCode
+import com.squareup.kotlinpoet.ksp.toClassName
+import com.squareup.kotlinpoet.ksp.toTypeName
+import com.squareup.kotlinpoet.ksp.writeTo
+import com.typewritermc.codegen.DefinitionReferences
+import com.typewritermc.codegen.GeneratedFile
+import com.typewritermc.codegen.annotation
+import com.typewritermc.codegen.argument
+import com.typewritermc.codegen.declarationCode
+import com.typewritermc.codegen.getSymbolsWithAnnotation
 import com.typewritermc.codegen.kotlinCode
-import com.typewritermc.codegen.kotlinLiteral
+import com.typewritermc.codegen.listCode
+import com.typewritermc.codegen.mapCode
+import com.typewritermc.codegen.rawAnnotation
+import com.typewritermc.codegen.serialName
 import com.typewritermc.types.RepresentationTemplate
 import com.typewritermc.types.TypeDefinition
 import com.typewritermc.types.TypeDefinitionId
 import com.typewritermc.types.TypeId
+import com.typewritermc.types.TypewriterReadModels
+import com.typewritermc.types.TypewriterString
 import com.typewritermc.types.ksp.KspTypeConversionResult
 import com.typewritermc.types.ksp.KspTypeGraphConverter
 import com.typewritermc.types.ksp.OwnedFieldDeclaration
+import com.typewritermc.types.ksp.declaredTypeIdentity
 import com.typewritermc.types.skir.SkirTypeCodec
 import com.typewritermc.types.skir.getOrThrow
+import kotlin.uuid.Uuid
+import com.typewritermc.codegen.TypewriterApi as Api
 
-/** Generates the finite canonical expression model without publishing authoring declarations. */
+/**
+ * Generates the finite canonical expression model without publishing authoring declarations.
+ *
+ * Every class reachable from the `@TypewriterReadModels` roots receives a `typewriter.read` identity, except declared
+ * `@TypewriterType` classes, which keep their declared identity so values such as `Color` match the authored catalog.
+ */
 internal class ReadModelProcessor(
     private val output: CodeGenerator,
     private val logger: KSPLogger,
@@ -32,25 +65,14 @@ internal class ReadModelProcessor(
         if (generated) return
         val carriers =
             resolver
-                .getSymbolsWithAnnotation(
-                    "com.typewritermc.types.TypewriterReadModels",
-                ).filterIsInstance<KSClassDeclaration>()
+                .getSymbolsWithAnnotation(TypewriterReadModels::class)
+                .filterIsInstance<KSClassDeclaration>()
                 .sortedBy { it.qualifiedName!!.asString() }
                 .toList()
         if (carriers.isEmpty()) return
         val roots =
             carriers.flatMap { carrier ->
-                carrier.annotations
-                    .first {
-                        it.annotationType
-                            .resolve()
-                            .declaration.qualifiedName
-                            ?.asString() ==
-                            "com.typewritermc.types.TypewriterReadModels"
-                    }.arguments
-                    .first()
-                    .value
-                    .let { it as List<*> }
+                (carrier.rawAnnotation(TypewriterReadModels::class)?.argument("types") as List<*>)
                     .filterIsInstance<KSType>()
                     .map { it.declaration as KSClassDeclaration }
             }
@@ -65,7 +87,7 @@ internal class ReadModelProcessor(
             when (
                 val result =
                     KspTypeGraphConverter(identityPolicy = { source ->
-                        TypeDefinitionId(TypeId.Qualified("typewriter.read", source.qualifiedName!!.asString()), 1)
+                        source.readModelIdentity()
                     }).convertDeclaration(declaration)
             ) {
                 is KspTypeConversionResult.Failure -> {
@@ -84,182 +106,223 @@ internal class ReadModelProcessor(
             }
         }
         generated = true
-        val source =
-            buildString {
-                appendLine("package com.typewritermc.expression")
-                appendLine("import com.typewritermc.expression.field")
-                appendLine("object CanonicalReadModels : CanonicalReadModelRegistry(")
-                appendLine("    definitions = listOf(")
-                definitions.values.sortedBy { it.id.toString() }.forEach { appendLine("        ${it.kotlinCode()},") }
-                appendLine("    ),")
-                appendLine("    descriptors = listOf(")
-                declarations.toSortedMap(compareBy { it.toString() }).forEach { (id, declaration) ->
-                    appendLine(descriptor(declaration, definitions.getValue(id), fields[id].orEmpty()))
-                }
-                appendLine("    ),")
-                appendLine(") {")
-                roots.forEach { root ->
-                    val qualified = root.qualifiedName!!.asString()
-                    val property = root.simpleName.asString().replaceFirstChar(Char::lowercaseChar)
-                    appendLine("    val $property: CanonicalReadModel<$qualified> = model($qualified::class)")
-                }
-                appendLine("}")
-                declarations.toSortedMap(compareBy { it.toString() }).forEach { (id, declaration) ->
-                    val qualified = declaration.qualifiedName!!.asString()
-                    if (declaration.typeParameters.isNotEmpty() ||
-                        definitions.getValue(id).representation !is RepresentationTemplate.Record
-                    ) {
-                        return@forEach
-                    }
-                    fields[id].orEmpty().forEach { field ->
-                        val property =
-                            declaration.getAllProperties().firstOrNull { it.simpleName.asString() == field.sourceName } ?: return@forEach
-                        val type = property.type.resolve().sourceName()
-                        val getter = qualified.replace('.', '_') + "_" + field.sourceName
-                        appendLine("@get:kotlin.jvm.JvmName(\"$getter\")")
-                        appendLine("val <M : MissingPolicy> Expr<out $qualified?, M>.`${field.sourceName}`: Expr<$type, MayBeMissing>")
-                        appendLine("    get() = field(${field.name.kotlinLiteral()})")
-                    }
-                }
-            }
-        output
-            .createNewFile(
-                Dependencies.ALL_FILES,
-                "com.typewritermc.expression",
-                "CanonicalReadModels",
-            ).bufferedWriter()
-            .use { it.write(source) }
-        val manifest =
-            buildString {
-                append("{\"definitions\":[")
-                append(
-                    definitions.values.sortedBy { it.id.toString() }.joinToString { definition ->
-                        skirout.editor.v1.type_catalog.TypeDefinition.serializer.toJsonCode(
-                            SkirTypeCodec.encode(definition).getOrThrow(),
-                            build.skir.JsonFlavor.READABLE,
-                        )
-                    },
-                )
-                append("],\"models\":[")
-                append(
-                    declarations.toSortedMap(compareBy { it.toString() }).entries.joinToString { (id, declaration) ->
-                        val identity =
-                            skirout.editor.v1.type_catalog.TypeDefinitionId.serializer.toJsonCode(
-                                SkirTypeCodec.encode(definitions.getValue(id)).getOrThrow().id,
-                                build.skir.JsonFlavor.READABLE,
-                            )
-                        val recordFields =
-                            if (definitions
-                                    .getValue(
-                                        id,
-                                    ).representation is RepresentationTemplate.Record
+        val sortedDeclarations = declarations.toSortedMap(compareBy { it.toString() })
+        val references = context(resolver) { declarations.references() }
+        val file =
+            context(references) {
+                GeneratedFile
+                    .builder(PACKAGE, "CanonicalReadModels")
+                    .addType(registry(roots, definitions.values.sortedBy { it.id.toString() }, sortedDeclarations, fields))
+                    .apply {
+                        sortedDeclarations.forEach { (id, declaration) ->
+                            if (declaration.typeParameters.isNotEmpty() ||
+                                definitions.getValue(id).representation !is RepresentationTemplate.Record
                             ) {
-                                fields[id].orEmpty()
-                            } else {
-                                emptyList()
+                                return@forEach
                             }
-                        "{\"native\":${declaration.qualifiedName!!.asString().kotlinLiteral()},\"definition\":$identity,\"fields\":[" +
-                            recordFields.joinToString { field ->
-                                "{\"name\":${field.name.kotlinLiteral()},\"source\":${field.sourceName.kotlinLiteral()}}"
-                            } +
-                            "]}"
-                    },
-                )
-                append("]}")
+                            fields[id].orEmpty().forEach { field -> declaration.fieldExpression(field)?.let(::addProperty) }
+                        }
+                    }.build()
             }
-        output.createNewFile(Dependencies.ALL_FILES, "", "canonical-read-models", "json").bufferedWriter().use { it.write(manifest) }
+        file.writeTo(output, Dependencies.ALL_FILES)
+        output.createNewFile(Dependencies.ALL_FILES, "", "canonical-read-models", "json").bufferedWriter().use {
+            it.write(manifest(definitions, sortedDeclarations, fields))
+        }
     }
 
+    /** Declared types reachable from read models reference their generated definition; read identities are literal. */
+    context(resolver: Resolver)
+    private fun Map<TypeDefinitionId, KSClassDeclaration>.references(): DefinitionReferences {
+        val owners =
+            entries
+                .filter { (id, _) -> id.type is TypeId.Declared }
+                .mapNotNull { (id, declaration) ->
+                    val definition = SdkNames.of(declaration).definition
+                    (id to definition).takeIf {
+                        resolver.getClassDeclarationByName(definition.canonicalName) != null ||
+                            declaration.origin.name == "KOTLIN"
+                    }
+                }.toMap()
+        return DefinitionReferences(owners, unowned = TypeDefinitionId::declarationCode)
+    }
+
+    context(_: DefinitionReferences)
+    private fun registry(
+        roots: List<KSClassDeclaration>,
+        definitions: List<TypeDefinition>,
+        declarations: Map<TypeDefinitionId, KSClassDeclaration>,
+        fields: Map<TypeDefinitionId, List<OwnedFieldDeclaration>>,
+    ): TypeSpec =
+        TypeSpec
+            .objectBuilder("CanonicalReadModels")
+            .superclass(Api.CanonicalReadModelRegistry)
+            .addSuperclassConstructorParameter("definitions = %L", definitions.map { it.kotlinCode() }.listCode())
+            .addSuperclassConstructorParameter(
+                "descriptors = %L",
+                declarations
+                    .map { (id, declaration) ->
+                        descriptor(declaration, id, fields[id].orEmpty(), definitions.single { it.id == id })
+                    }.listCode(),
+            ).addProperties(
+                roots.map { root ->
+                    val type = root.toClassName()
+                    PropertySpec
+                        .builder(
+                            root.simpleName.asString().replaceFirstChar(Char::lowercaseChar),
+                            Api.CanonicalReadModel.parameterizedBy(type),
+                        ).initializer("model(%T::class)", type)
+                        .build()
+                },
+            ).build()
+
+    context(_: DefinitionReferences)
     private fun descriptor(
         declaration: KSClassDeclaration,
-        definition: TypeDefinition,
+        id: TypeDefinitionId,
         fields: List<OwnedFieldDeclaration>,
-    ): String {
-        val name = declaration.qualifiedName!!.asString()
-        val prefix = "CanonicalReadDescriptor($name::class, ${definition.id.kotlinCode()}, "
-        return when (val representation = definition.representation) {
-            is RepresentationTemplate.Record -> {
-                val getters =
-                    fields.joinToString { field ->
-                        "${field.name.kotlinLiteral()} to { value: Any -> (value as $name).`${field.sourceName}` }"
-                    }
-                val constructor =
-                    if (representation.abstract) {
-                        "null"
+        definition: TypeDefinition,
+    ): CodeBlock {
+        val name = declaration.toClassName()
+        val members: List<CodeBlock> =
+            when (val representation = definition.representation) {
+                is RepresentationTemplate.Record -> {
+                    val getters =
+                        fields.map { field ->
+                            CodeBlock.of("%S", field.name) to CodeBlock.of("{ value: Any·->♢(value as %T).%N }", name, field.sourceName)
+                        }
+                    val constructor =
+                        if (representation.abstract) {
+                            CodeBlock.of("null")
+                        } else {
+                            val arguments =
+                                declaration.primaryConstructor?.parameters.orEmpty().map { parameter ->
+                                    val property = parameter.name!!.asString()
+                                    val key = fields.first { it.sourceName == property }.name
+                                    CodeBlock.of("%N = values.getValue(%S) as %T", property, key, parameter.type.resolve().toTypeName())
+                                }
+                            CodeBlock.of(
+                                "{ values: %T·->♢%T(%L) }",
+                                MAP.parameterizedBy(STRING, ANY.copy(nullable = true)),
+                                name,
+                                arguments.joinToCode(",♢"),
+                            )
+                        }
+                    listOf(CodeBlock.of("fields = %L", getters.mapCode()), CodeBlock.of("construct = %L", constructor))
+                }
+
+                is RepresentationTemplate.Enumeration -> {
+                    val cases =
+                        declaration.declarations
+                            .filterIsInstance<KSClassDeclaration>()
+                            .filter { it.classKind == ClassKind.ENUM_ENTRY }
+                            .toList()
+                    val encode = cases.map { CodeBlock.of("%T.%N·->♢%S", name, it.simpleName.asString(), it.serialKey) }.joinToCode(";♢")
+                    val decode = cases.map { CodeBlock.of("%S·->♢%T.%N", it.serialKey, name, it.simpleName.asString()) }.joinToCode(";♢")
+                    listOf(
+                        CodeBlock.of("unwrap = { value·->♢when (value as %T) { %L } }", name, encode),
+                        CodeBlock.of("wrap = { value·->♢when (value) { %L;♢else·->♢error(%S) } }", decode, "Unknown canonical enum case"),
+                    )
+                }
+
+                is RepresentationTemplate.Scalar -> {
+                    if (declaration.classKind == ClassKind.OBJECT) {
+                        listOf(CodeBlock.of("unwrap = { Unit }"), CodeBlock.of("wrap = { %T }", name))
                     } else {
-                        val arguments =
-                            declaration.primaryConstructor?.parameters.orEmpty().joinToString { parameter ->
-                                val property = parameter.name!!.asString()
-                                val key = fields.first { it.sourceName == property }.name
-                                "`$property` = values.getValue(${key.kotlinLiteral()}) as ${parameter.type.resolve().sourceName()}"
-                            }
-                        "{ values: Map<String, Any?> -> $name($arguments) }"
+                        val parameter = declaration.primaryConstructor!!.parameters.single()
+                        val property = parameter.name!!.asString()
+                        val stored = parameter.type.resolve().toTypeName()
+                        val text = declaration.annotation<TypewriterString>() != null
+                        val getter = CodeBlock.of("(value as %T).%N%L", name, property, if (text) ".toString()" else "")
+                        val convert =
+                            if (stored == UUID) CodeBlock.of("%T.parse(value as String)", UUID) else CodeBlock.of("value as %T", stored)
+                        listOf(CodeBlock.of("unwrap = { value·->♢%L }", getter), CodeBlock.of("wrap = { value·->♢%T(%L) }", name, convert))
                     }
-                "        ${prefix}fields = mapOf($getters), construct = $constructor),"
-            }
+                }
 
-            is RepresentationTemplate.Enumeration -> {
-                val cases =
-                    declaration.declarations
-                        .filterIsInstance<KSClassDeclaration>()
-                        .filter { it.classKind == ClassKind.ENUM_ENTRY }
-                        .toList()
-                val encode =
-                    cases.joinToString(
-                        "; ",
-                    ) { case -> "$name.${case.simpleName.asString()} -> ${case.serialName().kotlinLiteral()}" }
-                val decode =
-                    cases.joinToString(
-                        "; ",
-                    ) { case -> "${case.serialName().kotlinLiteral()} -> $name.${case.simpleName.asString()}" }
-                "        ${prefix}unwrap = { value -> when (value as $name) { $encode } }, wrap = { value -> when (value) { $decode; else -> error(\"Unknown canonical enum case\") } }),"
+                else -> {
+                    error("Canonical native model $name has unsupported representation $representation")
+                }
             }
+        return CodeBlock.of(
+            "%T(%T::class,♢%L,♢%L)",
+            Api.CanonicalReadDescriptor,
+            name,
+            id.kotlinCode(),
+            members.joinToCode(",♢"),
+        )
+    }
 
-            is RepresentationTemplate.Scalar -> {
-                if (declaration.classKind == ClassKind.OBJECT) return "        ${prefix}unwrap = { Unit }, wrap = { $name }),"
-                val parameter = declaration.primaryConstructor!!.parameters.single()
-                val property = parameter.name!!.asString()
-                val scalarType = parameter.type.resolve().sourceName()
-                val text =
-                    declaration.annotations.any {
-                        it.annotationType
-                            .resolve()
-                            .declaration.qualifiedName
-                            ?.asString() ==
-                            "com.typewritermc.types.TypewriterString"
-                    }
-                val getter = "(value as $name).`$property`" + if (text) ".toString()" else ""
-                val convert = if (scalarType == "kotlin.uuid.Uuid") "kotlin.uuid.Uuid.parse(value as String)" else "value as $scalarType"
-                "        ${prefix}unwrap = { value -> $getter }, wrap = { value -> $name($convert) }),"
-            }
+    /** A typed field read on canonical model expressions, for example `expr.definition`. */
+    private fun KSClassDeclaration.fieldExpression(field: OwnedFieldDeclaration): PropertySpec? {
+        val property = getAllProperties().firstOrNull { it.simpleName.asString() == field.sourceName } ?: return null
+        val name = toClassName()
+        val missing = TypeVariableName("M", Api.MissingPolicy)
+        return PropertySpec
+            .builder(field.sourceName, Api.Expr.parameterizedBy(property.type.resolve().toTypeName(), Api.MayBeMissing))
+            .addAnnotation(
+                com.typewritermc.types.codegen.emit
+                    .jvmName("${name.canonicalName.replace('.', '_')}_${field.sourceName}", getter = true),
+            ).addTypeVariable(missing)
+            .receiver(Api.Expr.parameterizedBy(WildcardTypeName.producerOf(name.copy(nullable = true)), missing))
+            .getter(FunSpec.getterBuilder().addStatement("return %M(%S)", Api.expressionField, field.name).build())
+            .build()
+    }
 
-            else -> {
-                error("Canonical native model $name has unsupported representation $representation")
-            }
+    private fun manifest(
+        definitions: Map<TypeDefinitionId, TypeDefinition>,
+        declarations: Map<TypeDefinitionId, KSClassDeclaration>,
+        fields: Map<TypeDefinitionId, List<OwnedFieldDeclaration>>,
+    ): String =
+        buildString {
+            append("{\"definitions\":[")
+            append(
+                definitions.values.sortedBy { it.id.toString() }.joinToString { definition ->
+                    skirout.editor.v1.type_catalog.TypeDefinition.serializer.toJsonCode(
+                        SkirTypeCodec.encode(definition).getOrThrow(),
+                        build.skir.JsonFlavor.READABLE,
+                    )
+                },
+            )
+            append("],\"models\":[")
+            append(
+                declarations.entries.joinToString { (id, declaration) ->
+                    val identity =
+                        skirout.editor.v1.type_catalog.TypeDefinitionId.serializer.toJsonCode(
+                            SkirTypeCodec.encode(definitions.getValue(id)).getOrThrow().id,
+                            build.skir.JsonFlavor.READABLE,
+                        )
+                    val recordFields =
+                        if (definitions
+                                .getValue(
+                                    id,
+                                ).representation is RepresentationTemplate.Record
+                        ) {
+                            fields[id].orEmpty()
+                        } else {
+                            emptyList()
+                        }
+                    "{\"native\":${declaration.qualifiedName!!.asString().jsonString()},\"definition\":$identity,\"fields\":[" +
+                        recordFields.joinToString { field ->
+                            "{\"name\":${field.name.jsonString()},\"source\":${field.sourceName.jsonString()}}"
+                        } +
+                        "]}"
+                },
+            )
+            append("]}")
         }
+
+    private companion object {
+        const val PACKAGE = "com.typewritermc.expression"
+        val UUID: ClassName = ClassName("kotlin.uuid", Uuid::class.simpleName!!)
     }
 }
 
-private fun KSClassDeclaration.serialName(): String =
-    annotations
-        .firstOrNull {
-            it.annotationType
-                .resolve()
-                .declaration.qualifiedName
-                ?.asString() == "kotlinx.serialization.SerialName"
-        }?.arguments
-        ?.first()
-        ?.value as? String ?: simpleName.asString()
+/** Declared types keep their identity; every other read model class is named in the `typewriter.read` namespace. */
+private fun KSClassDeclaration.readModelIdentity(): TypeDefinitionId =
+    declaredTypeIdentity() ?: TypeDefinitionId(TypeId.Qualified("typewriter.read", toClassName().canonicalName), 1)
 
-private fun KSType.sourceName(): String {
-    val declarationName = declaration.qualifiedName?.asString() ?: declaration.simpleName.asString()
-    val parameters =
-        if (arguments.isEmpty()) {
-            ""
-        } else {
-            arguments.joinToString(prefix = "<", postfix = ">") { argument ->
-                argument.type?.resolve()?.sourceName() ?: "*"
-            }
-        }
-    return declarationName + parameters + if (nullability.name == "NULLABLE") "?" else ""
-}
+private val KSClassDeclaration.serialKey: String
+    get() = serialName ?: simpleName.asString()
+
+/** A JSON string literal; read model names and field keys are Kotlin identifiers, so only quoting is needed. */
+private fun String.jsonString(): String = "\"" + replace("\\", "\\\\").replace("\"", "\\\"") + "\""

@@ -2,10 +2,9 @@ package com.typewritermc.types.ksp
 
 import com.google.devtools.ksp.isAbstract
 import com.google.devtools.ksp.symbol.KSClassDeclaration
-import com.google.devtools.ksp.symbol.KSDeclaration
 import com.google.devtools.ksp.symbol.KSPropertyDeclaration
 import com.typewritermc.codegen.annotation
-import kotlinx.serialization.SerialName
+import com.typewritermc.codegen.serialName
 import kotlinx.serialization.Transient
 
 /**
@@ -20,9 +19,6 @@ fun KSClassDeclaration.serializedFieldNames(): Map<String, String> =
         .associate { property ->
             property.simpleName.asString() to (property.serialName ?: property.simpleName.asString())
         }
-
-private val KSDeclaration.serialName: String?
-    get() = annotation<SerialName>()?.value
 
 private val KSPropertyDeclaration.isSerializedProperty: Boolean
     get() =

@@ -185,15 +185,7 @@ final class _ReferencePickerSearchSource<T extends Object>
 }
 
 extension SearchResultTypeDisplay on skir.TypeDisplay {
-  Color? get searchResultAccent {
-    final text = color.trim();
-    if (text.isEmpty) return null;
-    try {
-      return parseColorHex(text, includeAlpha: true);
-    } on FormatException {
-      return null;
-    }
-  }
+  Color get searchResultAccent => color.toFlutterColor();
 }
 
 Widget referencePickerDescription<T extends Object>(

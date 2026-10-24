@@ -1684,24 +1684,6 @@ private fun scalarValue(
             primitive(values) { collectionContains(it) }
         }
 
-        is ExpressionNode.ColorParseWrapper -> {
-            primitive(values) {
-                val value = text(it)
-                if (value.isBlank()) {
-                    DataValue.Unfilled
-                } else {
-                    val color =
-                        try {
-                            com.typewritermc.types.Color
-                                .parseRgb(value)
-                        } catch (_: IllegalArgumentException) {
-                            throw OperationFailure("invalid_color", "Color text must use hexadecimal RGB syntax.")
-                        }
-                    DataValue.Named(com.typewritermc.types.ColorDefinition.use, DataValue.Integer(color.argb.toString().toBigInteger()))
-                }
-            }
-        }
-
         is ExpressionNode.ColorWithAlphaWrapper -> {
             primitive(values) { colorWithAlpha(it) }
         }

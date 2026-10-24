@@ -9,6 +9,7 @@ data class AppliedNativeArguments(
     val resolver: com.typewritermc.types.NativeBindingResolver,
 )
 
+@GeneratedSdkApi
 fun AppliedNativeArguments.requireOpaqueCompatibility(allowed: Set<Int>) {
     bindings.forEachIndexed { index, binding ->
         if (binding.opaque && index !in allowed) {

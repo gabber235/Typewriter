@@ -8,7 +8,6 @@ import com.typewritermc.expression.literal
 import com.typewritermc.expression.map
 import com.typewritermc.expression.name
 import com.typewritermc.expression.orElse
-import com.typewritermc.expression.parseColor
 import com.typewritermc.expression.target
 import com.typewritermc.expression.trim
 import com.typewritermc.presentation.ContainerStyle
@@ -35,7 +34,6 @@ import com.typewritermc.presentation.themeColor
 import com.typewritermc.presentation.withAlpha
 import com.typewritermc.types.Color
 import com.typewritermc.types.PresentationRole
-import com.typewritermc.types.text
 
 object TagInspectorPresentation : TagPresentation {
     override val roles = setOf(PresentationRole.INSPECTOR)
@@ -46,7 +44,6 @@ object TagInspectorPresentation : TagPresentation {
             resourceHeading(
                 title = expressions.name.orIfBlank("Unnamed tag"),
                 color = expressions.color.orElse(literal(Color(0xff9e9e9eu))),
-                identifier = subject.identifier.text,
             )
             inspectorSection("name", "Name", input = name.input) {
                 name { textInput { onComplete { value.trim() } } }
@@ -130,7 +127,6 @@ object PageInspectorPresentation : PagePresentation {
             resourceHeading(
                 title = expressions.name.orIfBlank("Unnamed page"),
                 color = literal(Color(0xff607d8bu)),
-                identifier = subject.identifier.text,
             )
             inspectorSection("book", "Book", input = book.input) {
                 book { linkInput() }
@@ -181,7 +177,7 @@ object PageSearchPresentation : PagePresentation {
         val page = subject.resource<Page>()
         val display = page.type.display
         val origin = context.read(LibraryContext.activeResource)
-        val color = display.color.parseColor().orElse(literal(Color(0xff607d8bu)))
+        val color = display.color.orElse(literal(Color(0xff607d8bu)))
         resourceSearchResult(
             title = page.fields.name.orIfBlank("Unnamed page"),
             accent = color,

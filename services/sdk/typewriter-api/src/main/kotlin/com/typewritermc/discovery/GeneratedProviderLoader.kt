@@ -147,37 +147,6 @@ private class CombinedProviderLease(
     }
 }
 
-/** Reads the tab separated provider index shared by KSP output and artifact discovery, rejecting malformed rows. */
-object GeneratedProviderIndex {
-    fun parse(content: String): List<GeneratedProviderIndexEntry> {
-        val kinds = GeneratedProviderKind.entries.associateBy(GeneratedProviderKind::key)
-        val entries =
-            content
-                .lineSequence()
-                .map(String::trim)
-                .filter(String::isNotEmpty)
-                .mapIndexed { index, line ->
-                    val columns = line.split('\t')
-                    require(columns.size == 3 && columns.none(String::isBlank)) {
-                        "Generated provider index line ${index + 1} must contain kind, provider class, and source part."
-                    }
-                    val kind =
-                        requireNotNull(kinds[columns[0]]) {
-                            "Generated provider index line ${index + 1} uses unknown kind ${columns[0]}."
-                        }
-                    require(columns[1].matches(QUALIFIED_CLASS_PATTERN)) {
-                        "Generated provider index line ${index + 1} has an invalid provider class."
-                    }
-                    require(columns[2].matches(SOURCE_PART_PATTERN)) {
-                        "Generated provider index line ${index + 1} has an invalid source part."
-                    }
-                    GeneratedProviderIndexEntry(kind, columns[1], columns[2])
-                }.toList()
-        require(entries.distinct().size == entries.size) { "Generated provider index contains duplicate rows." }
-        return entries
-    }
-}
-
 /**
  * Turns artifact provider indexes into the contributions consumed by Realm or execution catalog assembly.
  *
@@ -454,7 +423,7 @@ class GeneratedProviderLoader {
         val checks = mutableListOf<Pair<LoadedProvider, GeneratedCheckProvider>>()
         val capabilities = mutableListOf<OwnedRealmCapability>()
         val registrars = mutableListOf<OwnedRuntimeRegistrar>()
-        val registrarIds = mutableSetOf<Pair<ContributionSourceId, String>>()
+        val registrarIds = mutableSetOf<Pair<ContributionSourceId, RuntimeRegistrarId>>()
         val collectionProjections = mutableListOf<OwnedCollectionProjection>()
         val operations = mutableListOf<com.typewritermc.operations.OperationDeclaration>()
 
@@ -592,6 +561,4 @@ private data class IndexedProvider(
     val entry: GeneratedProviderIndexEntry,
 )
 
-private val QUALIFIED_CLASS_PATTERN = Regex("[A-Za-z_$][A-Za-z0-9_$]*(\\.[A-Za-z_$][A-Za-z0-9_$]*)+")
-private val SOURCE_PART_PATTERN = Regex("[A-Za-z][A-Za-z0-9_]*")
 private val GENERATED_PROVIDER_PRODUCER = ProducerId("sdk")

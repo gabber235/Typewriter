@@ -90,7 +90,7 @@ void main() {
       expect(option.label, "Quest Book");
       expect(option.display?.description, "A reusable quest collection");
       expect(option.display?.icon, "material-symbols:book");
-      expect(option.display?.color, "#3F51B5");
+      expect(option.display?.color, skir.Color(argb: 0xff3f51b5.toSigned(32)));
       expect(
         option.configuration,
         skir.TypeSelection.createComplete(
@@ -239,7 +239,7 @@ CheckedEditorCatalog _catalog({
           name: "Quest Book",
           description: "A reusable quest collection",
           icon: "material-symbols:book",
-          color: "#3F51B5",
+          color: skir.Color(argb: 0xff3f51b5.toSigned(32)),
         ),
       ),
       _published(entry, abstract: true),

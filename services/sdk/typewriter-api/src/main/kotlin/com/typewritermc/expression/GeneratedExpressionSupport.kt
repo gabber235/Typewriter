@@ -1,5 +1,6 @@
 package com.typewritermc.expression
 
+import com.typewritermc.authoring.GeneratedSdkApi
 import com.typewritermc.authoring.PathSegment
 import com.typewritermc.authoring.ValuePath
 import com.typewritermc.types.Color
@@ -124,12 +125,14 @@ private fun <T, B, O> Expr<out Collection<T>, *>.unaryCollection(
     return Expr { outer -> make(source.lower(outer), result.lower(outer.enter(frame))) }
 }
 
+@GeneratedSdkApi
 fun <T, S : Any> collectionAny(
     source: Expr<List<T>, out MissingPolicy>,
     factory: ExpressionFactory<S>,
     predicate: S.() -> Expr<Boolean, out MissingPolicy>,
 ): Expr<Boolean, MayBeMissing> = source.any { factory.create(this).predicate() }
 
+@GeneratedSdkApi
 fun <T, S : Any> collectionFilter(
     source: Expr<List<T>, out MissingPolicy>,
     factory: ExpressionFactory<S>,
@@ -320,10 +323,9 @@ fun literal(value: Color): Expr<Color, Handled> = portableLiteral(DataValue.Inte
 
 fun <M : MissingPolicy> Expr<*, M>.isNull(): Expr<Boolean, M> = Expr { ExpressionNode.IsNullWrapper(lower(it)) }
 
+@GeneratedSdkApi
 fun <M : MissingPolicy> textRepresentation(value: Expr<*, M>): Expr<String, M> =
     Expr { ExpressionNode.createTextUnary(operation = TextUnaryOperation.VALUE, source = value.lower(it)) }
-
-fun <M : MissingPolicy> Expr<String, M>.parseColor(): Expr<Color, MayBeMissing> = Expr { ExpressionNode.ColorParseWrapper(lower(it)) }
 
 fun <M : MissingPolicy> Expr<Boolean, M>.not(): Expr<Boolean, M> = Expr { ExpressionNode.BooleanNotWrapper(lower(it)) }
 

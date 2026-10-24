@@ -342,7 +342,8 @@ final class _AuthoredTypeSearchResultItem extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final color =
-        display?.color._parsedColor ?? Theme.of(context).colorScheme.primary;
+        display?.color.toFlutterColor() ??
+        Theme.of(context).colorScheme.primary;
     final icon = display?.icon.trim();
     final description = display?.description.trim();
     return SearchResultCard(
@@ -781,17 +782,6 @@ String _selectionSearchId(skir.TypeSelection selection) => base64Url
 
 String _typeUseSearchId(skir.TypeUse type) =>
     base64Url.encode(skir.TypeUse.serializer.toBytes(type)).replaceAll("=", "");
-
-extension on String {
-  Color? get _parsedColor {
-    if (trim().isEmpty) return null;
-    try {
-      return parseColorHex(this, includeAlpha: true);
-    } on FormatException {
-      return null;
-    }
-  }
-}
 
 String _valuePathLabel(skir.ValuePath path) => path.segments
     .map(

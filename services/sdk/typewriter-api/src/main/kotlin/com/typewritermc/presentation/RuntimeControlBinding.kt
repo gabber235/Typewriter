@@ -1,5 +1,8 @@
+@file:OptIn(GeneratedSdkApi::class)
+
 package com.typewritermc.presentation
 
+import com.typewritermc.authoring.GeneratedSdkApi
 import com.typewritermc.discovery.GraphDirection
 import com.typewritermc.discovery.checkedGeneratedScope
 import com.typewritermc.expression.Expr

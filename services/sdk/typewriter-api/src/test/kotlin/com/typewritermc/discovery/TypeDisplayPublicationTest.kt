@@ -6,6 +6,7 @@ import com.typewritermc.imprint.ContributionName
 import com.typewritermc.imprint.ContributionSourceId
 import com.typewritermc.imprint.ProducerId
 import com.typewritermc.library.BookDefinition
+import com.typewritermc.types.Color
 import com.typewritermc.types.DeclarationOwner
 import com.typewritermc.types.TypeDisplay
 import com.typewritermc.types.catalog.toWire
@@ -21,7 +22,7 @@ val TypeDisplayPublicationTest by testSuite {
                 name = "Book",
                 description = "Authored page collection",
                 icon = "material-symbols:book",
-                color = "#3F51B5",
+                color = Color(0xFF3F51B5u),
             )
         val providers =
             generatedTypeProviders()
@@ -45,7 +46,7 @@ val TypeDisplayPublicationTest by testSuite {
                 .display
         wireDisplay?.description shouldBe expected.description
         wireDisplay?.icon shouldBe expected.icon
-        wireDisplay?.color shouldBe expected.color
+        wireDisplay?.color?.argb shouldBe expected.color.argb.toInt()
     }
 }
 

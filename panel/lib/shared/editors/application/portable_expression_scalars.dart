@@ -14,19 +14,6 @@ extension _ScalarExpressionEvaluation on PortableExpressionEvaluator {
         when rule.operation == skir.RuleUnaryOperation.unique) {
       return _unique(values.single);
     }
-    if (node is skir.ExpressionNode_colorParseWrapper) {
-      final text = _text(values.single).trim();
-      if (text.isEmpty) return const _Unavailable();
-      if (!RegExp(r"^#[0-9a-fA-F]{6}$").hasMatch(text)) {
-        throw const _ExpressionFailure(
-          "invalid_color",
-          "The color is not a hexadecimal color",
-        );
-      }
-      return _Available(
-        _namedColor(0xff000000 | int.parse(text.substring(1), radix: 16)),
-      );
-    }
     final result = switch (node) {
       skir.ExpressionNode_textUnaryWrapper(:final value) => _string(
         switch (value.operation) {

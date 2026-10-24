@@ -1049,9 +1049,6 @@ final class _PortableExpressionChecker {
           throw const ExpressionProblem("incompatible_expression_types");
         }
         return boolResult();
-      case skir.ExpressionNode_colorParseWrapper():
-        allScalar(text);
-        return nominalType(skir.TypeUse.wrapNamed(expressionColorUse), true);
       case skir.ExpressionNode_colorWithAlphaWrapper():
         for (final v in values) {
           requireInteger(v);

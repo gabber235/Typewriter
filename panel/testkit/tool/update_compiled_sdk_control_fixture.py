@@ -6,7 +6,7 @@ from pathlib import Path
 parser = argparse.ArgumentParser()
 parser.add_argument("directory", type=Path)
 args = parser.parse_args()
-target = Path(__file__).resolve().parents[1] / "lib/src/app/compiled_sdk_control_fixture.dart"
+target = Path(__file__).resolve().parents[1] / "lib/src/shared/editors/presentation/compiled_sdk_control_fixture.dart"
 lines = [
     'import "dart:convert";',
     '',

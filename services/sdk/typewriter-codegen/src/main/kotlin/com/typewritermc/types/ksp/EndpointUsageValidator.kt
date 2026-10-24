@@ -2,13 +2,21 @@ package com.typewritermc.types.ksp
 
 import com.google.devtools.ksp.getAllSuperTypes
 import com.google.devtools.ksp.symbol.ClassKind
-import com.google.devtools.ksp.symbol.KSAnnotated
 import com.google.devtools.ksp.symbol.KSClassDeclaration
 import com.google.devtools.ksp.symbol.KSNode
 import com.google.devtools.ksp.symbol.KSPropertyDeclaration
 import com.google.devtools.ksp.symbol.KSType
 import com.google.devtools.ksp.symbol.KSTypeParameter
 import com.google.devtools.ksp.symbol.Modifier
+import com.squareup.kotlinpoet.asClassName
+import com.typewritermc.codegen.KnownTypes
+import com.typewritermc.codegen.annotation
+import com.typewritermc.codegen.isOneOf
+import com.typewritermc.codegen.isType
+import com.typewritermc.types.Ref
+import com.typewritermc.types.RelationshipEndpoint
+import com.typewritermc.types.TypewriterGeneratedEndpoint
+import com.typewritermc.types.TypewriterString
 
 data class EndpointUsageDiagnostic(
     val symbol: KSNode,
@@ -43,11 +51,11 @@ class EndpointUsageValidator {
         val declaration = type.declaration
         val qualified = declaration.qualifiedName?.asString() ?: return
         when {
-            qualified == REFERENCE_TYPE -> {
+            declaration isType Ref::class.asClassName() -> {
                 validateReference(type, resource, symbol, path, containsCollection, diagnostics)
             }
 
-            qualified in COLLECTION_TYPES -> {
+            declaration isOneOf KnownTypes.containers -> {
                 type.arguments.forEachIndexed { index, argument ->
                     argument.type?.resolve()?.let { item ->
                         visit(item, resource, symbol, path + "argument $index", true, stack, diagnostics)
@@ -55,7 +63,7 @@ class EndpointUsageValidator {
                 }
             }
 
-            qualified in TERMINAL_TYPES -> {
+            declaration isOneOf KnownTypes.terminals -> {
                 Unit
             }
 
@@ -106,7 +114,7 @@ class EndpointUsageValidator {
             endpointDeclaration
                 .getAllSuperTypes()
                 .firstOrNull { supertype ->
-                    supertype.declaration.qualifiedName?.asString() == RELATIONSHIP_ENDPOINT_TYPE
+                    supertype.declaration isType RelationshipEndpoint::class.asClassName()
                 } ?: return
         val expectedSource =
             contract.arguments
@@ -119,10 +127,7 @@ class EndpointUsageValidator {
                 ?.type
                 ?.resolve() ?: return
         val endpointName = endpointDeclaration.qualifiedName?.asString() ?: endpointDeclaration.simpleName.asString()
-        val requiresCollection =
-            endpointDeclaration
-                .annotation(GENERATED_ENDPOINT_ANNOTATION)
-                ?.argument("requiresCollection") as? Boolean
+        val requiresCollection = endpointDeclaration.annotation<TypewriterGeneratedEndpoint>()?.requiresCollection
         if (requiresCollection != null && requiresCollection != containsCollection) {
             val requirement = if (requiresCollection) "requires" else "forbids"
             diagnostics +=
@@ -173,67 +178,6 @@ private fun KSClassDeclaration.isTerminalDeclaration(): Boolean =
     classKind == ClassKind.ENUM_CLASS ||
         classKind == ClassKind.ENUM_ENTRY ||
         Modifier.VALUE in modifiers ||
-        hasAnnotation(TYPEWRITER_STRING_ANNOTATION)
+        annotation<TypewriterString>() != null
 
 private fun KSPropertyDeclaration.isAuthorable(): Boolean = isStoredTypeProperty
-
-private fun KSAnnotated.hasAnnotation(qualifiedName: String): Boolean =
-    annotations.any { annotation ->
-        annotation.annotationType
-            .resolve()
-            .declaration.qualifiedName
-            ?.asString() == qualifiedName
-    }
-
-private fun KSAnnotated.annotation(qualifiedName: String) =
-    annotations.firstOrNull { annotation ->
-        annotation.annotationType
-            .resolve()
-            .declaration.qualifiedName
-            ?.asString() == qualifiedName
-    }
-
-private fun com.google.devtools.ksp.symbol.KSAnnotation.argument(name: String): Any? =
-    arguments.firstOrNull { it.name?.asString() == name }?.value
-
-private const val REFERENCE_TYPE = "com.typewritermc.types.Ref"
-private const val RELATIONSHIP_ENDPOINT_TYPE = "com.typewritermc.types.RelationshipEndpoint"
-private const val GENERATED_ENDPOINT_ANNOTATION = "com.typewritermc.types.TypewriterGeneratedEndpoint"
-private const val TYPEWRITER_STRING_ANNOTATION = "com.typewritermc.types.TypewriterString"
-
-private val COLLECTION_TYPES =
-    setOf(
-        "kotlin.Array",
-        "kotlin.collections.Collection",
-        "kotlin.collections.Iterable",
-        "kotlin.collections.List",
-        "kotlin.collections.Map",
-        "kotlin.collections.MutableCollection",
-        "kotlin.collections.MutableIterable",
-        "kotlin.collections.MutableList",
-        "kotlin.collections.MutableMap",
-        "kotlin.collections.MutableSet",
-        "kotlin.collections.Set",
-    )
-
-private val TERMINAL_TYPES =
-    setOf(
-        "kotlin.Any",
-        "kotlin.Boolean",
-        "kotlin.Byte",
-        "kotlin.Double",
-        "kotlin.Float",
-        "kotlin.Int",
-        "kotlin.Long",
-        "kotlin.Short",
-        "kotlin.String",
-        "kotlin.UByte",
-        "kotlin.UInt",
-        "kotlin.ULong",
-        "kotlin.UShort",
-        "kotlin.Unit",
-        "kotlin.time.Duration",
-        "kotlin.time.Instant",
-        "java.math.BigDecimal",
-        "java.math.BigInteger",
-    )

@@ -1,5 +1,8 @@
+@file:OptIn(GeneratedSdkApi::class)
+
 package com.typewritermc.presentation
 
+import com.typewritermc.authoring.GeneratedSdkApi
 import com.typewritermc.expression.Expr
 import com.typewritermc.expression.ExpressionFactory
 import com.typewritermc.expression.Handled
@@ -28,12 +31,14 @@ interface PresentationRuntime {
         descriptor: PresentationDescriptor,
     )
 
+    @GeneratedSdkApi
     fun build(
         binding: PresentationBuildBinding,
         content: (PresentationBuildScope) -> Unit,
     ): PresentationBuildResult
 }
 
+@GeneratedSdkApi
 interface PresentationBuildScope : Layout {
     /** Generated scope builders register nested receiver declarations in the same presentation runtime. */
     fun registerExpressions(factory: ExpressionFactory<*>)

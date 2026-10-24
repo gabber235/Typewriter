@@ -492,7 +492,7 @@ pub struct TypeDisplay {
     pub name: String,
     pub description: String,
     pub icon: String,
-    pub color: String,
+    pub color: crate::skirout::base::kernel::v1::color::Color,
     /// Set this to None when you're creating a struct.
     pub _unrecognized: Option<crate::skir_client::UnrecognizedFields<TypeDisplay>>,
 }
@@ -2287,7 +2287,7 @@ fn initialize_module_serializers() {
             (*a).add_field(
                 "color",
                 3,
-                crate::skir_client::Serializer::string(),
+                crate::skirout::base::kernel::v1::color::Color::serializer(),
                 "",
                 |x: &TypeDisplay| &x.color,
                 |x: &mut TypeDisplay, v| x.color = v,

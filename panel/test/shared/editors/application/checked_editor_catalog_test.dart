@@ -262,7 +262,7 @@ void main() {
                 name: "Sequence",
                 description: "A branching page",
                 icon: "material-symbols:account-tree",
-                color: "#2196F3",
+                color: skir.Color(argb: 0xff2196f3.toSigned(32)),
               ),
             ),
             _published(fallback, const []),

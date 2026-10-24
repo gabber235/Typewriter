@@ -1,3 +1,5 @@
+@file:OptIn(GeneratedSdkApi::class)
+
 package com.typewritermc.authoring
 
 import com.typewritermc.checking.CatalogGeneration
@@ -78,6 +80,7 @@ interface ReadProjection<V> {
     fun read(location: ValueLocation): Availability<V>
 }
 
+@GeneratedSdkApi
 fun <V> nativeReadProjection(expected: TypeUse): ReadProjection<V> =
     object : ReadProjection<V> {
         override val expected: TypeUse = expected
@@ -86,6 +89,7 @@ fun <V> nativeReadProjection(expected: TypeUse): ReadProjection<V> =
         override fun read(location: ValueLocation): Availability<V> = reads.read(boundPath<V>(location, expected))
     }
 
+@GeneratedSdkApi
 fun <V> representationReadProjection(
     expected: TypeUse.Named,
     representation: TypeUse,
@@ -98,6 +102,7 @@ fun <V> representationReadProjection(
             reads.readRepresentation(boundPath<Any?>(location, expected), representation)
     }
 
+@GeneratedSdkApi
 fun <V> draftViewProjection(
     expected: TypeUse.Named,
     bind: (DraftBinding) -> V,
@@ -109,6 +114,7 @@ fun <V> draftViewProjection(
         override fun read(location: ValueLocation): Availability<V> = reads.binding(boundPath<V>(location, expected)).map(bind)
     }
 
+@GeneratedSdkApi
 fun <V> nullableReadProjection(inner: ReadProjection<V>): ReadProjection<V?> =
     object : ReadProjection<V?> {
         override val expected: TypeUse = TypeUse.Nullable(inner.expected)
@@ -120,16 +126,19 @@ fun <V> nullableReadProjection(inner: ReadProjection<V>): ReadProjection<V?> =
             }
     }
 
+@GeneratedSdkApi
 fun <V> listDraftProjection(
     expected: TypeUse.Named,
     item: ReadProjection<V>,
 ): ReadProjection<DraftList<V>> = collectionProjection(expected) { location, context -> ProjectedDraftList(location, context, item) }
 
+@GeneratedSdkApi
 fun <V> setDraftProjection(
     expected: TypeUse.Named,
     item: ReadProjection<V>,
 ): ReadProjection<DraftSet<V>> = collectionProjection(expected) { location, context -> ProjectedDraftSet(location, context, item) }
 
+@GeneratedSdkApi
 fun <K, V> mapDraftProjection(
     expected: TypeUse.Named,
     key: ReadProjection<K>,

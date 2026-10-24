@@ -1,6 +1,7 @@
 package com.typewritermc.types
 
 import com.typewritermc.authoring.AppliedNativeArguments
+import com.typewritermc.authoring.GeneratedSdkApi
 import com.typewritermc.authoring.NativeBindingId
 import com.typewritermc.authoring.NativeConstructionPlan
 import com.typewritermc.authoring.complete
@@ -24,6 +25,7 @@ fun interface NativeBindingResolver {
 }
 
 /** Resolves its native binding on first access, so recursive field applications need not expand during construction. */
+@GeneratedSdkApi
 class GeneratedNativeField<T>(
     val name: String,
     resolveBinding: () -> NativeBinding<*>,
@@ -32,6 +34,7 @@ class GeneratedNativeField<T>(
     val binding: NativeBinding<*> by lazy(LazyThreadSafetyMode.SYNCHRONIZED, resolveBinding)
 }
 
+@GeneratedSdkApi
 class GeneratedRecordNativeBinding<T>(
     override val checked: CheckedType,
     override val provider: NativeBindingId,
@@ -64,6 +67,7 @@ class GeneratedRecordNativeBinding<T>(
     }
 }
 
+@GeneratedSdkApi
 class GeneratedScalarNativeBinding<T>(
     override val checked: CheckedType,
     override val provider: NativeBindingId,
@@ -82,6 +86,7 @@ class GeneratedScalarNativeBinding<T>(
         construct(representation.decodeGenerated(value.value.namedPayload()))
 }
 
+@GeneratedSdkApi
 class GeneratedEnumNativeBinding<T>(
     override val checked: CheckedType,
     override val provider: NativeBindingId,
@@ -110,6 +115,7 @@ private fun NativeBinding<*>.encodeGenerated(value: Any?): DataValue {
     return (this as NativeBinding<Any?>).encode(value)
 }
 
+@GeneratedSdkApi
 fun NativeBinding<*>.encodeGeneratedDefault(value: Any?): DataValue = encodeGenerated(value)
 
 private fun NativeBinding<*>.decodeGenerated(value: DataValue): Any? {

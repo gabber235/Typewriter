@@ -8,10 +8,6 @@ import com.typewritermc.types.Resource
 import com.typewritermc.types.TypeDefinitionId
 import com.typewritermc.types.TypeTemplate
 
-@Target(AnnotationTarget.FUNCTION)
-@Retention(AnnotationRetention.BINARY)
-annotation class TypewriterCollectionProjection
-
 /**
  * Declares a portable row view over authored resources using source paths and literal field values.
  * Resource identity stays with the collection row rather than being copied into its content. The builder checks
