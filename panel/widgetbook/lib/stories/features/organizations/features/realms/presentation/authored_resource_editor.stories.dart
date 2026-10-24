@@ -177,7 +177,9 @@ _fixture({bool unfilled = false}) {
     required bool abstract,
     skir.TypeDisplay? display,
   }) => skir.PublishedType(
-    display: display,
+    searchKey: null,
+    placementField: null,
+    display: display ?? defaultTypeDisplay(""),
     definition: skir.TypeDefinition(
       id: id,
       parameters: const [],
@@ -199,7 +201,7 @@ _fixture({bool unfilled = false}) {
   ) => skir.TypeDisplay(
     name: name,
     description: description,
-    icon: icon,
+    icon: skir.Icon.wrapIconify(icon),
     color: skir.Color(argb: argb.toSigned(32)),
   );
   final presentationId = skir.PresentationId(
@@ -212,12 +214,14 @@ _fixture({bool unfilled = false}) {
   );
   final checked = CheckedEditorCatalog(
     skir.EditorCatalogWireSnapshot(
+      resourceDisplays: const [],
       resourceOperations: const [],
-      resourceOperationContributions: const [],
       generation: generation,
       types: [
         skir.PublishedType(
-          display: null,
+          searchKey: null,
+          placementField: null,
+          display: defaultTypeDisplay(""),
           definition: skir.TypeDefinition(
             id: definition,
             parameters: const [],
@@ -288,7 +292,7 @@ _fixture({bool unfilled = false}) {
         ),
       ],
       relations: const [],
-      resourceDefinitions: const [],
+      realmRoot: skir.TypeDefinitionId.defaultInstance,
       presentations: [
         skir.PresentationDescriptor(
           id: presentationId,
@@ -301,7 +305,6 @@ _fixture({bool unfilled = false}) {
       presentationMaterials: [
         skir.PresentationMaterial(
           inheritableNodes: const [],
-          resultAppearance: null,
 
           provider: presentationId,
           target: target,
@@ -369,13 +372,7 @@ _fixture({bool unfilled = false}) {
     catalog: checked,
     draft: AuthoringEdit(
       generation: generation,
-      resources: [
-        skir.AuthoringResource(
-          id: resource,
-          definition: skir.ResourceDefinitionId(value: "widgetbook.message"),
-          content: record,
-        ),
-      ],
+      resources: [skir.AuthoringResource(id: resource, content: record)],
       links: const [],
       catalog: checked,
     ),

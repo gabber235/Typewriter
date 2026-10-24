@@ -1,14 +1,12 @@
 package com.typewritermc.realm.authoring
 
 import com.typewritermc.authoring.AuthoringRecord
-import com.typewritermc.authoring.AuthoringResourceDefinition
 import com.typewritermc.authoring.Availability
 import com.typewritermc.authoring.DraftBinding
 import com.typewritermc.authoring.ItemId
 import com.typewritermc.authoring.LinkInspectionQuery
 import com.typewritermc.authoring.ReachabilityQuery
 import com.typewritermc.authoring.RelationSelection
-import com.typewritermc.authoring.ResourceDefinitionId
 import com.typewritermc.authoring.ResourceDrafts
 import com.typewritermc.authoring.RouteQuery
 import com.typewritermc.authoring.TraversalBudget
@@ -313,7 +311,7 @@ class RealmGraphReadsTest {
         val store =
             InMemoryAuthoringViewStore(
                 catalog,
-                AuthoringSeed(resources, resources.keys.associateWith { ResourceDefinitionId("node") }),
+                AuthoringSeed(resources),
             )
         val lease = store.capture()
         val reads = CapturedAuthoringReads(lease.originalView())
@@ -605,11 +603,10 @@ private class GraphCatalogLease(
     override val checks: List<OwnedCheckRecipe> = emptyList()
     override val relations: List<RelationContract> = listOf(EDGE, BAD)
     override val endpointBindings: List<EndpointBindingTemplate> = listOf(EDGE_BINDING, BAD_BINDING)
-    override val resources: List<AuthoringResourceDefinition> =
-        listOf(AuthoringResourceDefinition(ResourceDefinitionId("node"), NODE))
 
     override val configuration: List<com.typewritermc.configuration.ConfigurationRecipe> = emptyList()
     override val operations = com.typewritermc.operations.OperationCatalog()
+    override val placementFields = emptyMap<com.typewritermc.types.TypeDefinitionId, com.typewritermc.authoring.ValuePath>()
 
     override fun retain(): AuthoringCatalogLease = GraphCatalogLease(generation)
 

@@ -173,15 +173,7 @@ class Selector extends HookConsumerWidget {
         key: anchorKey,
         childFocusNode: focusNode,
         onClose: () => contextTargets.value = null,
-        items: [
-          if (operations.isNotEmpty)
-            MenuItem.section(
-              label: "Operations",
-              items: [
-                for (final operation in operations) operation.menuItem(ref),
-              ],
-            ),
-        ],
+        items: selectionOperationMenuItems(operations, ref),
         enableGestures: false,
         controller: controller,
         child: GestureDetector(

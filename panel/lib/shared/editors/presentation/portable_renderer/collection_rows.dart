@@ -502,18 +502,18 @@ Widget _collectionDragScopes(BuildContext source, Widget child) {
         wrappers.add(
           (child) => PresentationInteractionScope(value: value, child: child),
         );
-      case PresentationEnvironment(:final bindings):
+      case PresentationEnvironment(:final host):
         wrappers.add(
-          (child) => PresentationEnvironment(bindings: bindings, child: child),
+          (child) => PresentationEnvironment(host: host, child: child),
         );
-      case PortablePageInteractionScope(
-        :final nodeBuilder,
-        :final graphBuilder,
+      case PortableResourcesInteractionScope(
+        :final itemBuilder,
+        :final layoutBuilder,
       ):
         wrappers.add(
-          (child) => PortablePageInteractionScope(
-            nodeBuilder: nodeBuilder,
-            graphBuilder: graphBuilder,
+          (child) => PortableResourcesInteractionScope(
+            itemBuilder: itemBuilder,
+            layoutBuilder: layoutBuilder,
             child: child,
           ),
         );
@@ -774,7 +774,7 @@ extension _CollectionHeaderFocus on PortablePresentationNodeRenderer {
           contained: contained,
           collectionControls: scopedHeader.controls,
         );
-      } on PresentationColorFailure catch (failure) {
+      } on PresentationValueFailure catch (failure) {
         return _diagnostic(failure.message);
       } on FormatException catch (failure) {
         return _diagnostic(failure.message);

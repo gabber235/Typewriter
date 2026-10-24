@@ -1,8 +1,7 @@
 package fixture
 
 import com.typewritermc.authoring.DraftList
-import com.typewritermc.authoring.ResourceDefinitionId
-import com.typewritermc.authoring.TypewriterResourceDefinition
+import com.typewritermc.operations.PreparedOperation
 import com.typewritermc.types.Resource
 import com.typewritermc.types.TypewriterType
 
@@ -11,15 +10,10 @@ data class Box<T>(
     val value: T,
 ) : Resource
 
-object Resources {
-    @TypewriterResourceDefinition("fixture.box", Box::class)
-    val BOX = ResourceDefinitionId("fixture.box")
+object StarOperation : BoxOperation<*, *, Unit> { // error: Resource operations require closed native and projection arguments without stars.
+    override fun BoxOperationSpec<*, *, Unit>.declare(): PreparedOperation = prepare { }
 }
 
-object StarOperations : BoxOperations<*, *> { // error: Resource operations require closed native and projection arguments without stars.
-    override fun BoxOperationsScope<*, *>.operations() { }
-}
-
-object OpenListOperations : BoxOperations<List<*>, DraftList<*>> { // error: Resource operations require a supported closed resource application.
-    override fun BoxOperationsScope<List<*>, DraftList<*>>.operations() { }
+object OpenListOperation : BoxOperation<List<*>, DraftList<*>, Unit> { // error: Resource operations require a supported closed resource application.
+    override fun BoxOperationSpec<List<*>, DraftList<*>, Unit>.declare(): PreparedOperation = prepare { }
 }

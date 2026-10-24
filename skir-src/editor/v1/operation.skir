@@ -1,39 +1,39 @@
-// Resource operations publish additive editor affordances from catalog declarations.
-// Contributions attach shared operation definitions to matching resource types; the Realm
-// resolves current availability against a working observation. Action dispatch and authoring
-// preparation remain separate from labels, grouping, and primary operation nomination.
+// Resource operations publish editor affordances from catalog declarations. Every operation is one
+// declared object that applies to the resources its subject target matches; the Realm resolves
+// current availability against a working observation. Authoring preparation stays separate from
+// labels, grouping, gestures, and drop metadata.
 
-import { EditorAction } from "editor/v1/action.skir";
 import {
   ButtonVariant,
   HeaderActionTone,
 } from "editor/v1/presentation.skir";
 import {
+  CapabilityId,
   PresentationId,
-  TypeTemplate,
+  ResourceTarget,
   TypeUse,
+  ValuePath,
 } from "editor/v1/type_catalog.skir";
 
-/// Stable declaration owned identity, independent of display labels and catalog generation.
+/// Stable identity owned by the declaring object, independent of display labels and catalog generation.
+/// declaration is the fully qualified name of the operation object.
 struct ResourceOperationId(812600001) {
   artifact: string = 0;
   source_part: string = 1;
   declaration: string = 2;
-  local: string = 3;
 }
 
-enum OperationTargets(812600002) {
-  single: TypeTemplate = 1;
-  selection: TypeTemplate = 2;
-  contributed_single = 3;
-  contributed_selection = 4;
+/// The resources an operation applies to and how many it accepts at once.
+struct OperationTargets(812600002) {
+  subject: ResourceTarget = 0;
+  cardinality: OperationCardinality = 1;
 }
 
+/// Menu sections, in display order.
 enum OperationGroup(812600003) {
-  navigation = 1;
-  edit = 2;
-  organize = 3;
-  destructive = 4;
+  edit = 1;
+  organize = 2;
+  destructive = 3;
 }
 
 struct OperationConfirmation(812600004) {
@@ -48,12 +48,13 @@ struct OperationPresentation(812600005) {
   icon: string = 2;
   group: OperationGroup = 3;
   order: int32 = 4;
+  /// Destructive for the destructive group, neutral otherwise.
   tone: HeaderActionTone = 5;
   confirmation: OperationConfirmation? = 6;
-  /// Inspector button emphasis, independent of tone. Context menu rows ignore this variant.
-  variant: ButtonVariant = 7;
-  /// Whether this operation also appears among inspector controls. Menus and shortcuts remain available.
-  show_in_inspector: bool = 8;
+  /// Inspector presence. Menus, shortcuts and drops ignore it.
+  inspector: OperationInspector = 7;
+  /// The keyboard gesture that invokes this operation on the selection, if any.
+  shortcut: OperationShortcut? = 8;
 }
 
 struct OperationInputDefinition(812600006) {
@@ -65,32 +66,48 @@ struct ResourceOperationDefinition(812600007) {
   id: ResourceOperationId = 0;
   presentation: OperationPresentation = 1;
   targets: OperationTargets = 2;
-  action: EditorAction = 3;
-}
-
-/// Adds operation identities to matching resource types and optionally nominates a primary action.
-/// Resolution considers all selected targets; primary nomination applies to a single resource
-/// and conflicting equally applicable nominations are rejected.
-struct ResourceOperationContribution(812600008) {
-  target: TypeTemplate = 0;
-  operations: [ResourceOperationId] = 1;
-  primary: ResourceOperationId? = 2;
+  /// Every catalog operation is an authoring action prepared through this capability.
+  capability: CapabilityId = 3;
+  /// Set when a resource dropped onto another resource fills an input field.
+  drop: OperationDrop? = 4;
 }
 
 /// hidden omits an affordance, disabled retains its explanation, and enabled permits attempting
 /// dispatch. Availability is evaluated against current working facts and must be rechecked at preparation.
-enum OperationAvailability(812600009) {
+enum OperationAvailability(812600008) {
   hidden = 1;
   disabled: string = 2;
   enabled = 3;
 }
 
-struct ResolvedResourceOperation(812600010) {
+struct ResolvedResourceOperation(812600009) {
   definition: ResourceOperationDefinition = 0;
   availability: OperationAvailability = 1;
 }
 
-struct ResolvedResourceOperations(812600011) {
+/// Applicable operations ordered by group, then order, then identity.
+struct ResolvedResourceOperations(812600010) {
   operations: [ResolvedResourceOperation] = 0;
-  primary_operation: ResourceOperationId? = 1;
+}
+
+enum OperationCardinality(812600011) {
+  single = 1;
+  selection = 2;
+}
+
+/// Inspector presence of an operation.
+enum OperationInspector(812600012) {
+  hidden = 1;
+  button: ButtonVariant = 2;
+}
+
+/// The input field a drop fills with the resource dropped onto, and the hover hint.
+struct OperationDrop(812600013) {
+  input: ValuePath = 0;
+  hint: string = 1;
+}
+
+/// Keyboard gestures an operation can claim.
+enum OperationShortcut(812600014) {
+  delete = 1;
 }

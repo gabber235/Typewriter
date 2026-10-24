@@ -11057,9 +11057,291 @@ $PortableNewCounterpartChoiceCopyWith<$Res>? get slot {
 }
 
 /// @nodoc
+mixin _$TransformValues {
+
+ double get scale; double get rotateX; double get rotateY; double get rotateZ; double get translateX; double get translateY;
+/// Create a copy of _TransformValues
+/// with the given fields replaced by the non-null parameter values.
+@JsonKey(includeFromJson: false, includeToJson: false)
+@pragma('vm:prefer-inline')
+_$TransformValuesCopyWith<_TransformValues> get copyWith => __$TransformValuesCopyWithImpl<_TransformValues>(this as _TransformValues, _$identity);
+
+
+
+@override
+bool operator ==(Object other) {
+  final _this = this as _TransformValues;
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is _TransformValues&&(identical(other.scale, _this.scale) || other.scale == _this.scale)&&(identical(other.rotateX, _this.rotateX) || other.rotateX == _this.rotateX)&&(identical(other.rotateY, _this.rotateY) || other.rotateY == _this.rotateY)&&(identical(other.rotateZ, _this.rotateZ) || other.rotateZ == _this.rotateZ)&&(identical(other.translateX, _this.translateX) || other.translateX == _this.translateX)&&(identical(other.translateY, _this.translateY) || other.translateY == _this.translateY));
+}
+
+
+@override
+int get hashCode {
+  final _this = this as _TransformValues;
+  return Object.hash(runtimeType,_this.scale,_this.rotateX,_this.rotateY,_this.rotateZ,_this.translateX,_this.translateY);
+}
+
+@override
+String toString() {
+  final _this = this as _TransformValues;
+  return '_TransformValues(scale: ${_this.scale}, rotateX: ${_this.rotateX}, rotateY: ${_this.rotateY}, rotateZ: ${_this.rotateZ}, translateX: ${_this.translateX}, translateY: ${_this.translateY})';
+}
+
+
+}
+
+/// @nodoc
+abstract mixin class _$TransformValuesCopyWith<$Res>  {
+  factory _$TransformValuesCopyWith(_TransformValues value, $Res Function(_TransformValues) _then) = __$TransformValuesCopyWithImpl;
+@useResult
+$Res call({
+ double scale, double rotateX, double rotateY, double rotateZ, double translateX, double translateY
+});
+
+
+
+
+}
+/// @nodoc
+class __$TransformValuesCopyWithImpl<$Res>
+    implements _$TransformValuesCopyWith<$Res> {
+  __$TransformValuesCopyWithImpl(this._self, this._then);
+
+  final _TransformValues _self;
+  final $Res Function(_TransformValues) _then;
+
+/// Create a copy of _TransformValues
+/// with the given fields replaced by the non-null parameter values.
+@pragma('vm:prefer-inline') @override $Res call({Object? scale = null,Object? rotateX = null,Object? rotateY = null,Object? rotateZ = null,Object? translateX = null,Object? translateY = null,}) {
+  return _then(_TransformValues(
+scale: null == scale ? _self.scale : scale // ignore: cast_nullable_to_non_nullable
+as double,rotateX: null == rotateX ? _self.rotateX : rotateX // ignore: cast_nullable_to_non_nullable
+as double,rotateY: null == rotateY ? _self.rotateY : rotateY // ignore: cast_nullable_to_non_nullable
+as double,rotateZ: null == rotateZ ? _self.rotateZ : rotateZ // ignore: cast_nullable_to_non_nullable
+as double,translateX: null == translateX ? _self.translateX : translateX // ignore: cast_nullable_to_non_nullable
+as double,translateY: null == translateY ? _self.translateY : translateY // ignore: cast_nullable_to_non_nullable
+as double,
+  ));
+}
+
+}
+
+
+/// Adds pattern-matching-related methods to [_TransformValues].
+extension _TransformValuesPatterns on _TransformValues {
+/// A variant of `map` that fallback to returning `orElse`.
+///
+/// It is equivalent to doing:
+/// ```dart
+/// switch (sealedClass) {
+///   case final Subclass value:
+///     return ...;
+///   case _:
+///     return orElse();
+/// }
+/// ```
+
+@optionalTypeArgs TResult maybeMap<TResult extends Object?>(TResult Function( __TransformValues value)?  $default,{required TResult orElse(),}){
+final _that = this;
+switch (_that) {
+case __TransformValues() when $default != null:
+return $default(_that);case _:
+  return orElse();
+
+}
+}
+/// A `switch`-like method, using callbacks.
+///
+/// Callbacks receives the raw object, upcasted.
+/// It is equivalent to doing:
+/// ```dart
+/// switch (sealedClass) {
+///   case final Subclass value:
+///     return ...;
+///   case final Subclass2 value:
+///     return ...;
+/// }
+/// ```
+
+@optionalTypeArgs TResult map<TResult extends Object?>(TResult Function( __TransformValues value)  $default,){
+final _that = this;
+switch (_that) {
+case __TransformValues():
+return $default(_that);case _:
+  throw StateError('Unexpected subclass');
+
+}
+}
+/// A variant of `map` that fallback to returning `null`.
+///
+/// It is equivalent to doing:
+/// ```dart
+/// switch (sealedClass) {
+///   case final Subclass value:
+///     return ...;
+///   case _:
+///     return null;
+/// }
+/// ```
+
+@optionalTypeArgs TResult? mapOrNull<TResult extends Object?>(TResult? Function( __TransformValues value)?  $default,){
+final _that = this;
+switch (_that) {
+case __TransformValues() when $default != null:
+return $default(_that);case _:
+  return null;
+
+}
+}
+/// A variant of `when` that fallback to an `orElse` callback.
+///
+/// It is equivalent to doing:
+/// ```dart
+/// switch (sealedClass) {
+///   case Subclass(:final field):
+///     return ...;
+///   case _:
+///     return orElse();
+/// }
+/// ```
+
+@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function( double scale,  double rotateX,  double rotateY,  double rotateZ,  double translateX,  double translateY)?  $default,{required TResult orElse(),}) {final _that = this;
+switch (_that) {
+case __TransformValues() when $default != null:
+return $default(_that.scale,_that.rotateX,_that.rotateY,_that.rotateZ,_that.translateX,_that.translateY);case _:
+  return orElse();
+
+}
+}
+/// A `switch`-like method, using callbacks.
+///
+/// As opposed to `map`, this offers destructuring.
+/// It is equivalent to doing:
+/// ```dart
+/// switch (sealedClass) {
+///   case Subclass(:final field):
+///     return ...;
+///   case Subclass2(:final field2):
+///     return ...;
+/// }
+/// ```
+
+@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function( double scale,  double rotateX,  double rotateY,  double rotateZ,  double translateX,  double translateY)  $default,) {final _that = this;
+switch (_that) {
+case __TransformValues():
+return $default(_that.scale,_that.rotateX,_that.rotateY,_that.rotateZ,_that.translateX,_that.translateY);case _:
+  throw StateError('Unexpected subclass');
+
+}
+}
+/// A variant of `when` that fallback to returning `null`
+///
+/// It is equivalent to doing:
+/// ```dart
+/// switch (sealedClass) {
+///   case Subclass(:final field):
+///     return ...;
+///   case _:
+///     return null;
+/// }
+/// ```
+
+@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function( double scale,  double rotateX,  double rotateY,  double rotateZ,  double translateX,  double translateY)?  $default,) {final _that = this;
+switch (_that) {
+case __TransformValues() when $default != null:
+return $default(_that.scale,_that.rotateX,_that.rotateY,_that.rotateZ,_that.translateX,_that.translateY);case _:
+  return null;
+
+}
+}
+
+}
+
+/// @nodoc
+
+
+class __TransformValues extends _TransformValues {
+  const __TransformValues({required this.scale, required this.rotateX, required this.rotateY, required this.rotateZ, required this.translateX, required this.translateY}): super._();
+  
+
+@override final  double scale;
+@override final  double rotateX;
+@override final  double rotateY;
+@override final  double rotateZ;
+@override final  double translateX;
+@override final  double translateY;
+
+/// Create a copy of _TransformValues
+/// with the given fields replaced by the non-null parameter values.
+@override @JsonKey(includeFromJson: false, includeToJson: false)
+@pragma('vm:prefer-inline')
+_$_TransformValuesCopyWith<__TransformValues> get copyWith => __$_TransformValuesCopyWithImpl<__TransformValues>(this, _$identity);
+
+
+
+@override
+bool operator ==(Object other) {
+    return identical(this, other) || (other.runtimeType == runtimeType&&other is __TransformValues&&(identical(other.scale, scale) || other.scale == scale)&&(identical(other.rotateX, rotateX) || other.rotateX == rotateX)&&(identical(other.rotateY, rotateY) || other.rotateY == rotateY)&&(identical(other.rotateZ, rotateZ) || other.rotateZ == rotateZ)&&(identical(other.translateX, translateX) || other.translateX == translateX)&&(identical(other.translateY, translateY) || other.translateY == translateY));
+}
+
+
+@override
+int get hashCode {
+    return Object.hash(runtimeType,scale,rotateX,rotateY,rotateZ,translateX,translateY);
+}
+
+@override
+String toString() {
+    return '_TransformValues(scale: $scale, rotateX: $rotateX, rotateY: $rotateY, rotateZ: $rotateZ, translateX: $translateX, translateY: $translateY)';
+}
+
+
+}
+
+/// @nodoc
+abstract mixin class _$_TransformValuesCopyWith<$Res> implements _$TransformValuesCopyWith<$Res> {
+  factory _$_TransformValuesCopyWith(__TransformValues value, $Res Function(__TransformValues) _then) = __$_TransformValuesCopyWithImpl;
+@override @useResult
+$Res call({
+ double scale, double rotateX, double rotateY, double rotateZ, double translateX, double translateY
+});
+
+
+
+
+}
+/// @nodoc
+class __$_TransformValuesCopyWithImpl<$Res>
+    implements _$_TransformValuesCopyWith<$Res> {
+  __$_TransformValuesCopyWithImpl(this._self, this._then);
+
+  final __TransformValues _self;
+  final $Res Function(__TransformValues) _then;
+
+/// Create a copy of _TransformValues
+/// with the given fields replaced by the non-null parameter values.
+@override @pragma('vm:prefer-inline') $Res call({Object? scale = null,Object? rotateX = null,Object? rotateY = null,Object? rotateZ = null,Object? translateX = null,Object? translateY = null,}) {
+  return _then(__TransformValues(
+scale: null == scale ? _self.scale : scale // ignore: cast_nullable_to_non_nullable
+as double,rotateX: null == rotateX ? _self.rotateX : rotateX // ignore: cast_nullable_to_non_nullable
+as double,rotateY: null == rotateY ? _self.rotateY : rotateY // ignore: cast_nullable_to_non_nullable
+as double,rotateZ: null == rotateZ ? _self.rotateZ : rotateZ // ignore: cast_nullable_to_non_nullable
+as double,translateX: null == translateX ? _self.translateX : translateX // ignore: cast_nullable_to_non_nullable
+as double,translateY: null == translateY ? _self.translateY : translateY // ignore: cast_nullable_to_non_nullable
+as double,
+  ));
+}
+
+
+}
+
+/// @nodoc
 mixin _$PortablePresentationScope {
 
- Map<skir.ExpressionBindingId, PortableExpressionBinding> get bindings; skir.EvaluationBudget get budget; PortableOperationResults get operations; List<PortableAppearanceLayer> get appearanceLayers; Map<skir.ExpressionBindingId, AuthoredBindingAddress> get authoredAliases; AuthoredPresentationIndex? get authoredIndex; AuthoredPresentationIndex? get independentAuthoredIndex; List<PortableAuthoredPart> get authoredParts; PortableInspectorFrame? get inspectorFrame; Set<ActiveInspectorLayout> get activeInspectorLayouts; Set<ActivePartPresentation> get activeParts; bool get readOnly; bool get enabled; Stream<skir.RealmPresentationSearchUpdate> Function(skir.RealmPresentationSearchRequest request)? get watchSearch; ValueChanged<String>? get reportStatus; CheckedEditorCatalog? get catalog; PortableExpressionQueries? get queries; ResourceDiagnosticReader get resourceDiagnostics; skir.ResourceId? get resource; String? get searchHistoryNamespace; ValueChanged<skir.ResourceId>? get openResource; skir.PresentationRole? get role; skir.PresentationMaterial? get material; Set<skir.PresentationId> get activePresentations; Set<ActiveFieldPresentation> get activeFieldPresentations; skir.BoundControl? get associatedControl; ResolvedFieldAssociation? get fieldAssociation; Map<String, skir.PresentationNode> get slots; Map<String, PortableSlotBuilder> get slotBuilders; PortablePresentationHost? get host; Map<skir.ExpressionBindingId, PortableBindingSetter> get projectedWriters;
+ Map<skir.ExpressionBindingId, PortableExpressionBinding> get bindings; skir.EvaluationBudget get budget; PortableOperationResults get operations; List<PortableAppearanceLayer> get appearanceLayers; Map<skir.ExpressionBindingId, AuthoredBindingAddress> get authoredAliases; AuthoredPresentationIndex? get authoredIndex; AuthoredPresentationIndex? get independentAuthoredIndex; List<PortableAuthoredPart> get authoredParts; PortableInspectorFrame? get inspectorFrame; Set<ActiveInspectorLayout> get activeInspectorLayouts; Set<ActivePartPresentation> get activeParts; bool get readOnly; bool get enabled; Stream<skir.RealmPresentationSearchUpdate> Function(skir.RealmPresentationSearchRequest request)? get watchSearch; ValueChanged<String>? get reportStatus; CheckedEditorCatalog? get catalog; PortableExpressionQueries? get queries; ResourceDiagnosticReader get resourceDiagnostics; skir.ResourceId? get resource; String? get searchHistoryNamespace; ValueChanged<skir.ResourceId>? get openResource;/// The resource open in the workspace, which resources layouts mark as
+/// routed.
+ skir.ResourceId? get routedResource; skir.PresentationRole? get role; skir.PresentationMaterial? get material; Set<skir.PresentationId> get activePresentations; Set<ActiveFieldPresentation> get activeFieldPresentations; skir.BoundControl? get associatedControl; ResolvedFieldAssociation? get fieldAssociation; Map<String, skir.PresentationNode> get slots; Map<String, PortableSlotBuilder> get slotBuilders; PortablePresentationHost? get host;/// Host values for the host inputs each material in this scope declares.
+ HostContext get hostContext; Map<skir.ExpressionBindingId, PortableBindingSetter> get projectedWriters;
 /// Create a copy of PortablePresentationScope
 /// with the given fields replaced by the non-null parameter values.
 @JsonKey(includeFromJson: false, includeToJson: false)
@@ -11071,20 +11353,20 @@ $PortablePresentationScopeCopyWith<PortablePresentationScope> get copyWith => _$
 @override
 bool operator ==(Object other) {
   final _this = this as PortablePresentationScope;
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is PortablePresentationScope&&const DeepCollectionEquality().equals(other.bindings, _this.bindings)&&(identical(other.budget, _this.budget) || other.budget == _this.budget)&&(identical(other.operations, _this.operations) || other.operations == _this.operations)&&const DeepCollectionEquality().equals(other.appearanceLayers, _this.appearanceLayers)&&const DeepCollectionEquality().equals(other.authoredAliases, _this.authoredAliases)&&(identical(other.authoredIndex, _this.authoredIndex) || other.authoredIndex == _this.authoredIndex)&&(identical(other.independentAuthoredIndex, _this.independentAuthoredIndex) || other.independentAuthoredIndex == _this.independentAuthoredIndex)&&const DeepCollectionEquality().equals(other.authoredParts, _this.authoredParts)&&(identical(other.inspectorFrame, _this.inspectorFrame) || other.inspectorFrame == _this.inspectorFrame)&&const DeepCollectionEquality().equals(other.activeInspectorLayouts, _this.activeInspectorLayouts)&&const DeepCollectionEquality().equals(other.activeParts, _this.activeParts)&&(identical(other.readOnly, _this.readOnly) || other.readOnly == _this.readOnly)&&(identical(other.enabled, _this.enabled) || other.enabled == _this.enabled)&&(identical(other.watchSearch, _this.watchSearch) || other.watchSearch == _this.watchSearch)&&(identical(other.reportStatus, _this.reportStatus) || other.reportStatus == _this.reportStatus)&&(identical(other.catalog, _this.catalog) || other.catalog == _this.catalog)&&(identical(other.queries, _this.queries) || other.queries == _this.queries)&&(identical(other.resourceDiagnostics, _this.resourceDiagnostics) || other.resourceDiagnostics == _this.resourceDiagnostics)&&(identical(other.resource, _this.resource) || other.resource == _this.resource)&&(identical(other.searchHistoryNamespace, _this.searchHistoryNamespace) || other.searchHistoryNamespace == _this.searchHistoryNamespace)&&(identical(other.openResource, _this.openResource) || other.openResource == _this.openResource)&&(identical(other.role, _this.role) || other.role == _this.role)&&(identical(other.material, _this.material) || other.material == _this.material)&&const DeepCollectionEquality().equals(other.activePresentations, _this.activePresentations)&&const DeepCollectionEquality().equals(other.activeFieldPresentations, _this.activeFieldPresentations)&&(identical(other.associatedControl, _this.associatedControl) || other.associatedControl == _this.associatedControl)&&(identical(other.fieldAssociation, _this.fieldAssociation) || other.fieldAssociation == _this.fieldAssociation)&&const DeepCollectionEquality().equals(other.slots, _this.slots)&&const DeepCollectionEquality().equals(other.slotBuilders, _this.slotBuilders)&&(identical(other.host, _this.host) || other.host == _this.host)&&const DeepCollectionEquality().equals(other.projectedWriters, _this.projectedWriters));
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is PortablePresentationScope&&const DeepCollectionEquality().equals(other.bindings, _this.bindings)&&(identical(other.budget, _this.budget) || other.budget == _this.budget)&&(identical(other.operations, _this.operations) || other.operations == _this.operations)&&const DeepCollectionEquality().equals(other.appearanceLayers, _this.appearanceLayers)&&const DeepCollectionEquality().equals(other.authoredAliases, _this.authoredAliases)&&(identical(other.authoredIndex, _this.authoredIndex) || other.authoredIndex == _this.authoredIndex)&&(identical(other.independentAuthoredIndex, _this.independentAuthoredIndex) || other.independentAuthoredIndex == _this.independentAuthoredIndex)&&const DeepCollectionEquality().equals(other.authoredParts, _this.authoredParts)&&(identical(other.inspectorFrame, _this.inspectorFrame) || other.inspectorFrame == _this.inspectorFrame)&&const DeepCollectionEquality().equals(other.activeInspectorLayouts, _this.activeInspectorLayouts)&&const DeepCollectionEquality().equals(other.activeParts, _this.activeParts)&&(identical(other.readOnly, _this.readOnly) || other.readOnly == _this.readOnly)&&(identical(other.enabled, _this.enabled) || other.enabled == _this.enabled)&&(identical(other.watchSearch, _this.watchSearch) || other.watchSearch == _this.watchSearch)&&(identical(other.reportStatus, _this.reportStatus) || other.reportStatus == _this.reportStatus)&&(identical(other.catalog, _this.catalog) || other.catalog == _this.catalog)&&(identical(other.queries, _this.queries) || other.queries == _this.queries)&&(identical(other.resourceDiagnostics, _this.resourceDiagnostics) || other.resourceDiagnostics == _this.resourceDiagnostics)&&(identical(other.resource, _this.resource) || other.resource == _this.resource)&&(identical(other.searchHistoryNamespace, _this.searchHistoryNamespace) || other.searchHistoryNamespace == _this.searchHistoryNamespace)&&(identical(other.openResource, _this.openResource) || other.openResource == _this.openResource)&&(identical(other.routedResource, _this.routedResource) || other.routedResource == _this.routedResource)&&(identical(other.role, _this.role) || other.role == _this.role)&&(identical(other.material, _this.material) || other.material == _this.material)&&const DeepCollectionEquality().equals(other.activePresentations, _this.activePresentations)&&const DeepCollectionEquality().equals(other.activeFieldPresentations, _this.activeFieldPresentations)&&(identical(other.associatedControl, _this.associatedControl) || other.associatedControl == _this.associatedControl)&&(identical(other.fieldAssociation, _this.fieldAssociation) || other.fieldAssociation == _this.fieldAssociation)&&const DeepCollectionEquality().equals(other.slots, _this.slots)&&const DeepCollectionEquality().equals(other.slotBuilders, _this.slotBuilders)&&(identical(other.host, _this.host) || other.host == _this.host)&&(identical(other.hostContext, _this.hostContext) || other.hostContext == _this.hostContext)&&const DeepCollectionEquality().equals(other.projectedWriters, _this.projectedWriters));
 }
 
 
 @override
 int get hashCode {
   final _this = this as PortablePresentationScope;
-  return Object.hashAll([runtimeType,const DeepCollectionEquality().hash(_this.bindings),_this.budget,_this.operations,const DeepCollectionEquality().hash(_this.appearanceLayers),const DeepCollectionEquality().hash(_this.authoredAliases),_this.authoredIndex,_this.independentAuthoredIndex,const DeepCollectionEquality().hash(_this.authoredParts),_this.inspectorFrame,const DeepCollectionEquality().hash(_this.activeInspectorLayouts),const DeepCollectionEquality().hash(_this.activeParts),_this.readOnly,_this.enabled,_this.watchSearch,_this.reportStatus,_this.catalog,_this.queries,_this.resourceDiagnostics,_this.resource,_this.searchHistoryNamespace,_this.openResource,_this.role,_this.material,const DeepCollectionEquality().hash(_this.activePresentations),const DeepCollectionEquality().hash(_this.activeFieldPresentations),_this.associatedControl,_this.fieldAssociation,const DeepCollectionEquality().hash(_this.slots),const DeepCollectionEquality().hash(_this.slotBuilders),_this.host,const DeepCollectionEquality().hash(_this.projectedWriters)]);
+  return Object.hashAll([runtimeType,const DeepCollectionEquality().hash(_this.bindings),_this.budget,_this.operations,const DeepCollectionEquality().hash(_this.appearanceLayers),const DeepCollectionEquality().hash(_this.authoredAliases),_this.authoredIndex,_this.independentAuthoredIndex,const DeepCollectionEquality().hash(_this.authoredParts),_this.inspectorFrame,const DeepCollectionEquality().hash(_this.activeInspectorLayouts),const DeepCollectionEquality().hash(_this.activeParts),_this.readOnly,_this.enabled,_this.watchSearch,_this.reportStatus,_this.catalog,_this.queries,_this.resourceDiagnostics,_this.resource,_this.searchHistoryNamespace,_this.openResource,_this.routedResource,_this.role,_this.material,const DeepCollectionEquality().hash(_this.activePresentations),const DeepCollectionEquality().hash(_this.activeFieldPresentations),_this.associatedControl,_this.fieldAssociation,const DeepCollectionEquality().hash(_this.slots),const DeepCollectionEquality().hash(_this.slotBuilders),_this.host,_this.hostContext,const DeepCollectionEquality().hash(_this.projectedWriters)]);
 }
 
 @override
 String toString() {
   final _this = this as PortablePresentationScope;
-  return 'PortablePresentationScope(bindings: ${_this.bindings}, budget: ${_this.budget}, operations: ${_this.operations}, appearanceLayers: ${_this.appearanceLayers}, authoredAliases: ${_this.authoredAliases}, authoredIndex: ${_this.authoredIndex}, independentAuthoredIndex: ${_this.independentAuthoredIndex}, authoredParts: ${_this.authoredParts}, inspectorFrame: ${_this.inspectorFrame}, activeInspectorLayouts: ${_this.activeInspectorLayouts}, activeParts: ${_this.activeParts}, readOnly: ${_this.readOnly}, enabled: ${_this.enabled}, watchSearch: ${_this.watchSearch}, reportStatus: ${_this.reportStatus}, catalog: ${_this.catalog}, queries: ${_this.queries}, resourceDiagnostics: ${_this.resourceDiagnostics}, resource: ${_this.resource}, searchHistoryNamespace: ${_this.searchHistoryNamespace}, openResource: ${_this.openResource}, role: ${_this.role}, material: ${_this.material}, activePresentations: ${_this.activePresentations}, activeFieldPresentations: ${_this.activeFieldPresentations}, associatedControl: ${_this.associatedControl}, fieldAssociation: ${_this.fieldAssociation}, slots: ${_this.slots}, slotBuilders: ${_this.slotBuilders}, host: ${_this.host}, projectedWriters: ${_this.projectedWriters})';
+  return 'PortablePresentationScope(bindings: ${_this.bindings}, budget: ${_this.budget}, operations: ${_this.operations}, appearanceLayers: ${_this.appearanceLayers}, authoredAliases: ${_this.authoredAliases}, authoredIndex: ${_this.authoredIndex}, independentAuthoredIndex: ${_this.independentAuthoredIndex}, authoredParts: ${_this.authoredParts}, inspectorFrame: ${_this.inspectorFrame}, activeInspectorLayouts: ${_this.activeInspectorLayouts}, activeParts: ${_this.activeParts}, readOnly: ${_this.readOnly}, enabled: ${_this.enabled}, watchSearch: ${_this.watchSearch}, reportStatus: ${_this.reportStatus}, catalog: ${_this.catalog}, queries: ${_this.queries}, resourceDiagnostics: ${_this.resourceDiagnostics}, resource: ${_this.resource}, searchHistoryNamespace: ${_this.searchHistoryNamespace}, openResource: ${_this.openResource}, routedResource: ${_this.routedResource}, role: ${_this.role}, material: ${_this.material}, activePresentations: ${_this.activePresentations}, activeFieldPresentations: ${_this.activeFieldPresentations}, associatedControl: ${_this.associatedControl}, fieldAssociation: ${_this.fieldAssociation}, slots: ${_this.slots}, slotBuilders: ${_this.slotBuilders}, host: ${_this.host}, hostContext: ${_this.hostContext}, projectedWriters: ${_this.projectedWriters})';
 }
 
 
@@ -11095,11 +11377,11 @@ abstract mixin class $PortablePresentationScopeCopyWith<$Res>  {
   factory $PortablePresentationScopeCopyWith(PortablePresentationScope value, $Res Function(PortablePresentationScope) _then) = _$PortablePresentationScopeCopyWithImpl;
 @useResult
 $Res call({
- Map<skir.ExpressionBindingId, PortableExpressionBinding> bindings, skir.EvaluationBudget budget, PortableOperationResults operations, List<PortableAppearanceLayer> appearanceLayers, Map<skir.ExpressionBindingId, AuthoredBindingAddress> authoredAliases, AuthoredPresentationIndex? authoredIndex, AuthoredPresentationIndex? independentAuthoredIndex, List<PortableAuthoredPart> authoredParts, PortableInspectorFrame? inspectorFrame, Set<ActiveInspectorLayout> activeInspectorLayouts, Set<ActivePartPresentation> activeParts, bool readOnly, bool enabled, Stream<skir.RealmPresentationSearchUpdate> Function(skir.RealmPresentationSearchRequest request)? watchSearch, ValueChanged<String>? reportStatus, CheckedEditorCatalog? catalog, PortableExpressionQueries? queries, ResourceDiagnosticReader resourceDiagnostics, skir.ResourceId? resource, String? searchHistoryNamespace, ValueChanged<skir.ResourceId>? openResource, skir.PresentationRole? role, skir.PresentationMaterial? material, Set<skir.PresentationId> activePresentations, Set<ActiveFieldPresentation> activeFieldPresentations, skir.BoundControl? associatedControl, ResolvedFieldAssociation? fieldAssociation, Map<String, skir.PresentationNode> slots, Map<String, PortableSlotBuilder> slotBuilders, PortablePresentationHost? host, Map<skir.ExpressionBindingId, PortableBindingSetter> projectedWriters
+ Map<skir.ExpressionBindingId, PortableExpressionBinding> bindings, skir.EvaluationBudget budget, PortableOperationResults operations, List<PortableAppearanceLayer> appearanceLayers, Map<skir.ExpressionBindingId, AuthoredBindingAddress> authoredAliases, AuthoredPresentationIndex? authoredIndex, AuthoredPresentationIndex? independentAuthoredIndex, List<PortableAuthoredPart> authoredParts, PortableInspectorFrame? inspectorFrame, Set<ActiveInspectorLayout> activeInspectorLayouts, Set<ActivePartPresentation> activeParts, bool readOnly, bool enabled, Stream<skir.RealmPresentationSearchUpdate> Function(skir.RealmPresentationSearchRequest request)? watchSearch, ValueChanged<String>? reportStatus, CheckedEditorCatalog? catalog, PortableExpressionQueries? queries, ResourceDiagnosticReader resourceDiagnostics, skir.ResourceId? resource, String? searchHistoryNamespace, ValueChanged<skir.ResourceId>? openResource, skir.ResourceId? routedResource, skir.PresentationRole? role, skir.PresentationMaterial? material, Set<skir.PresentationId> activePresentations, Set<ActiveFieldPresentation> activeFieldPresentations, skir.BoundControl? associatedControl, ResolvedFieldAssociation? fieldAssociation, Map<String, skir.PresentationNode> slots, Map<String, PortableSlotBuilder> slotBuilders, PortablePresentationHost? host, HostContext hostContext, Map<skir.ExpressionBindingId, PortableBindingSetter> projectedWriters
 });
 
 
-$AuthoredPresentationIndexCopyWith<$Res>? get authoredIndex;$AuthoredPresentationIndexCopyWith<$Res>? get independentAuthoredIndex;$PortableInspectorFrameCopyWith<$Res>? get inspectorFrame;$ResolvedFieldAssociationCopyWith<$Res>? get fieldAssociation;
+$AuthoredPresentationIndexCopyWith<$Res>? get authoredIndex;$AuthoredPresentationIndexCopyWith<$Res>? get independentAuthoredIndex;$PortableInspectorFrameCopyWith<$Res>? get inspectorFrame;$ResolvedFieldAssociationCopyWith<$Res>? get fieldAssociation;$HostContextCopyWith<$Res> get hostContext;
 
 }
 /// @nodoc
@@ -11112,7 +11394,7 @@ class _$PortablePresentationScopeCopyWithImpl<$Res>
 
 /// Create a copy of PortablePresentationScope
 /// with the given fields replaced by the non-null parameter values.
-@pragma('vm:prefer-inline') @override $Res call({Object? bindings = null,Object? budget = null,Object? operations = null,Object? appearanceLayers = null,Object? authoredAliases = null,Object? authoredIndex = freezed,Object? independentAuthoredIndex = freezed,Object? authoredParts = null,Object? inspectorFrame = freezed,Object? activeInspectorLayouts = null,Object? activeParts = null,Object? readOnly = null,Object? enabled = null,Object? watchSearch = freezed,Object? reportStatus = freezed,Object? catalog = freezed,Object? queries = freezed,Object? resourceDiagnostics = null,Object? resource = freezed,Object? searchHistoryNamespace = freezed,Object? openResource = freezed,Object? role = freezed,Object? material = freezed,Object? activePresentations = null,Object? activeFieldPresentations = null,Object? associatedControl = freezed,Object? fieldAssociation = freezed,Object? slots = null,Object? slotBuilders = null,Object? host = freezed,Object? projectedWriters = null,}) {
+@pragma('vm:prefer-inline') @override $Res call({Object? bindings = null,Object? budget = null,Object? operations = null,Object? appearanceLayers = null,Object? authoredAliases = null,Object? authoredIndex = freezed,Object? independentAuthoredIndex = freezed,Object? authoredParts = null,Object? inspectorFrame = freezed,Object? activeInspectorLayouts = null,Object? activeParts = null,Object? readOnly = null,Object? enabled = null,Object? watchSearch = freezed,Object? reportStatus = freezed,Object? catalog = freezed,Object? queries = freezed,Object? resourceDiagnostics = null,Object? resource = freezed,Object? searchHistoryNamespace = freezed,Object? openResource = freezed,Object? routedResource = freezed,Object? role = freezed,Object? material = freezed,Object? activePresentations = null,Object? activeFieldPresentations = null,Object? associatedControl = freezed,Object? fieldAssociation = freezed,Object? slots = null,Object? slotBuilders = null,Object? host = freezed,Object? hostContext = null,Object? projectedWriters = null,}) {
   return _then(PortablePresentationScope(
 bindings: null == bindings ? _self.bindings : bindings // ignore: cast_nullable_to_non_nullable
 as Map<skir.ExpressionBindingId, PortableExpressionBinding>,budget: null == budget ? _self.budget : budget // ignore: cast_nullable_to_non_nullable
@@ -11135,7 +11417,8 @@ as PortableExpressionQueries?,resourceDiagnostics: null == resourceDiagnostics ?
 as ResourceDiagnosticReader,resource: freezed == resource ? _self.resource : resource // ignore: cast_nullable_to_non_nullable
 as skir.ResourceId?,searchHistoryNamespace: freezed == searchHistoryNamespace ? _self.searchHistoryNamespace : searchHistoryNamespace // ignore: cast_nullable_to_non_nullable
 as String?,openResource: freezed == openResource ? _self.openResource : openResource // ignore: cast_nullable_to_non_nullable
-as ValueChanged<skir.ResourceId>?,role: freezed == role ? _self.role : role // ignore: cast_nullable_to_non_nullable
+as ValueChanged<skir.ResourceId>?,routedResource: freezed == routedResource ? _self.routedResource : routedResource // ignore: cast_nullable_to_non_nullable
+as skir.ResourceId?,role: freezed == role ? _self.role : role // ignore: cast_nullable_to_non_nullable
 as skir.PresentationRole?,material: freezed == material ? _self.material : material // ignore: cast_nullable_to_non_nullable
 as skir.PresentationMaterial?,activePresentations: null == activePresentations ? _self.activePresentations : activePresentations // ignore: cast_nullable_to_non_nullable
 as Set<skir.PresentationId>,activeFieldPresentations: null == activeFieldPresentations ? _self.activeFieldPresentations : activeFieldPresentations // ignore: cast_nullable_to_non_nullable
@@ -11144,7 +11427,8 @@ as skir.BoundControl?,fieldAssociation: freezed == fieldAssociation ? _self.fiel
 as ResolvedFieldAssociation?,slots: null == slots ? _self.slots : slots // ignore: cast_nullable_to_non_nullable
 as Map<String, skir.PresentationNode>,slotBuilders: null == slotBuilders ? _self.slotBuilders : slotBuilders // ignore: cast_nullable_to_non_nullable
 as Map<String, PortableSlotBuilder>,host: freezed == host ? _self.host : host // ignore: cast_nullable_to_non_nullable
-as PortablePresentationHost?,projectedWriters: null == projectedWriters ? _self.projectedWriters : projectedWriters // ignore: cast_nullable_to_non_nullable
+as PortablePresentationHost?,hostContext: null == hostContext ? _self.hostContext : hostContext // ignore: cast_nullable_to_non_nullable
+as HostContext,projectedWriters: null == projectedWriters ? _self.projectedWriters : projectedWriters // ignore: cast_nullable_to_non_nullable
 as Map<skir.ExpressionBindingId, PortableBindingSetter>,
   ));
 }
@@ -11196,6 +11480,15 @@ $ResolvedFieldAssociationCopyWith<$Res>? get fieldAssociation {
   return $ResolvedFieldAssociationCopyWith<$Res>(_self.fieldAssociation!, (value) {
     return _then(_self.copyWith(fieldAssociation: value));
   });
+}/// Create a copy of PortablePresentationScope
+/// with the given fields replaced by the non-null parameter values.
+@override
+@pragma('vm:prefer-inline')
+$HostContextCopyWith<$Res> get hostContext {
+  
+  return $HostContextCopyWith<$Res>(_self.hostContext, (value) {
+    return _then(_self.copyWith(hostContext: value));
+  });
 }
 }
 
@@ -11205,7 +11498,7 @@ $ResolvedFieldAssociationCopyWith<$Res>? get fieldAssociation {
 
 
 class _PortablePresentationScope extends PortablePresentationScope {
-  const _PortablePresentationScope({required  Map<skir.ExpressionBindingId, PortableExpressionBinding> bindings, required this.budget, required this.operations, required  List<PortableAppearanceLayer> appearanceLayers, required  Map<skir.ExpressionBindingId, AuthoredBindingAddress> authoredAliases, required this.authoredIndex, required this.independentAuthoredIndex, required  List<PortableAuthoredPart> authoredParts, required this.inspectorFrame, required  Set<ActiveInspectorLayout> activeInspectorLayouts, required  Set<ActivePartPresentation> activeParts, required this.readOnly, required this.enabled, required this.watchSearch, required this.reportStatus, required this.catalog, required this.queries, required this.resourceDiagnostics, required this.resource, required this.searchHistoryNamespace, required this.openResource, required this.role, required this.material, required  Set<skir.PresentationId> activePresentations, required  Set<ActiveFieldPresentation> activeFieldPresentations, required this.associatedControl, required this.fieldAssociation, required  Map<String, skir.PresentationNode> slots, required  Map<String, PortableSlotBuilder> slotBuilders, required this.host, required  Map<skir.ExpressionBindingId, PortableBindingSetter> projectedWriters}): _bindings = bindings,_appearanceLayers = appearanceLayers,_authoredAliases = authoredAliases,_authoredParts = authoredParts,_activeInspectorLayouts = activeInspectorLayouts,_activeParts = activeParts,_activePresentations = activePresentations,_activeFieldPresentations = activeFieldPresentations,_slots = slots,_slotBuilders = slotBuilders,_projectedWriters = projectedWriters,super._();
+  const _PortablePresentationScope({required  Map<skir.ExpressionBindingId, PortableExpressionBinding> bindings, required this.budget, required this.operations, required  List<PortableAppearanceLayer> appearanceLayers, required  Map<skir.ExpressionBindingId, AuthoredBindingAddress> authoredAliases, required this.authoredIndex, required this.independentAuthoredIndex, required  List<PortableAuthoredPart> authoredParts, required this.inspectorFrame, required  Set<ActiveInspectorLayout> activeInspectorLayouts, required  Set<ActivePartPresentation> activeParts, required this.readOnly, required this.enabled, required this.watchSearch, required this.reportStatus, required this.catalog, required this.queries, required this.resourceDiagnostics, required this.resource, required this.searchHistoryNamespace, required this.openResource, required this.routedResource, required this.role, required this.material, required  Set<skir.PresentationId> activePresentations, required  Set<ActiveFieldPresentation> activeFieldPresentations, required this.associatedControl, required this.fieldAssociation, required  Map<String, skir.PresentationNode> slots, required  Map<String, PortableSlotBuilder> slotBuilders, required this.host, required this.hostContext, required  Map<skir.ExpressionBindingId, PortableBindingSetter> projectedWriters}): _bindings = bindings,_appearanceLayers = appearanceLayers,_authoredAliases = authoredAliases,_authoredParts = authoredParts,_activeInspectorLayouts = activeInspectorLayouts,_activeParts = activeParts,_activePresentations = activePresentations,_activeFieldPresentations = activeFieldPresentations,_slots = slots,_slotBuilders = slotBuilders,_projectedWriters = projectedWriters,super._();
   
 
  final  Map<skir.ExpressionBindingId, PortableExpressionBinding> _bindings;
@@ -11265,6 +11558,9 @@ class _PortablePresentationScope extends PortablePresentationScope {
 @override final  skir.ResourceId? resource;
 @override final  String? searchHistoryNamespace;
 @override final  ValueChanged<skir.ResourceId>? openResource;
+/// The resource open in the workspace, which resources layouts mark as
+/// routed.
+@override final  skir.ResourceId? routedResource;
 @override final  skir.PresentationRole? role;
 @override final  skir.PresentationMaterial? material;
  final  Set<skir.PresentationId> _activePresentations;
@@ -11298,6 +11594,8 @@ class _PortablePresentationScope extends PortablePresentationScope {
 }
 
 @override final  PortablePresentationHost? host;
+/// Host values for the host inputs each material in this scope declares.
+@override final  HostContext hostContext;
  final  Map<skir.ExpressionBindingId, PortableBindingSetter> _projectedWriters;
 @override Map<skir.ExpressionBindingId, PortableBindingSetter> get projectedWriters {
   if (_projectedWriters is EqualUnmodifiableMapView) return _projectedWriters;
@@ -11316,18 +11614,18 @@ _$PortablePresentationScopeCopyWith<_PortablePresentationScope> get copyWith => 
 
 @override
 bool operator ==(Object other) {
-    return identical(this, other) || (other.runtimeType == runtimeType&&other is _PortablePresentationScope&&const DeepCollectionEquality().equals(other.bindings, _bindings)&&(identical(other.budget, budget) || other.budget == budget)&&(identical(other.operations, operations) || other.operations == operations)&&const DeepCollectionEquality().equals(other.appearanceLayers, _appearanceLayers)&&const DeepCollectionEquality().equals(other.authoredAliases, _authoredAliases)&&(identical(other.authoredIndex, authoredIndex) || other.authoredIndex == authoredIndex)&&(identical(other.independentAuthoredIndex, independentAuthoredIndex) || other.independentAuthoredIndex == independentAuthoredIndex)&&const DeepCollectionEquality().equals(other.authoredParts, _authoredParts)&&(identical(other.inspectorFrame, inspectorFrame) || other.inspectorFrame == inspectorFrame)&&const DeepCollectionEquality().equals(other.activeInspectorLayouts, _activeInspectorLayouts)&&const DeepCollectionEquality().equals(other.activeParts, _activeParts)&&(identical(other.readOnly, readOnly) || other.readOnly == readOnly)&&(identical(other.enabled, enabled) || other.enabled == enabled)&&(identical(other.watchSearch, watchSearch) || other.watchSearch == watchSearch)&&(identical(other.reportStatus, reportStatus) || other.reportStatus == reportStatus)&&(identical(other.catalog, catalog) || other.catalog == catalog)&&(identical(other.queries, queries) || other.queries == queries)&&(identical(other.resourceDiagnostics, resourceDiagnostics) || other.resourceDiagnostics == resourceDiagnostics)&&(identical(other.resource, resource) || other.resource == resource)&&(identical(other.searchHistoryNamespace, searchHistoryNamespace) || other.searchHistoryNamespace == searchHistoryNamespace)&&(identical(other.openResource, openResource) || other.openResource == openResource)&&(identical(other.role, role) || other.role == role)&&(identical(other.material, material) || other.material == material)&&const DeepCollectionEquality().equals(other.activePresentations, _activePresentations)&&const DeepCollectionEquality().equals(other.activeFieldPresentations, _activeFieldPresentations)&&(identical(other.associatedControl, associatedControl) || other.associatedControl == associatedControl)&&(identical(other.fieldAssociation, fieldAssociation) || other.fieldAssociation == fieldAssociation)&&const DeepCollectionEquality().equals(other.slots, _slots)&&const DeepCollectionEquality().equals(other.slotBuilders, _slotBuilders)&&(identical(other.host, host) || other.host == host)&&const DeepCollectionEquality().equals(other.projectedWriters, _projectedWriters));
+    return identical(this, other) || (other.runtimeType == runtimeType&&other is _PortablePresentationScope&&const DeepCollectionEquality().equals(other.bindings, _bindings)&&(identical(other.budget, budget) || other.budget == budget)&&(identical(other.operations, operations) || other.operations == operations)&&const DeepCollectionEquality().equals(other.appearanceLayers, _appearanceLayers)&&const DeepCollectionEquality().equals(other.authoredAliases, _authoredAliases)&&(identical(other.authoredIndex, authoredIndex) || other.authoredIndex == authoredIndex)&&(identical(other.independentAuthoredIndex, independentAuthoredIndex) || other.independentAuthoredIndex == independentAuthoredIndex)&&const DeepCollectionEquality().equals(other.authoredParts, _authoredParts)&&(identical(other.inspectorFrame, inspectorFrame) || other.inspectorFrame == inspectorFrame)&&const DeepCollectionEquality().equals(other.activeInspectorLayouts, _activeInspectorLayouts)&&const DeepCollectionEquality().equals(other.activeParts, _activeParts)&&(identical(other.readOnly, readOnly) || other.readOnly == readOnly)&&(identical(other.enabled, enabled) || other.enabled == enabled)&&(identical(other.watchSearch, watchSearch) || other.watchSearch == watchSearch)&&(identical(other.reportStatus, reportStatus) || other.reportStatus == reportStatus)&&(identical(other.catalog, catalog) || other.catalog == catalog)&&(identical(other.queries, queries) || other.queries == queries)&&(identical(other.resourceDiagnostics, resourceDiagnostics) || other.resourceDiagnostics == resourceDiagnostics)&&(identical(other.resource, resource) || other.resource == resource)&&(identical(other.searchHistoryNamespace, searchHistoryNamespace) || other.searchHistoryNamespace == searchHistoryNamespace)&&(identical(other.openResource, openResource) || other.openResource == openResource)&&(identical(other.routedResource, routedResource) || other.routedResource == routedResource)&&(identical(other.role, role) || other.role == role)&&(identical(other.material, material) || other.material == material)&&const DeepCollectionEquality().equals(other.activePresentations, _activePresentations)&&const DeepCollectionEquality().equals(other.activeFieldPresentations, _activeFieldPresentations)&&(identical(other.associatedControl, associatedControl) || other.associatedControl == associatedControl)&&(identical(other.fieldAssociation, fieldAssociation) || other.fieldAssociation == fieldAssociation)&&const DeepCollectionEquality().equals(other.slots, _slots)&&const DeepCollectionEquality().equals(other.slotBuilders, _slotBuilders)&&(identical(other.host, host) || other.host == host)&&(identical(other.hostContext, hostContext) || other.hostContext == hostContext)&&const DeepCollectionEquality().equals(other.projectedWriters, _projectedWriters));
 }
 
 
 @override
 int get hashCode {
-    return Object.hashAll([runtimeType,const DeepCollectionEquality().hash(_bindings),budget,operations,const DeepCollectionEquality().hash(_appearanceLayers),const DeepCollectionEquality().hash(_authoredAliases),authoredIndex,independentAuthoredIndex,const DeepCollectionEquality().hash(_authoredParts),inspectorFrame,const DeepCollectionEquality().hash(_activeInspectorLayouts),const DeepCollectionEquality().hash(_activeParts),readOnly,enabled,watchSearch,reportStatus,catalog,queries,resourceDiagnostics,resource,searchHistoryNamespace,openResource,role,material,const DeepCollectionEquality().hash(_activePresentations),const DeepCollectionEquality().hash(_activeFieldPresentations),associatedControl,fieldAssociation,const DeepCollectionEquality().hash(_slots),const DeepCollectionEquality().hash(_slotBuilders),host,const DeepCollectionEquality().hash(_projectedWriters)]);
+    return Object.hashAll([runtimeType,const DeepCollectionEquality().hash(_bindings),budget,operations,const DeepCollectionEquality().hash(_appearanceLayers),const DeepCollectionEquality().hash(_authoredAliases),authoredIndex,independentAuthoredIndex,const DeepCollectionEquality().hash(_authoredParts),inspectorFrame,const DeepCollectionEquality().hash(_activeInspectorLayouts),const DeepCollectionEquality().hash(_activeParts),readOnly,enabled,watchSearch,reportStatus,catalog,queries,resourceDiagnostics,resource,searchHistoryNamespace,openResource,routedResource,role,material,const DeepCollectionEquality().hash(_activePresentations),const DeepCollectionEquality().hash(_activeFieldPresentations),associatedControl,fieldAssociation,const DeepCollectionEquality().hash(_slots),const DeepCollectionEquality().hash(_slotBuilders),host,hostContext,const DeepCollectionEquality().hash(_projectedWriters)]);
 }
 
 @override
 String toString() {
-    return 'PortablePresentationScope._value(bindings: $bindings, budget: $budget, operations: $operations, appearanceLayers: $appearanceLayers, authoredAliases: $authoredAliases, authoredIndex: $authoredIndex, independentAuthoredIndex: $independentAuthoredIndex, authoredParts: $authoredParts, inspectorFrame: $inspectorFrame, activeInspectorLayouts: $activeInspectorLayouts, activeParts: $activeParts, readOnly: $readOnly, enabled: $enabled, watchSearch: $watchSearch, reportStatus: $reportStatus, catalog: $catalog, queries: $queries, resourceDiagnostics: $resourceDiagnostics, resource: $resource, searchHistoryNamespace: $searchHistoryNamespace, openResource: $openResource, role: $role, material: $material, activePresentations: $activePresentations, activeFieldPresentations: $activeFieldPresentations, associatedControl: $associatedControl, fieldAssociation: $fieldAssociation, slots: $slots, slotBuilders: $slotBuilders, host: $host, projectedWriters: $projectedWriters)';
+    return 'PortablePresentationScope._value(bindings: $bindings, budget: $budget, operations: $operations, appearanceLayers: $appearanceLayers, authoredAliases: $authoredAliases, authoredIndex: $authoredIndex, independentAuthoredIndex: $independentAuthoredIndex, authoredParts: $authoredParts, inspectorFrame: $inspectorFrame, activeInspectorLayouts: $activeInspectorLayouts, activeParts: $activeParts, readOnly: $readOnly, enabled: $enabled, watchSearch: $watchSearch, reportStatus: $reportStatus, catalog: $catalog, queries: $queries, resourceDiagnostics: $resourceDiagnostics, resource: $resource, searchHistoryNamespace: $searchHistoryNamespace, openResource: $openResource, routedResource: $routedResource, role: $role, material: $material, activePresentations: $activePresentations, activeFieldPresentations: $activeFieldPresentations, associatedControl: $associatedControl, fieldAssociation: $fieldAssociation, slots: $slots, slotBuilders: $slotBuilders, host: $host, hostContext: $hostContext, projectedWriters: $projectedWriters)';
 }
 
 
@@ -11338,11 +11636,11 @@ abstract mixin class _$PortablePresentationScopeCopyWith<$Res> implements $Porta
   factory _$PortablePresentationScopeCopyWith(_PortablePresentationScope value, $Res Function(_PortablePresentationScope) _then) = __$PortablePresentationScopeCopyWithImpl;
 @override @useResult
 $Res call({
- Map<skir.ExpressionBindingId, PortableExpressionBinding> bindings, skir.EvaluationBudget budget, PortableOperationResults operations, List<PortableAppearanceLayer> appearanceLayers, Map<skir.ExpressionBindingId, AuthoredBindingAddress> authoredAliases, AuthoredPresentationIndex? authoredIndex, AuthoredPresentationIndex? independentAuthoredIndex, List<PortableAuthoredPart> authoredParts, PortableInspectorFrame? inspectorFrame, Set<ActiveInspectorLayout> activeInspectorLayouts, Set<ActivePartPresentation> activeParts, bool readOnly, bool enabled, Stream<skir.RealmPresentationSearchUpdate> Function(skir.RealmPresentationSearchRequest request)? watchSearch, ValueChanged<String>? reportStatus, CheckedEditorCatalog? catalog, PortableExpressionQueries? queries, ResourceDiagnosticReader resourceDiagnostics, skir.ResourceId? resource, String? searchHistoryNamespace, ValueChanged<skir.ResourceId>? openResource, skir.PresentationRole? role, skir.PresentationMaterial? material, Set<skir.PresentationId> activePresentations, Set<ActiveFieldPresentation> activeFieldPresentations, skir.BoundControl? associatedControl, ResolvedFieldAssociation? fieldAssociation, Map<String, skir.PresentationNode> slots, Map<String, PortableSlotBuilder> slotBuilders, PortablePresentationHost? host, Map<skir.ExpressionBindingId, PortableBindingSetter> projectedWriters
+ Map<skir.ExpressionBindingId, PortableExpressionBinding> bindings, skir.EvaluationBudget budget, PortableOperationResults operations, List<PortableAppearanceLayer> appearanceLayers, Map<skir.ExpressionBindingId, AuthoredBindingAddress> authoredAliases, AuthoredPresentationIndex? authoredIndex, AuthoredPresentationIndex? independentAuthoredIndex, List<PortableAuthoredPart> authoredParts, PortableInspectorFrame? inspectorFrame, Set<ActiveInspectorLayout> activeInspectorLayouts, Set<ActivePartPresentation> activeParts, bool readOnly, bool enabled, Stream<skir.RealmPresentationSearchUpdate> Function(skir.RealmPresentationSearchRequest request)? watchSearch, ValueChanged<String>? reportStatus, CheckedEditorCatalog? catalog, PortableExpressionQueries? queries, ResourceDiagnosticReader resourceDiagnostics, skir.ResourceId? resource, String? searchHistoryNamespace, ValueChanged<skir.ResourceId>? openResource, skir.ResourceId? routedResource, skir.PresentationRole? role, skir.PresentationMaterial? material, Set<skir.PresentationId> activePresentations, Set<ActiveFieldPresentation> activeFieldPresentations, skir.BoundControl? associatedControl, ResolvedFieldAssociation? fieldAssociation, Map<String, skir.PresentationNode> slots, Map<String, PortableSlotBuilder> slotBuilders, PortablePresentationHost? host, HostContext hostContext, Map<skir.ExpressionBindingId, PortableBindingSetter> projectedWriters
 });
 
 
-@override $AuthoredPresentationIndexCopyWith<$Res>? get authoredIndex;@override $AuthoredPresentationIndexCopyWith<$Res>? get independentAuthoredIndex;@override $PortableInspectorFrameCopyWith<$Res>? get inspectorFrame;@override $ResolvedFieldAssociationCopyWith<$Res>? get fieldAssociation;
+@override $AuthoredPresentationIndexCopyWith<$Res>? get authoredIndex;@override $AuthoredPresentationIndexCopyWith<$Res>? get independentAuthoredIndex;@override $PortableInspectorFrameCopyWith<$Res>? get inspectorFrame;@override $ResolvedFieldAssociationCopyWith<$Res>? get fieldAssociation;@override $HostContextCopyWith<$Res> get hostContext;
 
 }
 /// @nodoc
@@ -11355,7 +11653,7 @@ class __$PortablePresentationScopeCopyWithImpl<$Res>
 
 /// Create a copy of PortablePresentationScope
 /// with the given fields replaced by the non-null parameter values.
-@override @pragma('vm:prefer-inline') $Res call({Object? bindings = null,Object? budget = null,Object? operations = null,Object? appearanceLayers = null,Object? authoredAliases = null,Object? authoredIndex = freezed,Object? independentAuthoredIndex = freezed,Object? authoredParts = null,Object? inspectorFrame = freezed,Object? activeInspectorLayouts = null,Object? activeParts = null,Object? readOnly = null,Object? enabled = null,Object? watchSearch = freezed,Object? reportStatus = freezed,Object? catalog = freezed,Object? queries = freezed,Object? resourceDiagnostics = null,Object? resource = freezed,Object? searchHistoryNamespace = freezed,Object? openResource = freezed,Object? role = freezed,Object? material = freezed,Object? activePresentations = null,Object? activeFieldPresentations = null,Object? associatedControl = freezed,Object? fieldAssociation = freezed,Object? slots = null,Object? slotBuilders = null,Object? host = freezed,Object? projectedWriters = null,}) {
+@override @pragma('vm:prefer-inline') $Res call({Object? bindings = null,Object? budget = null,Object? operations = null,Object? appearanceLayers = null,Object? authoredAliases = null,Object? authoredIndex = freezed,Object? independentAuthoredIndex = freezed,Object? authoredParts = null,Object? inspectorFrame = freezed,Object? activeInspectorLayouts = null,Object? activeParts = null,Object? readOnly = null,Object? enabled = null,Object? watchSearch = freezed,Object? reportStatus = freezed,Object? catalog = freezed,Object? queries = freezed,Object? resourceDiagnostics = null,Object? resource = freezed,Object? searchHistoryNamespace = freezed,Object? openResource = freezed,Object? routedResource = freezed,Object? role = freezed,Object? material = freezed,Object? activePresentations = null,Object? activeFieldPresentations = null,Object? associatedControl = freezed,Object? fieldAssociation = freezed,Object? slots = null,Object? slotBuilders = null,Object? host = freezed,Object? hostContext = null,Object? projectedWriters = null,}) {
   return _then(_PortablePresentationScope(
 bindings: null == bindings ? _self._bindings : bindings // ignore: cast_nullable_to_non_nullable
 as Map<skir.ExpressionBindingId, PortableExpressionBinding>,budget: null == budget ? _self.budget : budget // ignore: cast_nullable_to_non_nullable
@@ -11378,7 +11676,8 @@ as PortableExpressionQueries?,resourceDiagnostics: null == resourceDiagnostics ?
 as ResourceDiagnosticReader,resource: freezed == resource ? _self.resource : resource // ignore: cast_nullable_to_non_nullable
 as skir.ResourceId?,searchHistoryNamespace: freezed == searchHistoryNamespace ? _self.searchHistoryNamespace : searchHistoryNamespace // ignore: cast_nullable_to_non_nullable
 as String?,openResource: freezed == openResource ? _self.openResource : openResource // ignore: cast_nullable_to_non_nullable
-as ValueChanged<skir.ResourceId>?,role: freezed == role ? _self.role : role // ignore: cast_nullable_to_non_nullable
+as ValueChanged<skir.ResourceId>?,routedResource: freezed == routedResource ? _self.routedResource : routedResource // ignore: cast_nullable_to_non_nullable
+as skir.ResourceId?,role: freezed == role ? _self.role : role // ignore: cast_nullable_to_non_nullable
 as skir.PresentationRole?,material: freezed == material ? _self.material : material // ignore: cast_nullable_to_non_nullable
 as skir.PresentationMaterial?,activePresentations: null == activePresentations ? _self._activePresentations : activePresentations // ignore: cast_nullable_to_non_nullable
 as Set<skir.PresentationId>,activeFieldPresentations: null == activeFieldPresentations ? _self._activeFieldPresentations : activeFieldPresentations // ignore: cast_nullable_to_non_nullable
@@ -11387,7 +11686,8 @@ as skir.BoundControl?,fieldAssociation: freezed == fieldAssociation ? _self.fiel
 as ResolvedFieldAssociation?,slots: null == slots ? _self._slots : slots // ignore: cast_nullable_to_non_nullable
 as Map<String, skir.PresentationNode>,slotBuilders: null == slotBuilders ? _self._slotBuilders : slotBuilders // ignore: cast_nullable_to_non_nullable
 as Map<String, PortableSlotBuilder>,host: freezed == host ? _self.host : host // ignore: cast_nullable_to_non_nullable
-as PortablePresentationHost?,projectedWriters: null == projectedWriters ? _self._projectedWriters : projectedWriters // ignore: cast_nullable_to_non_nullable
+as PortablePresentationHost?,hostContext: null == hostContext ? _self.hostContext : hostContext // ignore: cast_nullable_to_non_nullable
+as HostContext,projectedWriters: null == projectedWriters ? _self._projectedWriters : projectedWriters // ignore: cast_nullable_to_non_nullable
 as Map<skir.ExpressionBindingId, PortableBindingSetter>,
   ));
 }
@@ -11439,6 +11739,15 @@ $ResolvedFieldAssociationCopyWith<$Res>? get fieldAssociation {
 
   return $ResolvedFieldAssociationCopyWith<$Res>(_self.fieldAssociation!, (value) {
     return _then(_self.copyWith(fieldAssociation: value));
+  });
+}/// Create a copy of PortablePresentationScope
+/// with the given fields replaced by the non-null parameter values.
+@override
+@pragma('vm:prefer-inline')
+$HostContextCopyWith<$Res> get hostContext {
+  
+  return $HostContextCopyWith<$Res>(_self.hostContext, (value) {
+    return _then(_self.copyWith(hostContext: value));
   });
 }
 }

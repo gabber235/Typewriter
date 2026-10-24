@@ -1,15 +1,23 @@
 package com.typewritermc.discovery
 
+import com.typewritermc.authoring.PlacementDefinition
 import com.typewritermc.checking.CatalogGeneration
 import com.typewritermc.imprint.ArtifactId
 import com.typewritermc.imprint.ContributionName
 import com.typewritermc.imprint.ContributionSourceId
 import com.typewritermc.imprint.ProducerId
 import com.typewritermc.library.BookDefinition
+import com.typewritermc.library.PageDefinition
+import com.typewritermc.library.TagDefinition
 import com.typewritermc.types.Color
+import com.typewritermc.types.ColorDefinition
 import com.typewritermc.types.DeclarationOwner
+import com.typewritermc.types.Icon
 import com.typewritermc.types.TypeDisplay
 import com.typewritermc.types.catalog.toWire
+import com.typewritermc.types.skir.SkirTypeCodec
+import com.typewritermc.types.skir.getOrThrow
+import com.typewritermc.types.toWire
 import de.infix.testBalloon.framework.core.testSuite
 import io.kotest.matchers.shouldBe
 import java.lang.reflect.Modifier
@@ -21,7 +29,7 @@ val TypeDisplayPublicationTest by testSuite {
             TypeDisplay(
                 name = "Book",
                 description = "Authored page collection",
-                icon = "material-symbols:book",
+                icon = Icon.Iconify("material-symbols:book"),
                 color = Color(0xFF3F51B5u),
             )
         val providers =
@@ -42,15 +50,48 @@ val TypeDisplayPublicationTest by testSuite {
             assembly.snapshot
                 .toWire()
                 .types
-                .single { published -> published.display?.name == expected.name }
+                .single { published -> published.definition == SkirTypeCodec.encode(BookDefinition.declaration).getOrThrow() }
                 .display
-        wireDisplay?.description shouldBe expected.description
-        wireDisplay?.icon shouldBe expected.icon
-        wireDisplay?.color?.argb shouldBe expected.color.argb.toInt()
+        wireDisplay.description shouldBe expected.description
+        wireDisplay.icon shouldBe expected.icon.toWire()
+        wireDisplay.color.argb shouldBe expected.color.argb.toInt()
+    }
+
+    test("a type without a display annotation publishes its class name with the default icon and color") {
+        ColorDefinition.display shouldBe
+            TypeDisplay(
+                name = "Color",
+                description = "",
+                icon = TypeDisplay.DEFAULT_ICON,
+                color = TypeDisplay.DEFAULT_COLOR,
+            )
+        PlacementDefinition.display.name shouldBe "Placement"
+    }
+
+    test("every resource type publishes its search key and other types publish none") {
+        val providers = generatedTypeProviders().distinctBy { provider -> provider.definition.id }
+        val origin = providerOrigin()
+        val published =
+            CatalogContributions(
+                declarations =
+                    providers.map { provider ->
+                        OwnedTypeDeclaration(origin, provider.definition, provider.display, searchKey = provider.searchKey)
+                    },
+            ).assemble(CatalogAssemblyContext(CatalogGeneration("search keys")))
+                .snapshot.types
+                .associate { it.definition.id to it.searchKey }
+
+        published[BookDefinition.id] shouldBe "book"
+        published[PageDefinition.id] shouldBe "page"
+        published[TagDefinition.id] shouldBe "tag"
+        published[ColorDefinition.id] shouldBe null
     }
 }
 
-private fun generatedTypeProviders(): List<GeneratedTypeProvider> {
+internal fun generatedTypeProviders(): List<GeneratedTypeProvider> = generatedProviders(GeneratedProviderKind.Type)
+
+/** Instances of every generated provider of [kind] indexed on the test classpath. */
+internal fun <T> generatedProviders(kind: GeneratedProviderKind): List<T> {
     val resources =
         Collections.list(
             requireNotNull(Thread.currentThread().contextClassLoader)
@@ -59,9 +100,10 @@ private fun generatedTypeProviders(): List<GeneratedTypeProvider> {
     return resources
         .flatMap { resource ->
             resource.openStream().bufferedReader().use { GeneratedProviderIndex.parse(it.readText()) }
-        }.filter { entry -> entry.kind == GeneratedProviderKind.Type }
+        }.filter { entry -> entry.kind == kind }
         .map { entry ->
-            instantiateGeneratedProvider(Class.forName(entry.providerClass)) as GeneratedTypeProvider
+            @Suppress("UNCHECKED_CAST")
+            instantiateGeneratedProvider(Class.forName(entry.providerClass)) as T
         }
 }
 
@@ -72,7 +114,7 @@ private fun instantiateGeneratedProvider(type: Class<*>): Any =
         }?.get(null)
         ?: type.getConstructor().newInstance()
 
-private fun providerOrigin(): ProviderOrigin =
+internal fun providerOrigin(): ProviderOrigin =
     ProviderOrigin(
         owner =
             DeclarationOwner(

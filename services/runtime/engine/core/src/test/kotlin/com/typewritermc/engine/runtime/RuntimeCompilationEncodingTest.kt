@@ -1,7 +1,6 @@
 package com.typewritermc.engine.runtime
 
 import com.typewritermc.authoring.NativeBindingId
-import com.typewritermc.authoring.ResourceDefinitionId
 import com.typewritermc.checking.CatalogGeneration
 import com.typewritermc.engine.CompilationContext
 import com.typewritermc.engine.CompiledResource
@@ -25,7 +24,7 @@ val RuntimeCompilationEncodingTest by testSuite {
         val id = TypeDefinitionId(TypeId.Qualified("test", "runtime"), 1)
         val facts =
             RuntimeCompilationFacts(
-                formatRevision = com.typewritermc.engine.PAGE_COMPILATION_FORMAT_REVISION,
+                formatRevision = com.typewritermc.engine.RESOURCE_GRAPH_FORMAT_REVISION,
                 root = CompiledResourceKey(ResourceId("page"), CompilationContext.Root),
                 resources = emptyList(),
                 edges = emptyList(),
@@ -48,13 +47,12 @@ val RuntimeCompilationEncodingTest by testSuite {
         val key = CompiledResourceKey(ResourceId("page"), CompilationContext.Root)
         val facts =
             RuntimeCompilationFacts(
-                formatRevision = com.typewritermc.engine.PAGE_COMPILATION_FORMAT_REVISION,
+                formatRevision = com.typewritermc.engine.RESOURCE_GRAPH_FORMAT_REVISION,
                 root = key,
                 resources =
                     listOf(
                         CompiledResource(
                             key = key,
-                            definition = ResourceDefinitionId("page"),
                             actualType = TypeUse.Named(resourceId),
                             bindingProvider = NativeBindingId("test"),
                             bindingSignature = "test:v1",

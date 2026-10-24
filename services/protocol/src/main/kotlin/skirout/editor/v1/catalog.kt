@@ -20,149 +20,44 @@ import build.skir.internal.MustNameArguments as _MustNameArguments;
 import build.skir.internal.UnrecognizedFields as _UnrecognizedFields;
 import build.skir.internal.UnrecognizedVariant as _UnrecognizedVariant;
 
-sealed interface ResourceDefinitionId_OrMutable {
-    val value: kotlin.String;
+sealed interface ResourceDisplayFormulas_OrMutable {
+    val target: skirout.editor.v1.type_catalog.ResourceTarget;
+    val label: skirout.editor.v1.expression.ExpressionNode;
+    val accent: skirout.editor.v1.expression.ExpressionNode;
+    val icon: skirout.editor.v1.expression.ExpressionNode;
 
-    fun toFrozen(): skirout.editor.v1.catalog.ResourceDefinitionId;
-}
-
-/** Deeply immutable. */
-@kotlin.Suppress("UNUSED_PARAMETER")
-class ResourceDefinitionId private constructor(
-    override val value: kotlin.String,
-    internal val _unrecognizedFields: _UnrecognizedFields<skirout.editor.v1.catalog.ResourceDefinitionId>? =
-        null,
-): skirout.editor.v1.catalog.ResourceDefinitionId_OrMutable {
-    constructor(
-        _mustNameArguments: _MustNameArguments =
-            _MustNameArguments,
-        value: kotlin.String,
-        _unrecognizedFields: _UnrecognizedFields<skirout.editor.v1.catalog.ResourceDefinitionId>? =
-            null,
-    ): this(
-        value,
-        _unrecognizedFields,
-    ) {}
-
-    @kotlin.Deprecated("Already frozen", kotlin.ReplaceWith("this"))
-    override fun toFrozen() = this;
-
-    /** Returns a mutable shallow copy of this instance */
-    fun toMutable() = Mutable(
-        value = this.value,
-    );
-
-    /** Returns a shallow copy of this instance with the specified fields replaced. */
-    fun copy(
-        _mustNameArguments: _MustNameArguments =
-            _MustNameArguments,
-        value: kotlin.String =
-            this.value,
-    ) = skirout.editor.v1.catalog.ResourceDefinitionId(
-        value,
-        this._unrecognizedFields,
-    );
-
-    @kotlin.Deprecated("No point in creating an exact copy of an immutable object", kotlin.ReplaceWith("this"))
-    fun copy() = this;
-
-    override fun equals(other: kotlin.Any?): kotlin.Boolean {
-        return this === other || (other is skirout.editor.v1.catalog.ResourceDefinitionId && this.value == other.value);
-    }
-
-    override fun hashCode(): kotlin.Int {
-        return kotlin.collections.listOf<kotlin.Any?>(this.value).hashCode();
-    }
-
-    override fun toString(): kotlin.String {
-        return build.skir.internal.toStringImpl(
-            this,
-            _SerializerRegistry.ResourceDefinitionIdSerializerImpl,
-        )
-    }
-
-    /** Mutable version of [ResourceDefinitionId]. */
-    class Mutable internal constructor(
-        _mustNameArguments: _MustNameArguments =
-            _MustNameArguments,
-        override var value: kotlin.String =
-            "",
-        internal var _unrecognizedFields: _UnrecognizedFields<skirout.editor.v1.catalog.ResourceDefinitionId>? =
-            null,
-    ): skirout.editor.v1.catalog.ResourceDefinitionId_OrMutable {
-        /** Returns a deeply immutable copy of this instance */
-        override fun toFrozen() = skirout.editor.v1.catalog.ResourceDefinitionId(
-            value = this.value,
-            _unrecognizedFields = this._unrecognizedFields,
-        );
-    }
-
-    companion object {
-        private val default =
-            skirout.editor.v1.catalog.ResourceDefinitionId(
-                "",
-            );
-
-        /** Returns an instance with all fields set to their default values. */
-        fun partial() = default;
-
-        /**
-         * Creates a new instance of [ResourceDefinitionId].
-         * Unlike the constructor, does not require all fields to be specified.
-         * Missing fields will be set to their default values.
-         */
-        fun partial(
-            _mustNameArguments: _MustNameArguments =
-                _MustNameArguments,
-            value: kotlin.String =
-                "",
-        ) = skirout.editor.v1.catalog.ResourceDefinitionId(
-            value = value,
-            _unrecognizedFields = null,
-        );
-
-        /** Serializer for [ResourceDefinitionId] instances. */
-        val serializer get() = _SerializerRegistry.ResourceDefinitionIdSerializer;
-
-        /** Describes the [ResourceDefinitionId] type. Provides runtime introspection capabilities. */
-        val typeDescriptor get() = _SerializerRegistry.ResourceDefinitionIdSerializerImpl.typeDescriptor;
-    }
-}
-
-sealed interface AuthoringResourceDefinition_OrMutable {
-    val id: skirout.editor.v1.catalog.ResourceDefinitionId_OrMutable;
-    val root: skirout.editor.v1.type_catalog.TypeDefinitionId_OrMutable;
-    val navigationHandler: skirout.editor.v1.catalog.AuthoringNavigationHandler;
-
-    fun toFrozen(): skirout.editor.v1.catalog.AuthoringResourceDefinition;
+    fun toFrozen(): skirout.editor.v1.catalog.ResourceDisplayFormulas;
 }
 
 /**
- * Gives an authored resource family its stable definition identity and navigation behavior,
- * independently of the concrete type application currently selected by a resource.
+ * Name, accent and icon formulas for resources of `target`. Each formula reads only the subject
+ * resource: its fields and its published type through the configured value binding.
  *
  * Deeply immutable.
  */
 @kotlin.Suppress("UNUSED_PARAMETER")
-class AuthoringResourceDefinition private constructor(
-    override val id: skirout.editor.v1.catalog.ResourceDefinitionId,
-    override val root: skirout.editor.v1.type_catalog.TypeDefinitionId,
-    override val navigationHandler: skirout.editor.v1.catalog.AuthoringNavigationHandler,
-    internal val _unrecognizedFields: _UnrecognizedFields<skirout.editor.v1.catalog.AuthoringResourceDefinition>? =
+class ResourceDisplayFormulas private constructor(
+    override val target: skirout.editor.v1.type_catalog.ResourceTarget,
+    override val label: skirout.editor.v1.expression.ExpressionNode,
+    override val accent: skirout.editor.v1.expression.ExpressionNode,
+    override val icon: skirout.editor.v1.expression.ExpressionNode,
+    internal val _unrecognizedFields: _UnrecognizedFields<skirout.editor.v1.catalog.ResourceDisplayFormulas>? =
         null,
-): skirout.editor.v1.catalog.AuthoringResourceDefinition_OrMutable {
+): skirout.editor.v1.catalog.ResourceDisplayFormulas_OrMutable {
     constructor(
         _mustNameArguments: _MustNameArguments =
             _MustNameArguments,
-        id: skirout.editor.v1.catalog.ResourceDefinitionId_OrMutable,
-        root: skirout.editor.v1.type_catalog.TypeDefinitionId_OrMutable,
-        navigationHandler: skirout.editor.v1.catalog.AuthoringNavigationHandler,
-        _unrecognizedFields: _UnrecognizedFields<skirout.editor.v1.catalog.AuthoringResourceDefinition>? =
+        target: skirout.editor.v1.type_catalog.ResourceTarget,
+        label: skirout.editor.v1.expression.ExpressionNode,
+        accent: skirout.editor.v1.expression.ExpressionNode,
+        icon: skirout.editor.v1.expression.ExpressionNode,
+        _unrecognizedFields: _UnrecognizedFields<skirout.editor.v1.catalog.ResourceDisplayFormulas>? =
             null,
     ): this(
-        id.toFrozen(),
-        root.toFrozen(),
-        navigationHandler,
+        target,
+        label,
+        accent,
+        icon,
         _unrecognizedFields,
     ) {}
 
@@ -171,25 +66,29 @@ class AuthoringResourceDefinition private constructor(
 
     /** Returns a mutable shallow copy of this instance */
     fun toMutable() = Mutable(
-        id = this.id,
-        root = this.root,
-        navigationHandler = this.navigationHandler,
+        target = this.target,
+        label = this.label,
+        accent = this.accent,
+        icon = this.icon,
     );
 
     /** Returns a shallow copy of this instance with the specified fields replaced. */
     fun copy(
         _mustNameArguments: _MustNameArguments =
             _MustNameArguments,
-        id: skirout.editor.v1.catalog.ResourceDefinitionId_OrMutable =
-            this.id,
-        root: skirout.editor.v1.type_catalog.TypeDefinitionId_OrMutable =
-            this.root,
-        navigationHandler: skirout.editor.v1.catalog.AuthoringNavigationHandler =
-            this.navigationHandler,
-    ) = skirout.editor.v1.catalog.AuthoringResourceDefinition(
-        id.toFrozen(),
-        root.toFrozen(),
-        navigationHandler,
+        target: skirout.editor.v1.type_catalog.ResourceTarget =
+            this.target,
+        label: skirout.editor.v1.expression.ExpressionNode =
+            this.label,
+        accent: skirout.editor.v1.expression.ExpressionNode =
+            this.accent,
+        icon: skirout.editor.v1.expression.ExpressionNode =
+            this.icon,
+    ) = skirout.editor.v1.catalog.ResourceDisplayFormulas(
+        target,
+        label,
+        accent,
+        icon,
         this._unrecognizedFields,
     );
 
@@ -197,111 +96,86 @@ class AuthoringResourceDefinition private constructor(
     fun copy() = this;
 
     override fun equals(other: kotlin.Any?): kotlin.Boolean {
-        return this === other || (other is skirout.editor.v1.catalog.AuthoringResourceDefinition && this.id == other.id && this.root == other.root && this.navigationHandler == other.navigationHandler);
+        return this === other || (other is skirout.editor.v1.catalog.ResourceDisplayFormulas && this.target == other.target && this.label == other.label && this.accent == other.accent && this.icon == other.icon);
     }
 
     override fun hashCode(): kotlin.Int {
-        return kotlin.collections.listOf<kotlin.Any?>(this.id, this.root, this.navigationHandler).hashCode();
+        return kotlin.collections.listOf<kotlin.Any?>(this.target, this.label, this.accent, this.icon).hashCode();
     }
 
     override fun toString(): kotlin.String {
         return build.skir.internal.toStringImpl(
             this,
-            _SerializerRegistry.AuthoringResourceDefinitionSerializerImpl,
+            _SerializerRegistry.ResourceDisplayFormulasSerializerImpl,
         )
     }
 
-    /** Mutable version of [AuthoringResourceDefinition]. */
+    /** Mutable version of [ResourceDisplayFormulas]. */
     class Mutable internal constructor(
         _mustNameArguments: _MustNameArguments =
             _MustNameArguments,
-        override var id: skirout.editor.v1.catalog.ResourceDefinitionId_OrMutable =
-            skirout.editor.v1.catalog.ResourceDefinitionId.partial(),
-        override var root: skirout.editor.v1.type_catalog.TypeDefinitionId_OrMutable =
-            skirout.editor.v1.type_catalog.TypeDefinitionId.partial(),
-        override var navigationHandler: skirout.editor.v1.catalog.AuthoringNavigationHandler =
-            skirout.editor.v1.catalog.AuthoringNavigationHandler.UNKNOWN,
-        internal var _unrecognizedFields: _UnrecognizedFields<skirout.editor.v1.catalog.AuthoringResourceDefinition>? =
+        override var target: skirout.editor.v1.type_catalog.ResourceTarget =
+            skirout.editor.v1.type_catalog.ResourceTarget.UNKNOWN,
+        override var label: skirout.editor.v1.expression.ExpressionNode =
+            skirout.editor.v1.expression.ExpressionNode.UNKNOWN,
+        override var accent: skirout.editor.v1.expression.ExpressionNode =
+            skirout.editor.v1.expression.ExpressionNode.UNKNOWN,
+        override var icon: skirout.editor.v1.expression.ExpressionNode =
+            skirout.editor.v1.expression.ExpressionNode.UNKNOWN,
+        internal var _unrecognizedFields: _UnrecognizedFields<skirout.editor.v1.catalog.ResourceDisplayFormulas>? =
             null,
-    ): skirout.editor.v1.catalog.AuthoringResourceDefinition_OrMutable {
+    ): skirout.editor.v1.catalog.ResourceDisplayFormulas_OrMutable {
         /** Returns a deeply immutable copy of this instance */
-        override fun toFrozen() = skirout.editor.v1.catalog.AuthoringResourceDefinition(
-            id = this.id,
-            root = this.root,
-            navigationHandler = this.navigationHandler,
+        override fun toFrozen() = skirout.editor.v1.catalog.ResourceDisplayFormulas(
+            target = this.target,
+            label = this.label,
+            accent = this.accent,
+            icon = this.icon,
             _unrecognizedFields = this._unrecognizedFields,
         );
-
-        /**
-         * If the value of [id] is already mutable, returns it as-is.
-         * Otherwise, makes a mutable copy, assigns it back to [id] and returns it.
-         */
-        val mutableId: skirout.editor.v1.catalog.ResourceDefinitionId.Mutable get() {
-            var value = this.id;
-            return when (value) {
-                is skirout.editor.v1.catalog.ResourceDefinitionId -> {
-                    value = value.toMutable();
-                    this.id = value;
-                    return value;
-                }
-                is skirout.editor.v1.catalog.ResourceDefinitionId.Mutable -> value;
-            }
-        }
-
-        /**
-         * If the value of [root] is already mutable, returns it as-is.
-         * Otherwise, makes a mutable copy, assigns it back to [root] and returns it.
-         */
-        val mutableRoot: skirout.editor.v1.type_catalog.TypeDefinitionId.Mutable get() {
-            var value = this.root;
-            return when (value) {
-                is skirout.editor.v1.type_catalog.TypeDefinitionId -> {
-                    value = value.toMutable();
-                    this.root = value;
-                    return value;
-                }
-                is skirout.editor.v1.type_catalog.TypeDefinitionId.Mutable -> value;
-            }
-        }
     }
 
     companion object {
         private val default =
-            skirout.editor.v1.catalog.AuthoringResourceDefinition(
-                skirout.editor.v1.catalog.ResourceDefinitionId.partial(),
-                skirout.editor.v1.type_catalog.TypeDefinitionId.partial(),
-                skirout.editor.v1.catalog.AuthoringNavigationHandler.UNKNOWN,
+            skirout.editor.v1.catalog.ResourceDisplayFormulas(
+                skirout.editor.v1.type_catalog.ResourceTarget.UNKNOWN,
+                skirout.editor.v1.expression.ExpressionNode.UNKNOWN,
+                skirout.editor.v1.expression.ExpressionNode.UNKNOWN,
+                skirout.editor.v1.expression.ExpressionNode.UNKNOWN,
             );
 
         /** Returns an instance with all fields set to their default values. */
         fun partial() = default;
 
         /**
-         * Creates a new instance of [AuthoringResourceDefinition].
+         * Creates a new instance of [ResourceDisplayFormulas].
          * Unlike the constructor, does not require all fields to be specified.
          * Missing fields will be set to their default values.
          */
         fun partial(
             _mustNameArguments: _MustNameArguments =
                 _MustNameArguments,
-            id: skirout.editor.v1.catalog.ResourceDefinitionId_OrMutable =
-                skirout.editor.v1.catalog.ResourceDefinitionId.partial(),
-            root: skirout.editor.v1.type_catalog.TypeDefinitionId_OrMutable =
-                skirout.editor.v1.type_catalog.TypeDefinitionId.partial(),
-            navigationHandler: skirout.editor.v1.catalog.AuthoringNavigationHandler =
-                skirout.editor.v1.catalog.AuthoringNavigationHandler.UNKNOWN,
-        ) = skirout.editor.v1.catalog.AuthoringResourceDefinition(
-            id = id,
-            root = root,
-            navigationHandler = navigationHandler,
+            target: skirout.editor.v1.type_catalog.ResourceTarget =
+                skirout.editor.v1.type_catalog.ResourceTarget.UNKNOWN,
+            label: skirout.editor.v1.expression.ExpressionNode =
+                skirout.editor.v1.expression.ExpressionNode.UNKNOWN,
+            accent: skirout.editor.v1.expression.ExpressionNode =
+                skirout.editor.v1.expression.ExpressionNode.UNKNOWN,
+            icon: skirout.editor.v1.expression.ExpressionNode =
+                skirout.editor.v1.expression.ExpressionNode.UNKNOWN,
+        ) = skirout.editor.v1.catalog.ResourceDisplayFormulas(
+            target = target,
+            label = label,
+            accent = accent,
+            icon = icon,
             _unrecognizedFields = null,
         );
 
-        /** Serializer for [AuthoringResourceDefinition] instances. */
-        val serializer get() = _SerializerRegistry.AuthoringResourceDefinitionSerializer;
+        /** Serializer for [ResourceDisplayFormulas] instances. */
+        val serializer get() = _SerializerRegistry.ResourceDisplayFormulasSerializer;
 
-        /** Describes the [AuthoringResourceDefinition] type. Provides runtime introspection capabilities. */
-        val typeDescriptor get() = _SerializerRegistry.AuthoringResourceDefinitionSerializerImpl.typeDescriptor;
+        /** Describes the [ResourceDisplayFormulas] type. Provides runtime introspection capabilities. */
+        val typeDescriptor get() = _SerializerRegistry.ResourceDisplayFormulasSerializerImpl.typeDescriptor;
     }
 }
 
@@ -1240,7 +1114,18 @@ sealed interface PublishedType_OrMutable {
     val status: skirout.editor.v1.catalog.DeclarationStatus;
     val effectiveFields: kotlin.collections.List<skirout.editor.v1.catalog.EffectiveFieldTemplate_OrMutable>;
     val ancestorTemplates: kotlin.collections.List<skirout.editor.v1.type_catalog.NamedTypeTemplate_OrMutable>;
-    val display: skirout.editor.v1.catalog.TypeDisplay_OrMutable?;
+    val display: skirout.editor.v1.catalog.TypeDisplay_OrMutable;
+    /**
+     * Search scope keyword for resources of this type, such as book in book:"Main story".
+     * Present for every resource type except the realm root and its sections, which every
+     * resource sits inside, and absent for every other type.
+     */
+    val searchKey: kotlin.String?;
+    /**
+     * The single effective field typed as a placement, which editors and Realm read and write
+     * when they lay out resources of this type. Absent when the type declares no placement.
+     */
+    val placementField: skirout.editor.v1.type_catalog.ValuePath_OrMutable?;
 
     fun toFrozen(): skirout.editor.v1.catalog.PublishedType;
 }
@@ -1252,7 +1137,9 @@ class PublishedType private constructor(
     override val status: skirout.editor.v1.catalog.DeclarationStatus,
     override val effectiveFields: build.skir.KeyedList<skirout.editor.v1.catalog.EffectiveFieldTemplate, kotlin.String>,
     override val ancestorTemplates: kotlin.collections.List<skirout.editor.v1.type_catalog.NamedTypeTemplate>,
-    override val display: skirout.editor.v1.catalog.TypeDisplay?,
+    override val display: skirout.editor.v1.catalog.TypeDisplay,
+    override val searchKey: kotlin.String?,
+    override val placementField: skirout.editor.v1.type_catalog.ValuePath?,
     internal val _unrecognizedFields: _UnrecognizedFields<skirout.editor.v1.catalog.PublishedType>? =
         null,
 ): skirout.editor.v1.catalog.PublishedType_OrMutable {
@@ -1263,7 +1150,9 @@ class PublishedType private constructor(
         status: skirout.editor.v1.catalog.DeclarationStatus,
         effectiveFields: kotlin.collections.Iterable<skirout.editor.v1.catalog.EffectiveFieldTemplate_OrMutable>,
         ancestorTemplates: kotlin.collections.Iterable<skirout.editor.v1.type_catalog.NamedTypeTemplate_OrMutable>,
-        display: skirout.editor.v1.catalog.TypeDisplay_OrMutable?,
+        display: skirout.editor.v1.catalog.TypeDisplay_OrMutable,
+        searchKey: kotlin.String?,
+        placementField: skirout.editor.v1.type_catalog.ValuePath_OrMutable?,
         _unrecognizedFields: _UnrecognizedFields<skirout.editor.v1.catalog.PublishedType>? =
             null,
     ): this(
@@ -1271,7 +1160,9 @@ class PublishedType private constructor(
         status,
         build.skir.internal.toKeyedList(effectiveFields, "key", { it.key }, { it.toFrozen() }),
         build.skir.internal.toFrozenList(ancestorTemplates, { it.toFrozen() }),
-        if (display != null) display.toFrozen() else null,
+        display.toFrozen(),
+        searchKey,
+        if (placementField != null) placementField.toFrozen() else null,
         _unrecognizedFields,
     ) {}
 
@@ -1285,6 +1176,8 @@ class PublishedType private constructor(
         effectiveFields = this.effectiveFields,
         ancestorTemplates = this.ancestorTemplates,
         display = this.display,
+        searchKey = this.searchKey,
+        placementField = this.placementField,
     );
 
     /** Returns a shallow copy of this instance with the specified fields replaced. */
@@ -1299,14 +1192,20 @@ class PublishedType private constructor(
             this.effectiveFields,
         ancestorTemplates: kotlin.collections.Iterable<skirout.editor.v1.type_catalog.NamedTypeTemplate_OrMutable> =
             this.ancestorTemplates,
-        display: skirout.editor.v1.catalog.TypeDisplay_OrMutable? =
+        display: skirout.editor.v1.catalog.TypeDisplay_OrMutable =
             this.display,
+        searchKey: kotlin.String? =
+            this.searchKey,
+        placementField: skirout.editor.v1.type_catalog.ValuePath_OrMutable? =
+            this.placementField,
     ) = skirout.editor.v1.catalog.PublishedType(
         definition.toFrozen(),
         status,
         build.skir.internal.toKeyedList(effectiveFields, "key", { it.key }, { it.toFrozen() }),
         build.skir.internal.toFrozenList(ancestorTemplates, { it.toFrozen() }),
-        if (display != null) display.toFrozen() else null,
+        display.toFrozen(),
+        searchKey,
+        if (placementField != null) placementField.toFrozen() else null,
         this._unrecognizedFields,
     );
 
@@ -1314,11 +1213,11 @@ class PublishedType private constructor(
     fun copy() = this;
 
     override fun equals(other: kotlin.Any?): kotlin.Boolean {
-        return this === other || (other is skirout.editor.v1.catalog.PublishedType && this.definition == other.definition && this.status == other.status && this.effectiveFields == other.effectiveFields && this.ancestorTemplates == other.ancestorTemplates && this.display == other.display);
+        return this === other || (other is skirout.editor.v1.catalog.PublishedType && this.definition == other.definition && this.status == other.status && this.effectiveFields == other.effectiveFields && this.ancestorTemplates == other.ancestorTemplates && this.display == other.display && this.searchKey == other.searchKey && this.placementField == other.placementField);
     }
 
     override fun hashCode(): kotlin.Int {
-        return kotlin.collections.listOf<kotlin.Any?>(this.definition, this.status, this.effectiveFields, this.ancestorTemplates, this.display).hashCode();
+        return kotlin.collections.listOf<kotlin.Any?>(this.definition, this.status, this.effectiveFields, this.ancestorTemplates, this.display, this.searchKey, this.placementField).hashCode();
     }
 
     override fun toString(): kotlin.String {
@@ -1340,7 +1239,11 @@ class PublishedType private constructor(
             build.skir.internal.emptyKeyedList<skirout.editor.v1.catalog.EffectiveFieldTemplate, kotlin.String>(),
         override var ancestorTemplates: kotlin.collections.List<skirout.editor.v1.type_catalog.NamedTypeTemplate_OrMutable> =
             build.skir.internal.emptyFrozenList<skirout.editor.v1.type_catalog.NamedTypeTemplate>(),
-        override var display: skirout.editor.v1.catalog.TypeDisplay_OrMutable? =
+        override var display: skirout.editor.v1.catalog.TypeDisplay_OrMutable =
+            skirout.editor.v1.catalog.TypeDisplay.partial(),
+        override var searchKey: kotlin.String? =
+            null,
+        override var placementField: skirout.editor.v1.type_catalog.ValuePath_OrMutable? =
             null,
         internal var _unrecognizedFields: _UnrecognizedFields<skirout.editor.v1.catalog.PublishedType>? =
             null,
@@ -1352,6 +1255,8 @@ class PublishedType private constructor(
             effectiveFields = this.effectiveFields,
             ancestorTemplates = this.ancestorTemplates,
             display = this.display,
+            searchKey = this.searchKey,
+            placementField = this.placementField,
             _unrecognizedFields = this._unrecognizedFields,
         );
 
@@ -1402,6 +1307,22 @@ class PublishedType private constructor(
                 }
             }
         }
+
+        /**
+         * If the value of [display] is already mutable, returns it as-is.
+         * Otherwise, makes a mutable copy, assigns it back to [display] and returns it.
+         */
+        val mutableDisplay: skirout.editor.v1.catalog.TypeDisplay.Mutable get() {
+            var value = this.display;
+            return when (value) {
+                is skirout.editor.v1.catalog.TypeDisplay -> {
+                    value = value.toMutable();
+                    this.display = value;
+                    return value;
+                }
+                is skirout.editor.v1.catalog.TypeDisplay.Mutable -> value;
+            }
+        }
     }
 
     companion object {
@@ -1411,6 +1332,8 @@ class PublishedType private constructor(
                 skirout.editor.v1.catalog.DeclarationStatus.UNKNOWN,
                 build.skir.internal.emptyKeyedList<skirout.editor.v1.catalog.EffectiveFieldTemplate, kotlin.String>(),
                 build.skir.internal.emptyFrozenList<skirout.editor.v1.type_catalog.NamedTypeTemplate>(),
+                skirout.editor.v1.catalog.TypeDisplay.partial(),
+                null,
                 null,
             );
 
@@ -1433,7 +1356,11 @@ class PublishedType private constructor(
                 build.skir.internal.emptyKeyedList<skirout.editor.v1.catalog.EffectiveFieldTemplate, kotlin.String>(),
             ancestorTemplates: kotlin.collections.Iterable<skirout.editor.v1.type_catalog.NamedTypeTemplate_OrMutable> =
                 build.skir.internal.emptyFrozenList<skirout.editor.v1.type_catalog.NamedTypeTemplate>(),
-            display: skirout.editor.v1.catalog.TypeDisplay_OrMutable? =
+            display: skirout.editor.v1.catalog.TypeDisplay_OrMutable =
+                skirout.editor.v1.catalog.TypeDisplay.partial(),
+            searchKey: kotlin.String? =
+                null,
+            placementField: skirout.editor.v1.type_catalog.ValuePath_OrMutable? =
                 null,
         ) = skirout.editor.v1.catalog.PublishedType(
             definition = definition,
@@ -1441,6 +1368,8 @@ class PublishedType private constructor(
             effectiveFields = effectiveFields,
             ancestorTemplates = ancestorTemplates,
             display = display,
+            searchKey = searchKey,
+            placementField = placementField,
             _unrecognizedFields = null,
         );
 
@@ -1455,7 +1384,7 @@ class PublishedType private constructor(
 sealed interface TypeDisplay_OrMutable {
     val name: kotlin.String;
     val description: kotlin.String;
-    val icon: kotlin.String;
+    val icon: skirout.kernel.v1.icon.Icon;
     val color: skirout.kernel.v1.color.Color_OrMutable;
 
     fun toFrozen(): skirout.editor.v1.catalog.TypeDisplay;
@@ -1466,7 +1395,7 @@ sealed interface TypeDisplay_OrMutable {
 class TypeDisplay private constructor(
     override val name: kotlin.String,
     override val description: kotlin.String,
-    override val icon: kotlin.String,
+    override val icon: skirout.kernel.v1.icon.Icon,
     override val color: skirout.kernel.v1.color.Color,
     internal val _unrecognizedFields: _UnrecognizedFields<skirout.editor.v1.catalog.TypeDisplay>? =
         null,
@@ -1476,7 +1405,7 @@ class TypeDisplay private constructor(
             _MustNameArguments,
         name: kotlin.String,
         description: kotlin.String,
-        icon: kotlin.String,
+        icon: skirout.kernel.v1.icon.Icon,
         color: skirout.kernel.v1.color.Color_OrMutable,
         _unrecognizedFields: _UnrecognizedFields<skirout.editor.v1.catalog.TypeDisplay>? =
             null,
@@ -1507,7 +1436,7 @@ class TypeDisplay private constructor(
             this.name,
         description: kotlin.String =
             this.description,
-        icon: kotlin.String =
+        icon: skirout.kernel.v1.icon.Icon =
             this.icon,
         color: skirout.kernel.v1.color.Color_OrMutable =
             this.color,
@@ -1545,8 +1474,8 @@ class TypeDisplay private constructor(
             "",
         override var description: kotlin.String =
             "",
-        override var icon: kotlin.String =
-            "",
+        override var icon: skirout.kernel.v1.icon.Icon =
+            skirout.kernel.v1.icon.Icon.UNKNOWN,
         override var color: skirout.kernel.v1.color.Color_OrMutable =
             skirout.kernel.v1.color.Color.partial(),
         internal var _unrecognizedFields: _UnrecognizedFields<skirout.editor.v1.catalog.TypeDisplay>? =
@@ -1583,7 +1512,7 @@ class TypeDisplay private constructor(
             skirout.editor.v1.catalog.TypeDisplay(
                 "",
                 "",
-                "",
+                skirout.kernel.v1.icon.Icon.UNKNOWN,
                 skirout.kernel.v1.color.Color.partial(),
             );
 
@@ -1602,8 +1531,8 @@ class TypeDisplay private constructor(
                 "",
             description: kotlin.String =
                 "",
-            icon: kotlin.String =
-                "",
+            icon: skirout.kernel.v1.icon.Icon =
+                skirout.kernel.v1.icon.Icon.UNKNOWN,
             color: skirout.kernel.v1.color.Color_OrMutable =
                 skirout.kernel.v1.color.Color.partial(),
         ) = skirout.editor.v1.catalog.TypeDisplay(
@@ -2364,8 +2293,9 @@ class ConfigurationRecipe private constructor(
 }
 
 /**
- * The UI surface requesting a type's presentation. Registering a role does not create a surface.
- * Missing presentations follow the catalog's explicit role fallbacks.
+ * Places in the editor shell. A role names where content appears, never what it is.
+ * Registering a role does not create a surface. Missing presentations follow the catalog's
+ * explicit role fallbacks.
  *
  * Deeply immutable.
  */
@@ -2373,12 +2303,13 @@ sealed class PresentationRole private constructor() {
     /** The kind of variant held by a `PresentationRole`. */
     enum class Kind {
         UNKNOWN,
-        WORKSPACE_EDITOR_CONST,
+        WORKSPACE_CONST,
+        NAVIGATOR_CONST,
         INSPECTOR_CONST,
+        ITEM_CONST,
         REFERENCE_PREVIEW_CONST,
         REFERENCE_PICKER_RESULT_CONST,
         RESOURCE_SEARCH_RESULT_CONST,
-        EDITOR_NODE_CONST,
     }
 
     class Unknown @kotlin.Deprecated("For internal use", kotlin.ReplaceWith("skirout.editor.v1.catalog.PresentationRole.UNKNOWN")) internal constructor(
@@ -2396,16 +2327,32 @@ sealed class PresentationRole private constructor() {
         }
     }
 
-    /** The main workspace for an opened resource, such as a page graph or timeline. */
-    object WORKSPACE_EDITOR : skirout.editor.v1.catalog.PresentationRole() {
-        override val kind get() = Kind.WORKSPACE_EDITOR_CONST;
+    /** Main area of a resource route. */
+    object WORKSPACE : skirout.editor.v1.catalog.PresentationRole() {
+        override val kind get() = Kind.WORKSPACE_CONST;
 
         override fun equals(other: kotlin.Any?): kotlin.Boolean {
-            return other is skirout.editor.v1.catalog.PresentationRole && other.kind == Kind.WORKSPACE_EDITOR_CONST;
+            return other is skirout.editor.v1.catalog.PresentationRole && other.kind == Kind.WORKSPACE_CONST;
         }
 
         override fun hashCode(): kotlin.Int {
-            return Kind.WORKSPACE_EDITOR_CONST.ordinal;
+            return Kind.WORKSPACE_CONST.ordinal;
+        }
+    }
+
+    /**
+     * Side navigation: the realm root's navigator fills the shell sidebar; the nearest other
+     * owner declaring one fills the rail.
+     */
+    object NAVIGATOR : skirout.editor.v1.catalog.PresentationRole() {
+        override val kind get() = Kind.NAVIGATOR_CONST;
+
+        override fun equals(other: kotlin.Any?): kotlin.Boolean {
+            return other is skirout.editor.v1.catalog.PresentationRole && other.kind == Kind.NAVIGATOR_CONST;
+        }
+
+        override fun hashCode(): kotlin.Int {
+            return Kind.NAVIGATOR_CONST.ordinal;
         }
     }
 
@@ -2419,6 +2366,19 @@ sealed class PresentationRole private constructor() {
 
         override fun hashCode(): kotlin.Int {
             return Kind.INSPECTOR_CONST.ordinal;
+        }
+    }
+
+    /** A resource laid out inside another place: grid card, graph node, list or tree row. */
+    object ITEM : skirout.editor.v1.catalog.PresentationRole() {
+        override val kind get() = Kind.ITEM_CONST;
+
+        override fun equals(other: kotlin.Any?): kotlin.Boolean {
+            return other is skirout.editor.v1.catalog.PresentationRole && other.kind == Kind.ITEM_CONST;
+        }
+
+        override fun hashCode(): kotlin.Int {
+            return Kind.ITEM_CONST.ordinal;
         }
     }
 
@@ -2458,19 +2418,6 @@ sealed class PresentationRole private constructor() {
 
         override fun hashCode(): kotlin.Int {
             return Kind.RESOURCE_SEARCH_RESULT_CONST.ordinal;
-        }
-    }
-
-    /** Resource content inside an editor node, independent of graph or timeline layout. */
-    object EDITOR_NODE : skirout.editor.v1.catalog.PresentationRole() {
-        override val kind get() = Kind.EDITOR_NODE_CONST;
-
-        override fun equals(other: kotlin.Any?): kotlin.Boolean {
-            return other is skirout.editor.v1.catalog.PresentationRole && other.kind == Kind.EDITOR_NODE_CONST;
-        }
-
-        override fun hashCode(): kotlin.Int {
-            return Kind.EDITOR_NODE_CONST.ordinal;
         }
     }
 
@@ -2820,7 +2767,6 @@ sealed interface PresentationMaterial_OrMutable {
     val layout: skirout.editor.v1.presentation.PresentationNode_OrMutable;
     val dependencies: skirout.editor.v1.presentation.PresentationDependencies_OrMutable;
     val subject: skirout.editor.v1.type_catalog.TypeTemplate;
-    val resultAppearance: skirout.editor.v1.presentation.ResultAppearance_OrMutable?;
     val inheritableNodes: kotlin.collections.List<kotlin.String>;
 
     fun toFrozen(): skirout.editor.v1.catalog.PresentationMaterial;
@@ -2841,7 +2787,6 @@ class PresentationMaterial private constructor(
     override val layout: skirout.editor.v1.presentation.PresentationNode,
     override val dependencies: skirout.editor.v1.presentation.PresentationDependencies,
     override val subject: skirout.editor.v1.type_catalog.TypeTemplate,
-    override val resultAppearance: skirout.editor.v1.presentation.ResultAppearance?,
     override val inheritableNodes: kotlin.collections.List<kotlin.String>,
     internal val _unrecognizedFields: _UnrecognizedFields<skirout.editor.v1.catalog.PresentationMaterial>? =
         null,
@@ -2855,7 +2800,6 @@ class PresentationMaterial private constructor(
         layout: skirout.editor.v1.presentation.PresentationNode_OrMutable,
         dependencies: skirout.editor.v1.presentation.PresentationDependencies_OrMutable,
         subject: skirout.editor.v1.type_catalog.TypeTemplate,
-        resultAppearance: skirout.editor.v1.presentation.ResultAppearance_OrMutable?,
         inheritableNodes: kotlin.collections.Iterable<kotlin.String>,
         _unrecognizedFields: _UnrecognizedFields<skirout.editor.v1.catalog.PresentationMaterial>? =
             null,
@@ -2866,7 +2810,6 @@ class PresentationMaterial private constructor(
         layout.toFrozen(),
         dependencies.toFrozen(),
         subject,
-        if (resultAppearance != null) resultAppearance.toFrozen() else null,
         build.skir.internal.toFrozenList(inheritableNodes),
         _unrecognizedFields,
     ) {}
@@ -2882,7 +2825,6 @@ class PresentationMaterial private constructor(
         layout = this.layout,
         dependencies = this.dependencies,
         subject = this.subject,
-        resultAppearance = this.resultAppearance,
         inheritableNodes = this.inheritableNodes,
     );
 
@@ -2902,8 +2844,6 @@ class PresentationMaterial private constructor(
             this.dependencies,
         subject: skirout.editor.v1.type_catalog.TypeTemplate =
             this.subject,
-        resultAppearance: skirout.editor.v1.presentation.ResultAppearance_OrMutable? =
-            this.resultAppearance,
         inheritableNodes: kotlin.collections.Iterable<kotlin.String> =
             this.inheritableNodes,
     ) = skirout.editor.v1.catalog.PresentationMaterial(
@@ -2913,7 +2853,6 @@ class PresentationMaterial private constructor(
         layout.toFrozen(),
         dependencies.toFrozen(),
         subject,
-        if (resultAppearance != null) resultAppearance.toFrozen() else null,
         build.skir.internal.toFrozenList(inheritableNodes),
         this._unrecognizedFields,
     );
@@ -2922,11 +2861,11 @@ class PresentationMaterial private constructor(
     fun copy() = this;
 
     override fun equals(other: kotlin.Any?): kotlin.Boolean {
-        return this === other || (other is skirout.editor.v1.catalog.PresentationMaterial && this.provider == other.provider && this.target == other.target && this.role == other.role && this.layout == other.layout && this.dependencies == other.dependencies && this.subject == other.subject && this.resultAppearance == other.resultAppearance && this.inheritableNodes == other.inheritableNodes);
+        return this === other || (other is skirout.editor.v1.catalog.PresentationMaterial && this.provider == other.provider && this.target == other.target && this.role == other.role && this.layout == other.layout && this.dependencies == other.dependencies && this.subject == other.subject && this.inheritableNodes == other.inheritableNodes);
     }
 
     override fun hashCode(): kotlin.Int {
-        return kotlin.collections.listOf<kotlin.Any?>(this.provider, this.target, this.role, this.layout, this.dependencies, this.subject, this.resultAppearance, this.inheritableNodes).hashCode();
+        return kotlin.collections.listOf<kotlin.Any?>(this.provider, this.target, this.role, this.layout, this.dependencies, this.subject, this.inheritableNodes).hashCode();
     }
 
     override fun toString(): kotlin.String {
@@ -2952,8 +2891,6 @@ class PresentationMaterial private constructor(
             skirout.editor.v1.presentation.PresentationDependencies.partial(),
         override var subject: skirout.editor.v1.type_catalog.TypeTemplate =
             skirout.editor.v1.type_catalog.TypeTemplate.UNKNOWN,
-        override var resultAppearance: skirout.editor.v1.presentation.ResultAppearance_OrMutable? =
-            null,
         override var inheritableNodes: kotlin.collections.List<kotlin.String> =
             build.skir.internal.emptyFrozenList<kotlin.String>(),
         internal var _unrecognizedFields: _UnrecognizedFields<skirout.editor.v1.catalog.PresentationMaterial>? =
@@ -2967,7 +2904,6 @@ class PresentationMaterial private constructor(
             layout = this.layout,
             dependencies = this.dependencies,
             subject = this.subject,
-            resultAppearance = this.resultAppearance,
             inheritableNodes = this.inheritableNodes,
             _unrecognizedFields = this._unrecognizedFields,
         );
@@ -3046,7 +2982,6 @@ class PresentationMaterial private constructor(
                 skirout.editor.v1.presentation.PresentationNode.partial(),
                 skirout.editor.v1.presentation.PresentationDependencies.partial(),
                 skirout.editor.v1.type_catalog.TypeTemplate.UNKNOWN,
-                null,
                 build.skir.internal.emptyFrozenList<kotlin.String>(),
             );
 
@@ -3073,8 +3008,6 @@ class PresentationMaterial private constructor(
                 skirout.editor.v1.presentation.PresentationDependencies.partial(),
             subject: skirout.editor.v1.type_catalog.TypeTemplate =
                 skirout.editor.v1.type_catalog.TypeTemplate.UNKNOWN,
-            resultAppearance: skirout.editor.v1.presentation.ResultAppearance_OrMutable? =
-                null,
             inheritableNodes: kotlin.collections.Iterable<kotlin.String> =
                 build.skir.internal.emptyFrozenList<kotlin.String>(),
         ) = skirout.editor.v1.catalog.PresentationMaterial(
@@ -3084,7 +3017,6 @@ class PresentationMaterial private constructor(
             layout = layout,
             dependencies = dependencies,
             subject = subject,
-            resultAppearance = resultAppearance,
             inheritableNodes = inheritableNodes,
             _unrecognizedFields = null,
         );
@@ -3241,7 +3173,7 @@ sealed interface EditorCatalogWireSnapshot_OrMutable {
     val generation: skirout.editor.v1.type_catalog.CatalogGeneration_OrMutable;
     val types: kotlin.collections.List<skirout.editor.v1.catalog.PublishedType_OrMutable>;
     val relations: kotlin.collections.List<skirout.editor.v1.catalog.RelationContract_OrMutable>;
-    val resourceDefinitions: kotlin.collections.List<skirout.editor.v1.catalog.AuthoringResourceDefinition_OrMutable>;
+    val resourceDisplays: kotlin.collections.List<skirout.editor.v1.catalog.ResourceDisplayFormulas_OrMutable>;
     val presentations: kotlin.collections.List<skirout.editor.v1.catalog.PresentationDescriptor_OrMutable>;
     val presentationMaterials: kotlin.collections.List<skirout.editor.v1.catalog.PresentationMaterial_OrMutable>;
     val configuration: kotlin.collections.List<skirout.editor.v1.catalog.ConfigurationRecipe_OrMutable>;
@@ -3251,7 +3183,8 @@ sealed interface EditorCatalogWireSnapshot_OrMutable {
     val recommendations: kotlin.collections.List<skirout.editor.v1.catalog.TypeRecommendation_OrMutable>;
     val roleFallbacks: kotlin.collections.List<skirout.editor.v1.catalog.RoleFallback_OrMutable>;
     val resourceOperations: kotlin.collections.List<skirout.editor.v1.operation.ResourceOperationDefinition_OrMutable>;
-    val resourceOperationContributions: kotlin.collections.List<skirout.editor.v1.operation.ResourceOperationContribution_OrMutable>;
+    /** The realm root type. The realm keeps exactly one instance, which owns every section. */
+    val realmRoot: skirout.editor.v1.type_catalog.TypeDefinitionId_OrMutable;
 
     fun toFrozen(): skirout.editor.v1.catalog.EditorCatalogWireSnapshot;
 }
@@ -3268,7 +3201,7 @@ class EditorCatalogWireSnapshot private constructor(
     override val generation: skirout.editor.v1.type_catalog.CatalogGeneration,
     override val types: kotlin.collections.List<skirout.editor.v1.catalog.PublishedType>,
     override val relations: kotlin.collections.List<skirout.editor.v1.catalog.RelationContract>,
-    override val resourceDefinitions: kotlin.collections.List<skirout.editor.v1.catalog.AuthoringResourceDefinition>,
+    override val resourceDisplays: kotlin.collections.List<skirout.editor.v1.catalog.ResourceDisplayFormulas>,
     override val presentations: kotlin.collections.List<skirout.editor.v1.catalog.PresentationDescriptor>,
     override val presentationMaterials: kotlin.collections.List<skirout.editor.v1.catalog.PresentationMaterial>,
     override val configuration: kotlin.collections.List<skirout.editor.v1.catalog.ConfigurationRecipe>,
@@ -3278,7 +3211,7 @@ class EditorCatalogWireSnapshot private constructor(
     override val recommendations: kotlin.collections.List<skirout.editor.v1.catalog.TypeRecommendation>,
     override val roleFallbacks: kotlin.collections.List<skirout.editor.v1.catalog.RoleFallback>,
     override val resourceOperations: kotlin.collections.List<skirout.editor.v1.operation.ResourceOperationDefinition>,
-    override val resourceOperationContributions: kotlin.collections.List<skirout.editor.v1.operation.ResourceOperationContribution>,
+    override val realmRoot: skirout.editor.v1.type_catalog.TypeDefinitionId,
     internal val _unrecognizedFields: _UnrecognizedFields<skirout.editor.v1.catalog.EditorCatalogWireSnapshot>? =
         null,
 ): skirout.editor.v1.catalog.EditorCatalogWireSnapshot_OrMutable {
@@ -3288,7 +3221,7 @@ class EditorCatalogWireSnapshot private constructor(
         generation: skirout.editor.v1.type_catalog.CatalogGeneration_OrMutable,
         types: kotlin.collections.Iterable<skirout.editor.v1.catalog.PublishedType_OrMutable>,
         relations: kotlin.collections.Iterable<skirout.editor.v1.catalog.RelationContract_OrMutable>,
-        resourceDefinitions: kotlin.collections.Iterable<skirout.editor.v1.catalog.AuthoringResourceDefinition_OrMutable>,
+        resourceDisplays: kotlin.collections.Iterable<skirout.editor.v1.catalog.ResourceDisplayFormulas_OrMutable>,
         presentations: kotlin.collections.Iterable<skirout.editor.v1.catalog.PresentationDescriptor_OrMutable>,
         presentationMaterials: kotlin.collections.Iterable<skirout.editor.v1.catalog.PresentationMaterial_OrMutable>,
         configuration: kotlin.collections.Iterable<skirout.editor.v1.catalog.ConfigurationRecipe_OrMutable>,
@@ -3298,14 +3231,14 @@ class EditorCatalogWireSnapshot private constructor(
         recommendations: kotlin.collections.Iterable<skirout.editor.v1.catalog.TypeRecommendation_OrMutable>,
         roleFallbacks: kotlin.collections.Iterable<skirout.editor.v1.catalog.RoleFallback_OrMutable>,
         resourceOperations: kotlin.collections.Iterable<skirout.editor.v1.operation.ResourceOperationDefinition_OrMutable>,
-        resourceOperationContributions: kotlin.collections.Iterable<skirout.editor.v1.operation.ResourceOperationContribution_OrMutable>,
+        realmRoot: skirout.editor.v1.type_catalog.TypeDefinitionId_OrMutable,
         _unrecognizedFields: _UnrecognizedFields<skirout.editor.v1.catalog.EditorCatalogWireSnapshot>? =
             null,
     ): this(
         generation.toFrozen(),
         build.skir.internal.toFrozenList(types, { it.toFrozen() }),
         build.skir.internal.toFrozenList(relations, { it.toFrozen() }),
-        build.skir.internal.toFrozenList(resourceDefinitions, { it.toFrozen() }),
+        build.skir.internal.toFrozenList(resourceDisplays, { it.toFrozen() }),
         build.skir.internal.toFrozenList(presentations, { it.toFrozen() }),
         build.skir.internal.toFrozenList(presentationMaterials, { it.toFrozen() }),
         build.skir.internal.toFrozenList(configuration, { it.toFrozen() }),
@@ -3315,7 +3248,7 @@ class EditorCatalogWireSnapshot private constructor(
         build.skir.internal.toFrozenList(recommendations, { it.toFrozen() }),
         build.skir.internal.toFrozenList(roleFallbacks, { it.toFrozen() }),
         build.skir.internal.toFrozenList(resourceOperations, { it.toFrozen() }),
-        build.skir.internal.toFrozenList(resourceOperationContributions, { it.toFrozen() }),
+        realmRoot.toFrozen(),
         _unrecognizedFields,
     ) {}
 
@@ -3327,7 +3260,7 @@ class EditorCatalogWireSnapshot private constructor(
         generation = this.generation,
         types = this.types,
         relations = this.relations,
-        resourceDefinitions = this.resourceDefinitions,
+        resourceDisplays = this.resourceDisplays,
         presentations = this.presentations,
         presentationMaterials = this.presentationMaterials,
         configuration = this.configuration,
@@ -3337,7 +3270,7 @@ class EditorCatalogWireSnapshot private constructor(
         recommendations = this.recommendations,
         roleFallbacks = this.roleFallbacks,
         resourceOperations = this.resourceOperations,
-        resourceOperationContributions = this.resourceOperationContributions,
+        realmRoot = this.realmRoot,
     );
 
     /** Returns a shallow copy of this instance with the specified fields replaced. */
@@ -3350,8 +3283,8 @@ class EditorCatalogWireSnapshot private constructor(
             this.types,
         relations: kotlin.collections.Iterable<skirout.editor.v1.catalog.RelationContract_OrMutable> =
             this.relations,
-        resourceDefinitions: kotlin.collections.Iterable<skirout.editor.v1.catalog.AuthoringResourceDefinition_OrMutable> =
-            this.resourceDefinitions,
+        resourceDisplays: kotlin.collections.Iterable<skirout.editor.v1.catalog.ResourceDisplayFormulas_OrMutable> =
+            this.resourceDisplays,
         presentations: kotlin.collections.Iterable<skirout.editor.v1.catalog.PresentationDescriptor_OrMutable> =
             this.presentations,
         presentationMaterials: kotlin.collections.Iterable<skirout.editor.v1.catalog.PresentationMaterial_OrMutable> =
@@ -3370,13 +3303,13 @@ class EditorCatalogWireSnapshot private constructor(
             this.roleFallbacks,
         resourceOperations: kotlin.collections.Iterable<skirout.editor.v1.operation.ResourceOperationDefinition_OrMutable> =
             this.resourceOperations,
-        resourceOperationContributions: kotlin.collections.Iterable<skirout.editor.v1.operation.ResourceOperationContribution_OrMutable> =
-            this.resourceOperationContributions,
+        realmRoot: skirout.editor.v1.type_catalog.TypeDefinitionId_OrMutable =
+            this.realmRoot,
     ) = skirout.editor.v1.catalog.EditorCatalogWireSnapshot(
         generation.toFrozen(),
         build.skir.internal.toFrozenList(types, { it.toFrozen() }),
         build.skir.internal.toFrozenList(relations, { it.toFrozen() }),
-        build.skir.internal.toFrozenList(resourceDefinitions, { it.toFrozen() }),
+        build.skir.internal.toFrozenList(resourceDisplays, { it.toFrozen() }),
         build.skir.internal.toFrozenList(presentations, { it.toFrozen() }),
         build.skir.internal.toFrozenList(presentationMaterials, { it.toFrozen() }),
         build.skir.internal.toFrozenList(configuration, { it.toFrozen() }),
@@ -3386,7 +3319,7 @@ class EditorCatalogWireSnapshot private constructor(
         build.skir.internal.toFrozenList(recommendations, { it.toFrozen() }),
         build.skir.internal.toFrozenList(roleFallbacks, { it.toFrozen() }),
         build.skir.internal.toFrozenList(resourceOperations, { it.toFrozen() }),
-        build.skir.internal.toFrozenList(resourceOperationContributions, { it.toFrozen() }),
+        realmRoot.toFrozen(),
         this._unrecognizedFields,
     );
 
@@ -3394,11 +3327,11 @@ class EditorCatalogWireSnapshot private constructor(
     fun copy() = this;
 
     override fun equals(other: kotlin.Any?): kotlin.Boolean {
-        return this === other || (other is skirout.editor.v1.catalog.EditorCatalogWireSnapshot && this.generation == other.generation && this.types == other.types && this.relations == other.relations && this.resourceDefinitions == other.resourceDefinitions && this.presentations == other.presentations && this.presentationMaterials == other.presentationMaterials && this.configuration == other.configuration && this.diagnostics == other.diagnostics && this.endpointBindings == other.endpointBindings && this.capabilities == other.capabilities && this.recommendations == other.recommendations && this.roleFallbacks == other.roleFallbacks && this.resourceOperations == other.resourceOperations && this.resourceOperationContributions == other.resourceOperationContributions);
+        return this === other || (other is skirout.editor.v1.catalog.EditorCatalogWireSnapshot && this.generation == other.generation && this.types == other.types && this.relations == other.relations && this.resourceDisplays == other.resourceDisplays && this.presentations == other.presentations && this.presentationMaterials == other.presentationMaterials && this.configuration == other.configuration && this.diagnostics == other.diagnostics && this.endpointBindings == other.endpointBindings && this.capabilities == other.capabilities && this.recommendations == other.recommendations && this.roleFallbacks == other.roleFallbacks && this.resourceOperations == other.resourceOperations && this.realmRoot == other.realmRoot);
     }
 
     override fun hashCode(): kotlin.Int {
-        return kotlin.collections.listOf<kotlin.Any?>(this.generation, this.types, this.relations, this.resourceDefinitions, this.presentations, this.presentationMaterials, this.configuration, this.diagnostics, this.endpointBindings, this.capabilities, this.recommendations, this.roleFallbacks, this.resourceOperations, this.resourceOperationContributions).hashCode();
+        return kotlin.collections.listOf<kotlin.Any?>(this.generation, this.types, this.relations, this.resourceDisplays, this.presentations, this.presentationMaterials, this.configuration, this.diagnostics, this.endpointBindings, this.capabilities, this.recommendations, this.roleFallbacks, this.resourceOperations, this.realmRoot).hashCode();
     }
 
     override fun toString(): kotlin.String {
@@ -3418,8 +3351,8 @@ class EditorCatalogWireSnapshot private constructor(
             build.skir.internal.emptyFrozenList<skirout.editor.v1.catalog.PublishedType>(),
         override var relations: kotlin.collections.List<skirout.editor.v1.catalog.RelationContract_OrMutable> =
             build.skir.internal.emptyFrozenList<skirout.editor.v1.catalog.RelationContract>(),
-        override var resourceDefinitions: kotlin.collections.List<skirout.editor.v1.catalog.AuthoringResourceDefinition_OrMutable> =
-            build.skir.internal.emptyFrozenList<skirout.editor.v1.catalog.AuthoringResourceDefinition>(),
+        override var resourceDisplays: kotlin.collections.List<skirout.editor.v1.catalog.ResourceDisplayFormulas_OrMutable> =
+            build.skir.internal.emptyFrozenList<skirout.editor.v1.catalog.ResourceDisplayFormulas>(),
         override var presentations: kotlin.collections.List<skirout.editor.v1.catalog.PresentationDescriptor_OrMutable> =
             build.skir.internal.emptyFrozenList<skirout.editor.v1.catalog.PresentationDescriptor>(),
         override var presentationMaterials: kotlin.collections.List<skirout.editor.v1.catalog.PresentationMaterial_OrMutable> =
@@ -3438,8 +3371,8 @@ class EditorCatalogWireSnapshot private constructor(
             build.skir.internal.emptyFrozenList<skirout.editor.v1.catalog.RoleFallback>(),
         override var resourceOperations: kotlin.collections.List<skirout.editor.v1.operation.ResourceOperationDefinition_OrMutable> =
             build.skir.internal.emptyFrozenList<skirout.editor.v1.operation.ResourceOperationDefinition>(),
-        override var resourceOperationContributions: kotlin.collections.List<skirout.editor.v1.operation.ResourceOperationContribution_OrMutable> =
-            build.skir.internal.emptyFrozenList<skirout.editor.v1.operation.ResourceOperationContribution>(),
+        override var realmRoot: skirout.editor.v1.type_catalog.TypeDefinitionId_OrMutable =
+            skirout.editor.v1.type_catalog.TypeDefinitionId.partial(),
         internal var _unrecognizedFields: _UnrecognizedFields<skirout.editor.v1.catalog.EditorCatalogWireSnapshot>? =
             null,
     ): skirout.editor.v1.catalog.EditorCatalogWireSnapshot_OrMutable {
@@ -3448,7 +3381,7 @@ class EditorCatalogWireSnapshot private constructor(
             generation = this.generation,
             types = this.types,
             relations = this.relations,
-            resourceDefinitions = this.resourceDefinitions,
+            resourceDisplays = this.resourceDisplays,
             presentations = this.presentations,
             presentationMaterials = this.presentationMaterials,
             configuration = this.configuration,
@@ -3458,7 +3391,7 @@ class EditorCatalogWireSnapshot private constructor(
             recommendations = this.recommendations,
             roleFallbacks = this.roleFallbacks,
             resourceOperations = this.resourceOperations,
-            resourceOperationContributions = this.resourceOperationContributions,
+            realmRoot = this.realmRoot,
             _unrecognizedFields = this._unrecognizedFields,
         );
 
@@ -3511,16 +3444,16 @@ class EditorCatalogWireSnapshot private constructor(
         }
 
         /**
-         * If the value of [resourceDefinitions] is already mutable, returns it as-is.
-         * Otherwise, makes a mutable copy, assigns it back to [resourceDefinitions] and returns it.
+         * If the value of [resourceDisplays] is already mutable, returns it as-is.
+         * Otherwise, makes a mutable copy, assigns it back to [resourceDisplays] and returns it.
          */
-        val mutableResourceDefinitions: kotlin.collections.MutableList<skirout.editor.v1.catalog.AuthoringResourceDefinition_OrMutable> get() {
-            var value = this.resourceDefinitions;
+        val mutableResourceDisplays: kotlin.collections.MutableList<skirout.editor.v1.catalog.ResourceDisplayFormulas_OrMutable> get() {
+            var value = this.resourceDisplays;
             return when (value) {
                 is build.skir.internal.MutableList -> value;
                 else -> {
                     value = build.skir.internal.MutableList(value);
-                    this.resourceDefinitions = value;
+                    this.resourceDisplays = value;
                     value;
                 }
             }
@@ -3671,18 +3604,18 @@ class EditorCatalogWireSnapshot private constructor(
         }
 
         /**
-         * If the value of [resourceOperationContributions] is already mutable, returns it as-is.
-         * Otherwise, makes a mutable copy, assigns it back to [resourceOperationContributions] and returns it.
+         * If the value of [realmRoot] is already mutable, returns it as-is.
+         * Otherwise, makes a mutable copy, assigns it back to [realmRoot] and returns it.
          */
-        val mutableResourceOperationContributions: kotlin.collections.MutableList<skirout.editor.v1.operation.ResourceOperationContribution_OrMutable> get() {
-            var value = this.resourceOperationContributions;
+        val mutableRealmRoot: skirout.editor.v1.type_catalog.TypeDefinitionId.Mutable get() {
+            var value = this.realmRoot;
             return when (value) {
-                is build.skir.internal.MutableList -> value;
-                else -> {
-                    value = build.skir.internal.MutableList(value);
-                    this.resourceOperationContributions = value;
-                    value;
+                is skirout.editor.v1.type_catalog.TypeDefinitionId -> {
+                    value = value.toMutable();
+                    this.realmRoot = value;
+                    return value;
                 }
+                is skirout.editor.v1.type_catalog.TypeDefinitionId.Mutable -> value;
             }
         }
     }
@@ -3693,7 +3626,7 @@ class EditorCatalogWireSnapshot private constructor(
                 skirout.editor.v1.type_catalog.CatalogGeneration.partial(),
                 build.skir.internal.emptyFrozenList<skirout.editor.v1.catalog.PublishedType>(),
                 build.skir.internal.emptyFrozenList<skirout.editor.v1.catalog.RelationContract>(),
-                build.skir.internal.emptyFrozenList<skirout.editor.v1.catalog.AuthoringResourceDefinition>(),
+                build.skir.internal.emptyFrozenList<skirout.editor.v1.catalog.ResourceDisplayFormulas>(),
                 build.skir.internal.emptyFrozenList<skirout.editor.v1.catalog.PresentationDescriptor>(),
                 build.skir.internal.emptyFrozenList<skirout.editor.v1.catalog.PresentationMaterial>(),
                 build.skir.internal.emptyFrozenList<skirout.editor.v1.catalog.ConfigurationRecipe>(),
@@ -3703,7 +3636,7 @@ class EditorCatalogWireSnapshot private constructor(
                 build.skir.internal.emptyFrozenList<skirout.editor.v1.catalog.TypeRecommendation>(),
                 build.skir.internal.emptyFrozenList<skirout.editor.v1.catalog.RoleFallback>(),
                 build.skir.internal.emptyFrozenList<skirout.editor.v1.operation.ResourceOperationDefinition>(),
-                build.skir.internal.emptyFrozenList<skirout.editor.v1.operation.ResourceOperationContribution>(),
+                skirout.editor.v1.type_catalog.TypeDefinitionId.partial(),
             );
 
         /** Returns an instance with all fields set to their default values. */
@@ -3723,8 +3656,8 @@ class EditorCatalogWireSnapshot private constructor(
                 build.skir.internal.emptyFrozenList<skirout.editor.v1.catalog.PublishedType>(),
             relations: kotlin.collections.Iterable<skirout.editor.v1.catalog.RelationContract_OrMutable> =
                 build.skir.internal.emptyFrozenList<skirout.editor.v1.catalog.RelationContract>(),
-            resourceDefinitions: kotlin.collections.Iterable<skirout.editor.v1.catalog.AuthoringResourceDefinition_OrMutable> =
-                build.skir.internal.emptyFrozenList<skirout.editor.v1.catalog.AuthoringResourceDefinition>(),
+            resourceDisplays: kotlin.collections.Iterable<skirout.editor.v1.catalog.ResourceDisplayFormulas_OrMutable> =
+                build.skir.internal.emptyFrozenList<skirout.editor.v1.catalog.ResourceDisplayFormulas>(),
             presentations: kotlin.collections.Iterable<skirout.editor.v1.catalog.PresentationDescriptor_OrMutable> =
                 build.skir.internal.emptyFrozenList<skirout.editor.v1.catalog.PresentationDescriptor>(),
             presentationMaterials: kotlin.collections.Iterable<skirout.editor.v1.catalog.PresentationMaterial_OrMutable> =
@@ -3743,13 +3676,13 @@ class EditorCatalogWireSnapshot private constructor(
                 build.skir.internal.emptyFrozenList<skirout.editor.v1.catalog.RoleFallback>(),
             resourceOperations: kotlin.collections.Iterable<skirout.editor.v1.operation.ResourceOperationDefinition_OrMutable> =
                 build.skir.internal.emptyFrozenList<skirout.editor.v1.operation.ResourceOperationDefinition>(),
-            resourceOperationContributions: kotlin.collections.Iterable<skirout.editor.v1.operation.ResourceOperationContribution_OrMutable> =
-                build.skir.internal.emptyFrozenList<skirout.editor.v1.operation.ResourceOperationContribution>(),
+            realmRoot: skirout.editor.v1.type_catalog.TypeDefinitionId_OrMutable =
+                skirout.editor.v1.type_catalog.TypeDefinitionId.partial(),
         ) = skirout.editor.v1.catalog.EditorCatalogWireSnapshot(
             generation = generation,
             types = types,
             relations = relations,
-            resourceDefinitions = resourceDefinitions,
+            resourceDisplays = resourceDisplays,
             presentations = presentations,
             presentationMaterials = presentationMaterials,
             configuration = configuration,
@@ -3759,7 +3692,7 @@ class EditorCatalogWireSnapshot private constructor(
             recommendations = recommendations,
             roleFallbacks = roleFallbacks,
             resourceOperations = resourceOperations,
-            resourceOperationContributions = resourceOperationContributions,
+            realmRoot = realmRoot,
             _unrecognizedFields = null,
         );
 
@@ -6547,119 +6480,6 @@ class TypeRecommendation private constructor(
     }
 }
 
-/** Deeply immutable. */
-sealed class AuthoringNavigationHandler private constructor() {
-    /** The kind of variant held by a `AuthoringNavigationHandler`. */
-    enum class Kind {
-        UNKNOWN,
-        GENERIC_CONST,
-        BOOK_CONST,
-        PAGE_CONST,
-        PAGE_ELEMENT_CONST,
-        TAGS_CONST,
-    }
-
-    class Unknown @kotlin.Deprecated("For internal use", kotlin.ReplaceWith("skirout.editor.v1.catalog.AuthoringNavigationHandler.UNKNOWN")) internal constructor(
-        internal val _kind: Kind,
-        internal override val _unrecognized: _UnrecognizedVariant<skirout.editor.v1.catalog.AuthoringNavigationHandler>?,
-    ) : skirout.editor.v1.catalog.AuthoringNavigationHandler() {
-        override val kind get() = _kind;
-
-        override fun equals(other: kotlin.Any?): kotlin.Boolean {
-            return other is skirout.editor.v1.catalog.AuthoringNavigationHandler && other.kind == kind;
-        }
-
-        override fun hashCode(): kotlin.Int {
-            return kind.ordinal;
-        }
-    }
-
-    object GENERIC : skirout.editor.v1.catalog.AuthoringNavigationHandler() {
-        override val kind get() = Kind.GENERIC_CONST;
-
-        override fun equals(other: kotlin.Any?): kotlin.Boolean {
-            return other is skirout.editor.v1.catalog.AuthoringNavigationHandler && other.kind == Kind.GENERIC_CONST;
-        }
-
-        override fun hashCode(): kotlin.Int {
-            return Kind.GENERIC_CONST.ordinal;
-        }
-    }
-
-    object BOOK : skirout.editor.v1.catalog.AuthoringNavigationHandler() {
-        override val kind get() = Kind.BOOK_CONST;
-
-        override fun equals(other: kotlin.Any?): kotlin.Boolean {
-            return other is skirout.editor.v1.catalog.AuthoringNavigationHandler && other.kind == Kind.BOOK_CONST;
-        }
-
-        override fun hashCode(): kotlin.Int {
-            return Kind.BOOK_CONST.ordinal;
-        }
-    }
-
-    object PAGE : skirout.editor.v1.catalog.AuthoringNavigationHandler() {
-        override val kind get() = Kind.PAGE_CONST;
-
-        override fun equals(other: kotlin.Any?): kotlin.Boolean {
-            return other is skirout.editor.v1.catalog.AuthoringNavigationHandler && other.kind == Kind.PAGE_CONST;
-        }
-
-        override fun hashCode(): kotlin.Int {
-            return Kind.PAGE_CONST.ordinal;
-        }
-    }
-
-    object PAGE_ELEMENT : skirout.editor.v1.catalog.AuthoringNavigationHandler() {
-        override val kind get() = Kind.PAGE_ELEMENT_CONST;
-
-        override fun equals(other: kotlin.Any?): kotlin.Boolean {
-            return other is skirout.editor.v1.catalog.AuthoringNavigationHandler && other.kind == Kind.PAGE_ELEMENT_CONST;
-        }
-
-        override fun hashCode(): kotlin.Int {
-            return Kind.PAGE_ELEMENT_CONST.ordinal;
-        }
-    }
-
-    object TAGS : skirout.editor.v1.catalog.AuthoringNavigationHandler() {
-        override val kind get() = Kind.TAGS_CONST;
-
-        override fun equals(other: kotlin.Any?): kotlin.Boolean {
-            return other is skirout.editor.v1.catalog.AuthoringNavigationHandler && other.kind == Kind.TAGS_CONST;
-        }
-
-        override fun hashCode(): kotlin.Int {
-            return Kind.TAGS_CONST.ordinal;
-        }
-    }
-
-    internal open val _unrecognized: _UnrecognizedVariant<skirout.editor.v1.catalog.AuthoringNavigationHandler>? get() = null;
-
-    abstract val kind: Kind;
-
-    override fun toString(): kotlin.String {
-        return build.skir.internal.toStringImpl(
-            this,
-            _SerializerRegistry.AuthoringNavigationHandlerSerializerImpl,
-        )
-    }
-
-    companion object {
-        /**
-         * Constant indicating an unknown [AuthoringNavigationHandler].
-         * Default value for fields of type [AuthoringNavigationHandler].
-         */
-        val UNKNOWN = @kotlin.Suppress("DEPRECATION") Unknown(Kind.UNKNOWN, null);
-
-        /** Serializer for [AuthoringNavigationHandler] instances. */
-        val serializer get() = _SerializerRegistry.AuthoringNavigationHandlerSerializer;
-
-        /** Describes the [AuthoringNavigationHandler] type. Provides runtime introspection capabilities. */
-        val typeDescriptor get() = _SerializerRegistry.AuthoringNavigationHandlerSerializerImpl.typeDescriptor;
-    }
-}
-
 sealed interface WatchEditorCatalogRequest_OrMutable {
     fun toFrozen(): skirout.editor.v1.catalog.WatchEditorCatalogRequest;
 }
@@ -6779,32 +6599,15 @@ val PrepareValue: build.skir.service.Method<
     )
 }
 
+/**
+ * The family of relations whose one owner endpoint holds the resources on its many member endpoint,
+ * such as a Book holding its pages. Every owned resource has one owner, and ownership never loops.
+ */
+val RESOURCE_OWNERSHIP_FAMILY: skirout.editor.v1.type_catalog.RelationFamilyId by kotlin.lazy {
+    skirout.editor.v1.type_catalog.RelationFamilyId.serializer.fromJsonCode("[\"resource.ownership\"]")
+}
+
 private object _SerializerRegistry {
-    val AuthoringNavigationHandlerSerializerImpl =
-        build.skir.internal.EnumSerializer.create<skirout.editor.v1.catalog.AuthoringNavigationHandler, skirout.editor.v1.catalog.AuthoringNavigationHandler.Unknown>(
-            recordId = "editor/v1/catalog.skir:AuthoringNavigationHandler",
-            doc = "",
-            getKindOrdinal = { it.kind.ordinal },
-            kindCount = skirout.editor.v1.catalog.AuthoringNavigationHandler.Kind.values().size,
-            unknownInstance = skirout.editor.v1.catalog.AuthoringNavigationHandler.UNKNOWN,
-            wrapUnrecognized = { @kotlin.Suppress("DEPRECATION") skirout.editor.v1.catalog.AuthoringNavigationHandler.Unknown(skirout.editor.v1.catalog.AuthoringNavigationHandler.Kind.UNKNOWN, it) },
-            getUnrecognized = { it._unrecognized },
-        );
-
-    val AuthoringNavigationHandlerSerializer = build.skir.internal.makeSerializer(AuthoringNavigationHandlerSerializerImpl);
-
-    val AuthoringResourceDefinitionSerializerImpl = build.skir.internal.StructSerializer(
-        recordId = "editor/v1/catalog.skir:AuthoringResourceDefinition",
-        doc = "Gives an authored resource family its stable definition identity and navigation behavior,\nindependently of the concrete type application currently selected by a resource.",
-        defaultInstance = skirout.editor.v1.catalog.AuthoringResourceDefinition.partial(),
-        newMutableFn = { it?.toMutable() ?: skirout.editor.v1.catalog.AuthoringResourceDefinition.Mutable() },
-        toFrozenFn = { it.toFrozen() },
-        getUnrecognizedFields = { it._unrecognizedFields },
-        setUnrecognizedFields = { m, u -> m._unrecognizedFields = u },
-    );
-
-    val AuthoringResourceDefinitionSerializer = build.skir.internal.makeSerializer(AuthoringResourceDefinitionSerializerImpl);
-
     val CatalogFetchRequestSerializerImpl = build.skir.internal.StructSerializer(
         recordId = "editor/v1/catalog.skir:CatalogFetchRequest",
         doc = "",
@@ -7130,7 +6933,7 @@ private object _SerializerRegistry {
     val PresentationRoleSerializerImpl =
         build.skir.internal.EnumSerializer.create<skirout.editor.v1.catalog.PresentationRole, skirout.editor.v1.catalog.PresentationRole.Unknown>(
             recordId = "editor/v1/catalog.skir:PresentationRole",
-            doc = "The UI surface requesting a type's presentation. Registering a role does not create a surface.\nMissing presentations follow the catalog's explicit role fallbacks.",
+            doc = "Places in the editor shell. A role names where content appears, never what it is.\nRegistering a role does not create a surface. Missing presentations follow the catalog's\nexplicit role fallbacks.",
             getKindOrdinal = { it.kind.ordinal },
             kindCount = skirout.editor.v1.catalog.PresentationRole.Kind.values().size,
             unknownInstance = skirout.editor.v1.catalog.PresentationRole.UNKNOWN,
@@ -7215,17 +7018,17 @@ private object _SerializerRegistry {
 
     val RequiredInputSerializer = build.skir.internal.makeSerializer(RequiredInputSerializerImpl);
 
-    val ResourceDefinitionIdSerializerImpl = build.skir.internal.StructSerializer(
-        recordId = "editor/v1/catalog.skir:ResourceDefinitionId",
-        doc = "",
-        defaultInstance = skirout.editor.v1.catalog.ResourceDefinitionId.partial(),
-        newMutableFn = { it?.toMutable() ?: skirout.editor.v1.catalog.ResourceDefinitionId.Mutable() },
+    val ResourceDisplayFormulasSerializerImpl = build.skir.internal.StructSerializer(
+        recordId = "editor/v1/catalog.skir:ResourceDisplayFormulas",
+        doc = "Name, accent and icon formulas for resources of [target]. Each formula reads only the subject\nresource: its fields and its published type through the configured value binding.",
+        defaultInstance = skirout.editor.v1.catalog.ResourceDisplayFormulas.partial(),
+        newMutableFn = { it?.toMutable() ?: skirout.editor.v1.catalog.ResourceDisplayFormulas.Mutable() },
         toFrozenFn = { it.toFrozen() },
         getUnrecognizedFields = { it._unrecognizedFields },
         setUnrecognizedFields = { m, u -> m._unrecognizedFields = u },
     );
 
-    val ResourceDefinitionIdSerializer = build.skir.internal.makeSerializer(ResourceDefinitionIdSerializerImpl);
+    val ResourceDisplayFormulasSerializer = build.skir.internal.makeSerializer(ResourceDisplayFormulasSerializerImpl);
 
     val RoleFallbackSerializerImpl = build.skir.internal.StructSerializer(
         recordId = "editor/v1/catalog.skir:RoleFallback",
@@ -7300,72 +7103,6 @@ private object _SerializerRegistry {
     val WatchEditorCatalogRequestSerializer = build.skir.internal.makeSerializer(WatchEditorCatalogRequestSerializerImpl);
 
     init {
-        AuthoringNavigationHandlerSerializerImpl.addConstantVariant(
-            1,
-            "generic",
-            skirout.editor.v1.catalog.AuthoringNavigationHandler.Kind.GENERIC_CONST.ordinal,
-            "",
-            skirout.editor.v1.catalog.AuthoringNavigationHandler.GENERIC,
-        );
-        AuthoringNavigationHandlerSerializerImpl.addConstantVariant(
-            2,
-            "book",
-            skirout.editor.v1.catalog.AuthoringNavigationHandler.Kind.BOOK_CONST.ordinal,
-            "",
-            skirout.editor.v1.catalog.AuthoringNavigationHandler.BOOK,
-        );
-        AuthoringNavigationHandlerSerializerImpl.addConstantVariant(
-            3,
-            "page",
-            skirout.editor.v1.catalog.AuthoringNavigationHandler.Kind.PAGE_CONST.ordinal,
-            "",
-            skirout.editor.v1.catalog.AuthoringNavigationHandler.PAGE,
-        );
-        AuthoringNavigationHandlerSerializerImpl.addConstantVariant(
-            4,
-            "page_element",
-            skirout.editor.v1.catalog.AuthoringNavigationHandler.Kind.PAGE_ELEMENT_CONST.ordinal,
-            "",
-            skirout.editor.v1.catalog.AuthoringNavigationHandler.PAGE_ELEMENT,
-        );
-        AuthoringNavigationHandlerSerializerImpl.addConstantVariant(
-            5,
-            "tags",
-            skirout.editor.v1.catalog.AuthoringNavigationHandler.Kind.TAGS_CONST.ordinal,
-            "",
-            skirout.editor.v1.catalog.AuthoringNavigationHandler.TAGS,
-        );
-        AuthoringNavigationHandlerSerializerImpl.finalizeEnum();
-
-        AuthoringResourceDefinitionSerializerImpl.addField(
-            "id",
-            "id",
-            0,
-            _SerializerRegistry.ResourceDefinitionIdSerializer,
-            "",
-            { it.id },
-            { mut, v -> mut.id = v },
-        );
-        AuthoringResourceDefinitionSerializerImpl.addField(
-            "root",
-            "root",
-            1,
-            skirout.editor.v1.type_catalog.TypeDefinitionId.serializer,
-            "",
-            { it.root },
-            { mut, v -> mut.root = v },
-        );
-        AuthoringResourceDefinitionSerializerImpl.addField(
-            "navigation_handler",
-            "navigationHandler",
-            2,
-            _SerializerRegistry.AuthoringNavigationHandlerSerializer,
-            "",
-            { it.navigationHandler },
-            { mut, v -> mut.navigationHandler = v },
-        );
-        AuthoringResourceDefinitionSerializerImpl.finalizeStruct();
-
         CatalogFetchRequestSerializerImpl.addField(
             "expected_generation",
             "expectedGeneration",
@@ -7598,15 +7335,15 @@ private object _SerializerRegistry {
             { mut, v -> mut.relations = v },
         );
         EditorCatalogWireSnapshotSerializerImpl.addField(
-            "resource_definitions",
-            "resourceDefinitions",
+            "resource_displays",
+            "resourceDisplays",
             3,
             build.skir.Serializers.list(
-                _SerializerRegistry.AuthoringResourceDefinitionSerializer,
+                _SerializerRegistry.ResourceDisplayFormulasSerializer,
             ),
             "",
-            { it.resourceDefinitions },
-            { mut, v -> mut.resourceDefinitions = v },
+            { it.resourceDisplays },
+            { mut, v -> mut.resourceDisplays = v },
         );
         EditorCatalogWireSnapshotSerializerImpl.addField(
             "presentations",
@@ -7708,15 +7445,13 @@ private object _SerializerRegistry {
             { mut, v -> mut.resourceOperations = v },
         );
         EditorCatalogWireSnapshotSerializerImpl.addField(
-            "resource_operation_contributions",
-            "resourceOperationContributions",
+            "realm_root",
+            "realmRoot",
             13,
-            build.skir.Serializers.list(
-                skirout.editor.v1.operation.ResourceOperationContribution.serializer,
-            ),
-            "",
-            { it.resourceOperationContributions },
-            { mut, v -> mut.resourceOperationContributions = v },
+            skirout.editor.v1.type_catalog.TypeDefinitionId.serializer,
+            "The realm root type. The realm keeps exactly one instance, which owns every section.",
+            { it.realmRoot },
+            { mut, v -> mut.realmRoot = v },
         );
         EditorCatalogWireSnapshotSerializerImpl.finalizeStruct();
 
@@ -8272,20 +8007,9 @@ private object _SerializerRegistry {
             { mut, v -> mut.subject = v },
         );
         PresentationMaterialSerializerImpl.addField(
-            "result_appearance",
-            "resultAppearance",
-            6,
-            build.skir.Serializers.optional(
-                skirout.editor.v1.presentation.ResultAppearance.serializer,
-            ),
-            "",
-            { it.resultAppearance },
-            { mut, v -> mut.resultAppearance = v },
-        );
-        PresentationMaterialSerializerImpl.addField(
             "inheritable_nodes",
             "inheritableNodes",
-            7,
+            6,
             build.skir.Serializers.list(
                 build.skir.Serializers.string,
             ),
@@ -8297,45 +8021,52 @@ private object _SerializerRegistry {
 
         PresentationRoleSerializerImpl.addConstantVariant(
             1,
-            "workspace_editor",
-            skirout.editor.v1.catalog.PresentationRole.Kind.WORKSPACE_EDITOR_CONST.ordinal,
-            "The main workspace for an opened resource, such as a page graph or timeline.",
-            skirout.editor.v1.catalog.PresentationRole.WORKSPACE_EDITOR,
+            "workspace",
+            skirout.editor.v1.catalog.PresentationRole.Kind.WORKSPACE_CONST.ordinal,
+            "Main area of a resource route.",
+            skirout.editor.v1.catalog.PresentationRole.WORKSPACE,
         );
         PresentationRoleSerializerImpl.addConstantVariant(
             2,
+            "navigator",
+            skirout.editor.v1.catalog.PresentationRole.Kind.NAVIGATOR_CONST.ordinal,
+            "Side navigation: the realm root's navigator fills the shell sidebar; the nearest other\nowner declaring one fills the rail.",
+            skirout.editor.v1.catalog.PresentationRole.NAVIGATOR,
+        );
+        PresentationRoleSerializerImpl.addConstantVariant(
+            3,
             "inspector",
             skirout.editor.v1.catalog.PresentationRole.Kind.INSPECTOR_CONST.ordinal,
             "Editable properties in inspectors, editing review, and delegated field controls.",
             skirout.editor.v1.catalog.PresentationRole.INSPECTOR,
         );
         PresentationRoleSerializerImpl.addConstantVariant(
-            3,
+            4,
+            "item",
+            skirout.editor.v1.catalog.PresentationRole.Kind.ITEM_CONST.ordinal,
+            "A resource laid out inside another place: grid card, graph node, list or tree row.",
+            skirout.editor.v1.catalog.PresentationRole.ITEM,
+        );
+        PresentationRoleSerializerImpl.addConstantVariant(
+            5,
             "reference_preview",
             skirout.editor.v1.catalog.PresentationRole.Kind.REFERENCE_PREVIEW_CONST.ordinal,
             "A compact preview of the selected reference target, with writes and input disabled.",
             skirout.editor.v1.catalog.PresentationRole.REFERENCE_PREVIEW,
         );
         PresentationRoleSerializerImpl.addConstantVariant(
-            4,
+            6,
             "reference_picker_result",
             skirout.editor.v1.catalog.PresentationRole.Kind.REFERENCE_PICKER_RESULT_CONST.ordinal,
             "A candidate target in a reference picker or a reference question during creation.",
             skirout.editor.v1.catalog.PresentationRole.REFERENCE_PICKER_RESULT,
         );
         PresentationRoleSerializerImpl.addConstantVariant(
-            5,
+            7,
             "resource_search_result",
             skirout.editor.v1.catalog.PresentationRole.Kind.RESOURCE_SEARCH_RESULT_CONST.ordinal,
             "An existing resource shown in authoring search, with navigation owned by the result row.",
             skirout.editor.v1.catalog.PresentationRole.RESOURCE_SEARCH_RESULT,
-        );
-        PresentationRoleSerializerImpl.addConstantVariant(
-            6,
-            "editor_node",
-            skirout.editor.v1.catalog.PresentationRole.Kind.EDITOR_NODE_CONST.ordinal,
-            "Resource content inside an editor node, independent of graph or timeline layout.",
-            skirout.editor.v1.catalog.PresentationRole.EDITOR_NODE,
         );
         PresentationRoleSerializerImpl.finalizeEnum();
 
@@ -8405,12 +8136,32 @@ private object _SerializerRegistry {
             "display",
             "display",
             4,
-            build.skir.Serializers.optional(
-                _SerializerRegistry.TypeDisplaySerializer,
-            ),
+            _SerializerRegistry.TypeDisplaySerializer,
             "",
             { it.display },
             { mut, v -> mut.display = v },
+        );
+        PublishedTypeSerializerImpl.addField(
+            "search_key",
+            "searchKey",
+            5,
+            build.skir.Serializers.optional(
+                build.skir.Serializers.string,
+            ),
+            "Search scope keyword for resources of this type, such as book in book:\"Main story\".\nPresent for every resource type except the realm root and its sections, which every\nresource sits inside, and absent for every other type.",
+            { it.searchKey },
+            { mut, v -> mut.searchKey = v },
+        );
+        PublishedTypeSerializerImpl.addField(
+            "placement_field",
+            "placementField",
+            6,
+            build.skir.Serializers.optional(
+                skirout.editor.v1.type_catalog.ValuePath.serializer,
+            ),
+            "The single effective field typed as a placement, which editors and Realm read and write\nwhen they lay out resources of this type. Absent when the type declares no placement.",
+            { it.placementField },
+            { mut, v -> mut.placementField = v },
         );
         PublishedTypeSerializerImpl.finalizeStruct();
 
@@ -8604,16 +8355,43 @@ private object _SerializerRegistry {
         );
         RequiredInputSerializerImpl.finalizeStruct();
 
-        ResourceDefinitionIdSerializerImpl.addField(
-            "value",
-            "value",
+        ResourceDisplayFormulasSerializerImpl.addField(
+            "target",
+            "target",
             0,
-            build.skir.Serializers.string,
+            skirout.editor.v1.type_catalog.ResourceTarget.serializer,
             "",
-            { it.value },
-            { mut, v -> mut.value = v },
+            { it.target },
+            { mut, v -> mut.target = v },
         );
-        ResourceDefinitionIdSerializerImpl.finalizeStruct();
+        ResourceDisplayFormulasSerializerImpl.addField(
+            "label",
+            "label",
+            1,
+            skirout.editor.v1.expression.ExpressionNode.serializer,
+            "",
+            { it.label },
+            { mut, v -> mut.label = v },
+        );
+        ResourceDisplayFormulasSerializerImpl.addField(
+            "accent",
+            "accent",
+            2,
+            skirout.editor.v1.expression.ExpressionNode.serializer,
+            "",
+            { it.accent },
+            { mut, v -> mut.accent = v },
+        );
+        ResourceDisplayFormulasSerializerImpl.addField(
+            "icon",
+            "icon",
+            3,
+            skirout.editor.v1.expression.ExpressionNode.serializer,
+            "",
+            { it.icon },
+            { mut, v -> mut.icon = v },
+        );
+        ResourceDisplayFormulasSerializerImpl.finalizeStruct();
 
         RoleFallbackSerializerImpl.addField(
             "role",
@@ -8670,7 +8448,7 @@ private object _SerializerRegistry {
             "icon",
             "icon",
             2,
-            build.skir.Serializers.string,
+            skirout.kernel.v1.icon.Icon.serializer,
             "",
             { it.icon },
             { mut, v -> mut.icon = v },

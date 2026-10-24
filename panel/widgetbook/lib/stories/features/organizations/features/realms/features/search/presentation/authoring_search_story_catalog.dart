@@ -32,31 +32,6 @@ CheckedEditorCatalog authoringSearchStoryCatalog() {
         target: target,
         role: skir.PresentationRole.resourceSearchResult,
         layout: _resultLayout(entry.key),
-        resultAppearance: skir.ResultAppearance(
-          accent: null,
-
-          style: skir.ResultStyle.card,
-          kindLabel: skir.ExpressionNode.wrapLiteral(
-            skir.DataValue.wrapStringValue(entry.key),
-          ),
-          leading: skir.PresentationNode(
-            nodeId: "search.${entry.key}.leading",
-            header: null,
-            properties: skir.PresentationProperties.defaultInstance,
-            element: skir.PresentationElement.wrapIcon(
-              (skir.IconContent.mutable()
-                    ..name = skir.ExpressionNode.wrapLiteral(
-                      skir.DataValue.wrapStringValue(switch (entry.key) {
-                        "book" => "material-symbols:book",
-                        "tag" => "fa6-solid:tag",
-                        "page" => "fa6-solid:file-lines",
-                        _ => "fa6-solid:cube",
-                      }),
-                    ))
-                  .toFrozen(),
-            ),
-          ),
-        ),
         dependencies: skir.PresentationDependencies.defaultInstance,
         subject: skir.TypeTemplate.createNamed(
           definition: entry.value,
@@ -67,13 +42,23 @@ CheckedEditorCatalog authoringSearchStoryCatalog() {
   }
   return CheckedEditorCatalog(
     skir.EditorCatalogWireSnapshot(
+      resourceDisplays: [
+        for (final definition in definitions.values)
+          nameResourceDisplay(
+            skir.TypeTemplate.createNamed(
+              definition: definition,
+              arguments: const [],
+            ),
+          ),
+      ],
       resourceOperations: const [],
-      resourceOperationContributions: const [],
       generation: skir.CatalogGeneration(value: "catalog:widgetbook.search"),
       types: [
         for (final definition in definitions.values)
           skir.PublishedType(
-            display: null,
+            searchKey: null,
+            placementField: null,
+            display: _storyDisplay(definition),
             definition: skir.TypeDefinition(
               id: definition,
               parameters: const [],
@@ -95,14 +80,7 @@ CheckedEditorCatalog authoringSearchStoryCatalog() {
           ),
       ],
       relations: const [],
-      resourceDefinitions: [
-        for (final entry in definitions.entries)
-          skir.AuthoringResourceDefinition(
-            id: skir.ResourceDefinitionId(value: "widgetbook.${entry.key}"),
-            root: entry.value,
-            navigationHandler: skir.AuthoringNavigationHandler.generic,
-          ),
-      ],
+      realmRoot: skir.TypeDefinitionId.defaultInstance,
       presentations: descriptors,
       presentationMaterials: materials,
       configuration: const [],
@@ -112,6 +90,32 @@ CheckedEditorCatalog authoringSearchStoryCatalog() {
       capabilities: const [],
       recommendations: const [],
       roleFallbacks: const [],
+    ),
+  );
+}
+
+/// Each story kind's type display, whose name, icon and color the host
+/// chrome shows for resources that declare nothing more specific.
+skir.TypeDisplay _storyDisplay(skir.TypeDefinitionId definition) {
+  final kind = authoringSearchStoryDefinitions.entries
+      .firstWhere((entry) => entry.value == definition)
+      .key;
+  return skir.TypeDisplay(
+    name: "${kind[0].toUpperCase()}${kind.substring(1)}",
+    description: "",
+    icon: skir.Icon.wrapIconify(switch (kind) {
+      "book" => "material-symbols:book",
+      "tag" => "fa6-solid:tag",
+      "page" => "fa6-solid:file-lines",
+      _ => "fa6-solid:cube",
+    }),
+    color: skir.Color(
+      argb: switch (kind) {
+        "book" => 0xFF3F51B5,
+        "tag" => 0xFF009688,
+        "page" => 0xFF607D8B,
+        _ => 0xFF9C64BD,
+      },
     ),
   );
 }
@@ -151,12 +155,6 @@ skir.PresentationNode _resultLayout(String kind) => skir.PresentationNode(
   element: skir.PresentationElement.wrapChildren(
     skir.ChildrenElement.createColumn(
       children: [
-        skir.AxisChild.wrapFixed(
-          presentationText(
-            "$kind.name",
-            inputExpression(configuredValueBindingId, field: "name"),
-          ),
-        ),
         skir.AxisChild.wrapFixed(
           presentationText(
             "$kind.summary",

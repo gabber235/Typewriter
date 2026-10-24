@@ -11,68 +11,139 @@ part "resource_creation.g.dart";
 ResourceCreationSession resourceCreation(Ref ref, AuthoringScope scope) =>
     ResourceCreationSession(ref, scope);
 
+/// One resource to create: a resource of [type], configured as
+/// [configuration], with [supplied] initial field values. An abstract
+/// configuration asks for a concrete subtype of [type] during creation.
 @freezed
 abstract class ResourceCreationRequest with _$ResourceCreationRequest {
   factory ResourceCreationRequest({
-    required skir.ResourceDefinitionId definition,
+    required skir.TypeDefinitionId type,
     required skir.TypeSelection configuration,
     skir.ResourceId? id,
     List<skir.FieldValue> supplied = const [],
   }) => ResourceCreationRequest.data(
     id: id ?? skir.newResourceId(),
-    definition: definition,
+    type: type,
     configuration: configuration,
     supplied: supplied,
   );
   const factory ResourceCreationRequest.data({
     required skir.ResourceId id,
-    required skir.ResourceDefinitionId definition,
+    required skir.TypeDefinitionId type,
     required skir.TypeSelection configuration,
     @Default([]) List<skir.FieldValue> supplied,
   }) = _ResourceCreationRequest;
 }
 
+/// How creating a resource of [type] starts: its first type selection.
 @freezed
 abstract class ResourceCreationTemplate with _$ResourceCreationTemplate {
   const factory ResourceCreationTemplate({
-    required skir.ResourceDefinitionId definition,
+    required skir.TypeDefinitionId type,
     required skir.TypeSelection configuration,
   }) = _ResourceCreationTemplate;
 }
 
 extension ResourceCreationCatalog on CheckedEditorCatalog? {
-  ResourceCreationTemplate? resourceCreationTemplate(String definition) {
+  /// The creation template for [type], or null when a person may not create
+  /// resources of that type.
+  ResourceCreationTemplate? resourceCreationTemplate(
+    skir.TypeDefinitionId type,
+  ) {
     final checked = this;
     if (checked == null) return null;
-    final id = skir.ResourceDefinitionId(value: definition);
-    final resource = checked.snapshot.resourceDefinitions
-        .where((candidate) => candidate.id == id)
-        .firstOrNull;
-    if (resource == null) return null;
-    final configuration = checked.beginSelection(resource.root);
+    final configuration = checked.beginSelection(type);
     if (configuration == skir.TypeSelection.unknown) return null;
-    return ResourceCreationTemplate(
-      definition: id,
-      configuration: configuration,
-    );
+    final creatable = checked.creatableTypes;
+    if (!checked
+        .concreteRecordSelections(configuration)
+        .any(
+          (concrete) => switch (concrete.definition) {
+            final definition? => creatable.contains(definition),
+            null => false,
+          },
+        )) {
+      return null;
+    }
+    return ResourceCreationTemplate(type: type, configuration: configuration);
   }
 }
 
-/// Resolves the creation template for [definition] in the selected Realm.
+/// A path from a resource type up to one of its owner types, such as from a
+/// page element through its Page to the Book.
+@freezed
+abstract class OwnerRoute with _$OwnerRoute {
+  const factory OwnerRoute({
+    /// The owner type this route reaches.
+    required skir.TypeDefinitionId ownerRoot,
+
+    /// The member endpoints followed from the starting type, nearest owner
+    /// first. A creation constraint follows them in this order.
+    required List<skir.EndpointId> endpoints,
+
+    /// Owner types this route reached, so a type that owns its own type, such
+    /// as a Folder holding Folders, ends the walk.
+    required Set<skir.TypeDefinitionId> visited,
+  }) = _OwnerRoute;
+
+  const OwnerRoute._();
+
+  OwnerRoute extend(skir.TypeDefinitionId owner, skir.EndpointId endpoint) =>
+      OwnerRoute(
+        ownerRoot: owner,
+        endpoints: [...endpoints, endpoint],
+        visited: {...visited, owner},
+      );
+}
+
+extension OwnerRoutes on CheckedEditorCatalog {
+  /// Routes from [configuration] to each owner type above it, nearest first,
+  /// following ownership member endpoints upward without revisiting a type.
+  /// Acyclic ownership holds between resources, not types, so a type may own
+  /// its own type; the walk still reaches it once.
+  Iterable<OwnerRoute> ownerRoutes(skir.TypeSelection configuration) sync* {
+    final start = configuration.definition;
+    if (start == null) return;
+    var frontier = [
+      OwnerRoute(ownerRoot: start, endpoints: const [], visited: const {}),
+    ];
+    while (frontier.isNotEmpty) {
+      final next = <OwnerRoute>[];
+      for (final route in frontier) {
+        for (final ownership in ownershipRelations) {
+          if (!isNominalSubtype(
+            route.ownerRoot,
+            ownership.member.resource.definition,
+          )) {
+            continue;
+          }
+          final owner = ownership.owner.resource.definition;
+          if (route.visited.contains(owner)) continue;
+          final extended = route.extend(owner, ownership.member.id);
+          yield extended;
+          next.add(extended);
+        }
+      }
+      frontier = next;
+    }
+  }
+}
+
+/// Resolves the creation template for [type] in the selected Realm.
 ///
 /// Null means creation is unavailable: no Realm is selected, its working
-/// catalog is not ready, or the catalog cannot configure the definition.
+/// catalog is not ready, or a person may not create resources of [type].
 @riverpod
 ResourceCreationTemplate? selectedResourceCreationTemplate(
   Ref ref,
-  skir.ResourceDefinitionId definition,
+  skir.TypeDefinitionId type,
 ) {
   if (ref.watch(selectedAuthoringScopeProvider) == null) return null;
   return ref
       .watch(selectedWorkingAuthoringDocumentProvider)
       .value
       ?.catalog
-      .resourceCreationTemplate(definition.value);
+      .resourceCreationTemplate(type);
 }
 
 /// Coordinates one creation action without publishing its unfinished dependencies.
@@ -135,15 +206,7 @@ final class ResourceCreationSession {
         request,
         creationContext ??
             CreationContext(
-              preferredResources: <skir.ResourceId>{
-                ...ref
-                    .read(selectionProvider)
-                    .whereType<AuthoringResourceIdentifier>()
-                    .where((resource) => resource.scope == scope)
-                    .map((resource) => resource.resourceId),
-                ?ref.read(pageIdProvider),
-                ?ref.read(bookIdProvider),
-              }.toList(),
+              preferredResources: ambientCreationResources(ref, scope, base),
             ),
       );
       operation.requireReady();
@@ -175,6 +238,90 @@ final class ResourceCreationSession {
       editing.close();
     }
   }
+}
+
+extension OwnedResourceCreation on ResourceCreationSession {
+  /// Creates a resource of [type] that joins the owning link field at
+  /// [owner], when given, with [supplied] initial field values, then opens or
+  /// selects it as every creation does.
+  Future<AuthoringResourceIdentifier?> createOwnedResource({
+    required BuildContext context,
+    required skir.TypeDefinitionId type,
+    skir.ValueLocation? owner,
+    List<skir.FieldValue> supplied = const [],
+  }) {
+    final document = ref.read(realmEditingProvider(scope)).document;
+    final template = document.catalog.resourceCreationTemplate(type);
+    if (template == null) {
+      throw StateError("Resources of this type cannot be created");
+    }
+    return createAndReveal(
+      context: context,
+      request: ResourceCreationRequest(
+        type: template.type,
+        configuration: template.configuration,
+        supplied: supplied,
+      ),
+      creationContext: owner == null
+          ? null
+          : ownerCreationContext(
+              document,
+              owner,
+              preferredResources: ambientCreationResources(
+                ref,
+                scope,
+                document,
+              ),
+            ),
+    );
+  }
+}
+
+/// The creation context of a resource that joins the owning link field at
+/// [owner], such as the pages of a Book: the created resource must link back
+/// to the owner through that field's member endpoint.
+CreationContext ownerCreationContext(
+  AuthoringDocument document,
+  skir.ValueLocation owner, {
+  List<skir.ResourceId> preferredResources = const [],
+}) {
+  final record = document.resource(owner.resource);
+  final field = record == null
+      ? null
+      : document.catalog.owningFieldAt(record.configuration, owner.path);
+  if (field == null) {
+    throw StateError("New resources cannot join this field");
+  }
+  return CreationContext(
+    preferredResources: [owner.resource, ...preferredResources],
+    constraints: [
+      CreationReferenceConstraint(
+        route: [field.ownership.member.id],
+        targets: {owner.resource},
+      ),
+    ],
+  );
+}
+
+/// Resources a creation prefers as destinations when it asks for one: the
+/// selection in [scope], then the routed resource and its owners.
+List<skir.ResourceId> ambientCreationResources(
+  Ref ref,
+  AuthoringScope scope,
+  AuthoringDocument document,
+) {
+  final routed = ref.read(routedResourceProvider(scope));
+  return <skir.ResourceId>{
+    ...ref
+        .read(selectionProvider)
+        .whereType<AuthoringResourceIdentifier>()
+        .where((resource) => resource.scope == scope)
+        .map((resource) => resource.resourceId),
+    if (routed != null) ...[
+      routed,
+      ...document.relations.ownerPath(routed).owners,
+    ],
+  }.toList();
 }
 
 final class _CreationCancelled implements Exception {

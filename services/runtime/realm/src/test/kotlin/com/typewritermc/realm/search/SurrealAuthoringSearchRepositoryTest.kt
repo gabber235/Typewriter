@@ -3,7 +3,7 @@ package com.typewritermc.realm.search
 import com.surrealdb.Surreal
 import com.typewritermc.authoring.ArgumentSelection
 import com.typewritermc.authoring.AuthoringRecord
-import com.typewritermc.authoring.ResourceDefinitionId
+import com.typewritermc.authoring.RealmRootDefinition
 import com.typewritermc.authoring.TypeSelection
 import com.typewritermc.realm.authoring.AuthoringCatalogLease
 import com.typewritermc.realm.authoring.AuthoringView
@@ -151,6 +151,29 @@ class SurrealAuthoringSearchRepositoryTest {
         }
     }
 
+    fun realmRootIsExcludedWhileSectionsStaySearchable() {
+        val section = definition("section")
+        val catalog =
+            DefaultCheckedCatalog(
+                com.typewritermc.checking.CatalogGeneration("catalog"),
+                listOf(
+                    TypeDefinition(RealmRootDefinition.id, representation = RepresentationTemplate.Record(emptyList())),
+                    TypeDefinition(section, representation = RepresentationTemplate.Record(emptyList())),
+                ),
+            )
+        Surreal().use { database ->
+            openSearchDatabase(database)
+            database.insertSearchRow("root", TypeUse.Named(RealmRootDefinition.id))
+            database.insertSearchRow("section", TypeUse.Named(section))
+
+            val results =
+                SurrealAuthoringSearchRepository(database)
+                    .search(searchView(catalog), "", emptySet(), emptySet(), null, 10)
+
+            results.map { it.resource } shouldBe listOf(ResourceId("section"))
+        }
+    }
+
     fun multiwordQueryMatchesIndexedBookTitle() {
         val type = definition("book")
         val catalog =
@@ -205,10 +228,9 @@ private fun Surreal.insertSearchRow(
     val resource = ResourceId(id)
     val record = AuthoringRecord(selection, emptyMap())
     query(
-        "CREATE ONLY \$resource CONTENT { definition: \$definition, content: \$content, search: { text: \$text } };",
+        "CREATE ONLY \$resource CONTENT { content: \$content, search: { text: \$text } };",
         mapOf(
             "resource" to resource.surrealRecordId(),
-            "definition" to ResourceDefinitionId("test.resource").value,
             "content" to
                 com.typewritermc.realm.authoring.authoredDatabaseValues
                     .encode(AuthoringRecord.serializer(), record),
@@ -226,7 +248,7 @@ private fun searchView(checked: com.typewritermc.types.catalog.CheckedCatalog): 
             override val checked = checked
         }
     return com.typewritermc.realm.authoring
-        .AuthoringView(lease, emptyMap(), emptyMap(), emptyMap())
+        .AuthoringView(lease, emptyMap(), emptyMap())
 }
 
 val SurrealAuthoringSearchRepositoryTestSuite by testSuite {
@@ -291,7 +313,6 @@ val SurrealAuthoringSearchRepositoryTestSuite by testSuite {
                             representation = RepresentationTemplate.Link(related.endpointId(EndpointSlot.First), TypeTemplate.Named(type)),
                         ),
                     ),
-                resourceRoot = type,
                 relations = listOf(contract(ownership, true), contract(related, false)),
             )
         val root = ResourceId("root")
@@ -315,7 +336,7 @@ val SurrealAuthoringSearchRepositoryTestSuite by testSuite {
                 outside to AuthoringRecord(selected, emptyMap()),
             )
         val occurrences = ResourceValueMapper.discover(resources).associateBy { it.id }
-        val view = AuthoringView(lease, resources, emptyMap(), occurrences)
+        val view = AuthoringView(lease, resources, occurrences)
         view.ownershipClosure(setOf(root)) shouldBe setOf(root, child, grandchild)
         lease.close()
     }
@@ -327,6 +348,9 @@ val SurrealAuthoringSearchRepositoryTestSuite by testSuite {
     }
     test("pendingGenericSearchRequiresProvableAppliedArguments") {
         SurrealAuthoringSearchRepositoryTest().pendingGenericSearchRequiresProvableAppliedArguments()
+    }
+    test("realmRootIsExcludedWhileSectionsStaySearchable") {
+        SurrealAuthoringSearchRepositoryTest().realmRootIsExcludedWhileSectionsStaySearchable()
     }
     test("multiwordQueryMatchesIndexedBookTitle") {
         SurrealAuthoringSearchRepositoryTest().multiwordQueryMatchesIndexedBookTitle()

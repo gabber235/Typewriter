@@ -6,17 +6,11 @@ import "package:typewriter_panel/typewriter_panel.dart";
 void main() {
   test("resource command retains scope and canonical payload", () async {
     final resource = skir.ResourceId(value: "book:main");
-    final definition = skir.ResourceDefinitionId(value: "typewriter.book");
     final configuration = skir.TypeSelection.createComplete(
       definition: _book,
       arguments: const [],
     );
-    final payload = _payload(
-      resource: resource,
-      definition: definition,
-      configuration: configuration,
-      navigationHandler: skir.AuthoringNavigationHandler.book,
-    );
+    final payload = _payload(resource: resource, configuration: configuration);
     final searchResult = SearchResult(
       id: resource.value,
       type: authoringResourceSearchResultType,
@@ -64,18 +58,18 @@ skir.RecordId _recordId(String table, String key) =>
 
 AuthoringSearchResultPayload _payload({
   required skir.ResourceId resource,
-  required skir.ResourceDefinitionId definition,
   required skir.TypeSelection configuration,
-  required skir.AuthoringNavigationHandler navigationHandler,
 }) {
   final catalog = CheckedEditorCatalog(
     skir.EditorCatalogWireSnapshot(
+      resourceDisplays: const [],
       resourceOperations: const [],
-      resourceOperationContributions: const [],
       generation: skir.CatalogGeneration(value: "catalog:test"),
       types: [
         skir.PublishedType(
-          display: null,
+          searchKey: null,
+          placementField: null,
+          display: defaultTypeDisplay(""),
           definition: skir.TypeDefinition(
             id: _book,
             parameters: const [],
@@ -91,13 +85,7 @@ AuthoringSearchResultPayload _payload({
         ),
       ],
       relations: const [],
-      resourceDefinitions: [
-        skir.AuthoringResourceDefinition(
-          id: definition,
-          root: _book,
-          navigationHandler: navigationHandler,
-        ),
-      ],
+      realmRoot: skir.TypeDefinitionId.defaultInstance,
       presentations: const [],
       presentationMaterials: const [],
       configuration: const [],
@@ -120,25 +108,13 @@ AuthoringSearchResultPayload _payload({
   );
   final document = AuthoringDocument(
     catalog: catalog,
-    entries: {
-      resource: skir.AuthoringResource(
-        id: resource,
-        definition: definition,
-        content: content,
-      ),
-    },
+    entries: {resource: skir.AuthoringResource(id: resource, content: content)},
     links: const [],
   );
   return AuthoringSearchResultPayload(
     hit: skir.AuthoringSearchHit(
       resource: resource,
-      definition: definition,
-      subject: skir.PresentationSubject(
-        resource: resource,
-        definition: definition,
-        content: content,
-        descriptor: skir.DataValue.wrapStringValue("Main Book"),
-      ),
+      subject: skir.PresentationSubject(resource: resource, content: content),
       context: skir.PortableValue(
         actualType: skir.TypeUse.wrapScalar(skir.ScalarKind.text),
         payload: skir.DataValue.wrapStringValue("library"),

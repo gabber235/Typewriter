@@ -86,7 +86,30 @@ val FieldPresentationInferenceTest by testSuite {
                 ),
                 ChildrenElement.StackWrapper(
                     skirout.editor.v1.presentation.StackChildrenElement
-                        .partial(children = listOf(first)),
+                        .partial(
+                            children =
+                                listOf(
+                                    skirout.editor.v1.presentation.StackChild
+                                        .FlowWrapper(first),
+                                ),
+                        ),
+                ),
+                ChildrenElement.StackWrapper(
+                    skirout.editor.v1.presentation.StackChildrenElement.partial(
+                        children =
+                            listOf(
+                                skirout.editor.v1.presentation.StackChild.createPositioned(
+                                    child = first,
+                                    top = null,
+                                    start = null,
+                                    end = null,
+                                    bottom = null,
+                                    width = null,
+                                    height = null,
+                                    transition = null,
+                                ),
+                            ),
+                    ),
                 ),
             )
         placements.forEach { placement ->
@@ -673,7 +696,13 @@ val FieldPresentationInferenceTest by testSuite {
                 generation = CatalogGeneration("field defaults"),
                 types = emptyList(),
                 relations = emptyList(),
-                resourceDefinitions = emptyList(),
+                resourceDisplays = emptyList(),
+                realmRoot =
+                    com.typewritermc.types.TypeDefinitionId(
+                        com.typewritermc.types.TypeId
+                            .Qualified("test", "realm.root"),
+                        1,
+                    ),
                 presentations = emptyList(),
                 presentationMaterials = listOf(material),
                 configuration = emptyList(),

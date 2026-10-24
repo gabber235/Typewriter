@@ -69,7 +69,7 @@ class EngineDeploymentEntrypoint : HostedRuntimeEntrypoint {
                     implementationToken = implementation.fingerprint(),
                     enforceImplementationCompatibility =
                         context.identity.placement == RuntimePlacement.PRIMARY_ENGINE,
-                    contentGateway = PageContentGateway(assembly.checked, assembly.bindings, assembly.snapshot.relations),
+                    contentGateway = ResourceGraphContentGateway(assembly.checked, assembly.bindings, assembly.snapshot.relations),
                     contentDelivery = MessagingEngineContentDelivery(context.host, context.identity.realmId, deploymentScope),
                 )
             ScopedEngineRuntime(runtime, deploymentScope)
@@ -102,7 +102,6 @@ private val EXECUTION_PROVIDER_KINDS =
     setOf(
         GeneratedProviderKind.Type,
         GeneratedProviderKind.NativeBinding,
-        GeneratedProviderKind.Resource,
         GeneratedProviderKind.Relation,
         GeneratedProviderKind.EndpointBindings,
         GeneratedProviderKind.Registrar,

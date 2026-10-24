@@ -4,6 +4,7 @@ package com.typewritermc.presentation
 
 import com.typewritermc.authoring.GeneratedSdkApi
 import com.typewritermc.expression.ExpressionFactories
+import skirout.editor.v1.presentation.PresentationNode
 import java.util.IdentityHashMap
 
 /**
@@ -43,7 +44,8 @@ class DefaultPresentationRuntime : PresentationRuntime {
         content: (PresentationBuildScope) -> Unit,
     ): PresentationBuildResult {
         val state = PresentationBuildState(binding, ::resolve, expressions)
-        val captured = state.captureResult(content)
-        return state.result(state.column(captured.nodes), captured.appearance)
+        val nodes = mutableListOf<PresentationNode>()
+        state.withTarget(nodes) { content(state.scope(target = nodes)) }
+        return state.result(state.column(nodes))
     }
 }

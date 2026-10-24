@@ -276,7 +276,7 @@ String? _actionText(
     ? null
     : switch (_string(scope, node)) {
         _ResolvedValue(:final value) => value,
-        _ResolvedFailure(:final message) => throw PresentationColorFailure(
+        _ResolvedFailure(:final message) => throw PresentationValueFailure(
           message,
         ),
       };
@@ -386,7 +386,7 @@ Widget _actionAppearance(
               return tooltip == null
                   ? result
                   : Tooltip(message: tooltip, child: result);
-            } on PresentationColorFailure catch (failure) {
+            } on PresentationValueFailure catch (failure) {
               return _diagnostic(failure.message);
             }
           },
@@ -405,7 +405,7 @@ BoxConstraints? _popupConstraints(
     if (value == null) return null;
     final number = _number(scope, value);
     if (number == null || !number.isFinite || number < 0) {
-      throw const PresentationColorFailure(
+      throw const PresentationValueFailure(
         "Popup dimensions must be finite and nonnegative",
       );
     }
@@ -416,7 +416,7 @@ BoxConstraints? _popupConstraints(
   final maximum = dimension(popup.maximumWidth) ?? double.infinity;
   final extent = dimension(popup.maximumExtent) ?? double.infinity;
   if (minimum > maximum) {
-    throw const PresentationColorFailure(
+    throw const PresentationValueFailure(
       "Popup minimum width exceeds its maximum width",
     );
   }
@@ -437,7 +437,7 @@ OutlinedBorder? _popupShape(
   }
   final border = popup.border;
   if (border != null && border is! skir.PresentationBorder_allWrapper) {
-    throw const PresentationColorFailure(
+    throw const PresentationValueFailure(
       "Popup borders must use one uniform side",
     );
   }
@@ -503,7 +503,7 @@ extension _ConfiguredMenuItemRendering on skir.MenuItem {
                     ],
                   ),
                 );
-              } on PresentationColorFailure catch (failure) {
+              } on PresentationValueFailure catch (failure) {
                 return _diagnostic(failure.message);
               }
             },

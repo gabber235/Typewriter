@@ -66,7 +66,7 @@ extension InheritedInspectorCatalog on CheckedEditorCatalog {
           final subject = material.subject;
           if (value.key.name.trim().isEmpty ||
               subject is! skir.TypeTemplate_namedWrapper ||
-              !_isNominalSubtype(subject.value.definition, value.key.owner)) {
+              !isNominalSubtype(subject.value.definition, value.key.owner)) {
             problem ??= "the part key has an incompatible declaring owner";
           }
         case skir.PresentationElement_remainingFieldsWrapper():
@@ -308,7 +308,7 @@ extension InheritedInspectorCatalog on CheckedEditorCatalog {
         ),
       );
     }
-    if (!_isNominalSubtype(
+    if (!isNominalSubtype(
       selected(owner)?.definition.id ?? key.owner,
       key.owner,
     )) {

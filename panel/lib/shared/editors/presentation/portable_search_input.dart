@@ -379,7 +379,7 @@ final class _PortableSearchSurface extends ConsumerWidget {
         context.colors.surface;
     final resultFill = popup?.fill == null
         ? fill
-        : PresentationColorEnvironment.of(context).resolve(popup!.fill!, scope);
+        : PresentationValueEnvironment.of(context).resolve(popup!.fill!, scope);
     final leading = _entryLeading(
       context,
       control.control,
@@ -599,7 +599,9 @@ final class _PortableSearchSurface extends ConsumerWidget {
                     PortableMappedSearchPayload(:final mapping) =>
                       PortableResultContent(
                         node: mapping.presentation,
-                        appearance: mapping.resultAppearance,
+                        // A resource result shows its name, accent and icon
+                        // like every other resource result.
+                        appearance: _resourceAppearance(selectedValue, scope),
                         scope: picker.resultScope(row.result, scope),
                         row: row.copyWith(
                           selected: selected,
@@ -607,8 +609,8 @@ final class _PortableSearchSurface extends ConsumerWidget {
                               ? null
                               : () => controller.activate(row.result),
                         ),
-                        fallbackStyle: SearchResultDensity.compact,
-                        fallbackKindLabel: "",
+                        // A search input opens a dropdown, so its rows are compact.
+                        density: SearchResultDensity.compact,
                       ),
                     PortableCustomSearchPayload() => SearchResultRow(
                       row: row.copyWith(
@@ -641,6 +643,21 @@ final class _PortableSearchSurface extends ConsumerWidget {
       ),
     );
   }
+}
+
+/// The appearance of the resource [value] links to, or null when it links to
+/// no resource the host can project.
+ResourceAppearance? _resourceAppearance(
+  skir.DataValue value,
+  PortablePresentationScope scope,
+) {
+  final resource = value.authoredLink?.target.resource;
+  final host = switch (scope.host) {
+    final PortableCollectionProjectionHost projection => projection,
+    _ => null,
+  };
+  if (resource == null || host == null) return null;
+  return host.projectResource(resource, context: scope.invocation)?.appearance;
 }
 
 /// Keeps keyboard navigation visible while the query retains focus.

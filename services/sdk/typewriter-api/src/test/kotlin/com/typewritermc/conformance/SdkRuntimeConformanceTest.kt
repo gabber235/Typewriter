@@ -1230,7 +1230,8 @@ val SdkRuntimeConformanceTest by testSuite {
                 generation = CatalogGeneration("immutable fields"),
                 types = emptyList(),
                 relations = emptyList(),
-                resourceDefinitions = emptyList(),
+                resourceDisplays = emptyList(),
+                realmRoot = com.typewritermc.authoring.RealmRootDefinition.id,
                 presentations = emptyList(),
                 presentationMaterials = listOf(material),
                 configuration = emptyList(),
@@ -1253,7 +1254,7 @@ val SdkRuntimeConformanceTest by testSuite {
                 ),
             )
         val definition = TypeDefinition(id, representation = RepresentationTemplate.Record(fieldList))
-        val fallbackParents = mutableListOf(com.typewritermc.types.PresentationRole.WORKSPACE_EDITOR)
+        val fallbackParents = mutableListOf(com.typewritermc.types.PresentationRole.WORKSPACE)
         val endpointPath = mutableListOf<com.typewritermc.configuration.FieldPatternSegment>(FieldPatternSegment.Field("items"))
         val rules =
             mutableListOf(
@@ -1328,7 +1329,7 @@ val SdkRuntimeConformanceTest by testSuite {
         assembly.snapshot.roleFallbacks
             .single()
             .parents shouldBe
-            listOf(com.typewritermc.types.PresentationRole.WORKSPACE_EDITOR)
+            listOf(com.typewritermc.types.PresentationRole.WORKSPACE)
         val checked = assembly.checked.resolve(TypeUse.Named(id)).ready()
         (checked.schema.representation as com.typewritermc.types.catalog.ResolvedRepresentation.Record).fields.size shouldBe 1
     }

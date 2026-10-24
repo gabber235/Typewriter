@@ -12,13 +12,14 @@ val CatalogSnapshotImmutabilityTest by testSuite {
     test("catalog snapshots reject outer and nested collection mutation") {
         val types = mutableListOf<com.typewritermc.types.catalog.PublishedType>()
         val parents = mutableListOf(PresentationRole.INSPECTOR)
-        val fallbacks = mutableListOf(RoleFallback(PresentationRole.WORKSPACE_EDITOR, parents))
+        val fallbacks = mutableListOf(RoleFallback(PresentationRole.WORKSPACE, parents))
         val source =
             EditorCatalogSnapshot(
                 generation = CatalogGeneration("catalog"),
                 types = types,
                 relations = emptyList(),
-                resourceDefinitions = emptyList(),
+                resourceDisplays = emptyList(),
+                realmRoot = com.typewritermc.authoring.RealmRootDefinition.id,
                 presentations = emptyList(),
                 presentationMaterials = emptyList(),
                 configuration = emptyList(),

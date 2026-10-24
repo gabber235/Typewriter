@@ -30,6 +30,7 @@ final class CanonicalReadModels {
         _ => const <skir.FieldDeclaration>[],
       };
       _definitions[definition.id] = skir.PublishedType(
+        placementField: null,
         definition: definition,
         status: skir.DeclarationStatus.ready,
         effectiveFields: [
@@ -42,12 +43,20 @@ final class CanonicalReadModels {
             ),
         ],
         ancestorTemplates: definition.parents,
-        display: null,
+        display: defaultTypeDisplay(_modelDisplayName(definition.id)),
+        searchKey: null,
       );
     }
   }
 
   final _definitions = <skir.TypeDefinitionId, skir.PublishedType>{};
+
+  static String _modelDisplayName(skir.TypeDefinitionId id) =>
+      switch (id.typeId) {
+        skir.TypeId_qualifiedWrapper(:final value) =>
+          value.name.split(".").last,
+        _ => "Type",
+      };
   final _fields = <String, List<String>>{};
   skir.PublishedType? published(skir.TypeDefinitionId id) => _definitions[id];
 
@@ -59,6 +68,10 @@ final class CanonicalReadModels {
   skir.TypeUse get publishedTypeUse => skir.TypeUse.wrapNamed(
     _use("com.typewritermc.types.catalog.PublishedType"),
   );
+
+  /// The evaluated display of a resource: its label, accent and icon.
+  skir.NamedTypeUse get resourceAppearanceUse =>
+      _use("com.typewritermc.authoring.ResourceAppearance");
 
   skir.NamedTypeUse _use(String name) => skir.NamedTypeUse(
     definition: skir.TypeDefinitionId(
@@ -152,6 +165,20 @@ final class CanonicalReadModels {
             ),
         ],
       );
+    }
+    if (value is skir.Icon) {
+      final icon = iconValue(value);
+      if (path.isEmpty) return icon;
+      final record =
+          (icon as skir.DataValue_namedWrapper).value.payload
+              as skir.DataValue_recordWrapper;
+      if (path.length == 1) {
+        final field = record.value.fields
+            .where((field) => field.name == path.single)
+            .firstOrNull;
+        if (field != null) return field.value;
+      }
+      throw FormatException("The canonical field ${path.first} is absent");
     }
     if (descriptor is skir.ReflectiveEnumDescriptor) {
       final variant = descriptor.getVariant(value);

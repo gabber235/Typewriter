@@ -73,15 +73,7 @@ void main() {
       final environments = tester.widgetList<PresentationEnvironment>(
         find.byType(PresentationEnvironment),
       );
-      expect(
-        environments
-            .single
-            .bindings[presentationSelectionCountBindingId]
-            ?.value
-            .authoredInteger
-            ?.toInt(),
-        2,
-      );
+      expect(environments.single.host.selectionCount, 2);
       container.read(selectionProvider.notifier).selectAll([first]);
       await tester.pumpAndSettle();
       expect(find.byType(AutoSizeText), findsOneWidget);
@@ -106,10 +98,8 @@ void main() {
             .widget<PresentationEnvironment>(
               find.byType(PresentationEnvironment),
             )
-            .bindings[presentationSelectionCountBindingId]
-            ?.value
-            .authoredInteger
-            ?.toInt(),
+            .host
+            .selectionCount,
         2,
       );
     },
@@ -147,45 +137,6 @@ void main() {
       expect(find.byType(InspectorScaffold), findsOneWidget);
       expect(find.byType(MobileInspector), findsOneWidget);
       expect(find.byKey(const ValueKey("route-content")), findsOneWidget);
-
-      await tester.pumpWidget(const SizedBox.shrink());
-      for (var index = 0; index < 20; index++) {
-        await tester.idle();
-        await tester.pump();
-      }
-    });
-
-    testWidgets("book scaffold hosts one inspector", (tester) async {
-      await tester.pumpTestApp(
-        child: const BookScaffold(
-          child: SizedBox.expand(key: ValueKey("book-route-content")),
-        ),
-        overrides: [
-          realmInteractionProvider.overrideWith(
-            (ref) => const RealmInteractionState(
-              connectionState: RealmConnectionState.online,
-            ),
-          ),
-          ...canonicalServicesProviderOverrides(state: DisplayState.noItems),
-          ...realmProviderOverrides(),
-          ...organizationProviderOverrides(),
-          ...organizationsProviderOverrides(state: DisplayState.noItems),
-          ...appearanceProviderOverrides(),
-          authUserInfoProvider.overrideWithValue(const AsyncLoading()),
-          selectionProvider.overrideWithValue([
-            TestSelectableIdentifier(id: "test-item"),
-          ]),
-        ],
-        settle: false,
-      );
-      for (var index = 0; index < 20; index++) {
-        await tester.idle();
-        await tester.pump();
-      }
-
-      expect(find.byType(InspectorScaffold), findsOneWidget);
-      expect(find.byType(MobileInspector), findsOneWidget);
-      expect(find.byKey(const ValueKey("book-route-content")), findsOneWidget);
 
       await tester.pumpWidget(const SizedBox.shrink());
       for (var index = 0; index < 20; index++) {

@@ -56,6 +56,8 @@ internal class RuntimePresentationBuildScope(
     override fun <S : Any> expressions(scope: KClass<S>): S =
         state.expressions.create(scope, com.typewritermc.expression.inputExpression<Any?, MayBeMissing>(CONFIGURED_VALUE))
 
+    override fun resourceAppearance() = state.resourceAppearance()
+
     override fun conditional(
         condition: Expr<Boolean, Handled>,
         whenFalse: ((PresentationBuildScope) -> Unit)?,
@@ -78,11 +80,4 @@ internal class RuntimePresentationBuildScope(
                 ),
             )
     }
-
-    override fun <R : Resource> resourceCollection(
-        id: String,
-        resource: KClass<R>,
-        appearance: PresentationReference?,
-        configure: ResourceCollectionSourceScope<R>.() -> Unit,
-    ): CollectionSource<R, ResourceId> = resourceCollectionSource(id, state.resourceType(resource), appearance, configure)
 }

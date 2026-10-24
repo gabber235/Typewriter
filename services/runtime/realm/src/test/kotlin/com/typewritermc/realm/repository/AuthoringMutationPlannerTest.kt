@@ -29,9 +29,9 @@ import com.typewritermc.operations.OperationInvocation
 import com.typewritermc.operations.OperationOrigin
 import com.typewritermc.operations.PreparationChoices
 import com.typewritermc.realm.authoring.AuthoringView
-import com.typewritermc.realm.authoring.OperationLayoutPreparation
 import com.typewritermc.realm.authoring.RuntimeOperationPreparation
 import com.typewritermc.realm.authoring.WorkingViewEditContext
+import com.typewritermc.types.ACYCLIC_RELATION_FAMILY_ID
 import com.typewritermc.types.CollectionKind
 import com.typewritermc.types.DataValue
 import com.typewritermc.types.EndpointBindingTemplate
@@ -93,136 +93,28 @@ class AuthoringMutationPlannerTest {
             com.typewritermc.realm.checking.TestCatalogLease(
                 generation = GENERATION,
                 definitions = definitions,
-                resourceRoot = NODE,
                 relations = listOf(manyContract()),
                 endpointBindings = BINDINGS,
             )
         val resources = mapOf(id to record().let { it.copy(fields = it.fields - "manyFirst") })
-        val baseline = AuthoringView(catalog, resources, mapOf(id to com.typewritermc.authoring.ResourceDefinitionId("test")), emptyMap())
+        val baseline = AuthoringView(catalog, resources, emptyMap())
         try {
             val reads =
                 com.typewritermc.realm.checking.CapturedAuthoringReads(
                     com.typewritermc.realm.authoring.AuthoredReadView
                         .Original(baseline),
                 )
-            val result =
+            val facts =
                 com.typewritermc.realm.authoring
-                    .BuiltinOperationAvailability(
-                        baseline,
-                        reads,
-                    ).availability(com.typewritermc.operations.BuiltinResourceOperation.LinkWithDuplicate, listOf(id))
-            result shouldBe com.typewritermc.operations.OperationAvailability.Hidden
+                    .RealmGraphFacts(
+                        com.typewritermc.realm.authoring
+                            .RelationReads(reads),
+                    )
+            facts.linkCapacityOf(id) shouldBe com.typewritermc.operations.LinkCapacity.None
         } finally {
             catalog.close()
         }
     }
-
-    fun placementPoliciesMatchExactOwnershipCollections() =
-        runBlocking {
-            val owner = ResourceId("layout-owner")
-            val first = ResourceId("layout-first")
-            val second = ResourceId("layout-second")
-            val firstItem = ItemId("layout-first-item")
-            val secondItem = ItemId("layout-second-item")
-            val inverseItem = ItemId("layout-inverse-item")
-            val resources =
-                mapOf(
-                    owner to
-                        record(
-                            children = listOf(ListItem(firstItem, link(PARENT_FIRST_TYPE, PARENT_FIRST, first, fieldPath("parent")))),
-                            manyFirst =
-                                listOf(
-                                    ListItem(
-                                        secondItem,
-                                        link(MANY_FIRST_TYPE, MANY_FIRST, second, fieldPath("manySecond").item(inverseItem)),
-                                    ),
-                                ),
-                        ),
-                    first to record(parent = link(PARENT_SECOND_TYPE, PARENT_SECOND, owner, fieldPath("children").item(firstItem))),
-                    second to
-                        record(
-                            manySecond =
-                                listOf(
-                                    ListItem(
-                                        inverseItem,
-                                        link(MANY_SECOND_TYPE, MANY_SECOND, owner, fieldPath("manyFirst").item(secondItem)),
-                                    ),
-                                ),
-                        ),
-                )
-            val ownership = setOf(RelationFamilyId(RESOURCE_OWNERSHIP_FAMILY_ID))
-            val baseline =
-                operationBaseline(
-                    resources,
-                    listOf(
-                        parentContract(RelationDeletePolicy.CASCADE, RelationDeletePolicy.CLEAR).copy(families = ownership),
-                        manyContract().copy(families = ownership),
-                    ),
-                )
-            val origin =
-                com.typewritermc.discovery.ProviderOrigin(
-                    com.typewritermc.types.DeclarationOwner(
-                        com.typewritermc.discovery.ContributionKey(
-                            com.typewritermc.imprint.ContributionSourceId("layout-test"),
-                            "main",
-                            com.typewritermc.imprint.ProducerId("test"),
-                            com.typewritermc.imprint.ContributionName("layout"),
-                        ),
-                        "fixture.LayoutOperations",
-                    ),
-                    com.typewritermc.imprint.ArtifactId("fixture:layout"),
-                    "main",
-                )
-            val requests = mutableListOf<com.typewritermc.operations.DestinationPlacementRequest>()
-
-            fun policy(
-                field: String,
-                use: TypeUse,
-            ) = com.typewritermc.operations.DestinationPlacementDeclaration(
-                origin,
-                TypeTemplate.Named(NODE),
-                com.typewritermc.authoring.typedPath<Any, Any>(NODE, fieldPath(field), use),
-                com.typewritermc.operations.DestinationPlacementPolicy { request ->
-                    requests += request
-                    com.typewritermc.operations.PlacementPreparation { }
-                },
-            )
-            val operations =
-                com.typewritermc.operations.OperationCatalog(
-                    placements =
-                        listOf(
-                            policy("children", CHILDREN_USE),
-                            policy("manyFirst", MANY_FIRST_LIST_USE),
-                        ),
-                )
-            val catalog =
-                object : com.typewritermc.realm.authoring.AuthoringCatalogLease by baseline.catalog {
-                    override val operations = operations
-
-                    override fun retain(): com.typewritermc.realm.authoring.AuthoringCatalogLease = this
-
-                    override fun close() = Unit
-                }
-            try {
-                val working = baseline.copy(catalog = catalog)
-                val edit = WorkingViewEditContext(working, "exact-layout")
-                val layouts = OperationLayoutPreparation(edit, working)
-                val session =
-                    RuntimeOperationPreparation(
-                        OperationInvocation("exact-layout", listOf(first, second)),
-                        PreparationChoices(),
-                        edit,
-                        working,
-                    )
-                with(session) { layouts.prepareMove(listOf(layouts.draft(first), layouts.draft(second)), owner, null).apply() }
-                requests.map { it.collection.path } shouldBe listOf(fieldPath("children"), fieldPath("manyFirst"))
-                requests.map { it.subjects.map { draft -> draft.id } } shouldBe listOf(listOf(first), listOf(second))
-                requests.map { it.occupants.map { draft -> draft.id } } shouldBe listOf(listOf(first), listOf(second))
-                baseline.resources shouldBe resources
-            } finally {
-                baseline.catalog.close()
-            }
-        }
 
     fun runtimeResolvesInlineCallbacksAndPreparesAgainstWorkingValues() =
         runBlocking {
@@ -245,17 +137,22 @@ class AuthoringMutationPlannerTest {
                     "main",
                 )
             val declaration =
-                com.typewritermc.operations.collectOperations(
+                com.typewritermc.operations.collectOperation<com.typewritermc.authoring.ResourceDraft, Unit>(
                     origin,
                     "fixture.InlineOperations",
-                    TypeTemplate.Named(NODE),
-                    com.typewritermc.authoring.draftViewProjection(NODE_USE, com.typewritermc.authoring.ResourceDrafts::bind),
-                ) { build ->
-                    build.operation("suffix", com.typewritermc.operations.noInput()) {
-                        label("Add suffix")
-                        availability {
+                    com.typewritermc.types.ResourceTarget
+                        .Type(TypeTemplate.Named(NODE)),
+                    com.typewritermc.operations.projectedSubjects(
+                        com.typewritermc.authoring.draftViewProjection(NODE_USE, com.typewritermc.authoring.ResourceDrafts::bind),
+                    ),
+                    com.typewritermc.operations.OperationInput.None,
+                    "Inline operations",
+                ) { spec ->
+                    with(spec) {
+                        appearance { label("Add suffix") }
+                        availableWhen {
                             val authoredValues =
-                                subjects.map {
+                                drafts.map {
                                     read(
                                         com.typewritermc.authoring.boundPath<String>(
                                             location(it.id, "label"),
@@ -264,7 +161,7 @@ class AuthoringMutationPlannerTest {
                                     )
                                 }
                             val state = com.typewritermc.operations.authored(authoredValues)
-                            if (state != com.typewritermc.operations.OperationAvailability.Enabled) return@availability state
+                            if (state != com.typewritermc.operations.OperationAvailability.Enabled) return@availableWhen state
                             val values = authoredValues.map { com.typewritermc.operations.requireAuthored(it) }
                             require(values.none { it == "availability-failure" }) { "Availability provider failed" }
                             com.typewritermc.operations.OperationAvailability.Enabled
@@ -275,13 +172,13 @@ class AuthoringMutationPlannerTest {
                                     com.typewritermc.operations.requireAuthored(
                                         read(
                                             com.typewritermc.authoring.boundPath<String>(
-                                                location(subject.id, "label"),
+                                                location(subject, "label"),
                                                 TypeUse.Scalar(ScalarKind.Text),
                                             ),
                                         ),
                                     )
                                 require(previous != "reject") { "The complete selection cannot be changed" }
-                                checkedSet(location(subject.id, "label"), DataValue.StringValue("$previous!"))
+                                checkedSet(location(subject, "label"), DataValue.StringValue("$previous!"))
                             }
                         }
                     }
@@ -291,7 +188,6 @@ class AuthoringMutationPlannerTest {
                     listOf(declaration),
                     baseline.catalog.checked,
                     baseline.catalog.nativeBindings,
-                    emptyList(),
                     emptyList(),
                 )
             check(operations.failures.isEmpty()) { operations.failures.joinToString { it.cause.toString() } }
@@ -327,7 +223,7 @@ class AuthoringMutationPlannerTest {
                 val capability =
                     resolved.operations
                         .single()
-                        .definition.id.capability
+                        .definition.capability
                 val preview =
                     runtime
                         .prepare(
@@ -491,9 +387,8 @@ class AuthoringMutationPlannerTest {
                         OperationInvocation("delete-overlap", listOf(parent, child)),
                         PreparationChoices(),
                         edit,
-                        baseline,
                     )
-                session.deleteSelection(listOf(parent, child))
+                session.delete(listOf(parent, child))
                 val result = edit.finish()
                 edit.session.resources.isEmpty() shouldBe true
                 result.intents.filterIsInstance<EditIntent.DeleteResource>().size shouldBe 2
@@ -504,23 +399,36 @@ class AuthoringMutationPlannerTest {
 
     fun moveTransfersTheWholeSelectionThroughExactOwnershipInverses() =
         runBlocking {
+            val root = ResourceId("move_root")
             val from = ResourceId("move_from")
             val to = ResourceId("move_to")
             val first = ResourceId("move_first")
             val second = ResourceId("move_second")
             val firstItem = ItemId("first")
             val secondItem = ItemId("second")
+            val fromItem = ItemId("from")
+            val toItem = ItemId("to")
             val resources =
                 mapOf(
+                    // Both owners are owned themselves, as every ownable resource must be.
+                    root to
+                        record(
+                            children =
+                                listOf(
+                                    ListItem(fromItem, link(PARENT_FIRST_TYPE, PARENT_FIRST, from, fieldPath("parent"))),
+                                    ListItem(toItem, link(PARENT_FIRST_TYPE, PARENT_FIRST, to, fieldPath("parent"))),
+                                ),
+                        ),
                     from to
                         record(
+                            parent = link(PARENT_SECOND_TYPE, PARENT_SECOND, root, fieldPath("children").item(fromItem)),
                             children =
                                 listOf(
                                     ListItem(firstItem, link(PARENT_FIRST_TYPE, PARENT_FIRST, first, fieldPath("parent"))),
                                     ListItem(secondItem, link(PARENT_FIRST_TYPE, PARENT_FIRST, second, fieldPath("parent"))),
                                 ),
                         ),
-                    to to record(),
+                    to to record(parent = link(PARENT_SECOND_TYPE, PARENT_SECOND, root, fieldPath("children").item(toItem))),
                     first to
                         record(
                             parent = link(PARENT_SECOND_TYPE, PARENT_SECOND, from, fieldPath("children").item(firstItem)),
@@ -550,17 +458,16 @@ class AuthoringMutationPlannerTest {
                         OperationInvocation("move-selection", listOf(first, second), origin),
                         PreparationChoices(),
                         edit,
-                        baseline,
                     )
-                val subjects = listOf(first, second).map(OperationLayoutPreparation(edit, baseline)::draft)
-                with(session) { relations.requireMove(subjects, to, origin, choices).apply() }
+                session.move(listOf(first, second), to, null)
                 val prepared = edit.finish()
                 prepared.intents.filterIsInstance<EditIntent.ConnectRelation>().all {
                     it.intent.counterpart is CounterpartChoice.Existing
                 } shouldBe true
                 val final = ResourceValueMapper.discover(edit.session.resources)
-                final.filter { it.source == to }.map { it.target.resource }.toSet() shouldBe setOf(first, second)
-                final.none { it.source == from } shouldBe true
+                final.filter { it.source == to && it.target.resource != root }.map { it.target.resource }.toSet() shouldBe
+                    setOf(first, second)
+                final.filter { it.source == from }.map { it.target.resource } shouldBe listOf(root)
                 (
                     edit.session.resources
                         .getValue(first)
@@ -596,12 +503,10 @@ class AuthoringMutationPlannerTest {
                         OperationInvocation("impossible-move", listOf(childA, childB)),
                         PreparationChoices(),
                         edit,
-                        baseline,
                     )
-                val subjects = listOf(childA, childB).map(OperationLayoutPreparation(edit, baseline)::draft)
                 var rejected = false
                 try {
-                    with(session) { relations.requireMove(subjects, destination, invocation.origin, choices).apply() }
+                    session.move(listOf(childA, childB), destination, null)
                 } catch (
                     _: IllegalArgumentException,
                 ) {
@@ -618,16 +523,33 @@ class AuthoringMutationPlannerTest {
 
     fun cloneCopiesOwnedClosureAndDeduplicatesSelectedDescendants() =
         runBlocking {
+            val root = ResourceId("clone_root")
             val book = ResourceId("clone_book")
             val page = ResourceId("clone_page")
             val element = ResourceId("clone_element")
             val outside = ResourceId("clone_shared")
+            val rootItem = ItemId("root")
+            val bookItem = ItemId("book")
+            val outsideItem = ItemId("outside")
             val pageItem = ItemId("page")
             val elementItem = ItemId("element")
             val resources =
                 mapOf(
+                    // Every node is ownable, so the top node owns itself; the cloned book and the outside resource
+                    // are owned by it, as every ownable resource must be.
+                    root to
+                        record(
+                            parent = link(PARENT_SECOND_TYPE, PARENT_SECOND, root, fieldPath("children").item(rootItem)),
+                            children =
+                                listOf(
+                                    ListItem(rootItem, link(PARENT_FIRST_TYPE, PARENT_FIRST, root, fieldPath("parent"))),
+                                    ListItem(bookItem, link(PARENT_FIRST_TYPE, PARENT_FIRST, book, fieldPath("parent"))),
+                                    ListItem(outsideItem, link(PARENT_FIRST_TYPE, PARENT_FIRST, outside, fieldPath("parent"))),
+                                ),
+                        ),
                     book to
                         record(
+                            parent = link(PARENT_SECOND_TYPE, PARENT_SECOND, root, fieldPath("children").item(bookItem)),
                             children = listOf(ListItem(pageItem, link(PARENT_FIRST_TYPE, PARENT_FIRST, page, fieldPath("parent")))),
                             manyFirst =
                                 listOf(
@@ -645,6 +567,7 @@ class AuthoringMutationPlannerTest {
                     element to record(parent = link(PARENT_SECOND_TYPE, PARENT_SECOND, page, fieldPath("children").item(elementItem))),
                     outside to
                         record(
+                            parent = link(PARENT_SECOND_TYPE, PARENT_SECOND, root, fieldPath("children").item(outsideItem)),
                             manySecond =
                                 listOf(
                                     ListItem(
@@ -672,14 +595,13 @@ class AuthoringMutationPlannerTest {
                         OperationInvocation("clone-closure", listOf(book, page)),
                         PreparationChoices(),
                         edit,
-                        baseline,
                     )
-                val result = with(session) { cloner.duplicateOwned(listOf(book, page)) }
+                val result = session.duplicate(listOf(book, page))
                 val final = edit.finish()
-                result.selectedCopies.size shouldBe 2
+                result.size shouldBe 2
                 final.intents.filterIsInstance<EditIntent.CreateResource>().size shouldBe 3
-                edit.session.resources.size shouldBe 7
-                val copy = edit.session.resources.getValue(result.selectedCopies[0])
+                edit.session.resources.size shouldBe 8
+                val copy = edit.session.resources.getValue(result[0])
                 val copiedChildItem =
                     (
                         (
@@ -706,7 +628,7 @@ class AuthoringMutationPlannerTest {
                         baseline.catalog.checked,
                     )
                 copied.problems.isEmpty() shouldBe true
-                copied.projections.any { it.first == result.selectedCopies[0] && it.second == result.selectedCopies[1] } shouldBe true
+                copied.projections.any { it.first == result[0] && it.second == result[1] } shouldBe true
             } finally {
                 baseline.catalog.close()
             }
@@ -765,8 +687,8 @@ class AuthoringMutationPlannerTest {
             try {
                 val edit = WorkingViewEditContext(baseline, "clone-outside")
                 val session =
-                    RuntimeOperationPreparation(OperationInvocation("clone-outside", listOf(source)), PreparationChoices(), edit, baseline)
-                val copy = with(session) { cloner.duplicateOwned(listOf(source)).selectedCopies.single() }
+                    RuntimeOperationPreparation(OperationInvocation("clone-outside", listOf(source)), PreparationChoices(), edit)
+                val copy = session.duplicate(listOf(source)).single()
                 edit.finish()
                 val links = ResourceValueMapper.discover(edit.session.resources)
                 links.any { it.source == copy && it.target.resource == outside } shouldBe true
@@ -791,10 +713,10 @@ class AuthoringMutationPlannerTest {
             try {
                 val edit = WorkingViewEditContext(baseline, "clone-scalar")
                 val session =
-                    RuntimeOperationPreparation(OperationInvocation("clone-scalar", listOf(source)), PreparationChoices(), edit, baseline)
+                    RuntimeOperationPreparation(OperationInvocation("clone-scalar", listOf(source)), PreparationChoices(), edit)
                 var rejected = false
                 try {
-                    with(session) { cloner.duplicateOwned(listOf(source)) }
+                    session.duplicate(listOf(source))
                 } catch (_: IllegalArgumentException) {
                     rejected = true
                 }
@@ -828,7 +750,6 @@ class AuthoringMutationPlannerTest {
             com.typewritermc.realm.checking.TestCatalogLease(
                 generation = GENERATION,
                 definitions = definitions,
-                resourceRoot = NODE,
                 relations =
                     listOf(
                         nestedContract().let {
@@ -842,9 +763,6 @@ class AuthoringMutationPlannerTest {
             com.typewritermc.realm.authoring.AuthoringView(
                 catalog,
                 resources,
-                resources.mapValues {
-                    com.typewritermc.authoring.ResourceDefinitionId("test")
-                },
                 emptyMap(),
             )
         try {
@@ -887,7 +805,6 @@ class AuthoringMutationPlannerTest {
             com.typewritermc.realm.checking.TestCatalogLease(
                 generation = GENERATION,
                 definitions = DEFINITIONS,
-                resourceRoot = NODE,
                 relations = listOf(parentContract(RelationDeletePolicy.CLEAR, RelationDeletePolicy.CLEAR)),
                 endpointBindings = BINDINGS,
             )
@@ -895,7 +812,6 @@ class AuthoringMutationPlannerTest {
             com.typewritermc.realm.authoring.AuthoringView(
                 catalog,
                 resources,
-                resources.mapValues { com.typewritermc.authoring.ResourceDefinitionId("test") },
                 emptyMap(),
             )
         try {
@@ -2191,6 +2107,66 @@ class AuthoringMutationPlannerTest {
         rejected.problems.any { it.code == "multiple_immediate_owners" } shouldBe true
     }
 
+    fun ownershipCycleIsRejected() {
+        val planner = planner(pairContract(OWNING_FAMILIES))
+        val first = ResourceId("cycle_first")
+        val second = ResourceId("cycle_second")
+        val resources =
+            mapOf(
+                first to record(first = link(PAIR_FIRST_TYPE, PAIR_FIRST, second, null)),
+                second to record(),
+            )
+
+        val rejected =
+            planner
+                .plan(
+                    resources,
+                    edit(EditIntent.SetValue(location(second, "first"), link(PAIR_FIRST_TYPE, PAIR_FIRST, first, null))),
+                ).shouldBeInstanceOf<MutationPlanningResult.Rejected>()
+
+        // Every affected resource on the cycle reports it.
+        rejected.problems
+            .filter { it.code == "relation_cycle" }
+            .map { it.location.resource }
+            .toSet() shouldBe setOf(first, second)
+    }
+
+    fun acyclicRelationAcceptsALongChainAndRejectsClosingIt() {
+        val planner = planner(pairContract(setOf(RelationFamilyId(ACYCLIC_RELATION_FAMILY_ID))))
+        val chain = (0 until 100_000).map { ResourceId("chain_$it") }
+        val resources =
+            chain.withIndex().associate { (index, id) ->
+                val next = chain.getOrNull(index + 1)
+                id to record(first = next?.let { link(PAIR_FIRST_TYPE, PAIR_FIRST, it, null) } ?: DataValue.Unfilled)
+            }
+        val last = chain.last()
+
+        planner
+            .plan(resources, edit(EditIntent.SetValue(location(chain.first(), "label"), DataValue.StringValue("head"))))
+            .shouldBeInstanceOf<MutationPlanningResult.Accepted>()
+        val rejected =
+            planner
+                .plan(resources, edit(EditIntent.SetValue(location(last, "first"), link(PAIR_FIRST_TYPE, PAIR_FIRST, chain.first(), null))))
+                .shouldBeInstanceOf<MutationPlanningResult.Rejected>()
+
+        rejected.problems.map { it.code }.toSet() shouldBe setOf("relation_cycle")
+    }
+
+    fun nonAcyclicRelationAllowsACycle() {
+        val planner = planner(pairContract())
+        val first = ResourceId("loop_first")
+        val second = ResourceId("loop_second")
+        val resources =
+            mapOf(
+                first to record(first = link(PAIR_FIRST_TYPE, PAIR_FIRST, second, null)),
+                second to record(),
+            )
+
+        planner
+            .plan(resources, edit(EditIntent.SetValue(location(second, "first"), link(PAIR_FIRST_TYPE, PAIR_FIRST, first, null))))
+            .shouldBeInstanceOf<MutationPlanningResult.Accepted>()
+    }
+
     fun oneEndpointRejectsASecondResourceRelation() {
         val planner = planner(pairContract())
         val target = ResourceId("target")
@@ -2240,16 +2216,12 @@ private fun operationBaseline(
             generation = GENERATION,
             definitions =
                 DEFINITIONS + com.typewritermc.types.StandardTypes.definitions + com.typewritermc.types.ResourceIdDefinition.definition,
-            resourceRoot = NODE,
             relations = contracts,
             endpointBindings = BINDINGS,
         )
     return AuthoringView(
         catalog,
         resources,
-        resources.mapValues {
-            com.typewritermc.authoring.ResourceDefinitionId("test")
-        },
         ResourceValueMapper.discover(resources).associateBy { it.id },
     )
 }
@@ -2449,6 +2421,7 @@ private fun binding(
 
 private val GENERATION = CatalogGeneration("catalog")
 private val NODE = id("node")
+private val OWNING_FAMILIES = setOf(RelationFamilyId(RESOURCE_OWNERSHIP_FAMILY_ID), RelationFamilyId(ACYCLIC_RELATION_FAMILY_ID))
 private val PAIR_FIRST = EndpointId("pair:first")
 private val PAIR_SECOND = EndpointId("pair:second")
 private val PARENT_FIRST = EndpointId("parent:first")
@@ -2537,9 +2510,6 @@ private val NESTED_BINDINGS =
     )
 
 val AuthoringMutationPlannerTestSuite by testSuite {
-    test("placementPoliciesMatchExactOwnershipCollections") {
-        AuthoringMutationPlannerTest().placementPoliciesMatchExactOwnershipCollections()
-    }
     test("inverseOnlyReferencesDoNotOfferLinkedDuplication") {
         AuthoringMutationPlannerTest().inverseOnlyReferencesDoNotOfferLinkedDuplication()
     }
@@ -2649,6 +2619,11 @@ val AuthoringMutationPlannerTestSuite by testSuite {
         AuthoringMutationPlannerTest().unavailableSelectedFormCannotAuthorizeAnAuthoredLink()
     }
     test("ownershipRejectsTwoImmediateOwners") { AuthoringMutationPlannerTest().ownershipRejectsTwoImmediateOwners() }
+    test("ownershipCycleIsRejected") { AuthoringMutationPlannerTest().ownershipCycleIsRejected() }
+    test("acyclicRelationAcceptsALongChainAndRejectsClosingIt") {
+        AuthoringMutationPlannerTest().acyclicRelationAcceptsALongChainAndRejectsClosingIt()
+    }
+    test("nonAcyclicRelationAllowsACycle") { AuthoringMutationPlannerTest().nonAcyclicRelationAllowsACycle() }
     test("oneEndpointRejectsASecondResourceRelation") { AuthoringMutationPlannerTest().oneEndpointRejectsASecondResourceRelation() }
     test(
         "unrelatedInvalidResourceDoesNotBlockAValidEdit",

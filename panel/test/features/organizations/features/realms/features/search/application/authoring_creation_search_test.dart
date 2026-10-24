@@ -10,10 +10,9 @@ final _refProvider = Provider<Ref>((ref) => ref);
 
 void main() {
   test("creation option identity includes unfinished type arguments", () {
-    final definition = skir.ResourceDefinitionId(value: "test.book");
     final type = _definition("Book");
     final first = AuthoringCreationOption(
-      definition: definition,
+      type: type,
       configuration: skir.TypeSelection.createPending(
         definition: type,
         arguments: [
@@ -25,7 +24,7 @@ void main() {
       label: "Book",
     );
     final second = AuthoringCreationOption(
-      definition: definition,
+      type: type,
       configuration: skir.TypeSelection.createPending(
         definition: type,
         arguments: [
@@ -57,10 +56,8 @@ void main() {
                   .whereType<SearchResultNode>()
                   .singleWhere(
                     (node) =>
-                        (node.result.payload as AuthoringCreationOption)
-                            .definition
-                            .value ==
-                        "test.book",
+                        (node.result.payload as AuthoringCreationOption).type ==
+                        _definition("Book"),
                   )
                   .result
                   .payload
@@ -71,10 +68,8 @@ void main() {
                   .whereType<SearchResultNode>()
                   .singleWhere(
                     (node) =>
-                        (node.result.payload as AuthoringCreationOption)
-                            .definition
-                            .value ==
-                        "test.entry",
+                        (node.result.payload as AuthoringCreationOption).type ==
+                        _definition("SimpleMessage"),
                   )
                   .result
                   .payload
@@ -86,10 +81,12 @@ void main() {
           arguments: const [],
         ),
       );
-      expect(option.definition, skir.ResourceDefinitionId(value: "test.book"));
       expect(option.label, "Quest Book");
       expect(option.display?.description, "A reusable quest collection");
-      expect(option.display?.icon, "material-symbols:book");
+      expect(
+        option.display?.icon,
+        skir.Icon.wrapIconify("material-symbols:book"),
+      );
       expect(option.display?.color, skir.Color(argb: 0xff3f51b5.toSigned(32)));
       expect(
         option.configuration,
@@ -112,10 +109,9 @@ void main() {
         fixture.controller.snapshot.nodes.single as SearchSectionNode;
     expect(
       section.children.whereType<SearchResultNode>().map(
-        (node) =>
-            (node.result.payload as AuthoringCreationOption).definition.value,
+        (node) => (node.result.payload as AuthoringCreationOption).type,
       ),
-      containsAll(["test.book", "test.entry"]),
+      containsAll([_definition("Book"), _definition("SimpleMessage")]),
     );
   });
 
@@ -130,6 +126,38 @@ void main() {
     await pumpEventQueue();
 
     expect(fixture.controller.snapshot.nodes, isEmpty);
+  });
+
+  test("scope keywords come from owner search keys and keep only types inside that scope", () async {
+    final fixture = _fixture();
+    addTearDown(fixture.container.dispose);
+    addTearDown(fixture.subscription.close);
+    addTearDown(fixture.controller.dispose);
+    await pumpEventQueue();
+    final source = AuthoringCreationSearchSource(
+      fixture.container.read(_refProvider),
+    );
+    final controller = SourceController(source: source, baseSelectors: const [])
+      ..triggerQuery();
+    addTearDown(controller.dispose);
+
+    expect(
+      source.selectors.whereType<KeyValueSelectorDefinition>().map(
+        (selector) => selector.key,
+      ),
+      unorderedEquals(["book:", "shelf:", "type:"]),
+    );
+    controller.updateQuery('book:"Lost tales"');
+    await pumpEventQueue();
+
+    final option =
+        ((controller.snapshot.nodes.single as SearchSectionNode).children.single
+                    as SearchResultNode)
+                .result
+                .payload
+            as AuthoringCreationOption;
+    expect(option.type, _definition("SimpleMessage"));
+    expect(option.disabledReason, 'No Quest Book named "Lost tales"');
   });
 
   test(
@@ -153,7 +181,7 @@ void main() {
           (section.children.single as SearchResultNode).result.payload
               as AuthoringCreationOption;
       expect(option.label, "ZMessage");
-      expect(option.definition.value, "test.entry");
+      expect(option.type, _definition("ZMessage"));
       expect(
         option.configuration,
         skir.TypeSelection.createComplete(
@@ -235,13 +263,15 @@ CheckedEditorCatalog _catalog({
     types: [
       _published(
         book,
+        searchKey: "book",
         display: skir.TypeDisplay(
           name: "Quest Book",
           description: "A reusable quest collection",
-          icon: "material-symbols:book",
+          icon: skir.Icon.wrapIconify("material-symbols:book"),
           color: skir.Color(argb: 0xff3f51b5.toSigned(32)),
         ),
       ),
+      _published(_definition("Shelf"), searchKey: "shelf"),
       _published(entry, abstract: true),
       _published(_definition("SimpleMessage"), parent: entry),
       if (manyEntries) ...[
@@ -251,25 +281,39 @@ CheckedEditorCatalog _catalog({
       ],
     ],
     relations: [
+      // A shelf owns Books, which makes them creatable resources.
+      skir.RelationContract(
+        id: skir.RelationId(value: "shelf.books"),
+        first: skir.EndpointDefinition(
+          id: skir.EndpointId(value: "shelf.books.shelf"),
+          slot: skir.EndpointSlot.first,
+          resource: skir.NamedTypeTemplate(
+            definition: _definition("Shelf"),
+            arguments: const [],
+          ),
+          cardinality: skir.EndpointCardinality.one,
+          onDelete: skir.RelationDeletePolicy.cascade,
+        ),
+        second: skir.EndpointDefinition(
+          id: skir.EndpointId(value: "shelf.books.book"),
+          slot: skir.EndpointSlot.second,
+          resource: skir.NamedTypeTemplate(
+            definition: book,
+            arguments: const [],
+          ),
+          cardinality: skir.EndpointCardinality.many,
+          onDelete: skir.RelationDeletePolicy.clear,
+        ),
+        families: [skir.resourceOwnershipFamily],
+      ),
       skir.RelationContract(
         id: skir.RelationId(value: "book.entries"),
         first: reversedOwnership ? child : owner,
         second: reversedOwnership ? owner : child,
-        families: [skir.RelationFamilyId(value: "resource.ownership")],
+        families: [skir.resourceOwnershipFamily],
       ),
     ],
-    resourceDefinitions: [
-      skir.AuthoringResourceDefinition(
-        id: skir.ResourceDefinitionId(value: "test.book"),
-        root: book,
-        navigationHandler: skir.AuthoringNavigationHandler.generic,
-      ),
-      skir.AuthoringResourceDefinition(
-        id: skir.ResourceDefinitionId(value: "test.entry"),
-        root: entry,
-        navigationHandler: skir.AuthoringNavigationHandler.generic,
-      ),
-    ],
+    realmRoot: skir.TypeDefinitionId.defaultInstance,
   );
 }
 
@@ -278,7 +322,10 @@ skir.PublishedType _published(
   skir.TypeDisplay? display,
   bool abstract = false,
   skir.TypeDefinitionId? parent,
+  String? searchKey,
 }) => skir.PublishedType(
+  searchKey: searchKey,
+  placementField: null,
   definition: skir.TypeDefinition(
     id: id,
     parameters: const [],
@@ -297,7 +344,7 @@ skir.PublishedType _published(
     if (parent != null)
       skir.NamedTypeTemplate(definition: parent, arguments: const []),
   ],
-  display: display,
+  display: display ?? defaultTypeDisplay(""),
 );
 
 skir.TypeDefinitionId _definition(String name) => skir.TypeDefinitionId(

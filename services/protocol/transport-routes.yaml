@@ -539,6 +539,16 @@ routes:
       failure_slug: resource-operations-resolve-failed
       requests: { panel: "service.to.{realm}.organization.{organization}.realm.editor.resources.operations.resolve", service: "service.to.{realm}.organization.{organization}.realm.editor.resources.operations.resolve" }
 
+  - name: resource_drop_candidates_resolve
+    scope: realm
+    grants: [{ role: organization_member, side: panel, direction: publish, channel: request }, { role: realm_coordinator, side: service, direction: subscribe, channel: request }]
+    flow:
+      kind: unary
+      method: "editor/v1/resource_operations.skir:ResolveDropCandidates"
+      operation: editor.resources.drops.resolve
+      failure_slug: resource-drop-candidates-resolve-failed
+      requests: { panel: "service.to.{realm}.organization.{organization}.realm.editor.resources.drops.resolve", service: "service.to.{realm}.organization.{organization}.realm.editor.resources.drops.resolve" }
+
   - name: authoring_action_prepare
     scope: realm
     grants: [{ role: organization_member, side: panel, direction: publish, channel: request }, { role: realm_coordinator, side: service, direction: subscribe, channel: request }]

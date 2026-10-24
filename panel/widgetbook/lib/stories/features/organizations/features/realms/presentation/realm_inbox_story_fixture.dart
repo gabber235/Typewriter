@@ -27,7 +27,9 @@ class RealmInboxStoryFixture extends ChangeNotifier {
   final work = ScopedWorkSession();
   int published = 0;
   final root = skir.CompilationRoot(
-    projection: skir.CompilationProjectionId(value: "typewriter.page"),
+    projection: skir.CompilationProjectionId(
+      value: "typewriter.resource-graph",
+    ),
     resource: skir.ResourceId(value: "welcome"),
   );
   late final document = fixtureAuthoringDocument(
@@ -36,7 +38,6 @@ class RealmInboxStoryFixture extends ChangeNotifier {
         pageId: root.resource,
         bookId: null,
         name: "Arrival at Swan Harbor",
-        configuration: skir.TypeSelection.unknown,
         chapter: "Arrival",
         priority: 0,
       ),
@@ -49,7 +50,6 @@ class RealmInboxStoryFixture extends ChangeNotifier {
             1 => "A message in the bottle",
             _ => "Harbor dialogue ${index + 1}",
           },
-          configuration: skir.TypeSelection.unknown,
           chapter: "Arrival",
           priority: index + 1,
         ),

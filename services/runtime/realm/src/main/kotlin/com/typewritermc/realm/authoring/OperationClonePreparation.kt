@@ -1,9 +1,7 @@
 package com.typewritermc.realm.authoring
 
-import com.typewritermc.authoring.AuthoringRecord
 import com.typewritermc.authoring.ConnectIntent
 import com.typewritermc.authoring.CounterpartChoice
-import com.typewritermc.authoring.GRAPH_PLACEMENT_TYPE_ID
 import com.typewritermc.authoring.LinkOccurrence
 import com.typewritermc.authoring.LinkOccurrenceId
 import com.typewritermc.authoring.PathSegment
@@ -14,32 +12,32 @@ import com.typewritermc.authoring.item
 import com.typewritermc.authoring.mapKey
 import com.typewritermc.authoring.mapValue
 import com.typewritermc.checking.InputIdentity
-import com.typewritermc.operations.CloneResult
-import com.typewritermc.operations.GraphGroupPlacement
 import com.typewritermc.operations.OperationPreparation
-import com.typewritermc.operations.ResourceClonePreparation
 import com.typewritermc.realm.repository.ResourceValueMapper
 import com.typewritermc.types.DataValue
-import com.typewritermc.types.DeclaredTypeId
 import com.typewritermc.types.LinkTarget
 import com.typewritermc.types.ListItem
 import com.typewritermc.types.MapRow
 import com.typewritermc.types.ResourceId
-import com.typewritermc.types.TypeId
 
 /** Copies the ownership closure before reconnecting any of its references. */
 internal class OperationClonePreparation(
-    private val edit: WorkingViewEditContext,
-    private val baseline: AuthoringView,
-) : ResourceClonePreparation {
+    private val reads: RelationReads,
+    private val relations: OperationRelationPreparation,
+    private val layouts: OperationLayoutPreparation,
+) {
+    private val catalog get() = reads.catalog
+    private val capturedReads get() = reads.reads
+
+    /** Copies the ownership closures of [roots] under their current owners and returns the copied roots in order. */
     context(operation: OperationPreparation)
-    override suspend fun duplicateOwned(roots: List<ResourceId>): CloneResult {
+    suspend fun duplicateOwned(roots: List<ResourceId>): List<ResourceId> {
         require(roots.isNotEmpty() && roots.distinct().size == roots.size)
-        val resources = edit.session.resources
-        val occurrences = ResourceValueMapper.discover(resources)
-        val projection = ResourceValueMapper.project(occurrences, resources, baseline.catalog.relations, baseline.catalog.checked)
+        val resources = reads.resources
+        val occurrences = reads.links.values.toList()
+        val projection = ResourceValueMapper.project(occurrences, resources, catalog.relations, catalog.checked)
         require(projection.problems.isEmpty()) { "Repair the selected relations before duplicating resources." }
-        val owning = baseline.catalog.ownershipRelationIds
+        val owning = catalog.ownershipRelationIds
         val ownership = projection.projections.filter { it.contract in owning }
         val closure = linkedSetOf<ResourceId>()
         val pending = ArrayDeque(roots)
@@ -47,17 +45,17 @@ internal class OperationClonePreparation(
             val resource = pending.removeFirst()
             if (!closure.add(resource)) continue
             require(resource in resources) { "A selected resource no longer exists." }
-            edit.capturedReads.observeInput(InputIdentity.Existence(resource))
-            edit.capturedReads.observeInput(InputIdentity.Form(ValueLocation(resource, ValuePath())))
-            edit.capturedReads.observeInput(InputIdentity.Value(ValueLocation(resource, ValuePath())))
-            edit.capturedReads.observeInput(InputIdentity.Incoming(resource, null))
+            capturedReads.observeInput(InputIdentity.Existence(resource))
+            capturedReads.observeInput(InputIdentity.Form(ValueLocation(resource, ValuePath())))
+            capturedReads.observeInput(InputIdentity.Value(ValueLocation(resource, ValuePath())))
+            capturedReads.observeInput(InputIdentity.Incoming(resource, null))
             ownership.filter { it.first == resource }.forEach { pending += it.second }
         }
         val copies = closure.associateWith { operation.identities.resource("clone:${it.value.length}:${it.value}") }
         require(copies.values.none { it in resources }) { "A copy identity already exists. Start a new operation." }
         val locations = linkedMapOf<ValueLocation, ValueLocation>()
         val contracts =
-            baseline.catalog.relations
+            catalog.relations
                 .flatMap { listOf(it.first.id to it, it.second.id to it) }
                 .toMap()
 
@@ -154,7 +152,6 @@ internal class OperationClonePreparation(
             }
         records.forEach { (id, record) -> operation.create(id, record) }
 
-        val relations = OperationRelationPreparation(edit, baseline)
         val connected = hashSetOf<LinkOccurrenceId>()
         for (old in occurrences.filter { it.source in closure }) {
             if (old.id in connected) continue
@@ -198,7 +195,7 @@ internal class OperationClonePreparation(
             val fresh = operation.identities.item("clone-owner:${ValueLocation(edge.first, oldPath).identityKey()}")
             val at = ValueLocation(edge.first, parent.item(fresh))
             val endpoint =
-                baseline.catalog.relations
+                catalog.relations
                     .single { it.id == edge.contract }
                     .first.id
             val target = copies.getValue(edge.second)
@@ -207,40 +204,17 @@ internal class OperationClonePreparation(
             )
         }
 
-        val layouts = OperationLayoutPreparation(edit, baseline)
+        // Copied roots join their originals' owners, whose layout places them. Only the realm root has no owner, and it
+        // is never duplicated, so a root without one has no layout to join.
         val outerRoots = closure.filter { resource -> ownership.none { it.second == resource && it.first in closure } }
-        outerRoots.groupBy { resource -> ownership.singleOrNull { it.second == resource }?.first }.forEach { (owner, originals) ->
-            val subjects = originals.map { layouts.draft(copies.getValue(it)) }
-            if (owner != null) {
-                operation.layouts.prepareMove(subjects, owner, null).apply()
-            } else {
-                val graphSubjects =
-                    originals
-                        .zip(subjects)
-                        .filter { (original, _) ->
-                            resources.getValue(original).hasGraphPlacement()
-                        }.map { it.second }
-                if (graphSubjects.isNotEmpty()) {
-                    edit.capturedReads.observeInput(RESOURCE_SELECTION_INPUT)
-                    val types = originals.map { resources.getValue(it).configuration }.toSet()
-                    val obstacles =
-                        resources
-                            .filter { (id, record) ->
-                                record.configuration in types && record.hasGraphPlacement() &&
-                                    ownership.none { it.second == id }
-                            }.keys
-                            .map(layouts::draft)
-                    with(edit.capturedReads) { GraphGroupPlacement.prepare(graphSubjects, obstacles) }.apply()
-                }
+        outerRoots
+            .groupBy { resource -> ownership.singleOrNull { it.second == resource }?.first }
+            .forEach { (owner, originals) ->
+                if (owner != null) with(layouts) { originals.map(copies::getValue).placeIn(owner, null) }
             }
-        }
-        return CloneResult(roots.map(copies::getValue))
+        return roots.map(copies::getValue)
     }
 }
-
-private fun AuthoringRecord.hasGraphPlacement(): Boolean =
-    (fields["placement"] as? DataValue.Named)?.actualType?.definition?.type ==
-        TypeId.Declared(DeclaredTypeId.parse(GRAPH_PLACEMENT_TYPE_ID))
 
 private fun ValueLocation.identityKey(): String =
     "${resource.value.length}:${resource.value}" +

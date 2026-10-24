@@ -6,7 +6,6 @@ enum class GeneratedProviderKind(
 ) {
     Type("type"),
     NativeBinding("nativeBinding"),
-    Resource("resource"),
     Relation("relation"),
     EndpointBindings("endpointBindings"),
     Configuration("configuration"),
@@ -16,6 +15,7 @@ enum class GeneratedProviderKind(
     Registrar("registrar"),
     CollectionProjection("collectionProjection"),
     ResourceOperation("resourceOperation"),
+    ResourceDisplay("resourceDisplay"),
 }
 
 /** Classpath resource that lists the generated providers of one compiled source part. */

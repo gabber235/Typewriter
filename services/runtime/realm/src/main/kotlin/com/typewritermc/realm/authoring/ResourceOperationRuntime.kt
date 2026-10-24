@@ -1,10 +1,14 @@
 package com.typewritermc.realm.authoring
 
+import com.typewritermc.authoring.AuthoredReads
 import com.typewritermc.authoring.AuthoringRecord
 import com.typewritermc.authoring.CompletenessResult
 import com.typewritermc.authoring.EditContext
 import com.typewritermc.authoring.ItemId
+import com.typewritermc.authoring.PlacementAnchor
 import com.typewritermc.authoring.PreparedEdit
+import com.typewritermc.authoring.ResourceDraft
+import com.typewritermc.authoring.ResourceDrafts
 import com.typewritermc.authoring.TypeSelection
 import com.typewritermc.authoring.ValueLocation
 import com.typewritermc.authoring.ValuePath
@@ -14,32 +18,33 @@ import com.typewritermc.capability.CapabilityId
 import com.typewritermc.checking.CatalogGeneration
 import com.typewritermc.checking.InputIdentity
 import com.typewritermc.discovery.ProviderOrigin
+import com.typewritermc.operations.AuthoringGraphFacts
+import com.typewritermc.operations.BoundResourceOperation
+import com.typewritermc.operations.DropCandidates
 import com.typewritermc.operations.NeedsChoices
 import com.typewritermc.operations.OperationAvailability
+import com.typewritermc.operations.OperationCardinality
 import com.typewritermc.operations.OperationConfirmation
 import com.typewritermc.operations.OperationIdentities
 import com.typewritermc.operations.OperationInvocation
 import com.typewritermc.operations.OperationPreparation
+import com.typewritermc.operations.OperationReads
 import com.typewritermc.operations.OperationTargets
 import com.typewritermc.operations.PreparationChoice
 import com.typewritermc.operations.PreparationChoices
 import com.typewritermc.operations.ResolvedResourceOperation
 import com.typewritermc.operations.ResolvedResourceOperations
-import com.typewritermc.operations.ResourceClonePreparation
-import com.typewritermc.operations.ResourceLayoutPreparation
-import com.typewritermc.operations.ResourceOperationContribution
-import com.typewritermc.operations.ResourceOperationDefinition
-import com.typewritermc.operations.ResourceOperationId
-import com.typewritermc.operations.ResourceRelationPreparation
 import com.typewritermc.operations.UnavailableAuthoredValue
 import com.typewritermc.operations.UnfinishedOperationInput
 import com.typewritermc.operations.asClosedUse
+import com.typewritermc.operations.requireAuthored
 import com.typewritermc.realm.checking.CapturedAuthoringReads
+import com.typewritermc.realm.repository.AuthoringPlanRejected
 import com.typewritermc.services.libs.utils.rethrowExceptional
 import com.typewritermc.types.DataValue
 import com.typewritermc.types.ResourceId
+import com.typewritermc.types.ResourceTarget
 import com.typewritermc.types.TypeTemplate
-import skirout.editor.v1.action.EditorAction
 import java.util.UUID
 
 internal sealed interface OperationPreparationResult {
@@ -78,7 +83,8 @@ internal class OperationResolutionFailure(
 ) : IllegalStateException("Resource operation availability failed for ${origin.owner.localIdentity}", cause)
 
 /**
- * Resolves operation availability and prepares edits against the panel confirmed saved observation plus its overlay.
+ * Resolves operation availability and drop candidates, and prepares edits, against the panel confirmed saved
+ * observation plus its overlay.
  *
  * The captured catalog and observation must still match before callbacks run. Preparation stages writes in
  * [WorkingViewEditContext] and returns an expectation bearing preview, input request, or failure. It never persists
@@ -94,10 +100,66 @@ internal class ResourceOperationRuntime(
         upserts: Map<ResourceId, AuthoringRecord>,
         removals: Set<ResourceId>,
     ): ResolvedResourceOperations =
-        views.capture().use { lease ->
-            if (lease.root.catalog.generation != expectedCatalog) throw OperationCatalogChanged(lease.root.catalog.generation)
-            val baseline = lease.operationObservation(confirmedObservation, upserts, removals)
-            resolve(invocation, baseline, CapturedAuthoringReads(AuthoredReadView.Original(baseline)))
+        observe(expectedCatalog, confirmedObservation, upserts, removals) { view ->
+            val operations =
+                invocation
+                    .applicableIn(view, CapturedAuthoringReads(AuthoredReadView.Original(view)))
+                    .mapNotNull { operation ->
+                        val reads = CapturedAuthoringReads(AuthoredReadView.Original(view))
+                        val availability = operation.evaluate(invocation.targets, RealmOperationReads(reads), reads)
+                        if (availability ==
+                            OperationAvailability.Hidden
+                        ) {
+                            null
+                        } else {
+                            ResolvedResourceOperation(operation.definition, availability)
+                        }
+                    }.sortedWith(
+                        compareBy(
+                            { it.definition.presentation.group.ordinal },
+                            { it.definition.presentation.order },
+                            { it.definition.capability.value },
+                        ),
+                    )
+            ResolvedResourceOperations(operations)
+        }
+
+    /**
+     * Destinations each enabled operation with a drop field accepts for the dragged [invocation] targets, from its
+     * declared candidates and accepts check. Preparation never runs; a list longer than [DROP_CANDIDATE_LIMIT] is
+     * capped and marked incomplete.
+     */
+    fun resolveDropCandidates(
+        invocation: OperationInvocation,
+        expectedCatalog: CatalogGeneration,
+        confirmedObservation: String,
+        upserts: Map<ResourceId, AuthoringRecord>,
+        removals: Set<ResourceId>,
+    ): List<DropCandidates> =
+        observe(expectedCatalog, confirmedObservation, upserts, removals) { view ->
+            invocation
+                .applicableIn(view, CapturedAuthoringReads(AuthoredReadView.Original(view)))
+                .mapNotNull { operation ->
+                    val field = operation.dropField ?: return@mapNotNull null
+                    val captured = CapturedAuthoringReads(AuthoredReadView.Original(view))
+                    val reads = RealmOperationReads(captured)
+                    if (operation.evaluate(invocation.targets, reads, captured) != OperationAvailability.Enabled) return@mapNotNull null
+                    val destinations =
+                        operation.guarded(captured) {
+                            field
+                                .acceptedCandidates(invocation.targets, reads)
+                                .filterIsInstance<ResourceId>()
+                                .filterNot { it in invocation.targets }
+                                .distinct()
+                                .take(DROP_CANDIDATE_LIMIT + 1)
+                                .toList()
+                        }
+                    DropCandidates(
+                        operation.definition.id,
+                        destinations.take(DROP_CANDIDATE_LIMIT),
+                        complete = destinations.size <= DROP_CANDIDATE_LIMIT,
+                    )
+                }
         }
 
     suspend fun prepare(
@@ -114,21 +176,18 @@ internal class ResourceOperationRuntime(
             if (lease.root.catalog.generation != expectedCatalog) throw OperationCatalogChanged(lease.root.catalog.generation)
             val baseline = lease.operationObservation(confirmedObservation, upserts, removals)
             val edit = WorkingViewEditContext(baseline, invocation.invocationId)
-            val catalog = baseline.catalog.operations
-            val operation = catalog.requireAuthoring(capability)
-            val applicable = invocation.applicableIn(baseline, edit.capturedReads)
-            val definition =
-                applicable.definitions.firstOrNull { definition ->
-                    (definition.action as? EditorAction.AuthoringWrapper)
-                        ?.value
-                        ?.capability
-                        ?.value == capability.value
-                }
-            val available = definition?.evaluateFor(invocation, baseline, edit.capturedReads)
-            if (available?.availability != OperationAvailability.Enabled) {
-                return OperationPreparationResult.Unavailable(
-                    (available?.availability as? OperationAvailability.Disabled)?.reason
-                        ?: "This operation does not apply to the captured selection",
+            val operation = baseline.catalog.operations.requireAuthoring(capability)
+            if (operation !in invocation.applicableIn(baseline, edit.capturedReads)) {
+                return OperationPreparationResult.Unavailable("This operation does not apply to the captured selection")
+            }
+            val session = RuntimeOperationPreparation(invocation, choices, edit)
+            when (val available = operation.evaluate(invocation.targets, session, edit.capturedReads)) {
+                OperationAvailability.Enabled -> Unit
+
+                is OperationAvailability.Disabled -> return OperationPreparationResult.Unavailable(available.reason)
+
+                OperationAvailability.Hidden -> return OperationPreparationResult.Unavailable(
+                    "This operation does not apply to the captured selection",
                 )
             }
             validateOrigin(invocation, baseline, edit.capturedReads)
@@ -145,169 +204,42 @@ internal class ResourceOperationRuntime(
                     is CompletenessResult.Complete -> Unit
                 }
             }
-            val session = RuntimeOperationPreparation(invocation, choices, edit, baseline)
             try {
                 operation.prepare(invocation.targets, input, session)
-                OperationPreparationResult.Preview(
-                    edit.finish(),
-                    session.confirmation(operation.descriptor.presentation.confirmation),
-                    session.selection,
-                )
+                OperationPreparationResult.Preview(edit.finish(), operation.definition.presentation.confirmation, session.selection)
             } catch (needed: NeedsChoices) {
                 OperationPreparationResult.NeedsInput(input, needed.requests)
             } catch (unfinished: UnfinishedOperationInput) {
                 OperationPreparationResult.NeedsInput(input, emptyList(), unfinished.paths)
             } catch (missing: UnavailableAuthoredValue) {
                 OperationPreparationResult.Invalid(missing.locations.map { ValueProblem(it, "required_authored_value_missing") })
+            } catch (rejected: AuthoringPlanRejected) {
+                OperationPreparationResult.Invalid(rejected.problems)
             } catch (failure: Exception) {
                 failure.rethrowExceptional()
                 OperationPreparationResult.Failed(failure)
             }
         }
 
-    private data class ApplicableOperations(
-        val definitions: List<ResourceOperationDefinition>,
-        val primaryContributions: List<ResourceOperationContribution>,
-    )
-
-    private fun OperationInvocation.applicableIn(
-        view: AuthoringView,
-        reads: CapturedAuthoringReads,
-    ): ApplicableOperations {
-        val catalog = view.catalog.operations
-        val targets =
-            this.targets.map { id ->
-                requireNotNull(view.resources[id]) { "The operation target is unavailable" }
-            }
-        this.targets.forEach { id ->
-            reads.observeInput(InputIdentity.Existence(id))
-            reads.observeInput(InputIdentity.Form(ValueLocation(id, ValuePath())))
-        }
-        val contributions =
-            targets.map { record ->
-                catalog.contributions.filter { matches(record, it.target, view) }
-            }
-        val covered =
-            contributions
-                .map { rows -> rows.flatMap { it.operations }.toSet() }
-                .reduce(Set<ResourceOperationId>::intersect)
-        return ApplicableOperations(
-            definitions =
-                catalog.definitions.filter { definition ->
-                    definition.id in covered && matches(targets, definition.targets, view)
-                },
-            primaryContributions = if (targets.size == 1) contributions.single().filter { it.primary != null } else emptyList(),
-        )
-    }
-
-    private fun ResourceOperationDefinition.evaluateFor(
-        invocation: OperationInvocation,
-        view: AuthoringView,
-        reads: CapturedAuthoringReads,
-    ): ResolvedResourceOperation? {
-        val action = this.action as? EditorAction.AuthoringWrapper
-        val provider =
-            action?.let {
-                view.catalog.operations.requireAuthoring(CapabilityId(it.value.capability.value))
-            }
-        val targets = invocation.targets.map(view.resources::getValue)
-        if (provider != null && !matches(targets, provider.descriptor.targets, view)) return null
-        val availability =
-            if (provider == null) {
-                OperationAvailability.Enabled
-            } else {
-                try {
-                    val value =
-                        provider.builtin?.let { builtin ->
-                            BuiltinOperationAvailability(view, reads).availability(builtin, invocation.targets)
-                        } ?: provider.availability(invocation.targets, reads)
-                    val health = reads.health()
-                    check(health.failures.isEmpty() && health.incomplete.isEmpty()) {
-                        "Operation availability reads did not produce complete evidence: $health"
-                    }
-                    value
-                } catch (failure: Exception) {
-                    failure.rethrowExceptional()
-                    throw OperationResolutionFailure(provider.origin, failure)
-                }
-            }
-        return if (availability == OperationAvailability.Hidden) {
-            null
-        } else {
-            ResolvedResourceOperation(this, availability)
-        }
-    }
-
-    private fun resolve(
-        invocation: OperationInvocation,
-        view: AuthoringView,
-        reads: CapturedAuthoringReads,
-    ): ResolvedResourceOperations {
-        val applicable = invocation.applicableIn(view, reads)
-        val items =
-            applicable.definitions
-                .mapNotNull { definition ->
-                    val callbackReads = CapturedAuthoringReads(AuthoredReadView.Original(view))
-                    definition.evaluateFor(invocation, view, callbackReads)
-                }.sortedWith(
-                    compareBy(
-                        { it.definition.presentation.group.ordinal },
-                        { it.definition.presentation.order },
-                        { it.definition.id.capability.value },
-                    ),
-                )
-        val primary = applicable.primaryIn(items, view)
-        val health = reads.health()
-        check(health.failures.isEmpty() && health.incomplete.isEmpty()) {
-            "Operation availability reads did not produce complete evidence"
-        }
-        return ResolvedResourceOperations(items, primary)
-    }
-
-    private fun ApplicableOperations.primaryIn(
-        items: List<ResolvedResourceOperation>,
-        view: AuthoringView,
-    ): ResourceOperationId? {
-        val maximal =
-            primaryContributions
-                .filter { candidate ->
-                    primaryContributions.none { other ->
-                        other.target.definition != candidate.target.definition &&
-                            view.catalog.checked.isNominalSubtype(other.target.definition, candidate.target.definition)
-                    }
-                }.mapNotNull { it.primary }
-                .distinct()
-        require(maximal.size <= 1) { "Resource operations have conflicting primary nominations" }
-        return maximal.singleOrNull()?.takeIf { id -> items.any { it.definition.id == id } }
-    }
-
-    private fun matches(
-        records: List<AuthoringRecord>,
-        selector: OperationTargets,
-        view: AuthoringView,
-    ): Boolean =
-        when (selector) {
-            is OperationTargets.Single -> records.size == 1 && records.all { matches(it, selector.type, view) }
-            is OperationTargets.Selection -> records.isNotEmpty() && records.all { matches(it, selector.type, view) }
-            OperationTargets.ContributedSingle -> records.size == 1
-            OperationTargets.ContributedSelection -> records.isNotEmpty()
+    /** Runs [body] against the caller's working observation once its catalog and saved observation are confirmed. */
+    private fun <T> observe(
+        expectedCatalog: CatalogGeneration,
+        confirmedObservation: String,
+        upserts: Map<ResourceId, AuthoringRecord>,
+        removals: Set<ResourceId>,
+        body: (AuthoringView) -> T,
+    ): T =
+        views.capture().use { lease ->
+            if (lease.root.catalog.generation != expectedCatalog) throw OperationCatalogChanged(lease.root.catalog.generation)
+            body(lease.operationObservation(confirmedObservation, upserts, removals))
         }
 
-    private fun matches(
-        record: AuthoringRecord,
-        target: TypeTemplate.Named,
-        view: AuthoringView,
-    ): Boolean =
-        when (val actual = record.configuration) {
-            is TypeSelection.Complete -> {
-                view.catalog.checked.isReadableAs(actual.use, target.asClosedUse())
-            }
-
-            is TypeSelection.Pending -> {
-                target.arguments.isEmpty() &&
-                    view.catalog.checked.isNominalSubtype(actual.definition, target.definition)
-            }
-        }
+    /** Availability of this operation for [subjects]; a callback failure or incomplete read is a resolution failure. */
+    private fun BoundResourceOperation.evaluate(
+        subjects: List<ResourceId>,
+        reads: OperationReads,
+        captured: CapturedAuthoringReads,
+    ): OperationAvailability = guarded(captured) { availability(subjects, reads) }
 
     private fun validateOrigin(
         invocation: OperationInvocation,
@@ -323,13 +255,93 @@ internal class ResourceOperationRuntime(
     }
 }
 
+/** The catalog operations whose targets cover the whole selection; the targets' existence and types are recorded as read. */
+internal fun OperationInvocation.applicableIn(
+    view: AuthoringView,
+    reads: CapturedAuthoringReads,
+): List<BoundResourceOperation> {
+    val records = targets.map { id -> requireNotNull(view.resources[id]) { "The operation target is unavailable" } }
+    targets.forEach { id ->
+        reads.observeInput(InputIdentity.Existence(id))
+        reads.observeInput(InputIdentity.Form(ValueLocation(id, ValuePath())))
+    }
+    return view.catalog.operations.operations
+        .filter { it.definition.targets.covers(records, view) }
+}
+
+/** Runs [body] for this operation and checks its reads; a failure or incomplete read is a resolution failure. */
+internal fun <T> BoundResourceOperation.guarded(
+    captured: CapturedAuthoringReads,
+    body: () -> T,
+): T =
+    try {
+        body().also {
+            val health = captured.health()
+            check(health.failures.isEmpty() && health.incomplete.isEmpty()) {
+                "Operation reads did not produce complete evidence: $health"
+            }
+        }
+    } catch (failure: Exception) {
+        failure.rethrowExceptional()
+        throw OperationResolutionFailure(origin, failure)
+    }
+
+private fun OperationTargets.covers(
+    records: List<AuthoringRecord>,
+    view: AuthoringView,
+): Boolean {
+    val count =
+        when (cardinality) {
+            OperationCardinality.Single -> records.size == 1
+            OperationCardinality.Selection -> records.isNotEmpty()
+        }
+    return count &&
+        when (val subject = subject) {
+            ResourceTarget.AnyResource -> true
+            is ResourceTarget.Type -> records.all { it.matches(subject.template, view) }
+        }
+}
+
+private fun AuthoringRecord.matches(
+    target: TypeTemplate.Named,
+    view: AuthoringView,
+): Boolean =
+    when (val actual = configuration) {
+        is TypeSelection.Complete -> {
+            view.catalog.checked.isReadableAs(actual.use, target.asClosedUse())
+        }
+
+        is TypeSelection.Pending -> {
+            target.arguments.isEmpty() &&
+                view.catalog.checked.isNominalSubtype(actual.definition, target.definition)
+        }
+    }
+
+/** The most destinations one operation offers for a drag; longer lists are capped and marked incomplete. */
+internal const val DROP_CANDIDATE_LIMIT = 200
+
+/** Operation reads of one captured graph without edits: authored reads and graph facts. */
+internal class RealmOperationReads(
+    private val captured: CapturedAuthoringReads,
+) : OperationReads,
+    AuthoredReads by captured,
+    AuthoringGraphFacts by RealmGraphFacts(RelationReads(captured)) {
+    override fun resourceDraft(id: ResourceId): ResourceDraft = captured.resourceDraft(id)
+}
+
+/** One preparation attempt: authored reads, graph facts and edits, all staged into [edit]. */
 internal class RuntimeOperationPreparation(
     override val invocation: OperationInvocation,
     override val choices: PreparationChoices,
     private val edit: WorkingViewEditContext,
-    baseline: AuthoringView,
+    relations: RelationReads = RelationReads(edit.capturedReads),
 ) : OperationPreparation,
-    EditContext by edit {
+    EditContext by edit,
+    AuthoringGraphFacts by RealmGraphFacts(relations) {
+    private val relationEdits = OperationRelationPreparation(relations)
+    private val layouts = OperationLayoutPreparation(relations)
+    private val cloner = OperationClonePreparation(relations, relationEdits, layouts)
+
     override val identities: OperationIdentities =
         object : OperationIdentities {
             override fun resource(key: String) = ResourceId(identity("resource", key))
@@ -341,31 +353,40 @@ internal class RuntimeOperationPreparation(
                 key: String,
             ) = UUID.nameUUIDFromBytes("${invocation.invocationId}:$kind:$key".toByteArray()).toString()
         }
-    override val relations: ResourceRelationPreparation = OperationRelationPreparation(edit, baseline)
-    override val layouts: ResourceLayoutPreparation = OperationLayoutPreparation(edit, baseline)
-    override val cloner: ResourceClonePreparation = OperationClonePreparation(edit, baseline)
-
-    override suspend fun deleteSelection(ids: List<ResourceId>) = edit.deleteAll(ids)
 
     var selection: List<ResourceId>? = null
         private set
-    private val confirmations = mutableListOf<OperationConfirmation>()
+
+    override fun resourceDraft(id: ResourceId): ResourceDraft = edit.capturedReads.resourceDraft(id)
 
     override fun selectAfterStaging(ids: List<ResourceId>) {
         require(ids.all { it in edit.session.resources }) { "The result selection contains an absent resource" }
         selection = ids.distinct()
     }
 
-    override fun confirm(confirmation: OperationConfirmation) {
-        confirmations += confirmation
+    override suspend fun delete(ids: List<ResourceId>) = edit.deleteAll(ids)
+
+    override suspend fun duplicate(roots: List<ResourceId>): List<ResourceId> = cloner.duplicateOwned(roots)
+
+    override suspend fun move(
+        ids: List<ResourceId>,
+        destination: ResourceId,
+        anchor: PlacementAnchor?,
+    ) {
+        val moved = relationEdits.move(ids, destination)
+        with(layouts) { moved.placeIn(destination, anchor) }
     }
 
-    fun confirmation(declared: OperationConfirmation?): OperationConfirmation? {
-        val all = (listOfNotNull(declared) + confirmations).distinct()
-        return when (all.size) {
-            0 -> null
-            1 -> all.single()
-            else -> OperationConfirmation(all.first().title, all.joinToString("\n\n") { it.message }, all.first().confirmationLabel)
-        }
-    }
+    override suspend fun link(
+        ids: List<ResourceId>,
+        target: ResourceId,
+    ) = relationEdits.link(ids, target)
+
+    override suspend fun unlink(
+        ids: List<ResourceId>,
+        target: ResourceId,
+    ) = relationEdits.unlink(ids, target)
 }
+
+/** [id] bound as a draft of any resource; an unreadable binding fails the read. */
+private fun CapturedAuthoringReads.resourceDraft(id: ResourceId): ResourceDraft = ResourceDrafts.bind(requireAuthored(resourceBinding(id)))

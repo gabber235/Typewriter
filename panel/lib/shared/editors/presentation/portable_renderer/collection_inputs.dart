@@ -70,7 +70,7 @@ extension _PortableCollectionInputRendering
       skir.PresentationElement_linkInputWrapper(:final value) => value,
       _ => null,
     };
-    return collectionWithFocus(
+    final rendered = collectionWithFocus(
       sourceScope: childScope,
       mutationScope: childScope,
       reference: control.binding,
@@ -187,6 +187,26 @@ extension _PortableCollectionInputRendering
         );
       },
     );
+    return linkControl == null && !_linksItems(childScope, control.binding)
+        ? rendered
+        : PortableResourcesInteractionScope.wrapLinkField(
+            context,
+            childScope,
+            collection,
+            rendered,
+          );
+  }
+
+  /// Whether the collection at [binding] holds links, so dropped resources
+  /// can be linked into it.
+  bool _linksItems(PortablePresentationScope scope, skir.BindingRef binding) {
+    final catalog = scope.catalog;
+    final item = catalog?.namedUse(
+      catalog.collectionItemType(scope.expectedType(binding)),
+    );
+    return item != null &&
+        catalog?.published(item.definition)?.definition.representation
+            is skir.RepresentationTemplate_linkWrapper;
   }
 
   Future<void> _addSequenceItem({
@@ -413,7 +433,7 @@ String _operationText(
     ? fallback
     : switch (_string(scope, value)) {
         _ResolvedValue(:final value) => value,
-        _ResolvedFailure(:final message) => throw PresentationColorFailure(
+        _ResolvedFailure(:final message) => throw PresentationValueFailure(
           message,
         ),
       };
@@ -443,7 +463,7 @@ double _collectionSpacing(
 ) {
   final value = appearance?.itemSpacing ?? context.spacing.space2;
   if (!value.isFinite || value < 0) {
-    throw const PresentationColorFailure(
+    throw const PresentationValueFailure(
       "Collection spacing must be finite and nonnegative",
     );
   }
@@ -466,7 +486,8 @@ Widget _collectionSurface(
             foregroundColor: appearance.itemForeground,
             border: appearance.itemBorder,
             radius: appearance.itemRadius ?? skir.PresentationRadius.none,
-            transitionMilliseconds: appearance.itemTransitionMilliseconds ?? 0,
+            transition: appearance.itemTransition,
+            shadows: appearance.itemShadows,
           ),
           scope: scope,
           diagnostic: _diagnostic,

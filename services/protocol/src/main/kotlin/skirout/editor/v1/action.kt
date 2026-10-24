@@ -2677,6 +2677,7 @@ sealed class EditorAction private constructor() {
         REALM_WRAPPER,
         NAVIGATE_WRAPPER,
         AUTHORING_WRAPPER,
+        CREATE_WRAPPER,
     }
 
     class Unknown @kotlin.Deprecated("For internal use", kotlin.ReplaceWith("skirout.editor.v1.action.EditorAction.UNKNOWN")) internal constructor(
@@ -2758,6 +2759,24 @@ sealed class EditorAction private constructor() {
         }
     }
 
+    class CreateWrapper private constructor (
+        val value: skirout.editor.v1.action.CreateResourceAction,
+    ) : skirout.editor.v1.action.EditorAction() {
+        constructor(
+            value: skirout.editor.v1.action.CreateResourceAction_OrMutable,
+        ): this(value.toFrozen()) {}
+
+        override val kind get() = Kind.CREATE_WRAPPER;
+
+        override fun equals(other: kotlin.Any?): kotlin.Boolean {
+            return other is skirout.editor.v1.action.EditorAction.CreateWrapper && value == other.value;
+        }
+
+        override fun hashCode(): kotlin.Int {
+            return this.value.hashCode() + -1352294148;
+        }
+    }
+
     internal open val _unrecognized: _UnrecognizedVariant<skirout.editor.v1.action.EditorAction>? get() = null;
 
     abstract val kind: Kind;
@@ -2806,11 +2825,350 @@ sealed class EditorAction private constructor() {
             )
         );
 
+        /** Shortcut for `CreateWrapper(skirout.editor.v1.action.CreateResourceAction(...))`. */
+        @kotlin.Suppress("UNUSED_PARAMETER")
+        fun createCreate(
+            _mustNameArguments: _MustNameArguments =
+                _MustNameArguments,
+            type: skirout.editor.v1.type_catalog.TypeDefinitionId_OrMutable,
+            owner: skirout.editor.v1.binding.BindingRef_OrMutable?,
+            fields: kotlin.collections.Iterable<skirout.editor.v1.action.CreateFieldValue_OrMutable>,
+        ) = CreateWrapper(
+            skirout.editor.v1.action.CreateResourceAction(
+                type = type,
+                owner = owner,
+                fields = fields,
+            )
+        );
+
         /** Serializer for [EditorAction] instances. */
         val serializer get() = _SerializerRegistry.EditorActionSerializer;
 
         /** Describes the [EditorAction] type. Provides runtime introspection capabilities. */
         val typeDescriptor get() = _SerializerRegistry.EditorActionSerializerImpl.typeDescriptor;
+    }
+}
+
+sealed interface CreateFieldValue_OrMutable {
+    val path: skirout.editor.v1.type_catalog.ValuePath_OrMutable;
+    val value: skirout.editor.v1.expression.ExpressionNode;
+
+    fun toFrozen(): skirout.editor.v1.action.CreateFieldValue;
+}
+
+/**
+ * A preset value for one field of the created resource, addressed relative to the created type.
+ * A value that evaluates to missing leaves the field at its creation default.
+ *
+ * Deeply immutable.
+ */
+@kotlin.Suppress("UNUSED_PARAMETER")
+class CreateFieldValue private constructor(
+    override val path: skirout.editor.v1.type_catalog.ValuePath,
+    override val value: skirout.editor.v1.expression.ExpressionNode,
+    internal val _unrecognizedFields: _UnrecognizedFields<skirout.editor.v1.action.CreateFieldValue>? =
+        null,
+): skirout.editor.v1.action.CreateFieldValue_OrMutable {
+    constructor(
+        _mustNameArguments: _MustNameArguments =
+            _MustNameArguments,
+        path: skirout.editor.v1.type_catalog.ValuePath_OrMutable,
+        value: skirout.editor.v1.expression.ExpressionNode,
+        _unrecognizedFields: _UnrecognizedFields<skirout.editor.v1.action.CreateFieldValue>? =
+            null,
+    ): this(
+        path.toFrozen(),
+        value,
+        _unrecognizedFields,
+    ) {}
+
+    @kotlin.Deprecated("Already frozen", kotlin.ReplaceWith("this"))
+    override fun toFrozen() = this;
+
+    /** Returns a mutable shallow copy of this instance */
+    fun toMutable() = Mutable(
+        path = this.path,
+        value = this.value,
+    );
+
+    /** Returns a shallow copy of this instance with the specified fields replaced. */
+    fun copy(
+        _mustNameArguments: _MustNameArguments =
+            _MustNameArguments,
+        path: skirout.editor.v1.type_catalog.ValuePath_OrMutable =
+            this.path,
+        value: skirout.editor.v1.expression.ExpressionNode =
+            this.value,
+    ) = skirout.editor.v1.action.CreateFieldValue(
+        path.toFrozen(),
+        value,
+        this._unrecognizedFields,
+    );
+
+    @kotlin.Deprecated("No point in creating an exact copy of an immutable object", kotlin.ReplaceWith("this"))
+    fun copy() = this;
+
+    override fun equals(other: kotlin.Any?): kotlin.Boolean {
+        return this === other || (other is skirout.editor.v1.action.CreateFieldValue && this.path == other.path && this.value == other.value);
+    }
+
+    override fun hashCode(): kotlin.Int {
+        return kotlin.collections.listOf<kotlin.Any?>(this.path, this.value).hashCode();
+    }
+
+    override fun toString(): kotlin.String {
+        return build.skir.internal.toStringImpl(
+            this,
+            _SerializerRegistry.CreateFieldValueSerializerImpl,
+        )
+    }
+
+    /** Mutable version of [CreateFieldValue]. */
+    class Mutable internal constructor(
+        _mustNameArguments: _MustNameArguments =
+            _MustNameArguments,
+        override var path: skirout.editor.v1.type_catalog.ValuePath_OrMutable =
+            skirout.editor.v1.type_catalog.ValuePath.partial(),
+        override var value: skirout.editor.v1.expression.ExpressionNode =
+            skirout.editor.v1.expression.ExpressionNode.UNKNOWN,
+        internal var _unrecognizedFields: _UnrecognizedFields<skirout.editor.v1.action.CreateFieldValue>? =
+            null,
+    ): skirout.editor.v1.action.CreateFieldValue_OrMutable {
+        /** Returns a deeply immutable copy of this instance */
+        override fun toFrozen() = skirout.editor.v1.action.CreateFieldValue(
+            path = this.path,
+            value = this.value,
+            _unrecognizedFields = this._unrecognizedFields,
+        );
+
+        /**
+         * If the value of [path] is already mutable, returns it as-is.
+         * Otherwise, makes a mutable copy, assigns it back to [path] and returns it.
+         */
+        val mutablePath: skirout.editor.v1.type_catalog.ValuePath.Mutable get() {
+            var value = this.path;
+            return when (value) {
+                is skirout.editor.v1.type_catalog.ValuePath -> {
+                    value = value.toMutable();
+                    this.path = value;
+                    return value;
+                }
+                is skirout.editor.v1.type_catalog.ValuePath.Mutable -> value;
+            }
+        }
+    }
+
+    companion object {
+        private val default =
+            skirout.editor.v1.action.CreateFieldValue(
+                skirout.editor.v1.type_catalog.ValuePath.partial(),
+                skirout.editor.v1.expression.ExpressionNode.UNKNOWN,
+            );
+
+        /** Returns an instance with all fields set to their default values. */
+        fun partial() = default;
+
+        /**
+         * Creates a new instance of [CreateFieldValue].
+         * Unlike the constructor, does not require all fields to be specified.
+         * Missing fields will be set to their default values.
+         */
+        fun partial(
+            _mustNameArguments: _MustNameArguments =
+                _MustNameArguments,
+            path: skirout.editor.v1.type_catalog.ValuePath_OrMutable =
+                skirout.editor.v1.type_catalog.ValuePath.partial(),
+            value: skirout.editor.v1.expression.ExpressionNode =
+                skirout.editor.v1.expression.ExpressionNode.UNKNOWN,
+        ) = skirout.editor.v1.action.CreateFieldValue(
+            path = path,
+            value = value,
+            _unrecognizedFields = null,
+        );
+
+        /** Serializer for [CreateFieldValue] instances. */
+        val serializer get() = _SerializerRegistry.CreateFieldValueSerializer;
+
+        /** Describes the [CreateFieldValue] type. Provides runtime introspection capabilities. */
+        val typeDescriptor get() = _SerializerRegistry.CreateFieldValueSerializerImpl.typeDescriptor;
+    }
+}
+
+sealed interface CreateResourceAction_OrMutable {
+    val type: skirout.editor.v1.type_catalog.TypeDefinitionId_OrMutable;
+    val owner: skirout.editor.v1.binding.BindingRef_OrMutable?;
+    val fields: kotlin.collections.List<skirout.editor.v1.action.CreateFieldValue_OrMutable>;
+
+    fun toFrozen(): skirout.editor.v1.action.CreateResourceAction;
+}
+
+/**
+ * Creates a resource of `type` and links it at `owner`, with preset fields. The owner is the
+ * link field of an ownership relation the new resource joins, such as the pages of the routed
+ * Book, so an owner type with two owning fields is never ambiguous. Without an owner, the host
+ * chooses one, for example the single instance of a realm section.
+ *
+ * Deeply immutable.
+ */
+@kotlin.Suppress("UNUSED_PARAMETER")
+class CreateResourceAction private constructor(
+    override val type: skirout.editor.v1.type_catalog.TypeDefinitionId,
+    override val owner: skirout.editor.v1.binding.BindingRef?,
+    override val fields: kotlin.collections.List<skirout.editor.v1.action.CreateFieldValue>,
+    internal val _unrecognizedFields: _UnrecognizedFields<skirout.editor.v1.action.CreateResourceAction>? =
+        null,
+): skirout.editor.v1.action.CreateResourceAction_OrMutable {
+    constructor(
+        _mustNameArguments: _MustNameArguments =
+            _MustNameArguments,
+        type: skirout.editor.v1.type_catalog.TypeDefinitionId_OrMutable,
+        owner: skirout.editor.v1.binding.BindingRef_OrMutable?,
+        fields: kotlin.collections.Iterable<skirout.editor.v1.action.CreateFieldValue_OrMutable>,
+        _unrecognizedFields: _UnrecognizedFields<skirout.editor.v1.action.CreateResourceAction>? =
+            null,
+    ): this(
+        type.toFrozen(),
+        if (owner != null) owner.toFrozen() else null,
+        build.skir.internal.toFrozenList(fields, { it.toFrozen() }),
+        _unrecognizedFields,
+    ) {}
+
+    @kotlin.Deprecated("Already frozen", kotlin.ReplaceWith("this"))
+    override fun toFrozen() = this;
+
+    /** Returns a mutable shallow copy of this instance */
+    fun toMutable() = Mutable(
+        type = this.type,
+        owner = this.owner,
+        fields = this.fields,
+    );
+
+    /** Returns a shallow copy of this instance with the specified fields replaced. */
+    fun copy(
+        _mustNameArguments: _MustNameArguments =
+            _MustNameArguments,
+        type: skirout.editor.v1.type_catalog.TypeDefinitionId_OrMutable =
+            this.type,
+        owner: skirout.editor.v1.binding.BindingRef_OrMutable? =
+            this.owner,
+        fields: kotlin.collections.Iterable<skirout.editor.v1.action.CreateFieldValue_OrMutable> =
+            this.fields,
+    ) = skirout.editor.v1.action.CreateResourceAction(
+        type.toFrozen(),
+        if (owner != null) owner.toFrozen() else null,
+        build.skir.internal.toFrozenList(fields, { it.toFrozen() }),
+        this._unrecognizedFields,
+    );
+
+    @kotlin.Deprecated("No point in creating an exact copy of an immutable object", kotlin.ReplaceWith("this"))
+    fun copy() = this;
+
+    override fun equals(other: kotlin.Any?): kotlin.Boolean {
+        return this === other || (other is skirout.editor.v1.action.CreateResourceAction && this.type == other.type && this.owner == other.owner && this.fields == other.fields);
+    }
+
+    override fun hashCode(): kotlin.Int {
+        return kotlin.collections.listOf<kotlin.Any?>(this.type, this.owner, this.fields).hashCode();
+    }
+
+    override fun toString(): kotlin.String {
+        return build.skir.internal.toStringImpl(
+            this,
+            _SerializerRegistry.CreateResourceActionSerializerImpl,
+        )
+    }
+
+    /** Mutable version of [CreateResourceAction]. */
+    class Mutable internal constructor(
+        _mustNameArguments: _MustNameArguments =
+            _MustNameArguments,
+        override var type: skirout.editor.v1.type_catalog.TypeDefinitionId_OrMutable =
+            skirout.editor.v1.type_catalog.TypeDefinitionId.partial(),
+        override var owner: skirout.editor.v1.binding.BindingRef_OrMutable? =
+            null,
+        override var fields: kotlin.collections.List<skirout.editor.v1.action.CreateFieldValue_OrMutable> =
+            build.skir.internal.emptyFrozenList<skirout.editor.v1.action.CreateFieldValue>(),
+        internal var _unrecognizedFields: _UnrecognizedFields<skirout.editor.v1.action.CreateResourceAction>? =
+            null,
+    ): skirout.editor.v1.action.CreateResourceAction_OrMutable {
+        /** Returns a deeply immutable copy of this instance */
+        override fun toFrozen() = skirout.editor.v1.action.CreateResourceAction(
+            type = this.type,
+            owner = this.owner,
+            fields = this.fields,
+            _unrecognizedFields = this._unrecognizedFields,
+        );
+
+        /**
+         * If the value of [type] is already mutable, returns it as-is.
+         * Otherwise, makes a mutable copy, assigns it back to [type] and returns it.
+         */
+        val mutableType: skirout.editor.v1.type_catalog.TypeDefinitionId.Mutable get() {
+            var value = this.type;
+            return when (value) {
+                is skirout.editor.v1.type_catalog.TypeDefinitionId -> {
+                    value = value.toMutable();
+                    this.type = value;
+                    return value;
+                }
+                is skirout.editor.v1.type_catalog.TypeDefinitionId.Mutable -> value;
+            }
+        }
+
+        /**
+         * If the value of [fields] is already mutable, returns it as-is.
+         * Otherwise, makes a mutable copy, assigns it back to [fields] and returns it.
+         */
+        val mutableFields: kotlin.collections.MutableList<skirout.editor.v1.action.CreateFieldValue_OrMutable> get() {
+            var value = this.fields;
+            return when (value) {
+                is build.skir.internal.MutableList -> value;
+                else -> {
+                    value = build.skir.internal.MutableList(value);
+                    this.fields = value;
+                    value;
+                }
+            }
+        }
+    }
+
+    companion object {
+        private val default =
+            skirout.editor.v1.action.CreateResourceAction(
+                skirout.editor.v1.type_catalog.TypeDefinitionId.partial(),
+                null,
+                build.skir.internal.emptyFrozenList<skirout.editor.v1.action.CreateFieldValue>(),
+            );
+
+        /** Returns an instance with all fields set to their default values. */
+        fun partial() = default;
+
+        /**
+         * Creates a new instance of [CreateResourceAction].
+         * Unlike the constructor, does not require all fields to be specified.
+         * Missing fields will be set to their default values.
+         */
+        fun partial(
+            _mustNameArguments: _MustNameArguments =
+                _MustNameArguments,
+            type: skirout.editor.v1.type_catalog.TypeDefinitionId_OrMutable =
+                skirout.editor.v1.type_catalog.TypeDefinitionId.partial(),
+            owner: skirout.editor.v1.binding.BindingRef_OrMutable? =
+                null,
+            fields: kotlin.collections.Iterable<skirout.editor.v1.action.CreateFieldValue_OrMutable> =
+                build.skir.internal.emptyFrozenList<skirout.editor.v1.action.CreateFieldValue>(),
+        ) = skirout.editor.v1.action.CreateResourceAction(
+            type = type,
+            owner = owner,
+            fields = fields,
+            _unrecognizedFields = null,
+        );
+
+        /** Serializer for [CreateResourceAction] instances. */
+        val serializer get() = _SerializerRegistry.CreateResourceActionSerializer;
+
+        /** Describes the [CreateResourceAction] type. Provides runtime introspection capabilities. */
+        val typeDescriptor get() = _SerializerRegistry.CreateResourceActionSerializerImpl.typeDescriptor;
     }
 }
 
@@ -2862,6 +3220,30 @@ private object _SerializerRegistry {
     );
 
     val CommandCapabilityActionSerializer = build.skir.internal.makeSerializer(CommandCapabilityActionSerializerImpl);
+
+    val CreateFieldValueSerializerImpl = build.skir.internal.StructSerializer(
+        recordId = "editor/v1/action.skir:CreateFieldValue",
+        doc = "A preset value for one field of the created resource, addressed relative to the created type.\nA value that evaluates to missing leaves the field at its creation default.",
+        defaultInstance = skirout.editor.v1.action.CreateFieldValue.partial(),
+        newMutableFn = { it?.toMutable() ?: skirout.editor.v1.action.CreateFieldValue.Mutable() },
+        toFrozenFn = { it.toFrozen() },
+        getUnrecognizedFields = { it._unrecognizedFields },
+        setUnrecognizedFields = { m, u -> m._unrecognizedFields = u },
+    );
+
+    val CreateFieldValueSerializer = build.skir.internal.makeSerializer(CreateFieldValueSerializerImpl);
+
+    val CreateResourceActionSerializerImpl = build.skir.internal.StructSerializer(
+        recordId = "editor/v1/action.skir:CreateResourceAction",
+        doc = "Creates a resource of [type] and links it at [owner], with preset fields. The owner is the\nlink field of an ownership relation the new resource joins, such as the pages of the routed\nBook, so an owner type with two owning fields is never ambiguous. Without an owner, the host\nchooses one, for example the single instance of a realm section.",
+        defaultInstance = skirout.editor.v1.action.CreateResourceAction.partial(),
+        newMutableFn = { it?.toMutable() ?: skirout.editor.v1.action.CreateResourceAction.Mutable() },
+        toFrozenFn = { it.toFrozen() },
+        getUnrecognizedFields = { it._unrecognizedFields },
+        setUnrecognizedFields = { m, u -> m._unrecognizedFields = u },
+    );
+
+    val CreateResourceActionSerializer = build.skir.internal.makeSerializer(CreateResourceActionSerializerImpl);
 
     val DuplicateListItemActionSerializerImpl = build.skir.internal.StructSerializer(
         recordId = "editor/v1/action.skir:DuplicateListItemAction",
@@ -3127,6 +3509,59 @@ private object _SerializerRegistry {
         );
         CommandCapabilityActionSerializerImpl.finalizeStruct();
 
+        CreateFieldValueSerializerImpl.addField(
+            "path",
+            "path",
+            0,
+            skirout.editor.v1.type_catalog.ValuePath.serializer,
+            "",
+            { it.path },
+            { mut, v -> mut.path = v },
+        );
+        CreateFieldValueSerializerImpl.addField(
+            "value",
+            "value",
+            1,
+            skirout.editor.v1.expression.ExpressionNode.serializer,
+            "",
+            { it.value },
+            { mut, v -> mut.value = v },
+        );
+        CreateFieldValueSerializerImpl.finalizeStruct();
+
+        CreateResourceActionSerializerImpl.addField(
+            "type",
+            "type",
+            0,
+            skirout.editor.v1.type_catalog.TypeDefinitionId.serializer,
+            "",
+            { it.type },
+            { mut, v -> mut.type = v },
+        );
+        CreateResourceActionSerializerImpl.addField(
+            "owner",
+            "owner",
+            1,
+            build.skir.Serializers.optional(
+                skirout.editor.v1.binding.BindingRef.serializer,
+            ),
+            "",
+            { it.owner },
+            { mut, v -> mut.owner = v },
+        );
+        CreateResourceActionSerializerImpl.addField(
+            "fields",
+            "fields",
+            2,
+            build.skir.Serializers.list(
+                _SerializerRegistry.CreateFieldValueSerializer,
+            ),
+            "",
+            { it.fields },
+            { mut, v -> mut.fields = v },
+        );
+        CreateResourceActionSerializerImpl.finalizeStruct();
+
         DuplicateListItemActionSerializerImpl.addField(
             "target",
             "target",
@@ -3181,6 +3616,15 @@ private object _SerializerRegistry {
             _SerializerRegistry.AuthoringCapabilityActionSerializer,
             "",
             { skirout.editor.v1.action.EditorAction.AuthoringWrapper(it) },
+            { it.value },
+        );
+        EditorActionSerializerImpl.addWrapperVariant(
+            5,
+            "create",
+            skirout.editor.v1.action.EditorAction.Kind.CREATE_WRAPPER.ordinal,
+            _SerializerRegistry.CreateResourceActionSerializer,
+            "",
+            { skirout.editor.v1.action.EditorAction.CreateWrapper(it) },
             { it.value },
         );
         EditorActionSerializerImpl.finalizeEnum();

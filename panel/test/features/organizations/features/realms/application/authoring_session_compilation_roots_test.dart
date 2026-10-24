@@ -87,7 +87,9 @@ void main() {
     () async {
       final nats = FakeNatsClient();
       final root = skir.CompilationRoot(
-        projection: skir.CompilationProjectionId(value: "typewriter.page"),
+        projection: skir.CompilationProjectionId(
+          value: "typewriter.resource-graph",
+        ),
         resource: skir.ResourceId(value: "saved"),
       );
       skir.QueryCompiledResourceStatusRequest? captured;

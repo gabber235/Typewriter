@@ -20,7 +20,11 @@ void main() {
       Map<String, skir.TypeTemplate> fields, {
       List<skir.NamedTypeTemplate> parents = const [],
     }) => skir.PublishedType(
-      display: null,
+      searchKey: null,
+      placementField: fields.containsKey("placement")
+          ? editorRootPath.field("placement")
+          : null,
+      display: defaultTypeDisplay(""),
       definition: skir.TypeDefinition(
         id: id,
         parameters: const [],
@@ -85,7 +89,6 @@ void main() {
     final configuration = catalog.beginSelection(root);
     final existing = skir.ResourceId(value: "tag:existing");
     final created = skir.ResourceId(value: "tag:created");
-    final definition = skir.ResourceDefinitionId(value: "test.tag");
     final placement = GraphPlacement(x: 0, y: 0, width: 3, height: 2);
     final draft =
         AuthoringEdit(
@@ -95,7 +98,6 @@ void main() {
             for (final id in [existing, created])
               skir.AuthoringResource(
                 id: id,
-                definition: definition,
                 content: skir.AuthoringRecord(
                   configuration: configuration,
                   fields: [
@@ -132,7 +134,7 @@ void main() {
         )..placeCreatedResource(
           ResourceCreationRequest(
             id: created,
-            definition: definition,
+            type: root,
             configuration: configuration,
           ),
         );

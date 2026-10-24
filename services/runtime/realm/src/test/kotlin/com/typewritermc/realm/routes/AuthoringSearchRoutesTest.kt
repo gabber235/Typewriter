@@ -1,6 +1,5 @@
 package com.typewritermc.realm.routes
 
-import com.typewritermc.authoring.ResourceDefinitionId
 import com.typewritermc.checking.CatalogGeneration
 import com.typewritermc.realm.authoring.AuthoringSeed
 import com.typewritermc.realm.authoring.InMemoryAuthoringViewStore
@@ -37,11 +36,7 @@ val AuthoringSearchRoutesTest by testSuite {
             val views =
                 InMemoryAuthoringViewStore(
                     catalog,
-                    AuthoringSeed(
-                        resources = mapOf(resource to authored),
-                        resourceDefinitions =
-                            mapOf(resource to ResourceDefinitionId("book")),
-                    ),
+                    AuthoringSeed(resources = mapOf(resource to authored)),
                 )
             val repository = RecordingSearchRepository()
             try {
@@ -65,10 +60,7 @@ val AuthoringSearchRoutesTest by testSuite {
                     repository.receivedTarget shouldBe TypeUse.Named(TEST_TYPE)
                     val hit = response.value.hits.single()
                     hit.resource.value shouldBe resource.value
-                    hit.definition.value shouldBe "book"
                     SkirAuthoringValueCodec.decode(hit.subject.content).getOrThrow() shouldBe authored
-                    SkirDataValueCodec.decode(hit.subject.descriptor).getOrThrow() shouldBe
-                        DataValue.StringValue("Readable Book")
                     SkirTypeCodec.decode(hit.context.actualType).getOrThrow() shouldBe TypeUse.Scalar(ScalarKind.Text)
                     SkirDataValueCodec.decode(hit.context.payload).getOrThrow() shouldBe
                         DataValue.StringValue("book Readable Book")
@@ -87,11 +79,7 @@ val AuthoringSearchRoutesTest by testSuite {
             val views =
                 InMemoryAuthoringViewStore(
                     catalog,
-                    AuthoringSeed(
-                        resources = mapOf(resource to authored),
-                        resourceDefinitions =
-                            mapOf(resource to ResourceDefinitionId("book")),
-                    ),
+                    AuthoringSeed(resources = mapOf(resource to authored)),
                 )
             try {
                 RouteFixture { contracts, _, _ ->
@@ -153,7 +141,6 @@ private class RecordingSearchRepository : AuthoringSearchRepository {
         return listOf(
             IndexedAuthoringSearchCandidate(
                 ResourceId("book"),
-                ResourceDefinitionId("book"),
                 record(name = "stale indexed content"),
                 "book Readable Book",
             ),

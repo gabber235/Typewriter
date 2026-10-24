@@ -18,7 +18,6 @@ import skirout.editor.v1.presentation.PresentationCollectionProjectionValue
 import skirout.editor.v1.presentation.PresentationCollectionRelationDefinition
 import skirout.editor.v1.presentation.PresentationElement
 import skirout.editor.v1.presentation.PresentationNode
-import skirout.editor.v1.presentation.PresentationResourceCollection
 import skirout.editor.v1.presentation.CrossAxisAlignment as WireCrossAxisAlignment
 import skirout.editor.v1.presentation.MainAxisAlignment as WireMainAxisAlignment
 
@@ -385,25 +384,6 @@ internal fun CollectionSource<*, *>.wire(state: PresentationBuildState): Present
                                         }
                                     },
                             )
-                        },
-                )
-            },
-        resources =
-            (rows as? CollectionRows.Resources)?.let { resources ->
-                val encodedRoot =
-                    SkirTypeCodec.encode(rowType).getOrThrow()
-                        as skirout.editor.v1.type_catalog.TypeTemplate.NamedWrapper
-                val appearance =
-                    resources.appearance?.let { reference ->
-                        state.presentationId(reference, state.type.rebind(rowType))
-                    }
-                PresentationResourceCollection(
-                    root = encodedRoot.value.definition,
-                    resourceBindingId = resources.resourceBinding.wire(),
-                    appearance =
-                        appearance?.let { id ->
-                            skirout.editor.v1.type_catalog
-                                .PresentationId(namespace = id.namespace, name = id.name)
                         },
                 )
             },

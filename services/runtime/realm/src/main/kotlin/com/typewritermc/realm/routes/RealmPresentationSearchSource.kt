@@ -8,7 +8,6 @@ import com.typewritermc.capability.RealmSearchContext
 import com.typewritermc.capability.RealmSearchUpdate
 import com.typewritermc.capability.ResourceOperationSearchContext
 import com.typewritermc.operations.OperationInvocation
-import com.typewritermc.operations.OperationSearch
 import com.typewritermc.realm.authoring.AuthoredReadView
 import com.typewritermc.realm.authoring.AuthoringLease
 import com.typewritermc.realm.authoring.AuthoringViewStore
@@ -77,7 +76,8 @@ class CapabilityRealmPresentationSearchSource(
         updates: RealmPresentationSearchUpdatePublisher,
     ): RealmPresentationSearchUpdate {
         cancel(request.subscriptionId)
-        if (OperationSearch.descriptors.any { it.id.value == request.capabilityId.value }) {
+        val capability = CapabilityId(request.capabilityId.value)
+        if (views.read { it.catalog.operations.candidateSearch(capability) != null }) {
             return operationSearch.watch(request, updates)
         }
         val catalog =
@@ -106,7 +106,7 @@ class CapabilityRealmPresentationSearchSource(
                 val values = mutableListOf<DataValue>()
                 try {
                     val registry = RealmCapabilityRegistry(catalog.capabilities)
-                    val provider = registry.requireSearch(CapabilityId(request.capabilityId.value))
+                    val provider = registry.requireSearch(capability)
                     val payload = SkirDataValueCodec.decode(request.payload).getOrThrow()
                     provider
                         .invoke(

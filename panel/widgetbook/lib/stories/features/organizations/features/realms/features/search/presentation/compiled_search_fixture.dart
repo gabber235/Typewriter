@@ -98,32 +98,12 @@ final class CompiledSearchFixture {
         "placement": compiledSdkPlacementValue,
       }),
     };
-    final roots = {
-      "book":
-          (compiledSdkBookRecord.configuration
-                  as skir.TypeSelection_completeWrapper)
-              .value
-              .definition,
-      "tag":
-          (compiledSdkTagRecord.configuration
-                  as skir.TypeSelection_completeWrapper)
-              .value
-              .definition,
-      "page": pageRoot,
-      "element": elementRoot,
-    };
     final edit = AuthoringEdit(
       generation: catalog.snapshot.generation,
       catalog: catalog,
       resources: [
         for (final entry in records.entries)
-          skir.AuthoringResource(
-            id: ids[entry.key]!,
-            content: entry.value,
-            definition: catalog.snapshot.resourceDefinitions
-                .singleWhere((resource) => resource.root == roots[entry.key])
-                .id,
-          ),
+          skir.AuthoringResource(id: ids[entry.key]!, content: entry.value),
       ],
       links: const [],
     );
@@ -223,7 +203,7 @@ skir.PublishedType _subtype(
           ..display = skir.TypeDisplay(
             name: label,
             description: "Compiled result fixture",
-            icon: "material-symbols:book",
+            icon: skir.Icon.wrapIconify("material-symbols:book"),
             color: skir.Color(argb: argb.toSigned(32)),
           ))
         .toFrozen();

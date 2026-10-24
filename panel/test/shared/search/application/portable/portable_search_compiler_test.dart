@@ -27,7 +27,6 @@ void main() {
             key: row,
             selectedValue: row,
             label: row,
-            resultAppearance: null,
             presentation: skir.PresentationNode.defaultInstance,
           ),
           contextBindings: [
@@ -473,8 +472,6 @@ _SearchFixture _fixture({
     path: skir.ValuePath(segments: const []),
   );
   final mapping = skir.SearchResultMapping(
-    resultAppearance: null,
-
     bindingId: _rowBinding,
     key: rowRead,
     selectedValue: selected == null
@@ -583,8 +580,6 @@ skir.SearchProvider _staticProvider(
     result:
         mapping ??
         skir.SearchResultMapping(
-          resultAppearance: null,
-
           bindingId: _rowBinding,
           key: rowRead,
           selectedValue: rowRead,

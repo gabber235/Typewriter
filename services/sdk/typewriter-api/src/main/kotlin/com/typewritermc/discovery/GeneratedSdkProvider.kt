@@ -1,6 +1,6 @@
 package com.typewritermc.discovery
 
-import com.typewritermc.authoring.AuthoringResourceDefinition
+import com.typewritermc.authoring.DisplayFormulas
 import com.typewritermc.capability.RealmCapabilityDescriptor
 import com.typewritermc.capability.RealmCapabilityProvider
 import com.typewritermc.checking.RealmCheckProvider
@@ -10,6 +10,7 @@ import com.typewritermc.presentation.PresentationDescriptor
 import com.typewritermc.presentation.PresentationProvider
 import com.typewritermc.types.EndpointBindingTemplate
 import com.typewritermc.types.RelationContract
+import com.typewritermc.types.ResourceTarget
 import com.typewritermc.types.TypeDefinition
 import com.typewritermc.types.TypeDefinitionId
 import com.typewritermc.types.TypeDisplay
@@ -19,7 +20,13 @@ interface GeneratedTypeProvider {
     val definition: TypeDefinition
     val nativeClass: KClass<*>?
         get() = null
+
+    /** The complete display codegen fills for every declared type; null only for providers codegen does not own. */
     val display: TypeDisplay?
+        get() = null
+
+    /** The search scope keyword of a resource type, or null for a type that is not a resource. */
+    val searchKey: String?
         get() = null
 }
 
@@ -29,10 +36,6 @@ interface GeneratedRelationProvider {
 
 interface GeneratedEndpointBindingsProvider {
     val bindings: List<EndpointBindingTemplate>
-}
-
-interface GeneratedResourceProvider {
-    val definition: AuthoringResourceDefinition
 }
 
 interface GeneratedConfigurationProvider : ConfigurationProvider {
@@ -45,6 +48,14 @@ interface GeneratedPresentationProvider : PresentationProvider {
     fun descriptor(origin: ProviderOrigin): PresentationDescriptor
 }
 
+/** One authored resource display: the resources it applies to and its formulas, built on demand at assembly. */
+interface GeneratedResourceDisplayProvider {
+    val target: ResourceTarget
+
+    fun formulas(): DisplayFormulas
+}
+
+/** One operation object: its identity, target and input from compile time, and the declaration it runs at assembly. */
 interface GeneratedResourceOperationProvider {
     fun contribute(origin: ProviderOrigin): com.typewritermc.operations.OperationDeclaration
 }

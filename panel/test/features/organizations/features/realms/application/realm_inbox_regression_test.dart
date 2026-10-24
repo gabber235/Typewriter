@@ -22,7 +22,6 @@ final _title = skir.ValueLocation(
   resource: _book.bookId,
   path: editorRootPath.field("title"),
 );
-final _refProvider = Provider<Ref>((ref) => ref);
 
 void main() {
   TestWidgetsFlutterBinding.ensureInitialized();
@@ -242,7 +241,7 @@ void main() {
     );
   });
 
-  testWidgets("a book issue navigates to its Realm Library", (tester) async {
+  testWidgets("a book issue opens the Book's surface", (tester) async {
     final fixture = _navigation();
 
     expect(
@@ -258,7 +257,8 @@ void main() {
     expect(organization.args!.organizationId, _scope.organizationId.id);
     final realm = organization.initialChildren!.single as RealmRoute;
     expect(realm.args!.realmId, _scope.realmId.id);
-    expect(realm.initialChildren!.single, isA<LibraryRoute>());
+    final resource = realm.initialChildren!.single as ResourceRoute;
+    expect(resource.args!.resourceId, _book.bookId.value);
   });
 
   testWidgets("a book issue selects its book for inspection", (tester) async {
@@ -313,29 +313,13 @@ void main() {
     },
   );
 
-  testWidgets("ordinary book opening opens the page editor", (tester) async {
-    final fixture = _navigation();
-    final resource = fixture.document.entry(_book.bookId)!;
-
-    final opened = await fixture.container
-        .read(authoringResourceNavigationRegistryProvider)
-        .open(
-          fixture.container.read(_refProvider),
-          AuthoringResourceIdentifier.inScope(_scope, resource.id),
-        );
-    await tester.pump(Duration.zero);
-
-    expect(opened, isTrue);
-    final destination = fixture.router.destinations.single;
-    expect(destination, isA<BookRoute>());
-    final book = destination as BookRoute;
-    expect(book.args!.organizationId, _scope.organizationId.id);
-    expect(book.args!.realmId, _scope.realmId.id);
-    expect(book.args!.bookId, _book.bookId.id);
-  });
-
-  for (final kind in ["page", "element", "cue", "tag"]) {
-    testWidgets("$kind reveal uses its editing surface and remains selected", (
+  for (final (kind, routed) in [
+    ("page", "page:inbox"),
+    ("element", "page:inbox"),
+    ("cue", "page:inbox"),
+    ("tag", "fixture:taxonomy"),
+  ]) {
+    testWidgets("$kind reveal routes to its nearest surface and selects it", (
       tester,
     ) async {
       final fixture = _navigation(document: _navigationDocument());
@@ -344,184 +328,139 @@ void main() {
         resource: id,
         path: editorRootPath.field("name"),
       );
-      final registry = fixture.container.read(
-        authoringResourceNavigationRegistryProvider,
-      );
-      final ref = fixture.container.read(_refProvider);
+      final navigation = fixture.container.read(realmSurfaceNavigationProvider);
       final resource = AuthoringResourceIdentifier.inScope(_scope, id);
-      expect(registry.canOpen(ref, resource), isTrue);
       for (var attempt = 0; attempt < 2; attempt++) {
-        expect(await registry.reveal(ref, _scope, location), isTrue);
+        expect(await navigation.reveal(_scope, location), isTrue);
         await tester.pump(Duration.zero);
         expect(fixture.container.read(selectionProvider), [resource]);
       }
-      final destination = fixture.router.destinations.last;
-      if (kind == "tag") {
-        final realm =
-            (destination as OrganizationRoute).initialChildren!.single
-                as RealmRoute;
-        expect(realm.initialChildren!.single, isA<TagsRoute>());
-      } else {
-        final book = destination as BookRoute;
-        expect(book.args!.bookId, _book.bookId.id);
-        expect(
-          (book.initialChildren!.single as RouteRoute).args!.pageId,
-          "page:inbox",
-        );
-      }
+      expect(_routed(fixture.router.destinations.last), routed);
     });
-
-    testWidgets(
-      "ordinary $kind opening retains its destination and selection",
-      (tester) async {
-        final fixture = _navigation(document: _navigationDocument());
-        final resource = AuthoringResourceIdentifier.inScope(
-          _scope,
-          skir.ResourceId(value: "$kind:inbox"),
-        );
-        expect(
-          await fixture.container
-              .read(authoringResourceNavigationRegistryProvider)
-              .open(fixture.container.read(_refProvider), resource),
-          isTrue,
-        );
-        await tester.pump(Duration.zero);
-        if (kind == "tag") {
-          final realm =
-              (fixture.router.destinations.single as OrganizationRoute)
-                      .initialChildren!
-                      .single
-                  as RealmRoute;
-          expect(realm.initialChildren!.single, isA<TagsRoute>());
-        } else {
-          final book = fixture.router.destinations.single as BookRoute;
-          expect(book.args!.bookId, _book.bookId.id);
-          expect(
-            (book.initialChildren!.single as RouteRoute).args!.pageId,
-            "page:inbox",
-          );
-        }
-        expect(
-          fixture.container.read(selectionProvider),
-          kind == "page" ? isEmpty : [resource],
-        );
-      },
-    );
   }
 
-  for (final kind in [
-    "generic",
-    "unknown",
-    "missing resource",
-    "missing definition",
-    "missing adapter",
-    "loading",
-  ]) {
-    testWidgets(
-      "$kind is unsupported without navigation or selection changes",
-      (tester) async {
-        var document = fixtureAuthoringDocument(books: [_book]);
-        if (kind == "missing resource") {
-          document = document.copyWith(entries: {});
-        }
-        if (kind == "generic" ||
-            kind == "unknown" ||
-            kind == "missing definition") {
-          final catalog = document.catalog.snapshot.toMutable();
-          catalog.resourceDefinitions = kind == "missing definition"
-              ? []
-              : [
-                  skir.AuthoringResourceDefinition(
-                    id: document.entries.values.single.definition,
-                    root: catalog.resourceDefinitions.first.root.toFrozen(),
-                    navigationHandler: kind == "generic"
-                        ? skir.AuthoringNavigationHandler.generic
-                        : skir.AuthoringNavigationHandler.unknown,
-                  ).toMutable(),
-                ];
-          document = document.copyWith(
-            catalog: CheckedEditorCatalog(catalog.toFrozen()),
-          );
-        }
-        final fixture = _navigation(
-          document: document,
-          registry: kind == "missing adapter"
-              ? AuthoringResourceNavigationRegistry({})
-              : null,
-          loading: kind == "loading",
-        );
-        final registry = fixture.container.read(
-          authoringResourceNavigationRegistryProvider,
-        );
-        final ref = fixture.container.read(_refProvider);
-        final resource = AuthoringResourceIdentifier.inScope(
-          _scope,
-          _book.bookId,
-        );
-        expect(registry.canOpen(ref, resource), isFalse);
-        expect(await registry.open(ref, resource), isFalse);
-        expect(await registry.reveal(ref, _scope, _title), isFalse);
-        expect(fixture.router.destinations, isEmpty);
-        expect(fixture.container.read(selectionProvider), isEmpty);
-        await tester.pump(Duration.zero);
-      },
-    );
-  }
-
-  for (final kind in ["page", "element"]) {
-    for (final malformed in [false, true]) {
-      testWidgets(
-        "$kind with ${malformed ? 'absent' : 'missing'} ownership fails before navigating",
-        (tester) async {
-          var document = _navigationDocument();
-          document = malformed
-              ? document.copyWith(
-                  entries: {...document.entries}..remove(_book.bookId),
-                )
-              : document.copyWith(links: []);
-          final fixture = _navigation(document: document);
-          final location = skir.ValueLocation(
-            resource: skir.ResourceId(value: "$kind:inbox"),
-            path: editorRootPath,
-          );
-          await expectLater(
-            fixture.container
-                .read(authoringResourceNavigationRegistryProvider)
-                .reveal(fixture.container.read(_refProvider), _scope, location),
-            throwsStateError,
-          );
-          expect(fixture.router.destinations, isEmpty);
-          expect(fixture.container.read(selectionProvider), isEmpty);
-          await tester.pump(Duration.zero);
-        },
+  for (final kind in ["missing resource", "loading"]) {
+    testWidgets("$kind opens nothing and keeps the selection", (tester) async {
+      var document = fixtureAuthoringDocument(realm: true, books: [_book]);
+      if (kind == "missing resource") {
+        document = document.copyWith(entries: {});
+      }
+      final fixture = _navigation(
+        document: document,
+        loading: kind == "loading",
       );
-    }
+      final navigation = fixture.container.read(realmSurfaceNavigationProvider);
+      expect(await navigation.open(_scope, _book.bookId), isFalse);
+      expect(await navigation.reveal(_scope, _title), isFalse);
+      expect(fixture.router.destinations, isEmpty);
+      expect(fixture.container.read(selectionProvider), isEmpty);
+      await tester.pump(Duration.zero);
+    });
   }
 
-  testWidgets("dispatch reads the current catalog after it changes", (
+  testWidgets(
+    "inspecting another resource from a surface without a side inspector "
+    "opens that resource's own surface",
+    (tester) async {
+      final fixture = _navigation(
+        document: _navigationDocument(),
+        routed: _book.bookId,
+      );
+      final element = skir.ResourceId(value: "element:inbox");
+      expect(
+        fixture.container.read(showsSideInspectorProvider(_scope)),
+        isFalse,
+      );
+
+      await fixture.container
+          .read(realmSurfaceNavigationProvider)
+          .navigate(
+            _scope,
+            element,
+            skir.ResourceNavigationMode.edit,
+            isCurrent: () => true,
+          );
+      await tester.pump(Duration.zero);
+
+      expect(_routed(fixture.router.destinations.single), element.value);
+      expect(fixture.container.read(selectionProvider), [
+        AuthoringResourceIdentifier.inScope(_scope, element),
+      ]);
+    },
+  );
+
+  testWidgets("inspecting a resource beside a workspace keeps the route", (
     tester,
   ) async {
-    final document = fixtureAuthoringDocument(books: [_book]);
+    final fixture = _navigation(
+      document: _navigationDocument(),
+      routed: skir.ResourceId(value: "page:inbox"),
+    );
+    final element = skir.ResourceId(value: "element:inbox");
+    expect(fixture.container.read(showsSideInspectorProvider(_scope)), isTrue);
+
+    await fixture.container
+        .read(realmSurfaceNavigationProvider)
+        .navigate(
+          _scope,
+          element,
+          skir.ResourceNavigationMode.edit,
+          isCurrent: () => true,
+        );
+    await tester.pump(Duration.zero);
+
+    expect(fixture.router.destinations, isEmpty);
+    expect(fixture.container.read(selectionProvider), [
+      AuthoringResourceIdentifier.inScope(_scope, element),
+    ]);
+  });
+
+  testWidgets(
+    "an element without owners opens the realm home with it selected",
+    (tester) async {
+      final document = _navigationDocument().copyWith(links: []);
+      final fixture = _navigation(document: document);
+      final element = skir.ResourceId(value: "element:inbox");
+
+      expect(
+        await fixture.container
+            .read(realmSurfaceNavigationProvider)
+            .open(_scope, element),
+        isTrue,
+      );
+      await tester.pump(Duration.zero);
+
+      expect(_routed(fixture.router.destinations.single), isNull);
+      expect(fixture.container.read(selectionProvider), [
+        AuthoringResourceIdentifier.inScope(_scope, element),
+      ]);
+    },
+  );
+
+  testWidgets("opening reads the current catalog after it changes", (
+    tester,
+  ) async {
+    final document = fixtureAuthoringDocument(realm: true, books: [_book]);
     final transport = ScriptedAuthoringTransport(AsyncData(document));
     addTearDown(transport.dispose);
     final fixture = _navigation(document: document, transport: transport);
-    final registry = fixture.container.read(
-      authoringResourceNavigationRegistryProvider,
-    );
-    final ref = fixture.container.read(_refProvider);
-    final resource = AuthoringResourceIdentifier.inScope(_scope, _book.bookId);
-    expect(registry.canOpen(ref, resource), isTrue);
     final catalog = document.catalog.snapshot.toMutable()
-      ..resourceDefinitions = [];
+      ..presentations = []
+      ..presentationMaterials = [];
     transport.publish(
       AsyncData(
         document.copyWith(catalog: CheckedEditorCatalog(catalog.toFrozen())),
       ),
     );
     await tester.pump(Duration.zero);
-    expect(registry.canOpen(ref, resource), isFalse);
-    expect(await registry.reveal(ref, _scope, _title), isFalse);
-    expect(fixture.router.destinations, isEmpty);
+
+    expect(
+      await fixture.container
+          .read(realmSurfaceNavigationProvider)
+          .open(_scope, _book.bookId),
+      isTrue,
+    );
+    expect(_routed(fixture.router.destinations.single), isNull);
     await tester.pump(Duration.zero);
   });
 
@@ -601,11 +540,10 @@ void main() {
           ),
         );
         await tester.pumpAndSettle();
-        final registry = fixture.container.read(
-          authoringResourceNavigationRegistryProvider,
+        final navigation = fixture.container.read(
+          realmSurfaceNavigationProvider,
         );
-        final ref = fixture.container.read(_refProvider);
-        expect(await registry.reveal(ref, _scope, _title), isTrue);
+        expect(await navigation.reveal(_scope, _title), isTrue);
         if (delayed) {
           await tester.pump(const Duration(milliseconds: 100));
           show.value = true;
@@ -627,7 +565,7 @@ void main() {
         );
         expect(tester.getRect(field).top, lessThan(600));
         tester.widget<EditableText>(field).focusNode.unfocus();
-        expect(await registry.reveal(ref, _scope, _title), isTrue);
+        expect(await navigation.reveal(_scope, _title), isTrue);
         await tester.pumpAndSettle();
         expect(
           tester.widget<EditableText>(field).focusNode.hasFocus ||
@@ -717,7 +655,7 @@ Future<RealmInboxState> _inbox({
   List<skir.Diagnostic> additional = const [],
   skir.PublicationStatus? status,
 }) async {
-  final document = fixtureAuthoringDocument(books: [_book]);
+  final document = fixtureAuthoringDocument(realm: true, books: [_book]);
   final review = status ?? _blocked([blocker!, ...additional]);
   final publication = TestPublicationRepository(
     _scope,
@@ -765,12 +703,12 @@ Future<RealmInboxState> _inbox({
 })
 _navigation({
   AuthoringDocument? document,
-  AuthoringResourceNavigationRegistry? registry,
   bool loading = false,
   bool retainReveal = true,
   ScriptedAuthoringTransport? transport,
+  skir.ResourceId? routed,
 }) {
-  document ??= fixtureAuthoringDocument(books: [_book]);
+  document ??= fixtureAuthoringDocument(realm: true, books: [_book]);
   final access = RouteAccessCoordinator(
     authentication: AuthenticationRouteAccess(),
     organizations: OrganizationRouteAccess(),
@@ -803,8 +741,10 @@ _navigation({
           (ref) => loading ? const AsyncLoading() : AsyncData(document!),
         ),
       appRouterProvider.overrideWithValue(router),
-      if (registry != null)
-        authoringResourceNavigationRegistryProvider.overrideWithValue(registry),
+      if (routed != null) ...[
+        realmIdProvider.overrideWith((_) => _scope.realmId),
+        routedResourceIdProvider.overrideWithValue(routed),
+      ],
     ],
   );
   final observation = container.listen(
@@ -842,59 +782,60 @@ final class _RecordingRouter extends AppRouter {
   }
 }
 
+/// The resource route [destination] opens, or null for the realm home.
+String? _routed(PageRouteInfo destination) {
+  final organization = destination as OrganizationRoute;
+  final realm = organization.initialChildren!.single as RealmRoute;
+  return switch (realm.initialChildren!.single) {
+    final ResourceRoute route => route.args!.resourceId,
+    RealmHomeRoute() => null,
+    final other => throw StateError("Unexpected route $other"),
+  };
+}
+
+/// A realm whose Book owns a page owning an element and a cue, beside a tag:
+/// owner chains of every depth below the root.
 AuthoringDocument _navigationDocument() {
   final page = Page(
     pageId: skir.ResourceId(value: "page:inbox"),
     bookId: _book.bookId,
     name: "Page",
-    configuration: skir.TypeSelection.unknown,
-    chapter: "",
-    priority: 0,
   );
   final tag = Tag(
     tagId: skir.ResourceId(value: "tag:inbox"),
     name: "Tag",
     color: Colors.blue,
-    parentIds: const [],
-    placement: const GraphPlacement(x: 0, y: 0, width: 1, height: 1),
   );
   final document = fixtureAuthoringDocument(
+    realm: true,
     books: [_book],
     pages: [page],
     tags: [tag],
   );
   final catalog = document.catalog.snapshot.toMutable();
-  final definitions = document.catalog.snapshot.resourceDefinitions.toList();
   final relations = document.catalog.snapshot.relations.toList();
   final entries = {...document.entries};
   final links = [...document.links];
-  final pageEntry = document.entry(page.pageId)!;
+  // Elements and cues reuse the tag record: a type with no surface of its own.
+  final itemEntry = document.entry(tag.tagId)!;
   final owner = document.catalog.snapshot.relations.singleWhere(
-    (relation) => relation.id.value == "fixture.book.pages",
+    (relation) => relation.id.value == fixtureBookPagesRelation,
   );
   for (final kind in ["element", "cue"]) {
-    final definition = skir.ResourceDefinitionId(value: "typewriter.$kind");
     final id = skir.ResourceId(value: "$kind:inbox");
-    definitions.add(
-      skir.AuthoringResourceDefinition(
-        id: definition,
-        root: owner.second.resource.definition,
-        navigationHandler: skir.AuthoringNavigationHandler.pageElement,
-      ),
-    );
     final relation = skir.RelationId(value: "fixture.page.$kind");
     relations.add(
       skir.RelationContract(
         id: relation,
         first: skir.EndpointDefinition(
-          id: skir.EndpointId(value: "${relation.value}.first"),
+          id: skir.EndpointId(value: "${relation.value}:first"),
           slot: skir.EndpointSlot.first,
           resource: owner.second.resource,
           cardinality: skir.EndpointCardinality.one,
           onDelete: skir.RelationDeletePolicy.cascade,
         ),
         second: skir.EndpointDefinition(
-          id: skir.EndpointId(value: "${relation.value}.second"),
+          id: skir.EndpointId(value: "${relation.value}:second"),
           slot: skir.EndpointSlot.second,
           resource: owner.second.resource,
           cardinality: skir.EndpointCardinality.many,
@@ -903,11 +844,7 @@ AuthoringDocument _navigationDocument() {
         families: owner.families,
       ),
     );
-    entries[id] = skir.AuthoringResource(
-      id: id,
-      definition: definition,
-      content: pageEntry.content,
-    );
+    entries[id] = skir.AuthoringResource(id: id, content: itemEntry.content);
     links.add(
       skir.LinkProjection(
         contract: relation,
@@ -918,9 +855,7 @@ AuthoringDocument _navigationDocument() {
       ),
     );
   }
-  catalog
-    ..resourceDefinitions = definitions
-    ..relations = relations;
+  catalog.relations = relations;
   return document.copyWith(
     catalog: CheckedEditorCatalog(catalog.toFrozen()),
     entries: entries,

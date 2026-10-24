@@ -69,8 +69,7 @@ extension on _ResourceCreationOperation {
     required ResourceIssues presentationIssues,
   }) {
     // Capture before the popup route crosses the inherited widget boundary.
-    final surfaceContext =
-        PresentationEnvironment.maybeOf(context)?.bindings ?? const {};
+    final surfaceContext = PresentationEnvironment.hostOf(context);
     final byId = {for (final candidate in candidates) candidate.id: candidate};
     return _presentQuestion(
       (query, onQueryChanged, onBack) => showReferencePicker<ReferenceChoice>(
@@ -95,12 +94,13 @@ extension on _ResourceCreationOperation {
             key: ValueKey(row.result.id),
             document: presentationDocument,
             issues: presentationIssues,
-            presentationContext: surfaceContext,
+            hostContext: surfaceContext,
             resource: resource,
             row: row,
             role: skir.PresentationRole.referencePickerResult,
+            density: SearchResultDensity.card,
             fallbackLabel: candidate.label,
-            kindLabelOverride: candidate.disabledReason == null
+            kindLabel: candidate.disabledReason == null
                 ? "select"
                 : "unavailable",
             footer: referencePickerDescription(candidate),

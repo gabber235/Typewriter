@@ -8,6 +8,8 @@ void main() {
     (skir.EditorCatalogWireSnapshot.mutable()
           ..types = [
             skir.PublishedType(
+              searchKey: null,
+              placementField: null,
               definition: skir.TypeDefinition(
                 id: frameworkResourceIdUse.definition,
                 parameters: const [],
@@ -17,7 +19,7 @@ void main() {
                 parents: const [],
               ),
               status: skir.DeclarationStatus.ready,
-              display: null,
+              display: defaultTypeDisplay(""),
               effectiveFields: const [],
               ancestorTemplates: const [],
             ),
@@ -27,7 +29,11 @@ void main() {
   final origin = skir.ExpressionBindingId(value: "context:test.origin");
   final type = skir.TypeUse.wrapNamed(frameworkResourceIdUse);
   final imports = [
-    skir.PresentationContextInput(bindingId: origin, valueType: type),
+    skir.PresentationContextInput(
+      source: skir.PresentationContextSource.caller,
+      bindingId: origin,
+      valueType: type,
+    ),
   ];
 
   test("absent caller inputs retain their declared type and missing value", () {
@@ -94,4 +100,68 @@ void main() {
       );
     },
   );
+
+  group("host inputs", () {
+    final active = skir.ExpressionBindingId(value: "context:host.active");
+    final activeInput = skir.PresentationContextInput(
+      bindingId: active,
+      source: skir.PresentationContextSource.wrapHost(
+        skir.HostContextInput.activeResource,
+      ),
+      valueType: type,
+    );
+
+    test("take their value from the host by declared source", () {
+      final routed = skir.ResourceId(value: "page:routed");
+      final normalized = <skir.ExpressionBindingId, PortableExpressionBinding>{}
+          .withContextImports(
+            catalog: catalog,
+            imports: [activeInput, panelSelectionCountInput],
+            host: HostContext(activeResource: routed, selectionCount: 3),
+          );
+
+      expect(normalized[active]?.value, routed.toExpressionValue());
+      expect(
+        normalized[panelSelectionCountInput.bindingId]?.value,
+        skir.DataValue.wrapInteger("3"),
+      );
+    });
+
+    test("stay unfilled when the host has no value", () {
+      final normalized = <skir.ExpressionBindingId, PortableExpressionBinding>{}
+          .withContextImports(catalog: catalog, imports: [activeInput]);
+
+      expect(normalized[active]?.value, skir.DataValue.unfilled);
+    });
+
+    test("reject a type the host contract does not give", () {
+      final mistyped = skir.PresentationContextInput(
+        bindingId: active,
+        source: skir.PresentationContextSource.wrapHost(
+          skir.HostContextInput.selectionCount,
+        ),
+        valueType: type,
+      );
+
+      expect(
+        () => <skir.ExpressionBindingId, PortableExpressionBinding>{}
+            .withContextImports(
+              catalog: catalog,
+              imports: [mistyped],
+              host: const HostContext(selectionCount: 1),
+            ),
+        throwsFormatException,
+      );
+    });
+
+    test("a nested host adds to the enclosing one", () {
+      final routed = skir.ResourceId(value: "page:routed");
+
+      expect(
+        const HostContext(selectionCount: 2)
+            .within(HostContext(activeResource: routed, selectionCount: 1)),
+        HostContext(activeResource: routed, selectionCount: 2),
+      );
+    });
+  });
 }

@@ -102,7 +102,7 @@ abstract class _CollectionEditorContinuation
   ) {
     try {
       return render(context, headerBuilder);
-    } on PresentationColorFailure catch (failure) {
+    } on PresentationValueFailure catch (failure) {
       return _diagnostic(failure.message);
     } on FormatException catch (failure) {
       return _diagnostic(failure.message);
@@ -320,7 +320,7 @@ extension _CollectionEditorPreparation on PortablePresentationNodeRenderer {
       fallback: true,
     );
     if (enabled case _ResolvedFailure(:final message)) {
-      throw PresentationColorFailure(message);
+      throw PresentationValueFailure(message);
     }
     final available = (enabled as _ResolvedValue<bool>).value;
     var nested = indexed
@@ -362,7 +362,7 @@ extension _CollectionEditorPreparation on PortablePresentationNodeRenderer {
         prepared.scope,
         prepared.available,
       );
-    } on PresentationColorFailure catch (failure) {
+    } on PresentationValueFailure catch (failure) {
       return _diagnostic(failure.message);
     } on FormatException catch (failure) {
       return _diagnostic(failure.message);
@@ -381,7 +381,7 @@ extension _CollectionEditorPreparation on PortablePresentationNodeRenderer {
         owner: owner,
         sourceOwner: sourceOwner,
       );
-    } on PresentationColorFailure catch (failure) {
+    } on PresentationValueFailure catch (failure) {
       return failedCollectionContinuation(owner, failure.message);
     } on FormatException catch (failure) {
       return failedCollectionContinuation(owner, failure.message);

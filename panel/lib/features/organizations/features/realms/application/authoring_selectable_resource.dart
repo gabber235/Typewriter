@@ -7,7 +7,7 @@ part "authoring_selectable_resource.freezed.dart";
 @freezed
 abstract class AuthoringResourceIdentifier extends SelectableIdentifier
     with _$AuthoringResourceIdentifier
-    implements GraphDragData, ReferenceResourceDragData {
+    implements GraphDragData {
   const factory AuthoringResourceIdentifier({
     required skir.RecordId organizationId,
     required skir.RecordId realmId,
@@ -42,12 +42,6 @@ abstract class AuthoringResourceIdentifier extends SelectableIdentifier
   GraphIdentifier get graphId => GraphIdentifier(resourceId.value);
 
   @override
-  skir.ResourceId get referenceId => resourceId;
-
-  @override
-  List<skir.TypeDefinitionId> get referenceTypes => const [];
-
-  @override
   AsyncValue<Selectable> create(Ref ref) {
     final source = ref.watch(workingAuthoringDocumentProvider(scope));
     if (source.mapUnready<Selectable>() case final pending?) return pending;
@@ -62,6 +56,7 @@ abstract class AuthoringResourceIdentifier extends SelectableIdentifier
       AuthoringSelectableResource(
         id: this,
         resource: resource,
+        appearance: document.catalog.appearanceOf(resource.content),
         workspace: workspace,
         commands: commands,
       ),
@@ -74,6 +69,7 @@ final class AuthoringSelectableResource
   const AuthoringSelectableResource({
     required this.id,
     required this.resource,
+    required this.appearance,
     required this.workspace,
     required this.commands,
   });
@@ -81,40 +77,35 @@ final class AuthoringSelectableResource
   @override
   final AuthoringResourceIdentifier id;
   final skir.AuthoringResource resource;
+
+  /// How the resource names and marks itself, from its declared display.
+  final ResourceAppearance appearance;
   final RealmEditing workspace;
   final AuthoredResourceCommands commands;
 
   @override
-  String get name => switch (resource.definition) {
-    final definition when definition == coreBookResourceDefinition =>
-      Book.fromAuthoring(resource).title,
-    final definition when definition == coreTagResourceDefinition =>
-      Tag.fromAuthoring(resource).name,
-    _ => resource.content.authoredLabel ?? id.resourceId.value,
-  };
+  String get name => appearance.label;
 
-  Color get color => switch (resource.definition) {
-    final definition when definition == coreBookResourceDefinition =>
-      Book.fromAuthoring(resource).color,
-    final definition when definition == coreTagResourceDefinition =>
-      Tag.fromAuthoring(resource).color,
-    _ => switch (resource.content.authoredField("color")?.authoredInteger) {
-      final value? => Color(value.toUnsigned(32).toInt()),
-      null => Colors.blueGrey,
-    },
-  };
+  Color get color => appearance.accent;
 
   @override
   List<SelectionCapability> get capabilities => const [];
 
+  /// The side inspector knows the routed resource, so `active_resource` and
+  /// the routed member state reach it as they reach the main surface.
   @override
   InspectionContent buildInspection(InspectionBindingScope owners) =>
       InspectionContent(
-        body: AuthoredResourceInspection(
+        body: Consumer(
           key: ValueKey((id.resourceId, skir.PresentationRole.inspector)),
-          resource: id.resourceId,
-          workspace: workspace,
-          commands: commands,
+          builder: (context, ref, _) => AuthoredResourceInspection(
+            resource: id.resourceId,
+            workspace: workspace,
+            commands: commands,
+            routedResource: ref.watch(routedResourceProvider(id.scope)),
+            openResource: (target) =>
+                ref.read(realmSurfaceNavigationProvider).open(id.scope, target),
+          ),
         ),
       );
 }

@@ -43,12 +43,10 @@ final class CompiledLiveResourceResults extends HookWidget {
       document.value = edit.toDocument(revision: document.value.revision + 1);
     }
 
-    final presentationContext = libraryOriginBindings(
-      fixture.ids[origin.value],
-    );
+    final hostContext = HostContext(activeResource: fixture.ids[origin.value]);
     final page = document.value.entry(fixture.ids["page"]!)!;
     final creation = AuthoringCreationOption(
-      definition: page.definition,
+      type: page.content.configuration.definition!,
       configuration: page.content.configuration,
       label: document.value.catalog.typeSelectionName(
         page.content.configuration,
@@ -139,7 +137,7 @@ final class CompiledLiveResourceResults extends HookWidget {
                     AuthoredResourceSearchResult(
                       document: document.value,
                       issues: issues,
-                      presentationContext: presentationContext,
+                      hostContext: hostContext,
                       resource: fixture.ids[kind]!,
                       row: row(
                         kind,
@@ -147,6 +145,7 @@ final class CompiledLiveResourceResults extends HookWidget {
                         authoringResourceSearchResultType,
                       ),
                       role: skir.PresentationRole.resourceSearchResult,
+                      density: SearchResultDensity.card,
                       fallbackLabel: "Resource unavailable",
                     ),
                   const Text(

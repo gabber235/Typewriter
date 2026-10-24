@@ -250,216 +250,43 @@ impl RealmPresence {
 }
 
 // ==============================================================================
-// struct RealmLibraryPresence
+// struct ResourcePresence
 // ==============================================================================
 
 #[derive(Clone, Debug, PartialEq, Default)]
-pub struct RealmLibraryPresence {
+pub struct ResourcePresence {
     pub realm_id: crate::skirout::base::kernel::v1::record_id::RecordId,
+    pub resource_id: crate::skirout::base::editor::v1::type_catalog::ResourceId,
     /// Set this to None when you're creating a struct.
-    pub _unrecognized: Option<crate::skir_client::UnrecognizedFields<RealmLibraryPresence>>,
+    pub _unrecognized: Option<crate::skir_client::UnrecognizedFields<ResourcePresence>>,
 }
 
-impl RealmLibraryPresence {
-    pub fn default_ref() -> &'static RealmLibraryPresence {
-        static D: std::sync::LazyLock<RealmLibraryPresence> =
-            std::sync::LazyLock::new(RealmLibraryPresence::default);
+impl ResourcePresence {
+    pub fn default_ref() -> &'static ResourcePresence {
+        static D: std::sync::LazyLock<ResourcePresence> =
+            std::sync::LazyLock::new(ResourcePresence::default);
         &D
     }
 }
 
-impl RealmLibraryPresence {
-    fn _adapter() -> &'static crate::skir_client::internal::StructAdapter<RealmLibraryPresence> {
+impl ResourcePresence {
+    fn _adapter() -> &'static crate::skir_client::internal::StructAdapter<ResourcePresence> {
         static ADAPTER: std::sync::LazyLock<
-            crate::skir_client::internal::StructAdapter<RealmLibraryPresence>,
+            crate::skir_client::internal::StructAdapter<ResourcePresence>,
         > = std::sync::LazyLock::new(|| {
             crate::skir_client::internal::StructAdapter::new(
                 "organization/v1/presence.skir",
-                "RealmLibraryPresence",
+                "ResourcePresence",
                 "",
-                |x: &RealmLibraryPresence| &x._unrecognized,
-                |x: &mut RealmLibraryPresence, u| x._unrecognized = u,
+                |x: &ResourcePresence| &x._unrecognized,
+                |x: &mut ResourcePresence, u| x._unrecognized = u,
             )
         });
         &*ADAPTER
     }
-    pub fn serializer() -> crate::skir_client::Serializer<RealmLibraryPresence> {
+    pub fn serializer() -> crate::skir_client::Serializer<ResourcePresence> {
         initialize_module_serializers();
-        crate::skir_client::internal::struct_serializer_from_static(RealmLibraryPresence::_adapter())
-    }
-}
-
-// ==============================================================================
-// struct RealmTagsPresence
-// ==============================================================================
-
-#[derive(Clone, Debug, PartialEq, Default)]
-pub struct RealmTagsPresence {
-    pub realm_id: crate::skirout::base::kernel::v1::record_id::RecordId,
-    /// Set this to None when you're creating a struct.
-    pub _unrecognized: Option<crate::skir_client::UnrecognizedFields<RealmTagsPresence>>,
-}
-
-impl RealmTagsPresence {
-    pub fn default_ref() -> &'static RealmTagsPresence {
-        static D: std::sync::LazyLock<RealmTagsPresence> =
-            std::sync::LazyLock::new(RealmTagsPresence::default);
-        &D
-    }
-}
-
-impl RealmTagsPresence {
-    fn _adapter() -> &'static crate::skir_client::internal::StructAdapter<RealmTagsPresence> {
-        static ADAPTER: std::sync::LazyLock<
-            crate::skir_client::internal::StructAdapter<RealmTagsPresence>,
-        > = std::sync::LazyLock::new(|| {
-            crate::skir_client::internal::StructAdapter::new(
-                "organization/v1/presence.skir",
-                "RealmTagsPresence",
-                "",
-                |x: &RealmTagsPresence| &x._unrecognized,
-                |x: &mut RealmTagsPresence, u| x._unrecognized = u,
-            )
-        });
-        &*ADAPTER
-    }
-    pub fn serializer() -> crate::skir_client::Serializer<RealmTagsPresence> {
-        initialize_module_serializers();
-        crate::skir_client::internal::struct_serializer_from_static(RealmTagsPresence::_adapter())
-    }
-}
-
-// ==============================================================================
-// struct BookPresence
-// ==============================================================================
-
-#[derive(Clone, Debug, PartialEq, Default)]
-pub struct BookPresence {
-    pub realm_id: crate::skirout::base::kernel::v1::record_id::RecordId,
-    pub book_id: crate::skirout::base::kernel::v1::record_id::RecordId,
-    /// Set this to None when you're creating a struct.
-    pub _unrecognized: Option<crate::skir_client::UnrecognizedFields<BookPresence>>,
-}
-
-impl BookPresence {
-    pub fn default_ref() -> &'static BookPresence {
-        static D: std::sync::LazyLock<BookPresence> =
-            std::sync::LazyLock::new(BookPresence::default);
-        &D
-    }
-}
-
-impl BookPresence {
-    fn _adapter() -> &'static crate::skir_client::internal::StructAdapter<BookPresence> {
-        static ADAPTER: std::sync::LazyLock<
-            crate::skir_client::internal::StructAdapter<BookPresence>,
-        > = std::sync::LazyLock::new(|| {
-            crate::skir_client::internal::StructAdapter::new(
-                "organization/v1/presence.skir",
-                "BookPresence",
-                "",
-                |x: &BookPresence| &x._unrecognized,
-                |x: &mut BookPresence, u| x._unrecognized = u,
-            )
-        });
-        &*ADAPTER
-    }
-    pub fn serializer() -> crate::skir_client::Serializer<BookPresence> {
-        initialize_module_serializers();
-        crate::skir_client::internal::struct_serializer_from_static(BookPresence::_adapter())
-    }
-}
-
-// ==============================================================================
-// enum PageActivity
-// ==============================================================================
-
-#[derive(Debug, Clone, PartialEq)]
-pub enum PageActivity {
-    Unknown(Option<crate::skir_client::UnrecognizedVariant<PageActivity>>),
-    Overview,
-    Graph,
-    Timeline,
-    Inspector,
-}
-
-impl Default for PageActivity {
-    fn default() -> Self {
-        PageActivity::Unknown(None)
-    }
-}
-
-impl PageActivity {
-    fn _adapter() -> &'static crate::skir_client::internal::EnumAdapter<PageActivity> {
-        static ADAPTER: std::sync::LazyLock<
-            crate::skir_client::internal::EnumAdapter<PageActivity>,
-        > = std::sync::LazyLock::new(|| {
-            crate::skir_client::internal::EnumAdapter::new(
-                |x: &PageActivity| match x {
-                    PageActivity::Unknown(_) => 0,
-                    PageActivity::Overview => 1,
-                    PageActivity::Graph => 2,
-                    PageActivity::Timeline => 3,
-                    PageActivity::Inspector => 4,
-                },
-                |u| PageActivity::Unknown(Some(u)),
-                |x: &PageActivity| match x {
-                    PageActivity::Unknown(Some(u)) => Some(u.as_ref()),
-                    _ => None,
-                },
-                "organization/v1/presence.skir",
-                "PageActivity",
-                "",
-            )
-        });
-        &*ADAPTER
-    }
-    pub fn serializer() -> crate::skir_client::Serializer<PageActivity> {
-        initialize_module_serializers();
-        crate::skir_client::internal::enum_serializer_from_static(PageActivity::_adapter())
-    }
-}
-
-// ==============================================================================
-// struct PagePresence
-// ==============================================================================
-
-#[derive(Clone, Debug, PartialEq, Default)]
-pub struct PagePresence {
-    pub realm_id: crate::skirout::base::kernel::v1::record_id::RecordId,
-    pub book_id: crate::skirout::base::kernel::v1::record_id::RecordId,
-    pub page_id: crate::skirout::base::kernel::v1::record_id::RecordId,
-    pub activity: PageActivity,
-    /// Set this to None when you're creating a struct.
-    pub _unrecognized: Option<crate::skir_client::UnrecognizedFields<PagePresence>>,
-}
-
-impl PagePresence {
-    pub fn default_ref() -> &'static PagePresence {
-        static D: std::sync::LazyLock<PagePresence> =
-            std::sync::LazyLock::new(PagePresence::default);
-        &D
-    }
-}
-
-impl PagePresence {
-    fn _adapter() -> &'static crate::skir_client::internal::StructAdapter<PagePresence> {
-        static ADAPTER: std::sync::LazyLock<
-            crate::skir_client::internal::StructAdapter<PagePresence>,
-        > = std::sync::LazyLock::new(|| {
-            crate::skir_client::internal::StructAdapter::new(
-                "organization/v1/presence.skir",
-                "PagePresence",
-                "",
-                |x: &PagePresence| &x._unrecognized,
-                |x: &mut PagePresence, u| x._unrecognized = u,
-            )
-        });
-        &*ADAPTER
-    }
-    pub fn serializer() -> crate::skir_client::Serializer<PagePresence> {
-        initialize_module_serializers();
-        crate::skir_client::internal::struct_serializer_from_static(PagePresence::_adapter())
+        crate::skir_client::internal::struct_serializer_from_static(ResourcePresence::_adapter())
     }
 }
 
@@ -476,10 +303,7 @@ pub enum PresenceLocation {
     Service(Box<ServicePresence>),
     Realms(Box<RealmsPresence>),
     Realm(Box<RealmPresence>),
-    RealmLibrary(Box<RealmLibraryPresence>),
-    RealmTags(Box<RealmTagsPresence>),
-    Book(Box<BookPresence>),
-    Page(Box<PagePresence>),
+    Resource(Box<ResourcePresence>),
 }
 
 impl Default for PresenceLocation {
@@ -502,10 +326,7 @@ impl PresenceLocation {
                     PresenceLocation::Service(_) => 4,
                     PresenceLocation::Realms(_) => 5,
                     PresenceLocation::Realm(_) => 6,
-                    PresenceLocation::RealmLibrary(_) => 7,
-                    PresenceLocation::RealmTags(_) => 8,
-                    PresenceLocation::Book(_) => 9,
-                    PresenceLocation::Page(_) => 10,
+                    PresenceLocation::Resource(_) => 7,
                 },
                 |u| PresenceLocation::Unknown(Some(u)),
                 |x: &PresenceLocation| match x {
@@ -706,95 +527,23 @@ fn initialize_module_serializers() {
             (*a).finalize();
         }
         unsafe {
-            let a: *mut crate::skir_client::internal::StructAdapter<RealmLibraryPresence> =
-                RealmLibraryPresence::_adapter() as *const _ as *mut _;
+            let a: *mut crate::skir_client::internal::StructAdapter<ResourcePresence> =
+                ResourcePresence::_adapter() as *const _ as *mut _;
             (*a).add_field(
                 "realm_id",
                 0,
                 crate::skirout::base::kernel::v1::record_id::RecordId::serializer(),
                 "",
-                |x: &RealmLibraryPresence| &x.realm_id,
-                |x: &mut RealmLibraryPresence, v| x.realm_id = v,
-            );
-            (*a).finalize();
-        }
-        unsafe {
-            let a: *mut crate::skir_client::internal::StructAdapter<RealmTagsPresence> =
-                RealmTagsPresence::_adapter() as *const _ as *mut _;
-            (*a).add_field(
-                "realm_id",
-                0,
-                crate::skirout::base::kernel::v1::record_id::RecordId::serializer(),
-                "",
-                |x: &RealmTagsPresence| &x.realm_id,
-                |x: &mut RealmTagsPresence, v| x.realm_id = v,
-            );
-            (*a).finalize();
-        }
-        unsafe {
-            let a: *mut crate::skir_client::internal::StructAdapter<BookPresence> =
-                BookPresence::_adapter() as *const _ as *mut _;
-            (*a).add_field(
-                "realm_id",
-                0,
-                crate::skirout::base::kernel::v1::record_id::RecordId::serializer(),
-                "",
-                |x: &BookPresence| &x.realm_id,
-                |x: &mut BookPresence, v| x.realm_id = v,
+                |x: &ResourcePresence| &x.realm_id,
+                |x: &mut ResourcePresence, v| x.realm_id = v,
             );
             (*a).add_field(
-                "book_id",
+                "resource_id",
                 1,
-                crate::skirout::base::kernel::v1::record_id::RecordId::serializer(),
+                crate::skirout::base::editor::v1::type_catalog::ResourceId::serializer(),
                 "",
-                |x: &BookPresence| &x.book_id,
-                |x: &mut BookPresence, v| x.book_id = v,
-            );
-            (*a).finalize();
-        }
-        unsafe {
-            let a: *mut crate::skir_client::internal::EnumAdapter<PageActivity> =
-                PageActivity::_adapter() as *const _ as *mut _;
-            (*a).add_constant_variant("overview", 1, 1, "", PageActivity::Overview);
-            (*a).add_constant_variant("graph", 2, 2, "", PageActivity::Graph);
-            (*a).add_constant_variant("timeline", 3, 3, "", PageActivity::Timeline);
-            (*a).add_constant_variant("inspector", 4, 4, "", PageActivity::Inspector);
-            (*a).finalize();
-        }
-        unsafe {
-            let a: *mut crate::skir_client::internal::StructAdapter<PagePresence> =
-                PagePresence::_adapter() as *const _ as *mut _;
-            (*a).add_field(
-                "realm_id",
-                0,
-                crate::skirout::base::kernel::v1::record_id::RecordId::serializer(),
-                "",
-                |x: &PagePresence| &x.realm_id,
-                |x: &mut PagePresence, v| x.realm_id = v,
-            );
-            (*a).add_field(
-                "book_id",
-                1,
-                crate::skirout::base::kernel::v1::record_id::RecordId::serializer(),
-                "",
-                |x: &PagePresence| &x.book_id,
-                |x: &mut PagePresence, v| x.book_id = v,
-            );
-            (*a).add_field(
-                "page_id",
-                2,
-                crate::skirout::base::kernel::v1::record_id::RecordId::serializer(),
-                "",
-                |x: &PagePresence| &x.page_id,
-                |x: &mut PagePresence, v| x.page_id = v,
-            );
-            (*a).add_field(
-                "activity",
-                3,
-                crate::skir_client::internal::enum_serializer_from_static(PageActivity::_adapter()),
-                "",
-                |x: &PagePresence| &x.activity,
-                |x: &mut PagePresence, v| x.activity = v,
+                |x: &ResourcePresence| &x.resource_id,
+                |x: &mut ResourcePresence, v| x.resource_id = v,
             );
             (*a).finalize();
         }
@@ -886,58 +635,16 @@ fn initialize_module_serializers() {
                 },
             );
             (*a).add_wrapper_variant(
-                "realm_library",
+                "resource",
                 7,
                 7,
                 crate::skir_client::internal::struct_serializer_from_static(
-                    RealmLibraryPresence::_adapter(),
+                    ResourcePresence::_adapter(),
                 ),
                 "",
-                |v| PresenceLocation::RealmLibrary(Box::new(v)),
+                |v| PresenceLocation::Resource(Box::new(v)),
                 |x| match x {
-                    PresenceLocation::RealmLibrary(b) => b.as_ref(),
-                    _ => unreachable!(),
-                },
-            );
-            (*a).add_wrapper_variant(
-                "realm_tags",
-                8,
-                8,
-                crate::skir_client::internal::struct_serializer_from_static(
-                    RealmTagsPresence::_adapter(),
-                ),
-                "",
-                |v| PresenceLocation::RealmTags(Box::new(v)),
-                |x| match x {
-                    PresenceLocation::RealmTags(b) => b.as_ref(),
-                    _ => unreachable!(),
-                },
-            );
-            (*a).add_wrapper_variant(
-                "book",
-                9,
-                9,
-                crate::skir_client::internal::struct_serializer_from_static(
-                    BookPresence::_adapter(),
-                ),
-                "",
-                |v| PresenceLocation::Book(Box::new(v)),
-                |x| match x {
-                    PresenceLocation::Book(b) => b.as_ref(),
-                    _ => unreachable!(),
-                },
-            );
-            (*a).add_wrapper_variant(
-                "page",
-                10,
-                10,
-                crate::skir_client::internal::struct_serializer_from_static(
-                    PagePresence::_adapter(),
-                ),
-                "",
-                |v| PresenceLocation::Page(Box::new(v)),
-                |x| match x {
-                    PresenceLocation::Page(b) => b.as_ref(),
+                    PresenceLocation::Resource(b) => b.as_ref(),
                     _ => unreachable!(),
                 },
             );

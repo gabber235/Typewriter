@@ -112,10 +112,10 @@ val FrameworkCatalogCreationTest by testSuite {
         val runtime = DefaultPresentationRuntime()
         val provider = com.typewritermc.elements.ElementGraphNodePresentation_ElementPresentationProvider(runtime)
         val inherited = provider.descriptor(origin("element_graph"))
-        inherited.roles shouldBe setOf(PresentationRole.EDITOR_NODE)
+        inherited.roles shouldBe setOf(PresentationRole.ITEM)
         entries.count { it.providerClass == provider.javaClass.name } shouldBe 1
         val inheritedRegistry = com.typewritermc.presentation.DefaultPresentationRegistry(catalog, listOf(inherited))
-        (inheritedRegistry.select(PresentationRole.EDITOR_NODE, checked) as com.typewritermc.presentation.PresentationSelection.Selected)
+        (inheritedRegistry.select(PresentationRole.ITEM, checked) as com.typewritermc.presentation.PresentationSelection.Selected)
             .descriptor.id shouldBe inherited.id
         val concrete =
             inherited.copy(
@@ -126,13 +126,13 @@ val FrameworkCatalogCreationTest by testSuite {
                 priority = inherited.priority - 1,
             )
         val customRegistry = com.typewritermc.presentation.DefaultPresentationRegistry(catalog, listOf(inherited, concrete))
-        (customRegistry.select(PresentationRole.EDITOR_NODE, checked) as com.typewritermc.presentation.PresentationSelection.Selected)
+        (customRegistry.select(PresentationRole.ITEM, checked) as com.typewritermc.presentation.PresentationSelection.Selected)
             .descriptor.id shouldBe concrete.id
         val material =
             provider.build(
                 PresentationBuildBinding(
                     checked.presentationTemplate(),
-                    PresentationRole.EDITOR_NODE,
+                    PresentationRole.ITEM,
                     mapOf(com.typewritermc.elements.Element::class to TypeTemplate.Named(com.typewritermc.elements.ElementDefinition.id)),
                 ),
             )
@@ -142,7 +142,7 @@ val FrameworkCatalogCreationTest by testSuite {
         listOf(inset.start, inset.top, inset.end, inset.bottom) shouldBe listOf(4.0, 4.0, 4.0, 4.0)
         val frame = (inset.child.singleFixed().element as PresentationElement.ContainerWrapper).value
         frame.radius shouldBe skirout.editor.v1.presentation.PresentationRadius.SMALL
-        frame.transitionMilliseconds shouldBe 400
+        frame.transition?.fallback?.milliseconds shouldBe 400
         val border = (frame.border as skirout.editor.v1.presentation.PresentationBorder.AllWrapper).value
         border.width shouldBe 3.0
         val states = (border.color as skirout.editor.v1.presentation.PresentationColor.StatesWrapper).value
@@ -202,12 +202,23 @@ val FrameworkCatalogCreationTest by testSuite {
             )
         val initializer = DefaultInitializationRuntime(catalog, bindings)
 
-        val book = initializer.prepareNow(request(generation, BookDefinition.use))
+        fun owner(
+            link: TypeUse.Named,
+            target: String,
+        ): DataValue =
+            bindings
+                .bind((catalog.resolve(link) as Resolution.Ready).value)
+                .encodeGeneratedDefault(com.typewritermc.types.Ref<Nothing, Nothing>(com.typewritermc.types.ResourceId(target)))
+
+        // Books and tags are always created into their section, so creation supplies the owner link.
+        val library = owner(TypeUse.Named(LibraryBooks.Book.Definition.id, listOf(LibraryDefinition.use)), "library")
+        val taxonomy = owner(TypeUse.Named(TaxonomyTags.Tag.Definition.id, listOf(TaxonomyDefinition.use)), "taxonomy")
+        val book = initializer.prepareNow(request(generation, BookDefinition.use, mapOf("library" to library)))
         val icon = book.record.fields.getValue("icon") as DataValue.Named
         icon.actualType shouldBe IconIconifyDefinition.use
         book.findings shouldBe emptyList()
 
-        val tag = initializer.prepareNow(request(generation, TagDefinition.use))
+        val tag = initializer.prepareNow(request(generation, TagDefinition.use, mapOf("taxonomy" to taxonomy)))
         tag.findings shouldBe emptyList()
         tag.record.fields.getValue("name") shouldBe DataValue.StringValue("")
         (tag.record.fields.getValue("color") is DataValue.Named) shouldBe true
@@ -348,10 +359,10 @@ val FrameworkCatalogCreationTest by testSuite {
         val checkedTag = (catalog.resolve(TagDefinition.use) as Resolution.Ready).value
         val graphMaterial =
             tagGraphProvider.build(
-                PresentationBuildBinding(checkedTag.presentationTemplate(), PresentationRole.EDITOR_NODE, resourceTypes),
+                PresentationBuildBinding(checkedTag.presentationTemplate(), PresentationRole.ITEM, resourceTypes),
             )
         val graphSurface = (graphMaterial.layout.singleFixed().element as PresentationElement.ContainerWrapper).value
-        graphSurface.transitionMilliseconds shouldBe 100
+        graphSurface.transition?.fallback?.milliseconds shouldBe 100
         val graphColors = (graphSurface.backgroundColor as skirout.editor.v1.presentation.PresentationColor.StatesWrapper).value
         graphColors.rules.map { it.match.required } shouldBe
             listOf(
@@ -437,42 +448,10 @@ val FrameworkCatalogCreationTest by testSuite {
                     resourceTypes,
                 ),
             )
-        val bookLeading =
-            bookSummary.layout
-                .adaptiveLeading()
-                .leading
-        (bookLeading.element is PresentationElement.PolymorphicMatchWrapper) shouldBe true
-        val summary = bookSummary.layout.adaptiveLeading()
-        val authoredBook =
-            DataValue.Named(
-                BookDefinition.use,
-                DataValue.Record(book.record.fields + ("title" to DataValue.StringValue("b"))),
-            )
-        val configured = WireExpressionBindingId(value = "configured_value")
-        val title = summary.center!!.element as PresentationElement.TextWrapper
-        title.value.value.evaluate(mapOf(configured to authoredBook)) shouldBe DataValue.StringValue("b")
-        title.value.value.evaluate(
-            mapOf(
-                configured to
-                    DataValue.Named(
-                        BookDefinition.use,
-                        DataValue.Record(book.record.fields),
-                    ),
-            ),
-        ) shouldBe DataValue.StringValue("Unnamed Book")
-
-        val match = bookLeading.element as PresentationElement.PolymorphicMatchWrapper
-        val iconValue = requireNotNull(authoredBook.at(match.value.binding.path))
-        val iconCase =
-            match.value.cases.single { candidate ->
-                candidate.concreteType ==
-                    com.typewritermc.types.skir.SkirTypeCodec
-                        .encode(IconIconifyDefinition.use)
-                        .getOrThrow()
-            }
-        val headerIcon = iconCase.child.singleFixed().element as PresentationElement.IconWrapper
-        headerIcon.value.name.evaluate(mapOf(match.value.scopeBindingId to iconValue)) shouldBe
-            DataValue.StringValue("material-symbols:book")
+        // A preview shows the resource as its display names and marks it, whatever its fields hold.
+        val bookPreview = bookSummary.layout.adaptiveLeading()
+        (bookPreview.leading.element as PresentationElement.IconWrapper).value.name.appearanceField() shouldBe "icon"
+        (bookPreview.center!!.element as PresentationElement.TextWrapper).value.value.appearanceField() shouldBe "label"
 
         val tagSummary =
             tagReferenceProvider.build(
@@ -486,8 +465,7 @@ val FrameworkCatalogCreationTest by testSuite {
             tagSummary.layout
                 .adaptiveLeading()
                 .leading
-        val tagIcon = tagLeading.element
-        (tagIcon is PresentationElement.IconWrapper) shouldBe true
+        (tagLeading.element as PresentationElement.IconWrapper).value.name.appearanceField() shouldBe "icon"
 
         val pageSummary =
             pageReferenceProvider.build(
@@ -502,7 +480,7 @@ val FrameworkCatalogCreationTest by testSuite {
                 .adaptiveLeading()
                 .leading
                 .element
-        (pageIcon is PresentationElement.IconWrapper) shouldBe true
+        (pageIcon as PresentationElement.IconWrapper).value.name.appearanceField() shouldBe "icon"
 
         val checkedPlacement = (catalog.resolve(GraphPlacementDefinition.use) as Resolution.Ready).value
         val placementMaterial =
@@ -544,7 +522,7 @@ val FrameworkCatalogCreationTest by testSuite {
                     (label.value as skirout.editor.v1.type_catalog.DataValue.StringValueWrapper).value
                 }
         placementPrefixes shouldBe listOf("X", "Y", "W", "H")
-        exportFrameworkControlFixture(entries, tag.record, book.record, tag.record.fields.getValue("placement"))
+        exportFrameworkControlFixture(tag.record, book.record, tag.record.fields.getValue("placement"))
     }
 }
 
@@ -650,6 +628,13 @@ private fun PresentationNode.fixedChildren(): List<PresentationNode> {
     return column.value.children.map(AxisChild::node)
 }
 
+/** The field of the presented resource's appearance this expression reads directly, or null for any other expression. */
+private fun WireExpressionNode.appearanceField(): String? {
+    val input = (this as? WireExpressionNode.InputWrapper)?.value ?: return null
+    if (input.binding.value != "presentation.subject.appearance") return null
+    return (input.path.segments.single() as WirePathSegment.FieldWrapper).value.name
+}
+
 private fun WireExpressionNode.evaluate(bindings: Map<WireExpressionBindingId, DataValue>): DataValue? =
     when (this) {
         is WireExpressionNode.LiteralWrapper -> {
@@ -726,10 +711,11 @@ private fun generatedProviderEntries(): List<com.typewritermc.discovery.Generate
 private fun request(
     generation: CatalogGeneration,
     use: TypeUse.Named,
+    supplied: Map<String, DataValue> = emptyMap(),
 ) = InitializationRequest(
     catalog = generation,
     target = PreparationTarget.Record(TypeSelection.Complete(use)),
-    supplied = DataValue.Record(emptyMap()),
+    supplied = DataValue.Record(supplied),
 )
 
 private val PreparedValue.record
@@ -753,65 +739,12 @@ private fun origin(name: String): ProviderOrigin =
     )
 
 private fun exportFrameworkControlFixture(
-    entries: List<com.typewritermc.discovery.GeneratedProviderIndexEntry>,
     tag: com.typewritermc.authoring.AuthoringRecord,
     book: com.typewritermc.authoring.AuthoringRecord,
     placement: DataValue,
 ) {
     val directory = System.getenv("TYPEWRITER_CONTROL_FIXTURE_DIR")?.let { java.io.File(it) } ?: return
     val runtime = DefaultPresentationRuntime()
-
-    fun instance(entry: com.typewritermc.discovery.GeneratedProviderIndexEntry): Any {
-        val type = Class.forName(entry.providerClass)
-        return if (entry.kind ==
-            GeneratedProviderKind.Presentation
-        ) {
-            type.getConstructor(PresentationRuntime::class.java).newInstance(runtime)
-        } else {
-            instantiateGeneratedProvider(type)
-        }
-    }
-    val exportedKinds =
-        setOf(
-            GeneratedProviderKind.Type,
-            GeneratedProviderKind.Presentation,
-            GeneratedProviderKind.Configuration,
-            GeneratedProviderKind.NativeBinding,
-            GeneratedProviderKind.Resource,
-            GeneratedProviderKind.Relation,
-            GeneratedProviderKind.EndpointBindings,
-        )
-    val providers = entries.filter { it.kind in exportedKinds }.associateWith(::instance)
-    val declarations =
-        providers.filterKeys { it.kind == GeneratedProviderKind.Type }.map { (entry, value) ->
-            val provider = value as com.typewritermc.discovery.GeneratedTypeProvider
-            com.typewritermc.discovery.OwnedTypeDeclaration(
-                origin(entry.providerClass.substringAfterLast('.').replace('$', '_')),
-                provider.definition,
-                provider.display,
-                provider.nativeClass,
-            )
-        } +
-            com.typewritermc.discovery.OwnedTypeDeclaration(
-                origin("fixture_entry"),
-                TypeDefinition(
-                    entryGraphFixtureType,
-                    representation = RepresentationTemplate.Record(emptyList()),
-                    parents = listOf(TypeTemplate.Named(com.typewritermc.elements.ElementDefinition.id)),
-                ),
-                com.typewritermc.types.TypeDisplay(
-                    "Message action",
-                    "Entry graph fixture",
-                    "fa6-solid:message",
-                    com.typewritermc.types.Color(0xFFE74C3Cu),
-                ),
-            ) + inheritedInspectorDeclarations()
-    val presentations =
-        providers.filterKeys { it.kind == GeneratedProviderKind.Presentation }.map { (entry, value) ->
-            val provider = value as com.typewritermc.discovery.GeneratedPresentationProvider
-            val owner = origin(entry.providerClass.substringAfterLast('.').replace('$', '_'))
-            com.typewritermc.discovery.OwnedPresentation(owner, provider.descriptor(owner), provider)
-        }
     val inspectorOrigin = origin("fixture_entry_inspector")
     val entryInspector =
         com.typewritermc.discovery.OwnedPresentation(
@@ -836,46 +769,31 @@ private fun exportFrameworkControlFixture(
                     }
             },
         )
+    val framework = frameworkContributions(runtime)
     val contributions =
-        com.typewritermc.discovery.CatalogContributions(
-            declarations = declarations,
-            presentations = presentations + entryInspector + inheritedInspectorPresentations(runtime),
-            configurations =
-                providers.filterKeys { it.kind == GeneratedProviderKind.Configuration }.map { (entry, value) ->
-                    val provider = value as com.typewritermc.discovery.GeneratedConfigurationProvider
-                    com.typewritermc.discovery.OwnedConfiguration(
-                        origin(entry.providerClass.substringAfterLast('.').replace('$', '_')),
-                        provider.target,
-                        provider,
-                    )
-                },
-            nativeBindings =
-                providers.filterKeys { it.kind == GeneratedProviderKind.NativeBinding }.map { (entry, value) ->
-                    com.typewritermc.discovery.OwnedNativeBinding(
-                        origin(entry.providerClass.substringAfterLast('.').replace('$', '_')),
-                        value as NativeBindingFactory,
-                    )
-                },
-            resources =
-                providers
-                    .filterKeys {
-                        it.kind == GeneratedProviderKind.Resource
-                    }.values
-                    .map { (it as com.typewritermc.discovery.GeneratedResourceProvider).definition },
-            relations =
-                providers
-                    .filterKeys {
-                        it.kind == GeneratedProviderKind.Relation
-                    }.values
-                    .map { (it as com.typewritermc.discovery.GeneratedRelationProvider).contract },
-            endpointBindings =
-                providers
-                    .filterKeys {
-                        it.kind == GeneratedProviderKind.EndpointBindings
-                    }.values
-                    .flatMap { (it as com.typewritermc.discovery.GeneratedEndpointBindingsProvider).bindings },
+        framework.copy(
+            declarations =
+                framework.declarations +
+                    com.typewritermc.discovery.OwnedTypeDeclaration(
+                        origin("fixture_entry"),
+                        TypeDefinition(
+                            entryGraphFixtureType,
+                            representation = RepresentationTemplate.Record(emptyList()),
+                            parents = listOf(TypeTemplate.Named(com.typewritermc.elements.ElementDefinition.id)),
+                        ),
+                        com.typewritermc.types.TypeDisplay(
+                            "Message action",
+                            "Entry graph fixture",
+                            com.typewritermc.types.Icon
+                                .Iconify("fa6-solid:message"),
+                            com.typewritermc.types.Color(0xFFE74C3Cu),
+                        ),
+                    ) + inheritedInspectorDeclarations(),
+            presentations = framework.presentations + entryInspector + inheritedInspectorPresentations(runtime),
         )
     val assembly = contributions.assemble(com.typewritermc.discovery.CatalogAssemblyContext(CatalogGeneration("compiled controls fixture")))
+    assembly.callbackFailures.map { "${it.callback}: ${it.cause}" } shouldBe emptyList()
+    assembly.snapshot.diagnostics.filter { it.code.contains("display") || it.code.contains("search_key") } shouldBe emptyList()
     assembly.snapshot.diagnostics.filter { it.code.contains("presentation") } shouldBe emptyList()
     val elementMaterial =
         assembly.snapshot.presentationMaterials.single {
@@ -1136,5 +1054,99 @@ private fun inheritedInspectorPresentations(runtime: PresentationRuntime): List<
                 remainingFields()
             }
         },
+    )
+}
+
+/**
+ * Every contribution the framework generates on the test classpath, with presentations built by [runtime], so tests
+ * assemble the core catalog exactly as discovery would.
+ */
+internal fun frameworkContributions(
+    runtime: PresentationRuntime = DefaultPresentationRuntime(),
+): com.typewritermc.discovery.CatalogContributions {
+    val entries = generatedProviderEntries()
+
+    fun instance(entry: com.typewritermc.discovery.GeneratedProviderIndexEntry): Any {
+        val type = Class.forName(entry.providerClass)
+        return if (entry.kind ==
+            GeneratedProviderKind.Presentation
+        ) {
+            type.getConstructor(PresentationRuntime::class.java).newInstance(runtime)
+        } else {
+            instantiateGeneratedProvider(type)
+        }
+    }
+    val exportedKinds =
+        setOf(
+            GeneratedProviderKind.Type,
+            GeneratedProviderKind.Presentation,
+            GeneratedProviderKind.Configuration,
+            GeneratedProviderKind.NativeBinding,
+            GeneratedProviderKind.Relation,
+            GeneratedProviderKind.EndpointBindings,
+            GeneratedProviderKind.ResourceDisplay,
+            GeneratedProviderKind.ResourceOperation,
+        )
+    val providers = entries.filter { it.kind in exportedKinds }.associateWith(::instance)
+    val declarations =
+        providers.filterKeys { it.kind == GeneratedProviderKind.Type }.map { (entry, value) ->
+            val provider = value as com.typewritermc.discovery.GeneratedTypeProvider
+            com.typewritermc.discovery.OwnedTypeDeclaration(
+                origin(entry.providerClass.substringAfterLast('.').replace('$', '_')),
+                provider.definition,
+                provider.display,
+                provider.nativeClass,
+                provider.searchKey,
+            )
+        }
+    val presentations =
+        providers.filterKeys { it.kind == GeneratedProviderKind.Presentation }.map { (entry, value) ->
+            val provider = value as com.typewritermc.discovery.GeneratedPresentationProvider
+            val owner = origin(entry.providerClass.substringAfterLast('.').replace('$', '_'))
+            com.typewritermc.discovery.OwnedPresentation(owner, provider.descriptor(owner), provider)
+        }
+    return com.typewritermc.discovery.CatalogContributions(
+        declarations = declarations,
+        presentations = presentations,
+        configurations =
+            providers.filterKeys { it.kind == GeneratedProviderKind.Configuration }.map { (entry, value) ->
+                val provider = value as com.typewritermc.discovery.GeneratedConfigurationProvider
+                com.typewritermc.discovery.OwnedConfiguration(
+                    origin(entry.providerClass.substringAfterLast('.').replace('$', '_')),
+                    provider.target,
+                    provider,
+                )
+            },
+        nativeBindings =
+            providers.filterKeys { it.kind == GeneratedProviderKind.NativeBinding }.map { (entry, value) ->
+                com.typewritermc.discovery.OwnedNativeBinding(
+                    origin(entry.providerClass.substringAfterLast('.').replace('$', '_')),
+                    value as NativeBindingFactory,
+                )
+            },
+        relations =
+            providers
+                .filterKeys {
+                    it.kind == GeneratedProviderKind.Relation
+                }.values
+                .map { (it as com.typewritermc.discovery.GeneratedRelationProvider).contract },
+        endpointBindings =
+            providers
+                .filterKeys {
+                    it.kind == GeneratedProviderKind.EndpointBindings
+                }.values
+                .flatMap { (it as com.typewritermc.discovery.GeneratedEndpointBindingsProvider).bindings },
+        displays =
+            providers.filterKeys { it.kind == GeneratedProviderKind.ResourceDisplay }.map { (entry, value) ->
+                com.typewritermc.discovery.OwnedResourceDisplay(
+                    origin(entry.providerClass.substringAfterLast('.').replace('$', '_')),
+                    value as com.typewritermc.discovery.GeneratedResourceDisplayProvider,
+                )
+            },
+        operations =
+            providers.filterKeys { it.kind == GeneratedProviderKind.ResourceOperation }.map { (entry, value) ->
+                (value as com.typewritermc.discovery.GeneratedResourceOperationProvider)
+                    .contribute(origin(entry.providerClass.substringAfterLast('.').replace('$', '_')))
+            },
     )
 }

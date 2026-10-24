@@ -6,6 +6,7 @@ import com.squareup.kotlinpoet.CodeBlock
 import com.squareup.kotlinpoet.FileSpec
 import com.squareup.kotlinpoet.FunSpec
 import com.squareup.kotlinpoet.KModifier
+import com.squareup.kotlinpoet.ParameterizedTypeName.Companion.parameterizedBy
 import com.squareup.kotlinpoet.PropertySpec
 import com.squareup.kotlinpoet.TypeName
 import com.squareup.kotlinpoet.TypeSpec
@@ -17,11 +18,14 @@ import com.typewritermc.codegen.GeneratedFile
 import com.typewritermc.codegen.kotlinCode
 import com.typewritermc.codegen.listCode
 import com.typewritermc.codegen.namedArguments
+import com.typewritermc.codegen.sentenceCase
 import com.typewritermc.discovery.GeneratedContract
 import com.typewritermc.presentation.PresentationDescriptor
 import com.typewritermc.presentation.PresentationTarget
 import com.typewritermc.types.ParameterKey
 import com.typewritermc.types.PresentationId
+import com.typewritermc.types.Resource
+import com.typewritermc.types.ResourceTarget
 import com.typewritermc.types.TypeDefinitionId
 import com.typewritermc.types.TypeTemplate
 import com.typewritermc.types.TypeUse
@@ -137,26 +141,53 @@ internal class ProviderAdapter(
         )
 
     /**
-     * The operations provider of an owner implementing `XOperations` for one closed application of resource X.
-     * [application] is that application; [arguments] are the native then draft type arguments of the contract.
+     * The provider of one operation object. [application] is the closed resource application an `XOperation` contract
+     * targets, with [arguments] its native then draft type arguments, or null for the root `ResourceOperation`, which
+     * applies to any resource. [input] is the operation's native input type and [inputUse] its portable type, or null
+     * for [Unit]. The default label is the object name in sentence case.
      */
     context(_: DefinitionReferences)
-    fun operations(
-        application: TypeUse.Named,
+    fun operation(
+        application: TypeUse.Named?,
         arguments: List<TypeName>,
         projections: List<CodeBlock>,
+        input: TypeName,
+        inputUse: TypeUse.Named?,
     ): FileSpec {
-        val projection =
-            if (targetParameters == 0) {
-                CodeBlock.of("%T", targetNames.draftProjection)
+        val draft: TypeName
+        val target: CodeBlock
+        val subjects: CodeBlock
+        val spec: TypeName
+        if (application == null) {
+            draft = Api.ResourceDraft
+            target = CodeBlock.of("%T", ResourceTarget.AnyResource::class)
+            subjects = CodeBlock.of("%T", Api.AnyResourceSubjects)
+            spec = Api.ResourceOperationSpecImpl.parameterizedBy(input)
+        } else {
+            draft = if (targetParameters == 0) targetNames.draft else targetNames.exactDraft.parameterizedBy(arguments)
+            target = CodeBlock.of("%T(%L)", ResourceTarget.Type::class, application.toTemplate().kotlinCode())
+            val projection =
+                if (targetParameters == 0) {
+                    CodeBlock.of("%T", targetNames.draftProjection)
+                } else {
+                    CodeBlock.of(
+                        "%M(%L,♢%T(%L)::bind)",
+                        Api.draftViewProjection,
+                        application.kotlinCode(),
+                        targetNames.exactDraftType.parameterizedOrSelf(arguments),
+                        projections.joinToCode(",♢"),
+                    )
+                }
+            subjects = CodeBlock.of("%M(%L)", Api.projectedSubjects, projection)
+            spec = targetNames.operationSpecImpl.parameterizedOrSelf(arguments + input)
+        }
+        val inputCode =
+            if (inputUse ==
+                null
+            ) {
+                CodeBlock.of("%T", Api.OperationInputNone)
             } else {
-                CodeBlock.of(
-                    "%M(%L,♢%T(%L)::bind)",
-                    Api.draftViewProjection,
-                    application.kotlinCode(),
-                    targetNames.exactDraftType.parameterizedOrSelf(arguments),
-                    projections.joinToCode(",♢"),
-                )
+                CodeBlock.of("%T(%L)", Api.OperationInputTyped, inputUse.kotlinCode())
             }
         return file(
             TypeSpec
@@ -169,16 +200,68 @@ internal class ProviderAdapter(
                         .addParameter("origin", Api.ProviderOrigin)
                         .returns(Api.OperationDeclaration)
                         .addCode(
-                            "return %M%L { build ->\n⇥with(%T) { %T(build).operations() }\n⇤}\n",
-                            Api.collectOperations,
+                            "return %M<%T,♢%T>%L { spec ->\n⇥with(%T) { %T(spec).declare() }\n⇤}\n",
+                            Api.collectOperation,
+                            draft,
+                            input,
                             namedArguments(
                                 "origin" to CodeBlock.of("origin"),
                                 "declaration" to CodeBlock.of("%S", ownerClass.canonicalName),
-                                "target" to application.toTemplate().kotlinCode(),
-                                "projection" to projection,
+                                "target" to target,
+                                "subjects" to subjects,
+                                "input" to inputCode,
+                                "defaultLabel" to CodeBlock.of("%S", ownerClass.simpleName.sentenceCase()),
                             ),
                             ownerClass,
-                            targetNames.operationsScopeImpl.parameterizedOrSelf(arguments),
+                            spec,
+                        ).build(),
+                ),
+        )
+    }
+
+    /**
+     * The display provider of an owner implementing `XDisplay` of a resource type without type parameters, or the
+     * root `ResourceDisplay` when the target is the unpublished `Resource` marker, which applies to any resource.
+     */
+    fun display(): FileSpec {
+        val anyResource = targetNames.source == Resource::class.asClassName()
+        val target =
+            if (anyResource) {
+                CodeBlock.of("%T", ResourceTarget.AnyResource::class)
+            } else {
+                CodeBlock.of("%T(%L)", ResourceTarget.Type::class, symbolicTarget())
+            }
+        val scope =
+            if (anyResource) {
+                CodeBlock.of("%T", Api.ResourceDisplaySubject)
+            } else {
+                CodeBlock.of("%T()", targetNames.displayScopeImpl)
+            }
+        return file(
+            TypeSpec
+                .classBuilder(name)
+                .addSuperinterface(Api.GeneratedResourceDisplayProvider)
+                .addProperty(
+                    PropertySpec
+                        .builder("target", ResourceTarget::class, KModifier.OVERRIDE)
+                        .getter(FunSpec.getterBuilder().addStatement("return %L", target).build())
+                        .build(),
+                ).addFunction(
+                    FunSpec
+                        .builder("formulas")
+                        .addModifiers(KModifier.OVERRIDE)
+                        .returns(Api.DisplayFormulas)
+                        .addCode(
+                            """
+                            |return with(%T) {
+                            |    val scope = %L
+                            |    %T(label = scope.label(),♢accent = scope.accent(),♢icon = scope.icon())
+                            |}
+                            |
+                            """.trimMargin(),
+                            ownerClass,
+                            scope,
+                            Api.DisplayFormulas,
                         ).build(),
                 ),
         )

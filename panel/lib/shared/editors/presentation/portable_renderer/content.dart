@@ -179,15 +179,15 @@ extension _PortableContentRendering on PortablePresentationNodeRenderer {
     skir.IconContent content,
     PortablePresentationScope childScope,
   ) {
-    final name = _string(childScope, content.name);
-    if (name case _ResolvedFailure(:final message)) {
+    final icon = _icon(childScope, content.name);
+    if (icon case _ResolvedFailure(:final message)) {
       return _diagnostic(message);
     }
     final color = _optionalTextColor(context, childScope, content.color);
     if (color case _ResolvedFailure(:final message)) {
       return _diagnostic(message);
     }
-    final iconName = (name as _ResolvedValue<String>).value;
+    final iconValue = (icon as _ResolvedValue<IconValue>).value;
     final label = content.semanticLabel == null
         ? null
         : switch (_string(childScope, content.semanticLabel!)) {
@@ -198,8 +198,8 @@ extension _PortableContentRendering on PortablePresentationNodeRenderer {
       label: label,
       image: true,
       child: ExcludeSemantics(
-        child: Icones(
-          iconName,
+        child: Icones.value(
+          iconValue,
           color: (color as _ResolvedValue<Color?>).value,
           size: _number(childScope, content.size),
         ),
@@ -232,7 +232,7 @@ extension _PortableContentRendering on PortablePresentationNodeRenderer {
         final value when value == skir.ImageFit.none => BoxFit.none,
         final value when value == skir.ImageFit.scaleDown => BoxFit.scaleDown,
         null => null,
-        _ => throw const PresentationColorFailure("Image fit is unavailable"),
+        _ => throw const PresentationValueFailure("Image fit is unavailable"),
       },
       alignment: options?.alignment == null
           ? Alignment.center
@@ -614,7 +614,7 @@ extension _PortableContentRendering on PortablePresentationNodeRenderer {
     Duration? duration(int? milliseconds) {
       if (milliseconds == null) return null;
       if (milliseconds < 0) {
-        throw const PresentationColorFailure(
+        throw const PresentationValueFailure(
           "Tooltip duration must be nonnegative",
         );
       }
@@ -820,7 +820,7 @@ double? _displayDimension(
   if (expression == null) return null;
   final value = _number(scope, expression);
   if (value == null || !value.isFinite || (positive ? value <= 0 : value < 0)) {
-    throw const PresentationColorFailure(
+    throw const PresentationValueFailure(
       "Display dimensions must be finite and within their allowed range",
     );
   }

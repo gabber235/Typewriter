@@ -228,7 +228,6 @@ class GeneratedProviderLoader {
             when (kind) {
                 GeneratedProviderKind.Type -> GeneratedTypeProvider::class.java
                 GeneratedProviderKind.NativeBinding -> NativeBindingFactory::class.java
-                GeneratedProviderKind.Resource -> GeneratedResourceProvider::class.java
                 GeneratedProviderKind.Relation -> GeneratedRelationProvider::class.java
                 GeneratedProviderKind.EndpointBindings -> GeneratedEndpointBindingsProvider::class.java
                 GeneratedProviderKind.Configuration -> GeneratedConfigurationProvider::class.java
@@ -238,6 +237,7 @@ class GeneratedProviderLoader {
                 GeneratedProviderKind.Registrar -> GeneratedRuntimeRegistrarProvider::class.java
                 GeneratedProviderKind.CollectionProjection -> GeneratedCollectionProjectionProvider::class.java
                 GeneratedProviderKind.ResourceOperation -> GeneratedResourceOperationProvider::class.java
+                GeneratedProviderKind.ResourceDisplay -> GeneratedResourceDisplayProvider::class.java
             }
         require(expected.isAssignableFrom(providerClass)) {
             "Generated ${kind.key} provider ${providerClass.name} must implement ${expected.name}."
@@ -415,7 +415,6 @@ class GeneratedProviderLoader {
     ): LoadedGeneratedProviders {
         val declarations = mutableListOf<OwnedTypeDeclaration>()
         val relations = mutableListOf<com.typewritermc.types.RelationContract>()
-        val resources = mutableListOf<com.typewritermc.authoring.AuthoringResourceDefinition>()
         val endpointBindings = mutableListOf<com.typewritermc.types.EndpointBindingTemplate>()
         val configurations = mutableListOf<OwnedConfiguration>()
         val presentations = mutableListOf<OwnedPresentation>()
@@ -426,21 +425,19 @@ class GeneratedProviderLoader {
         val registrarIds = mutableSetOf<Pair<ContributionSourceId, RuntimeRegistrarId>>()
         val collectionProjections = mutableListOf<OwnedCollectionProjection>()
         val operations = mutableListOf<com.typewritermc.operations.OperationDeclaration>()
+        val displays = mutableListOf<OwnedResourceDisplay>()
 
         loaded.forEach { loadedProvider ->
             val origin = loadedProvider.origin
             when (loadedProvider.entry.kind) {
                 GeneratedProviderKind.Type -> {
                     val provider = loadedProvider.require<GeneratedTypeProvider>()
-                    declarations += OwnedTypeDeclaration(origin, provider.definition, provider.display, provider.nativeClass)
+                    declarations +=
+                        OwnedTypeDeclaration(origin, provider.definition, provider.display, provider.nativeClass, provider.searchKey)
                 }
 
                 GeneratedProviderKind.NativeBinding -> {
                     nativeBindings += OwnedNativeBinding(origin, loadedProvider.require<NativeBindingFactory>())
-                }
-
-                GeneratedProviderKind.Resource -> {
-                    resources += loadedProvider.require<GeneratedResourceProvider>().definition
                 }
 
                 GeneratedProviderKind.Relation -> {
@@ -489,6 +486,10 @@ class GeneratedProviderLoader {
                     operations += loadedProvider.require<GeneratedResourceOperationProvider>().contribute(origin)
                 }
 
+                GeneratedProviderKind.ResourceDisplay -> {
+                    displays += OwnedResourceDisplay(origin, loadedProvider.require<GeneratedResourceDisplayProvider>())
+                }
+
                 GeneratedProviderKind.CollectionProjection -> {
                     collectionProjections +=
                         OwnedCollectionProjection(
@@ -509,13 +510,13 @@ class GeneratedProviderLoader {
                 CatalogContributions(
                     declarations = declarations,
                     relations = relations,
-                    resources = resources,
                     endpointBindings = endpointBindings,
                     configurations = configurations,
                     presentations = presentations,
                     nativeBindings = nativeBindings,
                     checks = ownedChecks,
                     operations = operations,
+                    displays = displays,
                 ),
             capabilities = capabilities,
             registrars = registrars,

@@ -344,16 +344,16 @@ final class _AuthoredTypeSearchResultItem extends StatelessWidget {
     final color =
         display?.color.toFlutterColor() ??
         Theme.of(context).colorScheme.primary;
-    final icon = display?.icon.trim();
+    final icon = display?.icon;
     final description = display?.description.trim();
     return SearchResultCard(
       color: color,
       prefix: SearchResultIconTile(
         color: color,
         onColor: color.on(context),
-        icon: icon == null || icon.isEmpty
+        icon: icon?.iconValue == null
             ? const Icon(Icons.category_outlined)
-            : Icones(icon),
+            : ResourceIcon(icon: icon),
         focused: focused,
       ),
       selected: selected,

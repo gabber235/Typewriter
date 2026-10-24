@@ -3,10 +3,10 @@ package com.typewritermc.realm
 import build.skir.Serializer
 import com.surrealdb.Surreal
 import com.typewritermc.authoring.AuthoringRecord
-import com.typewritermc.authoring.AuthoringResourceDefinition
+import com.typewritermc.authoring.RealmRootDefinition
 import com.typewritermc.authoring.RelationProjectionDelta
-import com.typewritermc.authoring.ResourceDefinitionId
 import com.typewritermc.authoring.TypeSelection
+import com.typewritermc.authoring.definition
 import com.typewritermc.checking.CatalogGeneration
 import com.typewritermc.checking.InputToken
 import com.typewritermc.discovery.CatalogAssemblyContext
@@ -22,6 +22,8 @@ import com.typewritermc.imprint.ArtifactId
 import com.typewritermc.imprint.ContributionName
 import com.typewritermc.imprint.ContributionSourceId
 import com.typewritermc.imprint.ProducerId
+import com.typewritermc.library.LibraryDefinition
+import com.typewritermc.library.TaxonomyDefinition
 import com.typewritermc.loader.api.HostedMessagingSession
 import com.typewritermc.loader.api.HostedRuntimeHost
 import com.typewritermc.loader.api.artifact.PublishResult
@@ -308,6 +310,45 @@ val RealmLifecycleTest by testSuite {
         }
     }
 
+    test("Realm start provisions the realm root and one instance of every section") {
+        runTest {
+            val incarnation = coreRealmCatalog("lifecycle-structure")
+            val fixture = RealmLifecycleFixture(this, catalog = incarnation)
+            try {
+                val session = fixture.session(1)
+                fixture.messaging.value = session.session
+                fixture.start()
+
+                val response =
+                    fixture.request(
+                        session,
+                        "editor.authoring.state.query",
+                        QueryAuthoringStateRequest(
+                            generation = SkirCatalogGeneration(value = incarnation.assembly.snapshot.generation.value),
+                            transferId = "lifecycle_structure",
+                        ),
+                        QueryAuthoringStateRequest.serializer,
+                        QueryAuthoringStateResponse.serializer,
+                    ) as QueryAuthoringStateResponse.ChunkWrapper
+                val state =
+                    SkirAuthoringState.serializer.fromBytes(
+                        response.value.transfer.payload
+                            .toByteArray(),
+                    )
+                state.resources
+                    .map {
+                        SkirAuthoringValueCodec
+                            .decode(it.content)
+                            .getOrThrow()
+                            .configuration.definition
+                    }.sortedBy { it.toString() } shouldBe
+                    listOf(RealmRootDefinition.id, LibraryDefinition.id, TaxonomyDefinition.id).sortedBy { it.toString() }
+            } finally {
+                fixture.close()
+            }
+        }
+    }
+
     test("Realm startup preserves unavailable authored data while serving unrelated resources") {
         runTest {
             val valid = TypeDefinitionId(TypeId.Qualified("lifecycle", "valid"), 1)
@@ -330,14 +371,7 @@ val RealmLifecycleTest by testSuite {
                 RealmLifecycleFixture(
                     this,
                     catalog = incarnation,
-                    initialSeed =
-                        AuthoringSeed(
-                            resources,
-                            mapOf(
-                                availableResource to ResourceDefinitionId("valid"),
-                                unavailableResource to ResourceDefinitionId("removed"),
-                            ),
-                        ),
+                    initialSeed = AuthoringSeed(resources),
                 )
             try {
                 val session = fixture.session(1)
@@ -384,8 +418,6 @@ val RealmLifecycleTest by testSuite {
                         availableResource.value to availableRecord,
                         unavailableResource.value to unavailableRecord,
                     )
-                snapshot.resources.associate { it.id.value to it.definition.value } shouldBe
-                    mapOf(availableResource.value to "valid", unavailableResource.value to "removed")
             } finally {
                 fixture.close()
             }
@@ -425,11 +457,6 @@ private fun lifecycleIsolationCatalog(
                     OwnedTypeDeclaration(origin("valid"), validDefinition),
                     OwnedTypeDeclaration(origin("unavailable_first"), unavailableDefinition),
                     OwnedTypeDeclaration(origin("unavailable_second"), unavailableDefinition),
-                ),
-            resources =
-                listOf(
-                    AuthoringResourceDefinition(ResourceDefinitionId("valid"), valid),
-                    AuthoringResourceDefinition(ResourceDefinitionId("removed"), unavailable),
                 ),
         )
     val deployment = GeneratedProviderLoader().load(emptyList(), DeploymentFacts(), DiscoveryDomains.Realm)
@@ -477,7 +504,6 @@ private class RealmLifecycleFixture(
                                     initialSeed.resources,
                                     emptySet(),
                                     RelationProjectionDelta(emptyList(), emptyList(), emptyList()),
-                                    initialSeed.resourceDefinitions,
                                 ),
                             )
                         }

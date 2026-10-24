@@ -353,9 +353,7 @@ extension _PortableCollectionRendering on PortablePresentationNodeRenderer {
         problem: projected.problem,
       );
     }
-    final resourceBinding =
-        definition.resources?.resourceBindingId ??
-        definition.projection!.resourceBindingId;
+    final resourceBinding = definition.projection!.resourceBindingId;
     return (
       definition: definition,
       rows: [
@@ -445,25 +443,25 @@ final class _ResourceReferenceAppearance extends HookWidget {
     required this.resource,
     required this.scope,
     required this.role,
-    required this.fallbackLabel,
     required this.render,
     required this.fallback,
-    this.appearanceOverride,
   });
 
   final skir.ResourceId resource;
   final PortablePresentationScope scope;
   final skir.PresentationRole role;
-  final String fallbackLabel;
-  final skir.PresentationId? appearanceOverride;
+
+  /// Renders the selected presentation of the resource with its appearance.
   final Widget Function(
     skir.PresentationNode,
     PortablePresentationScope,
-    skir.ResultAppearance?,
-    Color?,
+    ResourceAppearance,
   )
   render;
-  final Widget Function(Widget, Color?) fallback;
+
+  /// Stands in for the presentation: with the appearance when the resource
+  /// is known, and with a problem when its presentation cannot render.
+  final Widget Function(ResourceAppearance?, String? problem) fallback;
 
   @override
   Widget build(BuildContext context) {
@@ -478,25 +476,20 @@ final class _ResourceReferenceAppearance extends HookWidget {
     if (host == null ||
         host is! PortableCollectionProjectionHost ||
         catalog == null) {
-      return fallback(Text(fallbackLabel), null);
+      return fallback(null, null);
     }
     final projection = (host as PortableCollectionProjectionHost)
         .projectResource(resource, context: scope.invocation);
-    if (projection == null) return fallback(Text(fallbackLabel), null);
-    final display = catalog.selectionDisplay(projection.configuration);
-    final fallbackAccent = display?.searchResultAccent;
-    final override = role == skir.PresentationRole.referencePickerResult
-        ? appearanceOverride
-        : null;
-    final material = override == null
-        ? switch (catalog.selectPresentation(projection.configuration, role)) {
-            SelectedEditorPresentation(:final material) => material,
-            _ => null,
-          }
-        : catalog.presentationMaterial(override, projection.configuration);
-    if (material == null) {
-      return fallback(Text(projection.label), fallbackAccent);
-    }
+    if (projection == null) return fallback(null, null);
+    final appearance = projection.appearance;
+    final material = switch (catalog.selectPresentation(
+      projection.configuration,
+      role,
+    )) {
+      SelectedEditorPresentation(:final material) => material,
+      _ => null,
+    };
+    if (material == null) return fallback(appearance, null);
     final configured = PortableExpressionBinding(
       value: projection.value,
       location: skir.ValueLocation(resource: resource, path: editorRootPath),
@@ -518,14 +511,16 @@ final class _ResourceReferenceAppearance extends HookWidget {
             reportStatus: operations.reportStatus,
             bindings: {
               ...scope.bindings,
-              _configuredValueBindingId: configured,
+              configuredValueBindingId: configured,
               presentationSubjectIdentifierBindingId: resource
+                  .toExpressionBinding(),
+              presentationSubjectAppearanceBindingId: appearance
                   .toExpressionBinding(),
             },
             authoredAliases: {
               ...scope.authoredAliases,
-              _configuredValueBindingId: AuthoredBindingAddress.binding(
-                _configuredValueBindingId,
+              configuredValueBindingId: AuthoredBindingAddress.binding(
+                configuredValueBindingId,
                 configured,
               ),
             },
@@ -534,18 +529,13 @@ final class _ResourceReferenceAppearance extends HookWidget {
           .withActivePresentation(material.provider)
           .withReadOnly(true);
     } on FormatException catch (error) {
-      return fallback(Text(error.message), fallbackAccent);
+      return fallback(appearance, error.message);
     } on StateError catch (error) {
-      return fallback(Text(error.message), fallbackAccent);
+      return fallback(appearance, error.message);
     }
     final content = PortablePresentationChrome(
       role: role,
-      child: render(
-        material.layout,
-        targetScope,
-        material.resultAppearance,
-        fallbackAccent,
-      ),
+      child: render(material.layout, targetScope, appearance),
     );
     return _PortableDiagnosticBoundary(
       key: ValueKey((scope.catalog?.snapshot.generation, resource)),

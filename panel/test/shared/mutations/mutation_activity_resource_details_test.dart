@@ -47,12 +47,14 @@ EditorDocument _document(String field, String value) {
   );
   final catalog = CheckedEditorCatalog(
     skir.EditorCatalogWireSnapshot(
+      resourceDisplays: const [],
       resourceOperations: const [],
-      resourceOperationContributions: const [],
       generation: skir.CatalogGeneration(value: "test"),
       types: [
         skir.PublishedType(
-          display: null,
+          searchKey: null,
+          placementField: null,
+          display: defaultTypeDisplay(""),
           definition: skir.TypeDefinition(
             id: definition,
             parameters: const [],
@@ -75,7 +77,7 @@ EditorDocument _document(String field, String value) {
         ),
       ],
       relations: const [],
-      resourceDefinitions: const [],
+      realmRoot: skir.TypeDefinitionId.defaultInstance,
       presentations: const [],
       presentationMaterials: const [],
       configuration: const [],

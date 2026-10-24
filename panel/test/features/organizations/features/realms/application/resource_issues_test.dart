@@ -13,6 +13,7 @@ void main() {
     ),
   );
   final base = fixtureAuthoringDocument(
+    realm: true,
     books: [
       Book(
         bookId: id,
@@ -30,7 +31,6 @@ void main() {
         ...base.entries,
         id: skir.AuthoringResource(
           id: id,
-          definition: entry.definition,
           content: skir.AuthoringRecord(
             configuration: entry.content.configuration,
             fields: [

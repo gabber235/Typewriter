@@ -149,7 +149,7 @@ final class _AuthoredInteractionGalleryState
     resource: _interactionResource,
     source: _workspace.document,
     material: skir.PresentationMaterial.defaultInstance,
-    role: skir.PresentationRole.workspaceEditor,
+    role: skir.PresentationRole.workspace,
     budget: skir.EvaluationBudget(maxSteps: 1000, maxCollectionItems: 1000),
     capabilities: const PortablePresentationCapabilities(),
     edit: _binding,
@@ -667,7 +667,6 @@ AuthoringEdit _interactionDraft() {
     resources: [
       skir.AuthoringResource(
         id: _interactionResource,
-        definition: skir.ResourceDefinitionId(value: "widgetbook.interaction"),
         content: skir.AuthoringRecord(
           configuration: skir.TypeSelection.wrapComplete(configuration),
           fields: [
@@ -734,19 +733,22 @@ CheckedEditorCatalog _interactionCatalog() {
     skir.RepresentationTemplate representation, {
     List<skir.EffectiveFieldTemplate> effective = const [],
   }) => skir.PublishedType(
+    searchKey: null,
+    placementField: null,
     definition: skir.TypeDefinition(
       id: id,
       parameters: const [],
       representation: representation,
       parents: const [],
     ),
-    display: null,
+    display: defaultTypeDisplay(""),
     status: skir.DeclarationStatus.ready,
     effectiveFields: effective,
     ancestorTemplates: const [],
   );
   return CheckedEditorCatalog(
     skir.EditorCatalogWireSnapshot(
+      resourceDisplays: const [],
       generation: skir.CatalogGeneration(value: "catalog:interaction_story"),
       types: [
         published(
@@ -785,15 +787,8 @@ CheckedEditorCatalog _interactionCatalog() {
           skir.RepresentationTemplate.createMapping(key: text, value: text),
         ),
       ],
-      resourceDefinitions: [
-        skir.AuthoringResourceDefinition(
-          id: skir.ResourceDefinitionId(value: "widgetbook.interaction"),
-          root: root,
-          navigationHandler: skir.AuthoringNavigationHandler.generic,
-        ),
-      ],
+      realmRoot: skir.TypeDefinitionId.defaultInstance,
       resourceOperations: const [],
-      resourceOperationContributions: const [],
       relations: const [],
       presentations: const [],
       presentationMaterials: const [],
@@ -920,7 +915,7 @@ final class ResourceHeadingGallery extends HookWidget {
     final scope = PortablePresentationScope(
       operations: operations,
       bindings: {
-        presentationSelectionCountBindingId: PortableExpressionBinding(
+        panelSelectionCountInput.bindingId: PortableExpressionBinding(
           value: skir.DataValue.wrapInteger(multiple ? "2" : "1"),
         ),
       },

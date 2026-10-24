@@ -7,12 +7,12 @@ final realmFixtureGeneration = skir.CatalogGeneration(value: "fixture");
 skir.EditorCatalogWireSnapshot receivedEditorCatalogWireSnapshot({
   skir.CatalogGeneration? generation,
 }) => skir.EditorCatalogWireSnapshot(
+  resourceDisplays: const [],
   resourceOperations: const [],
-  resourceOperationContributions: const [],
   generation: generation ?? realmFixtureGeneration,
   types: const [],
   relations: const [],
-  resourceDefinitions: const [],
+  realmRoot: skir.TypeDefinitionId.defaultInstance,
   presentations: const [],
   presentationMaterials: const [],
   configuration: const [],

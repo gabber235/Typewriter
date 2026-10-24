@@ -2,6 +2,7 @@ package com.typewritermc.presentation
 
 import com.typewritermc.expression.Expr
 import com.typewritermc.expression.Handled
+import com.typewritermc.expression.literal
 import skirout.editor.v1.binding.BindingRef
 import skirout.editor.v1.expression.ExpressionNode
 import skirout.editor.v1.presentation.ChildrenElement
@@ -18,7 +19,6 @@ internal class RuntimeLayout(
     private val axis: PresentationAxisNodeList?,
     private val checked: CheckedPresentationTemplate,
     private val base: BindingRef,
-    private val result: ResultPresentationDraft? = null,
 ) : AxisLayout,
     PresentationQueries by state.queries,
     PresentationContent by RuntimePresentationContent(state, target),
@@ -36,18 +36,6 @@ internal class RuntimeLayout(
             )
         }
     override val context = RuntimePresentationContext(state)
-
-    override fun searchResult(body: SearchResultLayout.() -> Unit) {
-        val owner = requireNotNull(result) { "A result appearance requires a result presentation boundary." }
-        check(
-            state.currentTarget === owner.target && target === owner.target,
-        ) { "A result appearance cannot capture a nested layout scope." }
-        val nodes = mutableListOf<PresentationNode>()
-        val builder = RuntimeSearchResultLayout(state, state.scope(nodes))
-        state.withTarget(nodes) { builder.body() }
-        owner.declare(builder.build())
-        target.addAll(nodes)
-    }
 
     override fun clippedRow(
         spacing: Double,
@@ -270,10 +258,18 @@ internal class RuntimeLayout(
             )
     }
 
-    override fun stack(body: Layout.() -> Unit) {
-        val children = mutableListOf<PresentationNode>()
-        state.withTarget(children) { state.scope(children).body() }
-        target += state.node(PresentationElement.ChildrenWrapper(ChildrenElement.createStack(children = children)))
+    override fun stack(
+        alignment: PresentationAlignment?,
+        body: StackLayout.() -> Unit,
+    ) {
+        val children = PresentationStackNodeList()
+        state.withTarget(children) { RuntimeStackLayout(state, state.scope(children), children).body() }
+        target +=
+            state.node(
+                PresentationElement.ChildrenWrapper(
+                    ChildrenElement.createStack(children = children.children, alignment = alignment?.wire()),
+                ),
+            )
     }
 
     override fun section(
@@ -319,7 +315,60 @@ internal class RuntimeLayout(
                     backgroundColor = style.background?.wire(),
                     radius = style.radius.wire(),
                     foregroundColor = style.foreground?.wire(),
-                    transitionMilliseconds = style.transitionMilliseconds,
+                    transition = style.transition?.wire(),
+                    shadows = style.shadows.map { it.wire() },
+                ),
+            )
+    }
+
+    override fun size(
+        width: Double?,
+        height: Double?,
+        minimumWidth: Double?,
+        maximumWidth: Double?,
+        minimumHeight: Double?,
+        maximumHeight: Double?,
+        body: Layout.() -> Unit,
+    ) {
+        val bounds = listOfNotNull(width, height, minimumWidth, maximumWidth, minimumHeight, maximumHeight)
+        require(bounds.all { it.isFinite() && it >= 0.0 }) { "Sizes must be finite and nonnegative." }
+        require(minimumWidth == null || maximumWidth == null || minimumWidth <= maximumWidth) {
+            "A minimum width cannot exceed its maximum."
+        }
+        require(minimumHeight == null || maximumHeight == null || minimumHeight <= maximumHeight) {
+            "A minimum height cannot exceed its maximum."
+        }
+        target +=
+            state.node(
+                PresentationElement.createSize(
+                    child = child(body),
+                    width = width?.let { expression(literal(it)) },
+                    height = height?.let { expression(literal(it)) },
+                    minimumWidth = minimumWidth?.let { expression(literal(it)) },
+                    maximumWidth = maximumWidth?.let { expression(literal(it)) },
+                    minimumHeight = minimumHeight?.let { expression(literal(it)) },
+                    maximumHeight = maximumHeight?.let { expression(literal(it)) },
+                ),
+            )
+    }
+
+    override fun transform(
+        style: TransformStyle,
+        body: Layout.() -> Unit,
+    ) {
+        target +=
+            state.node(
+                PresentationElement.createTransform(
+                    child = child(body),
+                    origin = style.origin.wire(),
+                    perspective = style.perspective,
+                    scale = style.scale?.wire(),
+                    rotateX = style.rotateX?.wire(),
+                    rotateY = style.rotateY?.wire(),
+                    rotateZ = style.rotateZ?.wire(),
+                    translateX = style.translateX?.wire(),
+                    translateY = style.translateY?.wire(),
+                    transition = style.transition?.wire(),
                 ),
             )
     }
@@ -420,6 +469,40 @@ internal class RuntimeLayout(
     ) {
         val axis = requireNotNull(axis) { "Flexible children are only available inside row and column layouts." }
         axis.addFlexible(child(body), flex, fit)
+    }
+}
+
+/** Places positioned children into the enclosing stack; direct children flow through the delegated layout. */
+private class RuntimeStackLayout(
+    private val state: PresentationBuildState,
+    layout: Layout,
+    private val children: PresentationStackNodeList,
+) : StackLayout,
+    Layout by layout {
+    override fun positioned(
+        top: PresentationNumber?,
+        start: PresentationNumber?,
+        end: PresentationNumber?,
+        bottom: PresentationNumber?,
+        width: PresentationNumber?,
+        height: PresentationNumber?,
+        transition: PresentationTransitionPolicy?,
+        body: Layout.() -> Unit,
+    ) {
+        require(listOfNotNull(start, end, width).size <= 2) { "A positioned child may declare at most two horizontal bounds." }
+        require(listOfNotNull(top, bottom, height).size <= 2) { "A positioned child may declare at most two vertical bounds." }
+        children.addPositioned(
+            skirout.editor.v1.presentation.PositionedStackChild(
+                child = state.presentation(body),
+                top = top?.wire(),
+                start = start?.wire(),
+                end = end?.wire(),
+                bottom = bottom?.wire(),
+                width = width?.wire(),
+                height = height?.wire(),
+                transition = transition?.wire(),
+            ),
+        )
     }
 }
 

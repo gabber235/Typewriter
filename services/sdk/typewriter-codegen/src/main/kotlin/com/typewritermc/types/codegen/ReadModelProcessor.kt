@@ -120,7 +120,7 @@ internal class ReadModelProcessor(
                             ) {
                                 return@forEach
                             }
-                            fields[id].orEmpty().forEach { field -> declaration.fieldExpression(field)?.let(::addProperty) }
+                            fields[id].orEmpty().forEach { field -> declaration.fieldExpressions(field).forEach(::addProperty) }
                         }
                     }.build()
             }
@@ -252,20 +252,40 @@ internal class ReadModelProcessor(
         )
     }
 
-    /** A typed field read on canonical model expressions, for example `expr.definition`. */
-    private fun KSClassDeclaration.fieldExpression(field: OwnedFieldDeclaration): PropertySpec? {
-        val property = getAllProperties().firstOrNull { it.simpleName.asString() == field.sourceName } ?: return null
+    /**
+     * Typed field reads on canonical model expressions, for example `expr.definition`. A canonical read model value is
+     * projected from a complete native value, so reading a field of a present value keeps the receiver's missing
+     * policy; only a nullable receiver may be missing.
+     */
+    private fun KSClassDeclaration.fieldExpressions(field: OwnedFieldDeclaration): List<PropertySpec> {
+        val property = getAllProperties().firstOrNull { it.simpleName.asString() == field.sourceName } ?: return emptyList()
         val name = toClassName()
         val missing = TypeVariableName("M", Api.MissingPolicy)
-        return PropertySpec
-            .builder(field.sourceName, Api.Expr.parameterizedBy(property.type.resolve().toTypeName(), Api.MayBeMissing))
+        val jvmName = "${name.canonicalName.replace('.', '_')}_${field.sourceName}"
+        val type = property.type.resolve().toTypeName()
+
+        fun accessor(
+            receiver: ClassName,
+            result: com.squareup.kotlinpoet.TypeName,
+            suffix: String,
+        ) = PropertySpec
+            .builder(field.sourceName, Api.Expr.parameterizedBy(type, result))
             .addAnnotation(
                 com.typewritermc.types.codegen.emit
-                    .jvmName("${name.canonicalName.replace('.', '_')}_${field.sourceName}", getter = true),
+                    .jvmName(jvmName + suffix, getter = true),
             ).addTypeVariable(missing)
-            .receiver(Api.Expr.parameterizedBy(WildcardTypeName.producerOf(name.copy(nullable = true)), missing))
-            .getter(FunSpec.getterBuilder().addStatement("return %M(%S)", Api.expressionField, field.name).build())
-            .build()
+            .receiver(Api.Expr.parameterizedBy(WildcardTypeName.producerOf(receiver), missing))
+            .getter(
+                FunSpec
+                    .getterBuilder()
+                    .addStatement("return %M<%T>(%S) as %T", Api.expressionField, type, field.name, Api.Expr.parameterizedBy(type, result))
+                    .build(),
+            ).build()
+
+        return listOf(
+            accessor(name.copy(nullable = true) as ClassName, Api.MayBeMissing, ""),
+            accessor(name, missing, "_present"),
+        )
     }
 
     private fun manifest(

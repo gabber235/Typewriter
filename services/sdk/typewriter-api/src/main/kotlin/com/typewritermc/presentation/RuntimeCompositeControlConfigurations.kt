@@ -1,12 +1,17 @@
 package com.typewritermc.presentation
 
+import com.typewritermc.authoring.PathSegment
+import com.typewritermc.authoring.ValuePath
 import com.typewritermc.expression.Expr
+import com.typewritermc.expression.ExpressionBindingId
 import com.typewritermc.expression.Handled
+import com.typewritermc.expression.inputExpression
 import skirout.editor.v1.expression.ExpressionNode
+import skirout.editor.v1.presentation.PresentationNode
 import skirout.editor.v1.presentation.CollectionAppearance as WireCollectionAppearance
 import skirout.editor.v1.presentation.CollectionContent as WireCollectionContent
-import skirout.editor.v1.presentation.PageGraphAppearance as WirePageGraphAppearance
-import skirout.editor.v1.presentation.PageTimelineAppearance as WirePageTimelineAppearance
+import skirout.editor.v1.presentation.ResourceGraphAppearance as WireResourceGraphAppearance
+import skirout.editor.v1.presentation.ResourceTimelineAppearance as WireResourceTimelineAppearance
 
 internal class RuntimeCollectionAppearance(
     private val target: WireCollectionAppearance.Mutable,
@@ -25,8 +30,8 @@ internal class RuntimeCollectionAppearance(
         target.itemForeground = value.foreground?.wire()
         target.itemBorder = value.border?.wire()
         target.itemRadius = value.radius.wire()
-        require(value.transitionMilliseconds >= 0)
-        target.itemTransitionMilliseconds = value.transitionMilliseconds
+        target.itemTransition = value.transition?.wire()
+        target.itemShadows = value.shadows.map { it.wire() }
     }
 }
 
@@ -266,9 +271,9 @@ internal class RuntimeLinkInputScope(
     }
 }
 
-internal class RuntimeGraphPageScope(
-    private val target: WirePageGraphAppearance.Mutable,
-) : GraphPageScope {
+internal class RuntimeGraphAppearanceScope(
+    private val target: WireResourceGraphAppearance.Mutable,
+) : GraphAppearanceScope {
     override fun cellSize(value: Double) {
         positiveSize(value)
         target.cellSize = expression(value)
@@ -287,9 +292,9 @@ internal class RuntimeGraphPageScope(
     }
 }
 
-internal class RuntimeTimelinePageScope(
-    private val target: WirePageTimelineAppearance.Mutable,
-) : TimelinePageScope {
+internal class RuntimeTimelineAppearanceScope(
+    private val target: WireResourceTimelineAppearance.Mutable,
+) : TimelineAppearanceScope {
     override fun rulerHeight(value: Double) {
         nonnegativeSize(value)
         target.rulerHeight = value
@@ -414,4 +419,38 @@ internal class RuntimeChooseContent(
 
 internal class NullableContentDraft {
     var emptyText: skirout.editor.v1.expression.ExpressionNode? = null
+}
+
+/** Captures the group header of a tree layout, with the group bound to [groupBinding]. */
+internal class RuntimeTreeScope(
+    private val state: PresentationBuildState,
+    private val groupBinding: ExpressionBindingId,
+) : TreeScope {
+    var group: PresentationNode? = null
+        private set
+    var initiallyExpanded = true
+        private set
+
+    override fun group(body: TreeGroupScope.() -> Unit) {
+        check(group == null) { "A tree layout may declare one group header." }
+        state.groupBinding(groupBinding)
+        val expressions =
+            HierarchyGroupExpressions(
+                path = inputExpression(groupBinding, groupField("path")),
+                name = inputExpression(groupBinding, groupField("name")),
+                members = inputExpression(groupBinding, groupField("members")),
+            )
+        group =
+            state.presentation {
+                object : TreeGroupScope, Layout by this {
+                    override val group = expressions
+                }.body()
+            }
+    }
+
+    override fun initiallyExpanded(value: Boolean) {
+        initiallyExpanded = value
+    }
+
+    private fun groupField(name: String) = ValuePath(listOf(PathSegment.Field(name)))
 }

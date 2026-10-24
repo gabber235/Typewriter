@@ -1,7 +1,5 @@
 package com.typewritermc.discovery
 
-import com.typewritermc.authoring.AuthoringResourceDefinition
-import com.typewritermc.authoring.ResourceDefinitionId
 import com.typewritermc.checking.CatalogGeneration
 import com.typewritermc.configuration.ConfigurationProvider
 import com.typewritermc.imprint.ArtifactId
@@ -30,19 +28,17 @@ import io.kotest.matchers.shouldBe
 import kotlinx.coroutines.CancellationException
 
 val CatalogIsolationTest by testSuite {
-    test("unknown field dependency cannot remain a published resource family") {
+    test("unknown field dependency makes its declaration unavailable") {
         val broken = id("Broken")
         val definition = record(broken, FieldDeclaration(FieldOwner(broken, "payload"), TypeTemplate.Named(id("Missing"))))
         val assembly =
             CatalogContributions(
                 declarations = listOf(OwnedTypeDeclaration(origin, definition)),
-                resources = listOf(AuthoringResourceDefinition(ResourceDefinitionId("broken"), broken)),
             ).assemble(CatalogAssemblyContext(generation))
         (assembly.checked.definition(broken) is DeclarationStatus.Unavailable) shouldBe true
         assembly.snapshot.types
             .single { it.definition.id == broken }
             .status shouldBe assembly.checked.definition(broken)
-        assembly.snapshot.resourceDefinitions shouldBe emptyList()
         assembly.snapshot.recommendations shouldBe emptyList()
     }
 

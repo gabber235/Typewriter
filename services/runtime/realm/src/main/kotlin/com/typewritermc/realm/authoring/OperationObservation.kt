@@ -2,7 +2,6 @@ package com.typewritermc.realm.authoring
 
 import com.typewritermc.authoring.AuthoringRecord
 import com.typewritermc.authoring.StructuralResult
-import com.typewritermc.authoring.definitionFor
 import com.typewritermc.authoring.immutableAuthoringCopy
 import com.typewritermc.authoring.validateStructure
 import com.typewritermc.realm.repository.AuthoringMutationPlanner
@@ -35,21 +34,11 @@ internal fun AuthoringLease.operationObservation(
     val projected = ResourceValueMapper.project(links, resources, root.catalog.relations, root.catalog.checked)
     val problems =
         AuthoringMutationPlanner(root.catalog.checked, root.catalog.relations, root.catalog.endpointBindings)
-            .validateSnapshot(resources, upserts.keys + removals, projected)
+            .validateSnapshot(root.resources, resources, upserts.keys + removals, projected)
     require(problems.isEmpty()) { "An overlay violates resource structure or relation policy: $problems" }
     return AuthoringView(
         root.catalog,
         resources,
-        resources
-            .mapValues { (id, record) ->
-                if (id !in upserts) {
-                    root.resourceDefinitions.getValue(id)
-                } else {
-                    root.catalog.resources
-                        .definitionFor(record.configuration, root.catalog.checked)
-                        .id
-                }
-            }.immutableMapCopy(),
         links.associateBy { it.id }.immutableMapCopy(),
         root.observationId,
     )

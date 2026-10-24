@@ -1,7 +1,5 @@
 package fixture
 
-import com.typewritermc.authoring.ResourceDefinitionId
-import com.typewritermc.authoring.TypewriterResourceDefinition
 import com.typewritermc.types.One
 import com.typewritermc.types.Ref
 import com.typewritermc.types.ReferenceContract
@@ -30,13 +28,3 @@ interface TargetBoundsContract {
     interface Target : One<ExpectedTarget>
 }
 
-object FixtureResources {
-    @TypewriterResourceDefinition("fixture.bound_source", BoundSource::class)
-    val SOURCE = ResourceDefinitionId("fixture.bound_source")
-
-    @TypewriterResourceDefinition("fixture.expected_target", ExpectedTarget::class)
-    val EXPECTED = ResourceDefinitionId("fixture.expected_target")
-
-    @TypewriterResourceDefinition("fixture.wrong_target", WrongTarget::class)
-    val WRONG = ResourceDefinitionId("fixture.wrong_target")
-}

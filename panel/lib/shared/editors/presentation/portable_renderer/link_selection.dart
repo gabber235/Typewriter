@@ -64,7 +64,7 @@ Future<void> _chooseLink({
       shape: _popupShape(context, scope, control.popup),
       fill: control.popup?.fill == null
           ? null
-          : PresentationColorEnvironment.of(context)
+          : PresentationValueEnvironment.of(context)
                 .resolve(control.popup!.fill!, scope),
       padding: control.popup?.padding == null
           ? null
@@ -156,7 +156,8 @@ List<_AuthoredLinkChoice> _authoredLinkChoices({
         target.resource,
         context: scope.invocation,
       );
-      final label = row?.label ?? resource?.label ?? target.resource.value;
+      final label =
+          row?.label ?? resource?.appearance.label ?? target.resource.value;
       final typeLabel = resource == null
           ? "Resource"
           : scope.catalog?.typeSelectionName(resource.configuration) ??
@@ -293,13 +294,6 @@ Widget _buildAuthoredLinkChoiceResult(
         _AuthoredLinkChoiceKind.create => "create",
         _AuthoredLinkChoiceKind.unavailable => "unavailable",
       };
-      final leading = Icon(switch (choice.kind) {
-        _AuthoredLinkChoiceKind.automatic => Icons.link,
-        _AuthoredLinkChoiceKind.existing => Icons.link_outlined,
-        _AuthoredLinkChoiceKind.append ||
-        _AuthoredLinkChoiceKind.create => Icons.add_link,
-        _AuthoredLinkChoiceKind.unavailable => Icons.link_off,
-      });
       final footer = Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         mainAxisSize: MainAxisSize.min,
@@ -313,30 +307,37 @@ Widget _buildAuthoredLinkChoiceResult(
             SearchResultDescription(description: reason),
         ],
       );
-      Widget fallback(Widget body, Color? accent) => SearchResultRow(
-        row: row,
-        density: SearchResultDensity.card,
-        accent: accent,
-        leading: leading,
-        kindLabel: kind,
-        footer: footer,
-        body: body,
-      );
+      // The reference picker is a modal, so its rows are cards.
+      Widget fallback(ResourceAppearance? appearance, String? problem) =>
+          SearchResultRow(
+            row: row,
+            density: SearchResultDensity.card,
+            title: appearance?.label ?? choice.label,
+            accent: appearance?.accent,
+            leading: appearance == null
+                ? Icon(switch (choice.kind) {
+                    _AuthoredLinkChoiceKind.automatic => Icons.link,
+                    _AuthoredLinkChoiceKind.existing => Icons.link_outlined,
+                    _AuthoredLinkChoiceKind.append ||
+                    _AuthoredLinkChoiceKind.create => Icons.add_link,
+                    _AuthoredLinkChoiceKind.unavailable => Icons.link_off,
+                  })
+                : ResourceIcon(icon: appearance.icon),
+            kindLabel: kind,
+            footer: footer,
+            body: problem == null ? null : Text(problem),
+          );
       Widget render(
         skir.PresentationNode node,
         PortablePresentationScope targetScope,
-        skir.ResultAppearance? appearance,
-        Color? fallbackAccent,
+        ResourceAppearance appearance,
       ) => PortableResultContent(
         node: node,
         appearance: appearance,
         scope: targetScope,
         row: row,
-        fallbackStyle: SearchResultDensity.card,
-        fallbackKindLabel: choice.typeLabel,
-        fallbackAccent: fallbackAccent,
-        kindLabelOverride: kind,
-        fallbackLeading: leading,
+        density: SearchResultDensity.card,
+        kindLabel: kind,
         footer: footer,
       );
       return KeyedSubtree(
@@ -345,8 +346,6 @@ Widget _buildAuthoredLinkChoiceResult(
           resource: choice.target.resource,
           scope: choice.row?.scope ?? scope,
           role: skir.PresentationRole.referencePickerResult,
-          fallbackLabel: choice.label,
-          appearanceOverride: choice.definition?.resources?.appearance,
           render: render,
           fallback: fallback,
         ),

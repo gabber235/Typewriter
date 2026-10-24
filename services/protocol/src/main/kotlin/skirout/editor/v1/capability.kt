@@ -751,7 +751,7 @@ sealed class CapabilityDefinition private constructor() {
             _mustNameArguments: _MustNameArguments =
                 _MustNameArguments,
             capabilityId: skirout.editor.v1.type_catalog.CapabilityId_OrMutable,
-            targets: skirout.editor.v1.operation.OperationTargets,
+            targets: skirout.editor.v1.operation.OperationTargets_OrMutable,
             input: skirout.editor.v1.operation.OperationInputDefinition_OrMutable?,
         ) = AuthoringWrapper(
             skirout.editor.v1.capability.AuthoringCapabilityDefinition(
@@ -2913,7 +2913,7 @@ sealed class CommandResult private constructor() {
 
 sealed interface AuthoringCapabilityDefinition_OrMutable {
     val capabilityId: skirout.editor.v1.type_catalog.CapabilityId_OrMutable;
-    val targets: skirout.editor.v1.operation.OperationTargets;
+    val targets: skirout.editor.v1.operation.OperationTargets_OrMutable;
     val input: skirout.editor.v1.operation.OperationInputDefinition_OrMutable?;
 
     fun toFrozen(): skirout.editor.v1.capability.AuthoringCapabilityDefinition;
@@ -2932,13 +2932,13 @@ class AuthoringCapabilityDefinition private constructor(
         _mustNameArguments: _MustNameArguments =
             _MustNameArguments,
         capabilityId: skirout.editor.v1.type_catalog.CapabilityId_OrMutable,
-        targets: skirout.editor.v1.operation.OperationTargets,
+        targets: skirout.editor.v1.operation.OperationTargets_OrMutable,
         input: skirout.editor.v1.operation.OperationInputDefinition_OrMutable?,
         _unrecognizedFields: _UnrecognizedFields<skirout.editor.v1.capability.AuthoringCapabilityDefinition>? =
             null,
     ): this(
         capabilityId.toFrozen(),
-        targets,
+        targets.toFrozen(),
         if (input != null) input.toFrozen() else null,
         _unrecognizedFields,
     ) {}
@@ -2959,13 +2959,13 @@ class AuthoringCapabilityDefinition private constructor(
             _MustNameArguments,
         capabilityId: skirout.editor.v1.type_catalog.CapabilityId_OrMutable =
             this.capabilityId,
-        targets: skirout.editor.v1.operation.OperationTargets =
+        targets: skirout.editor.v1.operation.OperationTargets_OrMutable =
             this.targets,
         input: skirout.editor.v1.operation.OperationInputDefinition_OrMutable? =
             this.input,
     ) = skirout.editor.v1.capability.AuthoringCapabilityDefinition(
         capabilityId.toFrozen(),
-        targets,
+        targets.toFrozen(),
         if (input != null) input.toFrozen() else null,
         this._unrecognizedFields,
     );
@@ -2994,8 +2994,8 @@ class AuthoringCapabilityDefinition private constructor(
             _MustNameArguments,
         override var capabilityId: skirout.editor.v1.type_catalog.CapabilityId_OrMutable =
             skirout.editor.v1.type_catalog.CapabilityId.partial(),
-        override var targets: skirout.editor.v1.operation.OperationTargets =
-            skirout.editor.v1.operation.OperationTargets.UNKNOWN,
+        override var targets: skirout.editor.v1.operation.OperationTargets_OrMutable =
+            skirout.editor.v1.operation.OperationTargets.partial(),
         override var input: skirout.editor.v1.operation.OperationInputDefinition_OrMutable? =
             null,
         internal var _unrecognizedFields: _UnrecognizedFields<skirout.editor.v1.capability.AuthoringCapabilityDefinition>? =
@@ -3024,13 +3024,29 @@ class AuthoringCapabilityDefinition private constructor(
                 is skirout.editor.v1.type_catalog.CapabilityId.Mutable -> value;
             }
         }
+
+        /**
+         * If the value of [targets] is already mutable, returns it as-is.
+         * Otherwise, makes a mutable copy, assigns it back to [targets] and returns it.
+         */
+        val mutableTargets: skirout.editor.v1.operation.OperationTargets.Mutable get() {
+            var value = this.targets;
+            return when (value) {
+                is skirout.editor.v1.operation.OperationTargets -> {
+                    value = value.toMutable();
+                    this.targets = value;
+                    return value;
+                }
+                is skirout.editor.v1.operation.OperationTargets.Mutable -> value;
+            }
+        }
     }
 
     companion object {
         private val default =
             skirout.editor.v1.capability.AuthoringCapabilityDefinition(
                 skirout.editor.v1.type_catalog.CapabilityId.partial(),
-                skirout.editor.v1.operation.OperationTargets.UNKNOWN,
+                skirout.editor.v1.operation.OperationTargets.partial(),
                 null,
             );
 
@@ -3047,8 +3063,8 @@ class AuthoringCapabilityDefinition private constructor(
                 _MustNameArguments,
             capabilityId: skirout.editor.v1.type_catalog.CapabilityId_OrMutable =
                 skirout.editor.v1.type_catalog.CapabilityId.partial(),
-            targets: skirout.editor.v1.operation.OperationTargets =
-                skirout.editor.v1.operation.OperationTargets.UNKNOWN,
+            targets: skirout.editor.v1.operation.OperationTargets_OrMutable =
+                skirout.editor.v1.operation.OperationTargets.partial(),
             input: skirout.editor.v1.operation.OperationInputDefinition_OrMutable? =
                 null,
         ) = skirout.editor.v1.capability.AuthoringCapabilityDefinition(

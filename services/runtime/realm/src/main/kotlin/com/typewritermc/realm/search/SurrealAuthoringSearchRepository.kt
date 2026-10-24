@@ -2,8 +2,8 @@ package com.typewritermc.realm.search
 
 import com.surrealdb.Surreal
 import com.typewritermc.authoring.AuthoringRecord
-import com.typewritermc.authoring.ResourceDefinitionId
 import com.typewritermc.authoring.TypeSelection
+import com.typewritermc.authoring.definition
 import com.typewritermc.realm.authoring.AuthoringView
 import com.typewritermc.realm.authoring.authoredDatabaseValues
 import com.typewritermc.realm.authoring.ownershipRelationIds
@@ -19,7 +19,6 @@ import com.typewritermc.types.catalog.CheckedCatalog
 
 internal data class IndexedAuthoringSearchCandidate(
     val resource: ResourceId,
-    val definition: ResourceDefinitionId,
     val record: AuthoringRecord,
     val text: String,
 )
@@ -39,7 +38,7 @@ internal interface AuthoringSearchRepository {
  * Searches the stored text projection while the caller holds the current authoring view lock.
  *
  * Text ranking and ownership context narrow database candidates; catalog type matching then selects results
- * within a consistent preview transaction. Holding the view lock keeps repository writes from advancing saved
+ * within a consistent preview transaction and leaves out the catalog's realm root. Holding the view lock keeps repository writes from advancing saved
  * state while candidate rows are matched to the supplied catalog and resource graph.
  */
 internal class SurrealAuthoringSearchRepository(
@@ -80,7 +79,7 @@ internal class SurrealAuthoringSearchRepository(
                 val rows =
                     transaction
                         .query(
-                            "SELECT id, definition, content, search.text AS text, $score AS score FROM resource$index$where " +
+                            "SELECT id, content, search.text AS text, $score AS score FROM resource$index$where " +
                                 "ORDER BY score DESC, id LIMIT \$limit START \$offset;",
                             bindings + mapOf("limit" to pageSize, "offset" to offset),
                         ).take(0)
@@ -88,11 +87,10 @@ internal class SurrealAuthoringSearchRepository(
                 rows.forEach { value ->
                     val row = value.getObject()
                     val record = authoredDatabaseValues.decode(AuthoringRecord.serializer(), row.get("content"))
-                    if (record.matches(roots, target, view.catalog.checked)) {
+                    if (record.matches(roots, target, view.catalog.realmRoot, view.catalog.checked)) {
                         candidates +=
                             IndexedAuthoringSearchCandidate(
                                 row.get("id").getRecordId().toResourceId(),
-                                ResourceDefinitionId(row.get("definition").getString()),
                                 record,
                                 row.get("text").getString(),
                             )
@@ -126,13 +124,12 @@ private fun AuthoringView.linksForOwnership(contracts: Set<RelationId>): Map<Res
 private fun AuthoringRecord.matches(
     roots: Set<TypeDefinitionId>,
     target: TypeUse.Named?,
+    realmRoot: TypeDefinitionId,
     catalog: CheckedCatalog,
 ): Boolean {
-    val actualDefinition =
-        when (val selected = configuration) {
-            is TypeSelection.Complete -> selected.use.definition
-            is TypeSelection.Pending -> selected.definition
-        }
+    val actualDefinition = configuration.definition
+    // The realm root is the shell itself, never a search result; sections stay searchable for navigation.
+    if (actualDefinition == realmRoot || catalog.isNominalSubtype(actualDefinition, realmRoot)) return false
     if (roots.isNotEmpty() && roots.none { catalog.isNominalSubtype(actualDefinition, it) }) return false
     if (target == null) return true
     return when (val selected = configuration) {

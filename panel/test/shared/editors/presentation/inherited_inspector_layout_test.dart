@@ -117,6 +117,7 @@ void main() {
           (skir.PresentationDependencies.mutable()
                 ..contextInputs = [
                   skir.PresentationContextInput(
+                    source: skir.PresentationContextSource.caller,
                     bindingId: contextId,
                     valueType: textType,
                   ),

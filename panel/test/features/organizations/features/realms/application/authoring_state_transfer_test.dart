@@ -51,7 +51,6 @@ skir.AuthoringState _state() => skir.AuthoringState(
   resources: [
     skir.AuthoringResource(
       id: skir.ResourceId(value: "book"),
-      definition: skir.ResourceDefinitionId(value: "book"),
       content: skir.AuthoringRecord(
         configuration: skir.TypeSelection.unknown,
         fields: [

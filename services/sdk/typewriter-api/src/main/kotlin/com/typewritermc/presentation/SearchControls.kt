@@ -174,7 +174,7 @@ interface SearchSelectorsScope {
 /**
  * Maps a provider row to a stable result key, a value to write on selection, and its displayed presentation.
  * The selected value can differ from the row's type and identity. Required mappings are checked when the search
- * input is captured; native result appearance is captured with its body through [presentation].
+ * input is captured; a row's [presentation] body is captured with it.
  */
 interface SearchResultScope<Value, Row> {
     val row: Expr<Row, Handled>

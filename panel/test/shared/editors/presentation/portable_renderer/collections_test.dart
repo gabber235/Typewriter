@@ -553,7 +553,6 @@ _nestedMaterialFixture() {
         ),
       ],
     ),
-    resources: null,
   );
   final nestedLayout = skir.PresentationNode(
     nodeId: "nested.lookup",
@@ -580,7 +579,6 @@ _nestedMaterialFixture() {
   );
   final nestedMaterial = skir.PresentationMaterial(
     inheritableNodes: const [],
-    resultAppearance: null,
 
     provider: nestedProvider,
     target: skir.PresentationTarget.createNamed(
@@ -605,12 +603,12 @@ _nestedMaterialFixture() {
   );
   final checked = CheckedEditorCatalog(
     skir.EditorCatalogWireSnapshot(
+      resourceDisplays: const [],
       resourceOperations: const [],
-      resourceOperationContributions: const [],
       generation: original.generation,
       types: original.types,
       relations: original.relations,
-      resourceDefinitions: original.resourceDefinitions,
+      realmRoot: skir.TypeDefinitionId.defaultInstance,
       presentations: original.presentations,
       presentationMaterials: [
         ...original.presentationMaterials,
@@ -690,7 +688,9 @@ _fixture({
   );
   final generation = skir.CatalogGeneration(value: "catalog:collections");
   final published = skir.PublishedType(
-    display: null,
+    searchKey: null,
+    placementField: null,
+    display: defaultTypeDisplay(""),
     definition: skir.TypeDefinition(
       id: type,
       parameters: const [],
@@ -720,13 +720,15 @@ _fixture({
   );
   final checked = CheckedEditorCatalog(
     skir.EditorCatalogWireSnapshot(
+      resourceDisplays: const [],
       resourceOperations: const [],
-      resourceOperationContributions: const [],
       generation: generation,
       types: [
         published,
         skir.PublishedType(
-          display: null,
+          searchKey: null,
+          placementField: null,
+          display: defaultTypeDisplay(""),
           definition: skir.TypeDefinition(
             id: list,
             parameters: [
@@ -748,13 +750,7 @@ _fixture({
         ),
       ],
       relations: const [],
-      resourceDefinitions: [
-        skir.AuthoringResourceDefinition(
-          id: skir.ResourceDefinitionId(value: "test.tag"),
-          root: type,
-          navigationHandler: skir.AuthoringNavigationHandler.generic,
-        ),
-      ],
+      realmRoot: skir.TypeDefinitionId.defaultInstance,
       presentations: const [],
       presentationMaterials: const [],
       configuration: const [],
@@ -822,30 +818,21 @@ _fixture({
         targets: inputExpression(_rowBinding, field: "next"),
       ),
     ],
-    projection: projected
-        ? skir.PresentationCollectionProjection(
-            root: skir.NamedTypeTemplate(definition: type, arguments: const []),
-            resourceBindingId: _resourceBinding,
-            fields: [
-              skir.PresentationCollectionProjectionField(
-                target: skir.ValuePath(
-                  segments: [skir.PathSegment.createField(name: "name")],
-                ),
-                source:
-                    skir.PresentationCollectionProjectionValue.createContent(
-                      segments: [skir.PathSegment.createField(name: "name")],
-                    ),
-              ),
-            ],
-          )
-        : null,
-    resources: projected
-        ? null
-        : skir.PresentationResourceCollection(
-            root: type,
-            resourceBindingId: _resourceBinding,
-            appearance: null,
+    projection: skir.PresentationCollectionProjection(
+      root: skir.NamedTypeTemplate(definition: type, arguments: const []),
+      resourceBindingId: _resourceBinding,
+      fields: [
+        for (final field in ["name", if (!projected) "next"])
+          skir.PresentationCollectionProjectionField(
+            target: skir.ValuePath(
+              segments: [skir.PathSegment.createField(name: field)],
+            ),
+            source: skir.PresentationCollectionProjectionValue.createContent(
+              segments: [skir.PathSegment.createField(name: field)],
+            ),
           ),
+      ],
+    ),
   );
   final provider = skir.PresentationId(namespace: "test", name: "collections");
   final target = skir.PresentationTarget.createNamed(
@@ -854,7 +841,6 @@ _fixture({
   );
   final material = skir.PresentationMaterial(
     inheritableNodes: const [],
-    resultAppearance: null,
 
     provider: provider,
     target: target,
@@ -1002,7 +988,6 @@ skir.AuthoringResource _resource(
   List<skir.ResourceId> next,
 ) => skir.AuthoringResource(
   id: id,
-  definition: skir.ResourceDefinitionId(value: "test.tag"),
   content: skir.AuthoringRecord(
     configuration: skir.TypeSelection.createComplete(
       definition: type,

@@ -1,5 +1,6 @@
 package fixture
 
+import com.typewritermc.expression.label
 import com.typewritermc.expression.literal
 import com.typewritermc.expression.orElse
 import com.typewritermc.types.PresentationRole
@@ -19,5 +20,6 @@ object FallbackViewEditor : FallbackViewPresentation {
         showIf(condition = { repeat.orElse(literal(false)) }) {
             text(expressions.name.orElse(literal("Unnamed")))
         }
+        text(appearance.label)
     }
 }

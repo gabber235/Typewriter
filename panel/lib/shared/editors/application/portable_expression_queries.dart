@@ -56,6 +56,18 @@ final frameworkResourceIdUse = skir.NamedTypeUse(
   arguments: const [],
 );
 
+/// The group a tree layout binds while rendering each group header: its path,
+/// last path segment as name, and direct members.
+final hierarchyGroupUse = skir.NamedTypeUse(
+  definition: skir.TypeDefinitionId(
+    typeId: skir.TypeId.createDeclared(
+      value: "c9ef8108a30f4e43805d8ee137e001dc",
+    ),
+    revision: 1,
+  ),
+  arguments: const [],
+);
+
 extension ResourceIdentityExpression on skir.ResourceId {
   skir.DataValue toExpressionValue() => skir.DataValue.createNamed(
     actualType: frameworkResourceIdUse,
@@ -181,15 +193,12 @@ extension _CanonicalQueryEvaluation on PortableExpressionEvaluator {
           final selection = canonicalReadModels.decodeTypeSelection(
             (source as _Available).value,
           );
-          final definition = switch (selection) {
-            skir.TypeSelection_completeWrapper(:final value) =>
-              value.definition,
-            skir.TypeSelection_pendingWrapper(:final value) => value.definition,
-            _ => throw const _ExpressionFailure(
-              "invalid_type_selection",
-              "Unknown type selection",
-            ),
-          };
+          final definition =
+              selection.definition ??
+              (throw const _ExpressionFailure(
+                "invalid_type_selection",
+                "Unknown type selection",
+              ));
           final native = queries?.declaration(definition);
           if (native == null) return const _Unavailable();
           return _projectNative(
@@ -558,6 +567,76 @@ skir.DataValue colorValue(int argb) => skir.DataValue.createNamed(
   actualType: expressionColorUse,
   payload: skir.DataValue.wrapInteger(argb.toString()),
 );
+
+skir.NamedTypeUse _declaredUse(String id) => skir.NamedTypeUse(
+  definition: skir.TypeDefinitionId(
+    typeId: skir.TypeId.createDeclared(value: id),
+    revision: 1,
+  ),
+  arguments: const [],
+);
+
+/// The declared Icon type and its Iconify and SVG variants.
+final expressionIconUse = _declaredUse("6fffa4398c0b4611bbf3517e047e6a52");
+final _iconifyUse = _declaredUse("3845952a4d714e23ad55f07051669930");
+final _svgIconUse = _declaredUse("67ed1a5b0e534c05b8d233ef9783971b");
+
+/// Builds the declared Icon data value of [icon], the shape the Kotlin
+/// evaluator produces, so a projected type display icon equals an authored one.
+skir.DataValue iconValue(skir.Icon icon) => switch (icon) {
+  skir.Icon_svgWrapper(:final value) => skir.DataValue.createNamed(
+    actualType: _svgIconUse,
+    payload: skir.DataValue.createRecord(
+      fields: [
+        skir.FieldValue(
+          name: "source",
+          value: skir.DataValue.wrapStringValue(value),
+        ),
+      ],
+    ),
+  ),
+  skir.Icon_iconifyWrapper(:final value) => _iconifyValue(value),
+  _ => _iconifyValue(""),
+};
+
+skir.DataValue _iconifyValue(String value) => skir.DataValue.createNamed(
+  actualType: _iconifyUse,
+  payload: skir.DataValue.createRecord(
+    fields: [
+      skir.FieldValue(
+        name: "value",
+        value: skir.DataValue.wrapStringValue(value),
+      ),
+    ],
+  ),
+);
+
+/// Reads a declared Icon data value back into its wire form; null when
+/// [value] is not an Iconify or SVG icon.
+skir.Icon? decodeIconValue(skir.DataValue value) {
+  if (value is! skir.DataValue_namedWrapper) return null;
+  final payload = value.value.payload;
+  if (payload is! skir.DataValue_recordWrapper) return null;
+  String? field(String name) => payload.value.fields
+      .where((field) => field.name == name)
+      .firstOrNull
+      ?.value
+      .authoredString;
+  final type = value.value.actualType;
+  if (type == _iconifyUse) {
+    return switch (field("value")) {
+      final name? => skir.Icon.wrapIconify(name),
+      null => null,
+    };
+  }
+  if (type == _svgIconUse) {
+    return switch (field("source")) {
+      final source? => skir.Icon.wrapSvg(source),
+      null => null,
+    };
+  }
+  return null;
+}
 
 extension ExpressionTypes on CheckedEditorCatalog {
   skir.ExpressionMappingType? expressionMapping(skir.ExpressionType source) {

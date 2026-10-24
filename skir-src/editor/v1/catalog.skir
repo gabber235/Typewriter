@@ -10,14 +10,10 @@ import {
   InitializationDiagnostic,
 } from "editor/v1/diagnostic.skir";
 import { ExpressionNode } from "editor/v1/expression.skir";
-import {
-  ResourceOperationContribution,
-  ResourceOperationDefinition,
-} from "editor/v1/operation.skir";
+import { ResourceOperationDefinition } from "editor/v1/operation.skir";
 import {
   PresentationDependencies,
   PresentationNode,
-  ResultAppearance,
 } from "editor/v1/presentation.skir";
 import {
   AuthoringRecord,
@@ -32,6 +28,7 @@ import {
   RelationFamilyId,
   RelationId,
   RelativeFieldPattern,
+  ResourceTarget,
   RuleId,
   RuleOrigin,
   TypeDefinition,
@@ -44,38 +41,36 @@ import {
 import { BoundedTransferChunk } from "kernel/v1/bounded_transfer.skir";
 import { Color } from "kernel/v1/color.skir";
 import { InternalError } from "kernel/v1/errors.skir";
+import { Icon } from "kernel/v1/icon.skir";
 
-struct ResourceDefinitionId(810900001) {
-  value: string = 0;
+/// Name, accent and icon formulas for resources of [target]. Each formula reads only the subject
+/// resource: its fields and its published type through the configured value binding.
+struct ResourceDisplayFormulas(810900001) {
+  target: ResourceTarget = 0;
+  label: ExpressionNode = 1;
+  accent: ExpressionNode = 2;
+  icon: ExpressionNode = 3;
 }
 
-/// Gives an authored resource family its stable definition identity and navigation behavior,
-/// independently of the concrete type application currently selected by a resource.
-struct AuthoringResourceDefinition(810900002) {
-  id: ResourceDefinitionId = 0;
-  root: TypeDefinitionId = 1;
-  navigation_handler: AuthoringNavigationHandler = 2;
-}
-
-enum RelationDeletePolicy(810900003) {
+enum RelationDeletePolicy(810900002) {
   restrict = 1;
   cascade = 2;
   clear = 3;
 }
 
-enum EndpointSlot(810900004) {
+enum EndpointSlot(810900003) {
   first = 1;
   second = 2;
 }
 
-enum EndpointCardinality(810900005) {
+enum EndpointCardinality(810900004) {
   one = 1;
   many = 2;
 }
 
 /// Declares one side of a relation. Cardinality constrains how many resources on this side
 /// one opposite resource can reference. on_delete applies when a resource on this side is deleted.
-struct EndpointDefinition(810900006) {
+struct EndpointDefinition(810900005) {
   id: EndpointId = 0;
   slot: EndpointSlot = 1;
   resource: NamedTypeTemplate = 2;
@@ -85,41 +80,54 @@ struct EndpointDefinition(810900006) {
 
 /// Shared relation meaning used to validate authored references and derive graph edges.
 /// Families attach shared semantics such as ownership without relying on presentation names.
-struct RelationContract(810900007) {
+struct RelationContract(810900006) {
   id: RelationId = 0;
   first: EndpointDefinition = 1;
   second: EndpointDefinition = 2;
   families: [RelationFamilyId] = 3;
 }
 
-enum DeclarationStatus(810900008) {
+/// The family of relations whose one owner endpoint holds the resources on its many member endpoint,
+/// such as a Book holding its pages. Every owned resource has one owner, and ownership never loops.
+const RESOURCE_OWNERSHIP_FAMILY: RelationFamilyId = {
+  value: "resource.ownership",
+};
+
+enum DeclarationStatus(810900007) {
   ready = 1;
   unavailable: [DeclarationDiagnostic] = 2;
 }
 
-struct EffectiveFieldTemplate(810900009) {
+struct EffectiveFieldTemplate(810900008) {
   key: string = 0;
   owner: FieldOwner = 1;
   type: TypeTemplate = 2;
   rules: [RuleId] = 3;
 }
 
-struct PublishedType(810900010) {
+struct PublishedType(810900009) {
   definition: TypeDefinition = 0;
   status: DeclarationStatus = 1;
   effective_fields: [EffectiveFieldTemplate|key] = 2;
   ancestor_templates: [NamedTypeTemplate] = 3;
-  display: TypeDisplay? = 4;
+  display: TypeDisplay = 4;
+  /// Search scope keyword for resources of this type, such as book in book:"Main story".
+  /// Present for every resource type except the realm root and its sections, which every
+  /// resource sits inside, and absent for every other type.
+  search_key: string? = 5;
+  /// The single effective field typed as a placement, which editors and Realm read and write
+  /// when they lay out resources of this type. Absent when the type declares no placement.
+  placement_field: ValuePath? = 6;
 }
 
-struct TypeDisplay(810900011) {
+struct TypeDisplay(810900010) {
   name: string = 0;
   description: string = 1;
-  icon: string = 2;
+  icon: Icon = 2;
   color: Color = 3;
 }
 
-enum RepresentationKind(810900012) {
+enum RepresentationKind(810900011) {
   unit = 1;
   boolean = 2;
   text = 3;
@@ -137,46 +145,50 @@ enum RepresentationKind(810900012) {
   link = 15;
 }
 
-struct RuleDescriptor(810900013) {
+struct RuleDescriptor(810900012) {
   predicate: ExpressionNode = 0;
 }
 
-struct OwnedRule(810900014) {
+struct OwnedRule(810900013) {
   id: RuleId = 0;
   descriptor: RuleDescriptor = 1;
   diagnostic: DiagnosticTemplate = 2;
 }
 
-struct ConfigurationRecipe(810900015) {
+struct ConfigurationRecipe(810900014) {
   origin: RuleOrigin = 0;
   relative_path: RelativeFieldPattern = 1;
   representation_condition: RepresentationKind? = 2;
   rules: [OwnedRule] = 3;
 }
 
-/// The UI surface requesting a type's presentation. Registering a role does not create a surface.
-/// Missing presentations follow the catalog's explicit role fallbacks.
-enum PresentationRole(810900016) {
-  /// The main workspace for an opened resource, such as a page graph or timeline.
-  workspace_editor = 1;
+/// Places in the editor shell. A role names where content appears, never what it is.
+/// Registering a role does not create a surface. Missing presentations follow the catalog's
+/// explicit role fallbacks.
+enum PresentationRole(810900015) {
+  /// Main area of a resource route.
+  workspace = 1;
+  /// Side navigation: the realm root's navigator fills the shell sidebar; the nearest other
+  /// owner declaring one fills the rail.
+  navigator = 2;
   /// Editable properties in inspectors, editing review, and delegated field controls.
-  inspector = 2;
+  inspector = 3;
+  /// A resource laid out inside another place: grid card, graph node, list or tree row.
+  item = 4;
   /// A compact preview of the selected reference target, with writes and input disabled.
-  reference_preview = 3;
+  reference_preview = 5;
   /// A candidate target in a reference picker or a reference question during creation.
-  reference_picker_result = 4;
+  reference_picker_result = 6;
   /// An existing resource shown in authoring search, with navigation owned by the result row.
-  resource_search_result = 5;
-  /// Resource content inside an editor node, independent of graph or timeline layout.
-  editor_node = 6;
+  resource_search_result = 7;
 }
 
-enum PresentationTarget(810900017) {
+enum PresentationTarget(810900016) {
   named: NamedTypeTemplate = 1;
   representation: RepresentationKind = 2;
 }
 
-struct PresentationDescriptor(810900018) {
+struct PresentationDescriptor(810900017) {
   id: PresentationId = 0;
   owner: DeclarationOwner = 1;
   target: PresentationTarget = 2;
@@ -187,18 +199,17 @@ struct PresentationDescriptor(810900018) {
 /// Checked portable layout for a provider, target, and role. Dependencies describe required
 /// services and typed inputs. inheritable_nodes identifies reusable inspector material rather
 /// than granting inheritance to every node in the layout.
-struct PresentationMaterial(810900019) {
+struct PresentationMaterial(810900018) {
   provider: PresentationId = 0;
   target: PresentationTarget = 1;
   role: PresentationRole = 2;
   layout: PresentationNode = 3;
   dependencies: PresentationDependencies = 4;
   subject: TypeTemplate = 5;
-  result_appearance: ResultAppearance? = 6;
-  inheritable_nodes: [string] = 7;
+  inheritable_nodes: [string] = 6;
 }
 
-struct RoleFallback(810900020) {
+struct RoleFallback(810900019) {
   role: PresentationRole = 0;
   parents: [PresentationRole] = 1;
 }
@@ -206,11 +217,11 @@ struct RoleFallback(810900020) {
 /// One coherent generation of authoring types, relations, presentations, capabilities, and operations.
 /// Generation changes invalidate client assumptions across the whole snapshot; they are separate
 /// from saved resource observations and selected compiled publications.
-struct EditorCatalogWireSnapshot(810900021) {
+struct EditorCatalogWireSnapshot(810900020) {
   generation: CatalogGeneration = 0;
   types: [PublishedType] = 1;
   relations: [RelationContract] = 2;
-  resource_definitions: [AuthoringResourceDefinition] = 3;
+  resource_displays: [ResourceDisplayFormulas] = 3;
   presentations: [PresentationDescriptor] = 4;
   presentation_materials: [PresentationMaterial] = 5;
   configuration: [ConfigurationRecipe] = 6;
@@ -220,31 +231,32 @@ struct EditorCatalogWireSnapshot(810900021) {
   recommendations: [TypeRecommendation] = 10;
   role_fallbacks: [RoleFallback] = 11;
   resource_operations: [ResourceOperationDefinition] = 12;
-  resource_operation_contributions: [ResourceOperationContribution] = 13;
+  /// The realm root type. The realm keeps exactly one instance, which owns every section.
+  realm_root: TypeDefinitionId = 13;
 }
 
-struct CatalogTransferChunk(810900022) {
+struct CatalogTransferChunk(810900021) {
   generation: CatalogGeneration = 0;
   transfer: BoundedTransferChunk = 1;
 }
 
-enum CatalogUnavailableReason(810900023) {
+enum CatalogUnavailableReason(810900022) {
   encoded_size_limit = 1;
 }
 
-struct CatalogUnavailable(810900024) {
+struct CatalogUnavailable(810900023) {
   generation: CatalogGeneration = 0;
   reason: CatalogUnavailableReason = 1;
   encoded_size: int64 = 2;
   max_encoded_size: int64 = 3;
 }
 
-struct CatalogFetchRequest(810900025) {
+struct CatalogFetchRequest(810900024) {
   expected_generation: CatalogGeneration? = 0;
   transfer_id: string = 1;
 }
 
-enum CatalogFetchResult(810900026) {
+enum CatalogFetchResult(810900025) {
   chunk: CatalogTransferChunk = 1;
   generation_changed: CatalogGeneration = 2;
   unavailable: CatalogUnavailable = 3;
@@ -253,34 +265,34 @@ enum CatalogFetchResult(810900026) {
 
 /// Announces the installed catalog generation so clients can fetch current declarations.
 /// Delivery is an invalidation hint, rather than a durable history of catalog transitions.
-struct CatalogInvalidated(810900027) {
+struct CatalogInvalidated(810900026) {
   generation: CatalogGeneration = 0;
 }
 
-enum PreparationTarget(810900028) {
+enum PreparationTarget(810900027) {
   value: TypeUse = 1;
   record: TypeSelection = 2;
 }
 
-struct ValuePreparationRequest(810900029) {
+struct ValuePreparationRequest(810900028) {
   catalog: CatalogGeneration = 0;
   target: PreparationTarget = 1;
   supplied_value: DataValue? = 2;
 }
 
-enum PreparedContent(810900030) {
+enum PreparedContent(810900029) {
   value: DataValue = 1;
   record: AuthoringRecord = 2;
 }
 
 /// Proposed editable content after value preparation. It may carry initialization findings;
 /// preparation does not save a resource or establish that authored content is publishable.
-struct PreparedValue(810900031) {
+struct PreparedValue(810900030) {
   content: PreparedContent = 0;
   findings: [InitializationDiagnostic] = 1;
 }
 
-struct RequiredInput(810900032) {
+struct RequiredInput(810900031) {
   path: ValuePath = 0;
   expected: TypeUse = 1;
 }
@@ -288,7 +300,7 @@ struct RequiredInput(810900032) {
 /// Caller retained continuation for deferred constructor defaults and required input.
 /// Resume validates catalog, target, pending default paths, and supplied answers. The runtime
 /// retains no preparation session behind this value, and constructor sampling may execute provider code.
-struct PreparationDraft(810900033) {
+struct PreparationDraft(810900032) {
   catalog: CatalogGeneration = 0;
   target: PreparationTarget = 1;
   content: PreparedContent = 2;
@@ -297,12 +309,12 @@ struct PreparationDraft(810900033) {
   findings: [InitializationDiagnostic] = 5;
 }
 
-struct InputAnswer(810900034) {
+struct InputAnswer(810900033) {
   path: ValuePath = 0;
   value: DataValue = 1;
 }
 
-enum PreparationOperation(810900035) {
+enum PreparationOperation(810900034) {
   start: ValuePreparationRequest = 1;
   resume: struct {
     draft: PreparationDraft = 0;
@@ -312,19 +324,19 @@ enum PreparationOperation(810900035) {
 
 /// Separates prepared editable content from a continuation needing caller input or unavailable
 /// preparation. ready describes completion of initialization, not saved authoring or publication.
-enum PreparationStep(810900036) {
+enum PreparationStep(810900035) {
   ready: PreparedValue = 1;
   needs_input: PreparationDraft = 2;
   unavailable: PreparationDraft = 3;
 }
 
-enum PrepareValueResult(810900037) {
+enum PrepareValueResult(810900036) {
   prepared: PreparationStep = 1;
   catalog_changed: CatalogGeneration = 2;
   internal_error: InternalError = 3;
 }
 
-struct EndpointBindingTemplate(810900038) {
+struct EndpointBindingTemplate(810900037) {
   endpoint: EndpointId = 0;
   containing_resource: NamedTypeTemplate = 1;
   value_owner: TypeDefinitionId = 2;
@@ -333,17 +345,9 @@ struct EndpointBindingTemplate(810900038) {
   contains_collection: bool = 5;
 }
 
-struct TypeRecommendation(810900039) {
+struct TypeRecommendation(810900038) {
   type: NamedTypeUse = 0;
   occurrences: int64 = 1;
-}
-
-enum AuthoringNavigationHandler(810900040) {
-  generic = 1;
-  book = 2;
-  page = 3;
-  page_element = 4;
-  tags = 5;
 }
 
 method FetchEditorCatalog(

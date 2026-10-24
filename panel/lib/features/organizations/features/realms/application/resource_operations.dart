@@ -55,12 +55,7 @@ skir.OperationInvocation captureResourceOperationInvocation({
     final contract = document.catalog.snapshot.relations
         .where((contract) => contract.id == link.contract)
         .firstOrNull;
-    if (contract == null ||
-        !contract.families.any(
-          (family) => family.value == "resource.ownership",
-        )) {
-      continue;
-    }
+    if (contract == null || !contract.ownsResources) continue;
     final firstOwns =
         contract.first.cardinality == skir.EndpointCardinality.one;
     final owner = firstOwns ? link.first : link.second;
@@ -95,13 +90,6 @@ skir.OperationInvocation captureResourceOperationInvocation({
   );
 }
 
-final resourceDeleteOperationId = skir.ResourceOperationId(
-  artifact: "typewriter",
-  sourcePart: "main",
-  declaration: "com.typewritermc.library.CoreResourceOperations",
-  local: "delete",
-);
-
 /// Projects Realm affordances while retaining generic service operations.
 List<SelectionOperation> selectionOperationsFor(
   WidgetRef ref,
@@ -126,6 +114,8 @@ List<SelectionOperation> selectionOperationsFor(
   );
 }
 
+/// The client navigation entries, then the catalog operations in the order
+/// the Realm resolved them: by group, then order.
 List<SelectionOperation> resourceSelectionOperationsFor(
   WidgetRef ref,
   AuthoringScope scope,
@@ -134,35 +124,53 @@ List<SelectionOperation> resourceSelectionOperationsFor(
   final observed = ref.watch(workingAuthoringDocumentProvider(scope));
   final document = observed.value;
   if (document == null) return [];
+  final ids = targets.toSet().toList(growable: false);
+  final navigation = [
+    if (ids.length == 1) ...[
+      ResourceOpenOperation(
+        AuthoringResourceIdentifier.inScope(scope, ids.single),
+      ),
+      ResourceInspectOperation(
+        AuthoringResourceIdentifier.inScope(scope, ids.single),
+      ),
+    ],
+  ];
   final invocation = captureResourceOperationInvocation(
     document: document,
-    targets: targets,
+    targets: ids,
     invocationId: skir.InvocationId(value: "operation-resolution"),
   );
   final resolved = ref.watch(resourceOperationsProvider(scope, invocation));
   if (resolved.isLoading) {
-    return const [_UnavailableResourceOperation("Loading operations")];
-  }
-  if (resolved.hasError) {
-    return const [
-      _UnavailableResourceOperation("Resource operations unavailable"),
+    return [
+      ...navigation,
+      const _UnavailableResourceOperation("Loading operations"),
     ];
   }
-  final operations = resolved.requireValue;
+  if (resolved.hasError) {
+    return [
+      ...navigation,
+      const _UnavailableResourceOperation("Resource operations unavailable"),
+    ];
+  }
   return [
-    for (final operation in operations.operations)
+    ...navigation,
+    for (final operation in resolved.requireValue.operations)
       if (operation.availability != skir.OperationAvailability.hidden)
         ResourceSelectionOperation.create(
           scope: scope,
           invocation: invocation,
           operation: operation,
-          primary: operation.definition.id == operations.primaryOperation,
           canMutate: ResourceOperationSurface.maybeOf(ref.context)?.canMutate,
         ),
   ];
 }
 
+/// Menu sections of resource affordances, in display order.
+enum ResourceOperationMenuGroup { navigation, edit, organize, destructive }
+
 /// Carries immutable targets into menus, inspector controls and shortcuts.
+/// Every catalog operation prepares an authored edit through its capability.
 class ResourceSelectionOperation extends SelectionOperation {
   const ResourceSelectionOperation({
     required this.scope,
@@ -171,33 +179,27 @@ class ResourceSelectionOperation extends SelectionOperation {
     this.canMutate,
   });
 
+  /// Binds the operation's declared shortcut, if any, to its intent.
   factory ResourceSelectionOperation.create({
     required AuthoringScope scope,
     required skir.OperationInvocation invocation,
     required skir.ResolvedResourceOperation operation,
-    required bool primary,
     bool Function()? canMutate,
-  }) {
-    final intent = primary
-        ? PrimaryActionIntent
-        : operation.definition.id == resourceDeleteOperationId
-        ? DeleteIntent
-        : null;
-    return intent == null
-        ? ResourceSelectionOperation(
-            scope: scope,
-            invocation: invocation,
-            operation: operation,
-            canMutate: canMutate,
-          )
-        : _ShortcutResourceSelectionOperation(
-            scope: scope,
-            invocation: invocation,
-            operation: operation,
-            canMutate: canMutate,
-            intent: intent,
-          );
-  }
+  }) => switch (operation.definition.presentation.shortcut) {
+    skir.OperationShortcut.delete => _ShortcutResourceSelectionOperation(
+      scope: scope,
+      invocation: invocation,
+      operation: operation,
+      canMutate: canMutate,
+      intent: DeleteIntent,
+    ),
+    _ => ResourceSelectionOperation(
+      scope: scope,
+      invocation: invocation,
+      operation: operation,
+      canMutate: canMutate,
+    ),
+  };
 
   final AuthoringScope scope;
   final skir.OperationInvocation invocation;
@@ -205,11 +207,8 @@ class ResourceSelectionOperation extends SelectionOperation {
   final bool Function()? canMutate;
   bool get enabled =>
       operation.availability == skir.OperationAvailability.enabled &&
-      (operation.definition.action is skir.EditorAction_navigateWrapper ||
-          (canMutate?.call() ?? true));
-  String? get disabledReason =>
-      operation.definition.action is! skir.EditorAction_navigateWrapper &&
-          !(canMutate?.call() ?? true)
+      (canMutate?.call() ?? true);
+  String? get disabledReason => !(canMutate?.call() ?? true)
       ? "This view is read only"
       : switch (operation.availability) {
           skir.OperationAvailability_disabledWrapper(:final value) => value,
@@ -220,10 +219,21 @@ class ResourceSelectionOperation extends SelectionOperation {
   @override
   String get description => operation.definition.presentation.description;
   @override
-  bool get showInInspector => operation.definition.presentation.showInInspector;
+  bool get showInInspector =>
+      operation.definition.presentation.inspector !=
+      skir.OperationInspector.hidden;
+  @override
+  Object get menuGroup => switch (operation.definition.presentation.group) {
+    skir.OperationGroup.organize => ResourceOperationMenuGroup.organize,
+    skir.OperationGroup.destructive => ResourceOperationMenuGroup.destructive,
+    _ => ResourceOperationMenuGroup.edit,
+  };
   @override
   bool canExecuteOn(List<Selectable> selection) => true;
 
+  /// Prepares the operation for the captured targets. [initialInput] seeds
+  /// the input, as a drop does with the resource dropped onto; the input form
+  /// opens only when the Realm needs more.
   @override
   Future<void> executeOn(WidgetRef ref, {skir.DataValue? initialInput}) async {
     if (!enabled || !ref.context.mounted) return;
@@ -242,20 +252,14 @@ class ResourceSelectionOperation extends SelectionOperation {
       commands: ref.read(authoredResourceCommandsProvider(scope)),
       invocation: captured,
       label: name,
-      declaredConfirmation: operation.definition.presentation.confirmation,
       canMutate: canMutate,
     );
     try {
-      await ResourceActionDispatcher(
-        catalog: workspace.document.catalog,
-        context: resourceActionContext(workspace.document, captured.targets),
-        isCurrent: () => runner.isCurrent,
-        navigate: runner.navigate,
-        invokeCommand: runner.invokeCommand,
-        reload: runner.reload,
-        prepare: (capability, targets, seeded) =>
-            runner.prepare(capability, targets, initialInput ?? seeded),
-      ).dispatch(operation.definition.action);
+      await runner.prepare(
+        operation.definition.capability,
+        captured.targets.toList(growable: false),
+        initialInput,
+      );
     } finally {
       runner.dispose();
     }
@@ -298,13 +302,97 @@ final class _ShortcutResourceSelectionOperation
   final Type intent;
   @override
   ActionShortcut get shortcut => ActionShortcut.intent(
-    id: "resource_operation_${operation.definition.id.local}",
+    id: "resource_operation_${operation.definition.id.declaration}",
     label: name,
     description: description,
     intent: intent,
     priority: 10,
     onInvoke: enabled ? executeOn : (_) {},
   );
+}
+
+/// Opens the nearest surface of one resource through the SurfaceNavigator,
+/// like activating it in a navigator. Bound to the primary action intent.
+final class ResourceOpenOperation extends IntentShortcutOperation {
+  const ResourceOpenOperation(this.resource);
+
+  final AuthoringResourceIdentifier resource;
+
+  @override
+  String get name => "Open";
+  @override
+  String get description => "Open the resource where it is laid out";
+  @override
+  Type get intent => PrimaryActionIntent;
+  @override
+  Object get menuGroup => ResourceOperationMenuGroup.navigation;
+  @override
+  bool canExecuteOn(List<Selectable> selection) => true;
+  @override
+  Future<void> executeOn(WidgetRef ref) => openAuthoredResource(ref, resource);
+  @override
+  MenuItem menuItem(WidgetRef ref) => MenuItem(
+    label: name,
+    icon: const Icon(Icons.open_in_new),
+    onPressed: () => executeOn(ref),
+  );
+  @override
+  Widget inspectorButton(List<Selectable> selection) => Consumer(
+    builder: (context, ref, _) => Tooltip(
+      message: description,
+      child: TextButton.icon(
+        onPressed: () => executeOn(ref),
+        icon: const Icon(Icons.open_in_new, size: 16),
+        label: Text(name),
+      ),
+    ),
+  );
+}
+
+/// Selects one resource and reveals its inspector without leaving the
+/// current surface. Menus only: the inspector already shows it.
+final class ResourceInspectOperation extends SelectionOperation {
+  const ResourceInspectOperation(this.resource);
+
+  final AuthoringResourceIdentifier resource;
+
+  @override
+  String get name => "Inspect";
+  @override
+  String get description => "Show the resource in the inspector";
+  @override
+  bool get showInInspector => false;
+  @override
+  Object get menuGroup => ResourceOperationMenuGroup.navigation;
+  @override
+  bool canExecuteOn(List<Selectable> selection) => true;
+  @override
+  Future<void> executeOn(WidgetRef ref) => ref
+      .read(realmSurfaceNavigationProvider)
+      .navigate(
+        resource.scope,
+        resource.resourceId,
+        skir.ResourceNavigationMode.edit,
+        isCurrent: () => ref.context.mounted,
+      );
+  @override
+  MenuItem menuItem(WidgetRef ref) => MenuItem(
+    label: name,
+    icon: const Icon(Icons.info_outline),
+    onPressed: () => executeOn(ref),
+  );
+  @override
+  Widget inspectorButton(List<Selectable> selection) => const SizedBox.shrink();
+}
+
+/// Opens the nearest surface of [resource], as the Open entry does.
+Future<void> openAuthoredResource(
+  WidgetRef ref,
+  AuthoringResourceIdentifier resource,
+) async {
+  await ref
+      .read(realmSurfaceNavigationProvider)
+      .open(resource.scope, resource.resourceId);
 }
 
 final class _UnavailableResourceOperation extends SelectionOperation {
@@ -359,55 +447,6 @@ PortableInvocationContext resourceActionContext(
   );
 }
 
-/// Invokes a primary affordance with the resource captured by the gesture.
-Future<void> invokeResourcePrimary(
-  WidgetRef ref,
-  AuthoringResourceIdentifier resource,
-) async {
-  final commandsLease = ref.listenManual(
-    authoredResourceCommandsProvider(resource.scope),
-    (_, _) {},
-  );
-  try {
-    final workspace = ref.read(realmEditingProvider(resource.scope));
-    final router = ref.read(appRouterProvider);
-    final navigationRevision = router.navigationRevision;
-    final invocation = captureResourceOperationInvocation(
-      document: workspace.document,
-      targets: [resource.resourceId],
-    );
-    final result = await ref
-        .read(authoredResourceCommandsProvider(resource.scope))
-        .resolveResourceOperations(
-          skir.ResolveResourceOperationsRequest(
-            invocation: invocation,
-            context: workspace.captureOperationContext().context,
-          ),
-        );
-    if (!ref.context.mounted ||
-        router.navigationRevision != navigationRevision ||
-        ref.read(selectedAuthoringScopeProvider) != resource.scope) {
-      return;
-    }
-    if (result case skir.ResolveResourceOperationsResult_resolvedWrapper(
-      :final value,
-    )) {
-      final primary = value.operations
-          .where((item) => item.definition.id == value.primaryOperation)
-          .firstOrNull;
-      if (primary == null) return;
-      await ResourceSelectionOperation.create(
-        scope: resource.scope,
-        invocation: invocation,
-        operation: primary,
-        primary: true,
-      ).executeOn(ref);
-    }
-  } finally {
-    commandsLease.close();
-  }
-}
-
 /// Supplies the invoking view's current mutation access across async prompts.
 class ResourceOperationSurface extends InheritedWidget {
   const ResourceOperationSurface({
@@ -421,198 +460,4 @@ class ResourceOperationSurface extends InheritedWidget {
   @override
   bool updateShouldNotify(ResourceOperationSurface oldWidget) =>
       canMutate != oldWidget.canMutate;
-}
-
-/// Supplies gesture values to a declared action without creating another mutator.
-Future<void> invokeResourceDropOperation({
-  required WidgetRef ref,
-  required AuthoringScope scope,
-  required AuthoringResourceDragGroup group,
-  required String operationLocalId,
-  required Map<String, skir.DataValue> suppliedFields,
-  required bool Function() isCurrent,
-}) async {
-  final commandsLease = ref.listenManual(
-    authoredResourceCommandsProvider(scope),
-    (_, _) {},
-  );
-  try {
-    if (!isCurrent()) return;
-    final router = ref.read(appRouterProvider);
-    final navigationRevision = router.navigationRevision;
-    final workspace = ref.read(realmEditingProvider(scope));
-    final commands = ref.read(authoredResourceCommandsProvider(scope));
-    final invocation = captureResourceOperationInvocation(
-      document: workspace.document,
-      targets: group.memberships.keys.map((item) => item.resourceId),
-      origin: skir.OperationOrigin(
-        container:
-            group.memberships.values
-                    .map((item) => item.source)
-                    .toSet()
-                    .length ==
-                1
-            ? group.memberships.values.first.source
-            : null,
-        occurrences: group.memberships.values,
-      ),
-    );
-    final resolved = await commands.resolveResourceOperations(
-      skir.ResolveResourceOperationsRequest(
-        invocation: invocation,
-        context: workspace.captureOperationContext().context,
-      ),
-    );
-    if (!ref.context.mounted ||
-        !isCurrent() ||
-        router.navigationRevision != navigationRevision) {
-      return;
-    }
-    if (resolved is! skir.ResolveResourceOperationsResult_resolvedWrapper) {
-      throw StateError("The resource drop operation is unavailable");
-    }
-    final id = (resourceDeleteOperationId.toMutable()..local = operationLocalId)
-        .toFrozen();
-    final operation = resolved.value.operations
-        .where((item) => item.definition.id == id)
-        .firstOrNull;
-    if (operation == null ||
-        operation.availability != skir.OperationAvailability.enabled) {
-      return;
-    }
-    final action = operation.definition.action;
-    if (action is! skir.EditorAction_authoringWrapper) {
-      throw StateError("The drop action does not prepare an authored edit");
-    }
-    final input = workspace.document.catalog.snapshot.capabilities
-        .whereType<skir.CapabilityDefinition_authoringWrapper>()
-        .map((item) => item.value)
-        .where((item) => item.capabilityId == action.value.capability)
-        .firstOrNull
-        ?.input;
-    if (input == null) {
-      throw StateError("The drop action has no declared input");
-    }
-    final value = seedResourceOperationInput(
-      workspace.document,
-      input,
-      suppliedFields,
-    );
-    await ResourceSelectionOperation.create(
-      scope: scope,
-      invocation: invocation,
-      operation: operation,
-      primary: false,
-      canMutate: () => isCurrent() && (group.sourceCanMutate?.call() ?? true),
-    ).executeOn(ref, initialInput: value);
-  } finally {
-    commandsLease.close();
-  }
-}
-
-skir.DataValue seedResourceOperationInput(
-  AuthoringDocument document,
-  skir.OperationInputDefinition definition,
-  Map<String, skir.DataValue> supplied,
-) {
-  final actual = document.catalog.namedUse(definition.type);
-  if (actual == null) {
-    throw StateError("The operation input is not a named record");
-  }
-  final fields = document.catalog.fields(
-    skir.TypeSelection.wrapComplete(actual),
-  );
-  if (supplied.keys.any(
-    (key) => !fields.any((field) => field.template.key == key),
-  )) {
-    throw StateError("The gesture supplied an unknown operation input field");
-  }
-  return skir.DataValue.createNamed(
-    actualType: actual,
-    payload: skir.DataValue.createRecord(
-      fields: [
-        for (final field in fields)
-          skir.FieldValue(
-            name: field.template.key,
-            value: supplied.containsKey(field.template.key)
-                ? document
-                      .defaultValue(field.type)
-                      .withAuthoredPayload(supplied[field.template.key]!)
-                : document.defaultValue(field.type),
-          ),
-      ],
-    ),
-  );
-}
-
-/// Hover checks share preparation with activation and never stage their result.
-@riverpod
-Future<bool> resourceDropAvailable(
-  Ref ref,
-  AuthoringScope scope,
-  skir.OperationInvocation invocation,
-  String operationLocalId,
-  skir.DataValue supplied,
-) async {
-  ref.watch(workingAuthoringDocumentProvider(scope));
-  final workspace = ref.read(realmEditingProvider(scope));
-  final commands = ref.watch(authoredResourceCommandsProvider(scope));
-  final capture = workspace.captureOperationContext();
-  final resolved = await commands.resolveResourceOperations(
-    skir.ResolveResourceOperationsRequest(
-      invocation: invocation,
-      context: capture.context,
-    ),
-  );
-  if (!ref.mounted) return false;
-  if (resolved is! skir.ResolveResourceOperationsResult_resolvedWrapper) {
-    return false;
-  }
-  final id = (resourceDeleteOperationId.toMutable()..local = operationLocalId)
-      .toFrozen();
-  final operation = resolved.value.operations
-      .where((item) => item.definition.id == id)
-      .firstOrNull;
-  if (operation == null ||
-      operation.availability != skir.OperationAvailability.enabled) {
-    return false;
-  }
-  final action = operation.definition.action;
-  if (action is! skir.EditorAction_authoringWrapper) return false;
-  final input = capture.document.catalog.snapshot.capabilities
-      .whereType<skir.CapabilityDefinition_authoringWrapper>()
-      .map((item) => item.value)
-      .where((item) => item.capabilityId == action.value.capability)
-      .firstOrNull
-      ?.input;
-  if (input == null) return false;
-  final fields = supplied.authoredRecord?.fields;
-  if (fields == null) return false;
-  final initial = seedResourceOperationInput(capture.document, input, {
-    for (final field in fields) field.name: field.value,
-  });
-  final prepared = await commands.prepareValue(
-    skir.ValuePreparationRequest(
-      catalog: invocation.catalog,
-      target: skir.PreparationTarget.wrapValue(input.type),
-      suppliedValue: initial,
-    ),
-  );
-  if (!ref.mounted) return false;
-  final normalized = switch (prepared.content) {
-    skir.PreparedContent_valueWrapper(:final value) => value,
-    _ => throw StateError("Operation input preparation returned a record"),
-  };
-  final result = await commands.prepareAuthoringAction(
-    skir.PrepareAuthoringActionRequest(
-      invocation: invocation,
-      capability: action.value.capability,
-      context: capture.context,
-      inputRevision: 0,
-      input: normalized,
-      choices: const [],
-    ),
-  );
-  return result is skir.AuthoringActionResult_previewWrapper ||
-      result is skir.AuthoringActionResult_needsInputWrapper;
 }

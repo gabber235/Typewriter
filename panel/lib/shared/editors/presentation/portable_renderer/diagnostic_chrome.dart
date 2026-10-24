@@ -89,14 +89,14 @@ class PortableDiagnosticFrame extends HookWidget {
                   context,
                   scope!,
                   appearance,
-                  environment: PresentationColorEnvironment.of(context)
+                  environment: PresentationValueEnvironment.of(context)
                       .copyWith(
                         interaction: nativeInteraction.copyWith(
                           invalid: severity == skir.DiagnosticSeverity.error,
                         ),
                       ),
                 );
-        } on PresentationColorFailure catch (failure) {
+        } on PresentationValueFailure catch (failure) {
           return _diagnostic(failure.message);
         }
         final authoredLabelColor =
@@ -264,7 +264,7 @@ class PortablePresentationChrome extends HookWidget {
     final tooltip = useMemoized(GlobalKey<TooltipState>.new);
     final placement = PortableDiagnosticScope.of(context).placement;
     final expanded =
-        role == skir.PresentationRole.workspaceEditor ||
+        role == skir.PresentationRole.workspace ||
         role == skir.PresentationRole.inspector;
     final diagnostics = expanded
         ? placement.general

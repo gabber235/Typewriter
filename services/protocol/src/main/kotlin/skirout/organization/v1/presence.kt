@@ -590,27 +590,31 @@ class RealmPresence private constructor(
     }
 }
 
-sealed interface RealmLibraryPresence_OrMutable {
+sealed interface ResourcePresence_OrMutable {
     val realmId: skirout.kernel.v1.record_id.RecordId_OrMutable;
+    val resourceId: skirout.editor.v1.type_catalog.ResourceId_OrMutable;
 
-    fun toFrozen(): skirout.organization.v1.presence.RealmLibraryPresence;
+    fun toFrozen(): skirout.organization.v1.presence.ResourcePresence;
 }
 
 /** Deeply immutable. */
 @kotlin.Suppress("UNUSED_PARAMETER")
-class RealmLibraryPresence private constructor(
+class ResourcePresence private constructor(
     override val realmId: skirout.kernel.v1.record_id.RecordId,
-    internal val _unrecognizedFields: _UnrecognizedFields<skirout.organization.v1.presence.RealmLibraryPresence>? =
+    override val resourceId: skirout.editor.v1.type_catalog.ResourceId,
+    internal val _unrecognizedFields: _UnrecognizedFields<skirout.organization.v1.presence.ResourcePresence>? =
         null,
-): skirout.organization.v1.presence.RealmLibraryPresence_OrMutable {
+): skirout.organization.v1.presence.ResourcePresence_OrMutable {
     constructor(
         _mustNameArguments: _MustNameArguments =
             _MustNameArguments,
         realmId: skirout.kernel.v1.record_id.RecordId_OrMutable,
-        _unrecognizedFields: _UnrecognizedFields<skirout.organization.v1.presence.RealmLibraryPresence>? =
+        resourceId: skirout.editor.v1.type_catalog.ResourceId_OrMutable,
+        _unrecognizedFields: _UnrecognizedFields<skirout.organization.v1.presence.ResourcePresence>? =
             null,
     ): this(
         realmId.toFrozen(),
+        resourceId.toFrozen(),
         _unrecognizedFields,
     ) {}
 
@@ -620,6 +624,7 @@ class RealmLibraryPresence private constructor(
     /** Returns a mutable shallow copy of this instance */
     fun toMutable() = Mutable(
         realmId = this.realmId,
+        resourceId = this.resourceId,
     );
 
     /** Returns a shallow copy of this instance with the specified fields replaced. */
@@ -628,8 +633,11 @@ class RealmLibraryPresence private constructor(
             _MustNameArguments,
         realmId: skirout.kernel.v1.record_id.RecordId_OrMutable =
             this.realmId,
-    ) = skirout.organization.v1.presence.RealmLibraryPresence(
+        resourceId: skirout.editor.v1.type_catalog.ResourceId_OrMutable =
+            this.resourceId,
+    ) = skirout.organization.v1.presence.ResourcePresence(
         realmId.toFrozen(),
+        resourceId.toFrozen(),
         this._unrecognizedFields,
     );
 
@@ -637,293 +645,35 @@ class RealmLibraryPresence private constructor(
     fun copy() = this;
 
     override fun equals(other: kotlin.Any?): kotlin.Boolean {
-        return this === other || (other is skirout.organization.v1.presence.RealmLibraryPresence && this.realmId == other.realmId);
+        return this === other || (other is skirout.organization.v1.presence.ResourcePresence && this.realmId == other.realmId && this.resourceId == other.resourceId);
     }
 
     override fun hashCode(): kotlin.Int {
-        return kotlin.collections.listOf<kotlin.Any?>(this.realmId).hashCode();
+        return kotlin.collections.listOf<kotlin.Any?>(this.realmId, this.resourceId).hashCode();
     }
 
     override fun toString(): kotlin.String {
         return build.skir.internal.toStringImpl(
             this,
-            _SerializerRegistry.RealmLibraryPresenceSerializerImpl,
+            _SerializerRegistry.ResourcePresenceSerializerImpl,
         )
     }
 
-    /** Mutable version of [RealmLibraryPresence]. */
+    /** Mutable version of [ResourcePresence]. */
     class Mutable internal constructor(
         _mustNameArguments: _MustNameArguments =
             _MustNameArguments,
         override var realmId: skirout.kernel.v1.record_id.RecordId_OrMutable =
             skirout.kernel.v1.record_id.RecordId.partial(),
-        internal var _unrecognizedFields: _UnrecognizedFields<skirout.organization.v1.presence.RealmLibraryPresence>? =
+        override var resourceId: skirout.editor.v1.type_catalog.ResourceId_OrMutable =
+            skirout.editor.v1.type_catalog.ResourceId.partial(),
+        internal var _unrecognizedFields: _UnrecognizedFields<skirout.organization.v1.presence.ResourcePresence>? =
             null,
-    ): skirout.organization.v1.presence.RealmLibraryPresence_OrMutable {
+    ): skirout.organization.v1.presence.ResourcePresence_OrMutable {
         /** Returns a deeply immutable copy of this instance */
-        override fun toFrozen() = skirout.organization.v1.presence.RealmLibraryPresence(
+        override fun toFrozen() = skirout.organization.v1.presence.ResourcePresence(
             realmId = this.realmId,
-            _unrecognizedFields = this._unrecognizedFields,
-        );
-
-        /**
-         * If the value of [realmId] is already mutable, returns it as-is.
-         * Otherwise, makes a mutable copy, assigns it back to [realmId] and returns it.
-         */
-        val mutableRealmId: skirout.kernel.v1.record_id.RecordId.Mutable get() {
-            var value = this.realmId;
-            return when (value) {
-                is skirout.kernel.v1.record_id.RecordId -> {
-                    value = value.toMutable();
-                    this.realmId = value;
-                    return value;
-                }
-                is skirout.kernel.v1.record_id.RecordId.Mutable -> value;
-            }
-        }
-    }
-
-    companion object {
-        private val default =
-            skirout.organization.v1.presence.RealmLibraryPresence(
-                skirout.kernel.v1.record_id.RecordId.partial(),
-            );
-
-        /** Returns an instance with all fields set to their default values. */
-        fun partial() = default;
-
-        /**
-         * Creates a new instance of [RealmLibraryPresence].
-         * Unlike the constructor, does not require all fields to be specified.
-         * Missing fields will be set to their default values.
-         */
-        fun partial(
-            _mustNameArguments: _MustNameArguments =
-                _MustNameArguments,
-            realmId: skirout.kernel.v1.record_id.RecordId_OrMutable =
-                skirout.kernel.v1.record_id.RecordId.partial(),
-        ) = skirout.organization.v1.presence.RealmLibraryPresence(
-            realmId = realmId,
-            _unrecognizedFields = null,
-        );
-
-        /** Serializer for [RealmLibraryPresence] instances. */
-        val serializer get() = _SerializerRegistry.RealmLibraryPresenceSerializer;
-
-        /** Describes the [RealmLibraryPresence] type. Provides runtime introspection capabilities. */
-        val typeDescriptor get() = _SerializerRegistry.RealmLibraryPresenceSerializerImpl.typeDescriptor;
-    }
-}
-
-sealed interface RealmTagsPresence_OrMutable {
-    val realmId: skirout.kernel.v1.record_id.RecordId_OrMutable;
-
-    fun toFrozen(): skirout.organization.v1.presence.RealmTagsPresence;
-}
-
-/** Deeply immutable. */
-@kotlin.Suppress("UNUSED_PARAMETER")
-class RealmTagsPresence private constructor(
-    override val realmId: skirout.kernel.v1.record_id.RecordId,
-    internal val _unrecognizedFields: _UnrecognizedFields<skirout.organization.v1.presence.RealmTagsPresence>? =
-        null,
-): skirout.organization.v1.presence.RealmTagsPresence_OrMutable {
-    constructor(
-        _mustNameArguments: _MustNameArguments =
-            _MustNameArguments,
-        realmId: skirout.kernel.v1.record_id.RecordId_OrMutable,
-        _unrecognizedFields: _UnrecognizedFields<skirout.organization.v1.presence.RealmTagsPresence>? =
-            null,
-    ): this(
-        realmId.toFrozen(),
-        _unrecognizedFields,
-    ) {}
-
-    @kotlin.Deprecated("Already frozen", kotlin.ReplaceWith("this"))
-    override fun toFrozen() = this;
-
-    /** Returns a mutable shallow copy of this instance */
-    fun toMutable() = Mutable(
-        realmId = this.realmId,
-    );
-
-    /** Returns a shallow copy of this instance with the specified fields replaced. */
-    fun copy(
-        _mustNameArguments: _MustNameArguments =
-            _MustNameArguments,
-        realmId: skirout.kernel.v1.record_id.RecordId_OrMutable =
-            this.realmId,
-    ) = skirout.organization.v1.presence.RealmTagsPresence(
-        realmId.toFrozen(),
-        this._unrecognizedFields,
-    );
-
-    @kotlin.Deprecated("No point in creating an exact copy of an immutable object", kotlin.ReplaceWith("this"))
-    fun copy() = this;
-
-    override fun equals(other: kotlin.Any?): kotlin.Boolean {
-        return this === other || (other is skirout.organization.v1.presence.RealmTagsPresence && this.realmId == other.realmId);
-    }
-
-    override fun hashCode(): kotlin.Int {
-        return kotlin.collections.listOf<kotlin.Any?>(this.realmId).hashCode();
-    }
-
-    override fun toString(): kotlin.String {
-        return build.skir.internal.toStringImpl(
-            this,
-            _SerializerRegistry.RealmTagsPresenceSerializerImpl,
-        )
-    }
-
-    /** Mutable version of [RealmTagsPresence]. */
-    class Mutable internal constructor(
-        _mustNameArguments: _MustNameArguments =
-            _MustNameArguments,
-        override var realmId: skirout.kernel.v1.record_id.RecordId_OrMutable =
-            skirout.kernel.v1.record_id.RecordId.partial(),
-        internal var _unrecognizedFields: _UnrecognizedFields<skirout.organization.v1.presence.RealmTagsPresence>? =
-            null,
-    ): skirout.organization.v1.presence.RealmTagsPresence_OrMutable {
-        /** Returns a deeply immutable copy of this instance */
-        override fun toFrozen() = skirout.organization.v1.presence.RealmTagsPresence(
-            realmId = this.realmId,
-            _unrecognizedFields = this._unrecognizedFields,
-        );
-
-        /**
-         * If the value of [realmId] is already mutable, returns it as-is.
-         * Otherwise, makes a mutable copy, assigns it back to [realmId] and returns it.
-         */
-        val mutableRealmId: skirout.kernel.v1.record_id.RecordId.Mutable get() {
-            var value = this.realmId;
-            return when (value) {
-                is skirout.kernel.v1.record_id.RecordId -> {
-                    value = value.toMutable();
-                    this.realmId = value;
-                    return value;
-                }
-                is skirout.kernel.v1.record_id.RecordId.Mutable -> value;
-            }
-        }
-    }
-
-    companion object {
-        private val default =
-            skirout.organization.v1.presence.RealmTagsPresence(
-                skirout.kernel.v1.record_id.RecordId.partial(),
-            );
-
-        /** Returns an instance with all fields set to their default values. */
-        fun partial() = default;
-
-        /**
-         * Creates a new instance of [RealmTagsPresence].
-         * Unlike the constructor, does not require all fields to be specified.
-         * Missing fields will be set to their default values.
-         */
-        fun partial(
-            _mustNameArguments: _MustNameArguments =
-                _MustNameArguments,
-            realmId: skirout.kernel.v1.record_id.RecordId_OrMutable =
-                skirout.kernel.v1.record_id.RecordId.partial(),
-        ) = skirout.organization.v1.presence.RealmTagsPresence(
-            realmId = realmId,
-            _unrecognizedFields = null,
-        );
-
-        /** Serializer for [RealmTagsPresence] instances. */
-        val serializer get() = _SerializerRegistry.RealmTagsPresenceSerializer;
-
-        /** Describes the [RealmTagsPresence] type. Provides runtime introspection capabilities. */
-        val typeDescriptor get() = _SerializerRegistry.RealmTagsPresenceSerializerImpl.typeDescriptor;
-    }
-}
-
-sealed interface BookPresence_OrMutable {
-    val realmId: skirout.kernel.v1.record_id.RecordId_OrMutable;
-    val bookId: skirout.kernel.v1.record_id.RecordId_OrMutable;
-
-    fun toFrozen(): skirout.organization.v1.presence.BookPresence;
-}
-
-/** Deeply immutable. */
-@kotlin.Suppress("UNUSED_PARAMETER")
-class BookPresence private constructor(
-    override val realmId: skirout.kernel.v1.record_id.RecordId,
-    override val bookId: skirout.kernel.v1.record_id.RecordId,
-    internal val _unrecognizedFields: _UnrecognizedFields<skirout.organization.v1.presence.BookPresence>? =
-        null,
-): skirout.organization.v1.presence.BookPresence_OrMutable {
-    constructor(
-        _mustNameArguments: _MustNameArguments =
-            _MustNameArguments,
-        realmId: skirout.kernel.v1.record_id.RecordId_OrMutable,
-        bookId: skirout.kernel.v1.record_id.RecordId_OrMutable,
-        _unrecognizedFields: _UnrecognizedFields<skirout.organization.v1.presence.BookPresence>? =
-            null,
-    ): this(
-        realmId.toFrozen(),
-        bookId.toFrozen(),
-        _unrecognizedFields,
-    ) {}
-
-    @kotlin.Deprecated("Already frozen", kotlin.ReplaceWith("this"))
-    override fun toFrozen() = this;
-
-    /** Returns a mutable shallow copy of this instance */
-    fun toMutable() = Mutable(
-        realmId = this.realmId,
-        bookId = this.bookId,
-    );
-
-    /** Returns a shallow copy of this instance with the specified fields replaced. */
-    fun copy(
-        _mustNameArguments: _MustNameArguments =
-            _MustNameArguments,
-        realmId: skirout.kernel.v1.record_id.RecordId_OrMutable =
-            this.realmId,
-        bookId: skirout.kernel.v1.record_id.RecordId_OrMutable =
-            this.bookId,
-    ) = skirout.organization.v1.presence.BookPresence(
-        realmId.toFrozen(),
-        bookId.toFrozen(),
-        this._unrecognizedFields,
-    );
-
-    @kotlin.Deprecated("No point in creating an exact copy of an immutable object", kotlin.ReplaceWith("this"))
-    fun copy() = this;
-
-    override fun equals(other: kotlin.Any?): kotlin.Boolean {
-        return this === other || (other is skirout.organization.v1.presence.BookPresence && this.realmId == other.realmId && this.bookId == other.bookId);
-    }
-
-    override fun hashCode(): kotlin.Int {
-        return kotlin.collections.listOf<kotlin.Any?>(this.realmId, this.bookId).hashCode();
-    }
-
-    override fun toString(): kotlin.String {
-        return build.skir.internal.toStringImpl(
-            this,
-            _SerializerRegistry.BookPresenceSerializerImpl,
-        )
-    }
-
-    /** Mutable version of [BookPresence]. */
-    class Mutable internal constructor(
-        _mustNameArguments: _MustNameArguments =
-            _MustNameArguments,
-        override var realmId: skirout.kernel.v1.record_id.RecordId_OrMutable =
-            skirout.kernel.v1.record_id.RecordId.partial(),
-        override var bookId: skirout.kernel.v1.record_id.RecordId_OrMutable =
-            skirout.kernel.v1.record_id.RecordId.partial(),
-        internal var _unrecognizedFields: _UnrecognizedFields<skirout.organization.v1.presence.BookPresence>? =
-            null,
-    ): skirout.organization.v1.presence.BookPresence_OrMutable {
-        /** Returns a deeply immutable copy of this instance */
-        override fun toFrozen() = skirout.organization.v1.presence.BookPresence(
-            realmId = this.realmId,
-            bookId = this.bookId,
+            resourceId = this.resourceId,
             _unrecognizedFields = this._unrecognizedFields,
         );
 
@@ -944,34 +694,34 @@ class BookPresence private constructor(
         }
 
         /**
-         * If the value of [bookId] is already mutable, returns it as-is.
-         * Otherwise, makes a mutable copy, assigns it back to [bookId] and returns it.
+         * If the value of [resourceId] is already mutable, returns it as-is.
+         * Otherwise, makes a mutable copy, assigns it back to [resourceId] and returns it.
          */
-        val mutableBookId: skirout.kernel.v1.record_id.RecordId.Mutable get() {
-            var value = this.bookId;
+        val mutableResourceId: skirout.editor.v1.type_catalog.ResourceId.Mutable get() {
+            var value = this.resourceId;
             return when (value) {
-                is skirout.kernel.v1.record_id.RecordId -> {
+                is skirout.editor.v1.type_catalog.ResourceId -> {
                     value = value.toMutable();
-                    this.bookId = value;
+                    this.resourceId = value;
                     return value;
                 }
-                is skirout.kernel.v1.record_id.RecordId.Mutable -> value;
+                is skirout.editor.v1.type_catalog.ResourceId.Mutable -> value;
             }
         }
     }
 
     companion object {
         private val default =
-            skirout.organization.v1.presence.BookPresence(
+            skirout.organization.v1.presence.ResourcePresence(
                 skirout.kernel.v1.record_id.RecordId.partial(),
-                skirout.kernel.v1.record_id.RecordId.partial(),
+                skirout.editor.v1.type_catalog.ResourceId.partial(),
             );
 
         /** Returns an instance with all fields set to their default values. */
         fun partial() = default;
 
         /**
-         * Creates a new instance of [BookPresence].
+         * Creates a new instance of [ResourcePresence].
          * Unlike the constructor, does not require all fields to be specified.
          * Missing fields will be set to their default values.
          */
@@ -980,321 +730,19 @@ class BookPresence private constructor(
                 _MustNameArguments,
             realmId: skirout.kernel.v1.record_id.RecordId_OrMutable =
                 skirout.kernel.v1.record_id.RecordId.partial(),
-            bookId: skirout.kernel.v1.record_id.RecordId_OrMutable =
-                skirout.kernel.v1.record_id.RecordId.partial(),
-        ) = skirout.organization.v1.presence.BookPresence(
+            resourceId: skirout.editor.v1.type_catalog.ResourceId_OrMutable =
+                skirout.editor.v1.type_catalog.ResourceId.partial(),
+        ) = skirout.organization.v1.presence.ResourcePresence(
             realmId = realmId,
-            bookId = bookId,
+            resourceId = resourceId,
             _unrecognizedFields = null,
         );
 
-        /** Serializer for [BookPresence] instances. */
-        val serializer get() = _SerializerRegistry.BookPresenceSerializer;
+        /** Serializer for [ResourcePresence] instances. */
+        val serializer get() = _SerializerRegistry.ResourcePresenceSerializer;
 
-        /** Describes the [BookPresence] type. Provides runtime introspection capabilities. */
-        val typeDescriptor get() = _SerializerRegistry.BookPresenceSerializerImpl.typeDescriptor;
-    }
-}
-
-/** Deeply immutable. */
-sealed class PageActivity private constructor() {
-    /** The kind of variant held by a `PageActivity`. */
-    enum class Kind {
-        UNKNOWN,
-        OVERVIEW_CONST,
-        GRAPH_CONST,
-        TIMELINE_CONST,
-        INSPECTOR_CONST,
-    }
-
-    class Unknown @kotlin.Deprecated("For internal use", kotlin.ReplaceWith("skirout.organization.v1.presence.PageActivity.UNKNOWN")) internal constructor(
-        internal val _kind: Kind,
-        internal override val _unrecognized: _UnrecognizedVariant<skirout.organization.v1.presence.PageActivity>?,
-    ) : skirout.organization.v1.presence.PageActivity() {
-        override val kind get() = _kind;
-
-        override fun equals(other: kotlin.Any?): kotlin.Boolean {
-            return other is skirout.organization.v1.presence.PageActivity && other.kind == kind;
-        }
-
-        override fun hashCode(): kotlin.Int {
-            return kind.ordinal;
-        }
-    }
-
-    object OVERVIEW : skirout.organization.v1.presence.PageActivity() {
-        override val kind get() = Kind.OVERVIEW_CONST;
-
-        override fun equals(other: kotlin.Any?): kotlin.Boolean {
-            return other is skirout.organization.v1.presence.PageActivity && other.kind == Kind.OVERVIEW_CONST;
-        }
-
-        override fun hashCode(): kotlin.Int {
-            return Kind.OVERVIEW_CONST.ordinal;
-        }
-    }
-
-    object GRAPH : skirout.organization.v1.presence.PageActivity() {
-        override val kind get() = Kind.GRAPH_CONST;
-
-        override fun equals(other: kotlin.Any?): kotlin.Boolean {
-            return other is skirout.organization.v1.presence.PageActivity && other.kind == Kind.GRAPH_CONST;
-        }
-
-        override fun hashCode(): kotlin.Int {
-            return Kind.GRAPH_CONST.ordinal;
-        }
-    }
-
-    object TIMELINE : skirout.organization.v1.presence.PageActivity() {
-        override val kind get() = Kind.TIMELINE_CONST;
-
-        override fun equals(other: kotlin.Any?): kotlin.Boolean {
-            return other is skirout.organization.v1.presence.PageActivity && other.kind == Kind.TIMELINE_CONST;
-        }
-
-        override fun hashCode(): kotlin.Int {
-            return Kind.TIMELINE_CONST.ordinal;
-        }
-    }
-
-    object INSPECTOR : skirout.organization.v1.presence.PageActivity() {
-        override val kind get() = Kind.INSPECTOR_CONST;
-
-        override fun equals(other: kotlin.Any?): kotlin.Boolean {
-            return other is skirout.organization.v1.presence.PageActivity && other.kind == Kind.INSPECTOR_CONST;
-        }
-
-        override fun hashCode(): kotlin.Int {
-            return Kind.INSPECTOR_CONST.ordinal;
-        }
-    }
-
-    internal open val _unrecognized: _UnrecognizedVariant<skirout.organization.v1.presence.PageActivity>? get() = null;
-
-    abstract val kind: Kind;
-
-    override fun toString(): kotlin.String {
-        return build.skir.internal.toStringImpl(
-            this,
-            _SerializerRegistry.PageActivitySerializerImpl,
-        )
-    }
-
-    companion object {
-        /**
-         * Constant indicating an unknown [PageActivity].
-         * Default value for fields of type [PageActivity].
-         */
-        val UNKNOWN = @kotlin.Suppress("DEPRECATION") Unknown(Kind.UNKNOWN, null);
-
-        /** Serializer for [PageActivity] instances. */
-        val serializer get() = _SerializerRegistry.PageActivitySerializer;
-
-        /** Describes the [PageActivity] type. Provides runtime introspection capabilities. */
-        val typeDescriptor get() = _SerializerRegistry.PageActivitySerializerImpl.typeDescriptor;
-    }
-}
-
-sealed interface PagePresence_OrMutable {
-    val realmId: skirout.kernel.v1.record_id.RecordId_OrMutable;
-    val bookId: skirout.kernel.v1.record_id.RecordId_OrMutable;
-    val pageId: skirout.kernel.v1.record_id.RecordId_OrMutable;
-    val activity: skirout.organization.v1.presence.PageActivity;
-
-    fun toFrozen(): skirout.organization.v1.presence.PagePresence;
-}
-
-/** Deeply immutable. */
-@kotlin.Suppress("UNUSED_PARAMETER")
-class PagePresence private constructor(
-    override val realmId: skirout.kernel.v1.record_id.RecordId,
-    override val bookId: skirout.kernel.v1.record_id.RecordId,
-    override val pageId: skirout.kernel.v1.record_id.RecordId,
-    override val activity: skirout.organization.v1.presence.PageActivity,
-    internal val _unrecognizedFields: _UnrecognizedFields<skirout.organization.v1.presence.PagePresence>? =
-        null,
-): skirout.organization.v1.presence.PagePresence_OrMutable {
-    constructor(
-        _mustNameArguments: _MustNameArguments =
-            _MustNameArguments,
-        realmId: skirout.kernel.v1.record_id.RecordId_OrMutable,
-        bookId: skirout.kernel.v1.record_id.RecordId_OrMutable,
-        pageId: skirout.kernel.v1.record_id.RecordId_OrMutable,
-        activity: skirout.organization.v1.presence.PageActivity,
-        _unrecognizedFields: _UnrecognizedFields<skirout.organization.v1.presence.PagePresence>? =
-            null,
-    ): this(
-        realmId.toFrozen(),
-        bookId.toFrozen(),
-        pageId.toFrozen(),
-        activity,
-        _unrecognizedFields,
-    ) {}
-
-    @kotlin.Deprecated("Already frozen", kotlin.ReplaceWith("this"))
-    override fun toFrozen() = this;
-
-    /** Returns a mutable shallow copy of this instance */
-    fun toMutable() = Mutable(
-        realmId = this.realmId,
-        bookId = this.bookId,
-        pageId = this.pageId,
-        activity = this.activity,
-    );
-
-    /** Returns a shallow copy of this instance with the specified fields replaced. */
-    fun copy(
-        _mustNameArguments: _MustNameArguments =
-            _MustNameArguments,
-        realmId: skirout.kernel.v1.record_id.RecordId_OrMutable =
-            this.realmId,
-        bookId: skirout.kernel.v1.record_id.RecordId_OrMutable =
-            this.bookId,
-        pageId: skirout.kernel.v1.record_id.RecordId_OrMutable =
-            this.pageId,
-        activity: skirout.organization.v1.presence.PageActivity =
-            this.activity,
-    ) = skirout.organization.v1.presence.PagePresence(
-        realmId.toFrozen(),
-        bookId.toFrozen(),
-        pageId.toFrozen(),
-        activity,
-        this._unrecognizedFields,
-    );
-
-    @kotlin.Deprecated("No point in creating an exact copy of an immutable object", kotlin.ReplaceWith("this"))
-    fun copy() = this;
-
-    override fun equals(other: kotlin.Any?): kotlin.Boolean {
-        return this === other || (other is skirout.organization.v1.presence.PagePresence && this.realmId == other.realmId && this.bookId == other.bookId && this.pageId == other.pageId && this.activity == other.activity);
-    }
-
-    override fun hashCode(): kotlin.Int {
-        return kotlin.collections.listOf<kotlin.Any?>(this.realmId, this.bookId, this.pageId, this.activity).hashCode();
-    }
-
-    override fun toString(): kotlin.String {
-        return build.skir.internal.toStringImpl(
-            this,
-            _SerializerRegistry.PagePresenceSerializerImpl,
-        )
-    }
-
-    /** Mutable version of [PagePresence]. */
-    class Mutable internal constructor(
-        _mustNameArguments: _MustNameArguments =
-            _MustNameArguments,
-        override var realmId: skirout.kernel.v1.record_id.RecordId_OrMutable =
-            skirout.kernel.v1.record_id.RecordId.partial(),
-        override var bookId: skirout.kernel.v1.record_id.RecordId_OrMutable =
-            skirout.kernel.v1.record_id.RecordId.partial(),
-        override var pageId: skirout.kernel.v1.record_id.RecordId_OrMutable =
-            skirout.kernel.v1.record_id.RecordId.partial(),
-        override var activity: skirout.organization.v1.presence.PageActivity =
-            skirout.organization.v1.presence.PageActivity.UNKNOWN,
-        internal var _unrecognizedFields: _UnrecognizedFields<skirout.organization.v1.presence.PagePresence>? =
-            null,
-    ): skirout.organization.v1.presence.PagePresence_OrMutable {
-        /** Returns a deeply immutable copy of this instance */
-        override fun toFrozen() = skirout.organization.v1.presence.PagePresence(
-            realmId = this.realmId,
-            bookId = this.bookId,
-            pageId = this.pageId,
-            activity = this.activity,
-            _unrecognizedFields = this._unrecognizedFields,
-        );
-
-        /**
-         * If the value of [realmId] is already mutable, returns it as-is.
-         * Otherwise, makes a mutable copy, assigns it back to [realmId] and returns it.
-         */
-        val mutableRealmId: skirout.kernel.v1.record_id.RecordId.Mutable get() {
-            var value = this.realmId;
-            return when (value) {
-                is skirout.kernel.v1.record_id.RecordId -> {
-                    value = value.toMutable();
-                    this.realmId = value;
-                    return value;
-                }
-                is skirout.kernel.v1.record_id.RecordId.Mutable -> value;
-            }
-        }
-
-        /**
-         * If the value of [bookId] is already mutable, returns it as-is.
-         * Otherwise, makes a mutable copy, assigns it back to [bookId] and returns it.
-         */
-        val mutableBookId: skirout.kernel.v1.record_id.RecordId.Mutable get() {
-            var value = this.bookId;
-            return when (value) {
-                is skirout.kernel.v1.record_id.RecordId -> {
-                    value = value.toMutable();
-                    this.bookId = value;
-                    return value;
-                }
-                is skirout.kernel.v1.record_id.RecordId.Mutable -> value;
-            }
-        }
-
-        /**
-         * If the value of [pageId] is already mutable, returns it as-is.
-         * Otherwise, makes a mutable copy, assigns it back to [pageId] and returns it.
-         */
-        val mutablePageId: skirout.kernel.v1.record_id.RecordId.Mutable get() {
-            var value = this.pageId;
-            return when (value) {
-                is skirout.kernel.v1.record_id.RecordId -> {
-                    value = value.toMutable();
-                    this.pageId = value;
-                    return value;
-                }
-                is skirout.kernel.v1.record_id.RecordId.Mutable -> value;
-            }
-        }
-    }
-
-    companion object {
-        private val default =
-            skirout.organization.v1.presence.PagePresence(
-                skirout.kernel.v1.record_id.RecordId.partial(),
-                skirout.kernel.v1.record_id.RecordId.partial(),
-                skirout.kernel.v1.record_id.RecordId.partial(),
-                skirout.organization.v1.presence.PageActivity.UNKNOWN,
-            );
-
-        /** Returns an instance with all fields set to their default values. */
-        fun partial() = default;
-
-        /**
-         * Creates a new instance of [PagePresence].
-         * Unlike the constructor, does not require all fields to be specified.
-         * Missing fields will be set to their default values.
-         */
-        fun partial(
-            _mustNameArguments: _MustNameArguments =
-                _MustNameArguments,
-            realmId: skirout.kernel.v1.record_id.RecordId_OrMutable =
-                skirout.kernel.v1.record_id.RecordId.partial(),
-            bookId: skirout.kernel.v1.record_id.RecordId_OrMutable =
-                skirout.kernel.v1.record_id.RecordId.partial(),
-            pageId: skirout.kernel.v1.record_id.RecordId_OrMutable =
-                skirout.kernel.v1.record_id.RecordId.partial(),
-            activity: skirout.organization.v1.presence.PageActivity =
-                skirout.organization.v1.presence.PageActivity.UNKNOWN,
-        ) = skirout.organization.v1.presence.PagePresence(
-            realmId = realmId,
-            bookId = bookId,
-            pageId = pageId,
-            activity = activity,
-            _unrecognizedFields = null,
-        );
-
-        /** Serializer for [PagePresence] instances. */
-        val serializer get() = _SerializerRegistry.PagePresenceSerializer;
-
-        /** Describes the [PagePresence] type. Provides runtime introspection capabilities. */
-        val typeDescriptor get() = _SerializerRegistry.PagePresenceSerializerImpl.typeDescriptor;
+        /** Describes the [ResourcePresence] type. Provides runtime introspection capabilities. */
+        val typeDescriptor get() = _SerializerRegistry.ResourcePresenceSerializerImpl.typeDescriptor;
     }
 }
 
@@ -1309,10 +757,7 @@ sealed class PresenceLocation private constructor() {
         SERVICE_WRAPPER,
         REALMS_WRAPPER,
         REALM_WRAPPER,
-        REALM_LIBRARY_WRAPPER,
-        REALM_TAGS_WRAPPER,
-        BOOK_WRAPPER,
-        PAGE_WRAPPER,
+        RESOURCE_WRAPPER,
     }
 
     class Unknown @kotlin.Deprecated("For internal use", kotlin.ReplaceWith("skirout.organization.v1.presence.PresenceLocation.UNKNOWN")) internal constructor(
@@ -1438,75 +883,21 @@ sealed class PresenceLocation private constructor() {
         }
     }
 
-    class RealmLibraryWrapper private constructor (
-        val value: skirout.organization.v1.presence.RealmLibraryPresence,
+    class ResourceWrapper private constructor (
+        val value: skirout.organization.v1.presence.ResourcePresence,
     ) : skirout.organization.v1.presence.PresenceLocation() {
         constructor(
-            value: skirout.organization.v1.presence.RealmLibraryPresence_OrMutable,
+            value: skirout.organization.v1.presence.ResourcePresence_OrMutable,
         ): this(value.toFrozen()) {}
 
-        override val kind get() = Kind.REALM_LIBRARY_WRAPPER;
+        override val kind get() = Kind.RESOURCE_WRAPPER;
 
         override fun equals(other: kotlin.Any?): kotlin.Boolean {
-            return other is skirout.organization.v1.presence.PresenceLocation.RealmLibraryWrapper && value == other.value;
+            return other is skirout.organization.v1.presence.PresenceLocation.ResourceWrapper && value == other.value;
         }
 
         override fun hashCode(): kotlin.Int {
-            return this.value.hashCode() + 1890428683;
-        }
-    }
-
-    class RealmTagsWrapper private constructor (
-        val value: skirout.organization.v1.presence.RealmTagsPresence,
-    ) : skirout.organization.v1.presence.PresenceLocation() {
-        constructor(
-            value: skirout.organization.v1.presence.RealmTagsPresence_OrMutable,
-        ): this(value.toFrozen()) {}
-
-        override val kind get() = Kind.REALM_TAGS_WRAPPER;
-
-        override fun equals(other: kotlin.Any?): kotlin.Boolean {
-            return other is skirout.organization.v1.presence.PresenceLocation.RealmTagsWrapper && value == other.value;
-        }
-
-        override fun hashCode(): kotlin.Int {
-            return this.value.hashCode() + -1265085495;
-        }
-    }
-
-    class BookWrapper private constructor (
-        val value: skirout.organization.v1.presence.BookPresence,
-    ) : skirout.organization.v1.presence.PresenceLocation() {
-        constructor(
-            value: skirout.organization.v1.presence.BookPresence_OrMutable,
-        ): this(value.toFrozen()) {}
-
-        override val kind get() = Kind.BOOK_WRAPPER;
-
-        override fun equals(other: kotlin.Any?): kotlin.Boolean {
-            return other is skirout.organization.v1.presence.PresenceLocation.BookWrapper && value == other.value;
-        }
-
-        override fun hashCode(): kotlin.Int {
-            return this.value.hashCode() + 3029737;
-        }
-    }
-
-    class PageWrapper private constructor (
-        val value: skirout.organization.v1.presence.PagePresence,
-    ) : skirout.organization.v1.presence.PresenceLocation() {
-        constructor(
-            value: skirout.organization.v1.presence.PagePresence_OrMutable,
-        ): this(value.toFrozen()) {}
-
-        override val kind get() = Kind.PAGE_WRAPPER;
-
-        override fun equals(other: kotlin.Any?): kotlin.Boolean {
-            return other is skirout.organization.v1.presence.PresenceLocation.PageWrapper && value == other.value;
-        }
-
-        override fun hashCode(): kotlin.Int {
-            return this.value.hashCode() + 3433103;
+            return this.value.hashCode() + -341064690;
         }
     }
 
@@ -1588,59 +979,17 @@ sealed class PresenceLocation private constructor() {
             )
         );
 
-        /** Shortcut for `RealmLibraryWrapper(skirout.organization.v1.presence.RealmLibraryPresence(...))`. */
+        /** Shortcut for `ResourceWrapper(skirout.organization.v1.presence.ResourcePresence(...))`. */
         @kotlin.Suppress("UNUSED_PARAMETER")
-        fun createRealmLibrary(
+        fun createResource(
             _mustNameArguments: _MustNameArguments =
                 _MustNameArguments,
             realmId: skirout.kernel.v1.record_id.RecordId_OrMutable,
-        ) = RealmLibraryWrapper(
-            skirout.organization.v1.presence.RealmLibraryPresence(
+            resourceId: skirout.editor.v1.type_catalog.ResourceId_OrMutable,
+        ) = ResourceWrapper(
+            skirout.organization.v1.presence.ResourcePresence(
                 realmId = realmId,
-            )
-        );
-
-        /** Shortcut for `RealmTagsWrapper(skirout.organization.v1.presence.RealmTagsPresence(...))`. */
-        @kotlin.Suppress("UNUSED_PARAMETER")
-        fun createRealmTags(
-            _mustNameArguments: _MustNameArguments =
-                _MustNameArguments,
-            realmId: skirout.kernel.v1.record_id.RecordId_OrMutable,
-        ) = RealmTagsWrapper(
-            skirout.organization.v1.presence.RealmTagsPresence(
-                realmId = realmId,
-            )
-        );
-
-        /** Shortcut for `BookWrapper(skirout.organization.v1.presence.BookPresence(...))`. */
-        @kotlin.Suppress("UNUSED_PARAMETER")
-        fun createBook(
-            _mustNameArguments: _MustNameArguments =
-                _MustNameArguments,
-            realmId: skirout.kernel.v1.record_id.RecordId_OrMutable,
-            bookId: skirout.kernel.v1.record_id.RecordId_OrMutable,
-        ) = BookWrapper(
-            skirout.organization.v1.presence.BookPresence(
-                realmId = realmId,
-                bookId = bookId,
-            )
-        );
-
-        /** Shortcut for `PageWrapper(skirout.organization.v1.presence.PagePresence(...))`. */
-        @kotlin.Suppress("UNUSED_PARAMETER")
-        fun createPage(
-            _mustNameArguments: _MustNameArguments =
-                _MustNameArguments,
-            realmId: skirout.kernel.v1.record_id.RecordId_OrMutable,
-            bookId: skirout.kernel.v1.record_id.RecordId_OrMutable,
-            pageId: skirout.kernel.v1.record_id.RecordId_OrMutable,
-            activity: skirout.organization.v1.presence.PageActivity,
-        ) = PageWrapper(
-            skirout.organization.v1.presence.PagePresence(
-                realmId = realmId,
-                bookId = bookId,
-                pageId = pageId,
-                activity = activity,
+                resourceId = resourceId,
             )
         );
 
@@ -2015,18 +1364,6 @@ sealed class PresenceEvent private constructor() {
 }
 
 private object _SerializerRegistry {
-    val BookPresenceSerializerImpl = build.skir.internal.StructSerializer(
-        recordId = "organization/v1/presence.skir:BookPresence",
-        doc = "",
-        defaultInstance = skirout.organization.v1.presence.BookPresence.partial(),
-        newMutableFn = { it?.toMutable() ?: skirout.organization.v1.presence.BookPresence.Mutable() },
-        toFrozenFn = { it.toFrozen() },
-        getUnrecognizedFields = { it._unrecognizedFields },
-        setUnrecognizedFields = { m, u -> m._unrecognizedFields = u },
-    );
-
-    val BookPresenceSerializer = build.skir.internal.makeSerializer(BookPresenceSerializerImpl);
-
     val MembersPresenceSerializerImpl = build.skir.internal.StructSerializer(
         recordId = "organization/v1/presence.skir:MembersPresence",
         doc = "",
@@ -2050,31 +1387,6 @@ private object _SerializerRegistry {
     );
 
     val OrganizationPresenceSerializer = build.skir.internal.makeSerializer(OrganizationPresenceSerializerImpl);
-
-    val PageActivitySerializerImpl =
-        build.skir.internal.EnumSerializer.create<skirout.organization.v1.presence.PageActivity, skirout.organization.v1.presence.PageActivity.Unknown>(
-            recordId = "organization/v1/presence.skir:PageActivity",
-            doc = "",
-            getKindOrdinal = { it.kind.ordinal },
-            kindCount = skirout.organization.v1.presence.PageActivity.Kind.values().size,
-            unknownInstance = skirout.organization.v1.presence.PageActivity.UNKNOWN,
-            wrapUnrecognized = { @kotlin.Suppress("DEPRECATION") skirout.organization.v1.presence.PageActivity.Unknown(skirout.organization.v1.presence.PageActivity.Kind.UNKNOWN, it) },
-            getUnrecognized = { it._unrecognized },
-        );
-
-    val PageActivitySerializer = build.skir.internal.makeSerializer(PageActivitySerializerImpl);
-
-    val PagePresenceSerializerImpl = build.skir.internal.StructSerializer(
-        recordId = "organization/v1/presence.skir:PagePresence",
-        doc = "",
-        defaultInstance = skirout.organization.v1.presence.PagePresence.partial(),
-        newMutableFn = { it?.toMutable() ?: skirout.organization.v1.presence.PagePresence.Mutable() },
-        toFrozenFn = { it.toFrozen() },
-        getUnrecognizedFields = { it._unrecognizedFields },
-        setUnrecognizedFields = { m, u -> m._unrecognizedFields = u },
-    );
-
-    val PagePresenceSerializer = build.skir.internal.makeSerializer(PagePresenceSerializerImpl);
 
     val PanelPresenceSerializerImpl = build.skir.internal.StructSerializer(
         recordId = "organization/v1/presence.skir:PanelPresence",
@@ -2126,18 +1438,6 @@ private object _SerializerRegistry {
 
     val PresenceLocationSerializer = build.skir.internal.makeSerializer(PresenceLocationSerializerImpl);
 
-    val RealmLibraryPresenceSerializerImpl = build.skir.internal.StructSerializer(
-        recordId = "organization/v1/presence.skir:RealmLibraryPresence",
-        doc = "",
-        defaultInstance = skirout.organization.v1.presence.RealmLibraryPresence.partial(),
-        newMutableFn = { it?.toMutable() ?: skirout.organization.v1.presence.RealmLibraryPresence.Mutable() },
-        toFrozenFn = { it.toFrozen() },
-        getUnrecognizedFields = { it._unrecognizedFields },
-        setUnrecognizedFields = { m, u -> m._unrecognizedFields = u },
-    );
-
-    val RealmLibraryPresenceSerializer = build.skir.internal.makeSerializer(RealmLibraryPresenceSerializerImpl);
-
     val RealmPresenceSerializerImpl = build.skir.internal.StructSerializer(
         recordId = "organization/v1/presence.skir:RealmPresence",
         doc = "",
@@ -2162,17 +1462,17 @@ private object _SerializerRegistry {
 
     val RealmsPresenceSerializer = build.skir.internal.makeSerializer(RealmsPresenceSerializerImpl);
 
-    val RealmTagsPresenceSerializerImpl = build.skir.internal.StructSerializer(
-        recordId = "organization/v1/presence.skir:RealmTagsPresence",
+    val ResourcePresenceSerializerImpl = build.skir.internal.StructSerializer(
+        recordId = "organization/v1/presence.skir:ResourcePresence",
         doc = "",
-        defaultInstance = skirout.organization.v1.presence.RealmTagsPresence.partial(),
-        newMutableFn = { it?.toMutable() ?: skirout.organization.v1.presence.RealmTagsPresence.Mutable() },
+        defaultInstance = skirout.organization.v1.presence.ResourcePresence.partial(),
+        newMutableFn = { it?.toMutable() ?: skirout.organization.v1.presence.ResourcePresence.Mutable() },
         toFrozenFn = { it.toFrozen() },
         getUnrecognizedFields = { it._unrecognizedFields },
         setUnrecognizedFields = { m, u -> m._unrecognizedFields = u },
     );
 
-    val RealmTagsPresenceSerializer = build.skir.internal.makeSerializer(RealmTagsPresenceSerializerImpl);
+    val ResourcePresenceSerializer = build.skir.internal.makeSerializer(ResourcePresenceSerializerImpl);
 
     val ServicePresenceSerializerImpl = build.skir.internal.StructSerializer(
         recordId = "organization/v1/presence.skir:ServicePresence",
@@ -2199,97 +1499,9 @@ private object _SerializerRegistry {
     val ServicesPresenceSerializer = build.skir.internal.makeSerializer(ServicesPresenceSerializerImpl);
 
     init {
-        BookPresenceSerializerImpl.addField(
-            "realm_id",
-            "realmId",
-            0,
-            skirout.kernel.v1.record_id.RecordId.serializer,
-            "",
-            { it.realmId },
-            { mut, v -> mut.realmId = v },
-        );
-        BookPresenceSerializerImpl.addField(
-            "book_id",
-            "bookId",
-            1,
-            skirout.kernel.v1.record_id.RecordId.serializer,
-            "",
-            { it.bookId },
-            { mut, v -> mut.bookId = v },
-        );
-        BookPresenceSerializerImpl.finalizeStruct();
-
         MembersPresenceSerializerImpl.finalizeStruct();
 
         OrganizationPresenceSerializerImpl.finalizeStruct();
-
-        PageActivitySerializerImpl.addConstantVariant(
-            1,
-            "overview",
-            skirout.organization.v1.presence.PageActivity.Kind.OVERVIEW_CONST.ordinal,
-            "",
-            skirout.organization.v1.presence.PageActivity.OVERVIEW,
-        );
-        PageActivitySerializerImpl.addConstantVariant(
-            2,
-            "graph",
-            skirout.organization.v1.presence.PageActivity.Kind.GRAPH_CONST.ordinal,
-            "",
-            skirout.organization.v1.presence.PageActivity.GRAPH,
-        );
-        PageActivitySerializerImpl.addConstantVariant(
-            3,
-            "timeline",
-            skirout.organization.v1.presence.PageActivity.Kind.TIMELINE_CONST.ordinal,
-            "",
-            skirout.organization.v1.presence.PageActivity.TIMELINE,
-        );
-        PageActivitySerializerImpl.addConstantVariant(
-            4,
-            "inspector",
-            skirout.organization.v1.presence.PageActivity.Kind.INSPECTOR_CONST.ordinal,
-            "",
-            skirout.organization.v1.presence.PageActivity.INSPECTOR,
-        );
-        PageActivitySerializerImpl.finalizeEnum();
-
-        PagePresenceSerializerImpl.addField(
-            "realm_id",
-            "realmId",
-            0,
-            skirout.kernel.v1.record_id.RecordId.serializer,
-            "",
-            { it.realmId },
-            { mut, v -> mut.realmId = v },
-        );
-        PagePresenceSerializerImpl.addField(
-            "book_id",
-            "bookId",
-            1,
-            skirout.kernel.v1.record_id.RecordId.serializer,
-            "",
-            { it.bookId },
-            { mut, v -> mut.bookId = v },
-        );
-        PagePresenceSerializerImpl.addField(
-            "page_id",
-            "pageId",
-            2,
-            skirout.kernel.v1.record_id.RecordId.serializer,
-            "",
-            { it.pageId },
-            { mut, v -> mut.pageId = v },
-        );
-        PagePresenceSerializerImpl.addField(
-            "activity",
-            "activity",
-            3,
-            _SerializerRegistry.PageActivitySerializer,
-            "",
-            { it.activity },
-            { mut, v -> mut.activity = v },
-        );
-        PagePresenceSerializerImpl.finalizeStruct();
 
         PanelPresenceSerializerImpl.addField(
             "session_id",
@@ -2407,52 +1619,14 @@ private object _SerializerRegistry {
         );
         PresenceLocationSerializerImpl.addWrapperVariant(
             7,
-            "realm_library",
-            skirout.organization.v1.presence.PresenceLocation.Kind.REALM_LIBRARY_WRAPPER.ordinal,
-            _SerializerRegistry.RealmLibraryPresenceSerializer,
+            "resource",
+            skirout.organization.v1.presence.PresenceLocation.Kind.RESOURCE_WRAPPER.ordinal,
+            _SerializerRegistry.ResourcePresenceSerializer,
             "",
-            { skirout.organization.v1.presence.PresenceLocation.RealmLibraryWrapper(it) },
-            { it.value },
-        );
-        PresenceLocationSerializerImpl.addWrapperVariant(
-            8,
-            "realm_tags",
-            skirout.organization.v1.presence.PresenceLocation.Kind.REALM_TAGS_WRAPPER.ordinal,
-            _SerializerRegistry.RealmTagsPresenceSerializer,
-            "",
-            { skirout.organization.v1.presence.PresenceLocation.RealmTagsWrapper(it) },
-            { it.value },
-        );
-        PresenceLocationSerializerImpl.addWrapperVariant(
-            9,
-            "book",
-            skirout.organization.v1.presence.PresenceLocation.Kind.BOOK_WRAPPER.ordinal,
-            _SerializerRegistry.BookPresenceSerializer,
-            "",
-            { skirout.organization.v1.presence.PresenceLocation.BookWrapper(it) },
-            { it.value },
-        );
-        PresenceLocationSerializerImpl.addWrapperVariant(
-            10,
-            "page",
-            skirout.organization.v1.presence.PresenceLocation.Kind.PAGE_WRAPPER.ordinal,
-            _SerializerRegistry.PagePresenceSerializer,
-            "",
-            { skirout.organization.v1.presence.PresenceLocation.PageWrapper(it) },
+            { skirout.organization.v1.presence.PresenceLocation.ResourceWrapper(it) },
             { it.value },
         );
         PresenceLocationSerializerImpl.finalizeEnum();
-
-        RealmLibraryPresenceSerializerImpl.addField(
-            "realm_id",
-            "realmId",
-            0,
-            skirout.kernel.v1.record_id.RecordId.serializer,
-            "",
-            { it.realmId },
-            { mut, v -> mut.realmId = v },
-        );
-        RealmLibraryPresenceSerializerImpl.finalizeStruct();
 
         RealmPresenceSerializerImpl.addField(
             "realm_id",
@@ -2467,7 +1641,7 @@ private object _SerializerRegistry {
 
         RealmsPresenceSerializerImpl.finalizeStruct();
 
-        RealmTagsPresenceSerializerImpl.addField(
+        ResourcePresenceSerializerImpl.addField(
             "realm_id",
             "realmId",
             0,
@@ -2476,7 +1650,16 @@ private object _SerializerRegistry {
             { it.realmId },
             { mut, v -> mut.realmId = v },
         );
-        RealmTagsPresenceSerializerImpl.finalizeStruct();
+        ResourcePresenceSerializerImpl.addField(
+            "resource_id",
+            "resourceId",
+            1,
+            skirout.editor.v1.type_catalog.ResourceId.serializer,
+            "",
+            { it.resourceId },
+            { mut, v -> mut.resourceId = v },
+        );
+        ResourcePresenceSerializerImpl.finalizeStruct();
 
         ServicePresenceSerializerImpl.addField(
             "service_id",

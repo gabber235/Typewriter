@@ -36,6 +36,7 @@ extension ServicePortablePresentation on Service {
   }) => BoundPresentationHost(
     catalog: _servicePortableCatalog,
     root: () => _servicePortablePresentation(color, serviceId.id),
+    contextInputs: [panelSelectionCountInput],
     budget: skir.EvaluationBudget(maxSteps: 512, maxCollectionItems: 64),
     bindings: [
       _serviceNamePresentationBinding(identityOwner),
@@ -156,10 +157,21 @@ final _serviceNameMappings =
     (skir.ValueMappings.mutable()
           ..completion = skir.ExpressionMapping(
             inputBinding: _serviceNameCandidate,
-            body: skir.ExpressionNode.createRegexReplace(source:skir.ExpressionNode.createRegexReplace(source:skir.ExpressionNode.createTextUnary(operation:skir.TextUnaryOperation.lower,source:skir.ExpressionNode.createInput(
-                          binding: _serviceNameCandidate,
-                          path: editorRootPath,
-                        )),pattern:_portableLiteral(r"[\s\-]+"),replacement:_portableLiteral("_")),pattern:_portableLiteral("[^a-z0-9_]"),replacement:_portableLiteral("")),
+            body: skir.ExpressionNode.createRegexReplace(
+              source: skir.ExpressionNode.createRegexReplace(
+                source: skir.ExpressionNode.createTextUnary(
+                  operation: skir.TextUnaryOperation.lower,
+                  source: skir.ExpressionNode.createInput(
+                    binding: _serviceNameCandidate,
+                    path: editorRootPath,
+                  ),
+                ),
+                pattern: _portableLiteral(r"[\s\-]+"),
+                replacement: _portableLiteral("_"),
+              ),
+              pattern: _portableLiteral("[^a-z0-9_]"),
+              replacement: _portableLiteral(""),
+            ),
           ))
         .toFrozen();
 final _serviceNameFilters = [

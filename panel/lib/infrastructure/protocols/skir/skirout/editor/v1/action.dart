@@ -2721,6 +2721,7 @@ final class AuthoringCapabilityAction_mutable
 ///     case EditorAction_realm(:var value): { ... }
 ///     case EditorAction_navigate(:var value): { ... }
 ///     case EditorAction_authoring(:var value): { ... }
+///     case EditorAction_create(:var value): { ... }
 ///   }
 ///   ```
 ///
@@ -2765,6 +2766,19 @@ sealed class EditorAction {
       targets: targets,
       initialInput: initialInput,
     ),
+  );
+
+  /// Create a 'create' variant wrapping around the given value.
+  factory EditorAction.wrapCreate(CreateResourceAction value) =>
+      EditorAction_createWrapper._(value);
+
+  /// Same as `wrapCreate(CreateResourceAction(...))`.
+  factory EditorAction.createCreate({
+    required _lib_editor_v1_type_catalog.TypeDefinitionId_orMutable type,
+    required _lib_editor_v1_binding.BindingRef_orMutable? owner,
+    required _core.Iterable<CreateFieldValue_orMutable> fields,
+  }) => EditorAction.wrapCreate(
+    CreateResourceAction(type: type, owner: owner, fields: fields),
   );
 
   /// Returns the kind of variant held by this EditorAction.
@@ -2813,6 +2827,16 @@ sealed class EditorAction {
         (it) => it.value,
         ordinal: EditorAction_kind.authoringWrapper._ordinal,
       );
+      _serializerBuilder.addWrapperVariant(
+        5,
+        "create",
+        "wrapCreate",
+        CreateResourceAction.serializer,
+        "",
+        EditorAction_createWrapper._,
+        (it) => it.value,
+        ordinal: EditorAction_kind.createWrapper._ordinal,
+      );
       _serializerBuilder.finalize();
     }
     return _serializerBuilder.serializer;
@@ -2836,7 +2860,8 @@ enum EditorAction_kind {
   localWrapper(1),
   realmWrapper(2),
   navigateWrapper(3),
-  authoringWrapper(4);
+  authoringWrapper(4),
+  createWrapper(5);
 
   final _core.int _ordinal;
 
@@ -2913,4 +2938,322 @@ final class EditorAction_authoringWrapper extends _EditorAction_wrapper {
 
   @_core.override
   EditorAction_kind get kind => EditorAction_kind.authoringWrapper;
+}
+
+final class EditorAction_createWrapper extends _EditorAction_wrapper {
+  final CreateResourceAction value;
+
+  EditorAction_createWrapper._(this.value);
+
+  @_core.override
+  EditorAction_kind get kind => EditorAction_kind.createWrapper;
+}
+
+// -----------------------------------------------------------------------------
+// struct CreateFieldValue
+// -----------------------------------------------------------------------------
+
+sealed class CreateFieldValue_orMutable {
+  _lib_editor_v1_type_catalog.ValuePath_orMutable get path;
+  _lib_editor_v1_expression.ExpressionNode get value;
+
+  CreateFieldValue toFrozen();
+}
+
+/// A preset value for one field of the created resource, addressed relative to the created type.
+/// A value that evaluates to missing leaves the field at its creation default.
+///
+/// Deeply immutable.
+final class CreateFieldValue implements CreateFieldValue_orMutable {
+  @_core.override
+  final _lib_editor_v1_type_catalog.ValuePath path;
+  @_core.override
+  final _lib_editor_v1_expression.ExpressionNode value;
+  _skir.internal__UnrecognizedFields? _u;
+
+  factory CreateFieldValue({
+    required _lib_editor_v1_type_catalog.ValuePath_orMutable path,
+    required _lib_editor_v1_expression.ExpressionNode value,
+  }) => CreateFieldValue._(path.toFrozen(), value);
+
+  CreateFieldValue._(this.path, this.value);
+
+  /// Default instance with all fields set to their default values.
+  static final defaultInstance = CreateFieldValue._(
+    _lib_editor_v1_type_catalog.ValuePath.defaultInstance,
+    _lib_editor_v1_expression.ExpressionNode.unknown,
+  );
+
+  /// Returns a new mutable instance.
+  /// Fields are initialized to their default values.
+  static CreateFieldValue_mutable mutable() => CreateFieldValue_mutable._(
+    _lib_editor_v1_type_catalog.ValuePath.defaultInstance,
+    _lib_editor_v1_expression.ExpressionNode.unknown,
+  );
+
+  /// Returns this instance (no-op).
+  @_core.Deprecated("This instance is already frozen.")
+  @_core.override
+  CreateFieldValue toFrozen() => this;
+
+  /// Returns a mutable shallow copy of this instance.
+  CreateFieldValue_mutable toMutable() =>
+      CreateFieldValue_mutable._(this.path, this.value);
+
+  @_core.override
+  _core.bool operator ==(other) {
+    if (_core.identical(this, other)) return true;
+    if (other is! CreateFieldValue) return false;
+    return _skir.internal__listEquality.equals(
+      _equality_proxy,
+      other._equality_proxy,
+    );
+  }
+
+  @_core.override
+  _core.int get hashCode => _skir.internal__listEquality.hash(_equality_proxy);
+
+  _core.List get _equality_proxy => [this.path, this.value];
+
+  @_core.override
+  _core.String toString() => _skir.internal__stringify(this, serializer);
+
+  /// Serializer for `CreateFieldValue` instances.
+  static _skir.StructSerializer<CreateFieldValue, CreateFieldValue_mutable>
+  get serializer {
+    if (_serializerBuilder.mustInitialize()) {
+      _serializerBuilder.addField(
+        "path",
+        "path",
+        0,
+        _lib_editor_v1_type_catalog.ValuePath.serializer,
+        "",
+        (it) => it.path,
+        (it, v) => it.path = v,
+      );
+      _serializerBuilder.addField(
+        "value",
+        "value",
+        1,
+        _lib_editor_v1_expression.ExpressionNode.serializer,
+        "",
+        (it) => it.value,
+        (it, v) => it.value = v,
+      );
+      _serializerBuilder.finalize();
+    }
+    return _serializerBuilder.serializer;
+  }
+
+  static final _serializerBuilder = _skir.internal__StructSerializerBuilder(
+    recordId: "editor/v1/action.skir:CreateFieldValue",
+    doc: "A preset value for one field of the created resource, addressed relative to the created type.\nA value that evaluates to missing leaves the field at its creation default.",
+    defaultInstance: defaultInstance,
+    newMutable: (it) => (it != null) ? it.toMutable() : mutable(),
+    toFrozen: (CreateFieldValue_mutable it) => it.toFrozen(),
+    getUnrecognizedFields: (it) => it._u,
+    setUnrecognizedFields: (it, u) => it._u = u,
+  );
+}
+
+/// Mutable version of [CreateFieldValue].
+final class CreateFieldValue_mutable implements CreateFieldValue_orMutable {
+  _lib_editor_v1_type_catalog.ValuePath_orMutable path;
+  _lib_editor_v1_expression.ExpressionNode value;
+  _skir.internal__UnrecognizedFields? _u;
+
+  CreateFieldValue_mutable._(this.path, this.value);
+
+  /// If the value of [path] is already mutable, returns it as-is.
+  /// Otherwise, makes a mutable copy, assigns it back to [path] and returns it.
+  _lib_editor_v1_type_catalog.ValuePath_mutable get mutablePath {
+    final value = this.path;
+    if (value is _lib_editor_v1_type_catalog.ValuePath_mutable) {
+      return value;
+    } else {
+      return this.path = (value as _lib_editor_v1_type_catalog.ValuePath)
+          .toMutable();
+    }
+  }
+
+  /// Returns a deeply immutable copy of this instance.
+  @_core.override
+  CreateFieldValue toFrozen() =>
+      CreateFieldValue(path: this.path, value: this.value).._u = this._u;
+}
+
+// -----------------------------------------------------------------------------
+// struct CreateResourceAction
+// -----------------------------------------------------------------------------
+
+sealed class CreateResourceAction_orMutable {
+  _lib_editor_v1_type_catalog.TypeDefinitionId_orMutable get type;
+  _lib_editor_v1_binding.BindingRef_orMutable? get owner;
+  _core.Iterable<CreateFieldValue_orMutable> get fields;
+
+  CreateResourceAction toFrozen();
+}
+
+/// Creates a resource of `type` and links it at `owner`, with preset fields. The owner is the
+/// link field of an ownership relation the new resource joins, such as the pages of the routed
+/// Book, so an owner type with two owning fields is never ambiguous. Without an owner, the host
+/// chooses one, for example the single instance of a realm section.
+///
+/// Deeply immutable.
+final class CreateResourceAction implements CreateResourceAction_orMutable {
+  @_core.override
+  final _lib_editor_v1_type_catalog.TypeDefinitionId type;
+  @_core.override
+  final _lib_editor_v1_binding.BindingRef? owner;
+  @_core.override
+  final _core.Iterable<CreateFieldValue> fields;
+  _skir.internal__UnrecognizedFields? _u;
+
+  factory CreateResourceAction({
+    required _lib_editor_v1_type_catalog.TypeDefinitionId_orMutable type,
+    required _lib_editor_v1_binding.BindingRef_orMutable? owner,
+    required _core.Iterable<CreateFieldValue_orMutable> fields,
+  }) => CreateResourceAction._(
+    type.toFrozen(),
+    (owner != null) ? owner.toFrozen() : null,
+    _skir.internal__frozenMappedCopy(fields, (it) => it.toFrozen()),
+  );
+
+  CreateResourceAction._(this.type, this.owner, this.fields);
+
+  /// Default instance with all fields set to their default values.
+  static final defaultInstance = CreateResourceAction._(
+    _lib_editor_v1_type_catalog.TypeDefinitionId.defaultInstance,
+    null,
+    _skir.KeyedIterable.empty,
+  );
+
+  /// Returns a new mutable instance.
+  /// Fields are initialized to their default values.
+  static CreateResourceAction_mutable mutable() =>
+      CreateResourceAction_mutable._(
+        _lib_editor_v1_type_catalog.TypeDefinitionId.defaultInstance,
+        null,
+        _skir.KeyedIterable.empty,
+      );
+
+  /// Returns this instance (no-op).
+  @_core.Deprecated("This instance is already frozen.")
+  @_core.override
+  CreateResourceAction toFrozen() => this;
+
+  /// Returns a mutable shallow copy of this instance.
+  CreateResourceAction_mutable toMutable() =>
+      CreateResourceAction_mutable._(this.type, this.owner, this.fields);
+
+  @_core.override
+  _core.bool operator ==(other) {
+    if (_core.identical(this, other)) return true;
+    if (other is! CreateResourceAction) return false;
+    return _skir.internal__listEquality.equals(
+      _equality_proxy,
+      other._equality_proxy,
+    );
+  }
+
+  @_core.override
+  _core.int get hashCode => _skir.internal__listEquality.hash(_equality_proxy);
+
+  _core.List get _equality_proxy => [this.type, this.owner, this.fields];
+
+  @_core.override
+  _core.String toString() => _skir.internal__stringify(this, serializer);
+
+  /// Serializer for `CreateResourceAction` instances.
+  static _skir.StructSerializer<
+    CreateResourceAction,
+    CreateResourceAction_mutable
+  >
+  get serializer {
+    if (_serializerBuilder.mustInitialize()) {
+      _serializerBuilder.addField(
+        "type",
+        "type",
+        0,
+        _lib_editor_v1_type_catalog.TypeDefinitionId.serializer,
+        "",
+        (it) => it.type,
+        (it, v) => it.type = v,
+      );
+      _serializerBuilder.addField(
+        "owner",
+        "owner",
+        1,
+        _skir.Serializers.optional(
+          _lib_editor_v1_binding.BindingRef.serializer,
+        ),
+        "",
+        (it) => it.owner,
+        (it, v) => it.owner = v,
+      );
+      _serializerBuilder.addField(
+        "fields",
+        "fields",
+        2,
+        _skir.Serializers.iterable(CreateFieldValue.serializer),
+        "",
+        (it) => it.fields,
+        (it, v) => it.fields = v,
+      );
+      _serializerBuilder.finalize();
+    }
+    return _serializerBuilder.serializer;
+  }
+
+  static final _serializerBuilder = _skir.internal__StructSerializerBuilder(
+    recordId: "editor/v1/action.skir:CreateResourceAction",
+    doc: "Creates a resource of [type] and links it at [owner], with preset fields. The owner is the\nlink field of an ownership relation the new resource joins, such as the pages of the routed\nBook, so an owner type with two owning fields is never ambiguous. Without an owner, the host\nchooses one, for example the single instance of a realm section.",
+    defaultInstance: defaultInstance,
+    newMutable: (it) => (it != null) ? it.toMutable() : mutable(),
+    toFrozen: (CreateResourceAction_mutable it) => it.toFrozen(),
+    getUnrecognizedFields: (it) => it._u,
+    setUnrecognizedFields: (it, u) => it._u = u,
+  );
+}
+
+/// Mutable version of [CreateResourceAction].
+final class CreateResourceAction_mutable
+    implements CreateResourceAction_orMutable {
+  _lib_editor_v1_type_catalog.TypeDefinitionId_orMutable type;
+  _lib_editor_v1_binding.BindingRef_orMutable? owner;
+  _core.Iterable<CreateFieldValue_orMutable> fields;
+  _skir.internal__UnrecognizedFields? _u;
+
+  CreateResourceAction_mutable._(this.type, this.owner, this.fields);
+
+  /// If the value of [type] is already mutable, returns it as-is.
+  /// Otherwise, makes a mutable copy, assigns it back to [type] and returns it.
+  _lib_editor_v1_type_catalog.TypeDefinitionId_mutable get mutableType {
+    final value = this.type;
+    if (value is _lib_editor_v1_type_catalog.TypeDefinitionId_mutable) {
+      return value;
+    } else {
+      return this.type = (value as _lib_editor_v1_type_catalog.TypeDefinitionId)
+          .toMutable();
+    }
+  }
+
+  /// If the value of [fields] is already mutable, returns it as-is.
+  /// Otherwise, makes a mutable copy, assigns it back to [fields] and returns it.
+  _core.List<CreateFieldValue_orMutable> get mutableFields {
+    final value = this.fields;
+    if (value is _skir.internal__MutableList<CreateFieldValue_orMutable>) {
+      return value;
+    } else {
+      return this.fields = _skir.internal__MutableList([...value]);
+    }
+  }
+
+  /// Returns a deeply immutable copy of this instance.
+  @_core.override
+  CreateResourceAction toFrozen() => CreateResourceAction(
+    type: this.type,
+    owner: this.owner,
+    fields: this.fields,
+  ).._u = this._u;
 }

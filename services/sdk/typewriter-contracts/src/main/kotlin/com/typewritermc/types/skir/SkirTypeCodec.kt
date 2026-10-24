@@ -1,9 +1,6 @@
 package com.typewritermc.types.skir
 
-import com.typewritermc.authoring.AuthoringNavigationHandler
-import com.typewritermc.authoring.AuthoringResourceDefinition
 import com.typewritermc.authoring.PathSegment
-import com.typewritermc.authoring.ResourceDefinitionId
 import com.typewritermc.authoring.ValuePath
 import com.typewritermc.capability.RealmCapabilityDescriptor
 import com.typewritermc.checking.Diagnostic
@@ -37,6 +34,7 @@ import com.typewritermc.types.PresentationRole
 import com.typewritermc.types.RelationContract
 import com.typewritermc.types.RelationDeletePolicy
 import com.typewritermc.types.RepresentationTemplate
+import com.typewritermc.types.ResourceTarget
 import com.typewritermc.types.ScalarKind
 import com.typewritermc.types.TypeDefinition
 import com.typewritermc.types.TypeDefinitionId
@@ -50,14 +48,14 @@ import com.typewritermc.types.catalog.DeclarationStatus
 import com.typewritermc.types.catalog.EditorCatalogSnapshot
 import com.typewritermc.types.catalog.EffectiveFieldTemplate
 import com.typewritermc.types.catalog.PublishedType
+import com.typewritermc.types.catalog.ResourceDisplayFormulas
 import com.typewritermc.types.catalog.TypeRecommendation
+import com.typewritermc.types.toWire
 import skirout.editor.v1.catalog.EditorCatalogWireSnapshot
 import skirout.editor.v1.capability.CapabilityDefinition as SkirCapabilityDefinition
 import skirout.editor.v1.capability.CommandCapabilityDefinition as SkirCommandCapabilityDefinition
 import skirout.editor.v1.capability.ComputationCapabilityDefinition as SkirComputationCapabilityDefinition
 import skirout.editor.v1.capability.SearchCapabilityDefinition as SkirSearchCapabilityDefinition
-import skirout.editor.v1.catalog.AuthoringNavigationHandler as SkirAuthoringNavigationHandler
-import skirout.editor.v1.catalog.AuthoringResourceDefinition as SkirAuthoringResourceDefinition
 import skirout.editor.v1.catalog.ConfigurationRecipe as SkirConfigurationRecipe
 import skirout.editor.v1.catalog.DeclarationStatus as SkirDeclarationStatus
 import skirout.editor.v1.catalog.EffectiveFieldTemplate as SkirEffectiveFieldTemplate
@@ -73,6 +71,7 @@ import skirout.editor.v1.catalog.PublishedType as SkirPublishedType
 import skirout.editor.v1.catalog.RelationContract as SkirRelationContract
 import skirout.editor.v1.catalog.RelationDeletePolicy as SkirRelationDeletePolicy
 import skirout.editor.v1.catalog.RepresentationKind as SkirRepresentationKind
+import skirout.editor.v1.catalog.ResourceDisplayFormulas as SkirResourceDisplayFormulas
 import skirout.editor.v1.catalog.RoleFallback as SkirRoleFallback
 import skirout.editor.v1.catalog.RuleDescriptor as SkirRuleDescriptor
 import skirout.editor.v1.catalog.TypeDisplay as SkirTypeDisplay
@@ -109,6 +108,7 @@ import skirout.editor.v1.type_catalog.ProducerId as SkirProducerId
 import skirout.editor.v1.type_catalog.QualifiedTypeId as SkirQualifiedTypeId
 import skirout.editor.v1.type_catalog.RelativeFieldPattern as SkirRelativeFieldPattern
 import skirout.editor.v1.type_catalog.RepresentationTemplate as SkirRepresentationTemplate
+import skirout.editor.v1.type_catalog.ResourceTarget as SkirResourceTarget
 import skirout.editor.v1.type_catalog.RuleId as SkirRuleId
 import skirout.editor.v1.type_catalog.RuleOrigin as SkirRuleOrigin
 import skirout.editor.v1.type_catalog.ScalarKind as SkirScalarKind
@@ -505,13 +505,7 @@ private fun ConversionScope.encodeSnapshot(snapshot: EditorCatalogSnapshot) =
                 .CatalogGeneration(value = snapshot.generation.value),
         types = snapshot.types.mapIndexed { index, value -> at("type $index") { encode(value) } },
         relations = snapshot.relations.mapIndexed { index, value -> at("relation $index") { encode(value) } },
-        resourceDefinitions =
-            snapshot.resourceDefinitions.mapIndexed {
-                index,
-                value,
-                ->
-                at("resource definition $index") { encode(value) }
-            },
+        resourceDisplays = snapshot.resourceDisplays.mapIndexed { index, value -> at("resource display $index") { encode(value) } },
         presentations = snapshot.presentations.mapIndexed { index, value -> at("presentation $index") { encode(value) } },
         presentationMaterials =
             snapshot.presentationMaterials.mapIndexed {
@@ -527,11 +521,22 @@ private fun ConversionScope.encodeSnapshot(snapshot: EditorCatalogSnapshot) =
         recommendations = snapshot.recommendations.mapIndexed { index, value -> at("recommendation $index") { encode(value) } },
         roleFallbacks = snapshot.roleFallbacks.mapIndexed { index, value -> at("role fallback $index") { encode(value) } },
         resourceOperations = snapshot.resourceOperations.mapIndexed { index, value -> at("resource operation $index") { encode(value) } },
-        resourceOperationContributions =
-            snapshot.resourceOperationContributions.mapIndexed { index, value ->
-                at("resource operation contribution $index") { encode(value) }
-            },
+        realmRoot = encodeDefinitionId(snapshot.realmRoot),
     )
+
+private fun ConversionScope.encode(display: ResourceDisplayFormulas) =
+    SkirResourceDisplayFormulas(
+        target = encode(display.target),
+        label = display.label,
+        accent = display.accent,
+        icon = display.icon,
+    )
+
+internal fun ConversionScope.encode(target: ResourceTarget): SkirResourceTarget =
+    when (target) {
+        is ResourceTarget.Type -> SkirResourceTarget.TypeWrapper(encodeTypeTemplate(target.template))
+        ResourceTarget.AnyResource -> SkirResourceTarget.ANY_RESOURCE
+    }
 
 private fun encode(fallback: RoleFallback): SkirRoleFallback =
     SkirRoleFallback(
@@ -629,14 +634,16 @@ private fun ConversionScope.encode(type: PublishedType) =
             },
         effectiveFields = type.effectiveFields.map(::encode),
         ancestorTemplates = type.ancestorTemplates.map(::encodeNamedTypeTemplate),
-        display = type.display?.let(::encode),
+        display = encode(type.display),
+        searchKey = type.searchKey,
+        placementField = type.placementField?.let { encodeValuePath(it) },
     )
 
 private fun ConversionScope.encode(display: TypeDisplay) =
     SkirTypeDisplay(
         name = display.name,
         description = display.description,
-        icon = display.icon,
+        icon = display.icon.toWire(),
         color = SkirColor(argb = display.color.argb.toInt()),
     )
 
@@ -686,22 +693,6 @@ private fun ConversionScope.encode(endpoint: EndpointDefinition) =
             },
     )
 
-private fun ConversionScope.encode(resource: AuthoringResourceDefinition) =
-    SkirAuthoringResourceDefinition(
-        id =
-            skirout.editor.v1.catalog
-                .ResourceDefinitionId(value = resource.id.value),
-        root = encodeDefinitionId(resource.root),
-        navigationHandler =
-            when (resource.navigationHandler) {
-                AuthoringNavigationHandler.GENERIC -> SkirAuthoringNavigationHandler.GENERIC
-                AuthoringNavigationHandler.BOOK -> SkirAuthoringNavigationHandler.BOOK
-                AuthoringNavigationHandler.PAGE -> SkirAuthoringNavigationHandler.PAGE
-                AuthoringNavigationHandler.PAGE_ELEMENT -> SkirAuthoringNavigationHandler.PAGE_ELEMENT
-                AuthoringNavigationHandler.TAGS -> SkirAuthoringNavigationHandler.TAGS
-            },
-    )
-
 private fun ConversionScope.encode(presentation: PresentationDescriptor) =
     SkirPresentationDescriptor(
         id = encode(presentation.id),
@@ -719,7 +710,6 @@ private fun ConversionScope.encode(material: PresentationMaterial) =
         layout = material.layout,
         dependencies = material.dependencies,
         subject = encodeTypeTemplate(material.subject),
-        resultAppearance = material.resultAppearance,
         inheritableNodes = material.inheritableNodes,
     )
 
@@ -744,12 +734,13 @@ private fun ConversionScope.encode(target: PresentationTarget): SkirPresentation
 
 private fun encode(role: PresentationRole): SkirPresentationRole =
     when (role) {
-        PresentationRole.WORKSPACE_EDITOR -> SkirPresentationRole.WORKSPACE_EDITOR
+        PresentationRole.WORKSPACE -> SkirPresentationRole.WORKSPACE
+        PresentationRole.NAVIGATOR -> SkirPresentationRole.NAVIGATOR
         PresentationRole.INSPECTOR -> SkirPresentationRole.INSPECTOR
+        PresentationRole.ITEM -> SkirPresentationRole.ITEM
         PresentationRole.REFERENCE_PREVIEW -> SkirPresentationRole.REFERENCE_PREVIEW
         PresentationRole.REFERENCE_PICKER_RESULT -> SkirPresentationRole.REFERENCE_PICKER_RESULT
         PresentationRole.RESOURCE_SEARCH_RESULT -> SkirPresentationRole.RESOURCE_SEARCH_RESULT
-        PresentationRole.EDITOR_NODE -> SkirPresentationRole.EDITOR_NODE
     }
 
 private fun encode(kind: RepresentationKind): SkirRepresentationKind =

@@ -17,7 +17,6 @@ final class ResourceOperationRunner {
     required this.commands,
     required this.invocation,
     required this.label,
-    this.declaredConfirmation,
     this.canMutate,
   }) : _router = ref.read(appRouterProvider),
        _navigation = ref.read(appRouterProvider).navigationRevision {
@@ -36,7 +35,6 @@ final class ResourceOperationRunner {
   final AuthoredResourceCommands commands;
   final skir.OperationInvocation invocation;
   final String label;
-  final skir.OperationConfirmation? declaredConfirmation;
   final bool Function()? canMutate;
   late final ProviderSubscription<AuthoredResourceCommands> _commandsLease;
   final AppRouter _router;
@@ -44,7 +42,6 @@ final class ResourceOperationRunner {
   bool _closed = false;
   bool _navigating = false;
   bool _mutating = false;
-  bool _declarationConfirmed = false;
   ModalRoute<dynamic>? _ownedDialog;
 
   void _cancelExpiredDialog() {
@@ -90,15 +87,9 @@ final class ResourceOperationRunner {
     skir.ResourceNavigationMode mode,
   ) async {
     if (!isCurrent) return;
-    if (declaredConfirmation != null &&
-        !_declarationConfirmed &&
-        !await _confirm(null)) {
-      return;
-    }
-    if (!isCurrent) return;
     _navigating = true;
     await ref
-        .read(resourceOperationNavigationProvider)
+        .read(realmSurfaceNavigationProvider)
         .navigate(scope, resource, mode, isCurrent: () => _locationIsCurrent);
   }
 
@@ -106,7 +97,7 @@ final class ResourceOperationRunner {
     skir.CapabilityId capability,
     skir.DataValue payload,
   ) async {
-    if (!mutationAllowed || !await _confirm(null) || !mutationAllowed) return;
+    if (!mutationAllowed) return;
     _mutating = true;
     final result = await commands.invokeCommand(
       capabilityId: capability,
@@ -123,7 +114,7 @@ final class ResourceOperationRunner {
   }
 
   Future<void> reload() async {
-    if (!mutationAllowed || !await _confirm(null) || !mutationAllowed) return;
+    if (!mutationAllowed) return;
     _mutating = true;
     await commands.reload();
   }
@@ -194,6 +185,7 @@ final class ResourceOperationRunner {
             invocation: call,
             input: input,
             presentation: definition.input?.presentation,
+            candidateSearches: _candidateSearches(capability),
             problems: problems,
             choices: choices,
             answers: answers,
@@ -247,7 +239,7 @@ final class ResourceOperationRunner {
               _applySelection(value.selection);
               _navigating = true;
               await ref
-                  .read(resourceOperationNavigationProvider)
+                  .read(realmSurfaceNavigationProvider)
                   .recoverRemovedRoute(
                     scope,
                     before,
@@ -278,6 +270,26 @@ final class ResourceOperationRunner {
     }
   }
 
+  /// The candidate searches the catalog publishes for top level input fields
+  /// of [capability], keyed by field name. Each is the operation capability,
+  /// then `/candidates/`, then the field name.
+  Map<String, skir.CapabilityId> _candidateSearches(
+    skir.CapabilityId capability,
+  ) {
+    final prefix = "${capability.value}/candidates/";
+    return {
+      for (final search
+          in workspace.document.catalog.snapshot.capabilities
+              .whereType<skir.CapabilityDefinition_searchWrapper>())
+        if (search.value.capabilityId.value.startsWith(prefix) &&
+            !search.value.capabilityId.value
+                .substring(prefix.length)
+                .contains("."))
+          search.value.capabilityId.value.substring(prefix.length):
+              search.value.capabilityId,
+    };
+  }
+
   void _requireResponse(skir.InvocationId id, int received, int submitted) {
     if (id != invocation.invocationId || received != submitted) {
       throw StateError("The operation response belongs to another invocation");
@@ -304,10 +316,8 @@ final class ResourceOperationRunner {
     }
   }
 
-  Future<bool> _confirm(skir.OperationConfirmation? computed) async {
-    // Realm preparation already combines declared and handler confirmations.
-    final warning =
-        computed ?? (_declarationConfirmed ? null : declaredConfirmation);
+  /// The Realm preview carries the operation's declared confirmation.
+  Future<bool> _confirm(skir.OperationConfirmation? warning) async {
     if (warning == null) return mutationAllowed;
     final confirmed =
         await _showOwnedDialog<bool>(
@@ -328,7 +338,6 @@ final class ResourceOperationRunner {
           ),
         ) ??
         false;
-    if (confirmed) _declarationConfirmed = true;
     return confirmed;
   }
 
@@ -336,6 +345,7 @@ final class ResourceOperationRunner {
     required skir.OperationInvocation invocation,
     required OperationInputDraft? input,
     required skir.PresentationId? presentation,
+    required Map<String, skir.CapabilityId> candidateSearches,
     required List<skir.OperationInputProblem> problems,
     required List<skir.PreparationChoice> choices,
     required Map<skir.PreparationChoiceId, skir.PreparationChoiceAnswer>
@@ -344,6 +354,7 @@ final class ResourceOperationRunner {
   }) async {
     final host = input?.createHost(
       presentation: presentation,
+      candidateSearches: candidateSearches,
       capabilities: PortablePresentationCapabilities(
         watchSearch: (request) async* {
           final revision = input.revision;

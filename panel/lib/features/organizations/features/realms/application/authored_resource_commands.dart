@@ -25,6 +25,7 @@ AuthoredResourceCommands authoredResourceCommands(
     },
     prepareValue: session.prepareValue,
     resolveResourceOperations: session.resolveResourceOperations,
+    resolveDropCandidates: session.resolveDropCandidates,
     prepareAuthoringAction: session.prepareAuthoringAction,
     prepareStep: session.prepareStep,
     invokeCommand: session.invokeCommand,
@@ -45,6 +46,7 @@ final class AuthoredResourceCommands {
     required this.search,
     required this.reload,
     this.resolveResourceOperations = _operationsUnavailable,
+    this.resolveDropCandidates = _dropCandidatesUnavailable,
     this.prepareAuthoringAction = _preparationUnavailable,
   });
 
@@ -82,6 +84,12 @@ final class AuthoredResourceCommands {
     skir.ResolveResourceOperationsRequest request,
   )
   resolveResourceOperations;
+
+  /// Resolves, once per drag, where the dragged resources may land.
+  final Future<skir.ResolveDropCandidatesResult> Function(
+    skir.ResolveDropCandidatesRequest request,
+  )
+  resolveDropCandidates;
   final Future<skir.AuthoringActionResult> Function(
     skir.PrepareAuthoringActionRequest request,
   )
@@ -91,6 +99,10 @@ final class AuthoredResourceCommands {
   static Future<skir.ResolveResourceOperationsResult> _operationsUnavailable(
     skir.ResolveResourceOperationsRequest request,
   ) async => throw StateError("Resource operations are unavailable");
+
+  static Future<skir.ResolveDropCandidatesResult> _dropCandidatesUnavailable(
+    skir.ResolveDropCandidatesRequest request,
+  ) async => throw StateError("Drop candidates are unavailable");
 
   static Future<skir.AuthoringActionResult> _preparationUnavailable(
     skir.PrepareAuthoringActionRequest request,

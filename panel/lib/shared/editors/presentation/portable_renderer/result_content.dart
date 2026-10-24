@@ -1,19 +1,21 @@
 part of "../portable_presentation_renderer.dart";
 
-/// Adapts a portable result presentation to the shared row owner. Content is
-/// read only and the row retains activation and focus behavior. Invalid appearance
-/// expressions show feedback alongside the result body rather than replacing it.
+/// The uniform host chrome around a portable result body.
+///
+/// The surface picks [density]: compact in dropdowns, card in modals. The
+/// name, accent and icon come from the resource's [appearance], so every
+/// result row and picker names a resource the way its display declares. The
+/// body is the presentation's own details, rendered read only; the row keeps
+/// activation and focus. Without an appearance, as for values that are not
+/// resources, the body alone fills the row.
 final class PortableResultContent extends StatelessWidget {
   const PortableResultContent({
     required this.node,
     required this.scope,
     required this.row,
-    required this.fallbackStyle,
-    required this.fallbackKindLabel,
+    required this.density,
     this.appearance,
-    this.kindLabelOverride,
-    this.fallbackLeading,
-    this.fallbackAccent,
+    this.kindLabel = "",
     this.footer,
     super.key,
   });
@@ -21,94 +23,42 @@ final class PortableResultContent extends StatelessWidget {
   final skir.PresentationNode node;
   final PortablePresentationScope scope;
   final SearchResultRowContext row;
-  final SearchResultDensity fallbackStyle;
-  final String fallbackKindLabel;
-  final skir.ResultAppearance? appearance;
-  final String? kindLabelOverride;
-  final Widget? fallbackLeading;
-  final Color? fallbackAccent;
-  final Widget? footer;
+  final SearchResultDensity density;
+  final ResourceAppearance? appearance;
 
-  Color? accent(PortablePresentationScope scope) {
-    final expression = appearance?.accent;
-    if (expression == null) return null;
-    return switch (scope.evaluate(expression)) {
-      PortableExpressionAvailable(:final value)
-          when value.authoredInteger != null =>
-        Color(value.authoredInteger!.toUnsigned(32).toInt()),
-      PortableExpressionFailed(:final message) =>
-        throw PresentationColorFailure(message),
-      PortableExpressionUnavailable() => throw const PresentationColorFailure(
-        "The result accent is unavailable",
-      ),
-      PortableExpressionAvailable() => throw const PresentationColorFailure(
-        "The result accent must evaluate to a color",
-      ),
-    };
-  }
+  /// What kind of result this is, such as the resource type name.
+  final String kindLabel;
+  final Widget? footer;
 
   @override
   Widget build(BuildContext context) {
-    final contentScope = scope.withReadOnly(true).withAuthoredLayout(node);
-    final errors = <String>[];
-    Color? color;
-    try {
-      color = accent(contentScope);
-    } on PresentationColorFailure catch (error) {
-      errors.add(error.message);
-    } on FormatException catch (error) {
-      errors.add(error.message);
-    }
-    var kind = fallbackKindLabel;
-    final kindExpression = appearance?.kindLabel;
-    if (kindExpression != null) {
-      switch (_string(contentScope, kindExpression)) {
-        case _ResolvedValue(:final value):
-          kind = value;
-        case _ResolvedFailure(:final message):
-          errors.add(message);
-      }
-    }
-    final style = appearance?.style;
-    final density = switch (style) {
-      null => fallbackStyle,
-      skir.ResultStyle.compact => SearchResultDensity.compact,
-      skir.ResultStyle.card => SearchResultDensity.card,
-      _ => fallbackStyle,
-    };
-    if (style != null &&
-        style != skir.ResultStyle.compact &&
-        style != skir.ResultStyle.card) {
-      errors.add("The result style is unavailable");
-    }
-    final leadingNode = appearance?.leading;
-    final body = PortablePresentationNodeRenderer(
-      node: node,
-      scope: contentScope,
-    );
+    final details = appearance != null && _declaresNothing(node)
+        ? null
+        : PortablePresentationNodeRenderer(
+            node: node,
+            scope: scope.withReadOnly(true).withAuthoredLayout(node),
+          );
     return SearchResultRow(
       row: row,
       density: density,
-      accent: color ?? fallbackAccent,
-      leading: leadingNode == null
-          ? fallbackLeading
-          : PortablePresentationNodeRenderer(
-              node: leadingNode,
-              scope: contentScope.withAuthoredLayout(leadingNode),
-            ),
-      kindLabel: kindLabelOverride ?? kind,
+      title: appearance?.label,
+      accent: appearance?.accent,
+      leading: appearance == null ? null : ResourceIcon(icon: appearance!.icon),
+      kindLabel: kindLabel,
       footer: footer,
-      body: errors.isEmpty
-          ? body
-          : Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              mainAxisSize: MainAxisSize.min,
-              spacing: context.spacing.space1,
-              children: [
-                body,
-                for (final message in errors) _diagnostic(message),
-              ],
-            ),
+      body: details,
     );
   }
 }
+
+/// Whether [node] is a layout without children, such as the body of a result
+/// presentation that adds no details to the host's name, accent and icon.
+bool _declaresNothing(skir.PresentationNode node) => switch (node.element) {
+  skir.PresentationElement_childrenWrapper(
+    value: skir.ChildrenElement_columnWrapper(:final value) ||
+        skir.ChildrenElement_rowWrapper(:final value),
+  ) =>
+    value.children.isEmpty,
+  null => true,
+  _ => false,
+};

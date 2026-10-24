@@ -17,10 +17,17 @@ annotation class TypewriterRelationFamily(
     val id: String,
 )
 
+/** The owner holds its owned resources: each owned resource has one owner, and ownership never loops. */
 @TypewriterRelationFamily(RESOURCE_OWNERSHIP_FAMILY_ID)
-interface Owning
+interface Owning : Acyclic
 
 const val RESOURCE_OWNERSHIP_FAMILY_ID = "resource.ownership"
+
+/** Following first endpoint to second endpoint never returns to the start. */
+@TypewriterRelationFamily(ACYCLIC_RELATION_FAMILY_ID)
+interface Acyclic
+
+const val ACYCLIC_RELATION_FAMILY_ID = "relation.acyclic"
 
 @Target(AnnotationTarget.CLASS)
 @Retention(AnnotationRetention.BINARY)

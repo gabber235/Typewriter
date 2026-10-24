@@ -30,15 +30,20 @@ extension _PortableLinkInputRendering on PortablePresentationNodeRenderer {
         ?.authoredItems
         ?.toList(growable: false);
     if (items == null) {
-      return _AuthoredLinkValueInput(
-        key: ValueKey("${node.nodeId}.link"),
-        control: control,
-        owner: node,
-        scope: childScope,
-        reference: control.control.binding,
-        location: location,
-        candidates: candidates,
-        candidateDefinition: candidateDefinition,
+      return PortableResourcesInteractionScope.wrapLinkField(
+        context,
+        childScope,
+        location,
+        _AuthoredLinkValueInput(
+          key: ValueKey("${node.nodeId}.link"),
+          control: control,
+          owner: node,
+          scope: childScope,
+          reference: control.control.binding,
+          location: location,
+          candidates: candidates,
+          candidateDefinition: candidateDefinition,
+        ),
       );
     }
     final rowControl =
@@ -46,112 +51,119 @@ extension _PortableLinkInputRendering on PortablePresentationNodeRenderer {
               ..control = (control.control.toMutable()..prefix = null)
                   .toFrozen())
             .toFrozen();
-    return collectionWithFocus(
-      sourceScope: childScope,
-      mutationScope: childScope,
-      reference: control.control.binding,
-      removalKind: _CollectionRemovalKind.none,
-      renderedOrder: [for (final item in items) item.id],
-      sourceHeader: node.header == null
-          ? null
-          : _ScopedCollectionHeader(header: node.header, scope: childScope),
-      fallbackHeader: () => (_generatedEntryHeader(
-        childScope.associationFor(control.control).label ?? "Linked resources",
-      ).toMutable()..initiallyExpanded = true).toFrozen(),
-      contained: true,
-      allowAdd: true,
-      content: control.content,
-      addLabel: "Add link",
-      addIcon: Icons.add_link,
-      add: (context) => unawaited(
-        _addSequenceItem(
-          context: context,
-          control: control.control,
-          linkControl: control,
-          collection: location,
-          childScope: childScope,
+    return PortableResourcesInteractionScope.wrapLinkField(
+      context,
+      childScope,
+      location,
+      collectionWithFocus(
+        sourceScope: childScope,
+        mutationScope: childScope,
+        reference: control.control.binding,
+        removalKind: _CollectionRemovalKind.none,
+        renderedOrder: [for (final item in items) item.id],
+        sourceHeader: node.header == null
+            ? null
+            : _ScopedCollectionHeader(header: node.header, scope: childScope),
+        fallbackHeader: () => (_generatedEntryHeader(
+          childScope.associationFor(control.control).label ??
+              "Linked resources",
+        ).toMutable()..initiallyExpanded = true).toFrozen(),
+        contained: true,
+        allowAdd: true,
+        content: control.content,
+        addLabel: "Add link",
+        addIcon: Icons.add_link,
+        add: (context) => unawaited(
+          _addSequenceItem(
+            context: context,
+            control: control.control,
+            linkControl: control,
+            collection: location,
+            childScope: childScope,
+          ),
         ),
-      ),
-      headerBuilder: headerBuilder,
-      buildBody: (context) {
-        late final CollectionSequence sequence;
-        sequence = CollectionSequence(
-          scope: childScope,
-          collection: control.control.binding,
-          items: items,
-          allowReorder: control.allowReorder,
-          entryBuilder: (context, item, index) {
-            final reference = skir.BindingRef(
-              bindingId: control.control.binding.bindingId,
-              path: skir.ValuePath(
-                segments: [
-                  ...control.control.binding.path.segments,
-                  skir.PathSegment.createItem(id: item.id),
-                ],
-              ),
-            );
-            final itemLocation = skir.ValueLocation(
-              resource: location.resource,
-              path: skir.ValuePath(
-                segments: [
-                  ...location.path.segments,
-                  skir.PathSegment.createItem(id: item.id),
-                ],
-              ),
-            );
-            return directLinkEntry(
-              item: item,
-              reference: reference,
-              location: itemLocation,
-              scope: childScope,
-              owner: node,
-              control: rowControl,
-              candidates: candidates,
-              candidateDefinition: candidateDefinition,
-              fallbackHeader: () => _generatedEntryHeader("Item ${index + 1}"),
-              movementControls: [
-                if (control.allowReorder)
-                  _SuppliedHeaderControl(
-                    command: _CollectionCommand.reorder(
-                      childScope.diagnosticTarget(reference),
-                    ),
-                    build: (context) => sequence.handle(
-                      context,
-                      index,
-                      childScope,
-                      label: "Reorder linked resource ${index + 1}",
-                      icon: _operationGlyph(
-                        control.content?.reorderIcon,
+        headerBuilder: headerBuilder,
+        buildBody: (context) {
+          late final CollectionSequence sequence;
+          sequence = CollectionSequence(
+            scope: childScope,
+            collection: control.control.binding,
+            items: items,
+            allowReorder: control.allowReorder,
+            entryBuilder: (context, item, index) {
+              final reference = skir.BindingRef(
+                bindingId: control.control.binding.bindingId,
+                path: skir.ValuePath(
+                  segments: [
+                    ...control.control.binding.path.segments,
+                    skir.PathSegment.createItem(id: item.id),
+                  ],
+                ),
+              );
+              final itemLocation = skir.ValueLocation(
+                resource: location.resource,
+                path: skir.ValuePath(
+                  segments: [
+                    ...location.path.segments,
+                    skir.PathSegment.createItem(id: item.id),
+                  ],
+                ),
+              );
+              return directLinkEntry(
+                item: item,
+                reference: reference,
+                location: itemLocation,
+                scope: childScope,
+                owner: node,
+                control: rowControl,
+                candidates: candidates,
+                candidateDefinition: candidateDefinition,
+                fallbackHeader: () =>
+                    _generatedEntryHeader("Item ${index + 1}"),
+                movementControls: [
+                  if (control.allowReorder)
+                    _SuppliedHeaderControl(
+                      command: _CollectionCommand.reorder(
+                        childScope.diagnosticTarget(reference),
+                      ),
+                      build: (context) => sequence.handle(
+                        context,
+                        index,
                         childScope,
-                        const Icon(Icons.drag_handle),
+                        label: "Reorder linked resource ${index + 1}",
+                        icon: _operationGlyph(
+                          control.content?.reorderIcon,
+                          childScope,
+                          const Icon(Icons.drag_handle),
+                        ),
                       ),
                     ),
+                ],
+              );
+            },
+          );
+          return _controlFrame(
+            control.control,
+            control.inputAppearance == null
+                ? childScope
+                : childScope.withAppearance(control.inputAppearance!),
+            Column(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                if (items.isEmpty)
+                  _collectionEmpty(
+                    context,
+                    childScope,
+                    control.content,
+                    "No linked resources",
                   ),
+                sequence,
               ],
-            );
-          },
-        );
-        return _controlFrame(
-          control.control,
-          control.inputAppearance == null
-              ? childScope
-              : childScope.withAppearance(control.inputAppearance!),
-          Column(
-            crossAxisAlignment: CrossAxisAlignment.stretch,
-            children: [
-              if (items.isEmpty)
-                _collectionEmpty(
-                  context,
-                  childScope,
-                  control.content,
-                  "No linked resources",
-                ),
-              sequence,
-            ],
-          ),
-          renderPrefix: true,
-        );
-      },
+            ),
+            renderPrefix: true,
+          );
+        },
+      ),
     );
   }
 }
@@ -195,13 +207,15 @@ extension _DirectLinkCollectionRow on PortablePresentationNodeRenderer {
                 resource: link.target.resource,
                 scope: selectedRow?.scope ?? scope,
                 role: skir.PresentationRole.referencePreview,
-                fallbackLabel: link.target.resource.value,
-                render: (node, targetScope, appearance, accent) =>
+                render: (node, targetScope, _) =>
                     PortablePresentationNodeRenderer(
                       node: node,
                       scope: targetScope,
                     ),
-                fallback: (body, accent) => body,
+                fallback: (appearance, problem) => switch (appearance) {
+                  final known? when problem == null => Text(known.label),
+                  _ => _MissingLinkTarget(problem: problem),
+                },
               );
         final identityAndChoose = InputDecorator(
           decoration: style.decoration.copyWith(enabled: enabled),
@@ -423,13 +437,14 @@ final class _AuthoredLinkValueInput extends StatelessWidget {
             resource: link.target.resource,
             scope: selectedRow?.scope ?? scope,
             role: skir.PresentationRole.referencePreview,
-            fallbackLabel: link.target.resource.value,
-            render: (node, targetScope, appearance, accent) =>
-                PortablePresentationNodeRenderer(
-                  node: node,
-                  scope: targetScope,
-                ),
-            fallback: (body, accent) => body,
+            render: (node, targetScope, _) => PortablePresentationNodeRenderer(
+              node: node,
+              scope: targetScope,
+            ),
+            fallback: (appearance, problem) => switch (appearance) {
+              final known? when problem == null => Text(known.label),
+              _ => _MissingLinkTarget(problem: problem),
+            },
           );
     final content = InputDecorator(
       decoration: style.decoration.copyWith(enabled: enabled),
@@ -550,6 +565,37 @@ final class _AuthoredLinkValueInput extends StatelessWidget {
           child: framedContent,
         ),
       ),
+    );
+  }
+}
+
+/// Stands in for a link whose target cannot be shown, such as a resource that
+/// no longer exists, instead of its raw identity.
+final class _MissingLinkTarget extends StatelessWidget {
+  const _MissingLinkTarget({this.problem});
+
+  /// Why the target cannot render, when known.
+  final String? problem;
+
+  @override
+  Widget build(BuildContext context) {
+    final color = Theme.of(context).colorScheme.error;
+    return Row(
+      spacing: context.spacing.space1,
+      children: [
+        Icon(
+          problem == null ? Icons.link_off : Icons.error_outline,
+          size: 16,
+          color: color,
+        ),
+        Flexible(
+          child: Text(
+            problem ?? "Missing resource",
+            overflow: TextOverflow.ellipsis,
+            style: DefaultTextStyle.of(context).style.copyWith(color: color),
+          ),
+        ),
+      ],
     );
   }
 }

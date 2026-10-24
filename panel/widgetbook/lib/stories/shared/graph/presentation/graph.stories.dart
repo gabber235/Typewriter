@@ -326,20 +326,6 @@ Widget complexFlowGraphUseCase(BuildContext context) {
         ),
         priority: 1,
       ),
-
-      // Groups
-      GraphElement(
-        id: const GraphIdentifier("processing_group"),
-        x: 4,
-        y: -1,
-        width: 4,
-        height: 5,
-        builder: (_) => GraphGroup(
-          data: SimpleDragData(graphId: GraphIdentifier("processing_group")),
-          title: "Processing",
-          color: context.isDarkMode ? Colors.grey : Colors.grey.shade700,
-        ),
-      ),
     ],
     edges: [
       const GraphEdge(
@@ -466,43 +452,6 @@ Widget nestedGroupsGraphUseCase(BuildContext context) {
           data: const SimpleDragData(graphId: GraphIdentifier("cache")),
         ),
         priority: 1,
-      ),
-      // Groups
-      GraphElement(
-        id: const GraphIdentifier("frontend"),
-        x: 1,
-        y: 2,
-        width: 5,
-        height: 5,
-        builder: (_) => GraphGroup(
-          title: "Frontend",
-          color: Colors.blue,
-          data: const SimpleDragData(graphId: GraphIdentifier("frontend")),
-        ),
-      ),
-      GraphElement(
-        id: const GraphIdentifier("backend"),
-        x: 7,
-        y: 1,
-        width: 9,
-        height: 7,
-        builder: (_) => GraphGroup(
-          title: "Backend",
-          color: Colors.green,
-          data: const SimpleDragData(graphId: GraphIdentifier("backend")),
-        ),
-      ),
-      GraphElement(
-        id: const GraphIdentifier("storage"),
-        x: 11,
-        y: 2,
-        width: 4,
-        height: 5,
-        builder: (_) => GraphGroup(
-          title: "Storage",
-          color: Colors.orange,
-          data: const SimpleDragData(graphId: GraphIdentifier("storage")),
-        ),
       ),
     ],
     edges: [
@@ -855,19 +804,6 @@ Widget richContentGraphUseCase(BuildContext context) {
           ),
         ),
         priority: 1,
-      ),
-      // Groups
-      GraphElement(
-        id: const GraphIdentifier("services"),
-        x: 5,
-        y: -1,
-        width: 5,
-        height: 7,
-        builder: (_) => GraphGroup(
-          title: "Services",
-          color: Colors.grey.shade100,
-          data: const SimpleDragData(graphId: GraphIdentifier("services")),
-        ),
       ),
     ],
     edges: [

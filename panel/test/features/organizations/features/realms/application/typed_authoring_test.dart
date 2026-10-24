@@ -22,13 +22,7 @@ void main() {
           value: "fixture:saved",
         ),
         generation: skir.CatalogGeneration(value: "catalog:1"),
-        resources: [
-          skir.AuthoringResource(
-            id: resource,
-            definition: skir.ResourceDefinitionId(value: "typewriter.book"),
-            content: record,
-          ),
-        ],
+        resources: [skir.AuthoringResource(id: resource, content: record)],
         links: const [],
         findings: const [],
       );

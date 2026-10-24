@@ -34,6 +34,8 @@ import skirout.editor.v1.resource_operations.PreparationChoiceId
 import skirout.editor.v1.resource_operations.PreparationCounterpartOption
 import skirout.editor.v1.resource_operations.PreparationSourceOption
 import skirout.editor.v1.resource_operations.PrepareAuthoringActionRequest
+import skirout.editor.v1.resource_operations.ResolveDropCandidatesRequest
+import skirout.editor.v1.resource_operations.ResolveDropCandidatesResult
 import skirout.editor.v1.resource_operations.ResolveResourceOperationsRequest
 import skirout.editor.v1.resource_operations.ResolveResourceOperationsResult
 import skirout.editor.v1.authoring.CounterpartChoice as WireCounterpart
@@ -57,6 +59,7 @@ internal class ResourceOperationRoutes(
     fun register(builder: CommunicatorRoutesBuilder) =
         with(builder) {
             unary(contracts.resolveResourceOperations) { call -> resolve(call.request) }
+            unary(contracts.resolveDropCandidates) { call -> resolveDropCandidates(call.request) }
             unary(contracts.prepareAuthoringAction) { call -> prepare(call.request) }
         }
 
@@ -121,6 +124,44 @@ internal class ResourceOperationRoutes(
                             invalid.message ?: "The operation context is invalid",
                         ),
                     ),
+            )
+        }
+
+    internal fun resolveDropCandidates(request: ResolveDropCandidatesRequest): ResolveDropCandidatesResult =
+        try {
+            val context = request.context.decodeWorkingContext()
+            val candidates =
+                runtime.resolveDropCandidates(
+                    request.invocation.decodeInvocation(),
+                    CatalogGeneration(request.invocation.catalog.value),
+                    context.confirmed,
+                    context.upserts,
+                    context.removals,
+                )
+            ResolveDropCandidatesResult.ResolvedWrapper(SkirOperationCodec.encode(candidates).getOrThrow())
+        } catch (stale: StaleOperationObservation) {
+            ResolveDropCandidatesResult.createStaleObservation(actual = AuthoringObservationId(value = stale.actual))
+        } catch (stale: OperationCatalogChanged) {
+            ResolveDropCandidatesResult.createCatalogChanged(actualGeneration = SkirCatalogGeneration(value = stale.actual.value))
+        } catch (denied: RealmCapabilityPermissionDeniedException) {
+            ResolveDropCandidatesResult.createPermissionDenied(
+                diagnostics = listOf(operationDiagnostic("permission_denied", denied.message ?: "Permission denied")),
+            )
+        } catch (failed: OperationResolutionFailure) {
+            if (failed.cause is RealmCapabilityPermissionDeniedException) {
+                ResolveDropCandidatesResult.createPermissionDenied(
+                    diagnostics = listOf(operationDiagnostic("permission_denied", failed.cause?.message ?: "Permission denied")),
+                )
+            } else {
+                ResolveDropCandidatesResult.createFailed(
+                    diagnostics = listOf(operationDiagnostic("resolution_failed", failed.message ?: "Drop candidates failed")),
+                )
+            }
+        } catch (invalid: IllegalArgumentException) {
+            invalid.rethrowExceptional()
+            ResolveDropCandidatesResult.createInvalid(
+                diagnostics =
+                    listOf(operationDiagnostic("invalid_operation_context", invalid.message ?: "The operation context is invalid")),
             )
         }
 

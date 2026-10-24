@@ -1,7 +1,5 @@
 package fixture
 
-import com.typewritermc.authoring.ResourceDefinitionId
-import com.typewritermc.authoring.TypewriterResourceDefinition
 import com.typewritermc.types.One
 import com.typewritermc.types.Ref
 import com.typewritermc.types.ReferenceContract
@@ -25,10 +23,3 @@ interface NestedShapeContract {
     interface Target : One<NestedTarget>
 }
 
-object FixtureResources {
-    @TypewriterResourceDefinition("fixture.nested_source", NestedSource::class)
-    val SOURCE = ResourceDefinitionId("fixture.nested_source")
-
-    @TypewriterResourceDefinition("fixture.nested_target", NestedTarget::class)
-    val TARGET = ResourceDefinitionId("fixture.nested_target")
-}

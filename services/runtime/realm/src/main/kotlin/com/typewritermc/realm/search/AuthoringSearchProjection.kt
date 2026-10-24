@@ -1,17 +1,15 @@
 package com.typewritermc.realm.search
 
 import com.typewritermc.authoring.AuthoringRecord
-import com.typewritermc.authoring.ResourceDefinitionId
 import com.typewritermc.types.DataValue
 import com.typewritermc.types.ResourceId
 
 /** Derived search terms are stored beside the canonical resource in its write transaction. */
 internal fun authoredSearchText(
     resource: ResourceId,
-    definition: ResourceDefinitionId,
     record: AuthoringRecord,
 ): String {
-    val terms = mutableListOf(resource.value, definition.value)
+    val terms = mutableListOf(resource.value)
     record.fields.values.forEach { it.collectText(terms) }
     return terms.distinct().joinToString(" ")
 }

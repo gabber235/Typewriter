@@ -56,11 +56,9 @@ extension _PortableLayoutRendering on PortablePresentationNodeRenderer {
           PortablePresentationNodeRenderer(node: child, scope: childScope),
       ],
     ),
-    skir.ChildrenElement_stackWrapper(:final value) => Stack(
-      children: [
-        for (final child in value.children)
-          PortablePresentationNodeRenderer(node: child, scope: childScope),
-      ],
+    skir.ChildrenElement_stackWrapper(:final value) => _renderStack(
+      value,
+      childScope,
     ),
     _ => _diagnostic("Children layout ${element.kind.name} is not implemented"),
   };
@@ -75,7 +73,7 @@ extension _PortableLayoutRendering on PortablePresentationNodeRenderer {
   }) {
     final gap = spacing ?? element.layout.spacing;
     if (spacing != null && (!spacing.isFinite || spacing < 0)) {
-      throw const PresentationColorFailure(
+      throw const PresentationValueFailure(
         "Collection spacing must be finite and nonnegative",
       );
     }
@@ -577,7 +575,7 @@ AlignmentGeometry _presentationAlignment(
     AlignmentDirectional.bottomCenter,
   skir.PresentationAlignment_kind.bottomEndConst =>
     AlignmentDirectional.bottomEnd,
-  _ => throw const PresentationColorFailure(
+  _ => throw const PresentationValueFailure(
     "Presentation alignment is unavailable",
   ),
 };
@@ -585,7 +583,7 @@ AlignmentGeometry _presentationAlignment(
 double _tabSpacing(double? value, double fallback) {
   if (value == null) return fallback;
   if (!value.isFinite || value < 0) {
-    throw const PresentationColorFailure(
+    throw const PresentationValueFailure(
       "Tab spacing must be finite and nonnegative",
     );
   }
@@ -680,7 +678,7 @@ class _ConfiguredTab extends HookWidget {
                 ),
               ),
             );
-          } on PresentationColorFailure catch (failure) {
+          } on PresentationValueFailure catch (failure) {
             return _diagnostic(failure.message);
           }
         },

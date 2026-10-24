@@ -31,8 +31,9 @@ import io.kotest.matchers.shouldBe
 import io.kotest.matchers.types.shouldBeInstanceOf
 import skirout.editor.v1.presentation.AxisChild
 import skirout.editor.v1.presentation.ChildrenElement
-import skirout.editor.v1.presentation.PageGraphDirection
+import skirout.editor.v1.presentation.GraphDirection
 import skirout.editor.v1.presentation.PresentationElement
+import skirout.editor.v1.presentation.ResourcesLayout
 import skirout.editor.v1.type_catalog.PathSegment
 import java.util.Collections
 
@@ -115,24 +116,25 @@ val CorePageEditorPresentationTest by testSuite {
     }
 
     listOf(
-        Triple("Sequence", SequencePageDefinition.use, PageGraphDirection.LEFT_TO_RIGHT),
-        Triple("Static", StaticPageDefinition.use, PageGraphDirection.BOTTOM_TO_TOP),
-        Triple("Manifest", ManifestPageDefinition.use, PageGraphDirection.TOP_TO_BOTTOM),
+        Triple("Sequence", SequencePageDefinition.use, GraphDirection.LEFT_TO_RIGHT),
+        Triple("Static", StaticPageDefinition.use, GraphDirection.BOTTOM_TO_TOP),
+        Triple("Manifest", ManifestPageDefinition.use, GraphDirection.TOP_TO_BOTTOM),
         Triple("Scene", ScenePageDefinition.use, null),
     ).forEach { (name, type, direction) ->
         test("$name page has a discovered editor with its intended canvas") {
             val checked = (catalog.resolve(type) as Resolution.Ready).value
-            val selection = registry.select(PresentationRole.WORKSPACE_EDITOR, checked).shouldBeInstanceOf<PresentationSelection.Selected>()
-            val binding = PresentationBuildBinding(checked.presentationTemplate(), PresentationRole.WORKSPACE_EDITOR)
+            val selection = registry.select(PresentationRole.WORKSPACE, checked).shouldBeInstanceOf<PresentationSelection.Selected>()
+            val binding = PresentationBuildBinding(checked.presentationTemplate(), PresentationRole.WORKSPACE)
             val layout = providers.getValue(selection.descriptor).build(binding).layout
             val children = layout.element.shouldBeInstanceOf<PresentationElement.ChildrenWrapper>().value
             val column = children.shouldBeInstanceOf<ChildrenElement.ColumnWrapper>().value
             val child = column.children.single().shouldBeInstanceOf<AxisChild.FixedWrapper>()
             val canvas = child.value.element
+            val resources = canvas.shouldBeInstanceOf<PresentationElement.ResourcesWrapper>().value.layout
             if (direction == null) {
-                canvas.shouldBeInstanceOf<PresentationElement.PageTimelineWrapper>()
+                resources.shouldBeInstanceOf<ResourcesLayout.TimelineWrapper>()
             } else {
-                canvas.shouldBeInstanceOf<PresentationElement.PageGraphWrapper>().value.direction shouldBe direction
+                resources.shouldBeInstanceOf<ResourcesLayout.GraphWrapper>().value.direction shouldBe direction
             }
         }
     }

@@ -12,6 +12,7 @@ import com.typewritermc.authoring.TypeSelection
 import com.typewritermc.authoring.ValueLocation
 import com.typewritermc.authoring.ValuePath
 import com.typewritermc.authoring.ValueProblem
+import com.typewritermc.authoring.definition
 import com.typewritermc.authoring.field
 import com.typewritermc.authoring.item
 import com.typewritermc.authoring.mapKey
@@ -84,7 +85,7 @@ internal interface TypeArgumentOperations {
 /**
  * Previews a resource type argument change together with repairs to values and incident links.
  *
- * The resource definition remains fixed. Incompatible values become unfilled, compatible nested records can
+ * The resource type definition remains fixed. Incompatible values become unfilled, compatible nested records can
  * be retagged, and invalid links become disconnect intents. Preparation checks current expectations and
  * regenerates the preview before returning an edit, so caller supplied repair metadata is never trusted as
  * authority. Persistence remains a separate authoring commit.
@@ -515,10 +516,3 @@ private fun TypeTemplate.concreteUseOrNull(): TypeUse? {
         is TypeTemplate.Scalar -> TypeUse.Scalar(kind)
     }
 }
-
-private val TypeSelection.definition
-    get() =
-        when (this) {
-            is TypeSelection.Complete -> use.definition
-            is TypeSelection.Pending -> definition
-        }

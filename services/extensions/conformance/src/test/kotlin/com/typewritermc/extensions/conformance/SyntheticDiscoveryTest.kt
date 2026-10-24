@@ -34,6 +34,7 @@ import com.typewritermc.library.PageElements
 import com.typewritermc.presentation.DefaultPresentationRuntime
 import com.typewritermc.presentation.PresentationBuildBinding
 import com.typewritermc.presentation.presentationTemplate
+import com.typewritermc.types.ACYCLIC_RELATION_FAMILY_ID
 import com.typewritermc.types.DataValue
 import com.typewritermc.types.DeclarationOwner
 import com.typewritermc.types.DeclaredTypeId
@@ -86,7 +87,8 @@ val SyntheticDiscoveryTest by testSuite {
     }
 
     test("generates ownership relations and their concrete authored bindings") {
-        SyntheticEntryCues.contract.families shouldBe setOf(RelationFamilyId(RESOURCE_OWNERSHIP_FAMILY_ID))
+        SyntheticEntryCues.contract.families shouldBe
+            setOf(RelationFamilyId(ACYCLIC_RELATION_FAMILY_ID), RelationFamilyId(RESOURCE_OWNERSHIP_FAMILY_ID))
         SyntheticEntryCues.contract.first.cardinality shouldBe EndpointCardinality.One
         SyntheticEntryCues.contract.second.cardinality shouldBe EndpointCardinality.Many
         SyntheticEntryEndpointBindings.bindings
@@ -99,7 +101,8 @@ val SyntheticDiscoveryTest by testSuite {
                 binding.containsCollection shouldBe true
             }
 
-        SyntheticSegmentKeyframes.contract.families shouldBe setOf(RelationFamilyId(RESOURCE_OWNERSHIP_FAMILY_ID))
+        SyntheticSegmentKeyframes.contract.families shouldBe
+            setOf(RelationFamilyId(ACYCLIC_RELATION_FAMILY_ID), RelationFamilyId(RESOURCE_OWNERSHIP_FAMILY_ID))
     }
 
     test("native bindings preserve named identity and serialized field names") {
@@ -203,7 +206,7 @@ val SyntheticDiscoveryTest by testSuite {
         val catalog = presentationCatalog()
         val checked = (catalog.resolve(SyntheticEntryDefinition.use) as Resolution.Ready).value
 
-        val root = entry.build(PresentationBuildBinding(checked.presentationTemplate(), PresentationRole.WORKSPACE_EDITOR)).layout
+        val root = entry.build(PresentationBuildBinding(checked.presentationTemplate(), PresentationRole.WORKSPACE)).layout
         val children = (root.element as PresentationElement.ChildrenWrapper).value.axisNodes()
         val polymorphic =
             children
@@ -219,7 +222,7 @@ val SyntheticDiscoveryTest by testSuite {
                     .build(
                         PresentationBuildBinding(
                             repeatedChecked.presentationTemplate(),
-                            PresentationRole.WORKSPACE_EDITOR,
+                            PresentationRole.WORKSPACE,
                         ),
                     ).layout.element as
                     PresentationElement.ChildrenWrapper
@@ -377,19 +380,37 @@ private fun providerOrigin(local: String): ProviderOrigin {
 
 private fun ChildrenElement.axisNodes(): List<PresentationNode> =
     when (this) {
-        is ChildrenElement.ColumnWrapper -> value.children.map { it.node() }
+        is ChildrenElement.ColumnWrapper -> {
+            value.children.map { it.node() }
+        }
 
-        is ChildrenElement.RowWrapper -> value.children.map { it.node() }
+        is ChildrenElement.RowWrapper -> {
+            value.children.map { it.node() }
+        }
 
-        is ChildrenElement.WrapWrapper -> value.children
+        is ChildrenElement.WrapWrapper -> {
+            value.children
+        }
 
-        is ChildrenElement.GridWrapper -> value.children
+        is ChildrenElement.GridWrapper -> {
+            value.children
+        }
 
-        is ChildrenElement.StackWrapper -> value.children
+        is ChildrenElement.StackWrapper -> {
+            value.children.map {
+                when (it) {
+                    is skirout.editor.v1.presentation.StackChild.PositionedWrapper -> it.value.child
+                    is skirout.editor.v1.presentation.StackChild.FlowWrapper -> it.value
+                    else -> error("Unknown stack child")
+                }
+            }
+        }
 
         ChildrenElement.UNKNOWN,
         is ChildrenElement.Unknown,
-        -> emptyList()
+        -> {
+            emptyList()
+        }
     }
 
 private fun AxisChild.node(): PresentationNode =

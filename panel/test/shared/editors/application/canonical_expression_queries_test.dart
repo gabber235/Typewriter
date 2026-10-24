@@ -154,7 +154,7 @@ void main() {
   );
 
   test(
-    "unknown fields fail checking and missing optional metadata falls back",
+    "unknown fields fail checking and an undeclared display reads the defaults",
     () {
       final catalog = _catalog(display: false);
       final document = _document(catalog, "Page");
@@ -172,7 +172,7 @@ void main() {
       );
       expect(
         _evaluate(catalog, document, expression).value,
-        colorValue(0xff123456),
+        colorValue(0xff607d8b),
       );
       final invalid = catalog.evaluateExpression(
         fieldExpression(declaration, "unknown"),
@@ -282,7 +282,6 @@ void main() {
         ...original.entries,
         other: skir.AuthoringResource(
           id: other,
-          definition: skir.ResourceDefinitionId(value: "other"),
           content: skir.AuthoringRecord(
             configuration: skir.TypeSelection.createComplete(
               definition: _other,
@@ -437,7 +436,6 @@ void main() {
           skir.AuthoringResource entry(skir.ResourceId id, String name) =>
               skir.AuthoringResource(
                 id: id,
-                definition: skir.ResourceDefinitionId(value: "page"),
                 content: skir.AuthoringRecord(
                   configuration: skir.TypeSelection.createComplete(
                     definition: _page,
@@ -742,71 +740,261 @@ void main() {
     expect(result, isA<PortableExpressionFailed>());
     expect((result as PortableExpressionFailed).code, "invalid_resource_value");
   });
-  test(
-    "native appearance validates leading scope and caller import boundaries",
-    () {
-      final catalog = _catalog();
-      final missing = skir.ExpressionBindingId(value: "missing");
-      final layout = presentationText(
-        "body",
-        literalExpression(skir.DataValue.wrapStringValue("Title")),
+  test("admission rejects duplicate caller imports", () {
+    final catalog = _catalog();
+    final material = _resultMaterial(
+      presentationText("body", textLiteral("Title")),
+    );
+    final id = skir.ExpressionBindingId(value: "context:test.origin");
+    final dependency = skir.PresentationContextInput(
+      source: skir.PresentationContextSource.caller,
+      bindingId: id,
+      valueType: skir.TypeUse.wrapNamed(frameworkResourceIdUse),
+    );
+    final conflicting =
+        (material.toMutable()
+              ..dependencies =
+                  (material.dependencies.toMutable()
+                        ..contextInputs = [dependency, dependency])
+                      .toFrozen())
+            .toFrozen();
+    expect(
+      catalog.presentationExpressionProblems(conflicting, _pageSelection),
+      contains("duplicate_context_input"),
+    );
+  });
+
+  test("admission accepts host imports only with the host contract's type", () {
+    final catalog = _catalog();
+    final id = skir.ExpressionBindingId(value: "context:host.active");
+    skir.PresentationMaterial importing(skir.TypeUse type) {
+      final material = _resultMaterial(
+        presentationText("body", textLiteral("Title")),
       );
-      final appearance =
-          (skir.ResultAppearance.mutable()
-                ..leading = presentationText(
-                  "leading",
-                  skir.ExpressionNode.createInput(
-                    binding: missing,
-                    path: editorRootPath,
+      return (material.toMutable()
+            ..dependencies =
+                (material.dependencies.toMutable()
+                      ..contextInputs = [
+                        skir.PresentationContextInput(
+                          bindingId: id,
+                          source: skir.PresentationContextSource.wrapHost(
+                            skir.HostContextInput.activeResource,
+                          ),
+                          valueType: type,
+                        ),
+                      ])
+                    .toFrozen())
+          .toFrozen();
+    }
+
+    expect(
+      catalog.presentationExpressionProblems(
+        importing(skir.TypeUse.wrapScalar(skir.ScalarKind.text)),
+        _pageSelection,
+      ),
+      contains("invalid_host_context_input"),
+    );
+    expect(
+      catalog.presentationExpressionProblems(
+        importing(skir.TypeUse.wrapNamed(frameworkResourceIdUse)),
+        _pageSelection,
+      ),
+      isNot(contains("invalid_host_context_input")),
+    );
+  });
+
+  test("a resource presentation reads its subject appearance", () {
+    final catalog = _catalog();
+    final label = presentationText(
+      "label",
+      inputExpression(presentationSubjectAppearanceBindingId, field: "label"),
+    );
+    final missing = presentationText(
+      "missing",
+      inputExpression(presentationSubjectAppearanceBindingId, field: "title"),
+    );
+    expect(
+      catalog.presentationExpressionProblems(
+        _resultMaterial(label),
+        _pageSelection,
+      ),
+      isEmpty,
+    );
+    expect(
+      catalog.presentationExpressionProblems(
+        _resultMaterial(missing),
+        _pageSelection,
+      ),
+      isNotEmpty,
+    );
+  });
+
+  test("admission checks the paint of stacks, transforms and containers", () {
+    final catalog = _catalog();
+    final selected = skir.PresentationStateMatch(
+      required_: [skir.PresentationInteractionState.selected],
+      excluded: const [],
+    );
+    skir.PresentationNumber number(double value) =>
+        skir.PresentationNumber.wrapValue(numberLiteral(value));
+    final body = presentationText("body", textLiteral("Cover"));
+    List<String> problems(skir.PresentationElement element) =>
+        catalog.presentationExpressionProblems(
+          _resultMaterial(presentationNode("paint", element)),
+          _pageSelection,
+        );
+
+    final valid = skir.PresentationElement.wrapChildren(
+      skir.ChildrenElement.createStack(
+        alignment: null,
+        children: [
+          skir.StackChild.wrapFlow(body),
+          skir.StackChild.createPositioned(
+            child: body,
+            top: number(4),
+            start: null,
+            end: skir.PresentationNumber.createStates(
+              rules: [
+                skir.PresentationStateNumberRule(
+                  match: selected,
+                  value: numberLiteral(8),
+                ),
+              ],
+              fallback: numberLiteral(2),
+            ),
+            bottom: null,
+            width: number(30),
+            height: null,
+            transition: skir.PresentationTransitionPolicy(
+              rules: [
+                skir.PresentationStateTransitionRule(
+                  match: selected,
+                  transition: skir.PresentationTransition(
+                    milliseconds: 750,
+                    curve: skir.PresentationCurve.wrapElasticOut(0.9),
                   ),
-                ))
-              .toFrozen();
-      final material = _resultMaterial(layout, appearance: appearance);
-      final problems = catalog.presentationExpressionProblems(
-        material,
-        skir.TypeSelection.createComplete(
-          definition: _page,
-          arguments: const [],
-        ),
-      );
-      expect(problems, contains("unknown_expression_binding"));
-      final wrongRole =
-          (material.toMutable()..role = skir.PresentationRole.inspector)
-              .toFrozen();
-      expect(
-        catalog.presentationExpressionProblems(
-          wrongRole,
-          skir.TypeSelection.createComplete(
-            definition: _page,
-            arguments: const [],
+                ),
+              ],
+              fallback: skir.PresentationTransition(
+                milliseconds: 300,
+                curve: skir.PresentationCurve.emphasized,
+              ),
+            ),
           ),
-        ),
-        contains("invalid_result_appearance_role"),
-      );
-      final id = skir.ExpressionBindingId(value: "context:test.origin");
-      final dependency = skir.PresentationContextInput(
-        bindingId: id,
-        valueType: skir.TypeUse.wrapNamed(frameworkResourceIdUse),
-      );
-      final conflicting =
-          (material.toMutable()
-                ..dependencies =
-                    (material.dependencies.toMutable()
-                          ..contextInputs = [dependency, dependency])
-                        .toFrozen())
-              .toFrozen();
-      expect(
-        catalog.presentationExpressionProblems(
-          conflicting,
-          skir.TypeSelection.createComplete(
-            definition: _page,
-            arguments: const [],
+        ],
+      ),
+    );
+    expect(problems(valid), isEmpty);
+
+    final overconstrained = skir.PresentationElement.wrapChildren(
+      skir.ChildrenElement.createStack(
+        alignment: null,
+        children: [
+          skir.StackChild.createPositioned(
+            child: body,
+            top: null,
+            start: number(0),
+            end: number(0),
+            bottom: null,
+            width: number(10),
+            height: null,
+            transition: null,
           ),
+        ],
+      ),
+    );
+    expect(
+      problems(overconstrained),
+      contains("overconstrained_positioned_child"),
+    );
+
+    final transform = skir.PresentationElement.createTransform(
+      child: body,
+      origin: skir.PresentationAlignment.center,
+      perspective: double.nan,
+      scale: skir.PresentationNumber.wrapValue(textLiteral("large")),
+      rotateX: null,
+      rotateY: null,
+      rotateZ: null,
+      translateX: null,
+      translateY: null,
+      transition: skir.PresentationTransitionPolicy(
+        rules: [
+          skir.PresentationStateTransitionRule(
+            match: skir.PresentationStateMatch(
+              required_: [skir.PresentationInteractionState.hovered],
+              excluded: [skir.PresentationInteractionState.hovered],
+            ),
+            transition: skir.PresentationTransition(
+              milliseconds: 10,
+              curve: skir.PresentationCurve.linear,
+            ),
+          ),
+        ],
+        fallback: skir.PresentationTransition(
+          milliseconds: -1,
+          curve: skir.PresentationCurve.wrapElasticOut(0),
         ),
-        contains("duplicate_context_input"),
-      );
-    },
-  );
+      ),
+    );
+    expect(
+      problems(transform),
+      containsAll([
+        "invalid_transform_perspective",
+        "contradictory_presentation_state_match",
+        "invalid_presentation_transition",
+        "invalid_presentation_curve",
+      ]),
+    );
+    expect(problems(transform).length, greaterThan(4));
+
+    final accent = skir.PresentationColor.wrapValue(integerLiteral(0xff3366cc));
+    final container = skir.PresentationElement.createContainer(
+      child: body,
+      border: null,
+      backgroundColor: skir.PresentationColor.createBrightness(
+        light: skir.PresentationColor.createAdjusted(
+          source: accent,
+          lightness: 1.5,
+          chroma: 0,
+        ),
+        dark: accent,
+      ),
+      radius: skir.PresentationRadius.large,
+      foregroundColor: null,
+      transition: null,
+      shadows: [
+        skir.PresentationShadow(
+          color: accent,
+          blur: -2,
+          spread: 0,
+          offsetX: 0,
+          offsetY: 1,
+        ),
+      ],
+    );
+    expect(
+      problems(container),
+      containsAll([
+        "invalid_presentation_color_adjustment",
+        "invalid_presentation_shadow",
+      ]),
+    );
+    expect(
+      problems(
+        skir.PresentationElement.createSize(
+          child: body,
+          width: textLiteral("wide"),
+          height: numberLiteral(8),
+          minimumWidth: null,
+          maximumWidth: null,
+          minimumHeight: null,
+          maximumHeight: null,
+        ),
+      ),
+      isNotEmpty,
+    );
+  });
 
   test("clipped axes reject flexible children and columns at admission", () {
     final catalog = _catalog();
@@ -1074,7 +1262,7 @@ CheckedEditorCatalog _catalog({bool generic = false, bool display = true}) {
             ? skir.TypeDisplay(
                 name: "Page",
                 description: "Page type",
-                icon: "page",
+                icon: skir.Icon.wrapIconify("page"),
                 color: skir.Color(argb: 0xff336699.toSigned(32)),
               )
             : null,
@@ -1089,6 +1277,8 @@ skir.PublishedType _published(
   skir.TypeDefinition definition, {
   skir.TypeDisplay? display,
 }) => skir.PublishedType(
+  searchKey: null,
+  placementField: null,
   definition: definition,
   status: skir.DeclarationStatus.ready,
   effectiveFields: [
@@ -1103,7 +1293,7 @@ skir.PublishedType _published(
         ),
   ],
   ancestorTemplates: definition.parents,
-  display: display,
+  display: display ?? defaultTypeDisplay(""),
 );
 AuthoringDocument _document(
   CheckedEditorCatalog catalog,
@@ -1114,7 +1304,6 @@ AuthoringDocument _document(
   entries: {
     _resource: skir.AuthoringResource(
       id: _resource,
-      definition: skir.ResourceDefinitionId(value: "page"),
       content: skir.AuthoringRecord(
         configuration:
             configuration ??
@@ -1199,10 +1388,12 @@ final _namePath = skir.ValuePath(
   segments: [skir.PathSegment.createField(name: "name")],
 );
 
-skir.PresentationMaterial _resultMaterial(
-  skir.PresentationNode layout, {
-  skir.ResultAppearance? appearance,
-}) =>
+final _pageSelection = skir.TypeSelection.createComplete(
+  definition: _page,
+  arguments: const [],
+);
+
+skir.PresentationMaterial _resultMaterial(skir.PresentationNode layout) =>
     (skir.PresentationMaterial.mutable()
           ..provider = skir.PresentationId(namespace: "test", name: "result")
           ..role = skir.PresentationRole.resourceSearchResult
@@ -1214,6 +1405,5 @@ skir.PresentationMaterial _resultMaterial(
             definition: _page,
             arguments: const [],
           )
-          ..layout = layout
-          ..resultAppearance = appearance)
+          ..layout = layout)
         .toFrozen();

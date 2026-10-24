@@ -109,6 +109,12 @@ class PortableExpressionChecker(
         onInferred: ((ExpressionType) -> Unit)? = null,
     ): List<String> = Invocation(bindings, partialBindings).check(body, expectedOutput, onInferred)
 
+    /** Checks [body] against [bindings] and infers its result, for a result of any type such as an order key. */
+    fun checkAnyResultCodes(
+        body: ExpressionNode,
+        bindings: Map<ExpressionBindingId, ExpressionType>,
+    ): List<String> = Invocation(bindings, emptyMap()).inferOnly(body)
+
     fun checkExpressionStructure(
         body: ExpressionNode,
         bindings: Set<ExpressionBindingId>,
@@ -251,6 +257,15 @@ class PortableExpressionChecker(
         private val literalTypes = Collections.newSetFromMap(IdentityHashMap<ExpressionType, Boolean>())
         val queries = linkedMapOf<ExpressionOccurrence, CheckedQueryCall>()
 
+        fun inferOnly(body: ExpressionNode): List<String> =
+            try {
+                validateStructure(body, bindings.keys + partialBindings.keys)
+                infer(body)
+                emptyList()
+            } catch (failure: ExpressionCheckFailure) {
+                listOf(failure.code)
+            }
+
         fun check(
             body: ExpressionNode,
             expected: ExpressionType,
@@ -324,6 +339,16 @@ class PortableExpressionChecker(
         private fun integer(missing: Boolean = false) = scalar(ScalarKind.Integer(IntegerWidth.SIGNED_64), missing)
 
         private fun text(missing: Boolean = false) = scalar(ScalarKind.Text, missing)
+
+        /** Whether [actual] is a proper nominal subtype of [expected], such as an Iconify icon where an icon is expected. */
+        private fun isNominalSubtype(
+            actual: TypeUse?,
+            expected: TypeUse?,
+        ): Boolean {
+            if (actual !is TypeUse.Named || expected !is TypeUse.Named || actual == expected) return false
+            val resolved = resolveType(actual) as? Resolution.Ready ?: return false
+            return expected in resolved.value.schema.ancestors
+        }
 
         private fun ready(use: TypeUse): CheckedType =
             when (val result = resolveType(use)) {
@@ -408,7 +433,8 @@ class PortableExpressionChecker(
                     val au = a.nominalUseOrNull()
                     val eu = e.nominalUseOrNull()
                     au == eu || (scalarKind(a) != null && scalarKind(a) == scalarKind(e)) ||
-                        ((a in literalTypes || e in literalTypes) && numericFamily(a) != null && numericFamily(a) == numericFamily(e))
+                        ((a in literalTypes || e in literalTypes) && numericFamily(a) != null && numericFamily(a) == numericFamily(e)) ||
+                        isNominalSubtype(au, eu)
                 }
 
                 else -> {
@@ -454,6 +480,10 @@ class PortableExpressionChecker(
                     }
 
                     ac in literalTypes && bc !in literalTypes -> {
+                        bc
+                    }
+
+                    isNominalSubtype(ac.nominalUseOrNull(), bc.nominalUseOrNull()) -> {
                         bc
                     }
 

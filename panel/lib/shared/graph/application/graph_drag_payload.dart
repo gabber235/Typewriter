@@ -12,6 +12,11 @@ final class GraphDragPayload<T extends GraphDragData> extends ChangeNotifier {
   bool _pending = false;
   bool _disposed = false;
 
+  /// The last global pointer position of the drag, reported by its source.
+  /// Drop targets read it instead of the avatar position, which follows the
+  /// grab point.
+  Offset? pointer;
+
   GraphDragPhase get phase => _phase;
   bool get canHover => _phase == GraphDragPhase.ready || isDragging;
   bool get isDragging => _phase == GraphDragPhase.dragging;

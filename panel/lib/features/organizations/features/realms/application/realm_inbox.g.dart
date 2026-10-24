@@ -151,7 +151,7 @@ final class OpenRealmInboxLocationProvider
 }
 
 String _$openRealmInboxLocationHash() =>
-    r'548c7c10505604cc1afc5d730d3181c78951a4c3';
+    r'da369b20726600c315bdcdd75b5a521746e3d2c7';
 
 /// Reveals the editor for the issue location.
 

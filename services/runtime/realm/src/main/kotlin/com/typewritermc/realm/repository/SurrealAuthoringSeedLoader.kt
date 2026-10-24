@@ -2,7 +2,6 @@ package com.typewritermc.realm.repository
 
 import com.surrealdb.Surreal
 import com.typewritermc.authoring.AuthoringRecord
-import com.typewritermc.authoring.ResourceDefinitionId
 import com.typewritermc.realm.authoring.AuthoringSeed
 import com.typewritermc.realm.authoring.authoredDatabaseValues
 import com.typewritermc.realm.repository.utils.inTransaction
@@ -16,13 +15,11 @@ internal class SurrealAuthoringSeedLoader(
     fun load(): AuthoringSeed =
         database.inTransaction { transaction ->
             val resources = linkedMapOf<ResourceId, AuthoringRecord>()
-            val definitions = linkedMapOf<ResourceId, ResourceDefinitionId>()
-            transaction.query("SELECT id, definition, content FROM resource ORDER BY id;").take(0).getArray().forEach { rowValue ->
+            transaction.query("SELECT id, content FROM resource ORDER BY id;").take(0).getArray().forEach { rowValue ->
                 val row = rowValue.getObject()
                 val id = row.get("id").getRecordId().toResourceId()
                 resources[id] = authoredDatabaseValues.decode(AuthoringRecord.serializer(), row.get("content"))
-                definitions[id] = ResourceDefinitionId(row.get("definition").getString())
             }
-            AuthoringSeed(resources, definitions)
+            AuthoringSeed(resources)
         }
 }

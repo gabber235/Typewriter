@@ -1,7 +1,5 @@
 package fixture
 
-import com.typewritermc.authoring.ResourceDefinitionId
-import com.typewritermc.authoring.TypewriterResourceDefinition
 import com.typewritermc.expression.literal
 import com.typewritermc.library.coreTagCollectionProjection
 import com.typewritermc.presentation.projectedCollectionSource
@@ -27,14 +25,6 @@ interface LookupRelationContract {
     interface Source : One<LookupHost>
 
     interface Target : One<LookupTarget>
-}
-
-object LookupResources {
-    @TypewriterResourceDefinition("fixture.lookup_target", LookupTarget::class)
-    val TARGET = ResourceDefinitionId("fixture.lookup_target")
-
-    @TypewriterResourceDefinition("fixture.lookup_host", LookupHost::class)
-    val HOST = ResourceDefinitionId("fixture.lookup_host")
 }
 
 object LookupHostInspector : LookupHostPresentation {

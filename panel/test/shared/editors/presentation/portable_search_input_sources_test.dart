@@ -151,8 +151,6 @@ void main() {
       header: null,
     );
     final mapping = skir.SearchResultMapping(
-      resultAppearance: null,
-
       bindingId: row,
       key: rowRead,
       selectedValue: rowRead,
@@ -328,12 +326,14 @@ void main() {
       revision: 1,
     );
     final catalogSnapshot = skir.EditorCatalogWireSnapshot(
+      resourceDisplays: const [],
       resourceOperations: const [],
-      resourceOperationContributions: const [],
       generation: skir.CatalogGeneration(value: "catalog:http"),
       types: [
         skir.PublishedType(
-          display: null,
+          searchKey: null,
+          placementField: null,
+          display: defaultTypeDisplay(""),
           definition: skir.TypeDefinition(
             id: resultType,
             parameters: const [],
@@ -363,7 +363,7 @@ void main() {
         ),
       ],
       relations: const [],
-      resourceDefinitions: const [],
+      realmRoot: skir.TypeDefinitionId.defaultInstance,
       presentations: const [],
       presentationMaterials: const [],
       configuration: const [],
@@ -431,8 +431,6 @@ void main() {
           arguments: const [],
         ),
         result: skir.SearchResultMapping(
-          resultAppearance: null,
-
           bindingId: row,
           key: rowRead,
           selectedValue: rowRead,
@@ -628,8 +626,6 @@ skir.SearchControl _pendingControl() {
         ),
       ),
       result: skir.SearchResultMapping(
-        resultAppearance: null,
-
         bindingId: row,
         key: rowRead,
         selectedValue: rowRead,

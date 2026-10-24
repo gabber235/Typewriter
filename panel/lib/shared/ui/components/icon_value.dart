@@ -1,3 +1,5 @@
+import "package:typewriter_panel/infrastructure/protocols/skir/skir.dart"
+    as skir;
 import "package:typewriter_panel/typewriter_panel.dart";
 
 part "icon_value.freezed.dart";
@@ -56,4 +58,17 @@ extension IconTextValidation on String {
           (match) => !(match.group(1) ?? "").trimLeft().startsWith("#"),
         );
   }
+}
+
+/// Renderable form of a wire icon, such as a type display or resource icon.
+extension WireIconValue on skir.Icon {
+  /// Null for an empty or unknown icon, which has nothing to draw.
+  IconValue? get iconValue => switch (this) {
+    skir.Icon_iconifyWrapper(:final value) when value.isNotEmpty =>
+      IconValue.iconify(value),
+    skir.Icon_svgWrapper(:final value) when value.isNotEmpty => IconValue.svg(
+      value,
+    ),
+    _ => null,
+  };
 }

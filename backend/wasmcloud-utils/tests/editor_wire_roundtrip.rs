@@ -6,9 +6,9 @@ use wasmcloud_utils::skir::base::editor::v1::{
     },
     presentation::{
         AxisChild, AxisChildrenElement, AxisChildrenLayout, BoundControl, ChildrenElement,
-        NamedControl, PageGraphDirection, PageGraphElement, PageTimelineElement,
-        PresentationElement, PresentationNode, RichTextContent, TextContent, TextFit, TextRun,
-        TextSizing,
+        GraphDirection, GraphResourcesLayout, GridResourcesLayout, NamedControl,
+        PresentationElement, PresentationNode, ResourcesElement, ResourcesLayout, RichTextContent,
+        TextContent, TextFit, TextRun, TextSizing, TimelineResourcesLayout, TreeResourcesLayout,
     },
     publication, search,
     type_catalog::{
@@ -269,7 +269,7 @@ fn qualified_definition_identity_round_trips() {
 }
 
 #[test]
-fn page_workspaces_preserve_their_field_binding_and_graph_direction() {
+fn resources_elements_preserve_their_field_binding_and_layout() {
     let control = BoundControl {
         binding: binding::BindingRef {
             binding_id: ExpressionBindingId {
@@ -287,24 +287,55 @@ fn page_workspaces_preserve_their_field_binding_and_graph_direction() {
         },
         ..Default::default()
     };
-    let elements = [
-        PresentationElement::PageGraph(Box::new(PageGraphElement {
-            control: control.clone(),
-            direction: PageGraphDirection::RightToLeft,
+    let spacing = || ExpressionNode::Literal(Box::new(DataValue::Float(12.0)));
+    let layouts = [
+        ResourcesLayout::Graph(Box::new(GraphResourcesLayout {
+            direction: GraphDirection::RightToLeft,
             appearance: None,
             _unrecognized: None,
         })),
-        PresentationElement::PageTimeline(Box::new(PageTimelineElement {
-            control,
+        ResourcesLayout::Timeline(Box::new(TimelineResourcesLayout {
             appearance: None,
             _unrecognized: None,
         })),
+        ResourcesLayout::Grid(Box::new(GridResourcesLayout {
+            item_extent: spacing(),
+            aspect_ratio: spacing(),
+            spacing: spacing(),
+            _unrecognized: None,
+        })),
+        ResourcesLayout::Tree(Box::new(TreeResourcesLayout {
+            path: ValuePath {
+                segments: vec![PathSegment::Field(Box::new(FieldPathSegment {
+                    name: "chapter".to_owned(),
+                    _unrecognized: None,
+                }))],
+                _unrecognized: None,
+            },
+            group_binding_id: ExpressionBindingId {
+                value: "group".to_owned(),
+                _unrecognized: None,
+            },
+            initially_expanded: true,
+            ..Default::default()
+        })),
+        ResourcesLayout::List,
     ];
-    for element in elements {
+    for layout in layouts {
+        let element = PresentationElement::Resources(Box::new(ResourcesElement {
+            control: control.clone(),
+            layout,
+            order: None,
+            item_binding_id: ExpressionBindingId {
+                value: "resources_item".to_owned(),
+                _unrecognized: None,
+            },
+            _unrecognized: None,
+        }));
         let bytes = PresentationElement::serializer().to_bytes(&element);
         let decoded = PresentationElement::serializer()
             .from_bytes(&bytes, UnrecognizedValues::Drop)
-            .expect("page workspace must decode");
+            .expect("resources element must decode");
         assert_eq!(decoded, element);
     }
 }

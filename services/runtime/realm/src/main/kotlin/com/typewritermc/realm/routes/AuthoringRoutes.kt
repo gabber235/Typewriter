@@ -3,6 +3,7 @@ package com.typewritermc.realm.routes
 import com.typewritermc.authoring.ArgumentLocation
 import com.typewritermc.authoring.PreparedEditResult
 import com.typewritermc.authoring.TypeSelection
+import com.typewritermc.authoring.definition
 import com.typewritermc.authoring.skir.SkirAuthoringOperationCodec
 import com.typewritermc.checking.CatalogGeneration
 import com.typewritermc.realm.authoring.AuthoringViewStore
@@ -45,7 +46,6 @@ import skirout.editor.v1.authoring.PreparedEditResult as SkirPreparedEditResult
 import skirout.editor.v1.authoring.TypeArgumentChangePreview as SkirTypeArgumentChangePreview
 import skirout.editor.v1.authoring.TypePreviewResult as SkirTypePreviewResult
 import skirout.editor.v1.authoring_facts.LinkProjection as SkirLinkProjection
-import skirout.editor.v1.catalog.ResourceDefinitionId as SkirResourceDefinitionId
 import skirout.editor.v1.type_catalog.CatalogGeneration as SkirCatalogGeneration
 import skirout.editor.v1.type_catalog.NamedTypeUse as SkirNamedTypeUse
 import skirout.editor.v1.type_catalog.ResourceId as SkirResourceId
@@ -110,10 +110,8 @@ internal class AuthoringRoutes(
                 )
             val resources =
                 root.resources.entries.sortedBy { it.key.value }.map { (id, record) ->
-                    val definition = requireNotNull(root.resourceDefinitions[id])
                     SkirAuthoringResource(
                         id = SkirResourceId(value = id.value),
-                        definition = SkirResourceDefinitionId(value = definition.value),
                         content = SkirAuthoringValueCodec.encode(record).getOrThrow(),
                     )
                 }
@@ -226,13 +224,6 @@ private fun TypePreviewResult.toWire(): SkirTypePreviewResult =
             )
         }
     }
-
-private val TypeSelection.definition
-    get() =
-        when (this) {
-            is TypeSelection.Complete -> use.definition
-            is TypeSelection.Pending -> definition
-        }
 
 private fun TypeArgumentChangePreview.toWire(): SkirTypeArgumentChangePreview =
     SkirTypeArgumentChangePreview(

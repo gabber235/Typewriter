@@ -1,11 +1,11 @@
 package com.typewritermc.engine.conformance
 
 import com.typewritermc.authoring.GraphPlacement
+import com.typewritermc.authoring.HierarchyPath
 import com.typewritermc.discovery.GraphDirection
 import com.typewritermc.elements.Element
 import com.typewritermc.library.Book
 import com.typewritermc.library.BookPages
-import com.typewritermc.library.ChapterPath
 import com.typewritermc.library.Page
 import com.typewritermc.library.PageElements
 import com.typewritermc.types.PresentationRole
@@ -30,15 +30,15 @@ interface CapabilityElement : Element {
 data class CapabilityPage(
     override val book: Ref<BookPages.Page, Book>,
     override val name: String = "",
-    override val chapter: ChapterPath = ChapterPath.Root,
+    override val chapter: HierarchyPath = HierarchyPath.Root,
     override val priority: Int = 0,
     override val elements: List<Ref<PageElements.Page, CapabilityElement>> = emptyList(),
 ) : Page
 
 object CapabilityPageEditor : CapabilityPagePresentation {
-    override val roles = setOf(PresentationRole.WORKSPACE_EDITOR)
+    override val roles = setOf(PresentationRole.WORKSPACE)
 
     override fun CapabilityPagePresentationScope.present() {
-        elements { graphPage(GraphDirection.LEFT_TO_RIGHT) }
+        elements { graph(GraphDirection.LEFT_TO_RIGHT) }
     }
 }

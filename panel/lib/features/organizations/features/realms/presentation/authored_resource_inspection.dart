@@ -14,6 +14,7 @@ final class AuthoredResourceInspection extends StatefulWidget {
     this.role = skir.PresentationRole.inspector,
     this.commitPolicy = EditorCommitPolicy.autosaveChanges,
     this.openResource,
+    this.routedResource,
     super.key,
   });
 
@@ -23,6 +24,10 @@ final class AuthoredResourceInspection extends StatefulWidget {
   final skir.PresentationRole role;
   final EditorCommitPolicy commitPolicy;
   final ValueChanged<skir.ResourceId>? openResource;
+
+  /// The resource open in the workspace, marked as routed by resources
+  /// layouts.
+  final skir.ResourceId? routedResource;
 
   @override
   State<AuthoredResourceInspection> createState() =>
@@ -139,7 +144,7 @@ final class _AuthoredResourceInspectionState
               _binding.reportStatus(message);
             },
           ),
-        if (widget.role == skir.PresentationRole.workspaceEditor)
+        if (widget.role == skir.PresentationRole.workspace)
           Expanded(child: editor)
         else
           editor,
@@ -160,7 +165,7 @@ final class _AuthoredResourceInspectionState
       crossAxisAlignment: CrossAxisAlignment.stretch,
       spacing: context.spacing.space3,
       children: [
-        if (widget.role == skir.PresentationRole.workspaceEditor)
+        if (widget.role == skir.PresentationRole.workspace)
           Expanded(child: content)
         else
           content,
@@ -186,6 +191,7 @@ final class _AuthoredResourceInspectionState
       _binding.reportStatus(message);
     },
     openResource: widget.openResource,
+    routedResource: widget.routedResource,
     prepareValue: widget.commands.prepareValue,
     enabled: enabled,
     readOnly: readOnly,

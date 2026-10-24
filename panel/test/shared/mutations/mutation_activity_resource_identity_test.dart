@@ -82,12 +82,14 @@ final _recordField = skir.EffectiveFieldTemplate(
 );
 final _recordCatalog = CheckedEditorCatalog(
   skir.EditorCatalogWireSnapshot(
+    resourceDisplays: const [],
     resourceOperations: const [],
-    resourceOperationContributions: const [],
     generation: skir.CatalogGeneration(value: "test"),
     types: [
       skir.PublishedType(
-        display: null,
+        searchKey: null,
+        placementField: null,
+        display: defaultTypeDisplay(""),
         definition: skir.TypeDefinition(
           id: _recordType,
           parameters: const [],
@@ -110,7 +112,7 @@ final _recordCatalog = CheckedEditorCatalog(
       ),
     ],
     relations: const [],
-    resourceDefinitions: const [],
+    realmRoot: skir.TypeDefinitionId.defaultInstance,
     presentations: const [],
     presentationMaterials: const [],
     configuration: const [],

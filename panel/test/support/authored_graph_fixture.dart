@@ -10,6 +10,7 @@ final class AuthoredGraphFixture {
     bool scalarIncoming = false,
     bool ambiguousIncoming = false,
     bool ambiguousPages = false,
+    bool candidateSearch = false,
   }) {
     skir.TypeTemplate named(String name) => skir.TypeTemplate.createNamed(
       definition: _type(name),
@@ -22,7 +23,11 @@ final class AuthoredGraphFixture {
       skir.RepresentationTemplate representation, {
       List<skir.EffectiveFieldTemplate> fields = const [],
     }) => skir.PublishedType(
-      display: null,
+      searchKey: null,
+      placementField: fields.any((field) => field.key == "placement")
+          ? editorRootPath.field("placement")
+          : null,
+      display: defaultTypeDisplay(""),
       definition: skir.TypeDefinition(
         id: _type(name),
         parameters: const [],
@@ -105,6 +110,10 @@ final class AuthoredGraphFixture {
         record("LinkInput", {
           "target": skir.TypeTemplate.wrapScalar(skir.ScalarKind.text),
         }),
+        record("OperationResourceOption", {
+          "id": skir.TypeTemplate.wrapScalar(skir.ScalarKind.text),
+          "label": skir.TypeTemplate.wrapScalar(skir.ScalarKind.text),
+        }),
         record("Entry", {
           "page": named("PageRef"),
           "triggers": named("Triggers"),
@@ -160,7 +169,7 @@ final class AuthoredGraphFixture {
             skir.EndpointSlot.second,
             skir.EndpointCardinality.many,
           ),
-          families: [skir.RelationFamilyId(value: "resource.ownership")],
+          families: [skir.resourceOwnershipFamily],
         ),
         skir.RelationContract(
           id: triggerRelation,
@@ -208,10 +217,10 @@ final class AuthoredGraphFixture {
         ),
       ]
       ..capabilities = [
-        for (final operation in ["moveToPage", "linkWith", "delete"])
+        for (final operation in fixtureOperations)
           skir.CapabilityDefinition.createAuthoring(
             capabilityId: skir.CapabilityId(value: operation),
-            targets: skir.OperationTargets.contributedSelection,
+            targets: fixtureOperationTargets,
             input: operation == "delete"
                 ? null
                 : skir.OperationInputDefinition(
@@ -221,35 +230,54 @@ final class AuthoredGraphFixture {
                     presentation: null,
                   ),
           ),
+        if (candidateSearch)
+          skir.CapabilityDefinition.createSearch(
+            capabilityId: moveCandidateSearch,
+            requestType: skir.TypeUse.wrapScalar(skir.ScalarKind.text),
+            resultType: skir.TypeUse.wrapNamed(use("OperationResourceOption")),
+          ),
       ]
       ..resourceOperations = [
-        for (final operation in ["moveToPage", "linkWith", "delete"])
+        for (final operation in fixtureOperations)
           skir.ResourceOperationDefinition(
-            id: (resourceDeleteOperationId.toMutable()..local = operation)
-                .toFrozen(),
-            targets: skir.OperationTargets.contributedSelection,
+            id: fixtureOperationId(operation),
+            targets: fixtureOperationTargets,
+            capability: skir.CapabilityId(value: operation),
+            drop: switch (operation) {
+              "moveToOwner" => skir.OperationDrop(
+                input: editorRootPath.field("destination"),
+                hint: "Move here",
+              ),
+              "linkWith" => skir.OperationDrop(
+                input: editorRootPath.field("target"),
+                hint: "Link",
+              ),
+              _ => null,
+            },
             presentation: skir.OperationPresentation(
-              showInInspector: true,
-              variant: skir.ButtonVariant.outlined,
+              inspector: skir.OperationInspector.wrapButton(
+                operation == "delete"
+                    ? skir.ButtonVariant.filled
+                    : skir.ButtonVariant.outlined,
+              ),
+              shortcut: operation == "delete"
+                  ? skir.OperationShortcut.delete
+                  : null,
               label: {
-                "moveToPage": "Move to page",
+                "moveToOwner": "Move to",
                 "linkWith": "Link with",
                 "delete": "Delete",
               }[operation]!,
               description: "Fixture operation",
               icon: "",
-              group: skir.OperationGroup.edit,
-              order: 0,
-              tone: skir.HeaderActionTone.neutral,
+              group: operation == "delete"
+                  ? skir.OperationGroup.destructive
+                  : skir.OperationGroup.organize,
+              order: operation == "linkWith" ? 20 : 10,
+              tone: operation == "delete"
+                  ? skir.HeaderActionTone.destructive
+                  : skir.HeaderActionTone.neutral,
               confirmation: null,
-            ),
-            action: skir.EditorAction.createAuthoring(
-              capability: skir.CapabilityId(value: operation),
-              targets: skir.ExpressionNode.createInput(
-                binding: skir.ExpressionBindingId(value: "context:selection"),
-                path: editorRootPath,
-              ),
-              initialInput: null,
             ),
           ),
       ];
@@ -280,7 +308,6 @@ final class AuthoredGraphFixture {
       List<skir.FieldValue> fields,
     ) => skir.AuthoringResource(
       id: id,
-      definition: skir.ResourceDefinitionId(value: type),
       content: skir.AuthoringRecord(
         configuration: skir.TypeSelection.wrapComplete(use(type)),
         fields: fields,
@@ -373,27 +400,55 @@ final class AuthoredGraphFixture {
     addTearDown(workspace.dispose);
     addTearDown(transport.dispose);
     addTearDown(work.dispose);
-    group = AuthoringResourceDragGroup(
+    drag = ResourceDrag(
+      scope: scope,
       primary: AuthoringResourceIdentifier.inScope(scope, source),
-      memberships: {
-        for (final id in sourceIds)
-          AuthoringResourceIdentifier.inScope(scope, id): skir.LinkOccurrence(
-            id: skir.LinkOccurrenceId(
-              endpoint: _endpoint("page.elements"),
-              location: skir.ValueLocation(
-                resource: page,
-                path: membershipPath(id),
-              ),
-            ),
-            source: page,
-            target: skir.LinkTarget(
-              resource: id,
-              opposite: editorRootPath.field("page"),
+      subjects: sourceIds,
+    );
+    memberships = {
+      for (final id in sourceIds)
+        id: skir.LinkOccurrence(
+          id: skir.LinkOccurrenceId(
+            endpoint: _endpoint("page.elements"),
+            location: skir.ValueLocation(
+              resource: page,
+              path: membershipPath(id),
             ),
           ),
-      },
-    );
+          source: page,
+          target: skir.LinkTarget(
+            resource: id,
+            opposite: editorRootPath.field("page"),
+          ),
+        ),
+    };
   }
+
+  /// The search over Move to destinations, derived from its capability.
+  static final moveCandidateSearch = skir.CapabilityId(
+    value: "moveToOwner/candidates/destination",
+  );
+
+  /// An operation resource option row, as candidate searches return them.
+  skir.DataValue option(skir.ResourceId id, String label) =>
+      skir.DataValue.createNamed(
+        actualType: skir.NamedTypeUse(
+          definition: _type("OperationResourceOption"),
+          arguments: const [],
+        ),
+        payload: skir.DataValue.createRecord(
+          fields: [
+            skir.FieldValue(
+              name: "id",
+              value: skir.DataValue.wrapStringValue(id.value),
+            ),
+            skir.FieldValue(
+              name: "label",
+              value: skir.DataValue.wrapStringValue(label),
+            ),
+          ],
+        ),
+      );
 
   final source = skir.ResourceId(value: "entry:source");
   final second = skir.ResourceId(value: "entry:second");
@@ -414,10 +469,16 @@ final class AuthoredGraphFixture {
   );
   late final RealmEditing workspace;
   late final ScriptedAuthoringTransport transport;
-  late final AuthoringResourceDragGroup group;
+  late final ResourceDrag drag;
+
+  /// The page's membership occurrence of every source entry.
+  late final Map<skir.ResourceId, skir.LinkOccurrence> memberships;
   bool mutable = true;
 
   final preparations = <skir.PrepareAuthoringActionRequest>[];
+
+  /// Every drop candidate request, one per drag.
+  final dropResolutions = <skir.ResolveDropCandidatesRequest>[];
 
   AuthoredResourceCommands get commands {
     final base = fixtureAuthoringCommands(transport);
@@ -460,7 +521,6 @@ final class AuthoredGraphFixture {
       resolveResourceOperations: (request) async =>
           skir.ResolveResourceOperationsResult.wrapResolved(
             skir.ResolvedResourceOperations(
-              primaryOperation: null,
               operations: [
                 for (final operation
                     in workspace.document.catalog.snapshot.resourceOperations)
@@ -471,8 +531,41 @@ final class AuthoredGraphFixture {
               ],
             ),
           ),
+      resolveDropCandidates: _dropCandidates,
       prepareAuthoringAction: _prepare,
     );
+  }
+
+  /// Pages accept a move of entries they do not own; entries accept a link
+  /// from other entries.
+  Future<skir.ResolveDropCandidatesResult> _dropCandidates(
+    skir.ResolveDropCandidatesRequest request,
+  ) async {
+    dropResolutions.add(request);
+    final subjects = request.invocation.targets.toSet();
+    final document = workspace.document;
+    final owners = {
+      for (final subject in subjects) ...?document.relations.parents[subject],
+    };
+    return skir.ResolveDropCandidatesResult.wrapResolved([
+      skir.DropCandidates(
+        operation: fixtureOperationId("moveToOwner"),
+        destinations: [
+          for (final page in [page, destination])
+            if (!owners.contains(page)) page,
+        ],
+        complete: true,
+      ),
+      skir.DropCandidates(
+        operation: fixtureOperationId("linkWith"),
+        destinations: [
+          for (final entry in [source, second, target])
+            if (!subjects.contains(entry) && document.entry(entry) != null)
+              entry,
+        ],
+        complete: true,
+      ),
+    ]);
   }
 
   Future<skir.AuthoringActionResult> _prepare(
@@ -541,6 +634,20 @@ final class AuthoredGraphFixture {
     );
   }
 }
+
+const fixtureOperations = ["moveToOwner", "linkWith", "delete"];
+
+final fixtureOperationTargets = skir.OperationTargets(
+  subject: skir.ResourceTarget.anyResource,
+  cardinality: skir.OperationCardinality.selection,
+);
+
+skir.ResourceOperationId fixtureOperationId(String operation) =>
+    skir.ResourceOperationId(
+      artifact: "typewriter",
+      sourcePart: "main",
+      declaration: "com.typewritermc.operations.$operation",
+    );
 
 skir.TypeDefinitionId _type(String name) => skir.TypeDefinitionId(
   typeId: skir.TypeId.createQualified(namespace: "graph-test", name: name),

@@ -28,6 +28,20 @@ data class GraphPlacement(
     }
 }
 
+/**
+ * A point on a graph canvas, in canvas coordinates. Graph members moved onto a canvas are placed around it; pickers
+ * leave it empty.
+ */
+@TypewriterType(id = "0a18ceeaa4c94c2c87f705c327355af0")
+data class PlacementAnchor(
+    val x: Double,
+    val y: Double,
+) {
+    init {
+        require(x.isFinite() && y.isFinite()) { "A placement anchor must be finite." }
+    }
+}
+
 /** Positions an entry on one timeline track. */
 @Serializable
 @SerialName("timeline_entry")

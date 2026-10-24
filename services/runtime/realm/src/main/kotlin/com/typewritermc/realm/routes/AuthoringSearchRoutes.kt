@@ -19,7 +19,6 @@ import skirout.editor.v1.authoring.AuthoringSearchHit
 import skirout.editor.v1.authoring.PresentationSubject
 import skirout.editor.v1.authoring.SearchAuthoringRequest
 import skirout.editor.v1.authoring.SearchAuthoringResponse
-import skirout.editor.v1.catalog.ResourceDefinitionId as SkirResourceDefinitionId
 import skirout.editor.v1.type_catalog.CatalogGeneration as SkirCatalogGeneration
 import skirout.editor.v1.type_catalog.NamedTypeUse as SkirNamedTypeUse
 import skirout.editor.v1.type_catalog.ResourceId as SkirResourceId
@@ -60,8 +59,7 @@ internal class AuthoringSearchRoutes(
                         candidates
                             .mapNotNull { candidate ->
                                 val record = root.resources[candidate.resource] ?: return@mapNotNull null
-                                val definition = root.resourceDefinitions[candidate.resource] ?: return@mapNotNull null
-                                candidate.toWire(record, definition.value)
+                                candidate.toWire(record)
                             }.take(MAX_SEARCH_RESULTS),
                     diagnostics = emptyList(),
                 )
@@ -79,21 +77,14 @@ private fun invalidSearch(
         diagnostics = listOf(AuthoringDiagnostic(code = code, message = message, resource = null, path = null)),
     )
 
-private fun IndexedAuthoringSearchCandidate.toWire(
-    record: AuthoringRecord,
-    definition: String,
-): AuthoringSearchHit {
+private fun IndexedAuthoringSearchCandidate.toWire(record: AuthoringRecord): AuthoringSearchHit {
     val wireResource = SkirResourceId(value = resource.value)
-    val resourceDefinition = SkirResourceDefinitionId(value = definition)
     return AuthoringSearchHit(
         resource = wireResource,
-        definition = resourceDefinition,
         subject =
             PresentationSubject(
                 resource = wireResource,
-                definition = resourceDefinition,
                 content = SkirAuthoringValueCodec.encode(record).getOrThrow(),
-                descriptor = SkirDataValueCodec.encode(DataValue.StringValue(record.displayLabel ?: resource.value)).getOrThrow(),
             ),
         context =
             SkirPortableValue(
@@ -102,22 +93,6 @@ private fun IndexedAuthoringSearchCandidate.toWire(
             ),
     )
 }
-
-/** Labels a resource for editor search results from its first non blank name or title field. */
-internal val AuthoringRecord.displayLabel: String?
-    get() =
-        sequenceOf("name", "title")
-            .mapNotNull(fields::get)
-            .mapNotNull { it.displayText() }
-            .firstOrNull(String::isNotBlank)
-
-private fun DataValue.displayText(): String? =
-    when (this) {
-        is DataValue.StringValue -> value
-        is DataValue.EnumCase -> key
-        is DataValue.Named -> payload.displayText()
-        else -> null
-    }
 
 private fun SkirTypeDefinitionId.toDomain(): TypeDefinitionId =
     (

@@ -21,6 +21,7 @@ import com.typewritermc.protocol.transport.generated.editorCatalogWatch
 import com.typewritermc.protocol.transport.generated.editorPresentationSearch
 import com.typewritermc.protocol.transport.generated.editorPresentationSearchCancel
 import com.typewritermc.protocol.transport.generated.editorValuePrepare
+import com.typewritermc.protocol.transport.generated.resourceDropCandidatesResolve
 import com.typewritermc.protocol.transport.generated.resourceOperationsResolve
 import com.typewritermc.services.libs.communicator.contract.ResponseClassification
 import com.typewritermc.services.libs.communicator.contract.ResponseClassifier
@@ -44,6 +45,7 @@ import skirout.editor.v1.publication.PublicationViewChanged
 import skirout.editor.v1.publication.PublishAuthoringResponse
 import skirout.editor.v1.publication.QueryPublicationViewResponse
 import skirout.editor.v1.resource_operations.AuthoringActionResult
+import skirout.editor.v1.resource_operations.ResolveDropCandidatesResult
 import skirout.editor.v1.resource_operations.ResolveResourceOperationsResult
 import skirout.editor.v1.search.CancelRealmPresentationSearchResult
 import skirout.editor.v1.search.RealmPresentationSearchStatus
@@ -68,6 +70,13 @@ internal class EditorContracts(
         address.resourceOperationsResolve(
             policy(
                 ResolveResourceOperationsResult
+                    .createInternalError(),
+            ),
+        )
+    val resolveDropCandidates =
+        address.resourceDropCandidatesResolve(
+            policy(
+                ResolveDropCandidatesResult
                     .createInternalError(),
             ),
         )

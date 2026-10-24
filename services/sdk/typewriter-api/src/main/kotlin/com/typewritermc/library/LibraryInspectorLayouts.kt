@@ -10,6 +10,7 @@ import com.typewritermc.expression.gte
 import com.typewritermc.expression.literal
 import com.typewritermc.expression.map
 import com.typewritermc.expression.orElse
+import com.typewritermc.expression.orIfBlank
 import com.typewritermc.expression.size
 import com.typewritermc.expression.target
 import com.typewritermc.presentation.AxisLayout
@@ -180,23 +181,5 @@ internal fun Layout.librarySubjectLayout(
         compactPadding(PresentationInsets(4.0, 4.0, 4.0, 4.0))
         gap(12.0)
         minimumCenterWidth(80.0)
-    }
-}
-
-internal fun Expr<String, MissingPolicy>.orIfBlank(fallback: String): Expr<String, Handled> {
-    val source = this
-    val fallbackExpression = literal(fallback)
-    return Expr { environment ->
-        val input = source.lower(environment)
-        val fallbackNode = fallbackExpression.lower(environment)
-        ExpressionNode.createOrElse(
-            input =
-                ExpressionNode.createConditional(
-                    test = ExpressionNode.createRuleUnary(operation = RuleUnaryOperation.NON_BLANK, source = input),
-                    yes = input,
-                    no = fallbackNode,
-                ),
-            fallback = fallbackNode,
-        )
     }
 }

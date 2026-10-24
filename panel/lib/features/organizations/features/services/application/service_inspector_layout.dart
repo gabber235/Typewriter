@@ -82,7 +82,8 @@ skir.PresentationNode _inspectorCard(
   id,
   skir.PresentationElement.createContainer(
     foregroundColor: null,
-    transitionMilliseconds: 0,
+    transition: null,
+    shadows: const [],
     backgroundColor: _inspectorColor(color.withAlpha(24)),
     radius: skir.PresentationRadius.medium,
     border: null,
@@ -289,7 +290,11 @@ skir.PresentationNode _inspectorMessage(
 ) => _inspectorNode(
   "$id.visible",
   skir.PresentationElement.createConditional(
-    condition: skir.ExpressionNode.createValueCompare(operation: skir.ValueCompareOperation.notEqual,left:_portableRead(binding),right:_portableLiteral("None")),
+    condition: skir.ExpressionNode.createValueCompare(
+      operation: skir.ValueCompareOperation.notEqual,
+      left: _portableRead(binding),
+      right: _portableLiteral("None"),
+    ),
     whenTrue: _inspectorFact(
       id,
       "Message",

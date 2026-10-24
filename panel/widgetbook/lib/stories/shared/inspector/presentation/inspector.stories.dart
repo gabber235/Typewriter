@@ -62,18 +62,20 @@ Widget bookAndTagSelectionStory({required bool sharedColor}) {
           child: Wrap(
             spacing: 16,
             children: [
-              BookWidget(
-                id: book.bookId,
-                title: book.title,
-                icon: Icones(book.icon),
-                color: book.color,
-                tags: const [],
-              ),
-              SizedBox(
-                width: 150,
-                height: 50,
-                child: TagNode(tagId: tag.tagId),
-              ),
+              for (final (label, color, icon) in [
+                (book.title, book.color, "material-symbols:book"),
+                (tag.name, tag.color, "material-symbols:label"),
+              ])
+                SizedBox(
+                  width: 180,
+                  child: ResourceItemChrome(
+                    appearance: ResourceAppearance(
+                      label: label,
+                      accent: color,
+                      icon: skir.Icon.wrapIconify(icon),
+                    ),
+                  ),
+                ),
             ],
           ),
         ),

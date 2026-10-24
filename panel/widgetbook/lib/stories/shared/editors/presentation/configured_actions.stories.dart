@@ -244,34 +244,38 @@ skir.PresentationNode _projections() {
           .toFrozen();
   final graph = presentationNode(
     "graph",
-    skir.PresentationElement.wrapPageGraph(
-      (skir.PageGraphElement.mutable()
-            ..control = control
-            ..direction = skir.PageGraphDirection.leftToRight
-            ..appearance =
-                (skir.PageGraphAppearance.mutable()
-                      ..cellSize = numberLiteral(60)
-                      ..edgeColor = _paint(0xff7354bf)
-                      ..cardPadding = skir.PresentationInsets.wrapAll(8))
-                    .toFrozen())
-          .toFrozen(),
+    skir.PresentationElement.createResources(
+      control: control,
+      layout: skir.ResourcesLayout.createGraph(
+        direction: skir.GraphDirection.leftToRight,
+        appearance:
+            (skir.ResourceGraphAppearance.mutable()
+                  ..cellSize = numberLiteral(60)
+                  ..edgeColor = _paint(0xff7354bf)
+                  ..cardPadding = skir.PresentationInsets.wrapAll(8))
+                .toFrozen(),
+      ),
+      order: null,
+      itemBindingId: skir.ExpressionBindingId(value: "gallery.item"),
     ),
   );
   final timeline = presentationNode(
     "timeline",
-    skir.PresentationElement.wrapPageTimeline(
-      (skir.PageTimelineElement.mutable()
-            ..control = control
-            ..appearance =
-                (skir.PageTimelineAppearance.mutable()
-                      ..rulerHeight = 44
-                      ..trackPadding = 6
-                      ..laneHeight = 40
-                      ..laneGap = 12
-                      ..headerPadding = 8
-                      ..gridMajorColor = _paint(0xff7354bf))
-                    .toFrozen())
-          .toFrozen(),
+    skir.PresentationElement.createResources(
+      control: control,
+      layout: skir.ResourcesLayout.createTimeline(
+        appearance:
+            (skir.ResourceTimelineAppearance.mutable()
+                  ..rulerHeight = 44
+                  ..trackPadding = 6
+                  ..laneHeight = 40
+                  ..laneGap = 12
+                  ..headerPadding = 8
+                  ..gridMajorColor = _paint(0xff7354bf))
+                .toFrozen(),
+      ),
+      order: null,
+      itemBindingId: skir.ExpressionBindingId(value: "gallery.item"),
     ),
   );
   return presentationNode(
@@ -303,7 +307,7 @@ skir.PresentationNode _projections() {
 }
 
 class _GalleryHost extends ChangeNotifier
-    implements PortablePresentationHost, PortablePageHost {
+    implements PortablePresentationHost, PortableResourcesHost {
   _GalleryHost({
     required this.readOnly,
     required bool projections,
@@ -377,7 +381,7 @@ class _GalleryHost extends ChangeNotifier
   }
 
   @override
-  PortablePageProjection projectPage(
+  PortableResourcesProjection projectResources(
     skir.BindingRef source, {
     required PortableInvocationContext context,
   }) {
@@ -385,12 +389,13 @@ class _GalleryHost extends ChangeNotifier
       skir.ResourceId(value: "Start"),
       skir.ResourceId(value: "Complete"),
     ];
-    return PortablePageProjection(
-      entries: [
+    return PortableResourcesProjection(
+      members: [
         for (final indexed in resources.indexed)
-          PortablePageEntryProjection(
+          PortableResourceMember(
             resource: indexed.$2,
             occurrence: skir.LinkOccurrence.defaultInstance,
+            link: skir.DataValue.unfilled,
             resourceProjection: PortableResourceProjection(
               resource: indexed.$2,
               configuration: skir.TypeSelection.createComplete(
@@ -403,10 +408,14 @@ class _GalleryHost extends ChangeNotifier
                 ),
                 arguments: [],
               ),
-              label: indexed.$2.value,
+              appearance: ResourceAppearance(
+                label: indexed.$2.value,
+                accent: const Color(0xff7354bf),
+                icon: skir.Icon.wrapIconify("material-symbols:flag"),
+              ),
               value: skir.DataValue.wrapStringValue(indexed.$2.value),
             ),
-            graph: PortablePageGraphPlacement(
+            graph: PortableGraphPlacement(
               x: indexed.$1 * 5,
               y: indexed.$1,
               width: 4,
@@ -415,7 +424,7 @@ class _GalleryHost extends ChangeNotifier
           ),
       ],
       edges: [
-        PortablePageEdgeProjection(
+        PortableResourceEdge(
           id: "flow",
           source: resources.first,
           target: resources.last,
@@ -454,8 +463,8 @@ class _GalleryHost extends ChangeNotifier
     required PortableInvocationContext context,
   }) => const PortablePresentationWriteResult.applied();
   @override
-  PortablePresentationWriteResult removePageResource(
-    PortablePageEntryProjection entry, {
+  PortablePresentationWriteResult removeMember(
+    PortableResourceMember member, {
     required bool delete,
     required PortableInvocationContext context,
   }) => const PortablePresentationWriteResult.applied();

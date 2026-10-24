@@ -31,7 +31,7 @@ _PortableControlStyle _controlStyle(
   BuildContext context,
   PortablePresentationScope scope,
   skir.InputAppearance? appearance, {
-  PresentationColorEnvironment? environment,
+  PresentationValueEnvironment? environment,
 }) {
   final layers = [
     ...scope.appearanceLayers,
@@ -62,7 +62,7 @@ _PortableControlStyle _controlStyle(
     final layer = origin(select);
     return layer == null
         ? null
-        : (environment ?? PresentationColorEnvironment.of(context)).resolve(
+        : (environment ?? PresentationValueEnvironment.of(context)).resolve(
             select(layer.appearance)!,
             evaluation(layer),
           );
@@ -75,7 +75,7 @@ _PortableControlStyle _controlStyle(
     final textColor = color((a) => select(a)?.color);
     final weight = property((a) => select(a)?.weight);
     if (weight != null && (weight < 1 || weight > 1000)) {
-      throw const PresentationColorFailure(
+      throw const PresentationValueFailure(
         "Input font weight must be between 1 and 1000",
       );
     }
@@ -101,9 +101,9 @@ _PortableControlStyle _controlStyle(
                   ],
           );
         case _ResolvedFailure(:final message):
-          throw PresentationColorFailure(message);
+          throw PresentationValueFailure(message);
         case _ResolvedValue<ResolvedTextSizing?>(value: FitTextSizing()):
-          throw const PresentationColorFailure(
+          throw const PresentationValueFailure(
             "Editable input text cannot use fitted sizing",
           );
         default:
@@ -132,7 +132,7 @@ _PortableControlStyle _controlStyle(
         border = InputBorder.none;
       case skir.BorderOverride_valueWrapper(:final value):
         if (value is! skir.PresentationBorder_allWrapper) {
-          throw const PresentationColorFailure(
+          throw const PresentationValueFailure(
             "Input borders must use one uniform side",
           );
         }
@@ -144,7 +144,7 @@ _PortableControlStyle _controlStyle(
           ),
         );
       default:
-        throw const PresentationColorFailure("The input border is unavailable");
+        throw const PresentationValueFailure("The input border is unavailable");
     }
   }
   final radiusOrigin = origin((a) => a.radius);
@@ -176,11 +176,11 @@ _PortableControlStyle _controlStyle(
               evaluation(iconSizeOrigin),
               iconSizeOrigin.appearance.iconSize,
             ) ??
-            (throw const PresentationColorFailure(
+            (throw const PresentationValueFailure(
               "The input icon size is unavailable",
             ));
   if (!iconSize.isFinite || iconSize <= 0) {
-    throw const PresentationColorFailure("Input icon size must be positive");
+    throw const PresentationValueFailure("Input icon size must be positive");
   }
   return _PortableControlStyle(
     decoration: InputDecoration(
@@ -302,7 +302,7 @@ String? _entryPlaceholder(
     ? null
     : switch (_string(scope, content!.placeholder!)) {
         _ResolvedValue(:final value) => value,
-        _ResolvedFailure(:final message) => throw PresentationColorFailure(
+        _ResolvedFailure(:final message) => throw PresentationValueFailure(
           message,
         ),
       };
@@ -389,7 +389,7 @@ class _PortableControlInteraction extends HookWidget {
                   states.update(WidgetState.error, message != null);
                 }
               });
-            } on PresentationColorFailure catch (failure) {
+            } on PresentationValueFailure catch (failure) {
               return _diagnostic(failure.message);
             } on FormatException catch (failure) {
               return _diagnostic(failure.message);

@@ -36,7 +36,7 @@ data class ReferenceResourceDiagnostic(
     val message: String,
 )
 
-/** Describes one authored resource family for role presentations. */
+/** Describes one kind of authored resource for role presentations. */
 @TypewriterType(id = "da03c1ce637d4ee78c4916d304e57bf1")
 data class ResourceTypeDescriptor(
     val name: String,

@@ -207,10 +207,10 @@ method PublishAuthoring(
 ): enum {
   result: PublicationResult = 1;
   internal_error: InternalError = 2;
-} = 920017;
+} = 920018;
 method WatchPublication(
   struct {}
-): PublicationViewChanged = 920018;
+): PublicationViewChanged = 920019;
 
 /// Transfers one immutable review view or reports that expected is no longer current.
 /// All chunks share the view and transfer identities; later invalidations require a separate query.
@@ -224,4 +224,4 @@ method QueryPublicationView(
   changed: PublicationViewChanged = 2;
   unavailable: PublicationTransferUnavailable = 3;
   internal_error: InternalError = 4;
-} = 920019;
+} = 920020;

@@ -149,8 +149,8 @@ final _serviceIdentityType = skir.TypeUse.wrapNamed(
   _draftUse(_serviceIdentityDefinition),
 );
 final _serviceIdentityCatalog = skir.EditorCatalogWireSnapshot(
+  resourceDisplays: const [],
   resourceOperations: const [],
-  resourceOperationContributions: const [],
   generation: skir.CatalogGeneration(value: "panel.service.identity"),
   types: [
     _draftPublished(
@@ -170,7 +170,7 @@ final _serviceIdentityCatalog = skir.EditorCatalogWireSnapshot(
   capabilities: const [],
   relations: const [],
   endpointBindings: const [],
-  resourceDefinitions: const [],
+  realmRoot: skir.TypeDefinitionId.defaultInstance,
   recommendations: const [],
   roleFallbacks: const [],
 

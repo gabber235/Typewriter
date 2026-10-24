@@ -62,6 +62,7 @@ final class BoundPresentationHost extends ChangeNotifier
     this.capabilities = const PortablePresentationCapabilities(),
     this.role,
     this.material,
+    this.contextInputs,
     this.activePresentations = const {},
     this.slots = const {},
   }) : _bindings = _indexBindings(bindings) {
@@ -77,6 +78,9 @@ final class BoundPresentationHost extends ChangeNotifier
   final skir.EvaluationBudget budget;
   final skir.PresentationRole? role;
   final skir.PresentationMaterial? material;
+
+  /// Context inputs of a presentation built without material.
+  final List<skir.PresentationContextInput>? contextInputs;
   final Set<skir.PresentationId> activePresentations;
   final Map<String, skir.PresentationNode> slots;
   late PortablePresentationDocument _document;
@@ -267,6 +271,7 @@ final class BoundPresentationHost extends ChangeNotifier
     budget: budget,
     role: role,
     material: material,
+    contextInputs: contextInputs,
     activePresentations: activePresentations,
     slots: slots,
   );

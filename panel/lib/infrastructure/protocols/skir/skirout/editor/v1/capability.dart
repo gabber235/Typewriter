@@ -686,7 +686,7 @@ sealed class CapabilityDefinition {
   /// Same as `wrapAuthoring(AuthoringCapabilityDefinition(...))`.
   factory CapabilityDefinition.createAuthoring({
     required _lib_editor_v1_type_catalog.CapabilityId_orMutable capabilityId,
-    required _lib_editor_v1_operation.OperationTargets targets,
+    required _lib_editor_v1_operation.OperationTargets_orMutable targets,
     required _lib_editor_v1_operation.OperationInputDefinition_orMutable? input,
   }) => CapabilityDefinition.wrapAuthoring(
     AuthoringCapabilityDefinition(
@@ -3118,7 +3118,7 @@ final class CommandResult_staleGenerationWrapper
 
 sealed class AuthoringCapabilityDefinition_orMutable {
   _lib_editor_v1_type_catalog.CapabilityId_orMutable get capabilityId;
-  _lib_editor_v1_operation.OperationTargets get targets;
+  _lib_editor_v1_operation.OperationTargets_orMutable get targets;
   _lib_editor_v1_operation.OperationInputDefinition_orMutable? get input;
 
   AuthoringCapabilityDefinition toFrozen();
@@ -3137,11 +3137,11 @@ final class AuthoringCapabilityDefinition
 
   factory AuthoringCapabilityDefinition({
     required _lib_editor_v1_type_catalog.CapabilityId_orMutable capabilityId,
-    required _lib_editor_v1_operation.OperationTargets targets,
+    required _lib_editor_v1_operation.OperationTargets_orMutable targets,
     required _lib_editor_v1_operation.OperationInputDefinition_orMutable? input,
   }) => AuthoringCapabilityDefinition._(
     capabilityId.toFrozen(),
-    targets,
+    targets.toFrozen(),
     (input != null) ? input.toFrozen() : null,
   );
 
@@ -3150,7 +3150,7 @@ final class AuthoringCapabilityDefinition
   /// Default instance with all fields set to their default values.
   static final defaultInstance = AuthoringCapabilityDefinition._(
     _lib_editor_v1_type_catalog.CapabilityId.defaultInstance,
-    _lib_editor_v1_operation.OperationTargets.unknown,
+    _lib_editor_v1_operation.OperationTargets.defaultInstance,
     null,
   );
 
@@ -3159,7 +3159,7 @@ final class AuthoringCapabilityDefinition
   static AuthoringCapabilityDefinition_mutable mutable() =>
       AuthoringCapabilityDefinition_mutable._(
         _lib_editor_v1_type_catalog.CapabilityId.defaultInstance,
-        _lib_editor_v1_operation.OperationTargets.unknown,
+        _lib_editor_v1_operation.OperationTargets.defaultInstance,
         null,
       );
 
@@ -3254,7 +3254,7 @@ final class AuthoringCapabilityDefinition
 final class AuthoringCapabilityDefinition_mutable
     implements AuthoringCapabilityDefinition_orMutable {
   _lib_editor_v1_type_catalog.CapabilityId_orMutable capabilityId;
-  _lib_editor_v1_operation.OperationTargets targets;
+  _lib_editor_v1_operation.OperationTargets_orMutable targets;
   _lib_editor_v1_operation.OperationInputDefinition_orMutable? input;
   _skir.internal__UnrecognizedFields? _u;
 
@@ -3273,6 +3273,18 @@ final class AuthoringCapabilityDefinition_mutable
     } else {
       return this.capabilityId =
           (value as _lib_editor_v1_type_catalog.CapabilityId).toMutable();
+    }
+  }
+
+  /// If the value of [targets] is already mutable, returns it as-is.
+  /// Otherwise, makes a mutable copy, assigns it back to [targets] and returns it.
+  _lib_editor_v1_operation.OperationTargets_mutable get mutableTargets {
+    final value = this.targets;
+    if (value is _lib_editor_v1_operation.OperationTargets_mutable) {
+      return value;
+    } else {
+      return this.targets = (value as _lib_editor_v1_operation.OperationTargets)
+          .toMutable();
     }
   }
 

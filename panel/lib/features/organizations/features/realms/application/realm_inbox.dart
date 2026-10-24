@@ -168,8 +168,8 @@ Future<bool> openRealmInboxLocation(
   final retention = ref.keepAlive();
   try {
     return await ref
-        .read(authoringResourceNavigationRegistryProvider)
-        .reveal(ref, scope, location);
+        .read(realmSurfaceNavigationProvider)
+        .reveal(scope, location);
   } finally {
     retention.close();
   }

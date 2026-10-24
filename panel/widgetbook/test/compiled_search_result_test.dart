@@ -29,10 +29,8 @@ void main() {
           expect(find.text("Quest tag"), findsOneWidget);
         } else {
           expect(find.text("Village"), findsOneWidget);
-          expect(
-            find.text(kind == "page" ? "Dialogue page" : "Speaker"),
-            findsOneWidget,
-          );
+          // The host chrome names the kind from the type display.
+          expect(_kind(tester), kind == "page" ? "Dialogue page" : "Speaker");
         }
         if (kind == "element") {
           expect(find.text("Meet the Mayor"), findsOneWidget);
@@ -87,7 +85,7 @@ void main() {
         fixture.ids["element"]!,
         origin: fixture.ids["page"],
       );
-      expect(find.text("Speaker"), findsOneWidget);
+      expect(_kind(tester), "Speaker");
       expect(find.text("Main Quest"), findsNothing);
       expect(find.text("Village"), findsNothing);
       expect(find.text("Meet the Mayor"), findsNothing);
@@ -108,6 +106,9 @@ void main() {
     },
   );
 }
+
+String _kind(WidgetTester tester) =>
+    tester.widget<SearchResultSuffix>(find.byType(SearchResultSuffix)).label;
 
 Future<void> _pump(
   WidgetTester tester,
@@ -145,9 +146,10 @@ Future<void> _pump(
             child: AuthoredResourceSearchResult(
               document: document,
               issues: ResourceIssues.evaluate(document: document),
-              presentationContext: libraryOriginBindings(origin),
+              hostContext: HostContext(activeResource: origin),
               resource: resource,
               role: skir.PresentationRole.resourceSearchResult,
+              density: SearchResultDensity.card,
               fallbackLabel: "Missing recipe",
               row: SearchResultRowContext(
                 result: SearchResult(

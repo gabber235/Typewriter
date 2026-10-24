@@ -118,7 +118,6 @@ void main() {
         entries: {
           fixture.resource: skir.AuthoringResource(
             id: fixture.resource,
-            definition: skir.ResourceDefinitionId(value: "test.tag"),
             content: skir.AuthoringRecord(
               configuration: skir.TypeSelection.unknown,
               fields: record.fields,
@@ -131,7 +130,7 @@ void main() {
         resource: fixture.resource,
         source: observation,
         material: skir.PresentationMaterial.defaultInstance,
-        role: skir.PresentationRole.workspaceEditor,
+        role: skir.PresentationRole.workspace,
         budget: skir.EvaluationBudget(maxSteps: 100, maxCollectionItems: 100),
         capabilities: const PortablePresentationCapabilities(),
       );
@@ -186,7 +185,6 @@ void main() {
       entries: {
         fixture.resource: skir.AuthoringResource(
           id: fixture.resource,
-          definition: skir.ResourceDefinitionId(value: "test.tag"),
           content: fixture.draft.resource(fixture.resource)!,
         ),
       },
@@ -219,7 +217,7 @@ void main() {
       resource: fixture.resource,
       source: observation,
       material: skir.PresentationMaterial.defaultInstance,
-      role: skir.PresentationRole.workspaceEditor,
+      role: skir.PresentationRole.workspace,
       budget: skir.EvaluationBudget(maxSteps: 100, maxCollectionItems: 100),
       capabilities: const PortablePresentationCapabilities(),
     );
@@ -458,8 +456,8 @@ _nestedRuleFixture({
   );
   final checked = CheckedEditorCatalog(
     skir.EditorCatalogWireSnapshot(
+      resourceDisplays: const [],
       resourceOperations: const [],
-      resourceOperationContributions: const [],
       generation: generation,
       types: [
         _publishedRecord(
@@ -502,7 +500,9 @@ _nestedRuleFixture({
         ),
         if (collection)
           skir.PublishedType(
-            display: null,
+            searchKey: null,
+            placementField: null,
+            display: defaultTypeDisplay(""),
             definition: skir.TypeDefinition(
               id: placementList,
               parameters: const [],
@@ -518,7 +518,7 @@ _nestedRuleFixture({
           ),
       ],
       relations: const [],
-      resourceDefinitions: const [],
+      realmRoot: skir.TypeDefinitionId.defaultInstance,
       presentations: const [],
       presentationMaterials: const [],
       configuration: [
@@ -568,7 +568,6 @@ _nestedRuleFixture({
     resources: [
       skir.AuthoringResource(
         id: resource,
-        definition: skir.ResourceDefinitionId(value: "test.tag"),
         content: skir.AuthoringRecord(
           configuration: skir.TypeSelection.createComplete(
             definition: tag,
@@ -631,7 +630,9 @@ skir.PublishedType _publishedRecord({
   required List<skir.FieldDeclaration> fields,
   required List<skir.EffectiveFieldTemplate> effectiveFields,
 }) => skir.PublishedType(
-  display: null,
+  searchKey: null,
+  placementField: null,
+  display: defaultTypeDisplay(""),
   definition: skir.TypeDefinition(
     id: definition,
     parameters: const [],

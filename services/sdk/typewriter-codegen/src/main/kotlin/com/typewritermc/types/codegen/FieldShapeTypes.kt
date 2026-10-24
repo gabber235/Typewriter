@@ -181,7 +181,7 @@ internal val FieldShape.presentationControl: TypeName
 
             is FieldShape.Sequence -> {
                 when {
-                    kind == CollectionKind.List && item is FieldShape.Link -> Api.ResourceLinksControl.parameterizedBy(item.target)
+                    kind == CollectionKind.List && item is FieldShape.Link -> Api.ResourcesControl.parameterizedBy(item.target)
                     kind == CollectionKind.List -> Api.ListControl.parameterizedBy(item.presentationNested)
                     else -> Api.SetControl.parameterizedBy(item.presentationNested)
                 }

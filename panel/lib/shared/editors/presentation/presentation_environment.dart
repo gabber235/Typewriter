@@ -2,22 +2,27 @@ import "package:typewriter_panel/infrastructure/protocols/skir/skir.dart"
     as skir;
 import "package:typewriter_panel/typewriter_panel.dart";
 
-/// Read only surface observations shared by all presentations in this subtree.
+/// Host context shared by all presentations in this subtree. A nested
+/// environment adds to the enclosing one.
 final class PresentationEnvironment extends InheritedWidget {
-  PresentationEnvironment({
-    required Map<skir.ExpressionBindingId, PortableExpressionBinding> bindings,
+  const PresentationEnvironment({
+    required this.host,
     required super.child,
     super.key,
-  }) : bindings = Map.unmodifiable(bindings);
+  });
 
-  final Map<skir.ExpressionBindingId, PortableExpressionBinding> bindings;
+  final HostContext host;
 
   static PresentationEnvironment? maybeOf(BuildContext context) =>
       context.dependOnInheritedWidgetOfExactType<PresentationEnvironment>();
 
+  /// The host context of the nearest environment, or [HostContext.empty].
+  static HostContext hostOf(BuildContext context) =>
+      maybeOf(context)?.host ?? HostContext.empty;
+
   @override
   bool updateShouldNotify(PresentationEnvironment oldWidget) =>
-      !mapEquals(bindings, oldWidget.bindings);
+      host != oldWidget.host;
 }
 
 extension PortablePresentationBindingEnvironment
@@ -59,15 +64,29 @@ extension PortableCallerBindings
 
 extension PortableContextImports
     on Map<skir.ExpressionBindingId, PortableExpressionBinding> {
-  /// Imports require exact declared schemas and read only observations. Missing
-  /// inputs become typed unfilled values, preserving unavailable data separately
-  /// from malformed or conflicting caller input.
+  /// Imports require exact declared schemas and read only observations. Host
+  /// inputs not already bound take their value from [host]. Missing inputs
+  /// become typed unfilled values, preserving unavailable data separately
+  /// from malformed or conflicting input.
   Map<skir.ExpressionBindingId, PortableExpressionBinding> withContextImports({
     required CheckedEditorCatalog catalog,
     required Iterable<skir.PresentationContextInput> imports,
+    HostContext host = HostContext.empty,
   }) {
     final result = {...this};
     for (final input in imports) {
+      if (input.source case skir.PresentationContextSource_hostWrapper(
+        :final value,
+      )) {
+        if (HostContext.valueType(value) != input.valueType) {
+          throw const FormatException("Host input has an incompatible type");
+        }
+        if (!result.containsKey(input.bindingId)) {
+          if (host.bindingFor(value) case final binding?) {
+            result[input.bindingId] = binding;
+          }
+        }
+      }
       final supplied = result[input.bindingId];
       if (supplied == null) {
         result[input.bindingId] = PortableExpressionBinding(
@@ -99,6 +118,7 @@ normalizePresentationBindings({
   required Map<skir.ExpressionBindingId, PortablePresentationBinding> document,
   required Map<skir.ExpressionBindingId, PortableExpressionBinding> surface,
   required Iterable<skir.PresentationContextInput> imports,
+  HostContext host = HostContext.empty,
 }) =>
     {
           for (final entry in document.entries)
@@ -109,4 +129,4 @@ normalizePresentationBindings({
             ),
         }
         .withPresentationEnvironment(surface)
-        .withContextImports(catalog: catalog, imports: imports);
+        .withContextImports(catalog: catalog, imports: imports, host: host);

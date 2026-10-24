@@ -13,6 +13,7 @@ import com.typewritermc.authoring.PreparedEdit
 import com.typewritermc.authoring.TypeSelection
 import com.typewritermc.authoring.ValueLocation
 import com.typewritermc.authoring.ValuePath
+import com.typewritermc.authoring.ValueProblem
 import com.typewritermc.authoring.field
 import com.typewritermc.authoring.immutableCopy
 import com.typewritermc.authoring.item
@@ -31,6 +32,14 @@ import com.typewritermc.types.catalog.ResolvedRepresentation
 import com.typewritermc.types.immutableCopy
 import com.typewritermc.types.immutableListCopy
 import java.util.Collections
+
+/**
+ * The planner rejected a staged write or a finished edit. [problems] name every broken rule, such as
+ * `relation_cycle`, `owner_required` or `singleton_exists`, at the location it applies to.
+ */
+internal class AuthoringPlanRejected(
+    val problems: List<ValueProblem>,
+) : IllegalArgumentException(problems.joinToString { "${it.location}: ${it.code}" })
 
 /**
  * Owns the request local graph and normalized intent sequence used during operation preparation.
@@ -54,7 +63,7 @@ internal class AuthoringPlanningSession(
     fun deleteAll(ids: List<ResourceId>) {
         val deletion = ids.distinct().map { EditIntent.DeleteResource(it) }
         val problems = planner.replayStaged(staged, removed, PreparedEdit(baseline.catalog.generation, emptyList(), deletion))
-        require(problems.isEmpty()) { problems.joinToString { "${it.location}: ${it.code}" } }
+        if (problems.isNotEmpty()) throw AuthoringPlanRejected(problems)
         emitted += deletion
     }
 
@@ -107,6 +116,10 @@ internal class AuthoringPlanningSession(
         }
     }
 
+    /**
+     * Plans the complete normalized edit against the baseline. Throws [AuthoringPlanRejected] when the finished graph
+     * breaks a planner rule, such as an ownership cycle or a resource left without an owner.
+     */
     fun finish(): Pair<PreparedEdit, AuthoringMutationPlan> {
         val edit = PreparedEdit(baseline.catalog.generation, emptyList(), intents)
         val plan = accepted(planner.plan(baseline.resources, edit))
@@ -120,7 +133,7 @@ internal class AuthoringPlanningSession(
         val stable = intent.freeze()
         val edit = PreparedEdit(baseline.catalog.generation, emptyList(), listOf(stable))
         val problems = planner.replayStaged(staged, removed, edit)
-        require(problems.isEmpty()) { problems.joinToString { "${it.location}: ${it.code}" } }
+        if (problems.isNotEmpty()) throw AuthoringPlanRejected(problems)
         emitted += stable
     }
 
@@ -297,10 +310,7 @@ internal class AuthoringPlanningSession(
     private fun accepted(result: MutationPlanningResult): AuthoringMutationPlan =
         when (result) {
             is MutationPlanningResult.Accepted -> result.plan
-
-            is MutationPlanningResult.Rejected -> throw IllegalArgumentException(
-                result.problems.joinToString { "${it.location}: ${it.code}" },
-            )
+            is MutationPlanningResult.Rejected -> throw AuthoringPlanRejected(result.problems)
         }
 }
 

@@ -24,40 +24,41 @@ void main() {
     },
   );
 
-  testWidgets("completion observes committed composition when blur ends editing", (
-    tester,
-  ) async {
-    final completions = <TextEditingValue>[];
-    final controller = TextEditingController(text: "a");
-    final focus = FocusNode();
-    addTearDown(controller.dispose);
-    addTearDown(focus.dispose);
-    await tester.pumpTestApp(
-      child: Scaffold(
-        body: EditorTextField(
-          controller: controller,
-          focusNode: focus,
-          onCommittedDone: completions.add,
+  testWidgets(
+    "completion observes committed composition when blur ends editing",
+    (tester) async {
+      final completions = <TextEditingValue>[];
+      final controller = TextEditingController(text: "a");
+      final focus = FocusNode();
+      addTearDown(controller.dispose);
+      addTearDown(focus.dispose);
+      await tester.pumpTestApp(
+        child: Scaffold(
+          body: EditorTextField(
+            controller: controller,
+            focusNode: focus,
+            onCommittedDone: completions.add,
+          ),
         ),
-      ),
-    );
-    focus.requestFocus();
-    await tester.pump();
-    controller.value = const TextEditingValue(
-      text: "draft",
-      selection: TextSelection.collapsed(offset: 5),
-      composing: TextRange(start: 0, end: 5),
-    );
-    expect(completions,isEmpty);
-    focus.unfocus();
-    await tester.pump();
-    expect(completions.single.composing,TextRange.empty);
-    controller.value = controller.value.copyWith(composing: TextRange.empty);
-    await tester.pump();
-    expect(completions.map((value) => value.text), ["draft"]);
-    controller.selection = const TextSelection.collapsed(offset: 0);
-    expect(completions.length, 1);
-  });
+      );
+      focus.requestFocus();
+      await tester.pump();
+      controller.value = const TextEditingValue(
+        text: "draft",
+        selection: TextSelection.collapsed(offset: 5),
+        composing: TextRange(start: 0, end: 5),
+      );
+      expect(completions, isEmpty);
+      focus.unfocus();
+      await tester.pump();
+      expect(completions.single.composing, TextRange.empty);
+      controller.value = controller.value.copyWith(composing: TextRange.empty);
+      await tester.pump();
+      expect(completions.map((value) => value.text), ["draft"]);
+      controller.selection = const TextSelection.collapsed(offset: 0);
+      expect(completions.length, 1);
+    },
+  );
 
   testWidgets(
     "display text is replaced by the exact editable representation on focus",
@@ -135,30 +136,42 @@ void main() {
     await tester.pumpAndSettle();
     expect(controller.text, "1.23");
   });
-  testWidgets("intermediate accepted echoes never replace a newer raw draft",(tester) async {
+  testWidgets("intermediate accepted echoes never replace a newer raw draft", (
+    tester,
+  ) async {
     final controller = TextEditingController();
     addTearDown(controller.dispose);
     late StateSetter update;
     var value = 0;
-    await tester.pumpTestApp(child:Scaffold(body:StatefulBuilder(builder:(context,setState) {
-      update=setState;
-      return ValidatedTextField<int>(value:value,controller:controller,serialize:int.parse,onChanged:(_) {});
-    })));
-    await tester.enterText(find.byType(TextFormField),"1");
-    await tester.enterText(find.byType(TextFormField),"12");
-    await tester.enterText(find.byType(TextFormField),"123");
-    update(()=>value=1);
+    await tester.pumpTestApp(
+      child: Scaffold(
+        body: StatefulBuilder(
+          builder: (context, setState) {
+            update = setState;
+            return ValidatedTextField<int>(
+              value: value,
+              controller: controller,
+              serialize: int.parse,
+              onChanged: (_) {},
+            );
+          },
+        ),
+      ),
+    );
+    await tester.enterText(find.byType(TextFormField), "1");
+    await tester.enterText(find.byType(TextFormField), "12");
+    await tester.enterText(find.byType(TextFormField), "123");
+    update(() => value = 1);
     await tester.pump();
-    expect(controller.text,"123");
-    update(()=>value=12);
+    expect(controller.text, "123");
+    update(() => value = 12);
     await tester.pump();
-    expect(controller.text,"123");
-    update(()=>value=123);
+    expect(controller.text, "123");
+    update(() => value = 123);
     await tester.pump();
-    expect(controller.text,"123");
-    update(()=>value=9);
+    expect(controller.text, "123");
+    update(() => value = 9);
     await tester.pump();
-    expect(controller.text,"9");
+    expect(controller.text, "9");
   });
-
 }

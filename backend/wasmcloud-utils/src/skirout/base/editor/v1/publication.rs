@@ -2845,7 +2845,7 @@ pub fn publish_authoring_method()
     > = std::sync::LazyLock::new(|| {
         crate::skir_client::Method {
             name: "PublishAuthoring".to_string(),
-            number: 920017_i64,
+            number: 920018_i64,
             request_serializer: PublishAuthoringRequest::serializer(),
             response_serializer: PublishAuthoringResponse::serializer(),
             doc: "Releases only the issued candidate while its captured saved inputs and engine requirements still match.".to_string(),
@@ -2860,7 +2860,7 @@ pub fn watch_publication_method()
         crate::skir_client::Method<WatchPublicationRequest, PublicationViewChanged>,
     > = std::sync::LazyLock::new(|| crate::skir_client::Method {
         name: "WatchPublication".to_string(),
-        number: 920018_i64,
+        number: 920019_i64,
         request_serializer: WatchPublicationRequest::serializer(),
         response_serializer: PublicationViewChanged::serializer(),
         doc: "".to_string(),
@@ -2877,7 +2877,7 @@ pub fn query_publication_view_method()
     > = std::sync::LazyLock::new(|| {
         crate::skir_client::Method {
             name: "QueryPublicationView".to_string(),
-            number: 920019_i64,
+            number: 920020_i64,
             request_serializer: QueryPublicationViewRequest::serializer(),
             response_serializer: QueryPublicationViewResponse::serializer(),
             doc: "Transfers one immutable review view or reports that expected is no longer current.\nAll chunks share the view and transfer identities; later invalidations require a separate query.".to_string(),

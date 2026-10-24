@@ -8,7 +8,6 @@ import com.typewritermc.authoring.PreparedEdit
 import com.typewritermc.authoring.ValueLocation
 import com.typewritermc.authoring.ValuePath
 import com.typewritermc.authoring.ValueProblem
-import com.typewritermc.authoring.definitionFor
 import com.typewritermc.realm.authoring.AuthoringCatalogLease
 import com.typewritermc.realm.authoring.AuthoringViewDelta
 import com.typewritermc.realm.authoring.AuthoringViewStore
@@ -68,7 +67,7 @@ internal class RealmAuthoringOwner(
                 val conflicts = values.conflicts(edit.expectations)
                 if (conflicts.isNotEmpty()) return@read CommitResult.Conflict(conflicts)
                 val planner = AuthoringMutationPlanner(current.catalog.checked, current.catalog.relations, current.catalog.endpointBindings)
-                val raw =
+                val plan =
                     when (val planned = planner.plan(current.resources, edit)) {
                         is MutationPlanningResult.Rejected -> return@read CommitResult.Rejected(planned.problems)
                         is MutationPlanningResult.Accepted -> planned.plan
@@ -78,7 +77,7 @@ internal class RealmAuthoringOwner(
                         edit,
                         current.resources,
                         current.catalog.relations.mapTo(linkedSetOf()) { it.id },
-                        raw,
+                        plan,
                     )
                 val missing = required.filter { fact -> edit.expectations.none { it.sameFact(fact) } }
                 if (missing.isNotEmpty()) {
@@ -86,16 +85,7 @@ internal class RealmAuthoringOwner(
                         missing.map { ValueProblem(it.location(), "missing_expectation") },
                     )
                 }
-                val plan =
-                    raw.copy(
-                        definitions =
-                            raw.resources.mapValues { (_, record) ->
-                                current.catalog.resources
-                                    .definitionFor(record.configuration, current.catalog.checked)
-                                    .id
-                            },
-                    )
-                val next = views.prepare(AuthoringViewDelta(plan.resources, plan.removedResources, resourceDefinitions = plan.definitions))
+                val next = views.prepare(AuthoringViewDelta(plan.resources, plan.removedResources))
                 try {
                     storage.persistAtomic(plan)
                 } catch (failure: Throwable) {
@@ -120,15 +110,13 @@ internal class SurrealAuthoringStorage(
         database.inTransaction { transaction ->
             val relations = relationStore.prepare(plan.relations, transaction)
             plan.resources.forEach { (id, record) ->
-                val definition = plan.definitions.getValue(id)
                 transaction
                     .query(
-                        "UPSERT ONLY \$resource SET definition = \$definition, content = \$content, search = \$search;",
+                        "UPSERT ONLY \$resource SET content = \$content, search = \$search;",
                         mapOf(
                             "resource" to id.surrealRecordId(),
-                            "definition" to definition.value,
                             "content" to authoredDatabaseValues.encode(AuthoringRecord.serializer(), record),
-                            "search" to mapOf("text" to authoredSearchText(id, definition, record)),
+                            "search" to mapOf("text" to authoredSearchText(id, record)),
                         ),
                     ).take(0)
             }

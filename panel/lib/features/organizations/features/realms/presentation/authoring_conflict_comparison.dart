@@ -200,5 +200,6 @@ extension _ConflictValueDisplay on skir.DataValue {
 
 extension _ConflictResourceDisplay on skir.ResourceId {
   String label(AuthoringDocument document) =>
-      document.resource(this)?.authoredLabel ?? value;
+      resourceAppearanceIn(document.catalog, document, this)?.label ??
+      "Removed resource";
 }

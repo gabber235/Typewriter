@@ -3886,6 +3886,54 @@ impl DeclarationOwner {
 }
 
 // ==============================================================================
+// enum ResourceTarget
+// ==============================================================================
+
+/// Which resources a display or operation applies to: every application of one type template,
+/// or every resource when nothing more specific is declared.
+#[derive(Debug, Clone, PartialEq)]
+pub enum ResourceTarget {
+    Unknown(Option<crate::skir_client::UnrecognizedVariant<ResourceTarget>>),
+    Type(Box<TypeTemplate>),
+    AnyResource,
+}
+
+impl Default for ResourceTarget {
+    fn default() -> Self {
+        ResourceTarget::Unknown(None)
+    }
+}
+
+impl ResourceTarget {
+    fn _adapter() -> &'static crate::skir_client::internal::EnumAdapter<ResourceTarget> {
+        static ADAPTER: std::sync::LazyLock<
+            crate::skir_client::internal::EnumAdapter<ResourceTarget>,
+        > = std::sync::LazyLock::new(|| {
+            crate::skir_client::internal::EnumAdapter::new(
+                |x: &ResourceTarget| match x {
+                    ResourceTarget::Unknown(_) => 0,
+                    ResourceTarget::Type(_) => 1,
+                    ResourceTarget::AnyResource => 2,
+                },
+                |u| ResourceTarget::Unknown(Some(u)),
+                |x: &ResourceTarget| match x {
+                    ResourceTarget::Unknown(Some(u)) => Some(u.as_ref()),
+                    _ => None,
+                },
+                "editor/v1/type_catalog.skir",
+                "ResourceTarget",
+                "Which resources a display or operation applies to: every application of one type template,\nor every resource when nothing more specific is declared.",
+            )
+        });
+        &*ADAPTER
+    }
+    pub fn serializer() -> crate::skir_client::Serializer<ResourceTarget> {
+        initialize_module_serializers();
+        crate::skir_client::internal::enum_serializer_from_static(ResourceTarget::_adapter())
+    }
+}
+
+// ==============================================================================
 // initialize_module_serializers()
 // ==============================================================================
 
@@ -5991,6 +6039,24 @@ fn initialize_module_serializers() {
                 |x: &DeclarationOwner| &x.local_identity,
                 |x: &mut DeclarationOwner, v| x.local_identity = v,
             );
+            (*a).finalize();
+        }
+        unsafe {
+            let a: *mut crate::skir_client::internal::EnumAdapter<ResourceTarget> =
+                ResourceTarget::_adapter() as *const _ as *mut _;
+            (*a).add_wrapper_variant(
+                "type",
+                1,
+                1,
+                crate::skir_client::internal::enum_serializer_from_static(TypeTemplate::_adapter()),
+                "",
+                |v| ResourceTarget::Type(Box::new(v)),
+                |x| match x {
+                    ResourceTarget::Type(b) => b.as_ref(),
+                    _ => unreachable!(),
+                },
+            );
+            (*a).add_constant_variant("any_resource", 2, 2, "", ResourceTarget::AnyResource);
             (*a).finalize();
         }
     });

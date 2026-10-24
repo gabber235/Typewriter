@@ -17,7 +17,7 @@ const createAuthoringResourceCommandId = SearchCommandId(
 @freezed
 abstract class AuthoringCreationOption with _$AuthoringCreationOption {
   const factory AuthoringCreationOption({
-    required skir.ResourceDefinitionId definition,
+    required skir.TypeDefinitionId type,
     required skir.TypeSelection configuration,
     required String label,
     skir.TypeDisplay? display,
@@ -27,14 +27,24 @@ abstract class AuthoringCreationOption with _$AuthoringCreationOption {
 
   const AuthoringCreationOption._();
 
-  String get id => "${definition.value}:$configuration";
+  String get id => "$configuration";
 }
 
 /// Lists catalog creation options without allocating resources. The command
 /// resolves destination constraints when invoked, stages through the shared
 /// creation owner, and returns navigation as a host effect after admission.
 final class AuthoringCreationSearchSource implements SearchSource {
-  AuthoringCreationSearchSource(this.ref);
+  /// Reads the selected Realm's catalog once for the query syntax: the scope
+  /// keywords its creatable types offer, such as `book:` and `page:`.
+  AuthoringCreationSearchSource(this.ref)
+    : selectors = List.unmodifiable(
+        ref
+                .read(selectedWorkingAuthoringDocumentProvider)
+                .value
+                ?.catalog
+                .creationSelectors ??
+            const [authoringTypeSelector],
+      );
 
   final Ref ref;
   final _snapshots = StreamController<SearchSourceSnapshot>.broadcast(
@@ -48,7 +58,7 @@ final class AuthoringCreationSearchSource implements SearchSource {
   Stream<SearchSourceSnapshot> get snapshots => _snapshots.stream;
 
   @override
-  List<QuerySelectorDefinition> get selectors => authoringCreationSelectors;
+  final List<QuerySelectorDefinition> selectors;
 
   @override
   void initialize(SearchQueryContext context) {
@@ -75,25 +85,31 @@ final class AuthoringCreationSearchSource implements SearchSource {
     final catalog = document.catalog;
     final term = _query.normalizedQuery.trim().toLowerCase();
     final options = <AuthoringCreationOption>[];
-    for (final definition in catalog.snapshot.resourceDefinitions) {
-      final root = catalog.beginSelection(definition.root);
-      for (final configuration in catalog.concreteRecordSelections(root)) {
-        if (!_query.matchesCreationType(catalog, configuration)) continue;
-        final label = catalog.typeSelectionName(configuration);
-        if (term.isNotEmpty && !label.toLowerCase().contains(term)) continue;
-        options.add(
-          AuthoringCreationOption(
-            definition: definition.id,
-            configuration: configuration,
-            label: label,
-            display: catalog.selectionDisplay(configuration),
-            query: _query,
-            disabledReason: configuration is skir.TypeSelection_completeWrapper
-                ? null
-                : "This type requires concrete type arguments",
-          ),
-        );
-      }
+    for (final type in catalog.creatableTypes) {
+      final configuration = catalog.beginSelection(type);
+      if (!_query.matchesCreationType(catalog, configuration)) continue;
+      if (!_query.matchesCreationScopes(catalog, configuration)) continue;
+      final label = catalog.typeSelectionName(configuration);
+      if (term.isNotEmpty && !label.toLowerCase().contains(term)) continue;
+      options.add(
+        AuthoringCreationOption(
+          type: type,
+          configuration: configuration,
+          label: label,
+          display: catalog.selectionDisplay(configuration),
+          query: _query,
+          disabledReason: configuration is! skir.TypeSelection_completeWrapper
+              ? "This type requires concrete type arguments"
+              : switch (document.creationContext(
+                  configuration,
+                  _query.selectorValues,
+                )) {
+                  CreationScopeUnmatched(:final scopes) =>
+                    scopes.unmatchedMessage(catalog),
+                  CreationScoped() => null,
+                },
+        ),
+      );
     }
     options.sort((left, right) => left.label.compareTo(right.label));
     _snapshots.add(
@@ -147,6 +163,20 @@ SearchCommand createAuthoringResourceCommand({
       ? const SearchCommandState.enabled()
       : SearchCommandState.disabled(option.disabledReason!),
   execute: (execution, option, target) async {
+    final document = ref.read(realmEditingProvider(scope)).document;
+    final CreationContext creationContext;
+    switch (document.creationContext(
+      option.configuration,
+      option.query.selectorValues,
+      preferredResources: ambientCreationResources(ref, scope, document),
+    )) {
+      case CreationScopeUnmatched(:final scopes):
+        return SearchCommandResult.failed(
+          message: scopes.unmatchedMessage(document.catalog),
+        );
+      case CreationScoped(:final context):
+        creationContext = context;
+    }
     final intent = ref.read(resourceCreationProvider(scope)).beginNavigation();
     final created = await execution.prompts.show(
       (context) => ref
@@ -154,22 +184,10 @@ SearchCommand createAuthoringResourceCommand({
           .create(
             context: context,
             request: ResourceCreationRequest(
-              definition: option.definition,
+              type: option.type,
               configuration: option.configuration,
             ),
-            creationContext: option.query.creationContext(
-              document: ref.read(realmEditingProvider(scope)).document,
-              configuration: option.configuration,
-              preferredResources: <skir.ResourceId>{
-                ...ref
-                    .read(selectionProvider)
-                    .whereType<AuthoringResourceIdentifier>()
-                    .where((resource) => resource.scope == scope)
-                    .map((resource) => resource.resourceId),
-                ?ref.read(pageIdProvider),
-                ?ref.read(bookIdProvider),
-              }.toList(),
-            ),
+            creationContext: creationContext,
           ),
     );
     if (created == null) return const SearchCommandResult.cancelled();
@@ -180,3 +198,12 @@ SearchCommand createAuthoringResourceCommand({
     );
   },
 );
+
+extension on List<ScopeUnmatched> {
+  /// Names each scope value that matched nothing, such as
+  /// `No Book named "Missing"`.
+  String unmatchedMessage(CheckedEditorCatalog catalog) => [
+    for (final scope in this)
+      'No ${catalog.typeSelectionName(catalog.beginSelection(scope.selector.route.ownerRoot))} named "${scope.text}"',
+  ].join("; ");
+}

@@ -22,7 +22,6 @@ interface PresentationProvider {
 data class PresentationBuildResult(
     val layout: PresentationNode,
     val dependencies: PresentationDependencies,
-    val resultAppearance: skirout.editor.v1.presentation.ResultAppearance? = null,
 )
 
 interface PresentationRuntime {
@@ -56,25 +55,18 @@ interface PresentationBuildScope : Layout {
 
     fun <S : Any> expressions(scope: kotlin.reflect.KClass<S>): S
 
+    /**
+     * The evaluated display of the presented resource, which editors bind whenever they present one. Generated
+     * resource presentation scopes expose it as `appearance`.
+     */
+    fun resourceAppearance(): Expr<com.typewritermc.authoring.ResourceAppearance, Handled>
+
     fun conditional(
         condition: Expr<Boolean, Handled>,
         whenFalse: ((PresentationBuildScope) -> Unit)? = null,
         body: (PresentationBuildScope) -> Unit,
     )
-
-    fun <R : Resource> resourceCollection(
-        id: String,
-        resource: kotlin.reflect.KClass<R>,
-        appearance: PresentationReference? = null,
-        configure: ResourceCollectionSourceScope<R>.() -> Unit = {},
-    ): CollectionSource<R, com.typewritermc.types.ResourceId>
 }
-
-inline fun <reified R : Resource> PresentationBuildScope.resourceCollection(
-    id: String,
-    appearance: PresentationReference? = null,
-    noinline configure: ResourceCollectionSourceScope<R>.() -> Unit = {},
-): CollectionSource<R, com.typewritermc.types.ResourceId> = resourceCollection(id, R::class, appearance, configure)
 
 enum class NestedPresentationSlot { Payload, Fields, Items, Keys, Values }
 

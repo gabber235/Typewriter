@@ -24,12 +24,11 @@ void main() {
       expect(result, isA<EditStaged>());
       expect(workspace.document.entry(_book), isNull);
       expect(workspace.document.entry(_page), isNull);
-      expect(container.read(workingBooksProvider).requireValue, isEmpty);
-      expect(container.read(workingPagesProvider).requireValue, isEmpty);
-      expect(container.read(workingTagsProvider).requireValue, hasLength(2));
+      expect(workspace.document.entry(_parent), isNotNull);
+      expect(workspace.document.entry(_child), isNotNull);
       expect(workspace.state.groups.values.single.resources, {_book, _page});
       workspace.discard((result as EditStaged).group);
-      expect(container.read(workingPagesProvider).requireValue, hasLength(1));
+      expect(workspace.document.entry(_page), isNotNull);
     },
   );
 
@@ -142,7 +141,7 @@ void main() {
           ..connect(
             skir.LinkOccurrence(
               id: skir.LinkOccurrenceId(
-                endpoint: skir.EndpointId(value: "fixture.tag.parents.first"),
+                endpoint: skir.EndpointId(value: "fixture.tag.parents:first"),
                 location: authoredFieldLocation(_child, ["absent"]),
               ),
               source: _child,
@@ -178,7 +177,7 @@ void main() {
           ..connect(
             skir.LinkOccurrence(
               id: skir.LinkOccurrenceId(
-                endpoint: skir.EndpointId(value: "fixture.tag.parents.first"),
+                endpoint: skir.EndpointId(value: "fixture.tag.parents:first"),
                 location: skir.ValueLocation(
                   resource: _child,
                   path: skir.ValuePath(
@@ -235,14 +234,7 @@ AuthoringDocument _document() => fixtureAuthoringDocument(
     ),
   ],
   pages: [
-    Page(
-      pageId: _page,
-      bookId: _book,
-      name: "Page",
-      configuration: skir.TypeSelection.unknown,
-      chapter: "",
-      priority: 0,
-    ),
+    Page(pageId: _page, bookId: _book, name: "Page", chapter: "", priority: 0),
   ],
 );
 

@@ -1,10 +1,17 @@
 package com.typewritermc.presentation
 
 import com.typewritermc.authoring.ItemId
+import com.typewritermc.authoring.TypedPath
+import com.typewritermc.dsl.TypewriterDsl
 import com.typewritermc.expression.Expr
 import com.typewritermc.expression.ExpressionBindingId
 import com.typewritermc.expression.Handled
+import com.typewritermc.types.TypeDefinitionId
 import com.typewritermc.types.TypeTemplate
+import com.typewritermc.types.skir.SkirAuthoringValueCodec
+import com.typewritermc.types.skir.SkirTypeCodec
+import com.typewritermc.types.skir.getOrThrow
+import skirout.editor.v1.action.CreateFieldValue
 import skirout.editor.v1.action.EditorAction
 import skirout.editor.v1.binding.BindingRef
 import skirout.editor.v1.expression.ExpressionNode
@@ -134,3 +141,41 @@ fun <K, V> EditablePresentationInput<Map<K, V>, *>.updateRow(
 fun EditablePresentationInput<*, *>.removeRow(row: ItemId): EditorAction = actions.removeRow(binding, row)
 
 fun <V> EditablePresentationInput<V, *>.chooseForm(type: AppliedPresentation<out V>): EditorAction = actions.chooseForm(binding, type.type)
+
+/** Preset fields of a resource that a create action makes. */
+@TypewriterDsl
+class CreateResourceScope internal constructor() {
+    internal val fields = mutableListOf<CreateFieldValue>()
+
+    /** Presets the field at this path of the created resource to [value]. */
+    operator fun <V> TypedPath<*, V>.invoke(value: Expr<V, Handled>) {
+        val wirePath = SkirAuthoringValueCodec.encode(path).getOrThrow()
+        require(fields.none { it.path == wirePath }) { "A create action presets each field once." }
+        fields += CreateFieldValue(path = wirePath, value = value.toNode())
+    }
+}
+
+/**
+ * Creates a resource of [type] and links it into [owner], a link field of the presentation subject on the owner side
+ * of an ownership relation, such as `BookFields.pages` in a Book presentation. Without an owner the host chooses one,
+ * for example the single instance of a realm section. [presets] fill fields of the created resource; the presentation
+ * check rejects an owner that is not an owning link field of the subject and presets that are not fields of [type].
+ */
+fun createResource(
+    type: TypeDefinitionId,
+    owner: TypedPath<*, *>? = null,
+    presets: CreateResourceScope.() -> Unit = {},
+): EditorAction {
+    val scope = CreateResourceScope().apply(presets)
+    return EditorAction.createCreate(
+        type = SkirTypeCodec.encode(type).getOrThrow(),
+        owner =
+            owner?.let {
+                BindingRef(
+                    path = SkirAuthoringValueCodec.encode(it.path).getOrThrow(),
+                    bindingId = CONFIGURED_VALUE.wire(),
+                )
+            },
+        fields = scope.fields.toList(),
+    )
+}

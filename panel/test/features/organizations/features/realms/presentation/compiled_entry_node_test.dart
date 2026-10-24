@@ -23,7 +23,7 @@ void main() {
         resource: compiledEntryPageId,
         source: document,
         material: skir.PresentationMaterial.defaultInstance,
-        role: skir.PresentationRole.workspaceEditor,
+        role: skir.PresentationRole.workspace,
         budget: budget,
         capabilities: const PortablePresentationCapabilities(),
       );
@@ -32,7 +32,7 @@ void main() {
         nodeId: "compiled.page.graph",
         properties: skir.PresentationProperties.defaultInstance,
         header: null,
-        element: skir.PresentationElement.createPageGraph(
+        element: skir.PresentationElement.createResources(
           control:
               (skir.BoundControl.mutable()
                     ..binding = skir.BindingRef(
@@ -40,8 +40,12 @@ void main() {
                       path: editorRootPath.field("elements"),
                     ))
                   .toFrozen(),
-          direction: skir.PageGraphDirection.leftToRight,
-          appearance: null,
+          layout: skir.ResourcesLayout.createGraph(
+            direction: skir.GraphDirection.leftToRight,
+            appearance: null,
+          ),
+          order: null,
+          itemBindingId: skir.ExpressionBindingId(value: "resources.item"),
         ),
       );
       Future<void> pump() {
@@ -76,7 +80,7 @@ void main() {
                 ),
                 host: host,
                 resource: compiledEntryPageId,
-                role: skir.PresentationRole.workspaceEditor,
+                role: skir.PresentationRole.workspace,
               ),
             ),
           ),
@@ -105,7 +109,7 @@ void main() {
       expect(find.text("Welcome to the village"), findsNothing);
       final selected = document.catalog.selectPresentation(
         document.resource(compiledEntryFirstId)!.configuration,
-        skir.PresentationRole.editorNode,
+        skir.PresentationRole.item,
       ) as SelectedEditorPresentation;
       final target = skir.PresentationTarget.createNamed(
         definition: compiledSdkElementValue.authoredActualType!.definition,
@@ -298,7 +302,7 @@ BorderSide _frame(WidgetTester tester) => tester
 Widget _editor(AuthoringDocument document) => AuthoredResourceEditor(
   resource: _resource,
   document: document,
-  role: skir.PresentationRole.editorNode,
+  role: skir.PresentationRole.item,
   budget: skir.EvaluationBudget(maxSteps: 10000, maxCollectionItems: 1000),
   fillAvailableSpace: true,
 );
@@ -313,8 +317,10 @@ AuthoringDocument _document({String? icon}) {
               for (final type in catalog.snapshot.types)
                 if (type.definition.id == actual.definition)
                   (type.toMutable()
-                        ..display = (type.display!.toMutable()..icon = icon)
-                            .toFrozen())
+                        ..display =
+                            (type.display.toMutable()
+                                  ..icon = skir.Icon.wrapIconify(icon))
+                                .toFrozen())
                       .toFrozen()
                 else
                   type,
@@ -328,25 +334,11 @@ AuthoringDocument _document({String? icon}) {
     entries: const {},
     links: const [],
   );
-  final elementRoot = catalog.snapshot.types
-      .singleWhere(
-        (type) =>
-            type.definition.id.typeId ==
-            skir.TypeId.createQualified(
-              namespace: "kotlin",
-              name: "com.typewritermc.elements.Element",
-            ),
-      )
-      .definition
-      .id;
   return AuthoringDocument(
     catalog: catalog,
     entries: {
       _resource: skir.AuthoringResource(
         id: _resource,
-        definition: catalog.snapshot.resourceDefinitions
-            .singleWhere((resource) => resource.root == elementRoot)
-            .id,
         content: skir.AuthoringRecord(
           configuration: configuration,
           fields: [

@@ -1,17 +1,17 @@
 package com.typewritermc.realm.authoring
 
 import com.typewritermc.authoring.AuthoringRecord
-import com.typewritermc.authoring.AuthoringResourceDefinition
 import com.typewritermc.authoring.LinkOccurrence
 import com.typewritermc.authoring.LinkOccurrenceId
 import com.typewritermc.authoring.ReadContext
+import com.typewritermc.authoring.RealmRootDefinition
 import com.typewritermc.authoring.RelationSelection
-import com.typewritermc.authoring.ResourceDefinitionId
+import com.typewritermc.authoring.ResourceDisplayCatalog
 import com.typewritermc.authoring.SelectionId
 import com.typewritermc.authoring.TypeSelection
 import com.typewritermc.authoring.ValueLocation
 import com.typewritermc.authoring.ValuePath
-import com.typewritermc.authoring.definitionFor
+import com.typewritermc.authoring.definition
 import com.typewritermc.authoring.field
 import com.typewritermc.authoring.immutableAuthoringCopy
 import com.typewritermc.authoring.item
@@ -58,9 +58,19 @@ interface AuthoringCatalogLease : AutoCloseable {
     val checks: List<OwnedCheckRecipe>
     val relations: List<RelationContract>
     val endpointBindings: List<EndpointBindingTemplate>
-    val resources: List<AuthoringResourceDefinition>
     val configuration: List<ConfigurationRecipe>
     val operations: OperationCatalog
+
+    /** The realm root type of this catalog, whose single instance owns every realm section. */
+    val realmRoot: TypeDefinitionId
+        get() = RealmRootDefinition.id
+
+    /** The published placement field of each declared type that has one; other types are absent. */
+    val placementFields: Map<TypeDefinitionId, ValuePath>
+
+    /** The resource displays that name resources; a catalog without declared displays names none. */
+    val displays: ResourceDisplayCatalog
+        get() = ResourceDisplayCatalog()
 
     fun retain(): AuthoringCatalogLease
 }
@@ -80,7 +90,6 @@ val AuthoringCatalogLease.ownershipRelationIds: Set<RelationId>
 data class AuthoringView internal constructor(
     val catalog: AuthoringCatalogLease,
     val resources: Map<ResourceId, AuthoringRecord>,
-    val resourceDefinitions: Map<ResourceId, ResourceDefinitionId>,
     val links: Map<LinkOccurrenceId, LinkOccurrence>,
     /** Identifies this saved view until replacement, including across state transfer chunks. */
     val observationId: String =
@@ -107,12 +116,10 @@ data class AuthoringViewDelta(
     val upsertedResources: Map<ResourceId, AuthoringRecord> = emptyMap(),
     val removedResources: Set<ResourceId> = emptySet(),
     val catalog: AuthoringCatalogLease? = null,
-    val resourceDefinitions: Map<ResourceId, ResourceDefinitionId> = emptyMap(),
 )
 
 data class AuthoringSeed(
     val resources: Map<ResourceId, AuthoringRecord>,
-    val resourceDefinitions: Map<ResourceId, ResourceDefinitionId> = emptyMap(),
 )
 
 /**
@@ -167,10 +174,18 @@ sealed interface AuthoredReadView {
         override val readContext = original.readContext
         internal val graphIndexes = ConcurrentHashMap<RelationSelection, CapturedGraphIndex>()
 
+        /**
+         * Counts the staged writes applied so far. A writer may replace the graph with the same map instance it
+         * mutated, so readers caching derived facts key them on this counter rather than on map identity.
+         */
+        var revision: Long = 0
+            private set
+
         fun replace(next: Map<ResourceId, AuthoringRecord>) {
             resources = next
             cachedLinks = null
             graphIndexes.clear()
+            revision++
         }
     }
 }
@@ -217,7 +232,7 @@ class InMemoryAuthoringViewStore(
     private val roots = IdentityHashMap<ReadContext, RootRetention>()
     private var closed = false
     private var reload: (() -> AuthoringSeed)? = null
-    private var current = createRoot(catalog, seed.resources, seed.resourceDefinitions).also { roots[it.root.readContext] = it }
+    private var current = createRoot(catalog, seed.resources).also { roots[it.root.readContext] = it }
 
     override fun <T> read(block: (AuthoringView) -> T): T =
         synchronized(lock) {
@@ -248,8 +263,7 @@ class InMemoryAuthoringViewStore(
             )
             val catalog = delta.catalog ?: before.catalog
             val resources = before.resources + delta.upsertedResources - delta.removedResources
-            val definitions = before.resourceDefinitions + delta.resourceDefinitions - delta.removedResources
-            createRoot(catalog.retain(), resources, definitions).root
+            createRoot(catalog.retain(), resources).root
         }
 
     override fun install(view: AuthoringView) =
@@ -285,7 +299,7 @@ class InMemoryAuthoringViewStore(
     private fun ensureCurrent() {
         val loader = reload ?: return
         val seed = loader()
-        val replacement = createRoot(current.root.catalog.retain(), seed.resources, seed.resourceDefinitions)
+        val replacement = createRoot(current.root.catalog.retain(), seed.resources)
         install(replacement.root)
         reload = null
     }
@@ -293,22 +307,10 @@ class InMemoryAuthoringViewStore(
     private fun createRoot(
         catalog: AuthoringCatalogLease,
         resources: Map<ResourceId, AuthoringRecord>,
-        definitions: Map<ResourceId, ResourceDefinitionId>,
     ): RootRetention {
         try {
             val immutable = immutableResources(resources)
-            val resolved =
-                immutable.mapValues { (id, record) ->
-                    definitions[id] ?: catalog.resources.definitionFor(record.configuration, catalog.checked).id
-                }
-            return RootRetention(
-                AuthoringView(
-                    catalog,
-                    immutable,
-                    resolved.immutableMapCopy(),
-                    discoverLinks(immutable).immutableMapCopy(),
-                ),
-            )
+            return RootRetention(AuthoringView(catalog, immutable, discoverLinks(immutable).immutableMapCopy()))
         } catch (failure: Throwable) {
             try {
                 catalog.close()
@@ -428,11 +430,5 @@ private fun discoverLinks(resources: Map<ResourceId, AuthoringRecord>): Map<Link
 
 private fun immutableResources(resources: Map<ResourceId, AuthoringRecord>): Map<ResourceId, AuthoringRecord> =
     resources.immutableAuthoringCopy()
-
-private fun TypeSelection.definition(): TypeDefinitionId =
-    when (this) {
-        is TypeSelection.Complete -> use.definition
-        is TypeSelection.Pending -> definition
-    }
 
 internal val RESOURCE_SELECTION_INPUT: InputIdentity = InputIdentity.Selection(SelectionId("realm.resources"))

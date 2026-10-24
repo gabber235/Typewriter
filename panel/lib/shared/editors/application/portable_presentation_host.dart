@@ -62,9 +62,16 @@ abstract class PortablePresentationDocument
         PortableDiagnosticFallback.presentation,
     skir.PresentationRole? role,
     skir.PresentationMaterial? material,
+    List<skir.PresentationContextInput>? contextInputs,
     Set<skir.PresentationId> activePresentations = const {},
     Map<String, skir.PresentationNode> slots = const {},
   }) {
+    if (material != null && contextInputs != null) {
+      throw ArgumentError(
+        "Material declares its own context inputs",
+        "contextInputs",
+      );
+    }
     if (queries != null && !identical(queries.catalog, catalog)) {
       throw ArgumentError(
         "Presentation and query catalogs must have the same owner",
@@ -91,6 +98,9 @@ abstract class PortablePresentationDocument
       diagnosticFallback: diagnosticFallback,
       role: role,
       material: material,
+      contextInputs: List.unmodifiable(
+        material?.dependencies.contextInputs ?? contextInputs ?? const [],
+      ),
       activePresentations: Set.unmodifiable(activePresentations),
       slots: Map.unmodifiable(slots),
     );
@@ -110,6 +120,10 @@ abstract class PortablePresentationDocument
     required PortableDiagnosticFallback diagnosticFallback,
     required skir.PresentationRole? role,
     required skir.PresentationMaterial? material,
+
+    /// Values the presentation reads from its surroundings: the material's
+    /// declarations, or those of a presentation built without material.
+    required List<skir.PresentationContextInput> contextInputs,
     required Set<skir.PresentationId> activePresentations,
     required Map<String, skir.PresentationNode> slots,
   }) = _PortablePresentationDocument;
@@ -358,12 +372,14 @@ abstract class PortableCollectionProjection
   }) = _PortableCollectionProjection;
 }
 
+/// One resource as presentations see it: its configured value, its evaluated
+/// display, and the diagnostics that belong to it.
 @freezed
 abstract class PortableResourceProjection with _$PortableResourceProjection {
   const factory PortableResourceProjection({
     required skir.ResourceId resource,
     required skir.TypeSelection configuration,
-    required String label,
+    required ResourceAppearance appearance,
     required skir.DataValue value,
     @Default([]) List<PortablePresentationDiagnostic> diagnostics,
     @Default(PortableDiagnosticFallback.presentation)
@@ -422,32 +438,39 @@ abstract interface class PortableLinkHost {
 }
 
 @freezed
-abstract class PortablePageGraphPlacement with _$PortablePageGraphPlacement {
-  const factory PortablePageGraphPlacement({
+abstract class PortableGraphPlacement with _$PortableGraphPlacement {
+  const factory PortableGraphPlacement({
     required int x,
     required int y,
     required int width,
     required int height,
-  }) = _PortablePageGraphPlacement;
+  }) = _PortableGraphPlacement;
 }
 
+/// One resource laid out by a resources element: the target of one link of the
+/// bound field, with the link value the layout binds while ordering members.
 @freezed
-abstract class PortablePageEntryProjection with _$PortablePageEntryProjection {
-  const factory PortablePageEntryProjection({
+abstract class PortableResourceMember with _$PortableResourceMember {
+  const factory PortableResourceMember({
     required skir.ResourceId resource,
     required skir.LinkOccurrence occurrence,
+    required skir.DataValue link,
     required PortableResourceProjection resourceProjection,
-    PortablePageGraphPlacement? graph,
-  }) = _PortablePageEntryProjection;
+    PortableGraphPlacement? graph,
+  }) = _PortableResourceMember;
+
+  const PortableResourceMember._();
+
+  ResourceAppearance get appearance => resourceProjection.appearance;
 }
 
 @freezed
-abstract class PortablePageEdgeProjection with _$PortablePageEdgeProjection {
-  const factory PortablePageEdgeProjection({
+abstract class PortableResourceEdge with _$PortableResourceEdge {
+  const factory PortableResourceEdge({
     required String id,
     required skir.ResourceId source,
     required skir.ResourceId target,
-  }) = _PortablePageEdgeProjection;
+  }) = _PortableResourceEdge;
 }
 
 @freezed
@@ -483,15 +506,17 @@ abstract class PortableTimelineCueProjection
   }) = _PortableTimelineCueProjection;
 }
 
+/// The members of a resources binding in link order, the edges among them,
+/// and for each member the owned resources it places on a timeline.
 @Freezed(map: FreezedMapOptions.none, when: FreezedWhenOptions.none)
-abstract class PortablePageProjection with _$PortablePageProjection {
-  factory PortablePageProjection({
-    required List<PortablePageEntryProjection> entries,
-    required List<PortablePageEdgeProjection> edges,
+abstract class PortableResourcesProjection with _$PortableResourcesProjection {
+  factory PortableResourcesProjection({
+    required List<PortableResourceMember> members,
+    required List<PortableResourceEdge> edges,
     required Map<skir.ResourceId, List<PortableTimelineCueProjection>> timeline,
     String? problem,
-  }) => PortablePageProjection._value(
-    entries: List.unmodifiable(entries),
+  }) => PortableResourcesProjection._value(
+    members: List.unmodifiable(members),
     edges: List.unmodifiable(edges),
     timeline: {
       for (final entry in timeline.entries)
@@ -500,12 +525,12 @@ abstract class PortablePageProjection with _$PortablePageProjection {
     problem: problem,
   );
 
-  const factory PortablePageProjection._value({
-    required List<PortablePageEntryProjection> entries,
-    required List<PortablePageEdgeProjection> edges,
+  const factory PortableResourcesProjection._value({
+    required List<PortableResourceMember> members,
+    required List<PortableResourceEdge> edges,
     required Map<skir.ResourceId, List<PortableTimelineCueProjection>> timeline,
     required String? problem,
-  }) = _PortablePageProjection;
+  }) = _PortableResourcesProjection;
 }
 
 final class PortableGraphPositionChange {
@@ -532,8 +557,11 @@ final class PortableTimelineChange {
   final int endFrame;
 }
 
-abstract interface class PortablePageHost {
-  PortablePageProjection projectPage(
+/// Lays out the resources of a bound link field for every resources layout.
+/// Members are the link targets of the bound field; geometry writes go to each
+/// member's published placement field.
+abstract interface class PortableResourcesHost {
+  PortableResourcesProjection projectResources(
     skir.BindingRef source, {
     required PortableInvocationContext context,
   });
@@ -553,8 +581,9 @@ abstract interface class PortablePageHost {
     required PortableInvocationContext context,
   });
 
-  PortablePresentationWriteResult removePageResource(
-    PortablePageEntryProjection entry, {
+  /// Unlinks [member] from the bound field, or deletes it when [delete].
+  PortablePresentationWriteResult removeMember(
+    PortableResourceMember member, {
     required bool delete,
     required PortableInvocationContext context,
   });

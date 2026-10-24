@@ -2,8 +2,6 @@ package fixture
 
 import com.typewritermc.authoring.EditContext
 import com.typewritermc.authoring.PathSegment
-import com.typewritermc.authoring.ResourceDefinitionId
-import com.typewritermc.authoring.TypewriterResourceDefinition
 import com.typewritermc.authoring.ValuePath
 import com.typewritermc.authoring.append
 import com.typewritermc.types.DataValue
@@ -26,11 +24,6 @@ data class Variable<T : Reward>(
     val name: String,
     val value: T,
 ) : Resource
-
-object FixtureResources {
-    @TypewriterResourceDefinition("fixture.variable", Variable::class)
-    val VARIABLE = ResourceDefinitionId("fixture.variable")
-}
 
 context(edits: EditContext)
 suspend fun exactWrite(

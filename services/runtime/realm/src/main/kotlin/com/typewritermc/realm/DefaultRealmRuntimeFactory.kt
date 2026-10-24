@@ -298,6 +298,11 @@ internal fun CatalogAssembly.reportCallbackFailures() {
                     attribute("catalog.subject", callback.subject.toString())
                     attribute("presentation.role", callback.role.name)
                 }
+
+                is CatalogCallback.Display -> {
+                    attribute("catalog.callback.kind", "display")
+                    attribute("catalog.subject", callback.target.toString())
+                }
             }
             exception(failure.cause)
         }

@@ -170,6 +170,13 @@ impl GrantScope for RealmScope {
                     .publish
                     .insert(
                         format!(
+                            "service.to.{realm}.organization.{organization}.realm.editor.resources.drops.resolve"
+                        ),
+                    );
+                grants
+                    .publish
+                    .insert(
+                        format!(
                             "service.to.{realm}.organization.{organization}.realm.editor.resources.actions.prepare"
                         ),
                     );
@@ -359,6 +366,13 @@ impl GrantScope for RealmScope {
                     .insert(
                         format!(
                             "service.to.{realm}.organization.{organization}.realm.editor.resources.operations.resolve"
+                        ),
+                    );
+                grants
+                    .subscribe
+                    .insert(
+                        format!(
+                            "service.to.{realm}.organization.{organization}.realm.editor.resources.drops.resolve"
                         ),
                     );
                 grants

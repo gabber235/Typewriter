@@ -45,9 +45,9 @@ Raw<AppRouter> appRouter(Ref ref) {
 /// Defines the panel's route tree and the guards protecting each scope.
 ///
 /// Authentication guards protect the public and private roots. The shared
-/// organization guard protects organization and book routes. Nested realm
-/// routes also check authentication but do not validate realm existence or
-/// realm specific access. Navigation admission consults [workSessionLoss]
+/// organization guard protects the organization route and everything nested
+/// beneath it. Nested realm routes also check authentication but do not
+/// validate realm existence or realm specific access. Navigation admission consults [workSessionLoss]
 /// before leaving the current local work scope, including platform URL changes.
 @AutoRouterConfig(replaceInRouteName: "Page,Route")
 class AppRouter extends RootStackRouter {
@@ -315,19 +315,14 @@ class AppRouter extends RootStackRouter {
           // TODO: Add guard that organizationId and realmId exist and user has access to it.
           guards: [_authGuard],
           children: [
-            AutoRoute(page: LibraryRoute.page, path: "library", initial: true),
-            AutoRoute(page: TagsRoute.page, path: "tags"),
+            // Shows the root's first section; provisioning appends sections
+            // in display name order.
+            AutoRoute(page: RealmHomeRoute.page, path: "", initial: true),
+            // Keyed by realm, so navigator state survives switching resources.
+            AutoRoute(page: ResourceRoute.page, path: "resource/:resourceId"),
           ],
         ),
       ],
-    ),
-    AutoRoute(
-      page: BookRoute.page,
-      path: "/organization/:organizationId/realm/:realmId/book/:bookId",
-      usesPathAsKey: true,
-      // TODO: Validate realm/book existence and finer-grained book access.
-      guards: [_authGuard, _organizationGuard],
-      children: [AutoRoute(page: RouteRoute.page, path: "page/:pageId")],
     ),
   ];
 }

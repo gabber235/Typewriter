@@ -15,7 +15,7 @@ T _$identity<T>(T value) => value;
 /// @nodoc
 mixin _$AuthoringCreationOption {
 
- skir.ResourceDefinitionId get definition; skir.TypeSelection get configuration; String get label; skir.TypeDisplay? get display; SearchQueryContext get query; String? get disabledReason;
+ skir.TypeDefinitionId get type; skir.TypeSelection get configuration; String get label; skir.TypeDisplay? get display; SearchQueryContext get query; String? get disabledReason;
 /// Create a copy of AuthoringCreationOption
 /// with the given fields replaced by the non-null parameter values.
 @JsonKey(includeFromJson: false, includeToJson: false)
@@ -27,20 +27,20 @@ $AuthoringCreationOptionCopyWith<AuthoringCreationOption> get copyWith => _$Auth
 @override
 bool operator ==(Object other) {
   final _this = this as AuthoringCreationOption;
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is AuthoringCreationOption&&(identical(other.definition, _this.definition) || other.definition == _this.definition)&&(identical(other.configuration, _this.configuration) || other.configuration == _this.configuration)&&(identical(other.label, _this.label) || other.label == _this.label)&&(identical(other.display, _this.display) || other.display == _this.display)&&(identical(other.query, _this.query) || other.query == _this.query)&&(identical(other.disabledReason, _this.disabledReason) || other.disabledReason == _this.disabledReason));
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is AuthoringCreationOption&&(identical(other.type, _this.type) || other.type == _this.type)&&(identical(other.configuration, _this.configuration) || other.configuration == _this.configuration)&&(identical(other.label, _this.label) || other.label == _this.label)&&(identical(other.display, _this.display) || other.display == _this.display)&&(identical(other.query, _this.query) || other.query == _this.query)&&(identical(other.disabledReason, _this.disabledReason) || other.disabledReason == _this.disabledReason));
 }
 
 
 @override
 int get hashCode {
   final _this = this as AuthoringCreationOption;
-  return Object.hash(runtimeType,_this.definition,_this.configuration,_this.label,_this.display,_this.query,_this.disabledReason);
+  return Object.hash(runtimeType,_this.type,_this.configuration,_this.label,_this.display,_this.query,_this.disabledReason);
 }
 
 @override
 String toString() {
   final _this = this as AuthoringCreationOption;
-  return 'AuthoringCreationOption(definition: ${_this.definition}, configuration: ${_this.configuration}, label: ${_this.label}, display: ${_this.display}, query: ${_this.query}, disabledReason: ${_this.disabledReason})';
+  return 'AuthoringCreationOption(type: ${_this.type}, configuration: ${_this.configuration}, label: ${_this.label}, display: ${_this.display}, query: ${_this.query}, disabledReason: ${_this.disabledReason})';
 }
 
 
@@ -51,7 +51,7 @@ abstract mixin class $AuthoringCreationOptionCopyWith<$Res>  {
   factory $AuthoringCreationOptionCopyWith(AuthoringCreationOption value, $Res Function(AuthoringCreationOption) _then) = _$AuthoringCreationOptionCopyWithImpl;
 @useResult
 $Res call({
- skir.ResourceDefinitionId definition, skir.TypeSelection configuration, String label, skir.TypeDisplay? display, SearchQueryContext query, String? disabledReason
+ skir.TypeDefinitionId type, skir.TypeSelection configuration, String label, skir.TypeDisplay? display, SearchQueryContext query, String? disabledReason
 });
 
 
@@ -68,10 +68,10 @@ class _$AuthoringCreationOptionCopyWithImpl<$Res>
 
 /// Create a copy of AuthoringCreationOption
 /// with the given fields replaced by the non-null parameter values.
-@pragma('vm:prefer-inline') @override $Res call({Object? definition = null,Object? configuration = null,Object? label = null,Object? display = freezed,Object? query = null,Object? disabledReason = freezed,}) {
+@pragma('vm:prefer-inline') @override $Res call({Object? type = null,Object? configuration = null,Object? label = null,Object? display = freezed,Object? query = null,Object? disabledReason = freezed,}) {
   return _then(AuthoringCreationOption(
-definition: null == definition ? _self.definition : definition // ignore: cast_nullable_to_non_nullable
-as skir.ResourceDefinitionId,configuration: null == configuration ? _self.configuration : configuration // ignore: cast_nullable_to_non_nullable
+type: null == type ? _self.type : type // ignore: cast_nullable_to_non_nullable
+as skir.TypeDefinitionId,configuration: null == configuration ? _self.configuration : configuration // ignore: cast_nullable_to_non_nullable
 as skir.TypeSelection,label: null == label ? _self.label : label // ignore: cast_nullable_to_non_nullable
 as String,display: freezed == display ? _self.display : display // ignore: cast_nullable_to_non_nullable
 as skir.TypeDisplay?,query: null == query ? _self.query : query // ignore: cast_nullable_to_non_nullable
@@ -170,10 +170,10 @@ return $default(_that);case _:
 /// }
 /// ```
 
-@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function( skir.ResourceDefinitionId definition,  skir.TypeSelection configuration,  String label,  skir.TypeDisplay? display,  SearchQueryContext query,  String? disabledReason)?  $default,{required TResult orElse(),}) {final _that = this;
+@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function( skir.TypeDefinitionId type,  skir.TypeSelection configuration,  String label,  skir.TypeDisplay? display,  SearchQueryContext query,  String? disabledReason)?  $default,{required TResult orElse(),}) {final _that = this;
 switch (_that) {
 case _AuthoringCreationOption() when $default != null:
-return $default(_that.definition,_that.configuration,_that.label,_that.display,_that.query,_that.disabledReason);case _:
+return $default(_that.type,_that.configuration,_that.label,_that.display,_that.query,_that.disabledReason);case _:
   return orElse();
 
 }
@@ -191,10 +191,10 @@ return $default(_that.definition,_that.configuration,_that.label,_that.display,_
 /// }
 /// ```
 
-@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function( skir.ResourceDefinitionId definition,  skir.TypeSelection configuration,  String label,  skir.TypeDisplay? display,  SearchQueryContext query,  String? disabledReason)  $default,) {final _that = this;
+@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function( skir.TypeDefinitionId type,  skir.TypeSelection configuration,  String label,  skir.TypeDisplay? display,  SearchQueryContext query,  String? disabledReason)  $default,) {final _that = this;
 switch (_that) {
 case _AuthoringCreationOption():
-return $default(_that.definition,_that.configuration,_that.label,_that.display,_that.query,_that.disabledReason);case _:
+return $default(_that.type,_that.configuration,_that.label,_that.display,_that.query,_that.disabledReason);case _:
   throw StateError('Unexpected subclass');
 
 }
@@ -211,10 +211,10 @@ return $default(_that.definition,_that.configuration,_that.label,_that.display,_
 /// }
 /// ```
 
-@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function( skir.ResourceDefinitionId definition,  skir.TypeSelection configuration,  String label,  skir.TypeDisplay? display,  SearchQueryContext query,  String? disabledReason)?  $default,) {final _that = this;
+@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function( skir.TypeDefinitionId type,  skir.TypeSelection configuration,  String label,  skir.TypeDisplay? display,  SearchQueryContext query,  String? disabledReason)?  $default,) {final _that = this;
 switch (_that) {
 case _AuthoringCreationOption() when $default != null:
-return $default(_that.definition,_that.configuration,_that.label,_that.display,_that.query,_that.disabledReason);case _:
+return $default(_that.type,_that.configuration,_that.label,_that.display,_that.query,_that.disabledReason);case _:
   return null;
 
 }
@@ -226,10 +226,10 @@ return $default(_that.definition,_that.configuration,_that.label,_that.display,_
 
 
 class _AuthoringCreationOption extends AuthoringCreationOption {
-  const _AuthoringCreationOption({required this.definition, required this.configuration, required this.label, this.display, this.query = SearchQueryContext.empty, this.disabledReason}): super._();
+  const _AuthoringCreationOption({required this.type, required this.configuration, required this.label, this.display, this.query = SearchQueryContext.empty, this.disabledReason}): super._();
   
 
-@override final  skir.ResourceDefinitionId definition;
+@override final  skir.TypeDefinitionId type;
 @override final  skir.TypeSelection configuration;
 @override final  String label;
 @override final  skir.TypeDisplay? display;
@@ -246,18 +246,18 @@ _$AuthoringCreationOptionCopyWith<_AuthoringCreationOption> get copyWith => __$A
 
 @override
 bool operator ==(Object other) {
-    return identical(this, other) || (other.runtimeType == runtimeType&&other is _AuthoringCreationOption&&(identical(other.definition, definition) || other.definition == definition)&&(identical(other.configuration, configuration) || other.configuration == configuration)&&(identical(other.label, label) || other.label == label)&&(identical(other.display, display) || other.display == display)&&(identical(other.query, query) || other.query == query)&&(identical(other.disabledReason, disabledReason) || other.disabledReason == disabledReason));
+    return identical(this, other) || (other.runtimeType == runtimeType&&other is _AuthoringCreationOption&&(identical(other.type, type) || other.type == type)&&(identical(other.configuration, configuration) || other.configuration == configuration)&&(identical(other.label, label) || other.label == label)&&(identical(other.display, display) || other.display == display)&&(identical(other.query, query) || other.query == query)&&(identical(other.disabledReason, disabledReason) || other.disabledReason == disabledReason));
 }
 
 
 @override
 int get hashCode {
-    return Object.hash(runtimeType,definition,configuration,label,display,query,disabledReason);
+    return Object.hash(runtimeType,type,configuration,label,display,query,disabledReason);
 }
 
 @override
 String toString() {
-    return 'AuthoringCreationOption(definition: $definition, configuration: $configuration, label: $label, display: $display, query: $query, disabledReason: $disabledReason)';
+    return 'AuthoringCreationOption(type: $type, configuration: $configuration, label: $label, display: $display, query: $query, disabledReason: $disabledReason)';
 }
 
 
@@ -268,7 +268,7 @@ abstract mixin class _$AuthoringCreationOptionCopyWith<$Res> implements $Authori
   factory _$AuthoringCreationOptionCopyWith(_AuthoringCreationOption value, $Res Function(_AuthoringCreationOption) _then) = __$AuthoringCreationOptionCopyWithImpl;
 @override @useResult
 $Res call({
- skir.ResourceDefinitionId definition, skir.TypeSelection configuration, String label, skir.TypeDisplay? display, SearchQueryContext query, String? disabledReason
+ skir.TypeDefinitionId type, skir.TypeSelection configuration, String label, skir.TypeDisplay? display, SearchQueryContext query, String? disabledReason
 });
 
 
@@ -285,10 +285,10 @@ class __$AuthoringCreationOptionCopyWithImpl<$Res>
 
 /// Create a copy of AuthoringCreationOption
 /// with the given fields replaced by the non-null parameter values.
-@override @pragma('vm:prefer-inline') $Res call({Object? definition = null,Object? configuration = null,Object? label = null,Object? display = freezed,Object? query = null,Object? disabledReason = freezed,}) {
+@override @pragma('vm:prefer-inline') $Res call({Object? type = null,Object? configuration = null,Object? label = null,Object? display = freezed,Object? query = null,Object? disabledReason = freezed,}) {
   return _then(_AuthoringCreationOption(
-definition: null == definition ? _self.definition : definition // ignore: cast_nullable_to_non_nullable
-as skir.ResourceDefinitionId,configuration: null == configuration ? _self.configuration : configuration // ignore: cast_nullable_to_non_nullable
+type: null == type ? _self.type : type // ignore: cast_nullable_to_non_nullable
+as skir.TypeDefinitionId,configuration: null == configuration ? _self.configuration : configuration // ignore: cast_nullable_to_non_nullable
 as skir.TypeSelection,label: null == label ? _self.label : label // ignore: cast_nullable_to_non_nullable
 as String,display: freezed == display ? _self.display : display // ignore: cast_nullable_to_non_nullable
 as skir.TypeDisplay?,query: null == query ? _self.query : query // ignore: cast_nullable_to_non_nullable

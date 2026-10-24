@@ -297,12 +297,14 @@ void main() {
       final generation = skir.CatalogGeneration(value: "catalog:named");
       final checked = CheckedEditorCatalog(
         skir.EditorCatalogWireSnapshot(
+          resourceDisplays: const [],
           resourceOperations: const [],
-          resourceOperationContributions: const [],
           generation: generation,
           types: [
             skir.PublishedType(
-              display: null,
+              searchKey: null,
+              placementField: null,
+              display: defaultTypeDisplay(""),
               definition: skir.TypeDefinition(
                 id: alias,
                 parameters: const [],
@@ -318,7 +320,9 @@ void main() {
               ancestorTemplates: const [],
             ),
             skir.PublishedType(
-              display: null,
+              searchKey: null,
+              placementField: null,
+              display: defaultTypeDisplay(""),
               definition: skir.TypeDefinition(
                 id: root,
                 parameters: const [],
@@ -354,7 +358,7 @@ void main() {
             ),
           ],
           relations: const [],
-          resourceDefinitions: const [],
+          realmRoot: skir.TypeDefinitionId.defaultInstance,
           presentations: const [],
           presentationMaterials: const [],
           configuration: const [],
@@ -374,7 +378,6 @@ void main() {
         resources: [
           skir.AuthoringResource(
             id: location.resource,
-            definition: skir.ResourceDefinitionId(value: "test.root"),
             content: skir.AuthoringRecord(
               configuration: skir.TypeSelection.createComplete(
                 definition: root,

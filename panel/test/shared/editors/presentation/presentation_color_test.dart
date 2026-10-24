@@ -130,7 +130,14 @@ void main() {
           skir.PresentationElement.createContainer(
             backgroundColor: fill,
             foregroundColor: foreground,
-            transitionMilliseconds: 100,
+            transition: skir.PresentationTransitionPolicy(
+              rules: const [],
+              fallback: skir.PresentationTransition(
+                milliseconds: 100,
+                curve: skir.PresentationCurve.linear,
+              ),
+            ),
+            shadows: const [],
             border: null,
             radius: skir.PresentationRadius.large,
             child: _column(
@@ -232,7 +239,8 @@ void main() {
         ),
         backgroundColor: null,
         foregroundColor: _color(Colors.orange),
-        transitionMilliseconds: 0,
+        transition: null,
+        shadows: const [],
         border: null,
         radius: skir.PresentationRadius.none,
       ),
@@ -247,9 +255,9 @@ void main() {
     expect(Surface.colorOf(element), canvas);
     expect(Surface.foregroundOf(element).toARGB32(), Colors.orange.toARGB32());
   });
-  PresentationColorEnvironment environment({
+  PresentationValueEnvironment environment({
     PresentationInteraction interaction = const PresentationInteraction(),
-  }) => PresentationColorEnvironment(
+  }) => PresentationValueEnvironment(
     theme: ThemeData.dark(),
     appearance: appearance,
     interaction: interaction,
@@ -344,12 +352,12 @@ void main() {
           ),
           scope,
         ),
-        throwsA(isA<PresentationColorFailure>()),
+        throwsA(isA<PresentationValueFailure>()),
       );
     }
     expect(
       () => colors.resolve(skir.PresentationColor.unknown, scope),
-      throwsA(isA<PresentationColorFailure>()),
+      throwsA(isA<PresentationValueFailure>()),
     );
     expect(
       () => colors.resolve(
@@ -365,7 +373,7 @@ void main() {
         ),
         scope,
       ),
-      throwsA(isA<PresentationColorFailure>()),
+      throwsA(isA<PresentationValueFailure>()),
     );
     var recursive = _color(Colors.red);
     for (var i = 0; i < 65; i++) {
@@ -376,7 +384,7 @@ void main() {
     }
     expect(
       () => colors.resolve(recursive, scope),
-      throwsA(isA<PresentationColorFailure>()),
+      throwsA(isA<PresentationValueFailure>()),
     );
     final limited = PortablePresentationScope(
       operations: testPortableOperations(),
@@ -391,7 +399,7 @@ void main() {
         ),
         limited,
       ),
-      throwsA(isA<PresentationColorFailure>()),
+      throwsA(isA<PresentationValueFailure>()),
     );
   });
 

@@ -14,6 +14,7 @@ import skirout.editor.v1.presentation.PresentationHeaderTitle
 import skirout.editor.v1.presentation.PresentationNode
 import skirout.editor.v1.presentation.SearchProvider
 import skirout.editor.v1.presentation.SequencePresentation
+import skirout.editor.v1.presentation.StackChild
 
 data class PresentationMaterial(
     val provider: PresentationId,
@@ -22,7 +23,6 @@ data class PresentationMaterial(
     val role: PresentationRole,
     val layout: PresentationNode,
     val dependencies: PresentationDependencies,
-    val resultAppearance: skirout.editor.v1.presentation.ResultAppearance? = null,
     val inheritableNodes: List<String> = emptyList(),
 )
 
@@ -261,7 +261,7 @@ private fun PresentationNode.writesWithinOwner(
                     nested: Map<String, FieldWriteScope>,
                 ): Boolean {
                     val scoped = nested + (result.bindingId.value to FieldWriteScope.Foreign)
-                    return child(result.presentation, scoped) && child(result.resultAppearance?.leading, scoped)
+                    return child(result.presentation, scoped)
                 }
 
                 val queryBindings = bindings + (value.queryBindingId.value to FieldWriteScope.Foreign)
@@ -332,6 +332,20 @@ private fun PresentationNode.writesWithinOwner(
                     }
                 child(value.empty) && child(value.loading) &&
                     child(value.summary, bindings + (value.summaryBindingId.value to FieldWriteScope.Foreign)) && provider(value.provider)
+            }
+
+            is PresentationElement.ResourcesWrapper -> {
+                val layout = element.value.layout as? skirout.editor.v1.presentation.ResourcesLayout.TreeWrapper
+                child(
+                    layout?.value?.group,
+                    bindings + (
+                        layout
+                            ?.value
+                            ?.groupBindingId
+                            ?.value
+                            .orEmpty() to FieldWriteScope.Foreign
+                    ),
+                )
             }
 
             is PresentationElement.PartWrapper -> {
@@ -589,6 +603,14 @@ private fun PresentationNode.bodyChildren(): List<PresentationNode> =
                 add(element.value.child)
             }
 
+            is PresentationElement.SizeWrapper -> {
+                add(element.value.child)
+            }
+
+            is PresentationElement.TransformWrapper -> {
+                add(element.value.child)
+            }
+
             is PresentationElement.AnchorWrapper -> {
                 add(element.value.child)
             }
@@ -617,6 +639,10 @@ private fun PresentationNode.bodyChildren(): List<PresentationNode> =
                 element.value.itemPresentation?.let(::add)
             }
 
+            is PresentationElement.ResourcesWrapper -> {
+                (element.value.layout as? skirout.editor.v1.presentation.ResourcesLayout.TreeWrapper)?.value?.group?.let(::add)
+            }
+
             else -> {}
         }
     }
@@ -627,7 +653,7 @@ private fun MutableList<PresentationNode>.addChildren(children: ChildrenElement)
         is ChildrenElement.RowWrapper -> children.value.children.mapTo(this) { it.node() }
         is ChildrenElement.WrapWrapper -> addAll(children.value.children)
         is ChildrenElement.GridWrapper -> addAll(children.value.children)
-        is ChildrenElement.StackWrapper -> addAll(children.value.children)
+        is ChildrenElement.StackWrapper -> children.value.children.mapTo(this) { it.node() }
         else -> Unit
     }
 }
@@ -669,8 +695,7 @@ private fun PresentationElement.boundControl(): BoundControl? =
         is PresentationElement.SearchInputWrapper -> value.control
         is PresentationElement.NullableInputWrapper -> value.control
         is PresentationElement.LinkInputWrapper -> value.control
-        is PresentationElement.PageGraphWrapper -> value.control
-        is PresentationElement.PageTimelineWrapper -> value.control
+        is PresentationElement.ResourcesWrapper -> value.control
         else -> null
     }
 
@@ -679,6 +704,13 @@ private fun AxisChild.node(): PresentationNode =
         is AxisChild.FixedWrapper -> value
         is AxisChild.FlexibleWrapper -> value.child
         else -> error("Unknown Skir axis child variant.")
+    }
+
+private fun StackChild.node(): PresentationNode =
+    when (this) {
+        is StackChild.FlowWrapper -> value
+        is StackChild.PositionedWrapper -> value.child
+        else -> error("Unknown Skir stack child variant.")
     }
 
 private fun SequencePresentation.nodes(): List<PresentationNode> = listOfNotNull(item, empty, separator)
@@ -692,10 +724,10 @@ private fun PresentationConnection.nodes(): List<PresentationNode> =
 
 private fun SearchProvider.nodes(): List<PresentationNode> =
     when (this) {
-        is SearchProvider.StaticValuesWrapper -> listOfNotNull(value.result.presentation, value.result.resultAppearance?.leading)
-        is SearchProvider.HttpJsonWrapper -> listOfNotNull(value.result.presentation, value.result.resultAppearance?.leading)
-        is SearchProvider.RealmCallbackWrapper -> listOfNotNull(value.result.presentation, value.result.resultAppearance?.leading)
-        is SearchProvider.CollectionWrapper -> listOfNotNull(value.result.presentation, value.result.resultAppearance?.leading)
+        is SearchProvider.StaticValuesWrapper -> listOf(value.result.presentation)
+        is SearchProvider.HttpJsonWrapper -> listOf(value.result.presentation)
+        is SearchProvider.RealmCallbackWrapper -> listOf(value.result.presentation)
+        is SearchProvider.CollectionWrapper -> listOf(value.result.presentation)
         is SearchProvider.GateWrapper -> value.child.nodes()
         is SearchProvider.DebounceWrapper -> value.child.nodes()
         is SearchProvider.CacheWrapper -> value.child.nodes()

@@ -73,7 +73,7 @@ val DiscoveryEngineRuntimeTest by testSuite {
     test("admission failure retains the active compiled graph") {
         runTest {
             val gateway =
-                PageContentGateway(
+                ResourceGraphContentGateway(
                     catalog = EMPTY_CATALOG,
                     bindings = FactoryNativeBindingRegistry(EMPTY_CATALOG, emptyList()),
                     relations = emptyList(),

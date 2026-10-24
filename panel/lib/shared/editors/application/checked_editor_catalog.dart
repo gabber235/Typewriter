@@ -4,6 +4,7 @@ import "package:typewriter_panel/typewriter_panel.dart";
 
 part "checked_editor_catalog.freezed.dart";
 part "inherited_inspector_catalog.dart";
+part "realm_structure.dart";
 
 final class AppliedEditorField {
   const AppliedEditorField({required this.template, required this.type});
@@ -661,14 +662,17 @@ final class CheckedEditorCatalog {
   skir.TypeUse? concreteType(skir.TypeTemplate template) =>
       _concreteTemplateType(template);
 
-  skir.PublishedType? selected(skir.TypeSelection selection) {
-    final definition = switch (selection) {
-      skir.TypeSelection_completeWrapper(:final value) => value.definition,
-      skir.TypeSelection_pendingWrapper(:final value) => value.definition,
-      _ => null,
-    };
-    return definition == null ? null : published(definition);
-  }
+  /// The published placement field of the selected type, or null when the
+  /// type declares none. Layout reads and writes go through this path instead
+  /// of assuming a field name.
+  skir.ValuePath? placementField(skir.TypeSelection selection) =>
+      selected(selection)?.placementField;
+
+  skir.PublishedType? selected(skir.TypeSelection selection) =>
+      switch (selection.definition) {
+        final definition? => published(definition),
+        null => null,
+      };
 
   /// Applies effective field templates to the chosen type arguments.
   /// Unfinished arguments leave individual field types unavailable; missing or
@@ -1042,26 +1046,6 @@ final class CheckedEditorCatalog {
   List<skir.TypeRecommendation> get recommendations =>
       snapshot.recommendations.toList(growable: false);
 
-  skir.AuthoringResourceDefinition? resourceDefinition(
-    skir.TypeSelection selection,
-  ) {
-    final definitions = nominalDefinitions(selection);
-    final candidates = snapshot.resourceDefinitions
-        .where((resource) => definitions.contains(resource.root))
-        .toList(growable: false);
-    return candidates.length == 1 ? candidates.single : null;
-  }
-
-  bool isResourceDefinition(
-    skir.TypeSelection selection,
-    skir.ResourceDefinitionId id,
-  ) {
-    final definitions = nominalDefinitions(selection);
-    return snapshot.resourceDefinitions.any(
-      (resource) => resource.id == id && definitions.contains(resource.root),
-    );
-  }
-
   Set<skir.TypeDefinitionId> nominalDefinitions(skir.TypeSelection selection) {
     final definition = selected(selection);
     if (definition == null) return const {};
@@ -1105,7 +1089,7 @@ final class CheckedEditorCatalog {
                     candidate.template.relativePath &&
                 other.template.containingResource.definition !=
                     candidate.template.containingResource.definition &&
-                _isNominalSubtype(
+                isNominalSubtype(
                   other.template.containingResource.definition,
                   candidate.template.containingResource.definition,
                 ),
@@ -1192,7 +1176,7 @@ final class CheckedEditorCatalog {
       if (published.status != skir.DeclarationStatus.ready ||
           representation is! skir.RepresentationTemplate_recordWrapper ||
           representation.value.abstract_ ||
-          !_isNominalSubtype(published.definition.id, root)) {
+          !isNominalSubtype(published.definition.id, root)) {
         continue;
       }
       selections.add(beginSelection(published.definition.id));
@@ -1598,8 +1582,8 @@ final class CheckedEditorCatalog {
     final leftDefinition = left.value.definition;
     final rightDefinition = right.value.definition;
     if (leftDefinition != rightDefinition) {
-      return _isNominalSubtype(leftDefinition, rightDefinition) &&
-          !_isNominalSubtype(rightDefinition, leftDefinition);
+      return isNominalSubtype(leftDefinition, rightDefinition) &&
+          !isNominalSubtype(rightDefinition, leftDefinition);
     }
     final rightSubsumesLeft = _namedTemplateSubsumes(right.value, left.value);
     final leftSubsumesRight = _namedTemplateSubsumes(left.value, right.value);
@@ -1624,7 +1608,9 @@ final class CheckedEditorCatalog {
     _ => false,
   };
 
-  bool _isNominalSubtype(
+  /// Whether [actual] is [expected] or declares it among its ancestors.
+  /// Unavailable declarations break the chain.
+  bool isNominalSubtype(
     skir.TypeDefinitionId actual,
     skir.TypeDefinitionId expected,
   ) {
@@ -1972,8 +1958,7 @@ extension PresentationNodeStructure on skir.PresentationNode {
     skir.PresentationElement_nullableInputWrapper(:final value) =>
       value.control,
     skir.PresentationElement_linkInputWrapper(:final value) => value.control,
-    skir.PresentationElement_pageGraphWrapper(:final value) => value.control,
-    skir.PresentationElement_pageTimelineWrapper(:final value) => value.control,
+    skir.PresentationElement_resourcesWrapper(:final value) => value.control,
     _ => null,
   };
 }
@@ -2125,6 +2110,12 @@ Iterable<skir.PresentationNode> _presentationBodyNodes(
       if (value.itemPresentation case final child?) yield child;
     case skir.PresentationElement_setInputWrapper(:final value):
       if (value.itemPresentation case final child?) yield child;
+    case skir.PresentationElement_resourcesWrapper(
+      value: skir.ResourcesElement(
+        layout: skir.ResourcesLayout_treeWrapper(:final value),
+      ),
+    ):
+      if (value.group case final child?) yield child;
     case skir.PresentationElement_mapInputWrapper(:final value):
       if (value.keyPresentation case final child?) yield child;
       if (value.valuePresentation case final child?) yield child;
@@ -2150,6 +2141,10 @@ Iterable<skir.PresentationNode> _presentationBodyNodes(
     case skir.PresentationElement_alignWrapper(:final value):
       yield value.child;
     case skir.PresentationElement_containerWrapper(:final value):
+      yield value.child;
+    case skir.PresentationElement_sizeWrapper(:final value):
+      yield value.child;
+    case skir.PresentationElement_transformWrapper(:final value):
       yield value.child;
     case skir.PresentationElement_anchorWrapper(:final value):
       yield value.child;
@@ -2195,7 +2190,16 @@ Iterable<skir.PresentationNode> _childrenNodes(
     case skir.ChildrenElement_gridWrapper(:final value):
       yield* value.children;
     case skir.ChildrenElement_stackWrapper(:final value):
-      yield* value.children;
+      for (final child in value.children) {
+        switch (child) {
+          case skir.StackChild_flowWrapper(:final value):
+            yield value;
+          case skir.StackChild_positionedWrapper(:final value):
+            yield value.child;
+          default:
+            break;
+        }
+      }
     default:
       break;
   }
@@ -2230,7 +2234,6 @@ Iterable<skir.PresentationNode> _searchResultNodes(
   skir.SearchResultMapping result,
 ) sync* {
   yield result.presentation;
-  if (result.resultAppearance?.leading case final leading?) yield leading;
 }
 
 Iterable<skir.PresentationNode> _searchProviderNodes(

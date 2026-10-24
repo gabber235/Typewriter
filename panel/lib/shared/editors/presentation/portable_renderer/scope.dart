@@ -1,9 +1,5 @@
 part of "../portable_presentation_renderer.dart";
 
-final _configuredValueBindingId = skir.ExpressionBindingId(
-  value: "configured_value",
-);
-
 typedef PortableSlotBuilder = Widget Function(PortablePresentationScope scope);
 
 /// Immutable lexical rendering context. Copies borrow the host, query observer
@@ -41,6 +37,7 @@ abstract class PortablePresentationScope with _$PortablePresentationScope {
     skir.ResourceId? resource,
     String? searchHistoryNamespace,
     ValueChanged<skir.ResourceId>? openResource,
+    skir.ResourceId? routedResource,
     skir.PresentationRole? role,
     skir.PresentationMaterial? material,
     Set<skir.PresentationId> activePresentations = const {},
@@ -50,6 +47,7 @@ abstract class PortablePresentationScope with _$PortablePresentationScope {
     Map<String, skir.PresentationNode> slots = const {},
     Map<String, PortableSlotBuilder> slotBuilders = const {},
     PortablePresentationHost? host,
+    HostContext hostContext = HostContext.empty,
     Map<skir.ExpressionBindingId, PortableBindingSetter> projectedWriters =
         const {},
   }) => PortablePresentationScope._value(
@@ -74,6 +72,7 @@ abstract class PortablePresentationScope with _$PortablePresentationScope {
     resource: resource,
     searchHistoryNamespace: searchHistoryNamespace,
     openResource: openResource,
+    routedResource: routedResource,
     role: role,
     material: material,
     activePresentations: Set.unmodifiable(activePresentations),
@@ -83,6 +82,7 @@ abstract class PortablePresentationScope with _$PortablePresentationScope {
     slots: Map.unmodifiable(slots),
     slotBuilders: Map.unmodifiable(slotBuilders),
     host: host,
+    hostContext: hostContext,
     projectedWriters: Map.unmodifiable(projectedWriters),
   );
 
@@ -112,6 +112,10 @@ abstract class PortablePresentationScope with _$PortablePresentationScope {
     required skir.ResourceId? resource,
     required String? searchHistoryNamespace,
     required ValueChanged<skir.ResourceId>? openResource,
+
+    /// The resource open in the workspace, which resources layouts mark as
+    /// routed.
+    required skir.ResourceId? routedResource,
     required skir.PresentationRole? role,
     required skir.PresentationMaterial? material,
     required Set<skir.PresentationId> activePresentations,
@@ -121,6 +125,9 @@ abstract class PortablePresentationScope with _$PortablePresentationScope {
     required Map<String, skir.PresentationNode> slots,
     required Map<String, PortableSlotBuilder> slotBuilders,
     required PortablePresentationHost? host,
+
+    /// Host values for the host inputs each material in this scope declares.
+    required HostContext hostContext,
     required Map<skir.ExpressionBindingId, PortableBindingSetter>
     projectedWriters,
   }) = _PortablePresentationScope;
@@ -137,11 +144,6 @@ abstract class PortablePresentationScope with _$PortablePresentationScope {
                   AuthoredBindingAddress.binding(entry.key, entry.value)
             : AuthoredBindingAddress.binding(entry.key, entry.value),
     };
-    final additional = [
-      if (layout == material?.layout &&
-          material?.resultAppearance?.leading != null)
-        material!.resultAppearance!.leading!,
-    ];
     final sources = {
       for (final source
           in material?.dependencies.collections ??
@@ -152,14 +154,13 @@ abstract class PortablePresentationScope with _$PortablePresentationScope {
     final independent = AuthoredPresentationIndex.build(
       layout,
       aliases,
-      additionalLayouts: additional,
       sources: sources,
       onPart: (node, part, lexicalAliases) {
         parts.add(
           PortableAuthoredPart(
             nodeId: node.nodeId,
             part: part,
-            owner: lexicalAliases[_configuredValueBindingId],
+            owner: lexicalAliases[configuredValueBindingId],
           ),
         );
         return false;
@@ -172,7 +173,6 @@ abstract class PortablePresentationScope with _$PortablePresentationScope {
       authoredIndex: AuthoredPresentationIndex.build(
         layout,
         aliases,
-        additionalLayouts: additional,
         sources: sources,
       ),
     );
@@ -245,11 +245,11 @@ abstract class PortablePresentationScope with _$PortablePresentationScope {
       expression,
       lexicalTypes: bindings.lexicalSchemas,
     )) {
-      CheckedExpressionReady(:final program) =>
-        switch (program.result.declaredUse()) {
-          final use? => CompletePortablePresentationBinding(use),
-          _ => null,
-        },
+      CheckedExpressionReady(:final program) => switch (program.result
+          .declaredUse()) {
+        final use? => CompletePortablePresentationBinding(use),
+        _ => null,
+      },
       _ => null,
     };
   }
@@ -490,7 +490,7 @@ abstract class PortablePresentationScope with _$PortablePresentationScope {
   // Collection replacements allocate owned values because generated copyWith
   // enters the private Freezed value constructor directly.
   PortablePresentationScope withNamedPayload(PortableNamedPayload payload) {
-    final configured = skir.ExpressionBindingId(value: "configured_value");
+    final configured = configuredValueBindingId;
     FutureOr<PortablePresentationWriteResult> writeConfigured(
       skir.BindingRef reference,
       skir.DataValue value, {
@@ -529,7 +529,7 @@ abstract class PortablePresentationScope with _$PortablePresentationScope {
 
     return copyWith(
       bindings: {
-        ...bindings.withSubjectAt(payload.location),
+        ...bindings.withSubjectAt(payload.location, _appearanceOf),
         configured: PortableExpressionBinding(
           value: skir.DataValue.createNamed(
             actualType: payload.actualType,
@@ -557,8 +557,17 @@ abstract class PortablePresentationScope with _$PortablePresentationScope {
     );
   }
 
+  /// The appearance of a resource in this scope's authoring observation.
+  ResourceAppearance? _appearanceOf(skir.ResourceId resource) {
+    final catalog = queries?.catalog ?? this.catalog;
+    final record = queries?.authored?.resource(resource);
+    return catalog == null || record == null
+        ? null
+        : catalog.appearanceOf(record);
+  }
+
   PortablePresentationScope? withConfiguredValue(skir.BindingRef reference) =>
-      withBinding(reference, _configuredValueBindingId);
+      withBinding(reference, configuredValueBindingId);
 
   /// Rebinds an existing value and its schema, location and projected writer.
   /// An unavailable source returns null rather than inventing an editable value.
@@ -610,8 +619,8 @@ abstract class PortablePresentationScope with _$PortablePresentationScope {
     }
     return copyWith(
       bindings: {
-        ...(id == _configuredValueBindingId
-            ? bindings.withSubjectAt(location)
+        ...(id == configuredValueBindingId
+            ? bindings.withSubjectAt(location, _appearanceOf)
             : bindings),
         id: PortableExpressionBinding(
           value: value,
@@ -687,6 +696,7 @@ abstract class PortablePresentationScope with _$PortablePresentationScope {
     bindings: bindings.withContextImports(
       catalog: queries?.catalog ?? catalog!,
       imports: value.dependencies.contextInputs,
+      host: hostContext,
     ),
   );
 
@@ -706,7 +716,9 @@ abstract class PortablePresentationScope with _$PortablePresentationScope {
           input.bindingId: ?bindings[input.bindingId],
         presentationSubjectIdentifierBindingId: projected.resource
             .toExpressionBinding(),
-        _configuredValueBindingId: PortableExpressionBinding(
+        presentationSubjectAppearanceBindingId: projected.appearance
+            .toExpressionBinding(),
+        configuredValueBindingId: PortableExpressionBinding(
           value: projected.value,
           schema: switch (projected.configuration) {
             skir.TypeSelection_completeWrapper(:final value) =>
@@ -735,7 +747,9 @@ abstract class PortablePresentationScope with _$PortablePresentationScope {
       role: selected.resolvedRole,
       activePresentations: {selected.material.provider},
       openResource: openResource,
+      routedResource: this.routedResource,
       host: host,
+      hostContext: hostContext,
     ).withMaterial(selected.material);
   }
 }
@@ -771,16 +785,34 @@ extension _PortableNullableTypeUse on skir.TypeUse? {
   }
 }
 
+/// The subject identifier and appearance bindings of a resource presentation.
+/// Both follow the configured value: they name the resource whose root it is,
+/// and are absent below a resource root.
 extension _PresentationSubjectBindings
     on Map<skir.ExpressionBindingId, PortableExpressionBinding> {
   Map<skir.ExpressionBindingId, PortableExpressionBinding> withSubjectAt(
     skir.ValueLocation? location,
-  ) => {
-    for (final entry in entries)
-      if (entry.key != presentationSubjectIdentifierBindingId)
-        entry.key: entry.value,
-    if (location case final subject? when subject.path.segments.isEmpty)
-      presentationSubjectIdentifierBindingId: subject.resource
-          .toExpressionBinding(),
-  };
+    ResourceAppearance? Function(skir.ResourceId) appearanceOf,
+  ) {
+    final subject = switch (location) {
+      final value? when value.path.segments.isEmpty => value.resource,
+      _ => null,
+    };
+    final previous = this[presentationSubjectIdentifierBindingId]?.value;
+    final kept = this[presentationSubjectAppearanceBindingId];
+    final appearance = subject == null
+        ? null
+        : previous == subject.toExpressionValue() && kept != null
+        ? kept
+        : appearanceOf(subject)?.toExpressionBinding();
+    return {
+      for (final entry in entries)
+        if (entry.key != presentationSubjectIdentifierBindingId &&
+            entry.key != presentationSubjectAppearanceBindingId)
+          entry.key: entry.value,
+      if (subject != null)
+        presentationSubjectIdentifierBindingId: subject.toExpressionBinding(),
+      presentationSubjectAppearanceBindingId: ?appearance,
+    };
+  }
 }

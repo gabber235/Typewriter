@@ -3,11 +3,13 @@
 package com.typewritermc.presentation
 
 import com.typewritermc.authoring.GeneratedSdkApi
+import com.typewritermc.authoring.ResourceAppearance
 import com.typewritermc.expression.ExpressionBindingId
 import com.typewritermc.expression.ExpressionFactories
 import com.typewritermc.types.PresentationRole
 import com.typewritermc.types.TypeTemplate
 import com.typewritermc.types.TypeUse
+import com.typewritermc.types.skir.SkirAuthoringValueCodec
 import com.typewritermc.types.skir.SkirTypeCodec
 import com.typewritermc.types.skir.getOrThrow
 import com.typewritermc.types.toTemplate
@@ -17,10 +19,12 @@ import skirout.editor.v1.presentation.AxisChild
 import skirout.editor.v1.presentation.AxisChildrenElement
 import skirout.editor.v1.presentation.AxisChildrenLayout
 import skirout.editor.v1.presentation.ChildrenElement
+import skirout.editor.v1.presentation.PositionedStackChild
 import skirout.editor.v1.presentation.PresentationCollectionDefinition
 import skirout.editor.v1.presentation.PresentationDependencies
 import skirout.editor.v1.presentation.PresentationElement
 import skirout.editor.v1.presentation.PresentationNode
+import skirout.editor.v1.presentation.StackChild
 import kotlin.reflect.KClass
 import skirout.editor.v1.presentation.CrossAxisAlignment as WireCrossAxisAlignment
 import skirout.editor.v1.presentation.MainAxisAlignment as WireMainAxisAlignment
@@ -54,12 +58,20 @@ internal class PresentationBuildState(
         linkedMapOf(
             CONFIGURED_VALUE to type.type,
             ExpressionBindingId("presentation.subject.identifier") to TypeTemplate.Named(com.typewritermc.types.ResourceIdDefinition.id),
-            ExpressionBindingId("presentation.context.selection_count") to
-                TypeTemplate.Scalar(
-                    com.typewritermc.types.ScalarKind
-                        .Integer(com.typewritermc.types.IntegerWidth.SIGNED_32),
-                ),
         )
+
+    /**
+     * Checks the order key of a resources layout: [body] reads each member's link through [item], typed [link], and
+     * may produce a key of any type.
+     */
+    internal fun checkOrder(
+        body: ExpressionNode,
+        item: ExpressionBindingId,
+        link: TypeTemplate,
+    ) {
+        val errors = type.checkExpression(body, expressionTypes + (item to link), null, setOf(item))
+        require(errors.isEmpty()) { "Invalid resources order: ${errors.joinToString()}." }
+    }
 
     internal fun checkMapping(
         body: ExpressionNode,
@@ -107,6 +119,7 @@ internal class PresentationBuildState(
             contextInputs[key] =
                 skirout.editor.v1.presentation.PresentationContextInput(
                     bindingId = key.wire(),
+                    source = skirout.editor.v1.presentation.PresentationContextSource.CALLER,
                     valueType = SkirTypeCodec.encode(use).getOrThrow(),
                 )
             expressionTypes[key] = use.toTemplate()
@@ -132,10 +145,66 @@ internal class PresentationBuildState(
                 require(errors.isEmpty()) { "Invalid authoring target expression: ${errors.joinToString()}." }
             }
 
+            is skirout.editor.v1.action.EditorAction.CreateWrapper -> {
+                checkCreate(action.value)
+            }
+
             else -> {
                 Unit
             }
         }
+    }
+
+    /**
+     * Checks that a create action links the new resource into an owning link field of the subject that accepts its
+     * type, and that every preset is a field of the created type receiving a value of that field's type.
+     */
+    private fun checkCreate(action: skirout.editor.v1.action.CreateResourceAction) {
+        val created = SkirTypeCodec.decode(action.type).getOrThrow()
+        action.owner?.let { owner ->
+            require(owner.bindingId == CONFIGURED_VALUE.wire()) { "A create action owner must be a field of the presentation subject." }
+            val field = type.at(SkirAuthoringValueCodec.decode(owner.path).getOrThrow())
+            val link =
+                requireNotNull(field?.let { it.link() ?: it.itemsOrNull()?.link() }) {
+                    "A create action owner must be a link field of the presentation subject."
+                }
+            require(
+                link.endpoint in binding.ownershipEndpoints,
+            ) { "A create action owner must be the owner side of an ownership relation." }
+            val target = requireNotNull(link.target as? TypeTemplate.Named) { "A create action owner must link a named resource type." }
+            require(type.isSubtype(created, target.definition)) { "A create action owner does not accept resources of $created." }
+        }
+        val subject = type.rebind(TypeTemplate.Named(created, emptyList()))
+        action.fields.forEach { preset ->
+            val path = SkirAuthoringValueCodec.decode(preset.path).getOrThrow()
+            val field = requireNotNull(subject.at(path)) { "A create action preset ${path.segments} is not a field of $created." }
+            // A preset that evaluates to missing leaves the field at its creation default.
+            val errors = type.checkExpression(preset.value, expressionTypes, field.type, expressionTypes.keys, mayBeMissing = true)
+            require(errors.isEmpty()) { "Invalid create action preset: ${errors.joinToString()}." }
+        }
+        type(TypeUse.Named(created))
+    }
+
+    /** The field at [path] below this type, or null when a segment is not a field of it. */
+    private fun CheckedPresentationTemplate.at(path: com.typewritermc.authoring.ValuePath): CheckedPresentationTemplate? =
+        path.segments.fold(this as CheckedPresentationTemplate?) { current, segment ->
+            (segment as? com.typewritermc.authoring.PathSegment.Field)?.let { current?.fieldOrNull(it.name) }
+        }
+
+    /** Types the binding of the presented resource's evaluated display, a canonical read model the editor supplies. */
+    fun resourceAppearance(): com.typewritermc.expression.Expr<ResourceAppearance, com.typewritermc.expression.Handled> {
+        val binding = com.typewritermc.authoring.PresentedResourceAppearance.binding
+        expressionTypes[binding] =
+            com.typewritermc.expression.CanonicalReadModels.resourceAppearance.type
+                .toTemplate()
+        return com.typewritermc.expression.inputExpression(binding)
+    }
+
+    /** Declares the group binding of a tree layout, typed as the hierarchy group the host supplies. */
+    fun groupBinding(id: ExpressionBindingId) {
+        val use = TypeUse.Named(com.typewritermc.authoring.HierarchyGroupDefinition.id)
+        type(use)
+        expressionTypes[id] = use.toTemplate()
     }
 
     fun collection(source: CollectionSource<*, *>) {
@@ -160,10 +229,7 @@ internal class PresentationBuildState(
         )
     }
 
-    fun result(
-        layout: PresentationNode,
-        appearance: skirout.editor.v1.presentation.ResultAppearance? = null,
-    ): PresentationBuildResult =
+    fun result(layout: PresentationNode): PresentationBuildResult =
         PresentationBuildResult(
             layout = layout,
             dependencies =
@@ -175,34 +241,37 @@ internal class PresentationBuildState(
                     collections = collections.values,
                     contextInputs = contextInputs.values,
                 ),
-            resultAppearance = appearance,
         )
 
     fun <Value : Any> readContext(
         key: PresentationContextKey<Value>,
     ): com.typewritermc.expression.Expr<Value, com.typewritermc.expression.MayBeMissing> {
-        val template = requireNotNull(binding.nativeTypes[key.valueClass]) { "Caller input type is not registered." }
-        require(template.arguments.isEmpty()) { "Caller inputs require a closed registered type." }
-        val use = TypeUse.Named(template.definition)
+        val use =
+            when (val valueType = key.valueType) {
+                is PresentationContextValueType.Fixed -> {
+                    valueType.use
+                }
+
+                is PresentationContextValueType.Registered -> {
+                    val template =
+                        requireNotNull(binding.nativeTypes[valueType.valueClass]) { "Caller input type is not registered." }
+                    require(template.arguments.isEmpty()) { "Caller inputs require a closed registered type." }
+                    TypeUse.Named(template.definition)
+                }
+            }
         val declaration =
             skirout.editor.v1.presentation.PresentationContextInput(
                 bindingId = key.binding.wire(),
+                source = key.source,
                 valueType = SkirTypeCodec.encode(use).getOrThrow(),
             )
         val previous = contextInputs[key.binding]
-        require(previous == null || previous == declaration) { "Caller input types conflict." }
-        require(previous != null || !expressionTypes.containsKey(key.binding)) { "Caller input shadows a binding." }
+        require(previous == null || previous == declaration) { "Context input types conflict." }
+        require(previous != null || !expressionTypes.containsKey(key.binding)) { "Context input shadows a binding." }
         type(use)
         contextInputs.putIfAbsent(key.binding, declaration)
-        expressionTypes[key.binding] = template
+        expressionTypes[key.binding] = use.toTemplate()
         return com.typewritermc.expression.inputExpression(key.binding)
-    }
-
-    fun captureResult(content: (PresentationBuildScope) -> Unit): CapturedResultPresentation {
-        val target = mutableListOf<PresentationNode>()
-        val result = ResultPresentationDraft(target)
-        withTarget(target) { content(scope(target = target, result = result)) }
-        return result.finish()
     }
 
     fun bindingId(purpose: String): ExpressionBindingId = ExpressionBindingId("presentation.$purpose.${nextBinding++}")
@@ -225,10 +294,9 @@ internal class PresentationBuildState(
         axis: PresentationAxisNodeList? = null,
         checked: CheckedPresentationTemplate = type,
         base: BindingRef = BindingRef(path = WireValuePath(segments = emptyList()), bindingId = CONFIGURED_VALUE.wire()),
-        result: ResultPresentationDraft? = null,
     ): RuntimePresentationBuildScope {
         if (base.path.segments.isEmpty()) expressionTypes[ExpressionBindingId(base.bindingId.value)] = checked.type
-        return RuntimePresentationBuildScope(this, RuntimeLayout(this, target, axis, checked, base, result), target, checked, base)
+        return RuntimePresentationBuildScope(this, RuntimeLayout(this, target, axis, checked, base), target, checked, base)
     }
 
     fun node(
@@ -337,6 +405,47 @@ internal class PresentationAxisNodeList(
                         FlexFit.Loose -> skirout.editor.v1.presentation.FlexFit.LOOSE
                     },
             )
+    }
+}
+
+/** Records stack children in order: direct additions flow, [addPositioned] places a child by insets. */
+internal class PresentationStackNodeList : AbstractMutableList<PresentationNode>() {
+    private val nodes = mutableListOf<PresentationNode>()
+    val children = mutableListOf<StackChild>()
+
+    override val size: Int get() = nodes.size
+
+    override fun get(index: Int): PresentationNode = nodes[index]
+
+    override fun add(
+        index: Int,
+        element: PresentationNode,
+    ) {
+        nodes.add(index, element)
+        children.add(
+            index,
+            StackChild.FlowWrapper(element),
+        )
+    }
+
+    override fun removeAt(index: Int): PresentationNode {
+        children.removeAt(index)
+        return nodes.removeAt(index)
+    }
+
+    override fun set(
+        index: Int,
+        element: PresentationNode,
+    ): PresentationNode {
+        children[index] =
+            StackChild.FlowWrapper(element)
+        return nodes.set(index, element)
+    }
+
+    fun addPositioned(child: PositionedStackChild) {
+        nodes += child.child
+        children +=
+            StackChild.PositionedWrapper(child)
     }
 }
 

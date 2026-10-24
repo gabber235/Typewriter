@@ -125,8 +125,11 @@ void main() {
         if (cancellation == "none") {
           expect(created?.resourceId, fixture.request.id);
           expect(
-            workspace!.document.entry(fixture.request.id)?.definition,
-            fixture.request.definition,
+            workspace!.document
+                .entry(fixture.request.id)
+                ?.content
+                .configuration,
+            fixture.request.configuration,
           );
           expect(
             workspace!.document.initializationFindings.single.diagnostic.code,
@@ -134,7 +137,15 @@ void main() {
           );
           await tester.pump(const Duration(seconds: 1));
           expect(transport.requests, hasLength(1));
-          expect(transport.requests.single.edit.intents, hasLength(1));
+          expect(
+            transport.requests.single.edit.intents
+                .whereType<skir.EditIntent_createResourceWrapper>(),
+            hasLength(1),
+          );
+          // The single store holds the resource without an owner question.
+          expect(workspace!.document.relations.parents[fixture.request.id], [
+            skir.ResourceId(value: "store:existing"),
+          ]);
         } else {
           expect(created, isNull);
           expect(transport.requests, isEmpty);
@@ -177,15 +188,49 @@ _CreationFixture _fixture() {
     definition: definition,
     arguments: const [],
   );
-  final resourceDefinition = skir.ResourceDefinitionId(
-    value: "test.generic_resource",
+  final store = skir.TypeDefinitionId(
+    typeId: skir.TypeId.createQualified(namespace: "test", name: "Store"),
+    revision: 1,
+  );
+  final storeLink = skir.TypeDefinitionId(
+    typeId: skir.TypeId.createQualified(namespace: "test", name: "StoreLink"),
+    revision: 1,
+  );
+  final storeLinks = skir.TypeDefinitionId(
+    typeId: skir.TypeId.createQualified(namespace: "test", name: "StoreLinks"),
+    revision: 1,
+  );
+  final owner = skir.EndpointId(value: "test.store:first");
+  final itemsTemplate = skir.TypeTemplate.createNamed(
+    definition: storeLinks,
+    arguments: const [],
+  );
+  skir.PublishedType published(
+    skir.TypeDefinitionId id,
+    skir.RepresentationTemplate representation, {
+    List<skir.EffectiveFieldTemplate> effectiveFields = const [],
+  }) => skir.PublishedType(
+    searchKey: null,
+    placementField: null,
+    definition: skir.TypeDefinition(
+      id: id,
+      parameters: const [],
+      representation: representation,
+      parents: const [],
+    ),
+    status: skir.DeclarationStatus.ready,
+    effectiveFields: effectiveFields,
+    ancestorTemplates: const [],
+    display: defaultTypeDisplay(""),
   );
   final wire = skir.EditorCatalogWireSnapshot(
+    resourceDisplays: const [],
     resourceOperations: const [],
-    resourceOperationContributions: const [],
     generation: generation,
     types: [
       skir.PublishedType(
+        searchKey: null,
+        placementField: null,
         definition: skir.TypeDefinition(
           id: definition,
           parameters: const [],
@@ -198,22 +243,105 @@ _CreationFixture _fixture() {
         status: skir.DeclarationStatus.ready,
         effectiveFields: const [],
         ancestorTemplates: const [],
-        display: null,
+        display: defaultTypeDisplay(""),
+      ),
+      // A store owns the resource through its items, which makes it a
+      // creatable resource type that every creation adds to the store.
+      published(
+        store,
+        skir.RepresentationTemplate.createRecord(
+          fields: [
+            skir.FieldDeclaration(
+              owner: skir.FieldOwner(definition: store, name: "items"),
+              type: itemsTemplate,
+              overrides: const [],
+              hasConstructorDefault: false,
+            ),
+          ],
+          abstract_: false,
+        ),
+        effectiveFields: [
+          skir.EffectiveFieldTemplate(
+            key: "items",
+            owner: skir.FieldOwner(definition: store, name: "items"),
+            type: itemsTemplate,
+            rules: const [],
+          ),
+        ],
+      ),
+      published(
+        storeLinks,
+        skir.RepresentationTemplate.createSequence(
+          item: skir.TypeTemplate.createNamed(
+            definition: storeLink,
+            arguments: const [],
+          ),
+          kind: skir.CollectionKind.list,
+        ),
+      ),
+      published(
+        storeLink,
+        skir.RepresentationTemplate.createLink(
+          endpoint: owner,
+          target: skir.TypeTemplate.createNamed(
+            definition: definition,
+            arguments: const [],
+          ),
+        ),
       ),
     ],
-    relations: const [],
-    resourceDefinitions: [
-      skir.AuthoringResourceDefinition(
-        id: resourceDefinition,
-        root: definition,
-        navigationHandler: skir.AuthoringNavigationHandler.generic,
+    relations: [
+      skir.RelationContract(
+        id: skir.RelationId(value: "test.store"),
+        families: [skir.resourceOwnershipFamily],
+        first: skir.EndpointDefinition(
+          id: owner,
+          slot: skir.EndpointSlot.first,
+          resource: skir.NamedTypeTemplate(
+            definition: store,
+            arguments: const [],
+          ),
+          cardinality: skir.EndpointCardinality.one,
+          onDelete: skir.RelationDeletePolicy.cascade,
+        ),
+        second: skir.EndpointDefinition(
+          id: skir.EndpointId(value: "test.store:second"),
+          slot: skir.EndpointSlot.second,
+          resource: skir.NamedTypeTemplate(
+            definition: definition,
+            arguments: const [],
+          ),
+          cardinality: skir.EndpointCardinality.many,
+          onDelete: skir.RelationDeletePolicy.clear,
+        ),
       ),
     ],
+    realmRoot: skir.TypeDefinitionId.defaultInstance,
     presentations: const [],
     presentationMaterials: const [],
     configuration: const [],
     diagnostics: const [],
-    endpointBindings: const [],
+    endpointBindings: [
+      skir.EndpointBindingTemplate(
+        endpoint: owner,
+        containingResource: skir.NamedTypeTemplate(
+          definition: store,
+          arguments: const [],
+        ),
+        valueOwner: store,
+        target: skir.TypeTemplate.createNamed(
+          definition: definition,
+          arguments: const [],
+        ),
+        containsCollection: true,
+        relativePath: skir.RelativeFieldPattern(
+          segments: [
+            skir.FieldPatternSegment.createField(name: "items"),
+            skir.FieldPatternSegment.items,
+          ],
+        ),
+      ),
+    ],
     capabilities: const [],
     recommendations: const [],
     roleFallbacks: const [],
@@ -234,7 +362,29 @@ _CreationFixture _fixture() {
   final snapshot = skir.AuthoringState(
     confirmedObservation: skir.AuthoringObservationId(value: "fixture:saved"),
     generation: generation,
-    resources: const [],
+    resources: [
+      skir.AuthoringResource(
+        id: skir.ResourceId(value: "store:existing"),
+        content: skir.AuthoringRecord(
+          configuration: skir.TypeSelection.createComplete(
+            definition: store,
+            arguments: const [],
+          ),
+          fields: [
+            skir.FieldValue(
+              name: "items",
+              value: skir.DataValue.createNamed(
+                actualType: skir.NamedTypeUse(
+                  definition: storeLinks,
+                  arguments: const [],
+                ),
+                payload: skir.DataValue.createListValue(items: const []),
+              ),
+            ),
+          ],
+        ),
+      ),
+    ],
     links: const [],
     findings: const [],
   );
@@ -246,8 +396,7 @@ _CreationFixture _fixture() {
     pending: pending,
     request: ResourceCreationRequest(
       id: skir.ResourceId(value: "resource:created"),
-
-      definition: resourceDefinition,
+      type: definition,
       configuration: pending,
     ),
     prepared: prepared,

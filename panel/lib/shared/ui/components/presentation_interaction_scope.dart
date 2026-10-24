@@ -14,6 +14,16 @@ abstract class PresentationInteraction with _$PresentationInteraction {
     @Default(false) bool disabled,
     @Default(false) bool readOnly,
     @Default(false) bool invalid,
+
+    /// The resource is the one open in the workspace.
+    @Default(false) bool routed,
+
+    /// A dragged resource hovers this item and at least one drop offer
+    /// accepts it.
+    @Default(false) bool dropAccepted,
+
+    /// A dragged resource hovers this item and no drop offer accepts it.
+    @Default(false) bool dropRejected,
   }) = _PresentationInteraction;
 
   const PresentationInteraction._();

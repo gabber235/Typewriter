@@ -1738,6 +1738,49 @@ extension ResourceOperationsResolveRouteNats
   }
 }
 
+extension ResourceDropCandidatesResolveRouteNats
+    on _lib_editor_v1_resource_operations.ResolveDropCandidatesRequest {
+  SkirRouteOperation<
+    _lib_editor_v1_resource_operations.ResolveDropCandidatesResult
+  >
+  operation({
+    required _skir.RecordId organizationId,
+
+    required _skir.RecordId realmId,
+  }) {
+    final organization = organizationId.id._transportIdentity;
+
+    final realm = realmId.id._transportIdentity;
+
+    final method =
+        _lib_editor_v1_resource_operations.resolveDropCandidatesMethod;
+    return SkirRouteOperation(
+      subject:
+          "service" +
+          "." +
+          "to" +
+          "." +
+          realm +
+          "." +
+          "organization" +
+          "." +
+          organization +
+          "." +
+          "realm" +
+          "." +
+          "editor" +
+          "." +
+          "resources" +
+          "." +
+          "drops" +
+          "." +
+          "resolve",
+      requestBytes: method.requestSerializer.toBytes(this),
+      responseSerializer: method.responseSerializer,
+    );
+  }
+}
+
 extension AuthoringActionPrepareRouteNats
     on _lib_editor_v1_resource_operations.PrepareAuthoringActionRequest {
   SkirRouteOperation<_lib_editor_v1_resource_operations.AuthoringActionResult>
@@ -3583,6 +3626,28 @@ TransportPermissionGrant panelTransportPermissions({
             "resources" +
             "." +
             "operations" +
+            "." +
+            "resolve",
+      );
+
+      publish.add(
+        "service" +
+            "." +
+            "to" +
+            "." +
+            realm +
+            "." +
+            "organization" +
+            "." +
+            organization +
+            "." +
+            "realm" +
+            "." +
+            "editor" +
+            "." +
+            "resources" +
+            "." +
+            "drops" +
             "." +
             "resolve",
       );

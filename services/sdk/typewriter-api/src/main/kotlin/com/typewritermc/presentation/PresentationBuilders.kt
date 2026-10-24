@@ -8,6 +8,7 @@ import com.typewritermc.expression.Handled
 import com.typewritermc.expression.MayBeMissing
 import com.typewritermc.expression.literal
 import com.typewritermc.types.Color
+import com.typewritermc.types.Icon
 import com.typewritermc.types.Resource
 import com.typewritermc.types.ResourceId
 import com.typewritermc.types.TypeDefinitionId
@@ -30,8 +31,18 @@ interface PresentationContent {
         color: PresentationColor? = null,
     )
 
+    /** Draws the Iconify icon named by [value], such as `material-symbols:label`. */
     fun icon(
         value: Expr<String, Handled>,
+        options: IconOptions = IconOptions(),
+    )
+
+    /**
+     * Draws a typed [Icon], such as a resource's display icon. The icon element accepts an Iconify name or an [Icon]
+     * value and editors render the variant they receive. Call it as `icon(value)`; the typed overload forwards here.
+     */
+    fun iconValue(
+        value: Expr<Icon, Handled>,
         options: IconOptions = IconOptions(),
     )
 
@@ -273,6 +284,13 @@ data class IconOptions(
     val color: PresentationColor? = null,
 )
 
+/** Draws a typed [Icon] such as a resource's display icon, beside the Iconify name overload of the same element. */
+@JvmName("typedIcon")
+fun PresentationContent.icon(
+    value: Expr<Icon, Handled>,
+    options: IconOptions = IconOptions(),
+) = iconValue(value, options)
+
 data class StatusCase<V>(
     val value: V,
     val appearance: StatusAppearance,
@@ -389,12 +407,6 @@ sealed interface CollectionRows {
         val projection: CollectionProjectionSpec,
         val resourceBinding: ExpressionBindingId,
     ) : CollectionRows
-
-    data class Resources(
-        val root: TypeDefinitionId,
-        val resourceBinding: ExpressionBindingId,
-        val appearance: PresentationReference?,
-    ) : CollectionRows
 }
 
 data class CollectionRelation<Key>(
@@ -440,24 +452,6 @@ interface ProjectedCollectionSourceScope<Row, Key, Expressions : Any> {
     )
 }
 
-interface ResourceCollectionSourceScope<Row : Resource> {
-    val row: Expr<Row, MayBeMissing>
-
-    val resource: Expr<ResourceId, Handled>
-
-    fun selectability(value: Expr<Boolean, Handled>)
-
-    fun relation(
-        id: String,
-        target: Expr<ResourceId, Handled>,
-    )
-
-    fun relations(
-        id: String,
-        targets: Expr<List<ResourceId>, Handled>,
-    )
-}
-
 fun <Row, Key> collectionSource(
     id: String,
     rowType: TypeTemplate,
@@ -484,20 +478,6 @@ fun <R : Resource, Row, Key, Expressions : Any> CollectionProjection<R, Row, Exp
     val scope = DefaultProjectedCollectionSourceScope<Row, Key, Expressions>(rowBinding, resourceBinding, expressions)
     scope.configure()
     return scope.build(projection, scope.key())
-}
-
-internal fun <Row : Resource> resourceCollectionSource(
-    id: String,
-    root: TypeTemplate.Named,
-    appearance: PresentationReference?,
-    configure: ResourceCollectionSourceScope<Row>.() -> Unit,
-): CollectionSource<Row, ResourceId> {
-    require(id.isNotBlank()) { "Collection source ids must not be blank." }
-    val rowBinding = ExpressionBindingId("collection.$id.row")
-    val resourceBinding = ExpressionBindingId("collection.$id.resource")
-    val scope = DefaultResourceCollectionSourceScope<Row>(rowBinding, resourceBinding)
-    scope.configure()
-    return scope.build(id, root, appearance)
 }
 
 private class DefaultCollectionSourceScope<Row, Key>(
@@ -606,58 +586,6 @@ private class DefaultProjectedCollectionSourceScope<Row, Key, Expressions : Any>
             selectability = selectability,
             relations = relations.toList(),
             rows = CollectionRows.Projected(projection, resourceBinding),
-        )
-}
-
-private class DefaultResourceCollectionSourceScope<Row : Resource>(
-    private val rowBinding: ExpressionBindingId,
-    private val resourceBinding: ExpressionBindingId,
-) : ResourceCollectionSourceScope<Row> {
-    override val row = com.typewritermc.expression.inputExpression<Row, MayBeMissing>(rowBinding)
-    override val resource = com.typewritermc.expression.inputExpression<ResourceId, Handled>(resourceBinding)
-    private var selectability: Expr<Boolean, Handled> = literal(true)
-    private val relations = mutableListOf<CollectionRelation<ResourceId>>()
-
-    override fun selectability(value: Expr<Boolean, Handled>) {
-        selectability = value
-    }
-
-    override fun relation(
-        id: String,
-        target: Expr<ResourceId, Handled>,
-    ) {
-        addRelation(id, target.toNode())
-    }
-
-    override fun relations(
-        id: String,
-        targets: Expr<List<ResourceId>, Handled>,
-    ) {
-        addRelation(id, targets.toNode())
-    }
-
-    private fun addRelation(
-        id: String,
-        targets: ExpressionNode,
-    ) {
-        require(id.isNotBlank()) { "Collection relation ids must not be blank." }
-        require(relations.none { it.id == id }) { "Collection relation ids must be unique within one source." }
-        relations += CollectionRelation(id, targets)
-    }
-
-    fun build(
-        id: String,
-        root: TypeTemplate.Named,
-        appearance: PresentationReference?,
-    ): CollectionSource<Row, ResourceId> =
-        DefaultCollectionSource(
-            id = id,
-            rowType = root,
-            rowBinding = rowBinding,
-            key = resource,
-            selectability = selectability,
-            relations = relations.toList(),
-            rows = CollectionRows.Resources(root.definition, resourceBinding, appearance),
         )
 }
 

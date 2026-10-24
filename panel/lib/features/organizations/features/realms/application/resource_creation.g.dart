@@ -92,19 +92,19 @@ final class ResourceCreationFamily extends $Family
   String toString() => r'resourceCreationProvider';
 }
 
-/// Resolves the creation template for [definition] in the selected Realm.
+/// Resolves the creation template for [type] in the selected Realm.
 ///
 /// Null means creation is unavailable: no Realm is selected, its working
-/// catalog is not ready, or the catalog cannot configure the definition.
+/// catalog is not ready, or a person may not create resources of [type].
 
 @ProviderFor(selectedResourceCreationTemplate)
 final selectedResourceCreationTemplateProvider =
     SelectedResourceCreationTemplateFamily._();
 
-/// Resolves the creation template for [definition] in the selected Realm.
+/// Resolves the creation template for [type] in the selected Realm.
 ///
 /// Null means creation is unavailable: no Realm is selected, its working
-/// catalog is not ready, or the catalog cannot configure the definition.
+/// catalog is not ready, or a person may not create resources of [type].
 
 final class SelectedResourceCreationTemplateProvider
     extends
@@ -114,13 +114,13 @@ final class SelectedResourceCreationTemplateProvider
           ResourceCreationTemplate?
         >
     with $Provider<ResourceCreationTemplate?> {
-  /// Resolves the creation template for [definition] in the selected Realm.
+  /// Resolves the creation template for [type] in the selected Realm.
   ///
   /// Null means creation is unavailable: no Realm is selected, its working
-  /// catalog is not ready, or the catalog cannot configure the definition.
+  /// catalog is not ready, or a person may not create resources of [type].
   SelectedResourceCreationTemplateProvider._({
     required SelectedResourceCreationTemplateFamily super.from,
-    required skir.ResourceDefinitionId super.argument,
+    required skir.TypeDefinitionId super.argument,
   }) : super(
          retry: null,
          name: r'selectedResourceCreationTemplateProvider',
@@ -147,7 +147,7 @@ final class SelectedResourceCreationTemplateProvider
 
   @override
   ResourceCreationTemplate? create(Ref ref) {
-    final argument = this.argument as skir.ResourceDefinitionId;
+    final argument = this.argument as skir.TypeDefinitionId;
     return selectedResourceCreationTemplate(ref, argument);
   }
 
@@ -172,18 +172,18 @@ final class SelectedResourceCreationTemplateProvider
 }
 
 String _$selectedResourceCreationTemplateHash() =>
-    r'40cb0d7d714a14dc301eede49125454679554417';
+    r'a34318ecdee3200e10c53d345b7410f1a37e7a53';
 
-/// Resolves the creation template for [definition] in the selected Realm.
+/// Resolves the creation template for [type] in the selected Realm.
 ///
 /// Null means creation is unavailable: no Realm is selected, its working
-/// catalog is not ready, or the catalog cannot configure the definition.
+/// catalog is not ready, or a person may not create resources of [type].
 
 final class SelectedResourceCreationTemplateFamily extends $Family
     with
         $FunctionalFamilyOverride<
           ResourceCreationTemplate?,
-          skir.ResourceDefinitionId
+          skir.TypeDefinitionId
         > {
   SelectedResourceCreationTemplateFamily._()
     : super(
@@ -194,17 +194,13 @@ final class SelectedResourceCreationTemplateFamily extends $Family
         isAutoDispose: true,
       );
 
-  /// Resolves the creation template for [definition] in the selected Realm.
+  /// Resolves the creation template for [type] in the selected Realm.
   ///
   /// Null means creation is unavailable: no Realm is selected, its working
-  /// catalog is not ready, or the catalog cannot configure the definition.
+  /// catalog is not ready, or a person may not create resources of [type].
 
-  SelectedResourceCreationTemplateProvider call(
-    skir.ResourceDefinitionId definition,
-  ) => SelectedResourceCreationTemplateProvider._(
-    argument: definition,
-    from: this,
-  );
+  SelectedResourceCreationTemplateProvider call(skir.TypeDefinitionId type) =>
+      SelectedResourceCreationTemplateProvider._(argument: type, from: this);
 
   @override
   String toString() => r'selectedResourceCreationTemplateProvider';

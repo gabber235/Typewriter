@@ -9,338 +9,61 @@ import "../../../../../support/test_utils.dart";
 
 void main() {
   testWidgets(
-    "completed accepted operation cannot clear a later gesture hover",
+    "a drag resolves its candidates once and hovering costs no round trip",
     (tester) async {
       final fixture = AuthoredGraphFixture();
-      final release = Completer<void>();
-      var pending = false;
-      final commands = _commands(
-        fixture,
-        resolve: (request) async {
-          if (request.invocation.invocationId.value != "drop-preflight") {
-            pending = true;
-            await release.future;
-            return skir.ResolveResourceOperationsResult.wrapResolved(
-              skir.ResolvedResourceOperations(
-                primaryOperation: null,
-                operations: const [],
-              ),
-            );
-          }
-          return fixture.commands.resolveResourceOperations(request);
-        },
-      );
-      await _pumpOperation(tester, fixture, commands: commands);
+      await _pumpOperation(tester, fixture);
       final target = tester.getCenter(find.byKey(const ValueKey("operation")));
-      final first = await _startResourceDrag(tester, pointer: 1);
-      await first.moveTo(target);
+      final gesture = await _startResourceDrag(tester);
+      await gesture.moveTo(target);
       await tester.pumpAndSettle();
-      await first.up();
-      await tester.pump();
-      expect(pending, isTrue);
-      final next = await _startResourceDrag(tester, pointer: 2);
-      await next.moveTo(target);
+      expect(find.text("accepted: Move here"), findsOneWidget);
+      await gesture.moveTo(const Offset(10, 10));
       await tester.pumpAndSettle();
-      expect(find.text("accepted"), findsOneWidget);
-      release.complete();
+      expect(find.text("neutral"), findsOneWidget);
+      await gesture.moveTo(target);
       await tester.pumpAndSettle();
-      expect(find.text("accepted"), findsOneWidget);
-      await next.cancel();
-      await tester.pumpAndSettle();
-      expect(
-        fixture.workspace.document.relations.children[fixture.destination],
-        isNot(contains(fixture.source)),
-      );
-      expect(tester.takeException(), isNull);
-    },
-  );
-
-  testWidgets(
-    "late preflight for an old selection cannot accept a replacement snapshot",
-    (tester) async {
-      final fixture = AuthoredGraphFixture(secondSource: true);
-      final generation = ValueNotifier(0);
-      addTearDown(generation.dispose);
-      final releaseOld = Completer<void>();
-      final checked = <int>[];
-      final commands = _commands(
-        fixture,
-        resolve: (request) async {
-          checked.add(request.invocation.targets.length);
-          if (request.invocation.targets.length == 2) {
-            await releaseOld.future;
-            return fixture.commands.resolveResourceOperations(request);
-          }
-          return skir.ResolveResourceOperationsResult.wrapResolved(
-            skir.ResolvedResourceOperations(
-              primaryOperation: null,
-              operations: const [],
-            ),
-          );
-        },
-      );
-      await _pumpOperation(
-        tester,
-        fixture,
-        generation: generation,
-        commands: commands,
-      );
-      final container = tester.container(
-        of: find.byType(AuthoredPageGraphNode),
-      );
-      container
-          .read(selectionProvider.notifier)
-          .selectAll(fixture.group.memberships.keys.toList());
-      await tester.pump();
-      final old = await _startResourceDrag(tester, pointer: 1);
-      final oldPayload = tester
-          .widget<GraphDrag>(find.byType(GraphDrag))
-          .controller
-          .value!
-          .payload;
-      final target = tester.getCenter(find.byKey(const ValueKey("operation")));
-      await old.moveTo(target);
-      await tester.pump();
-      expect(checked, contains(2));
-      container.read(selectionProvider.notifier).clear();
-      await tester.pump();
-      expect(
-        (oldPayload.value as AuthoringResourceDragGroup).memberships,
-        hasLength(2),
-      );
-      generation.value++;
-      await tester.pump();
-      await tester.pump();
-      final next = await _startResourceDrag(tester, pointer: 2);
-      await next.moveTo(target);
-      await tester.pumpAndSettle();
-      expect(checked, contains(1));
-      expect(find.text("rejected"), findsOneWidget);
-      releaseOld.complete();
-      await tester.pumpAndSettle();
-      expect(find.text("rejected"), findsOneWidget);
-      expect(find.text("accepted"), findsNothing);
-      await old.moveTo(const Offset(10, 10));
-      await tester.pump();
-      expect(find.text("rejected"), findsOneWidget);
-      await old.up();
-      await next.up();
-      await tester.pumpAndSettle();
-      expect(
-        fixture.workspace.document.relations.children[fixture.destination],
-        isNot(contains(fixture.source)),
-      );
+      expect(find.text("accepted: Move here"), findsOneWidget);
+      expect(fixture.dropResolutions, hasLength(1));
       expect(fixture.preparations, isEmpty);
-      expect(tester.takeException(), isNull);
-    },
-  );
-
-  for (final bookTarget in [false, true]) {
-    testWidgets(
-      "retired tag avatar cannot mutate ${bookTarget ? 'Book' : 'tag'} target or clear replacement",
-      (tester) async {
-        final generation = ValueNotifier(0);
-        addTearDown(generation.dispose);
-        final parent = _tag("parent");
-        final child = _tag("child");
-        final book = Book(
-          bookId: skir.ResourceId(value: "book"),
-          title: "Book",
-          icon: "book",
-          color: Colors.blue,
-          tagIds: const [],
-        );
-        await tester.pumpTestApp(
-          overrides: authoringFixtureOverrides(
-            tags: [parent, child],
-            books: [book],
-          ),
-          child: Row(
-            children: [
-              Expanded(
-                child: SizedBox(
-                  height: 300,
-                  child: Graph(
-                    data: GraphData(
-                      cellSize: 50,
-                      edges: const [],
-                      elements: [
-                        GraphElement(
-                          id: GraphIdentifier(parent.tagId.value),
-                          x: 0,
-                          y: 0,
-                          width: 3,
-                          height: 1,
-                          builder: (_) => ValueListenableBuilder<int>(
-                            valueListenable: generation,
-                            builder: (_, value, _) => TagNode(
-                              key: ValueKey(value),
-                              tagId: parent.tagId,
-                            ),
-                          ),
-                        ),
-                      ],
-                    ),
-                    onElementsMoved: (_) {},
-                  ),
-                ),
-              ),
-              SizedBox(
-                key: const ValueKey("target"),
-                width: 200,
-                height: bookTarget ? bookHeight : 100,
-                child: bookTarget
-                    ? BookWidget(
-                        id: book.bookId,
-                        title: book.title,
-                        icon: const Icon(Icons.book),
-                        color: book.color,
-                      )
-                    : TagNode(tagId: child.tagId),
-              ),
-            ],
-          ),
-        );
-        Finder source() => find.descendant(
-          of: find.byType(Graph),
-          matching: find.byType(TagNode),
-        );
-        final oldGesture = await tester.startGesture(
-          tester.getCenter(source()),
-          pointer: 1,
-        );
-        await oldGesture.moveBy(const Offset(25, 0));
-        await tester.pump();
-        final controller = tester
-            .widget<GraphDrag>(find.byType(GraphDrag))
-            .controller;
-        final old = controller.value!.payload;
-        final target = tester.getCenter(find.byKey(const ValueKey("target")));
-        await oldGesture.moveTo(target);
-        await tester.pump();
-        generation.value++;
-        await tester.pump();
-        await tester.pump();
-        expect(old.canHover, isFalse);
-        final replacement = await tester.startGesture(
-          tester.getCenter(source()),
-          pointer: 2,
-        );
-        await replacement.moveBy(const Offset(25, 0));
-        await tester.pump();
-        await replacement.moveTo(target);
-        await tester.pump();
-        final current = controller.value!.payload;
-        await oldGesture.moveTo(const Offset(10, 10));
-        await tester.pump();
-        await oldGesture.moveTo(target);
-        await tester.pump();
-        await oldGesture.up();
-        await tester.pump();
-        final container = tester.container(
-          of: find.byKey(const ValueKey("target")),
-        );
-        List<skir.ResourceId> linked() => bookTarget
-            ? container
-                  .read(workingBookProvider(book.bookId))
-                  .requireValue!
-                  .tagIds
-            : container
-                  .read(workingTagProvider(child.tagId))
-                  .requireValue!
-                  .parentIds;
-        expect(linked(), isEmpty);
-        expect(controller.value?.payload, same(current));
-        expect(find.byType(RejectedTagDropTarget), findsNothing);
-        await replacement.up();
-        await tester.pumpAndSettle();
-        expect(linked(), [parent.tagId]);
-        expect(tester.takeException(), isNull);
-      },
-    );
-  }
-
-  testWidgets(
-    "Book source retires its envelope before a replacement can drop",
-    (tester) async {
-      final generation = ValueNotifier(0);
-      addTearDown(generation.dispose);
-      final bookId = skir.ResourceId(value: "book");
-      final accepted = <AuthoringResourceIdentifier>[];
-      await tester.pumpTestApp(
-        overrides: authoringFixtureOverrides(),
-        child: Row(
-          children: [
-            SizedBox(
-              width: 200,
-              height: bookHeight,
-              child: ValueListenableBuilder<int>(
-                valueListenable: generation,
-                builder: (_, value, _) => BookWidget(
-                  key: ValueKey(value),
-                  id: bookId,
-                  title: "Book",
-                  icon: const Icon(Icons.book),
-                  color: Colors.blue,
-                ),
-              ),
-            ),
-            const SizedBox(width: 100),
-            DragTarget<GraphDragPayload<AuthoringResourceIdentifier>>(
-              onWillAcceptWithDetails: (details) => details.data.canHover,
-              onAcceptWithDetails: (details) {
-                if (details.data.claim()) accepted.add(details.data.value);
-              },
-              builder: (_, _, _) => const SizedBox(
-                key: ValueKey("sink"),
-                width: 150,
-                height: 150,
-              ),
-            ),
-          ],
-        ),
-      );
-      final old = await tester.startGesture(
-        tester.getCenter(find.byType(BookWidget)),
-        pointer: 1,
-      );
-      await old.moveBy(const Offset(25, 0));
-      await tester.pump();
-      generation.value++;
-      await tester.pump();
-      final next = await tester.startGesture(
-        tester.getCenter(find.byType(BookWidget)),
-        pointer: 2,
-      );
-      await next.moveBy(const Offset(25, 0));
-      await tester.pump();
-      final target = tester.getCenter(find.byKey(const ValueKey("sink")));
-      await next.moveTo(target);
-      await old.moveTo(target);
-      await old.up();
-      await tester.pump();
-      expect(accepted, isEmpty);
-      await next.up();
+      await gesture.up();
       await tester.pumpAndSettle();
-      expect(accepted.single.resourceId, bookId);
+      expect(fixture.dropResolutions, hasLength(1));
+      expect(
+        fixture.workspace.document.relations.children[fixture.destination],
+        contains(fixture.source),
+      );
       expect(tester.takeException(), isNull);
+      await tester.pumpWidget(const SizedBox.shrink());
+      fixture.workspace.dispose();
     },
   );
 
+  testWidgets("a destination without offers rejects the drag", (tester) async {
+    final fixture = AuthoredGraphFixture();
+    await _pumpOperation(tester, fixture, destination: fixture.page);
+    final gesture = await _startResourceDrag(tester);
+    await gesture.moveTo(
+      tester.getCenter(find.byKey(const ValueKey("operation"))),
+    );
+    await tester.pumpAndSettle();
+    expect(find.text("rejected"), findsOneWidget);
+    await gesture.up();
+    await tester.pumpAndSettle();
+    expect(fixture.preparations, isEmpty);
+    expect(tester.takeException(), isNull);
+  });
+
   testWidgets(
-    "accepted resource operation survives pointer retirement while resolution is pending",
+    "accepted drop survives pointer retirement while candidates are pending",
     (tester) async {
       final fixture = AuthoredGraphFixture();
       final release = Completer<void>();
-      var entered = false;
       final commands = _commands(
         fixture,
         resolve: (request) async {
-          if (request.invocation.invocationId.value != "drop-preflight") {
-            entered = true;
-            await release.future;
-          }
-          return fixture.commands.resolveResourceOperations(request);
+          await release.future;
+          return fixture.commands.resolveDropCandidates(request);
         },
       );
       await _pumpOperation(tester, fixture, commands: commands);
@@ -353,10 +76,10 @@ void main() {
       await gesture.moveTo(
         tester.getCenter(find.byKey(const ValueKey("operation"))),
       );
-      await tester.pumpAndSettle();
+      await tester.pump();
+      expect(find.text("neutral"), findsOneWidget);
       await gesture.up();
       await tester.pump();
-      expect(entered, isTrue);
       expect(offered.phase, GraphDragPhase.retired);
       expect(
         fixture.workspace.document.relations.children[fixture.destination],
@@ -375,7 +98,152 @@ void main() {
   );
 
   testWidgets(
-    "removing source ProviderScope hides root feedback and retires surviving operation hover",
+    "a drop accepted while candidates load reaches the enclosing target when "
+    "the inner target turns out to offer nothing",
+    (tester) async {
+      final fixture = AuthoredGraphFixture();
+      final release = Completer<void>();
+      final commands = _commands(
+        fixture,
+        resolve: (request) async {
+          await release.future;
+          return fixture.commands.resolveDropCandidates(request);
+        },
+      );
+      await _pumpOperation(
+        tester,
+        fixture,
+        commands: commands,
+        destination: fixture.page,
+        enclosing: fixture.destination,
+      );
+      final gesture = await _startResourceDrag(tester);
+      await gesture.moveTo(
+        tester.getCenter(find.byKey(const ValueKey("operation"))),
+      );
+      await tester.pump();
+      expect(find.text("neutral"), findsOneWidget);
+      await gesture.up();
+      await tester.pump();
+      release.complete();
+      await tester.pumpAndSettle();
+      expect(
+        fixture.workspace.document.relations.children[fixture.destination],
+        contains(fixture.source),
+      );
+      expect(tester.takeException(), isNull);
+      await tester.pumpWidget(const SizedBox.shrink());
+      fixture.workspace.dispose();
+    },
+  );
+
+  testWidgets(
+    "a target that can offer nothing refuses while candidates load, so the "
+    "enclosing target receives the drag",
+    (tester) async {
+      final fixture = AuthoredGraphFixture();
+      final release = Completer<void>();
+      final commands = _commands(
+        fixture,
+        resolve: (request) async {
+          await release.future;
+          return fixture.commands.resolveDropCandidates(request);
+        },
+      );
+      await _pumpOperation(
+        tester,
+        fixture,
+        commands: commands,
+        // A dragged resource is never its own destination.
+        destination: fixture.source,
+        enclosing: fixture.destination,
+      );
+      final gesture = await _startResourceDrag(tester);
+      await gesture.moveTo(
+        tester.getCenter(find.byKey(const ValueKey("operation"))),
+      );
+      await tester.pump();
+      expect(find.text("rejected"), findsOneWidget);
+      expect(find.text("enclosing neutral"), findsOneWidget);
+      release.complete();
+      await tester.pumpAndSettle();
+      expect(find.text("enclosing accepted: Move here"), findsOneWidget);
+      await gesture.up();
+      await tester.pumpAndSettle();
+      expect(
+        fixture.workspace.document.relations.children[fixture.destination],
+        contains(fixture.source),
+      );
+      expect(tester.takeException(), isNull);
+      await tester.pumpWidget(const SizedBox.shrink());
+      fixture.workspace.dispose();
+    },
+  );
+
+  testWidgets(
+    "several offers open the drop chooser, and Escape cancels the drop",
+    (tester) async {
+      final fixture = AuthoredGraphFixture();
+      final commands = _commands(
+        fixture,
+        resolve: (request) async =>
+            skir.ResolveDropCandidatesResult.wrapResolved([
+              for (final operation in ["linkWith", "moveToOwner"])
+                skir.DropCandidates(
+                  operation: fixtureOperationId(operation),
+                  destinations: [fixture.destination],
+                  complete: true,
+                ),
+            ]),
+      );
+      await _pumpOperation(tester, fixture, commands: commands);
+      final target = tester.getCenter(find.byKey(const ValueKey("operation")));
+      var gesture = await _startResourceDrag(tester);
+      await gesture.moveTo(target);
+      await tester.pumpAndSettle();
+      expect(find.text("accepted: 2 options"), findsOneWidget);
+      await gesture.up();
+      await tester.pumpAndSettle();
+      expect(find.byType(DropChooser), findsOneWidget);
+      final labels = tester
+          .widgetList<MenuItemButton>(
+            find.descendant(
+              of: find.byType(DropChooser),
+              matching: find.byType(MenuItemButton),
+            ),
+          )
+          .map((button) => (button.child! as Text).data)
+          .toList();
+      expect(labels, ["Move to", "Link with"]);
+      await tester.sendKeyEvent(LogicalKeyboardKey.escape);
+      await tester.pumpAndSettle();
+      expect(find.byType(DropChooser), findsNothing);
+      expect(fixture.preparations, isEmpty);
+
+      gesture = await _startResourceDrag(tester, pointer: 2);
+      await gesture.moveTo(target);
+      await tester.pumpAndSettle();
+      await gesture.up();
+      await tester.pumpAndSettle();
+      await tester.tap(
+        find.descendant(
+          of: find.byType(DropChooser),
+          matching: find.text("Move to"),
+        ),
+      );
+      await tester.pumpAndSettle();
+      expect(fixture.preparations.single.capability.value, "moveToOwner");
+      expect(
+        fixture.workspace.document.relations.children[fixture.destination],
+        contains(fixture.source),
+      );
+      await tester.pumpWidget(const SizedBox.shrink());
+      fixture.workspace.dispose();
+    },
+  );
+
+  testWidgets(
+    "removing source ProviderScope hides root feedback and retires the hover",
     (tester) async {
       final fixture = AuthoredGraphFixture();
       final visible = ValueNotifier(true);
@@ -392,13 +260,13 @@ void main() {
       );
       await tester.pumpAndSettle();
       expect(find.byKey(const ValueKey("resource")), findsNWidgets(2));
-      expect(find.text("accepted"), findsOneWidget);
+      expect(find.text("accepted: Move here"), findsOneWidget);
       visible.value = false;
       await tester.pump();
       await tester.pump();
       expect(offered.phase, GraphDragPhase.retired);
       expect(find.byKey(const ValueKey("resource")), findsNothing);
-      expect(find.text("accepted"), findsNothing);
+      expect(find.text("accepted: Move here"), findsNothing);
       expect(find.text("rejected"), findsNothing);
       await gesture.up();
       await tester.pumpAndSettle();
@@ -427,15 +295,15 @@ void main() {
       final next = await _startResourceDrag(tester, pointer: 2);
       await next.moveTo(target);
       await tester.pumpAndSettle();
-      expect(find.text("accepted"), findsOneWidget);
+      expect(find.text("accepted: Move here"), findsOneWidget);
       await old.moveTo(const Offset(10, 10));
       await tester.pump();
-      expect(find.text("accepted"), findsOneWidget);
+      expect(find.text("accepted: Move here"), findsOneWidget);
       await old.moveTo(target);
       await tester.pump();
       await old.up();
       await tester.pump();
-      expect(find.text("accepted"), findsOneWidget);
+      expect(find.text("accepted: Move here"), findsOneWidget);
       expect(
         fixture.workspace.document.relations.children[fixture.destination],
         isNot(contains(fixture.source)),
@@ -452,14 +320,6 @@ void main() {
     },
   );
 }
-
-Tag _tag(String id) => Tag(
-  tagId: skir.ResourceId(value: id),
-  name: id,
-  color: Colors.blue,
-  parentIds: const [],
-  placement: GraphPlacement(x: 0, y: 0, width: 3, height: 1),
-);
 
 Future<TestGesture> _startResourceDrag(
   WidgetTester tester, {
@@ -484,6 +344,8 @@ Future<void> _pumpOperation(
   AuthoredResourceCommands? commands,
   ValueNotifier<bool>? visible,
   ValueNotifier<int>? generation,
+  skir.ResourceId? destination,
+  skir.ResourceId? enclosing,
 }) async {
   final binding = fixture.workspace.attach(
     fixture.page,
@@ -497,24 +359,24 @@ Future<void> _pumpOperation(
     resource: fixture.page,
   );
   final entries = [
-    for (final member in fixture.group.memberships.entries)
-      PortablePageEntryProjection(
-        resource: member.key.resourceId,
+    for (final member in fixture.memberships.entries)
+      PortableResourceMember(
+        resource: member.key,
         occurrence: member.value,
+        link: skir.DataValue.unfilled,
         resourceProjection: PortableResourceProjection(
-          resource: member.key.resourceId,
+          resource: member.key,
           configuration: fixture.workspace.document
-              .resource(member.key.resourceId)!
+              .resource(member.key)!
               .configuration,
-          label: "Source",
+          appearance: ResourceAppearance(
+            label: "Source",
+            accent: const Color(0xff607d8b),
+            icon: skir.Icon.wrapIconify("material-symbols:category"),
+          ),
           value: skir.DataValue.wrapStringValue("fixture"),
         ),
-        graph: const PortablePageGraphPlacement(
-          x: 0,
-          y: 0,
-          width: 4,
-          height: 1,
-        ),
+        graph: const PortableGraphPlacement(x: 0, y: 0, width: 4, height: 1),
       ),
   ];
   await tester.pumpTestApp(
@@ -541,18 +403,21 @@ Future<void> _pumpOperation(
               if (!(visible?.value ?? true)) return const SizedBox.shrink();
               return ProviderScope(
                 key: ValueKey(generation?.value ?? 0),
-                child: AuthoredPageInteractions(
+                child: AuthoredResourcesInteractions(
                   authoringScope: fixture.scope,
                   binding: binding,
                   child: Builder(
                     builder: (context) {
-                      final interactions = PortablePageInteractionScope.maybeOf(
+                      final interactions =
+                          PortableResourcesInteractionScope.maybeOf(context)!;
+                      final view = PortableResourcesView(
+                        members: entries,
+                        scope: pageScope,
+                        layout: PortableResourcesLayoutKind.graph,
+                      );
+                      return interactions.layoutBuilder(
                         context,
-                      )!;
-                      return interactions.graphBuilder(
-                        context,
-                        entries,
-                        pageScope,
+                        view,
                         SizedBox(
                           height: 300,
                           child: Graph(
@@ -567,10 +432,10 @@ Future<void> _pumpOperation(
                                   width: 4,
                                   height: 1,
                                   builder: (context) =>
-                                      interactions.nodeBuilder(
+                                      interactions.itemBuilder(
                                         context,
+                                        view,
                                         entries.first,
-                                        pageScope,
                                         const ColoredBox(
                                           key: ValueKey("resource"),
                                           color: Colors.blue,
@@ -594,24 +459,19 @@ Future<void> _pumpOperation(
         SizedBox(
           width: 180,
           height: 100,
-          child: ResourceOperationDropTarget(
-            scope: fixture.scope,
-            operationLocalId: "moveToPage",
-            suppliedFields: {
-              "destination": skir.DataValue.wrapStringValue(
-                fixture.destination.value,
+          child: _enclosedBy(
+            fixture,
+            enclosing,
+            ResourceDropTarget.at(
+              scope: fixture.scope,
+              destination: DropDestination.resource(
+                destination ?? fixture.destination,
               ),
-            },
-            canMutate: () => fixture.mutable,
-            builder: (_, accepted, rejected) => ColoredBox(
-              key: const ValueKey("operation"),
-              color: Colors.green,
-              child: Text(
-                accepted
-                    ? "accepted"
-                    : rejected
-                    ? "rejected"
-                    : "neutral",
+              canMutate: () => fixture.mutable,
+              builder: (_, hover) => ColoredBox(
+                key: const ValueKey("operation"),
+                color: Colors.green,
+                child: Text(_hoverText(hover)),
               ),
             ),
           ),
@@ -621,10 +481,35 @@ Future<void> _pumpOperation(
   );
 }
 
+String _hoverText(ResourceDropHover hover) => hover.accepted
+    ? "accepted: ${hover.hint}"
+    : hover.rejected
+    ? "rejected"
+    : "neutral";
+
+/// Places [target] inside a padded drop target for [enclosing], when given.
+Widget _enclosedBy(
+  AuthoredGraphFixture fixture,
+  skir.ResourceId? enclosing,
+  Widget target,
+) => enclosing == null
+    ? target
+    : ResourceDropTarget.at(
+        scope: fixture.scope,
+        destination: DropDestination.resource(enclosing),
+        canMutate: () => fixture.mutable,
+        builder: (_, hover) => Column(
+          children: [
+            Text("enclosing ${_hoverText(hover)}"),
+            Expanded(child: target),
+          ],
+        ),
+      );
+
 AuthoredResourceCommands _commands(
   AuthoredGraphFixture fixture, {
-  required Future<skir.ResolveResourceOperationsResult> Function(
-    skir.ResolveResourceOperationsRequest,
+  required Future<skir.ResolveDropCandidatesResult> Function(
+    skir.ResolveDropCandidatesRequest,
   )
   resolve,
 }) {
@@ -638,7 +523,11 @@ AuthoredResourceCommands _commands(
     watchSearch: base.watchSearch,
     search: base.search,
     reload: base.reload,
-    resolveResourceOperations: resolve,
+    resolveResourceOperations: base.resolveResourceOperations,
+    resolveDropCandidates: (request) {
+      fixture.dropResolutions.add(request);
+      return resolve(request);
+    },
     prepareAuthoringAction: base.prepareAuthoringAction,
   );
 }

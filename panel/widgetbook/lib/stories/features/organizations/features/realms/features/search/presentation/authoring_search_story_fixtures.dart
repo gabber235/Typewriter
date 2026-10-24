@@ -37,7 +37,6 @@ final class AuthoringSearchStoryFixtures {
         for (final hit in hits)
           hit.resource: skir.AuthoringResource(
             id: hit.resource,
-            definition: hit.definition,
             content: hit.subject.content,
           ),
       },
@@ -119,9 +118,6 @@ final class AuthoringSearchStoryFixtures {
   }) {
     final definition = authoringSearchStoryDefinitions[kind]!;
     final resource = skir.ResourceId(value: id);
-    final resourceDefinition = skir.ResourceDefinitionId(
-      value: "widgetbook.$kind",
-    );
     final content = skir.AuthoringRecord(
       configuration: skir.TypeSelection.createComplete(
         definition: definition,
@@ -140,13 +136,7 @@ final class AuthoringSearchStoryFixtures {
     );
     return skir.AuthoringSearchHit(
       resource: resource,
-      definition: resourceDefinition,
-      subject: skir.PresentationSubject(
-        resource: resource,
-        definition: resourceDefinition,
-        content: content,
-        descriptor: skir.DataValue.wrapStringValue(label),
-      ),
+      subject: skir.PresentationSubject(resource: resource, content: content),
       context: skir.PortableValue(
         actualType: skir.TypeUse.wrapScalar(skir.ScalarKind.text),
         payload: skir.DataValue.wrapStringValue(kind),

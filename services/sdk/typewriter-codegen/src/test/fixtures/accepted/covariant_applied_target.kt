@@ -1,7 +1,5 @@
 package fixture
 
-import com.typewritermc.authoring.ResourceDefinitionId
-import com.typewritermc.authoring.TypewriterResourceDefinition
 import com.typewritermc.types.One
 import com.typewritermc.types.Ref
 import com.typewritermc.types.ReferenceContract
@@ -36,10 +34,3 @@ interface CovariantTargetContract {
     interface Target : One<Variable<Reward>>
 }
 
-object FixtureResources {
-    @TypewriterResourceDefinition("fixture.covariant_source", CovariantSource::class)
-    val SOURCE = ResourceDefinitionId("fixture.covariant_source")
-
-    @TypewriterResourceDefinition("fixture.variable", Variable::class)
-    val VARIABLE = ResourceDefinitionId("fixture.variable")
-}

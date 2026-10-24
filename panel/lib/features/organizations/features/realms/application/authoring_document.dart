@@ -2,8 +2,12 @@ part of "realm_edit_model.dart";
 
 /// A complete immutable observation, paired with the catalog that interprets it.
 ///
-/// Display queries use this value without collecting save expectations. Resource
-/// definitions and unfinished authored values survive every working publication.
+/// Display queries use this value without collecting save expectations.
+/// Unfinished authored values survive every working publication.
+/// Relation indexes by document identity. A document is immutable, so its
+/// index never goes stale.
+final _relationIndexes = Expando<AuthoringRelationIndex>();
+
 @freezed
 abstract class AuthoringDocument
     with _$AuthoringDocument
@@ -36,8 +40,9 @@ abstract class AuthoringDocument
     );
   }
 
+  /// The ownership index of this document, derived once per document.
   AuthoringRelationIndex get relations =>
-      AuthoringRelationIndex.fromDocument(this);
+      _relationIndexes[this] ??= AuthoringRelationIndex.fromDocument(this);
 
   @override
   skir.CatalogGeneration get generation => catalog.snapshot.generation;

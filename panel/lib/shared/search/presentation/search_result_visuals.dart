@@ -172,6 +172,8 @@ class SearchResultTypeLabel extends StatelessWidget {
     final theme = Theme.of(context);
     return Text(
       label.toUpperCase(),
+      maxLines: 1,
+      overflow: TextOverflow.ellipsis,
       style: theme.textTheme.labelSmall?.copyWith(
         fontSize: 10,
         color: color ?? theme.colorScheme.onSurface.withValues(alpha: 0.7),
@@ -204,11 +206,14 @@ class SearchResultSuffix extends StatelessWidget {
     );
     final onSurface = surfaceColor.onBrightness(surfaceBrightness.inverted);
     return Row(
+      mainAxisSize: MainAxisSize.min,
       spacing: context.spacing.space2,
       children: [
-        SearchResultTypeLabel(
-          label: label,
-          color: onSurface.withValues(alpha: 0.7),
+        Flexible(
+          child: SearchResultTypeLabel(
+            label: label,
+            color: onSurface.withValues(alpha: 0.7),
+          ),
         ),
         if (shortcutActivator != null)
           ShortcutDisplay(

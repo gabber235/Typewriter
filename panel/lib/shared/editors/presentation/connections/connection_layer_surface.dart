@@ -50,7 +50,7 @@ final class _ConnectionLayerSurfaceState
 
   @override
   Widget build(BuildContext context) => _ConnectionLayerRenderSurface(
-    colors: PresentationColorEnvironment.of(context),
+    colors: PresentationValueEnvironment.of(context),
     connections: widget.connections,
     scope: widget.scope,
     textDirection: Directionality.of(context),
@@ -107,7 +107,7 @@ final class _ConnectionLayerRenderSurface
 
   final List<skir.PresentationConnection> connections;
   final PortablePresentationScope scope;
-  final PresentationColorEnvironment colors;
+  final PresentationValueEnvironment colors;
   final TextDirection textDirection;
   final ValueChanged<_ConnectionOverlay> onOverlayChanged;
 
@@ -151,7 +151,7 @@ final class _RenderConnectionLayerSurface extends RenderProxyBox {
     required this._onOverlayChanged,
   });
 
-  PresentationColorEnvironment _colors;
+  PresentationValueEnvironment _colors;
   List<skir.PresentationConnection> _connections;
   PortablePresentationScope _scope;
   TextDirection _textDirection;
@@ -165,7 +165,7 @@ final class _RenderConnectionLayerSurface extends RenderProxyBox {
   _ConnectionResolution get debugResolution => _lastResolution;
 
   void update({
-    required PresentationColorEnvironment colors,
+    required PresentationValueEnvironment colors,
     required List<skir.PresentationConnection> connections,
     required PortablePresentationScope scope,
     required TextDirection textDirection,

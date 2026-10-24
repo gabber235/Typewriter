@@ -326,6 +326,8 @@ _concreteResourceFixture() {
     List<skir.NamedTypeTemplate> parents = const [],
     skir.TypeDisplay? display,
   }) => skir.PublishedType(
+    searchKey: null,
+    placementField: null,
     definition: skir.TypeDefinition(
       id: id,
       parameters: const [],
@@ -338,7 +340,7 @@ _concreteResourceFixture() {
     status: skir.DeclarationStatus.ready,
     effectiveFields: const [],
     ancestorTemplates: parents,
-    display: display,
+    display: display ?? defaultTypeDisplay(""),
   );
   final pageParent = skir.NamedTypeTemplate(
     definition: page,
@@ -347,8 +349,8 @@ _concreteResourceFixture() {
   return (
     catalog: CheckedEditorCatalog(
       skir.EditorCatalogWireSnapshot(
+        resourceDisplays: const [],
         resourceOperations: const [],
-        resourceOperationContributions: const [],
         generation: skir.CatalogGeneration(value: "catalog:resources"),
         types: [
           published(page, abstract: true),
@@ -391,7 +393,7 @@ _concreteResourceFixture() {
           published(unrelated, abstract: false),
         ],
         relations: const [],
-        resourceDefinitions: const [],
+        realmRoot: skir.TypeDefinitionId.defaultInstance,
         presentations: const [],
         presentationMaterials: const [],
         configuration: const [],
@@ -427,6 +429,8 @@ _fixture({
     List<skir.TypeParameter> parameters = const [],
     List<skir.NamedTypeTemplate> parents = const [],
   }) => skir.PublishedType(
+    searchKey: null,
+    placementField: null,
     definition: skir.TypeDefinition(
       id: id,
       parameters: parameters,
@@ -439,13 +443,13 @@ _fixture({
     status: skir.DeclarationStatus.ready,
     effectiveFields: const [],
     ancestorTemplates: parents,
-    display: null,
+    display: defaultTypeDisplay(""),
   );
   return (
     catalog: CheckedEditorCatalog(
       skir.EditorCatalogWireSnapshot(
+        resourceDisplays: const [],
         resourceOperations: const [],
-        resourceOperationContributions: const [],
         generation: skir.CatalogGeneration(value: "catalog:1"),
         types: [
           published(
@@ -475,7 +479,7 @@ _fixture({
           ),
         ],
         relations: const [],
-        resourceDefinitions: const [],
+        realmRoot: skir.TypeDefinitionId.defaultInstance,
         presentations: const [],
         presentationMaterials: const [],
         configuration: const [],
@@ -501,7 +505,7 @@ skir.TypeDisplay _display(String name, String icon, int argb) =>
     skir.TypeDisplay(
       name: name,
       description: "$name page",
-      icon: icon,
+      icon: skir.Icon.wrapIconify(icon),
       color: skir.Color(argb: argb.toSigned(32)),
     );
 

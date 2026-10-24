@@ -35,22 +35,41 @@ annotation class TypewriterTypeImports(
     vararg val types: KClass<*>,
 )
 
+/**
+ * Overrides parts of a type's display. Every type has a display: codegen derives an omitted [name] from the class
+ * name in sentence case and fills an omitted [icon] or [color] with the framework defaults, so the annotation is only
+ * needed for what differs.
+ *
+ * [icon] uses Iconify `prefix:name` syntax, or inline SVG source. [color] uses `#RRGGBB` syntax. [searchKey] is the
+ * search scope keyword of a resource type, such as `book` in `book:"Main story"`; resource types without one use the
+ * class name in lower case. Codegen rejects a search key on a type that is not a resource and the key `type`, which
+ * editors reserve for their type selector.
+ */
 @Target(AnnotationTarget.CLASS)
 @Retention(AnnotationRetention.BINARY)
 annotation class TypewriterDisplay(
-    val name: String,
+    val name: String = "",
     val description: String = "",
-    val icon: String,
-    val color: String,
+    val icon: String = "",
+    val color: String = "",
+    val searchKey: String = "",
 )
 
-/** Display data of a type. Codegen validates the [TypewriterDisplay] color and emits it as a [Color]. */
+/** Display data of a type, always complete: codegen fills every part [TypewriterDisplay] leaves out. */
 data class TypeDisplay(
     val name: String,
     val description: String,
-    val icon: String,
+    val icon: Icon,
     val color: Color,
-)
+) {
+    companion object {
+        /** The icon of a type whose display names none. */
+        val DEFAULT_ICON: Icon = Icon.Iconify("material-symbols:category")
+
+        /** The color of a type whose display names none. */
+        val DEFAULT_COLOR: Color = Color(0xFF607D8Bu)
+    }
+}
 
 @Target(AnnotationTarget.CLASS)
 @Retention(AnnotationRetention.BINARY)
@@ -220,20 +239,23 @@ data class PresentationId(
 }
 
 /**
- * The UI context for which a presentation is selected. A type can provide different layouts for
- * its main workspace, inspector, references, search results, and editor nodes.
+ * A place in the editor shell for which a presentation is selected. A role names where content appears, never what
+ * it is.
  *
- * The host requests a role when selecting a presentation for a subject. Registering a role does
- * not create a UI surface. If no presentation matches, selection follows the catalog's explicit
- * role fallbacks; roles do not automatically inherit an editor or inspector layout.
+ * The host requests a role when selecting a presentation for a subject. Registering a role does not create a UI
+ * surface. If no presentation matches, selection follows the catalog's explicit role fallbacks; roles do not
+ * automatically inherit an editor or inspector layout.
  */
 @Serializable
 enum class PresentationRole {
+    /** The main area of a resource route, such as a page graph, a page timeline, or the library grid. */
+    WORKSPACE,
+
     /**
-     * The main workspace for an opened resource, such as a page graph or timeline.
-     * The workspace host requests this role separately from the resource's inspector.
+     * Side navigation. The realm root's navigator fills the shell sidebar; the nearest other owner of the routed
+     * resource that declares one fills the rail, such as the outline of a book beside its pages.
      */
-    WORKSPACE_EDITOR,
+    NAVIGATOR,
 
     /**
      * Editable properties for a resource or nested value. Used by resource inspectors,
@@ -241,6 +263,12 @@ enum class PresentationRole {
      * material from the subject's parent types.
      */
     INSPECTOR,
+
+    /**
+     * A resource laid out inside another place: a grid card, graph node, list row, or tree row. The containing
+     * layout supplies the item's bounds and surrounding interaction.
+     */
+    ITEM,
 
     /**
      * A compact preview of the selected reference target inside a link control.
@@ -252,20 +280,15 @@ enum class PresentationRole {
     /**
      * A candidate target in a reference picker, including reference questions during creation.
      * The picker owns selection and disables writes. Missing presentations fall back to
-     * [REFERENCE_PREVIEW]. Supports result appearance metadata for the surrounding row.
+     * [REFERENCE_PREVIEW]. The surrounding row draws the candidate's display name, accent and icon; the presentation
+     * adds the content shown under the name.
      */
     REFERENCE_PICKER_RESULT,
 
     /**
      * An existing resource in authoring search. The surrounding result owns navigation and
-     * selection and disables writes. Supports result appearance metadata for the surrounding row.
+     * selection and disables writes. The surrounding row draws the resource's display name, accent and icon; the
+     * presentation adds the content shown under the name.
      */
     RESOURCE_SEARCH_RESULT,
-
-    /**
-     * The content of a resource node within an editor, independent of graph or timeline layout.
-     * Currently requested by page graphs, tag graphs, and tag drag previews. The containing
-     * editor supplies the node's bounds and surrounding interaction.
-     */
-    EDITOR_NODE,
 }

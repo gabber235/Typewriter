@@ -151,6 +151,7 @@ final _name = skir.ValueLocation(
 );
 skir.DataValue _text(String value) => skir.DataValue.wrapStringValue(value);
 AuthoringDocument _document(String name) => fixtureAuthoringDocument(
+  realm: true,
   tags: [
     Tag(
       tagId: _tag,

@@ -28,7 +28,8 @@ part "portable_renderer/header_layout.dart";
 part "portable_renderer/layout.dart";
 part "portable_renderer/link_input.dart";
 part "portable_renderer/link_selection.dart";
-part "portable_renderer/pages.dart";
+part "portable_renderer/paint.dart";
+part "portable_renderer/resources.dart";
 part "portable_renderer/reorder_handle.dart";
 part "portable_renderer/result_content.dart";
 part "portable_renderer/scalar_inputs.dart";
@@ -277,13 +278,11 @@ final class PortablePresentationNodeRenderer extends StatelessWidget {
       childScope,
       headerBuilder: ownedCollectionHeaderBuilder,
     ),
-    skir.PresentationElement_pageGraphWrapper(:final value) => _renderPageGraph(
+    skir.PresentationElement_resourcesWrapper(:final value) => _renderResources(
       context,
       value,
       childScope,
     ),
-    skir.PresentationElement_pageTimelineWrapper(:final value) =>
-      _renderPageTimeline(context, value, childScope),
     skir.PresentationElement_commitControlsWrapper(:final value) =>
       _renderCommitControls(value, childScope),
     skir.PresentationElement_buttonWrapper(:final value) => _renderButton(
@@ -314,6 +313,14 @@ final class PortablePresentationNodeRenderer extends StatelessWidget {
     ),
     skir.PresentationElement_containerWrapper(:final value) => _renderContainer(
       context,
+      value,
+      childScope,
+    ),
+    skir.PresentationElement_sizeWrapper(:final value) => _renderSize(
+      value,
+      childScope,
+    ),
+    skir.PresentationElement_transformWrapper(:final value) => _renderTransform(
       value,
       childScope,
     ),
@@ -386,6 +393,7 @@ final class PortablePresentationRenderer extends HookWidget {
     required this.host,
     this.scopeBuilder,
     this.contextBindings = const {},
+    this.hostContext = HostContext.empty,
     this.contentBuilder,
     this.errorBuilder,
     this.onStatus,
@@ -394,8 +402,13 @@ final class PortablePresentationRenderer extends HookWidget {
   });
   final PortablePresentationHost host;
   final PortablePresentationScopeBuilder? scopeBuilder;
+
+  /// Inputs this renderer's caller supplies by binding.
   final Map<skir.ExpressionBindingId, PortableExpressionBinding>
   contextBindings;
+
+  /// Host values this renderer adds to its [PresentationEnvironment].
+  final HostContext hostContext;
   final Widget Function(
     skir.PresentationNode node,
     PortablePresentationScope scope,
@@ -417,15 +430,18 @@ final class PortablePresentationRenderer extends HookWidget {
       operations.retirePending();
       return null;
     }, [host, operations]);
+    final hostValues = hostContext.within(
+      PresentationEnvironment.hostOf(context),
+    );
     final Map<skir.ExpressionBindingId, PortableExpressionBinding> bindings;
     try {
       bindings = normalizePresentationBindings(
         catalog: document.catalog,
         document: document.bindings,
-        surface:
-            (PresentationEnvironment.maybeOf(context)?.bindings ?? const {})
-                .withCallerInputs(contextBindings),
-        imports: document.material?.dependencies.contextInputs ?? const [],
+        surface: const <skir.ExpressionBindingId, PortableExpressionBinding>{}
+            .withCallerInputs(contextBindings),
+        imports: document.contextInputs,
+        host: hostValues,
       );
     } on FormatException catch (error) {
       return errorBuilder?.call(error.message) ?? _diagnostic(error.message);
@@ -433,31 +449,32 @@ final class PortablePresentationRenderer extends HookWidget {
       return errorBuilder?.call(error.message) ?? _diagnostic(error.message);
     }
     final scope =
-        scopeBuilder?.call(
-          host: host,
-          document: document,
-          bindings: bindings,
-          operations: operations,
-          reportStatus: operations.reportStatus,
-        ) ??
-        PortablePresentationScope(
-          bindings: bindings,
-          budget: document.budget,
-          queries: document.queries,
-          resourceDiagnostics: document.resourceDiagnostics,
-          enabled: host.enabled,
-          readOnly: host.readOnly,
-          operations: operations,
-          watchSearch: host.capabilities.watchSearch,
-          openResource: host.capabilities.openResource,
-          reportStatus: operations.reportStatus,
-          catalog: document.catalog,
-          role: document.role,
-          material: document.material,
-          activePresentations: document.activePresentations,
-          slots: document.slots,
-          host: host,
-        );
+        (scopeBuilder?.call(
+                  host: host,
+                  document: document,
+                  bindings: bindings,
+                  operations: operations,
+                  reportStatus: operations.reportStatus,
+                ) ??
+                PortablePresentationScope(
+                  bindings: bindings,
+                  budget: document.budget,
+                  queries: document.queries,
+                  resourceDiagnostics: document.resourceDiagnostics,
+                  enabled: host.enabled,
+                  readOnly: host.readOnly,
+                  operations: operations,
+                  watchSearch: host.capabilities.watchSearch,
+                  openResource: host.capabilities.openResource,
+                  reportStatus: operations.reportStatus,
+                  catalog: document.catalog,
+                  role: document.role,
+                  material: document.material,
+                  activePresentations: document.activePresentations,
+                  slots: document.slots,
+                  host: host,
+                ))
+            .copyWith(hostContext: hostValues);
     final root =
         contentBuilder?.call(document.root, scope) ??
         PortablePresentationNodeRenderer(
@@ -465,7 +482,7 @@ final class PortablePresentationRenderer extends HookWidget {
           scope: scope,
           fillAvailableSpace:
               fillAvailableSpace ||
-              document.role == skir.PresentationRole.workspaceEditor,
+              document.role == skir.PresentationRole.workspace,
         );
     return _PortableDiagnosticBoundary(
       key: ValueKey(generation),

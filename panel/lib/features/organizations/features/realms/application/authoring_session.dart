@@ -276,6 +276,10 @@ class AuthoringSession extends _$AuthoringSession {
     skir.ResolveResourceOperationsRequest request,
   ) => _resourceOperations.resolve(request);
 
+  Future<skir.ResolveDropCandidatesResult> resolveDropCandidates(
+    skir.ResolveDropCandidatesRequest request,
+  ) => _resourceOperations.resolveDropCandidates(request);
+
   Future<skir.AuthoringActionResult> prepareAuthoringAction(
     skir.PrepareAuthoringActionRequest request,
   ) => _resourceOperations.prepare(request);

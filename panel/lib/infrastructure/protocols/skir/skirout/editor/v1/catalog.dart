@@ -25,180 +25,82 @@ import "../../kernel/v1/bounded_transfer.dart"
     as _lib_kernel_v1_bounded_transfer;
 import "../../kernel/v1/color.dart" as _lib_kernel_v1_color;
 import "../../kernel/v1/errors.dart" as _lib_kernel_v1_errors;
+import "../../kernel/v1/icon.dart" as _lib_kernel_v1_icon;
 
 // -----------------------------------------------------------------------------
-// struct ResourceDefinitionId
+// struct ResourceDisplayFormulas
 // -----------------------------------------------------------------------------
 
-sealed class ResourceDefinitionId_orMutable {
-  _core.String get value;
+sealed class ResourceDisplayFormulas_orMutable {
+  _lib_editor_v1_type_catalog.ResourceTarget get target;
+  _lib_editor_v1_expression.ExpressionNode get label;
+  _lib_editor_v1_expression.ExpressionNode get accent;
+  _lib_editor_v1_expression.ExpressionNode get icon;
 
-  ResourceDefinitionId toFrozen();
+  ResourceDisplayFormulas toFrozen();
 }
 
-/// Deeply immutable.
-final class ResourceDefinitionId implements ResourceDefinitionId_orMutable {
-  @_core.override
-  final _core.String value;
-  _skir.internal__UnrecognizedFields? _u;
-
-  factory ResourceDefinitionId({required _core.String value}) =>
-      ResourceDefinitionId._(value);
-
-  ResourceDefinitionId._(this.value);
-
-  /// Default instance with all fields set to their default values.
-  static final defaultInstance = ResourceDefinitionId._("");
-
-  /// Returns a new mutable instance.
-  /// Fields are initialized to their default values.
-  static ResourceDefinitionId_mutable mutable() =>
-      ResourceDefinitionId_mutable._("");
-
-  /// Returns this instance (no-op).
-  @_core.Deprecated("This instance is already frozen.")
-  @_core.override
-  ResourceDefinitionId toFrozen() => this;
-
-  /// Returns a mutable shallow copy of this instance.
-  ResourceDefinitionId_mutable toMutable() =>
-      ResourceDefinitionId_mutable._(this.value);
-
-  @_core.override
-  _core.bool operator ==(other) {
-    if (_core.identical(this, other)) return true;
-    if (other is! ResourceDefinitionId) return false;
-    return _skir.internal__listEquality.equals(
-      _equality_proxy,
-      other._equality_proxy,
-    );
-  }
-
-  @_core.override
-  _core.int get hashCode => _skir.internal__listEquality.hash(_equality_proxy);
-
-  _core.List get _equality_proxy => [this.value];
-
-  @_core.override
-  _core.String toString() => _skir.internal__stringify(this, serializer);
-
-  /// Serializer for `ResourceDefinitionId` instances.
-  static _skir.StructSerializer<
-    ResourceDefinitionId,
-    ResourceDefinitionId_mutable
-  >
-  get serializer {
-    if (_serializerBuilder.mustInitialize()) {
-      _serializerBuilder.addField(
-        "value",
-        "value",
-        0,
-        _skir.Serializers.string,
-        "",
-        (it) => it.value,
-        (it, v) => it.value = v,
-      );
-      _serializerBuilder.finalize();
-    }
-    return _serializerBuilder.serializer;
-  }
-
-  static final _serializerBuilder = _skir.internal__StructSerializerBuilder(
-    recordId: "editor/v1/catalog.skir:ResourceDefinitionId",
-    doc: "",
-    defaultInstance: defaultInstance,
-    newMutable: (it) => (it != null) ? it.toMutable() : mutable(),
-    toFrozen: (ResourceDefinitionId_mutable it) => it.toFrozen(),
-    getUnrecognizedFields: (it) => it._u,
-    setUnrecognizedFields: (it, u) => it._u = u,
-  );
-}
-
-/// Mutable version of [ResourceDefinitionId].
-final class ResourceDefinitionId_mutable
-    implements ResourceDefinitionId_orMutable {
-  _core.String value;
-  _skir.internal__UnrecognizedFields? _u;
-
-  ResourceDefinitionId_mutable._(this.value);
-
-  /// Returns a deeply immutable copy of this instance.
-  @_core.override
-  ResourceDefinitionId toFrozen() =>
-      ResourceDefinitionId(value: this.value).._u = this._u;
-}
-
-// -----------------------------------------------------------------------------
-// struct AuthoringResourceDefinition
-// -----------------------------------------------------------------------------
-
-sealed class AuthoringResourceDefinition_orMutable {
-  ResourceDefinitionId_orMutable get id;
-  _lib_editor_v1_type_catalog.TypeDefinitionId_orMutable get root;
-  AuthoringNavigationHandler get navigationHandler;
-
-  AuthoringResourceDefinition toFrozen();
-}
-
-/// Gives an authored resource family its stable definition identity and navigation behavior,
-/// independently of the concrete type application currently selected by a resource.
+/// Name, accent and icon formulas for resources of `target`. Each formula reads only the subject
+/// resource: its fields and its published type through the configured value binding.
 ///
 /// Deeply immutable.
-final class AuthoringResourceDefinition
-    implements AuthoringResourceDefinition_orMutable {
+final class ResourceDisplayFormulas
+    implements ResourceDisplayFormulas_orMutable {
   @_core.override
-  final ResourceDefinitionId id;
+  final _lib_editor_v1_type_catalog.ResourceTarget target;
   @_core.override
-  final _lib_editor_v1_type_catalog.TypeDefinitionId root;
+  final _lib_editor_v1_expression.ExpressionNode label;
   @_core.override
-  final AuthoringNavigationHandler navigationHandler;
+  final _lib_editor_v1_expression.ExpressionNode accent;
+  @_core.override
+  final _lib_editor_v1_expression.ExpressionNode icon;
   _skir.internal__UnrecognizedFields? _u;
 
-  factory AuthoringResourceDefinition({
-    required ResourceDefinitionId_orMutable id,
-    required _lib_editor_v1_type_catalog.TypeDefinitionId_orMutable root,
-    required AuthoringNavigationHandler navigationHandler,
-  }) => AuthoringResourceDefinition._(
-    id.toFrozen(),
-    root.toFrozen(),
-    navigationHandler,
-  );
+  factory ResourceDisplayFormulas({
+    required _lib_editor_v1_type_catalog.ResourceTarget target,
+    required _lib_editor_v1_expression.ExpressionNode label,
+    required _lib_editor_v1_expression.ExpressionNode accent,
+    required _lib_editor_v1_expression.ExpressionNode icon,
+  }) => ResourceDisplayFormulas._(target, label, accent, icon);
 
-  AuthoringResourceDefinition._(this.id, this.root, this.navigationHandler);
+  ResourceDisplayFormulas._(this.target, this.label, this.accent, this.icon);
 
   /// Default instance with all fields set to their default values.
-  static final defaultInstance = AuthoringResourceDefinition._(
-    ResourceDefinitionId.defaultInstance,
-    _lib_editor_v1_type_catalog.TypeDefinitionId.defaultInstance,
-    AuthoringNavigationHandler.unknown,
+  static final defaultInstance = ResourceDisplayFormulas._(
+    _lib_editor_v1_type_catalog.ResourceTarget.unknown,
+    _lib_editor_v1_expression.ExpressionNode.unknown,
+    _lib_editor_v1_expression.ExpressionNode.unknown,
+    _lib_editor_v1_expression.ExpressionNode.unknown,
   );
 
   /// Returns a new mutable instance.
   /// Fields are initialized to their default values.
-  static AuthoringResourceDefinition_mutable mutable() =>
-      AuthoringResourceDefinition_mutable._(
-        ResourceDefinitionId.defaultInstance,
-        _lib_editor_v1_type_catalog.TypeDefinitionId.defaultInstance,
-        AuthoringNavigationHandler.unknown,
+  static ResourceDisplayFormulas_mutable mutable() =>
+      ResourceDisplayFormulas_mutable._(
+        _lib_editor_v1_type_catalog.ResourceTarget.unknown,
+        _lib_editor_v1_expression.ExpressionNode.unknown,
+        _lib_editor_v1_expression.ExpressionNode.unknown,
+        _lib_editor_v1_expression.ExpressionNode.unknown,
       );
 
   /// Returns this instance (no-op).
   @_core.Deprecated("This instance is already frozen.")
   @_core.override
-  AuthoringResourceDefinition toFrozen() => this;
+  ResourceDisplayFormulas toFrozen() => this;
 
   /// Returns a mutable shallow copy of this instance.
-  AuthoringResourceDefinition_mutable toMutable() =>
-      AuthoringResourceDefinition_mutable._(
-        this.id,
-        this.root,
-        this.navigationHandler,
+  ResourceDisplayFormulas_mutable toMutable() =>
+      ResourceDisplayFormulas_mutable._(
+        this.target,
+        this.label,
+        this.accent,
+        this.icon,
       );
 
   @_core.override
   _core.bool operator ==(other) {
     if (_core.identical(this, other)) return true;
-    if (other is! AuthoringResourceDefinition) return false;
+    if (other is! ResourceDisplayFormulas) return false;
     return _skir.internal__listEquality.equals(
       _equality_proxy,
       other._equality_proxy,
@@ -209,47 +111,57 @@ final class AuthoringResourceDefinition
   _core.int get hashCode => _skir.internal__listEquality.hash(_equality_proxy);
 
   _core.List get _equality_proxy => [
-    this.id,
-    this.root,
-    this.navigationHandler,
+    this.target,
+    this.label,
+    this.accent,
+    this.icon,
   ];
 
   @_core.override
   _core.String toString() => _skir.internal__stringify(this, serializer);
 
-  /// Serializer for `AuthoringResourceDefinition` instances.
+  /// Serializer for `ResourceDisplayFormulas` instances.
   static _skir.StructSerializer<
-    AuthoringResourceDefinition,
-    AuthoringResourceDefinition_mutable
+    ResourceDisplayFormulas,
+    ResourceDisplayFormulas_mutable
   >
   get serializer {
     if (_serializerBuilder.mustInitialize()) {
       _serializerBuilder.addField(
-        "id",
-        "id",
+        "target",
+        "target",
         0,
-        ResourceDefinitionId.serializer,
+        _lib_editor_v1_type_catalog.ResourceTarget.serializer,
         "",
-        (it) => it.id,
-        (it, v) => it.id = v,
+        (it) => it.target,
+        (it, v) => it.target = v,
       );
       _serializerBuilder.addField(
-        "root",
-        "root",
+        "label",
+        "label",
         1,
-        _lib_editor_v1_type_catalog.TypeDefinitionId.serializer,
+        _lib_editor_v1_expression.ExpressionNode.serializer,
         "",
-        (it) => it.root,
-        (it, v) => it.root = v,
+        (it) => it.label,
+        (it, v) => it.label = v,
       );
       _serializerBuilder.addField(
-        "navigation_handler",
-        "navigationHandler",
+        "accent",
+        "accent",
         2,
-        AuthoringNavigationHandler.serializer,
+        _lib_editor_v1_expression.ExpressionNode.serializer,
         "",
-        (it) => it.navigationHandler,
-        (it, v) => it.navigationHandler = v,
+        (it) => it.accent,
+        (it, v) => it.accent = v,
+      );
+      _serializerBuilder.addField(
+        "icon",
+        "icon",
+        3,
+        _lib_editor_v1_expression.ExpressionNode.serializer,
+        "",
+        (it) => it.icon,
+        (it, v) => it.icon = v,
       );
       _serializerBuilder.finalize();
     }
@@ -257,59 +169,39 @@ final class AuthoringResourceDefinition
   }
 
   static final _serializerBuilder = _skir.internal__StructSerializerBuilder(
-    recordId: "editor/v1/catalog.skir:AuthoringResourceDefinition",
-    doc: "Gives an authored resource family its stable definition identity and navigation behavior,\nindependently of the concrete type application currently selected by a resource.",
+    recordId: "editor/v1/catalog.skir:ResourceDisplayFormulas",
+    doc: "Name, accent and icon formulas for resources of [target]. Each formula reads only the subject\nresource: its fields and its published type through the configured value binding.",
     defaultInstance: defaultInstance,
     newMutable: (it) => (it != null) ? it.toMutable() : mutable(),
-    toFrozen: (AuthoringResourceDefinition_mutable it) => it.toFrozen(),
+    toFrozen: (ResourceDisplayFormulas_mutable it) => it.toFrozen(),
     getUnrecognizedFields: (it) => it._u,
     setUnrecognizedFields: (it, u) => it._u = u,
   );
 }
 
-/// Mutable version of [AuthoringResourceDefinition].
-final class AuthoringResourceDefinition_mutable
-    implements AuthoringResourceDefinition_orMutable {
-  ResourceDefinitionId_orMutable id;
-  _lib_editor_v1_type_catalog.TypeDefinitionId_orMutable root;
-  AuthoringNavigationHandler navigationHandler;
+/// Mutable version of [ResourceDisplayFormulas].
+final class ResourceDisplayFormulas_mutable
+    implements ResourceDisplayFormulas_orMutable {
+  _lib_editor_v1_type_catalog.ResourceTarget target;
+  _lib_editor_v1_expression.ExpressionNode label;
+  _lib_editor_v1_expression.ExpressionNode accent;
+  _lib_editor_v1_expression.ExpressionNode icon;
   _skir.internal__UnrecognizedFields? _u;
 
-  AuthoringResourceDefinition_mutable._(
-    this.id,
-    this.root,
-    this.navigationHandler,
+  ResourceDisplayFormulas_mutable._(
+    this.target,
+    this.label,
+    this.accent,
+    this.icon,
   );
-
-  /// If the value of [id] is already mutable, returns it as-is.
-  /// Otherwise, makes a mutable copy, assigns it back to [id] and returns it.
-  ResourceDefinitionId_mutable get mutableId {
-    final value = this.id;
-    if (value is ResourceDefinitionId_mutable) {
-      return value;
-    } else {
-      return this.id = (value as ResourceDefinitionId).toMutable();
-    }
-  }
-
-  /// If the value of [root] is already mutable, returns it as-is.
-  /// Otherwise, makes a mutable copy, assigns it back to [root] and returns it.
-  _lib_editor_v1_type_catalog.TypeDefinitionId_mutable get mutableRoot {
-    final value = this.root;
-    if (value is _lib_editor_v1_type_catalog.TypeDefinitionId_mutable) {
-      return value;
-    } else {
-      return this.root = (value as _lib_editor_v1_type_catalog.TypeDefinitionId)
-          .toMutable();
-    }
-  }
 
   /// Returns a deeply immutable copy of this instance.
   @_core.override
-  AuthoringResourceDefinition toFrozen() => AuthoringResourceDefinition(
-    id: this.id,
-    root: this.root,
-    navigationHandler: this.navigationHandler,
+  ResourceDisplayFormulas toFrozen() => ResourceDisplayFormulas(
+    target: this.target,
+    label: this.label,
+    accent: this.accent,
+    icon: this.icon,
   ).._u = this._u;
 }
 
@@ -1403,7 +1295,16 @@ sealed class PublishedType_orMutable {
   _core.Iterable<EffectiveFieldTemplate_orMutable> get effectiveFields;
   _core.Iterable<_lib_editor_v1_type_catalog.NamedTypeTemplate_orMutable>
   get ancestorTemplates;
-  TypeDisplay_orMutable? get display;
+  TypeDisplay_orMutable get display;
+
+  /// Search scope keyword for resources of this type, such as book in book:"Main story".
+  /// Present for every resource type except the realm root and its sections, which every
+  /// resource sits inside, and absent for every other type.
+  _core.String? get searchKey;
+
+  /// The single effective field typed as a placement, which editors and Realm read and write
+  /// when they lay out resources of this type. Absent when the type declares no placement.
+  _lib_editor_v1_type_catalog.ValuePath_orMutable? get placementField;
 
   PublishedType toFrozen();
 }
@@ -1421,7 +1322,18 @@ final class PublishedType implements PublishedType_orMutable {
   final _core.Iterable<_lib_editor_v1_type_catalog.NamedTypeTemplate>
   ancestorTemplates;
   @_core.override
-  final TypeDisplay? display;
+  final TypeDisplay display;
+
+  /// Search scope keyword for resources of this type, such as book in book:"Main story".
+  /// Present for every resource type except the realm root and its sections, which every
+  /// resource sits inside, and absent for every other type.
+  @_core.override
+  final _core.String? searchKey;
+
+  /// The single effective field typed as a placement, which editors and Realm read and write
+  /// when they lay out resources of this type. Absent when the type declares no placement.
+  @_core.override
+  final _lib_editor_v1_type_catalog.ValuePath? placementField;
   _skir.internal__UnrecognizedFields? _u;
 
   factory PublishedType({
@@ -1432,7 +1344,9 @@ final class PublishedType implements PublishedType_orMutable {
       _lib_editor_v1_type_catalog.NamedTypeTemplate_orMutable
     >
     ancestorTemplates,
-    required TypeDisplay_orMutable? display,
+    required TypeDisplay_orMutable display,
+    required _core.String? searchKey,
+    required _lib_editor_v1_type_catalog.ValuePath_orMutable? placementField,
   }) => PublishedType._(
     definition.toFrozen(),
     status,
@@ -1443,7 +1357,9 @@ final class PublishedType implements PublishedType_orMutable {
       (it) => it.toFrozen(),
     ),
     _skir.internal__frozenMappedCopy(ancestorTemplates, (it) => it.toFrozen()),
-    (display != null) ? display.toFrozen() : null,
+    display.toFrozen(),
+    searchKey,
+    (placementField != null) ? placementField.toFrozen() : null,
   );
 
   PublishedType._(
@@ -1452,6 +1368,8 @@ final class PublishedType implements PublishedType_orMutable {
     this.effectiveFields,
     this.ancestorTemplates,
     this.display,
+    this.searchKey,
+    this.placementField,
   );
 
   /// Default instance with all fields set to their default values.
@@ -1460,6 +1378,8 @@ final class PublishedType implements PublishedType_orMutable {
     DeclarationStatus.unknown,
     _skir.KeyedIterable.empty,
     _skir.KeyedIterable.empty,
+    TypeDisplay.defaultInstance,
+    null,
     null,
   );
 
@@ -1470,6 +1390,8 @@ final class PublishedType implements PublishedType_orMutable {
     DeclarationStatus.unknown,
     _skir.KeyedIterable.empty,
     _skir.KeyedIterable.empty,
+    TypeDisplay.defaultInstance,
+    null,
     null,
   );
 
@@ -1485,6 +1407,8 @@ final class PublishedType implements PublishedType_orMutable {
     this.effectiveFields,
     this.ancestorTemplates,
     this.display,
+    this.searchKey,
+    this.placementField,
   );
 
   @_core.override
@@ -1506,6 +1430,8 @@ final class PublishedType implements PublishedType_orMutable {
     this.effectiveFields,
     this.ancestorTemplates,
     this.display,
+    this.searchKey,
+    this.placementField,
   ];
 
   @_core.override
@@ -1561,10 +1487,30 @@ final class PublishedType implements PublishedType_orMutable {
         "display",
         "display",
         4,
-        _skir.Serializers.optional(TypeDisplay.serializer),
+        TypeDisplay.serializer,
         "",
         (it) => it.display,
         (it, v) => it.display = v,
+      );
+      _serializerBuilder.addField(
+        "search_key",
+        "searchKey",
+        5,
+        _skir.Serializers.optional(_skir.Serializers.string),
+        "Search scope keyword for resources of this type, such as book in book:\"Main story\".\nPresent for every resource type except the realm root and its sections, which every\nresource sits inside, and absent for every other type.",
+        (it) => it.searchKey,
+        (it, v) => it.searchKey = v,
+      );
+      _serializerBuilder.addField(
+        "placement_field",
+        "placementField",
+        6,
+        _skir.Serializers.optional(
+          _lib_editor_v1_type_catalog.ValuePath.serializer,
+        ),
+        "The single effective field typed as a placement, which editors and Realm read and write\nwhen they lay out resources of this type. Absent when the type declares no placement.",
+        (it) => it.placementField,
+        (it, v) => it.placementField = v,
       );
       _serializerBuilder.finalize();
     }
@@ -1589,7 +1535,16 @@ final class PublishedType_mutable implements PublishedType_orMutable {
   _core.Iterable<EffectiveFieldTemplate_orMutable> effectiveFields;
   _core.Iterable<_lib_editor_v1_type_catalog.NamedTypeTemplate_orMutable>
   ancestorTemplates;
-  TypeDisplay_orMutable? display;
+  TypeDisplay_orMutable display;
+
+  /// Search scope keyword for resources of this type, such as book in book:"Main story".
+  /// Present for every resource type except the realm root and its sections, which every
+  /// resource sits inside, and absent for every other type.
+  _core.String? searchKey;
+
+  /// The single effective field typed as a placement, which editors and Realm read and write
+  /// when they lay out resources of this type. Absent when the type declares no placement.
+  _lib_editor_v1_type_catalog.ValuePath_orMutable? placementField;
   _skir.internal__UnrecognizedFields? _u;
 
   PublishedType_mutable._(
@@ -1598,6 +1553,8 @@ final class PublishedType_mutable implements PublishedType_orMutable {
     this.effectiveFields,
     this.ancestorTemplates,
     this.display,
+    this.searchKey,
+    this.placementField,
   );
 
   /// If the value of [definition] is already mutable, returns it as-is.
@@ -1639,6 +1596,17 @@ final class PublishedType_mutable implements PublishedType_orMutable {
     }
   }
 
+  /// If the value of [display] is already mutable, returns it as-is.
+  /// Otherwise, makes a mutable copy, assigns it back to [display] and returns it.
+  TypeDisplay_mutable get mutableDisplay {
+    final value = this.display;
+    if (value is TypeDisplay_mutable) {
+      return value;
+    } else {
+      return this.display = (value as TypeDisplay).toMutable();
+    }
+  }
+
   /// Returns a deeply immutable copy of this instance.
   @_core.override
   PublishedType toFrozen() => PublishedType(
@@ -1647,6 +1615,8 @@ final class PublishedType_mutable implements PublishedType_orMutable {
     effectiveFields: this.effectiveFields,
     ancestorTemplates: this.ancestorTemplates,
     display: this.display,
+    searchKey: this.searchKey,
+    placementField: this.placementField,
   ).._u = this._u;
 }
 
@@ -1657,7 +1627,7 @@ final class PublishedType_mutable implements PublishedType_orMutable {
 sealed class TypeDisplay_orMutable {
   _core.String get name;
   _core.String get description;
-  _core.String get icon;
+  _lib_kernel_v1_icon.Icon get icon;
   _lib_kernel_v1_color.Color_orMutable get color;
 
   TypeDisplay toFrozen();
@@ -1670,7 +1640,7 @@ final class TypeDisplay implements TypeDisplay_orMutable {
   @_core.override
   final _core.String description;
   @_core.override
-  final _core.String icon;
+  final _lib_kernel_v1_icon.Icon icon;
   @_core.override
   final _lib_kernel_v1_color.Color color;
   _skir.internal__UnrecognizedFields? _u;
@@ -1678,7 +1648,7 @@ final class TypeDisplay implements TypeDisplay_orMutable {
   factory TypeDisplay({
     required _core.String name,
     required _core.String description,
-    required _core.String icon,
+    required _lib_kernel_v1_icon.Icon icon,
     required _lib_kernel_v1_color.Color_orMutable color,
   }) => TypeDisplay._(name, description, icon, color.toFrozen());
 
@@ -1688,7 +1658,7 @@ final class TypeDisplay implements TypeDisplay_orMutable {
   static final defaultInstance = TypeDisplay._(
     "",
     "",
-    "",
+    _lib_kernel_v1_icon.Icon.unknown,
     _lib_kernel_v1_color.Color.defaultInstance,
   );
 
@@ -1697,7 +1667,7 @@ final class TypeDisplay implements TypeDisplay_orMutable {
   static TypeDisplay_mutable mutable() => TypeDisplay_mutable._(
     "",
     "",
-    "",
+    _lib_kernel_v1_icon.Icon.unknown,
     _lib_kernel_v1_color.Color.defaultInstance,
   );
 
@@ -1759,7 +1729,7 @@ final class TypeDisplay implements TypeDisplay_orMutable {
         "icon",
         "icon",
         2,
-        _skir.Serializers.string,
+        _lib_kernel_v1_icon.Icon.serializer,
         "",
         (it) => it.icon,
         (it, v) => it.icon = v,
@@ -1793,7 +1763,7 @@ final class TypeDisplay implements TypeDisplay_orMutable {
 final class TypeDisplay_mutable implements TypeDisplay_orMutable {
   _core.String name;
   _core.String description;
-  _core.String icon;
+  _lib_kernel_v1_icon.Icon icon;
   _lib_kernel_v1_color.Color_orMutable color;
   _skir.internal__UnrecognizedFields? _u;
 
@@ -2511,19 +2481,21 @@ final class ConfigurationRecipe_mutable
 // enum PresentationRole
 // -----------------------------------------------------------------------------
 
-/// The UI surface requesting a type's presentation. Registering a role does not create a surface.
-/// Missing presentations follow the catalog's explicit role fallbacks.
+/// Places in the editor shell. A role names where content appears, never what it is.
+/// Registering a role does not create a surface. Missing presentations follow the catalog's
+/// explicit role fallbacks.
 ///
 /// To switch on the variants:
 ///   ```
 ///   switch (e) {
 ///     case PresentationRole_unknown(): { ... }
-///     case PresentationRole.workspaceEditor: { ... }
+///     case PresentationRole.workspace: { ... }
+///     case PresentationRole.navigator: { ... }
 ///     case PresentationRole.inspector: { ... }
+///     case PresentationRole.item: { ... }
 ///     case PresentationRole.referencePreview: { ... }
 ///     case PresentationRole.referencePickerResult: { ... }
 ///     case PresentationRole.resourceSearchResult: { ... }
-///     case PresentationRole.editorNode: { ... }
 ///   }
 ///   ```
 ///
@@ -2533,11 +2505,18 @@ sealed class PresentationRole {
   /// Default value for fields of type `PresentationRole`.
   static const PresentationRole unknown = PresentationRole_unknown._instance;
 
-  /// The main workspace for an opened resource, such as a page graph or timeline.
-  static const workspaceEditor = _PresentationRole_consts.workspaceEditorConst;
+  /// Main area of a resource route.
+  static const workspace = _PresentationRole_consts.workspaceConst;
+
+  /// Side navigation: the realm root's navigator fills the shell sidebar; the nearest other
+  /// owner declaring one fills the rail.
+  static const navigator = _PresentationRole_consts.navigatorConst;
 
   /// Editable properties in inspectors, editing review, and delegated field controls.
   static const inspector = _PresentationRole_consts.inspectorConst;
+
+  /// A resource laid out inside another place: grid card, graph node, list or tree row.
+  static const item = _PresentationRole_consts.itemConst;
 
   /// A compact preview of the selected reference target, with writes and input disabled.
   static const referencePreview =
@@ -2551,9 +2530,6 @@ sealed class PresentationRole {
   static const resourceSearchResult =
       _PresentationRole_consts.resourceSearchResultConst;
 
-  /// Resource content inside an editor node, independent of graph or timeline layout.
-  static const editorNode = _PresentationRole_consts.editorNodeConst;
-
   /// Returns the kind of variant held by this PresentationRole.
   PresentationRole_kind get kind;
 
@@ -2562,45 +2538,52 @@ sealed class PresentationRole {
     if (_serializerBuilder.mustInitialize()) {
       _serializerBuilder.addConstantVariant(
         1,
-        "workspace_editor",
-        "workspaceEditor",
-        "The main workspace for an opened resource, such as a page graph or timeline.",
-        workspaceEditor,
+        "workspace",
+        "workspace",
+        "Main area of a resource route.",
+        workspace,
       );
       _serializerBuilder.addConstantVariant(
         2,
+        "navigator",
+        "navigator",
+        "Side navigation: the realm root's navigator fills the shell sidebar; the nearest other\nowner declaring one fills the rail.",
+        navigator,
+      );
+      _serializerBuilder.addConstantVariant(
+        3,
         "inspector",
         "inspector",
         "Editable properties in inspectors, editing review, and delegated field controls.",
         inspector,
       );
       _serializerBuilder.addConstantVariant(
-        3,
+        4,
+        "item",
+        "item",
+        "A resource laid out inside another place: grid card, graph node, list or tree row.",
+        item,
+      );
+      _serializerBuilder.addConstantVariant(
+        5,
         "reference_preview",
         "referencePreview",
         "A compact preview of the selected reference target, with writes and input disabled.",
         referencePreview,
       );
       _serializerBuilder.addConstantVariant(
-        4,
+        6,
         "reference_picker_result",
         "referencePickerResult",
         "A candidate target in a reference picker or a reference question during creation.",
         referencePickerResult,
       );
       _serializerBuilder.addConstantVariant(
-        5,
+        7,
         "resource_search_result",
         "resourceSearchResult",
         "An existing resource shown in authoring search, with navigation owned by the result row.",
         resourceSearchResult,
-      );
-      _serializerBuilder.addConstantVariant(
-        6,
-        "editor_node",
-        "editorNode",
-        "Resource content inside an editor node, independent of graph or timeline layout.",
-        editorNode,
       );
       _serializerBuilder.finalize();
     }
@@ -2610,7 +2593,7 @@ sealed class PresentationRole {
   static final _serializerBuilder = _skir.internal__EnumSerializerBuilder
       .create(
         recordId: "editor/v1/catalog.skir:PresentationRole",
-        doc: "The UI surface requesting a type's presentation. Registering a role does not create a surface.\nMissing presentations follow the catalog's explicit role fallbacks.",
+        doc: "Places in the editor shell. A role names where content appears, never what it is.\nRegistering a role does not create a surface. Missing presentations follow the catalog's\nexplicit role fallbacks.",
         unknownInstance: PresentationRole_unknown._instance,
         enumInstance: PresentationRole.unknown,
         getOrdinal: (it) => it.kind._ordinal,
@@ -2622,12 +2605,13 @@ sealed class PresentationRole {
 /// The kind of variant held by a `PresentationRole`.
 enum PresentationRole_kind {
   unknown(0),
-  workspaceEditorConst(1),
-  inspectorConst(2),
-  referencePreviewConst(3),
-  referencePickerResultConst(4),
-  resourceSearchResultConst(5),
-  editorNodeConst(6);
+  workspaceConst(1),
+  navigatorConst(2),
+  inspectorConst(3),
+  itemConst(4),
+  referencePreviewConst(5),
+  referencePickerResultConst(6),
+  resourceSearchResultConst(7);
 
   final _core.int _ordinal;
 
@@ -2654,12 +2638,13 @@ final class PresentationRole_unknown implements PresentationRole {
 }
 
 enum _PresentationRole_consts implements PresentationRole {
-  workspaceEditorConst(PresentationRole_kind.workspaceEditorConst),
+  workspaceConst(PresentationRole_kind.workspaceConst),
+  navigatorConst(PresentationRole_kind.navigatorConst),
   inspectorConst(PresentationRole_kind.inspectorConst),
+  itemConst(PresentationRole_kind.itemConst),
   referencePreviewConst(PresentationRole_kind.referencePreviewConst),
   referencePickerResultConst(PresentationRole_kind.referencePickerResultConst),
-  resourceSearchResultConst(PresentationRole_kind.resourceSearchResultConst),
-  editorNodeConst(PresentationRole_kind.editorNodeConst);
+  resourceSearchResultConst(PresentationRole_kind.resourceSearchResultConst);
 
   @_core.override
   final PresentationRole_kind kind;
@@ -3075,7 +3060,6 @@ sealed class PresentationMaterial_orMutable {
   _lib_editor_v1_presentation.PresentationDependencies_orMutable
   get dependencies;
   _lib_editor_v1_type_catalog.TypeTemplate get subject;
-  _lib_editor_v1_presentation.ResultAppearance_orMutable? get resultAppearance;
   _core.Iterable<_core.String> get inheritableNodes;
 
   PresentationMaterial toFrozen();
@@ -3100,8 +3084,6 @@ final class PresentationMaterial implements PresentationMaterial_orMutable {
   @_core.override
   final _lib_editor_v1_type_catalog.TypeTemplate subject;
   @_core.override
-  final _lib_editor_v1_presentation.ResultAppearance? resultAppearance;
-  @_core.override
   final _core.Iterable<_core.String> inheritableNodes;
   _skir.internal__UnrecognizedFields? _u;
 
@@ -3113,8 +3095,6 @@ final class PresentationMaterial implements PresentationMaterial_orMutable {
     required _lib_editor_v1_presentation.PresentationDependencies_orMutable
     dependencies,
     required _lib_editor_v1_type_catalog.TypeTemplate subject,
-    required _lib_editor_v1_presentation.ResultAppearance_orMutable?
-    resultAppearance,
     required _core.Iterable<_core.String> inheritableNodes,
   }) => PresentationMaterial._(
     provider.toFrozen(),
@@ -3123,7 +3103,6 @@ final class PresentationMaterial implements PresentationMaterial_orMutable {
     layout.toFrozen(),
     dependencies.toFrozen(),
     subject,
-    (resultAppearance != null) ? resultAppearance.toFrozen() : null,
     _skir.internal__frozenCopy(inheritableNodes),
   );
 
@@ -3134,7 +3113,6 @@ final class PresentationMaterial implements PresentationMaterial_orMutable {
     this.layout,
     this.dependencies,
     this.subject,
-    this.resultAppearance,
     this.inheritableNodes,
   );
 
@@ -3146,7 +3124,6 @@ final class PresentationMaterial implements PresentationMaterial_orMutable {
     _lib_editor_v1_presentation.PresentationNode.defaultInstance,
     _lib_editor_v1_presentation.PresentationDependencies.defaultInstance,
     _lib_editor_v1_type_catalog.TypeTemplate.unknown,
-    null,
     _skir.KeyedIterable.empty,
   );
 
@@ -3160,7 +3137,6 @@ final class PresentationMaterial implements PresentationMaterial_orMutable {
         _lib_editor_v1_presentation.PresentationNode.defaultInstance,
         _lib_editor_v1_presentation.PresentationDependencies.defaultInstance,
         _lib_editor_v1_type_catalog.TypeTemplate.unknown,
-        null,
         _skir.KeyedIterable.empty,
       );
 
@@ -3177,7 +3153,6 @@ final class PresentationMaterial implements PresentationMaterial_orMutable {
     this.layout,
     this.dependencies,
     this.subject,
-    this.resultAppearance,
     this.inheritableNodes,
   );
 
@@ -3201,7 +3176,6 @@ final class PresentationMaterial implements PresentationMaterial_orMutable {
     this.layout,
     this.dependencies,
     this.subject,
-    this.resultAppearance,
     this.inheritableNodes,
   ];
 
@@ -3270,20 +3244,9 @@ final class PresentationMaterial implements PresentationMaterial_orMutable {
         (it, v) => it.subject = v,
       );
       _serializerBuilder.addField(
-        "result_appearance",
-        "resultAppearance",
-        6,
-        _skir.Serializers.optional(
-          _lib_editor_v1_presentation.ResultAppearance.serializer,
-        ),
-        "",
-        (it) => it.resultAppearance,
-        (it, v) => it.resultAppearance = v,
-      );
-      _serializerBuilder.addField(
         "inheritable_nodes",
         "inheritableNodes",
-        7,
+        6,
         _skir.Serializers.iterable(_skir.Serializers.string),
         "",
         (it) => it.inheritableNodes,
@@ -3314,7 +3277,6 @@ final class PresentationMaterial_mutable
   _lib_editor_v1_presentation.PresentationNode_orMutable layout;
   _lib_editor_v1_presentation.PresentationDependencies_orMutable dependencies;
   _lib_editor_v1_type_catalog.TypeTemplate subject;
-  _lib_editor_v1_presentation.ResultAppearance_orMutable? resultAppearance;
   _core.Iterable<_core.String> inheritableNodes;
   _skir.internal__UnrecognizedFields? _u;
 
@@ -3325,7 +3287,6 @@ final class PresentationMaterial_mutable
     this.layout,
     this.dependencies,
     this.subject,
-    this.resultAppearance,
     this.inheritableNodes,
   );
 
@@ -3387,7 +3348,6 @@ final class PresentationMaterial_mutable
     layout: this.layout,
     dependencies: this.dependencies,
     subject: this.subject,
-    resultAppearance: this.resultAppearance,
     inheritableNodes: this.inheritableNodes,
   ).._u = this._u;
 }
@@ -3529,7 +3489,7 @@ sealed class EditorCatalogWireSnapshot_orMutable {
   _lib_editor_v1_type_catalog.CatalogGeneration_orMutable get generation;
   _core.Iterable<PublishedType_orMutable> get types;
   _core.Iterable<RelationContract_orMutable> get relations;
-  _core.Iterable<AuthoringResourceDefinition_orMutable> get resourceDefinitions;
+  _core.Iterable<ResourceDisplayFormulas_orMutable> get resourceDisplays;
   _core.Iterable<PresentationDescriptor_orMutable> get presentations;
   _core.Iterable<PresentationMaterial_orMutable> get presentationMaterials;
   _core.Iterable<ConfigurationRecipe_orMutable> get configuration;
@@ -3542,10 +3502,9 @@ sealed class EditorCatalogWireSnapshot_orMutable {
   _core.Iterable<RoleFallback_orMutable> get roleFallbacks;
   _core.Iterable<_lib_editor_v1_operation.ResourceOperationDefinition_orMutable>
   get resourceOperations;
-  _core.Iterable<
-    _lib_editor_v1_operation.ResourceOperationContribution_orMutable
-  >
-  get resourceOperationContributions;
+
+  /// The realm root type. The realm keeps exactly one instance, which owns every section.
+  _lib_editor_v1_type_catalog.TypeDefinitionId_orMutable get realmRoot;
 
   EditorCatalogWireSnapshot toFrozen();
 }
@@ -3564,7 +3523,7 @@ final class EditorCatalogWireSnapshot
   @_core.override
   final _core.Iterable<RelationContract> relations;
   @_core.override
-  final _core.Iterable<AuthoringResourceDefinition> resourceDefinitions;
+  final _core.Iterable<ResourceDisplayFormulas> resourceDisplays;
   @_core.override
   final _core.Iterable<PresentationDescriptor> presentations;
   @_core.override
@@ -3586,17 +3545,17 @@ final class EditorCatalogWireSnapshot
   @_core.override
   final _core.Iterable<_lib_editor_v1_operation.ResourceOperationDefinition>
   resourceOperations;
+
+  /// The realm root type. The realm keeps exactly one instance, which owns every section.
   @_core.override
-  final _core.Iterable<_lib_editor_v1_operation.ResourceOperationContribution>
-  resourceOperationContributions;
+  final _lib_editor_v1_type_catalog.TypeDefinitionId realmRoot;
   _skir.internal__UnrecognizedFields? _u;
 
   factory EditorCatalogWireSnapshot({
     required _lib_editor_v1_type_catalog.CatalogGeneration_orMutable generation,
     required _core.Iterable<PublishedType_orMutable> types,
     required _core.Iterable<RelationContract_orMutable> relations,
-    required _core.Iterable<AuthoringResourceDefinition_orMutable>
-    resourceDefinitions,
+    required _core.Iterable<ResourceDisplayFormulas_orMutable> resourceDisplays,
     required _core.Iterable<PresentationDescriptor_orMutable> presentations,
     required _core.Iterable<PresentationMaterial_orMutable>
     presentationMaterials,
@@ -3614,18 +3573,12 @@ final class EditorCatalogWireSnapshot
       _lib_editor_v1_operation.ResourceOperationDefinition_orMutable
     >
     resourceOperations,
-    required _core.Iterable<
-      _lib_editor_v1_operation.ResourceOperationContribution_orMutable
-    >
-    resourceOperationContributions,
+    required _lib_editor_v1_type_catalog.TypeDefinitionId_orMutable realmRoot,
   }) => EditorCatalogWireSnapshot._(
     generation.toFrozen(),
     _skir.internal__frozenMappedCopy(types, (it) => it.toFrozen()),
     _skir.internal__frozenMappedCopy(relations, (it) => it.toFrozen()),
-    _skir.internal__frozenMappedCopy(
-      resourceDefinitions,
-      (it) => it.toFrozen(),
-    ),
+    _skir.internal__frozenMappedCopy(resourceDisplays, (it) => it.toFrozen()),
     _skir.internal__frozenMappedCopy(presentations, (it) => it.toFrozen()),
     _skir.internal__frozenMappedCopy(
       presentationMaterials,
@@ -3638,17 +3591,14 @@ final class EditorCatalogWireSnapshot
     _skir.internal__frozenMappedCopy(recommendations, (it) => it.toFrozen()),
     _skir.internal__frozenMappedCopy(roleFallbacks, (it) => it.toFrozen()),
     _skir.internal__frozenMappedCopy(resourceOperations, (it) => it.toFrozen()),
-    _skir.internal__frozenMappedCopy(
-      resourceOperationContributions,
-      (it) => it.toFrozen(),
-    ),
+    realmRoot.toFrozen(),
   );
 
   EditorCatalogWireSnapshot._(
     this.generation,
     this.types,
     this.relations,
-    this.resourceDefinitions,
+    this.resourceDisplays,
     this.presentations,
     this.presentationMaterials,
     this.configuration,
@@ -3658,7 +3608,7 @@ final class EditorCatalogWireSnapshot
     this.recommendations,
     this.roleFallbacks,
     this.resourceOperations,
-    this.resourceOperationContributions,
+    this.realmRoot,
   );
 
   /// Default instance with all fields set to their default values.
@@ -3676,7 +3626,7 @@ final class EditorCatalogWireSnapshot
     _skir.KeyedIterable.empty,
     _skir.KeyedIterable.empty,
     _skir.KeyedIterable.empty,
-    _skir.KeyedIterable.empty,
+    _lib_editor_v1_type_catalog.TypeDefinitionId.defaultInstance,
   );
 
   /// Returns a new mutable instance.
@@ -3696,7 +3646,7 @@ final class EditorCatalogWireSnapshot
         _skir.KeyedIterable.empty,
         _skir.KeyedIterable.empty,
         _skir.KeyedIterable.empty,
-        _skir.KeyedIterable.empty,
+        _lib_editor_v1_type_catalog.TypeDefinitionId.defaultInstance,
       );
 
   /// Returns this instance (no-op).
@@ -3710,7 +3660,7 @@ final class EditorCatalogWireSnapshot
         this.generation,
         this.types,
         this.relations,
-        this.resourceDefinitions,
+        this.resourceDisplays,
         this.presentations,
         this.presentationMaterials,
         this.configuration,
@@ -3720,7 +3670,7 @@ final class EditorCatalogWireSnapshot
         this.recommendations,
         this.roleFallbacks,
         this.resourceOperations,
-        this.resourceOperationContributions,
+        this.realmRoot,
       );
 
   @_core.override
@@ -3740,7 +3690,7 @@ final class EditorCatalogWireSnapshot
     this.generation,
     this.types,
     this.relations,
-    this.resourceDefinitions,
+    this.resourceDisplays,
     this.presentations,
     this.presentationMaterials,
     this.configuration,
@@ -3750,7 +3700,7 @@ final class EditorCatalogWireSnapshot
     this.recommendations,
     this.roleFallbacks,
     this.resourceOperations,
-    this.resourceOperationContributions,
+    this.realmRoot,
   ];
 
   @_core.override
@@ -3791,13 +3741,13 @@ final class EditorCatalogWireSnapshot
         (it, v) => it.relations = v,
       );
       _serializerBuilder.addField(
-        "resource_definitions",
-        "resourceDefinitions",
+        "resource_displays",
+        "resourceDisplays",
         3,
-        _skir.Serializers.iterable(AuthoringResourceDefinition.serializer),
+        _skir.Serializers.iterable(ResourceDisplayFormulas.serializer),
         "",
-        (it) => it.resourceDefinitions,
-        (it, v) => it.resourceDefinitions = v,
+        (it) => it.resourceDisplays,
+        (it, v) => it.resourceDisplays = v,
       );
       _serializerBuilder.addField(
         "presentations",
@@ -3887,15 +3837,13 @@ final class EditorCatalogWireSnapshot
         (it, v) => it.resourceOperations = v,
       );
       _serializerBuilder.addField(
-        "resource_operation_contributions",
-        "resourceOperationContributions",
+        "realm_root",
+        "realmRoot",
         13,
-        _skir.Serializers.iterable(
-          _lib_editor_v1_operation.ResourceOperationContribution.serializer,
-        ),
-        "",
-        (it) => it.resourceOperationContributions,
-        (it, v) => it.resourceOperationContributions = v,
+        _lib_editor_v1_type_catalog.TypeDefinitionId.serializer,
+        "The realm root type. The realm keeps exactly one instance, which owns every section.",
+        (it) => it.realmRoot,
+        (it, v) => it.realmRoot = v,
       );
       _serializerBuilder.finalize();
     }
@@ -3919,7 +3867,7 @@ final class EditorCatalogWireSnapshot_mutable
   _lib_editor_v1_type_catalog.CatalogGeneration_orMutable generation;
   _core.Iterable<PublishedType_orMutable> types;
   _core.Iterable<RelationContract_orMutable> relations;
-  _core.Iterable<AuthoringResourceDefinition_orMutable> resourceDefinitions;
+  _core.Iterable<ResourceDisplayFormulas_orMutable> resourceDisplays;
   _core.Iterable<PresentationDescriptor_orMutable> presentations;
   _core.Iterable<PresentationMaterial_orMutable> presentationMaterials;
   _core.Iterable<ConfigurationRecipe_orMutable> configuration;
@@ -3931,17 +3879,16 @@ final class EditorCatalogWireSnapshot_mutable
   _core.Iterable<RoleFallback_orMutable> roleFallbacks;
   _core.Iterable<_lib_editor_v1_operation.ResourceOperationDefinition_orMutable>
   resourceOperations;
-  _core.Iterable<
-    _lib_editor_v1_operation.ResourceOperationContribution_orMutable
-  >
-  resourceOperationContributions;
+
+  /// The realm root type. The realm keeps exactly one instance, which owns every section.
+  _lib_editor_v1_type_catalog.TypeDefinitionId_orMutable realmRoot;
   _skir.internal__UnrecognizedFields? _u;
 
   EditorCatalogWireSnapshot_mutable._(
     this.generation,
     this.types,
     this.relations,
-    this.resourceDefinitions,
+    this.resourceDisplays,
     this.presentations,
     this.presentationMaterials,
     this.configuration,
@@ -3951,7 +3898,7 @@ final class EditorCatalogWireSnapshot_mutable
     this.recommendations,
     this.roleFallbacks,
     this.resourceOperations,
-    this.resourceOperationContributions,
+    this.realmRoot,
   );
 
   /// If the value of [generation] is already mutable, returns it as-is.
@@ -3988,16 +3935,15 @@ final class EditorCatalogWireSnapshot_mutable
     }
   }
 
-  /// If the value of [resourceDefinitions] is already mutable, returns it as-is.
-  /// Otherwise, makes a mutable copy, assigns it back to [resourceDefinitions] and returns it.
-  _core.List<AuthoringResourceDefinition_orMutable>
-  get mutableResourceDefinitions {
-    final value = this.resourceDefinitions;
+  /// If the value of [resourceDisplays] is already mutable, returns it as-is.
+  /// Otherwise, makes a mutable copy, assigns it back to [resourceDisplays] and returns it.
+  _core.List<ResourceDisplayFormulas_orMutable> get mutableResourceDisplays {
+    final value = this.resourceDisplays;
     if (value
-        is _skir.internal__MutableList<AuthoringResourceDefinition_orMutable>) {
+        is _skir.internal__MutableList<ResourceDisplayFormulas_orMutable>) {
       return value;
     } else {
-      return this.resourceDefinitions = _skir.internal__MutableList([...value]);
+      return this.resourceDisplays = _skir.internal__MutableList([...value]);
     }
   }
 
@@ -4116,20 +4062,15 @@ final class EditorCatalogWireSnapshot_mutable
     }
   }
 
-  /// If the value of [resourceOperationContributions] is already mutable, returns it as-is.
-  /// Otherwise, makes a mutable copy, assigns it back to [resourceOperationContributions] and returns it.
-  _core.List<_lib_editor_v1_operation.ResourceOperationContribution_orMutable>
-  get mutableResourceOperationContributions {
-    final value = this.resourceOperationContributions;
-    if (value
-        is _skir.internal__MutableList<
-          _lib_editor_v1_operation.ResourceOperationContribution_orMutable
-        >) {
+  /// If the value of [realmRoot] is already mutable, returns it as-is.
+  /// Otherwise, makes a mutable copy, assigns it back to [realmRoot] and returns it.
+  _lib_editor_v1_type_catalog.TypeDefinitionId_mutable get mutableRealmRoot {
+    final value = this.realmRoot;
+    if (value is _lib_editor_v1_type_catalog.TypeDefinitionId_mutable) {
       return value;
     } else {
-      return this.resourceOperationContributions = _skir.internal__MutableList([
-        ...value,
-      ]);
+      return this.realmRoot =
+          (value as _lib_editor_v1_type_catalog.TypeDefinitionId).toMutable();
     }
   }
 
@@ -4139,7 +4080,7 @@ final class EditorCatalogWireSnapshot_mutable
     generation: this.generation,
     types: this.types,
     relations: this.relations,
-    resourceDefinitions: this.resourceDefinitions,
+    resourceDisplays: this.resourceDisplays,
     presentations: this.presentations,
     presentationMaterials: this.presentationMaterials,
     configuration: this.configuration,
@@ -4149,7 +4090,7 @@ final class EditorCatalogWireSnapshot_mutable
     recommendations: this.recommendations,
     roleFallbacks: this.roleFallbacks,
     resourceOperations: this.resourceOperations,
-    resourceOperationContributions: this.resourceOperationContributions,
+    realmRoot: this.realmRoot,
   ).._u = this._u;
 }
 
@@ -7346,128 +7287,6 @@ final class TypeRecommendation_mutable implements TypeRecommendation_orMutable {
 }
 
 // -----------------------------------------------------------------------------
-// enum AuthoringNavigationHandler
-// -----------------------------------------------------------------------------
-
-/// To switch on the variants:
-///   ```
-///   switch (e) {
-///     case AuthoringNavigationHandler_unknown(): { ... }
-///     case AuthoringNavigationHandler.generic: { ... }
-///     case AuthoringNavigationHandler.book: { ... }
-///     case AuthoringNavigationHandler.page: { ... }
-///     case AuthoringNavigationHandler.pageElement: { ... }
-///     case AuthoringNavigationHandler.tags: { ... }
-///   }
-///   ```
-///
-/// Deeply immutable.
-sealed class AuthoringNavigationHandler {
-  /// Constant indicating an unknown `AuthoringNavigationHandler`.
-  /// Default value for fields of type `AuthoringNavigationHandler`.
-  static const AuthoringNavigationHandler unknown =
-      AuthoringNavigationHandler_unknown._instance;
-
-  static const generic = _AuthoringNavigationHandler_consts.genericConst;
-  static const book = _AuthoringNavigationHandler_consts.bookConst;
-  static const page = _AuthoringNavigationHandler_consts.pageConst;
-  static const pageElement =
-      _AuthoringNavigationHandler_consts.pageElementConst;
-  static const tags = _AuthoringNavigationHandler_consts.tagsConst;
-
-  /// Returns the kind of variant held by this AuthoringNavigationHandler.
-  AuthoringNavigationHandler_kind get kind;
-
-  /// Serializer for `AuthoringNavigationHandler` instances.
-  static _skir.EnumSerializer<AuthoringNavigationHandler> get serializer {
-    if (_serializerBuilder.mustInitialize()) {
-      _serializerBuilder.addConstantVariant(
-        1,
-        "generic",
-        "generic",
-        "",
-        generic,
-      );
-      _serializerBuilder.addConstantVariant(2, "book", "book", "", book);
-      _serializerBuilder.addConstantVariant(3, "page", "page", "", page);
-      _serializerBuilder.addConstantVariant(
-        4,
-        "page_element",
-        "pageElement",
-        "",
-        pageElement,
-      );
-      _serializerBuilder.addConstantVariant(5, "tags", "tags", "", tags);
-      _serializerBuilder.finalize();
-    }
-    return _serializerBuilder.serializer;
-  }
-
-  static final _serializerBuilder = _skir.internal__EnumSerializerBuilder
-      .create(
-        recordId: "editor/v1/catalog.skir:AuthoringNavigationHandler",
-        doc: "",
-        unknownInstance: AuthoringNavigationHandler_unknown._instance,
-        enumInstance: AuthoringNavigationHandler.unknown,
-        getOrdinal: (it) => it.kind._ordinal,
-        wrapUnrecognized: AuthoringNavigationHandler_unknown._unrecognized,
-        getUnrecognized: (it) => it._u,
-      );
-}
-
-/// The kind of variant held by a `AuthoringNavigationHandler`.
-enum AuthoringNavigationHandler_kind {
-  unknown(0),
-  genericConst(1),
-  bookConst(2),
-  pageConst(3),
-  pageElementConst(4),
-  tagsConst(5);
-
-  final _core.int _ordinal;
-
-  const AuthoringNavigationHandler_kind(this._ordinal);
-}
-
-final class AuthoringNavigationHandler_unknown
-    implements AuthoringNavigationHandler {
-  static const _instance = AuthoringNavigationHandler_unknown._();
-
-  final _skir.internal__UnrecognizedVariant? _u;
-
-  const AuthoringNavigationHandler_unknown._() : _u = null;
-  AuthoringNavigationHandler_unknown._unrecognized(this._u);
-
-  @_core.override
-  AuthoringNavigationHandler_kind get kind =>
-      AuthoringNavigationHandler_kind.unknown;
-  @_core.override
-  _core.bool operator ==(other) => other is AuthoringNavigationHandler_unknown;
-  @_core.override
-  _core.int get hashCode => 8118964;
-  @_core.override
-  _core.String toString() =>
-      _skir.internal__stringify(this, AuthoringNavigationHandler.serializer);
-}
-
-enum _AuthoringNavigationHandler_consts implements AuthoringNavigationHandler {
-  genericConst(AuthoringNavigationHandler_kind.genericConst),
-  bookConst(AuthoringNavigationHandler_kind.bookConst),
-  pageConst(AuthoringNavigationHandler_kind.pageConst),
-  pageElementConst(AuthoringNavigationHandler_kind.pageElementConst),
-  tagsConst(AuthoringNavigationHandler_kind.tagsConst);
-
-  @_core.override
-  final AuthoringNavigationHandler_kind kind;
-
-  const _AuthoringNavigationHandler_consts(this.kind);
-
-  @_core.override
-  _core.String toString() =>
-      _skir.internal__stringify(this, AuthoringNavigationHandler.serializer);
-}
-
-// -----------------------------------------------------------------------------
 // struct WatchEditorCatalogRequest
 // -----------------------------------------------------------------------------
 
@@ -7581,3 +7400,10 @@ prepareValueMethod = _skir.Method(
   PrepareValueResult.serializer,
   "",
 );
+
+/// The family of relations whose one owner endpoint holds the resources on its many member endpoint,
+/// such as a Book holding its pages. Every owned resource has one owner, and ownership never loops.
+final _lib_editor_v1_type_catalog.RelationFamilyId resourceOwnershipFamily =
+    (_lib_editor_v1_type_catalog.RelationFamilyId.serializer.fromJsonCode(
+      "[\"resource.ownership\"]",
+    ));

@@ -2,127 +2,104 @@
 
 package com.typewritermc.realm.authoring
 
-import com.typewritermc.authoring.Availability
+import com.typewritermc.authoring.CheckedWriteResult
 import com.typewritermc.authoring.GeneratedSdkApi
+import com.typewritermc.authoring.GraphLayout
+import com.typewritermc.authoring.GraphLayoutDefinition
+import com.typewritermc.authoring.GraphPlacement
+import com.typewritermc.authoring.GraphPlacementDefinition
 import com.typewritermc.authoring.PathSegment
-import com.typewritermc.authoring.ResourceDraft
-import com.typewritermc.authoring.TypeSelection
+import com.typewritermc.authoring.PlacementAnchor
 import com.typewritermc.authoring.ValueLocation
 import com.typewritermc.authoring.ValuePath
 import com.typewritermc.authoring.boundCollectionPath
+import com.typewritermc.authoring.definition
 import com.typewritermc.checking.InputIdentity
-import com.typewritermc.library.PAGE_CONTRACT_TYPE
-import com.typewritermc.operations.DestinationPlacementRequest
 import com.typewritermc.operations.OperationPreparation
-import com.typewritermc.operations.PlacementAnchor
-import com.typewritermc.operations.PlacementPreparation
-import com.typewritermc.operations.ResourceLayoutPreparation
-import com.typewritermc.operations.UnavailableAuthoredValue
-import com.typewritermc.operations.asClosedUse
-import com.typewritermc.realm.repository.ResourceValueMapper
 import com.typewritermc.types.ResourceId
-import com.typewritermc.types.TypeUse
+import com.typewritermc.types.TypeDefinitionId
+import com.typewritermc.types.catalog.Resolution
+import com.typewritermc.types.encodeGeneratedDefault
 import com.typewritermc.types.ownsResources
 
-/** Selects declared destination policy without inferring domain layout from presentation. */
+/** Lays out moved members when their destination is laid out as a graph, without inferring layout from presentation. */
 internal class OperationLayoutPreparation(
-    private val edit: WorkingViewEditContext,
-    private val baseline: AuthoringView,
-) : ResourceLayoutPreparation {
+    private val relations: RelationReads,
+) {
+    /**
+     * Gives these members a collision free graph placement around [anchor] when [destination] is a [GraphLayout].
+     *
+     * The members must already be owned by the destination. A member holding another placement kind, such as a
+     * timeline entry placement, first receives a fresh graph placement when its placement field accepts one. Other
+     * destinations, such as timeline pages, keep the members' placements untouched, and so do members whose type
+     * publishes no placement field that can hold a graph placement.
+     */
     context(operation: OperationPreparation)
-    override suspend fun prepareMove(
-        subjects: List<ResourceDraft>,
+    suspend fun List<ResourceId>.placeIn(
         destination: ResourceId,
         anchor: PlacementAnchor?,
-    ): PlacementPreparation {
-        val root = ValueLocation(destination, ValuePath())
-        edit.capturedReads.observeInput(InputIdentity.Form(root))
-        val record = requireNotNull(edit.session.resources[destination]) { "The destination no longer exists." }
-        val type =
-            (record.configuration as? TypeSelection.Complete)?.use
-                ?: error("Configure the destination type before moving resources.")
-        val requiresPlacement = baseline.catalog.checked.isNominalSubtype(type.definition, PAGE_CONTRACT_TYPE)
-        val destinationPolicies =
-            baseline.catalog.operations.placements.filter {
-                baseline.catalog.checked.isReadableAs(type, it.target.asClosedUse())
-            }
-        if (destinationPolicies.isEmpty()) {
-            require(!requiresPlacement) { "The destination does not declare placement for these resources." }
-            return PlacementPreparation { }
+    ) {
+        if (isEmpty() || !destination.isA(GraphLayoutDefinition.id)) return
+        val members = destination.ownedMembers(this)
+        val moving = mapNotNull { it.graphPlacement() ?: it.freshGraphPlacement() }
+        val occupants = members.filterNot { it in this }.mapNotNull { it.graphPlacement() }
+        val placed = with(relations.reads) { GraphGroupPlacement.place(moving, occupants, anchor) }
+        placed.forEach { (draft, placement) ->
+            draft.setX(placement.x)
+            draft.setY(placement.y)
         }
-        val owningEndpoints =
-            baseline.catalog.relations
-                .filter { it.ownsResources }
-                .mapTo(hashSetOf()) { it.first.id }
-        val memberships =
-            ResourceValueMapper.discover(edit.session.resources).filter {
-                it.source == destination && it.id.endpoint in owningEndpoints
-            }
-        val byCollection =
-            subjects.groupBy { subject ->
-                edit.capturedReads.observeInput(InputIdentity.Incoming(subject.id, null))
-                val membership =
-                    requireNotNull(memberships.singleOrNull { it.target.resource == subject.id }) {
-                        "Place resources in one exact destination ownership occurrence before preparing layout."
-                    }
-                edit.capturedReads.observeInput(InputIdentity.Value(membership.id.location))
-                val path = membership.id.location.path
-                if (path.segments.lastOrNull() is PathSegment.Item) ValuePath(path.segments.dropLast(1)) else path
-            }
-        val preparations =
-            byCollection.map { (path, selected) ->
-                val policies =
-                    destinationPolicies.filter { it.collection.path == path }
-                val mostSpecific =
-                    policies.filter { candidate ->
-                        policies.none { other ->
-                            candidate.target != other.target &&
-                                baseline.catalog.checked.isNominalSubtype(other.target.definition, candidate.target.definition)
-                        }
-                    }
-                if (mostSpecific.isEmpty()) {
-                    require(!requiresPlacement) {
-                        "The destination does not declare placement for these resources."
-                    }
-                    return@map PlacementPreparation { }
-                }
-                require(mostSpecific.size == 1) { "The destination has ambiguous placement policies for this ownership collection." }
-                val declaration = mostSpecific.single()
-                val collection = ValueLocation(destination, path)
-                edit.capturedReads.members(boundCollectionPath(collection))
-                val members =
-                    memberships.filter {
-                        it.id.location.path.segments
-                            .dropLast(1) == path.segments &&
-                            it.id.location.path.segments
-                                .lastOrNull() is PathSegment.Item
-                    }
-                members.forEach { edit.capturedReads.observeInput(InputIdentity.Value(it.id.location)) }
-                val occupants = members.map { it.target.resource }.distinct().map(::draft)
-                with(edit.capturedReads) {
-                    declaration.policy.prepare(DestinationPlacementRequest(destination, collection, selected, anchor, occupants))
-                }
-            }
-        return PlacementPreparation { preparations.forEach { it.apply() } }
     }
 
-    internal fun draft(id: ResourceId): ResourceDraft {
-        val binding =
-            when (val read = edit.capturedReads.resourceBinding(id)) {
-                is Availability.Available -> read.value
-                is Availability.Unavailable -> throw UnavailableAuthoredValue(read.locations)
-                is Availability.Failed -> error(read.diagnostic.toString())
-            }
-        return object : ResourceDraft {
-            override val id = id
-            override val catalog = binding.catalog
-            override val readContext = binding.readContext
-            override val location = binding.location
-            override val actualType: Availability<TypeUse.Named> =
-                when (val configuration = binding.actual) {
-                    is TypeSelection.Complete -> Availability.Available(configuration.use)
-                    is TypeSelection.Pending -> Availability.Unavailable(listOf(binding.location))
-                }
-        }
+    private fun ResourceId.isA(type: TypeDefinitionId): Boolean {
+        relations.observeForm(this)
+        val record = requireNotNull(relations.resources[this]) { "The destination no longer exists." }
+        return relations.catalog.checked.isNominalSubtype(record.configuration.definition, type)
     }
+
+    /** Resources this destination owns, after checking every subject holds one exact membership in it. */
+    private fun ResourceId.ownedMembers(subjects: List<ResourceId>): List<ResourceId> {
+        val owningEndpoints =
+            relations.catalog.relations
+                .filter { it.ownsResources }
+                .mapTo(hashSetOf()) { it.first.id }
+        val memberships = relations.links.values.filter { it.source == this && it.id.endpoint in owningEndpoints }
+        subjects.forEach { subject ->
+            relations.reads.observeInput(InputIdentity.Incoming(subject, null))
+            requireNotNull(memberships.singleOrNull { it.target.resource == subject }) {
+                "Place resources in one exact destination ownership occurrence before preparing layout."
+            }
+        }
+        memberships
+            .map {
+                it.id.location.path
+                    .collection()
+            }.distinct()
+            .forEach { path -> relations.reads.members(boundCollectionPath(ValueLocation(this, path))) }
+        memberships.forEach { relations.reads.observeInput(InputIdentity.Value(it.id.location)) }
+        return memberships.map { it.target.resource }.distinct()
+    }
+
+    /** Writes a default graph placement into this resource's placement field, when that field accepts one. */
+    context(operation: OperationPreparation)
+    private suspend fun ResourceId.freshGraphPlacement(): ValueLocation? {
+        val catalog = relations.catalog
+        val record = relations.resources[this] ?: return null
+        val location = catalog.placementLocation(this, record) ?: return null
+        // The authored value carries its actual placement kind, so the declared type comes from the containing record.
+        val field = location.path.segments.lastOrNull() as? PathSegment.Field ?: return null
+        val container = record.authoredTypeAt(ValuePath(location.path.segments.dropLast(1)), catalog.checked) ?: return null
+        val schema = (catalog.checked.resolve(container) as? Resolution.Ready)?.value?.schema ?: return null
+        val declared = schema.fields.singleOrNull { it.key == field.name }?.type ?: return null
+        if (!catalog.checked.isReadableAs(GraphPlacementDefinition.use, declared)) return null
+        val checked = (catalog.checked.resolve(GraphPlacementDefinition.use) as Resolution.Ready).value
+        val value = catalog.nativeBindings.bind(checked).encodeGeneratedDefault(GraphPlacement())
+        val written = operation.checkedSet(location, value)
+        check(written == CheckedWriteResult.Applied) { "The graph placement of $this was rejected: $written" }
+        return location
+    }
+
+    private fun ResourceId.graphPlacement(): ValueLocation? =
+        relations.resources[this]?.let { record -> relations.catalog.graphPlacementLocation(this, record) }
 }
+
+private fun ValuePath.collection(): ValuePath = if (segments.lastOrNull() is PathSegment.Item) ValuePath(segments.dropLast(1)) else this

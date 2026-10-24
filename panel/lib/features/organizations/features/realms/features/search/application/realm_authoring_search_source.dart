@@ -17,41 +17,23 @@ const authoringResourceSearchResultType = SearchResultType(
 )
 abstract class AuthoringSearchResultPayload
     with _$AuthoringSearchResultPayload {
-  factory AuthoringSearchResultPayload({
+  const factory AuthoringSearchResultPayload({
     required skir.AuthoringSearchHit hit,
     required AuthoringDocument document,
     required ResourceIssues issues,
-    Map<skir.ExpressionBindingId, PortableExpressionBinding>
-        presentationContext =
-        const {},
-  }) => AuthoringSearchResultPayload._value(
-    hit: hit,
-    document: document,
-    issues: issues,
-    presentationContext: Map.unmodifiable(presentationContext),
-  );
+    @Default(HostContext.empty) HostContext hostContext,
+  }) = _AuthoringSearchResultPayload;
 
   const AuthoringSearchResultPayload._();
 
-  const factory AuthoringSearchResultPayload._value({
-    required skir.AuthoringSearchHit hit,
-    required AuthoringDocument document,
-    required ResourceIssues issues,
-    required Map<skir.ExpressionBindingId, PortableExpressionBinding>
-    presentationContext,
-  }) = _AuthoringSearchResultPayload;
-
   CheckedEditorCatalog get catalog => document.catalog;
   skir.ResourceId get id => hit.resource;
-  skir.ResourceDefinitionId get definition => hit.definition;
   skir.PresentationSubject get subject => hit.subject;
   skir.PortableValue get context => hit.context;
   skir.TypeSelection get configuration => hit.subject.content.configuration;
 
-  String get title =>
-      subject.descriptor.authoredString ??
-      subject.content.authoredLabel ??
-      id.value;
+  /// The hit's name from its declared display, read from the hit's content.
+  String get title => catalog.appearanceOf(subject.content).label;
 }
 
 /// Uses Realm search to choose saved resource hits, then renders surviving hits
@@ -66,11 +48,9 @@ final class RealmAuthoringSearchSource implements SearchSource {
     this.contextResource,
     this.target,
     this.contexts = const [],
-    this.definitionFilter,
-    Map<skir.ExpressionBindingId, PortableExpressionBinding>
-        presentationContext =
-        const {},
-  }) : presentationContext = Map.unmodifiable(presentationContext);
+    this.typeFilter = const {},
+    this.hostContext = HostContext.empty,
+  });
 
   final Ref ref;
   final skir.RecordId organizationId;
@@ -78,9 +58,12 @@ final class RealmAuthoringSearchSource implements SearchSource {
   final skir.ResourceId? contextResource;
   final skir.NamedTypeUse? target;
   final List<skir.ResourceId> contexts;
-  final Set<skir.ResourceDefinitionId>? definitionFilter;
-  final Map<skir.ExpressionBindingId, PortableExpressionBinding>
-  presentationContext;
+
+  /// Types whose resources the search returns; empty returns every type.
+  final Set<skir.TypeDefinitionId> typeFilter;
+
+  /// Host values every hit's presentation may read.
+  final HostContext hostContext;
 
   final _snapshots = StreamController<SearchSourceSnapshot>.broadcast(
     sync: true,
@@ -133,23 +116,13 @@ final class RealmAuthoringSearchSource implements SearchSource {
           .read(workingAuthoringDocumentProvider(scope))
           .requireValue;
       final catalog = document.catalog;
-      final requestedDefinitions = definitionFilter;
-      final roots = catalog.snapshot.resourceDefinitions
-          .where(
-            (definition) =>
-                requestedDefinitions == null ||
-                requestedDefinitions.isEmpty ||
-                requestedDefinitions.contains(definition.id),
-          )
-          .map((definition) => definition.root)
-          .toList(growable: false);
       final response = await ref
           .read(authoredResourceCommandsProvider(scope))
           .search(
             skir.SearchAuthoringRequest(
               generation: document.generation,
               query: encodeRealmSearchQuery(query).normalizedQuery,
-              roots: roots,
+              roots: typeFilter.toList(growable: false),
               contexts: contexts.isNotEmpty ? contexts : [?contextResource],
               target: target,
             ),
@@ -188,18 +161,15 @@ final class RealmAuthoringSearchSource implements SearchSource {
               AuthoringSearchResultPayload(
                 hit: skir.AuthoringSearchHit(
                   resource: hit.resource,
-                  definition: hit.definition,
                   subject: skir.PresentationSubject(
                     resource: hit.resource,
-                    definition: hit.definition,
                     content: document.resource(hit.resource)!,
-                    descriptor: skir.DataValue.unfilled,
                   ),
                   context: hit.context,
                 ),
                 document: document,
                 issues: issues,
-                presentationContext: presentationContext,
+                hostContext: hostContext,
               ),
         ];
         _snapshots.add(
@@ -208,7 +178,7 @@ final class RealmAuthoringSearchSource implements SearchSource {
               for (final payload in payloads)
                 SearchNode.result(
                   result: SearchResult(
-                    id: "${payload.definition.value}:${payload.id.value}",
+                    id: payload.id.value,
                     type: authoringResourceSearchResultType,
                     payload: payload,
                     title: payload.title,

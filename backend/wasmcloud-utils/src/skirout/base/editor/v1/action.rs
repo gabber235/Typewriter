@@ -772,6 +772,7 @@ pub enum EditorAction {
     Realm(Box<RealmEditorAction>),
     Navigate(Box<ResourceNavigationAction>),
     Authoring(Box<AuthoringCapabilityAction>),
+    Create(Box<CreateResourceAction>),
 }
 
 impl Default for EditorAction {
@@ -792,6 +793,7 @@ impl EditorAction {
                     EditorAction::Realm(_) => 2,
                     EditorAction::Navigate(_) => 3,
                     EditorAction::Authoring(_) => 4,
+                    EditorAction::Create(_) => 5,
                 },
                 |u| EditorAction::Unknown(Some(u)),
                 |x: &EditorAction| match x {
@@ -808,6 +810,95 @@ impl EditorAction {
     pub fn serializer() -> crate::skir_client::Serializer<EditorAction> {
         initialize_module_serializers();
         crate::skir_client::internal::enum_serializer_from_static(EditorAction::_adapter())
+    }
+}
+
+// ==============================================================================
+// struct CreateFieldValue
+// ==============================================================================
+
+/// A preset value for one field of the created resource, addressed relative to the created type.
+/// A value that evaluates to missing leaves the field at its creation default.
+#[derive(Clone, Debug, PartialEq, Default)]
+pub struct CreateFieldValue {
+    pub path: crate::skirout::base::editor::v1::type_catalog::ValuePath,
+    pub value: crate::skirout::base::editor::v1::expression::ExpressionNode,
+    /// Set this to None when you're creating a struct.
+    pub _unrecognized: Option<crate::skir_client::UnrecognizedFields<CreateFieldValue>>,
+}
+
+impl CreateFieldValue {
+    pub fn default_ref() -> &'static CreateFieldValue {
+        static D: std::sync::LazyLock<CreateFieldValue> =
+            std::sync::LazyLock::new(CreateFieldValue::default);
+        &D
+    }
+}
+
+impl CreateFieldValue {
+    fn _adapter() -> &'static crate::skir_client::internal::StructAdapter<CreateFieldValue> {
+        static ADAPTER: std::sync::LazyLock<
+            crate::skir_client::internal::StructAdapter<CreateFieldValue>,
+        > = std::sync::LazyLock::new(|| {
+            crate::skir_client::internal::StructAdapter::new(
+                "editor/v1/action.skir",
+                "CreateFieldValue",
+                "A preset value for one field of the created resource, addressed relative to the created type.\nA value that evaluates to missing leaves the field at its creation default.",
+                |x: &CreateFieldValue| &x._unrecognized,
+                |x: &mut CreateFieldValue, u| x._unrecognized = u,
+            )
+        });
+        &*ADAPTER
+    }
+    pub fn serializer() -> crate::skir_client::Serializer<CreateFieldValue> {
+        initialize_module_serializers();
+        crate::skir_client::internal::struct_serializer_from_static(CreateFieldValue::_adapter())
+    }
+}
+
+// ==============================================================================
+// struct CreateResourceAction
+// ==============================================================================
+
+/// Creates a resource of `type` and links it at `owner`, with preset fields. The owner is the
+/// link field of an ownership relation the new resource joins, such as the pages of the routed
+/// Book, so an owner type with two owning fields is never ambiguous. Without an owner, the host
+/// chooses one, for example the single instance of a realm section.
+#[derive(Clone, Debug, PartialEq, Default)]
+pub struct CreateResourceAction {
+    pub type_: crate::skirout::base::editor::v1::type_catalog::TypeDefinitionId,
+    pub owner: Option<crate::skirout::base::editor::v1::binding::BindingRef>,
+    pub fields: Vec<CreateFieldValue>,
+    /// Set this to None when you're creating a struct.
+    pub _unrecognized: Option<crate::skir_client::UnrecognizedFields<CreateResourceAction>>,
+}
+
+impl CreateResourceAction {
+    pub fn default_ref() -> &'static CreateResourceAction {
+        static D: std::sync::LazyLock<CreateResourceAction> =
+            std::sync::LazyLock::new(CreateResourceAction::default);
+        &D
+    }
+}
+
+impl CreateResourceAction {
+    fn _adapter() -> &'static crate::skir_client::internal::StructAdapter<CreateResourceAction> {
+        static ADAPTER: std::sync::LazyLock<
+            crate::skir_client::internal::StructAdapter<CreateResourceAction>,
+        > = std::sync::LazyLock::new(|| {
+            crate::skir_client::internal::StructAdapter::new(
+                "editor/v1/action.skir",
+                "CreateResourceAction",
+                "Creates a resource of `type` and links it at `owner`, with preset fields. The owner is the\nlink field of an ownership relation the new resource joins, such as the pages of the routed\nBook, so an owner type with two owning fields is never ambiguous. Without an owner, the host\nchooses one, for example the single instance of a realm section.",
+                |x: &CreateResourceAction| &x._unrecognized,
+                |x: &mut CreateResourceAction, u| x._unrecognized = u,
+            )
+        });
+        &*ADAPTER
+    }
+    pub fn serializer() -> crate::skir_client::Serializer<CreateResourceAction> {
+        initialize_module_serializers();
+        crate::skir_client::internal::struct_serializer_from_static(CreateResourceAction::_adapter())
     }
 }
 
@@ -1395,6 +1486,76 @@ fn initialize_module_serializers() {
                     EditorAction::Authoring(b) => b.as_ref(),
                     _ => unreachable!(),
                 },
+            );
+            (*a).add_wrapper_variant(
+                "create",
+                5,
+                5,
+                crate::skir_client::internal::struct_serializer_from_static(
+                    CreateResourceAction::_adapter(),
+                ),
+                "",
+                |v| EditorAction::Create(Box::new(v)),
+                |x| match x {
+                    EditorAction::Create(b) => b.as_ref(),
+                    _ => unreachable!(),
+                },
+            );
+            (*a).finalize();
+        }
+        unsafe {
+            let a: *mut crate::skir_client::internal::StructAdapter<CreateFieldValue> =
+                CreateFieldValue::_adapter() as *const _ as *mut _;
+            (*a).add_field(
+                "path",
+                0,
+                crate::skirout::base::editor::v1::type_catalog::ValuePath::serializer(),
+                "",
+                |x: &CreateFieldValue| &x.path,
+                |x: &mut CreateFieldValue, v| x.path = v,
+            );
+            (*a).add_field(
+                "value",
+                1,
+                crate::skirout::base::editor::v1::expression::ExpressionNode::serializer(),
+                "",
+                |x: &CreateFieldValue| &x.value,
+                |x: &mut CreateFieldValue, v| x.value = v,
+            );
+            (*a).finalize();
+        }
+        unsafe {
+            let a: *mut crate::skir_client::internal::StructAdapter<CreateResourceAction> =
+                CreateResourceAction::_adapter() as *const _ as *mut _;
+            (*a).add_field(
+                "type",
+                0,
+                crate::skirout::base::editor::v1::type_catalog::TypeDefinitionId::serializer(),
+                "",
+                |x: &CreateResourceAction| &x.type_,
+                |x: &mut CreateResourceAction, v| x.type_ = v,
+            );
+            (*a).add_field(
+                "owner",
+                1,
+                crate::skir_client::Serializer::optional(
+                    crate::skirout::base::editor::v1::binding::BindingRef::serializer(),
+                ),
+                "",
+                |x: &CreateResourceAction| &x.owner,
+                |x: &mut CreateResourceAction, v| x.owner = v,
+            );
+            (*a).add_field(
+                "fields",
+                2,
+                crate::skir_client::Serializer::array(
+                    crate::skir_client::internal::struct_serializer_from_static(
+                        CreateFieldValue::_adapter(),
+                    ),
+                ),
+                "",
+                |x: &CreateResourceAction| &x.fields,
+                |x: &mut CreateResourceAction, v| x.fields = v,
             );
             (*a).finalize();
         }

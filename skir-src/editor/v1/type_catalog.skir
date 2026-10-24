@@ -414,3 +414,10 @@ struct DeclarationOwner(810100089) {
   source: ContributionKey = 0;
   local_identity: string = 1;
 }
+
+/// Which resources a display or operation applies to: every application of one type template,
+/// or every resource when nothing more specific is declared.
+enum ResourceTarget(810100090) {
+  type: TypeTemplate = 1;
+  any_resource = 2;
+}

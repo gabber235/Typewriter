@@ -126,13 +126,6 @@ AuthoringDocument compiledEntryNodeDocument({
     Map<String, skir.DataValue> fields,
   ) => skir.AuthoringResource(
     id: id,
-    definition: catalog.snapshot.resourceDefinitions
-        .singleWhere(
-          (definition) => catalog
-              .knownApplications(skir.TypeSelection.wrapComplete(type))
-              .any((application) => application.definition == definition.root),
-        )
-        .id,
     content: skir.AuthoringRecord(
       configuration: skir.TypeSelection.wrapComplete(type),
       fields: [
@@ -260,12 +253,12 @@ AuthoringDocument compiledEntryNodeDocument({
   );
 }
 
-/// A fixture page editor using the production graph element and bindings.
+/// A fixture page workspace using the production resources graph and bindings.
 final compiledEntryGraphLayout = skir.PresentationNode(
   nodeId: "entry-fixture.graph",
   properties: skir.PresentationProperties.defaultInstance,
   header: null,
-  element: skir.PresentationElement.createPageGraph(
+  element: skir.PresentationElement.createResources(
     control: skir.BoundControl(
       binding: skir.BindingRef(
         bindingId: skir.ExpressionBindingId(value: "configured_value"),
@@ -276,7 +269,11 @@ final compiledEntryGraphLayout = skir.PresentationNode(
       prefix: null,
       semanticLabel: null,
     ),
-    direction: skir.PageGraphDirection.leftToRight,
-    appearance: null,
+    layout: skir.ResourcesLayout.createGraph(
+      direction: skir.GraphDirection.leftToRight,
+      appearance: null,
+    ),
+    order: null,
+    itemBindingId: skir.ExpressionBindingId(value: "resources.item"),
   ),
 );

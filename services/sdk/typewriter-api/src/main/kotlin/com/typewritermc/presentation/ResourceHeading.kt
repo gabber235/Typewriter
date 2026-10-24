@@ -20,7 +20,7 @@ fun Layout.resourceHeading(
     title: Expr<String, Handled>,
     color: Expr<Color, Handled>,
     identifier: Expr<String, MayBeMissing>? = subject.identifier.text,
-    selectionCount: Expr<Int, MayBeMissing> = context.selectionCount,
+    selectionCount: Expr<Int, MayBeMissing> = context.read(EditorContext.selectionCount),
 ) {
     showIf(selectionCount.orElse(literal(1)) eq literal(1)) {
         column(spacing = 8.0, cross = CrossAxisAlignment.Stretch) {

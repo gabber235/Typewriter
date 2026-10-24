@@ -3,8 +3,6 @@ package fixture
 // The generated endpoint exists only from the second KSP round, and KSP stops after a round with errors, so this
 // case cannot share a compilation with first round diagnostics.
 
-import com.typewritermc.authoring.ResourceDefinitionId
-import com.typewritermc.authoring.TypewriterResourceDefinition
 import com.typewritermc.types.Many
 import com.typewritermc.types.Ref
 import com.typewritermc.types.ReferenceContract
@@ -13,11 +11,6 @@ import com.typewritermc.types.TypewriterType
 
 @TypewriterType(id = "a0000000000000000000000000000541")
 data class LinkTarget(val title: String = "") : Resource
-
-object Definitions {
-    @TypewriterResourceDefinition("fixture.link_target", LinkTarget::class)
-    val TARGET = ResourceDefinitionId("fixture.link_target")
-}
 
 @ReferenceContract("fixture.links")
 interface LinksContract {

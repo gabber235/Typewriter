@@ -10,15 +10,17 @@ import com.typewritermc.expression.ExpressionBindingId
 import com.typewritermc.expression.Handled
 import com.typewritermc.types.CollectionKind
 import com.typewritermc.types.TypeTemplate
+import com.typewritermc.types.skir.SkirAuthoringValueCodec
 import com.typewritermc.types.skir.SkirTypeCodec
 import com.typewritermc.types.skir.getOrThrow
 import com.typewritermc.types.toTemplate
 import skirout.editor.v1.binding.BindingRef
 import skirout.editor.v1.expression.ExpressionNode
 import skirout.editor.v1.presentation.BoundControl
-import skirout.editor.v1.presentation.PageGraphDirection
 import skirout.editor.v1.presentation.PresentationElement
 import skirout.editor.v1.presentation.PresentationNode
+import skirout.editor.v1.presentation.ResourcesLayout
+import skirout.editor.v1.presentation.GraphDirection as WireGraphDirection
 import skirout.editor.v1.presentation.PresentationProperties as WirePresentationProperties
 import skirout.editor.v1.type_catalog.ExpressionBindingId as WireExpressionBindingId
 import skirout.editor.v1.type_catalog.ValuePath as WireValuePath
@@ -233,34 +235,111 @@ internal class RuntimeControlBinding(
         }
     }
 
-    fun graphPage(
-        direction: GraphDirection,
-        configure: GraphPageScope.() -> Unit,
-    ) {
-        val draft =
-            skirout.editor.v1.presentation.PageGraphAppearance
-                .partial()
-                .toMutable()
-        RuntimeGraphPageScope(draft).configure()
-        val appearance = draft.toFrozen()
-        val wireDirection =
-            when (direction) {
-                GraphDirection.LEFT_TO_RIGHT -> PageGraphDirection.LEFT_TO_RIGHT
-                GraphDirection.RIGHT_TO_LEFT -> PageGraphDirection.RIGHT_TO_LEFT
-                GraphDirection.TOP_TO_BOTTOM -> PageGraphDirection.TOP_TO_BOTTOM
-                GraphDirection.BOTTOM_TO_TOP -> PageGraphDirection.BOTTOM_TO_TOP
+    private var resourceOrder: ExpressionNode? = null
+
+    fun order(key: ResourceItemScope<*>.() -> Expr<*, Handled>) {
+        check(resourceOrder == null) { "A resources layout may declare one order." }
+        val scope =
+            object : ResourceItemScope<com.typewritermc.types.Resource> {
+                override val resource =
+                    ResourceExpr<com.typewritermc.types.Resource>(
+                        ResourceReadSource.Reference(
+                            com.typewritermc.expression.inputExpression<
+                                com.typewritermc.types.Ref<Nothing, com.typewritermc.types.Resource>,
+                                Handled,
+                            >(RESOURCES_ITEM),
+                        ),
+                    )
             }
-        select { PresentationElement.createPageGraph(control = it, direction = wireDirection, appearance = appearance) }
+        resourceOrder = expression(scope.key())
     }
 
-    fun timelinePage(configure: TimelinePageScope.() -> Unit) {
+    fun graph(
+        direction: GraphDirection,
+        configure: GraphAppearanceScope.() -> Unit,
+    ) {
         val draft =
-            skirout.editor.v1.presentation.PageTimelineAppearance
+            skirout.editor.v1.presentation.ResourceGraphAppearance
                 .partial()
                 .toMutable()
-        RuntimeTimelinePageScope(draft).configure()
-        val appearance = draft.toFrozen()
-        select { PresentationElement.createPageTimeline(control = it, appearance = appearance) }
+        RuntimeGraphAppearanceScope(draft).configure()
+        val wireDirection =
+            when (direction) {
+                GraphDirection.LEFT_TO_RIGHT -> WireGraphDirection.LEFT_TO_RIGHT
+                GraphDirection.RIGHT_TO_LEFT -> WireGraphDirection.RIGHT_TO_LEFT
+                GraphDirection.TOP_TO_BOTTOM -> WireGraphDirection.TOP_TO_BOTTOM
+                GraphDirection.BOTTOM_TO_TOP -> WireGraphDirection.BOTTOM_TO_TOP
+            }
+        resources(
+            ResourcesLayout.createGraph(
+                direction = wireDirection,
+                appearance = draft.toFrozen(),
+            ),
+        )
+    }
+
+    fun timeline(configure: TimelineAppearanceScope.() -> Unit) {
+        val draft =
+            skirout.editor.v1.presentation.ResourceTimelineAppearance
+                .partial()
+                .toMutable()
+        RuntimeTimelineAppearanceScope(draft).configure()
+        resources(ResourcesLayout.createTimeline(appearance = draft.toFrozen()))
+    }
+
+    fun grid(
+        itemExtent: Double,
+        aspectRatio: Double,
+        spacing: Double,
+    ) {
+        require(itemExtent.isFinite() && itemExtent > 0) { "Grid item extents must be finite and positive." }
+        require(aspectRatio.isFinite() && aspectRatio > 0) { "Grid aspect ratios must be finite and positive." }
+        require(spacing.isFinite() && spacing >= 0) { "Grid spacing must be finite and nonnegative." }
+        resources(
+            ResourcesLayout.createGrid(
+                itemExtent = expression(itemExtent),
+                aspectRatio = expression(aspectRatio),
+                spacing = expression(spacing),
+            ),
+        )
+    }
+
+    fun list() = resources(ResourcesLayout.LIST)
+
+    fun tree(
+        path: com.typewritermc.authoring.TypedPath<*, com.typewritermc.authoring.HierarchyPath>,
+        configure: TreeScope.() -> Unit,
+    ) {
+        val groupBinding = state.bindingId("resources.group")
+        val scope = RuntimeTreeScope(state, groupBinding)
+        scope.configure()
+        resources(
+            ResourcesLayout.createTree(
+                path = SkirAuthoringValueCodec.encode(path.path).getOrThrow(),
+                group = scope.group,
+                groupBindingId = groupBinding.wire(),
+                connectors = null,
+                initiallyExpanded = scope.initiallyExpanded,
+            ),
+        )
+    }
+
+    private fun resources(layout: ResourcesLayout) {
+        resourceOrder?.let { order ->
+            require(layout !is ResourcesLayout.GraphWrapper && layout !is ResourcesLayout.TimelineWrapper) {
+                "Graph and timeline layouts place members by their placements and cannot declare an order."
+            }
+            val link = requireNotNull(checked.itemsOrNull()) { "A resources layout presents a collection of links." }.type
+            state.checkOrder(order, RESOURCES_ITEM, link)
+        }
+        select {
+            PresentationElement.createResources(
+                control = it,
+                layout = layout,
+                order = resourceOrder,
+                itemBindingId = RESOURCES_ITEM.wire(),
+            )
+        }
     }
 
     fun <V> polymorphicInput(configure: PolymorphicInputScope<V>.() -> Unit) {
@@ -412,6 +491,9 @@ internal class RuntimeControlBinding(
         finished = true
     }
 }
+
+/** Binds each member's link while a resources layout evaluates its order. */
+private val RESOURCES_ITEM = ExpressionBindingId("resources_item")
 
 private fun BindingRef.nested(
     slot: NestedPresentationSlot,

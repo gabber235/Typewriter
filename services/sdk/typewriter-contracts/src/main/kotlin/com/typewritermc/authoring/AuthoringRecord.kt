@@ -46,6 +46,17 @@ sealed interface TypeSelection {
 }
 
 /**
+ * The selected type, complete or pending. An extension rather than a member: an interface property would become a
+ * field of the selection's canonical read model, which [TypeSelection.Pending.definition] would then override.
+ */
+val TypeSelection.definition: TypeDefinitionId
+    get() =
+        when (this) {
+            is TypeSelection.Complete -> use.definition
+            is TypeSelection.Pending -> definition
+        }
+
+/**
  * Stores a resource's type selection separately from its field payload so partially configured records remain editable.
  * Nested nominal values still carry their own actual types in [DataValue.Named].
  */

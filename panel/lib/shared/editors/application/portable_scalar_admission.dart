@@ -284,7 +284,9 @@ skir.DataValue? stepPortableNumericValue({
         budget: skir.EvaluationBudget(maxSteps: 100, maxCollectionItems: 0),
       ).evaluate(
         skir.ExpressionNode.createNumberArithmetic(
-          operation: direction > 0 ? skir.NumberArithmeticOperation.add : skir.NumberArithmeticOperation.subtract,
+          operation: direction > 0
+              ? skir.NumberArithmeticOperation.add
+              : skir.NumberArithmeticOperation.subtract,
           first: skir.ExpressionNode.wrapLiteral(current),
           second: skir.ExpressionNode.wrapLiteral(step),
           remaining: const [],

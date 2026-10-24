@@ -1,15 +1,12 @@
 package com.typewritermc.realm.repository
 
 import com.surrealdb.Surreal
-import com.typewritermc.authoring.AuthoringResourceDefinition
 import com.typewritermc.authoring.CommitResult
 import com.typewritermc.authoring.EditIntent
-import com.typewritermc.authoring.ResourceDefinitionId
 import com.typewritermc.authoring.skir.SkirAuthoringOperationCodec
 import com.typewritermc.checking.CatalogGeneration
 import com.typewritermc.configuration.FieldPatternSegment
 import com.typewritermc.configuration.RelativeFieldPattern
-import com.typewritermc.realm.authoring.AuthoringCatalogLease
 import com.typewritermc.realm.authoring.InMemoryAuthoringViewStore
 import com.typewritermc.realm.checking.TestCatalogLease
 import com.typewritermc.realm.schema.MigrationResources
@@ -41,17 +38,19 @@ import skirout.editor.v1.type_catalog.TypeTemplate as WireTemplate
 import skirout.editor.v1.type_catalog.TypeUse as WireTypeUse
 
 val PanelCreationCommitTest by testSuite {
-    test("the panel entry page and Book creation edit commits through Realm and survives reload") {
+    test("the panel page and Book creation commits into the Library through Realm and survives reload") {
         val snapshot = EditorCatalogWireSnapshot.serializer.fromBytes(panelCreationFixture("catalog.skir"))
-        val wire = WireEdit.serializer.fromBytes(panelCreationFixture("edit.skir"))
-        val edit = SkirAuthoringOperationCodec.decode(wire).getOrThrow()
-        val catalog = PanelCreationCatalog(snapshot)
+        val seed = SkirAuthoringOperationCodec.decode(WireEdit.serializer.fromBytes(panelCreationFixture("seed.skir"))).getOrThrow()
+        val edit = SkirAuthoringOperationCodec.decode(WireEdit.serializer.fromBytes(panelCreationFixture("edit.skir"))).getOrThrow()
+        val catalog = panelCreationCatalog(snapshot)
         Surreal().use { database ->
             database.openTestDatabase("panel_creation")
             MigrationResources().loadRealmSchema().forEach { database.query(it.script).take(0) }
             val storage = SurrealAuthoringStorage(database)
             val views = InMemoryAuthoringViewStore(catalog, storage.readCoherent())
             val owner = RealmAuthoringOwner(storage, views)
+            owner.commit(seed) shouldBe CommitResult.Committed
+            storage.readCoherent().resources.size shouldBe 1
             val broken =
                 edit.copy(
                     intents =
@@ -64,14 +63,10 @@ val PanelCreationCommitTest by testSuite {
                         },
                 )
             owner.commit(broken).shouldBeInstanceOf<CommitResult.Rejected>()
-            storage.readCoherent().resources.size shouldBe 0
+            storage.readCoherent().resources.size shouldBe 1
             owner.commit(edit) shouldBe CommitResult.Committed
             val saved = storage.readCoherent()
             saved.resources.size shouldBe 3
-            saved.resourceDefinitions.values
-                .map { it.value }
-                .toSet()
-                .size shouldBe 3
             val links =
                 ResourceValueMapper.project(
                     ResourceValueMapper.discover(saved.resources),
@@ -88,7 +83,7 @@ val PanelCreationCommitTest by testSuite {
                 .getArray()
                 .len() shouldBe 2
             views.close()
-            val restarted = InMemoryAuthoringViewStore(PanelCreationCatalog(snapshot), saved)
+            val restarted = InMemoryAuthoringViewStore(panelCreationCatalog(snapshot), saved)
             restarted.capture().use { it.root.resources shouldBe saved.resources }
             restarted.close()
         }
@@ -96,74 +91,61 @@ val PanelCreationCommitTest by testSuite {
 }
 
 private fun panelCreationFixture(name: String): ByteArray =
-    requireNotNull(PanelCreationCatalog::class.java.getResourceAsStream("/creation/$name")) {
-        "Missing panel creation fixture $name. Capture the missing page and Book flow from resource_creation_flow_test.dart."
+    requireNotNull(TestCatalogLease::class.java.getResourceAsStream("/creation/$name")) {
+        "Missing panel creation fixture $name. Capture it by running resource_creation_flow_test.dart with " +
+            "TYPEWRITER_CREATION_FIXTURE_DIR set to this resource directory."
     }.use { it.readBytes() }
 
-private class PanelCreationCatalog private constructor(
-    private val delegate: AuthoringCatalogLease,
-    override val resources: List<AuthoringResourceDefinition>,
-) : AuthoringCatalogLease by delegate {
-    constructor(snapshot: EditorCatalogWireSnapshot) : this(
-        TestCatalogLease(
-            generation = CatalogGeneration(snapshot.generation.value),
-            definitions = snapshot.types.map { SkirTypeCodec.decode(it.definition).getOrThrow() },
-            relations =
-                snapshot.relations.map { relation ->
-                    RelationContract(
-                        RelationId(
-                            relation.id.value,
-                        ),
-                        endpoint(relation.first),
-                        endpoint(relation.second),
-                        relation.families.mapTo(linkedSetOf()) {
-                            RelationFamilyId(it.value)
-                        },
-                    )
-                },
-            endpointBindings =
-                snapshot.endpointBindings.map { binding ->
-                    EndpointBindingTemplate(
-                        EndpointId(binding.endpoint.value),
-                        SkirTypeCodec.decode(WireTemplate.NamedWrapper(binding.containingResource)).getOrThrow() as TypeTemplate.Named,
-                        definitionId(binding.valueOwner),
-                        RelativeFieldPattern(
-                            binding.relativePath.segments.map { segment ->
-                                when (segment) {
-                                    is skirout.editor.v1.type_catalog.FieldPatternSegment.FieldWrapper -> {
-                                        FieldPatternSegment.Field(
-                                            segment.value.name,
-                                        )
-                                    }
-
-                                    skirout.editor.v1.type_catalog.FieldPatternSegment.ITEMS -> {
-                                        FieldPatternSegment.Items
-                                    }
-
-                                    skirout.editor.v1.type_catalog.FieldPatternSegment.KEYS -> {
-                                        FieldPatternSegment.Keys
-                                    }
-
-                                    skirout.editor.v1.type_catalog.FieldPatternSegment.VALUES -> {
-                                        FieldPatternSegment.Values
-                                    }
-
-                                    else -> {
-                                        error("Unknown captured field pattern")
-                                    }
+/** The captured panel catalog: a Library owning Books that own pages, each linking back to its owner. */
+private fun panelCreationCatalog(snapshot: EditorCatalogWireSnapshot): TestCatalogLease =
+    TestCatalogLease(
+        generation = CatalogGeneration(snapshot.generation.value),
+        definitions = snapshot.types.map { SkirTypeCodec.decode(it.definition).getOrThrow() },
+        relations =
+            snapshot.relations.map { relation ->
+                RelationContract(
+                    RelationId(relation.id.value),
+                    endpoint(relation.first),
+                    endpoint(relation.second),
+                    relation.families.mapTo(linkedSetOf()) { RelationFamilyId(it.value) },
+                )
+            },
+        endpointBindings =
+            snapshot.endpointBindings.map { binding ->
+                EndpointBindingTemplate(
+                    EndpointId(binding.endpoint.value),
+                    SkirTypeCodec.decode(WireTemplate.NamedWrapper(binding.containingResource)).getOrThrow() as TypeTemplate.Named,
+                    definitionId(binding.valueOwner),
+                    RelativeFieldPattern(
+                        binding.relativePath.segments.map { segment ->
+                            when (segment) {
+                                is skirout.editor.v1.type_catalog.FieldPatternSegment.FieldWrapper -> {
+                                    FieldPatternSegment.Field(segment.value.name)
                                 }
-                            },
-                        ),
-                        SkirTypeCodec.decode(binding.target).getOrThrow(),
-                        binding.containsCollection,
-                    )
-                },
-        ),
-        snapshot.resourceDefinitions.map { AuthoringResourceDefinition(ResourceDefinitionId(it.id.value), definitionId(it.root)) },
-    )
 
-    override fun retain(): AuthoringCatalogLease = PanelCreationCatalog(delegate.retain(), resources)
-}
+                                skirout.editor.v1.type_catalog.FieldPatternSegment.ITEMS -> {
+                                    FieldPatternSegment.Items
+                                }
+
+                                skirout.editor.v1.type_catalog.FieldPatternSegment.KEYS -> {
+                                    FieldPatternSegment.Keys
+                                }
+
+                                skirout.editor.v1.type_catalog.FieldPatternSegment.VALUES -> {
+                                    FieldPatternSegment.Values
+                                }
+
+                                else -> {
+                                    error("Unknown captured field pattern")
+                                }
+                            }
+                        },
+                    ),
+                    SkirTypeCodec.decode(binding.target).getOrThrow(),
+                    binding.containsCollection,
+                )
+            },
+    )
 
 private fun definitionId(id: WireDefinitionId): TypeDefinitionId =
     (

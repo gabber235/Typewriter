@@ -3571,4 +3571,559 @@ as String,
 
 }
 
+/// @nodoc
+mixin _$OwnershipRelation {
+
+ skir.RelationId get relation; skir.EndpointDefinition get owner; skir.EndpointDefinition get member;
+/// Create a copy of OwnershipRelation
+/// with the given fields replaced by the non-null parameter values.
+@JsonKey(includeFromJson: false, includeToJson: false)
+@pragma('vm:prefer-inline')
+$OwnershipRelationCopyWith<OwnershipRelation> get copyWith => _$OwnershipRelationCopyWithImpl<OwnershipRelation>(this as OwnershipRelation, _$identity);
+
+
+
+@override
+bool operator ==(Object other) {
+  final _this = this as OwnershipRelation;
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is OwnershipRelation&&(identical(other.relation, _this.relation) || other.relation == _this.relation)&&(identical(other.owner, _this.owner) || other.owner == _this.owner)&&(identical(other.member, _this.member) || other.member == _this.member));
+}
+
+
+@override
+int get hashCode {
+  final _this = this as OwnershipRelation;
+  return Object.hash(runtimeType,_this.relation,_this.owner,_this.member);
+}
+
+@override
+String toString() {
+  final _this = this as OwnershipRelation;
+  return 'OwnershipRelation(relation: ${_this.relation}, owner: ${_this.owner}, member: ${_this.member})';
+}
+
+
+}
+
+/// @nodoc
+abstract mixin class $OwnershipRelationCopyWith<$Res>  {
+  factory $OwnershipRelationCopyWith(OwnershipRelation value, $Res Function(OwnershipRelation) _then) = _$OwnershipRelationCopyWithImpl;
+@useResult
+$Res call({
+ skir.RelationId relation, skir.EndpointDefinition owner, skir.EndpointDefinition member
+});
+
+
+
+
+}
+/// @nodoc
+class _$OwnershipRelationCopyWithImpl<$Res>
+    implements $OwnershipRelationCopyWith<$Res> {
+  _$OwnershipRelationCopyWithImpl(this._self, this._then);
+
+  final OwnershipRelation _self;
+  final $Res Function(OwnershipRelation) _then;
+
+/// Create a copy of OwnershipRelation
+/// with the given fields replaced by the non-null parameter values.
+@pragma('vm:prefer-inline') @override $Res call({Object? relation = null,Object? owner = null,Object? member = null,}) {
+  return _then(OwnershipRelation(
+relation: null == relation ? _self.relation : relation // ignore: cast_nullable_to_non_nullable
+as skir.RelationId,owner: null == owner ? _self.owner : owner // ignore: cast_nullable_to_non_nullable
+as skir.EndpointDefinition,member: null == member ? _self.member : member // ignore: cast_nullable_to_non_nullable
+as skir.EndpointDefinition,
+  ));
+}
+
+}
+
+
+/// Adds pattern-matching-related methods to [OwnershipRelation].
+extension OwnershipRelationPatterns on OwnershipRelation {
+/// A variant of `map` that fallback to returning `orElse`.
+///
+/// It is equivalent to doing:
+/// ```dart
+/// switch (sealedClass) {
+///   case final Subclass value:
+///     return ...;
+///   case _:
+///     return orElse();
+/// }
+/// ```
+
+@optionalTypeArgs TResult maybeMap<TResult extends Object?>(TResult Function( _OwnershipRelation value)?  $default,{required TResult orElse(),}){
+final _that = this;
+switch (_that) {
+case _OwnershipRelation() when $default != null:
+return $default(_that);case _:
+  return orElse();
+
+}
+}
+/// A `switch`-like method, using callbacks.
+///
+/// Callbacks receives the raw object, upcasted.
+/// It is equivalent to doing:
+/// ```dart
+/// switch (sealedClass) {
+///   case final Subclass value:
+///     return ...;
+///   case final Subclass2 value:
+///     return ...;
+/// }
+/// ```
+
+@optionalTypeArgs TResult map<TResult extends Object?>(TResult Function( _OwnershipRelation value)  $default,){
+final _that = this;
+switch (_that) {
+case _OwnershipRelation():
+return $default(_that);case _:
+  throw StateError('Unexpected subclass');
+
+}
+}
+/// A variant of `map` that fallback to returning `null`.
+///
+/// It is equivalent to doing:
+/// ```dart
+/// switch (sealedClass) {
+///   case final Subclass value:
+///     return ...;
+///   case _:
+///     return null;
+/// }
+/// ```
+
+@optionalTypeArgs TResult? mapOrNull<TResult extends Object?>(TResult? Function( _OwnershipRelation value)?  $default,){
+final _that = this;
+switch (_that) {
+case _OwnershipRelation() when $default != null:
+return $default(_that);case _:
+  return null;
+
+}
+}
+/// A variant of `when` that fallback to an `orElse` callback.
+///
+/// It is equivalent to doing:
+/// ```dart
+/// switch (sealedClass) {
+///   case Subclass(:final field):
+///     return ...;
+///   case _:
+///     return orElse();
+/// }
+/// ```
+
+@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function( skir.RelationId relation,  skir.EndpointDefinition owner,  skir.EndpointDefinition member)?  $default,{required TResult orElse(),}) {final _that = this;
+switch (_that) {
+case _OwnershipRelation() when $default != null:
+return $default(_that.relation,_that.owner,_that.member);case _:
+  return orElse();
+
+}
+}
+/// A `switch`-like method, using callbacks.
+///
+/// As opposed to `map`, this offers destructuring.
+/// It is equivalent to doing:
+/// ```dart
+/// switch (sealedClass) {
+///   case Subclass(:final field):
+///     return ...;
+///   case Subclass2(:final field2):
+///     return ...;
+/// }
+/// ```
+
+@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function( skir.RelationId relation,  skir.EndpointDefinition owner,  skir.EndpointDefinition member)  $default,) {final _that = this;
+switch (_that) {
+case _OwnershipRelation():
+return $default(_that.relation,_that.owner,_that.member);case _:
+  throw StateError('Unexpected subclass');
+
+}
+}
+/// A variant of `when` that fallback to returning `null`
+///
+/// It is equivalent to doing:
+/// ```dart
+/// switch (sealedClass) {
+///   case Subclass(:final field):
+///     return ...;
+///   case _:
+///     return null;
+/// }
+/// ```
+
+@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function( skir.RelationId relation,  skir.EndpointDefinition owner,  skir.EndpointDefinition member)?  $default,) {final _that = this;
+switch (_that) {
+case _OwnershipRelation() when $default != null:
+return $default(_that.relation,_that.owner,_that.member);case _:
+  return null;
+
+}
+}
+
+}
+
+/// @nodoc
+
+
+class _OwnershipRelation implements OwnershipRelation {
+  const _OwnershipRelation({required this.relation, required this.owner, required this.member});
+  
+
+@override final  skir.RelationId relation;
+@override final  skir.EndpointDefinition owner;
+@override final  skir.EndpointDefinition member;
+
+/// Create a copy of OwnershipRelation
+/// with the given fields replaced by the non-null parameter values.
+@override @JsonKey(includeFromJson: false, includeToJson: false)
+@pragma('vm:prefer-inline')
+_$OwnershipRelationCopyWith<_OwnershipRelation> get copyWith => __$OwnershipRelationCopyWithImpl<_OwnershipRelation>(this, _$identity);
+
+
+
+@override
+bool operator ==(Object other) {
+    return identical(this, other) || (other.runtimeType == runtimeType&&other is _OwnershipRelation&&(identical(other.relation, relation) || other.relation == relation)&&(identical(other.owner, owner) || other.owner == owner)&&(identical(other.member, member) || other.member == member));
+}
+
+
+@override
+int get hashCode {
+    return Object.hash(runtimeType,relation,owner,member);
+}
+
+@override
+String toString() {
+    return 'OwnershipRelation(relation: $relation, owner: $owner, member: $member)';
+}
+
+
+}
+
+/// @nodoc
+abstract mixin class _$OwnershipRelationCopyWith<$Res> implements $OwnershipRelationCopyWith<$Res> {
+  factory _$OwnershipRelationCopyWith(_OwnershipRelation value, $Res Function(_OwnershipRelation) _then) = __$OwnershipRelationCopyWithImpl;
+@override @useResult
+$Res call({
+ skir.RelationId relation, skir.EndpointDefinition owner, skir.EndpointDefinition member
+});
+
+
+
+
+}
+/// @nodoc
+class __$OwnershipRelationCopyWithImpl<$Res>
+    implements _$OwnershipRelationCopyWith<$Res> {
+  __$OwnershipRelationCopyWithImpl(this._self, this._then);
+
+  final _OwnershipRelation _self;
+  final $Res Function(_OwnershipRelation) _then;
+
+/// Create a copy of OwnershipRelation
+/// with the given fields replaced by the non-null parameter values.
+@override @pragma('vm:prefer-inline') $Res call({Object? relation = null,Object? owner = null,Object? member = null,}) {
+  return _then(_OwnershipRelation(
+relation: null == relation ? _self.relation : relation // ignore: cast_nullable_to_non_nullable
+as skir.RelationId,owner: null == owner ? _self.owner : owner // ignore: cast_nullable_to_non_nullable
+as skir.EndpointDefinition,member: null == member ? _self.member : member // ignore: cast_nullable_to_non_nullable
+as skir.EndpointDefinition,
+  ));
+}
+
+
+}
+
+/// @nodoc
+mixin _$OwningField {
+
+ String get field; OwnershipRelation get ownership;
+/// Create a copy of OwningField
+/// with the given fields replaced by the non-null parameter values.
+@JsonKey(includeFromJson: false, includeToJson: false)
+@pragma('vm:prefer-inline')
+$OwningFieldCopyWith<OwningField> get copyWith => _$OwningFieldCopyWithImpl<OwningField>(this as OwningField, _$identity);
+
+
+
+@override
+bool operator ==(Object other) {
+  final _this = this as OwningField;
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is OwningField&&(identical(other.field, _this.field) || other.field == _this.field)&&(identical(other.ownership, _this.ownership) || other.ownership == _this.ownership));
+}
+
+
+@override
+int get hashCode {
+  final _this = this as OwningField;
+  return Object.hash(runtimeType,_this.field,_this.ownership);
+}
+
+@override
+String toString() {
+  final _this = this as OwningField;
+  return 'OwningField(field: ${_this.field}, ownership: ${_this.ownership})';
+}
+
+
+}
+
+/// @nodoc
+abstract mixin class $OwningFieldCopyWith<$Res>  {
+  factory $OwningFieldCopyWith(OwningField value, $Res Function(OwningField) _then) = _$OwningFieldCopyWithImpl;
+@useResult
+$Res call({
+ String field, OwnershipRelation ownership
+});
+
+
+$OwnershipRelationCopyWith<$Res> get ownership;
+
+}
+/// @nodoc
+class _$OwningFieldCopyWithImpl<$Res>
+    implements $OwningFieldCopyWith<$Res> {
+  _$OwningFieldCopyWithImpl(this._self, this._then);
+
+  final OwningField _self;
+  final $Res Function(OwningField) _then;
+
+/// Create a copy of OwningField
+/// with the given fields replaced by the non-null parameter values.
+@pragma('vm:prefer-inline') @override $Res call({Object? field = null,Object? ownership = null,}) {
+  return _then(OwningField(
+field: null == field ? _self.field : field // ignore: cast_nullable_to_non_nullable
+as String,ownership: null == ownership ? _self.ownership : ownership // ignore: cast_nullable_to_non_nullable
+as OwnershipRelation,
+  ));
+}
+/// Create a copy of OwningField
+/// with the given fields replaced by the non-null parameter values.
+@override
+@pragma('vm:prefer-inline')
+$OwnershipRelationCopyWith<$Res> get ownership {
+  
+  return $OwnershipRelationCopyWith<$Res>(_self.ownership, (value) {
+    return _then(_self.copyWith(ownership: value));
+  });
+}
+}
+
+
+/// Adds pattern-matching-related methods to [OwningField].
+extension OwningFieldPatterns on OwningField {
+/// A variant of `map` that fallback to returning `orElse`.
+///
+/// It is equivalent to doing:
+/// ```dart
+/// switch (sealedClass) {
+///   case final Subclass value:
+///     return ...;
+///   case _:
+///     return orElse();
+/// }
+/// ```
+
+@optionalTypeArgs TResult maybeMap<TResult extends Object?>(TResult Function( _OwningField value)?  $default,{required TResult orElse(),}){
+final _that = this;
+switch (_that) {
+case _OwningField() when $default != null:
+return $default(_that);case _:
+  return orElse();
+
+}
+}
+/// A `switch`-like method, using callbacks.
+///
+/// Callbacks receives the raw object, upcasted.
+/// It is equivalent to doing:
+/// ```dart
+/// switch (sealedClass) {
+///   case final Subclass value:
+///     return ...;
+///   case final Subclass2 value:
+///     return ...;
+/// }
+/// ```
+
+@optionalTypeArgs TResult map<TResult extends Object?>(TResult Function( _OwningField value)  $default,){
+final _that = this;
+switch (_that) {
+case _OwningField():
+return $default(_that);case _:
+  throw StateError('Unexpected subclass');
+
+}
+}
+/// A variant of `map` that fallback to returning `null`.
+///
+/// It is equivalent to doing:
+/// ```dart
+/// switch (sealedClass) {
+///   case final Subclass value:
+///     return ...;
+///   case _:
+///     return null;
+/// }
+/// ```
+
+@optionalTypeArgs TResult? mapOrNull<TResult extends Object?>(TResult? Function( _OwningField value)?  $default,){
+final _that = this;
+switch (_that) {
+case _OwningField() when $default != null:
+return $default(_that);case _:
+  return null;
+
+}
+}
+/// A variant of `when` that fallback to an `orElse` callback.
+///
+/// It is equivalent to doing:
+/// ```dart
+/// switch (sealedClass) {
+///   case Subclass(:final field):
+///     return ...;
+///   case _:
+///     return orElse();
+/// }
+/// ```
+
+@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function( String field,  OwnershipRelation ownership)?  $default,{required TResult orElse(),}) {final _that = this;
+switch (_that) {
+case _OwningField() when $default != null:
+return $default(_that.field,_that.ownership);case _:
+  return orElse();
+
+}
+}
+/// A `switch`-like method, using callbacks.
+///
+/// As opposed to `map`, this offers destructuring.
+/// It is equivalent to doing:
+/// ```dart
+/// switch (sealedClass) {
+///   case Subclass(:final field):
+///     return ...;
+///   case Subclass2(:final field2):
+///     return ...;
+/// }
+/// ```
+
+@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function( String field,  OwnershipRelation ownership)  $default,) {final _that = this;
+switch (_that) {
+case _OwningField():
+return $default(_that.field,_that.ownership);case _:
+  throw StateError('Unexpected subclass');
+
+}
+}
+/// A variant of `when` that fallback to returning `null`
+///
+/// It is equivalent to doing:
+/// ```dart
+/// switch (sealedClass) {
+///   case Subclass(:final field):
+///     return ...;
+///   case _:
+///     return null;
+/// }
+/// ```
+
+@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function( String field,  OwnershipRelation ownership)?  $default,) {final _that = this;
+switch (_that) {
+case _OwningField() when $default != null:
+return $default(_that.field,_that.ownership);case _:
+  return null;
+
+}
+}
+
+}
+
+/// @nodoc
+
+
+class _OwningField extends OwningField {
+  const _OwningField({required this.field, required this.ownership}): super._();
+  
+
+@override final  String field;
+@override final  OwnershipRelation ownership;
+
+/// Create a copy of OwningField
+/// with the given fields replaced by the non-null parameter values.
+@override @JsonKey(includeFromJson: false, includeToJson: false)
+@pragma('vm:prefer-inline')
+_$OwningFieldCopyWith<_OwningField> get copyWith => __$OwningFieldCopyWithImpl<_OwningField>(this, _$identity);
+
+
+
+@override
+bool operator ==(Object other) {
+    return identical(this, other) || (other.runtimeType == runtimeType&&other is _OwningField&&(identical(other.field, field) || other.field == field)&&(identical(other.ownership, ownership) || other.ownership == ownership));
+}
+
+
+@override
+int get hashCode {
+    return Object.hash(runtimeType,field,ownership);
+}
+
+@override
+String toString() {
+    return 'OwningField(field: $field, ownership: $ownership)';
+}
+
+
+}
+
+/// @nodoc
+abstract mixin class _$OwningFieldCopyWith<$Res> implements $OwningFieldCopyWith<$Res> {
+  factory _$OwningFieldCopyWith(_OwningField value, $Res Function(_OwningField) _then) = __$OwningFieldCopyWithImpl;
+@override @useResult
+$Res call({
+ String field, OwnershipRelation ownership
+});
+
+
+@override $OwnershipRelationCopyWith<$Res> get ownership;
+
+}
+/// @nodoc
+class __$OwningFieldCopyWithImpl<$Res>
+    implements _$OwningFieldCopyWith<$Res> {
+  __$OwningFieldCopyWithImpl(this._self, this._then);
+
+  final _OwningField _self;
+  final $Res Function(_OwningField) _then;
+
+/// Create a copy of OwningField
+/// with the given fields replaced by the non-null parameter values.
+@override @pragma('vm:prefer-inline') $Res call({Object? field = null,Object? ownership = null,}) {
+  return _then(_OwningField(
+field: null == field ? _self.field : field // ignore: cast_nullable_to_non_nullable
+as String,ownership: null == ownership ? _self.ownership : ownership // ignore: cast_nullable_to_non_nullable
+as OwnershipRelation,
+  ));
+}
+
+/// Create a copy of OwningField
+/// with the given fields replaced by the non-null parameter values.
+@override
+@pragma('vm:prefer-inline')
+$OwnershipRelationCopyWith<$Res> get ownership {
+  
+  return $OwnershipRelationCopyWith<$Res>(_self.ownership, (value) {
+    return _then(_self.copyWith(ownership: value));
+  });
+}
+}
+
 // dart format on
