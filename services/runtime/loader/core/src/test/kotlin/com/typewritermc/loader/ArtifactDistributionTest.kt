@@ -118,13 +118,17 @@ import skirout.service.v1.topology.RealmInstance
 import skirout.service.v1.topology.WatchHostExecutionResponse
 import java.nio.file.Files
 import java.nio.file.Path
+import java.nio.file.attribute.FileTime
+import java.time.Clock
 import java.time.Instant
+import java.time.ZoneOffset
 import java.util.zip.ZipEntry
 import java.util.zip.ZipOutputStream
 import kotlin.time.Duration
 import kotlin.time.Duration.Companion.milliseconds
 import kotlin.time.Duration.Companion.seconds
 import kotlin.time.TestTimeSource
+import java.time.Duration as JavaDuration
 
 val ArtifactDistributionTest by testSuite {
     test("Realm deployment selection requires one unambiguous Realm host and permits no primary engine") {
@@ -378,17 +382,38 @@ val ArtifactDistributionTest by testSuite {
         }
     }
 
-    test("storing content that is already present succeeds without change, so a lost reply can be retried") {
+    test("storing content that is already present succeeds and refreshes it, so a lost reply can be retried") {
         runTest {
-            val store = FileDigestBlobStore(Files.createTempDirectory("typewriter-blobs-retry"))
+            val now = Instant.parse("2026-10-24T12:00:00Z")
+            val store = FileDigestBlobStore(Files.createTempDirectory("typewriter-blobs-retry"), Clock.fixed(now, ZoneOffset.UTC))
             val bytes = "retried artifact content".encodeToByteArray()
             val expected = BlobMetadata(ArtifactDigest.sha256(bytes), bytes.size.toLong())
+            store.store(expected, bytes) shouldBe StoreResult.Stored(expected)
+            val path = store.pathFor(expected.digest)
+            Files.setLastModifiedTime(path, FileTime.from(now.minus(JavaDuration.ofDays(30))))
 
             store.store(expected, bytes) shouldBe StoreResult.Stored(expected)
-            val stored = Files.getLastModifiedTime(store.pathFor(expected.digest))
-            store.store(expected, bytes) shouldBe StoreResult.Stored(expected)
 
-            Files.getLastModifiedTime(store.pathFor(expected.digest)) shouldBe stored
+            // Collection counts the grace period from the latest store, so publication can still reference the blob.
+            Files.getLastModifiedTime(path).toInstant() shouldBe now
+            store.collectGarbage(emptySet()) shouldBe 0
+            store.fetch(expected.digest).shouldSucceed() shouldBe bytes
+        }
+    }
+
+    test("storing verified content over a corrupt blob repairs it, while unverified content leaves it") {
+        runTest {
+            val store = FileDigestBlobStore(Files.createTempDirectory("typewriter-blobs-repair"))
+            val bytes = "content that is repaired".encodeToByteArray()
+            val expected = BlobMetadata(ArtifactDigest.sha256(bytes), bytes.size.toLong())
+            store.store(expected, bytes) shouldBe StoreResult.Stored(expected)
+            val corrupt = "content that is r3paired".encodeToByteArray()
+            Files.write(store.pathFor(expected.digest), corrupt)
+
+            (store.store(expected, "forged content of the size".encodeToByteArray()) is StoreResult.Invalid) shouldBe true
+            Files.readAllBytes(store.pathFor(expected.digest)) shouldBe corrupt
+
+            store.store(expected, bytes) shouldBe StoreResult.Stored(expected)
             store.fetch(expected.digest).shouldSucceed() shouldBe bytes
         }
     }
@@ -460,8 +485,7 @@ val ArtifactDistributionTest by testSuite {
             val service = SharedArtifactService("quests", realmBlobs, FileSharedArtifactRepository(root.resolve("shared.cbor")))
             val shared =
                 object : SharedArtifactAccess by service {
-                    override suspend fun fetch(digest: ArtifactDigest): BlobResult<ByteArray> =
-                        error("An oversized blob must not be read")
+                    override suspend fun fetch(digest: ArtifactDigest): BlobResult<ByteArray> = error("An oversized blob must not be read")
                 }
             val address = RealmRouteScope(realmId = "quests", organizationId = "writers")
             val realmHost = Communicator(broker.transport(TRANSPORT_LIMITS), harness.telemetry, propagators)

@@ -16,10 +16,11 @@ import kotlinx.coroutines.sync.withLock
 import kotlinx.coroutines.withContext
 import java.io.OutputStream
 import java.nio.file.AtomicMoveNotSupportedException
-import java.nio.file.FileAlreadyExistsException
 import java.nio.file.Files
 import java.nio.file.Path
 import java.nio.file.StandardCopyOption
+import java.nio.file.attribute.FileTime
+import java.security.DigestInputStream
 import java.security.DigestOutputStream
 import java.security.MessageDigest
 import java.time.Clock
@@ -33,8 +34,10 @@ import kotlin.io.path.isRegularFile
  * Stores immutable digest addressed blobs on disk.
  *
  * A store writes a temporary file beside the blobs, verifies size and SHA256, and only then moves it into place,
- * so a blob path never holds unverified content. Existing final files are trusted by metadata lookup rather than
- * rehashed; [fetch] rehashes what it reads, so corruption on disk surfaces as invalid instead of being served.
+ * so a blob path never holds unverified content. Metadata lookup trusts existing final files rather than rehashing
+ * them; [fetch] rehashes what it reads, so corruption on disk surfaces as invalid instead of being served. Storing a
+ * digest that is already present verifies the existing file: an intact one is touched so garbage collection counts
+ * its grace period from this store, and a corrupt one is replaced by the supplied content once that verifies.
  * Callers coordinate collection with producers; IO dispatching does not provide mutual exclusion.
  */
 class FileDigestBlobStore(
@@ -141,7 +144,10 @@ class FileDigestBlobStore(
                     return@withContext StoreResult.Invalid("Blob exceeds the maximum accepted size.")
                 }
                 val target = blobPath(expected.digest)
-                if (target.isRegularFile()) return@withContext verifiedExisting(target, expected)
+                if (target.isRegularFile() && target.holds(expected)) {
+                    Files.setLastModifiedTime(target, FileTime.from(clock.instant()))
+                    return@withContext StoreResult.Stored(expected)
+                }
                 val temporary = Files.createTempFile(incoming, "blob", null)
                 try {
                     val digest = MessageDigest.getInstance("SHA-256")
@@ -154,27 +160,21 @@ class FileDigestBlobStore(
                         return@withContext StoreResult.Invalid("Blob digest does not match.")
                     }
                     target.parent.createDirectories()
-                    moveAtomically(temporary, target)
+                    // Replaces a corrupt file, or a concurrent store's copy of the same verified bytes.
+                    moveReplacing(temporary, target)
                     StoreResult.Stored(expected)
-                } catch (_: FileAlreadyExistsException) {
-                    verifiedExisting(target, expected)
                 } finally {
                     Files.deleteIfExists(temporary)
                 }
             }
         }
 
-    /** A concurrent or earlier store already placed this digest; its size must agree with the expectation. */
-    private fun verifiedExisting(
-        target: Path,
-        expected: BlobMetadata,
-    ): StoreResult {
-        val size = target.fileSize()
-        return if (size == expected.size) {
-            StoreResult.Stored(expected)
-        } else {
-            StoreResult.Invalid("Stored blob has $size bytes, expected ${expected.size}.")
-        }
+    /** Whether this file has the expected size and hashes to the expected digest. */
+    private fun Path.holds(expected: BlobMetadata): Boolean {
+        if (fileSize() != expected.size) return false
+        val digest = MessageDigest.getInstance("SHA-256")
+        DigestInputStream(Files.newInputStream(this), digest).use { it.transferTo(OutputStream.nullOutputStream()) }
+        return digest.digest().toHexString() == expected.digest.value
     }
 
     /**
@@ -229,14 +229,14 @@ class FileDigestBlobStore(
 
     private fun blobPath(digest: ArtifactDigest): Path = blobs.resolve(digest.value.take(2)).resolve(digest.value.drop(2))
 
-    private fun moveAtomically(
+    private fun moveReplacing(
         source: Path,
         target: Path,
     ) {
         try {
-            Files.move(source, target, StandardCopyOption.ATOMIC_MOVE)
+            Files.move(source, target, StandardCopyOption.ATOMIC_MOVE, StandardCopyOption.REPLACE_EXISTING)
         } catch (_: AtomicMoveNotSupportedException) {
-            Files.move(source, target)
+            Files.move(source, target, StandardCopyOption.REPLACE_EXISTING)
         }
     }
 }
