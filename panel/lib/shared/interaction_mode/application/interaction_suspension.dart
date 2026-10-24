@@ -5,7 +5,8 @@ part "interaction_suspension.g.dart";
 /// Whether mode shortcuts and selection operations are blocked app wide, for
 /// example while the realm connection is being checked.
 ///
-/// The app overrides it through appOverrides; the default keeps tests and
-/// Widgetbook stories unblocked.
+/// The app overrides it through appOverrides, which bootstrap, testApp and
+/// FakeApp install. The unblocked default applies only to containers built
+/// without appOverrides.
 @riverpod
 bool interactionSuspended(Ref ref) => false;
