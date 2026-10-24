@@ -574,376 +574,6 @@ as List<LocatedInitializationFinding>,
 }
 
 /// @nodoc
-mixin _$ResourceCounterpartResolution {
-
-
-
-
-
-@override
-bool operator ==(Object other) {
-    return identical(this, other) || (other.runtimeType == runtimeType&&other is ResourceCounterpartResolution);
-}
-
-
-@override
-int get hashCode => runtimeType.hashCode;
-
-@override
-String toString() {
-    return 'ResourceCounterpartResolution()';
-}
-
-
-}
-
-/// @nodoc
-class $ResourceCounterpartResolutionCopyWith<$Res>  {
-$ResourceCounterpartResolutionCopyWith(ResourceCounterpartResolution _, $Res Function(ResourceCounterpartResolution) __);
-}
-
-
-/// Adds pattern-matching-related methods to [ResourceCounterpartResolution].
-extension ResourceCounterpartResolutionPatterns on ResourceCounterpartResolution {
-/// A variant of `map` that fallback to returning `orElse`.
-///
-/// It is equivalent to doing:
-/// ```dart
-/// switch (sealedClass) {
-///   case final Subclass value:
-///     return ...;
-///   case _:
-///     return orElse();
-/// }
-/// ```
-
-@optionalTypeArgs TResult maybeMap<TResult extends Object?>({TResult Function( ResolvedResourceCounterpart value)?  resolved,TResult Function( ResourceCounterpartChoiceRequired value)?  choiceRequired,TResult Function( InvalidResourceCounterpart value)?  invalid,required TResult orElse(),}){
-final _that = this;
-switch (_that) {
-case ResolvedResourceCounterpart() when resolved != null:
-return resolved(_that);case ResourceCounterpartChoiceRequired() when choiceRequired != null:
-return choiceRequired(_that);case InvalidResourceCounterpart() when invalid != null:
-return invalid(_that);case _:
-  return orElse();
-
-}
-}
-/// A `switch`-like method, using callbacks.
-///
-/// Callbacks receives the raw object, upcasted.
-/// It is equivalent to doing:
-/// ```dart
-/// switch (sealedClass) {
-///   case final Subclass value:
-///     return ...;
-///   case final Subclass2 value:
-///     return ...;
-/// }
-/// ```
-
-@optionalTypeArgs TResult map<TResult extends Object?>({required TResult Function( ResolvedResourceCounterpart value)  resolved,required TResult Function( ResourceCounterpartChoiceRequired value)  choiceRequired,required TResult Function( InvalidResourceCounterpart value)  invalid,}){
-final _that = this;
-switch (_that) {
-case ResolvedResourceCounterpart():
-return resolved(_that);case ResourceCounterpartChoiceRequired():
-return choiceRequired(_that);case InvalidResourceCounterpart():
-return invalid(_that);}
-}
-/// A variant of `map` that fallback to returning `null`.
-///
-/// It is equivalent to doing:
-/// ```dart
-/// switch (sealedClass) {
-///   case final Subclass value:
-///     return ...;
-///   case _:
-///     return null;
-/// }
-/// ```
-
-@optionalTypeArgs TResult? mapOrNull<TResult extends Object?>({TResult? Function( ResolvedResourceCounterpart value)?  resolved,TResult? Function( ResourceCounterpartChoiceRequired value)?  choiceRequired,TResult? Function( InvalidResourceCounterpart value)?  invalid,}){
-final _that = this;
-switch (_that) {
-case ResolvedResourceCounterpart() when resolved != null:
-return resolved(_that);case ResourceCounterpartChoiceRequired() when choiceRequired != null:
-return choiceRequired(_that);case InvalidResourceCounterpart() when invalid != null:
-return invalid(_that);case _:
-  return null;
-
-}
-}
-/// A variant of `when` that fallback to an `orElse` callback.
-///
-/// It is equivalent to doing:
-/// ```dart
-/// switch (sealedClass) {
-///   case Subclass(:final field):
-///     return ...;
-///   case _:
-///     return orElse();
-/// }
-/// ```
-
-@optionalTypeArgs TResult maybeWhen<TResult extends Object?>({TResult Function( skir.ValueLocation location)?  resolved,TResult Function( String message)?  choiceRequired,TResult Function( String message)?  invalid,required TResult orElse(),}) {final _that = this;
-switch (_that) {
-case ResolvedResourceCounterpart() when resolved != null:
-return resolved(_that.location);case ResourceCounterpartChoiceRequired() when choiceRequired != null:
-return choiceRequired(_that.message);case InvalidResourceCounterpart() when invalid != null:
-return invalid(_that.message);case _:
-  return orElse();
-
-}
-}
-/// A `switch`-like method, using callbacks.
-///
-/// As opposed to `map`, this offers destructuring.
-/// It is equivalent to doing:
-/// ```dart
-/// switch (sealedClass) {
-///   case Subclass(:final field):
-///     return ...;
-///   case Subclass2(:final field2):
-///     return ...;
-/// }
-/// ```
-
-@optionalTypeArgs TResult when<TResult extends Object?>({required TResult Function( skir.ValueLocation location)  resolved,required TResult Function( String message)  choiceRequired,required TResult Function( String message)  invalid,}) {final _that = this;
-switch (_that) {
-case ResolvedResourceCounterpart():
-return resolved(_that.location);case ResourceCounterpartChoiceRequired():
-return choiceRequired(_that.message);case InvalidResourceCounterpart():
-return invalid(_that.message);}
-}
-/// A variant of `when` that fallback to returning `null`
-///
-/// It is equivalent to doing:
-/// ```dart
-/// switch (sealedClass) {
-///   case Subclass(:final field):
-///     return ...;
-///   case _:
-///     return null;
-/// }
-/// ```
-
-@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>({TResult? Function( skir.ValueLocation location)?  resolved,TResult? Function( String message)?  choiceRequired,TResult? Function( String message)?  invalid,}) {final _that = this;
-switch (_that) {
-case ResolvedResourceCounterpart() when resolved != null:
-return resolved(_that.location);case ResourceCounterpartChoiceRequired() when choiceRequired != null:
-return choiceRequired(_that.message);case InvalidResourceCounterpart() when invalid != null:
-return invalid(_that.message);case _:
-  return null;
-
-}
-}
-
-}
-
-/// @nodoc
-
-
-class ResolvedResourceCounterpart implements ResourceCounterpartResolution {
-  const ResolvedResourceCounterpart(this.location);
-  
-
- final  skir.ValueLocation location;
-
-/// Create a copy of ResourceCounterpartResolution
-/// with the given fields replaced by the non-null parameter values.
-@JsonKey(includeFromJson: false, includeToJson: false)
-@pragma('vm:prefer-inline')
-$ResolvedResourceCounterpartCopyWith<ResolvedResourceCounterpart> get copyWith => _$ResolvedResourceCounterpartCopyWithImpl<ResolvedResourceCounterpart>(this, _$identity);
-
-
-
-@override
-bool operator ==(Object other) {
-    return identical(this, other) || (other.runtimeType == runtimeType&&other is ResolvedResourceCounterpart&&(identical(other.location, location) || other.location == location));
-}
-
-
-@override
-int get hashCode {
-    return Object.hash(runtimeType,location);
-}
-
-@override
-String toString() {
-    return 'ResourceCounterpartResolution.resolved(location: $location)';
-}
-
-
-}
-
-/// @nodoc
-abstract mixin class $ResolvedResourceCounterpartCopyWith<$Res> implements $ResourceCounterpartResolutionCopyWith<$Res> {
-  factory $ResolvedResourceCounterpartCopyWith(ResolvedResourceCounterpart value, $Res Function(ResolvedResourceCounterpart) _then) = _$ResolvedResourceCounterpartCopyWithImpl;
-@useResult
-$Res call({
- skir.ValueLocation location
-});
-
-
-
-
-}
-/// @nodoc
-class _$ResolvedResourceCounterpartCopyWithImpl<$Res>
-    implements $ResolvedResourceCounterpartCopyWith<$Res> {
-  _$ResolvedResourceCounterpartCopyWithImpl(this._self, this._then);
-
-  final ResolvedResourceCounterpart _self;
-  final $Res Function(ResolvedResourceCounterpart) _then;
-
-/// Create a copy of ResourceCounterpartResolution
-/// with the given fields replaced by the non-null parameter values.
-@pragma('vm:prefer-inline') $Res call({Object? location = null,}) {
-  return _then(ResolvedResourceCounterpart(
-null == location ? _self.location : location // ignore: cast_nullable_to_non_nullable
-as skir.ValueLocation,
-  ));
-}
-
-
-}
-
-/// @nodoc
-
-
-class ResourceCounterpartChoiceRequired implements ResourceCounterpartResolution {
-  const ResourceCounterpartChoiceRequired(this.message);
-  
-
- final  String message;
-
-/// Create a copy of ResourceCounterpartResolution
-/// with the given fields replaced by the non-null parameter values.
-@JsonKey(includeFromJson: false, includeToJson: false)
-@pragma('vm:prefer-inline')
-$ResourceCounterpartChoiceRequiredCopyWith<ResourceCounterpartChoiceRequired> get copyWith => _$ResourceCounterpartChoiceRequiredCopyWithImpl<ResourceCounterpartChoiceRequired>(this, _$identity);
-
-
-
-@override
-bool operator ==(Object other) {
-    return identical(this, other) || (other.runtimeType == runtimeType&&other is ResourceCounterpartChoiceRequired&&(identical(other.message, message) || other.message == message));
-}
-
-
-@override
-int get hashCode {
-    return Object.hash(runtimeType,message);
-}
-
-@override
-String toString() {
-    return 'ResourceCounterpartResolution.choiceRequired(message: $message)';
-}
-
-
-}
-
-/// @nodoc
-abstract mixin class $ResourceCounterpartChoiceRequiredCopyWith<$Res> implements $ResourceCounterpartResolutionCopyWith<$Res> {
-  factory $ResourceCounterpartChoiceRequiredCopyWith(ResourceCounterpartChoiceRequired value, $Res Function(ResourceCounterpartChoiceRequired) _then) = _$ResourceCounterpartChoiceRequiredCopyWithImpl;
-@useResult
-$Res call({
- String message
-});
-
-
-
-
-}
-/// @nodoc
-class _$ResourceCounterpartChoiceRequiredCopyWithImpl<$Res>
-    implements $ResourceCounterpartChoiceRequiredCopyWith<$Res> {
-  _$ResourceCounterpartChoiceRequiredCopyWithImpl(this._self, this._then);
-
-  final ResourceCounterpartChoiceRequired _self;
-  final $Res Function(ResourceCounterpartChoiceRequired) _then;
-
-/// Create a copy of ResourceCounterpartResolution
-/// with the given fields replaced by the non-null parameter values.
-@pragma('vm:prefer-inline') $Res call({Object? message = null,}) {
-  return _then(ResourceCounterpartChoiceRequired(
-null == message ? _self.message : message // ignore: cast_nullable_to_non_nullable
-as String,
-  ));
-}
-
-
-}
-
-/// @nodoc
-
-
-class InvalidResourceCounterpart implements ResourceCounterpartResolution {
-  const InvalidResourceCounterpart(this.message);
-  
-
- final  String message;
-
-/// Create a copy of ResourceCounterpartResolution
-/// with the given fields replaced by the non-null parameter values.
-@JsonKey(includeFromJson: false, includeToJson: false)
-@pragma('vm:prefer-inline')
-$InvalidResourceCounterpartCopyWith<InvalidResourceCounterpart> get copyWith => _$InvalidResourceCounterpartCopyWithImpl<InvalidResourceCounterpart>(this, _$identity);
-
-
-
-@override
-bool operator ==(Object other) {
-    return identical(this, other) || (other.runtimeType == runtimeType&&other is InvalidResourceCounterpart&&(identical(other.message, message) || other.message == message));
-}
-
-
-@override
-int get hashCode {
-    return Object.hash(runtimeType,message);
-}
-
-@override
-String toString() {
-    return 'ResourceCounterpartResolution.invalid(message: $message)';
-}
-
-
-}
-
-/// @nodoc
-abstract mixin class $InvalidResourceCounterpartCopyWith<$Res> implements $ResourceCounterpartResolutionCopyWith<$Res> {
-  factory $InvalidResourceCounterpartCopyWith(InvalidResourceCounterpart value, $Res Function(InvalidResourceCounterpart) _then) = _$InvalidResourceCounterpartCopyWithImpl;
-@useResult
-$Res call({
- String message
-});
-
-
-
-
-}
-/// @nodoc
-class _$InvalidResourceCounterpartCopyWithImpl<$Res>
-    implements $InvalidResourceCounterpartCopyWith<$Res> {
-  _$InvalidResourceCounterpartCopyWithImpl(this._self, this._then);
-
-  final InvalidResourceCounterpart _self;
-  final $Res Function(InvalidResourceCounterpart) _then;
-
-/// Create a copy of ResourceCounterpartResolution
-/// with the given fields replaced by the non-null parameter values.
-@pragma('vm:prefer-inline') $Res call({Object? message = null,}) {
-  return _then(InvalidResourceCounterpart(
-null == message ? _self.message : message // ignore: cast_nullable_to_non_nullable
-as String,
-  ));
-}
-
-
-}
-
-/// @nodoc
 mixin _$AuthoringCompositionFailure {
 
  List<skir.ExpectationConflict> get conflicts;
@@ -3026,6 +2656,376 @@ $AuthoringConflictEvidenceCopyWith<$Res> get evidence {
     return _then(_self.copyWith(evidence: value));
   });
 }
+}
+
+/// @nodoc
+mixin _$ResourceCounterpartResolution {
+
+
+
+
+
+@override
+bool operator ==(Object other) {
+    return identical(this, other) || (other.runtimeType == runtimeType&&other is ResourceCounterpartResolution);
+}
+
+
+@override
+int get hashCode => runtimeType.hashCode;
+
+@override
+String toString() {
+    return 'ResourceCounterpartResolution()';
+}
+
+
+}
+
+/// @nodoc
+class $ResourceCounterpartResolutionCopyWith<$Res>  {
+$ResourceCounterpartResolutionCopyWith(ResourceCounterpartResolution _, $Res Function(ResourceCounterpartResolution) __);
+}
+
+
+/// Adds pattern-matching-related methods to [ResourceCounterpartResolution].
+extension ResourceCounterpartResolutionPatterns on ResourceCounterpartResolution {
+/// A variant of `map` that fallback to returning `orElse`.
+///
+/// It is equivalent to doing:
+/// ```dart
+/// switch (sealedClass) {
+///   case final Subclass value:
+///     return ...;
+///   case _:
+///     return orElse();
+/// }
+/// ```
+
+@optionalTypeArgs TResult maybeMap<TResult extends Object?>({TResult Function( ResolvedResourceCounterpart value)?  resolved,TResult Function( ResourceCounterpartChoiceRequired value)?  choiceRequired,TResult Function( InvalidResourceCounterpart value)?  invalid,required TResult orElse(),}){
+final _that = this;
+switch (_that) {
+case ResolvedResourceCounterpart() when resolved != null:
+return resolved(_that);case ResourceCounterpartChoiceRequired() when choiceRequired != null:
+return choiceRequired(_that);case InvalidResourceCounterpart() when invalid != null:
+return invalid(_that);case _:
+  return orElse();
+
+}
+}
+/// A `switch`-like method, using callbacks.
+///
+/// Callbacks receives the raw object, upcasted.
+/// It is equivalent to doing:
+/// ```dart
+/// switch (sealedClass) {
+///   case final Subclass value:
+///     return ...;
+///   case final Subclass2 value:
+///     return ...;
+/// }
+/// ```
+
+@optionalTypeArgs TResult map<TResult extends Object?>({required TResult Function( ResolvedResourceCounterpart value)  resolved,required TResult Function( ResourceCounterpartChoiceRequired value)  choiceRequired,required TResult Function( InvalidResourceCounterpart value)  invalid,}){
+final _that = this;
+switch (_that) {
+case ResolvedResourceCounterpart():
+return resolved(_that);case ResourceCounterpartChoiceRequired():
+return choiceRequired(_that);case InvalidResourceCounterpart():
+return invalid(_that);}
+}
+/// A variant of `map` that fallback to returning `null`.
+///
+/// It is equivalent to doing:
+/// ```dart
+/// switch (sealedClass) {
+///   case final Subclass value:
+///     return ...;
+///   case _:
+///     return null;
+/// }
+/// ```
+
+@optionalTypeArgs TResult? mapOrNull<TResult extends Object?>({TResult? Function( ResolvedResourceCounterpart value)?  resolved,TResult? Function( ResourceCounterpartChoiceRequired value)?  choiceRequired,TResult? Function( InvalidResourceCounterpart value)?  invalid,}){
+final _that = this;
+switch (_that) {
+case ResolvedResourceCounterpart() when resolved != null:
+return resolved(_that);case ResourceCounterpartChoiceRequired() when choiceRequired != null:
+return choiceRequired(_that);case InvalidResourceCounterpart() when invalid != null:
+return invalid(_that);case _:
+  return null;
+
+}
+}
+/// A variant of `when` that fallback to an `orElse` callback.
+///
+/// It is equivalent to doing:
+/// ```dart
+/// switch (sealedClass) {
+///   case Subclass(:final field):
+///     return ...;
+///   case _:
+///     return orElse();
+/// }
+/// ```
+
+@optionalTypeArgs TResult maybeWhen<TResult extends Object?>({TResult Function( skir.ValueLocation location)?  resolved,TResult Function( String message)?  choiceRequired,TResult Function( String message)?  invalid,required TResult orElse(),}) {final _that = this;
+switch (_that) {
+case ResolvedResourceCounterpart() when resolved != null:
+return resolved(_that.location);case ResourceCounterpartChoiceRequired() when choiceRequired != null:
+return choiceRequired(_that.message);case InvalidResourceCounterpart() when invalid != null:
+return invalid(_that.message);case _:
+  return orElse();
+
+}
+}
+/// A `switch`-like method, using callbacks.
+///
+/// As opposed to `map`, this offers destructuring.
+/// It is equivalent to doing:
+/// ```dart
+/// switch (sealedClass) {
+///   case Subclass(:final field):
+///     return ...;
+///   case Subclass2(:final field2):
+///     return ...;
+/// }
+/// ```
+
+@optionalTypeArgs TResult when<TResult extends Object?>({required TResult Function( skir.ValueLocation location)  resolved,required TResult Function( String message)  choiceRequired,required TResult Function( String message)  invalid,}) {final _that = this;
+switch (_that) {
+case ResolvedResourceCounterpart():
+return resolved(_that.location);case ResourceCounterpartChoiceRequired():
+return choiceRequired(_that.message);case InvalidResourceCounterpart():
+return invalid(_that.message);}
+}
+/// A variant of `when` that fallback to returning `null`
+///
+/// It is equivalent to doing:
+/// ```dart
+/// switch (sealedClass) {
+///   case Subclass(:final field):
+///     return ...;
+///   case _:
+///     return null;
+/// }
+/// ```
+
+@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>({TResult? Function( skir.ValueLocation location)?  resolved,TResult? Function( String message)?  choiceRequired,TResult? Function( String message)?  invalid,}) {final _that = this;
+switch (_that) {
+case ResolvedResourceCounterpart() when resolved != null:
+return resolved(_that.location);case ResourceCounterpartChoiceRequired() when choiceRequired != null:
+return choiceRequired(_that.message);case InvalidResourceCounterpart() when invalid != null:
+return invalid(_that.message);case _:
+  return null;
+
+}
+}
+
+}
+
+/// @nodoc
+
+
+class ResolvedResourceCounterpart implements ResourceCounterpartResolution {
+  const ResolvedResourceCounterpart(this.location);
+  
+
+ final  skir.ValueLocation location;
+
+/// Create a copy of ResourceCounterpartResolution
+/// with the given fields replaced by the non-null parameter values.
+@JsonKey(includeFromJson: false, includeToJson: false)
+@pragma('vm:prefer-inline')
+$ResolvedResourceCounterpartCopyWith<ResolvedResourceCounterpart> get copyWith => _$ResolvedResourceCounterpartCopyWithImpl<ResolvedResourceCounterpart>(this, _$identity);
+
+
+
+@override
+bool operator ==(Object other) {
+    return identical(this, other) || (other.runtimeType == runtimeType&&other is ResolvedResourceCounterpart&&(identical(other.location, location) || other.location == location));
+}
+
+
+@override
+int get hashCode {
+    return Object.hash(runtimeType,location);
+}
+
+@override
+String toString() {
+    return 'ResourceCounterpartResolution.resolved(location: $location)';
+}
+
+
+}
+
+/// @nodoc
+abstract mixin class $ResolvedResourceCounterpartCopyWith<$Res> implements $ResourceCounterpartResolutionCopyWith<$Res> {
+  factory $ResolvedResourceCounterpartCopyWith(ResolvedResourceCounterpart value, $Res Function(ResolvedResourceCounterpart) _then) = _$ResolvedResourceCounterpartCopyWithImpl;
+@useResult
+$Res call({
+ skir.ValueLocation location
+});
+
+
+
+
+}
+/// @nodoc
+class _$ResolvedResourceCounterpartCopyWithImpl<$Res>
+    implements $ResolvedResourceCounterpartCopyWith<$Res> {
+  _$ResolvedResourceCounterpartCopyWithImpl(this._self, this._then);
+
+  final ResolvedResourceCounterpart _self;
+  final $Res Function(ResolvedResourceCounterpart) _then;
+
+/// Create a copy of ResourceCounterpartResolution
+/// with the given fields replaced by the non-null parameter values.
+@pragma('vm:prefer-inline') $Res call({Object? location = null,}) {
+  return _then(ResolvedResourceCounterpart(
+null == location ? _self.location : location // ignore: cast_nullable_to_non_nullable
+as skir.ValueLocation,
+  ));
+}
+
+
+}
+
+/// @nodoc
+
+
+class ResourceCounterpartChoiceRequired implements ResourceCounterpartResolution {
+  const ResourceCounterpartChoiceRequired(this.message);
+  
+
+ final  String message;
+
+/// Create a copy of ResourceCounterpartResolution
+/// with the given fields replaced by the non-null parameter values.
+@JsonKey(includeFromJson: false, includeToJson: false)
+@pragma('vm:prefer-inline')
+$ResourceCounterpartChoiceRequiredCopyWith<ResourceCounterpartChoiceRequired> get copyWith => _$ResourceCounterpartChoiceRequiredCopyWithImpl<ResourceCounterpartChoiceRequired>(this, _$identity);
+
+
+
+@override
+bool operator ==(Object other) {
+    return identical(this, other) || (other.runtimeType == runtimeType&&other is ResourceCounterpartChoiceRequired&&(identical(other.message, message) || other.message == message));
+}
+
+
+@override
+int get hashCode {
+    return Object.hash(runtimeType,message);
+}
+
+@override
+String toString() {
+    return 'ResourceCounterpartResolution.choiceRequired(message: $message)';
+}
+
+
+}
+
+/// @nodoc
+abstract mixin class $ResourceCounterpartChoiceRequiredCopyWith<$Res> implements $ResourceCounterpartResolutionCopyWith<$Res> {
+  factory $ResourceCounterpartChoiceRequiredCopyWith(ResourceCounterpartChoiceRequired value, $Res Function(ResourceCounterpartChoiceRequired) _then) = _$ResourceCounterpartChoiceRequiredCopyWithImpl;
+@useResult
+$Res call({
+ String message
+});
+
+
+
+
+}
+/// @nodoc
+class _$ResourceCounterpartChoiceRequiredCopyWithImpl<$Res>
+    implements $ResourceCounterpartChoiceRequiredCopyWith<$Res> {
+  _$ResourceCounterpartChoiceRequiredCopyWithImpl(this._self, this._then);
+
+  final ResourceCounterpartChoiceRequired _self;
+  final $Res Function(ResourceCounterpartChoiceRequired) _then;
+
+/// Create a copy of ResourceCounterpartResolution
+/// with the given fields replaced by the non-null parameter values.
+@pragma('vm:prefer-inline') $Res call({Object? message = null,}) {
+  return _then(ResourceCounterpartChoiceRequired(
+null == message ? _self.message : message // ignore: cast_nullable_to_non_nullable
+as String,
+  ));
+}
+
+
+}
+
+/// @nodoc
+
+
+class InvalidResourceCounterpart implements ResourceCounterpartResolution {
+  const InvalidResourceCounterpart(this.message);
+  
+
+ final  String message;
+
+/// Create a copy of ResourceCounterpartResolution
+/// with the given fields replaced by the non-null parameter values.
+@JsonKey(includeFromJson: false, includeToJson: false)
+@pragma('vm:prefer-inline')
+$InvalidResourceCounterpartCopyWith<InvalidResourceCounterpart> get copyWith => _$InvalidResourceCounterpartCopyWithImpl<InvalidResourceCounterpart>(this, _$identity);
+
+
+
+@override
+bool operator ==(Object other) {
+    return identical(this, other) || (other.runtimeType == runtimeType&&other is InvalidResourceCounterpart&&(identical(other.message, message) || other.message == message));
+}
+
+
+@override
+int get hashCode {
+    return Object.hash(runtimeType,message);
+}
+
+@override
+String toString() {
+    return 'ResourceCounterpartResolution.invalid(message: $message)';
+}
+
+
+}
+
+/// @nodoc
+abstract mixin class $InvalidResourceCounterpartCopyWith<$Res> implements $ResourceCounterpartResolutionCopyWith<$Res> {
+  factory $InvalidResourceCounterpartCopyWith(InvalidResourceCounterpart value, $Res Function(InvalidResourceCounterpart) _then) = _$InvalidResourceCounterpartCopyWithImpl;
+@useResult
+$Res call({
+ String message
+});
+
+
+
+
+}
+/// @nodoc
+class _$InvalidResourceCounterpartCopyWithImpl<$Res>
+    implements $InvalidResourceCounterpartCopyWith<$Res> {
+  _$InvalidResourceCounterpartCopyWithImpl(this._self, this._then);
+
+  final InvalidResourceCounterpart _self;
+  final $Res Function(InvalidResourceCounterpart) _then;
+
+/// Create a copy of ResourceCounterpartResolution
+/// with the given fields replaced by the non-null parameter values.
+@pragma('vm:prefer-inline') $Res call({Object? message = null,}) {
+  return _then(InvalidResourceCounterpart(
+null == message ? _self.message : message // ignore: cast_nullable_to_non_nullable
+as String,
+  ));
+}
+
+
 }
 
 // dart format on

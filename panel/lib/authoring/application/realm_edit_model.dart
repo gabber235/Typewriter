@@ -7,6 +7,10 @@ part "authoring_document.dart";
 part "authoring_edit.dart";
 part "authoring_facts.dart";
 part "authoring_conflict_review.dart";
+part "authoring_link_staging.dart";
+part "authoring_expectations.dart";
+part "resource_counterpart_catalog.dart";
+part "authoring_defaults.dart";
 
 /// An atomic pair of saved facts and the working overlay sent for preparation.
 @freezed
@@ -25,19 +29,6 @@ abstract class RealmPreparedEdit with _$RealmPreparedEdit {
     required skir.PreparedEdit request,
     @Default([]) List<LocatedInitializationFinding> findings,
   }) = _RealmPreparedEdit;
-}
-
-/// Whether canonical relation metadata identifies one direct scalar counterpart.
-@freezed
-sealed class ResourceCounterpartResolution
-    with _$ResourceCounterpartResolution {
-  const factory ResourceCounterpartResolution.resolved(
-    skir.ValueLocation location,
-  ) = ResolvedResourceCounterpart;
-  const factory ResourceCounterpartResolution.choiceRequired(String message) =
-      ResourceCounterpartChoiceRequired;
-  const factory ResourceCounterpartResolution.invalid(String message) =
-      InvalidResourceCounterpart;
 }
 
 /// Supplies replay and composition semantics to the shared Realm editing workspace.
