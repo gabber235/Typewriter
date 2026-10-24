@@ -549,17 +549,9 @@ final class CheckedEditorCatalog {
 
   /// Checks nominal readability and nullable widening for valid type uses.
   /// This relation does not prove declaration readiness or argument bounds;
-  /// callers admitting external types must use [isReadyTypeUse] as well.
+  /// callers admitting external types must use [isReadyApplication] as well.
   bool isReadableAs(skir.TypeUse actual, skir.TypeUse expected) =>
       _isReadableAs(actual, expected, 0);
-
-  /// Whether a complete named use is valid in this checked snapshot.
-  ///
-  /// Equality and nominal readability assume their inputs are valid type uses.
-  /// This boundary also proves that every referenced declaration is ready,
-  /// every application has the declared arity, and every applied argument
-  /// satisfies its parameter bounds.
-  bool isReadyTypeUse(skir.TypeUse use) => _isReadyTypeUse(use, 0);
 
   bool isReadyApplication(skir.NamedTypeUse application) =>
       _isReadyApplication(application, 0);
