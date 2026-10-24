@@ -47,12 +47,18 @@ final panelModules = PanelModuleGraph({
 /// (`OrganizationRoute`, `ServicesRoute`) and their named arguments into
 /// app_router.gr.dart, and features navigate with them. The router in turn
 /// builds the feature pages. Matched by the declaring file, so a route's
-/// constructor parameters count too.
+/// constructor parameters count too. Only the app and the features may use
+/// them; shared code and authoring receive routes from a feature instead.
 bool isGeneratedRoute(Element element) =>
     element.firstFragment.libraryFragment?.source.uri.path.endsWith(
       ".gr.dart",
     ) ??
     false;
+
+/// Whether code in [module] may use the generated routes, which the app
+/// module declares.
+bool mayUseGeneratedRoutes(PanelModule module) =>
+    module.path == "app" || module.path.startsWith("features/");
 
 /// One declared module: a folder below lib/, owning every file beneath it
 /// that no deeper module claims.
@@ -99,9 +105,8 @@ final class PanelModuleGraph {
   /// The deepest declared module whose folder contains [libraryPath], or null.
   PanelModule? tryModuleOf(String libraryPath) {
     if (!libraryPath.contains("/")) {
-      return libraryPath == "main.dart"
-          ? _modules["app"]
-          : _modules["dependencies"];
+      final owner = _rootFiles[libraryPath];
+      return owner == null ? null : _modules[owner];
     }
     final owners = _modules.keys.where(
       (path) => libraryPath.startsWith("$path/"),
@@ -110,6 +115,14 @@ final class PanelModuleGraph {
     return _modules[owners.reduce((a, b) => a.length >= b.length ? a : b)];
   }
 }
+
+/// The files directly below lib/ that belong to a module. Any other root file
+/// belongs to no module, so the architecture test reports it.
+const _rootFiles = {
+  "main.dart": "app",
+  "dependencies.dart": "dependencies",
+  "dependencies_io_stub.dart": "dependencies",
+};
 
 PanelModule moduleOf(String libraryPath) =>
     panelModules.tryModuleOf(libraryPath) ??
@@ -125,13 +138,14 @@ List<String> cyclesIn(PanelModuleGraph graph) => [
 ];
 
 /// Generated files belong to their declaring library; a barrel holds only
-/// directives (library, import, export, part), whatever its name.
-bool isGeneratedOrBarrel(String path) =>
+/// directives (library, import, export, part), whatever its name. [source]
+/// defaults to the file's content on disk.
+bool isGeneratedOrBarrel(String path, {String? source}) =>
     path.endsWith(".g.dart") ||
     path.endsWith(".freezed.dart") ||
     path.endsWith(".gr.dart") ||
     path.contains("/skirout/") ||
-    _onlyDirectives(File(path).readAsStringSync());
+    _onlyDirectives(source ?? File(path).readAsStringSync());
 
 final _comment = RegExp(r"//[^\n]*|/\*[\s\S]*?\*/");
 final _directive = RegExp(
