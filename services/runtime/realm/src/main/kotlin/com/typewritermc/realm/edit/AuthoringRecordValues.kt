@@ -11,7 +11,6 @@ import com.typewritermc.authoring.writeField
 import com.typewritermc.realm.authoring.ResourceValueMapper
 import com.typewritermc.realm.authoring.authoredTypeAt
 import com.typewritermc.realm.authoring.valueAt
-import com.typewritermc.services.libs.utils.sha256Hex
 import com.typewritermc.types.actualType
 import com.typewritermc.types.catalog.CheckedCatalog
 import com.typewritermc.types.catalog.Resolution
@@ -40,7 +39,7 @@ import skirout.editor.v1.type_catalog.ValueLocation
 import skirout.editor.v1.type_catalog.ValuePath
 import skirout.kernel.v1.resource_id.ResourceId
 
-internal data class AuthoredCollection(
+private data class AuthoredCollection(
     val type: NamedTypeUse,
     val representation: SequenceResolvedRepresentation,
 )
@@ -141,7 +140,13 @@ internal fun AuthoringRecord.collectionValue(
     return DataValue.named(collection.type, payload)
 }
 
-internal fun AuthoringRecord.declaredCollection(
+/** Whether [location] declares a list or set, even while it is still unfilled. */
+internal fun AuthoringRecord.declaresCollection(
+    location: ValueLocation,
+    catalog: CheckedCatalog,
+): Boolean = declaredCollection(location, catalog) != null
+
+private fun AuthoringRecord.declaredCollection(
     location: ValueLocation,
     catalog: CheckedCatalog,
 ): AuthoredCollection? {
@@ -188,24 +193,10 @@ internal fun TypeUse?.namedType(): NamedTypeUse? =
         else -> null
     }
 
-internal fun deterministicItem(
-    batch: String,
-    ordinal: Int,
-    containing: ValueLocation,
-): ItemId {
-    val content = "$batch:$ordinal:${containing.resource.value}:${ValuePath.serializer.toJsonCode(containing.path)}"
-    return ItemId(value = "relation:${content.sha256Hex()}")
-}
-
-internal fun ValuePath.startsWith(prefix: ValuePath): Boolean =
-    segments.size >= prefix.segments.size && segments.take(prefix.segments.size) == prefix.segments
-
 internal fun insertionIndex(
     items: List<ListItem>,
     after: ItemId?,
 ): Int? = if (after == null) 0 else items.indexOfFirst { it.id == after }.takeIf { it >= 0 }?.plus(1)
-
-internal fun ValueProblem.on(resource: ResourceId): ValueProblem = copy(location = location.copy(resource = resource))
 
 internal fun problem(
     resource: ResourceId,

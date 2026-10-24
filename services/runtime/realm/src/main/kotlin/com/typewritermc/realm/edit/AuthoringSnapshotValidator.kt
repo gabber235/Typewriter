@@ -201,3 +201,5 @@ private fun validateAcyclic(
         }
     }
 }
+
+private fun ValueProblem.on(resource: ResourceId): ValueProblem = copy(location = location.copy(resource = resource))

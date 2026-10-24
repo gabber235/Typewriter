@@ -10,6 +10,7 @@ import com.typewritermc.realm.authoring.CounterpartBinding
 import com.typewritermc.realm.authoring.ResourceValueMapper
 import com.typewritermc.realm.authoring.authoredTypeAt
 import com.typewritermc.realm.authoring.valueAt
+import com.typewritermc.services.libs.utils.sha256Hex
 import com.typewritermc.types.catalog.CheckedCatalog
 import com.typewritermc.types.endpoint
 import com.typewritermc.types.items
@@ -30,6 +31,7 @@ import skirout.editor.v1.diagnostic.ValueProblem
 import skirout.editor.v1.type_catalog.AuthoringRecord
 import skirout.editor.v1.type_catalog.DataValue
 import skirout.editor.v1.type_catalog.EndpointId
+import skirout.editor.v1.type_catalog.ItemId
 import skirout.editor.v1.type_catalog.LinkTarget
 import skirout.editor.v1.type_catalog.ListItem
 import skirout.editor.v1.type_catalog.PathSegment
@@ -168,9 +170,8 @@ internal class RelationValueSynchronizer(
                     }
                     val materialized = DataValue.named(actual, DataValue.RecordWrapper(prepared.payload))
                     val targetRecord = resources[intent.value.target]
-                    val collection = targetRecord?.declaredCollection(counterpart.value.containing, catalog)
                     val embedded =
-                        if (collection != null) {
+                        if (targetRecord?.declaresCollection(counterpart.value.containing, catalog) == true) {
                             val current = targetRecord.collectionValue(counterpart.value.containing, catalog, problems) ?: return
                             val item = deterministicItem(batch, ordinal, counterpart.value.containing)
                             insert(
@@ -453,3 +454,15 @@ internal class RelationValueSynchronizer(
         update(resources, location, if (nullable) DataValue.NULL else DataValue.UNFILLED, problems)
     }
 }
+
+private fun deterministicItem(
+    batch: String,
+    ordinal: Int,
+    containing: ValueLocation,
+): ItemId {
+    val content = "$batch:$ordinal:${containing.resource.value}:${ValuePath.serializer.toJsonCode(containing.path)}"
+    return ItemId(value = "relation:${content.sha256Hex()}")
+}
+
+private fun ValuePath.startsWith(prefix: ValuePath): Boolean =
+    segments.size >= prefix.segments.size && segments.take(prefix.segments.size) == prefix.segments
