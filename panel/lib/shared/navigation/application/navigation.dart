@@ -47,7 +47,7 @@ class CurrentRoute extends _$CurrentRoute {
 /// A missing parameter returns null. Consumers use this provider for route
 /// scoped resource lookup and should handle that absence before constructing an
 /// identifier.
-@riverpod
+@Riverpod(keepAlive: true)
 String? routeParam(Ref ref, String id) {
   final router = ref.watch(navigationRouterProvider);
   final params = router.topRoute.inheritedPathParams;

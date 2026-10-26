@@ -17,7 +17,7 @@ abstract class _OrganizationAccessSnapshot with _$OrganizationAccessSnapshot {
 ///
 /// Keeping the observations together makes a session change one coherent
 /// route access update rather than two independently ordered callbacks.
-@Riverpod(keepAlive: true)
+@riverpod
 _OrganizationAccessSnapshot _organizationAccessSnapshot(Ref ref) =>
     _OrganizationAccessSnapshot(
       principal: ref.watch(userIdProvider),
