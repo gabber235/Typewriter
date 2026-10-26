@@ -174,6 +174,10 @@ fn response(
     spawn_local(async move {
         tx.write_all(body_bytes).await;
         drop(tx);
+        #[expect(
+            clippy::let_underscore_must_use,
+            reason = "the trailers have no content; a reader that already dropped the future needs nothing more"
+        )]
         let _ = trailers_tx.write(Ok(None)).await;
     });
 

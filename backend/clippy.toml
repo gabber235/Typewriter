@@ -1,0 +1,2 @@
+# Tests may unwrap: a panic is how a test reports a broken expectation.
+allow-unwrap-in-tests = true

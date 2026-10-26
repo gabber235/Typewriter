@@ -56,8 +56,10 @@ pub fn generate_names(seed: [u8; 16]) -> GeneratedNames {
         .map(|byte| format!("{byte:02x}"))
         .collect::<String>();
 
-    let first = u64::from_le_bytes(seed[..8].try_into().unwrap());
-    let second = u64::from_le_bytes(seed[8..].try_into().unwrap());
+    // Little endian, so the low half holds `seed[..8]` and the high half `seed[8..]`.
+    let value = u128::from_le_bytes(seed);
+    let first = value as u64;
+    let second = (value >> 64) as u64;
 
     GeneratedNames {
         authentik_username: format!("service-{hex}"),
