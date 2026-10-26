@@ -1,4 +1,4 @@
-//! The Typewriter harness. Every command an agent, Gabber or CI runs goes through here, so the
+//! The Typewriter harness. Every command an agent, a developer or CI runs goes through here, so the
 //! task graph, the build lock and the deploy steps are Rust instead of task wiring. devenv only
 //! provides the tools these commands call.
 
