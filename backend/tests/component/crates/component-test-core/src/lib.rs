@@ -22,6 +22,7 @@ pub use messaging_mock::{
     MessagingExpectation, MessagingMock, MessagingOperation, MessagingTranscriptEntry,
     subject_matches,
 };
+pub use outgoing::{buffered, wasi_response};
 
 pub use builder::{
     ComponentConfiguration, FixtureBuilder, FixtureExtension, FixtureSpec, ProvisionContext,
@@ -57,7 +58,7 @@ pub type TestResult = anyhow::Result<()>;
 /// Boxed future used by the attribute macro to borrow a test context for its duration.
 pub type BoxTestFuture<'a> = Pin<Box<dyn Future<Output = TestResult> + Send + 'a>>;
 
-/// Static fixture metadata consumed by the runner and affected selection logic.
+/// Static fixture metadata consumed by the runner.
 pub trait FixtureDeclaration: Send + Sync + 'static {
     const DESCRIPTOR: FixtureDescriptor;
 }
@@ -206,10 +207,7 @@ impl MessagingClient {
         subject: impl Into<String>,
         body: impl Into<Vec<u8>>,
     ) -> Result<()> {
-        self.0
-            .publish(host_message(subject, body))
-            .await
-            .map_err(Into::into)
+        self.0.publish(host_message(subject, body)).await
     }
     /// Sends a broker request and returns the reply body.
     pub async fn request(
@@ -226,7 +224,7 @@ impl MessagingClient {
     }
     /// Waits until the broker delivery queues and guest handlers are idle.
     pub async fn wait_idle(&self) -> Result<()> {
-        self.0.wait_idle().await.map_err(Into::into)
+        self.0.wait_idle().await
     }
 }
 fn host_message(subject: impl Into<String>, body: impl Into<Vec<u8>>) -> crate::nats::HostMessage {
@@ -305,7 +303,7 @@ fn admission_limit(available: usize, configured: Option<&str>) -> Result<usize, 
             .ok_or_else(|| {
                 "admission phase: COMPONENT_TEST_JOBS must be a positive integer".to_string()
             }),
-        None => Ok(available.clamp(1, 2)),
+        None => Ok(available.max(1)),
     }
 }
 
@@ -323,12 +321,20 @@ where
         Ok(value) => value,
         Err(error) => panic!("component test failed: {error:#}"),
     };
+    let started = Instant::now();
     let outcome = globals.runtime.block_on(run::<F, B>(
         globals.admission.clone(),
         globals.engine.clone(),
         descriptor,
         body,
     ));
+    let failure = match &outcome {
+        Outcome::Pass => None,
+        Outcome::Error(report) | Outcome::Panic(_, report) => Some(report.as_str()),
+    };
+    if let Err(error) = record_result(descriptor, started.elapsed(), failure) {
+        panic!("component test failed: recording its result: {error:#}");
+    }
     match outcome {
         Outcome::Pass => {}
         Outcome::Error(report) => panic!("component test failed:\n{report}"),
@@ -338,6 +344,37 @@ where
         }
     }
 }
+/// Appends one case's result as a JSON line to the file `COMPONENT_TEST_RESULTS` names, so the
+/// runner reads outcomes and durations instead of parsing libtest's console output.
+fn record_result(
+    descriptor: &TestDescriptor,
+    duration: std::time::Duration,
+    failure: Option<&str>,
+) -> Result<()> {
+    static RESULTS: std::sync::Mutex<()> = std::sync::Mutex::new(());
+    let Some(path) = std::env::var_os("COMPONENT_TEST_RESULTS") else {
+        return Ok(());
+    };
+    let mut line = serde_json::to_string(&serde_json::json!({
+        "id": descriptor.libtest_name(),
+        "duration_millis": duration.as_millis(),
+        "failure": failure,
+    }))?;
+    line.push('\n');
+    // One write per line under the lock, so concurrent cases never interleave.
+    let _guard = RESULTS
+        .lock()
+        .unwrap_or_else(std::sync::PoisonError::into_inner);
+    std::io::Write::write_all(
+        &mut std::fs::OpenOptions::new()
+            .create(true)
+            .append(true)
+            .open(path)?,
+        line.as_bytes(),
+    )?;
+    Ok(())
+}
+
 enum Outcome {
     Pass,
     Error(String),
@@ -574,10 +611,10 @@ where
         {
             failures.push(format!("stopping host: {error:#}"));
         }
-        if let Some(messaging) = &fixture.messaging {
-            if let Err(error) = messaging.close().await {
-                failures.push(format!("stopping NATS: {error:#}"));
-            }
+        if let Some(messaging) = &fixture.messaging
+            && let Err(error) = messaging.close().await
+        {
+            failures.push(format!("stopping NATS: {error:#}"));
         }
     }
     diagnostic.phase("cleaning extensions");

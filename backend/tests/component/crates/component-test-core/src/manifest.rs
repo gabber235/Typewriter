@@ -23,7 +23,7 @@ static MANIFEST: OnceLock<Result<RunManifest, String>> = OnceLock::new();
 static ARTIFACTS: OnceLock<Mutex<HashMap<(String, String), Artifact>>> = OnceLock::new();
 
 fn command(fixture: &str) -> String {
-    format!("cargo xtask component-test {fixture}")
+    format!("cargo xtask components {fixture}")
 }
 
 pub(crate) fn artifacts(descriptor: &FixtureDescriptor) -> Result<HashMap<String, Artifact>> {
@@ -105,9 +105,9 @@ pub(crate) fn artifacts(descriptor: &FixtureDescriptor) -> Result<HashMap<String
 }
 
 fn load_manifest() -> Result<RunManifest, String> {
-    let path = env::var_os("COMPONENT_TEST_RUN_MANIFEST").ok_or_else(|| "validation phase: COMPONENT_TEST_RUN_MANIFEST is missing; run `cargo xtask component-test <fixture>`".to_string())?;
-    let bytes = fs::read(&path).map_err(|error| format!("validation phase: cannot read run manifest `{}`: {error}; run `cargo xtask component-test <fixture>`", PathBuf::from(path).display()))?;
-    serde_json::from_slice(&bytes).map_err(|error| format!("validation phase: invalid run manifest: {error}; run `cargo xtask component-test <fixture>`"))
+    let path = env::var_os("COMPONENT_TEST_RUN_MANIFEST").ok_or_else(|| "validation phase: COMPONENT_TEST_RUN_MANIFEST is missing; run `cargo xtask components <fixture>`".to_string())?;
+    let bytes = fs::read(&path).map_err(|error| format!("validation phase: cannot read run manifest `{}`: {error}; run `cargo xtask components <fixture>`", PathBuf::from(path).display()))?;
+    serde_json::from_slice(&bytes).map_err(|error| format!("validation phase: invalid run manifest: {error}; run `cargo xtask components <fixture>`"))
 }
 
 fn validate_manifest(manifest: &RunManifest, descriptor: &FixtureDescriptor) -> Result<()> {

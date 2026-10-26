@@ -4,6 +4,7 @@ members = [
     "access/auth-callout",
     "access/auth-sentinel",
     "access/auth-typewriter-permissions",
+    "database/schema",
     "organization/organization-members",
     "organization/organization-roles",
     "organization/user-organization",
@@ -12,6 +13,7 @@ members = [
     "testing/component-test-echo",
     "testing/component-test-messaging",
     "testing/component-test-responder",
+    "testing/nats-broker",
     "wasmcloud-utils",
     "wasmcloud-utils-macros",
 ]

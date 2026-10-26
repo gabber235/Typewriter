@@ -2,7 +2,7 @@
 
 #![forbid(unsafe_code)]
 
-use std::collections::{BTreeMap, BTreeSet};
+use std::collections::BTreeSet;
 use std::path::{Path, PathBuf};
 
 use serde::{Deserialize, Serialize};
@@ -52,12 +52,11 @@ impl ComponentBuild {
 }
 
 #[derive(Clone, Copy, Debug, Eq, PartialEq, Serialize)]
-/// Static fixture catalog entry used for builds, selection, and runtime assembly.
+/// Static fixture catalog entry used for builds and runtime assembly.
 pub struct FixtureDescriptor {
     pub id: &'static str,
     pub primary: ComponentBuild,
     pub dependencies: &'static [ComponentBuild],
-    pub affected_paths: &'static [&'static str],
 }
 
 impl FixtureDescriptor {
@@ -268,83 +267,6 @@ impl RunManifest {
     }
 }
 
-#[derive(Clone, Debug, Default, Eq, PartialEq)]
-/// Fixtures selected by changed paths, with reasons for each selection.
-pub struct AffectedSelection {
-    pub all: bool,
-    pub fixture_ids: BTreeSet<String>,
-    pub reasons: BTreeMap<String, BTreeSet<String>>,
-}
-
-impl AffectedSelection {
-    /// Selects every fixture and records the global reason.
-    pub fn select_all(reason: impl Into<String>) -> Self {
-        let mut selection = Self {
-            all: true,
-            ..Self::default()
-        };
-        selection
-            .reasons
-            .entry("*".to_string())
-            .or_default()
-            .insert(reason.into());
-        selection
-    }
-
-    /// Adds one fixture and records the path or rule that selected it.
-    pub fn include(&mut self, fixture_id: &str, reason: impl Into<String>) {
-        self.fixture_ids.insert(fixture_id.to_string());
-        self.reasons
-            .entry(fixture_id.to_string())
-            .or_default()
-            .insert(reason.into());
-    }
-}
-
-/// Selects fixtures affected by source, schema, or global component test changes.
-pub fn select_affected(
-    fixtures: &[&FixtureDescriptor],
-    changed_paths: impl IntoIterator<Item = impl AsRef<Path>>,
-) -> AffectedSelection {
-    let mut selection = AffectedSelection::default();
-    for path in changed_paths {
-        let normalized = path.as_ref().to_string_lossy().replace('\\', "/");
-        if is_global_component_test_path(&normalized) {
-            return AffectedSelection::select_all(normalized);
-        }
-
-        let mut matched = false;
-        for fixture in fixtures {
-            let package_marker = format!("/{}/", fixture.primary.package);
-            let uses_component = fixture.components().any(|component| {
-                normalized.contains(&format!("/{}/", component.package))
-                    || normalized.ends_with(&format!("/{}", component.package))
-            });
-            let explicit = fixture
-                .affected_paths
-                .iter()
-                .any(|prefix| normalized.starts_with(prefix));
-            if uses_component || normalized.contains(&package_marker) || explicit {
-                selection.include(fixture.id, normalized.clone());
-                matched = true;
-            }
-        }
-
-        if normalized.starts_with("backend/") && !matched {
-            return AffectedSelection::select_all(format!("unmapped backend change: {normalized}"));
-        }
-    }
-    selection
-}
-
-fn is_global_component_test_path(path: &str) -> bool {
-    path.starts_with("backend/tests/component/crates/")
-        || path == "backend/Cargo.lock"
-        || path == "backend/Cargo.toml"
-        || path.starts_with(".cargo/")
-        || path == ".github/workflows/ci-component-tests.yml"
-}
-
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -354,7 +276,6 @@ mod tests {
         id: "service-identity",
         primary: ComponentBuild::primary("service-identity", "service_identity"),
         dependencies: NO_DEPS,
-        affected_paths: &["backend/database/schema/service/"],
     };
 
     fn test_descriptor() -> TestDescriptor {
@@ -378,21 +299,5 @@ mod tests {
             validate_catalog([&SERVICE, &SERVICE], std::iter::empty()),
             Err(ModelError::DuplicateFixture("service-identity".into()))
         );
-    }
-
-    #[test]
-    fn selects_component_and_schema_changes() {
-        let fixtures = [&SERVICE];
-        let source = select_affected(&fixtures, ["backend/service/service-identity/src/lib.rs"]);
-        assert!(source.fixture_ids.contains("service-identity"));
-
-        let schema = select_affected(&fixtures, ["backend/database/schema/service/service.surql"]);
-        assert!(schema.fixture_ids.contains("service-identity"));
-    }
-
-    #[test]
-    fn unknown_backend_change_fails_safe() {
-        let selection = select_affected([&SERVICE].as_slice(), ["backend/new-area/file.rs"]);
-        assert!(selection.all);
     }
 }

@@ -8,7 +8,6 @@ use component_test::{
         package = "component-test-messaging",
         target = "component_test_messaging"
     ),
-    affected_paths("backend/testing/component-test-messaging/")
 )]
 pub struct SyntheticMessaging;
 
@@ -41,7 +40,6 @@ async fn host_publish_invokes_component(
         package = "component-test-messaging",
         target = "component_test_messaging"
     ),
-    affected_paths("backend/testing/component-test-messaging/")
 )]
 pub struct SyntheticMessagingRequest;
 
@@ -81,10 +79,6 @@ async fn component_request_uses_scripted_reply(
         package = "component-test-responder",
         target = "component_test_responder"
     ),
-    affected_paths(
-        "backend/testing/component-test-messaging/",
-        "backend/testing/component-test-responder/"
-    )
 )]
 pub struct SyntheticComposed;
 

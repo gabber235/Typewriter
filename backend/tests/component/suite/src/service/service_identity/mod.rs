@@ -9,10 +9,6 @@ pub(crate) struct Authentik;
 #[component_fixture(
     id = "service-identity",
     primary(package = "service-identity", target = "service_identity"),
-    affected_paths(
-        "backend/service/service-identity/",
-        "backend/database/schema/service/"
-    )
 )]
 pub struct ServiceIdentity;
 
