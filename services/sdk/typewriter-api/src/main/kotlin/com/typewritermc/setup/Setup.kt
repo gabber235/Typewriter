@@ -312,7 +312,10 @@ sealed interface SetupLayout {
     }
 }
 
-/** UUIDv5 over the key path: stable across runs, unique per path. */
+/**
+ * UUIDv5 over the key path: stable across runs, unique per path. Each step is hashed with its length, so a key that
+ * contains the separator cannot spell the path of another part.
+ */
 internal fun stableId(path: List<String>): ResourceId {
     val digest = MessageDigest.getInstance("SHA-1")
     digest.update(
@@ -322,7 +325,12 @@ internal fun stableId(path: List<String>): ResourceId {
             .putLong(SETUP_NAMESPACE.leastSignificantBits)
             .array(),
     )
-    val hash = digest.digest(path.joinToString("/").toByteArray(Charsets.UTF_8)).copyOf(16)
+    path.forEach { step ->
+        val bytes = step.toByteArray(Charsets.UTF_8)
+        digest.update(ByteBuffer.allocate(Int.SIZE_BYTES).putInt(bytes.size).array())
+        digest.update(bytes)
+    }
+    val hash = digest.digest().copyOf(16)
     hash[6] = (hash[6].toInt() and 0x0f or 0x50).toByte()
     hash[8] = (hash[8].toInt() and 0x3f or 0x80).toByte()
     val bits = ByteBuffer.wrap(hash)

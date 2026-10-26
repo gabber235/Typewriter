@@ -5,10 +5,8 @@ import com.typewritermc.engine.RESOURCE_GRAPH_MEDIA_TYPE
 import com.typewritermc.engine.RESOURCE_GRAPH_PROJECTION
 import com.typewritermc.engine.Root
 import com.typewritermc.services.libs.filetransfer.blob.ArtifactDigest
-import com.typewritermc.services.libs.filetransfer.blob.BlobEndpoint
 import com.typewritermc.services.libs.filetransfer.blob.BlobMetadata
-import com.typewritermc.services.libs.filetransfer.blob.BlobResult
-import com.typewritermc.services.libs.filetransfer.blob.StoreResult
+import com.typewritermc.services.libs.filetransfer.blob.InMemoryBlobEndpoint
 import com.typewritermc.types.ResourceId
 import com.typewritermc.types.toSkir
 import de.infix.testBalloon.framework.core.testSuite
@@ -30,7 +28,7 @@ import skirout.editor.v1.type_catalog.PublicationId
 val BlobCompiledArtifactSourceTest by testSuite {
     test("loads a complete publication and its opaque artifacts") {
         runTest {
-            val blobs = FakeBlobEndpoint()
+            val blobs = InMemoryBlobEndpoint()
             val shard = shard("a", "page")
             val activation = activation(1, listOf(shard), blobs)
 
@@ -52,10 +50,10 @@ val BlobCompiledArtifactSourceTest by testSuite {
 
     test("missing blobs fail without returning a partial activation") {
         runTest {
-            val blobs = FakeBlobEndpoint()
+            val blobs = InMemoryBlobEndpoint()
             val shard = shard("b", "missing")
             val activation = activation(1, listOf(shard), blobs)
-            blobs.remove(activation.outputs.single().blob)
+            blobs.remove(activation.blobDigest())
 
             shouldThrow<IllegalStateException> { BlobCompiledArtifactSource(blobs).load(activation) }
         }
@@ -63,10 +61,11 @@ val BlobCompiledArtifactSourceTest by testSuite {
 
     test("corrupt blobs are rejected") {
         runTest {
-            val blobs = FakeBlobEndpoint()
+            val blobs = InMemoryBlobEndpoint()
             val shard = shard("c", "corrupt")
             val activation = activation(1, listOf(shard), blobs)
-            blobs.corrupt(activation.outputs.single().blob)
+            val digest = activation.blobDigest()
+            blobs.replace(digest, blobs.content(digest).also { it[it.lastIndex] = (it.last() + 1).toByte() })
 
             shouldThrow<IllegalArgumentException> { BlobCompiledArtifactSource(blobs).load(activation) }
         }
@@ -74,10 +73,11 @@ val BlobCompiledArtifactSourceTest by testSuite {
 
     test("truncated content is rejected") {
         runTest {
-            val blobs = FakeBlobEndpoint()
+            val blobs = InMemoryBlobEndpoint()
             val shard = shard("d", "truncated")
             val activation = activation(1, listOf(shard), blobs)
-            blobs.truncate(activation.outputs.single().blob)
+            val digest = activation.blobDigest()
+            blobs.replace(digest, blobs.content(digest).copyOf(1))
 
             shouldThrow<IllegalArgumentException> { BlobCompiledArtifactSource(blobs).load(activation) }
         }
@@ -103,7 +103,7 @@ private fun shard(
 private fun activation(
     revision: Long,
     shards: List<ResourceGraphShard>,
-    blobs: FakeBlobEndpoint,
+    blobs: InMemoryBlobEndpoint,
 ): PublishedContent {
     val outputs =
         shards.map { shard ->
@@ -119,7 +119,7 @@ private fun activation(
                         mediaType = RESOURCE_GRAPH_MEDIA_TYPE,
                         semanticDigest = shard.digest,
                     ),
-                blob = blobs.put(ResourceGraphShard.serializer.toJsonCode(shard).encodeToByteArray()),
+                blob = blobs.put(ResourceGraphShard.serializer.toJsonCode(shard).encodeToByteArray()).toPointer(),
             )
         }
     return PublishedContent(
@@ -131,45 +131,12 @@ private fun activation(
     )
 }
 
-private class FakeBlobEndpoint : BlobEndpoint {
-    private val bytes = mutableMapOf<ArtifactDigest, ByteArray>()
-
-    fun remove(pointer: CompiledBlobPointer) {
-        bytes.remove(pointer.artifactDigest())
-    }
-
-    fun corrupt(pointer: CompiledBlobPointer) {
-        val digest = pointer.artifactDigest()
-        bytes[digest] = bytes.getValue(digest).copyOf().also { it[it.lastIndex] = (it.last() + 1).toByte() }
-    }
-
-    fun truncate(pointer: CompiledBlobPointer) {
-        val digest = pointer.artifactDigest()
-        bytes[digest] = bytes.getValue(digest).copyOf(1)
-    }
-
-    override suspend fun metadata(digest: ArtifactDigest): BlobResult<BlobMetadata> {
-        val value = bytes[digest] ?: return BlobResult.NotFound
-        return BlobResult.Success(BlobMetadata(digest, value.size.toLong()))
-    }
-
-    override suspend fun fetch(digest: ArtifactDigest): BlobResult<ByteArray> =
-        bytes[digest]?.let { BlobResult.Success(it.copyOf()) } ?: BlobResult.NotFound
-
-    override suspend fun store(
-        expected: BlobMetadata,
-        content: ByteArray,
-    ): StoreResult = error("Writes are unsupported in this fixture.")
-
-    fun put(value: ByteArray): CompiledBlobPointer {
-        val digest = ArtifactDigest.sha256(value)
-        bytes[digest] = value
-        return CompiledBlobPointer(digest = ContentDigest(digest.value).value, size = value.size.toLong())
-    }
-}
+private fun PublishedContent.blobDigest() = outputs.single().blob.artifactDigest()
 
 private fun CompiledBlobPointer.artifactDigest() =
     ArtifactDigest(
         com.typewritermc.services.libs.filetransfer.blob.DigestAlgorithm.SHA_256,
         digest,
     )
+
+private fun BlobMetadata.toPointer() = CompiledBlobPointer(digest = ContentDigest(digest.value).value, size = size)

@@ -17,6 +17,7 @@ import com.typewritermc.discovery.OwnedProviderRegistry
 import com.typewritermc.discovery.ProviderLease
 import com.typewritermc.discovery.ProviderOrigin
 import com.typewritermc.realm.catalog.AuthoringCatalogLease
+import com.typewritermc.testkit.definitions
 import com.typewritermc.types.FactoryNativeBindingRegistry
 import com.typewritermc.types.NativeBindingFactory
 import com.typewritermc.types.NativeBindingRegistry
@@ -39,15 +40,12 @@ import skirout.editor.v1.type_catalog.AuthoringRecord
 import skirout.editor.v1.type_catalog.CatalogGeneration
 import skirout.editor.v1.type_catalog.CollectionKind
 import skirout.editor.v1.type_catalog.DataValue
-import skirout.editor.v1.type_catalog.FieldDeclaration
-import skirout.editor.v1.type_catalog.FieldOwner
 import skirout.editor.v1.type_catalog.InputToken
 import skirout.editor.v1.type_catalog.IntegerWidth
 import skirout.editor.v1.type_catalog.ItemId
 import skirout.editor.v1.type_catalog.ListItem
 import skirout.editor.v1.type_catalog.ParameterKey
 import skirout.editor.v1.type_catalog.PathSegment
-import skirout.editor.v1.type_catalog.RepresentationTemplate
 import skirout.editor.v1.type_catalog.ScalarKind
 import skirout.editor.v1.type_catalog.TypeDefinition
 import skirout.editor.v1.type_catalog.TypeDefinitionId
@@ -84,7 +82,7 @@ internal class TestCatalogLease private constructor(
         providers: OwnedProviderRegistry = EmptyProviders,
         checks: List<OwnedCheckRecipe> = emptyList(),
         configuration: List<skirout.editor.v1.catalog.ConfigurationRecipe> = emptyList(),
-        definitions: List<TypeDefinition> = listOf(TEST_DEFINITION, LIST_DEFINITION),
+        definitions: List<TypeDefinition> = TEST_DEFINITIONS,
         nativeBindingFactories: List<NativeBindingFactory> = emptyList(),
         relations: List<RelationContract> = emptyList(),
     ) : this(
@@ -234,33 +232,20 @@ internal val LIST_TYPE = TypeDefinitionId.qualified("typewriter", "list")
 internal val TEXT_USE = ScalarKind.TEXT.use
 internal val INT_USE = integerScalar(IntegerWidth.SIGNED_THIRTY_TWO).use
 internal val LIST_USE = LIST_TYPE.namedUse(listOf(INT_USE))
-internal val TEST_DEFINITION =
-    TypeDefinition.partial(
-        id = TEST_TYPE,
-        representation =
-            RepresentationTemplate.createRecord(
-                fields =
-                    listOf(
-                        FieldDeclaration.partial(
-                            owner = FieldOwner(definition = TEST_TYPE, name = "name"),
-                            type = ScalarKind.TEXT.template,
-                        ),
-                        FieldDeclaration.partial(
-                            owner = FieldOwner(definition = TEST_TYPE, name = "count"),
-                            type = integerScalar(IntegerWidth.SIGNED_THIRTY_TWO).template,
-                        ),
-                        FieldDeclaration.partial(
-                            owner = FieldOwner(definition = TEST_TYPE, name = "numbers"),
-                            type = LIST_TYPE.template(listOf(integerScalar(IntegerWidth.SIGNED_THIRTY_TWO).template)),
-                        ),
-                    ),
-                abstract_ = false,
-            ),
-    )
 internal val LIST_PARAMETER = ParameterKey(owner = LIST_TYPE, index = 0)
-internal val LIST_DEFINITION =
-    TypeDefinition.partial(
-        id = LIST_TYPE,
-        parameters = listOf(TypeParameter.partial(key = LIST_PARAMETER, name = "T")),
-        representation = RepresentationTemplate.createSequence(item = LIST_PARAMETER.template, kind = CollectionKind.LIST),
-    )
+
+/** The test resource with a name, a count and a list of numbers, and the generic list it uses. */
+internal val TEST_DEFINITIONS =
+    definitions {
+        record(TEST_TYPE) {
+            field("name", ScalarKind.TEXT.template)
+            field("count", integerScalar(IntegerWidth.SIGNED_THIRTY_TWO).template)
+            field("numbers", LIST_TYPE.template(listOf(integerScalar(IntegerWidth.SIGNED_THIRTY_TWO).template)))
+        }
+        sequence(
+            LIST_TYPE,
+            item = LIST_PARAMETER.template,
+            kind = CollectionKind.LIST,
+            parameters = listOf(TypeParameter.partial(key = LIST_PARAMETER, name = "T")),
+        )
+    }

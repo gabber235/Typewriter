@@ -1,5 +1,7 @@
 package com.typewritermc.services.libs.registrar.console
 
+import com.typewritermc.services.libs.registrar.OrganizationBinding
+import com.typewritermc.services.libs.registrar.ReadySession
 import com.typewritermc.services.libs.registrar.RegistrarSnapshot
 import com.typewritermc.services.libs.registrar.RegistrarState
 import com.typewritermc.services.libs.registrar.RegistrationToken
@@ -31,5 +33,33 @@ val RegistrarConsoleObserverTest by testSuite {
             ),
         )
         displayed.shouldContainExactly("TOKEN12345", "OTHER12345")
+    }
+
+    test("a pending registration token is cleared once bound") {
+        val shown = ShownTokens()
+        RegistrarConsoleObserver(shown).observe(
+            flowOf(
+                RegistrarSnapshot(1, 0, RegistrarState.AwaitingBinding(identity, RegistrationToken("TOKEN12345"))),
+                RegistrarSnapshot(
+                    2,
+                    0,
+                    RegistrarState.Ready(ReadySession(identity, OrganizationBinding("organization", "Organization")), 1),
+                ),
+            ),
+        )
+        shown.history.shouldContainExactly("TOKEN12345", null)
+    }
+}
+
+/** What an operator sees over time: each displayed token, and null once the display is cleared. */
+private class ShownTokens : BindingTokenOutput {
+    val history = mutableListOf<String?>()
+
+    override fun display(token: String) {
+        history += token
+    }
+
+    override fun cleared() {
+        history += null
     }
 }

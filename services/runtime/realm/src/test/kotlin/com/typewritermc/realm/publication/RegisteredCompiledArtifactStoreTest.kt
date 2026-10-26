@@ -3,10 +3,8 @@ package com.typewritermc.realm.publication
 import com.typewritermc.engine.CompiledArtifact
 import com.typewritermc.engine.ContentDigest
 import com.typewritermc.services.libs.filetransfer.blob.ArtifactDigest
-import com.typewritermc.services.libs.filetransfer.blob.BlobEndpoint
-import com.typewritermc.services.libs.filetransfer.blob.BlobMetadata
 import com.typewritermc.services.libs.filetransfer.blob.BlobResult
-import com.typewritermc.services.libs.filetransfer.blob.StoreResult
+import com.typewritermc.services.libs.filetransfer.blob.InMemoryBlobEndpoint
 import de.infix.testBalloon.framework.core.testSuite
 import io.kotest.assertions.throwables.shouldThrow
 import io.kotest.matchers.shouldBe
@@ -105,35 +103,6 @@ private fun Char.compiledArtifact(resource: String) =
         semanticDigest = ContentDigest(toString().repeat(64)),
         payload = byteArrayOf(code.toByte()),
     )
-
-internal class InMemoryBlobEndpoint : BlobEndpoint {
-    private val blobs = mutableMapOf<ArtifactDigest, ByteArray>()
-
-    /** Every store that reached this endpoint, so tests can tell whether unchanged content travelled again. */
-    var stores = 0
-        private set
-
-    fun remove(digest: ArtifactDigest) {
-        blobs.remove(digest)
-    }
-
-    override suspend fun metadata(digest: ArtifactDigest): BlobResult<BlobMetadata> =
-        blobs[digest]?.let { BlobResult.Success(BlobMetadata(digest, it.size.toLong())) } ?: BlobResult.NotFound
-
-    override suspend fun fetch(digest: ArtifactDigest): BlobResult<ByteArray> =
-        blobs[digest]?.let { BlobResult.Success(it.copyOf()) } ?: BlobResult.NotFound
-
-    override suspend fun store(
-        expected: BlobMetadata,
-        content: ByteArray,
-    ): StoreResult {
-        stores++
-        if (content.size.toLong() != expected.size) return StoreResult.Invalid("Unexpected blob size.")
-        if (ArtifactDigest.sha256(content) != expected.digest) return StoreResult.Invalid("Unexpected blob digest.")
-        blobs[expected.digest] = content.copyOf()
-        return StoreResult.Stored(expected)
-    }
-}
 
 internal class TestPublicationRetention : com.typewritermc.loader.api.artifact.PublicationBlobRetention {
     val publications = mutableMapOf<String, Set<ArtifactDigest>>()

@@ -40,6 +40,7 @@ import com.typewritermc.realm.operation.PreparationEvaluator
 import com.typewritermc.realm.publication.StagedEngineImplementationSource
 import com.typewritermc.realm.storage.RealmDatabaseProvider
 import com.typewritermc.realm.storage.SchemaMigrator
+import com.typewritermc.realm.testing.RealmCatalog
 import com.typewritermc.services.libs.communicator.address.MessageAddress
 import com.typewritermc.services.libs.communicator.client.Communicator
 import com.typewritermc.services.libs.communicator.testing.FakeMessageTransport
@@ -54,7 +55,7 @@ import com.typewritermc.services.libs.telemetry.ErrorSlug
 import com.typewritermc.services.libs.telemetry.MainSpanScope
 import com.typewritermc.services.libs.telemetry.mainSpan
 import com.typewritermc.services.libs.telemetry.testing.TelemetryTestHarness
-import com.typewritermc.services.libs.utils.DelayScheduler
+import com.typewritermc.services.libs.utils.FakeDelayScheduler
 import com.typewritermc.services.libs.utils.RetryPolicy
 import com.typewritermc.types.namedUse
 import com.typewritermc.types.payload
@@ -93,7 +94,6 @@ import skirout.editor.v1.type_catalog.TypeDefinition
 import skirout.editor.v1.type_catalog.TypeDefinitionId
 import skirout.editor.v1.type_catalog.TypeSelection
 import skirout.kernel.v1.resource_id.ResourceId
-import kotlin.time.Duration
 import kotlin.time.Duration.Companion.seconds
 
 @OptIn(ExperimentalCoroutinesApi::class)
@@ -189,7 +189,7 @@ val RealmLifecycleTest by testSuite {
 
                 first.transport.activeSubscriptionCount shouldBe 0
                 second.transport.activeSubscriptionCount shouldBe 0
-                fixture.delayScheduler.awaitRequest()
+                fixture.delayScheduler.awaitRequest() shouldBe 1.seconds
                 fixture.delayScheduler.resume()
                 runCurrent()
 
@@ -218,7 +218,7 @@ val RealmLifecycleTest by testSuite {
                 runCurrent()
 
                 session.transport.activeSubscriptionCount shouldBe 0
-                fixture.delayScheduler.awaitRequest()
+                fixture.delayScheduler.awaitRequest() shouldBe 1.seconds
                 fixture.delayScheduler.resume()
                 runCurrent()
 
@@ -307,7 +307,7 @@ val RealmLifecycleTest by testSuite {
 
     test("Realm start provisions the realm root and one instance of every section") {
         runTest {
-            val incarnation = coreRealmCatalog("lifecycle-structure")
+            val incarnation = RealmCatalog().incarnation("lifecycle-structure")
             val fixture = RealmLifecycleFixture(this, catalog = incarnation)
             try {
                 val session = fixture.session(1)
@@ -477,7 +477,7 @@ private class RealmLifecycleFixture(
             if (catalog == null) store.installTestCatalog("lifecycle_catalog") else store.replace(catalog)
         }
     val messaging = MutableStateFlow<HostedMessagingSession?>(null)
-    val delayScheduler = FakeDelayScheduler()
+    val delayScheduler = FakeDelayScheduler(holdDelays = true)
     var databaseOpen = false
         private set
     val artifactWrites: Int
@@ -655,23 +655,5 @@ private class TestDatabaseProvider(
         } finally {
             database.close()
         }
-    }
-}
-
-private class FakeDelayScheduler : DelayScheduler {
-    private val requested = Channel<Duration>(Channel.UNLIMITED)
-    private val resumed = Channel<Unit>(Channel.UNLIMITED)
-
-    override suspend fun delay(duration: Duration) {
-        requested.send(duration)
-        resumed.receive()
-    }
-
-    suspend fun awaitRequest() {
-        requested.receive() shouldBe 1.seconds
-    }
-
-    fun resume() {
-        check(resumed.trySend(Unit).isSuccess)
     }
 }

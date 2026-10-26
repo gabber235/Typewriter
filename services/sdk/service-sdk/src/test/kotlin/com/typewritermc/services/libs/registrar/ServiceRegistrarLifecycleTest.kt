@@ -5,7 +5,6 @@ package com.typewritermc.services.libs.registrar
 import com.typewritermc.services.libs.communicator.client.Communicator
 import com.typewritermc.services.libs.communicator.testing.FakeMessageTransport
 import com.typewritermc.services.libs.registrar.testing.FakeCredentialStorage
-import com.typewritermc.services.libs.registrar.testing.FakeDelayScheduler
 import com.typewritermc.services.libs.registrar.testing.FakeIdentityIssuer
 import com.typewritermc.services.libs.registrar.testing.FakeRegistrarRuntime
 import com.typewritermc.services.libs.registrar.testing.FakeRegistrarRuntimeFactory
@@ -13,6 +12,7 @@ import com.typewritermc.services.libs.registrar.testing.FakeRetryRandom
 import com.typewritermc.services.libs.registrar.testing.RegistrarAction
 import com.typewritermc.services.libs.registrar.testing.RegistrarActionLedger
 import com.typewritermc.services.libs.telemetry.testing.TelemetryTestHarness
+import com.typewritermc.services.libs.utils.FakeDelayScheduler
 import com.typewritermc.services.libs.utils.RetryPolicy
 import de.infix.testBalloon.framework.core.testSuite
 import io.kotest.matchers.shouldBe
@@ -661,7 +661,7 @@ private class Fixture(
             factory,
             harness.telemetry,
             RetryPolicy.exponential(1.seconds, 8.seconds, jitterRatio = 0.0),
-            FakeDelayScheduler(ledger = ledger),
+            FakeDelayScheduler { ledger.record(RegistrarAction.Delay(it)) },
             TestTimeSource(),
             FakeRetryRandom(listOf(.5), ledger),
         )

@@ -33,5 +33,7 @@ dependencies {
     implementation(libs.opentelemetry.exporter.otlp)
     implementation(libs.opentelemetry.semconv)
     implementation(libs.kotlin.serialize.cbor)
+    testImplementation(testFixtures(project(":messaging")))
+    testImplementation(testFixtures(project(":telemetry")))
     testImplementation(libs.kotlin.coroutines.test)
 }

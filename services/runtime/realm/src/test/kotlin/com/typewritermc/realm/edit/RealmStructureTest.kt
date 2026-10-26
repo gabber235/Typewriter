@@ -2,8 +2,8 @@
 
 package com.typewritermc.realm.edit
 
-import com.surrealdb.Surreal
 import com.typewritermc.authoring.GeneratedSdkApi
+import com.typewritermc.authoring.GraphPlacement
 import com.typewritermc.authoring.RealmRootDefinition
 import com.typewritermc.authoring.RealmRootFields
 import com.typewritermc.authoring.RealmSectionDefinition
@@ -15,29 +15,28 @@ import com.typewritermc.authoring.root
 import com.typewritermc.authoring.with
 import com.typewritermc.discovery.CatalogContributions
 import com.typewritermc.discovery.OwnedTypeDeclaration
+import com.typewritermc.library.BookFields
+import com.typewritermc.library.BookTags
 import com.typewritermc.library.LibraryDefinition
+import com.typewritermc.library.Tag
 import com.typewritermc.library.TagDefinition
 import com.typewritermc.library.TaxonomyDefinition
-import com.typewritermc.library.TaxonomyFields
-import com.typewritermc.library.TaxonomyTags
-import com.typewritermc.realm.authoring.InMemoryAuthoringViewStore
+import com.typewritermc.library.book
+import com.typewritermc.library.library
+import com.typewritermc.library.tag
+import com.typewritermc.library.taxonomy
 import com.typewritermc.realm.authoring.valueAt
-import com.typewritermc.realm.catalog.RealmCatalogIncarnation
-import com.typewritermc.realm.catalog.RealmCatalogStore
-import com.typewritermc.realm.coreRealmCatalog
-import com.typewritermc.realm.record
-import com.typewritermc.realm.storage.MigrationResources
-import com.typewritermc.realm.storage.openTestDatabase
-import com.typewritermc.realm.testTag
+import com.typewritermc.realm.testing.RealmCatalog
+import com.typewritermc.realm.testing.RealmFixture
+import com.typewritermc.realm.testing.RealmStorage
+import com.typewritermc.realm.testing.withSetup
+import com.typewritermc.setup.setup
 import com.typewritermc.types.Ref
-import com.typewritermc.types.catalog.Resolution
-import com.typewritermc.types.encodeGeneratedDefault
-import com.typewritermc.types.fields
 import com.typewritermc.types.items
 import com.typewritermc.types.namedTemplate
 import com.typewritermc.types.namedUse
 import com.typewritermc.types.qualified
-import com.typewritermc.types.toResourceId
+import com.typewritermc.types.toSkir
 import com.typewritermc.types.unwrapNamed
 import com.typewritermc.types.use
 import de.infix.testBalloon.framework.core.testSuite
@@ -56,12 +55,18 @@ import skirout.editor.v1.type_catalog.ValueLocation
 import skirout.editor.v1.type_catalog.ValuePath
 import skirout.kernel.v1.resource_id.ResourceId
 
+private val questTag = setup("quest-tag") { taxonomy { tags.tag("quest") { name = "Quest" } } }
+
+private val shelf =
+    setup("shelf") {
+        val (quest, side) = taxonomy { tags.tag("quest") to tags.tag("side") }
+        Shelf(library { books.book("story") { handle } }, quest, side)
+    }
+
 val RealmStructureTest by testSuite {
     test("a fresh realm gets its root and one instance of every section in display name order") {
-        RealmStructureFixture("fresh_realm").use { fixture ->
-            fixture.provision()
-
-            val resources = fixture.resources()
+        RealmFixture.core().use { realm ->
+            val resources = realm.resources
             resources.typesOf(RealmRootDefinition.id).size shouldBe 1
             val library = resources.typesOf(LibraryDefinition.id).single()
             val taxonomy = resources.typesOf(TaxonomyDefinition.id).single()
@@ -70,25 +75,22 @@ val RealmStructureTest by testSuite {
     }
 
     test("provisioning an already structured realm changes nothing") {
-        RealmStructureFixture("idempotent_realm").use { fixture ->
-            fixture.provision()
-            val before = fixture.views.read { it.observationId to it.resources }
+        RealmFixture.core().use { realm ->
+            val before = realm.views.read { it.observationId to it.resources }
 
-            fixture.provision()
+            realm.provision()
 
-            fixture.views.read { it.observationId to it.resources } shouldBe before
+            realm.views.read { it.observationId to it.resources } shouldBe before
         }
     }
 
     test("a section type added by a new extension is created on the next start") {
-        RealmStructureFixture("added_section").use { fixture ->
-            fixture.provision()
-            val before = fixture.resources()
+        RealmFixture.core(RealmStorage.Surreal).use { realm ->
+            val before = realm.resources
 
-            fixture.restart(withExtraSection = true)
-            fixture.provision()
+            realm.restart(RealmCatalog(declarations = { core -> listOf(extraSection(core)) }))
 
-            val after = fixture.resources()
+            val after = realm.resources
             val added = after.typesOf(EXTRA_SECTION).single()
             after.sectionsOfRoot() shouldBe before.sectionsOfRoot() + added
             val root = before.typesOf(RealmRootDefinition.id).single()
@@ -98,177 +100,120 @@ val RealmStructureTest by testSuite {
     }
 
     test("a tag created into the taxonomy commits and survives reload") {
-        RealmStructureFixture("owned_tag").use { fixture ->
-            fixture.provision()
-            val taxonomy = fixture.resources().typesOf(TaxonomyDefinition.id).single()
-            val tag = ResourceId(value = "tag")
-            val edit =
-                fixture.views.capture().use { lease ->
-                    val context = WorkingViewEditContext(lease.root, "owned-tag")
-                    context.create(tag.toResourceId(), fixture.unownedTag())
-                    context.insert(
-                        boundCollectionPath(ValueLocation.of(taxonomy, TaxonomyFields.tags.path)),
-                        null,
-                        fixture.taxonomyLink(tag),
-                    )
-                    context.finish()
-                }
+        withSetup(questTag, RealmStorage.Surreal) { tag ->
+            restart()
 
-            fixture.owner.commit(edit) shouldBe CommitPreparedEditResponse.COMMITTED
-
-            fixture.restart()
-            val saved = fixture.resources().getValue(tag)
-            (
-                saved
-                    .valueAt(
-                        ValuePath.root.field("taxonomy"),
-                    )?.unwrapNamed() as DataValue.LinkWrapper
-            ).value.target.resource shouldBe taxonomy
+            resources.getValue(tag.id.toSkir()).owner() shouldBe resources.typesOf(TaxonomyDefinition.id).single()
         }
     }
 
-    test("a resource without an owner is rejected") {
-        RealmStructureFixture("owner_required").use { fixture ->
-            fixture.provision()
-
-            val problems = fixture.reject(EditIntent.createCreateResource(id = ResourceId(value = "loose"), record = fixture.unownedTag()))
-
-            problems shouldContain ("loose" to "owner_required")
+    test("creating a resource under an id that exists is refused and changes nothing") {
+        withSetup(questTag) { tag ->
+            rejected(EditIntent.createCreateResource(id = tag.id.toSkir(), record = unownedTag())) shouldContain
+                (tag.id.value to "resource_already_exists")
         }
     }
 
-    test("unlinking a section from the root leaves it without an owner and is rejected") {
-        RealmStructureFixture("section_unlinked").use { fixture ->
-            fixture.provision()
-            val resources = fixture.resources()
+    test("a resource without an owner is refused") {
+        RealmFixture.core().use { realm ->
+            realm.rejected(EditIntent.createCreateResource(id = ResourceId(value = "loose"), record = realm.unownedTag())) shouldContain
+                ("loose" to "owner_required")
+        }
+    }
+
+    test("unlinking a section from the root leaves it without an owner and is refused") {
+        RealmFixture.core().use { realm ->
+            val resources = realm.resources
             val root = resources.typesOf(RealmRootDefinition.id).single()
             val library = resources.typesOf(LibraryDefinition.id).single()
             val sections = resources.getValue(root).valueAt(RealmRootFields.sections.path)?.unwrapNamed() as DataValue.ListValueWrapper
-            val item =
-                sections.items
-                    .single {
-                        (it.value.unwrapNamed() as DataValue.LinkWrapper)
-                            .value.target.resource ==
-                            library
-                    }.id
+            val item = sections.items.single { it.value.linkTarget() == library }.id
 
-            val problems = fixture.reject(EditIntent.createRemove(at = ValueLocation.of(root, RealmRootFields.sections.path), item = item))
-
-            problems shouldContain (library.value to "owner_required")
+            realm.rejected(EditIntent.createRemove(at = ValueLocation.of(root, RealmRootFields.sections.path), item = item)) shouldContain
+                (library.value to "owner_required")
         }
     }
 
-    test("a second root or a second instance of a section type is rejected") {
-        RealmStructureFixture("singleton_exists").use { fixture ->
-            fixture.provision()
-            val resources = fixture.resources()
+    test("a second root or a second instance of a section type is refused") {
+        RealmFixture.core().use { realm ->
+            val resources = realm.resources
             val root = resources.getValue(resources.typesOf(RealmRootDefinition.id).single())
             val library = resources.getValue(resources.typesOf(LibraryDefinition.id).single())
 
-            fixture.reject(EditIntent.createCreateResource(id = ResourceId(value = "second_root"), record = root)) shouldContain
+            realm.rejected(EditIntent.createCreateResource(id = ResourceId(value = "second_root"), record = root)) shouldContain
                 ("second_root" to "singleton_exists")
-            fixture.reject(EditIntent.createCreateResource(id = ResourceId(value = "second_library"), record = library)) shouldContain
+            realm.rejected(EditIntent.createCreateResource(id = ResourceId(value = "second_library"), record = library)) shouldContain
                 ("second_library" to "singleton_exists")
         }
     }
 
-    test("removing the root or a section is rejected") {
-        RealmStructureFixture("singleton_required").use { fixture ->
-            fixture.provision()
-            val resources = fixture.resources()
+    test("removing the root or a section is refused") {
+        RealmFixture.core().use { realm ->
+            val resources = realm.resources
             val root = resources.typesOf(RealmRootDefinition.id).single()
             val library = resources.typesOf(LibraryDefinition.id).single()
 
-            fixture.reject(EditIntent.createDeleteResource(id = library)) shouldContain (library.value to "singleton_required")
-            fixture.reject(EditIntent.createDeleteResource(id = root)) shouldContain (root.value to "singleton_required")
+            realm.rejected(EditIntent.createDeleteResource(id = library)) shouldContain (library.value to "singleton_required")
+            realm.rejected(EditIntent.createDeleteResource(id = root)) shouldContain (root.value to "singleton_required")
+        }
+    }
+
+    test("an edit prepared before another author changed the same list is refused as a conflict") {
+        withSetup(shelf) { (book, quest, side) ->
+            val first = asUser("first")
+            val second = asUser("second")
+            val tags = boundCollectionPath(ValueLocation.of(book.id.toSkir(), BookFields.tags.path))
+            val tagLink =
+                BookTags.Book.Definition.id
+                    .namedUse(listOf(TagDefinition.id.use()))
+                    .use
+
+            first.commit { insert(tags, null, encoder.encode(tagLink, Ref<Nothing, Nothing>(quest.id))) } shouldBe
+                CommitPreparedEditResponse.COMMITTED
+            val saved = resources
+
+            second
+                .commit { insert(tags, null, encoder.encode(tagLink, Ref<Nothing, Nothing>(side.id))) }
+                .shouldBeInstanceOf<CommitPreparedEditResponse.ConflictErrorWrapper>()
+            resources shouldBe saved
         }
     }
 }
 
+private data class Shelf(
+    val book: com.typewritermc.setup.SetupHandle<com.typewritermc.library.Book>,
+    val quest: com.typewritermc.setup.SetupHandle<Tag>,
+    val side: com.typewritermc.setup.SetupHandle<Tag>,
+)
+
 private val EXTRA_SECTION = TypeDefinitionId.qualified("structure", "ExtraSection")
 
-/** A realm on the core catalog backed by a test database, provisioned like Realm start does. */
-private class RealmStructureFixture(
-    name: String,
-) : AutoCloseable {
-    private val database = Surreal()
-    private val storage: SurrealAuthoringStorage
-    lateinit var views: InMemoryAuthoringViewStore
-        private set
-    lateinit var owner: RealmAuthoringOwner
-        private set
+private fun extraSection(core: CatalogContributions) =
+    OwnedTypeDeclaration(
+        core.declarations.first().origin,
+        TypeDefinition.partial(
+            id = EXTRA_SECTION,
+            representation = RepresentationTemplate.createRecord(fields = emptyList(), abstract_ = false),
+            parents = listOf(RealmSectionDefinition.id.namedTemplate()),
+        ),
+        searchKey = "extrasection",
+    )
 
-    init {
-        database.openTestDatabase(name)
-        MigrationResources().loadRealmSchema().forEach { database.query(it.script).take(0) }
-        storage = SurrealAuthoringStorage(database)
-        restart()
+/** A Tag record whose owner link is not filled in, which no author's create may leave so. */
+private fun RealmFixture.unownedTag(): AuthoringRecord =
+    encoder
+        .record(TagDefinition.id.use(), Tag(taxonomy = Ref(com.typewritermc.types.ResourceId("unowned")), placement = GraphPlacement()))
+        .with("taxonomy", DataValue.UNFILLED)
+
+/** Commits [intent] alone, expects the refusal, checks nothing changed, and returns its problems as resource and code pairs. */
+private suspend fun RealmFixture.rejected(intent: EditIntent): List<Pair<String, String>> {
+    val before = resources
+    val generation = views.read { it.catalog.generation }
+    val response = commit(PreparedEdit(catalog = generation, expectations = emptyList(), intents = listOf(intent)))
+    resources shouldBe before
+    return response.shouldBeInstanceOf<CommitPreparedEditResponse.RejectedErrorWrapper>().value.map {
+        it.location.resource.value to it.code
     }
-
-    /** Reloads saved authoring under the core catalog, optionally with one more realm section type. */
-    fun restart(withExtraSection: Boolean = false) {
-        if (::views.isInitialized) views.close()
-        // A restart installs its catalog into a new store, as a new Realm activation does.
-        val catalogs = RealmCatalogStore().apply { replace(coreCatalog(withExtraSection)) }
-        views = InMemoryAuthoringViewStore(catalogs.captureCurrent(), storage.readCoherent())
-        owner = RealmAuthoringOwner(storage, views)
-    }
-
-    suspend fun provision() = RealmStructureProvisioning(owner).ensure(views)
-
-    fun resources(): Map<ResourceId, AuthoringRecord> = views.read { it.resources }
-
-    /** A Tag whose owner link is not filled in yet. */
-    fun unownedTag(): AuthoringRecord =
-        views.read { view ->
-            val record = view.catalog.record(testTag(name = "Quest"), TagDefinition.id)
-            record.with("taxonomy", DataValue.UNFILLED)
-        }
-
-    /** The taxonomy's link item for [tag], pointing back at the tag's owner field. */
-    fun taxonomyLink(tag: ResourceId): DataValue =
-        views.read { view ->
-            val use =
-                TaxonomyTags.Taxonomy.Definition.id
-                    .namedUse(listOf(TagDefinition.id.use()))
-            val checked = (view.catalog.checked.resolve(use.use) as Resolution.Ready).value
-            view.catalog.nativeBindings
-                .bind(checked)
-                .encodeGeneratedDefault(
-                    Ref<Nothing, Nothing>(tag.toResourceId(), ValuePath.root.field("taxonomy")),
-                )
-        }
-
-    /** The planner's problems for [intent] on the saved resources, as resource and code pairs. */
-    fun reject(intent: EditIntent): List<Pair<String, String>> =
-        views.read { view ->
-            val planner = AuthoringMutationPlanner(view.catalog.checked, view.catalog.relations)
-            val result =
-                planner.plan(
-                    view.resources,
-                    PreparedEdit(catalog = view.catalog.generation, expectations = emptyList(), intents = listOf(intent)),
-                )
-            result.shouldBeInstanceOf<MutationPlanningResult.Rejected>().problems.map { it.location.resource.value to it.code }
-        }
-
-    override fun close() {
-        views.close()
-        database.close()
-    }
-
-    private fun coreCatalog(withExtraSection: Boolean): RealmCatalogIncarnation =
-        coreRealmCatalog("realm-structure-$withExtraSection") { core -> if (withExtraSection) listOf(extraSection(core)) else emptyList() }
-
-    private fun extraSection(core: CatalogContributions) =
-        OwnedTypeDeclaration(
-            core.declarations.first().origin,
-            TypeDefinition.partial(
-                id = EXTRA_SECTION,
-                representation = RepresentationTemplate.createRecord(fields = emptyList(), abstract_ = false),
-                parents = listOf(RealmSectionDefinition.id.namedTemplate()),
-            ),
-            searchKey = "extrasection",
-        )
 }
 
 private fun Map<ResourceId, AuthoringRecord>.typesOf(type: TypeDefinitionId): List<ResourceId> =
@@ -277,8 +222,10 @@ private fun Map<ResourceId, AuthoringRecord>.typesOf(type: TypeDefinitionId): Li
 private fun Map<ResourceId, AuthoringRecord>.sectionsOfRoot(): List<ResourceId> {
     val root = getValue(typesOf(RealmRootDefinition.id).single())
     val sections = root.valueAt(RealmRootFields.sections.path)?.unwrapNamed() as DataValue.ListValueWrapper
-    return sections.items.map {
-        (it.value.unwrapNamed() as DataValue.LinkWrapper)
-            .value.target.resource
-    }
+    return sections.items.map { it.value.linkTarget() }
 }
+
+/** The resource a tag's owner link points at. */
+private fun AuthoringRecord.owner(): ResourceId = valueAt(ValuePath.root.field("taxonomy"))!!.linkTarget()
+
+private fun DataValue.linkTarget(): ResourceId = (unwrapNamed() as DataValue.LinkWrapper).value.target.resource

@@ -13,6 +13,9 @@ dependencies {
     implementation(project(":protocol-transport"))
     implementation(libs.kotlin.serialize.json)
     testImplementation(project(":loader-api"))
+    testImplementation(testFixtures(project(":messaging")))
+    testImplementation(testFixtures(project(":telemetry")))
+    testImplementation(testFixtures(project(":file-transfer")))
     testImplementation(libs.kotlin.coroutines.test)
 }
 

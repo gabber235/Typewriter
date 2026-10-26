@@ -4,16 +4,28 @@ package com.typewritermc.realm.routes
 
 import com.typewritermc.authoring.GeneratedSdkApi
 import com.typewritermc.authoring.GraphPlacement
+import com.typewritermc.authoring.HierarchyPath
 import com.typewritermc.authoring.PlacementAnchor
+import com.typewritermc.authoring.RealmRootDefinition
 import com.typewritermc.authoring.ResourceDraft
+import com.typewritermc.authoring.TimelineEntryPlacement
 import com.typewritermc.authoring.field
 import com.typewritermc.authoring.fieldMap
 import com.typewritermc.authoring.of
 import com.typewritermc.authoring.requireValid
 import com.typewritermc.authoring.root
 import com.typewritermc.discovery.ProviderOrigin
+import com.typewritermc.library.Book
+import com.typewritermc.library.LibraryDefinition
+import com.typewritermc.library.Page
 import com.typewritermc.library.TAXONOMY_TAGS_RELATION_ID
+import com.typewritermc.library.Tag
 import com.typewritermc.library.TagDefinition
+import com.typewritermc.library.TagFields
+import com.typewritermc.library.book
+import com.typewritermc.library.library
+import com.typewritermc.library.tag
+import com.typewritermc.library.taxonomy
 import com.typewritermc.operations.AnyResourceSubjects
 import com.typewritermc.operations.Delete
 import com.typewritermc.operations.Duplicate
@@ -33,25 +45,38 @@ import com.typewritermc.operations.UnlinkInputDefinition
 import com.typewritermc.operations.capability
 import com.typewritermc.operations.collectOperation
 import com.typewritermc.operations.fillOnDrop
-import com.typewritermc.realm.TestRealmStructure
-import com.typewritermc.realm.edit.MutationPlanningResult
-import com.typewritermc.realm.testTag
+import com.typewritermc.realm.routeFixtureCatalog
+import com.typewritermc.realm.testing.RealmCatalog
+import com.typewritermc.realm.testing.RealmFixture
+import com.typewritermc.realm.testing.withSetup
+import com.typewritermc.setup.SetupHandle
+import com.typewritermc.setup.SetupList
+import com.typewritermc.setup.setup
+import com.typewritermc.testing.routes.FixtureGraphEntry
+import com.typewritermc.testing.routes.FixtureGraphPage
+import com.typewritermc.testing.routes.FixtureTimelineEntry
+import com.typewritermc.testing.routes.FixtureTimelinePage
+import com.typewritermc.testing.routes.fixtureGraphEntry
+import com.typewritermc.testing.routes.fixtureGraphPage
+import com.typewritermc.testing.routes.fixtureTimelineEntry
+import com.typewritermc.testing.routes.fixtureTimelinePage
 import com.typewritermc.types.Ref
 import com.typewritermc.types.endpointId
 import com.typewritermc.types.fieldMap
-import com.typewritermc.types.fields
 import com.typewritermc.types.items
 import com.typewritermc.types.namedTemplate
 import com.typewritermc.types.payload
 import com.typewritermc.types.toResourceId
+import com.typewritermc.types.toSkir
 import com.typewritermc.types.type
 import com.typewritermc.types.use
 import de.infix.testBalloon.framework.core.testSuite
 import io.kotest.matchers.collections.shouldContain
 import io.kotest.matchers.collections.shouldContainAll
 import io.kotest.matchers.shouldBe
-import kotlinx.coroutines.test.runTest
+import io.kotest.matchers.types.shouldBeInstanceOf
 import skirout.editor.v1.authoring.AuthoringObservationId
+import skirout.editor.v1.authoring.CommitPreparedEditResponse
 import skirout.editor.v1.authoring.EditIntent
 import skirout.editor.v1.authoring.LinkOccurrenceId
 import skirout.editor.v1.authoring.PreparedEdit
@@ -61,6 +86,7 @@ import skirout.editor.v1.resource_operations.OperationSelectionEffect
 import skirout.editor.v1.resource_operations.ResolveDropCandidatesResult
 import skirout.editor.v1.resource_operations.ResolveResourceOperationsResult
 import skirout.editor.v1.type_catalog.AuthoringRecord
+import skirout.editor.v1.type_catalog.CatalogGeneration
 import skirout.editor.v1.type_catalog.DataValue
 import skirout.editor.v1.type_catalog.RelationId
 import skirout.editor.v1.type_catalog.ResourceTarget
@@ -68,27 +94,129 @@ import skirout.editor.v1.type_catalog.ValueLocation
 import skirout.editor.v1.type_catalog.ValuePath
 import skirout.kernel.v1.resource_id.ResourceId
 
+/** A book and three tags; `tag` is a child of `parent`, `loose` has no relations. */
+private data class TagGraph(
+    val book: SetupHandle<Book>,
+    val tag: SetupHandle<Tag>,
+    val parent: SetupHandle<Tag>,
+    val loose: SetupHandle<Tag>,
+)
+
+private val tagGraph =
+    setup("tag-graph") {
+        val (parent, tag, loose) =
+            taxonomy {
+                val parent = tags.tag("parent") { name = "Adventure" }
+                Triple(
+                    parent,
+                    tags.tag("tag") {
+                        name = "Quest"
+                        parents = setOf(parent)
+                    },
+                    tags.tag("loose") { name = "Loose" },
+                )
+            }
+        val book =
+            library {
+                books.book("book") {
+                    title = "Tutorial"
+                    handle
+                }
+            }
+        TagGraph(book, tag, parent, loose)
+    }
+
+/** Three pages of a source book with their chapters and priorities, and a destination book with two pages. */
+private data class Shelves(
+    val destination: SetupHandle<Book>,
+    val moved: List<SetupHandle<FixtureTimelinePage>>,
+    val residents: List<SetupHandle<FixtureTimelinePage>>,
+)
+
+private val shelves =
+    setup("shelves") {
+        library {
+            val moved =
+                books.book("source") {
+                    title = "Source"
+                    listOf(pages.page("first", "intro", 100), pages.page("second", "intro", 1), pages.page("other", "outro", 77))
+                }
+            val (destination, residents) =
+                books.book("destination") {
+                    title = "Destination"
+                    handle to listOf(pages.page("resident", "intro", 9), pages.page("peer", "outro", 3))
+                }
+            Shelves(destination, moved, residents)
+        }
+    }
+
+/** Two graph pages and a page without a graph layout, each holding one entry. */
+private data class Canvas(
+    val book: SetupHandle<Book>,
+    val graph: SetupHandle<FixtureGraphPage>,
+    val canvas: SetupHandle<FixtureGraphPage>,
+    val timeline: SetupHandle<FixtureTimelinePage>,
+    val graphEntry: SetupHandle<FixtureGraphEntry>,
+    val residentEntry: SetupHandle<FixtureGraphEntry>,
+    val timelineEntry: SetupHandle<FixtureTimelineEntry>,
+)
+
+private val canvas =
+    setup("canvas") {
+        library {
+            books.book("elements") {
+                title = "Library"
+                val (graph, graphEntry) =
+                    pages.fixtureGraphPage("graph") {
+                        name = "Page 0"
+                        handle to elements.fixtureGraphEntry("graph-entry") { placement = GraphPlacement(0, 0, 2, 2) }
+                    }
+                val (canvas, residentEntry) =
+                    pages.fixtureGraphPage("canvas") {
+                        name = "Page 1"
+                        priority = 1
+                        handle to elements.fixtureGraphEntry("resident-entry") { placement = GraphPlacement(0, 0, 2, 2) }
+                    }
+                val (timeline, timelineEntry) =
+                    pages.fixtureTimelinePage("timeline") {
+                        name = "Page 2"
+                        priority = 2
+                        handle to elements.fixtureTimelineEntry("timeline-entry") { placement = TimelineEntryPlacement(0) }
+                    }
+                Canvas(handle, graph, canvas, timeline, graphEntry, residentEntry, timelineEntry)
+            }
+        }
+    }
+
+private fun SetupList<Page>.page(
+    key: String,
+    chapterName: String,
+    order: Int,
+): SetupHandle<FixtureTimelinePage> =
+    fixtureTimelinePage(key) {
+        chapter = HierarchyPath.parse(chapterName)
+        priority = order
+        handle
+    }
+
 val ResourceOperationRoutesTest by testSuite {
     test("every resource gets the core operations its graph facts allow") {
-        CoreOperationsFixture().use { fixture ->
-            fixture.operationsOf("book") shouldBe setOf("MoveToOwner", "LinkWith", "Duplicate", "Delete")
-            fixture.operationsOf("tag") shouldBe setOf("MoveToOwner", "LinkWith", "Unlink", "Duplicate", "LinkWithDuplicate", "Delete")
-            fixture.operationsOf("book", "tag") shouldBe setOf("MoveToOwner", "LinkWith", "Unlink", "Duplicate", "Delete")
-            fixture.operationsOf(TestRealmStructure.library.value) shouldBe emptySet()
-            fixture.operationsOf(TestRealmStructure.root.value) shouldBe emptySet()
+        withSetup(tagGraph) { graph ->
+            operationsOf(graph.book.resource) shouldBe setOf("MoveToOwner", "LinkWith", "Duplicate", "Delete")
+            operationsOf(graph.tag.resource) shouldBe setOf("MoveToOwner", "LinkWith", "Unlink", "Duplicate", "LinkWithDuplicate", "Delete")
+            operationsOf(graph.book.resource, graph.tag.resource) shouldBe setOf("MoveToOwner", "LinkWith", "Unlink", "Duplicate", "Delete")
+            operationsOf(singleOf(LibraryDefinition.id)) shouldBe emptySet()
+            operationsOf(singleOf(RealmRootDefinition.id)) shouldBe emptySet()
         }
     }
 
     test("operations resolve in group order and carry their capability and drop") {
-        CoreOperationsFixture().use { fixture ->
-            val resolved = (fixture.resolve("tag") as ResolveResourceOperationsResult.ResolvedWrapper).value.operations
-            resolved.map {
-                it.definition.id.declaration
-                    .substringAfterLast('.')
-            } shouldBe
+        withSetup(tagGraph) { graph ->
+            val resolved = (operations.resolve(graph.tag.resource) as ResolveResourceOperationsResult.ResolvedWrapper).value.operations
+            resolved.map { it.definition.id.simpleName } shouldBe
                 listOf("MoveToOwner", "LinkWith", "Unlink", "Duplicate", "LinkWithDuplicate", "Delete")
             val move = resolved.first().definition
-            move.capability.value shouldBe fixture.operation(MoveToOwner).capability.value
+            move.capability.value shouldBe operations.operation(MoveToOwner).capability.value
             move.drop?.hint shouldBe "Move here"
             resolved
                 .last()
@@ -96,381 +224,312 @@ val ResourceOperationRoutesTest by testSuite {
         }
     }
 
-    test("linked tag duplicate crosses wire preparation and replay without changing saved state") {
-        runTest {
-            CoreOperationsFixture().use { fixture ->
-                val before = fixture.views.read { it.resources }
-                val result = fixture.routes.prepare(fixture.prepare(LinkWithDuplicate, "tag")) as AuthoringActionResult.PreviewWrapper
-                val selected = result.value.selection as OperationSelectionEffect.ReplaceWrapper
-                val copy = ResourceId(value = selected.value.single().value)
-                val edit = result.value.edit.requireValid()
-                val after =
-                    (fixture.plan(edit) as MutationPlanningResult.Accepted).let {
-                        before + it.plan.resources -
-                            it.plan.removedResources
-                    }
-                after.getValue(ResourceId(value = "tag")).linkTargets("parents").toSet() shouldBe setOf(ResourceId(value = "parent"), copy)
-                after.getValue(copy).linkTargets("parents") shouldBe listOf(ResourceId(value = "parent"))
-                fixture.views.read { it.resources } shouldBe before
-            }
+    test("a linked duplicate of a tag is saved under the same parents, linked to the original, and selected") {
+        withSetup(tagGraph) { graph ->
+            val before = resources
+            val preview =
+                operations.routes
+                    .prepare(operations.prepare(operations.operation(LinkWithDuplicate), graph.tag.resource))
+                    .shouldBeInstanceOf<AuthoringActionResult.PreviewWrapper>()
+            resources shouldBe before
+
+            commit(preview.value.edit.requireValid()) shouldBe CommitPreparedEditResponse.COMMITTED
+
+            val saved = resources
+            val copy = (saved.keys - before.keys).single()
+            (preview.value.selection as OperationSelectionEffect.ReplaceWrapper).value.map { it.value } shouldBe listOf(copy.value)
+            saved.getValue(graph.tag.resource).linkTargets("parents").toSet() shouldBe setOf(graph.parent.resource, copy)
+            saved.getValue(copy).linkTargets("parents") shouldBe listOf(graph.parent.resource)
         }
     }
 
     test("moving pages to another book keeps their chapters and priorities") {
-        runTest {
-            CoreOperationsFixture(withPages = true).use { fixture ->
-                val before = fixture.views.read { it.resources }
-                val after =
-                    fixture.replay(
-                        fixture
-                            .prepare(MoveToOwner, "second", "first", "other")
-                            .copy(
-                                input =
-                                    fixture.input(
-                                        MoveToOwnerInput(ResourceId(value = "destination").toResourceId()),
-                                        MoveToOwnerInputDefinition.id,
-                                    ),
-                            ),
-                    )
-                listOf("first", "second", "other").forEach { id ->
-                    val moved = after.getValue(ResourceId(value = id))
-                    moved.linkTarget("book") shouldBe ResourceId(value = "destination")
-                    moved.field("chapter") shouldBe before.getValue(ResourceId(value = id)).field("chapter")
-                    moved.field("priority") shouldBe before.getValue(ResourceId(value = id)).field("priority")
-                }
-                after.getValue(ResourceId(value = "destination")).linkTargets("pages") shouldContainAll
-                    listOf("resident", "peer", "first", "second", "other").map { ResourceId(value = it) }
-                fixture.views.read { it.resources } shouldBe before
+        withSetup(shelves, catalog = routeFixtureCatalog) { (destination, moved, residents) ->
+            val before = resources
+
+            val saved =
+                operations.commit(
+                    operations.prepare(
+                        operations.operation(MoveToOwner),
+                        moved[1].resource,
+                        moved[0].resource,
+                        moved[2].resource,
+                        input = operations.input(MoveToOwnerInput(destination.id), MoveToOwnerInputDefinition.id),
+                    ),
+                )
+
+            moved.forEach { page ->
+                val id = page.resource
+                saved.getValue(id).linkTarget("book") shouldBe destination.resource
+                saved.getValue(id).field("chapter") shouldBe before.getValue(id).field("chapter")
+                saved.getValue(id).field("priority") shouldBe before.getValue(id).field("priority")
             }
+            saved.getValue(destination.resource).linkTargets("pages") shouldContainAll (residents + moved).map { it.resource }
         }
     }
 
     test("moving an entry into a page that is not a graph layout keeps its placement") {
-        runTest {
-            CoreOperationsFixture(withElements = true).use { fixture ->
-                val before = fixture.views.read { it.resources }
-                val after =
-                    fixture.replay(
-                        fixture
-                            .prepare(MoveToOwner, "graph-entry")
-                            .copy(
-                                input =
-                                    fixture.input(
-                                        MoveToOwnerInput(ResourceId(value = "timeline").toResourceId(), PlacementAnchor(40.0, 40.0)),
-                                        MoveToOwnerInputDefinition.id,
-                                    ),
-                            ),
-                    )
-                val moved = after.getValue(ResourceId(value = "graph-entry"))
-                moved.linkTarget("page") shouldBe ResourceId(value = "timeline")
-                moved.field("placement") shouldBe before.getValue(ResourceId(value = "graph-entry")).field("placement")
-            }
+        withSetup(canvas, catalog = routeFixtureCatalog) { page ->
+            val before = resources
+
+            val saved = move(page.graphEntry, page.timeline, PlacementAnchor(40.0, 40.0))
+
+            val moved = saved.getValue(page.graphEntry.resource)
+            moved.linkTarget("page") shouldBe page.timeline.resource
+            moved.field("placement") shouldBe before.getValue(page.graphEntry.resource).field("placement")
         }
     }
 
-    test("moving an entry into a graph layout places it clear of the members already there") {
-        runTest {
-            CoreOperationsFixture(withElements = true).use { fixture ->
-                val after =
-                    fixture.replay(
-                        fixture
-                            .prepare(MoveToOwner, "graph-entry")
-                            .copy(
-                                input =
-                                    fixture.input(
-                                        MoveToOwnerInput(ResourceId(value = "canvas").toResourceId()),
-                                        MoveToOwnerInputDefinition.id,
-                                    ),
-                            ),
-                    )
-                val moved = after.getValue(ResourceId(value = "graph-entry"))
-                moved.linkTarget("page") shouldBe ResourceId(value = "canvas")
-                val placement = moved.graphPlacement()
-                placement.intersectsWithGap(after.getValue(ResourceId(value = "resident-entry")).graphPlacement()) shouldBe false
-                (placement.width to placement.height) shouldBe (2 to 2)
-            }
+    test("moving an entry into a graph layout places it clear of the members already there and keeps its size") {
+        withSetup(canvas, catalog = routeFixtureCatalog) { page ->
+            val saved = move(page.graphEntry, page.canvas)
+
+            val moved = saved.getValue(page.graphEntry.resource)
+            moved.linkTarget("page") shouldBe page.canvas.resource
+            val placement = moved.graphPlacement()
+            placement.intersectsWithGap(saved.getValue(page.residentEntry.resource).graphPlacement()) shouldBe false
+            (placement.width to placement.height) shouldBe (2 to 2)
         }
     }
 
     test("moving an entry onto a graph canvas places it at the anchor") {
-        runTest {
-            CoreOperationsFixture(withElements = true).use { fixture ->
-                val after =
-                    fixture.replay(
-                        fixture
-                            .prepare(MoveToOwner, "graph-entry")
-                            .copy(
-                                input =
-                                    fixture.input(
-                                        MoveToOwnerInput(ResourceId(value = "canvas").toResourceId(), PlacementAnchor(20.0, 20.0)),
-                                        MoveToOwnerInputDefinition.id,
-                                    ),
-                            ),
-                    )
-                after.getValue(ResourceId(value = "graph-entry")).graphPlacement() shouldBe GraphPlacement(19, 19, 2, 2)
-            }
-        }
-    }
+        withSetup(canvas, catalog = routeFixtureCatalog) { page ->
+            val saved = move(page.graphEntry, page.canvas, PlacementAnchor(20.0, 20.0))
 
-    test("moving an entry with another placement kind into a graph layout gives it a fresh graph placement") {
-        runTest {
-            CoreOperationsFixture(withElements = true).use { fixture ->
-                val after =
-                    fixture.replay(
-                        fixture
-                            .prepare(MoveToOwner, "timeline-entry")
-                            .copy(
-                                input =
-                                    fixture.input(
-                                        MoveToOwnerInput(ResourceId(value = "canvas").toResourceId()),
-                                        MoveToOwnerInputDefinition.id,
-                                    ),
-                            ),
-                    )
-                val moved = after.getValue(ResourceId(value = "timeline-entry"))
-                moved.linkTarget("page") shouldBe ResourceId(value = "canvas")
-                val placement = moved.graphPlacement()
-                placement.intersectsWithGap(after.getValue(ResourceId(value = "resident-entry")).graphPlacement()) shouldBe false
-            }
+            saved.getValue(page.graphEntry.resource).graphPlacement() shouldBe GraphPlacement(19, 19, 2, 2)
         }
     }
 
     test("a preparation the planner rejects is invalid with the broken rule") {
-        runTest {
-            CoreOperationsFixture(extraOperations = { origin -> listOf(orphanTag(origin)) }).use { fixture ->
-                val request =
-                    fixture
-                        .prepare(Delete, "tag")
-                        .copy(
-                            capability =
-                                skirout.editor.v1.type_catalog.CapabilityId(
-                                    value = fixture.operationId("fixture.OrphanTag").capability.value,
-                                ),
-                        )
-                val result = fixture.routes.prepare(request) as AuthoringActionResult.InvalidErrorWrapper
-                result.value.diagnostics.map { it.code } shouldContain "owner_required"
-            }
+        withSetup(tagGraph, catalog = RealmCatalog(operations = { origin -> listOf(orphanTag(origin)) })) { graph ->
+            val result = operations.routes.prepare(operations.prepare(operations.operation("fixture.OrphanTag"), graph.tag.resource))
+
+            result
+                .shouldBeInstanceOf<AuthoringActionResult.InvalidErrorWrapper>()
+                .value.diagnostics
+                .map { it.code } shouldContain
+                "owner_required"
         }
     }
 
     test("duplicating an entry inside a page that is not a graph layout needs no placement") {
-        runTest {
-            CoreOperationsFixture(withElements = true).use { fixture ->
-                val before = fixture.views.read { it.resources }
-                val after = fixture.replay(fixture.prepare(Duplicate, "timeline-entry"))
-                val copy = (after.keys - before.keys).single()
-                after.getValue(copy).linkTarget("page") shouldBe ResourceId(value = "timeline")
-                after.getValue(copy).field("placement") shouldBe before.getValue(ResourceId(value = "timeline-entry")).field("placement")
-            }
+        withSetup(canvas, catalog = routeFixtureCatalog) { page ->
+            val before = resources
+
+            val saved = operations.commit(operations.prepare(operations.operation(Duplicate), page.timelineEntry.resource))
+
+            val copy = saved.getValue((saved.keys - before.keys).single())
+            copy.linkTarget("page") shouldBe page.timeline.resource
+            copy.field("placement") shouldBe before.getValue(page.timelineEntry.resource).field("placement")
         }
     }
 
     test("deleting a selection removes it with everything it owns") {
-        runTest {
-            CoreOperationsFixture(withElements = true).use { fixture ->
-                val after = fixture.replay(fixture.prepare(Delete, "graph"))
-                (ResourceId(value = "graph") in after) shouldBe false
-                (ResourceId(value = "graph-entry") in after) shouldBe false
-                (ResourceId(value = "canvas") in after) shouldBe true
-            }
+        withSetup(canvas, catalog = routeFixtureCatalog) { page ->
+            val saved = operations.commit(operations.prepare(operations.operation(Delete), page.graph.resource))
+
+            (page.graph.resource in saved) shouldBe false
+            (page.graphEntry.resource in saved) shouldBe false
+            (page.canvas.resource in saved) shouldBe true
         }
     }
 
     test("a tag dropped onto a book is linked through the book's tags") {
-        runTest {
-            CoreOperationsFixture().use { fixture ->
-                val before = fixture.views.read { it.resources }
-                val after =
-                    fixture.replay(
-                        fixture
-                            .prepare(LinkWith, "tag")
-                            .copy(
-                                input = fixture.input(LinkWithInput(ResourceId(value = "book").toResourceId()), LinkWithInputDefinition.id),
-                            ),
-                    )
-                after.getValue(ResourceId(value = "book")).linkTargets("tags") shouldBe listOf(ResourceId(value = "tag"))
-                after.getValue(ResourceId(value = "tag")).fields shouldBe before.getValue(ResourceId(value = "tag")).fields
-            }
+        withSetup(tagGraph) { graph ->
+            val before = resources
+
+            val saved = link(LinkWith, graph.tag, LinkWithInput(graph.book.id))
+
+            saved.getValue(graph.book.resource).linkTargets("tags") shouldBe listOf(graph.tag.resource)
+            saved.getValue(graph.tag.resource).fields shouldBe before.getValue(graph.tag.resource).fields
         }
     }
 
     test("a tag dropped onto a tag becomes its child") {
-        runTest {
-            CoreOperationsFixture().use { fixture ->
-                val after =
-                    fixture.replay(
-                        fixture
-                            .prepare(LinkWith, "loose")
-                            .copy(
-                                input = fixture.input(LinkWithInput(ResourceId(value = "tag").toResourceId()), LinkWithInputDefinition.id),
-                            ),
-                    )
-                after.getValue(ResourceId(value = "loose")).linkTargets("parents") shouldBe listOf(ResourceId(value = "tag"))
-                after.getValue(ResourceId(value = "tag")).linkTargets("parents") shouldBe listOf(ResourceId(value = "parent"))
-            }
+        withSetup(tagGraph) { graph ->
+            val saved = link(LinkWith, graph.loose, LinkWithInput(graph.tag.id))
+
+            saved.getValue(graph.loose.resource).linkTargets("parents") shouldBe listOf(graph.tag.resource)
+            saved.getValue(graph.tag.resource).linkTargets("parents") shouldBe listOf(graph.parent.resource)
         }
     }
 
-    test("linking an already linked tag changes nothing and unlink removes the link") {
-        runTest {
-            CoreOperationsFixture().use { fixture ->
-                val before = fixture.views.read { it.resources }
-                val relinked =
-                    fixture.replay(
-                        fixture
-                            .prepare(LinkWith, "tag")
-                            .copy(
-                                input =
-                                    fixture.input(
-                                        LinkWithInput(ResourceId(value = "parent").toResourceId()),
-                                        LinkWithInputDefinition.id,
-                                    ),
-                            ),
-                    )
-                relinked shouldBe before
-                val unlinked =
-                    fixture.replay(
-                        fixture
-                            .prepare(Unlink, "tag")
-                            .copy(
-                                input = fixture.input(UnlinkInput(ResourceId(value = "parent").toResourceId()), UnlinkInputDefinition.id),
-                            ),
-                    )
-                unlinked.getValue(ResourceId(value = "tag")).linkTargets("parents") shouldBe emptyList()
-            }
+    test("linking a tag to the parent it already has changes nothing") {
+        withSetup(tagGraph) { graph ->
+            val before = resources
+
+            link(LinkWith, graph.tag, LinkWithInput(graph.parent.id)) shouldBe before
         }
     }
 
-    test("a tag cycle written directly into the parents field is rejected") {
-        CoreOperationsFixture().use { fixture ->
+    test("unlinking a tag from its parent removes the link") {
+        withSetup(tagGraph) { graph ->
+            val saved = link(Unlink, graph.tag, UnlinkInput(graph.parent.id))
+
+            saved.getValue(graph.tag.resource).linkTargets("parents") shouldBe emptyList()
+        }
+    }
+
+    test("a tag cycle written directly into the parents field is refused and changes nothing") {
+        withSetup(tagGraph) { graph ->
+            val before = resources
+            // The panel's raw write of the field, as an author editing it by hand sends it.
             val cyclic =
-                fixture.record(
-                    testTag(
-                        name = "Adventure",
-                        parents = setOf(Ref(ResourceId(value = "tag").toResourceId())),
-                        placement = GraphPlacement(5, 0),
-                    ),
-                    TagDefinition.id,
+                encoder.record(
+                    TagDefinition.id.use(),
+                    Tag(taxonomy = Ref(graph.parent.id), parents = setOf(Ref(graph.tag.id)), placement = GraphPlacement()),
                 )
-            val generation = fixture.views.read { it.catalog.generation }
-            val edit =
-                PreparedEdit(
-                    catalog = generation,
-                    expectations = emptyList(),
-                    intents =
-                        listOf(
-                            EditIntent.createSetValue(
-                                at = ValueLocation.of(ResourceId(value = "parent"), ValuePath.root.field("parents")),
-                                value = cyclic.fieldMap.getValue("parents"),
-                            ),
-                        ),
+            val write =
+                EditIntent.createSetValue(
+                    at = ValueLocation.of(graph.parent.resource, TagFields.parents.path),
+                    value = cyclic.fieldMap.getValue("parents"),
                 )
-            val rejected = fixture.plan(edit) as MutationPlanningResult.Rejected
-            rejected.problems.map { it.code }.toSet() shouldBe setOf("relation_cycle")
+
+            val response =
+                commit(PreparedEdit(catalog = views.read { it.catalog.generation }, expectations = emptyList(), intents = listOf(write)))
+
+            response
+                .shouldBeInstanceOf<CommitPreparedEditResponse.RejectedErrorWrapper>()
+                .value
+                .map { it.code }
+                .toSet() shouldBe
+                setOf("relation_cycle")
+            resources shouldBe before
         }
     }
 
     test("drop candidates come from the declared candidates of enabled operations") {
-        CoreOperationsFixture(withElements = true).use { fixture ->
-            val entry = fixture.drops("graph-entry")
+        withSetup(tagGraph + canvas, catalog = routeFixtureCatalog) { (graph, page) ->
+            val entry = drops(page.graphEntry.resource)
             entry.keys shouldBe setOf("MoveToOwner")
-            entry
-                .getValue("MoveToOwner")
-                .destinations
-                .map { it.value }
-                .toSet() shouldBe setOf("canvas", "timeline")
+            entry.getValue("MoveToOwner").destinations.toSet() shouldBe setOf(page.canvas.resource, page.timeline.resource)
             entry.getValue("MoveToOwner").complete shouldBe true
 
-            val tag = fixture.drops("tag")
-            tag
-                .getValue("LinkWith")
-                .destinations
-                .map { it.value }
-                .toSet() shouldBe setOf("book", "library", "loose")
-            tag.getValue("Unlink").destinations.map { it.value } shouldBe listOf("parent")
-            fixture.drops(TestRealmStructure.library.value) shouldBe emptyMap()
+            val tag = drops(graph.tag.resource)
+            tag.getValue("LinkWith").destinations.toSet() shouldBe setOf(graph.book.resource, page.book.resource, graph.loose.resource)
+            tag.getValue("Unlink").destinations shouldBe listOf(graph.parent.resource)
+            drops(singleOf(LibraryDefinition.id)) shouldBe emptyMap()
         }
     }
 
     test("drop candidates are capped and marked incomplete") {
-        CoreOperationsFixture(extraOperations = { origin -> listOf(manyCandidates(origin)) }).use { fixture ->
-            val many = fixture.drops("tag").getValue("ManyCandidates")
+        withSetup(tagGraph, catalog = RealmCatalog(operations = { origin -> listOf(manyCandidates(origin)) })) { graph ->
+            val many = drops(graph.tag.resource).getValue("ManyCandidates")
+
             many.destinations.size shouldBe 200
             many.complete shouldBe false
         }
     }
 
     test("a failing availability callback fails menu resolution but not drops or the preparation of another operation") {
-        runTest {
-            CoreOperationsFixture(extraOperations = { origin -> listOf(brokenAvailability(origin)) }).use { fixture ->
-                (fixture.resolve("tag") is ResolveResourceOperationsResult.FailedErrorWrapper) shouldBe true
-                // Drops only evaluate operations that declare a drop field.
-                (fixture.dropCandidates("tag") is ResolveDropCandidatesResult.ResolvedWrapper) shouldBe true
-                (fixture.routes.prepare(fixture.prepare(Delete, "tag")) is AuthoringActionResult.PreviewWrapper) shouldBe true
-                val broken =
-                    fixture
-                        .prepare(Delete, "tag")
-                        .copy(
-                            capability =
-                                skirout.editor.v1.type_catalog.CapabilityId(
-                                    value =
-                                        fixture
-                                            .operationId("fixture.BrokenAvailability")
-                                            .capability.value,
-                                ),
-                        )
-                (fixture.routes.prepare(broken) is AuthoringActionResult.FailedErrorWrapper) shouldBe true
-            }
+        withSetup(tagGraph, catalog = RealmCatalog(operations = { origin -> listOf(brokenAvailability(origin)) })) { graph ->
+            operations
+                .resolve(graph.tag.resource)
+                .shouldBeInstanceOf<ResolveResourceOperationsResult.FailedErrorWrapper>()
+                .value.diagnostics
+                .map { it.code } shouldBe listOf("resolution_failed")
+            // Drops only evaluate operations that declare a drop field.
+            operations.dropCandidates(graph.tag.resource).shouldBeInstanceOf<ResolveDropCandidatesResult.ResolvedWrapper>()
+            operations.routes
+                .prepare(operations.prepare(operations.operation(Delete), graph.tag.resource))
+                .shouldBeInstanceOf<AuthoringActionResult.PreviewWrapper>()
+            operations.routes
+                .prepare(operations.prepare(operations.operation("fixture.BrokenAvailability"), graph.tag.resource))
+                .shouldBeInstanceOf<AuthoringActionResult.FailedErrorWrapper>()
+                .value.diagnostics
+                .map { it.code } shouldBe listOf("resolution_failed")
         }
     }
 
-    test("changed saved observations and catalogs produce typed refresh responses") {
-        CoreOperationsFixture().use { fixture ->
-            val request = fixture.resolveRequest("book")
-            val stale =
-                fixture.routes.resolve(
+    test("a resolution against an older saved observation answers with the current one") {
+        withSetup(tagGraph) { graph ->
+            val request = operations.resolveRequest(graph.book.resource)
+            val current = request.context.confirmedObservation
+
+            val response =
+                operations.routes.resolve(
                     request.copy(context = request.context.copy(confirmedObservation = AuthoringObservationId(value = "previous"))),
                 )
-            (stale is ResolveResourceOperationsResult.StaleObservationErrorWrapper) shouldBe true
-            val catalog =
-                fixture.routes.resolve(
-                    request.copy(
-                        invocation =
-                            request.invocation.copy(
-                                catalog =
-                                    skirout.editor.v1.type_catalog
-                                        .CatalogGeneration(value = "previous"),
-                            ),
-                    ),
+
+            response.shouldBeInstanceOf<ResolveResourceOperationsResult.StaleObservationErrorWrapper>().value.actual shouldBe current
+        }
+    }
+
+    test("a resolution against an older catalog answers with the current generation") {
+        withSetup(tagGraph) { graph ->
+            val request = operations.resolveRequest(graph.book.resource)
+
+            val response =
+                operations.routes.resolve(
+                    request.copy(invocation = request.invocation.copy(catalog = CatalogGeneration(value = "previous"))),
                 )
-            (catalog is ResolveResourceOperationsResult.CatalogChangedErrorWrapper) shouldBe true
-            val empty = fixture.routes.resolve(request.copy(invocation = request.invocation.copy(targets = emptyList())))
-            (empty is ResolveResourceOperationsResult.InvalidErrorWrapper) shouldBe true
+
+            response.shouldBeInstanceOf<ResolveResourceOperationsResult.CatalogChangedErrorWrapper>().value.actualGeneration shouldBe
+                request.invocation.catalog
+        }
+    }
+
+    test("a resolution without targets is invalid") {
+        withSetup(tagGraph) { graph ->
+            val request = operations.resolveRequest(graph.book.resource)
+
+            val response = operations.routes.resolve(request.copy(invocation = request.invocation.copy(targets = emptyList())))
+
+            response
+                .shouldBeInstanceOf<ResolveResourceOperationsResult.InvalidErrorWrapper>()
+                .value.diagnostics
+                .map { it.code } shouldBe
+                listOf("invalid_operation_context")
         }
     }
 }
 
-/** The simple names of the operation objects resolved for [ids]. */
-private fun CoreOperationsFixture.operationsOf(vararg ids: String): Set<String> =
-    (resolve(*ids) as ResolveResourceOperationsResult.ResolvedWrapper)
+/** The simple names of the operation objects resolved for [targets]. */
+private fun RealmFixture.operationsOf(vararg targets: ResourceId): Set<String> =
+    (operations.resolve(*targets) as ResolveResourceOperationsResult.ResolvedWrapper)
         .value.operations
-        .map {
-            it.definition.id.declaration
-                .substringAfterLast('.')
-        }.toSet()
+        .mapTo(linkedSetOf()) { it.definition.id.simpleName }
 
-/** Drop candidates for dragging [ids], by operation object simple name. */
-private fun CoreOperationsFixture.drops(vararg ids: String) =
-    (dropCandidates(*ids) as ResolveDropCandidatesResult.ResolvedWrapper)
+/** Drop candidates for dragging [targets], by operation object simple name. */
+private fun RealmFixture.drops(vararg targets: ResourceId) =
+    (operations.dropCandidates(*targets) as ResolveDropCandidatesResult.ResolvedWrapper)
         .value
         .associateBy { it.operation.declaration.substringAfterLast('.') }
 
-private fun CoreOperationsFixture.operationId(declaration: String) =
-    views.read { root ->
-        root.catalog.operations.operations
-            .single { it.definition.id.declaration == declaration }
-            .definition.id
-    }
+/** Commits a MoveToOwner of [entry] into [page], optionally dropped at [anchor]. */
+private suspend fun RealmFixture.move(
+    entry: SetupHandle<*>,
+    page: SetupHandle<*>,
+    anchor: PlacementAnchor? = null,
+) = operations.commit(
+    operations.prepare(
+        operations.operation(MoveToOwner),
+        entry.resource,
+        input = operations.input(MoveToOwnerInput(page.id, anchor), MoveToOwnerInputDefinition.id),
+    ),
+)
+
+/** Commits the link operation [operation] of [subject] with [input]. */
+private suspend fun RealmFixture.link(
+    operation: Any,
+    subject: SetupHandle<*>,
+    input: Any,
+) = operations.commit(
+    operations.prepare(
+        operations.operation(operation),
+        subject.resource,
+        input =
+            operations.input(
+                input,
+                when (input) {
+                    is LinkWithInput -> LinkWithInputDefinition.id
+                    else -> UnlinkInputDefinition.id
+                },
+            ),
+    ),
+)
+
+private val skirout.editor.v1.operation.ResourceOperationId.simpleName get() = declaration.substringAfterLast('.')
 
 /** A Tag operation whose drop field declares more candidates than one drag may receive. */
 private fun manyCandidates(origin: ProviderOrigin) =
@@ -507,14 +566,7 @@ private fun orphanTag(origin: ProviderOrigin) =
             prepare {
                 val owner = RelationId(value = TAXONOMY_TAGS_RELATION_ID).endpointId(EndpointSlot.SECOND)
                 disconnect(
-                    LinkOccurrenceId(
-                        endpoint = owner,
-                        location =
-                            ValueLocation.of(
-                                subjects.single(),
-                                ValuePath.root.field("taxonomy"),
-                            ),
-                    ),
+                    LinkOccurrenceId(endpoint = owner, location = ValueLocation.of(subjects.single(), ValuePath.root.field("taxonomy"))),
                 )
             }
         }
@@ -536,6 +588,8 @@ private fun brokenAvailability(origin: ProviderOrigin) =
         }
     }
 
+private fun AuthoringRecord.field(name: String): DataValue? = fieldMap[name]
+
 private fun AuthoringRecord.graphPlacement(): GraphPlacement {
     val fields = ((fieldMap.getValue("placement") as DataValue.NamedWrapper).payload as DataValue.RecordWrapper).value.fieldMap
 
@@ -552,9 +606,8 @@ private fun AuthoringRecord.linkTarget(field: String): ResourceId =
         .value.target.resource
 
 private fun AuthoringRecord.linkTargets(field: String): List<ResourceId> {
-    val payload = (fieldMap.getValue(field) as DataValue.NamedWrapper).payload
     val items =
-        when (payload) {
+        when (val payload = (fieldMap.getValue(field) as DataValue.NamedWrapper).payload) {
             is DataValue.ListValueWrapper -> payload.items
             is DataValue.SetValueWrapper -> payload.items
             else -> error("Expected a collection in $field.")

@@ -8,17 +8,13 @@ import com.typewritermc.services.libs.telemetry.mainSpanBlocking
 import com.typewritermc.services.libs.telemetry.testing.TelemetryTestHarness
 import de.infix.testBalloon.framework.core.testSuite
 import io.kotest.assertions.throwables.shouldThrow
-import io.kotest.matchers.booleans.shouldBeTrue
 import io.kotest.matchers.collections.shouldContainExactly
 import io.kotest.matchers.shouldBe
-import io.mockk.every
-import io.mockk.mockk
-import io.mockk.verify
+import io.kotest.matchers.string.shouldContain
+import io.kotest.matchers.string.shouldContainInOrder
 import io.opentelemetry.api.common.AttributeKey
 import io.opentelemetry.api.trace.SpanId
 import kotlinx.coroutines.flow.MutableStateFlow
-import org.jline.reader.EndOfFileException
-import org.jline.reader.LineReader
 import kotlin.time.TestTimeSource
 
 val LoaderShellTest by testSuite {
@@ -32,17 +28,17 @@ val LoaderShellTest by testSuite {
                 registrarStates = MutableStateFlow(RegistrarSnapshot(12, 3, RegistrarState.Idle)),
                 timeSource = TestTimeSource(),
             )
-        val reader = mockk<LineReader>(relaxed = true)
 
-        TelemetryTestHarness.create().use { harness ->
-            val shell = LoaderShell(context, harness.telemetry)
+        ShellTerminal(input = "help 'status\nstop\n").use { terminal ->
+            TelemetryTestHarness.create().use { harness ->
+                LoaderShell(context, harness.telemetry).runLoop(terminal.reader) shouldBe ShellExitReason.STOP_REQUESTED
+            }
 
-            shell.executeCommand("help 'status", reader)
-            shell.executeCommand("stop", reader)
+            terminal.printed.shouldContainInOrder(
+                "Error: incorrect format in file  line 0: unclosed quote",
+                "Stopping the loader",
+            )
         }
-
-        context.isStopRequested().shouldBeTrue()
-        verify(atLeast = 2) { reader.printAbove(any<String>()) }
     }
 
     test("tokenization rejects an unclosed quote") {
@@ -57,18 +53,19 @@ val LoaderShellTest by testSuite {
                 registrarStates = MutableStateFlow(RegistrarSnapshot(12, 3, RegistrarState.Idle)),
                 timeSource = TestTimeSource(),
             )
-        val reader = mockk<LineReader>(relaxed = true)
 
-        TelemetryTestHarness.create().use { harness ->
-            val shell = LoaderShell(context, harness.telemetry)
-            harness.telemetry.mainSpanBlocking("test.parent", ErrorSlug.of("test-parent-failed")) { _ ->
-                shell.executeCommand("stop", reader)
+        ShellTerminal().use { terminal ->
+            TelemetryTestHarness.create().use { harness ->
+                val shell = LoaderShell(context, harness.telemetry)
+                harness.telemetry.mainSpanBlocking("test.parent", ErrorSlug.of("test-parent-failed")) { _ ->
+                    shell.executeCommand("stop", terminal.reader)
+                }
+
+                val command = harness.finishedSpans().single { it.name == "loader.shell.command" }
+                command.parentSpanId shouldBe SpanId.getInvalid()
+                harness.finishedSpans().none { it.name == "loader.shell" } shouldBe true
+                harness.assertNoActiveSpans()
             }
-
-            val command = harness.finishedSpans().single { it.name == "loader.shell.command" }
-            command.parentSpanId shouldBe SpanId.getInvalid()
-            harness.finishedSpans().none { it.name == "loader.shell" } shouldBe true
-            harness.assertNoActiveSpans()
         }
     }
 
@@ -96,11 +93,13 @@ val LoaderShellTest by testSuite {
                 registrarStates = MutableStateFlow(RegistrarSnapshot(12, 3, RegistrarState.Idle)),
                 timeSource = TestTimeSource(),
             )
-        val reader = mockk<LineReader>(relaxed = true)
-        every { reader.readLine("loader> ") } throws EndOfFileException()
 
-        TelemetryTestHarness.create().use { harness ->
-            LoaderShell(context, harness.telemetry).runLoop(reader) shouldBe ShellExitReason.END_OF_INPUT
+        ShellTerminal().use { terminal ->
+            TelemetryTestHarness.create().use { harness ->
+                LoaderShell(context, harness.telemetry).runLoop(terminal.reader) shouldBe ShellExitReason.END_OF_INPUT
+            }
+
+            terminal.printed shouldContain "End of input (Ctrl+D)"
         }
     }
 }

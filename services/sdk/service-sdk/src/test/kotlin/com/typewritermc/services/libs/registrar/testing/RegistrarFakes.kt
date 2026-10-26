@@ -21,7 +21,6 @@ import com.typewritermc.services.libs.registrar.RuntimeSetupProgress
 import com.typewritermc.services.libs.registrar.RuntimeSetupProgressSink
 import com.typewritermc.services.libs.registrar.ServiceIdentity
 import com.typewritermc.services.libs.registrar.ServiceRole
-import com.typewritermc.services.libs.utils.DelayScheduler
 import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.channels.awaitClose
 import kotlinx.coroutines.flow.Flow
@@ -318,17 +317,5 @@ class FakeRetryRandom(
         } else {
             values.first()
         }
-    }
-}
-
-class FakeDelayScheduler(
-    private val delegate: suspend (Duration) -> Unit = {},
-    val ledger: RegistrarActionLedger = RegistrarActionLedger(),
-) : DelayScheduler {
-    val actions get() = ledger.actions
-
-    override suspend fun delay(duration: Duration) {
-        ledger.record(RegistrarAction.Delay(duration))
-        delegate(duration)
     }
 }

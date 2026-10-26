@@ -10,7 +10,6 @@ dependencies {
     implementation(libs.kotlinpoet)
     implementation(libs.kotlinpoet.ksp)
     implementation(libs.kotlin.serialize.cbor)
-    testImplementation(libs.mockk)
     testImplementation(libs.kctfork.core)
     testImplementation(libs.kctfork.ksp)
     testImplementation(project(":typewriter-api"))

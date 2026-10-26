@@ -5,6 +5,7 @@ plugins {
     id("com.typewritermc.basic-conventions")
     id("com.typewritermc.imprint")
     alias(libs.plugins.gradle.buildconfig)
+    `java-test-fixtures`
 }
 
 dependencies {
@@ -23,10 +24,18 @@ dependencies {
     implementation(libs.surrealdb.java.sdk)
     implementation(libs.kotlin.serialize.json)
 
-    testImplementation(project(":messaging"))
-    testImplementation(project(":file-transfer"))
-    testImplementation(project(":telemetry"))
+    testFixturesApi(project(":typewriter-test-kit"))
+    testFixturesImplementation(libs.surrealdb.java.sdk)
+
+    testImplementation(testFixtures(project(":messaging")))
+    testImplementation(testFixtures(project(":file-transfer")))
+    testImplementation(testFixtures(project(":telemetry")))
+    testImplementation(testFixtures(project(":internal-utils")))
     testImplementation(project(":loader-api"))
+    // The extension JAR itself: the tests load it as an extension artifact, and its classes live in its common part.
+    testImplementation(project(":realm-route-fixtures")) {
+        attributes { attribute(LibraryElements.LIBRARY_ELEMENTS_ATTRIBUTE, objects.named(LibraryElements.JAR)) }
+    }
     testImplementation(libs.kotlin.coroutines.test)
 }
 

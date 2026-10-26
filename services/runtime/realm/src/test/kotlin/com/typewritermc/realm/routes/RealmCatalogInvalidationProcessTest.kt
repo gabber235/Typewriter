@@ -10,6 +10,7 @@ import com.typewritermc.services.libs.communicator.transport.TransportError
 import com.typewritermc.services.libs.telemetry.testing.TelemetryTestHarness
 import com.typewritermc.services.libs.utils.CoroutineDelayScheduler
 import com.typewritermc.services.libs.utils.RetryPolicy
+import com.typewritermc.testkit.eventually
 import de.infix.testBalloon.framework.core.testSuite
 import io.kotest.matchers.shouldBe
 import io.opentelemetry.context.propagation.ContextPropagators
@@ -42,23 +43,7 @@ val RealmCatalogInvalidationProcessTest by testSuite {
                     RealmRouteScope(organizationId = "organization", realmId = "realm"),
                 )
 
-                val publication =
-                    withTimeout(2.seconds) {
-                        while (true) {
-                            transport.actions
-                                .filterIsInstance<FakeMessageTransport.Action.Publish>()
-                                .filter {
-                                    it.message.address ==
-                                        MessageAddress.of(
-                                            "service.from.realm.organization.organization.realm.editor.catalog.invalidate",
-                                        )
-                                }.takeIf { it.size >= 2 }
-                                ?.last()
-                                ?.let { return@withTimeout it }
-                            delay(10.milliseconds)
-                        }
-                        error("Publication wait ended unexpectedly")
-                    }
+                val publication = awaitPublicationCount(transport, 2)
                 val update = CatalogInvalidated.serializer.fromBytes(publication.message.payload.toByteArray())
 
                 update.generation.value shouldBe "initial"
@@ -115,22 +100,17 @@ val RealmCatalogInvalidationProcessTest by testSuite {
 private suspend fun awaitPublicationCount(
     transport: FakeMessageTransport,
     count: Int,
-): FakeMessageTransport.Action.Publish =
-    withTimeoutOrNull(2.seconds) {
-        while (true) {
-            transport.actions
-                .filterIsInstance<FakeMessageTransport.Action.Publish>()
-                .filter {
-                    it.message.address ==
-                        MessageAddress.of(
-                            "service.from.realm.organization.organization.realm.editor.catalog.invalidate",
-                        )
-                }.takeIf { it.size >= count }
-                ?.last()
-                ?.let { return@withTimeoutOrNull it }
-            delay(10.milliseconds)
-        }
-        error("Publication wait ended unexpectedly")
-    } ?: error("Expected $count catalog invalidations but observed ${transport.actions}.")
+): FakeMessageTransport.Action.Publish {
+    fun invalidations() =
+        transport.actions
+            .filterIsInstance<FakeMessageTransport.Action.Publish>()
+            .filter { it.message.address == CATALOG_INVALIDATE }
+    return eventually("$count catalog invalidations", describe = { transport.actions }) {
+        invalidations().takeIf { it.size >= count }?.last()
+    }
+}
+
+private val CATALOG_INVALIDATE =
+    MessageAddress.of("service.from.realm.organization.organization.realm.editor.catalog.invalidate")
 
 private val TEST_RETRY_POLICY = RetryPolicy.fixed(10.milliseconds)

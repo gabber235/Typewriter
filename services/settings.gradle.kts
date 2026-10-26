@@ -67,4 +67,5 @@ includeProject("realm", "runtime/realm")
 includeProject("basic-extension", "extensions/basic")
 includeProject("conformance-extension", "extensions/conformance")
 
-includeProject("typewriter-setup", "testing/typewriter-setup")
+includeProject("typewriter-test-kit", "testing/typewriter-test-kit")
+includeProject("realm-route-fixtures", "testing/realm-route-fixtures")

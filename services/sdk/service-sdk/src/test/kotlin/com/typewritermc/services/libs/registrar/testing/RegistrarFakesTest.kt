@@ -7,6 +7,7 @@ import com.typewritermc.services.libs.communicator.testing.FakeMessageTransport
 import com.typewritermc.services.libs.registrar.BindingObservation
 import com.typewritermc.services.libs.registrar.RuntimeResult
 import com.typewritermc.services.libs.telemetry.testing.TelemetryTestHarness
+import com.typewritermc.services.libs.utils.FakeDelayScheduler
 import de.infix.testBalloon.framework.core.testSuite
 import io.kotest.matchers.shouldBe
 import io.opentelemetry.context.propagation.ContextPropagators
@@ -49,7 +50,7 @@ val RegistrarFakesTest by testSuite {
         runTest {
             val ledger = RegistrarActionLedger()
             FakeCredentialStorage(ledger = ledger).load()
-            FakeDelayScheduler(ledger = ledger).delay(kotlin.time.Duration.ZERO)
+            FakeDelayScheduler { ledger.record(RegistrarAction.Delay(it)) }.delay(kotlin.time.Duration.ZERO)
             ledger.actions shouldBe listOf(RegistrarAction.LoadCredentials, RegistrarAction.Delay(kotlin.time.Duration.ZERO))
             val snapshot = ledger.actions
             FakeCredentialStorage(ledger = ledger).load()

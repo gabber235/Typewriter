@@ -46,15 +46,23 @@ val LoaderSettingsTest by testSuite {
         configuration.natsServerUri shouldBe URI("nats://profile.example.test:4222")
     }
 
-    test("telemetry sampler preserves fallback and ratio bounds") {
-        LoaderSettings(
-            configuration =
-                mapOf(
-                    "OTEL_TRACES_SAMPLER" to "traceidratio",
-                    "OTEL_TRACES_SAMPLER_ARG" to "2.0",
-                ),
-        ).telemetryConfiguration().sampler shouldBe LoaderSamplerConfiguration.TraceIdRatio(1.0)
+    listOf(
+        Triple("a configured sampler ratio is honoured", "0.25", 0.25),
+        Triple("an unparsable sampler ratio samples everything", "abc", 1.0),
+        Triple("a sampler ratio above one clamps to one", "2.0", 1.0),
+    ).forEach { (name, configured, ratio) ->
+        test(name) {
+            LoaderSettings(
+                configuration =
+                    mapOf(
+                        "OTEL_TRACES_SAMPLER" to "traceidratio",
+                        "OTEL_TRACES_SAMPLER_ARG" to configured,
+                    ),
+            ).telemetryConfiguration().sampler shouldBe LoaderSamplerConfiguration.TraceIdRatio(ratio)
+        }
+    }
 
+    test("an unsupported sampler falls back to always on") {
         LoaderSettings(
             configuration = mapOf("OTEL_TRACES_SAMPLER" to "unsupported"),
         ).telemetryConfiguration().sampler shouldBe LoaderSamplerConfiguration.AlwaysOn

@@ -50,7 +50,7 @@ import skirout.kernel.v1.resource_id.ResourceId
 
 val CapturedAuthoringReadsTest by testSuite {
     test("projection reads preserve partial bindings and exact value evidence") {
-        val catalog = TestCatalogLease(definitions = listOf(TEST_DEFINITION, LIST_DEFINITION, REPRESENTATION_DEFINITION))
+        val catalog = TestCatalogLease(definitions = TEST_DEFINITIONS + listOf(REPRESENTATION_DEFINITION))
         val resource = ResourceId(value = "projection")
         val root = ValueLocation.of(resource)
         val nullValue = location(resource, "nullValue")
@@ -188,7 +188,7 @@ val CapturedAuthoringReadsTest by testSuite {
                 representation = RepresentationTemplate.createRecord(fields = emptyList(), abstract_ = false),
                 parents = listOf(TEST_TYPE.namedTemplate()),
             )
-        val catalog = TestCatalogLease(definitions = listOf(TEST_DEFINITION, LIST_DEFINITION, derived))
+        val catalog = TestCatalogLease(definitions = TEST_DEFINITIONS + listOf(derived))
         val resource = ResourceId(value = "pending")
         val record =
             AuthoringRecord.of(
@@ -254,7 +254,7 @@ val CapturedAuthoringReadsTest by testSuite {
                 parameters = listOf(TypeParameter.partial(key = parameter, name = "T")),
                 representation = RepresentationTemplate.createRecord(fields = emptyList(), abstract_ = false),
             )
-        val catalog = TestCatalogLease(definitions = listOf(TEST_DEFINITION, LIST_DEFINITION, definition))
+        val catalog = TestCatalogLease(definitions = TEST_DEFINITIONS + listOf(definition))
         val text = ResourceId(value = "text")
         val number = ResourceId(value = "number")
         val textUse = generic.namedUse(listOf(TEXT_USE))
@@ -294,7 +294,7 @@ val CapturedAuthoringReadsTest by testSuite {
                 parameters = listOf(TypeParameter.partial(key = parameter, name = "T")),
                 representation = RepresentationTemplate.createRecord(fields = emptyList(), abstract_ = false),
             )
-        val catalog = TestCatalogLease(definitions = listOf(TEST_DEFINITION, LIST_DEFINITION, definition))
+        val catalog = TestCatalogLease(definitions = TEST_DEFINITIONS + listOf(definition))
         val resource = ResourceId(value = "pending")
         val unresolved = ResourceId(value = "unresolved")
         val textUse = generic.namedUse(listOf(TEXT_USE))
