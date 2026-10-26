@@ -24,10 +24,9 @@ in
     pkgs.fluxcd # `cargo xtask cluster ci` bootstraps Flux
     pkgs.crane
     pkgs.ast-grep # project rules (sgconfig.yml), run by `cargo xtask review`
-    # `cargo xtask review deep`: diff coverage. Its own test suite fails inside the macOS Nix
+    # Coverage of `cargo xtask check backend`. Its own test suite fails inside the macOS Nix
     # sandbox, so the package is used without running it.
     (pkgs.cargo-llvm-cov.overrideAttrs { doCheck = false; })
-    pkgs.cargo-mutants # `cargo xtask review deep`: mutation testing
   ]
   ++ pkgs.lib.optionals pkgs.stdenv.isLinux [
     # The end to end suites on Linux (CI): the virtual display and recorder `cargo xtask evidence`
@@ -71,6 +70,7 @@ in
       "clippy"
       "rustfmt"
       "rust-src"
+      "llvm-tools-preview" # cargo llvm-cov: coverage of `cargo xtask check backend`
     ];
   };
 

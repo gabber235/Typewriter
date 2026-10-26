@@ -109,6 +109,8 @@ pub struct Step {
     pub budget: Duration,
     /// Reads generated sources, so [`GENERATE`] runs before it.
     pub needs_generate: bool,
+    /// The coverage file the step writes into [`review::COVERAGE_DIR`] while it tests.
+    pub coverage: Option<&'static str>,
 }
 
 pub enum Run {
@@ -140,6 +142,7 @@ const fn program(
         heavy: false,
         budget: mins(minutes),
         needs_generate: true,
+        coverage: None,
     }
 }
 
@@ -152,6 +155,14 @@ impl Step {
     const fn heavy(self) -> Self {
         Self {
             heavy: true,
+            ..self
+        }
+    }
+
+    /// Measures coverage while it tests, writing `file` into [`review::COVERAGE_DIR`].
+    const fn coverage(self, file: &'static str) -> Self {
+        Self {
+            coverage: Some(file),
             ..self
         }
     }
@@ -169,19 +180,22 @@ pub const GENERATE: Step = Step {
     heavy: false,
     budget: mins(10),
     needs_generate: false,
+    coverage: None,
 };
 
 pub const CHECKS: &[Step] = &[
     // The root `check` includes the imprint build and every project's ktlintCheck.
+    // `coverageReport` merges the Kover coverage of the same test run, so tests run once.
     program(
         "services",
         Area::Services,
         15,
         "services",
         "./gradlew",
-        &["check"],
+        &["check", "coverageReport"],
     )
-    .heavy(),
+    .heavy()
+    .coverage("services.xml"),
     program(
         "backend:lint",
         Area::Backend,
@@ -199,15 +213,25 @@ pub const CHECKS: &[Step] = &[
         ],
     )
     .heavy(),
+    // cargo llvm-cov runs the tests instrumented, so one run gives results and coverage.
     program(
         "backend:test",
         Area::Backend,
-        12,
+        15,
         "backend",
         "cargo",
-        &["test", "--locked", "--workspace", "--no-fail-fast"],
+        &[
+            "llvm-cov",
+            "--locked",
+            "--workspace",
+            "--no-fail-fast",
+            "--lcov",
+            "--output-path",
+            "../.xtask/results/coverage/backend.lcov",
+        ],
     )
-    .heavy(),
+    .heavy()
+    .coverage("backend.lcov"),
     // The component test framework is its own workspace; its suite crate is the `components` area.
     // Its wasmtime host takes most of the budget on a cold build.
     program(
@@ -217,7 +241,7 @@ pub const CHECKS: &[Step] = &[
         "backend",
         "cargo",
         &[
-            "test",
+            "llvm-cov",
             "--locked",
             "--manifest-path",
             "tests/component/Cargo.toml",
@@ -225,9 +249,13 @@ pub const CHECKS: &[Step] = &[
             "--exclude",
             "typewriter-component-tests",
             "--no-fail-fast",
+            "--lcov",
+            "--output-path",
+            "../.xtask/results/coverage/backend-support.lcov",
         ],
     )
-    .heavy(),
+    .heavy()
+    .coverage("backend-support.lcov"),
     Step {
         name: "components",
         area: Area::Components,
@@ -238,6 +266,7 @@ pub const CHECKS: &[Step] = &[
         heavy: true,
         budget: mins(30),
         needs_generate: true,
+        coverage: None,
     },
     program(
         "protocol",
@@ -279,30 +308,52 @@ pub const CHECKS: &[Step] = &[
     program(
         "panel:app",
         Area::Panel,
-        10,
+        // Coverage instrumentation takes the suite from about 7 to about 11 minutes.
+        15,
         "panel",
         "flutter",
-        &["test", "--concurrency=2"],
+        &[
+            "test",
+            "--concurrency=2",
+            "--coverage",
+            "--coverage-path",
+            "../.xtask/results/coverage/panel.lcov",
+        ],
     )
-    .heavy(),
+    .heavy()
+    .coverage("panel.lcov"),
     program(
         "panel:testkit",
         Area::Panel,
         5,
         "panel/testkit",
         "flutter",
-        &["test", "--concurrency=2"],
+        &[
+            "test",
+            "--concurrency=2",
+            "--coverage",
+            "--coverage-path",
+            "../../.xtask/results/coverage/panel-testkit.lcov",
+        ],
     )
-    .heavy(),
+    .heavy()
+    .coverage("panel-testkit.lcov"),
     program(
         "panel:widgetbook",
         Area::Panel,
         5,
         "panel/widgetbook",
         "flutter",
-        &["test", "--concurrency=2"],
+        &[
+            "test",
+            "--concurrency=2",
+            "--coverage",
+            "--coverage-path",
+            "../../.xtask/results/coverage/panel-widgetbook.lcov",
+        ],
     )
-    .heavy(),
+    .heavy()
+    .coverage("panel-widgetbook.lcov"),
     Step {
         name: "gitops",
         area: Area::Gitops,
@@ -314,6 +365,7 @@ pub const CHECKS: &[Step] = &[
         budget: mins(3),
         // The subscription ConfigMaps it validates are tracked deployment manifests.
         needs_generate: false,
+        coverage: None,
     },
     // One native step: the install must finish before validate and build, and steps run in
     // parallel.
@@ -328,6 +380,7 @@ pub const CHECKS: &[Step] = &[
         budget: mins(10),
         // The site reads only its own sources.
         needs_generate: false,
+        coverage: None,
     },
     Step {
         name: "quality",
@@ -340,6 +393,7 @@ pub const CHECKS: &[Step] = &[
         budget: mins(5),
         // The detectors read tracked sources only; generated output is ignored.
         needs_generate: false,
+        coverage: None,
     },
     // Building the harness already needs its own generated types, so these never wait for
     // generate.
@@ -467,6 +521,10 @@ pub fn run(ctx: &Context, steps: &[&'static Step]) -> Result<()> {
     process::install_interrupt_handler();
     let logs = ctx.root.join(".xtask/logs");
     fs::create_dir_all(&logs).with_context(|| format!("cannot create {}", logs.display()))?;
+    // Coverage tools write their file but not its folder.
+    let coverage = ctx.root.join(review::COVERAGE_DIR);
+    fs::create_dir_all(&coverage)
+        .with_context(|| format!("cannot create {}", coverage.display()))?;
     let commit = ctx
         .tool(".", "git", &["rev-parse", "HEAD"])
         .output_text()?
@@ -515,6 +573,9 @@ fn run_step(ctx: &Context, step: &Step, logs: &Path, commit: &str) -> bool {
     let started = Instant::now();
     let outcome = lock.and_then(|_lock| execute(ctx, step, &log));
     let elapsed = started.elapsed();
+    let stamped = step.coverage.map_or(Ok(()), |file| {
+        review::stamp_coverage(ctx, file, started_at, outcome.is_ok(), commit)
+    });
     let run = TestRun {
         runner: Runner::Step,
         commit: commit.to_owned(),
@@ -535,7 +596,7 @@ fn run_step(ctx: &Context, step: &Step, logs: &Path, commit: &str) -> bool {
     };
     let path = ctx.root.join(format!(".xtask/results/steps/{name}.json"));
     let written = results::write(&run, &path);
-    let outcome = outcome.and(written);
+    let outcome = outcome.and(written).and(stamped);
     report(step, outcome, elapsed, &log)
 }
 
