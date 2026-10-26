@@ -1,17 +1,18 @@
 import "package:flutter_test/flutter_test.dart";
 import "package:typewriter_panel/typewriter_panel.dart";
-
-import "../../support/test_utils.dart";
+import "package:typewriter_testkit/testing.dart";
 
 final class _RecordingAuth extends Auth {
-  int signOutCalls = 0;
+  _RecordingAuth(this._onSignOut);
+
+  final void Function() _onSignOut;
 
   @override
   Future<OidcUserManager?> build() async => null;
 
   @override
   Future<void> signOut() async {
-    signOutCalls++;
+    _onSignOut();
   }
 }
 
@@ -21,7 +22,8 @@ void main() {
   ) async {
     const scope = LocalWorkScope(userId: "user", organizationId: null);
     final controller = WorkSessionLossController(() => scope, () => true);
-    final auth = _RecordingAuth();
+    var signOutCalls = 0;
+    final auth = _RecordingAuth(() => signOutCalls++);
     var routerReads = 0;
     addTearDown(controller.dispose);
 
@@ -45,13 +47,13 @@ void main() {
     expect(find.text("Leave this work session?"), findsOneWidget);
     await tester.tap(find.text("Stay"));
     await tester.pumpAndSettle();
-    expect(auth.signOutCalls, 0);
+    expect(signOutCalls, 0);
 
     await tester.tap(find.text("Sign out"));
     await tester.pumpAndSettle();
     await tester.tap(find.text("Leave"));
     await tester.pumpAndSettle();
-    expect(auth.signOutCalls, 1);
+    expect(signOutCalls, 1);
     expect(routerReads, 0);
   });
 }

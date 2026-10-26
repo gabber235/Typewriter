@@ -2,9 +2,7 @@ import "package:flutter_test/flutter_test.dart";
 import "package:typewriter_panel/infrastructure/protocols/skir/skir.dart"
     as skir;
 import "package:typewriter_panel/typewriter_panel.dart";
-import "package:typewriter_testkit/typewriter_testkit.dart";
-
-import "../../../support/test_utils.dart";
+import "package:typewriter_testkit/testing.dart";
 
 void main() {
   test("normal collection examples start without authored errors", () {
@@ -30,7 +28,7 @@ void main() {
     final scenario = _scenario();
     await _pump(tester, scenario);
     expect(find.byType(TextFormField), findsNWidgets(3));
-    expect(find.byTooltip("Expand"), findsNothing);
+    expect(find.tooltip("Expand"), findsNothing);
     await tester.enterText(find.byType(TextFormField).first, "Landing");
     await tester.pumpAndSettle();
     expect(
@@ -121,7 +119,7 @@ void main() {
       await tester.tap(find.text("Item 1"));
       await tester.pumpAndSettle();
       final original = _editable(tester, 0).controller;
-      await tester.tap(find.byTooltip("Reorder item 1"));
+      await tester.tap(find.tooltip("Reorder item 1"));
       final handleFocus = FocusManager.instance.primaryFocus;
       await tester.sendKeyDownEvent(LogicalKeyboardKey.altLeft);
       await tester.sendKeyEvent(LogicalKeyboardKey.arrowDown);
@@ -146,8 +144,8 @@ void main() {
     (tester) async {
       final scenario = _scenario();
       await _pump(tester, scenario);
-      final first = find.byTooltip("Reorder item 1");
-      final last = find.byTooltip("Reorder item 3");
+      final first = find.tooltip("Reorder item 1");
+      final last = find.tooltip("Reorder item 3");
       final destination = tester.getCenter(last) + const Offset(0, 80);
       final gesture = await tester.startGesture(tester.getCenter(first));
       await gesture.moveBy(const Offset(0, 24));
@@ -181,8 +179,8 @@ void main() {
       final originalEditor = _editable(tester, 1);
       final original = originalEditor.controller;
       final originalFocus = originalEditor.focusNode;
-      final first = find.byTooltip("Reorder item 1");
-      final last = find.byTooltip("Reorder item 2");
+      final first = find.tooltip("Reorder item 1");
+      final last = find.tooltip("Reorder item 2");
       final handleFocus = _reorderFocus(tester, first);
       final destination = tester.getCenter(last) + const Offset(0, 80);
       final gesture = await tester.startGesture(tester.getCenter(first));
@@ -216,7 +214,7 @@ void main() {
   ) async {
     final scenario = _scenario(CollectionEditorExample.scalarMap);
     await _pump(tester, scenario);
-    await tester.tap(find.byTooltip("Remove row").first);
+    await tester.tap(find.tooltip("Remove row").first);
     await tester.pumpAndSettle();
     final rows =
         (scenario.value.authoredPayload as skir.DataValue_mapValueWrapper)
@@ -239,9 +237,9 @@ void main() {
           .authoredField("tags");
       final relations = scenario.workspace.document.links.length;
       await _pump(tester, scenario);
-      expect(find.byTooltip("Clear link"), findsNWidgets(2));
-      expect(find.byTooltip("Remove item"), findsNothing);
-      await tester.tap(find.byTooltip("Clear link").first);
+      expect(find.tooltip("Clear link"), findsNWidgets(2));
+      expect(find.tooltip("Remove item"), findsNothing);
+      await tester.tap(find.tooltip("Clear link").first);
       await tester.pumpAndSettle();
       expect(scenario.value.authoredItems, hasLength(1));
       expect(scenario.value.authoredItems!.single.id, before.last.id);
@@ -282,21 +280,7 @@ void main() {
   testWidgets("cancelling authored removal leaves the actual draft untouched", (
     tester,
   ) async {
-    final scenario = CollectionEditorScenario(
-      example: CollectionEditorExample.authoredSteps,
-      confirmRemoval: true,
-    );
-    addTearDown(scenario.dispose);
-    await _pump(tester, scenario);
-    final before = scenario.value;
-    await tester.tap(find.byTooltip("Remove step").first);
-    await tester.pumpAndSettle();
-    expect(find.text("Remove this step?"), findsOneWidget);
-    await tester.tap(find.text("Cancel"));
-    await tester.pumpAndSettle();
-    expect(scenario.value, before);
-    expect(scenario.workspace.hasPendingWork, isFalse);
-    expect(tester.takeException(), isNull);
+    await _cancelRemoval(tester, CollectionEditorExample.authoredSteps);
   });
 
   testWidgets("accepted delayed removal focuses the surviving row control", (
@@ -307,7 +291,7 @@ void main() {
     final host = _DelayedRemovalHost(scenario.host, gate);
     addTearDown(host.dispose);
     await _pump(tester, scenario, host: host);
-    final remove = find.byTooltip("Remove item").first;
+    final remove = find.tooltip("Remove item").first;
     await _activateWithKeyboard(tester, remove);
     await tester.pump();
     expect(scenario.value.authoredItems, hasLength(3));
@@ -317,7 +301,7 @@ void main() {
       scenario.value.authoredItems!.first.id,
       CollectionEditorScenario.second,
     );
-    final surviving = _button(tester, find.byTooltip("Remove item").first);
+    final surviving = _button(tester, find.tooltip("Remove item").first);
     expect(surviving.focusNode!.hasFocus, isTrue);
     expect(tester.takeException(), isNull);
   });
@@ -327,13 +311,13 @@ void main() {
   ) async {
     final scenario = _scenario();
     await _pump(tester, scenario);
-    await _activateWithKeyboard(tester, find.byTooltip("Remove item").last);
+    await _activateWithKeyboard(tester, find.tooltip("Remove item").last);
     await tester.pumpAndSettle();
     expect(
       scenario.value.authoredItems!.last.id,
       CollectionEditorScenario.second,
     );
-    final remaining = _button(tester, find.byTooltip("Remove item").last);
+    final remaining = _button(tester, find.tooltip("Remove item").last);
     expect(remaining.focusNode!.hasFocus, isTrue);
     expect(tester.takeException(), isNull);
   });
@@ -344,11 +328,11 @@ void main() {
     final scenario = _scenario();
     _keepRows(scenario, 1);
     await _pump(tester, scenario);
-    await _activateWithKeyboard(tester, find.byTooltip("Remove item"));
+    await _activateWithKeyboard(tester, find.tooltip("Remove item"));
     await tester.pumpAndSettle();
     expect(scenario.value.authoredItems, isEmpty);
     expect(
-      _button(tester, find.byTooltip("Add item")).focusNode!.hasFocus,
+      _button(tester, find.tooltip("Add item")).focusNode!.hasFocus,
       isTrue,
     );
     expect(tester.takeException(), isNull);
@@ -362,7 +346,7 @@ void main() {
     final host = _DelayedRemovalHost(scenario.host, gate);
     addTearDown(host.dispose);
     await _pump(tester, scenario, host: host);
-    final remove = find.byTooltip("Remove item").first;
+    final remove = find.tooltip("Remove item").first;
     await _activateWithKeyboard(tester, remove);
     final origin = FocusManager.instance.primaryFocus;
     gate.complete(false);
@@ -370,7 +354,7 @@ void main() {
     expect(scenario.value.authoredItems, hasLength(3));
     expect(FocusManager.instance.primaryFocus, same(origin));
     expect(
-      _button(tester, find.byTooltip("Add item")).focusNode!.hasFocus,
+      _button(tester, find.tooltip("Add item")).focusNode!.hasFocus,
       isFalse,
     );
     expect(tester.takeException(), isNull);
@@ -384,7 +368,7 @@ void main() {
       final host = _DelayedRemovalHost(scenario.host, gate);
       addTearDown(host.dispose);
       await _pump(tester, scenario, host: host);
-      await _activateWithKeyboard(tester, find.byTooltip("Remove item").first);
+      await _activateWithKeyboard(tester, find.tooltip("Remove item").first);
       final renderer = tester.widget<PortablePresentationNodeRenderer>(
         find.byType(PortablePresentationNodeRenderer).first,
       );
@@ -425,21 +409,7 @@ void main() {
   testWidgets(
     "cancelling a nested collection header removal preserves both owners",
     (tester) async {
-      final scenario = CollectionEditorScenario(
-        example: CollectionEditorExample.nestedLists,
-        confirmRemoval: true,
-      );
-      addTearDown(scenario.dispose);
-      await _pump(tester, scenario);
-      final before = scenario.value;
-      await tester.tap(find.byTooltip("Remove step").first);
-      await tester.pumpAndSettle();
-      expect(find.text("Remove this step?"), findsOneWidget);
-      await tester.tap(find.text("Cancel"));
-      await tester.pumpAndSettle();
-      expect(scenario.value, before);
-      expect(scenario.workspace.hasPendingWork, isFalse);
-      expect(tester.takeException(), isNull);
+      await _cancelRemoval(tester, CollectionEditorExample.nestedLists);
     },
   );
 
@@ -453,7 +423,7 @@ void main() {
       final nextPageFocus = FocusNode();
       addTearDown(nextPageFocus.dispose);
       await _pump(tester, scenario, host: host);
-      await _activateWithKeyboard(tester, find.byTooltip("Remove item").first);
+      await _activateWithKeyboard(tester, find.tooltip("Remove item").first);
       await tester.pumpTestApp(
         child: Scaffold(body: TextField(focusNode: nextPageFocus)),
       );
@@ -482,7 +452,7 @@ void main() {
     await _pump(tester, scenario, host: host);
     await tester.tap(find.text("Arrival"));
     await tester.pumpAndSettle();
-    await _activateWithKeyboard(tester, find.byTooltip("Remove item").first);
+    await _activateWithKeyboard(tester, find.tooltip("Remove item").first);
     await tester.pump();
     final changedFocus = _editable(tester, 0).focusNode..requestFocus();
     await tester.pump();
@@ -661,4 +631,27 @@ final class _DelayedRemovalHost extends ChangeNotifier
     if (settlement case final pending?) await pending.future;
     return result;
   }
+}
+
+/// Asks to remove the first step of [example], cancels, and expects the draft
+/// to stay as it was.
+Future<void> _cancelRemoval(
+  WidgetTester tester,
+  CollectionEditorExample example,
+) async {
+  final scenario = CollectionEditorScenario(
+    example: example,
+    confirmRemoval: true,
+  );
+  addTearDown(scenario.dispose);
+  await _pump(tester, scenario);
+  final before = scenario.value;
+  await tester.tap(find.tooltip("Remove step").first);
+  await tester.pumpAndSettle();
+  expect(find.text("Remove this step?"), findsOneWidget);
+  await tester.tap(find.text("Cancel"));
+  await tester.pumpAndSettle();
+  expect(scenario.value, before);
+  expect(scenario.workspace.hasPendingWork, isFalse);
+  expect(tester.takeException(), isNull);
 }

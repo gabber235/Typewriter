@@ -2,10 +2,7 @@ import "package:flutter_test/flutter_test.dart";
 import "package:typewriter_panel/infrastructure/protocols/skir/skir.dart"
     as skir;
 import "package:typewriter_panel/typewriter_panel.dart";
-import "package:typewriter_testkit/typewriter_testkit.dart";
-
-import "../../../support/publication.dart";
-import "../../../support/test_utils.dart";
+import "package:typewriter_testkit/testing.dart";
 
 final _scope = AuthoringScope(
   organizationId: skir.recordId("organization:inbox"),
@@ -690,9 +687,11 @@ Future<RealmInboxState> _inbox({
   );
   final subscription = container.listen(realmInboxProvider(_scope), (_, _) {});
   addTearDown(subscription.close);
-  await waitForPublication(
-    () =>
-        container.read(realmInboxProvider(_scope)).publication.review == review,
+  await eventually(
+    () => expect(
+      container.read(realmInboxProvider(_scope)).publication.review == review,
+      isTrue,
+    ),
   );
   return container.read(realmInboxProvider(_scope));
 }

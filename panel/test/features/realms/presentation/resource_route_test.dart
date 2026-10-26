@@ -2,9 +2,7 @@ import "package:flutter_test/flutter_test.dart";
 import "package:typewriter_panel/infrastructure/protocols/skir/skir.dart"
     as skir;
 import "package:typewriter_panel/typewriter_panel.dart";
-import "package:typewriter_testkit/typewriter_testkit.dart";
-
-import "../../../support/test_utils.dart";
+import "package:typewriter_testkit/testing.dart";
 
 void main() {
   testWidgets("a page shows its workspace beside its Book's outline", (
@@ -55,7 +53,7 @@ void main() {
     await _pump(tester, _page, size: const Size(420, 900));
 
     expect(find.byType(AuthoredResourceNavigator), findsNothing);
-    expect(find.byTooltip("Open Route"), findsOneWidget);
+    expect(find.tooltip("Open Route"), findsOneWidget);
     final menu = Focus.of(tester.element(find.byIcon(Icons.menu_open)))
       ..requestFocus();
     await tester.pump();

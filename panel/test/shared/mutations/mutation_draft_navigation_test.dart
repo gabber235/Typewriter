@@ -2,9 +2,7 @@ import "package:flutter_test/flutter_test.dart";
 import "package:typewriter_panel/infrastructure/protocols/skir/skir.dart"
     as skir;
 import "package:typewriter_panel/typewriter_panel.dart";
-import "package:typewriter_testkit/typewriter_testkit.dart";
-
-import "../../support/test_utils.dart";
+import "package:typewriter_testkit/testing.dart";
 
 void main() {
   testWidgets(
@@ -84,7 +82,7 @@ void main() {
       await tester.pumpAndSettle();
       expect(find.text("Open work"), findsNothing);
 
-      await tester.tap(find.byTooltip("Close"));
+      await tester.tap(find.tooltip("Close"));
       await tester.pumpAndSettle();
       workspace.setDestination(WorkDriverId(domain: "value", scope: key), null);
 
@@ -96,7 +94,7 @@ void main() {
       await tester.pumpAndSettle();
       expect(find.text("No pending changes"), findsOneWidget);
 
-      await tester.tap(find.byTooltip("Close"));
+      await tester.tap(find.tooltip("Close"));
       await tester.pumpAndSettle();
       expect(tester.takeException(), isNull);
     },

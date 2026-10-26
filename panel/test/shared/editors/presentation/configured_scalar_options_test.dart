@@ -2,9 +2,7 @@ import "package:flutter_test/flutter_test.dart";
 import "package:typewriter_panel/infrastructure/protocols/skir/skir.dart"
     as skir;
 import "package:typewriter_panel/typewriter_panel.dart";
-import "package:typewriter_testkit/typewriter_testkit.dart";
-
-import "../../../support/test_utils.dart";
+import "package:typewriter_testkit/testing.dart";
 
 void main() {
   for (final configured in [false, true]) {
@@ -587,7 +585,7 @@ void main() {
           .toList();
       expect(tiles[0].enabled, isTrue);
       expect(tiles[1].enabled, isFalse);
-      expect(find.byTooltip("Unavailable in this state"), findsOneWidget);
+      expect(find.tooltip("Unavailable in this state"), findsOneWidget);
       await tester.tap(find.text("second"));
       await tester.pumpAndSettle();
       expect(fixture.value, skir.DataValue.wrapStringValue("first"));

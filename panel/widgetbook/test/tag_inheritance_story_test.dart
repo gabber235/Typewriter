@@ -2,7 +2,7 @@ import "package:flutter_test/flutter_test.dart";
 import "package:typewriter_panel/infrastructure/protocols/skir/skir.dart"
     as skir;
 import "package:typewriter_panel/typewriter_panel.dart";
-import "package:typewriter_testkit/typewriter_testkit.dart";
+import "package:typewriter_testkit/testing.dart";
 import "package:widgetbook_workspace/stories/authoring/presentation/tag_inheritance_presentation.stories.dart";
 
 void main() {
@@ -43,7 +43,7 @@ void main() {
         expect(section, findsOneWidget);
         final disclosure = find.descendant(
           of: section,
-          matching: find.byTooltip("Expand"),
+          matching: find.tooltip("Expand"),
         );
         expect(disclosure, findsOneWidget);
         await tester.ensureVisible(disclosure);

@@ -2,9 +2,7 @@ import "package:flutter_test/flutter_test.dart";
 import "package:typewriter_panel/infrastructure/protocols/skir/skir.dart"
     as skir;
 import "package:typewriter_panel/typewriter_panel.dart";
-import "package:typewriter_testkit/typewriter_testkit.dart";
-
-import "../../support/test_utils.dart";
+import "package:typewriter_testkit/testing.dart";
 
 void main() {
   test("concrete endpoint binding replaces the ancestor at the same path", () {
@@ -201,7 +199,7 @@ void main() {
     await tester.pumpWidget(
       _linkControl(fixture, editing: editing, source: source),
     );
-    await tester.tap(find.byTooltip("Add link"));
+    await tester.tap(find.tooltip("Add link"));
     await tester.pumpAndSettle();
     await tester.tap(
       find.byKey(
@@ -229,7 +227,7 @@ void main() {
     final fixture = _fixture(abstractWrapper: true, nestedCollection: true);
     final editing = _LinkWorkspace(fixture.draft, fixture.source.resource);
     await tester.pumpWidget(_linkControl(fixture, editing: editing));
-    await tester.tap(find.byTooltip("Choose linked resource"));
+    await tester.tap(find.tooltip("Choose linked resource"));
     await tester.pumpAndSettle();
     await tester.tap(
       find.byKey(
@@ -499,7 +497,7 @@ void main() {
     expect(
       find.descendant(
         of: find.byKey(const ValueKey("link.field")),
-        matching: find.byTooltip("Choose linked resource"),
+        matching: find.tooltip("Choose linked resource"),
       ),
       findsOneWidget,
     );
@@ -523,7 +521,7 @@ void main() {
         ),
       );
       expect(wrapped, isEmpty);
-      expect(find.byTooltip("Choose linked resource"), findsOneWidget);
+      expect(find.tooltip("Choose linked resource"), findsOneWidget);
     },
   );
 
@@ -534,13 +532,13 @@ void main() {
     final editing = _LinkWorkspace(fixture.draft, fixture.source.resource);
     await tester.pumpWidget(_linkControl(fixture, editing: editing));
 
-    await tester.tap(find.byTooltip("Choose linked resource"));
+    await tester.tap(find.tooltip("Choose linked resource"));
     await tester.pumpAndSettle();
-    await tester.tap(find.byTooltip("Close"));
+    await tester.tap(find.tooltip("Close"));
     await tester.pumpAndSettle();
     expect(editing.workspace.state.groups, isEmpty);
 
-    await tester.tap(find.byTooltip("Choose linked resource"));
+    await tester.tap(find.tooltip("Choose linked resource"));
     await tester.pumpAndSettle();
     await tester.tap(
       find.byKey(
@@ -604,7 +602,7 @@ void main() {
       ),
     );
 
-    await tester.tap(find.byTooltip("Choose linked resource"));
+    await tester.tap(find.tooltip("Choose linked resource"));
     await tester.pumpAndSettle();
     await tester.tap(
       find.byKey(

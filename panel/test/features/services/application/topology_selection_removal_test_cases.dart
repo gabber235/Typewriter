@@ -44,8 +44,7 @@ void _testTopologySelectionRemoval() {
         container.read(selectionProvider.notifier).selectAll([identifier]);
         final session = container.listen(inspectionSessionProvider, (_, _) {});
         addTearDown(session.close);
-        final inspected = await waitForProvider(
-          container,
+        final inspected = await container.eventually(
           inspectedSelectionProvider,
           (value) => value.hasValue && value.requireValue.length == 1,
           description: "inspected topology selection",

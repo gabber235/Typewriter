@@ -1,7 +1,6 @@
 import "package:flutter_test/flutter_test.dart";
 import "package:typewriter_panel/typewriter_panel.dart";
-
-import "../../../support/test_utils.dart";
+import "package:typewriter_testkit/testing.dart";
 
 void main() {
   testWidgets("invokes async and changes FAB icon to spinner while running", (
@@ -30,7 +29,7 @@ void main() {
 
     await tester.tap(find.byType(FloatingActionButton));
 
-    await tester.pumpUntil(() {
+    await tester.eventually(() {
       expect(invoked, 1);
       expect(find.byType(Icon), findsNothing);
       expect(find.byType(CircularProgressIndicator), findsOneWidget);
@@ -39,7 +38,7 @@ void main() {
 
     completer.complete();
 
-    await tester.pumpUntil(() {
+    await tester.eventually(() {
       expect(invoked, 2);
       expect(find.byType(Icon), findsOneWidget);
       expect(find.byType(CircularProgressIndicator), findsNothing);

@@ -1,7 +1,6 @@
 import "package:flutter_test/flutter_test.dart";
 import "package:typewriter_panel/typewriter_panel.dart";
-
-import "../../../support/test_utils.dart";
+import "package:typewriter_testkit/testing.dart";
 
 void main() {
   for (final mixed in [false, true]) {
@@ -78,13 +77,13 @@ void main() {
         find.text("This value is Unfilled"),
         mixed ? findsNothing : findsOneWidget,
       );
-      await tester.tap(find.byTooltip("Open color picker"));
+      await tester.tap(find.tooltip("Open color picker"));
       await tester.pumpAndSettle();
       expect(
         find.text("Choose one replacement color."),
         mixed ? findsOneWidget : findsNothing,
       );
-      await tester.tap(find.byTooltip("Close color picker"));
+      await tester.tap(find.tooltip("Close color picker"));
       await tester.pumpAndSettle();
       expect(writes, isEmpty);
       expect(clears, 0);
@@ -156,7 +155,7 @@ void main() {
             find.text("This value is Unfilled"),
             mixed ? findsNothing : findsOneWidget,
           );
-          await tester.tap(find.byTooltip("Open picker"));
+          await tester.tap(find.tooltip("Open picker"));
           await tester.pumpAndSettle();
           final seed = tester
               .widget<DateTimePickerSurface>(find.byType(DateTimePickerSurface))
@@ -165,7 +164,7 @@ void main() {
             find.text("Choose one replacement value."),
             mixed ? findsOneWidget : findsNothing,
           );
-          await tester.tap(find.byTooltip("Close picker"));
+          await tester.tap(find.tooltip("Close picker"));
           await tester.pumpAndSettle();
           expect(writes, isEmpty);
           expect(clears, 0);

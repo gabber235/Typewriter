@@ -112,7 +112,7 @@ class _Harness {
         organizationIdProvider.overrideWith(
           (ref) => organization?.call() ?? _organizationId,
         ),
-        natsProvider.overrideWith(() => FakeNats(nats)),
+        natsProvider.overrideWith(() => ConnectedNats(nats)),
         panelTelemetryProvider.overrideWithValue(
           const AsyncData(NoopPanelTelemetry()),
         ),
@@ -137,8 +137,7 @@ class _Harness {
     container
         .read(selectionProvider.notifier)
         .select(ServiceHostIdentifier(host.hostId));
-    final selected = await waitForProvider(
-      container,
+    final selected = await container.eventually(
       selectedProvider,
       (value) => value.hasValue && value.requireValue.isNotEmpty,
       description: "service host selection",

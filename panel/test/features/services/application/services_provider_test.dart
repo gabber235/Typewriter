@@ -2,7 +2,7 @@ import "package:flutter_test/flutter_test.dart";
 import "package:typewriter_panel/infrastructure/protocols/skir/skir.dart"
     as skir;
 import "package:typewriter_panel/typewriter_panel.dart";
-import "package:typewriter_testkit/typewriter_testkit.dart";
+import "package:typewriter_testkit/testing.dart";
 
 const _publishSubject = "cloud.to.user.user1.organization.org1.services.watch";
 const _listenSubject = "cloud.from.organization.org1.services.watch";
@@ -40,7 +40,7 @@ class _Harness {
       overrides: [
         userIdProvider.overrideWith((ref) async => "user1"),
         organizationIdProvider.overrideWith((ref) => _organizationId),
-        natsProvider.overrideWith(() => FakeNats(nats)),
+        natsProvider.overrideWith(() => ConnectedNats(nats)),
       ],
     );
     subscription = container.listen(
@@ -323,7 +323,7 @@ void main() {
         overrides: [
           userIdProvider.overrideWith((ref) async => auth.userId),
           organizationIdProvider.overrideWith((ref) => auth.organizationId),
-          natsProvider.overrideWith(() => FakeNats(nats)),
+          natsProvider.overrideWith(() => ConnectedNats(nats)),
         ],
       );
       addTearDown(container.dispose);

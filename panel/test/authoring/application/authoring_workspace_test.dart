@@ -2,9 +2,7 @@ import "package:flutter_test/flutter_test.dart";
 import "package:typewriter_panel/infrastructure/protocols/skir/skir.dart"
     as skir;
 import "package:typewriter_panel/typewriter_panel.dart";
-import "package:typewriter_testkit/typewriter_testkit.dart";
-
-import "../../support/publication.dart";
+import "package:typewriter_testkit/testing.dart";
 
 void main() {
   test(
@@ -671,10 +669,14 @@ void main() {
         ..start();
       work.register(driver);
       final lease = work.lease(driver.id);
-      await waitForPublication(() => driver.view is ReadyRealmPublication);
+      await eventually(
+        () => expect(driver.view is ReadyRealmPublication, isTrue),
+      );
       final publishing = (driver.view as ReadyRealmPublication).command
           .invoke();
-      await waitForPublication(() => repository.publishedValues.isNotEmpty);
+      await eventually(
+        () => expect(repository.publishedValues.isNotEmpty, isTrue),
+      );
       expect(work.state.entries.values.single.saving, isTrue);
       expect(work.state.entries.values.single.needsAttention, isFalse);
       lease.release();
@@ -699,7 +701,9 @@ void main() {
       );
       gate.complete();
       expect(await publishing, skir.PublishAuthoringResponse.publishing);
-      await waitForPublication(() => driver.view is PublishingRealmPublication);
+      await eventually(
+        () => expect(driver.view is PublishingRealmPublication, isTrue),
+      );
       expect(
         work.state.entries.values.single.phase,
         "Publishing saved content",
@@ -803,7 +807,9 @@ void main() {
         apply: (edit) => edit.set(_name, _text("Draft name")),
       );
       final before = workspace.state;
-      await waitForPublication(() => publication.view is ReadyRealmPublication);
+      await eventually(
+        () => expect(publication.view is ReadyRealmPublication, isTrue),
+      );
       expect(
         await (publication.view as ReadyRealmPublication).command.invoke(),
         skir.PublishAuthoringResponse.publishing,
@@ -831,7 +837,9 @@ void main() {
     final driver = PublicationWorkDriver(_workScope, repository, work)..start();
     work.register(driver);
     final lease = work.lease(driver.id);
-    await waitForPublication(() => driver.view is ReadyRealmPublication);
+    await eventually(
+      () => expect(driver.view is ReadyRealmPublication, isTrue),
+    );
     final command = (driver.view as ReadyRealmPublication).command;
     await expectLater(
       command.invoke(),

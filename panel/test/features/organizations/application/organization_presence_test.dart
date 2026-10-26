@@ -2,9 +2,7 @@ import "package:flutter_test/flutter_test.dart";
 import "package:typewriter_panel/infrastructure/protocols/skir/skir.dart"
     as skir;
 import "package:typewriter_panel/typewriter_panel.dart";
-import "package:typewriter_testkit/typewriter_testkit.dart";
-
-import "../../../support/provider_test_utils.dart";
+import "package:typewriter_testkit/testing.dart";
 
 const _ownSubject =
     "typewriter.presence.organization.org1.user.authenticated-user";
@@ -113,8 +111,7 @@ void main() {
         location: skir.PresenceLocation.createServices(),
       ),
     );
-    await waitForProvider(
-      harness.container,
+    await harness.container.eventually(
       organizationPresenceProvider,
       (state) => state.value?.length == 1,
       description: "remote presence",
@@ -150,8 +147,7 @@ void main() {
       "remote-user",
       skir.PresenceEvent.createLeft(sessionId: "remote-session"),
     );
-    await waitForProvider(
-      harness.container,
+    await harness.container.eventually(
       organizationPresenceProvider,
       (state) => state.value?.isEmpty ?? false,
       description: "departed remote presence",

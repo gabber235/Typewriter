@@ -2,9 +2,7 @@ import "package:flutter_test/flutter_test.dart";
 import "package:typewriter_panel/infrastructure/protocols/skir/skir.dart"
     as skir;
 import "package:typewriter_panel/typewriter_panel.dart";
-import "package:typewriter_testkit/typewriter_testkit.dart";
-
-import "../../support/publication.dart";
+import "package:typewriter_testkit/testing.dart";
 
 void main() {
   final scope = AuthoringScope(
@@ -26,12 +24,16 @@ void main() {
       work.dispose();
       await source.close();
     });
-    await waitForPublication(() => driver.view is ReadyRealmPublication);
+    await eventually(
+      () => expect(driver.view is ReadyRealmPublication, isTrue),
+    );
     final stale = (driver.view as ReadyRealmPublication).command;
     source.observe(
       PublicationObservation.fetching(skir.PublicationViewId(value: "new")),
     );
-    await waitForPublication(() => driver.view is CheckingRealmPublication);
+    await eventually(
+      () => expect(driver.view is CheckingRealmPublication, isTrue),
+    );
     expect(driver.view, isA<CheckingRealmPublication>());
     expect(
       await stale.invoke(),
@@ -40,21 +42,27 @@ void main() {
     expect(source.candidates, isEmpty);
     final blocked = blockedPublicationStatus();
     source.emit(blocked);
-    await waitForPublication(
-      () =>
-          driver.view is BlockedRealmPublication &&
-          driver.view.review == blocked,
+    await eventually(
+      () => expect(
+        driver.view is BlockedRealmPublication && driver.view.review == blocked,
+        isTrue,
+      ),
     );
     expect(driver.view, isA<BlockedRealmPublication>());
     final ready = readyPublicationStatus(candidate: "new");
     source.emit(ready, id: "new");
-    await waitForPublication(
-      () => driver.view is ReadyRealmPublication && driver.view.review == ready,
+    await eventually(
+      () => expect(
+        driver.view is ReadyRealmPublication && driver.view.review == ready,
+        isTrue,
+      ),
     );
     final fresh = (driver.view as ReadyRealmPublication).command;
     await fresh.invoke();
     expect(source.candidates.single.value, "new");
-    await waitForPublication(() => driver.view is ReadyRealmPublication);
+    await eventually(
+      () => expect(driver.view is ReadyRealmPublication, isTrue),
+    );
   });
   test("repeated invocation and old terminal observations cannot authorize a second request while sending", () async {
     final work = ScopedWorkSession();
@@ -71,16 +79,20 @@ void main() {
       work.dispose();
       await source.close();
     });
-    await waitForPublication(() => driver.view is ReadyRealmPublication);
+    await eventually(
+      () => expect(driver.view is ReadyRealmPublication, isTrue),
+    );
     final command = (driver.view as ReadyRealmPublication).command;
     final first = command.invoke();
-    await waitForPublication(() => source.candidates.isNotEmpty);
+    await eventually(() => expect(source.candidates.isNotEmpty, isTrue));
     final oldStatus = readyPublicationStatus(candidate: "older");
     source.emit(oldStatus, id: "old");
-    await waitForPublication(
-      () =>
-          driver.view is RequestActiveRealmPublication &&
-          driver.view.review == oldStatus,
+    await eventually(
+      () => expect(
+        driver.view is RequestActiveRealmPublication &&
+            driver.view.review == oldStatus,
+        isTrue,
+      ),
     );
     expect(driver.view, isA<RequestActiveRealmPublication>());
     expect(
@@ -92,7 +104,9 @@ void main() {
       SubmissionConfirmed(skir.PublishAuthoringResponse.noChanges),
     );
     await first;
-    await waitForPublication(() => driver.view is ReadyRealmPublication);
+    await eventually(
+      () => expect(driver.view is ReadyRealmPublication, isTrue),
+    );
   });
   test("unknown delivery remains readonly after coherent observations and never offers replay", () async {
     final work = ScopedWorkSession();
@@ -112,7 +126,9 @@ void main() {
       work.dispose();
       await source.close();
     });
-    await waitForPublication(() => driver.view is ReadyRealmPublication);
+    await eventually(
+      () => expect(driver.view is ReadyRealmPublication, isTrue),
+    );
     final command = (driver.view as ReadyRealmPublication).command;
     await expectLater(
       command.invoke(),
@@ -120,10 +136,12 @@ void main() {
     );
     final laterStatus = readyPublicationStatus(candidate: "later");
     source.emit(laterStatus);
-    await waitForPublication(
-      () =>
-          driver.view is UncertainRealmPublication &&
-          driver.view.review == laterStatus,
+    await eventually(
+      () => expect(
+        driver.view is UncertainRealmPublication &&
+            driver.view.review == laterStatus,
+        isTrue,
+      ),
     );
     expect(driver.view, isA<UncertainRealmPublication>());
     expect(work.submissions.single.canReplay, isFalse);

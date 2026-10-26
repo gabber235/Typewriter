@@ -1,7 +1,6 @@
 import "package:flutter_test/flutter_test.dart";
 import "package:typewriter_panel/typewriter_panel.dart";
-
-import "../../../support/test_utils.dart";
+import "package:typewriter_testkit/testing.dart";
 
 void main() {
   const token = AsyncData(AccessToken(token: "access-token"));
@@ -116,7 +115,7 @@ void main() {
       focus.requestFocus();
       await tester.pump(const Duration(milliseconds: 1));
       expect(focus.hasFocus, isTrue);
-      lifecycle.status = status;
+      lifecycle.state = status;
       await tester.pump(const Duration(milliseconds: 1));
       await tester.pump(const Duration(milliseconds: 1));
       expect(control, findsNothing);
@@ -129,7 +128,7 @@ void main() {
       expect(initialized, 1);
       expect(disposed, 0);
 
-      lifecycle.status = const NatsConnected();
+      lifecycle.state = const NatsConnected();
       await tester.pump(const Duration(milliseconds: 1));
       expect(control, findsOneWidget);
       expect(focus.canRequestFocus, isTrue);
@@ -145,10 +144,6 @@ void main() {
 class _MutableLifecycle extends NatsLifecycle {
   @override
   NatsConnectionState build() => const NatsConnected();
-
-  NatsConnectionState get status => state;
-
-  set status(NatsConnectionState status) => state = status;
 }
 
 class _RouteProbe extends StatefulWidget {

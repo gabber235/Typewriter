@@ -411,47 +411,11 @@ CheckedEditorCatalog _catalog(CollectionEditorExample example) {
     String name,
     skir.RepresentationTemplate representation, {
     Map<String, skir.TypeTemplate> fields = const {},
-  }) => skir.PublishedType(
-    searchKey: null,
-    placementField: null,
-    definition: skir.TypeDefinition(
-      id: _id(name),
-      parameters: const [],
-      parents: const [],
-      representation: representation,
-    ),
-    status: skir.DeclarationStatus.ready,
-    display: defaultTypeDisplay(""),
-    ancestorTemplates: const [],
-    effectiveFields: [
-      for (final field in fields.entries)
-        skir.EffectiveFieldTemplate(
-          key: field.key,
-          owner: skir.FieldOwner(definition: _id(name), name: field.key),
-          type: field.value,
-          rules: const [],
-        ),
-    ],
-  );
+  }) => testPublishedType(_id(name), representation, fields: fields);
   skir.PublishedType record(
     String name,
     Map<String, skir.TypeTemplate> fields,
-  ) => published(
-    name,
-    skir.RepresentationTemplate.createRecord(
-      abstract_: false,
-      fields: [
-        for (final field in fields.entries)
-          skir.FieldDeclaration(
-            owner: skir.FieldOwner(definition: _id(name), name: field.key),
-            type: field.value,
-            overrides: const [],
-            hasConstructorDefault: false,
-          ),
-      ],
-    ),
-    fields: fields,
-  );
+  ) => testPublishedRecord(_id(name), fields);
   final entryType = _entryType(example);
   return CheckedEditorCatalog(
     (skir.EditorCatalog.mutable()

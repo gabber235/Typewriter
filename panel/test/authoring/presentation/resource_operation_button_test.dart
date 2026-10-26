@@ -2,8 +2,7 @@ import "package:flutter_test/flutter_test.dart";
 import "package:typewriter_panel/infrastructure/protocols/skir/skir.dart"
     as skir;
 import "package:typewriter_panel/typewriter_panel.dart";
-
-import "../../support/test_utils.dart";
+import "package:typewriter_testkit/testing.dart";
 
 const _icon =
     '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"> '
@@ -141,7 +140,7 @@ void main() {
           find.byType(buttonType),
         );
         expect(button.onPressed, isNull);
-        expect(find.byTooltip("This view is read only"), findsOneWidget);
+        expect(find.tooltip("This view is read only"), findsOneWidget);
         await tester.tap(find.byType(buttonType));
         await tester.pumpAndSettle();
         expect(invocations, 1);

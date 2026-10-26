@@ -2,9 +2,7 @@ import "package:flutter_test/flutter_test.dart";
 import "package:typewriter_panel/infrastructure/protocols/skir/skir.dart"
     as skir;
 import "package:typewriter_panel/typewriter_panel.dart";
-import "package:typewriter_testkit/typewriter_testkit.dart";
-
-import "../../support/test_utils.dart";
+import "package:typewriter_testkit/testing.dart";
 
 void main() {
   testWidgets("a grid lays out every member as a card", (tester) async {
@@ -52,7 +50,7 @@ void main() {
       greaterThan(tester.getTopLeft(_chrome("Opening")).dx),
     );
 
-    await tester.tap(find.byTooltip("Collapse act1"));
+    await tester.tap(find.tooltip("Collapse act1"));
     await tester.pumpAndSettle();
 
     expect(find.text("intro"), findsNothing);
@@ -60,7 +58,7 @@ void main() {
     expect(_chrome("Scene"), findsNothing);
     expect(_chrome("Loose"), findsOneWidget);
 
-    await tester.tap(find.byTooltip("Expand act1"));
+    await tester.tap(find.tooltip("Expand act1"));
     await tester.pumpAndSettle();
     expect(_chrome("Scene"), findsOneWidget);
   });

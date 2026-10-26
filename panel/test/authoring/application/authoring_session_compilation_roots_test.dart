@@ -2,9 +2,7 @@ import "package:flutter_test/flutter_test.dart";
 import "package:typewriter_panel/infrastructure/protocols/skir/skir.dart"
     as skir;
 import "package:typewriter_panel/typewriter_panel.dart";
-import "package:typewriter_testkit/typewriter_testkit.dart";
-
-import "../../support/publication.dart";
+import "package:typewriter_testkit/testing.dart";
 
 void main() {
   for (final result in [
@@ -27,7 +25,7 @@ void main() {
           );
         final container = ProviderContainer.test(
           overrides: [
-            natsProvider.overrideWith(() => FakeNats(nats)),
+            natsProvider.overrideWith(() => ConnectedNats(nats)),
             panelTelemetryProvider.overrideWithValue(
               const AsyncData(NoopPanelTelemetry()),
             ),
@@ -106,7 +104,7 @@ void main() {
       });
       final container = ProviderContainer.test(
         overrides: [
-          natsProvider.overrideWith(() => FakeNats(nats)),
+          natsProvider.overrideWith(() => ConnectedNats(nats)),
           panelTelemetryProvider.overrideWithValue(
             const AsyncData(NoopPanelTelemetry()),
           ),
@@ -172,7 +170,7 @@ void main() {
       });
     final container = ProviderContainer.test(
       overrides: [
-        natsProvider.overrideWith(() => FakeNats(nats)),
+        natsProvider.overrideWith(() => ConnectedNats(nats)),
         panelTelemetryProvider.overrideWithValue(
           const AsyncData(NoopPanelTelemetry()),
         ),
@@ -183,8 +181,11 @@ void main() {
     );
     final observed = <PublicationObservation>[];
     final subscription = source.watch().listen(observed.add);
-    await waitForPublication(
-      () => observed.lastOrNull is AvailablePublicationObservation,
+    await eventually(
+      () => expect(
+        observed.lastOrNull is AvailablePublicationObservation,
+        isTrue,
+      ),
     );
     expect(observed.first, isA<FetchingPublicationObservation>());
     expect((observed.last as AvailablePublicationObservation).view.id, view.id);
@@ -198,10 +199,12 @@ void main() {
         skir.PublicationViewChanged(current: view.id),
       ),
     );
-    await waitForPublication(
-      () =>
-          observed.whereType<AvailablePublicationObservation>().last.view.id ==
-          view.id,
+    await eventually(
+      () => expect(
+        observed.whereType<AvailablePublicationObservation>().last.view.id ==
+            view.id,
+        isTrue,
+      ),
     );
     expect(
       (observed.last as AvailablePublicationObservation).view.status,

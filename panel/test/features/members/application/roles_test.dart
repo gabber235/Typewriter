@@ -2,7 +2,7 @@ import "package:flutter_test/flutter_test.dart";
 import "package:typewriter_panel/infrastructure/protocols/skir/skir.dart"
     as skir;
 import "package:typewriter_panel/typewriter_panel.dart";
-import "package:typewriter_testkit/typewriter_testkit.dart";
+import "package:typewriter_testkit/testing.dart";
 
 const _userId = "user1";
 final _organizationId = skir.recordId("organization:org1");
@@ -35,7 +35,7 @@ final class _Harness {
       overrides: [
         userIdProvider.overrideWith((ref) async => _userId),
         organizationIdProvider.overrideWith((ref) => _organizationId),
-        natsProvider.overrideWith(() => FakeNats(nats)),
+        natsProvider.overrideWith(() => ConnectedNats(nats)),
       ],
     );
     subscription = container.listen(

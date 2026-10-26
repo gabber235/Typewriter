@@ -1,7 +1,6 @@
 import "package:flutter_test/flutter_test.dart";
 import "package:typewriter_panel/typewriter_panel.dart";
-
-import "../../support/test_utils.dart";
+import "package:typewriter_testkit/testing.dart";
 
 void main() {
   const screenshotDirectory = String.fromEnvironment(
@@ -82,7 +81,7 @@ void main() {
       expect(find.text("All saved"), findsNothing);
       expect(find.text("No pending changes"), findsOneWidget);
 
-      await tester.tap(find.byTooltip("Close"));
+      await tester.tap(find.tooltip("Close"));
       await tester.pumpAndSettle();
       expect(find.text("Save activity"), findsNothing);
       expect(tester.takeException(), isNull);
@@ -132,14 +131,14 @@ void main() {
         addTearDown(pointer.removePointer);
         await pointer.addPointer(location: const Offset(10, 500));
         await pointer.moveTo(
-          tester.getCenter(find.byTooltip("Needs attention")),
+          tester.getCenter(find.tooltip("Needs attention")),
         );
         await tester.pumpAndSettle();
         expect(
           find.text("Save activity"),
           mobile ? findsNothing : findsOneWidget,
         );
-        await tester.tap(find.byTooltip("Needs attention"));
+        await tester.tap(find.tooltip("Needs attention"));
 
         await tester.pumpAndSettle();
         expect(find.text("Save activity"), findsOneWidget);
@@ -153,7 +152,7 @@ void main() {
         );
         expect(tester.takeException(), isNull);
         if (!mobile) {
-          await pointer.moveTo(tester.getCenter(find.byTooltip("Close")));
+          await pointer.moveTo(tester.getCenter(find.tooltip("Close")));
           await tester.pump(const Duration(seconds: 1));
           await tester.pump();
           expect(tester.takeException(), isNull);
@@ -173,7 +172,7 @@ void main() {
             tester.getTopLeft(find.text("Save activity")).dx,
             greaterThan(16),
           );
-          await tester.tap(find.byTooltip("Close"));
+          await tester.tap(find.tooltip("Close"));
         } else {
           await tester.sendKeyEvent(LogicalKeyboardKey.escape);
         }

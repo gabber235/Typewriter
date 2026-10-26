@@ -1,6 +1,6 @@
 import "package:flutter_test/flutter_test.dart";
 import "package:typewriter_panel/typewriter_panel.dart";
-import "package:typewriter_testkit/typewriter_testkit.dart";
+import "package:typewriter_testkit/testing.dart";
 import "package:widgetbook_workspace/stories/shared/editors/presentation/portable_presentation_renderer.stories.dart";
 
 void main() {

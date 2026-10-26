@@ -2,7 +2,7 @@ import "package:flutter_test/flutter_test.dart";
 import "package:typewriter_panel/infrastructure/protocols/skir/skir.dart"
     as skir;
 import "package:typewriter_panel/typewriter_panel.dart";
-import "package:typewriter_testkit/typewriter_testkit.dart";
+import "package:typewriter_testkit/testing.dart";
 
 LocalWorkScope _scope(String organization) => LocalWorkScope(
   userId: "user",
@@ -326,7 +326,7 @@ void main() {
       expect(subscriptions, 1);
       final stack = fixture.ids;
       final pushCount = pushes.length;
-      lifecycle.status = const NatsConnecting();
+      lifecycle.state = const NatsConnecting();
       await tester.pump(const Duration(milliseconds: 1));
       await tester.pump(const Duration(milliseconds: 1));
       expect(find.text("Services pending"), findsNothing);
@@ -337,7 +337,7 @@ void main() {
       expect(cancellations, 0);
 
       services.add(const []);
-      lifecycle.status = const NatsConnected();
+      lifecycle.state = const NatsConnected();
       await tester.pumpAndSettle();
       expect(find.text("Services ready"), findsOneWidget);
       expect(fixture.ids, stack);
@@ -661,10 +661,6 @@ void main() {
 class _MutableLifecycle extends NatsLifecycle {
   @override
   NatsConnectionState build() => const NatsConnected();
-
-  NatsConnectionState get status => state;
-
-  set status(NatsConnectionState value) => state = value;
 }
 
 class _PendingServices extends CanonicalOrganizationServices {

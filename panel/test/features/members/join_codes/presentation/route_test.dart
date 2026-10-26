@@ -1,9 +1,6 @@
 import "package:flutter_test/flutter_test.dart";
 import "package:typewriter_panel/typewriter_panel.dart";
-import "package:typewriter_testkit/typewriter_testkit.dart";
-
-import "../../../../support/test_utils.dart";
-import "../application/support/join_codes_test_support.dart";
+import "package:typewriter_testkit/testing.dart";
 
 void main() {
   testWidgets("JoinCodesPage separately uses Join Code wording without tabs", (
@@ -11,10 +8,7 @@ void main() {
   ) async {
     await tester.pumpTestApp(
       child: const JoinCodesPage(),
-      overrides: [
-        ...organizationMembersProviderOverrides(state: DisplayState.noItems),
-        ...organizationJoinCodesProviderOverrides(state: DisplayState.noItems),
-      ],
+      overrides: [...FakeMembership().overrides],
     );
     await tester.pump();
 
@@ -39,12 +33,7 @@ void main() {
       addTearDown(tester.view.reset);
       await tester.pumpTestApp(
         child: const JoinCodesPage(),
-        overrides: [
-          ...organizationMembersProviderOverrides(state: DisplayState.noItems),
-          organizationJoinCodesProvider.overrideWith(
-            LoadingJoinCodesNotifier.new,
-          ),
-        ],
+        overrides: [...FakeMembership(joinCodes: null).overrides],
         settle: false,
       );
       await tester.pump();

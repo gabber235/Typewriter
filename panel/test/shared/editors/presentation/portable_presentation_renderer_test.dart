@@ -2,9 +2,7 @@ import "package:flutter_test/flutter_test.dart";
 import "package:typewriter_panel/infrastructure/protocols/skir/skir.dart"
     as skir;
 import "package:typewriter_panel/typewriter_panel.dart";
-import "package:typewriter_testkit/typewriter_testkit.dart";
-
-import "../../../support/test_utils.dart";
+import "package:typewriter_testkit/testing.dart";
 
 void main() {
   registerConfiguredCollectionTests();
@@ -308,10 +306,10 @@ void main() {
       ),
       findsOneWidget,
     );
-    await tester.tap(find.byTooltip("Collapse"));
+    await tester.tap(find.tooltip("Collapse"));
     await tester.pumpAndSettle();
     expect(find.text("Section body"), findsNothing);
-    await tester.tap(find.byTooltip("Expand"));
+    await tester.tap(find.tooltip("Expand"));
     await tester.pumpAndSettle();
     expect(find.text("Section body"), findsOneWidget);
   });
@@ -466,7 +464,7 @@ void main() {
 
     await tester.enterText(find.byType(TextFormField), "8");
     await tester.pumpAndSettle();
-    expect(find.byTooltip("The document rejected this write"), findsOneWidget);
+    expect(find.tooltip("The document rejected this write"), findsOneWidget);
     expect(find.bySemanticsLabel("Presentation error"), findsOneWidget);
 
     await tester.tap(find.text("Run action"));
@@ -598,9 +596,9 @@ void main() {
     await tester.enterText(find.byType(TextFormField), "-");
     await tester.pump();
     final writeCountBeforeCollapse = host.writes.length;
-    await tester.tap(find.byTooltip("Collapse"));
+    await tester.tap(find.tooltip("Collapse"));
     await tester.pumpAndSettle();
-    await tester.tap(find.byTooltip("Expand"));
+    await tester.tap(find.tooltip("Expand"));
     await tester.pumpAndSettle();
 
     expect(
@@ -625,7 +623,7 @@ void main() {
     );
     await tester.pumpAndSettle();
 
-    expect(find.byTooltip("More actions"), findsOneWidget);
+    expect(find.tooltip("More actions"), findsOneWidget);
     expect(tester.takeException(), isNull);
   });
 
@@ -1195,7 +1193,7 @@ void main() {
     await tester.pumpTestApp(child: fixture.widget);
 
     expect(find.text("The collection binding is unavailable"), findsNothing);
-    await tester.tap(find.byTooltip("Add item"));
+    await tester.tap(find.tooltip("Add item"));
     await tester.pumpAndSettle();
 
     final submitted = await _submit(tester, fixture.document);
@@ -1221,12 +1219,12 @@ void main() {
     await tester.pumpTestApp(child: list.widget);
     expect(find.text("Pages"), findsOneWidget);
     expect(find.text("Pages in this book"), findsOneWidget);
-    expect(find.byTooltip("Add item"), findsOneWidget);
+    expect(find.tooltip("Add item"), findsOneWidget);
 
     final map = _mapFixture(label: "Translations");
     await tester.pumpTestApp(child: map.widget);
     expect(find.text("Translations"), findsOneWidget);
-    expect(find.byTooltip("Add entry"), findsOneWidget);
+    expect(find.tooltip("Add entry"), findsOneWidget);
     expect(
       find.byWidgetPredicate(
         (widget) => widget is IconButton && widget.tooltip == "Add entry",
@@ -1244,7 +1242,7 @@ void main() {
     );
     await tester.pumpTestApp(child: fixture.widget);
 
-    expect(find.byTooltip("Add item"), findsNothing);
+    expect(find.tooltip("Add item"), findsNothing);
     expect(fixture.document.workspace.state.groups, isEmpty);
   });
 
@@ -1253,7 +1251,7 @@ void main() {
     await tester.pumpTestApp(child: fixture.widget);
 
     expect(find.text("The map binding is unavailable"), findsNothing);
-    await tester.tap(find.byTooltip("Add entry"));
+    await tester.tap(find.tooltip("Add entry"));
     await tester.pump();
 
     final submitted = await _submit(tester, fixture.document);
@@ -1277,7 +1275,7 @@ void main() {
     final fixture = _linkCollectionFixture();
     await tester.pumpTestApp(child: fixture.widget);
 
-    await tester.tap(find.byTooltip("Add link"));
+    await tester.tap(find.tooltip("Add link"));
     await tester.pumpAndSettle();
     expect(find.text("Target Alpha"), findsOneWidget);
     expect(find.text(fixture.target.value), findsNothing);
@@ -1304,7 +1302,7 @@ void main() {
     final fixture = _linkCollectionFixture();
     await tester.pumpTestApp(child: fixture.widget);
 
-    await tester.tap(find.byTooltip("Add link"));
+    await tester.tap(find.tooltip("Add link"));
     await tester.pumpAndSettle();
     await tester.sendKeyEvent(LogicalKeyboardKey.escape);
     await tester.pumpAndSettle();
@@ -1319,7 +1317,7 @@ void main() {
     final fixture = _linkCollectionFixture();
     await tester.pumpTestApp(child: fixture.widget);
 
-    await tester.tap(find.byTooltip("Add link"));
+    await tester.tap(find.tooltip("Add link"));
     await tester.pumpAndSettle();
     await tester.enterText(find.byType(TextField).first, "Target Beta");
     await tester.pumpAndSettle();
@@ -1357,7 +1355,7 @@ void main() {
 
     expect(find.text("Target Alpha"), findsOneWidget);
     expect(find.text(fixture.target.value), findsNothing);
-    expect(find.byTooltip("Clear link"), findsOneWidget);
+    expect(find.tooltip("Clear link"), findsOneWidget);
     expect(find.byType(DepthBox), findsWidgets);
   });
 
@@ -1388,9 +1386,9 @@ void main() {
 
     expect(tester.takeException(), isNull);
     expect(find.text("Target Alpha"), findsOneWidget);
-    expect(find.byTooltip("Change linked resource"), findsOneWidget);
-    expect(find.byTooltip("Clear link"), findsOneWidget);
-    expect(find.byTooltip("Remove item"), findsNWidgets(2));
+    expect(find.tooltip("Change linked resource"), findsOneWidget);
+    expect(find.tooltip("Clear link"), findsOneWidget);
+    expect(find.tooltip("Remove item"), findsNWidgets(2));
     expect(find.text("Change"), findsNothing);
   });
 
@@ -1411,9 +1409,9 @@ void main() {
         closeTo(14, 0.01),
       );
       expect(find.text("Target Alpha"), findsOneWidget);
-      expect(find.byTooltip("Change linked resource"), findsOneWidget);
-      expect(find.byTooltip("Clear link"), findsOneWidget);
-      expect(find.byTooltip("Remove item"), findsNWidgets(2));
+      expect(find.tooltip("Change linked resource"), findsOneWidget);
+      expect(find.tooltip("Clear link"), findsOneWidget);
+      expect(find.tooltip("Remove item"), findsNWidgets(2));
       expect(tester.takeException(), isNull);
     },
   );
@@ -3171,7 +3169,7 @@ void registerConfiguredCollectionTests() {
       await tester.pumpTestApp(child: fixture.widget);
       expect(find.text("Prefix insertion"), findsOneWidget);
       expect(find.text("Coordinates"), findsOneWidget);
-      expect(find.byTooltip("Add item"), findsOneWidget);
+      expect(find.tooltip("Add item"), findsOneWidget);
       expect(
         tester
             .getSemantics(find.widgetWithText(FilledButton, "Prefix insertion"))
@@ -3274,7 +3272,7 @@ void registerConfiguredCollectionTests() {
       await tester.pumpTestApp(child: fixture.widget);
       expect(find.text("No coordinates"), findsOneWidget);
       expect(find.text("No items"), findsNothing);
-      expect(find.byTooltip("New coordinate"), findsOneWidget);
+      expect(find.tooltip("New coordinate"), findsOneWidget);
       final add = tester.widget<IconButton>(
         find.byWidgetPredicate(
           (widget) =>
@@ -3282,7 +3280,7 @@ void registerConfiguredCollectionTests() {
         ),
       );
       expect(add.style?.visualDensity, VisualDensity.compact);
-      await tester.tap(find.byTooltip("New coordinate"));
+      await tester.tap(find.tooltip("New coordinate"));
       await tester.pumpAndSettle();
       final submitted = await _submit(tester, fixture.document);
       expect(submitted.intents, hasLength(1));
@@ -3341,7 +3339,7 @@ void registerConfiguredCollectionTests() {
         ),
       );
       await tester.pumpTestApp(child: fixture.widget);
-      expect(find.byTooltip("Remove coordinate"), findsNWidgets(2));
+      expect(find.tooltip("Remove coordinate"), findsNWidgets(2));
       expect(find.text("Remove glyph"), findsNWidgets(2));
       final cards = find.descendant(
         of: find.byType(ReorderableListView),
@@ -3427,10 +3425,10 @@ void registerConfiguredCollectionTests() {
         ),
       );
       await tester.pumpTestApp(child: fixture.widget);
-      expect(find.byTooltip("Disconnect node"), findsOneWidget);
-      expect(find.byTooltip("Choose node"), findsNWidgets(2));
+      expect(find.tooltip("Disconnect node"), findsOneWidget);
+      expect(find.tooltip("Choose node"), findsNWidgets(2));
       expect(find.text("Select destination"), findsOneWidget);
-      await tester.tap(find.byTooltip("Choose node").last);
+      await tester.tap(find.tooltip("Choose node").last);
       await tester.pumpAndSettle();
       expect(find.byType(QueryBar), findsOneWidget);
       final query = tester.widget<QueryBar>(find.byType(QueryBar));

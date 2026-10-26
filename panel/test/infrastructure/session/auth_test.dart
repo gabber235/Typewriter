@@ -1,6 +1,5 @@
 import "package:flutter_test/flutter_test.dart";
 import "package:typewriter_panel/typewriter_panel.dart";
-import "package:typewriter_testkit/typewriter_testkit.dart";
 
 void main() {
   group("UserInfo", () {
@@ -101,45 +100,15 @@ void main() {
     });
   });
 
-  group("authUserInfoProvider", () {
-    test("provides user info when overridden", () async {
-      const testUserInfo = UserInfo(
-        sub: "test-user-sub",
-        name: "Test User",
-        email: "test@example.com",
-      );
-
-      final container = ProviderContainer.test(
-        overrides: authProviderOverrides(userInfo: testUserInfo),
-      );
-
-      final userInfo = await container.read(authUserInfoProvider.future);
-
-      expect(userInfo.sub, equals("test-user-sub"));
-      expect(userInfo.name, equals("Test User"));
-      expect(userInfo.email, equals("test@example.com"));
-    });
-
-    test("uses default mock user when no override specified", () async {
-      final container = ProviderContainer.test(
-        overrides: authProviderOverrides(),
-      );
-
-      final userInfo = await container.read(authUserInfoProvider.future);
-
-      expect(userInfo.sub, equals("1"));
-      expect(userInfo.name, equals("John Doe"));
-      expect(userInfo.email, equals("john.doe@example.com"));
-    });
-  });
-
   group("userIdProvider", () {
     test("returns sub when authenticated", () async {
       const testUserInfo = UserInfo(sub: "unique-user-id-123");
 
       final container = ProviderContainer.test(
         overrides: [
-          ...authProviderOverrides(userInfo: testUserInfo),
+          authUserInfoProvider.overrideWithValue(
+            const AsyncValue.data(testUserInfo),
+          ),
           isAuthenticatedProvider.overrideWithValue(
             const AsyncValue.data(true),
           ),

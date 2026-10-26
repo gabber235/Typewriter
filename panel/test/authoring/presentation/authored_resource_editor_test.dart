@@ -2,9 +2,7 @@ import "package:flutter_test/flutter_test.dart";
 import "package:typewriter_panel/infrastructure/protocols/skir/skir.dart"
     as skir;
 import "package:typewriter_panel/typewriter_panel.dart";
-import "package:typewriter_testkit/typewriter_testkit.dart";
-
-import "../../support/test_utils.dart";
+import "package:typewriter_testkit/testing.dart";
 
 void main() {
   testWidgets(
@@ -1063,63 +1061,19 @@ _emptyPageGraphFixture() {
     definition: elementsDefinition,
     arguments: const [],
   );
-  final elementsOwner = skir.FieldOwner(
-    definition: definition,
-    name: "elements",
-  );
   final checked = CheckedEditorCatalog(
     skir.EditorCatalog(
       resourceDisplays: const [],
       resourceOperations: const [],
       generation: generation,
       types: [
-        skir.PublishedType(
-          searchKey: null,
-          placementField: null,
-          display: defaultTypeDisplay(""),
-          definition: skir.TypeDefinition(
-            id: definition,
-            parameters: const [],
-            representation: skir.RepresentationTemplate.createRecord(
-              fields: [
-                skir.FieldDeclaration(
-                  owner: elementsOwner,
-                  type: elementsType,
-                  overrides: const [],
-                  hasConstructorDefault: false,
-                ),
-              ],
-              abstract_: false,
-            ),
-            parents: const [],
+        testPublishedRecord(definition, {"elements": elementsType}),
+        testPublishedType(
+          elementsDefinition,
+          skir.RepresentationTemplate.createSequence(
+            item: skir.TypeTemplate.wrapScalar(skir.ScalarKind.text),
+            kind: skir.CollectionKind.list,
           ),
-          status: skir.DeclarationStatus.ready,
-          effectiveFields: [
-            skir.EffectiveFieldTemplate(
-              key: "elements",
-              owner: elementsOwner,
-              type: elementsType,
-              rules: const [],
-            ),
-          ],
-          ancestorTemplates: const [],
-        ),
-        skir.PublishedType(
-          searchKey: null,
-          placementField: null,
-          display: defaultTypeDisplay(""),
-          definition: skir.TypeDefinition(
-            id: elementsDefinition,
-            parameters: const [],
-            representation: skir.RepresentationTemplate.createSequence(
-              item: skir.TypeTemplate.wrapScalar(skir.ScalarKind.text),
-              kind: skir.CollectionKind.list,
-            ),
-            parents: const [],
-          ),
-          status: skir.DeclarationStatus.ready,
-          effectiveFields: const [],
-          ancestorTemplates: const [],
         ),
       ],
       relations: const [],

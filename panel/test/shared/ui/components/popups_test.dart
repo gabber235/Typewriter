@@ -1,7 +1,7 @@
 import "package:flutter_test/flutter_test.dart";
 import "package:typewriter_panel/typewriter_panel.dart";
+import "package:typewriter_testkit/testing.dart";
 
-import "../../../support/test_utils.dart";
 import "../../selectables/application/selection_test_support.dart";
 
 Future<void> _invokePrimaryAction(WidgetTester tester) async {

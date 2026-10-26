@@ -1,7 +1,6 @@
 import "package:flutter_test/flutter_test.dart";
 import "package:typewriter_panel/typewriter_panel.dart";
-
-import "../../../../support/test_utils.dart";
+import "package:typewriter_testkit/testing.dart";
 
 void main() {
   for (final variant in LoadingVariant.values) {
@@ -31,19 +30,11 @@ void main() {
         expect(find.byType(CircularProgressIndicator), findsNothing);
 
         await tester.tap(find.byType(InkWell));
-        await tester.pumpUntil(() {
-          expect(invoked, 1);
-          expect(find.byType(CircularProgressIndicator), findsOneWidget);
-          expect(find.text("Go"), findsNothing);
-        });
+        await _showsLoading(tester, () => invoked, 1, loading: true);
 
         completer.complete();
 
-        await tester.pumpUntil(() {
-          expect(invoked, 2);
-          expect(find.byType(CircularProgressIndicator), findsNothing);
-          expect(find.text("Go"), findsOneWidget);
-        });
+        await _showsLoading(tester, () => invoked, 2, loading: false);
       });
 
       testWidgets("shows snackbar and tooltip on failure", (tester) async {
@@ -92,7 +83,7 @@ void main() {
           expect(find.byType(CircularProgressIndicator), findsNothing);
           await tester.tap(find.byType(InkWell));
 
-          await tester.pumpUntil(() {
+          await tester.eventually(() {
             expect(invoked, 1);
             expect(find.text("Go"), findsOneWidget);
             expect(find.byType(Icon), findsNothing);
@@ -101,7 +92,7 @@ void main() {
 
           completer.complete();
 
-          await tester.pumpUntil(() {
+          await tester.eventually(() {
             expect(invoked, 2);
             expect(find.text("Go"), findsOneWidget);
             expect(find.byType(Icon), findsOneWidget);
@@ -161,19 +152,11 @@ void main() {
       final triggered = controller.trigger();
       expect(triggered, true);
 
-      await tester.pumpUntil(() {
-        expect(invoked, 1);
-        expect(find.byType(CircularProgressIndicator), findsOneWidget);
-        expect(find.text("Go"), findsNothing);
-      });
+      await _showsLoading(tester, () => invoked, 1, loading: true);
 
       completer.complete();
 
-      await tester.pumpUntil(() {
-        expect(invoked, 2);
-        expect(find.byType(CircularProgressIndicator), findsNothing);
-        expect(find.text("Go"), findsOneWidget);
-      });
+      await _showsLoading(tester, () => invoked, 2, loading: false);
     });
 
     testWidgets("returns false when button is disabled", (tester) async {
@@ -214,7 +197,7 @@ void main() {
 
       controller.trigger();
 
-      await tester.pumpUntil(() {
+      await tester.eventually(() {
         expect(invoked, 1);
         expect(find.byType(CircularProgressIndicator), findsOneWidget);
       });
@@ -308,3 +291,19 @@ void main() {
     });
   });
 }
+
+/// Waits until the button ran [expected] times and shows its spinner when
+/// [loading], or its label otherwise.
+Future<void> _showsLoading(
+  WidgetTester tester,
+  int Function() invoked,
+  int expected, {
+  required bool loading,
+}) => tester.eventually(() {
+  expect(invoked(), expected);
+  expect(
+    find.byType(CircularProgressIndicator),
+    loading ? findsOneWidget : findsNothing,
+  );
+  expect(find.text("Go"), loading ? findsNothing : findsOneWidget);
+});

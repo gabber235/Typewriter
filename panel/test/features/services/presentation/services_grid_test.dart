@@ -2,9 +2,7 @@ import "package:flutter_test/flutter_test.dart";
 import "package:typewriter_panel/infrastructure/protocols/skir/skir.dart"
     as skir;
 import "package:typewriter_panel/typewriter_panel.dart";
-import "package:typewriter_testkit/typewriter_testkit.dart";
-
-import "../../../support/test_utils.dart";
+import "package:typewriter_testkit/testing.dart";
 
 void main() {
   test(
@@ -61,7 +59,7 @@ void main() {
       final graph = tester.widget<Graph>(find.byType(Graph));
       expect(graph.data.elements, hasLength(4));
       expect(graph.data.edges, hasLength(2));
-      expect(find.byTooltip("Zoom to fit"), findsNothing);
+      expect(find.tooltip("Zoom to fit"), findsNothing);
     },
   );
 
@@ -302,7 +300,7 @@ class _Fixture {
 
   List<Override> get overrides => [
     userIdProvider.overrideWith((ref) async => "test-user"),
-    natsProvider.overrideWith(() => FakeNats(nats)),
+    natsProvider.overrideWith(() => ConnectedNats(nats)),
     organizationIdProvider.overrideWith(
       (ref) => skir.recordId("organization:test"),
     ),

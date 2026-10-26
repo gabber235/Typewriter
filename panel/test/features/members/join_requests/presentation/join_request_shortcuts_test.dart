@@ -2,7 +2,7 @@ import "package:flutter_test/flutter_test.dart";
 import "package:typewriter_panel/infrastructure/protocols/skir/skir.dart"
     as skir;
 import "package:typewriter_panel/typewriter_panel.dart";
-import "package:typewriter_testkit/typewriter_testkit.dart";
+import "package:typewriter_testkit/testing.dart";
 
 void main() {
   testWidgets("join request bulk shortcuts clear and decline selection", (
@@ -13,9 +13,7 @@ void main() {
 
     await tester.pumpWidget(
       FakeApp(
-        overrides: organizationMembersProviderOverrides(
-          state: DisplayState.noItems,
-        ),
+        overrides: FakeMembership().overrides,
         child: BulkJoinRequestActions(
           selectedCount: 1,
           selectedIds: {skir.recordId("request_to_join:request")},

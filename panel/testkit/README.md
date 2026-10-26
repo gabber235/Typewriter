@@ -1,16 +1,23 @@
 # typewriter_testkit
 
-A new Flutter project.
+Shared test kit for the panel. Tests import `package:typewriter_testkit/testing.dart`;
+web code such as Widgetbook imports the web safe `package:typewriter_testkit/typewriter_testkit.dart`.
 
-## Getting Started
+| Folder        | Holds                                                                |
+| ------------- | -------------------------------------------------------------------- |
+| `core/`       | `World`, `Trait`, `Slot`, `PanelStage`, `pumpPanel`, `eventually`    |
+| `doubles/`    | One fake per seam; it remembers changes and holds no service rules   |
+| `traits/`     | Sources a test sets: `signedIn`, `realm`, `offline`, `compact`, ...  |
+| `drivers/`    | Read and act on the panel through semantics, as its user does        |
+| `generators/` | A small seeded `Generator` for varied data                           |
 
-This project is a starting point for a Flutter application.
+```dart
+final panel = await tester.pumpPanel([
+  signedIn(ada, organization: acme),
+  realm(books: [book("First")]),
+]);
+await panel.resources.row("First").open();
+await panel.eventually(() => expect(panel.path, endsWith("book:first")));
+```
 
-A few resources to get you started if this is your first Flutter project:
-
-- [Lab: Write your first Flutter app](https://docs.flutter.dev/get-started/codelab)
-- [Cookbook: Useful Flutter samples](https://docs.flutter.dev/cookbook)
-
-For help getting started with Flutter development, view the
-[online documentation](https://docs.flutter.dev/), which offers tutorials,
-samples, guidance on mobile development, and a full API reference.
+Each trait fills one slot; two traits for the same slot fail with a message naming both.

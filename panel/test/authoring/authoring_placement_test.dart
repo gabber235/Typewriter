@@ -2,6 +2,7 @@ import "package:flutter_test/flutter_test.dart";
 import "package:typewriter_panel/infrastructure/protocols/skir/skir.dart"
     as skir;
 import "package:typewriter_panel/typewriter_panel.dart";
+import "package:typewriter_testkit/testing.dart";
 
 void main() {
   test("created graph resources avoid siblings and preserve dimensions", () {
@@ -19,40 +20,13 @@ void main() {
       skir.TypeDefinitionId id,
       Map<String, skir.TypeTemplate> fields, {
       List<skir.NamedTypeTemplate> parents = const [],
-    }) => skir.PublishedType(
-      searchKey: null,
+    }) => testPublishedRecord(
+      id,
+      fields,
+      parents: parents,
       placementField: fields.containsKey("placement")
           ? editorRootPath.field("placement")
           : null,
-      display: defaultTypeDisplay(""),
-      definition: skir.TypeDefinition(
-        id: id,
-        parameters: const [],
-        parents: parents,
-        representation: skir.RepresentationTemplate.createRecord(
-          abstract_: false,
-          fields: [
-            for (final field in fields.entries)
-              skir.FieldDeclaration(
-                owner: skir.FieldOwner(definition: id, name: field.key),
-                type: field.value,
-                overrides: const [],
-                hasConstructorDefault: false,
-              ),
-          ],
-        ),
-      ),
-      status: skir.DeclarationStatus.ready,
-      effectiveFields: [
-        for (final field in fields.entries)
-          skir.EffectiveFieldTemplate(
-            key: field.key,
-            owner: skir.FieldOwner(definition: id, name: field.key),
-            type: field.value,
-            rules: const [],
-          ),
-      ],
-      ancestorTemplates: parents,
     );
     final refined = skir.TypeDefinitionId(
       typeId: skir.TypeId.createQualified(

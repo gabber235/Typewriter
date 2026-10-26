@@ -1,8 +1,8 @@
 import "package:flutter_test/flutter_test.dart";
+import "package:typewriter_panel/infrastructure/protocols/skir/skir.dart"
+    as skir;
 import "package:typewriter_panel/typewriter_panel.dart";
-import "package:typewriter_testkit/typewriter_testkit.dart";
-
-import "../../../support/test_utils.dart";
+import "package:typewriter_testkit/testing.dart";
 
 void main() {
   testWidgets("fitted headings render in mobile and minimum desktop panes", (
@@ -117,12 +117,12 @@ void main() {
               connectionState: RealmConnectionState.online,
             ),
           ),
-          ...canonicalServicesProviderOverrides(state: DisplayState.noItems),
-          ...realmProviderOverrides(),
-          ...organizationProviderOverrides(),
-          ...organizationsProviderOverrides(state: DisplayState.noItems),
+          canonicalOrganizationServicesProvider.overrideWith2(
+            (_) => _NoServices(),
+          ),
+          organizationsProvider.overrideWith(_NoOrganizations.new),
           authUserInfoProvider.overrideWithValue(const AsyncLoading()),
-          ...appearanceProviderOverrides(),
+          FakeAppearance().override,
           selectionProvider.overrideWithValue([
             TestSelectableIdentifier(id: "test-item"),
           ]),
@@ -315,4 +315,17 @@ void main() {
       expect(afterExpand, equals(effectiveBefore));
     });
   });
+}
+
+/// A user who belongs to no organization yet.
+class _NoOrganizations extends Organizations {
+  @override
+  Stream<List<skir.Organization>> build() => Stream.value(const []);
+}
+
+/// An organization without services.
+class _NoServices extends CanonicalOrganizationServices {
+  @override
+  Stream<List<skir.Service>> build(skir.RecordId organizationId) =>
+      Stream.value(const []);
 }

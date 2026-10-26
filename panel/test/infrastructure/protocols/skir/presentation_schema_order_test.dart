@@ -23,9 +23,9 @@ void main() {
 
   test("presentation element ordinals ascend in declaration order", () {
     final source = sourceFile.readAsStringSync();
-    final body = RegExp(
-      r"enum PresentationElement\([0-9]+\) \{([\s\S]+?)\n\}",
-    ).firstMatch(source)!.group(1)!;
+    final body = RegExp(r"enum PresentationElement\([0-9]+\) \{([\s\S]+?)\n\}")
+        .firstMatch(source)!
+        .group(1)!;
     final ordinals = RegExp(
       r"= ([0-9]+);$",
       multiLine: true,

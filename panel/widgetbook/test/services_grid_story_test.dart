@@ -2,7 +2,8 @@ import "package:flutter_test/flutter_test.dart";
 import "package:typewriter_panel/infrastructure/protocols/skir/skir.dart"
     as skir;
 import "package:typewriter_panel/typewriter_panel.dart";
-import "package:typewriter_testkit/typewriter_testkit.dart";
+import "package:typewriter_testkit/testing.dart";
+import "package:widgetbook_workspace/data/data.dart";
 import "package:widgetbook_workspace/stories/features/services/presentation/route.stories.dart";
 import "package:widgetbook_workspace/stories/features/services/presentation/topology_scenarios.dart";
 
@@ -167,7 +168,7 @@ void main() {
       FakeApp(
         overrides: [
           userIdProvider.overrideWith((ref) async => "story-user"),
-          natsProvider.overrideWith(() => FakeNats(nats)),
+          natsProvider.overrideWith(() => ConnectedNats(nats)),
           canonicalOrganizationServicesProvider.overrideWith2(
             (_) => _StoryServices(services),
           ),
@@ -204,7 +205,7 @@ void main() {
     expect(find.text("Apply"), findsNothing);
     expect(find.text("Save"), findsNothing);
 
-    expect(find.byTooltip("Zoom to fit"), findsNothing);
+    expect(find.tooltip("Zoom to fit"), findsNothing);
     expect(find.text("Enabled"), findsNothing);
     expect(find.text("Disabled"), findsNothing);
     expect(find.text("Assigned Realm"), findsNothing);

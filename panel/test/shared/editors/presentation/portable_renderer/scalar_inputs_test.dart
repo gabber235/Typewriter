@@ -2,8 +2,7 @@ import "package:flutter_test/flutter_test.dart";
 import "package:typewriter_panel/infrastructure/protocols/skir/skir.dart"
     as skir;
 import "package:typewriter_panel/typewriter_panel.dart";
-
-import "../../../../support/test_utils.dart";
+import "package:typewriter_testkit/testing.dart";
 
 void main() {
   for (final scenario in [
@@ -626,7 +625,7 @@ void main() {
         await tester.pumpAndSettle();
         expect(written, [filled, skir.DataValue.unfilled]);
 
-        await tester.tap(find.byTooltip("Open picker"));
+        await tester.tap(find.tooltip("Open picker"));
         await tester.pumpAndSettle();
         final seed = tester
             .widget<DateTimePickerSurface>(find.byType(DateTimePickerSurface))
@@ -641,7 +640,7 @@ void main() {
           ],
           [0, 0, 0, 0, 0],
         );
-        await tester.tap(find.byTooltip("Close picker"));
+        await tester.tap(find.tooltip("Close picker"));
         await tester.pumpAndSettle();
         expect(written, [filled, skir.DataValue.unfilled]);
 
@@ -768,10 +767,10 @@ void main() {
     );
 
     expect(written, isEmpty);
-    await tester.tap(find.byTooltip("Open picker"));
+    await tester.tap(find.tooltip("Open picker"));
     await tester.pumpAndSettle();
     expect(written, isEmpty);
-    await tester.tap(find.byTooltip("Close picker"));
+    await tester.tap(find.tooltip("Close picker"));
     await tester.pumpAndSettle();
     expect(written, isEmpty);
     await tester.enterText(find.byType(TextFormField), "01:02:03");
@@ -801,11 +800,11 @@ void main() {
       written.add,
     );
 
-    await tester.tap(find.byTooltip("Open picker"));
+    await tester.tap(find.tooltip("Open picker"));
     await tester.pumpAndSettle();
     expect(tester.takeException(), isNull);
     expect(written, isEmpty);
-    await tester.tap(find.byTooltip("Close picker"));
+    await tester.tap(find.tooltip("Close picker"));
     await tester.pumpAndSettle();
     await tester.enterText(find.byType(TextFormField), "1900-06-16");
     await tester.pumpAndSettle();

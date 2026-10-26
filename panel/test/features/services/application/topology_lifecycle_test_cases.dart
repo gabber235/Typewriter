@@ -7,7 +7,7 @@ void topologyLifecycleTests() {
       overrides: [
         ...appOverrides(),
         userIdProvider.overrideWith((ref) async => null),
-        natsProvider.overrideWith(() => FakeNats(nats)),
+        natsProvider.overrideWith(() => ConnectedNats(nats)),
       ],
     );
     addTearDown(nats.dispose);
@@ -46,7 +46,7 @@ void topologyLifecycleTests() {
       overrides: [
         ...appOverrides(),
         userIdProvider.overrideWith((ref) async => "user1"),
-        natsProvider.overrideWith(() => FakeNats(nats)),
+        natsProvider.overrideWith(() => ConnectedNats(nats)),
       ],
     );
     addTearDown(nats.dispose);

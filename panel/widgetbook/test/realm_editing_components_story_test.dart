@@ -1,6 +1,6 @@
 import "package:flutter_test/flutter_test.dart";
 import "package:typewriter_panel/typewriter_panel.dart";
-import "package:typewriter_testkit/typewriter_testkit.dart";
+import "package:typewriter_testkit/testing.dart";
 import "package:widgetbook_workspace/stories/authoring/presentation/authored_type_argument_editor.stories.dart";
 import "package:widgetbook_workspace/stories/authoring/presentation/realm_editing_review.stories.dart";
 import "package:widgetbook_workspace/stories/authoring/presentation/resource_drop_target.stories.dart";
@@ -55,7 +55,7 @@ void main() {
       ),
     );
     await tester.pumpAndSettle();
-    await tester.tap(find.byTooltip("Clear Reward"));
+    await tester.tap(find.tooltip("Clear Reward"));
     await tester.pumpAndSettle();
     await tester.tap(find.widgetWithText(FilledButton, "Review type change"));
     await tester.pumpAndSettle();

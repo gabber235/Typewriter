@@ -1,6 +1,6 @@
 import "package:flutter_test/flutter_test.dart";
 import "package:typewriter_panel/typewriter_panel.dart";
-import "package:typewriter_testkit/typewriter_testkit.dart";
+import "package:typewriter_testkit/testing.dart";
 import "package:widgetbook_workspace/stories/shared/editors/presentation/portable_presentation_renderer.stories.dart";
 
 void main() {
@@ -34,8 +34,8 @@ void main() {
     );
     await tester.pumpAndSettle();
     expect(find.byType(TextFormField), findsNothing);
-    expect(find.byTooltip("Add item"), findsOneWidget);
-    await tester.tap(find.byTooltip("Add item"));
+    expect(find.tooltip("Add item"), findsOneWidget);
+    await tester.tap(find.tooltip("Add item"));
     await tester.pumpAndSettle();
     expect(find.byType(TextFormField), findsOneWidget);
     expect(tester.takeException(), isNull);
@@ -67,10 +67,10 @@ void main() {
     (tester) async {
       await _pump(tester);
       expect(find.byType(TextFormField), findsNWidgets(3));
-      await tester.tap(find.byTooltip("Add item"));
+      await tester.tap(find.tooltip("Add item"));
       await tester.pumpAndSettle();
       expect(find.byType(TextFormField), findsNWidgets(4));
-      await tester.tap(find.byTooltip("Remove item").last);
+      await tester.tap(find.tooltip("Remove item").last);
       await tester.pumpAndSettle();
       expect(find.byType(TextFormField), findsNWidgets(3));
       expect(tester.takeException(), isNull);

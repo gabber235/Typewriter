@@ -2,7 +2,7 @@ import "package:flutter_test/flutter_test.dart";
 import "package:typewriter_panel/infrastructure/protocols/skir/skir.dart"
     as skir;
 import "package:typewriter_panel/typewriter_panel.dart";
-import "package:typewriter_testkit/typewriter_testkit.dart";
+import "package:typewriter_testkit/testing.dart";
 import "package:widgetbook_workspace/stories/authoring/presentation/authored_presentation_renderer.stories.dart";
 
 void main() {
@@ -115,7 +115,7 @@ void main() {
       findsOneWidget,
     );
     expect(
-      find.byTooltip("The presentation value is unavailable"),
+      find.tooltip("The presentation value is unavailable"),
       findsOneWidget,
     );
     expect(
@@ -142,7 +142,7 @@ void main() {
     );
     await tester.pumpAndSettle();
     expect(find.text("Item 4"), findsOneWidget);
-    expect(find.byTooltip("Remove item"), findsNWidgets(4));
+    expect(find.tooltip("Remove item"), findsNWidgets(4));
 
     final firstItem = find.text("Item 1");
     final secondItem = find.text("Item 2");
@@ -159,7 +159,7 @@ void main() {
     );
     expect(firstRow, findsOneWidget);
     await tester.tap(
-      find.descendant(of: firstRow, matching: find.byTooltip("Reorder item")),
+      find.descendant(of: firstRow, matching: find.tooltip("Reorder item")),
     );
     await tester.sendKeyDownEvent(LogicalKeyboardKey.altLeft);
     await tester.sendKeyEvent(LogicalKeyboardKey.arrowDown);
@@ -183,7 +183,7 @@ void main() {
     await tester.pumpAndSettle();
     expect(find.text("chapter"), findsOneWidget);
     expect(find.text("Arrival"), findsOneWidget);
-    expect(find.byTooltip("Remove row"), findsNWidgets(3));
+    expect(find.tooltip("Remove row"), findsNWidgets(3));
     expect(find.text("No default presentation is available"), findsNothing);
 
     final rootRenderer = tester
@@ -262,12 +262,12 @@ void main() {
     expect(find.text("Archived quest"), findsOneWidget);
 
     await tester.tap(
-      find.descendant(of: actionHeader, matching: find.byTooltip("Collapse")),
+      find.descendant(of: actionHeader, matching: find.tooltip("Collapse")),
     );
     await tester.pumpAndSettle();
     expect(find.text("Archived quest"), findsNothing);
     await tester.tap(
-      find.descendant(of: actionHeader, matching: find.byTooltip("Expand")),
+      find.descendant(of: actionHeader, matching: find.tooltip("Expand")),
     );
     await tester.pumpAndSettle();
     expect(find.text("Archived quest"), findsOneWidget);

@@ -2,7 +2,7 @@ import "package:flutter_test/flutter_test.dart";
 import "package:typewriter_panel/infrastructure/protocols/skir/skir.dart"
     as skir;
 import "package:typewriter_panel/typewriter_panel.dart";
-import "package:typewriter_testkit/typewriter_testkit.dart";
+import "package:typewriter_testkit/testing.dart";
 
 const _bindSubject = "cloud.to.user.user1.organization.org1.services.bind";
 const _updateSubject = "cloud.to.user.user1.organization.org1.services.update";
@@ -38,7 +38,7 @@ class _Harness {
               ? _organizationId
               : organizationId as skir.RecordId?,
         ),
-        natsProvider.overrideWith(() => FakeNats(nats)),
+        natsProvider.overrideWith(() => ConnectedNats(nats)),
         panelTelemetryProvider.overrideWithValue(
           const AsyncData(NoopPanelTelemetry()),
         ),

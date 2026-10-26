@@ -1,7 +1,6 @@
 import "package:flutter_test/flutter_test.dart";
 import "package:typewriter_panel/typewriter_panel.dart";
-
-import "../../../support/test_utils.dart";
+import "package:typewriter_testkit/testing.dart";
 
 void main() {
   testWidgets("opens both picker variants and closes with escape", (
@@ -11,7 +10,7 @@ void main() {
       child: const _ColorFieldHarness(includeAlpha: false),
     );
 
-    await tester.tap(find.byTooltip("Open color picker"));
+    await tester.tap(find.tooltip("Open color picker"));
     await tester.pumpAndSettle();
     expect(find.byType(ColorArea), findsOneWidget);
     expect(find.bySemanticsLabel("Opacity"), findsNothing);
@@ -23,7 +22,7 @@ void main() {
     await tester.pumpTestApp(
       child: const _ColorFieldHarness(includeAlpha: true),
     );
-    await tester.tap(find.byTooltip("Open color picker"));
+    await tester.tap(find.tooltip("Open color picker"));
     await tester.pumpAndSettle();
     expect(find.bySemanticsLabel("Opacity"), findsOneWidget);
   });
@@ -39,7 +38,7 @@ void main() {
     );
 
     expect(changes, 0);
-    await tester.tap(find.byTooltip("Open color picker"));
+    await tester.tap(find.tooltip("Open color picker"));
     await tester.pumpAndSettle();
     expect(find.textContaining("set alpha to FF"), findsOneWidget);
     expect(changes, 0);
@@ -73,7 +72,7 @@ void main() {
     await tester.pumpTestApp(
       child: const _ColorFieldHarness(includeAlpha: true),
     );
-    await tester.tap(find.byTooltip("Open color picker"));
+    await tester.tap(find.tooltip("Open color picker"));
     await tester.pumpAndSettle();
 
     await tester.sendKeyDownEvent(LogicalKeyboardKey.controlLeft);
@@ -131,7 +130,7 @@ void main() {
 
     await tester.sendKeyEvent(LogicalKeyboardKey.keyF);
     await tester.pumpAndSettle();
-    expect(find.byTooltip("Remove from favorites"), findsOneWidget);
+    expect(find.tooltip("Remove from favorites"), findsOneWidget);
 
     await tester.sendKeyEvent(LogicalKeyboardKey.keyP);
     await tester.pumpAndSettle();
@@ -242,7 +241,7 @@ void main() {
     await tester.pumpTestApp(
       child: const _ColorFieldHarness(includeAlpha: true, readOnly: true),
     );
-    await tester.tap(find.byTooltip("Open color picker"));
+    await tester.tap(find.tooltip("Open color picker"));
     await tester.pumpAndSettle();
     expect(find.byType(ColorArea), findsOneWidget);
     expect(tester.widget<ColorArea>(find.byType(ColorArea)).enabled, isFalse);
@@ -250,7 +249,7 @@ void main() {
     await tester.pumpTestApp(
       child: const _ColorFieldHarness(includeAlpha: true, enabled: false),
     );
-    expect(find.byTooltip("Open color picker"), findsNothing);
+    expect(find.tooltip("Open color picker"), findsNothing);
   });
 
   testWidgets("favorite grid supports keyboard reordering and removal", (

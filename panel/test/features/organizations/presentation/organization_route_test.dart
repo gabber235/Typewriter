@@ -2,9 +2,7 @@ import "package:flutter_test/flutter_test.dart";
 import "package:typewriter_panel/infrastructure/protocols/skir/skir.dart"
     as skir;
 import "package:typewriter_panel/typewriter_panel.dart";
-import "package:typewriter_testkit/typewriter_testkit.dart";
-
-import "../../../support/test_utils.dart";
+import "package:typewriter_testkit/testing.dart";
 
 void main() {
   testWidgets(
@@ -15,60 +13,20 @@ void main() {
       addTearDown(tester.view.resetPhysicalSize);
       addTearDown(tester.view.resetDevicePixelRatio);
       final organization = skir.recordId("organization:focus");
-      final realm = skir.RealmInstance(
-        realmId: skir.recordId("realm_instance:focus"),
-        ownerHost: skir.OwnerHost(
-          id: skir.recordId("service_host:focus"),
-          name: "focus",
-        ),
-        revision: 1,
-        targetEngine: skir.EngineTarget(
-          engineId: "typewritermc:paper",
-          versionConstraint: "*",
-        ),
-        state: skir.ChildRuntimeState(
-          status: skir.ChildRuntimeStatus.active,
-          activeArtifactVersion: "1.0.0",
-          message: null,
-          updatedAt: DateTime.utc(2026),
-        ),
-      );
-      final serviceId = skir.recordId("service:focus");
-      final service = skir.Service(
-        serviceId: serviceId,
-        revision: 1,
+      final backend = FakeOrganizations();
+      addTearDown(backend.close);
+      final realm = backend.addRealm(
+        organization,
+        id: skir.recordId("realm_instance:focus"),
         name: "focus",
-        role: skir.ServiceRole.createHost(version: "1.0.0"),
-        createdAt: DateTime.utc(2026),
-        state: skir.ServiceState(
-          status: skir.ServiceStatus.online,
-          lastSeen: DateTime.now(),
-        ),
-        organization: null,
-        registration: null,
       );
+      final service = backend.services(organization).single;
       final services = _Services(service);
       addTearDown(services.updates.close);
-      final host = skir.ServiceHost(
-        hostId: realm.ownerHost.id,
-        serviceId: serviceId,
-        revision: 1,
-        entrypoint: "PAPER",
-        canHostRealm: true,
-        supportedEngines: [],
-        topologyRevision: skir.ReconciledRevision(desired: 1, applied: 1),
-        state: skir.HostRuntimeState(
-          status: skir.HostRuntimeStatus.active,
-          message: null,
-          updatedAt: DateTime.utc(2026),
-        ),
-      );
+      var snapshots = 0;
       final source = _Topology(
-        skir.OrganizationTopologySnapshot(
-          hosts: [host],
-          realms: [realm],
-          engines: [],
-        ),
+        backend.topology(organization),
+        onSnapshot: () => snapshots++,
       );
       var taps = 0;
       await tester.pumpTestApp(
@@ -85,15 +43,15 @@ void main() {
               .overrideWith(() => source),
           canonicalOrganizationServicesProvider(organization)
               .overrideWith(() => services),
-          ...organizationsProviderOverrides(state: DisplayState.noItems),
+          organizationsProvider.overrideWith(_NoOrganizations.new),
           selectedAuthoringScopeProvider.overrideWithValue(null),
           authUserInfoProvider.overrideWithValue(const AsyncLoading()),
-          ...appearanceProviderOverrides(),
+          FakeAppearance().override,
         ],
         settle: false,
       );
       final container = tester.container(of: find.byType(OrganizationScaffold));
-      await tester.pumpUntil(() {
+      await tester.eventually(() {
         expect(container.read(realmInteractionProvider).suspended, isFalse);
         expect(find.text("Checking realm connection"), findsNothing);
       });
@@ -103,14 +61,14 @@ void main() {
         (_, next) => states.add(next.connectionState),
       );
       addTearDown(observation.close);
-      expect(source.snapshots, 1);
+      expect(snapshots, 1);
 
       tester.binding.handleAppLifecycleStateChanged(AppLifecycleState.inactive);
       await tester.pump();
       tester.binding.handleAppLifecycleStateChanged(AppLifecycleState.resumed);
       await tester.pump();
 
-      expect(source.snapshots, 1);
+      expect(snapshots, 1);
       expect(states, isNot(contains(RealmConnectionState.checking)));
       expect(find.text("Checking realm connection"), findsNothing);
       await tester.tap(find.text("Edit value"));
@@ -131,8 +89,8 @@ void main() {
         RealmConnectionState.offline,
       );
       services.updates.add([service]);
-      await tester.pumpUntil(() {
-        expect(source.snapshots, 2);
+      await tester.eventually(() {
+        expect(snapshots, 2);
         expect(container.read(realmInteractionProvider).suspended, isFalse);
       });
       expect(tester.takeException(), isNull);
@@ -194,15 +152,15 @@ void main() {
 String _leafName(SidebarLink link) => link.route.flattened.last.routeName;
 
 class _Topology extends OrganizationTopologyController {
-  _Topology(this.topology);
+  _Topology(this.topology, {required this._onSnapshot});
   final skir.OrganizationTopologySnapshot topology;
-  int snapshots = 0;
+  final void Function() _onSnapshot;
 
   @override
   Stream<skir.OrganizationTopologySnapshot> build(
     skir.RecordId organizationId,
   ) async* {
-    snapshots++;
+    _onSnapshot();
     yield topology;
   }
 }
@@ -218,4 +176,10 @@ class _Services extends CanonicalOrganizationServices {
     yield [initial];
     yield* updates.stream;
   }
+}
+
+/// A user who belongs to no organization yet.
+class _NoOrganizations extends Organizations {
+  @override
+  Stream<List<skir.Organization>> build() => Stream.value(const []);
 }

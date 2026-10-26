@@ -1,7 +1,7 @@
 import "package:flutter_test/flutter_test.dart";
 import "package:typewriter_panel/typewriter_panel.dart";
+import "package:typewriter_testkit/testing.dart";
 
-import "../../../support/test_utils.dart";
 import "../application/core/support/search_core_test_harness.dart";
 
 void main() {

@@ -2,7 +2,7 @@ import "package:flutter_test/flutter_test.dart";
 import "package:typewriter_panel/infrastructure/protocols/skir/skir.dart"
     as skir;
 import "package:typewriter_panel/typewriter_panel.dart";
-import "package:typewriter_testkit/typewriter_testkit.dart";
+import "package:typewriter_testkit/testing.dart";
 import "package:widgetbook_workspace/stories/shared/editors/presentation/portable_presentation_renderer.stories.dart";
 
 void main() {
@@ -92,11 +92,11 @@ void main() {
     final before = tester.state<EditableTextState>(
       find.byType(EditableText).first,
     );
-    await tester.tap(find.byTooltip("Collapse"));
+    await tester.tap(find.tooltip("Collapse"));
     await tester.pumpAndSettle();
     expect(find.byType(TextFormField), findsNothing);
     expect(find.byType(PortableDiagnosticHeaderMarker), findsOneWidget);
-    expect(find.byTooltip("1 field diagnostic"), findsOneWidget);
+    expect(find.tooltip("1 field diagnostic"), findsOneWidget);
     final marker = find.byType(PortableDiagnosticHeaderMarker);
     final headerFrame = tester.widget<AnimatedContainer>(
       find.ancestor(of: marker, matching: find.byType(AnimatedContainer)).first,
@@ -111,7 +111,7 @@ void main() {
     );
     expect(hidden, same(before));
     expect(hidden.widget.focusNode.canRequestFocus, isFalse);
-    await tester.tap(find.byTooltip("Expand"));
+    await tester.tap(find.tooltip("Expand"));
     await tester.pumpAndSettle();
     expect(
       tester.state<EditableTextState>(find.byType(EditableText).first),

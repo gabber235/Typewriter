@@ -71,7 +71,6 @@ class LocalWork extends _$LocalWork implements LocalWorkCommands {
   LocalWorkScope? _scope;
   ScopedWorkSession? _session;
   StreamSubscription<LocalWorkState>? _subscription;
-  bool _disposeRegistered = false;
 
   ScopedWorkSession get _activeSession => _session!;
 
@@ -79,10 +78,9 @@ class LocalWork extends _$LocalWork implements LocalWorkCommands {
   LocalWorkState build() {
     final scope = ref.watch(localWorkScopeProvider);
     if (_session == null || _scope != scope) _replace(scope);
-    if (!_disposeRegistered) {
-      _disposeRegistered = true;
-      ref.onDispose(_dispose);
-    }
+    // Riverpod runs dispose callbacks before every rebuild and then forgets
+    // them, so each build registers the release of the session it keeps.
+    ref.onDispose(_dispose);
     return _activeSession.state;
   }
 
@@ -101,6 +99,8 @@ class LocalWork extends _$LocalWork implements LocalWorkCommands {
     unawaited(_subscription?.cancel());
     _session?.dispose();
     _subscription = null;
+    _session = null;
+    _scope = null;
   }
 
   @override

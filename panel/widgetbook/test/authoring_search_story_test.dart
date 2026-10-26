@@ -1,9 +1,8 @@
 import "package:flutter_test/flutter_test.dart";
 import "package:typewriter_panel/typewriter_panel.dart";
+import "package:typewriter_testkit/testing.dart";
 import "package:widgetbook_workspace/stories/authoring/search/presentation/authoring_search_result_items.stories.dart";
 import "package:widgetbook_workspace/stories/features/organizations/search/presentation/primary_search.stories.dart";
-
-import "support/network_images.dart";
 
 void main() {
   testWidgetsWithNetworkImages(

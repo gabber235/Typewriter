@@ -2,10 +2,7 @@ import "package:flutter_test/flutter_test.dart";
 import "package:typewriter_panel/infrastructure/protocols/skir/skir.dart"
     as skir;
 import "package:typewriter_panel/typewriter_panel.dart";
-import "package:typewriter_testkit/typewriter_testkit.dart";
-
-import "../../../support/provider_test_utils.dart";
-import "../../../support/test_utils.dart";
+import "package:typewriter_testkit/testing.dart";
 
 part "host_apply_test_cases.dart";
 part "host_target_selection_test_cases.dart";
@@ -204,8 +201,7 @@ void main() {
       ServiceIdentifier(harness.service.serviceId),
       ServiceHostIdentifier(harness.host.hostId),
     ]);
-    await waitForProvider(
-      harness.container,
+    await harness.container.eventually(
       inspectedSelectionProvider,
       (value) => value.hasValue && value.requireValue.length == 2,
       description: "mixed service and host inspection",
@@ -236,8 +232,7 @@ void main() {
         ServiceHostIdentifier(harness.host.hostId),
         ServiceHostIdentifier(harness.secondHost!.hostId),
       ]);
-      await waitForProvider(
-        harness.container,
+      await harness.container.eventually(
         inspectedSelectionProvider,
         (value) => value.hasValue && value.requireValue.length == 2,
         description: "multiple host inspection",

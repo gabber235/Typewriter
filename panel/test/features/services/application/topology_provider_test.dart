@@ -2,7 +2,7 @@ import "package:flutter_test/flutter_test.dart";
 import "package:typewriter_panel/infrastructure/protocols/skir/skir.dart"
     as skir;
 import "package:typewriter_panel/typewriter_panel.dart";
-import "package:typewriter_testkit/typewriter_testkit.dart";
+import "package:typewriter_testkit/testing.dart";
 
 part "topology_state_test_cases.dart";
 part "topology_lifecycle_test_cases.dart";
@@ -131,7 +131,7 @@ void main() {
         ...appOverrides(),
         userIdProvider.overrideWith((ref) async => "user1"),
         organizationIdProvider.overrideWith((ref) => _organizationId),
-        natsProvider.overrideWith(() => FakeNats(nats)),
+        natsProvider.overrideWith(() => ConnectedNats(nats)),
       ],
     );
     addTearDown(container.dispose);
@@ -253,7 +253,7 @@ void main() {
         ...appOverrides(),
         userIdProvider.overrideWith((ref) async => "user1"),
         organizationIdProvider.overrideWith((ref) => _organizationId),
-        natsProvider.overrideWith(() => FakeNats(nats)),
+        natsProvider.overrideWith(() => ConnectedNats(nats)),
       ],
     );
     addTearDown(container.dispose);
@@ -421,7 +421,7 @@ void main() {
           ...appOverrides(),
           userIdProvider.overrideWith((ref) async => "user1"),
           organizationIdProvider.overrideWith((ref) => _organizationId),
-          natsProvider.overrideWith(() => FakeNats(nats)),
+          natsProvider.overrideWith(() => ConnectedNats(nats)),
         ],
       );
       addTearDown(container.dispose);
@@ -478,7 +478,7 @@ void main() {
         ...appOverrides(),
         userIdProvider.overrideWith((ref) async => "user1"),
         organizationIdProvider.overrideWith((ref) => _organizationId),
-        natsProvider.overrideWith(() => FakeNats(nats)),
+        natsProvider.overrideWith(() => ConnectedNats(nats)),
         serviceConnectionsProvider.overrideWith((ref) => connections),
       ],
     );
@@ -534,7 +534,7 @@ void main() {
           ...appOverrides(),
           userIdProvider.overrideWith((ref) async => "user1"),
           organizationIdProvider.overrideWithValue(_organizationId),
-          natsProvider.overrideWith(() => FakeNats(nats)),
+          natsProvider.overrideWith(() => ConnectedNats(nats)),
           serviceConnectionsProvider.overrideWith((ref) => connections),
         ],
       );

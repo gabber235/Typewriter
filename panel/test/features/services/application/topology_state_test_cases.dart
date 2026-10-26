@@ -29,7 +29,7 @@ void topologyStateTests() {
               ...appOverrides(),
               userIdProvider.overrideWith((ref) async => "user1"),
               organizationIdProvider.overrideWith((ref) => _organizationId),
-              natsProvider.overrideWith(() => FakeNats(nats)),
+              natsProvider.overrideWith(() => ConnectedNats(nats)),
             ],
           );
           addTearDown(nats.dispose);
@@ -196,7 +196,7 @@ void topologyStateTests() {
         overrides: [
           ...appOverrides(),
           userIdProvider.overrideWith((ref) async => "user1"),
-          natsProvider.overrideWith(() => FakeNats(nats)),
+          natsProvider.overrideWith(() => ConnectedNats(nats)),
         ],
       );
       addTearDown(nats.dispose);
@@ -259,7 +259,7 @@ void topologyStateTests() {
           ...appOverrides(),
           userIdProvider.overrideWith((ref) async => "user1"),
           organizationIdProvider.overrideWith((ref) => _organizationId),
-          natsProvider.overrideWith(() => FakeNats(nats)),
+          natsProvider.overrideWith(() => ConnectedNats(nats)),
         ],
       );
       addTearDown(container.dispose);

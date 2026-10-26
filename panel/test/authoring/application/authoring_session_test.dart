@@ -2,10 +2,7 @@ import "package:flutter_test/flutter_test.dart";
 import "package:typewriter_panel/infrastructure/protocols/skir/skir.dart"
     as skir;
 import "package:typewriter_panel/typewriter_panel.dart";
-import "package:typewriter_testkit/typewriter_testkit.dart";
-
-import "../../support/catalog_fixture.dart";
-import "../../support/provider_test_utils.dart";
+import "package:typewriter_testkit/testing.dart";
 
 const _catalogSubject =
     "service.to.realm1.organization.org1.realm.editor.catalog.fetch";
@@ -52,8 +49,7 @@ void main() {
       final provider = authoringSessionProvider(_organization, _realm);
       final subscription = harness.container.listen(provider, (_, _) {});
       try {
-        final state = await waitForProvider(
-          harness.container,
+        final state = await harness.container.eventually(
           provider,
           (state) => state.failure != null,
           description: "initial catalog failure",
@@ -81,16 +77,14 @@ void main() {
       final provider = authoringSessionProvider(_organization, _realm);
       final subscription = harness.container.listen(provider, (_, _) {});
       try {
-        await waitForProvider(
-          harness.container,
+        await harness.container.eventually(
           provider,
           (state) => _title(state) == "Initial",
           description: "initial current state",
         );
         title = "Changed";
         harness.emit();
-        await waitForProvider(
-          harness.container,
+        await harness.container.eventually(
           provider,
           (state) => _title(state) == "Changed",
           description: "state after hint",
@@ -106,8 +100,7 @@ void main() {
         );
         await Future<void>.delayed(Duration.zero);
         harness.nats.setConnectionState(const NatsConnected());
-        await waitForProvider(
-          harness.container,
+        await harness.container.eventually(
           provider,
           (state) => _title(state) == "Missed hint",
           description: "reconnected current state",
@@ -141,8 +134,7 @@ void main() {
     final provider = authoringSessionProvider(_organization, _realm);
     final subscription = harness.container.listen(provider, (_, _) {});
     try {
-      await waitForProvider(
-        harness.container,
+      await harness.container.eventually(
         provider,
         (state) => _title(state) == "Initial",
         description: "initial state",
@@ -151,8 +143,7 @@ void main() {
       await _waitUntil(() => requests == 2);
       harness.emit();
       delayed.complete(_snapshotResponse(_snapshot("Intermediate", 1)));
-      await waitForProvider(
-        harness.container,
+      await harness.container.eventually(
         provider,
         (state) => _title(state) == "Newest",
         description: "query queued by hint",
@@ -179,15 +170,15 @@ void main() {
     final provider = authoringSessionProvider(_organization, _realm);
     final subscription = harness.container.listen(provider, (_, _) {});
     try {
-      await waitForProvider(
-        harness.container,
+      await harness.container.eventually(
         provider,
         (state) => _title(state) == "Initial",
         description: "initial state",
       );
       final beforeReplacement = queries;
-      (harness.container.read(natsProvider.notifier) as FakeNats).connection =
-          replacement;
+      (harness.container.read(natsProvider.notifier) as ConnectedNats).replace(
+        replacement,
+      );
       // Rebinding invalidates the session, which refreshes its snapshot.
       await _waitUntil(() => queries > beforeReplacement);
       await pumpEventQueue();
@@ -221,8 +212,7 @@ void main() {
     final provider = authoringSessionProvider(_organization, _realm);
     final subscription = harness.container.listen(provider, (_, _) {});
     try {
-      final initial = await waitForProvider(
-        harness.container,
+      final initial = await harness.container.eventually(
         provider,
         (state) => state.confirmedDocument != null,
         description: "initial draft",
@@ -244,8 +234,7 @@ void main() {
           skir.CatalogInvalidated(generation: generation),
         ),
       );
-      final current = await waitForProvider(
-        harness.container,
+      final current = await harness.container.eventually(
         provider,
         (state) =>
             state.generation == generation && state.confirmedDocument != null,
@@ -323,7 +312,7 @@ final class _Harness {
     );
     container = ProviderContainer.test(
       overrides: [
-        natsProvider.overrideWith(() => FakeNats(nats)),
+        natsProvider.overrideWith(() => ConnectedNats(nats)),
         resourceSessionProvider.overrideWithValue(session),
         organizationIdProvider.overrideWithValue(_organization),
         realmIdProvider.overrideWithValue(_realm),

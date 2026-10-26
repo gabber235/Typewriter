@@ -2,9 +2,7 @@ import "package:flutter_test/flutter_test.dart";
 import "package:typewriter_panel/infrastructure/protocols/skir/skir.dart"
     as skir;
 import "package:typewriter_panel/typewriter_panel.dart";
-
-import "../../../support/catalog_fixture.dart";
-import "../../../support/portable_fixture.dart";
+import "package:typewriter_testkit/testing.dart";
 
 /// Runs every case of the shared operation fixture
 /// (`skir-src/editor/v1/fixtures/operations/*.json`, format in the README

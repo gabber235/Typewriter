@@ -1,7 +1,6 @@
 import "package:flutter_test/flutter_test.dart";
 import "package:typewriter_panel/typewriter_panel.dart";
-
-import "../../../../support/test_utils.dart";
+import "package:typewriter_testkit/testing.dart";
 
 enum _IconButtonVariant { standard, filled, outlined }
 
@@ -57,7 +56,7 @@ void main() {
 
         await tester.tap(find.byType(IconButton));
 
-        await tester.pumpUntil(() {
+        await tester.eventually(() {
           expect(invocations, 1);
           expect(find.byType(CircularProgressIndicator), findsOneWidget);
           expect(find.byIcon(Icons.add), findsNothing);
@@ -68,7 +67,7 @@ void main() {
 
         completer.complete();
 
-        await tester.pumpUntil(() {
+        await tester.eventually(() {
           expect(invocations, 2);
           expect(find.byType(CircularProgressIndicator), findsNothing);
           expect(find.byIcon(Icons.add), findsOneWidget);
@@ -145,7 +144,7 @@ void main() {
     );
 
     await tester.tap(find.byType(IconButton));
-    await tester.pumpUntil(
+    await tester.eventually(
       () => expect(find.byType(CircularProgressIndicator), findsOneWidget),
     );
 

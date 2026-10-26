@@ -1,8 +1,6 @@
 import "package:flutter_test/flutter_test.dart";
 import "package:typewriter_panel/typewriter_panel.dart";
-import "package:typewriter_testkit/typewriter_testkit.dart";
-
-import "../../../../support/test_utils.dart";
+import "package:typewriter_testkit/testing.dart";
 
 const _duplicateQuerySelectors = <QuerySelectorDefinition>[
   KeyValueSelectorDefinition(id: "status_1", key: "status"),
@@ -633,19 +631,19 @@ Future<void> _pumpUi(WidgetTester tester) async {
 }
 
 Future<void> _waitForSuggestionsVisible(WidgetTester tester) async {
-  await tester.pumpUntil(() {
+  await tester.eventually(() {
     expect(_suggestions(), findsOneWidget);
   });
 }
 
 Future<void> _waitForSuggestionsHidden(WidgetTester tester) async {
-  await tester.pumpUntil(() {
+  await tester.eventually(() {
     expect(_suggestions(), findsNothing);
   });
 }
 
 Future<void> _waitForHelperVisible(WidgetTester tester) async {
-  await tester.pumpUntil(() {
+  await tester.eventually(() {
     expect(find.textContaining("You can use:"), findsOneWidget);
   });
 }

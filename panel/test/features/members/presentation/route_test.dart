@@ -2,9 +2,7 @@ import "package:flutter_test/flutter_test.dart";
 import "package:typewriter_panel/infrastructure/protocols/skir/skir.dart"
     as skir;
 import "package:typewriter_panel/typewriter_panel.dart";
-import "package:typewriter_testkit/typewriter_testkit.dart";
-
-import "../../../support/test_utils.dart";
+import "package:typewriter_testkit/testing.dart";
 
 void main() {
   test(
@@ -34,9 +32,7 @@ void main() {
   ) async {
     await tester.pumpTestApp(
       child: const MemberListPage(),
-      overrides: organizationMembersProviderOverrides(
-        state: DisplayState.noItems,
-      ),
+      overrides: FakeMembership().overrides,
     );
     await tester.pump();
 

@@ -2,9 +2,7 @@ import "package:flutter_test/flutter_test.dart";
 import "package:typewriter_panel/infrastructure/protocols/skir/skir.dart"
     as skir;
 import "package:typewriter_panel/typewriter_panel.dart";
-import "package:typewriter_testkit/typewriter_testkit.dart";
-
-import "../../support/test_utils.dart";
+import "package:typewriter_testkit/testing.dart";
 
 Future<void> _setSurface(WidgetTester tester, {required bool mobile}) async {
   final size = Size(mobile ? 390 : 1280, 800);
@@ -29,7 +27,7 @@ Future<void> _openActivity(
     ),
   );
   await tester.tap(
-    mobile ? find.byTooltip("Needs attention") : find.text("Needs attention"),
+    mobile ? find.tooltip("Needs attention") : find.text("Needs attention"),
   );
   await tester.pumpAndSettle();
 }

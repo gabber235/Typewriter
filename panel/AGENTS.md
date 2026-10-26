@@ -71,5 +71,8 @@ Represent clear, distinct variants in Widgetbook. Prefer knobs within one use ca
 `cargo xtask check panel` runs `flutter analyze` (not `dart analyze`) and `flutter test` in `panel/`,
 `panel/testkit/` and `panel/widgetbook/`. Leave zero issues, including infos.
 
-Use `testApp()` and `pumpTestApp()` from `test/test_utils.dart`.
-Widgetbook components: wrap with `FakeApp`.
+Import `package:typewriter_testkit/testing.dart`. Start widget tests with
+`tester.pumpPanel([traits], at: ...)`, which runs the real app router, theme and
+shortcuts over fakes the traits configure. Read and act through its drivers, which
+find controls by semantics, and wait with `eventually`. Story data lives in
+`widgetbook/lib/data/`, not in the testkit.

@@ -2,9 +2,7 @@ import "package:flutter_test/flutter_test.dart";
 import "package:typewriter_panel/infrastructure/protocols/skir/skir.dart"
     as skir;
 import "package:typewriter_panel/typewriter_panel.dart";
-import "package:typewriter_testkit/typewriter_testkit.dart";
-
-import "../../../support/test_utils.dart";
+import "package:typewriter_testkit/testing.dart";
 
 void main() {
   test(
@@ -91,9 +89,9 @@ void main() {
     addTearDown(scenario.dispose);
     await _pump(tester, scenario);
 
-    expect(find.byTooltip("Remove step"), findsNothing);
+    expect(find.tooltip("Remove step"), findsNothing);
     // The declaration removes first. It cannot suppress second's removal.
-    expect(find.byTooltip("Remove item"), findsOneWidget);
+    expect(find.tooltip("Remove item"), findsOneWidget);
     expect(scenario.value.authoredItems!.map((item) => item.id), [
       CollectionEditorScenario.first,
       CollectionEditorScenario.second,
@@ -114,8 +112,8 @@ void main() {
 
     // Authored removal uses configuredValueBindingId. Generated removal uses
     // the scoped alias. They identify the same source item.
-    expect(find.byTooltip("Remove item"), findsOneWidget);
-    final remove = find.byTooltip("Remove step").first;
+    expect(find.tooltip("Remove item"), findsOneWidget);
+    final remove = find.tooltip("Remove step").first;
     expect(remove.hitTestable(), findsOneWidget);
     await tester.tap(remove);
     await tester.pumpAndSettle();
@@ -124,7 +122,7 @@ void main() {
     await tester.pumpAndSettle();
     expect(scenario.value.authoredItems, hasLength(2));
 
-    await tester.tap(find.byTooltip("Remove step").first);
+    await tester.tap(find.tooltip("Remove step").first);
     await tester.pumpAndSettle();
     await tester.tap(find.widgetWithText(FilledButton, "Remove step"));
     await tester.pumpAndSettle();
@@ -221,7 +219,7 @@ void main() {
     addTearDown(scenario.dispose);
     await _pump(tester, scenario);
 
-    expect(find.byTooltip("Remove item"), findsNWidgets(2));
+    expect(find.tooltip("Remove item"), findsNWidgets(2));
     await tester.tap(find.widgetWithText(TextButton, "Delete quest").first);
     await tester.pumpAndSettle();
     // This public host boundary test establishes forwarding. Resource

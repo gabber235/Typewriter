@@ -9,6 +9,9 @@ part "context_menu.freezed.dart";
 /// other taps can be delegated through the static [onTapUp] helper's `orElse`
 /// callback. Supply [builder]
 /// when the child must be built with the menu controller.
+/// What assistive technology calls an open context menu.
+const contextMenuSemanticLabel = "Context menu";
+
 class ContextMenuRegion extends HookWidget {
   const ContextMenuRegion({
     required this.items,
@@ -52,6 +55,9 @@ class ContextMenuRegion extends HookWidget {
       ],
       controller: controller,
       onClose: onClose,
+      // Names the open menu for assistive technology, which reads it out
+      // before its entries.
+      semanticLabel: contextMenuSemanticLabel,
       childFocusNode: childFocusNode,
       builder: builder,
       child: child,

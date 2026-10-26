@@ -64,7 +64,6 @@ final class ScriptedAuthoringRequest {
 /// [publication] must match that scope and remains owned by its caller.
 List<Override> authoringFixtureOverrides({
   AuthoringScope? scope,
-  DisplayState? state,
   AuthoringDocument? document,
   AuthoringSessionState? initial,
   Iterable<Book> books = const [],
@@ -92,14 +91,7 @@ List<Override> authoringFixtureOverrides({
       transport ??
       ScriptedAuthoringTransport(
         observation ??
-            (state == DisplayState.loading
-                ? const AsyncLoading<AuthoringDocument>()
-                : state == DisplayState.error
-                ? AsyncError<AuthoringDocument>(
-                    StateError("Realm fixture unavailable"),
-                    StackTrace.current,
-                  )
-                : initial?.failure != null
+            (initial?.failure != null
                 ? AsyncError<AuthoringDocument>(
                     initial!.failure!,
                     StackTrace.current,

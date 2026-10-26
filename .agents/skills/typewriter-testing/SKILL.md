@@ -22,7 +22,7 @@ refactor that keeps the outcome.
 | Property  | an invariant over generated inputs                                       | proptest, bolero, kotest-property     |
 | Component | one backend component's contract on a real broker and database          | `TestContext` in backend/tests        |
 | Realm     | authoring, commit and publication rules on a real Realm                  | `setup(...)` with `withSetup`         |
-| Widget    | panel behaviour: keyboard, overlays, unsaved work, offline states        | `pumpTestApp` in panel/test           |
+| Widget    | panel behaviour: keyboard, overlays, unsaved work, offline states        | `pumpPanel(traits)` from testkit       |
 | Scenario  | a user journey through panel, backend and Realm; failures through faults | the `Panel` driver in integration_test|
 | Harness   | CI runs the right checks, stacks clean up, evidence leaks no secret      | tests beside the xtask module         |
 

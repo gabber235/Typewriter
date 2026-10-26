@@ -1,0 +1,65 @@
+import "package:faker/faker.dart";
+import "package:typewriter_panel/infrastructure/protocols/skir/skir.dart"
+    as skir;
+import "package:typewriter_panel/typewriter_panel.dart";
+import "package:widgetbook_workspace/data/display_state.dart";
+
+// ============================================================================
+// Join Code Mocks
+// ============================================================================
+
+skir.JoinCode generateRandomJoinCode({
+  List<skir.OrganizationRole>? availableRoles,
+}) {
+  final random = faker.randomGenerator;
+
+  // Randomly decide if this code expires or never expires (30% chance never expires)
+  final neverExpires = random.boolean() && random.boolean();
+  final expiresAt = neverExpires
+      ? null
+      : DateTime.now().add(Duration(hours: random.integer(168, min: 1)));
+
+  // Randomly decide if single-use (70% chance)
+  final singleUse = random.boolean() || random.boolean();
+
+  // Randomly decide if auto-accept (40% chance)
+  final hasAutoAccept = random.boolean() && random.boolean();
+  final autoAccept = hasAutoAccept && availableRoles != null
+      ? skir.JoinCode_AutoAccept(
+          roleIds: (availableRoles.toList()..shuffle())
+              .take(random.integer(3, min: 1))
+              .map((r) => r.roleId)
+              .toList(),
+        )
+      : skir.JoinCode_AutoAccept(roleIds: const []);
+
+  return skir.JoinCode(
+    code: skir.recordId("organization_join_code:${generateCode(20)}"),
+    createdAt: faker.date.dateTime(minYear: 2024, maxYear: 2025),
+    expiresAt: expiresAt,
+    singleUse: singleUse,
+    autoAccept: autoAccept,
+  );
+}
+
+class OrganizationJoinCodesMock extends OrganizationJoinCodes {
+  OrganizationJoinCodesMock({required this.displayState});
+
+  final DisplayState displayState;
+
+  @override
+  Stream<List<skir.JoinCode>> build() async* {
+    final availableRoles = await ref.watch(organizationRolesProvider.future);
+    yield await displayState.generate(
+      () => generateRandomJoinCode(availableRoles: availableRoles),
+    );
+  }
+}
+
+List<Override> organizationJoinCodesProviderOverrides({
+  DisplayState state = DisplayState.fewItems,
+}) => [
+  organizationJoinCodesProvider.overrideWith(
+    () => OrganizationJoinCodesMock(displayState: state),
+  ),
+];

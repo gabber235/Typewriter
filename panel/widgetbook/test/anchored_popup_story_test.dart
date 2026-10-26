@@ -1,5 +1,6 @@
 import "package:flutter_test/flutter_test.dart";
 import "package:typewriter_panel/typewriter_panel.dart";
+import "package:typewriter_testkit/testing.dart";
 import "package:widgetbook_workspace/stories/shared/shell/appbar.stories.dart";
 import "package:widgetbook_workspace/stories/shared/ui/components/anchored_popup.stories.dart";
 
@@ -31,11 +32,11 @@ void main() {
     await tester.pumpAndSettle();
     final mouse = await tester.createGesture(kind: PointerDeviceKind.mouse);
     await mouse.addPointer(location: Offset.zero);
-    await mouse.moveTo(tester.getCenter(find.byTooltip("Close")));
+    await mouse.moveTo(tester.getCenter(find.tooltip("Close")));
     await tester.pump(const Duration(seconds: 1));
     await tester.pump();
     expect(tester.takeException(), isNull);
-    await tester.tap(find.byTooltip("Close"));
+    await tester.tap(find.tooltip("Close"));
     await tester.pumpAndSettle();
     expect(find.text("Activity"), findsNothing);
     expect(find.text("Open activity"), findsOneWidget);

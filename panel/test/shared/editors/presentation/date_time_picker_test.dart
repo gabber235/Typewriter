@@ -1,7 +1,6 @@
 import "package:flutter_test/flutter_test.dart";
 import "package:typewriter_panel/typewriter_panel.dart";
-
-import "../../../support/test_utils.dart";
+import "package:typewriter_testkit/testing.dart";
 
 void main() {
   testWidgets("direct typing updates only complete valid drafts", (
@@ -39,7 +38,7 @@ void main() {
   ) async {
     await tester.pumpTestApp(child: const _DateTimeFieldHarness());
 
-    await tester.tap(find.byTooltip("Open picker"));
+    await tester.tap(find.tooltip("Open picker"));
     await tester.pumpAndSettle();
     expect(find.byType(DateTimePickerSurface), findsOneWidget);
 
@@ -51,7 +50,7 @@ void main() {
       "Open date and time picker",
     );
 
-    await tester.tap(find.byTooltip("Open picker"));
+    await tester.tap(find.tooltip("Open picker"));
     await tester.pumpAndSettle();
     await tester.tapAt(const Offset(4, 4));
     await tester.pumpAndSettle();
@@ -103,7 +102,7 @@ void main() {
   ) async {
     final key = GlobalKey<_DateTimeFieldHarnessState>();
     await tester.pumpTestApp(child: _DateTimeFieldHarness(key: key));
-    await tester.tap(find.byTooltip("Open picker"));
+    await tester.tap(find.tooltip("Open picker"));
     await tester.pumpAndSettle();
 
     await tester.sendKeyEvent(LogicalKeyboardKey.arrowRight);
@@ -137,7 +136,7 @@ void main() {
   ) async {
     final key = GlobalKey<_DateTimeFieldHarnessState>();
     await tester.pumpTestApp(child: _DateTimeFieldHarness(key: key));
-    await tester.tap(find.byTooltip("Open picker"));
+    await tester.tap(find.tooltip("Open picker"));
     await tester.pumpAndSettle();
 
     await tester.tap(find.bySemanticsLabel("Thursday, August 22, 2024"));
@@ -152,7 +151,7 @@ void main() {
     tester,
   ) async {
     await tester.pumpTestApp(child: const _DateTimeFieldHarness());
-    await tester.tap(find.byTooltip("Open picker"));
+    await tester.tap(find.tooltip("Open picker"));
     await tester.pumpAndSettle();
 
     await tester.tap(find.byKey(const ValueKey("date_time_month_picker")));
@@ -179,7 +178,7 @@ void main() {
     tester,
   ) async {
     await tester.pumpTestApp(child: const _DateTimeFieldHarness());
-    await tester.tap(find.byTooltip("Open picker"));
+    await tester.tap(find.tooltip("Open picker"));
     await tester.pumpAndSettle();
 
     await tester.tap(find.byKey(const ValueKey("date_time_month_picker")));
@@ -209,7 +208,7 @@ void main() {
     await tester.pumpTestApp(
       child: _DateTimeFieldHarness(key: key, includeDate: false),
     );
-    await tester.tap(find.byTooltip("Open picker"));
+    await tester.tap(find.tooltip("Open picker"));
     await tester.pumpAndSettle();
 
     final fields = find.descendant(
@@ -271,7 +270,7 @@ void main() {
     await tester.pumpTestApp(
       child: const _DateTimeFieldHarness(includeDate: false),
     );
-    await tester.tap(find.byTooltip("Open picker"));
+    await tester.tap(find.tooltip("Open picker"));
     await tester.pumpAndSettle();
     expect(FocusManager.instance.primaryFocus?.debugLabel, "Hour");
 
@@ -294,7 +293,7 @@ void main() {
     await tester.pumpTestApp(
       child: const _DateTimeFieldHarness(includeDate: false),
     );
-    await tester.tap(find.byTooltip("Open picker"));
+    await tester.tap(find.tooltip("Open picker"));
     await tester.pumpAndSettle();
 
     final hourField = find.descendant(
@@ -324,7 +323,7 @@ void main() {
     await tester.pumpTestApp(
       child: const _DateTimeFieldHarness(includeDate: false),
     );
-    await tester.tap(find.byTooltip("Open picker"));
+    await tester.tap(find.tooltip("Open picker"));
     await tester.pumpAndSettle();
 
     for (final label in ["Hour", "Minute", "Second"]) {
@@ -390,7 +389,7 @@ void main() {
 
   testWidgets("focus remains trapped inside the open picker", (tester) async {
     await tester.pumpTestApp(child: const _DateTimeFieldHarness());
-    await tester.tap(find.byTooltip("Open picker"));
+    await tester.tap(find.tooltip("Open picker"));
     await tester.pumpAndSettle();
 
     for (var index = 0; index < 12; index++) {
@@ -419,7 +418,7 @@ void main() {
     await tester.pumpTestApp(
       child: _DateTimeFieldHarness(key: readOnlyKey, readOnly: true),
     );
-    expect(find.byTooltip("Open picker"), findsNothing);
+    expect(find.tooltip("Open picker"), findsNothing);
 
     await tester.sendKeyEvent(LogicalKeyboardKey.tab);
     await tester.pumpAndSettle();
@@ -435,7 +434,7 @@ void main() {
     await tester.pumpTestApp(
       child: const _DateTimeFieldHarness(enabled: false),
     );
-    await tester.tap(find.byTooltip("Open picker"));
+    await tester.tap(find.tooltip("Open picker"));
     await tester.pumpAndSettle();
     expect(find.byType(DateTimePickerSurface), findsNothing);
   });
@@ -444,7 +443,7 @@ void main() {
     tester,
   ) async {
     await tester.pumpTestApp(child: const _DateTimeFieldHarness());
-    await tester.tap(find.byTooltip("Open picker"));
+    await tester.tap(find.tooltip("Open picker"));
     await tester.pumpAndSettle();
 
     final selected = tester.getSemantics(

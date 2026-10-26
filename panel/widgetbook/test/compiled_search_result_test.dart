@@ -2,11 +2,9 @@ import "package:flutter_test/flutter_test.dart";
 import "package:typewriter_panel/infrastructure/protocols/skir/skir.dart"
     as skir;
 import "package:typewriter_panel/typewriter_panel.dart";
-import "package:typewriter_testkit/typewriter_testkit.dart";
+import "package:typewriter_testkit/testing.dart";
 
 import "package:widgetbook_workspace/stories/authoring/search/presentation/compiled_search_fixture.dart";
-
-import "support/network_images.dart";
 
 void main() {
   for (final kind in ["book", "page", "element"]) {

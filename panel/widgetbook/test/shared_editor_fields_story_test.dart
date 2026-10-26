@@ -1,5 +1,6 @@
 import "package:flutter_test/flutter_test.dart";
 import "package:typewriter_panel/typewriter_panel.dart";
+import "package:typewriter_testkit/testing.dart";
 import "package:widgetbook_workspace/stories/shared/editors/presentation/components/color_picker/color_picker_field.stories.dart";
 import "package:widgetbook_workspace/stories/shared/editors/presentation/components/date_time_picker/date_time_picker_field.stories.dart";
 import "package:widgetbook_workspace/stories/shared/ui/input/input_field_container.stories.dart";
@@ -82,7 +83,7 @@ void main() {
     await tester.pumpAndSettle();
     expect(find.text("Bound color: #FF3498DB"), findsOneWidget);
 
-    await tester.tap(find.byTooltip("Open color picker"));
+    await tester.tap(find.tooltip("Open color picker"));
     await tester.pumpAndSettle();
     expect(find.byType(ColorArea), findsOneWidget);
     await tester.sendKeyEvent(LogicalKeyboardKey.escape);
@@ -94,13 +95,13 @@ void main() {
   testWidgets("read only color field inspects without editing", (tester) async {
     await tester.pumpWidget(const ColorPickerFieldStory(readOnly: true));
     await tester.pumpAndSettle();
-    await tester.tap(find.byTooltip("Open color picker"));
+    await tester.tap(find.tooltip("Open color picker"));
     await tester.pumpAndSettle();
     expect(tester.widget<ColorArea>(find.byType(ColorArea)).enabled, isFalse);
 
     await tester.pumpWidget(const ColorPickerFieldStory(enabled: false));
     await tester.pumpAndSettle();
-    expect(find.byTooltip("Open color picker"), findsNothing);
+    expect(find.tooltip("Open color picker"), findsNothing);
   });
 
   testWidgets("date field updates only complete drafts and opens its picker", (
@@ -118,7 +119,7 @@ void main() {
     await tester.pumpAndSettle();
     expect(find.textContaining("Bound start: 2026-11-01T09:15:00"), findsOne);
 
-    await tester.tap(find.byTooltip("Open picker"));
+    await tester.tap(find.tooltip("Open picker"));
     await tester.pumpAndSettle();
     expect(find.byType(DateTimePickerSurface), findsOneWidget);
     await tester.sendKeyEvent(LogicalKeyboardKey.escape);
