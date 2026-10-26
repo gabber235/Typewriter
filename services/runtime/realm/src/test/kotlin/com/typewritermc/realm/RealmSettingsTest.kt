@@ -1,6 +1,7 @@
 package com.typewritermc.realm
 
 import de.infix.testBalloon.framework.core.testSuite
+import io.kotest.assertions.throwables.shouldThrow
 import io.kotest.matchers.collections.shouldBeEmpty
 import io.kotest.matchers.shouldBe
 import java.nio.file.Files
@@ -45,8 +46,14 @@ val RealmSettingsTest by testSuite {
             .diagnosticLevel shouldBe RealmDiagnosticLevel.ERROR
     }
 
-    test("an unknown diagnostic level falls back to WARN") {
-        RealmSettings(configuration = mapOf("TYPEWRITER_DIAGNOSTIC_LEVEL" to "verbose"))
+    test("an unknown diagnostic level fails startup naming the setting and the value") {
+        shouldThrow<IllegalStateException> {
+            RealmSettings(configuration = mapOf("TYPEWRITER_DIAGNOSTIC_LEVEL" to "verbose")).applicationConfiguration()
+        }.message shouldBe "Realm setting TYPEWRITER_DIAGNOSTIC_LEVEL has unknown value: verbose"
+    }
+
+    test("an absent diagnostic level means WARN") {
+        RealmSettings()
             .applicationConfiguration()
             .diagnosticLevel shouldBe RealmDiagnosticLevel.WARN
     }

@@ -8,6 +8,32 @@ plugins {
     `java-test-fixtures`
 }
 
+/*
+ * The route fixture extension reaches the tests twice. The provider loader reads the whole JAR as an extension
+ * artifact (its path arrives as a system property) and defines the generated providers it indexes itself, while the
+ * test classpath holds the fixture types the tests construct. A generated capability provider calls a private
+ * sibling class the index does not name, so the loader asks its parent for that sibling; were the sibling on the
+ * test classpath, the two would sit in one package across two class loaders and the call would fail with
+ * IllegalAccessError. The test classpath therefore gets the JAR without its capability providers, the same way a
+ * deployed extension is invisible to the host class loader.
+ */
+val routeFixtureExtension by configurations.creating {
+    isCanBeConsumed = false
+    attributes { attribute(Usage.USAGE_ATTRIBUTE, objects.named(Usage.JAVA_RUNTIME)) }
+}
+
+val routeFixtureClasses =
+    tasks.register<Jar>("routeFixtureClasses") {
+        archiveFileName = "realm-route-fixture-classes.jar"
+        destinationDirectory = layout.buildDirectory.dir("route-fixtures")
+        from(provider { zipTree(routeFixtureExtension.singleFile) }) { exclude("**/*CapabilityProvider*.class") }
+    }
+
+tasks.test {
+    inputs.files(routeFixtureExtension)
+    jvmArgumentProviders += CommandLineArgumentProvider { listOf("-Dtypewriter.realm.routeFixtures=${routeFixtureExtension.singleFile}") }
+}
+
 dependencies {
     implementation(platform(libs.koin.bom))
     implementation(libs.koin.core)
@@ -34,9 +60,14 @@ dependencies {
     testImplementation(testFixtures(project(":internal-utils")))
     testImplementation(project(":loader-api"))
     // The extension JAR itself: the tests load it as an extension artifact, and its classes live in its common part.
-    testImplementation(project(":realm-route-fixtures")) {
+    testCompileOnly(project(":realm-route-fixtures")) {
         attributes { attribute(LibraryElements.LIBRARY_ELEMENTS_ATTRIBUTE, objects.named(LibraryElements.JAR)) }
     }
+    routeFixtureExtension(project(":realm-route-fixtures")) {
+        isTransitive = false
+        attributes { attribute(LibraryElements.LIBRARY_ELEMENTS_ATTRIBUTE, objects.named(LibraryElements.JAR)) }
+    }
+    testRuntimeOnly(files(routeFixtureClasses))
     testImplementation(libs.kotlin.coroutines.test)
     testImplementation(libs.kotest.property)
 }

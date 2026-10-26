@@ -9,8 +9,8 @@ import java.nio.file.Path
 /**
  * Collects resolved diagnostic and database policy before Realm composition.
  *
- * The settings adapter defaults unknown diagnostic levels to WARN; database configuration performs its own
- * validation.
+ * An absent diagnostic level means WARN and an unknown one fails startup naming the value; database configuration
+ * performs its own validation.
  */
 internal data class RealmApplicationConfiguration(
     val diagnosticLevel: RealmDiagnosticLevel,
@@ -31,8 +31,10 @@ internal fun RealmSettings.applicationConfiguration(): RealmApplicationConfigura
     RealmApplicationConfiguration(
         diagnosticLevel =
             get("TYPEWRITER_DIAGNOSTIC_LEVEL")
-                ?.uppercase()
-                ?.let { value -> RealmDiagnosticLevel.entries.firstOrNull { it.name == value } }
+                ?.let { value ->
+                    RealmDiagnosticLevel.entries.firstOrNull { it.name == value.uppercase() }
+                        ?: unknownValue("TYPEWRITER_DIAGNOSTIC_LEVEL", value)
+                }
                 ?: RealmDiagnosticLevel.WARN,
         database = databaseConfiguration(),
     )

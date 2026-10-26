@@ -4,6 +4,12 @@ import com.typewritermc.authoring.GraphLayout
 import com.typewritermc.authoring.GraphPlacement
 import com.typewritermc.authoring.HierarchyPath
 import com.typewritermc.authoring.TimelineEntryPlacement
+import com.typewritermc.capability.RealmCapabilities
+import com.typewritermc.capability.RealmCapability
+import com.typewritermc.capability.RealmCapabilityPermissionDeniedException
+import com.typewritermc.capability.RealmCommandContext
+import com.typewritermc.capability.RealmCommandOutcome
+import com.typewritermc.capability.RealmComputationContext
 import com.typewritermc.elements.Entry
 import com.typewritermc.library.Book
 import com.typewritermc.library.BookPages
@@ -11,6 +17,8 @@ import com.typewritermc.library.Page
 import com.typewritermc.library.PageElements
 import com.typewritermc.types.Ref
 import com.typewritermc.types.TypewriterType
+import skirout.editor.v1.capability.NotificationSeverity
+import skirout.editor.v1.capability.PanelInstruction
 
 /*
  * Pages and entries for Realm route tests that the core catalog lacks, because core declares no concrete page. They
@@ -53,3 +61,39 @@ data class FixtureTimelineEntry(
     override val name: String = "",
     override val placement: TimelineEntryPlacement,
 ) : Entry
+
+/** The payload and result of the fixture capabilities: a text the capability echoes or reacts to. */
+@TypewriterType(id = "5b0f7e2a9c3d4e1f8a6b2c4d6e8f0a12")
+data class FixtureMessage(
+    val value: String,
+)
+
+/**
+ * A computation and a command for Realm invocation tests. Each echoes its payload, refuses [DENIED] with a permission
+ * denial and fails on [BROKEN], so a test picks the outcome through the payload it sends.
+ */
+@RealmCapabilities
+class FixtureCapabilities {
+    /** Returns the payload unchanged. */
+    @RealmCapability.Computation
+    context(_: RealmComputationContext)
+    suspend fun echo(request: FixtureMessage): FixtureMessage = request.also { it.react() }
+
+    /** Notifies the panel with the payload. */
+    @RealmCapability.Command
+    context(_: RealmCommandContext)
+    suspend fun announce(request: FixtureMessage): RealmCommandOutcome {
+        request.react()
+        return RealmCommandOutcome(listOf(PanelInstruction.createNotify(severity = NotificationSeverity.SUCCESS, message = request.value)))
+    }
+
+    companion object {
+        const val DENIED = "denied"
+        const val BROKEN = "broken"
+    }
+}
+
+private fun FixtureMessage.react() {
+    if (value == FixtureCapabilities.DENIED) throw RealmCapabilityPermissionDeniedException("Fixture capability denied")
+    check(value != FixtureCapabilities.BROKEN) { "Fixture capability broke" }
+}

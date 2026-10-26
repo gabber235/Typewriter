@@ -129,12 +129,17 @@ internal class WorkingViewEditContext(
         type: NamedTypeUse,
     ) = append(EditIntent.createRetag(at = at, type = type))
 
+    /**
+     * Stages the write when the planner accepts it. A refused write is reported to the caller and leaves the edit as it
+     * was, so the operation can carry on and finish without it.
+     */
     override suspend fun checkedSet(
         path: ValueLocation,
         value: DataValue,
     ): CheckedWriteResult =
         try {
-            append(EditIntent.createSetValue(at = path, value = value))
+            session.appendAtomically(EditIntent.createSetValue(at = path, value = value))
+            working.replace(session.resources)
             CheckedWriteResult.Applied
         } catch (failure: IllegalArgumentException) {
             CheckedWriteResult.Rejected(listOf(ValueProblem(location = path, code = "operation_write_rejected")))

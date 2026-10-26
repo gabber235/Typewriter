@@ -70,10 +70,6 @@ private fun PublicationResult.toWire(): PublishAuthoringResponse =
             PublishAuthoringResponse.BlockedErrorWrapper(blockers)
         }
 
-        is PublicationResult.Interrupted -> {
-            PublishAuthoringResponse.InterruptedErrorWrapper(publication)
-        }
-
         PublicationResult.NoChanges -> {
             PublishAuthoringResponse.NO_CHANGES
         }

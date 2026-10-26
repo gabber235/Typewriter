@@ -54,7 +54,6 @@ struct LinkOccurrence(84020003) {
 struct RelationProjectionDelta(84020004) {
   removals: [LinkProjection] = 0;
   created: [LinkProjection] = 1;
-  metadata_changed: [LinkProjection] = 2;
 }
 
 /// Supplies a resource identity and authored content to portable resource presentations.
@@ -251,7 +250,8 @@ method SearchAuthoring(
 /// committed confirms installation of saved authoring state. It does not confirm check completion,
 /// compilation, publication selection, or engine application. conflict_error requires refreshing
 /// original facts; rejected_error reports invalid intent or missing guards; catalog_changed_error
-/// requires a new catalog.
+/// requires a new catalog; invalid_error reports a prepared edit no editor may send, such as an
+/// unknown intent or a record with duplicate field names, with the reason.
 method CommitPreparedEdit(
   PreparedEdit
 ): enum {
@@ -259,7 +259,8 @@ method CommitPreparedEdit(
   conflict_error: [ExpectationConflict] = 2;
   rejected_error: [ValueProblem] = 3;
   catalog_changed_error: CatalogGeneration = 4;
-  internal_error: InternalError = 5;
+  invalid_error: AuthoringInvalid = 5;
+  internal_error: InternalError = 6;
 } = 940203;
 
 method PreviewTypeArgumentChange(

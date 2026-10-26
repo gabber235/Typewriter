@@ -189,10 +189,9 @@ method PublishAuthoring(
     publication: PublicationId = 0;
   } = 2;
   blocked_error: PublicationBlockers = 3;
-  interrupted_error: PublicationId = 4;
-  no_changes = 5;
-  candidate_changed_error: PublicationViewChanged = 6;
-  internal_error: InternalError = 7;
+  no_changes = 4;
+  candidate_changed_error: PublicationViewChanged = 5;
+  internal_error: InternalError = 6;
 } = 941501;
 /// Returns the current review view identity; later identities arrive as update hints.
 method WatchPublication(

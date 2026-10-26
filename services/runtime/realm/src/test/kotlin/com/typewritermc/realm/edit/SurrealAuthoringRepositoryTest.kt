@@ -248,6 +248,26 @@ val SurrealAuthoringRepositoryTest by testSuite {
         }
     }
 
+    test("an operation whose checked write was refused still finishes and commits its other writes") {
+        quest().use { realm ->
+            val missing = location(ResourceId(value = "missing"), "name")
+            val refusals = mutableListOf<CheckedWriteResult>()
+
+            realm
+                .commit {
+                    refusals += checkedSet(missing, DataValue.StringValueWrapper("Lost"))
+                    checkedSet(title, DataValue.StringValueWrapper("Story")) shouldBe CheckedWriteResult.Applied
+                }.shouldBeCommitted()
+
+            refusals shouldBe
+                listOf(
+                    CheckedWriteResult.Rejected(listOf(ValueProblem(location = missing, code = "operation_write_rejected"))),
+                )
+            realm.resources.keys shouldBe setOf(id)
+            realm.resources.getValue(id).text("name") shouldBe "Story"
+        }
+    }
+
     test("a deleted resource is removed from Surreal and stays gone after a reload") {
         RealmFixture.surreal(catalog).use { realm ->
             val kept = ResourceId(value = "kept")
@@ -381,7 +401,7 @@ private fun pair() =
 
 private fun unpair() = EditIntent.DisconnectRelationWrapper(LinkOccurrenceId(endpoint = PAIR_FIRST, location = at(source, "first")))
 
-private val NO_RELATION_CHANGES = RelationProjectionDelta(removals = emptyList(), created = emptyList(), metadataChanged = emptyList())
+private val NO_RELATION_CHANGES = RelationProjectionDelta(removals = emptyList(), created = emptyList())
 
 /** An embedded SurrealDB named [name] with the Realm schema loaded. */
 private fun realmDatabase(name: String) =

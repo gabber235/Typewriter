@@ -32,6 +32,7 @@ import com.typewritermc.types.qualified
 import com.typewritermc.types.requireValid
 import de.infix.testBalloon.framework.core.testSuite
 import io.kotest.matchers.shouldBe
+import io.kotest.matchers.string.shouldContain
 import io.kotest.matchers.types.shouldBeInstanceOf
 import kotlinx.coroutines.test.runTest
 import skirout.editor.v1.authoring.CommitPreparedEditResponse
@@ -77,26 +78,29 @@ private class InvalidCommit(
     val payload: RealmFixture.(SetupHandle<Book>) -> ByteArray,
 )
 
-/**
- * Commits no editor may send, derived from a valid rename of the tutorial. The commit response has no typed invalid
- * input variant, so each is answered as an internal error.
- */
-private val invalidCommits =
+/** Payloads that are no prepared edit at all; the communicator cannot decode them, so they never reach the route. */
+private val undecodableCommits =
     listOf(
         InvalidCommit("malformed binary") { byteArrayOf(-1) },
         InvalidCommit("truncated binary") { book -> encode(rename(book, "Renamed")).dropLast(1).toByteArray() },
-        InvalidCommit("an unknown intent") { book -> encode(rename(book, "Renamed").copy(intents = listOf(EditIntent.UNKNOWN))) },
+    )
+
+/** Prepared edits no editor may send, each paired with the rule its refusal names. */
+private val invalidCommits =
+    listOf(
+        InvalidCommit("an unknown intent") { book -> encode(rename(book, "Renamed").copy(intents = listOf(EditIntent.UNKNOWN))) } to
+            "Unknown edit intent",
         InvalidCommit("an unknown expectation") { book ->
             val edit = rename(book, "Renamed")
             encode(edit.copy(expectations = edit.expectations + EditExpectation.UNKNOWN))
-        },
+        } to "Unknown edit expectation",
         InvalidCommit("a created record with duplicate field names") { book ->
             val duplicate = AuthoringRecord(configuration = resources.getValue(book.resource).configuration, fields = duplicateTitles())
             encode(edit(EditIntent.createCreateResource(id = ResourceId(value = "copy"), record = duplicate)))
-        },
+        } to "Record field title is duplicated",
         InvalidCommit("a nested record with duplicate field names") { book ->
             encode(edit(EditIntent.createSetValue(at = titleOf(book), value = DataValue.createRecord(fields = duplicateTitles()))))
-        },
+        } to "Record field title is duplicated",
     )
 
 val AuthoringRoutesTest by testSuite {
@@ -119,21 +123,45 @@ val AuthoringRoutesTest by testSuite {
         }
     }
 
-    for (invalid in invalidCommits) {
-        test("a commit of ${invalid.name} is refused without saving anything and the next valid edit commits") {
+    for ((invalid, reason) in invalidCommits) {
+        test("a commit of ${invalid.name} is refused as invalid with its reason, saves nothing, and the next valid edit commits") {
+            runTest {
+                withSetup(tutorial) { book ->
+                    authoringRoutes().use { wire ->
+                        val before = resources
+
+                        val diagnostic =
+                            wire
+                                .send(RealmRouteScope::authoringEditCommit, invalid.payload(this, book))
+                                .shouldBeInstanceOf<CommitPreparedEditResponse.InvalidErrorWrapper>()
+                                .value.diagnostics
+                                .single()
+
+                        diagnostic.code shouldBe "invalid_edit"
+                        diagnostic.message shouldContain reason
+                        resources shouldBe before
+                        wire.call(RealmRouteScope::authoringEditCommit, rename(book, "Renamed")) shouldBe
+                            CommitPreparedEditResponse.COMMITTED
+                    }
+                }
+            }
+        }
+    }
+
+    for (undecodable in undecodableCommits) {
+        test("a commit of ${undecodable.name} fails without saving anything and the next valid edit commits") {
             runTest {
                 withSetup(tutorial) { book ->
                     authoringRoutes().use { wire ->
                         val before = resources
 
                         wire
-                            .send(RealmRouteScope::authoringEditCommit, invalid.payload(this, book))
+                            .send(RealmRouteScope::authoringEditCommit, undecodable.payload(this, book))
                             .shouldBeInstanceOf<CommitPreparedEditResponse.InternalErrorWrapper>()
 
                         resources shouldBe before
                         wire.call(RealmRouteScope::authoringEditCommit, rename(book, "Renamed")) shouldBe
                             CommitPreparedEditResponse.COMMITTED
-                        resources.getValue(book.resource).text("title") shouldBe "Renamed"
                     }
                 }
             }

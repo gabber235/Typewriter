@@ -59,9 +59,6 @@ internal class PatchRunner(
                 patchId.string to storedChecksum.string
             }
 
-        check(entries.map { it.first }.distinct().size == entries.size) {
-            "Patch history contains duplicate ids"
-        }
         return entries.toMap()
     }
 

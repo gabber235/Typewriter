@@ -1,9 +1,7 @@
 package com.typewritermc.realm.storage
 
 import com.surrealdb.Surreal
-import com.surrealdb.SurrealException
 import com.surrealdb.Transaction
-import kotlinx.coroutines.CancellationException
 import java.util.WeakHashMap
 
 /**
@@ -46,35 +44,3 @@ internal fun transactionAdmission(database: Surreal): Any =
     }
 
 private val transactionAdmissions = WeakHashMap<Surreal, Any>()
-
-/** Retries only transaction conflicts while preserving one prepared authoring decision. */
-internal class StorageRetryPolicy(
-    private val maximumAttempts: Int = 4,
-) {
-    init {
-        require(maximumAttempts > 0) { "Maximum attempts must be positive." }
-    }
-
-    inline fun <Result> retryWriteConflicts(attempt: () -> Result): Result {
-        var latest: Throwable? = null
-        repeat(maximumAttempts) {
-            try {
-                return attempt()
-            } catch (cancelled: CancellationException) {
-                throw cancelled
-            } catch (failure: Throwable) {
-                if (!failure.isStorageWriteConflict()) throw failure
-                latest = failure
-            }
-        }
-        throw requireNotNull(latest)
-    }
-}
-
-private fun Throwable.isStorageWriteConflict(): Boolean {
-    if (this is SurrealException) {
-        val text = message.orEmpty().lowercase()
-        if (text.contains("conflict") || text.contains("transaction was aborted")) return true
-    }
-    return cause?.isStorageWriteConflict() == true
-}

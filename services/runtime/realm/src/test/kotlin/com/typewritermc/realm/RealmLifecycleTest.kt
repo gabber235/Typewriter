@@ -561,7 +561,7 @@ private class RealmLifecycleFixture(
                                 AuthoringMutationPlan(
                                     initialSeed.resources,
                                     emptySet(),
-                                    RelationProjectionDelta(removals = emptyList(), created = emptyList(), metadataChanged = emptyList()),
+                                    RelationProjectionDelta(removals = emptyList(), created = emptyList()),
                                 ),
                             )
                         }

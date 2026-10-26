@@ -16,7 +16,11 @@ import com.typewritermc.realm.operation.requireValid
 import com.typewritermc.services.libs.communicator.router.CommunicatorRoutesBuilder
 import com.typewritermc.types.catalog.of
 import com.typewritermc.types.requireValid
+import skirout.editor.v1.authoring.AuthoringDiagnostic
+import skirout.editor.v1.authoring.AuthoringInvalid
 import skirout.editor.v1.authoring.AuthoringObservationId
+import skirout.editor.v1.authoring.CommitPreparedEditResponse
+import skirout.editor.v1.authoring.PreparedEdit
 import skirout.editor.v1.authoring.PreviewTypeArgumentChangeRequest
 import skirout.editor.v1.authoring.PreviewTypeArgumentChangeResponse
 import skirout.editor.v1.authoring.QueryAuthoringStateRequest
@@ -33,8 +37,9 @@ import skirout.editor.v1.authoring.CatalogChanged as SkirCatalogChanged
 /**
  * Exposes saved snapshot queries, prepared edit commit, and type argument previews to the editor.
  *
- * A state query answers with one retained view and its confirmed observation identity. Commit delegates admission
- * to the repository; preview and preparation return proposed edits without changing saved resources. Finding
+ * A state query answers with one retained view and its confirmed observation identity. Commit refuses a prepared edit
+ * that breaks a rule every edit must keep, naming the rule, and delegates admission of every other edit to the
+ * repository; preview and preparation return proposed edits without changing saved resources. Finding
  * freshness is evaluated against the returned baseline.
  */
 internal class AuthoringRoutes(
@@ -47,10 +52,32 @@ internal class AuthoringRoutes(
     fun register(builder: CommunicatorRoutesBuilder) =
         with(builder) {
             unary(address.authoringStateQuery) { call -> query(call.request) }
-            unary(address.authoringEditCommit) { call -> repository.commit(call.request.requireValid()) }
+            unary(address.authoringEditCommit) { call -> commit(call.request) }
             unary(address.authoringTypePreview) { call -> preview(call.request) }
             unary(address.authoringTypeCommit) { call -> typeArguments.prepare(call.request.requireValid()) }
         }
+
+    private suspend fun commit(request: PreparedEdit): CommitPreparedEditResponse {
+        val edit =
+            try {
+                request.requireValid()
+            } catch (invalid: IllegalArgumentException) {
+                return CommitPreparedEditResponse.InvalidErrorWrapper(
+                    AuthoringInvalid(
+                        diagnostics =
+                            listOf(
+                                AuthoringDiagnostic(
+                                    code = "invalid_edit",
+                                    message = invalid.message ?: "The prepared edit is invalid.",
+                                    resource = null,
+                                    path = null,
+                                ),
+                            ),
+                    ),
+                )
+            }
+        return repository.commit(edit)
+    }
 
     private suspend fun query(request: QueryAuthoringStateRequest): QueryAuthoringStateResponse {
         val lease = views.capture()

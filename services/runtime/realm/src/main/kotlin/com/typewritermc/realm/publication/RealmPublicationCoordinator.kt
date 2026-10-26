@@ -72,10 +72,6 @@ sealed interface PublicationResult {
     data class CandidateChanged(
         val view: PublicationViewId,
     ) : PublicationResult
-
-    data class Interrupted(
-        val publication: PublicationId,
-    ) : PublicationResult
 }
 
 interface PublicationAttemptStore {
