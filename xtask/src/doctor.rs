@@ -149,7 +149,7 @@ fn which(program: &str) -> Option<PathBuf> {
 
 /// No stack outlived its supervisor, as a stack does when an agent is killed with SIGKILL.
 fn no_orphaned_stacks(_: &Context) -> Option<String> {
-    let records = match crate::stack::StackRecord::all() {
+    let records = match crate::stack::StackRecord::all(&crate::stack::spec::Registry::machine()) {
         Ok(records) => records,
         Err(error) => return Some(format!("cannot read the stack registry: {error:#}")),
     };

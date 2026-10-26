@@ -159,8 +159,24 @@ impl Published {
     }
 }
 
-/// Where the machine wide stack registry lives: one record per running stack.
-pub const REGISTRY: &str = "/tmp/typewriter-stacks";
+/// The machine wide stack registry: one record per running stack. Tests use a temp dir.
+pub struct Registry(PathBuf);
+
+impl Registry {
+    pub fn machine() -> Self {
+        Self(PathBuf::from("/tmp/typewriter-stacks"))
+    }
+
+    #[cfg(test)]
+    pub fn at(dir: &Path) -> Self {
+        Self(dir.to_owned())
+    }
+
+    pub fn dir(&self) -> &Path {
+        &self.0
+    }
+}
+
 /// Ports one stack may use. Each name has a fixed offset, so a worktree keeps its addresses
 /// across runs.
 pub const PORTS: [&str; 7] = [
@@ -186,14 +202,13 @@ impl PortLease {
     /// Prefers the block hashed from the worktree path, so ports are stable, and takes the next
     /// free block when another live stack holds it or something else listens on it. The lease is
     /// the stack record, written while the registry is locked, so two stacks never share a block.
-    pub fn acquire(worktree: &Path) -> Result<Self> {
-        let registry = Path::new(REGISTRY);
-        fs::create_dir_all(registry)
-            .with_context(|| format!("cannot create {}", registry.display()))?;
-        let lock = registry_lock(registry)?;
+    pub fn acquire(registry: &Registry, worktree: &Path) -> Result<Self> {
+        let dir = registry.dir();
+        fs::create_dir_all(dir).with_context(|| format!("cannot create {}", dir.display()))?;
+        let lock = registry_lock(dir)?;
         let key = worktree_key(worktree);
-        let record = registry.join(format!("{key}.json"));
-        let taken: BTreeSet<u16> = StackRecord::all()?
+        let record = dir.join(format!("{key}.json"));
+        let taken: BTreeSet<u16> = StackRecord::all(registry)?
             .into_iter()
             .filter(|other| other.path != record && process_alive(other.owner))
             .map(|other| other.base)
@@ -310,5 +325,127 @@ impl<'a> StackContext<'a> {
         build()?;
         self.built.borrow_mut().insert(what);
         Ok(())
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    /// A service that only declares its dependencies.
+    macro_rules! service {
+        ($name:ident, $($need:ident),*) => {
+            pub struct $name;
+            impl Service for $name {
+                const ID: ServiceId = ServiceId(stringify!($name));
+                fn needs(&self) -> &'static [ServiceId] {
+                    &[$(<$need as Service>::ID),*]
+                }
+                fn command(&self, _: &StackContext) -> Result<Command> {
+                    Ok(Command::new("true"))
+                }
+                fn ready(&self, _: &StackContext) -> Probe {
+                    Probe::ExitSuccess
+                }
+            }
+        };
+    }
+
+    mod chain {
+        use super::*;
+        service!(Broker,);
+        service!(Accounts, Broker);
+        service!(Realm, Accounts, Broker);
+    }
+
+    mod cycle {
+        use super::*;
+        service!(First, Second);
+        service!(Second, First);
+        service!(Free,);
+    }
+
+    mod missing {
+        use super::*;
+        service!(Broker,);
+        service!(Accounts, Broker);
+    }
+
+    fn order(spec: &StackSpec) -> Result<Vec<&'static str>> {
+        Ok(spec
+            .ordered()?
+            .iter()
+            .map(|service| service.id().0)
+            .collect())
+    }
+
+    #[test]
+    fn dependencies_start_before_their_dependents() {
+        let spec = StackSpec::default()
+            .with(chain::Realm)
+            .with(chain::Accounts)
+            .with(chain::Broker);
+        assert_eq!(order(&spec).unwrap(), ["Broker", "Accounts", "Realm"]);
+    }
+
+    #[test]
+    fn a_missing_dependency_is_named() {
+        let spec = StackSpec::default().with(missing::Accounts);
+        let error = order(&spec).unwrap_err().to_string();
+        assert_eq!(
+            error,
+            "service `Accounts` needs `Broker`, which the stack does not contain"
+        );
+    }
+
+    #[test]
+    fn services_that_need_each_other_are_named() {
+        let spec = StackSpec::default()
+            .with(cycle::First)
+            .with(cycle::Free)
+            .with(cycle::Second);
+        let error = order(&spec).unwrap_err().to_string();
+        assert_eq!(error, "the services First, Second need each other");
+    }
+
+    #[test]
+    fn live_stacks_of_different_worktrees_never_share_a_port_block() {
+        let registry = tempfile::tempdir().unwrap();
+        let registry = Registry::at(registry.path());
+        // Enough worktrees that some prefer the same block (fixed paths, so the same ones every
+        // run).
+        let bases: Vec<u16> = (0..100)
+            .map(|index| {
+                let worktree = PathBuf::from(format!("/worktrees/{index}"));
+                PortLease::acquire(&registry, &worktree).unwrap().base
+            })
+            .collect();
+        let distinct: BTreeSet<u16> = bases.iter().copied().collect();
+        assert_eq!(distinct.len(), bases.len());
+    }
+
+    #[test]
+    fn a_worktree_keeps_its_ports_across_runs() {
+        let dir = tempfile::tempdir().unwrap();
+        let registry = Registry::at(dir.path());
+        let worktree = Path::new("/worktrees/stable");
+        let first = PortLease::acquire(&registry, worktree).unwrap();
+        // The run ended: its supervisor forgot the record.
+        fs::remove_file(&first.record).unwrap();
+        let second = PortLease::acquire(&registry, worktree).unwrap();
+        assert_eq!(first.base, second.base);
+    }
+
+    #[test]
+    fn a_second_stack_of_the_same_worktree_is_refused() {
+        let dir = tempfile::tempdir().unwrap();
+        let registry = Registry::at(dir.path());
+        let worktree = Path::new("/worktrees/busy");
+        let _running = PortLease::acquire(&registry, worktree).unwrap();
+        let error = PortLease::acquire(&registry, worktree)
+            .err()
+            .unwrap()
+            .to_string();
+        assert!(error.contains("a stack for this worktree is already running"));
     }
 }

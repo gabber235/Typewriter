@@ -192,3 +192,41 @@ fn piped(command: &mut Command, input: Vec<u8>) -> Result<std::process::Output> 
         .with_context(|| format!("cannot write to {}", display(command)))?;
     Ok(output)
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    /// A fresh repository ignoring build_runner output, with `files` written and force staged.
+    fn staged(files: &[&str]) -> (tempfile::TempDir, Context) {
+        let dir = tempfile::tempdir().unwrap();
+        let ctx = Context {
+            root: dir.path().to_owned(),
+        };
+        ctx.tool(".", "git", &["init", "--quiet"])
+            .output_text()
+            .unwrap();
+        fs::write(dir.path().join(".gitignore"), "*.g.dart\n").unwrap();
+        for file in files {
+            fs::write(dir.path().join(file), "text\n").unwrap();
+        }
+        let mut add = ctx.tool(".", "git", &["add", "--force", ".gitignore"]);
+        add.args(files).output_text().unwrap();
+        (dir, ctx)
+    }
+
+    #[test]
+    fn a_staged_generated_file_is_refused_by_name() {
+        let (_dir, ctx) = staged(&["notes.txt", "model.g.dart"]);
+        let error = check(&ctx).unwrap_err().to_string();
+        assert!(error.contains("ignored files are staged"));
+        assert!(error.contains("model.g.dart"));
+        assert!(!error.contains("notes.txt"));
+    }
+
+    #[test]
+    fn staged_files_nothing_ignores_pass() {
+        let (_dir, ctx) = staged(&["notes.txt"]);
+        assert!(check(&ctx).is_ok());
+    }
+}

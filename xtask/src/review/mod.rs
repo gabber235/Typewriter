@@ -34,7 +34,8 @@ const REPORT: &str = ".xtask/review/report.json";
 #[derive(Args)]
 pub struct ReviewArgs {
     /// The ref the working tree is compared with, through its merge base with HEAD. Defaults to
-    /// origin/HEAD; pass the pull request's base branch for stacked work.
+    /// the base CI uses: the pull request's base branch, or before a pull request exists, the
+    /// remote branch HEAD grew from most recently.
     #[arg(long, global = true)]
     base: Option<String>,
     /// Prints the facts as JSON instead of text.

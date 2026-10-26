@@ -4,7 +4,7 @@
 //! Dropping [`Stack`] sends SIGTERM to every group and SIGKILL after five seconds, so a failing,
 //! timed out or interrupted command never leaves a stack behind. A group whose leader exits is
 //! stopped the same way, so its descendants do not outlive it. A supervisor killed outright
-//! leaves its record in [`spec::REGISTRY`], which `cargo xtask stack gc` reads to kill what it
+//! leaves its record in the [`Registry`], which `cargo xtask stack gc` reads to kill what it
 //! left. devenv's process dependencies are not used: devenv 2.4.0 still has the bugs where an on
 //! demand process waits forever and disabled processes start their prerequisites.
 
@@ -24,7 +24,7 @@ use std::time::{Duration, Instant};
 use anyhow::{Context as _, Result, bail};
 use serde::{Deserialize, Serialize};
 
-use self::spec::{DynService, PortLease, Probe, Published, REGISTRY, StackContext, StackSpec};
+use self::spec::{DynService, PortLease, Probe, Published, Registry, StackContext, StackSpec};
 use crate::Context;
 use crate::lock::E2eSlot;
 use crate::process::{self, Group, POLL, STOP_GRACE, Supervisor, interrupted, kill_group};
@@ -55,7 +55,7 @@ pub fn run<T>(
     let order = spec.ordered()?;
     process::install_interrupt_handler();
     let _slot = E2eSlot::acquire(&ctx.root)?;
-    let stack_ctx = StackContext::new(ctx, PortLease::acquire(&ctx.root)?);
+    let stack_ctx = StackContext::new(ctx, PortLease::acquire(&Registry::machine(), &ctx.root)?);
     reset_state(&stack_ctx.state(), &[Keep::BrokerKeys])?;
     let mut stack = Stack::register(&stack_ctx)?;
     let mut published = Published::default();
@@ -261,8 +261,9 @@ pub struct StackRecord {
 }
 
 impl StackRecord {
-    pub fn all() -> Result<Vec<Self>> {
-        let Ok(entries) = fs::read_dir(REGISTRY) else {
+    /// Every record in `registry`.
+    pub fn all(registry: &Registry) -> Result<Vec<Self>> {
+        let Ok(entries) = fs::read_dir(registry.dir()) else {
             return Ok(Vec::new());
         };
         let mut records = Vec::new();
@@ -302,9 +303,9 @@ impl StackRecord {
 
 /// Kills stacks whose supervisor is gone (an agent killed with SIGKILL) and releases their port
 /// blocks.
-pub fn gc() -> Result<Vec<StackRecord>> {
+pub fn gc(registry: &Registry) -> Result<Vec<StackRecord>> {
     let mut removed = Vec::new();
-    for record in StackRecord::all()? {
+    for record in StackRecord::all(registry)? {
         if !process_alive(record.owner) {
             for group in &record.groups {
                 kill_group(*group, libc::SIGKILL);
@@ -414,7 +415,7 @@ pub fn command(ctx: &Context, command: StackCommand) -> Result<()> {
             Ok(())
         }
         StackCommand::Gc => {
-            let removed = gc()?;
+            let removed = gc(&Registry::machine())?;
             if removed.is_empty() {
                 println!("no orphaned stacks");
             }
@@ -428,5 +429,106 @@ pub fn command(ctx: &Context, command: StackCommand) -> Result<()> {
             }
             Ok(())
         }
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use std::net::TcpListener;
+    use std::os::unix::process::ExitStatusExt as _;
+    use std::thread;
+
+    use super::*;
+
+    fn record(registry: &Path, name: &str, owner: u32, groups: Vec<u32>) -> StackRecord {
+        let record = StackRecord {
+            path: registry.join(format!("{name}.json")),
+            worktree: PathBuf::from(format!("/worktrees/{name}")),
+            owner,
+            base: 20000,
+            groups,
+        };
+        record.write().unwrap();
+        record
+    }
+
+    /// The pid of a process that has exited and been reaped.
+    fn dead_pid() -> u32 {
+        let mut child = Command::new("true").spawn().unwrap();
+        let pid = child.id();
+        child.wait().unwrap();
+        pid
+    }
+
+    #[test]
+    fn gc_stops_what_a_killed_supervisor_left_and_keeps_live_stacks() {
+        let dir = tempfile::tempdir().unwrap();
+        let registry = Registry::at(dir.path());
+        let mut orphan = Command::new("sleep")
+            .arg("60")
+            .process_group(0)
+            .spawn()
+            .unwrap();
+        let orphaned = record(dir.path(), "orphaned", dead_pid(), vec![orphan.id()]);
+        let live = record(dir.path(), "live", std::process::id(), Vec::new());
+
+        let removed = gc(&registry).unwrap();
+
+        assert_eq!(removed.len(), 1);
+        assert_eq!(removed[0].worktree, orphaned.worktree);
+        assert!(!orphaned.path.exists());
+        assert!(live.path.exists());
+        assert_eq!(orphan.wait().unwrap().signal(), Some(libc::SIGKILL));
+    }
+
+    /// A local server answering every request with `status`.
+    fn answering(status: &'static str) -> u16 {
+        let listener = TcpListener::bind((Ipv4Addr::LOCALHOST, 0)).unwrap();
+        let port = listener.local_addr().unwrap().port();
+        thread::spawn(move || {
+            for stream in listener.incoming() {
+                let mut stream = stream.unwrap();
+                // The whole request head, so closing never resets the connection under the reply.
+                let mut request = Vec::new();
+                let mut byte = [0];
+                while !request.ends_with(b"\r\n\r\n") && stream.read(&mut byte).unwrap_or(0) == 1 {
+                    request.push(byte[0]);
+                }
+                let _ = write!(stream, "HTTP/1.1 {status}\r\nContent-Length: 0\r\n\r\n");
+            }
+        });
+        port
+    }
+
+    #[test]
+    fn an_http_service_is_ready_only_on_a_success_status() {
+        assert!(probe_passes(&Probe::http(
+            answering("204 No Content"),
+            "/health"
+        )));
+        assert!(!probe_passes(&Probe::http(
+            answering("503 Service Unavailable"),
+            "/health"
+        )));
+    }
+
+    #[test]
+    fn an_http_service_that_does_not_listen_is_not_ready() {
+        let port = TcpListener::bind((Ipv4Addr::LOCALHOST, 0))
+            .unwrap()
+            .local_addr()
+            .unwrap()
+            .port();
+        assert!(!probe_passes(&Probe::http(port, "/health")));
+    }
+
+    #[test]
+    fn a_file_service_is_ready_once_its_file_exists() {
+        let dir = tempfile::tempdir().unwrap();
+        let file = dir.path().join("ready");
+        let probe = Probe::FileExists(file.clone());
+        assert!(!probe_passes(&probe));
+        fs::write(&file, "").unwrap();
+        assert!(probe_passes(&probe));
     }
 }

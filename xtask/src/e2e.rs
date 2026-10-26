@@ -19,7 +19,7 @@ use crate::evidence::{self, Recorded};
 use crate::lock::HeavyLock;
 use crate::process::{Supervisor, Unsupervised};
 use crate::results::{self, Outcome, Quarantine, TestRun};
-use crate::stack::{self, Stack, typewriter};
+use crate::stack::{self, typewriter};
 use crate::{CommandExt, Context, Scratch, cluster, generate, secrets};
 
 /// Where the stack writes the panel's compile time defines (it publishes the same path as
@@ -117,9 +117,6 @@ fn scenarios(ctx: &Context, suite: Suite, target: Target) -> Result<()> {
     let run = match target {
         Target::Stack => stack::run(ctx, &typewriter::panel(), suite.budget(), |stack| {
             let _lock = lock()?;
-            if suite == Suite::Panel {
-                broker_tests(ctx, stack)?;
-            }
             let defines = ctx.root.join(PANEL_DEFINES);
             settle(ctx, suite, &defines, &evidence, &quarantine, stack)
         })?,
@@ -139,9 +136,12 @@ fn scenarios(ctx: &Context, suite: Suite, target: Target) -> Result<()> {
     let run = TestRun { commit, ..run };
     let file = evidence.join("test_run.json");
     results::write(&run, &file)?;
+    // Every suite drives the same registered scenarios, so a drive reporting none is broken.
     if run.cases.is_empty() {
-        println!("{name}: no scenarios ({})", file.display());
-        return Ok(());
+        bail!(
+            "{name}: the drive reported no scenarios ({})",
+            file.display()
+        );
     }
     results::report(&run, &quarantine, &mut std::io::stderr())?;
     println!(
@@ -170,17 +170,6 @@ fn settle(
         },
         quarantine,
     )
-}
-
-/// The panel's NATS adapter tests against the stack's broker, before any scenario.
-fn broker_tests(ctx: &Context, stack: &mut Stack) -> Result<()> {
-    let defines = defines(&ctx.root.join(PANEL_DEFINES));
-    let mut command = ctx.tool("panel", "flutter", &["test", "testing/stack", &defines]);
-    let status = stack.run_command(&mut command)?;
-    if !status.success() {
-        bail!("{} failed with {status}", crate::display(&command));
-    }
-    Ok(())
 }
 
 /// One `flutter drive` run writing its `TestRun` to `out`; `only` limits it to those scenario

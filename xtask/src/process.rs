@@ -162,3 +162,46 @@ pub fn log_tail(log: &Path, count: usize) -> Vec<String> {
     }
     lines.into()
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn dropping_a_group_stops_every_process_in_it() {
+        let group = Group::spawn(Command::new("sh").args(["-c", "sleep 60 & sleep 60"])).unwrap();
+        let id = group.id();
+        assert!(group_alive(id));
+        drop(group);
+        assert!(!group_alive(id));
+    }
+
+    #[test]
+    fn a_group_that_ignores_sigterm_is_killed() {
+        let group =
+            Group::spawn(Command::new("sh").args(["-c", "trap '' TERM; sleep 60 & wait"])).unwrap();
+        let id = group.id();
+        // Gives the shell time to ignore SIGTERM before the stop.
+        thread::sleep(Duration::from_millis(200));
+        drop(group);
+        assert!(!group_alive(id));
+    }
+
+    #[test]
+    fn a_wait_past_its_deadline_fails_and_leaves_the_group_to_stop() {
+        let mut group = Group::spawn(Command::new("sleep").arg("60")).unwrap();
+        let error = group
+            .wait(Some(Instant::now() + Duration::from_millis(200)))
+            .unwrap_err();
+        assert_eq!(error.to_string(), "ran out of its time budget");
+    }
+
+    #[test]
+    fn a_log_tail_keeps_the_last_lines() {
+        let dir = tempfile::tempdir().unwrap();
+        let log = dir.path().join("step.log");
+        std::fs::write(&log, "1\n2\n3\n4\n").unwrap();
+        assert_eq!(log_tail(&log, 2), ["3", "4"]);
+        assert!(log_tail(&dir.path().join("missing.log"), 2).is_empty());
+    }
+}

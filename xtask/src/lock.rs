@@ -2,7 +2,7 @@
 
 use std::fs::{File, OpenOptions, TryLockError};
 use std::io::{Read as _, Seek as _, Write as _};
-use std::path::Path;
+use std::path::{Path, PathBuf};
 use std::thread;
 use std::time::Duration;
 
@@ -24,16 +24,24 @@ impl HeavyLock {
     /// Takes the lock, waiting for whoever holds it. `holder` says who is waiting, so the
     /// message names the step that queues. Gives up when the harness is interrupted.
     pub fn acquire(holder: &str) -> Result<Self> {
+        Self::acquire_at(Path::new(HEAVY_LOCK), holder)
+    }
+
+    /// The lock at `path`; tests pass a temp file so they never queue behind real builds.
+    pub fn acquire_at(path: &Path, holder: &str) -> Result<Self> {
         let file = OpenOptions::new()
             .create(true)
             .truncate(false)
             .write(true)
-            .open(HEAVY_LOCK)
-            .with_context(|| format!("cannot open {HEAVY_LOCK}"))?;
+            .open(path)
+            .with_context(|| format!("cannot open {}", path.display()))?;
         let mut announced = false;
-        while !try_lock(&file, HEAVY_LOCK)? {
+        while !try_lock(&file, path)? {
             if !announced {
-                eprintln!("{holder}: waiting for another heavy build ({HEAVY_LOCK})");
+                eprintln!(
+                    "{holder}: waiting for another heavy build ({})",
+                    path.display()
+                );
                 announced = true;
             }
             wait_turn()?;
@@ -60,14 +68,14 @@ impl E2eSlot {
             .unwrap_or_else(|| (total_memory_gb() / 8).max(1));
         let mut files = Vec::with_capacity(slots);
         for index in 0..slots {
-            let path = format!("/tmp/typewriter-e2e-{index}.lock");
+            let path = PathBuf::from(format!("/tmp/typewriter-e2e-{index}.lock"));
             let file = OpenOptions::new()
                 .create(true)
                 .truncate(false)
                 .read(true)
                 .write(true)
                 .open(&path)
-                .with_context(|| format!("cannot open {path}"))?;
+                .with_context(|| format!("cannot open {}", path.display()))?;
             files.push((path, file));
         }
         let mut announced = false;
@@ -84,7 +92,7 @@ impl E2eSlot {
                     let mut holder = String::new();
                     file.rewind()?;
                     file.read_to_string(&mut holder)?;
-                    eprintln!("stack: {path} is held by {}", holder.trim());
+                    eprintln!("stack: {} is held by {}", path.display(), holder.trim());
                 }
                 eprintln!("stack: waiting for an end to end slot");
                 announced = true;
@@ -102,12 +110,12 @@ impl E2eSlot {
 }
 
 /// Whether `file` is now locked by this process.
-fn try_lock(file: &File, path: &str) -> Result<bool> {
+fn try_lock(file: &File, path: &Path) -> Result<bool> {
     match file.try_lock() {
         Ok(()) => Ok(true),
         Err(TryLockError::WouldBlock) => Ok(false),
         Err(TryLockError::Error(error)) => {
-            Err(error).with_context(|| format!("cannot lock {path}"))
+            Err(error).with_context(|| format!("cannot lock {}", path.display()))
         }
     }
 }
@@ -147,4 +155,30 @@ fn total_memory_gb() -> usize {
             })
     };
     bytes.map_or(8, |bytes| (bytes >> 30) as usize)
+}
+
+#[cfg(test)]
+mod tests {
+    use std::sync::mpsc;
+
+    use super::*;
+
+    #[test]
+    fn a_second_heavy_build_waits_until_the_first_releases() {
+        let dir = tempfile::tempdir().unwrap();
+        let path = dir.path().join("heavy.lock");
+        let first = HeavyLock::acquire_at(&path, "first").unwrap();
+        let (sender, received) = mpsc::channel();
+        let waiter = thread::spawn({
+            let path = path.clone();
+            move || {
+                let _second = HeavyLock::acquire_at(&path, "second").unwrap();
+                sender.send(()).unwrap();
+            }
+        });
+        assert!(received.recv_timeout(Duration::from_secs(1)).is_err());
+        drop(first);
+        assert!(received.recv_timeout(Duration::from_secs(5)).is_ok());
+        waiter.join().unwrap();
+    }
 }

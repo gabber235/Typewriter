@@ -3616,6 +3616,7 @@ dependencies = [
  "serde_json",
  "sha2",
  "skir-client",
+ "tempfile",
  "toml",
  "tree-sitter",
  "tree-sitter-dart",

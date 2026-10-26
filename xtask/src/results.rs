@@ -19,7 +19,7 @@ pub use crate::skirout::base::harness::v1::test_run::{Failure, Outcome, TestCase
 const QUARANTINE: &str = "harness/quarantine.toml";
 
 /// The cases that run and report but do not gate.
-#[derive(Deserialize)]
+#[derive(Default, Deserialize)]
 #[serde(deny_unknown_fields)]
 pub struct Quarantine {
     #[serde(default, rename = "case")]
@@ -189,5 +189,118 @@ pub fn runner_name(runner: &Runner) -> &'static str {
         Runner::PanelWeb => "panel-web",
         Runner::Step => "step",
         Runner::Unknown(_) => "unknown",
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    fn run(cases: &[(&str, Outcome)]) -> TestRun {
+        TestRun {
+            runner: Runner::Components,
+            cases: cases
+                .iter()
+                .map(|(id, outcome)| TestCase {
+                    id: (*id).to_owned(),
+                    outcome: outcome.clone(),
+                    ..TestCase::default()
+                })
+                .collect(),
+            ..TestRun::default()
+        }
+    }
+
+    fn failed(message: &str) -> Outcome {
+        Outcome::Failed(Box::new(Failure {
+            message: message.to_owned(),
+            ..Failure::default()
+        }))
+    }
+
+    fn quarantining(id: &str) -> Quarantine {
+        toml::from_str(&format!(
+            "[[case]]\nid = \"{id}\"\nreason = \"times out on CI\"\nissue = 7\n"
+        ))
+        .unwrap()
+    }
+
+    fn never_rerun(_: &[&str]) -> Result<TestRun> {
+        panic!("nothing should be rerun")
+    }
+
+    #[test]
+    fn a_case_that_passes_on_rerun_is_flaky_and_does_not_gate() {
+        let first = run(&[("a", failed("boom")), ("b", Outcome::Passed)]);
+        let settled = settle(
+            first,
+            |ids| {
+                assert_eq!(ids, ["a"]);
+                Ok(run(&[("a", Outcome::Passed)]))
+            },
+            &Quarantine::default(),
+        )
+        .unwrap();
+        assert!(matches!(settled.cases[0].outcome, Outcome::Flaky(_)));
+        assert_eq!(settled.cases[1].outcome, Outcome::Passed);
+        let mut out = Vec::new();
+        assert!(report(&settled, &Quarantine::default(), &mut out).is_ok());
+        assert!(String::from_utf8(out).unwrap().contains("flaky        a"));
+    }
+
+    #[test]
+    fn a_case_that_fails_again_gates() {
+        let first = run(&[("a", failed("boom"))]);
+        let settled = settle(
+            first,
+            |_| Ok(run(&[("a", failed("boom again"))])),
+            &Quarantine::default(),
+        )
+        .unwrap();
+        assert!(matches!(settled.cases[0].outcome, Outcome::Failed(_)));
+        let error = report(&settled, &Quarantine::default(), &mut Vec::new()).unwrap_err();
+        assert_eq!(error.to_string(), "1 of 1 cases failed: a");
+    }
+
+    #[test]
+    fn a_quarantined_failure_is_not_rerun_and_does_not_gate() {
+        let quarantine = quarantining("components/a");
+        let settled = settle(run(&[("a", failed("boom"))]), never_rerun, &quarantine).unwrap();
+        assert!(matches!(settled.cases[0].outcome, Outcome::Quarantined(_)));
+        let mut out = Vec::new();
+        assert!(report(&settled, &quarantine, &mut out).is_ok());
+        assert!(
+            String::from_utf8(out)
+                .unwrap()
+                .contains("quarantined  a: times out on CI (issue #7)")
+        );
+    }
+
+    #[test]
+    fn a_quarantine_entry_of_another_runner_does_not_apply() {
+        let quarantine = quarantining("panel/a");
+        let settled = settle(
+            run(&[("a", failed("boom"))]),
+            |_| Ok(run(&[("a", failed("boom"))])),
+            &quarantine,
+        )
+        .unwrap();
+        assert!(report(&settled, &quarantine, &mut Vec::new()).is_err());
+    }
+
+    #[test]
+    fn an_unknown_outcome_gates() {
+        let unknown = run(&[("a", Outcome::Unknown(Default::default()))]);
+        let error = report(&unknown, &Quarantine::default(), &mut Vec::new()).unwrap_err();
+        assert!(error.to_string().contains("a"));
+    }
+
+    #[test]
+    fn a_run_survives_writing_and_reading() {
+        let dir = tempfile::tempdir().unwrap();
+        let path = dir.path().join("nested/run.json");
+        let written = run(&[("a", failed("boom")), ("b", Outcome::Passed)]);
+        write(&written, &path).unwrap();
+        assert_eq!(read_all(dir.path()).unwrap(), vec![(path, written)]);
     }
 }

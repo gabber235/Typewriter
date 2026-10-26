@@ -57,7 +57,7 @@ jobs:
       - if: matrix.area.area != 'quality'
         timeout-minutes: ${{ matrix.area.budget_minutes }}
         run: devenv shell -- cargo xtask check ${{ matrix.area.area }}
-      # The review's default base, origin/HEAD, does not exist in a CI checkout.
+      # A CI checkout has no local branches to infer a base from; pass the event's base.
       - if: matrix.area.area == 'quality'
         timeout-minutes: ${{ matrix.area.budget_minutes }}
         run: devenv shell -- cargo xtask review gate --base "$BASE_SHA"

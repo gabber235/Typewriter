@@ -315,3 +315,86 @@ impl Digest {
         format!("{:016x}", self.0)
     }
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    fn digest(text: &str) -> Digest {
+        let mut digest = Digest::new();
+        digest.update(text.as_bytes());
+        digest
+    }
+
+    /// A repository root with one generated output and a stamp recording it under `inputs`.
+    fn stamped(inputs: &Digest) -> (tempfile::TempDir, Context, PathBuf) {
+        let dir = tempfile::tempdir().unwrap();
+        let ctx = Context {
+            root: dir.path().to_owned(),
+        };
+        fs::create_dir_all(dir.path().join("panel/lib")).unwrap();
+        fs::write(dir.path().join("panel/lib/model.g.dart"), "").unwrap();
+        let stamp = dir.path().join("panel.stamp");
+        fs::write(
+            &stamp,
+            format!("{}\npanel/lib/model.g.dart\n", inputs.hex()),
+        )
+        .unwrap();
+        (dir, ctx, stamp)
+    }
+
+    #[test]
+    fn unchanged_inputs_with_every_output_present_are_current() {
+        let inputs = digest("inputs");
+        let (_dir, ctx, stamp) = stamped(&inputs);
+        assert!(is_current(&ctx, &stamp, &inputs));
+    }
+
+    #[test]
+    fn changed_inputs_are_stale() {
+        let (_dir, ctx, stamp) = stamped(&digest("inputs"));
+        assert!(!is_current(&ctx, &stamp, &digest("edited inputs")));
+    }
+
+    #[test]
+    fn a_deleted_output_is_stale() {
+        let inputs = digest("inputs");
+        let (dir, ctx, stamp) = stamped(&inputs);
+        fs::remove_file(dir.path().join("panel/lib/model.g.dart")).unwrap();
+        assert!(!is_current(&ctx, &stamp, &inputs));
+    }
+
+    #[test]
+    fn a_generator_that_never_ran_is_stale() {
+        let inputs = digest("inputs");
+        let (dir, ctx, _) = stamped(&inputs);
+        assert!(!is_current(
+            &ctx,
+            &dir.path().join("protocol.stamp"),
+            &inputs
+        ));
+    }
+
+    #[test]
+    fn generated_outputs_and_hand_written_inputs_are_told_apart() {
+        let dir = tempfile::tempdir().unwrap();
+        let ctx = Context {
+            root: dir.path().to_owned(),
+        };
+        for file in [
+            "panel/lib/model.dart",
+            "panel/lib/model.g.dart",
+            "panel/lib/skirout/types.dart",
+            "panel/build/cache.g.dart",
+        ] {
+            let path = dir.path().join(file);
+            fs::create_dir_all(path.parent().unwrap()).unwrap();
+            fs::write(path, "").unwrap();
+        }
+        let generator = build_runner("panel", &["panel/lib"]);
+        assert_eq!(
+            generator.output_files(&ctx).unwrap(),
+            ["panel/lib/model.g.dart", "panel/lib/skirout/types.dart"]
+        );
+    }
+}

@@ -641,3 +641,59 @@ fn set_pull_body(ctx: &Context, pr: u64, body: &str) -> Result<()> {
     }
     Ok(())
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    const SECRET: &str = "ghp_0123456789abcdefghij";
+
+    #[test]
+    fn only_the_managed_section_is_replaced() {
+        let body = format!("A{START}old{END}B");
+        assert_eq!(
+            replace_between(&body, START, END, "new"),
+            format!("A{START}\nnew\n{END}B")
+        );
+    }
+
+    #[test]
+    fn publishing_again_does_not_grow_the_description() {
+        let once = replace_between("Summary", START, END, "new");
+        assert_eq!(replace_between(&once, START, END, "new"), once);
+    }
+
+    #[test]
+    fn a_description_without_the_section_gets_it_appended() {
+        assert_eq!(
+            replace_between("Summary\n\n", START, END, "new"),
+            format!("Summary\n\n{START}\nnew\n{END}\n")
+        );
+    }
+
+    #[test]
+    fn a_section_holding_a_secret_is_refused() {
+        let section = format!("| case | log: token {SECRET} |");
+        let error = scrub(&section, &[], &[SECRET.to_owned()]).unwrap_err();
+        assert!(error.to_string().contains("contains a secret"));
+    }
+
+    #[test]
+    fn a_text_artifact_holding_a_secret_is_refused() {
+        let dir = tempfile::tempdir().unwrap();
+        let log = dir.path().join("case.log");
+        fs::write(&log, format!("authorization: {SECRET}\n")).unwrap();
+        let media = [(log, "case.log".to_owned())];
+        let error = scrub("clean", &media, &[SECRET.to_owned()]).unwrap_err();
+        assert!(error.to_string().contains("case.log contains a secret"));
+    }
+
+    #[test]
+    fn clean_text_is_published() {
+        let dir = tempfile::tempdir().unwrap();
+        let log = dir.path().join("case.log");
+        fs::write(&log, "all good\n").unwrap();
+        let media = [(log, "case.log".to_owned())];
+        assert!(scrub("clean", &media, &[SECRET.to_owned()]).is_ok());
+    }
+}
