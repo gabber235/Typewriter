@@ -12,7 +12,6 @@
     "backend/tests",
     "backend/wasmcloud-utils",
     "backend/wasmcloud-utils-macros",
-    "dagger",
     "discord_bot",
     "documentation",
     "engine",
@@ -43,7 +42,8 @@
     "services/platform/service-utils",
     "services/runtime/realm",
     "skir",
-    "tools"
+    "tools",
+    "xtask"
   ],
   "scopeRequiredForTypes": ["feat", "fix", "refactor", "perf"]
 }
