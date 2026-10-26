@@ -5,12 +5,13 @@
 use std::fs;
 use std::io::Write;
 use std::path::{Path, PathBuf};
-use std::process::Stdio;
+use std::process::{Command, Stdio};
 
 use anyhow::{Context as _, Result, bail, ensure};
 use clap::ValueEnum;
 use serde_json::Value;
 
+use crate::cluster::CiCluster;
 use crate::lock::HeavyLock;
 use crate::stack::client_configuration::ClientConfiguration;
 use crate::{CommandExt, Context, Scratch, cluster, secrets};
@@ -67,17 +68,25 @@ impl Cluster {
             "linux/amd64"
         }
     }
+}
 
-    fn user(self) -> &'static str {
-        "gabber235"
-    }
+/// How pushes reach a cluster's registry.
+struct Registry<'a> {
+    cluster: Cluster,
+    user: &'static str,
+    password: String,
+    /// The CI cluster, whose certificate authority the push tools must trust.
+    ci: Option<&'a CiCluster>,
+}
 
-    /// The registry password, from the cluster's secrets profile.
-    fn password(self) -> Result<String> {
-        match self {
-            Self::Local => secrets::local_registry_password(),
-            Self::Ci => Ok(secrets::Ci::load()?.registry_password),
+impl Registry<'_> {
+    /// `program` with this registry's certificate authority trusted.
+    fn tool(&self, ctx: &Context, program: &str, args: &[&str]) -> Command {
+        let mut command = ctx.tool(".", program, args);
+        if let Some(ci) = self.ci {
+            ci.trust(&mut command);
         }
+        command
     }
 }
 
@@ -89,17 +98,42 @@ pub(crate) struct Component {
 }
 
 pub fn deploy(ctx: &Context, cluster: Cluster) -> Result<()> {
-    ensure_main_checkout(ctx)?;
-    publish(ctx, cluster, &cluster.password()?)
+    match cluster {
+        Cluster::Local => {
+            ensure_main_checkout(ctx)?;
+            publish(
+                ctx,
+                &Registry {
+                    cluster,
+                    user: "gabber235",
+                    password: secrets::local_registry_password()?,
+                    ci: None,
+                },
+            )
+        }
+        Cluster::Ci => deploy_ci(ctx, &CiCluster::connect(ctx)?),
+    }
 }
 
-/// Deploys to the CI cluster with the `ci` secrets the caller loaded already.
-pub fn deploy_ci(ctx: &Context, secrets: &secrets::Ci) -> Result<()> {
+/// Pushes this commit's backend to the CI cluster's registry, then releases the commit to its
+/// Typewriter tenant.
+pub fn deploy_ci(ctx: &Context, ci: &CiCluster) -> Result<()> {
     ensure_main_checkout(ctx)?;
-    publish(ctx, Cluster::Ci, &secrets.registry_password)
+    publish(
+        ctx,
+        &Registry {
+            cluster: Cluster::Ci,
+            user: "admin",
+            password: ci.registry_password(ctx)?,
+            ci: Some(ci),
+        },
+    )?;
+    let revision = ctx.tool(".", "git", &["rev-parse", "HEAD"]).output_text()?;
+    ci.release(ctx, revision.trim())
 }
 
-fn publish(ctx: &Context, cluster: Cluster, password: &str) -> Result<()> {
+fn publish(ctx: &Context, registry: &Registry) -> Result<()> {
+    let cluster = registry.cluster;
     // The components compile against the generated Skir sources.
     crate::generate::generate(ctx, None)?;
     let components = deployable(ctx)?;
@@ -116,24 +150,25 @@ fn publish(ctx: &Context, cluster: Cluster, password: &str) -> Result<()> {
         );
         // The wash fork reads registry credentials from flags only; the long form keeps the
         // password out of errors (`crate::display`).
-        ctx.tool(
-            ".",
-            "wash",
-            &[
-                "oci",
-                "push",
-                "-u",
-                cluster.user(),
-                "--password",
-                password,
-                &reference,
-            ],
-        )
-        .arg(&component.artifact)
-        .run()
-        .with_context(|| format!("cannot push {reference}"))?;
+        registry
+            .tool(
+                ctx,
+                "wash",
+                &[
+                    "oci",
+                    "push",
+                    "-u",
+                    registry.user,
+                    "--password",
+                    &registry.password,
+                    &reference,
+                ],
+            )
+            .arg(&component.artifact)
+            .run()
+            .with_context(|| format!("cannot push {reference}"))?;
     }
-    push_database_image(ctx, cluster, password)?;
+    push_database_image(ctx, registry)?;
     if let Cluster::Ci = cluster {
         let state = ctx.root.join(cluster::STATE);
         fs::create_dir_all(&state).with_context(|| format!("cannot create {}", state.display()))?;
@@ -240,7 +275,8 @@ pub(crate) fn deployable(ctx: &Context) -> Result<Vec<Component>> {
 }
 
 /// alpine, plus /usr/local/bin/surrealkit and /workspace/backend/database, entrypoint surrealkit.
-fn push_database_image(ctx: &Context, cluster: Cluster, password: &str) -> Result<()> {
+fn push_database_image(ctx: &Context, registry: &Registry) -> Result<()> {
+    let cluster = registry.cluster;
     let image = format!(
         "{}/database:{}",
         cluster.repository(),
@@ -292,16 +328,16 @@ fn push_database_image(ctx: &Context, cluster: Cluster, password: &str) -> Resul
         .arg("workspace")
         .run()?;
 
-    let mut login = ctx
+    let mut login = registry
         .tool(
-            ".",
+            ctx,
             "crane",
             &[
                 "auth",
                 "login",
                 cluster.registry(),
                 "-u",
-                cluster.user(),
+                registry.user,
                 "--password-stdin",
             ],
         )
@@ -312,44 +348,46 @@ fn push_database_image(ctx: &Context, cluster: Cluster, password: &str) -> Resul
         .stdin
         .take()
         .expect("stdin is piped")
-        .write_all(password.as_bytes())?;
+        .write_all(registry.password.as_bytes())?;
     ensure!(
         login.wait()?.success(),
         "crane cannot log in to {}",
         cluster.registry()
     );
 
-    ctx.tool(
-        ".",
-        "crane",
-        &[
-            "append",
-            "--platform",
-            cluster.platform(),
-            "-b",
-            DATABASE_BASE_IMAGE,
-            "-t",
-            &image,
-            "-f",
-        ],
-    )
-    .arg(&surrealkit_layer)
-    .arg("-f")
-    .arg(&schema_layer)
-    .run()?;
-    ctx.tool(
-        ".",
-        "crane",
-        &[
-            "mutate",
-            &image,
-            "--workdir",
-            "/workspace/backend",
-            "--entrypoint",
-            "/usr/local/bin/surrealkit",
-        ],
-    )
-    .run()
+    registry
+        .tool(
+            ctx,
+            "crane",
+            &[
+                "append",
+                "--platform",
+                cluster.platform(),
+                "-b",
+                DATABASE_BASE_IMAGE,
+                "-t",
+                &image,
+                "-f",
+            ],
+        )
+        .arg(&surrealkit_layer)
+        .arg("-f")
+        .arg(&schema_layer)
+        .run()?;
+    registry
+        .tool(
+            ctx,
+            "crane",
+            &[
+                "mutate",
+                &image,
+                "--workdir",
+                "/workspace/backend",
+                "--entrypoint",
+                "/usr/local/bin/surrealkit",
+            ],
+        )
+        .run()
 }
 
 /// tar without macOS resource fork entries, which would land in the image as `._` files.

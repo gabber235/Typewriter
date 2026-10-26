@@ -1,7 +1,7 @@
 //! `cargo xtask secrets`: the secrets the harness reads. `secretspec.toml` declares them with every
 //! other Typewriter secret; the values come from the Typewriter 1Password vault or the root `.env`
 //! and stay in this process. Nothing here prints, logs or exports a value: commands that need one
-//! get it on stdin or from a file only they can read.
+//! get it on stdin, in their environment or from a file only they can read.
 //!
 //! Each load is one batched vault read, so a command loads a profile once and passes the values
 //! on, and only the code paths that use a secret load it.
@@ -43,28 +43,25 @@ pub fn command(ctx: &Context, command: SecretsCommand) -> Result<()> {
 
 /// The full tier's secrets (`profiles.ci`).
 pub struct Ci {
-    pub age_key: String,
-    pub registry_password: String,
     pub infrastructure_deploy_key: String,
+    pub connect_credentials: String,
+    pub connect_token: String,
 }
 
 impl Ci {
     pub fn load() -> Result<Self> {
         let SecretSpecProfile::Ci {
-            ci_age_key,
-            ci_registry_password,
             infrastructure_deploy_key,
-        } = load(
-            Profile::Ci,
-            "create the CI cluster and deploy the backend to it",
-        )?
+            ci_connect_credentials,
+            ci_connect_token,
+        } = load(Profile::Ci, "create the CI cluster")?
         else {
             unreachable!("load_profile resolves the profile it is given");
         };
         Ok(Self {
-            age_key: ci_age_key,
-            registry_password: ci_registry_password,
             infrastructure_deploy_key,
+            connect_credentials: ci_connect_credentials,
+            connect_token: ci_connect_token,
         })
     }
 }

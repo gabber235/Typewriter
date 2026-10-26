@@ -1,5 +1,5 @@
 # The Infrastructure revision the full tier builds its CI cluster from (`cargo xtask cluster ci`).
-# Its `clusters/ci` overlay and `config/k3d/ci.yaml` define the cluster; bump the revision to
-# pick up Infrastructure changes.
+# Its `ci:up` task creates the cluster from `config/k3d/ci.yaml` and the `clusters/ci` overlay;
+# bump the revision to pick up Infrastructure changes.
 repository = "Seamlezz/Infrastructure"
 revision = "324e0f407e2591fcdc6ecc02c23dc9b6152ec878"
