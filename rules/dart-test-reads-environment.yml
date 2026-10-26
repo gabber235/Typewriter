@@ -14,4 +14,6 @@ ignores:
   # Rewrites the shared creation fixture only when asked; every run reads the committed one.
   - panel/test/authoring/application/resource_creation_flow_test.dart
 rule:
-  pattern: Platform.environment[$KEY]
+  # Dart patterns cannot start inside an expression, so match the member access by kind.
+  kind: member_expression
+  regex: ^Platform\.environment$
