@@ -1,4 +1,0 @@
-commit-msg:
-  commands:
-    conventional-commit:
-      run: bunx --no-install commitlint --config commitlint.config.cjs --edit {1}
