@@ -15,3 +15,6 @@ tracing.workspace = true
 url.workspace = true
 wasmcloud-utils.workspace = true
 wit-bindgen.workspace = true
+
+[lints]
+workspace = true

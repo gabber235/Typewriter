@@ -223,6 +223,10 @@ async fn send_frames_within(
         };
         if let Err(error) = result {
             // The receiver learns at once; the original failure stays the result.
+            #[expect(
+                clippy::let_underscore_must_use,
+                reason = "the original failure is the result; a failed notice adds nothing"
+            )]
             let _ = sink.publish(interrupted_frame(payload_id)).await;
             return Err(error);
         }

@@ -28,7 +28,7 @@ pub mod transport;
 pub mod wasmcloud;
 
 #[rustfmt::skip]
-#[allow(clippy::redundant_closure)]
+#[allow(clippy::redundant_closure, clippy::too_many_lines, clippy::unwrap_used)]
 pub mod skirout;
 pub use crate::skirout as skir;
 pub use otel_wasi;
@@ -53,6 +53,7 @@ pub use skir_response_trait::{
 pub mod skir_utils;
 
 #[path = "transport_routes/skirout/mod.rs"]
+#[allow(clippy::too_many_lines)]
 pub mod transport_routes;
 
 /// Validate that SKIR record IDs belong to the expected database table.

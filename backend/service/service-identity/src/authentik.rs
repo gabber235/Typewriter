@@ -181,12 +181,20 @@ async fn send(
         spawn_local(async move {
             tx.write_all(bytes).await;
             drop(tx);
+            #[expect(
+                clippy::let_underscore_must_use,
+                reason = "the trailers have no content; a reader that already dropped the future needs nothing more"
+            )]
             let _ = tx_done.write(Ok(None)).await;
         });
         (Some(rx), rx_done)
     } else {
         let (tx_done, rx_done) = bindings::wit_future::new(|| todo!());
         spawn_local(async move {
+            #[expect(
+                clippy::let_underscore_must_use,
+                reason = "the trailers have no content; a reader that already dropped the future needs nothing more"
+            )]
             let _ = tx_done.write(Ok(None)).await;
         });
         (None, rx_done)

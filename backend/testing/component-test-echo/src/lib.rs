@@ -30,6 +30,10 @@ impl Guest for Component {
         spawn_local(async move {
             tx.write_all(b"ok".to_vec()).await;
             drop(tx);
+            #[expect(
+                clippy::let_underscore_must_use,
+                reason = "the client may already be gone; nothing awaits the trailers"
+            )]
             let _ = trailers_tx.write(Ok(None)).await;
         });
         let (response, _) = Response::new(headers, Some(rx), trailers_rx);

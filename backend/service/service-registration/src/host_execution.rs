@@ -15,7 +15,7 @@ use wasmcloud_utils::{
             ChildRuntimeStateRecord, EngineInstanceViewRecord, RealmInstanceViewRecord,
             ServiceHostRecord,
         },
-        transaction_query,
+        transaction_query_file,
     },
     skir::base::service::v1::topology::{
         EngineRuntimeObservation, HostExecutionObservation, OrganizationTopologyChanged,
@@ -35,15 +35,19 @@ struct DesiredExecutionRecord {
     engine: Option<EngineInstanceViewRecord>,
 }
 
+/// Committed topology views of a host after its report was applied.
+#[derive(Debug, Deserialize)]
+struct UpdatedExecution {
+    organization_id: RecordId,
+    host: ServiceHostRecord,
+    realm: Option<RealmInstanceViewRecord>,
+    engine: Option<EngineInstanceViewRecord>,
+}
+
 #[derive(Debug, Deserialize)]
 #[serde(tag = "outcome", rename_all = "kebab-case")]
 enum ReportExecutionOutcome {
-    Updated {
-        organization_id: RecordId,
-        host: ServiceHostRecord,
-        realm: Option<RealmInstanceViewRecord>,
-        engine: Option<EngineInstanceViewRecord>,
-    },
+    Updated(Box<UpdatedExecution>),
     StaleRevision,
     HostNotFound,
 }
@@ -120,116 +124,9 @@ pub async fn handle_report(
         .map(ChildRuntimeStateRecord::try_from)
         .transpose()
         .map_err(|()| wasi_error!("engine-state-invalid", "engine state is invalid"))?;
-    let outcome = transaction_query!(
+    let outcome = transaction_query_file!(
         ReportExecutionOutcome,
-        r#"
-        BEGIN TRANSACTION;
-
-        RETURN {
-            LET $hosts = SELECT * FROM service_host WHERE service_id = $service_id;
-            IF array::is_empty($hosts) {
-                RETURN { outcome: 'host-not-found' }
-            };
-            LET $host = array::first($hosts);
-            LET $host_id = $host.id;
-            IF $host.topology_revision.desired != $topology_revision {
-                RETURN { outcome: 'stale-revision' }
-            };
-            LET $realm = array::first(SELECT * FROM realm_instance WHERE owner_host_id = $host_id);
-            LET $engine = array::first(SELECT * FROM engine_instance WHERE owner_host_id = $host_id);
-            IF $realm_state != NONE AND $realm_state != NULL {
-                UPDATE realm_instance SET
-                    state = {
-                        status: $realm_state.status,
-                        active_artifact_version: IF $realm_state.active_artifact_version = NULL {
-                            NONE
-                        } ELSE {
-                            $realm_state.active_artifact_version
-                        },
-                        message: IF $realm_state.message = NULL {
-                            NONE
-                        } ELSE {
-                            $realm_state.message
-                        },
-                        updated_at: <datetime>$realm_state.updated_at,
-                    }
-                WHERE owner_host_id = $host_id
-            };
-            IF $engine_state != NONE AND $engine_state != NULL {
-                UPDATE engine_instance SET
-                    state = {
-                        status: $engine_state.status,
-                        active_artifact_version: IF $engine_state.active_artifact_version = NULL {
-                            NONE
-                        } ELSE {
-                            $engine_state.active_artifact_version
-                        },
-                        message: IF $engine_state.message = NULL {
-                            NONE
-                        } ELSE {
-                            $engine_state.message
-                        },
-                        updated_at: <datetime>$engine_state.updated_at,
-                    }
-                WHERE owner_host_id = $host_id
-            };
-            LET $complete = (
-                $realm = NONE
-                OR ($realm_state != NONE AND $realm_state != NULL AND $realm_state.status = 'active')
-            ) AND (
-                $engine = NONE
-                OR ($engine_state != NONE AND $engine_state != NULL AND $engine_state.status = 'active')
-            );
-            LET $failed = (
-                $realm_state != NONE AND $realm_state != NULL AND $realm_state.status = 'failed'
-            ) OR (
-                $engine_state != NONE AND $engine_state != NULL AND $engine_state.status = 'failed'
-            );
-            LET $drifted = (
-                $realm_state != NONE
-                AND $realm_state != NULL
-                AND $realm_state.status IN ['rolled_back', 'drifted']
-            ) OR (
-                $engine_state != NONE
-                AND $engine_state != NULL
-                AND $engine_state.status IN ['rolled_back', 'drifted']
-            );
-            LET $host_status = IF $complete {
-                'active'
-            } ELSE IF $failed {
-                'failed'
-            } ELSE IF $drifted {
-                'drifted'
-            } ELSE {
-                'reconciling'
-            };
-            LET $updated_host = UPDATE ONLY $host_id SET
-                topology_revision.applied = IF $complete {
-                    $topology_revision
-                } ELSE {
-                    topology_revision.applied
-                },
-                state = { status: $host_status, updated_at: time::now() }
-            RETURN AFTER;
-            RETURN {
-                outcome: 'updated',
-                organization_id: $host.service_id.organization,
-                host: $updated_host,
-                realm: array::first(
-                    (SELECT * FROM realm_instance
-                        WHERE owner_host_id = $host_id)
-                        .map(|$row| fn::service::realm_view($row))
-                ),
-                engine: array::first(
-                    (SELECT * FROM engine_instance
-                        WHERE owner_host_id = $host_id)
-                        .map(|$row| fn::service::engine_view($row))
-                ),
-            };
-        };
-
-        COMMIT TRANSACTION;
-        "#,
+        "src/report_host_execution_transaction.surql",
     )
     .bind("service_id", RecordId::new("service", service_id.as_str()))
     .bind("topology_revision", request.topology_revision)
@@ -253,13 +150,14 @@ pub async fn handle_report(
         ),
     };
     Ok(match outcome {
-        ReportExecutionOutcome::Updated {
-            organization_id,
-            host,
-            realm,
-            engine,
-        } => {
-            publish_report(&organization_id, &host, realm.as_ref(), engine.as_ref()).await?;
+        ReportExecutionOutcome::Updated(updated) => {
+            publish_report(
+                &updated.organization_id,
+                &updated.host,
+                updated.realm.as_ref(),
+                updated.engine.as_ref(),
+            )
+            .await?;
             skir_variant!(ReportHostExecutionResponse::Success)
         }
         ReportExecutionOutcome::StaleRevision => {
