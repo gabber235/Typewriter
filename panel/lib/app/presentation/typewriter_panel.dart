@@ -10,52 +10,58 @@ import "package:typewriter_panel/typewriter_panel.dart";
 class TypewriterPanel extends HookConsumerWidget {
   const TypewriterPanel({super.key});
 
+  /// The boundary around the whole app that end to end screenshots capture.
+  static const screenshotKey = ValueKey("typewriter-panel");
+
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final router = ref.watch(appRouterProvider);
     final themeMode = ref.watch(appearanceProvider);
 
-    return WorkSessionUnloadBoundary(
-      child: EagerInitialization(
-        child: RouteAccessBinding(
-          access: router.access,
-          builder: (context) => MaterialApp.router(
-            title: "Typewriter",
-            theme: buildTheme(Brightness.light),
-            darkTheme: buildTheme(Brightness.dark),
-            themeMode: themeMode,
-            routerConfig: router.config(
-              navigatorObservers: () => [
-                InvalidatorNavigatorObserver(() async {
-                  // We don't want to invalidate during the build phase, so we wait
-                  await WidgetsBinding.instance.endOfFrame;
-                  ref
-                    ..invalidate(routeParamProvider)
-                    ..invalidate(currentRouteProvider);
-                }),
-                LoggerNavigatorObserver(),
-              ],
-            ),
-            shortcuts: typewriterShortcuts,
-            scrollBehavior: GlobalCustomScrollBehavior(),
-            builder: (context, child) {
-              return Surface(
-                color: Theme.of(context).scaffoldBackgroundColor,
-                foreground: context.colors.contentPrimary,
-                secondaryForeground: context.colors.contentSecondary,
-                child: AppOverlay(
-                  child: Scaffold(
-                    body: AppRequiredWidgets(
-                      child: Responsive(
-                        child: RequiredNatsConnection(
-                          child: child ?? const SizedBox.shrink(),
+    return RepaintBoundary(
+      key: screenshotKey,
+      child: WorkSessionUnloadBoundary(
+        child: EagerInitialization(
+          child: RouteAccessBinding(
+            access: router.access,
+            builder: (context) => MaterialApp.router(
+              title: "Typewriter",
+              theme: buildTheme(Brightness.light),
+              darkTheme: buildTheme(Brightness.dark),
+              themeMode: themeMode,
+              routerConfig: router.config(
+                navigatorObservers: () => [
+                  InvalidatorNavigatorObserver(() async {
+                    // We don't want to invalidate during the build phase, so we wait
+                    await WidgetsBinding.instance.endOfFrame;
+                    ref
+                      ..invalidate(routeParamProvider)
+                      ..invalidate(currentRouteProvider);
+                  }),
+                  LoggerNavigatorObserver(),
+                ],
+              ),
+              shortcuts: typewriterShortcuts,
+              scrollBehavior: GlobalCustomScrollBehavior(),
+              builder: (context, child) {
+                return Surface(
+                  color: Theme.of(context).scaffoldBackgroundColor,
+                  foreground: context.colors.contentPrimary,
+                  secondaryForeground: context.colors.contentSecondary,
+                  child: AppOverlay(
+                    child: Scaffold(
+                      body: AppRequiredWidgets(
+                        child: Responsive(
+                          child: RequiredNatsConnection(
+                            child: child ?? const SizedBox.shrink(),
+                          ),
                         ),
                       ),
                     ),
                   ),
-                ),
-              );
-            },
+                );
+              },
+            ),
           ),
         ),
       ),
