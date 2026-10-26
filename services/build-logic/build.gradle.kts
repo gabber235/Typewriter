@@ -16,4 +16,5 @@ dependencies {
     implementation(libs.detekt.gradle.plugin)
     implementation(libs.foojay.resolver)
     implementation(libs.test.balloon.gradle.plugin)
+    implementation(libs.kover.gradle.plugin)
 }

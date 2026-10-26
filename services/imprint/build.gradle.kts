@@ -1,5 +1,6 @@
 plugins {
     base
+    id("com.typewritermc.coverage-merge")
 }
 
 subprojects {
