@@ -28,7 +28,8 @@ val SkirValueDepthTest by testSuite {
         val supported = wireValue(512)
 
         supported.requirePortable() shouldBeSameInstanceAs supported
-        shouldThrow<IllegalArgumentException> { wireValue(513).requirePortable() }
+        shouldThrow<IllegalArgumentException> { wireValue(513).requirePortable() }.message shouldBe
+            "Authored value exceeds the supported nesting depth."
     }
 
     test("raw prepared edit binary decoding admits the authored boundary and rejects excessive depth") {

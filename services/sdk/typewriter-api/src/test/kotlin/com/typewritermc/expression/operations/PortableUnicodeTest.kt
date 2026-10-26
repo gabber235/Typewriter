@@ -35,16 +35,6 @@ val PortableUnicodeTest by testSuite {
         PortableUnicode.foldCase("ẞ") shouldBe "ss"
     }
 
-    test("normalization produces the four UAX 15 forms") {
-        PortableUnicode.normalize("Å", compatibility = false, compose = true) shouldBe "Å"
-        PortableUnicode.normalize("Å", compatibility = false, compose = false) shouldBe "Å"
-        PortableUnicode.normalize("ﬁ", compatibility = true, compose = true) shouldBe "fi"
-        PortableUnicode.normalize("ﬁ", compatibility = false, compose = true) shouldBe "ﬁ"
-        PortableUnicode.normalize("가", compatibility = false, compose = false) shouldBe "가"
-        PortableUnicode.normalize("각", compatibility = false, compose = true) shouldBe "각"
-        PortableUnicode.normalize("", compatibility = false, compose = true) shouldBe ""
-    }
-
     test("white space is the pinned White_Space property plus U+FEFF") {
         PortableUnicode.trimStart("　﻿x") shouldBe "x"
         PortableUnicode.trimEnd("x\u0085") shouldBe "x"

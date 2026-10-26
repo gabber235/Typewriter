@@ -24,12 +24,26 @@ data class BrokerMessage(
     val headers: Map<String, List<String>>,
     val replyTo: String?,
 ) {
-    fun header(name: String): String? =
-        headers.entries
-            .firstOrNull { it.key.equals(name, ignoreCase = true) }
-            ?.value
-            ?.firstOrNull()
+    fun header(name: String): String? = headers.first(name)
 }
+
+/**
+ * What the broker remembers of one published message: its address and framing headers. The payload is not kept, so a
+ * long transfer through the broker holds no copy of its body.
+ */
+data class PublishedMessage(
+    val subject: String,
+    val headers: Map<String, List<String>>,
+    val replyTo: String?,
+) {
+    fun header(name: String): String? = headers.first(name)
+}
+
+private fun Map<String, List<String>>.first(name: String): String? =
+    entries
+        .firstOrNull { it.key.equals(name, ignoreCase = true) }
+        ?.value
+        ?.firstOrNull()
 
 /**
  * An in memory stand in for one NATS server, so the real [NatsMessageTransport] runs unchanged in tests.
@@ -44,13 +58,13 @@ class MemoryNatsBroker(
 ) {
     private val lock = Any()
     private val subscriptions = mutableListOf<Pair<List<String>, Channel<NatsClientMessage>>>()
-    private val history = mutableListOf<BrokerMessage>()
+    private val history = mutableListOf<PublishedMessage>()
 
     /** How many subscriptions, including reply inboxes, are open. */
     val activeSubscriptionCount: Int get() = synchronized(lock) { subscriptions.size }
 
-    /** Every message published so far, before interception, in publish order. */
-    val published: List<BrokerMessage> get() = synchronized(lock) { history.toList() }
+    /** Every message published so far, before interception, in publish order and without its payload. */
+    val published: List<PublishedMessage> get() = synchronized(lock) { history.toList() }
 
     /** A connected transport of one client of this broker. */
     suspend fun transport(limits: TransportLimits): NatsMessageTransport {
@@ -70,7 +84,7 @@ class MemoryNatsBroker(
             BrokerMessage(message.subject, message.payload?.toByteArray() ?: byteArrayOf(), message.headers.orEmpty(), message.replyTo)
         val targets =
             synchronized(lock) {
-                history += seen
+                history += PublishedMessage(seen.subject, seen.headers, seen.replyTo)
                 intercept(seen).map { delivered ->
                     delivered to subscriptions.filter { (pattern, _) -> pattern.matches(delivered.subject.split('.')) }.map { it.second }
                 }

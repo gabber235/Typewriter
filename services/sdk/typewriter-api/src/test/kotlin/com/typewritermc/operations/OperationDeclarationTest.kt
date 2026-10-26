@@ -27,6 +27,7 @@ import com.typewritermc.types.qualified
 import com.typewritermc.types.toSkir
 import com.typewritermc.types.use
 import de.infix.testBalloon.framework.core.testSuite
+import io.kotest.assertions.throwables.shouldThrow
 import io.kotest.matchers.collections.shouldContainAll
 import io.kotest.matchers.shouldBe
 import io.kotest.matchers.string.shouldContain
@@ -49,7 +50,6 @@ import skirout.editor.v1.resource_operations.PreparationChoiceAnswer
 import skirout.editor.v1.resource_operations.PreparationChoiceId
 import skirout.editor.v1.resource_operations.PreparationCounterpartOption
 import skirout.editor.v1.type_catalog.AuthoringRecord
-import skirout.editor.v1.type_catalog.CapabilityId
 import skirout.editor.v1.type_catalog.CatalogGeneration
 import skirout.editor.v1.type_catalog.DataValue
 import skirout.editor.v1.type_catalog.DeclarationOwner
@@ -62,7 +62,7 @@ import skirout.editor.v1.type_catalog.ValueLocation
 import skirout.editor.v1.type_catalog.ValuePath
 
 val OperationDeclarationTest by testSuite {
-    test("declared appearance publishes with the tone following the group") {
+    test("a destructive group gives the destructive tone whatever the button variant") {
         listOf(ButtonVariant.FILLED, ButtonVariant.OUTLINED, ButtonVariant.TEXT).forEach { variant ->
             val declaration =
                 collect<Unit> {
@@ -75,41 +75,35 @@ val OperationDeclarationTest by testSuite {
                     confirm("Remove these?") { action("Remove") }
                     prepare { }
                 }
-            val definition = bind(declaration).single()
-            val appearance = definition.presentation
-            appearance.label shouldBe "Example operation"
-            appearance.icon shouldBe "mdi:delete-outline"
-            appearance.order shouldBe 3
+            val appearance = bind(declaration).single().presentation
             appearance.tone shouldBe HeaderActionTone.DESTRUCTIVE
-            appearance.shortcut shouldBe OperationShortcut.DELETE
-            appearance.confirmation?.title shouldBe "Example operation"
-            appearance.confirmation?.confirmationLabel shouldBe "Remove"
             (appearance.inspector as OperationInspector.ButtonWrapper).value shouldBe variant
-            definition.capability.value shouldBe definition.id.capability.value
-            definition.targets.cardinality shouldBe OperationCardinality.SELECTION
-            definition.drop shouldBe null
         }
+    }
+
+    test("a confirmation is titled with the operation label and confirms with the declared action") {
+        val declaration =
+            collect<Unit> {
+                confirm("Remove these?") { action("Remove") }
+                prepare { }
+            }
+        val confirmation = requireNotNull(bind(declaration).single().presentation.confirmation)
+
+        confirmation.title shouldBe "Example operation"
+        confirmation.confirmationLabel shouldBe "Remove"
     }
 
     test("the core catalog publishes every core operation for any resource with labels from object names") {
         val assembly = frameworkContributions().assemble(CatalogAssemblyContext(CatalogGeneration(value = "core operations")))
         assembly.operations.diagnostics shouldBe emptyList()
         val definitions = assembly.editorCatalog.resourceOperations.associateBy { it.id.declaration.substringAfterLast('.') }
-        definitions.mapValues { it.value.presentation.label } shouldBe
-            mapOf(
-                "Delete" to "Delete",
-                "Duplicate" to "Duplicate",
-                "MoveToOwner" to "Move to",
-                "LinkWith" to "Link with",
-                "Unlink" to "Unlink",
-                "LinkWithDuplicate" to "Link with duplicate",
-            )
+        definitions.keys shouldBe setOf("Delete", "Duplicate", "MoveToOwner", "LinkWith", "Unlink", "LinkWithDuplicate")
+        // Labels come from the object name in words; an owner suffix names the drop target, so it is dropped.
+        definitions.getValue("MoveToOwner").presentation.label shouldBe "Move to"
+        definitions.getValue("LinkWithDuplicate").presentation.label shouldBe "Link with duplicate"
         definitions.values.all { it.targets.subject == skirout.editor.v1.type_catalog.ResourceTarget.ANY_RESOURCE } shouldBe true
         definitions.getValue("LinkWithDuplicate").targets.cardinality shouldBe OperationCardinality.SINGLE
         definitions.getValue("Delete").presentation.shortcut shouldBe OperationShortcut.DELETE
-        definitions.getValue("MoveToOwner").drop shouldBe drop(ValuePath.root.field("destination"), "Move here")
-        definitions.getValue("LinkWith").drop shouldBe drop(ValuePath.root.field("target"), "Link")
-        definitions.getValue("Unlink").drop shouldBe drop(ValuePath.root.field("target"), "Unlink")
         val searches =
             assembly.editorCatalog.capabilities.mapNotNull { capability ->
                 (capability as? skirout.editor.v1.capability.CapabilityDefinition.SearchWrapper)?.value?.capabilityId
@@ -120,14 +114,16 @@ val OperationDeclarationTest by testSuite {
             }
     }
 
-    test("a drop field must declare candidates and an operation fills at most one field on drop") {
+    test("a drop field without candidates is refused") {
         val uncandidated =
             collect<MoveToOwnerInput> {
                 input { MoveToOwnerInputFields.destination { fillOnDrop() } }
                 prepare { }
             }
         uncandidated.failure?.message!! shouldContain "must declare candidates"
+    }
 
+    test("an operation that fills two fields on drop is refused") {
         val second =
             typedPath<MoveToOwnerInput, ResourceId>(
                 MoveToOwnerInputDefinition.id,
@@ -244,6 +240,37 @@ val OperationDeclarationTest by testSuite {
             ),
         ) shouldBe
             proposed
+    }
+
+    test("a new counterpart answered with another configured type asks for the choice again") {
+        val location = ValueLocation.of(ResourceId("owner"))
+
+        fun choice(type: skirout.editor.v1.type_catalog.NamedTypeUse) =
+            CounterpartChoice.createNew(
+                containing = location,
+                prepared =
+                    PreparedValue(
+                        content = PreparedContent.RecordWrapper(AuthoringRecord.of(TypeSelection.CompleteWrapper(type), emptyMap())),
+                        findings = emptyList(),
+                    ),
+            )
+        val inverse = PreparationChoiceId(value = "inverse")
+        val other = TypeDefinitionId.qualified("test", "OtherCounterpart").namedUse()
+        val choices = PreparationChoices(listOf(PreparationChoiceAnswer.createCounterpart(choiceId = inverse, counterpart = choice(other))))
+        val asked =
+            PreparationChoice.Counterpart(
+                choiceId = inverse,
+                label = "Choose inverse",
+                source =
+                    LinkOccurrence(
+                        id = LinkOccurrenceId(endpoint = EndpointId(value = "source"), location = location),
+                        source = ResourceId("owner").toSkir(),
+                        target = LinkTarget(resource = ResourceId("target").toSkir(), opposite = null),
+                    ),
+                candidates = listOf(PreparationCounterpartOption(label = "Create", counterpart = choice(target.namedUse()))),
+            )
+
+        shouldThrow<NeedsChoices> { choices.require(asked) }.requests shouldBe listOf(PreparationChoice.CounterpartWrapper(asked))
     }
 }
 

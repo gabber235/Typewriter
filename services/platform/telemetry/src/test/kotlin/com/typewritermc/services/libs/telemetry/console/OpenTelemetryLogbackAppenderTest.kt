@@ -17,11 +17,21 @@ import io.opentelemetry.sdk.trace.SdkTracerProvider
 import org.slf4j.helpers.NOPLoggerFactory
 
 val OpenTelemetryLogbackAppenderTest by testSuite {
-    test("ignores a non Logback SLF4J backend") {
-        val sdk = OpenTelemetrySdk.builder().build()
+    test("bridges nothing from a non Logback SLF4J backend") {
+        val exporter = InMemoryLogRecordExporter.create()
+        val provider =
+            SdkLoggerProvider
+                .builder()
+                .addLogRecordProcessor(SimpleLogRecordProcessor.create(exporter))
+                .build()
+        val sdk = OpenTelemetrySdk.builder().setLoggerProvider(provider).build()
+        val backend = NOPLoggerFactory()
 
-        installOpenTelemetryLogback(sdk, Level.WARN, NOPLoggerFactory()).close()
+        installOpenTelemetryLogback(sdk, Level.WARN, backend).use {
+            backend.getLogger("third.party").error("visible", IllegalStateException("broken"))
+        }
 
+        exporter.finishedLogRecordItems shouldBe emptyList()
         sdk.close()
     }
 

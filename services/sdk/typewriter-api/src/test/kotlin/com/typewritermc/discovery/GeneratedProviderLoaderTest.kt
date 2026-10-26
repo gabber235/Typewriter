@@ -28,11 +28,18 @@ val GeneratedProviderLoaderTest by testSuite {
         first.service shouldBe service
     }
 
-    test("deployment owners reject missing services and constructor cycles") {
+    test("a deployment owner whose constructor needs a missing service is refused naming that service") {
         val owners = DeploymentRuntimeOwners(requireNotNull(OwnerConsumer::class.java.classLoader), emptyMap())
 
-        shouldThrow<IllegalArgumentException> { owners.resolve(OwnerConsumer::class.java) }
-        shouldThrow<IllegalArgumentException> { owners.resolve(CycleOwnerA::class.java) }
+        shouldThrow<IllegalArgumentException> { owners.resolve(OwnerConsumer::class.java) }.message shouldBe
+            "No runtime service is registered for com.typewritermc.discovery.FixtureRuntimeServiceContract."
+    }
+
+    test("deployment owners whose constructors need each other are refused naming the cycle") {
+        val owners = DeploymentRuntimeOwners(requireNotNull(OwnerConsumer::class.java.classLoader), emptyMap())
+
+        shouldThrow<IllegalArgumentException> { owners.resolve(CycleOwnerA::class.java) }.message shouldBe
+            "Runtime owner constructor cycle: com.typewritermc.discovery.CycleOwnerA then com.typewritermc.discovery.CycleOwnerB then com.typewritermc.discovery.CycleOwnerA"
     }
 
     test("deployment owners enforce exact deployment class identity") {
@@ -193,7 +200,7 @@ val GeneratedProviderLoaderTest by testSuite {
                 facts = DeploymentFacts(),
                 domain = DiscoveryDomains.Execution,
             )
-        }
+        }.message shouldBe "Duplicate runtime registrar shadow.runtime in contribution source fixture."
     }
 
     listOf(DiscoveryDomains.Realm, DiscoveryDomains.Execution).forEach { domain ->

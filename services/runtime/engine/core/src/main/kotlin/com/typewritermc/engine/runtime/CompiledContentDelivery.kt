@@ -98,7 +98,7 @@ class MessagingEngineContentDelivery(
                                 EngineContentDeliveryHealth.Failed(
                                     failure.message ?: "Compiled content delivery failed",
                                 )
-                            delay(1.seconds)
+                            delay(CONTENT_DELIVERY_RETRY_DELAY)
                         }
                     }
                 }
@@ -162,6 +162,9 @@ class MessagingEngineContentDelivery(
         }
     }
 }
+
+/** How long delivery waits after a failed attempt before it subscribes and queries again. */
+internal val CONTENT_DELIVERY_RETRY_DELAY = 1.seconds
 
 private fun RouterResult.requireDeliverySuccess(operation: String) {
     if (this is RouterResult.Failure) {

@@ -19,6 +19,9 @@ dependencies {
     implementation(libs.kotlin.reflect)
     ksp(project(":typewriter-codegen"))
     testImplementation(libs.kotlin.serialize.json)
+    testImplementation(libs.kotest.property)
+    // The kit builds on this module; its own jar must not join the test classpath beside the main classes.
+    testImplementation(project(":typewriter-test-kit")) { exclude(module = "typewriter-api") }
 }
 
 ksp {
@@ -32,4 +35,23 @@ tasks.test {
     // codecs they round trip through recurse once per level. The default thread stack is too small for
     // that on some platforms, so test threads get a stack with room to spare.
     jvmArgs("-Xss8m")
+}
+
+val writeSdkFixtures by tasks.registering(JavaExec::class) {
+    group = "build"
+    description = "Writes the canonical read schema, the compiled control fixtures and the expression differential corpus."
+    classpath = sourceSets.test.get().runtimeClasspath
+    mainClass = "com.typewritermc.fixtures.SdkFixtureWriterKt"
+    val fixtures = layout.buildDirectory.dir("fixtures")
+    args(
+        rootDir.resolve("../skir-src/editor/v1/fixtures/canonical_read_models.json").absolutePath,
+        fixtures
+            .get()
+            .dir("controls")
+            .asFile.absolutePath,
+        fixtures
+            .get()
+            .file("expression_corpus.json")
+            .asFile.absolutePath,
+    )
 }

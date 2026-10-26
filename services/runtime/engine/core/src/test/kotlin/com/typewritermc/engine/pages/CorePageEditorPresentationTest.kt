@@ -24,6 +24,7 @@ import com.typewritermc.types.catalog.DefaultCheckedCatalog
 import com.typewritermc.types.catalog.Resolution
 import com.typewritermc.types.use
 import de.infix.testBalloon.framework.core.testSuite
+import io.kotest.matchers.nulls.shouldNotBeNull
 import io.kotest.matchers.shouldBe
 import io.kotest.matchers.types.shouldBeInstanceOf
 import skirout.editor.v1.catalog.PresentationRole
@@ -31,6 +32,7 @@ import skirout.editor.v1.presentation.AxisChild
 import skirout.editor.v1.presentation.ChildrenElement
 import skirout.editor.v1.presentation.GraphDirection
 import skirout.editor.v1.presentation.PresentationElement
+import skirout.editor.v1.presentation.PresentationNode
 import skirout.editor.v1.presentation.ResourcesLayout
 import skirout.editor.v1.type_catalog.CatalogGeneration
 import skirout.editor.v1.type_catalog.DeclarationOwner
@@ -88,7 +90,7 @@ val CorePageEditorPresentationTest by testSuite {
         Triple("Manifest", ManifestEntryDefinition.use, GraphPlacementDefinition.use),
         Triple("Scene", SceneEntryDefinition.use, TimelineEntryPlacementDefinition.use),
     ).forEach { (name, type, placement) ->
-        test("$name entry inspector inherits name and places its named placement after the remainder") {
+        test("$name entry inspector shows the name first, then the remaining fields, then the placement editor") {
             val checked = (catalog.resolve(type.use) as Resolution.Ready).value
             val selected = registry.select(PresentationRole.INSPECTOR, checked).shouldBeInstanceOf<PresentationSelection.Selected>()
             val layout =
@@ -97,20 +99,11 @@ val CorePageEditorPresentationTest by testSuite {
                     .build(
                         PresentationBuildBinding(checked.presentationTemplate(), PresentationRole.INSPECTOR),
                     ).layout
-            val column =
-                layout.element
-                    .shouldBeInstanceOf<PresentationElement.ChildrenWrapper>()
-                    .value
-                    .shouldBeInstanceOf<ChildrenElement.ColumnWrapper>()
-                    .value
-            val nodes = column.children.map { it.shouldBeInstanceOf<AxisChild.FixedWrapper>().value }
-            nodes.size shouldBe 3
-            val nameRequest = nodes[0].element.shouldBeInstanceOf<PresentationElement.DefaultPresentationWrapper>().value
-            nameRequest.control.binding.path.segments shouldBe listOf(PathSegment.createField(name = "name"))
-            nameRequest.presentationId shouldBe null
-            nodes[1].element.shouldBeInstanceOf<PresentationElement.RemainingFieldsWrapper>()
-            val placementRequest = nodes[2].element.shouldBeInstanceOf<PresentationElement.DefaultPresentationWrapper>().value
-            placementRequest.control.binding.path.segments shouldBe listOf(PathSegment.createField(name = "placement"))
+            val presented = layout.flattened().filter { it.presentsFields }
+
+            presented.map { it.fieldPaths } shouldBe listOf(listOf("name"), listOf(REMAINING_FIELDS), listOf("placement"))
+            presented.first().defaultPresentation?.presentationId shouldBe null
+            val placementRequest = presented.last().defaultPresentation.shouldNotBeNull()
             val checkedPlacement = (catalog.resolve(placement.use) as Resolution.Ready).value
             val placementSelection =
                 registry
@@ -127,16 +120,17 @@ val CorePageEditorPresentationTest by testSuite {
         Triple("Manifest", ManifestPageDefinition.use, GraphDirection.TOP_TO_BOTTOM),
         Triple("Scene", ScenePageDefinition.use, null),
     ).forEach { (name, type, direction) ->
-        test("$name page has a discovered editor with its intended canvas") {
+        test("$name page workspace presents its resources on its intended canvas") {
             val checked = (catalog.resolve(type.use) as Resolution.Ready).value
             val selection = registry.select(PresentationRole.WORKSPACE, checked).shouldBeInstanceOf<PresentationSelection.Selected>()
             val binding = PresentationBuildBinding(checked.presentationTemplate(), PresentationRole.WORKSPACE)
             val layout = providers.getValue(selection.descriptor).build(binding).layout
-            val children = layout.element.shouldBeInstanceOf<PresentationElement.ChildrenWrapper>().value
-            val column = children.shouldBeInstanceOf<ChildrenElement.ColumnWrapper>().value
-            val child = column.children.single().shouldBeInstanceOf<AxisChild.FixedWrapper>()
-            val canvas = child.value.element
-            val resources = canvas.shouldBeInstanceOf<PresentationElement.ResourcesWrapper>().value.layout
+            val resources =
+                layout
+                    .flattened()
+                    .filterIsInstance<PresentationElement.ResourcesWrapper>()
+                    .single()
+                    .value.layout
             if (direction == null) {
                 resources.shouldBeInstanceOf<ResourcesLayout.TimelineWrapper>()
             } else {
@@ -150,3 +144,37 @@ private fun corePageProviderInstance(name: String): Any {
     val type = Class.forName(name)
     return type.fields.singleOrNull { it.name == "INSTANCE" }?.get(null) ?: type.getConstructor().newInstance()
 }
+
+private const val REMAINING_FIELDS = "remaining fields"
+
+/** The element of [this] and every element nested in its column and row children, in reading order. */
+private fun PresentationNode.flattened(): List<PresentationElement> {
+    val element = element ?: return emptyList()
+    val axis =
+        when (val children = (element as? PresentationElement.ChildrenWrapper)?.value) {
+            is ChildrenElement.ColumnWrapper -> children.value.children
+            is ChildrenElement.RowWrapper -> children.value.children
+            else -> emptyList()
+        }
+    val nodes =
+        axis.mapNotNull { child ->
+            when (child) {
+                is AxisChild.FixedWrapper -> child.value
+                is AxisChild.FlexibleWrapper -> child.value.child
+                else -> null
+            }
+        }
+    return listOf(element) + nodes.flatMap { it.flattened() }
+}
+
+private val PresentationElement.defaultPresentation get() = (this as? PresentationElement.DefaultPresentationWrapper)?.value
+
+private val PresentationElement.presentsFields
+    get() = defaultPresentation != null || this is PresentationElement.RemainingFieldsWrapper
+
+/** The field names an element edits, or [REMAINING_FIELDS] for the slot that presents every field not placed. */
+private val PresentationElement.fieldPaths: List<String>
+    get() =
+        defaultPresentation?.control?.binding?.path?.segments?.map { segment ->
+            (segment as PathSegment.FieldWrapper).value.name
+        } ?: listOf(REMAINING_FIELDS)

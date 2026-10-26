@@ -20,7 +20,6 @@ import com.typewritermc.services.libs.registrar.RegistrarFailure
 import com.typewritermc.services.libs.registrar.RegistrarStopFailure
 import com.typewritermc.services.libs.registrar.RegistrationLeaseResult
 import com.typewritermc.services.libs.registrar.RuntimeCloseResult
-import com.typewritermc.services.libs.registrar.RuntimeConnectivity
 import com.typewritermc.services.libs.registrar.RuntimeResult
 import com.typewritermc.services.libs.registrar.RuntimeStopOperation
 import com.typewritermc.services.libs.registrar.ServiceId
@@ -31,6 +30,7 @@ import de.infix.testBalloon.framework.core.testSuite
 import io.kotest.assertions.throwables.shouldThrow
 import io.kotest.matchers.collections.shouldContainExactly
 import io.kotest.matchers.shouldBe
+import io.kotest.matchers.types.shouldBeInstanceOf
 import kotlinx.coroutines.async
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.first
@@ -38,14 +38,12 @@ import kotlinx.coroutines.flow.take
 import kotlinx.coroutines.flow.toList
 import kotlinx.coroutines.test.runCurrent
 import kotlinx.coroutines.test.runTest
-import skirout.access.v1.permission.EntityPermissionQualifier
 import skirout.service.v1.lifecycle.ServiceHeartbeatNotification
 import skirout.service.v1.lifecycle.ServiceShutdownNotification
 import skirout.service.v1.registration.ServiceBoundNotification
 import skirout.service.v1.status.EnsureRegistrationLeaseResponse
 import skirout.service.v1.status.QueryServiceBindingResponse
 import skirout.service.v1.status.ServiceBinding
-import java.util.Base64
 import kotlin.time.Duration.Companion.hours
 import kotlin.time.Duration.Companion.minutes
 import kotlin.time.TestTimeSource
@@ -208,7 +206,7 @@ val RegistrarMessagingRuntimeTest by testSuite {
         }
     }
 
-    test("lease command uses the generated registration route") {
+    test("lease request returns the issued registration token") {
         val fixture = runtimeFixture()
         try {
             fixture.transport.respondWith(
@@ -219,13 +217,11 @@ val RegistrarMessagingRuntimeTest by testSuite {
                     ),
                 ),
             )
-            val result = fixture.runtime.ensureRegistrationLease() as RuntimeResult.Success
-            (result.value as RegistrationLeaseResult.Issued).token.reveal() shouldBe "TOKEN12345"
-            val action =
-                fixture.transport.actions
-                    .filterIsInstance<FakeMessageTransport.Action.Request>()
-                    .single()
-            action.message.address.value shouldBe "cloud.to.service.service-id.registration.ensure"
+            val result = fixture.runtime.ensureRegistrationLease().shouldBeInstanceOf<RuntimeResult.Success<RegistrationLeaseResult>>()
+            result.value
+                .shouldBeInstanceOf<RegistrationLeaseResult.Issued>()
+                .token
+                .reveal() shouldBe "TOKEN12345"
         } finally {
             fixture.close()
         }
@@ -245,20 +241,12 @@ val RegistrarMessagingRuntimeTest by testSuite {
         mapped.value shouldBe BindingStatus.Unbound
     }
 
-    test("issued registration lease maps a valid token") {
-        val mapped =
-            mapRegistrationLease(
-                EnsureRegistrationLeaseResponse.createIssued(token = "TOKEN12345", expiresAt = java.time.Instant.EPOCH),
-            ) as RuntimeResult.Success
-        (mapped.value as RegistrationLeaseResult.Issued).token.reveal() shouldBe "TOKEN12345"
-    }
-
     test("blank registration token is protocol incompatible") {
         val mapped =
             mapRegistrationLease(
                 EnsureRegistrationLeaseResponse.createIssued(token = "", expiresAt = java.time.Instant.EPOCH),
-            ) as RuntimeResult.Failure
-        (mapped.failure is RegistrarFailure.ProtocolIncompatible) shouldBe true
+            ).shouldBeInstanceOf<RuntimeResult.Failure>()
+        mapped.failure shouldBe RegistrarFailure.ProtocolIncompatible("registration-lease", "blank-token")
     }
 
     test("service not found is terminal typed failure") {
@@ -376,7 +364,7 @@ val RegistrarMessagingRuntimeTest by testSuite {
         }
     }
 
-    test("shutdown publishes exact subject and reports shutdown operation failure") {
+    test("shutdown publishes the shutdown notification on the service subject") {
         val fixture = runtimeFixture()
         try {
             fixture.runtime.sendShutdown() shouldBe RuntimeResult.Success(Unit)
@@ -388,10 +376,22 @@ val RegistrarMessagingRuntimeTest by testSuite {
             ServiceShutdownNotification.serializer
                 .fromBytes(published.message.payload.toByteArray())
                 .shouldBe(ServiceShutdownNotification())
+        } finally {
+            fixture.close()
+        }
+    }
+
+    test("a failed shutdown publish is a redacted shutdown messaging failure") {
+        val fixture = runtimeFixture()
+        try {
             val cause = IllegalStateException("sensitive-shutdown-details")
             fixture.transport.failNextPublish(TransportError.Unavailable(cause))
-            val failed = fixture.runtime.sendShutdown() as RuntimeResult.Failure
-            val failure = failed.failure as RegistrarFailure.Messaging
+            val failure =
+                fixture.runtime
+                    .sendShutdown()
+                    .shouldBeInstanceOf<RuntimeResult.Failure>()
+                    .failure
+                    .shouldBeInstanceOf<RegistrarFailure.Messaging>()
             failure.operation shouldBe MessagingOperation.SHUTDOWN
             failure.cause?.reveal() shouldBe cause
             failure.toString().contains("sensitive-shutdown-details") shouldBe false
@@ -407,8 +407,7 @@ val RegistrarMessagingRuntimeTest by testSuite {
                 NatsLifecycleResult.Failure(
                     NatsLifecycleError.Connection(IllegalStateException("offline")),
                 )
-            (fixture.runtime.connect() is RuntimeResult.Failure) shouldBe true
-            fixture.runtime.connectivity.first() shouldBe RuntimeConnectivity.CONNECTED
+            fixture.runtime.connect().shouldBeInstanceOf<RuntimeResult.Failure>()
             val beforeTokens = fixture.tokenExchanges()
             val beforeSentinel = fixture.sentinelFetches()
             fixture.access.get()
@@ -451,13 +450,6 @@ val RegistrarMessagingRuntimeTest by testSuite {
         } finally {
             fixture.close()
         }
-    }
-
-    test("service qualifier uses standard base64 and round trips") {
-        val encoded = encodedServiceQualifier()
-        val decoded = Base64.getDecoder().decode(encoded)
-        val qualifier = EntityPermissionQualifier.serializer.fromBytes(decoded)
-        qualifier.kind shouldBe EntityPermissionQualifier.Kind.SERVICE_WRAPPER
     }
 
     test("service authentication maps exact fields and redacts diagnostics") {

@@ -108,13 +108,17 @@ val CanonicalExpressionTypeTest by testSuite {
             listOf(CheckFailure.ExpressionResultMayBeMissing)
     }
 
-    test("an each lambda sees the item type and a comparator returns an integer") {
+    test("an each lambda sees the item type") {
         val bindings = mapOf(rows to nominalExpressionType(listType(text)))
         val isA = checkCall("value.equals", checkLocal(0), checkLiteral(DataValue.StringValueWrapper("a")))
         val kept = checkCall("collection.filter", source, checkLambda(1, isA))
         checker.checkExpressionCodes(kept, bindings, nominalExpressionType(listType(text))) shouldBe emptyList()
         val lengths = checkCall("collection.map", source, checkLambda(1, checkCall("text.length", checkLocal(0))))
         checker.checkExpressionCodes(lengths, bindings, nominalExpressionType(listType(count))) shouldBe emptyList()
+    }
+
+    test("a sort comparator must return an integer") {
+        val bindings = mapOf(rows to nominalExpressionType(listType(text)))
         val ordered = checkCall("collection.sort_with", source, checkLambda(2, checkCall("value.compare", checkLocal(0), checkLocal(1))))
         checker.checkExpressionCodes(ordered, bindings, nominalExpressionType(listType(text))) shouldBe emptyList()
         val unordered = checkCall("collection.sort_with", source, checkLambda(2, checkLocal(0)))

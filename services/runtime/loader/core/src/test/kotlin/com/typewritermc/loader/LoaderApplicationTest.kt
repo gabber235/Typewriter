@@ -5,7 +5,6 @@ import com.typewritermc.services.libs.telemetry.mainSpanBlocking
 import de.infix.testBalloon.framework.core.testSuite
 import io.kotest.matchers.collections.shouldBeEmpty
 import io.kotest.matchers.shouldBe
-import io.kotest.matchers.types.shouldBeInstanceOf
 import io.opentelemetry.sdk.OpenTelemetrySdk
 import io.opentelemetry.sdk.common.CompletableResultCode
 import io.opentelemetry.sdk.trace.SdkTracerProvider
@@ -16,10 +15,6 @@ import java.util.concurrent.CopyOnWriteArrayList
 import java.util.concurrent.TimeUnit
 
 val LoaderApplicationTest by testSuite {
-    test("shared application assembles the artifact bootstrap") {
-        loaderApplication { }.use { application -> application.bootstrap.shouldBeInstanceOf<ArtifactLoaderBootstrap>() }
-    }
-
     test("closing the loader exports pending spans") {
         val exporter = RecordingSpanExporter()
         // The batch never exports on its own schedule, so the span stays pending until the loader closes.

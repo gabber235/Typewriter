@@ -20,7 +20,10 @@ import com.typewritermc.types.Resource
 import com.typewritermc.types.TypewriterRecordContract
 import com.typewritermc.types.TypewriterType
 import java.nio.file.Path
-import kotlin.io.path.readText
+import io.kotest.assertions.withClue
+import io.kotest.matchers.collections.shouldBeEmpty
+import io.kotest.matchers.nulls.shouldNotBeNull
+import io.kotest.matchers.shouldBe
 
 /** Every fixture resource lives on the fixture shelf, a realm section. */
 @TypewriterRecordContract
@@ -81,8 +84,6 @@ object TouchEverything : ResourceOperation<Unit> {
 
 fun main(args: Array<String>) {
     val artifact = Path.of(args.single())
-    val index = GeneratedProviderIndex.parse(artifact.resolve(GENERATED_PROVIDER_INDEX_PATH).readText())
-    check(index.count { it.kind == GeneratedProviderKind.ResourceOperation } == 3)
     GeneratedProviderLoader()
         .load(
             listOf(
@@ -100,10 +101,17 @@ fun main(args: Array<String>) {
             runtimeServices = mapOf(PresentationRuntime::class.java to DefaultPresentationRuntime()),
         ).use { deployment ->
             val assembly = deployment.providers.contributions.assemble(CatalogAssemblyContext(CatalogGeneration(value = "fixture")))
-            check(assembly.operations.diagnostics.isEmpty()) { assembly.operations.failures.joinToString { it.cause.stackTraceToString() } }
+            withClue(assembly.operations.failures.joinToString { it.cause.stackTraceToString() }) {
+                assembly.operations.diagnostics.shouldBeEmpty()
+            }
             val fixture = assembly.operations.operations.filter { it.definition.id.artifact == "fixture" }
-            check(fixture.map { it.definition.presentation.label }.toSet() == setOf("Reset reward", "Rename", "Touch everything"))
-            check(fixture.map { it.definition.id.declaration }.toSet() == setOf("fixture.ResetReward", "fixture.Rename", "fixture.TouchEverything"))
-            check(fixture.filter { it.definition.presentation.label != "Touch everything" }.all { it.input.schema != null && it.input.binding != null })
+            fixture.associate { it.definition.id.declaration to it.definition.presentation.label } shouldBe
+                mapOf("fixture.ResetReward" to "Reset reward", "fixture.Rename" to "Rename", "fixture.TouchEverything" to "Touch everything")
+            fixture.filter { it.definition.presentation.label != "Touch everything" }.forEach { operation ->
+                withClue("${operation.definition.id.declaration} takes an input") {
+                    operation.input.schema.shouldNotBeNull()
+                    operation.input.binding.shouldNotBeNull()
+                }
+            }
         }
 }

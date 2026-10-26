@@ -35,5 +35,6 @@ dependencies {
     implementation(libs.kotlin.serialize.cbor)
     testImplementation(testFixtures(project(":messaging")))
     testImplementation(testFixtures(project(":telemetry")))
+    testImplementation(testFixtures(project(":file-transfer")))
     testImplementation(libs.kotlin.coroutines.test)
 }

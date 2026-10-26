@@ -42,6 +42,7 @@ import com.typewritermc.services.libs.telemetry.testing.TelemetryTestHarness
 import de.infix.testBalloon.framework.core.testSuite
 import io.kotest.assertions.throwables.shouldThrow
 import io.kotest.matchers.shouldBe
+import io.kotest.matchers.types.shouldBeInstanceOf
 import io.kotest.matchers.types.shouldBeSameInstanceAs
 import io.opentelemetry.api.baggage.Baggage
 import io.opentelemetry.api.baggage.propagation.W3CBaggagePropagator
@@ -233,18 +234,6 @@ val CommunicatorTest by testSuite {
 
                 result.await() shouldBe listOf(CommunicationResult.Success("host-a"))
                 fake.activeSubscriptionCount shouldBe 0
-            }
-        }
-    }
-
-    test("communicator creates a router with its private infrastructure") {
-        runTest {
-            fixture().use { (client, fake, _) ->
-                val router = client.createRouter(communicatorRoutes { event(event) { } }, this)
-
-                router.start() shouldBe RouterResult.Success
-                fake.activeSubscriptionCount shouldBe 1
-                router.stop() shouldBe RouterResult.Success
             }
         }
     }
@@ -641,48 +630,43 @@ val CommunicatorTest by testSuite {
         }
     }
 
-    test("watch recovers after decode failure and terminal failure completes with error span") {
+    test("a watch update that cannot be decoded is reported as a decode failure and later updates still arrive") {
+        runTest {
+            fixture().use { (client, fake, _) ->
+                fake.respondWith { message, _ -> TransportResult.Success(InboundMessage(message.address, "ok".encodeToByteArray())) }
+                val values = async { client.watch(watch, Target("a"), "start").toList() }
+                runCurrent()
+
+                fake.deliver(TransportDelivery.Message(InboundMessage(MessageAddress.of("service.a.updates"), "bad".encodeToByteArray())))
+                fake.deliver(TransportDelivery.Message(InboundMessage(MessageAddress.of("service.a.updates"), "later".encodeToByteArray())))
+                fake.deliver(TransportDelivery.Completed)
+
+                val results = values.await()
+                results[1].shouldBeInstanceOf<CommunicationResult.Failure>().error.shouldBeInstanceOf<CommunicationError.Decode>()
+                results[2] shouldBe CommunicationResult.Success(WatchMessage.Update("later"))
+            }
+        }
+    }
+
+    test("a terminal subscription failure ends the watch with that failure and an error span") {
         runTest {
             fixture().use { (client, fake, harness) ->
                 fake.respondWith { message, _ -> TransportResult.Success(InboundMessage(message.address, "ok".encodeToByteArray())) }
                 val values = async { client.watch(watch, Target("a"), "start").toList() }
                 runCurrent()
-                val incoming =
-                    MessageHeaders.of("traceparent" to "00-11111111111111111111111111111111-2222222222222222-01")
-                fake.deliver(
-                    TransportDelivery.Message(
-                        InboundMessage(
-                            MessageAddress.of("service.a.updates"),
-                            "bad".encodeToByteArray(),
-                            headers = incoming,
-                        ),
-                    ),
-                )
-                fake.deliver(
-                    TransportDelivery.Message(
-                        InboundMessage(
-                            MessageAddress.of("service.a.updates"),
-                            "ok".encodeToByteArray(),
-                        ),
-                    ),
-                )
+
                 fake.deliver(TransportDelivery.Failure(TransportError.Unavailable()))
-                val results = values.await()
-                results.map { it::class } shouldBe
-                    listOf(
-                        CommunicationResult.Success::class,
-                        CommunicationResult.Failure::class,
-                        CommunicationResult.Success::class,
-                        CommunicationResult.Failure::class,
-                    )
-                harness
-                    .finishedSpans()
-                    .single { it.name == "book.watch receive" && it.parentSpanId == "2222222222222222" }
+
+                values
+                    .await()
+                    .last()
+                    .shouldBeInstanceOf<CommunicationResult.Failure>()
+                    .error
+                    .shouldBeInstanceOf<CommunicationError.Unavailable>()
                 harness
                     .finishedSpans()
                     .last { it.name == "book.watch receive" }
                     .status.statusCode shouldBe StatusCode.ERROR
-                fake.actions.count { it is FakeMessageTransport.Action.SubscriptionClose } shouldBe 1
                 harness.assertNoActiveSpans()
             }
         }

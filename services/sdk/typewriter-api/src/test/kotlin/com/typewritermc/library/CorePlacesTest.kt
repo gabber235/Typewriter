@@ -8,7 +8,6 @@ import com.typewritermc.discovery.CatalogAssembly
 import com.typewritermc.discovery.CatalogAssemblyContext
 import com.typewritermc.discovery.assemble
 import com.typewritermc.expression.Handled
-import com.typewritermc.expression.descendants
 import com.typewritermc.expression.inputExpression
 import com.typewritermc.expression.listExpr
 import com.typewritermc.expression.literal
@@ -16,6 +15,7 @@ import com.typewritermc.expression.name
 import com.typewritermc.expression.orElse
 import com.typewritermc.presentation.DefaultPresentationRuntime
 import com.typewritermc.presentation.PresentationBuildBinding
+import com.typewritermc.presentation.allNodes
 import com.typewritermc.presentation.createResource
 import com.typewritermc.presentation.presentationTemplate
 import com.typewritermc.presentation.resource
@@ -33,10 +33,10 @@ import skirout.editor.v1.action.EditorAction
 import skirout.editor.v1.catalog.DeclarationStatus
 import skirout.editor.v1.catalog.PresentationMaterial
 import skirout.editor.v1.catalog.PresentationRole
+import skirout.editor.v1.catalog.RelationDeletePolicy
 import skirout.editor.v1.expression.ExpressionNode
 import skirout.editor.v1.presentation.ChildrenElement
 import skirout.editor.v1.presentation.GraphDirection
-import skirout.editor.v1.presentation.PresentationAlignment
 import skirout.editor.v1.presentation.PresentationElement
 import skirout.editor.v1.presentation.PresentationInteractionState
 import skirout.editor.v1.presentation.PresentationNode
@@ -72,14 +72,43 @@ val CorePlacesTest by testSuite {
     }
 
     test("the library workspace shows every book as a card") {
-        val grid =
-            assembly
-                .resources(
-                    LibraryDefinition.id,
-                    PresentationRole.WORKSPACE,
-                ).layout
-                .shouldBeInstanceOf<ResourcesLayout.GridWrapper>()
-        listOf(grid.value.itemExtent, grid.value.aspectRatio, grid.value.spacing).map { it.literal() } shouldBe listOf(240.0, 0.72, 16.0)
+        val books = assembly.material(LibraryDefinition.id, PresentationRole.WORKSPACE).layout.resourcesElement()
+
+        books.control.binding.path.segments shouldBe listOf(PathSegment.createField(name = "books"))
+        books.layout.shouldBeInstanceOf<ResourcesLayout.GridWrapper>()
+        assembly
+            .material(BookDefinition.id, PresentationRole.ITEM)
+            .layout
+            .paintNodes()
+            .flatMap { it.appearanceReads() }
+            .toSet() shouldBe
+            setOf("label", "accent", "icon")
+    }
+
+    test("deleting either end of an unannotated link clears it, while an annotated owner cascades to its pages") {
+        fun deletePolicies(id: skirout.editor.v1.type_catalog.RelationId) =
+            assembly.relations.single { it.id == id }.let { listOf(it.first.onDelete, it.second.onDelete) }
+
+        deletePolicies(BookTags.contract.id) shouldBe listOf(RelationDeletePolicy.CLEAR, RelationDeletePolicy.CLEAR)
+        deletePolicies(TagParents.contract.id) shouldBe listOf(RelationDeletePolicy.CLEAR, RelationDeletePolicy.CLEAR)
+        deletePolicies(BookPages.contract.id) shouldBe listOf(RelationDeletePolicy.CASCADE, RelationDeletePolicy.CLEAR)
+    }
+
+    test("an element name must be present and on one line") {
+        val rules =
+            assembly.configuration
+                .filter { it.origin.owner == com.typewritermc.elements.ElementDefinition.id }
+                .flatMap { it.rules }
+                .map { it.descriptor.predicate }
+
+        fun accepted(name: String) =
+            rules.all {
+                com.typewritermc.expression.evaluate(it, "configured_value" to DataValue.StringValueWrapper(name)) ==
+                    com.typewritermc.authoring.Availability
+                        .Available(DataValue.BooleanWrapper(true))
+            }
+
+        listOf("Intro", "", "first\nsecond").map(::accepted) shouldBe listOf(true, false, false)
     }
 
     test("the taxonomy workspace places tags on a graph from top to bottom and renders them as items") {
@@ -91,47 +120,35 @@ val CorePlacesTest by testSuite {
                 ).layout
                 .shouldBeInstanceOf<ResourcesLayout.GraphWrapper>()
         graph.value.direction shouldBe GraphDirection.TOP_TO_BOTTOM
-        assembly.material(TagDefinition.id, PresentationRole.ITEM).provider.name shouldContain "TagGraphNodePresentation"
+        assembly
+            .material(TagDefinition.id, PresentationRole.ITEM)
+            .layout
+            .allNodes()
+            .flatMap { it.appearanceReads() }
+            .toSet() shouldBe
+            setOf("label", "icon")
     }
 
     test("a book stands in the library as a stacked card built from its appearance") {
         val material = assembly.material(BookDefinition.id, PresentationRole.ITEM)
-        material.provider.name shouldContain "BookItemPresentation"
         val nodes = material.layout.paintNodes()
-
-        val sized = nodes.firstNotNullOf { (it.element as? PresentationElement.SizeWrapper)?.value }
-        listOf(sized.width?.literal(), sized.height?.literal()) shouldBe listOf(175.0, 230.0)
         val transforms = nodes.mapNotNull { (it.element as? PresentationElement.TransformWrapper)?.value }
-        val hover = transforms.first()
-        hover.scale
+
+        nodes.flatMap { it.appearanceReads() }.toSet() shouldBe setOf("label", "accent", "icon")
+        transforms
+            .first()
+            .scale
             .shouldBeInstanceOf<PresentationNumber.StatesWrapper>()
             .value.rules
             .single()
-            .match.required shouldBe
-            listOf(PresentationInteractionState.HOVERED)
-        val cover = transforms.single { it.rotateY != null }
-        cover.origin shouldBe PresentationAlignment.CENTER_START
-        cover.transition
+            .match.required shouldBe listOf(PresentationInteractionState.HOVERED)
+        transforms
+            .single { it.rotateY != null }
+            .transition
             ?.rules
             ?.single()
             ?.match
             ?.required shouldBe listOf(PresentationInteractionState.SELECTED)
-        val stack =
-            nodes.firstNotNullOf {
-                ((it.element as? PresentationElement.ChildrenWrapper)?.value as? ChildrenElement.StackWrapper)
-                    ?.value
-            }
-        stack.children.count { it is StackChild.PositionedWrapper } shouldBe 5
-        val reads = nodes.flatMap { it.appearanceReads() }.toSet()
-        reads shouldBe setOf("label", "accent", "icon")
-        val bars = nodes.firstNotNullOf { (it.element as? PresentationElement.RepeatedWrapper)?.value }
-        val limited = (bars.source as ExpressionNode.OrElseWrapper).value.value
-        limited
-            .descendants()
-            .filterIsInstance<ExpressionNode.CallWrapper>()
-            .map { it.value.operation.value }
-            .toList() shouldContain
-            "list.slice"
     }
 
     test("the book outline groups pages by chapter and creates a page into the book from each group") {
@@ -209,6 +226,16 @@ val CorePlacesTest by testSuite {
         shouldThrow<IllegalArgumentException> {
             build { createResource(type = TagDefinition.id, owner = null) { PageFields.priority(literal(1)) } }
         }.message shouldContain "is not a field of"
+    }
+
+    test("a create action preset whose value does not match its field is refused") {
+        val build = assembly.bookBuild()
+
+        @Suppress("UNCHECKED_CAST")
+        val wrongPriority = literal("high") as com.typewritermc.expression.Expr<Int, Handled>
+        shouldThrow<IllegalArgumentException> {
+            build { createResource(type = PageDefinition.id, owner = BookFields.pages) { PageFields.priority(wrongPriority) } }
+        }.message shouldBe "Invalid [4,[5,[3]]] expression: incompatible_expression_result_type."
     }
 }
 

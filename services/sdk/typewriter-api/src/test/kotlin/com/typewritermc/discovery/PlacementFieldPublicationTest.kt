@@ -6,6 +6,7 @@ import com.typewritermc.authoring.root
 import com.typewritermc.elements.ElementDefinition
 import com.typewritermc.library.BookDefinition
 import com.typewritermc.library.TagDefinition
+import com.typewritermc.testkit.origin
 import com.typewritermc.types.qualified
 import com.typewritermc.types.template
 import de.infix.testBalloon.framework.core.testSuite
@@ -29,9 +30,7 @@ val PlacementFieldPublicationTest by testSuite {
         assembly.placementField(BookDefinition.id) shouldBe null
         assembly.editorCatalog.types
             .single { it.definition == TagDefinition.declaration }
-            .placementField
-            ?.segments
-            ?.size shouldBe 1
+            .placementField shouldBe placement
     }
 
     test("a type with two placement fields publishes none and reports the ambiguity") {
@@ -61,7 +60,7 @@ val PlacementFieldPublicationTest by testSuite {
 }
 
 private fun assemble(vararg extra: TypeDefinition): CatalogAssembly {
-    val origin = providerOrigin()
+    val origin = origin("type_display", "test:type_display")
     val generated = generatedTypeProviders().distinctBy { it.definition.id }
     return CatalogContributions(
         declarations =

@@ -17,7 +17,6 @@ import skirout.editor.v1.catalog.DeclarationStatus
 import skirout.editor.v1.catalog.EndpointCardinality
 import skirout.editor.v1.catalog.EndpointDefinition
 import skirout.editor.v1.catalog.EndpointSlot
-import skirout.editor.v1.catalog.RESOURCE_OWNERSHIP_FAMILY
 import skirout.editor.v1.catalog.RelationContract
 import skirout.editor.v1.catalog.RelationDeletePolicy
 import skirout.editor.v1.type_catalog.CatalogGeneration
@@ -32,10 +31,6 @@ import skirout.editor.v1.type_catalog.TypeDefinitionId
 import skirout.editor.v1.type_catalog.TypeParameter
 
 val RealmStructureAssemblyTest by testSuite {
-    test("the ownership family annotation id is the editor contract's ownership family") {
-        RESOURCE_OWNERSHIP_FAMILY_ID shouldBe RESOURCE_OWNERSHIP_FAMILY.value
-    }
-
     test("reserved read identities cannot replace intrinsic schemas or isolate unrelated declarations") {
         val reserved = TypeDefinitionId.qualified(com.typewritermc.expression.CANONICAL_READ_NAMESPACE, "UnfamiliarModel")
         val healthy = id("Healthy")

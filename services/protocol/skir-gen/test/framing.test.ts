@@ -27,19 +27,31 @@ const resolveWithSkir = async (routes: string) =>
   resolveRoutes(parseManifest(manifestSource(routes), "routes.yaml"), await loadSkirInput());
 
 describe("payload ceilings", () => {
-  test("only the blob routes raise a ceiling, each in its own direction", async () => {
-    const { resolved } = await committedRoutes();
-    const raised = resolved.routes
-      .filter(
-        (route) =>
-          route.limits.requestMaxBytes !== resolved.limits.requestMaxBytes ||
-          route.limits.replyMaxBytes !== resolved.limits.replyMaxBytes,
-      )
-      .map((route) => [route.name, route.limits.requestMaxBytes / MIB, route.limits.replyMaxBytes / MIB]);
-    expect(raised).toEqual([
-      ["shared_blob_fetch", 0.5, 128],
-      ["shared_blob_store", 128, 32],
-    ]);
+  test("a route that raises a ceiling carries its own limit and every other route the manifest's", async () => {
+    const resolved = await resolveWithSkir(`  - name: plain
+    scope: realm
+    callers: [{ role: realm_participant }]
+    server: { role: realm_coordinator }
+    flow:
+      kind: unary
+      method: "service/v1/artifact.skir:FetchArtifactBlobMetadata"
+      operation: plain
+      request: plain
+  - name: large_request
+    scope: realm
+    callers: [{ role: realm_participant }]
+    server: { role: realm_coordinator }
+    flow:
+      kind: unary
+      method: "service/v1/artifact.skir:FetchArtifactBlobMetadata"
+      operation: large.request
+      request: large.request
+      request_max_bytes: ${128 * MIB}
+`);
+    const [plain, large] = resolved.routes;
+    expect(plain!.limits.requestMaxBytes).toBe(resolved.limits.requestMaxBytes);
+    expect(large!.limits.requestMaxBytes).toBe(128 * MIB);
+    expect(large!.limits.replyMaxBytes).toBe(resolved.limits.replyMaxBytes);
   });
 
   test("a backend component cannot receive framed requests", () => {
@@ -62,10 +74,30 @@ describe("payload ceilings", () => {
 });
 
 describe("NATS response limits", () => {
-  test("the Realm coordinator may send every frame of the largest blob it serves", async () => {
-    const { resolved } = await committedRoutes();
-    expect(responseLimit("realm_coordinator", resolved.routes)).toBe((128 * MIB) / (512 * 1024));
-    expect(serviceResponseLimit(resolved.roles, resolved.routes)).toBe(256);
+  test("a server may send every frame of the largest reply it serves", async () => {
+    const resolved = await resolveWithSkir(`  - name: small_reply
+    scope: realm
+    callers: [{ role: realm_participant }]
+    server: { role: realm_coordinator }
+    flow:
+      kind: unary
+      method: "service/v1/artifact.skir:FetchArtifactBlobMetadata"
+      operation: small.reply
+      request: small
+  - name: large_reply
+    scope: realm
+    callers: [{ role: realm_participant }]
+    server: { role: realm_coordinator }
+    flow:
+      kind: unary
+      method: "service/v1/artifact.skir:FetchArtifactBlobMetadata"
+      operation: large.reply
+      request: large
+      reply_max_bytes: ${64 * MIB}
+`);
+    const frames = (64 * MIB) / resolved.limits.chunkBytes;
+    expect(responseLimit("realm_coordinator", resolved.routes)).toBe(frames);
+    expect(serviceResponseLimit(resolved.roles, resolved.routes)).toBe(frames);
   });
 
   test("a panel role never needs a response permission", async () => {

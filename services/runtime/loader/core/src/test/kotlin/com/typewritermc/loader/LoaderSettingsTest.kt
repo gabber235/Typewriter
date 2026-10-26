@@ -1,35 +1,25 @@
 package com.typewritermc.loader
 
-import com.typewritermc.services.libs.registrar.ServiceRole
 import de.infix.testBalloon.framework.core.testSuite
+import io.kotest.matchers.nulls.shouldNotBeNull
 import io.kotest.matchers.shouldBe
 import java.net.URI
+import java.nio.file.Files
 import java.nio.file.Path
 
 val LoaderSettingsTest by testSuite {
-    test("local profile supplies registration and NATS settings") {
-        val configuration = LoaderSettings.fromFile(profile("local")).registrarConfiguration()
+    shippedProfiles().forEach { profile ->
+        test("the shipped ${profile.fileName} profile names its own backend, broker and telemetry endpoint") {
+            val settings = LoaderSettings.fromFile(profile)
+            val configuration = settings.registrarConfiguration()
 
-        configuration.identityIssueUri shouldBe URI("https://api.tw.seamlezz.net/service/identity/issue")
-        configuration.sentinelCredentialsUri shouldBe URI("https://api.tw.seamlezz.net/auth/sentinel")
-        configuration.oauthTokenUri shouldBe URI("https://auth.tw.seamlezz.net/application/o/token/")
-        configuration.oauthClientId shouldBe "typewriter-services"
-        configuration.oauthScopes shouldBe setOf("openid", "profile", "entitlements")
-        configuration.natsServerUri shouldBe URI("tls://nats.local.seamlezz.net:4222")
-        configuration.role shouldBe ServiceRole.Host(LOADER_VERSION)
-        LoaderSettings.fromFile(profile("local")).telemetryConfiguration() shouldBe
-            LoaderTelemetryConfiguration(
-                "https://otlp.local.seamlezz.net",
-                LoaderSamplerConfiguration.AlwaysOn,
-            )
-    }
-
-    test("production profile supplies registration and NATS settings") {
-        val configuration = LoaderSettings.fromFile(profile("production")).registrarConfiguration()
-
-        configuration.identityIssueUri shouldBe URI("https://api.typewritermc.com/service/identity/issue")
-        configuration.oauthTokenUri shouldBe URI("https://auth.typewritermc.com/application/o/token/")
-        configuration.natsServerUri shouldBe URI("nats://nats.seamlezz.com:4222")
+            // A shipped profile must never fall back to the production defaults for a value it leaves out.
+            REQUIRED_PROFILE_SETTINGS.forEach { name -> settings.getOrNull(name).shouldNotBeNull() }
+            configuration.identityIssueUri.host shouldBe URI(settings.get("API_BASE_URL", "")).host
+            configuration.oauthTokenUri.host shouldBe URI(settings.get("AUTH_BASE_URL", "")).host
+            configuration.natsServerUri shouldBe URI(settings.get("NATS_URL", ""))
+            settings.telemetryConfiguration().otlpEndpoint.shouldNotBeNull()
+        }
     }
 
     test("process settings override the loader profile") {
@@ -69,4 +59,9 @@ val LoaderSettingsTest by testSuite {
     }
 }
 
-private fun profile(name: String): Path = Path.of("..", "..", "config", "$name.properties")
+private val REQUIRED_PROFILE_SETTINGS = listOf("API_BASE_URL", "AUTH_BASE_URL", "NATS_URL", "OTEL_EXPORTER_OTLP_ENDPOINT")
+
+private fun shippedProfiles(): List<Path> =
+    Files.list(Path.of("..", "..", "config")).use { files ->
+        files.filter { it.fileName.toString().endsWith(".properties") }.sorted().toList()
+    }

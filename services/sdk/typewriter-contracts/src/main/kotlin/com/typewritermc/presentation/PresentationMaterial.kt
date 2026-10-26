@@ -371,7 +371,11 @@ private fun PresentationNode.writesWithinOwner(
     return visit(this, mapOf("configured_value" to FieldWriteScope.Record))
 }
 
-private fun PresentationNode.allNodes(): List<PresentationNode> =
+/**
+ * This node and every node below it, parents before children: body children, header titles, control prefixes, input
+ * content, sequence items and search result presentations.
+ */
+fun PresentationNode.allNodes(): List<PresentationNode> =
     listOf(this) + (decorations() + bodyChildren()).flatMap(PresentationNode::allNodes)
 
 private fun PresentationNode.decorations(): List<PresentationNode> =

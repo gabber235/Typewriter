@@ -12,5 +12,6 @@ kotlin {
 dependencies {
     api(project(":protocol"))
     api(project(":messaging"))
+    testImplementation(testFixtures(project(":messaging")))
     testImplementation(testFixtures(project(":telemetry")))
 }

@@ -4,7 +4,11 @@ package com.typewritermc.presentation
 
 import com.typewritermc.authoring.GeneratedSdkApi
 import com.typewritermc.authoring.field
+import com.typewritermc.authoring.of
 import com.typewritermc.authoring.root
+import com.typewritermc.authoring.text
+import com.typewritermc.configuration.field
+import com.typewritermc.configuration.of
 import com.typewritermc.discovery.CatalogAssemblyContext
 import com.typewritermc.discovery.CatalogContributions
 import com.typewritermc.discovery.OwnedPresentation
@@ -21,6 +25,10 @@ import com.typewritermc.imprint.ContributionSourceId
 import com.typewritermc.imprint.ProducerId
 import com.typewritermc.library.coreTagCollectionProjection
 import com.typewritermc.presentation.of
+import com.typewritermc.testkit.definitions
+import com.typewritermc.testkit.elementsOf
+import com.typewritermc.testkit.fixedChildren
+import com.typewritermc.testkit.singleFixed
 import com.typewritermc.types.Resource
 import com.typewritermc.types.ResourceId
 import com.typewritermc.types.StandardTypes
@@ -48,7 +56,11 @@ import com.typewritermc.types.text
 import com.typewritermc.types.toTemplate
 import com.typewritermc.types.use
 import de.infix.testBalloon.framework.core.testSuite
+import io.kotest.assertions.throwables.shouldNotThrowAny
+import io.kotest.assertions.throwables.shouldThrow
+import io.kotest.matchers.collections.shouldHaveSize
 import io.kotest.matchers.shouldBe
+import io.kotest.matchers.shouldNotBe
 import skirout.editor.v1.catalog.DeclarationStatus
 import skirout.editor.v1.catalog.PresentationDescriptor
 import skirout.editor.v1.catalog.PresentationRole
@@ -64,6 +76,7 @@ import skirout.editor.v1.presentation.FlexFit
 import skirout.editor.v1.presentation.ImageFit
 import skirout.editor.v1.presentation.MainAxisAlignment
 import skirout.editor.v1.presentation.PresentationAlignment
+import skirout.editor.v1.presentation.PresentationContextSource
 import skirout.editor.v1.presentation.PresentationElement
 import skirout.editor.v1.presentation.PresentationInteractionState
 import skirout.editor.v1.presentation.PresentationNode
@@ -72,6 +85,7 @@ import skirout.editor.v1.type_catalog.CatalogGeneration
 import skirout.editor.v1.type_catalog.DataValue
 import skirout.editor.v1.type_catalog.DeclarationOwner
 import skirout.editor.v1.type_catalog.EndpointId
+import skirout.editor.v1.type_catalog.ExpressionBindingId
 import skirout.editor.v1.type_catalog.FieldDeclaration
 import skirout.editor.v1.type_catalog.FieldOwner
 import skirout.editor.v1.type_catalog.IntegerWidth
@@ -88,7 +102,7 @@ import skirout.editor.v1.type_catalog.TypeUse
 import skirout.editor.v1.type_catalog.ValuePath
 
 val DefaultPresentationRuntimeTest by testSuite {
-    test("caller inputs register one typed dependency without copying canonical facts") {
+    test("a caller input read twice registers one caller dependency typed as a resource id") {
         val catalog =
             DefaultCheckedCatalog(
                 CatalogGeneration(value = "caller inputs"),
@@ -122,7 +136,6 @@ val DefaultPresentationRuntimeTest by testSuite {
                 )
             }
         val input = result.dependencies.contextInputs.single()
-        input.binding.id.value shouldBe "context:test.active_resource"
         input.source shouldBe skirout.editor.v1.presentation.PresentationContextSource.CALLER
         input.binding.type shouldBe
             com.typewritermc.types.ResourceIdDefinition.use.use
@@ -171,7 +184,7 @@ val DefaultPresentationRuntimeTest by testSuite {
         inputs.size shouldBe 2
     }
 
-    test("callable part keys compile declarations requests and typed exclusions with canonical owner identity") {
+    test("a part defined once and requested again is owned by its type and excluded from remaining fields") {
         val id = TypeDefinitionId.qualified("test", "PartOwner")
         val catalog =
             DefaultCheckedCatalog(
@@ -198,18 +211,17 @@ val DefaultPresentationRuntimeTest by testSuite {
                     remainingFields { exclude(heading) }
                 }
             }
-        val nodes = ((result.layout.element as PresentationElement.ChildrenWrapper).value as ChildrenElement.ColumnWrapper).value.children
-        val definition =
-            (nodes[0] as skirout.editor.v1.presentation.AxisChild.FixedWrapper).value.element as PresentationElement.PartWrapper
-        val request = (nodes[1] as skirout.editor.v1.presentation.AxisChild.FixedWrapper).value.element as PresentationElement.PartWrapper
-        val rest =
-            (nodes[2] as skirout.editor.v1.presentation.AxisChild.FixedWrapper).value.element as PresentationElement.RemainingFieldsWrapper
+        val nodes = result.layout.fixedChildren()
+        val definition = nodes[0].element as PresentationElement.PartWrapper
+        val request = nodes[1].element as PresentationElement.PartWrapper
+        val rest = nodes[2].element as PresentationElement.RemainingFieldsWrapper
         definition.value.key.owner shouldBe id
         definition.value.key.name shouldBe "heading"
-        (definition.value.body != null) shouldBe true
+        definition.value.body.literalText() shouldBe "Shared heading"
+        request.value.key shouldBe definition.value.key
         request.value.body shouldBe null
         rest.value.excludedParts shouldBe listOf(definition.value.key)
-        result.layout.validateInheritableNodes(result.layout.inferInheritableNodes()) { true }
+        shouldNotThrowAny { result.layout.validateInheritableNodes(result.layout.inferInheritableNodes()) { true } }
     }
 
     test("nested record part requests bind the configured record to their field") {
@@ -221,20 +233,11 @@ val DefaultPresentationRuntimeTest by testSuite {
                 representation = RepresentationTemplate.createRecord(fields = emptyList(), abstract_ = false),
             )
         val root =
-            TypeDefinition.partial(
-                id = rootId,
-                representation =
-                    RepresentationTemplate.createRecord(
-                        fields =
-                            listOf(
-                                FieldDeclaration.partial(
-                                    owner = FieldOwner(definition = rootId, name = "details"),
-                                    type = nestedId.template(),
-                                ),
-                            ),
-                        abstract_ = false,
-                    ),
-            )
+            definitions {
+                record(rootId) {
+                    field("details", nestedId.template())
+                }
+            }.single()
         val catalog =
             DefaultCheckedCatalog(
                 CatalogGeneration(value = "nested part request"),
@@ -364,200 +367,109 @@ val DefaultPresentationRuntimeTest by testSuite {
         }
     }
 
-    test("display families lower their declared options through shared appearance and glyph delegates") {
-        val catalog = DefaultCheckedCatalog(CatalogGeneration(value = "display options"), StandardTypes.definitions)
-        val checked = catalog.ready(ScalarKind.TEXT.use)
-        val color = literalColor(com.typewritermc.types.Color(0xff3366ccu))
-        val result =
-            DefaultPresentationRuntime().build(
-                PresentationBuildBinding(checked.presentationTemplate(), PresentationRole.INSPECTOR),
-            ) { build ->
-                with(build) {
-                    image(literal("https://example.test/image.png")) {
-                        width(80.0)
-                        height(literal(60.0))
-                        fit(ImageFit.COVER)
-                        radius(PresentationRadius.Small)
-                    }
-                    badge(literal("Ready")) {
-                        textStyle(TextStyle(weight = FontWeight(500)))
-                        fill(color)
-                        icon("book", size = 14.0)
-                    }
-                    chip(literal("Label")) {
-                        noIcon()
-                        noBorder()
-                        density(ControlDensity.COMPACT)
-                    }
-                    progress(literal(3), literal(10)) {
-                        color(color)
-                        backgroundColor(color)
-                        minimumHeight(5.0)
-                        radius(PresentationRadius.Small)
-                    }
-                    tooltip(literal("Details"), configure = {
-                        waitDelay(DisplayDelay(250))
-                        showDelay(DisplayDelay(2000))
-                        preferBelow(false)
-                        fill(color)
-                    }) { text(literal("Help")) }
-                    divider {
-                        color(color)
-                        thickness(2.0)
-                        space(literal(12.0))
-                        indent(4.0)
-                        endIndent(6.0)
-                    }
-                    tabs {
-                        density(ControlDensity.COMPACT)
-                        spacing(Spacing(4.0))
-                        contentSpacing(Spacing(10.0))
-                        tab("first", literal("First"), icon = "book") { text(literal("Content")) }
-                    }
-                    status(
-                        literal(true),
-                        listOf(
-                            StatusCase(
-                                true,
-                                StatusAppearance("Active", "active") {
-                                    noIcon()
-                                    textStyle(TextStyle(weight = FontWeight(600)))
-                                },
-                            ),
-                        ),
-                    )
-                    dateTime(literal(kotlin.time.Instant.fromEpochMilliseconds(1000)), literal("yyyy")) {
-                        noIcon()
-                        textStyle(TextStyle(weight = FontWeight(500)))
-                    }
-                    relativeTime(literal(kotlin.time.Instant.fromEpochMilliseconds(1000))) {
-                        noIcon()
-                        density(ControlDensity.COMPACT)
-                    }
-                }
-            }
-        val nodes = result.layout.fixedChildren().map { it.element }
-        val image = (nodes[0] as PresentationElement.ImageWrapper).value
-        image.options?.fit shouldBe skirout.editor.v1.presentation.ImageFit.COVER
-        (image.options?.width != null) shouldBe true
-        val badge = (nodes[1] as PresentationElement.BadgeWrapper).value
+    test("an image keeps its configured width and fit") {
+        val image = (displayElements()[0] as PresentationElement.ImageWrapper).value
+
+        image.options?.fit shouldBe ImageFit.COVER
+        image.options?.width.literalValue() shouldBe DataValue.FloatWrapper(80.0)
+    }
+
+    test("a badge keeps its text weight and its book icon") {
+        val badge = (displayElements()[1] as PresentationElement.BadgeWrapper).value
+
         badge.options
             ?.appearance
             ?.valueStyle
             ?.weight shouldBe 500
-        (badge.options?.icon is skirout.editor.v1.presentation.InputAdornment.ContentWrapper) shouldBe true
-        (nodes[2] as PresentationElement.ChipWrapper).value.options?.icon shouldBe skirout.editor.v1.presentation.InputAdornment.NONE
-        ((nodes[3] as PresentationElement.ProgressWrapper).value.appearance?.minimumHeight != null) shouldBe true
-        (nodes[4] as PresentationElement.TooltipWrapper).value.appearance?.waitMilliseconds shouldBe 250
-        ((nodes[5] as PresentationElement.DividerWrapper).value.endIndent != null) shouldBe true
-        val tabs = (nodes[6] as PresentationElement.TabsWrapper).value
+        (badge.options?.icon as skirout.editor.v1.presentation.InputAdornment.ContentWrapper).value.iconName() shouldBe "book"
+    }
+
+    test("a chip without an icon shows none") {
+        (displayElements()[2] as PresentationElement.ChipWrapper).value.options?.icon shouldBe
+            skirout.editor.v1.presentation.InputAdornment.NONE
+    }
+
+    test("a progress bar keeps its minimum height") {
+        (displayElements()[3] as PresentationElement.ProgressWrapper)
+            .value.appearance
+            ?.minimumHeight
+            .literalValue() shouldBe
+            DataValue.FloatWrapper(5.0)
+    }
+
+    test("a tooltip keeps its wait delay") {
+        (displayElements()[4] as PresentationElement.TooltipWrapper).value.appearance?.waitMilliseconds shouldBe 250
+    }
+
+    test("a divider keeps its end indent") {
+        (displayElements()[5] as PresentationElement.DividerWrapper).value.endIndent.literalValue() shouldBe DataValue.FloatWrapper(6.0)
+    }
+
+    test("tabs keep their spacing and each tab its icon") {
+        val tabs = (displayElements()[6] as PresentationElement.TabsWrapper).value
+
         tabs.spacing shouldBe 4.0
         tabs.contentSpacing shouldBe 10.0
-        (tabs.tabs.single().icon != null) shouldBe true
-        (nodes[7] as PresentationElement.StatusWrapper)
+        tabs.tabs
+            .single()
+            .icon
+            .iconName() shouldBe "book"
+    }
+
+    test("status, date time and relative time keep their icon, weight and density") {
+        val elements = displayElements()
+
+        (elements[7] as PresentationElement.StatusWrapper)
             .value.cases
             .single()
             .appearance.options
             ?.icon shouldBe
             skirout.editor.v1.presentation.InputAdornment.NONE
-        (nodes[8] as PresentationElement.DateTimeWrapper)
+        (elements[8] as PresentationElement.DateTimeWrapper)
             .value.options
             ?.appearance
             ?.valueStyle
             ?.weight shouldBe 500
-        (nodes[9] as PresentationElement.RelativeTimeWrapper)
+        (elements[9] as PresentationElement.RelativeTimeWrapper)
             .value.options
             ?.appearance
-            ?.density shouldBe
-            skirout.editor.v1.presentation.ControlDensity.COMPACT
+            ?.density shouldBe ControlDensity.COMPACT
     }
 
-    test("field publication captures metadata after control selection and direct row fields share width") {
-        val id = TypeDefinitionId.qualified("test", "ConfiguredCoordinates")
-        val number = integerScalar(IntegerWidth.SIGNED_THIRTY_TWO).template
-        val definition =
-            TypeDefinition.partial(
-                id = id,
-                representation =
-                    RepresentationTemplate.createRecord(
-                        fields =
-                            listOf(
-                                FieldDeclaration.partial(owner = FieldOwner(definition = id, name = "x"), type = number),
-                                FieldDeclaration.partial(owner = FieldOwner(definition = id, name = "y"), type = number),
-                            ),
-                        abstract_ = false,
-                    ),
-            )
-        val catalog = DefaultCheckedCatalog(CatalogGeneration(value = "configured coordinates"), listOf(definition))
-        val checked = catalog.ready(id.use())
+    test("fields with an editor share a row evenly while fixed content keeps its size") {
+        val row = coordinateRow()
 
-        fun NumericInputScope<Int>.coordinateInput() {
-            step(2)
-            density(ControlDensity.COMPACT)
-            selectAllOnFocus()
-            textStyle(TextStyle(weight = FontWeight(500)))
-        }
-        val result =
-            DefaultPresentationRuntime().build(
-                PresentationBuildBinding(checked.presentationTemplate(), PresentationRole.WORKSPACE),
-            ) { build ->
-                with(build) {
-                    @Suppress("UNCHECKED_CAST")
-                    val scope = NumberControl::class as kotlin.reflect.KClass<NumberControl<Int>>
-                    val x: PresentedField<Int, NumberControl<Int>> = field("x", scope)
-                    val y: PresentedField<Int, NumberControl<Int>> = field("y", scope)
-                    row {
-                        x {
-                            numericInput {
-                                coordinateInput()
-                                placeholder("X")
-                                noIcon()
-                                prefix { text(literal("axis")) }
-                                onComplete { value }
-                            }
-                            label("Horizontal")
-                            readOnly()
-                            enabledIf(literal(false))
-                        }
-                        y {
-                            label("Vertical")
-                            numericInput {
-                                coordinateInput()
-                                placeholder(literal("Y"))
-                            }
-                        }
-                        text(literal("units"))
-                    }
-                }
-            }
-        val row = ((result.layout.singleFixed().element as PresentationElement.ChildrenWrapper).value as ChildrenElement.RowWrapper).value
         row.children.map { it.kind } shouldBe
             listOf(
                 skirout.editor.v1.presentation.AxisChild.Kind.FLEXIBLE_WRAPPER,
                 skirout.editor.v1.presentation.AxisChild.Kind.FLEXIBLE_WRAPPER,
                 skirout.editor.v1.presentation.AxisChild.Kind.FIXED_WRAPPER,
             )
+        row.children.take(2).map { (it as skirout.editor.v1.presentation.AxisChild.FlexibleWrapper).value.flex } shouldBe listOf(1, 1)
+    }
+
+    test("metadata authored before or after the editor reaches the field it describes") {
+        val row = coordinateRow()
         val xNode = (row.children[0] as skirout.editor.v1.presentation.AxisChild.FlexibleWrapper).value.child
         val x = (xNode.element as PresentationElement.NumericInputWrapper).value
         val y =
             (
-                (row.children[1] as skirout.editor.v1.presentation.AxisChild.FlexibleWrapper).value.child.element as
-                    PresentationElement.NumericInputWrapper
+                (row.children[1] as skirout.editor.v1.presentation.AxisChild.FlexibleWrapper).value.child.element
+                    as PresentationElement.NumericInputWrapper
             ).value
-        (row.children[0] as skirout.editor.v1.presentation.AxisChild.FlexibleWrapper).value.flex shouldBe 1
-        (x.control.label as skirout.editor.v1.expression.ExpressionNode.LiteralWrapper).value shouldBe
-            skirout.editor.v1.type_catalog.DataValue
-                .StringValueWrapper("Horizontal")
+
+        x.control.label.literalValue() shouldBe DataValue.StringValueWrapper("Horizontal")
+        y.control.label.literalValue() shouldBe DataValue.StringValueWrapper("Vertical")
         xNode.properties.readOnly shouldBe true
-        (xNode.properties.enabledIf != null) shouldBe true
-        x.appearance?.density shouldBe skirout.editor.v1.presentation.ControlDensity.COMPACT
+        xNode.properties.enabledIf.literalValue() shouldBe DataValue.BooleanWrapper(false)
+        x.appearance?.density shouldBe ControlDensity.COMPACT
         x.appearance?.valueStyle?.weight shouldBe 500
         x.entry?.selectAllOnFocus shouldBe true
         x.options.step shouldBe y.options.step
-        (x.mappings?.completion != null) shouldBe true
-        y.mappings?.completion shouldBe null
-        (x.content?.leading is skirout.editor.v1.presentation.InputAdornment.ContentWrapper) shouldBe true
+        (x.content?.leading as skirout.editor.v1.presentation.InputAdornment.ContentWrapper).value.literalText() shouldBe "axis"
         y.content?.leading shouldBe null
+        x.mappings?.completion shouldNotBe null
+        y.mappings?.completion shouldBe null
     }
 
     test("appearance defaults are immutable sparse wrappers and local controls stay sparse") {
@@ -611,8 +523,8 @@ val DefaultPresentationRuntimeTest by testSuite {
             }
         val node = result.layout.singleFixed()
         val control = (node.element as PresentationElement.DefaultPresentationWrapper).value.control
-        (control.prefix != null) shouldBe true
-        (control.label != null) shouldBe true
+        control.prefix.literalText() shouldBe "prefix"
+        control.label.literalValue() shouldBe DataValue.StringValueWrapper("Name")
         node.properties.readOnly shouldBe true
     }
 
@@ -658,7 +570,7 @@ val DefaultPresentationRuntimeTest by testSuite {
         alignment.alignment shouldBe skirout.editor.v1.presentation.PresentationAlignment.CENTER
     }
 
-    test("resource headings compose ordinary nodes with identity and pane context") {
+    test("a resource heading shows its title and the subject identifier only while one resource is selected") {
         val catalog =
             DefaultCheckedCatalog(
                 CatalogGeneration(value = "headings"),
@@ -675,47 +587,32 @@ val DefaultPresentationRuntimeTest by testSuite {
                 }
             }
         val conditional = result.layout.singleFixed().element as PresentationElement.ConditionalWrapper
-        val condition = (conditional.value.condition as skirout.editor.v1.expression.ExpressionNode.CallWrapper).value
-        condition.operation.value shouldBe "value.equals"
-        val count = condition.arguments[0] as skirout.editor.v1.expression.ExpressionNode.OrElseWrapper
-        (count.value.value as skirout.editor.v1.expression.ExpressionNode.InputWrapper).value.binding.value shouldBe
-            EditorContext.selectionCount.binding.value
-        result.dependencies.contextInputs
-            .single()
-            .source shouldBe
-            skirout.editor.v1.presentation.PresentationContextSource.HostWrapper(
-                skirout.editor.v1.presentation.HostContextInput.SELECTION_COUNT,
+        val selectionCount = EditorContext.selectionCount.binding.value
+
+        result.dependencies.contextInputs.map { it.source } shouldBe
+            listOf(
+                skirout.editor.v1.presentation.PresentationContextSource.HostWrapper(
+                    skirout.editor.v1.presentation.HostContextInput.SELECTION_COUNT,
+                ),
             )
+        conditional.value.condition.evaluateWith(selectionCount to DataValue.integer(java.math.BigInteger.ONE)) shouldBe
+            DataValue.BooleanWrapper(true)
+        conditional.value.condition.evaluateWith(selectionCount to DataValue.integer(java.math.BigInteger.TWO)) shouldBe
+            DataValue.BooleanWrapper(false)
         val paragraphs =
             conditional.value.whenTrue
                 .singleFixed()
                 .fixedChildren()
-        val title = (paragraphs.first().element as PresentationElement.TextWrapper).value
-        val fit = title.sizing as skirout.editor.v1.presentation.TextSizing.FitWrapper
-        ((fit.value.minimum as skirout.editor.v1.expression.ExpressionNode.LiteralWrapper).value).requirePortable() shouldBe
-            DataValue.FloatWrapper(18.0)
-        ((fit.value.maximum as skirout.editor.v1.expression.ExpressionNode.LiteralWrapper).value).requirePortable() shouldBe
-            DataValue.FloatWrapper(40.0)
-        title.paragraph.maxLines shouldBe 1
-        title.paragraph.selectable shouldBe true
-        title.paragraph.overflow shouldBe skirout.editor.v1.presentation.PresentationTextOverflow.ELLIPSIS
-        val identity = paragraphs.last().element as PresentationElement.ConditionalWrapper
-        val idText =
-            (
-                identity.value.whenTrue
-                    .singleFixed()
-                    .element as PresentationElement.TextWrapper
-            ).value
-        idText.paragraph.selectable shouldBe true
-        idText.paragraph.softWrap shouldBe true
-        val identifier = idText.value as skirout.editor.v1.expression.ExpressionNode.OrElseWrapper
-        val representation = (identifier.value.value as skirout.editor.v1.expression.ExpressionNode.CallWrapper).value
-        representation.operation.value shouldBe "value.unwrap"
-        val identityRead = representation.arguments.single() as skirout.editor.v1.expression.ExpressionNode.InputWrapper
-        identityRead.value.binding.value shouldBe "presentation.subject.identifier"
+        paragraphs.first().literalText() shouldBe "A title"
+        val identity = (paragraphs.last().element as PresentationElement.ConditionalWrapper).value.whenTrue.singleFixed()
+        val identifier = DataValue.named(com.typewritermc.types.ResourceIdDefinition.use, DataValue.StringValueWrapper("quest-1"))
+        (identity.element as PresentationElement.TextWrapper).value.value.evaluateWith(
+            "presentation.subject.identifier" to identifier,
+        ) shouldBe
+            DataValue.StringValueWrapper("quest-1")
     }
 
-    test("rich paragraphs serialize sizing and paragraph behavior") {
+    test("rich text keeps its sizing, paragraph behavior, shared style and run weights") {
         val catalog = DefaultCheckedCatalog(CatalogGeneration(value = "rich sizing"), StandardTypes.definitions)
         val checked = catalog.ready(ScalarKind.TEXT.use)
         val result =
@@ -741,17 +638,14 @@ val DefaultPresentationRuntimeTest by testSuite {
         text.paragraph.softWrap shouldBe true
         text.paragraph.selectable shouldBe true
         text.paragraph.tone shouldBe skirout.editor.v1.presentation.PresentationTextTone.SECONDARY
-        text.runs.size shouldBe 2
-        (text.style?.color != null) shouldBe true
-        val restored =
-            skirout.editor.v1.presentation.RichTextContent.serializer.fromBytes(
-                skirout.editor.v1.presentation.RichTextContent.serializer
-                    .toBytes(text),
-            )
-        restored shouldBe text
+        text.runs.map { it.text.literalValue() } shouldBe
+            listOf(DataValue.StringValueWrapper("First"), DataValue.StringValueWrapper("Second"))
+        text.style?.fontWeight.literalValue() shouldBe DataValue.integer(java.math.BigInteger.valueOf(500))
+        text.runs.map { it.style?.fontWeight?.literalValue() } shouldBe listOf(null, DataValue.integer(java.math.BigInteger.valueOf(700)))
+        text.style?.color shouldNotBe null
     }
 
-    test("builds one symbolic generic material and applies it to concrete uses") {
+    test("one generic material serves every argument and a mapping of the wrong type rejects it") {
         val id = TypeDefinitionId.qualified("test", "Weighted")
         val parameter = ParameterKey(owner = id, index = 0)
         val definition =
@@ -825,12 +719,14 @@ val DefaultPresentationRuntimeTest by testSuite {
         expected shouldBe parameter.template
         val weight = material.layout.fixedChildren()[1].element as PresentationElement.NumericInputWrapper
         weight.value.appearance?.density shouldBe skirout.editor.v1.presentation.ControlDensity.COMPACT
-        (weight.value.options.minimum != null) shouldBe true
-        (weight.value.options.step != null) shouldBe true
-        (weight.value.content?.placeholder != null) shouldBe true
-        (weight.value.mappings?.completion != null) shouldBe true
-        (weight.value.mappings?.display != null) shouldBe true
-        (weight.value.control.label != null) shouldBe true
+        weight.value.options.minimum
+            .literalValue() shouldBe DataValue.integer(java.math.BigInteger.ZERO)
+        weight.value.content
+            ?.placeholder
+            .literalValue() shouldBe DataValue.StringValueWrapper("Weight")
+        weight.value.control.label
+            .literalValue() shouldBe DataValue.StringValueWrapper("Relative weight")
+        weight.value.mappings?.display shouldNotBe null
 
         val text = mapOf(parameter to ScalarKind.TEXT.use)
         val integer = mapOf(parameter to integerScalar(IntegerWidth.SIGNED_THIRTY_TWO).use)
@@ -846,28 +742,19 @@ val DefaultPresentationRuntimeTest by testSuite {
                 declarations = listOf(OwnedTypeDeclaration(origin, definition)),
                 presentations = listOf(OwnedPresentation(origin, descriptor, provider)),
             ).assemble(CatalogAssemblyContext(CatalogGeneration(value = "invalid symbolic presentation")))
-        rejected.editorCatalog.presentationMaterials.isEmpty() shouldBe true
-        rejected.editorCatalog.diagnostics.isNotEmpty() shouldBe true
+        rejected.editorCatalog.presentationMaterials shouldBe emptyList()
+        rejected.editorCatalog.diagnostics.map { it.code } shouldBe listOf("presentation_material_build_failed")
     }
 
     test("isolates a named presentation with an invalid collection projection") {
         val subjectId = TypeDefinitionId.qualified("test", "InvalidCollectionSubject")
         val unrelatedId = TypeDefinitionId.qualified("test", "UnrelatedCollectionSubject")
         val subject =
-            TypeDefinition.partial(
-                id = subjectId,
-                representation =
-                    RepresentationTemplate.createRecord(
-                        fields =
-                            listOf(
-                                FieldDeclaration.partial(
-                                    owner = FieldOwner(definition = subjectId, name = "title"),
-                                    type = ScalarKind.TEXT.template,
-                                ),
-                            ),
-                        abstract_ = false,
-                    ),
-            )
+            definitions {
+                record(subjectId) {
+                    field("title", ScalarKind.TEXT.template)
+                }
+            }.single()
         val unrelated =
             TypeDefinition.partial(
                 id = unrelatedId,
@@ -939,20 +826,11 @@ val DefaultPresentationRuntimeTest by testSuite {
         val childId = TypeDefinitionId.qualified("test", "ProjectionChild")
         val resourceId = TypeDefinitionId.qualified("test", "ProjectionResource")
         val base =
-            TypeDefinition.partial(
-                id = baseId,
-                representation =
-                    RepresentationTemplate.createRecord(
-                        fields =
-                            listOf(
-                                FieldDeclaration.partial(
-                                    owner = FieldOwner(definition = baseId, name = "title"),
-                                    type = ScalarKind.TEXT.template,
-                                ),
-                            ),
-                        abstract_ = false,
-                    ),
-            )
+            definitions {
+                record(baseId) {
+                    field("title", ScalarKind.TEXT.template)
+                }
+            }.single()
         val child =
             TypeDefinition.partial(
                 id = childId,
@@ -960,24 +838,12 @@ val DefaultPresentationRuntimeTest by testSuite {
                 parents = listOf(baseId.namedTemplate()),
             )
         val resource =
-            TypeDefinition.partial(
-                id = resourceId,
-                representation =
-                    RepresentationTemplate.createRecord(
-                        fields =
-                            listOf(
-                                FieldDeclaration.partial(
-                                    owner = FieldOwner(definition = resourceId, name = "child"),
-                                    type = childId.template(),
-                                ),
-                                FieldDeclaration.partial(
-                                    owner = FieldOwner(definition = resourceId, name = "selected"),
-                                    type = ScalarKind.TEXT.template,
-                                ),
-                            ),
-                        abstract_ = false,
-                    ),
-            )
+            definitions {
+                record(resourceId) {
+                    field("child", childId.template())
+                    field("selected", ScalarKind.TEXT.template)
+                }
+            }.single()
         val target = PresentationTarget.NamedWrapper(resourceId.namedTemplate())
         val descriptor = descriptor("valid collection", target, 0, PresentationRole.INSPECTOR)
         val origin = ProviderOrigin(descriptor.owner, ArtifactId("test:valid-collection"), "main")
@@ -1050,21 +916,12 @@ val DefaultPresentationRuntimeTest by testSuite {
         val selected = ScalarKind.TEXT.template
 
         fun subject(id: TypeDefinitionId): TypeDefinition =
-            TypeDefinition.partial(
-                id = id,
-                representation =
-                    RepresentationTemplate.createRecord(
-                        fields =
-                            listOf(
-                                FieldDeclaration.partial(
-                                    owner = FieldOwner(definition = id, name = "title"),
-                                    type = ScalarKind.TEXT.template,
-                                ),
-                                FieldDeclaration.partial(owner = FieldOwner(definition = id, name = "selected"), type = selected),
-                            ),
-                        abstract_ = false,
-                    ),
-            )
+            definitions {
+                record(id) {
+                    field("title", ScalarKind.TEXT.template)
+                    field("selected", selected)
+                }
+            }.single()
 
         val base =
             TypeDefinition.partial(
@@ -1207,7 +1064,7 @@ val DefaultPresentationRuntimeTest by testSuite {
         assembly.editorCatalog.presentationMaterials shouldBe emptyList()
     }
 
-    test("resolves one presentation reference by its checked binding without mutating rejected registrations") {
+    test("a presentation reference resolves by the bound type and refuses a conflicting or missing registration") {
         val reference = object : PresentationReference {}
         val catalog = DefaultCheckedCatalog(CatalogGeneration(value = "reference targets"), StandardTypes.definitions)
         val text = descriptor("text reference", PresentationTarget.RepresentationWrapper(RepresentationKind.TEXT), 0)
@@ -1219,9 +1076,9 @@ val DefaultPresentationRuntimeTest by testSuite {
         first.register(reference, boolean)
         first.register(reference, text)
 
-        runCatching {
+        shouldThrow<IllegalArgumentException> {
             first.register(reference, text.copy(target = PresentationTarget.RepresentationWrapper(RepresentationKind.INTEGER)))
-        }.isFailure shouldBe true
+        }.message shouldBe "One presentation id cannot describe different providers in one catalog runtime."
 
         fun selected(
             runtime: DefaultPresentationRuntime,
@@ -1238,10 +1095,11 @@ val DefaultPresentationRuntimeTest by testSuite {
 
         selected(first, ScalarKind.TEXT) shouldBe text.id.name
         selected(first, ScalarKind.BOOLEAN) shouldBe boolean.id.name
-        runCatching { selected(second, ScalarKind.TEXT) }.isFailure shouldBe true
+        shouldThrow<IllegalArgumentException> { selected(second, ScalarKind.TEXT) }.message shouldBe
+            "The invoked presentation reference was not registered by its generated provider."
     }
 
-    test("builds scalar field controls and remaining field exclusions") {
+    test("a field editor binds its field and remaining fields leave out the excluded ones") {
         val id = TypeDefinitionId.qualified("test", "PresentationSubject")
         val definition =
             TypeDefinition.partial(
@@ -1249,75 +1107,75 @@ val DefaultPresentationRuntimeTest by testSuite {
                 representation =
                     RepresentationTemplate.createRecord(
                         fields =
-                            listOf(
-                                FieldDeclaration.partial(
-                                    owner = FieldOwner(definition = id, name = "title"),
-                                    type = ScalarKind.TEXT.template,
-                                ),
-                            ),
+                            listOf("title", "note").map { name ->
+                                FieldDeclaration.partial(owner = FieldOwner(definition = id, name = name), type = ScalarKind.TEXT.template)
+                            },
                         abstract_ = false,
                     ),
             )
         val catalog = DefaultCheckedCatalog(CatalogGeneration(value = "presentation runtime"), listOf(definition))
-        val checked = (catalog.resolve(id.use()) as Resolution.Ready).value
-        val runtime = DefaultPresentationRuntime()
         val root =
-            runtime.build(PresentationBuildBinding(checked.presentationTemplate(), PresentationRole.WORKSPACE)) { build ->
+            DefaultPresentationRuntime().build(
+                PresentationBuildBinding(catalog.ready(id.use()).presentationTemplate(), PresentationRole.WORKSPACE),
+            ) { build ->
                 with(build) {
                     val title: PresentedField<String, TextControl> = field("title", TextControl::class)
+                    val note: PresentedField<String, TextControl> = field("note", TextControl::class)
                     title {
                         label("Title")
                         textInput()
                     }
-                    remainingFields()
+                    remainingFields { exclude(note) }
                 }
             }
-        val column = (root.layout.element as PresentationElement.ChildrenWrapper).value as ChildrenElement.ColumnWrapper
-        val fieldNode = (column.value.children[0] as skirout.editor.v1.presentation.AxisChild.FixedWrapper).value
-        val remainingNode = (column.value.children[1] as skirout.editor.v1.presentation.AxisChild.FixedWrapper).value
-        val field = fieldNode.element as PresentationElement.TextInputWrapper
-        val remaining = remainingNode.element as PresentationElement.RemainingFieldsWrapper
-        field.value.control.binding.path.segments.size shouldBe 1
-        (field.value.control.label != null) shouldBe true
-        remaining.value.excluded.size shouldBe 0
+        val (fieldNode, remainingNode) = root.layout.fixedChildren()
+        val field = (fieldNode.element as PresentationElement.TextInputWrapper).value
+
+        field.control.binding.path.text shouldBe "title"
+        field.control.label.literalValue() shouldBe DataValue.StringValueWrapper("Title")
+        (remainingNode.element as PresentationElement.RemainingFieldsWrapper).value.excluded shouldBe
+            listOf(
+                skirout.editor.v1.type_catalog.RelativeFieldPattern
+                    .of(
+                        skirout.editor.v1.type_catalog.FieldPatternSegment
+                            .field("note"),
+                    ),
+            )
     }
 
-    test("dispatches value class mangled link controls") {
-        val resourceId = TypeDefinitionId.qualified("test", "LinkTargetResource")
-        val linkId = TypeDefinitionId.qualified("test", "LinkValue")
-        val subjectId = TypeDefinitionId.qualified("test", "LinkControlSubject")
-        val linkType = linkId.template()
-        val definitions =
-            StandardTypes.definitions +
-                TypeDefinition.partial(
-                    id = resourceId,
-                    representation = RepresentationTemplate.createRecord(fields = emptyList(), abstract_ = false),
-                ) +
-                TypeDefinition.partial(
-                    id = linkId,
-                    representation =
-                        RepresentationTemplate.createLink(
-                            endpoint = EndpointId(value = "test:link"),
-                            target = resourceId.template(),
-                        ),
-                ) +
-                TypeDefinition.partial(
-                    id = subjectId,
-                    representation =
-                        RepresentationTemplate.createRecord(
-                            fields =
-                                listOf(
-                                    FieldDeclaration.partial(owner = FieldOwner(definition = subjectId, name = "link"), type = linkType),
-                                    FieldDeclaration.partial(
-                                        owner = FieldOwner(definition = subjectId, name = "links"),
-                                        type = StandardTypes.set.template(listOf(linkType)),
-                                    ),
-                                ),
-                            abstract_ = false,
-                        ),
-                )
-        val catalog = DefaultCheckedCatalog(CatalogGeneration(value = "mangled link controls"), definitions)
-        val checked = catalog.ready(subjectId.use())
+    /** A record with a single link field `link` and a set of links `links`. */
+    val linkSubject =
+        run {
+            val resourceId = TypeDefinitionId.qualified("test", "LinkTargetResource")
+            val linkId = TypeDefinitionId.qualified("test", "LinkValue")
+            val subjectId = TypeDefinitionId.qualified("test", "LinkControlSubject")
+            val linkType = linkId.template()
+            val definitions =
+                StandardTypes.definitions +
+                    TypeDefinition.partial(
+                        id = resourceId,
+                        representation = RepresentationTemplate.createRecord(fields = emptyList(), abstract_ = false),
+                    ) +
+                    TypeDefinition.partial(
+                        id = linkId,
+                        representation =
+                            RepresentationTemplate.createLink(
+                                endpoint = EndpointId(value = "test:link"),
+                                target = resourceId.template(),
+                            ),
+                    ) +
+                    definitions {
+                        record(subjectId) {
+                            field("link", linkType)
+                            field("links", StandardTypes.set.template(listOf(linkType)))
+                        }
+                    }.single()
+            val catalog = DefaultCheckedCatalog(CatalogGeneration(value = "mangled link controls"), definitions)
+            catalog.ready(subjectId.use())
+        }
+
+    test("single and collection link fields get link inputs with their candidate policy and reorder setting") {
+        val checked = linkSubject
         val result =
             DefaultPresentationRuntime().build(
                 PresentationBuildBinding(checked.presentationTemplate(), PresentationRole.INSPECTOR),
@@ -1356,27 +1214,148 @@ val DefaultPresentationRuntimeTest by testSuite {
         links.value.allowReorder shouldBe true
     }
 
-    test("preserves layout kinds and control options") {
+    test("a single link input cannot allow reordering") {
+        shouldThrow<IllegalArgumentException> {
+            DefaultPresentationRuntime().build(
+                PresentationBuildBinding(linkSubject.presentationTemplate(), PresentationRole.INSPECTOR),
+            ) { build ->
+                with(build) {
+                    @Suppress("UNCHECKED_CAST")
+                    val link: PresentedField<Any, LinkControl<ProjectionFixtureResource>> =
+                        field("link", LinkControl::class as kotlin.reflect.KClass<LinkControl<ProjectionFixtureResource>>)
+
+                    link { linkInput { allowReorder(true) } }
+                }
+            }
+        }.message shouldBe "A single link cannot be reordered."
+    }
+
+    /** Types [content] as a build over the data subject, for a table of rejected builds. */
+    fun composed(content: PresentationBuildScope.(PresentedField<String, TextControl>) -> Unit) = content
+
+    mapOf<String, Pair<PresentationBuildScope.(PresentedField<String, TextControl>) -> Unit, String>>(
+        "a polymorphic match with two cases for one type" to
+            (
+                composed { title ->
+                    polymorphicMatch(title.input) {
+                        case(AppliedPresentation<String>(PresentationDataFixture.id.namedUse(), PresentationDataFixture.reference)) {}
+                        case(AppliedPresentation<String>(PresentationDataFixture.id.namedUse(), PresentationDataFixture.reference)) {}
+                    }
+                } to "A polymorphic match may declare one case per concrete type."
+            ),
+        "a polymorphic match without a case" to
+            (
+                composed { title -> polymorphicMatch(title.input) { fallback { text(literal("fallback")) } } } to
+                    "A polymorphic match requires at least one concrete case."
+            ),
+        "a presentation parameter bound twice" to
+            (
+                composed { title ->
+                    invoke(PresentationDataFixture.reference) {
+                        bind(PresentationDataFixture.parameter, title.input)
+                        bind(PresentationDataFixture.parameter, title.input)
+                    }
+                } to "A presentation parameter may be bound once per invocation."
+            ),
+        "a presentation parameter in the caller input namespace" to
+            (
+                composed { title ->
+                    invoke(PresentationDataFixture.reference) {
+                        bind(PresentationParameter<String>(ExpressionBindingId(value = "context:title")), title.input)
+                    }
+                } to "Presentation parameters cannot shadow caller inputs."
+            ),
+        "one caller input read with two types" to
+            (
+                composed {
+                    context.read(
+                        PresentationContextKey(
+                            ExpressionBindingId(value = "context:mode"),
+                            PresentationContextSource.CALLER,
+                            PresentationContextValueType.Fixed<String>(ScalarKind.TEXT.use),
+                        ),
+                    )
+                    context.read(
+                        PresentationContextKey(
+                            ExpressionBindingId(value = "context:mode"),
+                            PresentationContextSource.CALLER,
+                            PresentationContextValueType.Fixed<Long>(integerScalar(IntegerWidth.SIGNED_SIXTY_FOUR).use),
+                        ),
+                    )
+                } to "Context input context:mode is declared with conflicting types."
+            ),
+        "a caller input that shadows a binding" to
+            (
+                composed {
+                    context.read(
+                        PresentationContextKey(
+                            CONFIGURED_VALUE,
+                            PresentationContextSource.CALLER,
+                            PresentationContextValueType.Fixed<String>(ScalarKind.TEXT.use),
+                        ),
+                    )
+                } to "Context input ${CONFIGURED_VALUE.value} shadows a binding."
+            ),
+        "two search selectors with one id" to
+            (
+                composed { title ->
+                    title {
+                        searchInput<String> {
+                            selectors {
+                                selector("tag", "tag")
+                                selector("tag", "tag")
+                            }
+                            provider(
+                                sources.staticValues(
+                                    com.typewritermc.expression.portableLiteral<List<String>>(DataValue.listValue(emptyList())),
+                                ),
+                            )
+                            result {
+                                key(row)
+                                selectedValue(row)
+                                presentation { text(row) }
+                            }
+                        }
+                    }
+                } to "Binding search_selector.tag is already declared in this scope."
+            ),
+    ).forEach { (case, rejection) ->
+        test("$case is refused") {
+            shouldThrow<IllegalArgumentException> { PresentationDataFixture.build(rejection.first) }.message shouldBe rejection.second
+        }
+    }
+
+    test("a field with a named presentation cannot also declare an explicit control") {
+        val textReference = object : PresentationReference {}
+        val runtime =
+            DefaultPresentationRuntime().also {
+                it.register(textReference, descriptor("plain text", PresentationTarget.RepresentationWrapper(RepresentationKind.TEXT), 0))
+            }
+
+        shouldThrow<IllegalArgumentException> {
+            runtime.build(
+                PresentationBuildBinding(PresentationDataFixture.checked.presentationTemplate(), PresentationRole.INSPECTOR),
+            ) { build ->
+                val title: PresentedField<String, TextControl> = build.field("title", TextControl::class)
+                title(using = textReference) { textInput() }
+            }
+        }.message shouldBe "A named presentation reference cannot be combined with an explicit field control."
+    }
+
+    test("a presentation parameter cannot be named in the caller input namespace") {
+        shouldThrow<IllegalArgumentException> { presentationParameter<String>("context:title") }.message shouldBe
+            "Presentation parameters cannot shadow caller inputs."
+    }
+
+    test("layout containers and input options keep the values they were authored with") {
         val id = TypeDefinitionId.qualified("test", "PresentationInventory")
         val definition =
-            TypeDefinition.partial(
-                id = id,
-                representation =
-                    RepresentationTemplate.createRecord(
-                        fields =
-                            listOf(
-                                FieldDeclaration.partial(
-                                    owner = FieldOwner(definition = id, name = "title"),
-                                    type = ScalarKind.TEXT.template,
-                                ),
-                                FieldDeclaration.partial(
-                                    owner = FieldOwner(definition = id, name = "amount"),
-                                    type = integerScalar(IntegerWidth.SIGNED_THIRTY_TWO).template,
-                                ),
-                            ),
-                        abstract_ = false,
-                    ),
-            )
+            definitions {
+                record(id) {
+                    field("title", ScalarKind.TEXT.template)
+                    field("amount", integerScalar(IntegerWidth.SIGNED_THIRTY_TWO).template)
+                }
+            }.single()
         val catalog = DefaultCheckedCatalog(CatalogGeneration(value = "presentation inventory"), listOf(definition))
         val checked = (catalog.resolve(id.use()) as Resolution.Ready).value
         val root =
@@ -1439,13 +1418,17 @@ val DefaultPresentationRuntimeTest by testSuite {
                     as PresentationElement.TextInputWrapper
             ).value
         text.options.characterFilters.size shouldBe 1
-        (text.mappings?.completion != null) shouldBe true
-        (text.control.prefix?.element is PresentationElement.IconWrapper) shouldBe true
-        ((elements[1] as PresentationElement.ChildrenWrapper).value is ChildrenElement.WrapWrapper) shouldBe true
-        ((elements[2] as PresentationElement.ChildrenWrapper).value is ChildrenElement.GridWrapper) shouldBe true
+        text.mappings?.completion shouldNotBe null
+        text.control.prefix.iconName() shouldBe "book"
+        val wrap = ((elements[1] as PresentationElement.ChildrenWrapper).value as ChildrenElement.WrapWrapper).value.layout
+        listOf(wrap.spacing, wrap.runSpacing) shouldBe listOf(2.0, 3.0)
+        val grid = ((elements[2] as PresentationElement.ChildrenWrapper).value as ChildrenElement.GridWrapper).value.layout
+        listOf(grid.columns.toDouble(), grid.horizontalSpacing, grid.verticalSpacing) shouldBe listOf(2.0, 4.0, 5.0)
         ((elements[3] as PresentationElement.ChildrenWrapper).value is ChildrenElement.StackWrapper) shouldBe true
-        (elements[4] is PresentationElement.SectionWrapper) shouldBe true
-        (elements[5] is PresentationElement.PaddingWrapper) shouldBe true
+        val border = (elements[4] as PresentationElement.SectionWrapper).value.border
+        (border as skirout.editor.v1.presentation.PresentationBorder.AllWrapper).value.width shouldBe 1.0
+        with((elements[5] as PresentationElement.PaddingWrapper).value) { listOf(start, top, end, bottom) } shouldBe
+            listOf(1.0, 2.0, 3.0, 4.0)
         (elements[6] is PresentationElement.ContainerWrapper) shouldBe true
         (elements[7] is PresentationElement.TooltipWrapper) shouldBe true
         val select = elements[8] as PresentationElement.SelectInputWrapper
@@ -1455,299 +1438,67 @@ val DefaultPresentationRuntimeTest by testSuite {
         select.value.allowCustomValue shouldBe true
     }
 
-    test("binds composite callbacks to their nested schema and lexical values") {
-        val wrapperId = TypeDefinitionId.qualified("test", "Code")
-        val positionId = TypeDefinitionId.qualified("test", "Position")
-        val subjectId = TypeDefinitionId.qualified("test", "CompositeSubject")
-        val integer = integerScalar(IntegerWidth.SIGNED_THIRTY_TWO)
-        val position =
-            TypeDefinition.partial(
-                id = positionId,
-                representation =
-                    RepresentationTemplate.createRecord(
-                        fields =
-                            listOf(
-                                FieldDeclaration.partial(owner = FieldOwner(definition = positionId, name = "x"), type = integer.template),
-                                FieldDeclaration.partial(owner = FieldOwner(definition = positionId, name = "y"), type = integer.template),
-                            ),
-                        abstract_ = false,
-                    ),
-            )
-        val wrapper =
-            TypeDefinition.partial(id = wrapperId, representation = RepresentationTemplate.createScalar(kind = ScalarKind.TEXT))
-        val subject =
-            TypeDefinition.partial(
-                id = subjectId,
-                representation =
-                    RepresentationTemplate.createRecord(
-                        fields =
-                            listOf(
-                                FieldDeclaration.partial(
-                                    owner = FieldOwner(definition = subjectId, name = "list"),
-                                    type = StandardTypes.list.template(listOf(ScalarKind.TEXT.template)),
-                                ),
-                                FieldDeclaration.partial(
-                                    owner = FieldOwner(definition = subjectId, name = "set"),
-                                    type = StandardTypes.set.template(listOf(ScalarKind.TEXT.template)),
-                                ),
-                                FieldDeclaration.partial(
-                                    owner = FieldOwner(definition = subjectId, name = "map"),
-                                    type =
-                                        StandardTypes.map.template(
-                                            listOf(
-                                                ScalarKind.TEXT.template,
-                                                integer.template.nullable(),
-                                            ),
-                                        ),
-                                ),
-                                FieldDeclaration.partial(
-                                    owner = FieldOwner(definition = subjectId, name = "code"),
-                                    type = wrapperId.template(),
-                                ),
-                                FieldDeclaration.partial(
-                                    owner = FieldOwner(definition = subjectId, name = "position"),
-                                    type = positionId.template(),
-                                ),
-                            ),
-                        abstract_ = false,
-                    ),
-            )
-        val catalog =
-            DefaultCheckedCatalog(
-                CatalogGeneration(value = "nested presentation callbacks"),
-                StandardTypes.definitions + wrapper + position + subject,
-            )
-        val checked = catalog.ready(subjectId.use())
-        val root =
-            DefaultPresentationRuntime().build(
-                PresentationBuildBinding(checked.presentationTemplate(), PresentationRole.WORKSPACE),
-            ) { build ->
-                with(build) {
-                    @Suppress("UNCHECKED_CAST")
-                    val list: PresentedField<List<String>, ListControl<TextControl>> =
-                        field(
-                            "list",
-                            ListControl::class as kotlin.reflect.KClass<ListControl<TextControl>>,
-                            mapOf(NestedPresentationSlot.Items to NestedPresentationScope(TextControl::class)),
-                        )
+    test("list, set and map editors bind items, keys and values to their own lexical bindings") {
+        val elements = CompositeFixture.root().layout.fixedChildren()
+        val map = (elements[2].element as PresentationElement.MapInputWrapper).value
+        val nullable = (map.valuePresentation.singleFixed().element as PresentationElement.NullableInputWrapper).value
 
-                    @Suppress("UNCHECKED_CAST")
-                    val set: PresentedField<Set<String>, SetControl<TextControl>> =
-                        field(
-                            "set",
-                            SetControl::class as kotlin.reflect.KClass<SetControl<TextControl>>,
-                            mapOf(NestedPresentationSlot.Items to NestedPresentationScope(TextControl::class)),
-                        )
-
-                    @Suppress("UNCHECKED_CAST")
-                    val map: PresentedField<Map<String, Int?>, MapControl<TextControl, NullableControl<NumberControl<Int>>>> =
-                        field(
-                            "map",
-                            MapControl::class as kotlin.reflect.KClass<MapControl<TextControl, NullableControl<NumberControl<Int>>>>,
-                            mapOf(
-                                NestedPresentationSlot.Keys to NestedPresentationScope(TextControl::class),
-                                NestedPresentationSlot.Values to
-                                    NestedPresentationScope(
-                                        NullableControl::class,
-                                        nested =
-                                            mapOf(
-                                                NestedPresentationSlot.Values to NestedPresentationScope(NumberControl::class),
-                                            ),
-                                    ),
-                            ),
-                        )
-
-                    @Suppress("UNCHECKED_CAST")
-                    val code: PresentedField<String, NamedControl<String, TextControl>> =
-                        field(
-                            "code",
-                            NamedControl::class as kotlin.reflect.KClass<NamedControl<String, TextControl>>,
-                            mapOf(NestedPresentationSlot.Payload to NestedPresentationScope(TextControl::class)),
-                        )
-
-                    @Suppress("UNCHECKED_CAST")
-                    val positionField: PresentedField<Any, RecordControl<TestPositionScope>> =
-                        field(
-                            "position",
-                            RecordControl::class as kotlin.reflect.KClass<RecordControl<TestPositionScope>>,
-                            mapOf(
-                                NestedPresentationSlot.Fields to
-                                    NestedPresentationScope(
-                                        TestPositionScope::class,
-                                        create = { nested -> TestPositionScopeImpl(nested) },
-                                    ),
-                            ),
-                        )
-
-                    list { listInput { items { textInput() } } }
-                    set { collectionInput { items { textInput() } } }
-                    map {
-                        mapInput {
-                            keys { textInput() }
-                            values { nullableInput { value { numericInput() } } }
-                        }
-                    }
-                    code { namedInput { payload { textInput() } } }
-                    positionField { recordInput { fields { x { numericInput() } } } }
-                }
-            }
-
-        val nestedRemainder =
-            DefaultPresentationRuntime().build(
-                PresentationBuildBinding(checked.presentationTemplate(), PresentationRole.WORKSPACE),
-            ) { build ->
-                with(build) {
-                    @Suppress("UNCHECKED_CAST")
-                    val positionField: PresentedField<Any, RecordControl<TestPositionScope>> =
-                        field(
-                            "position",
-                            RecordControl::class as kotlin.reflect.KClass<RecordControl<TestPositionScope>>,
-                            mapOf(
-                                NestedPresentationSlot.Fields to
-                                    NestedPresentationScope(TestPositionScope::class, create = { nested -> TestPositionScopeImpl(nested) }),
-                            ),
-                        )
-                    positionField {
-                        recordInput {
-                            fields {
-                                x { numericInput { placeholder("X") } }
-                                remainingFields()
-                            }
-                        }
-                    }
-                }
-            }
-        val positionBody = (nestedRemainder.layout.singleFixed().element as PresentationElement.RecordInputWrapper).value.fieldPresentation
-        val nestedChildren = requireNotNull(positionBody).fixedChildren()
-        nestedChildren
-            .first()
-            .boundControl()
-            .binding.path.segments.size shouldBe 2
-        val scopedRemainder = nestedChildren.last().element as PresentationElement.ScopedBindingWrapper
-        scopedRemainder.value.binding.path.segments.size shouldBe 1
-        scopedRemainder.value.scopeBinding.id.value shouldBe "configured_value"
-        (scopedRemainder.value.child.element is PresentationElement.RemainingFieldsWrapper) shouldBe true
-
-        System.getenv("TYPEWRITER_CONTROL_FIXTURE_DIR")?.let { output ->
-            val directory = java.io.File(output)
-            directory.mkdirs()
-            java.io.File(directory, "composite-layout.bin").writeBytes(PresentationNode.serializer.toBytes(root.layout).toByteArray())
-            val value =
-                DataValue.record(
-                    mapOf(
-                        "list" to DataValue.listValue(emptyList()),
-                        "set" to DataValue.setValue(emptyList()),
-                        "map" to DataValue.mapValue(emptyList()),
-                        "code" to DataValue.named(wrapperId.namedUse(), DataValue.StringValueWrapper("Authored code")),
-                        "position" to
-                            DataValue.named(
-                                positionId.namedUse(),
-                                DataValue.record(
-                                    mapOf(
-                                        "x" to DataValue.integer(java.math.BigInteger.valueOf(7)),
-                                        "y" to DataValue.integer(java.math.BigInteger.valueOf(8)),
-                                    ),
-                                ),
-                            ),
-                    ),
-                )
-            val encoded =
-                value.requirePortable()
-            java.io
-                .File(
-                    directory,
-                    "composite-value.bin",
-                ).writeBytes(
-                    skirout.editor.v1.type_catalog.DataValue.serializer
-                        .toBytes(encoded)
-                        .toByteArray(),
-                )
-            java.io
-                .File(
-                    directory,
-                    "nested-remainder-layout.bin",
-                ).writeBytes(PresentationNode.serializer.toBytes(nestedRemainder.layout).toByteArray())
-            val owner =
-                ProviderOrigin(
-                    descriptor(
-                        "nested remainder",
-                        PresentationTarget.NamedWrapper(subjectId.namedTemplate()),
-                        0,
-                        PresentationRole.WORKSPACE,
-                    ).owner,
-                    ArtifactId("test:nested-remainder"),
-                    "main",
-                )
-            val assembly =
-                CatalogContributions(
-                    declarations =
-                        listOf(wrapper, position, subject).map {
-                            OwnedTypeDeclaration(owner, it)
-                        },
-                ).assemble(CatalogAssemblyContext(CatalogGeneration(value = "nested remainder fixture")))
-            val wire = assembly.editorCatalog
-            java.io
-                .File(
-                    directory,
-                    "nested-remainder-catalog.bin",
-                ).writeBytes(
-                    skirout.editor.v1.catalog.EditorCatalog.serializer
-                        .toBytes(wire)
-                        .toByteArray(),
-                )
-        }
-        val elements = root.layout.fixedChildren()
-        val list = elements[0].element as PresentationElement.ListInputWrapper
-        list.value.itemPresentation
+        (elements[0].element as PresentationElement.ListInputWrapper)
+            .value.itemPresentation
             .singleFixed()
             .boundControl()
-            .binding.bindingId.value shouldBe "list_item"
-        val set = elements[1].element as PresentationElement.SetInputWrapper
-        set.value.itemPresentation
+            .binding.bindingId.value shouldBe
+            "list_item"
+        (elements[1].element as PresentationElement.SetInputWrapper)
+            .value.itemPresentation
             .singleFixed()
             .boundControl()
-            .binding.bindingId.value shouldBe "set_item"
-        val map = elements[2].element as PresentationElement.MapInputWrapper
-        map.value.keyPresentation
+            .binding.bindingId.value shouldBe
+            "set_item"
+        map.keyPresentation
             .singleFixed()
             .boundControl()
             .binding.bindingId.value shouldBe "map_key"
-        val nullable =
-            map.value.valuePresentation
-                .singleFixed()
-                .element as PresentationElement.NullableInputWrapper
-        System.getenv("TYPEWRITER_CONTROL_FIXTURE_DIR")?.let { output ->
-            java.io
-                .File(
-                    output,
-                    "nullable-layout.bin",
-                ).writeBytes(PresentationNode.serializer.toBytes(map.value.valuePresentation!!).toByteArray())
-            val value =
-                DataValue.integer(java.math.BigInteger.valueOf(42))
-            java.io
-                .File(
-                    output,
-                    "nullable-value.bin",
-                ).writeBytes(
-                    skirout.editor.v1.type_catalog.DataValue.serializer
-                        .toBytes(value)
-                        .toByteArray(),
-                )
-        }
-        nullable.value.valuePresentation
+        nullable.valuePresentation
             .singleFixed()
             .boundControl()
             .binding.bindingId.value shouldBe "map_value"
-        val named = elements[3].element as PresentationElement.NamedInputWrapper
-        named.value.payloadPresentation
+    }
+
+    test("a named scalar editor binds its payload at the field and a record editor binds its nested field") {
+        val elements = CompositeFixture.root().layout.fixedChildren()
+
+        (elements[3].element as PresentationElement.NamedInputWrapper)
+            .value.payloadPresentation
             .singleFixed()
             .boundControl()
-            .binding.path.segments.size shouldBe 1
-        val record = elements[4].element as PresentationElement.RecordInputWrapper
-        record.value.fieldPresentation
+            .binding.path.text shouldBe
+            "code"
+        (elements[4].element as PresentationElement.RecordInputWrapper)
+            .value.fieldPresentation
             .singleFixed()
             .boundControl()
-            .binding.path.segments.size shouldBe 2
+            .binding.path.text shouldBe
+            "position.x"
+    }
+
+    test("a nested record remainder covers the record's other fields under the configured value") {
+        val record =
+            CompositeFixture
+                .nestedRemainder()
+                .layout
+                .singleFixed()
+                .element as PresentationElement.RecordInputWrapper
+        val children = requireNotNull(record.value.fieldPresentation).fixedChildren()
+        val remainder = (children.last().element as PresentationElement.ScopedBindingWrapper).value
+
+        children
+            .first()
+            .boundControl()
+            .binding.path.text shouldBe "position.x"
+        remainder.binding.path.text shouldBe "position"
+        remainder.scopeBinding.id.value shouldBe "configured_value"
+        (remainder.child.element is PresentationElement.RemainingFieldsWrapper) shouldBe true
     }
 
     test("nested named controls remain local to their record and collection binders") {
@@ -1755,36 +1506,18 @@ val DefaultPresentationRuntimeTest by testSuite {
         val subjectId = TypeDefinitionId.qualified("test", "NestedChoiceSubject")
         val integer = integerScalar(IntegerWidth.SIGNED_THIRTY_TWO)
         val position =
-            TypeDefinition.partial(
-                id = positionId,
-                representation =
-                    RepresentationTemplate.createRecord(
-                        fields =
-                            listOf(
-                                FieldDeclaration.partial(owner = FieldOwner(definition = positionId, name = "x"), type = integer.template),
-                            ),
-                        abstract_ = false,
-                    ),
-            )
+            definitions {
+                record(positionId) {
+                    field("x", integer.template)
+                }
+            }.single()
         val subject =
-            TypeDefinition.partial(
-                id = subjectId,
-                representation =
-                    RepresentationTemplate.createRecord(
-                        fields =
-                            listOf(
-                                FieldDeclaration.partial(
-                                    owner = FieldOwner(definition = subjectId, name = "style"),
-                                    type = positionId.template(),
-                                ),
-                                FieldDeclaration.partial(
-                                    owner = FieldOwner(definition = subjectId, name = "buttons"),
-                                    type = StandardTypes.list.template(listOf(positionId.template())),
-                                ),
-                            ),
-                        abstract_ = false,
-                    ),
-            )
+            definitions {
+                record(subjectId) {
+                    field("style", positionId.template())
+                    field("buttons", StandardTypes.list.template(listOf(positionId.template())))
+                }
+            }.single()
         val catalog =
             DefaultCheckedCatalog(
                 CatalogGeneration(value = "nested explicit presentation paths"),
@@ -1844,187 +1577,126 @@ val DefaultPresentationRuntimeTest by testSuite {
                     buttons { listInput { items { recordInput { fields { x(using = reference) } } } } }
                 }
             }
-        layout.layout.inferInheritableNodes().size shouldBe 3
+        val inherited = layout.layout.inferInheritableNodes()
+        val nestedInvocations =
+            layout.layout
+                .allNodes()
+                .filter { it.element is PresentationElement.DefaultPresentationWrapper }
+                .map { it.nodeId }
+
+        nestedInvocations shouldHaveSize 2
+        inherited shouldHaveSize 3
+        inherited.intersect(nestedInvocations.toSet()) shouldBe emptySet()
     }
 
-    test("builds scoped collection match and invocation data nodes with lexical bindings") {
-        val id = TypeDefinitionId.qualified("test", "PresentationDataSubject")
-        val definition =
-            TypeDefinition.partial(
-                id = id,
-                representation =
-                    RepresentationTemplate.createRecord(
-                        fields =
-                            listOf(
-                                FieldDeclaration.partial(
-                                    owner = FieldOwner(definition = id, name = "title"),
-                                    type = ScalarKind.TEXT.template,
-                                ),
-                            ),
-                        abstract_ = false,
-                    ),
-            )
-        val catalog = DefaultCheckedCatalog(CatalogGeneration(value = "presentation data"), StandardTypes.definitions + definition)
-        val checked = catalog.ready(id.use())
-        val reference = object : PresentationReference {}
-        val referenceId =
-            skirout.editor.v1.type_catalog
-                .PresentationId(namespace = "test", name = "invoked")
-        val parameter = presentationParameter<String>("title")
-        val runtime =
-            DefaultPresentationRuntime().also {
-                it.register(reference, descriptor("invoked", PresentationTarget.NamedWrapper(id.namedTemplate()), 0))
-            }
-        val repeatedSource =
-            com.typewritermc.expression.portableLiteral<List<String>>(
-                DataValue.listValue(
-                    listOf(ListItem(id = ItemId(value = "first"), value = DataValue.StringValueWrapper("value"))),
-                ),
-            )
-        val source =
-            collectionSource<String, String>("rows", ScalarKind.TEXT.template) {
-                key(row)
-                relations("children", repeatedSource)
-            }
-        val root =
-            runtime.build(PresentationBuildBinding(checked.presentationTemplate(), PresentationRole.WORKSPACE)) { build ->
-                with(build) {
-                    val title: PresentedField<String, TextControl> = field("title", TextControl::class)
-                    repeated<String, String>(repeatedSource) {
-                        text(item.orElse(literal("missing")))
-                        empty { text(literal("empty")) }
-                        separator { divider() }
-                    }
-                    scoped(title.input) { textInput() }
-                    typedField(title.input) { textInput() }
-                    collectionLookup(source, title.input) {
-                        found { text(row.orElse(literal("missing row"))) }
-                        missing { text(literal("missing")) }
-                        loading { text(literal("loading")) }
-                    }
-                    collectionGraph(source) {
-                        root(title.input)
-                        relation("children", CollectionGraphDirection.REVERSE, maximumDepth = 4)
-                        node {
-                            text(row.orElse(literal("missing node")))
-                            descendants()
-                        }
-                    }
-                    polymorphicMatch(title.input) {
-                        case(AppliedPresentation<String>(id.namedUse(), reference)) {
-                            text(literal("subject case"))
-                        }
-                        fallback { text(literal("fallback")) }
-                    }
-                    invoke(reference) { bind(parameter, title.input) }
-                }
-            }
+    test("a data layout depends on its collection source, invoked presentation and subject type") {
+        val dependencies = PresentationDataFixture.root().dependencies
 
-        root.dependencies.collections
-            .single()
-            .sourceId shouldBe "rows"
-        root.dependencies.presentations
-            .single()
-            .name shouldBe "invoked"
-        root.dependencies.types.single() shouldBe id.use()
-
-        val elements = root.layout.fixedChildren().map(PresentationNode::element)
-        val repeated = elements[0] as PresentationElement.RepeatedWrapper
-        repeated.value.itemBinding.id.value
-            .startsWith("presentation.repeated.item") shouldBe true
-        (repeated.value.presentation.empty != null) shouldBe true
-        val scoped = elements[1] as PresentationElement.ScopedBindingWrapper
-        scoped.value.child
-            .singleFixed()
-            .boundControl()
-            .binding.bindingId shouldBe scoped.value.scopeBinding.id
-        val typed = elements[2] as PresentationElement.TypedFieldWrapper
-        System.getenv("TYPEWRITER_CONTROL_FIXTURE_DIR")?.let { output ->
-            java.io
-                .File(
-                    output,
-                    "typed-layout.bin",
-                ).writeBytes(PresentationNode.serializer.toBytes(root.layout.fixedChildren()[2]).toByteArray())
-            val value =
-                DataValue
-                    .record(
-                        mapOf("title" to DataValue.StringValueWrapper("Authored title")),
-                    ).requirePortable()
-            java.io
-                .File(
-                    output,
-                    "typed-value.bin",
-                ).writeBytes(
-                    skirout.editor.v1.type_catalog.DataValue.serializer
-                        .toBytes(value)
-                        .toByteArray(),
-                )
-        }
-        typed.value.presentation
-            .singleFixed()
-            .boundControl()
-            .binding.path.segments.size shouldBe 1
-        val lookup = elements[3] as PresentationElement.CollectionLookupWrapper
-        lookup.value.sourceId shouldBe "rows"
-        (lookup.value.loading != null) shouldBe true
-        val graph = elements[4] as PresentationElement.CollectionGraphWrapper
-        graph.value.sourceId shouldBe "rows"
-        graph.value.maximumDepth shouldBe 4
-        graph.value.direction shouldBe skirout.editor.v1.presentation.CollectionGraphDirection.REVERSE
-        (graph.value.rootSequence.layout is skirout.editor.v1.presentation.SequenceLayout.ChildrenWrapper) shouldBe true
-        (graph.value.children.layout is skirout.editor.v1.presentation.SequenceLayout.ChildrenWrapper) shouldBe true
-        graph.value.rootSequence.empty shouldBe null
-        root.dependencies.collections
+        dependencies.collections.single().sourceId shouldBe "rows"
+        dependencies.collections
             .single()
             .relations
             .single()
-            .targets shouldBe repeatedSource.toNode()
-        val match = elements[5] as PresentationElement.PolymorphicMatchWrapper
-        match.value.cases.size shouldBe 1
-        (match.value.fallback != null) shouldBe true
-        val invocation = elements[6] as PresentationElement.InvocationWrapper
-        invocation.value.arguments
-            .single()
-            .input.value shouldBe "title"
-        invocation.value.arguments
-            .single()
-            .binding.path.segments.size shouldBe 1
+            .targets shouldBe PresentationDataFixture.repeatedSource.toNode()
+        dependencies.presentations.single().name shouldBe "invoked"
+        dependencies.types.single() shouldBe PresentationDataFixture.id.use()
+    }
 
-        val other =
-            collectionSource<Boolean, String>("rows", ScalarKind.BOOLEAN.template) {
-                key(literal("same key type"))
-            }
-        val otherResult =
-            runtime.build(PresentationBuildBinding(checked.presentationTemplate(), PresentationRole.WORKSPACE)) { build ->
-                with(build) {
-                    val title: PresentedField<String, TextControl> = field("title", TextControl::class)
-                    collectionLookup(other, title.input) {
-                        found { text(literal("found")) }
-                        missing { text(literal("missing")) }
+    test("a repeated node shows its empty and separator content") {
+        val repeated = (dataElements()[0] as PresentationElement.RepeatedWrapper).value.presentation
+
+        repeated.empty.literalText() shouldBe "empty"
+        (repeated.separator?.element is PresentationElement.DividerWrapper) shouldBe true
+    }
+
+    test("a scoped node binds its editor to the scope it declares") {
+        val scoped = (dataElements()[1] as PresentationElement.ScopedBindingWrapper).value
+
+        scoped.child
+            .singleFixed()
+            .boundControl()
+            .binding.bindingId shouldBe scoped.scopeBinding.id
+    }
+
+    test("a typed field binds its editor to the field") {
+        (dataElements()[2] as PresentationElement.TypedFieldWrapper)
+            .value.presentation
+            .singleFixed()
+            .boundControl()
+            .binding.path.text shouldBe
+            "title"
+    }
+
+    test("a collection lookup reads its source and shows loading content") {
+        val lookup = (dataElements()[3] as PresentationElement.CollectionLookupWrapper).value
+
+        lookup.sourceId shouldBe "rows"
+        lookup.loading.literalText() shouldBe "loading"
+    }
+
+    test("a collection graph follows its relation in the authored direction up to its depth") {
+        val graph = (dataElements()[4] as PresentationElement.CollectionGraphWrapper).value
+
+        graph.sourceId shouldBe "rows"
+        graph.relationId shouldBe "children"
+        graph.maximumDepth shouldBe 4
+        graph.direction shouldBe CollectionGraphDirection.REVERSE
+    }
+
+    test("a polymorphic match keeps its case and fallback") {
+        val match = (dataElements()[5] as PresentationElement.PolymorphicMatchWrapper).value
+
+        match.cases
+            .single()
+            .child
+            .literalText() shouldBe "subject case"
+        match.fallback.literalText() shouldBe "fallback"
+    }
+
+    test("an invocation binds its parameter to the field") {
+        val argument = (dataElements()[6] as PresentationElement.InvocationWrapper).value.arguments.single()
+
+        argument.input.value shouldBe "title"
+        argument.binding.path.text shouldBe "title"
+    }
+
+    test("a lookup row binding carries the row type of its source") {
+        with(PresentationDataFixture) {
+            val otherResult =
+                runtime.build(PresentationBuildBinding(checked.presentationTemplate(), PresentationRole.WORKSPACE)) { build ->
+                    with(build) {
+                        val title: PresentedField<String, TextControl> = field("title", TextControl::class)
+                        collectionLookup(other, title.input) {
+                            found { text(literal("found")) }
+                            missing { text(literal("missing")) }
+                        }
                     }
                 }
-            }
-        otherResult.dependencies.collections
-            .single()
-            .rowBinding.type shouldBe
-            ScalarKind.BOOLEAN.template
-        otherResult.dependencies.presentations shouldBe emptyList()
+            otherResult.dependencies.collections
+                .single()
+                .rowBinding.type shouldBe ScalarKind.BOOLEAN.template
+            otherResult.dependencies.presentations shouldBe emptyList()
+        }
+    }
 
-        runCatching {
-            runtime.build(PresentationBuildBinding(checked.presentationTemplate(), PresentationRole.WORKSPACE)) { build ->
-                with(build) {
-                    val title: PresentedField<String, TextControl> = field("title", TextControl::class)
-                    collectionLookup(source, title.input) {
-                        found { text(literal("found")) }
-                        missing { text(literal("missing")) }
-                    }
-                    collectionLookup(other, title.input) {
-                        found { text(literal("found")) }
-                        missing { text(literal("missing")) }
+    test("two collection sources under one id with different row types are refused") {
+        with(PresentationDataFixture) {
+            shouldThrow<IllegalArgumentException> {
+                runtime.build(PresentationBuildBinding(checked.presentationTemplate(), PresentationRole.WORKSPACE)) { build ->
+                    with(build) {
+                        val title: PresentedField<String, TextControl> = field("title", TextControl::class)
+                        collectionLookup(source, title.input) {
+                            found { text(literal("found")) }
+                            missing { text(literal("missing")) }
+                        }
+                        collectionLookup(other, title.input) {
+                            found { text(literal("found")) }
+                            missing { text(literal("missing")) }
+                        }
                     }
                 }
-            }
-        }.isFailure shouldBe true
+            }.message shouldBe "One presentation build cannot declare conflicting collection sources with the same id."
+        }
     }
 
     test("projected collection sources use stable resource identities by default and allow handled custom keys") {
@@ -2043,7 +1715,9 @@ val DefaultPresentationRuntimeTest by testSuite {
             projection.projectedCollectionSource(
                 key = { expressions.name.orElse(literal("unnamed")) },
             )
-        (byName.key.toNode() is ExpressionNode.OrElseWrapper) shouldBe true
+        val key = (byName.key.toNode() as ExpressionNode.OrElseWrapper).value
+        key.fallback.literalValue() shouldBe DataValue.StringValueWrapper("unnamed")
+        key.value shouldNotBe byResource.key.toNode()
         byName.relations shouldBe emptyList()
     }
 
@@ -2096,20 +1770,10 @@ val DefaultPresentationRuntimeTest by testSuite {
         val specialized = DefaultPresentationRegistry(catalog, listOf(preview, picker), com.typewritermc.discovery.DEFAULT_ROLE_FALLBACKS)
         (specialized.select(PresentationRole.REFERENCE_PICKER_RESULT, checked) as PresentationSelection.Selected)
             .descriptor.id shouldBe picker.id
-    }
 
-    test("inspector presentations do not satisfy workspace selection") {
-        val id = TypeDefinitionId.qualified("test", "RoleSubject")
-        val definition =
-            TypeDefinition.partial(id = id, representation = RepresentationTemplate.createRecord(fields = emptyList(), abstract_ = false))
-        val catalog = DefaultCheckedCatalog(CatalogGeneration(value = "role separation"), listOf(definition))
-        val checked = (catalog.resolve(id.use()) as Resolution.Ready).value
-        val inspector = descriptor("inspector", PresentationTarget.NamedWrapper(id.namedTemplate()), 10, PresentationRole.INSPECTOR)
-        val registry = DefaultPresentationRegistry(catalog, listOf(inspector))
-
-        (registry.select(PresentationRole.INSPECTOR, checked) as PresentationSelection.Selected).descriptor.id shouldBe inspector.id
-        registry.select(PresentationRole.WORKSPACE, checked) shouldBe
-            PresentationSelection.Missing(PresentationRole.WORKSPACE)
+        val inspector = descriptor("inspector", preview.target, 0, PresentationRole.INSPECTOR)
+        DefaultPresentationRegistry(catalog, listOf(inspector), com.typewritermc.discovery.DEFAULT_ROLE_FALLBACKS)
+            .select(PresentationRole.WORKSPACE, checked) shouldBe PresentationSelection.Missing(PresentationRole.WORKSPACE)
     }
 
     test("reports incomparable generic presentation targets as a conflict before priority") {
@@ -2343,12 +2007,28 @@ private object ProjectionFixtureExpressionsFactory : com.typewritermc.expression
 
 private interface ProjectionFixtureExpressions
 
-private fun PresentationNode.fixedChildren(): List<PresentationNode> {
-    val column = (element as PresentationElement.ChildrenWrapper).value as ChildrenElement.ColumnWrapper
-    return column.value.children.map { (it as skirout.editor.v1.presentation.AxisChild.FixedWrapper).value }
-}
+/** The portable value of a literal expression. */
+private fun ExpressionNode?.literalValue(): DataValue = (this as ExpressionNode.LiteralWrapper).value.requirePortable()
 
-private fun PresentationNode?.singleFixed(): PresentationNode = requireNotNull(this).fixedChildren().single()
+/** The literal string of the only text element in this layout. */
+private fun PresentationNode?.literalText(): String =
+    (
+        requireNotNull(
+            this,
+        ).elementsOf<PresentationElement.TextWrapper>().single().value.value.literalValue() as DataValue.StringValueWrapper
+    ).value
+
+/** The literal icon name of the only icon element in this layout. */
+private fun PresentationNode?.iconName(): String =
+    (
+        requireNotNull(
+            this,
+        ).elementsOf<PresentationElement.IconWrapper>().single().value.name.literalValue() as DataValue.StringValueWrapper
+    ).value
+
+/** The value of this expression when each named input binding holds the given value. */
+private fun ExpressionNode.evaluateWith(vararg inputs: Pair<String, DataValue>): DataValue? =
+    (com.typewritermc.expression.evaluate(this, *inputs) as? com.typewritermc.authoring.Availability.Available)?.value
 
 private fun PresentationNode.boundControl(): skirout.editor.v1.presentation.BoundControl =
     when (val value = element) {
@@ -2404,3 +2084,407 @@ private fun rootOwnership(vararg members: TypeDefinitionId): List<skirout.editor
                 ),
         )
     }
+
+/** One of each display element with its options configured, in declaration order. */
+private fun displayElements(): List<PresentationElement> {
+    val catalog = DefaultCheckedCatalog(CatalogGeneration(value = "display options"), StandardTypes.definitions)
+    val checked = catalog.ready(ScalarKind.TEXT.use)
+    val color = literalColor(com.typewritermc.types.Color(0xff3366ccu))
+    val result =
+        DefaultPresentationRuntime().build(
+            PresentationBuildBinding(checked.presentationTemplate(), PresentationRole.INSPECTOR),
+        ) { build ->
+            with(build) {
+                image(literal("https://example.test/image.png")) {
+                    width(80.0)
+                    height(literal(60.0))
+                    fit(ImageFit.COVER)
+                    radius(PresentationRadius.Small)
+                }
+                badge(literal("Ready")) {
+                    textStyle(TextStyle(weight = FontWeight(500)))
+                    fill(color)
+                    icon("book", size = 14.0)
+                }
+                chip(literal("Label")) {
+                    noIcon()
+                    noBorder()
+                    density(ControlDensity.COMPACT)
+                }
+                progress(literal(3), literal(10)) {
+                    color(color)
+                    backgroundColor(color)
+                    minimumHeight(5.0)
+                    radius(PresentationRadius.Small)
+                }
+                tooltip(literal("Details"), configure = {
+                    waitDelay(DisplayDelay(250))
+                    showDelay(DisplayDelay(2000))
+                    preferBelow(false)
+                    fill(color)
+                }) { text(literal("Help")) }
+                divider {
+                    color(color)
+                    thickness(2.0)
+                    space(literal(12.0))
+                    indent(4.0)
+                    endIndent(6.0)
+                }
+                tabs {
+                    density(ControlDensity.COMPACT)
+                    spacing(Spacing(4.0))
+                    contentSpacing(Spacing(10.0))
+                    tab("first", literal("First"), icon = "book") { text(literal("Content")) }
+                }
+                status(
+                    literal(true),
+                    listOf(
+                        StatusCase(
+                            true,
+                            StatusAppearance("Active", "active") {
+                                noIcon()
+                                textStyle(TextStyle(weight = FontWeight(600)))
+                            },
+                        ),
+                    ),
+                )
+                dateTime(literal(kotlin.time.Instant.fromEpochMilliseconds(1000)), literal("yyyy")) {
+                    noIcon()
+                    textStyle(TextStyle(weight = FontWeight(500)))
+                }
+                relativeTime(literal(kotlin.time.Instant.fromEpochMilliseconds(1000))) {
+                    noIcon()
+                    density(ControlDensity.COMPACT)
+                }
+            }
+        }
+    return result.layout.fixedChildren().map { requireNotNull(it.element) }
+}
+
+/** A row of an x and a y coordinate editor, configured in different orders, and a fixed text. */
+private fun coordinateRow(): skirout.editor.v1.presentation.AxisChildrenElement {
+    val id = TypeDefinitionId.qualified("test", "ConfiguredCoordinates")
+    val number = integerScalar(IntegerWidth.SIGNED_THIRTY_TWO).template
+    val definition =
+        definitions {
+            record(id) {
+                field("x", number)
+                field("y", number)
+            }
+        }.single()
+    val catalog = DefaultCheckedCatalog(CatalogGeneration(value = "configured coordinates"), listOf(definition))
+    val checked = catalog.ready(id.use())
+
+    fun NumericInputScope<Int>.coordinateInput() {
+        step(2)
+        density(ControlDensity.COMPACT)
+        selectAllOnFocus()
+        textStyle(TextStyle(weight = FontWeight(500)))
+    }
+    val result =
+        DefaultPresentationRuntime().build(
+            PresentationBuildBinding(checked.presentationTemplate(), PresentationRole.WORKSPACE),
+        ) { build ->
+            with(build) {
+                @Suppress("UNCHECKED_CAST")
+                val scope = NumberControl::class as kotlin.reflect.KClass<NumberControl<Int>>
+                val x: PresentedField<Int, NumberControl<Int>> = field("x", scope)
+                val y: PresentedField<Int, NumberControl<Int>> = field("y", scope)
+                row {
+                    x {
+                        numericInput {
+                            coordinateInput()
+                            placeholder("X")
+                            noIcon()
+                            prefix { text(literal("axis")) }
+                            onComplete { value }
+                        }
+                        label("Horizontal")
+                        readOnly()
+                        enabledIf(literal(false))
+                    }
+                    y {
+                        label("Vertical")
+                        numericInput {
+                            coordinateInput()
+                            placeholder(literal("Y"))
+                        }
+                    }
+                    text(literal("units"))
+                }
+            }
+        }
+    return ((result.layout.singleFixed().element as PresentationElement.ChildrenWrapper).value as ChildrenElement.RowWrapper).value
+}
+
+/** A subject with list, set, map, named scalar and nested record fields that the composite editors bind into. */
+private object CompositeFixture {
+    val wrapperId = TypeDefinitionId.qualified("test", "Code")
+    val positionId = TypeDefinitionId.qualified("test", "Position")
+    val subjectId = TypeDefinitionId.qualified("test", "CompositeSubject")
+    val integer = integerScalar(IntegerWidth.SIGNED_THIRTY_TWO)
+    val position =
+        definitions {
+            record(positionId) {
+                field("x", integer.template)
+                field("y", integer.template)
+            }
+        }.single()
+    val wrapper =
+        TypeDefinition.partial(id = wrapperId, representation = RepresentationTemplate.createScalar(kind = ScalarKind.TEXT))
+    val subject =
+        definitions {
+            record(subjectId) {
+                field("list", StandardTypes.list.template(listOf(ScalarKind.TEXT.template)))
+                field("set", StandardTypes.set.template(listOf(ScalarKind.TEXT.template)))
+                field("map", StandardTypes.map.template(listOf(ScalarKind.TEXT.template, integer.template.nullable())))
+                field("code", wrapperId.template())
+                field("position", positionId.template())
+            }
+        }.single()
+    val catalog =
+        DefaultCheckedCatalog(
+            CatalogGeneration(value = "nested presentation callbacks"),
+            StandardTypes.definitions + wrapper + position + subject,
+        )
+    val checked = catalog.ready(subjectId.use())
+
+    fun root(): PresentationBuildResult =
+        DefaultPresentationRuntime().build(
+            PresentationBuildBinding(checked.presentationTemplate(), PresentationRole.WORKSPACE),
+        ) { build ->
+            with(build) {
+                @Suppress("UNCHECKED_CAST")
+                val list: PresentedField<List<String>, ListControl<TextControl>> =
+                    field(
+                        "list",
+                        ListControl::class as kotlin.reflect.KClass<ListControl<TextControl>>,
+                        mapOf(NestedPresentationSlot.Items to NestedPresentationScope(TextControl::class)),
+                    )
+
+                @Suppress("UNCHECKED_CAST")
+                val set: PresentedField<Set<String>, SetControl<TextControl>> =
+                    field(
+                        "set",
+                        SetControl::class as kotlin.reflect.KClass<SetControl<TextControl>>,
+                        mapOf(NestedPresentationSlot.Items to NestedPresentationScope(TextControl::class)),
+                    )
+
+                @Suppress("UNCHECKED_CAST")
+                val map: PresentedField<Map<String, Int?>, MapControl<TextControl, NullableControl<NumberControl<Int>>>> =
+                    field(
+                        "map",
+                        MapControl::class as kotlin.reflect.KClass<MapControl<TextControl, NullableControl<NumberControl<Int>>>>,
+                        mapOf(
+                            NestedPresentationSlot.Keys to NestedPresentationScope(TextControl::class),
+                            NestedPresentationSlot.Values to
+                                NestedPresentationScope(
+                                    NullableControl::class,
+                                    nested =
+                                        mapOf(
+                                            NestedPresentationSlot.Values to NestedPresentationScope(NumberControl::class),
+                                        ),
+                                ),
+                        ),
+                    )
+
+                @Suppress("UNCHECKED_CAST")
+                val code: PresentedField<String, NamedControl<String, TextControl>> =
+                    field(
+                        "code",
+                        NamedControl::class as kotlin.reflect.KClass<NamedControl<String, TextControl>>,
+                        mapOf(NestedPresentationSlot.Payload to NestedPresentationScope(TextControl::class)),
+                    )
+
+                @Suppress("UNCHECKED_CAST")
+                val positionField: PresentedField<Any, RecordControl<TestPositionScope>> =
+                    field(
+                        "position",
+                        RecordControl::class as kotlin.reflect.KClass<RecordControl<TestPositionScope>>,
+                        mapOf(
+                            NestedPresentationSlot.Fields to
+                                NestedPresentationScope(
+                                    TestPositionScope::class,
+                                    create = { nested -> TestPositionScopeImpl(nested) },
+                                ),
+                        ),
+                    )
+
+                list { listInput { items { textInput() } } }
+                set { collectionInput { items { textInput() } } }
+                map {
+                    mapInput {
+                        keys { textInput() }
+                        values { nullableInput { value { numericInput() } } }
+                    }
+                }
+                code { namedInput { payload { textInput() } } }
+                positionField { recordInput { fields { x { numericInput() } } } }
+            }
+        }
+
+    fun nestedRemainder(): PresentationBuildResult =
+        DefaultPresentationRuntime().build(
+            PresentationBuildBinding(checked.presentationTemplate(), PresentationRole.WORKSPACE),
+        ) { build ->
+            with(build) {
+                @Suppress("UNCHECKED_CAST")
+                val positionField: PresentedField<Any, RecordControl<TestPositionScope>> =
+                    field(
+                        "position",
+                        RecordControl::class as kotlin.reflect.KClass<RecordControl<TestPositionScope>>,
+                        mapOf(
+                            NestedPresentationSlot.Fields to
+                                NestedPresentationScope(TestPositionScope::class, create = { nested -> TestPositionScopeImpl(nested) }),
+                        ),
+                    )
+                positionField {
+                    recordInput {
+                        fields {
+                            x { numericInput { placeholder("X") } }
+                            remainingFields()
+                        }
+                    }
+                }
+            }
+        }
+}
+
+/** A subject with one title field and the data nodes built over it: repeated, scoped, typed, lookup, graph, match, invocation. */
+private object PresentationDataFixture {
+    val id = TypeDefinitionId.qualified("test", "PresentationDataSubject")
+    val definition =
+        definitions {
+            record(id) {
+                field("title", ScalarKind.TEXT.template)
+            }
+        }.single()
+    val catalog = DefaultCheckedCatalog(CatalogGeneration(value = "presentation data"), StandardTypes.definitions + definition)
+    val checked = catalog.ready(id.use())
+    val reference = object : PresentationReference {}
+    val referenceId =
+        skirout.editor.v1.type_catalog
+            .PresentationId(namespace = "test", name = "invoked")
+    val parameter = presentationParameter<String>("title")
+    val runtime =
+        DefaultPresentationRuntime().also {
+            it.register(reference, descriptor("invoked", PresentationTarget.NamedWrapper(id.namedTemplate()), 0))
+        }
+    val repeatedSource =
+        com.typewritermc.expression.portableLiteral<List<String>>(
+            DataValue.listValue(
+                listOf(ListItem(id = ItemId(value = "first"), value = DataValue.StringValueWrapper("value"))),
+            ),
+        )
+    val source =
+        collectionSource<String, String>("rows", ScalarKind.TEXT.template) {
+            key(row)
+            relations("children", repeatedSource)
+        }
+    val other =
+        collectionSource<Boolean, String>("rows", ScalarKind.BOOLEAN.template) {
+            key(literal("same key type"))
+        }
+
+    /** Builds [content] over the subject with its `title` field. */
+    fun build(content: PresentationBuildScope.(PresentedField<String, TextControl>) -> Unit): PresentationBuildResult =
+        runtime.build(PresentationBuildBinding(checked.presentationTemplate(), PresentationRole.WORKSPACE)) { build ->
+            build.content(build.field("title", TextControl::class))
+        }
+
+    fun root(): PresentationBuildResult =
+        runtime.build(PresentationBuildBinding(checked.presentationTemplate(), PresentationRole.WORKSPACE)) { build ->
+            with(build) {
+                val title: PresentedField<String, TextControl> = field("title", TextControl::class)
+                repeated<String, String>(repeatedSource) {
+                    text(item.orElse(literal("missing")))
+                    empty { text(literal("empty")) }
+                    separator { divider() }
+                }
+                scoped(title.input) { textInput() }
+                typedField(title.input) { textInput() }
+                collectionLookup(source, title.input) {
+                    found { text(row.orElse(literal("missing row"))) }
+                    missing { text(literal("missing")) }
+                    loading { text(literal("loading")) }
+                }
+                collectionGraph(source) {
+                    root(title.input)
+                    relation("children", CollectionGraphDirection.REVERSE, maximumDepth = 4)
+                    node {
+                        text(row.orElse(literal("missing node")))
+                        descendants()
+                    }
+                }
+                polymorphicMatch(title.input) {
+                    case(AppliedPresentation<String>(id.namedUse(), reference)) {
+                        text(literal("subject case"))
+                    }
+                    fallback { text(literal("fallback")) }
+                }
+                invoke(reference) { bind(parameter, title.input) }
+            }
+        }
+}
+
+private fun dataElements(): List<PresentationElement> =
+    PresentationDataFixture.root().layout.fixedChildren().map {
+        requireNotNull(it.element)
+    }
+
+/**
+ * The panel's compiled control fixtures from presentation building: the composite, nested remainder, nullable and typed
+ * layouts with a value for each, by file name.
+ */
+internal fun presentationControlFixtures(): Map<String, ByteArray> {
+    val root = CompositeFixture.root().layout
+    val nestedRemainder = CompositeFixture.nestedRemainder().layout
+    val map = (root.fixedChildren()[2].element as PresentationElement.MapInputWrapper).value
+    val owner =
+        ProviderOrigin(
+            descriptor("nested remainder", PresentationTarget.NamedWrapper(CompositeFixture.subjectId.namedTemplate()), 0).owner,
+            ArtifactId("test:nested-remainder"),
+            "main",
+        )
+    val nestedRemainderCatalog =
+        CatalogContributions(
+            declarations =
+                listOf(CompositeFixture.wrapper, CompositeFixture.position, CompositeFixture.subject).map {
+                    OwnedTypeDeclaration(owner, it)
+                },
+        ).assemble(CatalogAssemblyContext(CatalogGeneration(value = "nested remainder fixture"))).editorCatalog
+    return mapOf(
+        "composite-layout.bin" to PresentationNode.serializer.toBytes(root).toByteArray(),
+        "composite-value.bin" to
+            DataValue
+                .record(
+                    mapOf(
+                        "list" to DataValue.listValue(emptyList()),
+                        "set" to DataValue.setValue(emptyList()),
+                        "map" to DataValue.mapValue(emptyList()),
+                        "code" to DataValue.named(CompositeFixture.wrapperId.namedUse(), DataValue.StringValueWrapper("Authored code")),
+                        "position" to
+                            DataValue.named(
+                                CompositeFixture.positionId.namedUse(),
+                                DataValue.record(
+                                    mapOf(
+                                        "x" to DataValue.integer(java.math.BigInteger.valueOf(7)),
+                                        "y" to DataValue.integer(java.math.BigInteger.valueOf(8)),
+                                    ),
+                                ),
+                            ),
+                    ),
+                ).bytes(),
+        "nested-remainder-layout.bin" to PresentationNode.serializer.toBytes(nestedRemainder).toByteArray(),
+        "nested-remainder-catalog.bin" to
+            skirout.editor.v1.catalog.EditorCatalog.serializer
+                .toBytes(nestedRemainderCatalog)
+                .toByteArray(),
+        "nullable-layout.bin" to PresentationNode.serializer.toBytes(requireNotNull(map.valuePresentation)).toByteArray(),
+        "nullable-value.bin" to DataValue.integer(java.math.BigInteger.valueOf(42)).bytes(),
+        "typed-layout.bin" to PresentationNode.serializer.toBytes(PresentationDataFixture.root().layout.fixedChildren()[2]).toByteArray(),
+        "typed-value.bin" to DataValue.record(mapOf("title" to DataValue.StringValueWrapper("Authored title"))).bytes(),
+    )
+}
+
+private fun DataValue.bytes(): ByteArray = DataValue.serializer.toBytes(requirePortable()).toByteArray()

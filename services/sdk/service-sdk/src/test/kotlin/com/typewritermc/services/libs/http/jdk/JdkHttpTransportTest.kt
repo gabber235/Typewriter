@@ -10,15 +10,17 @@ import com.typewritermc.services.libs.telemetry.ErrorSlug
 import de.infix.testBalloon.framework.core.testSuite
 import io.kotest.assertions.throwables.shouldThrow
 import io.kotest.matchers.shouldBe
+import io.kotest.matchers.types.shouldBeInstanceOf
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.async
 import kotlinx.coroutines.coroutineScope
-import kotlinx.coroutines.delay
+import kotlinx.coroutines.runInterruptible
 import kotlinx.coroutines.withContext
 import kotlinx.coroutines.withTimeout
 import java.net.InetSocketAddress
 import java.net.ServerSocket
 import java.net.URI
+import java.util.concurrent.CountDownLatch
 import kotlin.time.Duration.Companion.milliseconds
 import kotlin.time.Duration.Companion.seconds
 
@@ -40,46 +42,22 @@ val JdkHttpTransportTest by testSuite {
         converted.values("x-multi") shouldBe listOf("one", "two")
     }
 
-    test("sends bodies preserves response status and bounds response collection") {
-        val server = HttpServer.create(InetSocketAddress(0), 0)
-        server.createContext("/echo") { exchange ->
-            val body = exchange.requestBody.readAllBytes()
-            exchange.responseHeaders.add("X-Multi", "one")
-            exchange.responseHeaders.add("X-Multi", "two")
-            exchange.sendResponseHeaders(503, body.size.toLong())
-            exchange.responseBody.use { it.write(body) }
-        }
-        server.start()
-        try {
+    test("a non 2xx status, its headers and the sent body pass through") {
+        withEchoServer { uri ->
             JdkHttpTransport().use { transport ->
-                val uri = URI("http://127.0.0.1:${server.address.port}/echo")
-                val request =
-                    HttpRequest(
-                        HttpOperation("jdk.echo"),
-                        ErrorSlug.of("jdk-failed"),
-                        HttpMethod.POST,
-                        uri,
-                        body = byteArrayOf(1, 2, 3),
-                        maximumResponseBytes = 10,
-                    )
-                val response = (transport.execute(request) as HttpResult.Success).response
+                val response = transport.execute(echo(uri, maximumResponseBytes = 10)).shouldBeInstanceOf<HttpResult.Success>().response
                 response.statusCode shouldBe 503
                 response.body.toList() shouldBe listOf<Byte>(1, 2, 3)
                 response.headers.values("x-multi").toSet() shouldBe setOf("one", "two")
-                transport.execute(
-                    HttpRequest(
-                        HttpOperation("jdk.limit"),
-                        ErrorSlug.of("jdk-failed"),
-                        HttpMethod.POST,
-                        uri,
-                        body = byteArrayOf(1, 2, 3),
-                        maximumResponseBytes = 2,
-                    ),
-                ) shouldBe
-                    HttpResult.Failure(HttpError.ResponseTooLarge(2))
             }
-        } finally {
-            server.stop(0)
+        }
+    }
+
+    test("a response over the limit is ResponseTooLarge") {
+        withEchoServer { uri ->
+            JdkHttpTransport().use { transport ->
+                transport.execute(echo(uri, maximumResponseBytes = 2)) shouldBe HttpResult.Failure(HttpError.ResponseTooLarge(2))
+            }
         }
     }
 
@@ -149,10 +127,13 @@ val JdkHttpTransportTest by testSuite {
         }
     }
 
-    test("caller cancellation promptly cancels a blocked request") {
+    test("caller cancellation ends a request the server has not answered") {
+        val arrived = CountDownLatch(1)
+        val release = CountDownLatch(1)
         val server = HttpServer.create(InetSocketAddress(0), 0)
         server.createContext("/blocked") { exchange ->
-            Thread.sleep(1000)
+            arrived.countDown()
+            release.await()
             runCatching {
                 exchange.sendResponseHeaders(200, -1)
                 exchange.close()
@@ -162,18 +143,20 @@ val JdkHttpTransportTest by testSuite {
         try {
             JdkHttpTransport().use { transport ->
                 withContext(Dispatchers.IO) {
-                    withTimeout(500.milliseconds) {
+                    withTimeout(2.seconds) {
                         coroutineScope {
                             val call = async { transport.execute(localRequest(server, "/blocked")) }
-                            delay(25.milliseconds)
+                            runInterruptible { arrived.await() }
                             call.cancel()
                             call.join()
                             call.isCancelled shouldBe true
+                            release.count shouldBe 1L
                         }
                     }
                 }
             }
         } finally {
+            release.countDown()
             server.stop(0)
         }
     }
@@ -227,6 +210,36 @@ val JdkHttpTransportTest by testSuite {
         shouldThrow<IllegalStateException> { transport.execute(request) }
     }
 }
+
+/** Runs [block] against a server whose `/echo` answers 503 with the request body and two `X-Multi` values. */
+private suspend fun withEchoServer(block: suspend (URI) -> Unit) {
+    val server = HttpServer.create(InetSocketAddress(0), 0)
+    server.createContext("/echo") { exchange ->
+        val body = exchange.requestBody.readAllBytes()
+        exchange.responseHeaders.add("X-Multi", "one")
+        exchange.responseHeaders.add("X-Multi", "two")
+        exchange.sendResponseHeaders(503, body.size.toLong())
+        exchange.responseBody.use { it.write(body) }
+    }
+    server.start()
+    try {
+        block(URI("http://127.0.0.1:${server.address.port}/echo"))
+    } finally {
+        server.stop(0)
+    }
+}
+
+private fun echo(
+    uri: URI,
+    maximumResponseBytes: Long,
+) = HttpRequest(
+    HttpOperation("jdk.echo"),
+    ErrorSlug.of("jdk-failed"),
+    HttpMethod.POST,
+    uri,
+    body = byteArrayOf(1, 2, 3),
+    maximumResponseBytes = maximumResponseBytes,
+)
 
 private fun localRequest(
     server: HttpServer,

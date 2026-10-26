@@ -115,4 +115,25 @@ describe("grant rule", () => {
       "organization_member publish $JS.API.CONSUMER.DELETE.TYPEWRITER_MEMBERSHIP.{consumer:organization_members_changed}",
     ]);
   });
+
+  test("a persistent watch for a role without a personal identifier is refused", () => {
+    expect(() =>
+      grants(
+        `  - name: realm_watch
+    scope: realm
+    callers: [{ role: realm_participant }]
+    server: { role: realm_coordinator }
+    flow:
+      kind: watch
+      method: "editor/v1/catalog.skir:WatchEditorCatalog"
+      operation: realm.watch
+      request: realm.watch
+      updates:
+        payload: "editor/v1/catalog.skir:CatalogInvalidated"
+        address: realm.changed
+        delivery: { kind: persistent, stream: TYPEWRITER_REALM, projection: realm_changed }
+`,
+      ),
+    ).toThrow("persistent consumers of role realm_participant need a personal identifier");
+  });
 });

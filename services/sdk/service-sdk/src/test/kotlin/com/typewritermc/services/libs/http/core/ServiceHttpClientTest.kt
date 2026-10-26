@@ -5,6 +5,7 @@ import com.typewritermc.services.libs.telemetry.testing.TelemetryTestHarness
 import de.infix.testBalloon.framework.core.testSuite
 import io.kotest.assertions.throwables.shouldThrow
 import io.kotest.matchers.shouldBe
+import io.kotest.matchers.types.shouldBeSameInstanceAs
 import io.opentelemetry.api.baggage.Baggage
 import io.opentelemetry.api.baggage.propagation.W3CBaggagePropagator
 import io.opentelemetry.api.trace.SpanKind
@@ -122,18 +123,20 @@ val ServiceHttpClientTest by testSuite {
         }
     }
 
-    test("cancellation and nested fatal failures escape unchanged and close spans") {
-        for (failure in listOf(CancellationException("cancel"), object : LinkageError("fatal") {})) {
-            TelemetryTestHarness.create().use { harness ->
-                val thrown = shouldThrow<Throwable> { client(harness) { throw failure }.execute(request()) }
-                if (failure is CancellationException) {
-                    (thrown is CancellationException) shouldBe true
-                } else {
-                    (thrown === failure) shouldBe
-                        true
-                }
-                harness.assertNoActiveSpans()
-            }
+    test("cancellation escapes as cancellation and closes the span") {
+        TelemetryTestHarness.create().use { harness ->
+            shouldThrow<CancellationException> {
+                client(harness) { throw CancellationException("cancel") }.execute(request())
+            }.message shouldBe "cancel"
+            harness.assertNoActiveSpans()
+        }
+    }
+
+    test("a fatal failure escapes unchanged and closes the span") {
+        val fatal = object : LinkageError("fatal") {}
+        TelemetryTestHarness.create().use { harness ->
+            shouldThrow<LinkageError> { client(harness) { throw fatal }.execute(request()) } shouldBeSameInstanceAs fatal
+            harness.assertNoActiveSpans()
         }
     }
 }

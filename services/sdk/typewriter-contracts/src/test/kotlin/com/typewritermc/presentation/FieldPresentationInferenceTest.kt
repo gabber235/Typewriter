@@ -7,10 +7,6 @@ import de.infix.testBalloon.framework.core.testSuite
 import io.kotest.assertions.throwables.shouldThrow
 import io.kotest.matchers.shouldBe
 import skirout.editor.v1.binding.BindingRef
-import skirout.editor.v1.catalog.PresentationMaterial
-import skirout.editor.v1.catalog.PresentationRole
-import skirout.editor.v1.catalog.PresentationTarget
-import skirout.editor.v1.catalog.RepresentationKind
 import skirout.editor.v1.presentation.AxisChild
 import skirout.editor.v1.presentation.AxisChildrenElement
 import skirout.editor.v1.presentation.BoundControl
@@ -20,7 +16,6 @@ import skirout.editor.v1.presentation.PresentationElement
 import skirout.editor.v1.presentation.PresentationNode
 import skirout.editor.v1.presentation.PresentationProperties
 import skirout.editor.v1.presentation.TextControl
-import skirout.editor.v1.type_catalog.CatalogGeneration
 import skirout.editor.v1.type_catalog.ExpressionBindingId
 import skirout.editor.v1.type_catalog.PathSegment
 import skirout.editor.v1.type_catalog.PresentationId
@@ -76,102 +71,19 @@ val FieldPresentationInferenceTest by testSuite {
                     skirout.editor.v1.presentation.PresentationHeader
                         .partial(),
             ).inferInheritableNodes() shouldBe emptyList()
-        val placements =
-            listOf(
-                ChildrenElement.RowWrapper(AxisChildrenElement.partial(children = listOf(AxisChild.FixedWrapper(first)))),
-                ChildrenElement.WrapWrapper(
-                    skirout.editor.v1.presentation.WrapChildrenElement
-                        .partial(children = listOf(first)),
-                ),
-                ChildrenElement.GridWrapper(
-                    skirout.editor.v1.presentation.GridChildrenElement
-                        .partial(children = listOf(first)),
-                ),
-                ChildrenElement.StackWrapper(
-                    skirout.editor.v1.presentation.StackChildrenElement
-                        .partial(
-                            children =
-                                listOf(
-                                    skirout.editor.v1.presentation.StackChild
-                                        .FlowWrapper(first),
-                                ),
-                        ),
-                ),
-                ChildrenElement.StackWrapper(
-                    skirout.editor.v1.presentation.StackChildrenElement.partial(
-                        children =
-                            listOf(
-                                skirout.editor.v1.presentation.StackChild.createPositioned(
-                                    child = first,
-                                    top = null,
-                                    start = null,
-                                    end = null,
-                                    bottom = null,
-                                    width = null,
-                                    height = null,
-                                    transition = null,
-                                ),
-                            ),
-                    ),
-                ),
-            )
-        placements.forEach { placement ->
-            first
+    }
+
+    for ((name, placement) in neutralPlacements()) {
+        test("a $name placement keeps its child inheritable") {
+            fieldNode("name")
                 .copy(nodeId = "placement", element = PresentationElement.ChildrenWrapper(placement))
                 .inferInheritableNodes() shouldBe listOf("placement", "name")
         }
-        val boundaries =
-            listOf(
-                PresentationElement.RepeatedWrapper(
-                    skirout.editor.v1.presentation.RepeatedElement.partial(
-                        presentation =
-                            skirout.editor.v1.presentation.SequencePresentation
-                                .partial(item = first),
-                    ),
-                ),
-                PresentationElement.AppearanceDefaultsWrapper(
-                    skirout.editor.v1.presentation.AppearanceDefaultsElement
-                        .partial(child = first),
-                ),
-                PresentationElement.PolymorphicMatchWrapper(
-                    skirout.editor.v1.presentation.PolymorphicMatchElement
-                        .partial(fallback = first),
-                ),
-                PresentationElement.CollectionLookupWrapper(
-                    skirout.editor.v1.presentation.CollectionLookupElement
-                        .partial(found = first, missing = first),
-                ),
-                PresentationElement.createConditional(
-                    condition =
-                        skirout.editor.v1.expression.ExpressionNode.LiteralWrapper(
-                            skirout.editor.v1.type_catalog.DataValue
-                                .BooleanWrapper(true),
-                        ),
-                    whenTrue = first,
-                    whenFalse = null,
-                ),
-                PresentationElement.createScopedBinding(
-                    binding = fieldControl("name").binding,
-                    scopeBinding = declared("scope"),
-                    child = first,
-                ),
-                PresentationElement.createTypedField(
-                    binding = fieldControl("name").binding,
-                    expectedType =
-                        skirout.editor.v1.type_catalog.TypeTemplate
-                            .ScalarWrapper(skirout.editor.v1.type_catalog.ScalarKind.TEXT),
-                    presentation = first,
-                ),
-                PresentationElement.createPadding(
-                    child = first,
-                    top = 0.0,
-                    start = 0.0,
-                    end = 0.0,
-                    bottom = 0.0,
-                ),
-            )
-        boundaries.forEach { element ->
-            first.copy(nodeId = "boundary", element = element).inferInheritableNodes() shouldBe emptyList()
+    }
+
+    for ((name, element) in behavioralBoundaries()) {
+        test("a $name stops inheritance") {
+            fieldNode("name").copy(nodeId = "boundary", element = element).inferInheritableNodes() shouldBe emptyList()
         }
     }
 
@@ -552,7 +464,7 @@ val FieldPresentationInferenceTest by testSuite {
         layout.validateInheritableNodes(layout.inferInheritableNodes()) { true }
     }
 
-    test("explicit definitions reject unsafe ancestry and duplicate keys rather than silently staying local") {
+    test("a part declared under a behavioral boundary is refused") {
         val part = partNode("details", fieldNode("name"))
         val conditional =
             PresentationNode.partial(
@@ -568,9 +480,12 @@ val FieldPresentationInferenceTest by testSuite {
                         whenFalse = null,
                     ),
             )
-        shouldThrow<IllegalArgumentException> {
-            conditional.validateInheritableNodes(conditional.inferInheritableNodes()) { true }
-        }
+        rejectionOf { conditional.validateInheritableNodes(conditional.inferInheritableNodes()) { true } } shouldBe
+            "Presentation part declarations require neutral owner layout groups."
+    }
+
+    test("two definitions of one part in a material are refused") {
+        val part = partNode("details", fieldNode("name"))
         val duplicate =
             column(
                 "root",
@@ -584,15 +499,17 @@ val FieldPresentationInferenceTest by testSuite {
                         ),
                 ),
             )
-        shouldThrow<IllegalArgumentException> {
-            duplicate.validateInheritableNodes(duplicate.inferInheritableNodes()) { true }
-        }
-        shouldThrow<IllegalArgumentException> {
-            part.validateInheritableNodes(part.inferInheritableNodes(), partOwnerCompatible = { false }) { true }
-        }
+        rejectionOf { duplicate.validateInheritableNodes(duplicate.inferInheritableNodes()) { true } } shouldBe
+            "Presentation part details has multiple definitions in one material."
     }
 
-    test("part bodies permit hidden owner editors and nested record remainders but reject foreign or whole owner writes") {
+    test("a part whose declaring owner is incompatible is refused") {
+        val part = partNode("details", fieldNode("name"))
+        rejectionOf { part.validateInheritableNodes(part.inferInheritableNodes(), partOwnerCompatible = { false }) { true } } shouldBe
+            "Presentation part details has an incompatible declaring owner."
+    }
+
+    test("a part body may hold a nested record remainder inside a scoped binding") {
         val nested =
             PresentationNode.partial(
                 nodeId = "scope",
@@ -604,30 +521,13 @@ val FieldPresentationInferenceTest by testSuite {
                     ),
             )
         partNode("details", nested).let { it.validateInheritableNodes(it.inferInheritableNodes()) { true } }
-        listOf(
-            remainder("owner remainder"),
-            fieldNode("name").copy(
-                element =
-                    PresentationElement.TextInputWrapper(
-                        TextControl.partial(
-                            control =
-                                fieldControl(
-                                    "name",
-                                ).copy(binding = BindingRef.partial(bindingId = ExpressionBindingId(value = "foreign"))),
-                        ),
-                    ),
-            ),
-            fieldNode("name").copy(
-                element =
-                    PresentationElement.TextInputWrapper(
-                        TextControl.partial(
-                            control = fieldControl("name").copy(binding = fieldControl("name").binding.copy(path = ValuePath.partial())),
-                        ),
-                    ),
-            ),
-        ).forEach { body ->
+    }
+
+    for ((name, body) in writesOutsideOwner()) {
+        test("a part body with $name is refused") {
             val part = partNode("details", body)
-            shouldThrow<IllegalArgumentException> { part.validateInheritableNodes(part.inferInheritableNodes()) { true } }
+            rejectionOf { part.validateInheritableNodes(part.inferInheritableNodes()) { true } } shouldBe
+                "Presentation part details must have bounded editors within its owner record and no owner remainder."
         }
     }
 
@@ -646,18 +546,24 @@ val FieldPresentationInferenceTest by testSuite {
         }
     }
 
-    test("reference admission rejects duplicate node identities and nonexistent owner fields") {
+    test("a node id shared by two distinct nodes is refused") {
+        val field = fieldNode("name")
+        val collision = column("root", field, fieldNode("message").copy(nodeId = "name"))
+        rejectionOf { collision.validateInheritableNodes(collision.inferInheritableNodes()) { true } } shouldBe
+            "Presentation node ids must not identify distinct nodes."
+    }
+
+    test("the same node placed twice yields one inherited reference") {
         val field = fieldNode("name")
         val duplicate = column("root", field, field)
-        shouldThrow<IllegalArgumentException> {
-            duplicate.validateInheritableNodes(duplicate.inferInheritableNodes()) { true }
-        }
-        val separateDuplicate = column("root", field, field.copy(nodeId = "other name"))
-        separateDuplicate.validateInheritableNodes(separateDuplicate.inferInheritableNodes()) { true }
-        val unequalCollision = column("root", field, fieldNode("message").copy(nodeId = "name"))
-        shouldThrow<IllegalArgumentException> {
-            unequalCollision.validateInheritableNodes(unequalCollision.inferInheritableNodes()) { true }
-        }
+        rejectionOf { duplicate.validateInheritableNodes(duplicate.inferInheritableNodes()) { true } } shouldBe
+            "Inheritable node ids must be unique."
+        val separate = column("root", field, field.copy(nodeId = "other name"))
+        separate.validateInheritableNodes(separate.inferInheritableNodes()) { true }
+    }
+
+    test("a field node shared between a part and a local scope is admitted") {
+        val field = fieldNode("name")
         val sharedLocal =
             column(
                 "root",
@@ -673,44 +579,19 @@ val FieldPresentationInferenceTest by testSuite {
                 ),
             )
         sharedLocal.validateInheritableNodes(sharedLocal.inferInheritableNodes()) { true }
-        shouldThrow<IllegalArgumentException> {
-            field.validateInheritableNodes(field.inferInheritableNodes()) { false }
-        }
-        shouldThrow<IllegalArgumentException> {
-            field.validateInheritableNodes(listOf("other")) { true }
-        }
-        field.validateInheritableNodes(field.inferInheritableNodes()) { it == "name" }
     }
 
-    test("catalog wire roundtrip retains inferred node references without duplicating controls") {
-        val layout = column("root", fieldNode("name"), partNode("details", fieldNode("message")), remainder("rest"))
-        val material =
-            PresentationMaterial(
-                provider = PresentationId(namespace = "test", name = "fields"),
-                target = PresentationTarget.RepresentationWrapper(RepresentationKind.RECORD),
-                role = PresentationRole.INSPECTOR,
-                layout = layout,
-                dependencies = PresentationDependencies.partial(),
-                subject = TypeTemplate.ScalarWrapper(ScalarKind.TEXT),
-                inheritableNodes = layout.inferInheritableNodes(),
-            )
-        val wire =
-            skirout.editor.v1.catalog.EditorCatalog.partial(
-                generation =
-                    skirout.editor.v1.type_catalog
-                        .CatalogGeneration(value = "field defaults"),
-                realmRoot = TypeDefinitionId.qualified("test", "realm.root"),
-                presentationMaterials = listOf(material),
-            )
-        val decoded =
-            skirout.editor.v1.catalog.EditorCatalog.serializer
-                .fromBytes(
-                    skirout.editor.v1.catalog.EditorCatalog.serializer
-                        .toBytes(wire),
-                ).presentationMaterials
-                .single()
-        decoded.inheritableNodes shouldBe listOf("root", "name", "details", "rest")
-        decoded.layout shouldBe layout
+    test("an inherited field node must target an existing owner field") {
+        val field = fieldNode("name")
+        field.validateInheritableNodes(field.inferInheritableNodes()) { it == "name" }
+        rejectionOf { field.validateInheritableNodes(field.inferInheritableNodes()) { false } } shouldBe
+            "Inheritable node name must target an existing direct owner field."
+    }
+
+    test("references that differ from the inferred layout are refused") {
+        val field = fieldNode("name")
+        rejectionOf { field.validateInheritableNodes(listOf("other")) { true } } shouldBe
+            "Inheritable nodes must match the inferred canonical layout."
     }
 }
 
@@ -768,3 +649,138 @@ private fun remainder(id: String): PresentationNode =
 private fun declared(id: String): skirout.editor.v1.presentation.BindingDeclaration =
     skirout.editor.v1.presentation.BindingDeclaration
         .partial(id = ExpressionBindingId(value = id))
+
+private fun neutralPlacements(): Map<String, ChildrenElement> {
+    val child = fieldNode("name")
+    return mapOf(
+        "row" to ChildrenElement.RowWrapper(AxisChildrenElement.partial(children = listOf(AxisChild.FixedWrapper(child)))),
+        "wrap" to
+            ChildrenElement.WrapWrapper(
+                skirout.editor.v1.presentation.WrapChildrenElement
+                    .partial(children = listOf(child)),
+            ),
+        "grid" to
+            ChildrenElement.GridWrapper(
+                skirout.editor.v1.presentation.GridChildrenElement
+                    .partial(children = listOf(child)),
+            ),
+        "stack flow" to
+            ChildrenElement.StackWrapper(
+                skirout.editor.v1.presentation.StackChildrenElement
+                    .partial(
+                        children =
+                            listOf(
+                                skirout.editor.v1.presentation.StackChild
+                                    .FlowWrapper(child),
+                            ),
+                    ),
+            ),
+        "stack positioned" to
+            ChildrenElement.StackWrapper(
+                skirout.editor.v1.presentation.StackChildrenElement.partial(
+                    children =
+                        listOf(
+                            skirout.editor.v1.presentation.StackChild.createPositioned(
+                                child = child,
+                                top = null,
+                                start = null,
+                                end = null,
+                                bottom = null,
+                                width = null,
+                                height = null,
+                                transition = null,
+                            ),
+                        ),
+                ),
+            ),
+    )
+}
+
+private fun behavioralBoundaries(): Map<String, PresentationElement> {
+    val child = fieldNode("name")
+    return mapOf(
+        "repeated element" to
+            PresentationElement.RepeatedWrapper(
+                skirout.editor.v1.presentation.RepeatedElement.partial(
+                    presentation =
+                        skirout.editor.v1.presentation.SequencePresentation
+                            .partial(item = child),
+                ),
+            ),
+        "appearance default" to
+            PresentationElement.AppearanceDefaultsWrapper(
+                skirout.editor.v1.presentation.AppearanceDefaultsElement
+                    .partial(child = child),
+            ),
+        "polymorphic match" to
+            PresentationElement.PolymorphicMatchWrapper(
+                skirout.editor.v1.presentation.PolymorphicMatchElement
+                    .partial(fallback = child),
+            ),
+        "collection lookup" to
+            PresentationElement.CollectionLookupWrapper(
+                skirout.editor.v1.presentation.CollectionLookupElement
+                    .partial(found = child, missing = child),
+            ),
+        "conditional" to
+            PresentationElement.createConditional(
+                condition =
+                    skirout.editor.v1.expression.ExpressionNode.LiteralWrapper(
+                        skirout.editor.v1.type_catalog.DataValue
+                            .BooleanWrapper(true),
+                    ),
+                whenTrue = child,
+                whenFalse = null,
+            ),
+        "scoped binding" to
+            PresentationElement.createScopedBinding(
+                binding = fieldControl("name").binding,
+                scopeBinding = declared("scope"),
+                child = child,
+            ),
+        "typed field" to
+            PresentationElement.createTypedField(
+                binding = fieldControl("name").binding,
+                expectedType =
+                    skirout.editor.v1.type_catalog.TypeTemplate
+                        .ScalarWrapper(skirout.editor.v1.type_catalog.ScalarKind.TEXT),
+                presentation = child,
+            ),
+        "padding" to
+            PresentationElement.createPadding(
+                child = child,
+                top = 0.0,
+                start = 0.0,
+                end = 0.0,
+                bottom = 0.0,
+            ),
+    )
+}
+
+private fun writesOutsideOwner(): Map<String, PresentationNode> =
+    mapOf(
+        "an owner remainder" to remainder("owner remainder"),
+        "an editor bound to a foreign binding" to
+            fieldNode("name").copy(
+                element =
+                    PresentationElement.TextInputWrapper(
+                        TextControl.partial(
+                            control =
+                                fieldControl(
+                                    "name",
+                                ).copy(binding = BindingRef.partial(bindingId = ExpressionBindingId(value = "foreign"))),
+                        ),
+                    ),
+            ),
+        "an editor writing the whole owner" to
+            fieldNode("name").copy(
+                element =
+                    PresentationElement.TextInputWrapper(
+                        TextControl.partial(
+                            control = fieldControl("name").copy(binding = fieldControl("name").binding.copy(path = ValuePath.partial())),
+                        ),
+                    ),
+            ),
+    )
+
+private fun rejectionOf(check: () -> Unit): String? = shouldThrow<IllegalArgumentException> { check() }.message

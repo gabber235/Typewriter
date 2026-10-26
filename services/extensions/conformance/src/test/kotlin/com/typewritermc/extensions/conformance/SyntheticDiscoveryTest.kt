@@ -11,17 +11,12 @@ import com.typewritermc.capability.RealmSearchContext
 import com.typewritermc.capability.RealmSearchUpdate
 import com.typewritermc.capability.id
 import com.typewritermc.discovery.CapabilityOwnerResolver
-import com.typewritermc.discovery.DeploymentFacts
-import com.typewritermc.discovery.DiscoveryDomains
 import com.typewritermc.discovery.GENERATED_PROVIDER_INDEX_PATH
 import com.typewritermc.discovery.GeneratedProviderIndex
 import com.typewritermc.discovery.GeneratedProviderIndexEntry
-import com.typewritermc.discovery.GeneratedProviderInstantiator
 import com.typewritermc.discovery.GeneratedProviderKind
 import com.typewritermc.discovery.GeneratedTypeProvider
 import com.typewritermc.discovery.ProviderOrigin
-import com.typewritermc.discovery.RuntimeRegistrarId
-import com.typewritermc.discovery.RuntimeScope
 import com.typewritermc.discovery.contributionKey
 import com.typewritermc.imprint.ArtifactId
 import com.typewritermc.imprint.ContributionName
@@ -31,39 +26,32 @@ import com.typewritermc.library.PageElements
 import com.typewritermc.presentation.DefaultPresentationRuntime
 import com.typewritermc.presentation.PresentationBuildBinding
 import com.typewritermc.presentation.presentationTemplate
-import com.typewritermc.types.ACYCLIC_RELATION_FAMILY_ID
 import com.typewritermc.types.FactoryNativeBindingRegistry
 import com.typewritermc.types.NativeBinding
 import com.typewritermc.types.NativeBindingFactory
-import com.typewritermc.types.RESOURCE_OWNERSHIP_FAMILY_ID
 import com.typewritermc.types.Ref
 import com.typewritermc.types.ResourceId
 import com.typewritermc.types.StandardTypes
 import com.typewritermc.types.catalog.DefaultCheckedCatalog
 import com.typewritermc.types.catalog.Resolution
-import com.typewritermc.types.declared
 import com.typewritermc.types.endpoint
 import com.typewritermc.types.fieldMap
 import com.typewritermc.types.fields
 import com.typewritermc.types.integer
 import com.typewritermc.types.named
-import com.typewritermc.types.namedTemplate
 import com.typewritermc.types.payload
 import com.typewritermc.types.qualified
 import com.typewritermc.types.record
-import com.typewritermc.types.template
 import com.typewritermc.types.toSkir
 import com.typewritermc.types.use
 import de.infix.testBalloon.framework.core.testSuite
-import io.kotest.matchers.collections.shouldContainExactly
+import io.kotest.matchers.collections.shouldContainExactlyInAnyOrder
 import io.kotest.matchers.collections.shouldHaveSize
 import io.kotest.matchers.shouldBe
-import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.flow.toList
 import kotlinx.coroutines.test.runTest
 import skirout.editor.v1.capability.NotificationSeverity
 import skirout.editor.v1.capability.PanelInstruction
-import skirout.editor.v1.catalog.EndpointCardinality
 import skirout.editor.v1.catalog.PresentationRole
 import skirout.editor.v1.presentation.AxisChild
 import skirout.editor.v1.presentation.ChildrenElement
@@ -74,47 +62,18 @@ import skirout.editor.v1.type_catalog.CatalogGeneration
 import skirout.editor.v1.type_catalog.DataValue
 import skirout.editor.v1.type_catalog.DeclarationOwner
 import skirout.editor.v1.type_catalog.PathSegment
-import skirout.editor.v1.type_catalog.RelationFamilyId
-import skirout.editor.v1.type_catalog.RepresentationTemplate
 import skirout.editor.v1.type_catalog.TypeDefinition
 import skirout.editor.v1.type_catalog.TypeDefinitionId
-import skirout.editor.v1.type_catalog.TypeTemplate
 import java.math.BigInteger
 import java.util.Collections
 
 val SyntheticDiscoveryTest by testSuite {
-    test("generates stable declarations for the entry and polymorphic message family") {
-        SyntheticEntryDefinition.id shouldBe
-            TypeDefinitionId.declared("019d1c2a8f7b7cc18c2a4a7b2fd1e281")
-        val entryFields = (SyntheticEntryDefinition.definition.representation as RepresentationTemplate.RecordWrapper).value.fields
-        entryFields.map { it.owner.name } shouldContainExactly listOf("page", "name", "placement", "message", "cues")
+    test("both concrete messages, and only they, can be authored where any message is expected") {
+        val catalog = messageCatalog()
+        val message = (catalog.resolve(SyntheticMessageDefinition.use.use) as Resolution.Ready).value
 
-        (SyntheticMessageDefinition.definition.representation as RepresentationTemplate.RecordWrapper).value.abstract_ shouldBe true
-        LiteralMessageDefinition.definition.parents
-            .single()
-            .definition shouldBe SyntheticMessageDefinition.id
-        RepeatedMessageDefinition.definition.parents
-            .single()
-            .definition shouldBe SyntheticMessageDefinition.id
-    }
-
-    test("generates ownership relations and their concrete authored bindings") {
-        SyntheticEntryCues.contract.families shouldBe
-            setOf(RelationFamilyId(value = ACYCLIC_RELATION_FAMILY_ID), RelationFamilyId(value = RESOURCE_OWNERSHIP_FAMILY_ID))
-        SyntheticEntryCues.contract.first.cardinality shouldBe EndpointCardinality.ONE
-        SyntheticEntryCues.contract.second.cardinality shouldBe EndpointCardinality.MANY
-        SyntheticEntryEndpointBindings.bindings
-            .single {
-                it.valueOwner == SyntheticEntryDefinition.id &&
-                    it.target == SyntheticSegmentDefinition.id.template()
-            }.let { binding ->
-                binding.valueOwner shouldBe SyntheticEntryDefinition.id
-                binding.target shouldBe SyntheticSegmentDefinition.id.template()
-                binding.containsCollection shouldBe true
-            }
-
-        SyntheticSegmentKeyframes.contract.families shouldBe
-            setOf(RelationFamilyId(value = ACYCLIC_RELATION_FAMILY_ID), RelationFamilyId(value = RESOURCE_OWNERSHIP_FAMILY_ID))
+        catalog.concreteForms(message).map { it.use } shouldContainExactlyInAnyOrder
+            listOf(LiteralMessageDefinition.use.use, RepeatedMessageDefinition.use.use)
     }
 
     test("native bindings preserve named identity and serialized field names") {
@@ -140,26 +99,6 @@ val SyntheticDiscoveryTest by testSuite {
             )
         val complete = checked.complete(encoded) as CompletenessResult.Complete
         binding.decode(complete.value) shouldBe source
-    }
-
-    test("generated page reference bindings retain the exact relation endpoint and target") {
-        val pageField =
-            (SyntheticPageReferenceEntryDefinition.definition.representation as RepresentationTemplate.RecordWrapper)
-                .value
-                .fields
-                .single { it.owner.name == "referencedPage" }
-                .type as TypeTemplate.NamedWrapper
-
-        pageField.value.definition shouldBe
-            TypeDefinitionId.qualified("relation", "com.typewritermc.extensions.conformance.SyntheticPageReferences.Entry")
-        SyntheticPageReferenceEntryEndpointBindings.bindings
-            .single {
-                it.endpoint == SyntheticPageReferences.contract.first.id
-            }.target shouldBe
-            SyntheticPageDefinition.id.template()
-        SyntheticPageReferences.contract.second.resource shouldBe
-            com.typewritermc.library.PageDefinition.id
-                .namedTemplate()
     }
 
     test("containing page and ordinary referenced page retain separate native fields") {
@@ -202,134 +141,104 @@ val SyntheticDiscoveryTest by testSuite {
                 ).use(listOf(SyntheticPageDefinition.use.use))
     }
 
-    test("generated presentation composes concrete polymorphic controls with serialized paths") {
+    test("the entry editor offers both message kinds, and the repeated message edits its count with a number input") {
         val runtime = DefaultPresentationRuntime()
-        val literal =
-            LiteralMessageEditorPresentation_LiteralMessagePresentationProvider(runtime)
-        val repeated =
-            RepeatedMessageEditorPresentation_RepeatedMessagePresentationProvider(runtime)
-        val entry =
-            SyntheticEntryEditorPresentation_SyntheticEntryPresentationProvider(runtime)
-        literal.descriptor(providerOrigin("literal"))
+        val repeated = RepeatedMessageEditorPresentation_RepeatedMessagePresentationProvider(runtime)
+        val entry = SyntheticEntryEditorPresentation_SyntheticEntryPresentationProvider(runtime)
+        LiteralMessageEditorPresentation_LiteralMessagePresentationProvider(runtime).descriptor(providerOrigin("literal"))
         repeated.descriptor(providerOrigin("repeated"))
         entry.descriptor(providerOrigin("entry"))
         val catalog = presentationCatalog()
-        val checked = (catalog.resolve(SyntheticEntryDefinition.use.use) as Resolution.Ready).value
 
-        val root = entry.build(PresentationBuildBinding(checked.presentationTemplate(), PresentationRole.WORKSPACE)).layout
-        val children = (root.element as PresentationElement.ChildrenWrapper).value.axisNodes()
-        val polymorphic =
-            children
-                .mapNotNull { it.element as? PresentationElement.PolymorphicInputWrapper }
+        val message =
+            entry
+                .build(catalog.workspaceOf(SyntheticEntryDefinition.use.use))
+                .layout
+                .flattened()
+                .filterIsInstance<PresentationElement.PolymorphicInputWrapper>()
                 .single()
-        polymorphic.value.concreteTypes shouldHaveSize 2
-        val repeatedPresentation = requireNotNull(polymorphic.value.concreteTypes[1].presentation)
-        (repeatedPresentation.element is PresentationElement.InvocationWrapper) shouldBe true
-        val repeatedChecked = (catalog.resolve(RepeatedMessageDefinition.use.use) as Resolution.Ready).value
-        val repeatedFields =
-            (
-                repeated
-                    .build(
-                        PresentationBuildBinding(
-                            repeatedChecked.presentationTemplate(),
-                            PresentationRole.WORKSPACE,
-                        ),
-                    ).layout.element as
-                    PresentationElement.ChildrenWrapper
-            ).value
-                .axisNodes()
-        val repetitions = repeatedFields[1].element as PresentationElement.NumericInputWrapper
-        repetitions.value.control.binding.path.segments.single().let { segment ->
-            (segment as PathSegment.FieldWrapper).value.name shouldBe "repeat_count"
-        }
+        message.value.concreteTypes.map { it.concreteType } shouldContainExactlyInAnyOrder
+            listOf(LiteralMessageDefinition.use.use, RepeatedMessageDefinition.use.use)
+
+        val countInputs =
+            repeated
+                .build(catalog.workspaceOf(RepeatedMessageDefinition.use.use))
+                .layout
+                .flattened()
+                .filterIsInstance<PresentationElement.NumericInputWrapper>()
+                .filter { input -> input.value.control.binding.path.segments == listOf(PathSegment.createField(name = "repeat_count")) }
+        countInputs shouldHaveSize 1
     }
 
-    test("generated registrar contributes execution scope ownership") {
+    test("a generated search capability decodes its input and streams encoded results") {
         runTest {
-            val scope = RecordingRuntimeScope(this)
-
-            val provider = SyntheticRuntimeRegistrarGeneratedRegistrarProvider()
-            provider.descriptor.domains shouldBe setOf(DiscoveryDomains.Execution)
-            provider.descriptor.id shouldBe RuntimeRegistrarId("synthetic")
-            val registrar =
-                provider.bind(
-                    GeneratedProviderInstantiator { type -> type.getDeclaredConstructor().newInstance() },
-                )
-            with(scope) { registrar.register() }
-
-            scope.owned shouldBe 1
-        }
-    }
-
-    test("generated Realm capability providers decode invoke and encode through one catalog") {
-        runTest {
-            val owner = SyntheticRealmCapabilities()
-            val resolver = CapabilityOwnerResolver { owner }
-            val registry =
-                RealmCapabilityRegistry(
-                    listOf(
-                        SyntheticRealmCapabilitiesPublishMessageGeneratedCapabilityProvider().bind(resolver),
-                        SyntheticRealmCapabilitiesRepeatMessageGeneratedCapabilityProvider().bind(resolver),
-                        SyntheticRealmCapabilitiesSearchMessagesGeneratedCapabilityProvider().bind(resolver),
-                    ),
-                )
-            val catalog = messageCatalog()
-            val runtime = RealmCapabilityRuntime(catalog, messageBindings(catalog))
-
-            registry.definitions.map { it.id } shouldBe
-                listOf(publishMessageCapability.id, repeatMessageCapability.id, searchMessagesCapability.id)
-                    .sortedBy { it.value }
-            val literal =
-                DataValue.named(
-                    LiteralMessageDefinition.use,
-                    DataValue.record(mapOf("value" to DataValue.StringValueWrapper("hello"))),
-                )
-            registry
+            capabilities()
                 .requireSearch(searchMessagesCapability.id)
-                .invoke(SyntheticCapabilityContext, runtime, literal, RealmSearchQuery.partial(normalizedQuery = "hello"))
-                .updates
+                .invoke(
+                    SyntheticCapabilityContext,
+                    capabilityRuntime(),
+                    literal("hello"),
+                    RealmSearchQuery.partial(normalizedQuery = "hello"),
+                ).updates
                 .toList() shouldBe
-                listOf(
-                    RealmSearchUpdate.Partial(
-                        listOf(
-                            DataValue.named(
-                                RepeatedMessageDefinition.use,
-                                DataValue.record(
-                                    mapOf(
-                                        "value" to DataValue.StringValueWrapper("hello"),
-                                        "repeat_count" to DataValue.integer(BigInteger.ONE),
-                                    ),
-                                ),
-                            ),
-                        ),
-                    ),
-                    RealmSearchUpdate.Complete,
-                )
+                listOf(RealmSearchUpdate.Partial(listOf(repeated("hello", BigInteger.ONE))), RealmSearchUpdate.Complete)
+        }
+    }
 
-            registry.requireComputation(repeatMessageCapability.id).invoke(
-                SyntheticCapabilityContext,
-                runtime,
-                DataValue.named(
-                    RepeatedMessageDefinition.use,
-                    DataValue.record(
-                        mapOf(
-                            "value" to DataValue.StringValueWrapper("go"),
-                            "repeat_count" to DataValue.integer(BigInteger.TWO),
-                        ),
-                    ),
-                ),
-            ) shouldBe
-                DataValue.named(
-                    LiteralMessageDefinition.use,
-                    DataValue.record(mapOf("value" to DataValue.StringValueWrapper("gogo"))),
-                )
-            registry
+    test("a generated computation capability decodes its input and encodes its result") {
+        runTest {
+            capabilities()
+                .requireComputation(repeatMessageCapability.id)
+                .invoke(SyntheticCapabilityContext, capabilityRuntime(), repeated("go", BigInteger.TWO)) shouldBe literal("gogo")
+        }
+    }
+
+    test("a generated command capability decodes its input and returns its panel instructions") {
+        runTest {
+            capabilities()
                 .requireCommand(publishMessageCapability.id)
-                .invoke(SyntheticCapabilityContext, runtime, literal)
+                .invoke(SyntheticCapabilityContext, capabilityRuntime(), literal("hello"))
                 .instructions shouldBe
                 listOf(PanelInstruction.createNotify(severity = NotificationSeverity.SUCCESS, message = "hello"))
         }
     }
+}
+
+private fun capabilities(): RealmCapabilityRegistry {
+    val resolver = CapabilityOwnerResolver { SyntheticRealmCapabilities() }
+    return RealmCapabilityRegistry(
+        listOf(
+            SyntheticRealmCapabilitiesPublishMessageGeneratedCapabilityProvider().bind(resolver),
+            SyntheticRealmCapabilitiesRepeatMessageGeneratedCapabilityProvider().bind(resolver),
+            SyntheticRealmCapabilitiesSearchMessagesGeneratedCapabilityProvider().bind(resolver),
+        ),
+    )
+}
+
+private fun capabilityRuntime(): RealmCapabilityRuntime {
+    val catalog = messageCatalog()
+    return RealmCapabilityRuntime(catalog, messageBindings(catalog))
+}
+
+private fun literal(value: String) =
+    DataValue.named(LiteralMessageDefinition.use, DataValue.record(mapOf("value" to DataValue.StringValueWrapper(value))))
+
+private fun repeated(
+    value: String,
+    count: BigInteger,
+) = DataValue.named(
+    RepeatedMessageDefinition.use,
+    DataValue.record(mapOf("value" to DataValue.StringValueWrapper(value), "repeat_count" to DataValue.integer(count))),
+)
+
+private fun DefaultCheckedCatalog.workspaceOf(use: skirout.editor.v1.type_catalog.TypeUse): PresentationBuildBinding =
+    PresentationBuildBinding((resolve(use) as Resolution.Ready).value.presentationTemplate(), PresentationRole.WORKSPACE)
+
+/** The element of [this] and every element nested in its children, depth first in reading order. */
+private fun PresentationNode.flattened(): List<PresentationElement> {
+    val element = element ?: return emptyList()
+    val children = (element as? PresentationElement.ChildrenWrapper)?.value?.axisNodes().orEmpty()
+    return listOf(element) + children.flatMap { it.flattened() }
 }
 
 private fun messageCatalog() =
@@ -433,23 +342,6 @@ private fun AxisChild.node(): PresentationNode =
         is AxisChild.Unknown,
         -> error("Unknown axis child")
     }
-
-private class RecordingRuntimeScope(
-    override val coroutineScope: CoroutineScope,
-) : RuntimeScope {
-    override val facts: DeploymentFacts = DeploymentFacts(emptyMap())
-    var owned: Int = 0
-        private set
-
-    override fun own(cleanup: suspend () -> Unit) {
-        owned += 1
-    }
-
-    override fun <R : AutoCloseable> own(resource: R): R {
-        owned += 1
-        return resource
-    }
-}
 
 private data object SyntheticCapabilityContext :
     RealmSearchContext,

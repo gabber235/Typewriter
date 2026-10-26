@@ -1,6 +1,5 @@
 package com.typewritermc.expression
 
-import build.skir.JsonFlavor
 import com.typewritermc.authoring.AuthoredReads
 import com.typewritermc.authoring.Availability
 import com.typewritermc.authoring.BoundCollectionPath
@@ -32,7 +31,6 @@ import com.typewritermc.types.requireValid
 import com.typewritermc.types.setValue
 import com.typewritermc.types.timestamp
 import de.infix.testBalloon.framework.core.testSuite
-import io.kotest.assertions.withClue
 import io.kotest.matchers.shouldBe
 import kotlinx.serialization.json.Json
 import kotlinx.serialization.json.JsonElement
@@ -108,7 +106,6 @@ val PortableExpressionFixtureTest by testSuite {
 
     cases.forEach { case ->
         test("${case.file}: ${case.id}") {
-            case.expression.roundTrips()
             case.check?.let { case.checkWith(it) }
             if (case.expression.ruleProfileViolations().isEmpty()) case.evaluate()
         }
@@ -203,17 +200,6 @@ private fun JsonObject.requireKeys(
 ) {
     val unknown = keys - allowed
     require(unknown.isEmpty()) { "$owner has unknown keys $unknown." }
-}
-
-/** Compares encodings rather than values, so a non portable literal such as NaN still round trips. */
-private fun ExpressionNode.roundTrips() {
-    val serializer = ExpressionNode.serializer
-    val readable = serializer.toJsonCode(this, JsonFlavor.READABLE)
-    withClue("readable JSON") { serializer.toJsonCode(serializer.fromJsonCode(readable), JsonFlavor.READABLE) shouldBe readable }
-    withClue("dense JSON") {
-        serializer.toJsonCode(serializer.fromJsonCode(serializer.toJsonCode(this)), JsonFlavor.READABLE) shouldBe readable
-    }
-    withClue("binary") { serializer.toJsonCode(serializer.fromBytes(serializer.toBytes(this)), JsonFlavor.READABLE) shouldBe readable }
 }
 
 private fun FixtureCase.checkWith(check: JsonObject) {

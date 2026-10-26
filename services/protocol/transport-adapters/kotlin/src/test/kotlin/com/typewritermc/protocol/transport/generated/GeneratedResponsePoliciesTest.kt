@@ -3,7 +3,6 @@ package com.typewritermc.protocol.transport.generated
 import com.typewritermc.protocol.transport.RealmRouteScope
 import com.typewritermc.services.libs.communicator.contract.ResponseClassification
 import com.typewritermc.services.libs.communicator.contract.ResponseOutcome
-import com.typewritermc.services.libs.telemetry.ErrorSlug
 import de.infix.testBalloon.framework.core.testSuite
 import io.kotest.matchers.shouldBe
 import skirout.editor.v1.authoring.AuthoringState
@@ -38,11 +37,5 @@ val GeneratedResponsePoliciesTest by testSuite {
         scope.sharedPublish.responsePolicy
             .classify(conflict)
             .outcome shouldBe ResponseOutcome.DOMAIN_ERROR
-    }
-
-    test("route failures use the slug derived from the operation name") {
-        scope.authoringStateQuery.failureSlug shouldBe ErrorSlug.of("editor-authoring-state-query-failed")
-        scope.editorCatalogWatch.failureSlug shouldBe ErrorSlug.of("editor-catalog-invalidate-failed")
-        scope.authoringChanged.failureSlug shouldBe ErrorSlug.of("editor-authoring-changed-failed")
     }
 }

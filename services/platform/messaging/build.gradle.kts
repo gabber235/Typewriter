@@ -19,4 +19,5 @@ dependencies {
     implementation(libs.nats.core)
     testImplementation(testFixtures(project(":telemetry")))
     testImplementation(libs.kotlin.coroutines.test)
+    testImplementation(libs.kotest.property)
 }

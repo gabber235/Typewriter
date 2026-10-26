@@ -21,6 +21,7 @@ import com.typewritermc.services.libs.communicator.router.RouterResult
 import com.typewritermc.services.libs.communicator.router.communicatorRoutes
 import com.typewritermc.services.libs.communicator.testing.BrokerMessage
 import com.typewritermc.services.libs.communicator.testing.MemoryNatsBroker
+import com.typewritermc.services.libs.communicator.testing.PublishedMessage
 import com.typewritermc.services.libs.communicator.transfer.Assembly
 import com.typewritermc.services.libs.communicator.transfer.PayloadAssembler
 import com.typewritermc.services.libs.communicator.transfer.PayloadPlan
@@ -247,11 +248,10 @@ val PayloadFramingTest by testSuite {
                 listOf(message)
             }
         }) { broker, client ->
-            val started = TimeSource.Monotonic.markNow()
+            // A sender left waiting would fail with a timeout after the frame inactivity instead of this rejection.
+            client.uploadFailure(bytes(LIMITS.chunkBytes * 5 + 3)).shouldBeInstanceOf<TransferRejected>().message shouldBe
+                "The receiver rejected a frame of the payload"
 
-            client.uploadFailure(bytes(LIMITS.chunkBytes * 5 + 3)).shouldBeInstanceOf<TransferRejected>()
-
-            (started.elapsedNow() < ROUTER_LIMITS.frameInactivity) shouldBe true
             handled.get() shouldBe 0
             broker.published.mapNotNull { it.header("Typewriter-Transfer-Failure") } shouldBe listOf("rejected", "interrupted")
         }
@@ -334,18 +334,32 @@ val PayloadFramingTest by testSuite {
         }
     }
 
-    test("an abandoned upload is freed by the sweep") {
+    test("an abandoned upload is freed by the sweep, so its bytes take a new upload") {
         val time = TestTimeSource()
-        val assembler = PayloadAssembler(LIMITS.copy(frameInactivity = 30.seconds), LIMITS.requestMaxBytes, clock = time)
-        val plan = LIMITS.planPayload(Payload.copyOf(bytes(LIMITS.chunkBytes * 6)), LIMITS.requestMaxBytes) as PayloadPlan.Framed
-        plan.frames.take(3).forEach { assembler.accept(InboundMessage(REQUEST, it.payload, headers = it.headers)) }
+        val assembler =
+            PayloadAssembler(
+                LIMITS.copy(frameInactivity = 30.seconds),
+                LIMITS.requestMaxBytes,
+                maxPendingBytes = LIMITS.chunkBytes * 5L,
+                clock = time,
+            )
+        val abandoned = LIMITS.planPayload(Payload.copyOf(bytes(LIMITS.chunkBytes * 4)), LIMITS.requestMaxBytes) as PayloadPlan.Framed
+        assembler.accept(InboundMessage(REQUEST, abandoned.frames[0].payload, headers = abandoned.frames[0].headers))
+
+        /** The answer at the window end of a new upload of four chunks, whose bytes only fit once the abandoned one is gone. */
+        suspend fun windowEndOfNewUpload(seed: Int): Assembly {
+            val upload =
+                LIMITS.planPayload(Payload.copyOf(bytes(LIMITS.chunkBytes * 4, seed = seed)), LIMITS.requestMaxBytes) as PayloadPlan.Framed
+            assembler.accept(InboundMessage(REQUEST, upload.frames[0].payload, headers = upload.frames[0].headers))
+            return assembler.accept(InboundMessage(REQUEST, upload.frames[1].payload, REPLY, upload.frames[1].headers))
+        }
 
         assembler.sweep()
-        assembler.pendingCount() shouldBe 1
+        windowEndOfNewUpload(seed = 3).shouldBeInstanceOf<Assembly.Answer>().headers.first("Typewriter-Transfer-Failure") shouldBe "busy"
         time += 31.seconds
         assembler.sweep()
 
-        assembler.pendingCount() shouldBe 0
+        windowEndOfNewUpload(seed = 5).shouldBeInstanceOf<Assembly.Answer>().headers.first("Typewriter-Transfer-Failure") shouldBe null
     }
 
     test("a payload beyond the pending byte bound is answered busy at its window end") {
@@ -518,7 +532,7 @@ private suspend fun MemoryNatsBroker.request(
 }
 
 /** Messages published to reply inboxes by the responder, excluding credits the requester sent back. */
-private fun MemoryNatsBroker.replies(): List<BrokerMessage> =
+private fun MemoryNatsBroker.replies(): List<PublishedMessage> =
     published.filter { it.subject.startsWith("_INBOX.") && it.header("Typewriter-Credit") == null }
 
 private fun bytes(

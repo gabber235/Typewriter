@@ -284,11 +284,17 @@ private class TypewriterTypeProcessor(
             logger.error("Relation endpoints must name a registered resource declaration.", this)
             return null
         }
-        val resourceTemplate = resource.endpointTemplate(declarations)
-        if (resourceTemplate == null) {
-            logger.error("Relation endpoint resources require valid Typewriter type ids.", this)
-            return null
-        }
+        val resourceTemplate =
+            when (val endpoint = resource.endpointTemplate(declarations)) {
+                is EndpointTemplate.Ready -> {
+                    endpoint.template
+                }
+
+                is EndpointTemplate.Rejected -> {
+                    logger.error(endpoint.reason, this)
+                    return null
+                }
+            }
         return RelationEndpointSource(
             name = simpleName.asString(),
             slot = EndpointSlot.First,
@@ -879,40 +885,70 @@ private fun discoverEndpointBindings(
 private fun classes(declarations: Sequence<KSDeclaration>): Sequence<KSClassDeclaration> =
     declarations.filterIsInstance<KSClassDeclaration>().flatMap { sequenceOf(it) + classes(it.declarations) }
 
+/** The portable template of a relation endpoint resource, or why an author's endpoint type has none. */
+private sealed interface EndpointTemplate {
+    data class Ready(
+        val template: TypeTemplate,
+    ) : EndpointTemplate
+
+    data class Rejected(
+        val reason: String,
+    ) : EndpointTemplate
+}
+
 /**
  * The portable template of a relation endpoint resource. Records each named declaration in [declarations], so the
- * relation can reference the generated definition that owns its id. Null when a declaration has a malformed type id.
+ * relation can reference the generated definition that owns its id. Rejected when a declaration has a malformed type
+ * id or an argument names a type alias or another type that is neither a class nor a declaration's parameter.
  */
-private fun KSType.endpointTemplate(declarations: MutableMap<TypeDefinitionId, KSClassDeclaration>): TypeTemplate? {
-    val parameter = declaration as? KSTypeParameter
-    if (parameter != null) {
-        val owner =
-            parameter.parentDeclaration as? KSClassDeclaration
-                ?: error("Relation endpoint parameters require a declaration owner.")
-        val index = owner.typeParameters.indexOf(parameter)
-        require(index >= 0) { "Relation endpoint parameters must belong to their declaration." }
-        val identity = owner.typeDefinitionIdentity() ?: return null
-        declarations[identity] = owner
-        return ParameterKey(owner = identity, index = index).template.withNullability(this)
-    }
-    val declaration =
-        declaration as? KSClassDeclaration
-            ?: error("Relation endpoint arguments must use class or parameter types.")
-    portableScalarKind()?.let { scalar -> return scalar.template.withNullability(this) }
+private fun KSType.endpointTemplate(declarations: MutableMap<TypeDefinitionId, KSClassDeclaration>): EndpointTemplate {
+    (declaration as? KSTypeParameter)?.let { parameter -> return parameterEndpointTemplate(parameter, declarations) }
+    val declaration = declaration as? KSClassDeclaration ?: return EndpointTemplate.Rejected(NOT_CLASS_OR_PARAMETER)
+    portableScalarKind()?.let { scalar -> return EndpointTemplate.Ready(scalar.template.withNullability(this)) }
     val identity =
         when {
-            declaration isOneOf KnownTypes.lists -> StandardTypes.list
-            declaration isOneOf KnownTypes.sets -> StandardTypes.set
-            declaration isOneOf KnownTypes.maps -> StandardTypes.map
-            else -> (declaration.typeDefinitionIdentity() ?: return null).also { declarations[it] = declaration }
+            declaration isOneOf KnownTypes.lists -> {
+                StandardTypes.list
+            }
+
+            declaration isOneOf KnownTypes.sets -> {
+                StandardTypes.set
+            }
+
+            declaration isOneOf KnownTypes.maps -> {
+                StandardTypes.map
+            }
+
+            else -> {
+                (declaration.typeDefinitionIdentity() ?: return EndpointTemplate.Rejected(MALFORMED_ENDPOINT_ID))
+                    .also { declarations[it] = declaration }
+            }
         }
     val arguments =
         arguments.mapIndexed { index, argument ->
-            val type = argument.type?.resolve() ?: return@mapIndexed ParameterKey(owner = identity, index = index).template
-            type.endpointTemplate(declarations) ?: return null
+            argument.type?.resolve()?.endpointTemplate(declarations)
+                ?: EndpointTemplate.Ready(ParameterKey(owner = identity, index = index).template)
         }
-    return identity.template(arguments).withNullability(this)
+    arguments.filterIsInstance<EndpointTemplate.Rejected>().firstOrNull()?.let { return it }
+    val templates = arguments.map { (it as EndpointTemplate.Ready).template }
+    return EndpointTemplate.Ready(identity.template(templates).withNullability(this))
 }
+
+/** The template of an endpoint argument that names a type parameter of the declaration that owns it. */
+private fun KSType.parameterEndpointTemplate(
+    parameter: KSTypeParameter,
+    declarations: MutableMap<TypeDefinitionId, KSClassDeclaration>,
+): EndpointTemplate {
+    val owner = parameter.parentDeclaration as? KSClassDeclaration ?: return EndpointTemplate.Rejected(NOT_CLASS_OR_PARAMETER)
+    val index = owner.typeParameters.indexOf(parameter)
+    require(index >= 0) { "Relation endpoint parameters must belong to their declaration." }
+    val identity = owner.typeDefinitionIdentity() ?: return EndpointTemplate.Rejected(MALFORMED_ENDPOINT_ID)
+    declarations[identity] = owner
+    return EndpointTemplate.Ready(ParameterKey(owner = identity, index = index).template.withNullability(this))
+}
+
+private const val MALFORMED_ENDPOINT_ID = "Relation endpoint resources require valid Typewriter type ids."
+private const val NOT_CLASS_OR_PARAMETER = "Relation endpoint arguments must use class or parameter types."
 
 private fun TypeTemplate.withNullability(type: KSType): TypeTemplate = if (type.isMarkedNullable) this.nullable() else this
 

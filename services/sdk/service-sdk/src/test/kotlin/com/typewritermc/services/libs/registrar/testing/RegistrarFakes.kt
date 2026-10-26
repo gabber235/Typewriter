@@ -96,7 +96,11 @@ class FakeCredentialStorage(
 ) : CredentialStorage {
     private val loads = ArrayDeque<CredentialLoadResult>().apply { add(initial) }
     private val stores = ArrayDeque<CredentialStoreResult>()
+    private val attempts = mutableListOf<IdentityCredentials>()
     val actions get() = ledger.actions
+
+    /** Every credentials value the registrar asked to store, in order, whether the store succeeded or not. */
+    val stored: List<IdentityCredentials> get() = synchronized(this) { attempts.toList() }
 
     @Synchronized fun enqueueLoad(result: CredentialLoadResult) {
         loads += result
@@ -115,6 +119,7 @@ class FakeCredentialStorage(
     override suspend fun store(credentials: IdentityCredentials): CredentialStoreResult =
         synchronized(this) {
             ledger.record(RegistrarAction.StoreCredentials(credentials.identity, System.identityHashCode(credentials)))
+            attempts += credentials
             stores.removeFirstOrNull() ?: CredentialStoreResult.Success
         }
 }

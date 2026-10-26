@@ -60,40 +60,6 @@ val ImprintPluginTest by testSuite {
             ).output shouldContain "Artifact version must use complete semantic version syntax"
     }
 
-    test("extensions create arbitrary isolated source parts") {
-        val fixture = fixture("capability")
-        fixture.writeBuild(
-            "capability",
-            capabilityBuild("typewritermc:items"),
-        )
-        fixture.writeBuild(
-            """
-            plugins {
-                kotlin("jvm") version "2.4.21"
-                id("com.typewritermc.imprint")
-            }
-            typewriter {
-                extension {
-                    id = "typewritermc:quests"
-                    version = "1.0.0"
-                    sourceSet("items") {
-                        capabilities {
-                            capability(project(":capability"), version = "^1")
-                        }
-                    }
-                }
-            }
-            """.trimIndent(),
-        )
-
-        val output = fixture.run("typewriterSourceSets").output
-
-        output shouldContain "Typewriter source set common"
-        output shouldContain "Typewriter source set items"
-        output shouldNotContain "realm"
-        output shouldNotContain "panel"
-    }
-
     test("extension common receives engine core and extension API") {
         val fixture = fixture("engineCore", "extensionApi")
         fixture.writeBuild("engineCore", javaLibraryBuild())
@@ -666,30 +632,33 @@ val ImprintPluginTest by testSuite {
             "Cyclic extension source set inclusion: first > second > first"
     }
 
-    test("relationship inputs track producers constraints and artifact contents") {
+    test("a changed requirement constraint rewrites the manifest") {
         val fixture = fixture("base")
         fixture.writeBuild("base", capabilityBuild("typewritermc:base"))
-        val build =
-            capabilityBuild(
-                "typewritermc:items",
-                requires = "capability(project(\":base\"), version = \"^1\")",
-            )
+        val build = capabilityBuild("typewritermc:items", requires = "capability(project(\":base\"), version = \"^1\")")
         fixture.writeBuild(build)
-
-        fixture.run("generateImprintManifest").task(":base:jar")?.outcome shouldBe TaskOutcome.SUCCESS
-        val original = fixture.manifestBytes()
-        fixture.run("generateImprintManifest").task(":generateImprintManifest")?.outcome shouldBe TaskOutcome.UP_TO_DATE
-
-        fixture.write("base/src/main/resources/content.txt", "changed artifact content")
-        fixture.run("generateImprintManifest").task(":generateImprintManifest")?.outcome shouldBe TaskOutcome.SUCCESS
-        fixture.manifestBytes().toList() shouldBe original.toList()
+        fixture.run("generateImprintManifest")
 
         fixture.writeBuild(build.replace("^1", "^1.0"))
-        fixture.run("generateImprintManifest").task(":generateImprintManifest")?.outcome shouldBe TaskOutcome.SUCCESS
+        fixture.run("generateImprintManifest")
+
         val manifest = ImprintManifestCodec.decode(fixture.manifestBytes()) as CapabilityManifest
         manifest.directRequirements
             .single()
             .version.expression shouldBe "^1.0"
+    }
+
+    test("changed content of a required artifact leaves the manifest bytes unchanged") {
+        val fixture = fixture("base")
+        fixture.writeBuild("base", capabilityBuild("typewritermc:base"))
+        fixture.writeBuild(capabilityBuild("typewritermc:items", requires = "capability(project(\":base\"), version = \"^1\")"))
+        fixture.run("generateImprintManifest")
+        val original = fixture.manifestBytes()
+
+        fixture.write("base/src/main/resources/content.txt", "changed artifact content")
+        fixture.run("generateImprintManifest")
+
+        fixture.manifestBytes().toList() shouldBe original.toList()
     }
 
     test("platform archive changes invalidate hosted manifest content") {

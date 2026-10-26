@@ -18,6 +18,7 @@ import com.typewritermc.services.libs.communicator.contract.UnaryContract
 import com.typewritermc.services.libs.communicator.router.CommunicatorRouter
 import com.typewritermc.services.libs.communicator.router.CommunicatorRoutes
 import com.typewritermc.services.libs.communicator.router.IncomingUnaryCall
+import com.typewritermc.services.libs.communicator.router.RouterError
 import com.typewritermc.services.libs.communicator.router.RouterOptions
 import com.typewritermc.services.libs.communicator.router.RouterResult
 import com.typewritermc.services.libs.communicator.router.RouterState
@@ -33,15 +34,18 @@ import com.typewritermc.services.libs.telemetry.testing.TelemetryTestHarness
 import de.infix.testBalloon.framework.core.testSuite
 import io.kotest.assertions.throwables.shouldThrow
 import io.kotest.matchers.shouldBe
+import io.kotest.matchers.types.shouldBeInstanceOf
 import io.opentelemetry.api.trace.propagation.W3CTraceContextPropagator
 import io.opentelemetry.context.propagation.ContextPropagators
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.async
+import kotlinx.coroutines.awaitCancellation
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.test.advanceTimeBy
 import kotlinx.coroutines.test.runCurrent
 import kotlinx.coroutines.test.runTest
 import kotlin.time.Duration.Companion.milliseconds
+import kotlin.time.Duration.Companion.seconds
 
 private data class RouterTarget(
     val id: String,
@@ -185,7 +189,7 @@ val CommunicatorRouterTest by testSuite {
         }
     }
 
-    test("typed call is processed, startup is ready, and stop is idempotent") {
+    test("a call is answered on its reply address") {
         runTest {
             var observed: IncomingUnaryCall<RouterTarget, String, String>? = null
             val routes =
@@ -195,30 +199,42 @@ val CommunicatorRouterTest by testSuite {
                         "ok"
                     }
                 }
-            val fixture = routerFixture(routes, this)
-            fixture.router.start() shouldBe RouterResult.Success
-            fixture.router.state shouldBe RouterState.RUNNING
-            fixture.fake.deliver(
-                TransportDelivery.Message(
-                    InboundMessage(
-                        MessageAddress.of("router.alpha.get"),
-                        "request".encodeToByteArray(),
-                        MessageAddress.of("reply.alpha"),
+            routerFixture(routes, this).use { fixture ->
+                fixture.router.start() shouldBe RouterResult.Success
+                fixture.fake.deliver(
+                    TransportDelivery.Message(
+                        InboundMessage(
+                            MessageAddress.of("router.alpha.get"),
+                            "request".encodeToByteArray(),
+                            MessageAddress.of("reply.alpha"),
+                        ),
                     ),
-                ),
-            )
-            runCurrent()
-            observed?.address shouldBe RouterTarget("alpha")
-            observed?.request shouldBe "request"
-            fixture.fake.actions
-                .filterIsInstance<FakeMessageTransport.Action.Publish>()
-                .single()
-                .message.address shouldBe MessageAddress.of("reply.alpha")
-            fixture.router.stop() shouldBe RouterResult.Success
-            fixture.router.stop() shouldBe RouterResult.Success
-            fixture.fake.actions.count { it is FakeMessageTransport.Action.SubscriptionClose } shouldBe 1
-            fixture.harness.assertNoActiveSpans()
-            fixture.close()
+                )
+                runCurrent()
+
+                observed?.address shouldBe RouterTarget("alpha")
+                observed?.request shouldBe "request"
+                val reply =
+                    fixture.fake.actions
+                        .filterIsInstance<FakeMessageTransport.Action.Publish>()
+                        .single()
+                        .message
+                reply.address shouldBe MessageAddress.of("reply.alpha")
+                routerUnary.responseCodec.decode(reply.payload) shouldBe "ok"
+                fixture.router.stop() shouldBe RouterResult.Success
+                fixture.harness.assertNoActiveSpans()
+            }
+        }
+    }
+
+    test("stopping a stopped router succeeds again") {
+        runTest {
+            routerFixture(communicatorRoutes { unary(routerUnary) { "ok" } }, this).use { fixture ->
+                fixture.router.start() shouldBe RouterResult.Success
+
+                fixture.router.stop() shouldBe RouterResult.Success
+                fixture.router.stop() shouldBe RouterResult.Success
+            }
         }
     }
 
@@ -457,49 +473,64 @@ val CommunicatorRouterTest by testSuite {
         }
     }
 
-    test("graceful stop drains accepted work while timeout stop returns promptly and cancels blocked work") {
+    test("graceful stop waits for accepted work") {
         runTest {
             var drained = false
             val drainGate = kotlinx.coroutines.CompletableDeferred<Unit>()
-            val draining =
-                routerFixture(
-                    communicatorRoutes {
-                        event(routerEvent, parallelism = 1) {
-                            drainGate.await()
-                            drained = true
-                        }
-                    },
-                    this,
-                )
-            draining.use { draining ->
-                draining.router.start()
-                draining.fake.deliver(message("router.drain.get"))
+            val routes =
+                communicatorRoutes {
+                    event(routerEvent, parallelism = 1) {
+                        drainGate.await()
+                        drained = true
+                    }
+                }
+            routerFixture(routes, this).use { fixture ->
+                fixture.router.start()
+                fixture.fake.deliver(message("router.drain.get"))
                 runCurrent()
-                val graceful = async { draining.router.stop() }
+
+                val graceful = async { fixture.router.stop() }
                 runCurrent()
                 graceful.isCompleted shouldBe false
                 drainGate.complete(Unit)
-                runCurrent()
+
                 graceful.await() shouldBe RouterResult.Success
                 drained shouldBe true
             }
+        }
+    }
 
-            val gate = kotlinx.coroutines.CompletableDeferred<Unit>()
-            val fixture =
-                routerFixture(
-                    communicatorRoutes { event(routerEvent, parallelism = 1) { gate.await() } },
-                    this,
-                    RouterOptions(shutdownTimeout = kotlin.time.Duration.parse("1s")),
-                )
-            fixture.use { fixture ->
+    test("stop gives up after the shutdown timeout and cancels blocked work") {
+        runTest {
+            var cancelled = false
+            val routes =
+                communicatorRoutes {
+                    event(routerEvent, parallelism = 1) {
+                        try {
+                            awaitCancellation()
+                        } finally {
+                            cancelled = true
+                        }
+                    }
+                }
+            routerFixture(routes, this, RouterOptions(shutdownTimeout = 1.seconds)).use { fixture ->
                 fixture.router.start()
                 fixture.fake.deliver(message("router.a.get"))
                 runCurrent()
+
                 val stopped = async { fixture.router.stop() }
-                advanceTimeBy(1_001.milliseconds)
+                advanceTimeBy(999.milliseconds)
                 runCurrent()
-                (stopped.await() is RouterResult.Failure) shouldBe true
-                fixture.router.state shouldBe RouterState.STOPPED
+                stopped.isCompleted shouldBe false
+                advanceTimeBy(2.milliseconds)
+                runCurrent()
+
+                stopped
+                    .await()
+                    .shouldBeInstanceOf<RouterResult.Failure>()
+                    .error
+                    .shouldBeInstanceOf<RouterError.Shutdown>()
+                cancelled shouldBe true
             }
         }
     }

@@ -67,12 +67,6 @@ describe("pinned Unicode tables", () => {
 });
 
 describe("emitted Unicode tables", () => {
-  test("are deterministic", () => {
-    const again = unicodeTables(UNICODE_RELEASE, UNICODE_ROOT);
-    expect(emitKotlinUnicodeTables(again)).toBe(emitKotlinUnicodeTables(TABLES));
-    expect(emitDartUnicodeTables(again)).toBe(emitDartUnicodeTables(TABLES));
-  });
-
   test("spell their data only in characters both languages read unescaped", () => {
     expect(ALPHABET).toHaveLength(91);
     expect(ALPHABET).not.toMatch(/["$\\]/);

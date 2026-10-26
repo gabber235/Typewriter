@@ -11,9 +11,24 @@ import com.typewritermc.expression.MayBeMissing
 import com.typewritermc.types.TypewriterRecordContract
 import com.typewritermc.types.TypewriterTypeImports
 import kotlinx.serialization.SerialName
-import skirout.editor.v1.type_catalog.RepresentationTemplate
-import com.typewritermc.types.template
-import com.typewritermc.types.nullable
+import com.typewritermc.discovery.CatalogAssemblyContext
+import com.typewritermc.discovery.DeploymentFacts
+import com.typewritermc.discovery.DiscoveryDomains
+import com.typewritermc.discovery.GeneratedProviderArtifact
+import com.typewritermc.discovery.GeneratedProviderLoader
+import com.typewritermc.discovery.assemble
+import com.typewritermc.imprint.ArtifactId
+import com.typewritermc.presentation.DefaultPresentationRuntime
+import com.typewritermc.presentation.PresentationRuntime
+import java.nio.file.Path
+import com.typewritermc.types.catalog.Resolution
+import com.typewritermc.types.integerScalar
+import com.typewritermc.types.use
+import io.kotest.assertions.withClue
+import io.kotest.matchers.shouldBe
+import skirout.editor.v1.type_catalog.CatalogGeneration
+import skirout.editor.v1.type_catalog.IntegerWidth
+import skirout.editor.v1.type_catalog.TypeUse
 import skirout.editor.v1.type_catalog.PathSegment
 
 interface ImportedEntry : Element {
@@ -98,27 +113,6 @@ suspend fun <C, D> genericEdit(
     draft.setPayload(replacement)
 }
 
-fun verifyCanonicalOwnership() {
-    val imported = ImportedEntryDefinition.definition.representation as RepresentationTemplate.RecordWrapper
-    check(imported.value.fields.map { it.owner.name } == listOf("placement"))
-    val child = GenericChildDefinition.definition.representation as RepresentationTemplate.RecordWrapper
-    check(child.value.fields.isEmpty())
-    check(
-        NullableChildDefinition.definition.parents.single().arguments.single() ==
-            NullableChildDefinition.definition.parameters.single().key.template.nullable(),
-    )
-    check(
-        GenericChildFields.payload.path.segments
-            .single() ==
-            PathSegment.createField(name = "wire_payload"),
-    )
-    check(
-        ImportedEntryFields.name.path.segments
-            .single() ==
-            PathSegment.createField(name = "name"),
-    )
-}
-
 context(edits: EditContext)
 suspend fun <C, D> nullableEdit(
     draft: NullableChildExactDraft<C, D>,
@@ -127,4 +121,32 @@ suspend fun <C, D> nullableEdit(
     draft.setPayload(replacement)
 }
 
-fun main() = verifyCanonicalOwnership()
+/**
+ * The checked catalog shows each inherited field once under the wire name its declaration gives, and generated
+ * accessors read that wire name.
+ */
+fun main(args: Array<String>) {
+    GeneratedProviderLoader()
+        .load(
+            listOf(
+                GeneratedProviderArtifact(ArtifactId("fixture"), Path.of(args.single())),
+                GeneratedProviderArtifact(ArtifactId("core"), Path.of(Element::class.java.protectionDomain.codeSource.location.toURI())),
+            ),
+            DeploymentFacts(emptyMap()),
+            DiscoveryDomains.Realm,
+            runtimeServices = mapOf(PresentationRuntime::class.java to DefaultPresentationRuntime()),
+        ).use { deployment ->
+            val assembly = deployment.providers.contributions.assemble(CatalogAssemblyContext(CatalogGeneration(value = "fixture")))
+            fun fieldKeys(use: TypeUse): List<String> =
+                when (val resolved = assembly.checked.resolve(use)) {
+                    is Resolution.Ready -> resolved.value.schema.fields.map { it.key }
+                    is Resolution.Invalid -> error("${resolved.diagnostics} ${assembly.editorCatalog.diagnostics}")
+                }
+            val integer = integerScalar(IntegerWidth.SIGNED_THIRTY_TWO).use
+            withClue("GenericChild<Int>") { fieldKeys(GenericChildDefinition.applied(listOf(integer)).use) shouldBe listOf("wire_payload") }
+            withClue("NullableChild<Int>") { fieldKeys(NullableChildDefinition.applied(listOf(integer)).use) shouldBe listOf("wire_payload") }
+            withClue("ImportedEntry") { fieldKeys(ImportedEntryDefinition.use.use).count { it == "placement" } shouldBe 1 }
+        }
+    GenericChildFields.payload.path.segments.single() shouldBe PathSegment.createField(name = "wire_payload")
+    ImportedEntryFields.name.path.segments.single() shouldBe PathSegment.createField(name = "name")
+}

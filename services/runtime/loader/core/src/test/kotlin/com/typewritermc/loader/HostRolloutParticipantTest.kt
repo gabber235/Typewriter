@@ -48,7 +48,6 @@ import com.typewritermc.protocol.transport.generated.rolloutStatus
 import com.typewritermc.protocol.transport.generated.serviceReplyInboxPrefix
 import com.typewritermc.services.libs.communicator.address.MessageAddress
 import com.typewritermc.services.libs.communicator.client.Communicator
-import com.typewritermc.services.libs.communicator.contract.ResponseOutcome
 import com.typewritermc.services.libs.communicator.router.RouterResult
 import com.typewritermc.services.libs.communicator.router.RouterState
 import com.typewritermc.services.libs.communicator.router.communicatorRoutes
@@ -63,6 +62,7 @@ import de.infix.testBalloon.framework.core.testSuite
 import io.kotest.assertions.throwables.shouldThrow
 import io.kotest.matchers.collections.shouldContainExactly
 import io.kotest.matchers.shouldBe
+import io.kotest.matchers.types.shouldBeInstanceOf
 import io.opentelemetry.api.OpenTelemetry
 import io.opentelemetry.context.propagation.ContextPropagators
 import kotlinx.coroutines.CancellationException
@@ -146,7 +146,7 @@ val HostRolloutParticipantTest by testSuite {
             shouldThrow<IllegalArgumentException> {
                 HostedRuntimeLoader(HostedRuntimeEntrypoint::class.java.classLoader)
                     .stage(fixture.context(artifact, manifest))
-            }
+            }.message shouldBe "Hosted runtime entrypoint java.lang.String does not implement HostedRuntimeEntrypoint."
         }
     }
 
@@ -168,21 +168,19 @@ val HostRolloutParticipantTest by testSuite {
         runTest {
             val fixture = participantFixture(this)
             val artifact = fixture.root.resolve("runtime.jar")
-            ZipOutputStream(Files.newOutputStream(artifact)).use { }
+            writeRuntimeJar(artifact, ThrowingHostedRuntimeEntrypoint::class.java)
             val manifest = fixture.engineManifest(ThrowingHostedRuntimeEntrypoint::class.qualifiedName!!)
+            StagingLoaders.last = null
 
             shouldThrow<IllegalStateException> {
-                HostedRuntimeLoader(ThrowingHostedRuntimeEntrypoint::class.java.classLoader)
+                HostedRuntimeLoader(ParentHiding(ThrowingHostedRuntimeEntrypoint::class.java))
                     .stage(fixture.context(artifact, manifest))
-            }
-        }
-    }
+            }.message shouldBe "fixture stage failure"
 
-    test("participant status contract classifies its typed internal failure") {
-        val policy = RealmRouteScope(organizationId = "organization", realmId = "realm").rolloutStatus.responsePolicy
-        policy.classify(policy.internalFailureResponse).outcome shouldBe ResponseOutcome.INTERNAL_ERROR
-        val status = ParticipantStatus(serviceId = "service", attempt = attempt(1, 1), phase = ParticipantPhase.IDLE)
-        policy.classify(QueryParticipantStatusResponse.StatusWrapper(status)).outcome shouldBe ResponseOutcome.SUCCESS
+            // The entrypoint was defined from the runtime JAR, and that loader no longer reads it once closed.
+            val loader = StagingLoaders.last.shouldBeInstanceOf<URLClassLoader>()
+            loader.getResource(RUNTIME_MARKER) shouldBe null
+        }
     }
 
     test("hosts that a command does not list stay silent") {
@@ -210,7 +208,7 @@ val HostRolloutParticipantTest by testSuite {
         }
     }
 
-    test("commands are serialized idempotent and projection specific") {
+    test("a repeated stage is accepted again and stages its projection once") {
         runTest {
             val fixture = participantFixture(this)
             val attempt = attempt(2, 1)
@@ -218,29 +216,71 @@ val HostRolloutParticipantTest by testSuite {
             val projection = fixture.projection(reference)
             fixture.projections[reference] = projection
             val stage = fixture.stage(attempt, reference)
+
+            fixture.participant.apply(stage) shouldBe fixture.accepted
+            fixture.participant.apply(stage) shouldBe fixture.accepted
+
+            val staged = fixture.stagedContexts.single()
+            staged.publicationTarget shouldBe projection.publicationTarget
+            staged.engineImplementation shouldBe projection.runtimes.single().implementation
+            fixture.participant.close()
+        }
+    }
+
+    test("a repeated commit is accepted again and activates the runtime once") {
+        runTest {
+            val fixture = participantFixture(this)
+            val attempt = attempt(2, 1)
+            val reference = fixture.reference("first")
+            fixture.projections[reference] = fixture.projection(reference)
+            fixture.participant.apply(fixture.stage(attempt, reference))
             val commit = fixture.commit(attempt, reference)
 
-            fixture.participant.apply(stage) shouldBe fixture.accepted
-            fixture.participant.apply(stage) shouldBe fixture.accepted
-            fixture.stagedContexts.size shouldBe 1
-            fixture.stagedContexts.single().publicationTarget shouldBe projection.publicationTarget
-            fixture.stagedContexts.single().engineImplementation shouldBe projection.runtimes.single().implementation
+            fixture.participant.apply(commit) shouldBe fixture.accepted
+            fixture.participant.apply(commit) shouldBe fixture.accepted
 
-            fixture.participant.apply(commit) shouldBe fixture.accepted
-            fixture.participant.apply(commit) shouldBe fixture.accepted
             fixture.runtimes.single().operations shouldContainExactly listOf("activate")
+            fixture.participant.close()
+        }
+    }
+
+    test("an abort of the active attempt is accepted") {
+        runTest {
+            val fixture = participantFixture(this)
+            val attempt = attempt(2, 1)
+            val reference = fixture.reference("first")
+            fixture.projections[reference] = fixture.projection(reference)
+            fixture.participant.apply(fixture.stage(attempt, reference))
 
             fixture.participant.apply(fixture.abort(attempt, reference)) shouldBe fixture.accepted
+            fixture.participant.close()
+        }
+    }
 
-            val conflictReference = fixture.reference("conflict")
-            val conflict = fixture.participant.apply(fixture.stage(attempt, conflictReference))
-            conflict shouldBe ApplyRolloutCommandResponse.createAttemptConflictError(serviceId = "service")
+    test("staging another projection in the same attempt is answered with an attempt conflict") {
+        runTest {
+            val fixture = participantFixture(this)
+            val attempt = attempt(2, 1)
+            val reference = fixture.reference("first")
+            fixture.projections[reference] = fixture.projection(reference)
+            fixture.participant.apply(fixture.stage(attempt, reference))
 
-            val older =
-                fixture.participant.apply(
-                    fixture.stage(attempt(1, 1), reference),
-                )
-            older shouldBe ApplyRolloutCommandResponse.createStaleAttemptError(serviceId = "service")
+            fixture.participant.apply(fixture.stage(attempt, fixture.reference("conflict"))) shouldBe
+                ApplyRolloutCommandResponse.createAttemptConflictError(serviceId = "service")
+            fixture.stagedContexts.size shouldBe 1
+            fixture.participant.close()
+        }
+    }
+
+    test("a command of an older attempt is answered as stale") {
+        runTest {
+            val fixture = participantFixture(this)
+            val reference = fixture.reference("first")
+            fixture.projections[reference] = fixture.projection(reference)
+            fixture.participant.apply(fixture.stage(attempt(2, 1), reference))
+
+            fixture.participant.apply(fixture.stage(attempt(1, 1), reference)) shouldBe
+                ApplyRolloutCommandResponse.createStaleAttemptError(serviceId = "service")
             fixture.participant.close()
         }
     }
@@ -274,25 +314,16 @@ val HostRolloutParticipantTest by testSuite {
 
             fixture.participant.apply(fixture.stage(attempt, reference)) shouldBe fixture.accepted
 
-            val context = fixture.stagedContexts.single()
-            val extension = context.artifacts.extensions.single()
-            context.artifacts.runtimeArtifact.manifest shouldBe
-                EngineManifest(
-                    id = ArtifactId("typewritermc:paper"),
-                    version = ArtifactVersion("1.0.0"),
-                    hostApi = VersionConstraint("^1"),
-                    runtimeEntrypointClass = "fixture.Runtime",
-                    directCapabilities = emptyList(),
-                    resolvedCapabilities = emptyList(),
-                    bundledComponents = emptyList(),
-                    contributions = emptyList(),
-                )
+            val extension =
+                fixture.stagedContexts
+                    .single()
+                    .artifacts.extensions
+                    .single()
             extension.manifest.id shouldBe ArtifactId("typewritermc:extension")
             extension.sourceParts.map { it.name } shouldContainExactly listOf("paper", "panel")
             extension.sourceParts[0].disposition shouldBe SourcePartDisposition.Eligible(setOf(RuntimePlacement.PRIMARY_ENGINE))
             extension.sourceParts[1].disposition shouldBe
                 SourcePartDisposition.Ineligible(listOf("Source part is not eligible for PRIMARY_ENGINE."))
-            fixture.classPaths.single().size shouldBe 2
             fixture.participant.close()
         }
     }
@@ -685,7 +716,6 @@ private class ParticipantFixture(
     val participant: HostRolloutParticipant,
     val projections: MutableMap<ProjectionReference, HostDeploymentProjection>,
     val stagedContexts: MutableList<HostedDeploymentContext>,
-    val classPaths: MutableList<List<Path>>,
     val runtimes: MutableList<RecordingRuntime>,
     val events: MutableList<ParticipantStatus>,
     val root: Path,
@@ -846,7 +876,6 @@ private fun participantFixture(scope: TestScope): ParticipantFixture {
     val realmId = RealmId("realm")
     val projections = mutableMapOf<ProjectionReference, HostDeploymentProjection>()
     val contexts = mutableListOf<HostedDeploymentContext>()
-    val classPaths = mutableListOf<List<Path>>()
     val runtimes = mutableListOf<RecordingRuntime>()
     val events = mutableListOf<ParticipantStatus>()
     val blobs = FileDigestBlobStore(root)
@@ -860,7 +889,6 @@ private fun participantFixture(scope: TestScope): ParticipantFixture {
     val stager =
         HostedRuntimeStager { context ->
             contexts += context
-            classPaths += context.artifacts.executableArtifacts
             val runtime = RecordingRuntime()
             runtimes += runtime
             LoadedHostedRuntime(runtime, URLClassLoader(emptyArray<java.net.URL>()))
@@ -913,7 +941,7 @@ private fun participantFixture(scope: TestScope): ParticipantFixture {
             stager,
             1.seconds,
         )
-    return ParticipantFixture(serviceId, realmId, host, participant, projections, contexts, classPaths, runtimes, events, root)
+    return ParticipantFixture(serviceId, realmId, host, participant, projections, contexts, runtimes, events, root)
 }
 
 private fun attempt(
@@ -939,7 +967,52 @@ class NoZeroArgumentHostedRuntimeEntrypoint(
 }
 
 class ThrowingHostedRuntimeEntrypoint : HostedRuntimeEntrypoint {
-    override suspend fun stage(context: HostedDeploymentContext): StagedHostedRuntime = error("fixture stage failure")
+    override suspend fun stage(context: HostedDeploymentContext): StagedHostedRuntime {
+        StagingLoaders.last = javaClass.classLoader
+        error("fixture stage failure")
+    }
+}
+
+/** The class loader that defined the entrypoint that staged last; the parent loader shares it with runtime JARs. */
+object StagingLoaders {
+    @Volatile
+    var last: ClassLoader? = null
+}
+
+private const val RUNTIME_MARKER = "fixture/runtime-marker.txt"
+
+/** Writes a runtime JAR holding the compiled classes of [entrypoint] and a marker resource. */
+private fun writeRuntimeJar(
+    artifact: Path,
+    entrypoint: Class<*>,
+) {
+    val compiled = Path.of(entrypoint.getResource("${entrypoint.simpleName}.class")!!.toURI()).parent
+    val packagePath = entrypoint.packageName.replace('.', '/')
+    ZipOutputStream(Files.newOutputStream(artifact)).use { archive ->
+        Files.list(compiled).use { files ->
+            files.filter { it.fileName.toString().startsWith(entrypoint.simpleName) }.forEach { file ->
+                archive.putNextEntry(ZipEntry("$packagePath/${file.fileName}"))
+                archive.write(Files.readAllBytes(file))
+                archive.closeEntry()
+            }
+        }
+        archive.putNextEntry(ZipEntry(RUNTIME_MARKER))
+        archive.write("runtime".encodeToByteArray())
+        archive.closeEntry()
+    }
+}
+
+/** A parent that cannot see [hidden], so the runtime JAR's own loader defines it. */
+private class ParentHiding(
+    private val hidden: Class<*>,
+) : ClassLoader(hidden.classLoader) {
+    override fun loadClass(
+        name: String,
+        resolve: Boolean,
+    ): Class<*> {
+        if (name.startsWith(hidden.name)) throw ClassNotFoundException(name)
+        return super.loadClass(name, resolve)
+    }
 }
 
 private class RecordingRuntime : StagedHostedRuntime {

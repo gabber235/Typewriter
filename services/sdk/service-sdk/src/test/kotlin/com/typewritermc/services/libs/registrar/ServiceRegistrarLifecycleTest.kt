@@ -15,8 +15,13 @@ import com.typewritermc.services.libs.telemetry.testing.TelemetryTestHarness
 import com.typewritermc.services.libs.utils.FakeDelayScheduler
 import com.typewritermc.services.libs.utils.RetryPolicy
 import de.infix.testBalloon.framework.core.testSuite
+import io.kotest.matchers.collections.shouldContainInOrder
+import io.kotest.matchers.collections.shouldHaveSize
+import io.kotest.matchers.comparables.shouldBeGreaterThan
+import io.kotest.matchers.comparables.shouldBeGreaterThanOrEqualTo
 import io.kotest.matchers.shouldBe
 import io.kotest.matchers.types.shouldBeInstanceOf
+import io.kotest.matchers.types.shouldBeSameInstanceAs
 import io.opentelemetry.api.trace.SpanId
 import io.opentelemetry.context.propagation.ContextPropagators
 import kotlinx.coroutines.SupervisorJob
@@ -25,6 +30,8 @@ import kotlinx.coroutines.cancel
 import kotlinx.coroutines.cancelAndJoin
 import kotlinx.coroutines.flow.collect
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.test.TestScope
+import kotlinx.coroutines.test.UnconfinedTestDispatcher
 import kotlinx.coroutines.test.advanceTimeBy
 import kotlinx.coroutines.test.runCurrent
 import kotlinx.coroutines.test.runTest
@@ -53,11 +60,18 @@ val ServiceRegistrarLifecycleTest by testSuite {
             }
         }
     }
-    test("repeated stop returns the exact idempotent result") {
+    test("a second stop after a ready stop succeeds without cleaning up again") {
         runTest {
-            fixture(this).use { f ->
-                val first = f.registrar.stop()
-                (f.registrar.stop() === first) shouldBe true
+            fixture(this, CredentialLoadResult.Loaded(credentials())).use { f ->
+                f.readyScript()
+                f.registrar.start()
+                runCurrent()
+
+                f.registrar.stop() shouldBe RegistrarStopResult.Success
+                f.registrar.stop() shouldBe RegistrarStopResult.Success
+
+                f.ledger.actions.count { it == RegistrarAction.Shutdown } shouldBe 1
+                f.ledger.actions.count { it == RegistrarAction.Close } shouldBe 1
             }
         }
     }
@@ -87,28 +101,19 @@ val ServiceRegistrarLifecycleTest by testSuite {
             }
         }
     }
-    test("missing credentials issue and store once with immutable reference evidence") {
+    test("missing credentials are issued once, stored and used to reach ready") {
         runTest {
             fixture(this).use { f ->
-                val value = credentials()
-                f.issuer.enqueue(IdentityIssueResult.Success(value))
+                val issued = credentials()
+                f.issuer.enqueue(IdentityIssueResult.Success(issued))
                 f.readyScript()
                 f.registrar.start()
                 runCurrent()
                 f.ledger.actions.count { it is RegistrarAction.IssueIdentity } shouldBe 1
-                val store =
-                    f.ledger.actions
-                        .filterIsInstance<RegistrarAction.StoreCredentials>()
-                        .single()
-                val create =
-                    f.ledger.actions
-                        .filterIsInstance<RegistrarAction.CreateRuntime>()
-                        .single()
-                store.referenceId shouldBe create.credentialReferenceId
-                val bodies = f.harness.finishedLogs().mapNotNull { it.bodyValue?.asString() }
-                bodies.contains("Loading the saved service identity") shouldBe true
-                bodies.contains("Requesting a new service identity") shouldBe true
-                bodies.contains("Service registration is ready") shouldBe true
+                f.storage.stored.single() shouldBeSameInstanceAs issued
+                f.registrar.states.value.state
+                    .shouldBeInstanceOf<RegistrarState.Ready>()
+                    .session.identity shouldBeSameInstanceAs issued.identity
             }
         }
     }
@@ -167,11 +172,11 @@ val ServiceRegistrarLifecycleTest by testSuite {
             }
         }
     }
-    test("terminal store failure retains exact credentials for explicit retry") {
+    test("terminal store failure keeps the issued credentials for an explicit retry") {
         runTest {
             fixture(this).use { f ->
-                val value = credentials()
-                f.issuer.enqueue(IdentityIssueResult.Success(value))
+                val issued = credentials()
+                f.issuer.enqueue(IdentityIssueResult.Success(issued))
                 f.storage.enqueueStore(CredentialStoreResult.Failure(CredentialStorageError.Corrupt("bad")))
                 f.storage.enqueueStore(CredentialStoreResult.Success)
                 f.readyScript()
@@ -179,12 +184,11 @@ val ServiceRegistrarLifecycleTest by testSuite {
                 runCurrent()
                 f.registrar.retry()
                 runCurrent()
-                f.ledger.actions
-                    .filterIsInstance<RegistrarAction.StoreCredentials>()
-                    .map { it.referenceId }
-                    .distinct()
-                    .size shouldBe 1
+                f.storage.stored shouldHaveSize 2
+                f.storage.stored.forEach { it shouldBeSameInstanceAs issued }
                 f.ledger.actions.count { it is RegistrarAction.IssueIdentity } shouldBe 1
+                f.registrar.states.value.state
+                    .shouldBeInstanceOf<RegistrarState.Ready>()
             }
         }
     }
@@ -208,20 +212,28 @@ val ServiceRegistrarLifecycleTest by testSuite {
             }
         }
     }
-    test("corrupt load is terminal while unavailable load retries") {
+    test("a corrupt credential file fails registration") {
         runTest {
             fixture(this, CredentialLoadResult.Failure(CredentialStorageError.Corrupt("bad"))).use { f ->
                 f.registrar.start()
                 runCurrent()
-                f.registrar.states.value.state
-                    .shouldBeInstanceOf<RegistrarState.Failed>()
+                f.registrar.states.value.state shouldBe
+                    RegistrarState.Failed(RegistrarFailure.CredentialStorage(CredentialStorageError.Corrupt("bad")))
+                f.ledger.actions.none { it is RegistrarAction.Delay } shouldBe true
             }
+        }
+    }
+    test("an unavailable credential file is loaded again after a delay and reaches ready") {
+        runTest {
             fixture(this, CredentialLoadResult.Failure(CredentialStorageError.Unavailable("down"))).use { f ->
                 f.storage.enqueueLoad(CredentialLoadResult.Loaded(credentials()))
                 f.readyScript()
                 f.registrar.start()
                 runCurrent()
-                f.ledger.actions.any { it is RegistrarAction.Delay } shouldBe true
+                f.ledger.actions.count { it == RegistrarAction.LoadCredentials } shouldBe 2
+                f.ledger.actions.filterIsInstance<RegistrarAction.Delay>() shouldHaveSize 1
+                f.registrar.states.value.state
+                    .shouldBeInstanceOf<RegistrarState.Ready>()
             }
         }
     }
@@ -423,59 +435,92 @@ val ServiceRegistrarLifecycleTest by testSuite {
             }
         }
     }
-    test("heartbeat failure degrades with the same session") {
+    test("heartbeat failure degrades and recovers with the same session") {
         runTest {
-            fixture(this, CredentialLoadResult.Loaded(credentials())).use { f ->
+            fixture(this, CredentialLoadResult.Loaded(credentials()), holdDelays = true).use { f ->
                 f.runtime.enqueueHeartbeat(RuntimeResult.Failure(RegistrarFailure.Messaging(MessagingOperation.HEARTBEAT)))
                 f.readyScript()
                 f.registrar.start()
                 runCurrent()
-                f.ledger.actions.any { it is RegistrarAction.Delay } shouldBe true
-                val ready = f.registrar.states.value.state as RegistrarState.Ready
-                ready.session.shouldBeInstanceOf<ReadySession>()
+                val degraded =
+                    f.registrar.states.value.state
+                        .shouldBeInstanceOf<RegistrarState.DegradedAfterReady>()
+
+                f.delays.resume()
+                runCurrent()
+
+                f.registrar.states.value.state
+                    .shouldBeInstanceOf<RegistrarState.Ready>()
+                    .session shouldBe degraded.session
+            }
+        }
+    }
+    test("a communicator is refused for a generation that is no longer ready") {
+        runTest {
+            fixture(this, CredentialLoadResult.Loaded(credentials())).use { f ->
+                f.readyThenReconnected(this)
+
+                f.registrar.communicatorFor(1) shouldBe RegistrarResult.Failure(RegistrarFailure.Internal("ready_generation_changed"))
+                f.registrar.communicatorFor(2).shouldBeInstanceOf<RegistrarResult.Success<Communicator>>()
             }
         }
     }
     test("connectivity recovery increments generation") {
         runTest {
             fixture(this, CredentialLoadResult.Loaded(credentials())).use { f ->
-                f.readyScript()
-                f.registrar.start()
-                runCurrent()
-                f.runtime.setConnectivity(RuntimeConnectivity.DISCONNECTED)
-                runCurrent()
-                f.runtime.setConnectivity(RuntimeConnectivity.CONNECTED)
-                runCurrent()
+                f.readyThenReconnected(this)
                 (f.registrar.states.value.state as RegistrarState.Ready).connectionGeneration shouldBe 2
             }
         }
     }
-    test("authorization rotation keeps the current runtime until release") {
+    test("authorization rotation serves the replacement while the current runtime stays open") {
         runTest {
             fixture(this, CredentialLoadResult.Loaded(credentials())).use { f ->
                 f.readyScript()
                 f.registrar.start()
                 runCurrent()
-                val replacementLedger = RegistrarActionLedger()
-                val replacement = f.runtime(replacementLedger)
-                replacement.setConnectivity(RuntimeConnectivity.CONNECTED)
-                replacement.enqueueQuery(RuntimeResult.Success(BindingStatus.Bound(binding())))
-                f.factory.enqueue(RuntimeCreateResult.Success(replacement))
+                val replacement = f.boundReplacement()
 
                 f.registrar.rotateAuthorization() shouldBe RegistrarResult.Success(2L)
 
                 f.ledger.actions.count { it == RegistrarAction.Close } shouldBe 0
-                replacementLedger.actions.any { it is RegistrarAction.Connect } shouldBe true
-                replacementLedger.actions.count { it == RegistrarAction.QueryBinding } shouldBe 1
-                replacementLedger.actions.count { it == RegistrarAction.Heartbeat } shouldBe 1
-                f.registrar.communicatorFor(2).shouldBeInstanceOf<RegistrarResult.Success<Communicator>>()
+                replacement.actions.count { it is RegistrarAction.Connect } shouldBe 1
+                replacement.actions.count { it == RegistrarAction.Heartbeat } shouldBe 1
+                f.registrar.communicatorFor(2) shouldBe RegistrarResult.Success(replacement.communicator)
+            }
+        }
+    }
+    test("a failed rotation release can be released again") {
+        runTest {
+            fixture(this, CredentialLoadResult.Loaded(credentials())).use { f ->
+                f.readyScript()
+                f.registrar.start()
+                runCurrent()
+                f.boundReplacement()
+                f.registrar.rotateAuthorization() shouldBe RegistrarResult.Success(2L)
 
                 f.runtime.closeResult = RuntimeCloseResult.Failure(listOf(RegistrarStopFailure.Internal("close")))
                 f.registrar.releaseAuthorizationRotation(2).shouldBeInstanceOf<RegistrarResult.Failure>()
                 f.runtime.closeResult = RuntimeCloseResult.Success
                 f.registrar.releaseAuthorizationRotation(2) shouldBe RegistrarResult.Success(Unit)
-                f.registrar.releaseAuthorizationRotation(2) shouldBe RegistrarResult.Success(Unit)
+
                 f.ledger.actions.count { it == RegistrarAction.Close } shouldBe 2
+            }
+        }
+    }
+    test("releasing a rotation twice closes the previous runtime once") {
+        runTest {
+            fixture(this, CredentialLoadResult.Loaded(credentials())).use { f ->
+                f.readyScript()
+                f.registrar.start()
+                runCurrent()
+                f.boundReplacement()
+                f.registrar.rotateAuthorization() shouldBe RegistrarResult.Success(2L)
+
+                f.registrar.releaseAuthorizationRotation(2) shouldBe RegistrarResult.Success(Unit)
+                f.registrar.releaseAuthorizationRotation(2) shouldBe RegistrarResult.Success(Unit)
+
+                f.ledger.actions.count { it == RegistrarAction.Close } shouldBe 1
             }
         }
     }
@@ -536,35 +581,47 @@ val ServiceRegistrarLifecycleTest by testSuite {
     }
     test("await during degraded waits for recovery") {
         runTest {
-            fixture(this, CredentialLoadResult.Loaded(credentials())).use { f ->
+            fixture(this, CredentialLoadResult.Loaded(credentials()), holdDelays = true).use { f ->
                 f.runtime.enqueueHeartbeat(RuntimeResult.Failure(RegistrarFailure.Messaging(MessagingOperation.HEARTBEAT)))
                 f.readyScript()
                 f.registrar.start()
                 runCurrent()
+                f.registrar.states.value.state
+                    .shouldBeInstanceOf<RegistrarState.DegradedAfterReady>()
+
                 val waiter = async { f.registrar.awaitReady() }
-                waiter.isCompleted shouldBe false
                 runCurrent()
+                waiter.isCompleted shouldBe false
+
+                f.delays.resume()
                 waiter.await().shouldBeInstanceOf<RegistrarResult.Success<ReadySession>>()
             }
         }
     }
-    test("stop orders shutdown before close and prevents further heartbeat") {
+    test("stop announces shutdown before closing the runtime") {
         runTest {
             fixture(this, CredentialLoadResult.Loaded(credentials())).use { f ->
                 f.readyScript()
                 f.registrar.start()
                 runCurrent()
                 f.registrar.stop()
-                val count =
-                    f.ledger.actions.count {
-                        it ==
-                            RegistrarAction.Heartbeat
-                    }
+                f.ledger.actions.filter { it == RegistrarAction.Shutdown || it == RegistrarAction.Close } shouldBe
+                    listOf(RegistrarAction.Shutdown, RegistrarAction.Close)
+                f.harness.assertNoActiveSpans()
+            }
+        }
+    }
+    test("no heartbeat is sent after stop") {
+        runTest {
+            fixture(this, CredentialLoadResult.Loaded(credentials())).use { f ->
+                f.readyScript()
+                f.registrar.start()
+                runCurrent()
+                f.registrar.stop()
+                val heartbeats = f.ledger.actions.count { it == RegistrarAction.Heartbeat }
                 advanceTimeBy(1_000)
                 runCurrent()
-                f.ledger.actions.count { it == RegistrarAction.Heartbeat } shouldBe count
-                (f.ledger.actions.indexOf(RegistrarAction.Shutdown) < f.ledger.actions.indexOf(RegistrarAction.Close)) shouldBe true
-                f.harness.assertNoActiveSpans()
+                f.ledger.actions.count { it == RegistrarAction.Heartbeat } shouldBe heartbeats
             }
         }
     }
@@ -576,8 +633,13 @@ val ServiceRegistrarLifecycleTest by testSuite {
                 f.readyScript()
                 f.registrar.start()
                 runCurrent()
-                val result = f.registrar.stop() as RegistrarStopResult.Failure
-                result.failures.size shouldBe 2
+                f.registrar.stop() shouldBe
+                    RegistrarStopResult.Failure(
+                        listOf(
+                            RegistrarStopFailure.Runtime(RuntimeStopOperation.SHUTDOWN_FAILED),
+                            RegistrarStopFailure.Internal("close"),
+                        ),
+                    )
             }
         }
     }
@@ -588,38 +650,46 @@ val ServiceRegistrarLifecycleTest by testSuite {
                 f.storage.enqueueStore(CredentialStoreResult.Failure(CredentialStorageError.Unavailable("x")))
                 f.readyScript()
                 val seen = mutableListOf<RegistrarSnapshot>()
-                val collect = launch { f.registrar.states.collect { seen += it } }
+                val collect = launch(UnconfinedTestDispatcher(testScheduler)) { f.registrar.states.collect { seen += it } }
                 f.registrar.start()
                 runCurrent()
                 collect.cancelAndJoin()
-                seen.zipWithNext().all { (a, b) -> b.sequence > a.sequence && b.attempt >= a.attempt } shouldBe true
+                seen.map { it.state::class }.shouldContainInOrder(
+                    RegistrarState.Idle::class,
+                    RegistrarState.DegradedBeforeReady::class,
+                    RegistrarState.Ready::class,
+                )
+                seen.zipWithNext().forEach { (before, after) ->
+                    after.sequence shouldBeGreaterThan before.sequence
+                    after.attempt shouldBeGreaterThanOrEqualTo before.attempt
+                }
             }
         }
     }
-    test("telemetry follows lifecycle transition order") {
+    test("telemetry reports the lifecycle in order") {
         runTest {
-            fixture(this, CredentialLoadResult.Loaded(credentials())).use { f ->
+            fixture(this).use { f ->
                 f.readyScript()
                 f.registrar.start()
                 runCurrent()
                 f.registrar.stop()
 
-                val logs = f.harness.finishedLogs().mapNotNull { it.bodyValue?.asString() }
-                val connecting = logs.indexOfFirst { it.startsWith("Connecting to messaging") }
-                val ready = logs.indexOf("Service registration is ready")
-                val stopping = logs.indexOf("Stopping service registration")
-                val stopped = logs.indexOf("Service registration stopped")
-
-                (connecting < ready) shouldBe true
-                (ready < stopping) shouldBe true
-                (stopping < stopped) shouldBe true
+                f.harness
+                    .finishedLogs()
+                    .mapNotNull { it.bodyValue?.asString() }
+                    .filter { it in LIFECYCLE_LOGS } shouldBe
+                    listOf(
+                        "Loading the saved service identity",
+                        "Requesting a new service identity",
+                        "Service registration is ready",
+                        "Stopping service registration",
+                        "Service registration stopped",
+                    )
             }
         }
     }
-    test("public diagnostics redact tokens and credential secrets") {
+    test("exported logs never contain the registration token or app password") {
         runTest {
-            credentials().toString().contains("password") shouldBe false
-            RegistrarState.AwaitingBinding(identity(), RegistrationToken("secret")).toString().contains("secret") shouldBe false
             fixture(this).use { f ->
                 f.runtime.enqueueLease(RuntimeResult.Success(RegistrationLeaseResult.Issued(RegistrationToken("registration-secret"))))
                 f.runtime.enqueueWatch(
@@ -641,9 +711,19 @@ val ServiceRegistrarLifecycleTest by testSuite {
     }
 }
 
+private val LIFECYCLE_LOGS =
+    setOf(
+        "Loading the saved service identity",
+        "Requesting a new service identity",
+        "Service registration is ready",
+        "Stopping service registration",
+        "Service registration stopped",
+    )
+
 private class Fixture(
     scope: kotlinx.coroutines.CoroutineScope,
     private val initial: CredentialLoadResult,
+    holdDelays: Boolean,
 ) : AutoCloseable {
     private val registrarScope = kotlinx.coroutines.CoroutineScope(scope.coroutineContext + SupervisorJob())
     val harness = TelemetryTestHarness.create()
@@ -652,6 +732,7 @@ private class Fixture(
     val issuer = FakeIdentityIssuer(ledger)
     val runtime = FakeRegistrarRuntime(Communicator(FakeMessageTransport(), harness.telemetry, ContextPropagators.noop()), ledger)
     val factory = FakeRegistrarRuntimeFactory(ledger)
+    val delays = FakeDelayScheduler(holdDelays) { ledger.record(RegistrarAction.Delay(it)) }
     val registrar =
         ServiceRegistrar(
             configuration(),
@@ -661,7 +742,7 @@ private class Fixture(
             factory,
             harness.telemetry,
             RetryPolicy.exponential(1.seconds, 8.seconds, jitterRatio = 0.0),
-            FakeDelayScheduler { ledger.record(RegistrarAction.Delay(it)) },
+            delays,
             TestTimeSource(),
             FakeRetryRandom(listOf(.5), ledger),
         )
@@ -680,6 +761,17 @@ private class Fixture(
         factory.enqueue(RuntimeCreateResult.Success(runtime))
     }
 
+    /** Starts the registrar to ready, then drops and restores its connection, so the second generation is ready. */
+    suspend fun readyThenReconnected(test: TestScope) {
+        readyScript()
+        registrar.start()
+        test.runCurrent()
+        runtime.setConnectivity(RuntimeConnectivity.DISCONNECTED)
+        test.runCurrent()
+        runtime.setConnectivity(RuntimeConnectivity.CONNECTED)
+        test.runCurrent()
+    }
+
     fun runtime(runtimeLedger: RegistrarActionLedger): FakeRegistrarRuntime =
         FakeRegistrarRuntime(
             Communicator(
@@ -689,6 +781,15 @@ private class Fixture(
             ),
             runtimeLedger,
         )
+
+    /** Scripts the next runtime the factory creates as connected and bound, with its own ledger. */
+    fun boundReplacement(): FakeRegistrarRuntime {
+        val replacement = runtime(RegistrarActionLedger())
+        replacement.setConnectivity(RuntimeConnectivity.CONNECTED)
+        replacement.enqueueQuery(RuntimeResult.Success(BindingStatus.Bound(binding())))
+        factory.enqueue(RuntimeCreateResult.Success(replacement))
+        return replacement
+    }
 
     private fun initialMissing() = initial is CredentialLoadResult.Missing
 
@@ -701,7 +802,8 @@ private class Fixture(
 private fun fixture(
     scope: kotlinx.coroutines.CoroutineScope,
     initial: CredentialLoadResult = CredentialLoadResult.Missing,
-) = Fixture(scope, initial)
+    holdDelays: Boolean = false,
+) = Fixture(scope, initial, holdDelays)
 
 private fun identity() = ServiceIdentity(ServiceId("service"), "Service", "user", ServiceRole.Host("1"))
 

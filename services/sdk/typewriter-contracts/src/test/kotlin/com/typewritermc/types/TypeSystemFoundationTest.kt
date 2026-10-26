@@ -3,6 +3,7 @@ package com.typewritermc.types
 import com.typewritermc.authoring.CompletenessResult
 import com.typewritermc.authoring.complete
 import com.typewritermc.authoring.of
+import com.typewritermc.authoring.text
 import com.typewritermc.authoring.validateStructure
 import com.typewritermc.configuration.field
 import com.typewritermc.configuration.of
@@ -252,11 +253,12 @@ val TypeSystemFoundationTest by testSuite {
         val symbolicActual = variable.id.template(listOf(parameter.template))
         val symbolicExpected = variable.id.template(listOf(resource.id.template()))
 
+        catalog.isReadableAs(concreteActual, concreteExpected) shouldBe true
         catalog.isTemplateReadableAs(
             symbolicActual,
             symbolicExpected,
             mapOf(parameter to listOf(reward.id.template())),
-        ) shouldBe catalog.isReadableAs(concreteActual, concreteExpected)
+        ) shouldBe true
         catalog.isTemplateReadableAs(symbolicExpected, symbolicActual) shouldBe false
     }
 
@@ -616,13 +618,14 @@ val TypeSystemFoundationTest by testSuite {
                 ),
             )
 
-        (checked.complete(unfinished) is CompletenessResult.Unfinished) shouldBe true
+        (checked.complete(unfinished) as CompletenessResult.Unfinished).locations.map { it.path.text } shouldContainExactly listOf("count")
         val invalidNull =
             DataValue.named(
                 use,
                 DataValue.record(mapOf("note" to DataValue.NULL, "count" to DataValue.NULL)),
             )
-        (checked.complete(invalidNull) is CompletenessResult.Invalid) shouldBe true
+        (checked.complete(invalidNull) as CompletenessResult.Invalid).problems.map { it.location.path.text to it.code } shouldContainExactly
+            listOf("count" to "wrong_scalar")
     }
 
     test("named scalar identity remains while its payload is unfinished") {
@@ -633,7 +636,7 @@ val TypeSystemFoundationTest by testSuite {
         val checked = (catalog.resolve(use.use) as Resolution.Ready).value
 
         val result = checked.complete(DataValue.named(use, DataValue.UNFILLED)) as CompletenessResult.Unfinished
-        result.locations.size shouldBe 1
+        result.locations.map { it.path.text } shouldContainExactly listOf("")
     }
 
     test("unknown record keys reject structural admission") {
@@ -669,7 +672,13 @@ val TypeSystemFoundationTest by testSuite {
 
         DefaultCanonicalValueEquality.equivalent(firstComplete, secondComplete) shouldBe true
         DefaultCanonicalValueEquality.hash(firstComplete) shouldBe DefaultCanonicalValueEquality.hash(secondComplete)
+    }
 
+    test("a list with two items under one id is invalid") {
+        val list = listDefinition()
+        val catalog = catalog(list)
+        val use = list.id.namedUse(listOf(TEXT))
+        val checked = (catalog.resolve(use.use) as Resolution.Ready).value
         val duplicate =
             DataValue.named(
                 use,
@@ -710,7 +719,7 @@ val TypeSystemFoundationTest by testSuite {
         (catalog.resolve(good.id.use()) is Resolution.Ready) shouldBe true
     }
 
-    test("catalog wire encoding preserves structured declaration provenance") {
+    test("a presentation and an endpoint binding keep their declaration provenance through the wire") {
         val owner =
             DeclarationOwner(
                 source =
@@ -745,13 +754,11 @@ val TypeSystemFoundationTest by testSuite {
                 containsCollection = true,
             )
 
-        val encoded = presentation.owner
-        encoded.source.source.value shouldBe "extension.example"
-        encoded.source.sourcePart shouldBe "realm"
-        encoded.source.producer.value shouldBe "types"
-        encoded.source.name.value shouldBe "presentations/editor"
-        encoded.localIdentity shouldBe "message.editor"
-        endpointBinding.requireValid() shouldBe endpointBinding
+        val decoded = PresentationDescriptor.serializer.fromBytes(PresentationDescriptor.serializer.toBytes(presentation).toByteArray())
+        decoded.owner shouldBe owner
+        EndpointBindingTemplate.serializer
+            .fromBytes(EndpointBindingTemplate.serializer.toBytes(endpointBinding).toByteArray())
+            .requireValid() shouldBe endpointBinding
     }
 
     test("the portable check keeps canonical values and rejects nonfinite floats") {

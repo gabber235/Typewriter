@@ -9,12 +9,10 @@ import com.typewritermc.authoring.DraftBinding
 import com.typewritermc.authoring.ReadContext
 import com.typewritermc.authoring.RealmRootDefinition
 import com.typewritermc.authoring.of
-import com.typewritermc.authoring.payload
 import com.typewritermc.authoring.use
 import com.typewritermc.checking.PartialSelection
 import com.typewritermc.checking.TypedSelection
 import com.typewritermc.elements.CueDefinition
-import com.typewritermc.expression.descendants
 import com.typewritermc.expression.field
 import com.typewritermc.expression.input
 import com.typewritermc.expression.literal
@@ -26,21 +24,20 @@ import com.typewritermc.library.PageDefinition
 import com.typewritermc.library.TaxonomyDefinition
 import com.typewritermc.library.fields
 import com.typewritermc.presentation.RuntimePresentationQueries
+import com.typewritermc.testkit.origin
 import com.typewritermc.types.Color
-import com.typewritermc.types.ColorDefinition
 import com.typewritermc.types.Icon
 import com.typewritermc.types.RESOURCE_OWNERSHIP_FAMILY_ID
 import com.typewritermc.types.ResourceId
 import com.typewritermc.types.TypeDisplay
 import com.typewritermc.types.fields
-import com.typewritermc.types.integer
-import com.typewritermc.types.named
 import com.typewritermc.types.namedTemplate
 import com.typewritermc.types.namedUse
 import com.typewritermc.types.of
 import com.typewritermc.types.qualified
 import com.typewritermc.types.record
 import com.typewritermc.types.template
+import com.typewritermc.types.toWire
 import com.typewritermc.types.type
 import com.typewritermc.types.use
 import de.infix.testBalloon.framework.core.testSuite
@@ -104,7 +101,7 @@ val ResourceDisplayAssemblyTest by testSuite {
             "Intro"
     }
 
-    test("the default display reads the subject's type display") {
+    test("a resource type without its own display uses the default display over the type display the catalog publishes") {
         val display = TypeDisplay("Fixture resource", "", Icon.Iconify("mdi:cube"), Color(0xFF123456u))
         val assembly =
             assemble(
@@ -112,12 +109,12 @@ val ResourceDisplayAssemblyTest by testSuite {
                 searchKeys =
                     mapOf(fixtureResource to "fixture"),
             )
-        val record = AuthoringRecord.of(TypeSelection.CompleteWrapper(fixtureResource.namedUse()), emptyMap())
-        val formulas = assembly.displays.displayFor(fixtureResource, assembly.checked)!!
 
-        formulas.target shouldBe ResourceTarget.ANY_RESOURCE
-        val reads = (formulas.label.callIds() + formulas.accent.callIds() + formulas.icon.callIds()).toSet()
-        reads shouldBe setOf("value.configuration", "catalog.declaration")
+        // The default formulas read the published declaration, a panel profile read: the panel evaluates them to these values.
+        assembly.displays.displayFor(fixtureResource, assembly.checked)?.target shouldBe ResourceTarget.ANY_RESOURCE
+        assembly.editorCatalog.types
+            .single { it.definition.id == fixtureResource }
+            .display shouldBe display.toWire()
     }
 
     test("a display formula that reads a host context input is rejected") {
@@ -352,7 +349,7 @@ private class FixtureDisplay(
 private fun displayProvider(
     target: ResourceTarget,
     build: () -> DisplayFormulas,
-) = OwnedResourceDisplay(providerOrigin(), FixtureDisplay(target, build))
+) = OwnedResourceDisplay(origin("type_display", "test:type_display"), FixtureDisplay(target, build))
 
 private fun assemble(
     declarations: List<Pair<TypeDefinitionId, Pair<TypeDefinition, TypeDisplay?>>> = emptyList(),
@@ -361,7 +358,7 @@ private fun assemble(
     relations: List<RelationContract> = emptyList(),
     includeGenerated: Boolean = true,
 ): CatalogAssembly {
-    val origin = providerOrigin()
+    val origin = origin("type_display", "test:type_display")
     val generated = generatedTypeProviders().distinctBy { it.definition.id }
     val generatedDisplays =
         generatedProviders<GeneratedResourceDisplayProvider>(GeneratedProviderKind.ResourceDisplay)
@@ -384,8 +381,6 @@ private fun CatalogAssembly.diagnosticCodes(type: TypeDefinitionId): List<String
 private fun CatalogAssembly.label(record: AuthoringRecord): String? = with(DisplayReads) { displays.label(record, checked) }
 
 /** The operations this formula calls. */
-private fun ExpressionNode.callIds(): List<String> =
-    descendants().filterIsInstance<ExpressionNode.CallWrapper>().map { it.value.operation.value }.toList()
 
 private object DisplayReads : AuthoredReads {
     override val catalog = CatalogGeneration(value = "resource displays")

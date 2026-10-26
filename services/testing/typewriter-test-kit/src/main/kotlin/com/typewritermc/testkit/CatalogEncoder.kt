@@ -5,8 +5,6 @@ import com.typewritermc.types.NativeBinding
 import com.typewritermc.types.NativeBindingRegistry
 import com.typewritermc.types.actualType
 import com.typewritermc.types.catalog.CheckedCatalog
-import com.typewritermc.types.catalog.CheckedType
-import com.typewritermc.types.catalog.Resolution
 import com.typewritermc.types.payload
 import skirout.editor.v1.type_catalog.AuthoringRecord
 import skirout.editor.v1.type_catalog.DataValue
@@ -41,9 +39,3 @@ class CatalogEncoder(
         return AuthoringRecord.of(TypeSelection.CompleteWrapper(encoded.actualType), payload.value)
     }
 }
-
-private fun CheckedCatalog.ready(use: TypeUse): CheckedType =
-    when (val resolution = resolve(use)) {
-        is Resolution.Ready -> resolution.value
-        is Resolution.Invalid -> error("The catalog cannot resolve $use: ${resolution.diagnostics}")
-    }

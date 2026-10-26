@@ -2,7 +2,6 @@ package com.typewritermc.expression
 
 import build.skir.JsonFlavor
 import com.typewritermc.types.ColorDefinition
-import com.typewritermc.types.IconDefinition
 import com.typewritermc.types.actualType
 import com.typewritermc.types.fields
 import com.typewritermc.types.payload
@@ -36,40 +35,16 @@ import java.nio.file.Path
 
 val CanonicalReadModelsTest by testSuite {
     test("the read schema derived from Skir matches the schema the panel derives") {
-        val schema = CanonicalReadModels.definitions + CanonicalReadModels.frameworkDefinitions
-        val actual =
-            schema.joinToString(",\n", "[\n", "\n]\n") {
-                TypeDefinition.serializer.toJsonCode(it, JsonFlavor.READABLE)
-            }
-        System.getenv("TYPEWRITER_READ_MODEL_FIXTURE")?.let { Files.writeString(fixtureDirectory().resolve(FIXTURE), actual) }
-        val expected =
+        val committed =
             Json
-                .parseToJsonElement(Files.readString(fixtureDirectory().resolve(FIXTURE)))
+                .parseToJsonElement(Files.readString(fixtureDirectory().resolve(CANONICAL_READ_MODELS_FIXTURE)))
                 .jsonArray
                 .map { TypeDefinition.serializer.fromJsonCode(it.toString()) }
-        schema shouldBe expected
+
+        committed shouldBe canonicalReadSchema()
     }
 
-    test("read identities are Skir record identities and variants extend their enum") {
-        CanonicalReadModels.typeUse.use.definition shouldBe readId("editor/v1/type_catalog.skir:TypeUse")
-        val named = CanonicalReadModels.definitions.single { it.id == readId("editor/v1/type_catalog.skir:TypeUse.named") }
-        named.parents.map { it.definition } shouldBe listOf(readId("editor/v1/type_catalog.skir:TypeUse"))
-        (named.representation as RepresentationTemplate.RecordWrapper).value.fields.map { it.owner.name } shouldBe listOf("value")
-        val published = CanonicalReadModels.definitions.single { it.id == CanonicalReadModels.publishedType.use.definition }
-        (published.representation as RepresentationTemplate.RecordWrapper).value.fields.map { it.owner.name } shouldBe
-            listOf("definition", "status", "effective_fields", "ancestor_templates", "display", "search_key", "placement_field")
-    }
-
-    test("kernel colors and icons read as the declared framework types") {
-        val display = CanonicalReadModels.definitions.single { it.id == readId("editor/v1/catalog.skir:TypeDisplay") }
-        val fields = (display.representation as RepresentationTemplate.RecordWrapper).value.fields
-        fields.associate { it.owner.name to it.type } shouldBe
-            mapOf(
-                "name" to text,
-                "description" to text,
-                "icon" to declared(IconDefinition.id),
-                "color" to declared(ColorDefinition.id),
-            )
+    test("a resource appearance reads its accent as the declared framework color") {
         val appearance =
             CanonicalReadModels.resourceAppearance.encode(
                 ResourceAppearance(label = "Book", accent = Color(argb = 0xFF336699u.toInt()), icon = Icon.IconifyWrapper("lucide:book")),
@@ -131,22 +106,20 @@ val CanonicalReadModelsTest by testSuite {
     }
 }
 
-private const val FIXTURE = "canonical_read_models.json"
+/** The committed schema fixture the panel compares its own derivation with. */
+internal const val CANONICAL_READ_MODELS_FIXTURE = "canonical_read_models.json"
 
-private val text =
-    skirout.editor.v1.type_catalog.TypeTemplate
-        .ScalarWrapper(ScalarKind.TEXT)
+/** Every read model definition: the Skir derived roots and the framework types they read. */
+internal fun canonicalReadSchema(): List<TypeDefinition> = CanonicalReadModels.definitions + CanonicalReadModels.frameworkDefinitions
+
+/** The text of [CANONICAL_READ_MODELS_FIXTURE]: [canonicalReadSchema] as readable Skir JSON. */
+internal fun renderCanonicalReadSchema(): String =
+    canonicalReadSchema().joinToString(",\n", "[\n", "\n]\n") { TypeDefinition.serializer.toJsonCode(it, JsonFlavor.READABLE) }
 
 private fun readId(record: String) =
     TypeDefinitionId(typeId = TypeId.QualifiedWrapper(QualifiedTypeId(namespace = CANONICAL_READ_NAMESPACE, name = record)), revision = 1)
 
 private fun declaredUse(id: TypeDefinitionId) = NamedTypeUse(definition = id, arguments = emptyList())
-
-private fun declared(id: TypeDefinitionId) =
-    skirout.editor.v1.type_catalog.TypeTemplate.NamedWrapper(
-        skirout.editor.v1.type_catalog
-            .NamedTypeTemplate(definition = id, arguments = emptyList()),
-    )
 
 private fun fixtureDirectory(): Path =
     generateSequence(Path.of("").toAbsolutePath()) { it.parent }

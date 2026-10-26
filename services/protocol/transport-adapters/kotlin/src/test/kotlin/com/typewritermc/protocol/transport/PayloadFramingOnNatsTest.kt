@@ -20,10 +20,13 @@ import com.typewritermc.services.libs.communicator.nats.NatsConnection
 import com.typewritermc.services.libs.communicator.nats.NatsConnectionConfiguration
 import com.typewritermc.services.libs.communicator.nats.NatsLifecycleResult
 import com.typewritermc.services.libs.communicator.nats.NatsMessageTransport
+import com.typewritermc.services.libs.communicator.result.CommunicationError
 import com.typewritermc.services.libs.communicator.result.CommunicationResult
 import com.typewritermc.services.libs.communicator.router.CommunicatorRoutes
 import com.typewritermc.services.libs.communicator.router.RouterResult
 import com.typewritermc.services.libs.communicator.router.communicatorRoutes
+import com.typewritermc.services.libs.communicator.testing.NatsTestServer
+import com.typewritermc.services.libs.communicator.transfer.TransferInterrupted
 import com.typewritermc.services.libs.communicator.transfer.TransportLimits
 import com.typewritermc.services.libs.communicator.transport.InboundMessage
 import com.typewritermc.services.libs.communicator.transport.OutboundMessage
@@ -33,9 +36,9 @@ import com.typewritermc.services.libs.communicator.transport.TransportResult
 import com.typewritermc.services.libs.telemetry.ErrorSlug
 import com.typewritermc.services.libs.telemetry.testing.TelemetryTestHarness
 import de.infix.testBalloon.framework.core.TestConfig
-import de.infix.testBalloon.framework.core.disable
 import de.infix.testBalloon.framework.core.testScope
 import de.infix.testBalloon.framework.core.testSuite
+import io.kotest.matchers.comparables.shouldBeLessThan
 import io.kotest.matchers.shouldBe
 import io.kotest.matchers.types.shouldBeInstanceOf
 import io.opentelemetry.api.trace.propagation.W3CTraceContextPropagator
@@ -47,12 +50,15 @@ import kotlinx.coroutines.launch
 import okio.ByteString.Companion.toByteString
 import skirout.service.v1.artifact.StoreArtifactBlobRequest
 import skirout.service.v1.artifact.StoreArtifactBlobResponse
+import java.nio.file.Path
 import java.security.MessageDigest
 import java.util.Collections
 import java.util.HexFormat
 import java.util.concurrent.atomic.AtomicInteger
+import kotlin.io.path.readText
 import kotlin.time.Duration.Companion.milliseconds
 import kotlin.time.Duration.Companion.seconds
+import kotlin.time.TimeSource
 import skirout.service.v1.artifact.ArtifactDigest as SkirArtifactDigest
 import skirout.service.v1.artifact.BlobMetadata as SkirBlobMetadata
 import skirout.service.v1.artifact.DigestAlgorithm as SkirDigestAlgorithm
@@ -60,12 +66,14 @@ import skirout.service.v1.artifact.DigestAlgorithm as SkirDigestAlgorithm
 /**
  * Covers payload framing over a real nats-server whose users hold the grants the backend hands out, so NATS
  * enforces max_payload and response permissions. Since a response permission lets a server publish on whatever reply
- * subject a request names, the suite also shows that servers answer only their callers' reply inboxes. The broker runs `src/test/fixtures/payload-framing-nats.conf` and
- * the suite connects to [NATS_URL_VARIABLE]. Without it the suite is skipped locally and fails under CI.
+ * subject a request names, the suite also shows that servers answer only their callers' reply inboxes. The suite starts
+ * its own broker on `src/test/fixtures/payload-framing-nats.conf` and runs on the wall clock the broker answers on.
  */
-val PayloadFramingOnNatsTest by testSuite(testConfig = brokerTestConfig()) {
+val PayloadFramingOnNatsTest by testSuite(testConfig = TestConfig.testScope(isEnabled = false)) {
+    val broker = testFixture { NatsTestServer.start(Path.of(BROKER_CONFIG).readText()) }
+
     test("a framed blob store request completes through credit windows the host answers under its response permission") {
-        brokerFixture { realm, quests, _ ->
+        brokerFixture(broker().url) { realm, quests, _ ->
             val content = bytes(CHUNK * TRANSPORT_LIMITS.windowFrames * 2 + 5)
             val stored = mutableListOf<ByteArray>()
             realm.serving(
@@ -92,7 +100,7 @@ val PayloadFramingOnNatsTest by testSuite(testConfig = brokerTestConfig()) {
     }
 
     test("a request above the broker's max_payload is framed instead of refused") {
-        brokerFixture { realm, quests, _ ->
+        brokerFixture(broker().url) { realm, quests, _ ->
             val content = bytes(MAX_PAYLOAD + 1)
             realm.serving(
                 communicatorRoutes {
@@ -118,7 +126,7 @@ val PayloadFramingOnNatsTest by testSuite(testConfig = brokerTestConfig()) {
     }
 
     test("a framed reply between services waits for the credits the requester answers under its response permission") {
-        brokerFixture { realm, quests, _ ->
+        brokerFixture(broker().url) { realm, quests, _ ->
             val probe = SCOPE.rolloutProbe.let { bytesRoute(it.name, it.requestAddress, it.replyAddresses, it.limits) }
             probe.limits?.replyCredit shouldBe true
             val reply = bytes(CHUNK * TRANSPORT_LIMITS.windowFrames * 2 + 5)
@@ -129,7 +137,7 @@ val PayloadFramingOnNatsTest by testSuite(testConfig = brokerTestConfig()) {
     }
 
     test("a framed reply to a panel caller streams without credit, since the panel holds no response permission") {
-        brokerFixture { realm, _, panel ->
+        brokerFixture(broker().url) { realm, _, panel ->
             val fetch = SCOPE.editorCatalogFetch.let { bytesRoute(it.name, it.requestAddress, it.replyAddresses, it.limits) }
             (fetch.limits ?: TRANSPORT_LIMITS).replyCredit shouldBe false
             val reply = bytes(CHUNK * TRANSPORT_LIMITS.windowFrames * 2 + 5)
@@ -140,7 +148,7 @@ val PayloadFramingOnNatsTest by testSuite(testConfig = brokerTestConfig()) {
     }
 
     test("a panel request naming a privileged reply subject is not answered there, while its own inbox is") {
-        brokerFixture { realm, _, panel ->
+        brokerFixture(broker().url) { realm, _, panel ->
             val watcher = watcher()
             val fetch = SCOPE.editorCatalogFetch.let { bytesRoute(it.name, it.requestAddress, it.replyAddresses, it.limits) }
             val handled = AtomicInteger()
@@ -155,7 +163,7 @@ val PayloadFramingOnNatsTest by testSuite(testConfig = brokerTestConfig()) {
     }
 
     test("a service serving a subject it publishes on cannot turn its own request into a publish on a privileged subject") {
-        brokerFixture { _, _, _ ->
+        brokerFixture(broker().url) { _, _, _ ->
             val host = connect("host", "${serviceReplyInboxPrefix("host")}.")
             val watcher = watcher()
             val store = SCOPE.sharedBlobStore.let { bytesRoute(it.name, it.requestAddress, it.replyAddresses, it.limits) }
@@ -171,32 +179,30 @@ val PayloadFramingOnNatsTest by testSuite(testConfig = brokerTestConfig()) {
     }
 
     test("a reply waiting for credit cannot reach a panel caller, whose credit the broker refuses") {
-        brokerFixture { realm, _, panel ->
+        brokerFixture(broker().url) { realm, _, panel ->
             val credited = TRANSPORT_LIMITS.copy(replyCredit = true, frameInactivity = 2.seconds)
             val fetch = SCOPE.editorCatalogFetch.let { bytesRoute(it.name, it.requestAddress, it.replyAddresses, credited) }
             val reply = bytes(CHUNK * TRANSPORT_LIMITS.windowFrames * 2 + 5)
             realm.serving(communicatorRoutes { unaryAt(fetch, SCOPE) { reply } }) {
-                panel.communicator.request(fetch, SCOPE, bytes(1)).shouldBeInstanceOf<CommunicationResult.Failure>()
+                val started = TimeSource.Monotonic.markNow()
+                val result = panel.communicator.request(fetch, SCOPE, bytes(1))
+
+                // Both sides wait the frame inactivity: the caller for the next frame, the host for the credit. Whichever gives
+                // up first decides whether the caller sees its own timeout or the host's interruption; either ends the call
+                // long before its timeout.
+                when (val error = result.shouldBeInstanceOf<CommunicationResult.Failure>().error) {
+                    is CommunicationError.Timeout -> Unit
+                    is CommunicationError.Transport -> error.cause.shouldBeInstanceOf<TransferInterrupted>()
+                    else -> throw AssertionError("Expected the frame inactivity to end the call, got $error")
+                }
+                started.elapsedNow() shouldBeLessThan fetch.timeout
             }
         }
     }
 }
 
-/** The environment variable naming the broker; CI always sets it. */
-private const val NATS_URL_VARIABLE = "NATS_URL"
-
-// A getter, since the suite reads it while this file's properties are still initializing.
-private val natsUrl: String? get() = System.getenv(NATS_URL_VARIABLE)
-
-/**
- * Runs the suite on the wall clock the broker answers on when a broker is named, skips it locally otherwise, and
- * fails under CI where it must never skip.
- */
-private fun brokerTestConfig(): TestConfig {
-    if (natsUrl != null) return TestConfig.testScope(isEnabled = false)
-    check(System.getenv("CI") == null) { "$NATS_URL_VARIABLE must name the payload framing nats-server under CI" }
-    return TestConfig.disable()
-}
+/** The broker configuration: users holding the grants the backend hands out. */
+private const val BROKER_CONFIG = "src/test/fixtures/payload-framing-nats.conf"
 
 /** The max_payload of the fixture broker, which is the NATS default. */
 private const val MAX_PAYLOAD = 1024 * 1024
@@ -228,6 +234,7 @@ private class BrokerClient(
 /** The connected clients of one test; [connect] adds a fixture user the test needs beyond the usual three. */
 private class BrokerFixture(
     scope: CoroutineScope,
+    private val url: String,
     private val harness: TelemetryTestHarness,
 ) : CoroutineScope by scope {
     private val propagators = ContextPropagators.create(W3CTraceContextPropagator.getInstance())
@@ -241,7 +248,7 @@ private class BrokerFixture(
             NatsConnection(
                 {
                     NatsConnectionConfiguration(
-                        serverUrl = requireNotNull(natsUrl),
+                        serverUrl = url,
                         clientName = user,
                         inboxPrefix = inboxPrefix,
                         maxReconnects = 0,
@@ -259,21 +266,23 @@ private class BrokerFixture(
  * Connects the Realm host, the quests service and the panel user alice, runs [block] and disconnects every client.
  * Services use their generated reply inbox prefix; the panel uses its session inbox.
  */
-private suspend fun brokerFixture(block: suspend BrokerFixture.(realm: BrokerClient, quests: BrokerClient, panel: BrokerClient) -> Unit) =
-    coroutineScope {
-        val harness = TelemetryTestHarness.create()
-        val fixture = BrokerFixture(this, harness)
-        try {
-            fixture.block(
-                fixture.connect("realm", "${serviceReplyInboxPrefix("realm")}."),
-                fixture.connect("quests", "${serviceReplyInboxPrefix("quests")}."),
-                fixture.connect("alice", PANEL_INBOX_PREFIX),
-            )
-        } finally {
-            fixture.clients.forEach { it.connection.shutdown() }
-            harness.close()
-        }
+private suspend fun brokerFixture(
+    url: String,
+    block: suspend BrokerFixture.(realm: BrokerClient, quests: BrokerClient, panel: BrokerClient) -> Unit,
+) = coroutineScope {
+    val harness = TelemetryTestHarness.create()
+    val fixture = BrokerFixture(this, url, harness)
+    try {
+        fixture.block(
+            fixture.connect("realm", "${serviceReplyInboxPrefix("realm")}."),
+            fixture.connect("quests", "${serviceReplyInboxPrefix("quests")}."),
+            fixture.connect("alice", PANEL_INBOX_PREFIX),
+        )
+    } finally {
+        fixture.clients.forEach { it.connection.shutdown() }
+        harness.close()
     }
+}
 
 /** Connects the watcher, which may subscribe to every subject. */
 private suspend fun BrokerFixture.watcher() = connect("watcher", "_INBOX.watcher.")

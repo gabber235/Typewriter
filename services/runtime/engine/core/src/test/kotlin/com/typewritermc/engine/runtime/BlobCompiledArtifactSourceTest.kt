@@ -59,19 +59,28 @@ val BlobCompiledArtifactSourceTest by testSuite {
         }
     }
 
-    test("corrupt blobs are rejected") {
+    test("a blob whose bytes changed is refused by its digest") {
         runTest {
             val blobs = InMemoryBlobEndpoint()
             val shard = shard("c", "corrupt")
             val activation = activation(1, listOf(shard), blobs)
             val digest = activation.blobDigest()
-            blobs.replace(digest, blobs.content(digest).also { it[it.lastIndex] = (it.last() + 1).toByte() })
+            // Still a well formed shard of the same size, so only the digest check can refuse it.
+            blobs.replace(
+                digest,
+                blobs
+                    .content(digest)
+                    .decodeToString()
+                    .replace("corrupt", "corrupu")
+                    .encodeToByteArray(),
+            )
 
-            shouldThrow<IllegalArgumentException> { BlobCompiledArtifactSource(blobs).load(activation) }
+            shouldThrow<IllegalArgumentException> { BlobCompiledArtifactSource(blobs).load(activation) }.message shouldBe
+                "Compiled artifact $digest does not match its descriptor."
         }
     }
 
-    test("truncated content is rejected") {
+    test("a truncated blob is refused against its descriptor") {
         runTest {
             val blobs = InMemoryBlobEndpoint()
             val shard = shard("d", "truncated")
@@ -79,7 +88,8 @@ val BlobCompiledArtifactSourceTest by testSuite {
             val digest = activation.blobDigest()
             blobs.replace(digest, blobs.content(digest).copyOf(1))
 
-            shouldThrow<IllegalArgumentException> { BlobCompiledArtifactSource(blobs).load(activation) }
+            shouldThrow<IllegalArgumentException> { BlobCompiledArtifactSource(blobs).load(activation) }.message shouldBe
+                "Compiled artifact $digest does not match its descriptor."
         }
     }
 }

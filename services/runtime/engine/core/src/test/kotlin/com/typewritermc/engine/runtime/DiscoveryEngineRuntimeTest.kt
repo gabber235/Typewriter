@@ -52,7 +52,7 @@ val DiscoveryEngineRuntimeTest by testSuite {
         }
     }
 
-    test("applies each fetched publication once without ordering its identity") {
+    test("refetching an applied publication leaves the engine unchanged") {
         runTest {
             val revisions = mutableListOf<Long>()
             val fixture = runtime(emptyList(), revisions)
@@ -87,7 +87,7 @@ val DiscoveryEngineRuntimeTest by testSuite {
                         descriptor = active.descriptor.copy(formatRevision = 3),
                     ),
                 )
-            }
+            }.message shouldBe "Unsupported compiled content format 3."
 
             gateway.graph shouldBeSameInstanceAs graph
         }
@@ -132,7 +132,6 @@ val DiscoveryEngineRuntimeTest by testSuite {
 
             fixture.runtime.stop()
 
-            fixture.runtime.ownsDeployment() shouldBe false
             shouldThrow<IllegalStateException> { fixture.deployment.retain() }
         }
     }

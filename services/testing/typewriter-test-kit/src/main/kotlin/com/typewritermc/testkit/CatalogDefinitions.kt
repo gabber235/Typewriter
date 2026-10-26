@@ -1,6 +1,7 @@
 package com.typewritermc.testkit
 
 import skirout.editor.v1.type_catalog.CollectionKind
+import skirout.editor.v1.type_catalog.EndpointId
 import skirout.editor.v1.type_catalog.FieldDeclaration
 import skirout.editor.v1.type_catalog.FieldOwner
 import skirout.editor.v1.type_catalog.NamedTypeTemplate
@@ -52,6 +53,21 @@ class CatalogDefinitions internal constructor() {
                 id = id,
                 parameters = parameters,
                 representation = RepresentationTemplate.createSequence(item = item, kind = kind),
+            )
+    }
+
+    /** A link type through [endpoint] whose target resource is [target]. */
+    fun link(
+        id: TypeDefinitionId,
+        endpoint: EndpointId,
+        target: TypeTemplate,
+        parameters: List<TypeParameter> = emptyList(),
+    ) {
+        definitions +=
+            TypeDefinition.partial(
+                id = id,
+                parameters = parameters,
+                representation = RepresentationTemplate.createLink(endpoint = endpoint, target = target),
             )
     }
 }

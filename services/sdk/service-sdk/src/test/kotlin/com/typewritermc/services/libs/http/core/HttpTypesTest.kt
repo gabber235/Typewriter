@@ -6,6 +6,7 @@ import io.kotest.assertions.throwables.shouldThrow
 import io.kotest.matchers.collections.shouldContainExactly
 import io.kotest.matchers.shouldBe
 import java.net.URI
+import kotlin.time.Duration
 
 val HttpTypesTest by testSuite {
     test("headers are case insensitive and multi value") {
@@ -41,22 +42,19 @@ val HttpTypesTest by testSuite {
             }
         }
     }
-    test("request and response bodies are defensively copied") {
+    test("a request keeps its body when the caller's array or the read copy changes") {
         val source = byteArrayOf(1, 2)
-        val request =
-            HttpRequest(
-                HttpOperation("test.get"),
-                ErrorSlug.of("test-failure"),
-                HttpMethod.POST,
-                URI("https://example.test"),
-                body = source,
-            )
+        val request = request(method = HttpMethod.POST, body = source)
         source[0] = 9
         request.body[1] = 9
         request.body.toList() shouldBe listOf<Byte>(1, 2)
+    }
+    test("a response keeps its body when the caller's array or the read copy changes") {
+        val source = byteArrayOf(1, 2)
         val response = HttpResponse(200, HttpHeaders.Empty, source)
-        source[1] = 8
-        response.body.toList() shouldBe listOf<Byte>(9, 2)
+        source[0] = 9
+        response.body[1] = 9
+        response.body.toList() shouldBe listOf<Byte>(1, 2)
     }
     test("diagnostics redact URI query headers body and error details") {
         val request =
@@ -80,15 +78,37 @@ val HttpTypesTest by testSuite {
             diagnostics.contains(it) shouldBe false
         }
     }
-    test("requests validate URI body timeout and limits") {
-        shouldThrow<IllegalArgumentException> {
-            HttpRequest(HttpOperation("test"), ErrorSlug.of("test"), HttpMethod.GET, URI("ftp://example.test"))
-        }
-        shouldThrow<IllegalArgumentException> {
-            HttpRequest(HttpOperation("test"), ErrorSlug.of("test"), HttpMethod.GET, URI("https://example.test"), body = byteArrayOf(1))
-        }
-        shouldThrow<IllegalArgumentException> {
-            HttpRequest(HttpOperation("test"), ErrorSlug.of("test"), HttpMethod.GET, URI("https://example.test"), maximumResponseBytes = 0)
+    listOf(
+        "a non HTTP scheme" to Pair("HTTP URI scheme is required") { request(uri = URI("ftp://example.test")) },
+        "user info in the URI" to
+            Pair("HTTP URI must have a host and no user info") { request(uri = URI("https://user@example.test")) },
+        "a body on a GET" to Pair("GET requests cannot have a body") { request(body = byteArrayOf(1)) },
+        "a zero timeout" to Pair("Timeout must be positive and finite") { request(timeout = Duration.ZERO) },
+        "an infinite timeout" to Pair("Timeout must be positive and finite") { request(timeout = Duration.INFINITE) },
+        "a zero request limit" to Pair("Maximum request bytes must be positive") { request(maximumRequestBytes = 0) },
+        "a zero response limit" to Pair("Maximum response bytes must be positive") { request(maximumResponseBytes = 0) },
+    ).forEach { (input, rejection) ->
+        val (message, build) = rejection
+        test("requests refuse $input") {
+            shouldThrow<IllegalArgumentException> { build() }.message shouldBe message
         }
     }
 }
+
+private fun request(
+    method: HttpMethod = HttpMethod.GET,
+    uri: URI = URI("https://example.test"),
+    body: ByteArray = byteArrayOf(),
+    timeout: Duration? = null,
+    maximumRequestBytes: Long? = null,
+    maximumResponseBytes: Long? = null,
+) = HttpRequest(
+    HttpOperation("test"),
+    ErrorSlug.of("test"),
+    method,
+    uri,
+    body = body,
+    timeout = timeout,
+    maximumRequestBytes = maximumRequestBytes,
+    maximumResponseBytes = maximumResponseBytes,
+)

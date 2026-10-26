@@ -127,39 +127,39 @@ val TelemetryLifecycleTest by testSuite {
         }
     }
 
-    test("cancellation is unwrapped non-error and always ends") {
-        TestTelemetry().use { test ->
-            val cancellation = CancellationException("shutdown")
-            val thrown =
-                shouldThrow<CancellationException> {
-                    test.telemetry.mainSpanBlocking("main", slug("main-failed")) { _ -> throw cancellation }
-                }
-            thrown shouldBeSameInstanceAs cancellation
-            val span = test.span("main")
-            span.status.statusCode shouldBe StatusCode.UNSET
-            span.attributes[AttributeKey.booleanKey("operation.cancelled")] shouldBe true
-            span.events.any { it.name == "exception" } shouldBe false
-        }
-    }
+    Boundary.entries.forEach { boundary ->
+        test("cancellation at a ${boundary.label} boundary is unwrapped, not an error, and always ends the span") {
+            TestTelemetry().use { test ->
+                val cancellation = CancellationException("shutdown")
 
-    test("source slug propagates through child and main without double wrapping") {
-        TestTelemetry().use { test ->
-            val cause = IllegalArgumentException("private details")
-            val thrown =
-                shouldThrow<SluggedException> {
-                    test.telemetry.mainSpanBlocking("main", slug("main-fallback")) { _ ->
-                        childSpanBlocking("child") { _ ->
-                            withErrorSlug(slug("repository-load-failed")) { throw cause }
-                        }
+                val thrown = shouldThrow<CancellationException> { boundary.failMain(test.telemetry, slug("main-failed"), cancellation) }
+
+                // Coroutine stack trace recovery may rethrow a copy across a suspension, so the message identifies it.
+                thrown.message shouldBe cancellation.message
+                val span = test.span("main")
+                span.status.statusCode shouldBe StatusCode.UNSET
+                span.attributes[AttributeKey.booleanKey("operation.cancelled")] shouldBe true
+                span.events.any { it.name == "exception" } shouldBe false
+            }
+        }
+
+        test("a source slug at a ${boundary.label} boundary reaches child and main without double wrapping") {
+            TestTelemetry().use { test ->
+                val cause = IllegalArgumentException("private details")
+
+                val thrown =
+                    shouldThrow<SluggedException> {
+                        boundary.failChild(test.telemetry, slug("main-fallback"), slug("repository-load-failed"), cause)
                     }
+
+                thrown.cause shouldBeSameInstanceAs cause
+                thrown.slug.value shouldBe "repository-load-failed"
+                listOf(test.span("main"), test.span("child")).forEach { span ->
+                    span.status.statusCode shouldBe StatusCode.ERROR
+                    span.attributes[AttributeKey.stringKey("exception.slug")] shouldBe "repository-load-failed"
+                    span.attributes[AttributeKey.stringKey("error.type")] shouldBe IllegalArgumentException::class.java.name
+                    span.status.description shouldBe "repository-load-failed"
                 }
-            thrown.cause shouldBeSameInstanceAs cause
-            thrown.slug.value shouldBe "repository-load-failed"
-            listOf(test.span("main"), test.span("child")).forEach { span ->
-                span.status.statusCode shouldBe StatusCode.ERROR
-                span.attributes[AttributeKey.stringKey("exception.slug")] shouldBe "repository-load-failed"
-                span.attributes[AttributeKey.stringKey("error.type")] shouldBe IllegalArgumentException::class.java.name
-                span.status.description shouldBe "repository-load-failed"
             }
         }
     }
@@ -289,34 +289,6 @@ val TelemetryLifecycleTest by testSuite {
         }
     }
 
-    test("suspend failures and cancellation follow boundary policy") {
-        TestTelemetry().use { test ->
-            val cause = IllegalStateException("failure")
-            val classified =
-                shouldThrow<SluggedException> {
-                    test.telemetry.mainSpan("failed", slug("suspend-fallback")) { _ ->
-                        childSpan("child") { _ ->
-                            withErrorSlugSuspending(slug("suspend-source-failed")) { throw cause }
-                        }
-                    }
-                }
-            classified.cause shouldBeSameInstanceAs cause
-            test.span("failed").attributes[AttributeKey.stringKey("exception.slug")] shouldBe
-                "suspend-source-failed"
-            test.span("child").attributes[AttributeKey.stringKey("exception.slug")] shouldBe
-                "suspend-source-failed"
-
-            shouldThrow<CancellationException> {
-                test.telemetry.mainSpan("cancelled", slug("cancelled-fallback")) { _ ->
-                    throw CancellationException("shutdown")
-                }
-            }
-            val cancelled = test.span("cancelled")
-            cancelled.status.statusCode shouldBe StatusCode.UNSET
-            cancelled.attributes[AttributeKey.booleanKey("operation.cancelled")] shouldBe true
-        }
-    }
-
     test("fatal failures escape main boundaries unchanged without error telemetry") {
         TestTelemetry().use { test ->
             val fatal = TestVirtualMachineError()
@@ -348,6 +320,68 @@ val TelemetryLifecycleTest by testSuite {
 }
 
 private fun slug(value: String) = ErrorSlug.of(value)
+
+/** The blocking and the suspending span boundaries, which follow one failure policy. */
+private enum class Boundary(
+    val label: String,
+) {
+    BLOCKING("blocking") {
+        override suspend fun failMain(
+            telemetry: ServiceTelemetry,
+            fallback: ErrorSlug,
+            failure: Throwable,
+        ) {
+            telemetry.mainSpanBlocking<Unit>("main", fallback) { _ -> throw failure }
+        }
+
+        override suspend fun failChild(
+            telemetry: ServiceTelemetry,
+            fallback: ErrorSlug,
+            source: ErrorSlug,
+            failure: Throwable,
+        ) {
+            telemetry.mainSpanBlocking<Unit>("main", fallback) { _ ->
+                childSpanBlocking("child") { _ -> withErrorSlug(source) { throw failure } }
+            }
+        }
+    },
+    SUSPENDING("suspending") {
+        override suspend fun failMain(
+            telemetry: ServiceTelemetry,
+            fallback: ErrorSlug,
+            failure: Throwable,
+        ) {
+            telemetry.mainSpan<Unit>("main", fallback) { _ -> throw failure }
+        }
+
+        override suspend fun failChild(
+            telemetry: ServiceTelemetry,
+            fallback: ErrorSlug,
+            source: ErrorSlug,
+            failure: Throwable,
+        ) {
+            telemetry.mainSpan<Unit>("main", fallback) { _ ->
+                childSpan("child") { _ -> withErrorSlugSuspending(source) { throw failure } }
+            }
+        }
+    },
+    ;
+
+    /** Runs a main span named `main` whose work throws [failure]. */
+    abstract suspend fun failMain(
+        telemetry: ServiceTelemetry,
+        fallback: ErrorSlug,
+        failure: Throwable,
+    )
+
+    /** Runs a main span `main` with a child span `child` whose work throws [failure] under [source]. */
+    abstract suspend fun failChild(
+        telemetry: ServiceTelemetry,
+        fallback: ErrorSlug,
+        source: ErrorSlug,
+        failure: Throwable,
+    )
+}
 
 private class TestVirtualMachineError : VirtualMachineError("test fatal")
 

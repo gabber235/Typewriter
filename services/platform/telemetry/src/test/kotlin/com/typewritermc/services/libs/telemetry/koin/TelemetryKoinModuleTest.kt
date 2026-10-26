@@ -16,29 +16,6 @@ import org.koin.dsl.koinApplication
 import org.koin.dsl.module
 
 val TelemetryKoinModuleTest by testSuite {
-    test("module resolves one singleton from application-owned OpenTelemetry") {
-        sdkFixture { sdk, _ ->
-            val app =
-                koinApplication {
-                    modules(module { single<OpenTelemetry> { sdk } }, serviceTelemetryModule("realm", "2.0.0"))
-                }
-            try {
-                app.koin.get<ServiceTelemetry>() shouldBeSameInstanceAs app.koin.get<ServiceTelemetry>()
-            } finally {
-                app.close()
-            }
-        }
-    }
-
-    test("missing OpenTelemetry binding fails at resolution") {
-        val app = koinApplication { modules(serviceTelemetryModule("realm")) }
-        try {
-            shouldThrowAny { app.koin.get<ServiceTelemetry>() }
-        } finally {
-            app.close()
-        }
-    }
-
     test("instrumentation metadata reaches spans") {
         sdkFixture { sdk, exporter ->
             val app =

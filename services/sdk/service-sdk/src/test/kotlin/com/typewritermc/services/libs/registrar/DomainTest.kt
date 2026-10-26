@@ -23,17 +23,26 @@ val DomainTest by testSuite {
         cause.toString() shouldBe "[REDACTED]"
         messaging.toString().contains("sensitive-token") shouldBe false
     }
-    test("configuration validates backend role invariants") {
-        shouldThrow<IllegalArgumentException> { ServiceId(" ") }
-        shouldThrow<IllegalArgumentException> { ServiceId(" service") }
-        shouldThrow<IllegalArgumentException> { ServiceRole.Host(" ") }
-        shouldThrow<IllegalArgumentException> { ServiceRole.Custom("Bad", "1") }
-        shouldThrow<IllegalArgumentException> { ServiceRole.Custom("valid_name", " 1") }
-        configuration(ServiceRole.Custom("valid_name", "3")).role shouldBe ServiceRole.Custom("valid_name", "3")
-    }
-    test("configuration validates endpoints and binding lease") {
-        shouldThrow<IllegalArgumentException> { configuration(ServiceRole.Host("1"), URI("ftp://example.test")) }
-        shouldThrow<IllegalArgumentException> { configuration(ServiceRole.Host("1"), bindingSeconds = 150) }
+    listOf(
+        Rejection("a blank service id", "serviceId must be trimmed and nonblank") { ServiceId(" ") },
+        Rejection("an untrimmed service id", "serviceId must be trimmed and nonblank") { ServiceId(" service") },
+        Rejection("a blank host version", "version must be trimmed and nonblank") { ServiceRole.Host(" ") },
+        Rejection("a custom role name that is no backend identifier", "name must be a backend identifier") {
+            ServiceRole.Custom("Bad", "1")
+        },
+        Rejection("an untrimmed custom role version", "version must be trimmed and nonblank") {
+            ServiceRole.Custom("valid_name", " 1")
+        },
+        Rejection("an identity endpoint with an unsupported scheme", "invalid endpoint URI") {
+            configuration(ServiceRole.Host("1"), URI("ftp://example.test"))
+        },
+        Rejection("a binding refresh that reaches the registration lease", "binding refresh must be below the registration lease") {
+            configuration(ServiceRole.Host("1"), bindingSeconds = 150)
+        },
+    ).forEach { rejection ->
+        test("configuration refuses ${rejection.input}") {
+            shouldThrow<IllegalArgumentException> { rejection.build() }.message shouldBe rejection.message
+        }
     }
 }
 
@@ -50,4 +59,10 @@ private fun configuration(
     natsServerUri = URI("nats://example.test"),
     role = role,
     bindingRefreshInterval = bindingSeconds.seconds,
+)
+
+private class Rejection(
+    val input: String,
+    val message: String,
+    val build: () -> Any,
 )

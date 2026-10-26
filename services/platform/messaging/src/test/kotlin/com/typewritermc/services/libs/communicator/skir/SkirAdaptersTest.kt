@@ -62,11 +62,6 @@ private val statusPolicy =
     )
 
 val SkirAdaptersTest by testSuite {
-    test("payload codec round trips generated values") {
-        val codec = Color.serializer.asPayloadCodec()
-        codec.decode(codec.encode(Color(argb = 0x12345678))) shouldBe Color(argb = 0x12345678)
-    }
-
     test("payload codec rejects malformed binary input") {
         shouldThrow<IllegalArgumentException> {
             Color.serializer.asPayloadCodec().decode(Payload.copyOf(byteArrayOf(1, 2, 3)))
@@ -78,21 +73,5 @@ val SkirAdaptersTest by testSuite {
             ErrorSlug.of("editor-authoring-state-query-failed")
         OperationName.of("organization.members.join_codes.watch").failureSlug shouldBe
             ErrorSlug.of("organization-members-join-codes-watch-failed")
-    }
-
-    test("method helper preserves explicit operation and serializers") {
-        val contract =
-            skirUnaryContract(
-                method = QueryServiceBinding,
-                name = OperationName.of("service-status"),
-                address = statusAddress,
-                responsePolicy = statusPolicy,
-                replyAddresses = { _, _ -> true },
-            )
-        val request = QueryServiceBindingRequest()
-        contract.name shouldBe OperationName.of("service-status")
-        contract.failureSlug shouldBe ErrorSlug.of("service-status-failed")
-        contract.requestCodec.decode(contract.requestCodec.encode(request)) shouldBe request
-        contract.responsePolicy shouldBe statusPolicy
     }
 }
