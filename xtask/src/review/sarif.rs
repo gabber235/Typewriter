@@ -15,7 +15,7 @@ pub fn to_sarif(report: &ChangeReport, change: &Change) -> Value {
     let rules: Vec<Value> = DETECTORS
         .iter()
         .map(|detector| detector.name)
-        .chain(report.deep.is_some().then_some("deep"))
+        .chain(["coverage"])
         .map(|name| json!({ "id": name, "name": name }))
         .collect();
     let results: Vec<Value> = report

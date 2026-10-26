@@ -2,7 +2,7 @@
 //! the typewriter-review skill uses. Every command compares the working tree with a base commit.
 
 mod change;
-mod deep;
+mod coverage;
 mod detectors;
 mod index;
 mod investigate;
@@ -10,6 +10,8 @@ mod report;
 mod sarif;
 mod tests;
 pub mod verdict;
+
+pub use self::coverage::{COVERAGE_DIR, stamp as stamp_coverage};
 
 use std::fs::{self, File};
 use std::io::Write as _;
@@ -49,8 +51,6 @@ pub enum ReviewCommand {
     Report,
     /// Gating detectors only (the `quality` check step).
     Gate,
-    /// The report with diff coverage and mutation testing on changed lines.
-    Deep,
     /// Questions about the change and the code around it.
     #[command(flatten)]
     Investigate(InvestigateCommand),
@@ -61,8 +61,7 @@ pub enum ReviewCommand {
 pub fn run(ctx: &Context, args: ReviewArgs) -> Result<()> {
     let base = args.base.as_deref();
     match args.command {
-        ReviewCommand::Report => report(ctx, base, args.json, false),
-        ReviewCommand::Deep => report(ctx, base, args.json, true),
+        ReviewCommand::Report => report(ctx, base, args.json),
         ReviewCommand::Gate => {
             let findings = gate_findings(ctx, base)?;
             print!("{findings}");
@@ -85,12 +84,9 @@ pub fn changed_paths(ctx: &Context, base: &str) -> Result<Vec<PathBuf>> {
 }
 
 /// Builds the report, writes the SARIF log and prints the report.
-fn report(ctx: &Context, base: Option<&str>, json: bool, deep: bool) -> Result<()> {
+fn report(ctx: &Context, base: Option<&str>, json: bool) -> Result<()> {
     let change = ChangeContext::load(ctx, base)?;
-    let deep = deep
-        .then(|| deep::analyse(ctx, &change.change))
-        .transpose()?;
-    let report = ChangeReport::build(ctx, &change, deep)?;
+    let report = ChangeReport::build(ctx, &change)?;
     let json_report = serde_json::to_string_pretty(&report)?;
     for (path, text) in [
         (

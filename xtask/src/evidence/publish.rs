@@ -95,6 +95,20 @@ struct ChangeReport {
     findings: Vec<Finding>,
     tests: TestChanges,
     change_map: Vec<EntityChange>,
+    coverage: Coverage,
+}
+
+#[derive(Deserialize)]
+struct Coverage {
+    areas: Vec<AreaCoverage>,
+}
+
+#[derive(Deserialize)]
+struct AreaCoverage {
+    area: String,
+    instrumented: Option<usize>,
+    covered: Option<usize>,
+    notes: Vec<String>,
 }
 
 #[derive(Deserialize)]
@@ -271,6 +285,8 @@ fn render_section(section: &Section) -> String {
             .unwrap_or_default()
     );
 
+    render_coverage(&mut out, &section.report.coverage);
+
     let _ = writeln!(out, "\n### Run health");
     let mut flaky = Vec::new();
     let mut quarantined = Vec::new();
@@ -349,6 +365,38 @@ fn render_section(section: &Section) -> String {
         "<sub>Commit {short}. Rewritten by CI on every push.</sub>"
     );
     out
+}
+
+/// How much of the changed code the tests ran, one row per area the change touched. Reported,
+/// never gating; the uncovered lines are inline findings.
+fn render_coverage(out: &mut String, coverage: &Coverage) {
+    if coverage.areas.is_empty() {
+        return;
+    }
+    let _ = writeln!(
+        out,
+        "\n### Coverage\n| Area | Changed lines covered |\n|---|---|"
+    );
+    let mut notes = Vec::new();
+    for area in &coverage.areas {
+        let coverage = match (area.covered, area.instrumented) {
+            (Some(_), Some(0)) => "no instrumented lines".to_string(),
+            (Some(covered), Some(instrumented)) => format!(
+                "{covered} of {instrumented} ({}%)",
+                covered * 100 / instrumented
+            ),
+            _ => "not measured".to_string(),
+        };
+        let _ = writeln!(out, "| {} | {coverage} |", area.area);
+        notes.extend(
+            area.notes
+                .iter()
+                .map(|note| format!("{}: {note}", area.area)),
+        );
+    }
+    if !notes.is_empty() {
+        let _ = writeln!(out, "\n<sub>{}</sub>", notes.join(". "));
+    }
 }
 
 fn cases(runs: &[(PathBuf, TestRun)]) -> impl Iterator<Item = (&TestRun, &TestCase)> {

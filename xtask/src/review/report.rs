@@ -12,7 +12,7 @@ use serde::Serialize;
 
 use super::SARIF;
 use super::change::{self, Change, Status};
-use super::deep::Deep;
+use super::coverage::Coverage;
 use super::detectors::{self, DETECTORS};
 use super::index::{Entity, EntityKind, Language, Snapshot};
 use super::tests::{self, TestChanges};
@@ -321,19 +321,18 @@ pub struct ChangeReport {
     pub tests: TestChanges,
     /// Flaky, quarantined and over budget cases from every `TestRun`.
     pub health: RunHealth,
-    /// Deep analysis (`review deep`): changed lines no test executed, mutants that survived.
-    pub deep: Option<Deep>,
+    /// Coverage of the changed lines, per area.
+    pub coverage: Coverage,
 }
 
 impl ChangeReport {
-    pub fn build(ctx: &Context, change: &ChangeContext, deep: Option<Deep>) -> Result<Self> {
+    pub fn build(ctx: &Context, change: &ChangeContext) -> Result<Self> {
         let mut findings = Vec::new();
         for detector in DETECTORS {
             findings.extend((detector.run)(ctx, change)?);
         }
-        if let Some(deep) = &deep {
-            findings.extend(deep.findings());
-        }
+        let coverage = Coverage::read(ctx, &change.change)?;
+        findings.extend(coverage.findings());
         findings.sort_by(|a, b| (a.severity, &a.file, a.line).cmp(&(b.severity, &b.file, b.line)));
         let tests = tests::changes(ctx, change)?;
         let health = health(ctx)?;
@@ -352,7 +351,7 @@ impl ChangeReport {
             findings,
             tests,
             health,
-            deep,
+            coverage,
         })
     }
 
@@ -513,8 +512,8 @@ impl ChangeReport {
             );
         }
 
-        if let Some(deep) = &self.deep {
-            let _ = writeln!(out, "\n## Deep\n\n{}", deep.summary());
+        if !self.coverage.areas.is_empty() {
+            let _ = writeln!(out, "\n## Coverage\n\n{}", self.coverage.summary());
         }
 
         out

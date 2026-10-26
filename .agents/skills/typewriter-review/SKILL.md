@@ -45,7 +45,7 @@ A patch smell ([patch-smells.md](references/patch-smells.md)) is an item unless 
 
 Every tool compares the working tree with `--base <ref>` (default `origin/HEAD`; pass the pull request's base branch for stacked work) and prints JSON with `--json`.
 
-- `cargo xtask review report`: the change report, led by its shape (files of every type per area, systems deleted and added); `review deep` adds diff coverage and mutation testing.
+- `cargo xtask review report`: the change report, led by its shape (files of every type per area, systems deleted and added) and the changed lines each area's tests covered, read from the coverage the check steps wrote.
 - `cargo xtask review changes`: entities added, removed and changed, per file.
 - `cargo xtask review leftovers <term>...`: every file at head that still names a term, in any file type, marked untouched or changed, with each term's hit count at base.
 - `cargo xtask review siblings <path>`: files beside a changed or deleted path with its extension, marked untouched or changed.
