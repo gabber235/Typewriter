@@ -1,15 +1,17 @@
-//! Everything known about a change before anyone reads it: the change map, detector findings on
-//! changed lines, test changes, run health and risk. Built by `cargo xtask review report`; leaves
-//! as compact markdown for the reviewer and as SARIF for code scanning.
+//! Everything known about a change before anyone reads it: its shape over every file type, the
+//! change map, detector findings on changed lines, test changes, run health and risk. Built by
+//! `cargo xtask review report`; leaves as compact markdown for the reviewer and as SARIF for code
+//! scanning.
 
-use std::collections::{BTreeSet, HashSet};
+use std::collections::{BTreeMap, HashSet};
 use std::fmt::Write as _;
-use std::path::PathBuf;
+use std::path::{Path, PathBuf};
 
 use anyhow::Result;
 use serde::Serialize;
 
-use super::change::{Change, Status};
+use super::SARIF;
+use super::change::{self, Change, Status};
 use super::deep::Deep;
 use super::detectors::{self, DETECTORS};
 use super::index::{Entity, EntityKind, Language, Snapshot};
@@ -21,6 +23,12 @@ use crate::results::{self, Outcome};
 
 /// How many entities of the ranked change map the markdown lists.
 const CHANGE_MAP_LINES: usize = 20;
+
+/// How many files without entities (configuration, workflows, docs) the markdown lists.
+const OTHER_FILE_LINES: usize = 40;
+
+/// The area of files at the repository root.
+const ROOT_AREA: &str = "(root)";
 
 /// The change and both snapshots, which every detector reads.
 pub struct ChangeContext {
@@ -174,11 +182,138 @@ pub struct RunHealth {
     pub over_budget: Vec<(String, i64)>,
 }
 
+/// What the change did to one top level directory, counted in files of every type.
+#[derive(Serialize)]
+pub struct Area {
+    pub area: String,
+    pub added: usize,
+    pub modified: usize,
+    pub deleted: usize,
+}
+
+/// A directory that exists at only one end of the change: a system it removed or introduced.
+#[derive(Serialize)]
+pub struct System {
+    pub path: PathBuf,
+    pub files: usize,
+}
+
+/// One changed file of any type.
+#[derive(Serialize)]
+pub struct ShapeFile {
+    pub path: PathBuf,
+    pub from: Option<PathBuf>,
+    pub status: Status,
+    /// Whether the change map covers it with entities.
+    pub code: bool,
+}
+
+/// The change over every file type: what a reviewer looks at before any entity.
+#[derive(Serialize)]
+pub struct ChangeShape {
+    pub areas: Vec<Area>,
+    /// Outermost directories present at base and gone at head.
+    pub systems_deleted: Vec<System>,
+    /// Outermost directories present at head and absent at base.
+    pub systems_added: Vec<System>,
+    pub files: Vec<ShapeFile>,
+}
+
+impl ChangeShape {
+    fn build(ctx: &Context, change: &Change) -> Result<Self> {
+        let mut areas: BTreeMap<String, Area> = BTreeMap::new();
+        for file in &change.files {
+            let name = area(&file.path);
+            let area = areas.entry(name.clone()).or_insert_with(|| Area {
+                area: name,
+                added: 0,
+                modified: 0,
+                deleted: 0,
+            });
+            match file.status {
+                Status::Added => area.added += 1,
+                Status::Modified => area.modified += 1,
+                Status::Deleted => area.deleted += 1,
+            }
+        }
+        // Only paths the change removed or created can form a system; both ends of a move count.
+        let removed: Vec<PathBuf> = change
+            .files
+            .iter()
+            .filter_map(|file| match (file.status, &file.from) {
+                (Status::Deleted, _) => Some(file.path.clone()),
+                (_, Some(from)) => Some(from.clone()),
+                _ => None,
+            })
+            .collect();
+        let created: Vec<PathBuf> = change
+            .files
+            .iter()
+            .filter(|file| file.status == Status::Added || file.from.is_some())
+            .map(|file| file.path.clone())
+            .collect();
+        let base = change::paths_at(ctx, &change.base)?;
+        let head = change::working_paths(ctx)?;
+        Ok(Self {
+            areas: areas.into_values().collect(),
+            systems_deleted: systems(&removed, &head),
+            systems_added: systems(&created, &base),
+            files: change
+                .files
+                .iter()
+                .map(|file| ShapeFile {
+                    path: file.path.clone(),
+                    from: file.from.clone(),
+                    status: file.status,
+                    code: Language::of(&file.path).is_some(),
+                })
+                .collect(),
+        })
+    }
+}
+
+/// The top level directory of `path`, or [`ROOT_AREA`].
+fn area(path: &Path) -> String {
+    let mut components = path.components();
+    match (components.next(), components.next()) {
+        (Some(first), Some(_)) => first.as_os_str().to_string_lossy().into_owned(),
+        _ => ROOT_AREA.to_string(),
+    }
+}
+
+/// The outermost directories of `changed` files that hold no file at the `other` end, with how
+/// many of `changed` they hold.
+fn systems(changed: &[PathBuf], other: &[PathBuf]) -> Vec<System> {
+    let kept: HashSet<&Path> = other
+        .iter()
+        .flat_map(|path| path.ancestors().skip(1))
+        .collect();
+    let mut gone: BTreeMap<&Path, usize> = BTreeMap::new();
+    for path in changed {
+        let outermost = path
+            .ancestors()
+            .skip(1)
+            .filter(|directory| !directory.as_os_str().is_empty() && !kept.contains(directory))
+            .last();
+        if let Some(directory) = outermost {
+            *gone.entry(directory).or_default() += 1;
+        }
+    }
+    gone.into_iter()
+        .map(|(path, files)| System {
+            path: path.to_path_buf(),
+            files,
+        })
+        .collect()
+}
+
 /// Everything known about a change before anyone reads it. Built by `cargo xtask review report`.
 #[derive(Serialize)]
 pub struct ChangeReport {
     pub base: String,
     pub risk: Risk,
+    /// Files of every type per area, and the systems the change deleted and added.
+    pub shape: ChangeShape,
     /// Functions, types and tests added, removed or changed, riskiest first.
     pub change_map: Vec<EntityChange>,
     /// Detector hits on changed lines only; exported as SARIF.
@@ -212,6 +347,7 @@ impl ChangeReport {
         Ok(Self {
             base: change.change.base.clone(),
             risk,
+            shape: ChangeShape::build(ctx, &change.change)?,
             change_map: ranked.into_iter().map(|(_, entry)| entry).collect(),
             findings,
             tests,
@@ -220,25 +356,15 @@ impl ChangeReport {
         })
     }
 
-    /// The report as compact markdown: risk, then findings, then test changes, run health and
-    /// the ranked change map.
+    /// The report as compact markdown: risk, the change shape over every file type, the ranked
+    /// change map, a count of detector findings, then test changes and run health.
     pub fn markdown(&self) -> String {
         let mut out = String::new();
-        let gates = self
-            .findings
-            .iter()
-            .filter(|f| f.severity == Severity::Gate)
-            .count();
-        let files = self
-            .change_map
-            .iter()
-            .map(|entry| &entry.file)
-            .collect::<BTreeSet<_>>()
-            .len();
         let _ = writeln!(
             out,
-            "# Change report against {}\n\n{} entities in {files} files. Risk **{}**{}",
+            "# Change report against {}\n\n{} files, {} entities. Risk **{}**{}",
             &self.base[..self.base.len().min(9)],
+            self.shape.files.len(),
             self.change_map.len(),
             match self.risk.level {
                 RiskLevel::Low => "low",
@@ -252,29 +378,60 @@ impl ChangeReport {
             }
         );
 
-        let _ = writeln!(
-            out,
-            "\n## Findings ({gates} gating, {} flags)\n",
-            self.findings.len() - gates
-        );
-        if self.findings.is_empty() {
-            let _ = writeln!(out, "None on changed lines.");
+        self.shape_markdown(&mut out);
+
+        let _ = writeln!(out, "\n## Change map, riskiest first\n");
+        if self.change_map.is_empty() {
+            let _ = writeln!(out, "No functions, types or tests changed.");
         }
-        for finding in &self.findings {
+        for entry in self.change_map.iter().take(CHANGE_MAP_LINES) {
             let _ = writeln!(
                 out,
-                "- {} `{}` {}:{} {}\n  Fix: {}",
-                match finding.severity {
-                    Severity::Gate => "gate",
-                    Severity::Flag => "flag",
-                },
-                finding.detector,
-                finding.file.display(),
-                finding.line,
-                finding.message,
-                finding.fix
+                "- {} {} `{}` {}:{} ({} lines)",
+                entry.change.sign(),
+                entry.kind.label(),
+                entry.qualified,
+                entry.file.display(),
+                entry.line,
+                entry.changed_lines
             );
         }
+        if self.change_map.len() > CHANGE_MAP_LINES {
+            let _ = writeln!(
+                out,
+                "- {} more: `cargo xtask review changes`",
+                self.change_map.len() - CHANGE_MAP_LINES
+            );
+        }
+
+        // Detector findings belong to the gate and code scanning; the reviewer only needs to know
+        // they exist and where to read them.
+        let gates = self
+            .findings
+            .iter()
+            .filter(|f| f.severity == Severity::Gate)
+            .count();
+        let mut detectors: BTreeMap<&str, usize> = BTreeMap::new();
+        for finding in &self.findings {
+            *detectors.entry(finding.detector).or_default() += 1;
+        }
+        let _ = writeln!(
+            out,
+            "\n## Detector findings\n\n{gates} gating, {} flags on changed lines{}. Listed in `{SARIF}`; `cargo xtask review gate` prints the gating ones.",
+            self.findings.len() - gates,
+            if detectors.is_empty() {
+                String::new()
+            } else {
+                format!(
+                    " ({})",
+                    detectors
+                        .iter()
+                        .map(|(detector, count)| format!("{detector} {count}"))
+                        .collect::<Vec<_>>()
+                        .join(", ")
+                )
+            }
+        );
 
         let tests = &self.tests;
         let _ = writeln!(
@@ -360,27 +517,77 @@ impl ChangeReport {
             let _ = writeln!(out, "\n## Deep\n\n{}", deep.summary());
         }
 
-        let _ = writeln!(out, "\n## Change map, riskiest first\n");
-        for entry in self.change_map.iter().take(CHANGE_MAP_LINES) {
-            let _ = writeln!(
-                out,
-                "- {} {} `{}` {}:{} ({} lines)",
-                entry.change.sign(),
-                entry.kind.label(),
-                entry.qualified,
-                entry.file.display(),
-                entry.line,
-                entry.changed_lines
-            );
-        }
-        if self.change_map.len() > CHANGE_MAP_LINES {
-            let _ = writeln!(
-                out,
-                "- {} more: `cargo xtask review changes`",
-                self.change_map.len() - CHANGE_MAP_LINES
-            );
-        }
         out
+    }
+
+    /// Files per area, the systems deleted and added, and every changed file without entities.
+    fn shape_markdown(&self, out: &mut String) {
+        let shape = &self.shape;
+        let _ = writeln!(
+            out,
+            "\n## Change shape\n\n| Area | Added | Modified | Deleted |\n| --- | --- | --- | --- |"
+        );
+        for area in &shape.areas {
+            let _ = writeln!(
+                out,
+                "| {} | {} | {} | {} |",
+                area.area, area.added, area.modified, area.deleted
+            );
+        }
+        for (label, systems) in [
+            ("Systems deleted", &shape.systems_deleted),
+            ("Systems added", &shape.systems_added),
+        ] {
+            let listed: Vec<String> = systems
+                .iter()
+                .map(|system| {
+                    format!(
+                        "`{}/` ({} file{})",
+                        system.path.display(),
+                        system.files,
+                        if system.files == 1 { "" } else { "s" }
+                    )
+                })
+                .collect();
+            let _ = writeln!(
+                out,
+                "\n{label}: {}.",
+                if listed.is_empty() {
+                    "none".to_string()
+                } else {
+                    listed.join(", ")
+                }
+            );
+        }
+        // Deleted first: what the change removed is where leftovers start.
+        let mut other: Vec<&ShapeFile> = shape.files.iter().filter(|file| !file.code).collect();
+        other.sort_by_key(|file| match file.status {
+            Status::Deleted => 0,
+            Status::Added => 1,
+            Status::Modified => 2,
+        });
+        if other.is_empty() {
+            return;
+        }
+        let _ = writeln!(out, "\nFiles without entities ({}):\n", other.len());
+        for file in other.iter().take(OTHER_FILE_LINES) {
+            let _ = writeln!(
+                out,
+                "- {} {}{}",
+                file.status.sign(),
+                file.path.display(),
+                file.from
+                    .as_ref()
+                    .map_or_else(String::new, |from| format!(" (from {})", from.display()))
+            );
+        }
+        if other.len() > OTHER_FILE_LINES {
+            let _ = writeln!(
+                out,
+                "- {} more: `cargo xtask review report --json`",
+                other.len() - OTHER_FILE_LINES
+            );
+        }
     }
 }
 

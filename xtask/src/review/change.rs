@@ -9,6 +9,7 @@ use std::process::{Command, Stdio};
 use std::thread;
 
 use anyhow::{Context as _, Result, anyhow, bail};
+use serde::Serialize;
 
 use crate::{CommandExt, Context};
 
@@ -18,11 +19,22 @@ const DEFAULT_BASE: &str = "origin/HEAD";
 /// Legacy references that are read, never changed (AGENTS.md), so neither indexed nor reviewed.
 const LEGACY: &[&str] = &["engine/", "extensions/", "module-plugin/", "app/"];
 
-#[derive(Clone, Copy, PartialEq, Eq)]
+#[derive(Clone, Copy, PartialEq, Eq, Serialize)]
+#[serde(rename_all = "lowercase")]
 pub enum Status {
     Added,
     Modified,
     Deleted,
+}
+
+impl Status {
+    pub fn sign(self) -> char {
+        match self {
+            Self::Added => '+',
+            Self::Modified => '~',
+            Self::Deleted => '-',
+        }
+    }
 }
 
 pub struct FileChange {
@@ -225,6 +237,51 @@ pub fn files_at(
         .zip(blobs)
         .filter_map(|(path, blob)| Some((path, String::from_utf8(blob).ok()?)))
         .collect())
+}
+
+/// The path of every reviewed file at `commit`, of any type.
+pub fn paths_at(ctx: &Context, commit: &str) -> Result<Vec<PathBuf>> {
+    let listing = git(
+        ctx,
+        &["ls-tree", "-r", "-z", "--name-only", "--full-tree", commit],
+    )
+    .output_text()?;
+    Ok(listing
+        .split('\0')
+        .map(PathBuf::from)
+        .filter(|path| !path.as_os_str().is_empty() && reviewed(path))
+        .collect())
+}
+
+/// The path of every reviewed file of the working tree, of any type: tracked or untracked, not
+/// ignored, and present on disk (a deletion not yet staged is gone).
+pub fn working_paths(ctx: &Context) -> Result<Vec<PathBuf>> {
+    let listing = git(
+        ctx,
+        &[
+            "ls-files",
+            "-z",
+            "--cached",
+            "--others",
+            "--exclude-standard",
+        ],
+    )
+    .output_text()?;
+    let mut paths: Vec<PathBuf> = listing
+        .split('\0')
+        .map(PathBuf::from)
+        .filter(|path| {
+            !path.as_os_str().is_empty() && reviewed(path) && ctx.root.join(path).exists()
+        })
+        .collect();
+    paths.sort();
+    paths.dedup();
+    Ok(paths)
+}
+
+/// The legacy reference prefixes as Git pathspecs that exclude them.
+pub fn legacy_excludes() -> impl Iterator<Item = String> {
+    LEGACY.iter().map(|prefix| format!(":(exclude){prefix}"))
 }
 
 /// Every reviewed file of the working tree (tracked or untracked, not ignored, plus the generated

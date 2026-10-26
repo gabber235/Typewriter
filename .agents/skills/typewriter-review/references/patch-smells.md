@@ -14,3 +14,4 @@ For the flagged hunks, answer each with file:line and plan flaw or execution fla
 10. A heuristic growing a list of exceptions where a structural model belongs. (usually plan)
 11. A test that restates what the code does instead of checking the requirement's outcome. (execution)
 12. Code worked around a neighbour instead of fixing it. (tools: neighbours, history; plan)
+13. A new system added beside the old one, with old entry points still live (workflows, scripts, docs pipelines). (tools: leftovers, siblings; usually plan)
