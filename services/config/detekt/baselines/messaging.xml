@@ -1,0 +1,24 @@
+<?xml version="1.0" ?>
+<SmellBaseline>
+  <ManuallySuppressedIssues/>
+  <CurrentIssues>
+    <ID>CyclomaticComplexMethod:Communicator.kt:Communicator$fun &lt;Address : Any, Request : Any, Initial : Any, Update : Any&gt; watch: Flow&lt;CommunicationResult&lt;WatchMessage&lt;Initial, Update&gt;&gt;&gt;</ID>
+    <ID>CyclomaticComplexMethod:Communicator.kt:Communicator$fun &lt;Address : Any, Request : Any, Response : Any&gt; scatter: Flow&lt;CommunicationResult&lt;Response&gt;&gt;</ID>
+    <ID>CyclomaticComplexMethod:CommunicatorRouter.kt:CommunicatorRouter$private fun startRuntime: Runtime</ID>
+    <ID>CyclomaticComplexMethod:CommunicatorRouter.kt:CommunicatorRouter$private suspend fun performShutdown</ID>
+    <ID>CyclomaticComplexMethod:PayloadFraming.kt:PayloadAssembler$suspend fun accept: Assembly</ID>
+    <ID>CyclomaticComplexMethod:PayloadFraming.kt:internal suspend fun PayloadPlan.Framed.sendInWindows: TransportResult&lt;InboundMessage?&gt;</ID>
+    <ID>SwallowedException:CommunicatorRouter.kt:CommunicatorRouter$failure: Throwable</ID>
+    <ID>TooGenericExceptionCaught:Communicator.kt:Communicator$cleanupFailure: Throwable</ID>
+    <ID>TooGenericExceptionCaught:Communicator.kt:Communicator$failure: Throwable</ID>
+    <ID>TooGenericExceptionCaught:CommunicatorRouter.kt:CommunicatorRouter$cleanup: Throwable</ID>
+    <ID>TooGenericExceptionCaught:CommunicatorRouter.kt:CommunicatorRouter$failure: Throwable</ID>
+    <ID>TooGenericExceptionCaught:CommunicatorRouter.kt:CommunicatorRouter$original: Throwable</ID>
+    <ID>TooGenericExceptionCaught:CommunicatorRouter.kt:CommunicatorRouter$secondary: Throwable</ID>
+    <ID>TooGenericExceptionCaught:NatsConnection.kt:NatsConnection$cleanupFailure: Throwable</ID>
+    <ID>TooGenericExceptionCaught:NatsConnection.kt:NatsConnection$failure: Throwable</ID>
+    <ID>TooGenericExceptionCaught:NatsMessageTransport.kt:NatsMessageTransport$cleanup: Throwable</ID>
+    <ID>TooGenericExceptionCaught:NatsMessageTransport.kt:NatsMessageTransport$failure: Throwable</ID>
+    <ID>TooGenericExceptionCaught:NatsMessageTransport.kt:failure: Throwable</ID>
+  </CurrentIssues>
+</SmellBaseline>

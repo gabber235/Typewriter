@@ -1,0 +1,8 @@
+<?xml version="1.0" ?>
+<SmellBaseline>
+  <ManuallySuppressedIssues/>
+  <CurrentIssues>
+    <ID>TooGenericExceptionCaught:Errors.kt:failure: Throwable</ID>
+    <ID>TooGenericExceptionCaught:SpanBoundaries.kt:failure: Throwable</ID>
+  </CurrentIssues>
+</SmellBaseline>

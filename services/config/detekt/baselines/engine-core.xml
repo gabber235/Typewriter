@@ -1,0 +1,11 @@
+<?xml version="1.0" ?>
+<SmellBaseline>
+  <ManuallySuppressedIssues/>
+  <CurrentIssues>
+    <ID>TooGenericExceptionCaught:CompiledContentDelivery.kt:MessagingEngineContentDelivery$cleanup: Throwable</ID>
+    <ID>TooGenericExceptionCaught:CompiledContentDelivery.kt:MessagingEngineContentDelivery$failure: Exception</ID>
+    <ID>TooGenericExceptionCaught:CompiledContentDelivery.kt:MessagingEngineContentDelivery$failure: Throwable</ID>
+    <ID>TooGenericExceptionCaught:EngineDeploymentEntrypoint.kt:EngineDeploymentEntrypoint$failure: Throwable</ID>
+    <ID>TooGenericExceptionCaught:ReloadableEngineRuntime.kt:ReloadableEngineRuntime$failure: Throwable</ID>
+  </CurrentIssues>
+</SmellBaseline>
