@@ -42,6 +42,8 @@ in
     pkgs.vulkan-loader
     pkgs.gtk3
     pkgs.chromium
+    # certutil: `cargo xtask e2e full` makes that browser trust the CI cluster's authority.
+    pkgs.nss.tools
   ];
 
   # Xcode and the macOS SDK come from the system: Flutter's native asset builds and
