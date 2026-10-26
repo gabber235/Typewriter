@@ -243,8 +243,7 @@ function emitReplyInboxes(): string[] {
  * consumer naming rule, the reply inbox prefixes, one route type per route a component serves or publishes on, one
  * dispatcher per component that receives messages and the `SkirResponse` implementation of every
  * method response. Its `skir_types` child module implements `SkirType` for every Skir record. The
- * route independent runtime they build on is hand written in `crate::transport`. generate.ts
- * formats both files with rustfmt.
+ * route independent runtime they build on is hand written in `crate::transport`.
  */
 export function emitRust(
   resolved: ResolvedRoutes,
