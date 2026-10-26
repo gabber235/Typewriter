@@ -13,9 +13,10 @@ use anyhow::{Context as _, Result};
 use crate::lock::HeavyLock;
 use crate::{CommandExt, Context};
 
-pub const DESCRIBE: &str = "cargo xtask generate: bun services/protocol/generate.ts, then \
-                            dart run build_runner build in panel, panel/testkit and panel/widgetbook, \
-                            each only when its inputs changed or its output is missing";
+pub const DESCRIBE: &str = "cargo xtask generate: bun services/protocol/generate.ts, \
+                            ./gradlew :typewriter-api:writeSdkFixtures, then dart run build_runner \
+                            build in panel, panel/testkit and panel/widgetbook, each only when its \
+                            inputs changed or its output is missing";
 
 /// One program that writes generated sources.
 struct Generator {
@@ -26,6 +27,9 @@ struct Generator {
     /// Directories the generated files land in. The generated files found there after a run are
     /// recorded, so deleting any of them reruns the generator.
     outputs: &'static [&'static str],
+    /// Files written outside the generated source convention (build output, committed fixtures),
+    /// recorded like generated files.
+    files: &'static [&'static str],
     tool: Tool,
 }
 
@@ -34,6 +38,9 @@ enum Tool {
     Protocol,
     /// `build_runner` in the Dart package at this path.
     BuildRunner(&'static str),
+    /// The fixtures other hosts read from the Kotlin SDK: the canonical read schema, the compiled
+    /// control fixtures the panel embeds, and the expression differential corpus.
+    SdkFixtures,
 }
 
 impl Tool {
@@ -42,9 +49,14 @@ impl Tool {
         match self {
             Tool::Protocol => ("bun", &["--revision"]),
             Tool::BuildRunner(_) => ("dart", &["--version"]),
+            Tool::SdkFixtures => ("java", &["-version"]),
         }
     }
 }
+
+/// The generated expressions and the results Kotlin computed, which the panel evaluates too.
+pub const SDK_EXPRESSION_CORPUS: &str =
+    "services/sdk/typewriter-api/build/fixtures/expression_corpus.json";
 
 const GENERATORS: &[Generator] = &[
     Generator {
@@ -71,7 +83,24 @@ const GENERATORS: &[Generator] = &[
             "services/protocol/transport-adapters/kotlin/skirout",
             "services/sdk/typewriter-api/src/main/skirout",
         ],
+        files: &[],
         tool: Tool::Protocol,
+    },
+    Generator {
+        name: "sdk-fixtures",
+        inputs: &[
+            "services/sdk/typewriter-api",
+            "services/testing/typewriter-test-kit",
+            "services/libs.versions.toml",
+            "panel/testkit/tool/update_compiled_sdk_control_fixture.py",
+        ],
+        outputs: &[],
+        files: &[
+            SDK_EXPRESSION_CORPUS,
+            "skir-src/editor/v1/fixtures/canonical_read_models.json",
+            "panel/testkit/lib/src/shared/editors/presentation/compiled_sdk_control_fixture.dart",
+        ],
+        tool: Tool::SdkFixtures,
     },
     build_runner(
         "panel",
@@ -105,6 +134,7 @@ const fn build_runner(package: &'static str, inputs: &'static [&'static str]) ->
         name: package,
         inputs,
         outputs: inputs,
+        files: &[],
         tool: Tool::BuildRunner(package),
     }
 }
@@ -161,6 +191,24 @@ impl Generator {
                 let mut build = ctx.tool(package, "dart", &["run", "build_runner", "build"]);
                 build.log_output(log)?.run()
             }
+            Tool::SdkFixtures => {
+                let _lock = HeavyLock::acquire("generate sdk-fixtures")?;
+                let mut write = ctx.tool(
+                    "services",
+                    "./gradlew",
+                    &[":typewriter-api:writeSdkFixtures"],
+                );
+                write.log_output(log)?.run()?;
+                let mut embed = ctx.tool(
+                    ".",
+                    "python3",
+                    &[
+                        "panel/testkit/tool/update_compiled_sdk_control_fixture.py",
+                        "services/sdk/typewriter-api/build/fixtures/controls",
+                    ],
+                );
+                embed.log_output(log)?.run()
+            }
         }
     }
 
@@ -204,6 +252,12 @@ impl Generator {
                 }
             })?;
         }
+        files.extend(
+            self.files
+                .iter()
+                .filter(|file| ctx.root.join(file).is_file())
+                .map(|file| (*file).to_owned()),
+        );
         files.sort();
         files.dedup();
         Ok(files)

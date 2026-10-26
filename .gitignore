@@ -182,6 +182,7 @@ panel/lib/infrastructure/protocols/operations/skirout/
 panel/lib/infrastructure/messaging/generated/skirout/
 backend/wasmcloud-utils/src/skirout/
 backend/wasmcloud-utils/src/transport_routes/skirout/
+panel/testkit/lib/src/shared/editors/presentation/compiled_sdk_control_fixture.dart
 services/protocol/src/main/kotlin/skirout/
 services/protocol/transport-adapters/kotlin/skirout/
 services/sdk/typewriter-api/src/main/skirout/
