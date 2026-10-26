@@ -31,6 +31,7 @@ import com.typewritermc.codegen.GeneratedFile
 import com.typewritermc.codegen.GeneratedOutput
 import com.typewritermc.codegen.KnownTypes
 import com.typewritermc.codegen.TypeParameterBindings
+import com.typewritermc.codegen.TypewriterApi
 import com.typewritermc.codegen.annotation
 import com.typewritermc.codegen.argument
 import com.typewritermc.codegen.compiledBounds
@@ -55,12 +56,14 @@ import com.typewritermc.types.EndpointSlot
 import com.typewritermc.types.Icon
 import com.typewritermc.types.Many
 import com.typewritermc.types.One
+import com.typewritermc.types.Ref
 import com.typewritermc.types.ReferenceContract
 import com.typewritermc.types.RelationDeletePolicy
 import com.typewritermc.types.Resource
 import com.typewritermc.types.StandardTypes
 import com.typewritermc.types.TypeDisplay
 import com.typewritermc.types.TypewriterDisplay
+import com.typewritermc.types.TypewriterGeneratedEndpoint
 import com.typewritermc.types.TypewriterRelationFamily
 import com.typewritermc.types.TypewriterType
 import com.typewritermc.types.TypewriterTypeImports
@@ -76,6 +79,7 @@ import com.typewritermc.types.codegen.emit.OperationEmitter
 import com.typewritermc.types.codegen.emit.PresentationEmitter
 import com.typewritermc.types.codegen.emit.SdkEndpoint
 import com.typewritermc.types.codegen.emit.SdkRelation
+import com.typewritermc.types.codegen.emit.SetupEmitter
 import com.typewritermc.types.codegen.emit.endpointBindingsFile
 import com.typewritermc.types.codegen.emit.file
 import com.typewritermc.types.codegen.emit.supportsNativeBinding
@@ -121,6 +125,7 @@ internal val SDK_EMITTERS: List<SdkEmitter> =
         DisplayEmitter,
         CheckEmitter,
         DraftEmitter,
+        SetupEmitter,
         DefinitionEmitter,
         NativeBindingEmitter,
     )
@@ -364,6 +369,8 @@ private class TypewriterTypeProcessor(
                                 property = accessor.field.sourceName,
                                 template = accessor.field.template,
                                 shape = classify(accessor.field.template, accessor.type),
+                                link = accessor.type.sdkLink(),
+                                placement = accessor.type.isPlacement(),
                             )
                         },
                     ownedFields = conversion.ownedFields[typeDefinition.id].orEmpty(),
@@ -727,6 +734,37 @@ private class OperationInputShape(
 private class Validated<T>(
     val value: T,
 )
+
+/** The reference contract side of a link field or of a list or set of links; null for every other field. */
+context(parameters: TypeParameterResolver)
+private fun KSType.sdkLink(): SdkLink? {
+    val container = declaration as? KSClassDeclaration ?: return null
+    val collection = container isOneOf KnownTypes.lists || container isOneOf KnownTypes.sets
+    val reference = if (collection) arguments.singleOrNull()?.type?.resolve() ?: return null else this
+    if (!(reference.declaration isType Ref::class.asClassName())) return null
+    val endpoint =
+        reference.arguments[0]
+            .type
+            ?.resolve()
+            ?.declaration as? KSClassDeclaration ?: return null
+    val generated = endpoint.rawAnnotation(TypewriterGeneratedEndpoint::class) ?: return null
+    return SdkLink(
+        owning = generated.argument("owning") == true,
+        slot = generated.enumArgumentOrNull<EndpointSlot>("slot") ?: return null,
+        collection = collection,
+        elementType =
+            reference.arguments[1]
+                .type
+                ?.resolve()
+                ?.toTypeName(parameters) ?: return null,
+    )
+}
+
+/** Whether this is the placement type or one of its subtypes. */
+private fun KSType.isPlacement(): Boolean {
+    val type = declaration as? KSClassDeclaration ?: return false
+    return type isType TypewriterApi.Placement || type.implements(TypewriterApi.Placement)
+}
 
 private data class EffectiveAccessorField(
     val field: OwnedFieldDeclaration,

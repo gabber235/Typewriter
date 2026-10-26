@@ -46,6 +46,8 @@ internal class SdkNames private constructor(
     val definition = base.suffixed("Definition")
     val nativeBindingFactory = base.suffixed("NativeBindingFactory")
     val endpointBindings = base.suffixed("EndpointBindings")
+    val setup = base.suffixed("Setup")
+    val setupSection = base.suffixed("Section")
 
     companion object {
         fun of(declaration: KSClassDeclaration): SdkNames {

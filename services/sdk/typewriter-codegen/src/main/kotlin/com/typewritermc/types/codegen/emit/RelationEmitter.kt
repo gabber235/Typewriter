@@ -18,6 +18,7 @@ import com.typewritermc.codegen.kotlinCode
 import com.typewritermc.codegen.namedArguments
 import com.typewritermc.codegen.setCode
 import com.typewritermc.types.EndpointSlot
+import com.typewritermc.types.RESOURCE_OWNERSHIP_FAMILY_ID
 import com.typewritermc.types.RelationDeletePolicy
 import com.typewritermc.types.RelationshipEndpoint
 import com.typewritermc.types.TypewriterGeneratedEndpoint
@@ -112,6 +113,7 @@ private fun SdkRelation.endpointType(endpoint: SdkEndpoint): TypeSpec {
                 .addMember("%S", id)
                 .addMember("%T.%L", EndpointSlot::class, endpoint.slot.name)
                 .addMember("%L", opposite(endpoint).cardinality == EndpointCardinality.MANY)
+                .addMember("%L", RESOURCE_OWNERSHIP_FAMILY_ID in families)
                 .build(),
         ).addSuperinterface(RelationshipEndpoint::class.asClassName().parameterizedBy(endpoint.resource, opposite(endpoint).resource))
         .addType(
