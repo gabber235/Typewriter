@@ -127,9 +127,6 @@ target/
 # Flutter web resource
 /plugin/src/main/resources/web/
 plugin/qodana.yaml
-code_generator/EntityEyeHeightProperty.kt
-code_generator/EntityHeightProperty.kt
-code_generator/EntityWidthProperty.kt
 
 jars/
 
