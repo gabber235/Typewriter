@@ -4,11 +4,15 @@
 # Infrastructure deploy key and the CI cluster's secrets.
 name: Full tier
 
+# TODO: once features/v1 merges into develop, run on develop only: drop features/v1 from the push
+# branches and the scheduled checkout ref below.
 on:
+  # GitHub starts scheduled runs from the default branch's copy of this file, so the nightly run
+  # begins only once this workflow is on develop; until then it checks out features/v1.
   schedule:
     - cron: "17 3 * * *"
   push:
-    branches: [develop]
+    branches: [develop, features/v1]
   workflow_dispatch:
 
 permissions:
@@ -20,7 +24,7 @@ concurrency:
   cancel-in-progress: true
 
 jobs:
-  # Commits pushed to develop follow the commit rules too. A brand new branch has no previous
+  # Commits pushed to develop and features/v1 follow the commit rules too. A brand new branch has no previous
   # commit to start the range from, so it is skipped.
   commits:
     if: github.event_name == 'push' && github.event.before != '0000000000000000000000000000000000000000'
@@ -37,6 +41,8 @@ jobs:
     timeout-minutes: 90
     steps:
       - uses: actions/checkout@v6
+        with:
+          ref: ${{ github.event_name == 'schedule' && 'features/v1' || github.ref }}
       - id: pin
         run: echo "revision=$(sed -n 's/^revision = "\(.*\)"/\1/p' harness/infrastructure.toml)" >> "$GITHUB_OUTPUT"
       # Where `cargo xtask cluster ci` expects the pinned revision.
