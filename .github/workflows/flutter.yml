@@ -1,0 +1,36 @@
+# A weekly pull request that moves the flutter-overlay input to its newest release, so a Flutter
+# that breaks the panel shows up as a red check instead of a surprise on a developer machine.
+name: Flutter
+
+on:
+  schedule:
+    - cron: "0 6 * * 1"
+  workflow_dispatch:
+
+permissions:
+  contents: write
+  pull-requests: write
+  # Dispatches CI on the bump branch.
+  actions: write
+
+jobs:
+  bump:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v6
+      - uses: cachix/install-nix-action@v31
+      - run: nix profile add nixpkgs#devenv
+      - run: devenv update flutter-overlay
+      - id: bump
+        uses: peter-evans/create-pull-request@v7
+        with:
+          branch: build/flutter
+          title: "build(panel): track newest Flutter"
+          commit-message: "build(panel): track newest Flutter"
+      # A pull request opened or pushed with the workflow token starts no workflows, but a
+      # dispatch does; its checks land on the branch head, which is the pull request's head.
+      - if: steps.bump.outputs.pull-request-operation != 'none'
+        run: gh workflow run ci.yml --ref build/flutter
+        env:
+          GH_TOKEN: ${{ github.token }}

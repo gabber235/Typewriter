@@ -1,0 +1,30 @@
+name: devenv
+description: >-
+  Installs Nix with the pinned toolchain's binary caches and devenv, so a job's steps can run
+  `devenv shell -- cargo xtask ...` exactly as on a developer machine.
+
+runs:
+  using: composite
+  steps:
+    # Room for the Nix store, Cargo, Gradle and Flutter on the 14 GB runner disk.
+    - uses: jlumbroso/free-disk-space@v1.3.1
+      with:
+        tool-cache: true
+        android: true
+        dotnet: true
+        haskell: true
+    - uses: cachix/install-nix-action@v31
+    # The store from the last run with the same toolchain pins turns a cold install of about
+    # 20 minutes into a few.
+    - uses: nix-community/cache-nix-action@v6
+      with:
+        primary-key: nix-${{ runner.os }}-${{ hashFiles('devenv.nix', 'devenv.yaml', 'devenv.lock', 'nix/**') }}
+        restore-prefixes-first-match: nix-${{ runner.os }}-
+    # Read only: no auth token, so jobs pull Flutter from gabber235.cachix.org and devenv itself
+    # from the public devenv cache, and never push.
+    - uses: cachix/cachix-action@v17
+      with:
+        name: gabber235
+        extraPullNames: devenv
+    - shell: bash
+      run: nix profile add nixpkgs#devenv

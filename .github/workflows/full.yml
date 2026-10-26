@@ -1,0 +1,64 @@
+# The full tier: a fresh k3d cluster from the pinned Infrastructure CI overlay, this commit's
+# backend deployed to it, and the panel web scenarios against the real Authentik, operator mode
+# NATS and runtime operator. Trusted events only, never fork pull requests, because it reads the
+# Infrastructure deploy key and the CI cluster's secrets.
+name: Full tier
+
+on:
+  schedule:
+    - cron: "17 3 * * *"
+  push:
+    branches: [develop]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  issues: write
+
+concurrency:
+  group: full-tier-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  # Commits pushed to develop follow the commit rules too. A brand new branch has no previous
+  # commit to start the range from, so it is skipped.
+  commits:
+    if: github.event_name == 'push' && github.event.before != '0000000000000000000000000000000000000000'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v6
+        with:
+          fetch-depth: 0
+      - uses: ./.github/actions/devenv
+      - run: devenv shell -- cargo xtask hook commit-msg --range ${{ github.event.before }}..${{ github.sha }}
+
+  full:
+    runs-on: ubuntu-latest
+    timeout-minutes: 90
+    steps:
+      - uses: actions/checkout@v6
+      - id: pin
+        run: echo "revision=$(sed -n 's/^revision = "\(.*\)"/\1/p' harness/infrastructure.toml)" >> "$GITHUB_OUTPUT"
+      # Where `cargo xtask cluster ci` expects the pinned revision.
+      - uses: actions/checkout@v6
+        with:
+          repository: Seamlezz/Infrastructure
+          ref: ${{ steps.pin.outputs.revision }}
+          ssh-key: ${{ secrets.INFRASTRUCTURE_DEPLOY_KEY }}
+          path: .xtask/infrastructure
+          persist-credentials: false
+      - uses: ./.github/actions/devenv
+      - run: devenv shell -- cargo xtask e2e full
+        env:
+          CI_AGE_KEY: ${{ secrets.CI_AGE_KEY }}
+          CI_REGISTRY_PASSWORD: ${{ secrets.CI_REGISTRY_PASSWORD }}
+      - if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: full-tier-evidence
+          path: .xtask/results/
+          if-no-files-found: ignore
+      - if: failure() && github.event_name == 'schedule'
+        run: gh issue create --title "Full tier failed $(date -I)" --body "$GITHUB_SERVER_URL/$GITHUB_REPOSITORY/actions/runs/$GITHUB_RUN_ID"
+        env:
+          GH_TOKEN: ${{ github.token }}

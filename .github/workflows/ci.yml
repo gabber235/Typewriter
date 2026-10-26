@@ -1,0 +1,152 @@
+# The pull request workflow. Every job is one `cargo xtask` line inside the devenv shell, so CI
+# runs exactly what a developer runs; `gate` is the one required check.
+name: CI
+
+on:
+  pull_request:
+  # The Flutter bump dispatches this on its branch: a pull request opened with the workflow token
+  # starts no workflows.
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ci-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: true
+
+# A dispatched run has no pull request: it compares with develop, where the Flutter bump starts.
+env:
+  BASE_SHA: ${{ github.event.pull_request.base.sha || 'origin/develop' }}
+  HEAD_SHA: ${{ github.event.pull_request.head.sha || github.sha }}
+
+jobs:
+  # The check areas the change affects and their time budgets, straight from the check graph.
+  # A change of only documentation affects none, so every other job skips and the gate passes.
+  plan:
+    runs-on: ubuntu-latest
+    outputs:
+      areas: ${{ steps.plan.outputs.areas }}
+    steps:
+      - uses: actions/checkout@v6
+        with:
+          fetch-depth: 0
+      - uses: ./.github/actions/devenv
+      # The last line only: the shell may print its own messages before the JSON.
+      - id: plan
+        run: echo "areas=$(devenv shell -- cargo xtask check --list --base "$BASE_SHA" | tail -n 1)" >> "$GITHUB_OUTPUT"
+
+  check:
+    name: check (${{ matrix.area.area }})
+    needs: plan
+    if: needs.plan.outputs.areas != '[]'
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        area: ${{ fromJSON(needs.plan.outputs.areas) }}
+    steps:
+      - uses: actions/checkout@v6
+        with:
+          fetch-depth: 0
+      - uses: ./.github/actions/devenv
+      # Untimed: the budget covers the area's steps, not the shell's first build or xtask's
+      # compile.
+      - run: devenv shell -- cargo xtask --help > /dev/null
+      - if: matrix.area.area != 'quality'
+        timeout-minutes: ${{ matrix.area.budget_minutes }}
+        run: devenv shell -- cargo xtask check ${{ matrix.area.area }}
+      # The review's default base, origin/HEAD, does not exist in a CI checkout.
+      - if: matrix.area.area == 'quality'
+        timeout-minutes: ${{ matrix.area.budget_minutes }}
+        run: devenv shell -- cargo xtask review gate --base "$BASE_SHA"
+      - if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: results-check-${{ matrix.area.area }}
+          path: .xtask/results/
+          if-no-files-found: ignore
+
+  commits:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v6
+        with:
+          fetch-depth: 0
+      - uses: ./.github/actions/devenv
+      - run: devenv shell -- cargo xtask hook commit-msg --range "$BASE_SHA..$HEAD_SHA"
+
+  # The display, Mesa, Vulkan, GTK and Chromium come from the devenv shell, not apt.
+  e2e:
+    name: e2e (${{ matrix.suite }})
+    needs: plan
+    if: needs.plan.outputs.areas != '[]'
+    runs-on: ubuntu-latest
+    timeout-minutes: 60
+    strategy:
+      fail-fast: false
+      matrix:
+        suite: [panel, panel-web]
+    steps:
+      - uses: actions/checkout@v6
+      - uses: ./.github/actions/devenv
+      - run: devenv shell -- cargo xtask e2e ${{ matrix.suite }}
+      - if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: results-e2e-${{ matrix.suite }}
+          path: .xtask/results/${{ matrix.suite }}/
+          if-no-files-found: ignore
+
+  # Runs when checks or suites fail too, since a failure is what the description must show. Jobs
+  # of other pull requests and the prune write the evidence branch at the same time; the publish
+  # retries its push onto their commits instead of queueing behind them.
+  report:
+    needs: [plan, check, e2e]
+    if: always() && needs.plan.outputs.areas != '[]'
+    runs-on: ubuntu-latest
+    # The evidence branch, the description and code scanning. Fork pull requests get a read
+    # only token whatever is asked here, so they get the job summary instead.
+    permissions:
+      contents: write
+      pull-requests: write
+      security-events: write
+    steps:
+      - uses: actions/checkout@v6
+        with:
+          fetch-depth: 0
+      - uses: actions/download-artifact@v4
+        with:
+          pattern: results-*
+          path: .xtask/results/inputs
+      - uses: ./.github/actions/devenv
+      - run: devenv shell -- cargo xtask review report --base "$BASE_SHA"
+      - if: github.event.pull_request.head.repo.full_name == github.repository
+        uses: github/codeql-action/upload-sarif@v4
+        with:
+          sarif_file: .xtask/review/review.sarif
+          category: typewriter
+      - if: github.event.pull_request.head.repo.full_name == github.repository
+        run: devenv shell -- cargo xtask evidence publish --pr ${{ github.event.number }} --sha "$HEAD_SHA"
+        env:
+          GH_TOKEN: ${{ github.token }}
+      # Fork pull requests and dispatched runs, which have no description to write.
+      - if: github.event.pull_request.head.repo.full_name != github.repository
+        run: devenv shell -- cargo xtask evidence summary --sha "$HEAD_SHA" >> "$GITHUB_STEP_SUMMARY"
+
+  # Skipped jobs pass only when the plan found nothing to check.
+  gate:
+    needs: [plan, check, commits, e2e, report]
+    if: always()
+    runs-on: ubuntu-latest
+    steps:
+      - env:
+          PLAN: ${{ needs.plan.result }}
+          COMMITS: ${{ needs.commits.result }}
+          SUITES: ${{ needs.plan.outputs.areas == '[]' && 'skipped' || 'success' }}
+          CHECK: ${{ needs.check.result }}
+          E2E: ${{ needs.e2e.result }}
+          REPORT: ${{ needs.report.result }}
+        run: >-
+          test "$PLAN" = success && test "$COMMITS" = success
+          && test "$CHECK" = "$SUITES" && test "$E2E" = "$SUITES" && test "$REPORT" = "$SUITES"
