@@ -13,7 +13,7 @@ use serde_json::Value;
 
 use crate::lock::HeavyLock;
 use crate::stack::client_configuration::ClientConfiguration;
-use crate::{CommandExt, Context, Scratch, cluster};
+use crate::{CommandExt, Context, Scratch, cluster, secrets};
 
 /// Tools deploy runs, for the doctor.
 pub const TOOLS: &[&str] = &["wash", "crane", "kubectl", "tar", "git"];
@@ -72,16 +72,11 @@ impl Cluster {
         "gabber235"
     }
 
-    fn password(self, ctx: &Context) -> Result<String> {
+    /// The registry password, from the cluster's secrets profile.
+    fn password(self) -> Result<String> {
         match self {
-            Self::Local => {
-                let file = ctx.root.join("backend/.artifact_keeper_password");
-                let password = fs::read_to_string(&file)
-                    .with_context(|| format!("cannot read {}", file.display()))?;
-                Ok(password.trim().to_owned())
-            }
-            Self::Ci => std::env::var("CI_REGISTRY_PASSWORD")
-                .context("CI_REGISTRY_PASSWORD must hold the CI cluster's registry password"),
+            Self::Local => secrets::local_registry_password(),
+            Self::Ci => Ok(secrets::Ci::load()?.registry_password),
         }
     }
 }
@@ -95,9 +90,18 @@ pub(crate) struct Component {
 
 pub fn deploy(ctx: &Context, cluster: Cluster) -> Result<()> {
     ensure_main_checkout(ctx)?;
+    publish(ctx, cluster, &cluster.password()?)
+}
+
+/// Deploys to the CI cluster with the `ci` secrets the caller loaded already.
+pub fn deploy_ci(ctx: &Context, secrets: &secrets::Ci) -> Result<()> {
+    ensure_main_checkout(ctx)?;
+    publish(ctx, Cluster::Ci, &secrets.registry_password)
+}
+
+fn publish(ctx: &Context, cluster: Cluster, password: &str) -> Result<()> {
     // The components compile against the generated Skir sources.
     crate::generate::generate(ctx, None)?;
-    let password = cluster.password(ctx)?;
     let components = deployable(ctx)?;
     {
         let _lock = HeavyLock::acquire("deploy")?;
@@ -121,7 +125,7 @@ pub fn deploy(ctx: &Context, cluster: Cluster) -> Result<()> {
                 "-u",
                 cluster.user(),
                 "--password",
-                &password,
+                password,
                 &reference,
             ],
         )
@@ -129,7 +133,7 @@ pub fn deploy(ctx: &Context, cluster: Cluster) -> Result<()> {
         .run()
         .with_context(|| format!("cannot push {reference}"))?;
     }
-    push_database_image(ctx, cluster, &password)?;
+    push_database_image(ctx, cluster, password)?;
     if let Cluster::Ci = cluster {
         let state = ctx.root.join(cluster::STATE);
         fs::create_dir_all(&state).with_context(|| format!("cannot create {}", state.display()))?;

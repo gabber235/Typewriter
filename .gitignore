@@ -160,7 +160,6 @@ plans/
 /docs/*
 !/docs/vision/
 !/docs/design/
-backend/.artifact_keeper_password
 AGENTS.local.md
 
 # devenv shell state; devenv.lock is committed

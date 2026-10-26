@@ -27,6 +27,10 @@ in
     # Coverage of `cargo xtask check backend`. Its own test suite fails inside the macOS Nix
     # sandbox, so the package is used without running it.
     (pkgs.cargo-llvm-cov.overrideAttrs { doCheck = false; })
+    # Secrets (secretspec.toml): `secretspec run` for the tools outside xtask, at the version of
+    # xtask's secretspec crate, and the 1Password CLI its vault provider calls.
+    pkgs.secretspec
+    pkgs._1password-cli
   ]
   ++ pkgs.lib.optionals pkgs.stdenv.isLinux [
     # The end to end suites on Linux (CI): the virtual display and recorder `cargo xtask evidence`
