@@ -17,7 +17,11 @@ jobs:
     runs-on: 'ubuntu-latest'
     steps:
     - uses: actions/checkout@v4
+    - uses: ./.github/actions/secrets
+      with:
+        scope: modrinth
+        token: ${{ secrets.OP_SERVICE_ACCOUNT_TOKEN }}
     - uses: funnyboy-roks/modrinth-auto-desc@v1.6
       with:
-        auth-token: ${{ secrets.MODRINTH_TOKEN }}
+        auth-token: ${{ env.MODRINTH_TOKEN }}
         slug: 'typewriter'
