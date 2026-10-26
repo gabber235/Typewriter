@@ -7,7 +7,7 @@ use component_test::{
     primary(
         package = "component-test-messaging",
         target = "component_test_messaging"
-    ),
+    )
 )]
 pub struct SyntheticMessaging;
 
@@ -39,7 +39,7 @@ async fn host_publish_invokes_component(
     primary(
         package = "component-test-messaging",
         target = "component_test_messaging"
-    ),
+    )
 )]
 pub struct SyntheticMessagingRequest;
 
@@ -78,7 +78,7 @@ async fn component_request_uses_scripted_reply(
     dependency(
         package = "component-test-responder",
         target = "component_test_responder"
-    ),
+    )
 )]
 pub struct SyntheticComposed;
 
@@ -100,7 +100,9 @@ impl FixtureSpec for SyntheticComposed {
 }
 
 #[component_test(SyntheticComposed)]
-async fn optional_component_replies(context: &mut TestContext<SyntheticComposed>) -> TestResult {
+async fn composed_request_and_reply_share_one_trace(
+    context: &mut TestContext<SyntheticComposed>,
+) -> TestResult {
     context
         .messaging()?
         .publish("test.request", b"composed".to_vec())
@@ -115,5 +117,66 @@ async fn optional_component_replies(context: &mut TestContext<SyntheticComposed>
     assert!(first.span_context.is_valid());
     assert_eq!(first.span_context.trace_id(), reply.span_context.trace_id());
     assert_ne!(first.span_context.span_id(), reply.span_context.span_id());
+    Ok(())
+}
+
+#[component_fixture(
+    id = "synthetic-isolation",
+    primary(
+        package = "component-test-messaging",
+        target = "component_test_messaging"
+    )
+)]
+pub struct SyntheticIsolation;
+
+impl FixtureSpec for SyntheticIsolation {
+    fn configure(builder: FixtureBuilder<Self>) -> FixtureBuilder<Self> {
+        builder
+            .otel()
+            .messaging_subscription("test.publish")
+            .stream("ISOLATION", ["isolation.>"])
+    }
+}
+
+/// The number of messages the case's own stream holds.
+async fn stored(context: &TestContext<SyntheticIsolation>) -> anyhow::Result<u64> {
+    let info = context
+        .messaging()?
+        .request(
+            "$JS.API.STREAM.INFO.ISOLATION",
+            Vec::new(),
+            std::time::Duration::from_secs(2),
+        )
+        .await?;
+    let info: serde_json::Value = serde_json::from_slice(&info)?;
+    info["state"]["messages"]
+        .as_u64()
+        .ok_or_else(|| anyhow::anyhow!("stream info without a message count: {info}"))
+}
+
+/// Both cases leave a message behind and both expect to start without one, so whichever runs
+/// second fails when cases share broker state.
+#[component_test(SyntheticIsolation)]
+#[case::first(1)]
+#[case::second(2)]
+async fn every_case_starts_with_its_own_empty_broker(
+    context: &mut TestContext<SyntheticIsolation>,
+    _case: u8,
+) -> TestResult {
+    assert_eq!(stored(context).await?, 0);
+
+    context
+        .messaging()?
+        .publish("isolation.mark", b"left behind".to_vec())
+        .await?;
+
+    let deadline = tokio::time::Instant::now() + std::time::Duration::from_secs(2);
+    while stored(context).await? == 0 {
+        anyhow::ensure!(
+            tokio::time::Instant::now() < deadline,
+            "the stream never stored the message"
+        );
+        tokio::time::sleep(std::time::Duration::from_millis(10)).await;
+    }
     Ok(())
 }

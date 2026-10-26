@@ -168,7 +168,7 @@ pub(crate) async fn start<F: FixtureDeclaration>(
     let mut messaging = None;
     let mut plugin_bindings = PluginBindings::new();
     if builder.messaging {
-        let driver = crate::nats::NatsDriver::start(&workload_id).await?;
+        let driver = crate::nats::NatsDriver::start(&workload_id, &builder.streams).await?;
         plugins.push(driver.plugin.clone());
         plugin_bindings = plugin_bindings.with_plugin(
             PluginBindingSet::new("wasmcloud-nats")
@@ -178,7 +178,15 @@ pub(crate) async fn start<F: FixtureDeclaration>(
                     ("jwt".into(), driver.credentials.jwt().to_owned()),
                     ("nkey-seed".into(), driver.credentials.seed().to_owned()),
                     ("subject-allow".into(), ">".into()),
-                    ("stream-allow".into(), "TYPEWRITER_MEMBERSHIP".into()),
+                    (
+                        "stream-allow".into(),
+                        builder
+                            .streams
+                            .iter()
+                            .map(|stream| stream.name.as_str())
+                            .collect::<Vec<_>>()
+                            .join(","),
+                    ),
                 ])),
         );
         for descriptor in F::DESCRIPTOR.components() {

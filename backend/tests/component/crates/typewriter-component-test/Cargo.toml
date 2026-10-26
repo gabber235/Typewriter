@@ -21,6 +21,3 @@ uuid.workspace = true
 wash-runtime.workspace = true
 wasmcloud-plugin-surrealdb.workspace = true
 wasmcloud-utils = { path = "../../../../wasmcloud-utils" }
-
-[dev-dependencies]
-trybuild = "1"

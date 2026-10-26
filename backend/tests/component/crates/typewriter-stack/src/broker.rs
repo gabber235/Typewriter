@@ -29,6 +29,7 @@ use nats_jwt_rs::user::User;
 use nkeys::KeyPair;
 use serde::{Deserialize, Serialize};
 use tokio::net::TcpListener;
+use typewriter_component_test::topology;
 
 #[derive(clap::Args)]
 pub struct BrokerArgs {
@@ -43,16 +44,6 @@ pub struct BrokerArgs {
     #[arg(long)]
     accounts: u16,
 }
-
-/// The JetStream stream membership events are published to, as the cluster defines it.
-const MEMBERSHIP_STREAM: &str = "TYPEWRITER_MEMBERSHIP";
-const MEMBERSHIP_SUBJECTS: [&str; 5] = [
-    "cloud.from.organization.*.members.changed",
-    "cloud.from.organization.*.join_requests.changed",
-    "cloud.from.organization.*.join_codes.changed",
-    "cloud.from.user.*.join_requests.changed",
-    "cloud.from.user.*.organizations.changed",
-];
 
 /// Runs the broker and its account service until the supervisor stops it.
 pub async fn run(args: BrokerArgs) -> Result<()> {
@@ -130,11 +121,11 @@ pub async fn run(args: BrokerArgs) -> Result<()> {
     let stream_manager_jwt = user_jwt(
         &typewriter,
         &stream_manager,
-        "membership-stream-manager",
+        "stream-manager",
         Permissions::default(),
         false,
     )?;
-    create_membership_stream(broker.endpoint(), &stream_manager_jwt, &stream_manager).await?;
+    create_streams(broker.endpoint(), &stream_manager_jwt, &stream_manager).await?;
 
     BrokerConnection {
         endpoint: broker.endpoint().to_owned(),
@@ -199,7 +190,8 @@ fn service_import(subject: &str, account: &KeyPair, local_subject: &str) -> Impo
     }
 }
 
-async fn create_membership_stream(endpoint: &str, jwt: &str, user: &KeyPair) -> Result<()> {
+/// Creates the topology's streams on the subjects the panel receives events on.
+async fn create_streams(endpoint: &str, jwt: &str, user: &KeyPair) -> Result<()> {
     let seed = user.seed()?;
     let key = Arc::new(KeyPair::from_seed(&seed)?);
     let client = async_nats::ConnectOptions::with_jwt(jwt.to_owned(), move |nonce| {
@@ -209,18 +201,18 @@ async fn create_membership_stream(endpoint: &str, jwt: &str, user: &KeyPair) -> 
     .connect(endpoint)
     .await
     .context("connecting as the host user")?;
-    async_nats::jetstream::new(client)
-        .get_or_create_stream(async_nats::jetstream::stream::Config {
-            name: MEMBERSHIP_STREAM.into(),
-            subjects: MEMBERSHIP_SUBJECTS
-                .iter()
-                .map(|subject| (*subject).into())
-                .collect(),
-            storage: async_nats::jetstream::stream::StorageType::Memory,
-            ..Default::default()
-        })
-        .await
-        .context("creating the membership stream")?;
+    let jetstream = async_nats::jetstream::new(client);
+    for stream in topology::STREAMS {
+        jetstream
+            .get_or_create_stream(async_nats::jetstream::stream::Config {
+                name: stream.name.into(),
+                subjects: stream.delivered_subjects().collect(),
+                storage: async_nats::jetstream::stream::StorageType::Memory,
+                ..Default::default()
+            })
+            .await
+            .with_context(|| format!("creating the {} stream", stream.name))?;
+    }
     Ok(())
 }
 

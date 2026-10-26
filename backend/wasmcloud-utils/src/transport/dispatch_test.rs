@@ -66,8 +66,22 @@ fn invalid_captured_token_fails_before_the_handler() {
 }
 
 #[test]
-fn subscriptions_list_one_exact_subject_per_matched_pattern() {
-    assert!(SUBSCRIPTIONS.contains(&"typewriter.from.service.*.heartbeat"));
-    assert!(SUBSCRIPTIONS.contains(&"service.*.binding.query"));
-    assert!(SUBSCRIPTIONS.iter().all(|subject| !subject.contains('>')));
+fn every_subscription_is_listed_once_and_reaches_a_route() {
+    let mut seen = std::collections::HashSet::new();
+    for subscription in SUBSCRIPTIONS {
+        assert!(seen.insert(subscription), "{subscription} is listed twice");
+        assert!(!subscription.contains('>'), "{subscription} is not exact");
+
+        let subject = subscription.replace('*', "s1");
+        let error = block_on(dispatch(
+            nats_message(&subject, b"not skir"),
+            heartbeat_only!(async |_, _| unreachable!()),
+        ))
+        .unwrap_err();
+        assert_ne!(
+            error.slug(),
+            "transport-unmatched-subject",
+            "{subscription} matches no route"
+        );
+    }
 }

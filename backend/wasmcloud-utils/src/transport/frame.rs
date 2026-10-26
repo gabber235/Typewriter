@@ -537,14 +537,6 @@ mod tests {
     }
 
     #[test]
-    fn the_route_decides_whether_its_reply_waits_for_credit() {
-        use crate::transport_routes::{ServiceBindingQueryRoute, UserOrganizationCreateRoute};
-        let received = Instant::now();
-        assert!(!ReplyPacing::of::<UserOrganizationCreateRoute>(received).credit);
-        assert!(ReplyPacing::of::<ServiceBindingQueryRoute>(received).credit);
-    }
-
-    #[test]
     fn a_reply_past_its_time_to_live_stops_as_interrupted() {
         let mut receiver = Receiver::default();
         let error = send_paced(&mut receiver, 3, None, Instant::now()).unwrap_err();

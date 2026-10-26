@@ -14,6 +14,7 @@ use std::sync::Arc;
 use anyhow::{Context as _, Result, bail, ensure};
 use bytes::Bytes;
 use serde_json::json;
+use typewriter_component_test::topology;
 use wash_runtime::engine::Engine;
 use wash_runtime::host::allowed_hosts::AllowedHost;
 use wash_runtime::host::http::{
@@ -193,7 +194,14 @@ pub async fn run(args: HostArgs) -> Result<()> {
                 ("jwt".into(), broker.host_jwt.clone()),
                 ("nkey-seed".into(), broker.host_seed.clone()),
                 ("subject-allow".into(), ">".into()),
-                ("stream-allow".into(), "TYPEWRITER_MEMBERSHIP".into()),
+                (
+                    "stream-allow".into(),
+                    topology::STREAMS
+                        .iter()
+                        .map(|stream| stream.name)
+                        .collect::<Vec<_>>()
+                        .join(","),
+                ),
             ])),
     );
     let mut builder = HostBuilder::new()

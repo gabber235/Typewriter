@@ -27,6 +27,7 @@ struct State {
     transcript: VecDeque<MessagingTranscriptEntry>,
     failures: Vec<String>,
     redactions: Vec<Vec<u8>>,
+    arranging: usize,
 }
 
 /// Redacted record of one broker operation observed by the fixture.
@@ -81,6 +82,7 @@ impl MessagingMock {
                 transcript: VecDeque::new(),
                 failures: Vec::new(),
                 redactions,
+                arranging: 0,
             })),
         }
     }
@@ -117,6 +119,20 @@ impl MessagingMock {
         }
     }
 
+    /// Lets broker traffic through unmatched while the returned guard lives.
+    ///
+    /// Setup that a test drives through the components' own requests produces publishes the
+    /// test does not assert. They enter the transcript, but neither satisfy nor violate an
+    /// expectation. Wait until the broker is idle before dropping the guard, so late deliveries
+    /// of the setup are not matched against the test's expectations.
+    pub fn arranging(&self) -> Arranging {
+        self.state
+            .lock()
+            .unwrap_or_else(|error| error.into_inner())
+            .arranging += 1;
+        Arranging { mock: self.clone() }
+    }
+
     /// Returns the bounded redacted broker transcript.
     pub fn transcript(&self) -> Vec<MessagingTranscriptEntry> {
         self.state
@@ -146,6 +162,19 @@ impl MessagingMock {
         message: &HostMessage,
     ) -> Option<ScriptedReply> {
         let mut state = self.state.lock().unwrap_or_else(|error| error.into_inner());
+        if state.arranging > 0 {
+            let body = redact_body(&message.body, &state.redactions);
+            push_transcript(
+                &mut state.transcript,
+                MessagingTranscriptEntry {
+                    operation,
+                    subject: message.subject.clone(),
+                    body,
+                    matched: true,
+                },
+            );
+            return None;
+        }
         let matched = state.expectations.iter().position(|expectation| {
             expectation.operation == operation
                 && expectation.seen < expectation.maximum
@@ -164,15 +193,15 @@ impl MessagingMock {
         };
         let was_matched = matched.is_some();
         let body = redact_body(&message.body, &state.redactions);
-        if state.transcript.len() == TRANSCRIPT_LIMIT {
-            state.transcript.pop_front();
-        }
-        state.transcript.push_back(MessagingTranscriptEntry {
-            operation,
-            subject: message.subject.clone(),
-            body,
-            matched: was_matched,
-        });
+        push_transcript(
+            &mut state.transcript,
+            MessagingTranscriptEntry {
+                operation,
+                subject: message.subject.clone(),
+                body,
+                matched: was_matched,
+            },
+        );
         reply
     }
 
@@ -218,6 +247,32 @@ impl MessagingMock {
             transcript
         )
     }
+}
+
+/// Ends an arranging window of [`MessagingMock::arranging`] when dropped.
+pub struct Arranging {
+    mock: MessagingMock,
+}
+
+impl Drop for Arranging {
+    fn drop(&mut self) {
+        let mut state = self
+            .mock
+            .state
+            .lock()
+            .unwrap_or_else(|error| error.into_inner());
+        state.arranging = state.arranging.saturating_sub(1);
+    }
+}
+
+fn push_transcript(
+    transcript: &mut VecDeque<MessagingTranscriptEntry>,
+    entry: MessagingTranscriptEntry,
+) {
+    if transcript.len() == TRANSCRIPT_LIMIT {
+        transcript.pop_front();
+    }
+    transcript.push_back(entry);
 }
 
 impl MessagingExpectation {
@@ -407,6 +462,25 @@ mod tests {
         assert!(error.contains("observed 0"));
         assert!(error.contains("[REDACTED]"));
         assert!(!error.contains("secret"));
+    }
+
+    #[test]
+    fn arranged_traffic_neither_satisfies_nor_violates_expectations() {
+        let mock = MessagingMock::new(Vec::new());
+        mock.expect_publish("event");
+        let arranging = mock.arranging();
+        mock.record_publish(&message("event", b"setup"));
+        mock.record_publish(&message("other", b"setup"));
+        drop(arranging);
+        assert!(
+            mock.verify()
+                .unwrap_err()
+                .to_string()
+                .contains("observed 0")
+        );
+
+        mock.record_publish(&message("event", b"test"));
+        assert!(mock.verify().is_ok());
     }
 
     #[test]

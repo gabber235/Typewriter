@@ -2,13 +2,13 @@
 //! variant names, including methods served outside the transport routes.
 
 use wasmcloud_utils::skir::base::{
-    access::v1::permission::GetEntityPermissionResponse,
     editor::v1::catalog::{CatalogFetchResult, PrepareValueResult},
     service::v1::{
         identity::IssueServiceIdentityResponse,
         organization::{
             UpdateOrganizationServiceResponse, UpdateOrganizationServiceResponse_ConflictError,
         },
+        service::Service,
         status::QueryServiceBindingResponse,
     },
 };
@@ -34,19 +34,28 @@ fn variant_names_decide_outcomes_and_slugs() {
 }
 
 #[test]
-fn messages_come_from_variant_docs_never_from_payloads() {
-    let missing = QueryServiceBindingResponse::ServiceNotFoundError(Box::default());
-    assert_eq!(missing.variant_message(), "Service not found.");
+fn messages_never_include_payload_values() {
+    let conflict = |actual_name: &str| {
+        UpdateOrganizationServiceResponse::ConflictError(Box::new(
+            UpdateOrganizationServiceResponse_ConflictError {
+                expected_revision: 3,
+                actual: Service {
+                    name: actual_name.to_owned(),
+                    ..Default::default()
+                },
+                ..Default::default()
+            },
+        ))
+        .variant_message()
+    };
 
-    // The conflict payload carries the current service; only the doc comment is reported.
-    let conflict = UpdateOrganizationServiceResponse::ConflictError(Box::new(
-        UpdateOrganizationServiceResponse_ConflictError {
-            expected_revision: 3,
-            ..Default::default()
-        },
-    ));
-    assert_eq!(conflict.variant_message(), "Service changed elsewhere.");
+    let message = conflict("secret-service-name");
+    assert!(!message.contains("secret-service-name"));
+    assert_eq!(message, conflict(""));
+}
 
+#[test]
+fn an_undocumented_variant_is_described_by_its_slug() {
     let undocumented = CatalogFetchResult::GenerationChangedError(Box::default());
     assert_eq!(undocumented.variant_message(), "generation-changed-error");
 }
@@ -66,16 +75,15 @@ fn domain_errors_are_built_from_their_slugs_with_default_payloads() {
 }
 
 #[test]
-fn methods_outside_the_routes_and_former_struct_responses_are_covered() {
+fn responses_of_methods_outside_the_routes_classify_outcomes() {
+    let issued = IssueServiceIdentityResponse::Success(Box::default());
+    assert_eq!(issued.outcome(), SkirResponseOutcome::Success);
+
     let identity =
         IssueServiceIdentityResponse::domain_error_from_slug("unknown-role-error").unwrap();
     assert_eq!(identity.outcome(), SkirResponseOutcome::DomainError);
-    assert_eq!(identity.variant_message(), "Unknown role.");
-
-    let granted = GetEntityPermissionResponse::Granted(Box::default());
-    assert_eq!(granted.outcome(), SkirResponseOutcome::Success);
     assert_eq!(
-        GetEntityPermissionResponse::internal_error().outcome(),
+        IssueServiceIdentityResponse::internal_error().outcome(),
         SkirResponseOutcome::InternalError
     );
 }

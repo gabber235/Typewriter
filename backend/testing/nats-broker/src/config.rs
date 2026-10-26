@@ -14,7 +14,8 @@ use crate::Ports;
 /// The full resolver accepts account JWTs at runtime (`$SYS.REQ.CLAIMS.UPDATE`) and deletes them
 /// on request (`allow_delete`), which is what makes an account per caller cheap. Without a port
 /// the server takes any free one; a websocket listener (without TLS) opens only when its port is
-/// given. `store` holds the resolver's JWTs and the JetStream store.
+/// given. `store` holds the resolver's JWTs and the JetStream store. A user minted here carries
+/// its whole grant in the JWT it connects with, so the control line fits a full panel grant.
 pub(crate) fn render(
     operator: &KeyPair,
     system: &KeyPair,
@@ -39,6 +40,7 @@ system_account: {system_key}
 resolver: {{ type: full, dir: "{store}/jwt", allow_delete: true }}
 resolver_preload: {{ {system_key}: {system_jwt} }}
 jetstream: {{ store_dir: "{store}/js", max_memory_store: 2G }}
+max_control_line: 64KB
 "#
     ))
 }

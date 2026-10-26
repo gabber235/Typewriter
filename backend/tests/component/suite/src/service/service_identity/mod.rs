@@ -1,5 +1,4 @@
-use component_test::{FixtureBuilder, FixtureSpec, component_fixture};
-use typewriter_component_test::prelude::{SchemaPreset, TypewriterFixtureBuilderExt};
+use typewriter_component_test::prelude::*;
 
 mod http_contract;
 mod issuance;
@@ -8,7 +7,7 @@ pub(crate) struct Authentik;
 
 #[component_fixture(
     id = "service-identity",
-    primary(package = "service-identity", target = "service_identity"),
+    primary(package = "service-identity", target = "service_identity")
 )]
 pub struct ServiceIdentity;
 

@@ -10,7 +10,7 @@ const CREDENTIALS: &str = "-----BEGIN NATS USER JWT-----\nfixture.jwt.value\n---
 
 #[component_fixture(
     id = "auth-sentinel",
-    primary(package = "auth-sentinel", target = "auth_sentinel"),
+    primary(package = "auth-sentinel", target = "auth_sentinel")
 )]
 pub struct AuthSentinel;
 
@@ -54,10 +54,19 @@ async fn configured_credentials_are_returned(
 }
 
 #[component_test(AuthSentinel)]
-async fn unknown_path_is_rejected(context: &mut TestContext<AuthSentinel>) -> TestResult {
-    let response = context
+async fn unknown_path_returns_not_found(context: &mut TestContext<AuthSentinel>) -> TestResult {
+    let response = context.http()?.get("/unknown").send().await?;
+
+    assert_eq!(response.status(), http::StatusCode::NOT_FOUND);
+    assert_eq!(response.text().await?, "not found\n");
+    Ok(())
+}
+
+#[component_test(AuthSentinel)]
+async fn incoming_traceparent_is_continued(context: &mut TestContext<AuthSentinel>) -> TestResult {
+    context
         .http()?
-        .get("/unknown")
+        .get("/auth/sentinel?source=component-test")
         .header(
             "traceparent",
             "00-11111111111111111111111111111111-2222222222222222-01",
@@ -65,8 +74,6 @@ async fn unknown_path_is_rejected(context: &mut TestContext<AuthSentinel>) -> Te
         .send()
         .await?;
 
-    assert_eq!(response.status(), http::StatusCode::NOT_FOUND);
-    assert_eq!(response.text().await?, "not found\n");
     let span = context
         .wait_for_span("handle", std::time::Duration::from_secs(2))
         .await?;

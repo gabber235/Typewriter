@@ -9,7 +9,7 @@ Run the suite from the devenv shell at the repository root. This is the supporte
 ```console
 cargo xtask check components
 cargo xtask components service-identity
-cargo xtask components synthetic-http case_000 --jobs 1
+cargo xtask components synthetic-isolation every_case_starts_with_its_own_empty_broker --jobs 1
 cargo xtask components --list
 cargo xtask components service-identity engine_identity_persists_credentials_and_roles --jobs 1 --live
 ```

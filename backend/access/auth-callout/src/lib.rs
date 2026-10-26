@@ -425,7 +425,8 @@ async fn request_permissions(
     Ok(permission_response)
 }
 
-fn convert_permissions(permissions: Permissions) -> NatsPermissions {
+/// The NATS permissions the broker enforces for a permission reply.
+pub fn convert_permissions(permissions: Permissions) -> NatsPermissions {
     use nats_jwt_rs::types::{
         Permission as NatsPermission, ResponsePermission as NatsResponsePermission,
     };

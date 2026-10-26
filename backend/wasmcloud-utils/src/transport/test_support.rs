@@ -7,8 +7,9 @@ use std::task::{Context, Poll, Waker};
 use crate::wasmcloud::messaging::types::NatsMessage;
 
 /// Runs a future that completes without waiting, as every transport path that reaches no broker
-/// call does.
+/// call does, inside the main span a component handler runs in.
 pub(crate) fn block_on<F: Future>(future: F) -> F::Output {
+    let _main_span = otel_wasi::enter_main_span(tracing::info_span!("transport_test"));
     let mut future = pin!(future);
     match future
         .as_mut()

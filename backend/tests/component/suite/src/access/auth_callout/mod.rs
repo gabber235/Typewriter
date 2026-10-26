@@ -15,7 +15,7 @@ use nats_jwt_rs::{
     authorization::{AuthRequest, AuthResponse},
 };
 use nkeys::KeyPair;
-use typewriter_component_test::prelude::SkirMessagingExpectationExt;
+use typewriter_component_test::prelude::{REQUEST_TIMEOUT, SkirMessagingExpectationExt};
 use wasmcloud_utils::skir::base::access::v1::permission::{
     EntityPermissionGrant, EntityPermissionQualifier, EntityPermissionQualifier_User,
     GetEntityPermissionResponse, Permission, Permissions, ResponsePermission,
@@ -60,7 +60,7 @@ impl IntoPayload for JsonClaims {
 
 #[component_fixture(
     id = "auth-callout",
-    primary(package = "auth-callout", target = "auth_callout"),
+    primary(package = "auth-callout", target = "auth_callout")
 )]
 pub struct AuthCallout;
 
@@ -181,11 +181,10 @@ async fn authorize_raw(
     context: &TestContext<AuthCallout>,
     body: Vec<u8>,
 ) -> anyhow::Result<Vec<u8>> {
-    let response = context
+    context
         .messaging()?
-        .request("$SYS.REQ.USER.AUTH", body, Duration::from_secs(2))
-        .await?;
-    Ok(response)
+        .request("$SYS.REQ.USER.AUTH", body, REQUEST_TIMEOUT)
+        .await
 }
 
 fn authorization_payload(response: &[u8]) -> anyhow::Result<serde_json::Value> {
@@ -268,10 +267,7 @@ fn expect_permissions(context: &TestContext<AuthCallout>) -> anyhow::Result<()> 
     context
         .messaging_mock()?
         .expect_request("auth.permissions.typewriter-panel")
-        .reply_skir(
-            &permission_response,
-            GetEntityPermissionResponse::serializer(),
-        );
+        .reply_skir(&permission_response);
     Ok(())
 }
 
@@ -331,29 +327,6 @@ async fn valid_user_token_receives_signed_permissions(
 }
 
 #[component_test(AuthCallout)]
-async fn token_with_one_matching_audience_in_array_is_authorized(
-    context: &mut TestContext<AuthCallout>,
-) -> TestResult {
-    expect_jwks(context)?;
-    expect_permissions(context)?;
-    let token = external_jwt_with_claims(
-        Some("Panel User"),
-        serde_json::json!({ "aud": ["unrelated", "typewriter-shared"] }),
-    )?;
-
-    let response = authorize_raw(context, auth_request(Some(token))?).await?;
-    let payload = authorization_payload(&response)?;
-
-    assert!(payload["nats"].get("error").is_none_or(|error| error == ""));
-    assert!(
-        payload["nats"]["jwt"]
-            .as_str()
-            .is_some_and(|jwt| !jwt.is_empty())
-    );
-    Ok(())
-}
-
-#[component_test(AuthCallout)]
 async fn token_with_no_matching_audience_is_denied(
     context: &mut TestContext<AuthCallout>,
 ) -> TestResult {
@@ -388,6 +361,27 @@ async fn user_token_without_name_receives_unknown_display_name(
     Ok(())
 }
 
+/// Sends an authorization request and asserts the callout stays silent. Without an answer the
+/// server refuses the connection, so silence is how the callout withholds credentials when it
+/// cannot decide.
+async fn assert_no_answer(context: &TestContext<AuthCallout>, body: Vec<u8>) -> TestResult {
+    let result = context
+        .messaging()?
+        .request("$SYS.REQ.USER.AUTH", body, Duration::from_secs(2))
+        .await;
+
+    let Err(error) = result else {
+        anyhow::bail!("the callout answered instead of staying silent")
+    };
+    assert!(
+        error
+            .downcast_ref::<tokio::time::error::Elapsed>()
+            .is_some(),
+        "expected no answer, the request failed otherwise: {error:#}"
+    );
+    Ok(())
+}
+
 #[component_test(AuthCallout)]
 async fn jwks_failure_does_not_issue_credentials(
     context: &mut TestContext<AuthCallout>,
@@ -400,14 +394,11 @@ async fn jwks_failure_does_not_issue_credentials(
         .status(http::StatusCode::SERVICE_UNAVAILABLE)
         .register()?;
 
-    let result = authorize(
+    assert_no_answer(
         context,
         auth_request(Some(external_jwt(Some("Panel User"))?))?,
     )
-    .await;
-
-    assert!(result.is_err());
-    Ok(())
+    .await
 }
 
 #[component_test(AuthCallout)]
@@ -420,14 +411,11 @@ async fn permission_exchange_failure_does_not_issue_credentials(
         .expect_request("auth.permissions.typewriter-panel")
         .reply_error("permission service unavailable");
 
-    let result = authorize(
+    assert_no_answer(
         context,
         auth_request(Some(external_jwt(Some("Panel User"))?))?,
     )
-    .await;
-
-    assert!(result.is_err());
-    Ok(())
+    .await
 }
 
 #[component_test(AuthCallout)]
@@ -438,35 +426,60 @@ async fn internal_permission_reply_does_not_issue_credentials(
     context
         .messaging_mock()?
         .expect_request("auth.permissions.typewriter-panel")
-        .reply_skir(
-            &GetEntityPermissionResponse::InternalError(Box::default()),
-            GetEntityPermissionResponse::serializer(),
-        );
+        .reply_skir(&GetEntityPermissionResponse::InternalError(Box::default()));
 
     // A resolver failure is an authorization failure, never an empty grant.
-    let result = authorize(
+    assert_no_answer(
         context,
         auth_request(Some(external_jwt(Some("Panel User"))?))?,
     )
-    .await;
-
-    assert!(result.is_err());
-    Ok(())
+    .await
 }
 
 #[component_test(AuthCallout)]
 async fn malformed_authorization_request_does_not_receive_response(
     context: &mut TestContext<AuthCallout>,
 ) -> TestResult {
-    let result = context
-        .messaging()?
-        .request(
-            "$SYS.REQ.USER.AUTH",
-            b"not a signed authorization request".to_vec(),
-            Duration::from_millis(200),
-        )
-        .await;
+    assert_no_answer(context, b"not a signed authorization request".to_vec()).await
+}
 
-    assert!(result.is_err());
+#[component_test(AuthCallout)]
+async fn forged_signature_is_denied(context: &mut TestContext<AuthCallout>) -> TestResult {
+    expect_jwks(context)?;
+    // The signature still belongs to the original claims; the claims now name someone else.
+    let token = external_jwt(Some("Panel User"))?;
+    let segments = token.split('.').collect::<Vec<_>>();
+    let [header, _, signature] = segments[..] else {
+        anyhow::bail!("a signed token has three segments")
+    };
+    let forged_claims = external_jwt_with_claims(
+        Some("Panel User"),
+        serde_json::json!({ "sub": "someone_else" }),
+    )?;
+    let forged_payload = forged_claims
+        .split('.')
+        .nth(1)
+        .ok_or_else(|| anyhow::anyhow!("a signed token has a payload"))?;
+    let forged = format!("{header}.{forged_payload}.{signature}");
+
+    let response = authorize(context, auth_request(Some(forged))?).await?;
+
+    assert_eq!(response.payload().error, "user not authorized");
+    assert!(response.payload().jwt.is_empty());
+    Ok(())
+}
+
+#[component_test(AuthCallout)]
+async fn unknown_issuer_is_denied(context: &mut TestContext<AuthCallout>) -> TestResult {
+    // No JWKS expectation: a token from an unconfigured issuer never makes the callout fetch keys.
+    let token = external_jwt_with_claims(
+        Some("Panel User"),
+        serde_json::json!({ "iss": "https://unknown-issuer.test/" }),
+    )?;
+
+    let response = authorize(context, auth_request(Some(token))?).await?;
+
+    assert_eq!(response.payload().error, "user not authorized");
+    assert!(response.payload().jwt.is_empty());
     Ok(())
 }

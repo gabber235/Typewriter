@@ -350,7 +350,7 @@ mod tests {
         assert!(rendered.contains("omitted 2 older spans"));
         assert!(!rendered.contains("name=span-0 "));
         assert!(rendered.contains("name=span-2 "));
-        assert!(rendered.contains("name=span-513 "));
+        assert!(rendered.contains(&format!("name=span-{} ", SPAN_LIMIT + 1)));
     }
 
     #[test]

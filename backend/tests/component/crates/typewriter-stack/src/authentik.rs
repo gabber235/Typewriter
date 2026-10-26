@@ -25,6 +25,7 @@ use ed25519_dalek::{Signer as _, SigningKey};
 use serde::Deserialize;
 use serde_json::{Value, json};
 use tokio::net::TcpListener;
+use typewriter_component_test::StackUser;
 
 #[derive(clap::Args)]
 pub struct IdentityArgs {
@@ -41,11 +42,7 @@ const KEY_ID: &str = "stack";
 const TOKEN_LIFETIME_SECONDS: u64 = 3600;
 
 pub async fn run(args: IdentityArgs) -> Result<()> {
-    let users: Vec<FixtureUser> = serde_json::from_str(
-        &std::fs::read_to_string(&args.users)
-            .with_context(|| format!("cannot read {}", args.users.display()))?,
-    )
-    .with_context(|| format!("{} is not a user list", args.users.display()))?;
+    let users = StackUser::read_all(&args.users)?;
     let mut seed = [0; 32];
     getrandom::getrandom(&mut seed).context("generating the signing key")?;
     let stand_in = Arc::new(AuthentikStandIn {
@@ -63,14 +60,6 @@ pub async fn run(args: IdentityArgs) -> Result<()> {
     Ok(())
 }
 
-/// A person the stack knows, shared with the panel tests.
-#[derive(Deserialize)]
-struct FixtureUser {
-    username: String,
-    password: String,
-    subject: String,
-}
-
 /// A service account `service-identity` created; it signs in with its username and app password.
 struct ServiceAccount {
     token: String,
@@ -80,7 +69,7 @@ struct ServiceAccount {
 struct AuthentikStandIn {
     base: String,
     signing: SigningKey,
-    users: Vec<FixtureUser>,
+    users: Vec<StackUser>,
     service_accounts: Mutex<HashMap<String, ServiceAccount>>,
     next_account: AtomicI64,
     /// Set by failure scenarios through `PUT /stack/outage`.

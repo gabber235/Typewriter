@@ -15,6 +15,7 @@ use base64::engine::general_purpose::STANDARD;
 use futures_util::StreamExt as _;
 use nkeys::KeyPair;
 use serde::Deserialize;
+use typewriter_component_test::StackUser;
 use wasmcloud_utils::skir::base::access::v1::permission::{
     EntityPermissionQualifier, EntityPermissionQualifier_User,
 };
@@ -48,27 +49,13 @@ pub struct StackEndpoints {
     pub nats: u16,
 }
 
-/// A person the stack knows.
-#[derive(Deserialize)]
-pub struct FixtureUser {
-    pub username: String,
-    pub password: String,
-    pub subject: String,
-    /// Names of the organizations the person belongs to once the stack is provisioned.
-    pub organizations: Vec<String>,
-}
-
 impl StackEndpoints {
-    pub fn users(&self) -> Result<Vec<FixtureUser>> {
-        serde_json::from_str(
-            &std::fs::read_to_string(&self.users)
-                .with_context(|| format!("cannot read {}", self.users.display()))?,
-        )
-        .with_context(|| format!("{} is not a user list", self.users.display()))
+    pub fn users(&self) -> Result<Vec<StackUser>> {
+        StackUser::read_all(&self.users)
     }
 
     /// The stack's owner: the first fixture user who belongs to an organization.
-    pub fn owner(&self) -> Result<FixtureUser> {
+    pub fn owner(&self) -> Result<StackUser> {
         self.users()?
             .into_iter()
             .find(|user| !user.organizations.is_empty())
@@ -91,7 +78,7 @@ pub struct Session {
 impl Session {
     pub async fn sign_in(
         endpoints: &StackEndpoints,
-        user: &FixtureUser,
+        user: &StackUser,
         organization: Option<&RecordId>,
     ) -> Result<Self> {
         let http = reqwest::Client::new();
@@ -200,7 +187,7 @@ impl Session {
 async fn access_token(
     http: &reqwest::Client,
     endpoints: &StackEndpoints,
-    user: &FixtureUser,
+    user: &StackUser,
 ) -> Result<String> {
     #[derive(Deserialize)]
     struct Token {

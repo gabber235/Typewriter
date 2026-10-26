@@ -222,8 +222,23 @@ pub async fn reply_handler_result<R>(
 where
     R: crate::SkirResponse,
 {
+    reply_handler_result_with(msg, result, async move |msg, body| {
+        reply(msg, body, pacing).await
+    })
+    .await
+}
+
+/// Encodes a handler result like [`reply_handler_result`] and hands the reply body to `send`.
+pub(crate) async fn reply_handler_result_with<R>(
+    msg: types::NatsMessage,
+    result: Result<R, otel_wasi::Error>,
+    send: impl AsyncFnOnce(types::NatsMessage, Vec<u8>) -> Result<(), otel_wasi::Error>,
+) -> Result<(), otel_wasi::Error>
+where
+    R: crate::SkirResponse,
+{
     match result {
-        Ok(response) => reply_response(msg, response, pacing).await,
+        Ok(response) => reply_response(msg, response, send).await,
         Err(error) => {
             let response = R::internal_error();
 
@@ -233,7 +248,7 @@ where
                 "messaging.response.success" = false,
             );
 
-            reply(msg, response.to_skir_bytes(), pacing).await?;
+            send(msg, response.to_skir_bytes()).await?;
             Err(error)
         }
     }
@@ -242,7 +257,7 @@ where
 async fn reply_response<R>(
     msg: types::NatsMessage,
     response: R,
-    pacing: transport::ReplyPacing,
+    send: impl AsyncFnOnce(types::NatsMessage, Vec<u8>) -> Result<(), otel_wasi::Error>,
 ) -> Result<(), otel_wasi::Error>
 where
     R: crate::SkirResponse,
@@ -261,7 +276,7 @@ where
         otel_wasi::main_attribute!("messaging.response.message" = message.clone(),);
     }
 
-    reply(msg, response.to_skir_bytes(), pacing).await?;
+    send(msg, response.to_skir_bytes()).await?;
 
     match outcome {
         crate::SkirResponseOutcome::Success | crate::SkirResponseOutcome::DomainError => Ok(()),

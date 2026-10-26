@@ -1,8 +1,7 @@
 use std::time::Duration;
 
-use component_test::{TestContext, TestResult, component_test};
 use json_matcher::{JsonMatcher, assert_jm, create_json_matcher};
-use typewriter_component_test::prelude::{DatabaseHandle, SkirHttpExt};
+use typewriter_component_test::{SkirHttpResponse, prelude::*};
 use wasmcloud_utils::{
     skir::base::service::v1::{
         identity::{IssueServiceIdentityRequest, IssueServiceIdentityResponse},
@@ -13,24 +12,22 @@ use wasmcloud_utils::{
 
 use super::{Authentik, ServiceIdentity};
 
+type Context = TestContext<ServiceIdentity>;
+
 fn host_role() -> ServiceRole {
     skir_variant!(ServiceRole::Host {
         version: "1.0.0".into(),
     })
 }
 
-fn request(role: ServiceRole) -> IssueServiceIdentityRequest {
-    IssueServiceIdentityRequest {
-        role,
-        _unrecognized: None,
-    }
+fn custom_role(name: &str) -> ServiceRole {
+    skir_variant!(ServiceRole::Custom {
+        name: name.into(),
+        version: "1.0.0".into(),
+    })
 }
 
-fn expect_account_creation(
-    context: &TestContext<ServiceIdentity>,
-    user_uid: &str,
-    user_pk: i64,
-) -> TestResult {
+fn expect_account_creation(context: &Context, user_uid: &str, user_pk: i64) -> TestResult {
     context
         .http_mock::<Authentik>()?
         .expect()
@@ -63,63 +60,105 @@ fn expect_account_creation(
 }
 
 async fn issue(
-    context: &TestContext<ServiceIdentity>,
-    request: &IssueServiceIdentityRequest,
-) -> anyhow::Result<typewriter_component_test::SkirHttpResponse<IssueServiceIdentityResponse>> {
+    context: &Context,
+    role: ServiceRole,
+) -> anyhow::Result<SkirHttpResponse<IssueServiceIdentityResponse>> {
     context
         .http()?
         .skir_post(
             "/service/identity/issue",
-            request,
-            IssueServiceIdentityRequest::serializer(),
-            IssueServiceIdentityResponse::serializer(),
+            &IssueServiceIdentityRequest {
+                role,
+                ..Default::default()
+            },
         )
         .await
 }
 
-#[component_test(ServiceIdentity)]
-async fn built_in_custom_role_name_is_rejected(
-    context: &mut TestContext<ServiceIdentity>,
-) -> TestResult {
-    let response = issue(
-        context,
-        &request(ServiceRole::Custom(Box::new(ServiceRole_Custom {
-            name: "host".into(),
-            version: "1.0.0".into(),
-            _unrecognized: None,
-        }))),
-    )
-    .await?;
+async fn services(context: &Context) -> anyhow::Result<serde_json::Value> {
+    context
+        .database()?
+        .query_json("SELECT id, role FROM service")
+        .await
+}
 
+/// A role the identity policy refuses before any account exists.
+#[derive(Debug)]
+enum RefusedRole {
+    /// A role variant this component does not know.
+    Unknown,
+    /// A version that is not semantic.
+    InvalidVersion,
+    /// A custom role whose name is not a snake case identifier.
+    InvalidCustomName,
+    /// A custom role named like a built in role.
+    BuiltinCustomName,
+}
+
+/// A refused role is rejected for its own reason, provisions no account and stores nothing.
+///
+/// The fixture registers no identity provider expectation, so provisioning an account fails the
+/// case.
+#[component_test(ServiceIdentity)]
+#[case::unknown_role(RefusedRole::Unknown)]
+#[case::invalid_version(RefusedRole::InvalidVersion)]
+#[case::invalid_custom_name(RefusedRole::InvalidCustomName)]
+#[case::builtin_custom_name(RefusedRole::BuiltinCustomName)]
+async fn refused_role_is_rejected_without_an_account(
+    context: &mut Context,
+    refused: RefusedRole,
+) -> TestResult {
+    let role = match refused {
+        RefusedRole::Unknown => ServiceRole::Unknown(None),
+        RefusedRole::InvalidVersion => skir_variant!(ServiceRole::Host {
+            version: "latest".into(),
+        }),
+        RefusedRole::InvalidCustomName => custom_role("Not An Id"),
+        RefusedRole::BuiltinCustomName => custom_role("host"),
+    };
+
+    let response = issue(context, role).await?;
+
+    let rejected_for_its_reason = matches!(
+        (&refused, &response.body),
+        (
+            RefusedRole::Unknown,
+            IssueServiceIdentityResponse::UnknownRoleError(_)
+        ) | (
+            RefusedRole::InvalidVersion,
+            IssueServiceIdentityResponse::RoleVersionInvalidError(_)
+        ) | (
+            RefusedRole::InvalidCustomName,
+            IssueServiceIdentityResponse::CustomRoleNameInvalidError(_)
+        ) | (
+            RefusedRole::BuiltinCustomName,
+            IssueServiceIdentityResponse::BuiltinRoleNameForbiddenError(_)
+        )
+    );
+    assert!(
+        rejected_for_its_reason,
+        "{refused:?} was not rejected for its reason: {:?}",
+        response.body
+    );
     assert_eq!(response.status, http::StatusCode::BAD_REQUEST);
-    assert!(matches!(
-        response.body,
-        IssueServiceIdentityResponse::BuiltinRoleNameForbiddenError(_)
-    ));
+    assert_jm!(services(context).await?, []);
     Ok(())
 }
 
 #[component_test(ServiceIdentity)]
-async fn host_identity_persists_credentials_and_role(
-    context: &mut TestContext<ServiceIdentity>,
-) -> TestResult {
+async fn host_identity_persists_credentials_and_role(context: &mut Context) -> TestResult {
     expect_account_creation(context, "fixture-service-uid", 314)?;
 
-    let response = issue(context, &request(host_role())).await?;
+    let response = issue(context, host_role()).await?;
 
     assert_eq!(response.status, http::StatusCode::OK);
     let IssueServiceIdentityResponse::Success(success) = response.body else {
-        anyhow::bail!("expected successful identity response");
+        anyhow::bail!("expected an issued identity, received {:?}", response.body);
     };
     assert_eq!(success.service_id, "fixture-service-uid");
     assert_eq!(success.username, "fixture-user");
     assert_eq!(success.token, "issued-token");
-
-    let database = context
-        .extension::<DatabaseHandle>()
-        .ok_or_else(|| anyhow::anyhow!("database handle missing"))?;
-    let services = database.query_json("SELECT id, role FROM service").await?;
-    assert_jm!(services, [{
+    assert_jm!(services(context).await?, [{
         "id": "service:`fixture-service-uid`",
         "role": { "type": "host", "version": "1.0.0" }
     }]);
@@ -128,7 +167,7 @@ async fn host_identity_persists_credentials_and_role(
 
 #[component_test(ServiceIdentity)]
 async fn unavailable_provider_returns_service_unavailable_without_persistence(
-    context: &mut TestContext<ServiceIdentity>,
+    context: &mut Context,
 ) -> TestResult {
     context
         .http_mock::<Authentik>()?
@@ -138,23 +177,24 @@ async fn unavailable_provider_returns_service_unavailable_without_persistence(
         .status(http::StatusCode::SERVICE_UNAVAILABLE)
         .register()?;
 
-    let response = issue(context, &request(host_role())).await?;
+    let response = issue(context, host_role()).await?;
 
     assert_eq!(response.status, http::StatusCode::SERVICE_UNAVAILABLE);
-    assert!(matches!(
-        response.body,
-        IssueServiceIdentityResponse::IdentityProviderUnavailableError(_)
-    ));
-    let database = context
-        .extension::<DatabaseHandle>()
-        .ok_or_else(|| anyhow::anyhow!("database handle missing"))?;
-    assert_jm!(database.query_json("SELECT * FROM service").await?, []);
+    assert!(
+        matches!(
+            response.body,
+            IssueServiceIdentityResponse::IdentityProviderUnavailableError(_)
+        ),
+        "{:?}",
+        response.body
+    );
+    assert_jm!(services(context).await?, []);
     Ok(())
 }
 
 #[component_test(ServiceIdentity)]
 async fn rejected_provider_response_returns_internal_error_without_persistence(
-    context: &mut TestContext<ServiceIdentity>,
+    context: &mut Context,
 ) -> TestResult {
     context
         .http_mock::<Authentik>()?
@@ -167,39 +207,30 @@ async fn rejected_provider_response_returns_internal_error_without_persistence(
         }))?
         .register()?;
 
-    let response = tokio::time::timeout(
-        Duration::from_secs(2),
-        issue(context, &request(host_role())),
-    )
-    .await
-    .map_err(|_| {
-        anyhow::anyhow!("identity response timed out after rejected provider response")
-    })??;
+    let response = tokio::time::timeout(Duration::from_secs(2), issue(context, host_role()))
+        .await
+        .map_err(|_| {
+            anyhow::anyhow!("identity response timed out after rejected provider response")
+        })??;
 
     assert_eq!(response.status, http::StatusCode::INTERNAL_SERVER_ERROR);
-    assert!(matches!(
-        response.body,
-        IssueServiceIdentityResponse::InternalError(_)
-    ));
-    let database = context
-        .extension::<DatabaseHandle>()
-        .ok_or_else(|| anyhow::anyhow!("database handle missing"))?;
-    assert_jm!(database.query_json("SELECT * FROM service").await?, []);
+    assert!(
+        matches!(
+            response.body,
+            IssueServiceIdentityResponse::InternalError(_)
+        ),
+        "{:?}",
+        response.body
+    );
+    assert_jm!(services(context).await?, []);
     Ok(())
 }
 
 #[component_test(ServiceIdentity)]
-async fn persistence_failure_deletes_provisioned_account(
-    context: &mut TestContext<ServiceIdentity>,
-) -> TestResult {
-    let database = context
-        .extension::<DatabaseHandle>()
-        .ok_or_else(|| anyhow::anyhow!("database handle missing"))?;
-    database
-        .seed(
-            "CREATE service:duplicate_uid SET name = 'existing', role = { type: 'host', version: '1.0.0' }",
-        )
-        .execute()
+async fn persistence_failure_deletes_provisioned_account(context: &mut Context) -> TestResult {
+    Seed::new()
+        .service("duplicate_uid")
+        .apply(&context.database()?)
         .await?;
     expect_account_creation(context, "duplicate_uid", 314)?;
     context
@@ -210,14 +241,20 @@ async fn persistence_failure_deletes_provisioned_account(
         .status(http::StatusCode::NO_CONTENT)
         .register()?;
 
-    let response = issue(context, &request(host_role())).await?;
+    let response = issue(context, host_role()).await?;
 
     assert_eq!(response.status, http::StatusCode::INTERNAL_SERVER_ERROR);
-    assert!(matches!(
-        response.body,
-        IssueServiceIdentityResponse::InternalError(_)
-    ));
-    let services = database.query_json("SELECT id FROM service").await?;
-    assert_jm!(services, [{ "id": "service:duplicate_uid" }]);
+    assert!(
+        matches!(
+            response.body,
+            IssueServiceIdentityResponse::InternalError(_)
+        ),
+        "{:?}",
+        response.body
+    );
+    assert_jm!(
+        context.database()?.query_json("SELECT id FROM service").await?,
+        [{ "id": "service:duplicate_uid" }]
+    );
     Ok(())
 }

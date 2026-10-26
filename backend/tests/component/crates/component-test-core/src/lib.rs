@@ -19,13 +19,13 @@ mod telemetry;
 
 pub use http_mock::{ExpectationBuilder, HttpMock, MockRequest, MockResponse};
 pub use messaging_mock::{
-    MessagingExpectation, MessagingMock, MessagingOperation, MessagingTranscriptEntry,
+    Arranging, MessagingExpectation, MessagingMock, MessagingOperation, MessagingTranscriptEntry,
     subject_matches,
 };
 pub use outgoing::{buffered, wasi_response};
 
 pub use builder::{
-    ComponentConfiguration, FixtureBuilder, FixtureExtension, FixtureSpec, ProvisionContext,
+    ComponentConfiguration, FixtureBuilder, FixtureExtension, FixtureSpec, ProvisionContext, Stream,
 };
 
 use std::{
@@ -255,6 +255,9 @@ struct Globals {
     admission: Arc<Semaphore>,
     _host_tracer_provider: SdkTracerProvider,
 }
+/// Stack of every runtime worker thread.
+const WORKER_STACK_BYTES: usize = 16 * 1024 * 1024;
+
 static GLOBALS: OnceLock<Result<Globals, String>> = OnceLock::new();
 fn globals() -> Result<&'static Globals> {
     GLOBALS
@@ -272,8 +275,11 @@ fn globals() -> Result<&'static Globals> {
             );
             tracing::subscriber::set_global_default(subscriber)
                 .map_err(|error| format!("initialization phase: host tracing: {error}"))?;
+            // An embedded SurrealDB in an unoptimized build recurses deeper than the default
+            // worker stack allows on some transactions.
             let runtime = Builder::new_multi_thread()
                 .enable_all()
+                .thread_stack_size(WORKER_STACK_BYTES)
                 .build()
                 .map_err(|e| format!("initialization phase: Tokio runtime: {e}"))?;
             let engine = Engine::builder()
@@ -668,9 +674,17 @@ fn failed_before_runtime(
 mod tests {
     use super::*;
     #[test]
-    fn admission_defaults_are_conservative() {
-        assert_eq!(admission_limit(8, None), Ok(2));
+    fn cases_run_one_per_core_by_default() {
+        assert_eq!(admission_limit(8, None), Ok(8));
+    }
+
+    #[test]
+    fn a_machine_without_cores_still_runs_cases() {
         assert_eq!(admission_limit(0, None), Ok(1));
+    }
+
+    #[test]
+    fn a_zero_job_override_is_refused() {
         assert!(admission_limit(2, Some("0")).is_err());
     }
 }

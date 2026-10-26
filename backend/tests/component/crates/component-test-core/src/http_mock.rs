@@ -498,25 +498,54 @@ mod tests {
     }
 
     #[tokio::test]
-    async fn supports_delay_failure_predicate_optional_and_redaction() {
+    async fn a_scripted_delay_reaches_the_outgoing_handler() {
         let mock = HttpMock::new("mock.test".into());
-        mock.redact("body-secret");
+        let delay = Duration::from_millis(50);
+        mock.expect().post().delay(delay).register().unwrap();
+
+        // The outgoing handler waits this long before it answers the component.
+        let response = mock.dispatch(request("body")).await.unwrap();
+
+        assert_eq!(response.delay, delay);
+    }
+
+    #[tokio::test]
+    async fn a_scripted_transport_failure_reaches_the_caller() {
+        let mock = HttpMock::new("mock.test".into());
         mock.expect()
             .body_matches(|body| body == b"failure")
-            .delay(Duration::from_millis(1))
             .transport_failure("reset")
             .register()
             .unwrap();
+
         let response = mock.dispatch(request("failure")).await.unwrap();
+
         assert_eq!(response.failure.as_deref(), Some("reset"));
+    }
+
+    #[tokio::test]
+    async fn an_optional_expectation_may_go_unmet() {
+        let mock = HttpMock::new("mock.test".into());
         mock.expect().get().optional().register().unwrap();
+
+        assert!(mock.verify().is_ok());
+    }
+
+    #[tokio::test]
+    async fn secrets_never_reach_the_transcript() {
+        let mock = HttpMock::new("mock.test".into());
+        mock.redact("body-secret");
+        mock.expect().post().register().unwrap();
         let mut secret = request("body-secret");
         secret.headers.insert(
             http::header::AUTHORIZATION,
             http::HeaderValue::from_static("token"),
         );
-        let _ = mock.dispatch(secret).await;
+
+        mock.dispatch(secret).await.unwrap();
+
         let transcript = mock.transcript().join("\n");
+        assert!(!transcript.is_empty());
         assert!(!transcript.contains("token"));
         assert!(!transcript.contains("body-secret"));
     }

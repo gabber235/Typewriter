@@ -25,5 +25,8 @@ otel-wasi.workspace = true
 tracing.workspace = true
 wit-bindgen.workspace = true
 
+[dev-dependencies]
+trybuild.workspace = true
+
 [lints]
 workspace = true

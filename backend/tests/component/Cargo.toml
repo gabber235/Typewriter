@@ -76,6 +76,8 @@ wasmtime-wasi-http = { version = "48.0.6", default-features = false, features = 
 ] }
 
 wasmcloud-utils = { path = "../../wasmcloud-utils" }
+auth-callout = { path = "../../access/auth-callout" }
+nats-broker = { path = "../../testing/nats-broker" }
 
 wash-runtime = { git = "https://github.com/gabber235/wasmCloud", rev = "0d5784c3159ecfc893230955d8dad4d675e414bf", default-features = false, features = [
     "wasmcloud-nats",

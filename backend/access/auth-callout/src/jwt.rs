@@ -605,15 +605,25 @@ mod tests {
     }
 
     #[test]
-    fn rejects_nonexact_issuer_and_unconfigured_audience() {
-        let config = issuer(true, 0);
-        let mut wrong_issuer = claims();
-        wrong_issuer.issuer = Some("https://issuer.example".into());
-        let mut wrong_audience = claims();
-        wrong_audience.audience = Some(AudienceClaim::One("other".into()));
+    fn rejects_an_issuer_that_is_not_exactly_the_configured_one() {
+        let mut claims = claims();
+        claims.issuer = Some("https://issuer.example".into());
 
-        assert!(check_jwt_claims(&wrong_issuer, &config, &FixedClock(1_000)).is_err());
-        assert!(check_jwt_claims(&wrong_audience, &config, &FixedClock(1_000)).is_err());
+        assert_eq!(
+            check_jwt_claims(&claims, &issuer(true, 0), &FixedClock(1_000)),
+            Err(ClaimValidationFailure::Issuer)
+        );
+    }
+
+    #[test]
+    fn rejects_an_audience_that_is_not_configured() {
+        let mut claims = claims();
+        claims.audience = Some(AudienceClaim::One("other".into()));
+
+        assert_eq!(
+            check_jwt_claims(&claims, &issuer(true, 0), &FixedClock(1_000)),
+            Err(ClaimValidationFailure::Audience)
+        );
     }
 
     #[test]
