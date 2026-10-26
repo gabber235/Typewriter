@@ -1,0 +1,70 @@
+// What one run of one test runner proved. Every runner writes this one shape (the component
+// runner, the graph's own steps, the panel driver), so the change report, conformance and
+// evidence read a single type instead of each runner's own output format.
+struct TestRun(85010001) {
+  runner: Runner;
+  commit: string;
+  started_at_millis: int64;
+  cases: [TestCase];
+}
+
+struct TestCase(85010002) {
+  // The test path or step name, unique within its run.
+  id: string;
+  // The requirement the test declares it demonstrates, for example "QUEST-1.E1".
+  requirement: string?;
+  demonstrates: Demonstrates;
+  outcome: Outcome;
+  // Where the case sits in the run's recording, when there is one.
+  span: Span?;
+  duration_millis: int64;
+  // Clips, screenshots and log excerpts that show the outcome.
+  artifacts: [Artifact];
+}
+
+enum Runner(85010003) {
+  components;
+  schema;
+  panel;
+  panel_web;
+  step;
+}
+
+enum Demonstrates(85010004) {
+  happy_path;
+  failure;
+  edge_case;
+}
+
+enum Outcome(85010005) {
+  passed;
+  failed: Failure;
+  // Failed once, then passed on the single rerun: reported, not gating.
+  flaky: Failure;
+  // Listed in harness/quarantine.toml: still run and reported, not gating.
+  quarantined: Failure;
+  // Passed, but exceeded its time budget by this many milliseconds.
+  over_budget: int64;
+}
+
+struct Failure(85010006) {
+  message: string;
+  // The first failing step or frame, when the runner knows it.
+  first_broken: string?;
+}
+
+struct Span(85010007) {
+  start_millis: int64;
+  end_millis: int64;
+}
+
+enum ArtifactKind(85010008) {
+  clip;
+  screenshot;
+  log_excerpt;
+}
+
+struct Artifact(85010009) {
+  kind: ArtifactKind;
+  path: string;
+}

@@ -1,0 +1,3 @@
+# Project rules for ast-grep: what the language linters do not catch. `cargo xtask review` runs
+# them on the lines a change added; errors gate, warnings flag. Run `ast-grep scan` for all code.
+ruleDirs: [rules]
