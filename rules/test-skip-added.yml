@@ -1,0 +1,8 @@
+id: test-skip-added
+language: rust
+severity: warning
+message: A test was disabled.
+note: Fix the test or the code; a test that cannot pass yet belongs in harness/quarantine.toml with an issue.
+rule:
+  kind: attribute_item
+  regex: '^#\[ignore'

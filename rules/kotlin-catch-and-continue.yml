@@ -1,0 +1,26 @@
+id: kotlin-catch-and-continue
+language: kotlin
+severity: error
+message: This catch neither rethrows, returns, uses the error it caught, nor takes a fallback action.
+note: Rethrow, return a failure, pass the error on (wrap it, record it on the span, send it), or act on the failure instead of only logging it.
+rule:
+  kind: catch_block
+  all:
+    # The caught parameter is the block's first plain identifier.
+    - has: { kind: simple_identifier, pattern: $ERROR }
+    - not: { has: { kind: jump_expression, stopBy: end } }
+    - not: { has: { kind: statements, has: { pattern: $ERROR, stopBy: end } } }
+    # A call other than logging is a fallback the catch performs instead (another move, a
+    # default source), not swallowing.
+    - not:
+        has:
+          kind: statements
+          has:
+            kind: call_expression
+            stopBy: end
+            not:
+              any:
+                - has: { kind: simple_identifier, regex: &log '^(trace|debug|info|warn|warning|error|log|print|println)$' }
+                - has:
+                    kind: navigation_expression
+                    has: { kind: navigation_suffix, has: { kind: simple_identifier, regex: *log } }

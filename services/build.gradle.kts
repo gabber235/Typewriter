@@ -33,8 +33,10 @@ subprojects.forEach { serviceProject ->
     }
 }
 
+// One `./gradlew check` covers the imprint build too, including its ktlint checks.
 tasks.named("check") {
     dependsOn(subprojects.map { "${it.path}:check" })
+    dependsOn(gradle.includedBuild("imprint").task(":check"))
 }
 
 tasks.register("ktlintCheck") {
