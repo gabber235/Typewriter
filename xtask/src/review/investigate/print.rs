@@ -3,10 +3,17 @@
 
 use std::fmt::Write as _;
 
+use super::inventory::{Leftovers, SiblingState, Siblings};
 use super::{Callers, Changes, Forwards, History, Hunk, Impact, Neighbours, Run, Similar, Site};
 
 /// Lists the first entries of a long answer.
 const LIMIT: usize = 15;
+
+/// Files `leftovers` lists; every one is a place to decide on, so more than [`LIMIT`].
+const LEFTOVER_FILES: usize = 40;
+
+/// Hits `leftovers` lists per file.
+const LEFTOVER_HITS: usize = 3;
 
 fn site(site: &Site) -> String {
     format!("{}:{}", site.file.display(), site.line)
@@ -200,6 +207,91 @@ pub fn run(run: &Run) -> String {
     );
     for line in &run.tail {
         let _ = writeln!(out, "  {line}");
+    }
+    out
+}
+
+pub fn leftovers(leftovers: &Leftovers) -> String {
+    let mut out = String::new();
+    let width = leftovers
+        .terms
+        .iter()
+        .map(|term| term.term.len())
+        .max()
+        .unwrap_or(0);
+    for term in &leftovers.terms {
+        let _ = writeln!(
+            out,
+            "{:<width$}  base {}: {} hits in {} files  head: {} hits in {} files  cleared {} files",
+            term.term,
+            leftovers.base,
+            term.base_hits,
+            term.base_files,
+            term.head_hits,
+            term.head_files,
+            term.cleared.len()
+        );
+    }
+    for file in leftovers.files.iter().take(LEFTOVER_FILES) {
+        let _ = writeln!(
+            out,
+            "{:<9}  {}",
+            if file.touched { "changed" } else { "untouched" },
+            file.path.display()
+        );
+        for hit in file.hits.iter().take(LEFTOVER_HITS) {
+            let _ = writeln!(out, "  {:>5}  {}  {}", hit.line, hit.term, hit.snippet);
+        }
+        if file.hits.len() > LEFTOVER_HITS {
+            let _ = writeln!(out, "  ... {} more hits", file.hits.len() - LEFTOVER_HITS);
+        }
+    }
+    if leftovers.files.len() > LEFTOVER_FILES {
+        let _ = writeln!(
+            out,
+            "... {} more files (--json lists all)",
+            leftovers.files.len() - LEFTOVER_FILES
+        );
+    }
+    out
+}
+
+pub fn siblings(siblings: &Siblings) -> String {
+    let mut out = String::new();
+    let count = |state: SiblingState| {
+        siblings
+            .files
+            .iter()
+            .filter(|sibling| sibling.state == state)
+            .count()
+    };
+    let _ = writeln!(
+        out,
+        "{}/*{}  base {}: {} files  now: {} untouched, {} added, {} modified, {} deleted",
+        siblings.directory.display(),
+        siblings
+            .extension
+            .as_ref()
+            .map_or_else(String::new, |extension| format!(".{extension}")),
+        siblings.base,
+        siblings.at_base,
+        count(SiblingState::Untouched),
+        count(SiblingState::Added),
+        count(SiblingState::Modified),
+        count(SiblingState::Deleted)
+    );
+    for sibling in &siblings.files {
+        let _ = writeln!(
+            out,
+            "  {:<9}  {}",
+            match sibling.state {
+                SiblingState::Untouched => "untouched",
+                SiblingState::Added => "added",
+                SiblingState::Modified => "modified",
+                SiblingState::Deleted => "deleted",
+            },
+            sibling.path.display()
+        );
     }
     out
 }

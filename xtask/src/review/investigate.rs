@@ -3,6 +3,7 @@
 //! Each command answers one question with facts and file:line, read from the code at base and
 //! head and from history. Judgment stays with the agent; nothing here decides what is a gap.
 
+mod inventory;
 mod print;
 
 use std::collections::{BTreeMap, HashMap, VecDeque};
@@ -54,6 +55,15 @@ pub enum InvestigateCommand {
     Impact { file: PathBuf, symbol: String },
     /// Runs one test and prints its outcome, to check a claim instead of guessing.
     Run { test: String },
+    /// Where each term still appears at head, in every file type, and how often it appeared at
+    /// base: what a replaced concept left behind.
+    Leftovers {
+        #[arg(required = true)]
+        terms: Vec<String>,
+    },
+    /// Files beside a changed or deleted path with its extension, untouched or changed: the rest of
+    /// a family the change only partly replaced.
+    Siblings { path: PathBuf },
 }
 
 /// An entity as the tools print it.
@@ -221,6 +231,16 @@ pub fn run(
             }
             Ok(())
         }
+        InvestigateCommand::Leftovers { terms } => emit(
+            json,
+            &inventory::leftovers(ctx, &terms, base)?,
+            print::leftovers,
+        ),
+        InvestigateCommand::Siblings { path } => emit(
+            json,
+            &inventory::siblings(ctx, &path, base)?,
+            print::siblings,
+        ),
     }
 }
 

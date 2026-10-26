@@ -44,7 +44,7 @@ pub struct ReviewArgs {
 
 #[derive(Subcommand)]
 pub enum ReviewCommand {
-    /// The report as compact markdown, flagged hunks first; writes .xtask/review/review.sarif and
+    /// The report as compact markdown, change shape first; writes .xtask/review/review.sarif and
     /// .xtask/review/report.json.
     Report,
     /// Gating detectors only (the `quality` check step).
