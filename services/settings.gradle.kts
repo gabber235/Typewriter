@@ -66,3 +66,5 @@ includeProject("engine-conformance", "runtime/engine/runtimes/conformance")
 includeProject("realm", "runtime/realm")
 includeProject("basic-extension", "extensions/basic")
 includeProject("conformance-extension", "extensions/conformance")
+
+includeProject("typewriter-setup", "testing/typewriter-setup")

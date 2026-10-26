@@ -19,6 +19,7 @@ internal object TypewriterApi {
     private const val EXPRESSION = "com.typewritermc.expression"
     private const val OPERATIONS = "com.typewritermc.operations"
     private const val PRESENTATION = "com.typewritermc.presentation"
+    private const val SETUP = "com.typewritermc.setup"
     private const val TYPES = "com.typewritermc.types"
 
     // Authoring
@@ -36,6 +37,9 @@ internal object TypewriterApi {
     val GenericField = ClassName(AUTHORING, "GenericField")
     val MapDraft = ClassName(AUTHORING, "MapDraft")
     val NativeConstructionPlan = ClassName(AUTHORING, "NativeConstructionPlan")
+    val Placement = ClassName(AUTHORING, "Placement")
+    val RealmRoot = ClassName(AUTHORING, "RealmRoot")
+    val RealmSection = ClassName(AUTHORING, "RealmSection")
     val ReadContext = ClassName(AUTHORING, "ReadContext")
     val ReadProjection = ClassName(AUTHORING, "ReadProjection")
     val DisplayFormulas = ClassName(AUTHORING, "DisplayFormulas")
@@ -196,6 +200,16 @@ internal object TypewriterApi {
     val ResourcesControl = ClassName(PRESENTATION, "ResourcesControl")
     val SetControl = ClassName(PRESENTATION, "SetControl")
     val TextControl = ClassName(PRESENTATION, "TextControl")
+
+    // Setup
+    val PartScope = ClassName(SETUP, "PartScope")
+    val SetupDsl = ClassName(SETUP, "SetupDsl")
+    val SetupFieldName = ClassName(SETUP, "SetupFieldName")
+    val SetupFields = ClassName(SETUP, "SetupFields")
+    val SetupHandle = ClassName(SETUP, "SetupHandle")
+    val SetupList = ClassName(SETUP, "SetupList")
+    val SetupRoot = ClassName(SETUP, "SetupRoot")
+    val SetupSection = ClassName(SETUP, "SetupSection")
 
     // Types
     val GeneratedEnumNativeBinding = ClassName(TYPES, "GeneratedEnumNativeBinding")

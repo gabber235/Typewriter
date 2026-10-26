@@ -59,6 +59,8 @@ annotation class TypewriterGeneratedEndpoint(
     val relation: String,
     val slot: EndpointSlot,
     val requiresCollection: Boolean,
+    /** Whether the contract is in the [Owning] family, so the first endpoint's resource owns the second's. */
+    val owning: Boolean,
 )
 
 /**
