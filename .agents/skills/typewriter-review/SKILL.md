@@ -23,6 +23,9 @@ Not a correctness review. Bugs belong to tests, detectors and the gate. Report a
 5. New system on an old one: `review forwards`, `review similar`. A new surface that forwards to the old model.
 6. Code the change worked around: `review neighbours`, `review history`. Frequent fixes mean the plan should have refactored it.
 7. Tests that prove nothing: `review impact`, `review run`. Would the test still pass if the feature missed its goal?
+   Judge each added or changed test with the `typewriter-testing` skill: one requirement, named as an
+   outcome, at the lowest layer that sees it, with none of the smells it lists. `review deep` shows
+   surviving mutants.
 
 ## Independent review budget
 

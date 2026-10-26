@@ -68,5 +68,8 @@ Every new UI component must include an accompanying Widgetbook story in the same
 Represent clear, distinct variants in Widgetbook. Prefer knobs within one use case when they can expose the variants clearly. Add separate use cases when variants need meaningfully different scenarios, state, layout, or supporting data.
 
 ### Panel Testing
+`cargo xtask check panel` runs `flutter analyze` (not `dart analyze`) and `flutter test` in `panel/`,
+`panel/testkit/` and `panel/widgetbook/`. Leave zero issues, including infos.
+
 Use `testApp()` and `pumpTestApp()` from `test/test_utils.dart`.
 Widgetbook components: wrap with `FakeApp`.
