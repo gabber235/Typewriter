@@ -1,16 +1,8 @@
 package com.typewritermc.realm
 
 import com.typewritermc.realm.testing.RealmCatalog
-import java.nio.file.Path
+import com.typewritermc.testing.routes.FixtureGraphPage
 
-/**
- * The core catalog plus the route fixture extension, whose concrete pages, entries and capabilities core does not
- * declare. The build hands over the extension JAR's path; the realm build file explains why it is no classpath entry.
- */
+/** The core catalog plus the route fixture extension, whose concrete pages and entries core does not declare. */
 internal val routeFixtureCatalog =
-    RealmCatalog(
-        artifacts =
-            listOf(
-                RealmCatalog.extension("typewritermc:realm-route-fixtures", Path.of(System.getProperty("typewriter.realm.routeFixtures"))),
-            ),
-    )
+    RealmCatalog(artifacts = listOf(RealmCatalog.extension("typewritermc:realm-route-fixtures", FixtureGraphPage::class)))

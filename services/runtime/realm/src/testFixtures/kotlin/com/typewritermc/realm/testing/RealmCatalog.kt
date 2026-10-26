@@ -57,11 +57,11 @@ data class RealmCatalog(
     }
 
     companion object {
-        /** The extension artifact [id] packaged as [jar], loaded the way Realm loads extensions. */
+        /** The extension artifact [id] whose classes include [type], loaded the way Realm loads extensions. */
         fun extension(
             id: String,
-            jar: Path,
-        ) = GeneratedProviderArtifact(ArtifactId(id), jar, acceptedSourceParts = setOf(COMMON_SOURCE_PART))
+            type: KClass<*>,
+        ) = GeneratedProviderArtifact(ArtifactId(id), type.codeSource(), acceptedSourceParts = setOf(COMMON_SOURCE_PART))
     }
 }
 
