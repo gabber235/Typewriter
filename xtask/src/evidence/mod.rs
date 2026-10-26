@@ -7,9 +7,7 @@ mod prune;
 pub(crate) mod publish;
 mod record;
 
-use std::fs;
 use std::path::PathBuf;
-use std::process::Command;
 use std::time::Duration;
 
 use anyhow::Result;
@@ -17,10 +15,9 @@ use clap::{ArgAction, Args, Subcommand};
 
 use self::prune::Prune;
 pub use self::record::{Recorded, record_with};
-use crate::{CommandExt, Context, Scratch};
+use crate::branch::{ATTEMPTS, BranchCheckout, REPOSITORY};
+use crate::{CommandExt, Context};
 
-/// The repository whose pull requests carry the section and whose [`BRANCH`] holds the media.
-const REPOSITORY: &str = "gabber235/TypeWriter";
 /// The orphan branch holding the media, one folder per pull request commit.
 const BRANCH: &str = "evidence";
 /// Where the runners write their `TestRun`s, relative to the repository root; CI downloads the
@@ -28,9 +25,6 @@ const BRANCH: &str = "evidence";
 pub const RESULTS: &str = ".xtask/results";
 /// Where `cargo xtask review report --json` output is read from, relative to the repository root.
 const REPORT: &str = ".xtask/review/report.json";
-/// How often a write that lost a race with another job (a push, a description edit) starts over
-/// from the new state before giving up.
-const ATTEMPTS: u32 = 5;
 
 #[derive(Subcommand)]
 pub enum EvidenceCommand {
@@ -170,146 +164,7 @@ fn pr_folder(pr: u64, sha: Option<&str>) -> String {
     }
 }
 
-/// A shallow checkout of [`BRANCH`], removed on drop.
-struct EvidenceRepository {
-    scratch: Scratch,
-    /// The branch tip the checkout started from, empty while the branch does not exist yet: the
-    /// lease every force push checks.
-    tip: String,
-}
-
-impl EvidenceRepository {
-    /// Fetches only the tip of [`BRANCH`], or starts it as an orphan when it does not exist.
-    fn clone_shallow(ctx: &Context) -> Result<Self> {
-        let scratch = Scratch::new("evidence")?;
-        fs::create_dir_all(scratch.0.join("repository"))?;
-        let mut repository = Self {
-            scratch,
-            tip: String::new(),
-        };
-        let url = format!("https://github.com/{REPOSITORY}");
-        repository.git(ctx, &["init", "--quiet"]).run()?;
-        repository
-            .git(ctx, &["remote", "add", "origin", &url])
-            .run()?;
-        let exists = !repository
-            .git(ctx, &["ls-remote", "--heads", "origin", BRANCH])
-            .output_text()?
-            .trim()
-            .is_empty();
-        if exists {
-            repository
-                .git(ctx, &["fetch", "--quiet", "--depth", "1", "origin", BRANCH])
-                .run()?;
-            repository
-                .git(ctx, &["checkout", "--quiet", "-B", BRANCH, "FETCH_HEAD"])
-                .run()?;
-            repository.tip = repository
-                .git(ctx, &["rev-parse", "HEAD"])
-                .output_text()?
-                .trim()
-                .to_string();
-        } else {
-            repository
-                .git(ctx, &["checkout", "--quiet", "--orphan", BRANCH])
-                .run()?;
-        }
-        Ok(repository)
-    }
-
-    fn checkout(&self) -> PathBuf {
-        self.scratch.0.join("repository")
-    }
-
-    /// Git in the checkout. With `GH_TOKEN` set (CI passes the workflow token) gh answers the
-    /// credential prompt; otherwise the user's own git credentials apply. The token stays in the
-    /// environment, out of the command line and the checkout's config.
-    fn git(&self, ctx: &Context, args: &[&str]) -> Command {
-        let mut command = ctx.tool(".", "git", args);
-        command.current_dir(self.checkout());
-        if std::env::var_os("GH_TOKEN").is_some() {
-            // An empty helper first clears the inherited ones, as `gh auth setup-git` does.
-            let helper = "credential.https://github.com.helper";
-            command
-                .env("GIT_CONFIG_COUNT", "2")
-                .env("GIT_CONFIG_KEY_0", helper)
-                .env("GIT_CONFIG_VALUE_0", "")
-                .env("GIT_CONFIG_KEY_1", helper)
-                .env("GIT_CONFIG_VALUE_1", "!gh auth git-credential");
-        }
-        command
-    }
-
-    /// Commits everything and pushes. Fast forward only, so it never drops another push; when
-    /// another job pushed first, the commit moves onto the new tip and the push is retried.
-    fn commit_and_push(&self, ctx: &Context, message: &str) -> Result<()> {
-        self.git(ctx, &["add", "--all"]).run()?;
-        if self
-            .git(ctx, &["diff", "--cached", "--quiet"])
-            .run()
-            .is_ok()
-        {
-            println!("evidence branch unchanged");
-            return Ok(());
-        }
-        self.commit(ctx, message)?;
-        let commit = self
-            .git(ctx, &["rev-parse", "HEAD"])
-            .output_text()?
-            .trim()
-            .to_string();
-        let mut attempt = 1;
-        loop {
-            let Err(error) = self
-                .git(ctx, &["push", "origin", &format!("HEAD:{BRANCH}")])
-                .run()
-            else {
-                return Ok(());
-            };
-            if attempt == ATTEMPTS {
-                return Err(error.context(format!("gave up after {ATTEMPTS} pushes")));
-            }
-            attempt += 1;
-            self.git(ctx, &["fetch", "--quiet", "--depth", "1", "origin", BRANCH])
-                .run()?;
-            self.git(ctx, &["checkout", "--quiet", "-B", BRANCH, "FETCH_HEAD"])
-                .run()?;
-            self.committer(ctx, &["cherry-pick", &commit]).run()?;
-        }
-    }
-
-    /// Replaces the history with one commit of the current tree, unless the branch moved since
-    /// the checkout.
-    fn squash(&self, ctx: &Context, message: &str) -> Result<()> {
-        self.git(ctx, &["checkout", "--orphan", "snapshot"]).run()?;
-        self.git(ctx, &["add", "--all"]).run()?;
-        self.commit(ctx, message)?;
-        let lease = format!("--force-with-lease={BRANCH}:{}", self.tip);
-        self.git(ctx, &["push", &lease, "origin", &format!("HEAD:{BRANCH}")])
-            .run()
-    }
-
-    fn commit(&self, ctx: &Context, message: &str) -> Result<()> {
-        self.committer(ctx, &["commit", "--quiet", "--message", message])
-            .run()
-    }
-
-    /// Git in the checkout, committing as the evidence bot.
-    fn committer(&self, ctx: &Context, args: &[&str]) -> Command {
-        let mut command = self.git(
-            ctx,
-            &[
-                "-c",
-                "user.name=Typewriter evidence",
-                "-c",
-                "user.email=evidence@typewriter.invalid",
-            ],
-        );
-        command.args(args);
-        command
-    }
-
-    fn path(&self, relative: &str) -> PathBuf {
-        self.checkout().join(relative)
-    }
+/// A shallow checkout of [`BRANCH`].
+fn clone_branch(ctx: &Context) -> Result<BranchCheckout> {
+    BranchCheckout::clone_shallow(ctx, BRANCH, "Typewriter evidence")
 }

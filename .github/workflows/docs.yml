@@ -1,0 +1,63 @@
+name: Docs
+
+# Previews of the documentation site on gh-pages, one per branch and pull request that changes
+# it, removed again when the pull request closes or the branch is deleted. ci.yml checks the site
+# (`cargo xtask check docs`); this workflow only publishes.
+on:
+  push:
+    branches-ignore: [develop]
+    paths: [documentation/**]
+  pull_request:
+    types: [opened, reopened, synchronize, closed]
+    paths: [documentation/**]
+  delete:
+  # Removes a branch preview the delete event missed.
+  workflow_dispatch:
+    inputs:
+      branch:
+        description: "Branch whose preview to remove, for example features/v1"
+        required: true
+        type: string
+
+# Pushes to gh-pages and comments the preview link with the workflow token.
+permissions:
+  contents: write
+  pull-requests: write
+
+concurrency:
+  group: docs-${{ github.event.pull_request.number || inputs.branch || github.event.ref || github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  preview:
+    if: github.event_name == 'push' || (github.event_name == 'pull_request' && github.event.action != 'closed')
+    runs-on: ubuntu-latest
+    env:
+      GH_TOKEN: ${{ github.token }}
+    steps:
+      # The full history: the site shows when each page last changed.
+      - uses: actions/checkout@v6
+        with:
+          fetch-depth: 0
+      - uses: ./.github/actions/devenv
+      - if: github.event_name == 'pull_request'
+        run: devenv shell -- cargo xtask docs preview --pr ${{ github.event.number }}
+      - if: github.event_name == 'push'
+        run: devenv shell -- cargo xtask docs preview --branch "$GITHUB_REF_NAME"
+
+  unpublish:
+    if: >-
+      (github.event_name == 'pull_request' && github.event.action == 'closed')
+      || (github.event_name == 'delete' && github.event.ref_type == 'branch')
+      || github.event_name == 'workflow_dispatch'
+    runs-on: ubuntu-latest
+    env:
+      GH_TOKEN: ${{ github.token }}
+      BRANCH: ${{ inputs.branch || github.event.ref }}
+    steps:
+      - uses: actions/checkout@v6
+      - uses: ./.github/actions/devenv
+      - if: github.event_name == 'pull_request'
+        run: devenv shell -- cargo xtask docs unpublish --pr ${{ github.event.number }}
+      - if: github.event_name != 'pull_request'
+        run: devenv shell -- cargo xtask docs unpublish --branch "$BRANCH"

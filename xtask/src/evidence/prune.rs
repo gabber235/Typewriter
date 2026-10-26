@@ -8,8 +8,9 @@ use std::time::{Duration, SystemTime, UNIX_EPOCH};
 
 use anyhow::{Context as _, Result};
 
-use super::{ATTEMPTS, EvidenceRepository, pr_folder};
+use super::{ATTEMPTS, clone_branch, pr_folder};
 use crate::Context;
+use crate::branch::BranchCheckout;
 
 /// Written into a merged pull request's folder: the Unix seconds it merged, which the weekly
 /// run compares with the retention.
@@ -37,7 +38,7 @@ pub fn prune(ctx: &Context, action: Prune) -> Result<()> {
 }
 
 fn prune_once(ctx: &Context, action: &Prune) -> Result<()> {
-    let repository = EvidenceRepository::clone_shallow(ctx)?;
+    let repository = clone_branch(ctx)?;
     if repository.tip.is_empty() {
         println!("no evidence branch yet");
         return Ok(());
@@ -83,7 +84,7 @@ fn prune_once(ctx: &Context, action: &Prune) -> Result<()> {
     repository.commit_and_push(ctx, &format!("prune {action:?}"))
 }
 
-fn remove(repository: &EvidenceRepository, relative: &str) -> Result<()> {
+fn remove(repository: &BranchCheckout, relative: &str) -> Result<()> {
     let path = repository.path(relative);
     if path.exists() {
         remove_path(&path)?;

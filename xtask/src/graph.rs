@@ -24,7 +24,7 @@ use crate::lock::HeavyLock;
 use crate::process::{self, Group};
 use crate::results::{self, Failure, Outcome, TestCase, TestRun};
 use crate::skirout::base::harness::v1::test_run::Runner;
-use crate::{CommandExt as _, Context, components, display, generate, gitops, review};
+use crate::{CommandExt as _, Context, components, display, docs, generate, gitops, review};
 
 /// How many trailing log lines a failure prints.
 const FAILURE_TAIL: usize = 20;
@@ -44,6 +44,8 @@ pub enum Area {
     Panel,
     /// Renders and validates every cluster in backend/_clusters.
     Gitops,
+    /// Biome, `astro check` and the build of the documentation site.
+    Docs,
     /// Project rules and new clones on the lines a change added (`cargo xtask review gate`).
     Quality,
     /// The harness itself: clippy and rustfmt.
@@ -59,6 +61,7 @@ impl Area {
             Self::Protocol => "protocol",
             Self::Panel => "panel",
             Self::Gitops => "gitops",
+            Self::Docs => "docs",
             Self::Quality => "quality",
             Self::Xtask => "xtask",
         }
@@ -70,6 +73,7 @@ impl Area {
             Self::Services => &["services/"],
             Self::Backend | Self::Components | Self::Gitops => &["backend/"],
             Self::Panel => &["panel/"],
+            Self::Docs => &[DOCS_SITE],
             // The project rules scan every source the other areas check.
             Self::Quality => &["services/", "backend/", "panel/", "rules/", "sgconfig.yml"],
             // Their inputs are all in EVERY_AREA.
@@ -77,6 +81,9 @@ impl Area {
         }
     }
 }
+
+/// The documentation site, whose Markdown is its source rather than documentation of the code.
+const DOCS_SITE: &str = "documentation/";
 
 /// Path prefixes whose changes affect every area: the harness, the toolchain, CI, and the
 /// protocol and generator whose output every area compiles.
@@ -308,6 +315,20 @@ pub const CHECKS: &[Step] = &[
         // The subscription ConfigMaps it validates are tracked deployment manifests.
         needs_generate: false,
     },
+    // One native step: the install must finish before validate and build, and steps run in
+    // parallel.
+    Step {
+        name: "docs",
+        area: Area::Docs,
+        run: Run::Native {
+            describe: docs::DESCRIBE,
+            run: docs::check,
+        },
+        heavy: false,
+        budget: mins(10),
+        // The site reads only its own sources.
+        needs_generate: false,
+    },
     Step {
         name: "quality",
         area: Area::Quality,
@@ -364,12 +385,16 @@ pub fn select(area: Option<Area>) -> Vec<&'static Step> {
         .collect()
 }
 
-/// The `steps` whose area a change to `paths` affects, by path prefix. Markdown is documentation
-/// and affects no area, so a change of only documentation selects nothing.
+/// The `steps` whose area a change to `paths` affects, by path prefix. Markdown outside the
+/// documentation site documents the code and affects no area, so a change of only such Markdown
+/// selects nothing.
 pub fn affected<'a>(steps: Vec<&'a Step>, paths: &[std::path::PathBuf]) -> Vec<&'a Step> {
     let paths: Vec<String> = paths
         .iter()
-        .filter(|path| path.extension().is_none_or(|extension| extension != "md"))
+        .filter(|path| {
+            path.starts_with(DOCS_SITE)
+                || path.extension().is_none_or(|extension| extension != "md")
+        })
         .map(|path| path.to_string_lossy().into_owned())
         .collect();
     steps

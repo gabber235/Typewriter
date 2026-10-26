@@ -22,7 +22,8 @@ env:
 
 jobs:
   # The check areas the change affects and their time budgets, straight from the check graph.
-  # A change of only documentation affects none, so every other job skips and the gate passes.
+  # A change of only Markdown outside the documentation site affects none, so every other job
+  # skips and the gate passes.
   plan:
     runs-on: ubuntu-latest
     outputs:
