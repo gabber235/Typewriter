@@ -1,8 +1,11 @@
+import com.typewritermc.buildlogic.servicesDirectory
+
 plugins {
     kotlin("jvm")
     id("de.infix.testBalloon")
     id("org.jlleitschuh.gradle.ktlint")
     id("dev.detekt")
+    id("org.jetbrains.kotlinx.kover")
 }
 
 group = "com.typewritermc"
@@ -12,9 +15,6 @@ repositories {
 }
 
 val libs = extensions.getByType<VersionCatalogsExtension>().named("libs")
-val servicesDirectory =
-    generateSequence(rootProject.projectDir) { it.parentFile }
-        .first { File(it, "build-logic").isDirectory && File(it, "libs.versions.toml").isFile }
 
 detekt {
     buildUponDefaultConfig = false
