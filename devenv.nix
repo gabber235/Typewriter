@@ -11,7 +11,8 @@ in
     flutter # `devenv update flutter-overlay` moves it to the newest release
     pins.nats-server
     pins.wash
-    pkgs.bun # Skir code generation and checks only
+    pkgs.bun # Skir code generation and checks, and the documentation site's package manager
+    pkgs.nodejs_24 # runs Astro, which builds the documentation site (`cargo xtask check docs`)
     pkgs.toxiproxy # the faults link of the worktree stack (`cargo xtask stack`)
     pkgs.chromedriver # `cargo xtask e2e panel-web`
     pkgs.jdk25 # runs Gradle; project JDKs come from Gradle toolchains

@@ -2,9 +2,11 @@
 //! task graph, the build lock and the deploy steps are Rust instead of task wiring. devenv only
 //! provides the tools these commands call.
 
+mod branch;
 mod cluster;
 mod components;
 mod deploy;
+mod docs;
 mod doctor;
 mod e2e;
 mod evidence;
@@ -45,7 +47,7 @@ enum Cli {
         #[arg(long)]
         print: bool,
         /// With `--list`, only the areas a change from this ref's merge base with HEAD to the
-        /// working tree affects; empty when it touches only documentation.
+        /// working tree affects; empty when it touches only Markdown outside the documentation site.
         #[arg(long, requires = "list")]
         base: Option<String>,
     },
@@ -70,6 +72,9 @@ enum Cli {
     /// Records end to end runs and publishes the pull request's evidence section.
     #[command(subcommand)]
     Evidence(evidence::EvidenceCommand),
+    /// Publishes and removes documentation previews; `check docs` checks the site.
+    #[command(subcommand)]
+    Docs(docs::DocsCommand),
     /// Runs a git hook's rules; devenv registers the hooks that call this.
     #[command(subcommand)]
     Hook(hooks::HookCommand),
@@ -114,6 +119,7 @@ fn main() -> ExitCode {
         Cli::Doctor => doctor::doctor(&context),
         Cli::Review(args) => review::run(&context, args),
         Cli::Evidence(command) => evidence::run(&context, command),
+        Cli::Docs(command) => docs::run(&context, command),
         Cli::Hook(command) => hooks::run(&context, command),
         Cli::Step { name } => graph::run_native(&context, &name),
     };

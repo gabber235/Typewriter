@@ -13,7 +13,7 @@ use anyhow::{Context as _, Result, anyhow, bail};
 use serde::Deserialize;
 use serde::de::IgnoredAny;
 
-use super::{ATTEMPTS, EvidenceRepository, Inputs, REPOSITORY, media_url, pr_folder};
+use super::{ATTEMPTS, Inputs, REPOSITORY, clone_branch, media_url, pr_folder};
 use crate::results::{self, Outcome, TestRun, runner_name};
 use crate::review::verdict::{
     COMMIT as VERDICT_COMMIT, END as VERDICT_END, START as VERDICT_START,
@@ -52,7 +52,7 @@ pub fn publish(ctx: &Context, pr: u64, sha: &str, inputs: &Inputs) -> Result<()>
     // The verdict comes from the description, so the final section is scrubbed again there.
     scrub(&section(None), &media, &secrets)?;
     if !media.is_empty() {
-        let repository = EvidenceRepository::clone_shallow(ctx)?;
+        let repository = clone_branch(ctx)?;
         for (source, target) in &media {
             let destination = repository.path(&format!("{prefix}/{target}"));
             if let Some(parent) = destination.parent() {
