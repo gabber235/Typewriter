@@ -1,0 +1,7 @@
+<?xml version="1.0" ?>
+<SmellBaseline>
+  <ManuallySuppressedIssues/>
+  <CurrentIssues>
+    <ID>TooGenericExceptionCaught:ImprintArchive.kt:ImprintArchive$failure: Exception</ID>
+  </CurrentIssues>
+</SmellBaseline>

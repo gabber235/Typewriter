@@ -19,7 +19,20 @@ val servicesDirectory =
 detekt {
     buildUponDefaultConfig = false
     allRules = false
-    config.setFrom(File(servicesDirectory, "config/detekt/observability.yml"))
+    config.setFrom(
+        File(servicesDirectory, "config/detekt/observability.yml"),
+        File(servicesDirectory, "config/detekt/structure.yml"),
+    )
+    // One baseline per project: each project's baseline task rewrites its whole file.
+    baseline = File(servicesDirectory, "config/detekt/baselines/${project.name}.xml")
+}
+
+// Generated sources are not reviewed and change on every generation, so no baseline can hold them.
+tasks.withType<dev.detekt.gradle.Detekt>().configureEach {
+    exclude { it.file.invariantSeparatorsPath.contains("/skirout/") }
+}
+tasks.withType<dev.detekt.gradle.DetektCreateBaselineTask>().configureEach {
+    exclude { it.file.invariantSeparatorsPath.contains("/skirout/") }
 }
 
 ktlint {

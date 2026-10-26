@@ -1,0 +1,21 @@
+<?xml version="1.0" ?>
+<SmellBaseline>
+  <ManuallySuppressedIssues/>
+  <CurrentIssues>
+    <ID>CyclomaticComplexMethod:JdkHttpTransport.kt:JdkHttpTransport$override suspend fun execute: HttpResult</ID>
+    <ID>CyclomaticComplexMethod:RegistrarTelemetry.kt:private fun RegistrarState.attributes</ID>
+    <ID>CyclomaticComplexMethod:RegistrarTelemetry.kt:private fun RegistrarState.projection: EventProjection</ID>
+    <ID>CyclomaticComplexMethod:RegistrarTelemetry.kt:private fun RegistrarState.wireValue: String</ID>
+    <ID>CyclomaticComplexMethod:ServiceRegistrar.kt:ServiceRegistrar$context(_: MainSpanScope) private suspend fun superviseBinding: OrganizationBinding?</ID>
+    <ID>CyclomaticComplexMethod:ServiceRegistrar.kt:ServiceRegistrar$private suspend fun cleanup: List&lt;RegistrarStopFailure&gt;</ID>
+    <ID>NestedBlockDepth:ServiceRegistrar.kt:ServiceRegistrar$context(_: MainSpanScope) private suspend fun superviseBinding: OrganizationBinding?</ID>
+    <ID>TooGenericExceptionCaught:FileCredentialStorage.kt:FileCredentialStorage$failure: Throwable</ID>
+    <ID>TooGenericExceptionCaught:JdkHttpTransport.kt:JdkHttpTransport$failure: Throwable</ID>
+    <ID>TooGenericExceptionCaught:OAuthHttpAdapter.kt:AuthentikTokenExchanger$failure: Throwable</ID>
+    <ID>TooGenericExceptionCaught:SentinelHttpAdapter.kt:TypewriterSentinelProvider$failure: Throwable</ID>
+    <ID>TooGenericExceptionCaught:ServiceRegistrar.kt:ServiceRegistrar$failure: Throwable</ID>
+    <ID>TooGenericExceptionCaught:ServiceRegistrar.kt:ServiceRegistrar$thrown: Throwable</ID>
+    <ID>TooGenericExceptionCaught:TypewriterIdentityIssuer.kt:TypewriterIdentityIssuer$failure: Throwable</ID>
+    <ID>TooGenericExceptionCaught:TypewriterIdentityIssuer.kt:failure: Throwable</ID>
+  </CurrentIssues>
+</SmellBaseline>

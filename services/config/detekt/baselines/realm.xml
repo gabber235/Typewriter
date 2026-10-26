@@ -1,0 +1,77 @@
+<?xml version="1.0" ?>
+<SmellBaseline>
+  <ManuallySuppressedIssues/>
+  <CurrentIssues>
+    <ID>CyclomaticComplexMethod:AuthoredPathTypes.kt:internal fun AuthoringRecord.authoredTypeAt: TypeUse?</ID>
+    <ID>CyclomaticComplexMethod:AuthoredPathTypes.kt:internal fun expectedType: TypeUse?</ID>
+    <ID>CyclomaticComplexMethod:AuthoringMutationPlanner.kt:AuthoringMutationPlanner$fun replayStaged: List&lt;ValueProblem&gt;</ID>
+    <ID>CyclomaticComplexMethod:AuthoringMutationPlanner.kt:AuthoringMutationPlanner$private fun delete</ID>
+    <ID>CyclomaticComplexMethod:AuthoringPlanningSession.kt:AuthoringPlanningSession$fun append</ID>
+    <ID>CyclomaticComplexMethod:AuthoringPlanningSession.kt:AuthoringPlanningSession$private fun connection</ID>
+    <ID>CyclomaticComplexMethod:AuthoringSearchProjection.kt:private fun DataValue.collectText</ID>
+    <ID>CyclomaticComplexMethod:AuthoringSnapshotValidator.kt:private fun validateRealmStructure</ID>
+    <ID>CyclomaticComplexMethod:CapturedAuthoringReads.kt:CapturedAuthoringReads$fun discoverOccurrences: List&lt;DraftBinding&gt;</ID>
+    <ID>CyclomaticComplexMethod:CapturedAuthoringReads.kt:CapturedAuthoringReads$internal fun bindOccurrence: DraftBinding?</ID>
+    <ID>CyclomaticComplexMethod:CapturedAuthoringReads.kt:CapturedAuthoringReads$override fun &lt;D&gt; select: PartialSelection&lt;D&gt;</ID>
+    <ID>CyclomaticComplexMethod:CapturedAuthoringReads.kt:CapturedAuthoringReads$override fun &lt;T&gt; readRepresentation: Availability&lt;T&gt;</ID>
+    <ID>CyclomaticComplexMethod:CapturedAuthoringReads.kt:CapturedAuthoringReads$override fun binding: Availability&lt;DraftBinding&gt;</ID>
+    <ID>CyclomaticComplexMethod:CapturedAuthoringReads.kt:CapturedAuthoringReads$private fun match: TypeMatch</ID>
+    <ID>CyclomaticComplexMethod:CapturedAuthoringReads.kt:CapturedAuthoringReads$private fun valueAt: LocatedValue</ID>
+    <ID>CyclomaticComplexMethod:CheckEvaluator.kt:CheckEvaluator$fun evaluate: CheckResult</ID>
+    <ID>CyclomaticComplexMethod:EditExpectations.kt:internal fun CurrentAuthoringValues.requiredExpectations: List&lt;EditExpectation&gt;</ID>
+    <ID>CyclomaticComplexMethod:EditExpectations.kt:internal fun EditExpectation.sameFact: Boolean</ID>
+    <ID>CyclomaticComplexMethod:GraphGroupPlacement.kt:GraphGroupPlacement$fun place: List&lt;GraphPlacement&gt;</ID>
+    <ID>CyclomaticComplexMethod:OperationClonePreparation.kt:OperationClonePreparation$context(operation: OperationPreparation) suspend fun duplicateOwned: List&lt;ResourceId&gt;</ID>
+    <ID>CyclomaticComplexMethod:OperationRealmPresentationSearchSource.kt:OperationRealmPresentationSearchSource$override suspend fun watch: RealmPresentationSearchUpdate</ID>
+    <ID>CyclomaticComplexMethod:OperationRelationPreparation.kt:OperationRelationPreparation$private fun counterpartCandidates: List&lt;CounterpartChoice?&gt;</ID>
+    <ID>CyclomaticComplexMethod:OwnershipClosureCompiler.kt:OwnershipClosureCompiler$context(snapshot: AuthoringView) fun compile: ResourceGraphCompileResult</ID>
+    <ID>CyclomaticComplexMethod:PreparedIntentIdentity.kt:private fun EditIntent.canonical: String</ID>
+    <ID>CyclomaticComplexMethod:PublicationAcceptance.kt:AuthoringAcceptance$override suspend fun evaluate: CapturedAssessment</ID>
+    <ID>CyclomaticComplexMethod:PublicationAcceptance.kt:private fun intrinsicCollectionProblems: List&lt;IntrinsicCollectionProblem&gt;</ID>
+    <ID>CyclomaticComplexMethod:RealmCheckInputs.kt:RealmCheckInputs$context(reads: CapturedAuthoringReads) fun evaluate: CheckEvaluation</ID>
+    <ID>CyclomaticComplexMethod:RealmCheckRuntime.kt:RealmCheckRuntime$private fun reconcileAndSchedule</ID>
+    <ID>CyclomaticComplexMethod:RealmGraphReads.kt:CapturedGraph$fun &lt;D : ResourceDraft&gt; bind: BoundMatch&lt;D&gt;</ID>
+    <ID>CyclomaticComplexMethod:RealmGraphReads.kt:RealmGraphReads$context(reads: CapturedAuthoringReads) fun &lt;D : ResourceDraft&gt; reachable: ReachabilityResult&lt;D&gt;</ID>
+    <ID>CyclomaticComplexMethod:RealmGraphReads.kt:RealmGraphReads$context(reads: CapturedAuthoringReads) fun routes: RouteResult</ID>
+    <ID>CyclomaticComplexMethod:RealmPresentationSearchSource.kt:CapabilityRealmPresentationSearchSource$override suspend fun watch: RealmPresentationSearchUpdate</ID>
+    <ID>CyclomaticComplexMethod:RealmPublicationCoordinator.kt:RealmPublicationCoordinator$suspend fun publish: PublicationResult</ID>
+    <ID>CyclomaticComplexMethod:RealmPublicationCoordinator.kt:RealmPublicationCoordinator$suspend fun refresh</ID>
+    <ID>CyclomaticComplexMethod:RelationValueSynchronizer.kt:RelationValueSynchronizer$fun connect</ID>
+    <ID>CyclomaticComplexMethod:ResourceOperationRoutes.kt:ResourceOperationRoutes$internal suspend fun prepare: AuthoringActionResult</ID>
+    <ID>CyclomaticComplexMethod:ResourceOperationRuntime.kt:ResourceOperationRuntime$suspend fun prepare: OperationPreparationResult</ID>
+    <ID>CyclomaticComplexMethod:ResourceValueMapper.kt:ResourceValueMapper$fun project: ProjectionResult</ID>
+    <ID>CyclomaticComplexMethod:ResourceValueMapper.kt:private fun collectLinkEvidence</ID>
+    <ID>CyclomaticComplexMethod:ResourceValueMapper.kt:private fun collectLinkSlots</ID>
+    <ID>CyclomaticComplexMethod:TypeArgumentOperations.kt:DefaultTypeArgumentOperations$override fun preview: PreviewTypeArgumentChangeResponse</ID>
+    <ID>CyclomaticComplexMethod:TypeArgumentOperations.kt:private fun collectRepairs</ID>
+    <ID>NestedBlockDepth:CheckEvaluator.kt:CheckEvaluator$fun evaluate: CheckResult</ID>
+    <ID>SwallowedException:WorkingViewEditContext.kt:WorkingViewEditContext$failure: IllegalArgumentException</ID>
+    <ID>TooGenericExceptionCaught:AuthoringViewStore.kt:InMemoryAuthoringViewStore$closing: Throwable</ID>
+    <ID>TooGenericExceptionCaught:AuthoringViewStore.kt:InMemoryAuthoringViewStore$failure: Throwable</ID>
+    <ID>TooGenericExceptionCaught:CapturedAuthoringReads.kt:CapturedAuthoringReads$failure: Exception</ID>
+    <ID>TooGenericExceptionCaught:CheckEvaluator.kt:CheckEvaluator$failure: Exception</ID>
+    <ID>TooGenericExceptionCaught:CheckPlans.kt:failure: Exception</ID>
+    <ID>TooGenericExceptionCaught:CheckPlans.kt:failure: Throwable</ID>
+    <ID>TooGenericExceptionCaught:DatabaseProvider.kt:DatabaseProvider$failure: Throwable</ID>
+    <ID>TooGenericExceptionCaught:DefaultRealmRuntimeFactory.kt:DefaultRealmRuntimeFactory$failure: Throwable</ID>
+    <ID>TooGenericExceptionCaught:EditorUpdatePublisher.kt:EditorUpdatePublisher$failure: Exception</ID>
+    <ID>TooGenericExceptionCaught:OperationRealmPresentationSearchSource.kt:OperationRealmPresentationSearchSource$failure: Exception</ID>
+    <ID>TooGenericExceptionCaught:PatchRunner.kt:PatchRunner$cause: Exception</ID>
+    <ID>TooGenericExceptionCaught:PublicationAcceptance.kt:AuthoringAcceptance$failure: Exception</ID>
+    <ID>TooGenericExceptionCaught:Realm.kt:Realm$failure: Throwable</ID>
+    <ID>TooGenericExceptionCaught:RealmCapabilityInvocationSource.kt:RealmCapabilityInvocationSource$failure: Throwable</ID>
+    <ID>TooGenericExceptionCaught:RealmCheckInputs.kt:RealmCheckInputs$failure: Exception</ID>
+    <ID>TooGenericExceptionCaught:RealmCheckRuntime.kt:RealmCheckRuntime$failure: Throwable</ID>
+    <ID>TooGenericExceptionCaught:RealmDeploymentEntrypoint.kt:RealmDeploymentRuntime$failure: Throwable</ID>
+    <ID>TooGenericExceptionCaught:RealmPresentationSearchSource.kt:CapabilityRealmPresentationSearchSource$failure: Exception</ID>
+    <ID>TooGenericExceptionCaught:RealmPresentationSearchSource.kt:CapabilityRealmPresentationSearchSource$failure: Throwable</ID>
+    <ID>TooGenericExceptionCaught:RealmPublicationCoordinator.kt:RealmPublicationCoordinator$failure: Exception</ID>
+    <ID>TooGenericExceptionCaught:RealmPublicationCoordinator.kt:RealmPublicationCoordinator$failure: Throwable</ID>
+    <ID>TooGenericExceptionCaught:ResourceOperationRuntime.kt:ResourceOperationRuntime$failure: Exception</ID>
+    <ID>TooGenericExceptionCaught:ResourceOperationRuntime.kt:failure: Exception</ID>
+    <ID>TooGenericExceptionCaught:SurrealAuthoringRepository.kt:RealmAuthoringOwner$failure: Throwable</ID>
+    <ID>TooGenericExceptionCaught:Transactions.kt:StorageRetryPolicy$failure: Throwable</ID>
+    <ID>TooGenericExceptionCaught:Transactions.kt:failure: Throwable</ID>
+    <ID>TooGenericExceptionCaught:WorkingViewEditContext.kt:WorkingViewEditContext$failure: Exception</ID>
+  </CurrentIssues>
+</SmellBaseline>
