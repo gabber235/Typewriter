@@ -14,11 +14,6 @@ mod topology;
 #[component_fixture(
     id = "service-registration",
     primary(package = "service-registration", target = "service_registration"),
-    affected_paths(
-        "backend/service/service-registration/",
-        "backend/database/schema/service/",
-        "backend/database/schema/organization/"
-    )
 )]
 pub struct ServiceRegistration;
 

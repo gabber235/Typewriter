@@ -16,10 +16,6 @@ use wasmcloud_utils::{
 #[component_fixture(
     id = "organization-roles",
     primary(package = "organization-roles", target = "organization_roles"),
-    affected_paths(
-        "backend/organization/organization-roles/",
-        "backend/database/schema/organization/"
-    )
 )]
 pub struct OrganizationRoles;
 

@@ -1,5 +1,5 @@
-#[path = "src/schema_manifest.rs"]
-mod schema_manifest;
+#[path = "src/manifest.rs"]
+mod manifest;
 
 use std::{env, fs, path::PathBuf};
 
@@ -13,11 +13,11 @@ fn generate() -> Result<(), String> {
     let crate_root = PathBuf::from(env::var_os("CARGO_MANIFEST_DIR").ok_or_else(|| {
         "CARGO_MANIFEST_DIR is unavailable while generating database schema".to_owned()
     })?);
-    let database_root = crate_root.join("../../../../database");
+    let database_root = crate_root.join("..");
     let manifest_path = database_root.join("capabilities.toml");
     let contents = fs::read_to_string(&manifest_path)
         .map_err(|error| format!("reading {}: {error}", manifest_path.display()))?;
-    let manifest = schema_manifest::Manifest::parse(&contents, |file| {
+    let manifest = manifest::Manifest::parse(&contents, |file| {
         database_root.join("schema").join(file).is_file()
     })?;
     let embedded_files = manifest.preset_files("full")?;

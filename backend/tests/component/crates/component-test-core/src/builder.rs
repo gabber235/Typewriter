@@ -422,7 +422,6 @@ mod tests {
             id: "fixture",
             primary: ComponentBuild::primary("component", "component"),
             dependencies: &[],
-            affected_paths: &[],
         };
     }
     struct Endpoint;
@@ -436,7 +435,6 @@ mod tests {
                 "messaging-component",
                 "messaging_component",
             )],
-            affected_paths: &[],
         };
     }
 

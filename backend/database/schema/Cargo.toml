@@ -1,0 +1,23 @@
+[package]
+name = "database-schema"
+version = "0.1.0"
+edition.workspace = true
+rust-version.workspace = true
+repository.workspace = true
+publish = false
+description = "The backend's SurrealDB schema files and the presets of capabilities.toml, embedded at build time."
+
+[dependencies]
+anyhow = "1"
+indexmap = { version = "2", features = ["serde"] }
+serde.workspace = true
+surrealdb = { version = "3.2.4", default-features = false }
+toml = { version = "1", features = ["preserve_order"] }
+
+[build-dependencies]
+indexmap = { version = "2", features = ["serde"] }
+serde.workspace = true
+toml = { version = "1", features = ["preserve_order"] }
+
+[lints]
+workspace = true

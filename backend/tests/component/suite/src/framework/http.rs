@@ -5,7 +5,6 @@ use component_test::{
 #[component_fixture(
     id = "synthetic-http",
     primary(package = "component-test-echo", target = "component_test_echo"),
-    affected_paths("backend/testing/component-test-echo/")
 )]
 pub struct SyntheticHttp;
 

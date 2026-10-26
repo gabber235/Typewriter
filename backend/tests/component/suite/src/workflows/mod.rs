@@ -28,11 +28,6 @@ mod service_onboarding;
     id = "workflow-manual-membership",
     primary(package = "user-organization", target = "user_organization"),
     dependency(package = "organization-members", target = "organization_members"),
-    affected_paths(
-        "backend/organization/user-organization/",
-        "backend/organization/organization-members/",
-        "backend/database/schema/organization/"
-    )
 )]
 pub struct ManualMembership;
 
