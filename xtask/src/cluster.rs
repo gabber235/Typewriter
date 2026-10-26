@@ -136,21 +136,32 @@ fn write_private(path: &Path, contents: &str) -> Result<()> {
 /// in its environment, never on a command line.
 pub fn create_ci(ctx: &Context, secrets: &Ci) -> Result<CiCluster> {
     let infrastructure = Infrastructure::pinned(ctx, &secrets.infrastructure_deploy_key)?;
-    let mut up = ctx.tool(CHECKOUT, "devenv", &["tasks", "run", "ci:up"]);
-    // The task runs in Infrastructure's own environment, not in the one this process runs in.
-    for (key, _) in std::env::vars_os() {
-        if key.to_string_lossy().starts_with("DEVENV_") {
-            up.env_remove(key);
+    // The tasks run in Infrastructure's own environment, not in the one this process runs in.
+    let task = |name: &str| {
+        let mut task = ctx.tool(CHECKOUT, "devenv", &["tasks", "run", name]);
+        for (key, _) in std::env::vars_os() {
+            if key.to_string_lossy().starts_with("DEVENV_") {
+                task.env_remove(key);
+            }
         }
-    }
-    up.env("CI_CONNECT_CREDENTIALS", &secrets.connect_credentials)
+        task
+    };
+    let up = task("ci:up")
+        .env("CI_CONNECT_CREDENTIALS", &secrets.connect_credentials)
         .env("CI_CONNECT_TOKEN", &secrets.connect_token)
         .env(
             "INFRASTRUCTURE_DEPLOY_KEY",
             &secrets.infrastructure_deploy_key,
         )
-        .run()
-        .with_context(|| format!("ci:up failed in {}", infrastructure.0.display()))?;
+        .run();
+    if let Err(error) = up {
+        // Lists only what is broken; the error returned stays ci:up's.
+        if let Err(status) = task("ci:status").run() {
+            eprintln!("ci:status failed too: {status:#}");
+        }
+        return Err(error)
+            .with_context(|| format!("ci:up failed in {}", infrastructure.0.display()));
+    }
     CiCluster::connect(ctx)
 }
 
