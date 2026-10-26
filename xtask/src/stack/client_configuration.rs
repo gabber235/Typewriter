@@ -18,7 +18,7 @@ pub const PANEL_CLIENT_ID: &str = "typewriter-panel";
 pub const SERVICES_CLIENT_ID: &str = "typewriter-services";
 /// The fixture users every stack knows, shared with the panel tests.
 pub const FIXTURE_USERS: &str = "backend/tests/component/fixtures/stack-users.json";
-/// The panel's configuration for Gabber's local cluster.
+/// The panel's configuration for the local development cluster.
 const LOCAL_PANEL_CONFIG: &str = "panel/config/local.json";
 
 pub struct ClientConfiguration {

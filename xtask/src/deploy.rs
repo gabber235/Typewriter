@@ -26,7 +26,7 @@ const DATABASE_BASE_IMAGE: &str = "alpine:3.20";
 /// A cluster this command may deploy to. Nothing else is reachable.
 #[derive(Clone, Copy, ValueEnum)]
 pub enum Cluster {
-    /// Gabber's k3d cluster on the Mac.
+    /// The local k3d cluster on the main checkout's machine.
     Local,
     /// The full tier's throwaway cluster (`cargo xtask cluster ci`).
     Ci,

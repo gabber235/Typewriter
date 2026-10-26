@@ -11,7 +11,7 @@ Not a correctness review. Bugs belong to tests, detectors and the gate. Report a
 
 ## Two uses
 
-- Finishing your own change: investigate with the tools below, compare what you find with what you built and with the plan, and bring every mismatch to Gabber as "we did X, but Y is the case" with a proposed next step. Do not report done while a mismatch is unanswered.
+- Finishing your own change: investigate with the tools below, compare what you find with what you built and with the plan, and bring every mismatch to the maintainer as "we did X, but Y is the case" with a proposed next step. Do not report done while a mismatch is unanswered.
 - Independent review: a fresh agent with only the change report (`cargo xtask review report`), the plan and this skill. Never the author's summary, the conversation, or a previous review.
 
 ## Questions to investigate

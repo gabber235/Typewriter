@@ -4,7 +4,7 @@
 //! with only what cannot exist in CI swapped (decryption, images, resources). Typewriter pins the
 //! revision in [`PIN`] and expects that revision checked out read only at [`CHECKOUT`]; the full
 //! tier workflow checks it out with the Infrastructure deploy key. Every command here addresses
-//! [`CONTEXT`] explicitly, so it can never reach Gabber's local cluster or production.
+//! [`CONTEXT`] explicitly, so it can never reach the local development cluster or production.
 
 use std::env;
 use std::io::Write as _;
