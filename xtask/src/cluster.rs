@@ -26,8 +26,8 @@ pub const TOOLS: &[&str] = &["devenv", "kubectl", "flux", "git"];
 /// The kubeconfig context k3d creates for the cluster `config/k3d/ci.yaml` names.
 pub const CONTEXT: &str = "k3d-seamlezz-ci";
 
-/// Where `cargo xtask deploy ci` writes the cluster's client configuration and the trust in its
-/// certificate authority, relative to the repository root.
+/// Where `cargo xtask deploy ci` writes the cluster's client configuration, relative to the
+/// repository root.
 pub const STATE: &str = ".xtask/state/cluster";
 
 /// The pinned Infrastructure revision, relative to the repository root.
@@ -49,7 +49,7 @@ pub enum ClusterCommand {
 
 pub fn command(ctx: &Context, command: ClusterCommand) -> Result<()> {
     match command {
-        ClusterCommand::Ci => create_ci(ctx, &Ci::load()?).map(drop),
+        ClusterCommand::Ci => create_ci(ctx, &Ci::load()?),
     }
 }
 
@@ -134,7 +134,7 @@ fn write_private(path: &Path, contents: &str) -> Result<()> {
 
 /// Creates the cluster through the pinned revision's `ci:up` task. The `ci` secrets reach the task
 /// in its environment, never on a command line.
-pub fn create_ci(ctx: &Context, secrets: &Ci) -> Result<CiCluster> {
+pub fn create_ci(ctx: &Context, secrets: &Ci) -> Result<()> {
     let infrastructure = Infrastructure::pinned(ctx, &secrets.infrastructure_deploy_key)?;
     // The tasks run in Infrastructure's own environment, not in the one this process runs in.
     let task = |name: &str| {
@@ -162,137 +162,62 @@ pub fn create_ci(ctx: &Context, secrets: &Ci) -> Result<CiCluster> {
         return Err(error)
             .with_context(|| format!("ci:up failed in {}", infrastructure.0.display()));
     }
-    CiCluster::connect(ctx)
+    Ok(())
 }
 
-/// The running CI cluster, with its certificate authority trusted by what this process starts.
-pub struct CiCluster {
-    /// The system's certificate bundle plus the cluster's authority.
-    bundle: PathBuf,
-    /// A home whose NSS database trusts the cluster's authority, for Chromium on Linux.
-    browser_home: Option<PathBuf>,
+/// The registry password of the `admin` user Artifact Keeper provisions in the CI cluster.
+pub fn registry_password(ctx: &Context) -> Result<String> {
+    kubectl(
+        ctx,
+        &[
+            "--namespace",
+            "artifact-keeper",
+            "get",
+            "secret",
+            "artifact-keeper-admin",
+            "--output",
+            r#"go-template={{index .data "admin-password" | base64decode}}"#,
+        ],
+    )
+    .output_text()
+    .context("cannot read the CI registry's admin password")
 }
 
-impl CiCluster {
-    /// Trusts the authority the cluster's cert-manager issues every `*.seamlezz.net` certificate
-    /// from. The files live in [`STATE`], so the trust outlives this process for a later deploy.
-    pub fn connect(ctx: &Context) -> Result<Self> {
-        let state = ctx.root.join(STATE);
-        fs::create_dir_all(&state).with_context(|| format!("cannot create {}", state.display()))?;
-        let authority = kubectl(
-            ctx,
-            &[
-                "--namespace",
-                "cert-manager",
-                "get",
-                "secret",
-                "ci-root-ca",
-                "--output",
-                r#"go-template={{index .data "ca.crt" | base64decode}}"#,
-            ],
-        )
-        .output_text()
-        .context("cannot read the CI cluster's certificate authority")?;
-        let ca = state.join("ca.crt");
-        fs::write(&ca, &authority).with_context(|| format!("cannot write {}", ca.display()))?;
-
-        let system = ["SSL_CERT_FILE", "NIX_SSL_CERT_FILE"]
-            .into_iter()
-            .find_map(std::env::var_os)
-            .map_or_else(
-                || PathBuf::from("/etc/ssl/certs/ca-certificates.crt"),
-                PathBuf::from,
-            );
-        let mut bundle = fs::read_to_string(&system)
-            .with_context(|| format!("cannot read the system certificates {}", system.display()))?;
-        bundle.push('\n');
-        bundle.push_str(&authority);
-        let bundle_file = state.join("ca-bundle.crt");
-        fs::write(&bundle_file, bundle)
-            .with_context(|| format!("cannot write {}", bundle_file.display()))?;
-
-        let browser_home = if cfg!(target_os = "linux") {
-            let home = state.join("browser-home");
-            trust_in_nss(ctx, &home, &ca)?;
-            Some(home)
-        } else {
-            None
-        };
-        Ok(Self {
-            bundle: bundle_file,
-            browser_home,
-        })
-    }
-
-    /// Makes `command` trust the cluster's authority: Nix built tools read these variables
-    /// instead of the system store.
-    pub fn trust(&self, command: &mut Command) {
-        command
-            .env("SSL_CERT_FILE", &self.bundle)
-            .env("NIX_SSL_CERT_FILE", &self.bundle);
-    }
-
-    /// The `HOME` for the browser the panel web scenarios drive: Chromium on Linux reads trusted
-    /// authorities from `$HOME/.pki/nssdb` only. Elsewhere the browser keeps its own home, and the
-    /// authority must be trusted by hand.
-    pub fn browser_home(&self) -> Option<&Path> {
-        self.browser_home.as_deref()
-    }
-
-    /// The registry password of the `admin` user Artifact Keeper provisions in the cluster.
-    pub fn registry_password(&self, ctx: &Context) -> Result<String> {
-        kubectl(
-            ctx,
-            &[
-                "--namespace",
-                "artifact-keeper",
-                "get",
-                "secret",
-                "artifact-keeper-admin",
-                "--output",
-                r#"go-template={{index .data "admin-password" | base64decode}}"#,
-            ],
-        )
-        .output_text()
-        .context("cannot read the CI registry's admin password")
-    }
-
-    /// Points the Typewriter tenant at `revision` and reconciles it, now that its images are in
-    /// the registry; returns once every Typewriter Kustomization is Ready.
-    pub fn release(&self, ctx: &Context, revision: &str) -> Result<()> {
-        let patch = serde_json::json!([
-            { "op": "add", "path": "/spec/ref", "value": { "commit": revision } }
-        ])
-        .to_string();
-        kubectl(
-            ctx,
-            &[
-                "--namespace",
-                "flux-system",
-                "patch",
-                "gitrepository",
-                "typewriter-backend",
-                "--type=json",
-                "--patch",
-                &patch,
-            ],
-        )
-        .run()?;
-        let mut resume = ctx.tool(
-            ".",
-            "flux",
-            &[
-                "--context",
-                CONTEXT,
-                "--namespace",
-                "flux-system",
-                "resume",
-                "kustomization",
-            ],
-        );
-        resume.args(TENANT).args(["--timeout", "20m"]);
-        resume.run()
-    }
+/// Points the CI cluster's Typewriter tenant at `revision` and reconciles it, now that its images
+/// are in the registry; returns once every Typewriter Kustomization is Ready.
+pub fn release(ctx: &Context, revision: &str) -> Result<()> {
+    let patch = serde_json::json!([
+        { "op": "add", "path": "/spec/ref", "value": { "commit": revision } }
+    ])
+    .to_string();
+    kubectl(
+        ctx,
+        &[
+            "--namespace",
+            "flux-system",
+            "patch",
+            "gitrepository",
+            "typewriter-backend",
+            "--type=json",
+            "--patch",
+            &patch,
+        ],
+    )
+    .run()?;
+    let mut resume = ctx.tool(
+        ".",
+        "flux",
+        &[
+            "--context",
+            CONTEXT,
+            "--namespace",
+            "flux-system",
+            "resume",
+            "kustomization",
+        ],
+    );
+    resume.args(TENANT).args(["--timeout", "20m"]);
+    resume.run()
 }
 
 /// The Typewriter tenant's Kustomizations, in their dependency order.
@@ -301,38 +226,6 @@ const TENANT: [&str; 3] = [
     "typewriter-backend",
     "typewriter-db-complete",
 ];
-
-/// Creates an NSS database under `home` that trusts `ca` for TLS servers.
-fn trust_in_nss(ctx: &Context, home: &Path, ca: &Path) -> Result<()> {
-    if home.exists() {
-        fs::remove_dir_all(home).with_context(|| format!("cannot clear {}", home.display()))?;
-    }
-    let nssdb = home.join(".pki/nssdb");
-    fs::create_dir_all(&nssdb).with_context(|| format!("cannot create {}", nssdb.display()))?;
-    let database = format!("sql:{}", nssdb.display());
-    ctx.tool(
-        ".",
-        "certutil",
-        &["-N", "-d", &database, "--empty-password"],
-    )
-    .run()?;
-    ctx.tool(
-        ".",
-        "certutil",
-        &[
-            "-A",
-            "-d",
-            &database,
-            "-n",
-            "seamlezz-ci",
-            "-t",
-            "C,,",
-            "-i",
-        ],
-    )
-    .arg(ca)
-    .run()
-}
 
 /// kubectl against the CI cluster only.
 fn kubectl(ctx: &Context, args: &[&str]) -> Command {

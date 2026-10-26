@@ -14,8 +14,7 @@ use std::time::Duration;
 
 use anyhow::{Context as _, Result, bail};
 
-use crate::cluster::CiCluster;
-use crate::deploy;
+use crate::deploy::{self, Cluster};
 use crate::evidence::{self, Recorded};
 use crate::lock::HeavyLock;
 use crate::process::{Supervisor, Unsupervised};
@@ -77,9 +76,9 @@ impl Suite {
 pub fn run(ctx: &Context, suite: Suite) -> Result<()> {
     match suite {
         Suite::Full => {
-            let ci = cluster::create_ci(ctx, &secrets::Ci::load()?)?;
-            deploy::deploy_ci(ctx, &ci)?;
-            scenarios(ctx, Suite::PanelWeb, Target::Cluster(&ci))
+            cluster::create_ci(ctx, &secrets::Ci::load()?)?;
+            deploy::deploy(ctx, Cluster::Ci)?;
+            scenarios(ctx, Suite::PanelWeb, Target::Cluster)
         }
         suite => scenarios(ctx, suite, Target::Stack),
     }
@@ -87,20 +86,20 @@ pub fn run(ctx: &Context, suite: Suite) -> Result<()> {
 
 /// What the scenarios run against.
 #[derive(Clone, Copy)]
-enum Target<'a> {
+enum Target {
     /// A fresh worktree stack, up for the run only.
     Stack,
     /// The CI cluster `cargo xtask deploy ci` deployed to.
-    Cluster(&'a CiCluster),
+    Cluster,
 }
 
 /// Runs `suite`'s scenarios against `target`.
-fn scenarios(ctx: &Context, suite: Suite, target: Target<'_>) -> Result<()> {
+fn scenarios(ctx: &Context, suite: Suite, target: Target) -> Result<()> {
     // The panel compiles against the generated Skir and build_runner sources.
     generate::generate(ctx, None)?;
     let name = match target {
         Target::Stack => suite.name().to_owned(),
-        Target::Cluster(_) => format!("{}-{}", Suite::Full.name(), suite.name()),
+        Target::Cluster => format!("{}-{}", Suite::Full.name(), suite.name()),
     };
     let evidence = ctx.root.join(evidence::RESULTS).join(&name);
     if evidence.exists() {
@@ -122,16 +121,15 @@ fn scenarios(ctx: &Context, suite: Suite, target: Target<'_>) -> Result<()> {
                 broker_tests(ctx, stack)?;
             }
             let defines = ctx.root.join(PANEL_DEFINES);
-            settle(ctx, suite, &defines, None, &evidence, &quarantine, stack)
+            settle(ctx, suite, &defines, &evidence, &quarantine, stack)
         })?,
-        Target::Cluster(ci) => {
+        Target::Cluster => {
             let _lock = lock()?;
             let defines = ctx.root.join(cluster::STATE).join("panel.json");
             settle(
                 ctx,
                 suite,
                 &defines,
-                ci.browser_home(),
                 &evidence,
                 &quarantine,
                 &mut Unsupervised::with_interrupts(),
@@ -154,39 +152,21 @@ fn scenarios(ctx: &Context, suite: Suite, target: Target<'_>) -> Result<()> {
     Ok(())
 }
 
-/// One drive of every scenario, then one rerun of the failed ones. `browser_home` is the `HOME` the
-/// driven browser starts with, when it must differ from this process's.
+/// One drive of every scenario, then one rerun of the failed ones.
 fn settle(
     ctx: &Context,
     suite: Suite,
     defines: &Path,
-    browser_home: Option<&Path>,
     evidence: &Path,
     quarantine: &Quarantine,
     supervisor: &mut dyn Supervisor,
 ) -> Result<TestRun> {
-    let first = drive(
-        ctx,
-        supervisor,
-        suite,
-        defines,
-        browser_home,
-        evidence,
-        None,
-    )?;
+    let first = drive(ctx, supervisor, suite, defines, evidence, None)?;
     results::settle(
         first,
         |failed| {
             let rerun = Scratch::new(&format!("e2e-{}-rerun", suite.name()))?;
-            drive(
-                ctx,
-                supervisor,
-                suite,
-                defines,
-                browser_home,
-                &rerun.0,
-                Some(failed),
-            )
+            drive(ctx, supervisor, suite, defines, &rerun.0, Some(failed))
         },
         quarantine,
     )
@@ -211,7 +191,6 @@ fn drive(
     supervisor: &mut dyn Supervisor,
     suite: Suite,
     defines_file: &Path,
-    browser_home: Option<&Path>,
     out: &Path,
     only: Option<&[&str]>,
 ) -> Result<TestRun> {
@@ -264,13 +243,7 @@ fn drive(
                     "--headless".into()
                 },
             ]);
-            // chromedriver starts the browser, which inherits its environment.
-            let mut chromedriver: Vec<String> = Vec::new();
-            if let Some(home) = browser_home {
-                chromedriver.extend(["env".into(), format!("HOME={}", home.display())]);
-            }
-            chromedriver.extend(["chromedriver".into(), format!("--port={port}")]);
-            Recorded::video(command).with(chromedriver)
+            Recorded::video(command).with(vec!["chromedriver".into(), format!("--port={port}")])
         }
         Suite::Full => unreachable!("the full suite drives the panel web scenarios"),
     }
