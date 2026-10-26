@@ -1,6 +1,8 @@
 package com.typewritermc.realm.storage
 
+import com.surrealdb.NotAllowedException
 import com.surrealdb.Surreal
+import com.surrealdb.signin.RootCredential
 import com.typewritermc.realm.SURREALDB_EMBEDDED_VERSION
 import com.typewritermc.realm.SURREALDB_SERVER_VERSION
 import com.typewritermc.services.libs.telemetry.ErrorSlug
@@ -9,6 +11,7 @@ import com.typewritermc.services.libs.telemetry.testing.TelemetryTestHarness
 import de.infix.testBalloon.framework.core.testSuite
 import io.kotest.assertions.throwables.shouldThrow
 import io.kotest.matchers.shouldBe
+import java.net.URI
 import java.nio.file.Files
 
 val DatabaseProviderTest by testSuite {
@@ -53,15 +56,31 @@ val DatabaseProviderTest by testSuite {
         }
     }
 
-    test("versioned SurrealKV opens persistent storage") {
-        val directory = Files.createTempDirectory("realm_surrealkv_versioned")
-        try {
-            Surreal().use { database ->
-                database.connect(DatabaseEndpoint.Embedded.SurrealKv(directory).connectionString)
-                database.version() shouldBe SURREALDB_EMBEDDED_VERSION
+    test("root credentials sign the connection in as the configured user") {
+        signInDatabase().use { database ->
+            database.authenticate(remoteConfiguration(DatabaseAuthentication.Root("realm_root", "secret")))
+
+            database.signedInUser() shouldBe "realm_root"
+        }
+    }
+
+    test("wrong root credentials are refused by the database") {
+        signInDatabase().use { database ->
+            shouldThrow<NotAllowedException> {
+                database.authenticate(remoteConfiguration(DatabaseAuthentication.Root("realm_root", "wrong")))
             }
-        } finally {
-            directory.toFile().deleteRecursively()
+            database.signedInUser() shouldBe null
+        }
+    }
+
+    test("a bearer token signs the connection in as the user it was issued to") {
+        signInDatabase().use { database ->
+            val token = database.signin(RootCredential("realm_root", "secret")).access
+            database.invalidate()
+
+            database.authenticate(remoteConfiguration(DatabaseAuthentication.Bearer(token)))
+
+            database.signedInUser() shouldBe "realm_root"
         }
     }
 
@@ -104,3 +123,22 @@ val DatabaseProviderTest by testSuite {
         }
     }
 }
+
+/** An embedded database with one root user, standing in for a remote server that checks credentials. */
+private fun signInDatabase(): Surreal =
+    Surreal().apply {
+        connect(DatabaseEndpoint.Embedded.Memory().connectionString)
+        useNs("sign_in").useDb("sign_in")
+        query("DEFINE USER realm_root ON ROOT PASSWORD 'secret' ROLES OWNER;").take(0)
+    }
+
+private fun remoteConfiguration(authentication: DatabaseAuthentication) =
+    RealmDatabaseConfiguration(
+        endpoint = DatabaseEndpoint.Remote(URI("wss://database.example.com")),
+        authentication = authentication,
+        namespace = "sign_in",
+        database = "sign_in",
+        expectedVersion = SURREALDB_SERVER_VERSION,
+    )
+
+private fun Surreal.signedInUser(): String? = query("RETURN \$token.ID;").take(0).takeUnless { it.isNone || it.isNull }?.getString()

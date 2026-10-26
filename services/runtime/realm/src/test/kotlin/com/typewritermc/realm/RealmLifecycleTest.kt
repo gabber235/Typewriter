@@ -141,7 +141,27 @@ val RealmLifecycleTest by testSuite {
                 runCurrent()
 
                 startup.await()
-                session.transport.activeSubscriptionCount shouldBeGreaterThan 0
+                session.transport.activeRealmRoutes() shouldBe REALM_ROUTES
+            } finally {
+                fixture.close()
+            }
+        }
+    }
+
+    test("a stopped Realm stops its routes and serves them again when started on the same staging") {
+        runTest {
+            val fixture = RealmLifecycleFixture(this)
+            try {
+                val session = fixture.session(1)
+                fixture.messaging.value = session.session
+                fixture.start()
+
+                fixture.stop()
+                session.transport.activeRealmRoutes() shouldBe emptySet()
+                fixture.databaseOpen shouldBe false
+
+                fixture.start()
+                session.transport.activeRealmRoutes() shouldBe REALM_ROUTES
             } finally {
                 fixture.close()
             }
@@ -461,6 +481,44 @@ private fun lifecycleIsolationCatalog(
     return RealmCatalogIncarnation(assembly, deployment)
 }
 
+/** Every editor request subject a started Realm answers for the fixture organization and Realm. */
+private val REALM_ROUTES =
+    listOf(
+        "editor.catalog.fetch",
+        "editor.catalog.invalidate",
+        "editor.creation.prepare",
+        "editor.presentation.search",
+        "editor.presentation.search.cancel",
+        "editor.capability.computation.invoke",
+        "editor.capability.command.invoke",
+        "editor.resources.operations.resolve",
+        "editor.resources.drops.resolve",
+        "editor.resources.actions.prepare",
+        "editor.authoring.state.query",
+        "editor.authoring.edit.commit",
+        "editor.authoring.type.preview",
+        "editor.authoring.type.commit",
+        "editor.authoring.search",
+        "editor.authoring.compiled.query",
+        "editor.authoring.compiled.status.query",
+        "editor.authoring.publish",
+        "editor.authoring.publication.query",
+        "editor.authoring.publication.watch",
+    ).map { "service.to.realm.organization.organization.realm.$it" }.toSet()
+
+/** Realm request subjects with a subscription that is still open. */
+private fun FakeMessageTransport.activeRealmRoutes(): Set<String> {
+    val open = mutableMapOf<String, Int>()
+    actions.forEach { action ->
+        when (action) {
+            is FakeMessageTransport.Action.Subscribe -> open.merge(action.pattern.value, 1, Int::plus)
+            is FakeMessageTransport.Action.SubscriptionClose -> open.merge(action.pattern.value, -1, Int::plus)
+            else -> Unit
+        }
+    }
+    return open.filter { (subject, count) -> count > 0 && subject.startsWith("service.to.") }.keys
+}
+
 /** The session reply inbox prefix of the panel member whose requests the fixture delivers. */
 private const val PANEL_REPLY_INBOX = "_INBOX.member.0123456789abcdef0123456789abcdef"
 
@@ -577,6 +635,10 @@ private class RealmLifecycleFixture(
             realm.start("realm")
         }
         databaseOpen shouldBe true
+    }
+
+    suspend fun stop() {
+        realm.shutdown()
     }
 
     suspend fun close() {

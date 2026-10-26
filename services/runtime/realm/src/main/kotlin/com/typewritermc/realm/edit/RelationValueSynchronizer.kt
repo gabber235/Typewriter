@@ -190,7 +190,7 @@ internal class RelationValueSynchronizer(
                             counterpart.value.containing
                         }
                     if (problems.isNotEmpty()) return
-                    val resolvedTargetRecord = targetRecord ?: return
+                    val resolvedTargetRecord = resources[intent.value.target] ?: return
                     val locations =
                         ResourceValueMapper
                             .declaredLocations(

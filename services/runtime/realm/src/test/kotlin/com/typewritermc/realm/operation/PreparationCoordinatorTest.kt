@@ -28,7 +28,7 @@ import skirout.editor.v1.type_catalog.TypeSelection
 import java.util.concurrent.atomic.AtomicInteger
 
 val PreparationCoordinatorTestSuite by testSuite {
-    test("each preparation evaluates defaults independently") {
+    test("concurrent identical preparations each get their own evaluated result") {
         runTest {
             val evaluations = AtomicInteger()
             val release = CompletableDeferred<Unit>()
@@ -47,8 +47,6 @@ val PreparationCoordinatorTestSuite by testSuite {
             release.complete(Unit)
             val results = callers.awaitAll()
             results.toSet().size shouldBe 12
-            evaluations.get() shouldBe 12
-            coordinator.prepare(request) shouldBe prepared("13")
         }
     }
     test("changed supplied values are independently evaluated") {

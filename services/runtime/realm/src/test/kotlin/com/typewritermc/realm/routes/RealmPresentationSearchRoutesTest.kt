@@ -29,8 +29,8 @@ import com.typewritermc.setup.setup
 import com.typewritermc.testing.routes.fixtureGraphEntry
 import com.typewritermc.testing.routes.fixtureGraphPage
 import com.typewritermc.testing.routes.fixtureTimelinePage
+import com.typewritermc.testkit.ready
 import com.typewritermc.types.ResourceId
-import com.typewritermc.types.catalog.Resolution
 import com.typewritermc.types.namedTemplate
 import com.typewritermc.types.requirePortable
 import com.typewritermc.types.template
@@ -308,7 +308,7 @@ private fun RealmFixture.candidateRequest(
 private fun RealmFixture.option(value: DataValue): OperationResourceOption =
     views.read { root ->
         val checked =
-            (root.catalog.checked.resolve(com.typewritermc.operations.OperationResourceOptionDefinition.use.use) as Resolution.Ready).value
+            root.catalog.checked.ready(com.typewritermc.operations.OperationResourceOptionDefinition.use.use)
         val complete =
             checked.complete(
                 value.requirePortable(),

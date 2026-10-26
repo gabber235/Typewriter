@@ -16,6 +16,7 @@ import com.typewritermc.operations.OperationDeclaration
 import com.typewritermc.presentation.DefaultPresentationRuntime
 import com.typewritermc.presentation.PresentationRuntime
 import com.typewritermc.realm.catalog.RealmCatalogIncarnation
+import com.typewritermc.realm.catalog.RealmCatalogStore
 import skirout.editor.v1.type_catalog.CatalogGeneration
 import java.nio.file.Path
 import kotlin.reflect.KClass
@@ -28,7 +29,12 @@ data class RealmCatalog(
     val artifacts: List<GeneratedProviderArtifact> = emptyList(),
     val declarations: (CatalogContributions) -> List<OwnedTypeDeclaration> = { emptyList() },
     val operations: (ProviderOrigin) -> List<OperationDeclaration> = { emptyList() },
-) {
+) : FixtureCatalog {
+    override fun activate(generation: String): ActiveCatalog {
+        val store = RealmCatalogStore().apply { replace(incarnation(generation)) }
+        return ActiveCatalog(store.captureCurrent(), store)
+    }
+
     /** The catalog discovery assembles from these artifacts, as Realm activation does. */
     fun incarnation(generation: String): RealmCatalogIncarnation {
         val deployment =

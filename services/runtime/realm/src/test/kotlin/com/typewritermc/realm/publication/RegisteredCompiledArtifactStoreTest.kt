@@ -15,32 +15,32 @@ import skirout.editor.v1.type_catalog.PublicationId
 import skirout.kernel.v1.resource_id.ResourceId
 
 val RegisteredCompiledArtifactStoreTest by testSuite {
-    test("publication outputs are complete and reuse verified payload blobs") {
+    test("a payload stored for one publication is reused by the next without another upload") {
         val blobs = InMemoryBlobEndpoint()
         val store = RegisteredCompiledArtifactStore(blobs, TestPublicationRetention())
-        val firstArtifact = 'a'.compiledArtifact("first")
-        val first =
-            store.store(
-                PublicationId(value = "first"),
-                CatalogGeneration(value = "catalog"),
-                "implementation",
-                listOf(firstArtifact),
-            )
-        val second =
-            store.store(
-                PublicationId(value = "second"),
-                CatalogGeneration(value = "catalog"),
-                "implementation",
-                listOf(firstArtifact),
-            )
-        first.outputs.single().blob shouldBe second.outputs.single().blob
+        val artifact = 'a'.compiledArtifact("first")
+
+        val first = store.store(PublicationId(value = "first"), CatalogGeneration(value = "catalog"), "implementation", listOf(artifact))
+        val second = store.store(PublicationId(value = "second"), CatalogGeneration(value = "catalog"), "implementation", listOf(artifact))
+
+        second.outputs.single().blob shouldBe first.outputs.single().blob
         blobs.stores shouldBe 1
+    }
+    test("a stored publication has one output for each compiled root, and none for no roots") {
+        val store = RegisteredCompiledArtifactStore(InMemoryBlobEndpoint(), TestPublicationRetention())
         val replacement = 'b'.compiledArtifact("replacement")
-        val third = store.store(PublicationId(value = "third"), CatalogGeneration(value = "catalog"), "implementation", listOf(replacement))
-        third.outputs.map { it.reference.root } shouldBe listOf(replacement.root)
-        third.publication shouldBe PublicationId(value = "third")
-        third.formatRevision shouldBe com.typewritermc.engine.PUBLISHED_CONTENT_FORMAT_REVISION
+
+        val stored =
+            store.store(
+                PublicationId(value = "third"),
+                CatalogGeneration(value = "catalog"),
+                "implementation",
+                listOf(replacement),
+            )
         val empty = store.store(PublicationId(value = "empty"), CatalogGeneration(value = "catalog"), "implementation", emptyList())
+
+        stored.publication shouldBe PublicationId(value = "third")
+        stored.outputs.map { it.reference.root } shouldBe listOf(replacement.root)
         empty.outputs shouldBe emptyList()
     }
     test("unchanged selected output restores missing exact bytes without a new publication") {
@@ -89,7 +89,13 @@ val RegisteredCompiledArtifactStoreTest by testSuite {
                     .blob.digest,
             )
         blobs.remove(digest)
-        shouldThrow<IllegalStateException> { store.restoreSelected(selected, listOf(artifact.copy(payload = byteArrayOf(2)))) }
+        shouldThrow<IllegalStateException> {
+            store.restoreSelected(
+                selected,
+                listOf(artifact.copy(payload = byteArrayOf(2))),
+            )
+        }.message shouldBe
+            "Missing selected publication bytes cannot be rebuilt identically"
         blobs.metadata(digest) shouldBe BlobResult.NotFound
     }
 }

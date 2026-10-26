@@ -14,6 +14,7 @@ import com.typewritermc.authoring.fieldMap
 import com.typewritermc.authoring.of
 import com.typewritermc.authoring.requireValid
 import com.typewritermc.authoring.root
+import com.typewritermc.capability.RealmCapabilityPermissionDeniedException
 import com.typewritermc.discovery.ProviderOrigin
 import com.typewritermc.library.Book
 import com.typewritermc.library.LibraryDefinition
@@ -48,6 +49,11 @@ import com.typewritermc.operations.fillOnDrop
 import com.typewritermc.realm.routeFixtureCatalog
 import com.typewritermc.realm.testing.RealmCatalog
 import com.typewritermc.realm.testing.RealmFixture
+import com.typewritermc.realm.testing.codes
+import com.typewritermc.realm.testing.expectRefused
+import com.typewritermc.realm.testing.link
+import com.typewritermc.realm.testing.links
+import com.typewritermc.realm.testing.value
 import com.typewritermc.realm.testing.withSetup
 import com.typewritermc.setup.SetupHandle
 import com.typewritermc.setup.SetupList
@@ -63,11 +69,9 @@ import com.typewritermc.testing.routes.fixtureTimelinePage
 import com.typewritermc.types.Ref
 import com.typewritermc.types.endpointId
 import com.typewritermc.types.fieldMap
-import com.typewritermc.types.items
 import com.typewritermc.types.namedTemplate
 import com.typewritermc.types.payload
 import com.typewritermc.types.toResourceId
-import com.typewritermc.types.toSkir
 import com.typewritermc.types.type
 import com.typewritermc.types.use
 import de.infix.testBalloon.framework.core.testSuite
@@ -79,7 +83,6 @@ import skirout.editor.v1.authoring.AuthoringObservationId
 import skirout.editor.v1.authoring.CommitPreparedEditResponse
 import skirout.editor.v1.authoring.EditIntent
 import skirout.editor.v1.authoring.LinkOccurrenceId
-import skirout.editor.v1.authoring.PreparedEdit
 import skirout.editor.v1.catalog.EndpointSlot
 import skirout.editor.v1.resource_operations.AuthoringActionResult
 import skirout.editor.v1.resource_operations.OperationSelectionEffect
@@ -238,8 +241,8 @@ val ResourceOperationRoutesTest by testSuite {
             val saved = resources
             val copy = (saved.keys - before.keys).single()
             (preview.value.selection as OperationSelectionEffect.ReplaceWrapper).value.map { it.value } shouldBe listOf(copy.value)
-            saved.getValue(graph.tag.resource).linkTargets("parents").toSet() shouldBe setOf(graph.parent.resource, copy)
-            saved.getValue(copy).linkTargets("parents") shouldBe listOf(graph.parent.resource)
+            saved.getValue(graph.tag.resource).links("parents").toSet() shouldBe setOf(graph.parent.resource, copy)
+            saved.getValue(copy).links("parents") shouldBe listOf(graph.parent.resource)
         }
     }
 
@@ -260,11 +263,11 @@ val ResourceOperationRoutesTest by testSuite {
 
             moved.forEach { page ->
                 val id = page.resource
-                saved.getValue(id).linkTarget("book") shouldBe destination.resource
-                saved.getValue(id).field("chapter") shouldBe before.getValue(id).field("chapter")
-                saved.getValue(id).field("priority") shouldBe before.getValue(id).field("priority")
+                saved.getValue(id).link("book") shouldBe destination.resource
+                saved.getValue(id).value("chapter") shouldBe before.getValue(id).value("chapter")
+                saved.getValue(id).value("priority") shouldBe before.getValue(id).value("priority")
             }
-            saved.getValue(destination.resource).linkTargets("pages") shouldContainAll (residents + moved).map { it.resource }
+            saved.getValue(destination.resource).links("pages") shouldContainAll (residents + moved).map { it.resource }
         }
     }
 
@@ -275,8 +278,8 @@ val ResourceOperationRoutesTest by testSuite {
             val saved = move(page.graphEntry, page.timeline, PlacementAnchor(40.0, 40.0))
 
             val moved = saved.getValue(page.graphEntry.resource)
-            moved.linkTarget("page") shouldBe page.timeline.resource
-            moved.field("placement") shouldBe before.getValue(page.graphEntry.resource).field("placement")
+            moved.link("page") shouldBe page.timeline.resource
+            moved.value("placement") shouldBe before.getValue(page.graphEntry.resource).value("placement")
         }
     }
 
@@ -285,7 +288,7 @@ val ResourceOperationRoutesTest by testSuite {
             val saved = move(page.graphEntry, page.canvas)
 
             val moved = saved.getValue(page.graphEntry.resource)
-            moved.linkTarget("page") shouldBe page.canvas.resource
+            moved.link("page") shouldBe page.canvas.resource
             val placement = moved.graphPlacement()
             placement.intersectsWithGap(saved.getValue(page.residentEntry.resource).graphPlacement()) shouldBe false
             (placement.width to placement.height) shouldBe (2 to 2)
@@ -319,8 +322,8 @@ val ResourceOperationRoutesTest by testSuite {
             val saved = operations.commit(operations.prepare(operations.operation(Duplicate), page.timelineEntry.resource))
 
             val copy = saved.getValue((saved.keys - before.keys).single())
-            copy.linkTarget("page") shouldBe page.timeline.resource
-            copy.field("placement") shouldBe before.getValue(page.timelineEntry.resource).field("placement")
+            copy.link("page") shouldBe page.timeline.resource
+            copy.value("placement") shouldBe before.getValue(page.timelineEntry.resource).value("placement")
         }
     }
 
@@ -340,7 +343,7 @@ val ResourceOperationRoutesTest by testSuite {
 
             val saved = link(LinkWith, graph.tag, LinkWithInput(graph.book.id))
 
-            saved.getValue(graph.book.resource).linkTargets("tags") shouldBe listOf(graph.tag.resource)
+            saved.getValue(graph.book.resource).links("tags") shouldBe listOf(graph.tag.resource)
             saved.getValue(graph.tag.resource).fields shouldBe before.getValue(graph.tag.resource).fields
         }
     }
@@ -349,8 +352,8 @@ val ResourceOperationRoutesTest by testSuite {
         withSetup(tagGraph) { graph ->
             val saved = link(LinkWith, graph.loose, LinkWithInput(graph.tag.id))
 
-            saved.getValue(graph.loose.resource).linkTargets("parents") shouldBe listOf(graph.tag.resource)
-            saved.getValue(graph.tag.resource).linkTargets("parents") shouldBe listOf(graph.parent.resource)
+            saved.getValue(graph.loose.resource).links("parents") shouldBe listOf(graph.tag.resource)
+            saved.getValue(graph.tag.resource).links("parents") shouldBe listOf(graph.parent.resource)
         }
     }
 
@@ -366,13 +369,12 @@ val ResourceOperationRoutesTest by testSuite {
         withSetup(tagGraph) { graph ->
             val saved = link(Unlink, graph.tag, UnlinkInput(graph.parent.id))
 
-            saved.getValue(graph.tag.resource).linkTargets("parents") shouldBe emptyList()
+            saved.getValue(graph.tag.resource).links("parents") shouldBe emptyList()
         }
     }
 
     test("a tag cycle written directly into the parents field is refused and changes nothing") {
         withSetup(tagGraph) { graph ->
-            val before = resources
             // The panel's raw write of the field, as an author editing it by hand sends it.
             val cyclic =
                 encoder.record(
@@ -385,16 +387,7 @@ val ResourceOperationRoutesTest by testSuite {
                     value = cyclic.fieldMap.getValue("parents"),
                 )
 
-            val response =
-                commit(PreparedEdit(catalog = views.read { it.catalog.generation }, expectations = emptyList(), intents = listOf(write)))
-
-            response
-                .shouldBeInstanceOf<CommitPreparedEditResponse.RejectedErrorWrapper>()
-                .value
-                .map { it.code }
-                .toSet() shouldBe
-                setOf("relation_cycle")
-            resources shouldBe before
+            expectRefused(write).codes.toSet() shouldBe setOf("relation_cycle")
         }
     }
 
@@ -438,6 +431,28 @@ val ResourceOperationRoutesTest by testSuite {
                 .shouldBeInstanceOf<AuthoringActionResult.FailedErrorWrapper>()
                 .value.diagnostics
                 .map { it.code } shouldBe listOf("resolution_failed")
+        }
+    }
+
+    test("an operation whose callbacks deny permission is refused as permission_denied when resolving, dropping or preparing it") {
+        withSetup(tagGraph, catalog = RealmCatalog(operations = { origin -> listOf(guarded(origin)) })) { graph ->
+            val denied = listOf("permission_denied" to LOCKED)
+
+            operations
+                .resolve(graph.tag.resource)
+                .shouldBeInstanceOf<ResolveResourceOperationsResult.PermissionDeniedErrorWrapper>()
+                .value.diagnostics
+                .map { it.code to it.message } shouldBe denied
+            operations
+                .dropCandidates(graph.tag.resource)
+                .shouldBeInstanceOf<ResolveDropCandidatesResult.PermissionDeniedErrorWrapper>()
+                .value.diagnostics
+                .map { it.code to it.message } shouldBe denied
+            operations.routes
+                .prepare(operations.prepare(operations.operation("fixture.Guarded"), graph.tag.resource))
+                .shouldBeInstanceOf<AuthoringActionResult.PermissionDeniedErrorWrapper>()
+                .value.diagnostics
+                .map { it.code to it.message } shouldBe denied
         }
     }
 
@@ -572,6 +587,30 @@ private fun orphanTag(origin: ProviderOrigin) =
         }
     }
 
+private const val LOCKED = "Tags are locked for this member."
+
+/** A Tag operation whose availability and drop candidates need a permission the caller lacks. */
+private fun guarded(origin: ProviderOrigin) =
+    collectOperation<ResourceDraft, LinkWithInput>(
+        origin,
+        "fixture.Guarded",
+        ResourceTarget.type(TagDefinition.id.namedTemplate()),
+        AnyResourceSubjects,
+        OperationInput.Typed(LinkWithInputDefinition.use),
+        "Guarded",
+    ) { spec ->
+        with(ResourceOperationSpecImpl(spec)) {
+            availableWhen { throw RealmCapabilityPermissionDeniedException(LOCKED) }
+            input {
+                LinkWithInputFields.target {
+                    candidates { throw RealmCapabilityPermissionDeniedException(LOCKED) }
+                    fillOnDrop()
+                }
+            }
+            prepare { }
+        }
+    }
+
 /** A Tag operation whose availability always fails. */
 private fun brokenAvailability(origin: ProviderOrigin) =
     collectOperation<ResourceDraft, Unit>(
@@ -588,8 +627,6 @@ private fun brokenAvailability(origin: ProviderOrigin) =
         }
     }
 
-private fun AuthoringRecord.field(name: String): DataValue? = fieldMap[name]
-
 private fun AuthoringRecord.graphPlacement(): GraphPlacement {
     val fields = ((fieldMap.getValue("placement") as DataValue.NamedWrapper).payload as DataValue.RecordWrapper).value.fieldMap
 
@@ -600,20 +637,3 @@ private fun AuthoringRecord.graphPlacement(): GraphPlacement {
 private fun GraphPlacement.intersectsWithGap(other: GraphPlacement): Boolean =
     x.toLong() < other.x.toLong() + other.width + 1 && x.toLong() + width + 1 > other.x &&
         y.toLong() < other.y.toLong() + other.height + 1 && y.toLong() + height + 1 > other.y
-
-private fun AuthoringRecord.linkTarget(field: String): ResourceId =
-    ((fieldMap.getValue(field) as DataValue.NamedWrapper).payload as DataValue.LinkWrapper)
-        .value.target.resource
-
-private fun AuthoringRecord.linkTargets(field: String): List<ResourceId> {
-    val items =
-        when (val payload = (fieldMap.getValue(field) as DataValue.NamedWrapper).payload) {
-            is DataValue.ListValueWrapper -> payload.items
-            is DataValue.SetValueWrapper -> payload.items
-            else -> error("Expected a collection in $field.")
-        }
-    return items.map {
-        ((it.value as DataValue.NamedWrapper).payload as DataValue.LinkWrapper)
-            .value.target.resource
-    }
-}

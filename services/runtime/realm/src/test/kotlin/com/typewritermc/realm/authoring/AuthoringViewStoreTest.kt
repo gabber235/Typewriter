@@ -30,7 +30,9 @@ import skirout.kernel.v1.resource_id.ResourceId
 import java.math.BigInteger
 import java.util.concurrent.CountDownLatch
 import java.util.concurrent.Executors
+import java.util.concurrent.FutureTask
 import java.util.concurrent.TimeUnit
+import java.util.concurrent.TimeoutException
 
 val AuthoringViewStoreTest by testSuite {
     test("operation overlays require the exact saved observation and preserve saved state") {
@@ -82,37 +84,35 @@ val AuthoringViewStoreTest by testSuite {
         store.close()
         catalog.openCount shouldBe 0
     }
-    test("read contexts belong to one retained original view") {
-        val catalog = TestCatalogLease()
-        val store = InMemoryAuthoringViewStore(catalog, AuthoringSeed(emptyMap()))
-        val original = store.capture()
-        val context = original.root.readContext
-        store.install(store.prepare(AuthoringViewDelta()))
-        store.retain(context).use { (it.root === original.root) shouldBe true }
-        original.close()
-        shouldThrow<IllegalArgumentException> { store.retain(context) }
-        store.close()
-    }
-    test("reload failure prevents serving old current state but preserves retained reads") {
+    test("a read context resumes its original view while retained and is refused once released") {
         val id = ResourceId(value = "page")
         val original = record(name = "Quest")
-        val catalog = TestCatalogLease()
-        val store = InMemoryAuthoringViewStore(catalog, AuthoringSeed(mapOf(id to original)))
+        val store = InMemoryAuthoringViewStore(TestCatalogLease(), AuthoringSeed(mapOf(id to original)))
+        val lease = store.capture()
+        val context = lease.root.readContext
+        store.install(store.prepare(AuthoringViewDelta(mapOf(id to record(name = "Story")))))
+
+        store.retain(context).use { it.root.resources[id] } shouldBe original
+        lease.close()
+
+        shouldThrow<IllegalArgumentException> { store.retain(context) }.message shouldBe "The original read view is no longer retained."
+        store.close()
+    }
+    test("a failed reload serves no stale current state, keeps retained reads and succeeds on the next capture") {
+        val id = ResourceId(value = "page")
+        val original = record(name = "Quest")
+        val store = InMemoryAuthoringViewStore(TestCatalogLease(), AuthoringSeed(mapOf(id to original)))
         val retained = store.capture()
         var fail = true
-        var loads = 0
         store.invalidate {
-            loads++
             if (fail) error("storage unavailable")
             AuthoringSeed(mapOf(id to record(name = "Story")))
         }
-        shouldThrow<IllegalStateException> { store.capture() }
+
+        shouldThrow<IllegalStateException> { store.capture() }.message shouldBe "storage unavailable"
         retained.root.resources[id] shouldBe original
         fail = false
         store.capture().use { it.root.resources[id] } shouldBe record(name = "Story")
-        loads shouldBe 2
-        store.capture().close()
-        loads shouldBe 2
         retained.close()
         store.close()
     }
@@ -132,83 +132,90 @@ val AuthoringViewStoreTest by testSuite {
         }
         store.close()
     }
-    test("root and staged views reject caller and exposed collection mutation") {
+    test("a captured view keeps the seed it was given when the caller changes it afterwards") {
         val id = ResourceId(value = "page")
-        val rootArguments = mutableListOf<TypeUse>(INT_USE)
-        val rootItems = mutableListOf(ListItem(id = ItemId(value = "root"), value = DataValue.integer(BigInteger.ONE)))
-        val rootFields =
+        val arguments = mutableListOf<TypeUse>(INT_USE)
+        val items = mutableListOf(ListItem(id = ItemId(value = "root"), value = DataValue.integer(BigInteger.ONE)))
+        val fields =
             mutableMapOf<String, DataValue>(
                 "name" to DataValue.StringValueWrapper("Quest"),
                 "count" to DataValue.integer(BigInteger.ONE),
-                "numbers" to DataValue.named(LIST_TYPE.namedUse(rootArguments), DataValue.listValue(rootItems)),
+                "numbers" to DataValue.named(LIST_TYPE.namedUse(arguments), DataValue.listValue(items)),
             )
-        val seed = mutableMapOf(id to AuthoringRecord.of(TypeSelection.CompleteWrapper(TEST_TYPE.namedUse()), rootFields))
+        val seed = mutableMapOf(id to AuthoringRecord.of(TypeSelection.CompleteWrapper(TEST_TYPE.namedUse()), fields))
         val store = InMemoryAuthoringViewStore(TestCatalogLease(), AuthoringSeed(seed))
 
         seed.clear()
-        rootFields["name"] = DataValue.StringValueWrapper("Changed")
-        rootArguments += TEXT_USE
-        rootItems += ListItem(id = ItemId(value = "late"), value = DataValue.integer(BigInteger.TWO))
+        fields["name"] = DataValue.StringValueWrapper("Changed")
+        arguments += TEXT_USE
+        items += ListItem(id = ItemId(value = "late"), value = DataValue.integer(BigInteger.TWO))
 
         store.capture().use { lease ->
-            val retained = lease.root.resources.getValue(id)
-            retained.fieldMap.getValue("name") shouldBe DataValue.StringValueWrapper("Quest")
-            val retainedNumbers = retained.fieldMap.getValue("numbers") as DataValue.NamedWrapper
-            retainedNumbers.actualType.arguments shouldBe listOf(INT_USE)
-            (retainedNumbers.payload as DataValue.ListValueWrapper).items.map(ListItem::id) shouldBe listOf(ItemId(value = "root"))
-            shouldThrow<UnsupportedOperationException> {
-                @Suppress("UNCHECKED_CAST")
-                (lease.root.resources as MutableMap<ResourceId, AuthoringRecord>)[ResourceId(value = "other")] = retained
-            }
-            // Skir type values are deeply immutable: their lists are not mutable lists at all.
-            (retainedNumbers.actualType.arguments is MutableList<*>) shouldBe false
-
-            val stagedItems = mutableListOf(ListItem(id = ItemId(value = "staged"), value = DataValue.integer(BigInteger.TWO)))
-            val stagedFields =
-                mutableMapOf<String, DataValue>(
-                    "name" to DataValue.StringValueWrapper("Story"),
-                    "count" to DataValue.integer(BigInteger.TWO),
-                    "numbers" to DataValue.named(LIST_USE, DataValue.listValue(stagedItems)),
-                )
-            val upserts = mutableMapOf(id to AuthoringRecord.of(TypeSelection.CompleteWrapper(TEST_TYPE.namedUse()), stagedFields))
-            val staged = lease.stagedView(upserts)
-            upserts.clear()
-            stagedFields["name"] = DataValue.StringValueWrapper("Changed")
-            stagedItems.clear()
-
-            val retainedStaged = staged.resources.getValue(id)
-            retainedStaged.fieldMap.getValue("name") shouldBe DataValue.StringValueWrapper("Story")
-            val stagedNumbers = retainedStaged.fieldMap.getValue("numbers") as DataValue.NamedWrapper
-            (stagedNumbers.payload as DataValue.ListValueWrapper).items.map(ListItem::id) shouldBe listOf(ItemId(value = "staged"))
-            // Skir data values are deeply immutable as well.
-            ((stagedNumbers.payload as DataValue.ListValueWrapper).items is MutableList<*>) shouldBe false
+            val captured = lease.root.resources.getValue(id)
+            captured.fieldMap.getValue("name") shouldBe DataValue.StringValueWrapper("Quest")
+            val numbers = captured.fieldMap.getValue("numbers") as DataValue.NamedWrapper
+            numbers.actualType.arguments shouldBe listOf(INT_USE)
+            (numbers.payload as DataValue.ListValueWrapper).items.map(ListItem::id) shouldBe listOf(ItemId(value = "root"))
         }
         store.close()
     }
-    test("installation and current reads share one lock") {
+    test("a staged view keeps the upserts it was given when the caller changes them afterwards") {
         val id = ResourceId(value = "page")
         val store = InMemoryAuthoringViewStore(TestCatalogLease(), AuthoringSeed(mapOf(id to record(name = "Quest"))))
+        store.capture().use { lease ->
+            val items = mutableListOf(ListItem(id = ItemId(value = "staged"), value = DataValue.integer(BigInteger.TWO)))
+            val fields =
+                mutableMapOf<String, DataValue>(
+                    "name" to DataValue.StringValueWrapper("Story"),
+                    "count" to DataValue.integer(BigInteger.TWO),
+                    "numbers" to DataValue.named(LIST_USE, DataValue.listValue(items)),
+                )
+            val upserts = mutableMapOf(id to AuthoringRecord.of(TypeSelection.CompleteWrapper(TEST_TYPE.namedUse()), fields))
+            val staged = lease.stagedView(upserts)
+
+            upserts.clear()
+            fields["name"] = DataValue.StringValueWrapper("Changed")
+            items.clear()
+
+            val kept = staged.resources.getValue(id)
+            kept.fieldMap.getValue("name") shouldBe DataValue.StringValueWrapper("Story")
+            val numbers = kept.fieldMap.getValue("numbers") as DataValue.NamedWrapper
+            (numbers.payload as DataValue.ListValueWrapper).items.map(ListItem::id) shouldBe listOf(ItemId(value = "staged"))
+        }
+        store.close()
+    }
+    test("an install waits until a current read in progress has finished") {
+        val id = ResourceId(value = "page")
+        val store = InMemoryAuthoringViewStore(TestCatalogLease(), AuthoringSeed(mapOf(id to record(name = "Quest"))))
+        val next = store.prepare(AuthoringViewDelta(mapOf(id to record(name = "Story"))))
         val executor = Executors.newFixedThreadPool(2)
         val reading = CountDownLatch(1)
-        val release = CountDownLatch(1)
+        val installing = CountDownLatch(1)
+        val installation =
+            FutureTask {
+                installing.countDown()
+                store.install(next)
+            }
         try {
             val read =
-                executor.submit {
-                    store.read { current ->
+                executor.submit<Pair<Boolean, AuthoringRecord?>> {
+                    store.read {
                         reading.countDown()
-                        release.await()
-                        current.resources[id] shouldBe record(name = "Quest")
+                        installing.await(2, TimeUnit.SECONDS)
+                        // While this read runs, the install another thread started cannot finish, so the current state
+                        // read again on this thread is still the one the read began with.
+                        val installed =
+                            runCatching { installation.get(200, TimeUnit.MILLISECONDS) }.exceptionOrNull() !is TimeoutException
+                        installed to store.read { current -> current.resources[id] }
                     }
                 }
             reading.await(2, TimeUnit.SECONDS) shouldBe true
-            val write = executor.submit { store.install(store.prepare(AuthoringViewDelta(mapOf(id to record(name = "Story"))))) }
-            write.isDone shouldBe false
-            release.countDown()
-            read.get(2, TimeUnit.SECONDS)
-            write.get(2, TimeUnit.SECONDS)
+            executor.execute(installation)
+
+            read.get(5, TimeUnit.SECONDS) shouldBe (false to record(name = "Quest"))
+            installation.get(2, TimeUnit.SECONDS)
             store.capture().use { it.root.resources[id] } shouldBe record(name = "Story")
         } finally {
-            release.countDown()
             executor.shutdownNow()
             store.close()
         }

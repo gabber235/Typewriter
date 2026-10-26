@@ -25,10 +25,11 @@ val GraphGroupPlacementTest by testSuite {
         GraphGroupPlacement.place(group, obstacles, null) shouldBe placed
     }
 
-    test("large occupied regions use a bounded deterministic escape") {
+    test("a group inside a huge obstacle lands just past its nearest edge, the same way every time") {
         val obstacle = GraphPlacement(-1_000_000, -1_000_000, 2_000_000, 2_000_000)
-        val placed = GraphGroupPlacement.place(listOf(GraphPlacement()), listOf(obstacle), null).single()
-        placed.intersectsWithGap(obstacle) shouldBe false
+        val placed = GraphGroupPlacement.place(listOf(GraphPlacement()), listOf(obstacle), null)
+        placed shouldBe listOf(GraphPlacement(1_000_001, 0, 1, 1))
+        GraphGroupPlacement.place(listOf(GraphPlacement()), listOf(obstacle), null) shouldBe placed
     }
 
     test("placement near integer limits stays representable") {

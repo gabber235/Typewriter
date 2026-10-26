@@ -1,14 +1,17 @@
 package com.typewritermc.realm.routes
 
-import build.skir.Serializer
 import com.typewritermc.protocol.transport.RealmRouteScope
 import com.typewritermc.services.libs.communicator.address.MessageAddress
 import com.typewritermc.services.libs.communicator.client.Communicator
+import com.typewritermc.services.libs.communicator.contract.EventContract
+import com.typewritermc.services.libs.communicator.contract.UnaryContract
+import com.typewritermc.services.libs.communicator.contract.WatchContract
 import com.typewritermc.services.libs.communicator.router.CommunicatorRouter
 import com.typewritermc.services.libs.communicator.router.CommunicatorRoutes
 import com.typewritermc.services.libs.communicator.router.RouterResult
 import com.typewritermc.services.libs.communicator.testing.FakeMessageTransport
 import com.typewritermc.services.libs.communicator.transport.InboundMessage
+import com.typewritermc.services.libs.communicator.transport.Payload
 import com.typewritermc.services.libs.communicator.transport.TransportDelivery
 import com.typewritermc.services.libs.telemetry.testing.TelemetryTestHarness
 import io.kotest.matchers.shouldBe
@@ -32,7 +35,7 @@ internal class RouteFixture(
     private val telemetry = TelemetryTestHarness.create()
     private val communicator = Communicator(transport, telemetry.telemetry, ContextPropagators.noop())
     private val scope = CoroutineScope(SupervisorJob() + Dispatchers.Default)
-    private val address = RealmRouteScope(organizationId = "organization", realmId = "realm")
+    val address = RealmRouteScope(organizationId = "organization", realmId = "realm")
     private val router: CommunicatorRouter = communicator.createRouter(routes(address, communicator), scope)
     private var replySequence = 0
 
@@ -40,40 +43,64 @@ internal class RouteFixture(
         runBlocking { router.start() shouldBe RouterResult.Success }
     }
 
-    suspend fun <Request : Any, Response : Any> request(
-        suffix: String,
+    /** Sends [request] to the route of [contract] as the panel does and returns the decoded reply. */
+    suspend fun <Request : Any, Response : Any> call(
+        contract: RealmRouteScope.() -> UnaryContract<RealmRouteScope, Request, Response>,
         request: Request,
-        requestSerializer: Serializer<Request>,
-        responseSerializer: Serializer<Response>,
-    ): Response = requestPayload(suffix, requestSerializer.toBytes(request).toByteArray(), responseSerializer)
-
-    suspend fun <Response : Any> requestPayload(
-        suffix: String,
-        payload: ByteArray,
-        responseSerializer: Serializer<Response>,
-    ): Response {
-        val reply = MessageAddress.of("$PANEL_REPLY_INBOX.${replySequence++}")
-        transport.deliver(
-            TransportDelivery.Message(
-                InboundMessage(
-                    address = MessageAddress.of("service.to.realm.organization.organization.realm.$suffix"),
-                    payload = payload,
-                    replyTo = reply,
-                ),
-            ),
+    ): Response =
+        send(
+            contract,
+            address
+                .contract()
+                .requestCodec
+                .encode(request)
+                .toByteArray(),
         )
-        val publication =
-            withTimeout(2.seconds) {
-                while (true) {
-                    transport.actions
-                        .filterIsInstance<FakeMessageTransport.Action.Publish>()
-                        .lastOrNull { it.message.address == reply }
-                        ?.let { return@withTimeout it }
-                    yield()
-                }
-                error("Reply wait ended unexpectedly")
+
+    /** Sends the raw [payload] to the route of [contract], as a client with a broken encoder would, and decodes the reply. */
+    suspend fun <Response : Any> send(
+        contract: RealmRouteScope.() -> UnaryContract<RealmRouteScope, *, Response>,
+        payload: ByteArray,
+    ): Response {
+        val unary = address.contract()
+        return unary.responseCodec.decode(exchange(unary.requestAddress.render(address), payload))
+    }
+
+    /** Opens the watch of [contract] with [request] and returns the initial reply the route answers with. */
+    suspend fun <Request : Any, Initial : Any> watch(
+        contract: RealmRouteScope.() -> WatchContract<RealmRouteScope, Request, Initial, *>,
+        request: Request,
+    ): Initial {
+        val watch = address.contract()
+        return watch.initialCodec.decode(exchange(watch.requestAddress.render(address), watch.requestCodec.encode(request).toByteArray()))
+    }
+
+    /** The events of [contract] the routes published so far, in order. */
+    fun <Event : Any> events(contract: RealmRouteScope.() -> EventContract<RealmRouteScope, Event>): List<Event> {
+        val event = address.contract()
+        val to = event.address.render(address)
+        return transport.actions
+            .filterIsInstance<FakeMessageTransport.Action.Publish>()
+            .filter { it.message.address == to }
+            .map { event.codec.decode(it.message.payload) }
+    }
+
+    private suspend fun exchange(
+        to: MessageAddress,
+        payload: ByteArray,
+    ): Payload {
+        val reply = MessageAddress.of("$PANEL_REPLY_INBOX.${replySequence++}")
+        transport.deliver(TransportDelivery.Message(InboundMessage(address = to, payload = payload, replyTo = reply)))
+        return withTimeout(2.seconds) {
+            while (true) {
+                transport.actions
+                    .filterIsInstance<FakeMessageTransport.Action.Publish>()
+                    .lastOrNull { it.message.address == reply }
+                    ?.let { return@withTimeout it.message.payload }
+                yield()
             }
-        return responseSerializer.fromBytes(publication.message.payload.toByteArray())
+            error("Reply wait ended unexpectedly")
+        }
     }
 
     override fun close() {

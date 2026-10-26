@@ -1,25 +1,13 @@
 package com.typewritermc.realm.operation
 
-import com.typewritermc.authoring.fieldMap
 import com.typewritermc.authoring.of
-import com.typewritermc.authoring.requireValid
 import com.typewritermc.authoring.with
-import com.typewritermc.checking.InputIdentity
-import com.typewritermc.discovery.OwnedCheckRecipe
-import com.typewritermc.discovery.OwnedProviderRegistry
-import com.typewritermc.realm.authoring.AuthoringSeed
-import com.typewritermc.realm.authoring.EmptyProviders
-import com.typewritermc.realm.authoring.InMemoryAuthoringViewStore
-import com.typewritermc.realm.catalog.AuthoringCatalogLease
-import com.typewritermc.realm.checking.dependencies
-import com.typewritermc.realm.edit.AuthoringMutationPlanner
-import com.typewritermc.realm.edit.AuthoringRepository
-import com.typewritermc.realm.edit.MutationPlanningResult
-import com.typewritermc.types.FactoryNativeBindingRegistry
-import com.typewritermc.types.NativeBindingRegistry
-import com.typewritermc.types.catalog.CheckedCatalog
-import com.typewritermc.types.catalog.DefaultCheckedCatalog
-import com.typewritermc.types.fields
+import com.typewritermc.realm.testing.DefinitionCatalog
+import com.typewritermc.realm.testing.RealmFixture
+import com.typewritermc.realm.testing.codes
+import com.typewritermc.realm.testing.linkOrNull
+import com.typewritermc.realm.testing.shouldBeCommitted
+import com.typewritermc.realm.testing.value
 import com.typewritermc.types.listValue
 import com.typewritermc.types.named
 import com.typewritermc.types.namedTemplate
@@ -30,10 +18,11 @@ import com.typewritermc.types.record
 import com.typewritermc.types.template
 import com.typewritermc.types.use
 import de.infix.testBalloon.framework.core.testSuite
+import io.kotest.matchers.collections.shouldContain
+import io.kotest.matchers.collections.shouldNotContain
+import io.kotest.matchers.nulls.shouldBeNull
 import io.kotest.matchers.shouldBe
 import io.kotest.matchers.types.shouldBeInstanceOf
-import kotlinx.coroutines.test.runTest
-import skirout.editor.v1.authoring.CommitPreparedEditResponse
 import skirout.editor.v1.authoring.EditIntent
 import skirout.editor.v1.authoring.LinkOccurrenceId
 import skirout.editor.v1.authoring.LinkRepairIntent
@@ -48,7 +37,6 @@ import skirout.editor.v1.catalog.RelationContract
 import skirout.editor.v1.catalog.RelationDeletePolicy
 import skirout.editor.v1.type_catalog.ArgumentSelection
 import skirout.editor.v1.type_catalog.AuthoringRecord
-import skirout.editor.v1.type_catalog.CatalogGeneration
 import skirout.editor.v1.type_catalog.CollectionKind
 import skirout.editor.v1.type_catalog.DataValue
 import skirout.editor.v1.type_catalog.EndpointId
@@ -57,6 +45,7 @@ import skirout.editor.v1.type_catalog.FieldOwner
 import skirout.editor.v1.type_catalog.ItemId
 import skirout.editor.v1.type_catalog.LinkTarget
 import skirout.editor.v1.type_catalog.ListItem
+import skirout.editor.v1.type_catalog.NamedTypeUse
 import skirout.editor.v1.type_catalog.ParameterKey
 import skirout.editor.v1.type_catalog.PathSegment
 import skirout.editor.v1.type_catalog.RelationId
@@ -69,434 +58,6 @@ import skirout.editor.v1.type_catalog.TypeSelection
 import skirout.editor.v1.type_catalog.ValueLocation
 import skirout.editor.v1.type_catalog.ValuePath
 import skirout.kernel.v1.resource_id.ResourceId
-
-class TypeArgumentOperationsTest {
-    fun previewRejectsDefinitionReplacementAndStructurallyInvalidRepairBatch() {
-        val catalog = RepairCatalogLease()
-        val resource = ResourceId(value = "container")
-        val record = repairRecord(ItemId(value = "bundle"))
-        val store =
-            InMemoryAuthoringViewStore(
-                catalog,
-                AuthoringSeed(mapOf(resource to record)),
-            )
-        val operations = DefaultTypeArgumentOperations(store)
-
-        store.capture().use { snapshot ->
-            operations
-                .preview(
-                    resource,
-                    TypeSelection.CompleteWrapper(BUNDLE_COIN),
-                    snapshot,
-                ).shouldBeInstanceOf<PreviewTypeArgumentChangeResponse.InvalidArgumentsErrorWrapper>()
-        }
-        store.close()
-
-        val invalid = record.with("unknown", DataValue.StringValueWrapper("retained"))
-        val invalidCatalog = RepairCatalogLease()
-        val invalidStore =
-            InMemoryAuthoringViewStore(
-                invalidCatalog,
-                AuthoringSeed(mapOf(resource to invalid)),
-            )
-        invalidStore.capture().use { snapshot ->
-            DefaultTypeArgumentOperations(invalidStore)
-                .preview(resource, TypeSelection.CompleteWrapper(CONTAINER_COIN), snapshot)
-                .shouldBeInstanceOf<PreviewTypeArgumentChangeResponse.RejectedErrorWrapper>()
-        }
-        invalidStore.close()
-    }
-
-    fun narrowingRetagsTaggedContainersAndClearsOnlyIncompatibleLeaves() {
-        val catalog = RepairCatalogLease()
-        val resource = ResourceId(value = "container")
-        val item = ItemId(value = "bundle")
-        val record = repairRecord(item)
-        val store =
-            InMemoryAuthoringViewStore(
-                catalog,
-                AuthoringSeed(mapOf(resource to record)),
-            )
-        val repository = RecordingRepository()
-        val operations = DefaultTypeArgumentOperations(store)
-
-        val preview =
-            store.capture().use { snapshot ->
-                operations
-                    .preview(
-                        resource,
-                        TypeSelection.CompleteWrapper(CONTAINER_COIN),
-                        snapshot,
-                    ).shouldBeInstanceOf<PreviewTypeArgumentChangeResponse.ReadyWrapper>()
-                    .value
-            }
-
-        val bundles = location(resource, "bundles")
-        val bundle =
-            ValueLocation.of(
-                resource,
-                ValuePath(
-                    segments =
-                        bundles.path.segments +
-                            PathSegment.createItem(id = item),
-                ),
-            )
-        val title =
-            ValueLocation.of(
-                resource,
-                ValuePath(
-                    segments =
-                        bundle.path.segments +
-                            PathSegment.createField(name = "title"),
-                ),
-            )
-        val incompatible =
-            ValueLocation.of(
-                resource,
-                ValuePath(
-                    segments =
-                        bundle.path.segments +
-                            PathSegment.createField(name = "value"),
-                ),
-            )
-        val compatible = location(resource, "reward")
-        preview.edit.intents shouldBe
-            listOf(
-                EditIntent.createConfigureResource(resource = resource, configuration = TypeSelection.CompleteWrapper(CONTAINER_COIN)),
-                EditIntent.createRetag(at = bundles, type = LIST_BUNDLE_COIN),
-                EditIntent.createRetag(at = bundle, type = BUNDLE_COIN),
-                EditIntent.createSetValue(at = incompatible, value = DataValue.UNFILLED),
-            )
-        preview.clearedLocations shouldBe listOf(incompatible)
-        val observed = preview.edit.expectations.flatMapTo(linkedSetOf()) { it.dependencies() }
-        (InputIdentity.Value(title) in observed) shouldBe true
-        (InputIdentity.Value(compatible) in observed) shouldBe true
-        (InputIdentity.Value(incompatible) in observed) shouldBe true
-        (InputIdentity.Value(bundles) in observed) shouldBe true
-        (InputIdentity.Value(bundles) in observed) shouldBe true
-        preview.edit.intents.any { it == EditIntent.createSetValue(at = compatible, value = DataValue.UNFILLED) } shouldBe false
-
-        store.close()
-    }
-
-    fun confirmationRetainsEvidenceForCompatibleValues() =
-        runTest {
-            val catalog = RepairCatalogLease()
-            val resource = ResourceId(value = "container")
-            val record = repairRecord(ItemId(value = "bundle"))
-            val store =
-                InMemoryAuthoringViewStore(
-                    catalog,
-                    AuthoringSeed(mapOf(resource to record)),
-                )
-            val repository = RecordingRepository()
-            val operations = DefaultTypeArgumentOperations(store)
-            val preview =
-                store.capture().use { snapshot ->
-                    operations
-                        .preview(
-                            resource,
-                            TypeSelection.CompleteWrapper(CONTAINER_COIN),
-                            snapshot,
-                        ).shouldBeInstanceOf<PreviewTypeArgumentChangeResponse.ReadyWrapper>()
-                        .value
-                }
-
-            val edit =
-                operations
-                    .prepare(preview)
-                    .shouldBeInstanceOf<PrepareTypeArgumentChangeResponse.PreparedWrapper>()
-                    .value.edit
-            repository.commit(edit)
-            edit.expectations.any { InputIdentity.Value(location(resource, "reward")) in it.dependencies() } shouldBe true
-            repository.edit shouldBe edit
-            store.close()
-        }
-
-    fun unfinishedSelectionPreservesIndependentAndCompatibleFieldsAndCanLaterComplete() =
-        runTest {
-            val catalog = RepairCatalogLease()
-            val resource = ResourceId(value = "dual")
-            val original = dualRecord(TypeSelection.CompleteWrapper(DUAL_COIN_GEM))
-            val store =
-                InMemoryAuthoringViewStore(
-                    catalog,
-                    AuthoringSeed(mapOf(resource to original)),
-                )
-            val repository = RecordingRepository()
-            val operations = DefaultTypeArgumentOperations(store)
-            val pending =
-                TypeSelection.createPending(
-                    definition = DUAL,
-                    arguments = listOf(ArgumentSelection.ChosenWrapper(COIN_USE.use), ArgumentSelection.UNFILLED),
-                )
-
-            val pendingPreview =
-                store.capture().use { snapshot ->
-                    operations
-                        .preview(
-                            resource,
-                            pending,
-                            snapshot,
-                        ).shouldBeInstanceOf<PreviewTypeArgumentChangeResponse.ReadyWrapper>()
-                        .value
-                }
-
-            pendingPreview.next shouldBe pending
-            pendingPreview.edit.intents.contains(EditIntent.createConfigureResource(resource = resource, configuration = pending)) shouldBe
-                true
-            pendingPreview.edit.intents.contains(
-                EditIntent.createSetValue(at = location(resource, "second"), value = DataValue.UNFILLED),
-            ) shouldBe
-                true
-            pendingPreview.edit.intents.contains(
-                EditIntent.createSetValue(at = location(resource, "name"), value = DataValue.UNFILLED),
-            ) shouldBe
-                false
-            pendingPreview.edit.intents.contains(
-                EditIntent.createSetValue(at = location(resource, "first"), value = DataValue.UNFILLED),
-            ) shouldBe
-                false
-
-            val pendingEdit =
-                operations
-                    .prepare(
-                        pendingPreview,
-                    ).shouldBeInstanceOf<PrepareTypeArgumentChangeResponse.PreparedWrapper>()
-                    .value.edit
-            val pendingPlan =
-                AuthoringMutationPlanner(
-                    catalog.checked,
-                    emptyList(),
-                ).plan(mapOf(resource to original), pendingEdit).shouldBeInstanceOf<MutationPlanningResult.Accepted>().plan
-            val pendingRecord = pendingPlan.resources.getValue(resource)
-            pendingRecord.configuration shouldBe pending
-            pendingRecord.fieldMap.getValue("name") shouldBe DataValue.StringValueWrapper("kept")
-            pendingRecord.fieldMap.getValue("first") shouldBe original.fieldMap.getValue("first")
-            pendingRecord.fieldMap.getValue("second") shouldBe DataValue.UNFILLED
-
-            val pendingStore =
-                InMemoryAuthoringViewStore(
-                    catalog.retain(),
-                    AuthoringSeed(mapOf(resource to pendingRecord)),
-                )
-            val complete = TypeSelection.CompleteWrapper(DUAL_COIN_COIN)
-            val completePreview =
-                pendingStore.capture().use { snapshot ->
-                    operations
-                        .preview(
-                            resource,
-                            complete,
-                            snapshot,
-                        ).shouldBeInstanceOf<PreviewTypeArgumentChangeResponse.ReadyWrapper>()
-                        .value
-                }
-            completePreview.next shouldBe complete
-            completePreview.edit.intents.contains(
-                EditIntent.createConfigureResource(resource = resource, configuration = complete),
-            ) shouldBe
-                true
-            completePreview.edit.intents.contains(
-                EditIntent.createSetValue(at = location(resource, "first"), value = DataValue.UNFILLED),
-            ) shouldBe
-                false
-
-            pendingStore.close()
-            store.close()
-        }
-
-    fun confirmationRejectsAlteredReceiptAndAcceptsAnExactRetry() =
-        runTest {
-            val catalog = RepairCatalogLease()
-            val resource = ResourceId(value = "dual")
-            val original = dualRecord(TypeSelection.CompleteWrapper(DUAL_COIN_GEM))
-            val store =
-                InMemoryAuthoringViewStore(
-                    catalog,
-                    AuthoringSeed(mapOf(resource to original)),
-                )
-            val repository = RecordingRepository()
-            val operations = DefaultTypeArgumentOperations(store)
-            val pending =
-                TypeSelection.createPending(
-                    definition = DUAL,
-                    arguments = listOf(ArgumentSelection.ChosenWrapper(COIN_USE.use), ArgumentSelection.UNFILLED),
-                )
-            val preview =
-                store.capture().use { snapshot ->
-                    operations
-                        .preview(
-                            resource,
-                            pending,
-                            snapshot,
-                        ).shouldBeInstanceOf<PreviewTypeArgumentChangeResponse.ReadyWrapper>()
-                        .value
-                }
-
-            operations
-                .prepare(
-                    preview.copy(
-                        edit =
-                            preview.edit
-                                .copy(
-                                    intents =
-                                        listOf(
-                                            EditIntent.createConfigureResource(
-                                                resource = resource,
-                                                configuration = TypeSelection.CompleteWrapper(DUAL_COIN_COIN),
-                                            ),
-                                        ),
-                                ),
-                    ),
-                ).shouldBeInstanceOf<PrepareTypeArgumentChangeResponse.RejectedErrorWrapper>()
-            repository.edit shouldBe null
-            operations
-                .prepare(
-                    preview.copy(edit = preview.edit.copy(expectations = preview.edit.expectations.dropLast(1))),
-                ).shouldBeInstanceOf<PrepareTypeArgumentChangeResponse.RejectedErrorWrapper>()
-            repository.edit shouldBe null
-
-            val prepared =
-                operations
-                    .prepare(preview)
-                    .shouldBeInstanceOf<PrepareTypeArgumentChangeResponse.PreparedWrapper>()
-                    .value.edit
-            repository.edit shouldBe null
-            repository.commit(prepared).shouldBeInstanceOf<CommitPreparedEditResponse.COMMITTED>()
-            repository.edit shouldBe prepared
-            store.close()
-        }
-
-    fun unfinishedSelectionClearsLinksWhoseDependentTargetIsUnknown() {
-        val catalog = RepairCatalogLease()
-        val resource = ResourceId(value = "dual")
-        val target = ResourceId(value = "target")
-        val linkLocation = location(resource, "target")
-        val linked =
-            dualRecord(TypeSelection.CompleteWrapper(DUAL_COIN_GEM)).with(
-                "target",
-                DataValue.named(
-                    LINK_GEM,
-                    DataValue.createLink(
-                        endpoint = SOURCE_ENDPOINT,
-                        target = LinkTarget(resource = target, opposite = null),
-                    ),
-                ),
-            )
-        val resources =
-            mapOf(
-                resource to linked,
-                target to AuthoringRecord.of(TypeSelection.CompleteWrapper(GEM_USE), emptyMap()),
-            )
-        val store =
-            InMemoryAuthoringViewStore(
-                catalog,
-                AuthoringSeed(resources),
-            )
-        val pending =
-            TypeSelection.createPending(
-                definition = DUAL,
-                arguments = listOf(ArgumentSelection.ChosenWrapper(COIN_USE.use), ArgumentSelection.UNFILLED),
-            )
-        val preview =
-            store.capture().use { snapshot ->
-                DefaultTypeArgumentOperations(
-                    store,
-                ).preview(resource, pending, snapshot).shouldBeInstanceOf<PreviewTypeArgumentChangeResponse.ReadyWrapper>().value
-            }
-
-        preview.clearedLocations.contains(linkLocation) shouldBe true
-        preview.edit.intents.none { it == EditIntent.createSetValue(at = linkLocation, value = DataValue.UNFILLED) } shouldBe true
-        preview.linkRepairs shouldBe
-            listOf(
-                LinkRepairIntent.ClearWrapper(
-                    LinkOccurrenceId(endpoint = SOURCE_ENDPOINT, location = linkLocation),
-                ),
-            )
-        preview.edit.expectations.any { InputIdentity.Incoming(resource, RELATION) in it.dependencies() } shouldBe true
-        store.close()
-    }
-}
-
-private class RecordingRepository : AuthoringRepository {
-    var edit: PreparedEdit? = null
-
-    override suspend fun commit(edit: PreparedEdit): CommitPreparedEditResponse {
-        this.edit = edit
-        return CommitPreparedEditResponse.COMMITTED
-    }
-}
-
-private class RepairCatalogLease(
-    override val generation: CatalogGeneration = CatalogGeneration(value = "catalog"),
-) : AuthoringCatalogLease {
-    override val checked: CheckedCatalog = DefaultCheckedCatalog(generation, REPAIR_DEFINITIONS)
-    override val nativeBindings: NativeBindingRegistry = FactoryNativeBindingRegistry(checked, emptyList())
-    override val providers: OwnedProviderRegistry = EmptyProviders
-    override val checks: List<OwnedCheckRecipe> = emptyList()
-    override val relations: List<RelationContract> = listOf(DUAL_RELATION)
-    override val configuration: List<skirout.editor.v1.catalog.ConfigurationRecipe> = emptyList()
-    override val operations = com.typewritermc.operations.OperationCatalog()
-    override val placementFields = emptyMap<TypeDefinitionId, ValuePath>()
-
-    override fun retain(): AuthoringCatalogLease = RepairCatalogLease(generation)
-
-    override fun close() = Unit
-}
-
-private fun repairRecord(item: ItemId): AuthoringRecord =
-    AuthoringRecord.of(
-        configuration = TypeSelection.CompleteWrapper(CONTAINER_REWARD),
-        fields =
-            mapOf(
-                "bundles" to
-                    DataValue.named(
-                        LIST_BUNDLE_REWARD,
-                        DataValue.listValue(
-                            listOf(
-                                ListItem(
-                                    id = item,
-                                    value =
-                                        DataValue.named(
-                                            BUNDLE_REWARD,
-                                            DataValue.record(
-                                                mapOf(
-                                                    "title" to DataValue.StringValueWrapper("kept"),
-                                                    "value" to DataValue.named(GEM_USE, DataValue.record(emptyMap())),
-                                                ),
-                                            ),
-                                        ),
-                                ),
-                            ),
-                        ),
-                    ),
-                "reward" to DataValue.named(COIN_USE, DataValue.record(emptyMap())),
-            ),
-    )
-
-private fun dualRecord(selection: TypeSelection): AuthoringRecord =
-    AuthoringRecord.of(
-        configuration = selection,
-        fields =
-            mapOf(
-                "name" to DataValue.StringValueWrapper("kept"),
-                "first" to DataValue.named(COIN_USE, DataValue.record(emptyMap())),
-                "second" to DataValue.named(GEM_USE, DataValue.record(emptyMap())),
-            ),
-    )
-
-private fun location(
-    resource: ResourceId,
-    field: String,
-) = ValueLocation.of(
-    resource,
-    ValuePath(
-        segments =
-            listOf(
-                PathSegment.createField(name = field),
-            ),
-    ),
-)
 
 private val REWARD = definition("reward")
 private val COIN = definition("coin")
@@ -639,21 +200,280 @@ private val REPAIR_DEFINITIONS =
 
 private fun definition(name: String) = TypeDefinitionId.qualified("repair", name)
 
-val TypeArgumentOperationsTestSuite by testSuite {
-    test("previewRejectsDefinitionReplacementAndStructurallyInvalidRepairBatch") {
-        TypeArgumentOperationsTest().previewRejectsDefinitionReplacementAndStructurallyInvalidRepairBatch()
+private val container = ResourceId(value = "container")
+private val dual = ResourceId(value = "dual")
+private val gem = ResourceId(value = "gem")
+private val bundleItem = ItemId(value = "bundle")
+
+/** A pending dual selection: the first argument chosen as coin, the second left open. */
+private val pendingCoin =
+    TypeSelection.createPending(
+        definition = DUAL,
+        arguments = listOf(ArgumentSelection.ChosenWrapper(COIN_USE.use), ArgumentSelection.UNFILLED),
+    )
+
+/** A container of rewards whose one bundle holds a gem, and whose own reward is a coin. */
+private val rewardContainer =
+    mapOf(container to containerRecord(CONTAINER_REWARD, LIST_BUNDLE_REWARD, BUNDLE_REWARD, gemValue()))
+
+/** A dual of coin and gem with a name and both values filled. */
+private val coinGemDual = mapOf(dual to dualRecord(TypeSelection.CompleteWrapper(DUAL_COIN_GEM)))
+
+/** The coin and gem dual linked to a gem resource through its second argument. */
+private val linkedDual =
+    mapOf(
+        dual to
+            dualRecord(TypeSelection.CompleteWrapper(DUAL_COIN_GEM)).with(
+                "target",
+                DataValue.named(
+                    LINK_GEM,
+                    DataValue.createLink(endpoint = SOURCE_ENDPOINT, target = LinkTarget(resource = gem, opposite = null)),
+                ),
+            ),
+        gem to AuthoringRecord.of(TypeSelection.CompleteWrapper(GEM_USE), emptyMap()),
+    )
+
+private val REPAIR_CATALOG = DefinitionCatalog(REPAIR_DEFINITIONS, listOf(DUAL_RELATION))
+
+val TypeArgumentOperationsTest by testSuite {
+    test("previewing a type of another definition is refused with type_argument_definition_changed") {
+        RealmFixture.of(REPAIR_CATALOG, rewardContainer).use { realm ->
+            realm
+                .preview(container, TypeSelection.CompleteWrapper(BUNDLE_COIN))
+                .shouldBeInstanceOf<PreviewTypeArgumentChangeResponse.InvalidArgumentsErrorWrapper>()
+                .value
+                .map { it.code } shouldBe listOf("type_argument_definition_changed")
+        }
     }
-    test("narrowingRetagsTaggedContainersAndClearsOnlyIncompatibleLeaves") {
-        TypeArgumentOperationsTest().narrowingRetagsTaggedContainersAndClearsOnlyIncompatibleLeaves()
+
+    test("previewing a change for a missing resource is refused with resource_missing") {
+        RealmFixture.of(REPAIR_CATALOG, rewardContainer).use { realm ->
+            realm
+                .preview(ResourceId(value = "missing"), TypeSelection.CompleteWrapper(CONTAINER_COIN))
+                .shouldBeInstanceOf<PreviewTypeArgumentChangeResponse.InvalidArgumentsErrorWrapper>()
+                .value
+                .map { it.code } shouldBe listOf("resource_missing")
+        }
     }
-    test("confirmationRetainsEvidenceForCompatibleValues") { TypeArgumentOperationsTest().confirmationRetainsEvidenceForCompatibleValues() }
-    test("unfinishedSelectionPreservesIndependentAndCompatibleFieldsAndCanLaterComplete") {
-        TypeArgumentOperationsTest().unfinishedSelectionPreservesIndependentAndCompatibleFieldsAndCanLaterComplete()
+
+    test("previewing a change on a record with an undeclared field is refused at that field") {
+        val invalid = rewardContainer.mapValues { (_, record) -> record.with("unknown", DataValue.StringValueWrapper("retained")) }
+        RealmFixture.of(REPAIR_CATALOG, invalid).use { realm ->
+            realm
+                .preview(container, TypeSelection.CompleteWrapper(CONTAINER_COIN))
+                .shouldBeInstanceOf<PreviewTypeArgumentChangeResponse.RejectedErrorWrapper>()
+                .value
+                .map { it.location } shouldContain location(container, "unknown")
+        }
     }
-    test("confirmationRejectsAlteredReceiptAndAcceptsAnExactRetry") {
-        TypeArgumentOperationsTest().confirmationRejectsAlteredReceiptAndAcceptsAnExactRetry()
+
+    test("narrowing a type argument retags its containers, clears incompatible leaves and keeps compatible values") {
+        RealmFixture.of(REPAIR_CATALOG, rewardContainer).use { realm ->
+            val preview = realm.preview(container, TypeSelection.CompleteWrapper(CONTAINER_COIN)).shouldBeReady()
+            preview.clearedLocations shouldBe listOf(bundleValue())
+
+            realm.commit(realm.prepare(preview).shouldBePrepared()).shouldBeCommitted()
+
+            realm.resources.getValue(container) shouldBe
+                containerRecord(CONTAINER_COIN, LIST_BUNDLE_COIN, BUNDLE_COIN, DataValue.UNFILLED)
+        }
     }
-    test("unfinishedSelectionClearsLinksWhoseDependentTargetIsUnknown") {
-        TypeArgumentOperationsTest().unfinishedSelectionClearsLinksWhoseDependentTargetIsUnknown()
+
+    test("a confirmed change is refused with expectation_conflict when a value it keeps changed after the preview") {
+        RealmFixture.of(REPAIR_CATALOG, rewardContainer).use { realm ->
+            val preview = realm.preview(container, TypeSelection.CompleteWrapper(CONTAINER_COIN)).shouldBeReady()
+            realm.commit(EditIntent.createSetValue(at = location(container, "reward"), value = gemValue())).shouldBeCommitted()
+
+            realm.prepare(preview).refusalCodes() shouldBe listOf("expectation_conflict")
+        }
+    }
+
+    test("a confirmed change is refused with catalog_changed once the Realm runs another catalog") {
+        RealmFixture.of(REPAIR_CATALOG, rewardContainer).use { realm ->
+            val preview = realm.preview(container, TypeSelection.CompleteWrapper(CONTAINER_COIN)).shouldBeReady()
+            realm.restart()
+
+            realm.prepare(preview).refusalCodes() shouldBe listOf("catalog_changed")
+        }
+    }
+
+    test("a preview without guards whose resource is gone by confirmation is refused as no longer valid") {
+        RealmFixture.of(REPAIR_CATALOG, rewardContainer).use { realm ->
+            val preview = realm.preview(container, TypeSelection.CompleteWrapper(CONTAINER_COIN)).shouldBeReady()
+            realm.commit(EditIntent.createDeleteResource(id = container)).shouldBeCommitted()
+
+            realm.prepare(preview.copy(edit = preview.edit.copy(expectations = emptyList()))).refusalCodes() shouldBe
+                listOf("type_argument_preview_no_longer_valid")
+        }
+    }
+
+    test("a pending selection keeps the independent and compatible fields, clears the open one, and can later be completed") {
+        RealmFixture.of(REPAIR_CATALOG, coinGemDual).use { realm ->
+            val pending = realm.preview(dual, pendingCoin).shouldBeReady()
+            realm.commit(realm.prepare(pending).shouldBePrepared()).shouldBeCommitted()
+
+            val partial = realm.resources.getValue(dual)
+            partial.configuration shouldBe pendingCoin
+            partial.value("name") shouldBe DataValue.StringValueWrapper("kept")
+            partial.value("first") shouldBe DataValue.record(emptyMap())
+            partial.value("second") shouldBe DataValue.UNFILLED
+
+            val complete = TypeSelection.CompleteWrapper(DUAL_COIN_COIN)
+            realm.commit(realm.prepare(realm.preview(dual, complete).shouldBeReady()).shouldBePrepared()).shouldBeCommitted()
+
+            val completed = realm.resources.getValue(dual)
+            completed.configuration shouldBe complete
+            completed.value("name") shouldBe DataValue.StringValueWrapper("kept")
+            completed.value("first") shouldBe DataValue.record(emptyMap())
+        }
+    }
+
+    test("a preview whose intents were altered is refused with type_argument_preview_mismatch") {
+        RealmFixture.of(REPAIR_CATALOG, coinGemDual).use { realm ->
+            val preview = realm.preview(dual, pendingCoin).shouldBeReady()
+            val altered =
+                preview.copy(
+                    edit =
+                        preview.edit.copy(
+                            intents =
+                                listOf(
+                                    EditIntent.createConfigureResource(
+                                        resource = dual,
+                                        configuration = TypeSelection.CompleteWrapper(DUAL_COIN_COIN),
+                                    ),
+                                ),
+                        ),
+                )
+
+            realm.prepare(altered).refusalCodes() shouldBe listOf("type_argument_preview_mismatch")
+        }
+    }
+
+    test("a preview missing one of its guards is refused with type_argument_preview_mismatch") {
+        RealmFixture.of(REPAIR_CATALOG, coinGemDual).use { realm ->
+            val preview = realm.preview(dual, pendingCoin).shouldBeReady()
+            val unguarded = preview.copy(edit = preview.edit.copy(expectations = preview.edit.expectations.dropLast(1)))
+
+            realm.prepare(unguarded).refusalCodes() shouldBe listOf("type_argument_preview_mismatch")
+        }
+    }
+
+    test("the exact preview is prepared and commits after an altered one was refused") {
+        RealmFixture.of(REPAIR_CATALOG, coinGemDual).use { realm ->
+            val preview = realm.preview(dual, pendingCoin).shouldBeReady()
+            realm.prepare(preview.copy(edit = preview.edit.copy(expectations = preview.edit.expectations.dropLast(1)))).refusalCodes()
+
+            realm.commit(realm.prepare(preview).shouldBePrepared()).shouldBeCommitted()
+
+            realm.resources.getValue(dual).configuration shouldBe pendingCoin
+        }
+    }
+
+    test("a pending selection clears a link whose target type becomes unknown on both sides") {
+        RealmFixture.of(REPAIR_CATALOG, linkedDual).use { realm ->
+            val target = location(dual, "target")
+            val preview = realm.preview(dual, pendingCoin).shouldBeReady()
+            preview.clearedLocations shouldContain target
+            preview.linkRepairs shouldBe
+                listOf(LinkRepairIntent.ClearWrapper(LinkOccurrenceId(endpoint = SOURCE_ENDPOINT, location = target)))
+
+            realm.commit(realm.prepare(preview).shouldBePrepared()).shouldBeCommitted()
+
+            realm.resources
+                .getValue(dual)
+                .linkOrNull("target")
+                .shouldBeNull()
+            realm.views.read { view -> view.links.values.map { it.target.resource } } shouldNotContain gem
+        }
     }
 }
+
+/** Previews changing [resource] to [requested] on the state the Realm holds now. */
+private fun RealmFixture.preview(
+    resource: ResourceId,
+    requested: TypeSelection,
+): PreviewTypeArgumentChangeResponse =
+    views.capture().use { snapshot -> DefaultTypeArgumentOperations(views).preview(resource, requested, snapshot) }
+
+/** Confirms [preview] against the state the Realm holds now. */
+private suspend fun RealmFixture.prepare(preview: TypeArgumentChangePreview): PrepareTypeArgumentChangeResponse =
+    DefaultTypeArgumentOperations(views).prepare(preview)
+
+private fun PreviewTypeArgumentChangeResponse.shouldBeReady(): TypeArgumentChangePreview =
+    shouldBeInstanceOf<PreviewTypeArgumentChangeResponse.ReadyWrapper>().value
+
+private fun PrepareTypeArgumentChangeResponse.shouldBePrepared(): PreparedEdit =
+    shouldBeInstanceOf<PrepareTypeArgumentChangeResponse.PreparedWrapper>().value.edit
+
+private fun PrepareTypeArgumentChangeResponse.refusalCodes(): List<String> =
+    shouldBeInstanceOf<PrepareTypeArgumentChangeResponse.RejectedErrorWrapper>().value.codes
+
+/** The value leaf of the container's one bundle. */
+private fun bundleValue() =
+    ValueLocation.of(
+        container,
+        ValuePath(
+            segments =
+                listOf(
+                    PathSegment.createField(name = "bundles"),
+                    PathSegment.createItem(id = bundleItem),
+                    PathSegment.createField(name = "value"),
+                ),
+        ),
+    )
+
+private fun gemValue() = DataValue.named(GEM_USE, DataValue.record(emptyMap()))
+
+private fun containerRecord(
+    configuration: NamedTypeUse,
+    list: NamedTypeUse,
+    bundle: NamedTypeUse,
+    value: DataValue,
+): AuthoringRecord =
+    AuthoringRecord.of(
+        configuration = TypeSelection.CompleteWrapper(configuration),
+        fields =
+            mapOf(
+                "bundles" to
+                    DataValue.named(
+                        list,
+                        DataValue.listValue(
+                            listOf(
+                                ListItem(
+                                    id = bundleItem,
+                                    value =
+                                        DataValue.named(
+                                            bundle,
+                                            DataValue.record(mapOf("title" to DataValue.StringValueWrapper("kept"), "value" to value)),
+                                        ),
+                                ),
+                            ),
+                        ),
+                    ),
+                "reward" to DataValue.named(COIN_USE, DataValue.record(emptyMap())),
+            ),
+    )
+
+private fun dualRecord(selection: TypeSelection): AuthoringRecord =
+    AuthoringRecord.of(
+        configuration = selection,
+        fields =
+            mapOf(
+                "name" to DataValue.StringValueWrapper("kept"),
+                "first" to DataValue.named(COIN_USE, DataValue.record(emptyMap())),
+                "second" to DataValue.named(GEM_USE, DataValue.record(emptyMap())),
+            ),
+    )
+
+private fun location(
+    resource: ResourceId,
+    field: String,
+) = ValueLocation.of(
+    resource,
+    ValuePath(
+        segments =
+            listOf(
+                PathSegment.createField(name = field),
+            ),
+    ),
+)

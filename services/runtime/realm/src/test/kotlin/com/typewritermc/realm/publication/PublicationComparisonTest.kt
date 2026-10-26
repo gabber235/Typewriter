@@ -92,14 +92,14 @@ val PublicationComparisonTest by testSuite {
         ) shouldBe
             listOf(PublicationChange.RootAddedWrapper(fresh.root), PublicationChange.RootRemovedWrapper(old.root))
     }
-    test("a release delta is nonempty and lists each change once") {
-        shouldThrow<IllegalArgumentException> { publicationDelta(emptyList()) }
+    test("a release delta without changes is refused") {
+        shouldThrow<IllegalArgumentException> { publicationDelta(emptyList()) }.message shouldBe
+            "A publication delta needs at least one change."
+    }
+    test("a release delta that lists one change twice is refused") {
         shouldThrow<IllegalArgumentException> {
             publicationDelta(listOf(PublicationChange.REQUIREMENTS_CHANGED, PublicationChange.REQUIREMENTS_CHANGED))
-        }
-        val root = comparisonArtifact().root
-        publicationDelta(listOf(PublicationChange.RootAddedWrapper(root), PublicationChange.REQUIREMENTS_CHANGED))
-            .allChanges shouldBe listOf(PublicationChange.RootAddedWrapper(root), PublicationChange.REQUIREMENTS_CHANGED)
+        }.message shouldBe "Publication delta changes must be distinct."
     }
 }
 

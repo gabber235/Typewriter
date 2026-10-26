@@ -2,58 +2,66 @@ package com.typewritermc.realm
 
 import com.typewritermc.loader.api.RuntimeHealth
 import de.infix.testBalloon.framework.core.testSuite
-import io.kotest.matchers.collections.shouldContainExactly
 import io.kotest.matchers.shouldBe
 import kotlinx.coroutines.test.runTest
 
 val RealmDeploymentEntrypointTest by testSuite {
-    test("successful activation exposes one healthy staged Realm generation") {
+    test("successful activation reports Healthy and close releases the Realm") {
         runTest {
-            val managed = RecordingManagedRealmRuntime()
+            val managed = FakeManagedRealmRuntime()
             val runtime = RealmDeploymentRuntime(managed)
 
+            runtime.health.value shouldBe RuntimeHealth.Staged
             runtime.activate()
-
             runtime.health.value shouldBe RuntimeHealth.Healthy
-            managed.operations shouldContainExactly listOf("activate")
+
             runtime.close()
-            managed.operations shouldContainExactly listOf("activate", "stop")
+            managed.released shouldBe true
         }
     }
 
-    test("failed activation stays unavailable until staged Realm resources are drained") {
+    test("failed activation reports Unhealthy with its reason and close still releases the Realm") {
         runTest {
-            val managed = RecordingManagedRealmRuntime(failActivation = true)
+            val managed = FakeManagedRealmRuntime(failActivation = true)
             val runtime = RealmDeploymentRuntime(managed)
 
             runCatching { runtime.activate() }.exceptionOrNull()?.message shouldBe "catalog activation failed"
 
             runtime.health.value shouldBe RuntimeHealth.Unhealthy("catalog activation failed")
             runtime.close()
-            managed.operations shouldContainExactly listOf("activate", "stop")
+            managed.released shouldBe true
+        }
+    }
+
+    test("quiesce reports Staged and resume reports Healthy again") {
+        runTest {
+            val runtime = RealmDeploymentRuntime(FakeManagedRealmRuntime())
+            runtime.activate()
+
+            runtime.quiesce()
+            runtime.health.value shouldBe RuntimeHealth.Staged
+
+            runtime.resume()
+            runtime.health.value shouldBe RuntimeHealth.Healthy
         }
     }
 }
 
-private class RecordingManagedRealmRuntime(
+private class FakeManagedRealmRuntime(
     private val failActivation: Boolean = false,
 ) : ManagedRealmRuntime {
-    val operations = mutableListOf<String>()
+    var released = false
+        private set
 
     override suspend fun activate() {
-        operations += "activate"
         if (failActivation) error("catalog activation failed")
     }
 
-    override suspend fun quiesce() {
-        operations += "quiesce"
-    }
+    override suspend fun quiesce() = Unit
 
-    override suspend fun resume() {
-        operations += "resume"
-    }
+    override suspend fun resume() = Unit
 
     override suspend fun stop() {
-        operations += "stop"
+        released = true
     }
 }

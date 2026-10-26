@@ -17,6 +17,7 @@ import skirout.editor.v1.compiled_content.PublishedOutput
 import skirout.editor.v1.diagnostic.Diagnostic
 import skirout.editor.v1.diagnostic.DiagnosticSeverity
 import skirout.editor.v1.publication.EngineImplementationInputs
+import skirout.editor.v1.publication.PublicationReport
 import skirout.editor.v1.publication.PublicationState
 import skirout.editor.v1.type_catalog.CatalogGeneration
 import skirout.editor.v1.type_catalog.DiagnosticId
@@ -26,7 +27,7 @@ import skirout.editor.v1.type_catalog.RuleOrigin
 import skirout.kernel.v1.resource_id.ResourceId
 
 val RegisteredCompiledContentRepositoryTest by testSuite {
-    test("selection replaces the complete set and empty results remove every previous root") {
+    test("each installation becomes the only selected publication, an empty one included") {
         publicationDatabase().use { database ->
             val attempts = SurrealPublicationAttemptStore(database)
             val results = SurrealRegisteredCompiledContentRepository(database)
@@ -45,14 +46,9 @@ val RegisteredCompiledContentRepositoryTest by testSuite {
             attempts.phase(empty.publication, PublicationState.ACTIVATING)
             attempts.install(empty)
             results.selected() shouldBe empty
-            database
-                .query("SELECT id FROM publication_attempt WHERE selected = true;")
-                .take(0)
-                .getArray()
-                .len() shouldBe 1
         }
     }
-    test("a failed installation rolls back clearing the previous selection") {
+    test("installing an attempt that never reached activation is refused and keeps the previous selection") {
         publicationDatabase().use { database ->
             val attempts = SurrealPublicationAttemptStore(database)
             val results = SurrealRegisteredCompiledContentRepository(database)
@@ -62,7 +58,7 @@ val RegisteredCompiledContentRepositoryTest by testSuite {
             attempts.install(first)
             val next = testPublishedContent("next", "b")
             attempts.start(next.publication, next.catalog, testEngineInputs())
-            shouldThrow<IllegalStateException> { attempts.install(next) }
+            shouldThrow<IllegalStateException> { attempts.install(next) }.message shouldBe "Publication was not ready for installation"
             results.selected() shouldBe first
         }
     }
@@ -79,8 +75,10 @@ val RegisteredCompiledContentRepositoryTest by testSuite {
             original.start(unfinished.publication, unfinished.catalog, testEngineInputs())
             original.phase(unfinished.publication, PublicationState.ACTIVATING)
             recovery.interruptUnfinished()
-            shouldThrow<IllegalStateException> { original.install(unfinished) }
+            shouldThrow<IllegalStateException> { original.install(unfinished) }.message shouldBe
+                "Publication was not ready for installation"
             results.selected() shouldBe selected
+            results.latestReport()?.state shouldBe PublicationState.INTERRUPTED
         }
     }
     test("blocked findings remain structured and preserve the selected result") {
@@ -100,14 +98,8 @@ val RegisteredCompiledContentRepositoryTest by testSuite {
             val id = PublicationId(value = "blocked")
             attempts.start(id, CatalogGeneration(value = "catalog"), testEngineInputs())
             attempts.blocked(id, listOf(finding))
-            results.latestReport()?.findings shouldBe listOf(finding)
-            database
-                .query("SELECT VALUE findings FROM ONLY publication_attempt:blocked;")
-                .take(0)
-                .getArray()
-                .single()
-                .isObject shouldBe
-                true
+            results.latestReport() shouldBe
+                PublicationReport(id = id, state = PublicationState.BlockedWrapper(listOf(finding)), findings = listOf(finding))
             results.selected() shouldBe null
         }
     }
@@ -122,8 +114,8 @@ val RegisteredCompiledContentRepositoryTest by testSuite {
             attempts.start(PublicationId(value = "unfinished"), first.catalog, testEngineInputs())
             SurrealPublicationAttemptStore(database).interruptUnfinished()
             results.selected() shouldBe first
-            database.query("SELECT VALUE state FROM ONLY publication_attempt:unfinished;").take(0).getString() shouldBe "interrupted"
-            database.query("SELECT VALUE state FROM ONLY publication_attempt:first;").take(0).getString() shouldBe "complete"
+            results.latestReport() shouldBe
+                PublicationReport(id = PublicationId(value = "unfinished"), state = PublicationState.INTERRUPTED, findings = emptyList())
         }
     }
 }

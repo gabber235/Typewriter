@@ -89,10 +89,6 @@ val RealmPackageBoundariesTest by testSuite {
         realmSources().map { it.pkg }.toSet() shouldBe ALLOWED.keys
     }
 
-    test("allowed Realm package references name only declared packages") {
-        (ALLOWED.values.flatten().toSet() - ALLOWED.keys) shouldBe emptySet()
-    }
-
     test("allowed Realm package references are acyclic") {
         cycleIn(ALLOWED) shouldBe null
     }
@@ -103,14 +99,18 @@ val RealmPackageBoundariesTest by testSuite {
         cycleIn(mapOf("a" to setOf("b"), "b" to setOf())) shouldBe null
     }
 
-    test("Realm packages reference only the packages below them") {
+    test("Realm packages reference only the declared packages below them") {
+        val undeclared =
+            ALLOWED.flatMap { (pkg, allowed) ->
+                (allowed - ALLOWED.keys).map { "$pkg allows undeclared package $it" }
+            }
         val violations =
             realmSources().flatMap { source ->
                 (source.references - source.pkg - ALLOWED.getValue(source.pkg)).map {
                     "${source.file.path}: ${source.pkg} references $it"
                 }
             }
-        violations shouldBe emptyList()
+        undeclared + violations shouldBe emptyList()
     }
 
     test("reference detection reads imports and qualified names in code only") {

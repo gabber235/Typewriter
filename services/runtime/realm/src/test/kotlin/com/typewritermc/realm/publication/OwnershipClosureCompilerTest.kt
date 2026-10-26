@@ -5,13 +5,10 @@ import com.typewritermc.authoring.of
 import com.typewritermc.engine.ResourceGraphCompileResult
 import com.typewritermc.engine.relation
 import com.typewritermc.realm.authoring.AuthoringSeed
-import com.typewritermc.realm.authoring.EmptyProviders
 import com.typewritermc.realm.authoring.InMemoryAuthoringViewStore
-import com.typewritermc.realm.catalog.AuthoringCatalogLease
-import com.typewritermc.types.FactoryNativeBindingRegistry
-import com.typewritermc.types.NativeBindingRegistry
-import com.typewritermc.types.catalog.CheckedCatalog
-import com.typewritermc.types.catalog.DefaultCheckedCatalog
+import com.typewritermc.realm.checking.RealmCheckRuntime
+import com.typewritermc.realm.testing.DefinitionCatalog
+import com.typewritermc.realm.testing.recordBinding
 import com.typewritermc.types.listValue
 import com.typewritermc.types.named
 import com.typewritermc.types.namedTemplate
@@ -22,6 +19,7 @@ import com.typewritermc.types.template
 import com.typewritermc.types.use
 import de.infix.testBalloon.framework.core.testSuite
 import io.kotest.matchers.shouldBe
+import io.kotest.matchers.types.shouldBeInstanceOf
 import skirout.editor.v1.catalog.EndpointCardinality
 import skirout.editor.v1.catalog.EndpointDefinition
 import skirout.editor.v1.catalog.EndpointSlot
@@ -29,7 +27,6 @@ import skirout.editor.v1.catalog.RelationContract
 import skirout.editor.v1.catalog.RelationDeletePolicy
 import skirout.editor.v1.compiled_content.CompiledEdgeOrigin
 import skirout.editor.v1.type_catalog.AuthoringRecord
-import skirout.editor.v1.type_catalog.CatalogGeneration
 import skirout.editor.v1.type_catalog.CollectionKind
 import skirout.editor.v1.type_catalog.DataValue
 import skirout.editor.v1.type_catalog.EndpointId
@@ -38,15 +35,16 @@ import skirout.editor.v1.type_catalog.FieldOwner
 import skirout.editor.v1.type_catalog.ItemId
 import skirout.editor.v1.type_catalog.LinkTarget
 import skirout.editor.v1.type_catalog.ListItem
+import skirout.editor.v1.type_catalog.PathSegment
 import skirout.editor.v1.type_catalog.RelationId
 import skirout.editor.v1.type_catalog.RepresentationTemplate
 import skirout.editor.v1.type_catalog.ScalarKind
 import skirout.editor.v1.type_catalog.TypeDefinition
 import skirout.editor.v1.type_catalog.TypeDefinitionId
 import skirout.editor.v1.type_catalog.TypeSelection
+import skirout.editor.v1.type_catalog.ValueLocation
 import skirout.editor.v1.type_catalog.ValuePath
 import skirout.kernel.v1.resource_id.ResourceId
-import java.util.concurrent.atomic.AtomicInteger
 
 private val pageId = ResourceId(value = "page")
 private val childId = ResourceId(value = "child")
@@ -54,99 +52,81 @@ private val missingId = ResourceId(value = "missing")
 
 val OwnershipClosureCompilerTest by testSuite {
     test("one sided ownership links compile the complete owned shard") {
-        fixture(mapOf(pageId to pageRecord(listOf(childId)), childId to childRecord("first"))).use { captured ->
-            val result = with(captured.root) { compiler(captured.root).compile(pageId) }
+        val result = compile(mapOf(pageId to pageRecord(listOf(childId)), childId to childRecord("first")), pageId)
 
-            result as ResourceGraphCompileResult.Success
-            result.shard.facts.resources
-                .map { it.key.source }
-                .toSet() shouldBe setOf(pageId, childId)
-            result.shard.facts.edges.single().let { edge ->
-                edge.source.source shouldBe pageId
-                edge.target.source shouldBe childId
-                edge.relation shouldBe OWNERSHIP
-            }
+        result as ResourceGraphCompileResult.Success
+        result.shard.facts.resources
+            .map { it.key.source }
+            .toSet() shouldBe setOf(pageId, childId)
+        result.shard.facts.edges.single().let { edge ->
+            edge.source.source shouldBe pageId
+            edge.target.source shouldBe childId
+            edge.relation shouldBe OWNERSHIP
         }
     }
 
     test("authored content changes produce a new shard identity") {
-        val first = fixture(mapOf(pageId to pageRecord(listOf(childId)), childId to childRecord("first")))
-        val second = fixture(mapOf(pageId to pageRecord(listOf(childId)), childId to childRecord("second")), "snapshot_2")
-        try {
-            val firstResult = with(first.root) { compiler(first.root).compile(pageId) } as ResourceGraphCompileResult.Success
-            val secondResult = with(second.root) { compiler(second.root).compile(pageId) } as ResourceGraphCompileResult.Success
+        val first = compile(mapOf(pageId to pageRecord(listOf(childId)), childId to childRecord("first")), pageId)
+        val second = compile(mapOf(pageId to pageRecord(listOf(childId)), childId to childRecord("second")), pageId)
 
-            (secondResult.inputFingerprint == firstResult.inputFingerprint) shouldBe false
-            (secondResult.shard.digest == firstResult.shard.digest) shouldBe false
-        } finally {
-            first.close()
-            second.close()
-        }
+        first as ResourceGraphCompileResult.Success
+        second as ResourceGraphCompileResult.Success
+        (second.inputFingerprint == first.inputFingerprint) shouldBe false
+        (second.shard.digest == first.shard.digest) shouldBe false
     }
 
     test("a nested compilation unit is its own shard, not part of its owner's") {
         val nested = ResourceId(value = "nested")
         val records = mapOf(pageId to pageRecord(listOf(childId, nested)), childId to childRecord("first"), nested to nestedRecord())
-        fixture(records).use { captured ->
-            val compiler = compiler(captured.root)
-            val page = with(captured.root) { compiler.compile(pageId) } as ResourceGraphCompileResult.Success
-            val unit = with(captured.root) { compiler.compile(nested) } as ResourceGraphCompileResult.Success
+        val page = compile(records, pageId) as ResourceGraphCompileResult.Success
+        val unit = compile(records, nested) as ResourceGraphCompileResult.Success
 
-            page.shard.facts.resources
-                .map { it.key.source }
-                .toSet() shouldBe setOf(pageId, childId)
-            page.shard.facts.edges
-                .map { it.target.source }
-                .toSet() shouldBe setOf(childId, nested)
-            unit.shard.facts.resources
-                .map { it.key.source } shouldBe listOf(nested)
-        }
+        page.shard.facts.resources
+            .map { it.key.source }
+            .toSet() shouldBe setOf(pageId, childId)
+        page.shard.facts.edges
+            .map { it.target.source }
+            .toSet() shouldBe setOf(childId, nested)
+        unit.shard.facts.resources
+            .map { it.key.source } shouldBe listOf(nested)
     }
 
     test("missing owned resources block publication") {
-        fixture(mapOf(pageId to pageRecord(listOf(missingId)))).use { captured ->
-            val result = with(captured.root) { compiler(captured.root).compile(pageId) }
+        val result = compile(mapOf(pageId to pageRecord(listOf(missingId))), pageId)
 
-            result as ResourceGraphCompileResult.Blocked
-            result.diagnostics.single().code shouldBe "missing_owned_resource"
-        }
+        result as ResourceGraphCompileResult.Blocked
+        result.diagnostics.single().code shouldBe "missing_owned_resource"
     }
 
     test("parallel occurrences retain distinct endpoint locations") {
-        fixture(mapOf(pageId to pageRecord(listOf(childId, childId)), childId to childRecord("child"))).use { captured ->
-            val result = with(captured.root) { compiler(captured.root).compile(pageId) } as ResourceGraphCompileResult.Success
+        val result =
+            compile(mapOf(pageId to pageRecord(listOf(childId, childId)), childId to childRecord("child")), pageId)
+                as ResourceGraphCompileResult.Success
 
-            result.shard.facts.edges.size shouldBe 2
-            result.shard.facts.edges
-                .map { (it.origin as CompiledEdgeOrigin.RelationWrapper).value.firstLocation }
-                .distinct()
-                .size shouldBe 2
-        }
+        result.shard.facts.edges
+            .map { (it.origin as CompiledEdgeOrigin.RelationWrapper).value.firstLocation }
+            .toSet() shouldBe setOf(childPath(0), childPath(1))
     }
 
-    test("capturedUnavailableResourceBlocksCompilation") {
-        val unavailableType = TypeDefinitionId.qualified("removed", "page")
+    test("a resource whose type the catalog no longer declares blocks its shard with unresolved_type") {
         val unavailable =
             AuthoringRecord.of(
-                TypeSelection.CompleteWrapper(unavailableType.namedUse()),
+                TypeSelection.CompleteWrapper(TypeDefinitionId.qualified("removed", "page").namedUse()),
                 mapOf("legacy" to DataValue.StringValueWrapper("preserved")),
             )
-        fixture(resources = mapOf(pageId to unavailable)).use { captured ->
-            val result = with(captured.root) { compiler(captured.root).compile(pageId) } as ResourceGraphCompileResult.Blocked
+        val result = compile(mapOf(pageId to unavailable), pageId) as ResourceGraphCompileResult.Blocked
 
-            result.diagnostics.map { it.code }.toSet() shouldBe
-                setOf("unresolved_type")
-        }
+        result.diagnostics.map { it.code to it.primary } shouldBe listOf("unresolved_type" to ValueLocation.of(pageId))
     }
+
     test("an invalid ownership edge does not block an independent page") {
         val other = ResourceId(value = "other")
-        fixture(mapOf(pageId to pageRecord(listOf(missingId)), other to pageRecord(emptyList()))).use { captured ->
-            val compiler = compiler(captured.root)
-            with(captured.root) { compiler.compile(pageId) } as ResourceGraphCompileResult.Blocked
-            val independent = with(captured.root) { compiler.compile(other) } as ResourceGraphCompileResult.Success
-            independent.shard.facts.resources
-                .map { it.key.source } shouldBe listOf(other)
-        }
+        val records = mapOf(pageId to pageRecord(listOf(missingId)), other to pageRecord(emptyList()))
+
+        compile(records, pageId).shouldBeInstanceOf<ResourceGraphCompileResult.Blocked>()
+        val independent = compile(records, other) as ResourceGraphCompileResult.Success
+        independent.shard.facts.resources
+            .map { it.key.source } shouldBe listOf(other)
     }
 
     test("a complete sibling cannot hide an unfinished owned resource") {
@@ -155,62 +135,32 @@ val OwnershipClosureCompilerTest by testSuite {
         val original = mapOf(pageId to pageRecord(listOf(childId)), childId to unfinished)
         val findings =
             listOf(original, original + (sibling to childRecord("complete"))).map { records ->
-                fixture(records).use { captured ->
-                    val result = with(captured.root) { compiler(captured.root).compile(pageId) } as ResourceGraphCompileResult.Blocked
-                    result.diagnostics
-                }
+                (compile(records, pageId) as ResourceGraphCompileResult.Blocked).diagnostics
             }
+
         findings[0] shouldBe findings[1]
-        findings[0].map { it.code } shouldBe listOf("unfinished_value")
-        findings[0]
-            .single()
-            .primary!!
-            .resource shouldBe childId
+        findings[0].map { it.code to it.primary?.resource } shouldBe listOf("unfinished_value" to childId)
     }
 }
 
-private fun compiler(view: com.typewritermc.realm.authoring.AuthoringView) =
-    OwnershipClosureCompiler(
-        setOf(OWNERSHIP),
-        testAssessment(
-            view,
-            listOf(
-                NativeBindingRequirement(
-                    PAGE_USE,
-                    skirout.editor.v1.type_catalog
-                        .NativeBindingId(value = "page"),
-                    "page_signature",
-                ),
-                NativeBindingRequirement(
-                    CHILD_USE,
-                    skirout.editor.v1.type_catalog
-                        .NativeBindingId(value = "child"),
-                    "child_signature",
-                ),
-                NativeBindingRequirement(
-                    NESTED_USE,
-                    skirout.editor.v1.type_catalog
-                        .NativeBindingId(value = "nested"),
-                    "nested_signature",
-                ),
-            ),
-        ).resources,
-    )
-
-private fun fixture(
+/** Compiles [root] from [resources] saved on the compiler catalog, with readiness from production acceptance. */
+private suspend fun compile(
     resources: Map<ResourceId, AuthoringRecord>,
-    snapshot: String = "snapshot_1",
-): com.typewritermc.realm.authoring.AuthoringLease {
-    val catalog = CompilerCatalogLease()
-    val store =
-        InMemoryAuthoringViewStore(
-            catalog,
-            AuthoringSeed(resources),
-        )
-    val captured = store.capture()
-    store.close()
-    return captured
-}
+    root: ResourceId,
+): ResourceGraphCompileResult =
+    InMemoryAuthoringViewStore(COMPILER_CATALOG.lease(), AuthoringSeed(resources)).use { store ->
+        RealmCheckRuntime(store).use { checks ->
+            val acceptance = AuthoringAcceptance(store, checks)
+            acceptance.capture().use { captured ->
+                val readiness = acceptance.evaluate(captured).resources
+                with(captured.root) { OwnershipClosureCompiler(setOf(OWNERSHIP), readiness).compile(root) }
+            }
+        }
+    }
+
+/** The authored location of the page's child link item number [index]. */
+private fun childPath(index: Int) =
+    ValuePath(segments = listOf(PathSegment.createField(name = "children"), PathSegment.createItem(id = ItemId(value = "child_$index"))))
 
 private fun pageRecord(targets: List<ResourceId>) =
     AuthoringRecord.of(
@@ -250,31 +200,6 @@ private fun nestedRecord() =
         TypeSelection.CompleteWrapper(NESTED_USE),
         mapOf("value" to DataValue.StringValueWrapper("nested")),
     )
-
-private class CompilerCatalogLease private constructor(
-    private val references: AtomicInteger,
-) : AuthoringCatalogLease {
-    constructor() : this(AtomicInteger(1))
-
-    override val generation = CatalogGeneration(value = "compiler_catalog")
-    override val checked: CheckedCatalog = DefaultCheckedCatalog(generation, DEFINITIONS)
-    override val nativeBindings: NativeBindingRegistry = FactoryNativeBindingRegistry(checked, emptyList())
-    override val providers = EmptyProviders
-    override val checks = emptyList<com.typewritermc.discovery.OwnedCheckRecipe>()
-    override val relations = listOf(OWNERSHIP_CONTRACT)
-    override val configuration: List<skirout.editor.v1.catalog.ConfigurationRecipe> = emptyList()
-    override val operations = com.typewritermc.operations.OperationCatalog()
-    override val placementFields = emptyMap<TypeDefinitionId, ValuePath>()
-
-    override fun retain(): AuthoringCatalogLease {
-        references.incrementAndGet()
-        return CompilerCatalogLease(references)
-    }
-
-    override fun close() {
-        check(references.decrementAndGet() >= 0)
-    }
-}
 
 private val PAGE = TypeDefinitionId.qualified("compiler", "page")
 private val CHILD = TypeDefinitionId.qualified("compiler", "child")
@@ -362,4 +287,10 @@ private val DEFINITIONS =
             id = CHILDREN,
             representation = RepresentationTemplate.createSequence(item = CHILD_LINK.template(), kind = CollectionKind.LIST),
         ),
+    )
+private val COMPILER_CATALOG =
+    DefinitionCatalog(
+        DEFINITIONS,
+        relations = listOf(OWNERSHIP_CONTRACT),
+        nativeBindingFactories = listOf(PAGE, CHILD, NESTED).map { recordBinding(it) },
     )

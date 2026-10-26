@@ -1,45 +1,54 @@
 package com.typewritermc.realm
 
 import de.infix.testBalloon.framework.core.testSuite
+import io.kotest.matchers.collections.shouldBeEmpty
 import io.kotest.matchers.shouldBe
+import java.nio.file.Files
 import java.nio.file.Path
+import java.util.Properties
+import kotlin.io.path.extension
+import kotlin.io.path.name
+import kotlin.io.path.nameWithoutExtension
+
+private val DATABASE_SECRETS = listOf("REALM_DB_USERNAME", "REALM_DB_PASSWORD", "REALM_DB_TOKEN")
 
 val RealmSettingsTest by testSuite {
-    test("local profile supplies Realm settings") {
-        val settings = RealmSettings.fromFile(profile("local"))
+    test("no shipped profile contains database secrets") {
+        val leaks =
+            shippedProfiles().flatMap { profile ->
+                val settings = RealmSettings.fromFile(profile)
+                DATABASE_SECRETS.filter { settings.get(it) != null }.map { "${profile.name}: $it" }
+            }
 
-        settings.get("REALM_DB_ENDPOINT_TYPE") shouldBe "embedded"
-        settings.get("REALM_DB_ENGINE") shouldBe "surrealkv"
-        settings.get("REALM_DB_PATH") shouldBe "database/realm"
-        settings.get("REALM_DB_NAMESPACE") shouldBe "typewriter"
-        settings.get("REALM_DB_DATABASE") shouldBe "realm"
-        settings.get("REALM_DB_AUTHENTICATION") shouldBe "none"
+        leaks.shouldBeEmpty()
     }
 
-    test("local Kubernetes profile supplies remote Realm settings without secrets") {
-        val settings = RealmSettings.fromFile(profile("local-kubernetes"))
+    test("every shipped profile parses into a database configuration once the process supplies its secrets") {
+        val failures =
+            shippedProfiles().mapNotNull { profile ->
+                val settings =
+                    RealmSettings(
+                        environment = DATABASE_SECRETS.associateWith { "supplied" },
+                        configuration = profileValues(profile),
+                    )
+                runCatching { settings.databaseConfiguration() }
+                    .exceptionOrNull()
+                    ?.let { "${profile.nameWithoutExtension}: ${it.message}" }
+            }
 
-        settings.get("REALM_DB_ENDPOINT_TYPE") shouldBe "remote"
-        settings.get("REALM_DB_URL") shouldBe "wss://surrealdb.local.seamlezz.net"
-        settings.get("REALM_DB_NAMESPACE") shouldBe "typewriter"
-        settings.get("REALM_DB_DATABASE") shouldBe "realm"
-        settings.get("REALM_DB_AUTHENTICATION") shouldBe "database"
-        settings.get("REALM_DB_USERNAME") shouldBe null
-        settings.get("REALM_DB_PASSWORD") shouldBe null
+        failures.shouldBeEmpty()
     }
 
-    test("application configuration parses typed slices") {
-        val configuration = RealmSettings.fromFile(profile("local")).applicationConfiguration()
-
-        configuration.diagnosticLevel shouldBe RealmDiagnosticLevel.WARN
+    test("the diagnostic level setting parses regardless of case") {
+        RealmSettings(configuration = mapOf("TYPEWRITER_DIAGNOSTIC_LEVEL" to "error"))
+            .applicationConfiguration()
+            .diagnosticLevel shouldBe RealmDiagnosticLevel.ERROR
     }
 
-    test("production profile supplies Realm settings") {
-        val settings = RealmSettings.fromFile(profile("production"))
-
-        settings.get("REALM_DB_ENDPOINT_TYPE") shouldBe "embedded"
-        settings.get("REALM_DB_ENGINE") shouldBe "surrealkv"
-        settings.get("REALM_DB_PATH") shouldBe "database/realm"
+    test("an unknown diagnostic level falls back to WARN") {
+        RealmSettings(configuration = mapOf("TYPEWRITER_DIAGNOSTIC_LEVEL" to "verbose"))
+            .applicationConfiguration()
+            .diagnosticLevel shouldBe RealmDiagnosticLevel.WARN
     }
 
     test("process settings override the selected profile") {
@@ -70,4 +79,15 @@ val RealmSettingsTest by testSuite {
     }
 }
 
-private fun profile(name: String): Path = Path.of("..", "config", "$name.properties")
+private fun shippedProfiles(): List<Path> =
+    Files
+        .list(Path.of("..", "config"))
+        .use { files ->
+            files.filter { it.extension == "properties" }.sorted().toList()
+        }.also { check(it.isNotEmpty()) { "No shipped Realm profiles found" } }
+
+private fun profileValues(profile: Path): Map<String, String> {
+    val properties = Properties()
+    Files.newBufferedReader(profile).use(properties::load)
+    return properties.stringPropertyNames().associateWith(properties::getProperty)
+}

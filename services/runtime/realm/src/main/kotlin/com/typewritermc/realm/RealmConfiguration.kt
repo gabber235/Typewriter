@@ -54,24 +54,24 @@ internal fun RealmSettings.databaseConfiguration(): RealmDatabaseConfiguration {
 }
 
 private fun RealmSettings.databaseEndpoint(): DatabaseEndpoint =
-    when (get("REALM_DB_ENDPOINT_TYPE", "embedded")!!.lowercase()) {
+    when (val type = get("REALM_DB_ENDPOINT_TYPE", "embedded")!!.lowercase()) {
         "embedded" -> embeddedDatabaseEndpoint()
         "remote" -> DatabaseEndpoint.Remote(URI(getRequired("REALM_DB_URL")))
-        else -> error("Unknown Realm database endpoint type")
+        else -> unknownValue("REALM_DB_ENDPOINT_TYPE", type)
     }
 
 private fun RealmSettings.embeddedDatabaseEndpoint(): DatabaseEndpoint.Embedded {
     val retention = get("REALM_DB_RETENTION")
-    return when (get("REALM_DB_ENGINE", "surrealkv")!!.lowercase()) {
+    return when (val engine = get("REALM_DB_ENGINE", "surrealkv")!!.lowercase()) {
         "memory" -> DatabaseEndpoint.Embedded.Memory(retention)
         "surrealkv" -> DatabaseEndpoint.Embedded.SurrealKv(Path.of(get("REALM_DB_PATH", "database/realm")!!), retention)
         "rocksdb" -> DatabaseEndpoint.Embedded.RocksDb(Path.of(get("REALM_DB_PATH", "database/realm")!!), retention)
-        else -> error("Unknown embedded Realm database engine")
+        else -> unknownValue("REALM_DB_ENGINE", engine)
     }
 }
 
 private fun RealmSettings.databaseAuthentication(): DatabaseAuthentication =
-    when (get("REALM_DB_AUTHENTICATION", "none")!!.lowercase()) {
+    when (val authentication = get("REALM_DB_AUTHENTICATION", "none")!!.lowercase()) {
         "none" -> {
             DatabaseAuthentication.None
         }
@@ -93,8 +93,13 @@ private fun RealmSettings.databaseAuthentication(): DatabaseAuthentication =
         }
 
         else -> {
-            error("Unknown Realm database authentication type")
+            unknownValue("REALM_DB_AUTHENTICATION", authentication)
         }
     }
 
 private fun RealmSettings.getRequired(name: String): String = requireNotNull(get(name)) { "Realm setting $name must be configured" }
+
+private fun unknownValue(
+    name: String,
+    value: String,
+): Nothing = error("Realm setting $name has unknown value: $value")

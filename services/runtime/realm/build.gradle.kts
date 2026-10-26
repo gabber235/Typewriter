@@ -26,6 +26,7 @@ dependencies {
 
     testFixturesApi(project(":typewriter-test-kit"))
     testFixturesImplementation(libs.surrealdb.java.sdk)
+    testFixturesImplementation(libs.kotest.assertions)
 
     testImplementation(testFixtures(project(":messaging")))
     testImplementation(testFixtures(project(":file-transfer")))
@@ -37,6 +38,7 @@ dependencies {
         attributes { attribute(LibraryElements.LIBRARY_ELEMENTS_ATTRIBUTE, objects.named(LibraryElements.JAR)) }
     }
     testImplementation(libs.kotlin.coroutines.test)
+    testImplementation(libs.kotest.property)
 }
 
 typewriter {

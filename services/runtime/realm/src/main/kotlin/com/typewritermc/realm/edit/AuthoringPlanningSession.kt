@@ -310,9 +310,10 @@ internal class AuthoringPlanningSession(
     }
 
     private fun clearReferences(at: ValueLocation) {
+        val record = resources[at.resource] ?: return
         ResourceValueMapper
             .discover(
-                mapOf(at.resource to resources.getValue(at.resource)),
+                mapOf(at.resource to record),
             ).filter {
                 it.id.location.path
                     .atOrBelow(at.path)
