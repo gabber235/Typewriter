@@ -18,6 +18,7 @@ mod lock;
 mod process;
 mod results;
 mod review;
+mod secrets;
 mod skirout;
 mod stack;
 
@@ -67,6 +68,9 @@ enum Cli {
     Stack(stack::StackCommand),
     /// Checks that the pinned tools are the ones on PATH, and says how to fix each problem.
     Doctor,
+    /// Shows which secret profiles are satisfied, never a value.
+    #[command(subcommand)]
+    Secrets(secrets::SecretsCommand),
     /// The change report, the reviewer's investigation tools and code scanning findings.
     Review(review::ReviewArgs),
     /// Records end to end runs and publishes the pull request's evidence section.
@@ -117,6 +121,7 @@ fn main() -> ExitCode {
         Cli::E2e { suite } => e2e::run(&context, suite),
         Cli::Stack(command) => stack::command(&context, command),
         Cli::Doctor => doctor::doctor(&context),
+        Cli::Secrets(command) => secrets::command(&context, command),
         Cli::Review(args) => review::run(&context, args),
         Cli::Evidence(command) => evidence::run(&context, command),
         Cli::Docs(command) => docs::run(&context, command),

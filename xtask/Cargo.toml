@@ -16,6 +16,11 @@ libc = "0.2"
 roxmltree = "0.20"
 serde = { version = "1", features = ["derive"] }
 serde_json = "1"
+# Secrets (`secretspec.toml`, `crate::secrets`), the heaviest dependency: about 45 seconds of a cold
+# build. Pinned to the `secretspec` CLI devenv provides, since minor releases still break. Without
+# default features only the built in providers compile, which include 1Password and dotenv.
+secretspec = { version = "=0.21.1", default-features = false }
+secretspec-derive = "=0.21.1"
 sha2 = "0.10"
 # The runtime of the generated Skir types (build.rs).
 skir-client = "0.1"

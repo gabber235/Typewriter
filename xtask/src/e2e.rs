@@ -14,13 +14,13 @@ use std::time::Duration;
 
 use anyhow::{Context as _, Result, bail};
 
-use crate::deploy::{self, Cluster};
+use crate::deploy;
 use crate::evidence::{self, Recorded};
 use crate::lock::HeavyLock;
 use crate::process::{Supervisor, Unsupervised};
 use crate::results::{self, Outcome, Quarantine, TestRun};
 use crate::stack::{self, Stack, typewriter};
-use crate::{CommandExt, Context, Scratch, cluster, generate};
+use crate::{CommandExt, Context, Scratch, cluster, generate, secrets};
 
 /// Where the stack writes the panel's compile time defines (it publishes the same path as
 /// `STACK_PANEL_DEFINES`), relative to the repository root.
@@ -76,8 +76,10 @@ impl Suite {
 pub fn run(ctx: &Context, suite: Suite) -> Result<()> {
     match suite {
         Suite::Full => {
-            cluster::create_ci(ctx)?;
-            deploy::deploy(ctx, Cluster::Ci)?;
+            // One vault read for the cluster and the deploy.
+            let secrets = secrets::Ci::load()?;
+            cluster::create_ci(ctx, &secrets)?;
+            deploy::deploy_ci(ctx, &secrets)?;
             scenarios(ctx, Suite::PanelWeb, Target::Cluster)
         }
         suite => scenarios(ctx, suite, Target::Stack),

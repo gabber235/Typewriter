@@ -26,7 +26,8 @@ const END: &str = "<!-- evidence:end -->";
 /// Marks a verdict whose commit is no longer the head.
 const STALE: &str = "**Stale**: ";
 /// Environment variables whose values must never appear in published text or media.
-const SECRETS: [&str; 3] = ["GH_TOKEN", "GITHUB_TOKEN", "CI_AGE_KEY"];
+/// Secrets resolved through `crate::secrets` never enter the environment.
+const SECRETS: [&str; 3] = ["GH_TOKEN", "GITHUB_TOKEN", "OP_SERVICE_ACCOUNT_TOKEN"];
 /// Change map entries shown before the rest are counted.
 const CHANGE_MAP_LIMIT: usize = 50;
 
