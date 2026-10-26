@@ -20,7 +20,7 @@ AsyncValue<AuthoringDocument> confirmedAuthoringDocument(
   return const AsyncLoading();
 }
 
-@Riverpod(keepAlive: true)
+@riverpod
 RealmEditPersistence realmEditPersistence(Ref ref, AuthoringScope scope) {
   AuthoringSession session() => ref.read(
     authoringSessionProvider(scope.organizationId, scope.realmId).notifier,
@@ -54,9 +54,13 @@ extension RealmEditingRegistration on LocalWork {
   getOrRegisterRealmEditing(AuthoringScope scope) => getOrRegisterScoped(
     WorkDriverId(domain: "authoring", scope: scope),
     (ref) {
+      final persistence = ref.listen(
+        realmEditPersistenceProvider(scope),
+        (_, _) {},
+      );
       final workspace = EditingWorkspace<AuthoringDocument, RealmPreparedEdit>(
         model: const RealmEditModel(),
-        persistence: ref.read(realmEditPersistenceProvider(scope)),
+        persistence: persistence.read(),
         submissions: this,
       );
       final subscription = ref.listen(
@@ -73,7 +77,10 @@ extension RealmEditingRegistration on LocalWork {
       return EditingWorkDriver(
         id: WorkDriverId(domain: "authoring", scope: scope),
         workspace: workspace,
-        onDispose: subscription.close,
+        onDispose: () {
+          subscription.close();
+          persistence.close();
+        },
         reviewFactory: (id) => WorkReviewContent(
           body: RealmEditingReview(
             workspace: RealmEditing.fromWorkspace(workspace),
