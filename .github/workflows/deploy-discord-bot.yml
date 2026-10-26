@@ -15,17 +15,12 @@ jobs:
       - uses: actions/checkout@v4
         with:
           fetch-depth: 1
-          # Cone mode keeps the root files, secretspec.toml among them.
           sparse-checkout: |
-            .github/actions
             discord_bot
           sparse-checkout-cone-mode: true
-      # FLY_API_TOKEN, which flyctl reads.
-      - uses: ./.github/actions/secrets
-        with:
-          scope: fly
-          token: ${{ secrets.OP_SERVICE_ACCOUNT_TOKEN }}
       - uses: superfly/flyctl-actions/setup-flyctl@master
       - name: Deploy Discord Bot
         working-directory: discord_bot
         run: flyctl deploy --remote-only
+        env:
+          FLY_API_TOKEN: ${{ secrets.FLY_API_TOKEN }}
