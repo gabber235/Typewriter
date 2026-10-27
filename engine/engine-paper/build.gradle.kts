@@ -1,6 +1,5 @@
 import com.github.jengelman.gradle.plugins.shadow.tasks.ShadowJar
 import io.papermc.hangarpublishplugin.model.Platforms
-import jdk.jfr.internal.JVM.exclude
 import xyz.jpenilla.resourcefactory.paper.PaperPluginYaml
 
 plugins {
