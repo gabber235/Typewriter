@@ -38,7 +38,9 @@ jobs:
 
   full:
     runs-on: ubuntu-latest
-    timeout-minutes: 90
+    # Infrastructure's ci:up may take 55 minutes, the tenant release 20 and the scenarios 30, on
+    # top of the backend build.
+    timeout-minutes: 150
     steps:
       - uses: actions/checkout@v6
         with:
