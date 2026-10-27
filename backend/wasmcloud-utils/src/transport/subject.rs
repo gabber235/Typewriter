@@ -160,8 +160,12 @@ impl InternalComponentScope {
 #[cfg(test)]
 mod tests {
     use otel_wasi::WasiError as _;
+    use proptest::prelude::*;
+    use proptest::test_runner::{Config, RngSeed};
 
     use super::*;
+    use crate::transport::{OutboundEventRoute, OutboundRequestRoute};
+    use crate::transport_routes::{ServiceBindingQueryRoute, UserOrganizationsWatchRoute};
 
     #[test]
     fn subject_tokens_reject_separators_wildcards_and_whitespace() {
@@ -191,5 +195,60 @@ mod tests {
         assert!(UserScope::from_tokens("a.b").is_err());
         assert!(OrganizationActorScope::from_tokens("ada", "*").is_err());
         assert!(InternalComponentScope::from_tokens().is_ok());
+    }
+
+    /// Identifiers as the backend meets them: generated uuids, slugs, and arbitrary text from an
+    /// identity provider or a client.
+    fn identifier() -> impl Strategy<Value = String> {
+        prop_oneof![
+            any::<u128>().prop_map(|bits| uuid::Uuid::from_u128(bits).simple().to_string()),
+            any::<u128>().prop_map(|bits| uuid::Uuid::from_u128(bits).to_string()),
+            "[a-z0-9_:@|-]{1,40}",
+            any::<String>(),
+            "[a-z]{0,4}[.*> \t\n{}\u{a0}\u{2028}][a-z]{0,4}",
+        ]
+    }
+
+    proptest! {
+        #![proptest_config(Config {
+            cases: 512,
+            rng_seed: RngSeed::Fixed(20_261_027),
+            failure_persistence: None,
+            ..Config::default()
+        })]
+
+        #[test]
+        fn an_accepted_identifier_round_trips_and_stays_one_subject_segment(id in identifier()) {
+            let Ok(token) = SubjectToken::try_from(id.as_str()) else {
+                let escapes = id.is_empty()
+                    || id.chars().any(|character| {
+                        character.is_whitespace() || ".*>{}".contains(character)
+                    });
+                prop_assert!(escapes, "{id:?} is refused without escaping its segment");
+                return Ok(());
+            };
+            prop_assert_eq!(token.as_str(), id.as_str());
+            prop_assert_eq!(token.to_string(), id.clone());
+
+            let service = ServiceScope::from_tokens(&id).expect("an accepted token is a scope");
+            let subject = <ServiceBindingQueryRoute as OutboundRequestRoute>::subject(&service);
+            prop_assert_eq!(
+                subject.split('.').collect::<Vec<_>>(),
+                vec!["service", id.as_str(), "binding", "query"]
+            );
+            prop_assert!(!subject.chars().any(char::is_whitespace), "{subject:?}");
+            let parsed = ServiceScope::from_tokens(subject.split('.').nth(1).unwrap_or_default())
+                .expect("the segment parses back");
+            prop_assert_eq!(parsed.service, service.service);
+
+            let user = UserScope::from_tokens(&id).expect("an accepted token is a scope");
+            let subject = <UserOrganizationsWatchRoute as OutboundEventRoute>::subject(&user);
+            let segments: Vec<&str> = subject.split('.').collect();
+            prop_assert_eq!(
+                segments.clone(),
+                vec!["typewriter", "to", "user", id.as_str(), "organizations", "changed"]
+            );
+            prop_assert!(segments.iter().all(|segment| !matches!(*segment, "*" | ">")));
+        }
     }
 }

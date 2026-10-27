@@ -10,6 +10,7 @@
 //! remain owned by the callout and permission service respectively.
 
 use crate::config::IssuerConfig;
+use base64::{Engine as _, engine::general_purpose::URL_SAFE_NO_PAD};
 use jose::{
     JoseHeader, JsonWebSignature, UntypedAdditionalProperties,
     format::{Compact, DecodeFormat},
@@ -149,6 +150,17 @@ pub fn validate_jwt<'c>(
     configs: &'c [IssuerConfig],
     clock: &impl ValidationClock,
 ) -> Result<Option<(Claims<UntypedAdditionalProperties>, &'c IssuerConfig)>, otel_wasi::Error> {
+    validate_jwt_with(token, configs, clock, fetch_jwks)
+}
+
+/// [`validate_jwt`] reading the selected issuer's JWKS from `keys`, which production fetches over
+/// HTTP from the configured URL.
+fn validate_jwt_with<'c>(
+    token: &str,
+    configs: &'c [IssuerConfig],
+    clock: &impl ValidationClock,
+    keys: impl FnOnce(&url::Url) -> Result<Jwks, otel_wasi::Error>,
+) -> Result<Option<(Claims<UntypedAdditionalProperties>, &'c IssuerConfig)>, otel_wasi::Error> {
     attribute!("auth.jwt.raw.size" = token.len() as i64);
 
     let Some(unverified) = decode_jwt(token) else {
@@ -181,7 +193,7 @@ pub fn validate_jwt<'c>(
             .to_string(),
     );
 
-    let jwks = fetch_jwks(&issuer_config.jwks_url)?;
+    let jwks = keys(&issuer_config.jwks_url)?;
 
     let Some(jwk) = find_matching_jwk(jwks, key_id, algorithm) else {
         return Ok(None);
@@ -230,12 +242,42 @@ fn is_supported_asymmetric_algorithm(algorithm: &JsonWebSigningAlgorithm) -> boo
 }
 
 fn decode_jwt(token: &str) -> Option<Unverified<FlexibleJwt>> {
+    if !has_admissible_header(token) {
+        main_attribute!("auth.jwt.decode.success" = false);
+        return None;
+    }
     let compact = Compact::from_str(token).ok()?;
     let result = FlexibleJwt::decode(compact).ok();
     if result.is_none() {
         main_attribute!("auth.jwt.decode.success" = false);
     }
     result
+}
+
+/// The signing algorithms [`is_supported_asymmetric_algorithm`] accepts, by their `alg` names.
+const SUPPORTED_ALGORITHMS: &[&str] = &[
+    "RS256", "RS384", "RS512", "PS256", "PS384", "PS512", "ES256", "ES384", "ES512", "ES256K",
+    "EdDSA",
+];
+
+/// Whether the token's header names a supported algorithm and embeds no key, checked before jose
+/// parses it. jose 0.0.2 deserializes an unrecognized algorithm name, in `alg` or in an embedded
+/// `jwk`, by alternating between its signing and encryption algorithm types until the stack
+/// overflows, so such a header must never reach it. Keys only ever come from the issuer's JWKS.
+fn has_admissible_header(token: &str) -> bool {
+    let Some(header) = token
+        .split('.')
+        .next()
+        .and_then(|header| URL_SAFE_NO_PAD.decode(header).ok())
+        .and_then(|header| serde_json::from_slice::<serde_json::Value>(&header).ok())
+    else {
+        return false;
+    };
+    header.get("jwk").is_none()
+        && header
+            .get("alg")
+            .and_then(serde_json::Value::as_str)
+            .is_some_and(|algorithm| SUPPORTED_ALGORITHMS.contains(&algorithm))
 }
 
 fn extract_key_id(unverified: &Unverified<FlexibleJwt>) -> Option<&str> {
@@ -557,6 +599,9 @@ fn check_jwt_claims(
 
     Ok(audience.to_string())
 }
+
+#[cfg(test)]
+mod fuzz;
 
 #[cfg(test)]
 mod tests {

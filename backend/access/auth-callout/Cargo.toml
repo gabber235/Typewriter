@@ -25,5 +25,8 @@ wasmcloud-component.workspace = true
 otel-wasi.workspace = true
 tracing.workspace = true
 
+[dev-dependencies]
+bolero.workspace = true
+
 [lints]
 workspace = true
