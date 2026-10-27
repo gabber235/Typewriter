@@ -36,21 +36,16 @@ import skirout.editor.v1.type_catalog.TypeSelection
 import skirout.editor.v1.type_catalog.ValueLocation
 import skirout.kernel.v1.resource_id.ResourceId
 
-private val source = ResourceId(value = "source")
-private val target = ResourceId(value = "target")
-private val other = ResourceId(value = "other")
-
-/** A parent with one child, linked both ways through the item [item] of its children. */
-private fun parentWithChild(item: ItemId) =
-    mapOf(
-        target to node(children = listOf(ListItem(id = item, value = link(PARENT_FIRST, source, path("parent"))))),
-        source to node(parent = link(PARENT_SECOND, target, path("children").item(item))),
-    )
-
-/** The node catalog whose `children` embed wrapper records, each able to hold one nested link back. */
-private fun wrapperChildren() = nodeCatalog(nestedRelation(EndpointCardinality.MANY), childItem = WRAPPER)
-
 val RelationSynchronizationTest by testSuite {
+    val source = ResourceId(value = "source")
+
+    val target = ResourceId(value = "target")
+
+    val other = ResourceId(value = "other")
+
+    /** The node catalog whose `children` embed wrapper records, each able to hold one nested link back. */
+    val wrapperCatalog = nodeCatalog(nestedRelation(EndpointCardinality.MANY), childItem = WRAPPER)
+
     test("connecting a link writes both sides and disconnecting it clears both") {
         RealmFixture.of(nodeCatalog(pairRelation()), mapOf(source to node(), target to node())).use { realm ->
             val inverse = occurrence(PAIR_SECOND, at(target, "second"), source)
@@ -133,7 +128,12 @@ val RelationSynchronizationTest by testSuite {
 
     test("removing a collection item clears its scalar inverse") {
         val item = ItemId(value = "page_occurrence")
-        RealmFixture.of(nodeCatalog(parentRelation()), parentWithChild(item)).use { realm ->
+        val seed =
+            mapOf(
+                target to node(children = listOf(ListItem(id = item, value = link(PARENT_FIRST, source, path("parent"))))),
+                source to node(parent = link(PARENT_SECOND, target, path("children").item(item))),
+            )
+        RealmFixture.of(nodeCatalog(parentRelation()), seed).use { realm ->
             realm.commit(EditIntent.createRemove(at = at(target, "children"), item = item)).shouldBeCommitted()
 
             realm.resources
@@ -286,7 +286,7 @@ val RelationSynchronizationTest by testSuite {
     }
 
     test("connecting, disconnecting and connecting again in one edit embeds two inverses and links only the last") {
-        RealmFixture.of(wrapperChildren(), mapOf(source to node(), target to node())).use { realm ->
+        RealmFixture.of(wrapperCatalog, mapOf(source to node(), target to node())).use { realm ->
             val connected = connection(NESTED_SECOND, at(source, "nestedSecond"), target, newWrapper(at(target, "children")))
 
             realm
@@ -309,32 +309,31 @@ val RelationSynchronizationTest by testSuite {
 
     test("an inferred inverse keeps its identity when the edit is composed after another write") {
         val seed = mapOf(target to node(), source to node())
-
-        suspend fun savedInverse(compose: (List<EditIntent>) -> List<EditIntent>): ItemId =
+        val alone =
             RealmFixture.of(nodeCatalog(parentRelation()), seed).use { realm ->
-                val edit =
-                    realm.asUser("author").edit {
-                        connect(connection(PARENT_SECOND, at(source, "parent"), target))
-                    }
-                realm.commit(realm.prepare(compose(edit.intents))).shouldBeCommitted()
+                val edit = realm.asUser("author").edit { connect(connection(PARENT_SECOND, at(source, "parent"), target)) }
+                realm.commit(realm.prepare(edit.intents)).shouldBeCommitted()
+                realm.resources
+                    .getValue(target)
+                    .itemIds("children")
+                    .single()
+            }
+        val composed =
+            RealmFixture.of(nodeCatalog(parentRelation()), seed).use { realm ->
+                val edit = realm.asUser("author").edit { connect(connection(PARENT_SECOND, at(source, "parent"), target)) }
+                val earlier = EditIntent.createSetValue(at = at(target, "label"), value = DataValue.StringValueWrapper("earlier draft"))
+                realm.commit(realm.prepare(listOf(earlier) + edit.intents)).shouldBeCommitted()
                 realm.resources
                     .getValue(target)
                     .itemIds("children")
                     .single()
             }
 
-        val alone = savedInverse { it }
-        val composed =
-            savedInverse {
-                listOf(EditIntent.createSetValue(at = at(target, "label"), value = DataValue.StringValueWrapper("earlier draft"))) +
-                    it
-            }
-
         composed shouldBe alone
     }
 
     test("a connect that embeds a new inverse conflicts when the target changed after the author loaded it") {
-        RealmFixture.of(wrapperChildren(), mapOf(source to node(), target to node(), other to node())).use { realm ->
+        RealmFixture.of(wrapperCatalog, mapOf(source to node(), target to node(), other to node())).use { realm ->
             val author = realm.asUser("author")
             realm.commit(connect(NESTED_SECOND, at(other, "nestedSecond"), target, newWrapper(at(target, "children")))).shouldBeCommitted()
             val before = realm.resources
@@ -348,7 +347,7 @@ val RelationSynchronizationTest by testSuite {
     }
 
     test("a connect that embeds a new inverse without the guards it requires is refused") {
-        RealmFixture.of(wrapperChildren(), mapOf(source to node(), target to node())).use { realm ->
+        RealmFixture.of(wrapperCatalog, mapOf(source to node(), target to node())).use { realm ->
             val unguarded =
                 realm
                     .prepare(listOf(connect(NESTED_SECOND, at(source, "nestedSecond"), target, newWrapper(at(target, "children")))))
@@ -408,7 +407,7 @@ val RelationSynchronizationTest by testSuite {
     }
 
     test("a new inverse prepared as a plain value instead of a record is refused at its collection") {
-        RealmFixture.of(wrapperChildren(), mapOf(source to node(), target to node())).use { realm ->
+        RealmFixture.of(wrapperCatalog, mapOf(source to node(), target to node())).use { realm ->
             val plain =
                 CounterpartChoice.createNew(
                     containing = at(target, "children"),
@@ -426,7 +425,7 @@ val RelationSynchronizationTest by testSuite {
     }
 
     test("a new inverse whose type is still pending is refused at its collection") {
-        RealmFixture.of(wrapperChildren(), mapOf(source to node(), target to node())).use { realm ->
+        RealmFixture.of(wrapperCatalog, mapOf(source to node(), target to node())).use { realm ->
             val pending =
                 CounterpartChoice.createNew(
                     containing = at(target, "children"),

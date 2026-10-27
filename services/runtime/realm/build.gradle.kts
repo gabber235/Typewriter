@@ -25,20 +25,17 @@ dependencies {
     implementation(libs.kotlin.serialize.json)
 
     testFixturesApi(project(":typewriter-test-kit"))
-    testFixturesImplementation(libs.surrealdb.java.sdk)
-    testFixturesImplementation(libs.kotest.assertions)
-
-    testImplementation(testFixtures(project(":messaging")))
-    testImplementation(testFixtures(project(":file-transfer")))
-    testImplementation(testFixtures(project(":telemetry")))
-    testImplementation(testFixtures(project(":internal-utils")))
-    testImplementation(project(":loader-api"))
+    testFixturesApi(project(":loader-api"))
+    testFixturesApi(testFixtures(project(":messaging")))
+    testFixturesApi(testFixtures(project(":file-transfer")))
+    testFixturesApi(testFixtures(project(":telemetry")))
+    testFixturesApi(testFixtures(project(":internal-utils")))
+    testFixturesApi(libs.kotlin.coroutines.test)
     // The extension JAR itself: the tests load it as an extension artifact, and its classes live in its common part.
-    testImplementation(project(":realm-route-fixtures")) {
+    testFixturesApi(project(":realm-route-fixtures")) {
         attributes { attribute(LibraryElements.LIBRARY_ELEMENTS_ATTRIBUTE, objects.named(LibraryElements.JAR)) }
     }
-    testImplementation(libs.kotlin.coroutines.test)
-    testImplementation(libs.kotest.property)
+    testFixturesApi(libs.kotest.property)
 }
 
 typewriter {

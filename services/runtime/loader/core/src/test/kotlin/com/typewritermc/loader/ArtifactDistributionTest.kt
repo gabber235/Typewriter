@@ -8,30 +8,19 @@ import com.typewritermc.imprint.ArtifactRequirement
 import com.typewritermc.imprint.ArtifactVersion
 import com.typewritermc.imprint.CommonExtensionSourcePart
 import com.typewritermc.imprint.EngineExtensionSourcePart
-import com.typewritermc.imprint.EngineManifest
 import com.typewritermc.imprint.ExtensionManifest
-import com.typewritermc.imprint.IMPRINT_MANIFEST_PATH
-import com.typewritermc.imprint.ImprintManifestCodec
 import com.typewritermc.imprint.RealmManifest
 import com.typewritermc.imprint.ResolvedArtifact
 import com.typewritermc.imprint.VersionConstraint
 import com.typewritermc.loader.api.EngineImplementationArtifact
 import com.typewritermc.loader.api.RuntimePlacement
-import com.typewritermc.loader.api.artifact.ProducerMetadata
 import com.typewritermc.loader.api.artifact.PublishResult
-import com.typewritermc.loader.api.artifact.PublishSharedArtifact
-import com.typewritermc.loader.api.artifact.SharedArtifactAccess
-import com.typewritermc.loader.api.artifact.SharedArtifactId
-import com.typewritermc.loader.api.artifact.SharedArtifactProvenance
-import com.typewritermc.loader.artifact.ArtifactCoordinate
 import com.typewritermc.loader.artifact.ArtifactInboxReconciler
 import com.typewritermc.loader.artifact.CommunicatorBlobEndpoint
-import com.typewritermc.loader.artifact.DeploymentArtifact
 import com.typewritermc.loader.artifact.FileCandidateRepository
 import com.typewritermc.loader.artifact.FileDigestBlobStore
 import com.typewritermc.loader.artifact.StableRealmArtifactRoutes
 import com.typewritermc.loader.artifact.TRANSFERRED_BLOB_MAX_BYTES
-import com.typewritermc.loader.artifact.toApi
 import com.typewritermc.loader.artifact.toSkir
 import com.typewritermc.loader.deployment.DeploymentContent
 import com.typewritermc.loader.deployment.DeploymentContentCodec
@@ -41,12 +30,22 @@ import com.typewritermc.loader.deployment.RealmDeploymentSelection
 import com.typewritermc.loader.deployment.projectFor
 import com.typewritermc.loader.rollout.RealmId
 import com.typewritermc.loader.rollout.deploymentSelectionOrNull
-import com.typewritermc.loader.rollout.toApi
+import com.typewritermc.loader.rollout.testing.presence
 import com.typewritermc.loader.rollout.toChildRuntimeState
 import com.typewritermc.loader.rollout.toDesiredHostExecution
 import com.typewritermc.loader.rollout.toSkir
 import com.typewritermc.loader.shared.FileSharedArtifactRepository
 import com.typewritermc.loader.shared.SharedArtifactService
+import com.typewritermc.loader.testing.FetchForbiddenSharedArtifactAccess
+import com.typewritermc.loader.testing.active
+import com.typewritermc.loader.testing.deploymentArtifact
+import com.typewritermc.loader.testing.engineManifest
+import com.typewritermc.loader.testing.realmManifest
+import com.typewritermc.loader.testing.record
+import com.typewritermc.loader.testing.sharedPublication
+import com.typewritermc.loader.testing.shouldSucceed
+import com.typewritermc.loader.testing.status
+import com.typewritermc.loader.testing.writeArtifactJar
 import com.typewritermc.protocol.transport.RealmRouteScope
 import com.typewritermc.protocol.transport.generated.TRANSPORT_LIMITS
 import com.typewritermc.services.libs.communicator.client.Communicator
@@ -72,11 +71,8 @@ import kotlinx.coroutines.test.advanceTimeBy
 import kotlinx.coroutines.test.runCurrent
 import kotlinx.coroutines.test.runTest
 import kotlinx.coroutines.withContext
-import skirout.kernel.v1.record_id.RecordId
-import skirout.kernel.v1.record_id.RecordIdKey
 import skirout.service.v1.rollout.ActiveProjection
 import skirout.service.v1.rollout.ParticipantPhase
-import skirout.service.v1.rollout.ParticipantStatus
 import skirout.service.v1.rollout.ProjectionHealth
 import skirout.service.v1.rollout.ProjectionReference
 import skirout.service.v1.rollout.RealmHostPresence
@@ -91,13 +87,10 @@ import skirout.service.v1.topology.RealmInfo
 import skirout.service.v1.topology.RealmInstance
 import skirout.service.v1.topology.WatchHostExecutionResponse
 import java.nio.file.Files
-import java.nio.file.Path
 import java.nio.file.attribute.FileTime
 import java.time.Clock
 import java.time.Instant
 import java.time.ZoneOffset
-import java.util.zip.ZipEntry
-import java.util.zip.ZipOutputStream
 import kotlin.time.Duration
 import kotlin.time.Duration.Companion.milliseconds
 import java.time.Duration as JavaDuration
@@ -409,10 +402,7 @@ val ArtifactDistributionTest by testSuite {
             Files.createDirectories(path.parent)
             java.io.RandomAccessFile(path.toFile(), "rw").use { it.setLength(TRANSFERRED_BLOB_MAX_BYTES + 1) }
             val service = SharedArtifactService("quests", realmBlobs, FileSharedArtifactRepository(root.resolve("shared.cbor")))
-            val shared =
-                object : SharedArtifactAccess by service {
-                    override suspend fun fetch(digest: ArtifactDigest): BlobResult<ByteArray> = error("An oversized blob must not be read")
-                }
+            val shared = FetchForbiddenSharedArtifactAccess(service)
             val address = RealmRouteScope(realmId = "quests", organizationId = "writers")
             val realmHost = Communicator(broker.transport(TRANSPORT_LIMITS), harness.telemetry, propagators)
             val router = realmHost.createRouter(communicatorRoutes { StableRealmArtifactRoutes(shared).register(this, address) }, this)
@@ -648,83 +638,4 @@ val ArtifactDistributionTest by testSuite {
             candidates.diagnostics().size shouldBe 0
         }
     }
-}
-
-private fun record(
-    table: String,
-    key: String,
-): RecordId = RecordId(table = table, key = RecordIdKey.StringWrapper(key))
-
-private fun <Value> BlobResult<Value>.shouldSucceed(): Value =
-    when (this) {
-        is BlobResult.Success -> value
-        else -> error("Expected a successful blob result but received $this.")
-    }
-
-private fun writeArtifactJar(
-    path: Path,
-    manifest: com.typewritermc.imprint.ImprintManifest,
-) {
-    Files.createDirectories(path.parent)
-    ZipOutputStream(Files.newOutputStream(path)).use { archive ->
-        archive.putNextEntry(ZipEntry(IMPRINT_MANIFEST_PATH))
-        archive.write(ImprintManifestCodec.encode(manifest))
-        archive.closeEntry()
-    }
-}
-
-private fun presence(
-    host: ServiceId,
-    roles: Set<RuntimePlacement>,
-    activeProjection: ActiveProjection? = null,
-) = RealmHostPresence(
-    serviceId = host.value,
-    hostApi = "1.0.0",
-    assignedRoles = roles.map { it.toSkir() },
-    activeProjection = activeProjection,
-)
-
-private fun status(
-    attempt: RolloutAttempt,
-    host: ServiceId,
-    phase: ParticipantPhase,
-) = ParticipantStatus(serviceId = host.value, attempt = attempt, phase = phase)
-
-private fun active(reference: ProjectionReference) =
-    ParticipantPhase.createActive(current = ActiveProjection(projection = reference, health = ProjectionHealth.HEALTHY), retained = null)
-
-private fun realmManifest() =
-    RealmManifest(
-        id = ArtifactId("typewritermc:realm"),
-        version = ArtifactVersion("1.0.0"),
-        hostApi = VersionConstraint("^1"),
-        runtimeEntrypointClass = "fixture.Runtime",
-        contributions = emptyList(),
-    )
-
-/** A Realm shared artifact service over a fresh store that already holds the bytes of its command. */
-private suspend fun sharedPublication() = SharedPublicationFixture().also { it.storeContent() }
-
-private class SharedPublicationFixture {
-    private val root = Files.createTempDirectory("typewriter-shared")
-    private val blobs = FileDigestBlobStore(root)
-    val service = SharedArtifactService("realm", blobs, FileSharedArtifactRepository(root.resolve("shared.cbor")))
-    private val bytes = "road network".encodeToByteArray()
-    val command =
-        PublishSharedArtifact(
-            SharedArtifactId("019d1f6c-1d2e-7249-9fa3-86964e89721d"),
-            null,
-            "Road network",
-            "application/vnd.typewriter.road-network",
-            BlobMetadata(ArtifactDigest.sha256(bytes), bytes.size.toLong()),
-            ProducerMetadata(mapOf("world" to "main")),
-            SharedArtifactProvenance.HostedRuntime("paper", "primary"),
-        )
-
-    suspend fun storeContent() {
-        blobs.store(command.blob, bytes) shouldBe StoreResult.Stored(command.blob)
-    }
-
-    /** The catalog a new process reads from the same file. */
-    suspend fun restartedCatalog() = FileSharedArtifactRepository(root.resolve("shared.cbor")).catalog()
 }

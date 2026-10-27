@@ -45,11 +45,3 @@ val RealmCatalogStoreTest by testSuite {
         }
     }
 }
-
-/** The incarnation's deployment still lends out its providers. */
-private fun RealmCatalogIncarnation.shouldBeOpen() = deployment.retain().close()
-
-/** The incarnation's deployment refuses to lend out its providers any more. */
-private fun RealmCatalogIncarnation.shouldBeClosed() {
-    shouldThrow<IllegalStateException> { deployment.retain() }.message shouldBe "Generated provider deployment is closed."
-}

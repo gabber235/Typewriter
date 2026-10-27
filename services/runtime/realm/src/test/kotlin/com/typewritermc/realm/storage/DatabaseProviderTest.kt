@@ -123,22 +123,3 @@ val DatabaseProviderTest by testSuite {
         }
     }
 }
-
-/** An embedded database with one root user, standing in for a remote server that checks credentials. */
-private fun signInDatabase(): Surreal =
-    Surreal().apply {
-        connect(DatabaseEndpoint.Embedded.Memory().connectionString)
-        useNs("sign_in").useDb("sign_in")
-        query("DEFINE USER realm_root ON ROOT PASSWORD 'secret' ROLES OWNER;").take(0)
-    }
-
-private fun remoteConfiguration(authentication: DatabaseAuthentication) =
-    RealmDatabaseConfiguration(
-        endpoint = DatabaseEndpoint.Remote(URI("wss://database.example.com")),
-        authentication = authentication,
-        namespace = "sign_in",
-        database = "sign_in",
-        expectedVersion = SURREALDB_SERVER_VERSION,
-    )
-
-private fun Surreal.signedInUser(): String? = query("RETURN \$token.ID;").take(0).takeUnless { it.isNone || it.isNull }?.getString()

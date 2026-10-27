@@ -52,13 +52,10 @@ val SourcePartEligibilityTest by testSuite {
             contributions = emptyList(),
         )
 
-    fun eligibility(selected: Set<ArtifactId>) =
-        SourcePartEligibilityResolver
-            .resolve(DeploymentSelection(engine, selected), listOf(extension))
-            .associate { it.sourcePart to it.eligibility }
-
     test("with its extension selected, each source part is eligible exactly when its engine, capabilities and includes are") {
-        eligibility(setOf(extension.id)) shouldBe
+        SourcePartEligibilityResolver
+            .resolve(DeploymentSelection(engine, setOf(extension.id)), listOf(extension))
+            .associate { it.sourcePart to it.eligibility } shouldBe
             mapOf(
                 "common" to Eligibility.Eligible,
                 "paper" to Eligibility.Eligible,
@@ -70,14 +67,11 @@ val SourcePartEligibilityTest by testSuite {
     }
 
     test("every source part of an unselected extension is ineligible with the reason") {
-        eligibility(emptySet()).values.toSet() shouldBe
+        SourcePartEligibilityResolver
+            .resolve(DeploymentSelection(engine, emptySet()), listOf(extension))
+            .associate { it.sourcePart to it.eligibility }
+            .values
+            .toSet() shouldBe
             setOf(Eligibility.Ineligible(listOf("Extension fixture:extension is not selected.")))
     }
 }
-
-private fun artifact(
-    id: String,
-    kind: ArtifactKind,
-) = ResolvedArtifact(ArtifactId(id), ArtifactVersion("1.0.0"), kind)
-
-private fun requirement(artifact: ResolvedArtifact) = ArtifactRequirement(artifact.id, VersionConstraint("^1"))

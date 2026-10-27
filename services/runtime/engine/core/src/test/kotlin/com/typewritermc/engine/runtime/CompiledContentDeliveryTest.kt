@@ -2,23 +2,16 @@
 
 package com.typewritermc.engine.runtime
 
+import com.typewritermc.engine.runtime.EngineContentDeliveryHealth
+import com.typewritermc.engine.runtime.testing.absentContentReply
+import com.typewritermc.engine.runtime.testing.delivery
+import com.typewritermc.engine.runtime.testing.deliveryHost
+import com.typewritermc.engine.runtime.testing.queryDeadline
 import com.typewritermc.loader.api.HostedMessagingSession
-import com.typewritermc.loader.api.HostedRuntimeHost
-import com.typewritermc.loader.api.artifact.PublishSharedArtifact
-import com.typewritermc.loader.api.artifact.SharedArtifactAccess
-import com.typewritermc.loader.api.artifact.SharedArtifactId
-import com.typewritermc.loader.api.artifact.SharedArtifactProvenance
-import com.typewritermc.loader.api.artifact.SharedArtifactRevision
-import com.typewritermc.protocol.transport.RealmRouteScope
-import com.typewritermc.protocol.transport.generated.authoringCompiledQuery
 import com.typewritermc.services.libs.communicator.client.Communicator
 import com.typewritermc.services.libs.communicator.testing.FakeMessageTransport
-import com.typewritermc.services.libs.communicator.transport.InboundMessage
-import com.typewritermc.services.libs.communicator.transport.OutboundMessage
 import com.typewritermc.services.libs.communicator.transport.TransportError
 import com.typewritermc.services.libs.communicator.transport.TransportResult
-import com.typewritermc.services.libs.filetransfer.blob.ArtifactDigest
-import com.typewritermc.services.libs.filetransfer.blob.BlobMetadata
 import com.typewritermc.services.libs.telemetry.testing.TelemetryTestHarness
 import de.infix.testBalloon.framework.core.testSuite
 import io.kotest.matchers.shouldBe
@@ -26,15 +19,14 @@ import io.opentelemetry.context.propagation.ContextPropagators
 import kotlinx.coroutines.async
 import kotlinx.coroutines.awaitCancellation
 import kotlinx.coroutines.delay
-import kotlinx.coroutines.flow.MutableStateFlow
-import kotlinx.coroutines.test.TestScope
 import kotlinx.coroutines.test.advanceTimeBy
 import kotlinx.coroutines.test.runCurrent
 import kotlinx.coroutines.test.runTest
-import skirout.editor.v1.compiled_content.QueryPublishedContentResponse
 import kotlin.time.Duration.Companion.milliseconds
 
 val CompiledContentDeliveryTest by testSuite {
+    val subscriptionCloseTime = 500.milliseconds
+
     test("a query that misses its deadline is retried in the same session and the answer keeps delivery watching") {
         runTest {
             TelemetryTestHarness.create().use { telemetry ->
@@ -95,7 +87,7 @@ val CompiledContentDeliveryTest by testSuite {
         runTest {
             TelemetryTestHarness.create().use { telemetry ->
                 val transport = FakeMessageTransport()
-                transport.closeSubscriptionWith(1) { delay(SUBSCRIPTION_CLOSE_TIME) }
+                transport.closeSubscriptionWith(1) { delay(subscriptionCloseTime) }
                 transport.respondWith { _, _ -> awaitCancellation() }
                 val delivery = delivery(transport, telemetry)
                 delivery.start { error("No content was returned") }
@@ -104,7 +96,7 @@ val CompiledContentDeliveryTest by testSuite {
                 val stopped = async { delivery.stop() }
                 runCurrent()
                 stopped.isCompleted shouldBe false
-                advanceTimeBy(SUBSCRIPTION_CLOSE_TIME)
+                advanceTimeBy(subscriptionCloseTime)
                 runCurrent()
 
                 stopped.isCompleted shouldBe true
@@ -129,7 +121,7 @@ val CompiledContentDeliveryTest by testSuite {
                 runCurrent()
 
                 // The count is the requirement: a stopped delivery never queries again.
-                transport.actions.filterIsInstance<FakeMessageTransport.Action.Request>().size shouldBe 1
+                transport.requests.size shouldBe 1
                 delivery.health.value shouldBe EngineContentDeliveryHealth.Idle
                 transport.close()
             }
@@ -138,55 +130,3 @@ val CompiledContentDeliveryTest by testSuite {
 }
 
 private const val REALM = "realm"
-private val SUBSCRIPTION_CLOSE_TIME = 500.milliseconds
-private val queryAddress = RealmRouteScope(organizationId = "organization", realmId = REALM)
-private val queryDeadline get() = queryAddress.authoringCompiledQuery.timeout
-
-private fun TestScope.delivery(
-    transport: FakeMessageTransport,
-    telemetry: TelemetryTestHarness,
-) = MessagingEngineContentDelivery(
-    deliveryHost(
-        HostedMessagingSession(1, "organization", Communicator(transport, telemetry.telemetry, ContextPropagators.noop())),
-        telemetry,
-    ),
-    REALM,
-    backgroundScope,
-)
-
-private fun absentContentReply(request: OutboundMessage): TransportResult<InboundMessage> =
-    TransportResult.Success(
-        InboundMessage(
-            request.address,
-            queryAddress.authoringCompiledQuery.responseCodec.encode(QueryPublishedContentResponse.createAbsent()),
-        ),
-    )
-
-private fun deliveryHost(
-    session: HostedMessagingSession,
-    telemetry: TelemetryTestHarness,
-) = object : HostedRuntimeHost {
-    override val messaging = MutableStateFlow<HostedMessagingSession?>(session)
-    override val openTelemetry = telemetry.openTelemetry
-    override val sharedArtifacts =
-        object : SharedArtifactAccess {
-            override suspend fun publish(command: PublishSharedArtifact): Nothing = error("No content was returned")
-
-            override suspend fun delete(
-                id: SharedArtifactId,
-                expectedRevision: SharedArtifactRevision,
-                provenance: SharedArtifactProvenance,
-            ): Nothing = error("No content was returned")
-
-            override suspend fun catalog(): Nothing = error("No content was returned")
-
-            override suspend fun metadata(digest: ArtifactDigest): Nothing = error("No content was returned")
-
-            override suspend fun fetch(digest: ArtifactDigest): Nothing = error("No content was returned")
-
-            override suspend fun store(
-                expected: BlobMetadata,
-                content: ByteArray,
-            ): Nothing = error("No content was returned")
-        }
-}

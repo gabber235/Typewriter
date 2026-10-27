@@ -1,6 +1,7 @@
 plugins {
     id("com.typewritermc.basic-conventions")
     application
+    `java-test-fixtures`
 }
 
 version = "1000.0.0"

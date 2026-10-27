@@ -1,15 +1,40 @@
 package com.typewritermc.testkit
 
+import com.typewritermc.types.template
 import skirout.editor.v1.type_catalog.CollectionKind
 import skirout.editor.v1.type_catalog.EndpointId
 import skirout.editor.v1.type_catalog.FieldDeclaration
 import skirout.editor.v1.type_catalog.FieldOwner
 import skirout.editor.v1.type_catalog.NamedTypeTemplate
+import skirout.editor.v1.type_catalog.ParameterKey
 import skirout.editor.v1.type_catalog.RepresentationTemplate
 import skirout.editor.v1.type_catalog.TypeDefinition
 import skirout.editor.v1.type_catalog.TypeDefinitionId
 import skirout.editor.v1.type_catalog.TypeParameter
 import skirout.editor.v1.type_catalog.TypeTemplate
+
+/**
+ * A single record type [id] with the [fields] given, in place of a [CatalogDefinitions] block when a test needs one
+ * definition. It is abstract when [abstract] and inherits the [parents].
+ */
+fun recordType(
+    id: TypeDefinitionId,
+    vararg fields: FieldDeclaration,
+    abstract: Boolean = false,
+    parents: List<NamedTypeTemplate> = emptyList(),
+): TypeDefinition =
+    TypeDefinition.partial(
+        id = id,
+        representation = RepresentationTemplate.createRecord(fields = fields.toList(), abstract_ = abstract),
+        parents = parents,
+    )
+
+/** The field [name] of the record type [owner], declared with [type]. */
+fun fieldDeclaration(
+    owner: TypeDefinitionId,
+    name: String,
+    type: TypeTemplate,
+): FieldDeclaration = FieldDeclaration.partial(owner = FieldOwner(definition = owner, name = name), type = type)
 
 @DslMarker
 annotation class CatalogDsl
@@ -69,6 +94,15 @@ class CatalogDefinitions internal constructor() {
                 parameters = parameters,
                 representation = RepresentationTemplate.createLink(endpoint = endpoint, target = target),
             )
+    }
+
+    /** A generic link [id] through [endpoint] whose target is its one type parameter `T`. */
+    fun genericLink(
+        id: TypeDefinitionId,
+        endpoint: EndpointId,
+    ) {
+        val parameter = ParameterKey(owner = id, index = 0)
+        link(id, endpoint, parameter.template, parameters = listOf(TypeParameter.partial(key = parameter, name = "T")))
     }
 }
 

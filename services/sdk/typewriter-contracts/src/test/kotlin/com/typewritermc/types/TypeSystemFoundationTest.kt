@@ -30,7 +30,6 @@ import skirout.editor.v1.diagnostic.StructuralResult
 import skirout.editor.v1.type_catalog.ArgumentSelection
 import skirout.editor.v1.type_catalog.AuthoringRecord
 import skirout.editor.v1.type_catalog.CatalogGeneration
-import skirout.editor.v1.type_catalog.CollectionKind
 import skirout.editor.v1.type_catalog.DataValue
 import skirout.editor.v1.type_catalog.DeclarationOwner
 import skirout.editor.v1.type_catalog.EndpointId
@@ -39,7 +38,6 @@ import skirout.editor.v1.type_catalog.FieldOwner
 import skirout.editor.v1.type_catalog.FieldPatternSegment
 import skirout.editor.v1.type_catalog.FieldValue
 import skirout.editor.v1.type_catalog.FloatWidth
-import skirout.editor.v1.type_catalog.IntegerWidth
 import skirout.editor.v1.type_catalog.ItemId
 import skirout.editor.v1.type_catalog.ListItem
 import skirout.editor.v1.type_catalog.ParameterKey
@@ -48,7 +46,6 @@ import skirout.editor.v1.type_catalog.RelativeFieldPattern
 import skirout.editor.v1.type_catalog.RepresentationTemplate
 import skirout.editor.v1.type_catalog.ScalarKind
 import skirout.editor.v1.type_catalog.TypeDefinition
-import skirout.editor.v1.type_catalog.TypeDefinitionId
 import skirout.editor.v1.type_catalog.TypeParameter
 import skirout.editor.v1.type_catalog.TypeSelection
 import skirout.editor.v1.type_catalog.TypeTemplate
@@ -353,60 +350,17 @@ val TypeSystemFoundationTest by testSuite {
         val elementLink = id("mutual_element_link")
         val list = listDefinition()
 
-        fun link(definition: TypeDefinitionId) =
-            TypeDefinition.partial(
-                id = definition,
-                parameters = listOf(TypeParameter.partial(key = ParameterKey(owner = definition, index = 0), name = "T")),
-                representation =
-                    RepresentationTemplate.createLink(
-                        endpoint = EndpointId(value = definition.toString()),
-                        target = ParameterKey(owner = definition, index = 0).template,
-                    ),
-            )
-
-        fun reference(
-            link: TypeDefinitionId,
-            target: TypeDefinitionId,
-        ) = link.template(listOf(target.template()))
-
-        fun elements(target: TypeDefinitionId) = list.id.template(listOf(reference(elementLink, target)))
-
-        fun record(
-            definition: TypeDefinitionId,
-            name: String,
-            type: TypeTemplate,
-            parent: TypeDefinitionId? = null,
-        ) = TypeDefinition.partial(
-            id = definition,
-            representation =
-                RepresentationTemplate.createRecord(
-                    fields =
-                        listOf(
-                            FieldDeclaration.partial(
-                                owner = FieldOwner(definition = definition, name = name),
-                                type = type,
-                                overrides =
-                                    parent
-                                        ?.let {
-                                            listOf(FieldOwner(definition = it, name = name))
-                                        }.orEmpty(),
-                            ),
-                        ),
-                    abstract_ = parent == null,
-                ),
-            parents = parent?.let { listOf(it.namedTemplate()) }.orEmpty(),
-        )
         val declarations =
             listOf(
                 list,
-                link(pageLink),
-                link(elementLink),
-                record(page, "elements", elements(element)),
-                record(element, "page", reference(pageLink, page)),
-                record(sequencePage, "elements", elements(sequenceEntry), page),
-                record(sequenceEntry, "page", reference(pageLink, sequencePage), element),
+                linkDefinition(pageLink),
+                linkDefinition(elementLink),
+                fieldRecord(page, "elements", elementsOf(list.id, elementLink, element)),
+                fieldRecord(element, "page", referenceTo(pageLink, page)),
+                fieldRecord(sequencePage, "elements", elementsOf(list.id, elementLink, sequenceEntry), page),
+                fieldRecord(sequenceEntry, "page", referenceTo(pageLink, sequencePage), element),
             )
-        val unrelatedEntry = record(id("mutual_unrelated_entry"), "page", reference(pageLink, element), element)
+        val unrelatedEntry = fieldRecord(id("mutual_unrelated_entry"), "page", referenceTo(pageLink, element), element)
         val invalid =
             catalog(
                 *(declarations + unrelatedEntry).toTypedArray(),
@@ -524,16 +478,19 @@ val TypeSystemFoundationTest by testSuite {
         val listUse = list.id.namedUse(listOf(treeUse.use))
         val checked = (catalog.resolve(listUse.use) as Resolution.Ready).value
 
-        fun sequence(children: List<DataValue>): DataValue =
-            DataValue.named(
-                listUse,
-                DataValue.listValue(children.mapIndexed { index, value -> ListItem(id = ItemId(value = "item$index"), value = value) }),
-            )
-
-        fun node(children: List<DataValue>): DataValue = DataValue.named(treeUse, DataValue.record(mapOf("children" to sequence(children))))
-        val leaf = node(emptyList())
-        val nested = (checked.complete(sequence(listOf(node(listOf(leaf, leaf))))) as CompletenessResult.Complete).value
-        val siblings = (checked.complete(sequence(listOf(node(listOf(leaf)), leaf))) as CompletenessResult.Complete).value
+        val leaf = nodeValue(treeUse, listUse, emptyList())
+        val nested =
+            (
+                checked.complete(
+                    sequenceValue(listUse, listOf(nodeValue(treeUse, listUse, listOf(leaf, leaf)))),
+                ) as CompletenessResult.Complete
+            ).value
+        val siblings =
+            (
+                checked.complete(
+                    sequenceValue(listUse, listOf(nodeValue(treeUse, listUse, listOf(leaf)), leaf)),
+                ) as CompletenessResult.Complete
+            ).value
 
         DefaultCanonicalValueEquality.equivalent(nested, siblings) shouldBe false
         (DefaultCanonicalValueEquality.hash(nested) == DefaultCanonicalValueEquality.hash(siblings)) shouldBe false
@@ -836,132 +793,4 @@ val TypeSystemFoundationTest by testSuite {
         val narrowed = 9.9999999f
         checked.complete(DataValue.FloatWrapper(narrowed.toDouble())).shouldBeInstanceOf<CompletenessResult.Complete>()
     }
-}
-
-private val TEXT = ScalarKind.TEXT.use
-private val TEXT_TEMPLATE = ScalarKind.TEXT.template
-
-private fun catalog(vararg definitions: TypeDefinition) = DefaultCheckedCatalog(CatalogGeneration(value = "test"), definitions.toList())
-
-private fun id(name: String) = TypeDefinitionId.qualified("test", name)
-
-private fun field(
-    owner: String,
-    name: String,
-    type: TypeTemplate,
-) = FieldDeclaration.partial(owner = FieldOwner(definition = id(owner), name = name), type = type)
-
-private fun recordDefinition(
-    name: String,
-    vararg fields: FieldDeclaration,
-): TypeDefinition =
-    TypeDefinition.partial(id = id(name), representation = RepresentationTemplate.createRecord(fields = fields.toList(), abstract_ = false))
-
-private fun resourceDefinition(): TypeDefinition {
-    val id = id("resource")
-    return TypeDefinition.partial(
-        id = id,
-        representation =
-            RepresentationTemplate.createRecord(
-                fields =
-                    listOf(
-                        FieldDeclaration.partial(owner = FieldOwner(definition = id, name = "name"), type = TEXT_TEMPLATE),
-                    ),
-                abstract_ = true,
-            ),
-    )
-}
-
-private fun rewardDefinition(resource: TypeDefinitionId): TypeDefinition {
-    val id = id("reward")
-    return TypeDefinition.partial(
-        id = id,
-        representation = RepresentationTemplate.createRecord(fields = emptyList(), abstract_ = false),
-        parents = listOf(resource.namedTemplate()),
-    )
-}
-
-private fun weightedDefinition(): TypeDefinition {
-    val id = id("weighted")
-    val parameter = ParameterKey(owner = id, index = 0)
-    return TypeDefinition.partial(
-        id = id,
-        parameters = listOf(TypeParameter.partial(key = parameter, name = "T")),
-        representation =
-            RepresentationTemplate.createRecord(
-                fields =
-                    listOf(
-                        FieldDeclaration.partial(owner = FieldOwner(definition = id, name = "value"), type = parameter.template),
-                    ),
-                abstract_ = false,
-            ),
-    )
-}
-
-private fun variableDefinition(resource: TypeDefinitionId): TypeDefinition {
-    val id = id("variable")
-    val parameter = ParameterKey(owner = id, index = 0)
-    return TypeDefinition(
-        id = id,
-        parameters = listOf(TypeParameter(key = parameter, name = "T", bounds = listOf(resource.template()))),
-        representation =
-            RepresentationTemplate.createRecord(
-                fields =
-                    listOf(
-                        FieldDeclaration.partial(owner = FieldOwner(definition = id, name = "value"), type = parameter.template),
-                    ),
-                abstract_ = false,
-            ),
-        parents = listOf(resource.namedTemplate()),
-    )
-}
-
-private fun listDefinition(): TypeDefinition {
-    val id = id("list")
-    val parameter = ParameterKey(owner = id, index = 0)
-    return TypeDefinition.partial(
-        id = id,
-        parameters = listOf(TypeParameter.partial(key = parameter, name = "T")),
-        representation = RepresentationTemplate.createSequence(item = parameter.template, kind = CollectionKind.LIST),
-    )
-}
-
-private fun treeDefinition(list: TypeDefinitionId): TypeDefinition {
-    val id = id("tree")
-    val parameter = ParameterKey(owner = id, index = 0)
-    val tree = id.template(listOf(parameter.template))
-    return TypeDefinition.partial(
-        id = id,
-        parameters = listOf(TypeParameter.partial(key = parameter, name = "T")),
-        representation =
-            RepresentationTemplate.createRecord(
-                fields =
-                    listOf(
-                        FieldDeclaration.partial(
-                            owner = FieldOwner(definition = id, name = "children"),
-                            type = list.template(listOf(tree)),
-                        ),
-                    ),
-                abstract_ = false,
-            ),
-    )
-}
-
-private fun optionalDefinition(): TypeDefinition {
-    val id = id("optional")
-    return TypeDefinition.partial(
-        id = id,
-        representation =
-            RepresentationTemplate.createRecord(
-                fields =
-                    listOf(
-                        FieldDeclaration.partial(owner = FieldOwner(definition = id, name = "note"), type = TEXT_TEMPLATE.nullable()),
-                        FieldDeclaration.partial(
-                            owner = FieldOwner(definition = id, name = "count"),
-                            type = integerScalar(IntegerWidth.SIGNED_THIRTY_TWO).template,
-                        ),
-                    ),
-                abstract_ = false,
-            ),
-    )
 }

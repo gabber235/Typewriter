@@ -101,5 +101,3 @@ val RealmConfigurationTest by testSuite {
             .shouldBeInstanceOf<DatabaseEndpoint.Embedded.RocksDb>()
     }
 }
-
-private fun settings(vararg values: Pair<String, String>): RealmSettings = RealmSettings(configuration = mapOf(*values))

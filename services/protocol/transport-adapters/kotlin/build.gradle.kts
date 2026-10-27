@@ -1,6 +1,7 @@
 plugins {
     id("com.typewritermc.basic-conventions")
     `java-library`
+    `java-test-fixtures`
 }
 
 kotlin {
@@ -12,6 +13,6 @@ kotlin {
 dependencies {
     api(project(":protocol"))
     api(project(":messaging"))
-    testImplementation(testFixtures(project(":messaging")))
-    testImplementation(testFixtures(project(":telemetry")))
+    testFixturesApi(testFixtures(project(":messaging")))
+    testFixturesApi(testFixtures(project(":telemetry")))
 }

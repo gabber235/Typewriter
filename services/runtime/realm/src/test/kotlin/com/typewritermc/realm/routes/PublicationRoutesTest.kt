@@ -178,20 +178,3 @@ val PublicationRoutesTest by testSuite {
         }
     }
 }
-
-/** Runs [test] against the publication, compiled content and compiled status routes of one [PublicationFixture]. */
-private suspend fun withPublicationRoutes(test: suspend (PublicationFixture, RouteFixture) -> Unit) {
-    val publication = PublicationFixture()
-    try {
-        val statuses = CompiledRootStatuses(CompiledArtifactProducerRegistry(listOf(ResourceGraphArtifactProducer)), publication.results)
-        RouteFixture { address, _ ->
-            communicatorRoutes {
-                PublicationRoutes(publication.publisher, address).register(this)
-                EditorCompiledContentRoutes(publication.results, address).register(this)
-                EditorCompiledResourceStatusRoutes(publication.views, statuses, address).register(this)
-            }
-        }.use { wire -> test(publication, wire) }
-    } finally {
-        publication.close()
-    }
-}

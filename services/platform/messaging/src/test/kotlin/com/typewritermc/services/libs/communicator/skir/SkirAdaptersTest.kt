@@ -13,55 +13,51 @@ import de.infix.testBalloon.framework.core.testSuite
 import io.kotest.assertions.throwables.shouldThrow
 import io.kotest.matchers.shouldBe
 import skirout.kernel.v1.color.Color
-import skirout.service.v1.status.QueryServiceBinding
-import skirout.service.v1.status.QueryServiceBindingRequest
 import skirout.service.v1.status.QueryServiceBindingResponse
 
-private data object StatusEndpoint
-
-private val statusAddress =
-    "service.status".addressTemplate(
-        render = { addressValuesOf() },
-        parse = { StatusEndpoint },
-    )
-
-private val statusPolicy =
-    ResponsePolicy<QueryServiceBindingResponse>(
-        internalFailureResponse = QueryServiceBindingResponse.createInternalError(),
-        classifier = { response ->
-            when (response.kind) {
-                QueryServiceBindingResponse.Kind.INTERNAL_ERROR_WRAPPER -> {
-                    ResponseClassification(
-                        ResponseOutcome.INTERNAL_ERROR,
-                        ResponseVariant.of("internal-error"),
-                    )
-                }
-
-                QueryServiceBindingResponse.Kind.SERVICE_NOT_FOUND_ERROR_WRAPPER -> {
-                    ResponseClassification(
-                        ResponseOutcome.DOMAIN_ERROR,
-                        ResponseVariant.of("service-not-found"),
-                    )
-                }
-
-                QueryServiceBindingResponse.Kind.BINDING_WRAPPER -> {
-                    ResponseClassification(
-                        ResponseOutcome.SUCCESS,
-                        ResponseVariant.of("status"),
-                    )
-                }
-
-                QueryServiceBindingResponse.Kind.UNKNOWN -> {
-                    ResponseClassification(
-                        ResponseOutcome.DOMAIN_ERROR,
-                        ResponseVariant.of("unknown"),
-                    )
-                }
-            }
-        },
-    )
-
 val SkirAdaptersTest by testSuite {
+    val statusAddress =
+        "service.status".addressTemplate(
+            render = { addressValuesOf() },
+            parse = { Unit },
+        )
+
+    val statusPolicy =
+        ResponsePolicy<QueryServiceBindingResponse>(
+            internalFailureResponse = QueryServiceBindingResponse.createInternalError(),
+            classifier = { response ->
+                when (response.kind) {
+                    QueryServiceBindingResponse.Kind.INTERNAL_ERROR_WRAPPER -> {
+                        ResponseClassification(
+                            ResponseOutcome.INTERNAL_ERROR,
+                            ResponseVariant.of("internal-error"),
+                        )
+                    }
+
+                    QueryServiceBindingResponse.Kind.SERVICE_NOT_FOUND_ERROR_WRAPPER -> {
+                        ResponseClassification(
+                            ResponseOutcome.DOMAIN_ERROR,
+                            ResponseVariant.of("service-not-found"),
+                        )
+                    }
+
+                    QueryServiceBindingResponse.Kind.BINDING_WRAPPER -> {
+                        ResponseClassification(
+                            ResponseOutcome.SUCCESS,
+                            ResponseVariant.of("status"),
+                        )
+                    }
+
+                    QueryServiceBindingResponse.Kind.UNKNOWN -> {
+                        ResponseClassification(
+                            ResponseOutcome.DOMAIN_ERROR,
+                            ResponseVariant.of("unknown"),
+                        )
+                    }
+                }
+            },
+        )
+
     test("payload codec rejects malformed binary input") {
         shouldThrow<IllegalArgumentException> {
             Color.serializer.asPayloadCodec().decode(Payload.copyOf(byteArrayOf(1, 2, 3)))

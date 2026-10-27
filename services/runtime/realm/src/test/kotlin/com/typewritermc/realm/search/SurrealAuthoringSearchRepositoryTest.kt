@@ -134,14 +134,3 @@ val SurrealAuthoringSearchRepositoryTest by testSuite {
             setOf("holder", "inner", "listed", "member", "key", "mapped", "cheerful")
     }
 }
-
-private fun definition(name: String): TypeDefinitionId = TypeDefinitionId.qualified("test", name)
-
-/** Creates [id] as an empty resource of [type]. */
-private fun create(
-    id: String,
-    type: skirout.editor.v1.type_catalog.NamedTypeUse,
-) = EditIntent.createCreateResource(
-    id = ResourceId(value = id),
-    record = AuthoringRecord.of(TypeSelection.CompleteWrapper(type), emptyMap()),
-)

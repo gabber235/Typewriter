@@ -1,19 +1,16 @@
 package com.typewritermc.loader.artifact
 
 import com.typewritermc.loader.api.artifact.PublicationBlobRoots
+import com.typewritermc.loader.artifact.testing.ledger
+import com.typewritermc.loader.artifact.testing.shouldHold
+import com.typewritermc.loader.artifact.testing.storeAged
 import com.typewritermc.services.libs.filetransfer.blob.ArtifactDigest
-import com.typewritermc.services.libs.filetransfer.blob.BlobMetadata
 import com.typewritermc.services.libs.filetransfer.blob.BlobResult
-import com.typewritermc.services.libs.filetransfer.blob.requireStored
 import de.infix.testBalloon.framework.core.testSuite
 import io.kotest.assertions.throwables.shouldThrow
 import io.kotest.matchers.shouldBe
-import io.kotest.matchers.types.shouldBeInstanceOf
 import kotlinx.serialization.SerializationException
 import java.nio.file.Files
-import java.nio.file.Path
-import java.nio.file.attribute.FileTime
-import java.time.Instant
 
 val PublicationBlobRetentionTest by testSuite {
     test("collection deletes old blobs no publication protects and keeps the selected and pending ones") {
@@ -109,16 +106,3 @@ val PublicationBlobRetentionTest by testSuite {
         blobs.metadata(second) shouldBe BlobResult.NotFound
     }
 }
-
-/** Stores [content] and backdates it past the collection grace period. */
-private suspend fun FileDigestBlobStore.storeAged(content: ByteArray): ArtifactDigest {
-    val digest = store(BlobMetadata(ArtifactDigest.sha256(content), content.size.toLong()), content).requireStored().digest
-    Files.setLastModifiedTime(pathFor(digest), FileTime.from(Instant.EPOCH))
-    return digest
-}
-
-private suspend fun FileDigestBlobStore.shouldHold(digest: ArtifactDigest) {
-    metadata(digest).shouldBeInstanceOf<BlobResult.Success<*>>()
-}
-
-private fun Path.ledger(): Path = resolve("publication-pins.cbor")

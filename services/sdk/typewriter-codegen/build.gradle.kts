@@ -1,6 +1,7 @@
 plugins {
     id("com.typewritermc.basic-conventions")
     alias(libs.plugins.kotlin.serialize)
+    `java-test-fixtures`
 }
 
 dependencies {
@@ -10,9 +11,9 @@ dependencies {
     implementation(libs.kotlinpoet)
     implementation(libs.kotlinpoet.ksp)
     implementation(libs.kotlin.serialize.cbor)
-    testImplementation(libs.kctfork.core)
-    testImplementation(libs.kctfork.ksp)
-    testImplementation(project(":typewriter-api"))
+    testFixturesApi(libs.kctfork.core)
+    testFixturesApi(libs.kctfork.ksp)
+    testFixturesApi(project(":typewriter-api"))
 }
 
 tasks.test {

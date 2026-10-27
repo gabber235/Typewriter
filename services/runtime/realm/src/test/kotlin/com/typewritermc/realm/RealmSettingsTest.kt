@@ -11,14 +11,14 @@ import kotlin.io.path.extension
 import kotlin.io.path.name
 import kotlin.io.path.nameWithoutExtension
 
-private val DATABASE_SECRETS = listOf("REALM_DB_USERNAME", "REALM_DB_PASSWORD", "REALM_DB_TOKEN")
-
 val RealmSettingsTest by testSuite {
+    val databaseSecrets = listOf("REALM_DB_USERNAME", "REALM_DB_PASSWORD", "REALM_DB_TOKEN")
+
     test("no shipped profile contains database secrets") {
         val leaks =
             shippedProfiles().flatMap { profile ->
                 val settings = RealmSettings.fromFile(profile)
-                DATABASE_SECRETS.filter { settings.get(it) != null }.map { "${profile.name}: $it" }
+                databaseSecrets.filter { settings.get(it) != null }.map { "${profile.name}: $it" }
             }
 
         leaks.shouldBeEmpty()
@@ -29,7 +29,7 @@ val RealmSettingsTest by testSuite {
             shippedProfiles().mapNotNull { profile ->
                 val settings =
                     RealmSettings(
-                        environment = DATABASE_SECRETS.associateWith { "supplied" },
+                        environment = databaseSecrets.associateWith { "supplied" },
                         configuration = profileValues(profile),
                     )
                 runCatching { settings.databaseConfiguration() }
@@ -84,17 +84,4 @@ val RealmSettingsTest by testSuite {
 
         settings.get("REALM_DB_NAMESPACE") shouldBe "profile"
     }
-}
-
-private fun shippedProfiles(): List<Path> =
-    Files
-        .list(Path.of("..", "config"))
-        .use { files ->
-            files.filter { it.extension == "properties" }.sorted().toList()
-        }.also { check(it.isNotEmpty()) { "No shipped Realm profiles found" } }
-
-private fun profileValues(profile: Path): Map<String, String> {
-    val properties = Properties()
-    Files.newBufferedReader(profile).use(properties::load)
-    return properties.stringPropertyNames().associateWith(properties::getProperty)
 }

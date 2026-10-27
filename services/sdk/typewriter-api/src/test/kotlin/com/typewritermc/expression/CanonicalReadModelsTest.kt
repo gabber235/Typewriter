@@ -1,6 +1,7 @@
 package com.typewritermc.expression
 
 import build.skir.JsonFlavor
+import com.typewritermc.testkit.repositoryFixture
 import com.typewritermc.types.ColorDefinition
 import com.typewritermc.types.actualType
 import com.typewritermc.types.fields
@@ -31,14 +32,14 @@ import skirout.editor.v1.type_catalog.TypeUse
 import skirout.kernel.v1.color.Color
 import skirout.kernel.v1.icon.Icon
 import java.nio.file.Files
-import java.nio.file.Path
 
 val CanonicalReadModelsTest by testSuite {
     test("the read schema derived from Skir matches the schema the panel derives") {
         val committed =
             Json
-                .parseToJsonElement(Files.readString(fixtureDirectory().resolve(CANONICAL_READ_MODELS_FIXTURE)))
-                .jsonArray
+                .parseToJsonElement(
+                    Files.readString(repositoryFixture("skir-src/editor/v1/fixtures").resolve(CANONICAL_READ_MODELS_FIXTURE)),
+                ).jsonArray
                 .map { TypeDefinition.serializer.fromJsonCode(it.toString()) }
 
         committed shouldBe canonicalReadSchema()
@@ -108,20 +109,3 @@ val CanonicalReadModelsTest by testSuite {
 
 /** The committed schema fixture the panel compares its own derivation with. */
 internal const val CANONICAL_READ_MODELS_FIXTURE = "canonical_read_models.json"
-
-/** Every read model definition: the Skir derived roots and the framework types they read. */
-internal fun canonicalReadSchema(): List<TypeDefinition> = CanonicalReadModels.definitions + CanonicalReadModels.frameworkDefinitions
-
-/** The text of [CANONICAL_READ_MODELS_FIXTURE]: [canonicalReadSchema] as readable Skir JSON. */
-internal fun renderCanonicalReadSchema(): String =
-    canonicalReadSchema().joinToString(",\n", "[\n", "\n]\n") { TypeDefinition.serializer.toJsonCode(it, JsonFlavor.READABLE) }
-
-private fun readId(record: String) =
-    TypeDefinitionId(typeId = TypeId.QualifiedWrapper(QualifiedTypeId(namespace = CANONICAL_READ_NAMESPACE, name = record)), revision = 1)
-
-private fun declaredUse(id: TypeDefinitionId) = NamedTypeUse(definition = id, arguments = emptyList())
-
-private fun fixtureDirectory(): Path =
-    generateSequence(Path.of("").toAbsolutePath()) { it.parent }
-        .map { it.resolve("skir-src/editor/v1/fixtures") }
-        .first(Files::isDirectory)

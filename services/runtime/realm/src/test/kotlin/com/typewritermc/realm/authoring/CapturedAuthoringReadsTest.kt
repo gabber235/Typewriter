@@ -14,12 +14,10 @@ import com.typewritermc.checking.ResourceTypeMatch
 import com.typewritermc.checking.TypedSelection
 import com.typewritermc.configuration.field
 import com.typewritermc.expression.operations.HostFailure
-import com.typewritermc.realm.catalog.AuthoringCatalogLease
 import com.typewritermc.realm.checking.DefaultReverseDependencyIndex
 import com.typewritermc.realm.checking.dependencies
 import com.typewritermc.realm.checking.outcome
 import com.typewritermc.types.fields
-import com.typewritermc.types.named
 import com.typewritermc.types.namedTemplate
 import com.typewritermc.types.namedUse
 import com.typewritermc.types.nullable
@@ -35,14 +33,12 @@ import skirout.editor.v1.type_catalog.ArgumentSelection
 import skirout.editor.v1.type_catalog.AuthoringRecord
 import skirout.editor.v1.type_catalog.DataValue
 import skirout.editor.v1.type_catalog.FieldPatternSegment
-import skirout.editor.v1.type_catalog.ItemId
 import skirout.editor.v1.type_catalog.ParameterKey
 import skirout.editor.v1.type_catalog.PathSegment
 import skirout.editor.v1.type_catalog.RelativeFieldPattern
 import skirout.editor.v1.type_catalog.RepresentationTemplate
 import skirout.editor.v1.type_catalog.RuleId
 import skirout.editor.v1.type_catalog.RuleOrigin
-import skirout.editor.v1.type_catalog.ScalarKind
 import skirout.editor.v1.type_catalog.TypeDefinition
 import skirout.editor.v1.type_catalog.TypeDefinitionId
 import skirout.editor.v1.type_catalog.TypeParameter
@@ -52,6 +48,8 @@ import skirout.editor.v1.type_catalog.ValuePath
 import skirout.kernel.v1.resource_id.ResourceId
 
 val CapturedAuthoringReadsTest by testSuite {
+    val derivedType = TypeDefinitionId.qualified("test", "derived")
+
     test("an authored null is present as null while an unfilled value is unavailable") {
         projection { reads ->
             reads.presence(boundPath<Any?>(NULL_VALUE, TEXT_USE.nullable())) shouldBe Availability.Available(false)
@@ -77,25 +75,20 @@ val CapturedAuthoringReadsTest by testSuite {
     }
 
     test("each read records exactly the inputs its result depends on") {
-        fun dependencies(read: (CapturedAuthoringReads) -> Unit): Set<InputIdentity> =
-            projection { reads ->
-                read(reads)
-                reads.observations().flatMapTo(linkedSetOf()) { it.dependencies() }
-            }
 
         val existence = InputIdentity.Existence(PROJECTION)
         val form = InputIdentity.Form(ValueLocation.of(PROJECTION))
         io.kotest.assertions.assertSoftly {
-            dependencies { it.presence(boundPath<Any?>(NULL_VALUE, TEXT_USE.nullable())) } shouldBe
+            dependenciesOf { it.presence(boundPath<Any?>(NULL_VALUE, TEXT_USE.nullable())) } shouldBe
                 setOf(existence, form, InputIdentity.Value(NULL_VALUE))
-            dependencies {
+            dependenciesOf {
                 it.readRepresentation<String>(
                     boundPath<Any>(REPRESENTATION_VALUE, REPRESENTATION_TYPE.use()),
                     TEXT_USE,
                 )
             } shouldBe
                 setOf(existence, form, InputIdentity.Value(REPRESENTATION_VALUE))
-            dependencies { it.binding(boundPath<Any>(ValueLocation.of(PROJECTION), TEST_TYPE.use())) } shouldBe setOf(existence, form)
+            dependenciesOf { it.binding(boundPath<Any>(ValueLocation.of(PROJECTION), TEST_TYPE.use())) } shouldBe setOf(existence, form)
         }
     }
 
@@ -170,10 +163,10 @@ val CapturedAuthoringReadsTest by testSuite {
     }
 
     test("a pending generic descendant is discovered as its nominal base") {
-        val parameter = ParameterKey(owner = DERIVED_TYPE, index = 0)
+        val parameter = ParameterKey(owner = derivedType, index = 0)
         val derived =
             TypeDefinition(
-                id = DERIVED_TYPE,
+                id = derivedType,
                 parameters = listOf(TypeParameter.partial(key = parameter, name = "T")),
                 representation = RepresentationTemplate.createRecord(fields = emptyList(), abstract_ = false),
                 parents = listOf(TEST_TYPE.namedTemplate()),
@@ -182,7 +175,7 @@ val CapturedAuthoringReadsTest by testSuite {
         val resource = ResourceId(value = "pending")
         val record =
             AuthoringRecord.of(
-                configuration = TypeSelection.createPending(definition = DERIVED_TYPE, arguments = listOf(ArgumentSelection.UNFILLED)),
+                configuration = TypeSelection.createPending(definition = derivedType, arguments = listOf(ArgumentSelection.UNFILLED)),
                 fields = emptyMap(),
             )
         val resources = mapOf(resource to record)
@@ -316,8 +309,8 @@ val CapturedAuthoringReadsTest by testSuite {
 
             expanded shouldBe
                 listOf(
-                    numberItem(resource, "a"),
-                    numberItem(resource, "b"),
+                    listItemAt(resource, "numbers", "a"),
+                    listItemAt(resource, "numbers", "b"),
                 )
             reads.observations().any { InputIdentity.Value(location(resource, "numbers")) in it.dependencies() } shouldBe true
         }
@@ -353,9 +346,9 @@ val CapturedAuthoringReadsTest by testSuite {
         val index = DefaultReverseDependencyIndex()
         val incremental = linkedMapOf<CheckInstanceId, Boolean>()
 
-        fun evaluate(id: CheckInstanceId): Pair<Boolean, List<skirout.editor.v1.authoring_facts.EditExpectation>> {
+        val evaluate: (CheckInstanceId) -> Pair<Boolean, List<skirout.editor.v1.authoring_facts.EditExpectation>> = { id ->
             val lease = store.capture()
-            return lease.use {
+            lease.use {
                 val reads = CapturedAuthoringReads(it.originalView())
                 val accepted =
                     when (id) {
@@ -394,52 +387,3 @@ val CapturedAuthoringReadsTest by testSuite {
         store.close()
     }
 }
-
-private val DERIVED_TYPE = TypeDefinitionId.qualified("test", "derived")
-private val REPRESENTATION_TYPE = TypeDefinitionId.qualified("test", "text_representation")
-private val REPRESENTATION_DEFINITION =
-    TypeDefinition.partial(id = REPRESENTATION_TYPE, representation = RepresentationTemplate.createScalar(kind = ScalarKind.TEXT))
-
-private val PROJECTION = ResourceId(value = "projection")
-private val NULL_VALUE = location(PROJECTION, "nullValue")
-private val MISSING_VALUE = location(PROJECTION, "missingValue")
-private val REPRESENTATION_VALUE = location(PROJECTION, "representation")
-
-/** Runs [block] on fresh reads of one resource of a pending type with an authored null, an unfilled value and a representation. */
-private fun <T> projection(block: (CapturedAuthoringReads) -> T): T {
-    val authored =
-        AuthoringRecord.of(
-            configuration = TypeSelection.createPending(definition = TEST_TYPE, arguments = emptyList()),
-            fields =
-                record(count = 7, numbers = listOf("item" to 7)).fieldMap +
-                    ("nullValue" to DataValue.NULL) +
-                    ("missingValue" to DataValue.UNFILLED) +
-                    ("representation" to DataValue.named(REPRESENTATION_TYPE.namedUse(), DataValue.StringValueWrapper("value"))),
-        )
-    return captured(TestCatalogLease(definitions = TEST_DEFINITIONS + REPRESENTATION_DEFINITION), mapOf(PROJECTION to authored)) { lease ->
-        block(CapturedAuthoringReads(lease.originalView()))
-    }
-}
-
-/** Runs [block] on a capture of a store that holds [resources] under [catalog], then closes the capture and the store. */
-private fun <T> captured(
-    catalog: AuthoringCatalogLease,
-    resources: Map<ResourceId, AuthoringRecord>,
-    block: (AuthoringLease) -> T,
-): T {
-    val store = InMemoryAuthoringViewStore(catalog, AuthoringSeed(resources))
-    return try {
-        store.capture().use(block)
-    } finally {
-        store.close()
-    }
-}
-
-/** The location of the item [item] in the `numbers` list of [resource]. */
-private fun numberItem(
-    resource: ResourceId,
-    item: String,
-) = ValueLocation.of(
-    resource,
-    ValuePath(segments = listOf(PathSegment.createField(name = "numbers"), PathSegment.createItem(id = ItemId(value = item)))),
-)

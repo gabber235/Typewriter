@@ -46,22 +46,3 @@ val RealmDeploymentEntrypointTest by testSuite {
         }
     }
 }
-
-private class FakeManagedRealmRuntime(
-    private val failActivation: Boolean = false,
-) : ManagedRealmRuntime {
-    var released = false
-        private set
-
-    override suspend fun activate() {
-        if (failActivation) error("catalog activation failed")
-    }
-
-    override suspend fun quiesce() = Unit
-
-    override suspend fun resume() = Unit
-
-    override suspend fun stop() {
-        released = true
-    }
-}

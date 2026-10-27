@@ -6,6 +6,7 @@ import com.typewritermc.imprint.ArtifactId
 import com.typewritermc.imprint.ContributionName
 import com.typewritermc.imprint.ContributionSourceId
 import com.typewritermc.imprint.ProducerId
+import com.typewritermc.testkit.recordType
 import com.typewritermc.types.RESOURCE_OWNERSHIP_FAMILY_ID
 import com.typewritermc.types.catalog.reasons
 import com.typewritermc.types.namedTemplate
@@ -33,8 +34,8 @@ import skirout.editor.v1.type_catalog.TypeParameter
 val RealmStructureAssemblyTest by testSuite {
     test("reserved read identities cannot replace intrinsic schemas or isolate unrelated declarations") {
         val reserved = TypeDefinitionId.qualified(com.typewritermc.expression.CANONICAL_READ_NAMESPACE, "UnfamiliarModel")
-        val healthy = id("Healthy")
-        val assembly = assemble(listOf(record(reserved), record(healthy)))
+        val healthy = TypeDefinitionId.qualified("structure", "Healthy")
+        val assembly = assemble(listOf(recordType(reserved), recordType(healthy)))
         assembly.checked.definition(reserved).codes() shouldBe setOf("reserved_intrinsic_type_identity")
         assembly.checked.definition(healthy) shouldBe DeclarationStatus.READY
     }
@@ -48,8 +49,8 @@ val RealmStructureAssemblyTest by testSuite {
     }
 
     test("rejects a concrete resource type that no ownership relation owns") {
-        val loose = id("Loose")
-        val owned = id("Owned")
+        val loose = TypeDefinitionId.qualified("structure", "Loose")
+        val owned = TypeDefinitionId.qualified("structure", "Owned")
 
         val assembly =
             assemble(
@@ -62,9 +63,9 @@ val RealmStructureAssemblyTest by testSuite {
     }
 
     test("an owned abstract member owns its concrete descendants and plain values need no owner") {
-        val member = id("Member")
-        val concrete = id("Concrete")
-        val value = id("Value")
+        val member = TypeDefinitionId.qualified("structure", "Member")
+        val concrete = TypeDefinitionId.qualified("structure", "Concrete")
+        val value = TypeDefinitionId.qualified("structure", "Value")
 
         val assembly =
             assemble(
@@ -72,7 +73,7 @@ val RealmStructureAssemblyTest by testSuite {
                     listOf(
                         resource(member, abstract = true),
                         resource(concrete, parents = listOf(member)),
-                        OwnedTypeDeclaration(origin, record(value)),
+                        OwnedTypeDeclaration(origin, recordType(value)),
                     ),
                 listOf(sectionsRelation, ownership("section.members", section, member)),
             )
@@ -82,7 +83,7 @@ val RealmStructureAssemblyTest by testSuite {
     }
 
     test("rejects a generic realm section type") {
-        val generic = id("GenericSection")
+        val generic = TypeDefinitionId.qualified("structure", "GenericSection")
         val declaration =
             TypeDefinition(
                 id = generic,
@@ -96,97 +97,3 @@ val RealmStructureAssemblyTest by testSuite {
         assembly.checked.definition(generic).codes() shouldBe setOf("generic_realm_section")
     }
 }
-
-private val section = id("Section")
-
-private val sectionsRelation = ownership("realm.sections", RealmRootDefinition.id, RealmSectionDefinition.id)
-
-/** The realm root, the section contract, and one concrete section owned through the sections relation. */
-private fun structure(): List<OwnedTypeDeclaration> =
-    listOf(
-        resource(RealmRootDefinition.id),
-        resource(RealmSectionDefinition.id, abstract = true),
-        resource(section, parents = listOf(RealmSectionDefinition.id)),
-    )
-
-private fun assemble(
-    declarations: List<OwnedTypeDeclaration>,
-    relations: List<RelationContract> = listOf(sectionsRelation),
-): CatalogAssembly =
-    CatalogContributions(declarations = declarations, relations = relations)
-        .assemble(CatalogAssemblyContext(CatalogGeneration(value = "realm structure")))
-
-@JvmName("assembleDefinitions")
-private fun assemble(definitions: List<TypeDefinition>): CatalogAssembly = assemble(definitions.map { OwnedTypeDeclaration(origin, it) })
-
-private fun resource(
-    id: TypeDefinitionId,
-    abstract: Boolean = false,
-    parents: List<TypeDefinitionId> = emptyList(),
-) = OwnedTypeDeclaration(origin, record(id, abstract, parents), searchKey = id.toString().filter(Char::isLetter).lowercase())
-
-private fun record(
-    id: TypeDefinitionId,
-    abstract: Boolean = false,
-    parents: List<TypeDefinitionId> = emptyList(),
-) = TypeDefinition.partial(
-    id = id,
-    representation =
-        RepresentationTemplate.createRecord(
-            fields = emptyList(),
-            abstract_ = abstract,
-        ),
-    parents =
-        parents.map {
-            it.namedTemplate()
-        },
-)
-
-private fun ownership(
-    relation: String,
-    owner: TypeDefinitionId,
-    member: TypeDefinitionId,
-) = RelationContract.of(
-    id = RelationId(value = relation),
-    first =
-        EndpointDefinition(
-            id = EndpointId(value = "$relation:first"),
-            slot = EndpointSlot.FIRST,
-            resource = owner.namedTemplate(),
-            cardinality = EndpointCardinality.ONE,
-            onDelete = RelationDeletePolicy.CASCADE,
-        ),
-    second =
-        EndpointDefinition(
-            id = EndpointId(value = "$relation:second"),
-            slot = EndpointSlot.SECOND,
-            resource = member.namedTemplate(),
-            cardinality = EndpointCardinality.MANY,
-            onDelete = RelationDeletePolicy.CLEAR,
-        ),
-    families = setOf(RelationFamilyId(value = RESOURCE_OWNERSHIP_FAMILY_ID)),
-)
-
-private fun DeclarationStatus.codes(): Set<String> =
-    (this as? DeclarationStatus.UnavailableWrapper)?.reasons.orEmpty().mapTo(linkedSetOf()) {
-        it.code
-    }
-
-private fun id(name: String) = TypeDefinitionId.qualified("structure", name)
-
-private val origin =
-    ProviderOrigin(
-        owner =
-            DeclarationOwner(
-                source =
-                    contributionKey(
-                        ContributionSourceId("test"),
-                        "main",
-                        ProducerId("sdk"),
-                        ContributionName("realm_structure"),
-                    ),
-                localIdentity = "realm structure",
-            ),
-        artifact = ArtifactId("test:realm_structure"),
-        sourcePart = "main",
-    )

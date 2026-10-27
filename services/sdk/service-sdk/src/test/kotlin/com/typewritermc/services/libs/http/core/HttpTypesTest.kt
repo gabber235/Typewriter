@@ -44,7 +44,7 @@ val HttpTypesTest by testSuite {
     }
     test("a request keeps its body when the caller's array or the read copy changes") {
         val source = byteArrayOf(1, 2)
-        val request = request(method = HttpMethod.POST, body = source)
+        val request = httpRequest(method = HttpMethod.POST, body = source)
         source[0] = 9
         request.body[1] = 9
         request.body.toList() shouldBe listOf<Byte>(1, 2)
@@ -79,14 +79,14 @@ val HttpTypesTest by testSuite {
         }
     }
     listOf(
-        "a non HTTP scheme" to Pair("HTTP URI scheme is required") { request(uri = URI("ftp://example.test")) },
+        "a non HTTP scheme" to Pair("HTTP URI scheme is required") { httpRequest(uri = URI("ftp://example.test")) },
         "user info in the URI" to
-            Pair("HTTP URI must have a host and no user info") { request(uri = URI("https://user@example.test")) },
-        "a body on a GET" to Pair("GET requests cannot have a body") { request(body = byteArrayOf(1)) },
-        "a zero timeout" to Pair("Timeout must be positive and finite") { request(timeout = Duration.ZERO) },
-        "an infinite timeout" to Pair("Timeout must be positive and finite") { request(timeout = Duration.INFINITE) },
-        "a zero request limit" to Pair("Maximum request bytes must be positive") { request(maximumRequestBytes = 0) },
-        "a zero response limit" to Pair("Maximum response bytes must be positive") { request(maximumResponseBytes = 0) },
+            Pair("HTTP URI must have a host and no user info") { httpRequest(uri = URI("https://user@example.test")) },
+        "a body on a GET" to Pair("GET requests cannot have a body") { httpRequest(method = HttpMethod.GET, body = byteArrayOf(1)) },
+        "a zero timeout" to Pair("Timeout must be positive and finite") { httpRequest(timeout = Duration.ZERO) },
+        "an infinite timeout" to Pair("Timeout must be positive and finite") { httpRequest(timeout = Duration.INFINITE) },
+        "a zero request limit" to Pair("Maximum request bytes must be positive") { httpRequest(maximumRequestBytes = 0) },
+        "a zero response limit" to Pair("Maximum response bytes must be positive") { httpRequest(maximumResponseBytes = 0) },
     ).forEach { (input, rejection) ->
         val (message, build) = rejection
         test("requests refuse $input") {
@@ -94,21 +94,3 @@ val HttpTypesTest by testSuite {
         }
     }
 }
-
-private fun request(
-    method: HttpMethod = HttpMethod.GET,
-    uri: URI = URI("https://example.test"),
-    body: ByteArray = byteArrayOf(),
-    timeout: Duration? = null,
-    maximumRequestBytes: Long? = null,
-    maximumResponseBytes: Long? = null,
-) = HttpRequest(
-    HttpOperation("test"),
-    ErrorSlug.of("test"),
-    method,
-    uri,
-    body = body,
-    timeout = timeout,
-    maximumRequestBytes = maximumRequestBytes,
-    maximumResponseBytes = maximumResponseBytes,
-)

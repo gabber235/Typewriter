@@ -1,6 +1,7 @@
 package com.typewritermc.loader.standalone.shell
 
 import com.github.ajalt.clikt.core.CliktError
+import com.typewritermc.loader.standalone.shell.testing.ShellTerminal
 import com.typewritermc.services.libs.registrar.RegistrarSnapshot
 import com.typewritermc.services.libs.registrar.RegistrarState
 import com.typewritermc.services.libs.telemetry.ErrorSlug

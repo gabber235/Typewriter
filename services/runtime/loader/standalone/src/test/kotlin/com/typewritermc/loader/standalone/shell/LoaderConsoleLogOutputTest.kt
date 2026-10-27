@@ -2,6 +2,7 @@
 
 package com.typewritermc.loader.standalone.shell
 
+import com.typewritermc.loader.standalone.shell.testing.ShellTerminal
 import com.typewritermc.services.libs.telemetry.console.ConsoleLogRecord
 import de.infix.testBalloon.framework.core.testSuite
 import io.kotest.matchers.shouldBe

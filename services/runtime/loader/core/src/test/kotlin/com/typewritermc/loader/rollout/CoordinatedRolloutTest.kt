@@ -1,8 +1,12 @@
 package com.typewritermc.loader.rollout
 
-import com.typewritermc.loader.FIXTURE_VERSION
 import com.typewritermc.loader.api.RuntimePlacement
-import com.typewritermc.loader.artifact.toApi
+import com.typewritermc.loader.rollout.testing.FakeRolloutHost
+import com.typewritermc.loader.rollout.testing.RolloutFixture
+import com.typewritermc.loader.rollout.testing.presence
+import com.typewritermc.loader.rollout.testing.rollsOutTheRealmAndPanelOnly
+import com.typewritermc.loader.testing.FIXTURE_VERSION
+import com.typewritermc.loader.testing.activeProjection
 import com.typewritermc.services.libs.registrar.ServiceId
 import de.infix.testBalloon.framework.core.testSuite
 import io.kotest.assertions.throwables.shouldThrow
@@ -21,6 +25,12 @@ import kotlin.time.Duration.Companion.seconds
 import kotlin.time.TestTimeSource
 
 val CoordinatedRolloutTest by testSuite {
+    val realmAndPanel = setOf(RuntimePlacement.REALM, RuntimePlacement.PANEL_ENGINE)
+
+    val statusPoll = 100.milliseconds
+
+    val healthyFor = 150.milliseconds
+
     test("a combined host is staged and committed once, as one participant") {
         runTest {
             val fixture = RolloutFixture(FakeRolloutHost(ServiceId("combined")))
@@ -88,8 +98,8 @@ val CoordinatedRolloutTest by testSuite {
 
     test("a Realm and panel host rolls out without any primary engine host") {
         runTest {
-            val host = FakeRolloutHost(ServiceId("realm-service"), REALM_AND_PANEL)
-            val selection = requireNotNull(listOf(presence(host.id, REALM_AND_PANEL)).deploymentSelectionOrNull())
+            val host = FakeRolloutHost(ServiceId("realm-service"), realmAndPanel)
+            val selection = requireNotNull(listOf(presence(host.id, realmAndPanel)).deploymentSelectionOrNull())
             val fixture = RolloutFixture(host, selection)
 
             fixture.rollout.rollOut(fixture.snapshot)
@@ -100,8 +110,8 @@ val CoordinatedRolloutTest by testSuite {
 
     test("a selected primary engine host that never answers does not block the Realm host") {
         runTest {
-            val host = FakeRolloutHost(ServiceId("realm-service"), REALM_AND_PANEL)
-            val observed = requireNotNull(listOf(presence(host.id, REALM_AND_PANEL)).deploymentSelectionOrNull())
+            val host = FakeRolloutHost(ServiceId("realm-service"), realmAndPanel)
+            val observed = requireNotNull(listOf(presence(host.id, realmAndPanel)).deploymentSelectionOrNull())
             val absentEngine = ServiceId("absent-engine")
             val selection =
                 observed.copy(
@@ -118,8 +128,8 @@ val CoordinatedRolloutTest by testSuite {
 
     test("a rollout whose Realm host stopped answering sends nothing and keeps the previous commit") {
         runTest {
-            val host = FakeRolloutHost(ServiceId("realm-service"), REALM_AND_PANEL)
-            val selection = requireNotNull(listOf(presence(host.id, REALM_AND_PANEL)).deploymentSelectionOrNull())
+            val host = FakeRolloutHost(ServiceId("realm-service"), realmAndPanel)
+            val selection = requireNotNull(listOf(presence(host.id, realmAndPanel)).deploymentSelectionOrNull())
             val fixture = RolloutFixture(host, selection)
             fixture.rollout.rollOut(fixture.snapshot)
             val committed = fixture.state.committed()
@@ -146,7 +156,7 @@ val CoordinatedRolloutTest by testSuite {
                         if (status.phase !is ParticipantPhase.ActiveWrapper) {
                             true
                         } else {
-                            timeSource += STATUS_POLL
+                            timeSource += statusPoll
                             activeReplies++
                             // The second reply after the commit goes missing; every other one reports healthy.
                             val answered = activeReplies != 2
@@ -156,27 +166,13 @@ val CoordinatedRolloutTest by testSuite {
                     }
                 }
             val fixture =
-                RolloutFixture(host, participantDeadline = 2.seconds, healthyDuration = HEALTHY_DURATION, timeSource = timeSource)
+                RolloutFixture(host, participantDeadline = 2.seconds, healthyDuration = healthyFor, timeSource = timeSource)
 
             fixture.rollout.rollOut(fixture.snapshot)
 
             fixture.state.committed()?.snapshot shouldBe fixture.snapshot
             val firstHealthyAfterGap = healthy.first { it > requireNotNull(gapAt) }
-            (healthy.last() - firstHealthyAfterGap) shouldBeGreaterThanOrEqualTo HEALTHY_DURATION
+            (healthy.last() - firstHealthyAfterGap) shouldBeGreaterThanOrEqualTo healthyFor
         }
     }
-}
-
-private val REALM_AND_PANEL = setOf(RuntimePlacement.REALM, RuntimePlacement.PANEL_ENGINE)
-private val STATUS_POLL = 100.milliseconds
-private val HEALTHY_DURATION = 150.milliseconds
-
-private suspend fun RolloutFixture.rollsOutTheRealmAndPanelOnly() {
-    val committed = requireNotNull(state.committed())
-    val reference = host.commands.first().projectionFor(host.id)
-    committed.projections shouldBe mapOf(host.id to reference.blob.toApi())
-    host.commandKinds shouldContainExactly listOf(RolloutCommandKind.STAGE, RolloutCommandKind.COMMIT)
-    host.commands.forEach { it.command.serviceIds shouldBe setOf(host.id.value) }
-    projections.fetch(reference).runtimes.map { it.placement } shouldContainExactly
-        listOf(RuntimePlacement.PANEL_ENGINE, RuntimePlacement.REALM)
 }

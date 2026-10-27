@@ -9,6 +9,12 @@ import com.typewritermc.discovery.GeneratedProviderKind
 import com.typewritermc.discovery.GeneratedTypeProvider
 import com.typewritermc.discovery.ProviderOrigin
 import com.typewritermc.discovery.contributionKey
+import com.typewritermc.engine.pages.testing.REMAINING_FIELDS
+import com.typewritermc.engine.pages.testing.corePageProviderInstance
+import com.typewritermc.engine.pages.testing.defaultPresentation
+import com.typewritermc.engine.pages.testing.fieldPaths
+import com.typewritermc.engine.pages.testing.flattened
+import com.typewritermc.engine.pages.testing.presentsFields
 import com.typewritermc.imprint.ArtifactId
 import com.typewritermc.imprint.ContributionName
 import com.typewritermc.imprint.ContributionSourceId
@@ -28,15 +34,11 @@ import io.kotest.matchers.nulls.shouldNotBeNull
 import io.kotest.matchers.shouldBe
 import io.kotest.matchers.types.shouldBeInstanceOf
 import skirout.editor.v1.catalog.PresentationRole
-import skirout.editor.v1.presentation.AxisChild
-import skirout.editor.v1.presentation.ChildrenElement
 import skirout.editor.v1.presentation.GraphDirection
 import skirout.editor.v1.presentation.PresentationElement
-import skirout.editor.v1.presentation.PresentationNode
 import skirout.editor.v1.presentation.ResourcesLayout
 import skirout.editor.v1.type_catalog.CatalogGeneration
 import skirout.editor.v1.type_catalog.DeclarationOwner
-import skirout.editor.v1.type_catalog.PathSegment
 import skirout.editor.v1.type_catalog.TypeDefinition
 import java.util.Collections
 
@@ -139,42 +141,3 @@ val CorePageEditorPresentationTest by testSuite {
         }
     }
 }
-
-private fun corePageProviderInstance(name: String): Any {
-    val type = Class.forName(name)
-    return type.fields.singleOrNull { it.name == "INSTANCE" }?.get(null) ?: type.getConstructor().newInstance()
-}
-
-private const val REMAINING_FIELDS = "remaining fields"
-
-/** The element of [this] and every element nested in its column and row children, in reading order. */
-private fun PresentationNode.flattened(): List<PresentationElement> {
-    val element = element ?: return emptyList()
-    val axis =
-        when (val children = (element as? PresentationElement.ChildrenWrapper)?.value) {
-            is ChildrenElement.ColumnWrapper -> children.value.children
-            is ChildrenElement.RowWrapper -> children.value.children
-            else -> emptyList()
-        }
-    val nodes =
-        axis.mapNotNull { child ->
-            when (child) {
-                is AxisChild.FixedWrapper -> child.value
-                is AxisChild.FlexibleWrapper -> child.value.child
-                else -> null
-            }
-        }
-    return listOf(element) + nodes.flatMap { it.flattened() }
-}
-
-private val PresentationElement.defaultPresentation get() = (this as? PresentationElement.DefaultPresentationWrapper)?.value
-
-private val PresentationElement.presentsFields
-    get() = defaultPresentation != null || this is PresentationElement.RemainingFieldsWrapper
-
-/** The field names an element edits, or [REMAINING_FIELDS] for the slot that presents every field not placed. */
-private val PresentationElement.fieldPaths: List<String>
-    get() =
-        defaultPresentation?.control?.binding?.path?.segments?.map { segment ->
-            (segment as PathSegment.FieldWrapper).value.name
-        } ?: listOf(REMAINING_FIELDS)

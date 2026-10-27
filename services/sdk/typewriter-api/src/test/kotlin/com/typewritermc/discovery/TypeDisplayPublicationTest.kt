@@ -76,29 +76,3 @@ val TypeDisplayPublicationTest by testSuite {
         published[ColorDefinition.id] shouldBe null
     }
 }
-
-internal fun generatedTypeProviders(): List<GeneratedTypeProvider> = generatedProviders(GeneratedProviderKind.Type)
-
-/** Instances of every generated provider of [kind] indexed on the test classpath. */
-internal fun <T> generatedProviders(kind: GeneratedProviderKind): List<T> {
-    val resources =
-        Collections.list(
-            requireNotNull(Thread.currentThread().contextClassLoader)
-                .getResources(GENERATED_PROVIDER_INDEX_PATH),
-        )
-    return resources
-        .flatMap { resource ->
-            resource.openStream().bufferedReader().use { GeneratedProviderIndex.parse(it.readText()) }
-        }.filter { entry -> entry.kind == kind }
-        .map { entry ->
-            @Suppress("UNCHECKED_CAST")
-            instantiateGeneratedProvider(Class.forName(entry.providerClass)) as T
-        }
-}
-
-private fun instantiateGeneratedProvider(type: Class<*>): Any =
-    type.fields
-        .singleOrNull { field ->
-            field.name == "INSTANCE" && Modifier.isStatic(field.modifiers) && field.type === type
-        }?.get(null)
-        ?: type.getConstructor().newInstance()

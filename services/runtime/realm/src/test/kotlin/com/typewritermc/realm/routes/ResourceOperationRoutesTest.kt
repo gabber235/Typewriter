@@ -7,19 +7,13 @@ import com.typewritermc.authoring.GraphPlacement
 import com.typewritermc.authoring.HierarchyPath
 import com.typewritermc.authoring.PlacementAnchor
 import com.typewritermc.authoring.RealmRootDefinition
-import com.typewritermc.authoring.ResourceDraft
 import com.typewritermc.authoring.TimelineEntryPlacement
 import com.typewritermc.authoring.field
 import com.typewritermc.authoring.fieldMap
 import com.typewritermc.authoring.of
 import com.typewritermc.authoring.requireValid
-import com.typewritermc.authoring.root
-import com.typewritermc.capability.RealmCapabilityPermissionDeniedException
-import com.typewritermc.discovery.ProviderOrigin
-import com.typewritermc.library.Book
 import com.typewritermc.library.LibraryDefinition
 import com.typewritermc.library.Page
-import com.typewritermc.library.TAXONOMY_TAGS_RELATION_ID
 import com.typewritermc.library.Tag
 import com.typewritermc.library.TagDefinition
 import com.typewritermc.library.TagFields
@@ -27,25 +21,19 @@ import com.typewritermc.library.book
 import com.typewritermc.library.library
 import com.typewritermc.library.tag
 import com.typewritermc.library.taxonomy
-import com.typewritermc.operations.AnyResourceSubjects
 import com.typewritermc.operations.Delete
 import com.typewritermc.operations.Duplicate
 import com.typewritermc.operations.LinkWith
 import com.typewritermc.operations.LinkWithDuplicate
 import com.typewritermc.operations.LinkWithInput
 import com.typewritermc.operations.LinkWithInputDefinition
-import com.typewritermc.operations.LinkWithInputFields
 import com.typewritermc.operations.MoveToOwner
 import com.typewritermc.operations.MoveToOwnerInput
 import com.typewritermc.operations.MoveToOwnerInputDefinition
-import com.typewritermc.operations.OperationInput
-import com.typewritermc.operations.ResourceOperationSpecImpl
 import com.typewritermc.operations.Unlink
 import com.typewritermc.operations.UnlinkInput
 import com.typewritermc.operations.UnlinkInputDefinition
 import com.typewritermc.operations.capability
-import com.typewritermc.operations.collectOperation
-import com.typewritermc.operations.fillOnDrop
 import com.typewritermc.realm.routeFixtureCatalog
 import com.typewritermc.realm.testing.RealmCatalog
 import com.typewritermc.realm.testing.RealmFixture
@@ -56,23 +44,13 @@ import com.typewritermc.realm.testing.links
 import com.typewritermc.realm.testing.value
 import com.typewritermc.realm.testing.withSetup
 import com.typewritermc.setup.SetupHandle
-import com.typewritermc.setup.SetupList
 import com.typewritermc.setup.setup
-import com.typewritermc.testing.routes.FixtureGraphEntry
-import com.typewritermc.testing.routes.FixtureGraphPage
-import com.typewritermc.testing.routes.FixtureTimelineEntry
-import com.typewritermc.testing.routes.FixtureTimelinePage
 import com.typewritermc.testing.routes.fixtureGraphEntry
 import com.typewritermc.testing.routes.fixtureGraphPage
 import com.typewritermc.testing.routes.fixtureTimelineEntry
 import com.typewritermc.testing.routes.fixtureTimelinePage
 import com.typewritermc.types.Ref
-import com.typewritermc.types.endpointId
 import com.typewritermc.types.fieldMap
-import com.typewritermc.types.namedTemplate
-import com.typewritermc.types.payload
-import com.typewritermc.types.toResourceId
-import com.typewritermc.types.type
 import com.typewritermc.types.use
 import de.infix.testBalloon.framework.core.testSuite
 import io.kotest.matchers.collections.shouldContain
@@ -82,127 +60,111 @@ import io.kotest.matchers.types.shouldBeInstanceOf
 import skirout.editor.v1.authoring.AuthoringObservationId
 import skirout.editor.v1.authoring.CommitPreparedEditResponse
 import skirout.editor.v1.authoring.EditIntent
-import skirout.editor.v1.authoring.LinkOccurrenceId
-import skirout.editor.v1.catalog.EndpointSlot
 import skirout.editor.v1.resource_operations.AuthoringActionResult
 import skirout.editor.v1.resource_operations.OperationSelectionEffect
 import skirout.editor.v1.resource_operations.ResolveDropCandidatesResult
 import skirout.editor.v1.resource_operations.ResolveResourceOperationsResult
-import skirout.editor.v1.type_catalog.AuthoringRecord
 import skirout.editor.v1.type_catalog.CatalogGeneration
-import skirout.editor.v1.type_catalog.DataValue
-import skirout.editor.v1.type_catalog.RelationId
-import skirout.editor.v1.type_catalog.ResourceTarget
 import skirout.editor.v1.type_catalog.ValueLocation
-import skirout.editor.v1.type_catalog.ValuePath
 import skirout.kernel.v1.resource_id.ResourceId
 
-/** A book and three tags; `tag` is a child of `parent`, `loose` has no relations. */
-private data class TagGraph(
-    val book: SetupHandle<Book>,
-    val tag: SetupHandle<Tag>,
-    val parent: SetupHandle<Tag>,
-    val loose: SetupHandle<Tag>,
-)
-
-private val tagGraph =
-    setup("tag-graph") {
-        val (parent, tag, loose) =
-            taxonomy {
-                val parent = tags.tag("parent") { name = "Adventure" }
-                Triple(
-                    parent,
-                    tags.tag("tag") {
-                        name = "Quest"
-                        parents = setOf(parent)
-                    },
-                    tags.tag("loose") { name = "Loose" },
-                )
-            }
-        val book =
-            library {
-                books.book("book") {
-                    title = "Tutorial"
-                    handle
-                }
-            }
-        TagGraph(book, tag, parent, loose)
-    }
-
-/** Three pages of a source book with their chapters and priorities, and a destination book with two pages. */
-private data class Shelves(
-    val destination: SetupHandle<Book>,
-    val moved: List<SetupHandle<FixtureTimelinePage>>,
-    val residents: List<SetupHandle<FixtureTimelinePage>>,
-)
-
-private val shelves =
-    setup("shelves") {
-        library {
-            val moved =
-                books.book("source") {
-                    title = "Source"
-                    listOf(pages.page("first", "intro", 100), pages.page("second", "intro", 1), pages.page("other", "outro", 77))
-                }
-            val (destination, residents) =
-                books.book("destination") {
-                    title = "Destination"
-                    handle to listOf(pages.page("resident", "intro", 9), pages.page("peer", "outro", 3))
-                }
-            Shelves(destination, moved, residents)
-        }
-    }
-
-/** Two graph pages and a page without a graph layout, each holding one entry. */
-private data class Canvas(
-    val book: SetupHandle<Book>,
-    val graph: SetupHandle<FixtureGraphPage>,
-    val canvas: SetupHandle<FixtureGraphPage>,
-    val timeline: SetupHandle<FixtureTimelinePage>,
-    val graphEntry: SetupHandle<FixtureGraphEntry>,
-    val residentEntry: SetupHandle<FixtureGraphEntry>,
-    val timelineEntry: SetupHandle<FixtureTimelineEntry>,
-)
-
-private val canvas =
-    setup("canvas") {
-        library {
-            books.book("elements") {
-                title = "Library"
-                val (graph, graphEntry) =
-                    pages.fixtureGraphPage("graph") {
-                        name = "Page 0"
-                        handle to elements.fixtureGraphEntry("graph-entry") { placement = GraphPlacement(0, 0, 2, 2) }
-                    }
-                val (canvas, residentEntry) =
-                    pages.fixtureGraphPage("canvas") {
-                        name = "Page 1"
-                        priority = 1
-                        handle to elements.fixtureGraphEntry("resident-entry") { placement = GraphPlacement(0, 0, 2, 2) }
-                    }
-                val (timeline, timelineEntry) =
-                    pages.fixtureTimelinePage("timeline") {
-                        name = "Page 2"
-                        priority = 2
-                        handle to elements.fixtureTimelineEntry("timeline-entry") { placement = TimelineEntryPlacement(0) }
-                    }
-                Canvas(handle, graph, canvas, timeline, graphEntry, residentEntry, timelineEntry)
-            }
-        }
-    }
-
-private fun SetupList<Page>.page(
-    key: String,
-    chapterName: String,
-    order: Int,
-): SetupHandle<FixtureTimelinePage> =
-    fixtureTimelinePage(key) {
-        chapter = HierarchyPath.parse(chapterName)
-        priority = order
-        handle
-    }
-
 val ResourceOperationRoutesTest by testSuite {
+    val tagGraph =
+        setup("tag-graph") {
+            val (parent, tag, loose) =
+                taxonomy {
+                    val parent = tags.tag("parent") { name = "Adventure" }
+                    Triple(
+                        parent,
+                        tags.tag("tag") {
+                            name = "Quest"
+                            parents = setOf(parent)
+                        },
+                        tags.tag("loose") { name = "Loose" },
+                    )
+                }
+            val book =
+                library {
+                    books.book("book") {
+                        title = "Tutorial"
+                        handle
+                    }
+                }
+            TagGraph(book, tag, parent, loose)
+        }
+
+    val shelves =
+        setup("shelves") {
+            library {
+                val moved =
+                    books.book("source") {
+                        title = "Source"
+                        listOf(
+                            pages.fixtureTimelinePage("first") {
+                                chapter = HierarchyPath.parse("intro")
+                                priority = 100
+                                handle
+                            },
+                            pages.fixtureTimelinePage("second") {
+                                chapter = HierarchyPath.parse("intro")
+                                priority = 1
+                                handle
+                            },
+                            pages.fixtureTimelinePage("other") {
+                                chapter = HierarchyPath.parse("outro")
+                                priority = 77
+                                handle
+                            },
+                        )
+                    }
+                val (destination, residents) =
+                    books.book("destination") {
+                        title = "Destination"
+                        handle to
+                            listOf(
+                                pages.fixtureTimelinePage("resident") {
+                                    chapter = HierarchyPath.parse("intro")
+                                    priority = 9
+                                    handle
+                                },
+                                pages.fixtureTimelinePage("peer") {
+                                    chapter = HierarchyPath.parse("outro")
+                                    priority = 3
+                                    handle
+                                },
+                            )
+                    }
+                Shelves(destination, moved, residents)
+            }
+        }
+
+    val canvas =
+        setup("canvas") {
+            library {
+                books.book("elements") {
+                    title = "Library"
+                    val (graph, graphEntry) =
+                        pages.fixtureGraphPage("graph") {
+                            name = "Page 0"
+                            handle to elements.fixtureGraphEntry("graph-entry") { placement = GraphPlacement(0, 0, 2, 2) }
+                        }
+                    val (canvas, residentEntry) =
+                        pages.fixtureGraphPage("canvas") {
+                            name = "Page 1"
+                            priority = 1
+                            handle to elements.fixtureGraphEntry("resident-entry") { placement = GraphPlacement(0, 0, 2, 2) }
+                        }
+                    val (timeline, timelineEntry) =
+                        pages.fixtureTimelinePage("timeline") {
+                            name = "Page 2"
+                            priority = 2
+                            handle to elements.fixtureTimelineEntry("timeline-entry") { placement = TimelineEntryPlacement(0) }
+                        }
+                    Canvas(handle, graph, canvas, timeline, graphEntry, residentEntry, timelineEntry)
+                }
+            }
+        }
+
     test("every resource gets the core operations its graph facts allow") {
         withSetup(tagGraph) { graph ->
             operationsOf(graph.book.resource) shouldBe setOf("MoveToOwner", "LinkWith", "Duplicate", "Delete")
@@ -498,142 +460,3 @@ val ResourceOperationRoutesTest by testSuite {
         }
     }
 }
-
-/** The simple names of the operation objects resolved for [targets]. */
-private fun RealmFixture.operationsOf(vararg targets: ResourceId): Set<String> =
-    (operations.resolve(*targets) as ResolveResourceOperationsResult.ResolvedWrapper)
-        .value.operations
-        .mapTo(linkedSetOf()) { it.definition.id.simpleName }
-
-/** Drop candidates for dragging [targets], by operation object simple name. */
-private fun RealmFixture.drops(vararg targets: ResourceId) =
-    (operations.dropCandidates(*targets) as ResolveDropCandidatesResult.ResolvedWrapper)
-        .value
-        .associateBy { it.operation.declaration.substringAfterLast('.') }
-
-/** Commits a MoveToOwner of [entry] into [page], optionally dropped at [anchor]. */
-private suspend fun RealmFixture.move(
-    entry: SetupHandle<*>,
-    page: SetupHandle<*>,
-    anchor: PlacementAnchor? = null,
-) = operations.commit(
-    operations.prepare(
-        operations.operation(MoveToOwner),
-        entry.resource,
-        input = operations.input(MoveToOwnerInput(page.id, anchor), MoveToOwnerInputDefinition.id),
-    ),
-)
-
-/** Commits the link operation [operation] of [subject] with [input]. */
-private suspend fun RealmFixture.link(
-    operation: Any,
-    subject: SetupHandle<*>,
-    input: Any,
-) = operations.commit(
-    operations.prepare(
-        operations.operation(operation),
-        subject.resource,
-        input =
-            operations.input(
-                input,
-                when (input) {
-                    is LinkWithInput -> LinkWithInputDefinition.id
-                    else -> UnlinkInputDefinition.id
-                },
-            ),
-    ),
-)
-
-private val skirout.editor.v1.operation.ResourceOperationId.simpleName get() = declaration.substringAfterLast('.')
-
-/** A Tag operation whose drop field declares more candidates than one drag may receive. */
-private fun manyCandidates(origin: ProviderOrigin) =
-    collectOperation<ResourceDraft, LinkWithInput>(
-        origin,
-        "fixture.ManyCandidates",
-        ResourceTarget.type(TagDefinition.id.namedTemplate()),
-        AnyResourceSubjects,
-        OperationInput.Typed(LinkWithInputDefinition.use),
-        "Many candidates",
-    ) { spec ->
-        with(ResourceOperationSpecImpl(spec)) {
-            input {
-                LinkWithInputFields.target {
-                    candidates { (0 until 250).asSequence().map { ResourceId(value = "candidate-$it").toResourceId() } }
-                    fillOnDrop()
-                }
-            }
-            prepare { }
-        }
-    }
-
-/** A Tag operation that releases its subject from the taxonomy, leaving it without an owner. */
-private fun orphanTag(origin: ProviderOrigin) =
-    collectOperation<ResourceDraft, Unit>(
-        origin,
-        "fixture.OrphanTag",
-        ResourceTarget.type(TagDefinition.id.namedTemplate()),
-        AnyResourceSubjects,
-        OperationInput.None,
-        "Orphan tag",
-    ) { spec ->
-        with(ResourceOperationSpecImpl(spec)) {
-            prepare {
-                val owner = RelationId(value = TAXONOMY_TAGS_RELATION_ID).endpointId(EndpointSlot.SECOND)
-                disconnect(
-                    LinkOccurrenceId(endpoint = owner, location = ValueLocation.of(subjects.single(), ValuePath.root.field("taxonomy"))),
-                )
-            }
-        }
-    }
-
-private const val LOCKED = "Tags are locked for this member."
-
-/** A Tag operation whose availability and drop candidates need a permission the caller lacks. */
-private fun guarded(origin: ProviderOrigin) =
-    collectOperation<ResourceDraft, LinkWithInput>(
-        origin,
-        "fixture.Guarded",
-        ResourceTarget.type(TagDefinition.id.namedTemplate()),
-        AnyResourceSubjects,
-        OperationInput.Typed(LinkWithInputDefinition.use),
-        "Guarded",
-    ) { spec ->
-        with(ResourceOperationSpecImpl(spec)) {
-            availableWhen { throw RealmCapabilityPermissionDeniedException(LOCKED) }
-            input {
-                LinkWithInputFields.target {
-                    candidates { throw RealmCapabilityPermissionDeniedException(LOCKED) }
-                    fillOnDrop()
-                }
-            }
-            prepare { }
-        }
-    }
-
-/** A Tag operation whose availability always fails. */
-private fun brokenAvailability(origin: ProviderOrigin) =
-    collectOperation<ResourceDraft, Unit>(
-        origin,
-        "fixture.BrokenAvailability",
-        ResourceTarget.type(TagDefinition.id.namedTemplate()),
-        AnyResourceSubjects,
-        OperationInput.None,
-        "Broken availability",
-    ) { spec ->
-        with(ResourceOperationSpecImpl(spec)) {
-            availableWhen { error("Unselected callback failure") }
-            prepare { error("Unavailable operation must never prepare") }
-        }
-    }
-
-private fun AuthoringRecord.graphPlacement(): GraphPlacement {
-    val fields = ((fieldMap.getValue("placement") as DataValue.NamedWrapper).payload as DataValue.RecordWrapper).value.fieldMap
-
-    fun int(name: String) = (fields.getValue(name) as DataValue.IntegerWrapper).value.toInt()
-    return GraphPlacement(int("x"), int("y"), int("width"), int("height"))
-}
-
-private fun GraphPlacement.intersectsWithGap(other: GraphPlacement): Boolean =
-    x.toLong() < other.x.toLong() + other.width + 1 && x.toLong() + width + 1 > other.x &&
-        y.toLong() < other.y.toLong() + other.height + 1 && y.toLong() + height + 1 > other.y

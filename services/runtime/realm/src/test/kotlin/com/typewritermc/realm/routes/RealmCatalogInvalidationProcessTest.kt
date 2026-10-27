@@ -19,13 +19,15 @@ import skirout.editor.v1.catalog.CatalogInvalidated
 import kotlin.time.Duration.Companion.seconds
 
 val RealmCatalogInvalidationProcessTest by testSuite {
+    val realmAddress = RealmRouteScope(organizationId = "organization", realmId = "realm")
+
     test("a failed catalog announcement is retried until delivered") {
         runTest {
             withInvalidations(backgroundScope, "initial") { process ->
                 val transport = FakeMessageTransport()
                 transport.failNextPublish(TransportError.Unavailable())
 
-                process.replaceCommunicator(communicator(transport), ADDRESS)
+                process.replaceCommunicator(communicator(transport), realmAddress)
 
                 transport.announcements() shouldBe listOf("initial", "initial")
             }
@@ -38,8 +40,8 @@ val RealmCatalogInvalidationProcessTest by testSuite {
                 val first = FakeMessageTransport()
                 val replacement = FakeMessageTransport()
 
-                process.replaceCommunicator(communicator(first), ADDRESS)
-                process.replaceCommunicator(communicator(replacement), ADDRESS)
+                process.replaceCommunicator(communicator(first), realmAddress)
+                process.replaceCommunicator(communicator(replacement), realmAddress)
 
                 first.announcements() shouldBe listOf("a")
                 replacement.announcements() shouldBe listOf("a")
@@ -47,54 +49,3 @@ val RealmCatalogInvalidationProcessTest by testSuite {
         }
     }
 }
-
-private val ADDRESS = RealmRouteScope(organizationId = "organization", realmId = "realm")
-
-private val CATALOG_INVALIDATE =
-    MessageAddress.of("service.from.realm.organization.organization.realm.editor.catalog.invalidate")
-
-/** The invalidation process of a Realm that installed [generation], on [scope]; [test] gets communicators from it. */
-private suspend fun withInvalidations(
-    scope: CoroutineScope,
-    generation: String,
-    test: suspend InvalidationContext.(RealmCatalogInvalidationProcess) -> Unit,
-) {
-    val telemetry = TelemetryTestHarness.create()
-    val catalogs = RealmCatalogStore().apply { installTestCatalog(generation) }
-    // The retry waits in virtual time, so a long delay costs nothing and proves no wall clock is involved.
-    val process =
-        RealmCatalogInvalidationProcess(catalogs, scope, telemetry.telemetry, RetryPolicy.fixed(30.seconds), CoroutineDelayScheduler)
-    val context = InvalidationContext(telemetry)
-    try {
-        context.test(process)
-    } finally {
-        process.stop()
-        context.close()
-        catalogs.close()
-        telemetry.close()
-    }
-}
-
-private class InvalidationContext(
-    private val telemetry: TelemetryTestHarness,
-) : AutoCloseable {
-    private val transports = mutableListOf<FakeMessageTransport>()
-
-    fun communicator(transport: FakeMessageTransport): Communicator {
-        transports += transport
-        return Communicator(transport, telemetry.telemetry, ContextPropagators.noop())
-    }
-
-    override fun close() = transports.forEach(FakeMessageTransport::close)
-}
-
-/** The generations announced on [this] transport, failed attempts included, in order. */
-private fun FakeMessageTransport.announcements(): List<String> =
-    actions
-        .filterIsInstance<FakeMessageTransport.Action.Publish>()
-        .filter { it.message.address == CATALOG_INVALIDATE }
-        .map {
-            CatalogInvalidated.serializer
-                .fromBytes(it.message.payload.toByteArray())
-                .generation.value
-        }

@@ -28,6 +28,8 @@ import skirout.editor.v1.type_catalog.ValueLocation
 import skirout.kernel.v1.resource_id.ResourceId
 
 val PublicationAcceptanceTest by testSuite {
+    val firstResource = ResourceId(value = "first")
+
     test("a resource whose native construction fails blocks publication with native_construction_failed") {
         val catalog =
             DefinitionCatalog(
@@ -35,11 +37,17 @@ val PublicationAcceptanceTest by testSuite {
                 nativeBindingFactories = listOf(recordBinding(TEST_TYPE) { error("The native resource cannot be built.") }),
             )
 
-        val assessment = assess(catalog)
+        val assessment =
+            RealmFixture.of(catalog, mapOf(firstResource to record(name = "ready"))).use { realm ->
+                RealmCheckRuntime(realm.views, selectionPredicates = RealmSelectionPredicateEvaluator()).use { checks ->
+                    val acceptance = AuthoringAcceptance(realm.views, checks)
+                    acceptance.capture().use { captured -> acceptance.evaluate(captured) }
+                }
+            }
 
-        assessment.resources.getValue(FIRST).shouldBeInstanceOf<ResourceReadiness.Blocked>()
+        assessment.resources.getValue(firstResource).shouldBeInstanceOf<ResourceReadiness.Blocked>()
         assessment.findings.map { Triple(it.code, it.message, it.primary) } shouldBe
-            listOf(Triple("native_construction_failed", "The native resource cannot be built.", ValueLocation.of(FIRST)))
+            listOf(Triple("native_construction_failed", "The native resource cannot be built.", ValueLocation.of(firstResource)))
     }
 
     test("a captured check that cannot complete blocks publication with check_incomplete and check_coverage_incomplete") {
@@ -54,7 +62,7 @@ val PublicationAcceptanceTest by testSuite {
                             ),
                         )
                         check(Availability.Available(true)) { it }
-                            .error("Never reported.", ValueLocation.of(FIRST))
+                            .error("Never reported.", ValueLocation.of(firstResource))
                     }
                 }
             }
@@ -70,9 +78,15 @@ val PublicationAcceptanceTest by testSuite {
                 Availability.Available(true)
             }
 
-        val assessment = assess(catalog, traversalLimit)
+        val assessment =
+            RealmFixture.of(catalog, mapOf(firstResource to record(name = "ready"))).use { realm ->
+                RealmCheckRuntime(realm.views, selectionPredicates = traversalLimit).use { checks ->
+                    val acceptance = AuthoringAcceptance(realm.views, checks)
+                    acceptance.capture().use { captured -> acceptance.evaluate(captured) }
+                }
+            }
 
-        assessment.resources.getValue(FIRST).shouldBeInstanceOf<ResourceReadiness.Ready>()
+        assessment.resources.getValue(firstResource).shouldBeInstanceOf<ResourceReadiness.Ready>()
         assessment.findings.map { it.code to it.message } shouldBe
             listOf(
                 "check_incomplete" to "graph traversal limit exceeded",
@@ -80,17 +94,3 @@ val PublicationAcceptanceTest by testSuite {
             )
     }
 }
-
-private val FIRST = ResourceId(value = "first")
-
-/** Assesses a Realm on [catalog] that has one complete test resource saved, as publication does. */
-private suspend fun assess(
-    catalog: DefinitionCatalog,
-    selectionPredicates: SelectionPredicateEvaluator = RealmSelectionPredicateEvaluator(),
-): CapturedAssessment =
-    RealmFixture.of(catalog, mapOf(FIRST to record(name = "ready"))).use { realm ->
-        RealmCheckRuntime(realm.views, selectionPredicates = selectionPredicates).use { checks ->
-            val acceptance = AuthoringAcceptance(realm.views, checks)
-            acceptance.capture().use { captured -> acceptance.evaluate(captured) }
-        }
-    }

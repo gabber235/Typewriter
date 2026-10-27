@@ -1,6 +1,5 @@
 package com.typewritermc.realm.routes
 
-import com.typewritermc.authoring.InitializationRuntime
 import com.typewritermc.protocol.transport.RealmRouteScope
 import com.typewritermc.protocol.transport.generated.editorCatalogFetch
 import com.typewritermc.protocol.transport.generated.editorCatalogWatch
@@ -45,20 +44,4 @@ val EditorCatalogRoutesTest by testSuite {
             }
         }
     }
-}
-
-/** Runs [test] against the catalog routes of a Realm that installed the catalog [generation]. */
-private suspend fun withCatalogRoutes(
-    generation: String,
-    test: suspend (RouteFixture) -> Unit,
-) = RealmCatalogStore().use { catalogs ->
-    catalogs.installTestCatalog(generation)
-    RouteFixture { address, _ ->
-        communicatorRoutes { EditorCatalogRoutes(RetainedRealmEditorCatalogSource(catalogs), UnusedInitialization, address).register(this) }
-    }.use { wire -> test(wire) }
-}
-
-private data object UnusedInitialization : InitializationRuntime {
-    override suspend fun step(operation: skirout.editor.v1.catalog.PreparationOperation): skirout.editor.v1.catalog.PrepareValueResult =
-        error("Not used")
 }

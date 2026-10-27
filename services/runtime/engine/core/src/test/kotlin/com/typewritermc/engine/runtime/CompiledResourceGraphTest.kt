@@ -1,40 +1,25 @@
 package com.typewritermc.engine.runtime
 
-import com.typewritermc.authoring.AppliedNativeArguments
-import com.typewritermc.authoring.CompleteValue
-import com.typewritermc.engine.RESOURCE_GRAPH_FORMAT_REVISION
-import com.typewritermc.engine.Root
-import com.typewritermc.types.FactoryNativeBindingRegistry
-import com.typewritermc.types.NativeBinding
-import com.typewritermc.types.NativeBindingFactory
-import com.typewritermc.types.ResourceId
-import com.typewritermc.types.catalog.CheckedType
-import com.typewritermc.types.catalog.DefaultCheckedCatalog
-import com.typewritermc.types.namedUse
+import com.typewritermc.engine.runtime.testing.GraphRejection
+import com.typewritermc.engine.runtime.testing.OTHER
+import com.typewritermc.engine.runtime.testing.PAGE
+import com.typewritermc.engine.runtime.testing.assemble
+import com.typewritermc.engine.runtime.testing.edge
+import com.typewritermc.engine.runtime.testing.facts
+import com.typewritermc.engine.runtime.testing.resource
 import com.typewritermc.types.qualified
-import com.typewritermc.types.toSkir
 import de.infix.testBalloon.framework.core.testSuite
 import io.kotest.assertions.throwables.shouldThrow
 import io.kotest.matchers.shouldBe
 import io.kotest.matchers.string.shouldStartWith
-import skirout.editor.v1.compiled_content.CompilationContext
-import skirout.editor.v1.compiled_content.CompiledEdge
-import skirout.editor.v1.compiled_content.CompiledEdgeOrigin
-import skirout.editor.v1.compiled_content.CompiledResource
-import skirout.editor.v1.compiled_content.CompiledResourceKey
-import skirout.editor.v1.compiled_content.RuntimeCompilationFacts
-import skirout.editor.v1.type_catalog.CatalogGeneration
 import skirout.editor.v1.type_catalog.DataValue
-import skirout.editor.v1.type_catalog.NamedValue
 import skirout.editor.v1.type_catalog.NativeBindingId
 import skirout.editor.v1.type_catalog.RelationId
-import skirout.editor.v1.type_catalog.RepresentationTemplate
-import skirout.editor.v1.type_catalog.ScalarKind
-import skirout.editor.v1.type_catalog.TypeDefinition
 import skirout.editor.v1.type_catalog.TypeDefinitionId
-import skirout.editor.v1.type_catalog.TypeUse
 
 val CompiledResourceGraphTest by testSuite {
+    val unknownType = TypeDefinitionId.qualified("test", "unknown")
+
     test("a complete publication hydrates every resource through its native binding") {
         val graph = assemble(listOf(facts(resource(PAGE))))
 
@@ -59,7 +44,7 @@ val CompiledResourceGraphTest by testSuite {
         ),
         GraphRejection(
             "a resource type is unknown to the runtime catalog",
-            listOf(facts(resource(PAGE, type = UNKNOWN_TYPE))),
+            listOf(facts(resource(PAGE, type = unknownType))),
             "Compiled resource $PAGE has an unresolved actual type",
         ),
         GraphRejection(
@@ -87,80 +72,4 @@ val CompiledResourceGraphTest by testSuite {
             shouldThrow<RuntimeException> { assemble(facts) }.message.orEmpty() shouldStartWith reason
         }
     }
-}
-
-private data class GraphRejection(
-    val name: String,
-    val facts: List<RuntimeCompilationFacts>,
-    val reason: String,
-)
-
-private val TEXT_TYPE = TypeDefinitionId.qualified("test", "text")
-private val UNKNOWN_TYPE = TypeDefinitionId.qualified("test", "unknown")
-private val PROVIDER = NativeBindingId(value = "test")
-private const val SIGNATURE = "test:v1"
-private val PAGE = key("page")
-private val OTHER = key("other")
-private val catalog =
-    DefaultCheckedCatalog(
-        CatalogGeneration(value = "compiled resource graph test"),
-        listOf(TypeDefinition.partial(id = TEXT_TYPE, representation = RepresentationTemplate.createScalar(kind = ScalarKind.TEXT))),
-    )
-
-private fun assemble(facts: List<RuntimeCompilationFacts>) =
-    CompiledResourceGraph.assemble(facts, emptyList(), catalog, FactoryNativeBindingRegistry(catalog, listOf(TextBindingFactory)))
-
-private fun key(resource: String) = CompiledResourceKey(source = ResourceId(resource).toSkir(), context = CompilationContext.Root)
-
-private fun facts(
-    vararg resources: CompiledResource,
-    edges: List<CompiledEdge> = emptyList(),
-) = RuntimeCompilationFacts(
-    formatRevision = RESOURCE_GRAPH_FORMAT_REVISION,
-    root = PAGE,
-    resources = resources.toList(),
-    edges = edges,
-    types = emptyList(),
-    relations = emptyList(),
-)
-
-private fun resource(
-    key: CompiledResourceKey,
-    type: TypeDefinitionId = TEXT_TYPE,
-    payload: DataValue = DataValue.StringValueWrapper("value"),
-    provider: NativeBindingId = PROVIDER,
-    signature: String = SIGNATURE,
-) = CompiledResource(
-    key = key,
-    actualType = type.namedUse(),
-    bindingProvider = provider,
-    bindingSignature = signature,
-    value = NamedValue(actualType = type.namedUse(), payload = payload),
-)
-
-private fun edge(relation: RelationId) =
-    CompiledEdge(
-        source = PAGE,
-        target = OTHER,
-        origin = CompiledEdgeOrigin.createRelation(relation = relation, firstLocation = null, secondLocation = null),
-    )
-
-/** Binds the text type the way a generated provider binds its declared type. */
-private object TextBindingFactory : NativeBindingFactory {
-    override val definition = TEXT_TYPE
-    override val provider = PROVIDER
-
-    override fun bind(
-        actual: CheckedType,
-        arguments: AppliedNativeArguments,
-    ): NativeBinding<*> =
-        object : NativeBinding<String> {
-            override val provider = PROVIDER
-            override val signature = SIGNATURE
-            override val actualType: TypeUse = actual.use
-
-            override fun encode(value: String): DataValue = DataValue.StringValueWrapper(value)
-
-            override fun decode(value: CompleteValue): String = "hydrated value"
-        }
 }

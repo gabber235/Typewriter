@@ -34,10 +34,10 @@ val DomainTest by testSuite {
             ServiceRole.Custom("valid_name", " 1")
         },
         Rejection("an identity endpoint with an unsupported scheme", "invalid endpoint URI") {
-            configuration(ServiceRole.Host("1"), URI("ftp://example.test"))
+            registrarConfiguration(identityUri = URI("ftp://example.test"))
         },
         Rejection("a binding refresh that reaches the registration lease", "binding refresh must be below the registration lease") {
-            configuration(ServiceRole.Host("1"), bindingSeconds = 150)
+            registrarConfiguration(bindingRefresh = 150.seconds)
         },
     ).forEach { rejection ->
         test("configuration refuses ${rejection.input}") {
@@ -45,24 +45,3 @@ val DomainTest by testSuite {
         }
     }
 }
-
-private fun configuration(
-    role: ServiceRole,
-    identityUri: URI = URI("https://example.test/issue"),
-    bindingSeconds: Int = 120,
-) = RegistrarConfiguration(
-    identityIssueUri = identityUri,
-    sentinelCredentialsUri = URI("https://example.test/sentinel"),
-    oauthTokenUri = URI("https://example.test/token"),
-    oauthClientId = "client",
-    oauthScopes = setOf("openid"),
-    natsServerUri = URI("nats://example.test"),
-    role = role,
-    bindingRefreshInterval = bindingSeconds.seconds,
-)
-
-private class Rejection(
-    val input: String,
-    val message: String,
-    val build: () -> Any,
-)

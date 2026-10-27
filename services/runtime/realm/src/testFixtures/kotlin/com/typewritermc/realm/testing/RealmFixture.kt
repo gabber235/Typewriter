@@ -2,6 +2,9 @@ package com.typewritermc.realm.testing
 
 import com.surrealdb.Surreal
 import com.typewritermc.authoring.EditContext
+import com.typewritermc.operations.OperationInvocation
+import com.typewritermc.operations.OperationOrigin
+import com.typewritermc.operations.PreparationChoices
 import com.typewritermc.realm.authoring.AuthoringLease
 import com.typewritermc.realm.authoring.AuthoringSeed
 import com.typewritermc.realm.authoring.InMemoryAuthoringViewStore
@@ -15,12 +18,14 @@ import com.typewritermc.realm.edit.RealmStructureProvisioning
 import com.typewritermc.realm.edit.SurrealAuthoringStorage
 import com.typewritermc.realm.edit.WorkingViewEditContext
 import com.typewritermc.realm.edit.requiredExpectations
+import com.typewritermc.realm.operation.RuntimeOperationPreparation
 import com.typewritermc.realm.search.SurrealAuthoringSearchRepository
 import com.typewritermc.realm.storage.MigrationResources
 import com.typewritermc.realm.storage.openTestDatabase
 import com.typewritermc.setup.Setup
 import com.typewritermc.testkit.CatalogEncoder
 import com.typewritermc.testkit.setup.SetupApplier
+import com.typewritermc.types.toResourceIds
 import skirout.editor.v1.authoring.CommitPreparedEditResponse
 import skirout.editor.v1.authoring.EditIntent
 import skirout.editor.v1.authoring.PreparedEdit
@@ -32,6 +37,27 @@ import skirout.kernel.v1.resource_id.ResourceId
 
 /** Where a [RealmFixture] saves authoring: in memory, or in an embedded SurrealDB with the Realm schema. */
 enum class RealmStorage { Memory, Surreal }
+
+/** An embedded SurrealDB named [name], with the Realm schema loaded. */
+internal fun realmDatabase(name: String = "realm"): Surreal =
+    Surreal().apply {
+        openTestDatabase(name)
+        MigrationResources().loadRealmSchema().forEach { query(it.script).take(0) }
+    }
+
+/**
+ * The operation preparation over [subjects] that writes into this edit, as an operation's prepare callback receives it.
+ * [origin] is the operation's origin when it has one, and [name] labels the invocation.
+ */
+internal fun WorkingViewEditContext.operationPreparation(
+    subjects: List<ResourceId>,
+    origin: OperationOrigin? = null,
+    name: String = "operation",
+): RuntimeOperationPreparation {
+    val targets = subjects.toResourceIds()
+    val invocation = origin?.let { OperationInvocation(name, targets, it) } ?: OperationInvocation(name, targets)
+    return RuntimeOperationPreparation(invocation, PreparationChoices(), this)
+}
 
 /**
  * A started Realm without the network: the catalog it activates, the root and sections Realm start provisions, and
@@ -118,6 +144,16 @@ class RealmFixture private constructor(
             }
         return commit(edit)
     }
+
+    /**
+     * Runs one operation over [subjects] inside a commit, as an operation's prepare callback does, and commits what it
+     * writes. [origin] is the operation's origin when it has one.
+     */
+    internal suspend fun operate(
+        subjects: List<ResourceId>,
+        origin: OperationOrigin? = null,
+        block: suspend RuntimeOperationPreparation.() -> Unit,
+    ): CommitPreparedEditResponse = commit { operationPreparation(subjects, origin).block() }
 
     /** [intents] as one prepared edit on the current state, with the expectations admission requires. */
     fun prepare(intents: List<EditIntent>): PreparedEdit =
@@ -217,12 +253,6 @@ class RealmFixture private constructor(
             val database = realmDatabase()
             return start(RealmFixture(database, catalog, SurrealAuthoringStorage(database)))
         }
-
-        private fun realmDatabase() =
-            Surreal().apply {
-                openTestDatabase("realm")
-                MigrationResources().loadRealmSchema().forEach { query(it.script).take(0) }
-            }
 
         private suspend fun start(fixture: RealmFixture): RealmFixture =
             fixture.also {

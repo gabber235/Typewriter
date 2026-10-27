@@ -19,8 +19,11 @@ import com.typewritermc.presentation.allNodes
 import com.typewritermc.presentation.createResource
 import com.typewritermc.presentation.presentationTemplate
 import com.typewritermc.presentation.resource
+import com.typewritermc.testkit.actions
+import com.typewritermc.testkit.appearanceReads
+import com.typewritermc.testkit.ready
+import com.typewritermc.testkit.resourcesElement
 import com.typewritermc.types.RESOURCE_OWNERSHIP_FAMILY_ID
-import com.typewritermc.types.catalog.Resolution
 import com.typewritermc.types.fields
 import com.typewritermc.types.use
 import de.infix.testBalloon.framework.core.testSuite
@@ -34,23 +37,18 @@ import skirout.editor.v1.catalog.DeclarationStatus
 import skirout.editor.v1.catalog.PresentationMaterial
 import skirout.editor.v1.catalog.PresentationRole
 import skirout.editor.v1.catalog.RelationDeletePolicy
-import skirout.editor.v1.expression.ExpressionNode
-import skirout.editor.v1.presentation.ChildrenElement
 import skirout.editor.v1.presentation.GraphDirection
 import skirout.editor.v1.presentation.PresentationElement
 import skirout.editor.v1.presentation.PresentationInteractionState
-import skirout.editor.v1.presentation.PresentationNode
 import skirout.editor.v1.presentation.PresentationNumber
 import skirout.editor.v1.presentation.ResourcesElement
 import skirout.editor.v1.presentation.ResourcesLayout
-import skirout.editor.v1.presentation.StackChild
 import skirout.editor.v1.type_catalog.CatalogGeneration
 import skirout.editor.v1.type_catalog.DataValue
 import skirout.editor.v1.type_catalog.ExpressionBindingId
 import skirout.editor.v1.type_catalog.PathSegment
 import skirout.editor.v1.type_catalog.TypeDefinitionId
 import skirout.editor.v1.catalog.PresentationTarget as WirePresentationTarget
-import skirout.editor.v1.presentation.PresentationColor as WireColor
 
 val CorePlacesTest by testSuite {
     val assembly = frameworkContributions().assemble(CatalogAssemblyContext(CatalogGeneration(value = "core places")))
@@ -66,7 +64,7 @@ val CorePlacesTest by testSuite {
 
     test("the realm navigator lists the sections of the root without letting anyone unlink them") {
         val layout = assembly.material(RealmRootDefinition.id, PresentationRole.NAVIGATOR).layout
-        val node = layout.nodes().single { it.element is PresentationElement.ResourcesWrapper }
+        val node = layout.allNodes().single { it.element is PresentationElement.ResourcesWrapper }
         node.resourcesElement().layout shouldBe ResourcesLayout.LIST
         node.properties.readOnly shouldBe true
     }
@@ -79,7 +77,7 @@ val CorePlacesTest by testSuite {
         assembly
             .material(BookDefinition.id, PresentationRole.ITEM)
             .layout
-            .paintNodes()
+            .allNodes()
             .flatMap { it.appearanceReads() }
             .toSet() shouldBe
             setOf("label", "accent", "icon")
@@ -131,7 +129,7 @@ val CorePlacesTest by testSuite {
 
     test("a book stands in the library as a stacked card built from its appearance") {
         val material = assembly.material(BookDefinition.id, PresentationRole.ITEM)
-        val nodes = material.layout.paintNodes()
+        val nodes = material.layout.allNodes()
         val transforms = nodes.mapNotNull { (it.element as? PresentationElement.TransformWrapper)?.value }
 
         nodes.flatMap { it.appearanceReads() }.toSet() shouldBe setOf("label", "accent", "icon")
@@ -238,133 +236,3 @@ val CorePlacesTest by testSuite {
         }.message shouldBe "Invalid [4,[5,[3]]] expression: incompatible_expression_result_type."
     }
 }
-
-/** Builds a Book workspace whose only content is a button running the action [action] creates. */
-private fun CatalogAssembly.bookBuild(): (() -> com.typewritermc.presentation.PresentationAction) -> Unit {
-    val checked = (checked.resolve(BookDefinition.use.use) as Resolution.Ready).value
-    val ownership =
-        relations
-            .filter { relation -> relation.families.any { it.value == RESOURCE_OWNERSHIP_FAMILY_ID } }
-            .mapTo(hashSetOf()) { it.first.id }
-    val binding = PresentationBuildBinding(checked.presentationTemplate(), PresentationRole.WORKSPACE, ownershipEndpoints = ownership)
-    return { action -> DefaultPresentationRuntime().build(binding) { scope -> scope.button(literal("Create"), action()) } }
-}
-
-/** Builds a Book workspace whose content [content] declares through the generated Book presentation scope. */
-private fun CatalogAssembly.bookPresentation(): (BookPresentationScope.() -> Unit) -> Unit {
-    val checked = (checked.resolve(BookDefinition.use.use) as Resolution.Ready).value
-    val binding = PresentationBuildBinding(checked.presentationTemplate(), PresentationRole.WORKSPACE)
-    return { content -> DefaultPresentationRuntime().build(binding) { scope -> BookPresentationScopeImpl(scope).content() } }
-}
-
-private fun CatalogAssembly.material(
-    type: TypeDefinitionId,
-    role: PresentationRole,
-): PresentationMaterial {
-    val wireType = type
-    return editorCatalog.presentationMaterials.single {
-        it.role == role && (it.target as? WirePresentationTarget.NamedWrapper)?.value?.definition == wireType
-    }
-}
-
-private fun CatalogAssembly.resources(
-    type: TypeDefinitionId,
-    role: PresentationRole,
-): ResourcesElement = material(type, role).layout.resourcesElement()
-
-private fun PresentationNode.resourcesElement(): ResourcesElement =
-    nodes().firstNotNullOf { (it.element as? PresentationElement.ResourcesWrapper)?.value }
-
-private fun PresentationNode.actions(): List<EditorAction> =
-    nodes().mapNotNull { (it.element as? PresentationElement.ButtonWrapper)?.value?.action }
-
-/** This node and every node beneath it, depth first. */
-private fun PresentationNode.nodes(): List<PresentationNode> =
-    listOf(this) +
-        when (val element = element) {
-            is PresentationElement.ChildrenWrapper -> element.value.childNodes()
-            else -> emptyList()
-        }.flatMap { it.nodes() }
-
-private fun skirout.editor.v1.presentation.ChildrenElement.childNodes(): List<PresentationNode> =
-    when (this) {
-        is skirout.editor.v1.presentation.ChildrenElement.ColumnWrapper -> value.children.map { it.node() }
-        is skirout.editor.v1.presentation.ChildrenElement.RowWrapper -> value.children.map { it.node() }
-        else -> emptyList()
-    }
-
-private fun skirout.editor.v1.presentation.AxisChild.node(): PresentationNode =
-    when (this) {
-        is skirout.editor.v1.presentation.AxisChild.FixedWrapper -> value
-        is skirout.editor.v1.presentation.AxisChild.FlexibleWrapper -> value.child
-        else -> error("Unknown axis child")
-    }
-
-/** Every node of a paint layout, through stacks, sizes, transforms, containers and conditionals. */
-private fun PresentationNode.paintNodes(): List<PresentationNode> =
-    listOf(this) +
-        when (val element = element) {
-            is PresentationElement.ChildrenWrapper -> {
-                when (val children = element.value) {
-                    is skirout.editor.v1.presentation.ChildrenElement.StackWrapper -> {
-                        children.value.children.map {
-                            when (it) {
-                                is StackChild.FlowWrapper -> it.value
-                                is StackChild.PositionedWrapper -> it.value.child
-                                else -> error("Unknown stack child")
-                            }
-                        }
-                    }
-
-                    else -> {
-                        children.childNodes()
-                    }
-                }
-            }
-
-            is PresentationElement.SizeWrapper -> {
-                listOf(element.value.child)
-            }
-
-            is PresentationElement.TransformWrapper -> {
-                listOf(element.value.child)
-            }
-
-            is PresentationElement.ContainerWrapper -> {
-                listOf(element.value.child)
-            }
-
-            is PresentationElement.PaddingWrapper -> {
-                listOf(element.value.child)
-            }
-
-            is PresentationElement.AlignWrapper -> {
-                listOf(element.value.child)
-            }
-
-            is PresentationElement.ConditionalWrapper -> {
-                listOfNotNull(element.value.whenTrue, element.value.whenFalse)
-            }
-
-            else -> {
-                emptyList()
-            }
-        }.flatMap { it.paintNodes() }
-
-/** The fields of the presented resource's appearance this node's text, icon and colors read. */
-private fun PresentationNode.appearanceReads(): List<String> {
-    val expressions =
-        when (val element = element) {
-            is PresentationElement.TextWrapper -> listOf(element.value.value)
-            is PresentationElement.IconWrapper -> listOf(element.value.name)
-            is PresentationElement.ContainerWrapper -> listOfNotNull((element.value.backgroundColor as? WireColor.ValueWrapper)?.value)
-            else -> emptyList()
-        }
-    return expressions.mapNotNull { expression ->
-        val input = (expression as? ExpressionNode.InputWrapper)?.value ?: return@mapNotNull null
-        if (input.binding.value != "presentation.subject.appearance") return@mapNotNull null
-        (input.path.segments.single() as PathSegment.FieldWrapper).value.name
-    }
-}
-
-private fun ExpressionNode.literal(): Double = ((this as ExpressionNode.LiteralWrapper).value as DataValue.FloatWrapper).value

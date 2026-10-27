@@ -2,11 +2,13 @@ package com.typewritermc.services.libs.communicator.testing
 
 import com.typewritermc.services.libs.communicator.address.AddressPattern
 import com.typewritermc.services.libs.communicator.address.MessageAddress
+import com.typewritermc.services.libs.communicator.contract.UnaryContract
 import com.typewritermc.services.libs.communicator.transfer.TransportLimits
 import com.typewritermc.services.libs.communicator.transport.InboundMessage
 import com.typewritermc.services.libs.communicator.transport.MessageTransport
 import com.typewritermc.services.libs.communicator.transport.MessagingSystem
 import com.typewritermc.services.libs.communicator.transport.OutboundMessage
+import com.typewritermc.services.libs.communicator.transport.Payload
 import com.typewritermc.services.libs.communicator.transport.ReplyChannel
 import com.typewritermc.services.libs.communicator.transport.SubscriptionOptions
 import com.typewritermc.services.libs.communicator.transport.TransportDelivery
@@ -16,8 +18,11 @@ import com.typewritermc.services.libs.communicator.transport.TransportSubscripti
 import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.receiveAsFlow
+import kotlinx.coroutines.withTimeout
+import kotlinx.coroutines.yield
 import java.util.concurrent.atomic.AtomicLong
 import kotlin.time.Duration
+import kotlin.time.Duration.Companion.seconds
 
 /**
  * Deterministic in memory transport for communicator and downstream tests.
@@ -46,6 +51,12 @@ class FakeMessageTransport(
     /** Immutable ordered snapshot of recorded actions. */
     val actions: List<Action> get() = synchronized(lock) { recorded.toList() }
 
+    /** The messages published so far, in order. */
+    val publications: List<OutboundMessage> get() = actions.filterIsInstance<Action.Publish>().map { it.message }
+
+    /** The requests sent so far, in order. */
+    val requests: List<OutboundMessage> get() = actions.filterIsInstance<Action.Request>().map { it.message }
+
     /** Number of subscriptions that have not been closed. */
     val activeSubscriptionCount: Int get() = synchronized(lock) { subscriptions.size }
 
@@ -73,6 +84,12 @@ class FakeMessageTransport(
             responders.addLast(responder)
         }
 
+    /** Answers the next request with [response], encoded as [contract] replies. */
+    fun <Response : Any> answer(
+        contract: UnaryContract<*, *, Response>,
+        response: Response,
+    ) = respondWith { request, _ -> TransportResult.Success(InboundMessage(request.address, contract.responseCodec.encode(response))) }
+
     /** Configures the next request to return [error]. */
     fun failNextRequest(error: TransportError) = synchronized(lock) { requestFailures.addLast(error) }
 
@@ -92,6 +109,29 @@ class FakeMessageTransport(
                 subscriptions.filter { delivery !is TransportDelivery.Message || it.matches(delivery.message) }
             }
         targets.forEach { it.deliver(delivery) }
+    }
+
+    /**
+     * Delivers [payload] to [to] as a request that expects its reply on [replyTo], as a remote caller does, and returns
+     * the payload a route publishes to [replyTo]; fails when no reply arrives within [timeout].
+     */
+    suspend fun exchange(
+        to: MessageAddress,
+        payload: ByteArray,
+        replyTo: MessageAddress,
+        timeout: Duration = 2.seconds,
+    ): Payload {
+        deliver(TransportDelivery.Message(InboundMessage(address = to, payload = payload, replyTo = replyTo)))
+        return withTimeout(timeout) {
+            while (true) {
+                actions
+                    .filterIsInstance<Action.Publish>()
+                    .lastOrNull { it.message.address == replyTo }
+                    ?.let { return@withTimeout it.message.payload }
+                yield()
+            }
+            error("Reply wait ended unexpectedly")
+        }
     }
 
     override suspend fun openReplyChannel(): TransportResult<ReplyChannel> {

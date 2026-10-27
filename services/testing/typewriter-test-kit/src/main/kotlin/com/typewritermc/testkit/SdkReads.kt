@@ -8,10 +8,14 @@ import com.typewritermc.imprint.ContributionSourceId
 import com.typewritermc.imprint.ProducerId
 import com.typewritermc.presentation.allNodes
 import com.typewritermc.types.catalog.Resolution
+import com.typewritermc.types.requirePortable
+import skirout.editor.v1.catalog.PreparedContent
+import skirout.editor.v1.catalog.PreparedValue
 import skirout.editor.v1.presentation.AxisChild
 import skirout.editor.v1.presentation.ChildrenElement
 import skirout.editor.v1.presentation.PresentationElement
 import skirout.editor.v1.presentation.PresentationNode
+import skirout.editor.v1.type_catalog.DataValue
 import skirout.editor.v1.type_catalog.DeclarationOwner
 
 /** The resolved value; fails with the catalog's diagnostics when the resolution is invalid. */
@@ -59,3 +63,9 @@ fun PresentationNode?.singleFixed(): PresentationNode =
 
 /** Every element of type [E] anywhere in this layout, parents before children. */
 inline fun <reified E : PresentationElement> PresentationNode.elementsOf(): List<E> = allNodes().mapNotNull { it.element as? E }
+
+/** The portable wire bytes of this value, as the Skir serializer writes them; fails when the value is not portable. */
+fun DataValue.bytes(): ByteArray = DataValue.serializer.toBytes(requirePortable()).toByteArray()
+
+/** The record content of this prepared value; fails when the value is not a record. */
+val PreparedValue.record get() = (content as PreparedContent.RecordWrapper).value

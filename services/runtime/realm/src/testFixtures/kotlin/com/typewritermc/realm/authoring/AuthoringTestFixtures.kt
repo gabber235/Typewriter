@@ -35,6 +35,9 @@ import com.typewritermc.types.qualified
 import com.typewritermc.types.rows
 import com.typewritermc.types.template
 import com.typewritermc.types.use
+import skirout.editor.v1.authoring.EditIntent
+import skirout.editor.v1.authoring.PreparedEdit
+import skirout.editor.v1.authoring_facts.EditExpectation
 import skirout.editor.v1.catalog.RelationContract
 import skirout.editor.v1.type_catalog.AuthoringRecord
 import skirout.editor.v1.type_catalog.CatalogGeneration
@@ -223,6 +226,42 @@ internal fun location(
     resource: ResourceId,
     field: String,
 ): ValueLocation = ValueLocation.of(resource, ValuePath.root.field(field))
+
+/** The location of the item [item] in the list or set field [field] of [resource]. */
+internal fun listItemAt(
+    resource: ResourceId,
+    field: String,
+    item: String,
+): ValueLocation =
+    ValueLocation.of(
+        resource,
+        ValuePath(segments = listOf(PathSegment.createField(name = field), PathSegment.createItem(id = ItemId(value = item)))),
+    )
+
+/**
+ * Renames the resource [id], saved as [initial], to [next]. The edit is guarded as an editor guards it: the resource
+ * exists with [initial]'s configuration, and its `name` reads [expected] when the edit is committed.
+ */
+internal fun renameEdit(
+    catalog: CatalogGeneration,
+    id: ResourceId,
+    initial: AuthoringRecord,
+    expected: String = "Quest",
+    next: String = "Story",
+): PreparedEdit {
+    val title = location(id, "name")
+    return PreparedEdit(
+        catalog = catalog,
+        expectations =
+            listOf(
+                EditExpectation.createResourceExists(id = id, expected = true),
+                EditExpectation.createConfiguration(at = ValueLocation.of(id), expected = initial.configuration),
+                EditExpectation.createConfiguration(at = title, expected = null),
+                EditExpectation.createValue(at = title, expected = DataValue.StringValueWrapper(expected)),
+            ),
+        intents = listOf(EditIntent.createSetValue(at = title, value = DataValue.StringValueWrapper(next))),
+    )
+}
 
 internal fun <T> com.typewritermc.authoring.Availability<T>.available(): T =
     (this as com.typewritermc.authoring.Availability.Available).value

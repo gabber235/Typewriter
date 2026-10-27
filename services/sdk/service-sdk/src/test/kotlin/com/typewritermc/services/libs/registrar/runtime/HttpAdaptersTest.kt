@@ -1,10 +1,6 @@
 package com.typewritermc.services.libs.registrar.runtime
 
 import com.typewritermc.services.libs.http.core.HttpHeaders
-import com.typewritermc.services.libs.http.core.HttpResponse
-import com.typewritermc.services.libs.http.core.HttpResult
-import com.typewritermc.services.libs.http.core.ServiceHttpClient
-import com.typewritermc.services.libs.http.testing.FakeHttpTransport
 import com.typewritermc.services.libs.registrar.AccessTokenFailureReason
 import com.typewritermc.services.libs.registrar.IdentityCredentials
 import com.typewritermc.services.libs.registrar.IdentityIssueError
@@ -15,7 +11,6 @@ import com.typewritermc.services.libs.registrar.SentinelFailureReason
 import com.typewritermc.services.libs.registrar.ServiceId
 import com.typewritermc.services.libs.registrar.ServiceIdentity
 import com.typewritermc.services.libs.registrar.ServiceRole
-import com.typewritermc.services.libs.telemetry.testing.TelemetryTestHarness
 import de.infix.testBalloon.framework.core.testSuite
 import io.kotest.matchers.shouldBe
 import io.kotest.matchers.types.shouldBeInstanceOf
@@ -25,44 +20,13 @@ import skirout.service.v1.identity.IssueServiceIdentityResponse
 import java.net.URI
 import skirout.service.v1.service.ServiceRole as SkirRole
 
-private val httpCredentials =
-    IdentityCredentials(
-        ServiceIdentity(ServiceId("service-id"), "Service Name", "service-user", ServiceRole.Custom("realm", "1.0")),
-        RedactedSecret.AppPassword("app-password"),
-    )
-
-private val mediaHeaders =
-    HttpHeaders.of(
-        "Content-Type" to "application/octet-stream",
-        "X-Typewriter-Format" to "skir-binary",
-    )
-
-private fun httpResponse(
-    status: Int,
-    body: ByteArray,
-    headers: HttpHeaders = mediaHeaders,
-) = HttpResult.Success(HttpResponse(status, headers, body))
-
-private data class HttpFixture(
-    val transport: FakeHttpTransport,
-    val harness: TelemetryTestHarness,
-    val client: ServiceHttpClient,
-) : AutoCloseable {
-    override fun close() = harness.close()
-}
-
-private fun httpFixture(vararg outcomes: HttpResult): HttpFixture {
-    val transport =
-        FakeHttpTransport(
-            outcomes.map { result ->
-                suspend { _: com.typewritermc.services.libs.http.core.HttpRequest -> result }
-            },
-        )
-    val harness = TelemetryTestHarness.create()
-    return HttpFixture(transport, harness, ServiceHttpClient(transport, harness.telemetry, harness.openTelemetry.propagators))
-}
-
 val HttpAdaptersTest by testSuite {
+    val httpCredentials =
+        IdentityCredentials(
+            ServiceIdentity(ServiceId("service-id"), "Service Name", "service-user", ServiceRole.Custom("realm", "1.0")),
+            RedactedSecret.AppPassword("app-password"),
+        )
+
     test("identity issuer sends canonical role headers and maps success") {
         val response =
             IssueServiceIdentityResponse.createSuccess(

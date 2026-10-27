@@ -7,6 +7,7 @@ import com.typewritermc.library.book
 import com.typewritermc.library.library
 import com.typewritermc.library.tag
 import com.typewritermc.library.taxonomy
+import com.typewritermc.testkit.rejectionOf
 import com.typewritermc.types.Ref
 import com.typewritermc.types.Resource
 import de.infix.testBalloon.framework.core.testSuite
@@ -151,32 +152,6 @@ val SetupTest by testSuite {
         }.message shouldBe "title was not assigned."
     }
 }
-
-/** The ids that [value] holds after construction turned its handles into refs, read from a book's tag field. */
-private fun Any.toRefsOf(): List<String> {
-    val part = setup("a") { library { books.book("x") { } } }.parts.single()
-    val constructed = part.copy(type = Holder::class, ownerField = null, assigned = mapOf("value" to this)).construct() as Holder
-    return when (val held = constructed.value) {
-        is List<*> -> held.map { (it as Ref<*, *>).target.value }
-        is Map<*, *> -> held.values.map { (it as Ref<*, *>).target.value }
-        else -> error("Unexpected $held")
-    }
-}
-
-/** A resource that holds any value, to observe what construction does to a handle nested in a collection. */
-internal data class Holder(
-    val value: Any,
-) : Resource
-
-private fun tagPart(placement: GraphPlacement?): SetupPart =
-    setup("a") { taxonomy { tags.tag("x") } }
-        .parts
-        .single()
-        .copy(placement = placement)
-
-private fun constructionFailure(part: SetupPart): String? = shouldThrow<IllegalStateException> { part.construct() }.message
-
-private fun rejectionOf(block: () -> Unit): String? = shouldThrow<IllegalArgumentException> { block() }.message
 
 private const val STABLE_ID_SEED = 5_123_456L
 private const val PINNED_BOOK_ID = "e362597a-988d-596b-8663-63ab6877e66b"

@@ -93,16 +93,3 @@ val RealmCapabilityRuntimeTest by testSuite {
             "Realm command capability is unavailable: test.lookup"
     }
 }
-
-private class ComputationProvider(
-    id: CapabilityId,
-) : RealmComputationCapabilityProvider {
-    override val descriptor =
-        ComputationCapabilityDefinition(capabilityId = id, requestType = ScalarKind.TEXT.use, resultType = ScalarKind.TEXT.use)
-
-    override suspend fun invoke(
-        context: RealmComputationContext,
-        runtime: RealmCapabilityRuntime,
-        payload: DataValue,
-    ): DataValue = payload
-}

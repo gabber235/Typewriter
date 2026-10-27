@@ -17,17 +17,13 @@ import skirout.editor.v1.type_catalog.DataValue
 import skirout.kernel.v1.resource_id.ResourceId
 import kotlin.time.Duration.Companion.minutes
 
-private val first = ResourceId(value = "first")
-private val second = ResourceId(value = "second")
-private val target = ResourceId(value = "target")
-
-/** Points the `first` field of [resource] at [target]. */
-private fun pointFirst(
-    resource: ResourceId,
-    target: ResourceId,
-) = EditIntent.createSetValue(at = at(resource, "first"), value = link(PAIR_FIRST, target))
-
 val RelationRulesTest by testSuite {
+    val first = ResourceId(value = "first")
+
+    val second = ResourceId(value = "second")
+
+    val target = ResourceId(value = "target")
+
     test("a second owner of an owned resource is refused at the owned resource") {
         val seed = mapOf(first to node(first = link(PAIR_FIRST, target)), target to node())
         RealmFixture.of(nodeCatalog(pairRelation(families = OWNERSHIP_FAMILY)), seed).use { realm ->
@@ -43,7 +39,7 @@ val RelationRulesTest by testSuite {
         val seed = mapOf(first to node(first = link(PAIR_FIRST, second)), second to node())
         RealmFixture.of(nodeCatalog(pairRelation(families = OWNERSHIP_FAMILY + ACYCLIC_FAMILY)), seed).use { realm ->
             realm
-                .expectRefused(pointFirst(second, first))
+                .expectRefused(EditIntent.createSetValue(at = at(second, "first"), value = link(PAIR_FIRST, first)))
                 .filter { it.code == "relation_cycle" }
                 .map { it.location.resource }
                 .toSet() shouldBe setOf(first, second)
@@ -67,14 +63,17 @@ val RelationRulesTest by testSuite {
                 ).shouldBeCommitted()
             realm.resources.getValue(chain.first()).text("label") shouldBe "head"
 
-            realm.expectRefused(pointFirst(chain.last(), chain.first())).map { it.code }.toSet() shouldBe setOf("relation_cycle")
+            realm
+                .expectRefused(EditIntent.createSetValue(at = at(chain.last(), "first"), value = link(PAIR_FIRST, chain.first())))
+                .map { it.code }
+                .toSet() shouldBe setOf("relation_cycle")
         }
     }
 
     test("a relation outside the acyclic family may form a cycle") {
         val seed = mapOf(first to node(first = link(PAIR_FIRST, second)), second to node())
         RealmFixture.of(nodeCatalog(pairRelation()), seed).use { realm ->
-            realm.commit(pointFirst(second, first)).shouldBeCommitted()
+            realm.commit(EditIntent.createSetValue(at = at(second, "first"), value = link(PAIR_FIRST, first))).shouldBeCommitted()
 
             realm.resources.getValue(second).link("first") shouldBe first
         }

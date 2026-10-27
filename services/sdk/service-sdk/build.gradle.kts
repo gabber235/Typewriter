@@ -2,6 +2,7 @@ plugins {
     id("com.typewritermc.basic-conventions")
     alias(libs.plugins.kotlin.serialize)
     `java-library`
+    `java-test-fixtures`
 }
 
 dependencies {
@@ -17,8 +18,8 @@ dependencies {
     implementation(libs.kotlin.serialize.cbor)
     implementation(libs.kotlin.serialize.json)
     implementation(libs.mordant)
-    testImplementation(testFixtures(project(":messaging")))
-    testImplementation(testFixtures(project(":telemetry")))
-    testImplementation(testFixtures(project(":internal-utils")))
-    testImplementation(libs.kotlin.coroutines.test)
+    testFixturesApi(testFixtures(project(":messaging")))
+    testFixturesApi(testFixtures(project(":telemetry")))
+    testFixturesApi(testFixtures(project(":internal-utils")))
+    testFixturesApi(libs.kotlin.coroutines.test)
 }

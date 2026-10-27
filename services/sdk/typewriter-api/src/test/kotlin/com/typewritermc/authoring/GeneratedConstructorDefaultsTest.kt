@@ -27,14 +27,8 @@ val GeneratedConstructorDefaultsTest by testSuite {
     val name = FieldOwner(definition = owner, name = "name")
     val count = FieldOwner(definition = owner, name = "count")
 
-    fun field(
-        field: FieldOwner,
-        sourceName: String = field.name,
-        hasDefault: Boolean,
-    ) = GeneratedConstructorField<Sampled>(field, sourceName, hasDefault, { ScalarKind.TEXT.use }, { null })
-
-    val nameField = field(name, hasDefault = false)
-    val countField = field(count, hasDefault = true)
+    val nameField = GeneratedConstructorField<Sampled>(name, name.name, false, { ScalarKind.TEXT.use }, { null })
+    val countField = GeneratedConstructorField<Sampled>(count, count.name, true, { ScalarKind.TEXT.use }, { null })
 
     test("metadata that matches the primary constructor in order is accepted and names its defaulted fields") {
         Sampled::class.constructorDefaults(listOf(nameField, countField)).defaultedFields shouldBe setOf(count)
@@ -48,7 +42,16 @@ val GeneratedConstructorDefaultsTest by testSuite {
             ),
         "a field no constructor parameter matches" to
             (
-                { Sampled::class.constructorDefaults(listOf(nameField, field(count, sourceName = "total", hasDefault = true))) } to
+                {
+                    Sampled::class.constructorDefaults(
+                        listOf(
+                            nameField,
+                            GeneratedConstructorField<Sampled>(count, "total", true, {
+                                ScalarKind.TEXT.use
+                            }, { null }),
+                        ),
+                    )
+                } to
                     "${Sampled::class.qualifiedName}: No primary constructor parameter matches $count (total)."
             ),
         "the same field twice" to
@@ -68,7 +71,16 @@ val GeneratedConstructorDefaultsTest by testSuite {
             ),
         "a default flag that disagrees with the constructor" to
             (
-                { Sampled::class.constructorDefaults(listOf(field(name, hasDefault = true), countField)) } to
+                {
+                    Sampled::class.constructorDefaults(
+                        listOf(
+                            GeneratedConstructorField<Sampled>(name, name.name, true, {
+                                ScalarKind.TEXT.use
+                            }, { null }),
+                            countField,
+                        ),
+                    )
+                } to
                     "${Sampled::class.qualifiedName}: Generated constructor metadata disagrees for $name (name)."
             ),
     ).forEach { (case, rejection) ->
@@ -110,23 +122,4 @@ val GeneratedConstructorDefaultsTest by testSuite {
                 ),
             )
     }
-}
-
-private class Sampled(
-    val name: String,
-    val count: String = "three",
-)
-
-private interface SampledShape
-
-/** A binding standing for a portable type argument the Kotlin type cannot see into. */
-private object OpaqueBinding : NativeBinding<Any?> {
-    override val provider = NativeBindingId(value = "test.opaque")
-    override val signature = "opaque"
-    override val actualType: TypeUse = ScalarKind.TEXT.use
-    override val opaque = true
-
-    override fun encode(value: Any?): DataValue = error("Opaque arguments are not encoded here.")
-
-    override fun decode(value: CompleteValue): Any? = error("Opaque arguments are not decoded here.")
 }

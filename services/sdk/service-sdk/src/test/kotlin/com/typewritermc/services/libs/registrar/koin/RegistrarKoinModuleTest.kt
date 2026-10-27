@@ -39,7 +39,15 @@ val RegistrarKoinModuleTest by testSuite {
                         single<CredentialStorage> { FakeCredentialStorage() }
                     },
                     registrarModule(
-                        configuration(),
+                        RegistrarConfiguration(
+                            identityIssueUri = URI("https://api.example.test/service/identity/issue"),
+                            sentinelCredentialsUri = URI("https://api.example.test/auth/sentinel"),
+                            oauthTokenUri = URI("https://auth.example.test/application/o/token/"),
+                            oauthClientId = "typewriter-services",
+                            oauthScopes = setOf("openid"),
+                            natsServerUri = URI("nats://nats.example.test:4222"),
+                            role = ServiceRole.Custom("realm", "1.0.0"),
+                        ),
                         scope,
                         RetryPolicy.fixed(1.seconds),
                         CoroutineDelayScheduler,
@@ -61,14 +69,3 @@ val RegistrarKoinModuleTest by testSuite {
         shouldThrow<IllegalStateException> { transport.execute(request) }
     }
 }
-
-private fun configuration() =
-    RegistrarConfiguration(
-        identityIssueUri = URI("https://api.example.test/service/identity/issue"),
-        sentinelCredentialsUri = URI("https://api.example.test/auth/sentinel"),
-        oauthTokenUri = URI("https://auth.example.test/application/o/token/"),
-        oauthClientId = "typewriter-services",
-        oauthScopes = setOf("openid"),
-        natsServerUri = URI("nats://nats.example.test:4222"),
-        role = ServiceRole.Custom("realm", "1.0.0"),
-    )

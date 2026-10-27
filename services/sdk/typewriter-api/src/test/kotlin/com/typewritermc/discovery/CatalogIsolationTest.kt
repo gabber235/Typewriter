@@ -1,11 +1,9 @@
 package com.typewritermc.discovery
 
 import com.typewritermc.configuration.ConfigurationProvider
-import com.typewritermc.imprint.ArtifactId
-import com.typewritermc.imprint.ContributionName
-import com.typewritermc.imprint.ContributionSourceId
-import com.typewritermc.imprint.ProducerId
 import com.typewritermc.presentation.of
+import com.typewritermc.testkit.origin
+import com.typewritermc.testkit.recordType
 import com.typewritermc.types.catalog.DefaultCheckedCatalog
 import com.typewritermc.types.catalog.of
 import com.typewritermc.types.namedTemplate
@@ -20,7 +18,6 @@ import skirout.editor.v1.catalog.PresentationDescriptor
 import skirout.editor.v1.catalog.PresentationRole
 import skirout.editor.v1.diagnostic.DeclarationDiagnostic
 import skirout.editor.v1.type_catalog.CatalogGeneration
-import skirout.editor.v1.type_catalog.DeclarationOwner
 import skirout.editor.v1.type_catalog.FieldDeclaration
 import skirout.editor.v1.type_catalog.FieldOwner
 import skirout.editor.v1.type_catalog.ParameterKey
@@ -32,12 +29,19 @@ import skirout.editor.v1.type_catalog.TypeDefinitionId
 import skirout.editor.v1.type_catalog.TypeParameter
 
 val CatalogIsolationTest by testSuite {
+    val generation = CatalogGeneration(value = "catalog isolation")
+
+    val origin = origin("isolation", artifact = "test:isolation")
+
     test("unknown field dependency makes its declaration unavailable") {
-        val broken = id("Broken")
+        val broken = TypeDefinitionId.qualified("isolation", "Broken")
         val definition =
-            record(
+            recordType(
                 broken,
-                FieldDeclaration.partial(owner = FieldOwner(definition = broken, name = "payload"), type = id("Missing").template()),
+                FieldDeclaration.partial(
+                    owner = FieldOwner(definition = broken, name = "payload"),
+                    type = TypeDefinitionId.qualified("isolation", "Missing").template(),
+                ),
             )
         val assembly =
             CatalogContributions(
@@ -51,14 +55,14 @@ val CatalogIsolationTest by testSuite {
     }
 
     test("quarantine follows parameter bounds and nested parent arguments") {
-        val bound = record(id("Bound"))
+        val bound = recordType(TypeDefinitionId.qualified("isolation", "Bound"))
         val generic =
             TypeDefinition.partial(
-                id = id("Generic"),
+                id = TypeDefinitionId.qualified("isolation", "Generic"),
                 parameters =
                     listOf(
                         TypeParameter(
-                            key = ParameterKey(owner = id("Generic"), index = 0),
+                            key = ParameterKey(owner = TypeDefinitionId.qualified("isolation", "Generic"), index = 0),
                             name = "T",
                             bounds = listOf(bound.id.template()),
                         ),
@@ -67,12 +71,21 @@ val CatalogIsolationTest by testSuite {
             )
         val parent =
             TypeDefinition.partial(
-                id = id("Parent"),
-                parameters = listOf(TypeParameter.partial(key = ParameterKey(owner = id("Parent"), index = 0), name = "T")),
+                id = TypeDefinitionId.qualified("isolation", "Parent"),
+                parameters =
+                    listOf(
+                        TypeParameter.partial(
+                            key = ParameterKey(owner = TypeDefinitionId.qualified("isolation", "Parent"), index = 0),
+                            name = "T",
+                        ),
+                    ),
                 representation = RepresentationTemplate.createRecord(fields = emptyList(), abstract_ = true),
             )
-        val child = record(id("Child")).copy(parents = listOf(parent.id.namedTemplate(listOf(bound.id.template()))))
-        val healthy = record(id("Healthy"))
+        val child =
+            recordType(
+                TypeDefinitionId.qualified("isolation", "Child"),
+            ).copy(parents = listOf(parent.id.namedTemplate(listOf(bound.id.template()))))
+        val healthy = recordType(TypeDefinitionId.qualified("isolation", "Healthy"))
         val catalog =
             DefaultCheckedCatalog(
                 generation,
@@ -85,8 +98,8 @@ val CatalogIsolationTest by testSuite {
     }
 
     test("configuration quarantine retains its exact original callback cause") {
-        val broken = record(id("Callback"))
-        val healthy = record(id("Unrelated"))
+        val broken = recordType(TypeDefinitionId.qualified("isolation", "Callback"))
+        val healthy = recordType(TypeDefinitionId.qualified("isolation", "Unrelated"))
         val cause = IllegalArgumentException("fixture explanation")
         val assembly =
             CatalogContributions(
@@ -131,7 +144,7 @@ val CatalogIsolationTest by testSuite {
     }
 
     test("callback cancellation propagates unchanged") {
-        val definition = record(id("Cancelled"))
+        val definition = recordType(TypeDefinitionId.qualified("isolation", "Cancelled"))
         val cancellation = CancellationException("fixture cancellation")
         val caught =
             shouldThrow<CancellationException> {
@@ -143,35 +156,3 @@ val CatalogIsolationTest by testSuite {
         (caught === cancellation) shouldBe true
     }
 }
-
-private val generation = CatalogGeneration(value = "catalog isolation")
-
-private fun id(name: String) = TypeDefinitionId.qualified("isolation", name)
-
-private fun record(
-    id: TypeDefinitionId,
-    vararg fields: FieldDeclaration,
-) = TypeDefinition.partial(id = id, representation = RepresentationTemplate.createRecord(fields = fields.toList(), abstract_ = false))
-
-private val origin =
-    ProviderOrigin(
-        DeclarationOwner(
-            source =
-                contributionKey(
-                    ContributionSourceId("test"),
-                    "main",
-                    ProducerId("sdk"),
-                    ContributionName("isolation"),
-                ),
-            localIdentity = "isolation",
-        ),
-        ArtifactId("test:isolation"),
-        "main",
-    )
-
-private fun failingProvider(cause: Exception) =
-    object : ConfigurationProvider {
-        override fun collect(
-            scope: com.typewritermc.configuration.ConfigurationCollectionScope,
-        ): com.typewritermc.configuration.CollectedConfiguration = throw cause
-    }

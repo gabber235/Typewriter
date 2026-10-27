@@ -26,7 +26,7 @@ import kotlinx.coroutines.yield
 import kotlin.time.Duration.Companion.seconds
 
 /** The session reply inbox prefix of the panel member whose requests the fixture delivers. */
-private const val PANEL_REPLY_INBOX = "_INBOX.member.0123456789abcdef0123456789abcdef"
+internal const val PANEL_REPLY_INBOX = "_INBOX.member.0123456789abcdef0123456789abcdef"
 
 internal class RouteFixture(
     routes: (RealmRouteScope, Communicator) -> CommunicatorRoutes,
@@ -88,20 +88,7 @@ internal class RouteFixture(
     private suspend fun exchange(
         to: MessageAddress,
         payload: ByteArray,
-    ): Payload {
-        val reply = MessageAddress.of("$PANEL_REPLY_INBOX.${replySequence++}")
-        transport.deliver(TransportDelivery.Message(InboundMessage(address = to, payload = payload, replyTo = reply)))
-        return withTimeout(2.seconds) {
-            while (true) {
-                transport.actions
-                    .filterIsInstance<FakeMessageTransport.Action.Publish>()
-                    .lastOrNull { it.message.address == reply }
-                    ?.let { return@withTimeout it.message.payload }
-                yield()
-            }
-            error("Reply wait ended unexpectedly")
-        }
-    }
+    ): Payload = transport.exchange(to, payload, replyTo = MessageAddress.of("$PANEL_REPLY_INBOX.${replySequence++}"))
 
     override fun close() {
         runBlocking { router.stop() }

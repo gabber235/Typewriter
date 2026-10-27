@@ -11,9 +11,7 @@ import com.typewritermc.operations.capability
 import com.typewritermc.protocol.transport.RealmRouteScope
 import com.typewritermc.realm.operation.ResourceOperationRuntime
 import com.typewritermc.realm.testing.RealmFixture
-import com.typewritermc.setup.SetupHandle
 import com.typewritermc.types.requirePortable
-import com.typewritermc.types.toSkir
 import com.typewritermc.types.use
 import io.kotest.matchers.shouldBe
 import io.kotest.matchers.types.shouldBeInstanceOf
@@ -121,6 +119,3 @@ internal class OperationDriver(
 }
 
 internal val RealmFixture.operations get() = OperationDriver(this)
-
-/** The saved resource id of a setup handle, as routes and saved records name it. */
-internal val SetupHandle<*>.resource: ResourceId get() = id.toSkir()

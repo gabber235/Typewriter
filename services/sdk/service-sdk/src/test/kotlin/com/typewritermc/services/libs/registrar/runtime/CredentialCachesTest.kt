@@ -10,47 +10,25 @@ import com.typewritermc.services.libs.registrar.ServiceIdentity
 import com.typewritermc.services.libs.registrar.ServiceRole
 import de.infix.testBalloon.framework.core.testSuite
 import io.kotest.matchers.shouldBe
-import io.kotest.matchers.types.shouldBeInstanceOf
 import kotlin.time.Duration.Companion.seconds
 import kotlin.time.TestTimeSource
 
-private val cacheCredentials =
-    IdentityCredentials(
-        ServiceIdentity(ServiceId("service-id"), "Service Name", "service-user", ServiceRole.Host("1.0")),
-        RedactedSecret.AppPassword("app-password"),
-    )
-
-private val unavailableToken = AccessTokenResult.Failure(RegistrarFailure.AccessToken(AccessTokenFailureReason.UNAVAILABLE, true))
-private val unavailableSentinel = SentinelResult.Failure(RegistrarFailure.Sentinel(SentinelFailureReason.UNAVAILABLE, true))
-private val protocolSentinel = SentinelResult.Failure(RegistrarFailure.Sentinel(SentinelFailureReason.PROTOCOL, false))
-
-/** Answers each call with the next scripted result and counts the calls. */
-private class Script<T>(
-    vararg results: T,
-) {
-    private val remaining = ArrayDeque(results.toList())
-    var calls = 0
-        private set
-
-    fun next(): T {
-        calls++
-        return checkNotNull(remaining.removeFirstOrNull()) { "No result scripted for call $calls" }
-    }
-}
-
-private fun token(value: String) = AccessTokenResult.Success(RedactedSecret.AccessToken(value), expiresInSeconds = 60)
-
-private fun sentinel(jwt: String) =
-    SentinelResult.Success(SentinelCredentials(RedactedSecret.SentinelJwt(jwt), RedactedSecret.SentinelSeed("seed")))
-
-private fun AccessTokenResult.revealed() = shouldBeInstanceOf<AccessTokenResult.Success>().token.reveal()
-
-private fun SentinelResult.jwt() = shouldBeInstanceOf<SentinelResult.Success>().credentials.jwt.reveal()
-
 val CredentialCachesTest by testSuite {
+    val cacheCredentials =
+        IdentityCredentials(
+            ServiceIdentity(ServiceId("service-id"), "Service Name", "service-user", ServiceRole.Host("1.0")),
+            RedactedSecret.AppPassword("app-password"),
+        )
+
+    val unavailableToken = AccessTokenResult.Failure(RegistrarFailure.AccessToken(AccessTokenFailureReason.UNAVAILABLE, true))
+
+    val unavailableSentinel = SentinelResult.Failure(RegistrarFailure.Sentinel(SentinelFailureReason.UNAVAILABLE, true))
+
+    val protocolSentinel = SentinelResult.Failure(RegistrarFailure.Sentinel(SentinelFailureReason.PROTOCOL, false))
+
     test("an access token is reused until its expiry minus the skew") {
         val clock = TestTimeSource()
-        val script = Script<AccessTokenResult>(token("first"), token("second"))
+        val script = ScriptedCalls<AccessTokenResult>(token("first"), token("second"))
         val cache = AccessTokenCache(cacheCredentials, { script.next() }, clock, skew = 10.seconds)
 
         cache.get().revealed() shouldBe "first"
@@ -65,7 +43,7 @@ val CredentialCachesTest by testSuite {
 
     test("a failed token refresh never serves the expired token") {
         val clock = TestTimeSource()
-        val script = Script<AccessTokenResult>(token("first"), unavailableToken)
+        val script = ScriptedCalls<AccessTokenResult>(token("first"), unavailableToken)
         val cache = AccessTokenCache(cacheCredentials, { script.next() }, clock, skew = 0.seconds)
 
         cache.get().revealed() shouldBe "first"
@@ -75,7 +53,7 @@ val CredentialCachesTest by testSuite {
 
     test("sentinel credentials are reused before the refresh age") {
         val clock = TestTimeSource()
-        val script = Script<SentinelResult>(sentinel("first"), sentinel("second"))
+        val script = ScriptedCalls<SentinelResult>(sentinel("first"), sentinel("second"))
         val cache = SentinelCache({ script.next() }, refreshAfter = 30.seconds, maximumStaleness = 60.seconds, clock = clock)
 
         cache.get().jwt() shouldBe "first"
@@ -89,7 +67,7 @@ val CredentialCachesTest by testSuite {
 
     test("stale sentinel credentials are served while the service is unavailable, up to the maximum staleness") {
         val clock = TestTimeSource()
-        val script = Script<SentinelResult>(sentinel("first"), unavailableSentinel, unavailableSentinel)
+        val script = ScriptedCalls<SentinelResult>(sentinel("first"), unavailableSentinel, unavailableSentinel)
         val cache = SentinelCache({ script.next() }, refreshAfter = 30.seconds, maximumStaleness = 60.seconds, clock = clock)
 
         cache.get().jwt() shouldBe "first"
@@ -101,7 +79,7 @@ val CredentialCachesTest by testSuite {
 
     test("a sentinel protocol error gets no stale fallback") {
         val clock = TestTimeSource()
-        val script = Script<SentinelResult>(sentinel("first"), protocolSentinel)
+        val script = ScriptedCalls<SentinelResult>(sentinel("first"), protocolSentinel)
         val cache = SentinelCache({ script.next() }, refreshAfter = 30.seconds, maximumStaleness = 60.seconds, clock = clock)
 
         cache.get().jwt() shouldBe "first"

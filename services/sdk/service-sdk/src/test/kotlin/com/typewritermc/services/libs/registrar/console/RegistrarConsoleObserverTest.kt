@@ -12,15 +12,15 @@ import de.infix.testBalloon.framework.core.testSuite
 import io.kotest.matchers.collections.shouldContainExactly
 import kotlinx.coroutines.flow.flowOf
 
-private val identity =
-    ServiceIdentity(
-        ServiceId("service-id"),
-        "Service Name",
-        "service-user",
-        ServiceRole.Custom("realm", "1.0.0"),
-    )
-
 val RegistrarConsoleObserverTest by testSuite {
+    val identity =
+        ServiceIdentity(
+            ServiceId("service-id"),
+            "Service Name",
+            "service-user",
+            ServiceRole.Custom("realm", "1.0.0"),
+        )
+
     test("displays only changed non-null binding tokens") {
         val displayed = mutableListOf<String>()
         val observer = RegistrarConsoleObserver(displayed::add)
@@ -48,18 +48,5 @@ val RegistrarConsoleObserverTest by testSuite {
             ),
         )
         shown.history.shouldContainExactly("TOKEN12345", null)
-    }
-}
-
-/** What an operator sees over time: each displayed token, and null once the display is cleared. */
-private class ShownTokens : BindingTokenOutput {
-    val history = mutableListOf<String?>()
-
-    override fun display(token: String) {
-        history += token
-    }
-
-    override fun cleared() {
-        history += null
     }
 }

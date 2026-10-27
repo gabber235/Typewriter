@@ -3,65 +3,19 @@ package com.typewritermc.services.libs.registrar.storage
 import com.typewritermc.services.libs.registrar.CredentialLoadResult
 import com.typewritermc.services.libs.registrar.CredentialStorageError
 import com.typewritermc.services.libs.registrar.CredentialStoreResult
-import com.typewritermc.services.libs.registrar.IdentityCredentials
-import com.typewritermc.services.libs.registrar.RedactedSecret
 import com.typewritermc.services.libs.registrar.ServiceId
-import com.typewritermc.services.libs.registrar.ServiceIdentity
 import com.typewritermc.services.libs.registrar.ServiceRole
 import de.infix.testBalloon.framework.core.testSuite
 import io.kotest.matchers.shouldBe
 import io.kotest.matchers.types.shouldBeInstanceOf
-import kotlinx.coroutines.test.StandardTestDispatcher
-import kotlinx.coroutines.test.TestScope
-import kotlinx.coroutines.test.runTest
 import kotlinx.serialization.ExperimentalSerializationApi
-import kotlinx.serialization.Serializable
 import kotlinx.serialization.cbor.Cbor
 import java.nio.file.Files
-import java.nio.file.Path
-
-private fun credentials(id: String = "service-id") =
-    IdentityCredentials(
-        ServiceIdentity(
-            ServiceId(id),
-            "Service Name",
-            "service-user",
-            ServiceRole.Custom("custom_role", "7.8.9"),
-        ),
-        RedactedSecret.AppPassword("private-password"),
-    )
-
-/** A temporary credential directory whose [storage] runs on the test scheduler; deleted after the case. */
-private class StorageFixture(
-    val directory: Path,
-    private val scope: TestScope,
-) {
-    val path: Path = directory.resolve("identity.cbor")
-
-    fun storage(
-        at: Path = path,
-        maximumBytes: Long = 64 * 1024,
-    ) = FileCredentialStorage(at, maximumBytes, StandardTestDispatcher(scope.testScheduler))
-
-    suspend fun loadError(
-        at: Path = path,
-        maximumBytes: Long = 64 * 1024,
-    ): CredentialStorageError = storage(at, maximumBytes).load().shouldBeInstanceOf<CredentialLoadResult.Failure>().error
-}
-
-private fun withStorage(block: suspend StorageFixture.() -> Unit) {
-    val directory = Files.createTempDirectory("registrar-storage")
-    try {
-        runTest { StorageFixture(directory, this).block() }
-    } finally {
-        directory.toFile().deleteRecursively()
-    }
-}
-
-private val CORRUPT = CredentialStorageError.Corrupt("credential_file_corrupt")
 
 @OptIn(ExperimentalSerializationApi::class)
 val FileCredentialStorageTest by testSuite {
+    val corruptError = CredentialStorageError.Corrupt("credential_file_corrupt")
+
     test("missing file returns Missing") {
         withStorage { storage().load() shouldBe CredentialLoadResult.Missing }
     }
@@ -94,7 +48,7 @@ val FileCredentialStorageTest by testSuite {
     test("malformed file is corrupt") {
         withStorage {
             Files.writeString(path, "not-cbor")
-            loadError() shouldBe CORRUPT
+            loadError() shouldBe corruptError
         }
     }
 
@@ -121,12 +75,12 @@ val FileCredentialStorageTest by testSuite {
     test("a file over the size limit is corrupt") {
         withStorage {
             Files.write(path, ByteArray(33) { 1 })
-            loadError(maximumBytes = 32) shouldBe CORRUPT
+            loadError(maximumBytes = 32) shouldBe corruptError
         }
     }
 
     test("a directory at the credential path is corrupt") {
-        withStorage { loadError(at = directory) shouldBe CORRUPT }
+        withStorage { loadError(at = directory) shouldBe corruptError }
     }
 
     test("a symbolic link to valid credentials is corrupt") {
@@ -134,24 +88,7 @@ val FileCredentialStorageTest by testSuite {
             val target = directory.resolve("elsewhere.cbor")
             storage(at = target).store(credentials()) shouldBe CredentialStoreResult.Success
             Files.createSymbolicLink(path, target)
-            loadError() shouldBe CORRUPT
+            loadError() shouldBe corruptError
         }
     }
 }
-
-@Serializable
-private data class StoredCredentialFixture(
-    val version: Int,
-    val serviceId: String,
-    val displayName: String,
-    val username: String,
-    val issuedServiceRole: StoredServiceRoleFixture,
-    val token: String,
-)
-
-@Serializable
-private data class StoredServiceRoleFixture(
-    val type: String,
-    val version: String,
-    val name: String? = null,
-)

@@ -2,6 +2,10 @@ package com.typewritermc.services.libs.communicator.nats
 
 import com.typewritermc.services.libs.communicator.address.AddressPattern
 import com.typewritermc.services.libs.communicator.address.MessageAddress
+import com.typewritermc.services.libs.communicator.testing.FakeNatsClient
+import com.typewritermc.services.libs.communicator.testing.FakeNatsClientFactory
+import com.typewritermc.services.libs.communicator.testing.FakeNatsSubscription
+import com.typewritermc.services.libs.communicator.testing.natsConnection
 import com.typewritermc.services.libs.communicator.transfer.TransportLimits
 import com.typewritermc.services.libs.communicator.transport.ConsumerGroup
 import com.typewritermc.services.libs.communicator.transport.MessageHeaders
@@ -42,6 +46,18 @@ import kotlin.time.Duration.Companion.seconds
 
 @ExperimentalCoroutinesApi
 val NatsAdapterTest by testSuite {
+    val testLimits =
+        TransportLimits(
+            chunkBytes = 512 * 1024,
+            windowFrames = 8,
+            requestMaxBytes = 512L * 1024,
+            replyMaxBytes =
+                32L * 1024 * 1024,
+            frameInactivity = 30.seconds,
+            replyTtl = 5.minutes,
+            replyCredit = false,
+        )
+
     test("authentication never prints its secrets") {
         val authentication =
             NatsAuthentication(
@@ -72,20 +88,21 @@ val NatsAdapterTest by testSuite {
     }
 
     test("native connectivity transitions gate transport and update lifecycle state") {
-        val client = FakeClient()
-        val connection = connection(client)
+        val client = FakeNatsClient()
+        val connection = natsConnection(client)
         connection.connect()
-        val transport = NatsMessageTransport(connection, TEST_LIMITS)
+        val transport = NatsMessageTransport(connection, testLimits)
 
         client.connectivity.value = NatsClientConnectivity.Connecting
         testScope.advanceTimeBy(25.milliseconds)
         connection.state.value shouldBe NatsConnectionState.Reconnecting
-        (transport.publish(outbound()) as TransportResult.Failure).error::class shouldBe TransportError.Unavailable::class
+        (transport.publish(OutboundMessage(MessageAddress.of("work"), byteArrayOf())) as TransportResult.Failure).error::class shouldBe
+            TransportError.Unavailable::class
 
         client.connectivity.value = NatsClientConnectivity.Connected
         testScope.advanceTimeBy(25.milliseconds)
         connection.state.value shouldBe NatsConnectionState.Connected
-        transport.publish(outbound()) shouldBe TransportResult.Success(Unit)
+        transport.publish(OutboundMessage(MessageAddress.of("work"), byteArrayOf())) shouldBe TransportResult.Success(Unit)
 
         client.connectivity.value = NatsClientConnectivity.Disconnected
         testScope.advanceTimeBy(25.milliseconds)
@@ -94,10 +111,10 @@ val NatsAdapterTest by testSuite {
     }
 
     test("authentication maps nonce signing and connected state only after success") {
-        val client = FakeClient()
+        val client = FakeNatsClient()
         var challengeHasNonce = false
         val factory =
-            FakeFactory(client) { auth ->
+            FakeNatsClientFactory(client) { auth ->
                 val mapped = auth(true) { "signed:$it" }
                 mapped.signature shouldBe "signed:seed"
             }
@@ -117,18 +134,18 @@ val NatsAdapterTest by testSuite {
     }
 
     test("connect failure is typed and cancellation is unchanged") {
-        val failed = FakeClient(connectResult = Result.failure(IllegalStateException("no")))
-        val connection = connection(failed)
+        val failed = FakeNatsClient(connectResult = Result.failure(IllegalStateException("no")))
+        val connection = natsConnection(failed)
         (connection.connect() as NatsLifecycleResult.Failure).error::class shouldBe NatsLifecycleError.Connection::class
 
-        val cancelled = connection(FakeClient(connectResult = Result.failure(CancellationException("stop"))))
+        val cancelled = natsConnection(FakeNatsClient(connectResult = Result.failure(CancellationException("stop"))))
         shouldThrow<CancellationException> { cancelled.connect() }
     }
 
     test("canceling vendor authentication preserves the connection timeout and permits another attempt") {
         val timeout = IllegalStateException("timed out connecting to server")
-        val failedClient = FakeClient(connectResult = Result.failure(timeout))
-        val replacementClient = FakeClient()
+        val failedClient = FakeNatsClient(connectResult = Result.failure(timeout))
+        val replacementClient = FakeNatsClient()
         val clients = ArrayDeque(listOf(failedClient, replacementClient))
         val connection =
             NatsConnection(
@@ -166,12 +183,12 @@ val NatsAdapterTest by testSuite {
     test("caller cancellation propagates and releases the partially connected client") {
         coroutineScope {
             val entered = CompletableDeferred<Unit>()
-            val client = FakeClient()
+            val client = FakeNatsClient()
             val connection =
                 NatsConnection(
                     { NatsConnectionConfiguration("nats://localhost") },
                     { NatsAuthentication() },
-                    FakeFactory(client) {
+                    FakeNatsClientFactory(client) {
                         entered.complete(Unit)
                         awaitCancellation()
                     },
@@ -190,8 +207,8 @@ val NatsAdapterTest by testSuite {
     }
 
     test("reconnect reloads providers and shutdown drains before disconnect") {
-        val firstClient = FakeClient()
-        val replacementClient = FakeClient()
+        val firstClient = FakeNatsClient()
+        val replacementClient = FakeNatsClient()
         val clients = ArrayDeque(listOf(firstClient, replacementClient))
         var configurations = 0
         val connection =
@@ -213,8 +230,8 @@ val NatsAdapterTest by testSuite {
     }
 
     test("reconnect creates a fresh client when no active client remains") {
-        val failedClient = FakeClient(connectResult = Result.failure(IllegalStateException("closed")))
-        val replacementClient = FakeClient()
+        val failedClient = FakeNatsClient(connectResult = Result.failure(IllegalStateException("closed")))
+        val replacementClient = FakeNatsClient()
         val clients = ArrayDeque(listOf(failedClient, replacementClient))
         val connection =
             NatsConnection(
@@ -233,8 +250,8 @@ val NatsAdapterTest by testSuite {
     test("shutdown preserves drain failure and suppressed disconnect failure") {
         val drain = IllegalStateException("drain")
         val disconnect = IllegalStateException("disconnect")
-        val client = FakeClient(drainFailure = drain, disconnectFailure = disconnect)
-        val connection = connection(client)
+        val client = FakeNatsClient(drainFailure = drain, disconnectFailure = disconnect)
+        val connection = natsConnection(client)
         connection.connect()
         val failure = connection.shutdown() as NatsLifecycleResult.Failure
         failure.error.cause shouldBe drain
@@ -253,125 +270,41 @@ val NatsAdapterTest by testSuite {
             replies: Flow<NatsClientMessage>,
             publishFailure: Throwable? = null,
         ): TransportError {
-            val client = FakeClient(subscription = FakeSubscription(replies), publishFailure = publishFailure)
-            val connection = connection(client)
+            val client = FakeNatsClient(subscription = FakeNatsSubscription(replies), publishFailure = publishFailure)
+            val connection = natsConnection(client)
             connection.connect()
-            return (NatsMessageTransport(connection, TEST_LIMITS).request(outbound(), 1.seconds) as TransportResult.Failure).error
+            return (
+                NatsMessageTransport(
+                    connection,
+                    testLimits,
+                ).request(OutboundMessage(MessageAddress.of("work"), byteArrayOf()), 1.seconds) as TransportResult.Failure
+            ).error
         }
-        result(flowOf(status(503)))::class shouldBe TransportError.NoResponders::class
-        result(flowOf(status(404)))::class shouldBe TransportError.Failure::class
+        result(flowOf(NatsClientMessage("reply", null, null, null, 503, "status")))::class shouldBe TransportError.NoResponders::class
+        result(flowOf(NatsClientMessage("reply", null, null, null, 404, "status")))::class shouldBe TransportError.Failure::class
         result(flow { awaitCancellation() })::class shouldBe TransportError.Timeout::class
         result(flowOf())::class shouldBe TransportError.Unavailable::class
         result(flowOf(), IllegalStateException("broken"))::class shouldBe TransportError.Failure::class
     }
 
     test("flush failure rolls subscription back") {
-        val subscription = FakeSubscription(flowOf())
-        val client = FakeClient(subscription = subscription, flushFailure = IllegalStateException("flush"))
-        val connection = connection(client)
+        val subscription = FakeNatsSubscription(flowOf())
+        val client = FakeNatsClient(subscription = subscription, flushFailure = IllegalStateException("flush"))
+        val connection = natsConnection(client)
         connection.connect()
-        NatsMessageTransport(connection, TEST_LIMITS).subscribe(AddressPattern.of("jobs.*"))::class shouldBe TransportResult.Failure::class
+        NatsMessageTransport(connection, testLimits).subscribe(AddressPattern.of("jobs.*"))::class shouldBe TransportResult.Failure::class
         subscription.unsubscribeCalls shouldBe 1
     }
 
     test("disconnected and invalid request timeout fail explicitly") {
-        val transport = NatsMessageTransport(connection(FakeClient()), TEST_LIMITS)
-        (transport.publish(outbound()) as TransportResult.Failure).error::class shouldBe TransportError.Unavailable::class
-        shouldThrow<IllegalArgumentException> { transport.request(outbound(), 0.milliseconds) }
+        val transport = NatsMessageTransport(natsConnection(FakeNatsClient()), testLimits)
+        (transport.publish(OutboundMessage(MessageAddress.of("work"), byteArrayOf())) as TransportResult.Failure).error::class shouldBe
+            TransportError.Unavailable::class
+        shouldThrow<IllegalArgumentException> {
+            transport.request(
+                OutboundMessage(MessageAddress.of("work"), byteArrayOf()),
+                0.milliseconds,
+            )
+        }
     }
 }
-
-private typealias AuthenticationCallback = suspend (Boolean, suspend (String) -> String?) -> NatsAuthentication
-
-private class FakeFactory(
-    private val client: FakeClient,
-    private val created: suspend (AuthenticationCallback) -> Unit = {},
-) : NatsClientFactory {
-    override fun create(
-        configuration: NatsConnectionConfiguration,
-        authentication: suspend (Boolean, suspend (String) -> String?) -> NatsAuthentication,
-    ): NatsClientAdapter {
-        client.onConnect = { created(authentication) }
-        return client
-    }
-}
-
-private class FakeClient(
-    private val connectResult: Result<Unit> = Result.success(Unit),
-    private val publishFailure: Throwable? = null,
-    private val subscription: FakeSubscription = FakeSubscription(flowOf()),
-    private val flushFailure: Throwable? = null,
-    var drainFailure: Throwable? = null,
-    var disconnectFailure: Throwable? = null,
-) : NatsClientAdapter {
-    override val connectivity = MutableStateFlow(NatsClientConnectivity.Connected)
-    val events = mutableListOf<String>()
-    var onConnect: suspend () -> Unit = {}
-
-    override suspend fun connect(): Result<Unit> {
-        events += "connect"
-        onConnect()
-        return connectResult
-    }
-
-    override suspend fun disconnect() {
-        events += "disconnect"
-        disconnectFailure?.let { throw it }
-    }
-
-    override suspend fun drain(timeout: Duration) {
-        events += "drain"
-        drainFailure?.let { throw it }
-    }
-
-    override suspend fun flush() {
-        events += "flush"
-        flushFailure?.let { throw it }
-    }
-
-    override suspend fun publish(message: NatsClientMessage) {
-        publishFailure?.let { throw it }
-    }
-
-    override suspend fun subscribe(
-        subject: String,
-        queueGroup: String?,
-    ): NatsClientSubscription {
-        events += "subscribe:$subject:$queueGroup"
-        return subscription
-    }
-}
-
-private class FakeSubscription(
-    override val messages: Flow<NatsClientMessage>,
-) : NatsClientSubscription {
-    override val isActive: StateFlow<Boolean> = MutableStateFlow(true)
-    var unsubscribeCalls = 0
-
-    override suspend fun unsubscribe() {
-        unsubscribeCalls++
-    }
-}
-
-private fun connection(client: FakeClient) =
-    NatsConnection(
-        { NatsConnectionConfiguration("nats://localhost") },
-        { NatsAuthentication() },
-        FakeFactory(client),
-    )
-
-private fun outbound() = OutboundMessage(MessageAddress.of("work"), byteArrayOf())
-
-private fun status(code: Int) = NatsClientMessage("reply", null, null, null, code, "status")
-
-private val TEST_LIMITS =
-    TransportLimits(
-        chunkBytes = 512 * 1024,
-        windowFrames = 8,
-        requestMaxBytes = 512L * 1024,
-        replyMaxBytes =
-            32L * 1024 * 1024,
-        frameInactivity = 30.seconds,
-        replyTtl = 5.minutes,
-        replyCredit = false,
-    )

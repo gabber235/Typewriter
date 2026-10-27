@@ -21,9 +21,9 @@ import com.typewritermc.imprint.ContributionName
 import com.typewritermc.imprint.ContributionSourceId
 import com.typewritermc.imprint.ProducerId
 import com.typewritermc.testkit.elementsOf
+import com.typewritermc.testkit.ready
 import com.typewritermc.types.StandardTypes
 import com.typewritermc.types.catalog.DefaultCheckedCatalog
-import com.typewritermc.types.catalog.Resolution
 import com.typewritermc.types.floatScalar
 import com.typewritermc.types.namedTemplate
 import com.typewritermc.types.qualified
@@ -226,105 +226,3 @@ val TypedLoweringTest by testSuite {
         }.message shouldContain "incompatible_expression_result_type"
     }
 }
-
-private val WEIGHTED = TypeDefinitionId.qualified("test", "Weighted")
-private val WEIGHTED_VALUE = ParameterKey(owner = WEIGHTED, index = 0)
-private val SUBJECT = TypeDefinitionId.qualified("test", "LoweringSubject")
-
-/** Presents the weight and value fields of a Weighted<T>, configuring them through [configure]. */
-private fun weighted(
-    scope: PresentationBuildScope,
-    configure: WeightedFields.(PresentedField<Double, NumberControl<Double>>) -> Unit,
-) {
-    @Suppress("UNCHECKED_CAST")
-    val weight = scope.field<Double, NumberControl<*>>("weight", NumberControl::class) as PresentedField<Double, NumberControl<Double>>
-
-    @Suppress("UNCHECKED_CAST")
-    val value = scope.field<Any?, NumberControl<*>>("value", NumberControl::class) as PresentedField<Any?, NumberControl<Any?>>
-    WeightedFields(value).configure(weight)
-}
-
-private class WeightedFields(
-    val value: PresentedField<Any?, NumberControl<Any?>>,
-)
-
-/** A text expression the DSL would not accept, to show that lowering checks the slot type itself. */
-@Suppress("UNCHECKED_CAST")
-private fun com.typewritermc.expression.Expr<Boolean, Handled>.uncheckedText(): com.typewritermc.expression.Expr<String, Handled> =
-    this as com.typewritermc.expression.Expr<String, Handled>
-
-private fun weightedAssembly(present: (PresentationBuildScope) -> Unit) =
-    CatalogContributions(
-        declarations = listOf(OwnedTypeDeclaration(ORIGIN, weightedDefinition())),
-        presentations =
-            listOf(
-                OwnedPresentation(
-                    ORIGIN,
-                    PresentationDescriptor.of(
-                        id = PresentationId(namespace = "test", name = "weighted"),
-                        owner = ORIGIN.owner,
-                        target = PresentationTarget.NamedWrapper(WEIGHTED.namedTemplate(listOf(WEIGHTED_VALUE.template))),
-                        roles = setOf(PresentationRole.INSPECTOR),
-                        priority = 0,
-                    ),
-                    object : PresentationProvider {
-                        override fun build(binding: PresentationBuildBinding) = DefaultPresentationRuntime().build(binding, present)
-                    },
-                ),
-            ),
-    ).assemble(CatalogAssemblyContext(CatalogGeneration(value = "weighted")))
-
-private fun weightedDefinition(): TypeDefinition =
-    TypeDefinition(
-        id = WEIGHTED,
-        parameters = listOf(TypeParameter(key = WEIGHTED_VALUE, name = "T", bounds = emptyList())),
-        representation =
-            RepresentationTemplate.createRecord(
-                fields =
-                    listOf(
-                        FieldDeclaration.partial(owner = FieldOwner(definition = WEIGHTED, name = "value"), type = WEIGHTED_VALUE.template),
-                        FieldDeclaration.partial(
-                            owner = FieldOwner(definition = WEIGHTED, name = "weight"),
-                            type = floatScalar(FloatWidth.SIXTY_FOUR).template,
-                        ),
-                    ),
-                abstract_ = false,
-            ),
-        parents = emptyList(),
-    )
-
-/** Builds [content] for a record with a text title and a list of text tags. */
-private fun build(content: (PresentationBuildScope) -> Unit): PresentationBuildResult {
-    val subject =
-        TypeDefinition.partial(
-            id = SUBJECT,
-            representation =
-                RepresentationTemplate.createRecord(
-                    fields =
-                        listOf(
-                            FieldDeclaration.partial(
-                                owner = FieldOwner(definition = SUBJECT, name = "title"),
-                                type = ScalarKind.TEXT.template,
-                            ),
-                            FieldDeclaration.partial(
-                                owner = FieldOwner(definition = SUBJECT, name = "tags"),
-                                type = StandardTypes.list.template(listOf(ScalarKind.TEXT.template)),
-                            ),
-                        ),
-                    abstract_ = false,
-                ),
-        )
-    val catalog = DefaultCheckedCatalog(CatalogGeneration(value = "lowering"), StandardTypes.definitions + subject)
-    val checked = (catalog.resolve(SUBJECT.use()) as Resolution.Ready).value
-    return DefaultPresentationRuntime().build(PresentationBuildBinding(checked.presentationTemplate(), PresentationRole.WORKSPACE), content)
-}
-
-private val ORIGIN: ProviderOrigin =
-    ProviderOrigin(
-        DeclarationOwner(
-            source = contributionKey(ContributionSourceId("test"), "main", ProducerId("sdk"), ContributionName("lowering")),
-            localIdentity = "lowering",
-        ),
-        ArtifactId("test:sdk"),
-        "main",
-    )

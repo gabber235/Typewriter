@@ -3,7 +3,9 @@ package com.typewritermc.services.libs.communicator.nats
 import com.typewritermc.services.libs.communicator.address.AddressPattern
 import com.typewritermc.services.libs.communicator.address.MessageAddress
 import com.typewritermc.services.libs.communicator.testing.NatsTestServer
-import com.typewritermc.services.libs.communicator.transfer.TransportLimits
+import com.typewritermc.services.libs.communicator.testing.onBroker
+import com.typewritermc.services.libs.communicator.testing.requireSubscription
+import com.typewritermc.services.libs.communicator.testing.success
 import com.typewritermc.services.libs.communicator.transport.ConsumerGroup
 import com.typewritermc.services.libs.communicator.transport.InboundMessage
 import com.typewritermc.services.libs.communicator.transport.MessageHeaders
@@ -12,7 +14,6 @@ import com.typewritermc.services.libs.communicator.transport.Payload
 import com.typewritermc.services.libs.communicator.transport.SubscriptionOptions
 import com.typewritermc.services.libs.communicator.transport.TransportDelivery
 import com.typewritermc.services.libs.communicator.transport.TransportResult
-import com.typewritermc.services.libs.communicator.transport.TransportSubscription
 import de.infix.testBalloon.framework.core.TestConfig
 import de.infix.testBalloon.framework.core.testScope
 import de.infix.testBalloon.framework.core.testSuite
@@ -20,13 +21,10 @@ import io.kotest.matchers.shouldBe
 import io.kotest.matchers.string.shouldStartWith
 import io.kotest.matchers.types.shouldBeInstanceOf
 import kotlinx.coroutines.CompletableDeferred
-import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.channels.Channel
-import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withTimeout
-import kotlin.time.Duration.Companion.minutes
 import kotlin.time.Duration.Companion.seconds
 
 /** The NATS transport against a real nats-server, for what only the broker decides: routing, queue groups, inboxes. */
@@ -38,7 +36,7 @@ val NatsTransportOnBrokerTest by testSuite(testConfig = TestConfig.testScope(isE
             val server = transport()
             val client = transport()
             val received = CompletableDeferred<InboundMessage>()
-            val requests = server.subscribe(AddressPattern.of("work")).subscription()
+            val requests = server.subscribe(AddressPattern.of("work")).requireSubscription()
             val serving =
                 launch {
                     val request = (requests.deliveries.first() as TransportDelivery.Message).message
@@ -73,7 +71,7 @@ val NatsTransportOnBrokerTest by testSuite(testConfig = TestConfig.testScope(isE
             val workers = transport()
             val publisher = transport()
             val group = SubscriptionOptions(ConsumerGroup.of("workers"))
-            val members = List(2) { workers.subscribe(AddressPattern.of("jobs.*"), group).subscription() }
+            val members = List(2) { workers.subscribe(AddressPattern.of("jobs.*"), group).requireSubscription() }
             val delivered = Channel<Pair<Int, String>>(Channel.UNLIMITED)
             val collecting =
                 members.mapIndexed { member, subscription ->
@@ -98,8 +96,8 @@ val NatsTransportOnBrokerTest by testSuite(testConfig = TestConfig.testScope(isE
     test("a message that arrives before anyone collects the subscription is still delivered") {
         onBroker(broker().url) {
             val subscriber = transport()
-            val news = subscriber.subscribe(AddressPattern.of("news")).subscription()
-            val marker = subscriber.subscribe(AddressPattern.of("marker")).subscription()
+            val news = subscriber.subscribe(AddressPattern.of("news")).requireSubscription()
+            val marker = subscriber.subscribe(AddressPattern.of("marker")).requireSubscription()
             val publisher = transport()
 
             publisher.publish(OutboundMessage(MessageAddress.of("news"), byteArrayOf(1))) shouldBe TransportResult.Success(Unit)
@@ -116,7 +114,7 @@ val NatsTransportOnBrokerTest by testSuite(testConfig = TestConfig.testScope(isE
 
     test("closing a subscription completes its deliveries") {
         onBroker(broker().url) {
-            val subscription = transport().subscribe(AddressPattern.of("news")).subscription()
+            val subscription = transport().subscribe(AddressPattern.of("news")).requireSubscription()
             val received = Channel<TransportDelivery>(Channel.UNLIMITED)
             val collecting = launch { subscription.deliveries.collect(received::send) }
             transport().publish(OutboundMessage(MessageAddress.of("news"), byteArrayOf(1))) shouldBe TransportResult.Success(Unit)
@@ -140,54 +138,3 @@ val NatsTransportOnBrokerTest by testSuite(testConfig = TestConfig.testScope(isE
 }
 
 private const val JOBS = 40
-
-/** The connections of one test, each shut down when the test ends. */
-private class BrokerClients(
-    scope: CoroutineScope,
-    private val url: String,
-) : CoroutineScope by scope {
-    val connections = mutableListOf<NatsConnection>()
-
-    /** A transport on a new connection to the broker. */
-    suspend fun transport(inboxPrefix: String = "_INBOX."): NatsMessageTransport {
-        val connection =
-            NatsConnection(
-                { NatsConnectionConfiguration(url, inboxPrefix = inboxPrefix, maxReconnects = 0) },
-                { NatsAuthentication() },
-            )
-        connections += connection
-        connection.connect() shouldBe NatsLifecycleResult.Success
-        return NatsMessageTransport(connection, LIMITS)
-    }
-}
-
-private suspend fun onBroker(
-    url: String,
-    block: suspend BrokerClients.() -> Unit,
-) = coroutineScope {
-    val clients = BrokerClients(this, url)
-    try {
-        clients.block()
-    } finally {
-        clients.connections.forEach { it.shutdown() }
-    }
-}
-
-private fun TransportResult<TransportSubscription>.subscription(): TransportSubscription = success()
-
-private fun <T> TransportResult<T>.success(): T =
-    when (this) {
-        is TransportResult.Success -> value
-        is TransportResult.Failure -> throw AssertionError("The broker answered with $error", error.cause)
-    }
-
-private val LIMITS =
-    TransportLimits(
-        chunkBytes = 512 * 1024,
-        windowFrames = 8,
-        requestMaxBytes = 512L * 1024,
-        replyMaxBytes = 32L * 1024 * 1024,
-        frameInactivity = 30.seconds,
-        replyTtl = 5.minutes,
-        replyCredit = false,
-    )

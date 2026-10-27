@@ -7,6 +7,8 @@ import io.kotest.matchers.shouldBe
 import io.kotest.matchers.types.shouldBeInstanceOf
 import skirout.editor.v1.authoring.CommitPreparedEditResponse
 import skirout.editor.v1.authoring.EditIntent
+import skirout.editor.v1.authoring.PreparedEdit
+import skirout.editor.v1.authoring_facts.EditExpectation
 import skirout.editor.v1.diagnostic.ValueProblem
 
 /** A refusal reason where an author sees it: the resource it applies to and its code. */
@@ -40,6 +42,17 @@ fun CommitPreparedEditResponse.shouldBeRejectedAt(
 
 /** Commits [intents], asserts they are refused and that nothing was saved, and returns the problems named. */
 suspend fun RealmFixture.expectRefused(vararg intents: EditIntent): List<ValueProblem> = expectUnchanged { commit(*intents) }
+
+/**
+ * Commits [intent] alone with no expectations, as a stale or hand written edit would, asserts it is refused and that
+ * nothing was saved, and returns the problems named.
+ */
+suspend fun RealmFixture.expectRefusedUnguarded(intent: EditIntent): List<ValueProblem> =
+    expectUnchanged { commit(PreparedEdit(catalog = generation, expectations = emptyList(), intents = listOf(intent))) }
+
+/** The facts as they were saved when the commit conflicted. */
+fun CommitPreparedEditResponse.conflictingFacts(): List<EditExpectation> =
+    shouldBeInstanceOf<CommitPreparedEditResponse.ConflictErrorWrapper>().value.map { it.actual }
 
 /** Commits what [block] writes, asserts it is refused and that nothing was saved, and returns the problems named. */
 internal suspend fun RealmFixture.expectRefused(block: suspend WorkingViewEditContext.() -> Unit): List<ValueProblem> =

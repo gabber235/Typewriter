@@ -2,6 +2,7 @@ plugins {
     id("com.typewritermc.basic-conventions")
     id("com.typewritermc.imprint")
     `java-library`
+    `java-test-fixtures`
 }
 
 dependencies {
@@ -12,11 +13,11 @@ dependencies {
     implementation(project(":messaging"))
     implementation(project(":protocol-transport"))
     implementation(libs.kotlin.serialize.json)
-    testImplementation(project(":loader-api"))
-    testImplementation(testFixtures(project(":messaging")))
-    testImplementation(testFixtures(project(":telemetry")))
-    testImplementation(testFixtures(project(":file-transfer")))
-    testImplementation(libs.kotlin.coroutines.test)
+    testFixturesApi(project(":loader-api"))
+    testFixturesApi(testFixtures(project(":messaging")))
+    testFixturesApi(testFixtures(project(":telemetry")))
+    testFixturesApi(testFixtures(project(":file-transfer")))
+    testFixturesApi(libs.kotlin.coroutines.test)
 }
 
 typewriter {

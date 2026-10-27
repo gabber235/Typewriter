@@ -5,7 +5,6 @@ package com.typewritermc.realm.edit
 import com.typewritermc.authoring.GeneratedSdkApi
 import com.typewritermc.authoring.boundCollectionPath
 import com.typewritermc.authoring.of
-import com.typewritermc.library.Book
 import com.typewritermc.library.BookFields
 import com.typewritermc.library.BookPages
 import com.typewritermc.library.PageDefinition
@@ -17,9 +16,7 @@ import com.typewritermc.realm.testing.link
 import com.typewritermc.realm.testing.links
 import com.typewritermc.realm.testing.shouldBeCommitted
 import com.typewritermc.realm.testing.withSetup
-import com.typewritermc.setup.SetupHandle
 import com.typewritermc.setup.setup
-import com.typewritermc.testing.routes.FixtureTimelinePage
 import com.typewritermc.testing.routes.fixtureTimelinePage
 import com.typewritermc.types.Ref
 import com.typewritermc.types.namedUse
@@ -28,29 +25,23 @@ import de.infix.testBalloon.framework.core.testSuite
 import io.kotest.matchers.shouldBe
 import skirout.editor.v1.type_catalog.ValueLocation
 
-/** A page held by the first of two books. */
-private data class TwoBooks(
-    val first: SetupHandle<Book>,
-    val second: SetupHandle<Book>,
-    val page: SetupHandle<FixtureTimelinePage>,
-)
-
-private val twoBooks =
-    setup("two-books") {
-        library {
-            val (first, page) =
-                books.book("first") {
-                    handle to
-                        pages.fixtureTimelinePage("start") {
-                            name = "Start"
-                            handle
-                        }
-                }
-            TwoBooks(first, books.book("second") { handle }, page)
-        }
-    }
-
 val ResourceOwnershipTest by testSuite {
+    /** Two books, the first holding one page: the handles of the first book, the second book and the page. */
+    val twoBooks =
+        setup("two-books") {
+            library {
+                val (first, page) =
+                    books.book("first") {
+                        handle to
+                            pages.fixtureTimelinePage("start") {
+                                name = "Start"
+                                handle
+                            }
+                    }
+                Triple(first, books.book("second") { handle }, page)
+            }
+        }
+
     test("a committed page links to its book and the book lists the page") {
         withSetup(twoBooks, catalog = routeFixtureCatalog) { (first, _, page) ->
             resources.getValue(page.resource).link("book") shouldBe first.resource

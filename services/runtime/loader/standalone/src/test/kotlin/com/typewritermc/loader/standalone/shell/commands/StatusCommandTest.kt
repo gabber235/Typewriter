@@ -2,9 +2,10 @@ package com.typewritermc.loader.standalone.shell.commands
 
 import com.github.ajalt.clikt.testing.test
 import com.typewritermc.loader.standalone.shell.LoaderShellContext
+import com.typewritermc.loader.standalone.shell.commands.testing.identity
+import com.typewritermc.loader.standalone.shell.commands.testing.readySession
 import com.typewritermc.services.libs.registrar.MessagingOperation
 import com.typewritermc.services.libs.registrar.OrganizationBinding
-import com.typewritermc.services.libs.registrar.ReadySession
 import com.typewritermc.services.libs.registrar.RegistrarFailure
 import com.typewritermc.services.libs.registrar.RegistrarSnapshot
 import com.typewritermc.services.libs.registrar.RegistrarStage
@@ -12,9 +13,6 @@ import com.typewritermc.services.libs.registrar.RegistrarState
 import com.typewritermc.services.libs.registrar.RegistrarStopResult
 import com.typewritermc.services.libs.registrar.RegistrationToken
 import com.typewritermc.services.libs.registrar.RetrySchedule
-import com.typewritermc.services.libs.registrar.ServiceId
-import com.typewritermc.services.libs.registrar.ServiceIdentity
-import com.typewritermc.services.libs.registrar.ServiceRole
 import de.infix.testBalloon.framework.core.testSuite
 import io.kotest.matchers.string.shouldContain
 import io.kotest.matchers.string.shouldNotContain
@@ -149,17 +147,3 @@ val StatusCommandTest by testSuite {
         output shouldContain "Shutdown: completed"
     }
 }
-
-private val identity =
-    ServiceIdentity(
-        serviceId = ServiceId("service123"),
-        displayName = "Loader Service",
-        username = "loader_service",
-        role = ServiceRole.Host("1.0.0"),
-    )
-
-private fun readySession() =
-    ReadySession(
-        identity = identity,
-        binding = OrganizationBinding("organization123", "Test Organization"),
-    )

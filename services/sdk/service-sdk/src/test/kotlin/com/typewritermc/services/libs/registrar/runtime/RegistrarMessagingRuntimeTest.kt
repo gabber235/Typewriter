@@ -10,10 +10,8 @@ import com.typewritermc.services.libs.communicator.nats.NatsLifecycleResult
 import com.typewritermc.services.libs.communicator.testing.FakeMessageTransport
 import com.typewritermc.services.libs.communicator.transport.InboundMessage
 import com.typewritermc.services.libs.communicator.transport.TransportError
-import com.typewritermc.services.libs.communicator.transport.TransportResult
 import com.typewritermc.services.libs.registrar.BindingObservation
 import com.typewritermc.services.libs.registrar.BindingStatus
-import com.typewritermc.services.libs.registrar.IdentityCredentials
 import com.typewritermc.services.libs.registrar.MessagingOperation
 import com.typewritermc.services.libs.registrar.RedactedSecret
 import com.typewritermc.services.libs.registrar.RegistrarFailure
@@ -22,9 +20,6 @@ import com.typewritermc.services.libs.registrar.RegistrationLeaseResult
 import com.typewritermc.services.libs.registrar.RuntimeCloseResult
 import com.typewritermc.services.libs.registrar.RuntimeResult
 import com.typewritermc.services.libs.registrar.RuntimeStopOperation
-import com.typewritermc.services.libs.registrar.ServiceId
-import com.typewritermc.services.libs.registrar.ServiceIdentity
-import com.typewritermc.services.libs.registrar.ServiceRole
 import com.typewritermc.services.libs.telemetry.testing.TelemetryTestHarness
 import de.infix.testBalloon.framework.core.testSuite
 import io.kotest.assertions.throwables.shouldThrow
@@ -47,119 +42,6 @@ import skirout.service.v1.status.ServiceBinding
 import kotlin.time.Duration.Companion.hours
 import kotlin.time.Duration.Companion.minutes
 import kotlin.time.TestTimeSource
-
-private val runtimeCredentials =
-    IdentityCredentials(
-        ServiceIdentity(ServiceId("service-id"), "Service Name", "service-user", ServiceRole.Custom("realm", "1.0.0")),
-        RedactedSecret.AppPassword("app-password"),
-    )
-
-private class FakeNatsLifecycle : NatsLifecycle {
-    override val state = MutableStateFlow(NatsConnectionState.Connected)
-    var connectResult: NatsLifecycleResult = NatsLifecycleResult.Success
-    var reconnectResult: NatsLifecycleResult = NatsLifecycleResult.Success
-    var shutdownResult: NatsLifecycleResult = NatsLifecycleResult.Success
-
-    override suspend fun connect() = connectResult
-
-    override suspend fun reconnect() = reconnectResult
-
-    override suspend fun shutdown() = shutdownResult
-}
-
-private data class RuntimeFixture(
-    val runtime: TypewriterRegistrarRuntime,
-    val transport: FakeMessageTransport,
-    val nats: FakeNatsLifecycle,
-    val harness: TelemetryTestHarness,
-    val access: AccessTokenCache,
-    val sentinel: SentinelCache,
-    val tokenExchanges: () -> Int,
-    val sentinelFetches: () -> Int,
-) : AutoCloseable {
-    override fun close() {
-        transport.close()
-        harness.close()
-    }
-}
-
-private suspend fun runtimeFixture(): RuntimeFixture {
-    var exchanges = 0
-    var fetches = 0
-    val timeSource = TestTimeSource()
-    val access =
-        AccessTokenCache(
-            runtimeCredentials,
-            AccessTokenExchanger {
-                exchanges++
-                AccessTokenResult.Success(RedactedSecret.AccessToken("access-token"), 3600)
-            },
-            timeSource,
-            1.minutes,
-        )
-    val sentinel =
-        SentinelCache(
-            SentinelProvider {
-                fetches++
-                SentinelResult.Success(
-                    SentinelCredentials(
-                        RedactedSecret.SentinelJwt("sentinel-jwt"),
-                        RedactedSecret.SentinelSeed("sentinel-seed"),
-                    ),
-                )
-            },
-            1.hours,
-            2.hours,
-            timeSource,
-        )
-    access.get()
-    sentinel.get()
-    val transport = FakeMessageTransport()
-    val harness = TelemetryTestHarness.create()
-    val nats = FakeNatsLifecycle()
-    return RuntimeFixture(
-        TypewriterRegistrarRuntime(
-            Communicator(transport, harness.telemetry, harness.openTelemetry.propagators),
-            ServiceRouteScope("service-id"),
-            nats,
-            access,
-            sentinel,
-        ),
-        transport,
-        nats,
-        harness,
-        access,
-        sentinel,
-        { exchanges },
-        { fetches },
-    )
-}
-
-private fun status(binding: ServiceBinding) = QueryServiceBindingResponse.createBinding(binding = binding)
-
-private fun queryResponse(
-    response: QueryServiceBindingResponse,
-): suspend (
-    com.typewritermc.services.libs.communicator.transport.OutboundMessage,
-    kotlin.time.Duration,
-) -> TransportResult<InboundMessage> =
-    { message, _ ->
-        TransportResult.Success(
-            InboundMessage(message.address, QueryServiceBindingResponse.serializer.toBytes(response).toByteArray()),
-        )
-    }
-
-private fun leaseResponse(
-    response: EnsureRegistrationLeaseResponse,
-): suspend (
-    com.typewritermc.services.libs.communicator.transport.OutboundMessage,
-    kotlin.time.Duration,
-) -> TransportResult<InboundMessage> =
-    { message, _ ->
-        TransportResult.Success(
-            InboundMessage(message.address, EnsureRegistrationLeaseResponse.serializer.toBytes(response).toByteArray()),
-        )
-    }
 
 val RegistrarMessagingRuntimeTest by testSuite {
     test("query uses exact status subject and maps bound name") {

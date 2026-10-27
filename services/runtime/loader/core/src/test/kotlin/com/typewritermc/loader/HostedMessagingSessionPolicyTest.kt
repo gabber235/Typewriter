@@ -1,19 +1,11 @@
 package com.typewritermc.loader
 
 import com.typewritermc.loader.rollout.invalidatesHostedMessagingSession
-import com.typewritermc.services.libs.registrar.MessagingOperation
-import com.typewritermc.services.libs.registrar.OrganizationBinding
-import com.typewritermc.services.libs.registrar.ReadySession
-import com.typewritermc.services.libs.registrar.RegistrarFailure
-import com.typewritermc.services.libs.registrar.RegistrarStage
+import com.typewritermc.loader.testing.binding
+import com.typewritermc.loader.testing.degradedState
 import com.typewritermc.services.libs.registrar.RegistrarState
-import com.typewritermc.services.libs.registrar.RetrySchedule
-import com.typewritermc.services.libs.registrar.ServiceId
-import com.typewritermc.services.libs.registrar.ServiceIdentity
-import com.typewritermc.services.libs.registrar.ServiceRole
 import de.infix.testBalloon.framework.core.testSuite
 import io.kotest.matchers.shouldBe
-import kotlin.time.Duration.Companion.seconds
 
 val HostedMessagingSessionPolicyTest by testSuite {
     test("transport degradation invalidates the hosted messaging session") {
@@ -24,18 +16,3 @@ val HostedMessagingSessionPolicyTest by testSuite {
         RegistrarState.Reauthorizing(binding).invalidatesHostedMessagingSession() shouldBe false
     }
 }
-
-private val binding = OrganizationBinding("organization", "Organization")
-private val readySession =
-    ReadySession(
-        ServiceIdentity(ServiceId("service"), "Service", "service-user", ServiceRole.Host("1")),
-        binding,
-    )
-
-private fun degradedState() =
-    RegistrarState.DegradedAfterReady(
-        readySession,
-        RegistrarStage.CONNECTING,
-        RegistrarFailure.Messaging(MessagingOperation.CONNECTIVITY),
-        RetrySchedule(1, 1.seconds),
-    )

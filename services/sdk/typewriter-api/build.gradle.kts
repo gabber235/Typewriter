@@ -3,6 +3,7 @@ plugins {
     alias(libs.plugins.ksp)
     alias(libs.plugins.kotlin.serialize)
     `java-library`
+    `java-test-fixtures`
 }
 
 kotlin {
@@ -18,10 +19,10 @@ dependencies {
     api(libs.kotlin.coroutines.core)
     implementation(libs.kotlin.reflect)
     ksp(project(":typewriter-codegen"))
-    testImplementation(libs.kotlin.serialize.json)
-    testImplementation(libs.kotest.property)
+    testFixturesApi(libs.kotlin.serialize.json)
+    testFixturesApi(libs.kotest.property)
     // The kit builds on this module; its own jar must not join the test classpath beside the main classes.
-    testImplementation(project(":typewriter-test-kit")) { exclude(module = "typewriter-api") }
+    testFixturesApi(project(":typewriter-test-kit")) { exclude(module = "typewriter-api") }
 }
 
 ksp {
@@ -40,7 +41,7 @@ tasks.test {
 val writeSdkFixtures by tasks.registering(JavaExec::class) {
     group = "build"
     description = "Writes the canonical read schema, the compiled control fixtures and the expression differential corpus."
-    classpath = sourceSets.test.get().runtimeClasspath
+    classpath = sourceSets.testFixtures.get().runtimeClasspath
     mainClass = "com.typewritermc.fixtures.SdkFixtureWriterKt"
     val fixtures = layout.buildDirectory.dir("fixtures")
     args(

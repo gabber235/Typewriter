@@ -1,19 +1,14 @@
 package com.typewritermc.loader
 
-import com.typewritermc.loader.api.HostedMessagingSession
-import com.typewritermc.loader.api.RuntimePlacement
-import com.typewritermc.loader.rollout.ArtifactHostAssignment
 import com.typewritermc.loader.rollout.DesiredHostExecution
-import com.typewritermc.loader.rollout.ExecutionRevision
-import com.typewritermc.loader.rollout.HostAssignmentRuntime
 import com.typewritermc.loader.rollout.HostExecutionObservation
 import com.typewritermc.loader.rollout.HostExecutionOwner
-import com.typewritermc.loader.rollout.RealmId
-import com.typewritermc.services.libs.registrar.ServiceId
+import com.typewritermc.loader.testing.TestRuntime
+import com.typewritermc.loader.testing.assignment
+import com.typewritermc.loader.testing.desired
 import de.infix.testBalloon.framework.core.testSuite
 import io.kotest.assertions.throwables.shouldThrow
 import io.kotest.matchers.shouldBe
-import skirout.service.v1.rollout.ParticipantStatus
 
 val HostExecutionOwnerTest by testSuite {
     test("initial empty and consecutive empty revisions are reported without runtime creation") {
@@ -97,27 +92,5 @@ val HostExecutionOwnerTest by testSuite {
         owner.apply(local, null)
         owner.report(local, 1L) { error("Standalone mode must not report") }
         owner.isApplied(local) shouldBe true
-    }
-}
-
-private val assignment = ArtifactHostAssignment(RealmId("realm"), setOf(RuntimePlacement.PRIMARY_ENGINE))
-
-private fun desired(
-    revision: Long,
-    assignment: ArtifactHostAssignment?,
-) = DesiredHostExecution(ExecutionRevision(ServiceId("service"), revision), assignment)
-
-private class TestRuntime(
-    override val assignment: ArtifactHostAssignment,
-) : HostAssignmentRuntime {
-    override val status: ParticipantStatus? = null
-    var failClose = false
-    var closeCalls = 0
-
-    override suspend fun replaceSession(session: HostedMessagingSession?) = Unit
-
-    override suspend fun close() {
-        closeCalls++
-        check(!failClose) { "Runtime shutdown failed" }
     }
 }

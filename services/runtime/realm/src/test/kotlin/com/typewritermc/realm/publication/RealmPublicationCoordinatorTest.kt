@@ -1,30 +1,11 @@
 package com.typewritermc.realm.publication
 
-import com.typewritermc.authoring.CompilationUnitDefinition
-import com.typewritermc.authoring.of
 import com.typewritermc.engine.CompilationResult
 import com.typewritermc.engine.ContentDigest
-import com.typewritermc.engine.decodeResourceGraphShard
-import com.typewritermc.realm.authoring.AuthoringLease
-import com.typewritermc.realm.authoring.AuthoringSeed
-import com.typewritermc.realm.authoring.AuthoringView
 import com.typewritermc.realm.authoring.AuthoringViewDelta
-import com.typewritermc.realm.authoring.InMemoryAuthoringViewStore
-import com.typewritermc.realm.checking.RealmCheckRuntime
-import com.typewritermc.realm.testing.DefinitionCatalog
-import com.typewritermc.realm.testing.recordBinding
 import com.typewritermc.services.libs.filetransfer.blob.ArtifactDigest
-import com.typewritermc.services.libs.filetransfer.blob.BlobEndpoint
-import com.typewritermc.services.libs.filetransfer.blob.BlobMetadata
 import com.typewritermc.services.libs.filetransfer.blob.BlobResult
 import com.typewritermc.services.libs.filetransfer.blob.DigestAlgorithm
-import com.typewritermc.services.libs.filetransfer.blob.InMemoryBlobEndpoint
-import com.typewritermc.services.libs.filetransfer.blob.StoreResult
-import com.typewritermc.types.field
-import com.typewritermc.types.namedTemplate
-import com.typewritermc.types.namedUse
-import com.typewritermc.types.qualified
-import com.typewritermc.types.template
 import de.infix.testBalloon.framework.core.testSuite
 import io.kotest.assertions.throwables.shouldThrow
 import io.kotest.matchers.shouldBe
@@ -34,13 +15,7 @@ import kotlinx.coroutines.async
 import kotlinx.coroutines.test.runCurrent
 import kotlinx.coroutines.test.runTest
 import skirout.editor.v1.authoring_facts.EditExpectation
-import skirout.editor.v1.checking.CheckInstanceId
-import skirout.editor.v1.checking.CheckOutcome
-import skirout.editor.v1.checking.CheckTicket
-import skirout.editor.v1.checking.FindingSet
 import skirout.editor.v1.checking.FindingStatus
-import skirout.editor.v1.compilation_root.CompilationProjectionId
-import skirout.editor.v1.compilation_root.CompilationRoot
 import skirout.editor.v1.compiled_content.PublishedContent
 import skirout.editor.v1.diagnostic.DiagnosticSeverity
 import skirout.editor.v1.publication.EngineImplementationInputs
@@ -51,22 +26,10 @@ import skirout.editor.v1.publication.PublicationFailure
 import skirout.editor.v1.publication.PublicationReport
 import skirout.editor.v1.publication.PublicationState
 import skirout.editor.v1.publication.PublicationStatus
-import skirout.editor.v1.type_catalog.AuthoringRecord
 import skirout.editor.v1.type_catalog.CatalogGeneration
-import skirout.editor.v1.type_catalog.CheckExecutionId
 import skirout.editor.v1.type_catalog.DataValue
-import skirout.editor.v1.type_catalog.FieldDeclaration
-import skirout.editor.v1.type_catalog.FieldOwner
 import skirout.editor.v1.type_catalog.InputToken
 import skirout.editor.v1.type_catalog.PublicationId
-import skirout.editor.v1.type_catalog.RepresentationTemplate
-import skirout.editor.v1.type_catalog.RuleId
-import skirout.editor.v1.type_catalog.RuleOrigin
-import skirout.editor.v1.type_catalog.ScalarKind
-import skirout.editor.v1.type_catalog.TypeDefinition
-import skirout.editor.v1.type_catalog.TypeDefinitionId
-import skirout.editor.v1.type_catalog.TypeSelection
-import skirout.editor.v1.type_catalog.ValueLocation
 import skirout.kernel.v1.resource_id.ResourceId
 
 val RealmPublicationCoordinatorTest by testSuite {
@@ -75,7 +38,9 @@ val RealmPublicationCoordinatorTest by testSuite {
         try {
             val witnesses =
                 fixture.views.read { view ->
-                    listOf(EditExpectation.createResource(id = PAGE_ID, expected = view.resources.getValue(PAGE_ID)))
+                    listOf(
+                        EditExpectation.createResource(id = PUBLICATION_PAGE_ID, expected = view.resources.getValue(PUBLICATION_PAGE_ID)),
+                    )
                 }
             fixture.findings =
                 listOf(
@@ -158,7 +123,7 @@ val RealmPublicationCoordinatorTest by testSuite {
         fixture.results.latestReport() shouldBe null
         fixture.update("Quest")
         fixture.release()
-        fixture.views.install(fixture.views.prepare(AuthoringViewDelta(emptyMap(), removedResources = setOf(PAGE_ID))))
+        fixture.views.install(fixture.views.prepare(AuthoringViewDelta(emptyMap(), removedResources = setOf(PUBLICATION_PAGE_ID))))
         fixture.publisher.refresh()
         val ready = fixture.ready()
         ready.changes.allChanges shouldBe listOf(PublicationChange.RootRemovedWrapper(fixture.root))
@@ -280,7 +245,29 @@ val RealmPublicationCoordinatorTest by testSuite {
     }
 
     test("blocked compilation retains successful roots and source and target locations without effects") {
-        val fixture = PublicationFixture(producers = listOf(ResourceGraphArtifactProducer, blockedProducer()))
+        val broken =
+            compiledArtifactProducer(
+                projection = "fixture.blocked",
+                mediaType = "application/blocked",
+                roots = setOf(compilationRoot("fixture.blocked", "broken")),
+            ) { roots ->
+                listOf(
+                    CompilationResult.Blocked(
+                        roots.single(),
+                        ContentDigest("a".repeat(64)),
+                        listOf(
+                            compilationDiagnostic(
+                                "broken_link",
+                                "The target is missing",
+                                DiagnosticSeverity.ERROR,
+                                ResourceId(value = "broken"),
+                                ResourceId(value = "target"),
+                            ),
+                        ),
+                    ),
+                )
+            }
+        val fixture = PublicationFixture(producers = listOf(ResourceGraphArtifactProducer, broken))
         fixture.publisher.refresh()
         val blocked =
             fixture.publisher.views.value.status
@@ -405,205 +392,3 @@ val RealmPublicationCoordinatorTest by testSuite {
         fixture.close()
     }
 }
-
-/**
- * A publication coordinator over saved views of the publication page catalog, assessed by production acceptance and
- * recorded in an embedded SurrealDB with the Realm schema. Hooks inject failures and pauses at the seams a test needs.
- */
-internal class PublicationFixture(
-    initial: Map<ResourceId, AuthoringRecord> = mapOf(PAGE_ID to publicationPageRecord("Quest")),
-    producers: List<CompiledArtifactProducer> = listOf(ResourceGraphArtifactProducer),
-) {
-    val views = InMemoryAuthoringViewStore(PUBLICATION_CATALOG.lease(), AuthoringSeed(initial))
-    private val checks = RealmCheckRuntime(views)
-    private val database = publicationDatabase()
-    val attempts = SurrealPublicationAttemptStore(database)
-    val results = SurrealRegisteredCompiledContentRepository(database)
-    val retention = TestPublicationRetention()
-    val root = CompilationRoot(projection = CompilationProjectionId(value = "typewriter.resource-graph"), resource = PAGE_ID)
-    var engineInputs = testEngineInputs()
-    var blobRequests = 0
-    var captureFailure = false
-    var findings = emptyList<FindingSet>()
-
-    /** Runs while saved content is assessed. */
-    var onEvaluate: (suspend () -> Unit)? = null
-
-    /** Runs before each compiled blob is stored, while an attempt is storing its artifacts. */
-    var onStore: suspend () -> Unit = {}
-    val blobs = InMemoryBlobEndpoint()
-    private val acceptance = AuthoringAcceptance(views, checks)
-    val publisher =
-        RealmPublicationCoordinator(
-            object : PublicationAcceptance {
-                override fun capture(): AuthoringLease {
-                    check(!captureFailure) { "Saved content is unavailable" }
-                    return acceptance.capture()
-                }
-
-                override fun <T> withCurrent(block: (AuthoringView) -> T): T = acceptance.withCurrent(block)
-
-                override suspend fun evaluate(capture: AuthoringLease): CapturedAssessment {
-                    onEvaluate?.invoke()
-                    return acceptance.evaluate(capture)
-                }
-            },
-            attempts,
-            RegisteredCompiledArtifactStore(
-                object : BlobEndpoint by blobs {
-                    override suspend fun metadata(digest: ArtifactDigest): BlobResult<BlobMetadata> {
-                        blobRequests++
-                        return blobs.metadata(digest)
-                    }
-
-                    override suspend fun store(
-                        expected: BlobMetadata,
-                        content: ByteArray,
-                    ): StoreResult {
-                        onStore()
-                        return blobs.store(expected, content)
-                    }
-                },
-                retention,
-            ),
-            object : EngineImplementationSource {
-                override fun capture() = engineInputs
-            },
-            CompiledArtifactProducerRegistry(producers),
-            results,
-            findings = { findings },
-        )
-
-    fun ready() =
-        publisher.views.value.status
-            .shouldBeInstanceOf<PublicationStatus.ReadyWrapper>()
-            .value
-
-    fun update(value: String) = views.install(views.prepare(AuthoringViewDelta(mapOf(PAGE_ID to publicationPageRecord(value)))))
-
-    suspend fun release(): PublicationResult.Activated {
-        publisher.refresh()
-        return publisher.publish(ready().candidate).shouldBeInstanceOf<PublicationResult.Activated>()
-    }
-
-    /** Selects [content] as another writer's completed publication would. */
-    suspend fun installElsewhere(content: PublishedContent) {
-        attempts.start(content.publication, content.catalog, testEngineInputs())
-        attempts.phase(content.publication, PublicationState.ACTIVATING)
-        attempts.install(content)
-    }
-
-    /** The page's authored value as the stored resource graph of [content] carries it. */
-    fun publishedPageValue(content: PublishedContent): DataValue? {
-        val payload =
-            blobs.content(
-                ArtifactDigest(
-                    DigestAlgorithm.SHA_256,
-                    content.outputs
-                        .single()
-                        .blob.digest,
-                ),
-            )
-        val page =
-            payload
-                .decodeResourceGraphShard()
-                .facts.resources
-                .single { it.key.source == PAGE_ID }
-        return (page.value.payload as DataValue.RecordWrapper).field("value")
-    }
-
-    /** A finding set of the page check numbered [rule], witnessed by [expectations] on the current catalog. */
-    fun findingSet(
-        rule: Int,
-        expectations: List<EditExpectation>,
-        status: FindingStatus,
-    ): FindingSet {
-        val location = ValueLocation.of(PAGE_ID)
-        return FindingSet(
-            ticket =
-                CheckTicket(
-                    instance =
-                        CheckInstanceId(
-                            rule = RuleId(origin = RuleOrigin(owner = PUBLICATION_PAGE, ordinal = 0), localIndex = rule),
-                            location = location,
-                        ),
-                    incarnation = "external_input",
-                    execution = CheckExecutionId(value = "execution"),
-                    catalog = views.read { it.catalog.generation },
-                ),
-            expectations = expectations,
-            outcome = CheckOutcome.FINISHED,
-            findings = listOf(compilationDiagnostic("external_check", "An external input requires attention.", location = location)),
-            status = status,
-        )
-    }
-
-    suspend fun close() {
-        publisher.close()
-        checks.close()
-        views.close()
-        database.close()
-    }
-}
-
-private fun blockedProducer() =
-    object : CompiledArtifactProducer {
-        override val projection = CompilationProjectionId(value = "fixture.blocked")
-        override val mediaType = "application/blocked"
-
-        override fun roots(view: AuthoringView) = setOf(CompilationRoot(projection = projection, resource = ResourceId(value = "broken")))
-
-        context(inputs: CompilationInputs)
-        override fun compile(roots: Set<CompilationRoot>): List<CompilationResult> =
-            listOf(
-                CompilationResult.Blocked(
-                    roots.single(),
-                    ContentDigest("a".repeat(64)),
-                    listOf(
-                        compilationDiagnostic(
-                            "broken_link",
-                            "The target is missing",
-                            DiagnosticSeverity.ERROR,
-                            ResourceId(value = "broken"),
-                            ResourceId(value = "target"),
-                        ),
-                    ),
-                ),
-            )
-    }
-
-private fun publicationPageRecord(value: String) =
-    AuthoringRecord.of(
-        TypeSelection.CompleteWrapper(PUBLICATION_PAGE_USE),
-        mapOf("value" to DataValue.StringValueWrapper(value)),
-    )
-
-private val PUBLICATION_PAGE = TypeDefinitionId.qualified("publication", "page")
-private val PUBLICATION_PAGE_USE = PUBLICATION_PAGE.namedUse()
-private val PUBLICATION_DEFINITIONS =
-    listOf(
-        TypeDefinition.partial(
-            id = CompilationUnitDefinition.id,
-            representation = RepresentationTemplate.createRecord(fields = emptyList(), abstract_ = true),
-        ),
-        TypeDefinition.partial(
-            id = PUBLICATION_PAGE,
-            representation =
-                RepresentationTemplate.createRecord(
-                    fields =
-                        listOf(
-                            FieldDeclaration.partial(
-                                owner = FieldOwner(definition = PUBLICATION_PAGE, name = "value"),
-                                type = ScalarKind.TEXT.template,
-                            ),
-                        ),
-                    abstract_ = false,
-                ),
-            parents = listOf(CompilationUnitDefinition.id.namedTemplate()),
-        ),
-    )
-
-private val PAGE_ID = ResourceId(value = "page")
-
-private val PUBLICATION_CATALOG =
-    DefinitionCatalog(PUBLICATION_DEFINITIONS, nativeBindingFactories = listOf(recordBinding(PUBLICATION_PAGE)))

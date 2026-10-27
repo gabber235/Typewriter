@@ -58,15 +58,3 @@ val PlacementFieldPublicationTest by testSuite {
             .map { it.code } shouldBe listOf("ambiguous_placement_field")
     }
 }
-
-private fun assemble(vararg extra: TypeDefinition): CatalogAssembly {
-    val origin = origin("type_display", "test:type_display")
-    val generated = generatedTypeProviders().distinctBy { it.definition.id }
-    return CatalogContributions(
-        declarations =
-            generated.map { OwnedTypeDeclaration(origin, it.definition, it.display) } +
-                extra.map { OwnedTypeDeclaration(origin, it) },
-    ).assemble(CatalogAssemblyContext(CatalogGeneration(value = "placement field publication")))
-}
-
-private fun CatalogAssembly.placementField(type: TypeDefinitionId): ValuePath? = placementFields[type]

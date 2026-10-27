@@ -8,6 +8,7 @@ import com.typewritermc.authoring.GeneratedSdkApi
 import com.typewritermc.authoring.bind
 import com.typewritermc.authoring.complete
 import com.typewritermc.authoring.map
+import com.typewritermc.testkit.ready
 import com.typewritermc.types.FactoryNativeBindingRegistry
 import com.typewritermc.types.GeneratedRecordNativeBinding
 import com.typewritermc.types.NativeBinding
@@ -15,8 +16,6 @@ import com.typewritermc.types.NativeBindingFactory
 import com.typewritermc.types.StandardTypes
 import com.typewritermc.types.catalog.CheckedType
 import com.typewritermc.types.catalog.DefaultCheckedCatalog
-import com.typewritermc.types.catalog.Resolution
-import com.typewritermc.types.catalog.resolve
 import com.typewritermc.types.nullable
 import com.typewritermc.types.qualified
 import com.typewritermc.types.use
@@ -68,7 +67,7 @@ val LazyNativeBindingTest by testSuite {
                 StandardTypes.map.use(listOf(childUse, childUse)) to emptyMap<Any, Any>(),
             )
         cases.forEach { (use, original) ->
-            val checked = (catalog.resolve(use) as Resolution.Ready).value
+            val checked = catalog.ready(use)
 
             @Suppress("UNCHECKED_CAST")
             val binding = registry.bind(checked) as NativeBinding<Any?>

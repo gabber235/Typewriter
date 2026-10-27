@@ -23,30 +23,35 @@ import skirout.editor.v1.type_catalog.ItemId
 import skirout.editor.v1.type_catalog.ListItem
 import skirout.kernel.v1.resource_id.ResourceId
 
-private val first = ResourceId(value = "first")
-private val second = ResourceId(value = "second")
-private val unrelated = ResourceId(value = "unrelated")
-private val parent = ResourceId(value = "parent")
-private val child = ResourceId(value = "child")
-private val childItem = ItemId(value = "child")
+val RelationDeletionTest by testSuite {
+    val first = ResourceId(value = "first")
 
-/** Two nodes paired through a relation that restricts deleting either side, and an unrelated node. */
-private val restricted =
-    nodeCatalog(pairRelation(RelationDeletePolicy.RESTRICT)) to
+    val second = ResourceId(value = "second")
+
+    val unrelated = ResourceId(value = "unrelated")
+
+    val parent = ResourceId(value = "parent")
+
+    val child = ResourceId(value = "child")
+
+    val childItem = ItemId(value = "child")
+
+    /** Two nodes paired through a relation that restricts deleting either side, and an unrelated node. */
+    val restricted =
+        nodeCatalog(pairRelation(RelationDeletePolicy.RESTRICT)) to
+            mapOf(
+                first to node(first = link(PAIR_FIRST, second, path("second"))),
+                second to node(second = link(PAIR_SECOND, first, path("first"))),
+                unrelated to node(),
+            )
+
+    /** A parent whose children list holds one child, linked both ways. */
+    val family =
         mapOf(
-            first to node(first = link(PAIR_FIRST, second, path("second"))),
-            second to node(second = link(PAIR_SECOND, first, path("first"))),
-            unrelated to node(),
+            parent to node(children = listOf(ListItem(id = childItem, value = link(PARENT_FIRST, child, path("parent"))))),
+            child to node(parent = link(PARENT_SECOND, parent, path("children").item(childItem))),
         )
 
-/** A parent whose children list holds one child, linked both ways. */
-private val family =
-    mapOf(
-        parent to node(children = listOf(ListItem(id = childItem, value = link(PARENT_FIRST, child, path("parent"))))),
-        child to node(parent = link(PARENT_SECOND, parent, path("children").item(childItem))),
-    )
-
-val RelationDeletionTest by testSuite {
     test("deleting both sides of a restricted relation in one run deletes both") {
         RealmFixture.of(restricted.first, restricted.second).use { realm ->
             realm.commit(EditIntent.createDeleteResource(id = first), EditIntent.createDeleteResource(id = second)).shouldBeCommitted()

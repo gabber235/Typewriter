@@ -3,9 +3,8 @@ package com.typewritermc.imprint.gradle
 import com.typewritermc.imprint.ArtifactId
 import com.typewritermc.imprint.ArtifactKind
 import com.typewritermc.imprint.ArtifactVersion
-import com.typewritermc.imprint.ContributionName
 import com.typewritermc.imprint.GeneratedContribution
-import com.typewritermc.imprint.ProducerId
+import com.typewritermc.imprint.gradle.testing.contribution
 import de.infix.testBalloon.framework.core.testSuite
 import io.kotest.assertions.throwables.shouldThrow
 import io.kotest.matchers.collections.shouldContainExactly
@@ -20,8 +19,8 @@ val ManifestContentPipelineTest by testSuite {
         )
 
     test("source order does not change canonical manifest content") {
-        val first = source(contribution("z.cbor"), runtimeEntrypoints = listOf("fixture.Runtime"))
-        val second = source(contribution("a.cbor"))
+        val first = manifestContentSource(contribution("z.cbor"), runtimeEntrypoints = listOf("fixture.Runtime"))
+        val second = manifestContentSource(contribution("a.cbor"))
 
         val forward = realmContentPipeline(first, second).assemble(context)
         val reverse = realmContentPipeline(second, first).assemble(context)
@@ -35,7 +34,7 @@ val ManifestContentPipelineTest by testSuite {
         val duplicate = contribution("duplicate.cbor")
         val failure =
             shouldThrow<IllegalArgumentException> {
-                libraryContentPipeline(source(duplicate) + source(duplicate)).assemble(context)
+                libraryContentPipeline(manifestContentSource(duplicate) + manifestContentSource(duplicate)).assemble(context)
             }
 
         failure.message shouldBe
@@ -44,31 +43,11 @@ val ManifestContentPipelineTest by testSuite {
 
     test("hosted and library pipelines enforce runtime entrypoint policy") {
         shouldThrow<IllegalArgumentException> {
-            realmContentPipeline(source(contribution("local.cbor")), source()).assemble(context)
+            realmContentPipeline(manifestContentSource(contribution("local.cbor")), manifestContentSource()).assemble(context)
         }.message shouldBe "A hosted artifact must declare exactly one runtime entrypoint, but found 0."
 
         shouldThrow<IllegalArgumentException> {
-            libraryContentPipeline(source(runtimeEntrypoints = listOf("fixture.Runtime"))).assemble(context)
+            libraryContentPipeline(manifestContentSource(runtimeEntrypoints = listOf("fixture.Runtime"))).assemble(context)
         }.message shouldBe "Only hosted Imprint artifacts may declare a runtime entrypoint."
     }
 }
-
-private fun source(
-    vararg contributions: GeneratedContribution,
-    runtimeEntrypoints: List<String> = emptyList(),
-): ManifestContentSource =
-    ManifestContentSource {
-        ManifestContent(
-            contributions = contributions.toList(),
-            runtimeEntrypoints = runtimeEntrypoints,
-        )
-    }
-
-private fun contribution(name: String): GeneratedContribution =
-    GeneratedContribution(
-        source = com.typewritermc.imprint.ContributionSourceId("artifact:typewritermc:realm"),
-        sourcePart = "main",
-        producer = ProducerId("types"),
-        name = ContributionName(name),
-        payload = name.encodeToByteArray(),
-    )

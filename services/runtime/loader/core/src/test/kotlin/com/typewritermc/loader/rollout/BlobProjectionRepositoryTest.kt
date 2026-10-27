@@ -1,12 +1,8 @@
 package com.typewritermc.loader.rollout
 
-import com.typewritermc.loader.FIXTURE_VERSION
 import com.typewritermc.loader.artifact.toApi
-import com.typewritermc.loader.deployment.HostDeploymentProjection
-import com.typewritermc.loader.deployment.RealmDeploymentSelection
-import com.typewritermc.loader.deployment.projectFor
+import com.typewritermc.loader.rollout.testing.projection
 import com.typewritermc.services.libs.filetransfer.blob.InMemoryBlobEndpoint
-import com.typewritermc.services.libs.registrar.ServiceId
 import de.infix.testBalloon.framework.core.testSuite
 import io.kotest.assertions.throwables.shouldThrow
 import io.kotest.matchers.shouldBe
@@ -63,13 +59,3 @@ val BlobProjectionRepositoryTest by testSuite {
         }
     }
 }
-
-private val HOST = ServiceId("combined")
-
-private fun projection(): HostDeploymentProjection =
-    deploymentSnapshot().projectFor(
-        "realm",
-        RealmDeploymentSelection(HOST, setOf(HOST), mapOf(HOST to FIXTURE_VERSION)),
-        HOST,
-        deploymentManifests(),
-    )

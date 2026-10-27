@@ -39,16 +39,12 @@ val CanonicalExpressionTypeTest by testSuite {
     val rows = ExpressionBindingId(value = "rows")
     val source = checkInput(rows)
 
-    fun listType(item: TypeUse) = StandardTypes.list.use(listOf(item))
-
-    fun integerLiteral(value: Long) = checkLiteral(DataValue.integer(BigInteger.valueOf(value)))
-
     test("grouped literal keys keep their numeric evidence inside structural map children") {
-        val expression = checkCall("collection.group_by", source, checkLambda(1, integerLiteral(1)))
+        val expression = checkCall("collection.group_by", source, checkLambda(1, checkLiteral(DataValue.integer(BigInteger.valueOf(1)))))
         checker.checkExpressionCodes(
             expression,
-            mapOf(rows to nominalExpressionType(listType(text))),
-            nominalExpressionType(StandardTypes.map.use(listOf(narrow, listType(text)))),
+            mapOf(rows to nominalExpressionType(StandardTypes.list.use(listOf(text)))),
+            nominalExpressionType(StandardTypes.map.use(listOf(narrow, StandardTypes.list.use(listOf(text))))),
         ) shouldBe emptyList()
     }
 
@@ -56,8 +52,8 @@ val CanonicalExpressionTypeTest by testSuite {
         val expression = checkCall("collection.map", source, checkLambda(1, checkLocal(0)))
         checker.checkExpressionCodes(
             expression,
-            mapOf(rows to nominalExpressionType(listType(wide))),
-            nominalExpressionType(listType(narrow)),
+            mapOf(rows to nominalExpressionType(StandardTypes.list.use(listOf(wide)))),
+            nominalExpressionType(StandardTypes.list.use(listOf(narrow))),
         ) shouldBe listOf(CheckFailure.IncompatibleExpressionResultType)
     }
 
@@ -84,7 +80,7 @@ val CanonicalExpressionTypeTest by testSuite {
             nominalExpressionType(ScalarKind.BOOLEAN.use),
         ) shouldBe emptyList()
         aliasChecker.checkExpressionCodes(
-            checkCall("map.contains_key", source, integerLiteral(1)),
+            checkCall("map.contains_key", source, checkLiteral(DataValue.integer(BigInteger.valueOf(1)))),
             bindings,
             nominalExpressionType(ScalarKind.BOOLEAN.use),
         ) shouldBe listOf(CheckFailure.InvalidOperandType)
@@ -92,37 +88,37 @@ val CanonicalExpressionTypeTest by testSuite {
 
     test("a literal fold seed takes the accumulator width of the step without narrowing bound inputs") {
         val step = checkLambda(2, checkCall("number.add", checkLocal(0), checkLocal(1)))
-        val expression = checkCall("collection.fold", source, integerLiteral(0), step)
+        val expression = checkCall("collection.fold", source, checkLiteral(DataValue.integer(BigInteger.valueOf(0))), step)
         checker.checkExpressionCodes(
             expression,
-            mapOf(rows to nominalExpressionType(listType(count))),
+            mapOf(rows to nominalExpressionType(StandardTypes.list.use(listOf(count)))),
             nominalExpressionType(count),
         ) shouldBe emptyList()
     }
 
     test("an item read by index may be missing") {
-        val bindings = mapOf(rows to nominalExpressionType(listType(text)))
-        val first = checkCall("list.at", source, integerLiteral(0))
+        val bindings = mapOf(rows to nominalExpressionType(StandardTypes.list.use(listOf(text))))
+        val first = checkCall("list.at", source, checkLiteral(DataValue.integer(BigInteger.valueOf(0))))
         checker.checkExpressionCodes(first, bindings, nominalExpressionType(text, true)) shouldBe emptyList()
         checker.checkExpressionCodes(first, bindings, nominalExpressionType(text)) shouldBe
             listOf(CheckFailure.ExpressionResultMayBeMissing)
     }
 
     test("an each lambda sees the item type") {
-        val bindings = mapOf(rows to nominalExpressionType(listType(text)))
+        val bindings = mapOf(rows to nominalExpressionType(StandardTypes.list.use(listOf(text))))
         val isA = checkCall("value.equals", checkLocal(0), checkLiteral(DataValue.StringValueWrapper("a")))
         val kept = checkCall("collection.filter", source, checkLambda(1, isA))
-        checker.checkExpressionCodes(kept, bindings, nominalExpressionType(listType(text))) shouldBe emptyList()
+        checker.checkExpressionCodes(kept, bindings, nominalExpressionType(StandardTypes.list.use(listOf(text)))) shouldBe emptyList()
         val lengths = checkCall("collection.map", source, checkLambda(1, checkCall("text.length", checkLocal(0))))
-        checker.checkExpressionCodes(lengths, bindings, nominalExpressionType(listType(count))) shouldBe emptyList()
+        checker.checkExpressionCodes(lengths, bindings, nominalExpressionType(StandardTypes.list.use(listOf(count)))) shouldBe emptyList()
     }
 
     test("a sort comparator must return an integer") {
-        val bindings = mapOf(rows to nominalExpressionType(listType(text)))
+        val bindings = mapOf(rows to nominalExpressionType(StandardTypes.list.use(listOf(text))))
         val ordered = checkCall("collection.sort_with", source, checkLambda(2, checkCall("value.compare", checkLocal(0), checkLocal(1))))
-        checker.checkExpressionCodes(ordered, bindings, nominalExpressionType(listType(text))) shouldBe emptyList()
+        checker.checkExpressionCodes(ordered, bindings, nominalExpressionType(StandardTypes.list.use(listOf(text)))) shouldBe emptyList()
         val unordered = checkCall("collection.sort_with", source, checkLambda(2, checkLocal(0)))
-        checker.checkExpressionCodes(unordered, bindings, nominalExpressionType(listType(text))) shouldBe
+        checker.checkExpressionCodes(unordered, bindings, nominalExpressionType(StandardTypes.list.use(listOf(text)))) shouldBe
             listOf(CheckFailure.InvalidOperandType)
     }
 

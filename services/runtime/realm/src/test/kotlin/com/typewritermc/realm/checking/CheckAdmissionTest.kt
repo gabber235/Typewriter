@@ -1,70 +1,13 @@
 package com.typewritermc.realm.checking
 
 import com.typewritermc.authoring.of
-import com.typewritermc.realm.authoring.AuthoringSeed
 import com.typewritermc.realm.authoring.AuthoringViewDelta
-import com.typewritermc.realm.authoring.InMemoryAuthoringViewStore
-import com.typewritermc.realm.authoring.TEST_TYPE
-import com.typewritermc.realm.authoring.TestCatalogLease
-import com.typewritermc.realm.authoring.location
 import com.typewritermc.realm.authoring.record
 import de.infix.testBalloon.framework.core.testSuite
 import io.kotest.matchers.shouldBe
-import skirout.editor.v1.authoring_facts.EditExpectation
-import skirout.editor.v1.checking.CheckInstanceId
 import skirout.editor.v1.checking.CheckOutcome
-import skirout.editor.v1.checking.CheckResult
-import skirout.editor.v1.checking.CheckTicket
 import skirout.editor.v1.type_catalog.CatalogGeneration
 import skirout.editor.v1.type_catalog.CheckExecutionId
-import skirout.editor.v1.type_catalog.DataValue
-import skirout.editor.v1.type_catalog.RuleId
-import skirout.editor.v1.type_catalog.RuleOrigin
-import skirout.editor.v1.type_catalog.ValueLocation
-import skirout.kernel.v1.resource_id.ResourceId
-
-private val page = ResourceId(value = "page")
-private val instance =
-    CheckInstanceId(
-        rule = RuleId(origin = RuleOrigin(owner = TEST_TYPE, ordinal = 0), localIndex = 0),
-        location = ValueLocation.of(page),
-    )
-private val catalog = CatalogGeneration(value = "catalog")
-private val first =
-    CheckTicket(instance = instance, incarnation = "catalog", execution = CheckExecutionId(value = "first"), catalog = catalog)
-
-/** A finished check result of [ticket] that read the page name as [name]. */
-private fun resultOf(
-    ticket: CheckTicket = first,
-    name: String = "Quest",
-    outcome: CheckOutcome = CheckOutcome.FINISHED,
-) = CheckResult(
-    ticket = ticket,
-    outcome = outcome,
-    expectations = listOf(EditExpectation.createValue(at = location(page, "name"), expected = DataValue.StringValueWrapper(name))),
-    findings = emptyList(),
-)
-
-/** Runs [test] with a view store whose page is named [name], admitting against [current] as the latest execution. */
-private fun admitting(
-    name: String = "Quest",
-    current: CheckTicket = first,
-    test: (InMemoryAuthoringViewStore, DefaultCheckAdmission) -> Unit,
-) {
-    InMemoryAuthoringViewStore(TestCatalogLease(catalog), AuthoringSeed(mapOf(page to record(name = name)))).use { store ->
-        val executions =
-            object : CurrentCheckExecutions {
-                override fun ticket(instance: CheckInstanceId) = current
-            }
-        test(store, DefaultCheckAdmission(store, executions))
-    }
-}
-
-/** Admits [result] as current findings and reports whether it was installed. */
-private fun DefaultCheckAdmission.publish(result: CheckResult): Pair<AdmissionResult, Boolean> {
-    var installed = false
-    return requireCurrentExecutionAndInputs(result) { installed = true } to installed
-}
 
 val CheckAdmissionTest by testSuite {
     test("findings of the current execution whose inputs still match are published") {

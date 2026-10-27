@@ -1,10 +1,7 @@
 package com.typewritermc.realm.edit
 
 import com.typewritermc.authoring.item
-import com.typewritermc.operations.OperationInvocation
 import com.typewritermc.operations.OperationOrigin
-import com.typewritermc.operations.PreparationChoices
-import com.typewritermc.realm.operation.RuntimeOperationPreparation
 import com.typewritermc.realm.testing.RealmFixture
 import com.typewritermc.realm.testing.link
 import com.typewritermc.realm.testing.links
@@ -21,52 +18,23 @@ import skirout.editor.v1.type_catalog.ItemId
 import skirout.editor.v1.type_catalog.ListItem
 import skirout.kernel.v1.resource_id.ResourceId
 
-private fun id(name: String) = ResourceId(value = name)
-
-/** The parent relation as ownership: a parent owns its children and deleting it deletes them. */
-private val owning = parentRelation(RelationDeletePolicy.CASCADE, OWNERSHIP_FAMILY)
-
-/** Children list items for [ids], each keyed by the child's id and paired with the child's `parent`. */
-private fun children(vararg ids: ResourceId) =
-    ids.map { ListItem(id = ItemId(value = it.value), value = link(PARENT_FIRST, it, path("parent"))) }
-
-/** The parent link of [self] to [owner], matching the item [owner] keeps for it. */
-private fun ownedBy(
-    owner: ResourceId,
-    self: ResourceId,
-) = link(PARENT_SECOND, owner, path("children").item(ItemId(value = self.value)))
-
-/** Runs one operation preparation for [subjects] inside a commit, as an operation's prepare callback does. */
-private suspend fun RealmFixture.operate(
-    subjects: List<ResourceId>,
-    origin: OperationOrigin? = null,
-    block: suspend RuntimeOperationPreparation.() -> Unit,
-) = commit {
-    val invocation =
-        if (origin ==
-            null
-        ) {
-            OperationInvocation("operation", subjects.toResourceIds())
-        } else {
-            OperationInvocation("operation", subjects.toResourceIds(), origin)
-        }
-    RuntimeOperationPreparation(invocation, PreparationChoices(), this).block()
-}
-
 val CloneAndMoveTest by testSuite {
+    /** The parent relation as ownership: a parent owns its children and deleting it deletes them. */
+    val owning = parentRelation(RelationDeletePolicy.CASCADE, OWNERSHIP_FAMILY)
+
     test("moving a selection to another owner reparents every member and keeps their content") {
-        val root = id("root")
-        val from = id("from")
-        val to = id("to")
-        val first = id("first")
-        val second = id("second")
+        val root = ResourceId(value = "root")
+        val from = ResourceId(value = "from")
+        val to = ResourceId(value = "to")
+        val first = ResourceId(value = "first")
+        val second = ResourceId(value = "second")
         val seed =
             mapOf(
-                root to node(children = children(from, to)),
+                root to node(children = childItems(from, to)),
                 from to
                     node(
                         parent = ownedBy(root, from),
-                        children = children(first, second),
+                        children = childItems(first, second),
                     ),
                 to to node(parent = ownedBy(root, to)),
                 first to node(parent = ownedBy(from, first), label = "first"),
@@ -91,11 +59,11 @@ val CloneAndMoveTest by testSuite {
     }
 
     test("a batch move the destination cannot hold is refused and changes nothing") {
-        val ownerA = id("owner_a")
-        val ownerB = id("owner_b")
-        val destination = id("single_owner")
-        val childA = id("child_a")
-        val childB = id("child_b")
+        val ownerA = ResourceId(value = "owner_a")
+        val ownerB = ResourceId(value = "owner_b")
+        val destination = ResourceId(value = "single_owner")
+        val childA = ResourceId(value = "child_a")
+        val childB = ResourceId(value = "child_b")
         val seed =
             mapOf(
                 ownerA to node(first = link(PAIR_FIRST, childA, path("second"))),
@@ -115,21 +83,21 @@ val CloneAndMoveTest by testSuite {
     }
 
     test("duplicating a book and its page copies the owned closure once and keeps the outside link") {
-        val root = id("root")
-        val book = id("book")
-        val page = id("page")
-        val element = id("element")
-        val outside = id("outside")
+        val root = ResourceId(value = "root")
+        val book = ResourceId(value = "book")
+        val page = ResourceId(value = "page")
+        val element = ResourceId(value = "element")
+        val outside = ResourceId(value = "outside")
         val outsideItem = ItemId(value = "outside")
         val bookLink = ItemId(value = "book_link")
         val seed =
             mapOf(
                 // Every node is ownable, so the top node owns itself.
-                root to node(parent = ownedBy(root, root), children = children(root, book, outside)),
+                root to node(parent = ownedBy(root, root), children = childItems(root, book, outside)),
                 book to
                     node(
                         parent = ownedBy(root, book),
-                        children = children(page),
+                        children = childItems(page),
                         manyFirst =
                             listOf(
                                 ListItem(id = bookLink, value = link(MANY_FIRST, outside, path("manySecond").item(outsideItem))),
@@ -138,7 +106,7 @@ val CloneAndMoveTest by testSuite {
                 page to
                     node(
                         parent = ownedBy(book, page),
-                        children = children(element),
+                        children = childItems(element),
                     ),
                 element to node(parent = ownedBy(page, element)),
                 outside to
@@ -168,9 +136,9 @@ val CloneAndMoveTest by testSuite {
     }
 
     test("duplicating a resource copies its outgoing links and leaves incoming links on the original") {
-        val source = id("source")
-        val outside = id("outside")
-        val incoming = id("incoming")
+        val source = ResourceId(value = "source")
+        val outside = ResourceId(value = "outside")
+        val incoming = ResourceId(value = "incoming")
         val outgoing = ItemId(value = "outgoing")
         val outsideInverse = ItemId(value = "outside_inverse")
         val incomingItem = ItemId(value = "incoming")
@@ -215,8 +183,8 @@ val CloneAndMoveTest by testSuite {
     }
 
     test("duplicating a resource whose outside link has room for only one is refused and changes nothing") {
-        val source = id("source")
-        val outside = id("outside")
+        val source = ResourceId(value = "source")
+        val outside = ResourceId(value = "outside")
         val seed =
             mapOf(
                 source to node(first = link(PAIR_FIRST, outside, path("second"))),
@@ -231,8 +199,8 @@ val CloneAndMoveTest by testSuite {
     }
 
     test("duplicating a resource whose selected link lacks its counterpart is refused until the relation is repaired") {
-        val source = id("source")
-        val outside = id("outside")
+        val source = ResourceId(value = "source")
+        val outside = ResourceId(value = "outside")
         val seed = mapOf(source to node(first = link(PAIR_FIRST, outside, path("second"))), outside to node())
         RealmFixture.of(nodeCatalog(pairRelation()), seed).use { realm ->
             shouldThrow<IllegalArgumentException> {
@@ -243,7 +211,7 @@ val CloneAndMoveTest by testSuite {
     }
 
     test("running the same duplicating operation again is refused because its copy already exists") {
-        val source = id("source")
+        val source = ResourceId(value = "source")
         RealmFixture.of(nodeCatalog(pairRelation()), mapOf(source to node(label = "source"))).use { realm ->
             realm.operate(listOf(source)) { duplicate(listOf(source).toResourceIds()) }.shouldBeCommitted()
             val saved = realm.resources

@@ -55,6 +55,22 @@ dependencies {
     testImplementation(libs.findBundle("basic-test").get())
 }
 
+// Test fixtures hold the module's setups, fakes and assertions, so like the tests they get the
+// test toolkit, the module's implementation dependencies and its internals; the tests see the
+// fixtures' internals. Fixtures can then drive internal types without widening production
+// visibility for tests.
+pluginManager.withPlugin("java-test-fixtures") {
+    configurations.named("testFixturesImplementation") { extendsFrom(configurations.getByName("implementation")) }
+    dependencies {
+        "testFixturesImplementation"(libs.findBundle("basic-test").get())
+    }
+    val compilations = kotlin.target.compilations
+    compilations.matching { it.name == "testFixtures" }.configureEach {
+        associateWith(compilations.getByName("main"))
+        compilations.getByName("test").associateWith(this)
+    }
+}
+
 tasks.withType<Test> {
     useJUnitPlatform()
     // CI keeps only the console, so a failure must print its full cause chain there.

@@ -1,7 +1,6 @@
 package com.typewritermc.realm
 
 import com.typewritermc.authoring.definition
-import com.typewritermc.authoring.field
 import com.typewritermc.authoring.root
 import com.typewritermc.library.BookDefinition
 import com.typewritermc.library.LibraryDefinition
@@ -9,38 +8,36 @@ import com.typewritermc.library.book
 import com.typewritermc.library.library
 import com.typewritermc.library.tag
 import com.typewritermc.library.taxonomy
-import com.typewritermc.realm.authoring.valueAt
 import com.typewritermc.realm.testing.RealmFixture
 import com.typewritermc.realm.testing.RealmStorage
+import com.typewritermc.realm.testing.link
+import com.typewritermc.realm.testing.links
+import com.typewritermc.realm.testing.text
 import com.typewritermc.realm.testing.withSetup
 import com.typewritermc.setup.setup
 import com.typewritermc.testing.routes.fixtureTimelinePage
 import com.typewritermc.testkit.setup.SetupRejected
 import com.typewritermc.types.items
 import com.typewritermc.types.toSkir
-import com.typewritermc.types.unwrapNamed
 import de.infix.testBalloon.framework.core.testSuite
 import io.kotest.assertions.throwables.shouldThrow
 import io.kotest.matchers.shouldBe
 import io.kotest.matchers.string.shouldContain
 import io.kotest.matchers.string.shouldStartWith
-import skirout.editor.v1.type_catalog.AuthoringRecord
-import skirout.editor.v1.type_catalog.DataValue
-import skirout.kernel.v1.resource_id.ResourceId
-
-private val greeting =
-    setup("greeting") {
-        library {
-            books.book("greeting") {
-                title = "Greeting"
-                pages.fixtureTimelinePage("start") { name = "Start" }
-                pages.fixtureTimelinePage("end") { name = "End" }
-                handle
-            }
-        }
-    }
 
 val SetupApplierTest by testSuite {
+    val greeting =
+        setup("greeting") {
+            library {
+                books.book("greeting") {
+                    title = "Greeting"
+                    pages.fixtureTimelinePage("start") { name = "Start" }
+                    pages.fixtureTimelinePage("end") { name = "End" }
+                    handle
+                }
+            }
+        }
+
     test("a setup's resources are saved under their owners in builder order") {
         withSetup(greeting, RealmStorage.Surreal, routeFixtureCatalog) { book ->
             restart()
@@ -71,17 +68,3 @@ val SetupApplierTest by testSuite {
         }
     }
 }
-
-private fun AuthoringRecord.text(field: String): String = (valueAt(field.path())?.unwrapNamed() as DataValue.StringValueWrapper).value
-
-private fun AuthoringRecord.link(field: String): ResourceId =
-    (valueAt(field.path())?.unwrapNamed() as DataValue.LinkWrapper).value.target.resource
-
-private fun AuthoringRecord.links(field: String): List<ResourceId> =
-    (valueAt(field.path())?.unwrapNamed() as DataValue.ListValueWrapper).items.map {
-        (it.value.unwrapNamed() as DataValue.LinkWrapper).value.target.resource
-    }
-
-private fun String.path() =
-    skirout.editor.v1.type_catalog.ValuePath.root
-        .field(this)

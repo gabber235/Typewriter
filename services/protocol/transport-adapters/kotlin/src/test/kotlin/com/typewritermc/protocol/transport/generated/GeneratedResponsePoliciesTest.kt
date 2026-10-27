@@ -11,9 +11,9 @@ import skirout.editor.v1.authoring.QueryAuthoringStateResponse
 import skirout.kernel.v1.errors.InternalError
 import skirout.service.v1.artifact.PublishSharedArtifactResponse
 
-private val scope = RealmRouteScope(organizationId = "writers", realmId = "quests")
-
 val GeneratedResponsePoliciesTest by testSuite {
+    val scope = RealmRouteScope(organizationId = "writers", realmId = "quests")
+
     test("variant names classify the responses of a generated route") {
         val policy = scope.authoringStateQuery.responsePolicy
 

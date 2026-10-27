@@ -9,14 +9,9 @@ import com.typewritermc.authoring.of
 import com.typewritermc.authoring.root
 import com.typewritermc.authoring.typedPath
 import com.typewritermc.discovery.CatalogAssemblyContext
-import com.typewritermc.discovery.ProviderOrigin
 import com.typewritermc.discovery.assemble
-import com.typewritermc.discovery.contributionKey
-import com.typewritermc.imprint.ArtifactId
-import com.typewritermc.imprint.ContributionName
-import com.typewritermc.imprint.ContributionSourceId
-import com.typewritermc.imprint.ProducerId
 import com.typewritermc.library.frameworkContributions
+import com.typewritermc.testkit.origin
 import com.typewritermc.types.FactoryNativeBindingRegistry
 import com.typewritermc.types.ResourceId
 import com.typewritermc.types.ResourceIdDefinition
@@ -52,7 +47,6 @@ import skirout.editor.v1.resource_operations.PreparationCounterpartOption
 import skirout.editor.v1.type_catalog.AuthoringRecord
 import skirout.editor.v1.type_catalog.CatalogGeneration
 import skirout.editor.v1.type_catalog.DataValue
-import skirout.editor.v1.type_catalog.DeclarationOwner
 import skirout.editor.v1.type_catalog.EndpointId
 import skirout.editor.v1.type_catalog.LinkTarget
 import skirout.editor.v1.type_catalog.ResourceTarget
@@ -160,7 +154,7 @@ val OperationDeclarationTest by testSuite {
             .single()
             .origins
             .single()
-            .owner shouldBe origin().owner
+            .owner shouldBe origin("fixture.ExampleOperation", artifact = "fixture").owner
         bound.failures
             .single()
             .cause.message!! shouldContain "label cannot be blank"
@@ -273,41 +267,3 @@ val OperationDeclarationTest by testSuite {
         shouldThrow<NeedsChoices> { choices.require(asked) }.requests shouldBe listOf(PreparationChoice.CounterpartWrapper(asked))
     }
 }
-
-private val target = TypeDefinitionId.qualified("fixture", "Resource")
-
-/** Collects one operation on any resource as a generated provider would, with the label derived from `ExampleOperation`. */
-private fun <I> collect(
-    input: OperationInput = OperationInput.None,
-    declare: ResourceOperationSpec<I>.() -> PreparedOperation,
-): OperationDeclaration =
-    collectOperation<ResourceDraft, I>(
-        origin = origin(),
-        declaration = "fixture.ExampleOperation",
-        target = ResourceTarget.ANY_RESOURCE,
-        subjects = AnyResourceSubjects,
-        input = input,
-        defaultLabel = "Example operation",
-    ) { spec -> ResourceOperationSpecImpl(spec).declare() }
-
-private fun bind(declaration: OperationDeclaration): List<ResourceOperationDefinition> {
-    val catalog = DefaultCheckedCatalog(CatalogGeneration(value = "test"), emptyList())
-    val bound = bindOperations(listOf(declaration), catalog, FactoryNativeBindingRegistry(catalog, emptyList()), emptyList())
-    bound.failures shouldBe emptyList()
-    return bound.definitions
-}
-
-private fun drop(
-    input: ValuePath,
-    hint: String,
-) = OperationDrop(input = input, hint = hint)
-
-private fun origin(): ProviderOrigin =
-    ProviderOrigin(
-        DeclarationOwner(
-            source = contributionKey(ContributionSourceId("fixture"), "main", ProducerId("ksp"), ContributionName("ops")),
-            localIdentity = "fixture.ExampleOperation",
-        ),
-        ArtifactId("fixture"),
-        "main",
-    )

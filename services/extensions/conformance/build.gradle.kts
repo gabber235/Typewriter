@@ -42,5 +42,6 @@ dependencies {
     imprintExtensionApi(project(":typewriter-api"))
 
     testImplementation(project(":typewriter-api"))
+    testImplementation(project(":typewriter-test-kit"))
     testImplementation(libs.kotlin.coroutines.test)
 }

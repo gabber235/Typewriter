@@ -1,6 +1,7 @@
 plugins {
     id("com.typewritermc.basic-conventions")
     id("xyz.jpenilla.resource-factory-paper-convention") version "1.4.0"
+    `java-test-fixtures`
 }
 
 paperPluginYaml {

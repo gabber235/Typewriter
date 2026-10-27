@@ -1,20 +1,21 @@
 package com.typewritermc.loader
 
+import com.typewritermc.loader.testing.shippedProfiles
 import de.infix.testBalloon.framework.core.testSuite
 import io.kotest.matchers.nulls.shouldNotBeNull
 import io.kotest.matchers.shouldBe
 import java.net.URI
-import java.nio.file.Files
-import java.nio.file.Path
 
 val LoaderSettingsTest by testSuite {
+    val requiredProfileSettings = listOf("API_BASE_URL", "AUTH_BASE_URL", "NATS_URL", "OTEL_EXPORTER_OTLP_ENDPOINT")
+
     shippedProfiles().forEach { profile ->
         test("the shipped ${profile.fileName} profile names its own backend, broker and telemetry endpoint") {
             val settings = LoaderSettings.fromFile(profile)
             val configuration = settings.registrarConfiguration()
 
             // A shipped profile must never fall back to the production defaults for a value it leaves out.
-            REQUIRED_PROFILE_SETTINGS.forEach { name -> settings.getOrNull(name).shouldNotBeNull() }
+            requiredProfileSettings.forEach { name -> settings.getOrNull(name).shouldNotBeNull() }
             configuration.identityIssueUri.host shouldBe URI(settings.get("API_BASE_URL", "")).host
             configuration.oauthTokenUri.host shouldBe URI(settings.get("AUTH_BASE_URL", "")).host
             configuration.natsServerUri shouldBe URI(settings.get("NATS_URL", ""))
@@ -58,10 +59,3 @@ val LoaderSettingsTest by testSuite {
         ).telemetryConfiguration().sampler shouldBe LoaderSamplerConfiguration.AlwaysOn
     }
 }
-
-private val REQUIRED_PROFILE_SETTINGS = listOf("API_BASE_URL", "AUTH_BASE_URL", "NATS_URL", "OTEL_EXPORTER_OTLP_ENDPOINT")
-
-private fun shippedProfiles(): List<Path> =
-    Files.list(Path.of("..", "..", "config")).use { files ->
-        files.filter { it.fileName.toString().endsWith(".properties") }.sorted().toList()
-    }

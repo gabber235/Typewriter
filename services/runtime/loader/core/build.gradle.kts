@@ -3,6 +3,7 @@ plugins {
     alias(libs.plugins.kotlin.serialize)
     alias(libs.plugins.gradle.buildconfig)
     `java-library`
+    `java-test-fixtures`
 }
 
 buildConfig {
@@ -33,8 +34,8 @@ dependencies {
     implementation(libs.opentelemetry.exporter.otlp)
     implementation(libs.opentelemetry.semconv)
     implementation(libs.kotlin.serialize.cbor)
-    testImplementation(testFixtures(project(":messaging")))
-    testImplementation(testFixtures(project(":telemetry")))
-    testImplementation(testFixtures(project(":file-transfer")))
-    testImplementation(libs.kotlin.coroutines.test)
+    testFixturesApi(testFixtures(project(":messaging")))
+    testFixturesApi(testFixtures(project(":telemetry")))
+    testFixturesApi(testFixtures(project(":file-transfer")))
+    testFixturesApi(libs.kotlin.coroutines.test)
 }

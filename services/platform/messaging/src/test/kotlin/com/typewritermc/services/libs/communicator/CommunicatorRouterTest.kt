@@ -8,7 +8,6 @@ import com.typewritermc.services.libs.communicator.address.addressValuesOf
 import com.typewritermc.services.libs.communicator.client.Communicator
 import com.typewritermc.services.libs.communicator.contract.EventContract
 import com.typewritermc.services.libs.communicator.contract.OperationName
-import com.typewritermc.services.libs.communicator.contract.PayloadCodec
 import com.typewritermc.services.libs.communicator.contract.ReplyAddressRule
 import com.typewritermc.services.libs.communicator.contract.ResponseClassification
 import com.typewritermc.services.libs.communicator.contract.ResponseOutcome
@@ -16,7 +15,6 @@ import com.typewritermc.services.libs.communicator.contract.ResponsePolicy
 import com.typewritermc.services.libs.communicator.contract.ResponseVariant
 import com.typewritermc.services.libs.communicator.contract.UnaryContract
 import com.typewritermc.services.libs.communicator.router.CommunicatorRouter
-import com.typewritermc.services.libs.communicator.router.CommunicatorRoutes
 import com.typewritermc.services.libs.communicator.router.IncomingUnaryCall
 import com.typewritermc.services.libs.communicator.router.RouterError
 import com.typewritermc.services.libs.communicator.router.RouterOptions
@@ -24,9 +22,15 @@ import com.typewritermc.services.libs.communicator.router.RouterResult
 import com.typewritermc.services.libs.communicator.router.RouterState
 import com.typewritermc.services.libs.communicator.router.communicatorRoutes
 import com.typewritermc.services.libs.communicator.testing.FakeMessageTransport
+import com.typewritermc.services.libs.communicator.testing.TestTarget
+import com.typewritermc.services.libs.communicator.testing.deliveryOf
+import com.typewritermc.services.libs.communicator.testing.routerAddress
+import com.typewritermc.services.libs.communicator.testing.routerEvent
+import com.typewritermc.services.libs.communicator.testing.routerFixture
+import com.typewritermc.services.libs.communicator.testing.stringPayloadCodec
+import com.typewritermc.services.libs.communicator.testing.twoEventRoutes
 import com.typewritermc.services.libs.communicator.transport.InboundMessage
 import com.typewritermc.services.libs.communicator.transport.MessageHeaders
-import com.typewritermc.services.libs.communicator.transport.Payload
 import com.typewritermc.services.libs.communicator.transport.TransportDelivery
 import com.typewritermc.services.libs.communicator.transport.TransportError
 import com.typewritermc.services.libs.telemetry.ErrorSlug
@@ -47,58 +51,39 @@ import kotlinx.coroutines.test.runTest
 import kotlin.time.Duration.Companion.milliseconds
 import kotlin.time.Duration.Companion.seconds
 
-private data class RouterTarget(
-    val id: String,
-)
-
-private val routerAddress =
-    "router.{id}.get".addressTemplate({ addressValuesOf("id" to it.id) }, { RouterTarget(it.require("id")) })
-private val routerCodec =
-    object : PayloadCodec<String> {
-        override fun encode(value: String) = Payload.copyOf(value.encodeToByteArray())
-
-        override fun decode(payload: Payload) = payload.toByteArray().decodeToString()
-    }
-private val routerPolicy =
-    ResponsePolicy("internal") {
-        ResponseClassification(
-            if (it == "internal") ResponseOutcome.INTERNAL_ERROR else ResponseOutcome.SUCCESS,
-            ResponseVariant.of(if (it == "internal") "internal" else "success"),
-        )
-    }
-
-/** The router routes answer `reply.*` inboxes, and `reply.{id}.*` ones only for the target they name. */
-private val routerReplies =
-    ReplyAddressRule<RouterTarget> { target, reply ->
-        val tokens = reply.value.split('.')
-        tokens[0] == "reply" && (tokens.size == 2 || (tokens.size == 3 && tokens[1] == target.id))
-    }
-
-private val routerUnary =
-    UnaryContract(
-        OperationName.of("router.get"),
-        routerAddress,
-        routerCodec,
-        routerCodec,
-        routerPolicy,
-        replyAddresses = routerReplies,
-        failureSlug = ErrorSlug.of("router-get-failed"),
-    )
-private val routerEvent =
-    EventContract(
-        OperationName.of("router.event"),
-        routerAddress,
-        routerCodec,
-        ErrorSlug.of("router-event-failed"),
-    )
-
 val CommunicatorRouterTest by testSuite {
+    val routerPolicy =
+        ResponsePolicy("internal") {
+            ResponseClassification(
+                if (it == "internal") ResponseOutcome.INTERNAL_ERROR else ResponseOutcome.SUCCESS,
+                ResponseVariant.of(if (it == "internal") "internal" else "success"),
+            )
+        }
+
+    /** The router routes answer `reply.*` inboxes, and `reply.{id}.*` ones only for the target they name. */
+    val routerReplies =
+        ReplyAddressRule<TestTarget> { target, reply ->
+            val tokens = reply.value.split('.')
+            tokens[0] == "reply" && (tokens.size == 2 || (tokens.size == 3 && tokens[1] == target.id))
+        }
+
+    val routerUnary =
+        UnaryContract(
+            OperationName.of("router.get"),
+            routerAddress,
+            stringPayloadCodec,
+            stringPayloadCodec,
+            routerPolicy,
+            replyAddresses = routerReplies,
+            failureSlug = ErrorSlug.of("router-get-failed"),
+        )
+
     test("concrete route subscriptions avoid wildcard permissions") {
         runTest {
             val fixture =
                 routerFixture(
                     communicatorRoutes {
-                        unaryAt(routerUnary, RouterTarget("alpha")) { "ok" }
+                        unaryAt(routerUnary, TestTarget("alpha")) { "ok" }
                     },
                     this,
                 )
@@ -147,9 +132,9 @@ val CommunicatorRouterTest by testSuite {
                     OperationName.of("service.middle.get"),
                     "service.{id}.get".addressTemplate(
                         { addressValuesOf("id" to it.id) },
-                        { RouterTarget(it.require("id")) },
+                        { TestTarget(it.require("id")) },
                     ),
-                    routerCodec,
+                    stringPayloadCodec,
                     ErrorSlug.of("service-middle-failed"),
                 )
             val wildcardEnd =
@@ -157,9 +142,9 @@ val CommunicatorRouterTest by testSuite {
                     OperationName.of("service.alpha.any"),
                     "service.alpha.{id}".addressTemplate(
                         { addressValuesOf("id" to it.id) },
-                        { RouterTarget(it.require("id")) },
+                        { TestTarget(it.require("id")) },
                     ),
-                    routerCodec,
+                    stringPayloadCodec,
                     ErrorSlug.of("service-alpha-failed"),
                 )
             val routes =
@@ -191,7 +176,7 @@ val CommunicatorRouterTest by testSuite {
 
     test("a call is answered on its reply address") {
         runTest {
-            var observed: IncomingUnaryCall<RouterTarget, String, String>? = null
+            var observed: IncomingUnaryCall<TestTarget, String, String>? = null
             val routes =
                 communicatorRoutes {
                     unary(routerUnary, parallelism = 1) { call ->
@@ -212,13 +197,10 @@ val CommunicatorRouterTest by testSuite {
                 )
                 runCurrent()
 
-                observed?.address shouldBe RouterTarget("alpha")
+                observed?.address shouldBe TestTarget("alpha")
                 observed?.request shouldBe "request"
                 val reply =
-                    fixture.fake.actions
-                        .filterIsInstance<FakeMessageTransport.Action.Publish>()
-                        .single()
-                        .message
+                    fixture.fake.publications.single()
                 reply.address shouldBe MessageAddress.of("reply.alpha")
                 routerUnary.responseCodec.decode(reply.payload) shouldBe "ok"
                 fixture.router.stop() shouldBe RouterResult.Success
@@ -247,7 +229,7 @@ val CommunicatorRouterTest by testSuite {
                             EventContract(
                                 OperationName.of("router.event"),
                                 routerAddress,
-                                routerCodec,
+                                stringPayloadCodec,
                                 ErrorSlug.of("router-event-failed"),
                             ),
                         ) { }
@@ -304,7 +286,7 @@ val CommunicatorRouterTest by testSuite {
             val fixture = routerFixture(routes, this, RouterOptions(maxInFlight = 2, defaultRouteParallelism = 2))
             fixture.use { fixture ->
                 fixture.router.start()
-                repeat(4) { fixture.fake.deliver(message("router.$it.get")) }
+                repeat(4) { fixture.fake.deliver(deliveryOf("router.$it.get")) }
                 runCurrent()
                 active.get() shouldBe 2
                 entered.get() shouldBe 2
@@ -330,8 +312,8 @@ val CommunicatorRouterTest by testSuite {
             val fixture = routerFixture(routes, this)
             fixture.use { fixture ->
                 fixture.router.start()
-                fixture.fake.deliver(message("router.a.get", "first"))
-                fixture.fake.deliver(message("router.b.get", "second"))
+                fixture.fake.deliver(deliveryOf("router.a.get", "first"))
+                fixture.fake.deliver(deliveryOf("router.b.get", "second"))
                 runCurrent()
                 observed shouldBe listOf("first", "second")
                 fixture.router.state shouldBe RouterState.RUNNING
@@ -345,7 +327,7 @@ val CommunicatorRouterTest by testSuite {
             val fixture = routerFixture(communicatorRoutes { unary(routerUnary) { "ok" } }, this)
             fixture.use { fixture ->
                 fixture.router.start()
-                fixture.fake.deliver(message("router.a.get"))
+                fixture.fake.deliver(deliveryOf("router.a.get"))
                 runCurrent()
                 fixture.fake.actions.filterIsInstance<FakeMessageTransport.Action.Publish>() shouldBe emptyList()
                 fixture.harness
@@ -372,8 +354,8 @@ val CommunicatorRouterTest by testSuite {
                 UnaryContract(
                     OperationName.of("router.classified"),
                     routerAddress,
-                    routerCodec,
-                    routerCodec,
+                    stringPayloadCodec,
+                    stringPayloadCodec,
                     policy,
                     replyAddresses = routerReplies,
                     failureSlug = ErrorSlug.of("router-classified-failed"),
@@ -381,8 +363,8 @@ val CommunicatorRouterTest by testSuite {
             val fixture = routerFixture(communicatorRoutes { unary(contract) { it.request } }, this)
             fixture.use { fixture ->
                 fixture.router.start()
-                fixture.fake.deliver(message("router.a.get", "domain", "reply.one"))
-                fixture.fake.deliver(message("router.b.get", "internal", "reply.two"))
+                fixture.fake.deliver(deliveryOf("router.a.get", "domain", "reply.one"))
+                fixture.fake.deliver(deliveryOf("router.b.get", "internal", "reply.two"))
                 runCurrent()
                 fixture.fake.actions
                     .filterIsInstance<FakeMessageTransport.Action.Publish>()
@@ -410,8 +392,8 @@ val CommunicatorRouterTest by testSuite {
             val fixture = routerFixture(communicatorRoutes { unary(routerUnary) { handled++.let { "ok" } } }, this)
             fixture.use { fixture ->
                 fixture.router.start()
-                fixture.fake.deliver(message("router.a.get", "request", "service.to.victim.get"))
-                fixture.fake.deliver(message("router.a.get", "request", "reply.b.inbox"))
+                fixture.fake.deliver(deliveryOf("router.a.get", "request", "service.to.victim.get"))
+                fixture.fake.deliver(deliveryOf("router.a.get", "request", "reply.b.inbox"))
                 runCurrent()
                 handled shouldBe 0
                 fixture.fake.actions.filterIsInstance<FakeMessageTransport.Action.Publish>() shouldBe emptyList()
@@ -446,8 +428,8 @@ val CommunicatorRouterTest by testSuite {
             val fixture = routerFixture(communicatorRoutes { unary(routerUnary) { "ok" } }, this)
             fixture.use { fixture ->
                 fixture.router.start()
-                fixture.fake.deliver(message("router.a.get", "request", "reply.one"))
-                fixture.fake.deliver(message("router.a.get", "request", "reply.a.inbox"))
+                fixture.fake.deliver(deliveryOf("router.a.get", "request", "reply.one"))
+                fixture.fake.deliver(deliveryOf("router.a.get", "request", "reply.a.inbox"))
                 runCurrent()
                 fixture.fake.actions
                     .filterIsInstance<FakeMessageTransport.Action.Publish>()
@@ -486,7 +468,7 @@ val CommunicatorRouterTest by testSuite {
                 }
             routerFixture(routes, this).use { fixture ->
                 fixture.router.start()
-                fixture.fake.deliver(message("router.drain.get"))
+                fixture.fake.deliver(deliveryOf("router.drain.get"))
                 runCurrent()
 
                 val graceful = async { fixture.router.stop() }
@@ -515,7 +497,7 @@ val CommunicatorRouterTest by testSuite {
                 }
             routerFixture(routes, this, RouterOptions(shutdownTimeout = 1.seconds)).use { fixture ->
                 fixture.router.start()
-                fixture.fake.deliver(message("router.a.get"))
+                fixture.fake.deliver(deliveryOf("router.a.get"))
                 runCurrent()
 
                 val stopped = async { fixture.router.stop() }
@@ -637,7 +619,7 @@ val CommunicatorRouterTest by testSuite {
             fixture.use { fixture ->
                 fixture.fake.closeSubscriptionWith(1) { delay(Long.MAX_VALUE.milliseconds) }
                 fixture.router.start()
-                fixture.fake.deliver(message("router.a.get"))
+                fixture.fake.deliver(deliveryOf("router.a.get"))
                 runCurrent()
                 val startedAt = testScheduler.currentTime
                 val stopped = async { fixture.router.stop() }
@@ -679,56 +661,4 @@ val CommunicatorRouterTest by testSuite {
             }
         }
     }
-}
-
-private class RouterFixture(
-    val router: CommunicatorRouter,
-    val fake: FakeMessageTransport,
-    val harness: TelemetryTestHarness,
-) : AutoCloseable {
-    override fun close() {
-        fake.close()
-        harness.close()
-    }
-}
-
-private fun twoEventRoutes() =
-    communicatorRoutes {
-        event(routerEvent) { }
-        event(
-            EventContract(
-                OperationName.of("router.other"),
-                "other.{id}.get".addressTemplate({ addressValuesOf("id" to it.id) }, { RouterTarget(it.require("id")) }),
-                routerCodec,
-                ErrorSlug.of("router-other-failed"),
-            ),
-        ) { }
-    }
-
-private fun message(
-    address: String,
-    payload: String = "message",
-    replyTo: String? = null,
-) = TransportDelivery.Message(
-    InboundMessage(
-        MessageAddress.of(address),
-        payload.encodeToByteArray(),
-        replyTo?.let(MessageAddress::of),
-    ),
-)
-
-private fun routerFixture(
-    routes: CommunicatorRoutes,
-    scope: kotlinx.coroutines.CoroutineScope,
-    options: RouterOptions = RouterOptions(),
-): RouterFixture {
-    val fake = FakeMessageTransport()
-    val harness = TelemetryTestHarness.create()
-    val propagators = ContextPropagators.create(W3CTraceContextPropagator.getInstance())
-    val communicator = Communicator(fake, harness.telemetry, propagators)
-    return RouterFixture(
-        CommunicatorRouter(fake, routes, communicator, harness.telemetry, propagators, scope, options),
-        fake,
-        harness,
-    )
 }

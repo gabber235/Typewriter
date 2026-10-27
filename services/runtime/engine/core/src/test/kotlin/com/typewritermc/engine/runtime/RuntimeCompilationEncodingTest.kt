@@ -4,10 +4,14 @@ import com.typewritermc.engine.Root
 import com.typewritermc.engine.canonicalized
 import com.typewritermc.engine.decodeResourceGraphShard
 import com.typewritermc.engine.encodeShard
+import com.typewritermc.engine.runtime.testing.AdmissionRejection
+import com.typewritermc.engine.runtime.testing.admissionCatalog
+import com.typewritermc.engine.runtime.testing.admissionFacts
+import com.typewritermc.engine.runtime.testing.payloadDefinition
+import com.typewritermc.engine.runtime.testing.resourceDefinition
+import com.typewritermc.engine.runtime.testing.unrelatedDefinition
 import com.typewritermc.engine.semanticDigest
 import com.typewritermc.types.ResourceId
-import com.typewritermc.types.catalog.DefaultCheckedCatalog
-import com.typewritermc.types.named
 import com.typewritermc.types.namedUse
 import com.typewritermc.types.qualified
 import com.typewritermc.types.toSkir
@@ -19,7 +23,6 @@ import skirout.editor.v1.compiled_content.CompiledResource
 import skirout.editor.v1.compiled_content.CompiledResourceKey
 import skirout.editor.v1.compiled_content.RuntimeCompilationFacts
 import skirout.editor.v1.compiled_content.RuntimeRelationFact
-import skirout.editor.v1.type_catalog.CatalogGeneration
 import skirout.editor.v1.type_catalog.DataValue
 import skirout.editor.v1.type_catalog.NamedValue
 import skirout.editor.v1.type_catalog.NativeBindingId
@@ -30,6 +33,8 @@ import skirout.editor.v1.type_catalog.TypeDefinition
 import skirout.editor.v1.type_catalog.TypeDefinitionId
 
 val RuntimeCompilationEncodingTest by testSuite {
+    val boolean = RepresentationTemplate.createScalar(kind = ScalarKind.BOOLEAN)
+
     test("conflicting declarations with one identity are rejected before canonical encoding") {
         val id = TypeDefinitionId.qualified("test", "runtime")
         val facts =
@@ -72,7 +77,7 @@ val RuntimeCompilationEncodingTest by testSuite {
         ),
         AdmissionRejection(
             "a declared type means something else than in the runtime catalog",
-            admissionFacts(types = listOf(resourceDefinition, TypeDefinition.partial(id = payloadDefinition.id, representation = BOOLEAN))),
+            admissionFacts(types = listOf(resourceDefinition, TypeDefinition.partial(id = payloadDefinition.id, representation = boolean))),
             "Compiled runtime type facts do not equal the accepted declaration closure.",
         ),
         AdmissionRejection(
@@ -123,53 +128,4 @@ val RuntimeCompilationEncodingTest by testSuite {
                 .decodeResourceGraphShard()
         }.message shouldBe "Resource ids must not be blank."
     }
-}
-
-private data class AdmissionRejection(
-    val name: String,
-    val facts: RuntimeCompilationFacts,
-    val reason: String,
-)
-
-private val TEXT = RepresentationTemplate.createScalar(kind = ScalarKind.TEXT)
-private val BOOLEAN = RepresentationTemplate.createScalar(kind = ScalarKind.BOOLEAN)
-private val resourceDefinition = TypeDefinition.partial(id = TypeDefinitionId.qualified("test", "resource"), representation = TEXT)
-private val payloadDefinition = TypeDefinition.partial(id = TypeDefinitionId.qualified("test", "payload"), representation = TEXT)
-private val unrelatedDefinition = TypeDefinition.partial(id = TypeDefinitionId.qualified("test", "unrelated"), representation = TEXT)
-
-private fun admissionCatalog() =
-    DefaultCheckedCatalog(
-        CatalogGeneration(value = "runtime encoding test"),
-        listOf(resourceDefinition, payloadDefinition, unrelatedDefinition),
-    )
-
-/** A page resource of the resource type whose value nests a value of the payload type. */
-private fun admissionFacts(
-    types: List<TypeDefinition> = listOf(resourceDefinition, payloadDefinition),
-    relations: List<RuntimeRelationFact> = emptyList(),
-): RuntimeCompilationFacts {
-    val key = CompiledResourceKey(source = ResourceId("page").toSkir(), context = CompilationContext.Root)
-    return RuntimeCompilationFacts(
-        formatRevision = com.typewritermc.engine.RESOURCE_GRAPH_FORMAT_REVISION,
-        root = key,
-        resources =
-            listOf(
-                CompiledResource(
-                    key = key,
-                    actualType = resourceDefinition.id.namedUse(),
-                    bindingProvider = NativeBindingId(value = "test"),
-                    bindingSignature = "test:v1",
-                    value =
-                        (
-                            DataValue.named(
-                                payloadDefinition.id.namedUse(),
-                                DataValue.StringValueWrapper("value"),
-                            ) as DataValue.NamedWrapper
-                        ).value,
-                ),
-            ),
-        edges = emptyList(),
-        types = types,
-        relations = relations,
-    )
 }

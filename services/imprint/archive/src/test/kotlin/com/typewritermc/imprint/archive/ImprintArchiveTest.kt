@@ -1,18 +1,12 @@
 package com.typewritermc.imprint.archive
 
-import com.typewritermc.imprint.ArtifactId
-import com.typewritermc.imprint.ArtifactVersion
-import com.typewritermc.imprint.CapabilityManifest
-import com.typewritermc.imprint.IMPRINT_MANIFEST_PATH
 import com.typewritermc.imprint.ImprintManifestCodec
-import com.typewritermc.imprint.VersionConstraint
+import com.typewritermc.imprint.archive.testing.capabilityManifest
+import com.typewritermc.imprint.archive.testing.writeArchive
 import de.infix.testBalloon.framework.core.testSuite
 import io.kotest.assertions.throwables.shouldThrow
 import io.kotest.matchers.shouldBe
 import java.nio.file.Files
-import java.nio.file.Path
-import java.util.zip.ZipEntry
-import java.util.zip.ZipOutputStream
 
 val ImprintArchiveTest by testSuite {
     test("inspect reports an ordinary archive without a manifest as absent") {
@@ -43,26 +37,3 @@ val ImprintArchiveTest by testSuite {
         failure.message shouldBe "Cannot inspect Imprint archive ${archive.fileName}."
     }
 }
-
-private fun writeArchive(
-    path: Path,
-    manifest: ByteArray? = null,
-): Path {
-    ZipOutputStream(Files.newOutputStream(path)).use { output ->
-        if (manifest != null) {
-            output.putNextEntry(ZipEntry(IMPRINT_MANIFEST_PATH))
-            output.write(manifest)
-            output.closeEntry()
-        }
-    }
-    return path
-}
-
-private fun capabilityManifest() =
-    CapabilityManifest(
-        id = ArtifactId("typewritermc:test"),
-        version = ArtifactVersion("1.0.0"),
-        directRequirements = emptyList(),
-        resolvedCapabilities = emptyList(),
-        contributions = emptyList(),
-    )

@@ -2,6 +2,7 @@ plugins {
     id("com.typewritermc.basic-conventions")
     alias(libs.plugins.kotlin.serialize)
     `java-library`
+    `java-test-fixtures`
 }
 
 dependencies {
@@ -13,4 +14,5 @@ dependencies {
     api(libs.kotlin.serialize.core)
     implementation(libs.kotlin.serialize.cbor)
     implementation(libs.kotlin.serialize.json)
+    testImplementation(project(":typewriter-test-kit")) { exclude(module = "typewriter-api") }
 }

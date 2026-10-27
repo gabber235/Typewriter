@@ -4,21 +4,9 @@ package com.typewritermc.realm.routes
 
 import com.typewritermc.authoring.GeneratedSdkApi
 import com.typewritermc.authoring.GraphPlacement
-import com.typewritermc.authoring.ResourceDraft
-import com.typewritermc.authoring.complete
-import com.typewritermc.discovery.ProviderOrigin
-import com.typewritermc.library.TagDefinition
 import com.typewritermc.library.book
 import com.typewritermc.library.library
-import com.typewritermc.operations.AnyResourceSubjects
-import com.typewritermc.operations.LinkWithInput
-import com.typewritermc.operations.LinkWithInputDefinition
-import com.typewritermc.operations.LinkWithInputFields
 import com.typewritermc.operations.MoveToOwner
-import com.typewritermc.operations.OperationInput
-import com.typewritermc.operations.OperationResourceOption
-import com.typewritermc.operations.ResourceOperationSpecImpl
-import com.typewritermc.operations.collectOperation
 import com.typewritermc.realm.catalog.RealmCatalogStore
 import com.typewritermc.realm.catalog.installTestCatalog
 import com.typewritermc.realm.routeFixtureCatalog
@@ -29,10 +17,7 @@ import com.typewritermc.setup.setup
 import com.typewritermc.testing.routes.fixtureGraphEntry
 import com.typewritermc.testing.routes.fixtureGraphPage
 import com.typewritermc.testing.routes.fixtureTimelinePage
-import com.typewritermc.testkit.ready
 import com.typewritermc.types.ResourceId
-import com.typewritermc.types.namedTemplate
-import com.typewritermc.types.requirePortable
 import com.typewritermc.types.template
 import com.typewritermc.types.toTemplate
 import com.typewritermc.types.type
@@ -41,14 +26,9 @@ import de.infix.testBalloon.framework.core.testSuite
 import io.kotest.matchers.collections.shouldContainExactly
 import io.kotest.matchers.shouldBe
 import io.kotest.matchers.types.shouldBeInstanceOf
-import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.Job
-import kotlinx.coroutines.awaitCancellation
-import kotlinx.coroutines.launch
 import kotlinx.coroutines.test.runCurrent
 import kotlinx.coroutines.test.runTest
 import skirout.editor.v1.operation.ResourceOperationId
-import skirout.editor.v1.search.RealmPresentationSearchRequest
 import skirout.editor.v1.search.RealmPresentationSearchStatus
 import skirout.editor.v1.search.RealmPresentationSearchUpdate
 import skirout.editor.v1.search.RealmSearchQuery
@@ -56,55 +36,37 @@ import skirout.editor.v1.search.RealmSearchSelector
 import skirout.editor.v1.search.RealmSearchSelectorExpression
 import skirout.editor.v1.search.RealmSearchSelectorOperator
 import skirout.editor.v1.type_catalog.CapabilityId
-import skirout.editor.v1.type_catalog.CatalogGeneration
 import skirout.editor.v1.type_catalog.DataValue
-import skirout.editor.v1.type_catalog.ResourceTarget
 import skirout.editor.v1.type_catalog.TypeTemplate
 
-/** An entry on a graph page, and the two other pages it can move to: "Page 1" with a graph layout and "Page 2" without. */
-private val pages =
-    setup("search-pages") {
-        library {
-            books.book("pages") {
-                val entry =
-                    pages.fixtureGraphPage("graph") {
-                        name = "Page 0"
-                        elements.fixtureGraphEntry("entry") { placement = GraphPlacement() }
-                    }
-                val canvas =
-                    pages.fixtureGraphPage("canvas") {
-                        name = "Page 1"
-                        handle
-                    }
-                val timeline =
-                    pages.fixtureTimelinePage("timeline") {
-                        name = "Page 2"
-                        handle
-                    }
-                Triple(entry, canvas, timeline)
+val RealmPresentationSearchRoutesTest by testSuite {
+    /** An entry on a graph page, and the two other pages it can move to: "Page 1" with a graph layout and "Page 2" without. */
+    val pages =
+        setup("search-pages") {
+            library {
+                books.book("pages") {
+                    val entry =
+                        pages.fixtureGraphPage("graph") {
+                            name = "Page 0"
+                            elements.fixtureGraphEntry("entry") { placement = GraphPlacement() }
+                        }
+                    val canvas =
+                        pages.fixtureGraphPage("canvas") {
+                            name = "Page 1"
+                            handle
+                        }
+                    val timeline =
+                        pages.fixtureTimelinePage("timeline") {
+                            name = "Page 2"
+                            handle
+                        }
+                    Triple(entry, canvas, timeline)
+                }
             }
         }
-    }
 
-private val shelf = setup("shelf") { library { books.book("book") { handle } } }
+    val shelf = setup("shelf") { library { books.book("book") { handle } } }
 
-/** An operation on tags whose target field has a candidate search; a book selection gets no search from it. */
-private fun tagOnly(origin: ProviderOrigin) =
-    collectOperation<ResourceDraft, LinkWithInput>(
-        origin,
-        "fixture.TagOnly",
-        ResourceTarget.type(TagDefinition.id.namedTemplate()),
-        AnyResourceSubjects,
-        OperationInput.Typed(LinkWithInputDefinition.use),
-        "Tag only",
-    ) { spec ->
-        with(ResourceOperationSpecImpl(spec)) {
-            input { LinkWithInputFields.target { candidates { emptySequence() } } }
-            prepare { }
-        }
-    }
-
-val RealmPresentationSearchRoutesTest by testSuite {
     test("switching from an operation search cancels its stream even when the next capability is unavailable") {
         runTest {
             RealmCatalogStore().use { catalogs ->
@@ -234,86 +196,3 @@ val RealmPresentationSearchRoutesTest by testSuite {
             .message shouldBe "Realm presentation search response used a different subscription ID"
     }
 }
-
-private class PendingSearchSource(
-    private val scope: CoroutineScope,
-) : RealmPresentationSearchSource {
-    val active = mutableSetOf<String>()
-    private val jobs = mutableMapOf<String, Job>()
-
-    override suspend fun watch(
-        request: RealmPresentationSearchRequest,
-        updates: RealmPresentationSearchUpdatePublisher,
-    ): RealmPresentationSearchUpdate {
-        jobs[request.subscriptionId] =
-            scope.launch {
-                active += request.subscriptionId
-                try {
-                    awaitCancellation()
-                } finally {
-                    active -= request.subscriptionId
-                }
-            }
-        return RealmPresentationSearchUpdate.createSnapshot(
-            subscriptionId = request.subscriptionId,
-            status = RealmPresentationSearchStatus.LOADING,
-            values = emptyList(),
-            guidance = emptyList(),
-            diagnostics = emptyList(),
-        )
-    }
-
-    override fun cancel(subscriptionId: String): Boolean =
-        jobs.remove(subscriptionId)?.let {
-            it.cancel()
-            true
-        } ?: false
-}
-
-private fun validSearchRequest() =
-    RealmPresentationSearchRequest(
-        subscriptionId = "search",
-        generation = CatalogGeneration(value = "generation"),
-        capabilityId = CapabilityId(value = "capability"),
-        payload = DataValue.StringValueWrapper("server"),
-        resultType = TypeTemplate.ScalarWrapper(skirout.editor.v1.type_catalog.ScalarKind.TEXT),
-        operationContext = null,
-        query =
-            RealmSearchQuery(
-                normalizedQuery = "alex",
-                terms = listOf("alex"),
-                selectors = emptyList(),
-                selectorExpression = null,
-            ),
-    )
-
-/** A search over the candidates of [field] in the input of the operation object [operation], for dragging [subjects]. */
-private fun RealmFixture.candidateRequest(
-    operation: ResourceOperationId,
-    field: String,
-    query: String,
-    vararg subjects: skirout.kernel.v1.resource_id.ResourceId,
-) = validSearchRequest().copy(
-    generation = views.read { it.catalog.generation },
-    capabilityId = CapabilityId(value = operations.candidateSearch(operation, field).value),
-    resultType =
-        com.typewritermc.operations.OperationResourceOptionDefinition.use
-            .toTemplate()
-            .template,
-    operationContext = operations.searchContext(*subjects),
-    query = RealmSearchQuery(normalizedQuery = query, terms = listOf(query), selectors = emptyList(), selectorExpression = null),
-)
-
-/** Decodes one search result value as an operation resource option. */
-private fun RealmFixture.option(value: DataValue): OperationResourceOption =
-    views.read { root ->
-        val checked =
-            root.catalog.checked.ready(com.typewritermc.operations.OperationResourceOptionDefinition.use.use)
-        val complete =
-            checked.complete(
-                value.requirePortable(),
-            ) as com.typewritermc.authoring.CompletenessResult.Complete
-        root.catalog.nativeBindings
-            .bind(checked)
-            .decode(complete.value) as OperationResourceOption
-    }

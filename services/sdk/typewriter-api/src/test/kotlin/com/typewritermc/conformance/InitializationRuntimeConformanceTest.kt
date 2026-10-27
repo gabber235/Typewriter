@@ -10,6 +10,7 @@ import com.typewritermc.authoring.fieldMap
 import com.typewritermc.authoring.of
 import com.typewritermc.authoring.root
 import com.typewritermc.authoring.validateStructure
+import com.typewritermc.testkit.record
 import com.typewritermc.types.FactoryNativeBindingRegistry
 import com.typewritermc.types.NativeBinding
 import com.typewritermc.types.NativeBindingFactory
@@ -56,6 +57,47 @@ import kotlin.coroutines.EmptyCoroutineContext
 import kotlin.coroutines.startCoroutine
 
 val InitializationRuntimeConformanceTest by testSuite {
+    val initializedUse = INITIALIZED_ID.namedUse(emptyList())
+
+    val requiredOwner = FieldOwner(definition = INITIALIZED_ID, name = "required")
+
+    /** A record with a required text field and a defaulted integer field whose default the constructor captures. */
+    val initializedDefinition =
+        TypeDefinition.partial(
+            id = INITIALIZED_ID,
+            representation =
+                RepresentationTemplate.createRecord(
+                    fields =
+                        listOf(
+                            FieldDeclaration.partial(owner = requiredOwner, type = ScalarKind.TEXT.template),
+                            FieldDeclaration.partial(
+                                owner = DEFAULTED_OWNER,
+                                type = integerScalar(IntegerWidth.SIGNED_THIRTY_TWO).template,
+                                hasConstructorDefault = true,
+                            ),
+                        ),
+                    abstract_ = false,
+                ),
+        )
+
+    val abstractId = TypeDefinitionId.qualified("test", "AbstractInput")
+
+    val concreteId = TypeDefinitionId.qualified("test", "ConcreteInput")
+
+    val concreteValueOwner = FieldOwner(definition = concreteId, name = "value")
+
+    val abstractOwnerId = TypeDefinitionId.qualified("test", "AbstractOwner")
+
+    val abstractInputOwner = FieldOwner(definition = abstractOwnerId, name = "input")
+
+    val childId = TypeDefinitionId.qualified("test", "Child")
+
+    val childRequiredOwner = FieldOwner(definition = childId, name = "required")
+
+    val parentId = TypeDefinitionId.qualified("test", "Parent")
+
+    val parentChildOwner = FieldOwner(definition = parentId, name = "child")
+
     test("complete supplied values pass through without record synthesis") {
         val generation = CatalogGeneration(value = "complete supplied value")
         val catalog = DefaultCheckedCatalog(generation, emptyList())
@@ -75,7 +117,7 @@ val InitializationRuntimeConformanceTest by testSuite {
 
     test("partial supplied record fields merge with captured constructor defaults") {
         val generation = CatalogGeneration(value = "partial supplied record")
-        val catalog = DefaultCheckedCatalog(generation, listOf(INITIALIZED_DEFINITION))
+        val catalog = DefaultCheckedCatalog(generation, listOf(initializedDefinition))
         val plan = CapturingPlan()
         val runtime =
             DefaultInitializationRuntime(
@@ -87,12 +129,12 @@ val InitializationRuntimeConformanceTest by testSuite {
             runtime.prepareNow(
                 recordRequest(
                     generation,
-                    TypeSelection.CompleteWrapper(INITIALIZED_USE),
+                    TypeSelection.CompleteWrapper(initializedUse),
                     mapOf("required" to DataValue.StringValueWrapper("authored")),
                 ),
             )
 
-        plan.sampled.getValue(REQUIRED_OWNER).value shouldBe DataValue.StringValueWrapper("authored")
+        plan.sampled.getValue(requiredOwner).value shouldBe DataValue.StringValueWrapper("authored")
         prepared.record.fieldMap shouldBe
             mapOf(
                 "required" to DataValue.StringValueWrapper("authored"),
@@ -101,85 +143,31 @@ val InitializationRuntimeConformanceTest by testSuite {
         prepared.findings shouldBe emptyList()
     }
 
-    val pending =
-        object {
-            val generation = CatalogGeneration(value = "pending initialization catalog")
-            val definitionId = TypeDefinitionId.qualified("test", "PendingConfiguration")
-            val parameter = ParameterKey(owner = definitionId, index = 0)
-            val defaulted = FieldOwner(definition = definitionId, name = "defaulted")
-            val catalog =
-                DefaultCheckedCatalog(
-                    generation,
-                    listOf(
-                        TypeDefinition.partial(
-                            id = definitionId,
-                            parameters = listOf(TypeParameter.partial(key = parameter, name = "T")),
-                            representation =
-                                RepresentationTemplate.createRecord(
-                                    fields =
-                                        listOf(
-                                            FieldDeclaration.partial(
-                                                owner = FieldOwner(definition = definitionId, name = "independent"),
-                                                type = ScalarKind.TEXT.template,
-                                            ),
-                                            FieldDeclaration.partial(
-                                                owner = defaulted,
-                                                type = integerScalar(IntegerWidth.SIGNED_THIRTY_TWO).template,
-                                                hasConstructorDefault = true,
-                                            ),
-                                            FieldDeclaration.partial(
-                                                owner = FieldOwner(definition = definitionId, name = "dependent"),
-                                                type = parameter.template,
-                                            ),
-                                        ),
-                                    abstract_ = false,
-                                ),
-                        ),
-                    ),
-                )
-            val construction =
-                object : NativeConstructionPlan {
-                    override val defaultedFields = setOf(defaulted)
-
-                    override fun sample(
-                        arguments: AppliedNativeArguments,
-                        supplied: Map<FieldOwner, CompleteValue>,
-                    ): CaptureResult = error("Pending creation must not sample a native constructor.")
-                }
-            val selection = TypeSelection.createPending(definition = definitionId, arguments = listOf(ArgumentSelection.UNFILLED))
-
-            fun prepare(supplied: Map<String, DataValue>) =
-                DefaultInitializationRuntime(
-                    catalog,
-                    FactoryNativeBindingRegistry(catalog, listOf(PlanFactory(construction, definitionId))),
-                ).prepareNow(recordRequest(generation, selection, supplied))
-        }
-
     test("pending generic creation fills every field it knows without its type argument and leaves the rest unfilled") {
-        val prepared = pending.prepare(emptyMap())
+        val prepared = PendingInitialization.prepare(emptyMap())
 
         prepared.record shouldBe
             AuthoringRecord.of(
-                pending.selection,
+                PendingInitialization.selection,
                 mapOf(
                     "independent" to DataValue.StringValueWrapper(""),
                     "defaulted" to DataValue.UNFILLED,
                     "dependent" to DataValue.UNFILLED,
                 ),
             )
-        prepared.record.validateStructure(pending.catalog) shouldBe StructuralResult.VALID
+        prepared.record.validateStructure(PendingInitialization.catalog) shouldBe StructuralResult.VALID
         prepared.findings.map(InitializationDiagnostic::code) shouldBe listOf("incomplete_type_selection")
     }
 
     test("pending generic creation keeps a supplied field whose type depends on the missing argument and reports it") {
-        val prepared = pending.prepare(mapOf("dependent" to DataValue.StringValueWrapper("unchecked")))
+        val prepared = PendingInitialization.prepare(mapOf("dependent" to DataValue.StringValueWrapper("unchecked")))
 
         prepared.record.fieldMap shouldBe mapOf("dependent" to DataValue.StringValueWrapper("unchecked"))
         prepared.findings.map(InitializationDiagnostic::code) shouldBe listOf("dependent_field_type_unavailable")
     }
 
     test("creation keeps a supplied field the type does not declare and reports it as unknown") {
-        val prepared = pending.prepare(mapOf("unknown" to DataValue.BooleanWrapper(true)))
+        val prepared = PendingInitialization.prepare(mapOf("unknown" to DataValue.BooleanWrapper(true)))
 
         prepared.record.fieldMap shouldBe mapOf("unknown" to DataValue.BooleanWrapper(true))
         prepared.findings.map(InitializationDiagnostic::code) shouldBe listOf("unknown_field")
@@ -187,8 +175,10 @@ val InitializationRuntimeConformanceTest by testSuite {
 
     test("a preparation request for another catalog generation is unavailable") {
         val prepared =
-            DefaultInitializationRuntime(pending.catalog, FactoryNativeBindingRegistry(pending.catalog, emptyList()))
-                .prepareNow(recordRequest(CatalogGeneration(value = "other"), pending.selection, emptyMap()))
+            DefaultInitializationRuntime(
+                PendingInitialization.catalog,
+                FactoryNativeBindingRegistry(PendingInitialization.catalog, emptyList()),
+            ).prepareNow(recordRequest(CatalogGeneration(value = "other"), PendingInitialization.selection, emptyMap()))
 
         prepared.findings.map { it.code to it.message } shouldBe
             listOf("catalog_generation_mismatch" to "The initialization request uses a different catalog generation.")
@@ -196,14 +186,16 @@ val InitializationRuntimeConformanceTest by testSuite {
 
     test("record preparation refuses a supplied value that is not a record") {
         val prepared =
-            DefaultInitializationRuntime(pending.catalog, FactoryNativeBindingRegistry(pending.catalog, emptyList()))
-                .prepareNow(
-                    recordRequest(
-                        pending.generation,
-                        pending.selection,
-                        emptyMap(),
-                    ).copy(suppliedValue = DataValue.StringValueWrapper("text")),
-                )
+            DefaultInitializationRuntime(
+                PendingInitialization.catalog,
+                FactoryNativeBindingRegistry(PendingInitialization.catalog, emptyList()),
+            ).prepareNow(
+                recordRequest(
+                    PendingInitialization.generation,
+                    PendingInitialization.selection,
+                    emptyMap(),
+                ).copy(suppliedValue = DataValue.StringValueWrapper("text")),
+            )
 
         prepared.findings.map { it.code to it.message } shouldBe
             listOf("invalid_supplied_value" to "Record preparation requires a record value.")
@@ -211,35 +203,37 @@ val InitializationRuntimeConformanceTest by testSuite {
 
     test("record preparation refuses a selection of an undeclared type") {
         val prepared =
-            DefaultInitializationRuntime(pending.catalog, FactoryNativeBindingRegistry(pending.catalog, emptyList()))
-                .prepareNow(
-                    recordRequest(
-                        pending.generation,
-                        TypeSelection.CompleteWrapper(TypeDefinitionId.qualified("test", "Undeclared").namedUse()),
-                        emptyMap(),
-                    ),
-                )
+            DefaultInitializationRuntime(
+                PendingInitialization.catalog,
+                FactoryNativeBindingRegistry(PendingInitialization.catalog, emptyList()),
+            ).prepareNow(
+                recordRequest(
+                    PendingInitialization.generation,
+                    TypeSelection.CompleteWrapper(TypeDefinitionId.qualified("test", "Undeclared").namedUse()),
+                    emptyMap(),
+                ),
+            )
 
         prepared.findings.map { it.code to it.message } shouldBe listOf("invalid_type_selection" to "unknown_definition")
     }
 
     test("an invalid supplied constructor input blocks sampling and is reported at its field") {
         val generation = CatalogGeneration(value = "mismatched input catalog")
-        val catalog = DefaultCheckedCatalog(generation, listOf(INITIALIZED_DEFINITION))
+        val catalog = DefaultCheckedCatalog(generation, listOf(initializedDefinition))
         val plan = CapturingPlan()
         val prepared =
             DefaultInitializationRuntime(catalog, FactoryNativeBindingRegistry(catalog, listOf(PlanFactory(plan))))
                 .prepareNow(
                     recordRequest(
                         generation,
-                        TypeSelection.CompleteWrapper(INITIALIZED_USE),
+                        TypeSelection.CompleteWrapper(initializedUse),
                         mapOf("required" to DataValue.BooleanWrapper(true)),
                     ),
                 )
 
         plan.sampled shouldBe emptyMap()
         prepared.findings.map { Triple(it.code, it.field, it.relativePath) } shouldBe
-            listOf(Triple("wrong_scalar", REQUIRED_OWNER, ValuePath.root.field("required")))
+            listOf(Triple("wrong_scalar", requiredOwner, ValuePath.root.field("required")))
         prepared.findings.single().message shouldBe "A constructor input is invalid, so omitted defaults cannot be evaluated."
     }
 
@@ -272,7 +266,7 @@ val InitializationRuntimeConformanceTest by testSuite {
 
     test("complete creation samples the constructor with authored defaults and keeps only the defaults it captured") {
         val generation = CatalogGeneration(value = "initialization catalog")
-        val catalog = DefaultCheckedCatalog(generation, listOf(INITIALIZED_DEFINITION))
+        val catalog = DefaultCheckedCatalog(generation, listOf(initializedDefinition))
         val plan = CapturingPlan()
         val bindings = FactoryNativeBindingRegistry(catalog, listOf(PlanFactory(plan)))
         val runtime = DefaultInitializationRuntime(catalog, bindings)
@@ -282,13 +276,13 @@ val InitializationRuntimeConformanceTest by testSuite {
                 runtime.prepare(
                     recordRequest(
                         generation,
-                        TypeSelection.CompleteWrapper(INITIALIZED_USE),
+                        TypeSelection.CompleteWrapper(initializedUse),
                         emptyMap(),
                     ),
                 )
             }
 
-        plan.sampled.getValue(REQUIRED_OWNER).value shouldBe DataValue.StringValueWrapper("")
+        plan.sampled.getValue(requiredOwner).value shouldBe DataValue.StringValueWrapper("")
         prepared.record.fieldMap shouldBe
             mapOf(
                 "required" to DataValue.StringValueWrapper(""),
@@ -299,7 +293,7 @@ val InitializationRuntimeConformanceTest by testSuite {
 
     test("failed constructor sampling keeps declared defaults unfinished") {
         val generation = CatalogGeneration(value = "failed initialization catalog")
-        val catalog = DefaultCheckedCatalog(generation, listOf(INITIALIZED_DEFINITION))
+        val catalog = DefaultCheckedCatalog(generation, listOf(initializedDefinition))
         val diagnostic =
             InitializationDiagnostic(
                 field = DEFAULTED_OWNER,
@@ -314,7 +308,7 @@ val InitializationRuntimeConformanceTest by testSuite {
                 DefaultInitializationRuntime(catalog, bindings).prepare(
                     recordRequest(
                         generation,
-                        TypeSelection.CompleteWrapper(INITIALIZED_USE),
+                        TypeSelection.CompleteWrapper(initializedUse),
                         emptyMap(),
                     ),
                 )
@@ -332,30 +326,30 @@ val InitializationRuntimeConformanceTest by testSuite {
         val generation = CatalogGeneration(value = "abstract sample catalog")
         val abstractDefinition =
             TypeDefinition.partial(
-                id = ABSTRACT_ID,
+                id = abstractId,
                 representation = RepresentationTemplate.createRecord(fields = emptyList(), abstract_ = true),
             )
         val concreteDefinition =
             TypeDefinition.partial(
-                id = CONCRETE_ID,
+                id = concreteId,
                 representation =
                     RepresentationTemplate.createRecord(
                         fields =
                             listOf(
-                                FieldDeclaration.partial(owner = CONCRETE_VALUE_OWNER, type = ScalarKind.TEXT.template),
+                                FieldDeclaration.partial(owner = concreteValueOwner, type = ScalarKind.TEXT.template),
                             ),
                         abstract_ = false,
                     ),
-                parents = listOf(ABSTRACT_ID.namedTemplate()),
+                parents = listOf(abstractId.namedTemplate()),
             )
         val ownerDefinition =
             TypeDefinition.partial(
-                id = ABSTRACT_OWNER_ID,
+                id = abstractOwnerId,
                 representation =
                     RepresentationTemplate.createRecord(
                         fields =
                             listOf(
-                                FieldDeclaration.partial(owner = ABSTRACT_INPUT_OWNER, type = ABSTRACT_ID.template()),
+                                FieldDeclaration.partial(owner = abstractInputOwner, type = abstractId.template()),
                                 FieldDeclaration.partial(
                                     owner = ABSTRACT_DEFAULT_OWNER,
                                     type = integerScalar(IntegerWidth.SIGNED_THIRTY_TWO).template,
@@ -367,14 +361,14 @@ val InitializationRuntimeConformanceTest by testSuite {
             )
         val catalog = DefaultCheckedCatalog(generation, listOf(abstractDefinition, concreteDefinition, ownerDefinition))
         val plan = AbstractInputPlan()
-        val bindings = FactoryNativeBindingRegistry(catalog, listOf(PlanFactory(plan, ABSTRACT_OWNER_ID)))
+        val bindings = FactoryNativeBindingRegistry(catalog, listOf(PlanFactory(plan, abstractOwnerId)))
 
         val prepared =
             runSuspend {
                 DefaultInitializationRuntime(catalog, bindings).prepare(
                     recordRequest(
                         generation,
-                        TypeSelection.CompleteWrapper(ABSTRACT_OWNER_ID.namedUse()),
+                        TypeSelection.CompleteWrapper(abstractOwnerId.namedUse()),
                         emptyMap(),
                     ),
                 )
@@ -394,12 +388,12 @@ val InitializationRuntimeConformanceTest by testSuite {
         val generation = CatalogGeneration(value = "nested default catalog")
         val childDefinition =
             TypeDefinition.partial(
-                id = CHILD_ID,
+                id = childId,
                 representation =
                     RepresentationTemplate.createRecord(
                         fields =
                             listOf(
-                                FieldDeclaration.partial(owner = CHILD_REQUIRED_OWNER, type = ScalarKind.TEXT.template),
+                                FieldDeclaration.partial(owner = childRequiredOwner, type = ScalarKind.TEXT.template),
                                 FieldDeclaration.partial(
                                     owner = CHILD_DEFAULT_OWNER,
                                     type = integerScalar(IntegerWidth.SIGNED_THIRTY_TWO).template,
@@ -411,26 +405,26 @@ val InitializationRuntimeConformanceTest by testSuite {
             )
         val parentDefinition =
             TypeDefinition.partial(
-                id = PARENT_ID,
+                id = parentId,
                 representation =
                     RepresentationTemplate.createRecord(
                         fields =
                             listOf(
-                                FieldDeclaration.partial(owner = PARENT_CHILD_OWNER, type = CHILD_ID.template()),
+                                FieldDeclaration.partial(owner = parentChildOwner, type = childId.template()),
                             ),
                         abstract_ = false,
                     ),
             )
         val catalog = DefaultCheckedCatalog(generation, listOf(childDefinition, parentDefinition))
         val plan = ChildPlan()
-        val bindings = FactoryNativeBindingRegistry(catalog, listOf(PlanFactory(plan, CHILD_ID)))
+        val bindings = FactoryNativeBindingRegistry(catalog, listOf(PlanFactory(plan, childId)))
 
         val prepared =
             runSuspend {
                 DefaultInitializationRuntime(catalog, bindings).prepare(
                     recordRequest(
                         generation,
-                        TypeSelection.CompleteWrapper(PARENT_ID.namedUse()),
+                        TypeSelection.CompleteWrapper(parentId.namedUse()),
                         emptyMap(),
                     ),
                 )
@@ -438,7 +432,7 @@ val InitializationRuntimeConformanceTest by testSuite {
 
         prepared.record.fieldMap.getValue("child") shouldBe
             DataValue.named(
-                CHILD_ID.namedUse(),
+                childId.namedUse(),
                 DataValue.record(
                     mapOf(
                         "required" to DataValue.StringValueWrapper(""),
@@ -730,140 +724,3 @@ val InitializationRuntimeConformanceTest by testSuite {
             )
     }
 }
-
-private class CapturingPlan : NativeConstructionPlan {
-    override val defaultedFields = setOf(DEFAULTED_OWNER)
-    var sampled: Map<FieldOwner, CompleteValue> = emptyMap()
-
-    override fun sample(
-        arguments: AppliedNativeArguments,
-        supplied: Map<FieldOwner, CompleteValue>,
-    ): CaptureResult {
-        sampled = supplied
-        return CaptureResult.Captured(mapOf(DEFAULTED_OWNER to DataValue.integer(java.math.BigInteger.valueOf(3))))
-    }
-}
-
-private class FailingPlan(
-    private val diagnostic: InitializationDiagnostic,
-) : NativeConstructionPlan {
-    override val defaultedFields = setOf(DEFAULTED_OWNER)
-
-    override fun sample(
-        arguments: AppliedNativeArguments,
-        supplied: Map<FieldOwner, CompleteValue>,
-    ): CaptureResult = CaptureResult.Unavailable(listOf(diagnostic))
-}
-
-private class FieldFailingPlan(
-    field: FieldOwner,
-    private val diagnostic: InitializationDiagnostic,
-) : NativeConstructionPlan {
-    override val defaultedFields = setOf(field)
-
-    override fun sample(
-        arguments: AppliedNativeArguments,
-        supplied: Map<FieldOwner, CompleteValue>,
-    ): CaptureResult = CaptureResult.Unavailable(listOf(diagnostic))
-}
-
-private class AbstractInputPlan : NativeConstructionPlan {
-    override val defaultedFields = setOf(ABSTRACT_DEFAULT_OWNER)
-    var sampled: Map<FieldOwner, CompleteValue> = emptyMap()
-
-    override fun sample(
-        arguments: AppliedNativeArguments,
-        supplied: Map<FieldOwner, CompleteValue>,
-    ): CaptureResult {
-        sampled = supplied
-        return CaptureResult.Captured(
-            mapOf(ABSTRACT_DEFAULT_OWNER to DataValue.integer(java.math.BigInteger.valueOf(11))),
-        )
-    }
-}
-
-private class ChildPlan : NativeConstructionPlan {
-    override val defaultedFields = setOf(CHILD_DEFAULT_OWNER)
-
-    override fun sample(
-        arguments: AppliedNativeArguments,
-        supplied: Map<FieldOwner, CompleteValue>,
-    ): CaptureResult =
-        CaptureResult.Captured(
-            mapOf(CHILD_DEFAULT_OWNER to DataValue.integer(java.math.BigInteger.valueOf(7))),
-        )
-}
-
-private class PlanFactory(
-    override val constructionPlan: NativeConstructionPlan,
-    override val definition: TypeDefinitionId = INITIALIZED_ID,
-) : NativeBindingFactory {
-    override val provider = NativeBindingId(value = "test.initialization")
-
-    override fun bind(
-        actual: com.typewritermc.types.catalog.CheckedType,
-        arguments: AppliedNativeArguments,
-    ): NativeBinding<*> = error("Initialization sampling does not bind a complete native record.")
-}
-
-private fun <T> runSuspend(block: suspend () -> T): T {
-    var result: Result<T>? = null
-    block.startCoroutine(
-        object : Continuation<T> {
-            override val context = EmptyCoroutineContext
-
-            override fun resumeWith(value: Result<T>) {
-                result = value
-            }
-        },
-    )
-    return result!!.getOrThrow()
-}
-
-private val INITIALIZED_ID = TypeDefinitionId.qualified("test", "Initialized")
-private val INITIALIZED_USE = INITIALIZED_ID.namedUse(emptyList())
-private val REQUIRED_OWNER = FieldOwner(definition = INITIALIZED_ID, name = "required")
-private val DEFAULTED_OWNER = FieldOwner(definition = INITIALIZED_ID, name = "defaulted")
-
-/** A record with a required text field and a defaulted integer field whose default the constructor captures. */
-private val INITIALIZED_DEFINITION =
-    TypeDefinition.partial(
-        id = INITIALIZED_ID,
-        representation =
-            RepresentationTemplate.createRecord(
-                fields =
-                    listOf(
-                        FieldDeclaration.partial(owner = REQUIRED_OWNER, type = ScalarKind.TEXT.template),
-                        FieldDeclaration.partial(
-                            owner = DEFAULTED_OWNER,
-                            type = integerScalar(IntegerWidth.SIGNED_THIRTY_TWO).template,
-                            hasConstructorDefault = true,
-                        ),
-                    ),
-                abstract_ = false,
-            ),
-    )
-private val ABSTRACT_ID = TypeDefinitionId.qualified("test", "AbstractInput")
-private val CONCRETE_ID = TypeDefinitionId.qualified("test", "ConcreteInput")
-private val CONCRETE_VALUE_OWNER = FieldOwner(definition = CONCRETE_ID, name = "value")
-private val ABSTRACT_OWNER_ID = TypeDefinitionId.qualified("test", "AbstractOwner")
-private val ABSTRACT_INPUT_OWNER = FieldOwner(definition = ABSTRACT_OWNER_ID, name = "input")
-private val ABSTRACT_DEFAULT_OWNER = FieldOwner(definition = ABSTRACT_OWNER_ID, name = "defaulted")
-private val CHILD_ID = TypeDefinitionId.qualified("test", "Child")
-private val CHILD_REQUIRED_OWNER = FieldOwner(definition = CHILD_ID, name = "required")
-private val CHILD_DEFAULT_OWNER = FieldOwner(definition = CHILD_ID, name = "defaulted")
-private val PARENT_ID = TypeDefinitionId.qualified("test", "Parent")
-private val PARENT_CHILD_OWNER = FieldOwner(definition = PARENT_ID, name = "child")
-
-private val PreparedValue.record
-    get() = (content as PreparedContent.RecordWrapper).value
-
-private fun recordRequest(
-    generation: CatalogGeneration,
-    selection: TypeSelection,
-    supplied: Map<String, DataValue>,
-) = ValuePreparationRequest(
-    catalog = generation,
-    target = PreparationTarget.RecordWrapper(selection),
-    suppliedValue = DataValue.record(supplied),
-)

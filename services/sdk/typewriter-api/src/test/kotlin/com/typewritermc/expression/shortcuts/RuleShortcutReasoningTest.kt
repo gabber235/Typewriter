@@ -4,13 +4,6 @@ import com.typewritermc.authoring.Availability
 import com.typewritermc.configuration.ConfigurationCollectionScope
 import com.typewritermc.configuration.DefaultConfigurationCollectionScope
 import com.typewritermc.configuration.DefaultPredicateReasoner
-import com.typewritermc.configuration.DurationField
-import com.typewritermc.configuration.Integer
-import com.typewritermc.configuration.ListField
-import com.typewritermc.configuration.NullableField
-import com.typewritermc.configuration.Text
-import com.typewritermc.configuration.TimestampField
-import com.typewritermc.configuration.root
 import com.typewritermc.expression.DefaultExpressionEvaluator
 import com.typewritermc.expression.ExpressionBindings
 import com.typewritermc.expression.ExpressionValueReader
@@ -22,26 +15,26 @@ import com.typewritermc.expression.isNull
 import com.typewritermc.expression.literal
 import com.typewritermc.expression.or
 import com.typewritermc.expression.testPortableTypes
-import com.typewritermc.types.StandardTypes
+import com.typewritermc.testkit.durationField
+import com.typewritermc.testkit.integerField
+import com.typewritermc.testkit.listField
+import com.typewritermc.testkit.nullableIntegerField
+import com.typewritermc.testkit.nullableTextField
+import com.typewritermc.testkit.textField
+import com.typewritermc.testkit.timestampField
 import com.typewritermc.types.declared
 import com.typewritermc.types.duration
 import com.typewritermc.types.integerScalar
-import com.typewritermc.types.nullable
 import com.typewritermc.types.template
 import com.typewritermc.types.timestamp
 import de.infix.testBalloon.framework.core.testSuite
 import io.kotest.matchers.shouldBe
-import skirout.editor.v1.catalog.RepresentationKind
 import skirout.editor.v1.expression.EvaluationBudget
 import skirout.editor.v1.expression.ExpressionNode
 import skirout.editor.v1.type_catalog.DataValue
 import skirout.editor.v1.type_catalog.ExpressionBindingId
 import skirout.editor.v1.type_catalog.IntegerWidth
-import skirout.editor.v1.type_catalog.RelativeFieldPattern
-import skirout.editor.v1.type_catalog.ScalarKind
 import skirout.editor.v1.type_catalog.TypeDefinitionId
-import kotlin.reflect.KClass
-import kotlin.time.Duration
 import kotlin.time.Duration.Companion.seconds
 import kotlin.time.Instant
 
@@ -51,6 +44,8 @@ import kotlin.time.Instant
  * comparisons with literals lower to.
  */
 val RuleShortcutReasoningTest by testSuite {
+    val int = integerScalar(IntegerWidth.SIGNED_THIRTY_TWO).template
+
     val reasoner = DefaultPredicateReasoner()
 
     test("rule helpers accept and reject configured values by their declared bounds") {
@@ -140,96 +135,3 @@ val RuleShortcutReasoningTest by testSuite {
             true
     }
 }
-
-private val CONFIGURED_VALUE = ExpressionBindingId(value = "configured_value")
-
-private val OWNER = TypeDefinitionId.declared("0b9cbb2bb5d44d2c9f53d7b4a1d0f6e1")
-
-/** The predicates [configure] declares on one configured value. */
-private fun rules(configure: (ConfigurationCollectionScope) -> Unit): List<ExpressionNode> =
-    DefaultConfigurationCollectionScope(OWNER)
-        .also(configure)
-        .collected()
-        .recipes
-        .flatMap { it.rules }
-        .map { it.descriptor.predicate }
-
-/** The single predicate [configure] declares. */
-private fun rule(configure: (ConfigurationCollectionScope) -> Unit): ExpressionNode = rules(configure).single()
-
-/** Whether the rule holds for the configured [value]. */
-private infix fun ExpressionNode.holdsFor(value: DataValue): Boolean {
-    val result =
-        with(FixtureReads) {
-            DefaultExpressionEvaluator(
-                ExpressionValueReader { error("Rule tests bind unlocated values only.") },
-                testPortableTypes(),
-            ).evaluateScoped(
-                this@holdsFor,
-                ExpressionBindings(emptyMap()),
-                mapOf(CONFIGURED_VALUE to value),
-                EvaluationBudget(maxSteps = 10_000, maxCollectionItems = 10_000),
-            )
-        }
-    return ((result as Availability.Available).value as DataValue.BooleanWrapper).value
-}
-
-private val INT = integerScalar(IntegerWidth.SIGNED_THIRTY_TWO).template
-
-@Suppress("UNCHECKED_CAST")
-private fun integerField(scope: ConfigurationCollectionScope): Integer<Int> =
-    scope.field(RelativeFieldPattern.root, RepresentationKind.INTEGER, INT, Integer::class as KClass<Integer<Int>>)
-
-private fun textField(scope: ConfigurationCollectionScope): Text =
-    scope.field(RelativeFieldPattern.root, RepresentationKind.TEXT, ScalarKind.TEXT.template, Text::class)
-
-@Suppress("UNCHECKED_CAST")
-private fun listField(scope: ConfigurationCollectionScope): ListField<Int, Any, Any> =
-    scope.field(
-        RelativeFieldPattern.root,
-        RepresentationKind.LIST,
-        StandardTypes.list.template(listOf(INT)),
-        ListField::class as KClass<ListField<Int, Any, Any>>,
-    )
-
-private fun durationField(scope: ConfigurationCollectionScope): DurationField =
-    scope.field(RelativeFieldPattern.root, RepresentationKind.DURATION, ScalarKind.DURATION.template, DurationField::class)
-
-private fun timestampField(scope: ConfigurationCollectionScope): TimestampField =
-    scope.field(RelativeFieldPattern.root, RepresentationKind.TIMESTAMP, ScalarKind.TIMESTAMP.template, TimestampField::class)
-
-@Suppress("UNCHECKED_CAST")
-private fun nullableTextField(scope: ConfigurationCollectionScope): NullableField<String, Text> =
-    scope.field(
-        RelativeFieldPattern.root,
-        RepresentationKind.TEXT,
-        ScalarKind.TEXT.template.nullable(),
-        NullableField::class as KClass<NullableField<String, Text>>,
-        mapOf(
-            skirout.editor.v1.type_catalog.FieldPatternSegment.VALUES to
-                com.typewritermc.configuration.NestedConfigurationScope(
-                    RepresentationKind.TEXT,
-                    ScalarKind.TEXT.template,
-                    Text::class,
-                    com.typewritermc.configuration.TextExpressionsFactory,
-                ) { nested -> textField(nested) },
-        ),
-    )
-
-@Suppress("UNCHECKED_CAST")
-private fun nullableIntegerField(scope: ConfigurationCollectionScope): NullableField<Int, Integer<Int>> =
-    scope.field(
-        RelativeFieldPattern.root,
-        RepresentationKind.INTEGER,
-        INT.nullable(),
-        NullableField::class as KClass<NullableField<Int, Integer<Int>>>,
-        mapOf(
-            skirout.editor.v1.type_catalog.FieldPatternSegment.VALUES to
-                com.typewritermc.configuration.NestedConfigurationScope(
-                    RepresentationKind.INTEGER,
-                    INT,
-                    Integer::class,
-                    com.typewritermc.configuration.NumberExpressionsFactory,
-                ) { nested -> integerField(nested) },
-        ),
-    )
