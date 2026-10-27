@@ -71,8 +71,8 @@ export function registerFiberyTools(pi: ExtensionAPI): void {
 			priority: Type.Optional(stringEnum(BUG_PRIORITY_VALUES)),
 			linkedFeatureIdsOrNames: Type.Optional(Type.Array(Type.String({ description: "Linked feature ids or names" }))),
 		}),
-		async execute(_toolCallId, params, _signal, _onUpdate, ctx) {
-			const config = await getConfig(ctx.cwd);
+		async execute(_toolCallId, params, _signal, _onUpdate) {
+			const config = getConfig();
 			const result = await createBug(config, params);
 			return textResult(`Fibery bug create result: ${JSON.stringify(result, null, 2)}`, result);
 		},
@@ -90,8 +90,8 @@ export function registerFiberyTools(pi: ExtensionAPI): void {
 			importance: Type.Optional(stringEnum(FEATURE_IMPORTANCE_VALUES)),
 			linkedBugIdsOrNames: Type.Optional(Type.Array(Type.String({ description: "Linked bug ids or names" }))),
 		}),
-		async execute(_toolCallId, params, _signal, _onUpdate, ctx) {
-			const config = await getConfig(ctx.cwd);
+		async execute(_toolCallId, params, _signal, _onUpdate) {
+			const config = getConfig();
 			const result = await createFeature(config, params);
 			return textResult(`Fibery feature create result: ${JSON.stringify(result, null, 2)}`, result);
 		},
@@ -108,8 +108,8 @@ export function registerFiberyTools(pi: ExtensionAPI): void {
 			priority: Type.Optional(stringEnum(BUG_PRIORITY_VALUES)),
 			linkedFeatureIdsOrNames: Type.Optional(Type.Array(Type.String({ description: "Linked feature ids or names" }))),
 		}),
-		async execute(_toolCallId, params, _signal, _onUpdate, ctx) {
-			const config = await getConfig(ctx.cwd);
+		async execute(_toolCallId, params, _signal, _onUpdate) {
+			const config = getConfig();
 			const result = await updateBug(config, params);
 			return textResult(`Fibery bug update result: ${JSON.stringify(result, null, 2)}`, result);
 		},
@@ -127,8 +127,8 @@ export function registerFiberyTools(pi: ExtensionAPI): void {
 			importance: Type.Optional(stringEnum(FEATURE_IMPORTANCE_VALUES)),
 			linkedBugIdsOrNames: Type.Optional(Type.Array(Type.String({ description: "Linked bug ids or names" }))),
 		}),
-		async execute(_toolCallId, params, _signal, _onUpdate, ctx) {
-			const config = await getConfig(ctx.cwd);
+		async execute(_toolCallId, params, _signal, _onUpdate) {
+			const config = getConfig();
 			const result = await updateFeature(config, params);
 			return textResult(`Fibery feature update result: ${JSON.stringify(result, null, 2)}`, result);
 		},
@@ -144,8 +144,8 @@ export function registerFiberyTools(pi: ExtensionAPI): void {
 			title: Type.String({ description: "Rough or exact title to search" }),
 			limit: Type.Optional(Type.Number({ description: "Maximum results to return" })),
 		}),
-		async execute(_toolCallId, params, _signal, _onUpdate, ctx) {
-			const config = await getConfig(ctx.cwd);
+		async execute(_toolCallId, params, _signal, _onUpdate) {
+			const config = getConfig();
 			const result = await findItems(config, params.kind, params.title, params.limit ?? 20);
 			return textResult(`Fibery find result: ${JSON.stringify(result, null, 2)}`, result);
 		},
@@ -160,8 +160,8 @@ export function registerFiberyTools(pi: ExtensionAPI): void {
 		parameters: Type.Object({
 			limit: Type.Optional(Type.Number({ description: "Maximum number of tasks to return" })),
 		}),
-		async execute(_toolCallId, params, _signal, _onUpdate, ctx) {
-			const config = await getConfig(ctx.cwd);
+		async execute(_toolCallId, params, _signal, _onUpdate) {
+			const config = getConfig();
 			const result = await listCurrentTasks(config, params.limit ?? 200);
 			return textResult(`Fibery current tasks: ${JSON.stringify(result, null, 2)}`, result);
 		},
@@ -177,8 +177,8 @@ export function registerFiberyTools(pi: ExtensionAPI): void {
 			featureIdOrName: Type.String({ description: "Feature id or exact name" }),
 			relationField: Type.Optional(Type.String({ description: "Override bug relation field id" })),
 		}),
-		async execute(_toolCallId, params, _signal, _onUpdate, ctx) {
-			const config = await getConfig(ctx.cwd);
+		async execute(_toolCallId, params, _signal, _onUpdate) {
+			const config = getConfig();
 			const result = await linkBugToFeature(
 				config,
 				params.bugIdOrName,
@@ -197,8 +197,8 @@ export function registerFiberyTools(pi: ExtensionAPI): void {
 		parameters: Type.Object({
 			changedPaths: Type.Optional(Type.Array(Type.String({ description: "Changed file path" }))),
 		}),
-		async execute(_toolCallId, params, _signal, _onUpdate, ctx) {
-			const config = await getConfig(ctx.cwd);
+		async execute(_toolCallId, params, _signal, _onUpdate) {
+			const config = getConfig();
 			const result = await discoverDomains(config, params.changedPaths ?? []);
 			return textResult(`Fibery domain discovery: ${JSON.stringify(result, null, 2)}`, result);
 		},
@@ -210,8 +210,8 @@ export function registerFiberyTools(pi: ExtensionAPI): void {
 		description: "List available milestones",
 		promptSnippet: "List milestones before asking the user to choose one.",
 		parameters: Type.Object({}),
-		async execute(_toolCallId, _params, _signal, _onUpdate, ctx) {
-			const config = await getConfig(ctx.cwd);
+		async execute(_toolCallId, _params, _signal, _onUpdate) {
+			const config = getConfig();
 			const milestones = await listMilestones(config);
 			const result = { count: milestones.length, milestones };
 			return textResult(`Fibery milestones: ${JSON.stringify(result, null, 2)}`, result);
@@ -226,8 +226,8 @@ export function registerFiberyTools(pi: ExtensionAPI): void {
 		parameters: Type.Object({
 			limit: Type.Optional(Type.Number({ description: "How many recent betas to return" })),
 		}),
-		async execute(_toolCallId, params, _signal, _onUpdate, ctx) {
-			const config = await getConfig(ctx.cwd);
+		async execute(_toolCallId, params, _signal, _onUpdate) {
+			const config = getConfig();
 			const betas = await listRecentBetas(config, params.limit ?? 5);
 			const result = { count: betas.length, betas };
 			return textResult(`Fibery recent betas: ${JSON.stringify(result, null, 2)}`, result);
@@ -239,8 +239,8 @@ export function registerFiberyTools(pi: ExtensionAPI): void {
 		label: "Fibery Refresh Schema Cache",
 		description: "Refresh cached Fibery schema used by the extension",
 		parameters: Type.Object({}),
-		async execute(_toolCallId, _params, _signal, _onUpdate, ctx) {
-			const config = await getConfig(ctx.cwd);
+		async execute(_toolCallId, _params, _signal, _onUpdate) {
+			const config = getConfig();
 			const result = await refreshSchemaCache(config);
 			return textResult(`Fibery schema cache refreshed at ${result.refreshedAt}`, result);
 		},
@@ -252,8 +252,8 @@ export function registerFiberyTools(pi: ExtensionAPI): void {
 		description: "Get a compact live schema summary for maintenance mode",
 		promptSnippet: "Use a compact schema summary before deeper maintenance work.",
 		parameters: Type.Object({}),
-		async execute(_toolCallId, _params, _signal, _onUpdate, ctx) {
-			const config = await getConfig(ctx.cwd);
+		async execute(_toolCallId, _params, _signal, _onUpdate) {
+			const config = getConfig();
 			const result = await getDiscoverySummary(config);
 			return textResult(`Fibery discovery summary: ${JSON.stringify(result, null, 2)}`, result);
 		},
@@ -271,8 +271,8 @@ export function registerFiberyTools(pi: ExtensionAPI): void {
 			targetName: Type.Optional(Type.String({ description: "Milestone name such as Interim (0.9)" })),
 			includeDescriptions: Type.Optional(Type.Boolean({ description: "Fetch document markdown descriptions" })),
 		}),
-		async execute(_toolCallId, params, _signal, _onUpdate, ctx) {
-			const config = await getConfig(ctx.cwd);
+		async execute(_toolCallId, params, _signal, _onUpdate) {
+			const config = getConfig();
 			const result = await getChangelogItems(config, {
 				releaseType: params.releaseType ?? "beta",
 				targetIdentifier: params.targetIdentifier,

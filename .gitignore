@@ -158,7 +158,6 @@ PLAN.md
 /panel/doc
 plans/
 /docs/*
-backend/.artifact_keeper_password
 AGENTS.local.md
 
 # devenv shell state; devenv.lock is committed

@@ -23,3 +23,11 @@ nixConfig:
   extra-trusted-public-keys:
     - gabber235.cachix.org-1:sXlzXx2H2hsyx+SA4NkiXhAVD4q0IgnditjhCEsBgXQ=
 require_version: ">=2.4"
+nixpkgs:
+  # The 1Password CLI (`op`, devenv.nix) is the only unfree package.
+  permitted_unfree_packages:
+    - 1password-cli
+# xtask and `secretspec run` resolve secrets when a command needs them (secretspec.toml). devenv's
+# own integration would resolve them on every shell entry and fail without 1Password.
+secretspec:
+  enable: false
