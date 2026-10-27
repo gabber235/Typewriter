@@ -216,7 +216,8 @@ pub fn release(ctx: &Context, revision: &str) -> Result<()> {
             "kustomization",
         ],
     );
-    resume.args(TENANT).args(["--timeout", "20m"]);
+    // Without --wait, resuming several Kustomizations returns before any of them is Ready.
+    resume.args(TENANT).args(["--wait", "--timeout", "20m"]);
     resume.run()
 }
 
