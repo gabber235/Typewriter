@@ -134,7 +134,7 @@ impl SeedQuery {
     /// Runs a component's transaction the way the component does: a conflict with a concurrent
     /// transaction is retried under the same bounded policy, and the statement at
     /// `outcome_index` is returned. Lets a case race a transaction against itself without the
-    /// component, where the losing call of such a race currently never replies.
+    /// component.
     pub async fn transaction_json(self, outcome_index: usize) -> Result<serde_json::Value> {
         for attempt in 1..=TRANSACTION_CONFLICT_MAX_ATTEMPTS {
             match self

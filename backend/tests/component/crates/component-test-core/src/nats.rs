@@ -92,11 +92,18 @@ impl NatsDriver {
         Ok(())
     }
 
+    /// Sends `message` and waits up to `timeout` for the reply. The client's own request
+    /// timeout (ten seconds by default) is bypassed so that `timeout` is the only bound.
     pub async fn request(&self, message: HostMessage, timeout: Duration) -> Result<HostMessage> {
         let response = tokio::time::timeout(
             timeout,
-            self.client
-                .request_with_headers(message.subject, input_headers(), message.body.into()),
+            self.client.send_request(
+                message.subject,
+                async_nats::Request::new()
+                    .headers(input_headers())
+                    .payload(message.body.into())
+                    .timeout(None),
+            ),
         )
         .await??;
         Ok(HostMessage {

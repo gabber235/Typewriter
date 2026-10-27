@@ -19,7 +19,9 @@ use super::{
     service::service_grants,
 };
 
-const WAIT: Duration = Duration::from_secs(2);
+/// How long a message the broker must deliver may take. Generous because the whole suite shares
+/// one broker and one machine; a passing case never waits it out.
+const WAIT: Duration = Duration::from_secs(10);
 /// How long a message the broker refused is given to arrive anyway.
 const SILENCE: Duration = Duration::from_millis(300);
 
@@ -215,7 +217,9 @@ async fn a_service_reply_reaches_the_panel_up_to_its_limit(context: &mut Context
         let mut replies = panel.subscribe(&reply_to).await?;
 
         panel.publish(OWN_REALM, Some(&reply_to), "fetch").await?;
-        let request = receive(&mut requests).await?;
+        let request = receive(&mut requests)
+            .await
+            .context("the host receives the request")?;
         let reply = request.reply.context("the request names the panel inbox")?;
         assert_eq!(reply.as_str(), reply_to);
         for frame in 0..limit {
@@ -224,7 +228,10 @@ async fn a_service_reply_reaches_the_panel_up_to_its_limit(context: &mut Context
         }
         for frame in 0..limit {
             assert_eq!(
-                receive(&mut replies).await?.payload,
+                receive(&mut replies)
+                    .await
+                    .with_context(|| format!("frame {frame} reaches the panel"))?
+                    .payload,
                 format!("frame {frame}")
             );
         }
@@ -234,9 +241,17 @@ async fn a_service_reply_reaches_the_panel_up_to_its_limit(context: &mut Context
         assert!(next_within(&mut replies, SILENCE).await.is_none());
 
         // The limit belongs to each responder: another one that received the request may still answer.
-        receive(&mut replica_requests).await?;
+        receive(&mut replica_requests)
+            .await
+            .context("the replica receives the request")?;
         replica.publish(&reply, None, "replica").await?;
-        assert_eq!(receive(&mut replies).await?.payload, "replica");
+        assert_eq!(
+            receive(&mut replies)
+                .await
+                .context("the replica's answer reaches the panel")?
+                .payload,
+            "replica"
+        );
         Ok(())
     })
     .await

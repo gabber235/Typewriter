@@ -282,8 +282,8 @@ async fn joining_again_after_an_automatic_join_is_refused(context: &mut Context)
     Ok(())
 }
 
-/// The component's join transaction, raced directly against the database: through the component
-/// the losing call of a conflicting race never replies, which the report of this suite tracks.
+/// The component's join transaction, raced directly against the database, so the transaction's
+/// own guarantee is checked apart from the component's conflict retry.
 const JOIN_SUBMISSION: &str = include_str!(concat!(
     env!("CARGO_MANIFEST_DIR"),
     "/../../../organization/user-organization/src/join_submission_transaction.surql"
@@ -374,6 +374,76 @@ async fn one_person_joining_twice_at_once_becomes_one_member(context: &mut Conte
             .await?,
         1
     );
+    Ok(())
+}
+
+#[component_test(UserOrganization)]
+async fn two_people_racing_for_a_single_use_code_both_get_an_answer(
+    context: &mut Context,
+) -> TestResult {
+    let acme = acme_with_code(context, JoinCode::new("invite").single_use().expiring()).await?;
+    let hedy = StackUser::new("hedy");
+    Seed::new().user(&hedy).apply(&context.database()?).await?;
+    // Whoever wins tells both request views and removes the code; the loser publishes nothing.
+    let mock = context.messaging_mock()?;
+    mock.expect_persisted_publish("typewriter.to.user.*.join_requests.changed");
+    mock.expect_persisted_publish(to_organization(&acme, "join_requests.changed"));
+    mock.expect_persisted_publish(to_organization(&acme, "join_codes.changed"));
+
+    let (first, second) = tokio::join!(
+        submit(context, grace(), "invite"),
+        submit(context, &hedy, "invite"),
+    );
+
+    let replies = [first?, second?];
+    let made = replies
+        .iter()
+        .filter(|reply| matches!(reply, SubmitUserJoinRequestResponse::RequestMade(_)))
+        .count();
+    let refused = replies
+        .iter()
+        .filter(|reply| matches!(reply, SubmitUserJoinRequestResponse::CodeNotFoundError(_)))
+        .count();
+    assert_eq!((made, refused), (1, 1), "{replies:?}");
+    assert_jm!(
+        context
+            .database()?
+            .query_json("RETURN { codes: count(SELECT id FROM organization_join_code), requests: count(SELECT id FROM request_to_join), members: count(SELECT id FROM member_of WHERE in IN [user:user_grace, user:user_hedy]) }")
+            .await?,
+        { "codes": 0, "requests": 1, "members": 0 }
+    );
+    Ok(())
+}
+
+#[component_test(UserOrganization)]
+async fn joining_twice_at_once_answers_both_and_makes_one_member(
+    context: &mut Context,
+) -> TestResult {
+    let acme = acme_with_code(
+        context,
+        JoinCode::new("automatic")
+            .auto_accept(&["writer"])
+            .expiring(),
+    )
+    .await?;
+    expect_grace_joins_as_writer(context, &acme)?;
+
+    let (first, second) = tokio::join!(
+        submit(context, grace(), "automatic"),
+        submit(context, grace(), "automatic"),
+    );
+
+    let replies = [first?, second?];
+    let accepted = replies
+        .iter()
+        .filter(|reply| matches!(reply, SubmitUserJoinRequestResponse::AutoAccepted(_)))
+        .count();
+    let refused = replies
+        .iter()
+        .filter(|reply| matches!(reply, SubmitUserJoinRequestResponse::AlreadyMemberError(_)))
+        .count();
+    assert_eq!((accepted, refused), (1, 1), "{replies:?}");
+    assert_jm!(standing(context, grace()).await?, { "requests": 0, "members": 1 });
     Ok(())
 }
 
