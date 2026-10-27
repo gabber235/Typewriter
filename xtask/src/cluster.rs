@@ -13,7 +13,7 @@ use std::os::unix::fs::OpenOptionsExt as _;
 use std::path::{Path, PathBuf};
 use std::process::Command;
 
-use anyhow::{Context as _, Result};
+use anyhow::{Context as _, Result, ensure};
 use clap::Subcommand;
 use serde::Deserialize;
 
@@ -184,7 +184,7 @@ pub fn registry_password(ctx: &Context) -> Result<String> {
 }
 
 /// Points the CI cluster's Typewriter tenant at `revision` and reconciles it, now that its images
-/// are in the registry; returns once every Typewriter Kustomization is Ready.
+/// are in the registry; returns once every Typewriter Kustomization is Ready at `revision`.
 pub fn release(ctx: &Context, revision: &str) -> Result<()> {
     let patch = serde_json::json!([
         { "op": "add", "path": "/spec/ref", "value": { "commit": revision } }
@@ -204,21 +204,38 @@ pub fn release(ctx: &Context, revision: &str) -> Result<()> {
         ],
     )
     .run()?;
-    let mut resume = ctx.tool(
-        ".",
-        "flux",
-        &[
-            "--context",
-            CONTEXT,
-            "--namespace",
-            "flux-system",
-            "resume",
-            "kustomization",
-        ],
-    );
+    // The source must hold the commit before the Kustomizations resume, or they would turn Ready
+    // at the revision the tenant started from.
+    flux(ctx, &["reconcile", "source", "git", "typewriter-backend"])
+        .args(["--timeout", "15m"])
+        .run()
+        .context("Flux cannot fetch the commit under test")?;
     // Without --wait, resuming several Kustomizations returns before any of them is Ready.
-    resume.args(TENANT).args(["--wait", "--timeout", "20m"]);
-    resume.run()
+    flux(ctx, &["resume", "kustomization"])
+        .args(TENANT)
+        .args(["--wait", "--timeout", "20m"])
+        .run()?;
+    for kustomization in TENANT {
+        let applied = kubectl(
+            ctx,
+            &[
+                "--namespace",
+                "flux-system",
+                "get",
+                "kustomization",
+                kustomization,
+                "--output",
+                "jsonpath={.status.lastAppliedRevision}",
+            ],
+        )
+        .output_text()?;
+        ensure!(
+            applied.trim().ends_with(revision),
+            "{kustomization} applied {}, not {revision}",
+            applied.trim()
+        );
+    }
+    Ok(())
 }
 
 /// The Typewriter tenant's Kustomizations, in their dependency order.
@@ -227,6 +244,17 @@ const TENANT: [&str; 3] = [
     "typewriter-backend",
     "typewriter-db-complete",
 ];
+
+/// flux against the CI cluster's `flux-system` namespace only.
+fn flux(ctx: &Context, args: &[&str]) -> Command {
+    let mut command = ctx.tool(
+        ".",
+        "flux",
+        &["--context", CONTEXT, "--namespace", "flux-system"],
+    );
+    command.args(args);
+    command
+}
 
 /// kubectl against the CI cluster only.
 fn kubectl(ctx: &Context, args: &[&str]) -> Command {
