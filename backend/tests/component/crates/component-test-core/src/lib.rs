@@ -226,6 +226,20 @@ impl MessagingClient {
     pub async fn wait_idle(&self) -> Result<()> {
         self.0.wait_idle().await
     }
+    /// The number of messages the fixture's JetStream stream `stream` holds.
+    pub async fn stream_messages(&self, stream: &str) -> Result<u64> {
+        let info = self
+            .request(
+                format!("$JS.API.STREAM.INFO.{stream}"),
+                Vec::new(),
+                std::time::Duration::from_secs(2),
+            )
+            .await?;
+        let info: serde_json::Value = serde_json::from_slice(&info)?;
+        info["state"]["messages"]
+            .as_u64()
+            .ok_or_else(|| anyhow::anyhow!("stream info without a message count: {info}"))
+    }
 }
 fn host_message(subject: impl Into<String>, body: impl Into<Vec<u8>>) -> crate::nats::HostMessage {
     crate::nats::HostMessage {

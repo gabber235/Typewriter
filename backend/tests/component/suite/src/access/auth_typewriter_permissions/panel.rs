@@ -2,117 +2,38 @@
 //! deliberate oracle independent of the transport generator, so a generator change that alters a
 //! grant fails here instead of updating the expectation with it.
 
-use base64::{Engine as _, engine::general_purpose::URL_SAFE_NO_PAD};
+use super::AuthTypewriterPermissions;
 use json_matcher::assert_jm;
-use typewriter_component_test::prelude::*;
-use wasmcloud_utils::skir::base::{
-    access::v1::permission::{
-        EntityPermissionQualifier, EntityPermissionQualifier_User, GetEntityPermissionRequest,
-        GetEntityPermissionResponse, Permissions,
+use typewriter_component_test::{
+    access::{
+        PANEL_POLICY, SESSION, assert_consumer_grant, member_grants, permits, request_permissions,
+        sign_in,
     },
-    kernel::v1::record_id::RecordId,
+    prelude::*,
 };
-
-use super::{AuthTypewriterPermissions, Context, PANEL_POLICY, permits, request_permissions};
-
-pub(super) const SESSION: &str = "0123456789abcdef0123456789abcdef";
-
-fn claims(subject: &str, name: &str) -> Vec<u8> {
-    serde_json::to_vec(&serde_json::json!({
-        "sub": subject,
-        "name": name,
-        "email": "panel@example.test",
-        "avatar_url": "https://example.test/avatar.png"
-    }))
-    .expect("claims are valid JSON")
-}
-
-/// The policy request the callout sends when `subject` signs in to the panel.
-pub(super) fn sign_in(subject: &str, organization: Option<RecordId>) -> GetEntityPermissionRequest {
-    sign_in_as(subject, "Ada Lovelace", organization)
-}
-
-fn sign_in_as(
-    subject: &str,
-    name: &str,
-    organization: Option<RecordId>,
-) -> GetEntityPermissionRequest {
-    GetEntityPermissionRequest {
-        qualifier: EntityPermissionQualifier::User(Box::new(EntityPermissionQualifier_User {
-            organization_id: organization,
-            connection_session: SESSION.into(),
-            ..Default::default()
-        })),
-        jwt_claims: claims(subject, name),
-        ..Default::default()
-    }
-}
-
-fn consumer_name(organization: Option<&str>, projection: &str) -> String {
-    let identity = serde_json::to_vec(&(ada().token(), organization, SESSION, projection))
-        .expect("consumer identity is valid JSON");
-    format!("TW_{}", URL_SAFE_NO_PAD.encode(identity))
-}
-
-fn assert_consumer_grant(
-    publish: &[String],
-    organization: Option<&str>,
-    projection: &str,
-    filter: &str,
-) {
-    let consumer = consumer_name(organization, projection);
-    for subject in [
-        "$JS.API.STREAM.INFO.TYPEWRITER_MEMBERSHIP".to_owned(),
-        format!("$JS.API.CONSUMER.CREATE.TYPEWRITER_MEMBERSHIP.{consumer}.{filter}"),
-        format!("$JS.API.CONSUMER.INFO.TYPEWRITER_MEMBERSHIP.{consumer}"),
-        format!("$JS.API.CONSUMER.MSG.NEXT.TYPEWRITER_MEMBERSHIP.{consumer}"),
-        format!("$JS.API.CONSUMER.DELETE.TYPEWRITER_MEMBERSHIP.{consumer}"),
-    ] {
-        assert!(
-            publish.contains(&subject),
-            "missing consumer grant {subject}"
-        );
-    }
-}
-
-/// Grants of Ada signed in to Acme, whose founder she is.
-pub(super) async fn member_grants(context: &Context) -> anyhow::Result<Permissions> {
-    Seed::new()
-        .organization(&acme(), ada())
-        .apply(&context.database()?)
-        .await?;
-    Ok(request_permissions(
-        context,
-        PANEL_POLICY,
-        &sign_in(ada().token(), Some(acme().id())),
-    )
-    .await?
-    .permissions)
-}
+use wasmcloud_utils::skir::base::access::v1::permission::GetEntityPermissionResponse;
 
 #[component_test(AuthTypewriterPermissions)]
 async fn panel_login_stores_the_profile_and_a_later_login_updates_it(
-    context: &mut Context,
+    context: &mut TestContext<AuthTypewriterPermissions>,
 ) -> TestResult {
     request_permissions(
         context,
         PANEL_POLICY,
-        &sign_in_as(ada().token(), "Ada Byron", None),
+        &sign_in(ada().token(), "Ada Byron", None),
     )
     .await?;
     request_permissions(
         context,
         PANEL_POLICY,
-        &sign_in_as(ada().token(), "Ada Lovelace", None),
+        &sign_in(ada().token(), "Ada Lovelace", None),
     )
     .await?;
 
     assert_jm!(
         context
             .database()?
-            .seed("SELECT name, email, avatar_url FROM ONLY $user")
-            .bind("user", surrealdb_types::RecordId::from(ada().id()))?
-            .query_json()
+            .read("SELECT name, email, avatar_url FROM ONLY $user", &[("user", ada().id())])
             .await?,
         {
             "name": "Ada Lovelace",
@@ -124,8 +45,15 @@ async fn panel_login_stores_the_profile_and_a_later_login_updates_it(
 }
 
 #[component_test(AuthTypewriterPermissions)]
-async fn panel_login_grants_personal_subjects_only(context: &mut Context) -> TestResult {
-    let grant = request_permissions(context, PANEL_POLICY, &sign_in(ada().token(), None)).await?;
+async fn panel_login_grants_personal_subjects_only(
+    context: &mut TestContext<AuthTypewriterPermissions>,
+) -> TestResult {
+    let grant = request_permissions(
+        context,
+        PANEL_POLICY,
+        &sign_in(ada().token(), "Ada Lovelace", None),
+    )
+    .await?;
 
     assert_eq!(grant.tags, ["user:user_ada"]);
     let permissions = &grant.permissions;
@@ -139,12 +67,14 @@ async fn panel_login_grants_personal_subjects_only(context: &mut Context) -> Tes
     ));
     assert_consumer_grant(
         &permissions.publish.allow,
+        ada(),
         None,
         "user_organizations_changed",
         "cloud.from.user.user_ada.organizations.changed",
     );
     assert_consumer_grant(
         &permissions.publish.allow,
+        ada(),
         None,
         "user_join_requests_changed",
         "cloud.from.user.user_ada.join_requests.changed",
@@ -178,9 +108,11 @@ async fn panel_login_grants_personal_subjects_only(context: &mut Context) -> Tes
 }
 
 #[component_test(AuthTypewriterPermissions)]
-async fn a_subject_with_nats_separators_is_refused(context: &mut Context) -> TestResult {
+async fn a_subject_with_nats_separators_is_refused(
+    context: &mut TestContext<AuthTypewriterPermissions>,
+) -> TestResult {
     let reply: GetEntityPermissionResponse = context
-        .request(PANEL_POLICY, &sign_in("user_ada.>", None))
+        .request(PANEL_POLICY, &sign_in("user_ada.>", "Ada Lovelace", None))
         .await?;
 
     assert!(
@@ -199,17 +131,14 @@ async fn a_subject_with_nats_separators_is_refused(context: &mut Context) -> Tes
 
 #[component_test(AuthTypewriterPermissions)]
 async fn nonmember_cannot_gain_organization_permissions_or_tag(
-    context: &mut Context,
+    context: &mut TestContext<AuthTypewriterPermissions>,
 ) -> TestResult {
-    Seed::new()
-        .organization(&acme(), ada())
-        .apply(&context.database()?)
-        .await?;
+    seed_organization(context, &acme(), ada(), &[]).await?;
 
     let grant = request_permissions(
         context,
         PANEL_POLICY,
-        &sign_in(grace().token(), Some(acme().id())),
+        &sign_in(grace().token(), "Grace Hopper", Some(acme().id())),
     )
     .await?;
 
@@ -235,9 +164,11 @@ async fn nonmember_cannot_gain_organization_permissions_or_tag(
 
 #[component_test(AuthTypewriterPermissions)]
 async fn member_reaches_every_route_of_its_organization_and_nothing_of_another(
-    context: &mut Context,
+    context: &mut TestContext<AuthTypewriterPermissions>,
 ) -> TestResult {
-    let permissions = member_grants(context).await?;
+    seed_organization(context, &acme(), ada(), &[]).await?;
+
+    let permissions = member_grants(context, ada(), &acme()).await?;
 
     let realm = "service.to.quests.organization.acme.realm";
     for subject in [
@@ -278,6 +209,7 @@ async fn member_reaches_every_route_of_its_organization_and_nothing_of_another(
     }
     assert_consumer_grant(
         &permissions.publish.allow,
+        ada(),
         Some("acme"),
         "organization_members_changed",
         "cloud.from.organization.acme.members.changed",
@@ -300,8 +232,12 @@ async fn member_reaches_every_route_of_its_organization_and_nothing_of_another(
 }
 
 #[component_test(AuthTypewriterPermissions)]
-async fn member_reaches_every_realm_of_its_organization_only(context: &mut Context) -> TestResult {
-    let permissions = member_grants(context).await?;
+async fn member_reaches_every_realm_of_its_organization_only(
+    context: &mut TestContext<AuthTypewriterPermissions>,
+) -> TestResult {
+    seed_organization(context, &acme(), ada(), &[]).await?;
+
+    let permissions = member_grants(context, ada(), &acme()).await?;
 
     // A realm created after connect is reachable without a new connection: no realm is enumerated.
     for realm in ["quests", "realm_created_later"] {
@@ -328,18 +264,15 @@ async fn member_reaches_every_realm_of_its_organization_only(context: &mut Conte
 
 #[component_test(AuthTypewriterPermissions)]
 async fn punctuation_in_record_keys_remains_raw_in_generated_grants(
-    context: &mut Context,
+    context: &mut TestContext<AuthTypewriterPermissions>,
 ) -> TestResult {
     let world = Organization::new("writers-world");
-    Seed::new()
-        .organization(&world, ada())
-        .apply(&context.database()?)
-        .await?;
+    seed_organization(context, &world, ada(), &[]).await?;
 
     let grant = request_permissions(
         context,
         PANEL_POLICY,
-        &sign_in(ada().token(), Some(world.id())),
+        &sign_in(ada().token(), "Ada Lovelace", Some(world.id())),
     )
     .await?;
 

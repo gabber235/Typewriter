@@ -1,16 +1,19 @@
 //! Service grants, checked by the subjects a service must and must not reach.
 
-use typewriter_component_test::prelude::*;
+use super::AuthTypewriterPermissions;
+use typewriter_component_test::{
+    access::{
+        Realm, SERVICE_POLICY, bound_service, expect_binding, expect_bound, expect_scope, permits,
+        request_permissions, service_grants, service_sign_in,
+    },
+    prelude::*,
+};
 use wasmcloud_utils::{
     skir::base::{
-        access::v1::permission::{
-            EntityPermissionQualifier, GetEntityPermissionRequest, GetEntityPermissionResponse,
-            Permissions,
-        },
+        access::v1::permission::GetEntityPermissionResponse,
         service::v1::{
             status::{
                 QueryServiceBindingResponse, QueryServiceBindingResponse_Binding, ServiceBinding,
-                ServiceBinding_Bound,
             },
             topology::GetServiceMessagingScopeResponse,
         },
@@ -19,51 +22,12 @@ use wasmcloud_utils::{
     transport_routes::{REPLY_TTL_MS, SERVICE_RESPONSE_LIMIT},
 };
 
-use super::{
-    AuthTypewriterPermissions, Context, Realm, SERVICE_POLICY, bound_service, expect_binding,
-    expect_scope, permits, request_permissions,
-};
-
-pub(super) fn sign_in(service: &str) -> GetEntityPermissionRequest {
-    GetEntityPermissionRequest {
-        qualifier: EntityPermissionQualifier::Service(Box::default()),
-        jwt_claims: serde_json::to_vec(&serde_json::json!({
-            "sub": service,
-            "preferred_username": "Fixture Service"
-        }))
-        .expect("claims are valid JSON"),
-        ..Default::default()
-    }
-}
-
-/// The grants of `service`, bound to Acme and running `realm`.
-pub(super) async fn service_grants(
-    context: &Context,
-    service: &str,
-    realm: Realm,
-) -> anyhow::Result<Permissions> {
-    bound_service(context, service, realm)?;
-    Ok(
-        request_permissions(context, SERVICE_POLICY, &sign_in(service))
-            .await?
-            .permissions,
-    )
-}
-
-fn realm_route(realm: &str, organization: &str, route: &str) -> String {
-    format!("service.to.{realm}.organization.{organization}.realm.{route}")
-}
-
-fn realm_event(realm: &str, organization: &str, event: &str) -> String {
-    format!("service.from.{realm}.organization.{organization}.realm.{event}")
-}
-
 /// Another realm of Acme and the same realm key in another organization.
 const FOREIGN: [(&str, &str); 2] = [("foreign_realm", "acme"), ("quests", "globex")];
 
 #[component_test(AuthTypewriterPermissions)]
 async fn a_service_may_answer_every_frame_of_its_largest_reply(
-    context: &mut Context,
+    context: &mut TestContext<AuthTypewriterPermissions>,
 ) -> TestResult {
     let permissions = service_grants(context, "engine_one", Realm::Attached("quests")).await?;
 
@@ -83,7 +47,7 @@ async fn a_service_may_answer_every_frame_of_its_largest_reply(
 
 #[component_test(AuthTypewriterPermissions)]
 async fn an_attached_engine_reads_published_content_of_its_realm_only(
-    context: &mut Context,
+    context: &mut TestContext<AuthTypewriterPermissions>,
 ) -> TestResult {
     let permissions = service_grants(context, "engine_one", Realm::Attached("quests")).await?;
 
@@ -135,7 +99,7 @@ async fn an_attached_engine_reads_published_content_of_its_realm_only(
 
 #[component_test(AuthTypewriterPermissions)]
 async fn an_attached_engine_follows_rollout_but_cannot_lead_it(
-    context: &mut Context,
+    context: &mut TestContext<AuthTypewriterPermissions>,
 ) -> TestResult {
     let permissions = service_grants(context, "engine_one", Realm::Attached("quests")).await?;
 
@@ -154,11 +118,12 @@ async fn an_attached_engine_follows_rollout_but_cannot_lead_it(
 
 #[component_test(AuthTypewriterPermissions)]
 async fn a_bound_service_reports_its_lifecycle_on_its_own_subjects(
-    context: &mut Context,
+    context: &mut TestContext<AuthTypewriterPermissions>,
 ) -> TestResult {
     bound_service(context, "engine_one", Realm::Attached("quests"))?;
 
-    let grant = request_permissions(context, SERVICE_POLICY, &sign_in("engine_one")).await?;
+    let grant =
+        request_permissions(context, SERVICE_POLICY, &service_sign_in("engine_one")).await?;
 
     assert_eq!(grant.tags, ["service:engine_one", "organization:acme"]);
     let permissions = &grant.permissions;
@@ -190,7 +155,9 @@ async fn a_bound_service_reports_its_lifecycle_on_its_own_subjects(
 }
 
 #[component_test(AuthTypewriterPermissions)]
-async fn a_realm_host_serves_its_realm_routes_only(context: &mut Context) -> TestResult {
+async fn a_realm_host_serves_its_realm_routes_only(
+    context: &mut TestContext<AuthTypewriterPermissions>,
+) -> TestResult {
     let permissions = service_grants(context, "realm_host", Realm::Owned("quests")).await?;
 
     for route in [
@@ -242,7 +209,9 @@ async fn a_realm_host_serves_its_realm_routes_only(context: &mut Context) -> Tes
 }
 
 #[component_test(AuthTypewriterPermissions)]
-async fn a_realm_host_coordinates_rollout_of_its_realm(context: &mut Context) -> TestResult {
+async fn a_realm_host_coordinates_rollout_of_its_realm(
+    context: &mut TestContext<AuthTypewriterPermissions>,
+) -> TestResult {
     let permissions = service_grants(context, "realm_host", Realm::Owned("quests")).await?;
 
     for step in ["probe", "command", "status"] {
@@ -262,9 +231,9 @@ async fn a_realm_host_coordinates_rollout_of_its_realm(context: &mut Context) ->
 
 #[component_test(AuthTypewriterPermissions)]
 async fn failed_scope_lookup_replies_internal_error_instead_of_a_grant(
-    context: &mut Context,
+    context: &mut TestContext<AuthTypewriterPermissions>,
 ) -> TestResult {
-    bound_service_without_scope(context, "failing_host")?;
+    expect_bound(context, "failing_host")?;
     expect_scope(
         context,
         "failing_host",
@@ -273,7 +242,7 @@ async fn failed_scope_lookup_replies_internal_error_instead_of_a_grant(
 
     // The callout receives a typed failure at once instead of waiting for a reply.
     let reply: GetEntityPermissionResponse = context
-        .request(SERVICE_POLICY, &sign_in("failing_host"))
+        .request(SERVICE_POLICY, &service_sign_in("failing_host"))
         .await?;
 
     assert!(
@@ -284,7 +253,9 @@ async fn failed_scope_lookup_replies_internal_error_instead_of_a_grant(
 }
 
 #[component_test(AuthTypewriterPermissions)]
-async fn unknown_service_gets_no_permissions(context: &mut Context) -> TestResult {
+async fn unknown_service_gets_no_permissions(
+    context: &mut TestContext<AuthTypewriterPermissions>,
+) -> TestResult {
     expect_binding(
         context,
         "stranger",
@@ -292,7 +263,7 @@ async fn unknown_service_gets_no_permissions(context: &mut Context) -> TestResul
     )?;
 
     let reply: GetEntityPermissionResponse = context
-        .request(SERVICE_POLICY, &sign_in("stranger"))
+        .request(SERVICE_POLICY, &service_sign_in("stranger"))
         .await?;
 
     assert!(
@@ -304,7 +275,7 @@ async fn unknown_service_gets_no_permissions(context: &mut Context) -> TestResul
 
 #[component_test(AuthTypewriterPermissions)]
 async fn unassigned_bound_service_receives_no_realm_permissions(
-    context: &mut Context,
+    context: &mut TestContext<AuthTypewriterPermissions>,
 ) -> TestResult {
     let permissions = service_grants(context, "idle_host", Realm::None).await?;
 
@@ -321,7 +292,7 @@ async fn unassigned_bound_service_receives_no_realm_permissions(
 
 #[component_test(AuthTypewriterPermissions)]
 async fn unbound_service_receives_registration_notification_permission(
-    context: &mut Context,
+    context: &mut TestContext<AuthTypewriterPermissions>,
 ) -> TestResult {
     expect_binding(
         context,
@@ -331,7 +302,8 @@ async fn unbound_service_receives_registration_notification_permission(
         }),
     )?;
 
-    let grant = request_permissions(context, SERVICE_POLICY, &sign_in("engine_one")).await?;
+    let grant =
+        request_permissions(context, SERVICE_POLICY, &service_sign_in("engine_one")).await?;
 
     assert_eq!(grant.tags, ["service:engine_one"]);
     assert!(permits(
@@ -342,18 +314,4 @@ async fn unbound_service_receives_registration_notification_permission(
         !subject.contains(".organization.") && !subject.starts_with("service.from.")
     }));
     Ok(())
-}
-
-/// Registration reports `service` as bound to Acme; the scope reply is left to the case.
-fn bound_service_without_scope(context: &Context, service: &str) -> anyhow::Result<()> {
-    expect_binding(
-        context,
-        service,
-        skir_variant!(QueryServiceBindingResponse::Binding {
-            binding: ServiceBinding::Bound(Box::new(ServiceBinding_Bound {
-                organization_id: acme().key,
-                ..Default::default()
-            })),
-        }),
-    )
 }

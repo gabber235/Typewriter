@@ -1,110 +1,90 @@
 use std::time::Duration;
 
 use json_matcher::assert_jm;
-use typewriter_component_test::prelude::*;
+use typewriter_component_test::{
+    prelude::*,
+    service::{
+        arrange_host_configuration, paper, realm_with_engine, register_host,
+        seed_organization_services, seed_registration_lease, unbind_service,
+    },
+};
 use wasmcloud_utils::skir::base::service::v1::{
     organization::OrganizationServicesChanged,
     registration::{
-        BindServiceRequest, BindServiceResponse, ServiceBoundNotification, UnbindServiceRequest,
-        UnbindServiceResponse,
+        BindServiceRequest, BindServiceResponse, ServiceBoundNotification, UnbindServiceResponse,
     },
     service::ServiceRole,
     topology::OrganizationTopologyChanged,
 };
 
-use super::{
-    Context, ServiceRegistration, acme_with_service, arrange_configuration, globex, paper,
-    realm_with_engine, register_host, to_service,
-};
+use super::ServiceRegistration;
 
+/// The registration token of the unbound service `lobby`.
 const TOKEN: &str = "ABCDEFGHIJ";
+/// How long `lobby`'s registration lease has left.
 const LEASE: Duration = Duration::from_secs(60);
-
-async fn bind(
-    context: &Context,
-    organization: &Organization,
-    token: &str,
-) -> anyhow::Result<BindServiceResponse> {
-    context
-        .request(
-            from_member(ada(), organization, "services.bind"),
-            &BindServiceRequest {
-                registration_token: token.into(),
-                ..Default::default()
-            },
-        )
-        .await
-}
-
-async fn unbind(context: &Context, key: &str) -> anyhow::Result<UnbindServiceResponse> {
-    context
-        .request(
-            from_member(ada(), &acme(), "services.unbind"),
-            &UnbindServiceRequest {
-                service_id: key.into(),
-                ..Default::default()
-            },
-        )
-        .await
-}
-
-/// The organization and lease the service `key` holds.
-async fn binding_of(context: &Context, key: &str) -> anyhow::Result<serde_json::Value> {
-    context
-        .database()?
-        .seed("SELECT VALUE { organization: organization ?? null, token: registration.token ?? null } FROM ONLY $service")
-        .bind("service", surrealdb_types::RecordId::new("service", key))?
-        .query_json()
-        .await
-}
+/// The organization `lobby` belongs to and the registration token it still holds.
+const BINDING: &str = "SELECT VALUE { organization: organization ?? null, token: registration.token ?? null } FROM ONLY service:lobby";
 
 #[component_test(ServiceRegistration)]
-async fn invalid_registration_token_does_not_bind_service(context: &mut Context) -> TestResult {
+async fn invalid_registration_token_does_not_bind_service(
+    context: &mut TestContext<ServiceRegistration>,
+) -> TestResult {
     Seed::new()
         .organization(&acme(), ada())
         .service("lobby")
         .registration_lease("lobby", TOKEN, LEASE)
-        .apply(&context.database()?)
+        .apply(context)
         .await?;
 
-    let reply = bind(context, &acme(), "ZZZZZZZZZZ").await?;
+    let reply: BindServiceResponse = context
+        .request(
+            from_member(ada(), &acme(), "services.bind"),
+            &BindServiceRequest {
+                registration_token: "ZZZZZZZZZZ".into(),
+                ..Default::default()
+            },
+        )
+        .await?;
 
     assert!(
         matches!(reply, BindServiceResponse::InvalidRegistrationTokenError(_)),
         "{reply:?}"
     );
-    assert_jm!(binding_of(context, "lobby").await?, { "organization": null, "token": TOKEN });
+    assert_jm!(context.database()?.query_json(BINDING).await?, { "organization": null, "token": TOKEN });
     Ok(())
 }
 
 #[component_test(ServiceRegistration)]
-async fn missing_organization_does_not_consume_registration(context: &mut Context) -> TestResult {
-    Seed::new()
-        .service("lobby")
-        .registration_lease("lobby", TOKEN, LEASE)
-        .apply(&context.database()?)
-        .await?;
+async fn missing_organization_does_not_consume_registration(
+    context: &mut TestContext<ServiceRegistration>,
+) -> TestResult {
+    seed_registration_lease(context, "lobby", TOKEN, LEASE).await?;
 
-    let reply = bind(context, &Organization::new("missing"), TOKEN).await?;
+    let reply: BindServiceResponse = context
+        .request(
+            from_member(ada(), &Organization::new("missing"), "services.bind"),
+            &BindServiceRequest {
+                registration_token: TOKEN.into(),
+                ..Default::default()
+            },
+        )
+        .await?;
 
     assert!(
         matches!(reply, BindServiceResponse::OrganizationNotFoundError(_)),
         "{reply:?}"
     );
-    assert_jm!(binding_of(context, "lobby").await?, { "organization": null, "token": TOKEN });
+    assert_jm!(context.database()?.query_json(BINDING).await?, { "organization": null, "token": TOKEN });
     Ok(())
 }
 
 #[component_test(ServiceRegistration)]
 async fn valid_registration_binds_service_and_publishes_both_views(
-    context: &mut Context,
+    context: &mut TestContext<ServiceRegistration>,
 ) -> TestResult {
-    acme_with_service(context, "arena").await?;
-    Seed::new()
-        .service("lobby")
-        .registration_lease("lobby", TOKEN, LEASE)
-        .apply(&context.database()?)
-        .await?;
+    seed_organization_services(context, &acme(), ada(), &["arena"]).await?;
+    seed_registration_lease(context, "lobby", TOKEN, LEASE).await?;
     context.expect_publish(
         to_organization(&acme(), "services.watch"),
         |event: &OrganizationServicesChanged| {
@@ -133,7 +113,15 @@ async fn valid_registration_binds_service_and_publishes_both_views(
         },
     )?;
 
-    let reply = bind(context, &acme(), TOKEN).await?;
+    let reply: BindServiceResponse = context
+        .request(
+            from_member(ada(), &acme(), "services.bind"),
+            &BindServiceRequest {
+                registration_token: TOKEN.into(),
+                ..Default::default()
+            },
+        )
+        .await?;
 
     let BindServiceResponse::Success(bound) = reply else {
         anyhow::bail!("expected the service to bind, received {reply:?}");
@@ -146,7 +134,7 @@ async fn valid_registration_binds_service_and_publishes_both_views(
         bound.service_role
     );
     assert_jm!(
-        binding_of(context, "lobby").await?,
+        context.database()?.query_json(BINDING).await?,
         { "organization": "organization:acme", "token": null }
     );
     Ok(())
@@ -154,11 +142,12 @@ async fn valid_registration_binds_service_and_publishes_both_views(
 
 #[component_test(ServiceRegistration)]
 async fn unbind_removes_service_and_topology_from_organization_views(
-    context: &mut Context,
+    context: &mut TestContext<ServiceRegistration>,
 ) -> TestResult {
-    acme_with_service(context, "lobby").await?;
+    seed_organization_services(context, &acme(), ada(), &["lobby"]).await?;
     register_host(context, "lobby", &["paper"]).await?;
-    let configured = arrange_configuration(context, "lobby", 1, realm_with_engine(paper())).await?;
+    let configured =
+        arrange_host_configuration(context, "lobby", 1, realm_with_engine(paper())).await?;
     context.expect_publish(
         to_organization(&acme(), "services.watch"),
         |event: &OrganizationServicesChanged| {
@@ -175,13 +164,13 @@ async fn unbind_removes_service_and_topology_from_organization_views(
         },
     )?;
 
-    let reply = unbind(context, "lobby").await?;
+    let reply = unbind_service(context, "lobby").await?;
 
     assert!(
         matches!(reply, UnbindServiceResponse::Success(_)),
         "{reply:?}"
     );
-    assert_jm!(binding_of(context, "lobby").await?, { "organization": null, "token": null });
+    assert_jm!(context.database()?.query_json(BINDING).await?, { "organization": null, "token": null });
     let realm = configured
         .realm
         .as_ref()
@@ -193,10 +182,7 @@ async fn unbind_removes_service_and_topology_from_organization_views(
     assert_jm!(
         context
             .database()?
-            .seed("RETURN [record::exists(service_host:lobby), record::exists($realm), record::exists($engine)]")
-            .bind("realm", surrealdb_types::RecordId::from(realm.realm_id.clone()))?
-            .bind("engine", surrealdb_types::RecordId::from(engine.engine_id.clone()))?
-            .query_json()
+            .read("RETURN [record::exists(service_host:lobby), record::exists($realm), record::exists($engine)]", &[("realm", realm.realm_id.clone()), ("engine", engine.engine_id.clone())])
             .await?,
         [true, true, true]
     );
@@ -204,24 +190,22 @@ async fn unbind_removes_service_and_topology_from_organization_views(
 }
 
 #[component_test(ServiceRegistration)]
-async fn unbinding_another_organizations_service_is_not_found(context: &mut Context) -> TestResult {
-    Seed::new()
-        .organization(&acme(), ada())
-        .organization(&globex(), grace())
-        .organization_service(&globex(), "lobby")
-        .apply(&context.database()?)
-        .await?;
+async fn unbinding_another_organizations_service_is_not_found(
+    context: &mut TestContext<ServiceRegistration>,
+) -> TestResult {
+    seed_organization(context, &acme(), ada(), &[]).await?;
+    seed_organization_services(context, &globex(), grace(), &["lobby"]).await?;
     context.expect_no_publish("typewriter.to.organization.*.services.watch")?;
     context.expect_no_publish("typewriter.to.organization.*.topology.watch")?;
 
-    let reply = unbind(context, "lobby").await?;
+    let reply = unbind_service(context, "lobby").await?;
 
     assert!(
         matches!(reply, UnbindServiceResponse::ServiceNotFoundError(_)),
         "{reply:?}"
     );
     assert_jm!(
-        binding_of(context, "lobby").await?,
+        context.database()?.query_json(BINDING).await?,
         { "organization": "organization:globex", "token": null }
     );
     Ok(())

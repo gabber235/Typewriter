@@ -1,31 +1,25 @@
-use crate::organization::organization_members::approve;
-use typewriter_component_test::prelude::*;
+use typewriter_component_test::{
+    organization::{approve_join_requests, found, join_code_request},
+    prelude::*,
+};
 use wasmcloud_utils::{
-    skir::base::{
-        kernel::v1::record_id::RecordId,
-        organization::v1::{
-            join_codes::{
-                GenerateOrganizationJoinCodeRequest,
-                GenerateOrganizationJoinCodeRequest_Expiration,
-                GenerateOrganizationJoinCodeResponse, OrganizationJoinCodesChange,
-                OrganizationJoinCodesChanged,
-            },
-            join_request::{
-                ApproveOrganizationJoinRequestsResponse, OrganizationJoinRequestsChange,
-                OrganizationJoinRequestsChanged, UserJoinRequestsChange, UserJoinRequestsChanged,
-            },
-            member::{
-                OrganizationMembersChange, OrganizationMembersChanged,
-                WatchOrganizationMembersRequest, WatchOrganizationMembersResponse,
-            },
-            organization::{
-                CreateOrganizationRequest, CreateOrganizationResponse, UserOrganizationsChange,
-                UserOrganizationsChanged,
-            },
-            user::{
-                SubmitUserJoinRequestRequest, SubmitUserJoinRequestResponse,
-                WatchUserOrganizationsRequest, WatchUserOrganizationsResponse,
-            },
+    skir::base::organization::v1::{
+        join_codes::{
+            GenerateOrganizationJoinCodeRequest_Expiration, GenerateOrganizationJoinCodeResponse,
+            OrganizationJoinCodesChange, OrganizationJoinCodesChanged,
+        },
+        join_request::{
+            ApproveOrganizationJoinRequestsResponse, OrganizationJoinRequestsChange,
+            OrganizationJoinRequestsChanged, UserJoinRequestsChange, UserJoinRequestsChanged,
+        },
+        member::{
+            OrganizationMembersChange, OrganizationMembersChanged, WatchOrganizationMembersRequest,
+            WatchOrganizationMembersResponse,
+        },
+        organization::{UserOrganizationsChange, UserOrganizationsChanged},
+        user::{
+            SubmitUserJoinRequestRequest, SubmitUserJoinRequestResponse,
+            WatchUserOrganizationsRequest, WatchUserOrganizationsResponse,
         },
     },
     transport_routes::{organization_members, user_organization},
@@ -54,50 +48,26 @@ impl FixtureSpec for ManualMembership {
     }
 }
 
-type Context = TestContext<ManualMembership>;
-
-/// Ada founds Acme through user-organization and has organization-members generate a single use
-/// join code that needs approval; returns the organization and the code.
-async fn acme_with_code(context: &Context) -> anyhow::Result<(Organization, RecordId)> {
-    Seed::new()
-        .user(ada())
-        .user(grace())
-        .apply(&context.database()?)
-        .await?;
-    let founded: CreateOrganizationResponse = context
-        .arrange(
-            from_user(ada(), "organization.create"),
-            &CreateOrganizationRequest {
-                name: "acme".into(),
-                ..Default::default()
-            },
-        )
-        .await?;
-    let CreateOrganizationResponse::Success(founded) = founded else {
-        anyhow::bail!("founding Acme failed: {founded:?}");
-    };
-    let acme = Organization::from_id(&founded.organization.organization_id);
+#[component_test(ManualMembership)]
+async fn manual_request_and_approval_are_visible_from_both_components(
+    context: &mut TestContext<ManualMembership>,
+) -> TestResult {
+    let acme = found(context, ada(), "acme").await?;
+    Seed::new().user(grace()).apply(context).await?;
     let generated: GenerateOrganizationJoinCodeResponse = context
         .arrange(
             from_member(ada(), &acme, "members.join_codes.generate"),
-            &GenerateOrganizationJoinCodeRequest {
-                single_use: true,
-                expiration: GenerateOrganizationJoinCodeRequest_Expiration::Never,
-                ..Default::default()
-            },
+            &join_code_request(
+                true,
+                GenerateOrganizationJoinCodeRequest_Expiration::Never,
+                Vec::new(),
+            ),
         )
         .await?;
     let GenerateOrganizationJoinCodeResponse::Success(generated) = generated else {
         anyhow::bail!("generating Acme's join code failed: {generated:?}");
     };
-    Ok((acme, generated.code.code))
-}
-
-#[component_test(ManualMembership)]
-async fn manual_request_and_approval_are_visible_from_both_components(
-    context: &mut Context,
-) -> TestResult {
-    let (acme, code) = acme_with_code(context).await?;
+    let code = generated.code.code;
     let organization = acme.key.clone();
     context.expect_publish(
         to_user(grace(), "join_requests.changed"),
@@ -172,7 +142,8 @@ async fn manual_request_and_approval_are_visible_from_both_components(
         },
     )?;
 
-    let approval = approve(context, &acme, request, writer).await?;
+    let approval =
+        approve_join_requests(context, ada(), &acme, vec![request], vec![writer]).await?;
     assert!(
         matches!(
             approval,

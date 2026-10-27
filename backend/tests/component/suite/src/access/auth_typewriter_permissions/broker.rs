@@ -4,140 +4,28 @@
 
 use std::time::Duration;
 
+use super::AuthTypewriterPermissions;
 use anyhow::Context as _;
-use async_nats::{Client, Event, Subscriber};
-use futures_util::StreamExt;
-use nats_broker::{Account, Broker, Credentials};
-use tokio::sync::mpsc;
-use typewriter_component_test::prelude::*;
+use typewriter_component_test::{
+    access::{Realm, member_grants, panel_inbox, service_grants},
+    broker::{Connection, SILENCE, WAIT, next_within, on_broker, receive},
+    prelude::*,
+};
 use wasmcloud_utils::{
     skir::base::access::v1::permission::Permissions, transport_routes::SERVICE_RESPONSE_LIMIT,
 };
-
-use super::{
-    AuthTypewriterPermissions, Context, Realm, panel::SESSION, panel::member_grants,
-    service::service_grants,
-};
-
-/// How long a message the broker must deliver may take. Generous because the whole suite shares
-/// one broker and one machine; a passing case never waits it out.
-const WAIT: Duration = Duration::from_secs(10);
-/// How long a message the broker refused is given to arrive anyway.
-const SILENCE: Duration = Duration::from_millis(300);
 
 /// A route of Acme's realm `quests` that a panel member calls and the realm host serves.
 const OWN_REALM: &str = "service.to.quests.organization.acme.realm.editor.catalog.fetch";
 /// The same route in another organization.
 const FOREIGN_REALM: &str = "service.to.quests.organization.globex.realm.editor.catalog.fetch";
 
-/// A broker connection that reports the errors the broker sends it.
-struct Connection {
-    client: Client,
-    errors: mpsc::UnboundedReceiver<String>,
-}
-
-impl Connection {
-    async fn open(account: &Account, credentials: &Credentials) -> anyhow::Result<Self> {
-        let (sender, errors) = mpsc::unbounded_channel();
-        let key = nkeys::KeyPair::from_seed(credentials.seed())?;
-        let client =
-            async_nats::ConnectOptions::with_jwt(credentials.jwt().to_owned(), move |nonce| {
-                let key = key.clone();
-                async move { key.sign(&nonce).map_err(async_nats::AuthError::new) }
-            })
-            .event_callback(move |event| {
-                let sender = sender.clone();
-                async move {
-                    if let Event::ServerError(error) = event {
-                        // The receiver lives as long as the case; a closed one has nothing to tell.
-                        drop(sender.send(error.to_string()));
-                    }
-                }
-            })
-            .connect(account.endpoint())
-            .await?;
-        Ok(Self { client, errors })
-    }
-
-    /// A broker user holding exactly what the component granted.
-    async fn granted(account: &Account, permissions: Permissions) -> anyhow::Result<Self> {
-        let credentials = account.user(&auth_callout::convert_permissions(permissions))?;
-        Self::open(account, &credentials).await
-    }
-
-    /// Subscribes and waits until the broker has registered the subscription.
-    async fn subscribe(&self, subject: &str) -> anyhow::Result<Subscriber> {
-        let subscriber = self.client.subscribe(subject.to_owned()).await?;
-        self.client.flush().await?;
-        Ok(subscriber)
-    }
-
-    async fn publish(&self, subject: &str, reply: Option<&str>, body: &str) -> anyhow::Result<()> {
-        match reply {
-            Some(reply) => {
-                self.client
-                    .publish_with_reply(
-                        subject.to_owned(),
-                        reply.to_owned(),
-                        body.to_owned().into(),
-                    )
-                    .await?
-            }
-            None => {
-                self.client
-                    .publish(subject.to_owned(), body.to_owned().into())
-                    .await?
-            }
-        }
-        self.client.flush().await?;
-        Ok(())
-    }
-
-    /// Whether the broker refused one of this connection's publishes.
-    async fn publish_was_refused(&mut self) -> bool {
-        tokio::time::timeout(WAIT, async {
-            while let Some(error) = self.errors.recv().await {
-                if error.contains("Permissions Violation for Publish") {
-                    return true;
-                }
-            }
-            false
-        })
-        .await
-        .unwrap_or(false)
-    }
-}
-
-async fn next_within(subscriber: &mut Subscriber, wait: Duration) -> Option<async_nats::Message> {
-    tokio::time::timeout(wait, subscriber.next())
-        .await
-        .ok()
-        .flatten()
-}
-
-async fn receive(subscriber: &mut Subscriber) -> anyhow::Result<async_nats::Message> {
-    next_within(subscriber, WAIT)
-        .await
-        .context("no message arrived")
-}
-
-/// Runs `case` on a fresh broker account and deletes the account afterwards.
-async fn on_broker<T>(case: impl AsyncFnOnce(&Account) -> anyhow::Result<T>) -> anyhow::Result<T> {
-    let broker = Broker::shared().await?;
-    let account = broker.account().await?;
-    let result = case(&account).await;
-    broker.delete(&account).await?;
-    result
-}
-
-/// Ada's reply inbox for this connection session.
-fn inbox(name: &str) -> String {
-    format!("_INBOX.{}.{SESSION}.{name}", ada().token())
-}
-
 #[component_test(AuthTypewriterPermissions)]
-async fn panel_grants_are_enforced_by_the_broker(context: &mut Context) -> TestResult {
-    let granted = member_grants(context).await?;
+async fn panel_grants_are_enforced_by_the_broker(
+    context: &mut TestContext<AuthTypewriterPermissions>,
+) -> TestResult {
+    seed_organization(context, &acme(), ada(), &[]).await?;
+    let granted = member_grants(context, ada(), &acme()).await?;
 
     on_broker(async |account| {
         let mut panel = Connection::granted(account, granted).await?;
@@ -159,9 +47,10 @@ async fn panel_grants_are_enforced_by_the_broker(context: &mut Context) -> TestR
 
 #[component_test(AuthTypewriterPermissions)]
 async fn a_panel_user_cannot_answer_its_own_message_to_reach_another_subject(
-    context: &mut Context,
+    context: &mut TestContext<AuthTypewriterPermissions>,
 ) -> TestResult {
-    let granted = member_grants(context).await?;
+    seed_organization(context, &acme(), ada(), &[]).await?;
+    let granted = member_grants(context, ada(), &acme()).await?;
     // The same grants with a response permission show that the self answer is a real attack.
     let escalating = Permissions {
         response: Some(Default::default()),
@@ -178,32 +67,24 @@ async fn a_panel_user_cannot_answer_its_own_message_to_reach_another_subject(
         let mut secrets = watcher.subscribe(secret).await?;
 
         let mut panel = Connection::granted(account, granted).await?;
-        self_answer(&panel, &presence, secret).await?;
+        panel.answer_own_echo(&presence, secret).await?;
         assert!(panel.publish_was_refused().await);
         assert!(next_within(&mut secrets, SILENCE).await.is_none());
 
         let escalating = Connection::granted(account, escalating).await?;
-        self_answer(&escalating, &presence, secret).await?;
+        escalating.answer_own_echo(&presence, secret).await?;
         assert_eq!(receive(&mut secrets).await?.payload, "self answer");
         Ok(())
     })
     .await
 }
 
-/// Publishes on the presence subject naming `secret` as the reply, receives the echo and answers
-/// it.
-async fn self_answer(client: &Connection, presence: &str, secret: &str) -> anyhow::Result<()> {
-    let mut echoes = client.subscribe(presence).await?;
-    client.publish(presence, Some(secret), "presence").await?;
-    let echo = receive(&mut echoes).await?;
-    let reply = echo.reply.context("the echo carries the named reply")?;
-    assert_eq!(reply.as_str(), secret);
-    client.publish(&reply, None, "self answer").await
-}
-
 #[component_test(AuthTypewriterPermissions)]
-async fn a_service_reply_reaches_the_panel_up_to_its_limit(context: &mut Context) -> TestResult {
-    let panel_grants = member_grants(context).await?;
+async fn a_service_reply_reaches_the_panel_up_to_its_limit(
+    context: &mut TestContext<AuthTypewriterPermissions>,
+) -> TestResult {
+    seed_organization(context, &acme(), ada(), &[]).await?;
+    let panel_grants = member_grants(context, ada(), &acme()).await?;
     let host_grants = service_grants(context, "realm_host", Realm::Owned("quests")).await?;
     let limit = SERVICE_RESPONSE_LIMIT.context("services answer requests")?;
 
@@ -213,7 +94,7 @@ async fn a_service_reply_reaches_the_panel_up_to_its_limit(context: &mut Context
         let replica = Connection::granted(account, host_grants).await?;
         let mut requests = host.subscribe(OWN_REALM).await?;
         let mut replica_requests = replica.subscribe(OWN_REALM).await?;
-        let reply_to = inbox("fetch");
+        let reply_to = panel_inbox(ada(), "fetch");
         let mut replies = panel.subscribe(&reply_to).await?;
 
         panel.publish(OWN_REALM, Some(&reply_to), "fetch").await?;
@@ -259,17 +140,18 @@ async fn a_service_reply_reaches_the_panel_up_to_its_limit(context: &mut Context
 
 #[component_test(AuthTypewriterPermissions)]
 async fn a_service_cannot_reply_to_an_inbox_that_asked_nothing(
-    context: &mut Context,
+    context: &mut TestContext<AuthTypewriterPermissions>,
 ) -> TestResult {
-    let panel_grants = member_grants(context).await?;
+    seed_organization(context, &acme(), ada(), &[]).await?;
+    let panel_grants = member_grants(context, ada(), &acme()).await?;
     let host_grants = service_grants(context, "realm_host", Realm::Owned("quests")).await?;
 
     on_broker(async |account| {
         let panel = Connection::granted(account, panel_grants).await?;
         let mut host = Connection::granted(account, host_grants).await?;
         let mut requests = host.subscribe(OWN_REALM).await?;
-        let asked = inbox("asked");
-        let unasked = inbox("unasked");
+        let asked = panel_inbox(ada(), "asked");
+        let unasked = panel_inbox(ada(), "unasked");
         let mut unasked_replies = panel.subscribe(&unasked).await?;
         let mut asked_replies = panel.subscribe(&asked).await?;
 
@@ -288,9 +170,10 @@ async fn a_service_cannot_reply_to_an_inbox_that_asked_nothing(
 
 #[component_test(AuthTypewriterPermissions)]
 async fn a_service_cannot_reply_after_its_reply_permission_expires(
-    context: &mut Context,
+    context: &mut TestContext<AuthTypewriterPermissions>,
 ) -> TestResult {
-    let panel_grants = member_grants(context).await?;
+    seed_organization(context, &acme(), ada(), &[]).await?;
+    let panel_grants = member_grants(context, ada(), &acme()).await?;
     let mut host_grants = service_grants(context, "realm_host", Realm::Owned("quests")).await?;
     // The granted expiry is minutes long; a short one lets the case observe it pass.
     host_grants
@@ -304,7 +187,7 @@ async fn a_service_cannot_reply_after_its_reply_permission_expires(
         let panel = Connection::granted(account, panel_grants).await?;
         let mut host = Connection::granted(account, host_grants).await?;
         let mut requests = host.subscribe(OWN_REALM).await?;
-        let reply_to = inbox("late");
+        let reply_to = panel_inbox(ada(), "late");
         let mut replies = panel.subscribe(&reply_to).await?;
 
         panel.publish(OWN_REALM, Some(&reply_to), "fetch").await?;

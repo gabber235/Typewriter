@@ -110,3 +110,8 @@ impl Organization {
 pub fn acme() -> Organization {
     Organization::new("acme")
 }
+
+/// An organization other than Acme, founded by Grace.
+pub fn globex() -> Organization {
+    Organization::new("globex")
+}

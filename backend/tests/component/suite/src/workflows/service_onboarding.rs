@@ -1,18 +1,17 @@
 use json_matcher::assert_jm;
-use typewriter_component_test::prelude::*;
+use typewriter_component_test::{
+    identity::{Authentik, expect_account_creation, host_role, issue_identity},
+    prelude::*,
+};
 use wasmcloud_utils::{
     skir::base::service::v1::{
-        identity::{IssueServiceIdentityRequest, IssueServiceIdentityResponse},
+        identity::IssueServiceIdentityResponse,
         organization::OrganizationServicesChanged,
         registration::{BindServiceRequest, BindServiceResponse, ServiceBoundNotification},
-        service::{ServiceRole, ServiceRole_Host},
         status::{EnsureRegistrationLeaseRequest, EnsureRegistrationLeaseResponse},
     },
-    skir_variant,
     transport_routes::service_registration,
 };
-
-struct Authentik;
 
 #[component_fixture(
     id = "workflow-service-onboarding",
@@ -44,34 +43,8 @@ impl FixtureSpec for ServiceOnboarding {
 async fn issued_service_can_register_with_an_organization(
     context: &mut TestContext<ServiceOnboarding>,
 ) -> TestResult {
-    context
-        .http_mock::<Authentik>()?
-        .expect()
-        .post()
-        .path_query("/api/v3/core/users/service_account/")
-        .header(
-            http::header::AUTHORIZATION,
-            http::HeaderValue::from_static("Bearer fixture-token"),
-        )
-        .response_json(&serde_json::json!({
-            "username": "onboarding-service",
-            "token": "issued-token",
-            "user_uid": "onboarding",
-            "user_pk": 42
-        }))?
-        .register()?;
-    let identity = context
-        .http()?
-        .skir_post::<_, IssueServiceIdentityResponse>(
-            "/service/identity/issue",
-            &IssueServiceIdentityRequest {
-                role: skir_variant!(ServiceRole::Host {
-                    version: "1.0.0".into(),
-                }),
-                ..Default::default()
-            },
-        )
-        .await?;
+    expect_account_creation(context, "onboarding", 42)?;
+    let identity = issue_identity(context, host_role()).await?;
     assert!(
         matches!(&identity.body, IssueServiceIdentityResponse::Success(success)
             if success.service_id == "onboarding"),
@@ -79,13 +52,10 @@ async fn issued_service_can_register_with_an_organization(
         identity.body
     );
 
-    Seed::new()
-        .organization(&acme(), ada())
-        .apply(&context.database()?)
-        .await?;
+    seed_organization(context, &acme(), ada(), &[]).await?;
     let lease: EnsureRegistrationLeaseResponse = context
         .request(
-            "typewriter.from.service.onboarding.registration.ensure",
+            from_service("onboarding", "registration.ensure"),
             &EnsureRegistrationLeaseRequest::default(),
         )
         .await?;
@@ -103,7 +73,7 @@ async fn issued_service_can_register_with_an_organization(
         },
     )?;
     context.expect_publish(
-        "typewriter.to.service.onboarding.registration.bound",
+        to_service("onboarding", "registration.bound"),
         |notification: &ServiceBoundNotification| {
             notification.organization_id == "acme"
                 && notification.organization_name.as_deref() == Some("acme")

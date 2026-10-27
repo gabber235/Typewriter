@@ -1,63 +1,36 @@
 use std::time::Duration;
 
 use json_matcher::assert_jm;
-use typewriter_component_test::prelude::*;
+use typewriter_component_test::{
+    prelude::*,
+    service::{ensure_registration_lease, seed_organization_services, seed_registration_lease},
+};
 use wasmcloud_utils::skir::base::service::v1::status::{
-    EnsureRegistrationLeaseRequest, EnsureRegistrationLeaseResponse, QueryServiceBindingRequest,
-    QueryServiceBindingResponse, ServiceBinding,
+    EnsureRegistrationLeaseResponse, QueryServiceBindingRequest, QueryServiceBindingResponse,
+    ServiceBinding,
 };
 
-use super::{Context, ServiceRegistration, from_service};
+use super::ServiceRegistration;
 
+/// The registration token `lobby` already holds.
+const TOKEN: &str = "ABCDEFGHIJ";
 /// A lease within the two minutes in which the component renews it.
 const EXPIRING: Duration = Duration::from_secs(60);
 /// A lease beyond the renewal window.
 const HEALTHY: Duration = Duration::from_secs(180);
-
-async fn query_binding(
-    context: &Context,
-    key: &str,
-) -> anyhow::Result<QueryServiceBindingResponse> {
-    context
-        .request(
-            from_service(key, "binding.query"),
-            &QueryServiceBindingRequest::default(),
-        )
-        .await
-}
-
-async fn ensure_lease(
-    context: &Context,
-    key: &str,
-) -> anyhow::Result<EnsureRegistrationLeaseResponse> {
-    context
-        .request(
-            from_service(key, "registration.ensure"),
-            &EnsureRegistrationLeaseRequest::default(),
-        )
-        .await
-}
-
-/// The unbound service `lobby` with a lease far from expiry; returns its registration.
-async fn lobby_with_healthy_lease(context: &Context) -> anyhow::Result<serde_json::Value> {
-    let database = context.database()?;
-    Seed::new()
-        .service("lobby")
-        .registration_lease("lobby", "ABCDEFGHIJ", HEALTHY)
-        .apply(&database)
-        .await?;
-    registration(&database).await
-}
-
-async fn registration(database: &DatabaseHandle) -> anyhow::Result<serde_json::Value> {
-    database
-        .query_json("SELECT VALUE registration FROM ONLY service:lobby")
-        .await
-}
+/// The registration lease `lobby` holds.
+const REGISTRATION: &str = "SELECT VALUE registration FROM ONLY service:lobby";
 
 #[component_test(ServiceRegistration)]
-async fn unknown_service_returns_not_found(context: &mut Context) -> TestResult {
-    let reply = query_binding(context, "missing").await?;
+async fn unknown_service_returns_not_found(
+    context: &mut TestContext<ServiceRegistration>,
+) -> TestResult {
+    let reply: QueryServiceBindingResponse = context
+        .request(
+            from_service("missing", "binding.query"),
+            &QueryServiceBindingRequest::default(),
+        )
+        .await?;
 
     assert!(
         matches!(reply, QueryServiceBindingResponse::ServiceNotFoundError(_)),
@@ -68,12 +41,12 @@ async fn unknown_service_returns_not_found(context: &mut Context) -> TestResult 
 
 #[component_test(ServiceRegistration)]
 async fn unbound_service_receives_persisted_registration_token(
-    context: &mut Context,
+    context: &mut TestContext<ServiceRegistration>,
 ) -> TestResult {
     let database = context.database()?;
-    Seed::new().service("lobby").apply(&database).await?;
+    Seed::new().service("lobby").apply(context).await?;
 
-    let reply = ensure_lease(context, "lobby").await?;
+    let reply = ensure_registration_lease(context, "lobby").await?;
 
     let EnsureRegistrationLeaseResponse::Issued(lease) = reply else {
         anyhow::bail!("expected an issued registration lease, received {reply:?}");
@@ -98,21 +71,17 @@ async fn unbound_service_receives_persisted_registration_token(
 
 #[component_test(ServiceRegistration)]
 async fn expiring_registration_token_is_reused_and_lease_is_renewed(
-    context: &mut Context,
+    context: &mut TestContext<ServiceRegistration>,
 ) -> TestResult {
     let database = context.database()?;
-    Seed::new()
-        .service("lobby")
-        .registration_lease("lobby", "ABCDEFGHIJ", EXPIRING)
-        .apply(&database)
-        .await?;
+    seed_registration_lease(context, "lobby", TOKEN, EXPIRING).await?;
 
-    let reply = ensure_lease(context, "lobby").await?;
+    let reply = ensure_registration_lease(context, "lobby").await?;
 
     let EnsureRegistrationLeaseResponse::Issued(lease) = reply else {
         anyhow::bail!("expected an issued registration lease, received {reply:?}");
     };
-    assert_eq!(lease.token, "ABCDEFGHIJ");
+    assert_eq!(lease.token, TOKEN);
     assert_jm!(
         database
             .query_json(
@@ -125,27 +94,38 @@ async fn expiring_registration_token_is_reused_and_lease_is_renewed(
 }
 
 #[component_test(ServiceRegistration)]
-async fn healthy_registration_lease_is_not_rewritten(context: &mut Context) -> TestResult {
+async fn healthy_registration_lease_is_not_rewritten(
+    context: &mut TestContext<ServiceRegistration>,
+) -> TestResult {
     let database = context.database()?;
-    let before = lobby_with_healthy_lease(context).await?;
+    seed_registration_lease(context, "lobby", TOKEN, HEALTHY).await?;
+    let before = database.query_json(REGISTRATION).await?;
 
-    let reply = ensure_lease(context, "lobby").await?;
+    let reply = ensure_registration_lease(context, "lobby").await?;
 
     let EnsureRegistrationLeaseResponse::Issued(lease) = reply else {
         anyhow::bail!("expected an issued registration lease, received {reply:?}");
     };
-    assert_eq!(lease.token, "ABCDEFGHIJ");
-    assert_eq!(registration(&database).await?, before);
+    assert_eq!(lease.token, TOKEN);
+    assert_eq!(database.query_json(REGISTRATION).await?, before);
     Ok(())
 }
 
 #[component_test(ServiceRegistration)]
-async fn repeated_binding_reads_leave_registration_unchanged(context: &mut Context) -> TestResult {
+async fn repeated_binding_reads_leave_registration_unchanged(
+    context: &mut TestContext<ServiceRegistration>,
+) -> TestResult {
     let database = context.database()?;
-    let before = lobby_with_healthy_lease(context).await?;
+    seed_registration_lease(context, "lobby", TOKEN, HEALTHY).await?;
+    let before = database.query_json(REGISTRATION).await?;
 
     for _ in 0..2 {
-        let reply = query_binding(context, "lobby").await?;
+        let reply: QueryServiceBindingResponse = context
+            .request(
+                from_service("lobby", "binding.query"),
+                &QueryServiceBindingRequest::default(),
+            )
+            .await?;
         assert!(
             matches!(&reply, QueryServiceBindingResponse::Binding(binding)
                 if matches!(binding.binding, ServiceBinding::Unbound)),
@@ -153,22 +133,23 @@ async fn repeated_binding_reads_leave_registration_unchanged(context: &mut Conte
         );
     }
 
-    assert_eq!(registration(&database).await?, before);
+    assert_eq!(database.query_json(REGISTRATION).await?, before);
     Ok(())
 }
 
 #[component_test(ServiceRegistration)]
 async fn bound_service_returns_organization_without_registration_token(
-    context: &mut Context,
+    context: &mut TestContext<ServiceRegistration>,
 ) -> TestResult {
     let database = context.database()?;
-    Seed::new()
-        .organization(&acme(), ada())
-        .organization_service(&acme(), "lobby")
-        .apply(&database)
-        .await?;
+    seed_organization_services(context, &acme(), ada(), &["lobby"]).await?;
 
-    let reply = query_binding(context, "lobby").await?;
+    let reply: QueryServiceBindingResponse = context
+        .request(
+            from_service("lobby", "binding.query"),
+            &QueryServiceBindingRequest::default(),
+        )
+        .await?;
 
     let QueryServiceBindingResponse::Binding(binding) = reply else {
         anyhow::bail!("expected a binding, received {reply:?}");
@@ -178,16 +159,11 @@ async fn bound_service_returns_organization_without_registration_token(
     };
     assert_eq!(bound.organization_id, "acme");
     assert_eq!(bound.organization_name.as_deref(), Some("acme"));
-    let reply = ensure_lease(context, "lobby").await?;
+    let reply = ensure_registration_lease(context, "lobby").await?;
     let EnsureRegistrationLeaseResponse::AlreadyBound(already_bound) = reply else {
         anyhow::bail!("expected an already bound reply, received {reply:?}");
     };
     assert_eq!(already_bound.organization_id, "acme");
-    assert_jm!(
-        database
-            .query_json("SELECT VALUE registration FROM ONLY service:lobby")
-            .await?,
-        null
-    );
+    assert_jm!(database.query_json(REGISTRATION).await?, null);
     Ok(())
 }

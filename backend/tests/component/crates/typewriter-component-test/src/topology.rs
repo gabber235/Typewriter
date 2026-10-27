@@ -9,6 +9,16 @@ use component_test::{FixtureBuilder, FixtureDeclaration, subject_matches};
 
 use crate::{Organization, StackUser};
 
+/// The subject on which the service `key` calls `route` of the registration component.
+pub fn from_service(key: &str, route: &str) -> String {
+    format!("typewriter.from.service.{key}.{route}")
+}
+
+/// The subject on which the registration component tells the service `key` about `event`.
+pub fn to_service(key: &str, event: &str) -> String {
+    format!("typewriter.to.service.{key}.{event}")
+}
+
 /// The subject on which `user` calls `route` of a component, such as `organization.create`.
 pub fn from_user(user: &StackUser, route: &str) -> String {
     format!("typewriter.from.user.{}.{route}", user.token())
@@ -33,6 +43,18 @@ pub fn to_user(user: &StackUser, event: &str) -> String {
 /// `members.changed`.
 pub fn to_organization(organization: &Organization, event: &str) -> String {
     format!("typewriter.to.organization.{}.{event}", organization.key)
+}
+
+/// The subject on which the realm `realm` of `organization` receives `route` from a service or
+/// the panel, such as `editor.catalog.fetch`.
+pub fn realm_route(realm: &str, organization: &str, route: &str) -> String {
+    format!("service.to.{realm}.organization.{organization}.realm.{route}")
+}
+
+/// The subject on which the realm `realm` of `organization` publishes `event`, such as
+/// `rollout.probe`.
+pub fn realm_event(realm: &str, organization: &str, event: &str) -> String {
+    format!("service.from.{realm}.organization.{organization}.realm.{event}")
 }
 
 /// A JetStream stream and the event subjects it captures.

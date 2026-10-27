@@ -129,6 +129,16 @@ Use `context.wait_for_span(name, timeout).await` to assert completed guest telem
 
 Raw byte APIs remain available for malformed payload and protocol tests.
 
+Domain modules hold the requests, doubles, builders and expectations of one area: `access`
+(policy requests and grants), `broker` (connections holding a grant), `callout` (signed
+authorization requests and identity provider keys), `identity` (Authentik and service roles),
+`organization` (founding, join codes and requests, members) and `service` (hosts and their
+execution).
+
+A test file holds only its fixture declaration and its cases. The ast-grep rule
+`rules/rust-component-test-local-helper.yml` fails `cargo xtask check quality` on any other
+function, type or impl in `suite/src`; a new helper grows this kit instead.
+
 ## Failure behavior
 
 The runner catches panics while polling the async body, drains messaging, verifies strict mocks, stops workload before host, cleans extensions in reverse order, prints one redacted report, then resumes the original panic. The report includes fixture/test/case identity, phase timings, artifacts and hashes, workload state, guest logs, mock transcripts, cleanup failures, and completed OpenTelemetry spans with their component resources, attributes, events, and links. Passing tests remain quiet.

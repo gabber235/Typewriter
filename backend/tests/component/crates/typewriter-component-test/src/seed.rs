@@ -9,16 +9,21 @@
 //! Seed::new()
 //!     .organization(acme(), ada())
 //!     .join_code(acme(), JoinCode::new("invite").expired())
-//!     .apply(&context.database()?)
+//!     .apply(context)
 //!     .await?;
 //! ```
+//!
+//! A case whose whole setup is an organization and its members writes it in one line with
+//! [`seed_organization`].
 
-use std::{borrow::Borrow, time::Duration};
+use std::time::Duration;
 
 use anyhow::Result;
-use surrealdb::types::{RecordId, SurrealValue, Value};
+use component_test::TestContext;
+use surrealdb::types::{RecordId as DatabaseRecordId, SurrealValue, Value};
+use wasmcloud_utils::skir::base::kernel::v1::record_id::RecordId;
 
-use crate::{DatabaseHandle, Organization, StackUser};
+use crate::{Organization, StackUser, TypewriterContext};
 
 /// Database state for one case, applied in one query.
 #[derive(Default)]
@@ -35,7 +40,7 @@ impl Seed {
 
     /// A person the identity provider knows; signing in creates them in production.
     pub fn user(mut self, user: &StackUser) -> Self {
-        let id = self.bind(RecordId::from(user.id()));
+        let id = self.bind(DatabaseRecordId::from(user.id()));
         let name = self.bind(user.username.clone());
         self.statements
             .push(format!("UPSERT {id} SET name = {name};"));
@@ -47,7 +52,7 @@ impl Seed {
     /// replaced by `_`, so a key with punctuation still gets a valid name.
     pub fn organization(self, organization: &Organization, founder: &StackUser) -> Self {
         let mut seed = self.user(founder);
-        let id = seed.bind(RecordId::from(organization.id()));
+        let id = seed.bind(DatabaseRecordId::from(organization.id()));
         let name = seed.bind(
             organization
                 .key
@@ -58,7 +63,7 @@ impl Seed {
                 })
                 .collect::<String>(),
         );
-        let founder = seed.bind(RecordId::from(founder.id()));
+        let founder = seed.bind(DatabaseRecordId::from(founder.id()));
         seed.statements.push(format!(
             "CREATE {id} SET name = {name}, founder = {founder};"
         ));
@@ -68,8 +73,8 @@ impl Seed {
     /// A member of `organization` holding the named roles.
     pub fn member(self, organization: &Organization, user: &StackUser, roles: &[&str]) -> Self {
         let mut seed = self.user(user);
-        let user = seed.bind(RecordId::from(user.id()));
-        let organization = seed.bind(RecordId::from(organization.id()));
+        let user = seed.bind(DatabaseRecordId::from(user.id()));
+        let organization = seed.bind(DatabaseRecordId::from(organization.id()));
         let roles = seed.roles(&organization, roles);
         seed.statements.push(format!(
             "RELATE {user}->member_of->{organization} SET roles = {roles};"
@@ -79,7 +84,7 @@ impl Seed {
 
     /// A custom role of `organization`.
     pub fn role(mut self, organization: &Organization, name: &str, priority: i64) -> Self {
-        let organization = self.bind(RecordId::from(organization.id()));
+        let organization = self.bind(DatabaseRecordId::from(organization.id()));
         let name = self.bind(name.to_owned());
         let priority = self.bind(priority);
         self.statements.push(format!(
@@ -90,7 +95,7 @@ impl Seed {
 
     /// Takes the named role out of what members may be given; no request changes this.
     pub fn unassignable(mut self, organization: &Organization, role: &str) -> Self {
-        let organization = self.bind(RecordId::from(organization.id()));
+        let organization = self.bind(DatabaseRecordId::from(organization.id()));
         let role = self.bind(role.to_owned());
         self.statements.push(format!(
             "UPDATE organization_role SET assignable = false WHERE organization = {organization} AND name = {role};"
@@ -100,8 +105,8 @@ impl Seed {
 
     /// A join code of `organization`.
     pub fn join_code(mut self, organization: &Organization, code: JoinCode) -> Self {
-        let id = self.bind(RecordId::new("organization_join_code", code.key));
-        let organization = self.bind(RecordId::from(organization.id()));
+        let id = self.bind(DatabaseRecordId::new("organization_join_code", code.key));
+        let organization = self.bind(DatabaseRecordId::from(organization.id()));
         let single_use = self.bind(code.single_use);
         let roles = self.roles(&organization, &code.auto_accept);
         let expires_at = code.expiry.expression();
@@ -114,8 +119,8 @@ impl Seed {
     /// A pending request of `user` to join `organization`.
     pub fn join_request(self, user: &StackUser, organization: &Organization) -> Self {
         let mut seed = self.user(user);
-        let user = seed.bind(RecordId::from(user.id()));
-        let organization = seed.bind(RecordId::from(organization.id()));
+        let user = seed.bind(DatabaseRecordId::from(user.id()));
+        let organization = seed.bind(DatabaseRecordId::from(organization.id()));
         seed.statements
             .push(format!("RELATE {user}->request_to_join->{organization};"));
         seed
@@ -124,7 +129,7 @@ impl Seed {
     /// An unbound service with the host role, named by its key, as the identity component issues
     /// it.
     pub fn service(mut self, key: &str) -> Self {
-        let id = self.bind(RecordId::new("service", key));
+        let id = self.bind(DatabaseRecordId::new("service", key));
         let name = self.bind(key.to_owned());
         self.statements.push(format!(
             "CREATE {id} SET name = {name}, role = {{ type: 'host', version: '1.0.0' }};"
@@ -134,9 +139,9 @@ impl Seed {
 
     /// A service with the host role that already belongs to `organization`.
     pub fn organization_service(mut self, organization: &Organization, key: &str) -> Self {
-        let id = self.bind(RecordId::new("service", key));
+        let id = self.bind(DatabaseRecordId::new("service", key));
         let name = self.bind(key.to_owned());
-        let organization = self.bind(RecordId::from(organization.id()));
+        let organization = self.bind(DatabaseRecordId::from(organization.id()));
         self.statements.push(format!(
             "CREATE {id} SET name = {name}, role = {{ type: 'host', version: '1.0.0' }}, organization = {organization};"
         ));
@@ -145,7 +150,7 @@ impl Seed {
 
     /// A registration lease of the unbound service `key` that expires after `expires_in`.
     pub fn registration_lease(mut self, key: &str, token: &str, expires_in: Duration) -> Self {
-        let id = self.bind(RecordId::new("service", key));
+        let id = self.bind(DatabaseRecordId::new("service", key));
         let token = self.bind(token.to_owned());
         let seconds = expires_in.as_secs();
         self.statements.push(format!(
@@ -156,7 +161,7 @@ impl Seed {
 
     /// The service `key` was seen online just now.
     pub fn service_online(mut self, key: &str) -> Self {
-        let id = self.bind(RecordId::new("service", key));
+        let id = self.bind(DatabaseRecordId::new("service", key));
         self.statements.push(format!(
             "UPDATE {id} SET state = {{ status: 'online', last_seen: time::now() }};"
         ));
@@ -169,10 +174,10 @@ impl Seed {
         self
     }
 
-    /// Writes the seed into `database`, such as the handle `context.database()?` returns.
-    pub async fn apply(self, database: &impl Borrow<DatabaseHandle>) -> Result<()> {
-        database
-            .borrow()
+    /// Writes the seed into the fixture's database.
+    pub async fn apply<F>(self, context: &TestContext<F>) -> Result<()> {
+        context
+            .database()?
             .run(&self.statements.join("\n"), self.bindings)
             .await
     }
@@ -254,4 +259,49 @@ impl JoinCode {
         self.expiry = Expiry::Expired;
         self
     }
+}
+
+/// Seeds `organization`, founded by `founder`, with each `(user, roles)` of `members` a member
+/// holding those roles: the [`Seed::organization`] and [`Seed::member`] steps of a case whose
+/// setup is only that.
+pub async fn seed_organization<F>(
+    context: &TestContext<F>,
+    organization: &Organization,
+    founder: &StackUser,
+    members: &[(&StackUser, &[&str])],
+) -> Result<()> {
+    members
+        .iter()
+        .fold(
+            Seed::new().organization(organization, founder),
+            |seed, (user, roles)| seed.member(organization, user, roles),
+        )
+        .apply(context)
+        .await
+}
+
+/// Seeds a pending request of `user` to join `organization` and returns the request's record.
+pub async fn seed_join_request<F>(
+    context: &TestContext<F>,
+    user: &StackUser,
+    organization: &Organization,
+) -> Result<RecordId> {
+    Seed::new()
+        .join_request(user, organization)
+        .apply(context)
+        .await?;
+    context.database()?.join_request(user, organization).await
+}
+
+/// Seeds the join code `code` of `organization`, in any state, including those no request can
+/// produce.
+pub async fn seed_join_code<F>(
+    context: &TestContext<F>,
+    organization: &Organization,
+    code: JoinCode,
+) -> Result<()> {
+    Seed::new()
+        .join_code(organization, code)
+        .apply(context)
+        .await
 }

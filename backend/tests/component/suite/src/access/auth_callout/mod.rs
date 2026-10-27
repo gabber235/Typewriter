@@ -1,62 +1,9 @@
-use std::time::{Duration, SystemTime, UNIX_EPOCH};
-
-use base64::Engine;
 use component_test::{
     FixtureBuilder, FixtureSpec, TestContext, TestResult, component_fixture, component_test,
 };
-use jose::{
-    JsonWebKey, Jwt,
-    jwk::JwkSigner,
-    jws::{IntoPayload, PayloadData, PayloadKind},
-    policy::{Checkable, StandardPolicy},
-};
-use nats_jwt_rs::{
-    Claims, ClaimsHeader,
-    authorization::{AuthRequest, AuthResponse},
-};
 use nkeys::KeyPair;
-use typewriter_component_test::prelude::{REQUEST_TIMEOUT, SkirMessagingExpectationExt};
-use wasmcloud_utils::skir::base::access::v1::permission::{
-    EntityPermissionGrant, EntityPermissionQualifier, EntityPermissionQualifier_User,
-    GetEntityPermissionResponse, Permission, Permissions, ResponsePermission,
-};
-use wasmcloud_utils::skir::base::kernel::v1::duration::Duration as SkirDuration;
-
-const PRIVATE_JWK: &str = r#"{
-    "use": "sig",
-    "kty": "OKP",
-    "kid": "fixture-key",
-    "crv": "Ed25519",
-    "alg": "EdDSA",
-    "x": "etkJX1EBhliHzBaimUQb0h2JhJKQ3G0beRVR3ssiedY",
-    "d": "629kbTnU3Pgfkoq7zG9qe5LPuMi1PdaLcNo87nUya1I",
-    "key_ops": ["sign", "verify"]
-}"#;
-
-const PUBLIC_JWK: &str = r#"{
-    "use": "sig",
-    "kty": "OKP",
-    "kid": "fixture-key",
-    "crv": "Ed25519",
-    "alg": "EdDSA",
-    "x": "etkJX1EBhliHzBaimUQb0h2JhJKQ3G0beRVR3ssiedY",
-    "key_ops": ["verify"]
-}"#;
-
-struct IdentityProvider;
-
-struct JsonClaims(serde_json::Value);
-
-impl IntoPayload for JsonClaims {
-    type Error = serde_json::Error;
-
-    fn into_payload(self) -> Result<PayloadKind, Self::Error> {
-        let encoded = serde_json::to_vec(&self.0)?;
-        Ok(PayloadKind::Attached(PayloadData::Standard(
-            jose::Base64UrlString::encode(encoded),
-        )))
-    }
-}
+use typewriter_component_test::{access::PANEL_POLICY, callout::*, prelude::*};
+use wasmcloud_utils::skir::base::access::v1::permission::GetEntityPermissionResponse;
 
 #[component_fixture(
     id = "auth-callout",
@@ -100,177 +47,6 @@ impl FixtureSpec for AuthCallout {
     }
 }
 
-fn external_jwt(name: Option<&str>) -> anyhow::Result<String> {
-    external_jwt_with_claims(name, serde_json::json!({}))
-}
-
-fn external_jwt_with_claims(
-    name: Option<&str>,
-    overrides: serde_json::Value,
-) -> anyhow::Result<String> {
-    let key: JsonWebKey = serde_json::from_str(PRIVATE_JWK)?;
-    let checked = key
-        .check(StandardPolicy::default())
-        .map_err(|(_, error)| anyhow::anyhow!(error.to_string()))?;
-    let mut signer: JwkSigner = checked.try_into()?;
-    let now = SystemTime::now().duration_since(UNIX_EPOCH)?.as_secs();
-    let mut claims = serde_json::json!({
-        "iss": "https://issuer.test/",
-        "sub": "panel_user",
-        "aud": "typewriter-panel",
-        "exp": now + 300,
-        "nbf": now - 1,
-        "iat": now
-    });
-    if let Some(name) = name {
-        claims["name"] = name.into();
-    }
-    for (key, value) in overrides
-        .as_object()
-        .expect("claim overrides are an object")
-    {
-        claims[key] = value.clone();
-    }
-    let jwt = Jwt::builder_jwt()
-        .build(JsonClaims(claims))?
-        .sign(&mut signer)?;
-    Ok(jwt.encode().to_string())
-}
-
-fn auth_request(password: Option<String>) -> anyhow::Result<Vec<u8>> {
-    let server = KeyPair::new_server();
-    let user = KeyPair::new_user();
-    let qualifier = EntityPermissionQualifier::User(Box::new(EntityPermissionQualifier_User {
-        organization_id: None,
-        connection_session: "0123456789abcdef0123456789abcdef".into(),
-        _unrecognized: None,
-    }));
-    let mut payload = AuthRequest::default();
-    payload.server.id = server.public_key();
-    payload.user_nkey = user.public_key();
-    payload.connect_opts.user = Some("panel_user".into());
-    payload.connect_opts.pass = password;
-    payload.connect_opts.nkey = Some(
-        base64::engine::general_purpose::STANDARD
-            .encode(EntityPermissionQualifier::serializer().to_bytes(&qualifier)),
-    );
-    let claims = Claims {
-        aud: Some("nats-authorization-request".into()),
-        exp: None,
-        iat: 0,
-        id: None,
-        iss: server.public_key(),
-        jti: String::new(),
-        name: None,
-        nats: payload,
-        nbf: None,
-        sub: user.public_key(),
-    };
-    Ok(claims.encode(&server)?.into_bytes())
-}
-
-async fn authorize(
-    context: &TestContext<AuthCallout>,
-    body: Vec<u8>,
-) -> anyhow::Result<Claims<AuthResponse>> {
-    let response = authorize_raw(context, body).await?;
-    Claims::decode(std::str::from_utf8(&response)?)
-}
-
-async fn authorize_raw(
-    context: &TestContext<AuthCallout>,
-    body: Vec<u8>,
-) -> anyhow::Result<Vec<u8>> {
-    context
-        .messaging()?
-        .request("$SYS.REQ.USER.AUTH", body, REQUEST_TIMEOUT)
-        .await
-}
-
-fn authorization_payload(response: &[u8]) -> anyhow::Result<serde_json::Value> {
-    let encoded = std::str::from_utf8(response)?;
-    let payload = encoded
-        .split('.')
-        .nth(1)
-        .ok_or_else(|| anyhow::anyhow!("authorization response has no payload"))?;
-    let decoded = base64::engine::general_purpose::URL_SAFE_NO_PAD.decode(payload)?;
-    Ok(serde_json::from_slice(&decoded)?)
-}
-
-fn signed_claims(token: &str) -> anyhow::Result<serde_json::Value> {
-    let mut parts = token.split('.');
-    let header = parts
-        .next()
-        .ok_or_else(|| anyhow::anyhow!("signed claims have no header"))?;
-    let payload = parts
-        .next()
-        .ok_or_else(|| anyhow::anyhow!("signed claims have no payload"))?;
-    let signature = parts
-        .next()
-        .ok_or_else(|| anyhow::anyhow!("signed claims have no signature"))?;
-    if parts.next().is_some() {
-        anyhow::bail!("signed claims have extra segments");
-    }
-
-    header.parse::<ClaimsHeader>()?;
-    let decoded = base64::engine::general_purpose::URL_SAFE_NO_PAD.decode(payload)?;
-    let claims: serde_json::Value = serde_json::from_slice(&decoded)?;
-    let issuer = claims["iss"]
-        .as_str()
-        .ok_or_else(|| anyhow::anyhow!("signed claims issuer missing"))?;
-    let signature = base64::engine::general_purpose::URL_SAFE_NO_PAD.decode(signature)?;
-    let signed = format!("{header}.{payload}");
-    KeyPair::from_public_key(issuer)?.verify(signed.as_bytes(), &signature)?;
-    Ok(claims)
-}
-
-fn expect_jwks(context: &TestContext<AuthCallout>) -> anyhow::Result<()> {
-    let current_key: serde_json::Value = serde_json::from_str(PUBLIC_JWK)?;
-    let mut previous_key = current_key.clone();
-    previous_key["kid"] = "previous-key".into();
-    context
-        .http_mock::<IdentityProvider>()?
-        .expect()
-        .get()
-        .path_query("/identity/keys?tenant=panel")
-        .response_json(&serde_json::json!({ "keys": [previous_key, current_key] }))?
-        .register()
-}
-
-fn expect_permissions(context: &TestContext<AuthCallout>) -> anyhow::Result<()> {
-    let permission_response =
-        GetEntityPermissionResponse::Granted(Box::new(EntityPermissionGrant {
-            permissions: Permissions {
-                publish: Permission {
-                    allow: vec!["cloud.to.user.panel_user.organization.watch".into()],
-                    deny: vec!["private.>".into()],
-                    _unrecognized: None,
-                },
-                subscribe: Permission {
-                    allow: vec!["cloud.from.user.panel_user.organization.watch".into()],
-                    deny: Vec::new(),
-                    _unrecognized: None,
-                },
-                response: Some(ResponsePermission {
-                    max_messages: Some(1),
-                    ttl: Some(SkirDuration {
-                        milliseconds: 300_000,
-                        _unrecognized: None,
-                    }),
-                    _unrecognized: None,
-                }),
-                _unrecognized: None,
-            },
-            tags: vec!["user:panel_user".into()],
-            _unrecognized: None,
-        }));
-    context
-        .messaging_mock()?
-        .expect_request("auth.permissions.typewriter-panel")
-        .reply_skir(&permission_response);
-    Ok(())
-}
-
 #[component_test(AuthCallout)]
 async fn missing_user_token_returns_signed_denial(
     context: &mut TestContext<AuthCallout>,
@@ -302,7 +78,9 @@ async fn valid_user_token_receives_signed_permissions(
 
     let response = authorize_raw(
         context,
-        auth_request(Some(external_jwt(Some("Panel User"))?))?,
+        auth_request(Some(external_jwt(
+            serde_json::json!({ "name": "Panel User" }),
+        )?))?,
     )
     .await?;
     let payload = authorization_payload(&response)?;
@@ -331,10 +109,10 @@ async fn token_with_no_matching_audience_is_denied(
     context: &mut TestContext<AuthCallout>,
 ) -> TestResult {
     expect_jwks(context)?;
-    let token = external_jwt_with_claims(
-        Some("Panel User"),
-        serde_json::json!({ "aud": ["unrelated", "also-unrelated"] }),
-    )?;
+    let token = external_jwt(serde_json::json!({
+        "name": "Panel User",
+        "aud": ["unrelated", "also-unrelated"]
+    }))?;
 
     let response = authorize(context, auth_request(Some(token))?).await?;
 
@@ -350,7 +128,11 @@ async fn user_token_without_name_receives_unknown_display_name(
     expect_jwks(context)?;
     expect_permissions(context)?;
 
-    let response = authorize_raw(context, auth_request(Some(external_jwt(None)?))?).await?;
+    let response = authorize_raw(
+        context,
+        auth_request(Some(external_jwt(serde_json::json!({}))?))?,
+    )
+    .await?;
     let payload = authorization_payload(&response)?;
     let user_jwt = payload["nats"]["jwt"]
         .as_str()
@@ -358,27 +140,6 @@ async fn user_token_without_name_receives_unknown_display_name(
     let user_claims = signed_claims(user_jwt)?;
 
     assert_eq!(user_claims["name"], "Unknown");
-    Ok(())
-}
-
-/// Sends an authorization request and asserts the callout stays silent. Without an answer the
-/// server refuses the connection, so silence is how the callout withholds credentials when it
-/// cannot decide.
-async fn assert_no_answer(context: &TestContext<AuthCallout>, body: Vec<u8>) -> TestResult {
-    let result = context
-        .messaging()?
-        .request("$SYS.REQ.USER.AUTH", body, Duration::from_secs(2))
-        .await;
-
-    let Err(error) = result else {
-        anyhow::bail!("the callout answered instead of staying silent")
-    };
-    assert!(
-        error
-            .downcast_ref::<tokio::time::error::Elapsed>()
-            .is_some(),
-        "expected no answer, the request failed otherwise: {error:#}"
-    );
     Ok(())
 }
 
@@ -396,7 +157,9 @@ async fn jwks_failure_does_not_issue_credentials(
 
     assert_no_answer(
         context,
-        auth_request(Some(external_jwt(Some("Panel User"))?))?,
+        auth_request(Some(external_jwt(
+            serde_json::json!({ "name": "Panel User" }),
+        )?))?,
     )
     .await
 }
@@ -408,12 +171,14 @@ async fn permission_exchange_failure_does_not_issue_credentials(
     expect_jwks(context)?;
     context
         .messaging_mock()?
-        .expect_request("auth.permissions.typewriter-panel")
+        .expect_request(PANEL_POLICY)
         .reply_error("permission service unavailable");
 
     assert_no_answer(
         context,
-        auth_request(Some(external_jwt(Some("Panel User"))?))?,
+        auth_request(Some(external_jwt(
+            serde_json::json!({ "name": "Panel User" }),
+        )?))?,
     )
     .await
 }
@@ -425,13 +190,15 @@ async fn internal_permission_reply_does_not_issue_credentials(
     expect_jwks(context)?;
     context
         .messaging_mock()?
-        .expect_request("auth.permissions.typewriter-panel")
+        .expect_request(PANEL_POLICY)
         .reply_skir(&GetEntityPermissionResponse::InternalError(Box::default()));
 
     // A resolver failure is an authorization failure, never an empty grant.
     assert_no_answer(
         context,
-        auth_request(Some(external_jwt(Some("Panel User"))?))?,
+        auth_request(Some(external_jwt(
+            serde_json::json!({ "name": "Panel User" }),
+        )?))?,
     )
     .await
 }
@@ -447,15 +214,15 @@ async fn malformed_authorization_request_does_not_receive_response(
 async fn forged_signature_is_denied(context: &mut TestContext<AuthCallout>) -> TestResult {
     expect_jwks(context)?;
     // The signature still belongs to the original claims; the claims now name someone else.
-    let token = external_jwt(Some("Panel User"))?;
+    let token = external_jwt(serde_json::json!({ "name": "Panel User" }))?;
     let segments = token.split('.').collect::<Vec<_>>();
     let [header, _, signature] = segments[..] else {
         anyhow::bail!("a signed token has three segments")
     };
-    let forged_claims = external_jwt_with_claims(
-        Some("Panel User"),
-        serde_json::json!({ "sub": "someone_else" }),
-    )?;
+    let forged_claims = external_jwt(serde_json::json!({
+        "name": "Panel User",
+        "sub": "someone_else"
+    }))?;
     let forged_payload = forged_claims
         .split('.')
         .nth(1)
@@ -472,10 +239,10 @@ async fn forged_signature_is_denied(context: &mut TestContext<AuthCallout>) -> T
 #[component_test(AuthCallout)]
 async fn unknown_issuer_is_denied(context: &mut TestContext<AuthCallout>) -> TestResult {
     // No JWKS expectation: a token from an unconfigured issuer never makes the callout fetch keys.
-    let token = external_jwt_with_claims(
-        Some("Panel User"),
-        serde_json::json!({ "iss": "https://unknown-issuer.test/" }),
-    )?;
+    let token = external_jwt(serde_json::json!({
+        "name": "Panel User",
+        "iss": "https://unknown-issuer.test/"
+    }))?;
 
     let response = authorize(context, auth_request(Some(token))?).await?;
 

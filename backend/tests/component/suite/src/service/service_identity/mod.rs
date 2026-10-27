@@ -1,9 +1,7 @@
-use typewriter_component_test::prelude::*;
+use typewriter_component_test::{identity::Authentik, prelude::*};
 
 mod http_contract;
 mod issuance;
-
-pub(crate) struct Authentik;
 
 #[component_fixture(
     id = "service-identity",

@@ -20,33 +20,26 @@ impl FixtureSpec for OrganizationRoles {
     }
 }
 
-async fn watch(
-    context: &TestContext<OrganizationRoles>,
-    organization: &Organization,
-) -> anyhow::Result<WatchOrganizationRolesResponse> {
-    context
-        .request(
-            from_member(ada(), organization, "roles.watch"),
-            &WatchOrganizationRolesRequest::default(),
-        )
-        .await
-}
-
 #[component_test(OrganizationRoles)]
 async fn watch_scopes_roles_and_orders_by_priority(
     context: &mut TestContext<OrganizationRoles>,
 ) -> TestResult {
     let acme = acme();
-    let globex = Organization::new("globex");
+    let globex = globex();
     Seed::new()
         .organization(&acme, ada())
         .organization(&globex, grace())
         .role(&acme, "editor", 10)
         .role(&globex, "reviewer", 10)
-        .apply(&context.database()?)
+        .apply(context)
         .await?;
 
-    let reply = watch(context, &acme).await?;
+    let reply: WatchOrganizationRolesResponse = context
+        .request(
+            from_member(ada(), &acme, "roles.watch"),
+            &WatchOrganizationRolesRequest::default(),
+        )
+        .await?;
 
     let WatchOrganizationRolesResponse::List(roles) = reply else {
         anyhow::bail!("expected role list, received {reply:?}")
@@ -65,7 +58,12 @@ async fn watch_scopes_roles_and_orders_by_priority(
 async fn watch_unknown_organization_returns_empty_list(
     context: &mut TestContext<OrganizationRoles>,
 ) -> TestResult {
-    let reply = watch(context, &Organization::new("missing")).await?;
+    let reply: WatchOrganizationRolesResponse = context
+        .request(
+            from_member(ada(), &Organization::new("missing"), "roles.watch"),
+            &WatchOrganizationRolesRequest::default(),
+        )
+        .await?;
 
     assert!(
         matches!(&reply, WatchOrganizationRolesResponse::List(roles) if roles.is_empty()),

@@ -64,6 +64,23 @@ impl DatabaseHandle {
         serde_json::from_value(value).context("decoding typed database query")
     }
 
+    /// Reads one value of `sql`, with each `(name, record)` bound as `$name`. The keyed read a case
+    /// uses to inspect the record it or a component wrote.
+    pub async fn read(&self, sql: &str, records: &[(&str, RecordId)]) -> Result<serde_json::Value> {
+        let bindings = records
+            .iter()
+            .map(|(name, record)| {
+                (
+                    (*name).to_owned(),
+                    surrealdb::types::RecordId::from(record.clone()).into_value(),
+                )
+            })
+            .collect();
+        let mut response = self.response(sql, bindings).await?;
+        let value: surrealdb::types::Value = response.take(0)?;
+        Ok(value.into_json_value())
+    }
+
     pub async fn query_json(&self, sql: &str) -> Result<serde_json::Value> {
         let mut response = self.response(sql, Vec::new()).await?;
         let value: surrealdb::types::Value = response.take(0)?;

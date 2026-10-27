@@ -1,9 +1,21 @@
 use json_matcher::assert_jm;
-use typewriter_component_test::prelude::{JoinCode, Organization, *};
+use typewriter_component_test::{
+    JoinCode, Organization,
+    organization::{
+        InvalidMemberUpdate, UnavailableRole, approve_join_requests, expect_join_request_removed,
+        join_code_request, role_names, update_member_roles,
+    },
+    prelude::*,
+};
 use wasmcloud_utils::skir::base::{
-    kernel::v1::{duration::Duration as SkirDuration, record_id::RecordId},
+    kernel::v1::duration::Duration as SkirDuration,
     organization::v1::{join_codes::*, join_request::*, member::*, organization::*},
 };
+
+/// The names of the roles `$user` holds in Acme.
+const ROLES: &str = "SELECT VALUE roles.name FROM ONLY member_of WHERE in = $user AND out = organization:acme FETCH roles";
+/// The number of pending join requests.
+const PENDING_REQUESTS: &str = "RETURN count(SELECT id FROM request_to_join)";
 
 #[component_fixture(
     id = "organization-members",
@@ -23,138 +35,12 @@ impl FixtureSpec for OrganizationMembers {
     }
 }
 
-type Context = TestContext<OrganizationMembers>;
-
-/// Acme, founded by Ada, with Grace as a writer. Organizations come from another component.
-async fn acme_with_writer(context: &Context) -> anyhow::Result<Organization> {
-    let acme = acme();
-    Seed::new()
-        .organization(&acme, ada())
-        .member(&acme, grace(), &["writer"])
-        .apply(&context.database()?)
-        .await?;
-    Ok(acme)
-}
-
-/// Acme with a pending request from Grace, which only another component creates.
-async fn acme_with_request(context: &Context) -> anyhow::Result<(Organization, RecordId)> {
-    let acme = acme();
-    let database = context.database()?;
-    Seed::new()
-        .organization(&acme, ada())
-        .join_request(grace(), &acme)
-        .apply(&database)
-        .await?;
-    let request = database.join_request(grace(), &acme).await?;
-    Ok((acme, request))
-}
-
-fn generate(
-    single_use: bool,
-    expiration: GenerateOrganizationJoinCodeRequest_Expiration,
-    roles: Vec<RecordId>,
-) -> GenerateOrganizationJoinCodeRequest {
-    GenerateOrganizationJoinCodeRequest {
-        single_use,
-        expiration,
-        auto_accept: GenerateOrganizationJoinCodeRequest_AutoAccept {
-            role_ids: roles,
-            ..Default::default()
-        },
-        ..Default::default()
-    }
-}
-
-async fn update(
-    context: &Context,
-    users: Vec<RecordId>,
-    roles: Vec<RecordId>,
-) -> anyhow::Result<UpdateOrganizationMemberRolesResponse> {
-    context
-        .request(
-            from_member(ada(), &acme(), "members.update"),
-            &UpdateOrganizationMemberRolesRequest {
-                user_ids: users,
-                role_ids: roles,
-                ..Default::default()
-            },
-        )
-        .await
-}
-
-/// Both views of Grace's request learn that it is gone.
-fn expect_request_removed(
-    context: &Context,
-    acme: &Organization,
-    request: &RecordId,
-) -> anyhow::Result<()> {
-    let removed = request.clone();
-    context.expect_publish(
-        to_organization(acme, "join_requests.changed"),
-        move |event: &OrganizationJoinRequestsChanged| {
-            matches!(event.changes.as_slice(), [OrganizationJoinRequestsChange::Remove(id)] if **id == removed)
-        },
-    )?;
-    let removed = request.clone();
-    context.expect_publish(
-        to_user(grace(), "join_requests.changed"),
-        move |event: &UserJoinRequestsChanged| {
-            matches!(event.changes.as_slice(), [UserJoinRequestsChange::Remove(id)] if **id == removed)
-        },
-    )?;
-    Ok(())
-}
-
-/// Ada approves `request`, handing out `role`.
-pub(crate) async fn approve<F>(
-    context: &TestContext<F>,
-    acme: &Organization,
-    request: RecordId,
-    role: RecordId,
-) -> anyhow::Result<ApproveOrganizationJoinRequestsResponse> {
-    context
-        .request(
-            from_member(ada(), acme, "members.join_requests.approve"),
-            &ApproveOrganizationJoinRequestsRequest {
-                request_ids: vec![request],
-                role_ids: vec![role],
-                ..Default::default()
-            },
-        )
-        .await
-}
-
-/// The role names `user` holds in Acme.
-async fn roles_of(context: &Context, user: &StackUser) -> anyhow::Result<serde_json::Value> {
-    context
-        .database()?
-        .seed("SELECT VALUE roles.name FROM ONLY member_of WHERE in = $user AND out = organization:acme FETCH roles")
-        .bind("user", surrealdb_types::RecordId::from(user.id()))?
-        .query_json()
-        .await
-}
-
-async fn pending_requests(context: &Context) -> anyhow::Result<serde_json::Value> {
-    context
-        .database()?
-        .query_json("RETURN count(SELECT id FROM request_to_join)")
-        .await
-}
-
-fn sorted_names(
-    roles: &[wasmcloud_utils::skir::base::organization::v1::role::OrganizationRole],
-) -> Vec<&str> {
-    let mut names = roles
-        .iter()
-        .map(|role| role.name.as_str())
-        .collect::<Vec<_>>();
-    names.sort_unstable();
-    names
-}
-
 #[component_test(OrganizationMembers)]
-async fn generate_join_code_persists_and_publishes(context: &mut Context) -> TestResult {
-    let acme = acme_with_writer(context).await?;
+async fn generate_join_code_persists_and_publishes(
+    context: &mut TestContext<OrganizationMembers>,
+) -> TestResult {
+    let acme = acme();
+    seed_organization(context, &acme, ada(), &[(grace(), &["writer"])]).await?;
     let writer = context.database()?.role(&acme, "writer").await?;
     let expected = writer.clone();
     context.expect_publish(
@@ -170,7 +56,7 @@ async fn generate_join_code_persists_and_publishes(context: &mut Context) -> Tes
     let reply: GenerateOrganizationJoinCodeResponse = context
         .request(
             from_member(ada(), &acme, "members.join_codes.generate"),
-            &generate(
+            &join_code_request(
                 false,
                 GenerateOrganizationJoinCodeRequest_Expiration::Never,
                 vec![writer],
@@ -195,14 +81,15 @@ async fn generate_join_code_persists_and_publishes(context: &mut Context) -> Tes
 
 #[component_test(OrganizationMembers)]
 async fn generate_join_code_rejects_invalid_expiration_without_state(
-    context: &mut Context,
+    context: &mut TestContext<OrganizationMembers>,
 ) -> TestResult {
-    let acme = acme_with_writer(context).await?;
+    let acme = acme();
+    seed_organization(context, &acme, ada(), &[(grace(), &["writer"])]).await?;
 
     let reply: GenerateOrganizationJoinCodeResponse = context
         .request(
             from_member(ada(), &acme, "members.join_codes.generate"),
-            &generate(
+            &join_code_request(
                 true,
                 GenerateOrganizationJoinCodeRequest_Expiration::Duration(Box::new(SkirDuration {
                     milliseconds: 0,
@@ -230,31 +117,25 @@ async fn generate_join_code_rejects_invalid_expiration_without_state(
     Ok(())
 }
 
-/// A role a join code cannot hand out.
-#[derive(Debug)]
-enum Unavailable {
-    Missing,
-    Protected,
-}
-
 /// A join code may only hand out roles that exist and that members may be given.
 #[component_test(OrganizationMembers)]
-#[case::missing_role(Unavailable::Missing)]
-#[case::protected_role(Unavailable::Protected)]
+#[case::missing_role(UnavailableRole::Missing)]
+#[case::protected_role(UnavailableRole::Protected)]
 async fn join_code_refuses_roles_it_cannot_hand_out(
-    context: &mut Context,
-    unavailable: Unavailable,
+    context: &mut TestContext<OrganizationMembers>,
+    unavailable: UnavailableRole,
 ) -> TestResult {
-    let acme = acme_with_writer(context).await?;
+    let acme = acme();
+    seed_organization(context, &acme, ada(), &[(grace(), &["writer"])]).await?;
     let role = match unavailable {
-        Unavailable::Missing => skir_record_id("organization_role", "missing"),
-        Unavailable::Protected => context.database()?.role(&acme, "founder").await?,
+        UnavailableRole::Missing => skir_record_id("organization_role", "missing"),
+        UnavailableRole::Protected => context.database()?.role(&acme, "founder").await?,
     };
 
     let reply: GenerateOrganizationJoinCodeResponse = context
         .request(
             from_member(ada(), &acme, "members.join_codes.generate"),
-            &generate(
+            &join_code_request(
                 true,
                 GenerateOrganizationJoinCodeRequest_Expiration::Never,
                 vec![role.clone()],
@@ -263,11 +144,12 @@ async fn join_code_refuses_roles_it_cannot_hand_out(
         .await?;
 
     let refused = match (&unavailable, &reply) {
-        (Unavailable::Missing, GenerateOrganizationJoinCodeResponse::RolesNotFoundError(error)) => {
-            &error.role_ids
-        }
         (
-            Unavailable::Protected,
+            UnavailableRole::Missing,
+            GenerateOrganizationJoinCodeResponse::RolesNotFoundError(error),
+        ) => &error.role_ids,
+        (
+            UnavailableRole::Protected,
             GenerateOrganizationJoinCodeResponse::RolesNotAssignableError(error),
         ) => &error.role_ids,
         _ => anyhow::bail!("{unavailable:?} role was not refused for its reason: {reply:?}"),
@@ -284,12 +166,15 @@ async fn join_code_refuses_roles_it_cannot_hand_out(
 }
 
 #[component_test(OrganizationMembers)]
-async fn revoke_join_code_deletes_and_notifies(context: &mut Context) -> TestResult {
-    let acme = acme_with_writer(context).await?;
+async fn revoke_join_code_deletes_and_notifies(
+    context: &mut TestContext<OrganizationMembers>,
+) -> TestResult {
+    let acme = acme();
+    seed_organization(context, &acme, ada(), &[(grace(), &["writer"])]).await?;
     let reply: GenerateOrganizationJoinCodeResponse = context
         .arrange(
             from_member(ada(), &acme, "members.join_codes.generate"),
-            &generate(
+            &join_code_request(
                 false,
                 GenerateOrganizationJoinCodeRequest_Expiration::Never,
                 Vec::new(),
@@ -333,8 +218,11 @@ async fn revoke_join_code_deletes_and_notifies(context: &mut Context) -> TestRes
 }
 
 #[component_test(OrganizationMembers)]
-async fn revoking_an_unknown_code_is_refused(context: &mut Context) -> TestResult {
-    let acme = acme_with_writer(context).await?;
+async fn revoking_an_unknown_code_is_refused(
+    context: &mut TestContext<OrganizationMembers>,
+) -> TestResult {
+    let acme = acme();
+    seed_organization(context, &acme, ada(), &[(grace(), &["writer"])]).await?;
     let unknown = skir_record_id("organization_join_code", "unknown");
 
     let reply: RevokeOrganizationJoinCodeResponse = context
@@ -356,14 +244,17 @@ async fn revoking_an_unknown_code_is_refused(context: &mut Context) -> TestResul
 }
 
 #[component_test(OrganizationMembers)]
-async fn join_code_watch_lists_only_this_organizations_codes(context: &mut Context) -> TestResult {
-    let acme = acme_with_writer(context).await?;
+async fn join_code_watch_lists_only_this_organizations_codes(
+    context: &mut TestContext<OrganizationMembers>,
+) -> TestResult {
+    let acme = acme();
+    seed_organization(context, &acme, ada(), &[(grace(), &["writer"])]).await?;
     let globex = Organization::new("globex");
     Seed::new()
         .organization(&globex, grace())
         .join_code(&acme, JoinCode::new("acme_code"))
         .join_code(&globex, JoinCode::new("globex_code"))
-        .apply(&context.database()?)
+        .apply(context)
         .await?;
 
     let reply: WatchOrganizationJoinCodesResponse = context
@@ -388,48 +279,41 @@ async fn join_code_watch_lists_only_this_organizations_codes(context: &mut Conte
 }
 
 #[component_test(OrganizationMembers)]
-async fn member_update_keeps_protected_founder_role(context: &mut Context) -> TestResult {
-    let acme = acme_with_writer(context).await?;
+async fn member_update_keeps_protected_founder_role(
+    context: &mut TestContext<OrganizationMembers>,
+) -> TestResult {
+    let acme = acme();
+    seed_organization(context, &acme, ada(), &[(grace(), &["writer"])]).await?;
     let writer = context.database()?.role(&acme, "writer").await?;
     let founder = ada().id();
     context.expect_publish(
         to_organization(&acme, "members.changed"),
         move |event: &OrganizationMembersChanged| {
             matches!(event.changes.as_slice(), [OrganizationMembersChange::Update(member)]
-                if member.user_id == founder && sorted_names(&member.roles) == ["founder", "writer"])
+                if member.user_id == founder && role_names(&member.roles) == ["founder", "writer"])
         },
     )?;
 
-    let reply = update(context, vec![ada().id()], vec![writer]).await?;
+    let reply = update_member_roles(context, ada(), &acme, vec![ada().id()], vec![writer]).await?;
 
     let UpdateOrganizationMemberRolesResponse::Success(updated) = reply else {
         anyhow::bail!("expected member update success, received {reply:?}")
     };
-    assert_eq!(
-        sorted_names(&updated.members[0].roles),
-        ["founder", "writer"]
-    );
+    assert_eq!(role_names(&updated.members[0].roles), ["founder", "writer"]);
     Ok(())
-}
-
-/// One invalid part of a member update.
-#[derive(Debug)]
-enum Invalid {
-    MissingRole,
-    ProtectedRole,
-    MissingUser,
 }
 
 /// Each invalid member update is refused for its own reason and changes no member.
 #[component_test(OrganizationMembers)]
-#[case::missing_role(Invalid::MissingRole)]
-#[case::protected_role(Invalid::ProtectedRole)]
-#[case::missing_user(Invalid::MissingUser)]
+#[case::missing_role(InvalidMemberUpdate::MissingRole)]
+#[case::protected_role(InvalidMemberUpdate::ProtectedRole)]
+#[case::missing_user(InvalidMemberUpdate::MissingUser)]
 async fn an_invalid_member_update_is_refused_without_changes(
-    context: &mut Context,
-    invalid: Invalid,
+    context: &mut TestContext<OrganizationMembers>,
+    invalid: InvalidMemberUpdate,
 ) -> TestResult {
-    let acme = acme_with_writer(context).await?;
+    let acme = acme();
+    seed_organization(context, &acme, ada(), &[(grace(), &["writer"])]).await?;
     let database = context.database()?;
     let writer = database.role(&acme, "writer").await?;
     let founder = database.role(&acme, "founder").await?;
@@ -437,41 +321,55 @@ async fn an_invalid_member_update_is_refused_without_changes(
     let missing_user = skir_record_id("user", "missing");
 
     let (users, roles) = match invalid {
-        Invalid::MissingRole => (vec![grace().id()], vec![writer, missing_role.clone()]),
-        Invalid::ProtectedRole => (vec![grace().id()], vec![founder.clone()]),
-        Invalid::MissingUser => (vec![missing_user.clone()], vec![writer]),
+        InvalidMemberUpdate::MissingRole => {
+            (vec![grace().id()], vec![writer, missing_role.clone()])
+        }
+        InvalidMemberUpdate::ProtectedRole => (vec![grace().id()], vec![founder.clone()]),
+        InvalidMemberUpdate::MissingUser => (vec![missing_user.clone()], vec![writer]),
     };
-    let reply = update(context, users, roles).await?;
+    let reply = update_member_roles(context, ada(), &acme, users, roles).await?;
 
     match (&invalid, &reply) {
         (
-            Invalid::MissingRole,
+            InvalidMemberUpdate::MissingRole,
             UpdateOrganizationMemberRolesResponse::RolesNotFoundError(error),
         ) => {
             assert_eq!(error.role_ids, [missing_role]);
         }
         (
-            Invalid::ProtectedRole,
+            InvalidMemberUpdate::ProtectedRole,
             UpdateOrganizationMemberRolesResponse::RolesNotAssignableError(error),
         ) => assert_eq!(error.role_ids, [founder]),
-        (Invalid::MissingUser, UpdateOrganizationMemberRolesResponse::UserNotFoundError(error)) => {
+        (
+            InvalidMemberUpdate::MissingUser,
+            UpdateOrganizationMemberRolesResponse::UserNotFoundError(error),
+        ) => {
             assert_eq!(error.user_ids, [missing_user]);
         }
         _ => anyhow::bail!("{invalid:?} was not refused for its reason: {reply:?}"),
     }
-    assert_jm!(roles_of(context, grace()).await?, ["writer"]);
+    assert_jm!(
+        context
+            .database()?
+            .read(ROLES, &[("user", grace().id())])
+            .await?,
+        ["writer"]
+    );
     Ok(())
 }
 
 #[component_test(OrganizationMembers)]
 async fn an_invalid_member_in_a_batch_leaves_every_member_unchanged(
-    context: &mut Context,
+    context: &mut TestContext<OrganizationMembers>,
 ) -> TestResult {
-    let acme = acme_with_writer(context).await?;
+    let acme = acme();
+    seed_organization(context, &acme, ada(), &[(grace(), &["writer"])]).await?;
     let writer = context.database()?.role(&acme, "writer").await?;
 
-    let reply = update(
+    let reply = update_member_roles(
         context,
+        ada(),
+        &acme,
         vec![ada().id(), skir_record_id("user", "missing"), grace().id()],
         vec![writer],
     )
@@ -484,13 +382,27 @@ async fn an_invalid_member_in_a_batch_leaves_every_member_unchanged(
         ),
         "{reply:?}"
     );
-    assert_jm!(roles_of(context, ada()).await?, ["founder"]);
+    assert_jm!(
+        context
+            .database()?
+            .read(ROLES, &[("user", grace().id())])
+            .await?,
+        ["writer"]
+    );
+    assert_jm!(
+        context
+            .database()?
+            .read(ROLES, &[("user", ada().id())])
+            .await?,
+        ["founder"]
+    );
     Ok(())
 }
 
 #[component_test(OrganizationMembers)]
-async fn founder_cannot_be_removed(context: &mut Context) -> TestResult {
-    let acme = acme_with_writer(context).await?;
+async fn founder_cannot_be_removed(context: &mut TestContext<OrganizationMembers>) -> TestResult {
+    let acme = acme();
+    seed_organization(context, &acme, ada(), &[(grace(), &["writer"])]).await?;
 
     let reply: RemoveOrganizationMemberResponse = context
         .request(
@@ -509,15 +421,22 @@ async fn founder_cannot_be_removed(context: &mut Context) -> TestResult {
         ),
         "{reply:?}"
     );
-    assert_jm!(roles_of(context, ada()).await?, ["founder"]);
+    assert_jm!(
+        context
+            .database()?
+            .read(ROLES, &[("user", ada().id())])
+            .await?,
+        ["founder"]
+    );
     Ok(())
 }
 
 #[component_test(OrganizationMembers)]
 async fn removing_a_member_ends_the_membership_and_tells_both_views(
-    context: &mut Context,
+    context: &mut TestContext<OrganizationMembers>,
 ) -> TestResult {
-    let acme = acme_with_writer(context).await?;
+    let acme = acme();
+    seed_organization(context, &acme, ada(), &[(grace(), &["writer"])]).await?;
     let removed = grace().id();
     context.expect_publish(
         to_organization(&acme, "members.changed"),
@@ -558,10 +477,13 @@ async fn removing_a_member_ends_the_membership_and_tells_both_views(
 }
 
 #[component_test(OrganizationMembers)]
-async fn removing_someone_who_is_not_a_member_is_refused(context: &mut Context) -> TestResult {
-    let acme = acme_with_writer(context).await?;
+async fn removing_someone_who_is_not_a_member_is_refused(
+    context: &mut TestContext<OrganizationMembers>,
+) -> TestResult {
+    let acme = acme();
+    seed_organization(context, &acme, ada(), &[(grace(), &["writer"])]).await?;
     let hedy = StackUser::new("hedy");
-    Seed::new().user(&hedy).apply(&context.database()?).await?;
+    Seed::new().user(&hedy).apply(context).await?;
 
     let reply: RemoveOrganizationMemberResponse = context
         .request(
@@ -583,17 +505,19 @@ async fn removing_someone_who_is_not_a_member_is_refused(context: &mut Context) 
 
 #[component_test(OrganizationMembers)]
 async fn approval_makes_the_applicant_a_member_and_tells_both_views(
-    context: &mut Context,
+    context: &mut TestContext<OrganizationMembers>,
 ) -> TestResult {
-    let (acme, request) = acme_with_request(context).await?;
+    let acme = acme();
+    seed_organization(context, &acme, ada(), &[]).await?;
+    let request = seed_join_request(context, grace(), &acme).await?;
     let writer = context.database()?.role(&acme, "writer").await?;
-    expect_request_removed(context, &acme, &request)?;
+    expect_join_request_removed(context, &acme, grace(), &request)?;
     let applicant = grace().id();
     context.expect_publish(
         to_organization(&acme, "members.changed"),
         move |event: &OrganizationMembersChanged| {
             matches!(event.changes.as_slice(), [OrganizationMembersChange::Add(member)]
-                if member.user_id == applicant && sorted_names(&member.roles) == ["writer"])
+                if member.user_id == applicant && role_names(&member.roles) == ["writer"])
         },
     )?;
     let joined = acme.id();
@@ -605,30 +529,35 @@ async fn approval_makes_the_applicant_a_member_and_tells_both_views(
         },
     )?;
 
-    let reply = approve(context, &acme, request, writer).await?;
+    let reply = approve_join_requests(context, ada(), &acme, vec![request], vec![writer]).await?;
 
     assert!(
         matches!(&reply, ApproveOrganizationJoinRequestsResponse::Success(success)
             if success.approvals.len() == 1 && success.approvals[0].member.user_id == grace().id()),
         "{reply:?}"
     );
-    assert_jm!(roles_of(context, grace()).await?, ["writer"]);
-    assert_jm!(pending_requests(context).await?, 0);
+    assert_jm!(
+        context
+            .database()?
+            .read(ROLES, &[("user", grace().id())])
+            .await?,
+        ["writer"]
+    );
+    assert_jm!(context.database()?.query_json(PENDING_REQUESTS).await?, 0);
     Ok(())
 }
 
 #[component_test(OrganizationMembers)]
-async fn approve_existing_member_rolls_back_request_deletion(context: &mut Context) -> TestResult {
-    let acme = acme_with_writer(context).await?;
+async fn approve_existing_member_rolls_back_request_deletion(
+    context: &mut TestContext<OrganizationMembers>,
+) -> TestResult {
+    let acme = acme();
+    seed_organization(context, &acme, ada(), &[(grace(), &["writer"])]).await?;
     let database = context.database()?;
-    Seed::new()
-        .join_request(grace(), &acme)
-        .apply(&database)
-        .await?;
-    let request = database.join_request(grace(), &acme).await?;
+    let request = seed_join_request(context, grace(), &acme).await?;
     let writer = database.role(&acme, "writer").await?;
 
-    let reply = approve(context, &acme, request, writer).await?;
+    let reply = approve_join_requests(context, ada(), &acme, vec![request], vec![writer]).await?;
 
     assert!(
         matches!(
@@ -637,36 +566,32 @@ async fn approve_existing_member_rolls_back_request_deletion(context: &mut Conte
         ),
         "{reply:?}"
     );
-    assert_jm!(pending_requests(context).await?, 1);
+    assert_jm!(context.database()?.query_json(PENDING_REQUESTS).await?, 1);
     Ok(())
 }
 
 #[component_test(OrganizationMembers)]
-async fn approval_uses_current_role_policy_inside_transaction(context: &mut Context) -> TestResult {
-    let (acme, request) = acme_with_request(context).await?;
+async fn approval_uses_current_role_policy_inside_transaction(
+    context: &mut TestContext<OrganizationMembers>,
+) -> TestResult {
+    let acme = acme();
+    seed_organization(context, &acme, ada(), &[]).await?;
+    let request = seed_join_request(context, grace(), &acme).await?;
     let database = context.database()?;
     let writer = database.role(&acme, "writer").await?;
     Seed::new()
         .unassignable(&acme, "writer")
-        .apply(&database)
+        .apply(context)
         .await?;
 
-    let reply: ApproveOrganizationJoinRequestsResponse = context
-        .request(
-            from_member(ada(), &acme, "members.join_requests.approve"),
-            &ApproveOrganizationJoinRequestsRequest {
-                request_ids: vec![request],
-                role_ids: vec![writer.clone()],
-                ..Default::default()
-            },
-        )
-        .await?;
+    let reply =
+        approve_join_requests(context, ada(), &acme, vec![request], vec![writer.clone()]).await?;
 
     let ApproveOrganizationJoinRequestsResponse::RolesNotAssignableError(error) = reply else {
         anyhow::bail!("expected current role policy error, received {reply:?}")
     };
     assert_eq!(error.role_ids, [writer]);
-    assert_jm!(pending_requests(context).await?, 1);
+    assert_jm!(context.database()?.query_json(PENDING_REQUESTS).await?, 1);
     assert_jm!(
         database
             .query_json("RETURN count(SELECT id FROM member_of WHERE in = user:user_grace)")
@@ -677,9 +602,13 @@ async fn approval_uses_current_role_policy_inside_transaction(context: &mut Cont
 }
 
 #[component_test(OrganizationMembers)]
-async fn decline_request_deletes_and_notifies_both_views(context: &mut Context) -> TestResult {
-    let (acme, request) = acme_with_request(context).await?;
-    expect_request_removed(context, &acme, &request)?;
+async fn decline_request_deletes_and_notifies_both_views(
+    context: &mut TestContext<OrganizationMembers>,
+) -> TestResult {
+    let acme = acme();
+    seed_organization(context, &acme, ada(), &[]).await?;
+    let request = seed_join_request(context, grace(), &acme).await?;
+    expect_join_request_removed(context, &acme, grace(), &request)?;
 
     let reply: DeclineOrganizationJoinRequestResponse = context
         .request(
@@ -695,13 +624,16 @@ async fn decline_request_deletes_and_notifies_both_views(context: &mut Context) 
         matches!(reply, DeclineOrganizationJoinRequestResponse::Success(_)),
         "{reply:?}"
     );
-    assert_jm!(pending_requests(context).await?, 0);
+    assert_jm!(context.database()?.query_json(PENDING_REQUESTS).await?, 0);
     Ok(())
 }
 
 #[component_test(OrganizationMembers)]
-async fn declining_an_unknown_request_is_refused(context: &mut Context) -> TestResult {
-    let acme = acme_with_writer(context).await?;
+async fn declining_an_unknown_request_is_refused(
+    context: &mut TestContext<OrganizationMembers>,
+) -> TestResult {
+    let acme = acme();
+    seed_organization(context, &acme, ada(), &[(grace(), &["writer"])]).await?;
     let unknown = skir_record_id("request_to_join", "unknown");
 
     let reply: DeclineOrganizationJoinRequestResponse = context
@@ -724,15 +656,17 @@ async fn declining_an_unknown_request_is_refused(context: &mut Context) -> TestR
 
 #[component_test(OrganizationMembers)]
 async fn join_request_watch_lists_only_this_organizations_requests(
-    context: &mut Context,
+    context: &mut TestContext<OrganizationMembers>,
 ) -> TestResult {
-    let (acme, request) = acme_with_request(context).await?;
+    let acme = acme();
+    seed_organization(context, &acme, ada(), &[]).await?;
+    let request = seed_join_request(context, grace(), &acme).await?;
     let globex = Organization::new("globex");
     let hedy = StackUser::new("hedy");
     Seed::new()
         .organization(&globex, &hedy)
         .join_request(grace(), &globex)
-        .apply(&context.database()?)
+        .apply(context)
         .await?;
 
     let reply: WatchOrganizationJoinRequestsResponse = context

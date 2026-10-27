@@ -138,22 +138,6 @@ impl FixtureSpec for SyntheticIsolation {
     }
 }
 
-/// The number of messages the case's own stream holds.
-async fn stored(context: &TestContext<SyntheticIsolation>) -> anyhow::Result<u64> {
-    let info = context
-        .messaging()?
-        .request(
-            "$JS.API.STREAM.INFO.ISOLATION",
-            Vec::new(),
-            std::time::Duration::from_secs(2),
-        )
-        .await?;
-    let info: serde_json::Value = serde_json::from_slice(&info)?;
-    info["state"]["messages"]
-        .as_u64()
-        .ok_or_else(|| anyhow::anyhow!("stream info without a message count: {info}"))
-}
-
 /// Both cases leave a message behind and both expect to start without one, so whichever runs
 /// second fails when cases share broker state.
 #[component_test(SyntheticIsolation)]
@@ -163,7 +147,7 @@ async fn every_case_starts_with_its_own_empty_broker(
     context: &mut TestContext<SyntheticIsolation>,
     _case: u8,
 ) -> TestResult {
-    assert_eq!(stored(context).await?, 0);
+    assert_eq!(context.messaging()?.stream_messages("ISOLATION").await?, 0);
 
     context
         .messaging()?
@@ -171,7 +155,7 @@ async fn every_case_starts_with_its_own_empty_broker(
         .await?;
 
     let deadline = tokio::time::Instant::now() + std::time::Duration::from_secs(2);
-    while stored(context).await? == 0 {
+    while context.messaging()?.stream_messages("ISOLATION").await? == 0 {
         anyhow::ensure!(
             tokio::time::Instant::now() < deadline,
             "the stream never stored the message"
