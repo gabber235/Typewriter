@@ -2,4 +2,4 @@
 # Its `ci:up` task creates the cluster from `config/k3d/ci.yaml` and the `clusters/ci` overlay;
 # bump the revision to pick up Infrastructure changes.
 repository = "Seamlezz/Infrastructure"
-revision = "b2542d4f15a0e1aba6db29654d6584b1f55e03c1"
+revision = "88c6cba30733f12f18783398671be336148d1698"
