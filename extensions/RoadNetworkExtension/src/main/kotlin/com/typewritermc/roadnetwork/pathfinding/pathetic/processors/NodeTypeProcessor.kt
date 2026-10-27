@@ -22,6 +22,7 @@ import org.bukkit.block.data.Openable
 import org.bukkit.block.data.type.Door
 import org.bukkit.block.data.type.Gate
 import org.bukkit.block.data.type.TrapDoor
+import org.bukkit.util.BoundingBox
 
 /**
  * A stateless and thread-safe node processor.
@@ -65,6 +66,20 @@ class NodeTypeProcessor(private val capabilities: EntityPathingCapabilities = En
             (((x + 33554432L) and 0x3FFFFFF) shl 38) or          // 26 bits for X (33M range)
                     (((z + 33554432L) and 0x3FFFFFF) shl 12) or  // 26 bits for Z (33M range)
                     ((y + 2048L) and 0xFFF)                      // 12 bits for Y (2K range)
+
+        fun isOpenable(block: Block): Boolean = when (block.blockData) {
+            is Door -> block.type != Material.IRON_DOOR
+            is TrapDoor -> block.type != Material.IRON_TRAPDOOR
+            is Gate -> true
+            else -> false
+        }
+
+        /** A low collision on the bottom of the block, such as a closed bottom trapdoor, that can be walked over. */
+        fun isSurfaceFeature(collisionBoxes: Collection<BoundingBox>): Boolean =
+            collisionBoxes.isNotEmpty() && collisionBoxes.all { box ->
+                val boxHeight = box.maxY - box.minY
+                boxHeight < 0.25 && box.minY < 0.1
+            }
     }
 
     /**
@@ -141,9 +156,6 @@ class NodeTypeProcessor(private val capabilities: EntityPathingCapabilities = En
             when (blockData) {
                 is Door -> {
                     add(PathNodeProperty.DOOR)
-                    if (blockType != Material.IRON_DOOR) {
-                        add(PathNodeProperty.OPENABLE)
-                    }
                     if (blockData.isOpen) {
                         add(PathNodeProperty.OPEN)
                     }
@@ -151,9 +163,6 @@ class NodeTypeProcessor(private val capabilities: EntityPathingCapabilities = En
 
                 is TrapDoor -> {
                     add(PathNodeProperty.TRAPDOOR)
-                    if (blockType != Material.IRON_TRAPDOOR) {
-                        add(PathNodeProperty.OPENABLE)
-                    }
                     if (blockData.isOpen) {
                         add(PathNodeProperty.OPEN)
                     }
@@ -161,7 +170,6 @@ class NodeTypeProcessor(private val capabilities: EntityPathingCapabilities = En
 
                 is Gate -> {
                     add(PathNodeProperty.GATE)
-                    add(PathNodeProperty.OPENABLE)
                     if (blockData.isOpen) {
                         add(PathNodeProperty.OPEN)
                     }
@@ -177,11 +185,11 @@ class NodeTypeProcessor(private val capabilities: EntityPathingCapabilities = En
                 Tag.FENCES.isTagged(blockType) || Tag.WALLS.isTagged(blockType) -> add(PathNodeProperty.FENCE)
             }
 
-            val collisionBoxes = block.collisionShape.boundingBoxes
-            if (collisionBoxes.isNotEmpty() && collisionBoxes.all { box ->
-                    val boxHeight = box.maxY - box.minY
-                    boxHeight < 0.25 && box.minY < 0.1
-                }) {
+            if (isOpenable(block)) {
+                add(PathNodeProperty.OPENABLE)
+            }
+
+            if (isSurfaceFeature(block.collisionShape.boundingBoxes)) {
                 add(PathNodeProperty.SURFACE_FEATURE)
             }
 
@@ -197,10 +205,7 @@ class NodeTypeProcessor(private val capabilities: EntityPathingCapabilities = En
      * a horizontal surface that an entity can actually stand on.
      */
     private fun isSurfaceWalkable(surfaceBlock: Block): Boolean {
-        val collisionBoxes = surfaceBlock.collisionShape.boundingBoxes
-        if (!surfaceBlock.isSolid && collisionBoxes.isEmpty()) return false
-
-        return collisionBoxes.any { box ->
+        return surfaceBlock.collisionShape.boundingBoxes.any { box ->
             val width = box.maxX - box.minX
             val length = box.maxZ - box.minZ
 

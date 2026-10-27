@@ -90,15 +90,27 @@ class WalkingSteeringSpec : FunSpec({
         val passRadiusSquared = 1.0
         val maxStepHeight = 0.6
 
-        fun advance(location: PositionProperty, node: PositionProperty, isLastNode: Boolean = false) =
-            canAdvancePastNode(location, node, isLastNode, maxStepHeight, arrivalRadiusSquared, passRadiusSquared)
+        fun advance(
+            location: PositionProperty,
+            node: PositionProperty,
+            requiresArrival: Boolean = false,
+            isShortcutClear: Boolean = true,
+        ) = canAdvancePastNode(
+            location,
+            node,
+            requiresArrival,
+            maxStepHeight,
+            arrivalRadiusSquared,
+            passRadiusSquared,
+        ) { isShortcutClear }
 
         test("arriving at a node always advances") {
             val location = positionAt(0.5, 65.0, 0.5)
             val node = positionAt(1.0, 65.0, 0.5)
 
             advance(location, node).shouldBeTrue()
-            advance(location, node, isLastNode = true).shouldBeTrue()
+            advance(location, node, requiresArrival = true).shouldBeTrue()
+            advance(location, node, isShortcutClear = false).shouldBeTrue()
         }
 
         test("an intermediate node on the same level can be passed early") {
@@ -108,11 +120,18 @@ class WalkingSteeringSpec : FunSpec({
             advance(location, node).shouldBeTrue()
         }
 
-        test("the last node requires actual arrival") {
+        test("a node requiring arrival cannot be passed early") {
             val location = positionAt(0.5, 65.0, 0.5)
             val node = positionAt(1.4, 65.0, 0.5)
 
-            advance(location, node, isLastNode = true).shouldBeFalse()
+            advance(location, node, requiresArrival = true).shouldBeFalse()
+        }
+
+        test("an intermediate node is not passed early when the way to the next node is blocked") {
+            val location = positionAt(0.5, 65.0, 0.5)
+            val node = positionAt(1.4, 65.0, 0.5)
+
+            advance(location, node, isShortcutClear = false).shouldBeFalse()
         }
 
         test("a node above step height cannot be cut short") {

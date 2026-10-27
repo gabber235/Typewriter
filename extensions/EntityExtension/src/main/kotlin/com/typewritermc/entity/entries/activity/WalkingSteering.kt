@@ -41,26 +41,29 @@ internal fun walkingLookRotation(
 /**
  * Decides whether the entity may advance past the path node it is currently steering towards.
  *
- * A node counts as passed once the entity arrives within the arrival radius. Intermediate nodes
- * on walkable ground may also be passed early within the wider pass radius, which rounds corners
- * instead of forcing the entity onto every block center. The last node never allows the shortcut,
- * keeping edge completion precise, and elevation changes always require actual arrival so jumps
- * and steps target the correct block.
+ * A node counts as passed once the entity arrives within the arrival radius. Other nodes on walkable
+ * ground may also be passed early within the wider pass radius, which rounds corners instead of forcing
+ * the entity onto every block center. The early pass needs [isShortcutClear] to confirm the entity can
+ * walk straight on to the following node, so it is not taken around a fence post or wall corner the
+ * skipped node was steering around. Nodes that [requiresArrival], such as the last one, never allow the
+ * shortcut, and elevation changes always require actual arrival so jumps and steps target the correct block.
  */
 internal fun canAdvancePastNode(
     location: PositionProperty,
     nodeTarget: PositionProperty,
-    isLastNode: Boolean,
+    requiresArrival: Boolean,
     maxStepHeight: Double,
     arrivalRadiusSquared: Double,
     passRadiusSquared: Double,
+    isShortcutClear: () -> Boolean,
 ): Boolean {
     val arrived = (location.distanceSquaredWeightedY(nodeTarget, 0.8) ?: return false) <= arrivalRadiusSquared
     if (arrived) return true
-    if (isLastNode) return false
+    if (requiresArrival) return false
 
     val dx = nodeTarget.x - location.x
     val dz = nodeTarget.z - location.z
     if (dx * dx + dz * dz > passRadiusSquared) return false
-    return abs(nodeTarget.y - location.y) <= maxStepHeight
+    if (abs(nodeTarget.y - location.y) > maxStepHeight) return false
+    return isShortcutClear()
 }

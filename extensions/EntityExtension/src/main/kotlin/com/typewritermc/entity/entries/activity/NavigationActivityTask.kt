@@ -14,8 +14,9 @@ import com.typewritermc.roadnetwork.gps.GPS
 import com.typewritermc.roadnetwork.gps.GPSEdge
 import com.typewritermc.roadnetwork.gps.findPathBetweenPosition
 import com.typewritermc.roadnetwork.pathfinding.pathetic.PathCalculationResult
+import com.typewritermc.roadnetwork.pathfinding.pathetic.processors.NodeClearance
+import com.typewritermc.roadnetwork.pathfinding.pathetic.processors.SidestepInfo
 import de.bsommerfeld.pathetic.api.pathing.result.Path
-import de.bsommerfeld.pathetic.api.wrapper.PathPosition
 import de.bsommerfeld.pathetic.bukkit.mapper.BukkitMapper
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
@@ -222,6 +223,9 @@ sealed interface NavigationActivityTaskState {
 
         @Volatile
         private var patheticPath: Path? = null
+
+        @Volatile
+        private var sidesteps: List<SidestepInfo?> = emptyList()
         private var pathIndex: Int = 0
         private var pathCalculationJob: Job? = null
 
@@ -263,6 +267,7 @@ sealed interface NavigationActivityTaskState {
 
                 when (result) {
                     is PathCalculationResult.Success -> {
+                        sidesteps = sidestepsAlong(result.path)
                         patheticPath = result.path
                         pathIndex = 0
                         pathIsFallback = result.isFallback
@@ -274,6 +279,14 @@ sealed interface NavigationActivityTaskState {
                         logger.warning("Failed to calculate path for edge ending at ${edge.end} starting from ${location.toPosition()}. Try to recalculate the road network edges.")
                     }
                 }
+            }
+        }
+
+        private fun sidestepsAlong(path: Path): List<SidestepInfo?> {
+            val clearance = NodeClearance(location.world.toBukkitWorld(), capabilities)
+            val nodes = path.toList()
+            return nodes.mapIndexed { index, node ->
+                nodes.getOrNull(index - 1)?.let { previous -> clearance.sidestep(node, previous) }
             }
         }
 
@@ -322,24 +335,27 @@ sealed interface NavigationActivityTaskState {
                 return
             }
 
-            val targetNode = currentPath.elementAtOrNull(pathIndex) ?: return
-            moveTo(nodeTarget(targetNode, world))
+            moveTo(nodeTarget(currentPath, pathIndex, world) ?: return)
             super.tick(context)
         }
 
         private fun advancePastReachedNodes(currentPath: Path, world: World) {
             if (!isOnGround()) return
             while (pathIndex < currentPath.length()) {
-                val node = currentPath.elementAtOrNull(pathIndex) ?: return
+                val target = nodeTarget(currentPath, pathIndex, world) ?: return
                 val isLastNode = pathIndex == currentPath.length() - 1
+                val requiresArrival = isLastNode || sidesteps.getOrNull(pathIndex) != null
                 val canAdvance = canAdvancePastNode(
                     location,
-                    nodeTarget(node, world),
-                    isLastNode,
+                    target,
+                    requiresArrival,
                     capabilities.maxStepHeight,
                     nearNodeRadius,
                     PASS_NODE_RADIUS_SQUARED,
-                )
+                ) {
+                    val following = nodeTarget(currentPath, pathIndex + 1, world)
+                    following != null && canWalkStraightTo(following, world)
+                }
                 if (!canAdvance) return
 
                 pathIndex++
@@ -347,20 +363,35 @@ sealed interface NavigationActivityTaskState {
             }
         }
 
-        private fun nodeTarget(node: PathPosition, world: World): PositionProperty {
+        private fun nodeTarget(path: Path, index: Int, world: World): PositionProperty? {
+            val node = path.elementAtOrNull(index) ?: return null
             val bukkitLocation = BukkitMapper.toLocation(node, world)
             val centered = bukkitLocation.toCenterLocation()
+            val sidestep = sidesteps.getOrNull(index)
+            val sidestepX = sidestep?.let { it.direction.x * it.distance } ?: 0.0
+            val sidestepZ = sidestep?.let { it.direction.z * it.distance } ?: 0.0
             val surfaceY = computeSurfaceY(
                 world, bukkitLocation.blockX, bukkitLocation.blockY, bukkitLocation.blockZ
             )
             return PositionProperty(
                 location.world,
-                centered.x,
+                centered.x + sidestepX,
                 surfaceY,
-                centered.z,
+                centered.z + sidestepZ,
                 location.yaw,
                 location.pitch
             )
+        }
+
+        private fun canWalkStraightTo(target: PositionProperty, world: World): Boolean {
+            val horizontalDelta = Vector(target.x - location.x, 0.0, target.z - location.z)
+            val result = blockCollision.handlePhysics(
+                boundingBox(),
+                horizontalDelta,
+                location,
+                BukkitBlockGetter(world),
+            )
+            return !result.collisionX && !result.collisionZ
         }
 
         private fun checkStuckState() {
@@ -407,30 +438,17 @@ sealed interface NavigationActivityTaskState {
             }
 
             pathIndex++
-            val nextNode = currentPath.elementAtOrNull(pathIndex) ?: run {
+            val nextTarget = nodeTarget(currentPath, pathIndex, location.world.toBukkitWorld()) ?: run {
                 logger.warning("Cannot retrieve next path node at index $pathIndex")
                 return
             }
 
-            val nextLocation = BukkitMapper.toLocation(nextNode, location.world.toBukkitWorld())
-            val nextSurfaceY = computeSurfaceY(
-                location.world.toBukkitWorld(),
-                nextLocation.blockX, nextLocation.blockY, nextLocation.blockZ
-            )
-
-            location = PositionProperty(
-                world = location.world,
-                x = nextLocation.toCenterLocation().x,
-                y = nextSurfaceY,
-                z = nextLocation.toCenterLocation().z,
-                yaw = location.yaw,
-                pitch = location.pitch
-            )
+            location = nextTarget
 
             velocity = Vector.ZERO
             resetStuckState()
 
-            logger.warning("Entity was stuck for $stuckThreshold ticks at $location for node $currentNode, teleported to next node at (${nextLocation.blockX}, ${nextLocation.blockY}, ${nextLocation.blockZ})")
+            logger.warning("Entity was stuck for $stuckThreshold ticks at $location for node $currentNode, teleported to next node at (${nextTarget.x}, ${nextTarget.y}, ${nextTarget.z})")
         }
 
         private fun resetStuckState() {
@@ -580,15 +598,8 @@ sealed interface NavigationActivityTaskState {
                 min(pathIndex + rotationLookAhead, currentPath.length() - 1)
             }
 
-            val targetNode = currentPath.elementAtOrNull(lookAheadIndex) ?: return null
-            val targetBukkitLoc = BukkitMapper.toLocation(targetNode, world)
-            val targetLocation = targetBukkitLoc.toCenterLocation()
-            val targetSurfaceY = computeSurfaceY(
-                world,
-                targetBukkitLoc.blockX, targetBukkitLoc.blockY, targetBukkitLoc.blockZ
-            )
-
-            return Vector(targetLocation.x, targetSurfaceY, targetLocation.z)
+            val target = nodeTarget(currentPath, lookAheadIndex, world) ?: return null
+            return Vector(target.x, target.y, target.z)
         }
 
         private fun hasDirectionConflict(): Boolean {
