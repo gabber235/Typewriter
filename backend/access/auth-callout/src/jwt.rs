@@ -261,9 +261,12 @@ const SUPPORTED_ALGORITHMS: &[&str] = &[
 ];
 
 /// Whether the token's header names a supported algorithm and embeds no key, checked before jose
-/// parses it. jose 0.0.2 deserializes an unrecognized algorithm name, in `alg` or in an embedded
-/// `jwk`, by alternating between its signing and encryption algorithm types until the stack
-/// overflows, so such a header must never reach it. Keys only ever come from the issuer's JWKS.
+/// parses it.
+///
+/// Guard for jose 0.0.2's unknown `alg` recursion: it deserializes an unrecognized algorithm name,
+/// in `alg` or in an embedded `jwk`, by alternating between its signing and encryption algorithm
+/// types until the stack overflows, so such a header must never reach it. Keys only ever come from
+/// the issuer's JWKS. Remove this guard once a jose release with the fix is pinned.
 fn has_admissible_header(token: &str) -> bool {
     let Some(header) = token
         .split('.')
@@ -440,11 +443,40 @@ fn parse_jwks_response(
         .read_to_end(&mut buf)
         .error_with_slug("auth-callout-jwks-response-read-failed")?;
 
-    let jwks: Jwks =
-        serde_json::from_slice(&buf).error_with_slug("auth-callout-jwks-response-parse-failed")?;
-
+    let jwks = parse_jwks(&buf)?;
     main_attribute!("auth.jwks.keys.count" = jwks.keys.len() as i64);
     Ok(jwks)
+}
+
+/// Parses a JWKS document, keeping only keys that declare a supported signing algorithm.
+///
+/// Guard for jose 0.0.2's unknown `alg` recursion: it deserializes an unrecognized algorithm name
+/// by alternating between its signing and encryption algorithm types until the stack overflows, so
+/// a key's `alg` is checked as plain JSON before jose sees the key. `alg` is the only field of a
+/// key that reaches those types. Dropped keys could never match anyway, since a token's key must
+/// declare its exact algorithm. Remove this guard once a jose release with the fix is pinned.
+fn parse_jwks(body: &[u8]) -> Result<Jwks, otel_wasi::Error> {
+    #[derive(Deserialize)]
+    struct RawJwks {
+        keys: Vec<serde_json::Value>,
+    }
+
+    let raw: RawJwks =
+        serde_json::from_slice(body).error_with_slug("auth-callout-jwks-response-parse-failed")?;
+    let declared = raw.keys.len();
+    let keys = raw
+        .keys
+        .into_iter()
+        .filter(|key| {
+            key.get("alg")
+                .and_then(serde_json::Value::as_str)
+                .is_some_and(|algorithm| SUPPORTED_ALGORITHMS.contains(&algorithm))
+        })
+        .map(serde_json::from_value)
+        .collect::<Result<Vec<jose::Jwk>, _>>()
+        .error_with_slug("auth-callout-jwks-response-parse-failed")?;
+    main_attribute!("auth.jwks.keys.dropped" = (declared - keys.len()) as i64);
+    Ok(Jwks { keys })
 }
 
 fn find_matching_jwk(

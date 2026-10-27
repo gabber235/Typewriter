@@ -18,7 +18,7 @@ use jose::{
     policy::{Checkable, StandardPolicy},
 };
 
-use super::{Jwks, SystemTime, ValidationClock, validate_jwt_with};
+use super::{Jwks, SystemTime, ValidationClock, parse_jwks, validate_jwt_with};
 use crate::config::{IssuerConfig, parse_issuer_configs};
 
 const ISSUER: &str = "https://issuer.example/";
@@ -283,4 +283,49 @@ fn a_token_embedding_a_key_yields_no_identity() {
         "jwk": { "kty": "OKP", "crv": "Ed25519", "alg": "EdE3A", "x": "AA" }
     });
     check(&reheadered(&seeds.valid, &header), &seeds, &issuers());
+}
+
+/// A key nobody can parse into an algorithm: jose 0.0.2 recursed on its `alg` until the stack
+/// overflowed.
+const UNKNOWN_ALGORITHM_KEY: &str = r#"{
+    "kty": "OKP", "kid": "fixture-key", "crv": "Ed25519", "alg": "EdE3A",
+    "x": "etkJX1EBhliHzBaimUQb0h2JhJKQ3G0beRVR3ssiedY"
+}"#;
+
+fn jwks_document(keys: &[&str]) -> Vec<u8> {
+    let keys: Vec<serde_json::Value> = keys
+        .iter()
+        .map(|key| serde_json::from_str(key).expect("the fixture key is JSON"))
+        .collect();
+    serde_json::json!({ "keys": keys }).to_string().into_bytes()
+}
+
+fn identity_with(document: &[u8]) -> bool {
+    let _main_span = otel_wasi::enter_main_span(tracing::info_span!("jwks_guard"));
+    let seeds = seeds();
+    validate_jwt_with(&seeds.valid, &issuers(), &FixedClock, |_| {
+        parse_jwks(document)
+    })
+    .expect("the JWKS parses")
+    .is_some()
+}
+
+#[test]
+fn a_jwks_with_one_bad_key_still_verifies_tokens_signed_by_its_good_key() {
+    assert!(identity_with(&jwks_document(&[
+        UNKNOWN_ALGORITHM_KEY,
+        PUBLIC_KEY
+    ])));
+}
+
+#[test]
+fn a_jwks_with_only_bad_keys_yields_no_identity() {
+    let without_algorithm = r#"{
+        "kty": "OKP", "kid": "fixture-key", "crv": "Ed25519",
+        "x": "etkJX1EBhliHzBaimUQb0h2JhJKQ3G0beRVR3ssiedY"
+    }"#;
+    assert!(!identity_with(&jwks_document(&[
+        UNKNOWN_ALGORITHM_KEY,
+        without_algorithm
+    ])));
 }
