@@ -124,7 +124,8 @@ fn publish(ctx: &Context, registry: &Registry) -> Result<()> {
             cluster.component_tag()
         );
         // The wash fork reads registry credentials from flags only; the long form keeps the
-        // password out of errors (`crate::display`).
+        // password out of errors (`crate::display`), and `=` keeps a password that starts with
+        // `-` from parsing as a flag.
         ctx.tool(
             ".",
             "wash",
@@ -133,8 +134,7 @@ fn publish(ctx: &Context, registry: &Registry) -> Result<()> {
                 "push",
                 "-u",
                 registry.user,
-                "--password",
-                &registry.password,
+                &format!("--password={}", registry.password),
                 &reference,
             ],
         )
