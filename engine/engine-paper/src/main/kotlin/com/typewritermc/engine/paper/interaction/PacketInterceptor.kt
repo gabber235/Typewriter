@@ -23,14 +23,14 @@ class PacketInterceptor : PacketListenerAbstract() {
 
     override fun onPacketReceive(event: PacketReceiveEvent?) {
         if (event == null || event.connectionState != ConnectionState.PLAY) return
-        val player = event.getPlayer<Player>()
+        val player = event.getPlayer<Player>() ?: return
         val interceptor = blockers[player.uniqueId] ?: return
         interceptor.trigger(event)
     }
 
     override fun onPacketSend(event: PacketSendEvent?) {
         if (event == null || event.connectionState != ConnectionState.PLAY) return
-        val player = event.getPlayer<Player>()
+        val player = event.getPlayer<Player>() ?: return
         val interceptor = blockers[player.uniqueId] ?: return
         interceptor.trigger(event)
     }

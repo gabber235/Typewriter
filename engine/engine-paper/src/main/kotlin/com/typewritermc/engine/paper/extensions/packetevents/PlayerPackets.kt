@@ -1,6 +1,10 @@
 package com.typewritermc.engine.paper.extensions.packetevents
 
 import com.github.retrooper.packetevents.PacketEvents
+import com.github.retrooper.packetevents.manager.server.ServerVersion
+import com.github.retrooper.packetevents.protocol.component.builtin.item.ItemSwingAnimation
+import com.github.retrooper.packetevents.protocol.component.builtin.item.ItemSwingAnimation.Type
+import com.github.retrooper.packetevents.protocol.player.InteractionHand
 import com.github.retrooper.packetevents.util.Vector3d
 import com.github.retrooper.packetevents.util.Vector3i
 import com.github.retrooper.packetevents.wrapper.PacketWrapper
@@ -8,7 +12,9 @@ import com.github.retrooper.packetevents.wrapper.play.server.WrapperPlayServerCa
 import com.github.retrooper.packetevents.wrapper.play.server.WrapperPlayServerEntityAnimation
 import com.github.retrooper.packetevents.wrapper.play.server.WrapperPlayServerEntityAnimation.EntityAnimationType.SWING_MAIN_ARM
 import com.github.retrooper.packetevents.wrapper.play.server.WrapperPlayServerEntityAnimation.EntityAnimationType.SWING_OFF_HAND
+import com.github.retrooper.packetevents.wrapper.play.server.WrapperPlayServerSwingAnimation
 import com.typewritermc.engine.paper.logger
+import com.typewritermc.engine.paper.utils.serverVersion
 import io.github.retrooper.packetevents.util.SpigotConversionUtil
 import me.tofaa.entitylib.meta.EntityMeta
 import me.tofaa.entitylib.wrapper.WrapperEntity
@@ -38,6 +44,17 @@ enum class ArmSwing {
 }
 
 fun Player.swingArm(entityId: Int, armSwing: ArmSwing) {
+    if (serverVersion.isNewerThanOrEquals(ServerVersion.V_26_3)) {
+        if (armSwing.swingLeft) {
+            WrapperPlayServerSwingAnimation(entityId, InteractionHand.OFF_HAND, ItemSwingAnimation(Type.WHACK, 6))
+        }
+        if (armSwing.swingRight) {
+            WrapperPlayServerSwingAnimation(entityId, InteractionHand.MAIN_HAND, ItemSwingAnimation(Type.WHACK, 6))
+        }
+
+        return
+    }
+
     if (armSwing.swingLeft) {
         WrapperPlayServerEntityAnimation(entityId, SWING_OFF_HAND).sendPacketTo(this)
     }

@@ -1,5 +1,6 @@
 import com.github.jengelman.gradle.plugins.shadow.tasks.ShadowJar
 import io.papermc.hangarpublishplugin.model.Platforms
+import jdk.jfr.internal.JVM.exclude
 import xyz.jpenilla.resourcefactory.paper.PaperPluginYaml
 
 plugins {
@@ -74,8 +75,8 @@ dependencies {
     compileOnlyApi("net.kyori:adventure-text-serializer-legacy:$adventureVersion")
     compileOnlyApi("net.kyori:adventure-text-serializer-gson:$adventureVersion")
 
-    compileOnlyApi("com.github.retrooper:packetevents-api:2.13.0")
-    compileOnlyApi("com.github.retrooper:packetevents-spigot:2.13.0")
+    compileOnlyApi("com.github.retrooper:packetevents-api:2.14.0")
+    compileOnlyApi("com.github.retrooper:packetevents-spigot:2.14.0")
 
     compileOnly("me.clip:placeholderapi:2.12.2")
     compileOnlyApi("org.geysermc.geyser:api:2.9.5-SNAPSHOT")
