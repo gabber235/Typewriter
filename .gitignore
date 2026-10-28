@@ -161,5 +161,6 @@ PLAN.md
 /panel/doc
 plans/
 /docs/*
+!/docs/vision/
 backend/.artifact_keeper_password
 AGENTS.local.md
