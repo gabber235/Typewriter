@@ -1,0 +1,80 @@
+<?xml version="1.0" ?>
+<SmellBaseline>
+  <ManuallySuppressedIssues/>
+  <CurrentIssues>
+    <ID>CyclomaticComplexMethod:CanonicalReadModel.kt:CanonicalReadModelRegistry.Companion$fun primitiveJson: String</ID>
+    <ID>CyclomaticComplexMethod:CatalogPortableTypes.kt:CatalogPortableTypes$private fun fitsShape: Boolean</ID>
+    <ID>CyclomaticComplexMethod:CatalogPortableTypes.kt:private fun fitsScalar: Boolean</ID>
+    <ID>CyclomaticComplexMethod:CatalogRecommendations.kt:internal fun typeRecommendations: List&lt;TypeRecommendation&gt;</ID>
+    <ID>CyclomaticComplexMethod:ConfigurationAssembly.kt:private fun RepresentationKind.representativeUse: TypeUse?</ID>
+    <ID>CyclomaticComplexMethod:CorePlacesTest.kt:private fun PresentationNode.paintNodes: List&lt;PresentationNode&gt;</ID>
+    <ID>CyclomaticComplexMethod:DefaultConfigurationCollectionScope.kt:internal fun helperMessage: String</ID>
+    <ID>CyclomaticComplexMethod:DefaultConfigurationCollectionScope.kt:private fun ConfigurationRuleHelper.predicate: Expr&lt;Boolean, MissingPolicy&gt;</ID>
+    <ID>CyclomaticComplexMethod:DefaultConfigurationCollectionScope.kt:private fun constant: Expr&lt;Any?, Handled&gt;</ID>
+    <ID>CyclomaticComplexMethod:DefaultInitializationRuntime.kt:DefaultInitializationRuntime$fun stepNow: PrepareValueResult</ID>
+    <ID>CyclomaticComplexMethod:DefaultInitializationRuntime.kt:DefaultInitializationRuntime$private fun admissibleInput: Boolean</ID>
+    <ID>CyclomaticComplexMethod:DefaultInitializationRuntime.kt:DefaultInitializationRuntime$private fun namedDefault: DataValue</ID>
+    <ID>CyclomaticComplexMethod:DefaultInitializationRuntime.kt:DefaultInitializationRuntime$private fun prepareRecordFields: RecordPreparation</ID>
+    <ID>CyclomaticComplexMethod:DefaultInitializationRuntime.kt:DefaultInitializationRuntime$private fun resumeValue: DataValue</ID>
+    <ID>CyclomaticComplexMethod:DefaultInitializationRuntime.kt:DefaultInitializationRuntime$private fun validateContinuation: InitializationDiagnostic?</ID>
+    <ID>CyclomaticComplexMethod:DefaultInitializationRuntime.kt:DefaultInitializationRuntime$private fun walkPrepared</ID>
+    <ID>CyclomaticComplexMethod:DefaultPortableRuleCompiler.kt:DefaultPredicateReasoner$private fun comparison: List&lt;Bound&gt;</ID>
+    <ID>CyclomaticComplexMethod:DefaultPortableRuleCompiler.kt:DefaultPredicateReasoner$private fun substitute: ExpressionNode</ID>
+    <ID>CyclomaticComplexMethod:DraftBinding.kt:ProjectedMapDraft$context(reads: AuthoredReads) override fun lookup: Availability&lt;V&gt;</ID>
+    <ID>CyclomaticComplexMethod:EditValidation.kt:fun EditIntent.requireValid: EditIntent</ID>
+    <ID>CyclomaticComplexMethod:ExpressionEvaluator.kt:EvaluatorState$context(reads: AuthoredReads) fun evaluate: Availability&lt;DataValue&gt;</ID>
+    <ID>CyclomaticComplexMethod:ExpressionEvaluator.kt:EvaluatorState$context(reads: AuthoredReads) private fun call: Availability&lt;DataValue&gt;</ID>
+    <ID>CyclomaticComplexMethod:ExpressionEvaluator.kt:private fun DataValue.unfilledPaths: List&lt;ValuePath&gt;</ID>
+    <ID>CyclomaticComplexMethod:GeneratedProviderLoader.kt:GeneratedProviderLoader$context(owners: DeploymentRuntimeOwners) private fun assemble: LoadedGeneratedProviders</ID>
+    <ID>CyclomaticComplexMethod:GeneratedProviderLoader.kt:GeneratedProviderLoader$private fun requireProviderType</ID>
+    <ID>CyclomaticComplexMethod:NativeBindingRegistry.kt:ScalarNativeBinding$override fun decode: Any?</ID>
+    <ID>CyclomaticComplexMethod:NativeBindingRegistry.kt:ScalarNativeBinding$override fun encode: DataValue</ID>
+    <ID>CyclomaticComplexMethod:PortableExpressionChecker.kt:PortableExpressionChecker$private fun validateStructure</ID>
+    <ID>CyclomaticComplexMethod:PortableExpressionChecker.kt:PortableExpressionChecker.Invocation$private fun compatible: Boolean</ID>
+    <ID>CyclomaticComplexMethod:PortableExpressionChecker.kt:PortableExpressionChecker.Invocation$private fun infer: ExpressionType</ID>
+    <ID>CyclomaticComplexMethod:PortableExpressionChecker.kt:PortableExpressionChecker.Invocation$private fun inferCall: ExpressionType</ID>
+    <ID>CyclomaticComplexMethod:PortableExpressionChecker.kt:PortableExpressionChecker.Invocation$private fun join: ExpressionType</ID>
+    <ID>CyclomaticComplexMethod:PortableExpressionChecker.kt:PortableExpressionChecker.Invocation$private fun literal: ExpressionType</ID>
+    <ID>CyclomaticComplexMethod:PortableExpressionChecker.kt:PortableExpressionChecker.Invocation$private fun project: ExpressionType</ID>
+    <ID>CyclomaticComplexMethod:PortableExpressionChecker.kt:PortableExpressionChecker.Invocation.TypeVariables$fun resolve: ExpressionType</ID>
+    <ID>CyclomaticComplexMethod:PortableExpressionChecker.kt:PortableExpressionChecker.Invocation.TypeVariables$fun unify</ID>
+    <ID>CyclomaticComplexMethod:PortableExpressionChecker.kt:PortableExpressionChecker.Invocation.TypeVariables$private fun width: Int</ID>
+    <ID>CyclomaticComplexMethod:PortableExpressionFixtureTest.kt:private fun JsonObject.compactValue: DataValue</ID>
+    <ID>CyclomaticComplexMethod:PortableNumberKernel.kt:PortableNumberKernel$override fun convert: PortableNumber</ID>
+    <ID>CyclomaticComplexMethod:PortableNumberKernel.kt:PortableNumberKernel$override fun power: PortableNumber</ID>
+    <ID>CyclomaticComplexMethod:PortableRegex.kt:internal fun String.normalizePortableRegex: PortableRegexNormalization</ID>
+    <ID>CyclomaticComplexMethod:PortableRegex.kt:private fun normalizeCharacterClass: CharacterClassNormalization</ID>
+    <ID>CyclomaticComplexMethod:PortableRegex.kt:private fun normalizeEscape: EscapeNormalization</ID>
+    <ID>CyclomaticComplexMethod:PortableRegexMatcher.kt:PortableRegexMatcher$private fun closure: List&lt;MachineThread&gt;</ID>
+    <ID>CyclomaticComplexMethod:PortableRegexMatcher.kt:PortableRegexParser$private fun escapedClassAtom: ClassAtom</ID>
+    <ID>CyclomaticComplexMethod:PortableRegexMatcher.kt:PortableRegexReplacement.Companion$fun parse: PortableRegexReplacement</ID>
+    <ID>CyclomaticComplexMethod:PortableTextKernel.kt:PortableTextKernel$override fun parseDuration: Duration</ID>
+    <ID>CyclomaticComplexMethod:PortableValueKernel.kt:internal fun portableCompare: Int</ID>
+    <ID>CyclomaticComplexMethod:PresentationBuildBinding.kt:fun CheckedType.presentationTemplate: CheckedPresentationTemplate</ID>
+    <ID>CyclomaticComplexMethod:PresentationMaterialAssembly.kt:internal fun collectPresentationMaterials: PresentationMaterialCollection</ID>
+    <ID>CyclomaticComplexMethod:PresentationMaterialAssembly.kt:private fun RepresentationTemplate.presentationKind: RepresentationKind</ID>
+    <ID>CyclomaticComplexMethod:PresentationMaterialAssembly.kt:private fun TypeTemplate.matchesTemplate: Boolean</ID>
+    <ID>CyclomaticComplexMethod:PresentationRegistry.kt:private fun TypeTemplate.matches: Boolean</ID>
+    <ID>CyclomaticComplexMethod:PresentationRegistry.kt:private fun TypeTemplate.subsumes: Boolean</ID>
+    <ID>CyclomaticComplexMethod:ResourceDisplayAssembly.kt:internal fun collectResourceDisplays: ResourceDisplayCollection</ID>
+    <ID>CyclomaticComplexMethod:RuntimeConfigurationScopes.kt:internal fun &lt;S : Any&gt; RuntimeConfigurationBinding.createScope: S</ID>
+    <ID>CyclomaticComplexMethod:RuntimeConfigurationScopes.kt:internal fun configurationExpressions: ExpressionFactory&lt;*&gt;</ID>
+    <ID>CyclomaticComplexMethod:RuntimePresentationContent.kt:private fun String.wireStatusTone: skirout.editor.v1.presentation.StatusTone</ID>
+    <ID>CyclomaticComplexMethod:RuntimePresentationContent.kt:private fun portableLiteral: DataValue</ID>
+    <ID>CyclomaticComplexMethod:TypeContributionAssembler.kt:fun CatalogContributions.assemble: CatalogAssembly</ID>
+    <ID>NestedBlockDepth:ExpressionEvaluator.kt:EvaluatorState$context(reads: AuthoredReads) private fun call: Availability&lt;DataValue&gt;</ID>
+    <ID>NestedBlockDepth:PresentationMaterialAssembly.kt:internal fun collectPresentationMaterials: PresentationMaterialCollection</ID>
+    <ID>SwallowedException:ExpressionEvaluator.kt:invalid: IllegalArgumentException</ID>
+    <ID>SwallowedException:GeneratedConstructorDefaults.kt:GeneratedNativeConstructionPlan$failure: Exception</ID>
+    <ID>SwallowedException:PortableRegexKernel.kt:PortableRegexKernel$failure: PortableRegexCompileFailure</ID>
+    <ID>TooGenericExceptionCaught:ConfigurationAssembly.kt:cause: Exception</ID>
+    <ID>TooGenericExceptionCaught:GeneratedConstructorDefaults.kt:GeneratedNativeConstructionPlan$failure: Exception</ID>
+    <ID>TooGenericExceptionCaught:GeneratedProviderLoader.kt:GeneratedProviderLoader$failure: Throwable</ID>
+    <ID>TooGenericExceptionCaught:GeneratedProviderLoader.kt:RetainedOwnedProviderRegistry$failure: Throwable</ID>
+    <ID>TooGenericExceptionCaught:NativeBindingRegistry.kt:FactoryNativeBindingRegistry$failure: Throwable</ID>
+    <ID>TooGenericExceptionCaught:OperationCatalog.kt:failure: Exception</ID>
+    <ID>TooGenericExceptionCaught:OperationDeclaration.kt:failure: Exception</ID>
+    <ID>TooGenericExceptionCaught:PresentationMaterialAssembly.kt:cause: Exception</ID>
+    <ID>TooGenericExceptionCaught:ResourceDisplayAssembly.kt:cause: Exception</ID>
+  </CurrentIssues>
+</SmellBaseline>

@@ -4,6 +4,7 @@ members = [
     "access/auth-callout",
     "access/auth-sentinel",
     "access/auth-typewriter-permissions",
+    "database/schema",
     "organization/organization-members",
     "organization/organization-roles",
     "organization/user-organization",
@@ -12,6 +13,7 @@ members = [
     "testing/component-test-echo",
     "testing/component-test-messaging",
     "testing/component-test-responder",
+    "testing/nats-broker",
     "wasmcloud-utils",
     "wasmcloud-utils-macros",
 ]
@@ -54,6 +56,18 @@ quote = "1"
 syn = { version = "2", features = ["full"] }
 
 surrealdb-types = "3.2.4"
+
+# Lints for the ways agent written code goes wrong; every member opts in with `[lints] workspace
+# = true`, and the backend lint step denies warnings.
+[workspace.lints.clippy]
+let_underscore_must_use = "deny"
+unwrap_used = "warn" # clippy.toml: allow-unwrap-in-tests = true
+cognitive_complexity = "warn"
+too_many_lines = "warn"
+fn_params_excessive_bools = "deny"
+
+[workspace.lints.rust]
+dead_code = "deny"
 
 [workspace.metadata.dylint]
 libraries = [

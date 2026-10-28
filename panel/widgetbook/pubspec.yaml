@@ -18,6 +18,9 @@ dependencies:
   faker:
 
 dependency_overrides:
+  # widgetbook_generator 3.24.0 caps analyzer below 14, which Dart 3.14 needs for build_runner to
+  # write valid code. Remove this override once widgetbook_generator accepts analyzer 14.
+  analyzer: ^14.0.0
   nats_core:
     git:
       url: https://github.com/gabber235/nats.dart.git

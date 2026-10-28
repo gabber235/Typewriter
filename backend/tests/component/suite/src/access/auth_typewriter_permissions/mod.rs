@@ -20,12 +20,6 @@ use wasmcloud_utils::{
         package = "auth-typewriter-permissions",
         target = "auth_typewriter_permissions"
     ),
-    affected_paths(
-        "backend/access/auth-typewriter-permissions/",
-        "backend/database/schema/organization/",
-        "backend/database/schema/service/",
-        "backend/database/schema/user.surql"
-    )
 )]
 pub struct AuthTypewriterPermissions;
 

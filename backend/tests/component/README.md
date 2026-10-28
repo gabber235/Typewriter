@@ -4,38 +4,21 @@ This workspace executes compiled `wasm32-wasip2` components through the producti
 
 ## Commands
 
-Run the suite through Dagger from the repository root. This is the supported development and CI interface:
+Run the suite from the devenv shell at the repository root. This is the supported development and CI interface:
 
 ```console
-dagger call backend-test stdout
-dagger call backend-test-fixture --fixture service-identity stdout
-dagger call backend-test-case --fixture synthetic-http --filter case_000 stdout
-dagger call backend-test-shard --index 0 --count 2 stdout
-dagger call backend-test-affected \
-  --repository https://github.com/Seamlezz/Typewriter.git \
-  --base <commit> stdout
+cargo xtask check components
+cargo xtask components service-identity
+cargo xtask components synthetic-http case_000 --jobs 1
+cargo xtask components --list
+cargo xtask components service-identity engine_identity_persists_credentials_and_roles --jobs 1 --live
 ```
 
-Dagger provides the pinned Rust environment, Wasm target, dependency caches, artifact caches, and concurrency settings. Do not invoke `cargo xtask component-test` directly for normal development or CI.
+`cargo xtask check components` runs every fixture and writes the results as a `TestRun` (`skir-src/harness/v1/test_run.skir`) to `.xtask/results/components.json`. `cargo xtask components` runs one fixture, or the cases of one fixture matching a filter; `--results <path>` writes its `TestRun`. Either way a failed case is rerun once: passing on the rerun reports it as flaky without failing the run, and cases listed in `harness/quarantine.toml` are reported without gating. devenv provides the pinned Rust toolchain, the Wasm target and `nats-server`.
 
-The internal xtask asks Cargo to build selected components, reads exact artifacts from Cargo JSON messages, hashes them, writes an immutable run manifest, then starts one library test process. Direct `cargo test` intentionally fails without that manifest because it cannot guarantee fresh Wasm artifacts.
+The runner reads the fixture catalog from the suite's `catalog` binary, checks that every deployable backend component has a fixture, asks Cargo to build the selected components, reads exact artifacts from Cargo JSON messages, hashes them, writes an immutable run manifest, then starts one library test process. Direct `cargo test` intentionally fails without that manifest because it cannot guarantee fresh Wasm artifacts.
 
-## Dagger and CI
-
-The dedicated Dagger functions are intentionally not annotated with `+check`, so the component suite is not part of the general `dagger check` command.
-
-The GitHub workflow only selects the appropriate Dagger function. Other CI systems can invoke the same functions without reproducing Rust setup, caching, artifact selection, or test commands.
-
-## Internal runner diagnostics
-
-The xtask is an implementation detail used by the Dagger functions. Framework maintainers may invoke it directly when diagnosing catalog discovery or runner behavior:
-
-```console
-cargo xtask component-test --list
-cargo xtask component-test service-identity engine_identity_persists_credentials_and_roles --jobs 1 --live
-```
-
-`--live` streams redacted fixture diagnostics. Passing tests otherwise remain quiet. Return to the equivalent Dagger command when verifying a repository change.
+`--live` streams redacted fixture diagnostics. Passing tests otherwise remain quiet.
 
 ## Writing a fixture
 
@@ -45,7 +28,6 @@ Fixtures live in `suite/src` and declare build identity once:
 #[component_fixture(
     id = "example",
     primary(package = "example-component", target = "example_component"),
-    affected_paths("backend/example/")
 )]
 pub struct Example;
 
@@ -125,7 +107,7 @@ builder
     })
 ```
 
-Each fixture starts an isolated NATS server and uses the production `wasmcloud:nats` plugin. Dagger supplies the pinned server binary. For runner diagnostics outside Dagger, install `nats-server` or set `NATS_SERVER_BIN`.
+The test process starts one operator mode NATS server (`backend/testing/nats-broker`), and each fixture gets its own account on it, with JetStream, signing in with a user JWT. Accounts isolate subjects, inboxes and streams like separate servers, so fixtures stay independent while paying for one account instead of a server start. Each fixture deletes its account in teardown. The fixture uses the production `wasmcloud:nats` plugin. devenv supplies the pinned server binary through `NATS_SERVER_BIN`.
 
 Tests inject through `context.messaging()?`. Guest publish and request traffic is verified through `context.messaging_mock()?`, including calls between real components. Injected input never satisfies outbound expectations. `wait_idle` fences broker subscriptions and waits for queued deliveries, running handlers, and observed output. It does not infer completion from a socket flush.
 
@@ -155,7 +137,7 @@ Sensitive environment values and authorization/cookie headers are redacted befor
 
 ## Parallelism
 
-The framework admits a conservative number of isolated fixtures based on available CPUs. Dagger caps normal suite and fixture execution at two jobs and exact case execution at one job.
+The framework admits as many fixtures at once as the machine has available parallelism. Pass `--jobs` to cap it.
 
 The supported runner is ordinary Cargo libtest. Nextest runs each test in a separate process and therefore cannot share the engine or admission controller; it is not optimized or supported initially.
 
@@ -163,11 +145,11 @@ The supported runner is ordinary Cargo libtest. Nextest runs each test in a sepa
 
 ### Missing run manifest
 
-Run the matching Dagger fixture or case command. Direct Cargo or IDE execution is not a freshness-safe path.
+Run the matching `cargo xtask components` fixture or case command. Direct Cargo or IDE execution is not a freshness-safe path.
 
 ### Artifact hash mismatch
 
-Rerun the matching Dagger command. Never edit files under `backend/target/wasm32-wasip2` manually.
+Rerun the matching `cargo xtask components` command. Never edit files under `backend/target/wasm32-wasip2` manually.
 
 ### Workload did not reach Running
 
@@ -179,16 +161,16 @@ Register the authority with `outgoing_http::<Marker>` or add an explicit allowed
 
 ### Test appears stuck
 
-Run one exact case with `dagger call backend-test-case`. Lifecycle phases have bounded timeouts and the report identifies drain or stop failures.
+Run one exact case with `cargo xtask components <fixture> <case> --jobs 1`. Lifecycle phases have bounded timeouts and the report identifies drain or stop failures.
 
 ## Architecture
 
-- `component-test-model`: descriptors, run manifest, catalog, affected selection.
+- `component-test-model`: descriptors, run manifest, catalog.
 - `component-test-core`: runtime lifecycle, builders, mocks, diagnostics.
 - `component-test-macros`: fixture and test attributes.
 - `component-test`: generic public facade.
-- `typewriter-component-test`: SurrealDB and Skir extensions.
-- `suite`: central fixture catalog and examples.
-- `xtask`: artifact builds, selection, manifests, sharding, and execution.
+- `typewriter-component-test`: SurrealDB (schema presets from `backend/database/schema`) and Skir extensions.
+- `suite`: central fixture catalog and examples, plus the `catalog` binary the runner reads it from.
+- `xtask/src/components.rs` (root harness): artifact builds, selection, manifests, execution and results.
 
-The framework validates embedded runtime behavior only. OCI packaging, container images, Kubernetes, operator reconciliation, and ingress require separate coverage. Core NATS transport and membership persistence run against a real isolated broker.
+The framework validates embedded runtime behavior only. OCI packaging, container images, Kubernetes, operator reconciliation, and ingress require separate coverage. Core NATS transport and membership persistence run against a real broker, isolated per fixture by account.

@@ -13,3 +13,6 @@ wasmcloud-utils.workspace = true
 wit-bindgen.workspace = true
 otel-wasi.workspace = true
 tracing.workspace = true
+
+[lints]
+workspace = true

@@ -50,7 +50,6 @@ struct FixtureArgs {
     id: LitStr,
     primary: ComponentArg,
     dependencies: Vec<ComponentArg>,
-    affected_paths: Vec<LitStr>,
 }
 
 struct ComponentArg {
@@ -63,7 +62,6 @@ impl Parse for FixtureArgs {
         let mut id = None;
         let mut primary = None;
         let mut dependencies = Vec::new();
-        let mut affected_paths = Vec::new();
 
         while !input.is_empty() {
             let key: Ident = input.parse()?;
@@ -82,12 +80,6 @@ impl Parse for FixtureArgs {
                     syn::parenthesized!(content in input);
                     dependencies.push(content.parse()?);
                 }
-                "affected_paths" => {
-                    let content;
-                    syn::parenthesized!(content in input);
-                    affected_paths
-                        .extend(Punctuated::<LitStr, Token![,]>::parse_terminated(&content)?);
-                }
                 _ => return Err(syn::Error::new(key.span(), "unknown fixture option")),
             }
             if input.peek(Token![,]) {
@@ -102,7 +94,6 @@ impl Parse for FixtureArgs {
             primary: primary
                 .ok_or_else(|| syn::Error::new(Span::call_site(), "missing `primary(...)`"))?,
             dependencies,
-            affected_paths,
         })
     }
 }
@@ -156,7 +147,6 @@ fn expand_fixture(args: FixtureArgs, item: ItemStruct) -> syn::Result<proc_macro
         let target = &dependency.target;
         quote!(::component_test::ComponentBuild::dependency(#package, #target))
     });
-    let affected_paths = &args.affected_paths;
 
     Ok(quote! {
         #item
@@ -170,7 +160,6 @@ fn expand_fixture(args: FixtureArgs, item: ItemStruct) -> syn::Result<proc_macro
                         #primary_target,
                     ),
                     dependencies: &[#(#dependencies),*],
-                    affected_paths: &[#(#affected_paths),*],
                 };
         }
 

@@ -1,14 +1,12 @@
-//! One real NATS process per fixture. The driver owns broker and observer lifetime.
+//! One account per fixture on the test process's shared NATS broker. The driver owns the account
+//! and observer lifetime.
 
-use std::{process::Stdio, sync::Arc, time::Duration};
+use std::{sync::Arc, time::Duration};
 
 use anyhow::{Context, Result, bail};
 use futures_util::StreamExt;
-use tokio::{
-    io::{AsyncBufReadExt, BufReader},
-    process::{Child, Command},
-    sync::{Mutex, mpsc, oneshot},
-};
+use nats_broker::{Account, Broker, Credentials};
+use tokio::sync::{Mutex, mpsc, oneshot};
 use wash_runtime::plugin::wasmcloud_nats::WasmcloudNats;
 
 use crate::MessagingMock;
@@ -33,25 +31,15 @@ impl ResponderRequest {
     }
 }
 
-struct Broker {
-    _storage: tempfile::TempDir,
-    child: Mutex<Child>,
-    stderr: tokio::task::JoinHandle<()>,
-}
-
-impl Drop for Broker {
-    fn drop(&mut self) {
-        self.stderr.abort();
-    }
-}
-
 #[derive(Clone)]
 pub(crate) struct NatsDriver {
-    pub endpoint: String,
+    /// The case's own account on the shared broker; deleted in [`NatsDriver::close`].
+    pub account: Account,
+    /// What the host's NATS plugin signs in with.
+    pub credentials: Credentials,
     pub plugin: Arc<WasmcloudNats>,
     client: async_nats::Client,
     workload_id: String,
-    broker: Arc<Broker>,
     observer: Arc<Mutex<Option<Observer>>>,
 }
 
@@ -68,48 +56,10 @@ impl Drop for Observer {
 
 impl NatsDriver {
     pub async fn start(workload_id: &str) -> Result<Self> {
-        let binary = std::env::var_os("NATS_SERVER_BIN").unwrap_or_else(|| "nats-server".into());
-        let storage = tempfile::tempdir()?;
-        let mut child = Command::new(binary)
-            .args([
-                "--addr",
-                "127.0.0.1",
-                "--port",
-                "-1",
-                "--jetstream",
-                "--store_dir",
-            ])
-            .arg(storage.path())
-            .stdout(Stdio::null())
-            .stderr(Stdio::piped())
-            .kill_on_drop(true)
-            .spawn()
-            .context("starting isolated NATS server; install nats-server or set NATS_SERVER_BIN")?;
-        let mut lines =
-            BufReader::new(child.stderr.take().context("NATS stderr unavailable")?).lines();
-        let endpoint = tokio::time::timeout(Duration::from_secs(10), async {
-            let mut endpoint = None;
-            while let Some(line) = lines.next_line().await? {
-                if let Some((_, address)) = line.split_once("Listening for client connections on ")
-                {
-                    endpoint = Some(format!("nats://{}", address.trim()));
-                }
-                if line.contains("Server is ready") {
-                    return endpoint.context("NATS announced readiness without a client address");
-                }
-            }
-            bail!("NATS exited before readiness")
-        })
-        .await
-        .context("NATS startup timed out")??;
-        let stderr =
-            tokio::spawn(async move { while let Ok(Some(_)) = lines.next_line().await {} });
-        let broker = Arc::new(Broker {
-            _storage: storage,
-            child: Mutex::new(child),
-            stderr,
-        });
-        let client = async_nats::connect(&endpoint)
+        let account = Broker::shared().await?.account().await?;
+        let credentials = account.admin()?;
+        let client = credentials
+            .connect(account.endpoint())
             .await
             .context("connecting fixture client")?;
         async_nats::jetstream::new(client.clone())
@@ -127,9 +77,9 @@ impl NatsDriver {
             })
             .await?;
         Ok(Self {
-            endpoint,
+            account,
+            credentials,
             client,
-            broker,
             workload_id: workload_id.into(),
             plugin: Arc::new(WasmcloudNats::new()),
             observer: Arc::new(Mutex::new(None)),
@@ -218,8 +168,7 @@ impl NatsDriver {
 
     pub async fn close(&self) -> Result<()> {
         self.observer.lock().await.take();
-        self.broker.child.lock().await.kill().await?;
-        Ok(())
+        Broker::shared().await?.delete(&self.account).await
     }
 }
 

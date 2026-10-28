@@ -71,6 +71,56 @@ pub async fn handle(request: Request) -> Result<Response, otel_wasi::Error<Error
         return skir_error(415);
     }
 
+    let Some(bytes) = read_bounded_body(request).await? else {
+        otel_wasi::main_attribute!(
+            "http.response.status_code" = 413i64,
+            "identity.outcome" = "request_body_too_large",
+        );
+        return skir_error(413);
+    };
+
+    let request = match IssueServiceIdentityRequest::serializer().from_bytes(
+        &bytes,
+        wasmcloud_utils::skir_client::UnrecognizedValues::Drop,
+    ) {
+        Ok(request) => {
+            otel_wasi::main_attribute!("identity.request.decode.success" = true);
+            request
+        }
+        Err(_) => {
+            otel_wasi::main_attribute!(
+                "identity.request.decode.success" = false,
+                "http.response.status_code" = 400i64,
+                "identity.outcome" = "malformed_request",
+            );
+            return skir_error(400);
+        }
+    };
+
+    let result = issue(request).await;
+
+    let status = result.http_status();
+    otel_wasi::main_attribute!(
+        "http.response.status_code" = status as i64,
+        "identity.response.variant" = result.variant_slug().to_string(),
+        "identity.outcome" = result.variant_slug().to_string(),
+    );
+    response(
+        status,
+        IssueServiceIdentityResponse::serializer().to_bytes(&result),
+        true,
+        None,
+    )
+    .error_with_typed_slug("service-identity-response-build-failed")
+}
+
+/// Consumes the request body, reading at most `MAX_BODY` bytes.
+///
+/// Returns `None` after rejecting an oversized body to the host, so the caller can answer with
+/// 413 without waiting for the rest of the stream.
+async fn read_bounded_body(
+    request: Request,
+) -> Result<Option<Vec<u8>>, otel_wasi::Error<ErrorCode>> {
     let (done_tx, done_rx) = bindings::wit_future::new(|| todo!());
     let (mut body, trailers) = Request::consume_body(request, done_rx);
     let mut bytes = Vec::new();
@@ -94,11 +144,7 @@ pub async fn handle(request: Request) -> Result<Response, otel_wasi::Error<Error
             .map_err(|_| ErrorCode::InternalError(None))
             .error_with_typed_slug("service-identity-request-body-result-failed")?;
         drop(trailers);
-        otel_wasi::main_attribute!(
-            "http.response.status_code" = 413i64,
-            "identity.outcome" = "request_body_too_large",
-        );
-        return skir_error(413);
+        return Ok(None);
     }
 
     drop(body);
@@ -110,26 +156,12 @@ pub async fn handle(request: Request) -> Result<Response, otel_wasi::Error<Error
     trailers
         .await
         .error_with_typed_slug("service-identity-request-trailers-failed")?;
+    Ok(Some(bytes))
+}
 
-    let request = match IssueServiceIdentityRequest::serializer().from_bytes(
-        &bytes,
-        wasmcloud_utils::skir_client::UnrecognizedValues::Drop,
-    ) {
-        Ok(request) => {
-            otel_wasi::main_attribute!("identity.request.decode.success" = true);
-            request
-        }
-        Err(_) => {
-            otel_wasi::main_attribute!(
-                "identity.request.decode.success" = false,
-                "http.response.status_code" = 400i64,
-                "identity.outcome" = "malformed_request",
-            );
-            return skir_error(400);
-        }
-    };
-
-    let result = match crate::identity::issue_identity(
+/// Runs the issuance workflow, reporting a workflow failure as the typed internal error response.
+async fn issue(request: IssueServiceIdentityRequest) -> IssueServiceIdentityResponse {
+    match crate::identity::issue_identity(
         &crate::authentik::AuthentikClient,
         &crate::repository::SurrealIdentityRepository,
         &crate::names::WasiNameSource,
@@ -147,21 +179,7 @@ pub async fn handle(request: Request) -> Result<Response, otel_wasi::Error<Error
             );
             IssueServiceIdentityResponse::internal_error()
         }
-    };
-
-    let status = result.http_status();
-    otel_wasi::main_attribute!(
-        "http.response.status_code" = status as i64,
-        "identity.response.variant" = result.variant_slug().to_string(),
-        "identity.outcome" = result.variant_slug().to_string(),
-    );
-    response(
-        status,
-        IssueServiceIdentityResponse::serializer().to_bytes(&result),
-        true,
-        None,
-    )
-    .error_with_typed_slug("service-identity-response-build-failed")
+    }
 }
 
 fn method_name(method: &Method) -> String {
@@ -246,6 +264,10 @@ fn response(
     spawn_local(async move {
         tx.write_all(bytes).await;
         drop(tx);
+        #[expect(
+            clippy::let_underscore_must_use,
+            reason = "the trailers have no content; a reader that already dropped the future needs nothing more"
+        )]
         let _ = trailers_tx.write(Ok(None)).await;
     });
     let (response, _) = Response::new(headers, Some(rx), trailers_rx);

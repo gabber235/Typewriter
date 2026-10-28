@@ -10,23 +10,17 @@ repository.workspace = true
 anyhow.workspace = true
 async-trait.workspace = true
 component-test.workspace = true
-indexmap.workspace = true
+database-schema = { path = "../../../../database/schema" }
 reqwest.workspace = true
 serde.workspace = true
 serde_json.workspace = true
 skir-client.workspace = true
 surrealdb.workspace = true
 tokio.workspace = true
-toml.workspace = true
 uuid.workspace = true
 wash-runtime.workspace = true
 wasmcloud-plugin-surrealdb.workspace = true
 wasmcloud-utils = { path = "../../../../wasmcloud-utils" }
-
-[build-dependencies]
-indexmap.workspace = true
-serde.workspace = true
-toml.workspace = true
 
 [dev-dependencies]
 trybuild = "1"

@@ -34,10 +34,9 @@ final class ResourceSession {
 @Riverpod(keepAlive: true)
 ResourceSession resourceSession(Ref ref) {
   ref.watch(localWorkScopeProvider);
-  final connection = ref.watch(natsProvider.notifier);
   final telemetry = ref.watch(panelTelemetryProvider.future);
   final session = ResourceSession(
-    SkirMutationClient(() => connection.client, () => telemetry),
+    SkirMutationClient(() => ref.read(natsProvider), () => telemetry),
     ref.watch(userIdProvider).value,
   );
   ref.onDispose(session.end);

@@ -1,5 +1,6 @@
 plugins {
     id("com.typewritermc.basic-conventions")
+    application
 }
 
 version = "1000.0.0"
@@ -13,6 +14,11 @@ dependencies {
     testImplementation(libs.mockk)
 }
 
+// `installDist` is the runnable host the worktree stack starts (`cargo xtask stack run --spec panel`).
+application {
+    mainClass.set("com.typewritermc.loader.standalone.StandaloneLoader")
+}
+
 fun registerRunProfile(profile: String) {
     val profileName = profile.replaceFirstChar(Char::uppercase)
     val configurationFile = rootProject.layout.projectDirectory.file("runtime/config/$profile.properties")
@@ -21,7 +27,7 @@ fun registerRunProfile(profile: String) {
         description = "Runs the standalone loader with the $profile configuration."
         dependsOn(tasks.named("classes"))
         classpath = sourceSets.main.get().runtimeClasspath
-        mainClass.set("com.typewritermc.loader.standalone.StandaloneLoader")
+        mainClass.set(application.mainClass)
         standardInput = System.`in`
         environment("TYPEWRITER_CONFIG_FILE", configurationFile.asFile.absolutePath)
         inputs.file(configurationFile)

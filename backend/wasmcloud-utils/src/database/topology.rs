@@ -138,7 +138,7 @@ impl From<ServiceHostRecord> for ServiceHost {
             host_id: value.id.into(),
             service_id: value.service_id.into(),
             revision: value.revision,
-            entrypoint: value.entrypoint.into(),
+            entrypoint: value.entrypoint,
             can_host_realm: value.can_host_realm,
             supported_engines: value
                 .supported_engines

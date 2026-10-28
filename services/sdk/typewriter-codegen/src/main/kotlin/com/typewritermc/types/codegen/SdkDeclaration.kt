@@ -9,6 +9,7 @@ import com.squareup.kotlinpoet.TypeVariableName
 import com.typewritermc.codegen.DefinitionReferences
 import com.typewritermc.codegen.TypeParameterBindings
 import com.typewritermc.codegen.implements
+import com.typewritermc.types.EndpointSlot
 import com.typewritermc.types.Resource
 import com.typewritermc.types.TypeDisplay
 import com.typewritermc.types.ksp.OwnedFieldDeclaration
@@ -80,7 +81,28 @@ internal class SdkField(
     val property: String,
     val template: TypeTemplate,
     val shape: FieldShape,
+    /** For a link field, or a list or set of links: its reference contract and side; null for every other field. */
+    val link: SdkLink? = null,
+    /** Whether the field holds the resource's placement in its owner's editor surface. */
+    val placement: Boolean = false,
 )
+
+/** One side of a reference contract, resolved from the generated endpoint interface of a `Ref<Endpoint, Target>`. */
+internal class SdkLink(
+    /** Whether the contract is in the owning family. */
+    val owning: Boolean,
+    val slot: EndpointSlot,
+    /** Whether the field holds a list or set of links rather than one link. */
+    val collection: Boolean,
+    /** The type a link in this field points at; for an owning list, the type its children must implement. */
+    val elementType: TypeName,
+) {
+    /** The owner's list of its children on an owning contract, for example `Book.pages`. */
+    val isOwningListOfChildren: Boolean get() = owning && slot == EndpointSlot.First && collection
+
+    /** The child's link back to its owner on an owning contract, for example `Book.library`. */
+    val isOwnerLinkOfChild: Boolean get() = owning && slot == EndpointSlot.Second && !collection
+}
 
 /** Contributes the declarations of one generated artifact to the declaration's SDK file. */
 internal fun interface SdkEmitter {

@@ -84,6 +84,12 @@ internal fun LoaderSettings.registrarConfiguration(): RegistrarConfiguration {
     )
 }
 
+/**
+ * The file a host writes its pending registration token to, resolved against its work directory, or null when unset.
+ * Only automation such as the worktree stack sets it; production hosts show the token on the console only.
+ */
+internal fun LoaderSettings.registrationTokenFile(): Path? = getOrNull("TYPEWRITER_REGISTRATION_TOKEN_FILE")?.let(Path::of)
+
 private fun readConfiguration(path: Path): Map<String, String> {
     require(Files.isRegularFile(path)) { "Loader configuration file does not exist: $path" }
     val properties = Properties()

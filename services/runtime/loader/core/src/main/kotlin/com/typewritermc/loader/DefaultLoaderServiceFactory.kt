@@ -19,12 +19,15 @@ import java.util.concurrent.ConcurrentHashMap
 /**
  * Composes persistent registration, registrar observation, and shared artifact storage for one host. Shared
  * repositories and services are cached by Realm within the created service lifetime. The service close callback
- * joins the registrar observer after registration shutdown.
+ * joins the registrar observer after registration shutdown. The pending registration token is shown on the console
+ * and, only when [registrationTokenFile] is configured, also written to that file resolved against the work
+ * directory, so automation can bind a headless host. Production hosts leave it unset and never put the token on disk.
  */
 internal class DefaultLoaderServiceFactory(
     private val configuration: RegistrarConfiguration,
     private val telemetry: ServiceTelemetry,
     private val openTelemetry: OpenTelemetry,
+    private val registrationTokenFile: Path?,
 ) : LoaderServiceFactory {
     override fun create(
         workDirectory: Path,
@@ -38,7 +41,13 @@ internal class DefaultLoaderServiceFactory(
                 telemetry,
                 openTelemetry,
             )
-        val observer = RegistrarConsoleObserver(MordantBindingTokenOutput())
+        val console = MordantBindingTokenOutput()
+        val observer =
+            RegistrarConsoleObserver(
+                registrationTokenFile
+                    ?.let { BindingTokenOutputs(console, FileBindingTokenOutput(workDirectory.resolve(it))) }
+                    ?: console,
+            )
         val observerJob = scope.launch(start = CoroutineStart.UNDISPATCHED) { observer.observe(service.states) }
         val artifactsRoot = workDirectory.resolve("artifacts")
         val blobs = FileDigestBlobStore(artifactsRoot, telemetry = telemetry)

@@ -173,8 +173,31 @@ pub async fn handle_approve(
     );
 
     let (approvals, join_requests_sequence, members_sequence) = approvals;
+    let join_requests_event =
+        publish_requests_removed(org_id, &approvals, join_requests_sequence).await?;
+    let members_event = publish_members_added(org_id, &approvals, members_sequence).await?;
+    let mut results = Vec::with_capacity(approvals.len());
+    for approved in approvals {
+        results.push(publish_user_approval(approved).await?);
+    }
+    otel_wasi::main_attribute!("join_request.outcome" = "approved");
+    Ok(skir_variant!(
+        ApproveOrganizationJoinRequestsResponse::Success {
+            approvals: results,
+            join_requests_event,
+            members_event
+        }
+    ))
+}
+
+/// Publishes the removal of every approved request from the organization request projection.
+async fn publish_requests_removed(
+    org_id: &str,
+    approvals: &[ApprovalRecord],
+    sequence: i64,
+) -> Result<OrganizationJoinRequestsChanged, otel_wasi::Error> {
     let join_requests_event = OrganizationJoinRequestsChanged {
-        sequence: join_requests_sequence,
+        sequence,
         changes: approvals
             .iter()
             .map(|approved| {
@@ -188,12 +211,24 @@ pub async fn handle_approve(
     )
     .persist(join_requests_event.clone())
     .await?;
+    Ok(join_requests_event)
+}
+
+/// Publishes the members created by the approval to the organization member projection.
+async fn publish_members_added(
+    org_id: &str,
+    approvals: &[ApprovalRecord],
+    sequence: i64,
+) -> Result<
+    wasmcloud_utils::skir::base::organization::v1::member::OrganizationMembersChanged,
+    otel_wasi::Error,
+> {
     let member_values: Vec<OrganizationMember> = approvals
         .iter()
         .map(|approved| approved.member.clone().into())
         .collect();
     let members_event = wasmcloud_utils::skir::base::organization::v1::member::OrganizationMembersChanged {
-        sequence: members_sequence,
+        sequence,
         changes: member_values
             .iter()
             .cloned()
@@ -206,51 +241,48 @@ pub async fn handle_approve(
     )
     .persist(members_event.clone())
     .await?;
-    let mut results = Vec::with_capacity(approvals.len());
-    for approved in approvals {
-        let request_id: wasmcloud_utils::skir::base::kernel::v1::record_id::RecordId =
-            approved.request.id.clone().into();
-        let member: OrganizationMember = approved.member.into();
+    Ok(members_event)
+}
 
-        let user_id = approved.request.user.id.key.raw_identity()?;
+/// Publishes one approval to the approved user, removing the request from their request view and
+/// adding the organization to their organization view.
+async fn publish_user_approval(
+    approved: ApprovalRecord,
+) -> Result<ApprovedOrganizationJoinRequest, otel_wasi::Error> {
+    let request_id: wasmcloud_utils::skir::base::kernel::v1::record_id::RecordId =
+        approved.request.id.clone().into();
+    let member: OrganizationMember = approved.member.into();
 
-        let user_request_event = UserJoinRequestsChanged {
-            sequence: approved.user_join_requests_sequence,
-            changes: vec![UserJoinRequestsChange::Remove(Box::new(request_id.clone()))],
-            ..Default::default()
-        };
-        wasmcloud_utils::transport_routes::UserJoinRequestsWatchRoute::delivery(
-            &wasmcloud_utils::transport::UserScope::try_from(user_id)?,
-        )
-        .persist(user_request_event)
-        .await?;
-        let organization: wasmcloud_utils::skir::base::organization::v1::organization::Organization =
-            approved.request.organization.into();
-        let user_organization_event = wasmcloud_utils::skir::base::organization::v1::organization::UserOrganizationsChanged {
-            sequence: approved.user_organizations_sequence,
-            changes: vec![wasmcloud_utils::skir::base::organization::v1::organization::UserOrganizationsChange::Add(Box::new(organization))],
-            ..Default::default()
-        };
-        wasmcloud_utils::transport_routes::UserOrganizationsWatchRoute::delivery(
-            &wasmcloud_utils::transport::UserScope::try_from(user_id)?,
-        )
-        .persist(user_organization_event)
-        .await?;
+    let user_id = approved.request.user.id.key.raw_identity()?;
 
-        results.push(ApprovedOrganizationJoinRequest {
-            request_id,
-            member,
-            ..Default::default()
-        });
-    }
-    otel_wasi::main_attribute!("join_request.outcome" = "approved");
-    Ok(skir_variant!(
-        ApproveOrganizationJoinRequestsResponse::Success {
-            approvals: results,
-            join_requests_event,
-            members_event
-        }
-    ))
+    let user_request_event = UserJoinRequestsChanged {
+        sequence: approved.user_join_requests_sequence,
+        changes: vec![UserJoinRequestsChange::Remove(Box::new(request_id.clone()))],
+        ..Default::default()
+    };
+    wasmcloud_utils::transport_routes::UserJoinRequestsWatchRoute::delivery(
+        &wasmcloud_utils::transport::UserScope::try_from(user_id)?,
+    )
+    .persist(user_request_event)
+    .await?;
+    let organization: wasmcloud_utils::skir::base::organization::v1::organization::Organization =
+        approved.request.organization.into();
+    let user_organization_event = wasmcloud_utils::skir::base::organization::v1::organization::UserOrganizationsChanged {
+        sequence: approved.user_organizations_sequence,
+        changes: vec![wasmcloud_utils::skir::base::organization::v1::organization::UserOrganizationsChange::Add(Box::new(organization))],
+        ..Default::default()
+    };
+    wasmcloud_utils::transport_routes::UserOrganizationsWatchRoute::delivery(
+        &wasmcloud_utils::transport::UserScope::try_from(user_id)?,
+    )
+    .persist(user_organization_event)
+    .await?;
+
+    Ok(ApprovedOrganizationJoinRequest {
+        request_id,
+        member,
+        ..Default::default()
+    })
 }
 
 /// Declines one unexpired join request.

@@ -11,7 +11,6 @@ const CREDENTIALS: &str = "-----BEGIN NATS USER JWT-----\nfixture.jwt.value\n---
 #[component_fixture(
     id = "auth-sentinel",
     primary(package = "auth-sentinel", target = "auth_sentinel"),
-    affected_paths("backend/access/auth-sentinel/")
 )]
 pub struct AuthSentinel;
 

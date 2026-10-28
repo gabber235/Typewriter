@@ -1,0 +1,28 @@
+# Structure rules for the ways agent written code goes wrong: swallowed errors, growing
+# complexity, dead private code. Findings that predate these rules are recorded once in
+# config/detekt/baselines/; only new ones fail.
+exceptions:
+  active: true
+  SwallowedException:
+    active: true
+  TooGenericExceptionCaught:
+    active: true
+empty-blocks:
+  active: true
+  EmptyCatchBlock:
+    active: true
+complexity:
+  active: true
+  CyclomaticComplexMethod:
+    active: true
+    allowedComplexity: 12
+  NestedBlockDepth:
+    active: true
+    allowedDepth: 4
+  LongParameterList:
+    active: true
+    allowedFunctionParameters: 6
+style:
+  active: true
+  UnusedPrivateFunction:
+    active: true

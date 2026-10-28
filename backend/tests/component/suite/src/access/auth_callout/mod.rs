@@ -61,7 +61,6 @@ impl IntoPayload for JsonClaims {
 #[component_fixture(
     id = "auth-callout",
     primary(package = "auth-callout", target = "auth_callout"),
-    affected_paths("backend/access/auth-callout/")
 )]
 pub struct AuthCallout;
 

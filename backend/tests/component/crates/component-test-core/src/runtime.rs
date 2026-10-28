@@ -174,7 +174,9 @@ pub(crate) async fn start<F: FixtureDeclaration>(
             PluginBindingSet::new("wasmcloud-nats")
                 .with_workload_config(WorkloadConfigPolicy::Deny)
                 .with_base(HashMap::from([
-                    ("servers".into(), driver.endpoint.clone()),
+                    ("servers".into(), driver.account.endpoint().to_owned()),
+                    ("jwt".into(), driver.credentials.jwt().to_owned()),
+                    ("nkey-seed".into(), driver.credentials.seed().to_owned()),
                     ("subject-allow".into(), ">".into()),
                     ("stream-allow".into(), "TYPEWRITER_MEMBERSHIP".into()),
                 ])),
@@ -286,11 +288,11 @@ pub(crate) async fn start<F: FixtureDeclaration>(
         bail!("workload did not reach Running: {state:?}: {message}");
     }
     let messaging_mock = messaging.as_ref().map(|_| builder.messaging_mock.clone());
-    if let (Some(driver), Some(mock)) = (&messaging, &messaging_mock) {
-        if let Err(error) = driver.observe(mock.clone()).await {
-            cleanup_failed_start(&host, &workload_id, builder.stop_timeout).await;
-            return Err(error);
-        }
+    if let (Some(driver), Some(mock)) = (&messaging, &messaging_mock)
+        && let Err(error) = driver.observe(mock.clone()).await
+    {
+        cleanup_failed_start(&host, &workload_id, builder.stop_timeout).await;
+        return Err(error);
     }
     Ok(RunningFixture {
         host,

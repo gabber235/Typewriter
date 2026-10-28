@@ -65,11 +65,18 @@ dependencies:
   crypto: 3.0.7
 
 dev_dependencies:
-  analyzer: ^13.3.0
+  analyzer: ^14.0.0
   flutter_test:
     sdk: flutter
+  integration_test:
+    sdk: flutter
+  flutter_driver:
+    sdk: flutter
   auto_route_generator:
-  build_runner:
+  # The analyzer override below skips build_runner's own analyzer constraint. 2.16.2 needs analyzer
+  # 14.3, while lean_builder 1.2.2 (through auto_route_generator) caps _fe_analyzer_shared below 106,
+  # which holds analyzer at 14.1. Unpin together with the override.
+  build_runner: 2.16.1
   flutter_lints:
   freezed:
   icons_launcher:
@@ -82,6 +89,10 @@ dev_dependencies:
   fake_async: ^1.3.3
 
 dependency_overrides:
+  # auto_route_generator 10.6.0 caps analyzer below 14, which Dart 3.14 needs for build_runner to
+  # write valid code. Upstream only raises the cap (Milad-Akarie/auto_route_library#2339); remove
+  # this override once auto_route_generator releases it.
+  analyzer: ^14.0.0
   nats_core:
     git:
       url: https://github.com/gabber235/nats.dart.git

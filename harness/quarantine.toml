@@ -1,0 +1,7 @@
+# Cases that still run and are reported on every pull request but do not gate it. Quarantine a
+# case only with a reason and the issue that tracks its fix, and remove the entry with the fix.
+#
+# [[case]]
+# id = "components/service::service_identity::rotates_keys"
+# reason = "the signing key cache races the rotation"
+# issue = 640

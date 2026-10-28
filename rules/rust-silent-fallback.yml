@@ -1,0 +1,11 @@
+id: rust-silent-fallback
+language: rust
+severity: error
+message: A failure becomes a default value.
+note: Return or propagate the error, or model the absent case in the type.
+ignores: ["**/tests/**", "**/*_test.rs"]
+rule:
+  any:
+    - pattern: $R.unwrap_or_default()
+    - pattern: $R.ok();
+    - pattern: let _ = $R?;

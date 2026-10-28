@@ -2,7 +2,7 @@ import { tokenizeModule } from "skir/dist/tokenizer.js";
 import type { Module, Record, Token } from "skir-internal";
 
 /** Bounded contexts in dependency order. A context's index is the second digit of its numbers. */
-export const CONTEXTS = ["kernel", "access", "organization", "service", "editor"] as const;
+export const CONTEXTS = ["kernel", "access", "organization", "service", "editor", "harness"] as const;
 export type Context = (typeof CONTEXTS)[number];
 
 /** One number in a Skir source and the value it must hold. */

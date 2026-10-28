@@ -26,11 +26,13 @@ Realm remains one deployable project.
 
 ## Verification
 
-Run complete service verification from `services/`:
+Run complete service verification from the repository root:
 
 ```shell
-./gradlew check ktlintCheck
+cargo xtask check services
 ```
+
+It runs `./gradlew check` in `services/`, which includes the imprint build and every ktlint check.
 
 Build canonical development artifacts:
 
@@ -47,11 +49,11 @@ Verify the Loader distribution:
 ./gradlew :loader-distribution:verifyDistribution
 ```
 
-Regenerate contracts from the repository root:
+Regenerate contracts from the repository root. The output is ignored by Git and never committed;
+every `cargo xtask check` regenerates it first when its inputs changed.
 
 ```shell
-bunx --no-install skir format --ci
-bunx --no-install skir gen
+cargo xtask generate
 ```
 
 Never add another nested Gradle root for a normal service project. `services/settings.gradle.kts` rejects it.

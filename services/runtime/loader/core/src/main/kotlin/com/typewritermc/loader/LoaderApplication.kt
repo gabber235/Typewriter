@@ -131,7 +131,9 @@ fun loaderApplication(logOutput: LoaderLogOutput): LoaderApplication {
                 module {
                     single<OpenTelemetry> { openTelemetry } onClose { it?.let(::closeLoaderOpenTelemetry) }
                     single { settings.registrarConfiguration() }
-                    single<LoaderServiceFactory> { DefaultLoaderServiceFactory(get(), get(), get()) }
+                    single<LoaderServiceFactory> {
+                        DefaultLoaderServiceFactory(get(), get(), get(), settings.registrationTokenFile())
+                    }
                     single<LoaderBootstrap> { ArtifactLoaderBootstrap(get(), settings) }
                 },
                 serviceTelemetryModule("com.typewritermc.loader", LOADER_VERSION),
