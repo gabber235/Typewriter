@@ -315,7 +315,9 @@ private class ExtensionValidator(
     }
 
     fun validate(extension: Extension.LoadedExtension): FailureReason? {
-        if (extension.info.engineVersion != expectedVersion) {
+        val baseExpected = expectedVersion.substringBefore("-")
+        val baseFound = extension.info.engineVersion.substringBefore("-")
+        if (extension.info.engineVersion != expectedVersion && baseExpected != baseFound) {
             return FailureReason.VersionMismatch(
                 expected = expectedVersion,
                 found = extension.info.engineVersion

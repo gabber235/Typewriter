@@ -88,6 +88,7 @@ dependencies {
 tasks.withType<ShadowJar> {
     minimize {
         exclude("kotlin/**")
+        exclude("org/koin/**")
         exclude("org/intellij/**")
         exclude("org/jetbrains/**")
         exclude(dependency("web::"))
@@ -177,7 +178,7 @@ paperPluginYaml {
     version = project.version.toString()
 
     main = "com.typewritermc.engine.paper.TypewriterPaperPlugin"
-    apiVersion = "1.21.3"
+    apiVersion = "1.21"
 
     foliaSupported = false
 

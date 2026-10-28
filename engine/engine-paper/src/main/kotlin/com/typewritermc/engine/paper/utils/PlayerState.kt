@@ -1,6 +1,9 @@
 package com.typewritermc.engine.paper.utils
 
 import com.github.retrooper.packetevents.manager.server.ServerVersion
+import com.github.retrooper.packetevents.PacketEvents
+import com.github.retrooper.packetevents.protocol.player.ClientVersion
+import com.typewritermc.engine.paper.snippets.snippet
 import com.github.retrooper.packetevents.protocol.component.ComponentTypes
 import com.github.retrooper.packetevents.protocol.component.builtin.item.ItemModel
 import com.github.retrooper.packetevents.protocol.component.builtin.item.ItemTooltipDisplay
@@ -148,7 +151,16 @@ fun Player.restore(state: PlayerState?) {
     state?.state?.forEach { (key, value) -> key.restore(this, value) }
 }
 
+private val hideHandWithFakeAir by snippet(
+    "cinematic.hide_hand_with_fake_air",
+    true,
+    "Whether to hide the player's hand using a fake air paper model in supported versions (1.21.2+)"
+)
+
 val fakeAir: com.github.retrooper.packetevents.protocol.item.ItemStack by lazy {
+    if (serverVersion.isOlderThan(ServerVersion.V_1_21_2)) {
+        return@lazy com.github.retrooper.packetevents.protocol.item.ItemStack.EMPTY
+    }
     var builder =
         com.github.retrooper.packetevents.protocol.item.ItemStack.builder()
             .type(ItemTypes.PAPER)
@@ -166,13 +178,29 @@ val fakeAir: com.github.retrooper.packetevents.protocol.item.ItemStack by lazy {
     return@lazy builder.build()
 }
 
+fun Player.fakeAirItem(): com.github.retrooper.packetevents.protocol.item.ItemStack {
+    if (!hideHandWithFakeAir) return com.github.retrooper.packetevents.protocol.item.ItemStack.EMPTY
+    if (serverVersion.isOlderThan(ServerVersion.V_1_21_2)) return com.github.retrooper.packetevents.protocol.item.ItemStack.EMPTY
+
+    val clientVersion = try {
+        PacketEvents.getAPI().playerManager.getClientVersion(this)
+    } catch (_: Exception) {
+        null
+    }
+    if (clientVersion != null && clientVersion.isOlderThan(ClientVersion.V_1_21_2)) {
+        return com.github.retrooper.packetevents.protocol.item.ItemStack.EMPTY
+    }
+
+    return fakeAir
+}
 
 fun Player.fakeClearInventory() {
+    val airItem = fakeAirItem()
     WrapperPlayServerWindowItems(
         0,
         0,
         (0..45).map { slot ->
-            if (slot >= 36) fakeAir else com.github.retrooper.packetevents.protocol.item.ItemStack.EMPTY
+            if (slot >= 36) airItem else com.github.retrooper.packetevents.protocol.item.ItemStack.EMPTY
         },
         null,
     ) sendPacketTo this
@@ -202,15 +230,19 @@ fun InterceptionBundle.keepFakeInventory() {
     !PacketType.Play.Client.INTERACT_ENTITY
     !PacketType.Play.Client.PLAYER_DIGGING
     PacketType.Play.Server.WINDOW_ITEMS { event ->
+        val player = event.getPlayer<Player>()
+        val airItem = player?.fakeAirItem() ?: fakeAir
         val packet = WrapperPlayServerWindowItems(event)
         packet.items = List(packet.items.size) { index ->
-            if (index >= 36) fakeAir
+            if (index >= 36) airItem
             else com.github.retrooper.packetevents.protocol.item.ItemStack.EMPTY
         }
     }
     PacketType.Play.Server.SET_SLOT { event ->
+        val player = event.getPlayer<Player>()
+        val airItem = player?.fakeAirItem() ?: fakeAir
         val packet = WrapperPlayServerSetSlot(event)
-        packet.item = if (packet.slot in 0..8) fakeAir
+        packet.item = if (packet.slot in 0..8) airItem
         else com.github.retrooper.packetevents.protocol.item.ItemStack.EMPTY
     }
 }
