@@ -2269,7 +2269,7 @@ impl crate::SkirResponse
     }
     fn internal_error() -> Self {
         crate::skirout::base::access::v1::permission::GetEntityPermissionResponse::InternalError(
-            ::std::default::Default::default(),
+            ::std::boxed::Box::new(::std::default::Default::default()),
         )
     }
 }
@@ -2297,7 +2297,7 @@ impl crate::SkirResponse
     }
     fn internal_error() -> Self {
         crate::skirout::base::access::v1::sentinel::GetSentinelCredentialsResponse::InternalError(
-            ::std::default::Default::default(),
+            ::std::boxed::Box::new(::std::default::Default::default()),
         )
     }
 }
@@ -2325,12 +2325,12 @@ impl crate::SkirResponse
     }
     fn internal_error() -> Self {
         crate::skirout::base::editor::v1::authoring::QueryAuthoringStateResponse::InternalError(
-            ::std::default::Default::default(),
+            ::std::boxed::Box::new(::std::default::Default::default()),
         )
     }
     fn domain_error_from_slug(slug: &str) -> Option<Self> {
         match slug {
-            "catalog-changed-error" => Some(crate::skirout::base::editor::v1::authoring::QueryAuthoringStateResponse::CatalogChangedError(::std::default::Default::default())),
+            "catalog-changed-error" => Some(crate::skirout::base::editor::v1::authoring::QueryAuthoringStateResponse::CatalogChangedError(::std::boxed::Box::new(::std::default::Default::default()))),
             _ => None,
         }
     }
@@ -2358,13 +2358,13 @@ impl crate::SkirResponse for crate::skirout::base::editor::v1::authoring::Search
     }
     fn internal_error() -> Self {
         crate::skirout::base::editor::v1::authoring::SearchAuthoringResponse::InternalError(
-            ::std::default::Default::default(),
+            ::std::boxed::Box::new(::std::default::Default::default()),
         )
     }
     fn domain_error_from_slug(slug: &str) -> Option<Self> {
         match slug {
-            "invalid-error" => Some(crate::skirout::base::editor::v1::authoring::SearchAuthoringResponse::InvalidError(::std::default::Default::default())),
-            "catalog-changed-error" => Some(crate::skirout::base::editor::v1::authoring::SearchAuthoringResponse::CatalogChangedError(::std::default::Default::default())),
+            "invalid-error" => Some(crate::skirout::base::editor::v1::authoring::SearchAuthoringResponse::InvalidError(::std::boxed::Box::new(::std::default::Default::default()))),
+            "catalog-changed-error" => Some(crate::skirout::base::editor::v1::authoring::SearchAuthoringResponse::CatalogChangedError(::std::boxed::Box::new(::std::default::Default::default()))),
             _ => None,
         }
     }
@@ -2395,14 +2395,14 @@ impl crate::SkirResponse
     }
     fn internal_error() -> Self {
         crate::skirout::base::editor::v1::authoring::CommitPreparedEditResponse::InternalError(
-            ::std::default::Default::default(),
+            ::std::boxed::Box::new(::std::default::Default::default()),
         )
     }
     fn domain_error_from_slug(slug: &str) -> Option<Self> {
         match slug {
             "conflict-error" => Some(crate::skirout::base::editor::v1::authoring::CommitPreparedEditResponse::ConflictError(::std::default::Default::default())),
             "rejected-error" => Some(crate::skirout::base::editor::v1::authoring::CommitPreparedEditResponse::RejectedError(::std::default::Default::default())),
-            "catalog-changed-error" => Some(crate::skirout::base::editor::v1::authoring::CommitPreparedEditResponse::CatalogChangedError(::std::default::Default::default())),
+            "catalog-changed-error" => Some(crate::skirout::base::editor::v1::authoring::CommitPreparedEditResponse::CatalogChangedError(::std::boxed::Box::new(::std::default::Default::default()))),
             _ => None,
         }
     }
@@ -2432,7 +2432,7 @@ impl crate::SkirResponse
         self.variant_slug().to_owned()
     }
     fn internal_error() -> Self {
-        crate::skirout::base::editor::v1::authoring::PreviewTypeArgumentChangeResponse::InternalError(::std::default::Default::default())
+        crate::skirout::base::editor::v1::authoring::PreviewTypeArgumentChangeResponse::InternalError(::std::boxed::Box::new(::std::default::Default::default()))
     }
     fn domain_error_from_slug(slug: &str) -> Option<Self> {
         match slug {
@@ -2466,7 +2466,7 @@ impl crate::SkirResponse
         self.variant_slug().to_owned()
     }
     fn internal_error() -> Self {
-        crate::skirout::base::editor::v1::authoring::PrepareTypeArgumentChangeResponse::InternalError(::std::default::Default::default())
+        crate::skirout::base::editor::v1::authoring::PrepareTypeArgumentChangeResponse::InternalError(::std::boxed::Box::new(::std::default::Default::default()))
     }
     fn domain_error_from_slug(slug: &str) -> Option<Self> {
         match slug {
@@ -2500,15 +2500,15 @@ impl crate::SkirResponse for crate::skirout::base::editor::v1::capability::Compu
     }
     fn internal_error() -> Self {
         crate::skirout::base::editor::v1::capability::ComputationResult::InternalError(
-            ::std::default::Default::default(),
+            ::std::boxed::Box::new(::std::default::Default::default()),
         )
     }
     fn domain_error_from_slug(slug: &str) -> Option<Self> {
         match slug {
-            "invalid-error" => Some(crate::skirout::base::editor::v1::capability::ComputationResult::InvalidError(::std::default::Default::default())),
-            "unavailable-error" => Some(crate::skirout::base::editor::v1::capability::ComputationResult::UnavailableError(::std::default::Default::default())),
-            "permission-denied-error" => Some(crate::skirout::base::editor::v1::capability::ComputationResult::PermissionDeniedError(::std::default::Default::default())),
-            "stale-generation-error" => Some(crate::skirout::base::editor::v1::capability::ComputationResult::StaleGenerationError(::std::default::Default::default())),
+            "invalid-error" => Some(crate::skirout::base::editor::v1::capability::ComputationResult::InvalidError(::std::boxed::Box::new(::std::default::Default::default()))),
+            "unavailable-error" => Some(crate::skirout::base::editor::v1::capability::ComputationResult::UnavailableError(::std::boxed::Box::new(::std::default::Default::default()))),
+            "permission-denied-error" => Some(crate::skirout::base::editor::v1::capability::ComputationResult::PermissionDeniedError(::std::boxed::Box::new(::std::default::Default::default()))),
+            "stale-generation-error" => Some(crate::skirout::base::editor::v1::capability::ComputationResult::StaleGenerationError(::std::boxed::Box::new(::std::default::Default::default()))),
             _ => None,
         }
     }
@@ -2557,29 +2557,29 @@ impl crate::SkirResponse for crate::skirout::base::editor::v1::capability::Comma
     }
     fn internal_error() -> Self {
         crate::skirout::base::editor::v1::capability::CommandResult::InternalError(
-            ::std::default::Default::default(),
+            ::std::boxed::Box::new(::std::default::Default::default()),
         )
     }
     fn domain_error_from_slug(slug: &str) -> Option<Self> {
         match slug {
             "invalid-error" => Some(
                 crate::skirout::base::editor::v1::capability::CommandResult::InvalidError(
-                    ::std::default::Default::default(),
+                    ::std::boxed::Box::new(::std::default::Default::default()),
                 ),
             ),
             "unavailable-error" => Some(
                 crate::skirout::base::editor::v1::capability::CommandResult::UnavailableError(
-                    ::std::default::Default::default(),
+                    ::std::boxed::Box::new(::std::default::Default::default()),
                 ),
             ),
             "permission-denied-error" => Some(
                 crate::skirout::base::editor::v1::capability::CommandResult::PermissionDeniedError(
-                    ::std::default::Default::default(),
+                    ::std::boxed::Box::new(::std::default::Default::default()),
                 ),
             ),
             "stale-generation-error" => Some(
                 crate::skirout::base::editor::v1::capability::CommandResult::StaleGenerationError(
-                    ::std::default::Default::default(),
+                    ::std::boxed::Box::new(::std::default::Default::default()),
                 ),
             ),
             _ => None,
@@ -2608,12 +2608,12 @@ impl crate::SkirResponse for crate::skirout::base::editor::v1::catalog::CatalogF
     }
     fn internal_error() -> Self {
         crate::skirout::base::editor::v1::catalog::CatalogFetchResult::InternalError(
-            ::std::default::Default::default(),
+            ::std::boxed::Box::new(::std::default::Default::default()),
         )
     }
     fn domain_error_from_slug(slug: &str) -> Option<Self> {
         match slug {
-            "generation-changed-error" => Some(crate::skirout::base::editor::v1::catalog::CatalogFetchResult::GenerationChangedError(::std::default::Default::default())),
+            "generation-changed-error" => Some(crate::skirout::base::editor::v1::catalog::CatalogFetchResult::GenerationChangedError(::std::boxed::Box::new(::std::default::Default::default()))),
             _ => None,
         }
     }
@@ -2640,7 +2640,7 @@ impl crate::SkirResponse for crate::skirout::base::editor::v1::catalog::WatchEdi
     }
     fn internal_error() -> Self {
         crate::skirout::base::editor::v1::catalog::WatchEditorCatalogResponse::InternalError(
-            ::std::default::Default::default(),
+            ::std::boxed::Box::new(::std::default::Default::default()),
         )
     }
 }
@@ -2682,19 +2682,19 @@ impl crate::SkirResponse for crate::skirout::base::editor::v1::catalog::PrepareV
     }
     fn internal_error() -> Self {
         crate::skirout::base::editor::v1::catalog::PrepareValueResult::InternalError(
-            ::std::default::Default::default(),
+            ::std::boxed::Box::new(::std::default::Default::default()),
         )
     }
     fn domain_error_from_slug(slug: &str) -> Option<Self> {
         match slug {
             "unavailable-error" => Some(
                 crate::skirout::base::editor::v1::catalog::PrepareValueResult::UnavailableError(
-                    ::std::default::Default::default(),
+                    ::std::boxed::Box::new(::std::default::Default::default()),
                 ),
             ),
             "catalog-changed-error" => Some(
                 crate::skirout::base::editor::v1::catalog::PrepareValueResult::CatalogChangedError(
-                    ::std::default::Default::default(),
+                    ::std::boxed::Box::new(::std::default::Default::default()),
                 ),
             ),
             _ => None,
@@ -2723,7 +2723,7 @@ impl crate::SkirResponse
         self.variant_slug().to_owned()
     }
     fn internal_error() -> Self {
-        crate::skirout::base::editor::v1::compiled_content::QueryPublishedContentResponse::InternalError(::std::default::Default::default())
+        crate::skirout::base::editor::v1::compiled_content::QueryPublishedContentResponse::InternalError(::std::boxed::Box::new(::std::default::Default::default()))
     }
 }
 impl crate::SkirResponse
@@ -2747,7 +2747,7 @@ impl crate::SkirResponse
         self.variant_slug().to_owned()
     }
     fn internal_error() -> Self {
-        crate::skirout::base::editor::v1::compiled_content::QueryCompiledResourceStatusResponse::InternalError(::std::default::Default::default())
+        crate::skirout::base::editor::v1::compiled_content::QueryCompiledResourceStatusResponse::InternalError(::std::boxed::Box::new(::std::default::Default::default()))
     }
 }
 impl crate::SkirResponse
@@ -2778,14 +2778,14 @@ impl crate::SkirResponse
     }
     fn internal_error() -> Self {
         crate::skirout::base::editor::v1::publication::PublishAuthoringResponse::InternalError(
-            ::std::default::Default::default(),
+            ::std::boxed::Box::new(::std::default::Default::default()),
         )
     }
     fn domain_error_from_slug(slug: &str) -> Option<Self> {
         match slug {
-            "blocked-error" => Some(crate::skirout::base::editor::v1::publication::PublishAuthoringResponse::BlockedError(::std::default::Default::default())),
-            "interrupted-error" => Some(crate::skirout::base::editor::v1::publication::PublishAuthoringResponse::InterruptedError(::std::default::Default::default())),
-            "candidate-changed-error" => Some(crate::skirout::base::editor::v1::publication::PublishAuthoringResponse::CandidateChangedError(::std::default::Default::default())),
+            "blocked-error" => Some(crate::skirout::base::editor::v1::publication::PublishAuthoringResponse::BlockedError(::std::boxed::Box::new(::std::default::Default::default()))),
+            "interrupted-error" => Some(crate::skirout::base::editor::v1::publication::PublishAuthoringResponse::InterruptedError(::std::boxed::Box::new(::std::default::Default::default()))),
+            "candidate-changed-error" => Some(crate::skirout::base::editor::v1::publication::PublishAuthoringResponse::CandidateChangedError(::std::boxed::Box::new(::std::default::Default::default()))),
             _ => None,
         }
     }
@@ -2812,7 +2812,7 @@ impl crate::SkirResponse
     }
     fn internal_error() -> Self {
         crate::skirout::base::editor::v1::publication::WatchPublicationResponse::InternalError(
-            ::std::default::Default::default(),
+            ::std::boxed::Box::new(::std::default::Default::default()),
         )
     }
 }
@@ -2840,12 +2840,12 @@ impl crate::SkirResponse
     }
     fn internal_error() -> Self {
         crate::skirout::base::editor::v1::publication::QueryPublicationViewResponse::InternalError(
-            ::std::default::Default::default(),
+            ::std::boxed::Box::new(::std::default::Default::default()),
         )
     }
     fn domain_error_from_slug(slug: &str) -> Option<Self> {
         match slug {
-            "view-changed-error" => Some(crate::skirout::base::editor::v1::publication::QueryPublicationViewResponse::ViewChangedError(::std::default::Default::default())),
+            "view-changed-error" => Some(crate::skirout::base::editor::v1::publication::QueryPublicationViewResponse::ViewChangedError(::std::boxed::Box::new(::std::default::Default::default()))),
             _ => None,
         }
     }
@@ -2877,15 +2877,15 @@ impl crate::SkirResponse
         self.variant_slug().to_owned()
     }
     fn internal_error() -> Self {
-        crate::skirout::base::editor::v1::resource_operations::ResolveResourceOperationsResult::InternalError(::std::default::Default::default())
+        crate::skirout::base::editor::v1::resource_operations::ResolveResourceOperationsResult::InternalError(::std::boxed::Box::new(::std::default::Default::default()))
     }
     fn domain_error_from_slug(slug: &str) -> Option<Self> {
         match slug {
-            "stale-observation-error" => Some(crate::skirout::base::editor::v1::resource_operations::ResolveResourceOperationsResult::StaleObservationError(::std::default::Default::default())),
-            "invalid-error" => Some(crate::skirout::base::editor::v1::resource_operations::ResolveResourceOperationsResult::InvalidError(::std::default::Default::default())),
-            "catalog-changed-error" => Some(crate::skirout::base::editor::v1::resource_operations::ResolveResourceOperationsResult::CatalogChangedError(::std::default::Default::default())),
-            "permission-denied-error" => Some(crate::skirout::base::editor::v1::resource_operations::ResolveResourceOperationsResult::PermissionDeniedError(::std::default::Default::default())),
-            "failed-error" => Some(crate::skirout::base::editor::v1::resource_operations::ResolveResourceOperationsResult::FailedError(::std::default::Default::default())),
+            "stale-observation-error" => Some(crate::skirout::base::editor::v1::resource_operations::ResolveResourceOperationsResult::StaleObservationError(::std::boxed::Box::new(::std::default::Default::default()))),
+            "invalid-error" => Some(crate::skirout::base::editor::v1::resource_operations::ResolveResourceOperationsResult::InvalidError(::std::boxed::Box::new(::std::default::Default::default()))),
+            "catalog-changed-error" => Some(crate::skirout::base::editor::v1::resource_operations::ResolveResourceOperationsResult::CatalogChangedError(::std::boxed::Box::new(::std::default::Default::default()))),
+            "permission-denied-error" => Some(crate::skirout::base::editor::v1::resource_operations::ResolveResourceOperationsResult::PermissionDeniedError(::std::boxed::Box::new(::std::default::Default::default()))),
+            "failed-error" => Some(crate::skirout::base::editor::v1::resource_operations::ResolveResourceOperationsResult::FailedError(::std::boxed::Box::new(::std::default::Default::default()))),
             _ => None,
         }
     }
@@ -2920,17 +2920,17 @@ impl crate::SkirResponse
     }
     fn internal_error() -> Self {
         crate::skirout::base::editor::v1::resource_operations::AuthoringActionResult::InternalError(
-            ::std::default::Default::default(),
+            ::std::boxed::Box::new(::std::default::Default::default()),
         )
     }
     fn domain_error_from_slug(slug: &str) -> Option<Self> {
         match slug {
-            "stale-observation-error" => Some(crate::skirout::base::editor::v1::resource_operations::AuthoringActionResult::StaleObservationError(::std::default::Default::default())),
-            "invalid-error" => Some(crate::skirout::base::editor::v1::resource_operations::AuthoringActionResult::InvalidError(::std::default::Default::default())),
-            "unavailable-error" => Some(crate::skirout::base::editor::v1::resource_operations::AuthoringActionResult::UnavailableError(::std::default::Default::default())),
-            "catalog-changed-error" => Some(crate::skirout::base::editor::v1::resource_operations::AuthoringActionResult::CatalogChangedError(::std::default::Default::default())),
-            "permission-denied-error" => Some(crate::skirout::base::editor::v1::resource_operations::AuthoringActionResult::PermissionDeniedError(::std::default::Default::default())),
-            "failed-error" => Some(crate::skirout::base::editor::v1::resource_operations::AuthoringActionResult::FailedError(::std::default::Default::default())),
+            "stale-observation-error" => Some(crate::skirout::base::editor::v1::resource_operations::AuthoringActionResult::StaleObservationError(::std::boxed::Box::new(::std::default::Default::default()))),
+            "invalid-error" => Some(crate::skirout::base::editor::v1::resource_operations::AuthoringActionResult::InvalidError(::std::boxed::Box::new(::std::default::Default::default()))),
+            "unavailable-error" => Some(crate::skirout::base::editor::v1::resource_operations::AuthoringActionResult::UnavailableError(::std::boxed::Box::new(::std::default::Default::default()))),
+            "catalog-changed-error" => Some(crate::skirout::base::editor::v1::resource_operations::AuthoringActionResult::CatalogChangedError(::std::boxed::Box::new(::std::default::Default::default()))),
+            "permission-denied-error" => Some(crate::skirout::base::editor::v1::resource_operations::AuthoringActionResult::PermissionDeniedError(::std::boxed::Box::new(::std::default::Default::default()))),
+            "failed-error" => Some(crate::skirout::base::editor::v1::resource_operations::AuthoringActionResult::FailedError(::std::boxed::Box::new(::std::default::Default::default()))),
             _ => None,
         }
     }
@@ -2962,15 +2962,15 @@ impl crate::SkirResponse
         self.variant_slug().to_owned()
     }
     fn internal_error() -> Self {
-        crate::skirout::base::editor::v1::resource_operations::ResolveDropCandidatesResult::InternalError(::std::default::Default::default())
+        crate::skirout::base::editor::v1::resource_operations::ResolveDropCandidatesResult::InternalError(::std::boxed::Box::new(::std::default::Default::default()))
     }
     fn domain_error_from_slug(slug: &str) -> Option<Self> {
         match slug {
-            "stale-observation-error" => Some(crate::skirout::base::editor::v1::resource_operations::ResolveDropCandidatesResult::StaleObservationError(::std::default::Default::default())),
-            "invalid-error" => Some(crate::skirout::base::editor::v1::resource_operations::ResolveDropCandidatesResult::InvalidError(::std::default::Default::default())),
-            "catalog-changed-error" => Some(crate::skirout::base::editor::v1::resource_operations::ResolveDropCandidatesResult::CatalogChangedError(::std::default::Default::default())),
-            "permission-denied-error" => Some(crate::skirout::base::editor::v1::resource_operations::ResolveDropCandidatesResult::PermissionDeniedError(::std::default::Default::default())),
-            "failed-error" => Some(crate::skirout::base::editor::v1::resource_operations::ResolveDropCandidatesResult::FailedError(::std::default::Default::default())),
+            "stale-observation-error" => Some(crate::skirout::base::editor::v1::resource_operations::ResolveDropCandidatesResult::StaleObservationError(::std::boxed::Box::new(::std::default::Default::default()))),
+            "invalid-error" => Some(crate::skirout::base::editor::v1::resource_operations::ResolveDropCandidatesResult::InvalidError(::std::boxed::Box::new(::std::default::Default::default()))),
+            "catalog-changed-error" => Some(crate::skirout::base::editor::v1::resource_operations::ResolveDropCandidatesResult::CatalogChangedError(::std::boxed::Box::new(::std::default::Default::default()))),
+            "permission-denied-error" => Some(crate::skirout::base::editor::v1::resource_operations::ResolveDropCandidatesResult::PermissionDeniedError(::std::boxed::Box::new(::std::default::Default::default()))),
+            "failed-error" => Some(crate::skirout::base::editor::v1::resource_operations::ResolveDropCandidatesResult::FailedError(::std::boxed::Box::new(::std::default::Default::default()))),
             _ => None,
         }
     }
@@ -3000,13 +3000,13 @@ impl crate::SkirResponse
     }
     fn internal_error() -> Self {
         crate::skirout::base::editor::v1::search::RealmPresentationSearchUpdate::InternalError(
-            ::std::default::Default::default(),
+            ::std::boxed::Box::new(::std::default::Default::default()),
         )
     }
     fn domain_error_from_slug(slug: &str) -> Option<Self> {
         match slug {
-            "unavailable-error" => Some(crate::skirout::base::editor::v1::search::RealmPresentationSearchUpdate::UnavailableError(::std::default::Default::default())),
-            "stale-observation-error" => Some(crate::skirout::base::editor::v1::search::RealmPresentationSearchUpdate::StaleObservationError(::std::default::Default::default())),
+            "unavailable-error" => Some(crate::skirout::base::editor::v1::search::RealmPresentationSearchUpdate::UnavailableError(::std::boxed::Box::new(::std::default::Default::default()))),
+            "stale-observation-error" => Some(crate::skirout::base::editor::v1::search::RealmPresentationSearchUpdate::StaleObservationError(::std::boxed::Box::new(::std::default::Default::default()))),
             _ => None,
         }
     }
@@ -3035,7 +3035,7 @@ impl crate::SkirResponse
     }
     fn internal_error() -> Self {
         crate::skirout::base::editor::v1::search::CancelRealmPresentationSearchResult::InternalError(
-            ::std::default::Default::default(),
+            ::std::boxed::Box::new(::std::default::Default::default()),
         )
     }
     fn domain_error_from_slug(slug: &str) -> Option<Self> {
@@ -3067,7 +3067,7 @@ impl crate::SkirResponse
         self.variant_slug().to_owned()
     }
     fn internal_error() -> Self {
-        crate::skirout::base::organization::v1::join_codes::WatchOrganizationJoinCodesResponse::InternalError(::std::default::Default::default())
+        crate::skirout::base::organization::v1::join_codes::WatchOrganizationJoinCodesResponse::InternalError(::std::boxed::Box::new(::std::default::Default::default()))
     }
 }
 impl crate::SkirResponse
@@ -3102,14 +3102,14 @@ impl crate::SkirResponse
         }
     }
     fn internal_error() -> Self {
-        crate::skirout::base::organization::v1::join_codes::GenerateOrganizationJoinCodeResponse::InternalError(::std::default::Default::default())
+        crate::skirout::base::organization::v1::join_codes::GenerateOrganizationJoinCodeResponse::InternalError(::std::boxed::Box::new(::std::default::Default::default()))
     }
     fn domain_error_from_slug(slug: &str) -> Option<Self> {
         match slug {
-            "roles-not-found-error" => Some(crate::skirout::base::organization::v1::join_codes::GenerateOrganizationJoinCodeResponse::RolesNotFoundError(::std::default::Default::default())),
-            "roles-not-assignable-error" => Some(crate::skirout::base::organization::v1::join_codes::GenerateOrganizationJoinCodeResponse::RolesNotAssignableError(::std::default::Default::default())),
-            "invalid-expiration-error" => Some(crate::skirout::base::organization::v1::join_codes::GenerateOrganizationJoinCodeResponse::InvalidExpirationError(::std::default::Default::default())),
-            "invalid-record-id-error" => Some(crate::skirout::base::organization::v1::join_codes::GenerateOrganizationJoinCodeResponse::InvalidRecordIdError(::std::default::Default::default())),
+            "roles-not-found-error" => Some(crate::skirout::base::organization::v1::join_codes::GenerateOrganizationJoinCodeResponse::RolesNotFoundError(::std::boxed::Box::new(::std::default::Default::default()))),
+            "roles-not-assignable-error" => Some(crate::skirout::base::organization::v1::join_codes::GenerateOrganizationJoinCodeResponse::RolesNotAssignableError(::std::boxed::Box::new(::std::default::Default::default()))),
+            "invalid-expiration-error" => Some(crate::skirout::base::organization::v1::join_codes::GenerateOrganizationJoinCodeResponse::InvalidExpirationError(::std::boxed::Box::new(::std::default::Default::default()))),
+            "invalid-record-id-error" => Some(crate::skirout::base::organization::v1::join_codes::GenerateOrganizationJoinCodeResponse::InvalidRecordIdError(::std::boxed::Box::new(::std::default::Default::default()))),
             _ => None,
         }
     }
@@ -3142,12 +3142,12 @@ impl crate::SkirResponse
         }
     }
     fn internal_error() -> Self {
-        crate::skirout::base::organization::v1::join_codes::RevokeOrganizationJoinCodeResponse::InternalError(::std::default::Default::default())
+        crate::skirout::base::organization::v1::join_codes::RevokeOrganizationJoinCodeResponse::InternalError(::std::boxed::Box::new(::std::default::Default::default()))
     }
     fn domain_error_from_slug(slug: &str) -> Option<Self> {
         match slug {
-            "code-not-found-error" => Some(crate::skirout::base::organization::v1::join_codes::RevokeOrganizationJoinCodeResponse::CodeNotFoundError(::std::default::Default::default())),
-            "invalid-record-id-error" => Some(crate::skirout::base::organization::v1::join_codes::RevokeOrganizationJoinCodeResponse::InvalidRecordIdError(::std::default::Default::default())),
+            "code-not-found-error" => Some(crate::skirout::base::organization::v1::join_codes::RevokeOrganizationJoinCodeResponse::CodeNotFoundError(::std::boxed::Box::new(::std::default::Default::default()))),
+            "invalid-record-id-error" => Some(crate::skirout::base::organization::v1::join_codes::RevokeOrganizationJoinCodeResponse::InvalidRecordIdError(::std::boxed::Box::new(::std::default::Default::default()))),
             _ => None,
         }
     }
@@ -3174,7 +3174,7 @@ impl crate::SkirResponse
         self.variant_slug().to_owned()
     }
     fn internal_error() -> Self {
-        crate::skirout::base::organization::v1::join_request::WatchOrganizationJoinRequestsResponse::InternalError(::std::default::Default::default())
+        crate::skirout::base::organization::v1::join_request::WatchOrganizationJoinRequestsResponse::InternalError(::std::boxed::Box::new(::std::default::Default::default()))
     }
 }
 impl crate::SkirResponse for crate::skirout::base::organization::v1::join_request::ApproveOrganizationJoinRequestsResponse {
@@ -3213,17 +3213,17 @@ impl crate::SkirResponse for crate::skirout::base::organization::v1::join_reques
         }
     }
     fn internal_error() -> Self {
-        crate::skirout::base::organization::v1::join_request::ApproveOrganizationJoinRequestsResponse::InternalError(::std::default::Default::default())
+        crate::skirout::base::organization::v1::join_request::ApproveOrganizationJoinRequestsResponse::InternalError(::std::boxed::Box::new(::std::default::Default::default()))
     }
     fn domain_error_from_slug(slug: &str) -> Option<Self> {
         match slug {
-            "request-not-found-error" => Some(crate::skirout::base::organization::v1::join_request::ApproveOrganizationJoinRequestsResponse::RequestNotFoundError(::std::default::Default::default())),
-            "roles-not-found-error" => Some(crate::skirout::base::organization::v1::join_request::ApproveOrganizationJoinRequestsResponse::RolesNotFoundError(::std::default::Default::default())),
-            "roles-not-assignable-error" => Some(crate::skirout::base::organization::v1::join_request::ApproveOrganizationJoinRequestsResponse::RolesNotAssignableError(::std::default::Default::default())),
-            "roles-required-error" => Some(crate::skirout::base::organization::v1::join_request::ApproveOrganizationJoinRequestsResponse::RolesRequiredError(::std::default::Default::default())),
-            "user-already-member-error" => Some(crate::skirout::base::organization::v1::join_request::ApproveOrganizationJoinRequestsResponse::UserAlreadyMemberError(::std::default::Default::default())),
-            "invalid-selection-error" => Some(crate::skirout::base::organization::v1::join_request::ApproveOrganizationJoinRequestsResponse::InvalidSelectionError(::std::default::Default::default())),
-            "invalid-record-id-error" => Some(crate::skirout::base::organization::v1::join_request::ApproveOrganizationJoinRequestsResponse::InvalidRecordIdError(::std::default::Default::default())),
+            "request-not-found-error" => Some(crate::skirout::base::organization::v1::join_request::ApproveOrganizationJoinRequestsResponse::RequestNotFoundError(::std::boxed::Box::new(::std::default::Default::default()))),
+            "roles-not-found-error" => Some(crate::skirout::base::organization::v1::join_request::ApproveOrganizationJoinRequestsResponse::RolesNotFoundError(::std::boxed::Box::new(::std::default::Default::default()))),
+            "roles-not-assignable-error" => Some(crate::skirout::base::organization::v1::join_request::ApproveOrganizationJoinRequestsResponse::RolesNotAssignableError(::std::boxed::Box::new(::std::default::Default::default()))),
+            "roles-required-error" => Some(crate::skirout::base::organization::v1::join_request::ApproveOrganizationJoinRequestsResponse::RolesRequiredError(::std::boxed::Box::new(::std::default::Default::default()))),
+            "user-already-member-error" => Some(crate::skirout::base::organization::v1::join_request::ApproveOrganizationJoinRequestsResponse::UserAlreadyMemberError(::std::boxed::Box::new(::std::default::Default::default()))),
+            "invalid-selection-error" => Some(crate::skirout::base::organization::v1::join_request::ApproveOrganizationJoinRequestsResponse::InvalidSelectionError(::std::boxed::Box::new(::std::default::Default::default()))),
+            "invalid-record-id-error" => Some(crate::skirout::base::organization::v1::join_request::ApproveOrganizationJoinRequestsResponse::InvalidRecordIdError(::std::boxed::Box::new(::std::default::Default::default()))),
             _ => None,
         }
     }
@@ -3256,12 +3256,12 @@ impl crate::SkirResponse
         }
     }
     fn internal_error() -> Self {
-        crate::skirout::base::organization::v1::join_request::DeclineOrganizationJoinRequestResponse::InternalError(::std::default::Default::default())
+        crate::skirout::base::organization::v1::join_request::DeclineOrganizationJoinRequestResponse::InternalError(::std::boxed::Box::new(::std::default::Default::default()))
     }
     fn domain_error_from_slug(slug: &str) -> Option<Self> {
         match slug {
-            "request-not-found-error" => Some(crate::skirout::base::organization::v1::join_request::DeclineOrganizationJoinRequestResponse::RequestNotFoundError(::std::default::Default::default())),
-            "invalid-record-id-error" => Some(crate::skirout::base::organization::v1::join_request::DeclineOrganizationJoinRequestResponse::InvalidRecordIdError(::std::default::Default::default())),
+            "request-not-found-error" => Some(crate::skirout::base::organization::v1::join_request::DeclineOrganizationJoinRequestResponse::RequestNotFoundError(::std::boxed::Box::new(::std::default::Default::default()))),
+            "invalid-record-id-error" => Some(crate::skirout::base::organization::v1::join_request::DeclineOrganizationJoinRequestResponse::InvalidRecordIdError(::std::boxed::Box::new(::std::default::Default::default()))),
             _ => None,
         }
     }
@@ -3287,7 +3287,7 @@ impl crate::SkirResponse
         self.variant_slug().to_owned()
     }
     fn internal_error() -> Self {
-        crate::skirout::base::organization::v1::member::WatchOrganizationMembersResponse::InternalError(::std::default::Default::default())
+        crate::skirout::base::organization::v1::member::WatchOrganizationMembersResponse::InternalError(::std::boxed::Box::new(::std::default::Default::default()))
     }
 }
 impl crate::SkirResponse
@@ -3328,17 +3328,17 @@ impl crate::SkirResponse
         }
     }
     fn internal_error() -> Self {
-        crate::skirout::base::organization::v1::member::UpdateOrganizationMemberRolesResponse::InternalError(::std::default::Default::default())
+        crate::skirout::base::organization::v1::member::UpdateOrganizationMemberRolesResponse::InternalError(::std::boxed::Box::new(::std::default::Default::default()))
     }
     fn domain_error_from_slug(slug: &str) -> Option<Self> {
         match slug {
-            "user-not-found-error" => Some(crate::skirout::base::organization::v1::member::UpdateOrganizationMemberRolesResponse::UserNotFoundError(::std::default::Default::default())),
-            "roles-not-found-error" => Some(crate::skirout::base::organization::v1::member::UpdateOrganizationMemberRolesResponse::RolesNotFoundError(::std::default::Default::default())),
-            "roles-not-assignable-error" => Some(crate::skirout::base::organization::v1::member::UpdateOrganizationMemberRolesResponse::RolesNotAssignableError(::std::default::Default::default())),
-            "roles-required-error" => Some(crate::skirout::base::organization::v1::member::UpdateOrganizationMemberRolesResponse::RolesRequiredError(::std::default::Default::default())),
-            "founder-role-required-error" => Some(crate::skirout::base::organization::v1::member::UpdateOrganizationMemberRolesResponse::FounderRoleRequiredError(::std::default::Default::default())),
-            "invalid-selection-error" => Some(crate::skirout::base::organization::v1::member::UpdateOrganizationMemberRolesResponse::InvalidSelectionError(::std::default::Default::default())),
-            "invalid-record-id-error" => Some(crate::skirout::base::organization::v1::member::UpdateOrganizationMemberRolesResponse::InvalidRecordIdError(::std::default::Default::default())),
+            "user-not-found-error" => Some(crate::skirout::base::organization::v1::member::UpdateOrganizationMemberRolesResponse::UserNotFoundError(::std::boxed::Box::new(::std::default::Default::default()))),
+            "roles-not-found-error" => Some(crate::skirout::base::organization::v1::member::UpdateOrganizationMemberRolesResponse::RolesNotFoundError(::std::boxed::Box::new(::std::default::Default::default()))),
+            "roles-not-assignable-error" => Some(crate::skirout::base::organization::v1::member::UpdateOrganizationMemberRolesResponse::RolesNotAssignableError(::std::boxed::Box::new(::std::default::Default::default()))),
+            "roles-required-error" => Some(crate::skirout::base::organization::v1::member::UpdateOrganizationMemberRolesResponse::RolesRequiredError(::std::boxed::Box::new(::std::default::Default::default()))),
+            "founder-role-required-error" => Some(crate::skirout::base::organization::v1::member::UpdateOrganizationMemberRolesResponse::FounderRoleRequiredError(::std::boxed::Box::new(::std::default::Default::default()))),
+            "invalid-selection-error" => Some(crate::skirout::base::organization::v1::member::UpdateOrganizationMemberRolesResponse::InvalidSelectionError(::std::boxed::Box::new(::std::default::Default::default()))),
+            "invalid-record-id-error" => Some(crate::skirout::base::organization::v1::member::UpdateOrganizationMemberRolesResponse::InvalidRecordIdError(::std::boxed::Box::new(::std::default::Default::default()))),
             _ => None,
         }
     }
@@ -3373,13 +3373,13 @@ impl crate::SkirResponse
         }
     }
     fn internal_error() -> Self {
-        crate::skirout::base::organization::v1::member::RemoveOrganizationMemberResponse::InternalError(::std::default::Default::default())
+        crate::skirout::base::organization::v1::member::RemoveOrganizationMemberResponse::InternalError(::std::boxed::Box::new(::std::default::Default::default()))
     }
     fn domain_error_from_slug(slug: &str) -> Option<Self> {
         match slug {
-            "user-not-member-error" => Some(crate::skirout::base::organization::v1::member::RemoveOrganizationMemberResponse::UserNotMemberError(::std::default::Default::default())),
-            "founder-cannot-be-removed-error" => Some(crate::skirout::base::organization::v1::member::RemoveOrganizationMemberResponse::FounderCannotBeRemovedError(::std::default::Default::default())),
-            "invalid-record-id-error" => Some(crate::skirout::base::organization::v1::member::RemoveOrganizationMemberResponse::InvalidRecordIdError(::std::default::Default::default())),
+            "user-not-member-error" => Some(crate::skirout::base::organization::v1::member::RemoveOrganizationMemberResponse::UserNotMemberError(::std::boxed::Box::new(::std::default::Default::default()))),
+            "founder-cannot-be-removed-error" => Some(crate::skirout::base::organization::v1::member::RemoveOrganizationMemberResponse::FounderCannotBeRemovedError(::std::boxed::Box::new(::std::default::Default::default()))),
+            "invalid-record-id-error" => Some(crate::skirout::base::organization::v1::member::RemoveOrganizationMemberResponse::InvalidRecordIdError(::std::boxed::Box::new(::std::default::Default::default()))),
             _ => None,
         }
     }
@@ -3405,7 +3405,7 @@ impl crate::SkirResponse
         self.variant_slug().to_owned()
     }
     fn internal_error() -> Self {
-        crate::skirout::base::organization::v1::organization::CreateOrganizationResponse::InternalError(::std::default::Default::default())
+        crate::skirout::base::organization::v1::organization::CreateOrganizationResponse::InternalError(::std::boxed::Box::new(::std::default::Default::default()))
     }
 }
 impl crate::SkirResponse
@@ -3434,11 +3434,11 @@ impl crate::SkirResponse
         }
     }
     fn internal_error() -> Self {
-        crate::skirout::base::organization::v1::organization::DeleteOrganizationResponse::InternalError(::std::default::Default::default())
+        crate::skirout::base::organization::v1::organization::DeleteOrganizationResponse::InternalError(::std::boxed::Box::new(::std::default::Default::default()))
     }
     fn domain_error_from_slug(slug: &str) -> Option<Self> {
         match slug {
-            "invalid-record-id-error" => Some(crate::skirout::base::organization::v1::organization::DeleteOrganizationResponse::InvalidRecordIdError(::std::default::Default::default())),
+            "invalid-record-id-error" => Some(crate::skirout::base::organization::v1::organization::DeleteOrganizationResponse::InvalidRecordIdError(::std::boxed::Box::new(::std::default::Default::default()))),
             _ => None,
         }
     }
@@ -3468,7 +3468,7 @@ impl crate::SkirResponse
     }
     fn internal_error() -> Self {
         crate::skirout::base::organization::v1::role::WatchOrganizationRolesResponse::InternalError(
-            ::std::default::Default::default(),
+            ::std::boxed::Box::new(::std::default::Default::default()),
         )
     }
 }
@@ -3495,7 +3495,7 @@ impl crate::SkirResponse
     }
     fn internal_error() -> Self {
         crate::skirout::base::organization::v1::user::WatchUserOrganizationsResponse::InternalError(
-            ::std::default::Default::default(),
+            ::std::boxed::Box::new(::std::default::Default::default()),
         )
     }
 }
@@ -3522,7 +3522,7 @@ impl crate::SkirResponse
     }
     fn internal_error() -> Self {
         crate::skirout::base::organization::v1::user::WatchUserJoinRequestsResponse::InternalError(
-            ::std::default::Default::default(),
+            ::std::boxed::Box::new(::std::default::Default::default()),
         )
     }
 }
@@ -3564,17 +3564,17 @@ impl crate::SkirResponse
     }
     fn internal_error() -> Self {
         crate::skirout::base::organization::v1::user::SubmitUserJoinRequestResponse::InternalError(
-            ::std::default::Default::default(),
+            ::std::boxed::Box::new(::std::default::Default::default()),
         )
     }
     fn domain_error_from_slug(slug: &str) -> Option<Self> {
         match slug {
-            "code-not-found-error" => Some(crate::skirout::base::organization::v1::user::SubmitUserJoinRequestResponse::CodeNotFoundError(::std::default::Default::default())),
-            "already-member-error" => Some(crate::skirout::base::organization::v1::user::SubmitUserJoinRequestResponse::AlreadyMemberError(::std::default::Default::default())),
-            "no-assignable-roles-error" => Some(crate::skirout::base::organization::v1::user::SubmitUserJoinRequestResponse::NoAssignableRolesError(::std::default::Default::default())),
-            "max-pending-requests-error" => Some(crate::skirout::base::organization::v1::user::SubmitUserJoinRequestResponse::MaxPendingRequestsError(::std::default::Default::default())),
-            "pending-request-exists-error" => Some(crate::skirout::base::organization::v1::user::SubmitUserJoinRequestResponse::PendingRequestExistsError(::std::default::Default::default())),
-            "invalid-record-id-error" => Some(crate::skirout::base::organization::v1::user::SubmitUserJoinRequestResponse::InvalidRecordIdError(::std::default::Default::default())),
+            "code-not-found-error" => Some(crate::skirout::base::organization::v1::user::SubmitUserJoinRequestResponse::CodeNotFoundError(::std::boxed::Box::new(::std::default::Default::default()))),
+            "already-member-error" => Some(crate::skirout::base::organization::v1::user::SubmitUserJoinRequestResponse::AlreadyMemberError(::std::boxed::Box::new(::std::default::Default::default()))),
+            "no-assignable-roles-error" => Some(crate::skirout::base::organization::v1::user::SubmitUserJoinRequestResponse::NoAssignableRolesError(::std::boxed::Box::new(::std::default::Default::default()))),
+            "max-pending-requests-error" => Some(crate::skirout::base::organization::v1::user::SubmitUserJoinRequestResponse::MaxPendingRequestsError(::std::boxed::Box::new(::std::default::Default::default()))),
+            "pending-request-exists-error" => Some(crate::skirout::base::organization::v1::user::SubmitUserJoinRequestResponse::PendingRequestExistsError(::std::boxed::Box::new(::std::default::Default::default()))),
+            "invalid-record-id-error" => Some(crate::skirout::base::organization::v1::user::SubmitUserJoinRequestResponse::InvalidRecordIdError(::std::boxed::Box::new(::std::default::Default::default()))),
             _ => None,
         }
     }
@@ -3608,13 +3608,13 @@ impl crate::SkirResponse
     }
     fn internal_error() -> Self {
         crate::skirout::base::organization::v1::user::CancelUserJoinRequestResponse::InternalError(
-            ::std::default::Default::default(),
+            ::std::boxed::Box::new(::std::default::Default::default()),
         )
     }
     fn domain_error_from_slug(slug: &str) -> Option<Self> {
         match slug {
-            "request-not-found-error" => Some(crate::skirout::base::organization::v1::user::CancelUserJoinRequestResponse::RequestNotFoundError(::std::default::Default::default())),
-            "invalid-record-id-error" => Some(crate::skirout::base::organization::v1::user::CancelUserJoinRequestResponse::InvalidRecordIdError(::std::default::Default::default())),
+            "request-not-found-error" => Some(crate::skirout::base::organization::v1::user::CancelUserJoinRequestResponse::RequestNotFoundError(::std::boxed::Box::new(::std::default::Default::default()))),
+            "invalid-record-id-error" => Some(crate::skirout::base::organization::v1::user::CancelUserJoinRequestResponse::InvalidRecordIdError(::std::boxed::Box::new(::std::default::Default::default()))),
             _ => None,
         }
     }
@@ -3640,7 +3640,7 @@ impl crate::SkirResponse
         self.variant_slug().to_owned()
     }
     fn internal_error() -> Self {
-        crate::skirout::base::service::v1::artifact::FetchSharedArtifactCatalogResponse::InternalError(::std::default::Default::default())
+        crate::skirout::base::service::v1::artifact::FetchSharedArtifactCatalogResponse::InternalError(::std::boxed::Box::new(::std::default::Default::default()))
     }
 }
 impl crate::SkirResponse
@@ -3668,12 +3668,12 @@ impl crate::SkirResponse
     }
     fn internal_error() -> Self {
         crate::skirout::base::service::v1::artifact::PublishSharedArtifactResponse::InternalError(
-            ::std::default::Default::default(),
+            ::std::boxed::Box::new(::std::default::Default::default()),
         )
     }
     fn domain_error_from_slug(slug: &str) -> Option<Self> {
         match slug {
-            "conflict-error" => Some(crate::skirout::base::service::v1::artifact::PublishSharedArtifactResponse::ConflictError(::std::default::Default::default())),
+            "conflict-error" => Some(crate::skirout::base::service::v1::artifact::PublishSharedArtifactResponse::ConflictError(::std::boxed::Box::new(::std::default::Default::default()))),
             _ => None,
         }
     }
@@ -3703,13 +3703,13 @@ impl crate::SkirResponse
     }
     fn internal_error() -> Self {
         crate::skirout::base::service::v1::artifact::FetchArtifactBlobResponse::InternalError(
-            ::std::default::Default::default(),
+            ::std::boxed::Box::new(::std::default::Default::default()),
         )
     }
     fn domain_error_from_slug(slug: &str) -> Option<Self> {
         match slug {
-            "not-found-error" => Some(crate::skirout::base::service::v1::artifact::FetchArtifactBlobResponse::NotFoundError(::std::default::Default::default())),
-            "invalid-error" => Some(crate::skirout::base::service::v1::artifact::FetchArtifactBlobResponse::InvalidError(::std::default::Default::default())),
+            "not-found-error" => Some(crate::skirout::base::service::v1::artifact::FetchArtifactBlobResponse::NotFoundError(::std::boxed::Box::new(::std::default::Default::default()))),
+            "invalid-error" => Some(crate::skirout::base::service::v1::artifact::FetchArtifactBlobResponse::InvalidError(::std::boxed::Box::new(::std::default::Default::default()))),
             _ => None,
         }
     }
@@ -3738,12 +3738,12 @@ impl crate::SkirResponse
     }
     fn internal_error() -> Self {
         crate::skirout::base::service::v1::artifact::StoreArtifactBlobResponse::InternalError(
-            ::std::default::Default::default(),
+            ::std::boxed::Box::new(::std::default::Default::default()),
         )
     }
     fn domain_error_from_slug(slug: &str) -> Option<Self> {
         match slug {
-            "invalid-error" => Some(crate::skirout::base::service::v1::artifact::StoreArtifactBlobResponse::InvalidError(::std::default::Default::default())),
+            "invalid-error" => Some(crate::skirout::base::service::v1::artifact::StoreArtifactBlobResponse::InvalidError(::std::boxed::Box::new(::std::default::Default::default()))),
             _ => None,
         }
     }
@@ -3772,12 +3772,12 @@ impl crate::SkirResponse
         self.variant_slug().to_owned()
     }
     fn internal_error() -> Self {
-        crate::skirout::base::service::v1::artifact::FetchArtifactBlobMetadataResponse::InternalError(::std::default::Default::default())
+        crate::skirout::base::service::v1::artifact::FetchArtifactBlobMetadataResponse::InternalError(::std::boxed::Box::new(::std::default::Default::default()))
     }
     fn domain_error_from_slug(slug: &str) -> Option<Self> {
         match slug {
-            "not-found-error" => Some(crate::skirout::base::service::v1::artifact::FetchArtifactBlobMetadataResponse::NotFoundError(::std::default::Default::default())),
-            "invalid-error" => Some(crate::skirout::base::service::v1::artifact::FetchArtifactBlobMetadataResponse::InvalidError(::std::default::Default::default())),
+            "not-found-error" => Some(crate::skirout::base::service::v1::artifact::FetchArtifactBlobMetadataResponse::NotFoundError(::std::boxed::Box::new(::std::default::Default::default()))),
+            "invalid-error" => Some(crate::skirout::base::service::v1::artifact::FetchArtifactBlobMetadataResponse::InvalidError(::std::boxed::Box::new(::std::default::Default::default()))),
             _ => None,
         }
     }
@@ -3825,20 +3825,20 @@ impl crate::SkirResponse
     }
     fn internal_error() -> Self {
         crate::skirout::base::service::v1::identity::IssueServiceIdentityResponse::InternalError(
-            ::std::default::Default::default(),
+            ::std::boxed::Box::new(::std::default::Default::default()),
         )
     }
     fn domain_error_from_slug(slug: &str) -> Option<Self> {
         match slug {
-            "malformed-request-error" => Some(crate::skirout::base::service::v1::identity::IssueServiceIdentityResponse::MalformedRequestError(::std::default::Default::default())),
-            "unknown-role-error" => Some(crate::skirout::base::service::v1::identity::IssueServiceIdentityResponse::UnknownRoleError(::std::default::Default::default())),
-            "role-unknown-property-error" => Some(crate::skirout::base::service::v1::identity::IssueServiceIdentityResponse::RoleUnknownPropertyError(::std::default::Default::default())),
-            "role-type-invalid-error" => Some(crate::skirout::base::service::v1::identity::IssueServiceIdentityResponse::RoleTypeInvalidError(::std::default::Default::default())),
-            "role-version-invalid-error" => Some(crate::skirout::base::service::v1::identity::IssueServiceIdentityResponse::RoleVersionInvalidError(::std::default::Default::default())),
-            "custom-role-name-required-error" => Some(crate::skirout::base::service::v1::identity::IssueServiceIdentityResponse::CustomRoleNameRequiredError(::std::default::Default::default())),
-            "custom-role-name-invalid-error" => Some(crate::skirout::base::service::v1::identity::IssueServiceIdentityResponse::CustomRoleNameInvalidError(::std::default::Default::default())),
-            "builtin-role-name-forbidden-error" => Some(crate::skirout::base::service::v1::identity::IssueServiceIdentityResponse::BuiltinRoleNameForbiddenError(::std::default::Default::default())),
-            "identity-provider-unavailable-error" => Some(crate::skirout::base::service::v1::identity::IssueServiceIdentityResponse::IdentityProviderUnavailableError(::std::default::Default::default())),
+            "malformed-request-error" => Some(crate::skirout::base::service::v1::identity::IssueServiceIdentityResponse::MalformedRequestError(::std::boxed::Box::new(::std::default::Default::default()))),
+            "unknown-role-error" => Some(crate::skirout::base::service::v1::identity::IssueServiceIdentityResponse::UnknownRoleError(::std::boxed::Box::new(::std::default::Default::default()))),
+            "role-unknown-property-error" => Some(crate::skirout::base::service::v1::identity::IssueServiceIdentityResponse::RoleUnknownPropertyError(::std::boxed::Box::new(::std::default::Default::default()))),
+            "role-type-invalid-error" => Some(crate::skirout::base::service::v1::identity::IssueServiceIdentityResponse::RoleTypeInvalidError(::std::boxed::Box::new(::std::default::Default::default()))),
+            "role-version-invalid-error" => Some(crate::skirout::base::service::v1::identity::IssueServiceIdentityResponse::RoleVersionInvalidError(::std::boxed::Box::new(::std::default::Default::default()))),
+            "custom-role-name-required-error" => Some(crate::skirout::base::service::v1::identity::IssueServiceIdentityResponse::CustomRoleNameRequiredError(::std::boxed::Box::new(::std::default::Default::default()))),
+            "custom-role-name-invalid-error" => Some(crate::skirout::base::service::v1::identity::IssueServiceIdentityResponse::CustomRoleNameInvalidError(::std::boxed::Box::new(::std::default::Default::default()))),
+            "builtin-role-name-forbidden-error" => Some(crate::skirout::base::service::v1::identity::IssueServiceIdentityResponse::BuiltinRoleNameForbiddenError(::std::boxed::Box::new(::std::default::Default::default()))),
+            "identity-provider-unavailable-error" => Some(crate::skirout::base::service::v1::identity::IssueServiceIdentityResponse::IdentityProviderUnavailableError(::std::boxed::Box::new(::std::default::Default::default()))),
             _ => None,
         }
     }
@@ -3864,7 +3864,7 @@ impl crate::SkirResponse
         self.variant_slug().to_owned()
     }
     fn internal_error() -> Self {
-        crate::skirout::base::service::v1::organization::WatchOrganizationServicesResponse::InternalError(::std::default::Default::default())
+        crate::skirout::base::service::v1::organization::WatchOrganizationServicesResponse::InternalError(::std::boxed::Box::new(::std::default::Default::default()))
     }
 }
 impl crate::SkirResponse
@@ -3899,14 +3899,14 @@ impl crate::SkirResponse
         }
     }
     fn internal_error() -> Self {
-        crate::skirout::base::service::v1::organization::UpdateOrganizationServiceResponse::InternalError(::std::default::Default::default())
+        crate::skirout::base::service::v1::organization::UpdateOrganizationServiceResponse::InternalError(::std::boxed::Box::new(::std::default::Default::default()))
     }
     fn domain_error_from_slug(slug: &str) -> Option<Self> {
         match slug {
-            "conflict-error" => Some(crate::skirout::base::service::v1::organization::UpdateOrganizationServiceResponse::ConflictError(::std::default::Default::default())),
-            "service-not-found-error" => Some(crate::skirout::base::service::v1::organization::UpdateOrganizationServiceResponse::ServiceNotFoundError(::std::default::Default::default())),
-            "validation-error" => Some(crate::skirout::base::service::v1::organization::UpdateOrganizationServiceResponse::ValidationError(::std::default::Default::default())),
-            "invalid-record-id-error" => Some(crate::skirout::base::service::v1::organization::UpdateOrganizationServiceResponse::InvalidRecordIdError(::std::default::Default::default())),
+            "conflict-error" => Some(crate::skirout::base::service::v1::organization::UpdateOrganizationServiceResponse::ConflictError(::std::boxed::Box::new(::std::default::Default::default()))),
+            "service-not-found-error" => Some(crate::skirout::base::service::v1::organization::UpdateOrganizationServiceResponse::ServiceNotFoundError(::std::boxed::Box::new(::std::default::Default::default()))),
+            "validation-error" => Some(crate::skirout::base::service::v1::organization::UpdateOrganizationServiceResponse::ValidationError(::std::boxed::Box::new(::std::default::Default::default()))),
+            "invalid-record-id-error" => Some(crate::skirout::base::service::v1::organization::UpdateOrganizationServiceResponse::InvalidRecordIdError(::std::boxed::Box::new(::std::default::Default::default()))),
             _ => None,
         }
     }
@@ -3938,13 +3938,13 @@ impl crate::SkirResponse for crate::skirout::base::service::v1::registration::Bi
     }
     fn internal_error() -> Self {
         crate::skirout::base::service::v1::registration::BindServiceResponse::InternalError(
-            ::std::default::Default::default(),
+            ::std::boxed::Box::new(::std::default::Default::default()),
         )
     }
     fn domain_error_from_slug(slug: &str) -> Option<Self> {
         match slug {
-            "invalid-registration-token-error" => Some(crate::skirout::base::service::v1::registration::BindServiceResponse::InvalidRegistrationTokenError(::std::default::Default::default())),
-            "organization-not-found-error" => Some(crate::skirout::base::service::v1::registration::BindServiceResponse::OrganizationNotFoundError(::std::default::Default::default())),
+            "invalid-registration-token-error" => Some(crate::skirout::base::service::v1::registration::BindServiceResponse::InvalidRegistrationTokenError(::std::boxed::Box::new(::std::default::Default::default()))),
+            "organization-not-found-error" => Some(crate::skirout::base::service::v1::registration::BindServiceResponse::OrganizationNotFoundError(::std::boxed::Box::new(::std::default::Default::default()))),
             _ => None,
         }
     }
@@ -3976,12 +3976,12 @@ impl crate::SkirResponse
     }
     fn internal_error() -> Self {
         crate::skirout::base::service::v1::registration::UnbindServiceResponse::InternalError(
-            ::std::default::Default::default(),
+            ::std::boxed::Box::new(::std::default::Default::default()),
         )
     }
     fn domain_error_from_slug(slug: &str) -> Option<Self> {
         match slug {
-            "service-not-found-error" => Some(crate::skirout::base::service::v1::registration::UnbindServiceResponse::ServiceNotFoundError(::std::default::Default::default())),
+            "service-not-found-error" => Some(crate::skirout::base::service::v1::registration::UnbindServiceResponse::ServiceNotFoundError(::std::boxed::Box::new(::std::default::Default::default()))),
             _ => None,
         }
     }
@@ -4012,7 +4012,7 @@ impl crate::SkirResponse for crate::skirout::base::service::v1::rollout::ProbeRe
     }
     fn internal_error() -> Self {
         crate::skirout::base::service::v1::rollout::ProbeRealmHostsResponse::InternalError(
-            ::std::default::Default::default(),
+            ::std::boxed::Box::new(::std::default::Default::default()),
         )
     }
 }
@@ -4049,15 +4049,15 @@ impl crate::SkirResponse
     }
     fn internal_error() -> Self {
         crate::skirout::base::service::v1::rollout::ApplyRolloutCommandResponse::InternalError(
-            ::std::default::Default::default(),
+            ::std::boxed::Box::new(::std::default::Default::default()),
         )
     }
     fn domain_error_from_slug(slug: &str) -> Option<Self> {
         match slug {
-            "stale-attempt-error" => Some(crate::skirout::base::service::v1::rollout::ApplyRolloutCommandResponse::StaleAttemptError(::std::default::Default::default())),
-            "attempt-conflict-error" => Some(crate::skirout::base::service::v1::rollout::ApplyRolloutCommandResponse::AttemptConflictError(::std::default::Default::default())),
-            "command-rejected-error" => Some(crate::skirout::base::service::v1::rollout::ApplyRolloutCommandResponse::CommandRejectedError(::std::default::Default::default())),
-            "command-failed-error" => Some(crate::skirout::base::service::v1::rollout::ApplyRolloutCommandResponse::CommandFailedError(::std::default::Default::default())),
+            "stale-attempt-error" => Some(crate::skirout::base::service::v1::rollout::ApplyRolloutCommandResponse::StaleAttemptError(::std::boxed::Box::new(::std::default::Default::default()))),
+            "attempt-conflict-error" => Some(crate::skirout::base::service::v1::rollout::ApplyRolloutCommandResponse::AttemptConflictError(::std::boxed::Box::new(::std::default::Default::default()))),
+            "command-rejected-error" => Some(crate::skirout::base::service::v1::rollout::ApplyRolloutCommandResponse::CommandRejectedError(::std::boxed::Box::new(::std::default::Default::default()))),
+            "command-failed-error" => Some(crate::skirout::base::service::v1::rollout::ApplyRolloutCommandResponse::CommandFailedError(::std::boxed::Box::new(::std::default::Default::default()))),
             _ => None,
         }
     }
@@ -4086,7 +4086,7 @@ impl crate::SkirResponse
     }
     fn internal_error() -> Self {
         crate::skirout::base::service::v1::rollout::QueryParticipantStatusResponse::InternalError(
-            ::std::default::Default::default(),
+            ::std::boxed::Box::new(::std::default::Default::default()),
         )
     }
 }
@@ -4117,12 +4117,12 @@ impl crate::SkirResponse
     }
     fn internal_error() -> Self {
         crate::skirout::base::service::v1::status::QueryServiceBindingResponse::InternalError(
-            ::std::default::Default::default(),
+            ::std::boxed::Box::new(::std::default::Default::default()),
         )
     }
     fn domain_error_from_slug(slug: &str) -> Option<Self> {
         match slug {
-            "service-not-found-error" => Some(crate::skirout::base::service::v1::status::QueryServiceBindingResponse::ServiceNotFoundError(::std::default::Default::default())),
+            "service-not-found-error" => Some(crate::skirout::base::service::v1::status::QueryServiceBindingResponse::ServiceNotFoundError(::std::boxed::Box::new(::std::default::Default::default()))),
             _ => None,
         }
     }
@@ -4155,12 +4155,12 @@ impl crate::SkirResponse
     }
     fn internal_error() -> Self {
         crate::skirout::base::service::v1::status::EnsureRegistrationLeaseResponse::InternalError(
-            ::std::default::Default::default(),
+            ::std::boxed::Box::new(::std::default::Default::default()),
         )
     }
     fn domain_error_from_slug(slug: &str) -> Option<Self> {
         match slug {
-            "service-not-found-error" => Some(crate::skirout::base::service::v1::status::EnsureRegistrationLeaseResponse::ServiceNotFoundError(::std::default::Default::default())),
+            "service-not-found-error" => Some(crate::skirout::base::service::v1::status::EnsureRegistrationLeaseResponse::ServiceNotFoundError(::std::boxed::Box::new(::std::default::Default::default()))),
             _ => None,
         }
     }
@@ -4200,16 +4200,16 @@ impl crate::SkirResponse
     }
     fn internal_error() -> Self {
         crate::skirout::base::service::v1::topology::ConfigureServiceHostResponse::InternalError(
-            ::std::default::Default::default(),
+            ::std::boxed::Box::new(::std::default::Default::default()),
         )
     }
     fn domain_error_from_slug(slug: &str) -> Option<Self> {
         match slug {
-            "conflict-error" => Some(crate::skirout::base::service::v1::topology::ConfigureServiceHostResponse::ConflictError(::std::default::Default::default())),
-            "invalid-configuration-error" => Some(crate::skirout::base::service::v1::topology::ConfigureServiceHostResponse::InvalidConfigurationError(::std::default::Default::default())),
-            "incompatible-engine-error" => Some(crate::skirout::base::service::v1::topology::ConfigureServiceHostResponse::IncompatibleEngineError(::std::default::Default::default())),
-            "realm-not-found-error" => Some(crate::skirout::base::service::v1::topology::ConfigureServiceHostResponse::RealmNotFoundError(::std::default::Default::default())),
-            "invalid-record-id-error" => Some(crate::skirout::base::service::v1::topology::ConfigureServiceHostResponse::InvalidRecordIdError(::std::default::Default::default())),
+            "conflict-error" => Some(crate::skirout::base::service::v1::topology::ConfigureServiceHostResponse::ConflictError(::std::boxed::Box::new(::std::default::Default::default()))),
+            "invalid-configuration-error" => Some(crate::skirout::base::service::v1::topology::ConfigureServiceHostResponse::InvalidConfigurationError(::std::boxed::Box::new(::std::default::Default::default()))),
+            "incompatible-engine-error" => Some(crate::skirout::base::service::v1::topology::ConfigureServiceHostResponse::IncompatibleEngineError(::std::boxed::Box::new(::std::default::Default::default()))),
+            "realm-not-found-error" => Some(crate::skirout::base::service::v1::topology::ConfigureServiceHostResponse::RealmNotFoundError(::std::boxed::Box::new(::std::default::Default::default()))),
+            "invalid-record-id-error" => Some(crate::skirout::base::service::v1::topology::ConfigureServiceHostResponse::InvalidRecordIdError(::std::boxed::Box::new(::std::default::Default::default()))),
             _ => None,
         }
     }
@@ -4235,7 +4235,7 @@ impl crate::SkirResponse
         self.variant_slug().to_owned()
     }
     fn internal_error() -> Self {
-        crate::skirout::base::service::v1::topology::WatchOrganizationTopologyResponse::InternalError(::std::default::Default::default())
+        crate::skirout::base::service::v1::topology::WatchOrganizationTopologyResponse::InternalError(::std::boxed::Box::new(::std::default::Default::default()))
     }
 }
 impl crate::SkirResponse
@@ -4262,7 +4262,7 @@ impl crate::SkirResponse
     }
     fn internal_error() -> Self {
         crate::skirout::base::service::v1::topology::WatchHostExecutionResponse::InternalError(
-            ::std::default::Default::default(),
+            ::std::boxed::Box::new(::std::default::Default::default()),
         )
     }
 }
@@ -4293,12 +4293,12 @@ impl crate::SkirResponse
     }
     fn internal_error() -> Self {
         crate::skirout::base::service::v1::topology::ReportHostExecutionResponse::InternalError(
-            ::std::default::Default::default(),
+            ::std::boxed::Box::new(::std::default::Default::default()),
         )
     }
     fn domain_error_from_slug(slug: &str) -> Option<Self> {
         match slug {
-            "stale-revision-error" => Some(crate::skirout::base::service::v1::topology::ReportHostExecutionResponse::StaleRevisionError(::std::default::Default::default())),
+            "stale-revision-error" => Some(crate::skirout::base::service::v1::topology::ReportHostExecutionResponse::StaleRevisionError(::std::boxed::Box::new(::std::default::Default::default()))),
             _ => None,
         }
     }
@@ -4330,12 +4330,12 @@ impl crate::SkirResponse
     }
     fn internal_error() -> Self {
         crate::skirout::base::service::v1::topology::GetServiceMessagingScopeResponse::InternalError(
-            ::std::default::Default::default(),
+            ::std::boxed::Box::new(::std::default::Default::default()),
         )
     }
     fn domain_error_from_slug(slug: &str) -> Option<Self> {
         match slug {
-            "not-found-error" => Some(crate::skirout::base::service::v1::topology::GetServiceMessagingScopeResponse::NotFoundError(::std::default::Default::default())),
+            "not-found-error" => Some(crate::skirout::base::service::v1::topology::GetServiceMessagingScopeResponse::NotFoundError(::std::boxed::Box::new(::std::default::Default::default()))),
             _ => None,
         }
     }
@@ -4364,7 +4364,7 @@ impl crate::SkirResponse
     }
     fn internal_error() -> Self {
         crate::skirout::base::service::v1::topology::RegisterServiceHostResponse::InternalError(
-            ::std::default::Default::default(),
+            ::std::boxed::Box::new(::std::default::Default::default()),
         )
     }
 }

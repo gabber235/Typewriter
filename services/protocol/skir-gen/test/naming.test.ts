@@ -3,7 +3,7 @@ import { describe, expect, test } from "bun:test";
 import type { CodeGenerator, RecordLocation } from "skir-internal";
 
 import type { ResolvedRoute } from "../src/routes/resolve.js";
-import { kotlinWrapperClass, LANGUAGE_GENERATORS, symbolProviders } from "../src/symbols.js";
+import { LANGUAGE_GENERATORS, symbolProviders } from "../src/symbols.js";
 import { Config } from "../src/config.js";
 import { OperationsConfig } from "../src/operations/index.js";
 import { committedRoutes, DART_PREFIX, generatorConfig, SKIR_GENERATORS } from "./support.js";
@@ -128,11 +128,6 @@ describe("naming agrees with generated Skir output", async () => {
         const rustPattern = last(providers.rust.variant(location, variant).reference, "::");
         expect(rustPattern.endsWith("(_)")).toBe(variant.type !== undefined);
         expect(rust).toContain(rustPattern.replace("(_)", ""));
-
-        if (variant.type !== undefined) {
-          const wrapper = last(kotlinWrapperClass(providers.kotlin, location, variant), ".");
-          expect(kotlinFile(location.modulePath)).toContain(`class ${wrapper}`);
-        }
       }
     }
   });

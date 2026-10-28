@@ -1,7 +1,7 @@
 import type { CodeGenerator } from "skir-internal";
 
 import { UNKNOWN_SLUG, type Outcome, type OutcomeResponse } from "../../outcomes.js";
-import { importedKotlinSymbol, kotlinWrapperClass } from "../../symbols.js";
+import { fillTemplate, importedKotlinSymbol } from "../../symbols.js";
 import { lowerCamel, quoted } from "../../text.js";
 import { REPLY_INBOX } from "../grants.js";
 import {
@@ -90,7 +90,7 @@ function emitPolicy(response: OutcomeResponse, symbols: CodeGenerator.SymbolProv
       `        ${symbols.variant(location, field).reference} -> ResponseClassification.${CLASSIFICATION[outcome]}(${kotlinString(slug)})`,
   );
   return `private val ${policyName(response)} = ResponsePolicy<${type}>(
-    ${kotlinWrapperClass(symbols, location, internalError)}(${internalErrorRecord}.partial()),
+    ${fillTemplate(symbols.variantConstructor(location, internalError), `${internalErrorRecord}.partial()`)},
 ) { response ->
     when (response.kind) {
 ${arms.join("\n")}
