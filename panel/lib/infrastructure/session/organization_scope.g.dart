@@ -37,7 +37,7 @@ final class OrganizationIdProvider
         argument: null,
         retry: null,
         name: r'organizationIdProvider',
-        isAutoDispose: true,
+        isAutoDispose: false,
         dependencies: null,
         $allTransitiveDependencies: null,
       );
@@ -64,4 +64,4 @@ final class OrganizationIdProvider
   }
 }
 
-String _$organizationIdHash() => r'7eb63d4df0d5163bd3cd75644fc63f619087e550';
+String _$organizationIdHash() => r'db502a9f3f917818491e08faaf0aded24eb6ce52';

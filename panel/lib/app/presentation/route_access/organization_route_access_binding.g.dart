@@ -40,7 +40,7 @@ final class _OrganizationAccessSnapshotProvider
         argument: null,
         retry: null,
         name: r'_organizationAccessSnapshotProvider',
-        isAutoDispose: false,
+        isAutoDispose: true,
         dependencies: null,
         $allTransitiveDependencies: null,
       );
@@ -69,4 +69,4 @@ final class _OrganizationAccessSnapshotProvider
 }
 
 String _$_organizationAccessSnapshotHash() =>
-    r'8f6f84251d5dc19f5a197cd2b95ca7192f1646a6';
+    r'132f5a6df827f3cce3d7a526b8a53ba4daa26a3d';
