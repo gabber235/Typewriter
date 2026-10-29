@@ -44,4 +44,11 @@ dependencies {
 
 tasks.withType<Test> {
     useJUnitPlatform()
+    // CI keeps only the console, so a failure must print its full cause chain there.
+    testLogging {
+        events(org.gradle.api.tasks.testing.logging.TestLogEvent.FAILED)
+        exceptionFormat = org.gradle.api.tasks.testing.logging.TestExceptionFormat.FULL
+        showCauses = true
+        showStackTraces = true
+    }
 }
