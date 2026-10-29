@@ -1,19 +1,9 @@
-import { GENERATOR as DART_GENERATOR } from "skir-dart-gen";
-import { GENERATOR as KOTLIN_GENERATOR } from "skir-kotlin-gen";
-import { convertCase, type CodeGenerator, type Field, type RecordLocation } from "skir-internal";
+import { GENERATOR as DART } from "skir-dart-gen";
+import type { CodeGenerator } from "skir-internal";
+import { GENERATOR as KOTLIN } from "skir-kotlin-gen";
 import { GENERATOR as RUST } from "skir-rust-gen";
 
 import type { Config } from "./config.js";
-
-/**
- * skir-kotlin-gen and skir-dart-gen still declare their types against skir-internal 0.1.1, whose
- * model types TypeScript does not relate to the 0.2.21 ones the compiler uses. The compiler hands
- * every generator the same model, so both are typed through the current contract.
- *
- * TODO: drop once both generators depend on skir-internal 0.2.
- */
-const KOTLIN = KOTLIN_GENERATOR as unknown as CodeGenerator<{ packagePrefix?: string }>;
-const DART = DART_GENERATOR as unknown as CodeGenerator<{ importUriPrefix?: string }>;
 
 /** The Skir language generators whose output the transport routes reference, by target. */
 export const LANGUAGE_GENERATORS = { kotlin: KOTLIN, dart: DART, rust: RUST } as const;
@@ -69,32 +59,9 @@ export function importedKotlinSymbol(symbol: CodeGenerator.Symbol): {
 }
 
 /**
- * The Kotlin class that wraps a payload into one wrapper variant, such as
- * `skirout.service.v1.status.QueryServiceBindingResponse.InternalErrorWrapper`. The providers
- * describe how to match a variant, not how to build one, so this follows the wrapper class naming of
- * skir-kotlin-gen; naming.test.ts checks it against the generated output.
- *
- * TODO: use a constructor member once the upstream symbol provider describes one.
+ * Fills the `{value}` slot of a template symbol, such as a variant constructor, with `value`. A
+ * symbol without the slot, such as a constant variant, is returned as is.
  */
-export function kotlinWrapperClass(
-  symbols: CodeGenerator.SymbolProvider,
-  location: RecordLocation,
-  variant: Field,
-): string {
-  return `${symbols.record(location).reference}.${convertCase(variant.name.text, "UpperCamel")}Wrapper`;
-}
-
-/**
- * The Rust expression that builds one variant with a default payload, derived from the provider's
- * match pattern: a wrapper variant pattern ends in `(_)`, a constant variant pattern is the value.
- */
-export function rustDefaultVariant(
-  symbols: CodeGenerator.SymbolProvider,
-  location: RecordLocation,
-  variant: Field,
-): string {
-  const pattern = symbols.variant(location, variant).reference;
-  return pattern.endsWith("(_)")
-    ? `${pattern.slice(0, -"(_)".length)}(::std::default::Default::default())`
-    : pattern;
+export function fillTemplate(symbol: CodeGenerator.Symbol, value: string): string {
+  return symbol.reference.replaceAll("{value}", value);
 }

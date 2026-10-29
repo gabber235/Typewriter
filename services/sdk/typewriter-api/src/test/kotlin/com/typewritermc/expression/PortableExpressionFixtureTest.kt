@@ -170,7 +170,7 @@ private fun JsonObject.fixtureCase(file: String): FixtureCase {
     return FixtureCase(
         file = file,
         id = id,
-        expression = ExpressionNode.serializer.fromJsonCode(getValue("expression").toString()),
+        expression = ExpressionNode.serializer.fromJson(getValue("expression")),
         inputs =
             this["inputs"]
                 ?.jsonObject
@@ -181,13 +181,13 @@ private fun JsonObject.fixtureCase(file: String): FixtureCase {
                     ExpressionBindingId(value = name) to
                         FixtureInput(
                             value = input.getValue("value").jsonObject.compactValue(),
-                            type = input["type"]?.let { ExpressionType.serializer.fromJsonCode(it.toString()) },
+                            type = input["type"]?.let { ExpressionType.serializer.fromJson(it) },
                             located = input["located"]?.jsonPrimitive?.boolean ?: true,
                         )
                 }.toMap(),
         check = check,
         definitions =
-            this["typeDefinitions"]?.jsonArray.orEmpty().map { TypeDefinition.serializer.fromJsonCode(it.toString()).requireValid() },
+            this["typeDefinitions"]?.jsonArray.orEmpty().map { TypeDefinition.serializer.fromJson(it).requireValid() },
         budget =
             EvaluationBudget(
                 maxSteps = budget?.get("maxSteps")?.jsonPrimitive?.long ?: 1000,
@@ -222,7 +222,7 @@ private fun FixtureCase.checkWith(check: JsonObject) {
     val checker = PortableExpressionChecker(catalog::resolve)
     val failures =
         checker
-            .checkExpressionCodes(expression, bindings, ExpressionType.serializer.fromJsonCode(check.getValue("resultType").toString()))
+            .checkExpressionCodes(expression, bindings, ExpressionType.serializer.fromJson(check.getValue("resultType")))
             .map { it.value }
     failures.sorted() shouldBe
         check
@@ -232,7 +232,7 @@ private fun FixtureCase.checkWith(check: JsonObject) {
             .sorted()
     check["inferredType"]?.let {
         checker.inferExpression(expression, bindings) shouldBe
-            ExpressionInference.Typed(ExpressionType.serializer.fromJsonCode(it.toString()))
+            ExpressionInference.Typed(ExpressionType.serializer.fromJson(it))
     }
 }
 
@@ -358,7 +358,7 @@ private fun JsonObject.named(): DataValue {
                 getValue("name").jsonPrimitive.content,
                 this["revision"]?.jsonPrimitive?.int ?: 1,
             )
-    val arguments = this["arguments"]?.jsonArray.orEmpty().map { TypeUse.serializer.fromJsonCode(it.toString()).requireValid() }
+    val arguments = this["arguments"]?.jsonArray.orEmpty().map { TypeUse.serializer.fromJson(it).requireValid() }
     return DataValue.named(definition.namedUse(arguments), getValue("payload").jsonObject.compactValue())
 }
 

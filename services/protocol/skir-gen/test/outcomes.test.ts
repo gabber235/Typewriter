@@ -191,9 +191,9 @@ method Ping(struct {}): enum {
     expect(rust!.code).toContain(`            ${response}::RefusedError(_) => "refused-error",`);
     expect(rust!.code).toContain('            _ => "unknown",');
     expect(rust!.code).toContain(`            ${response}::RefusedError(_) => "The pong was refused.".to_owned(),`);
-    expect(rust!.code).toContain(`        ${response}::InternalError(::std::default::Default::default())`);
+    expect(rust!.code).toContain(`        ${response}::InternalError(::std::boxed::Box::new(::std::default::Default::default()))`);
     expect(rust!.code).toContain(
-      `            "refused-error" => Some(${response}::RefusedError(::std::default::Default::default())),`,
+      `            "refused-error" => Some(${response}::RefusedError(::std::boxed::Box::new(::std::default::Default::default()))),`,
     );
   });
 

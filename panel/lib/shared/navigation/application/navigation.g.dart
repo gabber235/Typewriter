@@ -156,7 +156,7 @@ final class RouteParamProvider
   }) : super(
          retry: null,
          name: r'routeParamProvider',
-         isAutoDispose: true,
+         isAutoDispose: false,
          dependencies: null,
          $allTransitiveDependencies: null,
        );
@@ -201,7 +201,7 @@ final class RouteParamProvider
   }
 }
 
-String _$routeParamHash() => r'52d8b8a260a596410c164da691c14e2ac40c07f8';
+String _$routeParamHash() => r'156bc178435851c0edda37383fd04545255bd8d2';
 
 /// Reads an inherited path parameter from the router's active top route.
 ///
@@ -217,7 +217,7 @@ final class RouteParamFamily extends $Family
         name: r'routeParamProvider',
         dependencies: null,
         $allTransitiveDependencies: null,
-        isAutoDispose: true,
+        isAutoDispose: false,
       );
 
   /// Reads an inherited path parameter from the router's active top route.

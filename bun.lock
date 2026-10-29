@@ -5,10 +5,10 @@
     "": {
       "name": "typewriter-build-tools",
       "dependencies": {
-        "skir": "1.2.24",
-        "skir-dart-gen": "1.0.9",
-        "skir-kotlin-gen": "1.0.12",
-        "skir-rust-gen": "0.1.5",
+        "skir": "1.2.25",
+        "skir-dart-gen": "1.0.10",
+        "skir-kotlin-gen": "1.0.13",
+        "skir-rust-gen": "0.1.6",
         "typewriter-skir-gen": "workspace:*",
         "yaml": "2.9.1",
         "zod": "4.6.7",
@@ -19,7 +19,7 @@
         "@types/node": "26.6.5",
         "conventional-changelog-conventionalcommits": "^10.4.1",
         "lefthook": "2.2.2",
-        "skir-internal": "0.2.21",
+        "skir-internal": "0.2.22",
         "typescript": "7.0.2",
       },
     },
@@ -30,12 +30,6 @@
   "trustedDependencies": [
     "lefthook",
   ],
-  "patchedDependencies": {
-    "skir-kotlin-gen@1.0.12": "services/protocol/skir-gen/dependency-patches/skir-kotlin-gen@1.0.12.patch",
-    "skir-dart-gen@1.0.9": "services/protocol/skir-gen/dependency-patches/skir-dart-gen@1.0.9.patch",
-    "skir-rust-gen@0.1.5": "services/protocol/skir-gen/dependency-patches/skir-rust-gen@0.1.5.patch",
-    "skir-internal@0.2.21": "services/protocol/skir-gen/dependency-patches/skir-internal@0.2.21.patch",
-  },
   "packages": {
     "@babel/code-frame": ["@babel/code-frame@7.29.7", "", { "dependencies": { "@babel/helper-validator-identifier": "^7.29.7", "js-tokens": "^4.0.0", "picocolors": "^1.1.1" } }, "sha512-Aup7aUOfpbAUg2ROOJN6Iw5f9DMBlzu0mIkm/malLQFN/YQgO48wCj0Kxa3sEHJvPVFg7siR+qRInwXd2qhQKw=="],
 
@@ -249,13 +243,13 @@
 
     "semver": ["semver@7.8.5", "", { "bin": { "semver": "bin/semver.js" } }, "sha512-Y7/KDsb8LjooZpwaqGyulO6DQlksgCncchHGk+sZIY4SBvUocMBEFH5Ur1fI4dV+Jvl0w6cjvucaIi40puRioA=="],
 
-    "skir": ["skir@1.2.24", "", { "dependencies": { "glob": "^13.0.6", "skir-cc-gen": "^1.0.16", "skir-csharp-gen": "^0.1.1", "skir-dart-gen": "^1.0.9", "skir-elixir-gen": "^0.1.3", "skir-gleam-gen": "^0.1.4", "skir-go-gen": "^0.1.7", "skir-internal": "^0.2.21", "skir-java-gen": "^1.0.10", "skir-kotlin-gen": "^1.0.12", "skir-moonbit-gen": "^0.1.0", "skir-python-gen": "^1.0.9", "skir-rust-gen": "^0.1.5", "skir-swift-gen": "^0.1.7", "skir-typescript-gen": "^1.0.11", "skir-zig-gen": "^0.1.8", "watcher": "^2.3.1", "yaml": "^2.7.1", "zod": "^4.3.6" }, "bin": { "skir": "dist/compiler.js" } }, "sha512-/GzZ8IEjoKEFHppcpXTRLXDiXNaxK3p8QS+cu5ySCStREdL+Z8LR2+SoE+mpuAPMiE70uXpCRZQ4WstMblM9mA=="],
+    "skir": ["skir@1.2.25", "", { "dependencies": { "glob": "^13.0.6", "skir-cc-gen": "^1.0.16", "skir-csharp-gen": "^0.1.1", "skir-dart-gen": "^1.0.10", "skir-elixir-gen": "^0.1.3", "skir-gleam-gen": "^0.1.4", "skir-go-gen": "^0.1.7", "skir-internal": "^0.2.21", "skir-java-gen": "^1.0.10", "skir-kotlin-gen": "^1.0.13", "skir-moonbit-gen": "^0.1.0", "skir-python-gen": "^1.0.9", "skir-rust-gen": "^0.1.6", "skir-swift-gen": "^0.1.7", "skir-typescript-gen": "^1.0.11", "skir-zig-gen": "^0.1.8", "watcher": "^2.3.1", "yaml": "^2.7.1", "zod": "^4.3.6" }, "bin": { "skir": "dist/compiler.js" } }, "sha512-4cjO3613hhQFOEbX0qQLBo13H2KhKhXLy9W25gCJjGH7em7qgYbbQ2rFs3K84ThsnhJFCF5SBOQMXmMAlGx+IQ=="],
 
     "skir-cc-gen": ["skir-cc-gen@1.0.16", "", { "dependencies": { "skir-internal": "^0.2.19", "zod": "^4.2.1" } }, "sha512-BpL81tWcOndPtIReX3ek+ZGK6wblCiTUvX2rf0tcc8LuMtVMD1y7iCT4+Mh2aZmnWTxjmJYjqIBiTXooLPyhCg=="],
 
     "skir-csharp-gen": ["skir-csharp-gen@0.1.1", "", { "dependencies": { "skir-internal": "^0.2.21", "zod": "^4.2.1" } }, "sha512-aP594TnW2iSRBnp9H7TeYyXNS9NmmERT3WF80mNhNdanBeShzvnuQu0QgShJMX0k5nQEoK579lZNSwSYNAZBSQ=="],
 
-    "skir-dart-gen": ["skir-dart-gen@1.0.9", "", { "dependencies": { "skir-internal": "^0.1.1", "zod": "^4.2.1" } }, "sha512-niB2TE1BOaMdXUDT5SvUQ2RHJqlDUH88OFFm4Ufir0GmqHHo5qIsypR+wWcjB4LUwDH2HVBfztRn4V3MA5OL/A=="],
+    "skir-dart-gen": ["skir-dart-gen@1.0.10", "", { "dependencies": { "skir-internal": "^0.2.22", "zod": "^4.2.1" } }, "sha512-fERQKS8k5Ku5aW3kIxpU1R1s/mDWeU98HGHNz8I9Uk4P8d+f+raKPGBFjqTtxyHJU9LtzPK8iVm6no6941GYrw=="],
 
     "skir-elixir-gen": ["skir-elixir-gen@0.1.3", "", { "dependencies": { "skir-internal": "^0.2.21", "zod": "^4.3.6" } }, "sha512-9qEEUvmJR+fOkech3VYsCp2Xl3RcpiHWiDKltQy0yM8H5PdaY09sVKfs98liuhhp4mmu3heho/6J+LTPiBjBUQ=="],
 
@@ -263,17 +257,17 @@
 
     "skir-go-gen": ["skir-go-gen@0.1.7", "", { "dependencies": { "skir-internal": "^0.1.1", "zod": "^4.2.1" } }, "sha512-E3INrMI+Hx8e9qUkscZD5Ggite1g8SEqv6bAQp8dcAROL86cV5qnOrkv2WUSZGJhpjHfppzVTcwOgQPyYgUgyw=="],
 
-    "skir-internal": ["skir-internal@0.2.21", "", { "dependencies": { "zod": "^4.3.6" }, "bin": { "skir-internal": "dist/compiler.js" } }, "sha512-Fnuq+Y6iY4mF/9BxgeZn89N7qageN0DFzyNo2iEOSSP2TpFl/1maXX0ZdUJGLQzrBYWlj8Cv5qn6f4bEtkMulg=="],
+    "skir-internal": ["skir-internal@0.2.22", "", { "dependencies": { "zod": "^4.3.6" }, "bin": { "skir-internal": "dist/compiler.js" } }, "sha512-ulZ1ZK53TArHE4tbNHfIGkQlOKLkXOlEr2fznbVzDdVvlUDu4XmoBB7ySDNoboD4bDbwoEJmEz9JpDmMXwNkaQ=="],
 
     "skir-java-gen": ["skir-java-gen@1.0.10", "", { "dependencies": { "skir-internal": "^0.1.1", "zod": "^4.2.1" } }, "sha512-oE9bEVHmclzp6AGgfPmN1EygNq9oM4QI5+UEbfXx/9wwiNli0FNlT/RaSNzjUr3566oxlmaOLwHihel2VHPr3w=="],
 
-    "skir-kotlin-gen": ["skir-kotlin-gen@1.0.12", "", { "dependencies": { "skir-internal": "^0.1.1", "zod": "^4.2.1" } }, "sha512-OFR5Fj0AP/WxPiB701n3AcfWcmV8hz1Dsy5Gznan6iCEHWFndcH8tJL0B49ghDy4LjZ09bqNzX4HHAXgVAtUdg=="],
+    "skir-kotlin-gen": ["skir-kotlin-gen@1.0.13", "", { "dependencies": { "skir-internal": "^0.2.22", "zod": "^4.2.1" } }, "sha512-gP0Gy9UKoDgv90Dmw7Xcm1e8nUBrVOsHwbePPxQvsv1lF7vp6htzgOYpWNScWxr26cLbZstQxj7i9S0cUS/KVg=="],
 
     "skir-moonbit-gen": ["skir-moonbit-gen@0.1.1", "", { "dependencies": { "skir-internal": "^0.2.19", "zod": "^4.2.1" } }, "sha512-AYQj/WRuViIjrMi7fcm9meph2tGQOJpf8iSBDU0Jy3IlWm+2AVfyqKnJT/FUaOwdzYhiYLXc/Q2ibIuZJOP1mw=="],
 
     "skir-python-gen": ["skir-python-gen@1.0.9", "", { "dependencies": { "skir-internal": "^0.1.1", "zod": "^4.2.1" } }, "sha512-dJBq8+dQAZWHlUUxR0irCMOgsfmkS/AbyZYO/ihzG0kWR01NUwS22Usm/ZjivZWv9JL+fvNy8jIBW5B5/H+J8Q=="],
 
-    "skir-rust-gen": ["skir-rust-gen@0.1.5", "", { "dependencies": { "skir-internal": "^0.2.19", "zod": "^4.2.1" } }, "sha512-4OX7flc2WFzz2VURmlcxDZlTgJKQEl3XKqKuDIxayfF17nCTqjDE2Mlxf5vIohl0urh5tgzMQy2Qm1EqXEPxmg=="],
+    "skir-rust-gen": ["skir-rust-gen@0.1.6", "", { "dependencies": { "skir-internal": "^0.2.22", "zod": "^4.2.1" } }, "sha512-8CyX0WYHkQZDENkT/CuIXcOpeRFbDfmpULECEGir0HBSn1UKbcMW3SCHg982uQHL2MkkrfyV9eRjVRAAA81BcQ=="],
 
     "skir-swift-gen": ["skir-swift-gen@0.1.8", "", { "dependencies": { "skir-internal": "^0.1.1", "zod": "^4.2.1" } }, "sha512-oQShiizp1+5z9zrER6qMktfIZJ9pQgACSYpxZnJiTZ+YMbLsdweyRtfrlnrbTjyWspHd7RxDMT7q+ENJoHAItA=="],
 
@@ -317,19 +311,27 @@
 
     "import-fresh/resolve-from": ["resolve-from@4.0.0", "", {}, "sha512-pb/MYmXstAkysRFx8piNI1tGFNQIFA3vkE3Gq4EuA1dF6gHp/+vgZqsCGJapvy8N3Q+4o7FwvquPJcnZ7RYy4g=="],
 
-    "skir-dart-gen/skir-internal": ["skir-internal@0.1.1", "", { "dependencies": { "zod": "^4.2.1" }, "bin": { "skir-internal": "dist/compiler.js" } }, "sha512-lE/ZlQMfmGAZ3gb1gkdCv/PRZOrJmndp0tBWYcQb6Vr+qNjpPhIqw1a5iJ88muFw1AVUAGx97NIP3FI17vqi8A=="],
+    "skir-cc-gen/skir-internal": ["skir-internal@0.2.21", "", { "dependencies": { "zod": "^4.3.6" }, "bin": { "skir-internal": "dist/compiler.js" } }, "sha512-Fnuq+Y6iY4mF/9BxgeZn89N7qageN0DFzyNo2iEOSSP2TpFl/1maXX0ZdUJGLQzrBYWlj8Cv5qn6f4bEtkMulg=="],
+
+    "skir-csharp-gen/skir-internal": ["skir-internal@0.2.21", "", { "dependencies": { "zod": "^4.3.6" }, "bin": { "skir-internal": "dist/compiler.js" } }, "sha512-Fnuq+Y6iY4mF/9BxgeZn89N7qageN0DFzyNo2iEOSSP2TpFl/1maXX0ZdUJGLQzrBYWlj8Cv5qn6f4bEtkMulg=="],
+
+    "skir-elixir-gen/skir-internal": ["skir-internal@0.2.21", "", { "dependencies": { "zod": "^4.3.6" }, "bin": { "skir-internal": "dist/compiler.js" } }, "sha512-Fnuq+Y6iY4mF/9BxgeZn89N7qageN0DFzyNo2iEOSSP2TpFl/1maXX0ZdUJGLQzrBYWlj8Cv5qn6f4bEtkMulg=="],
+
+    "skir-gleam-gen/skir-internal": ["skir-internal@0.2.21", "", { "dependencies": { "zod": "^4.3.6" }, "bin": { "skir-internal": "dist/compiler.js" } }, "sha512-Fnuq+Y6iY4mF/9BxgeZn89N7qageN0DFzyNo2iEOSSP2TpFl/1maXX0ZdUJGLQzrBYWlj8Cv5qn6f4bEtkMulg=="],
 
     "skir-go-gen/skir-internal": ["skir-internal@0.1.1", "", { "dependencies": { "zod": "^4.2.1" }, "bin": { "skir-internal": "dist/compiler.js" } }, "sha512-lE/ZlQMfmGAZ3gb1gkdCv/PRZOrJmndp0tBWYcQb6Vr+qNjpPhIqw1a5iJ88muFw1AVUAGx97NIP3FI17vqi8A=="],
 
     "skir-java-gen/skir-internal": ["skir-internal@0.1.1", "", { "dependencies": { "zod": "^4.2.1" }, "bin": { "skir-internal": "dist/compiler.js" } }, "sha512-lE/ZlQMfmGAZ3gb1gkdCv/PRZOrJmndp0tBWYcQb6Vr+qNjpPhIqw1a5iJ88muFw1AVUAGx97NIP3FI17vqi8A=="],
 
-    "skir-kotlin-gen/skir-internal": ["skir-internal@0.1.1", "", { "dependencies": { "zod": "^4.2.1" }, "bin": { "skir-internal": "dist/compiler.js" } }, "sha512-lE/ZlQMfmGAZ3gb1gkdCv/PRZOrJmndp0tBWYcQb6Vr+qNjpPhIqw1a5iJ88muFw1AVUAGx97NIP3FI17vqi8A=="],
+    "skir-moonbit-gen/skir-internal": ["skir-internal@0.2.21", "", { "dependencies": { "zod": "^4.3.6" }, "bin": { "skir-internal": "dist/compiler.js" } }, "sha512-Fnuq+Y6iY4mF/9BxgeZn89N7qageN0DFzyNo2iEOSSP2TpFl/1maXX0ZdUJGLQzrBYWlj8Cv5qn6f4bEtkMulg=="],
 
     "skir-python-gen/skir-internal": ["skir-internal@0.1.1", "", { "dependencies": { "zod": "^4.2.1" }, "bin": { "skir-internal": "dist/compiler.js" } }, "sha512-lE/ZlQMfmGAZ3gb1gkdCv/PRZOrJmndp0tBWYcQb6Vr+qNjpPhIqw1a5iJ88muFw1AVUAGx97NIP3FI17vqi8A=="],
 
     "skir-swift-gen/skir-internal": ["skir-internal@0.1.1", "", { "dependencies": { "zod": "^4.2.1" }, "bin": { "skir-internal": "dist/compiler.js" } }, "sha512-lE/ZlQMfmGAZ3gb1gkdCv/PRZOrJmndp0tBWYcQb6Vr+qNjpPhIqw1a5iJ88muFw1AVUAGx97NIP3FI17vqi8A=="],
 
     "skir-typescript-gen/skir-internal": ["skir-internal@0.1.1", "", { "dependencies": { "zod": "^4.2.1" }, "bin": { "skir-internal": "dist/compiler.js" } }, "sha512-lE/ZlQMfmGAZ3gb1gkdCv/PRZOrJmndp0tBWYcQb6Vr+qNjpPhIqw1a5iJ88muFw1AVUAGx97NIP3FI17vqi8A=="],
+
+    "skir-zig-gen/skir-internal": ["skir-internal@0.2.21", "", { "dependencies": { "zod": "^4.3.6" }, "bin": { "skir-internal": "dist/compiler.js" } }, "sha512-Fnuq+Y6iY4mF/9BxgeZn89N7qageN0DFzyNo2iEOSSP2TpFl/1maXX0ZdUJGLQzrBYWlj8Cv5qn6f4bEtkMulg=="],
 
     "wrap-ansi/string-width": ["string-width@7.2.0", "", { "dependencies": { "emoji-regex": "^10.3.0", "get-east-asian-width": "^1.0.0", "strip-ansi": "^7.1.0" } }, "sha512-tsaTIkKW9b4N+AEj+SVA+WhJzV7/zMhcSu78mLKWSk7cXMOSHsBKFWUs0fWwq8QyK3MgJBQRX6Gbi4kYbdvGkQ=="],
   }

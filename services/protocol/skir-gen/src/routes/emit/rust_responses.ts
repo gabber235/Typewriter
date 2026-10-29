@@ -1,13 +1,22 @@
-import type { CodeGenerator } from "skir-internal";
+import type { CodeGenerator, Field, RecordLocation } from "skir-internal";
 
 import { UNKNOWN_SLUG, type MethodResponse, type Outcome } from "../../outcomes.js";
-import { rustDefaultVariant } from "../../symbols.js";
+import { fillTemplate } from "../../symbols.js";
 
 const OUTCOME: Record<Outcome, string> = {
   success: "crate::SkirResponseOutcome::Success",
   domain_error: "crate::SkirResponseOutcome::DomainError",
   internal_error: "crate::SkirResponseOutcome::InternalError",
 };
+
+/** The Rust expression that builds one variant, with a default payload for a wrapper variant. */
+function defaultVariant(
+  symbols: CodeGenerator.SymbolProvider,
+  location: RecordLocation,
+  variant: Field,
+): string {
+  return fillTemplate(symbols.variantConstructor(location, variant), "::std::default::Default::default()");
+}
 
 /** A Rust string literal; JSON escaping yields valid Rust escapes for the text Skir docs contain. */
 function literal(value: string): string {
@@ -65,7 +74,7 @@ function emitResponse(
         ]),
     "    }",
     "    fn internal_error() -> Self {",
-    `        ${rustDefaultVariant(symbols, location, internalError)}`,
+    `        ${defaultVariant(symbols, location, internalError)}`,
     "    }",
     ...(domainErrors.length === 0
       ? []
@@ -73,7 +82,7 @@ function emitResponse(
           "    fn domain_error_from_slug(slug: &str) -> Option<Self> {",
           "        match slug {",
           ...domainErrors.map(
-            ({ field, slug }) => `            ${literal(slug)} => Some(${rustDefaultVariant(symbols, location, field)}),`,
+            ({ field, slug }) => `            ${literal(slug)} => Some(${defaultVariant(symbols, location, field)}),`,
           ),
           "            _ => None,",
           "        }",

@@ -26,3 +26,10 @@ ksp {
     arg("typewriter.sourcePart", "main")
     arg("typewriter.claimDependencyClosure", "true")
 }
+
+tasks.test {
+    // The structural depth fixtures nest expressions about a thousand levels deep, and the Skir JSON
+    // codecs they round trip through recurse once per level. The default thread stack is too small for
+    // that on some platforms, so test threads get a stack with room to spare.
+    jvmArgs("-Xss8m")
+}
