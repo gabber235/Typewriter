@@ -30,7 +30,7 @@ Data belongs to an **identity**: anything in Typewriter that is clearly identifi
 | Book instance | One instance of a book |
 | Items | Possible, but probably not |
 
-Identities can be **delegated**: `player.group` resolves to the protagonist's group, while still remembering the original protagonist. The panel can later show where a value came from (for example, which protagonist wrote group data).
+Identities can be **delegated**: `protagonist.group` resolves to the protagonist's group, while still remembering the original protagonist. The panel can later show where a value came from (for example, which protagonist wrote group data).
 
 Because data is not tied to special entries, fact entries are no longer needed.
 
@@ -38,7 +38,7 @@ Because data is not tied to special entries, fact entries are no longer needed.
 
 Formulas read stored data directly.
 
-Read syntax is `entry.variable(identity)`, with generated shortcuts such as `my_entry(my_group)` and `my_group.my_entry`. Example, a stored value from a quest extension: `dragon_quest.stage(group) == dragon_quest.stages.forge_sword` (see [expressions.md](expressions.md)).
+Read syntax is `entry.variable(identity)`, with generated shortcuts such as `my_entry(my_group)` and `my_group.my_entry`. Example, a stored value from a quest extension: `dragon_quest.stage(group) == dragon_quest.stages.forge_sword` (see [formulas.md](formulas.md)).
 
 **Only extensions define stored value blueprints**; creators never define them in the panel. A blueprint states which identities it needs and which type it stores. The exact shape is decided later.
 
@@ -51,11 +51,11 @@ Read syntax is `entry.variable(identity)`, with generated shortcuts such as `my_
 
 **Entry variables** are stored values tied to an entry. Interactive, dynamic content always uses these. For them, usually:
 
-- The entry is one identity, plus others: `times_talked(player)`, `friendship(ann, smith)`. Several identities, also of the same kind, are allowed.
-- Many act on a **group** (a player is a group of one), but that is not forced. Example blueprints: a *permanent group variable* (one value per group) and a *permanent variable* (one value shared by everything and everyone, on all servers).
+- The entry is one identity, plus others: `times_talked(protagonist)`, `friendship(ann, smith)`. Several identities, also of the same kind, are allowed.
+- Many act on a **group** (a protagonist is a group of one), but that is not forced. Example blueprints: a *permanent group variable* (one value per group) and a *permanent variable* (one value shared by everything and everyone, on all servers).
 - Other identities are possible, for example a Minecraft world or a region.
 
-**Not every stored value is tied to an entry.** Extension code can also store **global data**, or data directly on a player, group, or other identity, without an entry. Creators cannot create these; only extension code can.
+**Not every stored value is tied to an entry.** Extension code can also store **global data**, or data directly on a protagonist, group, or other identity, without an entry. Creators cannot create these; only extension code can.
 
 **Extensions keep control:**
 
@@ -68,11 +68,17 @@ Extensions offer **generic entry variable** blueprints that accept any type. The
 
 ```
 entry "times_talked"   (generic stored value, type integer)
-times_talked(player) >= 3
+times_talked(protagonist) >= 3
 ```
 
-- There are a few **specialized entry types** instead of one fully configurable entry, because specialized types can be checked statically.
-- Variations cover lifetime the way legacy facts did: permanent, session only, reset on a schedule (like the legacy cron fact), timed. **The extension defines how each variation behaves.**
+- One generic **variable** entry: a name, **keys** (who it belongs to: protagonist, group, interaction, session, an NPC, a pair of protagonists, or none for global), a **type** (any type, not only numbers), and a default. It is still checked statically, because its type and keys become a real type.
+- What legacy facts did with special lifetimes is now generic: lifetime follows the keys (an `interaction` keyed value is gone when the interaction ends, a `session` keyed value on logout), and behaviour comes from **reactions** an extension can add: on every write (cap, guard, history), some time after the first or last write (timed), on a schedule for all keys (weekly reset), or at a time computed from the value (cooldowns).
+
+### When a shape changes
+
+- **Developer defined stored types** (core and extensions) are Typewriter types with numbered revisions; the migrator converts their data between revisions (see [importer-and-migrator.md](importer-and-migrator.md)).
+- **Creator defined shapes** (a variable's type or keys) are converted by a **migration**. Changing the shape of a variable that already has values shows a **conversion formula** from the old shape to the new one, as an ordinary field. Its default clears the values; the creator can replace it (`"${old} coins"`). The realm checks it against the stored values while editing, and runs it when the change is published, together with the new content. If it fails for any value, nothing changes and the publication shows the error. The same mechanism moves data when an instance key is renamed, or moves players off a removed quest stage.
+- Renaming a variable keeps its data, and widening a type (`Int` to `Int?`) needs no conversion.
 
 ### Defaults
 

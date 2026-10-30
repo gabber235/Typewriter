@@ -72,7 +72,7 @@ A trailing `?` on a horizon means it is not confirmed yet.
 | Publication | Turning authored content into what engines run |
 | Stored value | Data the realm stores for one or more identities. Its **blueprint** comes only from an extension; **instances** come from creators or extension code. Read as `entry.value(identity)`, for example `dragon_quest.stage(group)` |
 | Entry variable | A stored value tied to an entry. Stored data can also be global or on other identities, through extension code |
-| Context | Everything a formula can use: the player, the book, `minecraft`, and more. Not one single type |
+| Context | Everything a formula can use: the protagonist, the book, `minecraft`, and more. Not one single type |
 | Field types | `Var<T, CONTEXT>` (a value or a formula) and `Formula` (always a formula, with a declared signature) |
 | Identity | Anything clearly identifiable that data can belong to (protagonist, group, NPC, book instance) |
 | Protagonist | A player |
@@ -96,7 +96,8 @@ Horizon and maturity list every mark used in the area file, earliest and most se
 | [Interactions](interactions.md) | Scope, starts, Minecraft rules, priority, clashes | closed beta, later | shaped, sketch |
 | [Configurations](configurations.md) | Typed, overridable settings that replace snippets | closed beta | shaped |
 | [Data storage](data-storage.md) | Transactional state that replaces facts; identities | closed beta | settled, shaped |
-| [Expressions](expressions.md) | Formula language that replaces variables and criteria | closed beta, someday, ? | settled, shaped, sketch, wish, open |
+| [Formulas](formulas.md) | Formula language that replaces variables and criteria | closed beta, someday, ? | settled, shaped, sketch, wish, open |
+| [Importer and migrator](importer-and-migrator.md) | Import legacy 0.9 data once; migrate data between type revisions | closed beta | shaped, sketch |
 | [Publication](publication.md) | Live publishing, incremental compilation, hot reload | closed beta | settled, shaped, open |
 | [Panel](panel.md) | Web, desktop, and mobile editor | closed beta, later, someday | shaped, sketch, wish |
 | [Marketplace](marketplace.md) | Perks, sealed books, review, signing | later | shaped, sketch |

@@ -48,11 +48,11 @@ Planned future page types:
 
 A big change: **which kinds of context can be linked to each other** becomes explicit.
 
-- Legacy triggers implicitly carried a player. That is no longer assumed.
+- Legacy triggers implicitly carried a protagonist. That is no longer assumed.
 - A trigger can be about the **world**, with no protagonist. From there, a protagonist can be obtained through a formula.
 - An entry can **convert** one context into another, for example from a world trigger into a protagonist sequence.
 - By default, linking entries with different context requires such a conversion.
-- Link context and formula context are **the same concept** (see [expressions.md](expressions.md)). Whatever a formula can work with can also flow along links.
+- Link context and formula context are **the same concept** (see [formulas.md](formulas.md)). Whatever a formula can work with can also flow along links.
 - **Extensions can add their own context kinds** (for example a region or a match context for a minigame), with conversions to and from them.
 
 ### Organizational units
@@ -64,7 +64,7 @@ A big change: **which kinds of context can be linked to each other** becomes exp
 | Page | Holds entries; has a type |
 | Tag | Labels content across books, for search, filters, and selecting content (for example when sending content to a production realm) |
 
-Like entries, they can use **formulas** wherever useful (see [expressions.md](expressions.md)).
+Like entries, they can use **formulas** wherever useful (see [formulas.md](formulas.md)).
 
 ### Book instances
 
@@ -76,36 +76,34 @@ Like entries, they can use **formulas** wherever useful (see [expressions.md](ex
 
 Example: a "Bounty board" book with variable `town`, and instances for Riverside and Hilltop.
 
+**Variables are typed fields.** The book declares each variable as a name and a type (picked like any type, including function types). A variable can have a default. The book's variables together form one record type; each instance is a value of that type, so the instance editor shows one real field per variable.
+
+```
+Book: Dragon quest
+  variables:  town: Town                         reward: (protagonist: Player) -> Int
+  instances:  riverside  town = Riverside        reward = 50
+              hilltop    town = Hilltop          reward = protagonist.level * 10
+```
+
 **Where instances come from:**
 
 | Source | Example |
 | --- | --- |
-| Creator by hand | Add Riverside and Hilltop in the panel and fill in `town` |
-| Using the book | Wiring the book's generated entry somewhere creates an instance for that use |
-| From data | One instance per item in a list or formula, for example one per town |
+| Creator by hand | The book's `instances` field: add `riverside` and `hilltop`, fill in `town` |
+| From data | The same `instances` field switched to a formula: `towns.associate { it.name to Variables(town = it) }`, evaluated at publish |
+| Using the book | Wiring the book's generated entry somewhere creates an instance for that use; it asks only for the variables without a default |
 
-**Variables are typed fields.** A book variable uses the same two field types as entry fields (see [expressions.md](expressions.md#two-field-types)):
+An instance is identified by the book and its key; renaming an instance key moves its stored data along (through a migration at publication).
 
-| Variable type | Instance fills in |
-| --- | --- |
-| `Var<T, CONTEXT>` | A plain value of `T` (text, number, location, entry reference, ...), or a formula producing `T` using what `CONTEXT` makes available (player, book, `minecraft`, ...) |
-| `Formula` | Always a formula: a function with parameters and return types |
-
-```
-Book: Dragon quest
-  town:   Var<text, ...>                    Riverside: "Riverside"   Hilltop: "Hilltop"
-  reward: Formula (player) -> integer       Riverside: 50            Hilltop: player.level * 10
-```
-
-The book author declares the signature; every instance's formula must fit it.
+The book author declares the types; every instance's value and formula must fit them.
 
 Using `reward` inside the book:
 
 ```
-amount = book.reward                 player in context: passed implicitly
-amount = book.reward(player)         same, explicit
-group in context: book.reward        error, which player?
-group.map { book.reward }            ok, map puts a player in context
+amount = book.reward                 protagonist in context: passed implicitly
+amount = book.reward(protagonist)         same, explicit
+group in context: book.reward        error, which protagonist?
+group.map { book.reward }            ok, map puts a protagonist in context
 ```
 
 **Stored data is per instance automatically.** A book instance is an identity (see [data-storage.md](data-storage.md)), so progress in the Riverside bounty board is separate from Hilltop.
@@ -117,13 +115,13 @@ group.map { book.reward }            ok, map puts a player in context
 - To connect books, a book declares typed **incoming edges** and **outgoing edges**. They are black boxes wired to something else:
   - An incoming edge says "I am triggered by something of this type".
   - An outgoing edge says "I trigger something of this type".
-- From a book's edges, publication generates an **entry type** on the fly:
+- From the book's edges and variables, the realm derives an **entry type**, live while editing:
   - Outgoing edges become fields on the generated entry.
   - The incoming edge decides what can trigger it.
   - With several instances, there is one such entry per instance, or one wiring to all instances.
 - A generated entry can expose undefined book variables as fields to fill in, like any entry.
 
-A generated entry type is **scoped** by the same rule as creator defined functions: its book marks it `public` or `book`, and other books import it to use it (see [expressions.md](expressions.md)). This scoping is nice to have and dropped if very difficult.
+A generated entry type is usable in the books that import its book (see [formulas.md](formulas.md)).
 
 This makes a set of entries reusable as **one new entry type**, similar to a function, built inside Typewriter without code. Each use creates its own book instance.
 
@@ -133,7 +131,7 @@ A book can be applied to a protagonist conditionally, through a boolean formula 
 
 ```
 Book: Dragon quest
-  condition: player.level >= 10 && player.has_resource_pack(dragon_pack)
+  condition: protagonist.level >= 10 && protagonist.has_resource_pack(dragon_pack)
 
 Ann (level 12, pack loaded)  -> applies
 Bo  (level 4)                -> does not apply
@@ -151,7 +149,7 @@ Bo  (level 4)                -> does not apply
 - **The condition turns false mid interaction:** the running interaction from that book **stops right away**.
 - **Groups are filtered.** When a group meets a conditional book, the group is narrowed to the members the book applies to. Example: Ann (applies) and Bo (does not) enter the dragon cave as a party; the cutscene plays for Ann alone, and Bo sees nothing.
 - **Content without a protagonist** (a world trigger such as "every day at 18:00") **always runs**; the condition does not apply to it.
-- **Per instance:** the condition can use book variables, so each instance applies to different protagonists: `player.town == book.town`.
+- **Per instance:** the condition can use book variables, so each instance applies to different protagonists: `protagonist.town == book.town`.
 - **Books only.** Chapters and pages have no conditions. The book is the boundary: nothing outside it can reach in except through edges, so a protagonist outside the book simply never triggers its content. Inside a book, pages reference each other freely, so a page condition would make no sense.
 
 ### Groups as the trigger unit

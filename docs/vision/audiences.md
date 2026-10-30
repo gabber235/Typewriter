@@ -7,7 +7,7 @@ The people Typewriter serves and what each does with it.
 | Audience | What they do | Where |
 | --- | --- | --- |
 | Server owner | Installs and runs Typewriter (realm and engines) on their own hardware: a Minecraft hosting company or a VPS | Hosts, panel |
-| Extension developer | Builds extensions that add entries, expression functions, validators, and assets. Capabilities come only from core | Imprint, SDK |
+| Extension developer | Builds extensions that add entries, formula functions, validators, and assets. Capabilities come only from core | Imprint, SDK |
 | Content creator | Admins and helpers on a server who build interactions | Panel |
 | Protagonist | A player who experiences the content in game | Engine (Paper) |
 | Panel user | Someone learning Typewriter through interactive content inside the panel itself | Panel engine |

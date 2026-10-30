@@ -35,7 +35,7 @@ Example: the Paper host can run both a Paper engine and the realm.
 ```
 Typewriter Cloud                  Realm (owner's hardware)
   accounts, organizations           content: books, entries
-  members, roles                    player data: stored values
+  members, roles                    protagonist data: stored values
   licenses (add ons)                publications, revisions
   marketplace
   hosted web panel

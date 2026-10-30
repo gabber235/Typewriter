@@ -14,7 +14,7 @@ An extension can have code on both sides:
 Extensions can also contribute:
 
 - **Validators and linters** that query the content graph and report problems.
-- **Expression members**: functions and properties for the formula language (see [expressions.md](expressions.md)).
+- **Formula members**: functions and properties for the formula language (see [formulas.md](formulas.md)).
 - **Capability layers**: abstractions on top of engine capabilities (see [engines.md](engines.md)).
 - **Assets** for resource packs, with defaults that can be overridden (see [resource-packs.md](resource-packs.md)).
 
@@ -47,7 +47,7 @@ Typewriter's value grows with what it can do. Extensions must be easy to write, 
 | Realm and engine code, generated registration | closed beta | shaped |
 | Source parts targeting common, capabilities, or an engine | closed beta | shaped (exists in Imprint) |
 | Validators that query the graph | closed beta | shaped (some exist) |
-| Expression members from extensions | closed beta | shaped |
+| Formula members from extensions | closed beta | shaped |
 | Extension assets | later | sketch |
 
 ## Open questions

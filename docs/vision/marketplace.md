@@ -20,7 +20,7 @@ Book: Bounty board (bought)
 
 - A bought book is a **sealed package**: the buyer uses its public parts and fills in its variables. Seller updates apply cleanly.
 - The buyer can **unpack** it to edit the internals. An unpacked book no longer receives the seller's updates.
-- So `public` versus `book` visibility (see [expressions.md](expressions.md)) is also what protects a seller's internals.
+- Protecting a seller's internals needs a way to hide parts of a book from importers. Formulas have no visibility levels for now (see [formulas.md](formulas.md)); when the marketplace needs it, it becomes a filter on what a book exports.
 
 ### Sellers and review
 

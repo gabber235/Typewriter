@@ -1,4 +1,4 @@
-# Expressions
+# Formulas
 
 ## What it is
 
@@ -27,13 +27,13 @@ All types and functions can be built **dynamically** from these.
 
 ### Core properties
 
-- **Side effect free.** A formula never changes state; changes happen only through explicit entries.
-- **Typed values.** Example: `player.health` returns an integer.
+- **Side effect free.** A formula never changes state. An update field's formula **returns changes** (`coins += 50`); the entry applies them. World actions (giving items) stay explicit entries.
+- **Typed values.** Example: `protagonist.health` returns an integer.
 - **Everywhere.** Most entry fields can be a formula. Organizational units (books, chapters, pages, tags) can use formulas too.
 
 ### Context
 
-A formula's context is **everything it can use**: the player, the book, `minecraft`, and more. It is not one single type. Context is **statically defined**: the realm knows exactly what is available in each formula field. Contexts must be very flexible.
+A formula's context is **everything it can use**: the protagonist, the book, `minecraft`, and more. It is not one single type. Context is **statically defined**: the realm knows exactly what is available in each formula field. Contexts must be very flexible.
 
 | Context | Example |
 | --- | --- |
@@ -52,7 +52,7 @@ send message text:
   "A guard appeared at ${on_block_break.block?.location}. Talk to ${spawn_guard.npc.name}."
 ```
 
-| Expression | Kind | Nullable? |
+| Formula | Kind | Nullable? |
 | --- | --- | --- |
 | `on_block_break.block` | **Produced** data: exists only when that entry ran earlier in this chain | Yes, always |
 | `spawn_guard.npc` | A **field** on the entry: a reference to another entry, followed automatically | No, if the field is mandatory |
@@ -73,7 +73,7 @@ While the available context is fixed, the **functions** on things are determined
 - Identities (book instances, NPCs, other identities) get functions declared on them. Example: an NPC instance entry gives position data.
 - An entry can declare "if you have this, you can call this function". A function with no other parameters reads like a property.
 - **Functions can come from an entry's field values.** Example: an entry defines a map of quest stages; the system then offers each stage, so a creator can ask "is this stored value at this quest stage?"
-- Stored data (see [data-storage.md](data-storage.md)) is read **directly**, as `entry.variable(identity)`: the entry name, a dot, and the name of the stored variable on that entry. Entry types can get generated shortcuts: a player variable entry reads as `my_entry.value(my_group)`, as `my_entry(my_group)`, or with receiver sugar as `my_group.my_entry`. Only extensions define stored value blueprints (never creators); instances come from creators or extension code. The entry's own fields (with generated members) are separate:
+- Stored data (see [data-storage.md](data-storage.md)) is read **directly**, as `entry.variable(identity)`: the entry name, a dot, and the name of the stored variable on that entry. Entry types can get generated shortcuts: a protagonist variable entry reads as `my_entry.value(my_group)`, as `my_entry(my_group)`, or with receiver sugar as `my_group.my_entry`. Only extensions define stored value blueprints (never creators); instances come from creators or extension code. The entry's own fields (with generated members) are separate:
 
   ```
   dragon_quest.stage(group) == dragon_quest.stages.forge_sword
@@ -84,31 +84,25 @@ While the available context is fixed, the **functions** on things are determined
   | `dragon_quest.stage(group)` | Stored value, synchronized by the realm, for this group |
   | `dragon_quest.stages.forge_sword` | A field on the entry; its members are generated from the values the creator entered |
 
-  A formula can only use identities in its context: with only a player in context, `group` is an error.
+  A formula can only use identities in its context: with only a protagonist in context, `group` is an error.
 - Extensions, capabilities, the realm, and engines also contribute functions, even while the realm runs and content is being edited.
 
-### Two field types
+### One field type: the value type decides
 
-| | `Var<T, CONTEXT>` | `Formula` |
+Every formula field is `Var<T, CONTEXT>`: `T` is the value type, `CONTEXT` is what the field itself provides (for example the protagonist). The panel shows the normal editor for `T`; a header toggle switches to a formula. The field text is only the expression.
+
+**What `T` is decides what the text may be:**
+
+| `T` | Text | Example |
 | --- | --- | --- |
-| Use | Normal entry fields (the legacy `var`) | Fields that are always a formula |
-| Generic | Value type `T`, and `CONTEXT`: everything available to the formula (for example the player, the book, the `minecraft` root), not a single type | None |
-| Panel | Shows the editor for `T`; header toggle switches to a formula | Always a formula field |
-| Holds | A plain `T`, or a formula producing `T` | A function: parameters and return types |
-| Returns | One `T` | Possibly several values, like Go |
+| A plain type | An expression | `protagonist.level * 10` |
+| A function type | The **body**; parameters are in scope. A constant ignores them | `reward: (protagonist: Player) -> Int`: Riverside `50`, Hilltop `protagonist.level * 10` |
+| `Changes` | Several lines of changes, run in order | `quest.coins += 50` then `if (quest.coins > 100) quest.rank = gold` |
+| `Type` | A type | `(protagonist: Player, town: Town) -> Int` |
 
-**The signature is declared.** Whoever declares a `Formula` field (an extension for entry fields, the book author for book variables) declares its parameters and return types. Every formula filled in must fit it:
+A formula that does not fit `T` is an error in the panel (`"fifty"` where an integer is expected).
 
-```
-reward: Formula (player) -> integer
-  Riverside: 50                    ok, ignores player
-  Hilltop:   player.level * 10     ok
-  Hilltop:   "fifty"               error in the panel: must return integer
-```
-
-**`Formula` in the realm:** the realm does not run it. It **inspects** it: which parameter types it needs and what it returns. This feeds outference and suggestions in the panel. A formula whose types do not fit a use does not show up as a suggestion, or shows an error where it is used (for example at `book.reward`).
-
-**`Formula` on the engine:** it has a `run` operation. The caller must provide everything it needs; content can wire those inputs up from other things.
+**Where a formula can run** follows from what it reads: only values and content (the realm can run it, for example at publish), stored data, or live engine values (only the engine). A field that runs on the realm rejects formulas that need the engine.
 
 ### Field context is chosen by the extension
 
@@ -119,24 +113,24 @@ Example: a "give money" action triggered for a group. `amount` is a normal field
 ```kotlin
 class GiveMoneyActionEntry(
     // ... default needed fields
-    val amount: Var<Int, PlayerContext>,
+    val amount: Var<Int, MemberContext>,
 ) : ActionEntry
 ```
 
 ```
-amount: Var<Int, PlayerContext>
+amount: Var<Int, MemberContext>
   amount = 50                       plain value
-  amount = book.reward              formula, player in context
-  the extension iterates the group's members and evaluates amount per player
+  amount = book.reward              formula, protagonist in context
+  the extension iterates the group's members and evaluates amount per protagonist
 
-amount: Var<Int, GroupContext>
+amount: Var<Int, InteractionContext>
   amount = group.members.sumOf { book.reward }
   the extension decides what one amount for a group means
 ```
 
 ### Implicit context arguments
 
-A function parameter can be filled **implicitly from context**, or passed explicitly. Example: `book.reward` and `book.reward(player)` are the same when a player is in context. With a group in context there is no single player, so it must be explicit, or used inside something that brings a player into context, like `group.map { book.reward }`.
+A function parameter can be filled **implicitly from context**, or passed explicitly. Example: `book.reward` and `book.reward(protagonist)` are the same when a protagonist is in context. With a group in context there is no single protagonist, so it must be explicit, or used inside something that brings a protagonist into context, like `group.map { book.reward }`.
 
 ### Lists and lambdas
 
@@ -161,77 +155,74 @@ group.members.filter { it.isVeteran }
 
 The language should take the best syntactic sugar and general features from mainstream and functional programming languages, so common things read nicely.
 
-### Creator defined functions
+### Creator defined functions and values
 
-Creators define named, reusable functions in a **`Formula` field on an entry**. Parameter types are always declared:
-
-```
-fun isVeteran(player: Player) = player.playtime > 100.hours
-
-amount = group.members.filter { it.isVeteran }.sumOf { book.reward }
-```
-
-**Scope: visibility plus imports.** Nice to have; if it turns out to be very difficult, it will not be done. The same rule applies to a book's generated entry types (see [content-model.md](content-model.md)).
-
-- The **definition** says whether it may be used outside its book (`public`) or only inside it (`book`), like Kotlin visibility.
-- A book **imports** what it wants to use from other books, so pickers and suggestions stay small.
+A **definition** is a static entry with a name, a type, and a value, shared by everything in the book. A function is a definition whose type is a function type:
 
 ```
-Book: Utilities       fun isVeteran(player: Player) ...   public
-Book: Bounty board    generated entry type                public
-Book: Dragon quest    uses Utilities, Bounty board
-  -> isVeteran(player) and a "Bounty board" entry are available here
+Definition "is_veteran"   type: (protagonist: Player) -> Boolean
+  value: protagonist.playtime > 100.hours
+
+amount = group.members.filter { it.is_veteran }.sumOf { book.reward }
 ```
 
-When the defining book has several instances, the caller **picks the instance**: `utilities@Riverside.isVeteran(player)` (example syntax only; likely to change).
+Book variables have the same shape, but **each instance fills them in** (see [content-model.md](content-model.md)). Use a definition for logic that is the same everywhere, a book variable for what differs per instance.
 
-### Errors and exceptions
-
-Two different things, like errors and panics in Rust:
-
-| | Error | Exception |
-| --- | --- | --- |
-| How | A **value**, part of the type | Thrown at runtime |
-| When | Most failures (missing NPC, unset stored value) | Rare; a much bigger problem |
-| Who handles it | The type system; the panel makes the creator handle it | Runtime |
-
-Creators get several ways to handle errors, taken from Kotlin, Rust, and functional languages:
+**Imports.** A book imports other books it wants to use, so pickers and suggestions stay small. An import may get a short local name. Everything a book exports is usable by importers (no visibility levels for now).
 
 ```
-// fallback
-dragon_npc.location?.distance(player.location) ?: 999
+Book: Utilities       Definition is_veteran
+Book: Bounty board    instances riverside, hilltop
+Book: Dragon quest    imports Utilities, Bounty board as bounty
+  -> `Utilities`.is_veteran(protagonist), bounty.riverside.reward, and a "Bounty board" entry are available here
+```
 
-// match on the error type
-when (val loc = dragon_npc.location) {
+When the imported book has several instances, the caller **picks the instance like a field**: `bounty.riverside.reward`. With one instance it is left out.
+
+**Names** can be anything. Names that look like identifiers (Unicode letters included) are written bare; others go in backticks: `` `Dragon Quest`.stage ``. Renaming something rewrites the formulas that use it.
+
+### Unions, errors, and exceptions
+
+There is no special error mechanism. A value that can be one of several things is a **union**: a type with several kinds, like a Kotlin sealed interface. A failure is just one kind:
+
+```
+blacksmith.location      Spawned(position) or NotSpawned(npc)
+
+when (val loc = blacksmith.location) {
+  is Spawned    -> loc.position.distance(protagonist.location) < 20
   is NotSpawned -> false
-  else          -> loc.distance(player.location) < 20
 }
-
-// Rust style `if let` and `let else` are also wanted
 ```
+
+- Extensions declare unions in code; creators declare them with type definitions.
+- The panel makes the creator handle every kind; a kind added later shows up as an error where it is not handled.
+- `null` stays for "absent": `protagonist.title ?: "Stranger"`.
+- Rust style `if let` and `let else` are wished for with the syntax decision.
+
+**Exceptions** are rare (broken extension code, recursion limit). They fail one evaluation: text shows a fallback, conditions count as not met, and changes are not applied.
 
 ### Look and feel
 
 Formulas read **Kotlin-like**:
 
 ```
-player.health < 5 && dragon_quest.stage(player.group) >= 3
+protagonist.health < 5 && dragon_quest.stage(protagonist.group) >= 3
 
 group.members.all { it.health > 5 }
 
-when (player.level) {
+when (protagonist.level) {
   in 0..9   -> "Novice"
   in 10..49 -> "Adventurer"
   else      -> "Hero"
 }
 
-player.title ?: "Stranger"
+protagonist.title ?: "Stranger"
 ```
 
 **Multi line formulas with local names** are allowed; the last expression is the result of the field. `when` works as an expression and replaces long if else chains:
 
 ```
-let scales = dragon_quest.scales_found(player.group)
+let scales = dragon_quest.scales_found(protagonist.group)
 let needed = 5 - scales
 if (needed <= 0) "Go to the dragon!" else "Find $needed more scales."
 ```
@@ -247,11 +238,11 @@ if (needed <= 0) "Go to the dragon!" else "Find $needed more scales."
 
 Members are defined by the core engine, extensions, or engine capabilities. The realm runs the type information and linting, so the panel knows what is possible, what each formula produces, and what will error. Values are computed on the engine during execution.
 
-**String interpolation** works in formula mode: `"Find $needed more scales."`, `"Hello ${player.name}"`.
+**String interpolation** works in formula mode: `"Find $needed more scales."`, `"Hello ${protagonist.name}"`.
 
-### Type checking direction: outference
+### Type checking
 
-Formulas carry no type annotations. The direction is **type outference** rather than classic type inference: the realm decides whether a formula is type consistent without having to infer every missing type. Reference: Ross Tate, [Type-Outference with Label-Listeners](https://dl.acm.org/doi/10.1145/3763797) (OOPSLA 2025), and his KotlinConf 2025 talk "Designing Kotlin Beyond Type Inference".
+Formulas carry no type annotations (they are allowed where they help). Types flow inside one formula: the field says what it expects, names in scope and functions say what they give, and generic functions are solved per call. There is no global guessing, so errors stay local and readable ("expected integer, got text"). Reference for later refinements: Ross Tate, [Type-Outference with Label-Listeners](https://dl.acm.org/doi/10.1145/3763797) (OOPSLA 2025).
 
 ### Fields in the panel
 
@@ -259,15 +250,17 @@ A field shows its **normal editor** by default (a field can have its own UI layo
 
 ### Syntax direction
 
-The exact syntax is decided later. Known intent:
+The exact syntax is decided at the end, when most needs are known. Kotlin is the basis. Wishes include Rust `if let` and `let else`, a ternary operator, and features from functional languages. Known intent:
 
-- A function's first argument can be an **extension receiver**: `health(player)` can be written `player.health`.
+- A function's first argument can be an **extension receiver**: `health(protagonist)` can be written `protagonist.health`. This works for every function, including creator definitions.
 - A function with no other parameters needs no brackets.
 - Chaining must be easy.
 
 ### Formulas as starts
 
 **Any formula** can be a start ("when this becomes true"), whatever it reads.
+
+Besides "becomes true", a start can fire **whenever a formula's value changes**, with the **old and new value**.
 
 A formula itself only answers one question: **run it, what is the value?** That value can be cached. Everything else (for which protagonists it is checked, whether it fires once when it turns true or while it is true, how changes are noticed) is decided by **where the formula is used**, by the extension that declared the field and its context.
 
@@ -283,11 +276,12 @@ This is about execution on engines, not editing in the panel.
 Both are allowed.
 
 - A formula that reads the current time states that it must **always be recomputed**. This loses some optimization, not all of it.
-- Randomness **may be seeded**, but does not have to be. With a seed, the same seed always gives the same result. Seeding from something with an identity (for example the current interaction) makes a random value stable for that interaction.
+- Randomness is **seeded by where it runs** (the interaction, the entry, and the field), so recomputing gives the same result and a new interaction rolls again. A fresh roll on purpose is stored through an update field.
+- In an update field, `now` is the moment the changes are committed.
 
 ### Several return values
 
-A `Formula` can return several values; callers receive them **like in Go**.
+A function can return several named values, read like a record or unpacked: `let (gold, xp) = split_reward(100)`.
 
 ### Recursion
 
@@ -295,7 +289,7 @@ Recursion is allowed, with a **recursion limit**.
 
 ### Creator defined types
 
-Creators defining their own types (records, enums) would be useful, but may be too difficult. It is out of scope if so.
+Creators define their own types with a definition whose type is `Type`: `Definition "Energy" type: Type value: record { amount: Int, since: Instant }`. The type then appears in every type picker in the book and gets a constructor: `Energy(amount = 3, since = now)`.
 
 ### Live formula values
 
@@ -322,26 +316,26 @@ The variable system is complex and unpleasant to use. One expressive language bu
 | Statically known context per formula field | closed beta | settled |
 | Dynamic functions, including from entry field values | closed beta | shaped |
 | Direct reads of stored data | closed beta | shaped |
-| Time and seeded randomness | closed beta | shaped |
-| Several return values, Go style | closed beta | shaped |
+| Time and randomness seeded by where it runs | closed beta | shaped |
+| Several named return values | closed beta | shaped |
 | Recursion with a limit | closed beta | shaped |
-| Creator defined types (may be out of scope) | ? | wish |
+| Creator defined types (definitions of type `Type`) | closed beta | shaped |
 | Live formula values per protagonist in the panel | closed beta (not at the start) | sketch |
-| Any formula as a start, with smart recomputation | closed beta | shaped |
+| Any formula as a start (becomes true, or value changed with old and new), with smart recomputation | closed beta | shaped |
 | Lists, maps, lambdas | closed beta | shaped |
 | Functions as values (higher order functions) | closed beta | shaped |
 | Best of breed syntactic sugar | closed beta? | sketch |
-| Creator defined functions | closed beta | shaped |
-| Scope: visibility on the definition plus imports (nice to have; dropped if very difficult) | closed beta? | wish |
-| Errors as values, rare exceptions | closed beta | shaped |
+| Creator definitions (shared values and functions) | closed beta | shaped |
+| Imports with optional local names; no visibility levels for now | closed beta? | shaped |
+| Unions (errors are one kind), rare exceptions | closed beta | shaped |
 | Compiled or JIT formulas | someday | wish |
 | Kotlin-like look and feel | closed beta | shaped |
 | String interpolation | closed beta | settled |
-| Type outference, no annotations | closed beta? | sketch |
+| Local type checking, no annotations needed | closed beta | shaped |
 | Let blocks, multi line formulas | closed beta | shaped |
 | No special literals; registries and units as data driven members | closed beta | shaped |
 | Normal field with a formula toggle | closed beta | settled |
-| `Var<T, CONTEXT>` and `Formula` field types | closed beta | shaped |
+| One field type `Var<T, CONTEXT>`; the value type decides (function body, changes, type) | closed beta | shaped |
 | Concrete syntax details | closed beta | open |
 
 ## Open questions

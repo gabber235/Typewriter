@@ -35,7 +35,7 @@ Configuration through a visual tool is how Typewriter content is made.
 | Mobile applications | someday | wish |
 | Mobile friendly panel that can do everything | closed beta | shaped (mostly there) |
 | Fully keyboard driven | closed beta | shaped |
-| Live formula values per protagonist (see [expressions.md](expressions.md)) | closed beta (not at the start) | sketch |
+| Live formula values per protagonist (see [formulas.md](formulas.md)) | closed beta (not at the start) | sketch |
 
 ## Open questions
 
