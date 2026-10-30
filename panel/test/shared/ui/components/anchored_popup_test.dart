@@ -385,4 +385,45 @@ void main() {
     expect(find.text("Choose book"), findsOneWidget);
     expect(tester.takeException(), isNull);
   });
+
+  testWidgets("a screen reader reaches an open popup's content and buttons", (
+    tester,
+  ) async {
+    final panel = await tester.pumpPanel(
+      const [],
+      at: PanelLocation.component(
+        Scaffold(
+          body: Column(
+            children: [
+              const Text("Page behind"),
+              AnchoredPopup(
+                builder: (context, show) =>
+                    TextButton(onPressed: show, child: const Text("Inbox")),
+                popupBuilder: (context, close) => SizedBox(
+                  width: 300,
+                  child: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      const Text("No changes waiting"),
+                      TextButton(
+                        onPressed: close,
+                        child: const Text("Close popup"),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+
+    await panel.activateWithScreenReader("Inbox");
+
+    expect(semanticsLabeled("No changes waiting"), hasLength(1));
+    await panel.activateWithScreenReader("Close popup");
+    expect(semanticsLabeled("No changes waiting"), isEmpty);
+    expect(semanticsButton("Inbox").isTappable, isTrue);
+  });
 }

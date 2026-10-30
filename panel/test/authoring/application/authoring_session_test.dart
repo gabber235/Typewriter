@@ -91,6 +91,32 @@ void main() {
     },
   );
 
+  test("a reconnect refresh that meets a replaced session shows the current "
+      "state", () async {
+    var title = "Initial";
+    await world.openBookSession(
+      session,
+      _book,
+      () => title,
+      generation: _generation,
+      subjects: _subjects,
+    );
+
+    title = "After replacement";
+    await pumpEventQueue();
+    world.nats.disconnect();
+    world.replaceResourceSession();
+    // The reconnect refresh starts before the panel rebuilt on the new session.
+    world.nats.reconnect();
+
+    await world.untilBookTitled(
+      session,
+      _book.bookId,
+      "After replacement",
+      description: "state of the replaced session",
+    );
+  });
+
   test("a hint during an active query schedules a fresh query", () async {
     final delayed = Completer<Uint8List>();
     var requests = 0;

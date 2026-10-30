@@ -256,10 +256,13 @@ class _ActionShortcutButton extends HookConsumerWidget {
       shape: const StadiumBorder(),
       child: Tooltip(
         message: action.description,
-        child: InkWell(
-          customBorder: const StadiumBorder(),
-          onTap: controller.handlePress,
-          child: pill,
+        child: Semantics(
+          button: true,
+          child: InkWell(
+            customBorder: const StadiumBorder(),
+            onTap: controller.handlePress,
+            child: pill,
+          ),
         ),
       ),
     );

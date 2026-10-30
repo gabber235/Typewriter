@@ -96,6 +96,24 @@ void main() {
     );
   }
 
+  testWidgets("saved work reaches the inbox after the panel replaced its "
+      "connection", (tester) async {
+    final panel = await tester.pumpPanel([
+      signedIn(ada, organization: acme),
+      realm(books: [first]),
+    ]);
+    await panel.openSurface(first.bookId);
+    await panel.settleInbox();
+    expect(panel.shows("Review changes"), isFalse);
+
+    await panel.container.read(natsProvider.notifier).retry();
+    await panel.reportPublication(readyPublicationStatus());
+
+    expect(panel.shows("Review changes"), isTrue);
+    await panel.pressShifted(LogicalKeyboardKey.keyP);
+    expect(find.text("Publish"), findsWidgets);
+  });
+
   testWidgets("a refused publish tells the user why", (tester) async {
     final panel = await tester.pumpPanel([
       signedIn(ada, organization: acme),

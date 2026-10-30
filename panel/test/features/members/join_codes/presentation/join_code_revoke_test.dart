@@ -52,4 +52,30 @@ void main() {
     );
     await panel.settle();
   });
+
+  testWidgets("a revoked join code no longer shows on the new join code "
+      "card", (tester) async {
+    final clipboard = tester.recordClipboard();
+    final panel = await tester.pumpPanel([
+      signedIn(ada, organization: acme),
+      membershipService(),
+    ], at: membersPage(const JoinCodesRoute()));
+
+    await panel.tapOn(find.text("Generate Join Code"));
+    await panel.eventually(() => expect(clipboard, hasLength(1)));
+    final link = clipboard.single;
+    await panel.eventually(() => expect(panel.reads(link), isTrue));
+
+    await panel.tapOn(find.tooltip("Revoke join code"));
+    await panel.dialog.choose(
+      "Revoke",
+      message: "Revoke this join code?",
+    );
+
+    await panel.eventually(
+      () => expect(panel.shows("No active join codes"), isTrue),
+    );
+    expect(panel.reads(link), isFalse);
+    expect(find.text("Copy Join Code"), findsNothing);
+  });
 }

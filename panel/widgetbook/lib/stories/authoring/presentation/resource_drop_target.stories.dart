@@ -16,7 +16,12 @@ Widget resourceDropTargetStory(BuildContext context) {
   );
   return Story([
     signedIn(ada, organization: acme),
-    realmServing(entryGraphDocument(narrow: nodes == "Narrow")),
+    realmServing(
+      compiledEntryGraphDocument(
+        narrow: nodes == "Narrow",
+        operations: entryOperations,
+      ),
+    ),
     operations(entryOperations),
     ...context.knobs.traits("Village evening", {
       "Accepts the entries": [
@@ -72,41 +77,6 @@ void _moveToEvening(AuthoringEdit edit, List<skir.ResourceId> targets) {
       compiledEntryDestinationId,
     );
   }
-}
-
-/// The compiled entry Realm whose Village morning page shows its entries as
-/// a graph on its surface, beside the Village evening page in the rail. Its
-/// catalog declares the [entryOperations].
-AuthoringDocument entryGraphDocument({bool narrow = false}) {
-  final document = compiledEntryNodeDocument(narrow: narrow, graphEditor: true);
-  final page = document.resource(compiledEntryPageId)!.configuration;
-  final selected = document.catalog.selectPresentation(
-    page,
-    skir.PresentationRole.inspector,
-  ) as SelectedEditorPresentation;
-  final snapshot = document.catalog.snapshot.toMutable();
-  snapshot
-    ..resourceOperations = [
-      for (final operation in entryOperations) operation.definition,
-    ]
-    ..presentationMaterials = [
-      ...snapshot.presentationMaterials,
-      (selected.material.toMutable()..role = skir.PresentationRole.workspace)
-          .toFrozen(),
-    ]
-    ..presentations = [
-      for (final presentation in snapshot.presentations)
-        if (presentation.id == selected.material.provider)
-          (presentation.toFrozen().toMutable()
-                ..roles = [
-                  ...presentation.roles,
-                  skir.PresentationRole.workspace,
-                ])
-              .toFrozen()
-        else
-          presentation,
-    ];
-  return document.copyWith(catalog: CheckedEditorCatalog(snapshot.toFrozen()));
 }
 
 @widgetbook.UseCase(name: "Hover states", type: ResourceDropHighlight)

@@ -38,4 +38,25 @@ void main() {
       expect(runs, 1);
     },
   );
+
+  testWidgets("an action in the row is heard as a button the user can tap", (
+    tester,
+  ) async {
+    await tester.pumpPanel(
+      const [],
+      at: PanelLocation.component(
+        ActionSurface([numberedAction(0, onInvoke: (_) {})]),
+      ),
+    );
+
+    // The chip also reads out its shortcut key after its label.
+    final chip = find.semantics
+        .byPredicate(
+          (node) => node.isButton && node.spoken.startsWith("Action 0"),
+        )
+        .evaluate()
+        .single;
+
+    expect(chip.isTappable, isTrue);
+  });
 }

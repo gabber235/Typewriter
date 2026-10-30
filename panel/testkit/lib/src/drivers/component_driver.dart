@@ -53,6 +53,24 @@ abstract class ComponentDriver {
     await tester.pump(kDoubleTapTimeout);
     await settle();
   }
+
+  /// Activates the one button the user hears as [label] the way a screen
+  /// reader does, through its tap action, and lets the panel react. Fails
+  /// when assistive technology cannot reach the button or cannot activate it.
+  Future<void> activateWithScreenReader(String label) async {
+    final button = semanticsButton(label);
+    expect(
+      button.isTappable,
+      isTrue,
+      reason: "a screen reader can activate $label",
+    );
+    tester.semantics.tap(
+      find.semantics.byPredicate((node) => identical(node, button)),
+    );
+    // A control that also answers double taps acts once the timeout passed.
+    await tester.pump(kDoubleTapTimeout);
+    await settle();
+  }
 }
 
 /// The open context menu: the menu the keyboard focus moved into.

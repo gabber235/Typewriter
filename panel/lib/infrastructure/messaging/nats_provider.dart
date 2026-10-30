@@ -68,7 +68,10 @@ Future<skir.GetSentinelCredentialsResponse_Success> sentinelCredentials(
 
 /// Publishes the active client owned by the authenticated connection scope.
 ///
-/// Credential and organization changes dispose the entire previous connection.
+/// The token and the user come from the one [authSessionProvider] value that
+/// [userIdProvider] also resolves from, so a consumer that awaited the user
+/// always finds the session here. Only a changed session or organization
+/// disposes the previous connection; reloading the same session keeps it.
 /// [retry] publishes a fresh session of the same scope.
 @Riverpod(keepAlive: true)
 class Nats extends _$Nats {
@@ -76,15 +79,17 @@ class Nats extends _$Nats {
 
   @override
   NatsClient build() {
-    final token = ref.watch(accessTokenProvider).value?.token;
-    if (token == null) {
+    final session = ref.watch(
+      authSessionProvider.select((session) => session.value),
+    );
+    if (session == null) {
       throw StateError("User must be authenticated before connecting to NATS");
     }
     final connection = NatsConnectionOwner(
       settings: NatsConnectionSettings(
         url: AppConfig.nats.url,
-        token: token,
-        user: ref.watch(authUserInfoProvider).requireValue,
+        token: session.token.token,
+        user: session.user,
         sentinel: ref.watch(sentinelCredentialsProvider).requireValue,
         organization: ref.watch(organizationIdProvider),
       ),

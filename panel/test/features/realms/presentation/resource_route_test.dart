@@ -102,4 +102,27 @@ void main() {
     expect(panel.shows("New book"), isTrue);
     expect(semanticsButtons("Intro").isNotEmpty, isFalse);
   });
+
+  for (final (section, id) in [
+    ("Library", libraryId),
+    ("Tags", taxonomyId),
+  ]) {
+    testWidgets("a screen reader opens $section from the realm sidebar", (
+      tester,
+    ) async {
+      final panel = await tester.pumpPanel([
+        ...library,
+        window(const Size(1600, 1000)),
+      ]);
+
+      await panel.activateWithScreenReader(section);
+
+      await panel.eventually(
+        () => expect(
+          panel.path,
+          "/organization/acme/realm/main/resource/${id.value}",
+        ),
+      );
+    });
+  }
 }

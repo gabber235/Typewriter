@@ -10,8 +10,8 @@ void main() {
   for (final (routed, resource, title) in [
     ("Page", "page:arrival", "Arrival"),
     ("Book", "book:the_lost_village", "The Lost Village"),
-    ("Library", "library:library", "library"),
-    ("Tags", "library:taxonomy", "taxonomy"),
+    ("Library", "library:library", "Library"),
+    ("Tags", "library:taxonomy", "Tags"),
   ]) {
     testWidgets("the routed $routed opens at its own route under its title", (
       tester,
@@ -43,7 +43,7 @@ void main() {
     await tester.pumpStory(resourceBreadcrumbsUseCase);
 
     final crumbs = [
-      "library",
+      "Library",
       "The Lost Village",
       "Arrival",
     ].map((crumb) => tester.getTopLeft(find.text(crumb).first).dx).toList();
@@ -54,7 +54,7 @@ void main() {
   testWidgets("choosing a section in the navigator opens it", (tester) async {
     final panel = await tester.pumpStory(realmSectionsNavigatorUseCase);
 
-    await tester.tap(find.text("taxonomy"));
+    await tester.tap(find.text("Tags"));
 
     await tester.eventually(
       () => expect(panel.path, endsWith("/resource/library:taxonomy")),

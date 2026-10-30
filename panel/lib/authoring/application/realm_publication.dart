@@ -4,6 +4,8 @@ import "package:typewriter_panel/typewriter_panel.dart";
 
 part "realm_publication.g.dart";
 
+/// Its watch binds to the current connection, so a replaced connection
+/// rebuilds the repository and observers rebind to the new one.
 @Riverpod(keepAlive: true)
 RealmPublicationRepository realmPublicationRepository(
   Ref ref,
@@ -21,12 +23,22 @@ RealmPublicationRepository realmPublicationRepository(
 /// observations replace review state, while submission activity independently
 /// distinguishes sending and uncertain outcomes. A command is usable only for the
 /// exact ready view it captured; disposal retires listeners without deciding the
-/// outcome of an already owned submission.
+/// outcome of an already owned submission. A replaced repository is observed
+/// through [rebind], since the previous one stops hinting with its connection.
 final class PublicationWorkDriver extends ChangeNotifier implements WorkDriver {
-  PublicationWorkDriver(this.scope, this.repository, this.work);
+  PublicationWorkDriver(
+    this.scope,
+    RealmPublicationRepository repository,
+    this.work, {
+    this.onDispose,
+  }) : _repository = repository;
   final AuthoringScope scope;
-  final RealmPublicationRepository repository;
   final LocalWorkCommands work;
+
+  /// Releases what the registration holds for this driver.
+  final VoidCallback? onDispose;
+  RealmPublicationRepository _repository;
+  RealmPublicationRepository get repository => _repository;
   PublicationObservation _observation = PublicationObservation.fetching(
     skir.PublicationViewId(value: "initial"),
   );
@@ -47,6 +59,19 @@ final class PublicationWorkDriver extends ChangeNotifier implements WorkDriver {
       if (!_closed) notifyListeners();
     });
     _observe();
+  }
+
+  /// Observes [next] instead of the current repository, keeping the last
+  /// review on display while the new one is fetched.
+  void rebind(RealmPublicationRepository next) {
+    if (_closed || identical(next, _repository)) return;
+    _repository = next;
+    unawaited(_subscription?.cancel());
+    _observation = PublicationObservation.fetching(
+      _last?.id ?? skir.PublicationViewId(value: "initial"),
+    );
+    _observe();
+    notifyListeners();
   }
 
   void _observe() {
@@ -182,6 +207,7 @@ final class PublicationWorkDriver extends ChangeNotifier implements WorkDriver {
     _closed = true;
     unawaited(_subscription?.cancel());
     unawaited(_workObservation?.cancel());
+    onDispose?.call();
     super.dispose();
   }
 }
@@ -226,20 +252,26 @@ WorkDriverSnapshot publicationWorkSnapshot({
 
 extension PublicationWorkRegistration on LocalWork {
   PublicationWorkDriver getOrRegisterPublication(AuthoringScope scope) =>
-      getOrRegisterScoped(
-        WorkDriverId(domain: "publication", scope: scope),
-        (ref) => PublicationWorkDriver(
-          scope,
-          ref.read(
-            realmPublicationRepositoryProvider(
-              scope.organizationId,
-              scope.realmId,
-            ),
+      getOrRegisterScoped(WorkDriverId(domain: "publication", scope: scope), (
+        ref,
+      ) {
+        PublicationWorkDriver? driver;
+        final repository = ref.listen(
+          realmPublicationRepositoryProvider(
+            scope.organizationId,
+            scope.realmId,
           ),
+          (_, next) => driver?.rebind(next),
+        );
+        final created = driver = PublicationWorkDriver(
+          scope,
+          repository.read(),
           this,
-        )..start(),
-        destination: (ref) => RealmWorkDestination.of(ref, scope),
-      );
+          onDispose: repository.close,
+        )..start();
+        // A connection replaced while the driver started is observed too.
+        return created..rebind(repository.read());
+      }, destination: (ref) => RealmWorkDestination.of(ref, scope));
 }
 
 @riverpod

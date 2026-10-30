@@ -12,10 +12,10 @@ final class AuthoringResourceRepository {
   final ResourceSession session;
   final skir.RecordId organization;
   final skir.RecordId realm;
-  final _changes = StreamController<skir.AuthoringChanged>.broadcast(
-    sync: true,
-  );
-  final _invalidations = StreamController<void>.broadcast(sync: true);
+  // Delivered asynchronously: a listener may rebuild its owner and so dispose
+  // this repository, which must never happen inside the event's own dispatch.
+  final _changes = StreamController<skir.AuthoringChanged>.broadcast();
+  final _invalidations = StreamController<void>.broadcast();
   final Completer<void> _disposed = Completer<void>();
 
   Stream<skir.AuthoringChanged> get changes => _changes.stream;

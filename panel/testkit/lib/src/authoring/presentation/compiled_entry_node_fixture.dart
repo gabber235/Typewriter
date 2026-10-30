@@ -265,6 +265,44 @@ AuthoringDocument compiledEntryNodeDocument({
   );
 }
 
+/// The compiled entry Realm whose Village morning page shows its entries as
+/// a graph on its surface, beside the Village evening page in the rail, the
+/// way the real page workspace does. Its catalog declares [operations].
+AuthoringDocument compiledEntryGraphDocument({
+  bool narrow = false,
+  List<RealmOperation> operations = const [],
+}) {
+  final document = compiledEntryNodeDocument(narrow: narrow, graphEditor: true);
+  final page = document.resource(compiledEntryPageId)!.configuration;
+  final selected = document.catalog.selectPresentation(
+    page,
+    skir.PresentationRole.inspector,
+  ) as SelectedEditorPresentation;
+  final snapshot = document.catalog.snapshot.toMutable();
+  snapshot
+    ..resourceOperations = [
+      for (final operation in operations) operation.definition,
+    ]
+    ..presentationMaterials = [
+      ...snapshot.presentationMaterials,
+      (selected.material.toMutable()..role = skir.PresentationRole.workspace)
+          .toFrozen(),
+    ]
+    ..presentations = [
+      for (final presentation in snapshot.presentations)
+        if (presentation.id == selected.material.provider)
+          (presentation.toFrozen().toMutable()
+                ..roles = [
+                  ...presentation.roles,
+                  skir.PresentationRole.workspace,
+                ])
+              .toFrozen()
+        else
+          presentation,
+    ];
+  return document.copyWith(catalog: CheckedEditorCatalog(snapshot.toFrozen()));
+}
+
 /// A fixture page workspace using the production resources graph and bindings.
 /// [element] is the type of one member link of the page elements.
 skir.PresentationNode compiledEntryGraphLayout(skir.TypeTemplate element) =>

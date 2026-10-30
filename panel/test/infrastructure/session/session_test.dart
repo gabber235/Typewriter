@@ -11,7 +11,7 @@ void main() {
 
       expect(await container.read(isAuthenticatedProvider.future), isTrue);
       expect(await container.read(userIdProvider.future), ada.id);
-      final token = await container.read(accessTokenProvider.future);
+      final token = (await container.read(authSessionProvider.future))?.token;
       expect(token?.token, "access-token-${ada.id}");
       expect(token?.expiresAt, now.add(const Duration(days: 1)));
     });
@@ -22,6 +22,6 @@ void main() {
 
     expect(await container.read(isAuthenticatedProvider.future), isFalse);
     expect(await container.read(userIdProvider.future), isNull);
-    expect(await container.read(accessTokenProvider.future), isNull);
+    expect(await container.read(authSessionProvider.future), isNull);
   });
 }

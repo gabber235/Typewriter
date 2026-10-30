@@ -170,10 +170,12 @@ extension ShowPresentation on WidgetTester {
   ///
   /// Every applied write goes to [onWrite]; with [rebindWrites] the scope
   /// then holds the written value, the way an owner that stores it does.
+  /// With [section] the element sits in a section headed by that title.
   Future<PanelDriver> showBoundElement(
     skir.PresentationElement element,
     skir.DataValue value, {
     required skir.ExpressionBindingId binding,
+    String? section,
     ValueChanged<skir.DataValue>? onWrite,
     skir.TypeUse? expected,
     bool readOnly = false,
@@ -201,7 +203,19 @@ extension ShowPresentation on WidgetTester {
                 nodeId: "scalar",
                 properties: skir.PresentationProperties.defaultInstance,
                 element: element,
-                header: null,
+                header: section == null
+                    ? null
+                    : skir.PresentationHeader(
+                        binding: null,
+                        title: skir.PresentationHeaderTitle.wrapText(
+                          textLiteral(section),
+                        ),
+                        description: null,
+                        initiallyExpanded: null,
+                        items: const [],
+                        headerPadding: null,
+                        contentPadding: null,
+                      ),
               ),
               scope: PortablePresentationScope(
                 operations: operations,

@@ -446,6 +446,7 @@ CheckedEditorCatalog libraryCatalog({skir.CatalogGeneration? generation}) {
         fields: type.value,
         ancestors: sectionKinds.contains(type.key) ? ["section"] : const [],
         searchKey: resourceKinds.contains(type.key) ? type.key : null,
+        display: _sectionDisplays[type.key],
       ),
   ];
   final relations = <skir.RelationContract>[];
@@ -845,6 +846,22 @@ final _frameworkDefinitions = {
   "hierarchyGroup": hierarchyGroupUse.definition,
 };
 
+/// The displays the Kotlin library model declares for the realm sections.
+final _sectionDisplays = {
+  "library": skir.TypeDisplay(
+    name: "Library",
+    description: "Every book of the realm",
+    icon: skir.Icon.wrapIconify("material-symbols:local-library"),
+    color: skir.Color(argb: 0xFF3F51B5),
+  ),
+  "taxonomy": skir.TypeDisplay(
+    name: "Tags",
+    description: "Every tag of the realm",
+    icon: skir.Icon.wrapIconify("material-symbols:label"),
+    color: skir.Color(argb: 0xFF795548),
+  ),
+};
+
 skir.TypeDefinitionId _definition(String name) =>
     _frameworkDefinitions[name] ??
     skir.TypeDefinitionId(
@@ -871,9 +888,11 @@ skir.PublishedType _published(
   Map<String, skir.TypeTemplate> fields = const {},
   List<String> ancestors = const [],
   String? searchKey,
+  skir.TypeDisplay? display,
 }) => publishedType(
   _definition(name),
   representation: representation,
+  display: display,
   parents: [for (final ancestor in ancestors) _namedTemplate(ancestor)],
   ancestors: [for (final ancestor in ancestors) _namedTemplate(ancestor)],
   fields: [

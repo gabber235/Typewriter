@@ -36,7 +36,8 @@ void main() {
       test("falls back to $source", () async {
         expect(
           (await testWorld([signedIn(ada.withClaims(claims))]).container
-                  .read(authUserInfoProvider.future))
+                  .read(authSessionProvider.future))!
+              .user
               .avatarUrl,
           avatar,
         );
@@ -61,7 +62,8 @@ void main() {
       test("falls back to $source", () async {
         expect(
           (await testWorld([signedIn(ada.withClaims(claims))]).container
-                  .read(authUserInfoProvider.future))
+                  .read(authSessionProvider.future))!
+              .user
               .username,
           username,
         );
@@ -70,9 +72,9 @@ void main() {
   });
 
   test("a Discord profile is read from its claims", () async {
-    final account = await testWorld([
+    final account = (await testWorld([
       signedIn(ada.withClaims({"discord": _discord})),
-    ]).container.read(authUserInfoProvider.future);
+    ]).container.read(authSessionProvider.future))!.user;
 
     expect(
       account.discord,
@@ -88,9 +90,6 @@ void main() {
   test("without a session there is no account to show", () async {
     final container = testWorld(const []).container;
 
-    await expectLater(
-      container.read(authUserInfoProvider.future),
-      throwsA(isA<Exception>()),
-    );
+    expect(await container.read(authSessionProvider.future), isNull);
   });
 }

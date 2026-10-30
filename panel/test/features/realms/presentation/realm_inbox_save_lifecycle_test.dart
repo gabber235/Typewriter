@@ -77,6 +77,38 @@ void main() {
     expect(saves(), hasLength(2));
   });
 
+  testWidgets("an edit after saved values return is saved, although the "
+      "refresh after an earlier save failed", (tester) async {
+    final panel = await tester.pumpPanel([
+      signedIn(ada, organization: acme),
+      realm(books: [original]),
+      heldSaves,
+    ]);
+    final saved = panel.world.requireRealm;
+    final refreshes = saved.holdRefreshes();
+    await panel.openSurface(original.bookId);
+    await panel.field("title").enter("Draft");
+    await tester.pump(_autosave);
+    await panel.settle();
+    saved.saves.single.confirm();
+    await panel.settle();
+    refreshes.single.completeError(StateError("The connection dropped"));
+    await panel.settle();
+
+    saved.remoteChange((_) {});
+    await panel.settle();
+    for (final refresh in refreshes.skip(1)) {
+      refresh.complete(saved.document);
+    }
+    await panel.settle();
+    await panel.field("title").enter("Later");
+    await tester.pump(_autosave);
+    await panel.settle();
+
+    expect(saved.saves, hasLength(2));
+    expect(find.textContaining("later edits remain local"), findsNothing);
+  });
+
   testWidgets("a failed refresh stays an inbox issue until a retry reads the "
       "saved values, without saving again", (tester) async {
     final panel = await tester.pumpPanel([

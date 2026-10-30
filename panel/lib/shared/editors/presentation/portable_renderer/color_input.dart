@@ -96,6 +96,12 @@ extension _PortableColorInputRendering on PortablePresentationNodeRenderer {
                   input.content?.suffix,
                 );
                 final field = ColorPickerField(
+                  semanticLabel: _inputSemanticLabel(
+                    context,
+                    input.control,
+                    scope,
+                  ),
+                  semanticHint: scope.associationFor(input.control).description,
                   showDefaultIcon:
                       !externalLeading &&
                       input.content?.leading != skir.InputAdornment.none,
@@ -177,6 +183,7 @@ extension _PortableColorInputRendering on PortablePresentationNodeRenderer {
               },
             ),
       ),
+      labelsInput: true,
     );
   }
 }

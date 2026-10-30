@@ -68,6 +68,43 @@ class TestPublicationRepository implements RealmPublicationRepository {
   Future<void> close() => _observations.close();
 }
 
+/// The publication of [_realm] as the panel sees it over the connection
+/// [_connection] returns when it starts watching: like the Realm's hints, its
+/// reviews stop once that connection closes, and the repository is rebuilt
+/// for the next one.
+final class ConnectedPublicationRepository
+    implements RealmPublicationRepository {
+  ConnectedPublicationRepository(this._realm, this._connection);
+
+  final TestPublicationRepository _realm;
+  final NatsClient Function() _connection;
+
+  @override
+  Stream<PublicationObservation> watch() {
+    final NatsClient connection;
+    try {
+      connection = _connection();
+    } on ProviderException {
+      // Before the panel connects no hint arrives; the repository is
+      // rebuilt for the connection once it opens.
+      return const Stream.empty();
+    }
+    return _realm.watch().takeUntil(
+      connection.connectionStateChanges.where((state) => state is NatsClosed),
+    );
+  }
+
+  @override
+  PreparedCommit<skir.PublishAuthoringResponse> preparePublish(
+    skir.PublicationCandidateId candidate,
+  ) => _realm.preparePublish(candidate);
+
+  @override
+  Future<List<skir.CompiledResourceStatus>> states(
+    skir.CompilationStatusSelection selection,
+  ) => _realm.states(selection);
+}
+
 skir.CompilationRoot publicationRoot(String resource) => skir.CompilationRoot(
   projection: skir.CompilationProjectionId(value: "typewriter.resource-graph"),
   resource: skir.ResourceId(value: resource),

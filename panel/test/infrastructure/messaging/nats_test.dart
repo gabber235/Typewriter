@@ -168,6 +168,22 @@ void main() {
       );
     });
 
+    test("a session that has just signed in reaches its organizations "
+        "before anything else read its token", () async {
+      final world = testWorld([
+        signedIn(ada, organization: acme),
+        userBackend(),
+      ]);
+      // The panel fetches these before anyone signs in.
+      await world.container.read(sentinelCredentialsProvider.future);
+
+      final organizations = await world
+          .watch(organizationsProvider.future)
+          .read();
+
+      expect(organizations.map((it) => it.name), [acme.name]);
+    });
+
     testWidgets("an organization change reconnects to the new organization", (
       tester,
     ) async {

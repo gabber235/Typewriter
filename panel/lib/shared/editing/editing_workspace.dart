@@ -398,7 +398,14 @@ final class EditingWorkspace<S, E> extends ChangeNotifier {
   /// Admits a canonical observation and rebases pending local intent.
   /// Available observations received during a save are deferred until the
   /// active lane settles, preventing them from replacing its captured baseline.
+  /// Saved values observed again also recover a commit whose refresh failed;
+  /// an observation held back during the save predates that failure.
   void acceptConfirmed(S observation) {
+    _admitConfirmed(observation);
+    _recoverFailedRefresh(observation);
+  }
+
+  void _admitConfirmed(S observation) {
     if (_closed) return;
     if (_saving != null && model.isAvailable(observation)) {
       _deferredConfirmed = observation;
@@ -409,6 +416,23 @@ final class EditingWorkspace<S, E> extends ChangeNotifier {
       (id) => _groups[id]?.phase is EditGroupDirty<S>,
     );
     if (ready != null) unawaited(save(ready));
+  }
+
+  /// Refreshes once more for commits whose refresh failed, as when the
+  /// connection dropped right after the save. Their later edits otherwise
+  /// stay local until the user retries, although saved values are back.
+  void _recoverFailedRefresh(S observation) {
+    if (_closed || _recovering != null || !model.isAvailable(observation)) {
+      return;
+    }
+    final failed = _groups.values.any(
+      (group) => switch (group.phase) {
+        EditGroupCommittedAwaitingRefresh<S>(:final cause) => cause != null,
+        _ => false,
+      },
+    );
+    if (!failed) return;
+    _recovering = refreshConfirmed().whenComplete(() => _recovering = null);
   }
 
   void _install(S incoming) {
@@ -606,7 +630,7 @@ final class EditingWorkspace<S, E> extends ChangeNotifier {
       _saving = null;
       final deferred = _deferredConfirmed;
       _deferredConfirmed = null;
-      if (deferred != null) acceptConfirmed(deferred);
+      if (deferred != null) _admitConfirmed(deferred);
       retireIdleGroups();
     });
   }
@@ -640,7 +664,7 @@ final class EditingWorkspace<S, E> extends ChangeNotifier {
         _saving = null;
         final deferred = _deferredConfirmed;
         _deferredConfirmed = null;
-        if (deferred != null) acceptConfirmed(deferred);
+        if (deferred != null) _admitConfirmed(deferred);
         final ready = _requested.firstWhereOrNull(
           (id) => _groups[id]?.phase is EditGroupDirty<S>,
         );
@@ -840,6 +864,8 @@ final class EditingWorkspace<S, E> extends ChangeNotifier {
   /// Refreshes acknowledged state without replaying a submitted request.
   /// Groups awaiting refresh release only their frozen operations after the
   /// refresh succeeds. Later edits remain in the journal.
+  Future<void>? _recovering;
+
   Future<void> refreshConfirmed() async {
     if (_closed || _saving != null) return;
     try {

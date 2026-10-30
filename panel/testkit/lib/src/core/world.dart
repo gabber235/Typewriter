@@ -253,6 +253,10 @@ final class World {
     }
   }
 
+  /// Replaces the resource session the way a new work scope or user does;
+  /// everything built on it rebuilds when next read.
+  void replaceResourceSession() => container.invalidate(resourceSessionProvider);
+
   /// Runs [effect] after [delay], unless the world was disposed first.
   void schedule(Duration delay, void Function() effect) =>
       _timers.add(Timer(delay, effect));

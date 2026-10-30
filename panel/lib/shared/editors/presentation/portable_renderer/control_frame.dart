@@ -26,8 +26,8 @@ Widget _controlFrame(
             : resolvedLabel;
         // The visible label stays out of the semantics tree, so the field is
         // announced once: by its native input when [labelsInput] (see
-        // [_semanticInput]), otherwise by this frame unless the enclosing
-        // header already reads the same title.
+        // [_inputSemanticLabel]), otherwise by this frame unless the
+        // enclosing header already reads the same title.
         final frameLabel = semanticLabel?.trim() == enclosingTitle?.trim()
             ? null
             : semanticLabel;
@@ -152,22 +152,32 @@ Widget _controlAssociation(
   );
 }
 
+/// The name assistive technology reads for the native input of [control]:
+/// its own semantic label, or else the title of the enclosing header that
+/// visibly names it.
+String? _inputSemanticLabel(
+  BuildContext context,
+  skir.BoundControl control,
+  PortablePresentationScope scope,
+) =>
+    scope.associationFor(control).semanticLabel ??
+    _PortableHeaderTitle.maybeOf(context);
+
 /// Labels one native editor whose decoration contains only display content.
 /// Authored actions and other editable controls remain siblings of this child.
 Widget _semanticInput(
   skir.BoundControl control,
   PortablePresentationScope scope,
   Widget child,
-) {
-  final association = scope.associationFor(control);
-  return MergeSemantics(
+) => Builder(
+  builder: (context) => MergeSemantics(
     child: Semantics(
-      label: association.semanticLabel ?? "",
-      hint: association.description,
+      label: _inputSemanticLabel(context, control, scope) ?? "",
+      hint: scope.associationFor(control).description,
       child: child,
     ),
-  );
-}
+  ),
+);
 
 Widget? _fieldLabel(
   skir.BoundControl control,

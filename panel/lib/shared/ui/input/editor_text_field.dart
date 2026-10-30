@@ -46,6 +46,8 @@ class EditorTextField extends HookWidget {
     this.selectAllOnFocus = false,
     this.onInputFocus,
     this.onDismiss,
+    this.semanticLabel,
+    this.semanticHint,
     super.key,
   }) : super();
   final TextEditingController? controller;
@@ -115,6 +117,14 @@ class EditorTextField extends HookWidget {
   final bool selectAllOnFocus;
   final VoidCallback? onInputFocus;
   final VoidCallback? onDismiss;
+
+  /// The name assistive technology reads for the text input itself, for a
+  /// field whose visible label sits outside it.
+  final String? semanticLabel;
+
+  /// What assistive technology reads after [semanticLabel], such as the
+  /// field's description.
+  final String? semanticHint;
 
   @override
   Widget build(BuildContext context) {
@@ -248,40 +258,47 @@ class EditorTextField extends HookWidget {
       surroundingActions: surroundingActions,
       onInputFocus: onInputFocus,
       onDismiss: onDismiss,
-      child: TextFormField(
-        statesController: statesController,
-        focusNode: focusNode,
-        autofocus: autofocus == EditorTextFieldAutoFocus.textField,
-        controller: controller,
-        validator: validator,
-        onEditingComplete:
-            onEditingComplete ?? surroundingFocusNode.requestFocus,
-        onFieldSubmitted: onSubmitted,
-        onChanged: (draft) {
-          ownTextChanges.value.add(draft);
-          onChanged?.call(draft);
-        },
-        style: style,
-        textCapitalization: textCapitalization,
-        enableSuggestions: enableSuggestions,
-        obscureText: obscureText,
-        maxLength: maxLength,
-        maxLengthEnforcement: maxLengthEnforcement,
-        textInputAction: isSingleLine
-            ? TextInputAction.done
-            : TextInputAction.newline,
-        textAlign: textAlign,
-        minLines: minLines,
-        maxLines: effectiveMaxLines,
-        keyboardType: isSingleLine ? keyboardType : TextInputType.multiline,
-        enabled: enabled,
-        readOnly: readOnly,
-        selectAllOnFocus: selectAllOnFocus,
-        inputFormatters: [
-          if (isSingleLine) FilteringTextInputFormatter.singleLineFormatter,
-          ...?inputFormatters,
-        ],
-        decoration: effectiveDecoration,
+      // A named field is its own node, so nearby text such as a section
+      // title never merges into what it announces.
+      child: Semantics(
+        container: semanticLabel != null,
+        label: semanticLabel,
+        hint: semanticHint,
+        child: TextFormField(
+          statesController: statesController,
+          focusNode: focusNode,
+          autofocus: autofocus == EditorTextFieldAutoFocus.textField,
+          controller: controller,
+          validator: validator,
+          onEditingComplete:
+              onEditingComplete ?? surroundingFocusNode.requestFocus,
+          onFieldSubmitted: onSubmitted,
+          onChanged: (draft) {
+            ownTextChanges.value.add(draft);
+            onChanged?.call(draft);
+          },
+          style: style,
+          textCapitalization: textCapitalization,
+          enableSuggestions: enableSuggestions,
+          obscureText: obscureText,
+          maxLength: maxLength,
+          maxLengthEnforcement: maxLengthEnforcement,
+          textInputAction: isSingleLine
+              ? TextInputAction.done
+              : TextInputAction.newline,
+          textAlign: textAlign,
+          minLines: minLines,
+          maxLines: effectiveMaxLines,
+          keyboardType: isSingleLine ? keyboardType : TextInputType.multiline,
+          enabled: enabled,
+          readOnly: readOnly,
+          selectAllOnFocus: selectAllOnFocus,
+          inputFormatters: [
+            if (isSingleLine) FilteringTextInputFormatter.singleLineFormatter,
+            ...?inputFormatters,
+          ],
+          decoration: effectiveDecoration,
+        ),
       ),
     );
   }

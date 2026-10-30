@@ -40,6 +40,8 @@ class ColorPickerField extends HookConsumerWidget {
     this.popupConstraints,
     this.enabled = true,
     this.readOnly = false,
+    this.semanticLabel,
+    this.semanticHint,
     super.key,
   }) : mixed = false;
 
@@ -72,6 +74,8 @@ class ColorPickerField extends HookConsumerWidget {
     this.popupConstraints,
     this.enabled = true,
     this.readOnly = false,
+    this.semanticLabel,
+    this.semanticHint,
     super.key,
   }) : color = null,
        mixed = true;
@@ -108,6 +112,12 @@ class ColorPickerField extends HookConsumerWidget {
   final VoidCallback? onInteractionCommit;
   final bool enabled;
   final bool readOnly;
+
+  /// The name assistive technology reads for the color text input.
+  final String? semanticLabel;
+
+  /// What assistive technology reads after [semanticLabel].
+  final String? semanticHint;
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -248,6 +258,8 @@ class ColorPickerField extends HookConsumerWidget {
           name: includeAlpha ? "ARGB color" : "RGB color",
           readOnly: !editable,
           enabled: enabled,
+          semanticLabel: semanticLabel,
+          semanticHint: semanticHint,
           style: style,
           textAlign: textAlign,
           selectAllOnFocus: selectAllOnFocus,

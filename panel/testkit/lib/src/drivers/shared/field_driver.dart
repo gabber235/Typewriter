@@ -100,6 +100,14 @@ final class FieldDriver extends ComponentDriver {
     await settle();
   }
 
+  /// Focuses the field the way a screen reader does, through the focus
+  /// action of the field it announces.
+  Future<void> focusFromScreenReader() async {
+    final node = _node;
+    node.owner!.performAction(node.id, SemanticsAction.focus);
+    await settle();
+  }
+
   /// Replaces the field's text with [text] as typing does, without
   /// committing it.
   Future<void> type(String text) async {

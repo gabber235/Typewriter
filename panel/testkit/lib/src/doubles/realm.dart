@@ -418,7 +418,14 @@ final class FakeRealm {
   /// Replaces the Realm's authoring capabilities for [scope].
   List<Override> get overrides => [
     realmPublicationRepositoryProvider.overrideWith(
-      (ref, ids) => _serve(ids.$1, ids.$2, publication),
+      (ref, ids) => _serve(
+        ids.$1,
+        ids.$2,
+        ConnectedPublicationRepository(
+          publication,
+          () => ref.watch(natsProvider),
+        ),
+      ),
     ),
     confirmedAuthoringDocumentProvider.overrideWith((ref, requested) {
       _serve(requested.organizationId, requested.realmId, null);

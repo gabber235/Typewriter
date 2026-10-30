@@ -72,16 +72,18 @@ void main() {
     final panel = await tester.pumpStory(realmInboxButtonUseCase);
 
     await tester.pressInStory(LogicalKeyboardKey.keyP, shift: true);
-    expect(panel.labeled("Publish"), findsOne);
+    // The open inbox offers Publish twice: in its review and as its chip in
+    // the action row.
+    expect(semanticsButtons("Publish"), hasLength(2));
 
     await tester.sendKeyEvent(LogicalKeyboardKey.escape);
     await tester.runStory();
-    expect(panel.labeled("Publish"), findsNothing);
+    expect(semanticsButtons("Publish"), isEmpty);
 
     await tester.pressInStory(LogicalKeyboardKey.enter, primary: true);
     await tester.pressInStory(LogicalKeyboardKey.keyP, shift: true);
     expect(panel.shows("Everything is published"), isFalse);
-    expect(panel.labeled("Publish"), findsOne);
+    expect(semanticsButtons("Publish"), hasLength(2));
   });
 
   testWidgets("outside a Realm the app bar has no Realm inbox", (tester) async {
