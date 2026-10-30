@@ -22,6 +22,7 @@ import skirout.editor.v1.compiled_content.PublishedContent
 import skirout.editor.v1.compiled_content.PublishedOutput
 import skirout.editor.v1.publication.EngineImplementationInputs
 import skirout.editor.v1.publication.PublicationReport
+import skirout.editor.v1.type_catalog.AuthoringRecord
 import skirout.editor.v1.type_catalog.CatalogGeneration
 import skirout.editor.v1.type_catalog.InputToken
 import skirout.editor.v1.type_catalog.PublicationId
@@ -115,6 +116,8 @@ internal fun compiledArtifactProducer(
 
         context(inputs: CompilationInputs)
         override fun compile(roots: Set<CompilationRoot>): List<CompilationResult> = compile.invoke(roots)
+
+        override fun publishedRecord(payload: ByteArray): AuthoringRecord? = null
     }
 
 /** Registers [producers] and compiles an empty saved view with them, so registration and output rules both apply. */

@@ -10,6 +10,7 @@ class RealmInboxView extends StatelessWidget {
     required this.onClose,
     required this.openLocation,
     required this.resourceLabel,
+    required this.removedLabel,
     super.key,
   });
   final RealmInboxState state;
@@ -17,6 +18,10 @@ class RealmInboxView extends StatelessWidget {
   final VoidCallback onClose;
   final Future<void> Function(skir.ValueLocation) openLocation;
   final String Function(skir.ResourceId) resourceLabel;
+
+  /// Names a removed root from what it was published as, since saved content
+  /// no longer holds it.
+  final String Function(skir.RemovedRoot) removedLabel;
 
   Future<void> _publish(
     BuildContext context,
@@ -491,8 +496,8 @@ class RealmInboxView extends StatelessWidget {
   Widget _change(BuildContext context, skir.PublicationChange change) {
     final root = switch (change) {
       skir.PublicationChange_rootAddedWrapper(:final value) ||
-      skir.PublicationChange_rootUpdatedWrapper(:final value) ||
-      skir.PublicationChange_rootRemovedWrapper(:final value) => value,
+      skir.PublicationChange_rootUpdatedWrapper(:final value) => value,
+      skir.PublicationChange_rootRemovedWrapper(:final value) => value.root,
       _ => null,
     };
     final label = switch (change) {
@@ -512,7 +517,11 @@ class RealmInboxView extends StatelessWidget {
       contentPadding: EdgeInsets.zero,
       leading: _icon(context, Icons.article_outlined, color),
       title: Text(
-        root == null ? label : resourceLabel(root.resource),
+        switch (change) {
+          skir.PublicationChange_rootRemovedWrapper(:final value) =>
+            removedLabel(value),
+          _ => root == null ? label : resourceLabel(root.resource),
+        },
         style: context.theme.textTheme.titleSmall,
       ),
       trailing: root == null ? null : _badge(context, label, color),

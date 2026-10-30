@@ -7,6 +7,7 @@ import io.kotest.matchers.shouldBe
 import io.kotest.matchers.types.shouldBeInstanceOf
 import skirout.editor.v1.publication.EngineImplementationInputs
 import skirout.editor.v1.publication.PublicationChange
+import skirout.editor.v1.publication.RemovedRoot
 import skirout.editor.v1.type_catalog.CatalogGeneration
 import skirout.editor.v1.type_catalog.InputToken
 import skirout.editor.v1.type_catalog.PublicationId
@@ -20,6 +21,7 @@ val PublicationComparisonTest by testSuite {
             selected.copy(publication = PublicationId(value = "other"), catalog = CatalogGeneration(value = "other")),
             listOf(candidate),
             testEngineInputs(),
+            published = { null },
         ) shouldBe
             PublicationComparison.Unchanged
     }
@@ -36,6 +38,7 @@ val PublicationComparisonTest by testSuite {
                     selected,
                     listOf(artifact),
                     testEngineInputs(),
+                    published = { null },
                 ).shouldBeInstanceOf<PublicationComparison.Changed>()
                 .delta.allChanges shouldBe
                 listOf(PublicationChange.RootUpdatedWrapper(original.root))
@@ -52,10 +55,11 @@ val PublicationComparisonTest by testSuite {
                         skirout.editor.v1.type_catalog
                             .InputToken(value = "new"),
                 ),
+                published = { null },
             ).shouldBeInstanceOf<PublicationComparison.Changed>()
             .delta.allChanges shouldBe
             listOf(PublicationChange.REQUIREMENTS_CHANGED)
-        PublicationComparison.between(null, emptyList(), testEngineInputs()) shouldBe PublicationComparison.Unchanged
+        PublicationComparison.between(null, emptyList(), testEngineInputs(), published = { null }) shouldBe PublicationComparison.Unchanged
     }
     test("old envelope format requires explicit publication even without changed output") {
         val artifact = compiledArtifact()
@@ -66,10 +70,12 @@ val PublicationComparisonTest by testSuite {
                     outputs.copy(formatRevision = com.typewritermc.engine.PUBLISHED_CONTENT_FORMAT_REVISION + 1),
                     candidate,
                     testEngineInputs(),
+                    published = { null },
                 ).shouldBeInstanceOf<PublicationComparison.Changed>()
                 .delta.allChanges shouldBe
                 listOf(PublicationChange.REQUIREMENTS_CHANGED)
-            PublicationComparison.between(outputs, candidate, testEngineInputs()) shouldBe PublicationComparison.Unchanged
+            PublicationComparison.between(outputs, candidate, testEngineInputs(), published = { null }) shouldBe
+                PublicationComparison.Unchanged
         }
     }
     test("failed roots remain pending while definite removals and successful additions are comparable") {
@@ -81,8 +87,12 @@ val PublicationComparisonTest by testSuite {
             listOf(fresh),
             setOf(fresh.root, pending),
             testEngineInputs(),
+            published = { null },
         ) shouldBe
-            listOf(PublicationChange.RootAddedWrapper(fresh.root), PublicationChange.RootRemovedWrapper(old.root))
+            listOf(
+                PublicationChange.RootAddedWrapper(fresh.root),
+                PublicationChange.RootRemovedWrapper(RemovedRoot(root = old.root, published = null)),
+            )
     }
     test("a release delta without changes is refused") {
         shouldThrow<IllegalArgumentException> { publicationDelta(emptyList()) }.message shouldBe

@@ -35,6 +35,7 @@ import kotlinx.coroutines.withContext
 import skirout.editor.v1.authoring_facts.EditExpectation
 import skirout.editor.v1.checking.FindingSet
 import skirout.editor.v1.checking.FindingStatus
+import skirout.editor.v1.compilation_root.CompilationRoot
 import skirout.editor.v1.compiled_content.PublishedContent
 import skirout.editor.v1.diagnostic.Diagnostic
 import skirout.editor.v1.diagnostic.DiagnosticSeverity
@@ -51,6 +52,7 @@ import skirout.editor.v1.publication.PublicationState
 import skirout.editor.v1.publication.PublicationStatus
 import skirout.editor.v1.publication.PublicationView
 import skirout.editor.v1.publication.PublicationViewId
+import skirout.editor.v1.type_catalog.AuthoringRecord
 import skirout.editor.v1.type_catalog.CatalogGeneration
 import skirout.editor.v1.type_catalog.PublicationId
 import java.util.UUID
@@ -219,6 +221,8 @@ internal class RealmPublicationCoordinator(
                 val compiled = with(compilationInputs) { compilation.compile() }
                 val successful = compiled.filterIsInstance<CompilationResult.Success>().map { it.artifact }
                 val failed = compiled.filterIsInstance<CompilationResult.Blocked>()
+                val candidateRoots = compiled.mapTo(linkedSetOf()) { it.root }
+                val published = selected.removedRecords(candidateRoots)
                 val evidence = assessment.evidence.toMutableMap()
                 val projectionLocations =
                     captured.root.projection.problems
@@ -255,13 +259,14 @@ internal class RealmPublicationCoordinator(
                                 PublicationComparison.confirmedChanges(
                                     selected,
                                     successful,
-                                    compiled.mapTo(linkedSetOf()) { it.root },
+                                    candidateRoots,
                                     inputs,
+                                    published::get,
                                 ),
                             pendingRoots = failed.map { it.root },
                         )
                     } else {
-                        when (val comparison = PublicationComparison.between(selected, successful, inputs)) {
+                        when (val comparison = PublicationComparison.between(selected, successful, inputs, published::get)) {
                             PublicationComparison.Unchanged -> {
                                 if (selected != null && !restoreIfStillSelected(selected, successful)) {
                                     invalidate()
@@ -421,6 +426,17 @@ internal class RealmPublicationCoordinator(
         }
     }
 
+    /** The records this selection published for its roots outside [candidate], read back from stored payloads. */
+    private suspend fun PublishedContent?.removedRecords(candidate: Set<CompilationRoot>): Map<CompilationRoot, AuthoringRecord> =
+        this
+            ?.outputs
+            .orEmpty()
+            .filter { it.reference.root !in candidate }
+            .mapNotNull { output ->
+                val payload = artifacts.payload(output) ?: return@mapNotNull null
+                compilation.publishedRecord(output.reference.root, output.reference.mediaType, payload)?.let { output.reference.root to it }
+            }.toMap()
+
     private fun capturedFindings(root: AuthoringView) =
         findings().map { set ->
             val current =
@@ -453,7 +469,11 @@ internal class RealmPublicationCoordinator(
                             next.artifacts,
                             next.artifacts.mapTo(linkedSetOf()) { it.root } + pendingRoots,
                             next.engine,
-                        ),
+                        ) { root ->
+                            active.candidate.artifacts
+                                .firstOrNull { it.root == root }
+                                ?.let { compilation.publishedRecord(it.root, it.mediaType, it.payload) }
+                        },
                     pendingRoots = pendingRoots,
                     blockers = pending?.blockers?.all.orEmpty(),
                     notices = next.status.notices,

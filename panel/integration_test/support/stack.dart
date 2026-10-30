@@ -2,8 +2,8 @@
 ///
 /// `cargo xtask e2e` passes the stack's `panel.json` through
 /// `--dart-define-from-file`, so every value here is a compile time define.
-/// The CI cluster's file carries no `STACK_*` control values: failure scenarios
-/// check [controllable] and skip there.
+/// The CI cluster's file carries no `STACK_*` control values, so `faultScenario`
+/// registers nothing there.
 ///
 /// Import with a prefix (`import "support/stack.dart" as stack;`), so calls
 /// read as `stack.identityOutage(true)`.
@@ -91,6 +91,16 @@ Future<void> natsLink({required bool enabled}) => _expect(
   ),
 );
 
+/// Cuts or restores the Realm host's NATS link, so the Realm goes away while
+/// the panel stays connected.
+Future<void> realmLink({required bool enabled}) => _expect(
+  200,
+  http.post(
+    Uri.parse("$_faults/proxies/realm-nats"),
+    body: jsonEncode({"enabled": enabled}),
+  ),
+);
+
 /// Restores every link and removes every toxic, so the next scenario starts
 /// from a healthy stack.
 Future<void> resetFaults() async {
@@ -100,7 +110,7 @@ Future<void> resetFaults() async {
 
 Future<void> _expect(int status, Future<http.Response> request) async {
   if (!controllable) {
-    throw StateError("this stack has no fault control; skip the scenario");
+    throw StateError("this stack has no fault control; use faultScenario");
   }
   final response = await request;
   if (response.statusCode != status) {

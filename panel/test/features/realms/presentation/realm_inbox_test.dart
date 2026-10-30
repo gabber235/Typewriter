@@ -114,6 +114,28 @@ void main() {
     expect(find.text("Publish"), findsWidgets);
   });
 
+  testWidgets("a removed resource is named as it was published", (
+    tester,
+  ) async {
+    final removed = book("The Lost Map");
+    final panel = await tester.pumpPanel([
+      signedIn(ada, organization: acme),
+      realm(books: [first]),
+    ]);
+    await panel.openSurface(first.bookId);
+    await panel.reportPublication(
+      removalPublicationStatus(
+        removed.bookId,
+        published: realmDocument(books: [removed]).resource(removed.bookId),
+      ),
+    );
+
+    await panel.pressShifted(LogicalKeyboardKey.keyP);
+
+    expect(panel.shows("The Lost Map"), isTrue);
+    expect(panel.shows("Removed resource"), isFalse);
+  });
+
   testWidgets("a refused publish tells the user why", (tester) async {
     final panel = await tester.pumpPanel([
       signedIn(ada, organization: acme),

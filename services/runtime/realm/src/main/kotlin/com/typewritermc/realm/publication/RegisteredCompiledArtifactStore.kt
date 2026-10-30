@@ -53,6 +53,10 @@ class RegisteredCompiledArtifactStore(
         ).requireValid()
     }
 
+    /** The stored bytes of [output], or null when the store no longer holds them intact. */
+    suspend fun payload(output: PublishedOutput): ByteArray? =
+        (blobs.fetch(output.blob.digest.artifactDigest()) as? BlobResult.Success)?.value
+
     suspend fun selected(content: PublishedContent) = retention.selected(content.publication.value)
 
     suspend fun reconcile(content: PublishedContent?) =

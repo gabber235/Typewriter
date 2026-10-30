@@ -26,6 +26,7 @@ import skirout.editor.v1.publication.PublicationFailure
 import skirout.editor.v1.publication.PublicationReport
 import skirout.editor.v1.publication.PublicationState
 import skirout.editor.v1.publication.PublicationStatus
+import skirout.editor.v1.publication.RemovedRoot
 import skirout.editor.v1.type_catalog.CatalogGeneration
 import skirout.editor.v1.type_catalog.DataValue
 import skirout.editor.v1.type_catalog.InputToken
@@ -115,6 +116,20 @@ val RealmPublicationCoordinatorTest by testSuite {
         }
     }
 
+    test("a removed root is named by the record its selected publication carries") {
+        val fixture = PublicationFixture()
+        try {
+            fixture.release()
+            fixture.views.install(fixture.views.prepare(AuthoringViewDelta(emptyMap(), removedResources = setOf(PUBLICATION_PAGE_ID))))
+            fixture.publisher.refresh()
+
+            fixture.ready().changes.allChanges shouldBe
+                listOf(PublicationChange.RootRemovedWrapper(RemovedRoot(root = fixture.root, published = publicationPageRecord("Quest"))))
+        } finally {
+            fixture.close()
+        }
+    }
+
     test("initial empty content stays empty while removing the last root is a release") {
         val fixture = PublicationFixture(initial = emptyMap())
         fixture.publisher.refresh()
@@ -126,7 +141,7 @@ val RealmPublicationCoordinatorTest by testSuite {
         fixture.views.install(fixture.views.prepare(AuthoringViewDelta(emptyMap(), removedResources = setOf(PUBLICATION_PAGE_ID))))
         fixture.publisher.refresh()
         val ready = fixture.ready()
-        ready.changes.allChanges shouldBe listOf(PublicationChange.RootRemovedWrapper(fixture.root))
+        ready.changes.allChanges.map { (it as PublicationChange.RootRemovedWrapper).value.root } shouldBe listOf(fixture.root)
         fixture.publisher
             .publish(ready.candidate)
             .shouldBeInstanceOf<PublicationResult.Activated>()

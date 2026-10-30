@@ -105,6 +105,26 @@ skir.CompilationRoot publicationRoot(String resource) => skir.CompilationRoot(
   resource: skir.ResourceId(value: resource),
 );
 
+/// A review ready to release one removal: [resource], which the selected
+/// publication carries as [published].
+skir.PublicationStatus removalPublicationStatus(
+  skir.ResourceId resource, {
+  skir.AuthoringRecord? published,
+}) => skir.PublicationStatus.createReady(
+  candidate: skir.PublicationCandidateId(value: "candidate"),
+  notices: const [],
+  baseline: skir.PublicationBaseline.initial,
+  changes: skir.PublicationDelta(
+    first: skir.PublicationChange.wrapRootRemoved(
+      skir.RemovedRoot(
+        root: publicationRoot(resource.value),
+        published: published,
+      ),
+    ),
+    additional: const [],
+  ),
+);
+
 skir.PublicationStatus readyPublicationStatus({
   String candidate = "candidate",
   String resource = "page",

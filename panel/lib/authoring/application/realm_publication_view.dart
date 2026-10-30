@@ -96,12 +96,12 @@ bool validPublicationStatus(skir.PublicationStatus status) {
       _ => false,
     },
   );
+  bool root(skir.CompilationRoot value) =>
+      value.resource.value.isNotEmpty && value.projection.value.isNotEmpty;
   bool change(skir.PublicationChange value) => switch (value) {
     skir.PublicationChange_rootAddedWrapper(:final value) ||
-    skir.PublicationChange_rootUpdatedWrapper(:final value) ||
-    skir.PublicationChange_rootRemovedWrapper(
-      :final value,
-    ) => value.resource.value.isNotEmpty && value.projection.value.isNotEmpty,
+    skir.PublicationChange_rootUpdatedWrapper(:final value) => root(value),
+    skir.PublicationChange_rootRemovedWrapper(:final value) => root(value.root),
     skir.PublicationChange.requirementsChanged => true,
     _ => false,
   };
