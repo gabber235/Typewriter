@@ -423,7 +423,7 @@ final class FakeRealm {
         ids.$2,
         ConnectedPublicationRepository(
           publication,
-          () => ref.watch(natsProvider),
+          () => ref.watch(natsProvider.future),
         ),
       ),
     ),

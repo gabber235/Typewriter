@@ -40,7 +40,7 @@ final class AuthoringResourceRepository {
       return;
     }
     _started = true;
-    await rebindTransport(session.transport.client);
+    await rebindTransport(await session.transport.client);
   }
 
   Future<void> rebindTransport(NatsClient client) {

@@ -20,12 +20,13 @@ World testWorld(List<Trait> traits) {
 
 /// Waiting for what the panel resolves before it shows anything.
 extension WorldStartup on World {
-  /// Waits until the startup dependencies the panel shell waits for have
-  /// resolved: the sentinel credentials and the identity provider session.
-  /// Only then can the panel connect to NATS.
+  /// Waits until the panel has what a signed in page shows behind: the
+  /// sentinel credentials, the identity provider session and, for a signed
+  /// in user, the NATS connection.
   Future<void> initialized() async {
     await container.read(sentinelCredentialsProvider.future);
-    await container.read(authSessionProvider.future);
+    if (await container.read(authSessionProvider.future) == null) return;
+    await container.read(natsProvider.future);
   }
 }
 

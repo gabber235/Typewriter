@@ -66,7 +66,10 @@ extension CounterProjection on World {
           delivery: persistent
               ? const ProjectionDelivery.persistent(
                   stream: "TYPEWRITER_FIXTURE",
-                  consumer: "TW_counter",
+                  route: PersistentProjectionRoute(
+                    id: "counter",
+                    organizationScoped: false,
+                  ),
                 )
               : const ProjectionDelivery.ephemeral(),
           reconciliation: sequence == null

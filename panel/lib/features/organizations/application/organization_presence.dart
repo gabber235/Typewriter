@@ -64,7 +64,7 @@ class OrganizationPresence extends _$OrganizationPresence {
       userId: userId,
       organizationId: organizationId,
     );
-    _client = ref.watch(natsProvider);
+    _client = await ref.watch(natsProvider.future);
     _subscription = await _client.subscribe(
       OrganizationPresenceRouteEvent.subscriptionPattern(
         organizationId: organizationId,

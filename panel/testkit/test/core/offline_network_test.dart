@@ -39,6 +39,9 @@ void main() {
     await panel.eventually(
       () => expect(panel.world.nats.connection.actorId, ada.id),
     );
-    expect(panel.container.read(natsProvider), isA<FakeNatsClient>());
+    expect(
+      await panel.container.read(natsProvider.future),
+      isA<FakeNatsClient>(),
+    );
   });
 }

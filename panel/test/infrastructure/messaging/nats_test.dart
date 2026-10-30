@@ -134,32 +134,20 @@ void main() {
   });
 
   group("Nats", () {
-    test("refuses to connect without a signed in user", () async {
+    test("a consumer waiting without a signed in user opens nothing", () async {
       final world = testWorld(const []);
       await world.initialized();
 
-      expect(
-        () => world.container.read(natsProvider),
-        throwsA(
-          isA<ProviderException>().having(
-            (error) => error.exception,
-            "exception",
-            isA<StateError>().having(
-              (error) => error.message,
-              "message",
-              "User must be authenticated before connecting to NATS",
-            ),
-          ),
-        ),
-      );
+      world.watch(natsProvider);
+      await pumpEventQueue();
+
       expect(world.nats.connected, isFalse);
     });
 
     test("signing out closes the connection", () async {
       final world = testWorld([signedIn(ada)]);
       await world.initialized();
-      final connection = world.container.listen(natsProvider, (_, _) {});
-      addTearDown(connection.close);
+      world.watch(natsProvider);
       final signedInConnection = world.nats.connection;
 
       await world.container.read(authProvider.notifier).signOut();
@@ -169,19 +157,39 @@ void main() {
     });
 
     test("a session that has just signed in reaches its organizations "
-        "before anything else read its token", () async {
+        "before anything else loaded its token or credentials", () async {
       final world = testWorld([
         signedIn(ada, organization: acme),
         userBackend(),
       ]);
-      // The panel fetches these before anyone signs in.
-      await world.container.read(sentinelCredentialsProvider.future);
 
       final organizations = await world
           .watch(organizationsProvider.future)
           .read();
 
       expect(organizations.map((it) => it.name), [acme.name]);
+    });
+
+    test("signing out with a Realm's publication open opens no connection "
+        "and fails nothing", () async {
+      final world = await signedInWorld([
+        signedIn(ada, organization: acme),
+        realmPublicationOverNats(),
+      ]);
+      final publication = world.watch(
+        realmPublicationProvider(
+          acme.organizationId,
+          skir.recordId("realm_instance:main"),
+        ),
+      );
+      await pumpEventQueue();
+      final opened = world.nats.connections.length;
+
+      await world.container.read(authProvider.notifier).signOut();
+      await pumpEventQueue();
+
+      expect(publication.read().hasError, isFalse);
+      expect(world.nats.connections, hasLength(opened));
     });
 
     testWidgets("an organization change reconnects to the new organization", (
@@ -191,8 +199,7 @@ void main() {
       final panel = await tester.pumpPanel([
         signedIn(ada, organization: acme, others: [globex]),
       ]);
-      final connection = panel.container.listen(natsProvider, (_, _) {});
-      addTearDown(connection.close);
+      panel.world.watch(natsProvider);
       final acmeConnection = panel.world.nats.connection;
       expect(acmeConnection.organizationId, acme.organizationId.id);
 
@@ -351,8 +358,8 @@ void main() {
 
     test("cancellation remains safe while subscribe is pending", () async {
       final world = testWorld([signedIn(ada)]);
-      await world.initialized();
       world.nats.connectWith = HeldSubscriptionsNatsClient.new;
+      await world.initialized();
       final listener = world.watchCounter().listen(null);
       final server = world.nats.connection as HeldSubscriptionsNatsClient;
       await pumpEventQueue();
@@ -368,8 +375,8 @@ void main() {
 
     test("reconnect serializes a pending persistent acquisition", () async {
       final world = testWorld([signedIn(ada)]);
-      await world.initialized();
       world.nats.connectWith = HeldAcquisitionsNatsClient.new;
+      await world.initialized();
       var snapshots = 0;
       world.nats.registerHandler("watch", (_) => counterBytes(++snapshots));
       final values = <int>[];

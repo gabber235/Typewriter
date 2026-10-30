@@ -184,7 +184,7 @@ extension RefNatsExtension on Ref {
     SkirRouteOperation<TResponse> operation,
   ) async {
     final telemetry = await read(panelTelemetryProvider.future);
-    final client = read(natsProvider);
+    final client = await read(natsProvider.future);
     final response = await telemetry.traceNats(
       subject: operation.subject,
       payloadSize: operation.requestBytes.length,
@@ -207,6 +207,9 @@ extension RefNatsExtension on Ref {
   /// [reduceConfirmed] distinguishes confirmed command facts from observations.
   /// [reconcileSnapshot] applies feature policy when a replacement arrives,
   /// such as preserving newer facts only for members of the incoming snapshot.
+  ///
+  /// The projection starts once the connection exists, and the watching
+  /// provider rebuilds when the connection is replaced.
   Stream<TData> watchProjection<TData, TResponse, TEvent>({
     required String subject,
     required String eventSubject,
@@ -221,15 +224,16 @@ extension RefNatsExtension on Ref {
     TData Function(TData, TEvent)? reduceConfirmed,
     TData Function(TData, TData)? reconcileSnapshot,
     TData? initialValue,
-  }) => ProjectionWatcher<TData, TResponse, TEvent>(
-    client: watch(natsProvider),
+  }) => Stream.fromFuture(watch(natsProvider.future)).asyncExpand(
+    (client) => ProjectionWatcher<TData, TResponse, TEvent>(
+    client: client,
     requestSnapshot: () async {
       final telemetry = await read(panelTelemetryProvider.future);
       return telemetry.traceNats(
         subject: subject,
         payloadSize: requestBytes.length,
         operationName: "request",
-        operation: (headers) => read(natsProvider).request(
+        operation: (headers) => client.request(
           subject,
           requestBytes,
           // Projection routes keep the manifest's default limits.
@@ -250,7 +254,8 @@ extension RefNatsExtension on Ref {
     delivery: delivery,
     reconciliation: reconciliation,
     registerDisposal: onDispose,
-  ).watch(eventSubject: eventSubject);
+  ).watch(eventSubject: eventSubject),
+  );
 }
 
 /// Owns one projection stream across transport interruptions.
@@ -361,8 +366,12 @@ final class ProjectionWatcher<TData, TResponse, TEvent> {
 
             Future<NatsSubscription> subscribe() => switch (delivery) {
               ProjectionDeliveryEphemeral() => client.subscribe(eventSubject),
-              ProjectionDeliveryPersistent(:final stream, :final consumer) =>
-                client.subscribePersistent(stream, consumer, eventSubject),
+              ProjectionDeliveryPersistent(:final stream, :final route) =>
+                client.subscribePersistent(
+                  stream,
+                  route.consumerName(client),
+                  eventSubject,
+                ),
             };
 
             Future<void> installSnapshot(int expectedGeneration) async {

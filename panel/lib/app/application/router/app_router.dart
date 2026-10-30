@@ -9,6 +9,7 @@ part "guards/organization_guard.dart";
 part "guards/work_session_loss_guard.dart";
 part "work_session_navigation.dart";
 part "organization_access_redirect.dart";
+part "focus_owning_route.dart";
 
 typedef WorkSessionLossRouteConfirmation = Future<bool> Function(
   NavigationResolver resolver,
@@ -82,6 +83,9 @@ class AppRouter extends NavigationRouter {
         workSessionLoss,
         confirmWorkSessionLoss ?? (_) => _confirmWithDialog(),
       );
+
+  @override
+  RouteType get defaultRouteType => _focusOwningRouteType;
 
   @override
   int get navigationRevision => _navigationRevision;

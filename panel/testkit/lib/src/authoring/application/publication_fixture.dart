@@ -77,22 +77,17 @@ final class ConnectedPublicationRepository
   ConnectedPublicationRepository(this._realm, this._connection);
 
   final TestPublicationRepository _realm;
-  final NatsClient Function() _connection;
+  final Future<NatsClient> Function() _connection;
 
   @override
-  Stream<PublicationObservation> watch() {
-    final NatsClient connection;
-    try {
-      connection = _connection();
-    } on ProviderException {
-      // Before the panel connects no hint arrives; the repository is
-      // rebuilt for the connection once it opens.
-      return const Stream.empty();
-    }
-    return _realm.watch().takeUntil(
-      connection.connectionStateChanges.where((state) => state is NatsClosed),
-    );
-  }
+  Stream<PublicationObservation> watch() =>
+      Stream.fromFuture(_connection()).asyncExpand(
+        (connection) => _realm.watch().takeUntil(
+          connection.connectionStateChanges.where(
+            (state) => state is NatsClosed,
+          ),
+        ),
+      );
 
   @override
   PreparedCommit<skir.PublishAuthoringResponse> preparePublish(

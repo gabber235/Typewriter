@@ -321,7 +321,7 @@ function deliveryExpression(delivery: Delivery, name: string): string {
     ? "const ProjectionDelivery.ephemeral()"
     : `ProjectionDelivery.persistent(
                 stream: ${dartString(delivery.stream)},
-                consumer: ${name}Projection.consumerName(ref.read(natsProvider)),
+                route: ${name}Projection,
             )`;
 }
 

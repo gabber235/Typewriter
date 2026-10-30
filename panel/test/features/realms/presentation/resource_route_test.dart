@@ -125,4 +125,22 @@ void main() {
       );
     });
   }
+
+  testWidgets("a surface that opens behind search leaves typing in search", (
+    tester,
+  ) async {
+    final panel = await tester.pumpPanel([
+      ...library,
+      window(const Size(1600, 1000)),
+    ]);
+    await panel.activateWithScreenReader("Search");
+    expect(panel.queryBar.isFocused, isTrue);
+
+    await panel.follow(ResourceRoute(resourceId: libraryId.value));
+
+    expect(panel.routedResource, libraryId.value);
+    expect(panel.queryBar.isFocused, isTrue, reason: "search keeps focus");
+    await panel.queryBar.type("Route");
+    expect(panel.queryBar.text, "Route");
+  });
 }

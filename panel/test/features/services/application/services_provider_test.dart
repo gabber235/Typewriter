@@ -302,7 +302,6 @@ void main() {
       signedIn(ada, organization: acme),
       servicesBackend(services: [service("one", status: null)]),
     ]);
-    await world.initialized();
     world.container.listen(canonicalServicesProvider, (_, _) {});
 
     expect(
