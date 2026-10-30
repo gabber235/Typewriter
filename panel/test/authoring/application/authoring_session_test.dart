@@ -216,6 +216,68 @@ void main() {
     );
   });
 
+  testWidgets("a screen showing saved values that opens and asks for "
+      "current ones while it builds, as the conflict review does, receives "
+      "them", (tester) async {
+    var title = "Initial";
+    await tester.runAsync(
+      () => world.openBookSession(
+        session,
+        _book,
+        () => title,
+        generation: _generation,
+        subjects: _subjects,
+      ),
+    );
+    final open = ValueNotifier(false);
+    addTearDown(open.dispose);
+    Future<void>? asked;
+    await tester.pumpWidget(
+      PanelStage.world(
+        world,
+        at: PanelLocation.component(
+          ValueListenableBuilder(
+            valueListenable: open,
+            builder: (context, opened, _) => !opened
+                ? const SizedBox()
+                : Consumer(
+                    builder: (context, ref, _) {
+                      ref.watch(session);
+                      asked ??= ref.read(session.notifier).refresh();
+                      return const SizedBox();
+                    },
+                  ),
+          ),
+        ),
+      ),
+    );
+    await tester.runAsync(
+      () => world.container.eventually(
+        session,
+        (state) => !state.refreshing,
+        description: "no refresh in progress",
+      ),
+    );
+    title = "Current";
+
+    open.value = true;
+    await tester.pump();
+    expect(asked, isNotNull);
+    for (var turn = 0; turn < 20; turn++) {
+      await tester.runAsync(pumpEventQueue);
+      await tester.pump();
+    }
+
+    await tester.runAsync(
+      () => world.untilBookTitled(
+        session,
+        _book.bookId,
+        "Current",
+        description: "the values current when the screen asked",
+      ),
+    );
+  });
+
   test("a catalog change refetches the catalog, retries the state once and "
       "shows the new state", () async {
     var generation = _generation;

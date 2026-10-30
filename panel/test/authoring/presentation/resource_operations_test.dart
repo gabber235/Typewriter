@@ -151,4 +151,47 @@ void main() {
       isNot("/organization/acme/realm/main/resource/${first.bookId.value}"),
     );
   });
+
+  testWidgets("a screen reader selects a Book in the Library and deletes it", (
+    tester,
+  ) async {
+    final panel = await tester.pumpPanel([
+      signedIn(ada, organization: acme),
+      realm(books: [first, second]),
+      operations(const [reveal, move, delete]),
+    ]);
+    await panel.openSurface(libraryId);
+    const question = "Delete the selected resources?";
+
+    await panel.activateWithScreenReader("First");
+
+    expect(
+      semanticsButton("First").getSemanticsData().flagsCollection.isSelected,
+      Tristate.isTrue,
+    );
+    expect(panel.resources.selected, [first.bookId]);
+    await panel.activateWithScreenReader("Delete");
+    await panel.dialog.choose("Delete", message: question);
+    expect(panel.resources.showing("First"), isFalse);
+    expect(panel.resources.showing("Second"), isTrue);
+  });
+
+  testWidgets("a screen reader selects a Tag on the tags graph", (
+    tester,
+  ) async {
+    final legend = tag("Legend");
+    final panel = await tester.pumpPanel([
+      signedIn(ada, organization: acme),
+      realm(tags: [legend, tag("Myth")]),
+    ]);
+    await panel.openSurface(taxonomyId);
+
+    await panel.activateWithScreenReader("Legend");
+
+    expect(
+      semanticsButton("Legend").getSemanticsData().flagsCollection.isSelected,
+      Tristate.isTrue,
+    );
+    expect(panel.resources.selected, [legend.tagId]);
+  });
 }

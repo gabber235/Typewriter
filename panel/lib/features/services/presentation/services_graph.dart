@@ -264,10 +264,10 @@ class _ServiceGraphNode extends HookWidget {
       selectableId: item.selectableId,
       focusNode: focusNode,
       onDoubleTap: item.onDoubleTap,
+      // The selector makes the card a selectable button; the label reads
+      // it as kind, name and status instead of every text it shows.
       builder: (isSelected, isFocused, isHovered) => Semantics(
         label: "${item.badge}, ${item.title}, ${item.status}",
-        selected: isSelected,
-        button: true,
         excludeSemantics: true,
         child: ColoredBox(
           color: Surface.colorOf(context),

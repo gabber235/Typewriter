@@ -398,57 +398,52 @@ class AuthoredGraphItem extends HookConsumerWidget {
         editable && (mode is GraphMoveMode || mode is GraphResizeMode)
         ? mode as DirectionalInteractionMode
         : null;
-    // The node is one control: its selection, focus and tap merge with the
-    // text it shows, so assistive technology names it by what a sighted
-    // user reads on it, however deep the presentation nests that text.
-    return MergeSemantics(
-      child: LayoutBuilder(
-        builder: (context, constraints) => Selector(
-          selectableId: identifier,
-          focusNode: focus,
-          shortcuts: {
-            if (directionalMode != null)
-              for (final entry in movementShortcuts.entries)
-                for (final key in entry.key)
-                  SingleActivator(key): directionalMode.intentForDirection(
-                    entry.value,
-                  ),
-          },
-          builder: (selected, focused, hovered) {
-            Widget content(ResourceDropHover hover) =>
-                PresentationInteractionScope(
-                  value: PresentationInteraction(
-                    selected: selected,
-                    focused: focused,
-                    hovered: hovered,
-                    routed: resources.isRouted(identifier),
-                    disabled: !resources.scope.enabled,
-                    readOnly: !editable,
-                    dropAccepted: hover.accepted,
-                    dropRejected: hover.rejected,
-                  ),
-                  child: child,
-                );
-            return _ResourceItemDragAndDrop(
-              identifier: identifier,
-              resources: resources,
-              region: true,
-              builder: (context, hover) =>
-                  Semantics(selected: selected, child: content(hover)),
-              feedback: (context) => PortableDiagnosticPreview(
-                operations: resources.scope.operations,
-                child: Material(
-                  type: MaterialType.transparency,
-                  child: SizedBox(
-                    width: constraints.maxWidth,
-                    height: constraints.maxHeight,
-                    child: content(ResourceDropHover.idle),
-                  ),
+    return LayoutBuilder(
+      builder: (context, constraints) => Selector(
+        selectableId: identifier,
+        focusNode: focus,
+        shortcuts: {
+          if (directionalMode != null)
+            for (final entry in movementShortcuts.entries)
+              for (final key in entry.key)
+                SingleActivator(key): directionalMode.intentForDirection(
+                  entry.value,
+                ),
+        },
+        builder: (selected, focused, hovered) {
+          Widget content(ResourceDropHover hover) =>
+              PresentationInteractionScope(
+                value: PresentationInteraction(
+                  selected: selected,
+                  focused: focused,
+                  hovered: hovered,
+                  routed: resources.isRouted(identifier),
+                  disabled: !resources.scope.enabled,
+                  readOnly: !editable,
+                  dropAccepted: hover.accepted,
+                  dropRejected: hover.rejected,
+                ),
+                child: child,
+              );
+          return _ResourceItemDragAndDrop(
+            identifier: identifier,
+            resources: resources,
+            region: true,
+            builder: (context, hover) =>
+                Semantics(selected: selected, child: content(hover)),
+            feedback: (context) => PortableDiagnosticPreview(
+              operations: resources.scope.operations,
+              child: Material(
+                type: MaterialType.transparency,
+                child: SizedBox(
+                  width: constraints.maxWidth,
+                  height: constraints.maxHeight,
+                  child: content(ResourceDropHover.idle),
                 ),
               ),
-            );
-          },
-        ),
+            ),
+          );
+        },
       ),
     );
   }

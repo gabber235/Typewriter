@@ -51,7 +51,8 @@ final class PanelDriver extends ComponentDriver {
   /// The dialog in front of the panel.
   DialogDriver get dialog => DialogDriver(tester);
 
-  /// The label of the control that has keyboard focus, or null.
+  /// What assistive technology reads for the control that has keyboard
+  /// focus, or null.
   String? get focused {
     final nodes = find.semantics
         .byPredicate(
@@ -62,7 +63,8 @@ final class PanelDriver extends ComponentDriver {
                   Tristate.isTrue,
         )
         .evaluate();
-    return nodes.isEmpty ? null : nodes.last.label;
+    // The label assistive technology reads, with what merged into it.
+    return nodes.isEmpty ? null : nodes.last.spoken;
   }
 
   /// Whether keyboard focus is on the control [label] or on the unlabeled
