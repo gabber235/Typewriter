@@ -248,13 +248,27 @@ Formulas carry no type annotations (they are allowed where they help). Types flo
 
 A field shows its **normal editor** by default (a field can have its own UI layout). A small toggle in the field header switches it to a **formula field**, and back. This works like legacy variables.
 
-### Syntax direction
+### Syntax
 
-The exact syntax is decided at the end, when most needs are known. Kotlin is the basis. Wishes include Rust `if let` and `let else`, a ternary operator, and features from functional languages. Known intent:
+Kotlin is the base, with additions that make content formulas short and safe:
 
-- A function's first argument can be an **extension receiver**: `health(protagonist)` can be written `protagonist.health`. This works for every function, including creator definitions.
-- A function with no other parameters needs no brackets.
-- Chaining must be easy.
+```
+protagonist.level > 10 ? "Hero" : "Novice"                    ternary; if and when are expressions too
+if (let quest = protagonist.active_quest) quest.name else "No quest"
+when (reward) { is Money(amount) if amount > 100 -> "Big payday"; is Item(item) -> item.name }
+members.filter(.is_veteran).sumOf(.coins)                      member shorthand
+town in [riverside, hilltop]                                   collection literals
+give(sword, amount = 3)                                        named and default arguments
+let price = price * 0.8                                        shadowing instead of mutation
+let double(x: Int) = x * 2                                     local functions
+0 < reputation < 10                                            chained comparisons
+is_veteran and level > 10                                      and, or, not as readable aliases
+```
+
+- A function's first argument can be written as a receiver (`player.health` is `health(player)`), and a function with nothing left to pass needs no brackets.
+- No loops: ranges and list functions (`(1..5).map { it * 10 }`).
+- No `!!`: absent values are handled explicitly.
+- Text fields are templates in their normal editor: `<gold>Welcome back, ${protagonist.name}!</gold>`, with formatting `${coins:#,###}`. Values put into rich text are escaped, so player input cannot inject tags.
 
 ### Formulas as starts
 
@@ -336,7 +350,7 @@ The variable system is complex and unpleasant to use. One expressive language bu
 | No special literals; registries and units as data driven members | closed beta | shaped |
 | Normal field with a formula toggle | closed beta | settled |
 | One field type `Var<T, CONTEXT>`; the value type decides (function body, changes, type) | closed beta | shaped |
-| Concrete syntax details | closed beta | open |
+| Concrete syntax (Kotlin base, ternary, if let, patterns, member shorthand, collection literals, named arguments, shadowing, text templates) | closed beta | shaped |
 
 ## Open questions
 
