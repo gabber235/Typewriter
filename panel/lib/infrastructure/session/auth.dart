@@ -80,6 +80,15 @@ abstract class AccessToken with _$AccessToken {
 @Riverpod(keepAlive: true)
 OidcStore oidcStore(Ref ref) => OidcDefaultStore();
 
+/// Ends the identity provider's session for a signed in [OidcUserManager].
+///
+/// Production runs the provider's end session flow, which opens the browser
+/// on native platforms. End to end scenarios replace it, so a run never leaves
+/// browser tabs behind; the local sign out they check runs either way.
+@Riverpod(keepAlive: true)
+Future<void> Function(OidcUserManager manager) providerSessionEnd(Ref ref) =>
+    (manager) => manager.logout();
+
 /// Owns the panel's identity provider session for the application lifetime.
 ///
 /// Construction selects the redirect flow required by the current platform,
@@ -185,10 +194,11 @@ class Auth extends _$Auth {
     }
     // The end session request reads the current session when it starts, so it
     // starts before the session is forgotten.
+    final endProviderSession = ref.read(providerSessionEndProvider);
     unawaited(
       runPanelMutation(
         operation: PanelMutationOperation.endProviderSession,
-        mutation: manager.logout,
+        mutation: () => endProviderSession(manager),
         recover: (_, _) {},
       ),
     );
