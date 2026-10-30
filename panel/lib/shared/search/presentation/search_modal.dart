@@ -40,18 +40,20 @@ Future<T?> showSearchModal<T>(
         source: SelectionOperationsRoot.of(context),
         child: GlobalModeShortcut(
           child: GlobalOperationShortcuts(
-            child: SearchModal(
-              contributionBuilder: contributionBuilder,
-              onBack: onBack,
-              onQueryChanged: onQueryChanged,
-              searchHint: searchHint,
-              surfaceStyle: surfaceStyle,
-              queryDecoration: queryDecoration,
-              queryStyle: queryStyle,
-              queryAlignment: queryAlignment,
-              useDefaultQueryIcon: useDefaultQueryIcon,
-              rowRenderers: rowRenderers,
-              previewRenderers: previewRenderers,
+            child: PopupFocusHold(
+              child: SearchModal(
+                contributionBuilder: contributionBuilder,
+                onBack: onBack,
+                onQueryChanged: onQueryChanged,
+                searchHint: searchHint,
+                surfaceStyle: surfaceStyle,
+                queryDecoration: queryDecoration,
+                queryStyle: queryStyle,
+                queryAlignment: queryAlignment,
+                useDefaultQueryIcon: useDefaultQueryIcon,
+                rowRenderers: rowRenderers,
+                previewRenderers: previewRenderers,
+              ),
             ),
           ),
         ),

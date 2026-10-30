@@ -117,6 +117,33 @@ void main() {
     );
   });
 
+  test("saved values read while the connection is replaced arrive over the "
+      "replacement", () async {
+    var title = "Initial";
+    await world.openBookSession(
+      session,
+      _book,
+      () => title,
+      generation: _generation,
+      subjects: _subjects,
+    );
+
+    title = "Theirs";
+    final replaced = world.container.read(natsProvider.notifier).retry();
+    await world.container.read(session.notifier).refresh();
+    await replaced;
+
+    expect(
+      world.container
+          .read(session)
+          .resources[_book.bookId]
+          ?.content
+          .authoredField("title")
+          ?.authoredString,
+      "Theirs",
+    );
+  });
+
   test("a hint during an active query schedules a fresh query", () async {
     final delayed = Completer<Uint8List>();
     var requests = 0;

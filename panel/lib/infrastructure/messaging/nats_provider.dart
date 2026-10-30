@@ -129,9 +129,12 @@ class Nats extends _$Nats {
     return connection.client;
   }
 
-  /// Opens a fresh session of the current connection once it exists.
+  /// Opens a fresh session of the current connection, once it exists.
+  ///
+  /// An open connection is replaced at once, so a request that follows
+  /// already reads the replacement instead of the session being closed.
   Future<void> retry() async {
-    await future;
+    if (!state.hasValue) await future;
     await _connection.retry();
   }
 }

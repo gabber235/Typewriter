@@ -31,36 +31,29 @@ class OrganizationJoinRequests extends _$OrganizationJoinRequests {
       SequencedCollection<List<skir.OrganizationJoinRequest>>();
 
   @override
-  Stream<List<skir.OrganizationJoinRequest>> build() async* {
-    final userId = await ref.watch(userIdProvider.future);
-    if (!ref.mounted) return;
-
-    if (userId == null) {
-      yield [];
-      return;
-    }
+  Stream<List<skir.OrganizationJoinRequest>> build() {
     final organizationId = ref.watch(organizationIdProvider);
-    if (organizationId == null) {
-      yield [];
-      return;
-    }
-
-    final repository = ref.watch(
-      membershipResourceRepositoryProvider(organizationId),
-    );
-    final request = skir.WatchOrganizationJoinRequestsRequest();
-    yield* request.watch<List<skir.OrganizationJoinRequest>>(
-      ref,
-      userId: userId,
-      organizationId: organizationId,
-      snapshot: (response) => _joinRequestSnapshot(response).values.toList(),
-      reduce: _reduceOrganizationJoinRequests,
-      confirmedEvents: repository.requests,
-      reconciliation: ProjectionReconciliation.sequenced(
-        snapshotSequence: (response) => _joinRequestSnapshot(response).sequence,
-        eventSequence: (event) => event.sequence,
-        sequenceState: _sequenceState,
-      ),
+    if (organizationId == null) return Stream.value(const []);
+    return ref.watchSignedIn(
+      signedOut: const [],
+      (userId) => skir.WatchOrganizationJoinRequestsRequest()
+          .watch<List<skir.OrganizationJoinRequest>>(
+            ref,
+            userId: userId,
+            organizationId: organizationId,
+            snapshot: (response) =>
+                _joinRequestSnapshot(response).values.toList(),
+            reduce: _reduceOrganizationJoinRequests,
+            confirmedEvents: ref
+                .watch(membershipResourceRepositoryProvider(organizationId))
+                .requests,
+            reconciliation: ProjectionReconciliation.sequenced(
+              snapshotSequence: (response) =>
+                  _joinRequestSnapshot(response).sequence,
+              eventSequence: (event) => event.sequence,
+              sequenceState: _sequenceState,
+            ),
+          ),
     );
   }
 }

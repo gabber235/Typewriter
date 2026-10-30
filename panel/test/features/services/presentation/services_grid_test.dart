@@ -307,4 +307,17 @@ void main() {
 
     expect(panel.shows("Open"), isFalse);
   });
+
+  testWidgets("leaving the services page while its projections restart "
+      "fails nothing", (tester) async {
+    final panel = await tester.pumpPanel([
+      signedIn(ada, organization: acme),
+      servicesBackend(services: [_paper, _discord], topology: _topology),
+    ]);
+
+    await panel.follow(const IndexRoute());
+
+    expect(panel.path, "/");
+    expect(tester.takeException(), isNull);
+  });
 }

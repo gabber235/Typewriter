@@ -23,28 +23,20 @@ extension OrganizationRoleAppearance on skir.OrganizationRole {
 @riverpod
 class OrganizationRoles extends _$OrganizationRoles {
   @override
-  Stream<List<skir.OrganizationRole>> build() async* {
-    final userId = await ref.watch(userIdProvider.future);
-    if (!ref.mounted) return;
-
-    if (userId == null) {
-      yield [];
-      return;
-    }
+  Stream<List<skir.OrganizationRole>> build() {
     final organizationId = ref.watch(organizationIdProvider);
-    if (organizationId == null) {
-      yield [];
-      return;
-    }
-
-    final response = await ref.requestSkir(
-      skir.WatchOrganizationRolesRequest().operation(
-        userId: userId,
-        organizationId: organizationId,
-      ),
+    if (organizationId == null) return Stream.value(const []);
+    return ref.watchSignedIn(
+      signedOut: const [],
+      (userId) => Stream.fromFuture(
+        ref.requestSkir(
+          skir.WatchOrganizationRolesRequest().operation(
+            userId: userId,
+            organizationId: organizationId,
+          ),
+        ),
+      ).map((response) => response.readRoleSnapshot()),
     );
-    if (!ref.mounted) return;
-    yield response.readRoleSnapshot();
   }
 }
 

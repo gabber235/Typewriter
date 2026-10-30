@@ -57,7 +57,13 @@ abstract class ComponentDriver {
   /// Activates the one button the user hears as [label] the way a screen
   /// reader does, through its tap action, and lets the panel react. Fails
   /// when assistive technology cannot reach the button or cannot activate it.
-  Future<void> activateWithScreenReader(String label) async {
+  ///
+  /// Without [settle] the panel has not reacted yet when this returns, so
+  /// the test can act again in the same frame, as a fast user does.
+  Future<void> activateWithScreenReader(
+    String label, {
+    bool settle = true,
+  }) async {
     final button = semanticsButton(label);
     expect(
       button.isTappable,
@@ -67,9 +73,10 @@ abstract class ComponentDriver {
     tester.semantics.tap(
       find.semantics.byPredicate((node) => identical(node, button)),
     );
+    if (!settle) return;
     // A control that also answers double taps acts once the timeout passed.
     await tester.pump(kDoubleTapTimeout);
-    await settle();
+    await this.settle();
   }
 }
 

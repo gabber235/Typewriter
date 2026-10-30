@@ -226,35 +226,35 @@ extension RefNatsExtension on Ref {
     TData? initialValue,
   }) => Stream.fromFuture(watch(natsProvider.future)).asyncExpand(
     (client) => ProjectionWatcher<TData, TResponse, TEvent>(
-    client: client,
-    requestSnapshot: () async {
-      final telemetry = await read(panelTelemetryProvider.future);
-      return telemetry.traceNats(
-        subject: subject,
-        payloadSize: requestBytes.length,
-        operationName: "request",
-        operation: (headers) => client.request(
-          subject,
-          requestBytes,
-          // Projection routes keep the manifest's default limits.
-          limits: transportLimits,
-          headers: headers,
-          timeout: _requestTimeout,
-        ),
-      );
-    },
-    responseSerializer: responseSerializer,
-    eventSerializer: eventSerializer,
-    snapshot: snapshot,
-    reduce: reduce,
-    confirmedEvents: confirmedEvents,
-    reduceConfirmed: reduceConfirmed,
-    reconcileSnapshot: reconcileSnapshot,
-    initialValue: initialValue,
-    delivery: delivery,
-    reconciliation: reconciliation,
-    registerDisposal: onDispose,
-  ).watch(eventSubject: eventSubject),
+      client: client,
+      requestSnapshot: () async {
+        final telemetry = await read(panelTelemetryProvider.future);
+        return telemetry.traceNats(
+          subject: subject,
+          payloadSize: requestBytes.length,
+          operationName: "request",
+          operation: (headers) => client.request(
+            subject,
+            requestBytes,
+            // Projection routes keep the manifest's default limits.
+            limits: transportLimits,
+            headers: headers,
+            timeout: _requestTimeout,
+          ),
+        );
+      },
+      responseSerializer: responseSerializer,
+      eventSerializer: eventSerializer,
+      snapshot: snapshot,
+      reduce: reduce,
+      confirmedEvents: confirmedEvents,
+      reduceConfirmed: reduceConfirmed,
+      reconcileSnapshot: reconcileSnapshot,
+      initialValue: initialValue,
+      delivery: delivery,
+      reconciliation: reconciliation,
+      registerDisposal: onDispose,
+    ).watch(eventSubject: eventSubject),
   );
 }
 

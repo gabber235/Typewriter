@@ -426,4 +426,43 @@ void main() {
     expect(semanticsLabeled("No changes waiting"), isEmpty);
     expect(semanticsButton("Inbox").isTappable, isTrue);
   });
+
+  testWidgets("a dialog opened from an open popup keeps the focus it takes", (
+    tester,
+  ) async {
+    final panel = await tester.pumpPanel(
+      const [],
+      at: PanelLocation.component(
+        Scaffold(
+          body: AnchoredPopup(
+            builder: (context, show) =>
+                TextButton(onPressed: show, child: const Text("Inbox")),
+            popupBuilder: (context, close) => SizedBox(
+              width: 300,
+              child: TextButton(
+                onPressed: () => showDialog<void>(
+                  context: context,
+                  builder: (context) => const AlertDialog(
+                    content: TextField(
+                      autofocus: true,
+                      decoration: InputDecoration(labelText: "Reason"),
+                    ),
+                  ),
+                ),
+                child: const Text("Explain"),
+              ),
+            ),
+          ),
+        ),
+      ),
+    );
+    await panel.activateWithScreenReader("Inbox");
+
+    await panel.activateWithScreenReader("Explain");
+
+    expect(panel.field("Reason").isFocused, isTrue);
+    await panel.field("Reason").edit("late");
+    expect(panel.field("Reason").value, "late");
+    expect(panel.field("Reason").isFocused, isTrue);
+  });
 }

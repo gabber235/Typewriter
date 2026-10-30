@@ -255,6 +255,24 @@ Future<bool> isAuthenticated(Ref ref) async =>
 Future<String?> userId(Ref ref) async =>
     (await ref.watch(authSessionProvider.future))?.user.sub;
 
+/// Watching what only a signed in user can see.
+extension SignedInWatch on Ref {
+  /// The stream [open] starts for the signed in user, or [signedOut] alone
+  /// while nobody is signed in.
+  ///
+  /// The user is watched now, while the provider builds, so a new user
+  /// rebuilds it. [open] runs once the user is known and only while the
+  /// provider still listens to the result, so it may watch further
+  /// providers: a provider disposed first never runs [open] and never
+  /// touches its ref again.
+  Stream<T> watchSignedIn<T>(
+    Stream<T> Function(String userId) open, {
+    required T signedOut,
+  }) => Stream.fromFuture(watch(userIdProvider.future)).asyncExpand(
+    (userId) => userId == null ? Stream.value(signedOut) : open(userId),
+  );
+}
+
 /// Normalizes the provider claims of [user] into the panel's account model.
 UserInfo _userInfo(OidcUser user) {
   final claims = user.claims;

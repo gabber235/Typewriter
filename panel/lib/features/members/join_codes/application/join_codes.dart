@@ -69,36 +69,28 @@ class OrganizationJoinCodes extends _$OrganizationJoinCodes {
   final _sequenceState = SequencedCollection<List<skir.JoinCode>>();
 
   @override
-  Stream<List<skir.JoinCode>> build() async* {
-    final userId = await ref.watch(userIdProvider.future);
-    if (!ref.mounted) return;
-
-    if (userId == null) {
-      yield [];
-      return;
-    }
+  Stream<List<skir.JoinCode>> build() {
     final organizationId = ref.watch(organizationIdProvider);
-    if (organizationId == null) {
-      yield [];
-      return;
-    }
-
-    final repository = ref.watch(
-      membershipResourceRepositoryProvider(organizationId),
-    );
-    final request = skir.WatchOrganizationJoinCodesRequest();
-    yield* request.watch<List<skir.JoinCode>>(
-      ref,
-      userId: userId,
-      organizationId: organizationId,
-      snapshot: (response) => _joinCodeSnapshot(response).values.toList(),
-      reduce: _reduceJoinCodes,
-      confirmedEvents: repository.codes,
-      reconciliation: ProjectionReconciliation.sequenced(
-        snapshotSequence: (response) => _joinCodeSnapshot(response).sequence,
-        eventSequence: (event) => event.sequence,
-        sequenceState: _sequenceState,
-      ),
+    if (organizationId == null) return Stream.value(const []);
+    return ref.watchSignedIn(
+      signedOut: const [],
+      (userId) =>
+          skir.WatchOrganizationJoinCodesRequest().watch<List<skir.JoinCode>>(
+            ref,
+            userId: userId,
+            organizationId: organizationId,
+            snapshot: (response) => _joinCodeSnapshot(response).values.toList(),
+            reduce: _reduceJoinCodes,
+            confirmedEvents: ref
+                .watch(membershipResourceRepositoryProvider(organizationId))
+                .codes,
+            reconciliation: ProjectionReconciliation.sequenced(
+              snapshotSequence: (response) =>
+                  _joinCodeSnapshot(response).sequence,
+              eventSequence: (event) => event.sequence,
+              sequenceState: _sequenceState,
+            ),
+          ),
     );
   }
 }

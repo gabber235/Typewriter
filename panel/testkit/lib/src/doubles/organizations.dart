@@ -160,15 +160,11 @@ final class _Organizations extends Organizations {
   final FakeOrganizations _backend;
 
   @override
-  Stream<List<skir.Organization>> build() async* {
-    final user = await ref.watch(userIdProvider.future);
-    if (user == null) {
-      yield const [];
-      return;
-    }
-    yield _backend.of(user);
-    yield* _backend._changes.stream.map((_) => _backend.of(user));
-  }
+  Stream<List<skir.Organization>> build() =>
+      ref.watchSignedIn(signedOut: const [], (user) async* {
+        yield _backend.of(user);
+        yield* _backend._changes.stream.map((_) => _backend.of(user));
+      });
 }
 
 final class _Topology extends OrganizationTopologyController {

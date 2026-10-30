@@ -31,28 +31,23 @@ class UserJoinRequests extends _$UserJoinRequests {
   final _sequenceState = SequencedCollection<List<skir.UserJoinRequest>>();
 
   @override
-  Stream<List<skir.UserJoinRequest>> build() async* {
-    final userId = await ref.watch(userIdProvider.future);
-    if (userId == null) {
-      yield [];
-      return;
-    }
-
-    final request = skir.WatchUserJoinRequestsRequest();
-    yield* request.watch<List<skir.UserJoinRequest>>(
-      ref,
-      userId: userId,
-      snapshot: (response) =>
-          _userJoinRequestSnapshot(response).values.toList(),
-      reduce: _reduceUserJoinRequests,
-      reconciliation: ProjectionReconciliation.sequenced(
-        snapshotSequence: (response) =>
-            _userJoinRequestSnapshot(response).sequence,
-        eventSequence: (event) => event.sequence,
-        sequenceState: _sequenceState,
-      ),
-    );
-  }
+  Stream<List<skir.UserJoinRequest>> build() => ref.watchSignedIn(
+    signedOut: const [],
+    (userId) =>
+        skir.WatchUserJoinRequestsRequest().watch<List<skir.UserJoinRequest>>(
+          ref,
+          userId: userId,
+          snapshot: (response) =>
+              _userJoinRequestSnapshot(response).values.toList(),
+          reduce: _reduceUserJoinRequests,
+          reconciliation: ProjectionReconciliation.sequenced(
+            snapshotSequence: (response) =>
+                _userJoinRequestSnapshot(response).sequence,
+            eventSequence: (event) => event.sequence,
+            sequenceState: _sequenceState,
+          ),
+        ),
+  );
 
   /// Submits a request using either an invite code or an invite URL.
   ///

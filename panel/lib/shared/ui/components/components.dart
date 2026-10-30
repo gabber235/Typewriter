@@ -46,6 +46,7 @@ export "multiselect_dropdown.dart";
 export "page_heading.dart";
 export "panes.dart";
 export "pixel_scale_transition.dart";
+export "popup_focus_hold.dart";
 export "popups.dart";
 export "presentation_interaction_scope.dart";
 export "responsive.dart";

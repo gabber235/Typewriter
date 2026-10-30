@@ -34,27 +34,24 @@ part "topology_selection.dart";
 @riverpod
 class CanonicalOrganizationServices extends _$CanonicalOrganizationServices {
   @override
-  Stream<List<skir.Service>> build(skir.RecordId organizationId) async* {
-    final userId = await ref.watch(userIdProvider.future);
-    if (userId == null) {
-      yield [];
-      return;
-    }
-
-    yield* skir.WatchOrganizationServicesRequest().watch(
-      ref,
-      userId: userId,
-      organizationId: organizationId,
-      snapshot: (response) => response.readSnapshot(),
-      reduce: (current, event) => event.applyWatched(current),
-      confirmedEvents: ref
-          .watch(serviceResourceRepositoryProvider(organizationId))
-          .identities,
-      reduceConfirmed: (current, event) => event.applyCanonical(current),
-      reconcileSnapshot: (current, incoming) =>
-          incoming.reconcileSnapshot(current),
-      initialValue: const [],
-      reconciliation: const ProjectionReconciliation.latest(),
+  Stream<List<skir.Service>> build(skir.RecordId organizationId) {
+    return ref.watchSignedIn(
+      signedOut: const [],
+      (userId) => skir.WatchOrganizationServicesRequest().watch(
+        ref,
+        userId: userId,
+        organizationId: organizationId,
+        snapshot: (response) => response.readSnapshot(),
+        reduce: (current, event) => event.applyWatched(current),
+        confirmedEvents: ref
+            .watch(serviceResourceRepositoryProvider(organizationId))
+            .identities,
+        reduceConfirmed: (current, event) => event.applyCanonical(current),
+        reconcileSnapshot: (current, incoming) =>
+            incoming.reconcileSnapshot(current),
+        initialValue: const [],
+        reconciliation: const ProjectionReconciliation.latest(),
+      ),
     );
   }
 }

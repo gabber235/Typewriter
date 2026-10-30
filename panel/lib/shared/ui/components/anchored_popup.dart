@@ -267,23 +267,26 @@ class _AnchoredPopupState extends State<AnchoredPopup> {
                               SingleActivator(LogicalKeyboardKey.escape):
                                   DismissIntent(),
                             },
-                            child: FocusScope(
-                              node: _focus,
-                              canRequestFocus: focused,
-                              descendantsAreFocusable: focused,
-                              descendantsAreTraversable: focused,
-                              autofocus: focused,
-                              child: Focus(
-                                focusNode: _entry,
-                                child: Surface(
-                                  color: color,
-                                  foreground: context.colors.contentPrimary,
-                                  secondaryForeground:
-                                      context.colors.contentSecondary,
-                                  child: Builder(
-                                    builder: (context) => widget.popupBuilder(
-                                      context,
-                                      _controller.close,
+                            child: PopupFocusHold(
+                              active: focused,
+                              child: FocusScope(
+                                node: _focus,
+                                canRequestFocus: focused,
+                                descendantsAreFocusable: focused,
+                                descendantsAreTraversable: focused,
+                                autofocus: focused,
+                                child: Focus(
+                                  focusNode: _entry,
+                                  child: Surface(
+                                    color: color,
+                                    foreground: context.colors.contentPrimary,
+                                    secondaryForeground:
+                                        context.colors.contentSecondary,
+                                    child: Builder(
+                                      builder: (context) => widget.popupBuilder(
+                                        context,
+                                        _controller.close,
+                                      ),
                                     ),
                                   ),
                                 ),
